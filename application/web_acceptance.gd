@@ -7,6 +7,8 @@ const SCHEMA_VERSION: int = 1
 const GLOBAL_NAME: String = "glassvowAcceptance"
 
 var _publish_generation: int = 0
+var _ready_json: String = ""
+var _last_route: String = ""
 
 
 func observe_route(rebuilder: Callable, game: GlassvowGame, content: ContentDB,
@@ -14,7 +16,18 @@ func observe_route(rebuilder: Callable, game: GlassvowGame, content: ContentDB,
 	if not OS.has_feature("web_dev"):
 		return
 	var live_run: RunState = game.run if game != null else null
-	_queue_publish(canonical_route(rebuilder), live_run, content, durable_path)
+	_last_route = canonical_route(rebuilder)
+	_queue_publish(_last_route, live_run, content, durable_path)
+
+
+func observe_checkpoint(rebuilder: Callable, game: GlassvowGame, content: ContentDB,
+		durable_path: String) -> void:
+	if not OS.has_feature("web_dev"):
+		return
+	var live_run: RunState = game.run if game != null else null
+	_publish_generation += 1
+	var route: String = canonical_route(rebuilder) if rebuilder.is_valid() else _last_route
+	_publish_if_current(_publish_generation, route, live_run, content, durable_path)
 
 
 func _queue_publish(route: String, live_run: RunState, content: ContentDB,
@@ -67,7 +80,9 @@ func _publish(route: String, live_run: RunState, content: ContentDB,
 	var ready: Dictionary = pending.duplicate(true)
 	ready["ready"] = true
 	_publish_plain(pending)
-	_begin_indexed_db_ack(generation, JSON.stringify(ready))
+	_ready_json = JSON.stringify(ready)
+	_begin_indexed_db_ack(generation)
+	set_process(true)
 
 
 func _publish_plain(projection: Dictionary) -> void:
@@ -78,54 +93,127 @@ func _publish_plain(projection: Dictionary) -> void:
 		window[GLOBAL_NAME] = js_json.parse(serialized)
 
 
-func _begin_indexed_db_ack(generation: int, ready_json: String) -> void:
-	var capture_source: String = """
+func _begin_indexed_db_ack(generation: int) -> void:
+	var source: String = """
 (() => {
-	if (typeof GodotOS !== "object") return;
-	GodotOS.__glassvow_acceptance_generation = %d;
-	GodotOS.__glassvow_acceptance_previous_promise = GodotOS._fs_sync_promise;
+	if (typeof GodotOS !== "object") {
+		console.error("Glassvow IndexedDB acceptance sync failed: GodotOS is unavailable");
+		return;
+	}
+	const state = GodotOS.__glassvow_acceptance = {
+		generation: %d, status: "WAIT", baseline: GodotOS._fs_sync_promise, error: ""
+	};
+	(async () => {
+		try {
+			if (typeof GodotFS !== "object" || typeof GodotFS.is_persistent !== "function" ||
+					GodotFS.is_persistent() !== 1 || typeof GodotFS._syncing !== "boolean") {
+				throw new Error("Godot IndexedDB sync API is unavailable");
+			}
+			if (state.baseline != null && typeof state.baseline.then === "function") {
+				await state.baseline;
+			}
+			for (let attempt = 0; attempt < 120 && GodotFS._syncing; attempt += 1)
+				await new Promise((resolve) => requestAnimationFrame(resolve));
+			if (GodotFS._syncing) throw new Error("IndexedDB sync did not become idle");
+			if (GodotOS.__glassvow_acceptance === state) state.status = "REQUEST";
+		} catch (error) {
+			state.error = error instanceof Error ? error.message : String(error);
+			state.status = "ERROR";
+			console.error("Glassvow IndexedDB acceptance sync failed: " + state.error);
+		}
+	})();
 })();
 """ % generation
-	JavaScriptBridge.eval(capture_source, false)
+	JavaScriptBridge.eval(source, false)
 	# Godot 4.7.1-stable (a13da4feb): force_fs_sync only requests OS_Web's
 	# coordinated main-loop sync. Its distinct GodotOS promise is the ack.
-	JavaScriptBridge.force_fs_sync()
-	var source: String = """
+
+
+static func coordinator_action(snapshot: Dictionary, generation: int) -> String:
+	if str(snapshot.get("generation", -1)).to_int() != generation:
+		return "WAIT"
+	var status: String = str(snapshot.get("status", "ERROR"))
+	if status in ["REQUEST", "ACK", "ERROR"]:
+		return status
+	return "WAIT"
+
+
+static func coordinator_transition(state: Dictionary, snapshot: Dictionary) -> Dictionary:
+	var next: Dictionary = state.duplicate(true)
+	if str(snapshot.get("generation", -1)).to_int() != str(state.get("generation", -2)).to_int():
+		next["action"] = "WAIT"
+		return next
+	match str(state.get("phase", "WAIT_IDLE")):
+		"WAIT_IDLE":
+			if snapshot.get("settled", false) == true and not snapshot.get("syncing", true) == true:
+				next["phase"] = "WAIT_NEW"
+				next["baseline"] = str(snapshot.get("token", 0)).to_int()
+				next["action"] = "REQUEST"
+		"WAIT_NEW":
+			if str(snapshot.get("token", 0)).to_int() != str(state.get("baseline", 0)).to_int():
+				next["phase"] = "WAIT_SETTLED"
+				next["saw_syncing"] = snapshot.get("syncing", false) == true
+		"WAIT_SETTLED":
+			if snapshot.get("settled", false) == true:
+				if snapshot.get("syncing", false) == true:
+					next["saw_syncing"] = true
+				elif snapshot.get("saw_syncing", false) == true \
+						or state.get("saw_syncing", false) == true:
+					next["phase"] = "WAIT_IDLE"
+				elif str(snapshot.get("error", "")) != "":
+					next["action"] = "ERROR"
+				else:
+					next["action"] = "ACK"
+	return next
+
+
+func _process(_delta: float) -> void:
+	var serialized: Variant = JavaScriptBridge.eval(
+		"typeof GodotOS === 'object' && GodotOS.__glassvow_acceptance"
+		+ " ? JSON.stringify(GodotOS.__glassvow_acceptance)"
+		+ " : '{\"generation\":-1,\"status\":\"ERROR\"}'", false)
+	var parsed: Variant = JSON.parse_string(str(serialized))
+	var snapshot: Dictionary = parsed if parsed is Dictionary else {}
+	match coordinator_action(snapshot, _publish_generation):
+		"REQUEST":
+			JavaScriptBridge.eval("""
+(() => {
+	const state = GodotOS.__glassvow_acceptance;
+	state.status = "SYNCING";
+	state.baseline = GodotOS._fs_sync_promise;
+})();
+""", false)
+			JavaScriptBridge.force_fs_sync()
+			JavaScriptBridge.eval("""
 (async () => {
-	const generation = %d;
-	const os = typeof GodotOS === "object" ? GodotOS : null;
-	const currentGeneration = () => os == null ? null : os.__glassvow_acceptance_generation;
-	const previousPromise = os == null ? null : os.__glassvow_acceptance_previous_promise;
-	const readyJson = %s;
+	const state = GodotOS.__glassvow_acceptance;
 	try {
-		if (typeof GodotFS !== "object" || typeof GodotFS.is_persistent !== "function" ||
-				GodotFS.is_persistent() !== 1 || typeof GodotFS._syncing !== "boolean" ||
-				os == null) {
-			throw new Error("Godot IndexedDB sync API is unavailable");
-		}
-		let syncPromise = null;
+		let candidate = null;
 		for (let attempt = 0; attempt < 120; attempt += 1) {
-			if (currentGeneration() !== generation) return;
-			const candidate = os._fs_sync_promise;
-			if (candidate !== previousPromise && candidate != null &&
-					typeof candidate.then === "function") {
-				syncPromise = candidate;
-				break;
-			}
+			candidate = GodotOS._fs_sync_promise;
+			if (candidate !== state.baseline && candidate != null &&
+					typeof candidate.then === "function") break;
 			await new Promise((resolve) => requestAnimationFrame(resolve));
 		}
-		if (syncPromise == null) throw new Error("coordinated sync did not start");
-		const syncError = await syncPromise;
-		if (syncError) throw new Error("acceptance sync failed: " + syncError);
-		if (GodotFS._syncing !== false) throw new Error("acceptance sync is still active");
-		if (currentGeneration() !== generation) return;
-		delete os.__glassvow_acceptance_previous_promise;
-		window[%s] = JSON.parse(readyJson);
+		if (candidate === state.baseline) throw new Error("coordinated sync did not start");
+		const error = await candidate;
+		const resolvedWhileSyncing = GodotFS._syncing;
+		while (GodotFS._syncing) await new Promise((resolve) => requestAnimationFrame(resolve));
+		if (error) throw new Error("acceptance sync failed: " + error);
+		if (GodotOS.__glassvow_acceptance === state)
+			state.status = resolvedWhileSyncing ? "REQUEST" : "ACK";
 	} catch (error) {
-		if (currentGeneration() !== generation) return;
-		const message = error instanceof Error ? error.message : String(error);
-		console.error("Glassvow IndexedDB acceptance sync failed: " + message);
+		state.error = error instanceof Error ? error.message : String(error);
+		state.status = "ERROR";
+		console.error("Glassvow IndexedDB acceptance sync failed: " + state.error);
 	}
 })();
-""" % [generation, JSON.stringify(ready_json), JSON.stringify(GLOBAL_NAME)]
-	JavaScriptBridge.eval(source, false)
+""", false)
+		"ACK":
+			var ready_projection: Variant = JSON.parse_string(_ready_json)
+			if ready_projection is Dictionary:
+				var ready_dictionary: Dictionary = ready_projection
+				_publish_plain(ready_dictionary)
+			set_process(false)
+		"ERROR":
+			set_process(false)

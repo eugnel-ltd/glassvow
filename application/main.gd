@@ -344,7 +344,7 @@ func _ready() -> void:
 			{"kind": "memory", "title": "The Vigil Remembers",
 				"body": "Victory · 3 shards lit"},
 		], "cursor": 0}
-		if SaveService.store(game.run):
+		if _store_run():
 			_show_dawn()
 	elif show_map:
 		_new_run()
@@ -458,9 +458,10 @@ func _quit_game() -> void:
 
 
 func _store_run() -> bool:
-	return SaveService.store(game.run, _run_save_path)
-
-
+	var stored: bool = SaveService.store(game.run, _run_save_path)
+	if stored and _web_acceptance != null:
+		_web_acceptance.observe_checkpoint(_route_rebuilder, game, content, _run_save_path)
+	return stored
 ## Window close is a clean quit: with `config/auto_accept_quit=false` the engine
 ## hands us NOTIFICATION_WM_CLOSE_REQUEST instead of exiting itself. No save
 ## flush — durable at every boundary; the interception is the single path.
@@ -485,7 +486,6 @@ func _show_runtime_font_probe() -> void:
 	label.add_theme_color_override("font_color", GlassStyle.TEXT)
 	label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(label)
-
 
 ## Wait, then photograph, then quit.
 ##
@@ -878,7 +878,7 @@ func _show_save_error(detail_key: String) -> void:
 
 
 func _on_save_error_choice(id: String) -> void:
-	if id == "retry" and game != null and SaveService.store(game.run):
+	if id == "retry" and game != null and _store_run():
 		_route_run()
 	else:
 		_show_title()
@@ -908,7 +908,7 @@ func _new_run(profile: Dictionary = {}) -> void:
 		game.quests.decorate_map(game.run, _map)
 	game.run.map = _map.to_dict()
 	_run_over = false
-	if SaveService.store(game.run):
+	if _store_run():
 		_route_run()
 	else:
 		_show_save_error("ui.persistence.detail.pilgrimageStart")
@@ -1183,7 +1183,7 @@ func _on_potion_menu_choice(action: String, slot: int) -> void:
 		game.run.player.potions[slot] = ""
 	elif not game.rules.use_potion(game.run, null, slot):
 		return
-	if not SaveService.store(game.run):
+	if not _store_run():
 		_show_save_error("ui.persistence.detail.phialChoiceHold")
 		return
 	_close_overlay()
@@ -1482,7 +1482,7 @@ func _on_shop_choice(id: String) -> void:
 		_finish_node()
 		return
 	if id == "quest:flamelessLantern":
-		if game.quests.buy_usurper(game.run) and SaveService.store(game.run):
+		if game.quests.buy_usurper(game.run) and _store_run():
 			_refresh_shop()
 		else:
 			_show_save_error("ui.persistence.detail.emptyLanternPurchaseHold")
@@ -1514,7 +1514,7 @@ func _on_shop_choice(id: String) -> void:
 		"potions":
 			game.run.player.potions[game.run.player.potions.find("")] = item_id
 	row["sold"] = true
-	if SaveService.store(game.run):
+	if _store_run():
 		_refresh_shop()
 	else:
 		_show_save_error("ui.persistence.detail.purchaseHold")
@@ -1529,7 +1529,7 @@ func _on_shop_remove(uid_text: String) -> void:
 			break
 	game.run.player.gold -= cost
 	stock["removed"] = true
-	if SaveService.store(game.run):
+	if _store_run():
 		_refresh_shop()
 	else:
 		_show_save_error("ui.persistence.detail.removedCardHold")
@@ -1545,7 +1545,7 @@ func _prepare_encounter(n: MapNode) -> void:
 			enemies = game.rewards.roll_encounter(game.run, n.type, n.row, n)
 	game.run.pending_combat = n.type
 	game.run.pending_enemy_ids = enemies
-	if not SaveService.store(game.run):
+	if not _store_run():
 		_show_save_error("ui.persistence.detail.encounterFreeze")
 		return
 	_resume_pending_combat()
@@ -1653,7 +1653,7 @@ func _on_combat_over(result: String) -> void:
 		game.run.pending_combat = null
 		game.run.pending_enemy_ids = null
 		game.run.pending_run_end = {"outcome": "death"}
-		if not SaveService.store(game.run):
+		if not _store_run():
 			_show_save_error("ui.persistence.detail.fallHold")
 			return
 		_route_run()
@@ -1672,14 +1672,14 @@ func _on_combat_over(result: String) -> void:
 			scratch.erase("pendingBequest")
 		_map.clear_current()
 		game.run.map = _map.to_dict()
-		if not SaveService.store(game.run):
+		if not _store_run():
 			_show_save_error("ui.persistence.detail.shadeVictoryHold")
 			return
 		_route_run()
 		return
 	if node.type == "boss" and game.run.act == 2:
 		game.run.pending_run_end = {"outcome": "win"}
-		if not SaveService.store(game.run):
+		if not _store_run():
 			_show_save_error("ui.persistence.detail.finalVictoryHold")
 			return
 		_route_run()
@@ -1709,7 +1709,7 @@ func _on_combat_over(result: String) -> void:
 		"taken": {"gold": false, "card": false, "potion": false, "relic": false},
 		"slain_enemy": slain_enemy,
 	}
-	if not SaveService.store(game.run):
+	if not _store_run():
 		_show_save_error("ui.persistence.detail.victoryRewardsHold")
 		return
 	_route_run()
@@ -1799,7 +1799,7 @@ func _on_reward_claimed(what: StringName, id: String) -> void:
 			if not id.is_empty():
 				game.rewards.gain_relic(game.run, id)
 	taken[key] = true
-	if not SaveService.store(game.run):
+	if not _store_run():
 		_show_save_error("ui.persistence.detail.claimedRewardHold")
 
 
@@ -1826,7 +1826,7 @@ func _on_potion_replace(choice: String, id: String) -> void:
 	var pending: Dictionary = game.run.pending_reward
 	var taken: Dictionary = pending["taken"]
 	taken["potion"] = true
-	if SaveService.store(game.run):
+	if _store_run():
 		_show_pending_reward()
 	else:
 		_show_save_error("ui.persistence.detail.phialChoiceHold")
@@ -1836,7 +1836,7 @@ func _on_reward_finished() -> void:
 	game.run.pending_reward = null
 	_map.clear_current()
 	game.run.map = _map.to_dict()
-	if SaveService.store(game.run):
+	if _store_run():
 		_route_run()
 	else:
 		_show_save_error("ui.persistence.detail.clearedWaystoneHold")
@@ -1858,7 +1858,7 @@ func _show_boss_relic() -> void:
 	else:
 		offer = game.rewards.roll_boss_relics(game.run)
 		game.run.quest_scratch["bossRelicOffer"] = offer.duplicate()
-		if not SaveService.store(game.run):
+		if not _store_run():
 			_show_save_error("ui.persistence.detail.crownRelicsHold")
 			return
 	var choices: Array[Dictionary] = []
@@ -1888,7 +1888,7 @@ func _on_boss_relic_chosen(id: String) -> void:
 	_map = WorldMap.benchmark(game.run)
 	game.quests.decorate_map(game.run, _map)
 	game.run.map = _map.to_dict()
-	if SaveService.store(game.run):
+	if _store_run():
 		_show_map()
 		# The act-change plate rides over the arriving map, concurrent rather
 		# than awaited (reward.js:181 fires it on the boss-reward continue).
@@ -2055,7 +2055,7 @@ func _on_bequest_chosen(id: String) -> void:
 	game.run.quest_scratch["ownShade"] = scratch
 	var pending: Dictionary = game.run.pending_run_end
 	pending["bequestAnswered"] = true
-	if SaveService.store(game.run):
+	if _store_run():
 		_show_run_end()
 	else:
 		_show_save_error("ui.persistence.detail.bequestHold")
@@ -2154,7 +2154,7 @@ func _on_terminal_commit(_id: String) -> void:
 		})
 	game.run.pending_run_end = null
 	game.run.pending_dawn = {"events": events, "cursor": 0}
-	if SaveService.store(game.run):
+	if _store_run():
 		_show_dawn()
 	else:
 		_show_save_error("ui.persistence.detail.dawnHold")
@@ -2200,7 +2200,7 @@ func _on_dawn_advance(screen: DawnScreen) -> void:
 	var dawn: Dictionary = game.run.pending_dawn
 	var next: int = int(float(str(dawn.get("cursor", 0)))) + 1
 	dawn["cursor"] = next
-	if not SaveService.store(game.run):
+	if not _store_run():
 		_show_save_error("ui.persistence.detail.dawnCursorHold")
 		return
 	var events: Array = dawn["events"]
@@ -2270,7 +2270,7 @@ func _on_monument_choice(id: String) -> void:
 	game.run.pending_combat = "monster"
 	game.run.pending_enemy_ids = ["ownShade%d" % tier]
 	game.run.pending_quest_id = "ownShade"
-	if not SaveService.store(game.run):
+	if not _store_run():
 		_show_save_error("ui.persistence.detail.shadeDuelHold")
 		return
 	_vigil.last_fall = null
@@ -2301,7 +2301,7 @@ func _on_hollow_choice(id: String) -> void:
 				(_route_screen as HollowScreen).show_error(
 					str(result.get("message", "")))
 			return
-		if not SaveService.store(game.run):
+		if not _store_run():
 			_show_save_error("ui.persistence.detail.hollowPriceHold")
 			return
 		_show_hollow()
@@ -2354,7 +2354,7 @@ func _show_lamplighter() -> void:
 			ids.append(pool.pop_at(game.run.rng.pick_index(pool.size())))
 		offer = {"boons": ids}
 		game.run.quest_scratch["lamplighterOffer"] = offer
-		if not SaveService.store(game.run):
+		if not _store_run():
 			_show_save_error("ui.persistence.detail.lamplighterGiftsHold")
 			return
 	var aspect: Dictionary = content.aspects[game.run.aspect]
@@ -2381,7 +2381,7 @@ func _on_lamplighter_confirmed(boon_id: String, art_id: StringName) -> void:
 	game.rewards.apply_boon(game.run, boon_id)
 	game.run.pending_lamplighter = false
 	game.run.quest_scratch.erase("lamplighterOffer")
-	if SaveService.store(game.run):
+	if _store_run():
 		_show_map()
 	else:
 		_show_save_error("ui.persistence.detail.lamplighterGiftHold")
