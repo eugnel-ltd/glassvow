@@ -795,3 +795,35 @@ Fuse pass (same day, seeded from the first edit):
 
 sha256 `c1d4d34d6f1299f2a162a3fafb9d76ec61ec4e635914aedfd65e5493774447dd`.
 
+### #293 Act III tiles — unmerged candidates, not landed
+
+Issue #293 requires landed rows to be visually accepted. No fol2 named-device
+decision exists, so these files are **review evidence only**. They are not
+under `assets/art/map/`, they have no `provenance.json` record, and
+`record_schema.verdicts` remains `accepted` / `rejected`. `pending` is not a
+shipping state. Copying either PNG into `assets/art/map/materials/` without an
+`accepted` fol2 record will fail `tools/check_map_assets.py` honestly. On
+acceptance, copy the PNGs only; run Godot import at that materials path to
+generate fresh `.import` sidecars; then write accepted provenance. Do not copy
+review-folder sidecars.
+
+Evidence (exact candidate PNG and wrap bytes) lives in
+`docs/reviews/293/act3-tiles/`. Blocker and land-path:
+`docs/reviews/293/act3-tiles/blocker.md`.
+
+#### obsidian-dust ground candidate
+
+Intended land path: `assets/art/map/materials/act3-ground-obsidian-dust.png`
+(1024×1024 opaque RGB). Neutral scalar grain duplicated into RGB; act hue
+belongs to `MapRegions` ramp bands. Method: `tileable-value-noise-fbm`,
+seed `293201`.
+Measured mean `0.500000`, 8×8 spread `0.132904` ≤ 0.15, seam `0.493706` ≤ 3.0.
+sha256 `0ea765c1f5b4e4599b6c9e8baadf387a1dacfc3d02e77c365a3bc97de06e4144`.
+
+#### obsidian-facet prop candidate
+
+Intended land path: `assets/art/map/materials/act3-prop-obsidian-facet.png`.
+Same contract, method `tileable-worley-f2f1+fbm-grit`, seed `293202`. Measured
+mean `0.500000`, 8×8 spread `0.089249` ≤ 0.15, seam `1.163891` ≤ 3.0.
+sha256 `0d4b6d74a58c11d06c65225943b8a8674f66c56fcb796bd4ce1d05221a525d17`.
+
