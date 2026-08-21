@@ -68,7 +68,7 @@ static func run(fails: Array[String]) -> void:
 		fails.append("ContentDB: act 4 reward gold did not clamp to the final authored row")
 	rewards.gain_relic(pickup_run, "sweetRoot")
 	rewards.gain_relic(pickup_run, "hollowCrown")
-	if pickup_run.player.max_hp != 70 or pickup_run.player.hp != 70 \
+	if pickup_run.player.max_hp != 62 or pickup_run.player.hp != 62 \
 			or pickup_run.player.energy_max != 4:
 		fails.append("ContentDB: instant relic pickup laws are not applied")
 	pickup_run.unlocks = ["card:quakeblow", "relic:smolderingCoal"]

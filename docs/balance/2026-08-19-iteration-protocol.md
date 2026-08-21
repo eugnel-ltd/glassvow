@@ -169,6 +169,21 @@ SHA `c96ed731…`. Arm 2 78.5 / 39.5 / 86.0 / 50.5. Holdout 89.5 / 94.5 / 67.0 /
   now **0**. C2 FAIL all four (closest Dusk V0 +28.61). Dusk V5 holdout
   ceiling 4.5%. |Ash−Dusk| V0 **+55.5 pp**. C1 miss is not Ash-only.
   **No second 5h loop. No Smolder decay.** Identity keepers stay.
+- **H22 Ash HP 88→96 was reverted at `ad4b99b`.** Landscape Vow-5 Ash CEM
+  ceiling **90.5%** tripped the fail-closed 90% gate. Working content SHA
+  returned to H17 `f88753aa…` (Ash 88, Dusk 72). Do not raise Ash HP again
+  on that lever.
+- **H27 Dusk HP 72→64 is a keeper.** Isolated product knob
+  `aspects.duskblade.maxHp` (and the duskblade `player` copy). Ash stays 88.
+  Relics, chips, cards, and arts unchanged. Phase A vs H17: Dusk V0 arm 2
+  **45.0 → 36.0 (−9.0 pp)**; Dusk V0 holdout **79.0 → 66.0 (−13.0, not a
+  ≥20 pp collapse)**; all four arm-2 **<50%** (36.0 / 12.0 / 25.5 / 5.0);
+  |Ash−Dusk| **+5.5 / +13.5 pp**. Ash cells bit-identical. Old 80/55 VETO
+  is record. Content SHA `ea5d6cab…`. Snapshot:
+  `docs/balance/data/421-h27/phase-a.json`. Readout:
+  [`2026-08-21-421-hypothesis-27.md`](2026-08-21-421-hypothesis-27.md).
+  **Do not landscape in this pass** — Codex owns disposition and any later
+  exam. No second knob.
 
 Out of bounds unless a signed iteration brings one in: map weights, potion
 probability, act-transition heal, the five `vows` penalties, mix, `port_fixtures/`.

@@ -186,7 +186,7 @@ static func run(fails: Array[String]) -> void:
 		"first-clear II-prime elite pins both landed axes")
 	_check(fails, fourth.nodes[4].enemies == ["eternalKeeper"],
 		"first-clear hearth-prime pins the Eternal Keeper")
-	_check(fails, lifecycle.player.hp == 26,
+	_check(fails, lifecycle.player.hp == 23,
 		"each boss transition mends 35 percent without exceeding max HP")
 	var boss_map: WorldMap = WorldMap.slice()
 	boss_map.at = 0
