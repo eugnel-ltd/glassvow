@@ -64,27 +64,38 @@ one centred mesh, `WIDEST_STOP` 3 → `ZOOM_STOPS[3] = 28.0`, tilt
 **Review (human picture).** Non-transparent 1280×720 viewport, opaque
 background, dim ambient, two directional lights, `_clay_material`
 (`StandardMaterial3D` gray, roughness 0.82, specular off,
-`tools/raster_map_silhouette.gd:265-272`), `_add_review_light` (key 0.72 /
-fill 0.22, `tools/raster_map_silhouette.gd:275-287`), `REVIEW_STOP` 2 →
-zoom 20. Twenty instances on a 5×4 lattice, gap 2.6 m, seed 292 for yaw
+`tools/raster_map_silhouette.gd:269-276`), `_add_review_light` (key 0.72 /
+fill 0.22, `tools/raster_map_silhouette.gd:279-291`), `REVIEW_STOP` 2 →
+zoom 20. Twenty instances on a 5×4 lattice, `GAP_X` 1.85 m / `GAP_Z` 1.45 m
+so a 16:9 review ortho can keep pad on both axes, seed 292 for yaw
 (`rng.randf() * TAU`) and scale (`0.82 + rng.randf() * 0.27`)
-(`tools/raster_map_silhouette.gd:303-325`).
+(`tools/raster_map_silhouette.gd:307-338`). Review-only `_fit_review_camera`
+then scales `camera.size` around that lattice; production mask zoom stays
+`WIDEST_STOP`.
 
 ```gdscript
-# tools/raster_map_silhouette.gd:316-323
+# tools/raster_map_silhouette.gd:323-330
 var col: int = i % COLS
 var row: int = i / COLS
 var yaw: float = rng.randf() * TAU
 var scale: float = 0.82 + rng.randf() * 0.27
 var origin: Vector3 = Vector3(
-        (float(col) - 2.0) * GAP,
+        (float(col) - 2.0) * GAP_X,
         0.0,
-        (float(row) - 1.5) * GAP)
+        (float(row) - 1.5) * GAP_Z)
 ```
 
-`land_map_glb.review_png` (`tools/land_map_glb.py:106-122`) only asserts
-the PNG exists. Existence is a land-step, not a Gate. The Gate is
-`human_review.verdict` in `docs/reviews/292/gate-report.json`.
+`land_map_glb.review_png` (`tools/land_map_glb.py:155-172`) only asserts
+the PNG exists under `docs/reviews/<ticket>/`. Existence is a land-step, not
+a Gate. `--review-ticket` is required; the lander must not default to closed
+#292. Default landing copies the GLB and may write the capture; it does not
+append a canonical provenance row. Writing `accepted` requires
+`--accept-signed-capture` on an existing signed PNG plus an explicit
+`--reviewer` (`tools/land_map_glb.py:67-76`). There is no default reviewer.
+`pending` is not a shipping verdict. #292's signed close lives in
+`docs/reviews/292/gate-report.json`. #293's standing-monument capture has no
+owner visual verdict, so it stays out of canonical provenance and
+`check_map_assets` must fail until fol2 accepts.
 
 Do not ask a human to sign an unreadable capture. Do not upscale a mask
 and call it review. Do not close a one-module ticket as if it had passed
@@ -117,11 +128,12 @@ test that. One kit does not replace placeholders. Further acts stay on
 
 ## When to Apply
 
-- Any `--review=` recapture under `docs/reviews/292/`.
+- Any `--review=` recapture under `docs/reviews/<ticket>/`.
 - Any ask for a human to sign "same item" or "contour repetition" from a PNG.
 - Any edit that "simplifies" review back onto `SILHOUETTE_SHADER`.
-- Landing the next ordinary GLB with `tools/land_map_glb.py` (it writes the
-  review PNG from this harness).
+- Landing the next ordinary GLB with `tools/land_map_glb.py` (default writes
+  the review PNG from this harness, not provenance). After the owner signs,
+  `--accept-signed-capture` + `--reviewer` writes the canonical `accepted` row.
 
 ## Examples
 
