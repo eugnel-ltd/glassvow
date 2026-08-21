@@ -795,3 +795,40 @@ Fuse pass (same day, seeded from the first edit):
 
 sha256 `c1d4d34d6f1299f2a162a3fafb9d76ec61ec4e635914aedfd65e5493774447dd`.
 
+### #293 Act IV tiles — unmerged candidates, not landed
+
+Issue #293 requires landed rows to be visually accepted. No fol2 named-device
+decision exists, so these files are **review evidence only**. They are not
+under `assets/art/map/`, they have no `provenance.json` record, and
+`record_schema.verdicts` remains `accepted` / `rejected`. `pending` is not a
+shipping state. Copying either PNG into `assets/art/map/materials/` without an
+`accepted` fol2 record will fail `tools/check_map_assets.py` honestly. On
+acceptance, copy the PNGs only; run Godot import at that materials path to
+generate fresh `.import` sidecars; then write accepted provenance. Do not copy
+review-folder sidecars.
+
+Evidence (exact candidate PNG and wrap bytes) lives in
+`docs/reviews/293/act4-tiles/`. Wrap captures tile the original 1024px
+image 2×2, then resize to 512×512 with Lanczos. Blocker and land-path:
+`docs/reviews/293/act4-tiles/blocker.md`.
+
+#### pale-road ground candidate
+
+Intended land path: `assets/art/map/materials/act4-ground-pale-road.png`
+(1024×1024 opaque RGB). Neutral scalar grain duplicated into RGB; act hue
+belongs to `MapRegions` ramp bands. Method: `tileable-value-noise-fbm`, seed
+`293301`. Measured mean `0.500000`, 8×8 spread `0.076390` ≤ 0.15, seam
+`0.523876` ≤ 3.0.
+sha256 `78c78d6168c79c14346f10270a9a40f55a8536020d3c8ddd3de7c7c434324240`.
+
+#### inverted-hearth-stone prop candidate
+
+Intended land path: `assets/art/map/materials/act4-prop-inverted-hearth-stone.png`.
+Same contract, seed `293302`. Measured mean `0.500000`, spread `0.137995`, seam
+`0.368118`.
+sha256 `1908fb063ca92ba6e53cddf33efa4f943624c24eb22654560c29aec45a7471e8`.
+
+Act IV under-key gap 0.282132 → 0.282, derived from live `GROUND_VALUE` /
+`PROP_VALUE` / `BAND_KEY`. Unchanged after binding because `tex_mean` /
+candidate mean is 0.5.
+
