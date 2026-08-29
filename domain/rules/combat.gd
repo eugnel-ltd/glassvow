@@ -21,10 +21,18 @@ const POTION_IDS: Array[String] = [
 	"healing", "strength", "swift", "block", "fire", "venom", "energy",
 ]
 
+static var _research421_scoreline_damage: int = 0
+static var _research421_scoreline_relic_id: String = ""
+
 
 func _init(content_db: ContentDB) -> void:
 	content = content_db
 	quests = QuestRules.new(content_db)
+
+
+static func set_research421_scoreline_commitment(damage: int, relic_id: String) -> void:
+	_research421_scoreline_damage = damage
+	_research421_scoreline_relic_id = relic_id
 
 
 static func handles_special(id: String) -> bool:
@@ -488,6 +496,7 @@ func damage_player(
 
 
 func lose_combat(run: RunState, cb: CombatState) -> void:
+	_research421_expire_combat(cb)
 	cb.over = true
 	cb.result = "loss"
 	cb.player.hp = 0
@@ -496,6 +505,7 @@ func lose_combat(run: RunState, cb: CombatState) -> void:
 
 
 func _win_combat(run: RunState, cb: CombatState) -> void:
+	_research421_expire_combat(cb)
 	cb.over = true
 	cb.result = "win"
 	quests.on_combat_win(run, cb)
@@ -602,6 +612,7 @@ func _begin_finale_handoff(run: RunState, cb: CombatState, e: EnemyCombatant) ->
 
 
 func _on_enemy_death(run: RunState, cb: CombatState, e: EnemyCombatant) -> void:
+	_research421_expire_scoreline(cb, e.idx, "target-death")
 	e.hp = 0
 	var smolder: int = _sget(e.statuses, "poison")  # capture before the vessel empties
 	e.statuses = {}
@@ -836,6 +847,7 @@ func play_card(run: RunState, cb: CombatState, uid: int, target_idx: Variant = n
 	if not cb.over and run.has_relic("silkFan") and cb.counters_played % 3 == 0:
 		gain_block_player(cb, 3, false, run)
 		_proc(cb, "silkFan")
+	_research421_scoreline_after_card(run, cb, inst, target)
 
 	if card_type == "power":
 		cb.queue.append({"t": EventTypes.POWER_CONSUMED, "uid": inst.uid})
@@ -847,6 +859,70 @@ func play_card(run: RunState, cb: CombatState, uid: int, target_idx: Variant = n
 			cb.discard.append(inst)
 			cb.queue.append({"t": EventTypes.TO_DISCARD, "uid": inst.uid})
 	return true
+
+
+func _research421_scoreline_after_card(
+	run: RunState,
+	cb: CombatState,
+	inst: CardInst,
+	target: EnemyCombatant
+) -> void:
+	if run.aspect != 0 or String(inst.id) != "executioner" \
+			or _research421_scoreline_damage <= 0 \
+			or _research421_scoreline_relic_id.is_empty() \
+			or not run.has_relic(_research421_scoreline_relic_id) \
+			or cb.over or target == null or target.hp <= 0 \
+			or not cb.research421_scoreline_targets.has(target.idx):
+		return
+	cb.queue.append({
+		"t": &"research421Scoreline", "stage": "consumer", "idx": target.idx,
+	})
+	cb.research421_scoreline_targets.erase(target.idx)
+	cb.queue.append({
+		"t": &"research421Scoreline", "stage": "mediator-consume",
+		"idx": target.idx, "value": -1,
+	})
+	var realised: int = hit_enemy(run, cb, target, _research421_scoreline_damage, false)
+	cb.queue.append({
+		"t": &"research421Scoreline", "stage": "payoff", "idx": target.idx,
+		"requested": _research421_scoreline_damage, "realised": realised,
+	})
+
+
+func _research421_scoreline_producer(
+	run: RunState, cb: CombatState, inst: CardInst, target: EnemyCombatant, loss: int
+) -> void:
+	if run.aspect != 0 or String(inst.id) != "chisel" \
+			or _research421_scoreline_damage <= 0 \
+			or _research421_scoreline_relic_id.is_empty() \
+			or not run.has_relic(_research421_scoreline_relic_id) \
+			or loss <= 0 or cb.over or target.hp <= 0:
+		return
+	var replaced: bool = cb.research421_scoreline_targets.has(target.idx)
+	cb.queue.append({
+		"t": &"research421Scoreline", "stage": "producer",
+		"idx": target.idx, "loss": loss,
+	})
+	cb.research421_scoreline_targets[target.idx] = true
+	cb.queue.append({
+		"t": &"research421Scoreline", "stage": "mediator-set",
+		"idx": target.idx, "value": 1, "replaced": replaced,
+	})
+
+
+func _research421_expire_scoreline(cb: CombatState, idx: int, reason: String) -> void:
+	if not cb.research421_scoreline_targets.has(idx):
+		return
+	cb.research421_scoreline_targets.erase(idx)
+	cb.queue.append({
+		"t": &"research421Scoreline", "stage": "expiry",
+		"idx": idx, "reason": reason,
+	})
+
+
+func _research421_expire_combat(cb: CombatState) -> void:
+	for idx_v: Variant in cb.research421_scoreline_targets.keys():
+		_research421_expire_scoreline(cb, int(float(str(idx_v))), "combat-end")
 
 
 func exhaust_card(run: RunState, cb: CombatState, inst: CardInst) -> void:
@@ -884,7 +960,12 @@ func _apply_effect(
 				elif target != null:
 					if cb.over:
 						return
-					hit_enemy(run, cb, target, n, true, damage_mult)
+					var realised_damage: int = hit_enemy(
+						run, cb, target, n, true, damage_mult
+					)
+					_research421_scoreline_producer(
+						run, cb, inst, target, realised_damage
+					)
 		"block":
 			gain_block_player(cb, _ji(fx["n"]), true, run)
 		"draw":

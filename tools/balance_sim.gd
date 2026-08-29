@@ -6,6 +6,11 @@ const Policy: GDScript = preload("res://tools/balance_policy.gd")
 const Metrics: GDScript = preload("res://tools/balance_metrics.gd")
 const Incentives: GDScript = preload("res://tools/vow_incentives.gd")
 const PROFILE: String = "mature-three-act-no-side-state-v1"
+const RESEARCH421_SCORELINE_OATH: String = "research421ScorelineOath"
+const RESEARCH421_SCORELINE_LEVELS: Dictionary = {
+	"off": 0, "faultline-bonus-6": 6,
+}
+const RESEARCH421_COMMITMENT_LEVELS: Array[String] = ["none", "scoreline-oath"]
 static var _probe: Dictionary = {}
 func _initialize() -> void:
 	var opts: Dictionary = _options(OS.get_cmdline_user_args())
@@ -67,8 +72,17 @@ func _initialize() -> void:
 static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0,
 		ban: PackedStringArray = PackedStringArray(), policy: Dictionary = {},
 		random_build: bool = false, random_play: bool = false, mix: Dictionary = {},
-		vigil: VigilState = null, strip_start_hex: bool = false) -> Dictionary:
+		vigil: VigilState = null, strip_start_hex: bool = false,
+		research421: Dictionary = {}) -> Dictionary:
 	_probe = {}
+	var research_fault: String = configure_research421_scoreline_commitment(
+		research421, content
+	)
+	if not research_fault.is_empty():
+		return {
+			"seed": seed, "aspect": aspect, "vow": vow, "outcome": "error",
+			"error": research_fault,
+		}
 	Pilot.set_ban(ban)
 	Pilot.apply_policy(policy)
 	Pilot.set_modes(random_build, random_play)
@@ -81,6 +95,12 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 		profile["quests"] = vigil.quests.duplicate(true)
 		profile["shards"] = vigil.shards.duplicate()
 	var run: RunState = RunState.new_run(content, seed, "sim-%s-%d" % [aspect, seed], profile)
+	research_fault = apply_research421_scoreline_commitment(content, run, research421)
+	if not research_fault.is_empty():
+		return {
+			"seed": seed, "aspect": aspect, "vow": vow, "outcome": "error",
+			"error": research_fault,
+		}
 	if strip_start_hex:
 		_strip_hex(run)
 	_apply_ban(run)
@@ -444,6 +464,60 @@ static func _bump(key: String, n: int = 1) -> void:
 	_probe[key] = int(float(str(_probe.get(key, 0)))) + n
 
 
+static func configure_research421_scoreline_commitment(
+	settings: Dictionary, content: ContentDB = null
+) -> String:
+	CombatRules.set_research421_scoreline_commitment(0, "")
+	if content != null:
+		content.relics.erase(RESEARCH421_SCORELINE_OATH)
+	if settings.is_empty():
+		return ""
+	if not settings.has("schemaVersion") or typeof(settings["schemaVersion"]) != TYPE_STRING \
+			or str(settings["schemaVersion"]) != "scoreline-commitment-v1":
+		return "research421 requires schemaVersion=scoreline-commitment-v1"
+	for key_v: Variant in settings.keys():
+		var key: String = str(key_v)
+		if key not in ["schemaVersion", "scorelinePayoff", "scorelineCommitment"]:
+			return "research421 unknown key %s" % key
+	if not settings.has("scorelinePayoff") or not settings.has("scorelineCommitment"):
+		return "research421 requires both registered factors"
+	var payoff_v: Variant = settings.get("scorelinePayoff", "off")
+	if typeof(payoff_v) != TYPE_STRING \
+			or not RESEARCH421_SCORELINE_LEVELS.has(str(payoff_v)):
+		return "research421 scorelinePayoff has unregistered level"
+	var commitment_v: Variant = settings.get("scorelineCommitment", "none")
+	if typeof(commitment_v) != TYPE_STRING \
+			or str(commitment_v) not in RESEARCH421_COMMITMENT_LEVELS:
+		return "research421 scorelineCommitment has unregistered level"
+	if str(commitment_v) == "scoreline-oath" and str(payoff_v) == "off":
+		return "research421 scoreline-oath requires Scoreline payoff"
+	var damage: int = _ji(RESEARCH421_SCORELINE_LEVELS[str(payoff_v)])
+	CombatRules.set_research421_scoreline_commitment(
+		damage, RESEARCH421_SCORELINE_OATH if damage > 0 else ""
+	)
+	return ""
+
+
+static func apply_research421_scoreline_commitment(
+	content: ContentDB, run: RunState, settings: Dictionary
+) -> String:
+	content.relics.erase(RESEARCH421_SCORELINE_OATH)
+	if settings.is_empty() or str(settings.get("scorelineCommitment", "none")) == "none" \
+			or run.aspect != 0:
+		return ""
+	if run.player.relics.has(RESEARCH421_SCORELINE_OATH):
+		return "research421 Scoreline Oath already present"
+	if not content.cards.has("executioner"):
+		return "research421 Executioner content unavailable"
+	content.relics[RESEARCH421_SCORELINE_OATH] = {
+		"name": "Scoreline Oath", "text": "Research-only Scoreline commitment.",
+		"rarity": "special", "score": 0,
+	}
+	run.player.relics.append(RESEARCH421_SCORELINE_OATH)
+	run.player.deck.append(CardInst.new(run.next_uid(), &"executioner", false))
+	return ""
+
+
 static func _harvest_fight(game: GlassvowGame) -> void:
 	var relics: Array[String] = game.run.player.relics
 	if relics.has("ashenCore"):
@@ -487,6 +561,14 @@ static func _harvest_fight(game: GlassvowGame) -> void:
 				_bump("wardGainedBySmother")
 			elif last_play == "deflect":
 				_bump("wardGainedByDeflect")
+		elif kind == "research421Scoreline":
+			var stage: String = str(event.get("stage", ""))
+			_bump("scoreline%sEvents" % stage.to_pascal_case())
+			if stage == "payoff":
+				_bump("scorelinePayoffRequested", _ji(event.get("requested", 0)))
+				_bump("scorelinePayoffRealised", _ji(event.get("realised", 0)))
+			elif stage == "expiry":
+				_bump("scorelineExpiry%s" % str(event.get("reason", "")).to_pascal_case())
 		elif kind == "relicProc":
 			var relic_id: String = str(event.get("id", ""))
 			if relic_id == "ashenCore":

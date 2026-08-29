@@ -32,6 +32,9 @@ var hp_lost: int = 0
 var prism_procd: bool = false
 ## True when the Eternal Keeper's lethal threshold handed the fight to #312.
 var finale_handoff: bool = false
+## Research-only, combat-scoped Scoreline mediator for issue #421. It is absent
+## from fixture/save projections and remains empty without the commitment Oath.
+var research421_scoreline_targets: Dictionary = {}
 
 
 func living_enemies() -> Array[EnemyCombatant]:
