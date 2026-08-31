@@ -1,0 +1,265 @@
+{
+  "authority": {
+    "decision": "ADMIT_FOR_ONE_PHASE_A",
+    "excludes": [
+      "landscape",
+      "P9 claim",
+      "parameter rescue",
+      "second Phase A",
+      "push",
+      "pull request",
+      "merge"
+    ],
+    "scope": "Exactly one simulator Phase A on the admitted STREAM-B-v2 implementation."
+  },
+  "budget": {
+    "comparatorRows": 1200,
+    "godotRowProcesses": 1,
+    "landscapeRows": 0,
+    "mainPhaseARows": 4000,
+    "maximumSimulatorRows": 5200,
+    "modelCallsInsideExecutionAndDecision": 0,
+    "phaseInvocations": 1,
+    "reserveRows": 0,
+    "wallTimeSeconds": 2700
+  },
+  "cohorts": {
+    "arm1": "Planned build / competent play; primary reachability and win cohort.",
+    "arm2": "Random build / competent play; anti-fitness and GO comparator.",
+    "arm3": "Planned build / random play; reliability control.",
+    "arm4": "Random build / random play; reliability control.",
+    "holdout": "Planned build / competent play with mix none; veto only, never fitness or selection."
+  },
+  "comparators": {
+    "current-main": "Frozen origin/main content under the admitted engine and p9-w0-v2 default policy; this is a content comparator, not a replay under the old p8 executable.",
+    "explicit-off": "Treatment content with combat.wardSurplus explicitly fixed to 0.0; acquisition valuation remains, while the surplus-Ward play bonus is off.",
+    "null-card": "Treatment projection with facetBurst removed from cards and pools, under the same p9-w0-v2 default policy; it must be semantically identical to current-main.",
+    "omitted": "Treatment content with no wardSurplus override supplied; Policy.resolve supplies the preregistered default 4.5. Its four controls and holdout are the main Phase A."
+  },
+  "content": {
+    "candidateFileSha256": "f0c30dca034af0b962c0d2af332d09a578d4a7c8f6fc760004efc54ccc6f4e5a",
+    "candidatePath": "content/full-content.json",
+    "candidateSemanticSha256": "1f6a74a285e7b17b99e3cf09a0a85a5ee64c2f7ed30465d3210daf940c9b1adf",
+    "currentMainFileSha256": "a0d608a5142d2e3aab799cdf33d3163922b402c2aaf2a895e46e096399b56cf1",
+    "currentMainPath": "research/issue-421-grammar-only/inputs/current-main-c28ae388-full-content.json",
+    "currentMainSemanticSha256": "38e1f4f65901fefd4e6a0f6399c5f76d17355a19c8317f4714c33c9199dbe7aa",
+    "nullCardProjection": "Deep-copy candidate; erase cards.facetBurst and every cardPools entry facetBurst.",
+    "nullCardSemanticSha256": "38e1f4f65901fefd4e6a0f6399c5f76d17355a19c8317f4714c33c9199dbe7aa",
+    "nullEqualsCurrentMainSemantically": true,
+    "sharedPoolSmolderCards": "unchanged; no pool removal or aspect rewrite is permitted"
+  },
+  "crn": {
+    "comparators": {
+      "arm": 1,
+      "aspect": "duskblade",
+      "count": 200,
+      "first": 4000,
+      "last": 4199,
+      "vows": [
+        0,
+        5
+      ]
+    },
+    "controls": {
+      "arms": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "count": 200,
+      "first": 4000,
+      "last": 4199,
+      "mix": "shipping"
+    },
+    "excluded": [
+      "3000-3039 landscape Layer 1",
+      "4200-4999 CEM training",
+      "5200-5399 reserve",
+      "roots 215/216"
+    ],
+    "holdout": {
+      "arms": [
+        1
+      ],
+      "count": 200,
+      "first": 5000,
+      "last": 5199,
+      "mix": "none"
+    },
+    "pairing": "Within each aspect/vow/cohort, identical seed is the CRN unit. current-main and null-card must match outcomeDigest and final RNG exactly. omitted and explicit-off use paired descriptive contrasts."
+  },
+  "decisionRules": {
+    "FAIL_CLOSED": "Before rows: any frozen identity, clean-tree, engine, one-shot marker or no-other-Godot check fails. After start: process failure, timeout, incomplete matrix or deterministic analysis failure. Stop with no retry.",
+    "GO": "Every frozen gate passes. This task still stops and reports; it does not start a landscape or make a P9 claim.",
+    "NO-GO": "No veto fires, but one or more scientific success gates miss. This is futility for this frozen candidate and Phase A. Stop; no landscape or rescue.",
+    "VETO": "The fixed matrix completes but any identity, reliability or holdout veto fires. Stop; no landscape or rescue.",
+    "futility": "NO-GO only; VETO and FAIL_CLOSED remain distinct failure classes.",
+    "success": "GO only."
+  },
+  "design": {
+    "comparatorPanels": "Dusk Planned x Vows 0/5 x 200 control seeds for each of current-main, explicit-off and null-card = 1200 rows.",
+    "fixedLook": "All 5200 rows complete before verdict. There is no adaptive peek, threshold change, replacement row or rescue.",
+    "mainPhaseA": {
+      "controls": "arms 1-4 x two aspects x Vows 0/5 x 200 seeds = 3200 rows",
+      "holdout": "two aspects x Vows 0/5 x 200 seeds, mix none = 800 rows"
+    },
+    "rowOrder": [
+      "omitted controls",
+      "omitted holdout",
+      "current-main comparator",
+      "explicit-off comparator",
+      "null-card comparator"
+    ]
+  },
+  "estimands": {
+    "directShatterReachability": "Per Dusk Vow in omitted arm 1, fraction of runs with at least one shatter.",
+    "facetBurstReachability": "Per Dusk Vow in omitted arm 1, fraction of runs with at least one facetBurstPlayed; direct zero-row law binds each legal Dusk play to wardSpend.",
+    "holdout": "Win rates, Vow-5 ceilings and Ash-minus-Dusk lead; veto only and never used to choose or fit a setting.",
+    "identity": "H10 Ash shatters, H11 source-scoped player-origin Dusk enemy-Smolder applications, Ash facetBurst plays, and current-main/null-card digest/RNG mismatches.",
+    "pairedWinContrasts": "CRN point differences omitted minus current-main, explicit-off and null-card for Dusk arm 1; descriptive only.",
+    "policySensitivity": "The same reachability estimand in explicit-off; omitted/default and explicit-off are the two materially different policy settings.",
+    "separation": "Per Dusk Vow, Jaccard index of seed sets activating facetBurst and directShatter.",
+    "skillGap": "Point win-rate difference Planned minus RandomBuild per aspect/vow control cell."
+  },
+  "gates": {
+    "holdoutRule": "Holdout is a veto, not fitness. Its point results cannot select a policy, tune a weight, rescue a miss or rank a successor.",
+    "scientificSuccess": [
+      "All four arm-2 point win rates are strictly below 0.50.",
+      "Planned point win rate is strictly above RandomBuild in every aspect/vow cell.",
+      "omitted facetBurst, explicit-off facetBurst and directShatter each activate in at least 5% of Dusk arm-1 runs at both vows and have a positive two-sided 95% Clopper-Pearson lower bound.",
+      "facetBurst/directShatter activation-set Jaccard is at most 0.50 at each vow."
+    ],
+    "veto": [
+      "Any stall, simulator error, incomplete row, duplicate/missing CRN coordinate, source/protocol/content/policy drift or wall-time breach.",
+      "Any Ash shatter, Ash facetBurst play, or positive source-scoped player-origin Dusk enemy-Smolder application.",
+      "Any current-main or null-card destination activation, or any matched current-main/null-card outcomeDigest or final-RNG mismatch.",
+      "Either Vow-5 holdout exceeds 0.90, or Ash-minus-Dusk holdout lead lies outside [0, 0.20] at Vow 0 or Vow 5."
+    ]
+  },
+  "hypotheses": {
+    "H0": "A provenance, identity, reliability or holdout veto fires, or one or more frozen scientific success gates miss.",
+    "H1": "Every provenance, identity, reliability, holdout and scientific success gate passes on the fixed CRN matrix."
+  },
+  "identities": {
+    "admittedPreRepairCommit": "335da48b744f80e585175c108b6c44418ffe2438",
+    "files": {
+      "content/content_db.gd": "69b0b40f202f6d5215c1395599e78adb62017aab4891e6dcd77480af15e3bfed",
+      "content/full-content.json": "f0c30dca034af0b962c0d2af332d09a578d4a7c8f6fc760004efc54ccc6f4e5a",
+      "domain/events/event_types.gd": "bcd8ee9e70a5a9a696a8dcaf93b4ec97653fc54d299609c6e4d1997b9b69107e",
+      "domain/rules/combat.gd": "bdf1c4d92a09505678aad98ab76d55eb6de5f73a889086f4074431cf69fc6f32",
+      "domain/rules/rewards.gd": "1364bad4923a1abbf7ab2d5af4d4b5c772cc6d10cb723f80adbe22ea0461df8b",
+      "locale/en.json": "527a21e8fae3016563539f98f55dac2cef0a1a86cf7c4b8ccfc259cc6bd78a2a",
+      "locale/zh-Hant.json": "fbf019c4f05a8402f86a70f042b1d55e26b72a60711b8175bd055153a6a97a2f",
+      "research/issue-421-grammar-only/inputs/current-main-c28ae388-full-content.json": "a0d608a5142d2e3aab799cdf33d3163922b402c2aaf2a895e46e096399b56cf1",
+      "research/issue-421-grammar-only/protocols/p9-w0-v1-preregistration.md": "e2c2617554e8acd7d7148bac0afffdb58fcab6b8326b845a0dd982028851b9c9",
+      "research/issue-421-grammar-only/protocols/p9-w0-v2-preregistration.md": "a593c8c3e164016f7e93919a0909c769d407a93fc6ca496b81e19e6c3d803417",
+      "research/issue-421-grammar-only/summaries/design-verdict-v1.md": "9dc504569b6f7ce6d7abb71af679f997773c9ebee24b477cd1abdc84e8868081",
+      "research/issue-421-grammar-only/summaries/system-min-spec-v1.md": "cc1289d671ef38ece07c85f0787a4e716876eafbf9f8c802836a0c9fbfa6910a",
+      "research/issue-421-grammar-only/tools/p9_w0_v2_phase_a.py": "efc3c804c86d83a6fb47395d2e33b8e68ee00b4c4a2d354ef86d384a103620bb",
+      "research/issue-421-grammar-only/tools/p9_w0_v2_phase_a_rows.gd": "948df1de0ca9176100041ddacaf6208302041b30998f07cc7c7d2916dabb7c67",
+      "research/issue-421-grammar-only/tools/p9_w0_v2_phase_a_rows.gd.uid": "2a1bfe108aec1fb3ad6005a70864347fee3c7103547e80a2208203282145ce2c",
+      "research/issue-421-grammar-only/work/card_score_check.py": "e31e5d57528f2103de9ff4cef4e7f8d214ede3552d12bbe73ff629a7a250f368",
+      "tests/test_balance_catalogue.gd": "4d6e7f97fee909602f9cf47f86fdc7ef1f0f72c6cc664fc6b1ec6647d414ccc4",
+      "tests/test_balance_sim.gd": "e17cfd47f95224cf70bf4eae682f3d836a05a88b74f5283a443d281b1511158e",
+      "tests/test_content.gd": "a3cded5f40b0128249cf93832fced253473b62f71b7a686a5f747b2d50baf694",
+      "tests/test_locale_hydration.gd": "8567fda346bd3e19a44ee5915b43e59c9aca9b6af699646beebe432b2e31c9ec",
+      "tests/test_locale_hydration_catalogue.gd": "515115ada1d24bafd4f1856d5f54ca85df492f5143503f7132ac1b471692095f",
+      "tests/test_locale_hydration_main.gd": "7d76925feedebab8ad1dadf4d627dfd66634d35295288f36977d7e1dc24439e8",
+      "tests/test_ward_cashout.gd": "42e64a9f3f7a7ff465c1b8209f54a065b0f2c9bc2a48e4bf88d3c028e8023ead",
+      "tests/test_ward_cashout.gd.uid": "622f3df26bf9f5bfdbdd3c2e95e70099b87eb216fa9fa448de9422b6528ea680",
+      "tools/balance_cem.gd": "a1d30fcfa4b29a39a853aba6e48866324457add3669afeb5a007a08105f7f079",
+      "tools/balance_pilot.gd": "b2901ddfd4981003c3d7fbea947bdca1e656d26020a8dedc7c3f1aae4eaf48f6",
+      "tools/balance_policy.gd": "e6fa4f70a229ef74fa66b1f5d536940a4cb9be93ea9cd2b30fb96f1df64fdc3a",
+      "tools/balance_sim.gd": "a9fe288600d617e0026e7d9e6782074cc5619efb218ab850ee2e1fd0836b654f",
+      "tools/p9_ward_observer.gd": "d16ac5ea539359eb70afce30c287303db91c735a711ffcff2f7afcda5713c61c",
+      "tools/p9_ward_observer.gd.uid": "b12ecab279be7805a19ff3861d18565ad860449a8c02d34465d90777e1c312e2"
+    },
+    "godotVersion": "4.7.2.stable.official.ed1daf0bf",
+    "h11Observer": "p9-w0-v2-h11-player-dusk-enemy-smolder-observer-v1",
+    "implementationHead": "8f5d184d562828e2b8099b4d16b69a126ec4527f",
+    "pilot": "p9-w0-v2",
+    "samplerExtension": "p9-w0-v2-ward-surplus-extension-v1",
+    "sourceBase": "c28ae38824f7ba2168b573002ab8b90dadd5bde1",
+    "zeroRowProtocol": "p9-w0-v2",
+    "zeroRowProtocolSha256": "a593c8c3e164016f7e93919a0909c769d407a93fc6ca496b81e19e6c3d803417"
+  },
+  "issue": 421,
+  "nonGoals": [
+    "No landscape.",
+    "No P9 or #421 acceptance claim.",
+    "No shared-pool Smolder edit.",
+    "No new content, policy tuning, optimiser, reserve seed, retry or second Phase A.",
+    "No push, pull request or merge."
+  ],
+  "outputs": {
+    "completionReceipt": "completion-receipt.json",
+    "directory": "research/issue-421-grammar-only/artifacts/p9-w0-v2-phase-a",
+    "godotLog": "godot.log",
+    "rawRows": "raw-rows.jsonl",
+    "result": "phase-a-result.json",
+    "startMarker": "start-marker.json"
+  },
+  "phaseAToolingPreflight": {
+    "assetImport": "PASS",
+    "godotProcessesAtEachToolStart": 0,
+    "pythonCompile": "PASS",
+    "pythonSelfTest": "PASS (3 checks)",
+    "rowGeneratorParse": "PASS (1 checked)",
+    "simulatorRows": 0
+  },
+  "protocolId": "p9-w0-v2-phase-a",
+  "question": "Does the admitted S1-S4 system plus the single Dusk skill facetBurst expose a reachable, separate Ward cash-out destination under competent play and a materially different policy setting while preserving frozen identity, reliability and holdout vetoes?",
+  "schemaVersion": 1,
+  "statistics": {
+    "activationFloor": 0.05,
+    "activationInterval": "Exact two-sided Clopper-Pearson 95%; alpha=0.05.",
+    "decisionLook": "One fixed look after every one of the 5200 preregistered rows.",
+    "multiplicity": "The named gates form one joint preregistered decision; no post-row threshold or family change.",
+    "pointThresholdConvention": "Arm 2 must be strictly below 0.50; activation must be at least 0.05; Jaccard and holdout ceilings are inclusive at their stated bounds."
+  },
+  "system": {
+    "S1": "Optional requires.wardAtLeast uses a generic supported-key loop; unknown keys fail closed; preview mirrors can_play.",
+    "S2": "wardBurst spends current Ward, emits wardSpend, then deals spend*per through hit_enemy with is_attack=false; Dusk-only early return; no RNG, chip, shatter or Stun.",
+    "S3": "Optional aspect is enforced by RewardRules.card_pool; facetBurst is Dusk-only and Ash is also protected by the S2 early return.",
+    "S4": "Pilot p9-w0-v2 values wardBurst at spend*per and applies frozen wardSurplus 4.5 only above both the Ward gate and incoming damage; sampler/CEM extension is separately keyed.",
+    "facetBurst": {
+      "aspect": "duskblade",
+      "cost": 1,
+      "effects": [
+        {
+          "kind": "wardBurst",
+          "per": 2,
+          "spend": 10
+        }
+      ],
+      "name": "Facet Burst",
+      "rarity": "uncommon",
+      "requires": {
+        "wardAtLeast": 10
+      },
+      "target": "enemy",
+      "text": "Spend #10# Ward. Deal @20@ damage.",
+      "type": "skill",
+      "up": {
+        "effects": [
+          {
+            "kind": "wardBurst",
+            "per": 3,
+            "spend": 10
+          }
+        ],
+        "text": "Spend #10# Ward. Deal @30@ damage."
+      },
+      "vfx": "blunt"
+    },
+    "stunBoundary": "_shatter_enemy remains the sole Stun boundary."
+  },
+  "title": "STREAM-B-v2 single simulator Phase A",
+  "zeroRowAdmission": {
+    "directCombat": "passed before this protocol; not repeated as Phase A rows",
+    "fullSuite": "exit 0; PASS (73 tests)",
+    "portFixturesDiffBytes": 0,
+    "simulatorRows": 0
+  }
+}
