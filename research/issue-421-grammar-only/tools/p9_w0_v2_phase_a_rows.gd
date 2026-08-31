@@ -1,14 +1,16 @@
 extends SceneTree
-## Frozen row generator for the single p9-w0-v2 Phase A invocation.
+## Frozen row generator for the single p9-w0-v3 Phase A invocation.
 
 const Sim: GDScript = preload("res://tools/balance_sim.gd")
 const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
 const Incentives: GDScript = preload("res://tools/vow_incentives.gd")
 const Observer: GDScript = preload("res://tools/p9_ward_observer.gd")
-const PROTOCOL_ID: String = "p9-w0-v2-phase-a"
+const PROTOCOL_ID: String = "p9-w0-v3-phase-a"
 const SEED_FIRST: int = 4000
 const SEED_COUNT: int = 200
+const EXPECTED_ROWS: int = 6400
 const ARMS: Array[int] = [1, 2, 3, 4]
+const COMPARATOR_ARMS: Array[int] = [1, 3]
 const ASPECTS: Array[String] = ["duskblade", "ashwarden"]
 const VOWS: Array[int] = [0, 5]
 
@@ -46,7 +48,7 @@ func _initialize() -> void:
 		return
 	file.store_line(JSON.stringify({
 		"t": "manifest", "protocolId": PROTOCOL_ID,
-		"protocolSha256": opts["protocolSha"], "expectedRows": 5200,
+		"protocolSha256": opts["protocolSha"], "expectedRows": EXPECTED_ROWS,
 		"godot": Engine.get_version_info().get("string", "unknown"),
 		"pilot": Pilot.VERSION, "observer": Observer.VERSION,
 		"candidateContentSha256": FileAccess.get_sha256(ContentDB.FULL_PATH),
@@ -76,7 +78,7 @@ func _initialize() -> void:
 	row_index = _write_panel(file, null_card, "null-card", {}, row_index)
 	file.flush()
 	file.close()
-	if row_index != 5200:
+	if row_index != EXPECTED_ROWS:
 		_fail("row count drifted: %d" % row_index)
 		return
 	print(JSON.stringify({"protocolId": PROTOCOL_ID, "rows": row_index, "out": out_path}))
@@ -85,11 +87,12 @@ func _initialize() -> void:
 
 func _write_panel(file: FileAccess, content: ContentDB, variant: String,
 		policy: Dictionary, row_index: int) -> int:
-	for vow: int in VOWS:
-		for seed: int in range(SEED_FIRST, SEED_FIRST + SEED_COUNT):
-			row_index += 1
-			_write_row(file, content, variant, "comparator", 1, "duskblade", vow,
-				seed, policy, false, false, {}, row_index)
+	for arm: int in COMPARATOR_ARMS:
+		for vow: int in VOWS:
+			for seed: int in range(SEED_FIRST, SEED_FIRST + SEED_COUNT):
+				row_index += 1
+				_write_row(file, content, variant, "comparator", arm, "duskblade", vow,
+					seed, policy, false, arm == 3, {}, row_index)
 	print("p9 Phase A: %s comparator complete (%d rows)" % [variant, row_index])
 	return row_index
 

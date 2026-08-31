@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Execute and decide exactly one frozen STREAM-B-v2 simulator Phase A."""
+"""Preflight, execute and decide exactly one frozen STREAM-B-v3 simulator Phase A."""
 from __future__ import annotations
 
 import argparse
@@ -15,11 +15,21 @@ import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-PROTOCOL_REL = Path("research/issue-421-grammar-only/protocols/p9-w0-v2-phase-a-preregistration.json")
+PROTOCOL_ID = "p9-w0-v3-phase-a"
+PROTOCOL_REL = Path("research/issue-421-grammar-only/protocols/p9-w0-v3-phase-a-preregistration.json")
 ROWS_REL = Path("research/issue-421-grammar-only/tools/p9_w0_v2_phase_a_rows.gd")
 CURRENT_REL = Path("research/issue-421-grammar-only/inputs/current-main-c28ae388-full-content.json")
-OUT_REL = Path("research/issue-421-grammar-only/artifacts/p9-w0-v2-phase-a")
+OUT_REL = Path("research/issue-421-grammar-only/artifacts/p9-w0-v3-phase-a")
+V2_ROWS_REL = Path("research/issue-421-grammar-only/artifacts/p9-w0-v2-phase-a/raw-rows.jsonl")
 EXIT = {"GO": 0, "NO-GO": 2, "VETO": 3, "FAIL_CLOSED": 4}
+EXPECTED_ROWS = 6400
+COMPARATOR_ARM3_ROWS = 1200
+TURN_CEILING = "turnCeiling"
+PER_CELL_RUNS = 400
+PER_CELL_BOUND = 0.02
+PER_CELL_MAX = 8
+PER_CELL_VETO_AT = 9
+WHOLE_RUN_BOUND = 0.005
 
 
 def sha256(path: Path) -> str:
@@ -56,7 +66,34 @@ def _self_test() -> None:
     assert cp_lower(0, 200) == 0.0
     assert abs(cp_lower(10, 200) - 0.0242341655) < 1e-8
     assert canonical_sha({"b": 2, "a": 1}) == canonical_sha({"a": 1, "b": 2})
-    print("PASS (3 p9-w0-v2 Phase A runner checks)")
+    matched = [
+        _synthetic_row("omitted", TURN_CEILING, 4000),
+        _synthetic_row("null-card", TURN_CEILING, 4000),
+    ]
+    matched_metrics = _reliability(matched)
+    assert matched_metrics["unmatchedCount"] == 0
+    unmatched_metrics = _reliability(matched[:1])
+    assert unmatched_metrics["unmatchedCount"] == 1
+    error_metrics = _reliability([_synthetic_row("omitted", "error", 4000)])
+    assert error_metrics["errorCount"] == 1 and error_metrics["turnCeilingCount"] == 0
+    over_cell = []
+    for seed in range(4000, 4000 + PER_CELL_VETO_AT):
+        over_cell.extend((_synthetic_row("omitted", TURN_CEILING, seed),
+                          _synthetic_row("null-card", TURN_CEILING, seed)))
+    assert _reliability(over_cell)["perCell"]["arm3:duskblade"]["exceeded"]
+    over_whole = [_synthetic_row("null-card", TURN_CEILING, seed)
+                  for seed in range(33)]
+    over_whole.extend(_synthetic_row("omitted", "loss", seed) for seed in range(6367))
+    assert _reliability(over_whole)["wholeRun"]["exceeded"]
+    assert sum(len(seeds) for seeds in _expected_matrix().values()) == EXPECTED_ROWS
+    assert _arm3_comparator_rows() == COMPARATOR_ARM3_ROWS
+    print("PASS (10 p9-w0-v3 Phase A runner checks)")
+
+
+def _synthetic_row(variant: str, outcome: str, seed: int) -> dict:
+    return {"variant": variant, "cohort": "comparator" if variant != "omitted" else "control",
+            "arm": 3, "aspect": "duskblade", "vow": 0, "seed": seed,
+            "outcome": outcome, "error": "induced" if outcome == "error" else ""}
 
 
 def _other_godot_processes() -> list[str]:
@@ -76,7 +113,7 @@ def _preflight(protocol: dict, expected_protocol_sha: str, expected_head: str,
     protocol_path = REPO / PROTOCOL_REL
     if sha256(protocol_path) != expected_protocol_sha:
         raise RuntimeError("protocol SHA-256 does not match the frozen invocation")
-    if protocol.get("protocolId") != "p9-w0-v2-phase-a":
+    if protocol.get("protocolId") != PROTOCOL_ID:
         raise RuntimeError("protocol identity drift")
     if git("rev-parse", "HEAD") != expected_head:
         raise RuntimeError("execution HEAD does not match the frozen invocation")
@@ -91,6 +128,24 @@ def _preflight(protocol: dict, expected_protocol_sha: str, expected_head: str,
         path = REPO / rel
         if not path.is_file() or sha256(path) != expected:
             raise RuntimeError(f"frozen file identity mismatch: {rel}")
+    per_cell = protocol.get("reliability", {}).get("turnCeiling", {}).get("perArmAspectCell", {})
+    whole_run = protocol.get("reliability", {}).get("turnCeiling", {}).get("wholeRun", {})
+    if per_cell != {"boundInclusive": PER_CELL_BOUND, "runs": PER_CELL_RUNS,
+                    "maximumInclusive": PER_CELL_MAX, "vetoAt": PER_CELL_VETO_AT}:
+        raise RuntimeError("frozen per-cell turnCeiling bound drift")
+    if whole_run != {"boundInclusive": WHOLE_RUN_BOUND, "runs": EXPECTED_ROWS,
+                     "maximumInclusive": 32, "vetoAbove": WHOLE_RUN_BOUND}:
+        raise RuntimeError("frozen whole-run turnCeiling bound drift")
+    if protocol.get("budget", {}).get("maximumSimulatorRows") != EXPECTED_ROWS:
+        raise RuntimeError("frozen total row count drift")
+    if protocol.get("budget", {}).get("comparatorRows") != 2400:
+        raise RuntimeError("frozen comparator row count drift")
+    if sum(len(seeds) for seeds in _expected_matrix().values()) != EXPECTED_ROWS:
+        raise RuntimeError("internal expected matrix does not contain 6400 rows")
+    if _arm3_comparator_rows() != COMPARATOR_ARM3_ROWS:
+        raise RuntimeError("arm-3 comparator panel does not contain 1200 rows")
+    if _verify_v2_arm1_identity() != 400:
+        raise RuntimeError("immutable v2 current-main/null-card arm-1 identity is not 400/400")
     candidate = json.loads((REPO / "content/full-content.json").read_text())
     current = json.loads((REPO / CURRENT_REL).read_text())
     null_card = copy.deepcopy(candidate)
@@ -111,6 +166,24 @@ def _preflight(protocol: dict, expected_protocol_sha: str, expected_head: str,
     return version, canonical_sha(candidate)
 
 
+def _verify_v2_arm1_identity() -> int:
+    blobs = [json.loads(line) for line in (REPO / V2_ROWS_REL).read_text().splitlines()
+             if line.strip()]
+    rows = [row for row in blobs if row.get("t") == "row"]
+    if len(rows) != 5200:
+        raise RuntimeError("immutable v2 raw-row count drift")
+    current = {(int(r["vow"]), int(r["seed"])): r for r in rows
+               if r["variant"] == "current-main" and r["cohort"] == "comparator"
+               and int(r["arm"]) == 1 and r["aspect"] == "duskblade"}
+    null = {(int(r["vow"]), int(r["seed"])): r for r in rows
+            if r["variant"] == "null-card" and r["cohort"] == "comparator"
+            and int(r["arm"]) == 1 and r["aspect"] == "duskblade"}
+    if set(current) != set(null) or len(current) != 400:
+        raise RuntimeError("immutable v2 arm-1 CRN coordinate drift")
+    return sum(current[key]["outcomeDigest"] == null[key]["outcomeDigest"]
+               and current[key]["rng"] == null[key]["rng"] for key in current)
+
+
 def _expected_matrix() -> dict[tuple, set[int]]:
     expected: dict[tuple, set[int]] = {}
     controls = set(range(4000, 4200))
@@ -123,9 +196,15 @@ def _expected_matrix() -> dict[tuple, set[int]]:
         for vow in (0, 5):
             expected[("omitted", "holdout", 1, aspect, vow)] = holdout
     for variant in ("current-main", "explicit-off", "null-card"):
-        for vow in (0, 5):
-            expected[(variant, "comparator", 1, "duskblade", vow)] = controls
+        for arm in (1, 3):
+            for vow in (0, 5):
+                expected[(variant, "comparator", arm, "duskblade", vow)] = controls
     return expected
+
+
+def _arm3_comparator_rows() -> int:
+    return sum(len(seeds) for key, seeds in _expected_matrix().items()
+               if key[1] == "comparator" and key[2] == 3)
 
 
 def _read_rows(path: Path, protocol: dict, protocol_sha: str) -> tuple[dict, list[dict]]:
@@ -133,7 +212,8 @@ def _read_rows(path: Path, protocol: dict, protocol_sha: str) -> tuple[dict, lis
     if not blobs or blobs[0].get("t") != "manifest":
         raise RuntimeError("row archive has no manifest")
     manifest, rows = blobs[0], blobs[1:]
-    if manifest.get("protocolSha256") != protocol_sha or manifest.get("expectedRows") != 5200:
+    if manifest.get("protocolSha256") != protocol_sha \
+            or manifest.get("expectedRows") != EXPECTED_ROWS:
         raise RuntimeError("row manifest identity drift")
     if manifest.get("pilot") != protocol["identities"]["pilot"] \
             or manifest.get("observer") != protocol["identities"]["h11Observer"]:
@@ -141,10 +221,13 @@ def _read_rows(path: Path, protocol: dict, protocol_sha: str) -> tuple[dict, lis
     if manifest.get("candidateContentSha256") != protocol["content"]["candidateFileSha256"] \
             or manifest.get("currentMainContentSha256") != protocol["content"]["currentMainFileSha256"]:
         raise RuntimeError("row manifest content drift")
-    if len(rows) != 5200 or [r.get("rowIndex") for r in rows] != list(range(1, 5201)):
+    if len(rows) != EXPECTED_ROWS \
+            or [r.get("rowIndex") for r in rows] != list(range(1, EXPECTED_ROWS + 1)):
         raise RuntimeError(f"row count/order drift: {len(rows)}")
     actual: dict[tuple, set[int]] = collections.defaultdict(set)
     for row in rows:
+        if row.get("outcome") not in ("win", "loss", TURN_CEILING, "error"):
+            raise RuntimeError(f"unexpected row outcome: {row.get('outcome')}")
         key = (row["variant"], row["cohort"], int(row["arm"]), row["aspect"], int(row["vow"]))
         seed = int(row["seed"])
         if seed in actual[key]:
@@ -167,6 +250,7 @@ def _group(rows: list[dict], variant: str, cohort: str, arm: int,
 def _summary(rows: list[dict]) -> dict:
     wins = sum(r["outcome"] == "win" for r in rows)
     return {"runs": len(rows), "wins": wins, "winRate": wins / len(rows),
+            "turnCeilings": sum(r["outcome"] == TURN_CEILING for r in rows),
             "stalls": sum(r["outcome"] == "stall" for r in rows),
             "errors": sum(r["outcome"] == "error" for r in rows)}
 
@@ -177,12 +261,72 @@ def _activation(rows: list[dict], key: str) -> dict:
             "clopperPearsonLower95": cp_lower(len(seeds), len(rows)), "seeds": sorted(seeds)}
 
 
+def _row_coordinate(row: dict) -> dict:
+    return {"rowIndex": row.get("rowIndex"), "variant": row["variant"],
+            "cohort": row["cohort"], "arm": int(row["arm"]),
+            "aspect": row["aspect"], "vow": int(row["vow"]), "seed": int(row["seed"])}
+
+
+def _reliability(rows: list[dict]) -> dict:
+    errors = [r for r in rows if r.get("outcome") == "error" or bool(r.get("error"))]
+    ceilings = [r for r in rows if r.get("outcome") == TURN_CEILING]
+    null_twins = {(r["aspect"], int(r["vow"]), int(r["seed"])): r for r in rows
+                  if r.get("variant") == "null-card" and r.get("cohort") == "comparator"
+                  and int(r.get("arm", -1)) == 3}
+    unmatched = []
+    for row in ceilings:
+        twin = null_twins.get((row["aspect"], int(row["vow"]), int(row["seed"])))
+        if int(row["arm"]) != 3 or twin is None or twin.get("outcome") != TURN_CEILING:
+            unmatched.append(_row_coordinate(row))
+
+    per_cell = {}
+    for arm in (1, 2, 3, 4):
+        for aspect in ("duskblade", "ashwarden"):
+            count = sum(r.get("outcome") == TURN_CEILING for r in rows
+                        if r.get("variant") == "omitted" and r.get("cohort") == "control"
+                        and int(r.get("arm", -1)) == arm and r.get("aspect") == aspect)
+            per_cell[f"arm{arm}:{aspect}"] = {
+                "turnCeilings": count, "runs": PER_CELL_RUNS,
+                "rate": count / PER_CELL_RUNS, "boundInclusive": PER_CELL_BOUND,
+                "maximumInclusive": PER_CELL_MAX, "vetoAt": PER_CELL_VETO_AT,
+                "exceeded": count >= PER_CELL_VETO_AT,
+            }
+    whole_rate = len(ceilings) / len(rows) if rows else 0.0
+    return {
+        "errorCount": len(errors),
+        "errorCoordinates": [_row_coordinate(r) for r in errors],
+        "turnCeilingCount": len(ceilings),
+        "matchedCount": len(ceilings) - len(unmatched),
+        "unmatchedCount": len(unmatched),
+        "unmatchedCoordinates": unmatched,
+        "nullCardArm3TurnCeilings": sum(
+            r.get("outcome") == TURN_CEILING and r.get("variant") == "null-card"
+            and r.get("cohort") == "comparator" and int(r.get("arm", -1)) == 3
+            for r in rows),
+        "perCell": per_cell,
+        "wholeRun": {"turnCeilings": len(ceilings), "runs": len(rows), "rate": whole_rate,
+                     "boundInclusive": WHOLE_RUN_BOUND,
+                     "maximumInclusive": int(EXPECTED_ROWS * WHOLE_RUN_BOUND),
+                     "exceeded": whole_rate > WHOLE_RUN_BOUND},
+    }
+
+
 def _analyse(rows: list[dict], protocol: dict) -> tuple[str, list[str], dict]:
     veto: list[str] = []
     misses: list[str] = []
-    unreliable = [r for r in rows if r["outcome"] in ("stall", "error") or r.get("error")]
-    if unreliable:
-        veto.append(f"reliability breach in {len(unreliable)} row(s)")
+    reliability = _reliability(rows)
+    if reliability["errorCount"]:
+        veto.append(f"reliability error in {reliability['errorCount']} row(s)")
+    if reliability["unmatchedCount"]:
+        veto.append(f"unmatched turnCeiling in {reliability['unmatchedCount']} row(s)")
+    for cell, metric in reliability["perCell"].items():
+        if metric["exceeded"]:
+            veto.append(f"{cell} turnCeiling bound exceeded: "
+                        f"{metric['turnCeilings']}/{metric['runs']} (veto at 9/400)")
+    if reliability["wholeRun"]["exceeded"]:
+        whole = reliability["wholeRun"]
+        veto.append(f"whole-run turnCeiling bound exceeded: "
+                    f"{whole['turnCeilings']}/{whole['runs']} >0.5%")
     ash_rows = [r for r in rows if r["aspect"] == "ashwarden"]
     ash_shatters = sum(int(r["shatters"]) for r in ash_rows)
     ash_bursts = sum(int(r["facetBurstPlayed"]) for r in ash_rows)
@@ -198,11 +342,13 @@ def _analyse(rows: list[dict], protocol: dict) -> tuple[str, list[str], dict]:
         if activations:
             veto.append(f"{variant} manufactured {activations} destination activation(s)")
     paired_identity_faults = 0
+    paired_identity_checks = 0
     for vow in (0, 5):
         current = {int(r["seed"]): r for r in _group(rows, "current-main", "comparator", 1,
                                                        "duskblade", vow)}
         null = {int(r["seed"]): r for r in _group(rows, "null-card", "comparator", 1,
                                                     "duskblade", vow)}
+        paired_identity_checks += len(current)
         paired_identity_faults += sum(current[s]["outcomeDigest"] != null[s]["outcomeDigest"]
                                       or current[s]["rng"] != null[s]["rng"] for s in current)
     if paired_identity_faults:
@@ -272,11 +418,14 @@ def _analyse(rows: list[dict], protocol: dict) -> tuple[str, list[str], dict]:
         contrasts[f"v{vow}"] = {f"omittedMinus{label}":
                                   sum(base[s] - sample[s] for s in base) / len(base)
                                   for label, sample in samples.items() if label != "omitted"}
-    metrics = {"controls": controls, "holdout": holdout, "holdoutAshLead": leads,
+    metrics = {"reliability": reliability,
+               "controls": controls, "holdout": holdout, "holdoutAshLead": leads,
                "destinations": destinations, "activationSetJaccard": separation,
                "pairedWinContrasts": contrasts, "identity": {
                    "ashShatters": ash_shatters, "ashFacetBurstPlays": ash_bursts,
                    "h11PlayerDuskEnemySmolder": h11_events,
+                   "currentMainNullCardPairsChecked": paired_identity_checks,
+                   "currentMainNullCardPairsIdentical": paired_identity_checks - paired_identity_faults,
                    "currentMainNullCardPairFaults": paired_identity_faults,
                }}
     if veto:
@@ -292,7 +441,7 @@ def _write_json(path: Path, value: object) -> None:
 
 def _failure(out_dir: Path | None, protocol_sha: str, expected_head: str,
              message: str, rows: int = 0) -> int:
-    result = {"schemaVersion": 1, "protocolId": "p9-w0-v2-phase-a",
+    result = {"schemaVersion": 1, "protocolId": PROTOCOL_ID,
               "protocolSha256": protocol_sha, "executionHead": expected_head,
               "verdict": "FAIL_CLOSED", "reasons": [message], "rows": rows,
               "landscapeAuthorised": False}
@@ -305,6 +454,7 @@ def _failure(out_dir: Path | None, protocol_sha: str, expected_head: str,
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--preflight-only", action="store_true")
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--expected-protocol-sha", default="")
     parser.add_argument("--expected-head", default="")
@@ -313,9 +463,11 @@ def main() -> int:
     if args.self_test:
         _self_test()
         return 0
-    if not args.execute or len(args.expected_protocol_sha) != 64 or len(args.expected_head) != 40:
+    if args.preflight_only == args.execute \
+            or len(args.expected_protocol_sha) != 64 or len(args.expected_head) != 40:
         return _failure(None, args.expected_protocol_sha, args.expected_head,
-                        "execution requires the frozen protocol SHA and execution HEAD")
+                        "choose exactly one of preflight-only/execute and supply the frozen "
+                        "protocol SHA and execution HEAD")
     protocol_path = REPO / PROTOCOL_REL
     try:
         protocol = json.loads(protocol_path.read_text())
@@ -324,6 +476,11 @@ def main() -> int:
     except Exception as exc:
         return _failure(None, args.expected_protocol_sha, args.expected_head,
                         f"pre-row preflight: {exc}")
+
+    if args.preflight_only:
+        print(f"PASS (p9-w0-v3 static preflight; protocol={args.expected_protocol_sha}; "
+              f"head={args.expected_head}; matrix={EXPECTED_ROWS}; arm3Comparators={COMPARATOR_ARM3_ROWS})")
+        return 0
 
     out_dir = REPO / OUT_REL
     try:
@@ -378,7 +535,8 @@ def main() -> int:
               "manifest": manifest, "rows": len(rows), "wallTimeSeconds": wall,
               "verdict": verdict, "outcomeClass": {"GO": "success", "NO-GO": "futility",
                                                      "VETO": "veto"}[verdict],
-              "reasons": reasons, "metrics": metrics, "landscapeAuthorised": False}
+              "reasons": reasons, "metrics": metrics,
+              "landscapeAuthorised": verdict == "GO", "landscapeStarted": False}
     result_path = out_dir / "phase-a-result.json"
     _write_json(result_path, result)
     receipt = {"protocolSha256": args.expected_protocol_sha,

@@ -27,12 +27,14 @@ static func report(rows: Array[Dictionary], manifest: Dictionary) -> Dictionary:
 
 static func _aspect(rows: Array) -> Dictionary:
 	var wins: int = 0
+	var turn_ceilings: int = 0
 	var stalls: int = 0
 	var errors: int = 0
 	var by_act: Dictionary = {"1": [], "2": [], "3": []}
 	for row_v: Variant in rows:
 		var row: Dictionary = row_v
 		wins += 1 if row.get("outcome") == "win" else 0
+		turn_ceilings += 1 if row.get("outcome") == "turnCeiling" else 0
 		stalls += 1 if row.get("outcome") == "stall" else 0
 		errors += 1 if row.get("outcome") == "error" else 0
 		for fight_v: Variant in row.get("fights", []):
@@ -45,7 +47,8 @@ static func _aspect(rows: Array) -> Dictionary:
 		var fights: Array = by_act[act]
 		acts[act] = _fights(fights)
 	return {"runs": rows.size(), "wins": wins, "winRate": _round(rate),
-		"wilson95": wilson95(wins, rows.size()), "stalls": stalls, "errors": errors,
+		"wilson95": wilson95(wins, rows.size()), "turnCeilings": turn_ceilings,
+		"stalls": stalls, "errors": errors,
 		"acts": acts}
 
 

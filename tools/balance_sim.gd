@@ -106,9 +106,11 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 				_harvest_fight(game)
 				fights.append(fight)
 				if fight["result"] != "win":
+					var fight_result: String = str(fight["result"])
+					var outcome: String = fight_result \
+						if fight_result in ["stall", "turnCeiling"] else "loss"
 					return _finish(run, aspect, seed,
-						"stall" if fight["result"] == "stall" else "loss",
-						fights, "", economy, vigil, content)
+						outcome, fights, "", economy, vigil, content)
 				if node.type == "boss" and run.act == 2:
 					economy.append(_economy_row(run))
 					return _finish(run, aspect, seed, "win", fights, "", economy, vigil, content)
@@ -137,6 +139,7 @@ static func _fight(game: GlassvowGame, node: MapNode) -> Dictionary:
 	if enemies.is_empty():
 		enemies = game.rewards.roll_encounter(game.run, node.type, node.row, node)
 	var shatters_before: int = int(float(str(game.run.stats.get("shatters", 0))))
+	var turn_ceiling: bool = false
 	game.apply({"t": "startCombat", "enemies": enemies, "kind": node.combat_kind()})
 	while not game.cb.over:
 		Pilot.play_turn(game)
@@ -144,6 +147,7 @@ static func _fight(game: GlassvowGame, node: MapNode) -> Dictionary:
 			break
 		if game.cb.turn >= 30:
 			game.run.player.hp = maxi(0, game.cb.player.hp)
+			turn_ceiling = true
 			break
 		game.apply({"t": "endTurn"})
 	var smolder_kills: int = 0
@@ -151,9 +155,12 @@ static func _fight(game: GlassvowGame, node: MapNode) -> Dictionary:
 		if event.get("t") == EventTypes.HIT_ENEMY and event.get("poison", false) \
 				and event.get("dead", false):
 			smolder_kills += 1
+	var result: String = str(game.cb.result) if game.cb.over else "stall"
+	if turn_ceiling:
+		result = "turnCeiling"
 	return {
 		"act": game.run.act + 1, "kind": node.combat_kind(), "enemies": enemies,
-		"result": game.cb.result if game.cb.over else "stall", "turns": game.cb.turn,
+		"result": result, "turns": game.cb.turn,
 		"hpLost": game.cb.hp_lost,
 		"shatters": int(float(str(game.run.stats.get("shatters", 0)))) - shatters_before,
 		"smolderKills": smolder_kills,
