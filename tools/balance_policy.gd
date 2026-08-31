@@ -1,6 +1,6 @@
 class_name BalancePolicy
 extends RefCounted
-## Live default() is p8-d0-v1. sample_origin() is frozen p7-d2-v1 for sampler/CEM replay.
+## Live default() is p9-w0-v1. sample_origin() is frozen p7-d2-v1 for sampler/CEM replay.
 
 static func default() -> Dictionary:
 	return {
@@ -40,7 +40,7 @@ static func default() -> Dictionary:
 			"poisonDusk": 0.231435933369507, "poisonAsh": 0.75471690400962,
 			"catalystDusk": 0.658742733904453, "catalystAsh": 3.073545159698565,
 			"eclipse": 51.7435703707365, "eclipseFollow": 34.6681027677087, "vulnAttack": 18.086788624044,
-			"chip": 10.9225678185387, "power": 12.335912949551,
+			"chip": 10.9225678185387, "power": 12.335912949551, "wardSurplus": 4.5,
 		},
 		"route": {
 			"boss": 1032.790216282955, "treasure": 998.033788718737, "restLow": 772.9093415727995, "restOk": 157.065698273801,
@@ -101,7 +101,7 @@ static func sample_origin() -> Dictionary:
 			"poisonDusk": 0.22, "poisonAsh": 0.85,
 			"catalystDusk": 0.8, "catalystAsh": 3.2,
 			"eclipse": 48.0, "eclipseFollow": 36.0, "vulnAttack": 18.0,
-			"chip": 12.0, "power": 14.0,
+			"chip": 12.0, "power": 14.0, "wardSurplus": 4.5,
 		},
 		"route": {
 			"boss": 1000, "treasure": 900, "restLow": 800, "restOk": 150,

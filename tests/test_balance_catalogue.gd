@@ -1,8 +1,8 @@
 extends RefCounted
 ## Candidate catalogue isolation and fail-closed #454 seed-contract checks.
 
-const LIVE_FILE: String = "a0d608a5142d2e3aab799cdf33d3163922b402c2aaf2a895e46e096399b56cf1"
-const LIVE_SEMANTIC: String = "38e1f4f65901fefd4e6a0f6399c5f76d17355a19c8317f4714c33c9199dbe7aa"
+const LIVE_FILE: String = "f0c30dca034af0b962c0d2af332d09a578d4a7c8f6fc760004efc54ccc6f4e5a"
+const LIVE_SEMANTIC: String = "1f6a74a285e7b17b99e3cf09a0a85a5ee64c2f7ed30465d3210daf940c9b1adf"
 
 
 static func run(fails: Array[String]) -> void:

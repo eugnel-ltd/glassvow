@@ -4,7 +4,7 @@ extends RefCounted
 ## Routes favour treasure, then low-HP rest; rewards take the highest card/relic score; shops buy by value/gold.
 ## Potions heal at 20 missing HP, block lethal intent, and spend offensive stock in elite/boss fights.
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
-const VERSION: String = "p8-d0-v1"
+const VERSION: String = "p9-w0-v1"
 const SHOP_MIN_RATIO: float = 0.06475653649074956
 ## T1a: keep a reward iff card_score >= this. #215 four-grid top-decile median.
 const CARD_DECLINE_DEFAULT: float = 14.0958831273019
@@ -22,6 +22,8 @@ static var removal_min_copies: int = REMOVAL_MIN_COPIES_DEFAULT
 static var shop_min_ratio: float = SHOP_MIN_RATIO
 static var random_build: bool = false
 static var random_play: bool = false
+static func _ji(value: Variant) -> int:
+	return int(float(str(value)))
 static func set_modes(build: bool, play: bool) -> void:
 	random_build = build
 	random_play = play
@@ -145,13 +147,13 @@ static func _pick_play(game: GlassvowGame) -> Dictionary:
 			continue
 		if not _advances_fight(d) and (block <= 0 or unblocked <= 0):
 			continue
-		var score: float = _combat_score(game, card, d, target, preview, unblocked, dusk)
+		var score: float = _combat_score(game, card, d, target, preview, incoming, unblocked, dusk)
 		if score > best_score:
 			best = {"uid": card.uid, "target": target}
 			best_score = score
 	return best
 static func _combat_score(game: GlassvowGame, card: CardInst, d: Dictionary, target: Variant,
-		preview: Dictionary, unblocked: int, dusk: bool) -> float:
+		preview: Dictionary, incoming: int, unblocked: int, dusk: bool) -> float:
 	var cid: String = String(card.id)
 	var score: float = card_score(d, game.run.aspect, cid)
 	var loss: int = int(float(str(preview.get("loss", 0))))
@@ -164,6 +166,12 @@ static func _combat_score(game: GlassvowGame, card: CardInst, d: Dictionary, tar
 		score += _w("combat", "shatterDusk") if dusk else _w("combat", "shatterAsh")
 	if preview.get("lethal", false):
 		score += _w("combat", "lethal")
+	var burst: Dictionary = _ward_burst(d)
+	if not burst.is_empty():
+		var gate: int = _ward_gate(d)
+		if game.cb.player.block > gate and game.cb.player.block > incoming:
+			score += float(_ji(burst.get("spend", 0)) * _ji(burst.get("per", 0))) \
+				* _w("combat", "wardSurplus")
 	var foe: EnemyCombatant = null
 	if typeof(target) == TYPE_INT:
 		var idx: int = int(float(str(target)))
@@ -282,6 +290,7 @@ static func card_score(d: Dictionary, aspect: int, card_id: String = "") -> floa
 		var fx: Dictionary = fx_v
 		match str(fx.get("kind", "")):
 			"dmg": score += float(str(fx.get("n", 0))) * float(str(fx.get("times", 1)))
+			"wardBurst": score += float(_ji(fx.get("spend", 0)) * _ji(fx.get("per", 0)))
 			"block", "heal": score += float(str(fx.get("n", 0))) * _w("card", "blockHeal")
 			"draw", "energy": score += float(str(fx.get("n", 0))) * _w("card", "drawEnergy")
 			"chip": score += float(str(fx.get("n", 0))) * (_w("card", "chipDusk") if dusk else _w("card", "chipAsh"))
@@ -351,12 +360,24 @@ static func _special_id(d: Dictionary) -> String:
 		if str(fx.get("kind", "")) == "special":
 			return str(fx.get("id", ""))
 	return ""
+static func _ward_burst(d: Dictionary) -> Dictionary:
+	for fx_v: Variant in d.get("effects", []):
+		var fx: Dictionary = fx_v
+		if str(fx.get("kind", "")) == "wardBurst":
+			return fx
+	return {}
+static func _ward_gate(d: Dictionary) -> int:
+	var requirements_v: Variant = d.get("requires", {})
+	if typeof(requirements_v) != TYPE_DICTIONARY:
+		return 0
+	var requirements: Dictionary = requirements_v
+	return _ji(requirements.get("wardAtLeast", 0))
 static func _advances_fight(d: Dictionary) -> bool:
 	if str(d.get("type", "")) in ["attack", "power"]:
 		return true
 	for fx_v: Variant in d.get("effects", []):
 		var fx: Dictionary = fx_v
-		if str(fx.get("kind", "")) in ["draw", "energy", "heal", "chip", "special"] \
+		if str(fx.get("kind", "")) in ["draw", "energy", "heal", "chip", "wardBurst", "special"] \
 				or str(fx.get("who", "")) in ["target", "allEnemies"]:
 			return true
 	return false

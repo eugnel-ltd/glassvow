@@ -4,7 +4,7 @@ extends RefCounted
 const Sim: GDScript = preload("res://tools/balance_sim.gd")
 const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
-const EXPECTED: String = "b02bca98709f70ddc5e1b163bd580f54bece86ece2e6fd2b364784245ec8fecf"
+const EXPECTED: String = "339cc002e7d2d8df288cd1fb13b8b72970b2bd44f8752e3864442d34793aa27d"
 
 
 static func run(fails: Array[String]) -> void:
@@ -75,8 +75,8 @@ static func _check_valuation(content: ContentDB, fails: Array[String]) -> void:
 	var dusk_strike: float = Pilot.card_score(strike, 0, "strike")
 	if dusk_eclipse <= dusk_strike:
 		fails.append("balance pilot: Dusk eclipseSlash score %s should beat strike %s" % [dusk_eclipse, dusk_strike])
-	if Pilot.VERSION != "p8-d0-v1":
-		fails.append("balance pilot: VERSION expected p8-d0-v1 got %s" % Pilot.VERSION)
+	if Pilot.VERSION != "p9-w0-v1":
+		fails.append("balance pilot: VERSION expected p9-w0-v1 got %s" % Pilot.VERSION)
 	_check_grammar(content, fails)
 	_check_default_vector(content, fails)
 	var dusk_run: RunState = RunState.new_run(content, 7, "best-card")
