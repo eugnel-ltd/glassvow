@@ -558,13 +558,15 @@ func validate(fails: Array[String]) -> void:
 			fails.append("ContentDB: enemy %s has no AI handler" % eid)
 		for fault: String in enemy_faults(String(eid), enemy(eid)):
 			fails.append("ContentDB: %s" % fault)
-	for card_v: Variant in cards.values():
-		var card_def: Dictionary = card_v
-		_validate_effects(card_def.get("effects", []), fails)
+	for card_id_v: Variant in cards:
+		var card_id: String = str(card_id_v)
+		var card_def: Dictionary = cards[card_id_v]
+		_validate_requirements(card_id, card_def.get("requires", {}), fails)
+		_validate_effects(card_id, card_def, card_def.get("effects", []), fails)
 		var upgraded_v: Variant = card_def.get("up")
 		if typeof(upgraded_v) == TYPE_DICTIONARY:
 			var upgraded: Dictionary = upgraded_v
-			_validate_effects(upgraded.get("effects", []), fails)
+			_validate_effects(card_id, card_def, upgraded.get("effects", []), fails)
 	for potion_id: String in potions:
 		if not CombatRules.handles_potion(potion_id):
 			fails.append("ContentDB: potion %s has no handler" % potion_id)
@@ -607,14 +609,42 @@ func _validate_encounters(fails: Array[String]) -> void:
 							% [act_i, tier, eid])
 
 
-func _validate_effects(effects_v: Variant, fails: Array[String]) -> void:
+func _validate_requirements(card_id: String, requirements_v: Variant, fails: Array[String]) -> void:
+	if typeof(requirements_v) != TYPE_DICTIONARY:
+		fails.append("ContentDB: card %s requires must be a dictionary" % card_id)
+		return
+	var requirements: Dictionary = requirements_v
+	for key_v: Variant in requirements:
+		var key: String = str(key_v)
+		if not CombatRules.handles_requirement(key):
+			fails.append("ContentDB: card %s requires unknown key %s" % [card_id, key])
+			continue
+		var value: Variant = requirements[key_v]
+		if not _whole_at_least(value, 0):
+			fails.append("ContentDB: card %s requires.%s must be a non-negative whole number"
+				% [card_id, key])
+
+
+func _validate_effects(
+	card_id: String, card_def: Dictionary, effects_v: Variant, fails: Array[String]
+) -> void:
 	if typeof(effects_v) != TYPE_ARRAY:
 		return
 	for effect_v: Variant in effects_v:
 		if typeof(effect_v) != TYPE_DICTIONARY:
 			continue
 		var effect: Dictionary = effect_v
-		if str(effect.get("kind")) == "special":
+		var kind: String = str(effect.get("kind"))
+		if not CombatRules.handles_effect(kind):
+			fails.append("ContentDB: card %s effect kind %s has no handler" % [card_id, kind])
+		elif kind == "special":
 			var id_key: String = str(effect.get("id"))
 			if not CombatRules.handles_special(id_key):
 				fails.append("ContentDB: card special %s has no handler" % id_key)
+		elif kind == "wardBurst":
+			if str(card_def.get("target", "")) != "enemy":
+				fails.append("ContentDB: card %s wardBurst must target one enemy" % card_id)
+			for field: String in ["spend", "per"]:
+				if not _whole_at_least(effect.get(field), 0):
+					fails.append("ContentDB: card %s wardBurst.%s must be a non-negative whole number"
+						% [card_id, field])

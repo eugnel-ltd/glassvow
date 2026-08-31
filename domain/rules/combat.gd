@@ -17,6 +17,11 @@ const SPECIAL_IDS: Array[String] = [
 	"leech", "execute", "momentum", "doubleBlock", "phantom", "devour",
 	"pyreTithe", "catalyst", "shatterEcho", "flawless", "emberNova", "emberdance",
 ]
+const EFFECT_KINDS: Array[String] = [
+	"dmg", "block", "draw", "energy", "heal", "loseHp", "status", "addCard",
+	"chip", "ember", "wardBurst", "special",
+]
+const REQUIREMENT_KEYS: Array[String] = ["wardAtLeast"]
 const POTION_IDS: Array[String] = [
 	"healing", "strength", "swift", "block", "fire", "venom", "energy",
 ]
@@ -29,6 +34,14 @@ func _init(content_db: ContentDB) -> void:
 
 static func handles_special(id: String) -> bool:
 	return SPECIAL_IDS.has(id)
+
+
+static func handles_effect(kind: String) -> bool:
+	return EFFECT_KINDS.has(kind)
+
+
+static func handles_requirement(key: String) -> bool:
+	return REQUIREMENT_KEYS.has(key)
 
 
 static func handles_potion(id: String) -> bool:
@@ -750,6 +763,8 @@ func can_play(run: RunState, cb: CombatState, inst: CardInst, target_idx: Varian
 	var unplayable: bool = d.get("unplayable", false)
 	if unplayable:
 		return false
+	if not _requirements_met(cb, d):
+		return false
 	if eff_cost(run, cb, inst) > cb.player.energy:
 		return false
 	if str(d.get("target", "")) == "enemy":
@@ -758,6 +773,25 @@ func can_play(run: RunState, cb: CombatState, inst: CardInst, target_idx: Varian
 		var ti: int = target_idx
 		if ti < 0 or ti >= cb.enemies.size() or cb.enemies[ti].hp <= 0:
 			return false
+	return true
+
+
+func _requirements_met(cb: CombatState, d: Dictionary) -> bool:
+	var requirements_v: Variant = d.get("requires", {})
+	if typeof(requirements_v) != TYPE_DICTIONARY:
+		return false
+	var requirements: Dictionary = requirements_v
+	for key_v: Variant in requirements:
+		var key: String = str(key_v)
+		match key:
+			"wardAtLeast":
+				var value: Variant = requirements[key_v]
+				if (typeof(value) != TYPE_INT and typeof(value) != TYPE_FLOAT) \
+						or not is_equal_approx(float(str(value)), roundf(float(str(value)))) \
+						or cb.player.block < _ji(value):
+					return false
+			_:
+				return false
 	return true
 
 
@@ -940,6 +974,14 @@ func _apply_effect(
 					apply_chips(run, cb, e, cn)  # arts/phials chip immediately
 		"ember":
 			gain_embers(run, cb, _ji(fx["n"]))
+		"wardBurst":
+			if run.aspect != 0:
+				return
+			var spent: int = mini(_ji(fx["spend"]), p.block)
+			p.block -= spent
+			cb.queue.append({"t": EventTypes.WARD_SPEND, "n": spent, "total": p.block})
+			var damage: int = spent * _ji(fx["per"])
+			hit_enemy(run, cb, target, damage, false)
 		"special":
 			_apply_special(run, cb, inst, fx, target, damage_mult)
 		_:
@@ -1331,6 +1373,8 @@ func preview_play(
 	cb: CombatState, inst: CardInst, target_idx: Variant = null, run: RunState = null
 ) -> Variant:
 	var d: Dictionary = card_data(inst)
+	if not _requirements_met(cb, d):
+		return null
 	var p: PlayerCombatant = cb.player
 	var target: EnemyCombatant = null
 	if target_idx != null:
@@ -1346,6 +1390,11 @@ func preview_play(
 			hits.append({"dmg": _preview_hit(p, target, _ji(fx["n"])), "times": _ji(fx.get("times", 1))})
 		elif kind == "block":
 			block += preview_block(cb, _ji(fx["n"]), run)
+		elif kind == "wardBurst":
+			if run != null and run.aspect != 0:
+				continue
+			var spent: int = mini(_ji(fx["spend"]), p.block)
+			hits.append({"dmg": spent * _ji(fx["per"]), "times": 1})
 		elif kind == "special":
 			var sid: String = str(fx.get("id", ""))
 			if sid == "execute":

@@ -44,14 +44,27 @@ func card_pool(run: RunState, tier: String) -> Array:
 		var id: String = str(id_v)
 		if not _pool_open(run, content.pool_gate_cards, id):
 			continue
+		if not _card_matches_aspect(run, id):
+			continue
 		out.append(id)
 	for unlock_v: Variant in run.unlocks:
 		var unlock: String = str(unlock_v)
 		if unlock.begins_with("card:"):
 			var id: String = unlock.trim_prefix("card:")
-			if content.cards.has(id) and content.cards[id].get("rarity") == tier and not out.has(id):
+			if content.cards.has(id) and content.cards[id].get("rarity") == tier \
+					and _card_matches_aspect(run, id) and not out.has(id):
 				out.append(id)
 	return out
+
+
+func _card_matches_aspect(run: RunState, id: String) -> bool:
+	var required: String = str(content.cards.get(id, {}).get("aspect", ""))
+	if required.is_empty():
+		return true
+	if run.aspect < 0 or run.aspect >= content.aspects.size():
+		return false
+	var aspect: Dictionary = content.aspects[run.aspect]
+	return str(aspect.get("id", "")) == required
 
 
 func relic_pool(run: RunState, tier: String) -> Array:

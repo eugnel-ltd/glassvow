@@ -1092,6 +1092,11 @@
       "wound": {
         "name": "Shard",
         "text": "Unplayable. Broken glass rattling in your deck."
+      },
+      "facetBurst": {
+        "name": "Facet Burst",
+        "text": "Spend #10# Ward. Deal @20@ damage.",
+        "textUp": "Spend #10# Ward. Deal @30@ damage."
       }
     },
     "deeds": {

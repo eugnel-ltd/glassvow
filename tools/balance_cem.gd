@@ -51,20 +51,28 @@ func _initialize() -> void:
 	var vow: int = int(float(str(grid.get_slice(":", 1).trim_prefix("v"))))
 	var sampler_root: int = _i(opts, "samplerRoot")
 	var seed_pol: Dictionary = Policy.sample_range(sampler_root, _i(spec, "policyIndex"), 1)[0]
-	var paths: PackedStringArray = _mag_paths()
+	var paths: PackedStringArray = _legacy_mag_paths()
+	var extension_paths: PackedStringArray = _extension_mag_paths()
 	var mag_mu: Array[float] = []
 	var mag_sd: Array[float] = []
-	var base: Dictionary = Policy.sample_origin()
+	var extension_mu: Array[float] = []
+	var extension_sd: Array[float] = []
+	var base: Dictionary = Policy.sample_origin_extended()
 	for path: String in paths:
 		var ratio: float = _at(seed_pol, path) / _at(base, path)
 		mag_mu.append(log(clampf(ratio, 0.25, 4.0)))
 		mag_sd.append(0.35)
+	for path: String in extension_paths:
+		var ratio: float = _at(seed_pol, path) / _at(base, path)
+		extension_mu.append(log(clampf(ratio, 0.25, 4.0)))
+		extension_sd.append(0.35)
 	var thr_mu: Array[float] = []
 	var thr_sd: Array[float] = []
 	for t: int in range(THR.size()):
 		thr_mu.append(float(str(seed_pol[THR[t]])))
 		thr_sd.append(0.15 * (THR_HI[t] - THR_LO[t]))
 	var rng: Rng = Rng.new(_i(opts, "rootSeed") + island)
+	var extension_rng: Rng = Policy.extension_rng("cem", [_i(opts, "rootSeed"), island])
 	var pop: int = _i(opts, "popSize")
 	var elite_n: int = mini(_i(opts, "elite"), pop)
 	var max_gen: int = _i(opts, "maxGen")
@@ -78,6 +86,7 @@ func _initialize() -> void:
 	manifest["startCell"] = str(spec["cell"])
 	manifest["policyIndex"] = _i(spec, "policyIndex")
 	manifest["samplerRoot"] = sampler_root
+	manifest["sampleExtensionIdentity"] = Policy.SAMPLE_EXTENSION_IDENTITY
 	file.store_line(JSON.stringify(manifest))
 	file.flush()
 	var best_fit: float = -1.0
@@ -89,17 +98,21 @@ func _initialize() -> void:
 		var seed0: int = train0 + gen * n_train
 		var fits: Array[float] = []
 		var mags: Array = []
+		var extension_mags: Array = []
 		var thrs: Array = []
 		var pols: Array = []
 		var gen_best: float = -1.0
 		for c: int in range(pop):
 			var mag: Array[float] = _sample(rng, mag_mu, mag_sd, LOG_LO, LOG_HI)
 			var thr: Array[float] = _sample_thr(rng, thr_mu, thr_sd)
-			var pol: Dictionary = _policy(base, paths, mag, thr)
+			var extension_mag: Array[float] = _sample(extension_rng, extension_mu,
+				extension_sd, LOG_LO, LOG_HI)
+			var pol: Dictionary = _policy(base, paths, mag, thr, extension_paths, extension_mag)
 			var wins: int = _wins(content, aspect, vow, pol, seed0, n_train)
 			var fit: float = float(wins) / float(n_train)
 			fits.append(fit)
 			mags.append(mag)
+			extension_mags.append(extension_mag)
 			thrs.append(thr)
 			pols.append(pol)
 			if fit > gen_best:
@@ -110,6 +123,7 @@ func _initialize() -> void:
 		history.append(best_fit)
 		last_gen = gen
 		_refit(mag_mu, mag_sd, mags, fits, elite_n)
+		_refit(extension_mu, extension_sd, extension_mags, fits, elite_n)
 		_refit(thr_mu, thr_sd, thrs, fits, elite_n)
 		file.store_line(JSON.stringify({"t": "gen", "gen": gen, "genBest": gen_best,
 			"bestEver": best_fit, "meanMagSigma": _mean(mag_sd), "meanThrSigma": _mean(thr_sd),
@@ -173,10 +187,13 @@ static func _gauss(rng: Rng) -> float:
 	return sqrt(-2.0 * log(u1)) * cos(TAU * rng.next())
 
 static func _policy(base: Dictionary, paths: PackedStringArray, mag: Array[float],
-		thr: Array[float]) -> Dictionary:
-	var pol: Dictionary = Policy.sample_origin()
+		thr: Array[float], extension_paths: PackedStringArray = PackedStringArray(),
+		extension_mag: Array[float] = []) -> Dictionary:
+	var pol: Dictionary = Policy.sample_origin_extended()
 	for i: int in range(paths.size()):
 		_put(pol, paths[i], _at(base, paths[i]) * exp(mag[i]))
+	for i: int in range(extension_paths.size()):
+		_put(pol, extension_paths[i], _at(base, extension_paths[i]) * exp(extension_mag[i]))
 	for t: int in range(THR.size()):
 		if THR_INT[t] == 1:
 			pol[THR[t]] = int(thr[t])
@@ -225,7 +242,7 @@ static func _std(xs: Array[float], mean: float) -> float:
 		s += d * d
 	return maxf(sqrt(s / float(xs.size() - 1)), 0.02)
 
-static func _mag_paths() -> PackedStringArray:
+static func _legacy_mag_paths() -> PackedStringArray:
 	var d: Dictionary = Policy.sample_origin()
 	var out: PackedStringArray = PackedStringArray()
 	for group: String in ["card", "status", "special", "combat", "route", "relics", "relicRarity"]:
@@ -234,6 +251,10 @@ static func _mag_paths() -> PackedStringArray:
 			"relicAshBonus"]:
 		out.append(key)
 	return out
+
+
+static func _extension_mag_paths() -> PackedStringArray:
+	return PackedStringArray(["combat.wardSurplus"])
 
 static func _walk(group: Variant, prefix: String, out: PackedStringArray) -> void:
 	var d: Dictionary = group
