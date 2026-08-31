@@ -228,7 +228,7 @@ static func _asset_binding(fails: Array[String]) -> void:
 	var materials: MapMaterials = MapMaterials.new(
 			Vector3(0.0, 1.0, 0.0), 1, {}, Callable(fake, "load_resource"))
 	var act0: MapRegions = MapRegions.for_act(0)
-	var first: Dictionary = materials.bind_act(act0, PackedVector3Array())
+	var first: Dictionary = materials.bind_act(act0)
 	var first_paths: PackedStringArray = materials.active_asset_paths()
 	var first_resources: Array[Resource] = materials.active_asset_resources()
 	var first_ground: Variant = materials.ground.get_shader_parameter("surface_tex")
@@ -250,7 +250,7 @@ static func _asset_binding(fails: Array[String]) -> void:
 				or path.get_file().begins_with("act1-"),
 				"act 0 does not load another act: %s" % path)
 	var act1: MapRegions = MapRegions.for_act(1)
-	materials.bind_act(act1, PackedVector3Array())
+	materials.bind_act(act1)
 	var second_paths: PackedStringArray = materials.active_asset_paths()
 	var second_resources: Array[Resource] = materials.active_asset_resources()
 	var retained: bool = false
@@ -275,12 +275,8 @@ static func _asset_binding(fails: Array[String]) -> void:
 	var first_root: Node = scene.find_child("MapAssetGeometry", true, false)
 	_check(fails, first_root is Node3D and scene.active_asset_paths().size() == 13,
 			"complete active set replaces placeholders through MapScene binding")
-	# Kits 0 and 1 are shared-road-slab-a/b and are laid along the graph as the
-	# ROAD (#156 direction B), not scattered as scenery, so they have no
-	# AssetKit node at all. The remaining six share every scenery seat between
-	# them. Counting the sum rather than each kit's share is the check that
-	# matters: it fails if a seat is dropped or served twice, and it does not
-	# re-break every time the seat list is retuned.
+	# Kits 0 and 1 remain road slabs. Ordinary kit nodes bind empty until a
+	# compiler result arrives; no pre-route scenery scatter may flash or publish.
 	for i: int in range(2):
 		_check(fails, scene.find_child("AssetKit%02d" % i, true, false) == null,
 				"road kit %d is not scattered as scenery" % i)
@@ -291,8 +287,8 @@ static func _asset_binding(fails: Array[String]) -> void:
 				"asset kit %d is bound as a multimesh" % i)
 		if kit is MultiMeshInstance3D:
 			seated += (kit as MultiMeshInstance3D).multimesh.instance_count
-	_check(fails, seated == scene._all_prop_positions().size(),
-			"the six scenery kits between them fill every seat exactly once")
+	_check(fails, seated == 0,
+			"ordinary scenery kits remain empty before compiled layout binding")
 	for i: int in range(2):
 		_check(fails, scene.find_child("AssetRoad%d" % i, true, false) is MultiMeshInstance3D,
 				"road slab %d is laid along the graph" % i)
@@ -390,17 +386,25 @@ static func _compiled_layout(fails: Array[String]) -> void:
 	var bend_a: Vector3 = a.lerp(b, 0.35) + Vector3(0.0, 2.0, 4.0)
 	var bend_b: Vector3 = a.lerp(b, 0.65) + Vector3(0.0, 2.0, 4.0)
 	var edge_id: String = MapLayoutInput.edge_id("A", "B")
-	var result: MapLayoutResult = MapLayoutResult.create({
-		"schema_version": MapLayoutResult.SCHEMA_VERSION,
-		"generator_version": MapLayoutCompiler.VERSION,
+	var core: Dictionary = {
 		"node_anchors": {"A": _a3(a), "B": _a3(b)},
 		"edges": {edge_id: {
 			"from": "A", "to": "B",
 			"centerline": [_a3(a), _a3(bend_a), _a3(bend_b), _a3(b)],
 			"corridor_width": 2.5,
 		}},
+	}
+	var supplied_scenery: Dictionary = _one_compiled_scenery(
+		core, contract, assets, quality)
+	_check(fails, supplied_scenery.size() == 1,
+		"renderer fixture has one compiler-owned legal scenery placement")
+	var result: MapLayoutResult = MapLayoutResult.create({
+		"schema_version": MapLayoutResult.SCHEMA_VERSION,
+		"generator_version": MapLayoutCompiler.VERSION,
+		"node_anchors": core["node_anchors"],
+		"edges": core["edges"],
 		"hero_placements": _hero_placements(contract),
-		"scenery_instances": {},
+		"scenery_instances": supplied_scenery,
 		"hard_measurements": {}, "soft_scores": {},
 		"selected_restart_id": 0, "selected_candidate_id": "test/detour",
 		"input_digest": "a".repeat(64),
@@ -423,28 +427,63 @@ static func _compiled_layout(fails: Array[String]) -> void:
 			"road legs preserve canonical centreline Y and omit the forbidden chord")
 		var data: Dictionary = live.to_dict()
 		var accepted: Dictionary = data["scenery_instances"]
-		_check(fails, not accepted.is_empty() and accepted.size() < candidates.size(),
-			"existing deterministic seats are filtered rather than regenerated")
+		_check(fails, accepted == supplied_scenery,
+			"renderer preserves the compiler-owned scenery dictionary byte-for-byte")
 		_check(fails, _scenery_clears(accepted, data, contract, assets, quality),
 			"every published scenery transform clears nodes, roads, heroes and peers")
 		var diagnostics: Dictionary = scene.call(&"layout_diagnostics")
-		var accepted_count: int = MapLayoutCanonical.int_value(
-			diagnostics.get("accepted_count", -1))
-		var candidate_count: int = MapLayoutCanonical.int_value(
-			diagnostics.get("candidate_count", -1))
+		var compiled_count: int = MapLayoutCanonical.int_value(
+			diagnostics.get("compiled_scenery_count", -1))
 		var diagnostic_digest: String = str(diagnostics.get("layout_digest", ""))
 		var diagnostic_scenery: Dictionary = diagnostics.get("scenery_instances", {})
-		_check(fails, accepted_count == accepted.size()
-				and candidate_count == candidates.size()
+		_check(fails, compiled_count == accepted.size()
 				and diagnostic_digest == live.digest()
 				and diagnostic_scenery == accepted,
-			"the live diagnostics publish the same accepted placement authority")
+			"the live diagnostics publish the same compiled placement authority")
 	var rejected_v: Variant = scene.call(&"bind_layout", null, quality)
 	var cleared: PackedVector3Array = scene.call(&"road_segments")
 	var failure: Dictionary = scene.call(&"layout_failure")
 	_check(fails, rejected_v == null and cleared.is_empty() and not failure.is_empty(),
 		"an invalid compiled result fails explicitly and clears the compiled road")
 	scene.free()
+
+
+static func _one_compiled_scenery(data: Dictionary, contract: Dictionary,
+		assets: Dictionary, quality: Dictionary) -> Dictionary:
+	var profiles: Dictionary = assets["profiles"]
+	var helper: MapAssetProfiles = MapAssetProfiles.new(
+		MapQualityEvaluator.EMPTY_MANIFEST)
+	var profile_id: String = ""
+	for id: String in MapLayoutCanonical.sorted_keys(profiles):
+		var profile: Dictionary = profiles[id]
+		if str(profile.get("semantic_class", "")) in [
+			MapAssetProfiles.SEMANTIC_SCENERY,
+			MapAssetProfiles.SEMANTIC_ARCH_PASSABLE,
+		]:
+			profile_id = id
+			break
+	if profile_id.is_empty():
+		return {}
+	var profile: Dictionary = profiles[profile_id]
+	var scale: Vector3 = Vector3.ONE * helper.default_scale(profile)
+	for x: int in range(-30, 31, 5):
+		for z: int in range(-18, 19, 4):
+			var placement: Dictionary = {
+				"asset_id": profile_id, "profile_id": profile_id,
+				"transform": {
+					"origin": [float(x), 0.0, float(z)],
+					"yaw_radians": 0.0,
+					"scale": _a3(scale),
+				},
+				"semantic_zone": "midground",
+			}
+			var footprint: PackedVector2Array = helper.transformed_footprint(
+				profile, Vector3(float(x), 0.0, float(z)), 0.0, scale)
+			var prior: Array[PackedVector2Array] = []
+			if MapLayoutCompiler._scenery_rejection(
+					footprint, prior, data, contract, quality).is_empty():
+				return {"scenery-000": placement}
+	return {}
 
 
 static func _hero_placements(contract: Dictionary) -> Dictionary:
@@ -706,13 +745,14 @@ static func _grade_recipe(fails: Array[String], tex: Texture2D) -> void:
 	if image == null:
 		_check(fails, false, "act 0 grade has a readable Image")
 		return
-	_check(fails, image.get_width() == MapMaterials.GRADE_RESOLUTION.x
+	_check(fails, image.get_width() == 512 and image.get_height() == 256
 			and image.get_format() == Image.FORMAT_RGBA8,
-			"grade is world-XZ RGBA8 at the proxy resolution")
+			"painted grade keeps source-resolution RGB in the composite")
 	var under: Color = image.get_pixel(16, 29)
 	var surround: Color = image.get_pixel(image.get_width() >> 1, 0)
-	_check(fails, under.a < 0.5 and is_equal_approx(surround.a, 1.0),
-			"contact lives in alpha (dark under props, 1.0 in the open)")
+	_check(fails, is_equal_approx(under.a, 1.0)
+			and is_equal_approx(surround.a, 1.0),
+			"act bind starts with no orphan contact before compiled placement")
 	_check(fails, surround.h > 0.85,
 			"act 0 surround hue is crimson, aligned to the web act1 stage")
 

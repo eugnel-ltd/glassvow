@@ -83,13 +83,10 @@ var _scatter_salt: int = 0
 ## unchanged act, and a second run also starts in Act I, so without this the
 ## new run stands in the old run's wood.
 var _salt_dirty: bool = false
-## The dealt seats, and the salt they were dealt from. `_dealt_seats` is asked
-## five times per bind -- once by `_all_prop_positions` and once by each of the
-## three slice functions, twice over -- and re-running six relaxation passes over
-## 25 seats each time is waste. Cached rather than merely deterministic: while
-## the two agree today, nothing structural made them agree, and a grade painted
-## from one deal over geometry placed from another is a bug with no symptom
-## until someone looks at a contact shadow.
+## The dealt seats, and the salt they were dealt from. They remain the road-kit
+## and placeholder/grade fallback layout; ordinary scenery no longer consumes
+## them. The slice functions ask for the same 25-seat deal repeatedly, so cache
+## the six relaxation passes rather than merely relying on determinism.
 var _seats_cache: PackedVector3Array = PackedVector3Array()
 var _seats_cache_salt: int = -1
 const TAP_SLOP: float = 12.0
@@ -342,7 +339,7 @@ func set_act(act_i: int) -> void:
 ## would leave the new run standing in the previous run's wood.
 func _deal_act(region: MapRegions) -> void:
 	_salt_dirty = false
-	var assets: Dictionary = _materials.bind_act(region, _all_prop_positions())
+	var assets: Dictionary = _materials.bind_act(region)
 	_bind_asset_geometry(assets)
 	if not is_live():
 		set_live(false)
@@ -648,54 +645,28 @@ func _custom_data(index: int) -> Color:
 		fposmod(float(index) * 0.619, 1.0), 1.0)
 
 
-func _scenery_candidates() -> Dictionary:
-	var out: Dictionary = {}
-	if _kit_meshes.size() < 3 or _kit_profiles.size() != _kit_meshes.size() \
-			or _kit_ids.size() != _kit_meshes.size():
-		return out
-	var local_counts: Dictionary = {}
-	var positions: PackedVector3Array = _all_prop_positions()
-	var kinds: int = _kit_meshes.size() - 2
-	for seat: int in range(positions.size()):
-		var kit: int = seat_kit(seat, kinds)
-		var local: int = MapLayoutCanonical.int_value(local_counts.get(kit, 0))
-		local_counts[kit] = local + 1
-		var dress_index: int = kit * 7 + _dress_salt() + local
-		var transform: Transform3D = _dressed_transform(dress_index, positions[seat],
-			_asset_profiles.default_scale(_kit_profiles[kit]))
-		var candidate_id: String = "seat-%03d" % seat
-		out[candidate_id] = {
-			"dress_index": dress_index,
-			"placement": {
-				"asset_id": _kit_ids[kit], "profile_id": _kit_ids[kit],
-				"transform": {
-					"origin": _a3(transform.origin),
-					"yaw_radians": float(dress_index) * 1.117,
-					"scale": _a3(transform.basis.get_scale()),
-				},
-				"semantic_zone": "existing-seat",
-			},
-		}
-	return MapLayoutCanonical.ordered_dictionary(out)
-
-
-func _placement_footprint(candidate: Dictionary) -> PackedVector2Array:
-	var placement: Dictionary = candidate["placement"]
-	var transform: Dictionary = placement["transform"]
-	var profile_id: String = str(placement["profile_id"])
-	if not _active_profiles.has(profile_id):
-		return PackedVector2Array()
-	var profile: Dictionary = _active_profiles[profile_id]
-	return _asset_profiles.transformed_footprint(
-		profile, _v3(transform["origin"]),
-		rad_to_deg(MapLayoutCanonical.float_value(transform["yaw_radians"])),
-		_v3(transform["scale"]))
-
-
 func _place_scenery(placements: Dictionary) -> void:
+	var origins: PackedVector3Array = PackedVector3Array()
+	var pieces: Array[Vector4] = []
+	for placement_id: String in MapLayoutCanonical.sorted_keys(placements):
+		var placement: Dictionary = placements[placement_id]
+		var transform: Dictionary = placement["transform"]
+		var origin: Vector3 = _v3(transform["origin"])
+		origins.append(origin)
+		var profile_id: String = str(placement["profile_id"])
+		if not _active_profiles.has(profile_id):
+			continue
+		var profile: Dictionary = _active_profiles[profile_id]
+		var scale: Vector3 = _v3(transform["scale"])
+		var aabb: AABB = profile["local_aabb"]
+		pieces.append(Vector4(origin.x, origin.z,
+			maxf(aabb.size.x * scale.x, aabb.size.z * scale.z) * 0.5,
+			MapLayoutCanonical.float_value(profile["grounded_height"]) * scale.y
+				* MapAssetProfiles.HIDE_PER_HEIGHT))
+	_materials.bind_scenery_contact(MapRegions.for_act(_act), origins)
 	if _asset_geometry == null or _kit_meshes.size() < 3:
+		MapPinProjection.set_scenery([])
 		return
-	var candidates: Dictionary = _scenery_candidates()
 	for kit: int in range(2, _kit_meshes.size()):
 		var node_name: String = "AssetKit%02d" % kit
 		var stale: Node = _asset_geometry.find_child(node_name, false, false)
@@ -707,14 +678,15 @@ func _place_scenery(placements: Dictionary) -> void:
 			var placement: Dictionary = placements[candidate_id]
 			if str(placement["profile_id"]) != _kit_ids[kit]:
 				continue
-			var candidate: Dictionary = candidates.get(candidate_id, {})
-			if candidate.is_empty():
-				continue
+			var transform: Dictionary = placement["transform"]
+			var yaw: float = MapLayoutCanonical.float_value(
+				transform["yaw_radians"])
 			records.append({
 				"placement": placement,
-				"dress_index": candidate["dress_index"],
+				"dress_index": int(roundf(yaw / MapLayoutCompiler.SCENERY_YAW_STEP)),
 			})
 		_add_layout_multimesh(node_name, _kit_meshes[kit], records)
+	MapPinProjection.set_scenery(pieces)
 
 
 func _add_layout_multimesh(node_name: String, mesh: Mesh,
@@ -845,23 +817,10 @@ func _bind_asset_geometry(assets: Dictionary) -> void:
 	# left the graph to be carried by a 2 px dashed line drawn over the top.
 	_road_meshes = [meshes[0], meshes[1]]
 	_road_profiles = [profiles[0], profiles[1]]
-	var positions: PackedVector3Array = _all_prop_positions()
-	var kinds: int = meshes.size() - 2
+	# Ordinary kit nodes start empty. The compiler fills them only after routes
+	# exist; `_dealt_seats` remains solely for the placeholder/road-kit system.
 	for i: int in range(2, meshes.size()):
-		var placements: PackedVector3Array = PackedVector3Array()
-		for j: int in range(positions.size()):
-			if seat_kit(j, kinds) == i:
-				placements.append(positions[j])
-		_add_multimesh(_asset_geometry, "AssetKit%02d" % i, meshes[i], placements,
-				i * 7 + _dress_salt(), _asset_profiles.default_scale(profiles[i]))
-	# Publish the build-4-compatible directional envelope from the same
-	# profiles whose polygons the compiler will consume. No second formula lives here.
-	var pieces: Array[Vector4] = []
-	for j: int in range(positions.size()):
-		var kit: int = seat_kit(j, kinds)
-		pieces.append(_asset_profiles.directional_envelope(
-				profiles[kit], positions[j]))
-	MapPinProjection.set_scenery(pieces)
+		_add_layout_multimesh("AssetKit%02d" % i, meshes[i], [])
 	var terminus: MeshInstance3D = MeshInstance3D.new()
 	terminus.name = "AssetTerminus"
 	terminus.mesh = terminus_mesh
@@ -908,54 +867,32 @@ func _bind_asset_geometry(assets: Dictionary) -> void:
 	_repaint()
 
 
-## Bind the compiler result at the renderer boundary. The existing dealt seats
-## remain the only candidate pool; this pass can only remove unsafe instances.
-func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutResult:
+## Bind the compiler result at the renderer boundary. Scenery is already final:
+## this method renders the supplied placements and owns no candidate/filter pass.
+func bind_layout(compiled: MapLayoutResult, _quality: Dictionary) -> MapLayoutResult:
 	if compiled == null:
 		return _fail_layout("compiled result is null")
 	if _active_profiles.is_empty() or layout_hero_contract().is_empty():
 		return _fail_layout("active map asset profiles are incomplete")
 	var data: Dictionary = compiled.identity_dict()
-	var candidates: Dictionary = _scenery_candidates()
-	var accepted: Dictionary = {}
-	var accepted_footprints: Array[PackedVector2Array] = []
-	var rejections: Array[Dictionary] = []
-	var contract: Dictionary = layout_hero_contract()
-	for candidate_id: String in MapLayoutCanonical.sorted_keys(candidates):
-		var candidate: Dictionary = candidates[candidate_id]
-		var footprint: PackedVector2Array = _placement_footprint(candidate)
-		var rejection: Dictionary = _scenery_rejection(
-			footprint, accepted_footprints, data, contract, quality)
-		if not rejection.is_empty():
-			rejection["candidate_id"] = candidate_id
-			rejections.append(rejection)
-			continue
-		accepted[candidate_id] = candidate["placement"]
-		accepted_footprints.append(footprint)
-	data["scenery_instances"] = MapLayoutCanonical.ordered_dictionary(accepted)
-	var final_result: MapLayoutResult = MapLayoutResult.create(data)
-	if final_result == null:
-		return _fail_layout("filtered result is invalid")
+	var scenery: Dictionary = data["scenery_instances"]
 	var edges: Dictionary = data["edges"]
 	if not _bind_waylights(edges):
 		return _fail_layout("compiled edge cannot configure a bounded waylight")
-	_layout_result = final_result
+	_layout_result = compiled
 	_layout_failure.clear()
 	_road_segments = _flatten_edges(edges)
 	_layout_diagnostics = {
 		"status": "BOUND",
 		"input_digest": str(data["input_digest"]),
-		"layout_digest": final_result.digest(),
-		"candidate_count": candidates.size(),
-		"accepted_count": accepted.size(),
-		"rejected_count": rejections.size(),
-		"scenery_instances": data["scenery_instances"],
-		"rejections": rejections,
+		"layout_digest": compiled.digest(),
+		"compiled_scenery_count": scenery.size(),
+		"scenery_instances": scenery,
 	}
-	_place_scenery(accepted)
+	_place_scenery(scenery)
 	_build_road()
 	_repaint()
-	return final_result
+	return compiled
 
 
 func _fail_layout(reason: String) -> MapLayoutResult:
@@ -1004,50 +941,6 @@ func _clear_waylights() -> void:
 	for tracer: MapWaylightTracer in _waylights.values():
 		tracer.free()
 	_waylights.clear()
-
-
-func _scenery_rejection(footprint: PackedVector2Array,
-		accepted: Array[PackedVector2Array], data: Dictionary,
-		contract: Dictionary, quality: Dictionary) -> Dictionary:
-	if footprint.is_empty():
-		return {"reason": "invalid transformed footprint", "blocker_id": "profile"}
-	var epsilon: float = MapLayoutCanonical.float_value(quality["epsilon"]["world_m"])
-	var anchors: Dictionary = data["node_anchors"]
-	for node_id: String in MapLayoutCanonical.sorted_keys(anchors):
-		if MapQualityEvaluator._polygon_distance(footprint,
-				MapQualityEvaluator._node_world(_v3(anchors[node_id]), quality)) <= epsilon:
-			return {"reason": "node reserve", "blocker_id": node_id}
-	var road_clearance: float = MapLayoutCanonical.float_value(
-		quality["geometry"]["road_corridor"]["world_clearance_m"])
-	var edges: Dictionary = data["edges"]
-	for edge_id: String in MapLayoutCanonical.sorted_keys(edges):
-		var edge: Dictionary = edges[edge_id]
-		var reserve: float = MapLayoutCanonical.float_value(edge["corridor_width"]) \
-			* 0.5 + road_clearance
-		var points: Array = edge["centerline"]
-		for i: int in range(points.size() - 1):
-			if MapQualityEvaluator._segment_polygon(_xz(points[i]), _xz(points[i + 1]),
-					footprint) < reserve - epsilon:
-				return {"reason": "road and waylight corridor", "blocker_id": edge_id}
-	var zones: Dictionary = contract["protected_zones"]
-	for zone_id: String in MapLayoutCanonical.sorted_keys(zones):
-		var zone: Dictionary = zones[zone_id]
-		var geometry_id: String = "%s_protected_zone" % str(zone["role"])
-		var geometry: Dictionary = quality["geometry"]
-		if not geometry.has(geometry_id):
-			return {"reason": "unknown hero protected zone", "blocker_id": zone_id}
-		var rule: Dictionary = geometry[geometry_id]
-		var padding: float = MapLayoutCanonical.float_value(rule["padding_m"])
-		if MapQualityEvaluator._polygon_distance(footprint,
-				MapQualityEvaluator._poly(zone["polygon"])) < padding - epsilon:
-			return {"reason": "hero protected zone", "blocker_id": zone_id}
-	# `_dealt_seats` already preserves the existing SEAT_GAP centre floor. The
-	# polygon check removes the residual real-footprint overlaps without inventing
-	# a second placement or clearance threshold.
-	for prior: PackedVector2Array in accepted:
-		if MapQualityEvaluator._polygon_distance(footprint, prior) <= epsilon:
-			return {"reason": "accepted scenery footprint", "blocker_id": "scenery"}
-	return {}
 
 
 ## The graph, as road. Segments are world-space endpoint pairs; the screen that
@@ -1338,8 +1231,7 @@ func _wedge_positions() -> PackedVector3Array:
 
 
 ## Two entries per seat, at the two heights the placeholder prism stacks at.
-## The real kits flatten y to 0 in `_all_prop_positions`, so a pair becomes two
-## kits sharing one footprint -- which is the stack this family is named for.
+## The retained fallback/grade positions flatten these to ground level.
 func _slab_seats() -> PackedVector3Array:
 	var out: PackedVector3Array = PackedVector3Array()
 	for base: Vector3 in _band_seats(SLAB_N, SLAB_Z, 0.0, 2):
@@ -1356,15 +1248,8 @@ func _dab_positions() -> PackedVector3Array:
 	return _dealt_seats().slice(WEDGE_N + SLAB_N * 2)
 
 
-## Ground level, for the real kits and for the grade's contact shadows.
-##
-## Every kit GLB is authored grounded -- measured, all six AABBs start at
-## y = 0 -- while the seat lists carry the centre offset their PLACEHOLDER
-## primitive needs, and the prism's half-height is exactly 1.7. Passing those
-## through unchanged floated the whole scenery set 1.7 m, with the grade's
-## contact shadows still painted on the ground beneath it.
-## The dealt seats, for anything that has to measure them without standing up
-## a viewport -- `tools/probe_map_seeds.gd` is the caller this exists for.
+## Ground-level fallback/grade positions. Compiled ordinary scenery does not
+## read this list; road kits and the retained placeholder system still do.
 func prop_positions() -> PackedVector3Array:
 	return _all_prop_positions()
 

@@ -25,6 +25,9 @@ const GRADE_MIN: Vector2 = Vector2(-36.0, -18.0)
 ## so the map reads less dense.
 const GRADE_SIZE: Vector2 = Vector2(72.0, 36.0)
 const GRADE_RESOLUTION: Vector2i = Vector2i(256, 128)
+const CONTACT_ALPHA_FLOOR: float = 0.18
+const CONTACT_INNER_RADIUS: float = 0.35
+const CONTACT_OUTER_RADIUS: float = 1.75
 
 var ground: ShaderMaterial
 var road: ShaderMaterial
@@ -37,6 +40,10 @@ var _manifest_rows: Array[Dictionary] = []
 var _resource_loader: Callable
 var _active_paths: PackedStringArray = []
 var _active_resources: Array[Resource] = []
+## Source-resolution RGB for the active act. Its alpha is normalised to unity
+## once at act bind, so each layout bind can duplicate it and touch only the
+## compact support around compiled scenery origins.
+var _grade_rgb: Image = null
 
 
 func _init(sun: Vector3, tex_stop: int, manifest: Dictionary = {},
@@ -104,7 +111,7 @@ func bind_region(region: MapRegions, grade: Texture2D) -> void:
 
 ## Drops all prior-act references before loading only this act's 12-row set:
 ## two tiles, one grade, three shared + five act kits, and one terminus.
-func bind_act(region: MapRegions, positions: PackedVector3Array) -> Dictionary:
+func bind_act(region: MapRegions) -> Dictionary:
 	ground.set_shader_parameter("surface_tex", _fallback_surface)
 	road.set_shader_parameter("surface_tex", _fallback_surface)
 	prop.set_shader_parameter("surface_tex", _fallback_surface)
@@ -114,8 +121,7 @@ func bind_act(region: MapRegions, positions: PackedVector3Array) -> Dictionary:
 	bind_region(region, _fallback_grade)
 	_active_paths = PackedStringArray()
 	_active_resources.clear()
-	var procedural_grade: ImageTexture = grade_for(region, positions)
-	bind_region(region, procedural_grade)
+	_grade_rgb = _grade_image(region, PackedVector3Array())
 	var kits: Array[Resource] = []
 	var kit_ids: PackedStringArray = []
 	var terminus: Resource = null
@@ -190,7 +196,13 @@ func bind_act(region: MapRegions, positions: PackedVector3Array) -> Dictionary:
 	else:
 		vigil = null
 	if painted_grade != null:
-		bind_region(region, painted_grade)
+		var decoded: Image = _decode_painted_grade(painted_grade)
+		assert(decoded != null,
+			"Painted map grade must decode to source-resolution FORMAT_RGBA8")
+		if decoded != null:
+			_grade_rgb = decoded
+	_normalise_grade_alpha(_grade_rgb)
+	bind_scenery_contact(region, PackedVector3Array())
 	return {
 		"kits": kits, "kit_ids": kit_ids,
 		"terminus": terminus, "terminus_id": terminus_id,
@@ -212,6 +224,34 @@ func active_asset_resources() -> Array[Resource]:
 
 static func grade_for(region: MapRegions, positions: PackedVector3Array) -> ImageTexture:
 	return ImageTexture.create_from_image(_grade_image(region, positions))
+
+
+## Rebind the one shared grade sampler as painted RGB plus contact alpha derived
+## solely from compiled scenery origins.
+func bind_scenery_contact(region: MapRegions,
+		positions: PackedVector3Array) -> void:
+	assert(_grade_rgb != null, "Active map grade RGB must be cached before contact bind")
+	if _grade_rgb == null:
+		return
+	var composite: Image = _grade_rgb.duplicate() as Image
+	_bake_contact_alpha(composite, positions)
+	bind_region(region, ImageTexture.create_from_image(composite))
+
+
+## Pure alpha bake used by the Stage 2 contract. RGB is deliberately constant:
+## platform-dependent painted bytes are outside this test seam.
+static func contact_alpha_image(resolution: Vector2i,
+		positions: PackedVector3Array) -> Image:
+	var image: Image = Image.create_empty(
+		resolution.x, resolution.y, false, Image.FORMAT_RGBA8)
+	image.fill(Color(1.0, 1.0, 1.0, 1.0))
+	_bake_contact_alpha(image, positions)
+	return image
+
+
+static func contact_alpha_at(distance: float) -> float:
+	return lerpf(CONTACT_ALPHA_FLOOR, 1.0,
+		smoothstep(CONTACT_INNER_RADIUS, CONTACT_OUTER_RADIUS, distance))
 
 
 func _read_manifest() -> Dictionary:
@@ -273,6 +313,62 @@ func _load_resource(path: String) -> Resource:
 	return ResourceLoader.load(path)
 
 
+static func _decode_painted_grade(texture: Texture2D) -> Image:
+	var image: Image = texture.get_image()
+	if image == null:
+		return null
+	if image.is_compressed() and image.decompress() != OK:
+		return null
+	if image.get_format() != Image.FORMAT_RGBA8:
+		return null
+	# The shaders request filter_linear, not a mipmapped filter. Drop the imported
+	# chain so its authored alpha cannot survive beneath the rewritten base level.
+	image.clear_mipmaps()
+	return image
+
+
+static func _normalise_grade_alpha(image: Image) -> void:
+	if image == null:
+		return
+	for y: int in range(image.get_height()):
+		for x: int in range(image.get_width()):
+			var colour: Color = image.get_pixel(x, y)
+			colour.a = 1.0
+			image.set_pixel(x, y, colour)
+
+
+## ponytail: CPU bake, O(N * r^2) texels, once per layout bind. Keep it here
+## until a measurement, rather than speculation, says it needs another path.
+static func _bake_contact_alpha(image: Image,
+		positions: PackedVector3Array) -> void:
+	if image == null or image.get_width() <= 0 or image.get_height() <= 0:
+		return
+	var resolution: Vector2i = image.get_size()
+	var pixels_per_world: Vector2 = Vector2(
+		float(resolution.x) / GRADE_SIZE.x,
+		float(resolution.y) / GRADE_SIZE.y)
+	for position: Vector3 in positions:
+		var centre_x: float = (position.x - GRADE_MIN.x) * pixels_per_world.x - 0.5
+		var centre_y: float = (position.z - GRADE_MIN.y) * pixels_per_world.y - 0.5
+		var radius_x: float = CONTACT_OUTER_RADIUS * pixels_per_world.x
+		var radius_y: float = CONTACT_OUTER_RADIUS * pixels_per_world.y
+		var min_x: int = clampi(floori(centre_x - radius_x), 0, resolution.x - 1)
+		var max_x: int = clampi(ceili(centre_x + radius_x), 0, resolution.x - 1)
+		var min_y: int = clampi(floori(centre_y - radius_y), 0, resolution.y - 1)
+		var max_y: int = clampi(ceili(centre_y + radius_y), 0, resolution.y - 1)
+		for y: int in range(min_y, max_y + 1):
+			var world_z: float = GRADE_MIN.y \
+				+ (float(y) + 0.5) / float(resolution.y) * GRADE_SIZE.y
+			for x: int in range(min_x, max_x + 1):
+				var world_x: float = GRADE_MIN.x \
+					+ (float(x) + 0.5) / float(resolution.x) * GRADE_SIZE.x
+				var distance: float = Vector2(
+					world_x - position.x, world_z - position.z).length()
+				var colour: Color = image.get_pixel(x, y)
+				colour.a = minf(colour.a, contact_alpha_at(distance))
+				image.set_pixel(x, y, colour)
+
+
 func _make(shader_path: String, surface: Texture2D, grade: Texture2D,
 		surface_value: float, sun: Vector3, tex_stop: int) -> ShaderMaterial:
 	var material: ShaderMaterial = ShaderMaterial.new()
@@ -302,7 +398,7 @@ func _placeholder_grade() -> ImageTexture:
 
 
 ## Proxy `MapSceneProxy._grade_image`: corridor + aerial + contact in alpha.
-## Same per-texel prop walk as the proxy; hues come from MapRegions.
+## Hues come from MapRegions; contact uses the compact-support bake above.
 static func _grade_image(region: MapRegions, positions: PackedVector3Array) -> Image:
 	var image: Image = Image.create_empty(
 			GRADE_RESOLUTION.x, GRADE_RESOLUTION.y, false, Image.FORMAT_RGBA8)
@@ -320,10 +416,6 @@ static func _grade_image(region: MapRegions, positions: PackedVector3Array) -> I
 			hue = lerpf(hue, region.grade_hue_corridor, corridor)
 			saturation = lerpf(saturation, 0.08, corridor)
 			value = lerpf(value, 1.0, corridor)
-			var alpha: float = 1.0
-			for prop_position: Vector3 in positions:
-				var distance: float = Vector2(world_x - prop_position.x,
-						world_z - prop_position.z).length()
-				alpha = minf(alpha, lerpf(0.18, 1.0, smoothstep(0.35, 1.75, distance)))
-			image.set_pixel(x, y, Color.from_hsv(hue, saturation, value, alpha))
+			image.set_pixel(x, y, Color.from_hsv(hue, saturation, value, 1.0))
+	_bake_contact_alpha(image, positions)
 	return image

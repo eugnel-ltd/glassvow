@@ -7,6 +7,17 @@ const NO_FEASIBLE_NODE_ROUTE_LAYOUT: String = "NO_FEASIBLE_NODE_ROUTE_LAYOUT"
 const ALL_GROUND_EXHAUSTED: String = "ALL_GROUND_EXHAUSTED"
 const VERSION: String = "map-layout-compiler-v1"
 const MAX_LOCAL_SUBSTITUTIONS: int = 64
+const SCENERY_MIN_INSTANCES: int = 14
+const SCENERY_MAX_INSTANCES: int = 24
+const SCENERY_ZONE_INSTANCE_CAP: int = 8
+const SCENERY_ATTEMPTS_PER_ZONE: int = 256
+const SCENERY_YAW_STEP: float = 1.117
+const SCENERY_ZONES: PackedStringArray = [
+	"hero", "foreground-frame", "road-bank", "midground", "vista",
+]
+const SCENERY_SAMPLE_ZONES: PackedStringArray = [
+	"foreground-frame", "road-bank", "midground", "vista",
+]
 const _Routes = preload("res://presentation/map/map_layout_compiler_routes.gd")
 const _Grade = preload("res://presentation/map/map_grade_separation.gd")
 const _ScreenPreflight = preload(
@@ -477,9 +488,16 @@ static func _build_attempt(input: MapLayoutInput, source: Dictionary,
 				"details": {"grade_receipt": graded["receipt"]},
 			}, plan_diagnostics)
 		routes = graded["routes"]
+	var scenery_report: Dictionary = _scenery_instances(
+		input, source, anchors, routes, assets, quality)
+	plan_diagnostics["scenery_sampling"] = scenery_report.get("diagnostics", {})
+	if scenery_report.get("ok", false) != true:
+		return _attempt_failure(chosen_ids, route_rows,
+			scenery_report.get("binding", {}), plan_diagnostics)
+	var scenery: Dictionary = scenery_report["placements"]
 	var selected_id: String = "selection/%s" % MapLayoutCanonical.digest(chosen_ids)
 	var provisional: MapLayoutResult = _result(
-		source, input, anchors, routes, heroes, {}, {}, selected_id
+		source, input, anchors, routes, heroes, scenery, {}, {}, selected_id
 	)
 	if provisional == null:
 		return _attempt_failure(chosen_ids, route_rows,
@@ -489,7 +507,7 @@ static func _build_attempt(input: MapLayoutInput, source: Dictionary,
 		input, provisional, assets, quality
 	)
 	var final_result: MapLayoutResult = _result(
-		source, input, anchors, routes, heroes,
+		source, input, anchors, routes, heroes, scenery,
 		first.get("hard_values", {}), first.get("soft_raw", {}), selected_id
 	)
 	if final_result == null:
@@ -1059,8 +1077,492 @@ static func _component_plan_specs(component: Dictionary, plan: Dictionary,
 	]
 
 
+## Scenery is sampled only after anchors, routes and heroes are final. Rejected
+## samples consume the bounded sampler budget; they never enter the result and
+## therefore never become a renderer-side deletion problem.
+static func _scenery_instances(input: MapLayoutInput, source: Dictionary,
+		anchors: Dictionary, routes: Dictionary, assets: Dictionary,
+		quality: Dictionary) -> Dictionary:
+	var zones: Dictionary = _scenery_zone_contract(quality)
+	if zones.size() != SCENERY_ZONES.size():
+		return _scenery_failure("zone_contract",
+			"the five authored scenery zones are unavailable", {})
+	var profiles: Dictionary = assets.get("profiles", {})
+	var ordinary_ids: Array[String] = []
+	for profile_id: String in MapLayoutCanonical.sorted_keys(profiles):
+		var profile: Dictionary = profiles[profile_id]
+		if str(profile.get("semantic_class", "")) in [
+			MapAssetProfiles.SEMANTIC_SCENERY,
+			MapAssetProfiles.SEMANTIC_ARCH_PASSABLE,
+		]:
+			ordinary_ids.append(profile_id)
+	# Synthetic compiler tests intentionally carry hero authority only. An active
+	# production bundle always has ordinary profiles and is held to the slice floor.
+	if ordinary_ids.is_empty():
+		return {"ok": true, "placements": {}, "diagnostics": {
+			"status": "NO_ORDINARY_PROFILES", "attempt_count": 0,
+			"accepted_count": 0, "zone_counts": {}, "zone_occupancy": {},
+		}}
+	var geometry: Dictionary = _scenery_geometry(
+		input, anchors, routes, source, quality)
+	var zone_areas: Dictionary = geometry["zone_areas"]
+	var accepted: Dictionary = {}
+	var accepted_footprints: Array[PackedVector2Array] = []
+	var zone_footprint_area: Dictionary = {}
+	var zone_counts: Dictionary = {}
+	var attempts: Dictionary = {}
+	var rejections: Dictionary = {}
+	for zone_id: String in SCENERY_ZONES:
+		zone_footprint_area[zone_id] = 0.0
+		zone_counts[zone_id] = 0
+		attempts[zone_id] = 0
+		rejections[zone_id] = {}
+	var seed_digest: String = MapLayoutCanonical.digest(
+		[input.digest(), VERSION, "scenery-placement"])
+	var rng: Rng = Rng.new(seed_digest.substr(0, 8).hex_to_int())
+	var helper: MapAssetProfiles = MapAssetProfiles.new(
+		MapQualityEvaluator.EMPTY_MANIFEST)
+	var data: Dictionary = {"node_anchors": anchors, "edges": routes}
+	var contract: Dictionary = source["hero_anchor_contract"]
+	for zone_id: String in SCENERY_SAMPLE_ZONES:
+		var band: Array = zones[zone_id]["occupancy_ratio"]
+		var lower: float = MapLayoutCanonical.float_value(band[0])
+		while accepted.size() < SCENERY_MAX_INSTANCES \
+				and MapLayoutCanonical.int_value(zone_counts[zone_id]) \
+					< SCENERY_ZONE_INSTANCE_CAP \
+				and _zone_occupancy(zone_id, zone_footprint_area, zone_areas) \
+					< lower - MapLayoutCanonical.float_value(quality["epsilon"]["ratio"]) \
+				and MapLayoutCanonical.int_value(attempts[zone_id]) \
+					< SCENERY_ATTEMPTS_PER_ZONE:
+			_sample_scenery(zone_id, rng, ordinary_ids, profiles, helper,
+				geometry, data, contract, quality, accepted, accepted_footprints,
+				zone_footprint_area, zone_counts,
+				attempts, rejections, zones)
+	# The authored occupancy floors normally furnish the world by themselves. If
+	# small-footprint assets enter every band early, keep sampling inside those
+	# bands until the locked density floor is met; never cross a zone upper bound.
+	var fill_attempts: int = 0
+	var fill_budget: int = SCENERY_ATTEMPTS_PER_ZONE * SCENERY_SAMPLE_ZONES.size()
+	while accepted.size() < SCENERY_MIN_INSTANCES and fill_attempts < fill_budget:
+		var zone_id: String = SCENERY_SAMPLE_ZONES[
+			fill_attempts % SCENERY_SAMPLE_ZONES.size()]
+		fill_attempts += 1
+		if MapLayoutCanonical.int_value(zone_counts[zone_id]) \
+				>= SCENERY_ZONE_INSTANCE_CAP:
+			continue
+		_sample_scenery(zone_id, rng, ordinary_ids, profiles, helper,
+			geometry, data, contract, quality, accepted, accepted_footprints,
+			zone_footprint_area, zone_counts,
+			attempts, rejections, zones)
+	var occupied_zones: int = 0
+	var occupancy: Dictionary = {}
+	for zone_id: String in SCENERY_ZONES:
+		occupancy[zone_id] = _zone_occupancy(
+			zone_id, zone_footprint_area, zone_areas)
+		if MapLayoutCanonical.int_value(zone_counts[zone_id]) > 0:
+			occupied_zones += 1
+	var diagnostics: Dictionary = {
+		"status": "PLACED" if accepted.size() >= SCENERY_MIN_INSTANCES \
+			and occupied_zones >= 3 else "EXHAUSTED",
+		"seed_digest": seed_digest,
+		"attempt_count": _sum_int_values(attempts),
+		"accepted_count": accepted.size(),
+		"occupied_zone_count": occupied_zones,
+		"zone_areas": zone_areas,
+		"zone_counts": zone_counts,
+		"zone_footprint_area": zone_footprint_area,
+		"zone_occupancy": occupancy,
+		"attempts": attempts,
+		"rejections": rejections,
+		"limits": {
+			"minimum_instances": SCENERY_MIN_INSTANCES,
+			"maximum_instances": SCENERY_MAX_INSTANCES,
+			"per_zone_instance_cap": SCENERY_ZONE_INSTANCE_CAP,
+			"attempts_per_zone": SCENERY_ATTEMPTS_PER_ZONE,
+		},
+	}
+	if accepted.size() < SCENERY_MIN_INSTANCES or occupied_zones < 3:
+		return _scenery_failure("bounded_sampling",
+			"post-route scenery sampling did not meet its locked corpus floor",
+			diagnostics)
+	return {"ok": true,
+		"placements": MapLayoutCanonical.ordered_dictionary(accepted),
+		"diagnostics": MapLayoutCanonical.ordered_dictionary(diagnostics)}
+
+
+static func _sample_scenery(zone_id: String, rng: Rng,
+		ordinary_ids: Array[String], profiles: Dictionary,
+		helper: MapAssetProfiles, geometry: Dictionary, data: Dictionary,
+		contract: Dictionary, quality: Dictionary, accepted: Dictionary,
+		accepted_footprints: Array[PackedVector2Array],
+		zone_footprint_area: Dictionary, zone_counts: Dictionary,
+		attempts: Dictionary, rejections: Dictionary, zones: Dictionary) -> void:
+	attempts[zone_id] = MapLayoutCanonical.int_value(attempts[zone_id]) + 1
+	var attempt_index: int = _sum_int_values(attempts)
+	var profile_id: String = ordinary_ids[
+		posmod(attempt_index + rng.pick_index(ordinary_ids.size()), ordinary_ids.size())]
+	var profile: Dictionary = profiles[profile_id]
+	var dress_index: int = posmod(attempt_index + rng.pick_index(997), 997)
+	var scale: Vector3 = Vector3(
+		0.82 + 0.09 * float(dress_index % 4),
+		0.86 + 0.08 * float((dress_index + 2) % 3),
+		0.84 + 0.07 * float((dress_index + 1) % 4)) \
+		* helper.default_scale(profile)
+	var radius: float = _profile_radius(profile, scale)
+	var origin: Vector3 = _sample_zone_origin(
+		zone_id, rng, geometry, data["edges"], radius, quality)
+	var yaw: float = deg_to_rad(helper.fixed_yaw(profile)) \
+		if str(profile.get("yaw_mode", "")) == MapAssetProfiles.YAW_FIXED \
+		else float(dress_index) * SCENERY_YAW_STEP
+	var placement: Dictionary = {
+		"asset_id": profile_id,
+		"profile_id": profile_id,
+		"transform": {
+			"origin": _scenery_a3(origin),
+			"yaw_radians": yaw,
+			"scale": _scenery_a3(scale),
+		},
+		"semantic_zone": zone_id,
+	}
+	var candidate: Dictionary = {"placement": placement}
+	var footprint: PackedVector2Array = _placement_footprint(
+		candidate, profiles, helper)
+	var rejection: Dictionary = _scenery_rejection(
+		footprint, accepted_footprints, data, contract, quality)
+	if not rejection.is_empty():
+		_record_scenery_rejection(rejections, zone_id,
+			str(rejection.get("reason", "unknown")))
+		return
+	rejection = _screen_scenery_rejection(
+		footprint, profile, scale, geometry, data, quality)
+	if not rejection.is_empty():
+		_record_scenery_rejection(rejections, zone_id,
+			str(rejection.get("reason", "unknown")))
+		return
+	var area: float = _polygon_area(footprint)
+	var band: Array = zones[zone_id]["occupancy_ratio"]
+	var upper: float = MapLayoutCanonical.float_value(band[1])
+	var zone_area: float = MapLayoutCanonical.float_value(
+		geometry["zone_areas"][zone_id])
+	if (MapLayoutCanonical.float_value(zone_footprint_area[zone_id]) + area) \
+			/ maxf(zone_area, 0.000001) > upper \
+			+ MapLayoutCanonical.float_value(quality["epsilon"]["ratio"]):
+		_record_scenery_rejection(rejections, zone_id, "zone occupancy ceiling")
+		return
+	var placement_id: String = "scenery-%03d" % accepted.size()
+	accepted[placement_id] = placement
+	accepted_footprints.append(footprint)
+	zone_counts[zone_id] = MapLayoutCanonical.int_value(zone_counts[zone_id]) + 1
+	zone_footprint_area[zone_id] = MapLayoutCanonical.float_value(
+		zone_footprint_area[zone_id]) + area
+
+
+## The world predicate is the primary placement authority. This narrow screen
+## projection guard applies the already-authored node/scenery hard rules without
+## rerunning the complete evaluator for every rejected sample. The coherent
+## result still receives both complete evaluator passes below.
+static func _screen_scenery_rejection(footprint: PackedVector2Array,
+		profile: Dictionary, scale: Vector3, geometry: Dictionary,
+		data: Dictionary, quality: Dictionary) -> Dictionary:
+	var calibration: Dictionary = quality["calibration"]["shipping_touch_waystone"]
+	var ink_radius: float = MapLayoutCanonical.float_value(
+		calibration["ink_radius_px"]) * MapLayoutCanonical.float_value(
+		calibration["default_layout_scale"])
+	var touch_size: float = maxf(
+		MapLayoutCanonical.float_value(calibration["phone_touch_floor_px"]),
+		ink_radius * 2.0)
+	var epsilon: float = MapLayoutCanonical.float_value(quality["epsilon"]["screen_px"])
+	var limit: float = MapLayoutCanonical.float_value(geometry["node_ink_limit_px"])
+	var obstacle: Dictionary = {
+		"group": "scenery_instances",
+		"world": footprint,
+		"y": 0.0,
+		"height": MapLayoutCanonical.float_value(
+			profile["grounded_height"]) * scale.y,
+	}
+	var anchors: Dictionary = data["node_anchors"]
+	var profiles: Array = geometry["camera_profiles"]
+	for camera_v: Variant in profiles:
+		var camera: Dictionary = camera_v
+		var projected: Dictionary = MapQualityEvaluator._project_obstacle(
+			obstacle, camera)
+		var silhouette: PackedVector2Array = projected["clipped"]
+		if silhouette.is_empty():
+			continue
+		for node_id: String in MapLayoutCanonical.sorted_keys(anchors):
+			var node: Vector2 = MapQualityEvaluator._project(
+				_scenery_v3(anchors[node_id]), camera)
+			var gap: float = MapQualityEvaluator._signed_gap(
+				node, silhouette) - ink_radius
+			if gap + epsilon < limit:
+				return {"reason": "node_ink_clearance_px", "blocker_id": node_id}
+			var ink: PackedVector2Array = MapQualityEvaluator._circle(
+				node, ink_radius)
+			if MapQualityEvaluator._intersection_area(ink, silhouette) > epsilon:
+				return {"reason": "node_scenery_silhouette_overlap_area_px2",
+					"blocker_id": node_id}
+			var touch: PackedVector2Array = MapQualityEvaluator._rect(
+				node, Vector2.ONE * touch_size * 0.5)
+			if MapQualityEvaluator._intersection_area(touch, silhouette) > epsilon:
+				return {"reason": "node_touch_scenery_silhouette_overlap_area_px2",
+					"blocker_id": node_id}
+	return {}
+
+
+static func _scenery_geometry(input: MapLayoutInput, anchors: Dictionary,
+		routes: Dictionary, source: Dictionary, quality: Dictionary) -> Dictionary:
+	var stage: Rect2 = MapPinProjection.lattice_footprint()
+	var profile_rules: Dictionary = quality["profiles"]
+	var zooms: Array = profile_rules["zoom_stops_m"]
+	var tilt: float = absf(MapLayoutCanonical.float_value(profile_rules["tilt_deg"]))
+	var foreground_depth: float = MapLayoutCanonical.float_value(zooms[0]) \
+		/ maxf(sin(deg_to_rad(tilt)), 0.000001) / float(zooms.size())
+	var lattice: Dictionary = quality["calibration"]["stage_zoom_geometry"]
+	var cell: Array = lattice["cell_m"]
+	var cell_x: float = MapLayoutCanonical.float_value(cell[0])
+	var cell_z: float = MapLayoutCanonical.float_value(cell[1])
+	var row_half: float = MapLayoutCanonical.float_value(
+		quality["geometry"]["row_lane_envelope"]["row_half_extent_m"])
+	var last_x: float = -INF
+	for anchor_v: Variant in anchors.values():
+		last_x = maxf(last_x, _scenery_v3(anchor_v).x)
+	var vista_start: float = last_x + row_half
+	var vista_end: float = maxf(stage.end.x, vista_start + cell_x)
+	var bank_width: float = cell_z * 0.5
+	var route_length: float = 0.0
+	for edge_v: Variant in routes.values():
+		var edge: Dictionary = edge_v
+		var points: Array = edge["centerline"]
+		for i: int in range(points.size() - 1):
+			route_length += _scenery_xz(points[i]).distance_to(
+				_scenery_xz(points[i + 1]))
+	var hero_area: float = 0.0
+	for zone_v: Variant in source["hero_anchor_contract"]["protected_zones"].values():
+		var hero_zone: Dictionary = zone_v
+		hero_area += _polygon_area(MapQualityEvaluator._poly(hero_zone["polygon"]))
+	var foreground_area: float = stage.size.x * foreground_depth
+	var vista_area: float = (vista_end - vista_start) * stage.size.y
+	var road_area: float = route_length * bank_width * 2.0
+	var midground_area: float = maxf(stage.get_area() - foreground_area, stage.get_area() * 0.25)
+	var node_ink_limit: float = INF
+	for hard_v: Variant in quality["hard"]:
+		var hard: Dictionary = hard_v
+		if str(hard["id"]) == "node_ink_clearance_px":
+			node_ink_limit = MapLayoutCanonical.float_value(hard["limit"])
+			break
+	return {
+		"stage": stage,
+		"foreground_min_z": stage.end.y - foreground_depth,
+		"vista_start_x": vista_start,
+		"vista_end_x": vista_end,
+		"bank_width": bank_width,
+		"camera_profiles": MapQualityEvaluator.camera_registry(
+			input.node_records(), quality, input.edge_records())["profiles"],
+		"node_ink_limit_px": node_ink_limit,
+		"zone_areas": {
+			"hero": maxf(hero_area, 0.000001),
+			"foreground-frame": maxf(foreground_area, 0.000001),
+			"road-bank": maxf(road_area, 0.000001),
+			"midground": maxf(midground_area, 0.000001),
+			"vista": maxf(vista_area, 0.000001),
+		},
+	}
+
+
+static func _sample_zone_origin(zone_id: String, rng: Rng,
+		geometry: Dictionary, routes: Dictionary, radius: float,
+		quality: Dictionary) -> Vector3:
+	var stage: Rect2 = geometry["stage"]
+	if zone_id == "road-bank":
+		var segments: Array[Dictionary] = []
+		for edge_id: String in MapLayoutCanonical.sorted_keys(routes):
+			var edge: Dictionary = routes[edge_id]
+			var points: Array = edge["centerline"]
+			for i: int in range(points.size() - 1):
+				segments.append({"a": _scenery_xz(points[i]),
+					"b": _scenery_xz(points[i + 1]),
+					"reserve": MapLayoutCanonical.float_value(edge["corridor_width"]) * 0.5
+						+ MapLayoutCanonical.float_value(
+							quality["geometry"]["road_corridor"]["world_clearance_m"]),
+				})
+		if not segments.is_empty():
+			var segment: Dictionary = segments[rng.pick_index(segments.size())]
+			var a: Vector2 = segment["a"]
+			var b: Vector2 = segment["b"]
+			var direction: Vector2 = (b - a).normalized()
+			var normal: Vector2 = Vector2(-direction.y, direction.x)
+			var side: float = -1.0 if rng.next() < 0.5 else 1.0
+			var inner: float = MapLayoutCanonical.float_value(segment["reserve"]) + radius
+			var offset: float = inner + rng.next() * MapLayoutCanonical.float_value(
+				geometry["bank_width"])
+			var point: Vector2 = a.lerp(b, rng.next()) + normal * side * offset
+			return Vector3(point.x, 0.0, point.y)
+	var min_x: float = stage.position.x + radius
+	var max_x: float = stage.end.x - radius
+	var min_z: float = stage.position.y + radius
+	var max_z: float = stage.end.y - radius
+	if zone_id == "foreground-frame":
+		min_z = MapLayoutCanonical.float_value(geometry["foreground_min_z"]) + radius
+	elif zone_id == "vista":
+		min_x = MapLayoutCanonical.float_value(geometry["vista_start_x"]) + radius
+		max_x = MapLayoutCanonical.float_value(geometry["vista_end_x"]) - radius
+	elif zone_id == "midground":
+		max_z = MapLayoutCanonical.float_value(geometry["foreground_min_z"]) - radius
+	if min_x > max_x:
+		var centre_x: float = (min_x + max_x) * 0.5
+		min_x = centre_x
+		max_x = centre_x
+	if min_z > max_z:
+		var centre_z: float = (min_z + max_z) * 0.5
+		min_z = centre_z
+		max_z = centre_z
+	return Vector3(lerpf(min_x, max_x, rng.next()), 0.0,
+		lerpf(min_z, max_z, rng.next()))
+
+
+## Transplanted unchanged from the old renderer-side filter. The compiler now
+## calls it at sample time and resamples a rejected point.
+static func _scenery_rejection(footprint: PackedVector2Array,
+		accepted: Array[PackedVector2Array], data: Dictionary,
+		contract: Dictionary, quality: Dictionary) -> Dictionary:
+	if footprint.is_empty():
+		return {"reason": "invalid transformed footprint", "blocker_id": "profile"}
+	var epsilon: float = MapLayoutCanonical.float_value(quality["epsilon"]["world_m"])
+	var anchors: Dictionary = data["node_anchors"]
+	for node_id: String in MapLayoutCanonical.sorted_keys(anchors):
+		if MapQualityEvaluator._polygon_distance(footprint,
+				MapQualityEvaluator._node_world(_scenery_v3(anchors[node_id]), quality)) <= epsilon:
+			return {"reason": "node reserve", "blocker_id": node_id}
+	var road_clearance: float = MapLayoutCanonical.float_value(
+		quality["geometry"]["road_corridor"]["world_clearance_m"])
+	var edges: Dictionary = data["edges"]
+	for edge_id: String in MapLayoutCanonical.sorted_keys(edges):
+		var edge: Dictionary = edges[edge_id]
+		var reserve: float = MapLayoutCanonical.float_value(edge["corridor_width"]) \
+			* 0.5 + road_clearance
+		var points: Array = edge["centerline"]
+		for i: int in range(points.size() - 1):
+			if MapQualityEvaluator._segment_polygon(
+					_scenery_xz(points[i]), _scenery_xz(points[i + 1]), footprint) \
+					< reserve - epsilon:
+				return {"reason": "road and waylight corridor", "blocker_id": edge_id}
+	var protected: Dictionary = contract["protected_zones"]
+	for zone_id: String in MapLayoutCanonical.sorted_keys(protected):
+		var zone: Dictionary = protected[zone_id]
+		var geometry_id: String = "%s_protected_zone" % str(zone["role"])
+		var governed: Dictionary = quality["geometry"]
+		if not governed.has(geometry_id):
+			return {"reason": "unknown hero protected zone", "blocker_id": zone_id}
+		var rule: Dictionary = governed[geometry_id]
+		var padding: float = MapLayoutCanonical.float_value(rule["padding_m"])
+		if MapQualityEvaluator._polygon_distance(footprint,
+				MapQualityEvaluator._poly(zone["polygon"])) < padding - epsilon:
+			return {"reason": "hero protected zone", "blocker_id": zone_id}
+	for prior: PackedVector2Array in accepted:
+		if MapQualityEvaluator._polygon_distance(footprint, prior) <= epsilon:
+			return {"reason": "accepted scenery footprint", "blocker_id": "scenery"}
+	return {}
+
+
+## Transplanted from MapScene; it still uses the same profile authority and
+## exact transform, but now runs before the result is published.
+static func _placement_footprint(candidate: Dictionary, profiles: Dictionary,
+		helper: MapAssetProfiles) -> PackedVector2Array:
+	var placement: Dictionary = candidate["placement"]
+	var transform: Dictionary = placement["transform"]
+	var profile_id: String = str(placement["profile_id"])
+	if not profiles.has(profile_id):
+		return PackedVector2Array()
+	return helper.transformed_footprint(
+		profiles[profile_id], _scenery_v3(transform["origin"]),
+		rad_to_deg(MapLayoutCanonical.float_value(transform["yaw_radians"])),
+		_scenery_v3(transform["scale"]))
+
+
+static func _scenery_zone_contract(quality: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	for row_v: Variant in quality.get("zones", []):
+		if typeof(row_v) != TYPE_DICTIONARY:
+			continue
+		var row: Dictionary = row_v
+		var zone_id: String = str(row.get("id", ""))
+		if zone_id in SCENERY_ZONES:
+			out[zone_id] = row
+	for zone_id: String in SCENERY_ZONES:
+		if not out.has(zone_id):
+			return {}
+	return out
+
+
+static func _profile_radius(profile: Dictionary, scale: Vector3) -> float:
+	var points_v: Variant = profile.get("local_footprint", PackedVector2Array())
+	if not points_v is PackedVector2Array:
+		return 0.0
+	var radius: float = 0.0
+	var points: PackedVector2Array = points_v
+	for point: Vector2 in points:
+		radius = maxf(radius,
+			Vector2(point.x * scale.x, point.y * scale.z).length())
+	return radius
+
+
+static func _zone_occupancy(zone_id: String, areas: Dictionary,
+		zone_areas: Dictionary) -> float:
+	return MapLayoutCanonical.float_value(areas[zone_id]) / maxf(
+		MapLayoutCanonical.float_value(zone_areas[zone_id]), 0.000001)
+
+
+static func _polygon_area(poly: PackedVector2Array) -> float:
+	var total: float = 0.0
+	for i: int in range(poly.size()):
+		total += poly[i].cross(poly[(i + 1) % poly.size()])
+	return absf(total) * 0.5
+
+
+static func _record_scenery_rejection(rejections: Dictionary,
+		zone_id: String, reason: String) -> void:
+	var reasons: Dictionary = rejections[zone_id]
+	reasons[reason] = MapLayoutCanonical.int_value(reasons.get(reason, 0)) + 1
+	rejections[zone_id] = reasons
+
+
+static func _sum_int_values(values: Dictionary) -> int:
+	var total: int = 0
+	for value_v: Variant in values.values():
+		total += MapLayoutCanonical.int_value(value_v)
+	return total
+
+
+static func _scenery_failure(id: String, reason: String,
+		diagnostics: Dictionary) -> Dictionary:
+	return {"ok": false, "diagnostics": diagnostics, "binding": {
+		"kind": "scenery_sampling", "id": id, "node_id": "", "edge_id": "",
+		"profile_id": "world", "reason": reason,
+		"details": {"terminal": true, "diagnostics": diagnostics},
+	}}
+
+
+static func _scenery_a3(value: Vector3) -> Array[float]:
+	return [value.x, value.y, value.z]
+
+
+static func _scenery_v3(value: Variant) -> Vector3:
+	if value is Vector3:
+		return value
+	var row: Array = value
+	return Vector3(MapLayoutCanonical.float_value(row[0]),
+		MapLayoutCanonical.float_value(row[1]),
+		MapLayoutCanonical.float_value(row[2]))
+
+
+static func _scenery_xz(value: Variant) -> Vector2:
+	var point: Vector3 = _scenery_v3(value)
+	return Vector2(point.x, point.z)
+
+
 static func _result(source: Dictionary, input: MapLayoutInput,
 		anchors: Dictionary, routes: Dictionary, heroes: Dictionary,
+		scenery: Dictionary,
 		hard: Dictionary, soft: Dictionary, selected_id: String) -> MapLayoutResult:
 	return MapLayoutResult.create({
 		"schema_version": MapLayoutResult.SCHEMA_VERSION,
@@ -1068,7 +1570,7 @@ static func _result(source: Dictionary, input: MapLayoutInput,
 		"node_anchors": anchors,
 		"edges": routes,
 		"hero_placements": heroes,
-		"scenery_instances": {},
+		"scenery_instances": scenery,
 		"hard_measurements": hard,
 		"soft_scores": soft,
 		"selected_restart_id": 0,
