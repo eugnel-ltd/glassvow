@@ -796,6 +796,11 @@
       }
     },
     "cards": {
+      "crossedIntent": {
+        "name": "Crossed Intent",
+        "text": "Exchange the linked enemies' Attack intents this turn. Unplayable without a link.",
+        "textUp": "Exchange the linked enemies' Attack intents this turn. Unplayable without a link."
+      },
       "aegis": {
         "name": "Cathedral Glass",
         "text": "Gain #30# Ward. Kindle.",
@@ -2066,6 +2071,10 @@
       }
     },
     "relics": {
+      "crossedThreads": {
+        "name": "Crossed Threads",
+        "text": "At the start of your turn, link the two pure Attack intents furthest apart in damage."
+      },
       "ashenCore": {
         "name": "Ashen Core",
         "text": "Enemies begin each combat with 3 Smolder."

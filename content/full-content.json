@@ -237,6 +237,22 @@
       "name": "Smother",
       "text": "Gain #5# Ward. Apply 2 Smolder."
     },
+    "crossedIntent": {
+      "type": "skill",
+      "rarity": "common",
+      "cost": 1,
+      "target": "self",
+      "aspect": "duskblade",
+      "vfx": "void",
+      "effects": [{"kind": "special", "id": "crossedIntent"}],
+      "up": {
+        "cost": 0,
+        "effects": [{"kind": "special", "id": "crossedIntent"}],
+        "text": "Exchange the linked enemies' Attack intents this turn. Unplayable without a link."
+      },
+      "name": "Crossed Intent",
+      "text": "Exchange the linked enemies' Attack intents this turn. Unplayable without a link."
+    },
     "twinFangs": {
       "type": "attack",
       "rarity": "common",
@@ -1699,6 +1715,7 @@
   },
   "cardPools": {
     "common": [
+      "crossedIntent",
       "twinFangs",
       "quickSlash",
       "heavyBlow",
@@ -1922,6 +1939,14 @@
       "name": "Sweet Root",
       "text": "On pickup: gain 8 Max HP."
     },
+    "crossedThreads": {
+      "rarity": "uncommon",
+      "aspect": "duskblade",
+      "glyph": "⇄",
+      "tone": "#8fa8ff",
+      "name": "Crossed Threads",
+      "text": "At the start of your turn, link the two pure Attack intents furthest apart in damage."
+    },
     "gravebloom": {
       "rarity": "uncommon",
       "glyph": "❀",
@@ -2087,6 +2112,7 @@
       "sweetRoot"
     ],
     "uncommon": [
+      "crossedThreads",
       "gravebloom",
       "silkFan",
       "reapersBell",

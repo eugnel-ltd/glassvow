@@ -32,6 +32,8 @@ var hp_lost: int = 0
 var prism_procd: bool = false
 ## True when the Eternal Keeper's lethal threshold handed the fight to #312.
 var finale_handoff: bool = false
+## Research candidate: one combat-local linked-intent lifecycle.
+var crossed_intent: Dictionary = {}
 
 
 func living_enemies() -> Array[EnemyCombatant]:

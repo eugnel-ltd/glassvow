@@ -16,6 +16,7 @@ var quests: QuestRules
 const SPECIAL_IDS: Array[String] = [
 	"leech", "execute", "momentum", "doubleBlock", "phantom", "devour",
 	"pyreTithe", "catalyst", "shatterEcho", "flawless", "emberNova", "emberdance",
+	"crossedIntent",
 ]
 const POTION_IDS: Array[String] = [
 	"healing", "strength", "swift", "block", "fire", "venom", "energy",
@@ -321,6 +322,7 @@ static func _shuffle_cards(rng: Rng, arr: Array[CardInst]) -> void:
 
 
 func _compute_intents(run: RunState, cb: CombatState) -> void:
+	cb.crossed_intent = {}
 	for e: EnemyCombatant in cb.enemies:
 		if e.hp <= 0:
 			continue
@@ -330,6 +332,104 @@ func _compute_intents(run: RunState, cb: CombatState) -> void:
 			e.key, cb.turn + 1, last, prev, float(e.hp) / float(e.max_hp), run.rng, e.flags
 		)
 		cb.queue.append({"t": EventTypes.INTENT, "idx": e.idx, "move": String(e.move_key)})
+	_form_crossed_link(run, cb)
+
+
+func _exchangeable_move(e: EnemyCombatant) -> Dictionary:
+	var move: Dictionary = e.move()
+	if e.hp <= 0 or e.staggered or not str(move.get("intent", "")).begins_with("attack"):
+		return {}
+	if not move.has("dmg") or _ji(move["dmg"]) <= 0 or float(str(move["dmg"])) != _ji(move["dmg"]):
+		return {}
+	if move.has("times") and (_ji(move["times"]) <= 0 \
+			or float(str(move["times"])) != _ji(move["times"])):
+		return {}
+	for field: String in ["block", "heal", "fx", "addCards", "ramp"]:
+		if move.has(field):
+			return {}
+	return move
+
+
+func _form_crossed_link(run: RunState, cb: CombatState) -> void:
+	if run.aspect != 0 or not run.has_relic("crossedThreads"):
+		return
+	var best: int = 0
+	var pair: Array[int] = []
+	for i: int in range(cb.enemies.size()):
+		var left: Dictionary = _exchangeable_move(cb.enemies[i])
+		if left.is_empty():
+			continue
+		var left_threat: int = _ji(left["dmg"]) * _ji(left.get("times", 1))
+		for j: int in range(i + 1, cb.enemies.size()):
+			var right: Dictionary = _exchangeable_move(cb.enemies[j])
+			if right.is_empty():
+				continue
+			var gap: int = absi(left_threat - _ji(right["dmg"]) * _ji(right.get("times", 1)))
+			if gap > best:
+				best = gap
+				pair = [i, j]
+	if pair.is_empty():
+		return
+	cb.crossed_intent = {
+		"indices": pair,
+		"moveKeys": [String(cb.enemies[pair[0]].move_key), String(cb.enemies[pair[1]].move_key)],
+		"exchanged": false,
+	}
+	_proc(cb, "crossedThreads")
+
+
+func effective_enemy_move(cb: CombatState, e: EnemyCombatant) -> Dictionary:
+	var link: Dictionary = cb.crossed_intent
+	if link.get("exchanged", false) != true:
+		return e.move()
+	var indices: Array = link.get("indices", [])
+	var keys: Array = link.get("moveKeys", [])
+	if indices.size() != 2 or keys.size() != 2:
+		return e.move()
+	var side: int = indices.find(e.idx)
+	if side < 0:
+		return e.move()
+	var other: int = 1 - side
+	var source_idx: int = indices[other]
+	if source_idx < 0 or source_idx >= cb.enemies.size():
+		return e.move()
+	var moves: Dictionary = cb.enemies[source_idx].def.get("moves", {})
+	return moves.get(str(keys[other]), e.move())
+
+
+func _effective_move_key(cb: CombatState, e: EnemyCombatant) -> String:
+	var link: Dictionary = cb.crossed_intent
+	if link.get("exchanged", false) != true:
+		return String(e.move_key)
+	var indices: Array = link.get("indices", [])
+	var keys: Array = link.get("moveKeys", [])
+	var side: int = indices.find(e.idx)
+	return str(keys[1 - side]) if side >= 0 and keys.size() == 2 else String(e.move_key)
+
+
+func live_crossed_link(cb: CombatState) -> Variant:
+	var link: Dictionary = cb.crossed_intent
+	if link.is_empty() or link.get("exchanged", false) == true:
+		return null
+	var indices: Array = link.get("indices", [])
+	var keys: Array = link.get("moveKeys", [])
+	if indices.size() != 2 or keys.size() != 2:
+		return null
+	var labels: Array[String] = []
+	for side: int in range(2):
+		var idx: int = indices[side]
+		if idx < 0 or idx >= cb.enemies.size():
+			return null
+		var e: EnemyCombatant = cb.enemies[idx]
+		if e.hp <= 0 or e.staggered or String(e.move_key) != str(keys[side]):
+			return null
+		labels.append(str(e.move().get("name", keys[side])))
+	return {"indices": indices.duplicate(), "intentLabels": labels}
+
+
+func _invalidate_unconsumed_crossed_link(cb: CombatState) -> void:
+	if cb.crossed_intent.get("exchanged", false) != true:
+		cb.crossed_intent = {}
 
 
 func _start_player_turn(run: RunState, cb: CombatState) -> void:
@@ -488,6 +588,7 @@ func damage_player(
 
 
 func lose_combat(run: RunState, cb: CombatState) -> void:
+	cb.crossed_intent = {}
 	cb.over = true
 	cb.result = "loss"
 	cb.player.hp = 0
@@ -496,6 +597,7 @@ func lose_combat(run: RunState, cb: CombatState) -> void:
 
 
 func _win_combat(run: RunState, cb: CombatState) -> void:
+	cb.crossed_intent = {}
 	cb.over = true
 	cb.result = "win"
 	quests.on_combat_win(run, cb)
@@ -606,6 +708,7 @@ func _on_enemy_death(run: RunState, cb: CombatState, e: EnemyCombatant) -> void:
 	var smolder: int = _sget(e.statuses, "poison")  # capture before the vessel empties
 	e.statuses = {}
 	e.staggered = false
+	_invalidate_unconsumed_crossed_link(cb)
 	cb.queue.append({"t": EventTypes.DIE, "idx": e.idx})
 	# The death line rides right behind the die event (engine.js:1384-1385).
 	var death_line_v: Variant = e.def.get("deathDialogue")
@@ -690,6 +793,7 @@ func _shatter_enemy(run: RunState, cb: CombatState, e: EnemyCombatant) -> void:
 		return
 	run.stats["shatters"] = _ji(run.stats.get("shatters", 0)) + 1
 	e.staggered = true
+	_invalidate_unconsumed_crossed_link(cb)
 	cb.queue.append({"t": EventTypes.SHATTER, "idx": e.idx, "facetMax": e.facet_max})
 	add_status_enemy(cb, e, "vulnerable", 2)
 	gain_embers(run, cb, 2)
@@ -747,6 +851,8 @@ func can_play(run: RunState, cb: CombatState, inst: CardInst, target_idx: Varian
 	if cb.over:
 		return false
 	var d: Dictionary = card_data(inst)
+	if inst.id == &"crossedIntent" and (run.aspect != 0 or live_crossed_link(cb) == null):
+		return false
 	var unplayable: bool = d.get("unplayable", false)
 	if unplayable:
 		return false
@@ -956,6 +1062,13 @@ func _apply_special(
 ) -> void:
 	var sid: String = str(fx.get("id", ""))
 	match sid:
+		"crossedIntent":
+			cb.crossed_intent["exchanged"] = true
+			var indices: Array = cb.crossed_intent.get("indices", [])
+			for idx_v: Variant in indices:
+				var idx: int = idx_v
+				cb.queue.append({"t": EventTypes.INTENT, "idx": idx,
+					"move": _effective_move_key(cb, cb.enemies[idx])})
 		"leech":
 			var leech_loss: int = hit_enemy(run, cb, target, _ji(fx["n"]), true, damage_mult)
 			if leech_loss > 0:
@@ -1015,6 +1128,7 @@ func end_turn(run: RunState, cb: CombatState) -> void:
 	if cb.over:
 		return
 	var p: PlayerCombatant = cb.player
+	_invalidate_unconsumed_crossed_link(cb)
 	cb.queue.append({"t": EventTypes.END_TURN})
 	# Hand end-of-turn penalties (burn / hex).
 	for c: CardInst in cb.hand.duplicate():
@@ -1080,12 +1194,13 @@ func end_turn(run: RunState, cb: CombatState) -> void:
 			e.last_moves.append(String(e.move_key))
 			cb.queue.append({"t": EventTypes.STAGGERED, "idx": e.idx})
 		else:
-			var mv: Dictionary = e.move()
+			var mv: Dictionary = effective_enemy_move(cb, e)
 			cb.queue.append({
 				"t": EventTypes.ENEMY_ACT,
 				"idx": e.idx,
-				"move": String(e.move_key),
+				"move": _effective_move_key(cb, e),
 				"name": str(mv.get("name", "")),
+				"payload": mv.duplicate(true),
 			})
 			e.last_moves.append(String(e.move_key))
 			if mv.get("dmg") != null:
@@ -1135,6 +1250,7 @@ func end_turn(run: RunState, cb: CombatState) -> void:
 		_tick_status(e.statuses, "weak")
 	if cb.over:
 		return
+	cb.crossed_intent = {}
 	_compute_intents(run, cb)
 	_start_player_turn(run, cb)
 
@@ -1309,7 +1425,7 @@ func preview_block(cb: CombatState, base: int, run: RunState = null) -> int:
 func preview_enemy_dmg(
 	cb: CombatState, e: EnemyCombatant, run: RunState = null
 ) -> Variant:
-	var mv: Dictionary = e.move()
+	var mv: Dictionary = effective_enemy_move(cb, e)
 	var dmg_v: Variant = mv.get("dmg")
 	if dmg_v == null:
 		return null

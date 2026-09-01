@@ -42,14 +42,16 @@ func card_pool(run: RunState, tier: String) -> Array:
 	var out: Array = []
 	for id_v: Variant in base:
 		var id: String = str(id_v)
-		if not _pool_open(run, content.pool_gate_cards, id):
+		if not _pool_open(run, content.pool_gate_cards, id) \
+				or not _aspect_open(run, content.cards.get(id, {})):
 			continue
 		out.append(id)
 	for unlock_v: Variant in run.unlocks:
 		var unlock: String = str(unlock_v)
 		if unlock.begins_with("card:"):
 			var id: String = unlock.trim_prefix("card:")
-			if content.cards.has(id) and content.cards[id].get("rarity") == tier and not out.has(id):
+			if content.cards.has(id) and content.cards[id].get("rarity") == tier \
+					and _aspect_open(run, content.cards[id]) and not out.has(id):
 				out.append(id)
 	return out
 
@@ -59,14 +61,16 @@ func relic_pool(run: RunState, tier: String) -> Array:
 	var out: Array = []
 	for id_v: Variant in base:
 		var id: String = str(id_v)
-		if not _pool_open(run, content.pool_gate_relics, id):
+		if not _pool_open(run, content.pool_gate_relics, id) \
+				or not _aspect_open(run, content.relics.get(id, {})):
 			continue
 		out.append(id)
 	for unlock_v: Variant in run.unlocks:
 		var unlock: String = str(unlock_v)
 		if unlock.begins_with("relic:"):
 			var id: String = unlock.trim_prefix("relic:")
-			if content.relics.has(id) and content.relics[id].get("rarity") == tier and not out.has(id):
+			if content.relics.has(id) and content.relics[id].get("rarity") == tier \
+					and _aspect_open(run, content.relics[id]) and not out.has(id):
 				out.append(id)
 	return out
 
@@ -75,6 +79,18 @@ static func _pool_open(run: RunState, gate: Dictionary, id: String) -> bool:
 	if run.reveals_all or not gate.has(id):
 		return true
 	return run.reveals.has(str(gate[id]))
+
+
+func _aspect_open(run: RunState, definition_v: Variant) -> bool:
+	if typeof(definition_v) != TYPE_DICTIONARY:
+		return false
+	var definition: Dictionary = definition_v
+	var required: String = str(definition.get("aspect", ""))
+	if required.is_empty():
+		return true
+	if run.aspect < 0 or run.aspect >= content.aspects.size():
+		return false
+	return str(content.aspects[run.aspect].get("id", "")) == required
 
 
 ## {"gold": int, "cards": Array[String], "potion": null|String, "relic": null|String}

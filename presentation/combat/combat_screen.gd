@@ -2919,7 +2919,9 @@ func _enemy_act(ev: Dictionary) -> void:
 	var idx: int = ev["idx"]
 	var view: EnemyView = _enemy_view(idx)
 	var move_key: String = str(ev.get("move", ""))
-	var attacking: bool = _move_is_attack(idx, move_key)
+	var payload: Dictionary = ev.get("payload", {})
+	var event_intent: String = str(payload.get("intent", _move_intent(idx, move_key)))
+	var attacking: bool = event_intent.begins_with("attack")
 	_hit_seq = 0
 	# `vfxSource` for the enemy phase: an attack speaks its body's language, a
 	# debuff speaks void and a ward speaks ward.
@@ -2930,7 +2932,7 @@ func _enemy_act(ev: Dictionary) -> void:
 	# card's effect back at them.
 	_vfx_card_id = ""
 	_bespoke_fired = false
-	var intent: String = _move_intent(idx, move_key)
+	var intent: String = event_intent
 	if intent == "debuff":
 		_archetype = "void"
 	elif intent == "buff" or intent == "block":
@@ -3054,7 +3056,7 @@ func _refresh_intent(idx: int) -> void:
 	var e: EnemyCombatant = game.cb.enemies[idx]
 	if e.hp <= 0:
 		return
-	var mv: Dictionary = e.move()
+	var mv: Dictionary = _rules.effective_enemy_move(game.cb, e)
 	view.set_intent(
 		StringName(str(mv.get("intent", ""))),
 		_fmt_enemy_dmg(_rules.preview_enemy_dmg(game.cb, e, game.run)),
@@ -3099,7 +3101,7 @@ func _sync_actors(reap: bool = false) -> void:
 			dmg_text = Locale.active.t("ui.combat.staggered")
 			move_name = Locale.active.t("ui.combat.staggered")
 		elif e.hp > 0:
-			var mv: Dictionary = e.move()
+			var mv: Dictionary = _rules.effective_enemy_move(cb, e)
 			intent = StringName(str(mv.get("intent", "")))
 			move_name = str(mv.get("name", String(e.move_key)))
 			dmg_text = _fmt_enemy_dmg(_rules.preview_enemy_dmg(cb, e, game.run))
@@ -3218,7 +3220,7 @@ func _intent_tip(idx: int) -> Dictionary:
 	var e: EnemyCombatant = game.cb.enemies[idx]
 	if e.staggered:
 		return {"title": Locale.active.t("ui.combat.staggeredTitle"), "body": Locale.active.t("ui.combat.staggeredBody")}
-	var mv: Dictionary = e.move()
+	var mv: Dictionary = _rules.effective_enemy_move(game.cb, e)
 	var bits: PackedStringArray = PackedStringArray()
 	var preview: Variant = _rules.preview_enemy_dmg(game.cb, e, game.run)
 	if preview != null:
@@ -3619,15 +3621,14 @@ func _activate_selected() -> void:
 	if inst == null:
 		return
 	var d: Dictionary = _rules.card_data(inst)
-	var unplayable: bool = d.get("unplayable", false)
-	if unplayable or _rules.eff_cost(game.run, game.cb, inst) > game.cb.player.energy:
-		_sfx.play(&"debuff")
-		return
 	if str(d.get("target", "")) == "enemy":
 		var living: Array[int] = []
 		for e: EnemyCombatant in game.cb.enemies:
 			if e.hp > 0:
 				living.append(e.idx)
+		if living.is_empty() or not _rules.can_play(game.run, game.cb, inst, living[0]):
+			_sfx.play(&"debuff")
+			return
 		if living.size() == 1:
 			_commit_selected(living[0])
 			return
@@ -3645,6 +3646,10 @@ func _activate_selected() -> void:
 		if hint_guide != null:
 			hint_guide.on_card_grabbed(self, _hand.card_view(_selected_uid))
 		return
+	if not _rules.can_play(game.run, game.cb, inst, null):
+		_sfx.play(&"debuff")
+		return
+	_commit_selected(-1)
 
 
 func _commit_selected(target_idx: int) -> void:

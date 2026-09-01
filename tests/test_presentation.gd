@@ -234,6 +234,20 @@ static func run(fails: Array[String]) -> void:
 		_check(fails, game.cb.hand.size() == hand_before - 1, "card left the hand")
 		_check(fails, screen._hand.uids().size() == game.cb.hand.size(), "hand view tracks state")
 		_check(fails, not screen.request_play(9999, 0), "unknown uid rejected")
+	# The shared activation seam must commit self-target cards for both tap and keyboard.
+	var self_uid: int = -1
+	for c: CardInst in game.cb.hand:
+		if str(game.rules.card_data(c).get("target", "")) == "self" \
+				and game.rules.can_play(game.run, game.cb, c, null):
+			self_uid = c.uid
+			break
+	_check(fails, self_uid >= 0, "hand holds a playable self-target card")
+	if self_uid >= 0:
+		var self_hand_before: int = game.cb.hand.size()
+		screen._selected_uid = self_uid
+		screen._activate_selected()
+		_check(fails, game.cb.hand.size() == self_hand_before - 1,
+			"shared activation commits a playable self-target card")
 
 	# End the turn: enemy phase runs, next turn draws back to 5.
 	screen._on_end_turn_pressed()
