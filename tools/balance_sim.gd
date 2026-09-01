@@ -67,7 +67,7 @@ func _initialize() -> void:
 static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0,
 		ban: PackedStringArray = PackedStringArray(), policy: Dictionary = {},
 		random_build: bool = false, random_play: bool = false, mix: Dictionary = {},
-		vigil: VigilState = null, strip_start_hex: bool = false) -> Dictionary:
+		vigil: VigilState = null, strip_start_hex: bool = false, unlocks: PackedStringArray = PackedStringArray(["aspect2"])) -> Dictionary:
 	_probe = {}
 	Pilot.set_ban(ban)
 	Pilot.apply_policy(policy)
@@ -75,7 +75,7 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 	var aspect_index: int = 1 if aspect == "ashwarden" else 0
 	var profile: Dictionary = {
 		"aspect": aspect_index, "vow": vow, "reveals": content.reveal_ids.duplicate(),
-		"unlocks": ["aspect2"], "quests": {}, "shards": [], "lamplighter": false,
+		"unlocks": unlocks, "quests": {}, "shards": [], "lamplighter": false,
 	}
 	if vigil != null:
 		profile["quests"] = vigil.quests.duplicate(true)
@@ -150,6 +150,10 @@ static func _fight(game: GlassvowGame, node: MapNode) -> Dictionary:
 		if event.get("t") == EventTypes.HIT_ENEMY and event.get("poison", false) \
 				and event.get("dead", false):
 			smolder_kills += 1
+		elif event.get("t") == EventTypes.RELIC_PROC:
+			var relic_id: String = str(event.get("id", ""))
+			if relic_id in ["bellOfEndings", "prismCharm"]:
+				_bump("%sProcs" % relic_id)
 	return {
 		"act": game.run.act + 1, "kind": node.combat_kind(), "enemies": enemies,
 		"result": game.cb.result if game.cb.over else "stall", "turns": game.cb.turn,
@@ -161,6 +165,7 @@ static func _enter_node(run: RunState, node: MapNode) -> void:
 	run.node_id = node.id
 	run.waystones_lit = node.row + 1
 	if node.unlit:
+		_track_thief_of_wicks_proc(run)
 		var bounty: int = node.bounty * (2 if run.has_relic("thiefOfWicks") else 1)
 		run.player.gold += bounty
 		run.stats["goldEarned"] = int(float(str(run.stats.get("goldEarned", 0)))) + bounty
@@ -183,9 +188,11 @@ static func _claim_rewards(game: GlassvowGame, rewards: Dictionary) -> void:
 		if slot >= 0:
 			game.run.player.potions[slot] = str(potion_v)
 	var relic_v: Variant = rewards.get("relic")
+	_track_relic_offer(relic_v)
 	if relic_v != null and not Pilot.is_banned(str(relic_v)):
 		game.rewards.gain_relic(game.run, str(relic_v))
 	var relic2_v: Variant = rewards.get("relic2")
+	_track_relic_offer(relic2_v)
 	if relic2_v != null and not Pilot.is_banned(str(relic2_v)):
 		game.rewards.gain_relic(game.run, str(relic2_v))
 static func _resolve_safe_node(game: GlassvowGame, node: MapNode) -> void:
@@ -235,7 +242,7 @@ static func _resolve_event(game: GlassvowGame) -> void:
 			best_score = score
 			choice = row
 	var ops: Array = choice.get("ops", [])
-	var pending: Dictionary = game.rewards.apply_event_ops(game.run, ops)
+	var pending: Dictionary = _apply_event_ops_and_track_relics(game, ops)
 	match str(pending.get("kind", "")):
 		"card":
 			for pending_card: Variant in pending.get("cards", []):
@@ -382,6 +389,8 @@ static func _resolve_shop(game: GlassvowGame) -> void:
 	for row_v: Variant in stock.get("cards", []):
 		var row: Dictionary = row_v
 		_bump("%sOffered" % str(row.get("id", "")))
+	var relic_rows: Array = stock.get("relics", [])
+	_track_relic_rows(relic_rows)
 	var buys: Array[Dictionary] = Pilot.choose_shop(stock, game.run, game.content)
 	for buy: Dictionary in buys:
 		var price: int = int(float(str(buy["price"])))
@@ -411,7 +420,7 @@ static func _resolve_shop(game: GlassvowGame) -> void:
 				game.run.player.deck.erase(remove)
 static func _claim_treasure(game: GlassvowGame) -> void:
 	var before: Array[String] = game.run.player.relics.duplicate()
-	game.rewards.claim_treasure(game.run)
+	_track_relic_offer(game.rewards.claim_treasure(game.run).get("relic"))
 	for id: String in game.run.player.relics:
 		if not before.has(id) and Pilot.is_banned(id):
 			game.run.player.relics.erase(id)
@@ -438,12 +447,8 @@ static func _apply_ban(run: RunState) -> void:
 		run.player.relics.append(id)
 static func _ji(value: Variant) -> int:
 	return int(float(str(value)))
-
-
 static func _bump(key: String, n: int = 1) -> void:
 	_probe[key] = int(float(str(_probe.get(key, 0)))) + n
-
-
 static func _harvest_fight(game: GlassvowGame) -> void:
 	var relics: Array[String] = game.run.player.relics
 	if relics.has("ashenCore"):
@@ -493,8 +498,6 @@ static func _harvest_fight(game: GlassvowGame) -> void:
 				_bump("ashenCoreTriggered")
 			elif relic_id == "smolderingCoal":
 				_bump("smolderingCoalTriggered")
-
-
 static func _economy_row(run: RunState) -> Dictionary:
 	return {"act": run.act + 1, "gold": run.player.gold, "hp": run.player.hp,
 		"maxHp": run.player.max_hp, "deck": run.player.deck.size()}
@@ -512,18 +515,15 @@ static func _result(run: RunState, aspect: String, seed: int, outcome: String,
 		"policy": Pilot.policy_snapshot(),
 		"packageEvents": _probe.duplicate(),
 	}
-
-
 static func _finish(run: RunState, aspect: String, seed: int, outcome: String,
 		fights: Array[Dictionary], error: String, economy: Array[Dictionary],
 		vigil: VigilState, content: ContentDB) -> Dictionary:
+	_snapshot_finish_probe(run)
 	var row: Dictionary = _result(run, aspect, seed, outcome, fights, error, economy)
 	if vigil != null:
 		var commit: String = "win" if outcome == "win" else "death"
 		vigil.commit_run(run, commit, content)
 	return row
-
-
 static func _strip_hex(run: RunState) -> void:
 	var kept: Array[CardInst] = []
 	for card: CardInst in run.player.deck:
@@ -590,3 +590,35 @@ static func _manifest(opts: Dictionary, overlay: String, identity: Dictionary) -
 	row["mix"] = str(opts["mix"]) if not str(opts.get("mix", "")).is_empty() \
 		else Incentives.SHIPPING_ID
 	return row
+
+
+static func _track_thief_of_wicks_proc(run: RunState) -> void:
+	if run.has_relic("thiefOfWicks"):
+		_bump("thiefOfWicksProcs")
+
+
+static func _track_relic_offer(relic_v: Variant) -> void:
+	if relic_v != null:
+		_bump("%sOffered" % str(relic_v))
+
+
+static func _track_relic_rows(rows: Array) -> void:
+	for row_v: Variant in rows:
+		var row: Dictionary = row_v
+		_track_relic_offer(row.get("id"))
+
+
+static func _apply_event_ops_and_track_relics(game: GlassvowGame, ops: Array) -> Dictionary:
+	var relics_before: Array[String] = game.run.player.relics.duplicate()
+	var pending: Dictionary = game.rewards.apply_event_ops(game.run, ops)
+	for relic_id: String in game.run.player.relics:
+		if not relics_before.has(relic_id):
+			_track_relic_offer(relic_id)
+	return pending
+
+
+static func _snapshot_finish_probe(run: RunState) -> void:
+	_probe["slain"] = _ji(run.stats.get("slain", 0))
+	_probe["perfects"] = _ji(run.stats.get("perfects", 0))
+	_probe["unlitVisited"] = _ji(run.stats.get("unlitVisited", 0))
+	_probe["embersSpent"] = _ji(run.stats.get("embersSpent", 0))
