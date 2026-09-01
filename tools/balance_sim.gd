@@ -67,7 +67,8 @@ func _initialize() -> void:
 static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0,
 		ban: PackedStringArray = PackedStringArray(), policy: Dictionary = {},
 		random_build: bool = false, random_play: bool = false, mix: Dictionary = {},
-		vigil: VigilState = null, strip_start_hex: bool = false) -> Dictionary:
+		vigil: VigilState = null, strip_start_hex: bool = false,
+		unlocks: PackedStringArray = PackedStringArray(["aspect2"])) -> Dictionary:
 	_probe = {}
 	Pilot.set_ban(ban)
 	Pilot.apply_policy(policy)
@@ -75,7 +76,7 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 	var aspect_index: int = 1 if aspect == "ashwarden" else 0
 	var profile: Dictionary = {
 		"aspect": aspect_index, "vow": vow, "reveals": content.reveal_ids.duplicate(),
-		"unlocks": ["aspect2"], "quests": {}, "shards": [], "lamplighter": false,
+		"unlocks": unlocks, "quests": {}, "shards": [], "lamplighter": false,
 	}
 	if vigil != null:
 		profile["quests"] = vigil.quests.duplicate(true)
