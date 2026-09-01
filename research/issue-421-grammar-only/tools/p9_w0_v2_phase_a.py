@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preflight, execute and decide exactly one frozen STREAM-B-v3 simulator Phase A."""
+"""Preflight and execute the sole STREAM-B-v4 matched attribution re-exam."""
 from __future__ import annotations
 
 import argparse
@@ -15,14 +15,16 @@ import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-PROTOCOL_ID = "p9-w0-v3-phase-a"
-PROTOCOL_REL = Path("research/issue-421-grammar-only/protocols/p9-w0-v3-phase-a-preregistration.json")
+PROTOCOL_ID = "p9-w0-v4-phase-a"
+PROTOCOL_REL = Path("research/issue-421-grammar-only/protocols/p9-w0-v4-phase-a-preregistration.json")
 ROWS_REL = Path("research/issue-421-grammar-only/tools/p9_w0_v2_phase_a_rows.gd")
 CURRENT_REL = Path("research/issue-421-grammar-only/inputs/current-main-c28ae388-full-content.json")
-OUT_REL = Path("research/issue-421-grammar-only/artifacts/p9-w0-v3-phase-a")
+OUT_REL = Path("research/issue-421-grammar-only/artifacts/p9-w0-v4-phase-a")
 V2_ROWS_REL = Path("research/issue-421-grammar-only/artifacts/p9-w0-v2-phase-a/raw-rows.jsonl")
-EXIT = {"GO": 0, "NO-GO": 2, "VETO": 3, "FAIL_CLOSED": 4}
-EXPECTED_ROWS = 6400
+V3_PACKET = Path("/Users/jamesto/.codex/worktrees/421-stream-b-reliability-v3/glassvow/research/issue-421-grammar-only/artifacts/p9-w0-v3-phase-a")
+PREFLIGHT_ROWS = Path("/tmp/glassvow-421-v4-preflight.jsonl")
+EXIT = {"PASS": 0, "FAIL_CLOSED": 4, "STOP": 5}
+EXPECTED_ROWS = 1600
 COMPARATOR_ARM3_ROWS = 1200
 TURN_CEILING = "turnCeiling"
 PER_CELL_RUNS = 400
@@ -30,6 +32,14 @@ PER_CELL_BOUND = 0.02
 PER_CELL_MAX = 8
 PER_CELL_VETO_AT = 9
 WHOLE_RUN_BOUND = 0.005
+WHOLE_RUN_ROWS = 6400
+PARTICIPATION_FIELDS = ("facetBurstOffered", "facetBurstDrawn",
+                        "facetBurstPlayed", "facetBurstInDeck")
+EXPECTED_CEILINGS = {("omitted", 0, 4151), ("omitted", 5, 4064),
+                     ("omitted", 5, 4079), ("explicit-off", 0, 4151),
+                     ("explicit-off", 5, 4064), ("explicit-off", 5, 4079),
+                     ("current-main", 0, 4060), ("current-main", 0, 4096),
+                     ("null-card", 0, 4060), ("null-card", 0, 4096)}
 
 
 def sha256(path: Path) -> str:
@@ -66,34 +76,36 @@ def _self_test() -> None:
     assert cp_lower(0, 200) == 0.0
     assert abs(cp_lower(10, 200) - 0.0242341655) < 1e-8
     assert canonical_sha({"b": 2, "a": 1}) == canonical_sha({"a": 1, "b": 2})
-    matched = [
-        _synthetic_row("omitted", TURN_CEILING, 4000),
-        _synthetic_row("null-card", TURN_CEILING, 4000),
-    ]
-    matched_metrics = _reliability(matched)
-    assert matched_metrics["unmatchedCount"] == 0
-    unmatched_metrics = _reliability(matched[:1])
-    assert unmatched_metrics["unmatchedCount"] == 1
+    candidate_free = _reliability([_synthetic_row("omitted", TURN_CEILING, 4000)])
+    assert candidate_free["candidateFreeCount"] == 1
+    assert candidate_free["candidateTouchedCount"] == 0
+    for field in PARTICIPATION_FIELDS:
+        touched = _synthetic_row("omitted", TURN_CEILING, 4000)
+        touched[field] = 1
+        metrics = _reliability([touched])
+        assert metrics["candidateFreeCount"] == 0
+        assert metrics["candidateTouchedCount"] == 1
     error_metrics = _reliability([_synthetic_row("omitted", "error", 4000)])
     assert error_metrics["errorCount"] == 1 and error_metrics["turnCeilingCount"] == 0
     over_cell = []
     for seed in range(4000, 4000 + PER_CELL_VETO_AT):
-        over_cell.extend((_synthetic_row("omitted", TURN_CEILING, seed),
-                          _synthetic_row("null-card", TURN_CEILING, seed)))
+        over_cell.append(_synthetic_row("omitted", TURN_CEILING, seed))
     assert _reliability(over_cell)["perCell"]["arm3:duskblade"]["exceeded"]
     over_whole = [_synthetic_row("null-card", TURN_CEILING, seed)
                   for seed in range(33)]
-    over_whole.extend(_synthetic_row("omitted", "loss", seed) for seed in range(6367))
     assert _reliability(over_whole)["wholeRun"]["exceeded"]
     assert sum(len(seeds) for seeds in _expected_matrix().values()) == EXPECTED_ROWS
     assert _arm3_comparator_rows() == COMPARATOR_ARM3_ROWS
-    print("PASS (10 p9-w0-v3 Phase A runner checks)")
+    print("PASS (p9-w0-v4 analyser: candidate-free plus four touched cases)")
 
 
 def _synthetic_row(variant: str, outcome: str, seed: int) -> dict:
     return {"variant": variant, "cohort": "comparator" if variant != "omitted" else "control",
             "arm": 3, "aspect": "duskblade", "vow": 0, "seed": seed,
-            "outcome": outcome, "error": "induced" if outcome == "error" else ""}
+            "outcome": outcome, "error": "induced" if outcome == "error" else "",
+            "rng": seed, "outcomeDigest": "0" * 64, "trajectoryDigest": "1" * 64,
+            "facetBurstOffered": 0, "facetBurstDrawn": 0, "facetBurstPlayed": 0,
+            "facetBurstInDeck": 0, "ceilingFight": {}, "h11PlayerDuskEnemySmolder": 0}
 
 
 def _other_godot_processes() -> list[str]:
@@ -109,7 +121,7 @@ def _other_godot_processes() -> list[str]:
 
 
 def _preflight(protocol: dict, expected_protocol_sha: str, expected_head: str,
-               godot: str) -> tuple[str, str]:
+               godot: str, run_probe: bool) -> tuple[str, str, dict]:
     protocol_path = REPO / PROTOCOL_REL
     if sha256(protocol_path) != expected_protocol_sha:
         raise RuntimeError("protocol SHA-256 does not match the frozen invocation")
@@ -119,6 +131,16 @@ def _preflight(protocol: dict, expected_protocol_sha: str, expected_head: str,
         raise RuntimeError("execution HEAD does not match the frozen invocation")
     if git("status", "--porcelain"):
         raise RuntimeError("execution worktree is not clean")
+    parent = protocol["identities"]["executionParent"]
+    repair_paths = git("diff", "--name-only", parent, "HEAD").splitlines()
+    if any(not path.startswith("research/issue-421-grammar-only/") for path in repair_paths):
+        raise RuntimeError("repair diff escaped research/issue-421-grammar-only/")
+    inherited = set(protocol["scope"]["inheritedOutsideResearchPaths"])
+    outside = {path for path in git("diff", "--name-only",
+                                   protocol["identities"]["implementationHead"], "HEAD").splitlines()
+               if not path.startswith("research/issue-421-grammar-only/")}
+    if outside != inherited:
+        raise RuntimeError("out-of-scope diff is not exactly the inherited docs re-anchor")
     if git("rev-parse", "origin/main") != protocol["identities"]["sourceBase"]:
         raise RuntimeError("origin/main moved from the frozen source base")
     if subprocess.run(["git", "diff", "--quiet", "origin/main", "--", "port_fixtures"],
@@ -128,20 +150,29 @@ def _preflight(protocol: dict, expected_protocol_sha: str, expected_head: str,
         path = REPO / rel
         if not path.is_file() or sha256(path) != expected:
             raise RuntimeError(f"frozen file identity mismatch: {rel}")
+    lock = protocol["authority"]["bindingLock"]
+    lock_root = Path(lock["worktree"])
+    lock_head = subprocess.check_output(
+        ["git", "-C", str(lock_root), "rev-parse", "HEAD"], text=True).strip()
+    if lock_head != lock["commit"] or sha256(lock_root / lock["path"]) != lock["sha256"]:
+        raise RuntimeError("binding attribution-repair lock identity drift")
+    for name, expected in protocol["v3Reference"]["packetFiles"].items():
+        if sha256(V3_PACKET / name) != expected:
+            raise RuntimeError(f"immutable v3 packet identity drift: {name}")
     per_cell = protocol.get("reliability", {}).get("turnCeiling", {}).get("perArmAspectCell", {})
     whole_run = protocol.get("reliability", {}).get("turnCeiling", {}).get("wholeRun", {})
     if per_cell != {"boundInclusive": PER_CELL_BOUND, "runs": PER_CELL_RUNS,
                     "maximumInclusive": PER_CELL_MAX, "vetoAt": PER_CELL_VETO_AT}:
         raise RuntimeError("frozen per-cell turnCeiling bound drift")
-    if whole_run != {"boundInclusive": WHOLE_RUN_BOUND, "runs": EXPECTED_ROWS,
+    if whole_run != {"boundInclusive": WHOLE_RUN_BOUND, "runs": WHOLE_RUN_ROWS,
                      "maximumInclusive": 32, "vetoAbove": WHOLE_RUN_BOUND}:
         raise RuntimeError("frozen whole-run turnCeiling bound drift")
     if protocol.get("budget", {}).get("maximumSimulatorRows") != EXPECTED_ROWS:
         raise RuntimeError("frozen total row count drift")
-    if protocol.get("budget", {}).get("comparatorRows") != 2400:
+    if protocol.get("budget", {}).get("comparatorRows") != COMPARATOR_ARM3_ROWS:
         raise RuntimeError("frozen comparator row count drift")
     if sum(len(seeds) for seeds in _expected_matrix().values()) != EXPECTED_ROWS:
-        raise RuntimeError("internal expected matrix does not contain 6400 rows")
+        raise RuntimeError("internal expected matrix does not contain 1600 rows")
     if _arm3_comparator_rows() != COMPARATOR_ARM3_ROWS:
         raise RuntimeError("arm-3 comparator panel does not contain 1200 rows")
     if _verify_v2_arm1_identity() != 400:
@@ -163,7 +194,53 @@ def _preflight(protocol: dict, expected_protocol_sha: str, expected_head: str,
     processes = _other_godot_processes()
     if processes:
         raise RuntimeError("another Godot process is still live: " + " | ".join(processes))
-    return version, canonical_sha(candidate)
+    probe = _probe_preflight(protocol, expected_protocol_sha, expected_head, godot, run_probe)
+    return version, canonical_sha(candidate), probe
+
+
+def _probe_preflight(protocol: dict, protocol_sha: str, expected_head: str,
+                     godot: str, execute: bool) -> dict:
+    if execute:
+        if PREFLIGHT_ROWS.exists():
+            raise RuntimeError(f"preflight artifact already exists: {PREFLIGHT_ROWS}")
+        command = [godot, "--headless", "-s", f"res://{ROWS_REL}", "--",
+                   "--mode=preflight", f"--protocol=res://{PROTOCOL_REL}",
+                   f"--protocolSha={protocol_sha}", f"--expectedHead={expected_head}",
+                   f"--currentMain=res://{CURRENT_REL}", f"--out={PREFLIGHT_ROWS}"]
+        completed = subprocess.run(command, cwd=REPO, text=True, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                   timeout=int(protocol["preflight"]["wallTimeSeconds"]))
+        if completed.returncode != 0:
+            raise RuntimeError(f"probe exited {completed.returncode}: {completed.stdout.strip()}")
+    blobs = [json.loads(line) for line in PREFLIGHT_ROWS.read_text().splitlines() if line.strip()]
+    manifest, probes = blobs[0], blobs[1:]
+    if manifest.get("protocolSha256") != protocol_sha \
+            or manifest.get("executionHead") != expected_head \
+            or manifest.get("protocolRows") != 0 or not probes or len(probes) > 50:
+        raise RuntimeError("preflight probe manifest/cardinality drift")
+    positive = []
+    for probe in probes:
+        old, new, non_default = (probe["v3Writer"], probe["enrichedWriter"],
+                                 probe["nonDefaultWriter"])
+        if old["outcome"] != new["outcome"] or old["rng"] != new["rng"]:
+            raise RuntimeError(f"enriched writer changed outcome/rng at seed {probe['seed']}")
+        if old["trajectoryDigest"] != new["trajectoryDigest"]:
+            raise RuntimeError(f"same-trajectory digest mismatch at seed {probe['seed']}")
+        if non_default["outcomeDigest"] == non_default["trajectoryDigest"]:
+            raise RuntimeError(f"policy-erased digest did not differ at seed {probe['seed']}")
+        offered, drawn, played = (int(new["facetBurstOffered"]),
+                                  int(new["facetBurstDrawn"]), int(new["facetBurstPlayed"]))
+        if (played > 0 and drawn <= 0) or (drawn > 0 and offered <= 0):
+            raise RuntimeError(f"participation implication failed at seed {probe['seed']}")
+        if played > 0:
+            positive.append(probe)
+    if not positive or not all(positive[0]["eventKeys"].get(key) is True
+                               for key in PARTICIPATION_FIELDS[:3]):
+        raise RuntimeError("probe never carried a positive three-key facetBurst signal")
+    row = positive[0]["enrichedWriter"]
+    return {"artifact": str(PREFLIGHT_ROWS), "protocolRows": 0,
+            "seedsTried": len(probes), "positiveSeed": positive[0]["seed"],
+            "participation": {key: int(row[key]) for key in PARTICIPATION_FIELDS}}
 
 
 def _verify_v2_arm1_identity() -> int:
@@ -187,18 +264,11 @@ def _verify_v2_arm1_identity() -> int:
 def _expected_matrix() -> dict[tuple, set[int]]:
     expected: dict[tuple, set[int]] = {}
     controls = set(range(4000, 4200))
-    holdout = set(range(5000, 5200))
-    for arm in (1, 2, 3, 4):
-        for aspect in ("duskblade", "ashwarden"):
-            for vow in (0, 5):
-                expected[("omitted", "control", arm, aspect, vow)] = controls
-    for aspect in ("duskblade", "ashwarden"):
-        for vow in (0, 5):
-            expected[("omitted", "holdout", 1, aspect, vow)] = holdout
+    for vow in (0, 5):
+        expected[("omitted", "control", 3, "duskblade", vow)] = controls
     for variant in ("current-main", "explicit-off", "null-card"):
-        for arm in (1, 3):
-            for vow in (0, 5):
-                expected[(variant, "comparator", arm, "duskblade", vow)] = controls
+        for vow in (0, 5):
+            expected[(variant, "comparator", 3, "duskblade", vow)] = controls
     return expected
 
 
@@ -207,12 +277,14 @@ def _arm3_comparator_rows() -> int:
                if key[1] == "comparator" and key[2] == 3)
 
 
-def _read_rows(path: Path, protocol: dict, protocol_sha: str) -> tuple[dict, list[dict]]:
+def _read_rows(path: Path, protocol: dict, protocol_sha: str,
+               expected_head: str) -> tuple[dict, list[dict]]:
     blobs = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
     if not blobs or blobs[0].get("t") != "manifest":
         raise RuntimeError("row archive has no manifest")
     manifest, rows = blobs[0], blobs[1:]
     if manifest.get("protocolSha256") != protocol_sha \
+            or manifest.get("executionHead") != expected_head \
             or manifest.get("expectedRows") != EXPECTED_ROWS:
         raise RuntimeError("row manifest identity drift")
     if manifest.get("pilot") != protocol["identities"]["pilot"] \
@@ -236,6 +308,16 @@ def _read_rows(path: Path, protocol: dict, protocol_sha: str) -> tuple[dict, lis
         expected_weight = 0.0 if row["variant"] == "explicit-off" else 4.5
         if float(row["wardSurplus"]) != expected_weight:
             raise RuntimeError(f"policy comparator drift: {key} seed {seed}")
+        if any(key not in row or int(row[key]) < 0 for key in PARTICIPATION_FIELDS) \
+                or len(str(row.get("trajectoryDigest", ""))) != 64:
+            raise RuntimeError(f"attribution serialisation drift: {key} seed {seed}")
+        ceiling_fight = row.get("ceilingFight")
+        if row["outcome"] == TURN_CEILING \
+                and (not isinstance(ceiling_fight, dict)
+                     or set(ceiling_fight) != {"act", "kind", "enemies", "turns"}):
+            raise RuntimeError(f"ceilingFight serialisation drift: {key} seed {seed}")
+        if row["outcome"] != TURN_CEILING and ceiling_fight != {}:
+            raise RuntimeError(f"non-ceiling row carried ceilingFight: {key} seed {seed}")
     if dict(actual) != _expected_matrix():
         raise RuntimeError("row matrix or seed identity drift")
     return manifest, rows
@@ -270,14 +352,15 @@ def _row_coordinate(row: dict) -> dict:
 def _reliability(rows: list[dict]) -> dict:
     errors = [r for r in rows if r.get("outcome") == "error" or bool(r.get("error"))]
     ceilings = [r for r in rows if r.get("outcome") == TURN_CEILING]
-    null_twins = {(r["aspect"], int(r["vow"]), int(r["seed"])): r for r in rows
-                  if r.get("variant") == "null-card" and r.get("cohort") == "comparator"
-                  and int(r.get("arm", -1)) == 3}
-    unmatched = []
+    classified = []
     for row in ceilings:
-        twin = null_twins.get((row["aspect"], int(row["vow"]), int(row["seed"])))
-        if int(row["arm"]) != 3 or twin is None or twin.get("outcome") != TURN_CEILING:
-            unmatched.append(_row_coordinate(row))
+        coordinate = _row_coordinate(row)
+        fields = {key: int(row.get(key, 0)) for key in PARTICIPATION_FIELDS}
+        coordinate.update({"participation": fields, "participationTotal": sum(fields.values()),
+                           "ceilingFight": row.get("ceilingFight", {})})
+        classified.append(coordinate)
+    candidate_touched = [row for row in classified if row["participationTotal"] > 0]
+    candidate_free = [row for row in classified if row["participationTotal"] == 0]
 
     per_cell = {}
     for arm in (1, 2, 3, 4):
@@ -291,152 +374,131 @@ def _reliability(rows: list[dict]) -> dict:
                 "maximumInclusive": PER_CELL_MAX, "vetoAt": PER_CELL_VETO_AT,
                 "exceeded": count >= PER_CELL_VETO_AT,
             }
-    whole_rate = len(ceilings) / len(rows) if rows else 0.0
+    whole_rate = len(ceilings) / WHOLE_RUN_ROWS
     return {
         "errorCount": len(errors),
         "errorCoordinates": [_row_coordinate(r) for r in errors],
         "turnCeilingCount": len(ceilings),
-        "matchedCount": len(ceilings) - len(unmatched),
-        "unmatchedCount": len(unmatched),
-        "unmatchedCoordinates": unmatched,
+        "candidateFreeCount": len(candidate_free),
+        "candidateFreeCoordinates": candidate_free,
+        "candidateTouchedCount": len(candidate_touched),
+        "candidateTouchedCoordinates": candidate_touched,
         "nullCardArm3TurnCeilings": sum(
             r.get("outcome") == TURN_CEILING and r.get("variant") == "null-card"
             and r.get("cohort") == "comparator" and int(r.get("arm", -1)) == 3
             for r in rows),
         "perCell": per_cell,
-        "wholeRun": {"turnCeilings": len(ceilings), "runs": len(rows), "rate": whole_rate,
+        "wholeRun": {"turnCeilings": len(ceilings), "runs": WHOLE_RUN_ROWS, "rate": whole_rate,
                      "boundInclusive": WHOLE_RUN_BOUND,
-                     "maximumInclusive": int(EXPECTED_ROWS * WHOLE_RUN_BOUND),
+                     "maximumInclusive": int(WHOLE_RUN_ROWS * WHOLE_RUN_BOUND),
                      "exceeded": whole_rate > WHOLE_RUN_BOUND},
     }
 
 
+def _row_key(row: dict) -> tuple:
+    return (row["variant"], row["cohort"], int(row["arm"]), row["aspect"],
+            int(row["vow"]), int(row["seed"]))
+
+
+def _v3_reproduction(rows: list[dict]) -> dict:
+    source = [json.loads(line) for line in (V3_PACKET / "raw-rows.jsonl").read_text().splitlines()
+              if line.strip()]
+    wanted = {(*panel, seed) for panel, seeds in _expected_matrix().items() for seed in seeds}
+    old = {_row_key(row): row for row in source if row.get("t") == "row"
+           and _row_key(row) in wanted}
+    if set(old) != wanted:
+        raise RuntimeError("v3 matched-cohort coordinate set drift")
+    faults = []
+    outcome_matches = rng_matches = 0
+    for row in rows:
+        prior = old[_row_key(row)]
+        outcome_match = row["outcome"] == prior["outcome"]
+        rng_match = row["rng"] == prior["rng"]
+        outcome_matches += int(outcome_match)
+        rng_matches += int(rng_match)
+        if not outcome_match or not rng_match:
+            fault = _row_coordinate(row)
+            fault.update({"v3Outcome": prior["outcome"], "v4Outcome": row["outcome"],
+                          "v3Rng": prior["rng"], "v4Rng": row["rng"]})
+            faults.append(fault)
+    return {"checked": len(rows), "outcomeMatches": outcome_matches,
+            "rngMatches": rng_matches, "faultCount": len(faults), "faults": faults}
+
+
 def _analyse(rows: list[dict], protocol: dict) -> tuple[str, list[str], dict]:
-    veto: list[str] = []
-    misses: list[str] = []
+    failures: list[str] = []
     reliability = _reliability(rows)
+    reproduction = _v3_reproduction(rows)
+    actual_ceilings = {(r["variant"], int(r["vow"]), int(r["seed"])) for r in rows
+                       if r["outcome"] == TURN_CEILING}
+    ceiling_check = {"expected": 10, "actual": len(actual_ceilings),
+                     "matches": actual_ceilings == EXPECTED_CEILINGS,
+                     "missing": sorted(EXPECTED_CEILINGS - actual_ceilings),
+                     "unexpected": sorted(actual_ceilings - EXPECTED_CEILINGS)}
+    if reproduction["faultCount"]:
+        failures.append(f"v3 outcome/rng reproduction failure in "
+                        f"{reproduction['faultCount']} row(s)")
+    if not ceiling_check["matches"]:
+        failures.append(f"turnCeiling coordinate reproduction drift: "
+                        f"{ceiling_check['actual']}/10 expected")
     if reliability["errorCount"]:
-        veto.append(f"reliability error in {reliability['errorCount']} row(s)")
-    if reliability["unmatchedCount"]:
-        veto.append(f"unmatched turnCeiling in {reliability['unmatchedCount']} row(s)")
+        failures.append(f"reliability error in {reliability['errorCount']} row(s)")
+    if reliability["candidateTouchedCount"]:
+        failures.append(f"candidate-touched turnCeiling in "
+                        f"{reliability['candidateTouchedCount']} row(s)")
     for cell, metric in reliability["perCell"].items():
         if metric["exceeded"]:
-            veto.append(f"{cell} turnCeiling bound exceeded: "
-                        f"{metric['turnCeilings']}/{metric['runs']} (veto at 9/400)")
+            failures.append(f"{cell} turnCeiling bound exceeded: "
+                            f"{metric['turnCeilings']}/{metric['runs']} (veto at 9/400)")
     if reliability["wholeRun"]["exceeded"]:
         whole = reliability["wholeRun"]
-        veto.append(f"whole-run turnCeiling bound exceeded: "
-                    f"{whole['turnCeilings']}/{whole['runs']} >0.5%")
-    ash_rows = [r for r in rows if r["aspect"] == "ashwarden"]
-    ash_shatters = sum(int(r["shatters"]) for r in ash_rows)
-    ash_bursts = sum(int(r["facetBurstPlayed"]) for r in ash_rows)
+        failures.append(f"whole-run turnCeiling bound exceeded: "
+                        f"{whole['turnCeilings']}/{whole['runs']} >0.5%")
     h11_events = sum(int(r["h11PlayerDuskEnemySmolder"]) for r in rows)
-    if ash_shatters:
-        veto.append(f"H10: {ash_shatters} Ash shatter event(s)")
     if h11_events:
-        veto.append(f"H11: {h11_events} player-origin Dusk enemy-Smolder application(s)")
-    if ash_bursts:
-        veto.append(f"aspect scope: {ash_bursts} Ash facetBurst play(s)")
-    for variant in ("current-main", "null-card"):
-        activations = sum(int(r["facetBurstPlayed"]) for r in rows if r["variant"] == variant)
+        failures.append(f"H11: {h11_events} player-origin Dusk enemy-Smolder application(s)")
+    manufactured = {variant: sum(int(r["facetBurstPlayed"]) for r in rows
+                                 if r["variant"] == variant)
+                    for variant in ("current-main", "null-card")}
+    for variant, activations in manufactured.items():
         if activations:
-            veto.append(f"{variant} manufactured {activations} destination activation(s)")
-    paired_identity_faults = 0
-    paired_identity_checks = 0
-    for vow in (0, 5):
-        current = {int(r["seed"]): r for r in _group(rows, "current-main", "comparator", 1,
-                                                       "duskblade", vow)}
-        null = {int(r["seed"]): r for r in _group(rows, "null-card", "comparator", 1,
-                                                    "duskblade", vow)}
-        paired_identity_checks += len(current)
-        paired_identity_faults += sum(current[s]["outcomeDigest"] != null[s]["outcomeDigest"]
-                                      or current[s]["rng"] != null[s]["rng"] for s in current)
-    if paired_identity_faults:
-        veto.append(f"current-main/null-card identity drift in {paired_identity_faults} CRN pair(s)")
-
-    controls: dict[str, dict] = {}
-    for arm in (1, 2, 3, 4):
-        for aspect in ("duskblade", "ashwarden"):
-            for vow in (0, 5):
-                key = f"arm{arm}:{aspect}:v{vow}"
-                controls[key] = _summary(_group(rows, "omitted", "control", arm, aspect, vow))
-    for aspect in ("duskblade", "ashwarden"):
-        for vow in (0, 5):
-            planned = controls[f"arm1:{aspect}:v{vow}"]["winRate"]
-            random_build = controls[f"arm2:{aspect}:v{vow}"]["winRate"]
-            if random_build >= 0.50:
-                misses.append(f"arm 2 {aspect} V{vow} is {random_build:.1%}, not <50%")
-            if planned <= random_build:
-                misses.append(f"Planned is not strictly above RandomBuild for {aspect} V{vow}")
-
-    destinations: dict[str, dict] = {}
-    separation: dict[str, float] = {}
-    for vow in (0, 5):
-        omitted = _group(rows, "omitted", "control", 1, "duskblade", vow)
-        off = _group(rows, "explicit-off", "comparator", 1, "duskblade", vow)
-        for label, sample in (("omittedFacetBurst", omitted), ("explicitOffFacetBurst", off)):
-            metric = _activation(sample, "facetBurstPlayed")
-            destinations[f"{label}:v{vow}"] = metric
-            if metric["rate"] < 0.05 or metric["clopperPearsonLower95"] <= 0.0:
-                misses.append(f"{label} V{vow} misses the 5% positive-lower-bound floor")
-        direct = _activation(omitted, "shatters")
-        destinations[f"directShatter:v{vow}"] = direct
-        if direct["rate"] < 0.05 or direct["clopperPearsonLower95"] <= 0.0:
-            misses.append(f"directShatter V{vow} misses the 5% positive-lower-bound floor")
-        burst_seeds = set(destinations[f"omittedFacetBurst:v{vow}"]["seeds"])
-        shatter_seeds = set(direct["seeds"])
-        union = burst_seeds | shatter_seeds
-        jaccard = len(burst_seeds & shatter_seeds) / len(union) if union else 1.0
-        separation[f"v{vow}"] = jaccard
-        if jaccard > 0.50:
-            misses.append(f"Dusk V{vow} activation-set Jaccard {jaccard:.3f} >0.50")
-
-    holdout: dict[str, dict] = {}
-    for aspect in ("duskblade", "ashwarden"):
-        for vow in (0, 5):
-            holdout[f"{aspect}:v{vow}"] = _summary(
-                _group(rows, "omitted", "holdout", 1, aspect, vow))
-    for aspect in ("duskblade", "ashwarden"):
-        rate = holdout[f"{aspect}:v5"]["winRate"]
-        if rate > 0.90:
-            veto.append(f"holdout {aspect} V5 {rate:.1%} exceeds 90%")
-    leads: dict[str, float] = {}
-    for vow in (0, 5):
-        lead = holdout[f"ashwarden:v{vow}"]["winRate"] - holdout[f"duskblade:v{vow}"]["winRate"]
-        leads[f"v{vow}"] = lead
-        if not 0.0 <= lead <= 0.20:
-            veto.append(f"holdout Ash lead V{vow} {lead:+.1%} outside [0,20] pp")
-
-    contrasts: dict[str, dict] = {}
-    for vow in (0, 5):
-        samples = {}
-        for variant, cohort in (("omitted", "control"), ("current-main", "comparator"),
-                                ("explicit-off", "comparator"), ("null-card", "comparator")):
-            samples[variant] = {int(r["seed"]): int(r["outcome"] == "win")
-                                for r in _group(rows, variant, cohort, 1, "duskblade", vow)}
-        base = samples["omitted"]
-        contrasts[f"v{vow}"] = {f"omittedMinus{label}":
-                                  sum(base[s] - sample[s] for s in base) / len(base)
-                                  for label, sample in samples.items() if label != "omitted"}
-    metrics = {"reliability": reliability,
-               "controls": controls, "holdout": holdout, "holdoutAshLead": leads,
-               "destinations": destinations, "activationSetJaccard": separation,
-               "pairedWinContrasts": contrasts, "identity": {
-                   "ashShatters": ash_shatters, "ashFacetBurstPlays": ash_bursts,
+            failures.append(f"{variant} manufactured {activations} destination activation(s)")
+    current = {(int(r["vow"]), int(r["seed"])): r for r in rows
+               if r["variant"] == "current-main"}
+    null = {(int(r["vow"]), int(r["seed"])): r for r in rows
+            if r["variant"] == "null-card"}
+    identity_faults = sum(current[key]["outcomeDigest"] != null[key]["outcomeDigest"]
+                          or current[key]["rng"] != null[key]["rng"] for key in current)
+    if identity_faults:
+        failures.append(f"current-main/null-card identity drift in {identity_faults} CRN pair(s)")
+    omitted = {(int(r["vow"]), int(r["seed"])): r for r in rows if r["variant"] == "omitted"}
+    explicit = {(int(r["vow"]), int(r["seed"])): r for r in rows
+                if r["variant"] == "explicit-off"}
+    same_trajectory = [key for key in omitted
+                       if omitted[key]["trajectoryDigest"] == explicit[key]["trajectoryDigest"]]
+    same_ceiling = [key for key in same_trajectory if omitted[key]["outcome"] == TURN_CEILING]
+    metrics = {"reproductionVsV3": reproduction, "ceilingCoordinates": ceiling_check,
+               "reliability": reliability, "identity": {
                    "h11PlayerDuskEnemySmolder": h11_events,
-                   "currentMainNullCardPairsChecked": paired_identity_checks,
-                   "currentMainNullCardPairsIdentical": paired_identity_checks - paired_identity_faults,
-                   "currentMainNullCardPairFaults": paired_identity_faults,
-               }}
-    if veto:
-        return "VETO", veto, metrics
-    if misses:
-        return "NO-GO", misses, metrics
-    return "GO", ["all frozen Phase A gates passed"], metrics
+                   "currentMainNullCardPairsChecked": len(current),
+                   "currentMainNullCardPairsIdentical": len(current) - identity_faults,
+                   "currentMainNullCardPairFaults": identity_faults,
+                   "manufacturedFacetBurstPlays": manufactured},
+               "trajectoryDiagnostics": {"omittedExplicitOffPairsChecked": len(omitted),
+                                           "sameTrajectoryPairs": len(same_trajectory),
+                                           "sameTrajectoryCeilingExecutions": len(same_ceiling)}}
+    if failures:
+        return "FAIL_CLOSED", failures, metrics
+    return "PASS", ["all locked attribution re-exam gates passed"], metrics
 
 
 def _write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def _stop(message: str) -> int:
+    print("STOP: " + message, file=sys.stderr)
+    return EXIT["STOP"]
 
 
 def _failure(out_dir: Path | None, protocol_sha: str, expected_head: str,
@@ -444,7 +506,7 @@ def _failure(out_dir: Path | None, protocol_sha: str, expected_head: str,
     result = {"schemaVersion": 1, "protocolId": PROTOCOL_ID,
               "protocolSha256": protocol_sha, "executionHead": expected_head,
               "verdict": "FAIL_CLOSED", "reasons": [message], "rows": rows,
-              "landscapeAuthorised": False}
+              "landscapeAuthorised": False, "p9Claim": False}
     if out_dir is not None and out_dir.is_dir():
         _write_json(out_dir / "phase-a-result.json", result)
     print("FAIL_CLOSED: " + message, file=sys.stderr)
@@ -465,21 +527,20 @@ def main() -> int:
         return 0
     if args.preflight_only == args.execute \
             or len(args.expected_protocol_sha) != 64 or len(args.expected_head) != 40:
-        return _failure(None, args.expected_protocol_sha, args.expected_head,
-                        "choose exactly one of preflight-only/execute and supply the frozen "
-                        "protocol SHA and execution HEAD")
+        return _stop("choose exactly one of preflight-only/execute and supply the frozen "
+                     "protocol SHA and execution HEAD")
     protocol_path = REPO / PROTOCOL_REL
     try:
         protocol = json.loads(protocol_path.read_text())
-        version, semantic = _preflight(protocol, args.expected_protocol_sha,
-                                       args.expected_head, args.godot)
+        version, semantic, probe = _preflight(protocol, args.expected_protocol_sha,
+                                              args.expected_head, args.godot,
+                                              args.preflight_only)
     except Exception as exc:
-        return _failure(None, args.expected_protocol_sha, args.expected_head,
-                        f"pre-row preflight: {exc}")
+        return _stop(f"pre-row preflight: {exc}")
 
     if args.preflight_only:
-        print(f"PASS (p9-w0-v3 static preflight; protocol={args.expected_protocol_sha}; "
-              f"head={args.expected_head}; matrix={EXPECTED_ROWS}; arm3Comparators={COMPARATOR_ARM3_ROWS})")
+        print(f"PASS (p9-w0-v4 zero-row preflight; protocol={args.expected_protocol_sha}; "
+              f"head={args.expected_head}; protocolRows=0; positiveSeed={probe['positiveSeed']})")
         return 0
 
     out_dir = REPO / OUT_REL
@@ -489,7 +550,7 @@ def main() -> int:
         started = {"protocolId": protocol["protocolId"],
                    "protocolSha256": args.expected_protocol_sha,
                    "executionHead": args.expected_head, "rowsBeforeStart": 0,
-                   "startedAtUnix": time.time()}
+                   "preflight": probe, "startedAtUnix": time.time()}
         marker_fd = os.open(out_dir / "start-marker.json", os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
         with os.fdopen(marker_fd, "w") as marker:
             json.dump(started, marker, indent=2, sort_keys=True)
@@ -503,8 +564,9 @@ def main() -> int:
     rows_path = out_dir / "raw-rows.jsonl"
     log_path = out_dir / "godot.log"
     command = [args.godot, "--headless", "-s", f"res://{ROWS_REL}", "--",
-               f"--protocol=res://{PROTOCOL_REL}",
+               "--mode=rows", f"--protocol=res://{PROTOCOL_REL}",
                f"--protocolSha={args.expected_protocol_sha}",
+               f"--expectedHead={args.expected_head}",
                f"--currentMain=res://{CURRENT_REL}", f"--out={rows_path}"]
     started_at = time.monotonic()
     try:
@@ -517,7 +579,8 @@ def main() -> int:
             count = max(sum(1 for _ in rows_path.open()) - 1, 0) if rows_path.exists() else 0
             return _failure(out_dir, args.expected_protocol_sha, args.expected_head,
                             f"Godot row process exited {completed.returncode}", count)
-        manifest, rows = _read_rows(rows_path, protocol, args.expected_protocol_sha)
+        manifest, rows = _read_rows(rows_path, protocol, args.expected_protocol_sha,
+                                    args.expected_head)
         verdict, reasons, metrics = _analyse(rows, protocol)
     except subprocess.TimeoutExpired:
         count = max(sum(1 for _ in rows_path.open()) - 1, 0) if rows_path.exists() else 0
@@ -532,11 +595,15 @@ def main() -> int:
               "protocolSha256": args.expected_protocol_sha,
               "executionHead": args.expected_head, "implementationHead": protocol["identities"]["implementationHead"],
               "godot": version, "candidateSemanticSha256": semantic,
-              "manifest": manifest, "rows": len(rows), "wallTimeSeconds": wall,
-              "verdict": verdict, "outcomeClass": {"GO": "success", "NO-GO": "futility",
-                                                     "VETO": "veto"}[verdict],
+              "manifest": manifest, "preflight": probe,
+              "rows": len(rows), "wallTimeSeconds": wall,
+              "verdict": verdict,
+              "outcomeClass": "candidate-free" if verdict == "PASS" else
+                              ("causal-attribution" if
+                               metrics["reliability"]["candidateTouchedCount"] else
+                               "integrity-failure"),
               "reasons": reasons, "metrics": metrics,
-              "landscapeAuthorised": verdict == "GO", "landscapeStarted": False}
+              "landscapeAuthorised": False, "landscapeStarted": False, "p9Claim": False}
     result_path = out_dir / "phase-a-result.json"
     _write_json(result_path, result)
     receipt = {"protocolSha256": args.expected_protocol_sha,
