@@ -67,7 +67,7 @@ func _initialize() -> void:
 static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0,
 		ban: PackedStringArray = PackedStringArray(), policy: Dictionary = {},
 		random_build: bool = false, random_play: bool = false, mix: Dictionary = {},
-		vigil: VigilState = null, strip_start_hex: bool = false) -> Dictionary:
+		vigil: VigilState = null, strip_start_hex: bool = false, unlocks: PackedStringArray = PackedStringArray(["aspect2"])) -> Dictionary:
 	_probe = {}
 	Pilot.set_ban(ban)
 	Pilot.apply_policy(policy)
@@ -75,7 +75,7 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 	var aspect_index: int = 1 if aspect == "ashwarden" else 0
 	var profile: Dictionary = {
 		"aspect": aspect_index, "vow": vow, "reveals": content.reveal_ids.duplicate(),
-		"unlocks": ["aspect2"], "quests": {}, "shards": [], "lamplighter": false,
+		"unlocks": unlocks, "quests": {}, "shards": [], "lamplighter": false,
 	}
 	if vigil != null:
 		profile["quests"] = vigil.quests.duplicate(true)
@@ -150,6 +150,10 @@ static func _fight(game: GlassvowGame, node: MapNode) -> Dictionary:
 		if event.get("t") == EventTypes.HIT_ENEMY and event.get("poison", false) \
 				and event.get("dead", false):
 			smolder_kills += 1
+		elif event.get("t") == EventTypes.RELIC_PROC:
+			var relic_id: String = str(event.get("id", ""))
+			if relic_id in ["bellOfEndings", "prismCharm"]:
+				_bump("%sProcs" % relic_id)
 	return {
 		"act": game.run.act + 1, "kind": node.combat_kind(), "enemies": enemies,
 		"result": game.cb.result if game.cb.over else "stall", "turns": game.cb.turn,
@@ -493,8 +497,6 @@ static func _harvest_fight(game: GlassvowGame) -> void:
 				_bump("ashenCoreTriggered")
 			elif relic_id == "smolderingCoal":
 				_bump("smolderingCoalTriggered")
-
-
 static func _economy_row(run: RunState) -> Dictionary:
 	return {"act": run.act + 1, "gold": run.player.gold, "hp": run.player.hp,
 		"maxHp": run.player.max_hp, "deck": run.player.deck.size()}
@@ -512,18 +514,16 @@ static func _result(run: RunState, aspect: String, seed: int, outcome: String,
 		"policy": Pilot.policy_snapshot(),
 		"packageEvents": _probe.duplicate(),
 	}
-
-
 static func _finish(run: RunState, aspect: String, seed: int, outcome: String,
 		fights: Array[Dictionary], error: String, economy: Array[Dictionary],
 		vigil: VigilState, content: ContentDB) -> Dictionary:
+	_probe["slain"] = _ji(run.stats.get("slain", 0))
+	_probe["perfects"] = _ji(run.stats.get("perfects", 0))
 	var row: Dictionary = _result(run, aspect, seed, outcome, fights, error, economy)
 	if vigil != null:
 		var commit: String = "win" if outcome == "win" else "death"
 		vigil.commit_run(run, commit, content)
 	return row
-
-
 static func _strip_hex(run: RunState) -> void:
 	var kept: Array[CardInst] = []
 	for card: CardInst in run.player.deck:
