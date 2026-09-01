@@ -2,7 +2,7 @@ extends SceneTree
 ## Frozen L0/L1 row generator for the existing-grammar expression exam.
 
 const Sim: GDScript = preload("res://tools/balance_sim.gd")
-const PROTOCOL_ID: String = "existing-grammar-l0-l1-v1"
+const PROTOCOL_ID: String = "existing-grammar-l0-l1-v2"
 const ASPECT: String = "duskblade"
 const COHORT_FIRST: int = 6000
 const COHORT_LAST: int = 6255

@@ -15,8 +15,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 BASE = "c28ae38824f7ba2168b573002ab8b90dadd5bde1"
-PROTOCOL_ID = "existing-grammar-l0-l1-v1"
-PROTOCOL = ROOT / "research/issue-421-grammar-only/protocols/existing-grammar-l0-l1-v1.json"
+PROTOCOL_ID = "existing-grammar-l0-l1-v2"
+PROTOCOL = ROOT / "research/issue-421-grammar-only/protocols/existing-grammar-l0-l1-v2.json"
 PROTOCOL_SHA = PROTOCOL.with_suffix(".sha256")
 RUNNER = "res://research/issue-421-grammar-only/tools/existing_grammar_l1_rows.gd"
 PREFLIGHT = Path("/tmp/glassvow-421-l1-preflight.jsonl")

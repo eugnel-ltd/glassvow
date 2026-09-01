@@ -67,8 +67,7 @@ func _initialize() -> void:
 static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0,
 		ban: PackedStringArray = PackedStringArray(), policy: Dictionary = {},
 		random_build: bool = false, random_play: bool = false, mix: Dictionary = {},
-		vigil: VigilState = null, strip_start_hex: bool = false,
-		unlocks: PackedStringArray = PackedStringArray(["aspect2"])) -> Dictionary:
+		vigil: VigilState = null, strip_start_hex: bool = false, unlocks: PackedStringArray = PackedStringArray(["aspect2"])) -> Dictionary:
 	_probe = {}
 	Pilot.set_ban(ban)
 	Pilot.apply_policy(policy)
