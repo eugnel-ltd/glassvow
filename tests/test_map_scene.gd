@@ -100,8 +100,16 @@ static func _scene(fails: Array[String]) -> void:
 			and scene.get_stage().render_target_update_mode
 				== SubViewport.UPDATE_ONCE,
 			"set_live(false) re-arms UPDATE_ONCE")
-	_check(fails, scene.get_key().shadow_enabled == false,
-			"key light casts no shadow")
+	scene._repaint()
+	scene._process(1.0 / 60.0)
+	_check(fails, not scene.is_live() and scene.get_stage().render_target_update_mode
+		== SubViewport.UPDATE_ALWAYS, "idle content gets a bounded GPU settling pass")
+	for frame: int in range(3):
+		scene._process(1.0 / 60.0)
+	_check(fails, not scene.is_live() and scene.get_stage().render_target_update_mode
+		== SubViewport.UPDATE_ONCE, "settling returns to one final idle paint")
+	_check(fails, scene.get_key().shadow_enabled,
+			"one shared key casts scenery shadows")
 	var ground: Node = scene.find_child("TerrainPlaceholder", true, false)
 	_check(fails, ground is MeshInstance3D, "placeholder ground is a MeshInstance3D")
 	if ground is MeshInstance3D:
@@ -423,8 +431,8 @@ static func _compiled_layout(fails: Array[String]) -> void:
 			"road legs preserve canonical centreline Y and omit the forbidden chord")
 		var data: Dictionary = live.to_dict()
 		var accepted: Dictionary = data["scenery_instances"]
-		_check(fails, not accepted.is_empty() and accepted.size() < candidates.size(),
-			"existing deterministic seats are filtered rather than regenerated")
+		_check(fails, not accepted.is_empty() and accepted.size() < scene._scenery_candidates().size(),
+			"the bounded deterministic scenery candidates are filtered")
 		_check(fails, _scenery_clears(accepted, data, contract, assets, quality),
 			"every published scenery transform clears nodes, roads, heroes and peers")
 		var diagnostics: Dictionary = scene.call(&"layout_diagnostics")
@@ -435,7 +443,7 @@ static func _compiled_layout(fails: Array[String]) -> void:
 		var diagnostic_digest: String = str(diagnostics.get("layout_digest", ""))
 		var diagnostic_scenery: Dictionary = diagnostics.get("scenery_instances", {})
 		_check(fails, accepted_count == accepted.size()
-				and candidate_count == candidates.size()
+				and candidate_count == scene._scenery_candidates().size()
 				and diagnostic_digest == live.digest()
 				and diagnostic_scenery == accepted,
 			"the live diagnostics publish the same accepted placement authority")

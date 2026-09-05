@@ -61,6 +61,7 @@ var _region: MapRegions = null
 var _drift: PointerDrift = PointerDrift.new()
 var _map_scene: MapScene = null
 var _path_band: MapBand.PathBand = null
+var _atmosphere_band: MapBand.AtmosphereBand = null
 var _chip_band: MapBand.ChipBand = null
 var _layout_result: MapLayoutResult = null
 var _layout_data: Dictionary = {}
@@ -91,6 +92,9 @@ func _init(world_map: WorldMap, content_ref: ContentDB,
 	theme = GlassStyle.theme()
 	# World → marker glow → waystones → chips → chrome: child order is paint order.
 	_build_world_surface()
+	_atmosphere_band = MapBand.AtmosphereBand.new()
+	_atmosphere_band.host = self
+	add_child(_atmosphere_band)
 	_build_bands()
 	_build_waystones()
 	# Chips label the play plane and stay beneath the chrome.
@@ -841,6 +845,8 @@ func _push_bands(force: bool = false) -> void:
 	var path_d: Vector2 = Vector2(
 		_drift.n.x * PATH_DRIFT_AMP.x, _drift.n.y * PATH_DRIFT_AMP.y)
 	var cam: float = _rig_cam_x()
+	if _atmosphere_band != null:
+		_atmosphere_band.set_view(cam, path_d * 0.3, force)
 	if _path_band != null:
 		_path_band.set_view(cam, path_d, force)
 	if _chip_band != null:

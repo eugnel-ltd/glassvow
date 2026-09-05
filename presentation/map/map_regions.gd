@@ -22,6 +22,14 @@ const FALLBACK_ACCENTS: Array[Color] = [
 
 const WEATHER_BY_ACT: Array[StringName] = [&"ash", &"sunken", &"storm", &"dawn"]
 
+## Moss and ash → drowned masonry → amethyst slate → pale rose limestone.
+const LAND_LIGHT: Array[Color] = [Color("#67746c"), Color("#567981"),
+	Color("#75647f"), Color("#c3b8a3")]
+const LAND_DARK: Array[Color] = [Color("#2d403e"), Color("#243943"),
+	Color("#302c43"), Color("#686967")]
+const BASIN: Array[Color] = [Color("#172e31"), Color("#102f40"),
+	Color("#211f38"), Color("#3b5059")]
+
 ## Light arc (#207 decision 11): dusk → night → storm → dawn. Written onto
 ## ramp `band_shade` / `band_key` only — never albedo, never `surface_tex`.
 ## Act 0 (1-based act1 plates) takes the crimson forest-floor of

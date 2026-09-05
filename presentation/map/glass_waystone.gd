@@ -96,7 +96,8 @@ func set_state(is_reachable: bool, is_cleared: bool, is_current: bool = false) -
 	current = is_current
 	focus_mode = Control.FOCUS_ALL if reachable else Control.FOCUS_NONE
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if reachable else Control.CURSOR_ARROW
-	var art_tint: Color = Color(0.68, 0.70, 0.76, 0.76) if cleared else Color.WHITE
+	var art_tint: Color = Color(0.55, 0.61, 0.68, 0.72) if cleared else \
+		(Color.WHITE if reachable or current else Color(0.76, 0.81, 0.86, 0.94))
 	_frame_art.modulate = art_tint
 	_glyph_art.modulate = art_tint
 	var text_col: Color = GlassStyle.TEXT if reachable else GlassStyle.TEXT_DIM
@@ -204,10 +205,14 @@ func _draw() -> void:
 	if reachable or current:
 		draw_circle(Vector2(cx, cy), radius + 12.0,
 			Color(GlassStyle.EMBER.r, GlassStyle.EMBER.g, GlassStyle.EMBER.b, 0.08 + glow * 0.05))
-	draw_circle(Vector2(cx, cy), radius, Color(0.04, 0.05, 0.10, 0.55 if cleared else 0.86))
+	draw_circle(Vector2(cx, cy), radius, Color(0.035, 0.055, 0.075, 0.62 if cleared else 0.94))
+	draw_arc(Vector2(cx, cy), radius - 1.0, PI, TAU, 32,
+		Color(0.73, 0.67, 0.53, 0.38 if cleared else 0.68), 1.0, true)
+	draw_arc(Vector2(cx, cy), radius - 1.0, 0.0, PI, 32,
+		Color(0.06, 0.09, 0.12, 0.90), 2.0, true)
 	if reachable:
 		draw_arc(Vector2(cx, cy), radius + 5.0, 0.0, TAU, 32,
-			Color(1.0, 0.96, 0.88, 0.78 + glow * 0.2), 3.0)
+			Color(1.0, 0.76, 0.40, 0.80 + glow * 0.2), 2.5, true)
 	# Keyboard focus speaks the game's own focus language: GOLD corner
 	# brackets (GlassStyle.focus_ring's hue), boxed rather than ringed, so it
 	# cannot be confused with the warm reachable ring, the glass edge dashes,

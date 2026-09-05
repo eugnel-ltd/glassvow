@@ -9,7 +9,7 @@ extends RefCounted
 ## surface texture each and one shared grade.
 
 const GROUND_SHADER: String = "res://presentation/map/map_ground.gdshader"
-## The Vigil is the only unwrapped surface on the map; see the shader header.
+## The Vigil keeps its dedicated west-threshold treatment.
 const VIGIL_SHADER: String = "res://presentation/map/map_vigil.gdshader"
 const PROP_SHADER: String = "res://presentation/map/map_prop.gdshader"
 const MANIFEST_PATH: String = "res://assets/art/map/map-assets.json"
@@ -31,6 +31,9 @@ var road: ShaderMaterial
 ## Built only when Act I binds; every other act leaves it null.
 var vigil: ShaderMaterial = null
 var prop: ShaderMaterial
+var _painted: Dictionary = {}
+var _region: MapRegions
+
 var _fallback_surface: ImageTexture
 var _fallback_grade: ImageTexture
 var _manifest_rows: Array[Dictionary] = []
@@ -72,6 +75,8 @@ func set_sun(direction: Vector3) -> void:
 	prop.set_shader_parameter("sun", sun)
 	if vigil != null:
 		vigil.set_shader_parameter("sun", sun)
+	for material: ShaderMaterial in _painted.values():
+		material.set_shader_parameter("sun", sun)
 
 
 ## Hands the Vigil its baked albedo. It arrives separately from `bind_act`
@@ -105,6 +110,10 @@ func bind_region(region: MapRegions, grade: Texture2D) -> void:
 ## Drops all prior-act references before loading only this act's 12-row set:
 ## two tiles, one grade, three shared + five act kits, and one terminus.
 func bind_act(region: MapRegions, positions: PackedVector3Array) -> Dictionary:
+	_painted.clear()
+	_region = region
+	ground.set_shader_parameter("landscape_enabled", false)
+	ground.set_shader_parameter("landscape", null)
 	ground.set_shader_parameter("surface_tex", _fallback_surface)
 	road.set_shader_parameter("surface_tex", _fallback_surface)
 	prop.set_shader_parameter("surface_tex", _fallback_surface)
@@ -327,3 +336,27 @@ static func _grade_image(region: MapRegions, positions: PackedVector3Array) -> I
 				alpha = minf(alpha, lerpf(0.18, 1.0, smoothstep(0.35, 1.75, distance)))
 			image.set_pixel(x, y, Color.from_hsv(hue, saturation, value, alpha))
 	return image
+
+
+## Imported GLB albedo is reused for each mesh instead of being discarded by
+## the old triplanar override. Missing atlases retain the procedural fallback.
+func painted(mesh: Mesh, fallback: ShaderMaterial, road_surface: bool = false) -> ShaderMaterial:
+	if mesh == null or mesh.get_surface_count() == 0:
+		return fallback
+	if _painted.has(mesh):
+		return _painted[mesh]
+	var source: Material = mesh.surface_get_material(0)
+	if not source is BaseMaterial3D:
+		return fallback
+	var imported: BaseMaterial3D = source
+	if imported.albedo_texture == null:
+		return fallback
+	var material: ShaderMaterial = ShaderMaterial.new()
+	material.shader = load("res://presentation/map/map_painted.gdshader") as Shader
+	material.set_shader_parameter("surface_tex", imported.albedo_texture)
+	material.set_shader_parameter("sun", ground.get_shader_parameter("sun"))
+	material.set_shader_parameter("band_shade", _region.band_shade.lightened(0.12))
+	material.set_shader_parameter("band_key", _region.band_key.lightened(0.12))
+	material.set_shader_parameter("exposure", 0.90 if road_surface else 1.2)
+	_painted[mesh] = material
+	return material

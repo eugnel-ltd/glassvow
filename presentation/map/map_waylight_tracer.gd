@@ -16,6 +16,9 @@ const MAX_INSTANCES: int = 128
 const WORLD_EPSILON_M: float = 0.001
 const COLD_COLOR: Color = Color(0.10, 0.15, 0.26, 1.0)
 
+const WALKED_WIDTH_M: float = 0.16
+
+var _walked: MeshInstance3D
 var _bead_mesh: CylinderMesh
 var _waylight_material: StandardMaterial3D
 var _geometry_digest: String = ""
@@ -39,6 +42,12 @@ func _init() -> void:
 	_waylight_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_waylight_material.no_depth_test = false
 	material_override = _waylight_material
+	_walked = MeshInstance3D.new()
+	_walked.name = "WalkedRibbon"
+	_walked.material_override = _waylight_material
+	_walked.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_walked.visible = false
+	add_child(_walked)
 
 func configure_route(edge_record: Dictionary, state: StringName = STATE_COLD) -> bool:
 	if not is_route_state(state):
@@ -55,6 +64,7 @@ func configure_route(edge_record: Dictionary, state: StringName = STATE_COLD) ->
 	var next_digest: String = MapLayoutCanonical.digest(MapLayoutCanonical.ordered_dictionary(identity))
 	if next_digest != _geometry_digest:
 		_rebuild(transforms)
+		_walked.mesh = _ribbon(points)
 		_geometry_digest = next_digest
 	return set_route_state(state)
 
@@ -65,6 +75,8 @@ func set_route_state(state: StringName) -> bool:
 	if state == _state and _instance_custom_data.size() == count:
 		return true
 	_state = state
+	_walked.visible = state == STATE_WALKED
+	multimesh.visible_instance_count = 0 if state == STATE_WALKED else -1
 	_instance_custom_data.resize(count)
 	for i: int in range(count):
 		var progress: float = 0.0 if count <= 1 else float(i) / float(count - 1)
@@ -101,7 +113,7 @@ func instance_custom_data() -> Array[Color]:
 	return out
 
 func overhead() -> Dictionary:
-	return {"draw_calls": 1, "mesh_resources": 1, "material_resources": 1,
+	return {"draw_calls": 1, "mesh_resources": 2, "material_resources": 1,
 		"instance_count": 0 if multimesh == null else multimesh.instance_count,
 		"max_instances": MAX_INSTANCES, "sample_spacing_m": SAMPLE_SPACING_M,
 		"surface_lift_m": SURFACE_LIFT_M,
@@ -153,6 +165,22 @@ func _rebuild(transforms: Array[Transform3D]) -> void:
 		next.set_instance_transform(i, _instance_transforms[i])
 	multimesh = next
 	_geometry_builds += 1
+
+
+## The walked route is a continuous strip over the exact centreline, including
+## its bends. Cold/open beads retain the same immutable sampling and buffers.
+static func _ribbon(points: Array[Vector3]) -> ArrayMesh:
+	var surface: SurfaceTool = SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	surface.set_color(GlassStyle.GOLD)
+	surface.set_normal(Vector3.UP)
+	for i: int in range(points.size() - 1):
+		var a: Vector3 = points[i] + Vector3.UP * SURFACE_LIFT_M
+		var b: Vector3 = points[i + 1] + Vector3.UP * SURFACE_LIFT_M
+		var side: Vector3 = (b - a).cross(Vector3.UP).normalized() * WALKED_WIDTH_M * 0.5
+		for vertex: Vector3 in [a - side, b + side, b - side, a - side, a + side, b + side]:
+			surface.add_vertex(vertex)
+	return surface.commit()
 
 func _depth_test_enabled() -> bool:
 	return _waylight_material != null and not _waylight_material.no_depth_test \

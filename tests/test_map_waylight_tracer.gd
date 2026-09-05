@@ -23,7 +23,7 @@ static func run(fails: Array[String]) -> void:
 	_check(fails, cold_count == 16 and tracer.multimesh.instance_count == cold_count
 		and cold_count <= MapWaylightTracer.MAX_INSTANCES
 		and MapLayoutCanonical.int_value(report.get("draw_calls", 0)) == 1
-		and MapLayoutCanonical.int_value(report.get("mesh_resources", 0)) == 1
+		and MapLayoutCanonical.int_value(report.get("mesh_resources", 0)) == 2
 		and MapLayoutCanonical.int_value(report.get("material_resources", 0)) == 1,
 		"representative edge is one bounded instanced draw")
 	_check(fails, _covers_bent_legs(cold_transforms),
@@ -44,6 +44,9 @@ static func run(fails: Array[String]) -> void:
 	var open_data: Color = tracer.instance_custom_data()[0]
 	tracer.set_route_state(MapWaylightTracer.STATE_WALKED)
 	var walked_data: Color = tracer.instance_custom_data()[0]
+	_check(fails, tracer._walked.visible and tracer._walked.mesh.get_surface_count() == 1
+		and tracer.multimesh.visible_instance_count == 0,
+		"walked state replaces the beads with a continuous depth-tested ribbon")
 	_check(fails, cold_data[0] != open_data and open_data != walked_data
 		and cold_data[0] != walked_data, "cold/open/walked state payloads stay distinct")
 	_check(fails, MapWaylightTracer.route_state_color(MapWaylightTracer.STATE_COLD)

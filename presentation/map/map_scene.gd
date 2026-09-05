@@ -71,7 +71,7 @@ const ROAD_STEP: float = 0.95
 const EARLY_ROAD_STEP: float = 1.45
 const ROAD_WOBBLE: float = 0.045
 const EARLY_ROAD_WOBBLE: float = 0.11
-const EARLY_ROAD_WIDTH: float = 0.78
+const EARLY_ROAD_WIDTH: float = 0.58
 # Road slab scale comes from the shared-road profiles.
 # The current camera-directional hide envelope is owned by MapAssetProfiles.
 
@@ -123,6 +123,8 @@ var _layout_result: MapLayoutResult = null
 var _layout_diagnostics: Dictionary = {}
 var _layout_failure: Dictionary = {}
 var _act: int = -1
+var _live: bool = false
+var _settle_frames: int = 0
 var _dragging: bool = false
 var _lock_input: bool = false
 var _dragged: float = 0.0
@@ -415,10 +417,13 @@ func _projection() -> MapPinProjection:
 
 
 func is_live() -> bool:
-	return _stage.render_target_update_mode == SubViewport.UPDATE_ALWAYS
+	return _live
 
 
 func set_live(on: bool) -> void:
+	_live = on
+	if not on:
+		_settle_frames = 3
 	_stage.render_target_update_mode = (
 			SubViewport.UPDATE_ALWAYS if on else SubViewport.UPDATE_ONCE)
 
@@ -436,6 +441,7 @@ func set_live(on: bool) -> void:
 ## Never downgrade a live stage: while the camera moves the screen holds
 ## `UPDATE_ALWAYS`, and re-arming a single frame there would freeze the pan.
 func _repaint() -> void:
+	_settle_frames = 3
 	if _stage.render_target_update_mode != SubViewport.UPDATE_ALWAYS:
 		_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
 
@@ -506,6 +512,13 @@ func _screen_to_world(delta_px: Vector2) -> Vector2:
 
 
 func _process(delta: float) -> void:
+	# Texture uploads and the directional shadow pass need subsequent draws.
+	# Keep the requested live state separate from this bounded idle warm-up.
+	if _settle_frames > 0:
+		_settle_frames -= 1
+		if not _live:
+			_stage.render_target_update_mode = SubViewport.UPDATE_ALWAYS \
+				if _settle_frames > 0 else SubViewport.UPDATE_ONCE
 	if _dragging or _lock_input:
 		return
 	if _fling.length() > 0.02:
@@ -542,7 +555,10 @@ func _view_height() -> float:
 func _add_key(world: Node3D) -> void:
 	_key = DirectionalLight3D.new()
 	_key.name = "MapKey"
-	_key.shadow_enabled = false
+	_key.shadow_enabled = true
+	_key.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	_key.directional_shadow_max_distance = 80.0
+	_key.shadow_blur = 1.5
 	_key.basis = Basis.looking_at(-SUN_TO.normalized(), Vector3.UP)
 	world.add_child(_key)
 
@@ -561,6 +577,8 @@ func _add_environment(world: Node3D) -> void:
 func _add_ground(world: Node3D) -> void:
 	var plane: PlaneMesh = PlaneMesh.new()
 	plane.size = GROUND_SIZE
+	plane.subdivide_width = 128
+	plane.subdivide_depth = 96
 	var ground: MeshInstance3D = MeshInstance3D.new()
 	ground.name = "TerrainPlaceholder"
 	ground.mesh = plane
@@ -623,8 +641,9 @@ func _add_multimesh(world: Node3D, node_name: String, mesh: Mesh,
 	var instances: MultiMeshInstance3D = MultiMeshInstance3D.new()
 	instances.name = node_name
 	instances.multimesh = multimesh
-	instances.material_override = _materials.prop
-	instances.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	instances.material_override = _materials.painted(mesh, _materials.prop)
+	instances.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF \
+		if instances.material_override == _materials.prop else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	world.add_child(instances)
 
 
@@ -653,16 +672,23 @@ func _scenery_candidates() -> Dictionary:
 	if _kit_meshes.size() < 3 or _kit_profiles.size() != _kit_meshes.size() \
 			or _kit_ids.size() != _kit_meshes.size():
 		return out
-	var local_counts: Dictionary = {}
 	var positions: PackedVector3Array = _all_prop_positions()
+	var original_count: int = positions.size()
+	var rng: RandomNumberGenerator = _scatter_rng(41)
+	# Bounded regional patches, including banks beyond the node field. Every
+	# candidate still passes the same road/hero/occupancy filters below.
+	for row: int in range(25):
+		for bank: int in range(9):
+			positions.append(Vector3(-49.0 + row * 3.8 + rng.randf_range(-1.2, 1.2),
+				0.0, -31.0 + bank * 7.5 + rng.randf_range(-1.8, 1.8)))
 	var kinds: int = _kit_meshes.size() - 2
 	for seat: int in range(positions.size()):
 		var kit: int = seat_kit(seat, kinds)
-		var local: int = MapLayoutCanonical.int_value(local_counts.get(kit, 0))
-		local_counts[kit] = local + 1
-		var dress_index: int = kit * 7 + _dress_salt() + local
+		var dress_index: int = seat * 7 + _dress_salt()
+		var scale_factor: float = 1.0 if seat < original_count else \
+			(0.32 + 0.34 * fposmod(float(seat) * 0.618, 1.0))
 		var transform: Transform3D = _dressed_transform(dress_index, positions[seat],
-			_asset_profiles.default_scale(_kit_profiles[kit]))
+			_asset_profiles.default_scale(_kit_profiles[kit]) * scale_factor)
 		var candidate_id: String = "seat-%03d" % seat
 		out[candidate_id] = {
 			"dress_index": dress_index,
@@ -673,7 +699,7 @@ func _scenery_candidates() -> Dictionary:
 					"yaw_radians": float(dress_index) * 1.117,
 					"scale": _a3(transform.basis.get_scale()),
 				},
-				"semantic_zone": "existing-seat",
+				"semantic_zone": "road-bank" if absf(positions[seat].z) < 20.0 else "vista",
 			},
 		}
 	return MapLayoutCanonical.ordered_dictionary(out)
@@ -736,8 +762,8 @@ func _add_layout_multimesh(node_name: String, mesh: Mesh,
 	var instances: MultiMeshInstance3D = MultiMeshInstance3D.new()
 	instances.name = node_name
 	instances.multimesh = multimesh
-	instances.material_override = _materials.prop
-	instances.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	instances.material_override = _materials.painted(mesh, _materials.prop)
+	instances.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	_asset_geometry.add_child(instances)
 
 
@@ -868,8 +894,8 @@ func _bind_asset_geometry(assets: Dictionary) -> void:
 	# Just past the boss, which is lattice row 14 col 3 = world (36, 0, 0).
 	terminus.position = Vector3(TERMINUS_XZ.x, 0.0, TERMINUS_XZ.y)
 	terminus.scale = Vector3.ONE * _asset_profiles.default_scale(terminus_profile)
-	terminus.material_override = _materials.prop
-	terminus.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	terminus.material_override = _materials.painted(terminus_mesh, _materials.prop)
+	terminus.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	_asset_geometry.add_child(terminus)
 	# The Vigil, at the west end of the road, seen from outside: a gabled hall
 	# end-on with its chimney. The rose window is on the far side, turned in at
@@ -898,7 +924,7 @@ func _bind_asset_geometry(assets: Dictionary) -> void:
 			# broken enough to investigate.
 			push_warning("Vigil has no baked albedo; falling back to the prop shader")
 		gate.material_override = _materials.vigil if dressed else _materials.prop
-		gate.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		gate.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		_asset_geometry.add_child(gate)
 	# Seat the road pair now, empty, so anything resolving them by name finds
 	# them before the screen has a graph to hand down. `lay_road` rebuilds
@@ -926,6 +952,8 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 		var footprint: PackedVector2Array = _placement_footprint(candidate)
 		var rejection: Dictionary = _scenery_rejection(
 			footprint, accepted_footprints, data, contract, quality)
+		if rejection.is_empty():
+			rejection = _scenery_screen_rejection(candidate, footprint, data, quality)
 		if not rejection.is_empty():
 			rejection["candidate_id"] = candidate_id
 			rejections.append(rejection)
@@ -954,11 +982,34 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 	}
 	_place_scenery(accepted)
 	_build_road()
+	_bind_landscape(accepted)
 	_repaint()
 	return final_result
 
 
+func _bind_landscape(placements: Dictionary) -> void:
+	var contacts: Array[Vector3] = []
+	for value: Variant in placements.values():
+		var placement: Dictionary = value
+		var transform: Dictionary = placement["transform"]
+		var position: Vector3 = _v3(transform["origin"])
+		var footprint: PackedVector2Array = _placement_footprint({"placement": placement})
+		var radius: float = 0.4
+		for point: Vector2 in footprint:
+			radius = maxf(radius, point.distance_to(Vector2(position.x, position.z)))
+		contacts.append(Vector3(position.x, radius, position.z))
+	var field: Image = MapLandscape.bake(_road_segments, contacts, _scatter_salt)
+	_materials.ground.set_shader_parameter("landscape", ImageTexture.create_from_image(field))
+	_materials.ground.set_shader_parameter("land_light", MapRegions.LAND_LIGHT[_act])
+	_materials.ground.set_shader_parameter("land_dark", MapRegions.LAND_DARK[_act])
+	_materials.ground.set_shader_parameter("basin", MapRegions.BASIN[_act])
+	_materials.ground.set_shader_parameter("wetness", 1.0 if _act == 1 else 0.0)
+	_materials.ground.set_shader_parameter("landscape_enabled", true)
+
+
 func _fail_layout(reason: String) -> MapLayoutResult:
+	_materials.ground.set_shader_parameter("landscape_enabled", false)
+	_materials.ground.set_shader_parameter("landscape", null)
 	_layout_result = null
 	_layout_failure = {
 		"kind": "compiled_layout", "id": "live_map", "reason": reason,
@@ -1050,6 +1101,38 @@ func _scenery_rejection(footprint: PackedVector2Array,
 	return {}
 
 
+## Orthographic translation cancels in pairwise visibility. The smallest
+## governed pixels/metre is phone at zoom 28, so one projection conservatively
+## protects every pan, zoom and shipping shape without a camera-corpus loop.
+func _scenery_screen_rejection(candidate: Dictionary, footprint: PackedVector2Array,
+		data: Dictionary, quality: Dictionary) -> Dictionary:
+	var placement: Dictionary = candidate["placement"]
+	var transform: Dictionary = placement["transform"]
+	var profile: Dictionary = _active_profiles[str(placement["profile_id"])]
+	var height: float = MapLayoutCanonical.float_value(profile["grounded_height"]) * _v3(transform["scale"]).y
+	var ratio: float = 390.0 / MapCameraRig.ZOOM_STOPS[-1]
+	var sine: float = sin(deg_to_rad(absf(MapCameraRig.TILT_DEGREES)))
+	var cosine: float = cos(deg_to_rad(absf(MapCameraRig.TILT_DEGREES)))
+	var points: PackedVector2Array = PackedVector2Array()
+	for point: Vector2 in footprint:
+		points.append(Vector2(point.x, point.y * sine) * ratio)
+		points.append(Vector2(point.x, point.y * sine - height * cosine) * ratio)
+	var hull: PackedVector2Array = Geometry2D.convex_hull(points)
+	var calibration: Dictionary = quality["calibration"]["shipping_touch_waystone"]
+	var ink: float = MapLayoutCanonical.float_value(calibration["ink_radius_px"]) \
+		* MapLayoutCanonical.float_value(calibration["default_layout_scale"])
+	var half_touch: float = MapQualityEvaluator._touch_size_px(quality) * 0.5
+	var anchors: Dictionary = data["node_anchors"]
+	for node_id: String in anchors:
+		var node: Vector3 = _v3(anchors[node_id])
+		var centre: Vector2 = Vector2(node.x, node.z * sine - node.y * cosine) * ratio
+		if MapQualityEvaluator._signed_gap(centre, hull) < ink + 8.0 \
+			or MapQualityEvaluator._intersection_area(hull,
+				MapQualityEvaluator._rect(centre, Vector2.ONE * half_touch)) > 0.0:
+			return {"reason": "projected node visibility", "blocker_id": node_id}
+	return {}
+
+
 ## The graph, as road. Segments are world-space endpoint pairs; the screen that
 ## owns the WorldMap supplies them, so MapScene never learns the graph type.
 func lay_road(segments: PackedVector3Array) -> void:
@@ -1119,7 +1202,7 @@ func _road_multimesh(mesh: Mesh, positions: PackedVector3Array,
 				fposmod(float(index) * 0.619, 1.0), 1.0))
 	var instances: MultiMeshInstance3D = MultiMeshInstance3D.new()
 	instances.multimesh = multimesh
-	instances.material_override = _materials.road
+	instances.material_override = _materials.painted(mesh, _materials.road, true)
 	instances.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return instances
 

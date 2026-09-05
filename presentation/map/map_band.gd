@@ -4,8 +4,7 @@ extends Control
 ## bands store the amplitude-scaled slice and redraw when it moves enough.
 ## Child order IS paint order: MapScene (world) → marker glow → waystones → chips.
 ## SkyBand / RegionBand retired in #234 slice 7b2 — 3D MapScene owns the world.
-## VeilBand retired in #156 round 2 — the falling ash read as snow over a
-## journey the 3D world now carries on its own.
+## AtmosphereBand carries sparse regional weather behind the gameplay ink.
 
 const CAM_EPS: float = 0.05
 const DRIFT_EPS: float = 0.1
@@ -37,6 +36,59 @@ func set_view(p_cam_x: float, p_drift: Vector2, force: bool = false) -> void:
 		cam_x = p_cam_x
 		drift = p_drift
 		queue_redraw()
+
+
+## Map-only atmosphere. Reuses the existing soft-disc texture, with two
+## parallax rates and a small deterministic particle field behind all node ink.
+class AtmosphereBand extends MapBand:
+	var elapsed: float = 0.0
+	var _held: bool = false
+
+	func _init() -> void:
+		super(0.30)
+
+	func _process(delta: float) -> void:
+		if Preferences.active.reduce_motion:
+			if not _held:
+				_held = true
+				elapsed = 0.0
+				queue_redraw()
+			return
+		_held = false
+		elapsed = fmod(elapsed + delta, 240.0)
+		queue_redraw()
+
+	func _draw() -> void:
+		if host == null or host._region == null or size.x <= 0.0 or size.y <= 0.0:
+			return
+		var region: MapRegions = host._region
+		var tex: GradientTexture2D = SkyField.disc()
+		# Low, broad banks move more slowly than the physical scene.
+		for bank: int in range(5):
+			var at: Vector2 = Vector2(
+				fposmod(bank * 0.271 * size.x - cam_x * 0.30 + elapsed * 2.0, size.x * 1.4) - size.x * 0.2,
+				size.y * (0.08 + fposmod(bank * 0.379, 0.84)))
+			var span: Vector2 = Vector2(size.x * 0.95, size.y * 0.38)
+			draw_texture_rect(tex, Rect2(at - span * 0.5, span), false,
+				Color(region.accent, 0.055 if region.act == 3 else 0.075))
+		# Sparse fine ash, rising bubbles, storm needles, or dawn dust. Never
+		# snow-sized white discs; gameplay glow remains the brightest layer.
+		for i: int in range(42):
+			var depth: float = fposmod(i * 0.618034, 1.0)
+			var speed: float = 5.0 + depth * 11.0
+			var fall: float = -1.0 if region.act in [1, 3] else 1.0
+			var at: Vector2 = Vector2(
+				fposmod(i * 0.371 * size.x - cam_x * (0.8 + depth) + elapsed * speed * 0.3, size.x),
+				fposmod(i * 0.713 * size.y + elapsed * speed * fall, size.y))
+			var alpha: float = 0.12 + depth * 0.22
+			var radius: float = 0.65 + depth * 0.6
+			if region.act == 2:
+				draw_line(at, at + Vector2(4.0 + depth * 4.0, 2.0), Color(region.particles, alpha), 1.0, true)
+			else:
+				draw_circle(at, radius, Color(region.particles, alpha))
+				if i % 5 == 0:
+					draw_texture_rect(tex, Rect2(at - Vector2.ONE * 5.0, Vector2.ONE * 10.0),
+						false, Color(region.particles, alpha * 0.22))
 
 
 class PathBand extends MapBand:
