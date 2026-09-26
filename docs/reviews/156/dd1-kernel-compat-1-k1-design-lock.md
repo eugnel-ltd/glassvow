@@ -1,3 +1,14 @@
+# AMENDMENT 4: de-gating (owner direction 2026-09-26, author ruling #156/5850571428)
+
+Part A of the [author ruling](https://github.com/fol2/glassvow/issues/156#issuecomment-5850571428) supersedes the gates below.
+Build provenance replaces sandbox-specific helper, fixture and libc hashes.
+Record compiler/package versions, source hashes and every built artefact identity.
+Qualify the running Linux/x86_64/LP64 host and retain the primitive probes.
+Remove K0 custody, operation ledgers, calendar expiry and stop-all latches.
+Run all sixteen cases with per-case CPU enforcement and a 90-second wall timeout.
+Write each classification and the summary beneath the selected evidence directory.
+Part B/P9 is outside this amendment; the remainder is preserved as historical evidence.
+
 # DD1-KERNEL-COMPAT-1 — K1 design lock (source/inert only)
 
 **Role:** Claude Code design lead. Design only; no Python module/test is implemented here, no

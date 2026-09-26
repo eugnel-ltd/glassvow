@@ -62,7 +62,8 @@ def _complete(command, unit, account_path, receipt_path, output, head, repo, che
         prepared = require_native_backend(unit, list(command), repo, lifetime, generated)
         if inert:
             import dd1_runtime_fit as fit
-            allowed = INERT_BINARIES | ({fit.INERT_BINARY} if fit.selected(unit) else set())
+            from dd1_linux_snapshot import fixture_hashes
+            allowed = INERT_BINARIES | fixture_hashes() | ({fit.INERT_BINARY} if fit.selected(unit) else set())
             reservations.need(reservations.digest(prepared.pinned["files"][command[0]][0]) in allowed,
                               "inert entry permits only pinned harmless fixture")
         receipt = receipt_path.read_bytes()
@@ -125,9 +126,7 @@ def _run_inert_unit(command, *, unit, account_path, receipt_path, output, head, 
     if unit.get("operation") == "DD1-KERNEL-COMPAT-1":
         import dd1_kernel_qualification as kernel_qualification
         policy = kernel_qualification.inert_reservation_policy(unit)
-        lifetime = backend.controller_limits(unit, policy["deadline_utc"])
-    else:
-        lifetime = backend.controller_limits(unit)
+    lifetime = backend.controller_limits(unit)
     reservations.need(not account_path.resolve().is_relative_to(repo.resolve()), "inert account cannot be a repository account")
     receipt = reservations.read(receipt_path)
     # Receipt binds a demand with its receipt field omitted, avoiding a hash cycle.

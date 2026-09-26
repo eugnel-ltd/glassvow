@@ -1,11 +1,8 @@
-"""Exact host qualification for DD1-KERNEL-COMPAT-1. No I/O, clock, or host probe.
-
-require/native_bindings raise ReservationError on any mismatch. The inert
-reservation policy is code-pinned; callers cannot shape its deadline.
-"""
+"""Host qualification and finite per-case limits for harmless DD1 controls."""
 from __future__ import annotations
 import json
-import re
+import platform
+import struct
 import dd1_reservations as r
 
 SCHEMA = "DD1-KERNEL-QUALIFICATION-1"
@@ -17,21 +14,25 @@ PRIMITIVES = frozenset((
     "readonly_bind_remount", "subreaper", "pdeathsig", "rlimit_cpu", "cgroup_v2"))
 IDENTITY_FIELDS = ("system", "machine", "kernel_release", "kernel_version",
                    "pointer_bytes", "libc")
-LEGACY_RELEASE = "6.18.44"
-QUALIFIED_IDENTITY = dict(
-    system="Linux", machine="x86_64", kernel_release="6.12.94+",
-    kernel_version="#1 SMP PREEMPT_DYNAMIC Mon Sep 14 19:13:20 UTC 2026",
-    pointer_bytes=8, libc=["glibc", "2.41"])
-KEYS = frozenset(("schema", "operation", "selection", "source_head", "status", "mode",
-                  "host_identity", "primitives"))
+KEYS = frozenset(("schema", "status", "mode", "host_identity", "primitives"))
+
+
+def host_facts():
+    return dict(system=platform.system(), machine=platform.machine(),
+                kernel_release=platform.release(), kernel_version=platform.version(),
+                pointer_bytes=struct.calcsize("P"), libc=list(platform.libc_ver()))
+
+
+def profile():
+    return dict(schema=SCHEMA, status="REQUALIFYING", mode="inert_control",
+                host_identity=host_facts(), primitives=sorted(PRIMITIVES))
+
+
 INERT_RESERVATION_POLICY = {
     "operation": "DD1-KERNEL-COMPAT-1",
-    "selection": 5845725453,
-    "start_utc": "2026-09-26T11:02:00Z",
-    "deadline_utc": "2026-09-27T11:02:00Z",
     "synthetic_only": True,
-    "starts_cap": 16,
-    "cpu_ns_cap": 300_000_000_000,
+    "starts_cap": 1,
+    "cpu_ns_cap": 30_000_000_000,
     "raw_bytes_cap": 134_217_728,
     "per_invocation_cpu_seconds": 30,
     "executors": 1,
@@ -43,20 +44,14 @@ def profile_sha256(unit):
 
 
 def require(unit, host_facts):
+    r.need(host_facts["system"] == "Linux" and host_facts["machine"] == "x86_64"
+           and host_facts["pointer_bytes"] == 8, "unsupported host/ABI; no fallback")
     q = unit.get("kernel_qualification")
     if q is None:
-        r.need(host_facts["system"] == "Linux" and host_facts["machine"] == "x86_64"
-               and host_facts["pointer_bytes"] == 8 and host_facts["kernel_release"] == LEGACY_RELEASE,
-               "unsupported host/ABI; no fallback")
         return
     r.need(isinstance(q, dict), "kernel qualification profile required")
     r.need(set(q) == KEYS, "no extra fields")
     r.need(q["schema"] == SCHEMA, "wrong kernel qualification schema")
-    r.need(q["operation"] == OPERATION, "wrong kernel qualification operation")
-    r.need(q["selection"] == SELECTION, "wrong kernel qualification selection")
-    head = q["source_head"]
-    r.need(isinstance(head, str) and re.fullmatch(r"[0-9a-f]{40}", head) is not None
-           and head == unit.get("overlay_head"), "wrong source head")
     r.need(q["status"] in ("REQUALIFYING", "QUALIFIED"), "wrong kernel qualification status")
     r.need(q["mode"] == unit.get("mode"), "kernel qualification mode mismatch")
     ident = q["host_identity"]
@@ -107,17 +102,9 @@ def native_bindings(unit, expected, context):
 
 
 def inert_reservation_policy(unit):
-    """Return the code-pinned K1 inert policy, or fail closed. No I/O and no clock."""
-    q = unit.get("kernel_qualification")
+    """Per-case resource bounds; neither calendar expiry nor operation-wide credit."""
     r.need(unit.get("mode") == "inert_control", "kernel reservation policy is inert-control only")
     r.need(unit.get("operation") == OPERATION, "wrong unit operation")
-    r.need(isinstance(q, dict), "kernel qualification required")
-    r.need(q.get("selection") == SELECTION and q.get("operation") == OPERATION,
-           "wrong kernel qualification selection")
-    r.need(unit.get("operation_start_utc") == INERT_RESERVATION_POLICY["start_utc"],
-           "wrong operation_start_utc")
-    r.need(unit.get("operation_deadline_utc") == INERT_RESERVATION_POLICY["deadline_utc"],
-           "wrong operation_deadline_utc")
-    r.need(q.get("status") == "REQUALIFYING", "REQUALIFYING required")
-    r.need(q.get("host_identity") == QUALIFIED_IDENTITY, "wrong K0 host identity")
+    q = unit.get("kernel_qualification")
+    r.need(isinstance(q, dict) and q.get("status") == "REQUALIFYING", "REQUALIFYING required")
     return dict(INERT_RESERVATION_POLICY)

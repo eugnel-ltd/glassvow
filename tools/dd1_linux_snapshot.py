@@ -4,6 +4,8 @@ The host-authenticated demand owns source/content/runtime closure. We reject
 missing ELF interpreters/NEEDED names rather than importing host libraries.
 Only copied bytes enter the root; original paths are never mounted in it.
 """
+import json
+import subprocess
 import os
 from pathlib import Path, PurePosixPath
 import platform
@@ -13,8 +15,6 @@ import dd1_reservations as r
 import dd1_runtime_fit as fit
 
 ABI = "linux-x86_64-lp64-v1"
-# Exact helper built/tested in this source artifact, not a unit-selected runner.
-PINNED_HELPER_SHA256 = "41a4529af3bb2fb3f065d164dee8ac9cd2af7d761311c5ee63538347a44e45a4"
 HELPER_SOURCES = frozenset("res://tools/" + p for p in (
     "dd1_linux/policy.h", "dd1_linux/policy.c", "dd1_linux/isolate.c",
     "dd1_linux/supervisor.c", "dd1_linux_snapshot.py", "dd1_linux_backend.py",
@@ -23,6 +23,57 @@ HELPER_SOURCES = frozenset("res://tools/" + p for p in (
     "dd1_compatibility.py", "dd1_preparation.py", "dd1_preparation_watch.py",
     "dd1_prep_view.py", "dd1_import_semantics.py", "dd1_runtime_fit.py",
     "dd1_kernel_qualification.py"))
+
+
+BUILD_SOURCES = HELPER_SOURCES | frozenset("res://tools/dd1_linux/" + name for name in (
+    "inert.c", "compat2_inert.c", "fit_inert.c", "build_inert.py"))
+FIXTURE_NAMES = frozenset(("inert", "inert-dynamic", "compat2-inert", "fit-inert"))
+
+
+def build_sources(repo):
+    return {name: r.digest((repo / name[6:]).read_bytes()) for name in sorted(BUILD_SOURCES)}
+
+
+def verify_build_sources(repo, sources):
+    r.need(isinstance(sources, dict) and set(sources) == BUILD_SOURCES, "build source closure mismatch")
+    for name, wanted in sources.items():
+        raw = subprocess.run(["git", "-C", str(repo), "show", "HEAD:" + name[6:]],
+                             check=True, capture_output=True).stdout
+        r.need(r.digest(raw) == wanted == r.digest((repo / name[6:]).read_bytes()),
+               "build source differs from git blob: " + name)
+
+
+def build_manifest(repo):
+    """Read provenance from the executing checkout, never a staged caller manifest."""
+    path = repo / "tools/dd1_linux/build/BUILD.json"
+    r.need(not path.is_symlink(), "linked build manifest")
+    manifest = json.loads(path.read_bytes())
+    verify_build_sources(repo, manifest.get("sources"))
+    return manifest
+
+
+def fixture_hashes(names=FIXTURE_NAMES):
+    repo = Path(__file__).resolve().parents[1]
+    path = repo / "tools/dd1_linux/build/BUILD.json"
+    if not path.exists():
+        return frozenset()
+    manifest = build_manifest(repo)
+    hashes = set()
+    for name in names:
+        item = manifest.get("binaries", {}).get(name)
+        if item is not None:
+            raw = (path.parent / name).read_bytes()
+            r.need(r.digest(raw) == item["sha256"] and len(raw) == item["bytes"],
+                   "built fixture identity mismatch: " + name)
+            hashes.add(item["sha256"])
+    return frozenset(hashes)
+
+
+def validate_helper(helper, declared):
+    manifest = build_manifest(Path(__file__).resolve().parents[1])
+    item = manifest["binaries"]["supervisor"]
+    r.need(r.digest(helper) == declared == item["sha256"] and len(helper) == item["bytes"]
+           and elf(helper) == (None, []), "helper must match built static ELF")
 
 
 def read_regular(root: Path, name: str, maximum: int = 1 << 30) -> bytes:
@@ -130,7 +181,7 @@ def prepare(unit: dict, command: list[str], repo: Path, generated=None) -> dict:
             r.need(interp is None or interp in files, "unbound interpreter: " + str(interp))
             r.need(all(n in files if n.startswith("/") else n in basenames for n in needed), "unbound runtime dependency")
     helper = read_regular(repo, b["helper"]["path"])
-    r.need(r.digest(helper) == b["helper"]["sha256"] == PINNED_HELPER_SHA256 and elf(helper) == (None, []), "helper must be pinned static ELF")
+    validate_helper(helper, b["helper"]["sha256"])
     import dd1_preparation as preparation
     recipe = preparation.validate_recipe(unit, source)
     overrides, archives = view.execution_files(recipe, source)
@@ -152,7 +203,8 @@ def prepare(unit: dict, command: list[str], repo: Path, generated=None) -> dict:
     import dd1_compatibility as compatibility
     promotion = preparation.reserve_copy_bytes(recipe, source)
     result = dict(files=files, source=source, helper=helper, setup_raw=setup_raw + promotion,
-                  config=b, preparation=recipe, promotion_raw=promotion)
+                  config=b, preparation=recipe, promotion_raw=promotion,
+                  kernel_release=host["kernel_release"], kernel_version=host["kernel_version"])
     result["private_modes"], result["mode_projection"] = fit.validate(unit, source, files)
     result["profile"] = compatibility.validate_profile(unit, result)
     r.need(result["setup_raw"] + b["workload_raw_bytes"] + 524288 < unit["raw_bytes"],

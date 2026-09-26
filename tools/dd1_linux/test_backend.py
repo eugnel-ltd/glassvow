@@ -334,7 +334,7 @@ class BackendTests(unittest.TestCase):
                 r.atomic_write(root / "receipt.json", dict(schema="DD1-INERT-ONLY", demand_sha256="0"*64))
                 fragment = "inert demand/receipt mismatch"
             else:
-                fragment = {"binary": "runtime identity mismatch", "helper": "helper must be pinned",
+                fragment = {"binary": "runtime identity mismatch", "helper": "helper must match built static ELF",
                     "source": "actual source bytes differ", "architecture": "missing supported Linux demand", "output-root": "unbound output root"}[name]
                 if name == "binary": unit["linux"]["runtime"]["/workload"]["sha256"] = "0"*64
                 elif name == "helper": unit["linux"]["helper"]["sha256"] = "0"*64
@@ -372,12 +372,12 @@ class BackendTests(unittest.TestCase):
             target = copy / "tools/dd1_linux/build" / binary
             original = target.read_bytes()
             target.write_bytes(b"CHANGED AFTER DEMAND")
-            self.rejected(root, "runtime identity mismatch" if binary == "inert" else "helper must be pinned", copy)
+            self.rejected(root, "runtime identity mismatch" if binary == "inert" else "helper must match built static ELF", copy)
             target.write_bytes(original)
         root, unit = self.case("arbitrary-static-helper", repo=copy)
         unit["linux"]["helper"] = deepcopy(unit["linux"]["runtime"]["/workload"])
         fixture.sign(root, unit)
-        self.rejected(root, "helper must be pinned", copy)
+        self.rejected(root, "helper must match built static ELF", copy)
         root, unit = self.case("non-fixture-workload", repo=copy)
         unit["linux"]["runtime"]["/workload"] = dict(unit["linux"]["helper"], executable=True)
         fixture.sign(root, unit)

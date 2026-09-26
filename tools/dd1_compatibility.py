@@ -33,10 +33,12 @@ def validate_profile(unit, pinned):
     engine = r.digest(pinned["files"][unit["argv"][0]][0])
     r.need(unit["mode"] == "inert_control" or engine == ENGINE, "fixed official engine required")
     r.need(b.get("environment") == ENVIRONMENT, "unbound/changed workload environment")
-    libc = [raw for name, (raw, _) in pinned["files"].items() if name.endswith("/libc.so.6")]
-    r.need(len(libc) == 1 and r.digest(libc[0]) == LIBC, "profile libc identity")
+    libc_path = "/lib/x86_64-linux-gnu/libc.so.6"
+    libc_sha = b["runtime"].get(libc_path, {}).get("sha256")
+    libc = pinned["files"].get(libc_path)
+    r.need(libc is not None and r.digest(libc[0]) == libc_sha, "profile libc identity")
     expected = dict(id=PROFILE, operation="DD1-LINUX-ENTRY-1", stage=stage,
-        source_head=unit["overlay_head"], executable_sha256=engine, libc_sha256=LIBC,
+        source_head=unit["overlay_head"], executable_sha256=engine, libc_sha256=libc_sha,
         helper_sha256=r.digest(pinned["helper"]), source_manifest_sha256=r.digest(r.encode(unit["source_files"])),
         runtime_sha256=r.digest(r.encode(b["runtime"])), argv_sha256=r.digest(r.encode(unit["argv"])),
         environment_sha256=r.digest(r.encode(ENVIRONMENT)), process_signature=PROCESS,

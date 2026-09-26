@@ -1,104 +1,57 @@
 #!/usr/bin/env python3
-"""One-case K2 driver for DD1-KERNEL-COMPAT-1. No second sandbox and no caller clock.
-
-Reuses inert/compat2/fit fixtures through dd1_meter_entry._run_inert_unit.
-The disposable account is the K1 synthetic account only. K2-LEDGER.json under
---root is the operation-wide release, CPU and raw authority.
-"""
+"""Run every harmless kernel control independently, with recorded build provenance."""
 from __future__ import annotations
 import argparse
-import fcntl
 import json
 import os
 from pathlib import Path
-import re
+import platform
 import resource
 import signal
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 import dd1_kernel_qualification as kq
 import dd1_reservations as r
 
-BUILD_RESERVE = 60
-HEADROOM = 36
-RELEASE_TOTAL = 204
-RELEASE_LIMIT = 240
-AGGREGATE = 300
-RAW_EACH = 8 * 1024 * 1024
+RAW_EACH = CASE_RAW = 8 * 1024 * 1024
 CONTROLLER = "DD1_KERNEL_COMPAT_CONTROLLER"
-HELPER_PIN = "41a4529af3bb2fb3f065d164dee8ac9cd2af7d761311c5ee63538347a44e45a4"
-BASE_HEAD = "c17ae971a447c28e597b78d0ecb5eb29f36e644a"
-REMOTE_MAIN = "07b5aa9dec8436132a524511d5438c510e322070"
-LEDGER_SCHEMA = "DD1-KERNEL-COMPAT-1-K2-LEDGER-1"
 CASE_SCHEMA = "DD1-KERNEL-COMPAT-1-CASE"
-K0_SCHEMA = "DD1-KERNEL-COMPAT-1-K0"
-BUILD_RESERVE_NS = 60_000_000_000
-CPU_CAP_NS = 300_000_000_000
-RAW_CAP = 134_217_728
-CASE_CPU_MAX_NS = 30_000_000_000
-PLANNED_RELEASE_NS = 204_000_000_000
-HEADROOM_NS = 36_000_000_000
-RELEASE_SLOTS = 16
-DEADLINE_UNIX = 1790506920
-CASE_RAW = RAW_EACH
-STOPS = frozenset(("INCOMPATIBLE", "INCONCLUSIVE"))
-FINAL_KINDS = frozenset(("EXPECTED", "NOT_REACHABLE_ON_HOST", "INCOMPATIBLE", "INCONCLUSIVE"))
 ART_KEYS = ("supervisor", "inert", "compat2-inert", "fit-inert", "libc.so.6")
-TOP_KEYS = frozenset((
-    "schema", "operation", "selection_comment", "window", "head", "k0_sha256", "caps",
-    "build", "used", "rows", "latch"))
-ROW_KEYS = frozenset((
-    "seq", "case_id", "state", "g", "cpu_ns_reserved", "cpu_ns_observed", "cpu_ns_charged",
-    "raw_bytes_reserved", "raw_bytes_observed", "raw_bytes_charged", "reserved_utc",
-    "finished_utc", "classification", "reasons", "record_sha256"))
-BUILD_KEYS = frozenset((
-    "cpu_ns_reserved", "cpu_ns_observed", "cpu_ns_charged", "artefacts_sha256", "status",
-    "reasons", "recorded_utc"))
-USED_KEYS = frozenset((
-    "release_slots", "workload_releases", "cpu_ns_charged", "raw_bytes_charged", "raw_bytes_observed"))
-LATCH_KEYS = frozenset(("outcome", "case_id", "reasons", "latched_utc"))
-WINDOW = {
-    "start_utc": "2026-09-26T11:02:00Z",
-    "deadline_utc": "2026-09-27T11:02:00Z",
-    "deadline_unix": DEADLINE_UNIX,
-}
-CAPS = {
-    "release_slots": RELEASE_SLOTS,
-    "cpu_ns": CPU_CAP_NS,
-    "raw_bytes": RAW_CAP,
-    "case_cpu_ns_max": CASE_CPU_MAX_NS,
-    "case_raw_bytes": CASE_RAW,
-    "build_reserve_cpu_ns": BUILD_RESERVE_NS,
-    "planned_release_cpu_ns": PLANNED_RELEASE_NS,
-    "headroom_cpu_ns": HEADROOM_NS,
-}
-K0_KEYS = frozenset((
-    "schema", "operation", "selection_comment", "selection_timestamp_utc", "deadline_utc",
-    "custodian", "executor", "durable_root", "lock", "clone", "host", "resources",
-    "primitives", "github", "persistence", "helper", "helper_sources_sha256", "counters"))
-LOCK_KEYS = frozenset((
-    "path", "acquired", "locker_pid", "locker_start_ticks", "acquired_at_utc",
-    "same_unix_user_advisory_only"))
-CLONE_KEYS = frozenset(("path", "head", "tree", "clean", "shared_clone_modified", "remote_main"))
-HOST_KEYS = frozenset((
-    "hostname", "os_id", "os_version", "kernel_release", "kernel_version", "machine",
-    "pointer_bytes", "libc", "python", "boot_id_sha256", "cgroup_v2"))
-RESOURCE_KEYS = frozenset((
-    "vcpus", "memory_total_bytes", "memory_available_bytes", "swap_total_bytes",
-    "disk_free_bytes", "load_1m"))
-PRIMITIVE_BOOLS = (
-    "seccomp_user_notif", "user_namespace", "mount_namespace", "network_namespace",
-    "readonly_bind_remount", "subreaper", "pdeathsig", "cgroup_v2")
-PRIMITIVE_KEYS = frozenset(PRIMITIVE_BOOLS + ("rlimit_cpu_soft", "rlimit_cpu_hard"))
-PERSIST_KEYS = frozenset((
-    "home_root_expected_persistent", "usr_may_reset_on_computer_update", "flock_path",
-    "python_path", "cc_path", "openssh_reinstall_after_update_risk"))
-COUNTER_KEYS = frozenset(("workload_releases", "compile_commands", "engine_runs", "source_mutations"))
+
+
+def synthetic_account():
+    policy = kq.INERT_RESERVATION_POLICY
+    return dict(schema="DD1-KERNEL-COMPAT-1-SYNTHETIC-ACCOUNT-1", synthetic=True,
+                recovery=dict(id=kq.OPERATION, starts_used=0, cpu_ns_used=0, raw_bytes_used=0,
+                              **{k: policy[k] for k in ("starts_cap", "cpu_ns_cap", "raw_bytes_cap",
+                                                       "executors", "per_invocation_cpu_seconds")},
+                              unit_reservations_v2=[]))
+
+
+def case_directory(root, case_id):
+    return Path(root) / "cases" / case_id
+
+
+def build_problems(repo):
+    import dd1_linux_snapshot as snap
+    try:
+        manifest = snap.build_manifest(Path(repo))
+        build = Path(repo) / "tools/dd1_linux/build"
+        for name in ART_KEYS + ("ld-linux-x86-64.so.2",):
+            path = build / name
+            r.need(path.is_file() and not path.is_symlink(), "missing artefact: " + name)
+            raw = path.read_bytes()
+            item = manifest["binaries"][name]
+            r.need(r.digest(raw) == item["sha256"] and len(raw) == item["bytes"],
+                   "build identity mismatch: " + name)
+        r.need(snap.elf((build / "supervisor").read_bytes()) == (None, []), "supervisor is not static ELF")
+    except (OSError, ValueError, KeyError, TypeError, r.ReservationError, subprocess.SubprocessError) as exc:
+        return [str(exc)]
+    return []
 
 
 def _argv(source, mode, births):
@@ -120,7 +73,7 @@ ROWS = (
           "strict success; USER_NOTIF path live; 3 lifetime threads incl main; atomic save/readback; cleanup confirmed"),
     _case("KC02_READONLY_ESCAPE", "inert.c", "escape", 12,
           "writes/rename/alias to immutable source fail; original bytes readable; unit exits success; no escape"),
-    _case("KC03_CLONE3_FALLBACK", "inert.c", "clone3", 10,
+    _case("KC03_CLONE3_FALLBACK", "inert.c", "clone3", 11,
           "clone3 refused with ENOSYS path; no process created; bounded record; cleanup"),
     _case("KC04_STRICT_THREAD_CEILING", "inert.c", "thread_limit", 12,
           "strict four-lifetime-thread ceiling reached; next birth refused; no fifth thread"),
@@ -128,9 +81,9 @@ ROWS = (
           "RLIMIT_CPU actually terminates workload; failure retained; cleanup; no refund/credit"),
     _case("KC06_RAW_OVERWRITE", "inert.c", "overwrites", 12,
           "monotone raw/write accounting; cap refusal before excess effect; failed unit remains charged"),
-    _case("KC07_SOCKET_DENY", "inert.c", "socket", 10,
+    _case("KC07_SOCKET_DENY", "inert.c", "socket", 11,
           "unrelated socket syscall EOPNOTSUPP/denied; no socket effect; strict failure"),
-    _case("KC08_X32_ABI_KILL", "inert.c", "abi", 10,
+    _case("KC08_X32_ABI_KILL", "inert.c", "abi", 11,
           "x32-tagged syscall is fail-closed, expected SIGSYS; no BAD write"),
     _case("KC09_CONTROLLER_KILL", "inert.c", "linger", 12,
           "reservation/operation charge retained; PDEATHSIG/subreaper cleanup leaves controller/supervisor/workload identities gone",
@@ -148,10 +101,10 @@ ROWS = (
     _case("KC14_FIT_NEXT_BIRTH_DENY", "fit_inert.c", "sequential", 16,
           "15th lifetime birth is refused; no topology overflow",
           threads=14, births=14),
-    _case("KC15_IA32_REACHABILITY", "inert.c", "ia32", 8,
+    _case("KC15_IA32_REACHABILITY", "inert.c", "ia32", 11,
           "if seccomp arch guard is reached: fail-closed SIGSYS; if host faults first with SIGSEGV and zero forbidden effects: record `NOT_REACHABLE_ON_HOST` and make no seccomp-arch claim; exit 0/effect => INCOMPATIBLE",
           special="ia32_reachability"),
-    _case("KC16_NESTED_NAMESPACE_DENY", "inert.c", "namespace", 10,
+    _case("KC16_NESTED_NAMESPACE_DENY", "inert.c", "namespace", 11,
           "workload cannot create another user namespace; EOPNOTSUPP/denied; existing isolated namespace remains intact"),
 )
 
@@ -172,61 +125,12 @@ def row_for(case_id):
     return None
 
 
-def synthetic_account():
-    policy = kq.INERT_RESERVATION_POLICY
-    return dict(schema="DD1-KERNEL-COMPAT-1-SYNTHETIC-ACCOUNT-1", synthetic=True,
-        recovery=dict(id="DD1-KERNEL-COMPAT-1", selection=policy["selection"],
-            starts_used=0, starts_cap=policy["starts_cap"],
-            cpu_ns_used=0, cpu_ns_cap=policy["cpu_ns_cap"],
-            raw_bytes_used=0, raw_bytes_cap=policy["raw_bytes_cap"],
-            executors=policy["executors"], per_invocation_cpu_seconds=policy["per_invocation_cpu_seconds"],
-            first_engine_launch_utc=policy["start_utc"], deadline_utc=policy["deadline_utc"],
-            unit_reservations_v2=[],
-            events=[{"note": "SYNTHETIC K1 inert reservation account; no historical credit"}]))
-
-
-def qualification(head):
-    identity = {key: (list(value) if isinstance(value, list) else value)
-                for key, value in kq.QUALIFIED_IDENTITY.items()}
-    return dict(schema=kq.SCHEMA, operation=kq.OPERATION, selection=kq.SELECTION, source_head=head,
-                status="REQUALIFYING", mode="inert_control", host_identity=identity,
-                primitives=sorted(kq.PRIMITIVES))
-
-
 def _observed_cpu_ns():
     total = 0.0
     for who in (resource.RUSAGE_SELF, resource.RUSAGE_CHILDREN):
         usage = resource.getrusage(who)
         total += usage.ru_utime + usage.ru_stime
     return int(total * 1_000_000_000)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def operation_dir(root):
-    return Path(root) / "dd1-kernel-compat-1"
-
-
-def case_directory(root, case_id):
-    return operation_dir(root) / case_id
-
-
-
-
-
-
 
 
 def _signal_pid(pid, sig):
@@ -246,68 +150,6 @@ def _identity_absent(identity):
         if time.monotonic() >= deadline:
             return False
         time.sleep(0.02)
-
-
-
-
-
-
-
-
-
-
-def artefact_digests(clone):
-    build = Path(clone) / "tools/dd1_linux/build"
-    found = {}
-    for name in ART_KEYS:
-        path = build / name
-        if path.is_symlink() or not path.is_file():
-            found[name] = None
-            continue
-        try:
-            found[name] = r.digest(path.read_bytes())
-        except OSError:
-            found[name] = None
-    return found
-
-
-def build_problems(observed, artefacts):
-    import dd1_compatibility as compat
-    import dd1_linux_snapshot as snap
-    import dd1_meter_entry as entry
-    import dd1_runtime_fit as fit
-    reasons = []
-    if not isinstance(artefacts, dict):
-        return ["artefacts missing"]
-    checks = (
-        (artefacts.get("supervisor") == snap.PINNED_HELPER_SHA256, "supervisor pin mismatch"),
-        (artefacts.get("inert") in entry.INERT_BINARIES, "inert pin mismatch"),
-        (artefacts.get("compat2-inert") in entry.INERT_BINARIES, "compat2-inert pin mismatch"),
-        (artefacts.get("fit-inert") == fit.INERT_BINARY, "fit-inert pin mismatch"),
-        (artefacts.get("libc.so.6") == compat.LIBC, "libc pin mismatch"),
-    )
-    for ok, reason in checks:
-        if not ok:
-            reasons.append(reason)
-    if type(observed) is int and observed > BUILD_RESERVE_NS:
-        reasons.append("build cpu above 60s reserve")
-    return reasons
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def _account_row(account, case_id):
@@ -384,7 +226,6 @@ def _success_is(z, expected, bad):
 
 
 def _common_b(case_id, evidence, z, row, bad, inc):
-    import dd1_linux_snapshot as snap
     planned = row_for(case_id)
     if "exit" not in evidence:
         inc.append("exit absent")
@@ -401,7 +242,11 @@ def _common_b(case_id, evidence, z, row, bad, inc):
     _want(z, "cleanup_confirmed", True, bad, inc, "cleanup_confirmed", identical=True)
     _want(z, "native_qualified", False, bad, inc, "native_qualified", identical=True)
     _want(z, "n0_accepted", False, bad, inc, "n0_accepted", identical=True)
-    _want(z, "helper_sha256", snap.PINNED_HELPER_SHA256, bad, inc, "helper_sha256")
+    expected_helper = evidence.get("helper_sha256")
+    if expected_helper is None:
+        inc.append("built helper identity absent")
+    else:
+        _want(z, "helper_sha256", expected_helper, bad, inc, "helper_sha256")
     _want_int(row, "starts", 1, bad, inc, "starts")
     _want_int(row, "cpu_ns", planned["cpu_cap"] * 1_000_000_000, bad, inc, "cpu_ns")
     if "unit_raw_bytes" not in evidence:
@@ -611,7 +456,7 @@ def classify(case_id, evidence):
         inc.append("exception after reservation")
     if evidence.get("timeout") is True:
         inc.append("controller timeout")
-    if evidence.get("stdout_one") is not True:
+    if case_id != "KC09_CONTROLLER_KILL" and evidence.get("stdout_one") is not True:
         inc.append("controller stdout is not one JSON object")
     z = evidence.get("z") if evidence.get("stdout_one") is True else None
     if not isinstance(z, dict):
@@ -626,7 +471,9 @@ def classify(case_id, evidence):
         row = None
     if case_id in ("KC09_CONTROLLER_KILL", "KC10_SUPERVISOR_KILL") and evidence.get("live") is not True:
         inc.append("kill case never reached LIVE")
-    if isinstance(z, dict) and isinstance(row, dict):
+    if case_id == "KC09_CONTROLLER_KILL" and isinstance(row, dict):
+        _kc09(evidence, row, bad, inc)
+    elif isinstance(z, dict) and isinstance(row, dict):
         _predicates(case_id, evidence, z, row, bad, inc)
     kind = "EXPECTED"
     if case_id == "KC15_IA32_REACHABILITY" and isinstance(z, dict) and isinstance(row, dict) and not bad and not inc:
@@ -636,8 +483,6 @@ def classify(case_id, evidence):
     if inc:
         return "INCONCLUSIVE", inc
     return kind, []
-
-
 
 
 def tree_bytes(root, skip=None):
@@ -679,10 +524,6 @@ def tree_bytes(root, skip=None):
             except OSError:
                 pass
     return total
-
-
-
-
 
 
 def one_object(text):
@@ -749,6 +590,7 @@ def assemble_evidence(row, where, unit, account, outcome):
         live=(killed in ("controller", "supervisor")) if row.get("kill") else True,
         killed=killed if killed in ("controller", "supervisor") else None,
         identities_absent=absent, source_same=(before == after) if measured else True,
+        helper_sha256=unit.get("linux", {}).get("helper", {}).get("sha256") if isinstance(unit, dict) else None,
         unit_raw_bytes=unit.get("raw_bytes") if isinstance(unit, dict) else CASE_RAW,
         capture=capture, capture_bytes=tree_bytes(capture_dir) if capture_dir is not None else 0,
         src_input=_read_bytes(src / "input"), src_moved=_exists(src / "moved"),
@@ -756,14 +598,11 @@ def assemble_evidence(row, where, unit, account, outcome):
         src_frozen=_read_bytes(src / "inputs" / "frozen.txt"))
 
 
-
-
-
-
-def collect(args, row, k0):
+def collect(args, row):
     outcome = dict(exc=None, timed_out=False, killed=None, exit_code=None, stdout=None, stderr="",
                    before=None, after=None, where=None, unit=None, account_path=None)
-    repo = Path(k0["clone"]["path"])
+    repo = ROOT
+    deadline = time.monotonic() + 90
     proc = None
     try:
         outcome["before"] = source_identity(repo, row["source_file"])
@@ -779,7 +618,7 @@ def collect(args, row, k0):
                 except OSError:
                     outcome["killed"] = None
         try:
-            out, err = proc.communicate(timeout=90)
+            out, err = proc.communicate(timeout=max(0.01, deadline - time.monotonic()))
         except subprocess.TimeoutExpired:
             outcome["timed_out"] = True
             proc.kill()
@@ -804,15 +643,11 @@ def collect(args, row, k0):
     return outcome
 
 
-
-
 def apply_k1(unit, head, account_path, row):
     unit["operation"] = kq.OPERATION
     unit.pop("scientific_m", None)
     unit["overlay_head"] = head
-    unit["operation_start_utc"] = kq.INERT_RESERVATION_POLICY["start_utc"]
-    unit["operation_deadline_utc"] = kq.INERT_RESERVATION_POLICY["deadline_utc"]
-    unit["kernel_qualification"] = qualification(head)
+    unit["kernel_qualification"] = kq.profile()
     unit["cpu_seconds"] = row["cpu_cap"]
     unit["wall_seconds"] = 60
     unit["raw_bytes"] = RAW_EACH
@@ -914,10 +749,8 @@ def stage(root, repo, row, head):
         unit, account_path, staged = build_fit(where, repo, row, head)
     else:
         raise RuntimeError("unknown fixture")
-    if unit["overlay_head"] != head or unit["kernel_qualification"]["source_head"] != head:
+    if unit["overlay_head"] != head:
         raise RuntimeError("head is not bound to the unit")
-    if unit["kernel_qualification"]["selection"] != kq.SELECTION:
-        raise RuntimeError("owner selection mismatch")
     sign(where, unit)
     r.atomic_write(where / "paths.json", dict(account=str(account_path), receipt=str(where / "receipt.json"),
                                               output=unit["linux"]["output_root"], repo=str(staged),
@@ -935,7 +768,7 @@ def spawn(head, root, case_id):
     env = os.environ.copy()
     env[CONTROLLER] = "1"
     return subprocess.Popen([sys.executable, "-I", "-B", "-S", str(Path(__file__).resolve()),
-                             "--head", head, "--root", str(root), "--case", case_id],
+                             "--out", str(root), "--case", case_id],
                             env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 
@@ -955,17 +788,7 @@ def wait_live(proc, output, account_path):
     return None
 
 
-
-
-
-
 def controller_main(args):
-    k0 = preflight(args)
-    if not lock_held(args.root):
-        refuse("whole-operation lock not held")
-    if not controller_reserved(args, k0):
-        sys.stdout.write(json.dumps({"pre_release_error": "no durable K2 ledger reservation"}) + "\n")
-        return 2
     where = case_directory(args.root, args.case)
     meta = r.read(where / "paths.json")
     unit = r.read(where / "unit.json")
@@ -983,11 +806,73 @@ def controller_main(args):
         return 2
 
 
+def run_case(args, row):
+    before = _observed_cpu_ns()
+    outcome = collect(args, row)
+    account = None
+    if outcome["account_path"] is not None:
+        try:
+            account = r.read(outcome["account_path"])
+        except (OSError, r.ReservationError):
+            pass
+    evidence = assemble_evidence(row, outcome["where"], outcome["unit"], account, outcome)
+    classification, reasons = classify(row["case_id"], evidence)
+    if outcome["exc"] is not None:
+        reasons.append(type(outcome["exc"]).__name__ + ": " + str(outcome["exc"]))
+    return dict(case=row["case_id"].split("_")[0], case_id=row["case_id"],
+                classification=classification, reasons=reasons,
+                cpu_ns=max(0, _observed_cpu_ns() - before),
+                kernel_release=platform.release(), kernel_version=platform.version(),
+                controller_stdout=outcome["stdout"], controller_stderr=outcome["stderr"])
 
 
-
-
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--case")
+    group.add_argument("--all", action="store_true")
+    parser.add_argument("--out", required=True, type=Path)
+    args = parser.parse_args(argv)
+    rows = plan() if args.all else [row for row in plan()
+        if args.case in (row["case_id"], row["case_id"].split("_")[0])]
+    if not rows:
+        parser.error("unknown case")
+    args.root = args.out.resolve()
+    args.head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+                               check=True, capture_output=True, text=True).stdout.strip()
+    if os.environ.get(CONTROLLER) == "1":
+        if args.all:
+            parser.error("controller requires one case")
+        args.case = rows[0]["case_id"]
+        return controller_main(args)
+    # A new destination prevents overwriting earlier evidence or following planted links.
+    if args.out.is_symlink() or args.out.absolute() != args.root:
+        parser.error("output must be unaliased")
+    if args.root.is_relative_to(ROOT) and not args.root.is_relative_to(ROOT / "tools/dd1_linux/build"):
+        parser.error("repository output must be under gitignored tools/dd1_linux/build")
+    args.root.mkdir(parents=True, exist_ok=False)
+    problems = build_problems(ROOT)
+    records = []
+    for row in rows:
+        args.case = row["case_id"]
+        record = dict(case=row["case_id"].split("_")[0], case_id=row["case_id"],
+                      classification="INCONCLUSIVE", reasons=list(problems), cpu_ns=0,
+                      kernel_release=platform.release(), kernel_version=platform.version())
+        if not problems:
+            try:
+                record = run_case(args, row)
+            except Exception as exc:
+                record["reasons"] = [type(exc).__name__ + ": " + str(exc)]
+        r.atomic_write(args.root / (record["case"] + ".json"), record)
+        records.append(record)
+    summary = dict(head=args.head, cases=records, cpu_ns=sum(row["cpu_ns"] for row in records),
+                   kernel_release=platform.release(), kernel_version=platform.version())
+    r.atomic_write(args.root / "SUMMARY.json", summary)
+    print(json.dumps({row["case"]: row["classification"] for row in records}, sort_keys=True))
+    return 0 if all(row["classification"] == "EXPECTED" or
+                    (row["case"] == "KC15" and row["classification"] == "NOT_REACHABLE_ON_HOST")
+                    for row in records) else 1
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
