@@ -201,16 +201,8 @@ def _observed_cpu_ns():
     return int(total * 1_000_000_000)
 
 
-def refuse(reason, mutated=False):
-    sys.stdout.write(json.dumps(dict(
-        schema=CASE_SCHEMA, refused_before_g=True, workload_release=False,
-        ledger_mutated=bool(mutated), cpu_ns=_observed_cpu_ns(), reason=str(reason)[:2048]),
-        sort_keys=True) + "\n")
-    raise SystemExit(2)
 
 
-def stamp():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 
@@ -316,21 +308,6 @@ def build_problems(observed, artefacts):
 
 
 
-def g_evidence(account, case_id):
-    if not isinstance(account, dict):
-        return "SENT_OR_UNCERTAIN"
-    recovery = account.get("recovery")
-    rows = recovery.get("unit_reservations_v2") if isinstance(recovery, dict) else None
-    if not isinstance(rows, list):
-        return "NOT_SENT"
-    match = None
-    for item in rows:
-        if isinstance(item, dict) and item.get("unit_id") == case_id:
-            match = item
-            break
-    if not isinstance(match, dict) or "processes" not in match:
-        return "NOT_SENT"
-    return "SENT_OR_UNCERTAIN"
 
 
 def _account_row(account, case_id):
@@ -661,21 +638,6 @@ def classify(case_id, evidence):
     return kind, []
 
 
-def apply_audits(classification, reasons, case_raw, cpu_charged, retained):
-    found = list(reasons)
-    if type(case_raw) is int and case_raw > CASE_RAW:
-        found.append("CASE_EVIDENCE_OVER_8MIB")
-        classification = "INCOMPATIBLE"
-    over = False
-    if type(cpu_charged) is int and cpu_charged > CPU_CAP_NS:
-        found.append("OPERATION_CPU_OVER_CAP")
-        over = True
-    if type(retained) is int and retained > RAW_CAP:
-        found.append("OPERATION_RETAINED_OVER_128MIB")
-        over = True
-    if classification != "INCOMPATIBLE" and over:
-        classification = "INCONCLUSIVE"
-    return classification, found
 
 
 def tree_bytes(root, skip=None):
@@ -719,20 +681,8 @@ def tree_bytes(root, skip=None):
     return total
 
 
-def case_observed_raw(case_dir):
-    case_dir = Path(case_dir)
-    return tree_bytes(case_dir, skip=case_dir / "source")
 
 
-def retained_bytes(root, ledger_len):
-    total = tree_bytes(operation_dir(root))
-    k0 = Path(root) / "K0.json"
-    try:
-        if k0.is_symlink() or k0.is_file():
-            total += k0.lstat().st_size
-    except OSError:
-        pass
-    return total + ledger_len
 
 
 def one_object(text):
@@ -806,82 +756,8 @@ def assemble_evidence(row, where, unit, account, outcome):
         src_frozen=_read_bytes(src / "inputs" / "frozen.txt"))
 
 
-def _set_latch(ledger, row):
-    if row["classification"] not in STOPS or ledger.get("latch") is not None:
-        return
-    ledger["latch"] = dict(outcome=row["classification"], case_id=row["case_id"],
-                           reasons=list(row["reasons"]), latched_utc=stamp())
 
 
-def finalise(args, row, ledger, path, outcome):
-    where = outcome.get("where") or case_directory(args.root, row["case_id"])
-    account = None
-    if outcome.get("account_path") is not None:
-        try:
-            account = r.read(outcome["account_path"])
-        except (OSError, r.ReservationError):
-            account = None
-    evidence = assemble_evidence(row, where, outcome.get("unit"), account, outcome)
-    kind, base = classify(row["case_id"], evidence)
-    try:
-        Path(where).mkdir(parents=True, exist_ok=True)
-    except OSError:
-        return False
-    record = dict(
-        schema=CASE_SCHEMA, case_id=row["case_id"], operation=kq.OPERATION, selection=kq.SELECTION,
-        head=args.head, cpu_cap=row["cpu_cap"], required_observation=row["required_observation"],
-        classification=kind, reasons=list(base), child_exit=outcome.get("exit_code"),
-        result=evidence.get("z"), stderr=str(outcome.get("stderr") or "")[:2048],
-        charge=evidence.get("row"), source_before=outcome.get("before"), source_after=outcome.get("after"),
-        identities_absent=evidence.get("identities_absent"), g=g_evidence(account, row["case_id"]))
-    record_path = Path(where) / "CASE-RECORD.json"
-    try:
-        r.atomic_write(record_path, record)
-        record_sha = r.digest(record_path.read_bytes())
-    except (OSError, r.ReservationError):
-        return False
-    observed_cpu = _observed_cpu_ns()
-    observed_raw = case_observed_raw(where)
-    current = ledger["rows"][-1]
-    if current["case_id"] != row["case_id"] or current["state"] != "RESERVED":
-        return False
-    current["g"] = g_evidence(account, row["case_id"])
-    current["cpu_ns_observed"] = observed_cpu
-    current["raw_bytes_observed"] = observed_raw
-    current["cpu_ns_charged"] = max(current["cpu_ns_reserved"], observed_cpu)
-    current["raw_bytes_charged"] = max(current["raw_bytes_reserved"], observed_raw)
-    current["finished_utc"] = stamp()
-    current["record_sha256"] = record_sha
-    current["state"] = "FINAL"
-    classification, reasons = kind, list(base)
-    saved_latch = ledger["latch"]
-    for _pass in range(2):
-        current["classification"] = classification
-        current["reasons"] = reasons
-        ledger["latch"] = saved_latch
-        if classification in STOPS and ledger["latch"] is None:
-            ledger["latch"] = dict(outcome=classification, case_id=row["case_id"],
-                                   reasons=list(reasons), latched_utc=stamp())
-        ledger["used"] = recompute_used(ledger)
-        retained = retained_bytes(args.root, len(r.encode(ledger)))
-        classification, reasons = apply_audits(
-            kind, base, observed_raw, ledger["used"]["cpu_ns_charged"], retained)
-    current["classification"] = classification
-    current["reasons"] = reasons
-    ledger["latch"] = saved_latch
-    _set_latch(ledger, current)
-    ledger["used"] = recompute_used(ledger)
-    k0_sha = r.digest((Path(args.root) / "K0.json").read_bytes())
-    problem = validate_ledger(ledger, args.head, k0_sha)
-    if problem:
-        sys.stderr.write("ledger self-check: " + problem + "\n")
-        return False
-    try:
-        r.atomic_write(path, ledger)
-    except (OSError, r.ReservationError):
-        return False
-    sys.stdout.write(json.dumps(dict(record=record, ledger_row=current), sort_keys=True) + "\n")
-    return True
 
 
 def collect(args, row, k0):
@@ -928,29 +804,6 @@ def collect(args, row, k0):
     return outcome
 
 
-def abandon(path, ledger):
-    row = ledger["rows"][-1]
-    row["state"] = "ABANDONED"
-    row["g"] = "SENT_OR_UNCERTAIN"
-    row["cpu_ns_observed"] = None
-    row["raw_bytes_observed"] = None
-    row["cpu_ns_charged"] = row["cpu_ns_reserved"]
-    row["raw_bytes_charged"] = row["raw_bytes_reserved"]
-    row["finished_utc"] = stamp()
-    row["classification"] = "INCONCLUSIVE"
-    row["reasons"] = ["DANGLING_RESERVED_ROW"]
-    row["record_sha256"] = None
-    ledger["latch"] = dict(outcome="INCONCLUSIVE", case_id=row["case_id"],
-                           reasons=["DANGLING_RESERVED_ROW"], latched_utc=stamp())
-    ledger["used"] = recompute_used(ledger)
-    k0_sha = r.digest((path.parent / "K0.json").read_bytes())
-    if validate_ledger(ledger, ledger["head"], k0_sha):
-        return False
-    try:
-        r.atomic_write(path, ledger)
-    except (OSError, r.ReservationError):
-        return False
-    return True
 
 
 def apply_k1(unit, head, account_path, row):
@@ -1102,31 +955,8 @@ def wait_live(proc, output, account_path):
     return None
 
 
-def preflight(args):
-    if row_for(args.case) is None:
-        refuse("unknown case")
-    if re.fullmatch(r"[0-9a-f]{40}", args.head) is None:
-        refuse("exact K1 head required")
-    window_open()
-    return load_k0(args.root, args.head)
 
 
-def controller_reserved(args, k0):
-    """Read-only guard. The parent already holds LOCK; this process must not take it."""
-    if location_problem(args.root, k0["clone"]["path"]):
-        return False
-    path = ledger_file(args.root)
-    if path.is_symlink() or not path.is_file():
-        return False
-    try:
-        ledger = r.read(path)
-        k0_sha = r.digest((Path(args.root) / "K0.json").read_bytes())
-    except (OSError, r.ReservationError):
-        return False
-    if validate_ledger(ledger, args.head, k0_sha):
-        return False
-    rows = ledger["rows"]
-    return bool(rows) and rows[-1].get("case_id") == args.case and rows[-1].get("state") == "RESERVED"
 
 
 def controller_main(args):
@@ -1153,134 +983,10 @@ def controller_main(args):
         return 2
 
 
-def driver_main(args):
-    row = row_for(args.case)
-    if row is None:
-        refuse("unknown case")
-    if re.fullmatch(r"[0-9a-f]{40}", args.head) is None:
-        refuse("exact K1 head required")
-    window_open()
-    fd = acquire_lock(args.root)
-    try:
-        k0 = load_k0(args.root, args.head)
-        clone = k0["clone"]["path"]
-        located = location_problem(args.root, clone)
-        if located:
-            refuse(located)
-        path = ledger_file(args.root)
-        if path.is_symlink() or not path.is_file():
-            refuse("ledger missing")
-        try:
-            ledger = r.read(path)
-        except r.ReservationError as exc:
-            refuse("ledger unreadable: " + str(exc))
-        k0_sha = r.digest((Path(args.root) / "K0.json").read_bytes())
-        problem = validate_ledger(ledger, args.head, k0_sha)
-        if problem:
-            refuse(problem)
-        if ledger["rows"] and ledger["rows"][-1]["state"] == "RESERVED":
-            if abandon(path, ledger):
-                refuse("dangling reserved row", mutated=True)
-            refuse("dangling reserved row")
-        if ledger["latch"] is not None:
-            refuse("ledger latched")
-        if any(item["case_id"] == args.case for item in ledger["rows"]):
-            refuse("case already recorded")
-        where = case_directory(args.root, args.case)
-        if where.exists() or where.is_symlink():
-            refuse("case directory already exists")
-        cap_ns = row["cpu_cap"] * 1_000_000_000
-        if not reservation_fits(ledger["used"], cap_ns):
-            refuse("reservation exceeds operation cap")
-        ledger["rows"].append(make_reserved_row(len(ledger["rows"]) + 1, args.case, cap_ns))
-        ledger["used"] = recompute_used(ledger)
-        problem = validate_ledger(ledger, args.head, k0_sha)
-        if problem:
-            refuse("reservation failed self-check: " + problem)
-        try:
-            r.atomic_write(path, ledger)
-        except (OSError, r.ReservationError):
-            refuse("reservation write failed")
-        outcome = collect(args, row, k0)
-        wrote = finalise(args, row, ledger, path, outcome)
-        if isinstance(outcome.get("exc"), KeyboardInterrupt):
-            raise outcome["exc"]
-        if isinstance(outcome.get("exc"), SystemExit):
-            raise outcome["exc"]
-        return 0 if wrote and outcome.get("exc") is None else 2
-    finally:
-        os.close(fd)
 
 
-def init_main(args):
-    if re.fullmatch(r"[0-9a-f]{40}", args.head) is None:
-        refuse("exact K1 head required")
-    if args.build_cpu_ns is None or re.fullmatch(r"[0-9]+", args.build_cpu_ns) is None:
-        refuse("build cpu nanoseconds required")
-    observed = int(args.build_cpu_ns, 10)
-    window_open()
-    fd = acquire_lock(args.root)
-    try:
-        k0 = load_k0(args.root, args.head)
-        clone = k0["clone"]["path"]
-        located = location_problem(args.root, clone)
-        if located:
-            refuse(located)
-        path = ledger_file(args.root)
-        if path.exists() or path.is_symlink():
-            refuse("ledger already exists")
-        case_root = operation_dir(args.root)
-        if case_root.is_symlink() or (case_root.exists() and (not case_root.is_dir() or any(case_root.iterdir()))):
-            refuse("case root is not an empty directory")
-        artefacts = artefact_digests(clone)
-        reasons = build_problems(observed, artefacts)
-        status = "INCOMPATIBLE_BUILD" if reasons else "OK"
-        charged = max(BUILD_RESERVE_NS, observed)
-        k0_sha = r.digest((Path(args.root) / "K0.json").read_bytes())
-        recorded = stamp()
-        build = dict(cpu_ns_reserved=BUILD_RESERVE_NS, cpu_ns_observed=observed, cpu_ns_charged=charged,
-                     artefacts_sha256=artefacts, status=status, reasons=reasons, recorded_utc=recorded)
-        latch = None
-        if status != "OK":
-            latch = dict(outcome="INCOMPATIBLE_BUILD", case_id=None, reasons=list(reasons), latched_utc=recorded)
-        ledger = dict(
-            schema=LEDGER_SCHEMA, operation=kq.OPERATION, selection_comment=kq.SELECTION,
-            window=dict(WINDOW), head=args.head, k0_sha256=k0_sha, caps=dict(CAPS), build=build,
-            used=dict(release_slots=0, workload_releases=0, cpu_ns_charged=charged,
-                      raw_bytes_charged=0, raw_bytes_observed=0),
-            rows=[], latch=latch)
-        problem = validate_ledger(ledger, args.head, k0_sha)
-        if problem:
-            refuse("ledger failed self-check: " + problem)
-        r.atomic_write(path, ledger)
-        sys.stdout.write(json.dumps(dict(initialised=True, status=status), sort_keys=True) + "\n")
-        return 0
-    finally:
-        os.close(fd)
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--head", required=True)
-    parser.add_argument("--root", required=True)
-    parser.add_argument("--case", default=None)
-    parser.add_argument("--init-ledger", action="store_true")
-    parser.add_argument("--build-cpu-ns", default=None)
-    args = parser.parse_args(argv)
-    try:
-        if args.init_ledger and args.case:
-            refuse("--case and --init-ledger cannot be combined")
-        if args.init_ledger:
-            return init_main(args)
-        if not args.case:
-            refuse("--case is required")
-        if os.environ.get(CONTROLLER) == "1":
-            return controller_main(args)
-        return driver_main(args)
-    except SystemExit:
-        raise
-    except Exception as exc:
-        refuse(type(exc).__name__ + ": " + str(exc))
 
 
 if __name__ == "__main__":

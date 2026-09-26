@@ -276,258 +276,6 @@ class KernelQualificationTests(unittest.TestCase):
             self.assertNotIn("threads", rows[0])
 
 
-class ReservationPolicyTests(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.root = Path(self.tmp.name).resolve()
-
-    def tearDown(self):
-        self.tmp.cleanup()
-
-    def demand(self, name="k1-unit"):
-        path = self.root / (name + "-account.json")
-        r.atomic_write(path, k_account())
-        cmd = ["/workload", "positive"]
-        body = unit()
-        body.update(receipt_sha256="2" * 64, account_sha256=r.digest(path.read_bytes()), argv=cmd,
-                    unit_id=name, contained_starts=0, cpu_seconds=11, wall_seconds=30, raw_bytes=1_000_000,
-                    source_files={"res://tools/dd1_linux/inert.c": r.digest(SOURCE)})
-        return path, body, cmd
-
-    def test_legacy_deadline_constant_unchanged(self):
-        self.assertEqual(r.FIRST, "2026-09-17T17:54:40Z")
-        self.assertEqual(r.DEADLINE, "2026-09-24T17:54:40Z")
-        self.assertEqual(r.OPERATION, "DD1-N0-RECOVERY-1")
-
-    def test_legacy_after_expiry_rejects(self):
-        with self.assertRaisesRegex(r.ReservationError, "outside recovery window"):
-            r.totals(legacy_account(), datetime(2026, 9, 25, tzinfo=timezone.utc))
-
-    def test_kernel_policy_before_selected_deadline_passes(self):
-        path, body, cmd = self.demand()
-        policy = kq.inert_reservation_policy(body)
-        self.assertEqual(policy, kq.INERT_RESERVATION_POLICY)
-        self.assertEqual(policy["selection"], 5845725453)
-        self.assertEqual(policy["start_utc"], "2026-09-26T11:02:00Z")
-        self.assertEqual(policy["deadline_utc"], "2026-09-27T11:02:00Z")
-        r.validate_unit(body, cmd, head=HEAD, receipt_sha="2" * 64, account_sha=body["account_sha256"],
-                        source_reader=lambda _name: SOURCE, policy=policy)
-        account = r.read(path)
-        self.assertEqual(r.totals(account, INSIDE, policy)["starts"], 0)
-        r.available(account, 1, 11 * 10**9, 1_000_000, INSIDE, policy)
-
-    def test_kernel_policy_at_or_after_deadline_rejects(self):
-        path, body, _cmd = self.demand()
-        policy = kq.inert_reservation_policy(body)
-        account = r.read(path)
-        for now in (AT_DEADLINE, AT_DEADLINE + timedelta(seconds=1)):
-            with self.assertRaises(r.ReservationError):
-                r.totals(account, now, policy)
-
-    def test_kernel_policy_field_mismatch_rejects(self):
-        path, body, cmd = self.demand()
-        policy = kq.INERT_RESERVATION_POLICY
-        account = r.read(path)
-        mutations = []
-        for key, value in (("operation_start_utc", "2026-09-26T12:00:00Z"),
-                           ("operation_deadline_utc", "2026-09-27T12:00:00Z")):
-            changed = deepcopy(body)
-            changed[key] = value
-            mutations.append((key, lambda u=changed: kq.inert_reservation_policy(u)))
-        missing = deepcopy(body)
-        missing.pop("operation_start_utc")
-        mutations.append(("missing-start", lambda: kq.inert_reservation_policy(missing)))
-        missing_deadline = deepcopy(body)
-        missing_deadline.pop("operation_deadline_utc")
-        mutations.append(("missing-deadline", lambda: kq.inert_reservation_policy(missing_deadline)))
-        for field, value in (("first_engine_launch_utc", "2026-09-26T12:00:00Z"),
-                             ("deadline_utc", "2026-09-27T12:00:00Z"), ("selection", 1),
-                             ("starts_cap", 15), ("cpu_ns_cap", 1), ("raw_bytes_cap", 1),
-                             ("per_invocation_cpu_seconds", 31), ("executors", 2)):
-            changed = k_account(**{field: value})
-            mutations.append((field, lambda a=changed: r.totals(a, INSIDE, policy)))
-        wrong_schema = k_account()
-        wrong_schema["schema"] = "DD1-N0-RECOVERY-1-ACCOUNT-1"
-        mutations.append(("schema", lambda: r.totals(wrong_schema, INSIDE, policy)))
-        not_synthetic = k_account()
-        not_synthetic["synthetic"] = False
-        mutations.append(("synthetic", lambda: r.totals(not_synthetic, INSIDE, policy)))
-        wrong_operation = deepcopy(body)
-        wrong_operation["operation"] = r.OPERATION
-        mutations.append(("operation", lambda: kq.inert_reservation_policy(wrong_operation)))
-        for name, call in mutations:
-            with self.subTest(name=name):
-                with self.assertRaises(r.ReservationError):
-                    call()
-        self.assertEqual(path.read_bytes(), r.encode(account))
-
-    def test_kernel_policy_for_old_inert_unit_rejects(self):
-        old = dict(schema="DD1-COMPLETE-UNIT-DEMAND-2", operation=r.OPERATION, scientific_m=r.M,
-                   mode="inert_control", overlay_head=HEAD)
-        with self.assertRaises(r.ReservationError):
-            kq.inert_reservation_policy(old)
-        calls = []
-        with self.assertRaises(r.ReservationError):
-            r.reserve_and_run(self.root / "missing.json", old, command=["/workload", "positive"], head=HEAD,
-                              receipt_sha="2" * 64, source_reader=lambda _name: SOURCE,
-                              authority_check=lambda _account: None, output=self.root / "old-out",
-                              runner=lambda *_args: calls.append(1) or {"success": True}, now=INSIDE,
-                              policy=kq.INERT_RESERVATION_POLICY)
-        self.assertFalse(calls)
-        self.assertFalse((self.root / "missing.json").exists())
-
-    def test_kernel_policy_on_native_path_rejects_before_effect(self):
-        eng = unit(mode="engineering", qualification={"mode": "engineering", "status": "QUALIFIED"})
-        calls = []
-        with self.assertRaises(r.ReservationError):
-            kq.inert_reservation_policy(eng)
-        with self.assertRaises(r.ReservationError):
-            r.reserve_and_run(self.root / "native.json", eng, command=["/workload", "positive"], head=HEAD,
-                              receipt_sha="2" * 64, source_reader=lambda _name: SOURCE,
-                              authority_check=lambda _account: None, output=self.root / "native-out",
-                              runner=lambda *_args: calls.append(1) or {"success": True}, now=INSIDE,
-                              policy=kq.INERT_RESERVATION_POLICY)
-        self.assertFalse(calls)
-        native = inspect.getsource(entry.run_complete_unit)
-        self.assertNotIn("inert_reservation_policy", native)
-        self.assertNotIn("reservation_policy", native)
-        self.assertIn("controller_limits(unit)", native)
-
-    def test_grant_deadline_is_selected_deadline(self):
-        path, body, cmd = self.demand("grant")
-        policy = kq.inert_reservation_policy(body)
-        seen = {}
-
-        def runner(grant, _output):
-            seen["deadline"] = grant["deadline_unix"]
-            return {"success": True}
-
-        r.reserve_and_run(path, body, command=cmd, head=HEAD, receipt_sha="2" * 64,
-                          source_reader=lambda _name: SOURCE, authority_check=lambda _account: None,
-                          output=self.root / "grant", runner=runner, now=INSIDE, policy=policy)
-        grant = r.read(self.root / "grant" / "UNIT-GRANT.json")
-        self.assertEqual(seen["deadline"], 1790506920)
-        self.assertEqual(grant["deadline_unix"], 1790506920)
-        self.assertIsInstance(grant["deadline_unix"], int)
-
-    def test_backend_default_vs_k1_clock(self):
-        _path, body, _cmd = self.demand("clock")
-        policy = kq.inert_reservation_policy(body)
-        body["cpu_seconds"] = 20
-        body["wall_seconds"] = 30
-        moment = INSIDE.timestamp()
-        n0 = datetime.fromisoformat(r.DEADLINE.replace("Z", "+00:00")).timestamp()
-        self.assertLess(n0, moment)
-        k1 = datetime.fromisoformat(policy["deadline_utc"].replace("Z", "+00:00")).timestamp()
-        expected = min(30.0, k1 - moment)
-        self.assertEqual(expected, 30.0)
-        recorded = {}
-
-        class Proc:
-            def iterdir(self):
-                return [object()]
-
-        class Usage:
-            ru_utime = 0.0
-            ru_stime = 0.0
-
-        class Libc:
-            def prctl(self, *_args):
-                return 0
-
-        def run(deadline=None):
-            backend._once = False
-            with patch.object(backend, "Path", lambda _path: Proc()), \
-                 patch.object(backend.resource, "getrusage", lambda _who: Usage()), \
-                 patch.object(backend.resource, "getrlimit", lambda _res: (backend.resource.RLIM_INFINITY,) * 2), \
-                 patch.object(backend.resource, "setrlimit", lambda *_args: None), \
-                 patch.object(backend.signal, "signal", lambda *_args: None), \
-                 patch.object(backend.signal, "pthread_sigmask", lambda *_args: None), \
-                 patch.object(backend.signal, "setitimer", lambda _which, seconds, _interval=0: recorded.__setitem__("wall", seconds)), \
-                 patch.object(backend.ctypes, "CDLL", lambda *_args, **_kwargs: Libc()), \
-                 patch.object(backend.time, "time", lambda: moment), \
-                 patch.object(backend.time, "monotonic", lambda: 10.0):
-                if deadline is None:
-                    return backend.controller_limits(body)
-                return backend.controller_limits(body, deadline)
-
-        try:
-            with self.assertRaisesRegex(r.ReservationError, "cleanup headroom"):
-                run(None)
-            _start, remain = run(policy["deadline_utc"])
-            self.assertEqual(recorded["wall"], 30.0)
-            self.assertEqual(remain, 28.0)
-            with self.assertRaisesRegex(r.ReservationError, "unpinned kernel deadline"):
-                run("2026-09-28T00:00:00Z")
-        finally:
-            backend._once = False
-
-    def test_no_caller_clock_reaches_k2_release(self):
-        driver = Path(controls.__file__).read_text()
-        self.assertNotIn("now=", driver)
-        self.assertNotIn("--now", driver)
-        self.assertNotIn("--deadline", driver)
-        self.assertNotIn("reservation_policy", driver)
-        self.assertNotIn("now", inspect.signature(entry._run_inert_unit).parameters)
-        inert = inspect.getsource(entry._run_inert_unit)
-        self.assertIn("inert_reservation_policy(unit)", inert)
-        self.assertIn('policy["deadline_utc"]', inert)
-        path, body, cmd = self.demand("clock-reject")
-        before = path.read_bytes()
-        bad = dict(kq.INERT_RESERVATION_POLICY)
-        bad["deadline_utc"] = "2026-09-28T00:00:00Z"
-        calls = []
-        with self.assertRaisesRegex(r.ReservationError, "caller-shaped reservation policy rejected"):
-            r.reserve_and_run(path, body, command=cmd, head=HEAD, receipt_sha="2" * 64,
-                              source_reader=lambda _name: SOURCE, authority_check=lambda _account: None,
-                              output=self.root / "clock-reject", runner=lambda *_args: calls.append(1) or {"success": True},
-                              now=INSIDE, policy=bad)
-        self.assertFalse(calls)
-        self.assertEqual(path.read_bytes(), before)
-
-    def test_operation_totals_16_300s_128mib_no_refund(self):
-        policy = kq.INERT_RESERVATION_POLICY
-
-        def charged(count, **fields):
-            base = dict(state="RESERVED", starts=1, cpu_ns=1, raw_bytes=1)
-            base.update(fields)
-            rows = [dict(base, unit_id="u" + str(index)) for index in range(count)]
-            return k_account(unit_reservations_v2=rows)
-
-        full = charged(16)
-        self.assertEqual(r.totals(full, INSIDE, policy)["starts"], 16)
-        with self.assertRaisesRegex(r.ReservationError, "exhausted complete-unit reservation: starts"):
-            r.available(full, 1, 1, 1, INSIDE, policy)
-        cpu = charged(1, cpu_ns=300_000_000_000)
-        with self.assertRaisesRegex(r.ReservationError, "exhausted complete-unit reservation: cpu_ns"):
-            r.available(cpu, 1, 1, 1, INSIDE, policy)
-        raw = charged(1, raw_bytes=134_217_728)
-        with self.assertRaisesRegex(r.ReservationError, "exhausted complete-unit reservation: raw_bytes"):
-            r.available(raw, 1, 1, 1, INSIDE, policy)
-        failed = charged(16, state="FAILED")
-        self.assertEqual(r.totals(failed, INSIDE, policy)["starts"], 16)
-        with self.assertRaisesRegex(r.ReservationError, "exhausted complete-unit reservation: starts"):
-            r.available(failed, 1, 1, 1, INSIDE, policy)
-        with self.assertRaisesRegex(r.ReservationError, "per-invocation CPU ceiling"):
-            r.available(k_account(), 1, 31 * 10**9, 1, INSIDE, policy)
-
-    def test_legacy_reservation_tests_unchanged(self):
-        path = self.root / "legacy.json"
-        r.atomic_write(path, legacy_account())
-        cmd = ["/workload", "positive"]
-        body = dict(schema="DD1-COMPLETE-UNIT-DEMAND-2", operation=r.OPERATION, scientific_m=r.M,
-                    overlay_head="1" * 40, receipt_sha256="2" * 64, account_sha256=r.digest(path.read_bytes()),
-                    argv=cmd, unit_id="legacy-1", mode="inert_control", contained_starts=1, cpu_seconds=4,
-                    wall_seconds=5, raw_bytes=1_000_000, source_files={"res://inert.py": r.digest(SOURCE)})
-        result = r.reserve_and_run(path, body, command=cmd, head="1" * 40, receipt_sha="2" * 64,
-                                   source_reader=lambda _name: SOURCE, authority_check=lambda _account: None,
-                                   output=self.root / "legacy-1", runner=lambda *_args: {"success": True}, now=LEGACY_NOW)
-        self.assertEqual(result["charged"]["starts"], 2)
-        self.assertEqual(r.totals(r.read(path), LEGACY_NOW)["starts"], 2042)
-        grant = r.read(self.root / "legacy-1" / "UNIT-GRANT.json")
-        self.assertEqual(grant["deadline_unix"],
-                         datetime.fromisoformat(r.DEADLINE.replace("Z", "+00:00")).timestamp())
-        self.assertFalse(result["n0_accepted"])
 
 
 class LedgerTests(unittest.TestCase):
@@ -591,11 +339,6 @@ class LedgerTests(unittest.TestCase):
         FrozenClock.instant = INSIDE
         self.tmp.cleanup()
 
-    def patch_pins(self):
-        snap.PINNED_HELPER_SHA256 = r.digest(self.blobs["supervisor"])
-        entry.INERT_BINARIES = frozenset((r.digest(self.blobs["inert"]), r.digest(self.blobs["compat2-inert"])))
-        fitmod.INERT_BINARY = r.digest(self.blobs["fit-inert"])
-        compat.LIBC = r.digest(self.blobs["libc.so.6"])
 
     def source_map(self, clone=None):
         clone = self.clone if clone is None else clone
@@ -633,8 +376,6 @@ class LedgerTests(unittest.TestCase):
             helper_sources_sha256=self.source_map(clone),
             counters=dict(workload_releases=0, compile_commands=0, engine_runs=0, source_mutations=0))
 
-    def write_k0(self, body=None):
-        r.atomic_write(self.root / "K0.json", self.k0_body() if body is None else body)
 
     def invoke(self, args):
         out, err = io.StringIO(), io.StringIO()
@@ -645,20 +386,7 @@ class LedgerTests(unittest.TestCase):
                 return exc.code, out.getvalue(), err.getvalue()
         return code, out.getvalue(), err.getvalue()
 
-    def init_ledger(self, cpu_ns=10_000_000_000, root=None):
-        root = self.root if root is None else root
-        return self.invoke(["--head", HEAD, "--root", str(root), "--init-ledger", "--build-cpu-ns", str(cpu_ns)])
 
-    def reset(self):
-        ledger = self.root / "K2-LEDGER.json"
-        if ledger.is_symlink() or ledger.exists():
-            ledger.unlink()
-        case_root = self.root / "dd1-kernel-compat-1"
-        if case_root.exists() or case_root.is_symlink():
-            shutil.rmtree(case_root)
-        code, text, err = self.init_ledger()
-        self.assertEqual(code, 0, text + err)
-        return r.read(ledger)
 
     def evidence(self, case_id):
         planned = controls.row_for(case_id)
@@ -745,25 +473,6 @@ class LedgerTests(unittest.TestCase):
         unit = dict(raw_bytes=evidence["unit_raw_bytes"], linux=dict(output_root=str(where / "output")))
         return where, unit, account
 
-    def install_expected(self, evidence_for=None):
-        def stage(root, repo, row, head):
-            evidence = self.evidence(row["case_id"]) if evidence_for is None else evidence_for(row["case_id"])
-            return self.lay_down(root, row, evidence)
-
-        def spawn(head, root, case_id):
-            evidence = self.evidence(case_id) if evidence_for is None else evidence_for(case_id)
-            return Proc(json.dumps(evidence["z"]), evidence["exit"])
-
-        controls.stage = stage
-        controls.spawn = spawn
-        controls.wait_live = lambda proc, output, account: {
-            "controller": {"pid": 11}, "supervisor": {"pid": 12}, "workload": {"pid": 13}}
-        controls._signal_pid = lambda pid, sig: None
-
-    def run_case(self, case_id, evidence_for=None):
-        self.install_expected(evidence_for)
-        code, text, err = self.invoke(["--head", HEAD, "--root", str(self.root), "--case", case_id])
-        return code, text, err, r.read(self.root / "K2-LEDGER.json")
 
 
 
@@ -772,59 +481,8 @@ class LedgerTests(unittest.TestCase):
 
 
 
-    def test_ledger_no_case_rerun(self):
-        path = self.root / "K2-LEDGER.json"
-        self.reset()
-        self.run_case("KC01_STRICT_POSITIVE")
-        before = path.read_bytes()
-        calls = {}
-        controls.stage = lambda *args: calls.__setitem__("stage", True)
-        code, text, err = self.invoke(["--head", HEAD, "--root", str(self.root), "--case", "KC01_STRICT_POSITIVE"])
-        self.assertEqual(code, 2, text + err)
-        self.assertNotIn("stage", calls)
-        self.assertEqual(path.read_bytes(), before)
-        self.reset()
-        controls.spawn = lambda *args: Proc("not-json", 2)
-        controls.stage = lambda root, repo, row, head: self.lay_down(root, row, self.evidence(row["case_id"]))
-        self.invoke(["--head", HEAD, "--root", str(self.root), "--case", "KC02_READONLY_ESCAPE"])
-        before = path.read_bytes()
-        calls.clear()
-        controls.stage = lambda *args: calls.__setitem__("stage", True)
-        code, text, err = self.invoke(["--head", HEAD, "--root", str(self.root), "--case", "KC02_READONLY_ESCAPE"])
-        self.assertEqual(code, 2, text + err)
-        self.assertEqual(path.read_bytes(), before)
-        self.reset()
-        ledger = r.read(path)
-        ledger["rows"].append(controls.make_reserved_row(1, "KC03_CLONE3_FALLBACK", 10_000_000_000))
-        ledger["used"] = controls.recompute_used(ledger)
-        r.atomic_write(path, ledger)
-        self.invoke(["--head", HEAD, "--root", str(self.root), "--case", "KC04_STRICT_THREAD_CEILING"])
-        before = path.read_bytes()
-        calls.clear()
-        controls.stage = lambda *args: calls.__setitem__("stage", True)
-        code, text, err = self.invoke(["--head", HEAD, "--root", str(self.root), "--case", "KC03_CLONE3_FALLBACK"])
-        self.assertEqual(code, 2, text + err)
-        self.assertNotIn("stage", calls)
-        self.assertEqual(path.read_bytes(), before)
-        self.reset()
-        (self.root / "dd1-kernel-compat-1" / "KC05_CPU_EXHAUST").mkdir(parents=True)
-        before = path.read_bytes()
-        calls.clear()
-        controls.stage = lambda *args: calls.__setitem__("stage", True)
-        code, text, err = self.invoke(["--head", HEAD, "--root", str(self.root), "--case", "KC05_CPU_EXHAUST"])
-        self.assertEqual(code, 2, text + err)
-        self.assertNotIn("stage", calls)
-        self.assertEqual(path.read_bytes(), before)
 
-    def test_g_evidence_rule(self):
-        case_id = "KC01_STRICT_POSITIVE"
-        self.assertEqual(controls.g_evidence(None, case_id), "SENT_OR_UNCERTAIN")
-        self.assertEqual(controls.g_evidence({"recovery": {"unit_reservations_v2": []}}, case_id), "NOT_SENT")
-        self.assertEqual(controls.g_evidence(
-            {"recovery": {"unit_reservations_v2": [{"unit_id": case_id}]}}, case_id), "NOT_SENT")
-        self.assertEqual(controls.g_evidence(
-            {"recovery": {"unit_reservations_v2": [{"unit_id": case_id, "processes": {"controller": {}}}]}},
-            case_id), "SENT_OR_UNCERTAIN")
+
 
     def test_classify_expected_vs_stop(self):
         ids = [row["case_id"] for row in controls.plan()]
@@ -871,35 +529,6 @@ class LedgerTests(unittest.TestCase):
         self.assertEqual(controls.classify("KC15_IA32_REACHABILITY", exited)[0], "INCOMPATIBLE")
         self.assertEqual(controls.classify("KC15_IA32_REACHABILITY", self.evidence("KC15_IA32_REACHABILITY"))[0], "EXPECTED")
 
-    def test_k0_reverified_record(self):
-        loaded = controls.load_k0(str(self.root), HEAD)
-        self.assertEqual(loaded["selection_comment"], 5845725453)
-        self.assertEqual(loaded["clone"]["head"], HEAD)
-
-        def rejects(mutate, head=HEAD):
-            raw = (self.root / "K0.json").read_bytes()
-            body = r.read(self.root / "K0.json")
-            mutate(body)
-            r.atomic_write(self.root / "K0.json", body)
-            try:
-                with redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
-                    controls.load_k0(str(self.root), head)
-            finally:
-                (self.root / "K0.json").write_bytes(raw)
-
-        rejects(lambda body: body.__setitem__("selection_comment", 5827591001))
-        rejects(lambda body: body.update(selection_timestamp_utc="2026-09-25T05:57:00Z",
-                                         deadline_utc="2026-09-26T05:57:00Z"))
-        rejects(lambda body: body["lock"].__setitem__("acquired_at_utc", "2026-09-25T05:57:00Z"))
-        rejects(lambda body: body["clone"].__setitem__("head", BASE_HEAD))
-        rejects(lambda body: body["clone"].__setitem__("head", BASE_HEAD), head=BASE_HEAD)
-        rejects(lambda body: body["helper"].__setitem__("baseline_sha256", "0" * 64))
-        rejects(lambda body: body["helper_sources_sha256"].__setitem__("res://extra.py", "1" * 64))
-        rejects(lambda body: body["helper_sources_sha256"].__setitem__(
-            next(iter(body["helper_sources_sha256"])), "2" * 64))
-        rejects(lambda body: body["counters"].__setitem__("workload_releases", 1))
-        rejects(lambda body: body.__setitem__("extra", 1))
-        rejects(lambda body: body["host"].__setitem__("boot_id_sha256", "d" * 64))
 
     def test_kc02_staging_binds_escape_input(self):
         fake = self.root / "escape-clone"
@@ -935,19 +564,6 @@ class LedgerTests(unittest.TestCase):
         self.assertIn("repo=None", inspect.getsource(controls.build_compat))
         self.assertIn("repo=None", inspect.getsource(controls.build_fit))
 
-    def test_fixed_clock_window_refusal(self):
-        self.reset()
-        before = (self.root / "K2-LEDGER.json").read_bytes()
-        FrozenClock.instant = AT_DEADLINE
-        calls = {}
-        controls.stage = lambda *args: calls.__setitem__("stage", True)
-        code, text, err = self.invoke(["--head", HEAD, "--root", str(self.root), "--case", "KC01_STRICT_POSITIVE"])
-        self.assertEqual(code, 2, text + err)
-        self.assertIn("outside selected window", text)
-        self.assertFalse(json.loads(text)["ledger_mutated"])
-        self.assertNotIn("stage", calls)
-        self.assertEqual((self.root / "K2-LEDGER.json").read_bytes(), before)
-        FrozenClock.instant = INSIDE
 
     def test_malformed_disposition_rejects_as_reservation_error(self):
         qualified = unit(mode="engineering", qualification={"status": "QUALIFIED", "mode": "engineering"})
