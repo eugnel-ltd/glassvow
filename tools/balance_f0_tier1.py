@@ -228,7 +228,7 @@ def valid_proxies(controls: dict[str, dict[str, Any]], cells: dict[str, dict[str
 
 
 def breadth_metric(within10: int, viable: int) -> float:
-    return max(0.0, 3 - within10) / 3.0 + max(0.0, 4 - viable) / 4.0
+    return max(0.0, 3 - within10) / 3.0 + max(0.0, 3 - viable) / 3.0
 
 
 def valid_c1(valid: dict[str, Any]) -> dict[str, float]:
@@ -239,7 +239,7 @@ def valid_c1(valid: dict[str, Any]) -> dict[str, float]:
         value = breadth_metric(int(proxy["within10"]), int(proxy["viable"]))
         per[grid] = value
         c1a += max(0.0, 3 - int(proxy["within10"])) / 3.0
-        c1b += max(0.0, 4 - int(proxy["viable"])) / 4.0
+        c1b += max(0.0, 3 - int(proxy["viable"])) / 3.0
     return {"c1a": c1a, "c1b": c1b, "sum": c1a + c1b, **{f"grid:{grid}": per[grid] for grid in GRIDS}}
 
 

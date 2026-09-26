@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Compile issue #490's pre-registered Tier-1 candidates without mutating live content."""
 from __future__ import annotations
-import argparse, json, math, random, re, shutil, sys
+import argparse, json, math, random, re, shutil, sys, subprocess
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
 from balance_content_doe import canonical_json_bytes, design_metrics, read_json, set_path, sha256_bytes
-from balance_s009_reconstruct import FINALISTS_REL, catalogue_bytes, reconstruct
+from balance_s009_reconstruct import FINALISTS_REL, H39_COMMIT, catalogue_bytes, reconstruct
 REPO = Path(__file__).resolve().parents[1]
 REGISTRY_REL = "docs/balance/490-tier1-registry-v1.json"; FILES = ("content/full-content.json", "locale/en.json", "locale/zh-Hant.json")
 TOOL_ID = "glassvow-balance-tier1-design"; MARKER = f".{TOOL_ID}"  # RFC 6901 patches; v1 DOE uses incompatible dotted paths.
@@ -72,6 +72,9 @@ def _base_roots(repo: Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, A
     targets = deepcopy(sources); targets[FILES[0]] = packet["content"]
     finalists = read_json(repo / FINALISTS_REL); row = next(item for item in finalists["orderedFinalists"] if item["id"] == "s009")
     for relative in FILES[1:]:
+        # The s009 design centre includes historical locale text, not live retunes.
+        targets[relative] = json.loads(subprocess.check_output(
+            ["git", "show", f"{H39_COMMIT}:{relative}"], cwd=repo))
         for path, value in row["intendedHydratedUpdates"][relative].items():
             set_path(targets[relative], path, value)
     return sources, targets, packet

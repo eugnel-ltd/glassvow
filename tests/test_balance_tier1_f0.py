@@ -410,9 +410,9 @@ class Tier1F0MetricsTest(unittest.TestCase):
         self.assertTrue(interval["p025"] < 0 < interval["p975"] or interval["p975"] < 0
                         or interval["p025"] > 0)
 
-    def test_breadth_metric_matches_the_frozen_formula(self) -> None:
-        self.assertEqual(0.0, breadth_metric(3, 4))
-        self.assertAlmostEqual(1.0 / 3.0 + 0.5, breadth_metric(2, 2))
+    def test_breadth_metric_matches_amended_p9_counts(self) -> None:
+        self.assertEqual(0.0, breadth_metric(3, 3))
+        self.assertAlmostEqual(2.0 / 3.0, breadth_metric(2, 2))
         self.assertEqual(2.0, breadth_metric(0, 0))
 
 

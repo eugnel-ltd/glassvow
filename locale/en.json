@@ -876,8 +876,8 @@
       },
       "deflect": {
         "name": "Refract",
-        "text": "Gain #6# Ward. Draw 1 card.",
-        "textUp": "Gain #9# Ward. Draw 1 card."
+        "text": "Gain #8# Ward. Draw 1 card.",
+        "textUp": "Gain #11# Ward. Draw 1 card."
       },
       "devour": {
         "name": "Eat the Flame",
@@ -2096,7 +2096,7 @@
       },
       "emberHeart": {
         "name": "Emberheart",
-        "text": "At the end of combat, heal 3 HP."
+        "text": "At the end of combat, heal 6 HP."
       },
       "emberLantern": {
         "name": "Ember Lantern",

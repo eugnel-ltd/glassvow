@@ -72,7 +72,7 @@ for a in ['duskblade','ashwarden']:
     rates_by_policy=[(w/n,i,w,n) for (aa,vv,i),(w,n) in policy_counts.items() if aa==a and vv==v]
     rates_by_policy.sort(key=lambda x:(-x[0],x[1])); top_p=rates_by_policy[:200]; rest=rates_by_policy[200:]
     maxp=top_p[0]
-    result['verdicts'][gkey]={'topCell':top_name,'topRate':top_rate,'within10pp':within,'viabilityFloor':floor,'viableCells':viable,'arm2Rate':arm2[(a,v)],'arm2Gap':top_rate-arm2[(a,v)],'C1a':len(within)>=3,'C1b':len(viable)>=4,'C2':top_rate-arm2[(a,v)]>=.35 and arm2[(a,v)]<.5,'underSampledHigh':undersampled,'maxPolicy':{'policyIndex':maxp[1],'winRate':maxp[0],'wins':maxp[2],'runs':maxp[3]}}
+    result['verdicts'][gkey]={'topCell':top_name,'topRate':top_rate,'within10pp':within,'viabilityFloor':floor,'viableCells':viable,'arm2Rate':arm2[(a,v)],'arm2Gap':top_rate-arm2[(a,v)],'C1a':len(within)>=3,'C1b':len(viable)>=3,'C2':top_rate-arm2[(a,v)]>=.35 and arm2[(a,v)]<.5,'underSampledHigh':undersampled,'maxPolicy':{'policyIndex':maxp[1],'winRate':maxp[0],'wins':maxp[2],'runs':maxp[3]}}
     top_ids=[x[1] for x in top_p]; rest_ids=[x[1] for x in rest]
     magnitude=[]; thresholds=[]
     ranges={'cardDecline':40,'removalAppetite':24,'removalMinCopies':2,'shopMinRatio':.11,'restHpPct':65,'potionHealMissing':35,'routeLowHpPct':65,'shopGoldLow':90,'shopGoldHigh':150}

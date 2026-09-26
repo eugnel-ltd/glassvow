@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -26,6 +27,41 @@ from balance_seed_contract import load_contract, sha256_bytes
 
 
 class BalanceF1EvidenceTest(unittest.TestCase):
+    def test_amended_p9_requires_three_stayed_islands_all_close_and_v5_below_90(self) -> None:
+        grids = [f"{a}:v{v}" for a in ("duskblade", "ashwarden") for v in (0, 5)]
+        layer1 = {"deckCuts": {"thinMax": 10, "midMax": 20},
+                  "medians": {a: {"shattersPerFight": 1, "smolderKillsPerFight": 0}
+                              for a in ("duskblade", "ashwarden")},
+                  "verdicts": {g: {"viabilityFloor": 0.5, "topRate": 0.8} for g in grids}}
+        with tempfile.TemporaryDirectory(prefix="glassvow-retune-readout-") as temp:
+            root = Path(temp)
+            first = root / "layer1.json"
+            first.write_text(json.dumps(layer1))
+            out = root / "layer2.json"
+            for ceilings, expected_c3, expected_v5_fail in (
+                    ([0.8, 0.75, 0.7], True, False),
+                    ([0.8, 0.75], False, False),
+                    ([0.8, 0.75, 0.7, 0.6], False, False),
+                    ([0.9, 0.8, 0.8], True, True)):
+                for path in root.glob("island-*.ndjson"):
+                    path.unlink()
+                for i, ceiling in enumerate(ceilings):
+                    final = {"t": "final", "startCell": "attrition:fat",
+                             "grid": "duskblade:v5", "island": i, "stop": "plateau",
+                             "gens": 1, "gen0Best": 0.6, "holdoutCeiling": ceiling,
+                             "holdoutWins": round(ceiling * 200), "holdoutRuns": 200}
+                    rows = [{"t": "manifest"},
+                            {"t": "holdout", "aspect": "duskblade", "deck": 30,
+                             "fights": [{"shatters": 0, "smolderKills": 0}]}, final]
+                    (root / f"island-{i}.ndjson").write_text(
+                        "".join(json.dumps(row) + "\n" for row in rows))
+                subprocess.run([sys.executable, str(TOOLS / "balance_cem_report.py"),
+                                str(root), str(first), str(out)], check=True,
+                               stdout=subprocess.DEVNULL)
+                grid = json.loads(out.read_text())["grids"]["duskblade:v5"]
+                self.assertEqual(expected_c3, grid["C3"])
+                self.assertEqual(expected_v5_fail, grid["vow5Fail"])
+
     def test_racing_reanalysis_fails_closed_when_a_complete_raw_shard_is_missing(self) -> None:
         axes = load_contract()["frozenLandscape"]
         controls = [{"arm": arm, "aspect": aspect, "vow": vow, "seed": 6200,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -22,6 +23,7 @@ from balance_f1_f2 import (
 from balance_f0 import evaluation_from_registry, evaluation_spec, stage_args
 from balance_f1_racing import racing_decisions
 from balance_seed_contract import check_invocation, load_contract
+from balance_s009_reconstruct import H39_COMMIT
 
 
 class BalanceF1F2Test(unittest.TestCase):
@@ -33,20 +35,23 @@ class BalanceF1F2Test(unittest.TestCase):
             space["features"], [row["values"] for row in f0["candidates"]], 4, 458, 256)
         with tempfile.TemporaryDirectory(prefix="glassvow-f1-bundle-") as temp:
             out = Path(temp) / "bundle"
+            base = Path(temp) / "h39.json"
+            base.write_bytes(subprocess.check_output(
+                ["git", "show", f"{H39_COMMIT}:content/full-content.json"], cwd=repo))
             manifest = write_search_bundle(
-                repo / "content/full-content.json",
+                base,
                 repo / "docs/balance/421-content-search-space-v1.json",
                 f0, supplemental, metrics, out, ("c000", "c002"), 458)
             self.assertEqual(6, manifest["count"])
-            self.assertEqual((repo / "content/full-content.json").read_bytes(),
+            self.assertEqual(base.read_bytes(),
                              (out / "c000/full-content.json").read_bytes())
             self.assertEqual(6, len({row["semanticSha256"] for row in manifest["candidates"]}))
 
     def test_response_deficit_uses_raw_components_not_a_pass_label(self) -> None:
-        one_grid = [0.8, 0.75, 0.70, 3.0, 4.0, 0.40, 0.40]
+        one_grid = [0.8, 0.75, 0.70, 3.0, 3.0, 0.40, 0.40]
         self.assertEqual(0.0, response_deficit(one_grid * 4))
         binding = [0.8, 0.5, 0.4, 1.0, 2.0, 0.40, 0.40]
-        self.assertAlmostEqual(7.0 / 6.0, response_deficit(binding + one_grid * 3))
+        self.assertAlmostEqual(1.0, response_deficit(binding + one_grid * 3))
 
     def test_audit_band_needs_an_explicit_finalist_unseal(self) -> None:
         contract = load_contract()

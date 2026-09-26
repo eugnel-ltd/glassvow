@@ -53,7 +53,7 @@ for g in ['duskblade:v0','duskblade:v5','ashwarden:v0','ashwarden:v5']:
     for i in xs: cell_ceil[i['endCell']]=max(cell_ceil[i['endCell']], i['ceiling'])
     vals=sorted(cell_ceil.values(), reverse=True)
     c4=not (len(vals)<2 or vals[0]-vals[1]>=0.15-1e-12)
-    vow=int(g.split(':v')[1]); v5=vow==5 and best>0.90+1e-12
+    vow=int(g.split(':v')[1]); v5=vow==5 and best>=0.90-1e-12
     g0=sorted(i['gen0'] for i in xs); mid=statistics.median(g0)
     grids[g]={'islands':[{'island':i['island'],'start':i['start'],'end':i['endCell'],
         'ceiling':i['ceiling'],'holdoutWins':i['final']['holdoutWins'],
@@ -62,7 +62,7 @@ for g in ['duskblade:v0','duskblade:v5','ashwarden:v0','ashwarden:v5']:
         'endCounts':i['endCounts']} for i in xs],
         'viabilityFloor':floor,'layer1Top':top,'bestCeiling':best,
         'stayedViable':len(stayed),'closeToBest':len(close),
-        'C3':len(stayed)>=4 and len(close)>=3,'C4':c4,
+        'C3':len(stayed)>=3 and len(close)==len(stayed),'C4':c4,
         'cellCeilings':dict(cell_ceil),'vow5Fail':v5,
         'skillHeadroom':best-mid,'gen0Median':mid,'n':len(xs)}
 

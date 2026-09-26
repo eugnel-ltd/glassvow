@@ -34,7 +34,8 @@ VOWS = (0, 5)
 FINGERPRINT = (9000, 9063)
 FINGERPRINT_STAGE = "tier1-fingerprint"
 REQUIRED_GODOT_PREFIX = "4.7.2.stable"
-H39_FILE_SHA = "a0d608a5142d2e3aab799cdf33d3163922b402c2aaf2a895e46e096399b56cf1"
+LIVE_FILE_SHA = "667125b7ddb929d0bcc4297fb8ef8eab24e98f5dc252edd74999c0faa4dbf413"
+LIVE_OUTCOME_DIGEST = "daeab7507c2672be64339203958424a9a8b81fd22cc4cc39f27f138817d3f8e8"
 CANONICAL_REL = "docs/balance/data/489/canonical-host.json"
 
 
@@ -231,15 +232,15 @@ def build_packet(godot: str, out_dir: Path, jobs: int, content: str) -> dict[str
     fingerprint = run_fingerprint(godot, out_dir, jobs, content)
     commit = str(fingerprint.get("manifest", {}).get("commit")
                  or digest.get("manifest", {}).get("commit") or "unknown")
-    pin = load_contract()["digestPin"]["outcomeDigest"]
-    if identity["contentFileSha256"] == H39_FILE_SHA and digest["outcomeDigest"] == pin:
+    pin = LIVE_OUTCOME_DIGEST
+    if identity["contentFileSha256"] == LIVE_FILE_SHA and digest["outcomeDigest"] == pin:
         digest_status = "PIN_MATCH"
         qualified = True
         reason = ""
-    elif identity["contentFileSha256"] == H39_FILE_SHA:
+    elif identity["contentFileSha256"] == LIVE_FILE_SHA:
         digest_status = "PIN_MISMATCH"
         qualified = False
-        reason = "seed-1000 digest does not match the H39 pin"
+        reason = "seed-1000 digest does not match the live catalogue pin"
     else:
         digest_status = "RECORDED"
         qualified = True

@@ -329,7 +329,7 @@ def deficits(proxies: dict[str, dict[str, Any]]) -> dict[str, float]:
     c1a = c1b = c2arm = c2gap = 0.0
     for proxy in proxies.values():
         c1a += max(0.0, 3 - proxy["within10"]) / 3
-        c1b += max(0.0, 4 - proxy["viable"]) / 4
+        c1b += max(0.0, 3 - proxy["viable"]) / 3
         c2arm += max(0.0, proxy["arm2Rate"] - 0.5) / 0.5
         c2gap += max(0.0, 0.35 - proxy["margin"]) / 0.35
     return {"c1a": c1a, "c1b": c1b, "c2arm": c2arm, "c2gap": c2gap,

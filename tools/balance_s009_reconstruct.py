@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import subprocess
 import tempfile
 from copy import deepcopy
 from pathlib import Path
@@ -25,6 +26,7 @@ from balance_seed_contract import (  # noqa: E402
 
 FINALISTS_REL = "docs/balance/data/458/finalists.json"
 CANDIDATE_ID = "s009"
+H39_COMMIT = "07b5aa9dec8436132a524511d5438c510e322070"
 H39_FILE_SHA = "a0d608a5142d2e3aab799cdf33d3163922b402c2aaf2a895e46e096399b56cf1"
 EXAM_FILE_SHA = "5b3504f133a7e180f20426a8f28c5f2685c9d00d4e3c93c39a432a1a859ea448"
 EXAM_SEMANTIC_SHA = "6359c4958039d37fc05df5bd9487fac12c4cb3b0e8ee4c4f287d87d876b89fc3"
@@ -64,9 +66,10 @@ def catalogue_bytes(content: Any) -> bytes:
 def reconstruct(repo: Path = REPO) -> dict[str, Any]:
     live = repo / LIVE_REL
     live_sha = file_sha256(live)
-    if live_sha != H39_FILE_SHA:
-        raise ValueError(f"live {LIVE_REL} is {live_sha}, not H39 {H39_FILE_SHA}")
-    base = read_json(live)
+    base_blob = subprocess.check_output(["git", "show", f"{H39_COMMIT}:{LIVE_REL}"], cwd=repo)
+    if sha256_bytes(base_blob) != H39_FILE_SHA:
+        raise ValueError("committed H39 catalogue does not match its historical pin")
+    base = json.loads(base_blob)
     finalists = read_json(repo / FINALISTS_REL)
     content, applied = reconstruct_catalogue(base, finalists)
     blob = catalogue_bytes(content)
@@ -75,6 +78,8 @@ def reconstruct(repo: Path = REPO) -> dict[str, Any]:
         "examCommit": EXAM_COMMIT,
         "livePath": str(live),
         "liveFileSha256": live_sha,
+        "baseCommit": H39_COMMIT,
+        "baseFileSha256": H39_FILE_SHA,
         "fileSha256": sha256_bytes(blob),
         "semanticSha256": sha256_bytes(canonical_json_bytes(content)),
         "bytes": len(blob),
@@ -88,7 +93,7 @@ def reconstruct(repo: Path = REPO) -> dict[str, Any]:
         raise ValueError(
             f"reconstructed s009 semantic SHA {identity['semanticSha256']} != exam {EXAM_SEMANTIC_SHA}"
         )
-    if file_sha256(live) != H39_FILE_SHA:
+    if file_sha256(live) != live_sha:
         raise ValueError("reconstruction mutated live content/full-content.json")
     identity["examFileSha256"] = EXAM_FILE_SHA
     identity["examSemanticSha256"] = EXAM_SEMANTIC_SHA
@@ -110,7 +115,7 @@ def self_test() -> int:
     identity = packet["identity"]
     assert identity["fileSha256"] == EXAM_FILE_SHA
     assert identity["semanticSha256"] == EXAM_SEMANTIC_SHA
-    assert identity["liveFileSha256"] == H39_FILE_SHA
+    assert identity["baseFileSha256"] == H39_FILE_SHA
     assert live.read_bytes() == before
     with tempfile.TemporaryDirectory(prefix="glassvow-489-s009-") as temp:
         out = Path(temp) / "s009-full-content.json"

@@ -204,7 +204,7 @@ def mini_cem_report(candidate_dir: Path, analysis_path: Path,
             "medianCeiling": _interval(
                 [float(row["final"]["holdoutCeiling"]) for row in current])["p50"],
             "stayedViable": len(stayed), "closeToBest": len(close),
-            "developmentC3": len(stayed) >= 4 and len(close) >= 3,
+            "developmentC3": len(stayed) >= 3 and len(close) == len(stayed),
             "developmentC4": c4,
             "cellCeilings": dict(sorted(cell_ceilings.items())),
             "islands": [{

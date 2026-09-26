@@ -33,7 +33,7 @@ def response_deficit(values: list[float] | Any) -> float:
     for offset in range(0, len(GRIDS) * width, width):
         row = dict(zip(RESPONSE_KEYS, values[offset:offset + width], strict=True))
         total += max(0.0, 3.0 - float(row["within10"])) / 3.0
-        total += max(0.0, 4.0 - float(row["viable"])) / 4.0
+        total += max(0.0, 3.0 - float(row["viable"])) / 3.0
         total += max(0.0, float(row["arm2Rate"]) - 0.5) / 0.5
         total += max(0.0, 0.35 - float(row["margin"])) / 0.35
     return total

@@ -110,7 +110,7 @@ static func _english_is_a_no_op(fails: Array[String]) -> void:
 		fails.append("hydration: English wrote %d strings; it must be a no-op" % written)
 	if _fingerprint(db) != before:
 		fails.append("hydration: English hydration changed the baked catalogue")
-	if _at(db.relics, ["emberHeart", "text"]) != "At the end of combat, heal 3 HP.":
+	if _at(db.relics, ["emberHeart", "text"]) != "At the end of combat, heal 6 HP.":
 		fails.append("hydration: English hydration resurrected the stale seed relic text")
 
 
@@ -212,7 +212,7 @@ static func _real_zh_catalogue(fails: Array[String]) -> void:
 		fails.append("hydration: zh-Hant left the card name English")
 	if not _at(db.cards, ["strike", "text"]).contains("@6@"):
 		fails.append("hydration: zh-Hant card text lost its @n@ markers")
-	if _at(db.relics, ["emberHeart", "text"]) != "戰鬥結束時回復 3 點生命。":
+	if _at(db.relics, ["emberHeart", "text"]) != "戰鬥結束時回復 6 點生命。":
 		fails.append("hydration: zh-Hant Emberheart must say heal 3 HP exactly")
 	if _id_fingerprint(db) != baked_ids:
 		fails.append("hydration: zh-Hant changed content IDs")

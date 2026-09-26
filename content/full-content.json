@@ -9,7 +9,7 @@
     "id": "duskblade",
     "hue": 225,
     "art": "flare",
-    "maxHp": 64,
+    "maxHp": 68,
     "energy": 3,
     "handSize": 5,
     "potionSlots": 3,
@@ -539,7 +539,7 @@
       "effects": [
         {
           "kind": "block",
-          "n": 6
+          "n": 8
         },
         {
           "kind": "draw",
@@ -550,17 +550,17 @@
         "effects": [
           {
             "kind": "block",
-            "n": 9
+            "n": 11
           },
           {
             "kind": "draw",
             "n": 1
           }
         ],
-        "text": "Gain #9# Ward. Draw 1 card."
+        "text": "Gain #11# Ward. Draw 1 card."
       },
       "name": "Refract",
-      "text": "Gain #6# Ward. Draw 1 card."
+      "text": "Gain #8# Ward. Draw 1 card."
     },
     "leechBlade": {
       "type": "attack",
@@ -1855,8 +1855,8 @@
       "glyph": "♥",
       "tone": "#ff5964",
       "name": "Emberheart",
-      "heal": 3,
-      "text": "At the end of combat, heal 3 HP."
+      "heal": 6,
+      "text": "At the end of combat, heal 6 HP."
     },
     "ashenCore": {
       "rarity": "starter",
@@ -5415,7 +5415,7 @@
       "id": "duskblade",
       "hue": 225,
       "art": "flare",
-      "maxHp": 64,
+      "maxHp": 68,
       "energy": 3,
       "handSize": 5,
       "potionSlots": 3,

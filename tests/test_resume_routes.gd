@@ -15,6 +15,7 @@ static func run(fails: Array[String]) -> void:
 		_hollow_roundtrip(content, route, route == "event", fails)
 	_hollow_priority_roundtrip(content, fails)
 	_priority(content, fails)
+	_legacy_shop_retune(content, fails)
 	_quarantine_cases(content, fails)
 	if _file_snapshot(SaveService.RUN_PATH) != default_before:
 		fails.append("resume routes: injected route tests touched the default save")
@@ -278,3 +279,23 @@ static func _file_snapshot(path: String) -> Variant:
 		return null
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	return file.get_as_text() if file != null else null
+
+
+## #421: load and resume an actual v2 open shop carrying the old removal quote.
+static func _legacy_shop_retune(content: ContentDB, fails: Array[String]) -> void:
+	var original: ContentDB = ContentDB.load_full()
+	original.shop["removeCost"] = 75
+	var producer: Main = _main(original)
+	producer._continue_run(_route_run(original, "shop"))
+	if StateBuild.ji(producer.game.run.quest_scratch["shopStock"]["removeCost"]) != 75:
+		fails.append("resume retune: original shop must quote 75")
+	producer._store_run()
+	_dispose(producer)
+	var loaded: RunState = SaveService.load_run(content, SAVE_PATH)
+	if loaded == null:
+		fails.append("resume retune: v2 shop priced at 75 rejected on load")
+		return
+	var resumed: Main = _main(content)
+	resumed._continue_run(loaded)
+	_assert_screen(resumed, "shop", "legacy 75-gold retune", fails)
+	_dispose(resumed)

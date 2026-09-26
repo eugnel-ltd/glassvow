@@ -54,7 +54,7 @@ static func run(fails: Array[String]) -> void:
 		fails.append("ContentDB: full progression registries are incomplete")
 	full.validate(fails)
 	_validate_requires_ai(fails)
-	_emberheart_heal(full, 3, "full content", fails)
+	_emberheart_heal(full, 6, "full content", fails)
 	_emberheart_heal(db, 6, "fixture fallback", fails)
 	_enemy_overrides(fails)
 	var pickup_run: RunState = RunState.new_run(full, 5, "run-relic-pickup")
