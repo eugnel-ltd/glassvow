@@ -248,11 +248,17 @@ class BackendTests(unittest.TestCase):
         for mode in ("abi", "ia32"):
             root, _ = self.case(mode, mode)
             rec = self.run_case(root); report = self.report(rec)
-            # x32 hits the filter KILL branch. This host does not provide an
-            # int-0x80 ABI: its instruction faults before that branch; record
-            # this separately, never as a tested seccomp arch mismatch.
-            self.assertEqual(report["signal"], signal.SIGSYS if mode == "abi" else signal.SIGSEGV)
-            if mode == "ia32": rec["alternate_abi_limit"] = "host int-0x80 SIGSEGV; seccomp arch guard source-only"
+            # x32 hits the filter KILL branch. int-0x80 either reaches the
+            # seccomp arch guard or faults first on hosts without IA32 support;
+            # only SIGSYS proves a tested seccomp arch mismatch.
+            if mode == "abi":
+                self.assertEqual(report["signal"], signal.SIGSYS)
+            else:
+                self.assertIn(report["signal"], (signal.SIGSYS, signal.SIGSEGV))
+                if report["signal"] == signal.SIGSEGV:
+                    rec["alternate_abi_limit"] = "host int-0x80 SIGSEGV; seccomp arch guard source-only"
+                else:
+                    rec["alternate_abi_result"] = "int-0x80 reached seccomp arch guard; SIGSYS"
         root, _ = self.case("clone3", "clone3")
         rec = self.run_case(root); report = self.report(rec)
         self.assertGreaterEqual(report["clone3_denied"], 1)
