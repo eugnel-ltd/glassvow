@@ -213,36 +213,14 @@ def stamp():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
-def parse_utc(value):
-    if not isinstance(value, str) or not value.endswith("Z"):
-        return None
-    try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return None
 
 
-def valid_stamp(value):
-    if not isinstance(value, str) or re.fullmatch(
-            r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z", value) is None:
-        return False
-    return parse_utc(value) is not None
 
 
-def _hex(value, size):
-    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{%d}" % size, value) is not None
 
 
-def _inside(child, parent):
-    try:
-        Path(child).resolve().relative_to(Path(parent).resolve())
-    except (OSError, ValueError):
-        return False
-    return True
 
 
-def ledger_file(root):
-    return Path(root) / "K2-LEDGER.json"
 
 
 def operation_dir(root):
@@ -253,29 +231,10 @@ def case_directory(root, case_id):
     return operation_dir(root) / case_id
 
 
-def location_problem(root, clone_path):
-    path = ledger_file(root)
-    if path.is_symlink():
-        return "ledger path is a symlink"
-    resolved = path.parent.resolve() / path.name
-    if _inside(resolved, ROOT) or (clone_path and _inside(resolved, clone_path)):
-        return "ledger path is inside a clone or checkout"
-    if path.exists() and not path.is_file():
-        return "ledger path is not a regular file"
-    return None
 
 
-def window_open():
-    policy = kq.INERT_RESERVATION_POLICY
-    moment = datetime.now(timezone.utc)
-    start = datetime.fromisoformat(policy["start_utc"].replace("Z", "+00:00"))
-    deadline = datetime.fromisoformat(policy["deadline_utc"].replace("Z", "+00:00"))
-    if not (start <= moment < deadline):
-        refuse("outside selected window")
 
 
-def _live_boot_id_sha256():
-    return r.digest(Path("/proc/sys/kernel/random/boot_id").read_bytes())
 
 
 def _signal_pid(pid, sig):
@@ -297,155 +256,12 @@ def _identity_absent(identity):
         time.sleep(0.02)
 
 
-def k0_problem(record, root, head):
-    if not isinstance(record, dict) or set(record) != K0_KEYS:
-        return "K0 keys"
-    if record["schema"] != K0_SCHEMA or record["operation"] != kq.OPERATION:
-        return "K0 schema"
-    if type(record["selection_comment"]) is not int or record["selection_comment"] != kq.SELECTION:
-        return "K0 selection"
-    if record["selection_timestamp_utc"] != WINDOW["start_utc"] or record["deadline_utc"] != WINDOW["deadline_utc"]:
-        return "K0 window"
-    if record["custodian"] != "Tushar" or record["executor"] != "grokbot-vm":
-        return "K0 custody"
-    durable = str(Path(root).resolve())
-    if record["durable_root"] != durable:
-        return "K0 durable root"
-    lock = record["lock"]
-    if not isinstance(lock, dict) or set(lock) != LOCK_KEYS:
-        return "K0 lock keys"
-    if lock["path"] != durable + "/LOCK" or lock["acquired"] is not True or lock["same_unix_user_advisory_only"] is not True:
-        return "K0 lock"
-    if type(lock["locker_pid"]) is not int or lock["locker_pid"] < 0 or type(lock["locker_start_ticks"]) is not int or lock["locker_start_ticks"] < 0:
-        return "K0 lock identity"
-    acquired = parse_utc(lock["acquired_at_utc"])
-    start = parse_utc(WINDOW["start_utc"])
-    deadline = parse_utc(WINDOW["deadline_utc"])
-    if acquired is None or not (start <= acquired < deadline):
-        return "K0 lock time"
-    clone = record["clone"]
-    if not isinstance(clone, dict) or set(clone) != CLONE_KEYS:
-        return "K0 clone keys"
-    if not isinstance(clone["path"], str) or not Path(clone["path"]).is_absolute():
-        return "K0 clone path"
-    resolved = Path(clone["path"]).resolve()
-    if resolved != Path(ROOT).resolve():
-        return "K0 clone is not the driver checkout"
-    try:
-        resolved.relative_to(Path(durable).resolve())
-    except ValueError:
-        return "K0 clone outside durable root"
-    if clone["head"] == BASE_HEAD or clone["head"] != head or not _hex(clone["head"], 40) or not _hex(clone["tree"], 40):
-        return "K0 clone head"
-    if clone["clean"] is not True or clone["shared_clone_modified"] is not False or clone["remote_main"] != REMOTE_MAIN:
-        return "K0 clone state"
-    host = record["host"]
-    if not isinstance(host, dict) or set(host) != HOST_KEYS:
-        return "K0 host keys"
-    if not isinstance(host["hostname"], str):
-        return "K0 hostname"
-    if host["os_id"] != "debian" or host["os_version"] != "13" or host["cgroup_v2"] is not True:
-        return "K0 os"
-    identity = kq.QUALIFIED_IDENTITY
-    for field in ("kernel_release", "kernel_version", "machine", "pointer_bytes", "libc"):
-        if host.get(field) != identity[field]:
-            return "K0 host " + field
-    import platform
-    if host["python"] != platform.python_version() or not _hex(host["boot_id_sha256"], 64):
-        return "K0 python or boot id"
-    try:
-        live_boot = _live_boot_id_sha256()
-    except OSError:
-        return "boot_id unreadable"
-    if host["boot_id_sha256"] != live_boot:
-        return "boot_id mismatch"
-    resources = record["resources"]
-    if not isinstance(resources, dict) or set(resources) != RESOURCE_KEYS:
-        return "K0 resources"
-    primitives = record["primitives"]
-    if not isinstance(primitives, dict) or set(primitives) != PRIMITIVE_KEYS:
-        return "K0 primitives"
-    for name in PRIMITIVE_BOOLS:
-        if primitives[name] is not True:
-            return "K0 primitive " + name
-    github = record["github"]
-    if not isinstance(github, dict) or set(github) != {"ls_remote_main", "authenticated_gh_api_available"}:
-        return "K0 github"
-    if github["ls_remote_main"] != REMOTE_MAIN or github["authenticated_gh_api_available"] is not True:
-        return "K0 github"
-    persistence = record["persistence"]
-    if not isinstance(persistence, dict) or set(persistence) != PERSIST_KEYS:
-        return "K0 persistence"
-    helper = record["helper"]
-    if not isinstance(helper, dict) or set(helper) != {"baseline_sha256", "compiled_in_k0"}:
-        return "K0 helper keys"
-    if helper["baseline_sha256"] != HELPER_PIN or helper["compiled_in_k0"] is not False:
-        return "K0 helper"
-    import dd1_linux_snapshot as snap
-    sources = record["helper_sources_sha256"]
-    if not isinstance(sources, dict) or set(sources) != set(snap.HELPER_SOURCES):
-        return "K0 helper source map"
-    for name, digest in sources.items():
-        if not _hex(digest, 64):
-            return "K0 helper source digest"
-        file = resolved / name[6:]
-        try:
-            raw = file.read_bytes()
-        except OSError:
-            return "K0 helper source unreadable"
-        if r.digest(raw) != digest:
-            return "K0 helper source drift"
-    counters = record["counters"]
-    if not isinstance(counters, dict) or set(counters) != COUNTER_KEYS:
-        return "K0 counters"
-    for key in COUNTER_KEYS:
-        if type(counters[key]) is not int or counters[key] != 0:
-            return "K0 counters"
-    return None
 
 
-def load_k0(root, head):
-    path = Path(root) / "K0.json"
-    if path.is_symlink() or not path.is_file():
-        refuse("valid K0 record missing")
-    try:
-        record = r.read(path)
-    except r.ReservationError as exc:
-        refuse("valid K0 record missing: " + str(exc))
-    problem = k0_problem(record, root, head)
-    if problem:
-        refuse("valid K0 record missing: " + problem)
-    return record
 
 
-def acquire_lock(root):
-    try:
-        fd = os.open(str(Path(root) / "LOCK"), os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC)
-    except OSError:
-        refuse("whole-operation lock not acquired")
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError:
-        os.close(fd)
-        refuse("whole-operation lock not acquired")
-    return fd
 
 
-def lock_held(root):
-    """True when another open file description already holds LOCK. Does not keep it."""
-    try:
-        fd = os.open(str(Path(root) / "LOCK"), os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC)
-    except OSError:
-        return False
-    try:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            return True
-        fcntl.flock(fd, fcntl.LOCK_UN)
-        return False
-    finally:
-        os.close(fd)
 
 
 def artefact_digests(clone):
@@ -486,179 +302,18 @@ def build_problems(observed, artefacts):
     return reasons
 
 
-def recompute_used(ledger):
-    cpu = ledger["build"]["cpu_ns_charged"]
-    raw_charged = 0
-    raw_observed = 0
-    releases = 0
-    for row in ledger["rows"]:
-        cpu += row["cpu_ns_charged"]
-        raw_charged += row["raw_bytes_charged"]
-        if row["raw_bytes_observed"] is not None:
-            raw_observed += row["raw_bytes_observed"]
-        if row["g"] == "SENT_OR_UNCERTAIN":
-            releases += 1
-    return dict(release_slots=len(ledger["rows"]), workload_releases=releases, cpu_ns_charged=cpu,
-                raw_bytes_charged=raw_charged, raw_bytes_observed=raw_observed)
 
 
-def reservation_fits(used, cpu_ns):
-    return (type(used.get("release_slots")) is int and type(used.get("cpu_ns_charged")) is int
-            and type(used.get("raw_bytes_charged")) is int and type(cpu_ns) is int
-            and used["release_slots"] + 1 <= RELEASE_SLOTS
-            and used["cpu_ns_charged"] + cpu_ns <= CPU_CAP_NS
-            and used["raw_bytes_charged"] + CASE_RAW <= RAW_CAP)
 
 
-def make_reserved_row(seq, case_id, cpu_ns):
-    return dict(seq=seq, case_id=case_id, state="RESERVED", g="SENT_OR_UNCERTAIN",
-                cpu_ns_reserved=cpu_ns, cpu_ns_observed=None, cpu_ns_charged=cpu_ns,
-                raw_bytes_reserved=CASE_RAW, raw_bytes_observed=None, raw_bytes_charged=CASE_RAW,
-                reserved_utc=stamp(), finished_utc=None, classification=None, reasons=[],
-                record_sha256=None)
 
 
-def _reasons_ok(value, empty):
-    if not isinstance(value, list) or any(not isinstance(item, str) or not item for item in value):
-        return False
-    return (not value) if empty else bool(value)
 
 
-def _row_shape(row, index, seen):
-    if not isinstance(row, dict) or set(row) != ROW_KEYS:
-        return "row keys"
-    if type(row["seq"]) is not int or row["seq"] != index + 1:
-        return "row seq"
-    planned = row_for(row["case_id"]) if isinstance(row["case_id"], str) else None
-    if planned is None:
-        return "row case"
-    if row["case_id"] in seen:
-        return "duplicate case"
-    seen.add(row["case_id"])
-    cap = planned["cpu_cap"] * 1_000_000_000
-    if type(row["cpu_ns_reserved"]) is not int or row["cpu_ns_reserved"] != cap:
-        return "row cpu reserve"
-    if type(row["raw_bytes_reserved"]) is not int or row["raw_bytes_reserved"] != CASE_RAW:
-        return "row raw reserve"
-    if not valid_stamp(row["reserved_utc"]):
-        return "row reserved time"
-    state = row["state"]
-    if state == "RESERVED":
-        ok = (row["g"] == "SENT_OR_UNCERTAIN" and row["cpu_ns_observed"] is None
-              and row["raw_bytes_observed"] is None and row["cpu_ns_charged"] == row["cpu_ns_reserved"]
-              and row["raw_bytes_charged"] == row["raw_bytes_reserved"] and row["finished_utc"] is None
-              and row["classification"] is None and row["reasons"] == [] and row["record_sha256"] is None)
-        return None if ok else "RESERVED row invariant"
-    if state == "ABANDONED":
-        ok = (row["g"] == "SENT_OR_UNCERTAIN" and row["cpu_ns_observed"] is None
-              and row["raw_bytes_observed"] is None and row["cpu_ns_charged"] == row["cpu_ns_reserved"]
-              and row["raw_bytes_charged"] == row["raw_bytes_reserved"] and valid_stamp(row["finished_utc"])
-              and row["classification"] == "INCONCLUSIVE" and row["reasons"] == ["DANGLING_RESERVED_ROW"]
-              and row["record_sha256"] is None)
-        return None if ok else "ABANDONED row invariant"
-    if state != "FINAL":
-        return "row state"
-    if row["g"] not in ("SENT_OR_UNCERTAIN", "NOT_SENT"):
-        return "row g"
-    if type(row["cpu_ns_observed"]) is not int or row["cpu_ns_observed"] < 0:
-        return "row cpu observed"
-    if type(row["raw_bytes_observed"]) is not int or row["raw_bytes_observed"] < 0:
-        return "row raw observed"
-    if row["cpu_ns_charged"] != max(row["cpu_ns_reserved"], row["cpu_ns_observed"]):
-        return "row cpu charged"
-    if row["raw_bytes_charged"] != max(row["raw_bytes_reserved"], row["raw_bytes_observed"]):
-        return "row raw charged"
-    if not valid_stamp(row["finished_utc"]) or row["classification"] not in FINAL_KINDS:
-        return "row final fields"
-    if row["classification"] == "NOT_REACHABLE_ON_HOST" and row["case_id"] != "KC15_IA32_REACHABILITY":
-        return "NOT_REACHABLE_ON_HOST off KC15"
-    stop = row["classification"] in STOPS
-    if not _reasons_ok(row["reasons"], empty=not stop) or not _hex(row["record_sha256"], 64):
-        return "row reasons or record"
-    return None
 
 
-def _stop(row):
-    return row["state"] == "ABANDONED" or row.get("classification") in STOPS
 
 
-def validate_ledger(ledger, head, k0_sha):
-    if not isinstance(ledger, dict) or set(ledger) != TOP_KEYS:
-        return "ledger keys"
-    if ledger["schema"] != LEDGER_SCHEMA or ledger["operation"] != kq.OPERATION:
-        return "ledger schema"
-    if type(ledger["selection_comment"]) is not int or ledger["selection_comment"] != kq.SELECTION:
-        return "ledger selection"
-    if ledger["window"] != WINDOW or ledger["caps"] != CAPS:
-        return "ledger window or caps"
-    if ledger["head"] != head or not _hex(ledger["head"], 40) or ledger["k0_sha256"] != k0_sha or not _hex(k0_sha, 64):
-        return "ledger head or k0"
-    build = ledger["build"]
-    if not isinstance(build, dict) or set(build) != BUILD_KEYS:
-        return "build keys"
-    if type(build["cpu_ns_reserved"]) is not int or build["cpu_ns_reserved"] != BUILD_RESERVE_NS:
-        return "build reserve"
-    if type(build["cpu_ns_observed"]) is not int or build["cpu_ns_observed"] < 0:
-        return "build observed"
-    if type(build["cpu_ns_charged"]) is not int or build["cpu_ns_charged"] != max(BUILD_RESERVE_NS, build["cpu_ns_observed"]):
-        return "build charged"
-    artefacts = build["artefacts_sha256"]
-    if not isinstance(artefacts, dict) or set(artefacts) != set(ART_KEYS):
-        return "build artefacts"
-    for name in ART_KEYS:
-        if artefacts[name] is not None and not _hex(artefacts[name], 64):
-            return "build artefact hash"
-    expected = build_problems(build["cpu_ns_observed"], artefacts)
-    if build["status"] not in ("OK", "INCOMPATIBLE_BUILD") or build["reasons"] != expected:
-        return "build status"
-    if (build["status"] == "OK") != (not expected) or not valid_stamp(build["recorded_utc"]):
-        return "build status"
-    rows = ledger["rows"]
-    if not isinstance(rows, list):
-        return "rows"
-    if build["status"] != "OK" and rows:
-        return "build failure has releases"
-    seen = set()
-    for index, row in enumerate(rows):
-        problem = _row_shape(row, index, seen)
-        if problem:
-            return problem
-    if any(row["state"] == "RESERVED" and index != len(rows) - 1 for index, row in enumerate(rows)):
-        return "RESERVED row is not last"
-    stops = [index for index, row in enumerate(rows) if _stop(row)]
-    if len(stops) > 1:
-        return "more than one stop row"
-    if len(stops) == 1 and stops[0] != len(rows) - 1:
-        return "stop row is not last"
-    used = ledger["used"]
-    if not isinstance(used, dict) or set(used) != USED_KEYS:
-        return "used keys"
-    for key in USED_KEYS:
-        if type(used[key]) is not int:
-            return "used type"
-    if used != recompute_used(ledger):
-        return "used cache"
-    should_latch = build["status"] != "OK" or bool(stops)
-    latch = ledger["latch"]
-    if (latch is not None) != should_latch:
-        return "latch presence"
-    if latch is not None:
-        if not isinstance(latch, dict) or set(latch) != LATCH_KEYS or not valid_stamp(latch["latched_utc"]):
-            return "latch keys"
-        if not _reasons_ok(latch["reasons"], empty=False):
-            return "latch reasons"
-        if build["status"] != "OK":
-            if latch["outcome"] != "INCOMPATIBLE_BUILD" or latch["case_id"] is not None:
-                return "latch build"
-        else:
-            stop = rows[-1]
-            if latch["outcome"] != stop["classification"] or latch["case_id"] != stop["case_id"] or not _stop(stop):
-                return "latch row"
-    if latch is None:
-        if (used["release_slots"] > RELEASE_SLOTS or used["cpu_ns_charged"] > CPU_CAP_NS
-                or used["raw_bytes_charged"] > RAW_CAP or used["workload_releases"] > used["release_slots"]):
-            return "used over cap while open"
-    return None
 
 
 def g_evidence(account, case_id):
