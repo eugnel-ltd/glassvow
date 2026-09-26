@@ -165,7 +165,7 @@ class ProvenanceTests(unittest.TestCase):
 
 class BuildTests(unittest.TestCase):
     def test_build_records_all_outputs_and_toolchain_without_compiling(self):
-        for has_dpkg in (False, True):
+        for has_dpkg in (False, True, "missing gcc-14"):
             with self.subTest(dpkg=has_dpkg), tempfile.TemporaryDirectory() as tmp:
                 here = Path(tmp) / 'tools/dd1_linux'
                 here.mkdir(parents=True)
@@ -175,7 +175,9 @@ class BuildTests(unittest.TestCase):
                     if '-o' in argv:
                         Path(argv[-1]).write_bytes(('compiled:' + Path(argv[-1]).name).encode())
                         return SimpleNamespace(returncode=0, stdout='', stderr='')
-                    return SimpleNamespace(returncode=0, stdout='cc test version\n' if argv[0] == 'cc' else 'libc6 test\n')
+                    return SimpleNamespace(returncode=1 if has_dpkg == 'missing gcc-14' and argv[0] != 'cc' else 0,
+                                           stdout='cc test version\n' if argv[0] == 'cc' else 'libc6 test\n',
+                                           stderr='gcc-14 absent' if has_dpkg == 'missing gcc-14' else '')
                 def copy(source, dest):
                     Path(dest).write_bytes(('runtime:' + Path(dest).name).encode())
                 with patch.object(build_inert, 'HERE', here), \
@@ -186,13 +188,20 @@ class BuildTests(unittest.TestCase):
                      patch.object(snap, 'verify_build_sources'), \
                      patch.object(snap, 'elf', return_value=('/lib64/ld-linux-x86-64.so.2', ['libc.so.6'])):
                     manifest = build_inert.build()
-                self.assertEqual(len([c for c in commands if '-o' in c]), 5)
+                    initial_commands = list(commands)
+                    (here / 'build' / 'unrelated-file').write_bytes(b'unrelated')
+                    partial = build_inert.build(compat2_only=True)
+                    self.assertEqual(set(partial['binaries']),
+                                     {'supervisor', 'compat2-inert', 'libc.so.6', 'ld-linux-x86-64.so.2'})
+                    self.assertEqual(r.read(here / 'build/BUILD.json'), json.loads(r.encode(partial)))
+                self.assertEqual(len([c for c in initial_commands if '-o' in c]), 5)
                 self.assertEqual(set(manifest['binaries']), set(controls.ART_KEYS) | {'inert-dynamic', 'ld-linux-x86-64.so.2'})
-                self.assertEqual(manifest['toolchain'], dict(cc='cc test version', packages='libc6 test\n' if has_dpkg else None))
+                self.assertEqual(manifest['toolchain'], dict(cc='cc test version', packages='libc6 test\n' if has_dpkg else None,
+                    package_query=dict(exit=1 if has_dpkg == 'missing gcc-14' else 0,
+                                       stderr='gcc-14 absent' if has_dpkg == 'missing gcc-14' else '') if has_dpkg else None))
                 for name, item in manifest['binaries'].items():
                     raw = (here / 'build' / name).read_bytes()
                     self.assertEqual(item, dict(bytes=len(raw), sha256=r.digest(raw)))
-                self.assertEqual(r.read(here / 'build/BUILD.json'), json.loads(r.encode(manifest)))
 
 
 class ProfileTests(unittest.TestCase):

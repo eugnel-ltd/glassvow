@@ -26,16 +26,33 @@ TODAY = datetime(2026, 9, 26, tzinfo=timezone.utc)
 INSIDE = datetime(2026, 9, 18, tzinfo=timezone.utc)
 
 
+class IsolatedImportTests(unittest.TestCase):
+    def test_cli_imports_sibling_builders_with_isolation(self):
+        import subprocess
+        script = Path(controls.__file__).resolve()
+        code = "import runpy; runpy.run_path(%r, run_name='import_only'); import compat2_controls, fit_controls" % str(script)
+        result = subprocess.run([sys.executable, '-I', '-B', '-S', '-c', code],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
 class ReservationTests(unittest.TestCase):
-    def test_synthetic_legacy_account_has_no_expiry_but_keeps_caps(self):
+    def test_only_backend_test_account_has_no_expiry_but_keeps_caps(self):
         account = inert_cases.account()
         before = r.totals(account, INSIDE)
+        with self.assertRaisesRegex(r.ReservationError, 'outside recovery window'):
+            r.totals(account, TODAY)
+        account['schema'] = r.INERT_TEST_ACCOUNT_SCHEMA
         self.assertEqual(r.totals(account, TODAY), before)
         for field in ('starts_cap', 'cpu_ns_cap', 'raw_bytes_cap', 'executors'):
             changed = deepcopy(account)
             changed['recovery'][field] += 1
             with self.assertRaises(r.ReservationError):
                 r.totals(changed, TODAY)
+        changed = deepcopy(account)
+        changed['synthetic'] = False
+        with self.assertRaises(r.ReservationError):
+            r.totals(changed, TODAY)
         account['historical']['spendable'] = True
         with self.assertRaises(r.ReservationError):
             r.totals(account, TODAY)

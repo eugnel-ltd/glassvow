@@ -14,6 +14,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import dd1_kernel_qualification as kq
 import dd1_reservations as r
 

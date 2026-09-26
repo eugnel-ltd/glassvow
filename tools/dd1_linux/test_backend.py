@@ -69,6 +69,11 @@ class BackendTests(unittest.TestCase):
     def case(self, name, mode="positive", repo=REPO, **kw):
         root = self.root / name; root.mkdir()
         unit = fixture.case(root, repo, mode, **kw)
+        account = r.read(root / "ACCOUNT.json")
+        account["schema"] = r.INERT_TEST_ACCOUNT_SCHEMA
+        r.atomic_write(root / "ACCOUNT.json", account)
+        unit["account_sha256"] = r.digest((root / "ACCOUNT.json").read_bytes())
+        fixture.sign(root, unit)
         return root, unit
 
     def launch(self, root, repo=REPO, pass_fds=()):

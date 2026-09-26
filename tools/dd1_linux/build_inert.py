@@ -45,14 +45,18 @@ def build(compat2_only=False):
         shutil.copyfile(source, out / Path(dest).name)
     cc = subprocess.run(["cc", "--version"], check=True, capture_output=True, text=True).stdout.splitlines()[0]
     packages = None
+    package_query = None
     if shutil.which("dpkg-query"):
-        packages = subprocess.run(["dpkg-query", "-W", "-f=${Package} ${Version}\n",
-                                   "libc6", "libc6-dev", "gcc-14", "binutils"],
-                                  check=True, capture_output=True, text=True).stdout
+        query = subprocess.run(["dpkg-query", "-W", "-f=${Package} ${Version}\n",
+                                "libc6", "libc6-dev", "gcc-14", "binutils"],
+                               capture_output=True, text=True)
+        packages = query.stdout
+        package_query = dict(exit=query.returncode, stderr=query.stderr)
     snapshot.verify_build_sources(repo, sources)
-    result = dict(commands=records, sources=sources, toolchain=dict(cc=cc, packages=packages),
+    result = dict(commands=records, sources=sources, toolchain=dict(cc=cc, packages=packages, package_query=package_query),
         host=platform.uname()._asdict(),
-        libc=platform.libc_ver(), binaries={p.name: dict(bytes=p.stat().st_size, sha256=r.digest(p.read_bytes())) for p in out.iterdir() if p.is_file() and p.name != "BUILD.json"})
+        libc=platform.libc_ver(), binaries={p.name: dict(bytes=p.stat().st_size, sha256=r.digest(p.read_bytes()))
+            for p in [Path(cmd[-1]) for cmd in commands] + [out / Path(dest).name for dest in runtime]})
     (out / "BUILD.json").write_bytes(r.encode(result))
     return result
 

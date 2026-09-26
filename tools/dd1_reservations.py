@@ -142,11 +142,15 @@ def _totals_kernel(account: Mapping, now: datetime, policy: Mapping) -> dict:
     return result
 
 
+INERT_TEST_ACCOUNT_SCHEMA = "DD1-INERT-BACKEND-TEST-1"
+
+
 def totals(account: Mapping, now: datetime | None = None, policy=None) -> dict:
     now = now or datetime.now(timezone.utc)
     if policy is not None:
         return _totals_kernel(account, now, policy)
-    need(account.get("schema") == "DD1-N0-RECOVERY-1-ACCOUNT-1", "wrong account schema")
+    inert_test = account.get("synthetic") is True and account.get("schema") == INERT_TEST_ACCOUNT_SCHEMA
+    need(account.get("schema") == "DD1-N0-RECOVERY-1-ACCOUNT-1" or inert_test, "wrong account schema")
     r, historical = account.get("recovery", {}), account.get("historical", {})
     need(isinstance(r, dict) and isinstance(historical, dict), "invalid accounts")
     for field, value in {"starts_cap": STARTS_CAP, "cpu_ns_cap": CPU_CAP,
@@ -156,7 +160,7 @@ def totals(account: Mapping, now: datetime | None = None, policy=None) -> dict:
     need(r.get("id") == OPERATION, "wrong account operation")
     need(r.get("first_engine_launch_utc") == FIRST and r.get("deadline_utc") == DEADLINE, "recovery clock cannot be reset")
     start, expiry = (datetime.fromisoformat(s.replace("Z", "+00:00")) for s in (FIRST, DEADLINE))
-    if account.get("synthetic") is not True:
+    if not inert_test:
         need(now.tzinfo is not None and start <= now < expiry, "outside recovery window")
     for field, expected in {"starts_used": 1277, "starts_cap": 8192,
                             "starts_remaining_arithmetic": 6915, "spendable": False, "attempt": "1/1 consumed",
