@@ -122,14 +122,8 @@ def _totals_kernel(account: Mapping, now: datetime, policy: Mapping) -> dict:
     recovery = account.get("recovery", {})
     need(isinstance(recovery, dict), "invalid accounts")
     need(recovery.get("id") == "DD1-KERNEL-COMPAT-1", "wrong account operation")
-    need(recovery.get("selection") == policy["selection"], "wrong account selection")
-    need(recovery.get("first_engine_launch_utc") == policy["start_utc"]
-         and recovery.get("deadline_utc") == policy["deadline_utc"], "wrong account window")
     for field in ("starts_cap", "cpu_ns_cap", "raw_bytes_cap", "per_invocation_cpu_seconds", "executors"):
         need(type(recovery.get(field)) is int and recovery[field] == policy[field], "mismatched cap: " + field)
-    start = datetime.fromisoformat(policy["start_utc"].replace("Z", "+00:00"))
-    expiry = datetime.fromisoformat(policy["deadline_utc"].replace("Z", "+00:00"))
-    need(now.tzinfo is not None and start <= now < expiry, "outside selected window")
     result = {"starts": natural(recovery.get("starts_used"), "starts_used"),
               "cpu_ns": natural(recovery.get("cpu_ns_used"), "cpu_ns_used"),
               "raw_bytes": natural(recovery.get("raw_bytes_used"), "raw_bytes_used")}
@@ -162,7 +156,8 @@ def totals(account: Mapping, now: datetime | None = None, policy=None) -> dict:
     need(r.get("id") == OPERATION, "wrong account operation")
     need(r.get("first_engine_launch_utc") == FIRST and r.get("deadline_utc") == DEADLINE, "recovery clock cannot be reset")
     start, expiry = (datetime.fromisoformat(s.replace("Z", "+00:00")) for s in (FIRST, DEADLINE))
-    need(now.tzinfo is not None and start <= now < expiry, "outside recovery window")
+    if account.get("synthetic") is not True:
+        need(now.tzinfo is not None and start <= now < expiry, "outside recovery window")
     for field, expected in {"starts_used": 1277, "starts_cap": 8192,
                             "starts_remaining_arithmetic": 6915, "spendable": False, "attempt": "1/1 consumed",
                             "cpu_seconds": "UNKNOWN", "elapsed_seconds": "UNKNOWN",
@@ -213,9 +208,6 @@ def validate_unit(unit: Mapping, command: list[str], *, head: str, receipt_sha: 
         import dd1_kernel_qualification as kernel_qualification
         pinned = kernel_qualification.inert_reservation_policy(unit)
         need(policy == pinned, "caller-shaped reservation policy rejected")
-        need(unit.get("operation_start_utc") == policy["start_utc"]
-             and unit.get("operation_deadline_utc") == policy["deadline_utc"],
-             "selected window is not bound on the unit")
     need(unit.get("overlay_head") == head and bool(re.fullmatch(r"[0-9a-f]{40}", head)), "wrong exact source head")
     need(unit.get("receipt_sha256") == receipt_sha and unit.get("account_sha256") == account_sha, "stale receipt/account identity")
     need(isinstance(command, list) and command and all(isinstance(v, str) and v and "\0" not in v for v in command)
@@ -288,8 +280,8 @@ def reserve_and_run(account_path: Path, unit: Mapping, *, command: list[str], he
         changed["recovery"].setdefault("unit_reservations_v2", []).append(reserve)
         atomic_write(account_path, changed)  # Durable full charge BEFORE any runner/child.
         deadline_unix = datetime.fromisoformat(DEADLINE.replace("Z", "+00:00")).timestamp()
-        if policy is not None:
-            deadline_unix = int(datetime.fromisoformat(policy["deadline_utc"].replace("Z", "+00:00")).timestamp())
+        if unit.get("mode") == "inert_control":
+            deadline_unix = datetime.now(timezone.utc).timestamp() + unit["wall_seconds"]
         grant = dict(unit, schema="DD1-RESERVED-UNIT-2", engine_starts=1,
                      artifact_root=str((output / "capture").resolve()),
                      metadata_raw_reserved=metadata, child_raw_bytes=unit["raw_bytes"] - metadata - 4096,

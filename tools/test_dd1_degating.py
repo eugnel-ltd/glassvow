@@ -232,7 +232,8 @@ class RunnerTests(unittest.TestCase):
                 kind = 'INCOMPATIBLE' if case == 'KC01' else 'EXPECTED'
                 return dict(case=case, classification=kind, reasons=['different'] if case == 'KC01' else [],
                             cpu_ns=123, kernel_release='test')
-            with patch.object(controls, 'build_problems', return_value=[]), \
+            with patch.object(controls, 'adopt_orphans'), \
+                 patch.object(controls, 'build_problems', return_value=[]), \
                  patch.object(controls, 'run_case', side_effect=run), \
                  patch.object(controls.subprocess, 'run', return_value=SimpleNamespace(stdout='a' * 40)), \
                  redirect_stdout(io.StringIO()):

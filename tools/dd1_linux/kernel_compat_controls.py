@@ -49,7 +49,7 @@ def build_problems(repo):
             r.need(r.digest(raw) == item["sha256"] and len(raw) == item["bytes"],
                    "build identity mismatch: " + name)
         r.need(snap.elf((build / "supervisor").read_bytes()) == (None, []), "supervisor is not static ELF")
-    except (OSError, ValueError, KeyError, TypeError, r.ReservationError, subprocess.SubprocessError) as exc:
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, r.ReservationError, subprocess.SubprocessError) as exc:
         return [str(exc)]
     return []
 
@@ -671,29 +671,23 @@ def build_inert(where, repo, row, head):
     account_path = where / "ACCOUNT.json"
     account_path.write_bytes(r.encode(synthetic_account()))
     names = snap.HELPER_SOURCES | {"res://tools/dd1_linux/inert.c"}
-    staged = repo
+    staged = where / "source"
+    for name in names:
+        dest = staged / name[6:]
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes((repo / name[6:]).read_bytes())
+    for binary in ("supervisor", "inert"):
+        dest = staged / "tools/dd1_linux/build" / binary
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes((repo / "tools/dd1_linux/build" / binary).read_bytes())
+    files = {name: r.digest((staged / name[6:]).read_bytes()) for name in names}
+    helper = staged / "tools/dd1_linux/build/supervisor"
+    inert = staged / "tools/dd1_linux/build/inert"
     extra = []
     if row["case_id"] == "KC02_READONLY_ESCAPE":
-        src = where / "source"
-        for name in names:
-            dest = src / name[6:]
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_bytes((repo / name[6:]).read_bytes())
-        for binary in ("supervisor", "inert"):
-            dest = src / "tools/dd1_linux/build" / binary
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_bytes((repo / "tools/dd1_linux/build" / binary).read_bytes())
-        (src / "input").write_bytes(b"IMMUTABLE\n")
-        files = {name: r.digest((src / name[6:]).read_bytes()) for name in names}
+        (staged / "input").write_bytes(b"IMMUTABLE\n")
         files["res://input"] = r.digest(b"IMMUTABLE\n")
-        helper = src / "tools/dd1_linux/build/supervisor"
-        inert = src / "tools/dd1_linux/build/inert"
-        staged = src
-        extra = [str(src / "input")]
-    else:
-        files = {name: r.digest((repo / name[6:]).read_bytes()) for name in names}
-        helper = repo / "tools/dd1_linux/build/supervisor"
-        inert = repo / "tools/dd1_linux/build/inert"
+        extra = [str(staged / "input")]
     unit = dict(schema="DD1-COMPLETE-UNIT-DEMAND-2", operation=kq.OPERATION, overlay_head=head,
                 unit_id=row["case_id"], mode="inert_control", contained_starts=0,
                 source_files=files, argv=list(row["argv_tokens"]),
@@ -809,6 +803,8 @@ def controller_main(args):
 def run_case(args, row):
     before = _observed_cpu_ns()
     outcome = collect(args, row)
+    import dd1_linux_backend as backend
+    reaped, adopted = backend.reap_adopted()
     account = None
     if outcome["account_path"] is not None:
         try:
@@ -816,6 +812,8 @@ def run_case(args, row):
         except (OSError, r.ReservationError):
             pass
     evidence = assemble_evidence(row, outcome["where"], outcome["unit"], account, outcome)
+    if not reaped:
+        evidence["identities_absent"] = False
     classification, reasons = classify(row["case_id"], evidence)
     if outcome["exc"] is not None:
         reasons.append(type(outcome["exc"]).__name__ + ": " + str(outcome["exc"]))
@@ -823,7 +821,13 @@ def run_case(args, row):
                 classification=classification, reasons=reasons,
                 cpu_ns=max(0, _observed_cpu_ns() - before),
                 kernel_release=platform.release(), kernel_version=platform.version(),
-                controller_stdout=outcome["stdout"], controller_stderr=outcome["stderr"])
+                adopted=adopted, controller_stdout=outcome["stdout"], controller_stderr=outcome["stderr"])
+
+
+def adopt_orphans():
+    import ctypes
+    r.need(platform.system() == "Linux", "Linux control host required")
+    r.need(ctypes.CDLL(None).prctl(36, 1, 0, 0, 0) == 0, "driver subreaper unavailable")
 
 
 def main(argv=None):
@@ -852,6 +856,11 @@ def main(argv=None):
         parser.error("repository output must be under gitignored tools/dd1_linux/build")
     args.root.mkdir(parents=True, exist_ok=False)
     problems = build_problems(ROOT)
+    if not problems:
+        try:
+            adopt_orphans()
+        except (OSError, AttributeError, r.ReservationError) as exc:
+            problems = [str(exc)]
     records = []
     for row in rows:
         args.case = row["case_id"]
