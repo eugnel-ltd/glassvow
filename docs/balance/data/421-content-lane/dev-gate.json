@@ -1,0 +1,71 @@
+{
+  "runner": "throwaway tools/_probe421.gd rebuilt from docs/reviews/421/dusk-content-lane-probe-notes.md section 1 (not committed)",
+  "sample": {
+    "aspect": "duskblade",
+    "vows": [
+      0,
+      5
+    ],
+    "policyRoot": 7421,
+    "policies": [
+      0,
+      299
+    ],
+    "seeds": [
+      12000,
+      12015
+    ],
+    "rowsPerVariant": 9600
+  },
+  "twins": {
+    "commit": "e7a004d7122cf91c350aa0abc926965353017384",
+    "contentSha256": "8934031593228e450d3670d24da01aa4717480bd01ea4392e359d69a6f474248"
+  },
+  "holderRule": "run ends holding unbrokenCrown; paired against the same policy, vow and seed on the twin commit",
+  "gate": "holder minus twin win rate >= -5 pp at both vows",
+  "validation": {
+    "commit": "74ad72d",
+    "note": "reproduces the first dev gate exactly",
+    "V0": {
+      "holders": 751,
+      "holderWins": 354,
+      "twinWins": 375,
+      "deficitPp": -2.796272
+    },
+    "V5": {
+      "holders": 410,
+      "holderWins": 114,
+      "twinWins": 145,
+      "deficitPp": -7.560976
+    }
+  },
+  "retry": {
+    "commit": "935fa5d45c46dfda402535f2957af7ac8a14e9b1",
+    "result": {
+      "V0": {
+        "holders": 751,
+        "holderWins": 395,
+        "twinWins": 375,
+        "deficitPp": 2.663116,
+        "verdict": "PASS",
+        "rows": 4800,
+        "candWinRate": 0.3515,
+        "baseWinRate": 0.3527
+      },
+      "V5": {
+        "holders": 410,
+        "holderWins": 137,
+        "twinWins": 145,
+        "deficitPp": -1.95122,
+        "verdict": "PASS",
+        "rows": 4800,
+        "candWinRate": 0.1575,
+        "baseWinRate": 0.1638
+      }
+    }
+  },
+  "host": {
+    "arch": "x86_64",
+    "godot": "4.7.2.stable.official.ed1daf0bf"
+  }
+}

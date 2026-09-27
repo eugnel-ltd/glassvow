@@ -1,0 +1,266 @@
+{
+  "commit": "935fa5d45c46dfda402535f2957af7ac8a14e9b1",
+  "contentSha256": "a9ad6c558cf05c35e1d326f9a45540f5b7d245b85005a64cd7808f734ffc4440",
+  "host": {
+    "arch": "x86_64",
+    "os": "Linux VM, 8 vCPU",
+    "godot": "4.7.2.stable.official.ed1daf0bf"
+  },
+  "rawRoot": "/home/box/ops/glassvow/d557-exam1-935fa5d4",
+  "holders": {
+    "duskblade:v0": {
+      "runs": 80000,
+      "holders": 12884,
+      "holderShare": 0.161,
+      "holderWinRate": 0.5179,
+      "nonHolderWinRate": 0.3327,
+      "holderCells": {
+        "smolder:fat": {
+          "runs": 7270,
+          "wins": 4861
+        },
+        "smolder:mid": {
+          "runs": 3371,
+          "wins": 1177
+        },
+        "smolder:thin": {
+          "runs": 991,
+          "wins": 182
+        },
+        "shatter:fat": {
+          "runs": 364,
+          "wins": 219
+        },
+        "attrition:mid": {
+          "runs": 281,
+          "wins": 34
+        },
+        "attrition:fat": {
+          "runs": 253,
+          "wins": 106
+        },
+        "shatter:mid": {
+          "runs": 158,
+          "wins": 74
+        },
+        "attrition:thin": {
+          "runs": 143,
+          "wins": 7
+        },
+        "shatter:thin": {
+          "runs": 53,
+          "wins": 13
+        }
+      }
+    },
+    "duskblade:v5": {
+      "runs": 80000,
+      "holders": 6332,
+      "holderShare": 0.0791,
+      "holderWinRate": 0.3305,
+      "nonHolderWinRate": 0.1044,
+      "holderCells": {
+        "smolder:fat": {
+          "runs": 3310,
+          "wins": 1625
+        },
+        "smolder:mid": {
+          "runs": 1772,
+          "wins": 219
+        },
+        "smolder:thin": {
+          "runs": 363,
+          "wins": 28
+        },
+        "shatter:fat": {
+          "runs": 273,
+          "wins": 146
+        },
+        "attrition:mid": {
+          "runs": 250,
+          "wins": 4
+        },
+        "attrition:fat": {
+          "runs": 155,
+          "wins": 46
+        },
+        "shatter:mid": {
+          "runs": 99,
+          "wins": 20
+        },
+        "attrition:thin": {
+          "runs": 86,
+          "wins": 1
+        },
+        "shatter:thin": {
+          "runs": 24,
+          "wins": 4
+        }
+      }
+    }
+  },
+  "files": [
+    {
+      "path": "layer1/controls.ndjson",
+      "bytes": 24246920,
+      "lines": 1,
+      "sha256": "a55329a3598e978b2dcada60d78a20e4034e78a468ab5b80e20468d57cd5bdee"
+    },
+    {
+      "path": "layer1/shard-0.ndjson",
+      "bytes": 230880075,
+      "lines": 32001,
+      "sha256": "bb55a712cda92d50ade2577b948fa63003ec2e5df96d6ec1b7caac150e751723"
+    },
+    {
+      "path": "layer1/shard-1.ndjson",
+      "bytes": 230528033,
+      "lines": 32001,
+      "sha256": "ffafeede0fef22ec74fafa8166802fcd55795617a1fce0b77e7dfbe41a20efcc"
+    },
+    {
+      "path": "layer1/shard-2.ndjson",
+      "bytes": 228927553,
+      "lines": 32001,
+      "sha256": "215a2c89cf27c313c243dcd9f5b1491b57071183809ba3ced7d14baeda59ee45"
+    },
+    {
+      "path": "layer1/shard-3.ndjson",
+      "bytes": 230553544,
+      "lines": 32001,
+      "sha256": "bdf70a5038f4000b6c4bbffc003fb610cbe452c4d22a050ce022cf1563e72c3a"
+    },
+    {
+      "path": "layer1/shard-4.ndjson",
+      "bytes": 231229216,
+      "lines": 32001,
+      "sha256": "64409ceda79e5ec824597bd43dc5f4e410b2915cfcbcdaa31c30754adf194605"
+    },
+    {
+      "path": "layer1/shard-5.ndjson",
+      "bytes": 230540008,
+      "lines": 32001,
+      "sha256": "457df4f57924dbeba3d3b8e01e387b938354e47f11f9eb040b1ac3e90ab9eca8"
+    },
+    {
+      "path": "layer1/shard-6.ndjson",
+      "bytes": 230478143,
+      "lines": 32001,
+      "sha256": "8f2cdd215a570104f038f3a29d152cdff8329582d2e65ded8b0ffe471518a584"
+    },
+    {
+      "path": "layer1/shard-7.ndjson",
+      "bytes": 230631091,
+      "lines": 32001,
+      "sha256": "b1ac43f81e5a6e2a89717e61d55bc247f4c99bd060f5b3baabeae45e42550ca2"
+    },
+    {
+      "path": "layer1/shard-8.ndjson",
+      "bytes": 231212439,
+      "lines": 32001,
+      "sha256": "aa07c5e827e03395440e38dab0ecea7719b3990f9528f96fa4a26367251ccdf9"
+    },
+    {
+      "path": "layer1/shard-9.ndjson",
+      "bytes": 231167099,
+      "lines": 32001,
+      "sha256": "4f9d307ecd314b42ca08911855a98bc63a90ceaf486243712953aac5826e2b1e"
+    },
+    {
+      "path": "layer1/merged.ndjson",
+      "bytes": 2306138754,
+      "lines": 320001,
+      "sha256": "0d6b62f6ed1cea730a3ccbfd18df69ed22a506e114c6ba9b24edb882ed411b35"
+    },
+    {
+      "path": "layer2/island-0.ndjson",
+      "bytes": 1853004,
+      "lines": 216,
+      "sha256": "7b71d4087903cfc5f99a79d0b960c83f02f784ed8e9ebca87bf78a3e7d5e0c09"
+    },
+    {
+      "path": "layer2/island-1.ndjson",
+      "bytes": 1706684,
+      "lines": 210,
+      "sha256": "0ddfbdd7a7108b8043353151e2a0048741dc87c4910c6592ff8e338e4e21efbf"
+    },
+    {
+      "path": "layer2/island-2.ndjson",
+      "bytes": 1686358,
+      "lines": 222,
+      "sha256": "c904a3ea3f357864da02128401b8168406ebd6dd96203d7601d3428331904075"
+    },
+    {
+      "path": "layer2/island-3.ndjson",
+      "bytes": 1725985,
+      "lines": 217,
+      "sha256": "276609794a838d9788a82f71d58c824b722daa6475ac164376cce41b312df1b4"
+    },
+    {
+      "path": "layer2/island-4.ndjson",
+      "bytes": 1666045,
+      "lines": 222,
+      "sha256": "7e8c2bb01bbe80b610e10c3b9029bdc0bb3306a3f5c2f9d7327edda5b2c29dfd"
+    },
+    {
+      "path": "layer2/island-5.ndjson",
+      "bytes": 1646910,
+      "lines": 211,
+      "sha256": "9428a75e5b69916f50228fb30294a1a823750bea044b8beabf6264695ca1a6f0"
+    },
+    {
+      "path": "layer2/island-6.ndjson",
+      "bytes": 1486201,
+      "lines": 222,
+      "sha256": "4d637a1bcd36b5b63e7b5b7cdc9d5d19db789b0b3fdd3777342b0e772a2186a3"
+    },
+    {
+      "path": "layer2/island-7.ndjson",
+      "bytes": 1562933,
+      "lines": 218,
+      "sha256": "22a73fc86c055eec282e86509f526c05ad321cd07669d6b6d959ccc0068b9ff9"
+    },
+    {
+      "path": "layer2/island-8.ndjson",
+      "bytes": 1395683,
+      "lines": 209,
+      "sha256": "134beea24ebd4bdc4b313171c64718bc4100fe27dff361fea3a36512702fc11f"
+    },
+    {
+      "path": "layer2/island-9.ndjson",
+      "bytes": 1506226,
+      "lines": 220,
+      "sha256": "e58c70236c06a66e1a7fe6c37bac3b43c19b42a355c4a4ea7b1de7595cd5a238"
+    },
+    {
+      "path": "layer2/island-10.ndjson",
+      "bytes": 1572156,
+      "lines": 216,
+      "sha256": "8f9186b2d67770783a53e8c7eb5a1687849cb5ec36072ab1849b346e39ec5f3b"
+    },
+    {
+      "path": "layer2/island-11.ndjson",
+      "bytes": 1610180,
+      "lines": 222,
+      "sha256": "3729881a8e930f99b192c293eddbd66a5300da366f032fa8273c241c476db901"
+    },
+    {
+      "path": "phase-a/controls.json",
+      "bytes": 24246915,
+      "lines": 1,
+      "sha256": "4bb330510237fd11f75528f3cae27fda3bb11dfe8e9fc6355ba544b9b15a12ff"
+    },
+    {
+      "path": "phase-a/holdout-vow0.json",
+      "bytes": 3497173,
+      "lines": 1,
+      "sha256": "486ea00776fde6e627ac85448d578fa38baa175d4e5992f1cfa0e8e6015d663e"
+    },
+    {
+      "path": "phase-a/holdout-vow5.json",
+      "bytes": 3112575,
+      "lines": 1,
+      "sha256": "dc4cfa0b60c2c23af58c20764a7fb373ddfd24efa2e6b8f19b3a362cec584799"
+    }
+  ]
+}

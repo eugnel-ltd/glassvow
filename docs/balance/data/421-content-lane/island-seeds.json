@@ -1,0 +1,54 @@
+{
+ "duskblade:v0": [
+  {
+   "cell": "shatter:fat",
+   "policyIndex": 2
+  },
+  {
+   "cell": "smolder:fat",
+   "policyIndex": 7
+  },
+  {
+   "cell": "shatter:mid",
+   "policyIndex": 89
+  },
+  {
+   "cell": "attrition:fat",
+   "policyIndex": 17
+  },
+  {
+   "cell": "smolder:mid",
+   "policyIndex": 35
+  },
+  {
+   "cell": "smolder:thin",
+   "policyIndex": 47
+  }
+ ],
+ "duskblade:v5": [
+  {
+   "cell": "shatter:fat",
+   "policyIndex": 5
+  },
+  {
+   "cell": "smolder:fat",
+   "policyIndex": 28
+  },
+  {
+   "cell": "attrition:fat",
+   "policyIndex": 26
+  },
+  {
+   "cell": "shatter:mid",
+   "policyIndex": 114
+  },
+  {
+   "cell": "smolder:mid",
+   "policyIndex": 47
+  },
+  {
+   "cell": "smolder:thin",
+   "policyIndex": 662
+  }
+ ]
+}
