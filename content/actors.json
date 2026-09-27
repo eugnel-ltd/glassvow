@@ -1,0 +1,59 @@
+{
+  "v": 1,
+  "actors": {
+    "keeper": {
+      "name": "ui.scene.speaker.keeper",
+      "side": "right",
+      "faces": "left",
+      "tint": "#9b7fe0",
+      "rim": "right",
+      "crop": [0.0, 0.07, 1.0, 0.64],
+      "portraits": {
+        "default": "res://assets/art/meta/keeper.png",
+        "tender": {"art": "res://assets/art/portraits/keeper-tender.png"},
+        "offering": {"art": "res://assets/art/portraits/keeper-offering.png", "fallback": "tender"},
+        "weary": {"art": "res://assets/art/portraits/keeper-weary.png"},
+        "revealed": {"art": "res://assets/art/enemies/eternalKeeper.png", "rim": "left"},
+        "beckon": {"art": "res://assets/art/portraits/keeper-beckon.png", "rim": "left", "fallback": "revealed"}
+      }
+    },
+    "lamplighter": {
+      "name": "ui.scene.speaker.lamplighter",
+      "side": "right",
+      "faces": "left",
+      "tint": "#5fa39a",
+      "rim": "left",
+      "crop": [0.0, 0.0, 1.0, 0.6],
+      "portraits": {
+        "default": "res://assets/art/meta/hollow-lamplighter.png",
+        "wary": {"art": "res://assets/art/portraits/lamplighter-wary.png"},
+        "asking": {"art": "res://assets/art/portraits/lamplighter-asking.png"},
+        "recognising": {"art": "res://assets/art/portraits/lamplighter-recognising.png"},
+        "urgent": {"art": "res://assets/art/portraits/lamplighter-urgent.png", "fallback": "recognising"},
+        "grieving": {"art": "res://assets/art/portraits/lamplighter-grieving.png"}
+      }
+    },
+    "queue": {
+      "name": "ui.scene.speaker.queue",
+      "side": "centre",
+      "faces": "left",
+      "tint": "#d9b86a",
+      "rim": "right",
+      "crop": [0.0, 0.0, 1.0, 1.0],
+      "portraits": {
+        "default": "res://assets/art/portraits/queue-chorus.png"
+      }
+    },
+    "hero": {
+      "name": "",
+      "side": "left",
+      "faces": "left",
+      "tint": "#f2c14e",
+      "rim": "right",
+      "crop": [0.0, 0.0, 1.0, 0.62],
+      "portraits": {
+        "default": "@hero"
+      }
+    }
+  }
+}

@@ -1,6 +1,8 @@
 class_name SceneScript
 extends RefCounted
 ## Authored scene beat list. Copy lives in locale; this file is structure.
+## Stage directions (cast, moods, styles, effects) are validated by
+## `StageDirection`; a v1 script with none of them still plays unchanged.
 
 const PATH: String = "res://content/scenes.json"
 const MOTIONS: Dictionary = {"hold": true, "push-in": true, "linger": true}
@@ -77,6 +79,9 @@ static func pool_beat(art: String) -> SceneScript:
 		"motion": "hold",
 		"lines": beat_lines,
 		"skip_dwell": 0.0,
+		"transition": &"cut",
+		"ambient": &"motes",
+		"grade": &"none",
 	})
 	script.lines.append(line)
 	return script
@@ -114,12 +119,17 @@ static func _beat(scene_id: String, beat_i: int, raw: Variant) -> Variant:
 	var skip_dwell: float = float(str(row.get("skipDwell", 0.0)))
 	if skip_dwell < 0.0:
 		return _fail("scenes: %s beat %d has negative skipDwell" % [scene_id, beat_i])
-	return {
+	var beat: Dictionary = {
 		"art": str(row.get("art", "")),
 		"motion": motion,
 		"lines": cleaned_lines,
 		"skip_dwell": skip_dwell,
 	}
+	var staged: String = StageDirection.parse_beat(
+		row, beat, "scenes: %s beat %d" % [scene_id, beat_i])
+	if not staged.is_empty():
+		return _fail(staged)
+	return beat
 
 
 static func _line(scene_id: String, beat_i: int, line_i: int, raw: Variant) -> Variant:
@@ -133,6 +143,10 @@ static func _line(scene_id: String, beat_i: int, line_i: int, raw: Variant) -> V
 	var speaker: String = str(row.get("speaker", "")).strip_edges()
 	if not speaker.is_empty():
 		line["speaker"] = speaker
+	var staged: String = StageDirection.parse_line(
+		row, line, "scenes: %s beat %d line %d" % [scene_id, beat_i, line_i])
+	if not staged.is_empty():
+		return _fail(staged)
 	return line
 
 
