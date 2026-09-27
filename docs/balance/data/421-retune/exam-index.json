@@ -6,7 +6,14 @@
       "contentSha256": "667125b7ddb929d0bcc4297fb8ef8eab24e98f5dc252edd74999c0faa4dbf413",
       "numericOutcome": "MISS",
       "directory": "exam-1"
+    },
+    {
+      "exam": 2,
+      "commit": "df9ab247b7700ed2e7d413753af091b75e3778d3",
+      "contentSha256": "8934031593228e450d3670d24da01aa4717480bd01ea4392e359d69a6f474248",
+      "numericOutcome": "MISS",
+      "directory": "exam-2"
     }
   ],
-  "rootFilesDescribeExam": 1
+  "rootFilesDescribeExam": 2
 }
