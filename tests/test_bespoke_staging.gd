@@ -42,7 +42,9 @@ static func _overlay_on_opening(fails: Array[String]) -> void:
 		_check(fails, false, "opening did not load")
 		return
 	var view: Vector2 = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
-	for cursor: int in [0, 2, 5, 7]:
+	# Beat ② is the two-shot: the Keeper stands as a portrait and the seat is
+	# empty (test_stagecraft pins one body per cursor). The wide beats seat it.
+	for cursor: int in [0, 1, 5, 6, 7]:
 		var player: ScenePlayer = _live(opening, cursor)
 		var figure: HearthFigure = _figure(player) as HearthFigure
 		_check(fails, figure != null,
@@ -69,9 +71,10 @@ static func _overlay_on_opening(fails: Array[String]) -> void:
 		_check(fails, seat.end.y <= view.y * 0.92 and seat.end.y >= view.y * 0.70,
 			"cursor %d seats the cutout off the hearth platform (hem at %.0f)"
 				% [cursor, seat.end.y])
-		# The panel is `_copy.custom_minimum_size.x` wide and centre-docked.
-		var panel_right: float = (view.x + player._copy.custom_minimum_size.x) * 0.5
-		var behind: float = clampf(panel_right - seat.position.x, 0.0, seat.size.x)
+		# The pane docks clear of the seat; read its real rect, not a centring
+		# assumption.
+		var pane: Rect2 = player._director.pane_rect()
+		var behind: float = clampf(pane.end.x - seat.position.x, 0.0, seat.size.x)
 		_check(fails, behind <= seat.size.x * 0.25,
 			"cursor %d hides %.0f%% of the cutout behind the panel"
 				% [cursor, 100.0 * behind / maxf(seat.size.x, 1.0)])

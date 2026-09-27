@@ -266,6 +266,8 @@ static func _wake(main: Main) -> void:
 		player._ready()
 
 
+## Finish the interstitial by hand. A tap on a line still typing only lands
+## it (07-scenes §1); the next tap steps — so tap until the player has asked.
 static func _drive(main: Main) -> void:
 	_wake(main)
 	var player: ScenePlayer = main._route_screen as ScenePlayer
@@ -273,6 +275,10 @@ static func _drive(main: Main) -> void:
 		return
 	player._press(true)
 	player._press(false)
+	if is_instance_valid(player) and main._route_screen == player \
+			and not player._asked and player._beat == ScenePlayer.BEAT_WAIT:
+		player._press(true)
+		player._press(false)
 
 
 static func _main(content: ContentDB) -> Main:

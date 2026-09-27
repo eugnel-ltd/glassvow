@@ -190,6 +190,7 @@ func _ready() -> void:
 	# tools/shot.sh --onboard=map-select --shot=...    (first-run hint stills)
 	# tools/shot.sh --scene=opening --cursor=2 --shot=…   (bespoke scene beat)
 	# tools/shot.sh --scene=departure --settle=0.7 --shot=…  (L0 linger)
+	# tools/shot.sh --stagecraft --cursor=6 --freeze=0.12 --shot=…  (scene FX reel)
 	# tools/shot.sh --shop --shot=/tmp/shop.png           (Night Stall)
 	# tools/shot.sh --shop --locale=zh-Hant --shot=...    (review-state language)
 	var shot_path: String = ""
@@ -296,7 +297,8 @@ func _ready() -> void:
 			# Render-pick switch for the walk beat's two candidate forms
 			# (#312): --finale-form=step | hold. Dev capture only.
 			FinaleStaging.form = StringName(arg.trim_prefix("--finale-form="))
-		elif arg in ["--enemies", "--chips", "--hud", "--reward", "--layout"]:
+		elif arg in ["--enemies", "--chips", "--hud", "--reward", "--layout",
+				"--stagecraft"]:
 			lab_flag = arg
 	if performance_probe and (fight.is_empty() or not shot_path.is_empty()
 			or cards_lab or studio or not lab_flag.is_empty()):
@@ -405,6 +407,7 @@ func _ready() -> void:
 		# is a lab rather than a route: `--shape=` here would pick the window's
 		# stage, and what that bench needs to vary is the stage it DRAWS.
 		"--layout": lab = LayoutLab.new(content)
+		"--stagecraft": lab = StagecraftLab.new(content)
 	if lab != null:
 		add_child(lab)
 		if shot_path != "":
@@ -2980,7 +2983,7 @@ func _show_pending_pool() -> void:
 		_continue_after_pool()
 		return
 	var screen: ScenePlayer = ScenePlayer.new(
-		SceneScript.pool_beat(""), 0, _shape, _sfx_bus, row)
+		SceneScript.pool_beat(""), 0, _shape, _sfx_bus, row, _scene_hero())
 	screen.instant = _transitions != null and _transitions.instant
 	screen.advance_requested.connect(_on_pool_advance.bind(screen))
 	screen.finished.connect(_on_pool_finished)
@@ -3055,7 +3058,8 @@ func _show_scene() -> void:
 				_show_title()
 			return
 		cursor = int(float(str(pending.get("cursor", 0))))
-	var screen: ScenePlayer = ScenePlayer.new(script, cursor, _shape, _sfx_bus)
+	var screen: ScenePlayer = ScenePlayer.new(
+		script, cursor, _shape, _sfx_bus, {}, _scene_hero())
 	screen.instant = _transitions != null and _transitions.instant
 	screen.advance_requested.connect(_on_scene_advance.bind(screen))
 	screen.finished.connect(_on_scene_finished)
@@ -3075,10 +3079,25 @@ func _show_scene_shot(scene_id: String, cursor: int) -> bool:
 		push_error("unknown scene %s" % scene_id)
 		return false
 	var screen: ScenePlayer = ScenePlayer.new(
-		script, clampi(cursor, 0, script.line_count()), _shape, _sfx_bus)
+		script, clampi(cursor, 0, script.line_count()), _shape, _sfx_bus, {},
+		_scene_hero())
 	screen.instant = true
 	_show_route(screen, false, &"", false)
 	return true
+
+
+## The run's aspect id — the figure the `hero` actor wears in a scene. Empty
+## outside a run (the Vigil's unsealing), where ActorBook falls back.
+func _scene_hero() -> String:
+	if game == null or game.run == null or content == null:
+		return ""
+	if game.run.aspect < 0 or game.run.aspect >= content.aspects.size():
+		return ""
+	var aspect_v: Variant = content.aspects[game.run.aspect]
+	if typeof(aspect_v) != TYPE_DICTIONARY:
+		return ""
+	var aspect: Dictionary = aspect_v
+	return str(aspect.get("id", ""))
 
 
 func _on_scene_advance(screen: ScenePlayer) -> void:
