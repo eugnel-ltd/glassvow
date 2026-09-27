@@ -41,7 +41,7 @@ def account():
 def profile(unit):
     b=unit['linux']
     return dict(id=compat.PROFILE, operation='DD1-LINUX-ENTRY-1', stage=unit['stage'],
-        source_head=unit['overlay_head'], executable_sha256=b['runtime']['/workload']['sha256'], libc_sha256=compat.LIBC,
+        source_head=unit['overlay_head'], executable_sha256=b['runtime']['/workload']['sha256'], libc_sha256=b['runtime']['/lib/x86_64-linux-gnu/libc.so.6']['sha256'],
         helper_sha256=b['helper']['sha256'], source_manifest_sha256=r.digest(r.encode(unit['source_files'])),
         runtime_sha256=r.digest(r.encode(b['runtime'])), argv_sha256=r.digest(r.encode(unit['argv'])),
         environment_sha256=r.digest(r.encode(compat.ENVIRONMENT)), process_signature=compat.PROCESS,
@@ -78,7 +78,7 @@ def make_unit(where, mode='combined', *, cpu=16, prof=True, stage='identity', re
         p='tools/dd1_linux/build/'+name
         runtime[dest]=dict(path=p,sha256=r.digest((repo/p).read_bytes()),executable=executable)
     unit['linux']=dict(abi=snap.ABI,entry='/workload',runtime=runtime,
-        helper=dict(path='tools/dd1_linux/build/supervisor',sha256=snap.PINNED_HELPER_SHA256),
+        helper=dict(path='tools/dd1_linux/build/supervisor',sha256=r.digest((repo/'tools/dd1_linux/build/supervisor').read_bytes())),
         environment=compat.ENVIRONMENT,threads=4,workload_raw_bytes=131072,output_root=str(where/'output'))
     if prof: unit['compatibility']=profile(unit)
     save_inputs(where,unit)

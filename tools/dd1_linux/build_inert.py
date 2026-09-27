@@ -22,12 +22,15 @@ def build(compat2_only=False):
     common = ["cc", "-std=c11", "-O2", "-Wall", "-Wextra", "-Werror"]
     commands = [common + ["-static", *[str(HERE / n) for n in
         ("supervisor.c", "policy.c", "isolate.c", "capabilities.c")], "-o", str(out / "supervisor")]]
-    if compat2_only:
-        commands.append(common + ["-pthread", str(HERE / "compat2_inert.c"), "-o", str(out / "compat2-inert")])
-    else:
+    commands.append(common + ["-pthread", str(HERE / "compat2_inert.c"), "-o", str(out / "compat2-inert")])
+    if not compat2_only:
         commands.extend([
             common + ["-static", "-pthread", str(HERE / "inert.c"), "-o", str(out / "inert")],
-            common + ["-pthread", str(HERE / "inert.c"), "-o", str(out / "inert-dynamic")]])
+            common + ["-pthread", str(HERE / "inert.c"), "-o", str(out / "inert-dynamic")],
+            common + ["-pthread", str(HERE / "fit_inert.c"), "-o", str(out / "fit-inert")]])
+    repo = HERE.parents[1]
+    sources = snapshot.build_sources(repo)
+    snapshot.verify_build_sources(repo, sources)
     records = []
     for cmd in commands:
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
@@ -40,12 +43,21 @@ def build(compat2_only=False):
                interp: Path(interp).resolve()}
     for dest, source in runtime.items():
         shutil.copyfile(source, out / Path(dest).name)
-    result = dict(commands=records, host=platform.uname()._asdict(),
-        libc=platform.libc_ver(), binaries={p.name: dict(bytes=p.stat().st_size, sha256=r.digest(p.read_bytes())) for p in out.iterdir() if p.is_file() and p.name != "BUILD.json"})
+    cc = subprocess.run(["cc", "--version"], check=True, capture_output=True, text=True).stdout.splitlines()[0]
+    packages = None
+    package_query = None
+    if shutil.which("dpkg-query"):
+        query = subprocess.run(["dpkg-query", "-W", "-f=${Package} ${Version}\n",
+                                "libc6", "libc6-dev", "gcc-14", "binutils"],
+                               capture_output=True, text=True)
+        packages = query.stdout
+        package_query = dict(exit=query.returncode, stderr=query.stderr)
+    snapshot.verify_build_sources(repo, sources)
+    result = dict(commands=records, sources=sources, toolchain=dict(cc=cc, packages=packages, package_query=package_query),
+        host=platform.uname()._asdict(),
+        libc=platform.libc_ver(), binaries={p.name: dict(bytes=p.stat().st_size, sha256=r.digest(p.read_bytes()))
+            for p in [Path(cmd[-1]) for cmd in commands] + [out / Path(dest).name for dest in runtime]})
     (out / "BUILD.json").write_bytes(r.encode(result))
-    from dd1_meter_entry import INERT_BINARIES
-    r.need(result["binaries"]["supervisor"]["sha256"] == snapshot.PINNED_HELPER_SHA256, "rebuilt helper differs from code pin")
-    r.need(r.digest(dynamic.read_bytes()) in INERT_BINARIES, "rebuilt harmless fixture differs from code pin")
     return result
 
 

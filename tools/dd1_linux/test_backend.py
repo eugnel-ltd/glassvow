@@ -69,6 +69,11 @@ class BackendTests(unittest.TestCase):
     def case(self, name, mode="positive", repo=REPO, **kw):
         root = self.root / name; root.mkdir()
         unit = fixture.case(root, repo, mode, **kw)
+        account = r.read(root / "ACCOUNT.json")
+        account["schema"] = r.INERT_TEST_ACCOUNT_SCHEMA
+        r.atomic_write(root / "ACCOUNT.json", account)
+        unit["account_sha256"] = r.digest((root / "ACCOUNT.json").read_bytes())
+        fixture.sign(root, unit)
         return root, unit
 
     def launch(self, root, repo=REPO, pass_fds=()):
@@ -243,11 +248,17 @@ class BackendTests(unittest.TestCase):
         for mode in ("abi", "ia32"):
             root, _ = self.case(mode, mode)
             rec = self.run_case(root); report = self.report(rec)
-            # x32 hits the filter KILL branch. This host does not provide an
-            # int-0x80 ABI: its instruction faults before that branch; record
-            # this separately, never as a tested seccomp arch mismatch.
-            self.assertEqual(report["signal"], signal.SIGSYS if mode == "abi" else signal.SIGSEGV)
-            if mode == "ia32": rec["alternate_abi_limit"] = "host int-0x80 SIGSEGV; seccomp arch guard source-only"
+            # x32 hits the filter KILL branch. int-0x80 either reaches the
+            # seccomp arch guard or faults first on hosts without IA32 support;
+            # only SIGSYS proves a tested seccomp arch mismatch.
+            if mode == "abi":
+                self.assertEqual(report["signal"], signal.SIGSYS)
+            else:
+                self.assertIn(report["signal"], (signal.SIGSYS, signal.SIGSEGV))
+                if report["signal"] == signal.SIGSEGV:
+                    rec["alternate_abi_limit"] = "host int-0x80 SIGSEGV; seccomp arch guard source-only"
+                else:
+                    rec["alternate_abi_result"] = "int-0x80 reached seccomp arch guard; SIGSYS"
         root, _ = self.case("clone3", "clone3")
         rec = self.run_case(root); report = self.report(rec)
         self.assertGreaterEqual(report["clone3_denied"], 1)
@@ -334,7 +345,7 @@ class BackendTests(unittest.TestCase):
                 r.atomic_write(root / "receipt.json", dict(schema="DD1-INERT-ONLY", demand_sha256="0"*64))
                 fragment = "inert demand/receipt mismatch"
             else:
-                fragment = {"binary": "runtime identity mismatch", "helper": "helper must be pinned",
+                fragment = {"binary": "runtime identity mismatch", "helper": "helper must match built static ELF",
                     "source": "actual source bytes differ", "architecture": "missing supported Linux demand", "output-root": "unbound output root"}[name]
                 if name == "binary": unit["linux"]["runtime"]["/workload"]["sha256"] = "0"*64
                 elif name == "helper": unit["linux"]["helper"]["sha256"] = "0"*64
@@ -372,12 +383,12 @@ class BackendTests(unittest.TestCase):
             target = copy / "tools/dd1_linux/build" / binary
             original = target.read_bytes()
             target.write_bytes(b"CHANGED AFTER DEMAND")
-            self.rejected(root, "runtime identity mismatch" if binary == "inert" else "helper must be pinned", copy)
+            self.rejected(root, "runtime identity mismatch" if binary == "inert" else "helper must match built static ELF", copy)
             target.write_bytes(original)
         root, unit = self.case("arbitrary-static-helper", repo=copy)
         unit["linux"]["helper"] = deepcopy(unit["linux"]["runtime"]["/workload"])
         fixture.sign(root, unit)
-        self.rejected(root, "helper must be pinned", copy)
+        self.rejected(root, "helper must match built static ELF", copy)
         root, unit = self.case("non-fixture-workload", repo=copy)
         unit["linux"]["runtime"]["/workload"] = dict(unit["linux"]["helper"], executable=True)
         fixture.sign(root, unit)

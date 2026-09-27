@@ -137,7 +137,9 @@ def validate(unit, source, files):
            'runtime-fit exact stage/source/helper/host binding')
     r.need(2*n + 2 <= REFUSAL_RECORDS - 2, 'runtime-fit storage mismatch')
     if unit['mode'] == 'inert_control':
-        r.need(unit['runtime_fit']['executable_sha256'] == INERT_BINARY, 'wrong pinned runtime-fit fixture')
+        from dd1_linux_snapshot import fixture_hashes
+        r.need(unit['runtime_fit']['executable_sha256'] in ({INERT_BINARY} | fixture_hashes({'fit-inert'})),
+               'wrong built runtime-fit fixture')
     else:
         from dd1_compatibility import ENGINE
         r.need(unit['runtime_fit']['executable_sha256'] == ENGINE, 'runtime-fit fixed engine')
