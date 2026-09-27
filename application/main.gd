@@ -1769,6 +1769,7 @@ func _show_event() -> void:
 		var key: String = _event_story_key(event_id, choice, phase)
 		var story_screen: EventScreen = EventScreen.new(
 			event_id, event, Locale.active.t(key), false, true, _shape, _sfx_bus)
+		story_screen.beat = "coda" if phase == "coda" else "c%d" % choice
 		story_screen.continue_requested.connect(_on_event_story_continue)
 		_show_route(story_screen, true, &"map")
 		return
@@ -1864,6 +1865,7 @@ func _begin_event_story(event_id: String, choice: int) -> void:
 	}
 	if _store_event_choice():
 		_show_event()
+		_play_event_beat()
 
 
 func _on_event_story_continue() -> void:
@@ -1877,8 +1879,16 @@ func _on_event_story_continue() -> void:
 		game.run.quest_scratch["eventStory"] = story
 		if _store_event_choice():
 			_show_event()
+			_play_event_beat()
 		return
 	_finish_node()
+
+
+## A story beat that just arrived plays its effect; a resumed one does not.
+func _play_event_beat() -> void:
+	var beat_screen: EventScreen = _route_screen as EventScreen
+	if beat_screen != null:
+		beat_screen.play_beat()
 
 
 func _store_event_choice() -> bool:
@@ -3312,7 +3322,7 @@ func _show_hollow() -> void:
 	_remember_route(_show_hollow)
 	var meeting: Dictionary = meetings[step]
 	var screen: HollowScreen = HollowScreen.new(
-		pending, meeting, step + 1, meetings.size(), _shape, _sfx_bus)
+		pending, meeting, step + 1, meetings.size(), _shape, _sfx_bus, _scene_hero())
 	screen.action_requested.connect(
 		func(action: StringName) -> void: _on_hollow_choice(String(action)))
 	_show_route(screen, true, &"hollowLamplighter")
@@ -3330,6 +3340,11 @@ func _on_hollow_choice(id: String) -> void:
 			_show_save_error("ui.persistence.detail.hollowPriceHold")
 			return
 		_show_hollow()
+		# The price landing is the one moment worth a flourish: your embers
+		# kindle across into the hollow lantern.
+		var paid_screen: HollowScreen = _route_screen as HollowScreen
+		if paid_screen != null:
+			paid_screen.play_paid()
 		return
 	_stage_hollow_exit()
 

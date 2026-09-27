@@ -1,15 +1,29 @@
 class_name EventScreen
 extends Control
-## Benchmark event panel. The application owns resolution and passes this view
-## an immutable projection of the event and its current resolution state.
+## A road event, staged (stagecraft). The application owns resolution and
+## passes this view an immutable projection of the event and its current
+## resolution state; the view stands the event's own painting full-bleed as
+## the place, names it on a location card, speaks its prose into the leaded
+## pane, and offers the choices from a choice window above it. Each event
+## carries its own weather and grade, and a result beat its own effect
+## (`content/event-staging.json`) — played once, when the beat first arrives,
+## never on resume.
 
 signal choice_selected(ordinal: int)
 signal continue_requested
 
-const PANEL_W: float = 660.0
 const EVENT_ART: String = "res://assets/art/events/%s.png"
+const STAGING_PATH: String = "res://content/event-staging.json"
+const WINDOW_W: float = 520.0
+const WASH_ALPHA: float = 0.34
+const DIM_ALPHA: float = 0.58
+
+static var _staging: Dictionary = {}
+static var _staging_loaded: bool = false
 
 var shape: StringName = StageShape.IDENTITY
+## The story beat this screen shows (`c0`…, `coda`), or "" for the choice.
+var beat: String = ""
 
 var _event_id: String
 var _event: Dictionary
@@ -17,13 +31,18 @@ var _result_log: String
 var _choices_enabled: bool
 var _completed: bool
 var _sfx: SfxBus
-var _centre: CenterContainer
-var _panel: PanelContainer
 var _title: Label
 var _art: TextureRect
 var _body: Label
 var _choices: VBoxContainer
 var _buttons: Array[Button] = []
+var _wash: ColorRect
+var _ambient: SceneFx
+var _front: SceneFx
+var _copy: DialogueBox
+var _window: PanelContainer
+var _scroll: ScrollContainer
+var _wash_goal: float = WASH_ALPHA
 
 
 func _init(event_id: String, event_definition: Dictionary,
@@ -45,73 +64,126 @@ func _init(event_id: String, event_definition: Dictionary,
 	_build()
 
 
+## This event's staging row: ambient, grade and per-beat effects.
+static func staging_for(event_id: String) -> Dictionary:
+	if not _staging_loaded:
+		_staging_loaded = true
+		var loaded: Variant = load_staging(STAGING_PATH)
+		if typeof(loaded) == TYPE_DICTIONARY:
+			_staging = loaded
+	var row: Variant = _staging.get(event_id, {})
+	return row if typeof(row) == TYPE_DICTIONARY else {}
+
+
+## Parse `content/event-staging.json`; unknown weather, grade or effect fails.
+static func load_staging(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
+		return "event-staging: missing %s" % path
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if typeof(raw) != TYPE_DICTIONARY:
+		return "event-staging: root is not an object"
+	var root: Dictionary = raw
+	var events_v: Variant = root.get("events")
+	if typeof(events_v) != TYPE_DICTIONARY:
+		return "event-staging: missing events object"
+	var events: Dictionary = events_v
+	var out: Dictionary = {}
+	for id_v: Variant in events:
+		var id: String = str(id_v)
+		var row_v: Variant = events[id_v]
+		if typeof(row_v) != TYPE_DICTIONARY:
+			return "event-staging: %s is not an object" % id
+		var row: Dictionary = row_v
+		var beat_out: Dictionary = {}
+		var failed: String = StageDirection.parse_beat(row, beat_out, "event-staging: %s" % id)
+		if not failed.is_empty():
+			return failed
+		var beats_v: Variant = row.get("beats", {})
+		if typeof(beats_v) != TYPE_DICTIONARY:
+			return "event-staging: %s beats is not an object" % id
+		var beats: Dictionary = beats_v
+		var clean: Dictionary = {}
+		for key_v: Variant in beats:
+			var line: Dictionary = {}
+			failed = StageDirection.parse_line({"fx": beats[key_v]}, line,
+				"event-staging: %s beat %s" % [id, key_v])
+			if not failed.is_empty():
+				return failed
+			clean[str(key_v)] = line.get("fx", [])
+		beat_out["beats"] = clean
+		var dock: String = str(row.get("window", "left"))
+		if not ["left", "right", "centre"].has(dock):
+			return "event-staging: %s window '%s'" % [id, dock]
+		beat_out["window"] = dock
+		out[id] = beat_out
+	return out
+
+
 func _build() -> void:
-	var margin: MarginContainer = MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 12)
-	margin.add_theme_constant_override("margin_top", 20)
-	margin.add_theme_constant_override("margin_right", 12)
-	margin.add_theme_constant_override("margin_bottom", 20)
-	add_child(margin)
-
-	var scroll: ScrollContainer = ScrollContainer.new()
-	# Same reachability defect as #72's boon screen: without this the view never
-	# travels with focus, so a button below the fold is focused and invisible.
-	scroll.follow_focus = true
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	margin.add_child(scroll)
-
-	_centre = CenterContainer.new()
-	_centre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_centre.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.add_child(_centre)
-
-	_panel = PanelContainer.new()
-	_panel.custom_minimum_size.x = PANEL_W
-	_panel.add_theme_stylebox_override("panel", RunStyle.panel(16, 28, 0.92))
-	_centre.add_child(_panel)
-
-	var column: VBoxContainer = VBoxContainer.new()
-	column.alignment = BoxContainer.ALIGNMENT_CENTER
-	column.add_theme_constant_override("separation", 10)
-	_panel.add_child(column)
+	var row: Dictionary = staging_for(_event_id)
+	var reduce: bool = Preferences.active.reduce_motion
+	_art = TextureRect.new()
+	_art.name = "Plate"
+	var art_path: String = EVENT_ART % _event_id
+	if ResourceLoader.exists(art_path):
+		_art.texture = load(art_path) as Texture2D
+	_art.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_art)
+	var tone: StringName = row.get("grade", &"none")
+	var tint: Color = SceneDirector.GRADES.get(tone, SceneDirector.GRADES[&"none"])
+	var grade: ColorRect = _rect("Grade", tint)
+	add_child(grade)
+	_wash = _rect("Wash", Color(0.025, 0.020, 0.035, WASH_ALPHA))
+	add_child(_wash)
+	_ambient = SceneFx.new("AmbientFx")
+	_ambient.reduce_motion = reduce
+	var weather: StringName = row.get("ambient", &"none")
+	_ambient.set_ambient(weather)
+	add_child(_ambient)
+	_front = SceneFx.new("FrontFx")
+	_front.reduce_motion = reduce
+	_front.allow_shake = Preferences.active.screen_shake
+	add_child(_front)
 
 	_title = _label(str(_event.get("name", Locale.active.t("ui.event.strangePlace"))).to_upper(),
 		26, RunStyle.PARCHMENT, true)
 	_title.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_700, 3))
-	column.add_child(_title)
+	_title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
+	_title.add_theme_constant_override("shadow_outline_size", 6)
+	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_title)
 
-	_art = TextureRect.new()
-	var art_path: String = EVENT_ART % _event_id
-	if ResourceLoader.exists(art_path):
-		_art.texture = load(art_path) as Texture2D
-	_art.custom_minimum_size = Vector2(440, 220)
-	_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.add_child(_art)
+	_copy = DialogueBox.new()
+	_copy.reduce_motion = reduce
+	add_child(_copy)
+	_body = _copy.line_label()
+	var prose: String = _result_log if not _result_log.is_empty() \
+		else str(_event.get("text", ""))
+	_copy.show_line(prose, "", StageDirection.STYLE_NARRATION, DialogueBox.HAIRLINE,
+		&"left", false)
 
-	_body = _label(str(_event.get("text", "")), 17, Color("#cdd3e4"), true)
-	_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_body.add_theme_font_override("font", _italic_font())
-	_body.add_theme_constant_override("line_spacing", 7)
-	column.add_child(_body)
-
-	if not _result_log.is_empty():
-		var log_label: Label = _label(_result_log, 16, RunStyle.GOLD, true)
-		log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		column.add_child(log_label)
-
+	_window = PanelContainer.new()
+	_window.name = "ChoiceWindow"
+	_window.add_theme_stylebox_override("panel", _window_style())
+	add_child(_window)
+	# Same reachability rule as #72's boon screen: the view travels with focus,
+	# so a choice below the fold on a phone is never focused and invisible.
+	_scroll = ScrollContainer.new()
+	_scroll.follow_focus = true
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_window.add_child(_scroll)
 	_choices = VBoxContainer.new()
 	_choices.add_theme_constant_override("separation", 10)
 	_choices.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	column.add_child(_choices)
+	_scroll.add_child(_choices)
 	if _completed:
 		_add_continue()
 	else:
 		_add_choices()
+	resized.connect(_layout)
 
 
 func _add_choices() -> void:
@@ -153,6 +225,26 @@ func _add_continue() -> void:
 	_buttons.append(button)
 
 
+## The beat just arrived (not a resume): play its effect once.
+func play_beat() -> void:
+	var beats: Dictionary = staging_for(_event_id).get("beats", {})
+	var fx_list: Array = beats.get(beat, [])
+	var cue: String = ""
+	for fx_v: Variant in fx_list:
+		var fx: StringName = StageDirection.fx_name(str(fx_v))
+		if fx == &"dim":
+			_wash_goal = DIM_ALPHA
+			continue
+		_front.play(fx)
+		if cue.is_empty() and SceneDirector.FX_CUES.has(fx):
+			var pair: Array = SceneDirector.FX_CUES[fx]
+			var preferred: StringName = pair[0]
+			var fallback: StringName = pair[1]
+			cue = String(SceneDirector._cue(preferred, fallback))
+	if not cue.is_empty():
+		_sfx.play(StringName(cue))
+
+
 func _choose(ordinal: int) -> void:
 	for button: Button in _buttons:
 		button.disabled = true
@@ -166,33 +258,79 @@ func _hover(button: Button) -> void:
 
 
 func _ready() -> void:
-	resized.connect(_fit)
-	_fit()
+	_layout()
 	for button: Button in _buttons:
 		if not button.disabled:
 			button.grab_focus()
 			break
 
 
+func _process(delta: float) -> void:
+	_copy.advance_type(delta)
+	_ambient.tick(delta)
+	_front.tick(delta)
+	_wash.color.a = move_toward(_wash.color.a, _wash_goal, delta * 1.2)
+
+
 func set_shape(stage_shape: StringName) -> void:
 	if StageShape.REFERENCES.has(stage_shape):
 		shape = stage_shape
-		_fit()
+		_layout()
 
 
-func _fit() -> void:
-	if _centre == null:
-		return
+func _layout() -> void:
+	var view: Vector2 = size
+	if view.x < 1.0 or view.y < 1.0:
+		var ref: Vector2i = StageShape.REFERENCES[shape]
+		view = Vector2(ref)
 	var phone: bool = shape == &"phone-landscape"
-	_centre.custom_minimum_size = Vector2(maxf(0.0, size.x - 24.0),
-		maxf(0.0, size.y - 40.0))
-	_panel.custom_minimum_size.x = minf(PANEL_W,
-		maxf(300.0, size.x - (16.0 if phone else 24.0)))
-	_art.custom_minimum_size = Vector2(
-		minf(440.0, maxf(260.0, size.x - (60.0 if phone else 100.0))),
-		150.0 if phone else 220.0)
-	_title.add_theme_font_size_override("font_size", 20 if phone else 26)
-	_body.add_theme_font_size_override("font_size", 15 if phone else 17)
+	_copy.set_shape(shape)
+	var pane: Rect2 = DialogueBox.box_rect(view, shape, StageDirection.STYLE_SPEECH)
+	_copy.place(pane)
+	_ambient.set_view(view)
+	_front.set_view(view)
+	_title.add_theme_font_size_override("font_size", 18 if phone else 26)
+	var title_h: float = _title.get_combined_minimum_size().y
+	_title.size = Vector2(view.x * 0.8, title_h)
+	_title.position = Vector2(view.x * 0.1, view.y * (0.035 if phone else 0.09))
+	var top: float = _title.position.y + title_h + (6.0 if phone else 18.0)
+	var gap: float = 8.0 if phone else 20.0
+	var w: float = minf(WINDOW_W, view.x - 28.0)
+	var room: float = maxf(80.0, pane.position.y - gap - top)
+	var want: float = _choices.get_combined_minimum_size().y
+	var style_pad: float = 28.0
+	var h: float = minf(want + style_pad, room)
+	_scroll.custom_minimum_size = Vector2(w - style_pad, h - style_pad)
+	_window.size = Vector2(w, h)
+	# The choices dock to one side of the painting so its figure stays seen.
+	var dock: String = str(staging_for(_event_id).get("window", "left"))
+	var x: float = pane.position.x
+	if dock == "right":
+		x = pane.end.x - w
+	elif dock == "centre":
+		x = (view.x - w) * 0.5
+	_window.position = Vector2(clampf(x, 14.0, view.x - w - 14.0), pane.position.y - gap - h)
+
+
+func _window_style() -> StyleBoxFlat:
+	var box: StyleBoxFlat = StyleBoxFlat.new()
+	box.bg_color = Color(0.03, 0.034, 0.055, 0.88)
+	box.set_border_width_all(4)
+	box.border_color = DialogueBox.LEAD
+	box.set_corner_radius_all(10)
+	box.set_content_margin_all(14)
+	box.shadow_color = Color(0, 0, 0, 0.55)
+	box.shadow_size = 18
+	return box
+
+
+static func _rect(node_name: String, colour: Color) -> ColorRect:
+	var rect: ColorRect = ColorRect.new()
+	rect.name = node_name
+	rect.color = colour
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
 
 
 static func _label(text: String, font_size: int, colour: Color,
@@ -205,7 +343,3 @@ static func _label(text: String, font_size: int, colour: Color,
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", colour)
 	return label
-
-
-static func _italic_font() -> FontVariation:
-	return RunStyle.slanted(GlassStyle.ALEGREYA_400)

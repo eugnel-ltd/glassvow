@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "events": {
+    "forgottenShrine": {"ambient": "motes", "grade": "cold", "beats": {"c0": ["pulse"], "c1": ["dim"]}},
+    "woundedKnight": {"ambient": "embers", "grade": "hearth", "beats": {"c0": ["kindle"], "c1": ["dim"]}},
+    "voidChest": {"ambient": "snow-glass", "grade": "cold"},
+    "emberFountain": {"ambient": "embers", "grade": "hearth"},
+    "forge": {"ambient": "embers", "grade": "hearth"},
+    "gambler": {"ambient": "motes", "grade": "dusk"},
+    "mirror": {"ambient": "snow-glass", "grade": "cold", "beats": {"c0": ["flash-cold"], "c1": ["shatter"], "c2": ["pulse"]}},
+    "library": {"ambient": "motes", "grade": "dusk", "beats": {"c0": ["rays"], "c1": ["dim"]}},
+    "fleshTrader": {"ambient": "ash", "grade": "dusk", "beats": {"c0": ["flash-blood"]}},
+    "cursedIdol": {"ambient": "motes", "grade": "cold"},
+    "ruinedCamp": {"ambient": "ash", "grade": "dusk"}
+  }
+}
