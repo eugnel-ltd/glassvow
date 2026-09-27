@@ -143,6 +143,9 @@ Two rulings recorded here because they touch §1 and §8:
   typing (提前完成 reveal) and a tap on a standing line steps (即時推進).
   Hold-skip lands the typing line, then fast-forwards; the beat ② floor counts
   from the moment the line stands. The finale walk (§5) is unchanged.
+- **Beyond the four scenes.** Battle speech (the Usurper, the Shades), the
+  Hollow Lamplighter's price screen and all eleven road events use the same
+  pane, busts and effects, on existing copy; see the design record.
 - **#334 geometry overridden, its rule kept.** Opening beat ② is a two-shot
   close-up (hero left, Keeper right as a portrait); beats ①③④ keep the seated
   hearth figure. One Keeper body on screen at every cursor, pinned in

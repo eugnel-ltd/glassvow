@@ -138,6 +138,36 @@ figure in that mood's posture and light until the file lands.
 | Act IV node 5 | Two-shot, hero left, Keeper right in its hearth figure: 「你到了。這裏你認得。」 — then `revealed` (the shipped boss form, lit from the wrong side) with a cold flash and a crack on 「我一句都沒有說錯」; `beckon`, whispered, on 「坐下。」 |
 | Finale | White arrival and rays; the walk lines as title cards over the swap plate — the second step warms, the last lands with light. Win: rays over the ascended plate. Loss: 「這一個，也沒有回來。」 as the card, dimmed, ash falling. |
 
+## Beyond the scripted scenes
+
+The same components carry the game's other narrative surfaces, still on
+existing copy only:
+
+| Surface | Staging | Data |
+|---|---|---|
+| Battle speech: the Usurper's three opening lines and each Shade's dying word | `BattleDialogue`: the fight dims, the speaker's bust rises on the right under its combat name, the line types into the pane with its effect (a crack on "mask", a hop and an ember flash on the threat, a cold flash on the dying word, which stays whispered for the L1 weight line). The drain awaits it; a variant with no staging keeps the banner. | `content/battle-lines.json`; the Shade and the Sovereign are actors on their shipped art |
+| The Hollow Lamplighter's price | The meeting's own two-shot between its pre- and post-scenes: hero left, the Lamplighter lit right, the ask under his plaque, the price as a choice window. Asking → wary (a recoil) when it cannot be met → recognising once paid; paying kindles your embers into the hollow lantern. | moods in `content/actors.json` |
+| Road events (all eleven) | The event's painting full-bleed as the place, a location card, the prose in the pane, the choices in a window docked beside the figure; per-event weather and grade; each story beat's own effect, once, never on resume. | `content/event-staging.json` |
+
+Not staged, on purpose: the Night Stall (the painting *is* the screen, James's
+concept C1), dawn memories (the rubric's ceremony cadence), the Vigil and its
+epitaphs (records, not speech), and the waystone echoes' plate. The only
+existing monument art is a map icon, so the echoes stay a whisper in motes.
+
+## Open decisions (not decided here)
+
+- **Authored copy that no screen shows.** The line-table rows
+  `closer.ownShade`, `closer.usurper`, `closer.eighthOmen` and `closer.l3`
+  (`payoff.mirror`, the Queue), and the quest fields `final`, `death`,
+  `resolved`, `pages`, `fragments`, `waystoneEchoes`, `poor`, `bought`, `paid`,
+  `cannot` and `accepted`, are loaded and localised, but no runtime code
+  displays them. They are L2 closers (`04-delivery.md`), so *when* each plays is
+  a narrative-timing decision with ladder consequences, not a staging one. Once
+  that is decided, each closer is one pool beat through the engine.
+- **The gambler's roll.** `rewards.gd` attaches win/lose text to the roll, but
+  `_on_event_choice` never reads it, so the gambler's outcome is never
+  narrated. That is a gameplay-flow fix, left for its own change.
+
 ## Verification
 
 - `tests/test_stagecraft.gd` — vocabulary fails closed; fold is order-exact;
@@ -152,3 +182,9 @@ figure in that mood's posture and light until the file lands.
   stage), and the reel `-- --stagecraft --cursor=N --freeze=SECONDS --shot=…`
   photographs a one-shot effect mid-flight. `contact-sheet.jpg` here is the
   reviewed set from this change.
+- `tests/test_stagecraft_screens.gd` — battle and event staging fail closed and
+  match real content; the Hollow two-shot's moods and contracts; the event
+  screen's plate, prose, choices and once-only beat effect; the pane laying out
+  when placed before the tree. Previews: `-- --stagecraft
+  --stagecraft-screen=hollow[:paid|:refused]`, `event:<id>[:c0|:c1|:c2|:coda]`,
+  `battle:<variant>[:death]`, each with `--shape=` and `--freeze=`.

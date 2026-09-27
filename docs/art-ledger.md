@@ -1163,8 +1163,9 @@ or a walker into the plate (the stage supplies them; one body per character).
 
 ### Deferred — portraits for cast no scene yet casts
 
-Sovereign (`enemies/sovereign.png`) and the Shade (`enemies/shade.png`) will
-need mood portraits the day a scene gives them lines; their voice rules
-(`02-cast.md`: the Sovereign's avoidance of "walk", the Shade's fragments)
-should shape the poses then. Not billed now: art for a scene that does not
-exist cannot be reviewed against the line it serves.
+Sovereign (`enemies/sovereign.png`) and the Shade (`enemies/shade.png`) now
+speak in battle (the Usurper's opening lines, the Shades' dying words) on
+their shipped art as the `sovereign` and `shade` actors, one mood each. Mood
+portraits wait until a scene needs more than one register from them; their
+voice rules (`02-cast.md`: the Sovereign's avoidance of "walk", the Shade's
+fragments) should shape the poses then.
