@@ -66,7 +66,7 @@ This file is the port-facing contract only.
 ## Commissioned — stagecraft cues (2026-09-27, not yet generated)
 
 Billed by the dialogue stagecraft layer
-(`docs/design/2026-09-27-stagecraft/README.md`). `SceneDirector` already asks
+(`docs/design/2026-09-27-stagecraft/README.md`); tracked in #564 under #559. `SceneDirector` already asks
 for each cue by id and **plays a landed file with no code change**; until then
 it falls back to the shipped cue in the table (or stays silent where none
 fits). Generate through `.claude/skills/glassvow-elevenlabs/SKILL.md`, audition

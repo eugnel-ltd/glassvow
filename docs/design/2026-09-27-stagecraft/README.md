@@ -10,7 +10,8 @@ geometry, was delegated to the implementing agent in the same brief.
 This file is the authoring reference and the design record. Scene *order*
 and *meaning* stay where they were: `docs/story/07-scenes.md` (§1 grammar,
 §2–§5 blueprints). Art and audio commissions are in `docs/art-ledger.md` and
-`docs/sfx-ledger.md` under "Commissioned — stagecraft".
+`docs/sfx-ledger.md` under "Commissioned — stagecraft", tracked in #559
+(sub-issues #560–#564).
 
 ## Principles
 

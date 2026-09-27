@@ -1045,8 +1045,8 @@ light (`StagePortrait.MOOD_LOOKS`), so nothing is broken while these wait.
 **Landing a file at its path is the whole integration** — no code change;
 `tests/test_stagecraft.gd` then asserts the landed portrait is the one drawn.
 
-Tracking: the parent GitHub issue "Stagecraft art" and one sub-issue per
-family below. Every candidate goes through James's review before it enters
+Tracking: #559 (parent) — Keeper #560, Lamplighter #561, Queue #562,
+Unlit Way plates #563; the audio cues are #564. Every candidate goes through James's review before it enters
 `assets/`, as every asset in this ledger has.
 
 ### Portrait contract — binding for every `portraits/` file
