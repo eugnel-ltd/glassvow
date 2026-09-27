@@ -1690,7 +1690,7 @@ func _finish_node() -> void:
 	_map.clear_current()
 	game.run.map = _map.to_dict()
 	for key: String in ["eventNode", "eventPending", "eventStory", "eventChoice",
-			"shopStock", "treasureClaim"]:
+			"eventRoll", "shopStock", "treasureClaim"]:
 		game.run.quest_scratch.erase(key)
 	if _store_run():
 		_route_run()
@@ -1767,9 +1767,15 @@ func _show_event() -> void:
 		var phase: String = str(story.get("phase", "result"))
 		var choice: int = int(float(str(story.get("choice", 0))))
 		var key: String = _event_story_key(event_id, choice, phase)
+		var prose: String = Locale.active.t(key)
+		var beat: String = "coda" if phase == "coda" else "c%d" % choice
+		if phase == "roll":
+			var roll: String = str(story.get("roll", ""))
+			prose = _event_roll_text(event_id, choice, roll)
+			beat = "roll-%s" % roll
 		var story_screen: EventScreen = EventScreen.new(
-			event_id, event, Locale.active.t(key), false, true, _shape, _sfx_bus)
-		story_screen.beat = "coda" if phase == "coda" else "c%d" % choice
+			event_id, event, prose, false, true, _shape, _sfx_bus)
+		story_screen.beat = beat
 		story_screen.continue_requested.connect(_on_event_story_continue)
 		_show_route(story_screen, true, &"map")
 		return
@@ -1788,6 +1794,11 @@ func _on_event_choice(choice_text: String, event_id: String) -> void:
 	game.run.quest_scratch["eventChoice"] = int(choice_text)
 	var ops: Array = choice.get("ops", [])
 	var pending: Dictionary = game.rewards.apply_event_ops(game.run, ops)
+	# A narrated roll (the gambler's bones) is owed as its own beat. The id is
+	# persisted, never the text, so a resume narrates it in the live locale.
+	var roll: String = str(pending.get("rollId", ""))
+	if not roll.is_empty() and not _event_roll_text(event_id, int(choice_text), roll).is_empty():
+		game.run.quest_scratch["eventRoll"] = roll
 	if str(pending.get("kind", "")).is_empty():
 		_continue_event_after_ops()
 		return
@@ -1842,6 +1853,27 @@ func _event_story_key(event_id: String, choice: int, phase: String) -> String:
 	return "story.event-%s.c%d" % [event_id, choice]
 
 
+## The narrated outcome of a rolled choice, as hydrated for the live locale
+## (`content.events.<id>.rolls.<outcome>.text`); "" when the branch has none.
+func _event_roll_text(event_id: String, choice: int, roll_id: String) -> String:
+	if roll_id.is_empty() or not content.events.has(event_id):
+		return ""
+	var event: Dictionary = content.events[event_id]
+	var choices: Array = event.get("choices", [])
+	if choice < 0 or choice >= choices.size():
+		return ""
+	var row: Dictionary = choices[choice]
+	var ops: Array = row.get("ops", [])
+	for op_v: Variant in ops:
+		var op: Dictionary = op_v
+		var branches: Array = op.get("roll", [])
+		for branch_v: Variant in branches:
+			var branch: Dictionary = branch_v
+			if str(branch.get("id", "")) == roll_id:
+				return str(branch.get("text", ""))
+	return ""
+
+
 func _event_has_story(event_id: String, choice: int) -> bool:
 	var result_key: String = _event_story_key(event_id, choice, "result")
 	var coda_key: String = _event_story_key(event_id, choice, "coda")
@@ -1853,6 +1885,17 @@ func _continue_event_after_ops() -> void:
 	game.run.quest_scratch.erase("eventPending")
 	var event_id: String = str(game.run.quest_scratch.get("eventNode", ""))
 	var choice: int = int(float(str(game.run.quest_scratch.get("eventChoice", -1))))
+	var roll: String = str(game.run.quest_scratch.get("eventRoll", ""))
+	if not roll.is_empty():
+		game.run.quest_scratch.erase("eventRoll")
+		if not _event_roll_text(event_id, choice, roll).is_empty():
+			game.run.quest_scratch["eventStory"] = {
+				"id": event_id, "choice": choice, "phase": "roll", "roll": roll,
+			}
+			if _store_event_choice():
+				_show_event()
+				_play_event_beat()
+			return
 	if _event_has_story(event_id, choice):
 		_begin_event_story(event_id, choice)
 		return
@@ -1874,6 +1917,19 @@ func _on_event_story_continue() -> void:
 		_finish_node()
 		return
 	var story: Dictionary = story_v
+	if str(story.get("phase", "")) == "roll":
+		var event_id: String = str(story.get("id", ""))
+		var choice: int = int(float(str(story.get("choice", 0))))
+		if _event_has_story(event_id, choice):
+			story["phase"] = "result"
+			story.erase("roll")
+			game.run.quest_scratch["eventStory"] = story
+			if _store_event_choice():
+				_show_event()
+				_play_event_beat()
+			return
+		_finish_node()
+		return
 	if str(story.get("phase", "")) == "result":
 		story["phase"] = "coda"
 		game.run.quest_scratch["eventStory"] = story

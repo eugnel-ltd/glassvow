@@ -96,10 +96,20 @@ static func _hollow_two_shot(fails: Array[String], content: ContentDB) -> void:
 	screen.show_error("ui.hollow.message.needGold")
 	_check(fails, lamp.mood == HollowScreen.MOOD_REFUSED and not screen._error.text.is_empty(),
 		"a refused price did not turn him wary with the reason shown")
+	_check(fails, screen._ask.text == "“%s”" % str(meeting.get("cannot", "")),
+		"a refused price is not answered in his own words")
 	screen.set_paid(true, "ui.hollow.message.paneLit")
 	_check(fails, lamp.mood == HollowScreen.MOOD_PAID and screen._error.text.is_empty()
 			and not screen._continue.disabled,
 		"a paid price did not settle into recognition and let you continue")
+	_check(fails, screen._ask.text == "“%s”" % str(meeting.get("paid", "")),
+		"a paid price is not answered in his own words")
+	var resumed: HollowScreen = HollowScreen.new(
+		{"paid": true, "answer": "ui.hollow.message.paneLit"},
+		meeting, 3, meetings.size(), StageShape.IDENTITY, null, "ashwarden")
+	_check(fails, resumed._ask.text == "“%s”" % str(meeting.get("paid", "")),
+		"a resumed, paid meeting does not open on his answer")
+	resumed.free()
 	screen.play_paid()
 	_check(fails, screen._front.active(), "paying kindled nothing")
 	screen.free()
@@ -120,10 +130,32 @@ static func _event_staging_matches_content(fails: Array[String], content: Conten
 		var row: Dictionary = rows[id_v]
 		var beats: Dictionary = row.get("beats", {})
 		for beat_v: Variant in beats:
-			var key: String = "story.event-%s.%s" % [id, beat_v]
-			_check(fails, en.t(key) != key, "%s stages beat %s that has no prose" % [id, beat_v])
+			var beat: String = str(beat_v)
+			if beat.begins_with("roll-"):
+				_check(fails, _has_roll_text(content, id, beat.trim_prefix("roll-")),
+					"%s stages roll %s that narrates nothing" % [id, beat])
+				continue
+			var key: String = "story.event-%s.%s" % [id, beat]
+			_check(fails, en.t(key) != key, "%s stages beat %s that has no prose" % [id, beat])
 	_check(fails, typeof(EventScreen.load_staging("res://content/__none__.json")) == TYPE_STRING,
 		"a missing staging file did not fail")
+
+
+static func _has_roll_text(content: ContentDB, event_id: String, roll_id: String) -> bool:
+	var event: Dictionary = content.events.get(event_id, {})
+	var choices: Array = event.get("choices", [])
+	for row_v: Variant in choices:
+		var row: Dictionary = row_v
+		var ops: Array = row.get("ops", [])
+		for op_v: Variant in ops:
+			var op: Dictionary = op_v
+			var branches: Array = op.get("roll", [])
+			for branch_v: Variant in branches:
+				var branch: Dictionary = branch_v
+				if str(branch.get("id", "")) == roll_id \
+						and not str(branch.get("text", "")).is_empty():
+					return true
+	return false
 
 
 static func _event_screen_contract(fails: Array[String], content: ContentDB) -> void:

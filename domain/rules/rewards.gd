@@ -544,6 +544,9 @@ func apply_event_ops(run: RunState, ops: Array) -> Dictionary:
 					var nested_ops: Array = branch.get("ops", [])
 					var nested: Dictionary = apply_event_ops(run, nested_ops)
 					nested["text"] = str(branch.get("text", ""))
+					# The outcome's id, so the application can persist which
+					# branch landed and narrate it in any locale.
+					nested["rollId"] = str(branch.get("id", ""))
 					return nested
 		elif op.has("gold"):
 			var gold: int = _ji(op["gold"])
