@@ -120,7 +120,7 @@ Promote only the selected decision, required data, and reproducible acceptance i
 |---|---|---|
 | `agent_config` | `AGENTS.md`, `docs/agents/`, `.claude/skills/`, `.claude/agents/`, `.claude/workflows/`, `.grok/workflows/`, agent-contract checker/tests | fast active-instruction and active-automation structural regression; no Godot by default |
 | `docs` | Markdown, instructions, docs, anchor/freeze tooling | document anchors and detached-reference freeze; no Godot by default |
-| `balance_ml` | `tools/balance_*`, balance tests/protocols and governed balance docs | balance/ML self-tests; no Godot unless another scope also requires it |
+| `balance_ml` | `tools/balance_*`, balance tests/protocols and governed balance docs | balance/ML self-tests, plus Godot setup and asset import (the host-qualify self-test launches `tools/balance_sim.gd`, which needs the imported class cache) |
 | `provenance_evidence` | bounded execution-provenance tools, protocol and focused tests | deterministic policy/capsule fixtures; no Godot or live evidence campaign |
 | `godot_code` | `.gd`, `.tscn`, `.tres`, project resources | import, changed-file parse, complete discovered Godot regression suite |
 | `map_code` | map compiler, layout, routing, waylight, map tests/tools | map quality contract and shared profile probe; not the expensive asset gate |
@@ -256,7 +256,7 @@ Do not optimise vanity token counts by omitting thinking. Reduce tokens by reduc
 
 **Balance search runs outside delivery:** use immutable candidates and a bounded experiment; no branch, PR, or product CI per run.
 
-**A balance tool or protocol is promoted under `tools/balance_*` or its tests:** `balance_ml` runs the governed research contracts without map, locale, store, containment, or Godot work.
+**A balance tool or protocol is promoted under `tools/balance_*` or its tests:** `balance_ml` runs the governed research contracts, with Godot setup and asset import for the host-qualify self-test, but without map, locale, store or containment work.
 
 **A map GDScript and map test change:** `godot_code`, `map_code`, and possibly `presentation`; run import, changed-file parse, the complete Godot suite, map quality, and profile probe, while skipping the nine-minute asset gate unless a map asset also changed.
 

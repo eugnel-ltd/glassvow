@@ -14,7 +14,7 @@ vector through the same dict.
 
 ## Flags go after `--`
 
-`tools/balance_sim.gd:8` (`in _initialize`) reads `OS.get_cmdline_user_args()`,
+`tools/balance_sim.gd:11` (in `_initialize`) reads `OS.get_cmdline_user_args()`,
 so every sim flag must come **after a bare `--`**:
 
 ```
@@ -33,7 +33,7 @@ T1a is decline. `_claim_rewards` used to append `Pilot.choose_card`'s pick
 unconditionally. It now scores that pick and keeps it only when
 `accepts_card_reward` says so:
 
-- Gate: `tools/balance_sim.gd:132-133` (`in _claim_rewards`)
+- Gate: `tools/balance_sim.gd:177-178` (in `_claim_rewards`)
 - Predicate: `tools/balance_pilot.gd:68` (`accepts_card_reward`) —
   `score >= card_decline_threshold`
 - Default: `CARD_DECLINE_DEFAULT = -1e9` at `tools/balance_pilot.gd:10`
@@ -54,8 +54,8 @@ stays the unified intercept.
   `copies >= removal_min_copies and wscore <= removal_appetite - REMOVAL_SHOP_MARGIN`
 - Shop numerator and event score: `tools/balance_pilot.gd:70-71` (`remove_value`)
   — `removal_appetite - wscore`. Event path:
-  `tools/balance_sim.gd:241` (`in _event_op_score`). Shop call:
-  `tools/balance_pilot.gd:449-450` (`in choose_shop`).
+  `tools/balance_sim.gd:298` (in `_event_op_score`). Shop call:
+  `tools/balance_pilot.gd:522-523` (in `choose_shop`).
 - Defaults: `removalAppetite = 8.5`, `removalMinCopies = 3`,
   `REMOVAL_SHOP_MARGIN = 2.0` (not sampled). So the default shop gate is still
   `copies >= 3 and wscore <= 6.5`, and default `pickRemove` is still `8.5 - wscore`.
