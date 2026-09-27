@@ -7,7 +7,9 @@ extends Control
 ## dusk grade and falling ash as the meeting's pre- and post-scenes, so the
 ## three read as one conversation. His posture follows the price — asking,
 ## wary when it cannot be met, recognising once it is paid — and paying
-## kindles your embers into the dark lantern.
+## kindles your embers into the dark lantern. He answers in his own words:
+## the meeting's `paid` line once the price lands, its `cannot` line when it
+## cannot be met; the system's plain reason stays as a note under the choices.
 
 signal action_requested(action: StringName)
 
@@ -139,11 +141,10 @@ func _build() -> void:
 	_error.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(_error)
 
-	# The ask arrives typed, as every line on the stagecraft pane does.
-	_copy.show_line("“%s”" % str(_meeting.get("ask", "")),
-		Locale.active.t(_book.name_key(ACTOR)), StageDirection.STYLE_SPEECH,
-		_book.tint(ACTOR), &"right", false)
 	var paid: bool = str(_pending.get("paid", false)) == "true"
+	# The ask arrives typed, as every line on the stagecraft pane does; a
+	# resumed, already-paid meeting opens on his answer instead.
+	_say("paid" if paid and _has_line("paid") else "ask", false)
 	_stand(MOOD_PAID if paid else MOOD_ASK, true)
 	set_paid(paid, str(_pending.get("answer", "")))
 	resized.connect(_layout)
@@ -176,6 +177,8 @@ func set_paid(paid: bool, answer: String = "") -> void:
 	_error.text = ""
 	_sync_notes()
 	_stand(MOOD_PAID if paid else MOOD_ASK, false)
+	if paid and _has_line("paid"):
+		_say("paid", false)
 
 
 func show_error(message: String) -> void:
@@ -187,6 +190,8 @@ func show_error(message: String) -> void:
 	_sync_notes()
 	_stand(MOOD_REFUSED, false)
 	_stage.actor_fx(&"recoil", ACTOR)
+	if _has_line("cannot"):
+		_say("cannot", false)
 
 
 ## The price just landed: your embers kindle across into the hollow lantern
@@ -199,6 +204,18 @@ func play_paid() -> void:
 	_front.play(&"kindle", giver.hands(), taker.hands())
 	_stage.actor_fx(&"kindle", ACTOR)
 	_sfx.play(&"kindle")
+
+
+func _has_line(field: String) -> bool:
+	return not str(_meeting.get(field, "")).strip_edges().is_empty()
+
+
+## One of the meeting's own lines (`ask`, `paid`, `cannot`) into the pane,
+## under his plaque.
+func _say(field: String, instant: bool) -> void:
+	_copy.show_line("“%s”" % str(_meeting.get(field, "")),
+		Locale.active.t(_book.name_key(ACTOR)), StageDirection.STYLE_SPEECH,
+		_book.tint(ACTOR), &"right", instant)
 
 
 func _stand(mood: String, instant: bool) -> void:
