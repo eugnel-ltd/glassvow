@@ -2081,8 +2081,8 @@
       "tone": "#ff9a4d",
       "name": "Unbroken Crown",
       "wardPerAttack": 3,
-      "smolderPerAttack": 2,
-      "text": "Your blows no longer chip Facets, and your Smolder takes hold. Whenever you play an Attack, gain 3 Ward and apply 2 Smolder to the enemy."
+      "smolderPerAttack": 3,
+      "text": "Your blows no longer chip Facets, and your Smolder takes hold. Whenever you play an Attack, gain 3 Ward and apply 3 Smolder to the enemy."
     }
   },
   "relicPools": {

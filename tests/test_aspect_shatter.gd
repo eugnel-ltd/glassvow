@@ -151,8 +151,8 @@ static func _unbroken_crown(fails: Array[String]) -> void:
 	if int(float(str(preview["chips"]))) != 0 or preview["willShatter"]:
 		fails.append("Unbroken Crown: preview promises chip or shatter")
 	_play(game, &"venomStrike")
-	if _stacks(enemy.statuses, "poison") != 6:
-		fails.append("Unbroken Crown: Emberbite must apply its 4 Smolder plus crown 2")
+	if _stacks(enemy.statuses, "poison") != 7:
+		fails.append("Unbroken Crown: Emberbite must apply its 4 Smolder plus crown 3")
 	if enemy.chips != enemy.facet_max - 1 or enemy.staggered:
 		fails.append("Unbroken Crown: attack chipped or staggered")
 	if game.cb.player.block != 3:
