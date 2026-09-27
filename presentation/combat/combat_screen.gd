@@ -434,6 +434,7 @@ var _hero_swung: bool = true
 var _shake_host: Control
 var _vfx: VfxLayer
 var _floaters: Floaters
+var _dialogue: BattleDialogue
 ## `sfx` (audio.js). Owned here rather than reached for globally: the fight is
 ## the only screen that has sound yet, and `main.gd` is the sole composition
 ## root, so a second owner would have to be handed one rather than find one.
@@ -505,6 +506,7 @@ func set_shape(stage_shape: StringName) -> void:
 	if next == shape:
 		return
 	shape = next
+	_dialogue.set_shape(shape)
 	_authored = LayoutBook.resolve(&"battlefield", shape, act)
 	_placed = {}
 	_placed_at = Vector2i.ZERO
@@ -722,6 +724,11 @@ func _build_ui() -> void:
 	add_child(_vfx)
 	_floaters = Floaters.new()
 	add_child(_floaters)
+	# A foe that speaks does so over everything below the chrome: the fight
+	# dims a step and its glass bust answers in the story pane (stagecraft).
+	_dialogue = BattleDialogue.new(_sfx)
+	_dialogue.shape = shape
+	add_child(_dialogue)
 
 	# `.art-cast` carries z 57 against `#floaties`' 55 — the art's face is over
 	# the damage numerals, so it is added after them.
@@ -1320,6 +1327,7 @@ func start_encounter(enemy_ids: Array, kind: String, encounter_text: String) -> 
 	# must never wait on a tween that will not tick.
 	_floaters.instant = seq.instant
 	_floaters.clear_all()
+	_dialogue.instant = seq.instant
 	# `V.setWeather(theme?.weather, { boss: kind === 'boss' })` — the air a fight
 	# happens in, thicker for a boss.
 	_vfx.set_weather(not seq.instant, kind == "boss")
@@ -1456,6 +1464,7 @@ func _play_opening_ceremony() -> void:
 		return
 	var boss: bool = game.cb.enemies[0].boss
 	var spoken: Array[String] = []
+	var voices: Array[Dictionary] = []
 	var aspect_name: String = ""
 	if game.run.aspect >= 0 and game.run.aspect < game.content.aspects.size():
 		var aspect_v: Variant = game.content.aspects[game.run.aspect]
@@ -1467,8 +1476,12 @@ func _play_opening_ceremony() -> void:
 		if typeof(lines_v) != TYPE_ARRAY:
 			continue
 		var lines: Array = lines_v
+		var said: Array[String] = []
 		for line_v: Variant in lines:
-			spoken.append(str(line_v).replace("{aspect}", aspect_name))
+			said.append(str(line_v).replace("{aspect}", aspect_name))
+		spoken.append_array(said)
+		if not said.is_empty():
+			voices.append({"variant": String(e.variant_id), "name": e.name, "lines": said})
 	if not boss and spoken.is_empty():
 		return
 	await _wait(0.9)  # let the walk-in and the deal land first
@@ -1479,10 +1492,11 @@ func _play_opening_ceremony() -> void:
 		_sky.kick(1.6)
 		_sfx.play(&"bigDeath")
 		await _floaters.banner(game.cb.enemies[0].name, "boss", 2.1)
-	for line: String in spoken:
+	for voice: Dictionary in voices:
 		if not is_inside_tree():
 			return
-		await _floaters.banner(line, "variant", 1.8)
+		var said: Array[String] = voice["lines"]
+		await _voice(str(voice["variant"]), str(voice["name"]), said, false)
 
 
 ## `.combat-screen.intro` (styles.css:739) — the hero walks in from the left,
@@ -2164,6 +2178,39 @@ func _find_card(uid: int) -> CardInst:
 
 # ---------------------------------------------------------------- playback
 
+## A foe's spoken lines: through the battle dialogue when its variant is
+## staged (`content/battle-lines.json`), else the pre-stagecraft banner.
+func _voice(variant_id: String, speaker: String, lines: Array[String], death: bool) -> void:
+	if not _dialogue.can_voice(variant_id):
+		for line: String in lines:
+			if not is_inside_tree():
+				return
+			await _floaters.banner(line, "variant", 1.8)
+		return
+	var row: Dictionary = BattleDialogue.staging_for(variant_id)
+	var intro: Array[Dictionary] = row.get("intro", [] as Array[Dictionary])
+	var entries: Array[Dictionary] = []
+	for i: int in range(lines.size()):
+		var direction: Dictionary = row.get("death", {}) if death \
+			else (intro[i] if i < intro.size() else {})
+		entries.append({"text": lines[i], "direction": direction})
+	await _dialogue.speak(variant_id, speaker, entries)
+
+
+## A mid-fight line from the drain: a dying word when it is the foe's own
+## death line, otherwise the next of its spoken lines.
+func _voice_event(ev: Dictionary) -> void:
+	var text: String = str(ev.get("text", ""))
+	var idx: int = ev.get("idx", -1)
+	if idx < 0 or idx >= game.cb.enemies.size():
+		await _floaters.banner(text, "variant", 1.8)
+		return
+	var e: EnemyCombatant = game.cb.enemies[idx]
+	var death: bool = text == str(e.def.get("deathDialogue", ""))
+	var said: Array[String] = [text]
+	await _voice(String(e.variant_id), e.name, said, death)
+
+
 func _wait(seconds: float) -> void:
 	if seq.instant:
 		return
@@ -2652,7 +2699,7 @@ func _handle_event(ev: Dictionary) -> void:
 			# beat only holds the plate so the drain can reach combat_over.
 			await _wait(0.32)
 		EventTypes.VARIANT_DIALOGUE:
-			await _floaters.banner(str(ev.get("text", "")), "variant", 1.8)
+			await _voice_event(ev)
 		EventTypes.END_TURN:
 			# `heroActing = false` — nothing swings again until a card is played.
 			_hero_swung = true

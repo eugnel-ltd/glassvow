@@ -102,8 +102,7 @@ func _layout_copy() -> void:
 		view = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
 	var rect: Rect2 = DialogueBox.box_rect(view, StageShape.IDENTITY,
 		StageDirection.STYLE_SPEECH, HearthFigure.SEAT_LEFT)
-	_copy.position = rect.position
-	_copy.size = rect.size
+	_copy.place(rect)
 
 
 func _bind_line() -> void:

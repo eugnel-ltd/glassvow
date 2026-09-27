@@ -175,10 +175,7 @@ func pane_rect() -> Rect2:
 
 
 func _layout_box() -> void:
-	var rect: Rect2 = pane_rect()
-	box.position = rect.position
-	box.size = rect.size
-	box.custom_minimum_size = Vector2(rect.size.x, 0.0)
+	box.place(pane_rect())
 
 
 func _stage_size() -> Vector2:

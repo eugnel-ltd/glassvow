@@ -202,6 +202,15 @@ func type_time() -> float:
 	return _type_time
 
 
+## Seat the pane at `rect` and lay its text out now. Setting `size` on a
+## node outside the tree emits no `resized`, so callers place explicitly.
+func place(rect: Rect2) -> void:
+	position = rect.position
+	size = rect.size
+	custom_minimum_size = Vector2(rect.size.x, 0.0)
+	_layout()
+
+
 func line_label() -> Label:
 	return _line
 

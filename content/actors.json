@@ -44,6 +44,28 @@
         "default": "res://assets/art/portraits/queue-chorus.png"
       }
     },
+    "shade": {
+      "name": "",
+      "side": "right",
+      "faces": "left",
+      "tint": "#8a5bd6",
+      "rim": "left",
+      "crop": [0.0, 0.0, 1.0, 0.62],
+      "portraits": {
+        "default": "res://assets/art/enemies/shade.png"
+      }
+    },
+    "sovereign": {
+      "name": "",
+      "side": "right",
+      "faces": "left",
+      "tint": "#6d5ce8",
+      "rim": "left",
+      "crop": [0.0, 0.0, 1.0, 0.66],
+      "portraits": {
+        "default": "res://assets/art/enemies/sovereign.png"
+      }
+    },
     "hero": {
       "name": "",
       "side": "left",
