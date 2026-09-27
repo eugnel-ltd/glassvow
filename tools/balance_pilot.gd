@@ -16,6 +16,10 @@ const REMOVAL_MIN_COPIES_DEFAULT: int = 2
 const REMOVAL_SHOP_MARGIN: float = 2.0
 static var banned: Dictionary = {}
 static var vector: Dictionary = {}
+# Numeric weights retain the historical float(str(value)) rounding once per policy.
+static var _weights: Dictionary = {}
+static var _card_scores: Array[Dictionary] = [{}, {}, {}, {}]
+static var _score_content: ContentDB
 static var card_decline_threshold: float = CARD_DECLINE_DEFAULT
 static var removal_appetite: float = REMOVAL_APPETITE_DEFAULT
 static var removal_min_copies: int = REMOVAL_MIN_COPIES_DEFAULT
@@ -27,6 +31,17 @@ static func set_modes(build: bool, play: bool) -> void:
 	random_play = play
 static func apply_policy(policy: Dictionary) -> void:
 	vector = Policy.resolve(policy)
+	_weights.clear()
+	for scores: Dictionary in _card_scores:
+		scores.clear()
+	_score_content = null
+	for group: String in ["card", "status", "special", "combat", "route"]:
+		var numeric: Dictionary = {}
+		var raw: Dictionary = vector[group]
+		for key: String in raw:
+			if typeof(raw[key]) != TYPE_DICTIONARY:
+				numeric[key] = float(str(raw[key]))
+		_weights[group] = numeric
 	card_decline_threshold = float(str(vector["cardDecline"]))
 	removal_appetite = float(str(vector["removalAppetite"]))
 	removal_min_copies = int(float(str(vector["removalMinCopies"])))
@@ -41,8 +56,9 @@ static func _group(name: String) -> Dictionary:
 	var raw: Variant = vector[name]
 	return raw if typeof(raw) == TYPE_DICTIONARY else {}
 static func _w(group: String, key: String) -> float:
-	var d: Dictionary = _group(group)
-	return float(str(d[key]))
+	if vector.is_empty():
+		apply_policy({})
+	return _weights[group][key]
 static func _wf(key: String) -> float:
 	if vector.is_empty():
 		apply_policy({})
@@ -127,12 +143,18 @@ static func _pick_play(game: GlassvowGame) -> Dictionary:
 	var best: Dictionary = {}
 	var best_score: float = -INF
 	var dusk: bool = game.run.aspect == 0
+	var living: Array[EnemyCombatant] = game.cb.living_enemies()
+	var legal_target: Variant = living[0].idx if not living.is_empty() else null
 	for card: CardInst in game.cb.hand:
 		var d: Dictionary = game.rules.card_data(card)
-		var target: Variant = _target(game, card, d)
-		if not game.rules.can_play(game.run, game.cb, card, target):
+		# All living enemies are legal targets. Reject unplayable cards before
+		# forecasting targets; neither legality nor previews consume RNG.
+		if not game.rules.can_play(game.run, game.cb, card, legal_target):
 			continue
-		var preview_v: Variant = game.rules.preview_play(game.cb, card, target, game.run)
+		var previews: Dictionary = {}
+		var target: Variant = _target(game, card, d, living, previews)
+		var preview_v: Variant = previews[target] if previews.has(target) \
+			else game.rules.preview_play(game.cb, card, target, game.run)
 		var preview: Dictionary = preview_v if typeof(preview_v) == TYPE_DICTIONARY else {}
 		var block: int = int(float(str(preview.get("block", 0))))
 		if lethal and block > 0:
@@ -153,7 +175,7 @@ static func _pick_play(game: GlassvowGame) -> Dictionary:
 static func _combat_score(game: GlassvowGame, card: CardInst, d: Dictionary, target: Variant,
 		preview: Dictionary, unblocked: int, dusk: bool) -> float:
 	var cid: String = String(card.id)
-	var score: float = card_score(d, game.run.aspect, cid)
+	var score: float = catalogue_card_score(game.content, game.run.aspect, cid, card.up)
 	var loss: int = int(float(str(preview.get("loss", 0))))
 	var block: int = int(float(str(preview.get("block", 0))))
 	score += float(loss) * _w("combat", "loss")
@@ -192,10 +214,10 @@ static func _combat_score(game: GlassvowGame, card: CardInst, d: Dictionary, tar
 	if str(d.get("type", "")) == "power":
 		score += _w("combat", "power")
 	return score
-static func _target(game: GlassvowGame, card: CardInst, d: Dictionary) -> Variant:
+static func _target(game: GlassvowGame, card: CardInst, d: Dictionary,
+		living: Array[EnemyCombatant], previews: Dictionary) -> Variant:
 	if str(d.get("target", "")) != "enemy":
 		return null
-	var living: Array[EnemyCombatant] = game.cb.living_enemies()
 	var poison: bool = _has_effect(d, "status", "poison") \
 		or _has_effect(d, "special", "catalyst")
 	if _special_id(d) == "catalyst":
@@ -214,6 +236,7 @@ static func _target(game: GlassvowGame, card: CardInst, d: Dictionary) -> Varian
 	if game.run.aspect == 0:
 		for e: EnemyCombatant in living:
 			var pv: Variant = game.rules.preview_play(game.cb, card, e.idx, game.run)
+			previews[e.idx] = pv
 			if typeof(pv) == TYPE_DICTIONARY and pv.get("willShatter", false):
 				return e.idx
 	var lowest: EnemyCombatant = living[0]
@@ -271,6 +294,26 @@ static func _use_potions(game: GlassvowGame) -> void:
 		game.apply({"t": "usePotion", "slot": slot, "target": target})
 		if game.cb.over:
 			return
+# Catalogue definitions are immutable during a simulation. Reset on every policy
+# application and catalogue switch; ad-hoc effect dictionaries still use card_score.
+static func catalogue_card_score(content: ContentDB, aspect: int, card_id: String,
+		upgraded: bool = false) -> float:
+	if vector.is_empty():
+		apply_policy({})
+	if _score_content != content:
+		for scores: Dictionary in _card_scores:
+			scores.clear()
+		_score_content = content
+	# card_score distinguishes Dusk (0) from all other aspects, and base/up.
+	var scores: Dictionary = _card_scores[(2 if aspect == 0 else 0) + int(upgraded)]
+	if not scores.has(card_id):
+		var definition: Dictionary = content.cards.get(card_id, {})
+		if upgraded and definition.has("up"):
+			definition = definition.duplicate()
+			var upgrade: Dictionary = definition["up"]
+			definition.merge(upgrade, true)
+		scores[card_id] = card_score(definition, aspect, card_id)
+	return scores[card_id]
 static func card_score(d: Dictionary, aspect: int, card_id: String = "") -> float:
 	var dusk: bool = aspect == 0
 	var card_w: Dictionary = _group("card")
@@ -379,8 +422,7 @@ static func choose_card(ids: Array, content: ContentDB, aspect: int, rng: Rng = 
 		var id: String = str(id_v)
 		if is_banned(id):
 			continue
-		var definition: Dictionary = content.cards.get(id, {})
-		var candidate: float = card_score(definition, aspect, id)
+		var candidate: float = catalogue_card_score(content, aspect, id)
 		if candidate > score:
 			best = id
 			score = candidate
@@ -409,8 +451,7 @@ static func worst_card(run: RunState, content: ContentDB, cards: Array, kindle: 
 	for card: CardInst in cards:
 		if kindle and str(content.cards.get(String(card.id), {}).get("type", "")) == "curse":
 			continue
-		var definition: Dictionary = content.cards.get(String(card.id), {})
-		var candidate: float = card_score(definition, run.aspect, String(card.id))
+		var candidate: float = catalogue_card_score(content, run.aspect, String(card.id))
 		if candidate < score:
 			worst = card
 			score = candidate
@@ -419,8 +460,7 @@ static func best_card(run: RunState, content: ContentDB, cards: Array) -> CardIn
 	var best: CardInst = null
 	var score: float = -INF
 	for card: CardInst in cards:
-		var definition: Dictionary = content.cards.get(String(card.id), {})
-		var candidate: float = card_score(definition, run.aspect, String(card.id))
+		var candidate: float = catalogue_card_score(content, run.aspect, String(card.id))
 		if candidate > score:
 			best = card
 			score = candidate
@@ -463,8 +503,7 @@ static func choose_shop(stock: Dictionary, run: RunState, content: ContentDB) ->
 				if category == "relics":
 					value = relic_score(id, content, run.aspect)
 				elif category == "cards":
-					var definition: Dictionary = content.cards.get(id, {})
-					value = card_score(definition, run.aspect, id)
+					value = catalogue_card_score(content, run.aspect, id)
 				elif id == "healing":
 					value = _wf("potionHealing")
 				var ratio: float = value / float(maxi(price, 1))
@@ -479,8 +518,7 @@ static func choose_shop(stock: Dictionary, run: RunState, content: ContentDB) ->
 				for card: CardInst in run.player.deck:
 					if String(card.id) == String(worst.id):
 						copies += 1
-				var worst_def: Dictionary = content.cards.get(String(worst.id), {})
-				var wscore: float = card_score(worst_def, run.aspect, String(worst.id))
+				var wscore: float = catalogue_card_score(content, run.aspect, String(worst.id))
 				if wants_shop_remove(copies, wscore):
 					var remove_ratio: float = remove_value(wscore) / float(maxi(remove_cost, 1))
 					if remove_ratio > best_ratio:
