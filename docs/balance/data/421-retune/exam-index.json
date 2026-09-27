@@ -1,0 +1,12 @@
+{
+  "exams": [
+    {
+      "exam": 1,
+      "commit": "8bfa08c0f987d0f836ba03fe0e4202a470dd572d",
+      "contentSha256": "667125b7ddb929d0bcc4297fb8ef8eab24e98f5dc252edd74999c0faa4dbf413",
+      "numericOutcome": "MISS",
+      "directory": "exam-1"
+    }
+  ],
+  "rootFilesDescribeExam": 1
+}

@@ -1,0 +1,854 @@
+{
+  "developmentOnly": true,
+  "baseCommit": "8bfa08c0f987d0f836ba03fe0e4202a470dd572d",
+  "frozenAxes": {
+    "source": "#215",
+    "deckCuts": {
+      "thinMax": 25,
+      "midMax": 35
+    },
+    "medians": {
+      "duskblade": {
+        "shattersPerFight": 1.1111,
+        "smolderKillsPerFight": 0.1111
+      },
+      "ashwarden": {
+        "shattersPerFight": 0.6154,
+        "smolderKillsPerFight": 0.8519
+      }
+    },
+    "tieOrder": [
+      "shatter",
+      "smolder",
+      "attrition"
+    ]
+  },
+  "policyRoot": 3454,
+  "policies": 128,
+  "landscapeSeeds": [
+    9200,
+    9207
+  ],
+  "controlSeeds": [
+    9100,
+    9131
+  ],
+  "candidates": {
+    "exam1": {
+      "contentSha256": "667125b7ddb929d0bcc4297fb8ef8eab24e98f5dc252edd74999c0faa4dbf413",
+      "controls": {
+        "1:duskblade:v0": {
+          "wins": 25,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.78125
+        },
+        "1:duskblade:v5": {
+          "wins": 17,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.53125
+        },
+        "1:ashwarden:v0": {
+          "wins": 24,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.75
+        },
+        "1:ashwarden:v5": {
+          "wins": 9,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.28125
+        },
+        "2:duskblade:v0": {
+          "wins": 11,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.34375
+        },
+        "2:duskblade:v5": {
+          "wins": 9,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.28125
+        },
+        "2:ashwarden:v0": {
+          "wins": 6,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.1875
+        },
+        "2:ashwarden:v5": {
+          "wins": 6,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.1875
+        }
+      },
+      "cells": {
+        "duskblade:v0:shatter:thin": {
+          "wins": 14,
+          "runs": 85,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.16470588235294117,
+          "policies": 52
+        },
+        "duskblade:v0:shatter:mid": {
+          "wins": 75,
+          "runs": 139,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.539568345323741,
+          "policies": 70
+        },
+        "duskblade:v0:shatter:fat": {
+          "wins": 110,
+          "runs": 133,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.8270676691729323,
+          "policies": 62
+        },
+        "duskblade:v0:smolder:thin": {
+          "wins": 0,
+          "runs": 1,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 1
+        },
+        "duskblade:v0:smolder:mid": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "duskblade:v0:smolder:fat": {
+          "wins": 1,
+          "runs": 1,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 1.0,
+          "policies": 1
+        },
+        "duskblade:v0:attrition:thin": {
+          "wins": 8,
+          "runs": 354,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.022598870056497175,
+          "policies": 116
+        },
+        "duskblade:v0:attrition:mid": {
+          "wins": 26,
+          "runs": 216,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.12037037037037036,
+          "policies": 103
+        },
+        "duskblade:v0:attrition:fat": {
+          "wins": 65,
+          "runs": 95,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.6842105263157895,
+          "policies": 52
+        },
+        "duskblade:v5:shatter:thin": {
+          "wins": 3,
+          "runs": 157,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.01910828025477707,
+          "policies": 95
+        },
+        "duskblade:v5:shatter:mid": {
+          "wins": 23,
+          "runs": 94,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.24468085106382978,
+          "policies": 68
+        },
+        "duskblade:v5:shatter:fat": {
+          "wins": 44,
+          "runs": 83,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.5301204819277109,
+          "policies": 54
+        },
+        "duskblade:v5:smolder:thin": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "duskblade:v5:smolder:mid": {
+          "wins": 0,
+          "runs": 1,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 1
+        },
+        "duskblade:v5:smolder:fat": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "duskblade:v5:attrition:thin": {
+          "wins": 1,
+          "runs": 545,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.001834862385321101,
+          "policies": 128
+        },
+        "duskblade:v5:attrition:mid": {
+          "wins": 1,
+          "runs": 116,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.008620689655172414,
+          "policies": 71
+        },
+        "duskblade:v5:attrition:fat": {
+          "wins": 11,
+          "runs": 28,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.39285714285714285,
+          "policies": 24
+        },
+        "ashwarden:v0:shatter:thin": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "ashwarden:v0:shatter:mid": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "ashwarden:v0:shatter:fat": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "ashwarden:v0:smolder:thin": {
+          "wins": 14,
+          "runs": 276,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.050724637681159424,
+          "policies": 94
+        },
+        "ashwarden:v0:smolder:mid": {
+          "wins": 114,
+          "runs": 338,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.33727810650887574,
+          "policies": 119
+        },
+        "ashwarden:v0:smolder:fat": {
+          "wins": 136,
+          "runs": 201,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.6766169154228856,
+          "policies": 81
+        },
+        "ashwarden:v0:attrition:thin": {
+          "wins": 3,
+          "runs": 78,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.038461538461538464,
+          "policies": 58
+        },
+        "ashwarden:v0:attrition:mid": {
+          "wins": 16,
+          "runs": 80,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.2,
+          "policies": 57
+        },
+        "ashwarden:v0:attrition:fat": {
+          "wins": 29,
+          "runs": 51,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.5686274509803921,
+          "policies": 37
+        },
+        "ashwarden:v5:shatter:thin": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "ashwarden:v5:shatter:mid": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "ashwarden:v5:shatter:fat": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "ashwarden:v5:smolder:thin": {
+          "wins": 1,
+          "runs": 436,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0022935779816513763,
+          "policies": 123
+        },
+        "ashwarden:v5:smolder:mid": {
+          "wins": 28,
+          "runs": 307,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.09120521172638436,
+          "policies": 116
+        },
+        "ashwarden:v5:smolder:fat": {
+          "wins": 41,
+          "runs": 107,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.38317757009345793,
+          "policies": 62
+        },
+        "ashwarden:v5:attrition:thin": {
+          "wins": 1,
+          "runs": 100,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.01,
+          "policies": 68
+        },
+        "ashwarden:v5:attrition:mid": {
+          "wins": 1,
+          "runs": 52,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.019230769230769232,
+          "policies": 40
+        },
+        "ashwarden:v5:attrition:fat": {
+          "wins": 2,
+          "runs": 22,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.09090909090909091,
+          "policies": 20
+        }
+      },
+      "proxies": {
+        "duskblade:v0": {
+          "topCell": "smolder:fat",
+          "topRate": 1.0,
+          "thirdRate": 0.6842105263157895,
+          "fourthRate": 0.539568345323741,
+          "within10": 1,
+          "viable": 3,
+          "arm2Wins": 11,
+          "arm2Runs": 32,
+          "arm2Rate": 0.34375,
+          "margin": 0.65625
+        },
+        "duskblade:v5": {
+          "topCell": "shatter:fat",
+          "topRate": 0.5301204819277109,
+          "thirdRate": 0.24468085106382978,
+          "fourthRate": 0.01910828025477707,
+          "within10": 1,
+          "viable": 1,
+          "arm2Wins": 9,
+          "arm2Runs": 32,
+          "arm2Rate": 0.28125,
+          "margin": 0.24887048192771088
+        },
+        "ashwarden:v0": {
+          "topCell": "smolder:fat",
+          "topRate": 0.6766169154228856,
+          "thirdRate": 0.33727810650887574,
+          "fourthRate": 0.2,
+          "within10": 1,
+          "viable": 2,
+          "arm2Wins": 6,
+          "arm2Runs": 32,
+          "arm2Rate": 0.1875,
+          "margin": 0.4891169154228856
+        },
+        "ashwarden:v5": {
+          "topCell": "smolder:fat",
+          "topRate": 0.38317757009345793,
+          "thirdRate": 0.09090909090909091,
+          "fourthRate": 0.019230769230769232,
+          "within10": 1,
+          "viable": 1,
+          "arm2Wins": 6,
+          "arm2Runs": 32,
+          "arm2Rate": 0.1875,
+          "margin": 0.19567757009345793
+        }
+      },
+      "deficits": {
+        "c1a": 2.6666666666666665,
+        "c1b": 1.6666666666666665,
+        "c2arm": 0.0,
+        "c2gap": 0.7298627085109461,
+        "sum": 5.063196041844279
+      }
+    },
+    "iteration2": {
+      "contentSha256": "8934031593228e450d3670d24da01aa4717480bd01ea4392e359d69a6f474248",
+      "controls": {
+        "1:duskblade:v0": {
+          "wins": 26,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.8125
+        },
+        "1:duskblade:v5": {
+          "wins": 19,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.59375
+        },
+        "1:ashwarden:v0": {
+          "wins": 24,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.75
+        },
+        "1:ashwarden:v5": {
+          "wins": 9,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.28125
+        },
+        "2:duskblade:v0": {
+          "wins": 12,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.375
+        },
+        "2:duskblade:v5": {
+          "wins": 9,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.28125
+        },
+        "2:ashwarden:v0": {
+          "wins": 6,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.1875
+        },
+        "2:ashwarden:v5": {
+          "wins": 6,
+          "runs": 32,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.1875
+        }
+      },
+      "cells": {
+        "duskblade:v0:shatter:thin": {
+          "wins": 19,
+          "runs": 84,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.2261904761904762,
+          "policies": 55
+        },
+        "duskblade:v0:shatter:mid": {
+          "wins": 82,
+          "runs": 152,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.5394736842105263,
+          "policies": 72
+        },
+        "duskblade:v0:shatter:fat": {
+          "wins": 118,
+          "runs": 143,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.8251748251748252,
+          "policies": 66
+        },
+        "duskblade:v0:smolder:thin": {
+          "wins": 0,
+          "runs": 1,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 1
+        },
+        "duskblade:v0:smolder:mid": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "duskblade:v0:smolder:fat": {
+          "wins": 1,
+          "runs": 1,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 1.0,
+          "policies": 1
+        },
+        "duskblade:v0:attrition:thin": {
+          "wins": 9,
+          "runs": 321,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.028037383177570093,
+          "policies": 112
+        },
+        "duskblade:v0:attrition:mid": {
+          "wins": 28,
+          "runs": 224,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.125,
+          "policies": 99
+        },
+        "duskblade:v0:attrition:fat": {
+          "wins": 65,
+          "runs": 98,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.6632653061224489,
+          "policies": 52
+        },
+        "duskblade:v5:shatter:thin": {
+          "wins": 3,
+          "runs": 151,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.019867549668874173,
+          "policies": 91
+        },
+        "duskblade:v5:shatter:mid": {
+          "wins": 29,
+          "runs": 98,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.29591836734693877,
+          "policies": 64
+        },
+        "duskblade:v5:shatter:fat": {
+          "wins": 51,
+          "runs": 101,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.504950495049505,
+          "policies": 60
+        },
+        "duskblade:v5:smolder:thin": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "duskblade:v5:smolder:mid": {
+          "wins": 0,
+          "runs": 1,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 1
+        },
+        "duskblade:v5:smolder:fat": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "duskblade:v5:attrition:thin": {
+          "wins": 0,
+          "runs": 511,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 127
+        },
+        "duskblade:v5:attrition:mid": {
+          "wins": 3,
+          "runs": 134,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.022388059701492536,
+          "policies": 82
+        },
+        "duskblade:v5:attrition:fat": {
+          "wins": 14,
+          "runs": 28,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.5,
+          "policies": 24
+        },
+        "ashwarden:v0:shatter:thin": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "ashwarden:v0:shatter:mid": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "ashwarden:v0:shatter:fat": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "ashwarden:v0:smolder:thin": {
+          "wins": 14,
+          "runs": 276,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.050724637681159424,
+          "policies": 94
+        },
+        "ashwarden:v0:smolder:mid": {
+          "wins": 114,
+          "runs": 338,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.33727810650887574,
+          "policies": 119
+        },
+        "ashwarden:v0:smolder:fat": {
+          "wins": 136,
+          "runs": 201,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.6766169154228856,
+          "policies": 81
+        },
+        "ashwarden:v0:attrition:thin": {
+          "wins": 3,
+          "runs": 78,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.038461538461538464,
+          "policies": 58
+        },
+        "ashwarden:v0:attrition:mid": {
+          "wins": 16,
+          "runs": 80,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.2,
+          "policies": 57
+        },
+        "ashwarden:v0:attrition:fat": {
+          "wins": 29,
+          "runs": 51,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.5686274509803921,
+          "policies": 37
+        },
+        "ashwarden:v5:shatter:thin": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "ashwarden:v5:shatter:mid": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "ashwarden:v5:shatter:fat": {
+          "wins": 0,
+          "runs": 0,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0,
+          "policies": 0
+        },
+        "ashwarden:v5:smolder:thin": {
+          "wins": 1,
+          "runs": 436,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.0022935779816513763,
+          "policies": 123
+        },
+        "ashwarden:v5:smolder:mid": {
+          "wins": 28,
+          "runs": 307,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.09120521172638436,
+          "policies": 116
+        },
+        "ashwarden:v5:smolder:fat": {
+          "wins": 41,
+          "runs": 107,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.38317757009345793,
+          "policies": 62
+        },
+        "ashwarden:v5:attrition:thin": {
+          "wins": 1,
+          "runs": 100,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.01,
+          "policies": 68
+        },
+        "ashwarden:v5:attrition:mid": {
+          "wins": 1,
+          "runs": 52,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.019230769230769232,
+          "policies": 40
+        },
+        "ashwarden:v5:attrition:fat": {
+          "wins": 2,
+          "runs": 22,
+          "stalls": 0,
+          "errors": 0,
+          "winRate": 0.09090909090909091,
+          "policies": 20
+        }
+      },
+      "proxies": {
+        "duskblade:v0": {
+          "topCell": "smolder:fat",
+          "topRate": 1.0,
+          "thirdRate": 0.6632653061224489,
+          "fourthRate": 0.5394736842105263,
+          "within10": 1,
+          "viable": 2,
+          "arm2Wins": 12,
+          "arm2Runs": 32,
+          "arm2Rate": 0.375,
+          "margin": 0.625
+        },
+        "duskblade:v5": {
+          "topCell": "shatter:fat",
+          "topRate": 0.504950495049505,
+          "thirdRate": 0.29591836734693877,
+          "fourthRate": 0.022388059701492536,
+          "within10": 2,
+          "viable": 2,
+          "arm2Wins": 9,
+          "arm2Runs": 32,
+          "arm2Rate": 0.28125,
+          "margin": 0.22370049504950495
+        },
+        "ashwarden:v0": {
+          "topCell": "smolder:fat",
+          "topRate": 0.6766169154228856,
+          "thirdRate": 0.33727810650887574,
+          "fourthRate": 0.2,
+          "within10": 1,
+          "viable": 2,
+          "arm2Wins": 6,
+          "arm2Runs": 32,
+          "arm2Rate": 0.1875,
+          "margin": 0.4891169154228856
+        },
+        "ashwarden:v5": {
+          "topCell": "smolder:fat",
+          "topRate": 0.38317757009345793,
+          "thirdRate": 0.09090909090909091,
+          "fourthRate": 0.019230769230769232,
+          "within10": 1,
+          "viable": 1,
+          "arm2Wins": 6,
+          "arm2Runs": 32,
+          "arm2Rate": 0.1875,
+          "margin": 0.19567757009345793
+        }
+      },
+      "deficits": {
+        "c1a": 2.333333333333333,
+        "c1b": 1.6666666666666665,
+        "c2arm": 0.0,
+        "c2gap": 0.8017769567343918,
+        "sum": 4.8017769567343915
+      }
+    }
+  }
+}

@@ -1,0 +1,162 @@
+[
+  {
+    "arm": 1,
+    "aspect": "duskblade",
+    "vow": 0,
+    "wins": 142,
+    "runs": 200,
+    "winRate": 0.71,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 1,
+    "aspect": "duskblade",
+    "vow": 5,
+    "wins": 61,
+    "runs": 200,
+    "winRate": 0.305,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 1,
+    "aspect": "ashwarden",
+    "vow": 0,
+    "wins": 152,
+    "runs": 200,
+    "winRate": 0.76,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 1,
+    "aspect": "ashwarden",
+    "vow": 5,
+    "wins": 68,
+    "runs": 200,
+    "winRate": 0.34,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 2,
+    "aspect": "duskblade",
+    "vow": 0,
+    "wins": 56,
+    "runs": 200,
+    "winRate": 0.28,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 2,
+    "aspect": "duskblade",
+    "vow": 5,
+    "wins": 22,
+    "runs": 200,
+    "winRate": 0.11,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 2,
+    "aspect": "ashwarden",
+    "vow": 0,
+    "wins": 42,
+    "runs": 200,
+    "winRate": 0.21,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 2,
+    "aspect": "ashwarden",
+    "vow": 5,
+    "wins": 12,
+    "runs": 200,
+    "winRate": 0.06,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 3,
+    "aspect": "duskblade",
+    "vow": 0,
+    "wins": 82,
+    "runs": 200,
+    "winRate": 0.41,
+    "stalls": 1,
+    "errors": 0
+  },
+  {
+    "arm": 3,
+    "aspect": "duskblade",
+    "vow": 5,
+    "wins": 24,
+    "runs": 200,
+    "winRate": 0.12,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 3,
+    "aspect": "ashwarden",
+    "vow": 0,
+    "wins": 136,
+    "runs": 200,
+    "winRate": 0.68,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 3,
+    "aspect": "ashwarden",
+    "vow": 5,
+    "wins": 58,
+    "runs": 200,
+    "winRate": 0.29,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 4,
+    "aspect": "duskblade",
+    "vow": 0,
+    "wins": 21,
+    "runs": 200,
+    "winRate": 0.105,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 4,
+    "aspect": "duskblade",
+    "vow": 5,
+    "wins": 7,
+    "runs": 200,
+    "winRate": 0.035,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 4,
+    "aspect": "ashwarden",
+    "vow": 0,
+    "wins": 42,
+    "runs": 200,
+    "winRate": 0.21,
+    "stalls": 0,
+    "errors": 0
+  },
+  {
+    "arm": 4,
+    "aspect": "ashwarden",
+    "vow": 5,
+    "wins": 7,
+    "runs": 200,
+    "winRate": 0.035,
+    "stalls": 0,
+    "errors": 0
+  }
+]

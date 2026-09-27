@@ -1,0 +1,151 @@
+{
+  "commit": "8bfa08c0f987d0f836ba03fe0e4202a470dd572d",
+  "contentSha256": "667125b7ddb929d0bcc4297fb8ef8eab24e98f5dc252edd74999c0faa4dbf413",
+  "rawRoot": "/Users/jamesto/Coding/glassvow-exam/8bfa08c0f987d0f836ba03fe0e4202a470dd572d",
+  "files": [
+    {
+      "path": "controls.ndjson",
+      "bytes": 24025158,
+      "lines": 1,
+      "sha256": "669f73ebb8e3b098512f9627726999711d7ce9e06f9bff31b83e1d1784a28b1a"
+    },
+    {
+      "path": "layer2/island-0.ndjson",
+      "bytes": 1632119,
+      "lines": 217,
+      "sha256": "343e9b0b8d5fad9d513f210c12a4ecd8abdeeb4ece693eefc92dd7898f3e0863"
+    },
+    {
+      "path": "layer2/island-1.ndjson",
+      "bytes": 1756435,
+      "lines": 222,
+      "sha256": "8b461166efc01f333c8a6bd6e2e0562cbf79f032e43c4ab6cf4f16fe80b44953"
+    },
+    {
+      "path": "layer2/island-10.ndjson",
+      "bytes": 1578606,
+      "lines": 215,
+      "sha256": "dfad1756f4722fae0f21ed785d8b75f2aeb7747af97db01baa55a37eb6c7c605"
+    },
+    {
+      "path": "layer2/island-11.ndjson",
+      "bytes": 1564074,
+      "lines": 222,
+      "sha256": "23c6fc49c99303b86522bfff542e20c03779b4a9cdde4d31b52573d1dc12e5af"
+    },
+    {
+      "path": "layer2/island-2.ndjson",
+      "bytes": 1840749,
+      "lines": 220,
+      "sha256": "eb318fafbabd67d1d030813c36de6c0494fecc6a0d361078ed316afa676bde07"
+    },
+    {
+      "path": "layer2/island-3.ndjson",
+      "bytes": 1682247,
+      "lines": 219,
+      "sha256": "c381230d8d141c9c570eeb9abdc60e63b8671452224c9fb9c7f1e6707df2f140"
+    },
+    {
+      "path": "layer2/island-4.ndjson",
+      "bytes": 1744280,
+      "lines": 222,
+      "sha256": "0a2329f0436284f969e5aafb6b6c5b6a1013db5f5bc3d8f0a9d20926d36c71a3"
+    },
+    {
+      "path": "layer2/island-5.ndjson",
+      "bytes": 1663857,
+      "lines": 215,
+      "sha256": "1e183f6ade860bc9047f6fbc6254d601b492a22034c3c461ce319aeaf1e5a5c8"
+    },
+    {
+      "path": "layer2/island-6.ndjson",
+      "bytes": 1528028,
+      "lines": 219,
+      "sha256": "aaf6dbbef0c232c330249080e08d51ca1fe7afcef56cfe4f9c808ff94b16a817"
+    },
+    {
+      "path": "layer2/island-7.ndjson",
+      "bytes": 1419318,
+      "lines": 216,
+      "sha256": "8823f3ed3ad5a2ac9cda655191457e135b8dbe877d77361e11ace21d4356dcf7"
+    },
+    {
+      "path": "layer2/island-8.ndjson",
+      "bytes": 1477089,
+      "lines": 222,
+      "sha256": "a0303a825cd5847eb3b6e700eab479e34eab7148bca4935828b3846e71d28b1b"
+    },
+    {
+      "path": "layer2/island-9.ndjson",
+      "bytes": 1467112,
+      "lines": 222,
+      "sha256": "bc2fb7862cdfcf951a352875b546c0ae0dd00888a7a738fc1591fdfd047f28c3"
+    },
+    {
+      "path": "merged.ndjson",
+      "bytes": 2287838394,
+      "lines": 320001,
+      "sha256": "cad65079f57b27c01c77cb93ffaeca31e458ee03aef484e8fc954a2654a8090d"
+    },
+    {
+      "path": "shard-0.ndjson",
+      "bytes": 229068623,
+      "lines": 32001,
+      "sha256": "46689bb9391fd6f257cefa0ac62bc7878624b525d361fef208d705c431c83b03"
+    },
+    {
+      "path": "shard-1.ndjson",
+      "bytes": 228573957,
+      "lines": 32001,
+      "sha256": "17c658eff8e2a2b4bbaea4de561473cc585d9a4a76581a961e3dc1a59de75e7d"
+    },
+    {
+      "path": "shard-2.ndjson",
+      "bytes": 227203926,
+      "lines": 32001,
+      "sha256": "5922cd840cb612f99d2b5b31d39dbe5f6dd375bb3d0aef7bac213034f6b38a05"
+    },
+    {
+      "path": "shard-3.ndjson",
+      "bytes": 228572016,
+      "lines": 32001,
+      "sha256": "439d7ce33ff903b8539efd7ec4685753e2d399798743ebaa9ec1a33045ba8339"
+    },
+    {
+      "path": "shard-4.ndjson",
+      "bytes": 229478085,
+      "lines": 32001,
+      "sha256": "96d4ac649901385bcd4f98f89f258e8266eb2351360de68ff608f62f588c782b"
+    },
+    {
+      "path": "shard-5.ndjson",
+      "bytes": 228751715,
+      "lines": 32001,
+      "sha256": "51ba4e136d3b7a0323e1fe2733536ac120ce9d1baed5204aedfde73ca5a56a89"
+    },
+    {
+      "path": "shard-6.ndjson",
+      "bytes": 228655101,
+      "lines": 32001,
+      "sha256": "0473c78a3c541a8e37243896a0c9c1ede7566ef4409e794c4bab0a6f7289c501"
+    },
+    {
+      "path": "shard-7.ndjson",
+      "bytes": 228782284,
+      "lines": 32001,
+      "sha256": "62c9ebf98931c3a98a26342ab3c1c0a6bdc9ab718b476a8824486e9694ada6d2"
+    },
+    {
+      "path": "shard-8.ndjson",
+      "bytes": 229475440,
+      "lines": 32001,
+      "sha256": "c092e1a64a14ffe841a50a0106928e1732a1fe2088d063ca356e84d788d000c4"
+    },
+    {
+      "path": "shard-9.ndjson",
+      "bytes": 229285937,
+      "lines": 32001,
+      "sha256": "b445fb4ea4a0d1c628bf5a1c453baf6b69b87456cc2e9ebc2ab96c01e5e42da6"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "duskblade:v0": [
+    {
+      "cell": "shatter:fat",
+      "policyIndex": 8,
+      "wins": 1,
+      "runs": 1,
+      "rate": 1.0
+    },
+    {
+      "cell": "shatter:mid",
+      "policyIndex": 57,
+      "wins": 2,
+      "runs": 2,
+      "rate": 1.0
+    },
+    {
+      "cell": "smolder:fat",
+      "policyIndex": 3,
+      "wins": 1,
+      "runs": 1,
+      "rate": 1.0
+    },
+    {
+      "cell": "attrition:fat",
+      "policyIndex": 0,
+      "wins": 1,
+      "runs": 1,
+      "rate": 1.0
+    },
+    {
+      "cell": "smolder:mid",
+      "policyIndex": 35,
+      "wins": 1,
+      "runs": 1,
+      "rate": 1.0
+    },
+    {
+      "cell": "shatter:thin",
+      "policyIndex": 536,
+      "wins": 1,
+      "runs": 1,
+      "rate": 1.0
+    }
+  ],
+  "duskblade:v5": [
+    {
+      "cell": "shatter:fat",
+      "policyIndex": 16,
+      "wins": 2,
+      "runs": 2,
+      "rate": 1.0
+    },
+    {
+      "cell": "smolder:fat",
+      "policyIndex": 7,
+      "wins": 1,
+      "runs": 1,
+      "rate": 1.0
+    },
+    {
+      "cell": "attrition:fat",
+      "policyIndex": 10,
+      "wins": 1,
+      "runs": 1,
+      "rate": 1.0
+    },
+    {
+      "cell": "shatter:mid",
+      "policyIndex": 114,
+      "wins": 2,
+      "runs": 2,
+      "rate": 1.0
+    },
+    {
+      "cell": "smolder:mid",
+      "policyIndex": 101,
+      "wins": 1,
+      "runs": 1,
+      "rate": 1.0
+    },
+    {
+      "cell": "shatter:thin",
+      "policyIndex": 853,
+      "wins": 6,
+      "runs": 19,
+      "rate": 0.3157894736842105
+    }
+  ]
+}
