@@ -122,7 +122,9 @@ class ScopeFixtureTests(unittest.TestCase):
                       "run_balance_registry", "run_balance_host", "run_balance_f0",
                       "run_balance_tier1_f0", "run_balance_f1_f2"):
             self.assertTrue(selection.checks[check], check)
-        self.assertFalse(selection.checks["run_import_assets"])
+        # The host-qualify self-test runs balance_sim.gd, which needs the
+        # imported global class cache (BalanceCatalogue, ContentDB).
+        self.assertTrue(selection.checks["run_import_assets"])
 
     def test_execution_provenance_isolated_scope(self) -> None:
         selection = CI.classify_paths([
