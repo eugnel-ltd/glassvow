@@ -124,3 +124,28 @@ B 級 full-bleed plate**。兩條 binding 品味判斷(James,睇圖拍板):
 | 開封 short | 無(推門 plate 的門開 crop) | ThresholdScreen 位 |
 | Act IV | 五節點 establishing plate ×5(motif 池按 03-acts 對應表) | — |
 | 終戰 | 換位 plate ×1(你走,它留;互動 beat 疊其上) | `ascended.png` / `fallen.png` 兩結局 |
+
+## 9. Stagecraft(對白演出系統)[owner brief — James, 2026-09-27]
+
+The scene player now stages every scripted scene as a JRPG-style dialogue:
+a leaded glass pane with a name plaque, busts of the speaking cast in up to
+five seats (left/right the classic pair), lit when they speak and dark when
+they listen, mood portraits, delivery styles (speech, narration, shout,
+whisper, chorus, title card), beat weather and grade, and glass effects
+(crack, shatter, kindle, rays, impact, slash, quake). Directions ride on lines
+in `content/scenes.json`, so the cursor, the save and this document's beat
+structure are unchanged. Authoring reference and design record:
+`docs/design/2026-09-27-stagecraft/README.md`.
+
+Two rulings recorded here because they touch §1 and §8:
+
+- **§1 tap grammar, read literally.** Lines type in; a tap lands a line still
+  typing (提前完成 reveal) and a tap on a standing line steps (即時推進).
+  Hold-skip lands the typing line, then fast-forwards; the beat ② floor counts
+  from the moment the line stands. The finale walk (§5) is unchanged.
+- **#334 geometry overridden, its rule kept.** Opening beat ② is a two-shot
+  close-up (hero left, Keeper right as a portrait); beats ①③④ keep the seated
+  hearth figure. One Keeper body on screen at every cursor, pinned in
+  `tests/test_stagecraft.gd`. Copy (pane and title card) keeps clear of the
+  seat whenever it is shown.
+
