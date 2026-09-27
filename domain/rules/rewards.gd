@@ -68,7 +68,10 @@ func relic_pool(run: RunState, tier: String) -> Array:
 			var id: String = unlock.trim_prefix("relic:")
 			if content.relics.has(id) and content.relics[id].get("rarity") == tier and not out.has(id):
 				out.append(id)
-	return out
+	return out.filter(func(id: String) -> bool:
+		var aspect_id: String = str(content.relics[id].get("aspect", ""))
+		return aspect_id.is_empty() or (run.aspect >= 0 and run.aspect < content.aspects.size()
+			and str(content.aspects[run.aspect]["id"]) == aspect_id))
 
 
 static func _pool_open(run: RunState, gate: Dictionary, id: String) -> bool:

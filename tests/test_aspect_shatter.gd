@@ -5,6 +5,8 @@ extends RefCounted
 static func run(fails: Array[String]) -> void:
 	_connecting_strike(fails, 0, true)
 	_connecting_strike(fails, 1, false)
+	_unbroken_crown(fails)
+	_unbroken_crown_scalars(fails)
 	_dusk_emberbite_no_poison(fails)
 	_dusk_flare_no_poison(fails)
 	_ash_ashbite_applies_poison(fails)
@@ -135,3 +137,57 @@ static func _dusk_cinder_veined_still_hits_player(fails: Array[String]) -> void:
 			break
 	if not saw_player_smolder:
 		fails.append("aspect smolder: cinderVeined must still leave Smolder on Dusk")
+
+
+static func _unbroken_crown(fails: Array[String]) -> void:
+	var game: GlassvowGame = _fight(0, "unbroken-crown")
+	game.run.player.relics.append("unbrokenCrown")
+	var enemy: EnemyCombatant = game.cb.enemies[0]
+	enemy.hp = 100
+	enemy.chips = enemy.facet_max - 1
+	game.cb.player.block = 0
+	var strike: CardInst = CardInst.new(game.run.next_uid(), &"strike", false)
+	var preview: Dictionary = game.rules.preview_play(game.cb, strike, 0, game.run)
+	if int(float(str(preview["chips"]))) != 0 or preview["willShatter"]:
+		fails.append("Unbroken Crown: preview promises chip or shatter")
+	_play(game, &"venomStrike")
+	if _stacks(enemy.statuses, "poison") != 6:
+		fails.append("Unbroken Crown: Emberbite must apply its 4 Smolder plus crown 2")
+	if enemy.chips != enemy.facet_max - 1 or enemy.staggered:
+		fails.append("Unbroken Crown: attack chipped or staggered")
+	if game.cb.player.block != 3:
+		fails.append("Unbroken Crown: attack must gain 3 Ward")
+	game.rules.apply_chips(game.run, game.cb, enemy, 9)
+	if enemy.chips != enemy.facet_max - 1:
+		fails.append("Unbroken Crown: explicit chips must also be suppressed")
+	var content: ContentDB = ContentDB.load_full(false)
+	var rewards: RewardRules = RewardRules.new(content)
+	for aspect: int in [0, 1]:
+		var run_state: RunState = RunState.new_run(content, 42112, "crown-pool", {"aspect": aspect})
+		if rewards.relic_pool(run_state, "boss").has("unbrokenCrown") != (aspect == 0):
+			fails.append("Unbroken Crown: wrong aspect availability")
+		run_state.unlocks.append("relic:unbrokenCrown")
+		if rewards.relic_pool(run_state, "boss").has("unbrokenCrown") != (aspect == 0):
+			fails.append("Unbroken Crown: unlock bypasses aspect availability")
+
+
+static func _unbroken_crown_scalars(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_full(false)
+	content.relics["unbrokenCrown"]["wardPerAttack"] = 7
+	content.relics["unbrokenCrown"]["smolderPerAttack"] = 6
+	var run_state: RunState = RunState.new_run(content, 42113, "crown-scalars", {"aspect": 0})
+	run_state.player.relics.append("unbrokenCrown")
+	var game: GlassvowGame = GlassvowGame.new(content, run_state)
+	game.apply({"t": "startCombat", "enemies": ["sporeling", "sporeling"], "kind": "normal"})
+	for enemy: EnemyCombatant in game.cb.enemies:
+		enemy.hp = 100
+		enemy.block = 0
+		enemy.statuses.erase("poison")
+	game.cb.player.block = 0
+	game.cb.player.statuses["venomous"] = 2
+	_play(game, &"cleave")
+	for enemy: EnemyCombatant in game.cb.enemies:
+		if _stacks(enemy.statuses, "poison") != 8 or enemy.chips != 0:
+			fails.append("Unbroken Crown: AoE must combine tuned Smolder and venomous without chips")
+	if game.cb.player.block != 7:
+		fails.append("Unbroken Crown: tuned Ward must apply once per attack, not per target")

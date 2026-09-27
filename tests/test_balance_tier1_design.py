@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Public-seam tests for the issue #490 Tier-1 design registry."""
 from __future__ import annotations
-import json, sys, tempfile, unittest
+import json, sys, tempfile, unittest, subprocess, hashlib
 from copy import deepcopy
 from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(REPO / "tools"))
@@ -21,7 +21,10 @@ class BalanceTier1DesignTest(unittest.TestCase):
             self.assertEqual(reconstruct(REPO)["blob"], (out / "t1-c000/full-content.json").read_bytes())
             packet = json.loads((out / "t1-c047/hydration-patches.json").read_text())
             for relative, target in packet["files"].items():
-                replayed = replay_patches(json.loads((REPO / relative).read_text()), target["patch"])
+                source = json.loads(subprocess.check_output(["git", "show", f"{packet['sourceCommit']}:{relative}"], cwd=REPO))
+                replayed = replay_patches(source, target["patch"])
+                self.assertNotIn("unbrokenCrown", replayed.get("relics", {}))
+                self.assertEqual(target["semanticSha256"], hashlib.sha256(json.dumps(replayed, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()).hexdigest())
                 self.assertEqual(target["semanticSha256"], generated["candidates"][47]["files"][relative]["semanticSha256"])
                 self.assertEqual(target["semanticSha256"], target["replaySemanticSha256"]); self.assertEqual(target["fileSha256"], target["replayFileSha256"]); self.assertIsInstance(replayed, dict)
         with tempfile.TemporaryDirectory(prefix="glassvow-tier1-unsafe-") as temp:

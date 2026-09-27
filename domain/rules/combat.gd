@@ -395,7 +395,7 @@ func add_status_player(cb: CombatState, id: String, n: int) -> void:
 	_add_status(cb, cb.player.statuses, "player", id, n)
 
 
-## Enemy poison from the player is Ash-only (aspect != 0). Slice goldens still
+## Enemy poison from the player is Ash-only unless Unbroken Crown is held. Slice goldens still
 ## pin Dusk Flare smolder; the live catalogue id is `core`.
 func add_status_enemy(
 	cb: CombatState, e: EnemyCombatant, id: String, n: int, run: RunState = null
@@ -406,7 +406,7 @@ func add_status_enemy(
 
 
 func _player_smolder_blocked(run: RunState) -> bool:
-	return run != null and run.aspect == 0 and content.id == "core"
+	return run != null and run.aspect == 0 and content.id == "core" and not run.has_relic("unbrokenCrown")
 
 
 func _add_status(cb: CombatState, statuses: Dictionary, who: Variant, id: String, n: int) -> void:
@@ -665,7 +665,7 @@ func gain_block_enemy(
 ## (aspect 0): Ashwarden connecting attacks still compute implicit chip, but
 ## this no-op means they never stun.
 func apply_chips(run: RunState, cb: CombatState, e: EnemyCombatant, n: int) -> void:
-	if run.aspect != 0:
+	if run.aspect != 0 or run.has_relic("unbrokenCrown"):
 		return
 	if cb.over or e.hp <= 0 or n <= 0:
 		return
@@ -825,14 +825,19 @@ func play_card(run: RunState, cb: CombatState, uid: int, target_idx: Variant = n
 				apply_chips(run, cb, e, n)
 	cb.pending_chips_active = false
 	cb.pending_chips = {}
-	if not cb.over and card_type == "attack" and _sget(p.statuses, "venomous") > 0:
+	var crown: Dictionary = content.relics.get("unbrokenCrown", {}) if run.has_relic("unbrokenCrown") else {}
+	var smolder: int = _sget(p.statuses, "venomous") + _ji(crown.get("smolderPerAttack", 0))
+	if not cb.over and card_type == "attack" and smolder > 0:
 		var venom_targets: Array[EnemyCombatant] = []
 		if str(d.get("target", "")) == "allEnemies":
 			venom_targets = cb.living_enemies()
 		elif target != null and target.hp > 0:
 			venom_targets.append(target)
 		for e: EnemyCombatant in venom_targets:
-			add_status_enemy(cb, e, "poison", _sget(p.statuses, "venomous"), run)
+			add_status_enemy(cb, e, "poison", smolder, run)
+	if not cb.over and card_type == "attack" and not crown.is_empty():
+		gain_block_player(cb, _ji(crown.get("wardPerAttack", 0)), false, run)
+		_proc(cb, "unbrokenCrown")
 	if not cb.over and run.has_relic("silkFan") and cb.counters_played % 3 == 0:
 		gain_block_player(cb, 3, false, run)
 		_proc(cb, "silkFan")
@@ -1391,7 +1396,7 @@ func preview_play(
 		if str(d.get("type", "")) == "attack":
 			per = 1 + _ji(d.get("chip", 0)) + _sget(p.statuses, "beacon")
 		chips = (per if (hits.size() > 0 and loss > 0) else 0) + fx_chips
-		if run != null and run.aspect != 0:
+		if run != null and (run.aspect != 0 or run.has_relic("unbrokenCrown")):
 			chips = 0
 		will_shatter = chips > 0 and target.chips + chips >= target.facet_max and not lethal
 	return {

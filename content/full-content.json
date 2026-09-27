@@ -2073,6 +2073,16 @@
       "tone": "#ff5964",
       "name": "Crown of the Hearth",
       "text": "At the end of combat, heal 3 HP for every Ember still in your lantern."
+    },
+    "unbrokenCrown": {
+      "rarity": "boss",
+      "aspect": "duskblade",
+      "glyph": "⬡",
+      "tone": "#ff9a4d",
+      "name": "Unbroken Crown",
+      "wardPerAttack": 3,
+      "smolderPerAttack": 2,
+      "text": "Your blows no longer chip Facets, and your Smolder takes hold. Whenever you play an Attack, gain 3 Ward and apply 2 Smolder to the enemy."
     }
   },
   "relicPools": {
@@ -2107,7 +2117,8 @@
       "hollowCrown",
       "crownOfTithes",
       "shatterersCrown",
-      "crownOfTheHearth"
+      "crownOfTheHearth",
+      "unbrokenCrown"
     ]
   },
   "potions": {

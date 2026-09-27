@@ -68,7 +68,11 @@ def _diff(before: Any, after: Any, pointer: str = "") -> list[dict[str, Any]]:
         out.append({"op": "replace", "path": pointer, "before": before, "after": after})
     return out
 def _base_roots(repo: Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-    sources = {relative: read_json(repo / relative) for relative in FILES}; packet = reconstruct(repo)
+    # Historical candidates and their replay patches share the frozen H39 source.
+    # Live content can add IDs or pools without changing this experiment.
+    sources = {relative: json.loads(subprocess.check_output(
+        ["git", "show", f"{H39_COMMIT}:{relative}"], cwd=repo)) for relative in FILES}
+    packet = reconstruct(repo)
     targets = deepcopy(sources); targets[FILES[0]] = packet["content"]
     finalists = read_json(repo / FINALISTS_REL); row = next(item for item in finalists["orderedFinalists"] if item["id"] == "s009")
     for relative in FILES[1:]:
@@ -266,8 +270,8 @@ def compile_design(repo: Path = REPO, registry_path: Path | None = None,
         candidate = {"id": f"t1-c{index:03d}", "baseline": index == 0, "fileSha256": file_meta[FILES[0]]["fileSha256"], "semanticSha256": file_meta[FILES[0]]["semanticSha256"], "searchSpaceSha256": sha256_bytes(path.read_bytes()), "patch": patch_files[FILES[0]]["patch"],
                      "values": {ids[column]: registry["design"]["levels"][level] for column, level in enumerate(row)}, "files": file_meta}
         candidates.append(candidate)
-        artefacts.append({"candidate": candidate, "blobs": blobs, "patches": {"candidate": candidate["id"], "files": patch_files}})
-    manifest = {"tool": TOOL_ID, "registry": REGISTRY_REL, "features": 8,
+        artefacts.append({"candidate": candidate, "blobs": blobs, "patches": {"candidate": candidate["id"], "sourceCommit": H39_COMMIT, "files": patch_files}})
+    manifest = {"tool": TOOL_ID, "registry": REGISTRY_REL, "features": 8, "sourceCommit": H39_COMMIT,
                 "numericWrites": sum(len(feature["writes"]) for feature in registry["features"]),
                 "combinations": 3 ** 8, "seed": actual_seed, "count": 48, "baseIdentity": {key: value for key, value in packet["identity"].items() if key != "livePath"},
                 "registryIdentity": _identity(path, registry), "historyIdentity": _identity(history_path, history),
