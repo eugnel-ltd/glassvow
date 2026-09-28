@@ -795,3 +795,13 @@ Fuse pass (same day, seeded from the first edit):
 
 sha256 `c1d4d34d6f1299f2a162a3fafb9d76ec61ec4e635914aedfd65e5493774447dd`.
 
+### `map/grades/act1-grade.png` — 512×256 RGBA — Act I grade **candidate** (#294)
+
+Review-only shipping-path candidate, not accepted provenance. Locally authored
+2026-08-21 from `MapMaterials._grade_image` (Act I hue arc 0.95→0.88,
+corridor 0.98) sampled at 512×256, plus contact at the terminus seat
+`(22,0)`. Fallback `_grade_image` (256×128) is unchanged and remains the
+oracle. No vendor/provider generation. Evidence:
+`docs/reviews/294/act1-grade/`. Do not treat this paragraph as a reviewer
+verdict or human acceptance.
+
