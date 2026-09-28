@@ -63,6 +63,11 @@ func update(stock: Dictionary, gold: int, quest_offer: Dictionary,
 	_relayout()
 
 
+## The merchant's line. Empty restores the greeting.
+func say(text: String) -> void:
+	_say.text = text if not text.is_empty() else Locale.active.t("ui.shop.greeting")
+
+
 func _init(stock: Dictionary, gold: int, content: ContentDB,
 		quest_offer: Dictionary = {}, potion_slot_available: bool = true,
 		stage_shape: StringName = StageShape.IDENTITY, sfx: SfxBus = null) -> void:

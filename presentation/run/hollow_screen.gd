@@ -1,10 +1,22 @@
 class_name HollowScreen
 extends Control
-## Persisted Hollow Lamplighter interruption on an Unlit Way.
+## Persisted Hollow Lamplighter interruption on an Unlit Way, staged as the
+## meeting's own two-shot (stagecraft): the hero on the left, the Lamplighter
+## lit on the right, his ask typed into the leaded pane under his plaque, and
+## the price as a choice window between them. The night road carries the same
+## dusk grade and falling ash as the meeting's pre- and post-scenes, so the
+## three read as one conversation. His posture follows the price — asking,
+## wary when it cannot be met, recognising once it is paid — and paying
+## kindles your embers into the dark lantern. He answers in his own words:
+## the meeting's `paid` line once the price lands, its `cannot` line when it
+## cannot be met; the system's plain reason stays as a note under the choices.
 
 signal action_requested(action: StringName)
 
-const HOLLOW: String = "res://assets/art/meta/hollow-lamplighter.png"
+const ACTOR: String = "lamplighter"
+const MOOD_ASK: String = "asking"
+const MOOD_PAID: String = "recognising"
+const MOOD_REFUSED: String = "wary"
 
 var shape: StringName = StageShape.IDENTITY
 
@@ -12,10 +24,15 @@ var _pending: Dictionary
 var _meeting: Dictionary
 var _meeting_number: int
 var _target: int
+var _hero: String = ""
 var _sfx: SfxBus
-var _layout: GridContainer
-var _figure: TextureRect
-var _copy: PanelContainer
+var _book: ActorBook
+var _stage: PortraitStage
+var _ambient: SceneFx
+var _front: SceneFx
+var _header: VBoxContainer
+var _copy: DialogueBox
+var _window: PanelContainer
 var _kicker: Label
 var _title: Label
 var _ask: Label
@@ -29,17 +46,19 @@ var _leave: Button
 
 func _init(pending: Dictionary, meeting: Dictionary, meeting_number: int,
 		target: int, stage_shape: StringName = StageShape.IDENTITY,
-		sfx: SfxBus = null) -> void:
+		sfx: SfxBus = null, hero: String = "") -> void:
 	_pending = pending
 	_meeting = meeting
 	_meeting_number = clampi(meeting_number, 1, maxi(1, target))
 	_target = maxi(1, target)
+	_hero = hero
 	shape = stage_shape if StageShape.REFERENCES.has(stage_shape) else StageShape.IDENTITY
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = GlassStyle.theme()
 	_sfx = sfx if sfx != null else SfxBus.new()
 	if sfx == null:
 		add_child(_sfx)
+	_book = ActorBook.shared()
 	_build()
 
 
@@ -54,78 +73,56 @@ func _build() -> void:
 	background.stretch_mode = TextureRect.STRETCH_SCALE
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
-	var vignette: TextureRect = TextureRect.new()
-	vignette.texture = GlassStyle.grad_tex(
-		PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, 0.12), Color(0, 0, 0, 0.84)]),
-		PackedFloat32Array([0.0, 0.35, 1.0]), true,
-		Vector2(0.58, 0.48), Vector2(1.0, 0.48))
-	vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vignette.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	vignette.stretch_mode = TextureRect.STRETCH_SCALE
-	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(vignette)
+	var grade: ColorRect = ColorRect.new()
+	grade.color = SceneDirector.GRADES[&"dusk"]
+	grade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	grade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(grade)
+	var reduce: bool = Preferences.active.reduce_motion
+	_ambient = SceneFx.new("AmbientFx")
+	_ambient.reduce_motion = reduce
+	_ambient.set_ambient(&"ash")
+	add_child(_ambient)
+	_stage = PortraitStage.new(_book, _hero)
+	_stage.reduce_motion = reduce
+	add_child(_stage)
+	_front = SceneFx.new("FrontFx")
+	_front.reduce_motion = reduce
+	_front.allow_shake = Preferences.active.screen_shake
+	add_child(_front)
 
-	var margin: MarginContainer = MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(margin)
-	var centre: CenterContainer = CenterContainer.new()
-	centre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	centre.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	margin.add_child(centre)
-	_layout = GridContainer.new()
-	_layout.columns = 2
-	_layout.add_theme_constant_override("h_separation", 64)
-	_layout.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_layout.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	centre.add_child(_layout)
-
-	var figure_centre: CenterContainer = CenterContainer.new()
-	figure_centre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	figure_centre.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_layout.add_child(figure_centre)
-	_figure = TextureRect.new()
-	_figure.texture = load(HOLLOW) as Texture2D
-	_figure.custom_minimum_size = Vector2(336, 558)
-	_figure.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_figure.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	figure_centre.add_child(_figure)
-
-	_copy = PanelContainer.new()
-	_copy.custom_minimum_size.x = 520
-	_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_copy.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_copy.add_theme_stylebox_override("panel", _copy_style(46))
-	_layout.add_child(_copy)
-	var column: VBoxContainer = VBoxContainer.new()
-	column.add_theme_constant_override("separation", 8)
-	_copy.add_child(column)
+	_header = VBoxContainer.new()
+	_header.alignment = BoxContainer.ALIGNMENT_CENTER
+	_header.add_theme_constant_override("separation", 2)
+	_header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_header)
 	_kicker = _label(
 		Locale.active.t("ui.hollow.kicker", {
 			"current": _meeting_number, "total": _target}),
 		11, Color("#83939d"))
 	_kicker.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_500, 2))
-	column.add_child(_kicker)
-	_title = _label(Locale.active.t("ui.hollow.title"), 38, Color("#c3cdd2"))
+	_kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_header.add_child(_kicker)
+	_title = _label(Locale.active.t("ui.hollow.title"), 30, Color("#c3cdd2"))
 	_title.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_700, 2))
-	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(_title)
-	_ask = _label("“%s”" % str(_meeting.get("ask", "")), 19, Color("#d8dfe2"))
-	_ask.add_theme_font_override("font", GlassStyle.face(GlassStyle.CINZEL_500))
-	_ask.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_ask.custom_minimum_size.y = 96
-	column.add_child(_ask)
-	_answer = _label("", 14, Color("#d9c98c"))
-	_answer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_answer.custom_minimum_size.y = 48
-	column.add_child(_answer)
-	_error = _label("", 12, Color("#e2a0a0"))
-	_error.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_error.custom_minimum_size.y = 20
-	column.add_child(_error)
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_header.add_child(_title)
 
+	_copy = DialogueBox.new()
+	_copy.reduce_motion = reduce
+	add_child(_copy)
+	_ask = _copy.line_label()
+
+	_window = PanelContainer.new()
+	_window.name = "ChoiceWindow"
+	_window.add_theme_stylebox_override("panel", DialogueBox.window_style())
+	add_child(_window)
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	_window.add_child(column)
 	_actions = GridContainer.new()
-	_actions.columns = 3
-	_actions.add_theme_constant_override("h_separation", 12)
+	_actions.columns = 1
+	_actions.add_theme_constant_override("h_separation", 10)
 	_actions.add_theme_constant_override("v_separation", 8)
 	column.add_child(_actions)
 	_pay = _action(Locale.active.t("ui.hollow.payPrice").to_upper(), &"pay", true)
@@ -134,15 +131,29 @@ func _build() -> void:
 	_actions.add_child(_continue)
 	_leave = _action(Locale.active.t("ui.hollow.returnLater").to_upper(), &"leave", false)
 	_actions.add_child(_leave)
-	set_paid(str(_pending.get("paid", false)) == "true",
-		str(_pending.get("answer", "")))
+	_answer = _label("", 13, Color("#d9c98c"))
+	_answer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_answer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(_answer)
+	_error = _label("", 12, Color("#e2a0a0"))
+	_error.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_error.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(_error)
+
+	var paid: bool = str(_pending.get("paid", false)) == "true"
+	# The ask arrives typed, as every line on the stagecraft pane does; a
+	# resumed, already-paid meeting opens on his answer instead.
+	_say(_answer_field() if paid else "ask", false)
+	_stand(MOOD_PAID if paid else MOOD_ASK, true)
+	set_paid(paid, str(_pending.get("answer", "")))
+	resized.connect(_layout)
 	set_shape(shape)
 
 
 func _action(text: String, action: StringName, primary: bool) -> Button:
 	var button: Button = Button.new()
 	button.text = text
-	button.custom_minimum_size = Vector2(150, 44)
+	button.custom_minimum_size = Vector2(220, 42)
 	RunStyle.style_button(button, primary, Color("#83939d"))
 	button.pressed.connect(func() -> void:
 		_sfx.play(&"click")
@@ -163,6 +174,10 @@ func set_paid(paid: bool, answer: String = "") -> void:
 	_continue.disabled = not paid
 	_leave.disabled = paid
 	_error.text = ""
+	_sync_notes()
+	_stand(MOOD_PAID if paid else MOOD_ASK, false)
+	if paid:
+		_say(_answer_field(), false)
 
 
 func show_error(message: String) -> void:
@@ -171,6 +186,64 @@ func show_error(message: String) -> void:
 	_pay.disabled = false
 	_continue.disabled = true
 	_leave.disabled = false
+	_sync_notes()
+	_stand(MOOD_REFUSED, false)
+	_stage.actor_fx(&"recoil", ACTOR)
+	if _has_line("cannot"):
+		_say("cannot", false)
+
+
+## The price just landed: your embers kindle across into the hollow lantern
+## (which, being hollow, still does not light — the post-scene says so).
+func play_paid() -> void:
+	var giver: StagePortrait = _stage.portrait("hero")
+	var taker: StagePortrait = _stage.portrait(ACTOR)
+	if giver == null or taker == null:
+		return
+	_front.play(&"kindle", giver.hands(), taker.hands())
+	_stage.actor_fx(&"kindle", ACTOR)
+	_sfx.play(&"kindle")
+
+
+## His answer once the price is met. A promised price (the first meeting's
+## embers, owed to fights still to come) is accepted, not yet paid.
+func _answer_field() -> String:
+	if str(_pending.get("deferred", false)) == "true" and _has_line("accepted"):
+		return "accepted"
+	return "paid" if _has_line("paid") else "ask"
+
+
+func _has_line(field: String) -> bool:
+	return not str(_meeting.get(field, "")).strip_edges().is_empty()
+
+
+## One of the meeting's own lines (`ask`, `accepted`, `paid`, `cannot`) into the pane,
+## under his plaque.
+func _say(field: String, instant: bool) -> void:
+	_copy.show_line("“%s”" % str(_meeting.get(field, "")),
+		Locale.active.t(_book.name_key(ACTOR)), StageDirection.STYLE_SPEECH,
+		_book.tint(ACTOR), &"right", instant)
+
+
+func _stand(mood: String, instant: bool) -> void:
+	var cast: Array[Dictionary] = [
+		{"id": "hero", "at": &"left", "mood": ""},
+		{"id": ACTOR, "at": &"right", "mood": mood},
+	]
+	_stage.stage(cast, ACTOR, instant)
+
+
+## Empty notes take no room in the choice window.
+func _sync_notes() -> void:
+	_answer.visible = not _answer.text.is_empty()
+	_error.visible = not _error.text.is_empty()
+	if is_inside_tree():
+		_layout.call_deferred()
+
+
+func _ready() -> void:
+	# The window's minimum size is only final once the theme reaches it.
+	_layout.call_deferred()
 
 
 static func _message_text(message: String) -> String:
@@ -179,21 +252,46 @@ static func _message_text(message: String) -> String:
 	return message
 
 
+func _process(delta: float) -> void:
+	_copy.advance_type(delta)
+	_stage.tick(delta)
+	_ambient.tick(delta)
+	_front.tick(delta)
+
+
 func set_shape(stage_shape: StringName) -> void:
 	if not StageShape.REFERENCES.has(stage_shape):
 		return
 	shape = stage_shape
 	var short: bool = shape == &"phone-landscape"
-	_layout.columns = 2
-	_layout.add_theme_constant_override("h_separation", 24 if short else 64)
-	_figure.custom_minimum_size = Vector2(
-		180 if short else 336, 304 if short else 558)
-	_copy.custom_minimum_size.x = 560 if short else 520
-	_copy.add_theme_stylebox_override("panel", _copy_style(18 if short else 46))
-	_actions.columns = 2 if short else 3
-	_title.add_theme_font_size_override("font_size", 24 if short else 38)
-	_ask.add_theme_font_size_override("font_size", 13 if short else 19)
-	_ask.custom_minimum_size.y = 48 if short else 96
+	_actions.columns = 3 if short else 1
+	for button: Button in [_pay, _continue, _leave]:
+		button.custom_minimum_size = Vector2(150 if short else 220, 38 if short else 42)
+	_title.add_theme_font_size_override("font_size", 20 if short else 30)
+	_copy.set_shape(shape)
+	_layout()
+
+
+func _layout() -> void:
+	var view: Vector2 = size
+	if view.x < 1.0 or view.y < 1.0:
+		var ref: Vector2i = StageShape.REFERENCES[shape]
+		view = Vector2(ref)
+	var short: bool = shape == &"phone-landscape"
+	var pane: Rect2 = DialogueBox.box_rect(view, shape, StageDirection.STYLE_SPEECH)
+	_copy.place(pane)
+	_stage.set_view(view, shape)
+	_ambient.set_view(view)
+	_front.set_view(view)
+	var head: Vector2 = _header.get_combined_minimum_size()
+	_header.size = Vector2(view.x * 0.6, head.y)
+	_header.position = Vector2(view.x * 0.2, view.y * (0.03 if short else 0.09))
+	# On a phone the location card gives way to the choice window.
+	_header.visible = not short
+	var win: Vector2 = _window.get_combined_minimum_size()
+	_window.size = win
+	_window.position = Vector2((view.x - win.x) * 0.5,
+		pane.position.y - win.y - (10.0 if short else 22.0))
 
 
 static func _label(text: String, font_size: int, colour: Color) -> Label:
@@ -203,18 +301,3 @@ static func _label(text: String, font_size: int, colour: Color) -> Label:
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", colour)
 	return label
-
-
-static func _copy_style(inset: float) -> StyleBoxFlat:
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.045, 0.07, 0.095, 0.92)
-	style.set_border_width_all(1)
-	style.border_color = Color(0.51, 0.60, 0.65, 0.25)
-	style.corner_radius_top_left = 3
-	style.corner_radius_top_right = 18
-	style.corner_radius_bottom_left = 18
-	style.corner_radius_bottom_right = 3
-	style.set_content_margin_all(inset)
-	style.shadow_color = Color(0, 0, 0, 0.62)
-	style.shadow_size = 28
-	return style

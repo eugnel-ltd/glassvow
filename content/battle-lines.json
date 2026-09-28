@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "speakers": {
+    "usurpedSovereign": {"actor": "sovereign", "intro": [
+      {"fx": ["pulse"]},
+      {"fx": ["crack"]},
+      {"style": "shout", "fx": ["hop", "flash-ember"]}
+    ]},
+    "ownShade1": {"actor": "shade", "death": {"style": "whisper", "fx": ["flash-cold"]}},
+    "ownShade2": {"actor": "shade", "death": {"style": "whisper", "fx": ["flash-cold"]}},
+    "ownShade3": {"actor": "shade", "death": {"style": "whisper", "fx": ["flash-cold", "crack"]}}
+  }
+}

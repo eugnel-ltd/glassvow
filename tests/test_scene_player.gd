@@ -22,6 +22,7 @@ static func run(fails: Array[String]) -> void:
 	_finished_once(fails)
 	_missing_plates(fails, opening)
 	_dwell_reads_the_line(fails, opening)
+	_skip_lands_a_typing_line(fails, opening)
 
 
 static func _fresh_asks_once(fails: Array[String], opening: SceneScript) -> void:
@@ -61,6 +62,9 @@ static func _resume(fails: Array[String], opening: SceneScript) -> void:
 	player.free()
 
 
+## 07-scenes §1: a tap lands a line still typing (提前完成 reveal) and only a
+## tap on a standing line steps (即時推進) — one tap never costs a line the
+## player has not seen whole, and never moves more than one.
 static func _skip_distinct_from_tap(fails: Array[String], opening: SceneScript) -> void:
 	var tapped: Array[int] = [0]
 	var tap: ScenePlayer = ScenePlayer.new(opening, 0)
@@ -69,8 +73,14 @@ static func _skip_distinct_from_tap(fails: Array[String], opening: SceneScript) 
 	tap._press(true)
 	tap._process(0.05)
 	tap._press(false)
-	_check(fails, tapped[0] == 1, "a tap mid-reveal did not ask")
+	_check(fails, tapped[0] == 0, "a tap mid-reveal stepped past a line still typing")
 	_check(fails, is_equal_approx(tap._copy.modulate.a, 1.0), "a tap did not land the line")
+	_check(fails, tap._copy.is_complete() and tap._line.visible_characters == -1,
+		"a tap left the line half-typed")
+	_check(fails, tap._beat == ScenePlayer.BEAT_WAIT, "a tap did not stand the line")
+	tap._press(true)
+	tap._press(false)
+	_check(fails, tapped[0] == 1, "a tap on a standing line did not ask")
 	tap.advance_confirmed()
 	_check(fails, tap._beat == ScenePlayer.BEAT_REVEAL,
 		"a tap left skip armed (next line was instant)")
@@ -123,7 +133,7 @@ static func _skip_floor_once_from_destination(
 	var player: ScenePlayer = ScenePlayer.new(opening, 2)
 	player.advance_requested.connect(func() -> void: asked[0] += 1)
 	player._ready()
-	player._process(ScenePlayer.REVEAL_TIME + 0.01)
+	_settle(player)
 	player._press(true)
 	player._process(ScenePlayer.SKIP_HOLD)
 	_check(fails, player._skipping, "hold from beat ② did not arm skip")
@@ -247,6 +257,32 @@ static func _dwell_reads_the_line(fails: Array[String], opening: SceneScript) ->
 	waiting.free()
 
 
+## Let the owed line finish typing, and no more: the wait starts fresh.
+static func _settle(player: ScenePlayer) -> void:
+	var steps: int = 0
+	while player._beat == ScenePlayer.BEAT_REVEAL and steps < 400:
+		player._process(0.02)
+		steps += 1
+
+
+## Holding from the very first frame of a line lands it whole at the arm,
+## and the fast-forward then steps on the short skip wait.
+static func _skip_lands_a_typing_line(fails: Array[String], opening: SceneScript) -> void:
+	var asked: Array[int] = [0]
+	var player: ScenePlayer = ScenePlayer.new(opening, 0)
+	player.advance_requested.connect(func() -> void: asked[0] += 1)
+	player._ready()
+	player._press(true)
+	player._process(ScenePlayer.SKIP_HOLD)
+	_check(fails, player._skipping and player._beat == ScenePlayer.BEAT_WAIT,
+		"a skip that armed mid-reveal left the line typing")
+	_check(fails, player._line.visible_characters == -1,
+		"a skip that armed mid-reveal did not land the whole line")
+	player._process(ScenePlayer.SKIP_WAIT + 0.01)
+	_check(fails, asked[0] == 1, "a skip that armed mid-reveal did not step")
+	player.free()
+
+
 static func _live(script: SceneScript, cursor: int, asked: Array[int],
 		done: Array[int] = []) -> ScenePlayer:
 	var player: ScenePlayer = ScenePlayer.new(script, cursor)
@@ -280,6 +316,7 @@ static func _ask_via_input(opening: SceneScript, events: Array[InputEvent]) -> i
 	var player: ScenePlayer = ScenePlayer.new(opening, 0)
 	player.advance_requested.connect(func() -> void: asked[0] += 1)
 	player._ready()
+	_settle(player)
 	for event: InputEvent in events:
 		if event is InputEventMouseButton:
 			player._gui_input(event)

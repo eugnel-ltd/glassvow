@@ -31,7 +31,7 @@ var _line_up: bool = false
 var _plant: TextureRect = null
 var _reflection: WindowReflection = null
 var _copy_layer: Control = null
-var _copy: PanelContainer = null
+var _copy: DialogueBox = null
 var _speaker: Label = null
 var _line: Label = null
 
@@ -83,71 +83,40 @@ func _ready() -> void:
 		.finished.connect(_on_plant_done)
 
 
+## The run's hearth line stands in the same leaded pane the scene player
+## uses, docked clear of the seated figure (one body, and copy off it).
 func _build_copy() -> void:
-	var margin: MarginContainer = MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for side: String in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 48)
-	add_child(margin)
-	_copy_layer = margin
-	var dock: VBoxContainer = VBoxContainer.new()
-	dock.alignment = BoxContainer.ALIGNMENT_END
-	dock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	dock.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_child(dock)
-	var centre: CenterContainer = CenterContainer.new()
-	centre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dock.add_child(centre)
-	_copy = PanelContainer.new()
+	_copy = DialogueBox.new()
 	_copy.visible = false
-	_copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_copy.custom_minimum_size.x = 520.0
-	centre.add_child(_copy)
-	var column: VBoxContainer = VBoxContainer.new()
-	column.add_theme_constant_override("separation", 8)
-	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_copy.add_child(column)
-	_speaker = Label.new()
-	_speaker.name = "Speaker"
-	_speaker.visible = false
-	_speaker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_speaker.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_500, 2))
-	_speaker.add_theme_font_size_override("font_size", 11)
-	_speaker.add_theme_color_override("font_color", RunStyle.GOLD_DIM)
-	_speaker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.add_child(_speaker)
-	_line = Label.new()
-	_line.name = "Line"
-	_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_line.add_theme_font_override("font", GlassStyle.face(GlassStyle.CINZEL_500))
-	_line.add_theme_font_size_override("font_size", 19)
-	_line.add_theme_color_override("font_color", Color("#d8dfe2"))
-	_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.add_child(_line)
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.045, 0.07, 0.095, 0.92)
-	style.set_border_width_all(1)
-	style.border_color = Color(0.51, 0.60, 0.65, 0.25)
-	style.corner_radius_top_left = 3
-	style.corner_radius_top_right = 18
-	style.corner_radius_bottom_left = 18
-	style.corner_radius_bottom_right = 3
-	style.set_content_margin_all(46.0)
-	_copy.add_theme_stylebox_override("panel", style)
+	add_child(_copy)
+	_copy_layer = _copy
+	_speaker = _copy.speaker_label()
+	_line = _copy.line_label()
+	resized.connect(_layout_copy)
+	_layout_copy()
+
+
+func _layout_copy() -> void:
+	var view: Vector2 = size
+	if view.x < 1.0 or view.y < 1.0:
+		view = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
+	var rect: Rect2 = DialogueBox.box_rect(view, StageShape.IDENTITY,
+		StageDirection.STYLE_SPEECH, HearthFigure.SEAT_LEFT)
+	_copy.place(rect)
 
 
 func _bind_line() -> void:
 	if line_row.is_empty() or _line == null:
 		return
-	_line.text = LineTable.text(line_row, Locale.active.code == Locale.CODE_ZH_HANT)
+	var text: String = LineTable.text(line_row, Locale.active.code == Locale.CODE_ZH_HANT)
 	var speaker_id: String = str(line_row.get("speaker", "")).strip_edges()
-	_speaker.visible = speaker_id == "keeper"
-	_speaker.text = Locale.active.t("ui.scene.speaker.keeper") if _speaker.visible else ""
+	var keeper: bool = speaker_id == "keeper"
+	var book: ActorBook = ActorBook.shared()
+	_copy.show_line(text,
+		Locale.active.t(book.name_key("keeper")) if keeper else "",
+		StageDirection.STYLE_SPEECH if keeper else StageDirection.STYLE_NARRATION,
+		book.tint("keeper") if keeper else DialogueBox.HAIRLINE, &"right", true)
+	_layout_copy()
 
 
 func _tick_window(u: float) -> void:

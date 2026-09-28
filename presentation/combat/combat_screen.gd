@@ -434,6 +434,7 @@ var _hero_swung: bool = true
 var _shake_host: Control
 var _vfx: VfxLayer
 var _floaters: Floaters
+var _dialogue: BattleDialogue
 ## `sfx` (audio.js). Owned here rather than reached for globally: the fight is
 ## the only screen that has sound yet, and `main.gd` is the sole composition
 ## root, so a second owner would have to be handed one rather than find one.
@@ -505,6 +506,7 @@ func set_shape(stage_shape: StringName) -> void:
 	if next == shape:
 		return
 	shape = next
+	_dialogue.set_shape(shape)
 	_authored = LayoutBook.resolve(&"battlefield", shape, act)
 	_placed = {}
 	_placed_at = Vector2i.ZERO
@@ -722,6 +724,16 @@ func _build_ui() -> void:
 	add_child(_vfx)
 	_floaters = Floaters.new()
 	add_child(_floaters)
+	# Injected bus already lives under main; only own a fallback. Owned before
+	# the dialogue is built, so a foe that speaks here is heard too.
+	if _sfx == null:
+		_sfx = SfxBus.new()
+		add_child(_sfx)
+	# A foe that speaks does so over everything below the chrome: the fight
+	# dims a step and its glass bust answers in the story pane (stagecraft).
+	_dialogue = BattleDialogue.new(_sfx)
+	_dialogue.shape = shape
+	add_child(_dialogue)
 
 	# `.art-cast` carries z 57 against `#floaties`' 55 — the art's face is over
 	# the damage numerals, so it is added after them.
@@ -741,11 +753,6 @@ func _build_ui() -> void:
 	_cast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_cast.visible = false
 	add_child(_cast)
-
-	# Injected bus already lives under main; only own a fallback.
-	if _sfx == null:
-		_sfx = SfxBus.new()
-		add_child(_sfx)
 
 	_tips = TooltipLayer.new()
 	_tips.source = _tip_at
@@ -1320,6 +1327,7 @@ func start_encounter(enemy_ids: Array, kind: String, encounter_text: String) -> 
 	# must never wait on a tween that will not tick.
 	_floaters.instant = seq.instant
 	_floaters.clear_all()
+	_dialogue.instant = seq.instant
 	# `V.setWeather(theme?.weather, { boss: kind === 'boss' })` — the air a fight
 	# happens in, thicker for a boss.
 	_vfx.set_weather(not seq.instant, kind == "boss")
@@ -1456,6 +1464,7 @@ func _play_opening_ceremony() -> void:
 		return
 	var boss: bool = game.cb.enemies[0].boss
 	var spoken: Array[String] = []
+	var voices: Array[Dictionary] = []
 	var aspect_name: String = ""
 	if game.run.aspect >= 0 and game.run.aspect < game.content.aspects.size():
 		var aspect_v: Variant = game.content.aspects[game.run.aspect]
@@ -1467,8 +1476,12 @@ func _play_opening_ceremony() -> void:
 		if typeof(lines_v) != TYPE_ARRAY:
 			continue
 		var lines: Array = lines_v
+		var said: Array[String] = []
 		for line_v: Variant in lines:
-			spoken.append(str(line_v).replace("{aspect}", aspect_name))
+			said.append(str(line_v).replace("{aspect}", aspect_name))
+		spoken.append_array(said)
+		if not said.is_empty():
+			voices.append({"variant": String(e.variant_id), "name": e.name, "lines": said})
 	if not boss and spoken.is_empty():
 		return
 	await _wait(0.9)  # let the walk-in and the deal land first
@@ -1479,10 +1492,11 @@ func _play_opening_ceremony() -> void:
 		_sky.kick(1.6)
 		_sfx.play(&"bigDeath")
 		await _floaters.banner(game.cb.enemies[0].name, "boss", 2.1)
-	for line: String in spoken:
+	for voice: Dictionary in voices:
 		if not is_inside_tree():
 			return
-		await _floaters.banner(line, "variant", 1.8)
+		var said: Array[String] = voice["lines"]
+		await _voice(str(voice["variant"]), str(voice["name"]), said, false)
 
 
 ## `.combat-screen.intro` (styles.css:739) — the hero walks in from the left,
@@ -2164,6 +2178,41 @@ func _find_card(uid: int) -> CardInst:
 
 # ---------------------------------------------------------------- playback
 
+## A foe's spoken lines: through the battle dialogue when its variant is
+## staged (`content/battle-lines.json`), else the pre-stagecraft banner.
+func _voice(variant_id: String, speaker: String, lines: Array[String], death: bool) -> void:
+	if not _dialogue.can_voice(variant_id):
+		for line: String in lines:
+			if not is_inside_tree():
+				return
+			await _floaters.banner(line, "variant", 1.8)
+		return
+	var row: Dictionary = BattleDialogue.staging_for(variant_id)
+	var intro: Array[Dictionary] = row.get("intro", [] as Array[Dictionary])
+	var entries: Array[Dictionary] = []
+	for i: int in range(lines.size()):
+		var direction: Dictionary = row.get("death", {}) if death \
+			else (intro[i] if i < intro.size() else {})
+		entries.append({"text": lines[i], "direction": direction})
+	# A tip already standing (a touch long-press) steps aside for the pane.
+	_tips.hide_tip()
+	await _dialogue.speak(variant_id, speaker, entries)
+
+
+## A mid-fight line from the drain: a dying word when it is the foe's own
+## death line, otherwise the next of its spoken lines.
+func _voice_event(ev: Dictionary) -> void:
+	var text: String = str(ev.get("text", ""))
+	var idx: int = ev.get("idx", -1)
+	if idx < 0 or idx >= game.cb.enemies.size():
+		await _floaters.banner(text, "variant", 1.8)
+		return
+	var e: EnemyCombatant = game.cb.enemies[idx]
+	var death: bool = text == str(e.def.get("deathDialogue", ""))
+	var said: Array[String] = [text]
+	await _voice(String(e.variant_id), e.name, said, death)
+
+
 func _wait(seconds: float) -> void:
 	if seq.instant:
 		return
@@ -2652,7 +2701,7 @@ func _handle_event(ev: Dictionary) -> void:
 			# beat only holds the plate so the drain can reach combat_over.
 			await _wait(0.32)
 		EventTypes.VARIANT_DIALOGUE:
-			await _floaters.banner(str(ev.get("text", "")), "variant", 1.8)
+			await _voice_event(ev)
 		EventTypes.END_TURN:
 			# `heroActing = false` — nothing swings again until a card is played.
 			_hero_swung = true
@@ -3154,7 +3203,9 @@ func _sync_all() -> void:
 ## because a widget in `presentation/` does not read content and these are all
 ## catalogue copy.
 func _tip_at(global_pos: Vector2) -> Dictionary:
-	if game.cb == null:
+	# No tip over a speaking foe's pane: this gates the hover poll and the
+	# long-press alike, since both ask this source.
+	if game.cb == null or _dialogue.speaking():
 		return {}
 	# The hand is above everything, and a keyword beats the card that holds it —
 	# the benchmark gets the same order for free, because a `.kw` span is a
@@ -3307,6 +3358,10 @@ func _lantern_tip() -> Dictionary:
 ## forwards the gesture because the tooltip layer is deliberately pointer-inert
 ## and would never see it.
 func _input(event: InputEvent) -> void:
+	# A foe that speaks holds the fight until its last line clears: its pane
+	# takes the tap and the advance keys, and nothing reaches the hand.
+	if _dialogue.speaking():
+		return
 	var key: InputEventKey = event as InputEventKey
 	if _inspector != null and _inspector.visible:
 		if key != null and key.pressed and not key.echo:
@@ -3528,7 +3583,7 @@ func _aim_target() -> int:
 ## E and A answer even mid-animation guard (they check `S.busy` themselves and
 ## are no-ops when it is set); everything after the busy gate does not.
 func _combat_key(key: Key) -> bool:
-	if game.cb == null or game.cb.over:
+	if game.cb == null or game.cb.over or _dialogue.speaking():
 		return false
 	if key == KEY_ESCAPE:
 		if _hand.dragged_uid() >= 0 or _selected_uid >= 0:

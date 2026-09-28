@@ -1,7 +1,9 @@
 class_name ScenePlayer
 extends Control
-## Shared scripted-scene sequencer. DawnScreen's beat grammar, HollowScreen's
-## dialogue panel, a full-bleed plate that degrades to graded ground.
+## Shared scripted-scene sequencer. DawnScreen's beat grammar over a
+## full-bleed plate that degrades to graded ground, staged by SceneDirector:
+## a JRPG two-shot of lit and unlit glass portraits, the leaded dialogue pane
+## with its typed reveal, beat weather and grade, and one-shot effects.
 
 signal advance_requested
 signal finished
@@ -29,10 +31,6 @@ const BEAT_IDLE: int = 0
 const BEAT_REVEAL: int = 1
 const BEAT_WAIT: int = 2
 
-const NAMED_SPEAKERS: Dictionary = {
-	"keeper": true, "lamplighter": true, "queue": true,
-}
-
 var instant: bool = false
 var shape: StringName = StageShape.IDENTITY
 var _pool_row: Dictionary = {}
@@ -53,10 +51,10 @@ var _motion: String = "hold"
 var _beat_i: int = -1
 var _plate_host: Control
 var _plate: TextureRect
-var _margin: MarginContainer
-var _copy: PanelContainer
+var _copy: DialogueBox
 var _speaker: Label
 var _line: Label
+var _caption_seat: VBoxContainer
 var _caption: Label
 var _skip_fill: ColorRect
 var _letter_top: ColorRect
@@ -66,12 +64,22 @@ var _unsealing: UnsealingStaging = null
 var _unsealing_sting_beat: int = -1
 var _finale: FinaleStaging = null
 var _walk_t: float = 0.0
+var _director: SceneDirector
+## A bench (the stagecraft lab) opening mid-scene plays that line as if it
+## were reached live; the game never sets it, so a resume stands still.
+var live_from_cursor: bool = false
+var _hero: String = ""
+var _presented: bool = false
+var _arriving: bool = false
+var _reveal_for: float = REVEAL_TIME
 
 
+## `hero` is the run's aspect id; the `hero` actor wears its figure.
 func _init(scene_script: SceneScript, cursor: int = 0,
 		stage_shape: StringName = StageShape.IDENTITY, sfx: SfxBus = null,
-		pool_row: Dictionary = {}) -> void:
+		pool_row: Dictionary = {}, hero: String = "") -> void:
 	_script = scene_script
+	_hero = hero
 	_cursor = clampi(cursor, 0, scene_script.line_count())
 	_pool_row = pool_row.duplicate(true)
 	shape = stage_shape if StageShape.REFERENCES.has(stage_shape) else StageShape.IDENTITY
@@ -114,66 +122,41 @@ func _build() -> void:
 	_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_plate.name = "Plate"
 	_plate_host.add_child(_plate)
-	var wash: ColorRect = ColorRect.new()
-	wash.color = Color(0.025, 0.020, 0.035, 0.28)
-	wash.set_anchors_preset(Control.PRESET_FULL_RECT)
-	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(wash)
+	_director = SceneDirector.new(ActorBook.shared(), _hero, _sfx)
+	add_child(_director.grade)
+	add_child(_director.wash)
+	add_child(_director.ambient_fx)
+	add_child(_director.stage)
+	add_child(_director.front_fx)
+	_director.front_fx.shake_targets = [_plate_host, _director.stage]
 	_letter_top = _band()
 	_letter_bot = _band()
 	add_child(_letter_top)
 	add_child(_letter_bot)
-	_margin = MarginContainer.new()
-	_margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_margin)
-	var dock: VBoxContainer = VBoxContainer.new()
-	dock.alignment = BoxContainer.ALIGNMENT_END
-	dock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	dock.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dock.add_theme_constant_override("separation", 10)
-	dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_margin.add_child(dock)
-	var centre: CenterContainer = CenterContainer.new()
-	centre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dock.add_child(centre)
-	_copy = PanelContainer.new()
-	_copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	centre.add_child(_copy)
-	var column: VBoxContainer = VBoxContainer.new()
-	column.add_theme_constant_override("separation", 8)
-	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_copy.add_child(column)
-	_speaker = _label("", 11, RunStyle.GOLD_DIM)
-	_speaker.name = "Speaker"
-	_speaker.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_500, 2))
-	column.add_child(_speaker)
-	_line = _label("", 19, Color("#d8dfe2"))
-	_line.name = "Line"
-	_line.add_theme_font_override("font", GlassStyle.face(GlassStyle.CINZEL_500))
-	_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	column.add_child(_line)
-	var caption_seat: VBoxContainer = VBoxContainer.new()
-	caption_seat.alignment = BoxContainer.ALIGNMENT_CENTER
-	caption_seat.add_theme_constant_override("separation", 3)
-	caption_seat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	caption_seat.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dock.add_child(caption_seat)
+	_copy = _director.box
+	add_child(_copy)
+	_speaker = _copy.speaker_label()
+	_line = _copy.line_label()
+	_caption_seat = VBoxContainer.new()
+	_caption_seat.alignment = BoxContainer.ALIGNMENT_CENTER
+	_caption_seat.add_theme_constant_override("separation", 3)
+	_caption_seat.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_caption_seat)
 	_caption = _label(Locale.active.t("ui.dawn.inputHint"), 10,
 		Color(RunStyle.TEXT_DIM, 0.85))
 	_caption.name = "Caption"
 	_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	caption_seat.add_child(_caption)
+	_caption_seat.add_child(_caption)
 	_skip_fill = ColorRect.new()
 	_skip_fill.name = "SkipFill"
 	_skip_fill.color = RunStyle.GOLD
 	_skip_fill.custom_minimum_size = Vector2(0.0, 2.0)
 	_skip_fill.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_skip_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	caption_seat.add_child(_skip_fill)
+	_caption_seat.add_child(_skip_fill)
+	add_child(_director.veil)
+	resized.connect(_layout_stage)
 	set_shape(shape)
 
 
@@ -201,12 +184,16 @@ func _begin_beat() -> void:
 		_copy.modulate.a = 1.0
 		_finish_beat()
 		return
-	_copy.modulate.a = 0.0
+	# The pane fades in only when it arrives; within a conversation it stays
+	# and the words type in (07-scenes §1: tap lands the reveal, then steps).
+	_copy.modulate.a = 0.0 if _arriving else 1.0
+	_reveal_for = maxf(REVEAL_TIME, _copy.type_time())
 
 
 func _finish_beat() -> void:
 	_beat = BEAT_WAIT
 	_beat_t = 0.0
+	_copy.complete()
 
 
 func _complete() -> void:
@@ -223,26 +210,33 @@ func _present_line() -> void:
 	if _cursor < 0 or _cursor >= _script.line_count():
 		return
 	var row: Dictionary = _script.lines[_cursor]
+	var text: String = ""
+	var lines: Array[Dictionary] = _script.lines
 	if not _pool_row.is_empty():
-		_line.text = LineTable.text(
-			_pool_row, Locale.active.code == Locale.CODE_ZH_HANT)
-		var pool_speaker: String = str(_pool_row.get("speaker", "")).strip_edges()
-		_speaker.visible = NAMED_SPEAKERS.has(pool_speaker)
-		_speaker.text = Locale.active.t("ui.scene.speaker.%s" % pool_speaker) \
-			if _speaker.visible else ""
+		# The drawn row is line 0; a tail line after it is ordinary locale copy.
+		lines = _script.lines.duplicate()
+		lines[0] = _pool_line()
+		text = LineTable.text(_pool_row, Locale.active.code == Locale.CODE_ZH_HANT) \
+			if _cursor == 0 else Locale.active.t(str(row["key"]))
 	else:
-		_line.text = Locale.active.t(str(row["key"]))
-		var speaker_id: String = str(row.get("speaker", "")).strip_edges()
-		_speaker.visible = not speaker_id.is_empty()
-		_speaker.text = Locale.active.t("ui.scene.speaker.%s" % speaker_id) \
-			if _speaker.visible else ""
+		text = Locale.active.t(str(row["key"]))
+	# A player built mid-scene is a resume or a rebuild (a language switch):
+	# its first line stands without replaying the veil, effects or chime.
+	var animate: bool = not instant and not _skipping \
+		and (_presented or _cursor == 0 or live_from_cursor)
 	var beat_i: int = row["beat"]
 	if beat_i != _beat_i:
 		_beat_i = beat_i
 		_motion_t = 0.0
 		_motion = str(_script.beat_at(_cursor).get("motion", "hold"))
 		_bind_plate()
-		_bind_staging()
+		_director.begin_beat(_script.beat_at(_cursor), animate)
+		_sync_unsealing()
+	# A resumed scene stands its cast at once; a fresh one walks them on.
+	var stand_instant: bool = not _presented and _cursor > 0
+	_arriving = _director.present(lines, _cursor, text, animate, stand_instant)
+	_presented = true
+	_sync_hearth_figure()
 	_caption.visible = true
 	_caption.text = _caption_text()
 	_skip_fill.visible = not _walk_cursor()
@@ -270,23 +264,40 @@ func _bind_plate() -> void:
 	_plate.visible = _plate.texture != null
 
 
-## Per-scene presentation, not new grammar (07-scenes §1). Opening seats
-## the #283 cutout on the empty hearth; unsealing dresses beats 1–2 with
-## the shipped mural/masks/frame and yields to the one-queue plate.
-func _bind_staging() -> void:
-	_sync_hearth_figure()
-	_sync_unsealing()
+## The drawn row's line: its slot's look, plus its speaker. A registered
+## speaker with a body steps into their own seat; anyone else (a walker's echo)
+## is heard, not seen — whispered, unless the slot's look gives them a voice.
+func _pool_line() -> Dictionary:
+	var speaker: String = str(_pool_row.get("speaker", "")).strip_edges()
+	var line: Dictionary = _script.lines[0].duplicate() if _script.line_count() > 0 \
+		else {"key": "pool.inline", "beat": 0}
+	var book: ActorBook = ActorBook.shared()
+	if not book.has(speaker):
+		if not line.has("style"):
+			line["style"] = String(StageDirection.STYLE_WHISPER)
+		return line
+	line["speaker"] = speaker
+	if not str(book.resolve(speaker, "", _hero)["path"]).is_empty():
+		line["enter"] = [{"id": speaker, "at": String(book.side(speaker))}]
+	return line
 
 
+## One Keeper body at a time (#334's rule, kept): the seated figure is the
+## wide shot; when the Keeper steps into the two-shot as a portrait, the
+## hearth step is empty behind them. The pane keeps clear of the seat.
 func _sync_hearth_figure() -> void:
 	var wanted: bool = _script.id == "opening" and HearthFigure.present()
 	if not wanted:
 		if _hearth_figure != null:
 			_hearth_figure.queue_free()
 			_hearth_figure = null
+		_director.set_clear_right(0.0)
 		return
 	_hearth_figure = HearthFigure.attach(_plate)
-	_hearth_figure.visible = _plate.visible
+	_hearth_figure.visible = _plate.visible \
+		and not _director.stage.has_actor("keeper")
+	_director.set_clear_right(
+		HearthFigure.SEAT_LEFT if _hearth_figure.visible else 0.0)
 
 
 func _sync_unsealing() -> void:
@@ -360,6 +371,7 @@ func _art_path(index: int) -> String:
 
 func _process(delta: float) -> void:
 	_apply_motion(delta)
+	var typed: bool = _director.tick(delta)
 	if _holding and _beat != BEAT_IDLE:
 		if _walk_line():
 			_hold_walk(delta)
@@ -371,17 +383,24 @@ func _process(delta: float) -> void:
 				_skipping = true
 				skipped = true
 				_sfx.play(&"click")
+				# Fast-forward lands a line still typing; its floor (below)
+				# then counts from the moment it stands whole.
+				if _beat == BEAT_REVEAL:
+					_copy.modulate.a = 1.0
+					_director.settle()
+					_finish_beat()
 				# Do not emit on arm. The WAIT branch below enforces `_beat_t`
 				# against `_skip_wait()`, so a hold that arms on beat ② still
 				# owes the destination floor instead of skipping it.
 	match _beat:
 		BEAT_REVEAL:
 			_beat_t += delta
-			var u: float = clampf(_beat_t / REVEAL_TIME, 0.0, 1.0)
-			var shown: float = 1.0 if Preferences.active.reduce_motion \
-				else Motion.ease(Motion.CSS_EASE, u)
-			_copy.modulate.a = shown
-			if u >= 1.0:
+			if _arriving:
+				var u: float = clampf(_beat_t / REVEAL_TIME, 0.0, 1.0)
+				_copy.modulate.a = 1.0 if Preferences.active.reduce_motion \
+					else Motion.ease(Motion.CSS_EASE, u)
+			if _beat_t >= _reveal_for and typed:
+				_copy.modulate.a = 1.0
 				_finish_beat()
 		BEAT_WAIT:
 			if _walk_line():
@@ -471,10 +490,11 @@ func _press(down: bool) -> void:
 		_asked = true
 		advance_requested.emit()
 	elif _beat == BEAT_REVEAL:
+		# 07-scenes §1: a tap mid-reveal lands the line; the next tap steps.
+		# One tap never costs the player a line they have not seen whole.
 		_copy.modulate.a = 1.0
+		_director.settle()
 		_finish_beat()
-		_asked = true
-		advance_requested.emit()
 
 
 ## Release on a walk line. A tap mid-reveal only settles the line — the step
@@ -523,16 +543,29 @@ func set_shape(stage_shape: StringName) -> void:
 		return
 	shape = stage_shape
 	var short: bool = shape == &"phone-landscape"
-	var inset: int = 10 if short else 48
-	for side: String in ["left", "right", "top", "bottom"]:
-		_margin.add_theme_constant_override("margin_" + side, inset)
-	_copy.custom_minimum_size.x = 560.0 if short else 520.0
-	_copy.add_theme_stylebox_override("panel", _copy_style(
-		18.0 if short else 46.0))
-	_line.add_theme_font_size_override("font_size", 13 if short else 19)
 	var band: float = 0.05 if short else 0.08
 	_set_band(_letter_top, 0.0, band)
 	_set_band(_letter_bot, 1.0 - band, 1.0)
+	# The input hint sits in the lower letterbox band, under the pane.
+	_caption_seat.anchor_left = 0.2
+	_caption_seat.anchor_right = 0.8
+	_caption_seat.anchor_top = 1.0 - band
+	_caption_seat.anchor_bottom = 1.0
+	for side: String in ["offset_left", "offset_right", "offset_top", "offset_bottom"]:
+		_caption_seat.set(side, 0.0)
+	_layout_stage()
+
+
+## Stage-space layout. Outside a tree the size is zero, so the reference
+## shape stands in — headless tests then read the real geometry.
+func _layout_stage() -> void:
+	var view: Vector2 = size
+	if view.x < 1.0 or view.y < 1.0:
+		var ref: Vector2i = StageShape.REFERENCES[shape]
+		view = Vector2(ref)
+	var clear: float = HearthFigure.SEAT_LEFT \
+		if _hearth_figure != null and _hearth_figure.visible else 0.0
+	_director.layout(view, shape, clear)
 
 
 static func _set_band(bar: ColorRect, top: float, bottom: float) -> void:
@@ -551,21 +584,6 @@ static func _band() -> ColorRect:
 	bar.color = Color(0.01, 0.012, 0.02, 0.92)
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return bar
-
-
-static func _copy_style(inset: float) -> StyleBoxFlat:
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.045, 0.07, 0.095, 0.92)
-	style.set_border_width_all(1)
-	style.border_color = Color(0.51, 0.60, 0.65, 0.25)
-	style.corner_radius_top_left = 3
-	style.corner_radius_top_right = 18
-	style.corner_radius_bottom_left = 18
-	style.corner_radius_bottom_right = 3
-	style.set_content_margin_all(inset)
-	style.shadow_color = Color(0, 0, 0, 0.62)
-	style.shadow_size = 28
-	return style
 
 
 static func _label(text: String, font_size: int, colour: Color) -> Label:

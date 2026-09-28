@@ -1033,3 +1033,139 @@ waystone symbols. It carries no generated raster or external icon dependency.
 The Vigil's rose window remains concealed; the visible rose threshold belongs
 to Act IV. Native captures and final validation are recorded in
 `docs/reviews/map-reassembly/direction.md`; the concept image is not game proof.
+
+## Commissioned — dialogue stagecraft portraits and plates (2026-09-27)
+
+**Not yet generated.** Billed by the stagecraft system
+(`docs/design/2026-09-27-stagecraft/README.md`): the JRPG two-shot stands a
+speaking cast as glass busts beside the dialogue pane, and every mood a scene
+asks for is declared in `content/actors.json`. Until a file below lands, the
+stage carries that mood with the actor's shipped figure plus posture and
+light (`StagePortrait.MOOD_LOOKS`), so nothing is broken while these wait.
+**Landing a file at its path is the whole integration** — no code change;
+`tests/test_stagecraft.gd` then asserts the landed portrait is the one drawn.
+
+Tracking: #559 (parent) — Keeper #560, Lamplighter #561, Queue #562,
+Unlit Way plates #563; the audio cues are #564. Every candidate goes through James's review before it enters
+`assets/`, as every asset in this ledger has.
+
+### Portrait contract — binding for every `portraits/` file
+
+- **Image-to-image from the named reference, same canvas, same framing.**
+  682×1024 RGBA (Queue: 1024×1024). The figure keeps the reference's scale,
+  bounding box, hem line and silhouette mass; only the pose delta named in
+  the subject changes. One crop per actor in `content/actors.json` must fit
+  every mood — a re-framed variant breaks every bust it is cut from.
+- **The face is never drawn.** Hood openings and the Lamplighter's head stay
+  a deep black void: no eyes, no glowing points, no mouth (`02-cast.md`;
+  heroes are faceless by canon).
+- **Magenta keying, not black.** Generate on a flat `#FF00FF` field and key
+  it out: a black field cannot be separated from a black hood void (the
+  `unwalkedSelf` lesson above). Gate: leftover field-magenta < 32 px, opaque
+  near-black in the 8 px canvas frame < 400 px, corners alpha 0, and ≥ 90% of
+  non-transparent pixels at alpha ≥ 240 (the Lamplighter B/E washed-cutout
+  failure). Normalise with `sips -Z 1024`.
+- **Shipped assets are never modified.** These are new files beside the
+  references, never replacements.
+- **Verify in the running stage**, not only the PNG: `godot --path . --
+  --stagecraft --cursor=N --shot=…` and the scene's own `--scene=<id>
+  --cursor=N` still, at pad, desktop and phone shapes.
+
+Style block for every portrait, verbatim from the shipped figure prompts:
+
+> Serious cartoon-gothic stained-glass game art: chunky dark outer silhouette,
+> simplified exaggerated proportions, one iconic readable pose, 3-5 large
+> jewel-tone glass colour masses with very few thick lead dividers, matte
+> painterly texture, warm amber rim light, soft controlled inner glow. Designed
+> to remain readable at 128px. No text, no labels, no watermark.
+
+Construction clause, verbatim (the load-bearing paragraph — without it a pass
+returns painted cloth, not a leaded figure):
+
+> CONSTRUCTION, this is the most important instruction: the figure is not
+> painted cloth. The entire robe, hood and body are built from large flat panes
+> of coloured glass separated by thick black lead came lines, exactly like a
+> cathedral stained-glass window rendered as a character. Each fold of the robe
+> is a distinct glass pane with a hard lead border, not a soft painted fold.
+> Only a few big panes, never lacework or many small pieces. The lead lines are
+> heavy, black, and clearly visible across the whole figure. Readable as a solid
+> black shape if all internal detail were removed.
+
+Background and framing clause (new, shared by every portrait):
+
+> BACKGROUND is a FLAT SOLID MAGENTA #FF00FF field, edge to edge, no vignette,
+> no floor, no shadow. Black exists ONLY inside the hood void. EDIT THE ATTACHED
+> REFERENCE: keep the exact same canvas size, figure scale, position, bounding
+> box, hem line, pane layout and palette; change ONLY the pose described below.
+> Single complete figure, no cropped limbs. The hood opening (or bare head) is a
+> deep black VOID with NO face, NO eyes, NO glowing points.
+
+### The Keeper — four moods (reference `meta/keeper.png`, hearth-d)
+
+Glass blue, violet, teal and deep red; warm amber rim from the RIGHT, from a
+fire outside the frame — except the Act IV mood, which takes
+`enemies/eternalKeeper.png` (boss-c) as its reference and its inverted light.
+Voice rule that binds the pose: **the Keeper never urges departure**, so no
+mood points at a road, a door or the east.
+
+| Path | Used by | Subject delta |
+|---|---|---|
+| `portraits/keeper-tender.png` | opening b2 l3 (「到了那裏，你便到家了。」) | Hood tilted slightly toward the viewer's left, as if toward someone seated near; shoulders softened; hands still folded in the lap. The inner glow a touch warmer. Stillness, fondness, fatigue. |
+| `portraits/keeper-offering.png` | opening b2 l1 (the boon: 「帶上這個。」) | The right hand lifted from the lap and held forward at chest height, palm up, cupping one small ember of warm amber glass — the only bright point on the figure. The other hand stays in the lap. The hand offers; it does not point anywhere. |
+| `portraits/keeper-weary.png` | declared for the hearth pool and future hearth scenes | Hood bowed low toward the lap, shoulders sunk, hands loose. The amber rim is low and faint, the glass a little dimmer, as if the fire has burned down. |
+| `portraits/keeper-beckon.png` | act4-node5 l4 (「坐下。」) | Reference `enemies/eternalKeeper.png`. Cold violet-grey and teal glass, amber rim from the LEFT (the inverted hearth). One hand lifted from the lap, palm up and open, turned toward the empty space beside the figure — an invitation to sit down, gentle, not a command. |
+
+`revealed` needs no new art: it is `enemies/eternalKeeper.png` itself, and the
+recognition of that silhouette at node 5 is the design (`#260 Q7`).
+
+### The Hollow Lamplighter — five moods (reference `meta/hollow-lamplighter.png`, D)
+
+Cold grey-green and deep teal glass with worn gold edging; the one warm
+colour is the amber rim from a fire he is not carrying; the lantern on its
+iron pole is **dark and empty in every mood** — the unlit lantern is the whole
+character. The five meetings tighten from outward things to the self
+(`#260 Q3`), and the moods follow that arc.
+
+| Path | Used by | Subject delta |
+|---|---|---|
+| `portraits/lamplighter-wary.png` | m1-pre, m3-pre l3, m3-post, m4-pre l4 | Leaning back a little, weight on the rear foot; the lantern pole drawn in close across the body like a staff held between; the empty hand lowered and closed. |
+| `portraits/lamplighter-asking.png` | m2-pre l3, m5-pre l2 | The shipped pose sharpened: the open empty hand held forward and low, palm up, asking a price; lantern pole upright at his side. |
+| `portraits/lamplighter-recognising.png` | m1-pre l3, m2-pre l2, m3-pre l2, m4-pre, m5-pre l1, m5-post l2 | Leaning forward toward the viewer's left, head tilted as if studying a face; the dark empty lantern raised high beside his head, as though to light a face it cannot light. |
+| `portraits/lamplighter-urgent.png` | m4-pre l3 (「上次站在這裏的，是不是你?」) | Both hands forward, one gripping the lantern pole hard, the body tense and pitched in; the hem swinging with the movement. |
+| `portraits/lamplighter-grieving.png` | m5-pre l3, m5-post | Head bowed; the dark lantern lowered until it nearly rests on the ground by his feet; the free hand pressed flat to his chest. |
+
+### The Queue — one chorus portrait (new figure; L3/L4 only)
+
+| Path | Used by | Subject |
+|---|---|---|
+| `portraits/queue-chorus.png` — 1024×1024 RGBA | act4-node1–3 (the Queue speaks) | Five hooded walker figures in stained glass standing in ONE single-file line that recedes from the centre-left toward the right, each a little smaller and dimmer than the one before; every hood a black void; each figure carries one small point of warm amber light at the breast (`07-scenes §3`: 每人胸口一點光). Figures cut at mid-thigh by the bottom edge (the stage dissolves the cut). Cold gold and slate glass. |
+
+Binding: **one line, never a crowd per pane** — James ruled the per-pane
+duplication creepy on the staging bake-off. The Queue is plural walkers, not
+the Act IV counterfactual selves (those never speak). Seen only from the
+unsealing (L3) onward; never shown in any L0–L2 scene.
+
+### Plates for the Lamplighter's meetings (1536×1024, scene-plate contract)
+
+The five meetings stand on graded ground today (`test_scene_script.gd` pins
+"lamplighter meetings grew an art plate" — land these with that assertion
+updated in the same commit). Shared style block: verbatim from
+`docs/design/2026-08-16-scene-plates/README.md` § Shared style block, with its
+frame contract (nothing load-bearing in the outer 4% of width or the bottom
+12%). Two-shot addition: **keep the left and right 28% free of anything that
+reads as a figure** — the busts stand there — and never bake the Lamplighter
+or a walker into the plate (the stage supplies them; one body per character).
+
+| Path | Meetings | Subject |
+|---|---|---|
+| `scenes/unlit-way.png` | m1–m4 (pre and post) | The Unlit Way at night: a long stone road running east into darkness toward a faint dawn-less horizon; a row of tall iron lamp posts along its verge, every lamp dead and dark; ash drifting in a low cold wind; one flat roadside stone composed as a seat just right of centre, empty. Raking amber light from low left, as if from a fire far behind the viewer. |
+| `scenes/unlit-way-end.png` | m5 (pre and post) | Where the Unlit Way runs out: the paving breaks off into broken slabs and ash at the centre of the frame; the last dead lamp post stands at the end of the road; beyond it the ground falls away into mist toward a distant arch of light on the eastern horizon (the door, far off, never detailed). Emptier and colder than `unlit-way.png`. |
+
+### Deferred — portraits for cast no scene yet casts
+
+Sovereign (`enemies/sovereign.png`) and the Shade (`enemies/shade.png`) now
+speak in battle (the Usurper's opening lines, the Shades' dying words) on
+their shipped art as the `sovereign` and `shade` actors, one mood each. Mood
+portraits wait until a scene needs more than one register from them; their
+voice rules (`02-cast.md`: the Sovereign's avoidance of "walk", the Shade's
+fragments) should shape the poses then.

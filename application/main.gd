@@ -190,6 +190,7 @@ func _ready() -> void:
 	# tools/shot.sh --onboard=map-select --shot=...    (first-run hint stills)
 	# tools/shot.sh --scene=opening --cursor=2 --shot=…   (bespoke scene beat)
 	# tools/shot.sh --scene=departure --settle=0.7 --shot=…  (L0 linger)
+	# tools/shot.sh --stagecraft --cursor=6 --freeze=0.12 --shot=…  (scene FX reel)
 	# tools/shot.sh --shop --shot=/tmp/shop.png           (Night Stall)
 	# tools/shot.sh --shop --locale=zh-Hant --shot=...    (review-state language)
 	var shot_path: String = ""
@@ -296,7 +297,8 @@ func _ready() -> void:
 			# Render-pick switch for the walk beat's two candidate forms
 			# (#312): --finale-form=step | hold. Dev capture only.
 			FinaleStaging.form = StringName(arg.trim_prefix("--finale-form="))
-		elif arg in ["--enemies", "--chips", "--hud", "--reward", "--layout"]:
+		elif arg in ["--enemies", "--chips", "--hud", "--reward", "--layout",
+				"--stagecraft"]:
 			lab_flag = arg
 	if performance_probe and (fight.is_empty() or not shot_path.is_empty()
 			or cards_lab or studio or not lab_flag.is_empty()):
@@ -405,6 +407,7 @@ func _ready() -> void:
 		# is a lab rather than a route: `--shape=` here would pick the window's
 		# stage, and what that bench needs to vary is the stage it DRAWS.
 		"--layout": lab = LayoutLab.new(content)
+		"--stagecraft": lab = StagecraftLab.new(content)
 	if lab != null:
 		add_child(lab)
 		if shot_path != "":
@@ -1687,7 +1690,7 @@ func _finish_node() -> void:
 	_map.clear_current()
 	game.run.map = _map.to_dict()
 	for key: String in ["eventNode", "eventPending", "eventStory", "eventChoice",
-			"shopStock", "treasureClaim"]:
+			"eventRoll", "shopStock", "treasureClaim"]:
 		game.run.quest_scratch.erase(key)
 	if _store_run():
 		_route_run()
@@ -1764,8 +1767,15 @@ func _show_event() -> void:
 		var phase: String = str(story.get("phase", "result"))
 		var choice: int = int(float(str(story.get("choice", 0))))
 		var key: String = _event_story_key(event_id, choice, phase)
+		var prose: String = Locale.active.t(key)
+		var beat: String = "coda" if phase == "coda" else "c%d" % choice
+		if phase == "roll":
+			var roll: String = str(story.get("roll", ""))
+			prose = _event_roll_text(event_id, choice, roll)
+			beat = "roll-%s" % roll
 		var story_screen: EventScreen = EventScreen.new(
-			event_id, event, Locale.active.t(key), false, true, _shape, _sfx_bus)
+			event_id, event, prose, false, true, _shape, _sfx_bus)
+		story_screen.beat = beat
 		story_screen.continue_requested.connect(_on_event_story_continue)
 		_show_route(story_screen, true, &"map")
 		return
@@ -1784,6 +1794,11 @@ func _on_event_choice(choice_text: String, event_id: String) -> void:
 	game.run.quest_scratch["eventChoice"] = int(choice_text)
 	var ops: Array = choice.get("ops", [])
 	var pending: Dictionary = game.rewards.apply_event_ops(game.run, ops)
+	# A narrated roll (the gambler's bones) is owed as its own beat. The id is
+	# persisted, never the text, so a resume narrates it in the live locale.
+	var roll: String = str(pending.get("rollId", ""))
+	if not roll.is_empty() and not _event_roll_text(event_id, int(choice_text), roll).is_empty():
+		game.run.quest_scratch["eventRoll"] = roll
 	if str(pending.get("kind", "")).is_empty():
 		_continue_event_after_ops()
 		return
@@ -1838,6 +1853,27 @@ func _event_story_key(event_id: String, choice: int, phase: String) -> String:
 	return "story.event-%s.c%d" % [event_id, choice]
 
 
+## The narrated outcome of a rolled choice, as hydrated for the live locale
+## (`content.events.<id>.rolls.<outcome>.text`); "" when the branch has none.
+func _event_roll_text(event_id: String, choice: int, roll_id: String) -> String:
+	if roll_id.is_empty() or not content.events.has(event_id):
+		return ""
+	var event: Dictionary = content.events[event_id]
+	var choices: Array = event.get("choices", [])
+	if choice < 0 or choice >= choices.size():
+		return ""
+	var row: Dictionary = choices[choice]
+	var ops: Array = row.get("ops", [])
+	for op_v: Variant in ops:
+		var op: Dictionary = op_v
+		var branches: Array = op.get("roll", [])
+		for branch_v: Variant in branches:
+			var branch: Dictionary = branch_v
+			if str(branch.get("id", "")) == roll_id:
+				return str(branch.get("text", ""))
+	return ""
+
+
 func _event_has_story(event_id: String, choice: int) -> bool:
 	var result_key: String = _event_story_key(event_id, choice, "result")
 	var coda_key: String = _event_story_key(event_id, choice, "coda")
@@ -1849,6 +1885,17 @@ func _continue_event_after_ops() -> void:
 	game.run.quest_scratch.erase("eventPending")
 	var event_id: String = str(game.run.quest_scratch.get("eventNode", ""))
 	var choice: int = int(float(str(game.run.quest_scratch.get("eventChoice", -1))))
+	var roll: String = str(game.run.quest_scratch.get("eventRoll", ""))
+	if not roll.is_empty():
+		game.run.quest_scratch.erase("eventRoll")
+		if not _event_roll_text(event_id, choice, roll).is_empty():
+			game.run.quest_scratch["eventStory"] = {
+				"id": event_id, "choice": choice, "phase": "roll", "roll": roll,
+			}
+			if _store_event_choice():
+				_show_event()
+				_play_event_beat()
+			return
 	if _event_has_story(event_id, choice):
 		_begin_event_story(event_id, choice)
 		return
@@ -1861,6 +1908,7 @@ func _begin_event_story(event_id: String, choice: int) -> void:
 	}
 	if _store_event_choice():
 		_show_event()
+		_play_event_beat()
 
 
 func _on_event_story_continue() -> void:
@@ -1869,13 +1917,34 @@ func _on_event_story_continue() -> void:
 		_finish_node()
 		return
 	var story: Dictionary = story_v
+	if str(story.get("phase", "")) == "roll":
+		var event_id: String = str(story.get("id", ""))
+		var choice: int = int(float(str(story.get("choice", 0))))
+		if _event_has_story(event_id, choice):
+			story["phase"] = "result"
+			story.erase("roll")
+			game.run.quest_scratch["eventStory"] = story
+			if _store_event_choice():
+				_show_event()
+				_play_event_beat()
+			return
+		_finish_node()
+		return
 	if str(story.get("phase", "")) == "result":
 		story["phase"] = "coda"
 		game.run.quest_scratch["eventStory"] = story
 		if _store_event_choice():
 			_show_event()
+			_play_event_beat()
 		return
 	_finish_node()
+
+
+## A story beat that just arrived plays its effect; a resumed one does not.
+func _play_event_beat() -> void:
+	var beat_screen: EventScreen = _route_screen as EventScreen
+	if beat_screen != null:
+		beat_screen.play_beat()
 
 
 func _store_event_choice() -> bool:
@@ -1948,11 +2017,12 @@ func _show_shop() -> void:
 		game.run.player.potions.has(""),
 		_shape,
 		_sfx_bus)
+	screen.say(_shop_line(false))
 	screen.action_selected.connect(_on_shop_choice)
 	_show_route(screen, true, &"safeNodes")
 
 
-func _refresh_shop() -> void:
+func _refresh_shop(just_bought: bool = false) -> void:
 	var shop: ShopScreen = _route_screen as ShopScreen
 	if shop == null:
 		_show_shop()
@@ -1961,8 +2031,21 @@ func _refresh_shop() -> void:
 	shop.update(stock, game.run.player.gold,
 		game.quests.usurper_offer(game.run),
 		game.run.player.potions.has(""))
+	shop.say(_shop_line(just_bought))
 	if _run_hud != null:
 		_run_hud.refresh(game.run)
+
+
+## The merchant's line over the Night Stall: the Usurper's lantern speaks
+## through it — its price out of reach, or the throne told once it is sold.
+func _shop_line(just_bought: bool) -> String:
+	if just_bought:
+		return Locale.active.t("content.quests.usurper.bought")
+	var offer: Dictionary = game.quests.usurper_offer(game.run)
+	if not offer.is_empty() \
+			and game.run.player.gold < int(float(str(offer.get("price", 0)))):
+		return Locale.active.t("content.quests.usurper.poor")
+	return ""
 
 
 func _on_shop_choice(id: String) -> void:
@@ -1982,7 +2065,7 @@ func _on_shop_choice(id: String) -> void:
 		return
 	if id == "quest:flamelessLantern":
 		if game.quests.buy_usurper(game.run) and _store_run():
-			_refresh_shop()
+			_refresh_shop(true)
 		else:
 			_show_save_error("ui.persistence.detail.emptyLanternPurchaseHold")
 		return
@@ -2264,6 +2347,8 @@ func _on_combat_over(result: String) -> void:
 			scratch.erase("pendingBequest")
 		_map.clear_current()
 		game.run.map = _map.to_dict()
+		var shade: Array[String] = ["ownShade"]
+		_stage_closer(shade)
 		if not _store_run():
 			_show_save_error("ui.persistence.detail.shadeVictoryHold")
 			return
@@ -2281,6 +2366,9 @@ func _on_combat_over(result: String) -> void:
 				game.run.pending_scene = {"id": close_id, "cursor": 0}
 		game.run.mark_mirrored_road_cleared()
 		game.run.pending_run_end = {"outcome": "win"}
+		# With fewer than six panes act 2 is the last act, so its boss win
+		# ends the run here and still owes that win's page and closers.
+		_stage_boss_beats(node)
 		if not _store_run():
 			_show_save_error("ui.persistence.detail.finalVictoryHold")
 			return
@@ -2311,6 +2399,7 @@ func _on_combat_over(result: String) -> void:
 		"taken": {"gold": false, "card": false, "potion": false, "relic": false},
 		"slain_enemy": slain_enemy,
 	}
+	_stage_boss_beats(node)
 	if not _store_run():
 		_show_save_error("ui.persistence.detail.victoryRewardsHold")
 		return
@@ -2333,6 +2422,89 @@ func _grant_bequest(value: Variant) -> void:
 				var upgraded: bool = bequest.get("up", false)
 				game.run.player.deck.append(CardInst.new(
 					game.run.next_uid(), StringName(id), upgraded))
+
+
+## The act-2 boss win closes the journeys that end there: the Unreadable
+## Page's newest page is read first, then each closer owed plays in turn (one
+## pending scene at a time; `_stage_after_scene` queues the next).
+func _stage_boss_beats(node: MapNode) -> void:
+	if not _story_flow() or node == null or node.type != "boss" \
+			or game.run.act != QuestRules.EMBERGLASS_ACT \
+			or typeof(game.run.pending_scene) == TYPE_DICTIONARY:
+		return
+	var page: String = _page_scene()
+	if not page.is_empty():
+		game.run.pending_scene = {"id": page, "cursor": 0}
+		return
+	_stage_closer(PoolBeats.BOSS_CLOSERS)
+
+
+## Queue the first closer owed among `quest_ids` as the run's pending scene: a
+## journey this run completed whose closer is not yet heard and whose row still
+## matches (four lit panes; `once` holds it to one telling). The caller's store
+## keeps it.
+func _stage_closer(quest_ids: Array[String]) -> bool:
+	for quest_id: String in quest_ids:
+		if not game.run.quest_completions.has(quest_id):
+			continue
+		var key: String = PoolBeats.closer_key(quest_id)
+		var drawn: String = str(game.run.pool_beats.get(key, ""))
+		if not drawn.is_empty() and _vigil.scenes_seen.has(SceneScript.LINE_PREFIX + drawn):
+			continue
+		if _stage_line_scene(PoolBeats.CLOSERS[quest_id], key):
+			return true
+	return false
+
+
+## Draw a LineTable row once per `key` and queue it to play as a run scene.
+func _stage_line_scene(slot: String, key: String) -> bool:
+	if not _story_flow() or typeof(game.run.pending_scene) == TYPE_DICTIONARY:
+		return false
+	var row: Dictionary = PoolBeats.draw(game.run, _vigil, content, slot, key)
+	var scene_id: String = SceneScript.LINE_PREFIX + str(row.get("id", ""))
+	if row.is_empty() or _vigil.scenes_seen.has(scene_id):
+		return false
+	game.run.pending_scene = {"id": scene_id, "cursor": 0}
+	return true
+
+
+## What a finished run scene owes next: the boss win's closers after its page
+## and after each other, and the Queue after the first Act IV crossing.
+func _stage_after_scene(scene_id: String) -> void:
+	if scene_id.begins_with(SceneScript.PAGE_PREFIX):
+		_stage_closer(PoolBeats.BOSS_CLOSERS)
+	elif scene_id.begins_with(SceneScript.LINE_PREFIX):
+		var slot: String = str(_line_row(scene_id).get("slot", ""))
+		var quest_v: Variant = PoolBeats.CLOSERS.find_key(slot)
+		if quest_v != null:
+			_stage_closer(PoolBeats.closers_after(str(quest_v)))
+	elif scene_id == "act4-entry" or scene_id == "unsealing-short":
+		# Through the door, the Queue is heard (L3, once): on the first
+		# crossing, or on a later one for a Vigil that crossed before the row
+		# could play.
+		_stage_line_scene(PoolBeats.SLOT_L3, PoolBeats.KEY_L3)
+
+
+## The LineTable row a `line:` scene plays; empty for any other scene.
+func _line_row(scene_id: String) -> Dictionary:
+	if not scene_id.begins_with(SceneScript.LINE_PREFIX):
+		return {}
+	return LineTable.row_by_id(content.line_table,
+		scene_id.trim_prefix(SceneScript.LINE_PREFIX))
+
+
+## Page N of the Unreadable Page, read once while the page is carried: the
+## scene `unreadable-page-N`, owed by the act-2 boss win that turned it.
+func _page_scene() -> String:
+	var rec: Dictionary = game.quests.record(game.run, "unreadablePage")
+	var n: int = int(float(str(rec.get("progress", 0))))
+	var id: String = "unreadable-page-%d" % n
+	if n < 1 or _vigil.scenes_seen.has(id) or _scene_script(id) == null:
+		return ""
+	for card: CardInst in game.run.player.deck:
+		if card.id == &"unreadablePage":
+			return id
+	return ""
 
 
 func _on_result_continue() -> void:
@@ -2879,7 +3051,12 @@ func _scene_script(scene_id: String) -> SceneScript:
 	var found: Variant = _scenes.get(scene_id)
 	if found is SceneScript:
 		return found
-	return null
+	var row: Dictionary = _line_row(scene_id)
+	if not row.is_empty():
+		var line_script: SceneScript = SceneScript.pool_beat("", str(row.get("slot", "")))
+		line_script.id = scene_id
+		return line_script
+	return SceneScript.quest_page(scene_id)
 
 
 func _route_idle() -> void:
@@ -2979,15 +3156,43 @@ func _show_pending_pool() -> void:
 	if row.is_empty():
 		_continue_after_pool()
 		return
+	var tail: Array[Dictionary] = []
+	var echo: String = _omen_echo_key(str(pending.get("key", "")))
+	if not echo.is_empty():
+		var echo_line: Dictionary = SceneScript.OMEN_ECHO.duplicate(true)
+		echo_line["key"] = echo
+		tail.append(echo_line)
+	var script: SceneScript = SceneScript.pool_beat("", str(pending.get("slot", "")), tail)
+	var cursor: int = maxi(0, int(float(str(pending.get("cursor", 0)))))
 	var screen: ScenePlayer = ScenePlayer.new(
-		SceneScript.pool_beat(""), 0, _shape, _sfx_bus, row)
+		script, cursor, _shape, _sfx_bus, row, _scene_hero())
 	screen.instant = _transitions != null and _transitions.instant
 	screen.advance_requested.connect(_on_pool_advance.bind(screen))
 	screen.finished.connect(_on_pool_finished)
 	_show_route(screen, false)
 
 
+## Under the Eighth Omen the broken words follow every waystone (the omen's
+## own text): a waystone's echo carries the omen's line for its row, in turn.
+func _omen_echo_key(pool_key: String) -> String:
+	if not pool_key.begins_with("waystone:") or _map == null or _map.current() == null \
+			or game.run.act < 0 or game.run.act >= game.run.omens.size() \
+			or game.run.omens[game.run.act] != "eighthOmen":
+		return ""
+	var omen: Dictionary = content.quests.get("eighthOmen", {})
+	var echoes: Array = omen.get("waystoneEchoes", [])
+	if echoes.is_empty():
+		return ""
+	return "content.quests.eighthOmen.waystoneEchoes.%d" \
+		% posmod(_map.current().row, echoes.size())
+
+
 func _on_pool_advance(screen: ScenePlayer) -> void:
+	# The cursor rides the pending beat, so a rebuild resumes on its tail line
+	# (the omen's words) instead of replaying the echo before it.
+	var pending: Dictionary = PoolBeats.pending_of(game.run)
+	if not pending.is_empty():
+		pending["cursor"] = int(float(str(pending.get("cursor", 0)))) + 1
 	if not _store_run():
 		_show_save_error("ui.persistence.detail.chosenWaystoneHold")
 		return
@@ -3055,7 +3260,8 @@ func _show_scene() -> void:
 				_show_title()
 			return
 		cursor = int(float(str(pending.get("cursor", 0))))
-	var screen: ScenePlayer = ScenePlayer.new(script, cursor, _shape, _sfx_bus)
+	var screen: ScenePlayer = ScenePlayer.new(
+		script, cursor, _shape, _sfx_bus, _line_row(script.id), _scene_hero())
 	screen.instant = _transitions != null and _transitions.instant
 	screen.advance_requested.connect(_on_scene_advance.bind(screen))
 	screen.finished.connect(_on_scene_finished)
@@ -3075,10 +3281,25 @@ func _show_scene_shot(scene_id: String, cursor: int) -> bool:
 		push_error("unknown scene %s" % scene_id)
 		return false
 	var screen: ScenePlayer = ScenePlayer.new(
-		script, clampi(cursor, 0, script.line_count()), _shape, _sfx_bus)
+		script, clampi(cursor, 0, script.line_count()), _shape, _sfx_bus,
+		_line_row(scene_id), _scene_hero())
 	screen.instant = true
 	_show_route(screen, false, &"", false)
 	return true
+
+
+## The run's aspect id — the figure the `hero` actor wears in a scene. Empty
+## outside a run (the Vigil's unsealing), where ActorBook falls back.
+func _scene_hero() -> String:
+	if game == null or game.run == null or content == null:
+		return ""
+	if game.run.aspect < 0 or game.run.aspect >= content.aspects.size():
+		return ""
+	var aspect_v: Variant = content.aspects[game.run.aspect]
+	if typeof(aspect_v) != TYPE_DICTIONARY:
+		return ""
+	var aspect: Dictionary = aspect_v
+	return str(aspect.get("id", ""))
 
 
 func _on_scene_advance(screen: ScenePlayer) -> void:
@@ -3129,6 +3350,8 @@ func _on_scene_finished() -> void:
 			and str(game.run.pending_run_end.get("outcome", "")) == "win" \
 			and _scene_script("finale-win") != null:
 		game.run.pending_scene = {"id": "finale-win", "cursor": 0}
+	elif run_pending:
+		_stage_after_scene(scene_id)
 	# Vigil first. If the run store then fails or the process dies between
 	# them, the once-flag is already on disk and the run still points at the
 	# scene; resume replays a scene that finishes idempotently because
@@ -3293,7 +3516,7 @@ func _show_hollow() -> void:
 	_remember_route(_show_hollow)
 	var meeting: Dictionary = meetings[step]
 	var screen: HollowScreen = HollowScreen.new(
-		pending, meeting, step + 1, meetings.size(), _shape, _sfx_bus)
+		pending, meeting, step + 1, meetings.size(), _shape, _sfx_bus, _scene_hero())
 	screen.action_requested.connect(
 		func(action: StringName) -> void: _on_hollow_choice(String(action)))
 	_show_route(screen, true, &"hollowLamplighter")
@@ -3311,6 +3534,11 @@ func _on_hollow_choice(id: String) -> void:
 			_show_save_error("ui.persistence.detail.hollowPriceHold")
 			return
 		_show_hollow()
+		# The price landing is the one moment worth a flourish: your embers
+		# kindle across into the hollow lantern.
+		var paid_screen: HollowScreen = _route_screen as HollowScreen
+		if paid_screen != null:
+			paid_screen.play_paid()
 		return
 	_stage_hollow_exit()
 
