@@ -82,7 +82,7 @@
     "eclipseSlash": {
       "type": "attack",
       "rarity": "starter",
-      "cost": 1,
+      "cost": 2,
       "target": "enemy",
       "vfx": "slash",
       "effects": [
@@ -168,7 +168,7 @@
     "ashBite": {
       "type": "attack",
       "rarity": "starter",
-      "cost": 1,
+      "cost": 2,
       "target": "enemy",
       "vfx": "fire",
       "effects": [
@@ -266,7 +266,7 @@
     "quickSlash": {
       "type": "attack",
       "rarity": "common",
-      "cost": 0,
+      "cost": 1,
       "target": "enemy",
       "vfx": "slash",
       "effects": [
@@ -476,7 +476,7 @@
     "sidestep": {
       "type": "skill",
       "rarity": "common",
-      "cost": 0,
+      "cost": 1,
       "target": "self",
       "vfx": "ward",
       "effects": [
