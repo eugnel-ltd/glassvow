@@ -97,6 +97,18 @@ export type ExportSnap = {
   exportN?: number;
   format?: string;
   glbOption?: boolean;
+  gen100?: boolean;
+  retry?: boolean;
+  viewOk?: boolean;
+};
+
+export type ExportActCtx = {
+  taskIdArg: string;
+  leftoverTaskId: string;
+  generateClicked: boolean;
+  toolbarExportClicked: boolean;
+  formatOpened: boolean;
+  dialogExportClicked: boolean;
 };
 
 /** New `--image` must not click or write a leftover task's GLB. */
@@ -113,4 +125,41 @@ export function newImageExportGuard(
   if (!ctx.generateClicked && (s.exportN || s.format || s.glbOption)) return "refuse_prior_export";
   if (ctx.generateClicked && !isNewTask) return "watch_generate";
   return "allow";
+}
+
+/** Export detect-decide-act. A new `--image` clicks visible Generate 100 even
+ *  when Studio has already assigned a draft task URL, unless that id is the
+ *  leftover. `--task-id` skips the new-image guard. */
+export function decideExportAction(s: ExportSnap, ctx: ExportActCtx): string {
+  if (!ctx.taskIdArg) {
+    const g = newImageExportGuard(s, {
+      generateClicked: ctx.generateClicked,
+      leftoverTaskId: ctx.leftoverTaskId,
+    });
+    if (g === "refuse_prior_export") return g;
+    if (g === "accept_gltf") return "done";
+    if (g === "watch_generate") return "watch_generate";
+  }
+  if (s.gltf) return "done";
+  if (s.retry) return "dismiss_retry";
+  if (s.viewOk) return "dismiss_ok";
+  // Export visible is generate-complete. Leftover Generating text does not block.
+  if ((s.exportN ?? 0) >= 1 && !s.format) {
+    return ctx.toolbarExportClicked ? "watch_dialog" : "click_export";
+  }
+  if (s.format && s.format !== "GLB" && !s.glbOption) {
+    return ctx.formatOpened ? "watch_dialog" : "open_format";
+  }
+  if (s.glbOption && s.format !== "GLB") return "pick_glb";
+  if (s.format === "GLB" && (s.exportN ?? 0) < 2) return "watch_dialog";
+  if (s.format === "GLB" && (s.exportN ?? 0) >= 2) {
+    return ctx.dialogExportClicked ? "watch_download" : "click_dialog_export";
+  }
+  if (ctx.dialogExportClicked) return "watch_download";
+  if (ctx.generateClicked) return "watch_generate";
+  if (!s.exportN && s.gen100 && !ctx.taskIdArg) {
+    const tid = String(s.taskId || "");
+    if (tid === "" || tid !== ctx.leftoverTaskId) return "click_generate";
+  }
+  return "watch_generate";
 }

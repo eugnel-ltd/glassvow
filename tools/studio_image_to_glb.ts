@@ -37,6 +37,8 @@
  * does not decrypt Chrome Default. Stay on a bare `/workspace/generate` that
  * already shows Smart Mesh. Never reuse `/workspace/generate/<task-id>` for a
  * new `--image`; reset via about:blank and fail closed if that task id remains.
+ * After a fresh image upload Studio may assign a new draft task URL; visible
+ * Generate 100 is still clicked. A leftover task URL or export stays fail-closed.
  * `--task-id` re-export is unchanged. Do not kill Chrome to start a new image.
  * JSON `timings.driver_ms` is chrome+login+form (not Studio upload/generate).
  * `timings.generate_ms` starts when a visible Export appears.
@@ -56,6 +58,7 @@ import {
   UPLOAD_WATCH_LIMIT_MS,
   UPLOAD_WATCH_POLL_MS,
   blankResetArrived,
+  decideExportAction,
   generateTargetUrl,
   generateWaitReady,
   isTransientEvaluateError,
@@ -754,35 +757,14 @@ try {
     let formatOpened = false;
     let dialogExportClicked = false;
     if (!taskIdArg) await ev(cdp, "window.__gv_files = []");
-    const decideX = (s: any): string => {
-      if (!taskIdArg) {
-        const g = newImageExportGuard(s, {
-          generateClicked, leftoverTaskId: plan.leftoverTaskId,
-        });
-        if (g === "refuse_prior_export") return g;
-        if (g === "accept_gltf") return "done";
-        if (g === "watch_generate") return "watch_generate";
-      }
-      if (s.gltf) return "done";
-      if (s.retry) return "dismiss_retry";
-      if (s.viewOk) return "dismiss_ok";
-      // Export visible is generate-complete. Leftover Generating text does not block.
-      if (s.exportN >= 1 && !s.format) {
-        return toolbarExportClicked ? "watch_dialog" : "click_export";
-      }
-      if (s.format && s.format !== "GLB" && !s.glbOption) {
-        return formatOpened ? "watch_dialog" : "open_format";
-      }
-      if (s.glbOption && s.format !== "GLB") return "pick_glb";
-      if (s.format === "GLB" && s.exportN < 2) return "watch_dialog";
-      if (s.format === "GLB" && s.exportN >= 2) {
-        return dialogExportClicked ? "watch_download" : "click_dialog_export";
-      }
-      if (dialogExportClicked) return "watch_download";
-      if (generateClicked) return "watch_generate";
-      if (!s.exportN && s.gen100 && !s.taskId) return "click_generate";
-      return "watch_generate";
-    };
+    const decideX = (s: any): string => decideExportAction(s, {
+      taskIdArg,
+      leftoverTaskId: plan.leftoverTaskId,
+      generateClicked,
+      toolbarExportClicked,
+      formatOpened,
+      dialogExportClicked,
+    });
     const watching = (a: string) =>
       a === "watch_generate" || a === "watch_dialog" || a === "watch_download";
 

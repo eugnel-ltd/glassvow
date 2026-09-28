@@ -5,9 +5,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   BARE_GENERATE_URL, STUDIO, UPLOAD_WATCH_LIMIT_MS,
-  blankResetArrived, generateTaskIdFromHref, generateTargetUrl, generateWaitReady,
-  isBareGenerateHref, isTransientEvaluateError, newImageExportGuard,
+  blankResetArrived, decideExportAction, generateTaskIdFromHref, generateTargetUrl,
+  generateWaitReady, isBareGenerateHref, isTransientEvaluateError, newImageExportGuard,
   planWarmGeneratePage, refuseNewImageOnTaskUrl, uploadWatchTimedOut,
+  type ExportActCtx, type ExportSnap,
 } from "./studio_image_to_glb_logic.ts";
 
 const DRIVER = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "studio_image_to_glb.ts"), "utf8");
@@ -15,6 +16,19 @@ const TASK = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 const TASK_HREF = `${BARE_GENERATE_URL}/${TASK}`;
 const DONE = { href: TASK_HREF, login: false, err: false, smart: true };
 const NEW_TASK = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff";
+const DRAFT = "d820aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+
+const IDLE: ExportActCtx = {
+  taskIdArg: "", leftoverTaskId: TASK, generateClicked: false,
+  toolbarExportClicked: false, formatOpened: false, dialogExportClicked: false,
+};
+
+function snap(over: Partial<ExportSnap> = {}): ExportSnap {
+  return { taskId: DRAFT, gen100: true, exportN: 0, format: "", glbOption: false, gltf: null, ...over };
+}
+function ctx(over: Partial<ExportActCtx> = {}): ExportActCtx {
+  return { ...IDLE, ...over };
+}
 
 test("URL helpers: exact Studio origin and bare path only", () => {
   const bare = [
@@ -120,10 +134,68 @@ test("export guard: leftover GLB/Export without a new Generate is refused", () =
   )).toBe("watch_generate");
 });
 
+test("new draft task + visible Generate 100 clicks generate", () => {
+  expect(newImageExportGuard(snap(), { generateClicked: false, leftoverTaskId: TASK }))
+    .toBe("allow");
+  expect(decideExportAction(snap(), ctx())).toBe("click_generate");
+  expect(decideExportAction(snap(), ctx({ leftoverTaskId: "" }))).toBe("click_generate");
+  expect(decideExportAction(snap({ taskId: "" }), ctx())).toBe("click_generate");
+});
+
+test("same leftover or stale task cannot click Generate or export", () => {
+  expect(decideExportAction(snap({ taskId: TASK }), ctx())).toBe("watch_generate");
+  expect(decideExportAction(snap({ taskId: TASK, gen100: false, exportN: 1 }), ctx()))
+    .toBe("refuse_prior_export");
+  expect(decideExportAction(snap({ taskId: TASK, gltf: { size: 200 }, exportN: 1 }), ctx()))
+    .toBe("refuse_prior_export");
+  expect(decideExportAction(
+    snap({ taskId: TASK, gen100: false, gltf: { size: 200 } }),
+    ctx({ generateClicked: true }),
+  )).toBe("refuse_prior_export");
+});
+
+test("after Generate click a new task may accept GLB", () => {
+  expect(newImageExportGuard(
+    { gltf: { size: 200 }, taskId: DRAFT, exportN: 2 },
+    { generateClicked: true, leftoverTaskId: TASK },
+  )).toBe("accept_gltf");
+  expect(decideExportAction(
+    snap({ gen100: false, gltf: { size: 200 }, exportN: 2 }),
+    ctx({ generateClicked: true }),
+  )).toBe("done");
+  expect(newImageExportGuard(
+    { gltf: { size: 200 }, taskId: "", exportN: 2 },
+    { generateClicked: true, leftoverTaskId: TASK },
+  )).toBe("refuse_prior_export");
+  expect(decideExportAction(
+    snap({ gen100: false, exportN: 1 }),
+    ctx({ generateClicked: true }),
+  )).toBe("click_export");
+});
+
+test("draft without visible Generate watches safely", () => {
+  expect(decideExportAction(snap({ gen100: false }), ctx())).toBe("watch_generate");
+  expect(decideExportAction(snap({ gen100: false, taskId: "" }), ctx())).toBe("watch_generate");
+});
+
+test("--task-id re-export is unchanged", () => {
+  const re = ctx({ taskIdArg: TASK, leftoverTaskId: "" });
+  expect(decideExportAction({ taskId: TASK, exportN: 1, format: "", gen100: false }, re))
+    .toBe("click_export");
+  expect(decideExportAction(
+    { taskId: TASK, exportN: 1, format: "", gen100: false, gltf: { size: 200 } },
+    re,
+  )).toBe("done");
+  expect(decideExportAction({ taskId: TASK, exportN: 0, gen100: true }, re))
+    .toBe("watch_generate");
+});
+
 test("driver source: poll blank reset, overall upload deadline, export guard, OpenAPI ban", () => {
   expect(DRIVER).toContain("generateWaitReady");
   expect(DRIVER).toContain("blankResetArrived");
   expect(DRIVER).toContain("newImageExportGuard");
+  expect(DRIVER).toContain("decideExportAction");
+  expect(DRIVER).not.toContain("&& !s.taskId) return \"click_generate\"");
   expect(DRIVER).toContain("isTransientEvaluateError");
   expect(DRIVER).toContain("await sleep(UPLOAD_WATCH_POLL_MS)");
   expect(DRIVER).toContain("uploadStarted");
