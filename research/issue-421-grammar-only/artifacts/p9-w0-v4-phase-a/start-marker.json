@@ -1,0 +1,19 @@
+{
+  "executionHead": "3fb408871e89a7a407c4f7873fc3306826cbb3fb",
+  "preflight": {
+    "artifact": "/tmp/glassvow-421-v4-preflight.jsonl",
+    "participation": {
+      "facetBurstDrawn": 47,
+      "facetBurstInDeck": 1,
+      "facetBurstOffered": 3,
+      "facetBurstPlayed": 4
+    },
+    "positiveSeed": 9000,
+    "protocolRows": 0,
+    "seedsTried": 1
+  },
+  "protocolId": "p9-w0-v4-phase-a",
+  "protocolSha256": "16044d869f1a1ec0d0e9a4b566f53a6220f2df2efe0d4c82aeb06dba414590b4",
+  "rowsBeforeStart": 0,
+  "startedAtUnix": 1788224157.417928
+}

@@ -1,0 +1,8 @@
+{
+  "completedAtUnix": 1788224184.866215,
+  "protocolSha256": "16044d869f1a1ec0d0e9a4b566f53a6220f2df2efe0d4c82aeb06dba414590b4",
+  "rawRowsSha256": "ad63f53ef8394ec71dd9576c1148e5fc9a80e1df40a9a36880bd185e1d7a0180",
+  "resultSha256": "4eab49422fb641e92d7091aa4ac94a112616fac5f7161a5da2757602601fac95",
+  "rows": 1600,
+  "verdict": "FAIL_CLOSED"
+}

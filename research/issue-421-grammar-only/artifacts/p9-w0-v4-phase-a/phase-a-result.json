@@ -1,0 +1,408 @@
+{
+  "candidateSemanticSha256": "1f6a74a285e7b17b99e3cf09a0a85a5ee64c2f7ed30465d3210daf940c9b1adf",
+  "executionHead": "3fb408871e89a7a407c4f7873fc3306826cbb3fb",
+  "godot": "4.7.2.stable.official.ed1daf0bf",
+  "implementationHead": "07533cc3b870d2a673d2b8d5edbb7e6f8bc3036a",
+  "landscapeAuthorised": false,
+  "landscapeStarted": false,
+  "manifest": {
+    "candidateContentSha256": "f0c30dca034af0b962c0d2af332d09a578d4a7c8f6fc760004efc54ccc6f4e5a",
+    "currentMainContentSha256": "a0d608a5142d2e3aab799cdf33d3163922b402c2aaf2a895e46e096399b56cf1",
+    "executionHead": "3fb408871e89a7a407c4f7873fc3306826cbb3fb",
+    "expectedRows": 1600,
+    "godot": "4.7.2-stable (official)",
+    "observer": "p9-w0-v2-h11-player-dusk-enemy-smolder-observer-v1",
+    "pilot": "p9-w0-v2",
+    "protocolId": "p9-w0-v4-phase-a",
+    "protocolSha256": "16044d869f1a1ec0d0e9a4b566f53a6220f2df2efe0d4c82aeb06dba414590b4",
+    "t": "manifest"
+  },
+  "metrics": {
+    "ceilingCoordinates": {
+      "actual": 10,
+      "expected": 10,
+      "matches": true,
+      "missing": [],
+      "unexpected": []
+    },
+    "identity": {
+      "currentMainNullCardPairFaults": 0,
+      "currentMainNullCardPairsChecked": 400,
+      "currentMainNullCardPairsIdentical": 400,
+      "h11PlayerDuskEnemySmolder": 0,
+      "manufacturedFacetBurstPlays": {
+        "current-main": 0,
+        "null-card": 0
+      }
+    },
+    "reliability": {
+      "candidateFreeCoordinates": [
+        {
+          "arm": 3,
+          "aspect": "duskblade",
+          "ceilingFight": {
+            "act": 1,
+            "enemies": [
+              "rootheart"
+            ],
+            "kind": "boss",
+            "turns": 30
+          },
+          "cohort": "control",
+          "participation": {
+            "facetBurstDrawn": 0,
+            "facetBurstInDeck": 0,
+            "facetBurstOffered": 0,
+            "facetBurstPlayed": 0
+          },
+          "participationTotal": 0,
+          "rowIndex": 152,
+          "seed": 4151,
+          "variant": "omitted",
+          "vow": 0
+        },
+        {
+          "arm": 3,
+          "aspect": "duskblade",
+          "ceilingFight": {
+            "act": 1,
+            "enemies": [
+              "rootheart"
+            ],
+            "kind": "boss",
+            "turns": 30
+          },
+          "cohort": "comparator",
+          "participation": {
+            "facetBurstDrawn": 0,
+            "facetBurstInDeck": 0,
+            "facetBurstOffered": 0,
+            "facetBurstPlayed": 0
+          },
+          "participationTotal": 0,
+          "rowIndex": 461,
+          "seed": 4060,
+          "variant": "current-main",
+          "vow": 0
+        },
+        {
+          "arm": 3,
+          "aspect": "duskblade",
+          "ceilingFight": {
+            "act": 3,
+            "enemies": [
+              "sovereign"
+            ],
+            "kind": "boss",
+            "turns": 30
+          },
+          "cohort": "comparator",
+          "participation": {
+            "facetBurstDrawn": 0,
+            "facetBurstInDeck": 0,
+            "facetBurstOffered": 0,
+            "facetBurstPlayed": 0
+          },
+          "participationTotal": 0,
+          "rowIndex": 497,
+          "seed": 4096,
+          "variant": "current-main",
+          "vow": 0
+        },
+        {
+          "arm": 3,
+          "aspect": "duskblade",
+          "ceilingFight": {
+            "act": 1,
+            "enemies": [
+              "rootheart"
+            ],
+            "kind": "boss",
+            "turns": 30
+          },
+          "cohort": "comparator",
+          "participation": {
+            "facetBurstDrawn": 0,
+            "facetBurstInDeck": 0,
+            "facetBurstOffered": 0,
+            "facetBurstPlayed": 0
+          },
+          "participationTotal": 0,
+          "rowIndex": 952,
+          "seed": 4151,
+          "variant": "explicit-off",
+          "vow": 0
+        },
+        {
+          "arm": 3,
+          "aspect": "duskblade",
+          "ceilingFight": {
+            "act": 1,
+            "enemies": [
+              "rootheart"
+            ],
+            "kind": "boss",
+            "turns": 30
+          },
+          "cohort": "comparator",
+          "participation": {
+            "facetBurstDrawn": 0,
+            "facetBurstInDeck": 0,
+            "facetBurstOffered": 0,
+            "facetBurstPlayed": 0
+          },
+          "participationTotal": 0,
+          "rowIndex": 1261,
+          "seed": 4060,
+          "variant": "null-card",
+          "vow": 0
+        },
+        {
+          "arm": 3,
+          "aspect": "duskblade",
+          "ceilingFight": {
+            "act": 3,
+            "enemies": [
+              "sovereign"
+            ],
+            "kind": "boss",
+            "turns": 30
+          },
+          "cohort": "comparator",
+          "participation": {
+            "facetBurstDrawn": 0,
+            "facetBurstInDeck": 0,
+            "facetBurstOffered": 0,
+            "facetBurstPlayed": 0
+          },
+          "participationTotal": 0,
+          "rowIndex": 1297,
+          "seed": 4096,
+          "variant": "null-card",
+          "vow": 0
+        }
+      ],
+      "candidateFreeCount": 6,
+      "candidateTouchedCoordinates": [
+        {
+          "arm": 3,
+          "aspect": "duskblade",
+          "ceilingFight": {
+            "act": 2,
+            "enemies": [
+              "leviathan"
+            ],
+            "kind": "boss",
+            "turns": 30
+          },
+          "cohort": "control",
+          "participation": {
+            "facetBurstDrawn": 0,
+            "facetBurstInDeck": 0,
+            "facetBurstOffered": 1,
+            "facetBurstPlayed": 0
+          },
+          "participationTotal": 1,
+          "rowIndex": 265,
+          "seed": 4064,
+          "variant": "omitted",
+          "vow": 5
+        },
+        {
+          "arm": 3,
+          "aspect": "duskblade",
+          "ceilingFight": {
+            "act": 1,
+            "enemies": [
+              "rootheart"
+            ],
+            "kind": "boss",
+            "turns": 30
+          },
+          "cohort": "control",
+          "participation": {
+            "facetBurstDrawn": 12,
+            "facetBurstInDeck": 1,
+            "facetBurstOffered": 1,
+            "facetBurstPlayed": 0
+          },
+          "participationTotal": 14,
+          "rowIndex": 280,
+          "seed": 4079,
+          "variant": "omitted",
+          "vow": 5
+        },
+        {
+          "arm": 3,
+          "aspect": "duskblade",
+          "ceilingFight": {
+            "act": 2,
+            "enemies": [
+              "leviathan"
+            ],
+            "kind": "boss",
+            "turns": 30
+          },
+          "cohort": "comparator",
+          "participation": {
+            "facetBurstDrawn": 0,
+            "facetBurstInDeck": 0,
+            "facetBurstOffered": 1,
+            "facetBurstPlayed": 0
+          },
+          "participationTotal": 1,
+          "rowIndex": 1065,
+          "seed": 4064,
+          "variant": "explicit-off",
+          "vow": 5
+        },
+        {
+          "arm": 3,
+          "aspect": "duskblade",
+          "ceilingFight": {
+            "act": 1,
+            "enemies": [
+              "rootheart"
+            ],
+            "kind": "boss",
+            "turns": 30
+          },
+          "cohort": "comparator",
+          "participation": {
+            "facetBurstDrawn": 12,
+            "facetBurstInDeck": 1,
+            "facetBurstOffered": 1,
+            "facetBurstPlayed": 0
+          },
+          "participationTotal": 14,
+          "rowIndex": 1080,
+          "seed": 4079,
+          "variant": "explicit-off",
+          "vow": 5
+        }
+      ],
+      "candidateTouchedCount": 4,
+      "errorCoordinates": [],
+      "errorCount": 0,
+      "nullCardArm3TurnCeilings": 2,
+      "perCell": {
+        "arm1:ashwarden": {
+          "boundInclusive": 0.02,
+          "exceeded": false,
+          "maximumInclusive": 8,
+          "rate": 0.0,
+          "runs": 400,
+          "turnCeilings": 0,
+          "vetoAt": 9
+        },
+        "arm1:duskblade": {
+          "boundInclusive": 0.02,
+          "exceeded": false,
+          "maximumInclusive": 8,
+          "rate": 0.0,
+          "runs": 400,
+          "turnCeilings": 0,
+          "vetoAt": 9
+        },
+        "arm2:ashwarden": {
+          "boundInclusive": 0.02,
+          "exceeded": false,
+          "maximumInclusive": 8,
+          "rate": 0.0,
+          "runs": 400,
+          "turnCeilings": 0,
+          "vetoAt": 9
+        },
+        "arm2:duskblade": {
+          "boundInclusive": 0.02,
+          "exceeded": false,
+          "maximumInclusive": 8,
+          "rate": 0.0,
+          "runs": 400,
+          "turnCeilings": 0,
+          "vetoAt": 9
+        },
+        "arm3:ashwarden": {
+          "boundInclusive": 0.02,
+          "exceeded": false,
+          "maximumInclusive": 8,
+          "rate": 0.0,
+          "runs": 400,
+          "turnCeilings": 0,
+          "vetoAt": 9
+        },
+        "arm3:duskblade": {
+          "boundInclusive": 0.02,
+          "exceeded": false,
+          "maximumInclusive": 8,
+          "rate": 0.0075,
+          "runs": 400,
+          "turnCeilings": 3,
+          "vetoAt": 9
+        },
+        "arm4:ashwarden": {
+          "boundInclusive": 0.02,
+          "exceeded": false,
+          "maximumInclusive": 8,
+          "rate": 0.0,
+          "runs": 400,
+          "turnCeilings": 0,
+          "vetoAt": 9
+        },
+        "arm4:duskblade": {
+          "boundInclusive": 0.02,
+          "exceeded": false,
+          "maximumInclusive": 8,
+          "rate": 0.0,
+          "runs": 400,
+          "turnCeilings": 0,
+          "vetoAt": 9
+        }
+      },
+      "turnCeilingCount": 10,
+      "wholeRun": {
+        "boundInclusive": 0.005,
+        "exceeded": false,
+        "maximumInclusive": 32,
+        "rate": 0.0015625,
+        "runs": 6400,
+        "turnCeilings": 10
+      }
+    },
+    "reproductionVsV3": {
+      "checked": 1600,
+      "faultCount": 0,
+      "faults": [],
+      "outcomeMatches": 1600,
+      "rngMatches": 1600
+    },
+    "trajectoryDiagnostics": {
+      "omittedExplicitOffPairsChecked": 400,
+      "sameTrajectoryCeilingExecutions": 3,
+      "sameTrajectoryPairs": 400
+    }
+  },
+  "outcomeClass": "causal-attribution",
+  "p9Claim": false,
+  "preflight": {
+    "artifact": "/tmp/glassvow-421-v4-preflight.jsonl",
+    "participation": {
+      "facetBurstDrawn": 47,
+      "facetBurstInDeck": 1,
+      "facetBurstOffered": 3,
+      "facetBurstPlayed": 4
+    },
+    "positiveSeed": 9000,
+    "protocolRows": 0,
+    "seedsTried": 1
+  },
+  "protocolId": "p9-w0-v4-phase-a",
+  "protocolSha256": "16044d869f1a1ec0d0e9a4b566f53a6220f2df2efe0d4c82aeb06dba414590b4",
+  "reasons": [
+    "candidate-touched turnCeiling in 4 row(s)"
+  ],
+  "rows": 1600,
+  "schemaVersion": 1,
+  "verdict": "FAIL_CLOSED",
+  "wallTimeSeconds": 27.411474207998253
+}
