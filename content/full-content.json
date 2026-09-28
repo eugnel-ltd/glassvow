@@ -2058,7 +2058,9 @@
       "glyph": "♜",
       "tone": "#d8c27a",
       "name": "Crown of Tithes",
-      "text": "You may kindle twice each turn, and each kindling grants 3 Ward."
+      "duskFervorPer": 10,
+      "duskWardPer": 4,
+      "text": "You may kindle twice each turn, and each kindling grants 3 Ward. Duskblade: your blows no longer chip Facets; begin each combat with 1 Fervor for every 10 cards in your deck, and at the start of each turn gain 1 Ward for every 4."
     },
     "shatterersCrown": {
       "rarity": "boss",
@@ -2080,9 +2082,11 @@
       "glyph": "⬡",
       "tone": "#ff9a4d",
       "name": "Unbroken Crown",
-      "wardPerAttack": 3,
-      "smolderPerAttack": 3,
-      "text": "Your blows no longer chip Facets, and your Smolder takes hold. Whenever you play an Attack, gain 3 Ward and apply 3 Smolder to the enemy."
+      "wardPerAttack": 2,
+      "smolderPerAttack": 2,
+      "fullDeck": 30,
+      "fullPerAttack": 3,
+      "text": "Your blows no longer chip Facets, and your Smolder takes hold. Whenever you play an Attack, gain 2 Ward and apply 2 Smolder to the enemy; 3 of each while your deck holds 30 or more cards."
     }
   },
   "relicPools": {

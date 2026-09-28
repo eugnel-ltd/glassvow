@@ -290,6 +290,10 @@ func _apply_start_relics(run: RunState, cb: CombatState) -> void:
 		cb.ember_cap = 12
 		cb.embers = clampi(cb.embers + 2, 0, cb.ember_cap)
 		_proc(cb, "crownOfCinders")
+	var tithes_fervor: int = _tithes_per_deck(run, "duskFervorPer")
+	if tithes_fervor > 0:
+		add_status_player(cb, "str", tithes_fervor)
+		_proc(cb, "crownOfTithes")
 	if run.has_relic("shatterersCrown"):
 		for e: EnemyCombatant in cb.enemies:
 			e.facet_max = maxi(2, e.facet_max - 1)
@@ -309,6 +313,16 @@ func _apply_start_relics(run: RunState, cb: CombatState) -> void:
 
 static func _proc(cb: CombatState, relic_id: String) -> void:
 	cb.queue.append({"t": EventTypes.RELIC_PROC, "id": relic_id})
+
+
+## Crown of Tithes' Duskblade clause: one stack for every `field` cards in the
+## run deck (integer division). Zero for Ashwarden, non-holders and slice content.
+func _tithes_per_deck(run: RunState, field: String) -> int:
+	if run.aspect != 0 or not run.has_relic("crownOfTithes"):
+		return 0
+	var tithes: Dictionary = content.relics.get("crownOfTithes", {})
+	var per: int = _ji(tithes.get(field, 0))
+	return run.player.deck.size() / per if per > 0 else 0
 
 
 ## Fisher-Yates, identical draw order to the web shuffle().
@@ -351,6 +365,10 @@ func _start_player_turn(run: RunState, cb: CombatState) -> void:
 			return
 	if _sget(p.statuses, "barricade") == 0:
 		p.block = 0
+	var tithes_ward: int = _tithes_per_deck(run, "duskWardPer")
+	if tithes_ward > 0:
+		gain_block_player(cb, tithes_ward, false, run)
+		_proc(cb, "crownOfTithes")
 	var ritual: int = _sget(p.statuses, "ritual")
 	if ritual > 0:
 		add_status_player(cb, "str", ritual)
@@ -665,7 +683,7 @@ func gain_block_enemy(
 ## (aspect 0): Ashwarden connecting attacks still compute implicit chip, but
 ## this no-op means they never stun.
 func apply_chips(run: RunState, cb: CombatState, e: EnemyCombatant, n: int) -> void:
-	if run.aspect != 0 or run.has_relic("unbrokenCrown"):
+	if run.aspect != 0 or run.has_relic("unbrokenCrown") or run.has_relic("crownOfTithes"):
 		return
 	if cb.over or e.hp <= 0 or n <= 0:
 		return
@@ -826,7 +844,12 @@ func play_card(run: RunState, cb: CombatState, uid: int, target_idx: Variant = n
 	cb.pending_chips_active = false
 	cb.pending_chips = {}
 	var crown: Dictionary = content.relics.get("unbrokenCrown", {}) if run.has_relic("unbrokenCrown") else {}
-	var smolder: int = _sget(p.statuses, "venomous") + _ji(crown.get("smolderPerAttack", 0))
+	# A full deck (fullDeck or more cards) raises both per-Attack payoffs to fullPerAttack.
+	var crown_full: bool = crown.has("fullDeck") \
+		and run.player.deck.size() >= _ji(crown["fullDeck"])
+	var crown_ward: int = _ji(crown.get("fullPerAttack" if crown_full else "wardPerAttack", 0))
+	var crown_smolder: int = _ji(crown.get("fullPerAttack" if crown_full else "smolderPerAttack", 0))
+	var smolder: int = _sget(p.statuses, "venomous") + crown_smolder
 	if not cb.over and card_type == "attack" and smolder > 0:
 		var venom_targets: Array[EnemyCombatant] = []
 		if str(d.get("target", "")) == "allEnemies":
@@ -836,7 +859,7 @@ func play_card(run: RunState, cb: CombatState, uid: int, target_idx: Variant = n
 		for e: EnemyCombatant in venom_targets:
 			add_status_enemy(cb, e, "poison", smolder, run)
 	if not cb.over and card_type == "attack" and not crown.is_empty():
-		gain_block_player(cb, _ji(crown.get("wardPerAttack", 0)), false, run)
+		gain_block_player(cb, crown_ward, false, run)
 		_proc(cb, "unbrokenCrown")
 	if not cb.over and run.has_relic("silkFan") and cb.counters_played % 3 == 0:
 		gain_block_player(cb, 3, false, run)
@@ -1396,7 +1419,9 @@ func preview_play(
 		if str(d.get("type", "")) == "attack":
 			per = 1 + _ji(d.get("chip", 0)) + _sget(p.statuses, "beacon")
 		chips = (per if (hits.size() > 0 and loss > 0) else 0) + fx_chips
-		if run != null and (run.aspect != 0 or run.has_relic("unbrokenCrown")):
+		if run != null and (
+			run.aspect != 0 or run.has_relic("unbrokenCrown") or run.has_relic("crownOfTithes")
+		):
 			chips = 0
 		will_shatter = chips > 0 and target.chips + chips >= target.facet_max and not lethal
 	return {
