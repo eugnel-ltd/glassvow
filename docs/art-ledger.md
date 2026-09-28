@@ -795,3 +795,195 @@ Fuse pass (same day, seeded from the first edit):
 
 sha256 `c1d4d34d6f1299f2a162a3fafb9d76ec61ec4e635914aedfd65e5493774447dd`.
 
+### Act III ordinary clay — five accepted concepts (#293)
+
+Five ordinary kit silhouettes already sit in
+`docs/map-scene-asset-bill.md` (A3-1–A3-5). They do not need a new canon
+decision. This section records the five ordinary clay briefs and their
+generated JPEGs. Reviewer **fol2** accepted all five on 2026-08-21:
+
+- `act3-obsidian-blade` (A3-1)
+- `act3-broken-halo` (A3-2)
+- `act3-court-plinth` (A3-3)
+- `act3-shattered-wall-mass` (A3-4)
+- `act3-star-eye-mass` (A3-5)
+
+That acceptance authorises Tripo Studio Pro image-to-3D for these ordinary
+kits only. The API/OpenAPI path remains forbidden. Out of scope, and
+**not decided here**: A3-H `terminus-broken-ring-arch`.
+
+All five concepts are 1:1 clay maquettes, not shipping textures. They live
+outside `assets/art/map/` so `tools/check_map_assets.py` does not treat
+them as undeclared payload. Godot imports each JPEG under
+`assets/art/map-concepts/`; the Godot-generated `.import` sidecar is
+committed with the JPEG (do not hand-edit the sidecar). The only
+image-edit seed is `assets/art/map-concepts/shared-road-slab-a.jpg`
+(port-authored Grok Imagine, 2026-08-19, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`),
+already the accepted Studio concept for shipping `shared-road-slab-a.glb`.
+Codex generated the five review-candidate JPEGs on 2026-08-21 via OpenAI
+ImageGen image-edit, seeded from that file.
+
+Conversion (all five, reproducible): Pillow 12.3.0,
+`Image.open(src).convert("RGB")`,
+`resize((1024, 1024), Image.Resampling.LANCZOS)`, then
+`save(..., format="JPEG", quality=95, subsampling=0, optimize=False,
+progressive=False)`. Source PNGs were 1254×1254 RGB. A second conversion
+pass produced the same JPEG hashes.
+
+### `map-concepts/act3-obsidian-blade.jpg` — 1:1 concept, not a shipping texture
+
+**Status:** accepted 2026-08-21 by reviewer fol2. Studio Pro
+image-to-3D authorised for this ordinary kit only; API/OpenAPI
+remains forbidden.
+
+Tripo Studio image-to-3D input for kit module `act3-obsidian-blade` (A3-1:
+large obsidian wedge). Seed: `shared-road-slab-a.jpg`, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+Later GLB, not this commit: `assets/art/map/geometry/act3/obsidian-blade.glb`.
+
+Edit prompt (2026-08-21, Codex via OpenAI ImageGen image-edit, seeded from
+`shared-road-slab-a.jpg`, **ran**):
+
+> Keep the exact same clay-maquette look, medium-gray studio background, even
+> above-front lighting, 3/4 orthographic view, and matte untextured stone
+> surface. Replace the low road slab with one different prop: a single
+> large blunt obsidian wedge on a broad foot, no handle.
+> Chunky low-poly geometric volumes, no grass, no moss, no thin crack lines,
+> no cast shadow on the ground. Isolated, centered, large in frame. Distinct
+> wedge silhouette, still a simple game-kitbash mass.
+
+Source PNG (session-local, not in repo):
+`/Users/jamesto/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-ac568b9b-45ba-4e8a-991e-efd1f30c7a42.png`,
+1254×1254 RGB, sha256
+`f7dd4fee9f5864cdc4d145a1e1e1e3d5b3a57d64f2cbc499b435d6a0dca99ff7`.
+Review-candidate JPEG: `assets/art/map-concepts/act3-obsidian-blade.jpg`,
+1024×1024 RGB, 135601 bytes, sha256
+`0d58513b648a0d8c884edc76c3cdcc66b5df60b4a5b2d22da98b322636ccfb21`.
+Godot 4.7.2.stable generated `act3-obsidian-blade.jpg.import`.
+
+### `map-concepts/act3-broken-halo.jpg` — 1:1 concept, not a shipping texture
+
+**Status:** accepted 2026-08-21 by reviewer fol2. Studio Pro
+image-to-3D authorised for this ordinary kit only; API/OpenAPI
+remains forbidden.
+
+Tripo Studio image-to-3D input for kit module `act3-broken-halo` (A3-2:
+broken ring/halo mass). Seed: `shared-road-slab-a.jpg`, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+Later GLB, not this commit: `assets/art/map/geometry/act3/broken-halo.glb`.
+
+Edit prompt (2026-08-21, Codex via OpenAI ImageGen image-edit, seeded from
+`shared-road-slab-a.jpg`, **ran**):
+
+> Keep the exact same clay-maquette look, medium-gray studio background, even
+> above-front lighting, 3/4 orthographic view, and matte untextured stone
+> surface. Replace the low road slab with one different prop: a single
+> thick incomplete halo anchored to one base, no detached fragments.
+> Chunky low-poly geometric volumes, no grass, no moss, no thin crack lines,
+> no cast shadow on the ground. Isolated, centered, large in frame. Distinct
+> broken-halo silhouette, still a simple game-kitbash mass.
+
+Source PNG (session-local, not in repo):
+`/Users/jamesto/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-b29afeed-38be-4fc6-8fac-36793ad01d73.png`,
+1254×1254 RGB, sha256
+`0c81cbb4cb587197a0801a29c52a70d88862b8b5cfaf093961ab24a78d813281`.
+Review-candidate JPEG: `assets/art/map-concepts/act3-broken-halo.jpg`,
+1024×1024 RGB, 145290 bytes, sha256
+`1d0338cb2acb3f9f2fdeee620937909598d7a790c90127f97d7f59e92d7becae`.
+Godot 4.7.2.stable generated `act3-broken-halo.jpg.import`.
+
+### `map-concepts/act3-court-plinth.jpg` — 1:1 concept, not a shipping texture
+
+**Status:** accepted 2026-08-21 by reviewer fol2. Studio Pro
+image-to-3D authorised for this ordinary kit only; API/OpenAPI
+remains forbidden.
+
+Tripo Studio image-to-3D input for kit module `act3-court-plinth` (A3-3:
+Sovereign-court stacked slab). Seed: `shared-road-slab-a.jpg`, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+Later GLB, not this commit: `assets/art/map/geometry/act3/court-plinth.glb`.
+
+Edit prompt (2026-08-21, Codex via OpenAI ImageGen image-edit, seeded from
+`shared-road-slab-a.jpg`, **ran**):
+
+> Keep the exact same clay-maquette look, medium-gray studio background, even
+> above-front lighting, 3/4 orthographic view, and matte untextured stone
+> surface. Replace the low road slab with one different prop: a single
+> three broad fused court-plinth tiers.
+> Chunky low-poly geometric volumes, no grass, no moss, no thin crack lines,
+> no cast shadow on the ground. Isolated, centered, large in frame. Distinct
+> stacked-plinth silhouette, still a simple game-kitbash mass.
+
+Source PNG (session-local, not in repo):
+`/Users/jamesto/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-a5229500-55a0-4003-a435-9d5a57b4a67b.png`,
+1254×1254 RGB, sha256
+`a6ab516441edb5f61f1f194695993a1b3ecd6948a5a40fbb63bab19e4ec5cf03`.
+Review-candidate JPEG: `assets/art/map-concepts/act3-court-plinth.jpg`,
+1024×1024 RGB, 137126 bytes, sha256
+`c6c08bc67774c6a528b629008b228655b62e81d9d01033da3c19890fc45d31db`.
+Godot 4.7.2.stable generated `act3-court-plinth.jpg.import`.
+
+### `map-concepts/act3-shattered-wall-mass.jpg` — 1:1 concept, not a shipping texture
+
+**Status:** accepted 2026-08-21 by reviewer fol2. Studio Pro
+image-to-3D authorised for this ordinary kit only; API/OpenAPI
+remains forbidden.
+
+Tripo Studio image-to-3D input for kit module `act3-shattered-wall-mass` (A3-4:
+broad ruined court wall). Seed: `shared-road-slab-a.jpg`, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+Later GLB, not this commit: `assets/art/map/geometry/act3/shattered-wall-mass.glb`.
+
+Edit prompt (2026-08-21, Codex via OpenAI ImageGen image-edit, seeded from
+`shared-road-slab-a.jpg`, **ran**):
+
+> Keep the exact same clay-maquette look, medium-gray studio background, even
+> above-front lighting, 3/4 orthographic view, and matte untextured stone
+> surface. Replace the low road slab with one different prop: a single
+> broad ruined wall with stepped broken top and fused foot.
+> Chunky low-poly geometric volumes, no grass, no moss, no thin crack lines,
+> no cast shadow on the ground. Isolated, centered, large in frame. Distinct
+> ruined-wall silhouette, still a simple game-kitbash mass.
+
+Source PNG (session-local, not in repo):
+`/Users/jamesto/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-eab49bf5-aef2-4c85-b06d-d8c12f095898.png`,
+1254×1254 RGB, sha256
+`e4c767c7005d7dc619dfbb2c9d95a800f60f3ab3d933fe1f5cfc75cd2fe328b8`.
+Review-candidate JPEG: `assets/art/map-concepts/act3-shattered-wall-mass.jpg`,
+1024×1024 RGB, 140259 bytes, sha256
+`9a2cc72b05f29332d034d9b22a84133dccfe07f38d89fc1bb9f3e92e4af03237`.
+Godot 4.7.2.stable generated `act3-shattered-wall-mass.jpg.import`.
+
+### `map-concepts/act3-star-eye-mass.jpg` — 1:1 concept, not a shipping texture
+
+**Status:** accepted 2026-08-21 by reviewer fol2. Studio Pro
+image-to-3D authorised for this ordinary kit only; API/OpenAPI
+remains forbidden.
+
+Tripo Studio image-to-3D input for kit module `act3-star-eye-mass` (A3-5:
+star/watching-eye motif as one coarse silhouette). Seed:
+`shared-road-slab-a.jpg`, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+Later GLB, not this commit: `assets/art/map/geometry/act3/star-eye-mass.glb`.
+
+Edit prompt (2026-08-21, Codex via OpenAI ImageGen image-edit, seeded from
+`shared-road-slab-a.jpg`, **ran**):
+
+> Keep the exact same clay-maquette look, medium-gray studio background, even
+> above-front lighting, 3/4 orthographic view, and matte untextured stone
+> surface. Replace the low road slab with one different prop: a single
+> thick almond/star-eye mass with raised centre, no pupil/iris.
+> Chunky low-poly geometric volumes, no grass, no moss, no thin crack lines,
+> no cast shadow on the ground. Isolated, centered, large in frame. Distinct
+> star-eye silhouette, still a simple game-kitbash mass.
+
+Source PNG (session-local, not in repo):
+`/Users/jamesto/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-01d0de18-4612-4467-aae7-c1a48430c2ef.png`,
+1254×1254 RGB, sha256
+`c9ed04b85d0cd40a5105a999262de1a3e7c20692885e908e38eb2f2886f2e788`.
+Review-candidate JPEG: `assets/art/map-concepts/act3-star-eye-mass.jpg`,
+1024×1024 RGB, 125556 bytes, sha256
+`a14827cea20b4a58321a995bb0c99fa0d0bb4719607f0d8bbe8ad0a219da8449`.
+Godot 4.7.2.stable generated `act3-star-eye-mass.jpg.import`.
+
