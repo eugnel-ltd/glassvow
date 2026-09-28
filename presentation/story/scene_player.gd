@@ -210,8 +210,11 @@ func _present_line() -> void:
 	var text: String = ""
 	var lines: Array[Dictionary] = _script.lines
 	if not _pool_row.is_empty():
-		text = LineTable.text(_pool_row, Locale.active.code == Locale.CODE_ZH_HANT)
-		lines = [_pool_line()]
+		# The drawn row is line 0; a tail line after it is ordinary locale copy.
+		lines = _script.lines.duplicate()
+		lines[0] = _pool_line()
+		text = LineTable.text(_pool_row, Locale.active.code == Locale.CODE_ZH_HANT) \
+			if _cursor == 0 else Locale.active.t(str(row["key"]))
 	else:
 		text = Locale.active.t(str(row["key"]))
 	var animate: bool = not instant and not _skipping
@@ -225,8 +228,7 @@ func _present_line() -> void:
 		_sync_unsealing()
 	# A resumed scene stands its cast at once; a fresh one walks them on.
 	var stand_instant: bool = not _presented and _cursor > 0
-	_arriving = _director.present(lines, 0 if not _pool_row.is_empty() else _cursor,
-		text, animate, stand_instant)
+	_arriving = _director.present(lines, _cursor, text, animate, stand_instant)
 	_presented = true
 	_sync_hearth_figure()
 	_caption.visible = true
@@ -256,14 +258,17 @@ func _bind_plate() -> void:
 	_plate.visible = _plate.texture != null
 
 
-## A pool row is one line; a registered speaker with a body steps into their
-## own seat, anyone else (a walker's echo) is heard, not seen.
+## The drawn row's line: its slot's look, plus its speaker. A registered
+## speaker with a body steps into their own seat; anyone else (a walker's echo)
+## is heard, not seen — whispered, unless the slot's look gives them a voice.
 func _pool_line() -> Dictionary:
 	var speaker: String = str(_pool_row.get("speaker", "")).strip_edges()
-	var line: Dictionary = {"key": "pool.inline", "beat": 0}
+	var line: Dictionary = _script.lines[0].duplicate() if _script.line_count() > 0 \
+		else {"key": "pool.inline", "beat": 0}
 	var book: ActorBook = ActorBook.shared()
 	if not book.has(speaker):
-		line["style"] = String(StageDirection.STYLE_WHISPER)
+		if not line.has("style"):
+			line["style"] = String(StageDirection.STYLE_WHISPER)
 		return line
 	line["speaker"] = speaker
 	if not str(book.resolve(speaker, "", _hero)["path"]).is_empty():

@@ -137,7 +137,7 @@ in `content/scenes.json`, so the cursor, the save and this document's beat
 structure are unchanged. Authoring reference and design record:
 `docs/design/2026-09-27-stagecraft/README.md`.
 
-Two rulings recorded here because they touch §1 and §8:
+The rulings recorded here because they touch §1, §8 and the reveal ladder:
 
 - **§1 tap grammar, read literally.** Lines type in; a tap lands a line still
   typing (提前完成 reveal) and a tap on a standing line steps (即時推進).
@@ -146,6 +146,11 @@ Two rulings recorded here because they touch §1 and §8:
 - **Beyond the four scenes.** Battle speech (the Usurper, the Shades), the
   Hollow Lamplighter's price screen and all eleven road events use the same
   pane, busts and effects, on existing copy; see the design record.
+- **Copy that no screen showed now plays where it closes.** Each quest closer
+  once, straight after its completing fight, at four lit panes (the rows' own
+  gate); the Unreadable Page's pages as scenes at the win that turns them; the
+  Queue's L3 row at the first Act IV crossing, after the unsealing; the Eighth
+  Omen's words after each waystone's echo; the Night Stall's lantern lines.
 - **#334 geometry overridden, its rule kept.** Opening beat ② is a two-shot
   close-up (hero left, Keeper right as a portrait); beats ①③④ keep the seated
   hearth figure. One Keeper body on screen at every cursor, pinned in

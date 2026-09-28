@@ -148,25 +148,39 @@ existing copy only:
 | Battle speech: the Usurper's three opening lines and each Shade's dying word | `BattleDialogue`: the fight dims, the speaker's bust rises on the right under its combat name, the line types into the pane with its effect (a crack on "mask", a hop and an ember flash on the threat, a cold flash on the dying word, which stays whispered for the L1 weight line). The drain awaits it; a variant with no staging keeps the banner. | `content/battle-lines.json`; the Shade and the Sovereign are actors on their shipped art |
 | The Hollow Lamplighter's price | The meeting's own two-shot between its pre- and post-scenes: hero left, the Lamplighter lit right, the ask under his plaque, the price as a choice window. Asking → wary (a recoil) when it cannot be met → recognising once paid; paying kindles your embers into the hollow lantern. | moods in `content/actors.json` |
 | Road events (all eleven) | The event's painting full-bleed as the place, a location card, the prose in the pane, the choices in a window docked beside the figure; per-event weather and grade; each story beat's own effect, once, never on resume. | `content/event-staging.json` |
+| The gambler's roll | The landed branch (win or lose) is narrated as its own event beat, with its own effect (`roll-win`, `roll-lose`); the roll is kept by id, so a resume shows the same outcome and never rolls again. | `content/event-staging.json` |
+| The Lamplighter's replies | His meeting's own `ask`, `paid` and `cannot` lines in the pane under his plaque; the first meeting's promised price answers with `accepted`. | the meeting rows in `content/full-content.json` |
+| Quest closers | Once each, straight after the fight that completes the journey, while four panes are lit: the Own Shade whispered over ash in a cold grade; the Usurper on its crowned bust with a crack; the Eighth Omen as a gold title card in the inverted grade. A win that closes two journeys plays both in turn. Each plays as a run scene `line:<row id>` (a pending pool line may not stand beside a pending reward or run end in the save contract). | `SceneScript.POOL_LOOKS`, `PoolBeats.CLOSERS` |
+| The Unreadable Page | Each page read as its own scene (dusk, motes; the fifth page with rays) at the act-2 boss win that turns it, once, while the page is carried; that win's closers follow it. The pages are quest copy, not `story.*` leaves, so the scenes are built in code rather than authored in `content/scenes.json`. | `SceneScript.quest_page` (`unreadable-page-1`…`5`) |
+| The Queue at the door | `payoff.mirror` heard once, as a chorus under hearth light and rays, straight after act4-entry on the first Act IV crossing. | `PoolBeats.KEY_L3` |
+| The Eighth Omen's broken words | While that omen rules the act, each waystone's echo is followed by one of its four words as a title card, in turn by the waystone's row. | `SceneScript.OMEN_ECHO` |
+| The Night Stall | The merchant's line carries the lantern: its price out of reach (`poor`), and the throne told the moment it is sold (`bought`); otherwise the greeting. | `ShopScreen.say` |
 
-Not staged, on purpose: the Night Stall (the painting *is* the screen, James's
-concept C1), dawn memories (the rubric's ceremony cadence), the Vigil and its
+Not staged, on purpose: the Night Stall's frame (the painting *is* the screen,
+James's concept C1 — it speaks only through its own merchant line), dawn memories (the rubric's ceremony cadence), the Vigil and its
 epitaphs (records, not speech), and the waystone echoes' plate. The only
 existing monument art is a map icon, so the echoes stay a whisper in motes.
 
-## Open decisions (not decided here)
+## Narrative timing (decided here)
 
-- **Authored copy that no screen shows.** The line-table rows
-  `closer.ownShade`, `closer.usurper`, `closer.eighthOmen` and `closer.l3`
-  (`payoff.mirror`, the Queue), and the quest fields `final`, `death`,
-  `resolved`, `pages`, `fragments`, `waystoneEchoes`, `poor`, `bought`, `paid`,
-  `cannot` and `accepted`, are loaded and localised, but no runtime code
-  displays them. They are L2 closers (`04-delivery.md`), so *when* each plays is
-  a narrative-timing decision with ladder consequences, not a staging one. Once
-  that is decided, each closer is one pool beat through the engine.
-- **The gambler's roll.** `rewards.gd` attaches win/lose text to the roll, but
-  `_on_event_choice` never reads it, so the gambler's outcome is never
-  narrated. That is a gameplay-flow fix, left for its own change.
+The copy that was loaded and localised but never shown now plays through the
+same engine, at the moment its own row or ledger entry names:
+
+- **Closers are L2** (`04-delivery.md`: quest rewrites are closers only). The
+  rows carry their own gate (`shards>=4`, `once`), so the line plays only when
+  four panes are lit and only once across the Vigil. The moment is the
+  completing fight (`05-foreshadow-ledger.md` rows 5, 41 and 83 call them the
+  shade's confession, the victory pointer and the quest's closing line). The
+  quest fields `final`, `death` and `resolved` are the same sentences.
+- **Pages are milestone copy.** Pages one to four are L1 and the fifth is the
+  L2 closer (ledger rows 12 and 17); each is read at the win that turns it.
+- **The Queue's row is post-L3.** It is heard after the unsealing has been
+  seen, at the door itself, so the ladder is never climbed early.
+- **The omen's words and the stall's lines are L1** (ledger rows 16, 39, 40).
+
+Every beat keeps the engine's existing laws: a row is drawn once per key and
+replayed on resume without consuming randomness, and a scene marks
+`scenes_seen` when it finishes (a heard closer is never queued again).
 
 ## Verification
 
@@ -182,6 +196,15 @@ existing monument art is a map icon, so the echoes stay a whisper in motes.
   stage), and the reel `-- --stagecraft --cursor=N --freeze=SECONDS --shot=…`
   photographs a one-shot effect mid-flight. `contact-sheet.jpg` here is the
   reviewed set from this change.
+- `tests/test_quest_closers.gd` — each closer's gate (four panes, completed,
+  not yet heard, not told before), the boss-win chain, the Own Shade's fight,
+  page scenes (read once, only while carried, closers after them), the Queue
+  after the first crossing only, every slot look in the vocabulary, the omen's
+  words after a waystone, and the stall's lines. Every owed beat is a save the
+  load contract accepts, and a resumed run replays it. Previews:
+  `--stagecraft-screen=pool:<row-id>[:echo]`, `stall[:poor|:bought]`, and
+  `--scene=line:<row-id>` or `--scene=unreadable-page-<n>`.
+- `tests/test_event_rolls.gd` — the gambler's roll narrated, kept and resumed.
 - `tests/test_stagecraft_screens.gd` — battle and event staging fail closed and
   match real content; the Hollow two-shot's moods and contracts; the event
   screen's plate, prose, choices and once-only beat effect; the pane laying out

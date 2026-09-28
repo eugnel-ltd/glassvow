@@ -17,6 +17,9 @@ extends Control
 ##   hollow[:paid|:refused]        the Lamplighter's price, meeting 3 of 5
 ##   event:<id>[:c0|:c1|:c2|:coda] a road event, its choice or a story beat
 ##   battle:<variant>[:death]      a foe's battle dialogue over the Act I stage
+##   pool:<row-id>[:echo]          a LineTable row in its slot's look; `echo`
+##                                 adds the Eighth Omen's words (`--cursor=1`)
+##   stall[:poor|:bought]          the Night Stall and its lantern lines
 
 const REEL: Dictionary = {"beats": [
 	{"art": "res://assets/art/scenes/opening-hearth.png", "motion": "push-in",
@@ -93,6 +96,10 @@ func _ready() -> void:
 	elif parts[0] == "battle" and parts.size() > 1:
 		_battle(parts[1], parts.size() > 2 and parts[2] == "death")
 		return
+	elif parts[0] == "pool" and parts.size() > 1:
+		screen = _pool(parts[1], parts.size() > 2 and parts[2] == "echo")
+	elif parts[0] == "stall":
+		screen = _stall(parts[1] if parts.size() > 1 else "")
 	if screen == null:
 		push_error("stagecraft: unknown screen '%s'" % _screen)
 		return
@@ -155,9 +162,39 @@ func _battle(variant_id: String, death: bool) -> void:
 	_settle(dialogue)
 
 
+func _pool(row_id: String, echo: bool) -> Control:
+	var row: Dictionary = LineTable.row_by_id(_content.line_table, row_id)
+	if row.is_empty():
+		return null
+	var tail: Array[Dictionary] = []
+	if echo:
+		var echo_line: Dictionary = SceneScript.OMEN_ECHO.duplicate(true)
+		echo_line["key"] = "content.quests.eighthOmen.waystoneEchoes.0"
+		tail.append(echo_line)
+	var script: SceneScript = SceneScript.pool_beat("", str(row.get("slot", "")), tail)
+	var player: ScenePlayer = ScenePlayer.new(script,
+		clampi(_cursor, 0, script.line_count() - 1), _shape, null, row, "duskblade")
+	player.advance_requested.connect(func() -> void: player.advance_confirmed())
+	return player
+
+
+func _stall(line: String) -> Control:
+	var run: RunState = RunState.new_run(_content, 56502, "stagecraft-stall")
+	run.act = 1
+	var game: GlassvowGame = GlassvowGame.new(_content, run)
+	var offer: Dictionary = {"id": "flamelessLantern", "price": 650,
+		"name": str(_content.quests["usurper"].get("itemName", ""))}
+	var screen: ShopScreen = ShopScreen.new(game.rewards.gen_shop(run),
+		100 if line == "poor" else 800, _content,
+		{} if line == "bought" else offer, true, _shape)
+	if not line.is_empty():
+		screen.say(Locale.active.t("content.quests.usurper.%s" % line))
+	return screen
+
+
 ## A staged screen photographed after `--freeze` seconds of its own clock.
 func _settle(screen: Control) -> void:
-	if _freeze < 0.0:
+	if _freeze < 0.0 or not screen.has_method("_process"):
 		return
 	screen.set_process(false)
 	var left: float = _freeze

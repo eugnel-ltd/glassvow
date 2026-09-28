@@ -66,6 +66,17 @@
         "default": "res://assets/art/enemies/sovereign.png"
       }
     },
+    "usurper": {
+      "name": "content.variants.usurpedSovereign.name",
+      "side": "right",
+      "faces": "left",
+      "tint": "#8fd36a",
+      "rim": "left",
+      "crop": [0.0, 0.0, 1.0, 0.66],
+      "portraits": {
+        "default": "res://assets/art/enemies/sovereign.png"
+      }
+    },
     "hero": {
       "name": "",
       "side": "left",
