@@ -47,7 +47,7 @@ CHECKS = (
         "godot_code", "map_code", "map_assets", "balance_ml", "locale_content",
         "release_platform", "presentation", "conservative_core")),
     Check("run_import_assets", "Import assets", (
-        "godot_code", "map_code", "map_assets", "locale_content",
+        "godot_code", "map_code", "map_assets", "balance_ml", "locale_content",
         "release_platform", "presentation", "conservative_core")),
     Check("run_import_gate_tests", "Test asset import gate failures", ("ci_infra",)),
     Check("run_gdscript_parse", "Check GDScript syntax", changed_gdscript=True),
