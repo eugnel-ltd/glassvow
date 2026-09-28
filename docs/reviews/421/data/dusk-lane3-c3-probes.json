@@ -2741,7 +2741,203 @@
      "rootDeath": 0.45
     }
    }
-  }
+  },
+  "allIslandsBase": {
+   "i0:asis": {
+    "win": 0.645,
+    "laneFirst": 0.3,
+    "modal": [
+     "smolder:mid",
+     76
+    ]
+   },
+   "i0:forced": {
+    "win": 0.57,
+    "laneFirst": 0.45,
+    "modal": [
+     "smolder:mid",
+     92
+    ]
+   },
+   "i1:asis": {
+    "win": 0.635,
+    "laneFirst": 0.23,
+    "modal": [
+     "shatter:fat",
+     136
+    ]
+   },
+   "i1:forced": {
+    "win": 0.6,
+    "laneFirst": 0.42,
+    "modal": [
+     "shatter:fat",
+     131
+    ]
+   },
+   "i2:asis": {
+    "win": 0.635,
+    "laneFirst": 0.2,
+    "modal": [
+     "attrition:fat",
+     64
+    ]
+   },
+   "i2:forced": {
+    "win": 0.64,
+    "laneFirst": 0.465,
+    "modal": [
+     "attrition:fat",
+     90
+    ]
+   },
+   "i3:asis": {
+    "win": 0.735,
+    "laneFirst": 0.135,
+    "modal": [
+     "shatter:fat",
+     99
+    ]
+   },
+   "i3:forced": {
+    "win": 0.69,
+    "laneFirst": 0.445,
+    "modal": [
+     "shatter:fat",
+     102
+    ]
+   },
+   "i4:asis": {
+    "win": 0.435,
+    "laneFirst": 0.0,
+    "modal": [
+     "shatter:thin",
+     119
+    ]
+   },
+   "i4:forced": {
+    "win": 0.28,
+    "laneFirst": 0.36,
+    "modal": [
+     "smolder:thin",
+     78
+    ]
+   },
+   "i5:asis": {
+    "win": 0.605,
+    "laneFirst": 0.0,
+    "modal": [
+     "shatter:fat",
+     81
+    ]
+   },
+   "i5:forced": {
+    "win": 0.525,
+    "laneFirst": 0.435,
+    "modal": [
+     "attrition:fat",
+     54
+    ]
+   },
+   "i6:asis": {
+    "win": 0.35,
+    "laneFirst": 0.0,
+    "modal": [
+     "shatter:fat",
+     108
+    ]
+   },
+   "i6:forced": {
+    "win": 0.275,
+    "laneFirst": 0.32,
+    "modal": [
+     "smolder:fat",
+     50
+    ]
+   },
+   "i7:asis": {
+    "win": 0.465,
+    "laneFirst": 0.025,
+    "modal": [
+     "shatter:thin",
+     47
+    ]
+   },
+   "i7:forced": {
+    "win": 0.425,
+    "laneFirst": 0.295,
+    "modal": [
+     "shatter:mid",
+     62
+    ]
+   },
+   "i8:asis": {
+    "win": 0.28,
+    "laneFirst": 0.13,
+    "modal": [
+     "attrition:thin",
+     50
+    ]
+   },
+   "i8:forced": {
+    "win": 0.315,
+    "laneFirst": 0.26,
+    "modal": [
+     "attrition:fat",
+     52
+    ]
+   },
+   "i9:asis": {
+    "win": 0.295,
+    "laneFirst": 0.025,
+    "modal": [
+     "attrition:fat",
+     45
+    ]
+   },
+   "i9:forced": {
+    "win": 0.245,
+    "laneFirst": 0.255,
+    "modal": [
+     "smolder:fat",
+     59
+    ]
+   },
+   "i10:asis": {
+    "win": 0.2,
+    "laneFirst": 0.005,
+    "modal": [
+     "shatter:thin",
+     77
+    ]
+   },
+   "i10:forced": {
+    "win": 0.18,
+    "laneFirst": 0.19,
+    "modal": [
+     "shatter:thin",
+     84
+    ]
+   },
+   "i11:asis": {
+    "win": 0.17,
+    "laneFirst": 0.08,
+    "modal": [
+     "shatter:thin",
+     37
+    ]
+   },
+   "i11:forced": {
+    "win": 0.18,
+    "laneFirst": 0.275,
+    "modal": [
+     "shatter:thin",
+     37
+    ]
+   }
+  },
+  "forcedWeight": 1000,
+  "policySource": "exam-1 layer-2 island final rows, field policy"
  },
  "exam1Islands": [
   {
@@ -2888,5 +3084,2926 @@
    "rootheartDeaths": 0.51,
    "beatBoss1": 0.445
   }
- ]
+ ],
+ "revision": 2,
+ "examV5HoldoutAct1": {
+  "rows": 1200,
+  "act1Deaths": 609,
+  "thinDeckAct1Deaths": 467
+ },
+ "probe846": {
+  "settings": "dev seeds 13000-13199; exam-1 axes (cuts 20/29, shatter median 0.8889); contents BASE (#568, Rootheart 280), R260, P1, P1R260; policies 846, 1132, 1822, 342, 569 regenerated from sampler root 215; perturbations of 846: magnitudes x exp(N(0,s)), thresholds + N(0, t x CEM range), p1/p2 s 0.1 t 0.05, p3/p4 s 0.2 t 0.10, Python RNG seed 846",
+  "layer1": {
+   "846": {
+    "exam568V0": [
+     24,
+     40
+    ],
+    "exam568V5": [
+     25,
+     40
+    ],
+    "exam557V0": [
+     34,
+     40
+    ],
+    "exam557V5": [
+     26,
+     40
+    ]
+   },
+   "1132": {
+    "exam568V0": [
+     22,
+     40
+    ],
+    "exam568V5": [
+     16,
+     40
+    ],
+    "exam557V0": [
+     30,
+     40
+    ],
+    "exam557V5": [
+     20,
+     40
+    ]
+   },
+   "1822": {
+    "exam568V0": [
+     18,
+     40
+    ],
+    "exam568V5": [
+     16,
+     40
+    ],
+    "exam557V0": [
+     20,
+     40
+    ],
+    "exam557V5": [
+     9,
+     40
+    ]
+   },
+   "342": {
+    "exam568V0": [
+     29,
+     40
+    ],
+    "exam568V5": [
+     15,
+     40
+    ],
+    "exam557V0": [
+     30,
+     40
+    ],
+    "exam557V5": [
+     16,
+     40
+    ]
+   },
+   "569": {
+    "exam568V0": [
+     30,
+     40
+    ],
+    "exam568V5": [
+     14,
+     40
+    ],
+    "exam557V0": [
+     30,
+     40
+    ],
+    "exam557V5": [
+     19,
+     40
+    ]
+   }
+  },
+  "replay": {
+   "BASE": {
+    "V0": {
+     "846": {
+      "win": 0.72,
+      "wins": 144,
+      "runs": 200,
+      "wilson95": [
+       0.654,
+       0.778
+      ],
+      "rootheartDeathShare": 0.145,
+      "cells": {
+       "shatter:fat": 88,
+       "shatter:mid": 32,
+       "attrition:fat": 27,
+       "shatter:thin": 22
+      },
+      "winCells": {
+       "shatter:fat": 84,
+       "attrition:fat": 26,
+       "shatter:mid": 17
+      }
+     },
+     "1132": {
+      "win": 0.665,
+      "wins": 133,
+      "runs": 200,
+      "wilson95": [
+       0.597,
+       0.727
+      ],
+      "rootheartDeathShare": 0.14,
+      "cells": {
+       "attrition:fat": 74,
+       "shatter:fat": 46,
+       "shatter:thin": 22,
+       "attrition:mid": 21
+      },
+      "winCells": {
+       "attrition:fat": 68,
+       "shatter:fat": 42,
+       "smolder:fat": 13
+      }
+     },
+     "1822": {
+      "win": 0.41,
+      "wins": 82,
+      "runs": 200,
+      "wilson95": [
+       0.344,
+       0.479
+      ],
+      "rootheartDeathShare": 0.35,
+      "cells": {
+       "shatter:fat": 57,
+       "shatter:thin": 39,
+       "attrition:fat": 37,
+       "attrition:thin": 22
+      },
+      "winCells": {
+       "shatter:fat": 47,
+       "attrition:fat": 30,
+       "smolder:fat": 5
+      }
+     },
+     "342": {
+      "win": 0.735,
+      "wins": 147,
+      "runs": 200,
+      "wilson95": [
+       0.67,
+       0.791
+      ],
+      "rootheartDeathShare": 0.105,
+      "cells": {
+       "shatter:fat": 95,
+       "smolder:fat": 55,
+       "attrition:fat": 16,
+       "shatter:thin": 12
+      },
+      "winCells": {
+       "shatter:fat": 87,
+       "smolder:fat": 47,
+       "attrition:fat": 13
+      }
+     },
+     "569": {
+      "win": 0.715,
+      "wins": 143,
+      "runs": 200,
+      "wilson95": [
+       0.649,
+       0.773
+      ],
+      "rootheartDeathShare": 0.075,
+      "cells": {
+       "shatter:fat": 132,
+       "shatter:mid": 20,
+       "attrition:fat": 13,
+       "attrition:thin": 12
+      },
+      "winCells": {
+       "shatter:fat": 120,
+       "attrition:fat": 11,
+       "shatter:mid": 7
+      }
+     },
+     "846p1": {
+      "win": 0.65,
+      "wins": 130,
+      "runs": 200,
+      "wilson95": [
+       0.582,
+       0.713
+      ],
+      "rootheartDeathShare": 0.16,
+      "cells": {
+       "shatter:fat": 66,
+       "attrition:fat": 55,
+       "shatter:thin": 20,
+       "attrition:mid": 19
+      },
+      "winCells": {
+       "shatter:fat": 62,
+       "attrition:fat": 47,
+       "smolder:fat": 9
+      }
+     },
+     "846p2": {
+      "win": 0.73,
+      "wins": 146,
+      "runs": 200,
+      "wilson95": [
+       0.665,
+       0.787
+      ],
+      "rootheartDeathShare": 0.13,
+      "cells": {
+       "shatter:fat": 92,
+       "attrition:fat": 45,
+       "shatter:mid": 16,
+       "shatter:thin": 16
+      },
+      "winCells": {
+       "shatter:fat": 88,
+       "attrition:fat": 41,
+       "smolder:fat": 9
+      }
+     },
+     "846p3": {
+      "win": 0.635,
+      "wins": 127,
+      "runs": 200,
+      "wilson95": [
+       0.566,
+       0.699
+      ],
+      "rootheartDeathShare": 0.12,
+      "cells": {
+       "attrition:mid": 44,
+       "attrition:fat": 38,
+       "shatter:mid": 33,
+       "shatter:fat": 31
+      },
+      "winCells": {
+       "attrition:fat": 35,
+       "shatter:fat": 28,
+       "shatter:mid": 26
+      }
+     },
+     "846p4": {
+      "win": 0.71,
+      "wins": 142,
+      "runs": 200,
+      "wilson95": [
+       0.644,
+       0.768
+      ],
+      "rootheartDeathShare": 0.12,
+      "cells": {
+       "attrition:fat": 66,
+       "shatter:fat": 60,
+       "attrition:mid": 18,
+       "smolder:fat": 18
+      },
+      "winCells": {
+       "attrition:fat": 61,
+       "shatter:fat": 55,
+       "smolder:fat": 13
+      }
+     }
+    },
+    "V5": {
+     "846": {
+      "win": 0.45,
+      "wins": 90,
+      "runs": 200,
+      "wilson95": [
+       0.383,
+       0.519
+      ],
+      "rootheartDeathShare": 0.375,
+      "cells": {
+       "shatter:fat": 70,
+       "shatter:thin": 48,
+       "attrition:fat": 26,
+       "shatter:mid": 19
+      },
+      "winCells": {
+       "shatter:fat": 62,
+       "attrition:fat": 23,
+       "shatter:mid": 3
+      }
+     },
+     "1132": {
+      "win": 0.365,
+      "wins": 73,
+      "runs": 200,
+      "wilson95": [
+       0.301,
+       0.434
+      ],
+      "rootheartDeathShare": 0.38,
+      "cells": {
+       "attrition:fat": 45,
+       "shatter:fat": 42,
+       "shatter:thin": 40,
+       "attrition:thin": 24
+      },
+      "winCells": {
+       "attrition:fat": 38,
+       "shatter:fat": 30,
+       "smolder:fat": 4
+      }
+     },
+     "1822": {
+      "win": 0.195,
+      "wins": 39,
+      "runs": 200,
+      "wilson95": [
+       0.146,
+       0.255
+      ],
+      "rootheartDeathShare": 0.535,
+      "cells": {
+       "shatter:thin": 53,
+       "attrition:thin": 39,
+       "shatter:fat": 28,
+       "shatter:mid": 25
+      },
+      "winCells": {
+       "shatter:fat": 20,
+       "attrition:fat": 18,
+       "smolder:fat": 1
+      }
+     },
+     "342": {
+      "win": 0.375,
+      "wins": 75,
+      "runs": 200,
+      "wilson95": [
+       0.311,
+       0.444
+      ],
+      "rootheartDeathShare": 0.33,
+      "cells": {
+       "shatter:fat": 79,
+       "shatter:mid": 32,
+       "shatter:thin": 29,
+       "smolder:fat": 12
+      },
+      "winCells": {
+       "shatter:fat": 60,
+       "smolder:fat": 9,
+       "attrition:fat": 6
+      }
+     },
+     "569": {
+      "win": 0.335,
+      "wins": 67,
+      "runs": 200,
+      "wilson95": [
+       0.273,
+       0.403
+      ],
+      "rootheartDeathShare": 0.445,
+      "cells": {
+       "shatter:fat": 69,
+       "shatter:thin": 33,
+       "attrition:thin": 31,
+       "shatter:mid": 30
+      },
+      "winCells": {
+       "shatter:fat": 55,
+       "attrition:fat": 11,
+       "smolder:fat": 1
+      }
+     },
+     "846p1": {
+      "win": 0.395,
+      "wins": 79,
+      "runs": 200,
+      "wilson95": [
+       0.33,
+       0.464
+      ],
+      "rootheartDeathShare": 0.38,
+      "cells": {
+       "shatter:fat": 49,
+       "shatter:thin": 47,
+       "attrition:fat": 41,
+       "attrition:mid": 18
+      },
+      "winCells": {
+       "shatter:fat": 37,
+       "attrition:fat": 34,
+       "smolder:fat": 6
+      }
+     },
+     "846p2": {
+      "win": 0.39,
+      "wins": 78,
+      "runs": 200,
+      "wilson95": [
+       0.325,
+       0.459
+      ],
+      "rootheartDeathShare": 0.43,
+      "cells": {
+       "shatter:fat": 73,
+       "shatter:thin": 40,
+       "attrition:thin": 24,
+       "attrition:fat": 18
+      },
+      "winCells": {
+       "shatter:fat": 58,
+       "attrition:fat": 16,
+       "smolder:fat": 4
+      }
+     },
+     "846p3": {
+      "win": 0.275,
+      "wins": 55,
+      "runs": 200,
+      "wilson95": [
+       0.218,
+       0.341
+      ],
+      "rootheartDeathShare": 0.475,
+      "cells": {
+       "shatter:thin": 47,
+       "attrition:thin": 46,
+       "attrition:fat": 27,
+       "shatter:fat": 26
+      },
+      "winCells": {
+       "attrition:fat": 26,
+       "shatter:fat": 24,
+       "shatter:mid": 3
+      }
+     },
+     "846p4": {
+      "win": 0.385,
+      "wins": 77,
+      "runs": 200,
+      "wilson95": [
+       0.32,
+       0.454
+      ],
+      "rootheartDeathShare": 0.45,
+      "cells": {
+       "shatter:thin": 50,
+       "attrition:fat": 46,
+       "shatter:fat": 43,
+       "attrition:thin": 21
+      },
+      "winCells": {
+       "attrition:fat": 38,
+       "shatter:fat": 36,
+       "smolder:fat": 3
+      }
+     },
+     "846json": {
+      "win": 0.45,
+      "wins": 90,
+      "runs": 200,
+      "wilson95": [
+       0.383,
+       0.519
+      ],
+      "rootheartDeathShare": 0.375,
+      "cells": {
+       "shatter:fat": 70,
+       "shatter:thin": 48,
+       "attrition:fat": 26,
+       "shatter:mid": 19
+      },
+      "winCells": {
+       "shatter:fat": 62,
+       "attrition:fat": 23,
+       "shatter:mid": 3
+      }
+     }
+    }
+   },
+   "P1": {
+    "V0": {
+     "846": {
+      "win": 0.74,
+      "wins": 148,
+      "runs": 200,
+      "wilson95": [
+       0.675,
+       0.796
+      ],
+      "rootheartDeathShare": 0.145,
+      "cells": {
+       "shatter:fat": 92,
+       "shatter:mid": 37,
+       "shatter:thin": 22,
+       "attrition:fat": 21
+      },
+      "winCells": {
+       "shatter:fat": 88,
+       "shatter:mid": 25,
+       "attrition:fat": 21
+      }
+     },
+     "1132": {
+      "win": 0.715,
+      "wins": 143,
+      "runs": 200,
+      "wilson95": [
+       0.649,
+       0.773
+      ],
+      "rootheartDeathShare": 0.14,
+      "cells": {
+       "attrition:fat": 86,
+       "shatter:fat": 43,
+       "shatter:thin": 22,
+       "smolder:fat": 16
+      },
+      "winCells": {
+       "attrition:fat": 83,
+       "shatter:fat": 40,
+       "smolder:fat": 12
+      }
+     },
+     "1822": {
+      "win": 0.465,
+      "wins": 93,
+      "runs": 200,
+      "wilson95": [
+       0.397,
+       0.534
+      ],
+      "rootheartDeathShare": 0.35,
+      "cells": {
+       "shatter:fat": 65,
+       "shatter:thin": 39,
+       "attrition:fat": 38,
+       "attrition:thin": 22
+      },
+      "winCells": {
+       "shatter:fat": 58,
+       "attrition:fat": 33,
+       "shatter:mid": 1
+      }
+     },
+     "342": {
+      "win": 0.795,
+      "wins": 159,
+      "runs": 200,
+      "wilson95": [
+       0.734,
+       0.845
+      ],
+      "rootheartDeathShare": 0.105,
+      "cells": {
+       "shatter:fat": 119,
+       "smolder:fat": 53,
+       "shatter:thin": 12,
+       "shatter:mid": 7
+      },
+      "winCells": {
+       "shatter:fat": 111,
+       "smolder:fat": 47,
+       "attrition:fat": 1
+      }
+     },
+     "569": {
+      "win": 0.75,
+      "wins": 150,
+      "runs": 200,
+      "wilson95": [
+       0.686,
+       0.805
+      ],
+      "rootheartDeathShare": 0.075,
+      "cells": {
+       "shatter:fat": 145,
+       "shatter:mid": 23,
+       "attrition:thin": 10,
+       "shatter:thin": 8
+      },
+      "winCells": {
+       "shatter:fat": 135,
+       "shatter:mid": 13,
+       "attrition:fat": 2
+      }
+     },
+     "846p1": {
+      "win": 0.67,
+      "wins": 134,
+      "runs": 200,
+      "wilson95": [
+       0.602,
+       0.731
+      ],
+      "rootheartDeathShare": 0.16,
+      "cells": {
+       "attrition:fat": 73,
+       "shatter:fat": 42,
+       "shatter:thin": 20,
+       "attrition:mid": 18
+      },
+      "winCells": {
+       "attrition:fat": 67,
+       "shatter:fat": 39,
+       "smolder:fat": 14
+      }
+     },
+     "846p2": {
+      "win": 0.76,
+      "wins": 152,
+      "runs": 200,
+      "wilson95": [
+       0.696,
+       0.814
+      ],
+      "rootheartDeathShare": 0.13,
+      "cells": {
+       "shatter:fat": 111,
+       "attrition:fat": 38,
+       "shatter:thin": 16,
+       "shatter:mid": 12
+      },
+      "winCells": {
+       "shatter:fat": 105,
+       "attrition:fat": 35,
+       "smolder:fat": 6
+      }
+     },
+     "846p3": {
+      "win": 0.645,
+      "wins": 129,
+      "runs": 200,
+      "wilson95": [
+       0.577,
+       0.708
+      ],
+      "rootheartDeathShare": 0.12,
+      "cells": {
+       "attrition:mid": 57,
+       "attrition:fat": 56,
+       "shatter:fat": 24,
+       "attrition:thin": 16
+      },
+      "winCells": {
+       "attrition:fat": 45,
+       "attrition:mid": 39,
+       "shatter:fat": 23
+      }
+     },
+     "846p4": {
+      "win": 0.73,
+      "wins": 146,
+      "runs": 200,
+      "wilson95": [
+       0.665,
+       0.787
+      ],
+      "rootheartDeathShare": 0.12,
+      "cells": {
+       "attrition:fat": 81,
+       "shatter:fat": 50,
+       "smolder:fat": 21,
+       "attrition:mid": 14
+      },
+      "winCells": {
+       "attrition:fat": 73,
+       "shatter:fat": 48,
+       "smolder:fat": 20
+      }
+     }
+    },
+    "V5": {
+     "846": {
+      "win": 0.45,
+      "wins": 90,
+      "runs": 200,
+      "wilson95": [
+       0.383,
+       0.519
+      ],
+      "rootheartDeathShare": 0.375,
+      "cells": {
+       "shatter:fat": 77,
+       "shatter:thin": 47,
+       "shatter:mid": 21,
+       "attrition:fat": 19
+      },
+      "winCells": {
+       "shatter:fat": 68,
+       "attrition:fat": 16,
+       "shatter:mid": 4
+      }
+     },
+     "1132": {
+      "win": 0.39,
+      "wins": 78,
+      "runs": 200,
+      "wilson95": [
+       0.325,
+       0.459
+      ],
+      "rootheartDeathShare": 0.38,
+      "cells": {
+       "attrition:fat": 66,
+       "shatter:thin": 39,
+       "attrition:thin": 25,
+       "shatter:mid": 21
+      },
+      "winCells": {
+       "attrition:fat": 57,
+       "shatter:fat": 15,
+       "smolder:fat": 4
+      }
+     },
+     "1822": {
+      "win": 0.22,
+      "wins": 44,
+      "runs": 200,
+      "wilson95": [
+       0.168,
+       0.282
+      ],
+      "rootheartDeathShare": 0.535,
+      "cells": {
+       "shatter:thin": 53,
+       "shatter:fat": 44,
+       "attrition:thin": 39,
+       "attrition:mid": 21
+      },
+      "winCells": {
+       "shatter:fat": 34,
+       "attrition:fat": 9,
+       "smolder:fat": 1
+      }
+     },
+     "342": {
+      "win": 0.375,
+      "wins": 75,
+      "runs": 200,
+      "wilson95": [
+       0.311,
+       0.444
+      ],
+      "rootheartDeathShare": 0.33,
+      "cells": {
+       "shatter:fat": 87,
+       "shatter:mid": 34,
+       "shatter:thin": 28,
+       "smolder:fat": 18
+      },
+      "winCells": {
+       "shatter:fat": 60,
+       "smolder:fat": 14,
+       "attrition:fat": 1
+      }
+     },
+     "569": {
+      "win": 0.35,
+      "wins": 70,
+      "runs": 200,
+      "wilson95": [
+       0.287,
+       0.418
+      ],
+      "rootheartDeathShare": 0.445,
+      "cells": {
+       "shatter:fat": 89,
+       "shatter:thin": 33,
+       "attrition:thin": 31,
+       "shatter:mid": 22
+      },
+      "winCells": {
+       "shatter:fat": 70
+      }
+     },
+     "846p1": {
+      "win": 0.415,
+      "wins": 83,
+      "runs": 200,
+      "wilson95": [
+       0.349,
+       0.484
+      ],
+      "rootheartDeathShare": 0.38,
+      "cells": {
+       "attrition:fat": 58,
+       "shatter:thin": 47,
+       "shatter:fat": 38,
+       "attrition:thin": 18
+      },
+      "winCells": {
+       "attrition:fat": 48,
+       "shatter:fat": 32,
+       "smolder:fat": 2
+      }
+     },
+     "846p2": {
+      "win": 0.35,
+      "wins": 70,
+      "runs": 200,
+      "wilson95": [
+       0.287,
+       0.418
+      ],
+      "rootheartDeathShare": 0.43,
+      "cells": {
+       "shatter:fat": 64,
+       "shatter:thin": 40,
+       "attrition:thin": 24,
+       "attrition:fat": 22
+      },
+      "winCells": {
+       "shatter:fat": 49,
+       "attrition:fat": 19,
+       "smolder:fat": 2
+      }
+     },
+     "846p3": {
+      "win": 0.315,
+      "wins": 63,
+      "runs": 200,
+      "wilson95": [
+       0.255,
+       0.382
+      ],
+      "rootheartDeathShare": 0.475,
+      "cells": {
+       "attrition:thin": 46,
+       "shatter:thin": 46,
+       "attrition:fat": 42,
+       "shatter:fat": 20
+      },
+      "winCells": {
+       "attrition:fat": 36,
+       "shatter:fat": 18,
+       "smolder:fat": 4
+      }
+     },
+     "846p4": {
+      "win": 0.4,
+      "wins": 80,
+      "runs": 200,
+      "wilson95": [
+       0.335,
+       0.469
+      ],
+      "rootheartDeathShare": 0.45,
+      "cells": {
+       "attrition:fat": 56,
+       "shatter:thin": 50,
+       "shatter:fat": 33,
+       "attrition:thin": 22
+      },
+      "winCells": {
+       "attrition:fat": 47,
+       "shatter:fat": 30,
+       "smolder:fat": 3
+      }
+     },
+     "846json": {
+      "win": 0.45,
+      "wins": 90,
+      "runs": 200,
+      "wilson95": [
+       0.383,
+       0.519
+      ],
+      "rootheartDeathShare": 0.375,
+      "cells": {
+       "shatter:fat": 77,
+       "shatter:thin": 47,
+       "shatter:mid": 21,
+       "attrition:fat": 19
+      },
+      "winCells": {
+       "shatter:fat": 68,
+       "attrition:fat": 16,
+       "shatter:mid": 4
+      }
+     }
+    }
+   },
+   "P1R260": {
+    "V0": {
+     "846": {
+      "win": 0.74,
+      "wins": 148,
+      "runs": 200,
+      "wilson95": [
+       0.675,
+       0.796
+      ],
+      "rootheartDeathShare": 0.105,
+      "cells": {
+       "shatter:fat": 83,
+       "attrition:fat": 31,
+       "shatter:mid": 30,
+       "shatter:thin": 18
+      },
+      "winCells": {
+       "shatter:fat": 79,
+       "attrition:fat": 29,
+       "shatter:mid": 22
+      }
+     },
+     "1132": {
+      "win": 0.71,
+      "wins": 142,
+      "runs": 200,
+      "wilson95": [
+       0.644,
+       0.768
+      ],
+      "rootheartDeathShare": 0.09,
+      "cells": {
+       "attrition:fat": 92,
+       "shatter:fat": 39,
+       "attrition:mid": 17,
+       "shatter:thin": 14
+      },
+      "winCells": {
+       "attrition:fat": 88,
+       "shatter:fat": 37,
+       "smolder:fat": 9
+      }
+     },
+     "1822": {
+      "win": 0.465,
+      "wins": 93,
+      "runs": 200,
+      "wilson95": [
+       0.397,
+       0.534
+      ],
+      "rootheartDeathShare": 0.29,
+      "cells": {
+       "shatter:fat": 73,
+       "shatter:thin": 33,
+       "attrition:fat": 29,
+       "shatter:mid": 21
+      },
+      "winCells": {
+       "shatter:fat": 65,
+       "attrition:fat": 26,
+       "smolder:fat": 2
+      }
+     },
+     "342": {
+      "win": 0.825,
+      "wins": 165,
+      "runs": 200,
+      "wilson95": [
+       0.766,
+       0.871
+      ],
+      "rootheartDeathShare": 0.08,
+      "cells": {
+       "shatter:fat": 124,
+       "smolder:fat": 50,
+       "shatter:thin": 9,
+       "shatter:mid": 9
+      },
+      "winCells": {
+       "shatter:fat": 119,
+       "smolder:fat": 46
+      }
+     },
+     "569": {
+      "win": 0.765,
+      "wins": 153,
+      "runs": 200,
+      "wilson95": [
+       0.702,
+       0.818
+      ],
+      "rootheartDeathShare": 0.055,
+      "cells": {
+       "shatter:fat": 155,
+       "shatter:mid": 17,
+       "attrition:thin": 8,
+       "attrition:mid": 7
+      },
+      "winCells": {
+       "shatter:fat": 139,
+       "shatter:mid": 11,
+       "attrition:fat": 3
+      }
+     },
+     "846p1": {
+      "win": 0.735,
+      "wins": 147,
+      "runs": 200,
+      "wilson95": [
+       0.67,
+       0.791
+      ],
+      "rootheartDeathShare": 0.13,
+      "cells": {
+       "attrition:fat": 80,
+       "shatter:fat": 53,
+       "shatter:thin": 17,
+       "attrition:mid": 16
+      },
+      "winCells": {
+       "attrition:fat": 74,
+       "shatter:fat": 51,
+       "attrition:mid": 9
+      }
+     },
+     "846p2": {
+      "win": 0.79,
+      "wins": 158,
+      "runs": 200,
+      "wilson95": [
+       0.728,
+       0.841
+      ],
+      "rootheartDeathShare": 0.085,
+      "cells": {
+       "shatter:fat": 121,
+       "attrition:fat": 36,
+       "shatter:mid": 15,
+       "shatter:thin": 10
+      },
+      "winCells": {
+       "shatter:fat": 115,
+       "attrition:fat": 34,
+       "smolder:fat": 5
+      }
+     },
+     "846p3": {
+      "win": 0.655,
+      "wins": 131,
+      "runs": 200,
+      "wilson95": [
+       0.587,
+       0.717
+      ],
+      "rootheartDeathShare": 0.1,
+      "cells": {
+       "attrition:fat": 59,
+       "attrition:mid": 48,
+       "shatter:fat": 30,
+       "shatter:mid": 20
+      },
+      "winCells": {
+       "attrition:fat": 52,
+       "attrition:mid": 31,
+       "shatter:fat": 28
+      }
+     },
+     "846p4": {
+      "win": 0.76,
+      "wins": 152,
+      "runs": 200,
+      "wilson95": [
+       0.696,
+       0.814
+      ],
+      "rootheartDeathShare": 0.085,
+      "cells": {
+       "attrition:fat": 93,
+       "shatter:fat": 47,
+       "smolder:fat": 17,
+       "attrition:mid": 15
+      },
+      "winCells": {
+       "attrition:fat": 82,
+       "shatter:fat": 45,
+       "smolder:fat": 16
+      }
+     }
+    },
+    "V5": {
+     "846": {
+      "win": 0.5,
+      "wins": 100,
+      "runs": 200,
+      "wilson95": [
+       0.431,
+       0.569
+      ],
+      "rootheartDeathShare": 0.31,
+      "cells": {
+       "shatter:fat": 86,
+       "shatter:thin": 41,
+       "shatter:mid": 25,
+       "attrition:fat": 22
+      },
+      "winCells": {
+       "shatter:fat": 77,
+       "attrition:fat": 19,
+       "shatter:mid": 3
+      }
+     },
+     "1132": {
+      "win": 0.43,
+      "wins": 86,
+      "runs": 200,
+      "wilson95": [
+       0.363,
+       0.499
+      ],
+      "rootheartDeathShare": 0.31,
+      "cells": {
+       "attrition:fat": 66,
+       "shatter:thin": 31,
+       "attrition:mid": 27,
+       "shatter:fat": 27
+      },
+      "winCells": {
+       "attrition:fat": 57,
+       "shatter:fat": 21,
+       "smolder:fat": 4
+      }
+     },
+     "1822": {
+      "win": 0.21,
+      "wins": 42,
+      "runs": 200,
+      "wilson95": [
+       0.159,
+       0.272
+      ],
+      "rootheartDeathShare": 0.495,
+      "cells": {
+       "shatter:thin": 51,
+       "shatter:fat": 44,
+       "attrition:thin": 37,
+       "attrition:mid": 24
+      },
+      "winCells": {
+       "shatter:fat": 36,
+       "attrition:fat": 5,
+       "smolder:fat": 1
+      }
+     },
+     "342": {
+      "win": 0.475,
+      "wins": 95,
+      "runs": 200,
+      "wilson95": [
+       0.407,
+       0.544
+      ],
+      "rootheartDeathShare": 0.275,
+      "cells": {
+       "shatter:fat": 100,
+       "smolder:fat": 24,
+       "shatter:thin": 22,
+       "shatter:mid": 22
+      },
+      "winCells": {
+       "shatter:fat": 74,
+       "smolder:fat": 20,
+       "attrition:fat": 1
+      }
+     },
+     "569": {
+      "win": 0.36,
+      "wins": 72,
+      "runs": 200,
+      "wilson95": [
+       0.297,
+       0.429
+      ],
+      "rootheartDeathShare": 0.405,
+      "cells": {
+       "shatter:fat": 91,
+       "shatter:thin": 31,
+       "attrition:thin": 28,
+       "shatter:mid": 23
+      },
+      "winCells": {
+       "shatter:fat": 72
+      }
+     },
+     "846p1": {
+      "win": 0.465,
+      "wins": 93,
+      "runs": 200,
+      "wilson95": [
+       0.397,
+       0.534
+      ],
+      "rootheartDeathShare": 0.33,
+      "cells": {
+       "attrition:fat": 59,
+       "shatter:fat": 44,
+       "shatter:thin": 41,
+       "shatter:mid": 15
+      },
+      "winCells": {
+       "attrition:fat": 50,
+       "shatter:fat": 39,
+       "smolder:fat": 2
+      }
+     },
+     "846p2": {
+      "win": 0.405,
+      "wins": 81,
+      "runs": 200,
+      "wilson95": [
+       0.339,
+       0.474
+      ],
+      "rootheartDeathShare": 0.395,
+      "cells": {
+       "shatter:fat": 68,
+       "shatter:thin": 37,
+       "attrition:fat": 27,
+       "attrition:thin": 22
+      },
+      "winCells": {
+       "shatter:fat": 55,
+       "attrition:fat": 24,
+       "smolder:fat": 2
+      }
+     },
+     "846p3": {
+      "win": 0.375,
+      "wins": 75,
+      "runs": 200,
+      "wilson95": [
+       0.311,
+       0.444
+      ],
+      "rootheartDeathShare": 0.4,
+      "cells": {
+       "attrition:fat": 41,
+       "shatter:thin": 40,
+       "attrition:thin": 39,
+       "shatter:fat": 28
+      },
+      "winCells": {
+       "attrition:fat": 35,
+       "shatter:fat": 25,
+       "shatter:mid": 6
+      }
+     },
+     "846p4": {
+      "win": 0.405,
+      "wins": 81,
+      "runs": 200,
+      "wilson95": [
+       0.339,
+       0.474
+      ],
+      "rootheartDeathShare": 0.41,
+      "cells": {
+       "attrition:fat": 57,
+       "shatter:thin": 43,
+       "shatter:fat": 32,
+       "attrition:thin": 20
+      },
+      "winCells": {
+       "attrition:fat": 46,
+       "shatter:fat": 30,
+       "smolder:fat": 4
+      }
+     },
+     "846json": {
+      "win": 0.5,
+      "wins": 100,
+      "runs": 200,
+      "wilson95": [
+       0.431,
+       0.569
+      ],
+      "rootheartDeathShare": 0.31,
+      "cells": {
+       "shatter:fat": 86,
+       "shatter:thin": 41,
+       "shatter:mid": 25,
+       "attrition:fat": 22
+      },
+      "winCells": {
+       "shatter:fat": 77,
+       "attrition:fat": 19,
+       "shatter:mid": 3
+      }
+     }
+    }
+   },
+   "R260": {
+    "V0": {
+     "846": {
+      "win": 0.725,
+      "wins": 145,
+      "runs": 200,
+      "wilson95": [
+       0.659,
+       0.782
+      ],
+      "rootheartDeathShare": 0.105,
+      "cells": {
+       "shatter:fat": 88,
+       "attrition:fat": 33,
+       "shatter:mid": 29,
+       "shatter:thin": 18
+      },
+      "winCells": {
+       "shatter:fat": 83,
+       "attrition:fat": 31,
+       "shatter:mid": 17
+      }
+     },
+     "1132": {
+      "win": 0.715,
+      "wins": 143,
+      "runs": 200,
+      "wilson95": [
+       0.649,
+       0.773
+      ],
+      "rootheartDeathShare": 0.09,
+      "cells": {
+       "attrition:fat": 84,
+       "shatter:fat": 50,
+       "attrition:mid": 16,
+       "shatter:thin": 13
+      },
+      "winCells": {
+       "attrition:fat": 77,
+       "shatter:fat": 46,
+       "smolder:fat": 10
+      }
+     },
+     "1822": {
+      "win": 0.465,
+      "wins": 93,
+      "runs": 200,
+      "wilson95": [
+       0.397,
+       0.534
+      ],
+      "rootheartDeathShare": 0.29,
+      "cells": {
+       "shatter:fat": 70,
+       "attrition:fat": 32,
+       "shatter:thin": 31,
+       "attrition:mid": 18
+      },
+      "winCells": {
+       "shatter:fat": 59,
+       "attrition:fat": 27,
+       "smolder:fat": 7
+      }
+     },
+     "342": {
+      "win": 0.71,
+      "wins": 142,
+      "runs": 200,
+      "wilson95": [
+       0.644,
+       0.768
+      ],
+      "rootheartDeathShare": 0.08,
+      "cells": {
+       "shatter:fat": 89,
+       "smolder:fat": 61,
+       "attrition:fat": 18,
+       "shatter:mid": 11
+      },
+      "winCells": {
+       "shatter:fat": 77,
+       "smolder:fat": 50,
+       "attrition:fat": 15
+      }
+     },
+     "569": {
+      "win": 0.745,
+      "wins": 149,
+      "runs": 200,
+      "wilson95": [
+       0.68,
+       0.8
+      ],
+      "rootheartDeathShare": 0.055,
+      "cells": {
+       "shatter:fat": 137,
+       "attrition:fat": 20,
+       "shatter:mid": 14,
+       "attrition:thin": 10
+      },
+      "winCells": {
+       "shatter:fat": 122,
+       "attrition:fat": 17,
+       "smolder:fat": 5
+      }
+     },
+     "846p1": {
+      "win": 0.665,
+      "wins": 133,
+      "runs": 200,
+      "wilson95": [
+       0.597,
+       0.727
+      ],
+      "rootheartDeathShare": 0.13,
+      "cells": {
+       "attrition:fat": 68,
+       "shatter:fat": 64,
+       "attrition:mid": 18,
+       "shatter:thin": 16
+      },
+      "winCells": {
+       "shatter:fat": 59,
+       "attrition:fat": 58,
+       "smolder:fat": 9
+      }
+     },
+     "846p2": {
+      "win": 0.785,
+      "wins": 157,
+      "runs": 200,
+      "wilson95": [
+       0.723,
+       0.836
+      ],
+      "rootheartDeathShare": 0.085,
+      "cells": {
+       "shatter:fat": 110,
+       "attrition:fat": 43,
+       "shatter:mid": 12,
+       "smolder:fat": 12
+      },
+      "winCells": {
+       "shatter:fat": 106,
+       "attrition:fat": 38,
+       "smolder:fat": 9
+      }
+     },
+     "846p3": {
+      "win": 0.615,
+      "wins": 123,
+      "runs": 200,
+      "wilson95": [
+       0.546,
+       0.68
+      ],
+      "rootheartDeathShare": 0.1,
+      "cells": {
+       "attrition:mid": 44,
+       "attrition:fat": 38,
+       "shatter:fat": 34,
+       "shatter:mid": 34
+      },
+      "winCells": {
+       "attrition:fat": 34,
+       "shatter:fat": 32,
+       "shatter:mid": 26
+      }
+     },
+     "846p4": {
+      "win": 0.765,
+      "wins": 153,
+      "runs": 200,
+      "wilson95": [
+       0.702,
+       0.818
+      ],
+      "rootheartDeathShare": 0.085,
+      "cells": {
+       "attrition:fat": 71,
+       "shatter:fat": 63,
+       "attrition:mid": 20,
+       "smolder:fat": 17
+      },
+      "winCells": {
+       "attrition:fat": 68,
+       "shatter:fat": 56,
+       "smolder:fat": 15
+      }
+     }
+    },
+    "V5": {
+     "846": {
+      "win": 0.505,
+      "wins": 101,
+      "runs": 200,
+      "wilson95": [
+       0.436,
+       0.574
+      ],
+      "rootheartDeathShare": 0.31,
+      "cells": {
+       "shatter:fat": 76,
+       "shatter:thin": 42,
+       "attrition:fat": 25,
+       "shatter:mid": 20
+      },
+      "winCells": {
+       "shatter:fat": 70,
+       "attrition:fat": 22,
+       "shatter:mid": 5
+      }
+     },
+     "1132": {
+      "win": 0.395,
+      "wins": 79,
+      "runs": 200,
+      "wilson95": [
+       0.33,
+       0.464
+      ],
+      "rootheartDeathShare": 0.31,
+      "cells": {
+       "attrition:fat": 50,
+       "shatter:fat": 45,
+       "shatter:thin": 32,
+       "attrition:mid": 21
+      },
+      "winCells": {
+       "attrition:fat": 43,
+       "shatter:fat": 32,
+       "smolder:fat": 3
+      }
+     },
+     "1822": {
+      "win": 0.195,
+      "wins": 39,
+      "runs": 200,
+      "wilson95": [
+       0.146,
+       0.255
+      ],
+      "rootheartDeathShare": 0.495,
+      "cells": {
+       "shatter:thin": 49,
+       "attrition:thin": 37,
+       "shatter:fat": 32,
+       "shatter:mid": 29
+      },
+      "winCells": {
+       "shatter:fat": 25,
+       "attrition:fat": 13,
+       "smolder:fat": 1
+      }
+     },
+     "342": {
+      "win": 0.42,
+      "wins": 84,
+      "runs": 200,
+      "wilson95": [
+       0.354,
+       0.489
+      ],
+      "rootheartDeathShare": 0.275,
+      "cells": {
+       "shatter:fat": 82,
+       "smolder:fat": 26,
+       "shatter:mid": 25,
+       "shatter:thin": 22
+      },
+      "winCells": {
+       "shatter:fat": 59,
+       "smolder:fat": 19,
+       "attrition:fat": 6
+      }
+     },
+     "569": {
+      "win": 0.33,
+      "wins": 66,
+      "runs": 200,
+      "wilson95": [
+       0.269,
+       0.398
+      ],
+      "rootheartDeathShare": 0.405,
+      "cells": {
+       "shatter:fat": 75,
+       "shatter:thin": 31,
+       "attrition:thin": 28,
+       "shatter:mid": 28
+      },
+      "winCells": {
+       "shatter:fat": 56,
+       "attrition:fat": 9,
+       "smolder:fat": 1
+      }
+     },
+     "846p1": {
+      "win": 0.46,
+      "wins": 92,
+      "runs": 200,
+      "wilson95": [
+       0.392,
+       0.529
+      ],
+      "rootheartDeathShare": 0.33,
+      "cells": {
+       "shatter:fat": 54,
+       "attrition:fat": 50,
+       "shatter:thin": 41,
+       "attrition:thin": 15
+      },
+      "winCells": {
+       "shatter:fat": 46,
+       "attrition:fat": 41,
+       "smolder:fat": 3
+      }
+     },
+     "846p2": {
+      "win": 0.395,
+      "wins": 79,
+      "runs": 200,
+      "wilson95": [
+       0.33,
+       0.464
+      ],
+      "rootheartDeathShare": 0.395,
+      "cells": {
+       "shatter:fat": 71,
+       "shatter:thin": 37,
+       "attrition:fat": 27,
+       "attrition:thin": 22
+      },
+      "winCells": {
+       "shatter:fat": 56,
+       "attrition:fat": 20,
+       "smolder:fat": 3
+      }
+     },
+     "846p3": {
+      "win": 0.32,
+      "wins": 64,
+      "runs": 200,
+      "wilson95": [
+       0.259,
+       0.388
+      ],
+      "rootheartDeathShare": 0.4,
+      "cells": {
+       "shatter:thin": 40,
+       "attrition:thin": 39,
+       "attrition:fat": 32,
+       "attrition:mid": 31
+      },
+      "winCells": {
+       "attrition:fat": 29,
+       "shatter:fat": 24,
+       "smolder:fat": 4
+      }
+     },
+     "846p4": {
+      "win": 0.43,
+      "wins": 86,
+      "runs": 200,
+      "wilson95": [
+       0.363,
+       0.499
+      ],
+      "rootheartDeathShare": 0.41,
+      "cells": {
+       "shatter:fat": 47,
+       "attrition:fat": 47,
+       "shatter:thin": 43,
+       "attrition:thin": 20
+      },
+      "winCells": {
+       "shatter:fat": 42,
+       "attrition:fat": 40,
+       "smolder:fat": 4
+      }
+     },
+     "846json": {
+      "win": 0.505,
+      "wins": 101,
+      "runs": 200,
+      "wilson95": [
+       0.436,
+       0.574
+      ],
+      "rootheartDeathShare": 0.31,
+      "cells": {
+       "shatter:fat": 76,
+       "shatter:thin": 42,
+       "attrition:fat": 25,
+       "shatter:mid": 20
+      },
+      "winCells": {
+       "shatter:fat": 70,
+       "attrition:fat": 22,
+       "shatter:mid": 5
+      }
+     }
+    }
+   }
+  },
+  "examFinalPoliciesSameSeeds": {
+   "V5_BASE": {
+    "i6": 0.35,
+    "i7": 0.465,
+    "i8": 0.28,
+    "i9": 0.295,
+    "i10": 0.2,
+    "i11": 0.17
+   },
+   "V5_R260": {
+    "i6": 0.395,
+    "i7": 0.465,
+    "i8": 0.29,
+    "i9": 0.285,
+    "i10": 0.23,
+    "i11": 0.165
+   },
+   "V0_BASE": {
+    "i0": 0.645,
+    "i1": 0.635,
+    "i2": 0.635,
+    "i3": 0.735,
+    "i4": 0.435,
+    "i5": 0.605
+   },
+   "V0_R260": {
+    "i0": 0.635,
+    "i1": 0.625,
+    "i2": 0.63,
+    "i3": 0.78,
+    "i4": 0.525,
+    "i5": 0.63
+   }
+  },
+  "pairedContentEffects": {
+   "V0 BASE->R260": {
+    "n": 1800,
+    "meanA": 0.6633,
+    "meanB": 0.6878,
+    "deltaPp": 2.44,
+    "flipsUp": 139,
+    "flipsDown": 95,
+    "se_pp": 0.85
+   },
+   "V0 P1->P1R260": {
+    "n": 1800,
+    "meanA": 0.6967,
+    "meanB": 0.7161,
+    "deltaPp": 1.94,
+    "flipsUp": 121,
+    "flipsDown": 86,
+    "se_pp": 0.8
+   },
+   "V0 BASE->P1": {
+    "n": 1800,
+    "meanA": 0.6633,
+    "meanB": 0.6967,
+    "deltaPp": 3.33,
+    "flipsUp": 208,
+    "flipsDown": 148,
+    "se_pp": 1.05
+   },
+   "V0 R260->P1R260": {
+    "n": 1800,
+    "meanA": 0.6878,
+    "meanB": 0.7161,
+    "deltaPp": 2.83,
+    "flipsUp": 211,
+    "flipsDown": 160,
+    "se_pp": 1.07
+   },
+   "V0 BASE->P1R260": {
+    "n": 1800,
+    "meanA": 0.6633,
+    "meanB": 0.7161,
+    "deltaPp": 5.28,
+    "flipsUp": 257,
+    "flipsDown": 162,
+    "se_pp": 1.14
+   },
+   "V5 BASE->R260": {
+    "n": 1800,
+    "meanA": 0.3517,
+    "meanB": 0.3833,
+    "deltaPp": 3.17,
+    "flipsUp": 130,
+    "flipsDown": 73,
+    "se_pp": 0.79
+   },
+   "V5 P1->P1R260": {
+    "n": 1800,
+    "meanA": 0.3628,
+    "meanB": 0.4028,
+    "deltaPp": 4.0,
+    "flipsUp": 137,
+    "flipsDown": 65,
+    "se_pp": 0.79
+   },
+   "V5 BASE->P1": {
+    "n": 1800,
+    "meanA": 0.3517,
+    "meanB": 0.3628,
+    "deltaPp": 1.11,
+    "flipsUp": 164,
+    "flipsDown": 144,
+    "se_pp": 0.97
+   },
+   "V5 R260->P1R260": {
+    "n": 1800,
+    "meanA": 0.3833,
+    "meanB": 0.4028,
+    "deltaPp": 1.94,
+    "flipsUp": 180,
+    "flipsDown": 145,
+    "se_pp": 1.0
+   },
+   "V5 BASE->P1R260": {
+    "n": 1800,
+    "meanA": 0.3517,
+    "meanB": 0.4028,
+    "deltaPp": 5.11,
+    "flipsUp": 237,
+    "flipsDown": 145,
+    "se_pp": 1.09
+   }
+  },
+  "perturbationThresholds": {
+   "846p1": {
+    "cardDecline": 36.500051382450756,
+    "removalAppetite": 25.096947684406416,
+    "removalMinCopies": 2,
+    "shopMinRatio": 0.08419336856513146,
+    "restHpPct": 78,
+    "potionHealMissing": 22,
+    "routeLowHpPct": 80,
+    "shopGoldLow": 14,
+    "shopGoldHigh": 225
+   },
+   "846p2": {
+    "cardDecline": 34.295274434825295,
+    "removalAppetite": 27.470853817673206,
+    "removalMinCopies": 2,
+    "shopMinRatio": 0.08977876295756533,
+    "restHpPct": 78,
+    "potionHealMissing": 21,
+    "routeLowHpPct": 81,
+    "shopGoldLow": 22,
+    "shopGoldHigh": 225
+   },
+   "846p3": {
+    "cardDecline": 36.102945232998614,
+    "removalAppetite": 24.061457208532772,
+    "removalMinCopies": 2,
+    "shopMinRatio": 0.08483344033184981,
+    "restHpPct": 89,
+    "potionHealMissing": 21,
+    "routeLowHpPct": 81,
+    "shopGoldLow": 1,
+    "shopGoldHigh": 221
+   },
+   "846p4": {
+    "cardDecline": 36.12093329051168,
+    "removalAppetite": 23.17611962757809,
+    "removalMinCopies": 2,
+    "shopMinRatio": 0.09845631632905807,
+    "restHpPct": 73,
+    "potionHealMissing": 28,
+    "routeLowHpPct": 78,
+    "shopGoldLow": 0,
+    "shopGoldHigh": 201
+   }
+  },
+  "perturbationSha256": {
+   "846p1": "d293bba7f5ee60b9ce2574887f2d6ff00f00b07b0219d30e2680294659603e6c",
+   "846p2": "d233703de071b55dde556aadd2e60c3e6c0dd509abcf35249d57f8b2d61470ec",
+   "846p3": "892dfab8c4d5f2c08cd6ae6f28eeef6532dd7aabad699d007d4b0131edfa3c8d",
+   "846p4": "42864aa86f85575564d35c1754aa128e650023bb572e65bf88c6b76c44f7d42e"
+  }
+ },
+ "rehearsal": {
+  "settings": "tools/balance_cem.gd defaults popSize 60, elite 15, maxGen 20, seedCount 40; trainSeed0 14000 (14000-14799), holdoutSeed0 13000, holdoutCount 200, samplerRoot 7421, rootSeed 7422; judged by tools/balance_cem_report.py",
+  "layer1": "dev-gate rows: sampler root 7421, policies 0-299, seeds 12000-12015, Dusk V0 and V5; arm 2 from 800 dev seeds per vow (12100-12899); island rule = tools/balance_exam.py select_islands; cuts 20/29 (exam 1); each variant own Dusk medians",
+  "variants": {
+   "A": "P1R260",
+   "B": "P1"
+  },
+  "islandSeeds": {
+   "A": {
+    "duskblade:v0": [
+     {
+      "cell": "shatter:fat",
+      "policyIndex": 0
+     },
+     {
+      "cell": "smolder:fat",
+      "policyIndex": 2
+     },
+     {
+      "cell": "attrition:fat",
+      "policyIndex": 3
+     },
+     {
+      "cell": "shatter:mid",
+      "policyIndex": 6
+     },
+     {
+      "cell": "smolder:mid",
+      "policyIndex": 11
+     },
+     {
+      "cell": "attrition:mid",
+      "policyIndex": 97
+     }
+    ],
+    "duskblade:v5": [
+     {
+      "cell": "smolder:fat",
+      "policyIndex": 0
+     },
+     {
+      "cell": "attrition:fat",
+      "policyIndex": 2
+     },
+     {
+      "cell": "shatter:fat",
+      "policyIndex": 0
+     },
+     {
+      "cell": "smolder:mid",
+      "policyIndex": 16
+     },
+     {
+      "cell": "shatter:mid",
+      "policyIndex": 112
+     },
+     {
+      "cell": "attrition:mid",
+      "policyIndex": 97
+     }
+    ]
+   },
+   "B": {
+    "duskblade:v0": [
+     {
+      "cell": "smolder:fat",
+      "policyIndex": 2
+     },
+     {
+      "cell": "shatter:fat",
+      "policyIndex": 0
+     },
+     {
+      "cell": "attrition:fat",
+      "policyIndex": 3
+     },
+     {
+      "cell": "smolder:mid",
+      "policyIndex": 11
+     },
+     {
+      "cell": "shatter:mid",
+      "policyIndex": 6
+     },
+     {
+      "cell": "attrition:mid",
+      "policyIndex": 82
+     }
+    ],
+    "duskblade:v5": [
+     {
+      "cell": "attrition:fat",
+      "policyIndex": 2
+     },
+     {
+      "cell": "smolder:fat",
+      "policyIndex": 0
+     },
+     {
+      "cell": "shatter:fat",
+      "policyIndex": 10
+     },
+     {
+      "cell": "smolder:mid",
+      "policyIndex": 1
+     },
+     {
+      "cell": "shatter:mid",
+      "policyIndex": 108
+     },
+     {
+      "cell": "attrition:mid",
+      "policyIndex": 6
+     }
+    ]
+   }
+  },
+  "layer1Analysis": {
+   "A": {
+    "deckCuts": {
+     "thinMax": 20,
+     "midMax": 29
+    },
+    "medians": {
+     "shattersPerFight": 0.875,
+     "smolderKillsPerFight": 0.0
+    },
+    "verdicts": {
+     "duskblade:v0": {
+      "topCell": "shatter:fat",
+      "topRate": 0.6915367483296214,
+      "arm2Rate": 0.31875,
+      "arm2Runs": 800,
+      "viabilityFloor": 0.5051433741648107
+     },
+     "duskblade:v5": {
+      "topCell": "smolder:fat",
+      "topRate": 0.5765124555160143,
+      "arm2Rate": 0.115,
+      "arm2Runs": 800,
+      "viabilityFloor": 0.34575622775800713
+     }
+    },
+    "cells": {
+     "duskblade:v0": {
+      "shatter:thin": [
+       260,
+       725,
+       0.0193
+      ],
+      "shatter:mid": [
+       244,
+       641,
+       0.2652
+      ],
+      "shatter:fat": [
+       213,
+       898,
+       0.6915
+      ],
+      "smolder:thin": [
+       146,
+       216,
+       0.0278
+      ],
+      "smolder:mid": [
+       143,
+       296,
+       0.2432
+      ],
+      "smolder:fat": [
+       166,
+       581,
+       0.6867
+      ],
+      "attrition:thin": [
+       219,
+       506,
+       0.0119
+      ],
+      "attrition:mid": [
+       205,
+       423,
+       0.1418
+      ],
+      "attrition:fat": [
+       158,
+       514,
+       0.6362
+      ]
+     },
+     "duskblade:v5": {
+      "shatter:thin": [
+       288,
+       1049,
+       0.0019
+      ],
+      "shatter:mid": [
+       260,
+       697,
+       0.066
+      ],
+      "shatter:fat": [
+       207,
+       607,
+       0.5206
+      ],
+      "smolder:thin": [
+       112,
+       142,
+       0.007
+      ],
+      "smolder:mid": [
+       116,
+       175,
+       0.0743
+      ],
+      "smolder:fat": [
+       138,
+       281,
+       0.5765
+      ],
+      "attrition:thin": [
+       277,
+       838,
+       0.0036
+      ],
+      "attrition:mid": [
+       261,
+       649,
+       0.0247
+      ],
+      "attrition:fat": [
+       149,
+       362,
+       0.547
+      ]
+     }
+    }
+   },
+   "B": {
+    "deckCuts": {
+     "thinMax": 20,
+     "midMax": 29
+    },
+    "medians": {
+     "shattersPerFight": 0.875,
+     "smolderKillsPerFight": 0.0
+    },
+    "verdicts": {
+     "duskblade:v0": {
+      "topCell": "smolder:fat",
+      "topRate": 0.6941838649155723,
+      "arm2Rate": 0.315,
+      "arm2Runs": 800,
+      "viabilityFloor": 0.5045919324577861
+     },
+     "duskblade:v5": {
+      "topCell": "attrition:fat",
+      "topRate": 0.5674157303370787,
+      "arm2Rate": 0.10875,
+      "arm2Runs": 800,
+      "viabilityFloor": 0.33808286516853936
+     }
+    },
+    "cells": {
+     "duskblade:v0": {
+      "shatter:thin": [
+       272,
+       844,
+       0.0083
+      ],
+      "shatter:mid": [
+       240,
+       626,
+       0.2572
+      ],
+      "shatter:fat": [
+       218,
+       838,
+       0.6766
+      ],
+      "smolder:thin": [
+       153,
+       224,
+       0.0179
+      ],
+      "smolder:mid": [
+       144,
+       288,
+       0.2674
+      ],
+      "smolder:fat": [
+       172,
+       533,
+       0.6942
+      ],
+      "attrition:thin": [
+       227,
+       527,
+       0.0076
+      ],
+      "attrition:mid": [
+       214,
+       428,
+       0.1379
+      ],
+      "attrition:fat": [
+       165,
+       492,
+       0.6037
+      ]
+     },
+     "duskblade:v5": {
+      "shatter:thin": [
+       291,
+       1153,
+       0.0017
+      ],
+      "shatter:mid": [
+       261,
+       677,
+       0.0635
+      ],
+      "shatter:fat": [
+       208,
+       562,
+       0.516
+      ],
+      "smolder:thin": [
+       115,
+       142,
+       0.007
+      ],
+      "smolder:mid": [
+       107,
+       169,
+       0.0888
+      ],
+      "smolder:fat": [
+       134,
+       266,
+       0.5602
+      ],
+      "attrition:thin": [
+       280,
+       847,
+       0.0024
+      ],
+      "attrition:mid": [
+       258,
+       628,
+       0.0303
+      ],
+      "attrition:fat": [
+       159,
+       356,
+       0.5674
+      ]
+     }
+    }
+   }
+  },
+  "results": {
+   "A": {
+    "variant": "P1R260",
+    "grids": {
+     "duskblade:v0": {
+      "floor": 0.5051433741648107,
+      "layer1Top": 0.6915367483296214,
+      "arm2": 0.31875,
+      "bestCeiling": 0.79,
+      "stayedViable": 1,
+      "closeToBest": 1,
+      "distinctStayCells": [
+       "attrition:fat"
+      ],
+      "C3": false,
+      "C4": true,
+      "cellCeilings": {
+       "attrition:fat": 0.79,
+       "shatter:fat": 0.7,
+       "shatter:mid": 0.745
+      },
+      "n": 6,
+      "islands": [
+       {
+        "island": 0,
+        "start": "shatter:fat",
+        "end": "attrition:fat",
+        "holdout": 0.695,
+        "holdoutWins": 139,
+        "stay": false,
+        "modalCount": 54,
+        "inStart": 29,
+        "gens": 20,
+        "stop": "maxGen",
+        "bestTrain": 0.95,
+        "gen0": 0.575,
+        "minutes": 45.9,
+        "rootheartDeathShare": 0.065,
+        "winsModal": [
+         "attrition:fat",
+         49
+        ],
+        "endCuts21_30": "attrition:mid",
+        "policyIndex": 0.0
+       },
+       {
+        "island": 1,
+        "start": "smolder:fat",
+        "end": "attrition:fat",
+        "holdout": 0.47,
+        "holdoutWins": 94,
+        "stay": false,
+        "modalCount": 80,
+        "inStart": 42,
+        "gens": 20,
+        "stop": "stall",
+        "bestTrain": 0.75,
+        "gen0": 0.375,
+        "minutes": 41.0,
+        "rootheartDeathShare": 0.24,
+        "winsModal": [
+         "attrition:fat",
+         57
+        ],
+        "endCuts21_30": "attrition:fat",
+        "policyIndex": 2.0
+       },
+       {
+        "island": 2,
+        "start": "attrition:fat",
+        "end": "attrition:fat",
+        "holdout": 0.77,
+        "holdoutWins": 154,
+        "stay": true,
+        "modalCount": 109,
+        "inStart": 109,
+        "gens": 20,
+        "stop": "maxGen",
+        "bestTrain": 0.95,
+        "gen0": 0.7,
+        "minutes": 55.6,
+        "rootheartDeathShare": 0.06,
+        "winsModal": [
+         "attrition:fat",
+         96
+        ],
+        "endCuts21_30": "attrition:fat",
+        "policyIndex": 3.0
+       },
+       {
+        "island": 3,
+        "start": "shatter:mid",
+        "end": "attrition:fat",
+        "holdout": 0.79,
+        "holdoutWins": 158,
+        "stay": false,
+        "modalCount": 106,
+        "inStart": 5,
+        "gens": 14,
+        "stop": "stall",
+        "bestTrain": 0.9,
+        "gen0": 0.575,
+        "minutes": 36.0,
+        "rootheartDeathShare": 0.085,
+        "winsModal": [
+         "attrition:fat",
+         98
+        ],
+        "endCuts21_30": "attrition:fat",
+        "policyIndex": 6.0
+       },
+       {
+        "island": 4,
+        "start": "smolder:mid",
+        "end": "shatter:fat",
+        "holdout": 0.7,
+        "holdoutWins": 140,
+        "stay": false,
+        "modalCount": 137,
+        "inStart": 2,
+        "gens": 18,
+        "stop": "stall",
+        "bestTrain": 0.925,
+        "gen0": 0.45,
+        "minutes": 38.3,
+        "rootheartDeathShare": 0.055,
+        "winsModal": [
+         "shatter:fat",
+         112
+        ],
+        "endCuts21_30": "shatter:fat",
+        "policyIndex": 11.0
+       },
+       {
+        "island": 5,
+        "start": "attrition:mid",
+        "end": "shatter:mid",
+        "holdout": 0.745,
+        "holdoutWins": 149,
+        "stay": false,
+        "modalCount": 133,
+        "inStart": 3,
+        "gens": 7,
+        "stop": "stall",
+        "bestTrain": 0.925,
+        "gen0": 0.8,
+        "minutes": 17.3,
+        "rootheartDeathShare": 0.055,
+        "winsModal": [
+         "shatter:mid",
+         114
+        ],
+        "endCuts21_30": "shatter:mid",
+        "policyIndex": 97.0
+       }
+      ],
+      "phaseA": {
+       "devArm2": 31.9,
+       "ceiling": 35.0,
+       "estimates": {
+        "base 30.4->32.0": 33.5,
+        "85deaec 34.4->37.5": 35.0
+       },
+       "worstCaseV0Offset": 35.0
+      }
+     },
+     "duskblade:v5": {
+      "floor": 0.34575622775800713,
+      "layer1Top": 0.5765124555160143,
+      "arm2": 0.115,
+      "bestCeiling": 0.49,
+      "stayedViable": 1,
+      "closeToBest": 1,
+      "distinctStayCells": [
+       "attrition:fat"
+      ],
+      "C3": false,
+      "C4": true,
+      "cellCeilings": {
+       "shatter:fat": 0.49,
+       "attrition:fat": 0.365,
+       "shatter:thin": 0.32
+      },
+      "n": 6,
+      "islands": [
+       {
+        "island": 6,
+        "start": "smolder:fat",
+        "end": "shatter:fat",
+        "holdout": 0.47,
+        "holdoutWins": 94,
+        "stay": false,
+        "modalCount": 90,
+        "inStart": 21,
+        "gens": 20,
+        "stop": "maxGen",
+        "bestTrain": 0.725,
+        "gen0": 0.275,
+        "minutes": 39.6,
+        "rootheartDeathShare": 0.32,
+        "winsModal": [
+         "shatter:fat",
+         73
+        ],
+        "endCuts21_30": "shatter:fat",
+        "policyIndex": 0.0
+       },
+       {
+        "island": 7,
+        "start": "attrition:fat",
+        "end": "attrition:fat",
+        "holdout": 0.365,
+        "holdoutWins": 73,
+        "stay": true,
+        "modalCount": 58,
+        "inStart": 58,
+        "gens": 20,
+        "stop": "maxGen",
+        "bestTrain": 0.625,
+        "gen0": 0.225,
+        "minutes": 34.0,
+        "rootheartDeathShare": 0.43,
+        "winsModal": [
+         "attrition:fat",
+         47
+        ],
+        "endCuts21_30": "attrition:fat",
+        "policyIndex": 2.0
+       },
+       {
+        "island": 8,
+        "start": "shatter:fat",
+        "end": "shatter:thin",
+        "holdout": 0.32,
+        "holdoutWins": 64,
+        "stay": false,
+        "modalCount": 42,
+        "inStart": 26,
+        "gens": 16,
+        "stop": "stall",
+        "bestTrain": 0.625,
+        "gen0": 0.325,
+        "minutes": 30.2,
+        "rootheartDeathShare": 0.33,
+        "winsModal": [
+         "attrition:fat",
+         25
+        ],
+        "endCuts21_30": "shatter:thin",
+        "policyIndex": 0.0
+       },
+       {
+        "island": 9,
+        "start": "smolder:mid",
+        "end": "shatter:thin",
+        "holdout": 0.225,
+        "holdoutWins": 45,
+        "stay": false,
+        "modalCount": 43,
+        "inStart": 11,
+        "gens": 7,
+        "stop": "stall",
+        "bestTrain": 0.525,
+        "gen0": 0.325,
+        "minutes": 12.1,
+        "rootheartDeathShare": 0.41,
+        "winsModal": [
+         "smolder:fat",
+         23
+        ],
+        "endCuts21_30": "shatter:thin",
+        "policyIndex": 16.0
+       },
+       {
+        "island": 10,
+        "start": "shatter:mid",
+        "end": "shatter:fat",
+        "holdout": 0.49,
+        "holdoutWins": 98,
+        "stay": false,
+        "modalCount": 123,
+        "inStart": 21,
+        "gens": 11,
+        "stop": "stall",
+        "bestTrain": 0.65,
+        "gen0": 0.4,
+        "minutes": 20.5,
+        "rootheartDeathShare": 0.285,
+        "winsModal": [
+         "shatter:fat",
+         97
+        ],
+        "endCuts21_30": "shatter:fat",
+        "policyIndex": 112.0
+       },
+       {
+        "island": 11,
+        "start": "attrition:mid",
+        "end": "shatter:fat",
+        "holdout": 0.415,
+        "holdoutWins": 83,
+        "stay": false,
+        "modalCount": 59,
+        "inStart": 8,
+        "gens": 12,
+        "stop": "stall",
+        "bestTrain": 0.675,
+        "gen0": 0.425,
+        "minutes": 24.2,
+        "rootheartDeathShare": 0.36,
+        "winsModal": [
+         "shatter:fat",
+         52
+        ],
+        "endCuts21_30": "shatter:thin",
+        "policyIndex": 97.0
+       }
+      ],
+      "phaseA": {
+       "devArm2": 11.5,
+       "ceiling": 20.0,
+       "estimates": {
+        "base 11.1->11.5": 11.9,
+        "85deaec 14.5->13.0": 10.0
+       },
+       "worstCaseV0Offset": 14.6
+      }
+     }
+    }
+   },
+   "B": {
+    "variant": "P1",
+    "grids": {
+     "duskblade:v0": {
+      "floor": 0.5045919324577861,
+      "layer1Top": 0.6941838649155723,
+      "arm2": 0.315,
+      "bestCeiling": 0.825,
+      "stayedViable": 2,
+      "closeToBest": 0,
+      "distinctStayCells": [
+       "attrition:fat",
+       "shatter:fat"
+      ],
+      "C3": false,
+      "C4": true,
+      "cellCeilings": {
+       "attrition:fat": 0.825,
+       "shatter:fat": 0.69,
+       "shatter:mid": 0.78
+      },
+      "n": 6,
+      "islands": [
+       {
+        "island": 0,
+        "start": "smolder:fat",
+        "end": "attrition:fat",
+        "holdout": 0.67,
+        "holdoutWins": 134,
+        "stay": false,
+        "modalCount": 86,
+        "inStart": 64,
+        "gens": 20,
+        "stop": "maxGen",
+        "bestTrain": 0.8,
+        "gen0": 0.4,
+        "minutes": 44.0,
+        "rootheartDeathShare": 0.145,
+        "winsModal": [
+         "attrition:fat",
+         75
+        ],
+        "endCuts21_30": "attrition:fat",
+        "policyIndex": 2.0
+       },
+       {
+        "island": 1,
+        "start": "shatter:fat",
+        "end": "shatter:fat",
+        "holdout": 0.555,
+        "holdoutWins": 111,
+        "stay": true,
+        "modalCount": 72,
+        "inStart": 72,
+        "gens": 7,
+        "stop": "stall",
+        "bestTrain": 0.725,
+        "gen0": 0.575,
+        "minutes": 14.4,
+        "rootheartDeathShare": 0.125,
+        "winsModal": [
+         "shatter:fat",
+         59
+        ],
+        "endCuts21_30": "shatter:fat",
+        "policyIndex": 0.0
+       },
+       {
+        "island": 2,
+        "start": "attrition:fat",
+        "end": "attrition:fat",
+        "holdout": 0.57,
+        "holdoutWins": 114,
+        "stay": true,
+        "modalCount": 78,
+        "inStart": 78,
+        "gens": 9,
+        "stop": "stall",
+        "bestTrain": 0.85,
+        "gen0": 0.675,
+        "minutes": 22.4,
+        "rootheartDeathShare": 0.06,
+        "winsModal": [
+         "attrition:fat",
+         72
+        ],
+        "endCuts21_30": "attrition:fat",
+        "policyIndex": 3.0
+       },
+       {
+        "island": 3,
+        "start": "smolder:mid",
+        "end": "shatter:fat",
+        "holdout": 0.69,
+        "holdoutWins": 138,
+        "stay": false,
+        "modalCount": 112,
+        "inStart": 4,
+        "gens": 20,
+        "stop": "maxGen",
+        "bestTrain": 0.925,
+        "gen0": 0.425,
+        "minutes": 41.0,
+        "rootheartDeathShare": 0.145,
+        "winsModal": [
+         "shatter:fat",
+         100
+        ],
+        "endCuts21_30": "shatter:fat",
+        "policyIndex": 11.0
+       },
+       {
+        "island": 4,
+        "start": "shatter:mid",
+        "end": "attrition:fat",
+        "holdout": 0.825,
+        "holdoutWins": 165,
+        "stay": false,
+        "modalCount": 96,
+        "inStart": 4,
+        "gens": 20,
+        "stop": "maxGen",
+        "bestTrain": 0.95,
+        "gen0": 0.6,
+        "minutes": 51.0,
+        "rootheartDeathShare": 0.1,
+        "winsModal": [
+         "attrition:fat",
+         92
+        ],
+        "endCuts21_30": "attrition:fat",
+        "policyIndex": 6.0
+       },
+       {
+        "island": 5,
+        "start": "attrition:mid",
+        "end": "shatter:mid",
+        "holdout": 0.78,
+        "holdoutWins": 156,
+        "stay": false,
+        "modalCount": 140,
+        "inStart": 1,
+        "gens": 10,
+        "stop": "stall",
+        "bestTrain": 0.875,
+        "gen0": 0.7,
+        "minutes": 20.5,
+        "rootheartDeathShare": 0.055,
+        "winsModal": [
+         "shatter:mid",
+         129
+        ],
+        "endCuts21_30": "shatter:mid",
+        "policyIndex": 82.0
+       }
+      ],
+      "phaseA": {
+       "devArm2": 31.5,
+       "ceiling": 35.0,
+       "estimates": {
+        "base 30.4->32.0": 33.1,
+        "85deaec 34.4->37.5": 34.6
+       },
+       "worstCaseV0Offset": 34.6
+      }
+     },
+     "duskblade:v5": {
+      "floor": 0.33808286516853936,
+      "layer1Top": 0.5674157303370787,
+      "arm2": 0.10875,
+      "bestCeiling": 0.42,
+      "stayedViable": 1,
+      "closeToBest": 1,
+      "distinctStayCells": [
+       "shatter:fat"
+      ],
+      "C3": false,
+      "C4": true,
+      "cellCeilings": {
+       "attrition:mid": 0.22,
+       "shatter:thin": 0.37,
+       "shatter:fat": 0.42
+      },
+      "n": 6,
+      "islands": [
+       {
+        "island": 6,
+        "start": "attrition:fat",
+        "end": "attrition:mid",
+        "holdout": 0.22,
+        "holdoutWins": 44,
+        "stay": false,
+        "modalCount": 55,
+        "inStart": 28,
+        "gens": 20,
+        "stop": "maxGen",
+        "bestTrain": 0.325,
+        "gen0": 0.15,
+        "minutes": 28.1,
+        "rootheartDeathShare": 0.51,
+        "winsModal": [
+         "attrition:fat",
+         20
+        ],
+        "endCuts21_30": "attrition:thin",
+        "policyIndex": 2.0
+       },
+       {
+        "island": 7,
+        "start": "smolder:fat",
+        "end": "shatter:thin",
+        "holdout": 0.37,
+        "holdoutWins": 74,
+        "stay": false,
+        "modalCount": 47,
+        "inStart": 5,
+        "gens": 12,
+        "stop": "stall",
+        "bestTrain": 0.625,
+        "gen0": 0.35,
+        "minutes": 21.4,
+        "rootheartDeathShare": 0.33,
+        "winsModal": [
+         "attrition:fat",
+         21
+        ],
+        "endCuts21_30": "shatter:thin",
+        "policyIndex": 0.0
+       },
+       {
+        "island": 8,
+        "start": "shatter:fat",
+        "end": "shatter:fat",
+        "holdout": 0.36,
+        "holdoutWins": 72,
+        "stay": true,
+        "modalCount": 59,
+        "inStart": 59,
+        "gens": 14,
+        "stop": "stall",
+        "bestTrain": 0.625,
+        "gen0": 0.25,
+        "minutes": 27.2,
+        "rootheartDeathShare": 0.375,
+        "winsModal": [
+         "shatter:fat",
+         54
+        ],
+        "endCuts21_30": "shatter:thin",
+        "policyIndex": 10.0
+       },
+       {
+        "island": 9,
+        "start": "smolder:mid",
+        "end": "shatter:thin",
+        "holdout": 0.17,
+        "holdoutWins": 34,
+        "stay": false,
+        "modalCount": 71,
+        "inStart": 4,
+        "gens": 10,
+        "stop": "stall",
+        "bestTrain": 0.3,
+        "gen0": 0.25,
+        "minutes": 13.1,
+        "rootheartDeathShare": 0.46,
+        "winsModal": [
+         "shatter:fat",
+         19
+        ],
+        "endCuts21_30": "shatter:thin",
+        "policyIndex": 1.0
+       },
+       {
+        "island": 10,
+        "start": "shatter:mid",
+        "end": "shatter:fat",
+        "holdout": 0.415,
+        "holdoutWins": 83,
+        "stay": false,
+        "modalCount": 108,
+        "inStart": 23,
+        "gens": 20,
+        "stop": "maxGen",
+        "bestTrain": 0.6,
+        "gen0": 0.225,
+        "minutes": 34.6,
+        "rootheartDeathShare": 0.36,
+        "winsModal": [
+         "shatter:fat",
+         82
+        ],
+        "endCuts21_30": "shatter:fat",
+        "policyIndex": 108.0
+       },
+       {
+        "island": 11,
+        "start": "attrition:mid",
+        "end": "shatter:fat",
+        "holdout": 0.42,
+        "holdoutWins": 84,
+        "stay": false,
+        "modalCount": 54,
+        "inStart": 11,
+        "gens": 14,
+        "stop": "stall",
+        "bestTrain": 0.575,
+        "gen0": 0.275,
+        "minutes": 27.6,
+        "rootheartDeathShare": 0.365,
+        "winsModal": [
+         "shatter:fat",
+         47
+        ],
+        "endCuts21_30": "shatter:fat",
+        "policyIndex": 6.0
+       }
+      ],
+      "phaseA": {
+       "devArm2": 10.9,
+       "ceiling": 20.0,
+       "estimates": {
+        "base 11.1->11.5": 11.3,
+        "85deaec 14.5->13.0": 9.4
+       },
+       "worstCaseV0Offset": 14.0
+      }
+     }
+    }
+   }
+  }
+ }
 }
