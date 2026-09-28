@@ -104,9 +104,13 @@ func _ready() -> void:
 		push_error("stagecraft: unknown screen '%s'" % _screen)
 		return
 	add_child(screen)
-	# The price landing live, as main plays it after a pay: the kindle and its cue.
+	# Live moments play once the screen is in the tree, as main plays them, so
+	# their cues reach a bus that is ready: the price landing, a story beat.
 	if screen is HollowScreen and parts.size() > 1 and parts[1] == "paid":
 		(screen as HollowScreen).play_paid()
+	var event_screen: EventScreen = screen as EventScreen
+	if event_screen != null and not event_screen.beat.is_empty():
+		event_screen.play_beat()
 	_settle(screen)
 
 
@@ -132,7 +136,6 @@ func _event(event_id: String, story_beat: String) -> Control:
 	var screen: EventScreen = EventScreen.new(event_id, event, Locale.active.t(key),
 		false, true, _shape)
 	screen.beat = story_beat
-	screen.play_beat()
 	return screen
 
 
