@@ -795,3 +795,173 @@ Fuse pass (same day, seeded from the first edit):
 
 sha256 `c1d4d34d6f1299f2a162a3fafb9d76ec61ec4e635914aedfd65e5493774447dd`.
 
+### Act II ordinary clay — A2-1 and A2-4 only (#293)
+
+These two ordinary kit silhouettes already sit in
+`docs/map-scene-asset-bill.md` and already read off the port-owned Act II
+stage and event plates. They do not need a new canon decision. This section records the two ordinary clay briefs and their generated
+review-candidate JPEGs. They are **not accepted**.
+
+Out of scope, and **not decided here**: A2-2 `act2-silted-stair`, A2-3
+`act2-library-arch`, A2-5 `act2-lure-lantern-post`, and A2-H
+`terminus-flooded-threshold`.
+
+Both concepts are 1:1 clay maquettes, not shipping textures. They live
+outside `assets/art/map/` so `tools/check_map_assets.py` does not treat
+them as undeclared payload. Godot imports each JPEG under
+`assets/art/map-concepts/`; the Godot-generated `.import` sidecar is
+committed with the JPEG (do not hand-edit the sidecar). The only
+image-edit seed is `assets/art/map-concepts/shared-road-slab-a.jpg`
+(port-authored Grok Imagine, 2026-08-19, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`),
+already the accepted Studio concept for shipping `shared-road-slab-a.glb`.
+Codex generated both review-candidate JPEGs on 2026-08-21 via OpenAI
+ImageGen image-edit, seeded from that file. Human visual sign-off is
+**pending**. Studio is **forbidden until a human says yes**. Stage and
+event plates below are rights-safe **read-only motif references** owned
+by this port; they are not Studio or image-edit inputs (wrong look, and
+they are not the clay-maquette seed).
+
+Conversion (both, reproducible): Pillow 12.3.0,
+`Image.open(src).convert("RGB")`,
+`resize((1024, 1024), Image.Resampling.LANCZOS)`, then
+`save(..., format="JPEG", quality=95, subsampling=0, optimize=False,
+progressive=False)`. Source PNGs were 1254×1254 RGB. A second conversion
+pass produced the same JPEG hashes.
+
+### `map-concepts/act2-drowned-wall-corner.jpg` — 1:1 concept, not a shipping texture
+
+**Status:** generated review candidate. Human visual sign-off pending.
+Studio forbidden until yes.
+
+Tripo Studio image-to-3D input for kit module `act2-drowned-wall-corner`
+(A2-1 in `docs/map-scene-asset-bill.md`: drowned city wall mass). Same
+clay-maquette language as `shared-road-slab-a.jpg`; derived from that
+file with OpenAI ImageGen image-edit so lighting and material stay put. One
+connected volume so Smart Mesh is less likely to emit two islands.
+
+Exact target paths:
+
+- concept JPEG: `assets/art/map-concepts/act2-drowned-wall-corner.jpg`
+- Godot-generated sidecar:
+  `assets/art/map-concepts/act2-drowned-wall-corner.jpg.import`
+- later GLB, not this commit: `assets/art/map/geometry/act2/drowned-wall-corner.glb`
+
+Rights-safe sources:
+
+- Seed (the only image-edit input):
+  `assets/art/map-concepts/shared-road-slab-a.jpg`, sha256
+  `619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+  Port-authored; already submitted to paid Studio Pro for a shipping GLB.
+- Motif (read-only): port-owned `assets/art/stage/act2-backdrop.png` (drowned
+  masonry walls of the sunken city), `assets/art/stage/act2-ledge.png` (thick
+  gothic wall as the combat ledge), and the low side-wall masses of
+  `assets/art/stage/act2-mid.png` — not that plate's hanging lanterns, chains,
+  or pointed arch.
+
+No new canon: Act II is already the drowned city (`docs/story/03-acts.md`);
+the stage plates already paint city-wall masonry. This row only constrains
+the clay silhouette to a **broad connected city-wall corner**.
+
+Edit prompt (2026-08-21, Codex via OpenAI ImageGen image-edit, seeded from
+`shared-road-slab-a.jpg`, **ran**; produced the source PNG below):
+
+> Keep the exact same clay-maquette look, medium-gray studio background, even
+> above-front lighting, 3/4 orthographic view, and matte untextured stone
+> surface. Replace the low road slab with one different prop: a single broad
+> connected city-wall corner. Two thick short wall runs meet at a right angle
+> as one fused L-shaped masonry mass, like a chunky low-poly wall corner
+> sitting on the ground — wide, connected, one volume, a blunt broken top,
+> no separate blocks. Not a tower, not a pointed gothic arch, not a doorway,
+> not a stair, not a lantern, not chains, not a cage, not a water plane.
+> Chunky low-poly geometric volumes, no carved ornament, no crenellations as
+> extra teeth, no grass, no moss, no thin crack lines, no cast shadow on the
+> ground. Isolated, centered, large in frame. Distinct L-corner silhouette,
+> still a simple game-kitbash mass.
+
+Planned fuse pass (same seed chain, **not run** — use only if a later edit
+segments into two walls):
+
+> Keep the same clay-maquette look, medium-gray studio background, even
+> lighting, and 3/4 view. Fuse the wall corner into one continuous L-shaped
+> masonry mass — no gap between the two runs, no separate stones, one solid
+> connected city-wall corner sitting on the ground.
+
+Source PNG (session-local, not in repo):
+`~/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-bba5fe13-9fe1-41c9-a811-acd06879ec68.png`,
+1254×1254 RGB, sha256
+`1a380853641aa334b4cd20cf8f65627cefca7544521690024e9acde622434e87`.
+
+Review-candidate JPEG: `assets/art/map-concepts/act2-drowned-wall-corner.jpg`,
+1024×1024 RGB, 127446 bytes, sha256
+`9243439b119ffdd6303db2f4a1806f1e97cc7dcf1bdb78bcb3bb783c2f60ed02`.
+Godot 4.7.2.stable generated `act2-drowned-wall-corner.jpg.import`.
+Human visual sign-off: **pending**. Studio: **forbidden until yes**.
+
+### `map-concepts/act2-sunken-shelf-mass.jpg` — 1:1 concept, not a shipping texture
+
+**Status:** generated review candidate. Human visual sign-off pending.
+Studio forbidden until yes.
+
+Tripo Studio image-to-3D input for kit module `act2-sunken-shelf-mass`
+(A2-4 in `docs/map-scene-asset-bill.md`: stacked slab; no thin shelf slats).
+Same clay-maquette language as `shared-road-slab-a.jpg`; derived from
+that file with OpenAI ImageGen image-edit. One fused stacked mass (no loose
+slats) so Smart Mesh is less likely to emit islands.
+
+Exact target paths:
+
+- concept JPEG: `assets/art/map-concepts/act2-sunken-shelf-mass.jpg`
+- Godot-generated sidecar:
+  `assets/art/map-concepts/act2-sunken-shelf-mass.jpg.import`
+- later GLB, not this commit: `assets/art/map/geometry/act2/sunken-shelf-mass.glb`
+
+Rights-safe sources:
+
+- Seed (the only image-edit input):
+  `assets/art/map-concepts/shared-road-slab-a.jpg`, sha256
+  `619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+  Port-authored; already submitted to paid Studio Pro for a shipping GLB.
+- Motif (read-only): port-owned `assets/art/events/library.png` — the drowned
+  library's stone bookcase and raised stacked-book platform read as a thick
+  masonry mass, not furniture slats. Shipped event copy already names
+  "shelves" and "stacks" (`content/full-content.json`, event `library`,
+  The Drowned Library). The #289 bill already forbids thin shelf slats.
+
+No new canon: the library is already the Act II lore event field; the kit
+job is the existing stacked-slab placeholder family as one fused mass.
+
+Edit prompt (2026-08-21, Codex via OpenAI ImageGen image-edit, seeded from
+`shared-road-slab-a.jpg`, **ran**; produced the source PNG below):
+
+> Keep the exact same clay-maquette look, medium-gray studio background, even
+> above-front lighting, 3/4 orthographic view, and matte untextured stone
+> surface. Replace the low road slab with one different prop: a single fused
+> stacked slab mass. Three or four thick stone slabs melted into one connected
+> stepped pile — each step is a chunky slab as thick as the original road
+> block, fused to the ones above and below with no gaps. NO thin shelf slats,
+> no bookcase with open bays, no books, no pages, no cloth, no second pile,
+> no stair flight, no arch, no lantern. Chunky low-poly geometric volumes,
+> no grass, no moss, no thin crack lines, no cast shadow on the ground.
+> Isolated, centered, large in frame. Distinct stacked-slab silhouette,
+> still a simple game-kitbash mass.
+
+Planned fuse pass (same seed chain, **not run** — use only if a later edit
+emits slats or separate slabs):
+
+> Keep the same clay-maquette look, medium-gray studio background, even
+> lighting, and 3/4 view. Fuse the stack into one continuous stepped mass —
+> no gaps between slabs, no thin slats, no separate stones, no books. One
+> solid connected stacked-slab pile, sitting on the ground.
+
+Source PNG (session-local, not in repo):
+`~/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-199ec4b7-321e-4f16-a89c-54f429fae48d.png`,
+1254×1254 RGB, sha256
+`ce352504e4ac09ed10d9ee383c77c44f43571b29c93e4f8d4a9066ba98ea61d4`.
+
+Review-candidate JPEG: `assets/art/map-concepts/act2-sunken-shelf-mass.jpg`,
+1024×1024 RGB, 140863 bytes, sha256
+`5b8d0a75fad4244df851144cc1c822faf0da59ad0336c292b6f23893d1b37c53`.
+Godot 4.7.2.stable generated `act2-sunken-shelf-mass.jpg.import`.
+Human visual sign-off: **pending**. Studio: **forbidden until yes**.
+
