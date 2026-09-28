@@ -1,0 +1,763 @@
+{
+  "head": "b5aef75e7dba1af9063eb72aea4c6e11248f3a9e",
+  "runs": [
+    {
+      "seed": 717,
+      "shape": "1458x820",
+      "seconds": 8.48,
+      "checks": {
+        "current_visible": true,
+        "dimensions": [
+          1458.0,
+          820.0
+        ],
+        "drag_pan": true,
+        "drag_preserves_selection": true,
+        "drag_probe": {
+          "camera_delta": 1.26395010948181,
+          "hovered": "none",
+          "motion_events": 1,
+          "origin": "(12.0, 410.0)",
+          "received_down": true,
+          "target": "(42.0, 420.0)",
+          "target_markers": []
+        },
+        "guidance": {
+          "choices_clicked": 2,
+          "edges": 76,
+          "failures": [],
+          "ok": true,
+          "source_unchanged": true,
+          "surface_samples": 10991
+        },
+        "journey_button": true,
+        "marker_target": [
+          60.0,
+          60.0
+        ],
+        "overview": {
+          "cluster_open": true,
+          "cluster_transition": {
+            "after": 32.0,
+            "before": 145.867080688477,
+            "whole": false
+          },
+          "nodes": 65,
+          "overlaps": [],
+          "represented": 65,
+          "single_select": true,
+          "target_sizes_pass": true,
+          "targets": 31
+        },
+        "required_target": 60.0,
+        "select_current": true,
+        "sightlines": {
+          "blocked_node_centres": 0,
+          "heading_degrees": 25.0,
+          "scope": "current and reachable centres at focus; not entire routes",
+          "tested_node_centres": 3
+        },
+        "source_current_unchanged": true,
+        "target_sizes_pass": true,
+        "viewport_matches_pixels": true,
+        "wheel_zoom": true,
+        "whole_button": true
+      },
+      "images": [
+        "map-717-1458x820-arrival.png",
+        "map-717-1458x820-choice-0.png",
+        "map-717-1458x820-choice-1.png",
+        "map-717-1458x820-overview.png",
+        "map-717-1458x820-whole.png",
+        "map-717-1458x820-court.png",
+        "map-717-1458x820-journey.png",
+        "map-717-1458x820-threshold.png",
+        "map-717-1458x820-passage.png"
+      ]
+    },
+    {
+      "seed": 717,
+      "shape": "1180x820",
+      "seconds": 8.5,
+      "checks": {
+        "current_visible": true,
+        "dimensions": [
+          1180.0,
+          820.0
+        ],
+        "drag_pan": true,
+        "drag_preserves_selection": true,
+        "drag_probe": {
+          "camera_delta": 1.26395010948181,
+          "hovered": "none",
+          "motion_events": 1,
+          "origin": "(12.0, 410.0)",
+          "received_down": true,
+          "target": "(42.0, 420.0)",
+          "target_markers": []
+        },
+        "guidance": {
+          "choices_clicked": 2,
+          "edges": 76,
+          "failures": [],
+          "ok": true,
+          "source_unchanged": true,
+          "surface_samples": 10991
+        },
+        "journey_button": true,
+        "marker_target": [
+          60.0,
+          60.0
+        ],
+        "overview": {
+          "cluster_open": true,
+          "cluster_transition": {
+            "after": 32.0,
+            "before": 182.731658935547,
+            "whole": false
+          },
+          "nodes": 65,
+          "overlaps": [],
+          "represented": 65,
+          "single_select": true,
+          "target_sizes_pass": true,
+          "targets": 21
+        },
+        "required_target": 60.0,
+        "select_current": true,
+        "sightlines": {
+          "blocked_node_centres": 0,
+          "heading_degrees": 25.0,
+          "scope": "current and reachable centres at focus; not entire routes",
+          "tested_node_centres": 3
+        },
+        "source_current_unchanged": true,
+        "target_sizes_pass": true,
+        "viewport_matches_pixels": true,
+        "wheel_zoom": true,
+        "whole_button": true
+      },
+      "images": [
+        "map-717-1180x820-arrival.png",
+        "map-717-1180x820-choice-0.png",
+        "map-717-1180x820-choice-1.png",
+        "map-717-1180x820-overview.png",
+        "map-717-1180x820-whole.png",
+        "map-717-1180x820-court.png",
+        "map-717-1180x820-journey.png",
+        "map-717-1180x820-threshold.png",
+        "map-717-1180x820-passage.png"
+      ]
+    },
+    {
+      "seed": 717,
+      "shape": "844x390",
+      "seconds": 8.39,
+      "checks": {
+        "current_visible": true,
+        "dimensions": [
+          844.0,
+          390.0
+        ],
+        "drag_pan": true,
+        "drag_preserves_selection": true,
+        "drag_probe": {
+          "camera_delta": 2.65753602981567,
+          "hovered": "none",
+          "motion_events": 1,
+          "origin": "(12.0, 195.0)",
+          "received_down": true,
+          "target": "(42.0, 205.0)",
+          "target_markers": []
+        },
+        "guidance": {
+          "choices_clicked": 2,
+          "edges": 76,
+          "failures": [],
+          "ok": true,
+          "source_unchanged": true,
+          "surface_samples": 10991
+        },
+        "journey_button": true,
+        "marker_target": [
+          44.0,
+          44.0
+        ],
+        "overview": {
+          "cluster_open": true,
+          "cluster_transition": {
+            "after": 32.0,
+            "before": 147.743988037109,
+            "whole": false
+          },
+          "nodes": 65,
+          "overlaps": [],
+          "represented": 65,
+          "single_select": true,
+          "target_sizes_pass": true,
+          "targets": 17
+        },
+        "required_target": 44.0,
+        "select_current": true,
+        "sightlines": {
+          "blocked_node_centres": 0,
+          "heading_degrees": 25.0,
+          "scope": "current and reachable centres at focus; not entire routes",
+          "tested_node_centres": 3
+        },
+        "source_current_unchanged": true,
+        "target_sizes_pass": true,
+        "viewport_matches_pixels": true,
+        "wheel_zoom": true,
+        "whole_button": true
+      },
+      "images": [
+        "map-717-844x390-arrival.png",
+        "map-717-844x390-choice-0.png",
+        "map-717-844x390-choice-1.png",
+        "map-717-844x390-overview.png",
+        "map-717-844x390-whole.png",
+        "map-717-844x390-court.png",
+        "map-717-844x390-journey.png",
+        "map-717-844x390-threshold.png",
+        "map-717-844x390-passage.png"
+      ]
+    },
+    {
+      "seed": 4,
+      "shape": "1458x820",
+      "seconds": 4.75,
+      "checks": {
+        "current_visible": true,
+        "dimensions": [
+          1458.0,
+          820.0
+        ],
+        "drag_pan": true,
+        "drag_preserves_selection": true,
+        "drag_probe": {
+          "camera_delta": 1.26394855976105,
+          "hovered": "none",
+          "motion_events": 1,
+          "origin": "(12.0, 410.0)",
+          "received_down": true,
+          "target": "(42.0, 420.0)",
+          "target_markers": []
+        },
+        "guidance": {
+          "choices_clicked": 1,
+          "edges": 74,
+          "failures": [],
+          "ok": true,
+          "source_unchanged": true,
+          "surface_samples": 12128
+        },
+        "journey_button": true,
+        "marker_target": [
+          60.0000305175781,
+          60.0
+        ],
+        "overview": {
+          "cluster_open": true,
+          "cluster_transition": {
+            "after": 32.0,
+            "before": 166.7275390625,
+            "whole": false
+          },
+          "nodes": 66,
+          "overlaps": [],
+          "represented": 66,
+          "single_select": true,
+          "target_sizes_pass": true,
+          "targets": 25
+        },
+        "required_target": 60.0,
+        "select_current": true,
+        "sightlines": {
+          "blocked_node_centres": 0,
+          "heading_degrees": -25.0,
+          "scope": "current and reachable centres at focus; not entire routes",
+          "tested_node_centres": 2
+        },
+        "source_current_unchanged": true,
+        "target_sizes_pass": true,
+        "viewport_matches_pixels": true,
+        "wheel_zoom": true,
+        "whole_button": true
+      },
+      "images": [
+        "map-4-1458x820-arrival.png",
+        "map-4-1458x820-choice-0.png",
+        "map-4-1458x820-choice-1.png",
+        "map-4-1458x820-overview.png",
+        "map-4-1458x820-whole.png",
+        "map-4-1458x820-court.png",
+        "map-4-1458x820-journey.png",
+        "map-4-1458x820-threshold.png",
+        "map-4-1458x820-passage.png"
+      ]
+    },
+    {
+      "seed": 4,
+      "shape": "1180x820",
+      "seconds": 4.75,
+      "checks": {
+        "current_visible": true,
+        "dimensions": [
+          1180.0,
+          820.0
+        ],
+        "drag_pan": true,
+        "drag_preserves_selection": true,
+        "drag_probe": {
+          "camera_delta": 1.26394855976105,
+          "hovered": "none",
+          "motion_events": 1,
+          "origin": "(12.0, 410.0)",
+          "received_down": true,
+          "target": "(42.0, 420.0)",
+          "target_markers": []
+        },
+        "guidance": {
+          "choices_clicked": 1,
+          "edges": 74,
+          "failures": [],
+          "ok": true,
+          "source_unchanged": true,
+          "surface_samples": 12128
+        },
+        "journey_button": true,
+        "marker_target": [
+          60.0,
+          60.0
+        ],
+        "overview": {
+          "cluster_open": true,
+          "cluster_transition": {
+            "after": 32.0,
+            "before": 208.864135742188,
+            "whole": false
+          },
+          "nodes": 66,
+          "overlaps": [],
+          "represented": 66,
+          "single_select": true,
+          "target_sizes_pass": true,
+          "targets": 20
+        },
+        "required_target": 60.0,
+        "select_current": true,
+        "sightlines": {
+          "blocked_node_centres": 0,
+          "heading_degrees": -25.0,
+          "scope": "current and reachable centres at focus; not entire routes",
+          "tested_node_centres": 2
+        },
+        "source_current_unchanged": true,
+        "target_sizes_pass": true,
+        "viewport_matches_pixels": true,
+        "wheel_zoom": true,
+        "whole_button": true
+      },
+      "images": [
+        "map-4-1180x820-arrival.png",
+        "map-4-1180x820-choice-0.png",
+        "map-4-1180x820-choice-1.png",
+        "map-4-1180x820-overview.png",
+        "map-4-1180x820-whole.png",
+        "map-4-1180x820-court.png",
+        "map-4-1180x820-journey.png",
+        "map-4-1180x820-threshold.png",
+        "map-4-1180x820-passage.png"
+      ]
+    },
+    {
+      "seed": 4,
+      "shape": "844x390",
+      "seconds": 4.39,
+      "checks": {
+        "current_visible": true,
+        "dimensions": [
+          844.0,
+          390.0
+        ],
+        "drag_pan": true,
+        "drag_preserves_selection": true,
+        "drag_probe": {
+          "camera_delta": 2.65753579139709,
+          "hovered": "none",
+          "motion_events": 1,
+          "origin": "(12.0, 195.0)",
+          "received_down": true,
+          "target": "(42.0, 205.0)",
+          "target_markers": [
+            "1,3"
+          ]
+        },
+        "guidance": {
+          "choices_clicked": 1,
+          "edges": 74,
+          "failures": [],
+          "ok": true,
+          "source_unchanged": true,
+          "surface_samples": 12128
+        },
+        "journey_button": true,
+        "marker_target": [
+          44.0,
+          44.0
+        ],
+        "overview": {
+          "cluster_open": true,
+          "cluster_transition": {
+            "after": 46.1531562805176,
+            "before": 155.582473754883,
+            "whole": false
+          },
+          "nodes": 66,
+          "overlaps": [],
+          "represented": 66,
+          "single_select": true,
+          "target_sizes_pass": true,
+          "targets": 16
+        },
+        "required_target": 44.0,
+        "select_current": true,
+        "sightlines": {
+          "blocked_node_centres": 0,
+          "heading_degrees": -25.0,
+          "scope": "current and reachable centres at focus; not entire routes",
+          "tested_node_centres": 2
+        },
+        "source_current_unchanged": true,
+        "target_sizes_pass": true,
+        "viewport_matches_pixels": true,
+        "wheel_zoom": true,
+        "whole_button": true
+      },
+      "images": [
+        "map-4-844x390-arrival.png",
+        "map-4-844x390-choice-0.png",
+        "map-4-844x390-choice-1.png",
+        "map-4-844x390-overview.png",
+        "map-4-844x390-whole.png",
+        "map-4-844x390-court.png",
+        "map-4-844x390-journey.png",
+        "map-4-844x390-threshold.png",
+        "map-4-844x390-passage.png"
+      ]
+    },
+    {
+      "seed": 2026,
+      "shape": "1458x820",
+      "seconds": 5.39,
+      "checks": {
+        "current_visible": true,
+        "dimensions": [
+          1458.0,
+          820.0
+        ],
+        "drag_pan": true,
+        "drag_preserves_selection": true,
+        "drag_probe": {
+          "camera_delta": 1.26395130157471,
+          "hovered": "none",
+          "motion_events": 1,
+          "origin": "(12.0, 410.0)",
+          "received_down": true,
+          "target": "(42.0, 420.0)",
+          "target_markers": []
+        },
+        "guidance": {
+          "choices_clicked": 2,
+          "edges": 74,
+          "failures": [],
+          "ok": true,
+          "source_unchanged": true,
+          "surface_samples": 14433
+        },
+        "journey_button": true,
+        "marker_target": [
+          59.9999389648438,
+          60.0
+        ],
+        "overview": {
+          "cluster_open": true,
+          "cluster_transition": {
+            "after": 37.4802284240723,
+            "before": 186.422393798828,
+            "whole": false
+          },
+          "nodes": 54,
+          "overlaps": [],
+          "represented": 54,
+          "single_select": true,
+          "target_sizes_pass": true,
+          "targets": 17
+        },
+        "required_target": 60.0,
+        "select_current": true,
+        "sightlines": {
+          "blocked_node_centres": 0,
+          "heading_degrees": -25.0,
+          "scope": "current and reachable centres at focus; not entire routes",
+          "tested_node_centres": 3
+        },
+        "source_current_unchanged": true,
+        "target_sizes_pass": true,
+        "viewport_matches_pixels": true,
+        "wheel_zoom": true,
+        "whole_button": true
+      },
+      "images": [
+        "map-2026-1458x820-arrival.png",
+        "map-2026-1458x820-choice-0.png",
+        "map-2026-1458x820-choice-1.png",
+        "map-2026-1458x820-overview.png",
+        "map-2026-1458x820-whole.png",
+        "map-2026-1458x820-court.png",
+        "map-2026-1458x820-journey.png",
+        "map-2026-1458x820-threshold.png",
+        "map-2026-1458x820-passage.png"
+      ]
+    },
+    {
+      "seed": 2026,
+      "shape": "1180x820",
+      "seconds": 5.47,
+      "checks": {
+        "current_visible": true,
+        "dimensions": [
+          1180.0,
+          820.0
+        ],
+        "drag_pan": true,
+        "drag_preserves_selection": true,
+        "drag_probe": {
+          "camera_delta": 1.26395130157471,
+          "hovered": "none",
+          "motion_events": 1,
+          "origin": "(12.0, 410.0)",
+          "received_down": true,
+          "target": "(42.0, 420.0)",
+          "target_markers": []
+        },
+        "guidance": {
+          "choices_clicked": 2,
+          "edges": 74,
+          "failures": [],
+          "ok": true,
+          "source_unchanged": true,
+          "surface_samples": 14433
+        },
+        "journey_button": true,
+        "marker_target": [
+          60.0,
+          60.0000305175781
+        ],
+        "overview": {
+          "cluster_open": true,
+          "cluster_transition": {
+            "after": 37.4802284240723,
+            "before": 233.536407470703,
+            "whole": false
+          },
+          "nodes": 54,
+          "overlaps": [],
+          "represented": 54,
+          "single_select": true,
+          "target_sizes_pass": true,
+          "targets": 15
+        },
+        "required_target": 60.0,
+        "select_current": true,
+        "sightlines": {
+          "blocked_node_centres": 0,
+          "heading_degrees": -25.0,
+          "scope": "current and reachable centres at focus; not entire routes",
+          "tested_node_centres": 3
+        },
+        "source_current_unchanged": true,
+        "target_sizes_pass": true,
+        "viewport_matches_pixels": true,
+        "wheel_zoom": true,
+        "whole_button": true
+      },
+      "images": [
+        "map-2026-1180x820-arrival.png",
+        "map-2026-1180x820-choice-0.png",
+        "map-2026-1180x820-choice-1.png",
+        "map-2026-1180x820-overview.png",
+        "map-2026-1180x820-whole.png",
+        "map-2026-1180x820-court.png",
+        "map-2026-1180x820-journey.png",
+        "map-2026-1180x820-threshold.png",
+        "map-2026-1180x820-passage.png"
+      ]
+    },
+    {
+      "seed": 2026,
+      "shape": "844x390",
+      "seconds": 5.08,
+      "checks": {
+        "current_visible": true,
+        "dimensions": [
+          844.0,
+          390.0
+        ],
+        "drag_pan": true,
+        "drag_preserves_selection": true,
+        "drag_probe": {
+          "camera_delta": 2.65753579139709,
+          "hovered": "none",
+          "motion_events": 1,
+          "origin": "(12.0, 195.0)",
+          "received_down": true,
+          "target": "(42.0, 205.0)",
+          "target_markers": []
+        },
+        "guidance": {
+          "choices_clicked": 2,
+          "edges": 74,
+          "failures": [],
+          "ok": true,
+          "source_unchanged": true,
+          "surface_samples": 14433
+        },
+        "journey_button": true,
+        "marker_target": [
+          44.0,
+          44.0
+        ],
+        "overview": {
+          "cluster_open": true,
+          "cluster_transition": {
+            "after": 59.8594779968262,
+            "before": 159.920700073242,
+            "whole": false
+          },
+          "nodes": 54,
+          "overlaps": [],
+          "represented": 54,
+          "single_select": true,
+          "target_sizes_pass": true,
+          "targets": 13
+        },
+        "required_target": 44.0,
+        "select_current": true,
+        "sightlines": {
+          "blocked_node_centres": 0,
+          "heading_degrees": -25.0,
+          "scope": "current and reachable centres at focus; not entire routes",
+          "tested_node_centres": 3
+        },
+        "source_current_unchanged": true,
+        "target_sizes_pass": true,
+        "viewport_matches_pixels": true,
+        "wheel_zoom": true,
+        "whole_button": true
+      },
+      "images": [
+        "map-2026-844x390-arrival.png",
+        "map-2026-844x390-choice-0.png",
+        "map-2026-844x390-choice-1.png",
+        "map-2026-844x390-overview.png",
+        "map-2026-844x390-whole.png",
+        "map-2026-844x390-court.png",
+        "map-2026-844x390-journey.png",
+        "map-2026-844x390-threshold.png",
+        "map-2026-844x390-passage.png"
+      ]
+    }
+  ],
+  "status": "native matrix complete; visual inspection and independent review reported separately",
+  "media_sha256": {
+    "combat-1180x820-after.png": "05e107e71988f1e32c601e21052903b98e1d8265eb2238e952dd5ef6fa157683",
+    "combat-1180x820-before.png": "a137bf191efdc2ffa1fbee2379fa96d67cee096654ddef78ddbe33cfb1410070",
+    "combat-1458x820-after.png": "59847eb2c674e04ccce72867e44dfbdd85e99b7fe680d1fd1c1939f74d978752",
+    "combat-1458x820-before.png": "03f92b27b2396470f1f8eaa4be51f3f0157a8470bfb50c94f0ba8cebfd5eb4d5",
+    "combat-844x390-after.png": "15af5f78ba1eae0e99ba1052d27af2fd17774d4266bcd55383c58855c3349d67",
+    "combat-844x390-before.png": "e972d0ceb1066a4b73a4af5d3c63756e530bbc031bf9c7cdc5fcf498e76adf38",
+    "map-2026-1180x820-arrival.png": "2bea3ea669aec360a5a8fe305733ba8c3032f78dba5909c6c9624a0719699192",
+    "map-2026-1180x820-choice-0.png": "7e826649d86f6a9c2d23f30758822c70a7eda9ca55b7f8279ffd64e4c91712cc",
+    "map-2026-1180x820-choice-1.png": "b047e3ef64087bfb7fff9ee1a66867ca33e686ed87f98f83348d6f1800c180d2",
+    "map-2026-1180x820-court.png": "a7dd9c3b0218c7e0673a8a99992dfbca027d294e7ff5e49d8a0d141fdfa5a59c",
+    "map-2026-1180x820-journey.png": "2aa2fce1bb68123a74322e414cd905f109d3e7af29170b992353277574f4a928",
+    "map-2026-1180x820-overview.png": "9a9bfe03f91e1e3f1da47e03cc3d433a7c0bb066643e3cdb6763715b5820bf76",
+    "map-2026-1180x820-passage.png": "07566c63331a150e66b54d7e5883ad90ec4e066bd07eadef105507f9b5bfbec5",
+    "map-2026-1180x820-threshold.png": "42977dd5d5a71a9391d99c6302db40efca1a6e4bc2cff104a2ac01462b565ba8",
+    "map-2026-1180x820-whole.png": "7b201786a9254c97e7d75bf03b133063732b6b4efefb630f80ba02064915255e",
+    "map-2026-1458x820-arrival.png": "fc79918d18f2fd0334c2332ffb230da60e66df3d625c78693431aa0422b344d7",
+    "map-2026-1458x820-choice-0.png": "fd6e78360e668ef7693a76188ffe6bc73955efbe57835524574ca63ead4202b3",
+    "map-2026-1458x820-choice-1.png": "b7512c5339d39ec0772d6310c42c748443b4cd7774167d078aea01fa6095ab82",
+    "map-2026-1458x820-court.png": "a19e6bcbd89b6af78da7a988e7f120393f3cc2b730cda9b093f29350e557859f",
+    "map-2026-1458x820-journey.png": "ce10e9374a24f8b833e14e5f7e78ca72f7097cb40a4d173b06ffd1bb3df64036",
+    "map-2026-1458x820-overview.png": "9bfa6461b921f1ceea30dcd5ce0fcf0fbc0edb27a3d48c7b5c8e2c56ae4c397e",
+    "map-2026-1458x820-passage.png": "acc7a96c9e1cd78368fd71f6f62c75bc71838eea9e8438c5423e3648713d06d1",
+    "map-2026-1458x820-threshold.png": "16d948eda0420654f3570c84a7b102957c0db8249853763f34300c1d9eb0b869",
+    "map-2026-1458x820-whole.png": "8141332d4f6af3781475a75dd9306cdc2e8ca90cb27710cf7b94ded90645475c",
+    "map-2026-844x390-arrival.png": "a17819e8141b0c10a466fb02bcd1ccdd900ba030c0e70cca2d8e303b41f9b357",
+    "map-2026-844x390-choice-0.png": "67156e5a42a0de0aa90b0ea88f4d8c036e3d1c98be8ee7d5ae653e399867c8de",
+    "map-2026-844x390-choice-1.png": "6df69fb02659e3c714d9e2da03f6c8f3dd8e470c7b41920ceb793a7ecd058717",
+    "map-2026-844x390-court.png": "d01c515e397dd16c995e13330a3c42935a00e5788bd85a5bdb24f8a3d7cbcef4",
+    "map-2026-844x390-journey.png": "81910a415cfc29928fde661d517fe71835ae02b9d3f3781bc4e59e5f6cb3c01c",
+    "map-2026-844x390-overview.png": "2354fbe54e66e5bb7333ee8a1b12a1e0edfb49340ce375e4c690b2bf7f4ef187",
+    "map-2026-844x390-passage.png": "2d4ff7311652d1c4b1fcf5cfa7483bc20dcf8a45c72530a87984fe27a6f8b48c",
+    "map-2026-844x390-threshold.png": "b1ae06662985d92cd6e2d2a0421a7f1318f19efcb3b3d330c218fb1e9076befe",
+    "map-2026-844x390-whole.png": "ba116c857b9089d2246839d4a1011c5dac52db4d034aa46dd1c6f9febeeb2166",
+    "map-4-1180x820-arrival.png": "9a2e3c04aa7f1656baa84e9302ddd816eff3a73d852b811f4eda43fe690b8a7b",
+    "map-4-1180x820-choice-0.png": "985dcf9c564991fb4969fe7e3842088e074ce7990ea4b3ac929b6956680f3b58",
+    "map-4-1180x820-choice-1.png": "ebe59520f96b94fba0b23e2fae6d747e4e287188ef9c8c912bc1338b6d56ab0a",
+    "map-4-1180x820-court.png": "3615afec21c51feb07e7cb29a44181bddc4d4763c9ba68d4ef7c92c680b5b159",
+    "map-4-1180x820-journey.png": "d63fc4e8a028d9a00cb6fa00ede2cd4b30f595e4a056ea8119b5908092a9541a",
+    "map-4-1180x820-overview.png": "7f4efdbf340dfc9c0de6aa75d8d78fdc95371fdbe02c62e2486a441d59c1a6ee",
+    "map-4-1180x820-passage.png": "dd2e3937e74e1f2f703e5acc3b44c869d23340a6fb10d620b267483dd66de70b",
+    "map-4-1180x820-threshold.png": "9fab2875f8a719963b9fcb82fd59d6f259046a9e835d9d5cf500cb3f660db06b",
+    "map-4-1180x820-whole.png": "8d75d7cbec6f2138752c913b5f0a4686f522e8d8ab71d10bc76eb29ad808db9d",
+    "map-4-1458x820-arrival.png": "7bc792bc1e9bdf8f9b88152011ad11ac6ef8367f020cddcf91769a023bb0f035",
+    "map-4-1458x820-choice-0.png": "100eb8418715cccdb37420dfc8fd04da486dc9d668aa6a775d3987dad498a460",
+    "map-4-1458x820-choice-1.png": "ebe59520f96b94fba0b23e2fae6d747e4e287188ef9c8c912bc1338b6d56ab0a",
+    "map-4-1458x820-court.png": "1c7201263baf90c220776e7f9d2c97fe062d15bab6161fc90c7a6efb35cba4f8",
+    "map-4-1458x820-journey.png": "3583f909300931c6a602ada3fadc580dd9401c1e486cbe9f9a2fe618eeb29501",
+    "map-4-1458x820-overview.png": "1985f3161b30555f2c6d5393d7b0ea581e47473787417ef898741e2d1c7c009e",
+    "map-4-1458x820-passage.png": "d1ce1574cae796d6f5cc3abeaa956ef1c4bfe5020536d6bd77180308e01419a4",
+    "map-4-1458x820-threshold.png": "d0746ca81d637980218652d7c3825d76f6bc18805b283c6ed7125a2cd1285d74",
+    "map-4-1458x820-whole.png": "8d702ed7240fd19e4b226ec562b7b4d72a99969497c3f59336eddaf963a4fa8e",
+    "map-4-844x390-arrival.png": "2db89bcd06ca04dbca50af4b2fcb804880ed0408f7c1e3b764138f5cff61e1c8",
+    "map-4-844x390-choice-0.png": "b91f0648831fd0aa7cd7ce69a69133bac9bc5b5fb4b709158291ab08af78d95f",
+    "map-4-844x390-choice-1.png": "ebe59520f96b94fba0b23e2fae6d747e4e287188ef9c8c912bc1338b6d56ab0a",
+    "map-4-844x390-court.png": "0119937218658f5b460ac5df0048e3f9e90f3e93dca6fb77766691412f92491d",
+    "map-4-844x390-journey.png": "a1568ecee753396446dfb73b0888e5f9f876f97ad2a8c6998099daa07a18aef9",
+    "map-4-844x390-overview.png": "0e6b839d1982d3b57f22b12c0b206846bd61a08b4c37fa698c9b498b62b4ab34",
+    "map-4-844x390-passage.png": "a26b425c9c7d506ba0d733f813937e191074af1d3214eeec2ecab2c686c19179",
+    "map-4-844x390-threshold.png": "8dfb59adc7aec12120757ba66221de7613213a9788564194d7ce67499055f27c",
+    "map-4-844x390-whole.png": "f47d42cfda8adca622c887354cc6a8073b08be0ffbebd5651ab5ff28a0741718",
+    "map-717-1180x820-arrival.png": "b14c56a14b358f1289608aba185c5d2702d0c81ad51c99c13c37eac1063eadfd",
+    "map-717-1180x820-choice-0.png": "0866bc0b586d497e7d6d34c3ad9a9a8ac5f58a915e6866c5c50ee188cb75e280",
+    "map-717-1180x820-choice-1.png": "0d8a20de5ed9f54fadf80030ca9de9067eae035b5b87704ad3d247033dc49d18",
+    "map-717-1180x820-court.png": "8ad28fadc7f7e251072351903c8380778b6d9190a9dee9b6d09ce26124b85d24",
+    "map-717-1180x820-journey.png": "6325b9f03f86a76111548eee7a13d5d94a0de5e3be67b8a8ecce699a5492a420",
+    "map-717-1180x820-overview.png": "3a8161dcd54cfa4b99752165de5f936a8fc7701559ccd64b6f4ff4ac785bbb1b",
+    "map-717-1180x820-passage.png": "da0f4295ddff9e6d9cea2ed4ec1eb6a7feb883c7607c5b085fea8c5ed18b5dfa",
+    "map-717-1180x820-threshold.png": "2826f745273546ee59942757893f4acd76202eb6ade9a6efac51d4e1290abd9d",
+    "map-717-1180x820-whole.png": "93cbd115d9b484074e9743141a170b32064aac356762bda2ccb6312d8525fcac",
+    "map-717-1458x820-arrival.png": "62ce14b2370d382c2cb76ab6728e3116b020f8c044a8595f8a058470f270537b",
+    "map-717-1458x820-choice-0.png": "2fe926f3d71e4dbb9de6d3870c5efc943c8d8a1acc3f57f1d19aa237ab4c5427",
+    "map-717-1458x820-choice-1.png": "8b7c0d98aaf717a91274123cc8cfcb5cb36b65ac94a61c1a2160ac24bd5d88ca",
+    "map-717-1458x820-court.png": "b6189ee584030d672cbcdd734de7d70b607b2ef535a0b946bbced9e335ff10e9",
+    "map-717-1458x820-journey.png": "57b40d0286e63195aed6bb6384d969310f51abae744bfa5a21a43c1e5194f2a2",
+    "map-717-1458x820-overview.png": "b03372d4078fdb09f4d0b4d4a558f05f37152a62160e6d26635773f6b94a977a",
+    "map-717-1458x820-passage.png": "da891fbce9d24ae0eb5a21aa62941c76e8d70c83e0efa967a03648b0d992bc8c",
+    "map-717-1458x820-threshold.png": "7d3046c46e31cd9efdd6c6b00b4915626aa2dbbc608cf022c19e97dfc0e1b62d",
+    "map-717-1458x820-whole.png": "9a9e97ace3a0761f3ef02496eb530180590d75b701c0fae6600bc7c9973c1d5b",
+    "map-717-844x390-arrival.png": "ccec3a3d18b61768daabe560c2d3409750deeb49ad3f4fb2d6b425de1557b775",
+    "map-717-844x390-choice-0.png": "67123f26038dadbed2653c0203119be8831b485f7e0248cd6c7d59a0a7f47ed9",
+    "map-717-844x390-choice-1.png": "ebe59520f96b94fba0b23e2fae6d747e4e287188ef9c8c912bc1338b6d56ab0a",
+    "map-717-844x390-court.png": "323b1cfe4a1f0f3999cdec74692ef023e95e7331ca237857c888bfe310c1d4ec",
+    "map-717-844x390-journey.png": "33fc0013e7410f66e5a2594a64a2bcd345f19a28805bb4e2512904e1967b2e0c",
+    "map-717-844x390-overview.png": "2c2dd890425745905c506caa707f237124d839c3fd247eee1e308b96bf24a142",
+    "map-717-844x390-passage.png": "6f88a6ce25edb7830971afed83950e320ab344345beb59e40578a16008b05b4c",
+    "map-717-844x390-threshold.png": "8b36f7431e9a92a7017cecc61ae09b08dc467ab6a9f05830defe4229c6ef2541",
+    "map-717-844x390-whole.png": "57c09666452b3fe7dcd33dfa61f7a64a9d4372c39c32728b5f1f9f7c86f77dda"
+  }
+}
