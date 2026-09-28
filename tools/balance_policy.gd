@@ -1,6 +1,8 @@
 class_name BalancePolicy
 extends RefCounted
-## Live default() is p9-w0-v1. sample_origin() is frozen p7-d2-v1 for sampler/CEM replay.
+## Live default() is p9-w0-v2. sample_origin() is frozen p7-d2-v1 for sampler/CEM replay.
+## New coordinates are appended from a separately keyed stream so the legacy sampler is immutable.
+const SAMPLE_EXTENSION_IDENTITY: String = "p9-w0-v2-ward-surplus-extension-v1"
 
 static func default() -> Dictionary:
 	return {
@@ -101,7 +103,7 @@ static func sample_origin() -> Dictionary:
 			"poisonDusk": 0.22, "poisonAsh": 0.85,
 			"catalystDusk": 0.8, "catalystAsh": 3.2,
 			"eclipse": 48.0, "eclipseFollow": 36.0, "vulnAttack": 18.0,
-			"chip": 12.0, "power": 14.0, "wardSurplus": 4.5,
+			"chip": 12.0, "power": 14.0,
 		},
 		"route": {
 			"boss": 1000, "treasure": 900, "restLow": 800, "restOk": 150,
@@ -122,6 +124,16 @@ static func sample_origin() -> Dictionary:
 		"relicDuskBonus": 12.0,
 		"relicAshBonus": 16.0,
 	}
+
+
+static func sample_extension_origin() -> Dictionary:
+	return {"combat": {"wardSurplus": 4.5}}
+
+
+static func sample_origin_extended() -> Dictionary:
+	var vector: Dictionary = sample_origin()
+	_merge(vector, sample_extension_origin())
+	return vector
 
 
 static func resolve(over: Dictionary) -> Dictionary:
@@ -150,9 +162,33 @@ static func sample_range(root_seed: int, first: int, count: int) -> Array[Dictio
 		vector["routeLowHpPct"] = rng.irange(25, 90)
 		vector["shopGoldLow"] = rng.irange(0, 90)
 		vector["shopGoldHigh"] = rng.irange(100, 250)
+		_append_sample_extension(vector, root_seed, index)
 		if index >= first:
 			out.append(vector)
 	return out
+
+
+static func extension_rng(domain: String, keys: Array) -> Rng:
+	var material: String = "%s|%s" % [SAMPLE_EXTENSION_IDENTITY, domain]
+	for key_v: Variant in keys:
+		material += "|%d" % int(float(str(key_v)))
+	return Rng.new(_domain_seed(material))
+
+
+static func _append_sample_extension(vector: Dictionary, root_seed: int, index: int) -> void:
+	var extension: Dictionary = sample_extension_origin()
+	var rng: Rng = extension_rng("sampler", [root_seed, index])
+	var combat: Dictionary = extension["combat"]
+	combat["wardSurplus"] = float(str(combat["wardSurplus"])) * _log_factor(rng)
+	_merge(vector, extension)
+
+
+static func _domain_seed(material: String) -> int:
+	var digest: PackedByteArray = material.sha256_buffer()
+	var seed: int = 0
+	for i: int in range(4):
+		seed = (seed << 8) | int(digest[i])
+	return seed if seed != 0 else 1
 
 
 static func _scale_group(group: Dictionary, rng: Rng) -> void:

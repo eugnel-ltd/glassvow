@@ -5,6 +5,7 @@ const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
 const Metrics: GDScript = preload("res://tools/balance_metrics.gd")
 const Incentives: GDScript = preload("res://tools/vow_incentives.gd")
+const WardObserver: GDScript = preload("res://tools/p9_ward_observer.gd")
 const PROFILE: String = "mature-three-act-no-side-state-v1"
 static var _probe: Dictionary = {}
 func _initialize() -> void:
@@ -493,6 +494,10 @@ static func _harvest_fight(game: GlassvowGame) -> void:
 				_bump("ashenCoreTriggered")
 			elif relic_id == "smolderingCoal":
 				_bump("smolderingCoalTriggered")
+	var identity_counts: Dictionary = WardObserver.observe(game.cb.queue, game.run.aspect)
+	for key_v: Variant in identity_counts:
+		var key: String = str(key_v)
+		_bump(key, _ji(identity_counts[key_v]))
 
 
 static func _economy_row(run: RunState) -> Dictionary:

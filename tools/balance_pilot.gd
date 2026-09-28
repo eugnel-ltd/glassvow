@@ -4,7 +4,7 @@ extends RefCounted
 ## Routes favour treasure, then low-HP rest; rewards take the highest card/relic score; shops buy by value/gold.
 ## Potions heal at 20 missing HP, block lethal intent, and spend offensive stock in elite/boss fights.
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
-const VERSION: String = "p9-w0-v1"
+const VERSION: String = "p9-w0-v2"
 const SHOP_MIN_RATIO: float = 0.06475653649074956
 ## T1a: keep a reward iff card_score >= this. #215 four-grid top-decile median.
 const CARD_DECLINE_DEFAULT: float = 14.0958831273019
