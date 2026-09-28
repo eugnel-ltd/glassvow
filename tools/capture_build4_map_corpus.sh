@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Rebuild the exact TestFlight 1.0.0 (4) map-defect corpus (#462).
+# Recapture the exact #529 matrix for #461 Stage 1 on the shipping backend.
 set -euo pipefail
 
-BUILD4_SOURCE_COMMIT="52a56e726da70c2dd57254e8c6618682c7558f90"
+BUILD4_SOURCE_COMMIT="c28ae38824f7ba2168b573002ab8b90dadd5bde1"
+EXPECTED_CANDIDATE_DIFF_SHA256="9de47eef17c91b1b30991762e8c867fb074e243c1d66c41dd513654cbc8d642a"
 EXPECTED_GODOT_PREFIX="4.7.2.stable"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT="$ROOT/artifacts/build4-map-corpus"
@@ -11,6 +12,7 @@ CAPTURE_HEAD=""
 GODOT_BIN="${GODOT_BIN:-godot}"
 ON_PRODUCTION_DRIFT="fail"
 DETECT_DRIFT_ONLY=false
+ORIGINAL_ARGS=("$@")
 PRODUCTION_PATHS=(
   application
   assets/art/map
@@ -110,6 +112,14 @@ if [[ ! "$CAPTURE_HEAD" =~ ^[0-9a-f]{40}$ ]]; then
   echo "capture_build4_map_corpus: capture head is not a full lowercase Git SHA: $CAPTURE_HEAD" >&2
   exit 2
 fi
+CANDIDATE_DIFF_SHA256="$(git diff HEAD --binary -- \
+  presentation/map/map_layout_compiler.gd presentation/map/map_scene.gd \
+  tests/test_map_layout_scenery.gd tests/test_map_layout_scenery.gd.uid \
+  tests/test_map_scene.gd | shasum -a 256 | awk '{print $1}')"
+if [[ "$CANDIDATE_DIFF_SHA256" != "$EXPECTED_CANDIDATE_DIFF_SHA256" ]]; then
+  echo "capture_build4_map_corpus: candidate diff drifted: $CANDIDATE_DIFF_SHA256" >&2
+  exit 2
+fi
 if ! git cat-file -e "${BUILD4_SOURCE_COMMIT}^{commit}" 2>/dev/null; then
   echo "capture_build4_map_corpus: build-4 source commit is unavailable: $BUILD4_SOURCE_COMMIT" >&2
   exit 2
@@ -203,14 +213,15 @@ run_godot_capture() {
   local -a command=(
     "$GODOT_BIN"
     --path "$ROOT"
-    --rendering-method gl_compatibility
     --resolution 1180x820
     --position "${GLASSVOW_SHOT_POSITION:--4000,-4000}"
-    -s res://tools/capture_build4_map_corpus.gd
+    -s res://tools/capture_461_scenery.gd
     --
     "--output=$run_dir"
     "--capture-head=$CAPTURE_HEAD"
     "--asset-manifest-sha256=$ASSET_MANIFEST_SHA256"
+    "--candidate-diff-sha256=$CANDIDATE_DIFF_SHA256"
+    "--capture-command=$CAPTURE_COMMAND"
   )
 
   if [[ "$(uname -s)" == "Linux" && -z "${DISPLAY:-}" ]]; then
@@ -225,16 +236,17 @@ run_godot_capture() {
 }
 
 capture_and_package() {
-  local name="$1"
-  local run_dir="$OUTPUT/$name"
-  mkdir -p "$run_dir"
-  run_godot_capture "$run_dir"
-  python3 tools/package_build4_map_corpus.py package --run "$run_dir"
+  run_godot_capture "$OUTPUT"
 }
 
 echo "capture_build4_map_corpus: source=$BUILD4_SOURCE_COMMIT head=$CAPTURE_HEAD godot=$GODOT_VERSION"
 echo "capture_build4_map_corpus: asset_manifest_sha256=$ASSET_MANIFEST_SHA256"
-capture_and_package run-a
+CAPTURE_COMMAND="tools/capture_build4_map_corpus.sh"
+for arg in "${ORIGINAL_ARGS[@]}"; do
+  printf -v quoted_arg '%q' "$arg"
+  CAPTURE_COMMAND+=" $quoted_arg"
+done
+capture_and_package
 
 if $VERIFY_REPEAT; then
   capture_and_package run-b
@@ -243,9 +255,5 @@ if $VERIFY_REPEAT; then
     --second "$OUTPUT/run-b" \
     --output "$OUTPUT/repeatability.json"
 fi
-
-python3 tools/package_build4_map_corpus.py publish \
-  --first "$OUTPUT/run-a" \
-  --output "$OUTPUT"
 
 printf 'capture_build4_map_corpus: packet ready at %s\n' "$OUTPUT"

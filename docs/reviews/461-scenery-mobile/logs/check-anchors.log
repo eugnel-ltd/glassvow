@@ -1,0 +1,5 @@
+docs/reviews/461/remaining-commercial-gap.md:62  PATHLESS   `:1273` — names no file, so it was never checked — write the full repo-relative path
+docs/reviews/461/remaining-commercial-gap.md:62  PATHLESS   `:1294` — names no file, so it was never checked — write the full repo-relative path
+docs/reviews/461/remaining-commercial-gap.md:209  PATHLESS   `:651-680` — names no file, so it was never checked — write the full repo-relative path
+
+3 anchor(s) name no file at all, so they were never checked despite carrying a symbol. Cite the full repo-relative path.

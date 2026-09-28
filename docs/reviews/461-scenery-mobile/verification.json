@@ -1,0 +1,123 @@
+{
+  "T1": {
+    "result": "pass",
+    "runtime_rendering_method": "mobile",
+    "shipping_rendering_method": "mobile",
+    "source": "RenderingServer.get_current_rendering_method()"
+  },
+  "T2": {
+    "capture_head": "c28ae38824f7ba2168b573002ab8b90dadd5bde1",
+    "command_executed": "tools/capture_build4_map_corpus.sh --output docs/reviews/461-scenery-mobile",
+    "rendering_override": false,
+    "result": "pass"
+  },
+  "T3": {
+    "all_five_layout_digests_byte_equal_to_461_scenery": true,
+    "all_hard_zero_metrics_zero": true,
+    "layouts": [
+      {
+        "act": 1,
+        "layout_digest": "5a7d6a435082707594c9ec56f6c321291fbba42133622a73997ed3fa298b3545",
+        "scenery_count": 15,
+        "seed": 17634
+      },
+      {
+        "act": 1,
+        "layout_digest": "9b182e7c36d840c8850d8df62dbb01485ce90eacab6d7ce3684a24319f0d8091",
+        "scenery_count": 21,
+        "seed": 717
+      },
+      {
+        "act": 2,
+        "layout_digest": "6d5bd644c02867b8e316d4b0f0442d24720719e088a622ff0f9609ddd14089c7",
+        "scenery_count": 19,
+        "seed": 717
+      },
+      {
+        "act": 3,
+        "layout_digest": "54341c63a16c278dc1e807aa0cf32800838437d9b340c79a3e8b800e848ae75d",
+        "scenery_count": 18,
+        "seed": 717
+      },
+      {
+        "act": 4,
+        "layout_digest": "a995141403bf08da65221c1e2e0837884484508132123c0c51853a7b296dcf5c",
+        "scenery_count": 17,
+        "seed": 717
+      }
+    ],
+    "occupancy_range": [
+      15,
+      21
+    ],
+    "required_occupancy_range": [
+      14,
+      24
+    ],
+    "result": "pass"
+  },
+  "T4": {
+    "reason": "Stage 2",
+    "result": "skipped"
+  },
+  "T5": {
+    "reason": "Stage 2",
+    "result": "skipped"
+  },
+  "T6": {
+    "ground_median": 75.3156,
+    "measurement": "analysis/t6-luminance.json",
+    "prop_median": 36.6578,
+    "ratio": 0.486723,
+    "result": "reported_not_graded"
+  },
+  "T7": {
+    "backend": "mobile",
+    "inspected_frame_ids": [
+      "F001",
+      "F002",
+      "F003",
+      "F004",
+      "F005",
+      "F006",
+      "F007",
+      "F008",
+      "F009",
+      "F010",
+      "F011",
+      "F012"
+    ],
+    "observations": [
+      "Forward Mobile preserves lit top, mid front and dark side facets on the compiled scenery.",
+      "Routes and waystone silhouettes remained readable in the twelve inspected frames.",
+      "Some phone-scale and Acts II-IV faces remain very dark; the owner-eye gate remains open.",
+      "Fixed painted contact ellipses remain visibly detached from some compiled props; T5 belongs to Stage 2."
+    ],
+    "poses": [
+      "opening",
+      "focused",
+      "travel-midpoint"
+    ],
+    "result": "performed",
+    "shapes": [
+      "pad-landscape",
+      "phone-landscape"
+    ]
+  },
+  "capture": {
+    "command": "tools/capture_build4_map_corpus.sh --output docs/reviews/461-scenery-mobile",
+    "compiler_inputs": 5,
+    "frames": 12,
+    "head": "c28ae38824f7ba2168b573002ab8b90dadd5bde1",
+    "observed_exit_code": 0,
+    "runtime_seconds": 846.211
+  },
+  "capture_manifest_sha256": "5f1fd5382e35ad378d41678285351a000a026992f534d25a76f0824afd4325ff",
+  "comparison_manifest_sha256": {
+    "docs/reviews/461-scenery/manifest.json": "bc0ba866a4fec61c3453ec3d3d82b0fa15330dd3517177560622e85d1f717e0c",
+    "docs/reviews/529/manifest.json": "d337ca8c77ca2358db210e11f4686af68abc3da300b0402f710160cbccd1aa44"
+  },
+  "issue": 461,
+  "schema": 1,
+  "stage": 1
+}

@@ -1,0 +1,69 @@
+{
+  "capture_head": "c28ae38824f7ba2168b573002ab8b90dadd5bde1",
+  "diagnostic_only": true,
+  "frame_count": 12,
+  "frames": [
+    {
+      "file": "raw/act-01_seed-00017634_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F001",
+      "png_sha256": "414378077cec82f8c8725fe9615bfd88c673079b43bf745bb695312e5938c966"
+    },
+    {
+      "file": "raw/act-01_seed-00017634_shape-pad-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F002",
+      "png_sha256": "69c53f0a3285f3fef027ab673f66556345c955def95e5bdca2f4b07034b3a55a"
+    },
+    {
+      "file": "raw/act-01_seed-00017634_shape-phone-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F003",
+      "png_sha256": "62d1e316283cb9c4924b0bed3119885db912842cecc47d4e080bbd259a1d153d"
+    },
+    {
+      "file": "raw/act-01_seed-00017634_shape-phone-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F004",
+      "png_sha256": "1153864f15ce4a200c9182f4369b8d4500c3bbb9dd4a293aef8aac6dc0d691e5"
+    },
+    {
+      "file": "raw/act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F005",
+      "png_sha256": "f1afe044a8fb8740e871beadbc6f18d59403884674a4af40f0b857d143d9d766"
+    },
+    {
+      "file": "raw/act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F006",
+      "png_sha256": "543b33e83cb2250fa7c732305ac66288abf60ca0d7d13034173b83347ead9ea2"
+    },
+    {
+      "file": "raw/act-01_seed-00000717_shape-phone-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F007",
+      "png_sha256": "18cfa7c9190f0f4ce3fab975a5874c647f850bf2d2222c09e2734ebf06f1db70"
+    },
+    {
+      "file": "raw/act-01_seed-00000717_shape-phone-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F008",
+      "png_sha256": "0b3b0c0cce203f75fc3b0caa5d3d3286657d2475e6a1324b71794d8363d0e881"
+    },
+    {
+      "file": "raw/act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-travel-midpoint_locale-en.png",
+      "frame_id": "F009",
+      "png_sha256": "c00b6a4919b6eee6c0da255bd0577a901a50e168823cfad35f8c20badab10e4c"
+    },
+    {
+      "file": "raw/act-02_seed-00000717_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F010",
+      "png_sha256": "1ae5876af1c7c9880f374089460137ce6ef77d1e061bb6bc430447e37a7c69bd"
+    },
+    {
+      "file": "raw/act-03_seed-00000717_shape-phone-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F011",
+      "png_sha256": "703864ebea0b1298e2df467befee7a0c492dc0145c5f1be2d5a41992eaae63ed"
+    },
+    {
+      "file": "raw/act-04_seed-00000717_shape-pad-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F012",
+      "png_sha256": "b396b4c671892a3cdf4e495ae3af3f47fe27b91b3ba7b8f225f3472d02a053bd"
+    }
+  ],
+  "issue": 461,
+  "schema": 1
+}
