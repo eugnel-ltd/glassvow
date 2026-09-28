@@ -44,6 +44,37 @@
     ],
     "sha256_pattern": "^[0-9a-f]{64}$"
   },
+  "unsigned_act1_slice": {
+    "issue": 294,
+    "authorized": "James instructed 'do 1 now' as approval to proceed with the Act I slice; this is not a separate visual verdict",
+    "note": "Present files are unsigned. records[] stays accepted-only. Visual review still owed.",
+    "assets": [
+      {
+        "asset_id": "act1-grade",
+        "source": "local-deterministic",
+        "created_at": "2026-08-21T11:38:00+08:00",
+        "license": "original Glassvow authorship (no vendor, no paid credits)",
+        "source_sha256": "e9c74f792dec12d4c70940d651b611c341940320f1544d440cafdb523aaf3fa7",
+        "final_sha256": "e9c74f792dec12d4c70940d651b611c341940320f1544d440cafdb523aaf3fa7",
+        "edits": [
+          "sampled MapMaterials._grade_image at 512x256 RGBA with terminus seat (22,0) contact",
+          "Godot 4.7.2 wrote .import then ConfigFile set compress/mode=2 high_quality mipmaps and reimported"
+        ]
+      },
+      {
+        "asset_id": "act1-terminus",
+        "source": "local-deterministic",
+        "created_at": "2026-08-21T12:41:00+08:00",
+        "license": "original Glassvow authorship (no vendor, no paid credits)",
+        "source_sha256": "f560741cc86023ef9d5edebd62accf15143e9821932e26011da75f30ba4317f8",
+        "final_sha256": "f560741cc86023ef9d5edebd62accf15143e9821932e26011da75f30ba4317f8",
+        "edits": [
+          "hand-curated voxel occupancy + greedy mesh tracing assets/art/stage/act1-backdrop.png",
+          "one connected island, 342 tris, grounded Y-up metres, one surface, POSITION+NORMAL, no textures"
+        ]
+      }
+    ]
+  },
   "records": [
     {
       "asset_id": "shared-road-slab-a",

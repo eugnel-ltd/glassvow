@@ -1,0 +1,21 @@
+{
+  "ticket": 294,
+  "role": "reviewable-slice",
+  "base": "76c2fe458741e8def40888e722052768ab08bd1a",
+  "path": "assets/art/map/geometry/act1/terminus-amber-window-tower.glb",
+  "sha256": "f560741cc86023ef9d5edebd62accf15143e9821932e26011da75f30ba4317f8",
+  "bytes": 11228,
+  "triangles": 342,
+  "vertices": 252,
+  "surfaces": 1,
+  "y_min": 0.0,
+  "y_max": 4.5,
+  "x_range": [-1.3, 1.5],
+  "z_range": [-0.8, 1.1],
+  "inspect_glb": "OK",
+  "source": "local-deterministic",
+  "license": "original Glassvow authorship (no vendor, no paid credits)",
+  "provenance_written": false,
+  "human_acceptance": false,
+  "slice_note": "James 'do 1 now' authorized the Act I slice to proceed; not a separate visual verdict"
+}

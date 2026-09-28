@@ -817,3 +817,32 @@ Fuse pass (same day, seeded from the first edit):
 
 sha256 `c1d4d34d6f1299f2a162a3fafb9d76ec61ec4e635914aedfd65e5493774447dd`.
 
+### `map/grades/act1-grade.png` — 512×256 RGBA — Act I grade (#294)
+
+Locally authored from `MapMaterials._grade_image` (Act I hue arc 0.95→0.88,
+corridor 0.98) sampled at exact 512×256 RGBA, plus contact darkening at the
+fallback prop XZ seats and the terminus seat `(22,0)`. The 256×128 procedural
+fallback is unchanged and remains the test oracle. No vendor, no paid
+generation. PNG sha256
+`e9c74f792dec12d4c70940d651b611c341940320f1544d440cafdb523aaf3fa7`.
+
+Godot 4.7.2 wrote the `.import` sidecar (`--import`, then ConfigFile set
+`compress/mode=2`, `compress/high_quality=true`, `mipmaps/generate=true`,
+then reimport). Not hand-edited. `check_grade` pixel+import pass.
+
+James's 'do 1 now' authorized this Act I slice to proceed. That is not a
+separate visual verdict. Evidence: `docs/reviews/294/act1-grade/`.
+
+### `map/geometry/act1/terminus-amber-window-tower.glb` — Act I hero terminus (#294)
+
+Hand-curated local deterministic mesh tracing
+`assets/art/stage/act1-backdrop.png` (crimson forest, lit arched window):
+grounded stone shaft, crenellated crown, pointed gothic opening through +Z
+(production camera), lower-right turret. Voxel occupancy + greedy meshing so
+the shipping GLB is one connected island without Blender or a vendor.
+Y-up, metres, ground Y=0, one triangulated surface, POSITION+NORMAL, no
+textures/UVs/animation. 342 triangles, 11228 bytes. sha256
+`f560741cc86023ef9d5edebd62accf15143e9821932e26011da75f30ba4317f8`.
+`inspect_glb` passes. No accepted provenance record — visual review still
+owed. Evidence: `docs/reviews/294/act1-terminus/`.
+
