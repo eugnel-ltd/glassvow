@@ -103,8 +103,22 @@ def append_provenance(
     dump_json(path, data)
 
 
-def review_png(dest: Path, asset_id: str) -> Path:
-    png = REPO / "docs/reviews/292" / f"{asset_id}-20.png"
+def validate_review_ticket(ticket: str | None, no_review: bool) -> str | None:
+    """Fail closed: no implicit #292. Explicit digits only, unless --no-review."""
+    if no_review:
+        return None
+    if ticket is None or not str(ticket).strip():
+        raise ValueError("--review-ticket is required; refusing to default to closed #292")
+    text = str(ticket).strip()
+    if not text.isdigit() or int(text) <= 0:
+        raise ValueError(
+            f"--review-ticket must be a positive issue number, not {ticket!r}")
+    return text
+
+
+def review_png(dest: Path, asset_id: str, ticket: str) -> Path:
+    ticket = validate_review_ticket(ticket, False) or ticket
+    png = REPO / "docs/reviews" / ticket / f"{asset_id}-20.png"
     png.parent.mkdir(parents=True, exist_ok=True)
     rel = dest.resolve().relative_to(REPO)
     cmd = [
@@ -114,9 +128,9 @@ def review_png(dest: Path, asset_id: str) -> Path:
         "-s", "res://tools/raster_map_silhouette.gd", "--",
         f"--glb=res://{rel.as_posix()}",
         "--out=/tmp/map-sil-review",
-        f"--review=res://docs/reviews/292/{asset_id}-20.png",
+        f"--review=res://docs/reviews/{ticket}/{asset_id}-20.png",
     ]
-    run(cmd, timeout=120)
+    run(cmd, timeout=240)
     if not png.is_file():
         raise RuntimeError(f"20-placement PNG missing: {png}")
     return png
@@ -140,6 +154,8 @@ def gates() -> str:
 
 
 def main() -> int:
+    if "--self-test" in sys.argv:
+        return self_test()
     parser = argparse.ArgumentParser(description="Land a Studio GLB onto a map kit path")
     parser.add_argument("--asset", required=True)
     parser.add_argument("--src", required=True, type=Path)
@@ -154,7 +170,17 @@ def main() -> int:
     )
     parser.add_argument("--gates", action="store_true")
     parser.add_argument("--no-review", action="store_true")
+    parser.add_argument(
+        "--review-ticket",
+        default=None,
+        help="docs/reviews/<ticket>/ for the 20-placement PNG. Required unless --no-review. No default.",
+    )
     args = parser.parse_args()
+    if not args.no_review:
+        try:
+            args.review_ticket = validate_review_ticket(args.review_ticket, False)
+        except ValueError as error:
+            parser.error(str(error))
     os.chdir(REPO)
     row = manifest_row(args.asset)
     src = args.src if args.src.is_absolute() else Path(args.src)
@@ -183,7 +209,9 @@ def main() -> int:
             "land_map_glb.py copy of Studio Export GLB; no blender pass",
         ]},
     )
-    review = None if args.no_review else str(review_png(dest, args.asset).relative_to(REPO))
+    review = None if args.no_review else str(
+        review_png(dest, args.asset, args.review_ticket).relative_to(REPO)
+    )
     gate_out = ""
     if args.gates:
         gate_out = gates()
@@ -197,6 +225,44 @@ def main() -> int:
         "review_path": review,
         "gate_tail": gate_out[-400:] if gate_out else "",
     }))
+    return 0
+
+
+def self_test() -> int:
+    errors: list[str] = []
+    try:
+        validate_review_ticket(None, False)
+        errors.append("missing ticket did not fail")
+    except ValueError:
+        print("self-test review-ticket: correctly failed missing")
+    try:
+        validate_review_ticket("", False)
+        errors.append("empty ticket did not fail")
+    except ValueError:
+        print("self-test review-ticket: correctly failed empty")
+    try:
+        validate_review_ticket("../292", False)
+        errors.append("path ticket did not fail")
+    except ValueError:
+        print("self-test review-ticket: correctly failed non-digits")
+    try:
+        validate_review_ticket("292", False)
+        print("self-test review-ticket: explicit 292 allowed")
+    except ValueError as error:
+        errors.append(f"explicit 292 rejected: {error}")
+    if validate_review_ticket("293", False) != "293":
+        errors.append("293 was not accepted")
+    else:
+        print("self-test review-ticket: 293 accepted")
+    if validate_review_ticket(None, True) is not None:
+        errors.append("--no-review still required a ticket")
+    else:
+        print("self-test review-ticket: --no-review skips ticket")
+    if errors:
+        print("\n".join(errors), file=sys.stderr)
+        print("self-test FAILED", file=sys.stderr)
+        return 1
+    print("self-test OK (review-ticket fail-closed; no default to closed #292)")
     return 0
 
 

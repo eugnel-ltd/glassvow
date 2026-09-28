@@ -200,6 +200,34 @@
       "concept_sha256": "c1d4d34d6f1299f2a162a3fafb9d76ec61ec4e635914aedfd65e5493774447dd",
       "land_method": "studio_new_headless_export",
       "polycount_target": 1500
+    },
+    {
+      "asset_id": "shared-standing-monument",
+      "source": "Studio",
+      "created_at": "2026-08-21T10:32:40+08:00",
+      "license": "Tripo Studio Pro commercial grant (paid product Studio, not API)",
+      "source_sha256": "fb0ee05c97a176559d7b6bc0263a9d4fcd46224c4e1510f9f250373609b6fe8a",
+      "final_sha256": "fb0ee05c97a176559d7b6bc0263a9d4fcd46224c4e1510f9f250373609b6fe8a",
+      "edits": [
+        "fused concept so Smart Mesh emits one island; 2026-08-19 two-island and 2026-08-21 three-island outputs rejected",
+        "land_map_glb.py copy of Studio Export GLB Quad@800 Private P2.0 Preview; no blender pass"
+      ],
+      "reviewer": "fol2",
+      "verdict": "accepted",
+      "task_id": "d499af93-fc94-402d-9e56-18fab6f9377a",
+      "face_limit": 1500,
+      "texture": false,
+      "pbr": false,
+      "concept_path": "assets/art/map-concepts/shared-standing-monument.jpg",
+      "concept_sha256": "b4b0ddfaa07e2b6f5083e9185413931123154ee5bd6ec7cb59f2c68aef80d2b3",
+      "land_method": "studio_new_headless_export",
+      "polycount_target": 1500,
+      "model": "Smart Mesh P2.0 Preview",
+      "studio_url": "https://studio.tripo3d.ai/workspace/generate/d499af93-fc94-402d-9e56-18fab6f9377a",
+      "faces_reported": 1602,
+      "slider_faces": 800,
+      "topology": "quad",
+      "privacy": "private"
     }
   ]
 }
