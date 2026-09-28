@@ -75,6 +75,7 @@ func _run(opts: Dictionary) -> void:
 		views.append({"deg": yaw, "opaque": opaque, "png": "rot-%03d.png" % yaw})
 		yaw += YAW_STEP_DEG
 	var review_rel: String = str(opts.get("review", ""))
+	var review_fit: Dictionary = {}
 	if review_rel != "":
 		var review_path: String = _absolute(review_rel)
 		var parent: String = review_path.get_base_dir()
@@ -87,6 +88,7 @@ func _run(opts: Dictionary) -> void:
 		_add_review_light(review_world)
 		_add_ground(review_world)
 		_add_placements(review_world, mesh, _clay_material())
+		review_fit = await _fit_review_camera(review_viewport, review_world)
 		var review_image: Image = await _capture(review_viewport, MASK_FRAMES)
 		if review_image == null or review_image.save_png(review_path) != OK:
 			printerr("raster_map_silhouette: review capture failed")
@@ -102,6 +104,8 @@ func _run(opts: Dictionary) -> void:
 		"zoom_size": MapCameraRig.ZOOM_STOPS[WIDEST_STOP],
 		"views": views,
 	}
+	if not review_fit.is_empty():
+		report["review_fit"] = review_fit
 	var report_path: String = "%s/raster-report.json" % out_dir
 	var report_file: FileAccess = FileAccess.open(report_path, FileAccess.WRITE)
 	if report_file == null:
@@ -307,7 +311,10 @@ func _add_placements(world: Node3D, mesh: Mesh, material: Material) -> void:
 	rng.seed = PLACEMENT_SEED
 	const COLS: int = 5
 	const ROWS: int = 4
-	const GAP: float = 2.6
+	# Wider than deep so a 16:9 review ortho can keep 10–15% pad on both
+	# axes while 3/4 views stay ≥80 px. Seed 292 still owns yaw and scale.
+	const GAP_X: float = 1.85
+	const GAP_Z: float = 1.45
 	var multimesh: MultiMesh = MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
 	multimesh.mesh = mesh
@@ -318,9 +325,9 @@ func _add_placements(world: Node3D, mesh: Mesh, material: Material) -> void:
 		var yaw: float = rng.randf() * TAU
 		var scale: float = 0.82 + rng.randf() * 0.27
 		var origin: Vector3 = Vector3(
-				(float(col) - 2.0) * GAP,
+				(float(col) - 2.0) * GAP_X,
 				0.0,
-				(float(row) - 1.5) * GAP)
+				(float(row) - 1.5) * GAP_Z)
 		var basis: Basis = Basis(Vector3.UP, yaw).scaled(Vector3(scale, scale, scale))
 		multimesh.set_instance_transform(i, Transform3D(basis, origin))
 	var instances: MultiMeshInstance3D = MultiMeshInstance3D.new()
@@ -329,6 +336,86 @@ func _add_placements(world: Node3D, mesh: Mesh, material: Material) -> void:
 	instances.material_override = material
 	instances.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	world.add_child(instances)
+
+
+## Review-only ortho fit. Keeps MapCameraRig tilt/pose; does not change
+## production mask zoom (WIDEST_STOP). Scales camera.size so the 5×4 AABB
+## occupies 75% of the tighter axis (~12.5% pad), which is ≥70% on both
+## axes for this lattice.
+func _fit_review_camera(viewport: SubViewport, world: Node3D) -> Dictionary:
+	var rig: MapCameraRig = _review_rig(world)
+	if rig == null:
+		return {}
+	var cam: Camera3D = rig.get_camera()
+	var placements: Node = world.get_node_or_null("ReviewPlacements")
+	if not (placements is MultiMeshInstance3D):
+		return {}
+	var aabb: AABB = _review_placement_aabb(placements as MultiMeshInstance3D)
+	var center: Vector3 = aabb.get_center()
+	cam.position = Vector3(
+			center.x,
+			center.y + MapCameraRig.CAM_HEIGHT,
+			center.z + MapCameraRig.look_dz())
+	var i: int = 0
+	while i < 2:
+		await process_frame
+		i += 1
+	var min_s: Vector2 = Vector2(INF, INF)
+	var max_s: Vector2 = Vector2(-INF, -INF)
+	var corner: int = 0
+	while corner < 8:
+		var screen: Vector2 = cam.unproject_position(aabb.get_endpoint(corner))
+		min_s.x = minf(min_s.x, screen.x)
+		min_s.y = minf(min_s.y, screen.y)
+		max_s.x = maxf(max_s.x, screen.x)
+		max_s.y = maxf(max_s.y, screen.y)
+		corner += 1
+	var vp_w: float = float(viewport.size.x)
+	var vp_h: float = float(viewport.size.y)
+	var occ_x: float = (max_s.x - min_s.x) / vp_w
+	var occ_y: float = (max_s.y - min_s.y) / vp_h
+	var tight: float = minf(occ_x, occ_y)
+	const TARGET_FILL: float = 0.75
+	var fitted: float = cam.size
+	if tight > 0.0001:
+		fitted = cam.size * tight / TARGET_FILL
+		cam.size = fitted
+	var scale: float = tight / TARGET_FILL if tight > 0.0001 else 1.0
+	var after_x: float = occ_x / scale
+	var after_y: float = occ_y / scale
+	var out: Dictionary = {
+		"size": fitted,
+		"occ_x": after_x,
+		"occ_y": after_y,
+		"occ_before_x": occ_x,
+		"occ_before_y": occ_y,
+		"aabb_size": [aabb.size.x, aabb.size.y, aabb.size.z],
+	}
+	print("raster_map_silhouette: review-fit size=%.3f before=%.3fx%.3f after=%.3fx%.3f" % [
+			fitted, occ_x, occ_y, after_x, after_y])
+	return out
+
+
+func _review_rig(world: Node3D) -> MapCameraRig:
+	for child: Node in world.get_children():
+		if child is MapCameraRig:
+			return child as MapCameraRig
+	return null
+
+
+func _review_placement_aabb(instances: MultiMeshInstance3D) -> AABB:
+	var multimesh: MultiMesh = instances.multimesh
+	var mesh_aabb: AABB = multimesh.mesh.get_aabb()
+	var combined: AABB = AABB()
+	var started: bool = false
+	for i: int in range(multimesh.instance_count):
+		var inst: AABB = multimesh.get_instance_transform(i) * mesh_aabb
+		if not started:
+			combined = inst
+			started = true
+		else:
+			combined = combined.merge(inst)
+	return combined
 
 
 func _opaque_count(image: Image) -> int:
