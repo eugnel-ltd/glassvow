@@ -2194,6 +2194,8 @@ func _voice(variant_id: String, speaker: String, lines: Array[String], death: bo
 		var direction: Dictionary = row.get("death", {}) if death \
 			else (intro[i] if i < intro.size() else {})
 		entries.append({"text": lines[i], "direction": direction})
+	# A tip already standing (a touch long-press) steps aside for the pane.
+	_tips.hide_tip()
 	await _dialogue.speak(variant_id, speaker, entries)
 
 
@@ -3201,7 +3203,9 @@ func _sync_all() -> void:
 ## because a widget in `presentation/` does not read content and these are all
 ## catalogue copy.
 func _tip_at(global_pos: Vector2) -> Dictionary:
-	if game.cb == null:
+	# No tip over a speaking foe's pane: this gates the hover poll and the
+	# long-press alike, since both ask this source.
+	if game.cb == null or _dialogue.speaking():
 		return {}
 	# The hand is above everything, and a keyword beats the card that holds it —
 	# the benchmark gets the same order for free, because a `.kw` span is a

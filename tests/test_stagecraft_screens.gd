@@ -35,7 +35,12 @@ static func _battle_dialogue_holds_the_fight(fails: Array[String]) -> void:
 		"a combat screen that owns its bus handed its foes' voices none")
 	var turn: int = game.cb.turn
 	var hand: int = game.cb.hand.size()
+	var lantern: Vector2 = screen._hud.lantern_rect().get_center()
+	_check(fails, not screen._tip_at(lantern).is_empty(),
+		"the lantern offers no tip to gate (fixture)")
 	screen._dialogue.visible = true
+	_check(fails, screen._tip_at(lantern).is_empty(),
+		"a tip can pop over a speaking foe's pane")
 	_check(fails, screen._dialogue.speaking(), "a shown pane does not count as speaking")
 	for key: Key in [KEY_SPACE, KEY_ENTER, KEY_SPACE, KEY_E, KEY_A, KEY_RIGHT]:
 		_check(fails, not screen._combat_key(key),
