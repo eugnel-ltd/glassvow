@@ -167,7 +167,7 @@ func _build() -> void:
 
 	_window = PanelContainer.new()
 	_window.name = "ChoiceWindow"
-	_window.add_theme_stylebox_override("panel", _window_style())
+	_window.add_theme_stylebox_override("panel", DialogueBox.window_style())
 	add_child(_window)
 	# Same reachability rule as #72's boon screen: the view travels with focus,
 	# so a choice below the fold on a phone is never focused and invisible.
@@ -236,11 +236,8 @@ func play_beat() -> void:
 			_wash_goal = DIM_ALPHA
 			continue
 		_front.play(fx)
-		if cue.is_empty() and SceneDirector.FX_CUES.has(fx):
-			var pair: Array = SceneDirector.FX_CUES[fx]
-			var preferred: StringName = pair[0]
-			var fallback: StringName = pair[1]
-			cue = String(SceneDirector._cue(preferred, fallback))
+		if cue.is_empty():
+			cue = String(SceneDirector.cue_for(fx))
 	if not cue.is_empty():
 		_sfx.play(StringName(cue))
 
@@ -310,18 +307,6 @@ func _layout() -> void:
 	elif dock == "centre":
 		x = (view.x - w) * 0.5
 	_window.position = Vector2(clampf(x, 14.0, view.x - w - 14.0), pane.position.y - gap - h)
-
-
-func _window_style() -> StyleBoxFlat:
-	var box: StyleBoxFlat = StyleBoxFlat.new()
-	box.bg_color = Color(0.03, 0.034, 0.055, 0.88)
-	box.set_border_width_all(4)
-	box.border_color = DialogueBox.LEAD
-	box.set_corner_radius_all(10)
-	box.set_content_margin_all(14)
-	box.shadow_color = Color(0, 0, 0, 0.55)
-	box.shadow_size = 18
-	return box
 
 
 static func _rect(node_name: String, colour: Color) -> ColorRect:

@@ -13,7 +13,8 @@ extends Control
 ##
 ## Layout is a pure function of the stage size (`box_rect`) so geometry is
 ## testable headless. `Line` stays a Label — callers and tests read `.text`;
-## the reveal only moves `visible_characters`, so wrapping never reflows.
+## the reveal only moves `visible_characters` over the already-shaped line
+## (`VC_CHARS_AFTER_SHAPING`), so wrapping never reflows while it types.
 
 const CPS_LATIN: float = 50.0
 const CPS_CJK: float = 24.0
@@ -128,6 +129,20 @@ static func box_rect(view: Vector2, stage_shape: StringName, box_style: StringNa
 	return Rect2(left, bottom - height, width, height)
 
 
+## The leaded window a staged screen docks its choices in, cut from the
+## same glass as the pane (one definition, so the two never drift).
+static func window_style() -> StyleBoxFlat:
+	var box: StyleBoxFlat = StyleBoxFlat.new()
+	box.bg_color = Color(0.03, 0.034, 0.055, 0.90)
+	box.set_border_width_all(4)
+	box.border_color = LEAD
+	box.set_corner_radius_all(10)
+	box.set_content_margin_all(14)
+	box.shadow_color = Color(0, 0, 0, 0.55)
+	box.shadow_size = 18
+	return box
+
+
 ## Present one line. `instant` lands it whole (capture, resume, skip, and
 ## reduced motion — reduced motion never shortens the dwell, only the reveal).
 func show_line(text: String, speaker_name: String, line_style: StringName,
@@ -161,14 +176,18 @@ func show_line(text: String, speaker_name: String, line_style: StringName,
 ## every frame (so headless tests drive it too). True once the line stands.
 func advance_type(delta: float) -> bool:
 	_clock += delta
+	var flaring: bool = _flare > 0.0
 	_flare = maxf(0.0, _flare - delta * 1.6)
 	if _jolt > 0.0:
 		_jolt = maxf(0.0, _jolt - delta * 3.2)
 		var home: float = _text_rect().position.x
 		_line.position.x = home + sin(_clock * 90.0) * 3.0 * _jolt
 	if _complete:
+		# Only the advance ember moves once a line stands; the leaded frame
+		# redraws only while a shout's flare is still fading.
 		_glyph.queue_redraw()
-		queue_redraw()
+		if flaring:
+			queue_redraw()
 		return true
 	_elapsed += delta
 	var shown: int = 0
@@ -444,6 +463,6 @@ static func _label(node_name: String) -> Label:
 	label.name = node_name
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.visible_characters_behavior = TextServer.VC_CHARS_BEFORE_SHAPING
+	label.visible_characters_behavior = TextServer.VC_CHARS_AFTER_SHAPING
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label

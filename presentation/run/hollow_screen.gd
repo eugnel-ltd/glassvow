@@ -13,7 +13,6 @@ extends Control
 
 signal action_requested(action: StringName)
 
-const HOLLOW: String = "res://assets/art/meta/hollow-lamplighter.png"
 const ACTOR: String = "lamplighter"
 const MOOD_ASK: String = "asking"
 const MOOD_PAID: String = "recognising"
@@ -116,7 +115,7 @@ func _build() -> void:
 
 	_window = PanelContainer.new()
 	_window.name = "ChoiceWindow"
-	_window.add_theme_stylebox_override("panel", _window_style())
+	_window.add_theme_stylebox_override("panel", DialogueBox.window_style())
 	add_child(_window)
 	var column: VBoxContainer = VBoxContainer.new()
 	column.add_theme_constant_override("separation", 8)
@@ -293,18 +292,6 @@ func _layout() -> void:
 	_window.size = win
 	_window.position = Vector2((view.x - win.x) * 0.5,
 		pane.position.y - win.y - (10.0 if short else 22.0))
-
-
-func _window_style() -> StyleBoxFlat:
-	var box: StyleBoxFlat = StyleBoxFlat.new()
-	box.bg_color = Color(0.03, 0.034, 0.055, 0.90)
-	box.set_border_width_all(4)
-	box.border_color = DialogueBox.LEAD
-	box.set_corner_radius_all(10)
-	box.set_content_margin_all(14)
-	box.shadow_color = Color(0, 0, 0, 0.55)
-	box.shadow_size = 18
-	return box
 
 
 static func _label(text: String, font_size: int, colour: Color) -> Label:

@@ -227,13 +227,30 @@ static func _queue_at_the_door(fails: Array[String], content: ContentDB) -> void
 	_check(fails, main.game.run.pending_scene == null and main._map_screen is WorldMapScreen,
 		"the Queue did not hand on to the Act IV map")
 	_dispose(main)
-	var again: Main = _crossing_main(content)
-	again._vigil.scenes_seen.append("act4-entry")
-	again._on_boss_relic_chosen("")
-	again._on_scene_finished()
-	_check(fails, not again.game.run.pool_beats.has(PoolBeats.KEY_L3),
-		"a repeat crossing drew the Queue's line")
-	_dispose(again)
+	var late: Main = _crossing_main(content)
+	late._vigil.scenes_seen.append("act4-entry")
+	late._on_boss_relic_chosen("")
+	_check(fails, _playing(late, "unsealing-short"), "a repeat crossing did not play the door")
+	late._on_scene_finished()
+	_check(fails, _playing(late, "line:payoff.mirror"),
+		"a Vigil that crossed before the Queue could speak never hears it")
+	_dispose(late)
+	var heard: Main = _crossing_main(content)
+	heard._vigil.scenes_seen.append("act4-entry")
+	heard._vigil.scenes_seen.append("line:payoff.mirror")
+	heard._on_boss_relic_chosen("")
+	heard._on_scene_finished()
+	_check(fails, heard.game.run.pending_scene == null and heard._map_screen is WorldMapScreen,
+		"a heard Queue spoke again at a later crossing")
+	_dispose(heard)
+	var told: Main = _crossing_main(content)
+	told._vigil.scenes_seen.append("act4-entry")
+	told._vigil.line_once.append("payoff.mirror")
+	told._on_boss_relic_chosen("")
+	told._on_scene_finished()
+	_check(fails, not told.game.run.pool_beats.has(PoolBeats.KEY_L3),
+		"a Queue a past run told spoke again")
+	_dispose(told)
 
 
 ## Every slot look parses into the vocabulary, and an unregistered voice with
@@ -269,6 +286,30 @@ static func _omen_echoes(fails: Array[String], content: ContentDB) -> void:
 	main.game.run.omens = ["ashfall", null, null]
 	_check(fails, main._omen_echo_key("waystone:n0").is_empty(),
 		"another omen carried the Eighth Omen's words")
+	# The tail line is resumable: the cursor rides the pending beat.
+	main.game.run.omens = ["eighthOmen", null, null]
+	main._map.nodes[0].row = 2
+	main.game.run.pending_pool = PoolBeats._pending(PoolBeats.SLOT_WAYSTONE,
+		"pool.waystone.w60", "waystone:n0", PoolBeats.RESUME_NODE)
+	main._show_pending_pool()
+	var echo_player: ScenePlayer = main._route_screen as ScenePlayer
+	_check(fails, echo_player != null and echo_player._script.line_count() == 2
+			and echo_player._cursor == 0,
+		"the waystone beat under the omen is not the echo then the words")
+	if echo_player != null:
+		main._on_pool_advance(echo_player)
+	_check(fails, int(float(str(PoolBeats.pending_of(main.game.run).get("cursor", 0)))) == 1,
+		"advancing to the omen's words did not persist the cursor")
+	main._show_pending_pool()
+	var rebuilt: ScenePlayer = main._route_screen as ScenePlayer
+	_check(fails, rebuilt != null and rebuilt._cursor == 1,
+		"a rebuilt waystone beat replayed the echo before the omen's words")
+	if rebuilt != null:
+		rebuilt._ready()
+		_check(fails, rebuilt._copy.line_label().text == Locale.active.t(
+				"content.quests.eighthOmen.waystoneEchoes.2")
+				and not rebuilt._director.front_fx.active(),
+			"the rebuilt beat is not the omen's words, standing without effects")
 	_dispose(main)
 	var tail: Array[Dictionary] = [{
 		"key": "content.quests.eighthOmen.waystoneEchoes.1", "style": "title"}]

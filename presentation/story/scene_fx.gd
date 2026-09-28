@@ -216,27 +216,38 @@ func tick(delta: float) -> void:
 				target.position = offset
 		if _shake_t >= _shake_dur:
 			_end_shake()
-	for crack: Crack in _cracks:
-		crack.t += delta
-	_cracks = _cracks.filter(func(c: Crack) -> bool: return c.t < CRACK_LIFE)
-	for shard: Shard in _shards:
-		shard.vel.y += GRAVITY * delta
-		shard.pos += shard.vel * delta
-		shard.rot += shard.spin * delta
-		shard.t += delta
-	_shards = _shards.filter(func(s: Shard) -> bool: return s.t < 1.5)
-	for spark: Spark in _sparks:
-		spark.t += delta
-	_sparks = _sparks.filter(func(s: Spark) -> bool: return s.t < s.delay + 0.95)
-	for list: Array[Streak] in [_slashes, _rays, _rings]:
-		for item: Streak in list:
-			item.t += delta
-	_slashes = _slashes.filter(func(s: Streak) -> bool: return s.t < 0.5)
-	_rays = _rays.filter(func(r: Streak) -> bool: return r.t < 2.8)
-	_rings = _rings.filter(func(r: Streak) -> bool: return r.t < 0.55)
+	# Only lists with something live in them are aged and pruned: an idle
+	# stage allocates nothing per frame.
+	if not _cracks.is_empty():
+		for crack: Crack in _cracks:
+			crack.t += delta
+		_cracks = _cracks.filter(func(c: Crack) -> bool: return c.t < CRACK_LIFE)
+	if not _shards.is_empty():
+		for shard: Shard in _shards:
+			shard.vel.y += GRAVITY * delta
+			shard.pos += shard.vel * delta
+			shard.rot += shard.spin * delta
+			shard.t += delta
+		_shards = _shards.filter(func(s: Shard) -> bool: return s.t < 1.5)
+	if not _sparks.is_empty():
+		for spark: Spark in _sparks:
+			spark.t += delta
+		_sparks = _sparks.filter(func(s: Spark) -> bool: return s.t < s.delay + 0.95)
+	if not _slashes.is_empty():
+		_slashes = _aged(_slashes, delta, 0.5)
+	if not _rays.is_empty():
+		_rays = _aged(_rays, delta, 2.8)
+	if not _rings.is_empty():
+		_rings = _aged(_rings, delta, 0.55)
 	if not reduce_motion:
 		_drift_ambient(delta, view)
 	queue_redraw()
+
+
+static func _aged(list: Array[Streak], delta: float, life: float) -> Array[Streak]:
+	for item: Streak in list:
+		item.t += delta
+	return list.filter(func(item: Streak) -> bool: return item.t < life)
 
 
 func _end_shake() -> void:

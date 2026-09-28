@@ -144,6 +144,12 @@ static func _direction(raw: Variant, where: String) -> Variant:
 	return out
 
 
+## True from a foe's first line until its pane has faded: the fight beneath
+## takes no input meanwhile.
+func speaking() -> bool:
+	return visible
+
+
 ## Whether this foe's lines can be voiced here rather than as a banner.
 func can_voice(variant_id: String) -> bool:
 	return not staging_for(variant_id).is_empty()
@@ -204,11 +210,8 @@ func _fire(direction: Dictionary, actor: String) -> void:
 			if p != null and (fx == &"crack" or fx == &"rays"):
 				at = p.hands()
 			_fx.play(fx, at)
-		if cue.is_empty() and SceneDirector.FX_CUES.has(fx):
-			var pair: Array = SceneDirector.FX_CUES[fx]
-			var preferred: StringName = pair[0]
-			var fallback: StringName = pair[1]
-			cue = String(SceneDirector._cue(preferred, fallback))
+		if cue.is_empty():
+			cue = String(SceneDirector.cue_for(fx))
 	if not cue.is_empty() and _sfx != null:
 		_sfx.play(StringName(cue))
 

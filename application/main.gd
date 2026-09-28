@@ -2366,6 +2366,8 @@ func _on_combat_over(result: String) -> void:
 				game.run.pending_scene = {"id": close_id, "cursor": 0}
 		game.run.mark_mirrored_road_cleared()
 		game.run.pending_run_end = {"outcome": "win"}
+		# With fewer than six panes act 2 is the last act, so its boss win
+		# ends the run here and still owes that win's page and closers.
 		_stage_boss_beats(node)
 		if not _store_run():
 			_show_save_error("ui.persistence.detail.finalVictoryHold")
@@ -2459,10 +2461,10 @@ func _stage_line_scene(slot: String, key: String) -> bool:
 	if not _story_flow() or typeof(game.run.pending_scene) == TYPE_DICTIONARY:
 		return false
 	var row: Dictionary = PoolBeats.draw(game.run, _vigil, content, slot, key)
-	if row.is_empty():
+	var scene_id: String = SceneScript.LINE_PREFIX + str(row.get("id", ""))
+	if row.is_empty() or _vigil.scenes_seen.has(scene_id):
 		return false
-	game.run.pending_scene = {
-		"id": SceneScript.LINE_PREFIX + str(row.get("id", "")), "cursor": 0}
+	game.run.pending_scene = {"id": scene_id, "cursor": 0}
 	return true
 
 
@@ -2476,8 +2478,10 @@ func _stage_after_scene(scene_id: String) -> void:
 		var quest_v: Variant = PoolBeats.CLOSERS.find_key(slot)
 		if quest_v != null:
 			_stage_closer(PoolBeats.closers_after(str(quest_v)))
-	elif scene_id == "act4-entry":
-		# Through the door the first time, the Queue is heard (L3, once).
+	elif scene_id == "act4-entry" or scene_id == "unsealing-short":
+		# Through the door, the Queue is heard (L3, once): on the first
+		# crossing, or on a later one for a Vigil that crossed before the row
+		# could play.
 		_stage_line_scene(PoolBeats.SLOT_L3, PoolBeats.KEY_L3)
 
 
@@ -3158,9 +3162,10 @@ func _show_pending_pool() -> void:
 		var echo_line: Dictionary = SceneScript.OMEN_ECHO.duplicate(true)
 		echo_line["key"] = echo
 		tail.append(echo_line)
+	var script: SceneScript = SceneScript.pool_beat("", str(pending.get("slot", "")), tail)
+	var cursor: int = maxi(0, int(float(str(pending.get("cursor", 0)))))
 	var screen: ScenePlayer = ScenePlayer.new(
-		SceneScript.pool_beat("", str(pending.get("slot", "")), tail), 0,
-		_shape, _sfx_bus, row, _scene_hero())
+		script, cursor, _shape, _sfx_bus, row, _scene_hero())
 	screen.instant = _transitions != null and _transitions.instant
 	screen.advance_requested.connect(_on_pool_advance.bind(screen))
 	screen.finished.connect(_on_pool_finished)
@@ -3183,6 +3188,11 @@ func _omen_echo_key(pool_key: String) -> String:
 
 
 func _on_pool_advance(screen: ScenePlayer) -> void:
+	# The cursor rides the pending beat, so a rebuild resumes on its tail line
+	# (the omen's words) instead of replaying the echo before it.
+	var pending: Dictionary = PoolBeats.pending_of(game.run)
+	if not pending.is_empty():
+		pending["cursor"] = int(float(str(pending.get("cursor", 0)))) + 1
 	if not _store_run():
 		_show_save_error("ui.persistence.detail.chosenWaystoneHold")
 		return

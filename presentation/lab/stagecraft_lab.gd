@@ -104,6 +104,9 @@ func _ready() -> void:
 		push_error("stagecraft: unknown screen '%s'" % _screen)
 		return
 	add_child(screen)
+	# The price landing live, as main plays it after a pay: the kindle and its cue.
+	if screen is HollowScreen and parts.size() > 1 and parts[1] == "paid":
+		(screen as HollowScreen).play_paid()
 	_settle(screen)
 
 
@@ -142,7 +145,9 @@ func _battle(variant_id: String, death: bool) -> void:
 	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	add_child(backdrop)
-	var dialogue: BattleDialogue = BattleDialogue.new()
+	var bus: SfxBus = SfxBus.new()
+	add_child(bus)
+	var dialogue: BattleDialogue = BattleDialogue.new(bus)
 	dialogue.shape = _shape
 	add_child(dialogue)
 	var variant: Dictionary = _content.variants.get(variant_id, {})
@@ -174,6 +179,7 @@ func _pool(row_id: String, echo: bool) -> Control:
 	var script: SceneScript = SceneScript.pool_beat("", str(row.get("slot", "")), tail)
 	var player: ScenePlayer = ScenePlayer.new(script,
 		clampi(_cursor, 0, script.line_count() - 1), _shape, null, row, "duskblade")
+	player.live_from_cursor = true
 	player.advance_requested.connect(func() -> void: player.advance_confirmed())
 	return player
 
@@ -218,6 +224,7 @@ func _mount(cursor: int) -> void:
 		return
 	_player = ScenePlayer.new(script, clampi(cursor, 0, script.line_count() - 1),
 		_shape, null, {}, "duskblade")
+	_player.live_from_cursor = true
 	_player.advance_requested.connect(func() -> void: _player.advance_confirmed())
 	_player.finished.connect(func() -> void: _mount.call_deferred(0))
 	add_child(_player)

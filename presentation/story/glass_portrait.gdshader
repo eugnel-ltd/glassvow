@@ -35,6 +35,7 @@ void fragment() {
 	float edge = clamp(c.a - min(toward, toward2), 0.0, 1.0);
 	rgb += rim_color.rgb * edge * rim * (0.25 + 0.75 * light);
 	rgb = mix(rgb, flash_color.rgb, flash);
-	float keep = cut_fade > 0.0 ? smoothstep(cut_v, cut_v - cut_fade, UV.y) : 1.0;
+	// Ascending edges only: smoothstep with edge0 >= edge1 is undefined.
+	float keep = cut_fade > 0.0 ? 1.0 - smoothstep(cut_v - cut_fade, cut_v, UV.y) : 1.0;
 	COLOR = vec4(rgb, c.a * keep) * COLOR;
 }

@@ -724,6 +724,11 @@ func _build_ui() -> void:
 	add_child(_vfx)
 	_floaters = Floaters.new()
 	add_child(_floaters)
+	# Injected bus already lives under main; only own a fallback. Owned before
+	# the dialogue is built, so a foe that speaks here is heard too.
+	if _sfx == null:
+		_sfx = SfxBus.new()
+		add_child(_sfx)
 	# A foe that speaks does so over everything below the chrome: the fight
 	# dims a step and its glass bust answers in the story pane (stagecraft).
 	_dialogue = BattleDialogue.new(_sfx)
@@ -748,11 +753,6 @@ func _build_ui() -> void:
 	_cast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_cast.visible = false
 	add_child(_cast)
-
-	# Injected bus already lives under main; only own a fallback.
-	if _sfx == null:
-		_sfx = SfxBus.new()
-		add_child(_sfx)
 
 	_tips = TooltipLayer.new()
 	_tips.source = _tip_at
@@ -3354,6 +3354,10 @@ func _lantern_tip() -> Dictionary:
 ## forwards the gesture because the tooltip layer is deliberately pointer-inert
 ## and would never see it.
 func _input(event: InputEvent) -> void:
+	# A foe that speaks holds the fight until its last line clears: its pane
+	# takes the tap and the advance keys, and nothing reaches the hand.
+	if _dialogue.speaking():
+		return
 	var key: InputEventKey = event as InputEventKey
 	if _inspector != null and _inspector.visible:
 		if key != null and key.pressed and not key.echo:
@@ -3575,7 +3579,7 @@ func _aim_target() -> int:
 ## E and A answer even mid-animation guard (they check `S.busy` themselves and
 ## are no-ops when it is set); everything after the busy gate does not.
 func _combat_key(key: Key) -> bool:
-	if game.cb == null or game.cb.over:
+	if game.cb == null or game.cb.over or _dialogue.speaking():
 		return false
 	if key == KEY_ESCAPE:
 		if _hand.dragged_uid() >= 0 or _selected_uid >= 0:

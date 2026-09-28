@@ -65,6 +65,9 @@ var _unsealing_sting_beat: int = -1
 var _finale: FinaleStaging = null
 var _walk_t: float = 0.0
 var _director: SceneDirector
+## A bench (the stagecraft lab) opening mid-scene plays that line as if it
+## were reached live; the game never sets it, so a resume stands still.
+var live_from_cursor: bool = false
 var _hero: String = ""
 var _presented: bool = false
 var _arriving: bool = false
@@ -217,7 +220,10 @@ func _present_line() -> void:
 			if _cursor == 0 else Locale.active.t(str(row["key"]))
 	else:
 		text = Locale.active.t(str(row["key"]))
-	var animate: bool = not instant and not _skipping
+	# A player built mid-scene is a resume or a rebuild (a language switch):
+	# its first line stands without replaying the veil, effects or chime.
+	var animate: bool = not instant and not _skipping \
+		and (_presented or _cursor == 0 or live_from_cursor)
 	var beat_i: int = row["beat"]
 	if beat_i != _beat_i:
 		_beat_i = beat_i

@@ -206,11 +206,8 @@ func _fire(line: Dictionary, cast: Array[Dictionary], focus: String) -> void:
 		var target: String = StageDirection.fx_target(entry)
 		if target.is_empty() and StageDirection.ACTOR_FX.has(fx) and fx != &"shake":
 			target = focus
-		if cue.is_empty() and FX_CUES.has(fx):
-			var pair: Array = FX_CUES[fx]
-			var preferred: StringName = pair[0]
-			var fallback: StringName = pair[1]
-			cue = String(_cue(preferred, fallback))
+		if cue.is_empty():
+			cue = String(cue_for(fx))
 		match fx:
 			&"hop", &"recoil":
 				stage.actor_fx(fx, target)
@@ -239,6 +236,17 @@ func _fire(line: Dictionary, cast: Array[Dictionary], focus: String) -> void:
 		cue = String(_cue(SHOUT_CUE, &""))
 	if not cue.is_empty() and sfx != null:
 		sfx.play(StringName(cue))
+
+
+## The one-shot an effect sounds: its commissioned cue once the sample has
+## landed, else the shipped stand-in; empty for an effect with no sound.
+static func cue_for(fx: StringName) -> StringName:
+	if not FX_CUES.has(fx):
+		return &""
+	var pair: Array = FX_CUES[fx]
+	var preferred: StringName = pair[0]
+	var fallback: StringName = pair[1]
+	return _cue(preferred, fallback)
 
 
 static func _cue(preferred: StringName, fallback: StringName) -> StringName:

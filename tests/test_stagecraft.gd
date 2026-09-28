@@ -306,8 +306,8 @@ static func _reveal_pacing(fails: Array[String]) -> void:
 	box.free()
 
 
-## Capture and resume stand the stage without playing a single effect; a
-## live line plays its own.
+## Capture and resume (a player built mid-scene) stand the stage without
+## playing a single effect; a line reached live plays its own.
 static func _capture_fires_nothing(fails: Array[String]) -> void:
 	var node5: SceneScript = _script("act4-node5")
 	if node5 == null:
@@ -324,8 +324,23 @@ static func _capture_fires_nothing(fails: Array[String]) -> void:
 	var hero: StagePortrait = still._director.stage.portrait("hero")
 	_check(fails, hero != null and not hero.lit(), "the listener is lit")
 	still.free()
-	var live: ScenePlayer = _player(node5, 1, false)
+	var resumed: ScenePlayer = _player(node5, 1, false)
+	_check(fails, not resumed._director.front_fx.active(),
+		"a resumed line replayed its effects")
+	_check(fails, resumed._director.stage.has_actor("keeper"),
+		"a resumed line did not stand its cast")
+	resumed.free()
+	var live: ScenePlayer = _player(node5, 0, false)
+	live.advance_confirmed()
+	live._process(0.016)
 	_check(fails, live._director.front_fx.active(), "a live line did not play its effects")
+	for _i: int in range(90):
+		live._process(1.0 / 60.0)
+	var revealed: StagePortrait = live._director.stage.portrait("keeper")
+	_check(fails, revealed != null and revealed.mood == "revealed"
+			and is_equal_approx(revealed._sprite.modulate.a, 1.0)
+			and not revealed._prev.visible,
+		"the revealed Keeper stayed see-through after its crossfade")
 	live.free()
 
 

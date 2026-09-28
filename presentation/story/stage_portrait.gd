@@ -139,6 +139,8 @@ func set_mood(new_mood: String, instant: bool) -> void:
 			_prev.texture = _sprite.texture
 			_prev.visible = true
 			_mood_t = 0.0
+		else:
+			_end_crossfade()
 		_sprite.texture = texture
 	elif texture == null:
 		_sprite.texture = null
@@ -213,7 +215,7 @@ func tick(delta: float) -> void:
 	if _mood_t < 1.0:
 		_mood_t = minf(1.0, _mood_t + delta / MOOD_TIME)
 		if _mood_t >= 1.0:
-			_prev.visible = false
+			_end_crossfade()
 	_hop = maxf(0.0, _hop - delta * 2.6)
 	_recoil = maxf(0.0, _recoil - delta * 2.2)
 	_tremble = maxf(0.0, _tremble - delta * 1.8)
@@ -264,6 +266,14 @@ func _apply_pose() -> void:
 	if _prev.visible:
 		_prev.modulate.a = 1.0 - _mood_t
 		_sprite.modulate.a = _mood_t
+
+
+## The new mood stands whole: the outgoing texture hides and the incoming
+## one keeps no crossfade transparency.
+func _end_crossfade() -> void:
+	_mood_t = 1.0
+	_prev.visible = false
+	_sprite.modulate.a = 1.0
 
 
 func _layout_sprites() -> void:

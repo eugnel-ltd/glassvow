@@ -18,6 +18,36 @@ static func run(fails: Array[String]) -> void:
 	_hollow_two_shot(fails, content)
 	_event_staging_matches_content(fails, content)
 	_event_screen_contract(fails, content)
+	_battle_dialogue_holds_the_fight(fails)
+
+
+## While a foe speaks, the advance keys belong to its pane: Space and Enter
+## neither pick nor play a card, and E does not end the turn beneath it.
+static func _battle_dialogue_holds_the_fight(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_slice()
+	var game: GlassvowGame = GlassvowGame.new(content, RunState.new_run(content, 56503))
+	var screen: CombatScreen = CombatScreen.new(game)
+	screen.seq.instant = true
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	tree.root.add_child(screen)
+	screen.start_encounter(["sporeling", "sporeling"], "normal", "stagecraft-keys")
+	_check(fails, screen._dialogue._sfx != null,
+		"a combat screen that owns its bus handed its foes' voices none")
+	var turn: int = game.cb.turn
+	var hand: int = game.cb.hand.size()
+	screen._dialogue.visible = true
+	_check(fails, screen._dialogue.speaking(), "a shown pane does not count as speaking")
+	for key: Key in [KEY_SPACE, KEY_ENTER, KEY_SPACE, KEY_E, KEY_A, KEY_RIGHT]:
+		_check(fails, not screen._combat_key(key),
+			"key %s reached the fight while a foe spoke" % OS.get_keycode_string(key))
+	_check(fails, screen._selected_uid < 0 and game.cb.hand.size() == hand
+			and game.cb.turn == turn and not screen.seq.is_busy(),
+		"the fight moved beneath a speaking foe")
+	screen._dialogue.visible = false
+	_check(fails, screen._combat_key(KEY_SPACE) and screen._selected_uid >= 0,
+		"the hand did not answer Space once the foe fell silent")
+	tree.root.remove_child(screen)
+	screen.free()
 
 
 static func _pane_places_out_of_tree(fails: Array[String]) -> void:
@@ -25,6 +55,9 @@ static func _pane_places_out_of_tree(fails: Array[String]) -> void:
 	box.show_line("A line long enough to wrap if the pane were never laid out.",
 		"", StageDirection.STYLE_SPEECH, RunStyle.GOLD, &"left", true)
 	box.place(Rect2(40.0, 600.0, 900.0, 150.0))
+	_check(fails, box.line_label().visible_characters_behavior
+			== TextServer.VC_CHARS_AFTER_SHAPING,
+		"the reveal trims before shaping, so the wrap reflows as it types")
 	_check(fails, box.line_label().size.x > 600.0,
 		"a pane placed before the tree kept a collapsed text column (%.0f px)"
 			% box.line_label().size.x)
