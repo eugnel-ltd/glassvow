@@ -795,3 +795,29 @@ Fuse pass (same day, seeded from the first edit):
 
 sha256 `c1d4d34d6f1299f2a162a3fafb9d76ec61ec4e635914aedfd65e5493774447dd`.
 
+### #293 Act I tiles — unmerged candidates, not landed
+
+Issue #293 requires landed rows to be visually accepted. No fol2 named-device
+decision exists, so these files are **review evidence only**. They are not
+under `assets/art/map/`, they have no `provenance.json` record, and
+`record_schema.verdicts` remains `accepted` / `rejected`. `pending` is not a
+shipping state. Copying either PNG into `assets/art/map/materials/` without an
+`accepted` fol2 record will fail `tools/check_map_assets.py` honestly.
+
+Evidence (exact candidate bytes) lives in `docs/reviews/293/`. Blocker and
+land-path: `docs/reviews/293/blocker.md`.
+
+#### ash-loam ground candidate
+
+Intended land path: `map/materials/act1-ground-ash-loam.png` (1024×1024 opaque
+RGB). Neutral scalar grain duplicated into RGB; act hue belongs to
+`MapRegions` ramp bands. Method: `tileable-value-noise-fbm`, seed `293001`.
+Measured mean `0.499998`, 8×8 spread `0.057157` ≤ 0.15, seam `0.304717` ≤ 3.0.
+sha256 `1936fcb0df1e41241ba691fc921708ffd6e07a2b28584bc22693ce5a69c0460c`.
+
+#### charred-bark prop candidate
+
+Intended land path: `map/materials/act1-prop-charred-bark.png`. Same contract,
+seed `293002`. Measured mean `0.500000`, spread `0.035092`, seam `0.112113`.
+sha256 `0c5dda3dbf7a829f6697279535ab5c8b3bf1b13f25277d1c3238a484173f4a69`.
+
