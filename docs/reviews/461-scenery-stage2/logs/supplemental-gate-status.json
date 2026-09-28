@@ -1,0 +1,27 @@
+{
+  "commands": [
+    {
+      "command": "python3 tools/check_anchors.py",
+      "exit_code": 0,
+      "log": "logs/check-anchors.log",
+      "signal": "anchors OK"
+    },
+    {
+      "command": "python3 tools/check_benchmark_freeze.py",
+      "exit_code": 0,
+      "log": "logs/check-benchmark-freeze.log",
+      "signal": "benchmark citations frozen (601 in 54 file(s))"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "log": "logs/git-diff-check.log"
+    },
+    {
+      "command": "python3 analysis/verify_packet.py",
+      "exit_code": 0,
+      "log": "logs/verify-packet.log"
+    }
+  ],
+  "schema": 1
+}

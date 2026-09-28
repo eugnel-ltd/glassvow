@@ -1,0 +1,15 @@
+candidate=/Users/jamesto/Research/glassvow-461-scenery
+## jamesto/issue-461-scenery-compiler...origin/main
+ M presentation/map/map_layout_compiler.gd
+ M presentation/map/map_scene.gd
+A  tests/test_map_layout_scenery.gd
+A  tests/test_map_layout_scenery.gd.uid
+ M tests/test_map_scene.gd
+A  tools/capture_461_scenery.gd
+A  tools/capture_461_scenery.gd.uid
+ M tools/capture_build4_map_corpus.sh
+?? docs/reviews/461-scenery-mobile/
+?? docs/reviews/461-scenery/
+?? docs/reviews/461/
+candidate_compiler_sha256=49002f94bb0a1ee16bfbe3a4b33e38ee12d5233d4c699ba478545e3ff9cdd3ca
+compiler_byte_equal=true

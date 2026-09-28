@@ -1,0 +1,32 @@
+head=ca1057f2bbe25654c5f6add28f59e6b7e0115bc5
+base=c28ae38824f7ba2168b573002ab8b90dadd5bde1
+compiler_sha256=49002f94bb0a1ee16bfbe3a4b33e38ee12d5233d4c699ba478545e3ff9cdd3ca
+changed_paths:
+presentation/map/map_layout_compiler.gd
+presentation/map/map_materials.gd
+presentation/map/map_scene.gd
+tests/test_map_grade_contact.gd
+tests/test_map_grade_contact.gd.uid
+tests/test_map_layout_scenery.gd
+tests/test_map_layout_scenery.gd.uid
+tests/test_map_scene.gd
+tools/capture_461_scenery.gd
+tools/capture_461_scenery.gd.uid
+tools/capture_build4_map_corpus.sh
+forbidden_path_changes:
+locked constants at base:
+const GROUND_VALUE: float = 0.420
+const PROP_VALUE: float = 0.100
+const GRADE_MIN: Vector2 = Vector2(-36.0, -18.0)
+const GRADE_SIZE: Vector2 = Vector2(72.0, 36.0)
+locked constants at head:
+const GROUND_VALUE: float = 0.420
+const PROP_VALUE: float = 0.100
+const GRADE_MIN: Vector2 = Vector2(-36.0, -18.0)
+const GRADE_SIZE: Vector2 = Vector2(72.0, 36.0)
+bind_act callsites:
+presentation/map/map_scene.gd:342:	var assets: Dictionary = _materials.bind_act(region)
+contact bind callsites:
+presentation/map/map_materials.gd:205:	bind_scenery_contact(region, PackedVector3Array())
+presentation/map/map_materials.gd:231:func bind_scenery_contact(region: MapRegions,
+presentation/map/map_scene.gd:666:	_materials.bind_scenery_contact(MapRegions.for_act(_act), origins)

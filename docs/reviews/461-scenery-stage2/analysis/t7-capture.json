@@ -1,0 +1,32 @@
+{
+  "backend": "mobile",
+  "frame_ids": [
+    "F001",
+    "F002",
+    "F003",
+    "F004",
+    "F005",
+    "F006",
+    "F007",
+    "F008",
+    "F009",
+    "F010",
+    "F011",
+    "F012"
+  ],
+  "observation": "The contact constellation is removed, but several Act I and Act II prop faces remain silhouette-dark in the captured comparisons. This packet does not close the owner-eye gate.",
+  "owner_verdict": null,
+  "poses": [
+    "opening",
+    "focused",
+    "travel-midpoint"
+  ],
+  "result": "frames_captured_owner_eye_pending",
+  "schema": 1,
+  "shapes": [
+    "pad-landscape",
+    "phone-landscape"
+  ],
+  "stage_3_started": false,
+  "test": "T7"
+}

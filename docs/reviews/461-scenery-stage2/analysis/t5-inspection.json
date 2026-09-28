@@ -1,0 +1,18 @@
+{
+  "backend": "mobile",
+  "compiled_origins": 21,
+  "coverage_note": "The 11 out-of-rect origins have no containing texel in the locked grade sampler domain and are not bake failures.",
+  "distinct_visible_contact_ellipses": 3,
+  "frame": "raw/act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png",
+  "frame_sha256": "4b666367e8b0cbf5b606d0500660214cb516f986eb6bfff57b30761d1d0c7582",
+  "in_grade_rect_origins": 10,
+  "observation": "Each visible contact ellipse contains its projected compiled origin; no detached painted ellipse remains in open ground.",
+  "orphan_contact_ellipses": 0,
+  "out_of_grade_rect_origins": 11,
+  "overlay": "analysis/t5-act1-seed717-opening-overlay.png",
+  "overlay_sha256": "3e1b3b015c0fbf8565ca3a684c9f7d0fc79737b3ee3c729bf18b97ba43e8686f",
+  "projected_in_grade_origins_visible_in_frame": 3,
+  "result": "pass",
+  "schema": 1,
+  "test": "T5"
+}

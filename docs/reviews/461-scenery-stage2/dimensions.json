@@ -1,0 +1,80 @@
+{
+  "capture_head": "ca1057f2bbe25654c5f6add28f59e6b7e0115bc5",
+  "frame_count": 12,
+  "frames": [
+    {
+      "file": "raw/act-01_seed-00017634_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F001",
+      "height": 820,
+      "width": 1180
+    },
+    {
+      "file": "raw/act-01_seed-00017634_shape-pad-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F002",
+      "height": 820,
+      "width": 1180
+    },
+    {
+      "file": "raw/act-01_seed-00017634_shape-phone-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F003",
+      "height": 390,
+      "width": 844
+    },
+    {
+      "file": "raw/act-01_seed-00017634_shape-phone-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F004",
+      "height": 390,
+      "width": 844
+    },
+    {
+      "file": "raw/act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F005",
+      "height": 820,
+      "width": 1180
+    },
+    {
+      "file": "raw/act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F006",
+      "height": 820,
+      "width": 1180
+    },
+    {
+      "file": "raw/act-01_seed-00000717_shape-phone-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F007",
+      "height": 390,
+      "width": 844
+    },
+    {
+      "file": "raw/act-01_seed-00000717_shape-phone-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F008",
+      "height": 390,
+      "width": 844
+    },
+    {
+      "file": "raw/act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-travel-midpoint_locale-en.png",
+      "frame_id": "F009",
+      "height": 820,
+      "width": 1180
+    },
+    {
+      "file": "raw/act-02_seed-00000717_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F010",
+      "height": 820,
+      "width": 1180
+    },
+    {
+      "file": "raw/act-03_seed-00000717_shape-phone-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F011",
+      "height": 390,
+      "width": 844
+    },
+    {
+      "file": "raw/act-04_seed-00000717_shape-pad-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F012",
+      "height": 820,
+      "width": 1180
+    }
+  ],
+  "issue": 461,
+  "schema": 1
+}

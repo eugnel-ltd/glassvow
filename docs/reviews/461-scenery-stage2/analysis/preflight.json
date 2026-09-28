@@ -1,0 +1,25 @@
+{
+  "compressed_before_decompress": true,
+  "decoded_format": "FORMAT_RGBA8",
+  "decoded_format_value": 5,
+  "decoded_resolution": [
+    512,
+    256
+  ],
+  "decompress_error": 0,
+  "decompress_error_name": "OK",
+  "format_before_decompress": 22,
+  "get_image_resolution": [
+    512,
+    256
+  ],
+  "resource_class": "CompressedTexture2D",
+  "resource_path": "res://assets/art/map/grades/act1-grade.png",
+  "result": "pass",
+  "schema": 1,
+  "source_resolution": [
+    512,
+    256
+  ],
+  "test": "painted grade decode preflight"
+}

@@ -1,0 +1,65 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Metal 4.0 - Forward Mobile - Using Device #0: Apple - Apple M4 (Apple9)
+
+Sentry: DEBUG: starting Sentry SDK version 2.1.1+d288ad9
+Sentry: DEBUG: Automatic initialization is disabled in the project settings.
+Sentry: INFO: Automatic initialization is disabled! Operations with Sentry SDK will result in no-ops.
+capture_461_scenery: runtime_rendering_method=mobile source=RenderingServer
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] projected_seats (res://presentation/map/world_map_screen.gd:592)
+         [1] _layout_waystones (res://presentation/map/world_map_screen.gd:891)
+         [2] _notification (res://presentation/map/world_map_screen.gd:110)
+         [3] _capture_case (res://tools/capture_461_scenery.gd:157)
+         [4] _set_shape (res://tools/capture_461_scenery.gd:308)
+capture_461_scenery: act-01_seed-00017634_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png
+capture_461_scenery: act-01_seed-00017634_shape-pad-landscape_zoom-02-20_pose-focused_locale-en.png
+capture_461_scenery: act-01_seed-00017634_shape-phone-landscape_zoom-02-20_pose-opening_locale-en.png
+capture_461_scenery: act-01_seed-00017634_shape-phone-landscape_zoom-02-20_pose-focused_locale-en.png
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] projected_seats (res://presentation/map/world_map_screen.gd:592)
+         [1] _layout_waystones (res://presentation/map/world_map_screen.gd:891)
+         [2] _notification (res://presentation/map/world_map_screen.gd:110)
+         [3] _capture_case (res://tools/capture_461_scenery.gd:157)
+         [4] _set_shape (res://tools/capture_461_scenery.gd:308)
+capture_461_scenery: act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png
+capture_461_scenery: act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-focused_locale-en.png
+capture_461_scenery: act-01_seed-00000717_shape-phone-landscape_zoom-02-20_pose-opening_locale-en.png
+capture_461_scenery: act-01_seed-00000717_shape-phone-landscape_zoom-02-20_pose-focused_locale-en.png
+capture_461_scenery: act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-travel-midpoint_locale-en.png
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] projected_seats (res://presentation/map/world_map_screen.gd:592)
+         [1] _layout_waystones (res://presentation/map/world_map_screen.gd:891)
+         [2] _notification (res://presentation/map/world_map_screen.gd:110)
+         [3] _capture_case (res://tools/capture_461_scenery.gd:157)
+         [4] _set_shape (res://tools/capture_461_scenery.gd:308)
+capture_461_scenery: act-02_seed-00000717_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] projected_seats (res://presentation/map/world_map_screen.gd:592)
+         [1] _layout_waystones (res://presentation/map/world_map_screen.gd:891)
+         [2] _notification (res://presentation/map/world_map_screen.gd:110)
+         [3] _capture_case (res://tools/capture_461_scenery.gd:157)
+         [4] _set_shape (res://tools/capture_461_scenery.gd:308)
+capture_461_scenery: act-03_seed-00000717_shape-phone-landscape_zoom-02-20_pose-focused_locale-en.png
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] projected_seats (res://presentation/map/world_map_screen.gd:592)
+         [1] _layout_waystones (res://presentation/map/world_map_screen.gd:891)
+         [2] _notification (res://presentation/map/world_map_screen.gd:110)
+         [3] _capture_case (res://tools/capture_461_scenery.gd:157)
+         [4] _set_shape (res://tools/capture_461_scenery.gd:308)
+capture_461_scenery: act-04_seed-00000717_shape-pad-landscape_zoom-02-20_pose-focused_locale-en.png
+capture_461_scenery: 12 frames, 5 inputs -> /Users/jamesto/.codex/worktrees/461-stage2-scenery-contact/glassvow/docs/reviews/461-scenery-stage2

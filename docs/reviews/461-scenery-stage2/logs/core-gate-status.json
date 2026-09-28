@@ -1,0 +1,30 @@
+{
+  "commands": [
+    {
+      "command": "godot --version",
+      "exit_code": 0,
+      "log": "logs/godot-version.log",
+      "signal": "4.7.2.stable.official.ed1daf0bf"
+    },
+    {
+      "command": "tools/check_imports.sh",
+      "exit_code": 0,
+      "log": "logs/check-imports.log",
+      "signal": "asset import OK"
+    },
+    {
+      "command": "tools/check_scripts.sh",
+      "exit_code": 0,
+      "log": "logs/check-scripts.log",
+      "signal": "scripts OK (256 checked)"
+    },
+    {
+      "command": "godot --headless -s res://tests/run_all.gd",
+      "exit_code": 0,
+      "log": "logs/run-all.log",
+      "signal": "PASS (74 tests)"
+    }
+  ],
+  "head": "ca1057f2bbe25654c5f6add28f59e6b7e0115bc5",
+  "schema": 1
+}

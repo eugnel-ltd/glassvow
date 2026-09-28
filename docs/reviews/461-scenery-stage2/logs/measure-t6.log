@@ -1,0 +1,27 @@
+{
+  "backend": "mobile",
+  "crop_coordinates": "[left, top, right, bottom), source-frame pixels",
+  "frame": "raw/act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png",
+  "frame_sha256": "4b666367e8b0cbf5b606d0500660214cb516f986eb6bfff57b30761d1d0c7582",
+  "graded": false,
+  "ground_median": 75.3156,
+  "ground_roi": [
+    285,
+    235,
+    335,
+    315
+  ],
+  "luminance": "display-referred 8-bit RGB; Rec. 709 coefficients 0.2126, 0.7152, 0.0722",
+  "metric": "prop median luminance / ground median luminance",
+  "pixels_per_roi": 4000,
+  "prop_median": 23.0108,
+  "prop_roi": [
+    365,
+    235,
+    415,
+    315
+  ],
+  "ratio": 0.305525,
+  "schema": 1,
+  "test": "T6"
+}

@@ -1,0 +1,123 @@
+{
+  "T1": {
+    "result": "pass",
+    "runtime_rendering_method": "mobile",
+    "shipping_rendering_method": "mobile",
+    "source": "RenderingServer.get_current_rendering_method()"
+  },
+  "T2": {
+    "capture_head": "ca1057f2bbe25654c5f6add28f59e6b7e0115bc5",
+    "command_executed": "docs/reviews/461-scenery-stage2/run_capture.sh",
+    "rendering_override": false,
+    "result": "pass"
+  },
+  "T3": {
+    "all_five_layout_digests_byte_equal_to_stage1": true,
+    "all_hard_zero_metrics_byte_equal_and_zero": true,
+    "layouts": [
+      {
+        "act": 1,
+        "layout_digest": "5a7d6a435082707594c9ec56f6c321291fbba42133622a73997ed3fa298b3545",
+        "scenery_count": 15,
+        "seed": 17634
+      },
+      {
+        "act": 1,
+        "layout_digest": "9b182e7c36d840c8850d8df62dbb01485ce90eacab6d7ce3684a24319f0d8091",
+        "scenery_count": 21,
+        "seed": 717
+      },
+      {
+        "act": 2,
+        "layout_digest": "6d5bd644c02867b8e316d4b0f0442d24720719e088a622ff0f9609ddd14089c7",
+        "scenery_count": 19,
+        "seed": 717
+      },
+      {
+        "act": 3,
+        "layout_digest": "54341c63a16c278dc1e807aa0cf32800838437d9b340c79a3e8b800e848ae75d",
+        "scenery_count": 18,
+        "seed": 717
+      },
+      {
+        "act": 4,
+        "layout_digest": "a995141403bf08da65221c1e2e0837884484508132123c0c51853a7b296dcf5c",
+        "scenery_count": 17,
+        "seed": 717
+      }
+    ],
+    "occupancy_range": [
+      15,
+      21
+    ],
+    "required_occupancy_range": [
+      14,
+      24
+    ],
+    "result": "pass"
+  },
+  "T4": {
+    "act_1_seed_717_grade_domain": {
+      "in_rect": 10,
+      "out_of_rect": 11,
+      "total": 21
+    },
+    "clauses": [
+      "contact floor under every in-grade placement",
+      "far texels remain unity",
+      "no orphan alpha texel",
+      "compact bake is byte-equal to a full-image walk",
+      "empty positions leave unity alpha"
+    ],
+    "result": "pass",
+    "suite": "logs/run-all.log"
+  },
+  "T5": {
+    "inspection": "analysis/t5-inspection.json",
+    "orphan_contact_ellipses": 0,
+    "overlay": "analysis/t5-act1-seed717-opening-overlay.png",
+    "result": "pass"
+  },
+  "T6": {
+    "ground_median": 75.3156,
+    "measurement": "analysis/t6-luminance.json",
+    "prop_median": 23.0108,
+    "ratio": 0.305525,
+    "result": "reported_not_graded"
+  },
+  "T7": {
+    "backend": "mobile",
+    "frame_ids": [
+      "F001",
+      "F002",
+      "F003",
+      "F004",
+      "F005",
+      "F006",
+      "F007",
+      "F008",
+      "F009",
+      "F010",
+      "F011",
+      "F012"
+    ],
+    "observation": "The contact constellation is removed, but several Act I and Act II prop faces remain silhouette-dark in the captured comparisons. This packet does not close the owner-eye gate.",
+    "owner_verdict": null,
+    "result": "frames_captured_owner_eye_pending"
+  },
+  "capture": {
+    "command": "docs/reviews/461-scenery-stage2/run_capture.sh",
+    "compiler_inputs": 5,
+    "frames": 12,
+    "head": "ca1057f2bbe25654c5f6add28f59e6b7e0115bc5",
+    "observed_exit_code": 0,
+    "runtime_seconds": 1123.804
+  },
+  "capture_manifest_sha256": "3c89573eaa99933cbec4cf897fc85e82c7fc37317e0c2efa92920777d4766a0a",
+  "comparison_manifest_sha256": {
+    "docs/reviews/461-scenery-mobile/manifest.json": "5f1fd5382e35ad378d41678285351a000a026992f534d25a76f0824afd4325ff"
+  },
+  "issue": 461,
+  "schema": 1,
+  "stage": 2
+}

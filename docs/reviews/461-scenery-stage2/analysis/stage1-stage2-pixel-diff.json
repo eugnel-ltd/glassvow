@@ -1,0 +1,117 @@
+{
+  "baseline": "docs/reviews/461-scenery-mobile",
+  "diagnostic_only": true,
+  "frames": [
+    {
+      "changed_pixel_fraction": 0.0486327,
+      "changed_pixels": 47057,
+      "file": "raw/act-01_seed-00017634_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F001",
+      "maximum_rgb_channel_delta": 95,
+      "mean_absolute_rgb_channel_delta": 1.097224,
+      "total_pixels": 967600
+    },
+    {
+      "changed_pixel_fraction": 0.03687474,
+      "changed_pixels": 35680,
+      "file": "raw/act-01_seed-00017634_shape-pad-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F002",
+      "maximum_rgb_channel_delta": 100,
+      "mean_absolute_rgb_channel_delta": 0.854961,
+      "total_pixels": 967600
+    },
+    {
+      "changed_pixel_fraction": 0.03640783,
+      "changed_pixels": 11984,
+      "file": "raw/act-01_seed-00017634_shape-phone-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F003",
+      "maximum_rgb_channel_delta": 98,
+      "mean_absolute_rgb_channel_delta": 0.847987,
+      "total_pixels": 329160
+    },
+    {
+      "changed_pixel_fraction": 0.02540406,
+      "changed_pixels": 8362,
+      "file": "raw/act-01_seed-00017634_shape-phone-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F004",
+      "maximum_rgb_channel_delta": 102,
+      "mean_absolute_rgb_channel_delta": 0.586479,
+      "total_pixels": 329160
+    },
+    {
+      "changed_pixel_fraction": 0.05235428,
+      "changed_pixels": 50658,
+      "file": "raw/act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F005",
+      "maximum_rgb_channel_delta": 89,
+      "mean_absolute_rgb_channel_delta": 1.113833,
+      "total_pixels": 967600
+    },
+    {
+      "changed_pixel_fraction": 0.05309425,
+      "changed_pixels": 51374,
+      "file": "raw/act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F006",
+      "maximum_rgb_channel_delta": 98,
+      "mean_absolute_rgb_channel_delta": 1.114026,
+      "total_pixels": 967600
+    },
+    {
+      "changed_pixel_fraction": 0.04187933,
+      "changed_pixels": 13785,
+      "file": "raw/act-01_seed-00000717_shape-phone-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F007",
+      "maximum_rgb_channel_delta": 98,
+      "mean_absolute_rgb_channel_delta": 0.900117,
+      "total_pixels": 329160
+    },
+    {
+      "changed_pixel_fraction": 0.04506927,
+      "changed_pixels": 14835,
+      "file": "raw/act-01_seed-00000717_shape-phone-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F008",
+      "maximum_rgb_channel_delta": 99,
+      "mean_absolute_rgb_channel_delta": 0.869239,
+      "total_pixels": 329160
+    },
+    {
+      "changed_pixel_fraction": 0.05610583,
+      "changed_pixels": 54288,
+      "file": "raw/act-01_seed-00000717_shape-pad-landscape_zoom-02-20_pose-travel-midpoint_locale-en.png",
+      "frame_id": "F009",
+      "maximum_rgb_channel_delta": 98,
+      "mean_absolute_rgb_channel_delta": 1.128576,
+      "total_pixels": 967600
+    },
+    {
+      "changed_pixel_fraction": 0.06153576,
+      "changed_pixels": 59542,
+      "file": "raw/act-02_seed-00000717_shape-pad-landscape_zoom-02-20_pose-opening_locale-en.png",
+      "frame_id": "F010",
+      "maximum_rgb_channel_delta": 78,
+      "mean_absolute_rgb_channel_delta": 1.173077,
+      "total_pixels": 967600
+    },
+    {
+      "changed_pixel_fraction": 0.0507109,
+      "changed_pixels": 16692,
+      "file": "raw/act-03_seed-00000717_shape-phone-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F011",
+      "maximum_rgb_channel_delta": 155,
+      "mean_absolute_rgb_channel_delta": 0.995542,
+      "total_pixels": 329160
+    },
+    {
+      "changed_pixel_fraction": 0.08831439,
+      "changed_pixels": 85453,
+      "file": "raw/act-04_seed-00000717_shape-pad-landscape_zoom-02-20_pose-focused_locale-en.png",
+      "frame_id": "F012",
+      "maximum_rgb_channel_delta": 51,
+      "mean_absolute_rgb_channel_delta": 1.467697,
+      "total_pixels": 967600
+    }
+  ],
+  "issue": 461,
+  "schema": 1,
+  "stage": 2
+}
