@@ -120,7 +120,7 @@ class ScopeFixtureTests(unittest.TestCase):
         self.assertTrue(selection.checks["setup_godot"])
         for check in ("run_balance_doe", "run_balance_seed", "run_balance_s009",
                       "run_balance_registry", "run_balance_host", "run_balance_f0",
-                      "run_balance_tier1_f0", "run_balance_f1_f2"):
+                      "run_balance_tier1_f0", "run_balance_f1_f2", "run_balance_exam"):
             self.assertTrue(selection.checks[check], check)
         # The host-qualify self-test runs balance_sim.gd, which needs the
         # imported global class cache (BalanceCatalogue, ContentDB).

@@ -65,6 +65,7 @@ CHECKS = (
     Check("run_balance_f0", "Test F0 evaluator protocol", ("balance_ml",)),
     Check("run_balance_tier1_f0", "Test Tier-1 F0 response contract", ("balance_ml",)),
     Check("run_balance_f1_f2", "Test F1/F2 racing and model adequacy rules", ("balance_ml",)),
+    Check("run_balance_exam", "Test balance exam driver", ("balance_ml",)),
     Check("run_provenance_evidence", "Test execution-provenance capability", (
         "provenance_evidence",)),
     Check("run_doc_anchors", "Check doc file:line anchors", ("docs",)),
