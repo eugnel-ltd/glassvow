@@ -795,3 +795,48 @@ Fuse pass (same day, seeded from the first edit):
 
 sha256 `c1d4d34d6f1299f2a162a3fafb9d76ec61ec4e635914aedfd65e5493774447dd`.
 
+### `map/materials/act1-ground-ash-loam.png` — 1024×1024 opaque RGB
+
+Act I ground tile for the map surface shader (`MapMaterials.bind_act` →
+`surface_tex` / `tex_mean`). Neutral scalar grain duplicated into RGB; act hue
+belongs to `MapRegions` ramp bands, never albedo. Not a painted landscape and
+not a PBR stack: no baked key light, cast shadow, AO, normal, height, roughness,
+or alpha.
+
+**Method, not an image-gen prompt.** Deterministic local authoring
+(`tileable-value-noise-fbm`, seed `293001`). Wrapped value-noise fBm on a 1024
+torus so opposite edges are ordinary neighbours. Octaves (wavelength px, weight,
+Y-stretch): `(8, 0.55, 1)`, `(16, 0.28, 1)`, `(32, 0.14, 1)`, `(64, 0.08, 1)`,
+plus a squared crumb layer at 16/32 px. Contrast is a global std scale around
+mean 0.5 — no directional gradient. Integer-hash wrap is uint32.
+
+Measured on the shipped PNG: stored-channel mean `0.499998`, 8×8 linear-luminance
+spread `0.057157` ≤ 0.15, combined seam ratio `0.304717` (x `0.177`, y `0.430`)
+≤ 3.0, 156 distinct grey levels, RGB identical per pixel. Manifest `tex_mean`
+stays `0.5` (tolerance 0.02). After binding, albedo is
+`texture * (GROUND_VALUE / tex_mean)` so the linear ground↔prop gap remains
+`0.320` ≥ 0.272.
+
+sha256 `1936fcb0df1e41241ba691fc921708ffd6e07a2b28584bc22693ce5a69c0460c`.
+Import: Godot 4.7.2 `compress/mode=2`, `compress/high_quality=true`,
+`mipmaps/generate=true`. Named-device visual and iPad 8 smoke remain HITL.
+
+### `map/materials/act1-prop-charred-bark.png` — 1024×1024 opaque RGB
+
+Act I prop tile for the triplanar prop shader. Same neutral-scalar contract as
+the ground tile; the grain is different so ground and bark do not share one
+contour. Vertical ridged fibres plus shorter char flakes, still torus-wrapped
+and free of baked lighting.
+
+**Method.** Same generator, seed `293002`. Fibre octaves
+`(8, 0.22, 1)`, `(16, 0.38, 0.5)`, `(32, 0.28, 0.25)`, `(64, 0.12, 0.25)` with
+`1 - |2v - 1|` ridge, mixed with an isotropic flake layer at 8/16 px. Contrast
+is again a global std scale around mean 0.5.
+
+Measured: stored-channel mean `0.500000`, 8×8 spread `0.035092`, combined seam
+ratio `0.112113` (x `0.092`, y `0.127`), 180 grey levels, RGB identical per
+pixel. Manifest `tex_mean` stays `0.5`. Bound albedo uses `PROP_VALUE / tex_mean`.
+
+sha256 `0c5dda3dbf7a829f6697279535ab5c8b3bf1b13f25277d1c3238a484173f4a69`.
+Import same as the ground tile. Visual/iPad-8 HITL remains.
+

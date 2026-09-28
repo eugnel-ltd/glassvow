@@ -117,6 +117,20 @@ static func _scene(fails: Array[String]) -> void:
 	else:
 		_check(fails, paths.is_empty(),
 				"declared-but-absent assets keep the current placeholder geometry")
+	var ground_tile: String = "res://assets/art/map/materials/act1-ground-ash-loam.png"
+	var prop_tile: String = "res://assets/art/map/materials/act1-prop-charred-bark.png"
+	if ResourceLoader.exists(ground_tile) and ResourceLoader.exists(prop_tile):
+		_check(fails, paths.has(ground_tile) and paths.has(prop_tile),
+				"present Act I tiles bind through MapMaterials")
+		var live_ground: ShaderMaterial = _override(scene, "TerrainPlaceholder")
+		var live_prop: ShaderMaterial = _override(scene, "FlatWedges")
+		if live_ground != null and live_prop != null:
+			_check(fails, absf(_as_float(live_ground.get_shader_parameter("tex_mean")) - 0.5) <= 0.02
+					and absf(_as_float(live_prop.get_shader_parameter("tex_mean")) - 0.5) <= 0.02,
+					"bound Act I tile tex_mean stays in the 0.50±0.02 lock")
+			_check(fails, not is_same(live_ground.get_shader_parameter("surface_tex"),
+					live_prop.get_shader_parameter("surface_tex")),
+					"Act I ground and prop bind distinct live tiles")
 	for node_name: String in ["FlatWedges", "StackedSlabs", "DabMasses"]:
 		var placeholder: Node = scene.find_child(node_name, true, false)
 		_check(fails, placeholder is GeometryInstance3D
@@ -413,9 +427,16 @@ static func _palette(fails: Array[String]) -> void:
 	var ground_end: ShaderMaterial = _override(scene, "TerrainPlaceholder")
 	_check(fails, ground_end != null
 			and is_equal_approx(g_val, MapMaterials.GROUND_VALUE)
-			and is_same(surface, ground_end.get_shader_parameter("surface_tex"))
 			and ground_end.get_shader_parameter("albedo") == null,
-			"act switch does not retint albedo / surface_tex / surface_value")
+			"act switch does not retint albedo / surface_value")
+	var act1_ground: String = "res://assets/art/map/materials/act1-ground-ash-loam.png"
+	if ResourceLoader.exists(act1_ground):
+		_check(fails, surface is Texture2D
+				and not is_same(surface, ground_end.get_shader_parameter("surface_tex")),
+				"present Act I ground tile does not leak onto later acts")
+	else:
+		_check(fails, is_same(surface, ground_end.get_shader_parameter("surface_tex")),
+				"absent tiles keep the shared fallback across acts")
 	scene.free()
 
 
