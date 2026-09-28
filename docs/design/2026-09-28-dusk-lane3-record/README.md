@@ -61,7 +61,7 @@ The kindle limit and kindle Ward, `domain/rules/rewards.gd` and every tool were 
 
 ### 2.4 Tests and pins
 
-- `tests/test_aspect_shatter.gd` ([L205-L325](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/tests/test_aspect_shatter.gd#L205-L325)):
+- `tests/test_aspect_shatter.gd` ([L152-L325](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/tests/test_aspect_shatter.gd#L152-L325)):
   - The existing crown case now reads its numbers from content: Emberbite 4 + 2 = 6 Smolder and 2 Ward on the 10-card deck.
   - New `_unbroken_crown_fullness`: 2 + 2 at 29 cards and 3 + 3 at 30.
   - New `_tithes_dusk_clause`, on a 23-card deck: 0 preview chips; no chip, stagger or explicit chip; 2 Fervor, once; 5 Ward on turns 1–3 (on turns 2–3 after 50 leftover Ward); kindles twice for 3 Ward each, and a third kindle is refused.
@@ -124,13 +124,13 @@ Lane 3 itself adds only §2: the Tithes fork, crown fullness (which retunes #557
 
 ## 5. Dev gate and Phase A history
 
-Dev gate: [`dev-gate.json`](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/dev-gate.json). It passed at both vows on both heads, and each head reproduced its lock probe rows byte for byte (9 of 9 files).
+Dev gate: [`dev-gate.json`](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/dev-gate.json). It passed at both vows before and after knob 1, and each run reproduced its lock probe rows (F1, then K2) byte for byte (9 of 9 files). The knob-1 run used `85deaec` code with the knob-1 content, whose SHA-256 equals `582e2f7`'s.
 
 | Head | Vow | Top three cells | Arm 2 | Gap | Tithes paired (holders) | Crown paired (holders) |
 |---|---|---|---:|---:|---:|---:|
 | `85deaec` (F1) | V0 | 70.7 · 68.4 · 64.8 | 34.4% | 36.3 pp | +1.3 pp (951) | +0.1 pp (746) |
 | | V5 | 56.5 · 51.5 · 50.9 | 14.5% | 42.0 pp | +2.6 pp (621) | +1.0 pp (414) |
-| `582e2f7` (K2) | V0 | 72.4 · 68.1 · 64.4 | 30.4% | 42.0 pp | +2.9 pp (897) | +2.8 pp (647) |
+| `582e2f7` content (K2) | V0 | 72.4 · 68.1 · 64.4 | 30.4% | 42.0 pp | +2.9 pp (897) | +2.8 pp (647) |
 | | V5 | 60.6 · 56.7 · 56.6 | 11.1% | 49.5 pp | +7.4 pp (543) | +7.4 pp (340) |
 
 Phase A arm 2 (200 seeds each):
@@ -235,7 +235,7 @@ Every island that started in a fork cell (smolder:fat or attrition:fat) drifted 
 - The result is robust to reading rules: wins-only end cells or #557's 21/30 cuts add no V0 stay (VERIFIED).
 - Estimated Phase A Dusk V0 would be 33.5–35.0% for A and 33.1–34.6% for B, at or near the 35.0% ceiling, with knob 1 already spent.
 
-Revision 1 also priced, at probe scale: R240 (knob 1 reverted); P (P1 plus Crown of the Hearth Ashwarden-only; arm 2 V0 37.1%); H20 (Hollow Crown −20 max HP); HX (Hollow Crown Ashwarden-only; C1a 2 cells at both vows); crown full at 26 cards or flat 3 + 3; and dev-gate-only combinations HXR260, HXR240, PR260, PR240, P1R260C26 and P1R260CF. No variant with a mini-CEM showed more than 2 distinct V0 stays; the dev-gate-only combinations were not run through CEM.
+Revision 1 also priced, at probe scale: R240 (knob 1 reverted); P (P1 plus Crown of the Hearth Ashwarden-only; arm 2 V0 37.1%); H20 (Hollow Crown −20 max HP); HX (Hollow Crown Ashwarden-only; C1a 2 cells at both vows); P1 + crown full at 26 cards and P1 + flat crown 3 + 3; and dev-gate-only combinations HXR260, HXR240, PR260, PR240, P1R260C26 and P1R260CF. No variant with a mini-CEM showed more than 2 distinct V0 stays; the dev-gate-only combinations were not run through CEM.
 
 **Decision (#569): stop.** No variant qualifies, neither content field is implemented, no exam is spent, and C3 is not loosened.
 
@@ -245,7 +245,7 @@ Lane 3 met layer 1 and missed layer 2. The Tithes fork and crown fullness made t
 - At V0, the forks were not competitive first boss picks against the lane-neutral Hollow Crown. Each fork is also offered in only half of act-1 boss offers.
 - At V5, the 280-HP Rootheart ended roughly half of optimised runs before any boss relic. The best V5 whole-policy frontier found (45–47%) is in the shatter lane, and the fork-lane V5 islands sat 10–18.5 pp below it.
 
-The two retry levers pulled in opposite directions. Knob 1 (Rootheart 280) was needed to bring Phase A Dusk V0 arm 2 under 35.0%: it was 37.5% at 240 HP. The harder act-1 boss is also the V5 wall. Rootheart relief is the only V5 lever with evidence, and it adds no stay while pushing Phase A back to its ceiling (VERIFIED numbers; the reading is INFERRED in #569 §5). The lock's rules left no knob for a C3 miss, and neither #569 candidate met the owner's bar, so the lane stopped. The #569 diagnosis also records that tool properties add noise but do not explain the V0 direction (INFERRED).
+One lever, Rootheart HP, pulled the two gates in opposite directions. Knob 1 (Rootheart 280) was needed to bring Phase A Dusk V0 arm 2 under 35.0%: it was 37.5% at 240 HP. The harder act-1 boss is also the V5 wall. Rootheart relief is the only V5 lever with evidence, and it adds no stay while pushing Phase A back to its ceiling (VERIFIED numbers; the reading is INFERRED in #569 §5). The lock's rules left no knob for a C3 miss, and neither #569 candidate met the owner's bar, so the lane stopped. The #569 diagnosis also records that tool properties add noise but do not explain the V0 direction (INFERRED).
 
 ## 9. Not tried or not done
 
@@ -254,9 +254,9 @@ The two retry levers pulled in opposite directions. Knob 1 (Rootheart 280) was n
 - **Candidates A and B were not implemented**, and no second exam was run.
 - **The shatter bundle** (Cracked 2 → 1, probe F1c1) was priced and rejected in the lock. It drops V5 shatter:fat 12.7 pp behind the top.
 - **Instrument and pilot grammar are unchanged.** No policy key was added. The pilot's card and relic scores ignore held relics, and `cardDecline` is one global threshold. #569 lists both only as noise sources, and neither was changed.
-- **Out of scope for the lane:** Ashwarden (deferred), H10 (Dusk-only stun) and the H11 scope, which were untouched. Knob 1 did reverse the recorded "do not raise enemy HP or facets" lesson, as an explicit owner call.
+- **Out of scope for the lane:** Ashwarden balance (deferred), H10 (Dusk-only stun) and the H11 scope. H10 and H11 were untouched, and Ashwarden gets none of the Dusk clause. Knob 1's Rootheart 280 does apply to Ashwarden's act-1 boss (Phase A Ash arm 1: V0 76.0% → 70.0%, V5 34.0% → 30.0%; lock §4). It also reversed the recorded "do not raise enemy HP or facets" lesson, as an explicit owner call.
 - **No independent re-run.** The rules require one only after an all-PASS result.
-- **Layer 2 was not probed before the exam.** The lock left C3 and C4 UNKNOWN.
+- **Layer 2 was not probed before the exam.** The lock marked C3 UNKNOWN; its probe notes marked C3 and C4 UNKNOWN.
 - **Follow-ups left open on the branch:** the story canon-lint for the new copy was not run (the repo has no deterministic script), the long Tithes text, and Facet gauges still drawing for fork holders. #569 also marks the test and fixture impact of P1 as UNKNOWN.
 
 ## 10. References
@@ -291,4 +291,4 @@ The two retry levers pulled in opposite directions. Knob 1 (Rootheart 280) was n
   - [C3 diagnosis](https://github.com/fol2/glassvow/blob/04fd5b85c7653736972761f575d5c7db32415fa3/docs/reviews/421/dusk-lane3-c3-diagnosis.md);
   - [C3 probe data](https://github.com/fol2/glassvow/blob/04fd5b85c7653736972761f575d5c7db32415fa3/docs/reviews/421/data/dusk-lane3-c3-probes.json).
 - **Issue:** [#421 exam 1 readout comment](https://github.com/fol2/glassvow/issues/421#issuecomment-5863378757) (2026-09-28).
-- **Raw rows:** VM-local raw rows, not in Git: `/home/box/ops/glassvow/d568-exam1-582e2f7` on the Linux x86_64 evaluation VM (`layer1/`, `layer2/`, `phase-a/` and `phase-a.log`, about 4.3 GB). Paths, sizes and SHA-256 are listed in the [raw-rows manifest](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/raw-rows-manifest.json). The probe runners and probe rows were never committed. The lock's probe notes and #569 §6 are their only record.
+- **Raw rows:** VM-local raw rows, not in Git: `/home/box/ops/glassvow/d568-exam1-582e2f7` on the Linux x86_64 evaluation VM (`layer1/`, `layer2/`, `phase-a/` and `phase-a.log`, about 4.6 GB (4.3 GiB)). Paths, sizes and SHA-256 are listed in the [raw-rows manifest](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/raw-rows-manifest.json). The probe runners and probe rows were never committed. The lock's probe notes and #569 §6 are their only record.
