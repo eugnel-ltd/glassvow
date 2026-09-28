@@ -795,3 +795,76 @@ Fuse pass (same day, seeded from the first edit):
 
 sha256 `c1d4d34d6f1299f2a162a3fafb9d76ec61ec4e635914aedfd65e5493774447dd`.
 
+### Act II ordinary clay — five accepted concepts
+
+1:1 clay maquettes under `assets/art/map-concepts/`, not shipping textures.
+Reviewer **fol2** accepted all five on 2026-08-21:
+`act2-drowned-wall-corner`, `act2-silted-stair`, `act2-library-arch`,
+`act2-sunken-shelf-mass`, `act2-lure-lantern-post`. That acceptance
+authorises Studio Pro image-to-3D for these ordinary kits only; the API /
+OpenAPI remains forbidden.
+Seed (only image-edit input):
+`assets/art/map-concepts/shared-road-slab-a.jpg`, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+Codex / OpenAI ImageGen image-edit, 2026-08-21. Godot 4.7.2.stable wrote each
+`.import` sidecar. Conversion (all five, reproducible): Pillow 12.3.0,
+`Image.open(src).convert("RGB")`, `resize((1024, 1024),
+Image.Resampling.LANCZOS)`, `save(..., format="JPEG", quality=95,
+subsampling=0, optimize=False, progressive=False)`. Source PNGs 1254×1254 RGB;
+a second pass matched the JPEG hashes.
+
+### `map-concepts/act2-drowned-wall-corner.jpg`
+
+Asset `act2-drowned-wall-corner` (A2-1: drowned city wall mass). Prompt
+essentials: two thick short wall runs meet at a right angle as one fused
+L-shaped masonry mass. Source PNG
+`~/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-bba5fe13-9fe1-41c9-a811-acd06879ec68.png`,
+1254×1254 RGB, sha256
+`1a380853641aa334b4cd20cf8f65627cefca7544521690024e9acde622434e87`.
+JPEG 1024×1024 RGB, 127446 bytes, sha256
+`9243439b119ffdd6303db2f4a1806f1e97cc7dcf1bdb78bcb3bb783c2f60ed02`.
+
+### `map-concepts/act2-silted-stair.jpg`
+
+Asset `act2-silted-stair` (A2-2: broad stair disappearing into silt). Prompt
+essentials: broad short 4–5-step stone stair fused into a smooth silt bank, one connected volume.
+Source PNG
+`~/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-fd3b04cb-77b5-4e2e-b7ed-e63e029bf2d8.png`,
+1254×1254 RGB, sha256
+`3a826d3ff2464c867ad981796c0081e7cd267bff14e006d1ec9674370df14890`.
+JPEG 1024×1024 RGB, 134022 bytes, sha256
+`bf6aa92e9b62b373af66456ad5b1cc7771d9a6de288f02b844fb1a47279a335b`.
+
+### `map-concepts/act2-library-arch.jpg`
+
+Asset `act2-library-arch` (A2-3: flooded-library threshold). Prompt
+essentials: thick short piers fused to wide low lintel, one rectangular opening, no books/shelves.
+Source PNG
+`~/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-5b2ee809-d152-4435-b5d1-a2469bffe406.png`,
+1254×1254 RGB, sha256
+`eb2b14b680d9906b0c3031337f6070e7b6b10638963dbafe2f5274558bd060bd`.
+JPEG 1024×1024 RGB, 135881 bytes, sha256
+`a77f3a74826441a23a42f5e537b5741e1f4379da771c8c108d1836941e0cde99`.
+
+### `map-concepts/act2-sunken-shelf-mass.jpg`
+
+Asset `act2-sunken-shelf-mass` (A2-4: stacked slab; no thin shelf slats).
+Prompt essentials: three or four thick stone slabs melted into one connected
+stepped pile; no thin shelf slats. Source PNG
+`~/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-199ec4b7-321e-4f16-a89c-54f429fae48d.png`,
+1254×1254 RGB, sha256
+`ce352504e4ac09ed10d9ee383c77c44f43571b29c93e4f8d4a9066ba98ea61d4`.
+JPEG 1024×1024 RGB, 140863 bytes, sha256
+`5b8d0a75fad4244df851144cc1c822faf0da59ad0336c292b6f23893d1b37c53`.
+
+### `map-concepts/act2-lure-lantern-post.jpg`
+
+Asset `act2-lure-lantern-post` (A2-5: false-light landmark; no cage bars or
+chains). Prompt essentials: thick leaning post fused to oversized faceted lamp head and wide foot, no cage/chain/flame.
+Source PNG
+`~/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-715f834c-b542-4925-9fdf-dac15193577a.png`,
+1254×1254 RGB, sha256
+`abcfa212a19fd60ec883316753d5af6bad64b6e4ab1c176dd723048e2ee0478f`.
+JPEG 1024×1024 RGB, 126625 bytes, sha256
+`96c0a3f77c8130fc48bc4a2056828e4dd86ce64477ff264c9dad245626dea1c7`.
+
