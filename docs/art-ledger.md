@@ -795,3 +795,185 @@ Fuse pass (same day, seeded from the first edit):
 
 sha256 `c1d4d34d6f1299f2a162a3fafb9d76ec61ec4e635914aedfd65e5493774447dd`.
 
+### Act IV ordinary clay — five accepted concepts
+
+Five ordinary kit silhouettes already sit in
+`docs/map-scene-asset-bill.md` (A4-1–A4-5). They do not need a new canon
+decision. This section records the five ordinary clay briefs and their
+generated concept JPEGs. Reviewer **fol2** accepted all five on 2026-08-21:
+`act4-mirror-road-slab` (A4-1), `act4-standing-pair` (A4-2),
+`act4-reverse-hearth-arch` (A4-3), `act4-threshold-buttress` (A4-4),
+and `act4-pale-fractured-mass` (A4-5). That acceptance authorises
+Studio Pro image-to-3D for these ordinary kits only. API/OpenAPI
+generation remains forbidden. Out of scope, and **not decided here**:
+A4-H `terminus-threshold`.
+
+All five concepts are 1:1 clay maquettes, not shipping textures. They live
+outside `assets/art/map/` so `tools/check_map_assets.py` does not treat
+them as undeclared payload. Godot imports each JPEG under
+`assets/art/map-concepts/`; the Godot-generated `.import` sidecar is
+committed with the JPEG (do not hand-edit the sidecar). The only
+image-edit seed is `assets/art/map-concepts/shared-road-slab-a.jpg`
+(port-authored Grok Imagine, 2026-08-19, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`),
+already the accepted Studio concept for shipping `shared-road-slab-a.glb`.
+Codex generated the five concept JPEGs on 2026-08-21 via OpenAI
+ImageGen image-edit, seeded from that file.
+
+Conversion (all five, reproducible): Pillow 12.3.0,
+`Image.open(src).convert("RGB")`,
+`resize((1024, 1024), Image.Resampling.LANCZOS)`, then
+`save(..., format="JPEG", quality=95, subsampling=0, optimize=False,
+progressive=False)`. Source PNGs were 1254×1254 RGB. A second conversion
+pass produced the same JPEG hashes.
+
+### `map-concepts/act4-mirror-road-slab.jpg` — 1:1 concept, not a shipping texture
+
+**Status:** accepted 2026-08-21 by reviewer fol2. Authorises Studio Pro
+image-to-3D for this ordinary kit; API/OpenAPI remains forbidden.
+
+Tripo Studio image-to-3D input for kit module `act4-mirror-road-slab` (A4-1:
+reversed-road language). Seed: `shared-road-slab-a.jpg`, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+Later GLB, not this commit: `assets/art/map/geometry/act4/mirror-road-slab.glb`.
+
+Edit prompt (2026-08-21, Codex via OpenAI ImageGen image-edit, seeded from
+`shared-road-slab-a.jpg`, **ran**):
+
+> Keep the exact same clay-maquette look, medium-gray studio background, even
+> above-front lighting, 3/4 orthographic view, and matte untextured stone
+> surface. Replace the low road slab with one different prop: a single
+> broad reversed-road slab with an offset fold, no reflective material.
+> Chunky low-poly geometric volumes, no grass, no moss, no thin crack lines,
+> no cast shadow on the ground. Isolated, centered, large in frame. Distinct
+> folded-slab silhouette, still a simple game-kitbash mass.
+
+Source PNG (session-local, not in repo):
+`/Users/jamesto/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-f2123aa1-e8f4-4472-b668-b7bebcef6130.png`,
+1254×1254 RGB, sha256
+`cb6fe6b11a07e0d543c5b30f942651b1bf253e896f394c2a1e4f79bf2e3dd2f0`.
+Concept JPEG: `assets/art/map-concepts/act4-mirror-road-slab.jpg`,
+1024×1024 RGB, 124220 bytes, sha256
+`2c4230d53ca927325290f62731bec3c1b3bd71a26584ac7f6156294a98d4aa84`.
+Godot 4.7.2.stable generated `act4-mirror-road-slab.jpg.import`.
+
+### `map-concepts/act4-standing-pair.jpg` — 1:1 concept, not a shipping texture
+
+**Status:** accepted 2026-08-21 by reviewer fol2. Authorises Studio Pro
+image-to-3D for this ordinary kit; API/OpenAPI remains forbidden.
+
+Tripo Studio image-to-3D input for kit module `act4-standing-pair` (A4-2:
+queue of standing monuments). Seed: `shared-road-slab-a.jpg`, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+Later GLB, not this commit: `assets/art/map/geometry/act4/standing-pair.glb`.
+
+Edit prompt (2026-08-21, Codex via OpenAI ImageGen image-edit, seeded from
+`shared-road-slab-a.jpg`, **ran**):
+
+> Keep the exact same clay-maquette look, medium-gray studio background, even
+> above-front lighting, 3/4 orthographic view, and matte untextured stone
+> surface. Replace the low road slab with one different prop: a single
+> pair of two uneven stelae fused into one base.
+> Chunky low-poly geometric volumes, no grass, no moss, no thin crack lines,
+> no cast shadow on the ground. Isolated, centered, large in frame. Distinct
+> paired-stele silhouette, still a simple game-kitbash mass.
+
+Source PNG (session-local, not in repo):
+`/Users/jamesto/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-80fa2483-e6ed-4b21-a747-01688ede9ffc.png`,
+1254×1254 RGB, sha256
+`724962d339f9bfd00f0f95483338d24f168b8a594c63ca9be94e89be7a483119`.
+Concept JPEG: `assets/art/map-concepts/act4-standing-pair.jpg`,
+1024×1024 RGB, 136067 bytes, sha256
+`c3b9e713650bd3f18bcfb863f11ff75b40a276a6c34db94d1bce4d6c04ad2d23`.
+Godot 4.7.2.stable generated `act4-standing-pair.jpg.import`.
+
+### `map-concepts/act4-reverse-hearth-arch.jpg` — 1:1 concept, not a shipping texture
+
+**Status:** accepted 2026-08-21 by reviewer fol2. Authorises Studio Pro
+image-to-3D for this ordinary kit; API/OpenAPI remains forbidden.
+
+Tripo Studio image-to-3D input for kit module `act4-reverse-hearth-arch` (A4-3:
+inverted hearth-light threshold). Seed: `shared-road-slab-a.jpg`, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+Later GLB, not this commit: `assets/art/map/geometry/act4/reverse-hearth-arch.glb`.
+
+Edit prompt (2026-08-21, Codex via OpenAI ImageGen image-edit, seeded from
+`shared-road-slab-a.jpg`, **ran**):
+
+> Keep the exact same clay-maquette look, medium-gray studio background, even
+> above-front lighting, 3/4 orthographic view, and matte untextured stone
+> surface. Replace the low road slab with one different prop: a single
+> thick threshold with a blunt central inverted V.
+> Chunky low-poly geometric volumes, no grass, no moss, no thin crack lines,
+> no cast shadow on the ground. Isolated, centered, large in frame. Distinct
+> inverted-V threshold silhouette, still a simple game-kitbash mass.
+
+Source PNG (session-local, not in repo):
+`/Users/jamesto/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-012f3c96-8bab-4580-95da-9c3b1788b5e4.png`,
+1254×1254 RGB, sha256
+`1e2792e1c61d98048061c75ccfa51cfb9b8202a2e1142a838dc39287f3104ba6`.
+Concept JPEG: `assets/art/map-concepts/act4-reverse-hearth-arch.jpg`,
+1024×1024 RGB, 132577 bytes, sha256
+`449285b06f2de4dfe757d303e08945fd3f3c7ed956725b3c24e5297c9a39b370`.
+Godot 4.7.2.stable generated `act4-reverse-hearth-arch.jpg.import`.
+
+### `map-concepts/act4-threshold-buttress.jpg` — 1:1 concept, not a shipping texture
+
+**Status:** accepted 2026-08-21 by reviewer fol2. Authorises Studio Pro
+image-to-3D for this ordinary kit; API/OpenAPI remains forbidden.
+
+Tripo Studio image-to-3D input for kit module `act4-threshold-buttress` (A4-4:
+door/threshold support mass). Seed: `shared-road-slab-a.jpg`, sha256
+`619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+Later GLB, not this commit: `assets/art/map/geometry/act4/threshold-buttress.glb`.
+
+Edit prompt (2026-08-21, Codex via OpenAI ImageGen image-edit, seeded from
+`shared-road-slab-a.jpg`, **ran**):
+
+> Keep the exact same clay-maquette look, medium-gray studio background, even
+> above-front lighting, 3/4 orthographic view, and matte untextured stone
+> surface. Replace the low road slab with one different prop: a single
+> heavy angled buttress with a broad foot and a vertical support edge.
+> Chunky low-poly geometric volumes, no grass, no moss, no thin crack lines,
+> no cast shadow on the ground. Isolated, centered, large in frame. Distinct
+> buttress silhouette, still a simple game-kitbash mass.
+
+Source PNG (session-local, not in repo):
+`/Users/jamesto/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-b4b3f419-c09b-4fcf-bc01-400405fdd01b.png`,
+1254×1254 RGB, sha256
+`ecaf1902553d12ac2e61225c7f12b9872371cf1bf31ee71d9bc1964c238c04ab`.
+Concept JPEG: `assets/art/map-concepts/act4-threshold-buttress.jpg`,
+1024×1024 RGB, 133889 bytes, sha256
+`539815ce80703b96118be79a2e468cccca2e15f36545c652e8b90656c4b4c17b`.
+Godot 4.7.2.stable generated `act4-threshold-buttress.jpg.import`.
+
+### `map-concepts/act4-pale-fractured-mass.jpg` — 1:1 concept, not a shipping texture
+
+**Status:** accepted 2026-08-21 by reviewer fol2. Authorises Studio Pro
+image-to-3D for this ordinary kit; API/OpenAPI remains forbidden.
+
+Tripo Studio image-to-3D input for kit module `act4-pale-fractured-mass` (A4-5:
+neutral broad mass; no new canon symbol). Seed: `shared-road-slab-a.jpg`,
+sha256 `619d97054471996410be36370d1ec128d0f90489e7c55dc00e47bc0d8a31d54a`.
+Later GLB, not this commit: `assets/art/map/geometry/act4/pale-fractured-mass.glb`.
+
+Edit prompt (2026-08-21, Codex via OpenAI ImageGen image-edit, seeded from
+`shared-road-slab-a.jpg`, **ran**):
+
+> Keep the exact same clay-maquette look, medium-gray studio background, even
+> above-front lighting, 3/4 orthographic view, and matte untextured stone
+> surface. Replace the low road slab with one different prop: a single
+> neutral wide fused fractured mass with no canon symbol.
+> Chunky low-poly geometric volumes, no grass, no moss, no thin crack lines,
+> no cast shadow on the ground. Isolated, centered, large in frame. Distinct
+> fractured-mass silhouette, still a simple game-kitbash mass.
+
+Source PNG (session-local, not in repo):
+`/Users/jamesto/.codex/generated_images/01a021e0-d9c7-75f2-93d8-c5899e9c1d2a/exec-69c4678b-f088-457d-8745-6c670eb14fd8.png`,
+1254×1254 RGB, sha256
+`4083dde5b2d345155600311be54fd2c1806c18741089201179363529f9e82ce4`.
+Concept JPEG: `assets/art/map-concepts/act4-pale-fractured-mass.jpg`,
+1024×1024 RGB, 127765 bytes, sha256
+`5c496ae460b19636f8aa3cc966b60ae564b5b053eabd3e8243180a0d2b391e8f`.
+Godot 4.7.2.stable generated `act4-pale-fractured-mass.jpg.import`.
+
