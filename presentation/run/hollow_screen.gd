@@ -144,7 +144,7 @@ func _build() -> void:
 	var paid: bool = str(_pending.get("paid", false)) == "true"
 	# The ask arrives typed, as every line on the stagecraft pane does; a
 	# resumed, already-paid meeting opens on his answer instead.
-	_say("paid" if paid and _has_line("paid") else "ask", false)
+	_say(_answer_field() if paid else "ask", false)
 	_stand(MOOD_PAID if paid else MOOD_ASK, true)
 	set_paid(paid, str(_pending.get("answer", "")))
 	resized.connect(_layout)
@@ -177,8 +177,8 @@ func set_paid(paid: bool, answer: String = "") -> void:
 	_error.text = ""
 	_sync_notes()
 	_stand(MOOD_PAID if paid else MOOD_ASK, false)
-	if paid and _has_line("paid"):
-		_say("paid", false)
+	if paid:
+		_say(_answer_field(), false)
 
 
 func show_error(message: String) -> void:
@@ -206,11 +206,19 @@ func play_paid() -> void:
 	_sfx.play(&"kindle")
 
 
+## His answer once the price is met. A promised price (the first meeting's
+## embers, owed to fights still to come) is accepted, not yet paid.
+func _answer_field() -> String:
+	if str(_pending.get("deferred", false)) == "true" and _has_line("accepted"):
+		return "accepted"
+	return "paid" if _has_line("paid") else "ask"
+
+
 func _has_line(field: String) -> bool:
 	return not str(_meeting.get(field, "")).strip_edges().is_empty()
 
 
-## One of the meeting's own lines (`ask`, `paid`, `cannot`) into the pane,
+## One of the meeting's own lines (`ask`, `accepted`, `paid`, `cannot`) into the pane,
 ## under his plaque.
 func _say(field: String, instant: bool) -> void:
 	_copy.show_line("“%s”" % str(_meeting.get(field, "")),

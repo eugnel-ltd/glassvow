@@ -110,6 +110,13 @@ static func _hollow_two_shot(fails: Array[String], content: ContentDB) -> void:
 	_check(fails, resumed._ask.text == "“%s”" % str(meeting.get("paid", "")),
 		"a resumed, paid meeting does not open on his answer")
 	resumed.free()
+	var first: Dictionary = meetings[0]
+	var promised: HollowScreen = HollowScreen.new(
+		{"paid": true, "deferred": true, "answer": "ui.hollow.message.emberDebt"},
+		first, 1, meetings.size(), StageShape.IDENTITY, null, "ashwarden")
+	_check(fails, promised._ask.text == "“%s”" % str(first.get("accepted", "")),
+		"a promised price is not accepted in his own words")
+	promised.free()
 	screen.play_paid()
 	_check(fails, screen._front.active(), "paying kindled nothing")
 	screen.free()
