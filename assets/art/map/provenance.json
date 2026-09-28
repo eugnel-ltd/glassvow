@@ -222,6 +222,48 @@
       "concept_sha256": "b4b0ddfaa07e2b6f5083e9185413931123154ee5bd6ec7cb59f2c68aef80d2b3",
       "land_method": "studio_download",
       "polycount_target": 1500
+    },
+    {
+      "asset_id": "act3-grade",
+      "source": "local-deterministic",
+      "created_at": "2026-08-21T19:40:00+08:00",
+      "license": "Glassvow port-authored; no vendor grant",
+      "source_sha256": "56d9bb012038351f35fe2ea28086e2633b5d7811fc42cefeeb2fd67f155de332",
+      "final_sha256": "56d9bb012038351f35fe2ea28086e2633b5d7811fc42cefeeb2fd67f155de332",
+      "edits": [
+        "512x256 RGBA low-frequency painted grade: violet storm surround, obsidian-court corridor, broken-ring approach at the east seat",
+        "alpha contact darkening on MapScene module footprints plus the authored terminus seat; open 1.0 elsewhere",
+        "palette_arc follows MapRegions GRADE_HUE_NEAR/FAR/CORRIDOR act 2 (0.78/0.70/0.62)",
+        "Godot 4.7.2 importer sidecar kept as generated; HQ VRAM+mips not set (docs/reviews/294/import-blocker.md)",
+        "accepted as #294 Act III candidate; no fol2 visual sign-off observed"
+      ],
+      "reviewer": "candidate",
+      "verdict": "accepted",
+      "concept_path": "assets/art/stage/act3-backdrop.png",
+      "concept_sha256": "b5e9409f1a9854461c84fa51e0f3d0fffd0d8c333b0782ebdac8b8c3306bd0c4",
+      "land_method": "local-deterministic"
+    },
+    {
+      "asset_id": "act3-terminus",
+      "source": "local-deterministic",
+      "created_at": "2026-08-21T19:40:00+08:00",
+      "license": "Glassvow port-authored; no vendor grant",
+      "source_sha256": "ebef416b17326d37bbe39f0e1a3d162dc076be9d809c7bd25ae1656b41875781",
+      "final_sha256": "ebef416b17326d37bbe39f0e1a3d162dc076be9d809c7bd25ae1656b41875781",
+      "edits": [
+        "hand-curated one-surface GLB tracing shipped act3-backdrop.png broken ring-arch (gold halo behind the peak), fused to a grounded obsidian-court lathe",
+        "POSITION+NORMAL only; no UV/tangent/texture/image/animation/skeleton; Y-up metres; ground Y=0; one connected island",
+        "accepted as #294 Act III candidate; no fol2 visual sign-off observed"
+      ],
+      "reviewer": "candidate",
+      "verdict": "accepted",
+      "concept_path": "assets/art/stage/act3-backdrop.png",
+      "concept_sha256": "b5e9409f1a9854461c84fa51e0f3d0fffd0d8c333b0782ebdac8b8c3306bd0c4",
+      "land_method": "local-deterministic",
+      "polycount_target": 5000,
+      "faces_reported": 1920,
+      "texture": false,
+      "pbr": false
     }
   ]
 }

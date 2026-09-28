@@ -698,6 +698,35 @@ GLB at `geometry/shared/standing-monument.glb`. Studio Pro is the generating
 product; API generation is forbidden. Canonical 20-placement capture:
 `docs/reviews/293/shared-standing-monument-20.png`.
 
+### `map/grades/act3-grade.png` — 512×256 RGBA painted grade
+
+Act III map grade (#294): violet storm, obsidian court, broken-ring approach.
+RGB is low-frequency region/aerial wash on the `MapRegions` act-2 hue arc
+(near 0.78, far 0.70, corridor 0.62). Alpha is contact darkening on
+`MapScene` module footprints plus the terminus seat at world (22, 0).
+Port-authored, local-deterministic; not a vendor texture.
+
+sha256 `56d9bb012038351f35fe2ea28086e2633b5d7811fc42cefeeb2fd67f155de332`.
+Accepted as a #294 candidate only — no fol2 visual sign-off observed.
+Godot 4.7.2 importer sidecar is lossless/no-mips; HQ VRAM+mips is blocked
+in `docs/reviews/294/import-blocker.md`.
+
+### `map/geometry/act3/terminus-broken-ring-arch.glb` — hero terminus
+
+Act III hero terminus (#294): one-surface untextured GLB tracing the shipped
+broken ring-arch in `assets/art/stage/act3-backdrop.png` (gold halo behind
+the central peak; `act3-mid.png` confirms the split-ring read). Grounded
+obsidian-court lathe fused to the standing C-ring so the mesh is one
+connected island. POSITION+NORMAL, Y-up metres, Y min 0. 1920 triangles,
+35872 bytes.
+
+sha256 `ebef416b17326d37bbe39f0e1a3d162dc076be9d809c7bd25ae1656b41875781`.
+Traced source `act3-backdrop.png` sha256
+`b5e9409f1a9854461c84fa51e0f3d0fffd0d8c333b0782ebdac8b8c3306bd0c4`.
+Accepted as a #294 candidate only — no fol2 visual sign-off observed.
+Production-camera masks were not written here — headed Godot hung before
+raster; see `docs/reviews/294/import-blocker.md`.
+
 ### `map-concepts/act1-ash-trunk-fork.jpg` — 1:1 concept, not a shipping texture
 
 Tripo Studio image-to-3D input for kit module `act1-ash-trunk-fork` (A1-1 in
