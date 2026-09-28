@@ -1,0 +1,1330 @@
+{
+  "islands": 12,
+  "grids": {
+    "duskblade:v0": {
+      "islands": [
+        {
+          "island": 0,
+          "start": "smolder:fat",
+          "end": "smolder:mid",
+          "ceiling": 0.625,
+          "holdoutWins": 125,
+          "holdoutRuns": 200,
+          "gens": 13,
+          "stop": "stall",
+          "gen0": 0.675,
+          "ms": 1871759,
+          "curve": [
+            [
+              0,
+              0.675,
+              0.675
+            ],
+            [
+              1,
+              0.725,
+              0.725
+            ],
+            [
+              2,
+              0.75,
+              0.75
+            ],
+            [
+              3,
+              0.8,
+              0.8
+            ],
+            [
+              4,
+              0.75,
+              0.8
+            ],
+            [
+              5,
+              0.825,
+              0.825
+            ],
+            [
+              6,
+              0.825,
+              0.825
+            ],
+            [
+              7,
+              0.9,
+              0.9
+            ],
+            [
+              8,
+              0.825,
+              0.9
+            ],
+            [
+              9,
+              0.85,
+              0.9
+            ],
+            [
+              10,
+              0.85,
+              0.9
+            ],
+            [
+              11,
+              0.9,
+              0.9
+            ],
+            [
+              12,
+              0.85,
+              0.9
+            ]
+          ],
+          "endCounts": {
+            "shatter:mid": 47,
+            "shatter:thin": 17,
+            "smolder:thin": 13,
+            "shatter:fat": 9,
+            "smolder:mid": 72,
+            "smolder:fat": 26,
+            "attrition:thin": 10,
+            "attrition:mid": 5,
+            "attrition:fat": 1
+          }
+        },
+        {
+          "island": 1,
+          "start": "shatter:fat",
+          "end": "shatter:fat",
+          "ceiling": 0.605,
+          "holdoutWins": 121,
+          "holdoutRuns": 200,
+          "gens": 20,
+          "stop": "stall",
+          "gen0": 0.425,
+          "ms": 2658771,
+          "curve": [
+            [
+              0,
+              0.425,
+              0.425
+            ],
+            [
+              1,
+              0.475,
+              0.475
+            ],
+            [
+              2,
+              0.625,
+              0.625
+            ],
+            [
+              3,
+              0.75,
+              0.75
+            ],
+            [
+              4,
+              0.675,
+              0.75
+            ],
+            [
+              5,
+              0.7,
+              0.75
+            ],
+            [
+              6,
+              0.65,
+              0.75
+            ],
+            [
+              7,
+              0.775,
+              0.775
+            ],
+            [
+              8,
+              0.75,
+              0.775
+            ],
+            [
+              9,
+              0.825,
+              0.825
+            ],
+            [
+              10,
+              0.775,
+              0.825
+            ],
+            [
+              11,
+              0.775,
+              0.825
+            ],
+            [
+              12,
+              0.75,
+              0.825
+            ],
+            [
+              13,
+              0.725,
+              0.825
+            ],
+            [
+              14,
+              0.9,
+              0.9
+            ],
+            [
+              15,
+              0.825,
+              0.9
+            ],
+            [
+              16,
+              0.775,
+              0.9
+            ],
+            [
+              17,
+              0.825,
+              0.9
+            ],
+            [
+              18,
+              0.825,
+              0.9
+            ],
+            [
+              19,
+              0.85,
+              0.9
+            ]
+          ],
+          "endCounts": {
+            "smolder:thin": 3,
+            "shatter:fat": 143,
+            "shatter:mid": 11,
+            "shatter:thin": 13,
+            "attrition:mid": 9,
+            "smolder:fat": 2,
+            "attrition:thin": 9,
+            "attrition:fat": 9,
+            "smolder:mid": 1
+          }
+        },
+        {
+          "island": 2,
+          "start": "attrition:fat",
+          "end": "shatter:fat",
+          "ceiling": 0.615,
+          "holdoutWins": 123,
+          "holdoutRuns": 200,
+          "gens": 13,
+          "stop": "stall",
+          "gen0": 0.575,
+          "ms": 1696665,
+          "curve": [
+            [
+              0,
+              0.575,
+              0.575
+            ],
+            [
+              1,
+              0.65,
+              0.65
+            ],
+            [
+              2,
+              0.725,
+              0.725
+            ],
+            [
+              3,
+              0.75,
+              0.75
+            ],
+            [
+              4,
+              0.65,
+              0.75
+            ],
+            [
+              5,
+              0.675,
+              0.75
+            ],
+            [
+              6,
+              0.625,
+              0.75
+            ],
+            [
+              7,
+              0.775,
+              0.775
+            ],
+            [
+              8,
+              0.75,
+              0.775
+            ],
+            [
+              9,
+              0.7,
+              0.775
+            ],
+            [
+              10,
+              0.725,
+              0.775
+            ],
+            [
+              11,
+              0.7,
+              0.775
+            ],
+            [
+              12,
+              0.7,
+              0.775
+            ]
+          ],
+          "endCounts": {
+            "smolder:fat": 28,
+            "shatter:fat": 82,
+            "shatter:thin": 16,
+            "attrition:fat": 44,
+            "shatter:mid": 10,
+            "attrition:mid": 6,
+            "smolder:thin": 5,
+            "smolder:mid": 2,
+            "attrition:thin": 7
+          }
+        },
+        {
+          "island": 3,
+          "start": "shatter:mid",
+          "end": "shatter:fat",
+          "ceiling": 0.71,
+          "holdoutWins": 142,
+          "holdoutRuns": 200,
+          "gens": 17,
+          "stop": "stall",
+          "gen0": 0.4,
+          "ms": 2267551,
+          "curve": [
+            [
+              0,
+              0.4,
+              0.4
+            ],
+            [
+              1,
+              0.425,
+              0.425
+            ],
+            [
+              2,
+              0.575,
+              0.575
+            ],
+            [
+              3,
+              0.625,
+              0.625
+            ],
+            [
+              4,
+              0.7,
+              0.7
+            ],
+            [
+              5,
+              0.7,
+              0.7
+            ],
+            [
+              6,
+              0.625,
+              0.7
+            ],
+            [
+              7,
+              0.825,
+              0.825
+            ],
+            [
+              8,
+              0.775,
+              0.825
+            ],
+            [
+              9,
+              0.9,
+              0.9
+            ],
+            [
+              10,
+              0.8,
+              0.9
+            ],
+            [
+              11,
+              0.925,
+              0.925
+            ],
+            [
+              12,
+              0.925,
+              0.925
+            ],
+            [
+              13,
+              0.925,
+              0.925
+            ],
+            [
+              14,
+              0.925,
+              0.925
+            ],
+            [
+              15,
+              0.9,
+              0.925
+            ],
+            [
+              16,
+              0.85,
+              0.925
+            ]
+          ],
+          "endCounts": {
+            "attrition:thin": 7,
+            "attrition:fat": 20,
+            "shatter:fat": 90,
+            "attrition:mid": 11,
+            "smolder:thin": 6,
+            "shatter:mid": 50,
+            "shatter:thin": 15,
+            "smolder:mid": 1
+          }
+        },
+        {
+          "island": 4,
+          "start": "smolder:mid",
+          "end": "shatter:thin",
+          "ceiling": 0.54,
+          "holdoutWins": 108,
+          "holdoutRuns": 200,
+          "gens": 15,
+          "stop": "stall",
+          "gen0": 0.4,
+          "ms": 1696095,
+          "curve": [
+            [
+              0,
+              0.4,
+              0.4
+            ],
+            [
+              1,
+              0.55,
+              0.55
+            ],
+            [
+              2,
+              0.55,
+              0.55
+            ],
+            [
+              3,
+              0.55,
+              0.55
+            ],
+            [
+              4,
+              0.575,
+              0.575
+            ],
+            [
+              5,
+              0.575,
+              0.575
+            ],
+            [
+              6,
+              0.6,
+              0.6
+            ],
+            [
+              7,
+              0.55,
+              0.6
+            ],
+            [
+              8,
+              0.6,
+              0.6
+            ],
+            [
+              9,
+              0.725,
+              0.725
+            ],
+            [
+              10,
+              0.7,
+              0.725
+            ],
+            [
+              11,
+              0.7,
+              0.725
+            ],
+            [
+              12,
+              0.625,
+              0.725
+            ],
+            [
+              13,
+              0.625,
+              0.725
+            ],
+            [
+              14,
+              0.725,
+              0.725
+            ]
+          ],
+          "endCounts": {
+            "shatter:thin": 110,
+            "shatter:mid": 75,
+            "attrition:thin": 12,
+            "smolder:thin": 2,
+            "shatter:fat": 1
+          }
+        },
+        {
+          "island": 5,
+          "start": "attrition:mid",
+          "end": "shatter:fat",
+          "ceiling": 0.695,
+          "holdoutWins": 139,
+          "holdoutRuns": 200,
+          "gens": 20,
+          "stop": "stall",
+          "gen0": 0.55,
+          "ms": 2591407,
+          "curve": [
+            [
+              0,
+              0.55,
+              0.55
+            ],
+            [
+              1,
+              0.575,
+              0.575
+            ],
+            [
+              2,
+              0.6,
+              0.6
+            ],
+            [
+              3,
+              0.7,
+              0.7
+            ],
+            [
+              4,
+              0.675,
+              0.7
+            ],
+            [
+              5,
+              0.7,
+              0.7
+            ],
+            [
+              6,
+              0.75,
+              0.75
+            ],
+            [
+              7,
+              0.775,
+              0.775
+            ],
+            [
+              8,
+              0.775,
+              0.775
+            ],
+            [
+              9,
+              0.8,
+              0.8
+            ],
+            [
+              10,
+              0.75,
+              0.8
+            ],
+            [
+              11,
+              0.825,
+              0.825
+            ],
+            [
+              12,
+              0.85,
+              0.85
+            ],
+            [
+              13,
+              0.85,
+              0.85
+            ],
+            [
+              14,
+              0.9,
+              0.9
+            ],
+            [
+              15,
+              0.825,
+              0.9
+            ],
+            [
+              16,
+              0.85,
+              0.9
+            ],
+            [
+              17,
+              0.85,
+              0.9
+            ],
+            [
+              18,
+              0.85,
+              0.9
+            ],
+            [
+              19,
+              0.825,
+              0.9
+            ]
+          ],
+          "endCounts": {
+            "shatter:fat": 102,
+            "shatter:mid": 51,
+            "shatter:thin": 22,
+            "attrition:mid": 5,
+            "attrition:thin": 4,
+            "smolder:fat": 11,
+            "smolder:mid": 3,
+            "smolder:thin": 2
+          }
+        }
+      ],
+      "viabilityFloor": 0.5005511811023622,
+      "layer1Top": 0.6811023622047244,
+      "bestCeiling": 0.71,
+      "stayedViable": 1,
+      "closeToBest": 1,
+      "C3": false,
+      "C4": true,
+      "cellCeilings": {
+        "smolder:mid": 0.625,
+        "shatter:fat": 0.71,
+        "shatter:thin": 0.54
+      },
+      "vow5Fail": false,
+      "skillHeadroom": 0.22249999999999992,
+      "gen0Median": 0.48750000000000004,
+      "n": 6
+    },
+    "duskblade:v5": {
+      "islands": [
+        {
+          "island": 6,
+          "start": "smolder:fat",
+          "end": "shatter:fat",
+          "ceiling": 0.26,
+          "holdoutWins": 52,
+          "holdoutRuns": 200,
+          "gens": 17,
+          "stop": "stall",
+          "gen0": 0.25,
+          "ms": 1689777,
+          "curve": [
+            [
+              0,
+              0.25,
+              0.25
+            ],
+            [
+              1,
+              0.275,
+              0.275
+            ],
+            [
+              2,
+              0.225,
+              0.275
+            ],
+            [
+              3,
+              0.275,
+              0.275
+            ],
+            [
+              4,
+              0.375,
+              0.375
+            ],
+            [
+              5,
+              0.35,
+              0.375
+            ],
+            [
+              6,
+              0.325,
+              0.375
+            ],
+            [
+              7,
+              0.275,
+              0.375
+            ],
+            [
+              8,
+              0.45,
+              0.45
+            ],
+            [
+              9,
+              0.475,
+              0.475
+            ],
+            [
+              10,
+              0.35,
+              0.475
+            ],
+            [
+              11,
+              0.55,
+              0.55
+            ],
+            [
+              12,
+              0.45,
+              0.55
+            ],
+            [
+              13,
+              0.45,
+              0.55
+            ],
+            [
+              14,
+              0.475,
+              0.55
+            ],
+            [
+              15,
+              0.45,
+              0.55
+            ],
+            [
+              16,
+              0.425,
+              0.55
+            ]
+          ],
+          "endCounts": {
+            "shatter:mid": 43,
+            "shatter:fat": 89,
+            "shatter:thin": 37,
+            "attrition:mid": 16,
+            "attrition:thin": 4,
+            "attrition:fat": 3,
+            "smolder:mid": 5,
+            "smolder:thin": 3
+          }
+        },
+        {
+          "island": 7,
+          "start": "shatter:fat",
+          "end": "shatter:thin",
+          "ceiling": 0.385,
+          "holdoutWins": 77,
+          "holdoutRuns": 200,
+          "gens": 20,
+          "stop": "stall",
+          "gen0": 0.175,
+          "ms": 1887448,
+          "curve": [
+            [
+              0,
+              0.175,
+              0.175
+            ],
+            [
+              1,
+              0.2,
+              0.2
+            ],
+            [
+              2,
+              0.375,
+              0.375
+            ],
+            [
+              3,
+              0.275,
+              0.375
+            ],
+            [
+              4,
+              0.3,
+              0.375
+            ],
+            [
+              5,
+              0.375,
+              0.375
+            ],
+            [
+              6,
+              0.325,
+              0.375
+            ],
+            [
+              7,
+              0.4,
+              0.4
+            ],
+            [
+              8,
+              0.4,
+              0.4
+            ],
+            [
+              9,
+              0.425,
+              0.425
+            ],
+            [
+              10,
+              0.45,
+              0.45
+            ],
+            [
+              11,
+              0.525,
+              0.525
+            ],
+            [
+              12,
+              0.425,
+              0.525
+            ],
+            [
+              13,
+              0.575,
+              0.575
+            ],
+            [
+              14,
+              0.65,
+              0.65
+            ],
+            [
+              15,
+              0.5,
+              0.65
+            ],
+            [
+              16,
+              0.5,
+              0.65
+            ],
+            [
+              17,
+              0.575,
+              0.65
+            ],
+            [
+              18,
+              0.575,
+              0.65
+            ],
+            [
+              19,
+              0.525,
+              0.65
+            ]
+          ],
+          "endCounts": {
+            "smolder:thin": 11,
+            "shatter:fat": 32,
+            "shatter:mid": 40,
+            "shatter:thin": 60,
+            "attrition:thin": 34,
+            "attrition:fat": 4,
+            "attrition:mid": 17,
+            "smolder:mid": 2
+          }
+        },
+        {
+          "island": 8,
+          "start": "attrition:fat",
+          "end": "shatter:thin",
+          "ceiling": 0.235,
+          "holdoutWins": 47,
+          "holdoutRuns": 200,
+          "gens": 14,
+          "stop": "stall",
+          "gen0": 0.15,
+          "ms": 1304788,
+          "curve": [
+            [
+              0,
+              0.15,
+              0.15
+            ],
+            [
+              1,
+              0.2,
+              0.2
+            ],
+            [
+              2,
+              0.25,
+              0.25
+            ],
+            [
+              3,
+              0.15,
+              0.25
+            ],
+            [
+              4,
+              0.35,
+              0.35
+            ],
+            [
+              5,
+              0.35,
+              0.35
+            ],
+            [
+              6,
+              0.3,
+              0.35
+            ],
+            [
+              7,
+              0.375,
+              0.375
+            ],
+            [
+              8,
+              0.425,
+              0.425
+            ],
+            [
+              9,
+              0.4,
+              0.425
+            ],
+            [
+              10,
+              0.4,
+              0.425
+            ],
+            [
+              11,
+              0.4,
+              0.425
+            ],
+            [
+              12,
+              0.4,
+              0.425
+            ],
+            [
+              13,
+              0.375,
+              0.425
+            ]
+          ],
+          "endCounts": {
+            "smolder:thin": 14,
+            "attrition:fat": 37,
+            "attrition:mid": 25,
+            "shatter:thin": 42,
+            "attrition:thin": 40,
+            "shatter:mid": 22,
+            "shatter:fat": 18,
+            "smolder:fat": 2
+          }
+        },
+        {
+          "island": 9,
+          "start": "smolder:mid",
+          "end": "attrition:fat",
+          "ceiling": 0.245,
+          "holdoutWins": 49,
+          "holdoutRuns": 200,
+          "gens": 20,
+          "stop": "maxGen",
+          "gen0": 0.175,
+          "ms": 1846620,
+          "curve": [
+            [
+              0,
+              0.175,
+              0.175
+            ],
+            [
+              1,
+              0.225,
+              0.225
+            ],
+            [
+              2,
+              0.225,
+              0.225
+            ],
+            [
+              3,
+              0.175,
+              0.225
+            ],
+            [
+              4,
+              0.25,
+              0.25
+            ],
+            [
+              5,
+              0.275,
+              0.275
+            ],
+            [
+              6,
+              0.275,
+              0.275
+            ],
+            [
+              7,
+              0.25,
+              0.275
+            ],
+            [
+              8,
+              0.3,
+              0.3
+            ],
+            [
+              9,
+              0.325,
+              0.325
+            ],
+            [
+              10,
+              0.275,
+              0.325
+            ],
+            [
+              11,
+              0.35,
+              0.35
+            ],
+            [
+              12,
+              0.325,
+              0.35
+            ],
+            [
+              13,
+              0.35,
+              0.35
+            ],
+            [
+              14,
+              0.375,
+              0.375
+            ],
+            [
+              15,
+              0.375,
+              0.375
+            ],
+            [
+              16,
+              0.375,
+              0.375
+            ],
+            [
+              17,
+              0.475,
+              0.475
+            ],
+            [
+              18,
+              0.5,
+              0.5
+            ],
+            [
+              19,
+              0.4,
+              0.5
+            ]
+          ],
+          "endCounts": {
+            "smolder:thin": 9,
+            "smolder:fat": 16,
+            "attrition:fat": 45,
+            "shatter:thin": 26,
+            "attrition:mid": 29,
+            "attrition:thin": 21,
+            "shatter:mid": 31,
+            "shatter:fat": 16,
+            "smolder:mid": 7
+          }
+        },
+        {
+          "island": 10,
+          "start": "shatter:mid",
+          "end": "shatter:thin",
+          "ceiling": 0.21,
+          "holdoutWins": 42,
+          "holdoutRuns": 200,
+          "gens": 13,
+          "stop": "stall",
+          "gen0": 0.2,
+          "ms": 1196832,
+          "curve": [
+            [
+              0,
+              0.2,
+              0.2
+            ],
+            [
+              1,
+              0.325,
+              0.325
+            ],
+            [
+              2,
+              0.3,
+              0.325
+            ],
+            [
+              3,
+              0.25,
+              0.325
+            ],
+            [
+              4,
+              0.35,
+              0.35
+            ],
+            [
+              5,
+              0.375,
+              0.375
+            ],
+            [
+              6,
+              0.35,
+              0.375
+            ],
+            [
+              7,
+              0.425,
+              0.425
+            ],
+            [
+              8,
+              0.3,
+              0.425
+            ],
+            [
+              9,
+              0.425,
+              0.425
+            ],
+            [
+              10,
+              0.325,
+              0.425
+            ],
+            [
+              11,
+              0.4,
+              0.425
+            ],
+            [
+              12,
+              0.375,
+              0.425
+            ]
+          ],
+          "endCounts": {
+            "smolder:thin": 11,
+            "shatter:thin": 90,
+            "attrition:thin": 50,
+            "shatter:mid": 47,
+            "smolder:mid": 1,
+            "attrition:mid": 1
+          }
+        },
+        {
+          "island": 11,
+          "start": "attrition:mid",
+          "end": "shatter:thin",
+          "ceiling": 0.175,
+          "holdoutWins": 35,
+          "holdoutRuns": 200,
+          "gens": 12,
+          "stop": "stall",
+          "gen0": 0.175,
+          "ms": 1036748,
+          "curve": [
+            [
+              0,
+              0.175,
+              0.175
+            ],
+            [
+              1,
+              0.225,
+              0.225
+            ],
+            [
+              2,
+              0.225,
+              0.225
+            ],
+            [
+              3,
+              0.2,
+              0.225
+            ],
+            [
+              4,
+              0.275,
+              0.275
+            ],
+            [
+              5,
+              0.3,
+              0.3
+            ],
+            [
+              6,
+              0.325,
+              0.325
+            ],
+            [
+              7,
+              0.325,
+              0.325
+            ],
+            [
+              8,
+              0.3,
+              0.325
+            ],
+            [
+              9,
+              0.3,
+              0.325
+            ],
+            [
+              10,
+              0.25,
+              0.325
+            ],
+            [
+              11,
+              0.325,
+              0.325
+            ]
+          ],
+          "endCounts": {
+            "smolder:thin": 7,
+            "attrition:fat": 12,
+            "shatter:thin": 43,
+            "smolder:fat": 30,
+            "attrition:thin": 32,
+            "shatter:fat": 16,
+            "shatter:mid": 27,
+            "smolder:mid": 15,
+            "attrition:mid": 18
+          }
+        }
+      ],
+      "viabilityFloor": 0.31605584806318165,
+      "layer1Top": 0.5171116961263633,
+      "bestCeiling": 0.385,
+      "stayedViable": 0,
+      "closeToBest": 0,
+      "C3": false,
+      "C4": true,
+      "cellCeilings": {
+        "shatter:fat": 0.26,
+        "shatter:thin": 0.385,
+        "attrition:fat": 0.245
+      },
+      "vow5Fail": false,
+      "skillHeadroom": 0.21000000000000002,
+      "gen0Median": 0.175,
+      "n": 6
+    },
+    "ashwarden:v0": {
+      "islands": [],
+      "C3": false,
+      "C4": false,
+      "vow5Fail": false,
+      "n": 0
+    },
+    "ashwarden:v5": {
+      "islands": [],
+      "C3": false,
+      "C4": false,
+      "vow5Fail": false,
+      "n": 0
+    }
+  },
+  "vow5Fail": false,
+  "C3": {
+    "duskblade:v0": false,
+    "duskblade:v5": false,
+    "ashwarden:v0": false,
+    "ashwarden:v5": false
+  },
+  "C4": {
+    "duskblade:v0": true,
+    "duskblade:v5": true,
+    "ashwarden:v0": false,
+    "ashwarden:v5": false
+  }
+}

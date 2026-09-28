@@ -1,0 +1,162 @@
+[
+ {
+  "arm": 1,
+  "aspect": "duskblade",
+  "vow": 0,
+  "wins": 144,
+  "runs": 200,
+  "winRate": 0.72,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 1,
+  "aspect": "duskblade",
+  "vow": 5,
+  "wins": 61,
+  "runs": 200,
+  "winRate": 0.305,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 1,
+  "aspect": "ashwarden",
+  "vow": 0,
+  "wins": 140,
+  "runs": 200,
+  "winRate": 0.7,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 1,
+  "aspect": "ashwarden",
+  "vow": 5,
+  "wins": 60,
+  "runs": 200,
+  "winRate": 0.3,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 2,
+  "aspect": "duskblade",
+  "vow": 0,
+  "wins": 64,
+  "runs": 200,
+  "winRate": 0.32,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 2,
+  "aspect": "duskblade",
+  "vow": 5,
+  "wins": 23,
+  "runs": 200,
+  "winRate": 0.115,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 2,
+  "aspect": "ashwarden",
+  "vow": 0,
+  "wins": 40,
+  "runs": 200,
+  "winRate": 0.2,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 2,
+  "aspect": "ashwarden",
+  "vow": 5,
+  "wins": 8,
+  "runs": 200,
+  "winRate": 0.04,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 3,
+  "aspect": "duskblade",
+  "vow": 0,
+  "wins": 62,
+  "runs": 200,
+  "winRate": 0.31,
+  "stalls": 3,
+  "errors": 0
+ },
+ {
+  "arm": 3,
+  "aspect": "duskblade",
+  "vow": 5,
+  "wins": 27,
+  "runs": 200,
+  "winRate": 0.135,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 3,
+  "aspect": "ashwarden",
+  "vow": 0,
+  "wins": 124,
+  "runs": 200,
+  "winRate": 0.62,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 3,
+  "aspect": "ashwarden",
+  "vow": 5,
+  "wins": 55,
+  "runs": 200,
+  "winRate": 0.275,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 4,
+  "aspect": "duskblade",
+  "vow": 0,
+  "wins": 24,
+  "runs": 200,
+  "winRate": 0.12,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 4,
+  "aspect": "duskblade",
+  "vow": 5,
+  "wins": 6,
+  "runs": 200,
+  "winRate": 0.03,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 4,
+  "aspect": "ashwarden",
+  "vow": 0,
+  "wins": 29,
+  "runs": 200,
+  "winRate": 0.145,
+  "stalls": 0,
+  "errors": 0
+ },
+ {
+  "arm": 4,
+  "aspect": "ashwarden",
+  "vow": 5,
+  "wins": 5,
+  "runs": 200,
+  "winRate": 0.025,
+  "stalls": 0,
+  "errors": 0
+ }
+]

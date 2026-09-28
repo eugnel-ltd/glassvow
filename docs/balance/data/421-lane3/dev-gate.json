@@ -1,0 +1,377 @@
+{
+ "runner": "throwaway tools/_probe421.gd rebuilt from docs/reviews/421/dusk-lane3-probe-notes.md section 1 (not committed), run on live content (no --content override)",
+ "sample": {
+  "aspect": "duskblade",
+  "vows": [
+   0,
+   5
+  ],
+  "policyRoot": 7421,
+  "policies": [
+   0,
+   299
+  ],
+  "seeds": [
+   12000,
+   12015
+  ],
+  "arm2Seeds": [
+   12100,
+   12899
+  ],
+  "arm2RowsPerVow": 800,
+  "deckCuts": {
+   "thinMax": 21,
+   "midMax": 30
+  },
+  "minCellRuns": 100
+ },
+ "twins": {
+  "commit": "e0388dfae6f20ef2e2c4cf829b853ef58d14c067",
+  "rowsGeneratedAt": "935fa5d45c46dfda402535f2957af7ac8a14e9b1",
+  "note": "identical-seed twin rows; 935fa5d4 carries the same content as the lock base e0388dfa (Rootheart 240, no lane-3 content) and reproduces its rows exactly"
+ },
+ "gate": "both vows: >=3 cells within 10 pp of top; arm 2 < 50% and top - arm 2 >= 35 pp; Tithes and crown holders paired vs twins >= -5 pp",
+ "candidate": {
+  "commit": "85deaec3d75f89169d95b7937b586fef64a3c6fc",
+  "reproduces": "lock F1 probe rows byte-for-byte (9 of 9 row files identical)",
+  "result": {
+   "rows": 9600,
+   "arm2Rows": 1600,
+   "shatterMedian": 0.875,
+   "V0": {
+    "cells": {
+     "smolder:fat": {
+      "wins": 316,
+      "runs": 447,
+      "rate": 0.7069
+     },
+     "shatter:fat": {
+      "wins": 651,
+      "runs": 952,
+      "rate": 0.6838
+     },
+     "attrition:fat": {
+      "wins": 326,
+      "runs": 503,
+      "rate": 0.6481
+     },
+     "shatter:mid": {
+      "wins": 194,
+      "runs": 643,
+      "rate": 0.3017
+     },
+     "smolder:mid": {
+      "wins": 68,
+      "runs": 285,
+      "rate": 0.2386
+     },
+     "attrition:mid": {
+      "wins": 75,
+      "runs": 502,
+      "rate": 0.1494
+     },
+     "shatter:thin": {
+      "wins": 26,
+      "runs": 715,
+      "rate": 0.0364
+     },
+     "smolder:thin": {
+      "wins": 6,
+      "runs": 220,
+      "rate": 0.0273
+     },
+     "attrition:thin": {
+      "wins": 5,
+      "runs": 533,
+      "rate": 0.0094
+     }
+    },
+    "within10pp": [
+     "attrition:fat",
+     "shatter:fat",
+     "smolder:fat"
+    ],
+    "arm2": {
+     "wins": 275,
+     "runs": 800,
+     "rate": 0.3438
+    },
+    "gapPp": 36.32,
+    "paired": {
+     "crownOfTithes": {
+      "holders": 951,
+      "holderWins": 516,
+      "twinWins": 504,
+      "pairedPp": 1.26
+     },
+     "unbrokenCrown": {
+      "holders": 746,
+      "holderWins": 382,
+      "twinWins": 381,
+      "pairedPp": 0.13
+     }
+    },
+    "verdict": "PASS"
+   },
+   "V5": {
+    "cells": {
+     "smolder:fat": {
+      "wins": 121,
+      "runs": 214,
+      "rate": 0.5654
+     },
+     "shatter:fat": {
+      "wins": 345,
+      "runs": 670,
+      "rate": 0.5149
+     },
+     "attrition:fat": {
+      "wins": 172,
+      "runs": 338,
+      "rate": 0.5089
+     },
+     "smolder:mid": {
+      "wins": 19,
+      "runs": 159,
+      "rate": 0.1195
+     },
+     "shatter:mid": {
+      "wins": 63,
+      "runs": 614,
+      "rate": 0.1026
+     },
+     "attrition:mid": {
+      "wins": 30,
+      "runs": 607,
+      "rate": 0.0494
+     },
+     "shatter:thin": {
+      "wins": 8,
+      "runs": 1097,
+      "rate": 0.0073
+     },
+     "attrition:thin": {
+      "wins": 0,
+      "runs": 939,
+      "rate": 0.0
+     },
+     "smolder:thin": {
+      "wins": 0,
+      "runs": 162,
+      "rate": 0.0
+     }
+    },
+    "within10pp": [
+     "attrition:fat",
+     "shatter:fat",
+     "smolder:fat"
+    ],
+    "arm2": {
+     "wins": 116,
+     "runs": 800,
+     "rate": 0.145
+    },
+    "gapPp": 42.04,
+    "paired": {
+     "crownOfTithes": {
+      "holders": 621,
+      "holderWins": 265,
+      "twinWins": 249,
+      "pairedPp": 2.58
+     },
+     "unbrokenCrown": {
+      "holders": 414,
+      "holderWins": 139,
+      "twinWins": 135,
+      "pairedPp": 0.97
+     }
+    },
+    "verdict": "PASS"
+   }
+  },
+  "rowSha256": {
+   "IMPL-c0.ndjson": "fec2f7e182728c8868bab99ddc79d7094e22f09c064c2c869b34b952dec18931",
+   "IMPL-c1.ndjson": "b23cd1c9e258a3bea86d8d70a680280848681b885906b03d0291a6791bff4f00",
+   "IMPL-cx0.ndjson": "69064a8e07675bd11732b00bd6dc21050c11583c19d94da56a32326c87fc0cfe",
+   "IMPL-cx1.ndjson": "315c6119e2f13b45099844280b5d76bbc22ef84e3fc7b1c43f5071f9533eb03d",
+   "IMPL-s0.ndjson": "a91134a16b4d653b8aeed91ff9b5a61d6231a03d48c61abe4f4161c7d061438c",
+   "IMPL-s1.ndjson": "5fb5305a17ee85ca73b0044f1ecd30bc89311a4a195301617432d2a4c6da6efc",
+   "IMPL-s2.ndjson": "8f499632b41ae9eaeb690909193e79a57c2b0f4ec8e0bead51adef2d26a99a21",
+   "IMPL-s3.ndjson": "446d18008a8234029b94ccbc707c7c6127ede946ed478a1b4254e25314325683",
+   "IMPL-s4.ndjson": "06813e6c052c3e7186eb736347e00e09c6565452ece0e5e339d563da2459a3ad"
+  }
+ },
+ "knob1": {
+  "commit": "582e2f71a406910ef6c1d949ff9717f343539ffd",
+  "change": "enemies.rootheart.hp 240 -> 280 (lock section 8 knob 1; triggered by Phase A Dusk V0 37.5% > 35.0%)",
+  "reproduces": "lock K2 probe rows byte-for-byte (9 of 9 row files identical)",
+  "note": "run on 85deaec with the knob-1 content, whose SHA-256 equals 582e2f7 content",
+  "result": {
+   "rows": 9600,
+   "arm2Rows": 1600,
+   "shatterMedian": 0.888889,
+   "V0": {
+    "cells": {
+     "smolder:fat": {
+      "wins": 278,
+      "runs": 384,
+      "rate": 0.724
+     },
+     "shatter:fat": {
+      "wins": 578,
+      "runs": 849,
+      "rate": 0.6808
+     },
+     "attrition:fat": {
+      "wins": 299,
+      "runs": 464,
+      "rate": 0.6444
+     },
+     "shatter:mid": {
+      "wins": 165,
+      "runs": 565,
+      "rate": 0.292
+     },
+     "smolder:mid": {
+      "wins": 67,
+      "runs": 250,
+      "rate": 0.268
+     },
+     "attrition:mid": {
+      "wins": 59,
+      "runs": 487,
+      "rate": 0.1211
+     },
+     "smolder:thin": {
+      "wins": 7,
+      "runs": 267,
+      "rate": 0.0262
+     },
+     "shatter:thin": {
+      "wins": 20,
+      "runs": 887,
+      "rate": 0.0225
+     },
+     "attrition:thin": {
+      "wins": 7,
+      "runs": 647,
+      "rate": 0.0108
+     }
+    },
+    "within10pp": [
+     "attrition:fat",
+     "shatter:fat",
+     "smolder:fat"
+    ],
+    "arm2": {
+     "wins": 243,
+     "runs": 800,
+     "rate": 0.3038
+    },
+    "gapPp": 42.02,
+    "paired": {
+     "crownOfTithes": {
+      "holders": 897,
+      "holderWins": 479,
+      "twinWins": 453,
+      "pairedPp": 2.9
+     },
+     "unbrokenCrown": {
+      "holders": 647,
+      "holderWins": 328,
+      "twinWins": 310,
+      "pairedPp": 2.78
+     }
+    },
+    "verdict": "PASS"
+   },
+   "V5": {
+    "cells": {
+     "smolder:fat": {
+      "wins": 117,
+      "runs": 193,
+      "rate": 0.6062
+     },
+     "attrition:fat": {
+      "wins": 183,
+      "runs": 323,
+      "rate": 0.5666
+     },
+     "shatter:fat": {
+      "wins": 332,
+      "runs": 587,
+      "rate": 0.5656
+     },
+     "smolder:mid": {
+      "wins": 14,
+      "runs": 125,
+      "rate": 0.112
+     },
+     "shatter:mid": {
+      "wins": 45,
+      "runs": 561,
+      "rate": 0.0802
+     },
+     "attrition:mid": {
+      "wins": 31,
+      "runs": 556,
+      "rate": 0.0558
+     },
+     "smolder:thin": {
+      "wins": 1,
+      "runs": 167,
+      "rate": 0.006
+     },
+     "shatter:thin": {
+      "wins": 6,
+      "runs": 1221,
+      "rate": 0.0049
+     },
+     "attrition:thin": {
+      "wins": 1,
+      "runs": 1067,
+      "rate": 0.0009
+     }
+    },
+    "within10pp": [
+     "attrition:fat",
+     "shatter:fat",
+     "smolder:fat"
+    ],
+    "arm2": {
+     "wins": 89,
+     "runs": 800,
+     "rate": 0.1113
+    },
+    "gapPp": 49.5,
+    "paired": {
+     "crownOfTithes": {
+      "holders": 543,
+      "holderWins": 252,
+      "twinWins": 212,
+      "pairedPp": 7.37
+     },
+     "unbrokenCrown": {
+      "holders": 340,
+      "holderWins": 140,
+      "twinWins": 115,
+      "pairedPp": 7.35
+     }
+    },
+    "verdict": "PASS"
+   }
+  },
+  "rowSha256": {
+   "K1-c0.ndjson": "ddc0cd808cf2ebb643bfb9920c7ac0843de6ebbf9b1ee58e3f67f4491a96fea6",
+   "K1-c1.ndjson": "6742b0937767d4fd2d2745188728fba1ef6e57d269bfb0a19ac3e79e9b2c1e93",
+   "K1-cx0.ndjson": "87e677a8b34ef0943c438c7d3316ab148681ac535c9aa8880af6addf798e8ee8",
+   "K1-cx1.ndjson": "94c6ef2e79a18ea644ec62f20f3e2d623d0afe3d02e2cb3a41f894800f7bb1c1",
+   "K1-s0.ndjson": "dc952f0a7bd07c76c3e7d80e5a1505b4997b3822b7c06f3573122b946dfaa406",
+   "K1-s1.ndjson": "5ddf7839a5bfb09beca0585ca3da1790bb7f1847481311714fd4ae63ec766141",
+   "K1-s2.ndjson": "fb4d45b85f79a776d39d6930c2d41d0b29c223635db453f8a16f5ac43373c387",
+   "K1-s3.ndjson": "ebe5ecbc1483b83a5982b7b088d8df4fcac741e0c37e44a0fce3d782c4d806a8",
+   "K1-s4.ndjson": "ba558fa53fac79be7d20c37b464ed13c154b14c5b8ca8a85725ff5a61372bacf"
+  }
+ }
+}

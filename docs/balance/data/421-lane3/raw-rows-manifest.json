@@ -1,0 +1,645 @@
+{
+ "commit": "582e2f71a406910ef6c1d949ff9717f343539ffd",
+ "contentSha256": "f0ecd890ca3144d8f2d6f3e2f2a934d7dc0ef44880d1902a4655752accc99436",
+ "host": {
+  "arch": "x86_64",
+  "os": "Linux VM, 8 vCPU",
+  "godot": "4.7.2.stable.official.ed1daf0bf"
+ },
+ "rawRoot": "/home/box/ops/glassvow/d568-exam1-582e2f7",
+ "driver": "tools/balance_exam.py --jobs 6 (nice 10)",
+ "outcomes": {
+  "win": 63713,
+  "loss": 256184,
+  "stall": 103
+ },
+ "holderRule": "run ends holding the relic; both = holds crownOfTithes and unbrokenCrown",
+ "holders": {
+  "duskblade:v0": {
+   "crownOfTithes": {
+    "runs": 80000,
+    "holders": 13201,
+    "holderShare": 0.165,
+    "holderWinRate": 0.5625,
+    "nonHolderWinRate": 0.273,
+    "holderCells": {
+     "attrition:fat": {
+      "runs": 6053,
+      "wins": 4542
+     },
+     "attrition:mid": {
+      "runs": 3083,
+      "wins": 736
+     },
+     "smolder:fat": {
+      "runs": 1537,
+      "wins": 1284
+     },
+     "attrition:thin": {
+      "runs": 1017,
+      "wins": 45
+     },
+     "shatter:fat": {
+      "runs": 605,
+      "wins": 461
+     },
+     "smolder:mid": {
+      "runs": 462,
+      "wins": 218
+     },
+     "shatter:mid": {
+      "runs": 280,
+      "wins": 119
+     },
+     "smolder:thin": {
+      "runs": 100,
+      "wins": 16
+     },
+     "shatter:thin": {
+      "runs": 64,
+      "wins": 5
+     }
+    }
+   },
+   "unbrokenCrown": {
+    "runs": 80000,
+    "holders": 11651,
+    "holderShare": 0.1456,
+    "holderWinRate": 0.4877,
+    "nonHolderWinRate": 0.2924,
+    "holderCells": {
+     "smolder:fat": {
+      "runs": 6017,
+      "wins": 4261
+     },
+     "smolder:mid": {
+      "runs": 2812,
+      "wins": 636
+     },
+     "smolder:thin": {
+      "runs": 758,
+      "wins": 62
+     },
+     "shatter:fat": {
+      "runs": 615,
+      "wins": 381
+     },
+     "attrition:mid": {
+      "runs": 543,
+      "wins": 59
+     },
+     "attrition:fat": {
+      "runs": 314,
+      "wins": 176
+     },
+     "shatter:mid": {
+      "runs": 282,
+      "wins": 88
+     },
+     "attrition:thin": {
+      "runs": 225,
+      "wins": 5
+     },
+     "shatter:thin": {
+      "runs": 85,
+      "wins": 14
+     }
+    }
+   },
+   "both": {
+    "runs": 80000,
+    "holders": 1255,
+    "holderShare": 0.0157,
+    "holderWinRate": 0.9386,
+    "nonHolderWinRate": 0.311,
+    "holderCells": {
+     "smolder:fat": {
+      "runs": 959,
+      "wins": 937
+     },
+     "smolder:mid": {
+      "runs": 183,
+      "wins": 149
+     },
+     "attrition:fat": {
+      "runs": 66,
+      "wins": 61
+     },
+     "attrition:mid": {
+      "runs": 25,
+      "wins": 19
+     },
+     "smolder:thin": {
+      "runs": 22,
+      "wins": 12
+     }
+    }
+   }
+  },
+  "duskblade:v5": {
+   "crownOfTithes": {
+    "runs": 80000,
+    "holders": 5909,
+    "holderShare": 0.0739,
+    "holderWinRate": 0.4502,
+    "nonHolderWinRate": 0.076,
+    "holderCells": {
+     "attrition:fat": {
+      "runs": 2957,
+      "wins": 1816
+     },
+     "attrition:mid": {
+      "runs": 1400,
+      "wins": 108
+     },
+     "smolder:fat": {
+      "runs": 580,
+      "wins": 429
+     },
+     "shatter:fat": {
+      "runs": 350,
+      "wins": 243
+     },
+     "attrition:thin": {
+      "runs": 310,
+      "wins": 4
+     },
+     "smolder:mid": {
+      "runs": 142,
+      "wins": 34
+     },
+     "shatter:mid": {
+      "runs": 125,
+      "wins": 24
+     },
+     "shatter:thin": {
+      "runs": 31,
+      "wins": 1
+     },
+     "smolder:thin": {
+      "runs": 14,
+      "wins": 1
+     }
+    }
+   },
+   "unbrokenCrown": {
+    "runs": 80000,
+    "holders": 5223,
+    "holderShare": 0.0653,
+    "holderWinRate": 0.3176,
+    "nonHolderWinRate": 0.0887,
+    "holderCells": {
+     "smolder:fat": {
+      "runs": 2362,
+      "wins": 1280
+     },
+     "smolder:mid": {
+      "runs": 1310,
+      "wins": 87
+     },
+     "attrition:mid": {
+      "runs": 425,
+      "wins": 13
+     },
+     "shatter:fat": {
+      "runs": 370,
+      "wins": 183
+     },
+     "smolder:thin": {
+      "runs": 209,
+      "wins": 6
+     },
+     "shatter:mid": {
+      "runs": 195,
+      "wins": 19
+     },
+     "attrition:fat": {
+      "runs": 184,
+      "wins": 70
+     },
+     "attrition:thin": {
+      "runs": 114,
+      "wins": 1
+     },
+     "shatter:thin": {
+      "runs": 54,
+      "wins": 0
+     }
+    }
+   },
+   "both": {
+    "runs": 80000,
+    "holders": 428,
+    "holderShare": 0.0053,
+    "holderWinRate": 0.9089,
+    "nonHolderWinRate": 0.0993,
+    "holderCells": {
+     "smolder:fat": {
+      "runs": 360,
+      "wins": 335
+     },
+     "smolder:mid": {
+      "runs": 33,
+      "wins": 24
+     },
+     "attrition:fat": {
+      "runs": 27,
+      "wins": 24
+     },
+     "attrition:mid": {
+      "runs": 6,
+      "wins": 5
+     },
+     "smolder:thin": {
+      "runs": 1,
+      "wins": 1
+     },
+     "attrition:thin": {
+      "runs": 1,
+      "wins": 0
+     }
+    }
+   }
+  }
+ },
+ "files": [
+  {
+   "path": "phase-a/controls.json",
+   "bytes": 23416017,
+   "lines": 1,
+   "sha256": "12a0319825e81cdd8471208a113fbeef5b581d185def326f9dabf45e4ec101ec"
+  },
+  {
+   "path": "phase-a/holdout-vow0.json",
+   "bytes": 3428157,
+   "lines": 1,
+   "sha256": "3afd2745752fa9118216e8bd6efff8272c74c5683cdd3a9d8e7f040f87b3e7ca"
+  },
+  {
+   "path": "phase-a/holdout-vow5.json",
+   "bytes": 3032227,
+   "lines": 1,
+   "sha256": "4575080ffd885abe5b935126501fd23de1cdf16236b911fc9ef341ba143d4a00"
+  },
+  {
+   "path": "phase-a/phase-a.json",
+   "bytes": 4403,
+   "lines": 227,
+   "sha256": "4b96b703046aa6f35a3e874e48358b387011a31c01f1824bdefc836a28508104"
+  },
+  {
+   "path": "layer1/controls-analysis.json",
+   "bytes": 2133,
+   "lines": 161,
+   "sha256": "c329e316a52a889f18b529953c88290baa6bc4463a7a97b5b52aaea096df3921"
+  },
+  {
+   "path": "layer1/controls.ndjson",
+   "bytes": 23416018,
+   "lines": 1,
+   "sha256": "7fe611a1132c02974fec19d3a3a43da663c806902d869b006930bda184713bbd"
+  },
+  {
+   "path": "layer1/layer1-analysis.json",
+   "bytes": 20289,
+   "lines": 832,
+   "sha256": "b933c444c0748fd0749b4dc0883e2a02a07cf0b969ee37c5ff3efc27c20307fc"
+  },
+  {
+   "path": "layer1/merged.ndjson",
+   "bytes": 2248869191,
+   "lines": 320001,
+   "sha256": "a2fd77c533928af0f4b84408ddef1a9a954fed8dde440fef39310c82e5962ae7"
+  },
+  {
+   "path": "layer1/shard-0000.ndjson",
+   "bytes": 56485277,
+   "lines": 8001,
+   "sha256": "a47bad5dcdee71a5593db0161aeeee77c79c6d3a9b485230c2451c0875ccace7"
+  },
+  {
+   "path": "layer1/shard-0050.ndjson",
+   "bytes": 56529790,
+   "lines": 8001,
+   "sha256": "2bfef20f4c19a2a122ba93434df7f84e2f6d3442053053fcd4ef29d2a463cad6"
+  },
+  {
+   "path": "layer1/shard-0100.ndjson",
+   "bytes": 56356386,
+   "lines": 8001,
+   "sha256": "6aa99e56b68347472fd625dc034593e7911f675aaea1fa6d30e23007d6343ce5"
+  },
+  {
+   "path": "layer1/shard-0150.ndjson",
+   "bytes": 55852735,
+   "lines": 8001,
+   "sha256": "ad7af0ded563fc2d535a6fd626b9ffa59cebc4453333dbbaaf1ee68717fc181d"
+  },
+  {
+   "path": "layer1/shard-0200.ndjson",
+   "bytes": 55720712,
+   "lines": 8001,
+   "sha256": "9c0b828b3101c94088cf6634a0285304c6b77136b8c6d9182cd9e3174a16239d"
+  },
+  {
+   "path": "layer1/shard-0250.ndjson",
+   "bytes": 56429578,
+   "lines": 8001,
+   "sha256": "d568e5460286000f47b72ea0f20c375a6393e6fbb25234bf8ae271892f9c1518"
+  },
+  {
+   "path": "layer1/shard-0300.ndjson",
+   "bytes": 56002669,
+   "lines": 8001,
+   "sha256": "f662c29e9e6763eaa35f960731147dbebc9930cc638406c878498c24590b2f42"
+  },
+  {
+   "path": "layer1/shard-0350.ndjson",
+   "bytes": 56624875,
+   "lines": 8001,
+   "sha256": "a72ba86d00f673c5fd723f32e835dd3b47c218b377a1ae867708128612ca108f"
+  },
+  {
+   "path": "layer1/shard-0400.ndjson",
+   "bytes": 55762115,
+   "lines": 8001,
+   "sha256": "2c8fe4d85b469f46c9f4a5e75affa822d025106c3786a74c4990c1c42ef2dc9b"
+  },
+  {
+   "path": "layer1/shard-0450.ndjson",
+   "bytes": 55142742,
+   "lines": 8001,
+   "sha256": "a659b7e293b0cadcc9ee284f76dd6cdbfabfc68660fdc35e48e7a966ce301a12"
+  },
+  {
+   "path": "layer1/shard-0500.ndjson",
+   "bytes": 55842336,
+   "lines": 8001,
+   "sha256": "b04ba60f3260406b91221ad94a5e9e92ad4f744384fead57e4eed33a15dde0fd"
+  },
+  {
+   "path": "layer1/shard-0550.ndjson",
+   "bytes": 56464660,
+   "lines": 8001,
+   "sha256": "d95970e4d5a8d26b4447759b1b741eab25f87413b8b55527afa7d105195dfd90"
+  },
+  {
+   "path": "layer1/shard-0600.ndjson",
+   "bytes": 56299809,
+   "lines": 8001,
+   "sha256": "998c00c2960afc005aae053495669e2ded48a137e51cedfbeb3c05d451e42c3c"
+  },
+  {
+   "path": "layer1/shard-0650.ndjson",
+   "bytes": 56500792,
+   "lines": 8001,
+   "sha256": "3d2ce68f1d5749c9b5ada568ae705f543ca7a5712e10df9988cd6a6e8d6e07e8"
+  },
+  {
+   "path": "layer1/shard-0700.ndjson",
+   "bytes": 55762400,
+   "lines": 8001,
+   "sha256": "474270cdc4879363ce38d8b6d68c7fcb23ac9312de432ae17f465e579a9403c4"
+  },
+  {
+   "path": "layer1/shard-0750.ndjson",
+   "bytes": 56122546,
+   "lines": 8001,
+   "sha256": "a053a9fa11da74a81833182be5fe4c2edde711a67f0c4526a5e0ebd1197792d7"
+  },
+  {
+   "path": "layer1/shard-0800.ndjson",
+   "bytes": 56152162,
+   "lines": 8001,
+   "sha256": "89274d8d706da849f8aa020c802f691c4cf8d4537c620108f35616c88e17a365"
+  },
+  {
+   "path": "layer1/shard-0850.ndjson",
+   "bytes": 56266229,
+   "lines": 8001,
+   "sha256": "02998c26742ecdf64c6ae143d5cd7b76e08c9761445bdd0f5274dab5b973cf6e"
+  },
+  {
+   "path": "layer1/shard-0900.ndjson",
+   "bytes": 56628375,
+   "lines": 8001,
+   "sha256": "97f5e3224f590965db6dc69e690bc866ef822ae2689cc77ce18fdbdaf8a6ba8d"
+  },
+  {
+   "path": "layer1/shard-0950.ndjson",
+   "bytes": 56372998,
+   "lines": 8001,
+   "sha256": "4ac5021f72c5463c671281901c310aac9c1a688d5361009a0506856cc9000863"
+  },
+  {
+   "path": "layer1/shard-1000.ndjson",
+   "bytes": 55947780,
+   "lines": 8001,
+   "sha256": "566694b98573a6beb0b49a52edd53f8f87c20fa67697da7a78b59f1f23a4cd53"
+  },
+  {
+   "path": "layer1/shard-1050.ndjson",
+   "bytes": 56328220,
+   "lines": 8001,
+   "sha256": "f0d40f5efe757d193e265831949165a7ae04730aa7050d65ff929c3fba1c4ece"
+  },
+  {
+   "path": "layer1/shard-1100.ndjson",
+   "bytes": 56236854,
+   "lines": 8001,
+   "sha256": "200d561809100a2ed9ef0d2efb89e729f28959e88e83907c35cb748230222a2c"
+  },
+  {
+   "path": "layer1/shard-1150.ndjson",
+   "bytes": 56355522,
+   "lines": 8001,
+   "sha256": "a7960516456949e886966cb1d63d55fa22f91b2af7461c82a590ca167acefe25"
+  },
+  {
+   "path": "layer1/shard-1200.ndjson",
+   "bytes": 55913910,
+   "lines": 8001,
+   "sha256": "3b50f3de9a77344ee922eb25bde9b53e9fb0b4f87566067b456fc4c3070c2646"
+  },
+  {
+   "path": "layer1/shard-1250.ndjson",
+   "bytes": 56658741,
+   "lines": 8001,
+   "sha256": "f506b65fb5d1bbc6dfa65e91f7e4661bd27986d041b0d8092bcf05448796bfdf"
+  },
+  {
+   "path": "layer1/shard-1300.ndjson",
+   "bytes": 56500071,
+   "lines": 8001,
+   "sha256": "b9a04c9ce4c1a186a370948338e91e8e6fab27eedabf16f8ff55099f02566a08"
+  },
+  {
+   "path": "layer1/shard-1350.ndjson",
+   "bytes": 55620669,
+   "lines": 8001,
+   "sha256": "75d228484f2f45014bc7e0e8f88ef08aa91960183d12cac7579a657ed8302e66"
+  },
+  {
+   "path": "layer1/shard-1400.ndjson",
+   "bytes": 56504635,
+   "lines": 8001,
+   "sha256": "35021492d1902a915a083614ae8c0e1b2260aa2f542ed5796195fd4a2fce6b2f"
+  },
+  {
+   "path": "layer1/shard-1450.ndjson",
+   "bytes": 56515925,
+   "lines": 8001,
+   "sha256": "aeca5c92deb164ff29b8ed92e3108989c1f1fcefc46d1add947cb7d6c438fe58"
+  },
+  {
+   "path": "layer1/shard-1500.ndjson",
+   "bytes": 55923816,
+   "lines": 8001,
+   "sha256": "baeacc41cb62df9dd429ba0b37951e2889cca98b690becf7f7e390505a93e375"
+  },
+  {
+   "path": "layer1/shard-1550.ndjson",
+   "bytes": 56114117,
+   "lines": 8001,
+   "sha256": "e5745df79f4faabe064a446be7da4a57e4ee0e4d3cdbb510c654b198cf080209"
+  },
+  {
+   "path": "layer1/shard-1600.ndjson",
+   "bytes": 56010941,
+   "lines": 8001,
+   "sha256": "6685d2692ddb07b959f973e21259922e9bfedd1e3b0068cf15494d07e0966d95"
+  },
+  {
+   "path": "layer1/shard-1650.ndjson",
+   "bytes": 56723034,
+   "lines": 8001,
+   "sha256": "db24faf57274b03df34aaa2296423fc3de7dc277a290dce7dc126481831621aa"
+  },
+  {
+   "path": "layer1/shard-1700.ndjson",
+   "bytes": 56780758,
+   "lines": 8001,
+   "sha256": "38e78ed075848592ad4fb76fc35b772bc1f4cc80428e5154bac109bdfd86e100"
+  },
+  {
+   "path": "layer1/shard-1750.ndjson",
+   "bytes": 56038073,
+   "lines": 8001,
+   "sha256": "8055a27cd846a3f759b718a36773b61955a7b4de48627a9dd5a237e735f27707"
+  },
+  {
+   "path": "layer1/shard-1800.ndjson",
+   "bytes": 56584656,
+   "lines": 8001,
+   "sha256": "011fc5a6af9b206bb2762d9d7fa05a3e2b361b610cdf31e6fa44c13dccde22d6"
+  },
+  {
+   "path": "layer1/shard-1850.ndjson",
+   "bytes": 56386766,
+   "lines": 8001,
+   "sha256": "3240b8da9d5efe4f5cc675e00532d4a8b9e213a2742ba22bec079fb1f5308166"
+  },
+  {
+   "path": "layer1/shard-1900.ndjson",
+   "bytes": 55769923,
+   "lines": 8001,
+   "sha256": "3e1ba017d0033f1ee5278b98914650a23e4f37c7119f5a0fedd4396f70c34b8a"
+  },
+  {
+   "path": "layer1/shard-1950.ndjson",
+   "bytes": 56672234,
+   "lines": 8001,
+   "sha256": "31b55003ed9423969c0fc342c0196a0f4a5f934cf3479b457f24d3fc6e610794"
+  },
+  {
+   "path": "layer2/island-0.ndjson",
+   "bytes": 1706742,
+   "lines": 215,
+   "sha256": "2de210a9519d798719637c7b5b6898ba380b48a27630606092b5fdd9bb9c788c"
+  },
+  {
+   "path": "layer2/island-1.ndjson",
+   "bytes": 1638399,
+   "lines": 222,
+   "sha256": "2d59aae43e0f6e3d88d235b21c843aa43a4d6e06daa1ca53792ae1428da91494"
+  },
+  {
+   "path": "layer2/island-10.ndjson",
+   "bytes": 1375793,
+   "lines": 215,
+   "sha256": "559163a296753dbb098721a06203decfcf0819deb0013d359d46343c88e25f84"
+  },
+  {
+   "path": "layer2/island-11.ndjson",
+   "bytes": 1368986,
+   "lines": 214,
+   "sha256": "351f6d822a1d11376f9b6540ee84920b3d0dfc2e020af7c3ae3f61e981680412"
+  },
+  {
+   "path": "layer2/island-2.ndjson",
+   "bytes": 1676424,
+   "lines": 215,
+   "sha256": "0210adf59944156556d49d54254fd13d58af5b348ea43e525ec57e81b92c68a1"
+  },
+  {
+   "path": "layer2/island-3.ndjson",
+   "bytes": 1721398,
+   "lines": 219,
+   "sha256": "56c94d12290d405066b2cea266cde3b9b90b8418644087981786d02cddf4e6e5"
+  },
+  {
+   "path": "layer2/island-4.ndjson",
+   "bytes": 1560511,
+   "lines": 217,
+   "sha256": "8ba7a6af7cf75e54863cd3553a14806b690574b59176ebfb7190460a0dc7c6b6"
+  },
+  {
+   "path": "layer2/island-5.ndjson",
+   "bytes": 1628372,
+   "lines": 222,
+   "sha256": "ce67d941b485f7952764bae255543be250485bba7802f0eca0e108bb8952b8c0"
+  },
+  {
+   "path": "layer2/island-6.ndjson",
+   "bytes": 1434605,
+   "lines": 219,
+   "sha256": "13e778bdba020b50dc205a71c425e1312c4df9168faa36c1e4b7bc2596e770fb"
+  },
+  {
+   "path": "layer2/island-7.ndjson",
+   "bytes": 1399721,
+   "lines": 222,
+   "sha256": "7d32092f31fed674c56007d60bf7a977884df8ca5b8ba17f478d746a1259add9"
+  },
+  {
+   "path": "layer2/island-8.ndjson",
+   "bytes": 1363745,
+   "lines": 216,
+   "sha256": "720f9b379b1f7493a2e7ac5dee8d77749755b05c6cbfd28f8618b3652e3d8e5e"
+  },
+  {
+   "path": "layer2/island-9.ndjson",
+   "bytes": 1404378,
+   "lines": 222,
+   "sha256": "02573348e3961dd2d2d9a11a48700ac1928a6ffb2872f239d4cde06193ac0858"
+  },
+  {
+   "path": "layer2/island-seeds.json",
+   "bytes": 724,
+   "lines": 53,
+   "sha256": "a22b32ecf649537b2c55c7e40f0666b3fcc9131c1f882ca88ae75c34116722fc"
+  },
+  {
+   "path": "layer2/layer2-analysis.json",
+   "bytes": 25645,
+   "lines": 1329,
+   "sha256": "7a9ca91c8a29ffabc6b3044744ca68f47684b67e7bdf46575311598bb8406944"
+  },
+  {
+   "path": "layer2/schedule.json",
+   "bytes": 129,
+   "lines": 16,
+   "sha256": "cec4ea2485fee124f9eaa951f0bb2a4a4610ebb8587a74566d93d7200dfed7c3"
+  }
+ ]
+}
