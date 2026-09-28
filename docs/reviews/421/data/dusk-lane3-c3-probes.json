@@ -1,0 +1,2892 @@
+{
+ "note": "docs/reviews/421/dusk-lane3-c3-diagnosis.md",
+ "base": "3c5144e (content = 582e2f7)",
+ "variantChanges": {
+  "P1": "relics.crownOfCinders.aspect = ashwarden",
+  "P": "P1 plus relics.crownOfTheHearth.aspect = ashwarden",
+  "H20": "relics.hollowCrown.maxHpPenalty = 20",
+  "HX": "relics.hollowCrown.aspect = ashwarden",
+  "R240": "enemies.rootheart.hp = [240, 240]",
+  "R260": "enemies.rootheart.hp = [260, 260]",
+  "C26": "relics.unbrokenCrown.fullDeck = 26",
+  "CF": "relics.unbrokenCrown.wardPerAttack = smolderPerAttack = 3"
+ },
+ "variantContentSha256": {
+  "H20": "0d212045225006d52704bf5b1e39a5809649404cf7a65da5d29f17283bac5bcd",
+  "HX": "45dd99c61ba419176853132d6e691dd8d9e8a696ed409a2325475288f4eb25a4",
+  "HXR240": "b3ea1f21cc9c9b7a83a691b67d2a70c7a80d86395ddbcfb9bd47a29cacb60a54",
+  "HXR260": "24792d97c661afb5989c685a20da2e926428928663448d6d547723e5ad5d2174",
+  "P": "88cef830d06424184c19c750be13cebcaf7dbe96673b9205935e8e0fd6e44d54",
+  "P1": "638ed13c9c27c93c340817a11058a283ae1ada60ae544c75cd23e330991fe77b",
+  "P1C26": "425aea5fcd2793ec0345ca4c741ee4fe0731828a58b75e0a0c86bbfbfe38528c",
+  "P1CF": "a89c4bc123e5693f8851833d7c5280fc3a6f46f9b54fe66ad0f5e5aa39f65739",
+  "P1R260": "f6bab71b675332ae6bb47808cfd6650dda83ada6fa870ccc73f0e63ade5e9338",
+  "P1R260C26": "eeae9ab98a02abda2acbe38859fc54a72b72281966892e925d821a18f67cfc1b",
+  "P1R260CF": "bbe22286f9d8f3a60c5863c13d11eb5adbc3f73b70bc80fac1a7fa61b72ad000",
+  "PR240": "0c1e92f7788975dae5cb0b811641111a88f2648b5d3481208707bc46061e0956",
+  "PR260": "c35acb8bcf2549b9e88811caedb37f243908c22633295877ff5048c4c4cdf50a",
+  "R240": "27e17c3f89aa49b9d73ff1a18c5a1bab1fc31636bf5f8678b6b59ce3d5ed9fcf",
+  "R260": "f3ef999513ac68b1e3978d285f8fb533440f6d982b601ed60454c0012da6ed31"
+ },
+ "devGate": {
+  "BASE": {
+   "V0": {
+    "top3": [
+     [
+      "smolder:fat",
+      72.4,
+      384
+     ],
+     [
+      "shatter:fat",
+      68.1,
+      849
+     ],
+     [
+      "attrition:fat",
+      64.4,
+      464
+     ],
+     [
+      "shatter:mid",
+      29.2,
+      565
+     ]
+    ],
+    "in10": 3,
+    "arm2": 30.4,
+    "gapPp": 42.0,
+    "rootDeath": 26.7,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 2.9,
+     "unbrokenCrown": 2.78
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "smolder:fat",
+      60.6,
+      193
+     ],
+     [
+      "attrition:fat",
+      56.7,
+      323
+     ],
+     [
+      "shatter:fat",
+      56.6,
+      587
+     ],
+     [
+      "smolder:mid",
+      11.2,
+      125
+     ]
+    ],
+    "in10": 3,
+    "arm2": 11.1,
+    "gapPp": 49.5,
+    "rootDeath": 50.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 7.37,
+     "unbrokenCrown": 7.35
+    }
+   },
+   "shatterMedian": 0.8889
+  },
+  "R240": {
+   "V0": {
+    "top3": [
+     [
+      "smolder:fat",
+      70.7,
+      447
+     ],
+     [
+      "shatter:fat",
+      68.4,
+      952
+     ],
+     [
+      "attrition:fat",
+      64.8,
+      503
+     ],
+     [
+      "shatter:mid",
+      30.2,
+      643
+     ]
+    ],
+    "in10": 3,
+    "arm2": 34.4,
+    "gapPp": 36.3,
+    "rootDeath": 18.5,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 1.26,
+     "unbrokenCrown": 0.13
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "smolder:fat",
+      56.5,
+      214
+     ],
+     [
+      "shatter:fat",
+      51.5,
+      670
+     ],
+     [
+      "attrition:fat",
+      50.9,
+      338
+     ],
+     [
+      "smolder:mid",
+      11.9,
+      159
+     ]
+    ],
+    "in10": 3,
+    "arm2": 14.5,
+    "gapPp": 42.0,
+    "rootDeath": 42.2,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 2.58,
+     "unbrokenCrown": 0.97
+    }
+   },
+   "shatterMedian": 0.875
+  },
+  "H20": {
+   "V0": {
+    "top3": [
+     [
+      "smolder:fat",
+      70.2,
+      379
+     ],
+     [
+      "shatter:fat",
+      63.4,
+      823
+     ],
+     [
+      "attrition:fat",
+      63.0,
+      454
+     ],
+     [
+      "shatter:mid",
+      25.5,
+      569
+     ]
+    ],
+    "in10": 3,
+    "arm2": 28.1,
+    "gapPp": 42.1,
+    "rootDeath": 26.7,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 2.15,
+     "unbrokenCrown": 1.27
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "smolder:fat",
+      55.9,
+      186
+     ],
+     [
+      "shatter:fat",
+      52.8,
+      563
+     ],
+     [
+      "attrition:fat",
+      52.4,
+      317
+     ],
+     [
+      "smolder:mid",
+      9.5,
+      126
+     ]
+    ],
+    "in10": 3,
+    "arm2": 10.2,
+    "gapPp": 45.7,
+    "rootDeath": 50.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 5.83,
+     "unbrokenCrown": 4.89
+    }
+   },
+   "shatterMedian": 0.8889
+  },
+  "HX": {
+   "V0": {
+    "top3": [
+     [
+      "smolder:fat",
+      67.1,
+      444
+     ],
+     [
+      "attrition:fat",
+      58.4,
+      478
+     ],
+     [
+      "shatter:fat",
+      54.7,
+      687
+     ],
+     [
+      "smolder:mid",
+      24.4,
+      283
+     ]
+    ],
+    "in10": 2,
+    "arm2": 26.5,
+    "gapPp": 40.6,
+    "rootDeath": 26.7,
+    "verdict": "FAIL",
+    "paired": {
+     "crownOfTithes": 0.0,
+     "unbrokenCrown": -4.06
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "attrition:fat",
+      58.2,
+      328
+     ],
+     [
+      "smolder:fat",
+      56.2,
+      233
+     ],
+     [
+      "shatter:fat",
+      45.1,
+      448
+     ],
+     [
+      "smolder:mid",
+      11.7,
+      154
+     ]
+    ],
+    "in10": 2,
+    "arm2": 9.0,
+    "gapPp": 49.2,
+    "rootDeath": 50.4,
+    "verdict": "FAIL",
+    "paired": {
+     "crownOfTithes": 4.49,
+     "unbrokenCrown": -1.13
+    }
+   },
+   "shatterMedian": 0.8571
+  },
+  "HXR260": {
+   "V0": {
+    "top3": [
+     [
+      "smolder:fat",
+      63.6,
+      478
+     ],
+     [
+      "attrition:fat",
+      58.3,
+      494
+     ],
+     [
+      "shatter:fat",
+      55.7,
+      759
+     ],
+     [
+      "smolder:mid",
+      25.5,
+      286
+     ]
+    ],
+    "in10": 3,
+    "arm2": 27.8,
+    "gapPp": 35.8,
+    "rootDeath": 22.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": -1.95,
+     "unbrokenCrown": -3.78
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "smolder:fat",
+      56.5,
+      246
+     ],
+     [
+      "attrition:fat",
+      55.9,
+      333
+     ],
+     [
+      "shatter:fat",
+      46.8,
+      483
+     ],
+     [
+      "smolder:mid",
+      13.4,
+      164
+     ]
+    ],
+    "in10": 3,
+    "arm2": 9.5,
+    "gapPp": 47.0,
+    "rootDeath": 46.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 2.67,
+     "unbrokenCrown": 0.62
+    }
+   },
+   "shatterMedian": 0.8421
+  },
+  "HXR240": {
+   "V0": {
+    "top3": [
+     [
+      "smolder:fat",
+      64.0,
+      492
+     ],
+     [
+      "attrition:fat",
+      61.0,
+      477
+     ],
+     [
+      "shatter:fat",
+      55.0,
+      797
+     ],
+     [
+      "smolder:mid",
+      23.7,
+      333
+     ]
+    ],
+    "in10": 3,
+    "arm2": 28.1,
+    "gapPp": 35.9,
+    "rootDeath": 18.5,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": -2.49,
+     "unbrokenCrown": -4.71
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "attrition:fat",
+      56.0,
+      357
+     ],
+     [
+      "smolder:fat",
+      55.3,
+      235
+     ],
+     [
+      "shatter:fat",
+      43.0,
+      540
+     ],
+     [
+      "smolder:mid",
+      10.9,
+      183
+     ]
+    ],
+    "in10": 2,
+    "arm2": 10.4,
+    "gapPp": 45.6,
+    "rootDeath": 42.2,
+    "verdict": "FAIL",
+    "paired": {
+     "crownOfTithes": 3.35,
+     "unbrokenCrown": -2.69
+    }
+   },
+   "shatterMedian": 0.8182
+  },
+  "P": {
+   "V0": {
+    "top3": [
+     [
+      "smolder:fat",
+      73.3,
+      551
+     ],
+     [
+      "shatter:fat",
+      67.8,
+      739
+     ],
+     [
+      "attrition:fat",
+      67.6,
+      500
+     ],
+     [
+      "shatter:mid",
+      29.3,
+      550
+     ]
+    ],
+    "in10": 3,
+    "arm2": 37.1,
+    "gapPp": 36.2,
+    "rootDeath": 26.7,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 5.64,
+     "unbrokenCrown": 6.4
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "smolder:fat",
+      62.2,
+      288
+     ],
+     [
+      "attrition:fat",
+      61.2,
+      317
+     ],
+     [
+      "shatter:fat",
+      53.5,
+      501
+     ],
+     [
+      "smolder:mid",
+      10.9,
+      174
+     ]
+    ],
+    "in10": 3,
+    "arm2": 12.1,
+    "gapPp": 50.0,
+    "rootDeath": 50.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 9.71,
+     "unbrokenCrown": 4.66
+    }
+   },
+   "shatterMedian": 0.8333
+  },
+  "PR260": {
+   "V0": {
+    "top3": [
+     [
+      "smolder:fat",
+      70.1,
+      568
+     ],
+     [
+      "shatter:fat",
+      69.6,
+      785
+     ],
+     [
+      "attrition:fat",
+      68.7,
+      521
+     ],
+     [
+      "shatter:mid",
+      28.4,
+      606
+     ]
+    ],
+    "in10": 3,
+    "arm2": 38.4,
+    "gapPp": 31.7,
+    "rootDeath": 22.4,
+    "verdict": "FAIL",
+    "paired": {
+     "crownOfTithes": 6.36,
+     "unbrokenCrown": 2.92
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "smolder:fat",
+      62.7,
+      300
+     ],
+     [
+      "attrition:fat",
+      60.4,
+      323
+     ],
+     [
+      "shatter:fat",
+      54.1,
+      532
+     ],
+     [
+      "smolder:mid",
+      10.8,
+      185
+     ]
+    ],
+    "in10": 3,
+    "arm2": 13.8,
+    "gapPp": 48.9,
+    "rootDeath": 46.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 9.06,
+     "unbrokenCrown": 5.5
+    }
+   },
+   "shatterMedian": 0.8235
+  },
+  "PR240": {
+   "V0": {
+    "top3": [
+     [
+      "smolder:fat",
+      72.8,
+      593
+     ],
+     [
+      "attrition:fat",
+      69.9,
+      522
+     ],
+     [
+      "shatter:fat",
+      69.1,
+      823
+     ],
+     [
+      "shatter:mid",
+      26.4,
+      643
+     ]
+    ],
+    "in10": 3,
+    "arm2": 36.8,
+    "gapPp": 36.1,
+    "rootDeath": 18.5,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 4.85,
+     "unbrokenCrown": 4.64
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "attrition:fat",
+      59.9,
+      339
+     ],
+     [
+      "smolder:fat",
+      58.3,
+      312
+     ],
+     [
+      "shatter:fat",
+      53.7,
+      570
+     ],
+     [
+      "smolder:mid",
+      9.6,
+      208
+     ]
+    ],
+    "in10": 3,
+    "arm2": 15.1,
+    "gapPp": 44.8,
+    "rootDeath": 42.2,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 8.51,
+     "unbrokenCrown": 3.21
+    }
+   },
+   "shatterMedian": 0.8
+  },
+  "P1": {
+   "V0": {
+    "top3": [
+     [
+      "smolder:fat",
+      71.7,
+      499
+     ],
+     [
+      "shatter:fat",
+      69.8,
+      776
+     ],
+     [
+      "attrition:fat",
+      63.6,
+      445
+     ],
+     [
+      "shatter:mid",
+      29.4,
+      608
+     ]
+    ],
+    "in10": 3,
+    "arm2": 31.5,
+    "gapPp": 40.2,
+    "rootDeath": 26.7,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 5.64,
+     "unbrokenCrown": 4.05
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "attrition:fat",
+      60.5,
+      329
+     ],
+     [
+      "smolder:fat",
+      57.8,
+      251
+     ],
+     [
+      "shatter:fat",
+      54.2,
+      517
+     ],
+     [
+      "smolder:mid",
+      11.9,
+      160
+     ]
+    ],
+    "in10": 3,
+    "arm2": 10.9,
+    "gapPp": 49.6,
+    "rootDeath": 50.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 7.88,
+     "unbrokenCrown": 0.86
+    }
+   },
+   "shatterMedian": 0.875
+  },
+  "P1R260": {
+   "V0": {
+    "top3": [
+     [
+      "shatter:fat",
+      71.1,
+      836
+     ],
+     [
+      "smolder:fat",
+      69.8,
+      547
+     ],
+     [
+      "attrition:fat",
+      67.2,
+      467
+     ],
+     [
+      "shatter:mid",
+      30.0,
+      623
+     ]
+    ],
+    "in10": 3,
+    "arm2": 31.9,
+    "gapPp": 39.2,
+    "rootDeath": 22.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 5.63,
+     "unbrokenCrown": 3.76
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "smolder:fat",
+      59.0,
+      261
+     ],
+     [
+      "attrition:fat",
+      57.7,
+      333
+     ],
+     [
+      "shatter:fat",
+      54.5,
+      549
+     ],
+     [
+      "smolder:mid",
+      12.4,
+      169
+     ]
+    ],
+    "in10": 3,
+    "arm2": 11.5,
+    "gapPp": 47.5,
+    "rootDeath": 46.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 6.33,
+     "unbrokenCrown": 2.65
+    }
+   },
+   "shatterMedian": 0.875
+  },
+  "P1C26": {
+   "V0": {
+    "top3": [
+     [
+      "smolder:fat",
+      72.3,
+      531
+     ],
+     [
+      "shatter:fat",
+      69.8,
+      776
+     ],
+     [
+      "attrition:fat",
+      63.7,
+      441
+     ],
+     [
+      "smolder:mid",
+      34.3,
+      274
+     ]
+    ],
+    "in10": 3,
+    "arm2": 33.8,
+    "gapPp": 38.6,
+    "rootDeath": 26.7,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 5.94,
+     "unbrokenCrown": 8.1
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "attrition:fat",
+      60.6,
+      330
+     ],
+     [
+      "smolder:fat",
+      57.0,
+      258
+     ],
+     [
+      "shatter:fat",
+      54.3,
+      519
+     ],
+     [
+      "smolder:mid",
+      15.6,
+      154
+     ]
+    ],
+    "in10": 3,
+    "arm2": 11.4,
+    "gapPp": 49.2,
+    "rootDeath": 50.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 7.88,
+     "unbrokenCrown": 2.57
+    }
+   },
+   "shatterMedian": 0.875
+  },
+  "P1CF": {
+   "V0": {
+    "top3": [
+     [
+      "smolder:fat",
+      72.9,
+      557
+     ],
+     [
+      "shatter:fat",
+      69.6,
+      777
+     ],
+     [
+      "attrition:fat",
+      64.0,
+      439
+     ],
+     [
+      "smolder:mid",
+      36.4,
+      280
+     ]
+    ],
+    "in10": 3,
+    "arm2": 35.8,
+    "gapPp": 37.1,
+    "rootDeath": 26.7,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 6.4,
+     "unbrokenCrown": 11.43
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "attrition:fat",
+      61.0,
+      328
+     ],
+     [
+      "shatter:fat",
+      54.3,
+      519
+     ],
+     [
+      "smolder:fat",
+      53.9,
+      271
+     ],
+     [
+      "smolder:mid",
+      15.2,
+      165
+     ]
+    ],
+    "in10": 3,
+    "arm2": 12.2,
+    "gapPp": 48.7,
+    "rootDeath": 50.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 8.33,
+     "unbrokenCrown": 2.57
+    }
+   },
+   "shatterMedian": 0.875
+  },
+  "P1R260C26": {
+   "V0": {
+    "top3": [
+     [
+      "shatter:fat",
+      71.1,
+      836
+     ],
+     [
+      "smolder:fat",
+      70.4,
+      571
+     ],
+     [
+      "attrition:fat",
+      67.4,
+      466
+     ],
+     [
+      "smolder:mid",
+      33.2,
+      289
+     ]
+    ],
+    "in10": 3,
+    "arm2": 34.2,
+    "gapPp": 36.8,
+    "rootDeath": 22.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 5.82,
+     "unbrokenCrown": 6.97
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "attrition:fat",
+      57.9,
+      337
+     ],
+     [
+      "smolder:fat",
+      57.4,
+      272
+     ],
+     [
+      "shatter:fat",
+      54.6,
+      551
+     ],
+     [
+      "smolder:mid",
+      14.2,
+      155
+     ]
+    ],
+    "in10": 3,
+    "arm2": 11.5,
+    "gapPp": 46.4,
+    "rootDeath": 46.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 6.32,
+     "unbrokenCrown": 3.88
+    }
+   },
+   "shatterMedian": 0.875
+  },
+  "P1R260CF": {
+   "V0": {
+    "top3": [
+     [
+      "shatter:fat",
+      71.0,
+      838
+     ],
+     [
+      "smolder:fat",
+      70.8,
+      603
+     ],
+     [
+      "attrition:fat",
+      67.5,
+      462
+     ],
+     [
+      "smolder:mid",
+      35.5,
+      296
+     ]
+    ],
+    "in10": 3,
+    "arm2": 36.4,
+    "gapPp": 34.6,
+    "rootDeath": 22.4,
+    "verdict": "FAIL",
+    "paired": {
+     "crownOfTithes": 5.94,
+     "unbrokenCrown": 10.4
+    }
+   },
+   "V5": {
+    "top3": [
+     [
+      "attrition:fat",
+      58.2,
+      335
+     ],
+     [
+      "shatter:fat",
+      54.6,
+      551
+     ],
+     [
+      "smolder:fat",
+      54.6,
+      284
+     ],
+     [
+      "smolder:mid",
+      12.5,
+      168
+     ]
+    ],
+    "in10": 3,
+    "arm2": 12.6,
+    "gapPp": 45.6,
+    "rootDeath": 46.4,
+    "verdict": "PASS",
+    "paired": {
+     "crownOfTithes": 6.92,
+     "unbrokenCrown": 3.47
+    }
+   },
+   "shatterMedian": 0.875
+  }
+ },
+ "miniCem": {
+  "settings": "balance_cem.gd popSize 30, elite 8, maxGen 8, seedCount 20, trainSeed0 14000, holdoutSeed0 13000, holdoutCount 100, samplerRoot 7421, rootSeed 7422, no --stage; islands 0-2 and 6-8 = smolder/shatter/attrition:fat, 3-5 and 9-11 replicate them on another RNG stream; end cell = modal holdout cell, deck cuts 20/29, variant dev shatter median",
+  "representatives": {
+   "BASE": [
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 4,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 0,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 3,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 8,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 3,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 1,
+     "wins": 1,
+     "runs": 1
+    }
+   ],
+   "H20": [
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 4,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 0,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 3,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 8,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 3,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 1,
+     "wins": 1,
+     "runs": 1
+    }
+   ],
+   "P": [
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 3,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 7,
+     "wins": 3,
+     "runs": 3
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 0,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 7,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 10,
+     "wins": 3,
+     "runs": 3
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 2,
+     "wins": 1,
+     "runs": 1
+    }
+   ],
+   "R240": [
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 3,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 0,
+     "wins": 3,
+     "runs": 3
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 6,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 0,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 0,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 1,
+     "wins": 1,
+     "runs": 1
+    }
+   ],
+   "P1": [
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 2,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 0,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 3,
+     "wins": 7,
+     "runs": 7
+    },
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 0,
+     "wins": 3,
+     "runs": 3
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 10,
+     "wins": 3,
+     "runs": 3
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 2,
+     "wins": 1,
+     "runs": 1
+    }
+   ],
+   "P1R260": [
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 2,
+     "wins": 2,
+     "runs": 2
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 0,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 3,
+     "wins": 8,
+     "runs": 8
+    },
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 0,
+     "wins": 3,
+     "runs": 3
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 0,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 2,
+     "wins": 1,
+     "runs": 1
+    }
+   ],
+   "P1C26": [
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 2,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 0,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 3,
+     "wins": 7,
+     "runs": 7
+    },
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 0,
+     "wins": 3,
+     "runs": 3
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 10,
+     "wins": 3,
+     "runs": 3
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 2,
+     "wins": 1,
+     "runs": 1
+    }
+   ],
+   "P1CF": [
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 2,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 0,
+     "wins": 1,
+     "runs": 1
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 3,
+     "wins": 7,
+     "runs": 7
+    },
+    {
+     "cell": "smolder:fat",
+     "policyIndex": 0,
+     "wins": 3,
+     "runs": 3
+    },
+    {
+     "cell": "shatter:fat",
+     "policyIndex": 10,
+     "wins": 3,
+     "runs": 3
+    },
+    {
+     "cell": "attrition:fat",
+     "policyIndex": 2,
+     "wins": 1,
+     "runs": 1
+    }
+   ]
+  },
+  "islands": {
+   "BASE": [
+    {
+     "island": 0,
+     "start": "smolder:fat",
+     "end": "shatter:fat",
+     "stay": false,
+     "hold": 0.31,
+     "train": 0.65,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.24
+    },
+    {
+     "island": 1,
+     "start": "shatter:fat",
+     "end": "shatter:fat",
+     "stay": true,
+     "hold": 0.64,
+     "train": 0.85,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.12
+    },
+    {
+     "island": 2,
+     "start": "attrition:fat",
+     "end": "attrition:fat",
+     "stay": true,
+     "hold": 0.64,
+     "train": 0.9,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.1
+    },
+    {
+     "island": 3,
+     "start": "smolder:fat",
+     "end": "shatter:fat",
+     "stay": false,
+     "hold": 0.41,
+     "train": 0.65,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.22
+    },
+    {
+     "island": 4,
+     "start": "shatter:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.57,
+     "train": 0.85,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.13
+    },
+    {
+     "island": 5,
+     "start": "attrition:fat",
+     "end": "shatter:fat",
+     "stay": false,
+     "hold": 0.6,
+     "train": 0.8,
+     "gens": 6,
+     "stop": "stall",
+     "rootDeath": 0.19
+    },
+    {
+     "island": 6,
+     "start": "smolder:fat",
+     "end": "attrition:mid",
+     "stay": false,
+     "hold": 0.13,
+     "train": 0.45,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.57
+    },
+    {
+     "island": 7,
+     "start": "shatter:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.25,
+     "train": 0.5,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.28
+    },
+    {
+     "island": 8,
+     "start": "attrition:fat",
+     "end": "shatter:fat",
+     "stay": false,
+     "hold": 0.18,
+     "train": 0.4,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.38
+    },
+    {
+     "island": 9,
+     "start": "smolder:fat",
+     "end": "attrition:mid",
+     "stay": false,
+     "hold": 0.09,
+     "train": 0.4,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.47
+    },
+    {
+     "island": 10,
+     "start": "shatter:fat",
+     "end": "shatter:fat",
+     "stay": true,
+     "hold": 0.16,
+     "train": 0.4,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.42
+    },
+    {
+     "island": 11,
+     "start": "attrition:fat",
+     "end": "shatter:thin",
+     "stay": false,
+     "hold": 0.11,
+     "train": 0.3,
+     "gens": 7,
+     "stop": "stall",
+     "rootDeath": 0.53
+    }
+   ],
+   "H20": [
+    {
+     "island": 0,
+     "start": "smolder:fat",
+     "end": "shatter:fat",
+     "stay": false,
+     "hold": 0.26,
+     "train": 0.55,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.3
+    },
+    {
+     "island": 1,
+     "start": "shatter:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.6,
+     "train": 0.8,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.11
+    },
+    {
+     "island": 2,
+     "start": "attrition:fat",
+     "end": "attrition:fat",
+     "stay": true,
+     "hold": 0.59,
+     "train": 0.9,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.11
+    },
+    {
+     "island": 3,
+     "start": "smolder:fat",
+     "end": "shatter:fat",
+     "stay": false,
+     "hold": 0.28,
+     "train": 0.5,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.24
+    },
+    {
+     "island": 4,
+     "start": "shatter:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.56,
+     "train": 0.8,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.09
+    },
+    {
+     "island": 5,
+     "start": "attrition:fat",
+     "end": "shatter:fat",
+     "stay": false,
+     "hold": 0.58,
+     "train": 0.8,
+     "gens": 6,
+     "stop": "stall",
+     "rootDeath": 0.19
+    },
+    {
+     "island": 6,
+     "start": "smolder:fat",
+     "end": "attrition:mid",
+     "stay": false,
+     "hold": 0.11,
+     "train": 0.3,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.62
+    },
+    {
+     "island": 7,
+     "start": "shatter:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.19,
+     "train": 0.35,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.43
+    },
+    {
+     "island": 8,
+     "start": "attrition:fat",
+     "end": "shatter:thin",
+     "stay": false,
+     "hold": 0.07,
+     "train": 0.3,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.52
+    },
+    {
+     "island": 9,
+     "start": "smolder:fat",
+     "end": "attrition:mid",
+     "stay": false,
+     "hold": 0.04,
+     "train": 0.4,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.61
+    },
+    {
+     "island": 10,
+     "start": "shatter:fat",
+     "end": "attrition:mid",
+     "stay": false,
+     "hold": 0.09,
+     "train": 0.35,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.4
+    },
+    {
+     "island": 11,
+     "start": "attrition:fat",
+     "end": "shatter:thin",
+     "stay": false,
+     "hold": 0.09,
+     "train": 0.3,
+     "gens": 7,
+     "stop": "stall",
+     "rootDeath": 0.52
+    }
+   ],
+   "P": [
+    {
+     "island": 0,
+     "start": "smolder:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.52,
+     "train": 0.85,
+     "gens": 7,
+     "stop": "stall",
+     "rootDeath": 0.18
+    },
+    {
+     "island": 1,
+     "start": "shatter:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.43,
+     "train": 0.75,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.21
+    },
+    {
+     "island": 2,
+     "start": "attrition:fat",
+     "end": "smolder:fat",
+     "stay": false,
+     "hold": 0.73,
+     "train": 0.9,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.12
+    },
+    {
+     "island": 3,
+     "start": "smolder:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.6,
+     "train": 0.95,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.11
+    },
+    {
+     "island": 4,
+     "start": "shatter:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.46,
+     "train": 0.65,
+     "gens": 6,
+     "stop": "stall",
+     "rootDeath": 0.24
+    },
+    {
+     "island": 5,
+     "start": "attrition:fat",
+     "end": "smolder:fat",
+     "stay": false,
+     "hold": 0.63,
+     "train": 0.9,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.16
+    },
+    {
+     "island": 6,
+     "start": "smolder:fat",
+     "end": "shatter:mid",
+     "stay": false,
+     "hold": 0.16,
+     "train": 0.35,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.45
+    },
+    {
+     "island": 7,
+     "start": "shatter:fat",
+     "end": "shatter:fat",
+     "stay": true,
+     "hold": 0.38,
+     "train": 0.6,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.3
+    },
+    {
+     "island": 8,
+     "start": "attrition:fat",
+     "end": "shatter:thin",
+     "stay": false,
+     "hold": 0.07,
+     "train": 0.3,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.6
+    },
+    {
+     "island": 9,
+     "start": "smolder:fat",
+     "end": "shatter:mid",
+     "stay": false,
+     "hold": 0.23,
+     "train": 0.5,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.38
+    },
+    {
+     "island": 10,
+     "start": "shatter:fat",
+     "end": "shatter:thin",
+     "stay": false,
+     "hold": 0.25,
+     "train": 0.55,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.4
+    },
+    {
+     "island": 11,
+     "start": "attrition:fat",
+     "end": "attrition:mid",
+     "stay": false,
+     "hold": 0.06,
+     "train": 0.35,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.56
+    }
+   ],
+   "R240": [
+    {
+     "island": 0,
+     "start": "smolder:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.62,
+     "train": 0.8,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.07
+    },
+    {
+     "island": 1,
+     "start": "shatter:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.75,
+     "train": 0.9,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.05
+    },
+    {
+     "island": 2,
+     "start": "attrition:fat",
+     "end": "shatter:fat",
+     "stay": false,
+     "hold": 0.53,
+     "train": 0.8,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.22
+    },
+    {
+     "island": 3,
+     "start": "smolder:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.55,
+     "train": 0.8,
+     "gens": 6,
+     "stop": "stall",
+     "rootDeath": 0.08
+    },
+    {
+     "island": 4,
+     "start": "shatter:fat",
+     "end": "shatter:mid",
+     "stay": false,
+     "hold": 0.76,
+     "train": 0.85,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.03
+    },
+    {
+     "island": 5,
+     "start": "attrition:fat",
+     "end": "attrition:fat",
+     "stay": true,
+     "hold": 0.65,
+     "train": 0.9,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.08
+    },
+    {
+     "island": 6,
+     "start": "smolder:fat",
+     "end": "shatter:fat",
+     "stay": false,
+     "hold": 0.26,
+     "train": 0.55,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.34
+    },
+    {
+     "island": 7,
+     "start": "shatter:fat",
+     "end": "shatter:fat",
+     "stay": true,
+     "hold": 0.29,
+     "train": 0.55,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.23
+    },
+    {
+     "island": 8,
+     "start": "attrition:fat",
+     "end": "attrition:thin",
+     "stay": false,
+     "hold": 0.14,
+     "train": 0.4,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.4
+    },
+    {
+     "island": 9,
+     "start": "smolder:fat",
+     "end": "smolder:fat",
+     "stay": true,
+     "hold": 0.41,
+     "train": 0.6,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.26
+    },
+    {
+     "island": 10,
+     "start": "shatter:fat",
+     "end": "shatter:fat",
+     "stay": true,
+     "hold": 0.49,
+     "train": 0.7,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.18
+    },
+    {
+     "island": 11,
+     "start": "attrition:fat",
+     "end": "shatter:thin",
+     "stay": false,
+     "hold": 0.07,
+     "train": 0.3,
+     "gens": 7,
+     "stop": "stall",
+     "rootDeath": 0.46
+    }
+   ],
+   "P1": [
+    {
+     "island": 0,
+     "start": "smolder:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.34,
+     "train": 0.65,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.33
+    },
+    {
+     "island": 1,
+     "start": "shatter:fat",
+     "end": "shatter:fat",
+     "stay": true,
+     "hold": 0.6,
+     "train": 0.8,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.12
+    },
+    {
+     "island": 2,
+     "start": "attrition:fat",
+     "end": "attrition:fat",
+     "stay": true,
+     "hold": 0.63,
+     "train": 0.9,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.09
+    },
+    {
+     "island": 3,
+     "start": "smolder:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.35,
+     "train": 0.6,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.29
+    },
+    {
+     "island": 4,
+     "start": "shatter:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.63,
+     "train": 0.9,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.13
+    },
+    {
+     "island": 5,
+     "start": "attrition:fat",
+     "end": "attrition:fat",
+     "stay": true,
+     "hold": 0.61,
+     "train": 0.8,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.13
+    },
+    {
+     "island": 6,
+     "start": "smolder:fat",
+     "end": "smolder:fat",
+     "stay": true,
+     "hold": 0.33,
+     "train": 0.55,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.37
+    },
+    {
+     "island": 7,
+     "start": "shatter:fat",
+     "end": "shatter:fat",
+     "stay": true,
+     "hold": 0.33,
+     "train": 0.65,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.28
+    },
+    {
+     "island": 8,
+     "start": "attrition:fat",
+     "end": "attrition:thin",
+     "stay": false,
+     "hold": 0.06,
+     "train": 0.35,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.53
+    },
+    {
+     "island": 9,
+     "start": "smolder:fat",
+     "end": "smolder:fat",
+     "stay": true,
+     "hold": 0.32,
+     "train": 0.55,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.38
+    },
+    {
+     "island": 10,
+     "start": "shatter:fat",
+     "end": "shatter:fat",
+     "stay": true,
+     "hold": 0.3,
+     "train": 0.55,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.35
+    },
+    {
+     "island": 11,
+     "start": "attrition:fat",
+     "end": "attrition:mid",
+     "stay": false,
+     "hold": 0.08,
+     "train": 0.2,
+     "gens": 6,
+     "stop": "stall",
+     "rootDeath": 0.54
+    }
+   ],
+   "P1R260": [
+    {
+     "island": 0,
+     "start": "smolder:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.32,
+     "train": 0.6,
+     "gens": 6,
+     "stop": "stall",
+     "rootDeath": 0.36
+    },
+    {
+     "island": 1,
+     "start": "shatter:fat",
+     "end": "shatter:fat",
+     "stay": true,
+     "hold": 0.7,
+     "train": 0.9,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.09
+    },
+    {
+     "island": 2,
+     "start": "attrition:fat",
+     "end": "attrition:fat",
+     "stay": true,
+     "hold": 0.56,
+     "train": 0.8,
+     "gens": 6,
+     "stop": "stall",
+     "rootDeath": 0.09
+    },
+    {
+     "island": 3,
+     "start": "smolder:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.37,
+     "train": 0.6,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.21
+    },
+    {
+     "island": 4,
+     "start": "shatter:fat",
+     "end": "shatter:fat",
+     "stay": true,
+     "hold": 0.7,
+     "train": 0.85,
+     "gens": 7,
+     "stop": "stall",
+     "rootDeath": 0.13
+    },
+    {
+     "island": 5,
+     "start": "attrition:fat",
+     "end": "attrition:fat",
+     "stay": true,
+     "hold": 0.6,
+     "train": 0.8,
+     "gens": 7,
+     "stop": "stall",
+     "rootDeath": 0.12
+    },
+    {
+     "island": 6,
+     "start": "smolder:fat",
+     "end": "shatter:thin",
+     "stay": false,
+     "hold": 0.2,
+     "train": 0.45,
+     "gens": 7,
+     "stop": "stall",
+     "rootDeath": 0.37
+    },
+    {
+     "island": 7,
+     "start": "shatter:fat",
+     "end": "smolder:fat",
+     "stay": false,
+     "hold": 0.18,
+     "train": 0.55,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.36
+    },
+    {
+     "island": 8,
+     "start": "attrition:fat",
+     "end": "attrition:thin",
+     "stay": false,
+     "hold": 0.1,
+     "train": 0.35,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.64
+    },
+    {
+     "island": 9,
+     "start": "smolder:fat",
+     "end": "smolder:fat",
+     "stay": true,
+     "hold": 0.37,
+     "train": 0.6,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.3
+    },
+    {
+     "island": 10,
+     "start": "shatter:fat",
+     "end": "shatter:mid",
+     "stay": false,
+     "hold": 0.53,
+     "train": 0.6,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.2
+    },
+    {
+     "island": 11,
+     "start": "attrition:fat",
+     "end": "attrition:mid",
+     "stay": false,
+     "hold": 0.07,
+     "train": 0.3,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.53
+    }
+   ],
+   "P1C26": [
+    {
+     "island": 0,
+     "start": "smolder:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.3,
+     "train": 0.7,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.29
+    },
+    {
+     "island": 3,
+     "start": "smolder:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.43,
+     "train": 0.6,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.27
+    },
+    {
+     "island": 6,
+     "start": "smolder:fat",
+     "end": "shatter:thin",
+     "stay": false,
+     "hold": 0.19,
+     "train": 0.55,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.43
+    },
+    {
+     "island": 9,
+     "start": "smolder:fat",
+     "end": "smolder:fat",
+     "stay": true,
+     "hold": 0.24,
+     "train": 0.55,
+     "gens": 8,
+     "stop": "stall",
+     "rootDeath": 0.31
+    }
+   ],
+   "P1CF": [
+    {
+     "island": 0,
+     "start": "smolder:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.24,
+     "train": 0.55,
+     "gens": 6,
+     "stop": "stall",
+     "rootDeath": 0.39
+    },
+    {
+     "island": 3,
+     "start": "smolder:fat",
+     "end": "attrition:fat",
+     "stay": false,
+     "hold": 0.42,
+     "train": 0.6,
+     "gens": 8,
+     "stop": "maxGen",
+     "rootDeath": 0.33
+    }
+   ]
+  }
+ },
+ "oracleReplay": {
+  "settings": "exam-1 final policies, dev seeds 13000-13199, forced = start-lane relic weight 1000",
+  "fatIslands": {
+   "BASE": {
+    "i0:asis": {
+     "win": 0.645,
+     "modal": [
+      "smolder:mid",
+      76
+     ],
+     "inStart": 19,
+     "laneFirst": 0.3,
+     "rootDeath": 0.095
+    },
+    "i0:forced": {
+     "win": 0.57,
+     "modal": [
+      "smolder:mid",
+      92
+     ],
+     "inStart": 18,
+     "laneFirst": 0.45,
+     "rootDeath": 0.095
+    },
+    "i1:asis": {
+     "win": 0.635,
+     "modal": [
+      "shatter:fat",
+      136
+     ],
+     "inStart": 136,
+     "laneFirst": 0.23,
+     "rootDeath": 0.165
+    },
+    "i1:forced": {
+     "win": 0.6,
+     "modal": [
+      "shatter:fat",
+      131
+     ],
+     "inStart": 131,
+     "laneFirst": 0.42,
+     "rootDeath": 0.165
+    },
+    "i2:asis": {
+     "win": 0.635,
+     "modal": [
+      "attrition:fat",
+      64
+     ],
+     "inStart": 64,
+     "laneFirst": 0.2,
+     "rootDeath": 0.12
+    },
+    "i2:forced": {
+     "win": 0.64,
+     "modal": [
+      "attrition:fat",
+      90
+     ],
+     "inStart": 90,
+     "laneFirst": 0.465,
+     "rootDeath": 0.12
+    },
+    "i6:asis": {
+     "win": 0.35,
+     "modal": [
+      "shatter:fat",
+      108
+     ],
+     "inStart": 0,
+     "laneFirst": 0.0,
+     "rootDeath": 0.365
+    },
+    "i6:forced": {
+     "win": 0.275,
+     "modal": [
+      "smolder:fat",
+      50
+     ],
+     "inStart": 50,
+     "laneFirst": 0.32,
+     "rootDeath": 0.365
+    },
+    "i7:asis": {
+     "win": 0.465,
+     "modal": [
+      "shatter:thin",
+      47
+     ],
+     "inStart": 28,
+     "laneFirst": 0.025,
+     "rootDeath": 0.315
+    },
+    "i7:forced": {
+     "win": 0.425,
+     "modal": [
+      "shatter:mid",
+      62
+     ],
+     "inStart": 35,
+     "laneFirst": 0.295,
+     "rootDeath": 0.315
+    },
+    "i8:asis": {
+     "win": 0.28,
+     "modal": [
+      "attrition:thin",
+      50
+     ],
+     "inStart": 35,
+     "laneFirst": 0.13,
+     "rootDeath": 0.485
+    },
+    "i8:forced": {
+     "win": 0.315,
+     "modal": [
+      "attrition:fat",
+      52
+     ],
+     "inStart": 52,
+     "laneFirst": 0.26,
+     "rootDeath": 0.485
+    }
+   },
+   "P": {
+    "i0:asis": {
+     "win": 0.68,
+     "modal": [
+      "smolder:mid",
+      113
+     ],
+     "inStart": 30,
+     "laneFirst": 0.26,
+     "rootDeath": 0.095
+    },
+    "i0:forced": {
+     "win": 0.615,
+     "modal": [
+      "smolder:mid",
+      101
+     ],
+     "inStart": 36,
+     "laneFirst": 0.67,
+     "rootDeath": 0.095
+    },
+    "i1:asis": {
+     "win": 0.685,
+     "modal": [
+      "shatter:fat",
+      155
+     ],
+     "inStart": 155,
+     "laneFirst": 0.19,
+     "rootDeath": 0.165
+    },
+    "i1:forced": {
+     "win": 0.625,
+     "modal": [
+      "shatter:fat",
+      146
+     ],
+     "inStart": 146,
+     "laneFirst": 0.61,
+     "rootDeath": 0.165
+    },
+    "i2:asis": {
+     "win": 0.615,
+     "modal": [
+      "attrition:fat",
+      115
+     ],
+     "inStart": 115,
+     "laneFirst": 0.225,
+     "rootDeath": 0.12
+    },
+    "i2:forced": {
+     "win": 0.635,
+     "modal": [
+      "attrition:fat",
+      125
+     ],
+     "inStart": 125,
+     "laneFirst": 0.69,
+     "rootDeath": 0.12
+    },
+    "i6:asis": {
+     "win": 0.38,
+     "modal": [
+      "shatter:fat",
+      105
+     ],
+     "inStart": 0,
+     "laneFirst": 0.0,
+     "rootDeath": 0.365
+    },
+    "i6:forced": {
+     "win": 0.19,
+     "modal": [
+      "smolder:fat",
+      70
+     ],
+     "inStart": 70,
+     "laneFirst": 0.475,
+     "rootDeath": 0.365
+    },
+    "i7:asis": {
+     "win": 0.46,
+     "modal": [
+      "shatter:thin",
+      44
+     ],
+     "inStart": 14,
+     "laneFirst": 0.0,
+     "rootDeath": 0.315
+    },
+    "i7:forced": {
+     "win": 0.44,
+     "modal": [
+      "shatter:mid",
+      75
+     ],
+     "inStart": 44,
+     "laneFirst": 0.495,
+     "rootDeath": 0.315
+    },
+    "i8:asis": {
+     "win": 0.33,
+     "modal": [
+      "attrition:fat",
+      54
+     ],
+     "inStart": 54,
+     "laneFirst": 0.365,
+     "rootDeath": 0.485
+    },
+    "i8:forced": {
+     "win": 0.33,
+     "modal": [
+      "attrition:fat",
+      54
+     ],
+     "inStart": 54,
+     "laneFirst": 0.365,
+     "rootDeath": 0.485
+    }
+   },
+   "H20": {
+    "i0:asis": {
+     "win": 0.605,
+     "modal": [
+      "smolder:mid",
+      73
+     ],
+     "inStart": 16,
+     "laneFirst": 0.3,
+     "rootDeath": 0.095
+    },
+    "i0:forced": {
+     "win": 0.555,
+     "modal": [
+      "smolder:mid",
+      91
+     ],
+     "inStart": 15,
+     "laneFirst": 0.45,
+     "rootDeath": 0.095
+    },
+    "i1:asis": {
+     "win": 0.565,
+     "modal": [
+      "shatter:fat",
+      129
+     ],
+     "inStart": 129,
+     "laneFirst": 0.23,
+     "rootDeath": 0.165
+    },
+    "i1:forced": {
+     "win": 0.56,
+     "modal": [
+      "shatter:fat",
+      130
+     ],
+     "inStart": 130,
+     "laneFirst": 0.42,
+     "rootDeath": 0.165
+    },
+    "i2:asis": {
+     "win": 0.56,
+     "modal": [
+      "attrition:fat",
+      64
+     ],
+     "inStart": 64,
+     "laneFirst": 0.2,
+     "rootDeath": 0.12
+    },
+    "i2:forced": {
+     "win": 0.595,
+     "modal": [
+      "attrition:fat",
+      90
+     ],
+     "inStart": 90,
+     "laneFirst": 0.465,
+     "rootDeath": 0.12
+    },
+    "i6:asis": {
+     "win": 0.335,
+     "modal": [
+      "shatter:fat",
+      107
+     ],
+     "inStart": 0,
+     "laneFirst": 0.0,
+     "rootDeath": 0.365
+    },
+    "i6:forced": {
+     "win": 0.275,
+     "modal": [
+      "smolder:fat",
+      50
+     ],
+     "inStart": 50,
+     "laneFirst": 0.32,
+     "rootDeath": 0.365
+    },
+    "i7:asis": {
+     "win": 0.42,
+     "modal": [
+      "shatter:mid",
+      49
+     ],
+     "inStart": 27,
+     "laneFirst": 0.025,
+     "rootDeath": 0.315
+    },
+    "i7:forced": {
+     "win": 0.395,
+     "modal": [
+      "shatter:mid",
+      64
+     ],
+     "inStart": 35,
+     "laneFirst": 0.295,
+     "rootDeath": 0.315
+    },
+    "i8:asis": {
+     "win": 0.265,
+     "modal": [
+      "attrition:thin",
+      50
+     ],
+     "inStart": 36,
+     "laneFirst": 0.13,
+     "rootDeath": 0.485
+    },
+    "i8:forced": {
+     "win": 0.305,
+     "modal": [
+      "attrition:fat",
+      53
+     ],
+     "inStart": 53,
+     "laneFirst": 0.26,
+     "rootDeath": 0.485
+    }
+   },
+   "R260": {
+    "i0:asis": {
+     "win": 0.635,
+     "modal": [
+      "smolder:mid",
+      79
+     ],
+     "inStart": 19,
+     "laneFirst": 0.295,
+     "rootDeath": 0.085
+    },
+    "i0:forced": {
+     "win": 0.57,
+     "modal": [
+      "smolder:mid",
+      96
+     ],
+     "inStart": 22,
+     "laneFirst": 0.455,
+     "rootDeath": 0.085
+    },
+    "i1:asis": {
+     "win": 0.625,
+     "modal": [
+      "shatter:fat",
+      134
+     ],
+     "inStart": 134,
+     "laneFirst": 0.245,
+     "rootDeath": 0.135
+    },
+    "i1:forced": {
+     "win": 0.58,
+     "modal": [
+      "shatter:fat",
+      128
+     ],
+     "inStart": 128,
+     "laneFirst": 0.39,
+     "rootDeath": 0.135
+    },
+    "i2:asis": {
+     "win": 0.63,
+     "modal": [
+      "shatter:fat",
+      71
+     ],
+     "inStart": 60,
+     "laneFirst": 0.195,
+     "rootDeath": 0.095
+    },
+    "i2:forced": {
+     "win": 0.645,
+     "modal": [
+      "attrition:fat",
+      94
+     ],
+     "inStart": 94,
+     "laneFirst": 0.455,
+     "rootDeath": 0.095
+    },
+    "i6:asis": {
+     "win": 0.395,
+     "modal": [
+      "shatter:fat",
+      115
+     ],
+     "inStart": 0,
+     "laneFirst": 0.0,
+     "rootDeath": 0.31
+    },
+    "i6:forced": {
+     "win": 0.28,
+     "modal": [
+      "smolder:fat",
+      54
+     ],
+     "inStart": 54,
+     "laneFirst": 0.355,
+     "rootDeath": 0.31
+    },
+    "i7:asis": {
+     "win": 0.465,
+     "modal": [
+      "shatter:mid",
+      52
+     ],
+     "inStart": 34,
+     "laneFirst": 0.02,
+     "rootDeath": 0.27
+    },
+    "i7:forced": {
+     "win": 0.455,
+     "modal": [
+      "shatter:mid",
+      69
+     ],
+     "inStart": 42,
+     "laneFirst": 0.27,
+     "rootDeath": 0.27
+    },
+    "i8:asis": {
+     "win": 0.29,
+     "modal": [
+      "attrition:thin",
+      47
+     ],
+     "inStart": 35,
+     "laneFirst": 0.13,
+     "rootDeath": 0.45
+    },
+    "i8:forced": {
+     "win": 0.325,
+     "modal": [
+      "attrition:fat",
+      54
+     ],
+     "inStart": 54,
+     "laneFirst": 0.255,
+     "rootDeath": 0.45
+    }
+   }
+  }
+ },
+ "exam1Islands": [
+  {
+   "island": 0,
+   "start": "smolder:fat",
+   "end": "smolder:mid",
+   "holdout": 0.625,
+   "bestTrain": 0.9,
+   "gens": 13,
+   "stop": "stall",
+   "modalWinCell": "smolder:mid",
+   "rootheartDeaths": 0.1,
+   "beatBoss1": 0.9
+  },
+  {
+   "island": 1,
+   "start": "shatter:fat",
+   "end": "shatter:fat",
+   "holdout": 0.605,
+   "bestTrain": 0.9,
+   "gens": 20,
+   "stop": "stall",
+   "modalWinCell": "shatter:fat",
+   "rootheartDeaths": 0.135,
+   "beatBoss1": 0.865
+  },
+  {
+   "island": 2,
+   "start": "attrition:fat",
+   "end": "shatter:fat",
+   "holdout": 0.615,
+   "bestTrain": 0.775,
+   "gens": 13,
+   "stop": "stall",
+   "modalWinCell": "shatter:fat",
+   "rootheartDeaths": 0.165,
+   "beatBoss1": 0.835
+  },
+  {
+   "island": 3,
+   "start": "shatter:mid",
+   "end": "shatter:fat",
+   "holdout": 0.71,
+   "bestTrain": 0.925,
+   "gens": 17,
+   "stop": "stall",
+   "modalWinCell": "shatter:fat",
+   "rootheartDeaths": 0.13,
+   "beatBoss1": 0.865
+  },
+  {
+   "island": 4,
+   "start": "smolder:mid",
+   "end": "shatter:thin",
+   "holdout": 0.54,
+   "bestTrain": 0.725,
+   "gens": 15,
+   "stop": "stall",
+   "modalWinCell": "shatter:mid",
+   "rootheartDeaths": 0.28,
+   "beatBoss1": 0.72
+  },
+  {
+   "island": 5,
+   "start": "attrition:mid",
+   "end": "shatter:fat",
+   "holdout": 0.695,
+   "bestTrain": 0.9,
+   "gens": 20,
+   "stop": "stall",
+   "modalWinCell": "shatter:fat",
+   "rootheartDeaths": 0.13,
+   "beatBoss1": 0.87
+  },
+  {
+   "island": 6,
+   "start": "smolder:fat",
+   "end": "shatter:fat",
+   "holdout": 0.26,
+   "bestTrain": 0.55,
+   "gens": 17,
+   "stop": "stall",
+   "modalWinCell": "shatter:fat",
+   "rootheartDeaths": 0.475,
+   "beatBoss1": 0.52
+  },
+  {
+   "island": 7,
+   "start": "shatter:fat",
+   "end": "shatter:thin",
+   "holdout": 0.385,
+   "bestTrain": 0.65,
+   "gens": 20,
+   "stop": "stall",
+   "modalWinCell": "shatter:mid",
+   "rootheartDeaths": 0.425,
+   "beatBoss1": 0.57
+  },
+  {
+   "island": 8,
+   "start": "attrition:fat",
+   "end": "shatter:thin",
+   "holdout": 0.235,
+   "bestTrain": 0.425,
+   "gens": 14,
+   "stop": "stall",
+   "modalWinCell": "attrition:fat",
+   "rootheartDeaths": 0.5,
+   "beatBoss1": 0.49
+  },
+  {
+   "island": 9,
+   "start": "smolder:mid",
+   "end": "attrition:fat",
+   "holdout": 0.245,
+   "bestTrain": 0.5,
+   "gens": 20,
+   "stop": "maxGen",
+   "modalWinCell": "attrition:fat",
+   "rootheartDeaths": 0.5,
+   "beatBoss1": 0.47
+  },
+  {
+   "island": 10,
+   "start": "shatter:mid",
+   "end": "shatter:thin",
+   "holdout": 0.21,
+   "bestTrain": 0.425,
+   "gens": 13,
+   "stop": "stall",
+   "modalWinCell": "shatter:mid",
+   "rootheartDeaths": 0.535,
+   "beatBoss1": 0.46
+  },
+  {
+   "island": 11,
+   "start": "attrition:mid",
+   "end": "shatter:thin",
+   "holdout": 0.175,
+   "bestTrain": 0.325,
+   "gens": 12,
+   "stop": "stall",
+   "modalWinCell": "smolder:fat",
+   "rootheartDeaths": 0.51,
+   "beatBoss1": 0.445
+  }
+ ]
+}
