@@ -311,6 +311,7 @@ Per-way stat boons; a path chooser or any explicit path UI; card or map sigils; 
 ## 14. Open items for the content and presentation lanes
 
 - Final wording and numbers of the seven Edge cards and the Eclipse crown, against readout 4.
+  - *Implementation note (PR 6, 2026-09-29):* the amplifier ships as **Cleft 裂隙**. The working name "Fault Line 斷層" is taken: the existing card `executioner` is displayed as "Faultline" in English and 斷層 in zh-Hant. The other six cards, the crown and the deed keep their working names. Their costs and upgrades, and the first reading of the way with them, are in [readout 4a](readouts/readout-4a.md).
 - Crown of Tithes keeps its current effect; it is a Lantern alternate crown. Revisit only if the readout shows it idle.
 - Flame hexes and shapes, approved on device.
 - Whether the map's run HUD shows the lantern today; if not, the reward screen is the minimum surface.
