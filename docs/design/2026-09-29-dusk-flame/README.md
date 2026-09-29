@@ -1,0 +1,316 @@
+# The Flame — how the lantern reads Duskblade's three ways (design lock)
+
+**Status:** LOCKED for implementation, 2026-09-29. Owner: James. Author: Claude (Fable 5.1), from the owner conversation of 2026-09-29 (session `game-balance-pickup`). Companion files: [`ways-template.md`](ways-template.md) (the reusable class template) and [`../../release-roadmap.md`](../../release-roadmap.md) (sequencing and dates).
+
+**Authority.** This lock is the product definition of "three strategies" for Duskblade and the measurement contract that replaces the #421 landscape gates (C1–C4) for plurality. It does not edit `docs/rc-bar.md`; #549 carries the P9 wording change. It reopens no closed research. `docs/balance/p9-strategy-diversity-system.md` becomes a historical record when #549 lands; it is not rewritten.
+
+**Owner decisions recorded, 2026-09-29 (London time):**
+
+| Time | Decision |
+|---|---|
+| 12:46 | The path is never chosen from a menu. It is discovered. The only gauge is the lantern's flame: colour and stability. No hints; a few lines that "might mean something". Random, non-path decks must not still win. |
+| 12:46 | Steering may exist but stays implicit; the dialogue engine may carry an intro line, never an explanation. |
+| 12:46 | Ash-language cards leave Duskblade's offers. Delegated; no further approval needed. |
+| 13:14 | Purity is read from the deck, not from recent play. Soot severity is calibrated by the readout, not decided up front. The flame shows a fringe of the second colour. |
+| 14:08 | Option C: the flame is a mirror plus lantern quality. No per-way boons (the D3 set-bonus trap). Power comes from card synergy, capstone cards and crowns. Everything implicit. The method is the template for Ashwarden and later classes. |
+
+## 1. The vision in one paragraph
+
+Diablo II's Sorceress has three trees. Players are free to choose, they find their routes, and most builds are one main path with a little help from another. Glassvow expresses the same thing through cards, where the player does not control what is offered. So the deterministic layer that D2 gives through skill points is replaced by a **mirror**: the Duskblade's lantern burns whatever glass the hero carries. One kind of glass burns clean, with one colour and a still flame. Mixed glass burns dusty and unsteady. The player is never told this. They watch the flame change after a pick, and they discover it. Crowns arrive at the act boss that match the flame. The game feeds like glass to a lit flame. A player who insists on a way through bad luck gets there more slowly; a player who scatters never lights the lantern and cannot win. That is the whole design, and it is the language the game already speaks: Chip, Shatter, Kindle, Ember, Cracked.
+
+## 2. The law, and what the player sees
+
+**The lantern burns what you carry.** That sentence is the only rule the player is ever given, once, by the Keeper.
+
+Player-facing surfaces, complete list:
+
+1. the flame in the lantern (colour, fringe, stability, height);
+2. which crowns appear at an act boss;
+3. which cards tend to appear once the flame is lit;
+4. six short lines, each heard once, and the Vigil's whispers;
+5. one sentence per colour in the codex entry "The Lantern", revealed after that colour has first been seen steady.
+
+Not present, by decision: a path chooser, path names on cards, sigils on cards or map nodes, tooltip explanations of purity, per-way stat bonuses, tutorial text.
+
+## 3. Definitions
+
+- **Way** (道): one of a class's three strategic languages. Duskblade's are 碎 Shatter, 燼 Lantern, 蝕 Edge (§6).
+- **Coloured glass**: a card that carries affinity to at least one way. **Clear glass**: a card with no affinity (Strike, Defend, Ward, plain draw). Clear glass is fuel, never noise.
+- **Affinity**: per aspect, a weight in {0.5, 1.0} from a card to a way. A card may split 0.5/0.5 between two ways (a duo card). Weights are content data, not code.
+- **Mass** (N): the sum of affinity over the coloured cards in the deck. **Share**: a way's affinity divided by N. **Purity**: the dominant share. **Fringe**: the second share, shown only when it is large enough to matter.
+- **Tier**: Soot 塵, Kindling 燃, Steady 定, True 真. A function of mass and purity only.
+
+## 4. The purity function
+
+Deterministic, derived from `RunState.deck` and content only. Nothing is saved. The same function serves the game, the HUD and the simulator.
+
+```text
+coloured  = deck cards with an affinity entry for run.aspect
+            (starters included; curses, wounds, burns, hexes and quest pages excluded)
+A[w]      = sum of affinity[card][w] over coloured cards, for each way w
+N         = sum of A[w]
+share[w]  = A[w] / N                           (0 when N = 0)
+dominant  = the way with the largest share (ties: the earlier way in content order)
+second    = the next largest
+purity    = share[dominant]
+fringe    = second if share[second] >= fringeMin else none
+
+tier:
+  N < minMass                              -> KINDLING   (nothing declared yet)
+  purity >= trueMin                        -> TRUE
+  purity >= steadyMin                      -> STEADY
+  N >= sootMass and purity < sootMax       -> SOOT       (genuinely scattered)
+  otherwise                                -> KINDLING
+```
+
+Initial constants (content, per aspect; every one is **CALIBRATE**):
+
+| Key | Value | Meaning |
+|---|---|---|
+| `minMass` | 5 | The starter deck's three seeds plus two picks before the flame can declare |
+| `steadyMin` | 0.60 | Six in ten of the coloured glass is one way |
+| `trueMin` | 0.80 | Eight in ten |
+| `sootMass` | 6 | Enough coloured glass to be judged scattered |
+| `sootMax` | 0.45 | No way reaches even 45% |
+| `fringeMin` | 0.25 | The second way shows at the flame's tip from 25% |
+
+Worked examples with Duskblade's starters (chisel 1 shatter, eclipseSlash 1 edge, firstSpark 1 lantern; everything else clear):
+
+| Deck change | N | Shares | Tier |
+|---|---|---|---|
+| Start | 3 | 1/3 each | Kindling |
+| + Uppercut, + Quakeblow | 5 | shatter 0.60 | Steady, blue-white |
+| + War Cry | 6 | shatter 0.50, edge 0.33 | Kindling again: the pick dimmed it, visibly |
+| + Oblivion Strike, + Limit Break | 8 | shatter 0.63, edge 0.25 | Steady with a violet fringe |
+| Remove Eclipse Slash at the shop | 7 | shatter 0.71 | Steady, fringe gone; removal read as stabilising |
+| Two of each way, no more | 6 | 0.33 each | Soot |
+
+**When it is read.** At every deck change (reward taken, shop purchase or removal, event op, upgrade that changes a card id) and at combat start. Never mid-combat; the tier a combat starts with is the tier it keeps. This is the hysteresis: the flame moves when the player acts, not while they fight.
+
+**Upgrades** do not change affinity. **Relics** carry affinity too (§6), used only for shop and offer weighting; relics never enter N.
+
+## 5. Tiers and the lantern's quality (Option C)
+
+The flame changes only the lantern: how much fire it holds and how dearly the Art is paid. It never changes a way's own numbers, enemy numbers or card numbers. Initial knobs, all **CALIBRATE** in the order given in §11:
+
+| Tier | Lantern effect | Player reading |
+|---|---|---|
+| Soot 塵 | At the end of each of your turns the lantern loses 1 Ember. The Lantern Art costs 1 more. | The flame gutters; the Art comes slowly |
+| Kindling 燃 | None. Today's game. | A small orange flame |
+| Steady 定 | Ember cap +2. The first Ember gain of each turn yields +1. | The colour shows; the flame is still |
+| True 真 | As Steady. The Lantern Art costs 1 less (minimum 1). | Pure colour, taller, a halo |
+
+Why this is enough to make scattered decks lose without touching enemies: all three ways run through the lantern (Shatter spills Embers, Kindle makes Embers, the Art and the capstones spend them). A scattered deck has a leaking lantern, a dearer Art, no capstone synergy, and no crown arriving for it (§7). Three structural reasons, one dial.
+
+Why it does not become a set bonus: the effect is identical for all three ways, so it cannot make one way win. A 65/35 hybrid is Steady with a fringe and pays no tax. Only a genuinely scattered deck is Soot, and Soot is recoverable within one removal or two like picks.
+
+## 6. Duskblade's three ways
+
+The blurb already names them: *"Strikes, shatters, and turns broken facets into fuel."* The starter deck seeds one card of each.
+
+| Way | Flame | Colour | Shape | Verbs |
+|---|---|---|---|---|
+| 碎 Shatter | 霜焰 Frostlight | blue-white | sharp tongues | Chip, Stagger, Shatter, Echo |
+| 燼 Lantern | 熾焰 Hearthfire | amber-gold | round, hearth-like | Kindle, Ember, Lantern, Flare |
+| 蝕 Edge | 蝕焰 Eclipse | violet-crimson | thin and tall | Cracked, Dimmed, Fervor, the precise cut |
+| Soot 塵 | 塵焰 | dust-brown | guttering | none |
+
+Shape carries the way as well as colour, so a colour-blind player still reads three flames. Final hexes are the presentation lane's call, approved on device (§9).
+
+### 6.1 Affinity table (initial; the content PR is the source of truth)
+
+**碎 Shatter**
+
+| Card | Weight | Availability |
+|---|---|---|
+| chisel | 1.0 | starter |
+| uppercut | 1.0 | base pool |
+| oblivionStrike | 1.0 | base pool (capstone) |
+| limitBreak | 1.0 | poolWave2 (capstone) |
+| quakeblow | 1.0 | deed "Breaker of Panes" |
+| resonantLance | 0.5 (+0.5 Edge) | deed "Breaker of Panes" (duo) |
+
+Relics: shatterersCrown (crown), bellOfEndings 1.0, prismCharm 0.5 (+0.5 Lantern). Art: Beacon is the Ashwarden's; Flare is Duskblade's and belongs to no way.
+
+**燼 Lantern**
+
+| Card | Weight | Availability |
+|---|---|---|
+| firstSpark | 1.0 | starter |
+| preparation | 1.0 | base pool |
+| surge | 1.0 | base pool |
+| devour | 1.0 | poolWave2 |
+| offering | 1.0 | poolWave3 (capstone) |
+| tithe | 1.0 | deed "The Lantern Fed" |
+| pyreheart | 1.0 | deed "The Lantern Fed" |
+| novaflare | 1.0 | deed "Fire Given Freely" (capstone) |
+| emberdance | 1.0 | deed "Fire Given Freely" |
+| cripple | 0.5 | base pool |
+| aegis | 0.5 | base pool |
+
+Relics: crownOfCinders (crown), crownOfTheHearth and crownOfTithes (crown alternates), verdantBranch 1.0, thiefOfWicks 1.0, prismCharm 0.5, emberLantern 0.5.
+
+**蝕 Edge**
+
+| Card | Weight | Availability |
+|---|---|---|
+| eclipseSlash | 1.0 | starter |
+| warCry | 1.0 | base pool |
+| empower | 1.0 | base pool |
+| executioner | 1.0 | poolWave2 |
+| momentum | 0.5 | poolWave2 |
+| lunge | 0.5 | base pool |
+| frenzy | 1.0 | poolFull |
+| risingLitany | 1.0 | poolFull |
+| resonantLance | 0.5 | duo, see Shatter |
+
+Relics: crownOfTheEclipse (crown, **new**), executionersSeal 1.0, duskmirror 0.5, warFetish 0.5, ironTalisman 0.5.
+
+**Clear glass** (no affinity): strike, defend, brace, bulwark, fortify, sidestep, deflect, guardedStrike, quickSlash, heavyBlow, cleave, tempest, shardstorm, twinFangs, flurry, leechBlade, phantomBlades, agility, ironSkin, regrowth, bastion, flawlessForm, nightSight, bloodRite. Curses and quest cards are excluded from N.
+
+**Excluded from Duskblade's offers** (pool hygiene; Smolder is blocked for aspect 0 in `combat.gd`, so these are dead or half-dead glass for the Duskblade): cards venomStrike, toxicMist, annihilate, catalyst, virulence, ashenChoir; relic smolderingCoal. The Ashwarden keeps all of them. Nothing is deleted from content.
+
+### 6.2 What Edge lacks, and what the content lane adds
+
+Edge is the thin way: three coloured cards in a fresh pool, no crown, no capstone, no deed. The content lane adds, in Duskblade's language, with numbers finalised against the readout:
+
+| Role | Working name | Rarity | Sketch | Availability |
+|---|---|---|---|---|
+| applicator | Splinter Cut 裂痕斬 | common | Deal 5. Apply 1 Cracked. | base pool |
+| tempo | Dim the Glass 暗琉 | common | Apply 2 Dimmed. Draw 1. | base pool |
+| amplifier | Fault Line 斷層 | uncommon | Deal 8. If the target is Cracked, apply 1 more Cracked and gain 1 Fervor. | base pool |
+| defence in the way's words | Eclipse Step 蝕影步 | uncommon | Gain 5 Ward. Apply 1 Cracked to the enemy about to strike you. | base pool |
+| multi-hit | Tremor 震紋 | uncommon | Deal 3 damage three times. Each hit on Cracked glass deals 2 more. | poolWave2 |
+| capstone | Totality 全蝕 | rare | Deal 14. Cracked on the target doubles. | new deed |
+| duo Lantern/Edge | Ember Eye 燼瞳 | rare | Spend 2 Embers: apply 2 Cracked to ALL enemies. Kindle. | poolWave3 |
+| crown | Crown of the Eclipse 蝕月冠 | boss | Cracked you apply does not fade. | boss pool |
+| deed | Fault in the Glass 裂痕 | deed | Apply 40 Cracked across runs; unlocks Totality and Ember Eye | requires `run.stats["cracked"]` |
+
+Seven cards, one crown, one deed. After this, each way has roughly ten coloured cards at full unlock and four to five in a fresh pool, one crown, one or two capstones, and at least one duo card to each neighbour (Shatter/Edge: resonantLance; Shatter/Lantern: prismCharm; Lantern/Edge: Ember Eye).
+
+### 6.3 Deeds already teach the ways
+
+The deeds system already rewards playing a way with more of that way: "Breaker of Panes" (shatters) unlocks quakeblow and resonantLance; "The Lantern Fed" (kindles) unlocks tithe and pyreheart; "Fire Given Freely" (embers spent) unlocks novaflare and emberdance. The new Edge deed completes the set. This is D2's "find your route" as meta-progression, and it is why viability must be measured under both a fresh pool and a full pool (§11).
+
+## 7. Recognition at the boss
+
+The act boss does not ask. It recognises. For `run.aspect == 0`, `roll_boss_relics` becomes:
+
+```text
+read the flame (tier, dominant, fringe)
+slot 1: crownOf(dominant)  if tier in {STEADY, TRUE}
+        sootCrown          if tier == SOOT           (hollowCrown: energy, and the glass dims)
+        random             otherwise
+slot 2: crownOf(fringe)    if fringe and tier in {STEADY, TRUE}, else random
+slot 3: random from the remaining boss pool
+a held crown is never offered; a slot whose crown is held falls back to random
+random draws are made in a fixed count regardless of branch, so the seed stream stays stable
+```
+
+`crownOf`: Shatter → shatterersCrown; Lantern → crownOfCinders, then crownOfTheHearth, then crownOfTithes if earlier ones are held; Edge → crownOfTheEclipse. Later act bosses use the same rule, so a hybrid's second crown arrives in Act 2 and a pivot is recognised, not punished.
+
+No text says why the crown came. The first aha is "that crown was for my flame". The later aha is "keep it amber and the Hearth comes".
+
+## 8. Like calls to like
+
+Once the flame is Steady or True, the world leans toward it, softly:
+
+- `_roll_card_reward` and `gen_shop`: a pool entry whose affinity to the dominant way is at least 0.5 has its draw weight multiplied by `likeWeight` (initial **1.5**, CALIBRATE); to the fringe way, by `fringeWeight` (initial **1.2**). Kindling and Soot apply no weighting. Rarity cuts are unchanged. The draw count per offer is unchanged so replays stay deterministic.
+- Relic shop stock uses relic affinity the same way.
+- Pool hygiene (§6.1) applies at every tier.
+- Removal needs no rule. Removing off-colour glass raises purity and the flame answers on the spot. Players find "thin the deck, steady the flame" by themselves.
+
+The bias is soft on purpose. Good cards of the other ways still appear, so main-path-plus-splash emerges rather than being enforced.
+
+## 9. The flame on screen
+
+Presentation reads the flame from `EventTypes.FLAME` events emitted by the domain at every read (§4). It never computes purity itself.
+
+- **Where:** the combat HUD lantern (`presentation/combat/hud_bar.gd` already draws the lantern, its glow and ember pips); the reward and shop screens carry the same small lantern so the change after a pick is seen where the pick happens; the map's run HUD if it shows the lantern. The choice screen's title lantern is untouched.
+- **What:** a flame shader with four inputs: dominant colour, fringe colour (drawn at the tips), stability (flicker amplitude: Soot guttering, Kindling lively, Steady calm, True still) and height (tier). Shape per way as in §6.
+- **How it moves:** a change tweens over about a second; it never snaps. A Soot flame throws occasional dust motes. A True flame has a faint halo.
+- **Later, after visual approval:** the Art's VFX and the chip VFX tinted by the dominant colour. Measure the budget before that; do not restructure until the flame itself is approved on the reference shapes.
+- **Accessibility:** tier is legible from stability and height alone; way from shape alone.
+
+## 10. Lines
+
+Six lines, each heard once per Vigil, through Stagecraft's existing `once` gates and the line table's whisper slot. The register is the Keeper's warm tiredness and the road's whispers. Never a mechanic word.
+
+| Moment | Speaker / surface | zh-Hant | en |
+|---|---|---|---|
+| The lantern is lit at the opening | Keeper, in the opening scene | 它燒的是你帶著的東西。 | It burns what you carry. |
+| First Steady | Lamplighter, or a whisper if he is not met | 它認得你了。 | It knows you now. |
+| First True | whisper | 一種玻璃，一種火。 | One glass. One fire. |
+| First Soot | whisper | 塵火照不亮路。 | A dusty flame lights no road. |
+| Vigil after a death in Soot | Vigil whisper | 你的火從未安定下來。 | Your flame never settled. |
+| First Steady with a fringe | whisper | 火尖上有另一種顏色。 | There is another colour at the tip. |
+
+Codex: the help entry "The Lantern" gains one sentence per colour, each revealed after that colour has been seen Steady once. Three sentences, no numbers.
+
+## 11. Science: the instrument panel
+
+The previous programme measured shatters and Smolder kills, one of which is the Ashwarden's word, then partitioned runs by relative medians. It could not see the Lantern way at all. The new instrument is the game's own purity function plus the stats the run already keeps (`run.stats`: shatters, kindles, embersSpent; add `cracked` and `embersGained`).
+
+**Descriptor per run:** dominant way and tier at run end, plus the per-fight rates. Absolute, deterministic, identical in game and simulator.
+
+**Arms** (policy gains a `way` field in {none, shatter, lantern, edge}; a committed policy multiplies the pilot's card and relic scores of its way by `commit` = 3.0 and other coloured glass by 0.5, and steers shop and removal the same way; it does not change combat play):
+
+| Arm | Build | Play | Meaning |
+|---|---|---|---|
+| C_shatter, C_lantern, C_edge | committed | competent | "I chose this way and I insist" |
+| A | adaptive (today's arm 1) | competent | "I read the offers" |
+| R | random (today's arm 2) | competent | "I scatter" |
+
+Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds (common random numbers across arms). About 4,000 runs; minutes on the #558 simulator.
+
+**Gates** (initial; signed after the first readout, then frozen for the exam):
+
+| Gate | Statement | Initial threshold |
+|---|---|---|
+| G1 viability | each committed way wins | full pool: V0 ≥ 50%, V5 ≥ 25%; fresh pool: V0 ≥ 40% |
+| G2 parity | the ways are comparable | best committed − worst committed ≤ 10 pp at each vow |
+| G3 skill | reading offers is rewarded but commitment is not a trap | A ≥ best committed − 3 pp and A ≤ best committed + 15 pp |
+| G4 random loses | scattering cannot win | R ≤ worst committed − 25 pp; R < 35% at V0, < 15% at V5 |
+| G5 reachability | insisting gets there | committed arms reach Steady by the end of Act 1 in ≥ 70% of runs, True by the end of Act 2 in ≥ 40% |
+| G6 diversity of adaptive play | different runs are different | among A's wins no way exceeds 60%; at least two ways hold ≥ 20% |
+| G7 guards | nothing degenerate, nothing broken | CEM stress: V5 best holdout < 90%; zero stalls and errors; deterministic replay; save lineage and internal IDs unchanged |
+| H human | it is fun | James plus two or three players each win at V0 with every way at least once across the group; easy / fun / hard labels; #205 verdict |
+
+**Calibration order**, one commit and one ten-minute readout per step; the step that reaches G4 with the least damage to G3 is kept:
+
+1. pool hygiene, affinity table and the flame as a pure mirror (every lantern knob at zero);
+2. the Soot leak;
+3. Steady and True lantern quality;
+4. recognition at the boss and like-calls-to-like.
+
+**Seeds:** development 12000–12999; calibration 13000–13399, paired across arms; the historical holdout 5000–5199 is used once on the final candidate; the CEM stress keeps 4200–4999 for training and 5000–5199 for its ceiling. Acceptance seeds 3000–5199 stay otherwise untouched.
+
+**Exam:** the final candidate SHA runs the full cell table above plus the CEM stress. An independent re-run from a clean checkout on any host must agree on every gate's verdict (owner ruling of 2026-09-27; numbers need not match). Then the human feel round.
+
+## 12. Implementation map
+
+One outcome per PR, in this order. Each PR carries its own tests and the narrow gate that answers its question; the full core gate runs once on each coherent candidate before push.
+
+| # | Outcome | Surfaces | Proof |
+|---|---|---|---|
+| 1 | This lock, the template and the roadmap | docs | `check_anchors`, `check_benchmark_freeze` |
+| 2 | Affinity data, `domain/rules/flame.gd`, pool hygiene, `cracked` and `embersGained` stats, `EventTypes.FLAME`, simulator metrics, committed arms, `tools/balance_ways.py` readout; every lantern knob at zero | content, domain, tools, tests | unit tests for the purity function and tiers; readout 1 |
+| 3 | Recognition at the boss; like-calls-to-like | `rewards.gd` | determinism tests (draw counts, seed-1000 digest re-pinned in an explicit commit); readout 2 |
+| 4 | Lantern quality knobs, calibrated | `combat.gd` | readout 3 |
+| 5 | The flame on screen | `hud_bar.gd`, reward and shop screens, a flame shader | visual inspection on the reference shapes, then James on device |
+| 6 | Edge way content, crown, deed, art | content, locale, art ledger | readout 4 on the exam candidate |
+| 7 | Lines and the codex reveal | `scenes.json`, line table, locale | `test_stagecraft`, locale coverage |
+| 8 | #549: `rc-bar.md` P9 becomes G1–G7 plus H; the old P9 method doc gets a historical header | docs | `check_agent_contracts` if agent docs move |
+
+Invariants: no save schema change (the flame is derived); new card and relic ids are additions; `port_fixtures/` change only where boss offers and reward weights deliberately moved, in an explicit commit that says so; `domain/` stays pure and presentation consumes events.
+
+## 13. Non-goals
+
+Per-way stat boons; a path chooser or any explicit path UI; card or map sigils; tutorial text; enemy or shared-scalar retuning as the first lever; carrying the unmerged #556 and #557 scalar changes by default (the flame starts from `main`'s content and the readout decides); Ashwarden balance (1.1, via the template); the mythic set (#212); the CEM landscape as a plurality certifier; the certificate, oracle and containment vocabulary of the superseded programme.
+
+## 14. Open items for the content and presentation lanes
+
+- Final wording and numbers of the seven Edge cards and the Eclipse crown, against readout 4.
+- Crown of Tithes keeps its current effect; it is a Lantern alternate crown. Revisit only if the readout shows it idle.
+- Flame hexes and shapes, approved on device.
+- Whether the map's run HUD shows the lantern today; if not, the reward screen is the minimum surface.
