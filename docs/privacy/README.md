@@ -1,6 +1,6 @@
 # Privacy policy drafts (issue #415, text slice)
 
-**Status: draft for James, written 2026-09-29 against `main` at `9f14e5db`; D1 updated the same day when option B was implemented.** Part of [#415](https://github.com/fol2/glassvow/issues/415); it does not close it. Nothing here is hosted, entered in App Store Connect or shipped in the app, and none of it is legal advice or a compliance finding.
+**Status: draft for James, written 2026-09-29 against `main` at `9f14e5db`; D1 updated the same day when option B was implemented; the placeholders were filled and hosting decided the same evening (section 3).** Part of [#415](https://github.com/fol2/glassvow/issues/415); it does not close it. Both policies are built into `site/` for `https://glassvow.eugnel.com`, which is live only once the Cloudflare Pages project is deployed. Nothing here is entered in App Store Connect or shipped in the app, and none of it is legal advice or a compliance finding.
 
 Every practice described comes from this repository's configuration and source, and from the pinned Sentry sources (sentry-godot 2.1.1, sentry-cocoa 9.24.0). None of it has been observed in a live payload. The tethered-device check still owed on #420 is what turns "configured" into "observed".
 
@@ -9,6 +9,8 @@ Every practice described comes from this repository's configuration and source, 
 | `privacy-policy.en.md` | English policy (UK English) for the App Store listing and the future in-app link |
 | `privacy-policy.zh-Hant.md` | Traditional Chinese policy in Hong Kong written register (書面語): same meaning, not a literal translation |
 | `README.md` | this note |
+
+`tools/build_site.py` generates the public pages in `site/` from the two policies (section 3).
 
 Both policies cover Glassvow on iPhone and iPad, as built by the store preset `iOS`. The Android wave will need its own Play Data safety mapping and a policy revision.
 
@@ -67,15 +69,27 @@ Also in App Store Connect: **Privacy Policy URL** is required, one per localisat
 
 ## 3. Hosting the two pages
 
-The repository is public today (`fol2/glassvow`), and GitHub Pages is not enabled (the API returned 404 on 2026-09-29).
+**Decided by James on 2026-09-29: Cloudflare Pages on a domain he controls.** This is option 2 of the comparison this section first held (the others were GitHub Pages and linking App Store Connect to the files on GitHub), chosen because a URL on his own domain can later redirect anywhere without an app update. The in-app link (section 4) is compiled into every build, so these two URLs are permanent.
 
-| Option | Effort | What only James can do |
-|---|---|---|
-| **1. GitHub Pages from this repo** | Medium: one small PR plus a setting. The default Pages build does not turn Markdown without front matter into web pages, and publishing all of `docs/` would expose the internal research and review packets, so use a workflow that publishes only `docs/privacy/`. A `.github/` change also triggers the fail-closed full CI gate in `tools/ci_scope.py`. URL shape, to confirm after enabling: `https://fol2.github.io/glassvow/…` | Enable Pages in the repository settings (admin) with source "GitHub Actions"; optionally point a custom domain at it |
-| **2. Static page on a domain you already control** | Low to medium: convert each Markdown file to HTML once (for example with `pandoc -s`), upload under stable paths such as `/glassvow/privacy/en` and `/glassvow/privacy/zh-hant`, and repeat on every policy change | Hosting and DNS access; choose the URLs; keep the pages up, because App Review fetches them |
-| **3. App Store Connect points straight at GitHub** | Minutes. Use the rendered file pages `https://github.com/fol2/glassvow/blob/main/docs/privacy/privacy-policy.en.md` and its `.zh-Hant.md` twin. `raw.githubusercontent.com` serves the Markdown as plain text, which reads badly. The URLs break if the files are renamed or the repository turns private, and each policy change needs a merged PR | Paste the two URLs into App Store Connect (one per localisation); decide whether a repository URL is acceptable on the listing; keep the repository public |
+| | |
+|---|---|
+| English | `https://glassvow.eugnel.com/privacy/` |
+| 繁體中文 | `https://glassvow.eugnel.com/privacy/zh-hant/` |
+| Custom domain | `glassvow.eugnel.com`, on the Cloudflare Pages project `glassvow-site` |
+| Contact | `glassvow@eugnel.com`, Cloudflare Email Routing to James's mailbox |
+| Site folder | `site/`, deployed exactly as committed |
+| Deploy | `npx wrangler pages deploy site --project-name glassvow-site` |
 
-The in-app link (section 4) is compiled into the build, so the URL you choose now is the one every shipped build points at. If you want the fastest path, take option 3 and treat the two GitHub URLs as permanent: never rename the files. If you want to be able to move later without an app update, choose option 2 now, because a URL on your own domain can redirect anywhere. Either way, App Store Connect and the in-app link must use the same two URLs.
+The two URLs are the App Store Connect Privacy Policy URLs (one per localisation) and the in-app link targets; the bare `/privacy` and `/privacy/zh-hant` redirect to them. `/` is a bilingual landing page with both links and the support address. Unknown paths get a real 404 page: without a top-level `404.html`, Pages treats a project as a single-page app and answers every unknown path with the home page and status 200.
+
+**Changing the policy.** Edit the Markdown, including the date under its title, run `python3 tools/build_site.py`, and commit the Markdown and `site/` together. If the site goes live on a day other than 30 September 2026, change that date in both policies first. CI runs `tools/build_site.py --self-test` and `--check` whenever `docs/`, `site/` or the tool changes, and fails if `site/` is stale. The tool reads only headings, paragraphs, `-` lists, links, bold and italic, and refuses to publish anything else, an unfilled `[placeholder]` or the draft HTML comment. If a Chinese heading gains a character that the heading face lacks, the check reports `DISPLAY_GLYPHS`: run `python3 tools/build_site.py --display-font` with the FontTools bootstrap described in `tools/subset_noto_serif_tc.py`, which subsets the same pinned Noto Serif CJK source.
+
+**What `site/` holds.** The four generated pages; `assets/site.css`; Cinzel 700, copied from `assets/fonts/`, and a Noto Serif TC SemiBold subset for the Chinese headings, each beside its OFL licence; `assets/icon.png`, the app icon downscaled to 64 px with `sips`; `_headers` and `_redirects`; and `.gdignore`, which keeps Godot from importing the site's fonts and icon into the app (Pages also serves it, as an empty file).
+
+**Settings the Cloudflare wiring must keep.** The pages run no script and load nothing from another origin, and `_headers` sends a Content-Security-Policy that allows only the site's own styles, fonts and icon, so the browser blocks anything Cloudflare injects into the HTML. Keep these off for `glassvow.eugnel.com`:
+
+- Email Address Obfuscation, which is on by default in a new zone. It replaces addresses with a decoding script; with that script blocked, readers would see "[email protected]" instead of the contact address. The pages also wrap every address in `<!--email_off-->` markers, which Cloudflare honours.
+- Web Analytics automatic setup, Zaraz and Rocket Loader. Each injects a script, and this site is meant to carry no analytics of any kind.
 
 ## 4. Next step (not done here): in-app link slice
 
@@ -83,7 +97,7 @@ The in-app link (section 4) is compiled into the build, so the URL you choose no
 
 - A Privacy row in the settings panel (`presentation/run/settings_panel.gd`) that opens the locale-matched URL with `OS.shell_open`. This opens the browser and sends no app data, so it changes neither the policy nor the App Privacy answers.
 - Locale keys in `locale/en.json` and `locale/zh-Hant.json` (for example `ui.settings.privacy`), with the term 私隱政策 added to `docs/zh-hant-glossary.md`; `tests/test_locale.gd` already enforces paired keys.
-- The two URLs held in one place, identical to the App Store Connect values.
+- The two URLs from section 3 held in one place, identical to the App Store Connect values.
 - D1 option B is implemented: a `Preferences` key, read by the main loop in `application/sentry_loop.gd` before `SentrySDK.init`, plus the one-line notice on the Settings row.
 - Done when: both-locale in-app screenshots at the reference shapes, the live pages, App Store Connect readback of the policy URL and App Privacy answers, and the #420 payload evidence all agree on the same candidate. The local core gate in `CLAUDE.md` applies, because `presentation/`, `locale/` and `application/sentry_*` are production scopes.
 
@@ -91,10 +105,10 @@ The in-app link (section 4) is compiled into the build, so the URL you choose no
 
 Placeholders (each appears in both policies; search for `[`):
 
-- [ ] `[effective date]` and `[生效日期]`: the publication date (2 places).
-- [ ] `[developer name, as shown on the App Store listing]` and `[開發者名稱，須與 App Store 上架資料所示一致]`: the seller name exactly as the listing shows it (4 places). No company name has been invented.
-- [ ] `[contact email]` and `[聯絡電郵]`: a monitored address (8 places).
-- [ ] Delete the HTML comment at the top of each policy.
+- [x] `[effective date]` and `[生效日期]`: 30 September 2026 and 2026 年 9 月 30 日, the day the site goes live (2 places).
+- [x] `[developer name, as shown on the App Store listing]` and `[開發者名稱，須與 App Store 上架資料所示一致]`: `James TO`, the seller name on James's App Store listings (4 places). No company name has been invented.
+- [x] `[contact email]` and `[聯絡電郵]`: `glassvow@eugnel.com` (8 places).
+- [x] Delete the HTML comment at the top of each policy.
 
 Confirmations before publishing (facts I could not confirm from source):
 
@@ -104,6 +118,7 @@ Confirmations before publishing (facts I could not confirm from source):
 - [ ] "Prevent Storing of IP Addresses" turned on.
 - [ ] Guideline 5.1.1(i) asks the policy to confirm that third parties give the same or equal protection. The draft states Sentry's own documented position (it processes reports to provide its service to you) and links Sentry's privacy policy. Add an explicit "equal protection" sentence only after checking the Sentry terms and data processing agreement on your account.
 - [ ] `https://sentry.io/privacy/` still resolves.
+- [ ] Site deployed: both URLs, the two redirects and the 404 page answer on `glassvow.eugnel.com`, Email Address Obfuscation and Web Analytics are off for it (section 3), and a test message to `glassvow@eugnel.com` arrives.
 - [ ] Both policy URLs and the App Privacy answers entered in App Store Connect, then read back.
 - [ ] #420 device payload check done against sections 2 and 3 of the policy (see section 7).
 

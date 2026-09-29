@@ -69,6 +69,7 @@ CHECKS = (
         "provenance_evidence",)),
     Check("run_doc_anchors", "Check doc file:line anchors", ("docs",)),
     Check("run_benchmark_freeze", "Check no new web-reference citations", ("docs",)),
+    Check("run_privacy_site", "Check the privacy site is current", ("docs",)),
     Check("run_map_assets", "Check map tile and module assets", ("map_assets",)),
     Check("run_map_quality", "Check Map Compiler v2 quality contract", ("map_code",)),
     Check("run_performance_evidence", "Test performance evidence replay", (
@@ -201,11 +202,12 @@ def _scope_matches(path: str) -> set[str]:
                          "tests/test_agent_contracts.py"}):
         matches.add("agent_config")
 
-    if (_starts(lower, "docs/", ".grok/history/")
+    # site/ is the published privacy policy, generated from docs/privacy/.
+    if (_starts(lower, "docs/", ".grok/history/", "site/")
             or lower.endswith((".md", ".markdown"))
             or lower in {"license", "tools/check_anchors.py",
                          "tools/check_benchmark_freeze.py",
-                         "tools/benchmark-citations.txt"}):
+                         "tools/benchmark-citations.txt", "tools/build_site.py"}):
         matches.add("docs")
 
     release_named = any(token in lower for token in (

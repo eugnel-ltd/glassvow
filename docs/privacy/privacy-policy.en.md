@@ -1,8 +1,6 @@
-<!-- DRAFT for issue #415. Fill every [bracketed] placeholder and delete this comment before publishing. Notes for the owner are in README.md. -->
-
 # Glassvow privacy policy
 
-*Last updated: [effective date]*
+*Last updated: 30 September 2026*
 
 Glassvow (琉璃誓言) is a single-player card game for iPhone and iPad. This page explains, in plain language, what information the game handles. It describes the game as it is built today, and it will be updated when that changes.
 
@@ -10,7 +8,7 @@ Glassvow (琉璃誓言) is a single-player card game for iPhone and iPad. This p
 
 ## 1. Who we are
 
-Glassvow is made by [developer name, as shown on the App Store listing] ("we", "us"). You can reach us at [contact email].
+Glassvow is made by James TO ("we", "us"). You can reach us at glassvow@eugnel.com.
 
 ## 2. What the game collects
 
@@ -58,11 +56,11 @@ Apple may separately give us crash reports and basic usage figures for the game 
 
 Sentry keeps error and crash reports for up to 90 days (the exact period depends on Sentry's plan) and then deletes them automatically. Other diagnostic records, such as the session summaries, are kept for the period set out in Sentry's retention policy.
 
-Reports carry only a random code that you cannot see, so we usually cannot tell which reports came from your device. You can switch diagnostics off at any time in Settings. Reports already sent are deleted automatically after the period above. If you have a question, want to withdraw from diagnostics or want us to delete anything we can find, email [contact email] and we will do what we can to help.
+Reports carry only a random code that you cannot see, so we usually cannot tell which reports came from your device. You can switch diagnostics off at any time in Settings. Reports already sent are deleted automatically after the period above. If you have a question, want to withdraw from diagnostics or want us to delete anything we can find, email glassvow@eugnel.com and we will do what we can to help.
 
 ## 6. Children
 
-Glassvow does not ask anyone for their age, name or contact details, and it has no accounts, chat or online features. The only information it sends is the technical diagnostics described above, and it sends them in the same way for every player, whatever their age. We do not knowingly collect any other information from children. If you are a parent or guardian and have a question, please contact us at [contact email].
+Glassvow does not ask anyone for their age, name or contact details, and it has no accounts, chat or online features. The only information it sends is the technical diagnostics described above, and it sends them in the same way for every player, whatever their age. We do not knowingly collect any other information from children. If you are a parent or guardian and have a question, please contact us at glassvow@eugnel.com.
 
 ## 7. Changes to this policy
 
@@ -70,4 +68,4 @@ We may update this page from time to time. The date at the top shows the latest 
 
 ## 8. Contact
 
-[developer name, as shown on the App Store listing]: [contact email]
+James TO: glassvow@eugnel.com
