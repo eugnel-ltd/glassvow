@@ -7,11 +7,12 @@ landing commit then copies each pick to its ledgered path, commits the
 `.import` sidecar, moves the ledger row to Shipped with the prompt that
 rendered it, and takes the stills the issues ask for.
 
-65 candidates were generated on 2026-09-29, in two rounds, and 30 survive.
+69 candidates were generated on 2026-09-29, in three rounds, and 31 survive.
 Round 1 was the canonical prompts. Round 2 was an authorised follow-up for the
-four files round 1 left short, each with one amended sentence (see Round 2).
-Each family's contact sheet shows every candidate of both rounds, keyed and
-labelled, rejects included. Only the survivors are committed, in `survivors/`.
+four files round 1 left short, each with one amended sentence. Round 3
+re-rolled `unlit-way` alone, with a placement sentence of its own (see Rounds 2
+and 3). Each family's contact sheet shows every candidate of every round, keyed
+and labelled, rejects included. Only the survivors are committed, in `survivors/`.
 Raw renders and rejects stay out of the tree.
 
 | Family | Issue | Sheet | Generated | Survivors | Ranked first |
@@ -19,11 +20,10 @@ Raw renders and rejects stay out of the tree.
 | Keeper moods | #560 | [`contact-keeper.png`](contact-keeper.png) | 16 | 11 | tender-a, offering-b, weary-c, beckon-a |
 | Hollow Lamplighter moods | #561 | [`contact-lamplighter.png`](contact-lamplighter.png) | 24 | 13 | wary-e, asking-a, recognising-b, urgent-c, grieving-b |
 | Queue chorus | #562 | [`contact-queue.png`](contact-queue.png) | 9 | 3 | queue-chorus-h |
-| Unlit Way plates | #563 | [`contact-plates.png`](contact-plates.png) | 16 | 3 | unlit-way-c, unlit-way-end-g |
+| Unlit Way plates | #563 | [`contact-plates.png`](contact-plates.png) | 20 | 4 | unlit-way-c, unlit-way-end-g |
 
-**Remaining gap.** `unlit-way` still has one survivor (`c`, from round 1).
-Every other file has at least two. Finding 2 explains why, and the last section
-suggests a next step. It was not run.
+**No gaps remain.** Every file has at least two survivors. Round 3 was the last
+round.
 
 ## Binding
 
@@ -63,8 +63,8 @@ suggests a next step. It was not run.
   at run time), one image per call, three calls at a time. Each request reads
   the reference at its absolute path, then carries the canonical prompt
   verbatim from the issue (the issues assemble the ledger's clauses), the exact
-  canvas and the output path. Round 1 made 49 calls and round 2 made 16. All 65
-  returned the right canvas on the first attempt; no retry was needed.
+  canvas and the output path. Round 1 made 49 calls, round 2 16 and round 3 4.
+  All 69 returned the right canvas on the first attempt; no retry was needed.
 - **References.** For the portraits, the files the ledger names:
   `meta/keeper.png`, `enemies/eternalKeeper.png` for beckon, and
   `meta/hollow-lamplighter.png`. For the Queue, `meta/keeper.png` and
@@ -111,7 +111,7 @@ dark** is opaque near-black in the 8 px canvas frame (< 400), with the
 bottom-edge share in brackets; "not graded" marks the Queue's bottom edge.
 **Corners** are the four corner alphas; 0 means all four are clear. **≥240** is
 the share of visible pixels at alpha ≥ 240 (≥ 90%). **Verdict** ranks the
-survivors of each file across both rounds. James picks.
+survivors of each file across all rounds. James picks.
 
 ## Round 2 — the authorised follow-up
 
@@ -127,10 +127,11 @@ otherwise unchanged, and the ledger's style blocks stay verbatim.
 | `unlit-way`, `unlit-way-end` | "For this two-shot plate the subject (the road, the seat, the broken paving, the last lamp post and the distant arch) sits inside the central 44 percent of the width; the outer 28 percent on each side holds only ground, ash and sky." | After the TWO-SHOT FRAME clause. |
 
 **The placement sentence is an implementation amendment to the ledger prompt
-for two-shot plates.** The ledger row for each plate should carry it at
-landing, because #559 asks that the Shipped row record the prompt that rendered
-the pick. Finding 2 suggests splitting its subject list per plate first. The
-same applies to the wary sentence if a round-2 wary file is picked.
+for two-shot plates.** It now stands for `unlit-way-end` only; Round 3 gave
+`unlit-way` its own. At landing, each plate's ledger row should carry the
+sentence that rendered the pick, because #559 asks that the Shipped row record
+the prompt that rendered it. The same applies to the wary sentence if a round-2
+wary file is picked.
 
 The Queue brief cuts the figures at the canvas foot, so the bottom edge's
 near-black is reported but not graded for this file (`--cut-bottom`). The other
@@ -139,6 +140,31 @@ fails the renders that run off a side edge.
 
 Round 2: 16 renders, 6 survivors (`wary-e`, `wary-f`, `queue-chorus-g`,
 `queue-chorus-h`, `unlit-way-end-f`, `unlit-way-end-g`).
+
+## Round 3 — `unlit-way`'s own placement sentence
+
+The last round, authorised the same way: four more `unlit-way` renders (`i` to
+`l`). For this plate only, the round-2 sentence was replaced by:
+
+> For this two-shot plate the subject sits inside the central 44 percent of the
+> width: the stone road receding into plain darkness, the row of dead iron lamp
+> posts along its verge, and one flat roadside stone composed as an empty seat
+> at about 55 to 60 percent of the width. The outer 28 percent on each side
+> holds only ground, ash and sky. There is NO arch, NO door, NO light and NO
+> dawn on the horizon: the road runs out into darkness.
+
+**The two plates now carry different placement sentences, on purpose.** The
+round-2 sentence named "the distant arch" as part of the subject, and all four
+round-2 `unlit-way` renders drew one. That arch is the door, and the door must
+not appear before m5. Meetings m1 to m4 stand on `unlit-way`; only m5 reaches
+the end of the road. So the first plate's sentence forbids the arch outright
+and places the seat, while `unlit-way-end` keeps the round-2 sentence and its
+arch. Each plate's ledger row should carry its own sentence at landing.
+
+Round 3: 4 renders, 1 survivor (`i`). None drew an arch, a door or light on the
+horizon. `j` and `k` still stood a lamp post behind the Lamplighter's seat. The
+seat landed at 35–72% of the width across the four, and on its 55–60% mark
+only in `k`.
 
 ## Keeper — #560
 
@@ -302,8 +328,9 @@ paragraph.
 ## Unlit Way plates — #563
 
 1536×1024, full-bleed, not keyed. Both files were re-rolled in round 2 (`e` to
-`h`). One of eight survives for `unlit-way` and two of eight for
-`unlit-way-end`. Measured door-glow spans on the end plate, as a share of the
+`h`), and `unlit-way` again in round 3 (`i` to `l`). Two of 12 survive for
+`unlit-way` and two of eight for `unlit-way-end`. Measured door-glow spans on
+the end plate, as a share of the
 width: round 1 `a` 71–74%, `b` 77–79%, `c` 75–77%, `d` 78–81%; round 2 `e`
 80–85%, `f` 61–68%, `g` 61–63%, `h` 61–72% (a ring, not an arch).
 
@@ -317,6 +344,10 @@ width: round 1 `a` 71–74%, `b` 77–79%, `c` 75–77%, `d` 78–81%; round 2 `
 | `unlit-way-f.png` | 1536×1024 | pass | reject | Round 2. The seat spans 64-80% of the width, into the right band, and a ruined arch stands at the road's end. |
 | `unlit-way-g.png` | 1536×1024 | pass | reject | Round 2. One lamp post stands in the road instead of a row along the verge, the finish is photographic (bokeh on the ash), and an arch stands at the road's end. |
 | `unlit-way-h.png` | 1536×1024 | pass | reject | Round 2. The nearest miss: a row of dead lamps along the verge inside the centre band, amber from low left. But the seat reaches 75% of the width, into the right band; the finish is photographic, with black vignettes down both sides; and a ruined arch stands at the road's end. |
+| [`unlit-way-i.png`](survivors/unlit-way-i.png) | 1536×1024 | pass | **#2** | Round 3. Both bands hold only ground, ash and the amber shaft from low left; the road runs out into plain darkness at the centre, with no arch or horizon light, and the row of dead posts stands on its verge at 45-56%. Dark (mean luminance 15.4, as dark as the shipped opening-hearth.png at 17.7). The finish is photographic, and the seat sits on the road at 45-54% rather than roadside at 55-60%. |
+| `unlit-way-j.png` | 1536×1024 | pass | reject | Round 3. The two nearest lamp posts stand in the right band (75-78% and 85-91% of the width), behind the Lamplighter's seat, and a fire burns inside the left band instead of far behind the viewer. |
+| `unlit-way-k.png` | 1536×1024 | pass | reject | Round 3. The nearest lamp post stands in the right band (71-78%), behind the Lamplighter's seat, and the amber light comes from the upper right rather than low left. |
+| `unlit-way-l.png` | 1536×1024 | pass | reject | Round 3. The best finish of the round, painterly like c. But the road's vanishing end and the far row of posts sit at 68-85% of the width, behind the Lamplighter's seat; the nearest post, the tallest thing in the frame, stands in the left band (20-27%); and the seat is at 35-51%, left of centre. |
 | `unlit-way-end-a.png` | 1536×1024 | pass | reject | Photographic; the door arch straddles the 72% line; paving fills the bottom 30%. |
 | `unlit-way-end-b.png` | 1536×1024 | pass | reject | Painterly, but the door arch sits at about 78% of the width (right band), and a ruined cathedral spans 9-52%. |
 | `unlit-way-end-c.png` | 1536×1024 | pass | reject | The last lamp reads lit (bright glowing panes), and the door arch sits at 75-77%. |
@@ -350,6 +381,8 @@ Save the result as a PNG file at <scratch>/stagecraft-raw/unlit-way-<x>.png
   never detailed). Emptier and colder than the first plate."
 - Round 2 (`e` to `h` of both files) appends the placement sentence in Round 2
   to the TWO-SHOT FRAME clause.
+- Round 3 (`unlit-way-i` to `unlit-way-l`) appends `unlit-way`'s own sentence,
+  quoted in Round 3, in its place.
 
 </details>
 
@@ -361,21 +394,19 @@ Save the result as a PNG file at <scratch>/stagecraft-raw/unlit-way-<x>.png
    round-2 sentence, all four wary renders kept it (17.0–21.2%, against the
    reference's 20.2%). Round 2's wary failures were about the prop instead:
    `g`'s lantern became a flat slab, and `h`'s sits on top of the pole.
-2. **The placement sentence fixed the end plate, not the first plate.** In round
-   1 every `unlit-way-end` render put the door at 71–81% of the width, behind
-   the Lamplighter's seat at 0.80. In round 2, `f` and `g` put it at 61–68%, and
-   both survive. On `unlit-way` the lamp posts moved inside the centre band, but
-   two problems remain:
-   - The seat still drifts into the right band: `e` 74%, `f` 64–80%, `h` 75%.
+2. **The first plate needed three rounds.** In round 1 every `unlit-way-end`
+   render put the door at 71–81% of the width, behind the Lamplighter's seat at
+   0.80. Round 2's shared placement sentence fixed that: `f` and `g` put it at
+   61–68%, and both survive. On `unlit-way` the same sentence had two side
+   effects:
+   - The seat still drifted into the right band: `e` 74%, `f` 64–80%, `h` 75%.
    - Every round-2 render drew an arch at the road's end, against none in
-     round 1. The sentence's subject list is shared by both plates and names
-     "the distant arch", which is the end plate's door; on m1–m4 it anticipates
-     m5.
+     round 1, because the shared list names "the distant arch".
 
-   Suggested split before landing:
-   - `unlit-way`: "(the road, the lamp posts and the seat)".
-   - `unlit-way-end`: "(the broken paving, the last lamp post and the distant
-     arch)".
+   Round 3's own sentence removed the arch from all four renders, but only `i`
+   kept both bands clear. Placement by percentage is approximate with this
+   model: the seat landed on its mark once in four. The stills at landing are
+   the real check.
 3. **The Queue's side edges were the real test.** Round 1 kept two of five
    inside both side edges (`b`, `e`); round 2, with the inside-edges sentence,
    kept three of four (`f`, `g`, `h`). For the landing: `actors.json` gives the
@@ -394,9 +425,3 @@ Save the result as a PNG file at <scratch>/stagecraft-raw/unlit-way-<x>.png
    figure (IoU 0.92 to 0.99; `d` grew and is rejected). Landing one changes
    little on screen, because the stage's fallback already shows the shipped
    figure for this mood.
-
-## Suggested next step (not run)
-
-- `unlit-way`: four more, with the per-plate subject list from Finding 2 and a
-  seat placement such as "the seat sits between 55 and 68 percent of the
-  width".
