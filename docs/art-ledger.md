@@ -1034,16 +1034,153 @@ The Vigil's rose window remains concealed; the visible rose threshold belongs
 to Act IV. Native captures and final validation are recorded in
 `docs/reviews/map-reassembly/direction.md`; the concept image is not game proof.
 
+## Shipped — dialogue stagecraft portraits (2026-09-29)
+
+### `portraits/` — Keeper and Hollow Lamplighter moods, 682×1024 RGBA
+
+Eight of the nine mood portraits commissioned below for the Keeper (#560) and
+the Hollow Lamplighter (#561), moved here when they landed. The ninth,
+`portraits/lamplighter-grieving.png`, stays commissioned: its pick was
+withdrawn. Each file is an image-to-image edit of its actor's shipped figure on
+the same canvas, so the actor's one bust crop in `content/actors.json` fits
+every mood. That file already named every path, so landing them changed no game
+code. `tests/test_stagecraft.gd` asserts that each is the texture its bust
+draws.
+
+James picked them on 2026-09-29 from the candidates recorded in
+`docs/design/2026-09-29-stagecraft-art/README.md`, with its contact sheets, gate
+tables, ranking and rejection record. Rank is that README's ranking across both
+tools' rounds. The other survivors stay on the branch
+`art/stagecraft-candidates-2026-09-29` at 44ce8a61. Stills of each mood on its
+stage cut are in `docs/reviews/559/`.
+
+| Shipped | Pick | Rank | Used by |
+|---|---|---|---|
+| `keeper-tender.png` | `keeper-tender-c2` | #1 | opening b2 l3 (「到了那裏，你便到家了。」) |
+| `keeper-offering.png` | `keeper-offering-c3` | #1 | opening b2 l1 (the boon: 「帶上這個。」) and b2 lantern |
+| `keeper-weary.png` | `keeper-weary-c2` | #1 | declared for the hearth pool and future hearth scenes; no scene casts it yet |
+| `keeper-beckon.png` | `keeper-beckon-c4` | #1 | act4-node5 l4 (「坐下。」) |
+| `lamplighter-wary.png` | `lamplighter-wary-c1` | #2, after `c4` | m1-pre, m3-pre l3, m3-post, m4-pre l4 |
+| `lamplighter-asking.png` | `lamplighter-asking-c1` | #1 | m2-pre l3, m5-pre l2 |
+| `lamplighter-recognising.png` | `lamplighter-recognising-c4` | #2, after Grok's `b` | m1-pre l3, m2-pre l2, m3-pre l2, m4-pre, m5-pre l1, m5-post l2 |
+| `lamplighter-urgent.png` | `lamplighter-urgent-c1` | #1 | m4-pre l3 (「上次站在這裏的，是不是你?」) |
+
+Generated 2026-09-29 in the candidates' round 4, through
+`~/.claude/scripts/subagents/run-imagegen.sh`: Codex CLI 0.159.0 with
+`gpt-5.6-terra` at low reasoning effort, drawing with Codex's built-in image
+tool, one image per call. Codex served every call, and none fell back. On
+James's instruction, round 4 drew each figure on a transparent background
+instead of the magenta field the portrait contract below names, so the alpha is
+the render's own and was not keyed. The candidates branch gated each render
+with `tools/key_magenta.py --no-key`. Re-graded as landed against the
+contract's full gate, magenta row included, all eight pass: leftover
+field-magenta 0–22 px, opaque near-black in the frame 0–151 px, corners at
+alpha 0, and 93.8–98.1% of visible pixels at alpha ≥ 240. Each keeps its own
+anti-aliased alpha (256 levels); neither of the two renders whose alpha Codex
+replaced was picked.
+
+**The request that rendered each file** is its issue's prompt, verbatim, with
+round 4's one change: the background clause's first two sentences became
+"Output a PNG with a TRANSPARENT background (alpha 0 outside the figure); no
+magenta, no floor, no shadow, no vignette. Black exists ONLY inside the hood
+void." The Lamplighter's keeps "head void", as he wears no hood. `<repo>` stands
+for the working copy and `<scratch>` for the session's scratch directory, and
+each request's last line names its own file. The Keeper's, as sent for tender:
+
+```text
+Read the reference image at <repo>/assets/art/meta/keeper.png and produce an edited variation of it.
+
+Serious cartoon-gothic stained-glass game art: chunky dark outer silhouette, simplified exaggerated proportions, one iconic readable pose, 3-5 large jewel-tone glass colour masses with very few thick lead dividers, matte painterly texture, warm amber rim light, soft controlled inner glow. Designed to remain readable at 128px. No text, no labels, no watermark.
+
+CONSTRUCTION, this is the most important instruction: the figure is not painted cloth. The entire robe, hood and body are built from large flat panes of coloured glass separated by thick black lead came lines, exactly like a cathedral stained-glass window rendered as a character. Each fold of the robe is a distinct glass pane with a hard lead border, not a soft painted fold. Only a few big panes, never lacework or many small pieces. The lead lines are heavy, black, and clearly visible across the whole figure. Glass is blue, violet, teal and deep red, lit from within by a faint cold glow, with thin worn gold edging on the lead. Readable as a solid black shape if all internal detail were removed.
+
+Output a PNG with a TRANSPARENT background (alpha 0 outside the figure); no magenta, no floor, no shadow, no vignette. Black exists ONLY inside the hood void. EDIT THE ATTACHED REFERENCE: keep the exact same canvas size, figure scale, position, bounding box, hem line, pane layout and palette; change ONLY the pose described below. Single complete figure, no cropped limbs. The hood opening is a deep black VOID with NO face, NO eyes, NO glowing points.
+
+The Keeper — a seated hooded figure, knees drawn in, completely still and calm. Low wide hooded seated mass. Warm amber rim light falling on the figure from the RIGHT, from a fire outside the frame. The figure holds no lantern, staff or weapon. Do NOT draw a hearth, chair, floor, hall, fire, or any background object.
+
+POSE CHANGE: the hood tilts slightly toward the viewer's left, as if toward someone seated near; the shoulders soften; the hands stay folded in the lap. The inner glow is a touch warmer. Stillness, fondness, fatigue.
+
+Canvas: exactly 682x1024 pixels.
+
+Save the result as a PNG file at <scratch>/stagecraft-raw/keeper-tender-<x>.png
+```
+
+- `keeper-offering` and `keeper-weary` send the same request with the POSE
+  CHANGE paragraph replaced by their own, verbatim:
+  - offering: "POSE CHANGE: the right hand is lifted from the lap and held forward at chest height, palm up, cupping one small ember of warm amber glass, the only bright point on the figure. The other hand stays in the lap. The hand OFFERS; it does not point, and it gestures toward no road, door or direction."
+  - weary: "POSE CHANGE: the hood bows low toward the lap, the shoulders sink, the hands rest loose. The amber rim light is low and faint and the glass a little dimmer, as if the fire has burned down."
+- `keeper-beckon` reads `<repo>/assets/art/enemies/eternalKeeper.png`, drops
+  "Warm amber rim light falling on the figure from the RIGHT, from a fire outside the frame." from the Keeper paragraph, and replaces the POSE CHANGE
+  paragraph with: "INVERTED hearth light: warm amber arrives from the LEFT, the wrong side, catching the lead edges; the rest of the glass is cold violet-grey and deep teal. POSE CHANGE: one hand is lifted from the lap, palm up and open, and turned toward the empty space beside the figure: an invitation to sit down. Gentle, not a command."
+
+The Lamplighter's, as sent for wary. Its POSE CHANGE paragraph ends with the
+sentence round 2 added after three of round 1's four wary renders lost the rim:
+
+```text
+Read the reference image at <repo>/assets/art/meta/hollow-lamplighter.png and produce an edited variation of it.
+
+Serious cartoon-gothic stained-glass game art: chunky dark outer silhouette, simplified exaggerated proportions, one iconic readable pose, 3-5 large jewel-tone glass colour masses with very few thick lead dividers, matte painterly texture, warm amber rim light, soft controlled inner glow. Designed to remain readable at 128px. No text, no labels, no watermark.
+
+CONSTRUCTION, this is the most important instruction: the figure is not painted cloth. His entire robe and body are built from large flat panes of coloured glass separated by thick black lead came lines, exactly like a cathedral stained-glass window rendered as a character. Each fold of the robe is a distinct glass pane with a hard lead border, not a soft painted fold. Only a few big panes, never lacework or many small pieces. The lead lines are heavy, black, and clearly visible across the whole figure. Glass is cold grey-green and deep teal, lit from within by a faint cold glow, with thin worn gold edging on the lead. Readable as a solid black shape if all internal detail were removed.
+
+Output a PNG with a TRANSPARENT background (alpha 0 outside the figure); no magenta, no floor, no shadow, no vignette. Black exists ONLY inside the head void. EDIT THE ATTACHED REFERENCE: keep the exact same canvas size, figure scale, position, bounding box, hem line, pane layout and palette; change ONLY the pose described below. Single complete figure, no cropped limbs.
+
+The Hollow Lamplighter, a gaunt keeper, tall and skull-thin, in a long floor-length robe. Bare head, no raised hood, face a deep black void with no glowing eyes. The one warm colour in the frame is an amber rim light falling on him from outside the frame, from a fire he is not carrying. He holds a tall iron lantern pole; the lantern hanging from it is DARK AND EMPTY, with cold dead glass panes and no flame inside, the single unlit object in the frame, in every pose.
+
+POSE CHANGE: he leans back a little, weight on the rear foot; the lantern pole is drawn in close across his body like a staff held between; the empty hand is lowered and closed. The amber rim light from outside the frame and the thin worn gold edging on the lead stay exactly as in the reference.
+
+Canvas: exactly 682x1024 pixels.
+
+Save the result as a PNG file at <scratch>/stagecraft-raw/lamplighter-wary-<x>.png
+```
+
+- `lamplighter-asking`, `lamplighter-recognising` and `lamplighter-urgent` send
+  the same request without that sentence and with their own POSE CHANGE
+  paragraph, verbatim:
+  - asking: "POSE CHANGE: the shipped pose, sharpened. The open empty hand is held forward and low, palm up, asking a price; the lantern pole stands upright at his side."
+  - recognising: "POSE CHANGE: he leans forward toward the viewer's left with his head tilted, as if studying a face; the dark empty lantern is raised high beside his head, as though to light a face it cannot light."
+  - urgent: "POSE CHANGE: both hands come forward, one gripping the lantern pole hard; the body is tense and pitched in; the hem swings with the movement."
+
+**Caveats, recorded rather than fixed.** Each file landed as rendered. The
+figures are the candidates README's: S and V are the figure's mean HSV
+saturation and value (0–100), and the warm edge is the amber share of the
+silhouette's outer 12 px.
+
+- **The Keeper's glass is brighter than `keeper.png`.** Tender and offering
+  read V 24 against the reference's 18, so each cut between them and the
+  default figure in the opening's second beat shows a step: offering to
+  default, then default to tender. #560's "a touch warmer" allows some of it
+  for tender. Beckon reads S 68 and V 30 against `eternalKeeper.png`'s 62 and
+  27. That is a smaller step on the revealed-to-beckon cut in act4-node5, where
+  its chest pane runs a little hotter and its amber still comes from the left.
+- **Weary's rim is not dimmed.** #560 asks for "the amber rim light low and
+  faint and the glass a little dimmer". `keeper-weary-c2` has the deepest bow
+  of both tools (the hood 95 px lower), but its warm edge is 14.8% against
+  `keeper.png`'s 9.5%, and its glass reads V 20. Nor does the stage dim it any
+  more: `StagePortrait` grades a mood down only while its art is missing.
+- **Recognising holds the pole in his other hand.**
+  `lamplighter-recognising-c4` raises the pole and the dark lantern on the
+  viewer's left, where the shipped figure and the other landed moods hold them
+  on the viewer's right. The pole therefore changes sides on every cut to or
+  from recognising, in all six scenes that cast it. All four Codex recognising
+  renders did this; Grok's `b`, ranked first, keeps the usual side.
+- **Wary stands upright.** `lamplighter-wary-c1` draws the pole across the
+  body and lowers the closed hand, as briefed, but does not lean back; `c4`,
+  ranked first, does.
+
 ## Commissioned — dialogue stagecraft portraits and plates (2026-09-27)
 
-**Not yet generated.** Billed by the stagecraft system
+**Not yet landed.** Eight of the nine Keeper and Lamplighter moods shipped on
+2026-09-29 and moved to "Shipped — dialogue stagecraft portraits" above; what
+remains below has not landed. Billed by the stagecraft system
 (`docs/design/2026-09-27-stagecraft/README.md`): the JRPG two-shot stands a
 speaking cast as glass busts beside the dialogue pane, and every mood a scene
 asks for is declared in `content/actors.json`. Until a file below lands, the
 stage carries that mood with the actor's shipped figure plus posture and
 light (`StagePortrait.MOOD_LOOKS`), so nothing is broken while these wait.
-**Landing a file at its path is the whole integration** — no code change;
-`tests/test_stagecraft.gd` then asserts the landed portrait is the one drawn.
+**Landing a file at its path is the whole integration** — no game code
+changes. Its mood then joins `LANDED_MOODS` in `tests/test_stagecraft.gd`,
+which asserts that the landed portrait is the one drawn.
 
 Tracking: #559 (parent) — Keeper #560, Lamplighter #561, Queue #562,
 Unlit Way plates #563; the audio cues are #564. Every candidate goes through James's review before it enters
@@ -1108,12 +1245,8 @@ fire outside the frame — except the Act IV mood, which takes
 Voice rule that binds the pose: **the Keeper never urges departure**, so no
 mood points at a road, a door or the east.
 
-| Path | Used by | Subject delta |
-|---|---|---|
-| `portraits/keeper-tender.png` | opening b2 l3 (「到了那裏，你便到家了。」) | Hood tilted slightly toward the viewer's left, as if toward someone seated near; shoulders softened; hands still folded in the lap. The inner glow a touch warmer. Stillness, fondness, fatigue. |
-| `portraits/keeper-offering.png` | opening b2 l1 (the boon: 「帶上這個。」) | The right hand lifted from the lap and held forward at chest height, palm up, cupping one small ember of warm amber glass — the only bright point on the figure. The other hand stays in the lap. The hand offers; it does not point anywhere. |
-| `portraits/keeper-weary.png` | declared for the hearth pool and future hearth scenes | Hood bowed low toward the lap, shoulders sunk, hands loose. The amber rim is low and faint, the glass a little dimmer, as if the fire has burned down. |
-| `portraits/keeper-beckon.png` | act4-node5 l4 (「坐下。」) | Reference `enemies/eternalKeeper.png`. Cold violet-grey and teal glass, amber rim from the LEFT (the inverted hearth). One hand lifted from the lap, palm up and open, turned toward the empty space beside the figure — an invitation to sit down, gentle, not a command. |
+All four shipped on 2026-09-29; their rows moved to "Shipped — dialogue
+stagecraft portraits" above, each with the request that rendered it.
 
 `revealed` needs no new art: it is `enemies/eternalKeeper.png` itself, and the
 recognition of that silhouette at node 5 is the design (`#260 Q7`).
@@ -1126,13 +1259,12 @@ iron pole is **dark and empty in every mood** — the unlit lantern is the whole
 character. The five meetings tighten from outward things to the self
 (`#260 Q3`), and the moods follow that arc.
 
+Four of the five shipped on 2026-09-29; their rows moved to "Shipped —
+dialogue stagecraft portraits" above. Grieving's stays here.
+
 | Path | Used by | Subject delta |
 |---|---|---|
-| `portraits/lamplighter-wary.png` | m1-pre, m3-pre l3, m3-post, m4-pre l4 | Leaning back a little, weight on the rear foot; the lantern pole drawn in close across the body like a staff held between; the empty hand lowered and closed. |
-| `portraits/lamplighter-asking.png` | m2-pre l3, m5-pre l2 | The shipped pose sharpened: the open empty hand held forward and low, palm up, asking a price; lantern pole upright at his side. |
-| `portraits/lamplighter-recognising.png` | m1-pre l3, m2-pre l2, m3-pre l2, m4-pre, m5-pre l1, m5-post l2 | Leaning forward toward the viewer's left, head tilted as if studying a face; the dark empty lantern raised high beside his head, as though to light a face it cannot light. |
-| `portraits/lamplighter-urgent.png` | m4-pre l3 (「上次站在這裏的，是不是你?」) | Both hands forward, one gripping the lantern pole hard, the body tense and pitched in; the hem swinging with the movement. |
-| `portraits/lamplighter-grieving.png` | m5-pre l3, m5-post | Head bowed; the dark lantern lowered until it nearly rests on the ground by his feet; the free hand pressed flat to his chest. |
+| `portraits/lamplighter-grieving.png` | m5-pre l3, m5-post | Head bowed; the dark lantern lowered until it nearly rests on the ground by his feet; the free hand pressed flat to his chest. **Note: pick withdrawn 2026-09-29: pole differs from the shipped figure; redo in round 5.** |
 
 ### The Queue — one chorus portrait (new figure; L3/L4 only)
 

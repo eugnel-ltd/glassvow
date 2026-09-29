@@ -4,7 +4,8 @@ extends RefCounted
 ## it; every authored actor, mood and effect target is registered; the pane
 ## and busts stay inside the frame at every shipping shape; the typed reveal
 ## paces CJK slower than Latin and breathes at stops; effects never fire where
-## a line is not played live; and the opening keeps one Keeper body on screen.
+## a line is not played live; the opening keeps one Keeper body on screen; and
+## every landed mood portrait is the texture its bust draws.
 ## The flame's lines (flame lock §10): the Keeper names what the lantern burns
 ## as it is lit; the road's whispers play once each, after the won fight that
 ## read the change; and the codex shows the colours seen steady.
@@ -12,6 +13,15 @@ extends RefCounted
 const SHAPES: Array[StringName] = [
 	&"pad-landscape", &"desktop-landscape", &"phone-landscape",
 ]
+## The mood portraits landed from the stagecraft commission (#560, #561), each
+## at its ledgered path. Every one must be what its bust draws, never a fallback.
+## A mood still awaiting its art (the Lamplighter's grieving) is not listed: it
+## falls back as any missing mood does.
+const LANDED_MOODS: Dictionary[String, Array] = {
+	"keeper": ["tender", "offering", "weary", "beckon"],
+	"lamplighter": ["wary", "asking", "recognising", "urgent"],
+}
+const PORTRAIT_ART: String = "res://assets/art/portraits/%s-%s.png"
 const RUN_PATH: String = "user://test_stagecraft_flame_run_v2.json"
 const VIGIL_PATH: String = "user://test_stagecraft_flame_vigil_v2.json"
 const MapCompose: GDScript = preload("res://tests/test_map_compose.gd")
@@ -30,6 +40,7 @@ static func run(fails: Array[String]) -> void:
 	_directions_fail_closed(fails)
 	_fold_is_order_exact(fails)
 	_actor_book(fails)
+	_landed_portraits_are_drawn(fails)
 	_actor_book_fails_closed(fails)
 	_scenes_cast_is_registered(fails)
 	_names_resolve(fails)
@@ -141,16 +152,20 @@ static func _actor_book(fails: Array[String]) -> void:
 	_check(fails, str(revealed["path"]).ends_with("enemies/eternalKeeper.png")
 			and revealed_rim == &"left",
 		"the revealed Keeper is not the shipped boss form lit from the wrong side")
-	var beckon: Dictionary = book.resolve("keeper", "beckon")
-	var beckon_exact: bool = beckon["exact"]
-	var beckon_art: String = "res://assets/art/portraits/keeper-beckon.png"
-	if ResourceLoader.exists(beckon_art):
-		_check(fails, str(beckon["path"]) == beckon_art and beckon_exact,
-			"a landed mood portrait was not used")
-	else:
-		_check(fails, str(beckon["path"]).ends_with("enemies/eternalKeeper.png")
-				and not beckon_exact,
-			"a missing mood did not fall back along its chain")
+	# Beckon's art has landed, so its chain is proved on a registry whose beckon
+	# art is absent: it stands as revealed, never as the default.
+	var chained: Variant = ActorBook.parse({"actors": {"x": {"portraits": {
+		"default": "res://assets/art/meta/keeper.png",
+		"revealed": "res://assets/art/enemies/eternalKeeper.png",
+		"beckon": {"art": "res://assets/art/portraits/never-landed.png",
+			"fallback": "revealed"},
+	}}}})
+	var chain_book: ActorBook = chained if chained is ActorBook else ActorBook.new()
+	var fell: Dictionary = chain_book.resolve("x", "beckon")
+	var fell_exact: bool = fell["exact"]
+	_check(fails, str(fell["path"]).ends_with("enemies/eternalKeeper.png")
+			and not fell_exact,
+		"a missing mood did not fall back along its chain")
 	var unknown: Dictionary = book.resolve("keeper", "no-such-mood")
 	_check(fails, str(unknown["path"]).ends_with("meta/keeper.png"),
 		"an undeclared mood did not stand as the default")
@@ -163,6 +178,27 @@ static func _actor_book(fails: Array[String]) -> void:
 		_check(fails, not str(book.resolve(id, "default", "duskblade")["path"]).is_empty()
 				or id == "queue",
 			"%s has no drawable default" % id)
+
+
+## Each landed portrait is the texture its bust binds: the registry resolves the
+## mood exactly and the standing sprite's atlas is that very file, rather than
+## the actor's default carried by posture and light.
+static func _landed_portraits_are_drawn(fails: Array[String]) -> void:
+	var book: ActorBook = ActorBook.shared()
+	for actor: String in LANDED_MOODS:
+		for mood: String in LANDED_MOODS[actor]:
+			var art: String = PORTRAIT_ART % [actor, mood]
+			var resolved: Dictionary = book.resolve(actor, mood)
+			var exact: bool = resolved["exact"]
+			_check(fails, str(resolved["path"]) == art and exact,
+				"%s %s does not resolve to its landed portrait" % [actor, mood])
+			var bust: StagePortrait = StagePortrait.new(book, actor)
+			bust.stand(&"right", mood, true)
+			var drawn: AtlasTexture = bust._sprite.texture as AtlasTexture
+			_check(fails, drawn != null and drawn.atlas != null
+					and drawn.atlas.resource_path == art,
+				"%s %s does not draw its landed portrait" % [actor, mood])
+			bust.free()
 
 
 static func _actor_book_fails_closed(fails: Array[String]) -> void:
