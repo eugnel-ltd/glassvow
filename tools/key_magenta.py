@@ -44,10 +44,18 @@ grey-green and teal stay below strength 20; the Queue is gold, slate and
 teal), never for the Keeper: the violet glass of `enemies/eternalKeeper.png`
 reaches 120. Without it a pocket stays visible and fails the leftover gate.
 
+No key (--no-key). A render that carries its own alpha (Codex draws on a
+transparent background) is not keyed: it is written as RGBA, normalised with
+`sips -Z 1024` and graded on the frame, the corners and the solid share, with
+one more row that fails a render without an alpha channel. With no field
+keyed there is no leftover to grade, so the field-magenta count is reported
+as information only: on such a render it counts the figure's own colours.
+
     python3 tools/key_magenta.py RAW.png OUT.png [--expect 682x1024] [--haze] [--cut-bottom]
+    python3 tools/key_magenta.py --no-key RAW.png OUT.png [--expect 682x1024] [--cut-bottom]
     python3 tools/key_magenta.py --plate RAW.png
     python3 tools/key_magenta.py --contact-sheet OUT.png --row TITLE IMG [IMG ...]
-        [--row ...] [--tag STEM=TEXT ...] [--tile-height PX] [--guides]
+        [--row ...] [--tag STEM=TEXT ...] [--tile-height PX] [--guides] [--palette]
 
 Exit status is 0 only when every graded metric passes.
 """
@@ -240,16 +248,23 @@ def is_field_magenta(r: int, g: int, b: int) -> bool:
     return min(r, b) >= 180 and g <= 60 and abs(r - b) <= 50
 
 
-def gate(im: Image.Image, cut_bottom: bool = False) -> list[tuple[str, str, bool]]:
+def field_magenta_px(im: Image.Image) -> int:
+    """Visible pixels that pass the field-magenta test."""
+    return sum(1 for r, g, b, a in im.convert("RGBA").getdata() if a and is_field_magenta(r, g, b))
+
+
+def gate(im: Image.Image, cut_bottom: bool = False, keyed: bool = True
+         ) -> list[tuple[str, str, bool]]:
     """The portrait alpha gate: (metric, reading, passed) per ledger rule.
 
     `cut_bottom` is for a brief that cuts the figures at the canvas foot (the
     Queue): the bottom edge's near-black is still reported but no longer graded.
+    `keyed` False drops the leftover-magenta row: nothing was keyed, so nothing
+    can be left over.
     """
     rgba = im.convert("RGBA")
     w, h = rgba.size
     px = rgba.load()
-    leftover = sum(1 for r, g, b, a in rgba.getdata() if a and is_field_magenta(r, g, b))
     frame = [(x, y) for y in range(h) for x in range(w)
              if min(x, y, w - 1 - x, h - 1 - y) < FRAME_PX]
     dark = [y for x, y in frame if px[x, y][3] and max(px[x, y][:3]) <= NEAR_BLACK]
@@ -266,12 +281,16 @@ def gate(im: Image.Image, cut_bottom: bool = False) -> list[tuple[str, str, bool
     else:
         graded = len(dark)
         frame = f"{len(dark)} px (< {MAX_FRAME_DARK}; bottom edge {bottom})"
-    return [
-        ("leftover field-magenta", f"{leftover} px (< {MAX_LEFTOVER})", leftover < MAX_LEFTOVER),
+    rows = [
         ("near-black in 8 px frame", frame, graded < MAX_FRAME_DARK),
         ("corners alpha", str(corners), all(c == 0 for c in corners)),
         ("alpha >= 240 share", f"{share:.1%} (>= 90%)", share >= MIN_SOLID_SHARE),
     ]
+    if not keyed:
+        return rows
+    leftover = field_magenta_px(rgba)
+    return [("leftover field-magenta", f"{leftover} px (< {MAX_LEFTOVER})", leftover < MAX_LEFTOVER),
+            *rows]
 
 
 def report(name: str, rows: list[tuple[str, str, bool]], info: str = "") -> bool:
@@ -295,16 +314,29 @@ def parse_size(text: str) -> tuple[int, int]:
     return int(w), int(h)
 
 
+def has_alpha(im: Image.Image) -> bool:
+    return im.mode in ("RGBA", "LA", "PA") or "transparency" in im.info
+
+
 def key_file(raw: Path, out: Path, expect: tuple[int, int] | None, haze: bool,
-             cut_bottom: bool) -> bool:
+             cut_bottom: bool, no_key: bool = False) -> bool:
     if shutil.which("sips") is None:
         raise SystemExit("sips not found: the ledger normalises portraits with macOS `sips -Z 1024`")
-    cutout, spilled = key(Image.open(raw), haze)
-    cutout.save(out)
+    src = Image.open(raw)
+    if no_key:
+        alpha = [("alpha channel", f"{src.mode} (the render's own, not keyed)", has_alpha(src))]
+        src.convert("RGBA").save(out)
+        spilled = 0
+    else:
+        alpha = []
+        cutout, spilled = key(src, haze)
+        cutout.save(out)
     subprocess.run(["sips", "-Z", "1024", str(out)], check=True, capture_output=True)
     im = Image.open(out)
-    rows = ([canvas_row(im.size, expect)] if expect else []) + gate(im, cut_bottom)
+    rows = ([canvas_row(im.size, expect)] if expect else []) + alpha + gate(im, cut_bottom, not no_key)
     info = f"figure bbox {im.getchannel('A').getbbox()}"
+    if no_key:
+        info += f"; field-magenta {field_magenta_px(im)} px (not graded: nothing was keyed)"
     return report(f"{out.name}  {im.size[0]}x{im.size[1]} {im.mode}", rows,
                   info + (f"; despilled {spilled} px" if haze else ""))
 
@@ -324,8 +356,11 @@ def two_shot_guides(im: Image.Image) -> None:
 
 
 def contact_sheet(out: Path, rows: list[list[str]], tags: dict[str, str], tile_h: int,
-                  guides: bool = False) -> None:
-    """Every image of a family, labelled with its stem and tag, over mid-grey."""
+                  guides: bool = False, palette: bool = False) -> None:
+    """Every image of a family, labelled with its stem and tag, over mid-grey.
+
+    `palette` saves a dithered 256-colour sheet, about a third of the RGB file.
+    """
     font = ImageFont.load_default(size=20)
     gutter, title_h, label_h = 16, 34, 56
     layout = []
@@ -358,6 +393,8 @@ def contact_sheet(out: Path, rows: list[list[str]], tags: dict[str, str], tile_h
                 draw.text((x, y + tile_h + 28), tag, fill=(255, 255, 255), font=font)
             x += im.width + gutter
         y += tile_h + label_h + gutter
+    if palette:
+        sheet = sheet.quantize(colors=256, dither=Image.Dither.FLOYDSTEINBERG)
     sheet.save(out, optimize=True)
     print(f"{out}  {sheet.width}x{sheet.height}")
 
@@ -372,6 +409,9 @@ def main() -> int:
     ap.add_argument("--cut-bottom", action="store_true",
                     help="the brief cuts the figures at the canvas foot: report the bottom "
                          "edge's near-black but do not grade it (the Queue)")
+    ap.add_argument("--no-key", action="store_true",
+                    help="the render carries its own alpha (a transparent background): "
+                         "grade it without keying")
     ap.add_argument("--plate", action="store_true", help="check a 1536x1024 plate; no keying")
     ap.add_argument("--contact-sheet", type=Path, metavar="OUT.png")
     ap.add_argument("--row", action="append", nargs="+", default=[], metavar="TITLE IMG")
@@ -379,16 +419,21 @@ def main() -> int:
     ap.add_argument("--tile-height", type=int, default=400)
     ap.add_argument("--guides", action="store_true",
                     help="contact sheet: draw the plate two-shot bands on every tile")
+    ap.add_argument("--palette", action="store_true",
+                    help="contact sheet: save as a dithered 256-colour PNG (about a third of the size)")
     args = ap.parse_args()
     if args.contact_sheet:
         tags = dict(t.split("=", 1) for t in args.tag)
-        contact_sheet(args.contact_sheet, args.row, tags, args.tile_height, args.guides)
+        contact_sheet(args.contact_sheet, args.row, tags, args.tile_height, args.guides,
+                      args.palette)
         return 0
     if args.plate and len(args.paths) == 1:
         return 0 if check_plate(args.paths[0]) else 1
+    if args.no_key and args.haze:
+        ap.error("--haze clears keyed field; a --no-key render has none")
     if len(args.paths) == 2:
         return 0 if key_file(args.paths[0], args.paths[1], args.expect, args.haze,
-                             args.cut_bottom) else 1
+                             args.cut_bottom, args.no_key) else 1
     ap.error("give RAW.png OUT.png, --plate RAW.png, or --contact-sheet")
     return 2
 
