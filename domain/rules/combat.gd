@@ -254,7 +254,7 @@ func start_combat(
 	for c: CardInst in run.player.deck:
 		cb.draw.append(c.combat_copy())
 	_shuffle_cards(rng, cb.draw)
-	cb.embers = clampi(_ji(omen.get("startEmbers", 0)), 0, cb.ember_cap)
+	_light_lantern(run, cb, _ji(omen.get("startEmbers", 0)))
 	_apply_start_relics(run, cb)
 	_set_lantern_quality(run, cb)
 	_compute_intents(run, cb)
@@ -290,7 +290,7 @@ func _apply_start_relics(run: RunState, cb: CombatState) -> void:
 		_proc(cb, "vialOfLife")
 	if run.has_relic("crownOfCinders"):
 		cb.ember_cap = 12
-		cb.embers = clampi(cb.embers + 2, 0, cb.ember_cap)
+		_light_lantern(run, cb, 2)
 		_proc(cb, "crownOfCinders")
 	if run.has_relic("shatterersCrown"):
 		for e: EnemyCombatant in cb.enemies:
@@ -465,6 +465,7 @@ func _add_status(cb: CombatState, statuses: Dictionary, who: Variant, id: String
 
 ## Spilled fire, caught by your lantern. Negative n = spent. Returns the delta.
 ## Every Ember caught is tallied in `run.stats.embersGained` (flame lock §11).
+## The Embers a fight opens with are tallied by `_light_lantern`.
 ## A Steady or True lantern adds its bonus to the first gain of each turn, before
 ## the tithe and the cap take their share (flame lock §5).
 func gain_embers(run: RunState, cb: CombatState, n: int) -> int:
@@ -476,11 +477,27 @@ func gain_embers(run: RunState, cb: CombatState, n: int) -> int:
 	var delta: int = next - cb.embers
 	if delta == 0:
 		return 0
-	if delta > 0:
-		run.stats["embersGained"] = _ji(run.stats.get("embersGained", 0)) + delta
+	_tally_embers_gained(run, delta)
 	cb.embers = next
 	cb.queue.append({"t": EventTypes.EMBER, "n": delta, "total": cb.embers})
 	return delta
+
+
+## Embers put straight into the lantern as a fight opens (the omen's, the Crown
+## of Cinders'): no EMBER event and no tithe, so a trace does not move. The
+## lantern still receives them, up to the cap of that moment, and what it takes
+## is tallied like any other catch.
+func _light_lantern(run: RunState, cb: CombatState, n: int) -> void:
+	var lit: int = clampi(cb.embers + n, 0, cb.ember_cap)
+	_tally_embers_gained(run, lit - cb.embers)
+	cb.embers = lit
+
+
+## `run.stats.embersGained` counts the Embers the lantern receives, never those
+## it spends or loses (flame lock §11).
+func _tally_embers_gained(run: RunState, caught: int) -> void:
+	if caught > 0:
+		run.stats["embersGained"] = _ji(run.stats.get("embersGained", 0)) + caught
 
 
 ## Embers paid out of the lantern (the Art, a card's Ember price, a spill),
