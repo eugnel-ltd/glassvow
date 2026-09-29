@@ -16,7 +16,7 @@ const TABLE: Array = [
 	["steady shatter", [], ["uppercut", "quakeblow"], [], "STEADY", "shatterersCrown", ""],
 	["steady shatter, edge fringe", [],
 		["uppercut", "quakeblow", "warCry", "oblivionStrike", "limitBreak"], [],
-		"STEADY", "shatterersCrown", ""],
+		"STEADY", "shatterersCrown", "crownOfTheEclipse"],
 	["true shatter", ["eclipseSlash", "firstSpark"],
 		["uppercut", "quakeblow", "warCry", "oblivionStrike", "limitBreak"], [],
 		"TRUE", "shatterersCrown", ""],
@@ -26,9 +26,9 @@ const TABLE: Array = [
 	["true lantern", ["chisel", "eclipseSlash"], ["preparation", "surge", "devour", "offering"], [],
 		"TRUE", "crownOfCinders", ""],
 	["steady edge, lantern fringe", ["chisel"], ["warCry", "empower", "executioner", "preparation"],
-		[], "STEADY", "", "crownOfCinders"],
+		[], "STEADY", "crownOfTheEclipse", "crownOfCinders"],
 	["true edge", ["chisel", "firstSpark"], ["warCry", "empower", "executioner", "frenzy"], [],
-		"TRUE", "", ""],
+		"TRUE", "crownOfTheEclipse", ""],
 	["soot", [], ["uppercut", "preparation", "warCry"], [], "SOOT", "hollowCrown", ""],
 	# Held crowns: crownOf walks the alternates; a slot with none left draws.
 	["true lantern, cinders held", ["chisel", "eclipseSlash"],
@@ -42,6 +42,8 @@ const TABLE: Array = [
 		["crownOfCinders", "crownOfTheHearth", "crownOfTithes"], "TRUE", "", ""],
 	["steady shatter, its crown held", [], ["uppercut", "quakeblow"], ["shatterersCrown"],
 		"STEADY", "", ""],
+	["true edge, its crown held", ["chisel", "firstSpark"],
+		["warCry", "empower", "executioner", "frenzy"], ["crownOfTheEclipse"], "TRUE", "", ""],
 	["soot, the hollow crown held", [], ["uppercut", "preparation", "warCry"], ["hollowCrown"],
 		"SOOT", "", ""],
 	# The next act, same rule: a hybrid that took Cinders is offered the Hearth
@@ -53,12 +55,14 @@ const TABLE: Array = [
 		"STEADY", "crownOfCinders", ""],
 	# A thin boss pool: the crowns still lead, the offer only shrinks.
 	["two left, soot", [], ["uppercut", "preparation", "warCry"],
-		["crownOfCinders", "crownOfTheHearth", "crownOfTithes"], "SOOT", "hollowCrown", ""],
+		["crownOfCinders", "crownOfTheHearth", "crownOfTithes", "crownOfTheEclipse"],
+		"SOOT", "hollowCrown", ""],
 	["one left, the fringe crown", ["chisel"], ["warCry", "empower", "executioner", "preparation"],
-		["hollowCrown", "crownOfTheHearth", "crownOfTithes", "shatterersCrown"],
+		["hollowCrown", "crownOfTheHearth", "crownOfTithes", "shatterersCrown", "crownOfTheEclipse"],
 		"STEADY", "", "crownOfCinders"],
 	["none left", [], ["uppercut", "quakeblow"],
-		["crownOfCinders", "hollowCrown", "crownOfTithes", "shatterersCrown", "crownOfTheHearth"],
+		["crownOfCinders", "hollowCrown", "crownOfTithes", "shatterersCrown", "crownOfTheHearth",
+			"crownOfTheEclipse"],
 		"STEADY", "shatterersCrown", ""],
 ]
 
