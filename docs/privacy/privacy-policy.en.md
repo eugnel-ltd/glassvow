@@ -26,11 +26,11 @@ The game also sends a short summary of each play session: when it started, how l
 
 **What a report contains.**
 
-- *The problem itself*: the error message and the list of steps in the game's code that led to it. Before a report leaves your device, the game strips storage locations out of the error message, shortens long messages and replaces anything that looks like a saved-game record with a "redacted" marker.
+- *The problem itself*: the error message and the list of steps in the game's code that led to it. Before a report leaves your device, the game removes references to its own storage folder from the main error message, shortens long messages, and replaces a message that is itself a saved-game record with a "redacted" marker.
 - *Your device and its software*: the device model, the iOS version, the number of processor cores, available memory, screen size and orientation, battery level and whether it is charging, low-power mode and similar technical details, plus the version and build number of the game.
 - *Language, region and time*: your device's language and region settings, its time zone, and the time each event happened.
 - *Technical details of the game engine*: the engine version and details of your device's graphics processor.
-- *A short trail of recent events*: for example, error messages from the game, the game moving to the background, the screen rotating, the battery level or time zone changing, or a screenshot being taken. The screenshot itself is never sent.
+- *A short trail of recent events*: for example, error messages from the game, the game moving to the background, the screen rotating, the battery level or time zone changing, or a screenshot being taken. These are technical messages and device events, and they are not filtered. The screenshot itself is never sent.
 - *A random code*: created on your device when the game first runs, and used only to tell reports from one installation apart from another. It is not your name, an account or your Apple advertising identifier.
 
 The game does not ask Sentry to record your IP address. As with any internet connection, your device's IP address is visible to Sentry's servers when a report arrives.
@@ -47,7 +47,7 @@ Apple may separately give us crash reports and basic usage figures for the game 
 - **Advertising or tracking.** The game contains no advertising, no advertising identifier and no tracking of you across other companies' apps and websites. It has no analytics tool other than the crash and error reporting described above.
 - **Purchases or payments.** The game has no in-app purchases, and we never receive your payment details. Anything you buy from the App Store is handled by Apple.
 - **Anything you type.** The game has no text fields, chat or online play.
-- **Your saved games.** They are never uploaded as files, and the game filters error messages so that saved-game records are kept out of reports. Reports also never contain screenshots, log files or the game's internal state.
+- **Your saved games.** They are never uploaded as files, and reports are not built to contain them. Reports also never contain screenshots, log files or the game's internal state.
 
 ## 4. Where your data lives
 

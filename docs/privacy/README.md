@@ -12,7 +12,7 @@ Every practice described comes from this repository's configuration and source, 
 
 Both policies cover Glassvow on iPhone and iPad, as built by the store preset `iOS`. The Android wave will need its own Play Data safety mapping and a policy revision.
 
-## 1. Decisions that change the policy text
+## 1. Decisions that change the policy text or the App Privacy answers
 
 **D1. Consent and withdrawal (Apple guideline 5.1.1(ii)).** Sentry starts on every launch outside the editor. There is no first-run notice and no setting to turn it off, so both policies say in section 5 that there is no setting rather than claim otherwise. Apple's text: "Apps that collect user or usage data must secure user consent for the collection, even if such data is considered to be anonymous … Apps must also provide the customer with an easily accessible and understandable way to withdraw consent." `docs/rc-bar.md` (P7) asks for "a consent posture per Apple 5.1.1(ii)", but the repository does not define one, so this is your call.
 
@@ -34,6 +34,8 @@ A and B need code, and they change section 5. The switch has to be read from `us
 1. Turn on "Prevent Storing of IP Addresses" (project, Security & Privacy). By the SDK source the app already sends `infer_ip: never`, because `send_default_pii` is off. But the Cocoa source contains a stale comment saying the opposite (see section 6), so this setting is the belt to those braces and is Sentry's documented way to stop IP storage.
 2. Confirm the organisation's Data Storage Location says EU. The DSN host is the EU ingest host, and both policies say Frankfurt, Germany, which is what Sentry documents for EU storage.
 3. Confirm the plan. Sentry's retention page lists errors at 30 days (Developer) or 90 days (Team, Business, Enterprise), so "up to 90 days" holds either way. It publishes no period for release-health data, which is why the policies defer to Sentry's policy for session summaries.
+
+**D4. "Linked to user" for the installation ID.** The table answers No throughout (note 1). Apple counts "Personal Data" under privacy laws as linked, and a persistent per-installation ID may be personal data under the GDPR, so this is the weakest answer exactly where Apple's rule bites. I have made no legal finding. Decide it on purpose: if you or counsel read it the other way, answer Yes for Device ID and for the Diagnostics rows that carry it, and say so in the policy.
 
 ## 2. App Store Connect "App Privacy" answers
 
@@ -96,7 +98,7 @@ Placeholders (each appears in both policies; search for `[`):
 
 Confirmations before publishing (facts I could not confirm from source):
 
-- [ ] D1, D2 and D3 above decided; the policy edited if D1 is A or B.
+- [ ] D1 to D4 above decided; the policy edited if D1 is A or B, or if D4 is Yes.
 - [ ] Sentry organisation region is EU (Frankfurt) and the plan's retention is at most 90 days.
 - [ ] "Prevent Storing of IP Addresses" turned on.
 - [ ] Guideline 5.1.1(i) asks the policy to confirm that third parties give the same or equal protection. The draft states Sentry's own documented position (it processes reports to provide its service to you) and links Sentry's privacy policy. Add an explicit "equal protection" sentence only after checking the Sentry terms and data processing agreement on your account.
@@ -104,7 +106,7 @@ Confirmations before publishing (facts I could not confirm from source):
 - [ ] Both policy URLs and the App Privacy answers entered in App Store Connect, then read back.
 - [ ] #420 device payload check done against sections 2 and 3 of the policy (see section 7).
 
-Re-open this note when any of these change: the Sentry pin or any `[sentry]` option; a feedback form, account, advertising, analytics or in-app purchase appears; the Android wave starts; a consent switch ships; the export presets change.
+Re-open this note when any of these change: the Sentry pin or any `[sentry]` option; a feedback form, account, advertising, analytics or in-app purchase appears; networking code appears (Cocoa's network breadcrumbs and failed-request capture are on by default); the Android wave starts; a consent switch ships; the export presets change.
 
 ## 6. What the shipped configuration does (evidence)
 
@@ -115,7 +117,7 @@ Re-open this note when any of these change: the Sentry pin or any `[sentry]` opt
 | The only outbound connection is to Sentry's EU ingest host | `project.godot` `[sentry]` (host classified, not reproduced here). A source search of `application/`, `domain/`, `presentation/` and `content/` finds no network API. The only other GDScript networking code is the Funplay MCP editor plugin under `addons/`, which the store presets exclude in `export_presets.cfg` |
 | Sentry starts unconditionally outside the editor; there is no consent or off switch | `application/sentry_loop.gd`; `application/preferences.gd` holds audio, display, motion and language only; `presentation/run/settings_panel.gd` and both locale files contain no privacy or diagnostics text |
 | Privacy-minimal options: `send_default_pii=false`, `attach_log=false`, `attach_scene_tree=false`, `experimental/attach_screenshot=false`, `enable_logs=false`, `enable_metrics=false`, `godot_logger/include_variables=false`, `godot_logger/logs=0`, `godot_logger/breadcrumbs=15` (errors and warnings only, so `print()` output is excluded), app-hang tracking on | `project.godot` `[sentry]`, pinned by `tests/test_sentry_release.gd` |
-| Error text is filtered before sending: `user://` paths stripped, save-shaped JSON replaced, 240-character cap, repeats of one non-fatal error capped at 8, editor events dropped. It applies to exception values and the event message, not to breadcrumbs | `application/sentry_loop.gd`, `application/sentry_privacy.gd` |
+| Error text is filtered before sending: `user://` paths stripped, save-shaped JSON replaced, 240-character cap, repeats of one non-fatal error capped at 8, editor events dropped. It applies to exception values and the event message, not to breadcrumbs, so the policies say the main error message is filtered and the trail of recent events is not. The `user://` rule matches only paths inside the game's own storage, and the save-shaped rule matches only a message that starts with `{` and contains `"seed"`, `"deck"` or `glassvow_run` | `application/sentry_loop.gd`, `application/sentry_privacy.gd` |
 | Saves and settings are local files that the game never uploads | `application/save_service.gd` writes `user://glassvow_run_v2.json` and `user://glassvow_vigil_v2.json`; `application/preferences.gd` writes `user://settings.cfg` |
 | No permission strings, no tracking-prompt key, no iOS plugin options | `export_presets.cfg` sets `modules/camera=false` and empty usage strings; `addons/glassvow_ios_export/`, `tests/test_ios_plist_privacy.gd`; the export recorded in `docs/reviews/432/` also has file sharing off. The export was not re-run for this draft |
 | No text entry a player can reach, and no feedback form | text controls exist only in the developer console (`presentation/dev/`, excluded from the store presets), the card studio lab (`presentation/lab/`, packed but started only by the `--studio` command-line flag, and `export_presets.cfg` sets no `godot_cmdline`), and Sentry's own feedback form in `addons/sentry/user_feedback/`, which no first-party code references. The run seed is random, not typed |
