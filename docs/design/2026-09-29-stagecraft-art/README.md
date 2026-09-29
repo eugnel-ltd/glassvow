@@ -7,7 +7,8 @@ landing commit then copies each pick to its ledgered path, commits the
 `.import` sidecar, moves the ledger row to Shipped with the prompt that
 rendered it, and takes the stills the issues ask for.
 
-136 candidates were generated on 2026-09-29 in five rounds, and 87 survive.
+140 candidates were generated on 2026-09-29 and just after midnight in six
+rounds, and 90 survive.
 
 - **Rounds 1 to 3 (Grok Build, 69 candidates, 31 survivors).** Round 1 was the
   canonical prompts. Round 2 was an authorised follow-up for the four files
@@ -22,6 +23,11 @@ rendered it, and takes the stills the issues ask for.
   Queue's margins and slate glass and for a clean plate finish. It also redid
   `lamplighter-grieving` after James withdrew his pick, c3, over its pole, so
   round 4 now keeps 41 survivors (see Round 5).
+- **Round 6 (Codex, 4 candidates, 3 survivors).** Round 6 redid
+  `lamplighter-recognising` alone. Its pick, c4, landed in PR #591, and the
+  landing stills showed its pole and lantern changing sides against his other
+  moods on every cut. Round 6 asked for the reference's staff in the same hand
+  and on the same side (see Round 6).
 
 Each family's contact sheet shows every candidate of every round, labelled,
 rejects included, and its tags carry that cross-round ranking. `survivors/`
@@ -33,7 +39,7 @@ of the tree.
 | Family | Issue | Sheet | Generated (Grok + Codex) | Survivors (Grok + Codex) | Ranked first, across both |
 |---|---|---|---|---|---|
 | Keeper moods | #560 | [`contact-keeper.png`](contact-keeper.png) | 16 + 16 | 11 + 15 | tender-c2, offering-c3, weary-c2, beckon-c4 |
-| Hollow Lamplighter moods | #561 | [`contact-lamplighter.png`](contact-lamplighter.png) | 24 + 24 | 13 + 23 | wary-c4, asking-c1, recognising-b, urgent-c1, grieving-c5 |
+| Hollow Lamplighter moods | #561 | [`contact-lamplighter.png`](contact-lamplighter.png) | 24 + 28 | 13 + 26 | wary-c4, asking-c1, recognising-c8, urgent-c1, grieving-c5 |
 | Queue chorus | #562 | [`contact-queue.png`](contact-queue.png) | 9 + 11 | 3 + 4 | queue-chorus-c9 |
 | Unlit Way plates | #563 | [`contact-plates.png`](contact-plates.png) | 20 + 16 | 4 + 14 | unlit-way-c5, unlit-way-end-c8 |
 
@@ -137,7 +143,7 @@ only. Round 4's tables and the contact sheets carry the ranking across both
 tools, and that is the ranking to pick from. Round 5 re-ranks four files across
 every round (`queue-chorus`, `unlit-way`, `unlit-way-end` and
 `lamplighter-grieving`); for those, its tables and the sheets supersede Round
-4's verdicts. James picks.
+4's verdicts. Round 6 does the same for `lamplighter-recognising`. James picks.
 
 ## Round 2 — the authorised follow-up
 
@@ -300,7 +306,8 @@ this round came from Grok.
 | `unlit-way-end` | c1, c4, g, c3, f | Yes. In c1 the ground falls away into mist toward a small, far door at about 62% of the width; Grok's g stands on a flat plain. |
 
 Round 5 re-ranks the `lamplighter-grieving`, `queue-chorus`, `unlit-way` and
-`unlit-way-end` rows above; its cross-round ranking replaces them.
+`unlit-way-end` rows above; its cross-round ranking replaces them. Round 6 does
+the same for the `lamplighter-recognising` row.
 
 ### The gate
 
@@ -720,6 +727,165 @@ down (about 730 px), and c2 and c4 have c3's side crook (about 640 and 690 px).
    the crook back at the staff's end, which c3 had lost. Showing the full length
    would need a smaller lowering, such as the lantern at knee height: a change
    to the brief for James, not made here.
+
+## Round 6: Codex again for `lamplighter-recognising`
+
+James picked `lamplighter-recognising-c4`, ranked #2 behind Grok's b, and it
+landed in PR #591 as `portraits/lamplighter-recognising.png`, with the ledger's
+caveat that it holds the pole in his other hand. The landing stills show what
+that costs. The pole and lantern swap sides against the neighbouring mood on
+every cut that casts recognising: m1-pre (wary to recognising), m3-pre
+(recognising to wary), m4-pre (recognising to urgent), m5-pre (recognising to
+asking) and m5-post (grieving to recognising and back). In m5-post he has
+stepped aside to the far right, and the narration has him lift the lantern
+toward the east, while c4 lifts it toward the frame's centre. Round 6 gives
+James a continuity-safe alternative; c4 stays shipped unless he swaps it.
+
+Round 6 made four Codex renders, the round's cap. Three survive.
+
+- **Generation.** As in round 5: `run-imagegen.sh` resolved to `gpt-6.1-sol` at
+  xhigh reasoning effort through Codex CLI 0.159.0. One image per call, three
+  calls at a time, each in an empty working directory of its own: 4 calls of
+  161–181 s. Codex served every call, none printed `FALLBACK:` or `NOTE:`, and
+  every call returned 682×1024 RGBA first time. Each raw is a LANCZOS scale of
+  the image tool's single 1023×1537 file, identical to the pixel, so nothing
+  was pasted, thresholded, cropped or repainted.
+- **Requests.** Round 4's recognising request (round 1's, transparent),
+  verbatim, then two paragraphs of round 6's own and round 5's one-pass canvas
+  sentence. The exact request is below.
+  - The pole paragraph is built like round 5's for grieving. It names the
+    reference's staff, ring and lantern with their sizes, and states the hand
+    and the side as measured (see The pole side, measured): the staff in the
+    hand on the viewer's right, and the lantern on the viewer's right of his
+    head, about 300 px from it in the reference and 220–330 px in the landed
+    wary, asking and urgent. It says how to raise the lantern toward the face
+    he studies without crossing sides: up and in toward the viewer's left, on
+    its own side, with the crook free to turn in toward his head. It says what
+    went wrong last time. And because the crook already reaches almost to the
+    top edge, it says the lantern comes level with his head by his leaning down
+    to it, never by a shorter staff or a smaller lantern. It ends with round 5's
+    rim sentence.
+  - One THIS VERSION paragraph per take makes a 2×2 of how far he leans and
+    how high the lantern rises beside his head. c5 and c6 lean a moderate
+    amount (the head about 80 px lower and 50 px toward the viewer's left), c7
+    and c8 deeply, from the waist (about 150 px and 90 px). c5 and c7 hang the
+    lantern level with his face, c6 and c8 level with the top of his head.
+- **The gate.** As in round 4, `--no-key --expect 682x1024`. All four pass.
+- **New review aid: the pole side.** Measured outside the tool and not
+  committed. The reference's own lantern, cap to finial, is found in each
+  figure by masked template matching over scale and tilt, and its column of
+  mass is set against the centroid of the head void. dx is the lantern's centre
+  minus the head's, in pixels; positive puts the lantern on the viewer's right
+  of his head. Every match was checked on an overlay. For d and c2, whose
+  lanterns differ from the reference's, the lantern's box was read on the
+  50 px grid instead.
+- **Ranking.** As before. The side the lantern hangs on counts as continuity on
+  every cut to and from his other moods, as it did when round 4 kept b above
+  c4.
+- **What is committed.** The two best round-6 renders,
+  `survivors/lamplighter-recognising-c8.png` and `-c6.png` (1.1 MB), and the
+  rebuilt Lamplighter sheet (0.16 MB more): round 6 adds 1.3 MB, within the
+  25 MB cap. c5 is sheet only and c7 is rejected. The raw renders, the
+  requests and the call logs are kept outside the tree. Codex wrote no image
+  prompt of its own this round.
+- **Contact sheet.** Rebuilt by round 4's method. Built without the new row, it
+  reproduces the committed sheet byte for byte. `lamplighter-recognising` gains
+  a labelled round-6 row, and the tags carry the new ranking.
+
+<details><summary>Exact request: lamplighter-recognising-c5, and how c6 to c8 differ</summary>
+
+```text
+Read the reference image at <repo>/assets/art/meta/hollow-lamplighter.png and produce an edited variation of it.
+
+Serious cartoon-gothic stained-glass game art: chunky dark outer silhouette, simplified exaggerated proportions, one iconic readable pose, 3-5 large jewel-tone glass colour masses with very few thick lead dividers, matte painterly texture, warm amber rim light, soft controlled inner glow. Designed to remain readable at 128px. No text, no labels, no watermark.
+
+CONSTRUCTION, this is the most important instruction: the figure is not painted cloth. His entire robe and body are built from large flat panes of coloured glass separated by thick black lead came lines, exactly like a cathedral stained-glass window rendered as a character. Each fold of the robe is a distinct glass pane with a hard lead border, not a soft painted fold. Only a few big panes, never lacework or many small pieces. The lead lines are heavy, black, and clearly visible across the whole figure. Glass is cold grey-green and deep teal, lit from within by a faint cold glow, with thin worn gold edging on the lead. Readable as a solid black shape if all internal detail were removed.
+
+Output a PNG with a TRANSPARENT background (alpha 0 outside the figure); no magenta, no floor, no shadow, no vignette. Black exists ONLY inside the head void. EDIT THE ATTACHED REFERENCE: keep the exact same canvas size, figure scale, position, bounding box, hem line, pane layout and palette; change ONLY the pose described below. Single complete figure, no cropped limbs.
+
+The Hollow Lamplighter, a gaunt keeper, tall and skull-thin, in a long floor-length robe. Bare head, no raised hood, face a deep black void with no glowing eyes. The one warm colour in the frame is an amber rim light falling on him from outside the frame, from a fire he is not carrying. He holds a tall iron lantern pole; the lantern hanging from it is DARK AND EMPTY, with cold dead glass panes and no flame inside, the single unlit object in the frame, in every pose.
+
+POSE CHANGE: he leans forward toward the viewer's left with his head tilted, as if studying a face; the dark empty lantern is raised high beside his head, as though to light a face it cannot light.
+
+THE LANTERN POLE IS THE SAME OBJECT AS IN THE REFERENCE, IN THE SAME HAND AND ON THE SAME SIDE OF HIM. Keep it exactly: one straight iron staff about 1000 px long from end to end, with raised iron rings along the shaft and a pointed iron foot at its lower end; at its upper end the shepherd's crook, which IS the end of the staff, curving over about 90 px and finishing in a small curl; a round ring hanging from the crook's tip; and from that ring the same tall six-sided lantern, about 95 px wide and 235 px tall with its cap and bottom finial, dark and empty, with cold dead glass panes. In the reference he grips the staff in the hand on the viewer's right (his own left hand) at upper-chest height, and the lantern hangs on the viewer's right of his head: its centre is about 300 px to the right of the centre of his head, about 86 percent of the way across the canvas from the left edge. His other moods drawn from this reference keep it there: wary, asking and urgent all hold the staff in the hand on the viewer's right, with the lantern 220 to 330 px to the viewer's right of his head. So here too the staff stays in the hand on the viewer's right, and the lantern stays on the viewer's right of his head and body. Raising the lantern toward the face he studies means lifting the staff in that same hand, up and in toward the viewer's left, so that the lantern comes up close beside his head, on the viewer's right of it; the crook may turn in toward his head so that the lantern hangs near his face. The lantern never crosses in front of his head or past it to the viewer's left, and the staff never passes to the hand on the viewer's left. What went wrong last time, and must not happen again: the staff moved to his other hand, the one on the viewer's left, and the lantern was raised on the viewer's left of his head, so the lantern jumped to the other side of him on every cut to and from his other moods. In the reference the crook already reaches almost to the top edge of the canvas, so the lantern cannot hang much higher on the canvas: it comes level with his head because he leans forward and down toward it. If the top edge leaves too little room, he leans further; the crook stays inside the top edge, the staff is never cut or shortened, and the lantern is never made smaller to fit. The palette and the amber rim on BOTH edges of the figure stay exactly as in the reference.
+
+THIS VERSION: he leans forward a moderate amount toward the viewer's left, his head coming down about 80 px and about 50 px toward the viewer's left, and the lantern hangs level with his face, just to the viewer's right of it.
+
+Canvas: exactly 682x1024 pixels. Generate exactly one image; do not crop, stretch, pad, move or repaint anything afterwards, and do not paste, threshold or otherwise replace its alpha. If the image tool returns another size, only scale the whole image uniformly to 682x1024.
+
+Save the result as a PNG file at <scratch>/recog-r6/raw/lamplighter-recognising-c5.png
+```
+
+c6 to c8 differ only in the THIS VERSION paragraph (and their own file name):
+
+- c6: "THIS VERSION: he leans forward a moderate amount toward the viewer's left, his head coming down about 80 px and about 50 px toward the viewer's left, and the lantern is lifted higher, level with the top of his head, just to the viewer's right of it."
+- c7: "THIS VERSION: he stoops deeply forward toward the viewer's left, bending from the waist, his head coming down about 150 px and about 90 px toward the viewer's left, and the lantern hangs level with his face, just to the viewer's right of it."
+- c8: "THIS VERSION: he stoops deeply forward toward the viewer's left, bending from the waist, his head coming down about 150 px and about 90 px toward the viewer's left, and the lantern is lifted higher, level with the top of his head, just to the viewer's right of it."
+
+</details>
+
+### The pole side, measured
+
+| Figure | Lantern centre (share of width) | dx (px) | Side |
+|---|---|---|---|
+| `hollow-lamplighter.png`, the reference | 0.86 | +306 | right |
+| `lamplighter-wary-c1`, landed | 0.77 | +218 | right |
+| `lamplighter-asking-c1`, landed | 0.81 | +277 | right |
+| `lamplighter-urgent-c1`, landed | 0.88 | +334 | right |
+| `lamplighter-grieving-c5`, round 5's #1 | 0.87 | +285 | right |
+| recognising `b` (Grok) | 0.65 | +219 | right |
+| recognising `a` and `d` (Grok) | 0.19, 0.18 | −84, −136 | left |
+| recognising `c1` to `c3` (round 4) | 0.15, 0.20, 0.16 | −124, −148, −129 | left |
+| recognising `c4` (round 4), landed | 0.19 | −124 | left |
+| recognising `c5` to `c8` (round 6) | 0.63, 0.59, 0.83, 0.53 | +197, +186, +118, +225 | right |
+
+Grok's c, which did not apply the pose and is rejected, keeps the shipped
+lantern (+307).
+
+### Round 6 gate and verdicts
+
+| File | Size | Magenta | Frame dark (bottom edge) | Corners | ≥240 | Lantern dx | Gate | Verdict | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `lamplighter-recognising-c5.png` | 682×1024 | 4 | 94 (3) | 0 | 94.1% | +197 | pass | #4, sheet only | The staff stays in the hand on the viewer's right and the lantern on its usual side, 197 px right of his head, but at his jaw (its centre 55 px below the head's), so it is held beside his head rather than raised. The head tilts toward the viewer's left and drops 71 px; the body barely leans, and the free hand stays out palm up as in the shipped pose, which also reads as asking. The whole staff (about 1,010 px), crook, ring and full-size lantern are the reference's; the crook's knob touches the top edge. Palette and both rims as the reference (S 61, V 25; warm 23.0%, L:R 0.86). |
+| [`lamplighter-recognising-c6.png`](survivors/lamplighter-recognising-c6.png) | 682×1024 | 0 | 7 (0) | 0 | 94.3% | +186 | pass | **#3** | As c5 with the head lower (92 px down) and the lantern closer, beside his face: 186 px right of his head, its centre 36 px below the head's. The staff (about 1,010 px), crook and ring are the reference's; the lantern is about 0.9 of its size. The palette and rims nearest the reference of the round (S 60, V 23; warm 20.4%, L:R 0.87). |
+| `lamplighter-recognising-c7.png` | 682×1024 | 0 | 10 (0) | 0 | 93.2% | +118 | pass | reject | His head drops 122 px but moves 164 px toward the viewer's right and bows toward the lantern, so the head void faces away from the partner the stage seats on his left, as round 1's urgent-b and grieving-c did. The staff, crook, ring and full-size lantern are the reference's, in the hand on the viewer's right (the lantern 118 px right of his head). |
+| [`lamplighter-recognising-c8.png`](survivors/lamplighter-recognising-c8.png) | 682×1024 | 0 | 70 (0) | 0 | 94.0% | +225 | pass | **#1** | The deepest lean of all rounds: his head bows 186 px lower and 144 px toward the viewer's left, as if peering close at a face, while the hand on the viewer's right holds the staff upright and the dark lantern hangs high on its usual side, its centre 66 px above his lowered head and 225 px to the right of it (the landed wary, asking and urgent: 218-334 px). The staff (about 980 px), crook and ring are the reference's; the lantern is about 0.9 of its size. Palette and both rims as the reference (S 63, V 25; warm 20.3%, L:R 0.86). The free hand is out low, palm up. |
+
+### Cross-round ranking after round 6
+
+| File | Ranking | What round 6 changed |
+|---|---|---|
+| `lamplighter-recognising` | c8, b, c6, c5, c4, c3, c1, d, c2, a | Round 6 leads with c8, the deepest lean of all rounds, with the dark lantern held high on its usual side. b keeps #2: its lantern rises higher beside the head than in c6 and c5, which hold it at the jaw but match the landed moods' Codex glass. c4, the shipped file, drops to #5 behind every take that keeps the side, as round 4 already ranked b above it. Measured for the first time, Grok's a and d move the lantern too. |
+
+### Round 6 findings
+
+1. **Naming the hand and the side held them.** All four renders keep the staff
+   in the hand on the viewer's right and hang the lantern on the viewer's right
+   of his head (dx +118 to +225, against the reference's +306 and the landed
+   moods' +218 to +334). Before round 6, one recognising take in seven that
+   drew the pose kept that side, Grok's b. The brief's face on the viewer's
+   left pulls the lantern across to it: Grok's a and d moved it, as did all four
+   of round 4's. On m5-post's far-right seat the round-6 survivors lift the
+   lantern on his outer side, away from the frame's centre.
+2. **The lantern cannot rise on this canvas; the head comes down to it.** The
+   crook already reaches the top edge, and the lantern's centre stayed at
+   y 207–227 in all four, against the reference's 238. Its height beside his
+   head came from the lean alone: 55 px below the head's centre in c5, 36 in
+   c6 and 18 in c7, and 66 above it in c8, whose head dropped 186 px. The
+   height sentence barely moved it: the takes asked for the top of his head
+   hang the lantern within 20 px of those asked for his face (y 214 against
+   213 with the moderate lean, 207 against 227 with the deep one).
+3. **One deep lean went the wrong way.** c7 dropped its head 122 px, but toward
+   the lantern, to the viewer's right, and faces away from its partner. c8
+   leaned the way asked, and further (144 px toward the viewer's left).
+4. **The free hand stays in the asking pose.** All four keep the reference's
+   open palm, as round 4's did; the brief does not move it. So on m2-pre and
+   m5-pre, where recognising cuts to asking, the change is the head and the
+   lantern, not the hand.
+5. **The lantern shrinks a little in two.** c6 and c8 match the reference's
+   lantern at about 0.9 of its size (about 93 by 214 px), c5 and c7 at 0.97.
+6. **No rate limit.** The four calls ran in 5.5 minutes, three at a time, and
+   none fell back.
 
 ## Keeper — #560
 
