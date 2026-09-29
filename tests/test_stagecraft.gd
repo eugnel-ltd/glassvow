@@ -5,9 +5,19 @@ extends RefCounted
 ## and busts stay inside the frame at every shipping shape; the typed reveal
 ## paces CJK slower than Latin and breathes at stops; effects never fire where
 ## a line is not played live; and the opening keeps one Keeper body on screen.
+## The flame's lines (flame lock §10): the Keeper names what the lantern burns
+## as it is lit; the road's whispers play once each, after the won fight that
+## read the change; and the codex shows the colours seen steady.
 
 const SHAPES: Array[StringName] = [
 	&"pad-landscape", &"desktop-landscape", &"phone-landscape",
+]
+const RUN_PATH: String = "user://test_stagecraft_flame_run_v2.json"
+const VIGIL_PATH: String = "user://test_stagecraft_flame_vigil_v2.json"
+const MapCompose: GDScript = preload("res://tests/test_map_compose.gd")
+## Starters plus these read Steady blue-white with a violet fringe (§4).
+const STEADY_FRINGED: Array[String] = [
+	"uppercut", "quakeblow", "warCry", "oblivionStrike", "limitBreak",
 ]
 
 
@@ -30,6 +40,12 @@ static func run(fails: Array[String]) -> void:
 	_opening_keeps_one_body(fails)
 	_pool_rows(fails)
 	_reel_covers_the_vocabulary(fails)
+	_opening_names_the_lantern(fails)
+	_flame_whispers(fails)
+	_flame_lines_play_once(fails)
+	_codex_in_the_help(fails)
+	SaveService.clear(RUN_PATH)
+	SaveService.clear_vigil(VIGIL_PATH)
 
 
 static func _line_scene(line: Dictionary, beat_extra: Dictionary = {}) -> Variant:
@@ -403,6 +419,182 @@ static func _reel_covers_the_vocabulary(fails: Array[String]) -> void:
 	for fx: StringName in [&"kindle", &"crack", &"shatter", &"slash", &"impact",
 			&"quake", &"hop", &"recoil", &"rays", &"flash"]:
 		_check(fails, fx_seen.has(fx), "the reel never shows fx %s" % fx)
+
+
+## The lantern is lit on 「帶上這個」: the Keeper's next line, in the same
+## two-shot, is the only rule the player is ever given.
+static func _opening_names_the_lantern(fails: Array[String]) -> void:
+	var opening: SceneScript = _script("opening")
+	if opening == null:
+		_check(fails, false, "opening did not load")
+		return
+	var lit: int = -1
+	for i: int in range(opening.line_count()):
+		var fx_list: Array = opening.lines[i].get("fx", [])
+		if fx_list.has("kindle@keeper"):
+			lit = i
+	_check(fails, lit >= 0 and lit + 1 < opening.line_count(),
+		"the opening never kindles the lantern")
+	if lit < 0 or lit + 1 >= opening.line_count():
+		return
+	var line: Dictionary = opening.lines[lit + 1]
+	var line_beat: int = line["beat"]
+	var lit_beat: int = opening.lines[lit]["beat"]
+	_check(fails, str(line.get("key", "")) == "story.opening.b2.lantern"
+			and str(line.get("speaker", "")) == "keeper" and line_beat == lit_beat,
+		"the Keeper does not name what the lantern burns as it is lit")
+	var player: ScenePlayer = _player(opening, lit + 1, true)
+	_check(fails, player._copy.line_label().text == Locale.active.t("story.opening.b2.lantern")
+			and player._director.stage.has_actor("keeper"),
+		"the lantern's line is not the Keeper's, in the two-shot")
+	player.free()
+
+
+## The road's lines are heard, not seen: whispered, nameless, no body.
+static func _flame_whispers(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_full(false)
+	for slot: String in FlameLines.SPOKEN:
+		var row: Dictionary = LineTable.row_by_id(content.line_table, slot)
+		_check(fails, str(row.get("slot", "")) == slot, "no line answers %s" % slot)
+		var whisper: ScenePlayer = ScenePlayer.new(SceneScript.pool_beat("", slot), 0,
+			StageShape.IDENTITY, null, row)
+		whisper.instant = true
+		whisper._ready()
+		_check(fails, whisper._copy.style == StageDirection.STYLE_WHISPER
+				and whisper._speaker.text.is_empty()
+				and whisper._director.stage.standing().is_empty(),
+			"%s is not a whisper on an empty stage" % slot)
+		_check(fails, whisper._copy.line_label().text
+				== LineTable.text(row, Locale.active.code == Locale.CODE_ZH_HANT),
+			"%s does not speak its row" % slot)
+		whisper.free()
+
+
+## After the won fight that read the first Steady (with its fringe), the two
+## whispers play in turn, each once, then the reward; a later return to Steady
+## replays nothing. A fall and a run-ending win keep the whispers owed, though
+## the codex keeps the colour.
+static func _flame_lines_play_once(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_full()
+	var main: Main = _flame_main(content, "monster", 0)
+	main.game.flame_events(true)
+	main._on_combat_over("win")
+	_check(fails, _flame_playing(main, "line:flame.steady")
+			and main.game.run.pending_reward != null,
+		"the first Steady did not whisper after its fight, before the reward")
+	var loaded: RunState = SaveService.load_run(content, RUN_PATH)
+	_check(fails, loaded != null and typeof(loaded.pending_scene) == TYPE_DICTIONARY
+			and str(loaded.pending_scene.get("id", "")) == "line:flame.steady",
+		"the owed whisper is not a save the load contract accepts")
+	main._on_scene_finished()
+	_check(fails, _flame_playing(main, "line:flame.fringe"),
+		"the fringe's whisper did not follow the first Steady's")
+	main._on_scene_finished()
+	_check(fails, main.game.run.pending_scene == null and main._reward_screen != null
+			and main._vigil.scenes_seen.has("line:flame.steady")
+			and main._vigil.scenes_seen.has("line:flame.fringe"),
+		"the whispers did not hand on to the reward, heard")
+	var run_state: RunState = main.game.run
+	run_state.player.deck.append(CardInst.new(run_state.next_uid(), &"empower", false))
+	main.game.flame_events(true)
+	run_state.player.deck.pop_back()
+	main.game.flame_events(true)
+	main._on_combat_over("win")
+	_check(fails, main.game.run.pending_scene == null and main._reward_screen != null
+			and run_state.pool_draws.count(FlameLines.SLOT_STEADY) == 1,
+		"a second Steady in the run whispered again")
+	_flame_dispose(main)
+	var fallen: Main = _flame_main(content, "monster", 0)
+	fallen.game.flame_events(true)
+	fallen._on_combat_over("lose")
+	_check(fails, not fallen.game.run.pool_beats.has(FlameLines.SLOT_STEADY)
+			and fallen.game.run.pool_beats.has("codex.lantern.shatter")
+			and not _flame_playing(fallen, "line:flame.steady"),
+		"a fall spent the whisper, or lost the colour it saw")
+	_flame_dispose(fallen)
+	var ended: Main = _flame_main(content, "boss", 2)
+	ended.game.flame_events(true)
+	ended._on_combat_over("win")
+	_check(fails, not ended.game.run.pool_beats.has(FlameLines.SLOT_STEADY)
+			and ended.game.run.pool_beats.has("codex.lantern.shatter")
+			and not _flame_playing(ended, "line:flame.steady"),
+		"a run-ending win whispered to a walker who walks no further")
+	_flame_dispose(ended)
+
+
+## The Lantern's entry gains the colours seen steady, under its rules, and
+## nothing before one is seen.
+static func _codex_in_the_help(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_full(false)
+	var bare: HelpScreen = HelpScreen.new()
+	_check(fails, bare.find_child("Coda", true, false) == null,
+		"the codex showed a colour before one was seen")
+	bare.free()
+	var rows: Array[Dictionary] = [
+		LineTable.row_by_id(content.line_table, "codex.lantern.shatter"),
+		LineTable.row_by_id(content.line_table, "codex.lantern.edge"),
+	]
+	var zh: bool = Locale.active.code == Locale.CODE_ZH_HANT
+	var help: HelpScreen = HelpScreen.new(StageShape.IDENTITY, null, rows)
+	var coda: RichTextLabel = help.find_child("Coda", true, false) as RichTextLabel
+	_check(fails, coda != null and coda.text
+			== LineTable.text(rows[0], zh) + "\n" + LineTable.text(rows[1], zh),
+		"the codex did not show the colours seen steady, one to a line")
+	if coda != null:
+		var breath: Node = coda.get_parent()
+		var body: RichTextLabel = help._column.get_child(breath.get_index() - 1) as RichTextLabel
+		_check(fails, body != null and body.text == Locale.active.t("ui.help.lanternBody")
+				.replace("<b>", "[b]").replace("</b>", "[/b]"),
+			"the colours are not under the Lantern's rules")
+	help.free()
+
+
+static func _flame_main(content: ContentDB, kind: String, act: int) -> Main:
+	SaveService.clear(RUN_PATH)
+	SaveService.clear_vigil(VIGIL_PATH)
+	var main: Main = Main.new()
+	main._map_layout_compile = MapCompose.fake_layout_compile()
+	main.content = content
+	main._run_save_path = RUN_PATH
+	main._vigil_save_path = VIGIL_PATH
+	main._vigil = VigilState.blank()
+	main._vigil.scenes_seen.append("opening")
+	main._transitions = TransitionLayer.new()
+	main._transitions.instant = true
+	main.add_child(main._transitions)
+	main._music = MusicBus.new()
+	main.add_child(main._music)
+	main._sfx_bus = SfxBus.new()
+	main.add_child(main._sfx_bus)
+	var run_state: RunState = RunState.new_run(content, 57701, "run-577-flame", {"aspect": 0})
+	run_state.act = act
+	for id: String in STEADY_FRINGED:
+		run_state.player.deck.append(CardInst.new(run_state.next_uid(), StringName(id), false))
+	var foe: String = "sovereign" if kind == "boss" else "sporeling"
+	var map: WorldMap = WorldMap.new()
+	map.nodes.append(MapNode.make(kind, [foe], 0))
+	map.at = 0
+	run_state.node_id = map.nodes[0].id
+	run_state.map = map.to_dict()
+	run_state.pending_combat = kind
+	run_state.pending_enemy_ids = [foe]
+	main.game = GlassvowGame.new(content, run_state)
+	main._map = map
+	main.game.cb = CombatState.new()
+	main.game.cb.kind = &"boss" if kind == "boss" else &"normal"
+	return main
+
+
+static func _flame_playing(main: Main, scene_id: String) -> bool:
+	var player: ScenePlayer = main._route_screen as ScenePlayer
+	return player != null and player._script.id == scene_id
+
+
+static func _flame_dispose(main: Main) -> void:
+	main._clear_route()
+	for child: Node in main.get_children():
+		child.free()
+	main.free()
 
 
 static func _player(script: SceneScript, cursor: int, still: bool) -> ScenePlayer:

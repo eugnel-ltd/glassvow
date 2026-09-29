@@ -113,7 +113,7 @@ static func _flat_cursor(fails: Array[String]) -> void:
 	if opening == null:
 		_check(fails, false, "opening missing for cursor check")
 		return
-	_check(fails, opening.line_count() == 8, "opening is not 8 flat lines")
+	_check(fails, opening.line_count() == 9, "opening is not 9 flat lines")
 	_check(fails, opening.beats.size() == 4, "opening is not 4 beats")
 	var m4_pre: SceneScript = _script(scenes, "lamplighter-m4-pre")
 	_check(fails, m4_pre != null and m4_pre.line_count() == 4
@@ -124,7 +124,7 @@ static func _flat_cursor(fails: Array[String]) -> void:
 		"lamplighter-m5-post is not 3 flat lines")
 	_check(fails, str(m4_pre.beat_at(0).get("art", "")) == "",
 		"lamplighter meetings grew an art plate")
-	var expected: Array[int] = [0, 0, 1, 1, 1, 2, 2, 3]
+	var expected: Array[int] = [0, 0, 1, 1, 1, 1, 2, 2, 3]
 	for i: int in range(expected.size()):
 		var beat: Dictionary = opening.beat_at(i)
 		var beat_i: int = opening.lines[i]["beat"]
@@ -135,14 +135,14 @@ static func _flat_cursor(fails: Array[String]) -> void:
 	_check(fails, str(opening.beat_at(0).get("art", "")).ends_with("opening-hearth.png"),
 		"opening beat 0 lost its plate")
 	_check(fails, str(opening.beat_at(2).get("art", "")) == "",
-		"opening beat 1 (lines 2–4) should keep the previous plate")
-	_check(fails, str(opening.beat_at(7).get("motion", "")) == "linger",
+		"opening beat 1 (lines 2–5) should keep the previous plate")
+	_check(fails, str(opening.beat_at(8).get("motion", "")) == "linger",
 		"opening last line is not the linger beat")
 	_check(fails, is_equal_approx(float(str(opening.beat_at(2).get("skip_dwell", 0.0))), 1.0),
 		"opening beat ② lost its skip dwell")
 	_check(fails, is_equal_approx(float(str(opening.beat_at(0).get("skip_dwell", -1.0))), 0.0),
 		"opening beat ① grew a skip dwell")
-	_check(fails, opening.beat_at(-1).is_empty() and opening.beat_at(8).is_empty(),
+	_check(fails, opening.beat_at(-1).is_empty() and opening.beat_at(9).is_empty(),
 		"out-of-range beat_at did not return empty")
 
 

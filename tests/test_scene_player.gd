@@ -54,7 +54,7 @@ static func _holds_without_confirm(fails: Array[String], opening: SceneScript) -
 static func _resume(fails: Array[String], opening: SceneScript) -> void:
 	var asked: Array[int] = [0]
 	var done: Array[int] = [0]
-	var player: ScenePlayer = _live(opening, 5, asked, done)
+	var player: ScenePlayer = _live(opening, 6, asked, done)
 	_check(fails, _text(player, "Line") == Locale.active.t("story.opening.b3.l1"),
 		"resumed cursor is not on the owed line")
 	_check(fails, _text(player, "Speaker") == "", "resumed narration grew a speaker")

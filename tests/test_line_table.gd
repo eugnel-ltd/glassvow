@@ -1,7 +1,30 @@
 extends RefCounted
 ## #270: line-table selection, Vigil epitaphs, and the condition-column gate.
+## Flame lock §10: the lantern's lines are owed by tier transitions, drawn
+## through the once gates and heard once per Vigil; a fall in Soot writes the
+## flame's epitaph once; the codex keeps each colour seen steady.
 
 const TEST_VIGIL_PATH: String = "user://glassvow_test_line_table_vigil_v2.json"
+## The six lines exactly as the lock wrote them, zh held to the house 着.
+const FLAME_LOCKED: Dictionary = {
+	"flame.steady": ["它認得你了。", "It knows you now."],
+	"flame.true": ["一種玻璃，一種火。", "One glass. One fire."],
+	"flame.soot": ["塵火照不亮路。", "A dusty flame lights no road."],
+	"flame.sootDeath": ["你的火從未安定下來。", "Your flame never settled."],
+	"flame.fringe": ["火尖上有另一種顏色。", "There is another colour at the tip."],
+}
+const FLAME_OPENING_KEY: String = "story.opening.b2.lantern"
+const FLAME_OPENING: Array[String] = ["它燒的是你帶着的東西。", "It burns what you carry."]
+## Never a mechanic word: the lock's list as English words (and their plain
+## inflections), and the mechanic terms in zh-Hant (the lock's forms and the
+## catalogue's own 燃燼 and 黯淡). 塵 and 火 stay legal: the lock's text uses them.
+const FLAME_BANNED_EN: String = \
+	"(?i)\\b(ember|kindle|shatter|cracked|dimmed|tier|purity|steady|true|soot)(s|es|d|ed|ing)?\\b"
+const FLAME_BANNED_ZH: Array[String] = ["餘燼", "點燃", "燃燼", "碎裂", "裂痕", "暗淡", "黯淡"]
+## No numbers in the codex.
+const CODEX_NUMBERS: String = "(?i)[0-9一二三四五六七八九十兩百千]|\\b(one|two|three|four|five|six|seven|eight|nine|ten)\\b"
+const SHATTER_CODEX: String = "codex.lantern.shatter"
+const LANTERN_CODEX: String = "codex.lantern.lantern"
 
 
 static func _check(fails: Array[String], ok: bool, what: String) -> void:
@@ -32,6 +55,11 @@ static func run(fails: Array[String]) -> void:
 	_vigil_surface(fails)
 	_progress_persists(fails)
 	_batch3_pools(fails)
+	_flame_transitions(fails)
+	_flame_heard_once(fails)
+	_flame_soot_fall(fails)
+	_flame_codex(fails)
+	_flame_copy(fails)
 
 
 static func _rows() -> Array:
@@ -478,3 +506,264 @@ static func _batch3_pools(fails: Array[String]) -> void:
 	_check(fails, LineTable.conditions_match(h59.get("conditions", {}), paid)
 		and not LineTable.conditions_match(h59.get("conditions", {}), unpaid),
 		"h59 did not fire on hollowLamplighter>=1")
+
+
+## A Duskblade run: the starter deck (one seed of each way), plus `add`, less
+## `drop`. The decks are the lock's §4 worked examples.
+static func _dusk(content: ContentDB, id: String, add: Array[String] = [],
+		drop: Array[String] = []) -> RunState:
+	var state: RunState = RunState.new_run(content, id.hash() & 0x7FFFFFFF, id, {"aspect": 0})
+	_deck(state, add, drop)
+	return state
+
+
+static func _deck(state: RunState, add: Array[String], drop: Array[String] = []) -> void:
+	for id: String in add:
+		state.player.deck.append(CardInst.new(state.next_uid(), StringName(id), false))
+	for id: String in drop:
+		for card: CardInst in state.player.deck:
+			if String(card.id) == id:
+				state.player.deck.erase(card)
+				break
+
+
+static func _draw_all(state: RunState, vigil: VigilState, content: ContentDB,
+		slots: Array[String]) -> void:
+	for slot: String in slots:
+		PoolBeats.draw(state, vigil, content, slot, slot)
+
+
+static func _ids(rows: Array[Dictionary]) -> Array[String]:
+	var out: Array[String] = []
+	for row: Dictionary in rows:
+		out.append(str(row.get("id", "")))
+	return out
+
+
+## Each line is owed by a change of tier between two consecutive readings; the
+## codex by any reading of a steady colour. A fringe that appears on a flame
+## already steady is no transition.
+static func _flame_transitions(fails: Array[String]) -> void:
+	var start: Dictionary = FlameLines.START
+	var steady: Dictionary = {"tier": Flame.TIER_STEADY, "dominant": "shatter", "fringe": ""}
+	var fringed: Dictionary = {"tier": Flame.TIER_STEADY, "dominant": "shatter", "fringe": "edge"}
+	var dimmed: Dictionary = {"tier": Flame.TIER_KINDLING, "dominant": "shatter", "fringe": "edge"}
+	var pure: Dictionary = {"tier": Flame.TIER_TRUE, "dominant": "lantern", "fringe": ""}
+	var soot: Dictionary = {"tier": Flame.TIER_SOOT, "dominant": "shatter", "fringe": "lantern"}
+	var cases: Array = [
+		["the first steady", start, steady, [FlameLines.SLOT_STEADY, SHATTER_CODEX]],
+		["steady with a fringe", start, fringed,
+			[FlameLines.SLOT_STEADY, FlameLines.SLOT_FRINGE, SHATTER_CODEX]],
+		["a steady flame held", steady, steady, [SHATTER_CODEX]],
+		["a fringe on a steady flame", steady, fringed, [SHATTER_CODEX]],
+		["steady dimmed to kindling", fringed, dimmed, []],
+		["kindling back to steady", dimmed, fringed,
+			[FlameLines.SLOT_STEADY, FlameLines.SLOT_FRINGE, SHATTER_CODEX]],
+		["the first true", start, pure, [FlameLines.SLOT_TRUE, LANTERN_CODEX]],
+		["true settling to steady", pure, steady, [FlameLines.SLOT_STEADY, SHATTER_CODEX]],
+		["the first soot", start, soot, [FlameLines.SLOT_SOOT]],
+		["soot held", soot, soot, []],
+		["the starter deck", start, start, []],
+	]
+	for case_v: Variant in cases:
+		var entry: Array = case_v
+		var before: Dictionary = entry[1]
+		var after: Dictionary = entry[2]
+		var want: Array = entry[3]
+		var got: Array[String] = FlameLines.owed(before, after)
+		_check(fails, got == want,
+			"flame: %s owed %s, not %s" % [entry[0], str(got), str(want)])
+	_check(fails, FlameLines.death_slot(soot) == FlameLines.SLOT_SOOT_DEATH
+			and FlameLines.death_slot(steady).is_empty()
+			and FlameLines.death_slot(start).is_empty(),
+		"flame: only a fall in Soot owes the flame's epitaph")
+
+
+## The domain observes every reading: a transition owes its line once, a second
+## transition into the same tier draws nothing new, and the once gates carry the
+## line across the Vigil. A resumed run reads from the starter deck's flame.
+static func _flame_heard_once(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_full(false)
+	var vigil: VigilState = VigilState.blank()
+	var state: RunState = _dusk(content, "flame-heard-once")
+	var game: GlassvowGame = GlassvowGame.new(content, state)
+	game.flame_events(true)
+	_check(fails, game.take_flame_lines().is_empty(), "flame: the starter deck owed a line")
+	_deck(state, ["uppercut", "quakeblow"])
+	game.flame_events(true)
+	var first: Array[String] = game.take_flame_lines()
+	_check(fails, first == [FlameLines.SLOT_STEADY, SHATTER_CODEX],
+		"flame: the first steady reading owed %s" % str(first))
+	_check(fails, game.take_flame_lines().is_empty(), "flame: taking the owed lines did not drain them")
+	_draw_all(state, vigil, content, first)
+	game.flame_events(true)
+	_check(fails, not game.take_flame_lines().has(FlameLines.SLOT_STEADY),
+		"flame: a steady flame read again owed its line again")
+	_deck(state, ["warCry"])
+	game.flame_events(true)
+	_deck(state, ["oblivionStrike", "limitBreak"])
+	game.flame_events(true)
+	var again: Array[String] = game.take_flame_lines()
+	_check(fails, again == [FlameLines.SLOT_STEADY, FlameLines.SLOT_FRINGE, SHATTER_CODEX],
+		"flame: steady regained with a fringe owed %s" % str(again))
+	var draws: int = state.pool_draws.size()
+	_draw_all(state, vigil, content, again)
+	_check(fails, state.pool_draws.count(FlameLines.SLOT_STEADY) == 1
+			and state.pool_draws.has(FlameLines.SLOT_FRINGE)
+			and state.pool_draws.size() == draws + 1,
+		"flame: a second transition drew the steady line twice (draws %s)" % str(state.pool_draws))
+	_check(fails, vigil.commit_run(state, "win", content)
+			and vigil.line_once.has(FlameLines.SLOT_STEADY)
+			and vigil.line_once.has(FlameLines.SLOT_FRINGE)
+			and vigil.line_once.has(SHATTER_CODEX),
+		"flame: the run's lines did not fold into the Vigil's once gate")
+	var next: RunState = _dusk(content, "flame-heard-next", ["uppercut", "quakeblow"])
+	var resumed: GlassvowGame = GlassvowGame.new(content, next)
+	resumed.flame_events(true)
+	var owed: Array[String] = resumed.take_flame_lines()
+	_check(fails, owed.has(FlameLines.SLOT_STEADY),
+		"flame: a new game did not read from the starter deck's flame")
+	_draw_all(next, vigil, content, owed)
+	_check(fails, next.pool_draws.is_empty() and next.pool_beats.is_empty(),
+		"flame: a line heard in an earlier run was drawn again")
+	var soot_run: RunState = _dusk(content, "flame-soot", ["uppercut", "preparation", "warCry"])
+	var soot_game: GlassvowGame = GlassvowGame.new(content, soot_run)
+	soot_game.flame_events(true)
+	_check(fails, soot_game.take_flame_lines() == [FlameLines.SLOT_SOOT],
+		"flame: two of each way did not owe the first Soot")
+	var pure_run: RunState = _dusk(content, "flame-true",
+		["preparation", "surge", "devour", "offering"], ["chisel", "eclipseSlash"])
+	var pure_game: GlassvowGame = GlassvowGame.new(content, pure_run)
+	pure_game.flame_events(true)
+	_check(fails, pure_game.take_flame_lines() == [FlameLines.SLOT_TRUE, LANTERN_CODEX],
+		"flame: one glass did not owe the first True")
+
+
+## The Vigil's whisper for a fall in Soot is that fall's epitaph, once; a later
+## fall in Soot, a fall elsewhere, and a win keep to the loss pool's law.
+static func _flame_soot_fall(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_full(false)
+	var soot: Array[String] = ["uppercut", "preparation", "warCry"]
+	var vigil: VigilState = VigilState.blank()
+	_check(fails, vigil.commit_run(_dusk(content, "soot-fall-1", soot), "death", content)
+			and vigil.defeat_epitaphs == [FlameLines.SLOT_SOOT_DEATH]
+			and vigil.line_once.has(FlameLines.SLOT_SOOT_DEATH),
+		"flame: a fall in Soot did not write the flame's epitaph (%s)" % str(vigil.defeat_epitaphs))
+	_check(fails, vigil.commit_run(_dusk(content, "soot-fall-2", soot), "death", content)
+			and vigil.defeat_epitaphs.size() == 2
+			and vigil.defeat_epitaphs[1].begins_with("pool.loss.e"),
+		"flame: a second fall in Soot heard the flame's epitaph again")
+	var loaded: VigilState = VigilState.from_dict(vigil.to_dict())
+	_check(fails, loaded != null and loaded.line_once.has(FlameLines.SLOT_SOOT_DEATH),
+		"flame: the epitaph's once gate did not survive the Vigil save")
+	var steady: VigilState = VigilState.blank()
+	_check(fails, steady.commit_run(_dusk(content, "steady-fall", ["uppercut", "quakeblow"]),
+			"death", content)
+			and steady.defeat_epitaphs[0].begins_with("pool.loss.e"),
+		"flame: a fall outside Soot heard the flame's epitaph")
+	var won: VigilState = VigilState.blank()
+	_check(fails, won.commit_run(_dusk(content, "soot-win", soot), "win", content)
+			and won.defeat_epitaphs.is_empty()
+			and not won.line_once.has(FlameLines.SLOT_SOOT_DEATH),
+		"flame: a win in Soot wrote the fall's epitaph")
+	var screen: VigilScreen = VigilScreen.new(vigil, content)
+	var row: Dictionary = LineTable.row_by_id(content.line_table, FlameLines.SLOT_SOOT_DEATH)
+	var body: String = LineTable.text(row, Locale.active.code == Locale.CODE_ZH_HANT)
+	var shown: bool = false
+	for label: Node in screen._epitaph_list.find_children("*", "Label", true, false):
+		shown = shown or (label as Label).text.ends_with(body)
+	_check(fails, shown, "flame: the Vigil did not show the fall's whisper")
+	screen.free()
+
+
+## The codex keeps each colour seen steady: in the run as drawn, across the
+## Vigil once folded, in way order, and one sentence for every way.
+static func _flame_codex(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_full(false)
+	var vigil: VigilState = VigilState.blank()
+	var state: RunState = _dusk(content, "codex-steady", ["uppercut", "quakeblow"])
+	_check(fails, FlameLines.codex(content, vigil, state).is_empty(),
+		"codex: a colour was revealed before it was seen")
+	var game: GlassvowGame = GlassvowGame.new(content, state)
+	game.flame_events(true)
+	var owed: Array[String] = game.take_flame_lines()
+	_draw_all(state, vigil, content, owed.filter(func(slot: String) -> bool:
+		return FlameLines.is_codex(slot)))
+	_check(fails, _ids(FlameLines.codex(content, vigil, state)) == [SHATTER_CODEX],
+		"codex: the steady colour was not revealed in its run")
+	_check(fails, FlameLines.codex(content, vigil, null).is_empty(),
+		"codex: the Vigil held a colour before its run was folded")
+	_check(fails, vigil.commit_run(state, "death", content)
+			and _ids(FlameLines.codex(content, vigil, null)) == [SHATTER_CODEX],
+		"codex: a colour seen steady did not stay revealed across the Vigil")
+	var pure: RunState = _dusk(content, "codex-true",
+		["preparation", "surge", "devour", "offering"], ["chisel", "eclipseSlash"])
+	var pure_game: GlassvowGame = GlassvowGame.new(content, pure)
+	pure_game.flame_events(true)
+	_draw_all(pure, vigil, content, pure_game.take_flame_lines().filter(
+		func(slot: String) -> bool: return FlameLines.is_codex(slot)))
+	_check(fails, _ids(FlameLines.codex(content, vigil, pure)) == [SHATTER_CODEX, LANTERN_CODEX],
+		"codex: a true colour was not revealed, in way order")
+	for aspect: int in range(content.aspects.size()):
+		for way: Dictionary in Flame.ways(content, aspect):
+			var slot: String = FlameLines.CODEX_PREFIX + str(way.get("id", ""))
+			_check(fails, LineTable.has_slot(content.line_table, slot),
+				"codex: way %s has no sentence" % str(way.get("id", "")))
+
+
+## The six lines ship exactly as locked; none of the nine (the six and the
+## codex's three) speaks a mechanic word; each is bilingual and in the house
+## orthography; every row is heard once; the codex has no numbers.
+static func _flame_copy(fails: Array[String]) -> void:
+	var rows: Array = _rows()
+	var banned: RegEx = RegEx.new()
+	banned.compile(FLAME_BANNED_EN)
+	var numbers: RegEx = RegEx.new()
+	numbers.compile(CODEX_NUMBERS)
+	var lines: Array[Array] = []
+	for id_v: Variant in FLAME_LOCKED:
+		var id: String = str(id_v)
+		var row: Dictionary = LineTable.row_by_id(rows, id)
+		var locked: Array = FLAME_LOCKED[id_v]
+		var once: bool = row.get("once", false)
+		_check(fails, LineTable.text(row, true) == str(locked[0])
+				and LineTable.text(row, false) == str(locked[1]) and once,
+			"flame copy: %s is not the locked line, heard once" % id)
+		lines.append([id, LineTable.text(row, true), LineTable.text(row, false)])
+	var codex: int = 0
+	for row_v: Variant in rows:
+		var row: Dictionary = row_v
+		if not FlameLines.is_codex(str(row.get("slot", ""))):
+			continue
+		codex += 1
+		var zh: String = LineTable.text(row, true)
+		var en: String = LineTable.text(row, false)
+		var once: bool = row.get("once", false)
+		_check(fails, numbers.search(zh) == null and numbers.search(en) == null and once,
+			"flame copy: codex %s carries a number or can be heard twice" % str(row.get("id")))
+		lines.append([str(row.get("id")), zh, en])
+	_check(fails, codex == 3, "flame copy: the codex has %d sentences, not three" % codex)
+	var en_locale: Locale = Locale.new(Locale.CODE_EN)
+	var zh_locale: Locale = Locale.new(Locale.CODE_ZH_HANT)
+	_check(fails, zh_locale.t(FLAME_OPENING_KEY) == FLAME_OPENING[0]
+			and en_locale.t(FLAME_OPENING_KEY) == FLAME_OPENING[1],
+		"flame copy: the Keeper's opening line is not the locked line")
+	lines.append([FLAME_OPENING_KEY, zh_locale.t(FLAME_OPENING_KEY), en_locale.t(FLAME_OPENING_KEY)])
+	for line_v: Variant in lines:
+		var line: Array = line_v
+		var zh: String = str(line[1])
+		var en: String = str(line[2])
+		_check(fails, not zh.is_empty() and not en.is_empty() and zh != en,
+			"flame copy: %s is not bilingual" % str(line[0]))
+		_check(fails, banned.search(en) == null,
+			"flame copy: %s speaks a mechanic word: %s" % [str(line[0]), en])
+		for word: String in FLAME_BANNED_ZH:
+			_check(fails, not zh.contains(word),
+				"flame copy: %s speaks the mechanic word %s" % [str(line[0]), word])
+		_check(fails, not zh.contains("著") and not zh.contains("裡"),
+			"flame copy: %s breaks the 着/裏 orthography" % str(line[0]))
+	var probe: RegEx = RegEx.new()
+	probe.compile(FLAME_BANNED_EN)
+	_check(fails, probe.search("Embers spill.") != null and probe.search("It burns true.") != null
+			and probe.search("A construe") == null,
+		"flame copy: the mechanic-word guard does not bite")

@@ -9,6 +9,7 @@
         ]},
         {"motion": "push-in", "skipDwell": 1.0, "transition": "fade", "ambient": "embers", "grade": "hearth", "lines": [
           {"speaker": "keeper", "key": "story.opening.b2.l1", "enter": ["hero@left", "keeper@right:offering"], "fx": ["kindle@keeper"]},
+          {"speaker": "keeper", "key": "story.opening.b2.lantern"},
           {"speaker": "keeper", "key": "story.opening.b2.l2", "mood": "default"},
           {"speaker": "keeper", "key": "story.opening.b2.l3", "mood": "tender"}
         ]},

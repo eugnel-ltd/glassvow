@@ -9,7 +9,7 @@ const PANEL_MAX_HEIGHT: float = 0.88
 const DESKTOP_INSET: float = 28.0
 const PHONE_INSET: float = 18.0
 
-static func _sections(act_count: int) -> Array[Dictionary]:
+static func _sections(act_count: int, lantern_coda: String = "") -> Array[Dictionary]:
 	var params: Dictionary = {"count": act_count}
 	return [
 		{"title": Locale.active.t("ui.help.roadTitle"),
@@ -19,7 +19,7 @@ static func _sections(act_count: int) -> Array[Dictionary]:
 		{"title": Locale.active.t("ui.help.glassTitle"),
 			"body": Locale.active.t("ui.help.glassBody")},
 		{"title": Locale.active.t("ui.help.lanternTitle"),
-			"body": Locale.active.t("ui.help.lanternBody")},
+			"body": Locale.active.t("ui.help.lanternBody"), "coda": lantern_coda},
 		{"title": Locale.active.t("ui.help.wardTitle"),
 			"body": Locale.active.t("ui.help.wardBody")},
 		{"title": Locale.active.t("ui.help.firesTitle"),
@@ -27,6 +27,16 @@ static func _sections(act_count: int) -> Array[Dictionary]:
 		{"title": Locale.active.t("ui.help.vigilTitle"),
 			"body": Locale.active.t("ui.help.vigilBody")},
 	]
+
+
+## The Lantern's colour sentences this Vigil has revealed (flame lock §10), one
+## to a line in the reader's language; empty until a colour is seen steady.
+static func _lantern_coda(codex: Array[Dictionary]) -> String:
+	var zh: bool = Locale.active.code == Locale.CODE_ZH_HANT
+	var lines: PackedStringArray = PackedStringArray()
+	for row: Dictionary in codex:
+		lines.append(LineTable.text(row, zh))
+	return "\n".join(lines)
 
 
 var shape: StringName = StageShape.IDENTITY
@@ -37,7 +47,7 @@ var _sfx: SfxBus
 
 
 func _init(stage_shape: StringName = StageShape.IDENTITY,
-		sfx: SfxBus = null) -> void:
+		sfx: SfxBus = null, codex: Array[Dictionary] = []) -> void:
 	shape = stage_shape if StageShape.REFERENCES.has(stage_shape) else StageShape.IDENTITY
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -97,8 +107,9 @@ func _init(stage_shape: StringName = StageShape.IDENTITY,
 	rule.add_theme_stylebox_override("separator", rule_line)
 	rule_centre.add_child(rule)
 
-	for section: Dictionary in _sections(3):
-		_add_section(str(section["title"]), str(section["body"]))
+	for section: Dictionary in _sections(3, _lantern_coda(codex)):
+		_add_section(str(section["title"]), str(section["body"]),
+			str(section.get("coda", "")))
 
 	var action_margin: MarginContainer = MarginContainer.new()
 	action_margin.add_theme_constant_override("margin_top", 16)
@@ -119,7 +130,7 @@ func _init(stage_shape: StringName = StageShape.IDENTITY,
 	_fit.call_deferred()
 
 
-func _add_section(title_text: String, body_html: String) -> void:
+func _add_section(title_text: String, body_html: String, coda: String = "") -> void:
 	var heading: Label = Label.new()
 	heading.text = title_text
 	heading.add_theme_font_override("font", GlassStyle.face(GlassStyle.CINZEL_700))
@@ -128,20 +139,36 @@ func _add_section(title_text: String, body_html: String) -> void:
 	heading.add_theme_constant_override("line_spacing", 0)
 	_column.add_child(heading)
 
-	var body: RichTextLabel = RichTextLabel.new()
-	body.bbcode_enabled = true
-	body.fit_content = true
-	body.scroll_active = false
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var body: RichTextLabel = _prose(RunStyle.TEXT, true)
 	body.text = body_html.replace("{count}", "3").replace("<b>", "[b]").replace("</b>", "[/b]")
-	body.add_theme_font_override("normal_font", GlassStyle.face(GlassStyle.ALEGREYA_400))
 	body.add_theme_font_override("bold_font", GlassStyle.face(GlassStyle.ALEGREYA_700))
-	body.add_theme_font_size_override("normal_font_size", 16)
 	body.add_theme_font_size_override("bold_font_size", 16)
-	body.add_theme_color_override("default_color", RunStyle.TEXT)
 	body.add_theme_color_override("font_selected_color", RunStyle.PARCHMENT)
-	body.add_theme_constant_override("line_separation", 7)
 	_column.add_child(body)
+	if coda.is_empty():
+		return
+	# Plain text, never markup: the coda is authored copy in the hearth's
+	# warmer ink, a breath below the rules it follows.
+	var note: RichTextLabel = _prose(RunStyle.PARCHMENT, false)
+	note.name = "Coda"
+	note.text = coda
+	var breath: MarginContainer = MarginContainer.new()
+	breath.add_theme_constant_override("margin_top", 6)
+	breath.add_child(note)
+	_column.add_child(breath)
+
+
+static func _prose(colour: Color, markup: bool) -> RichTextLabel:
+	var prose: RichTextLabel = RichTextLabel.new()
+	prose.bbcode_enabled = markup
+	prose.fit_content = true
+	prose.scroll_active = false
+	prose.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	prose.add_theme_font_override("normal_font", GlassStyle.face(GlassStyle.ALEGREYA_400))
+	prose.add_theme_font_size_override("normal_font_size", 16)
+	prose.add_theme_color_override("default_color", colour)
+	prose.add_theme_constant_override("line_separation", 7)
+	return prose
 
 
 func set_shape(stage_shape: StringName) -> void:

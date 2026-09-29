@@ -269,15 +269,19 @@ func _hear_whisper(run: RunState, content: ContentDB) -> void:
 		whispers += 1
 
 
+## A fall in Soot is first owed the flame's own whisper (flame lock §10), once;
+## every other fall, and every later one, draws from the loss pool.
 func _write_epitaph(run: RunState, content: ContentDB) -> Array:
 	var last_id: String = defeat_epitaphs[defeat_epitaphs.size() - 1] \
 		if not defeat_epitaphs.is_empty() else ""
-	var row: Dictionary = LineTable.select(
-		content.line_table, "loss", _line_ctx(run), run.rng, {
-			"recent": line_recent,
-			"once": line_once,
-			"last_id": last_id,
-		})
+	var ctx: Dictionary = _line_ctx(run)
+	var memory: Dictionary = {"recent": line_recent, "once": line_once, "last_id": last_id}
+	var row: Dictionary = {}
+	var fall: String = FlameLines.death_slot(Flame.read(content, run))
+	if not fall.is_empty():
+		row = LineTable.select(content.line_table, fall, ctx, run.rng, memory)
+	if row.is_empty():
+		row = LineTable.select(content.line_table, "loss", ctx, run.rng, memory)
 	var id: String = str(row.get("id", ""))
 	if id.is_empty():
 		return []

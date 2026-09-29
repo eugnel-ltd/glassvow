@@ -44,7 +44,7 @@ static func _overlay_on_opening(fails: Array[String]) -> void:
 	var view: Vector2 = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
 	# Beat ② is the two-shot: the Keeper stands as a portrait and the seat is
 	# empty (test_stagecraft pins one body per cursor). The wide beats seat it.
-	for cursor: int in [0, 1, 5, 6, 7]:
+	for cursor: int in [0, 1, 6, 7, 8]:
 		var player: ScenePlayer = _live(opening, cursor)
 		var figure: HearthFigure = _figure(player) as HearthFigure
 		_check(fails, figure != null,

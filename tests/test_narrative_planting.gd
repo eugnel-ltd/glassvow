@@ -11,6 +11,8 @@ const RUNS: int = 24
 ## dual-reading plant in a shard-0-reachable pool is allowed at shards 0.
 ## Pool slots are shard-0 reachable (04-delivery loss/hearth/waystone);
 ## whisper and Own Shade death are L1; quest closers L2; sixth-shard closer L3.
+## The flame's lines and the codex colours (flame lock §10) are shard-0
+## reachable: the lantern speaks from the first run.
 const SLOT_LEVEL: Dictionary = {
 	"whisper": 1,
 	"death.ownShade1": 1,
@@ -23,6 +25,14 @@ const SLOT_LEVEL: Dictionary = {
 	"hearth": 0,
 	"waystone": 0,
 	"loss": 0,
+	"flame.steady": 0,
+	"flame.fringe": 0,
+	"flame.true": 0,
+	"flame.soot": 0,
+	"flame.sootDeath": 0,
+	"codex.lantern.shatter": 0,
+	"codex.lantern.lantern": 0,
+	"codex.lantern.edge": 0,
 }
 
 

@@ -65,8 +65,8 @@ static func run(fails: Array[String]) -> void:
 static func _inventory(content: ContentDB, fails: Array[String]) -> void:
 	var en: Dictionary = _flatten_story(Locale.CODE_EN)
 	var zh: Dictionary = _flatten_story(Locale.CODE_ZH_HANT)
-	_check(fails, en.size() == 122 and zh.size() == 122,
-		"story.* census is not 122/122 (en=%d zh=%d)" % [en.size(), zh.size()])
+	_check(fails, en.size() == 123 and zh.size() == 123,
+		"story.* census is not 123/123 (en=%d zh=%d)" % [en.size(), zh.size()])
 	var homes: Dictionary = _scene_homes()
 	var seen: Dictionary = {}
 	for key_v: Variant in en.keys():
@@ -107,8 +107,8 @@ static func _inventory(content: ContentDB, fails: Array[String]) -> void:
 	_check(fails, hearth_n == 60 and waystone_n == 60 and loss_n == 50,
 		"Batch 3 pools hearth=%d waystone=%d loss=%d" % [
 			hearth_n, waystone_n, loss_n])
-	_check(fails, content.line_table.size() == 178,
-		"line-table census is not 178 (got %d)" % content.line_table.size())
+	_check(fails, content.line_table.size() == 186,
+		"line-table census is not 186 (got %d)" % content.line_table.size())
 	var whispers: Locale = Locale.new(Locale.CODE_EN)
 	var whispers_zh: Locale = Locale.new(Locale.CODE_ZH_HANT)
 	_check(fails, whispers_zh.code == Locale.CODE_ZH_HANT, "zh-Hant whispers missing")
@@ -123,11 +123,13 @@ static func _journey_a(content: ContentDB, code: StringName, fails: Array[String
 	var tag: String = "A %s" % code
 	var zh: bool = code == Locale.CODE_ZH_HANT
 	var opening: SceneScript = _script("opening")
-	_check(fails, opening != null and opening.line_count() == 8,
+	# Nine lines since the flame lock's Keeper line followed the kindle (§10):
+	# the destination is line 4 and the city line 5.
+	_check(fails, opening != null and opening.line_count() == 9,
 		"%s: opening did not load" % tag)
 	if opening == null:
 		return
-	var dest: ScenePlayer = ScenePlayer.new(opening, 3)
+	var dest: ScenePlayer = ScenePlayer.new(opening, 4)
 	dest.instant = true
 	dest._ready()
 	var dest_line: Label = dest.find_child("Line", true, false) as Label
@@ -143,7 +145,7 @@ static func _journey_a(content: ContentDB, code: StringName, fails: Array[String
 	_check(fails, caption != null
 			and caption.text == Locale.active.t("ui.dawn.inputHint"),
 		"%s: opening lost tap/hold skip grammar" % tag)
-	var city: ScenePlayer = ScenePlayer.new(opening, 4)
+	var city: ScenePlayer = ScenePlayer.new(opening, 5)
 	city.instant = true
 	city._ready()
 	var city_line: Label = city.find_child("Line", true, false) as Label

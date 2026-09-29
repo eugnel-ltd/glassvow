@@ -59,6 +59,7 @@ task #270 [SETTLED — #258 R2 Q12].
 | Per-enemy fragments | L1 | |
 | Relic/card/status/potion lore | L1 | |
 | Event scripts | L1 | Silvered Mirror motif ruled L1 |
+| Flame lines and codex colour sentences | L1 | Flame lock §10 (James 2026-09-29): shard-0 reachable, each heard once per Vigil, never a mechanic word; the Keeper's line at the opening rides the Opening scene's L0 |
 | Dawn-ceremony prose | L2 | quest-milestone keyed |
 | Quest line rewrites | L2 | closers only; quest bodies stay L1 |
 | Sixth-shard scene | L3 | the only L3 surface |
