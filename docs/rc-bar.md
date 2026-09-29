@@ -40,8 +40,8 @@ The bar binds one exact RC commit. If the RC commit changes:
 | Diff since evidenced commit | Consequence |
 |---|---|
 | Docs-only | All evidence carries |
-| Any code, asset, or export-preset change | P1 re-runs; P2, P3, P4 re-run; P5 re-verifies only the surfaces the change touches; P7 re-checks build-config items only (SDK, Info.plist keys, signing); **P9 re-runs on the new content SHA** |
-| Player-facing-major change (James's judgment) | Additionally, P6 beta round repeats |
+| Any code, asset, or export-preset change | P1 re-runs; P2, P3, P4 re-run; P5 re-verifies only the surfaces the change touches; P7 re-checks build-config items only (SDK, Info.plist keys, signing); **P9's gates G1–G7 re-run on the new candidate SHA** |
+| Player-facing-major change (James's judgment) | Additionally, P6 beta round repeats, and P9's human round H with it |
 
 "Player-facing-major" means a change that would read differently between the beta round's build
 and this RC: gameplay balance, card/relic behaviour, encounter design, visible UI, or story
@@ -231,33 +231,54 @@ state, the policy URL, the Info.plist diff).
       records the crash-free-sessions rate; a rate below **99.0%** fails closed unless every
       contributing crash signature is itself in the ledger, fixed or waived.
 
-## P9 — Strategy landscape (two layers)
+## P9 — Duskblade's three ways (the Flame gates)
 
-The detector in [#213](https://github.com/fol2/glassvow/issues/213), measured by
-[#215](https://github.com/fol2/glassvow/issues/215) (layer 1, sampled plurality) and
-[#216](https://github.com/fol2/glassvow/issues/216) (layer 2, CEM ceilings). **Not
-optional.** #211 and #212 both change content after a landscape measured on an earlier
-SHA; a pass on pre-mythic content says nothing about the shipped game. Re-run both
-layers on the **RC content SHA** (`FileAccess.get_sha256` of `res://content/full-content.json`).
+Rewritten on 2026-09-29 under [#549](https://github.com/fol2/glassvow/issues/549). The
+measurement contract is §11 of the
+[Duskblade Flame design lock](design/2026-09-29-dusk-flame/README.md); this pillar binds it by
+reference and restates none of its numbers, because a copy here could only drift from it.
+**Not optional and not waivable.** A pass measured on different code or content says nothing
+about the shipped game.
 
-- [ ] Layer 1: `tools/balance_sweep.gd` sweep + controls, readout by
-      `tools/balance_landscape.py`. C1a, C1b, C2 recorded for both aspects × vows {0, 5}
-      against the signed arm definitions in the landscape doc.
-- [ ] Layer 2: `tools/balance_cem.gd` 24 islands (population 60, 40 common-random-number
-      training seeds/generation, holdout 5000–5199), readout by
-      `tools/balance_cem_report.py`. C3, C4, and the Vow-5 90% fail-closed ceiling gate
-      recorded on **holdout** numbers only. Training-seed fitness never enters the RC
-      receipt as a ceiling.
-- [ ] The landscape doc (`docs/balance/2026-08-14-strategy-landscape.md`) carries both
-      layers, fitness curves, drift map, replay keys, and the Tier-2 boundary (cross-turn
-      holds, target selection, Art timing remain unsearched).
-- [ ] All of C1–C4 plus the Vow-5 ceiling gate **must pass**. A miss returns to the map
-      as a wayfinder decision; it is not argued past this pillar.
+Duskblade ships with three ways (碎 Shatter, 燼 Lantern, 蝕 Edge) proven by the instrument of
+the Flame lock §11: gates G1–G7 on the exact candidate SHA, thresholds as frozen after
+readout 1 and recorded in the exam packet, plus the human round H; an independent re-run from
+a clean checkout must agree on every gate's verdict (owner ruling 2026-09-27).
 
-Evidence: the landscape doc on the RC commit plus the raw NDJSON / analysis JSON bound
-to that content SHA. Layer 1 took 66 min on this host; layer 2 took **4 h 11 min** on
-ten cores at ~150 ms/run under contention (the ticket's 40–80 min assumed 25–35 ms/run).
-Retune iterations use [`docs/balance/2026-08-19-iteration-protocol.md`](balance/2026-08-19-iteration-protocol.md); a landscape is not started until Phase A prints GO.
+- [ ] **Gates G1–G7.** Viability, parity, skill, random loses, reachability, diversity of
+      adaptive play and guards all pass on the candidate SHA, over the cells, arms and paired
+      seeds the lock fixes (Duskblade at Vow 0 and Vow 5, in the fresh and the full pool
+      state). The thresholds are those signed after readout 1 and frozen for the exam, which
+      start from the lock's initial values; the exam packet records the frozen values, and the
+      bar accepts no others.
+- [ ] **Candidate identity.** The candidate SHA is the RC commit the receipt binds, and the
+      scoped-reset table decides when the gates re-run. The Flame is code as well as content,
+      so the identity is the commit, not a content hash.
+- [ ] **Independent re-run.** A re-run of the exam from a clean checkout of the candidate SHA,
+      on any host, agrees with the exam packet on every gate's verdict. The numbers need not
+      match; the verdicts must.
+- [ ] **Human round H.** The round the lock's H row defines is played on a named build and
+      recorded against that exact build: its wins, its easy / fun / hard labels and James's
+      verdict for [#205](https://github.com/fol2/glassvow/issues/205). The labels are never a
+      win-rate target and never calibration data for a gate.
+- [ ] **Guards.** G7's guards stay gates: the Vow-5 ceiling is read on holdout numbers only
+      (training fitness never enters the receipt as a ceiling), stalls and errors are zero,
+      replay is deterministic, and the save lineage and internal IDs are unchanged. The lock's
+      §12 invariants bind the candidate: no save-schema change, IDs only added, and
+      `port_fixtures/` moved only in an explicit commit that says why.
+- [ ] **Ashwarden.** Ashwarden claims, and any claim that compares the two classes, are
+      deferred to 1.1 ([release roadmap](release-roadmap.md)) and are not PASS. No Ashwarden
+      evidence is a precondition for this pillar; comparator evidence kept from the earlier
+      programme is history, not a demand.
+- [ ] All of G1–G7 and H must pass, and the independent re-run must agree. A miss returns to
+      the map as a wayfinder decision; it is not argued past this pillar.
+
+Evidence: the exam packet on the candidate SHA (the readout, the frozen thresholds, each
+gate's verdict and the independent re-run's verdicts) and the human-round record. The earlier
+P9 method is kept as history in
+[`docs/balance/p9-strategy-diversity-system.md`](balance/p9-strategy-diversity-system.md), and
+[`docs/reviews/549/obligation-map.md`](reviews/549/obligation-map.md) records where each of
+its obligations went.
 
 ## The RC signature receipt
 
@@ -267,8 +288,8 @@ release-gate ticket ([#108](https://github.com/fol2/glassvow/issues/108)) bindin
 - the exact product head (the RC commit),
 - the `.ipa` artifact hash,
 - each pillar's evidence address (packet commits for P2/P3/P4; comment permalinks for
-  P5/P7/P8; for P6, whatever evidence #166 prescribes; for P9, the landscape doc and the
-  content-SHA-bound analysis JSON),
+  P5/P7/P8; for P6, whatever evidence #166 prescribes; for P9, the exam packet with the
+  independent re-run's verdicts, and the human-round record),
 - P0/P1 evidence inline (gate log, CI run link),
 - and the sentence "this build is the release candidate."
 
