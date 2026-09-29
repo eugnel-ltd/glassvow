@@ -1,0 +1,3 @@
+# The policies are directory pages; send the bare paths to them.
+/privacy /privacy/ 301
+/privacy/zh-hant /privacy/zh-hant/ 301

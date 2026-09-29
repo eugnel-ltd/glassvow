@@ -220,6 +220,15 @@ jobs:
         if: steps.scope.outputs.run_benchmark_freeze == 'true'
         run: python3 -B tools/check_benchmark_freeze.py
 
+      # site/ is deployed as committed, so it must match the policy Markdown.
+      # --self-test proves each audit (stale page, draft text, other-origin
+      # load, dangling link, missing heading glyph) can fail before trusting it.
+      - name: Check the privacy site is current
+        if: steps.scope.outputs.run_privacy_site == 'true'
+        run: |
+          python3 -B tools/build_site.py --self-test
+          python3 -B tools/build_site.py --check
+
       # Map tile/module gates (#207 repairs 7–9, #234 slice 5). `--self-test`
       # proves the checker can fail against generated fixtures; empty-dir is
       # the production state until tiles exist (`assets/art/map/` is absent).

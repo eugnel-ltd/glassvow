@@ -29,10 +29,26 @@ class ScopeFixtureTests(unittest.TestCase):
         self.assert_scopes(selection, "docs")
         self.assertTrue(selection.checks["run_doc_anchors"])
         self.assertTrue(selection.checks["run_benchmark_freeze"])
+        self.assertTrue(selection.checks["run_privacy_site"])
         self.assertFalse(selection.checks["run_agent_contracts"])
         self.assertFalse(selection.checks["run_import_assets"])
         self.assertFalse(selection.checks["run_godot_tests"])
         self.assertFalse(selection.checks["run_map_assets"])
+
+    def test_privacy_site_is_docs_not_godot(self) -> None:
+        # Fonts and pages under site/ are web assets behind .gdignore; they
+        # must not fall through to conservative_core or the locale font gate.
+        selection = CI.classify_paths([
+            "site/_headers",
+            "site/assets/fonts/NotoSerifTC-SemiBold-display.woff2",
+            "site/privacy/zh-hant/index.html",
+            "tools/build_site.py",
+        ])
+        self.assert_scopes(selection, "docs")
+        self.assertTrue(selection.checks["run_privacy_site"])
+        for check in ("setup_godot", "run_import_assets", "run_godot_tests",
+                      "run_locale_font", "run_gdscript_parse"):
+            self.assertFalse(selection.checks[check], check)
 
     def test_agent_instruction_change_is_fast_and_specific(self) -> None:
         selection = CI.classify_paths([
@@ -300,6 +316,8 @@ class WorkflowContractTests(unittest.TestCase):
             "tests/test_godot_runtime_workflow.py",
             "tools/check_anchors.py",
             "tools/check_benchmark_freeze.py",
+            "tools/build_site.py --self-test",
+            "tools/build_site.py --check",
             "tools/check_map_assets.py --self-test",
             "tools/land_map_glb.py --self-test",
             "tools/check_map_assets.py",
