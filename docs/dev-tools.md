@@ -219,6 +219,48 @@ Two capture flags exist for the same reason:
   frame, all of it in the fan. With `--settle=4` that falls to 0.03%, which is
   what makes a before/after diff of a layout change readable at all.
 
+## Save profile
+
+A development boot never touches the player's save. Any launch that carries a
+game argument (`--fight=`, `--map`, `--enter=`, `--dawn`, `--shop`, `--onboard=`,
+`--scene=`, `--resume`, `--shot=`, `--scenario=`, a lab or bench flag, or anything
+else `main.gd` parses) runs against the isolated Development profile:
+
+| | Player's profile | Development profile |
+|---|---|---|
+| Run | `user://glassvow_run_v2.json` | `user://glassvow_dev_run_v2.json` |
+| Vigil | `user://glassvow_vigil_v2.json` | `user://glassvow_dev_vigil_v2.json` |
+
+So `tools/shot.sh` and `tools/live.sh` sessions leave the player's run and Vigil
+alone, and a capture no longer leaves a stray `glassvow_run_v2.json` behind for
+the test suite to diverge on: there is nothing to delete before running it. The
+Development profile is a real profile. A development boot still stores a
+resumable checkpoint in it and `--resume` picks that up, so
+`tools/shot.sh --map --shot=…` followed by `tools/shot.sh --resume --shot=…` works
+inside it. `--onboard=` keeps its in-memory seeding of the opening and the
+hints, and what it writes lands in the Development Vigil, which keeps it between
+boots until the profile is emptied.
+
+- A boot with no game argument is the player's own launch and keeps the player's
+  profile. That includes `tools/live.sh start` with nothing after it: give it any
+  flag to get the isolated profile.
+- `--production-save` selects the player's profile on purpose, for the tools that
+  must read or seed the real save. `tools/probe_p48_rest.gd` seeds it for a live
+  host to continue, and that host is started with
+  `tools/live.sh start --production-save`.
+- `--scenario=` always builds into the Development profile; `--production-save`
+  cannot pull a Scenario onto the player's files.
+- To empty the Development profile, delete the `glassvow_dev_*` files (the
+  Console's *Clear Development profile* button does the same). Nothing about the
+  player's save changes. The test suite empties it too, so treat what it holds as
+  disposable.
+- Any argument selects the profile, not a list of flags, so a flag added later is
+  isolated without anyone remembering to register it. The rule lives in
+  `presentation/dev/boot.gd`, which store builds exclude, so an argument a store
+  build happens to carry never moves the player onto another profile.
+  `tests/test_dev_boot_profile.gd` holds it and `tests/test_dev_tools.gd` holds
+  the Scenario binding it rests on.
+
 ## Creation and maintenance contract
 
 1. First reuse a shipping screen, existing lab mode or existing probe. Do not

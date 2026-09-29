@@ -1,6 +1,34 @@
 extends RefCounted
-## Excluded Development boot. Parses a Scenario reference off the command
-## line and hands it to the composition root. No construct/reset of its own.
+## Excluded Development boot. Picks the save profile a tooling launch runs on,
+## and parses a Scenario reference off the command line; both are handed to the
+## composition root. No construct/reset of its own.
+
+## The explicit opt-out from the Development profile. A tooling boot that must
+## resume or seed the player's real save (`tools/probe_p48_rest.gd` seeds it for
+## a live host to continue) names this; nothing else reaches the production files.
+const PRODUCTION_SAVE_FLAG: String = "--production-save"
+
+
+## Any launch that carries an argument is a tooling launch — the line
+## `Main._ready` already draws between the player's plain boot and a capture or
+## bench — so it runs on the isolated Development profile unless it names the
+## production save. Keying on "has an argument" rather than on a list of flags is
+## what stops a future flag leaking into the player's save by being left off it.
+static func selects_dev_profile(args: PackedStringArray) -> bool:
+	return not args.is_empty() and not args.has(PRODUCTION_SAVE_FLAG)
+
+
+## The profile step every tooling boot passes through, whether or not it carries
+## a Scenario: bind the kernel's isolated files before anything can read or write
+## a save. A Scenario reaches the same `install_profile` again through
+## `apply_dev_scenario`, so there is one place a profile is installed.
+static func select_profile(host: Object, args: PackedStringArray) -> void:
+	if not selects_dev_profile(args):
+		return
+	if not host.has_method("install_profile"):
+		push_error("host cannot install the Development profile")
+		return
+	host.call("install_profile", ScenarioKernel.RUN_PATH, ScenarioKernel.VIGIL_PATH)
 
 
 static func apply(host: Object, args: PackedStringArray) -> void:
