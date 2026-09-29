@@ -7,21 +7,23 @@ landing commit then copies each pick to its ledgered path, commits the
 `.import` sidecar, moves the ledger row to Shipped with the prompt that
 rendered it, and takes the stills the issues ask for.
 
-49 candidates were generated on 2026-09-29 and 24 survive. Each family's
-contact sheet shows every candidate, keyed and labelled, rejects included. Only
-the survivors are committed, in `survivors/`. Raw renders and rejects stay out
-of the tree.
+65 candidates were generated on 2026-09-29, in two rounds, and 30 survive.
+Round 1 was the canonical prompts. Round 2 was an authorised follow-up for the
+four files round 1 left short, each with one amended sentence (see Round 2).
+Each family's contact sheet shows every candidate of both rounds, keyed and
+labelled, rejects included. Only the survivors are committed, in `survivors/`.
+Raw renders and rejects stay out of the tree.
 
 | Family | Issue | Sheet | Generated | Survivors | Ranked first |
 |---|---|---|---|---|---|
 | Keeper moods | #560 | [`contact-keeper.png`](contact-keeper.png) | 16 | 11 | tender-a, offering-b, weary-c, beckon-a |
-| Hollow Lamplighter moods | #561 | [`contact-lamplighter.png`](contact-lamplighter.png) | 20 | 11 | wary-d, asking-a, recognising-b, urgent-c, grieving-b |
-| Queue chorus | #562 | [`contact-queue.png`](contact-queue.png) | 5 | 1 | queue-chorus-e |
-| Unlit Way plates | #563 | [`contact-plates.png`](contact-plates.png) | 8 | 1 | unlit-way-c; none for unlit-way-end |
+| Hollow Lamplighter moods | #561 | [`contact-lamplighter.png`](contact-lamplighter.png) | 24 | 13 | wary-e, asking-a, recognising-b, urgent-c, grieving-b |
+| Queue chorus | #562 | [`contact-queue.png`](contact-queue.png) | 9 | 3 | queue-chorus-h |
+| Unlit Way plates | #563 | [`contact-plates.png`](contact-plates.png) | 16 | 3 | unlit-way-c, unlit-way-end-g |
 
-**Gaps.** `lamplighter-wary`, `queue-chorus` and `unlit-way` have one survivor
-each; `unlit-way-end` has none. Findings 1 to 3 explain why, and the last
-section suggests the next round. It was not run.
+**Remaining gap.** `unlit-way` still has one survivor (`c`, from round 1).
+Every other file has at least two. Finding 2 explains why, and the last section
+suggests a next step. It was not run.
 
 ## Binding
 
@@ -56,13 +58,13 @@ section suggests the next round. It was not run.
 
 ## How they were made
 
-- **Generation.** On 2026-09-29, through
-  `~/.claude/scripts/subagents/run-grok-media.sh`: Grok Build CLI 1.0.41 with
-  the model `grok-4.7` (the wrapper picks the newest at run time), one image per
-  call, three calls at a time. Each request reads the reference at its absolute
-  path, then carries the canonical prompt verbatim from the issue (the issues
-  assemble the ledger's clauses), the exact canvas and the output path. All 49
-  calls returned the right canvas on the first attempt; no retry was needed.
+- **Generation.** Through `~/.claude/scripts/subagents/run-grok-media.sh`:
+  Grok Build CLI 1.0.41 with the model `grok-4.7` (the wrapper picks the newest
+  at run time), one image per call, three calls at a time. Each request reads
+  the reference at its absolute path, then carries the canonical prompt
+  verbatim from the issue (the issues assemble the ledger's clauses), the exact
+  canvas and the output path. Round 1 made 49 calls and round 2 made 16. All 65
+  returned the right canvas on the first attempt; no retry was needed.
 - **References.** For the portraits, the files the ledger names:
   `meta/keeper.png`, `enemies/eternalKeeper.png` for beckon, and
   `meta/hollow-lamplighter.png`. For the Queue, `meta/keeper.png` and
@@ -78,23 +80,27 @@ section suggests the next round. It was not run.
   survives. It then writes RGBA, runs `sips -Z 1024` and grades the written
   file against the ledger gate. `--haze` (Lamplighter and Queue only, never the
   Keeper, whose violet glass reaches strength 120) also clears enclosed pockets
-  of the render's own pink haze and despills slivers. Plates are not keyed:
-  `--plate` checks the 1536×1024 canvas.
+  of the render's own pink haze and despills slivers. `--cut-bottom` (the Queue
+  only) reports the bottom edge's near-black without grading it. Plates are not
+  keyed: `--plate` checks the 1536×1024 canvas.
 - **Review aids.** These were measured outside the tool and are not committed.
   Silhouette IoU is the overlap with the reference at alpha ≥ 128. Warm edge is
   the share of amber pixels (hue 20–50°, saturation ≥ 0.45, value ≥ 0.35) in
   the silhouette's outer 12 px, split at the bounding box's midline. Reference
   values: `keeper.png` 9.9% (weighted right), `eternalKeeper.png` 12.0%
-  (weighted left), `hollow-lamplighter.png` 20.2% (both sides).
+  (weighted left), `hollow-lamplighter.png` 20.2% (both sides). Plate door
+  positions are the column span of the glow, at 80% of its peak brightness or
+  more, as a share of the width.
 - **Contact sheets.** Every candidate of a family, keyed and over mid-grey,
-  with the shipped reference first in each portrait row. The plates carry the
-  two-shot guides: cyan lines at 28% and 72% of the width and 70% of the height.
+  with the shipped reference first in each portrait row. A re-rolled file has
+  one row per round. The plates carry the two-shot guides: cyan lines at 28%
+  and 72% of the width and 70% of the height.
 
 ```bash
-python3 tools/key_magenta.py RAW.png OUT.png --expect 682x1024          # Keeper
-python3 tools/key_magenta.py RAW.png OUT.png --expect 682x1024 --haze   # Lamplighter
-python3 tools/key_magenta.py RAW.png OUT.png --expect 1024x1024 --haze  # Queue
-python3 tools/key_magenta.py --plate RAW.png                            # plates
+python3 tools/key_magenta.py RAW.png OUT.png --expect 682x1024                        # Keeper
+python3 tools/key_magenta.py RAW.png OUT.png --expect 682x1024 --haze                 # Lamplighter
+python3 tools/key_magenta.py RAW.png OUT.png --expect 1024x1024 --haze --cut-bottom   # Queue
+python3 tools/key_magenta.py --plate RAW.png                                          # plates
 python3 tools/key_magenta.py --contact-sheet contact-keeper.png --tile-height 400 \
     --row "keeper-tender  (#560)" REF.png A.png B.png C.png D.png \
     --tag keeper-tender-a="#1" --tag keeper-tender-b="REJECT: chest slab"   # one --row per file
@@ -102,13 +108,41 @@ python3 tools/key_magenta.py --contact-sheet contact-keeper.png --tile-height 40
 
 How to read the tables: **Magenta** is leftover field-magenta (< 32). **Frame
 dark** is opaque near-black in the 8 px canvas frame (< 400), with the
-bottom-edge share in brackets. **Corners** are the four corner alphas; 0 means
-all four are clear. **≥240** is the share of visible pixels at alpha ≥ 240
-(≥ 90%). **Verdict** ranks the survivors of each file. James picks.
+bottom-edge share in brackets; "not graded" marks the Queue's bottom edge.
+**Corners** are the four corner alphas; 0 means all four are clear. **≥240** is
+the share of visible pixels at alpha ≥ 240 (≥ 90%). **Verdict** ranks the
+survivors of each file across both rounds. James picks.
+
+## Round 2 — the authorised follow-up
+
+The orchestrator authorised a follow-up on the owner's delegation: four more
+candidates each for the four files round 1 left short. Each round-2 request is
+the round-1 request with exactly one sentence appended. The canonical text is
+otherwise unchanged, and the ledger's style blocks stay verbatim.
+
+| File | Sentence appended, verbatim | Where |
+|---|---|---|
+| `lamplighter-wary` | "The amber rim light from outside the frame and the thin worn gold edging on the lead stay exactly as in the reference." | End of the POSE block. |
+| `queue-chorus` | "All five figures, including the last and smallest, stay fully inside the left and right edges of the canvas." | End of the Queue paragraph. |
+| `unlit-way`, `unlit-way-end` | "For this two-shot plate the subject (the road, the seat, the broken paving, the last lamp post and the distant arch) sits inside the central 44 percent of the width; the outer 28 percent on each side holds only ground, ash and sky." | After the TWO-SHOT FRAME clause. |
+
+**The placement sentence is an implementation amendment to the ledger prompt
+for two-shot plates.** The ledger row for each plate should carry it at
+landing, because #559 asks that the Shipped row record the prompt that rendered
+the pick. Finding 2 suggests splitting its subject list per plate first. The
+same applies to the wary sentence if a round-2 wary file is picked.
+
+The Queue brief cuts the figures at the canvas foot, so the bottom edge's
+near-black is reported but not graded for this file (`--cut-bottom`). The other
+three edges and the corners are still graded, and that is how the tool now
+fails the renders that run off a side edge.
+
+Round 2: 16 renders, 6 survivors (`wary-e`, `wary-f`, `queue-chorus-g`,
+`queue-chorus-h`, `unlit-way-end-f`, `unlit-way-end-g`).
 
 ## Keeper — #560
 
-Tender, offering and weary edit `meta/keeper.png`; beckon edits
+Round 1 only. Tender, offering and weary edit `meta/keeper.png`; beckon edits
 `enemies/eternalKeeper.png`. Eleven of 16 survive; every file has at least two.
 
 | File | Size | Magenta | Frame dark (bottom edge) | Corners | ≥240 | Gate | Verdict | Notes |
@@ -165,15 +199,19 @@ Save the result as a PNG file at <scratch>/stagecraft-raw/keeper-tender-<x>.png
 
 ## Hollow Lamplighter — #561
 
-Every file edits `meta/hollow-lamplighter.png`. Eleven of 20 survive; wary has
-one.
+Every file edits `meta/hollow-lamplighter.png`. Wary was re-rolled in round 2
+(`e` to `h`). Thirteen of 24 survive, and every file has at least three.
 
 | File | Size | Magenta | Frame dark (bottom edge) | Corners | ≥240 | Gate | Verdict | Notes |
 |---|---|---|---|---|---|---|---|---|
 | `lamplighter-wary-a.png` | 682×1024 | 0 | 0 (0) | 0 | 98.3% | pass | reject | No amber rim and no gold edging (warm edge 0.0% against the reference's 20.2%). Wary cuts against recognising on consecutive lines in m1-pre and m3-pre, so the glass would change material. The pole also stays at his side. |
 | `lamplighter-wary-b.png` | 682×1024 | 0 | 0 (0) | 0 | 98.4% | pass | reject | The best pose of the four (pole across the body, weight back), but no rim or gold edging, washed sage glass, and the head 71 px lower. |
 | `lamplighter-wary-c.png` | 682×1024 | 0 | 0 (0) | 0 | 98.0% | pass | reject | The head is a solid black silhouette (the pale skull dome is gone), the robe breaks into many small shards, and there is no rim. |
-| [`lamplighter-wary-d.png`](survivors/lamplighter-wary-d.png) | 682×1024 | 0 | 0 (0) | 0 | 97.6% | pass | **#1** | Pole drawn in across the body, empty hand lowered and closed, rim and gold edging intact, head where the reference has it. The lantern is larger, with pale cold panes: unlit, but brighter than the reference's. |
+| [`lamplighter-wary-d.png`](survivors/lamplighter-wary-d.png) | 682×1024 | 0 | 0 (0) | 0 | 97.6% | pass | **#2** | Pole drawn in across the body, empty hand lowered and closed, rim and gold edging intact, head where the reference has it. The lantern is larger, with pale cold panes: unlit, but brighter than the reference's. |
+| [`lamplighter-wary-e.png`](survivors/lamplighter-wary-e.png) | 682×1024 | 0 | 0 (0) | 0 | 97.0% | pass | **#1** | Round 2. The pole is drawn across the body like a staff held between, the empty hand lowered and closed, the lantern dark. The rim and gold edging stay (warm edge 17.1%, against 0.0% for round 1's a to c), and the head is where the reference has it. |
+| [`lamplighter-wary-f.png`](survivors/lamplighter-wary-f.png) | 682×1024 | 0 | 0 (0) | 0 | 98.1% | pass | **#3** | Round 2. The shipped pose with the empty hand lowered and closed into a fist; the pole stays at his side. Rim kept (17.0%). The smallest change of the survivors. |
+| `lamplighter-wary-g.png` | 682×1024 | 0 | 0 (0) | 0 | 98.6% | pass | reject | Round 2. The raw render replaced the lantern with a flat grey slab crossed by lead lines: no iron frame and no glass, a fill rather than the lantern. The head also sits 33 px low. |
+| `lamplighter-wary-h.png` | 682×1024 | 0 | 0 (0) | 0 | 98.6% | pass | reject | Round 2. The lantern is fixed on top of the pole instead of hanging from it, and the figure is 9% shorter (head 75 px lower). |
 | [`lamplighter-asking-a.png`](survivors/lamplighter-asking-a.png) | 682×1024 | 0 | 0 (0) | 0 | 97.5% | pass | **#1** | The shipped pose with the palm-up hand forward and low, rim intact. Near-identical to the shipped figure (IoU 0.983). |
 | [`lamplighter-asking-b.png`](survivors/lamplighter-asking-b.png) | 682×1024 | 0 | 0 (0) | 0 | 98.1% | pass | **#3** | As a, with darker glass and the darkest lantern: a small palette step from the reference. |
 | [`lamplighter-asking-c.png`](survivors/lamplighter-asking-c.png) | 682×1024 | 0 | 0 (0) | 0 | 98.6% | pass | **#2** | Near-identical to a (IoU 0.990 against the reference). |
@@ -191,7 +229,7 @@ one.
 | `lamplighter-grieving-c.png` | 682×1024 | 0 | 0 (0) | 0 | 98.8% | pass | reject | Head turned to the viewer's right, away from his partner, and no rim (0.3%). |
 | `lamplighter-grieving-d.png` | 682×1024 | 0 | 0 (0) | 0 | 98.3% | pass | reject | A skull face is drawn: eye sockets, nose and teeth. |
 
-<details><summary>Exact request: lamplighter-wary, and how the other four differ</summary>
+<details><summary>Exact request: lamplighter-wary (round 1), and how the rest differ</summary>
 
 ```text
 Read the reference image at <repo>/assets/art/meta/hollow-lamplighter.png and produce an edited variation of it.
@@ -211,27 +249,32 @@ Canvas: exactly 682x1024 pixels.
 Save the result as a PNG file at <scratch>/stagecraft-raw/lamplighter-wary-<x>.png
 ```
 
-The other four files send the same request with the POSE block replaced by
-#561's, verbatim (asking, recognising, urgent, grieving).
+- The other four files send the same request with the POSE block replaced by
+  #561's, verbatim (asking, recognising, urgent, grieving).
+- Round 2 (`wary-e` to `wary-h`) appends the rim sentence in Round 2 to the
+  POSE block.
 
 </details>
 
 ## Queue chorus — #562
 
-A new figure group, so there is no edit reference and no framing to keep. One
-of five survives.
+A new figure group, so there is no edit reference and no framing to keep.
+Re-rolled in round 2 (`f` to `i`). Three of nine survive.
 
 | File | Size | Magenta | Frame dark (bottom edge) | Corners | ≥240 | Gate | Verdict | Notes |
 |---|---|---|---|---|---|---|---|---|
-| `queue-chorus-a.png` | 1024×1024 | 0 | 1077 (225) | 0 | 99.2% | **fail** | reject | Six figures, a smaller one standing beside the leader, cropped at the left edge (852 px of frame dark away from the bottom edge): a cluster, not one receding line. |
-| `queue-chorus-b.png` | 1024×1024 | 0 | 3150 (3150) | 0 | 99.5% | **fail** | reject | The hoods face the viewer's right (the actor faces left), and the cloaks are drawn as outlined cloth folds rather than leaded panes. |
-| `queue-chorus-c.png` | 1024×1024 | 0 | 3183 (2431) | 0 | 99.0% | **fail** | reject | Five figures side by side on one baseline, facing front: a size lineup, not a line receding in depth. Cropped at the left edge. |
-| `queue-chorus-d.png` | 1024×1024 | 0 | 531 (525) | [0, 0, 0, 255] | 99.3% | **fail** | reject | The nearest miss and the strongest read: five of one walker in one overlapping line from centre-left into the right, each smaller and dimmer, amber breast light, facing left. But the last figure runs off the right edge (556 px of edge contact, bottom-right corner opaque): a cropped figure, and a hard vertical cut on stage. Clean vector glass, flatter than keeper.png. |
-| [`queue-chorus-e.png`](survivors/queue-chorus-e.png) | 1024×1024 | 0 | 1667 (1667) | 0 | 98.9% | **fail** | **#1** | One receding line of five, facing left, amber breast lights, the most glass-like texture, clear of every edge but the brief's bottom cut. Hoods alternate gold and slate, which reads as several walkers, and the line fills only the lower half of the canvas, so the chorus bust will read small. |
+| `queue-chorus-a.png` | 1024×1024 | 0 | 1077 (225, not graded) | 0 | 99.2% | **fail** | reject | Six figures, a smaller one standing beside the leader, cropped at the left edge (852 px of frame dark away from the bottom edge): a cluster, not one receding line. |
+| `queue-chorus-b.png` | 1024×1024 | 0 | 3150 (3150, not graded) | 0 | 99.5% | pass | reject | The hoods face the viewer's right (the actor faces left), and the cloaks are drawn as outlined cloth folds rather than leaded panes. |
+| `queue-chorus-c.png` | 1024×1024 | 0 | 3183 (2431, not graded) | 0 | 99.0% | **fail** | reject | Five figures side by side on one baseline, facing front: a size lineup, not a line receding in depth. Cropped at the left edge. |
+| `queue-chorus-d.png` | 1024×1024 | 0 | 531 (525, not graded) | [0, 0, 0, 255] | 99.3% | **fail** | reject | The nearest miss and the strongest read: five of one walker in one overlapping line from centre-left into the right, each smaller and dimmer, amber breast light, facing left. But the last figure runs off the right edge (556 px of edge contact, bottom-right corner opaque): a cropped figure, and a hard vertical cut on stage. Clean vector glass, flatter than keeper.png. |
+| [`queue-chorus-e.png`](survivors/queue-chorus-e.png) | 1024×1024 | 0 | 1667 (1667, not graded) | 0 | 98.9% | pass | **#3** | One receding line of five, facing left, amber breast lights, the most glass-like texture, clear of both side edges. Hoods alternate gold and slate, which reads as several walkers, and the line fills only the lower half of the canvas, so the chorus bust will read small. |
+| `queue-chorus-f.png` | 1024×1024 | 0 | 121 (121, not graded) | 0 | 99.2% | pass | reject | Round 2. The front figure is smaller than the one behind it, so the line opens as a pair and reads as a group (round 1's a failed the same way). |
+| [`queue-chorus-g.png`](survivors/queue-chorus-g.png) | 1024×1024 | 0 | 2280 (2280, not graded) | 0 | 99.3% | pass | **#2** | Round 2. One receding line of five, inside both side edges, with amber breast lights and the most leaded-glass look of the round, in exactly the briefed gold, slate and pale teal. The figures face the viewer rather than slightly left, and a faint 1 px dark purple line survives on a few robe edges. |
+| [`queue-chorus-h.png`](survivors/queue-chorus-h.png) | 1024×1024 | 0 | 464 (464, not graded) | 0 | 98.8% | pass | **#1** | Round 2. One line of five of the same walker from the left into the right, each smaller and dimmer, facing left, amber breast lights, inside both side edges: the fullest reading of the brief. The lead is thinner than keeper.png's, and the last two figures are very dark. |
+| `queue-chorus-i.png` | 1024×1024 | 0 | 2094 (1115, not graded) | [0, 0, 255, 0] | 99.5% | **fail** | reject | Round 2. The line runs edge to edge: the front figure is cut by the left edge and the last by the right (979 px of dark frame off the bottom edge, bottom-left corner opaque). |
 
-Every Queue render fails the frame metric, because the brief cuts the figures
-at the canvas foot (Finding 3). Read the bracketed bottom-edge share: `e` is the
-only render clear of the other three edges and all four corners.
+The gate fails exactly the four renders that run off a side edge (`a`, `c`,
+`d`, `i`). The bottom edge is reported but not graded (see Round 2).
 
 <details><summary>Exact request</summary>
 
@@ -251,14 +294,18 @@ Canvas: exactly 1024x1024 pixels.
 Save the result as a PNG file at <scratch>/stagecraft-raw/queue-chorus-<x>.png
 ```
 
+Round 2 (`f` to `i`) appends the inside-edges sentence in Round 2 to the Queue
+paragraph.
+
 </details>
 
 ## Unlit Way plates — #563
 
-1536×1024, full-bleed, not keyed. One of four survives for `unlit-way` and none
-for `unlit-way-end`. The door-glow positions below were measured as the
-brightest point right of the centre on the horizon: `a` 72.1–73.2%, `b`
-77.4–78.5%, `c` 75.1–77.1%, `d` 78.6–80.7% of the width.
+1536×1024, full-bleed, not keyed. Both files were re-rolled in round 2 (`e` to
+`h`). One of eight survives for `unlit-way` and two of eight for
+`unlit-way-end`. Measured door-glow spans on the end plate, as a share of the
+width: round 1 `a` 71–74%, `b` 77–79%, `c` 75–77%, `d` 78–81%; round 2 `e`
+80–85%, `f` 61–68%, `g` 61–63%, `h` 61–72% (a ring, not an arch).
 
 | File | Size | Canvas | Verdict | Notes |
 |---|---|---|---|---|
@@ -266,10 +313,18 @@ brightest point right of the centre on the horizon: `a` 72.1–73.2%, `b`
 | `unlit-way-b.png` | 1536×1024 | pass | reject | Lamp posts stand in both bust bands (the right one, a post with a lantern, sits behind the Lamplighter's own pole); the seat spans 62-84%. |
 | [`unlit-way-c.png`](survivors/unlit-way-c.png) | 1536×1024 | pass | **#1** | Painterly. Road east to a dawnless horizon, dead lamps, the empty seat just right of centre (53-68%), raking amber from low left; the right band is empty. The nearest two posts stand in the left band, behind the hero's bust; the lit paving reaches into the bottom 30%. |
 | `unlit-way-d.png` | 1536×1024 | pass | reject | The style reference bled in: a cathedral hall with a rose window and a doorway, not the open road. The seat (63-88%) and the nearest post sit in the right band. |
+| `unlit-way-e.png` | 1536×1024 | pass | reject | Round 2. The bottom quarter is a flat grey fill that reads as a letterbox bar, a lit arch (the end plate's door) stands at the road's end, and the seat reaches 74% of the width. |
+| `unlit-way-f.png` | 1536×1024 | pass | reject | Round 2. The seat spans 64-80% of the width, into the right band, and a ruined arch stands at the road's end. |
+| `unlit-way-g.png` | 1536×1024 | pass | reject | Round 2. One lamp post stands in the road instead of a row along the verge, the finish is photographic (bokeh on the ash), and an arch stands at the road's end. |
+| `unlit-way-h.png` | 1536×1024 | pass | reject | Round 2. The nearest miss: a row of dead lamps along the verge inside the centre band, amber from low left. But the seat reaches 75% of the width, into the right band; the finish is photographic, with black vignettes down both sides; and a ruined arch stands at the road's end. |
 | `unlit-way-end-a.png` | 1536×1024 | pass | reject | Photographic; the door arch straddles the 72% line; paving fills the bottom 30%. |
 | `unlit-way-end-b.png` | 1536×1024 | pass | reject | Painterly, but the door arch sits at about 78% of the width (right band), and a ruined cathedral spans 9-52%. |
 | `unlit-way-end-c.png` | 1536×1024 | pass | reject | The last lamp reads lit (bright glowing panes), and the door arch sits at 75-77%. |
 | `unlit-way-end-d.png` | 1536×1024 | pass | reject | The nearest miss: dead lamp at the centre, broken slabs, cold and empty. But the door arch sits at 78-81%, directly behind the Lamplighter's seat (0.80), and the slabs reach into the bottom 30%. |
+| `unlit-way-end-e.png` | 1536×1024 | pass | reject | Round 2. The door sits at 80-85% of the width, in the right band, and a seat from the first plate bled in. |
+| [`unlit-way-end-f.png`](survivors/unlit-way-end-f.png) | 1536×1024 | pass | **#2** | Round 2. A crooked dead lamp stands at the centre where the slabs break; cold mist, the ground falling away into a valley, the door at 61-68% of the width, inside the centre band. But the paving runs on past the lamp to the door, which is nearer and more detailed than 'far off, never detailed'. |
+| [`unlit-way-end-g.png`](survivors/unlit-way-end-g.png) | 1536×1024 | pass | **#1** | Round 2. The last dead lamp (broken, dark glass) stands on the broken slabs at the centre where the road ends. The door is a small, far arch of light at 61-63%, and the outer bands hold only ground, ash and sky. The ground beyond is a flat plain rather than falling away into mist, and the slabs reach into the bottom 30%. |
+| `unlit-way-end-h.png` | 1536×1024 | pass | reject | Round 2. The door is a swirling ring of cold light close behind the lamp (61-72% of the width), not a distant arch on the horizon, and its mist spills into the right band. |
 
 <details><summary>Exact request: unlit-way, and the unlit-way-end subject</summary>
 
@@ -287,58 +342,61 @@ Canvas: exactly 1536x1024 pixels.
 Save the result as a PNG file at <scratch>/stagecraft-raw/unlit-way-<x>.png
 ```
 
-`unlit-way-end` sends the same request with the last paragraph replaced by
-#563's subject, verbatim: "Where the Unlit Way runs out: the paving breaks off
-into broken slabs and ash at the centre of the frame; the last dead lamp post
-stands at the end of the road; beyond it the ground falls away into mist toward
-a distant arch of light on the eastern horizon (the door, far off and never
-detailed). Emptier and colder than the first plate."
+- `unlit-way-end` sends the same request with the last paragraph replaced by
+  #563's subject, verbatim: "Where the Unlit Way runs out: the paving breaks
+  off into broken slabs and ash at the centre of the frame; the last dead lamp
+  post stands at the end of the road; beyond it the ground falls away into mist
+  toward a distant arch of light on the eastern horizon (the door, far off and
+  never detailed). Emptier and colder than the first plate."
+- Round 2 (`e` to `h` of both files) appends the placement sentence in Round 2
+  to the TWO-SHOT FRAME clause.
 
 </details>
 
 ## Findings
 
-1. **Some renders relight the Lamplighter.** Five renders dropped the amber rim
-   and the worn gold edging entirely (warm edge 0.3% or less): wary `a`, `b`
-   and `c`, `urgent-d` and `grieving-c`. Wary lost it three times in four,
-   urgent and grieving once each, asking and recognising never. A wary
-   re-roll could add "keep the amber rim light and the worn gold edging
-   exactly as in the reference". That changes the canonical prompt, so it is
-   James's call.
-2. **The plate prompt works against the two-shot rule.** The shared style block
-   asks for an "asymmetric composition with the subject well off centre".
-   With only the centre band free, every `unlit-way-end` render put the door at
-   72–81% of the width, behind the Lamplighter's seat at 0.80. Three of four
-   `unlit-way` renders put the seat in the right band. Re-rolling the same
-   prompt will probably repeat this. A suggested amendment for the two two-shot
-   plates is to replace "well off centre" with a placement, such as "the door
-   arch sits between 45 and 60 percent of the width".
-3. **The Queue cannot pass the frame metric as briefed.** "The bottom edge of
-   the canvas cuts the figures at mid-thigh" puts lead on the bottom edge of
-   every render (225 to 3,150 px). The tool now reports the bottom-edge share;
-   the other three edges are the real test. For the landing: `actors.json`
-   gives the Queue a full-canvas crop, and `StagePortrait` dissolves only a
-   bust cut above the canvas foot, so this cut will not dissolve by itself,
-   although #562 expects the dissolve to hide it. Check it in the
-   `act4-node1` still.
+1. **The rim sentence fixed the Lamplighter's relight.** In round 1, five
+   renders dropped the amber rim and the worn gold edging entirely (warm edge
+   0.3% or less): wary `a`, `b` and `c`, `urgent-d` and `grieving-c`. With the
+   round-2 sentence, all four wary renders kept it (17.0–21.2%, against the
+   reference's 20.2%). Round 2's wary failures were about the prop instead:
+   `g`'s lantern became a flat slab, and `h`'s sits on top of the pole.
+2. **The placement sentence fixed the end plate, not the first plate.** In round
+   1 every `unlit-way-end` render put the door at 71–81% of the width, behind
+   the Lamplighter's seat at 0.80. In round 2, `f` and `g` put it at 61–68%, and
+   both survive. On `unlit-way` the lamp posts moved inside the centre band, but
+   two problems remain:
+   - The seat still drifts into the right band: `e` 74%, `f` 64–80%, `h` 75%.
+   - Every round-2 render drew an arch at the road's end, against none in
+     round 1. The sentence's subject list is shared by both plates and names
+     "the distant arch", which is the end plate's door; on m1–m4 it anticipates
+     m5.
+
+   Suggested split before landing:
+   - `unlit-way`: "(the road, the lamp posts and the seat)".
+   - `unlit-way-end`: "(the broken paving, the last lamp post and the distant
+     arch)".
+3. **The Queue's side edges were the real test.** Round 1 kept two of five
+   inside both side edges (`b`, `e`); round 2, with the inside-edges sentence,
+   kept three of four (`f`, `g`, `h`). For the landing: `actors.json` gives the
+   Queue a full-canvas crop, and `StagePortrait` dissolves only a bust cut above
+   the canvas foot, so the brief's bottom cut will not dissolve by itself,
+   although #562 expects it to. Check it in the `act4-node1` still.
 4. **Enclosed background keeps the render's haze.** Grok Build floods the
    border-connected field to pure `#FF00FF` itself. Background that the figure
    encloses, between the lantern pole and the robe or inside the lantern's
    ring, keeps a pink haze of strength 60 to 160. That is what `--haze` clears.
    Without it, `lamplighter-wary-a` failed the leftover gate at 1,823 px.
 5. **m5-pre's first line enters the Lamplighter at the centre (0.50)**, in front
-   of the end plate's focal point, the broken road and the last lamp. That
-   line covers the brief's centre composition wherever the door lands.
+   of the end plate's lamp post. Both end-plate survivors keep the door at
+   61–68%, visible between the centre and the right seat once he moves there.
 6. **Asking is the shipped pose.** All four asking renders reproduce the shipped
    figure (IoU 0.92 to 0.99; `d` grew and is rejected). Landing one changes
    little on screen, because the stage's fallback already shows the shipped
    figure for this mood.
 
-## Suggested next round (not run)
+## Suggested next step (not run)
 
-- `lamplighter-wary`: four more, with the rim line from Finding 1 if James
-  agrees.
-- `queue-chorus`: four more. The target is `d`'s composition (one walker,
-  repeated and overlapping) with the line ending inside the frame.
-- `unlit-way` and `unlit-way-end`: four more each, once the placement amendment
-  in Finding 2 is settled.
+- `unlit-way`: four more, with the per-plate subject list from Finding 2 and a
+  seat placement such as "the seat sits between 55 and 68 percent of the
+  width".

@@ -12,6 +12,10 @@ ledger's portrait gate:
     corners                          alpha 0
     solid share                      >= 90% of non-transparent px at alpha >= 240
 
+The frame reading always carries the bottom edge's share. With --cut-bottom (a
+brief that cuts the figures at the canvas foot, as the Queue's does) that share
+is reported but not graded.
+
 Keying. A pixel's magenta strength is min(R, B) - G: 255 for #FF00FF, at most
 about 120 on the violet glass of `enemies/eternalKeeper.png`, and about 20 on
 the Lamplighter's glass. The field colour is the median of the canvas border. A pixel is field when its strength is within
@@ -40,7 +44,7 @@ grey-green and teal stay below strength 20; the Queue is gold, slate and
 teal), never for the Keeper: the violet glass of `enemies/eternalKeeper.png`
 reaches 120. Without it a pocket stays visible and fails the leftover gate.
 
-    python3 tools/key_magenta.py RAW.png OUT.png [--expect 682x1024] [--haze]
+    python3 tools/key_magenta.py RAW.png OUT.png [--expect 682x1024] [--haze] [--cut-bottom]
     python3 tools/key_magenta.py --plate RAW.png
     python3 tools/key_magenta.py --contact-sheet OUT.png --row TITLE IMG [IMG ...]
         [--row ...] [--tag STEM=TEXT ...] [--tile-height PX] [--guides]
@@ -236,8 +240,12 @@ def is_field_magenta(r: int, g: int, b: int) -> bool:
     return min(r, b) >= 180 and g <= 60 and abs(r - b) <= 50
 
 
-def gate(im: Image.Image) -> list[tuple[str, str, bool]]:
-    """The portrait alpha gate: (metric, reading, passed) per ledger rule."""
+def gate(im: Image.Image, cut_bottom: bool = False) -> list[tuple[str, str, bool]]:
+    """The portrait alpha gate: (metric, reading, passed) per ledger rule.
+
+    `cut_bottom` is for a brief that cuts the figures at the canvas foot (the
+    Queue): the bottom edge's near-black is still reported but no longer graded.
+    """
     rgba = im.convert("RGBA")
     w, h = rgba.size
     px = rgba.load()
@@ -250,12 +258,17 @@ def gate(im: Image.Image) -> list[tuple[str, str, bool]]:
     hist = rgba.getchannel("A").histogram()
     visible = sum(hist[1:])
     share = sum(hist[SOLID_ALPHA:]) / visible if visible else 0.0
-    # The bottom-edge share is reported, not excused: a bust cut at the canvas foot
-    # (the Queue) puts lead there by design, and a reader needs the split to see it.
+    # The bottom-edge share is always reported: a figure cut at the canvas foot puts
+    # lead there by design, and a reader needs the split to see it.
+    if cut_bottom:
+        graded = len(dark) - bottom
+        frame = f"{len(dark)} px ({graded} graded, < {MAX_FRAME_DARK}; bottom edge {bottom}, not graded)"
+    else:
+        graded = len(dark)
+        frame = f"{len(dark)} px (< {MAX_FRAME_DARK}; bottom edge {bottom})"
     return [
         ("leftover field-magenta", f"{leftover} px (< {MAX_LEFTOVER})", leftover < MAX_LEFTOVER),
-        ("near-black in 8 px frame", f"{len(dark)} px (< {MAX_FRAME_DARK}; bottom edge {bottom})",
-         len(dark) < MAX_FRAME_DARK),
+        ("near-black in 8 px frame", frame, graded < MAX_FRAME_DARK),
         ("corners alpha", str(corners), all(c == 0 for c in corners)),
         ("alpha >= 240 share", f"{share:.1%} (>= 90%)", share >= MIN_SOLID_SHARE),
     ]
@@ -282,14 +295,15 @@ def parse_size(text: str) -> tuple[int, int]:
     return int(w), int(h)
 
 
-def key_file(raw: Path, out: Path, expect: tuple[int, int] | None, haze: bool) -> bool:
+def key_file(raw: Path, out: Path, expect: tuple[int, int] | None, haze: bool,
+             cut_bottom: bool) -> bool:
     if shutil.which("sips") is None:
         raise SystemExit("sips not found: the ledger normalises portraits with macOS `sips -Z 1024`")
     cutout, spilled = key(Image.open(raw), haze)
     cutout.save(out)
     subprocess.run(["sips", "-Z", "1024", str(out)], check=True, capture_output=True)
     im = Image.open(out)
-    rows = ([canvas_row(im.size, expect)] if expect else []) + gate(im)
+    rows = ([canvas_row(im.size, expect)] if expect else []) + gate(im, cut_bottom)
     info = f"figure bbox {im.getchannel('A').getbbox()}"
     return report(f"{out.name}  {im.size[0]}x{im.size[1]} {im.mode}", rows,
                   info + (f"; despilled {spilled} px" if haze else ""))
@@ -355,6 +369,9 @@ def main() -> int:
     ap.add_argument("--haze", action="store_true",
                     help="no magenta-leaning glass in this palette: clear enclosed haze "
                          "pockets and despill (never for the Keeper)")
+    ap.add_argument("--cut-bottom", action="store_true",
+                    help="the brief cuts the figures at the canvas foot: report the bottom "
+                         "edge's near-black but do not grade it (the Queue)")
     ap.add_argument("--plate", action="store_true", help="check a 1536x1024 plate; no keying")
     ap.add_argument("--contact-sheet", type=Path, metavar="OUT.png")
     ap.add_argument("--row", action="append", nargs="+", default=[], metavar="TITLE IMG")
@@ -370,7 +387,8 @@ def main() -> int:
     if args.plate and len(args.paths) == 1:
         return 0 if check_plate(args.paths[0]) else 1
     if len(args.paths) == 2:
-        return 0 if key_file(args.paths[0], args.paths[1], args.expect, args.haze) else 1
+        return 0 if key_file(args.paths[0], args.paths[1], args.expect, args.haze,
+                             args.cut_bottom) else 1
     ap.error("give RAW.png OUT.png, --plate RAW.png, or --contact-sheet")
     return 2
 
