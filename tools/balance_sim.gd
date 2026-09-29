@@ -15,6 +15,9 @@ const PROFILES: Dictionary = {
 }
 ## Per-fight rates recorded with each run (flame lock §11 descriptor).
 const RATE_STATS: Array[String] = ["shatters", "kindles", "embersSpent", "cracked", "embersGained"]
+## A fight still running at this turn is cut off and counted a stall (flame
+## readout 5: 30 cut off a won 32-turn fight with the 650-HP final boss).
+const TURN_GUARD: int = 40
 static var _probe: Dictionary = {}
 static var _flame_acts: Array[Dictionary] = []
 func _initialize() -> void:
@@ -156,7 +159,7 @@ static func _fight(game: GlassvowGame, node: MapNode) -> Dictionary:
 		Pilot.play_turn(game)
 		if game.cb.over:
 			break
-		if game.cb.turn >= 30:
+		if game.cb.turn >= TURN_GUARD:
 			game.run.player.hp = maxi(0, game.cb.player.hp)
 			break
 		game.apply({"t": "endTurn"})
