@@ -99,6 +99,9 @@ class BalanceWaysTest(unittest.TestCase):
         random_arm = ways.sim_command("godot", 0, "full", "R", 13000, 3, Path("/r.json"))
         self.assertIn("--way=none", random_arm)
         self.assertIn("--build=random", random_arm)
+        self.assertFalse(any(arg.startswith("--content=") for _, command in work for arg in command))
+        swept = ways.jobs("godot", (13000, 13199), Path("/out"), Path("/sweep/point.json"))
+        self.assertTrue(all(command[-1] == "--content=/sweep/point.json" for _, command in swept))
 
     def test_gates_pass_on_their_exact_thresholds_and_fail_beyond(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -170,7 +173,9 @@ class BalanceWaysTest(unittest.TestCase):
                 code = ways.main(["--from-dir", temp, "--seeds", f"{SEEDS[0]}-{SEEDS[1]}"])
         self.assertEqual(0, code)
         self.assertIn("### V0, full pool", out.getvalue())
-        for argv in (["--quick", "--seeds", "13000-13009"], ["--seeds", "4000-4100"], ["--jobs", "0"]):
+        for argv in (["--quick", "--seeds", "13000-13009"], ["--seeds", "4000-4100"], ["--jobs", "0"],
+                     ["--content", "/no/such/catalogue.json"],
+                     ["--from-dir", "/tmp", "--content", __file__]):
             with self.subTest(argv=argv), contextlib.redirect_stderr(io.StringIO()), \
                     self.assertRaises(SystemExit) as caught:
                 ways.main(argv)

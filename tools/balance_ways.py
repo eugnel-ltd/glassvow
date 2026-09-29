@@ -12,6 +12,7 @@ on incomplete data.
 
 Usage (repo root):
   python3 tools/balance_ways.py [--quick | --seeds 13000-13199] [--jobs 4] [--out-dir DIR]
+                                [--content FILE]   # a scratch catalogue, e.g. one sweep point
   python3 tools/balance_ways.py --from-dir DIR [--quick | --seeds A-B]   # re-grade saved reports
 """
 from __future__ import annotations
@@ -82,23 +83,27 @@ def replay_name(vow: int, pool: str) -> str:
 
 
 def sim_command(godot: str, vow: int, pool: str, arm: str, first: int, count: int,
-                out: Path) -> list[str]:
+                out: Path, content: Path | None = None) -> list[str]:
     way, build = ARMS[arm]
     return [godot, "--headless", "-s", "res://tools/balance_sim.gd", "--", "--aspect=duskblade",
             f"--vow={vow}", f"--runs={count}", f"--seed0={first}", f"--pool={pool}",
-            f"--way={way}", f"--build={build}", f"--out={out}"]
+            f"--way={way}", f"--build={build}", f"--out={out}"] \
+        + ([f"--content={content}"] if content is not None else [])
 
 
-def jobs(godot: str, seeds: tuple[int, int], directory: Path) -> list[tuple[str, list[str]]]:
+def jobs(godot: str, seeds: tuple[int, int], directory: Path,
+         content: Path | None = None) -> list[tuple[str, list[str]]]:
     first, count = seeds[0], seeds[1] - seeds[0] + 1
     out: list[tuple[str, list[str]]] = []
     for vow in VOWS:
         for pool in POOLS:
             for arm in ARMS:
                 out.append((report_name(vow, pool, arm)[:-5], sim_command(
-                    godot, vow, pool, arm, first, count, directory / report_name(vow, pool, arm))))
+                    godot, vow, pool, arm, first, count, directory / report_name(vow, pool, arm),
+                    content)))
             out.append((replay_name(vow, pool)[:-5], sim_command(
-                godot, vow, pool, "A", first, min(REPLAY, count), directory / replay_name(vow, pool))))
+                godot, vow, pool, "A", first, min(REPLAY, count), directory / replay_name(vow, pool),
+                content)))
     return out
 
 
@@ -299,9 +304,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--godot", default="godot")
     parser.add_argument("--out-dir", type=Path, help="new or empty directory for reports and logs")
     parser.add_argument("--from-dir", type=Path, help="grade the reports an earlier run saved")
+    parser.add_argument("--content", type=Path,
+                        help="run on this catalogue instead of content/full-content.json")
     opts = parser.parse_args(argv)
     if opts.quick and opts.seeds:
         parser.error("--quick and --seeds are exclusive")
+    if opts.content is not None and (opts.from_dir is not None or not opts.content.is_file()):
+        parser.error("--content must name an existing file and cannot re-grade saved reports")
     try:
         seeds = QUICK_SEEDS if opts.quick else parse_seeds(opts.seeds) if opts.seeds else DEFAULT_SEEDS
     except ValueError as exc:
@@ -317,7 +326,8 @@ def main(argv: list[str] | None = None) -> int:
         directory.mkdir(parents=True, exist_ok=True)
         print(f"reports: {directory}", file=sys.stderr)
         start = time.monotonic()
-        run_jobs(jobs(opts.godot, seeds, directory.resolve()), directory, opts.jobs)
+        content = opts.content.resolve() if opts.content is not None else None
+        run_jobs(jobs(opts.godot, seeds, directory.resolve(), content), directory, opts.jobs)
         wall = time.monotonic() - start
     print(render(grade(directory, seeds), wall))
     return 0
