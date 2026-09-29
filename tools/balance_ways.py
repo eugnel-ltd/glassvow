@@ -60,7 +60,11 @@ G2_SPREAD = Fraction(10, 100)
 G3_BELOW, G3_ABOVE = Fraction(3, 100), Fraction(15, 100)
 G4_GAP = Fraction(25, 100)
 G4_CEILING = {0: Fraction(35, 100), 5: Fraction(15, 100)}
-G5_STEADY, G5_TRUE = Fraction(70, 100), Fraction(40, 100)
+# G5: (Steady by the end of Act 1, True by the end of Act 2) over every run; None is
+# not graded. The fresh-pool figure is readout 5's; like G1, fresh is graded at V0 only.
+G5_FLOOR = {(0, "full"): (Fraction(70, 100), Fraction(40, 100)),
+            (5, "full"): (Fraction(70, 100), Fraction(40, 100)),
+            (0, "fresh"): (Fraction(40, 100), None)}
 G6_MAX, G6_HELD, G6_WAYS = Fraction(60, 100), Fraction(20, 100), 2
 
 
@@ -202,6 +206,10 @@ def cell_gates(vow: int, pool: str, stats: dict[str, dict[str, Any]],
     floor = G1_FLOOR.get((vow, pool))
     steady = min(COMMITTED, key=lambda arm: stats[arm]["steady1"])
     true = min(COMMITTED, key=lambda arm: stats[arm]["true2"])
+    reach = G5_FLOOR.get((vow, pool))
+    reach_text = "no threshold for this cell" if reach is None else (
+        f">= {pct(reach[0])} and >= {pct(reach[1])} for every committed way" if reach[1] is not None
+        else f">= {pct(reach[0])} Steady for every committed way; True not graded")
     wins = Counter(row["flame"]["end"]["dominant"] for row in adaptive_rows if row["outcome"] == "win")
     total = sum(wins.values())
     shares = {way: Fraction(wins.get(way, 0), total) for way in WAYS} if total else {}
@@ -223,9 +231,9 @@ def cell_gates(vow: int, pool: str, stats: dict[str, dict[str, Any]],
          verdict(random_arm <= worst - G4_GAP and random_arm < G4_CEILING[vow])),
         ("G5 reachability: insisting gets there",
          f"Steady by end of Act 1 min {pct(stats[steady]['steady1'])} ({steady}); "
-         f"True by end of Act 2 min {pct(stats[true]['true2'])} ({true})",
-         ">= 70% and >= 40% for every committed way",
-         verdict(stats[steady]["steady1"] >= G5_STEADY and stats[true]["true2"] >= G5_TRUE)),
+         f"True by end of Act 2 min {pct(stats[true]['true2'])} ({true})", reach_text,
+         "n/a" if reach is None else verdict(stats[steady]["steady1"] >= reach[0]
+                                            and (reach[1] is None or stats[true]["true2"] >= reach[1]))),
         ("G6 diversity: different adaptive runs are different",
          ", ".join(f"{way} {pct(shares[way])}" for way in WAYS) + f" of {total} A wins"
          if total else "no A wins", "no way > 60%, >= 2 ways >= 20%",
