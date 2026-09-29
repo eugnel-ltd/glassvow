@@ -122,6 +122,7 @@ static func _vigil_write(fails: Array[String]) -> void:
 	Preferences.active.language = "en"
 	Locale.active = Locale.new(Locale.CODE_EN)
 	var host: Main = _bare_main()
+	var kernel: ScenarioKernel = ScenarioKernel.new(host.content)
 	var ref: ScenarioReference = ScenarioReference.new()
 	ref.load_from({
 		"id": "custom", "revision": 1, "build": "t", "seed": 18403,
@@ -129,19 +130,28 @@ static func _vigil_write(fails: Array[String]) -> void:
 	})
 	if not host.apply_dev_scenario(ref):
 		fails.append("dev tools: apply_dev_scenario failed: %s" % host.last_dev_error)
-	elif host._vigil_save_path != ScenarioKernel.VIGIL_PATH:
-		fails.append("dev tools: apply_dev_scenario did not bind the kernel Vigil path")
 	else:
-		host._vigil.whispers = 99
-		if not host._store_vigil():
-			fails.append("dev tools: redirected Vigil write failed")
-		elif _snap(SaveService.VIGIL_PATH) != before_vigil:
-			fails.append("dev tools: Console-routed Vigil write touched the player Vigil")
-		else:
-			var stored: VigilState = SaveService.load_vigil(host._vigil_save_path)
-			if stored.whispers != 99:
-				fails.append("dev tools: redirected Vigil write missed the Development profile")
-	ScenarioKernel.new(host.content).clear_profile()
+		# Both halves of the profile are asserted through the real entry point, each
+		# on its own, so a deleted or mistyped binding of either one fails here with
+		# its own message. The write below runs only when both hold: a Main left on
+		# the production path must not be handed a Vigil to overwrite it with.
+		var run_bound: bool = host._run_save_path == kernel.run_path
+		var vigil_bound: bool = host._vigil_save_path == kernel.vigil_path
+		if not run_bound:
+			fails.append("dev tools: apply_dev_scenario did not bind the kernel run path")
+		if not vigil_bound:
+			fails.append("dev tools: apply_dev_scenario did not bind the kernel Vigil path")
+		if run_bound and vigil_bound:
+			host._vigil.whispers = 99
+			if not host._store_vigil():
+				fails.append("dev tools: redirected Vigil write failed")
+			elif _snap(SaveService.VIGIL_PATH) != before_vigil:
+				fails.append("dev tools: Console-routed Vigil write touched the player Vigil")
+			else:
+				var stored: VigilState = SaveService.load_vigil(host._vigil_save_path)
+				if stored.whispers != 99:
+					fails.append("dev tools: redirected Vigil write missed the Development profile")
+	kernel.clear_profile()
 	host.free()
 	Locale.active = previous_locale
 	Preferences.active = previous_preferences
