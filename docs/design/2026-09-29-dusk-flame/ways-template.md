@@ -33,7 +33,7 @@ Everything below is content data. No way, colour or threshold lives in code.
         "likeWeight": 1.5, "fringeWeight": 1.2,
         "lantern": {
           "sootLeak": 1, "sootArtCost": 1,
-          "steadyCap": 2, "steadyFirstGain": 1, "trueArtCost": 1
+          "steadyCap": 4, "steadyFirstGain": 2, "trueArtCost": 2
         }
       },
       "sootCrown": "<boss relic id>",
@@ -50,7 +50,7 @@ Rules of the schema:
 - `excludes` lists the other classes' language that would be dead glass here. Nothing is deleted from content.
 - `flame` constants are per aspect so a class can feel different, but start from the Duskblade values.
 - The purity function, tiers, recognition at the boss and like-calls-to-like are the same code for every aspect (`domain/rules/flame.gd`, `rewards.gd`).
-- `flame.lantern` is the lantern's quality (lock §5), read from the flame at combat start: Soot loses `sootLeak` Embers at the end of each of the player's turns and adds `sootArtCost` to the Art's price; Steady and True add `steadyCap` to the Ember cap and `steadyFirstGain` to each turn's first Ember gain; True also takes `trueArtCost` off the Art, never below 1. Every knob is a whole number of at least 0, and a missing knob is 0, the plain lantern. The same code serves every aspect (`domain/rules/combat.gd`). *Implementation note (lock PR 4, 2026-09-29): these names replace the per-tier `soot`, `steady` and `true` blocks first sketched here.*
+- `flame.lantern` is the lantern's quality (lock §5), read from the flame at combat start: Soot loses `sootLeak` Embers at the end of each of the player's turns and adds `sootArtCost` to the Art's price; Steady and True add `steadyCap` to the Ember cap and `steadyFirstGain` to each turn's first Ember gain; True also takes `trueArtCost` off the Art, never below 1. Every knob is a whole number of at least 0, and a missing knob is 0, the plain lantern. The same code serves every aspect (`domain/rules/combat.gd`). *Implementation note (lock PR 4, 2026-09-29): these names replace the per-tier `soot`, `steady` and `true` blocks first sketched here.* *Calibration note (readout 6, 2026-09-30): the example shows Duskblade's shipped values, the ones a new class starts from; the lock's initial Steady and True values were `steadyCap` 2, `steadyFirstGain` 1 and `trueArtCost` 1.*
 
 ## 2. Design checklist
 
