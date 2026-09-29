@@ -132,9 +132,11 @@ const FAN_SPAN: float = 30.0   # PILE_FAN_MAX_DEG
 const FAN_FACES: int = 16      # PILE_FAN_MAX_LAYERS
 ## `.pile-exhaust { opacity: 0.9 }` — the ash pile sits a shade back.
 const ASH_FADE: float = 0.9
-const LANTERN_CAP_MAX: int = 12
 const LANTERN_PIP_SIDE: float = 5.0
 const LANTERN_PIP_RADIUS: float = 50.0
+## An ember pip's two readings (`.lbp`): held, and waiting to be filled.
+const LANTERN_PIP_LIT: Color = Color(1.0, 0.70, 0.35)
+const LANTERN_PIP_UNLIT: Color = Color(0.47, 0.39, 0.27, 0.35)
 ## The ember count, in the lantern's 104 box: under its foot, in the gap the pip
 ## arc leaves at the bottom (the pips run -140° to 140°). It used to sit over
 ## the glass, where it hid the top of every flame (#577).
@@ -215,7 +217,10 @@ var _lantern: Control
 var _lantern_count: Label
 var _lantern_art: TextureRect
 var _lantern_glow: TextureRect
+## One ember pip per Ember the lantern can hold, grown to the cap `set_lantern`
+## is given rather than built to a fixed size; a lower cap hides the spare.
 var _lantern_pips: Array[TextureRect] = []
+var _lantern_pip_texture: Texture2D
 ## The lantern's inner frame (`shell`) and its button body — the shell takes
 ## the `nope` shove and the beacon brightness, the body takes the tilt and the
 ## kindle swell, because the shell's scale is the shape adapter and its pivot
@@ -490,9 +495,15 @@ func _emit_potion(slot: int) -> void:
 
 ## The lantern's art charge, and whether it can be spent. The benchmark arcs one
 ## pip per emberCap from -140° to 140° (combat.js:754-762; styles.css:1101-1120).
+## The ring holds one pip per Ember the lantern can carry however high `cap` has
+## been raised (a Steady or True flame, a Crown of Cinders): the pips grow to it
+## and share the same arc, so a higher cap spaces them closer rather than
+## clipping the last.
 func set_lantern(charges: int, ready: bool, cap: int = 9, spent: bool = false) -> void:
 	_lantern_count.text = str(charges)
-	var shown_cap: int = clampi(cap, 1, LANTERN_CAP_MAX)
+	var shown_cap: int = maxi(cap, 1)
+	while _lantern_pips.size() < shown_cap:
+		_add_lantern_pip()
 	for i: int in range(_lantern_pips.size()):
 		var pip: TextureRect = _lantern_pips[i]
 		pip.visible = i < shown_cap
@@ -505,8 +516,7 @@ func set_lantern(charges: int, ready: bool, cap: int = 9, spent: bool = false) -
 			- Vector2.ONE * (LANTERN_PIP_SIDE * 0.5)
 		# `.lbp` blends between its readings over .25s; the build itself snaps,
 		# because a DOM element is born wearing its classes.
-		_pip_to(i, Color(1.0, 0.70, 0.35) if i < charges \
-			else Color(0.47, 0.39, 0.27, 0.35))
+		_pip_to(i, LANTERN_PIP_LIT if i < charges else LANTERN_PIP_UNLIT)
 	_pips_live = true
 	_lantern_ready = ready
 	# `.lantern-btn { transition: filter .25s }` over
@@ -540,6 +550,27 @@ func show_flame(event: Dictionary, instant: bool = false) -> void:
 		add_child(_flame)
 		_flame.light(_lantern_art, _lantern_glow)
 	_flame.show_event(event, instant)
+
+
+## One more ember pip on the lantern's ring, born unlit, the tone every pip waits
+## in. A pip added to a live HUD must not start white and fade down to it.
+func _add_lantern_pip() -> void:
+	var pip: TextureRect = TextureRect.new()
+	pip.texture = _lantern_pip_texture
+	# Expand mode FIRST: while a TextureRect is in KEEP_SIZE its texture is
+	# its minimum, so a `size` written before this line is clamped to the
+	# gradient's 256px and stays there — nine quarter-screen "pips" whose
+	# stacked 35% unlit tint was measured halving the hero plate under them.
+	pip.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pip.stretch_mode = TextureRect.STRETCH_SCALE
+	pip.size = Vector2.ONE * LANTERN_PIP_SIDE
+	pip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pip.modulate = LANTERN_PIP_UNLIT
+	_lantern_shell.add_child(pip)
+	_lantern_pips.append(pip)
+	_pip_from.append(LANTERN_PIP_UNLIT)
+	_pip_target.append(LANTERN_PIP_UNLIT)
+	_pip_u.append(1.0)
 
 
 ## Aim (or snap) one ember pip's tint. Progress is stepped in `_process`.
@@ -913,25 +944,10 @@ func _build_lantern() -> void:
 	_outline(_lantern_count, 8)
 	btn.add_child(_lantern_count)
 
-	var pip_texture: Texture2D = GlassStyle.grad_tex(
+	# The pips themselves are grown by `set_lantern`, to the cap it is given.
+	_lantern_pip_texture = GlassStyle.grad_tex(
 		PackedColorArray([Color.WHITE, Color(1.0, 1.0, 1.0, 0.0)]),
 		PackedFloat32Array([0.0, 1.0]), true, Vector2(0.5, 0.5), Vector2(1.0, 0.5))
-	for i: int in range(LANTERN_CAP_MAX):
-		var pip: TextureRect = TextureRect.new()
-		pip.texture = pip_texture
-		# Expand mode FIRST: while a TextureRect is in KEEP_SIZE its texture is
-		# its minimum, so a `size` written before this line is clamped to the
-		# gradient's 256px and stays there — nine quarter-screen "pips" whose
-		# stacked 35% unlit tint was measured halving the hero plate under them.
-		pip.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pip.stretch_mode = TextureRect.STRETCH_SCALE
-		pip.size = Vector2.ONE * LANTERN_PIP_SIDE
-		pip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		shell.add_child(pip)
-		_lantern_pips.append(pip)
-		_pip_from.append(Color.WHITE)
-		_pip_target.append(Color.WHITE)
-		_pip_u.append(1.0)
 	set_lantern(0, false)
 
 
