@@ -72,10 +72,14 @@ func relic_pool(run: RunState, tier: String) -> Array:
 
 
 ## Flame lock §6.1 pool hygiene: what an offer may draw. The reveal-gated pool
-## less the glass the run's aspect excludes; the draw count per offer is
-## unchanged. Checkpoint validators test membership against the full pools, so
-## a checkpoint saved before an exclusion still loads, and completeness (every
-## eligible relic owned) against these, as the generator saw them.
+## less the glass the run's aspect excludes. An exclusion changes which ids an
+## offer draws, not how many draws it makes, except where it leaves a relic
+## tier with nothing the run does not already hold: the shop then skips that
+## tier's pick and price draws, and a random relic with no tier left makes no
+## pick, as when ownership alone empties them. Checkpoint validators test
+## membership against the full pools, so a checkpoint saved before an exclusion
+## still loads, and completeness (every eligible relic owned) against these, as
+## the generator saw them.
 func offer_cards(run: RunState, tier: String) -> Array:
 	return _without(card_pool(run, tier), _excluded(run, "cards"))
 
@@ -85,16 +89,20 @@ func offer_relics(run: RunState, tier: String) -> Array:
 
 
 func _excluded(run: RunState, kind: String) -> Array:
-	if run.aspect < 0 or run.aspect >= content.aspects.size() \
-			or typeof(content.aspects[run.aspect]) != TYPE_DICTIONARY:
-		return []
-	var aspect: Dictionary = content.aspects[run.aspect]
-	var excludes_v: Variant = aspect.get("excludes", {})
+	var excludes_v: Variant = _aspect_row(run).get("excludes", {})
 	if typeof(excludes_v) != TYPE_DICTIONARY:
 		return []
 	var excludes: Dictionary = excludes_v
 	var ids_v: Variant = excludes.get(kind, [])
 	return ids_v if typeof(ids_v) == TYPE_ARRAY else []
+
+
+## The run aspect's content row; empty when the content declares none.
+func _aspect_row(run: RunState) -> Dictionary:
+	if run.aspect < 0 or run.aspect >= content.aspects.size() \
+			or typeof(content.aspects[run.aspect]) != TYPE_DICTIONARY:
+		return {}
+	return content.aspects[run.aspect]
 
 
 static func _without(pool: Array, excluded: Array) -> Array:
@@ -107,6 +115,86 @@ static func _pool_open(run: RunState, gate: Dictionary, id: String) -> bool:
 	if run.reveals_all or not gate.has(id):
 		return true
 	return run.reveals.has(str(gate[id]))
+
+
+## Flame lock §8, like calls to like: {way id: draw-weight multiplier}. Once the
+## flame is Steady or True its dominant way leans by the aspect's `likeWeight`
+## and its fringe way by `fringeWeight`; Kindling, Soot and an aspect without
+## ways lean nowhere. The flame is read from the deck through the pure mirror,
+## never from FLAME events, because the application edits the deck directly.
+func _lean(run: RunState) -> Dictionary:
+	var reading: Dictionary = Flame.read(content, run)
+	if not _lit(reading):
+		return {}
+	var flame_v: Variant = _aspect_row(run).get("flame", {})
+	var flame: Dictionary = flame_v if typeof(flame_v) == TYPE_DICTIONARY else {}
+	var lean: Dictionary = {str(reading["dominant"]): float(str(flame.get("likeWeight", 1.0)))}
+	if not str(reading["fringe"]).is_empty():
+		lean[str(reading["fringe"])] = float(str(flame.get("fringeWeight", 1.0)))
+	return lean
+
+
+static func _lit(reading: Dictionary) -> bool:
+	return str(reading["tier"]) in [Flame.TIER_STEADY, Flame.TIER_TRUE]
+
+
+## One pick from `pool` ("cards" or "relics"), made as `Rng.pick_index` makes
+## it: a single draw whatever the pool, the lean or the weights, so a lit flame
+## never moves the cursor or any later draw. With no lean it is `pick_index`.
+## With one, an entry weighs the product of the lean of every way it carries at
+## least 0.5 affinity to (a duo bridging the dominant and the fringe way takes
+## both), and the same draw falls through the cumulative weights.
+func _draw(rng: Rng, run: RunState, kind: String, pool: Array, lean: Dictionary) -> int:
+	if lean.is_empty() or pool.is_empty():
+		return rng.pick_index(pool.size())
+	var cumulative: Array[float] = []
+	var total: float = 0.0
+	for id_v: Variant in pool:
+		var affinity: Dictionary = Flame.relic_affinity(content, run.aspect, str(id_v)) \
+			if kind == "relics" else Flame.card_affinity(content, run.aspect, str(id_v))
+		var weight: float = 1.0
+		for way: Variant in lean:
+			if float(str(affinity.get(way, 0.0))) >= 0.5:
+				weight *= float(str(lean[way]))
+		total += weight
+		cumulative.append(total)
+	var target: float = rng.next() * total
+	for i: int in range(cumulative.size()):
+		if target < cumulative[i]:
+			return i
+	return cumulative.size() - 1
+
+
+## Flame lock §7, recognition at the boss: [slot-1 crown, slot-2 crown], "" for
+## a slot the draws fill. Slot 1 is the dominant way's crown when the flame is
+## Steady or True and the aspect's soot crown when it is Soot; slot 2 is the
+## fringe way's crown when Steady or True. A crown outside `available` (held,
+## or not in the boss offer pool) is never offered: the way falls back to its
+## alternates in order, then to the draw.
+func _recognised(run: RunState, available: Array[String]) -> Array[String]:
+	var reading: Dictionary = Flame.read(content, run)
+	var crowns: Array[String] = ["", ""]
+	if str(reading["tier"]) == Flame.TIER_SOOT:
+		var soot: String = str(_aspect_row(run).get("sootCrown", ""))
+		crowns[0] = soot if available.has(soot) else ""
+	elif _lit(reading):
+		crowns[0] = _crown_of(run, str(reading["dominant"]), available, "")
+		crowns[1] = _crown_of(run, str(reading["fringe"]), available, crowns[0])
+	return crowns
+
+
+## crownOf: the way's `crown`, then its `crownAlts` in order, skipping any not
+## in `available` and `taken`; "" when none is left.
+func _crown_of(run: RunState, way_id: String, available: Array[String], taken: String) -> String:
+	for way: Dictionary in Flame.ways(content, run.aspect):
+		if str(way.get("id", "")) != way_id:
+			continue
+		var alts: Array = way.get("crownAlts", [])
+		for crown_v: Variant in [way.get("crown", "")] + alts:
+			var crown: String = str(crown_v)
+			if crown != taken and available.has(crown):
+				return crown
+	return ""
 
 
 ## {"gold": int, "cards": Array[String], "potion": null|String, "relic": null|String}
@@ -157,6 +245,7 @@ func _rarity_cuts(kind: String) -> Vector2:
 func _roll_card_reward(run: RunState, kind: String) -> Array:
 	# Detached chain: the web quirk discards these draws' cursor movement.
 	var crng: Rng = Rng.new(run.rng_state())
+	var lean: Dictionary = _lean(run)
 	var out: Array = []  # may briefly hold one null from an empty-pool pick
 	var guard: Dictionary = {}
 	var wanted: int = 3 + (1 if run.has_relic("seersOrb") else 0) \
@@ -170,7 +259,7 @@ func _roll_card_reward(run: RunState, kind: String) -> Array:
 			var cuts: Vector2 = _rarity_cuts(kind)
 			pool_tier = "common" if r < cuts.x else ("uncommon" if r < cuts.y else "rare")
 		var pool: Array = offer_cards(run, pool_tier)
-		var idx: int = crng.pick_index(pool.size())  # the pick draw fires even on an empty pool
+		var idx: int = _draw(crng, run, "cards", pool, lean)  # the pick draw fires even on an empty pool
 		var id: Variant = pool[idx] if pool.size() > 0 else null
 		var digit: int = int(floorf(crng.next() * 4.0))
 		# Web guard key is `id + digit` — string concat for real ids, NaN for an
@@ -186,17 +275,32 @@ func _roll_card_reward(run: RunState, kind: String) -> Array:
 	return cards
 
 
+## Up to three distinct boss relics. The draws are made exactly as they always
+## were, whatever the flame (lock §7: a fixed draw count regardless of branch,
+## so the seed stream stays stable). Recognition then gives the flame's crowns
+## their slots and the draws that are not a placed crown fill the others in
+## drawn order, so an unlit flame offers precisely what was drawn.
 func roll_boss_relics(run: RunState) -> Array[String]:
 	var available: Array[String] = []
 	for id_v: Variant in offer_relics(run, "boss"):
 		var id: String = str(id_v)
 		if not run.player.relics.has(id):
 			available.append(id)
-	var out: Array[String] = []
-	while out.size() < mini(3, available.size()):
+	var drawn: Array[String] = []
+	while drawn.size() < mini(3, available.size()):
 		var id: String = available[run.rng.pick_index(available.size())]
-		if not out.has(id):
+		if not drawn.has(id):
+			drawn.append(id)
+	var crowns: Array[String] = _recognised(run, available)
+	crowns.resize(mini(crowns.size(), drawn.size()))
+	var out: Array[String] = []
+	for id: String in drawn:
+		if not crowns.has(id):
 			out.append(id)
+	for slot: int in range(crowns.size()):
+		if not crowns[slot].is_empty():
+			out.insert(slot, crowns[slot])
+	out.resize(drawn.size())
 	return out
 
 
@@ -425,10 +529,11 @@ func reverse_boon(run: RunState) -> bool:
 func gen_shop(run: RunState) -> Dictionary:
 	var discount: float = (0.75 if run.has_relic("merchantsMark") else 1.0) \
 		* float(str(_omen_mods(run).get("shopMult", 1)))
+	var lean: Dictionary = _lean(run)
 	var cards: Array = []
 	for tier: String in ["common", "common", "uncommon", "uncommon", "rare"]:
 		var pool: Array = offer_cards(run, tier)
-		var id: String = str(pool[run.rng.pick_index(pool.size())])
+		var id: String = str(pool[_draw(run.rng, run, "cards", pool, lean)])
 		var price_pair: Array = content.shop["cardPrice"][tier]
 		cards.append({
 			"id": id,
@@ -441,7 +546,7 @@ func gen_shop(run: RunState) -> Dictionary:
 			func(id_v: Variant) -> bool: return not run.player.relics.has(str(id_v))
 		)
 		if not available.is_empty():
-			var id: String = str(available[run.rng.pick_index(available.size())])
+			var id: String = str(available[_draw(run.rng, run, "relics", available, lean)])
 			var price_pair: Array = content.shop["relicPrice"][tier]
 			relics.append({
 				"id": id,

@@ -5,6 +5,7 @@ extends RefCounted
 const WAYS: Array[String] = ["shatter", "lantern", "edge"]
 const CONSTANTS: Array[String] = [
 	"minMass", "steadyMin", "trueMin", "sootMass", "sootMax", "fringeMin",
+	"likeWeight", "fringeWeight",
 ]
 
 
@@ -148,7 +149,8 @@ static func _way_less_aspects_read_neutral(content: ContentDB, fails: Array[Stri
 
 ## §6.1 as content: every id resolves, weights are 0.5 or 1.0 and total at most
 ## 1.0 per card or relic, crowns are boss relics, the §4 constants are present
-## and ordered, and the Ashwarden declares nothing yet.
+## and ordered, the §8 weights lean toward the flame (at least 1), and the
+## Ashwarden declares nothing yet.
 static func _ways_content_is_valid(content: ContentDB, fails: Array[String]) -> void:
 	var ways: Array[Dictionary] = Flame.ways(content, 0)
 	var ids: Array[String] = []
@@ -194,6 +196,9 @@ static func _ways_content_is_valid(content: ContentDB, fails: Array[String]) -> 
 			and _num(constants["steadyMin"]) < _num(constants["trueMin"])
 			and _num(constants["trueMin"]) <= 1.0 and _num(constants["fringeMin"]) > 0.0):
 		fails.append("ways content: flame thresholds out of order %s" % constants)
+	if _num(constants["likeWeight"]) < 1.0 or _num(constants["fringeWeight"]) < 1.0:
+		fails.append("ways content: likeWeight and fringeWeight must lean toward the flame %s"
+			% constants)
 	if not Flame.ways(content, 1).is_empty():
 		fails.append("ways content: the Ashwarden declares no ways until 1.1")
 
