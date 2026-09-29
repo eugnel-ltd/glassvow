@@ -5770,7 +5770,14 @@
         "sootMax": 0.45,
         "fringeMin": 0.25,
         "likeWeight": 1.5,
-        "fringeWeight": 1.2
+        "fringeWeight": 1.2,
+        "lantern": {
+          "sootLeak": 1,
+          "sootArtCost": 1,
+          "steadyCap": 2,
+          "steadyFirstGain": 1,
+          "trueArtCost": 1
+        }
       },
       "sootCrown": "hollowCrown",
       "excludes": {

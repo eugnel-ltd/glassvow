@@ -4,7 +4,11 @@ extends RefCounted
 const Sim: GDScript = preload("res://tools/balance_sim.gd")
 const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
-const EXPECTED: String = "ecd4edc11a7a9ce5be361907d4d1486dc8ddc1fec9450fa4173c06671f7f6025"
+const EXPECTED: String = "c4ddff97111adef37be9ab7b3e7279857ffc3dfaa987f305738ccc49cad271be"
+## The same run with every lantern knob at zero (flame lock §5): main's digest
+## from before the lantern had a quality (b151bcb9), so the knobs' zero point is
+## the old game. It moves only with a deliberate change to that game.
+const EXPECTED_UNLIT: String = "ecd4edc11a7a9ce5be361907d4d1486dc8ddc1fec9450fa4173c06671f7f6025"
 
 
 static func run(fails: Array[String]) -> void:
@@ -25,6 +29,24 @@ static func run(fails: Array[String]) -> void:
 		PackedStringArray(), {}, true, true)
 	if Sim.outcome_digest(random_first) != Sim.outcome_digest(random_second):
 		fails.append("balance sim: seeded random-build/random-play arm is not deterministic")
+	_check_unlit(fails)
+
+
+## Flame lock §5: with every lantern knob at zero the seed-1000 run replays the
+## game from before the lantern had a quality; with every knob at 1 it does not,
+## so the run meets a lit or sooty lantern and the replay is not vacuous.
+static func _check_unlit(fails: Array[String]) -> void:
+	for knob: int in [0, 1]:
+		var content: ContentDB = ContentDB.load_full(false)
+		var dusk: Dictionary = content.aspects[0]
+		var flame: Dictionary = dusk["flame"]
+		var lantern: Dictionary = flame["lantern"]
+		for key: Variant in lantern.keys():
+			lantern[key] = knob
+		var digest: String = Sim.outcome_digest(Sim.simulate(content, "duskblade", 1000, 0))
+		if (digest == EXPECTED_UNLIT) != (knob == 0):
+			fails.append("balance sim: seed 1000 with every lantern knob at %d must %s %s, got %s"
+				% [knob, "replay" if knob == 0 else "move off", EXPECTED_UNLIT, digest])
 
 
 static func _check_sampler(content: ContentDB, fails: Array[String]) -> void:

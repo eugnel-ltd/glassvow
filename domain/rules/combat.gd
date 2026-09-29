@@ -256,6 +256,7 @@ func start_combat(
 	_shuffle_cards(rng, cb.draw)
 	cb.embers = clampi(_ji(omen.get("startEmbers", 0)), 0, cb.ember_cap)
 	_apply_start_relics(run, cb)
+	_set_lantern_quality(run, cb)
 	_compute_intents(run, cb)
 	_start_player_turn(run, cb)
 	return cb
@@ -306,6 +307,36 @@ func _apply_start_relics(run: RunState, cb: CombatState) -> void:
 		for e: EnemyCombatant in cb.enemies:
 			e.statuses["poison"] = _sget(e.statuses, "poison") + core_smolder
 		_proc(cb, "ashenCore")
+
+
+## Flame lock §5 (docs/design/2026-09-29-dusk-flame): the flame read at combat
+## start sets the lantern's quality for the whole fight, the tier a combat
+## keeps. Soot leaks Embers at the end of each of your turns and makes the Art
+## dearer; Steady raises the cap (after the relics, so it adds to the Crown of
+## Cinders) and adds to each turn's first Ember gain; True is Steady with a
+## cheaper Art; Kindling, and any aspect without ways, is the plain lantern.
+## The effect is the same for every way. Every number is a `flame.lantern`
+## knob of the aspect's content.
+func _set_lantern_quality(run: RunState, cb: CombatState) -> void:
+	var tier: String = str(Flame.read(content, run)["tier"])
+	match tier:
+		Flame.TIER_SOOT:
+			cb.ember_leak = _lantern_knob(run, "sootLeak")
+			cb.art_cost_delta = _lantern_knob(run, "sootArtCost")
+		Flame.TIER_STEADY, Flame.TIER_TRUE:
+			cb.ember_cap += _lantern_knob(run, "steadyCap")
+			cb.first_gain_bonus = _lantern_knob(run, "steadyFirstGain")
+			if tier == Flame.TIER_TRUE:
+				cb.art_cost_delta = -_lantern_knob(run, "trueArtCost")
+
+
+## A lantern knob of the run's aspect; 0 when its content declares none. Only a
+## lit or sooty flame asks, and only an aspect with ways reads either.
+func _lantern_knob(run: RunState, key: String) -> int:
+	var aspect: Dictionary = content.aspects[run.aspect]
+	var flame: Dictionary = aspect.get("flame", {})
+	var lantern: Dictionary = flame.get("lantern", {})
+	return _ji(lantern.get(key, 0))
 
 
 static func _proc(cb: CombatState, relic_id: String) -> void:
@@ -434,7 +465,12 @@ func _add_status(cb: CombatState, statuses: Dictionary, who: Variant, id: String
 
 ## Spilled fire, caught by your lantern. Negative n = spent. Returns the delta.
 ## Every Ember caught is tallied in `run.stats.embersGained` (flame lock §11).
+## A Steady or True lantern adds its bonus to the first gain of each turn, before
+## the tithe and the cap take their share (flame lock §5).
 func gain_embers(run: RunState, cb: CombatState, n: int) -> int:
+	if n > 0 and cb.first_gain_bonus > 0 and cb.first_gain_turn != cb.turn:
+		cb.first_gain_turn = cb.turn
+		n += cb.first_gain_bonus
 	n = quests.tithe_embers(run, n)
 	var next: int = clampi(cb.embers + n, 0, cb.ember_cap)
 	var delta: int = next - cb.embers
@@ -1083,6 +1119,10 @@ func end_turn(run: RunState, cb: CombatState) -> void:
 	var regen: int = _sget(p.statuses, "regen")
 	if regen > 0:
 		heal_player(run, cb, regen)
+	# A Soot lantern gutters as your turn ends (flame lock §5). The Embers are
+	# lost, not spent: no deed counts them.
+	if cb.ember_leak > 0:
+		gain_embers(run, cb, -cb.ember_leak)
 	# Discard hand.
 	var uids: Array = []
 	for c: CardInst in cb.hand:
@@ -1247,8 +1287,16 @@ func kindle_from_hand(run: RunState, cb: CombatState, uid: int) -> bool:
 func can_use_art(run: RunState, cb: CombatState) -> bool:
 	if not content.arts.has(String(run.art)):
 		return false
-	var art: Dictionary = content.arts[String(run.art)]
-	return not cb.over and cb.art_used_turn != cb.turn and cb.embers >= _ji(art.get("cost", 0))
+	return not cb.over and cb.art_used_turn != cb.turn and cb.embers >= art_cost(run, cb)
+
+
+## The Art's price in this fight: its content cost moved by the lantern's
+## quality (flame lock §5: Soot dearer, True cheaper). A cheaper Art never falls
+## below 1, and the floor never raises an Art that costs less.
+func art_cost(run: RunState, cb: CombatState) -> int:
+	var art: Dictionary = content.arts.get(String(run.art), {})
+	var base: int = _ji(art.get("cost", 0))
+	return maxi(mini(base, 1), base + cb.art_cost_delta)
 
 
 func use_art(run: RunState, cb: CombatState) -> bool:
@@ -1256,7 +1304,7 @@ func use_art(run: RunState, cb: CombatState) -> bool:
 		return false
 	var art: Dictionary = content.arts[String(run.art)]
 	cb.art_used_turn = cb.turn
-	_spend_embers(run, cb, _ji(art.get("cost", 0)))
+	_spend_embers(run, cb, art_cost(run, cb))
 	cb.queue.append({"t": EventTypes.ART, "id": String(run.art)})
 	var effects: Array = art.get("effects", [])
 	for fx_v: Variant in effects:
