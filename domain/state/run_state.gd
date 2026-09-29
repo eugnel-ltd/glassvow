@@ -52,6 +52,7 @@ var stats: Dictionary = {
 	"slain": 0, "elites": 0, "bosses": 0, "dmgDealt": 0, "dmgTaken": 0,
 	"cardsPlayed": 0, "goldEarned": 0, "shatters": 0, "kindles": 0,
 	"perfects": 0, "smolderKills": 0, "unlitVisited": 0, "embersSpent": 0,
+	"cracked": 0, "embersGained": 0,
 }
 var map: Dictionary = {"nodes": [], "visited": []}
 var pending_combat: Variant = null

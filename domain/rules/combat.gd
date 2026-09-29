@@ -395,14 +395,18 @@ func add_status_player(cb: CombatState, id: String, n: int) -> void:
 	_add_status(cb, cb.player.statuses, "player", id, n)
 
 
-## Enemy poison from the player is Ash-only (aspect != 0). Slice goldens still
-## pin Dusk Flare smolder; the live catalogue id is `core`.
+## `run` marks the player as the source. Enemy poison from the player is
+## Ash-only (aspect != 0); slice goldens still pin Dusk Flare smolder, and the
+## live catalogue id is `core`. The Cracked the player applies is tallied in
+## `run.stats.cracked` (flame lock §11).
 func add_status_enemy(
 	cb: CombatState, e: EnemyCombatant, id: String, n: int, run: RunState = null
 ) -> void:
 	if id == "poison" and _player_smolder_blocked(run):
 		return
 	_add_status(cb, e.statuses, e.idx, id, n)
+	if run != null and id == "vulnerable" and n > 0:
+		run.stats["cracked"] = _ji(run.stats.get("cracked", 0)) + n
 
 
 func _player_smolder_blocked(run: RunState) -> bool:
@@ -419,12 +423,15 @@ func _add_status(cb: CombatState, statuses: Dictionary, who: Variant, id: String
 
 
 ## Spilled fire, caught by your lantern. Negative n = spent. Returns the delta.
+## Every Ember caught is tallied in `run.stats.embersGained` (flame lock §11).
 func gain_embers(run: RunState, cb: CombatState, n: int) -> int:
 	n = quests.tithe_embers(run, n)
 	var next: int = clampi(cb.embers + n, 0, cb.ember_cap)
 	var delta: int = next - cb.embers
 	if delta == 0:
 		return 0
+	if delta > 0:
+		run.stats["embersGained"] = _ji(run.stats.get("embersGained", 0)) + delta
 	cb.embers = next
 	cb.queue.append({"t": EventTypes.EMBER, "n": delta, "total": cb.embers})
 	return delta
@@ -691,7 +698,7 @@ func _shatter_enemy(run: RunState, cb: CombatState, e: EnemyCombatant) -> void:
 	run.stats["shatters"] = _ji(run.stats.get("shatters", 0)) + 1
 	e.staggered = true
 	cb.queue.append({"t": EventTypes.SHATTER, "idx": e.idx, "facetMax": e.facet_max})
-	add_status_enemy(cb, e, "vulnerable", 2)
+	add_status_enemy(cb, e, "vulnerable", 2, run)
 	gain_embers(run, cb, 2)
 	if run.has_relic("prismCharm") and not cb.prism_procd:
 		cb.prism_procd = true
