@@ -254,11 +254,24 @@ func _content_art(folder: String, id: String, definition: Dictionary,
 	return seat
 
 
+## Where this chrome ends for a shape: the top bar and the collection's two rows
+## under it. A widget seated below it is clear of the run HUD on every route,
+## however many relics the run has gathered (the reward and shop lantern hangs
+## there).
+static func chrome_bottom(stage_shape: StringName) -> float:
+	var compact: bool = stage_shape == &"phone-landscape"
+	return float(_bar_height(stage_shape) + (70 if compact else 96))
+
+
+## Compact chrome is phone-landscape only (#382 wrap bar). pad-portrait retired
+## with the landscape-only cut.
+static func _bar_height(stage_shape: StringName) -> int:
+	return 62 if stage_shape == &"phone-landscape" else 56
+
+
 func _apply_shape() -> void:
-	# Compact chrome is phone-landscape only (#382 wrap bar). pad-portrait
-	# retired with the landscape-only cut.
 	var compact: bool = shape == &"phone-landscape"
-	var bar_height: int = 62 if compact else 56
+	var bar_height: int = _bar_height(shape)
 	_top.offset_bottom = bar_height
 	_row.offset_left = 16
 	_row.offset_right = -_row.offset_left
@@ -274,7 +287,7 @@ func _apply_shape() -> void:
 		TextServer.OVERRUN_NO_TRIMMING if compact else TextServer.OVERRUN_TRIM_ELLIPSIS)
 	_title.max_lines_visible = 2 if compact else 1
 	_collection.offset_top = bar_height + 4
-	_collection.offset_bottom = bar_height + _shape_value(70, 96)
+	_collection.offset_bottom = chrome_bottom(shape)
 
 
 func _location_text(run: RunState) -> String:

@@ -372,6 +372,9 @@ var _rules: CombatRules
 var _enemy_views: Array[EnemyView] = []
 var _hand: HandView
 var _hud: HudBar
+## The last Flame reading (`EventTypes.FLAME`), so a HUD rebuilt for a new shape
+## burns the same flame. Empty for an aspect that declares no ways.
+var _flame_reading: Dictionary = {}
 ## The targeting arc, drawn only while a card that targets an enemy is aimed.
 var _aim: AimArc
 ## The region above the ground line, and the only parent an actor ever has. Its
@@ -842,6 +845,8 @@ func _build_hud() -> void:
 	_shake_host.add_child(_hud)
 	if sibling >= 0:
 		_shake_host.move_child(_hud, sibling)
+	if not _flame_reading.is_empty():
+		_hud.show_flame(_flame_reading, true)
 	_push_hud()
 	var locked: bool = seq.is_busy() or game.cb == null or game.cb.over
 	_hud.set_locked(locked)
@@ -1332,8 +1337,12 @@ func start_encounter(enemy_ids: Array, kind: String, encounter_text: String) -> 
 	# happens in, thicker for a boss.
 	_vfx.set_weather(not seq.instant, kind == "boss")
 	# Live play rolls the elite affix inside start_combat (traces passed it
-	# explicitly only to skip the rng draw).
-	game.apply({"t": "startCombat", "enemies": enemy_ids, "kind": kind})
+	# explicitly only to skip the rng draw). The batch is hard-synced below, so
+	# the one event read from it here is the Flame: the fight opens on the
+	# lantern the hero already carries, drawn at once.
+	for ev: Dictionary in game.apply({"t": "startCombat", "enemies": enemy_ids, "kind": kind}):
+		if ev.get("t") == EventTypes.FLAME:
+			_show_flame(ev, true)
 	for view: EnemyView in _enemy_views:
 		view.queue_free()
 	_enemy_views.clear()
@@ -2368,6 +2377,15 @@ func _float(at: Vector2, msg: String, cls: String = "dmg",
 func _land_in_pile(which: StringName) -> void:
 	_hud.bump_pile(which)
 
+
+## The Flame's reading, kept for a rebuilt HUD and drawn in the lantern
+## (lock §9). The screen only forwards it; the domain did the reading.
+func _show_flame(ev: Dictionary, instant: bool = false) -> void:
+	_flame_reading = ev
+	if _hud != null:
+		_hud.show_flame(ev, instant)
+
+
 func _handle_event(ev: Dictionary) -> void:
 	var t: StringName = ev["t"]
 	match t:
@@ -2733,6 +2751,10 @@ func _handle_event(ev: Dictionary) -> void:
 			_float(_enemy_centre(idx) + Vector2(0.0, -70.0), Locale.active.t("ui.combat.adamant"), "notice")
 			_sync_actors()
 			await _wait(0.18)
+		EventTypes.FLAME:
+			# The deck moved and the fight is over (the domain never reads the
+			# Flame mid-fight): the lantern tweens to the new reading.
+			_show_flame(ev)
 		EventTypes.VICTORY:
 			# The swap takes the close (07-scenes §5): a fight that did not
 			# end by hit points gets no fanfare — the scene arrives instead.

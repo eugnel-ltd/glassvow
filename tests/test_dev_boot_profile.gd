@@ -94,7 +94,7 @@ static func _parsed_flags(fails: Array[String]) -> PackedStringArray:
 			found.append(flag)
 	for named: String in [
 		"--fight=x", "--map", "--enter=x", "--dawn", "--onboard=x", "--scene=x",
-		"--stagecraft", "--shop", "--resume", "--shot=x",
+		"--stagecraft", "--shop", "--resume", "--shot=x", "--flame",
 	]:
 		_check(fails, found.has(named),
 			"Main._ready no longer parses %s, or this leg cannot see it" % named)

@@ -20,7 +20,8 @@ extends Control
 ## is a distance from an edge, a stage that flexes moves nothing.
 ##
 ## Values in, signals out. No game dependency: `set_values()` takes nine ints,
-## `set_title()` the location line, `set_lantern()` the art charge. The lab poses
+## `set_title()` the location line, `set_lantern()` the art charge,
+## `show_flame()` the Flame's reading as the domain emits it. The lab poses
 ## states the domain cannot reach yet (999 ward) and assembly wires the signals
 ## without this widget learning what a RunState is.
 ##
@@ -134,6 +135,10 @@ const ASH_FADE: float = 0.9
 const LANTERN_CAP_MAX: int = 12
 const LANTERN_PIP_SIDE: float = 5.0
 const LANTERN_PIP_RADIUS: float = 50.0
+## The ember count, in the lantern's 104 box: under its foot, in the gap the pip
+## arc leaves at the bottom (the pips run -140° to 140°). It used to sit over
+## the glass, where it hid the top of every flame (#577).
+const LANTERN_COUNT_BOX: Rect2 = Rect2(0.0, 88.0, 104.0, 34.0)
 
 ## The HUD's beacons. `artReady` 1.6s ease-in-out infinite — brightness 1.22
 ## with a 14px amber halo at the 50% mark — beckons from BOTH "you can act"
@@ -218,6 +223,9 @@ var _lantern_pips: Array[TextureRect] = []
 var _lantern_shell: Control
 var _lantern_body: Button
 var _lantern_ready: bool = false
+## The Flame in the lantern (lock §9). Null until the first reading arrives, so
+## an aspect that declares no ways keeps the painted lantern untouched.
+var _flame: LanternFlame = null
 var _kindle_target: bool = false
 ## Per-pip .25s crossfade state — from, target, and progress.
 var _pip_from: Array[Color] = []
@@ -519,6 +527,19 @@ func set_lantern(charges: int, ready: bool, cap: int = 9, spent: bool = false) -
 			LBP_BLEND, Motion.CSS_EASE)
 	# .lantern-btn.art-spent .lb-ic { opacity: .35 }
 	_lantern_art.modulate.a = 0.35 if spent else 1.0
+
+
+## The Flame's reading (`EventTypes.FLAME`), drawn in the lantern: its colour,
+## fringe, stillness, height and the way's figure, tweened over about a second
+## (lock §9). `instant` draws it at once, as a fight opens on the lantern the
+## hero already carries. The first reading lights the lantern; until then it is
+## the painted art, exactly as before the Flame.
+func show_flame(event: Dictionary, instant: bool = false) -> void:
+	if _flame == null:
+		_flame = LanternFlame.new()
+		add_child(_flame)
+		_flame.light(_lantern_art, _lantern_glow)
+	_flame.show_event(event, instant)
 
 
 ## Aim (or snap) one ember pip's tint. Progress is stepped in `_process`.
@@ -865,9 +886,10 @@ func _build_lantern() -> void:
 	_chrome_in.append(_lantern)
 	# The benchmark drop-shadows the lantern in its own firelight; a soft radial
 	# behind it is the cheap read of the same thing.
+	# A lit flame (`show_flame`) swaps this for the same falloff in its own light.
 	_lantern_glow = TextureRect.new()
 	_lantern_glow.texture = GlassStyle.grad_tex(
-		PackedColorArray([Color(1.0, 0.71, 0.35, 0.30), Color(1.0, 0.60, 0.25, 0.0)]),
+		PackedColorArray([Color(LanternFlame.PAINTED_LIGHT, 0.30), Color(1.0, 0.60, 0.25, 0.0)]),
 		PackedFloat32Array([0.0, 1.0]), true, Vector2(0.5, 0.5), Vector2(1.0, 0.5))
 	_lantern_glow.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_lantern_glow.stretch_mode = TextureRect.STRETCH_SCALE
@@ -884,7 +906,8 @@ func _build_lantern() -> void:
 	_lantern_art.position = Vector2(5.0, 5.0)
 	btn.add_child(_lantern_art)
 	_lantern_count = _num_label(26.0, PALE, GlassStyle.CINZEL_800, 0)
-	_lantern_count.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_lantern_count.position = LANTERN_COUNT_BOX.position
+	_lantern_count.size = LANTERN_COUNT_BOX.size
 	_lantern_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_lantern_count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_outline(_lantern_count, 8)

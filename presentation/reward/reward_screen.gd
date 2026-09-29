@@ -223,6 +223,7 @@ var _skip: Button = null
 var _overlay: ColorRect = null       # the scrim; one at a time, reused
 var _deep: bool = false
 var _picked: bool = false
+var _lantern: RunLantern = null      # the Flame, once a reading arrives
 
 ## One FontVariation per (face, tracking); Label wants a Font resource and a
 ## fresh one per label re-pays the shaping setup.
@@ -652,6 +653,18 @@ func callout_anchor() -> Control:
 	return _panel if _panel != null else self
 
 
+## The Flame's reading, in the hero's lantern beside the spoils, so a card taken
+## here is seen changing the flame here (lock §9). Main hands it the reading as
+## the screen opens (`instant`) and again after a claim moves the deck. The
+## lantern is built on the first reading, so a run whose aspect has no ways
+## never grows one.
+func show_flame(event: Dictionary, instant: bool = false) -> void:
+	if _lantern == null:
+		_lantern = RunLantern.new(shape)
+		add_child(_lantern)
+	_lantern.show_flame(event, instant)
+
+
 ## The player asked to leave. Emits `finished` when nothing is left on the glass,
 ## and otherwise puts the question to them first — spoils walked past are gone.
 func request_leave() -> void:
@@ -843,6 +856,8 @@ func set_shape(stage_shape: StringName) -> void:
 		return
 	shape = stage_shape
 	_rack_layout = LayoutBook.resolve(&"reward", shape)
+	if _lantern != null:
+		_lantern.set_shape(shape)
 	if _rack == null:
 		return
 	var panel_padding: float = _deep_panel_padding(_cards.size()) \
