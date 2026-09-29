@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reconstruct the s009 exam catalogue without touching live H39 content."""
+"""Reconstruct the s009 exam catalogue from the frozen H39 base; never touch live content."""
 from __future__ import annotations
 
 import argparse
@@ -16,6 +16,7 @@ if str(_TOOLS) not in sys.path:
 
 from balance_content_doe import canonical_json_bytes, get_path, set_path  # noqa: E402
 from balance_seed_contract import (  # noqa: E402
+    H39_REL,
     LIVE_REL,
     REPO,
     file_sha256,
@@ -47,7 +48,7 @@ def reconstruct_catalogue(base: Any, finalists: dict[str, Any]) -> tuple[Any, li
         before = get_path(content, path)
         expected = patch["before"]
         if before != expected:
-            raise ValueError(f"live H39 mismatch at {path}: {before!r} != {expected!r}")
+            raise ValueError(f"H39 base mismatch at {path}: {before!r} != {expected!r}")
         set_path(content, path, patch["after"])
         applied.append({"path": path, "before": before, "after": patch["after"]})
     texts = row["intendedHydratedUpdates"]["content/full-content.json"]
@@ -62,19 +63,19 @@ def catalogue_bytes(content: Any) -> bytes:
 
 
 def reconstruct(repo: Path = REPO) -> dict[str, Any]:
-    live = repo / LIVE_REL
-    live_sha = file_sha256(live)
-    if live_sha != H39_FILE_SHA:
-        raise ValueError(f"live {LIVE_REL} is {live_sha}, not H39 {H39_FILE_SHA}")
-    base = read_json(live)
+    base_path = repo / H39_REL
+    base_sha = file_sha256(base_path)
+    if base_sha != H39_FILE_SHA:
+        raise ValueError(f"{H39_REL} is {base_sha}, not H39 {H39_FILE_SHA}")
+    base = read_json(base_path)
     finalists = read_json(repo / FINALISTS_REL)
     content, applied = reconstruct_catalogue(base, finalists)
     blob = catalogue_bytes(content)
     identity = {
         "candidate": CANDIDATE_ID,
         "examCommit": EXAM_COMMIT,
-        "livePath": str(live),
-        "liveFileSha256": live_sha,
+        "basePath": str(base_path),
+        "baseFileSha256": base_sha,
         "fileSha256": sha256_bytes(blob),
         "semanticSha256": sha256_bytes(canonical_json_bytes(content)),
         "bytes": len(blob),
@@ -88,11 +89,11 @@ def reconstruct(repo: Path = REPO) -> dict[str, Any]:
         raise ValueError(
             f"reconstructed s009 semantic SHA {identity['semanticSha256']} != exam {EXAM_SEMANTIC_SHA}"
         )
-    if file_sha256(live) != H39_FILE_SHA:
-        raise ValueError("reconstruction mutated live content/full-content.json")
+    if file_sha256(base_path) != H39_FILE_SHA:
+        raise ValueError(f"reconstruction mutated {H39_REL}")
     identity["examFileSha256"] = EXAM_FILE_SHA
     identity["examSemanticSha256"] = EXAM_SEMANTIC_SHA
-    identity["liveUnchanged"] = True
+    identity["baseUnchanged"] = True
     return {"identity": identity, "blob": blob, "content": content}
 
 
@@ -110,7 +111,7 @@ def self_test() -> int:
     identity = packet["identity"]
     assert identity["fileSha256"] == EXAM_FILE_SHA
     assert identity["semanticSha256"] == EXAM_SEMANTIC_SHA
-    assert identity["liveFileSha256"] == H39_FILE_SHA
+    assert identity["baseFileSha256"] == H39_FILE_SHA
     assert live.read_bytes() == before
     with tempfile.TemporaryDirectory(prefix="glassvow-489-s009-") as temp:
         out = Path(temp) / "s009-full-content.json"
@@ -125,8 +126,8 @@ def self_test() -> int:
     assert live.read_bytes() == before
     print("balance s009 reconstruct self-test OK")
     print(json.dumps({k: identity[k] for k in (
-        "candidate", "examCommit", "liveFileSha256", "fileSha256", "semanticSha256",
-        "bytes", "liveUnchanged",
+        "candidate", "examCommit", "baseFileSha256", "fileSha256", "semanticSha256",
+        "bytes", "baseUnchanged",
     )}, indent=2, sort_keys=True))
     return 0
 

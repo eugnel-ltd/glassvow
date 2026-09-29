@@ -25,7 +25,7 @@ static func run(fails: Array[String]) -> void:
 		return
 	var args: PackedStringArray = PackedStringArray([
 		"--fight=sporeling,sporeling,sporeling", "--kind=normal",
-		"--seed=717", "--act=0", "--shape=phone-landscape",
+		"--seed=717", "--act=1", "--shape=phone-landscape",
 		"--vp=844x390", "--perf-language=zh-Hant",
 		"--perf-commit=0123456789abcdef0123456789abcdef01234567",
 		"--perf-out=/tmp/report.json",
@@ -33,6 +33,26 @@ static func run(fails: Array[String]) -> void:
 	var valid: Dictionary = Bench.request(args)
 	_check(fails, not valid.has("error"),
 		"combat bench accepts the complete release request")
+	# `--act=` is the act NUMBER, counted from 1 (#451). The request keeps the
+	# 0-based act index the plan and the report carry, so the evidence schema is
+	# unchanged: Act I is index 0, and the release fight's Act II is index 1.
+	var act_index: int = valid.get("act", -1)
+	_check(fails, act_index == 0, "combat bench reads --act=1 as act index 0")
+	for pair: Array in [["--act=2", 1], ["--act=3", 2]]:
+		var flag: String = pair[0]
+		var want: int = pair[1]
+		var numbered: PackedStringArray = args.duplicate()
+		numbered[numbered.find("--act=1")] = flag
+		var numbered_result: Dictionary = Bench.request(numbered)
+		var numbered_index: int = numbered_result.get("act", -1)
+		_check(fails, numbered_index == want,
+			"combat bench reads %s as act index %d" % [flag, want])
+	for refused: String in ["--act=0", "--act=4", "--act=abc", "--act="]:
+		var bad_act: PackedStringArray = args.duplicate()
+		bad_act[bad_act.find("--act=1")] = refused
+		var bad_result: Dictionary = Bench.request(bad_act)
+		_check(fails, bad_result.has("error"),
+			"combat bench rejects %s: not a release act number" % refused)
 	var missing: PackedStringArray = args.duplicate()
 	missing.remove_at(missing.find("--shape=phone-landscape"))
 	var missing_result: Dictionary = Bench.request(missing)

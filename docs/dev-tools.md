@@ -153,7 +153,7 @@ commands: `tools/check_imports.sh`, `tools/check_anchors.py`,
 `res://tools/bench_actor_stage.gd` probe, and:
 
 ```bash
-godot --headless -s res://tools/probe_layout.gd -- --all [--act=N]
+godot --headless -s res://tools/probe_layout.gd -- --all [--act=N]   # N counts from 1
 ```
 
 The #128 runtime-font proof also stays on the headed capture route. It renders
@@ -210,14 +210,39 @@ the hand fanning 586px wide instead of 282 everywhere but a running game.
 
 Two capture flags exist for the same reason:
 
-- **`--act=N`** stages a fight at any act. The domain does not model acts, so a
-  `--fight=` bench is act 0 and the other two were reachable only through the
-  layout bench.
+- **`--act=N`** stages a fight, or dresses the `--map` scenery, in any act. `N`
+  is the act number, counted from 1 (see below), and only 1 to 4 are accepted.
+  The domain does not model acts, so a `--fight=` bench is Act I and the others
+  were reachable only through the layout bench.
 - **`--settle=SECONDS`** photographs a composition at rest. Thirty frames is
   enough for a first paint and not for a fight: the opening hand is still in the
   air at half a second, so two runs of the same build differed across 2.4% of the
   frame, all of it in the fan. With `--settle=4` that falls to 0.03%, which is
   what makes a before/after diff of a layout change readable at all.
+
+### Act numbers and act indices
+
+Two numberings meet at the command line. `--act=` takes the first; the second is
+the index the game is keyed by, and the one flag that takes it is named for it
+(`--act-index=`).
+
+| Name | Counts from | Where it appears |
+|---|---|---|
+| **Act number** | 1 (Act I is `1`) | `--act=N` on `application/main.gd` (fights and `--map`), on the layout bench and on `tools/probe_layout.gd`, and the labels those benches print |
+| **Act index** | 0 (Act I is `0`) | `RunState.act`; the `LayoutBook`, `MapRegions` and `MapLandscapeAssets` tables; the `act` field of `assets/art/map/map-assets.json` (`-1` marks the kits every act shares); `--act-index=N` on `tools/preview_map.gd`; `overrides.act` in `--scenario` JSON; the `act` in the performance-budget plan and report |
+
+`--act=` takes the number: `--act=1` is Act I and `--act=4` is Act IV. `ActFlag`
+is the one function that turns a number into an index, and code that carries an
+index calls it `act_index`. The data formats that predate the convention keep
+their field names (`act` in the manifest, in `RunState`, in scenario JSON and in
+the performance plan) and count from 0. `ActFlag` refuses rather than clamps:
+`--act=0`, `--act=5`, an empty value and anything that is not a plain number exit
+with status 2 and a message that states this convention. The flag used to count
+from 0, so `--act=1` rendered Act II, `--act=9` quietly rendered Act IV and
+`--act=abc` quietly rendered Act I (#451).
+
+`tools/run_performance_budget.py` keeps the index in its plan and reports, so
+archived evidence still reads the same, and asks the game for `--act=` one higher.
 
 ## Save profile
 

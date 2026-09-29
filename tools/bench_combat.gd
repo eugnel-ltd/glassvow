@@ -98,10 +98,10 @@ func _bind_scene() -> bool:
 		_fail("fight mismatch: expected %s got %s" % [expected_fight, actual_fight])
 		return false
 	var requested_seed: int = int(float(str(_request["seed"])))
-	var requested_act: int = int(float(str(_request["act"])))
+	var requested_act_index: int = int(float(str(_request["act"])))
 	if combat.game.cb.kind != StringName(str(_request["kind"])) \
 			or combat.game.run.seed != requested_seed \
-			or combat.act != requested_act:
+			or combat.act != requested_act_index:
 		_fail("kind, seed or act differs from the request")
 		return false
 	var expected_size: Vector2i = Vector2i(
@@ -248,9 +248,16 @@ static func request(args: PackedStringArray) -> Dictionary:
 	var seed: int = str(raw["seed"]).to_int()
 	if not str(raw["seed"]).is_valid_int() or seed < 0:
 		return {"error": "invalid seed"}
-	var act: int = str(raw["act"]).to_int()
-	if not str(raw["act"]).is_valid_int() or act not in range(3):
-		return {"error": "invalid act"}
+	# `--act=` is the act NUMBER (`ActFlag`). The request, and so the report the
+	# runner replays, keeps the 0-based act index it always carried: the evidence
+	# schema does not move with the flag's convention (#451).
+	var forced: Dictionary = ActFlag.parse(str(raw["act"]))
+	if forced.has("error"):
+		return {"error": str(forced["error"])}
+	var act_index: int = forced["act_index"]
+	if act_index not in range(3):
+		return {"error": "release evidence covers --act=1 to --act=3, got --act=%s"
+			% str(raw["act"])}
 	var commit: String = str(raw["perf-commit"]).to_lower()
 	if commit.length() != 40 or not commit.is_valid_hex_number(false):
 		return {"error": "invalid commit"}
@@ -261,7 +268,7 @@ static func request(args: PackedStringArray) -> Dictionary:
 		return {"error": "empty fight"}
 	return {
 		"fight": fight, "kind": str(raw["kind"]), "seed": seed,
-		"act": act, "shape": String(shape), "vp_x": vp.x, "vp_y": vp.y,
+		"act": act_index, "shape": String(shape), "vp_x": vp.x, "vp_y": vp.y,
 		"language": str(raw["perf-language"]), "commit": commit,
 		"out": str(raw["perf-out"]),
 	}

@@ -71,6 +71,38 @@ func relic_pool(run: RunState, tier: String) -> Array:
 	return out
 
 
+## Flame lock §6.1 pool hygiene: what an offer may draw. The reveal-gated pool
+## less the glass the run's aspect excludes; the draw count per offer is
+## unchanged. Checkpoint validators test membership against the full pools, so
+## a checkpoint saved before an exclusion still loads, and completeness (every
+## eligible relic owned) against these, as the generator saw them.
+func offer_cards(run: RunState, tier: String) -> Array:
+	return _without(card_pool(run, tier), _excluded(run, "cards"))
+
+
+func offer_relics(run: RunState, tier: String) -> Array:
+	return _without(relic_pool(run, tier), _excluded(run, "relics"))
+
+
+func _excluded(run: RunState, kind: String) -> Array:
+	if run.aspect < 0 or run.aspect >= content.aspects.size() \
+			or typeof(content.aspects[run.aspect]) != TYPE_DICTIONARY:
+		return []
+	var aspect: Dictionary = content.aspects[run.aspect]
+	var excludes_v: Variant = aspect.get("excludes", {})
+	if typeof(excludes_v) != TYPE_DICTIONARY:
+		return []
+	var excludes: Dictionary = excludes_v
+	var ids_v: Variant = excludes.get(kind, [])
+	return ids_v if typeof(ids_v) == TYPE_ARRAY else []
+
+
+static func _without(pool: Array, excluded: Array) -> Array:
+	if excluded.is_empty():
+		return pool
+	return pool.filter(func(id_v: Variant) -> bool: return not excluded.has(str(id_v)))
+
+
 static func _pool_open(run: RunState, gate: Dictionary, id: String) -> bool:
 	if run.reveals_all or not gate.has(id):
 		return true
@@ -137,7 +169,7 @@ func _roll_card_reward(run: RunState, kind: String) -> Array:
 			var r: float = crng.next()
 			var cuts: Vector2 = _rarity_cuts(kind)
 			pool_tier = "common" if r < cuts.x else ("uncommon" if r < cuts.y else "rare")
-		var pool: Array = card_pool(run, pool_tier)
+		var pool: Array = offer_cards(run, pool_tier)
 		var idx: int = crng.pick_index(pool.size())  # the pick draw fires even on an empty pool
 		var id: Variant = pool[idx] if pool.size() > 0 else null
 		var digit: int = int(floorf(crng.next() * 4.0))
@@ -156,7 +188,7 @@ func _roll_card_reward(run: RunState, kind: String) -> Array:
 
 func roll_boss_relics(run: RunState) -> Array[String]:
 	var available: Array[String] = []
-	for id_v: Variant in relic_pool(run, "boss"):
+	for id_v: Variant in offer_relics(run, "boss"):
 		var id: String = str(id_v)
 		if not run.player.relics.has(id):
 			available.append(id)
@@ -291,9 +323,10 @@ func valid_treasure_checkpoint(run: RunState, value: Variant) -> bool:
 			and eligible.has(relic_v) and run.player.relics.has(relic_v)
 	if _ji(claim["gold"]) != 60 or run.player.gold < 60:
 		return false
-	for id_v: Variant in eligible:
-		if not run.player.relics.has(str(id_v)):
-			return false
+	for tier: String in ["common", "uncommon", "rare"]:
+		for id_v: Variant in offer_relics(run, tier):
+			if not run.player.relics.has(str(id_v)):
+				return false
 	return true
 
 
@@ -394,7 +427,7 @@ func gen_shop(run: RunState) -> Dictionary:
 		* float(str(_omen_mods(run).get("shopMult", 1)))
 	var cards: Array = []
 	for tier: String in ["common", "common", "uncommon", "uncommon", "rare"]:
-		var pool: Array = card_pool(run, tier)
+		var pool: Array = offer_cards(run, tier)
 		var id: String = str(pool[run.rng.pick_index(pool.size())])
 		var price_pair: Array = content.shop["cardPrice"][tier]
 		cards.append({
@@ -404,7 +437,7 @@ func gen_shop(run: RunState) -> Dictionary:
 		})
 	var relics: Array = []
 	for tier: String in ["common", "uncommon"]:
-		var available: Array = relic_pool(run, tier).filter(
+		var available: Array = offer_relics(run, tier).filter(
 			func(id_v: Variant) -> bool: return not run.player.relics.has(str(id_v))
 		)
 		if not available.is_empty():
@@ -483,7 +516,7 @@ func valid_shop_checkpoint(run: RunState, value: Variant) -> bool:
 		seen_tiers[tier] = true
 	for tier: String in ["common", "uncommon"]:
 		if not seen_tiers.has(tier):
-			for id_v: Variant in relic_pool(run, tier):
+			for id_v: Variant in offer_relics(run, tier):
 				if not run.player.relics.has(str(id_v)):
 					return false
 
@@ -593,11 +626,11 @@ func apply_event_ops(run: RunState, ops: Array) -> Dictionary:
 
 func roll_event_cards(run: RunState, count: int) -> Array[String]:
 	var weighted: Array = []
-	weighted.append_array(card_pool(run, "common"))
-	weighted.append_array(card_pool(run, "common"))
-	weighted.append_array(card_pool(run, "uncommon"))
-	weighted.append_array(card_pool(run, "uncommon"))
-	weighted.append_array(card_pool(run, "rare"))
+	weighted.append_array(offer_cards(run, "common"))
+	weighted.append_array(offer_cards(run, "common"))
+	weighted.append_array(offer_cards(run, "uncommon"))
+	weighted.append_array(offer_cards(run, "uncommon"))
+	weighted.append_array(offer_cards(run, "rare"))
 	var out: Array[String] = []
 	var guard: int = 0
 	while out.size() < count and guard < 60:
@@ -626,7 +659,7 @@ func _random_relic(run: RunState) -> Variant:
 	for i: int in range(order.size()):
 		var t: String = order[(idx + i) % order.size()]
 		var avail: Array = []
-		for id_v: Variant in relic_pool(run, t):
+		for id_v: Variant in offer_relics(run, t):
 			var id: String = str(id_v)
 			if not run.player.relics.has(id):
 				avail.append(id)

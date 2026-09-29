@@ -13,6 +13,9 @@ REPO = Path(__file__).resolve().parents[1]
 CONTRACT_REL = "docs/balance/421-content-search-seeds-v1.json"
 SPACE_REL = "docs/balance/421-content-search-space-v1.json"
 LIVE_REL = "content/full-content.json"
+# The #421 programme's catalogue (H39). Live content moved on with the flame
+# lock (PR 2, 2026-09-29), so replays of that programme read this frozen copy.
+H39_REL = "docs/balance/data/421-h39/full-content.json"
 DRIVER_RELS = (
     "tools/balance_sim.gd",
     "tools/balance_sweep.gd",

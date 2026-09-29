@@ -23,6 +23,9 @@ var _rig: MapCameraRig
 var _key: DirectionalLight3D
 var _world: Node3D
 var _landscape_assets: MapLandscapeAssets
+## Builds an act's catalogue from its act index. A field so a test can hand the
+## binder a catalogue that resolves only in part, which no shipped act does.
+var _landscape_source: Callable = MapLandscapeAssets.new
 var _landscape: MapLandscape
 var _live: bool = false
 var _settle_frames: int = 0
@@ -39,6 +42,8 @@ var _waylights: Dictionary[String, MapWaylightTracer] = {}
 var _layout_result: MapLayoutResult = null
 var _layout_diagnostics: Dictionary = {}
 var _layout_failure: Dictionary = {}
+## The bound act INDEX, 0-based (Act I is 0); -1 until the first bind. `--act=` is
+## the act NUMBER and never reaches here untranslated (`ActFlag`).
 var _act: int = -1
 var _dragging: bool = false
 var _lock_input: bool = false
@@ -214,9 +219,9 @@ func _add_hero_contract(anchors: Dictionary, zones: Dictionary, role: String,
 
 ## Bind this act's grade + ramp bands. `MapRegions.for_act` is the only
 ## palette source; content theme is not consulted. Re-arms freeze so the
-## new look paints once.
-func set_act(act_i: int) -> void:
-	var region: MapRegions = MapRegions.for_act(act_i)
+## new look paints once. `act_index` is 0-based.
+func set_act(act_index: int) -> void:
+	var region: MapRegions = MapRegions.for_act(act_index)
 	if region.act == _act and not _salt_dirty:
 		return
 	_act = region.act
@@ -463,6 +468,22 @@ func _placement_footprint(candidate: Dictionary) -> PackedVector2Array:
 		_v3(transform["scale"]))
 
 
+## Resolve the active act's landscape catalogue and hand its profiles on.
+##
+## Every act, 0-3, declares a set in `MapLandscapeAssets` (its scenery, a gate
+## and, for Act I, the Vigil), so a set that resolves only in part is a defect and
+## never work in progress. It `push_error`s naming the act and how many of the
+## declared assets resolved, records the layout failure and returns before
+## anything is bound, so the result is no landscape rather than a plausible half
+## of one. Before this the scene said nothing and the screen above it could only
+## report that profiles were unavailable, so a missing asset read as a broken
+## renderer (#450, #451).
+##
+## #451 also asked for a second case, an act nobody has authored yet, kept on
+## placeholders with a warning. That case ended with the placeholder renderer
+## (`7fc07f66`): an act either declares a set or does not exist, so there is no
+## warning path left to keep. An act added to `LayoutBook.ACTS` without a matching
+## `MapLandscapeAssets` entry is caught by `tests/test_map_asset_shortfall.gd`.
 func _bind_asset_geometry() -> void:
 	if _landscape != null:
 		_landscape.free()
@@ -477,8 +498,9 @@ func _bind_asset_geometry() -> void:
 	_terminus_id = ""
 	_threshold_id = ""
 	MapPinProjection.set_scenery([])
-	_landscape_assets = MapLandscapeAssets.new(_act)
+	_landscape_assets = _landscape_source.call(_act)
 	if not _landscape_assets.failure.is_empty():
+		push_error("MapScene: " + _landscape_assets.shortfall())
 		_fail_layout(_landscape_assets.failure)
 		return
 	_asset_profiles = _landscape_assets.registry

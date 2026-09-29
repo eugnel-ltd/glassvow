@@ -271,6 +271,15 @@ class PerformanceEvidenceTests(unittest.TestCase):
                     lambda section=section, key=key, value=value:
                     self.report[section].update({key: value}))
 
+    def test_act_flag_counts_from_one_while_the_plan_keeps_the_index(self) -> None:
+        # The plan and the report carry the 0-based act index; the game's
+        # `--act=` takes the act number. The release plan's Act II is index 1, so
+        # the game must be asked for `--act=2`, not `--act=1` (#451).
+        self.assertEqual(PERF.act_flag(self.plan["act"]), "--act=2")
+        self.assertEqual([PERF.act_flag(index) for index in range(3)],
+                         ["--act=1", "--act=2", "--act=3"])
+        self.assertEqual(PERF.expected(self.plan, "phone-landscape", "en")["act"], 1)
+
     def test_runtime_provenance_matches_the_signed_target(self) -> None:
         self.assert_report_rejected(lambda: self.report["provenance"]
                                     .update(godot="4.7.2.counterfeit"))
