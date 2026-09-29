@@ -5772,8 +5772,8 @@
         "likeWeight": 1.5,
         "fringeWeight": 1.2,
         "lantern": {
-          "sootLeak": 0,
-          "sootArtCost": 0,
+          "sootLeak": 1,
+          "sootArtCost": 1,
           "steadyCap": 0,
           "steadyFirstGain": 0,
           "trueArtCost": 0
