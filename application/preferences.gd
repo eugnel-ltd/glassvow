@@ -1,9 +1,10 @@
 class_name Preferences
 extends RefCounted
 ## Player-facing settings persisted at user://settings.cfg — audio (Master/
-## Music/SFX), display (fullscreen, vsync) and motion (screen shake, reduce
-## motion). Supersedes the audio-only user://audio.cfg: its values are
-## imported once, the first time this file is created, and never re-read.
+## Music/SFX), display (fullscreen, vsync), motion (screen shake, reduce
+## motion) and privacy (crash diagnostics). Supersedes the audio-only
+## user://audio.cfg: its values are imported once, the first time this file
+## is created, and never re-read.
 ##
 ## `active` is the main-owned handle (SKILL §2: no autoloads). Main replaces
 ## it with the disk-backed instance at boot; the default is an in-memory
@@ -21,6 +22,14 @@ const DEFAULT_MASTER: float = 1.0
 const DEFAULT_MUSIC: float = 0.35
 const DEFAULT_SFX: float = 0.55
 
+## Crash diagnostics are on unless the player switches them off (posture B,
+## docs/privacy/README.md). The main loop reads the same key through
+## `read_diagnostics_enabled`, so the two can never name different places.
+const PRIVACY_SECTION: String = "privacy"
+const DIAGNOSTICS_KEY: String = "diagnostics_enabled"
+const DIAGNOSTICS_NOTICE_KEY: String = "diagnostics_notice_seen"
+const DEFAULT_DIAGNOSTICS: bool = true
+
 static var active: Preferences = Preferences.new()
 
 var master_volume: float = DEFAULT_MASTER
@@ -37,6 +46,11 @@ var reduce_motion: bool = false
 ## Empty = derive from OS (`zh*` → zh-Hant, else en). Explicit `en` / `zh-Hant`
 ## overrides. Persisted under [locale] language.
 var language: String = ""
+## Whether Sentry starts. The main loop reads it from settings.cfg before Main
+## loads Preferences, so a change takes effect on the next launch.
+var diagnostics_enabled: bool = DEFAULT_DIAGNOSTICS
+## Whether the one-line diagnostics notice has been shown.
+var diagnostics_notice_seen: bool = false
 
 ## Only the instance read from disk writes back to disk; the default `active`
 ## stand-in stays in memory whatever a lab does to it.
@@ -60,6 +74,16 @@ static func read_from_disk(path: String = PATH,
 		preferences._store()
 	preferences.apply_audio()
 	return preferences
+
+
+## The main loop's read. Sentry starts before Main loads Preferences, so this
+## reads the one key straight from the file and has no other effect: it never
+## creates the file, imports audio.cfg or touches the audio buses.
+static func read_diagnostics_enabled(path: String = PATH) -> bool:
+	var config: ConfigFile = ConfigFile.new()
+	if config.load(path) != OK:
+		return DEFAULT_DIAGNOSTICS
+	return _diagnostics_value(config)
 
 
 func volume(bus: StringName) -> float:
@@ -130,6 +154,18 @@ func set_language(code: String) -> void:
 	_store()
 
 
+func set_diagnostics_enabled(on: bool) -> void:
+	diagnostics_enabled = on
+	_store()
+
+
+func mark_diagnostics_notice_seen() -> void:
+	if diagnostics_notice_seen:
+		return
+	diagnostics_notice_seen = true
+	_store()
+
+
 ## Resolves the catalogue code Preferences wants Locale to load.
 func effective_language() -> StringName:
 	return resolve_language(language, OS.get_locale_language())
@@ -180,6 +216,9 @@ func _read(config: ConfigFile) -> void:
 	reduce_motion = _bool_value(
 		config.get_value("motion", "reduce_motion", false), false)
 	language = str(config.get_value("locale", "language", ""))
+	diagnostics_enabled = _diagnostics_value(config)
+	diagnostics_notice_seen = _bool_value(
+		config.get_value(PRIVACY_SECTION, DIAGNOSTICS_NOTICE_KEY, false), false)
 
 
 func _import_legacy(legacy_audio_path: String) -> void:
@@ -206,6 +245,11 @@ static func _bool_value(value: Variant, fallback: bool) -> bool:
 	return fallback
 
 
+static func _diagnostics_value(config: ConfigFile) -> bool:
+	return _bool_value(config.get_value(PRIVACY_SECTION, DIAGNOSTICS_KEY, DEFAULT_DIAGNOSTICS),
+		DEFAULT_DIAGNOSTICS)
+
+
 func _apply_bus(bus: StringName) -> void:
 	var index: int = AudioServer.get_bus_index(bus)
 	if index < 0:
@@ -230,6 +274,8 @@ func _store() -> void:
 	config.set_value("motion", "screen_shake", screen_shake)
 	config.set_value("motion", "reduce_motion", reduce_motion)
 	config.set_value("locale", "language", language)
+	config.set_value(PRIVACY_SECTION, DIAGNOSTICS_KEY, diagnostics_enabled)
+	config.set_value(PRIVACY_SECTION, DIAGNOSTICS_NOTICE_KEY, diagnostics_notice_seen)
 	var error: Error = config.save(_path)
 	if error != OK:
 		push_warning("preferences: could not save (%s)" % error_string(error))
