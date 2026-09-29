@@ -9,6 +9,7 @@ static func run(fails: Array[String]) -> void:
 	_cracked(fails)
 	_embers_gained(fails)
 	_embers_at_combat_start(fails)
+	_opening_embers_owe_no_tithe(fails)
 	_old_save_loads(fails)
 
 
@@ -124,11 +125,26 @@ static func _embers_at_combat_start(fails: Array[String]) -> void:
 				% [label, room, tallied, _stat(game.run, "embersGained")])
 
 
+## The opening Embers are put in, not caught as spilled fire, so the Hollow
+## Lamplighter's tithe (a share of every Ember gained while its debt stands)
+## leaves them whole and the debt as it was; they still count.
+static func _opening_embers_owe_no_tithe(fails: Array[String]) -> void:
+	var opened: Dictionary = _opening("tithe", 0, 2, true, 5)
+	var game: GlassvowGame = opened["game"]
+	var scratch: Dictionary = game.run.quest_scratch["hollowLamplighter"]
+	var debt: int = int(float(str(scratch.get("emberDebt", -1))))
+	if game.cb.embers != 4 or _stat(game.run, "embersGained") != 4 or debt != 5:
+		fails.append("run stats: the opening Embers must escape the tithe, got %d held, %d tallied, debt %d"
+			% [game.cb.embers, _stat(game.run, "embersGained"), debt])
+
+
 ## A fight against one sporeling, opened on `startCombat` for an aspect whose run
 ## holds the Ember Wind omen for act one (`omen_embers` Embers, or none below 0)
-## and, if `crowned`, the Crown of Cinders. Returns {game, events}: the start
-## batch as `apply` gave it.
-static func _opening(tag: String, aspect: int, omen_embers: int, crowned: bool) -> Dictionary:
+## and, if `crowned`, the Crown of Cinders, and owes the Hollow Lamplighter `debt`
+## Embers when that is above 0. Returns {game, events}: the start batch as
+## `apply` gave it.
+static func _opening(tag: String, aspect: int, omen_embers: int, crowned: bool,
+		debt: int = 0) -> Dictionary:
 	var content: ContentDB = ContentDB.load_full(false)
 	var run_state: RunState = RunState.new_run(content, 42115, "stats-%s" % tag, {"aspect": aspect})
 	if omen_embers >= 0:
@@ -138,6 +154,8 @@ static func _opening(tag: String, aspect: int, omen_embers: int, crowned: bool) 
 		run_state.omens[0] = "emberWind"
 	if crowned:
 		run_state.player.relics.append("crownOfCinders")
+	if debt > 0:
+		run_state.quest_scratch["hollowLamplighter"] = {"emberDebt": debt}
 	var game: GlassvowGame = GlassvowGame.new(content, run_state)
 	var events: Array[Dictionary] = game.apply(
 		{"t": "startCombat", "enemies": ["sporeling"], "kind": "normal"})
