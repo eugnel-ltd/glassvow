@@ -603,18 +603,11 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		return {"error": "unknown --mix %s" % out["mix"]}
 	if not Pilot.WAYS.has(str(out["way"])):
 		return {"error": "--way must be one of %s" % ", ".join(Pilot.WAYS)}
-	for key: String in ["wayCommit", "wayOff"]:
-		if str(out[key]).is_empty():
-			continue
-		if not str(out[key]).is_valid_float() or float(str(out[key])) <= 0.0:
-			return {"error": "--%s must be a positive number" % key}
-		if str(out["way"]) == "none":
-			return {"error": "--%s needs --way" % key}
 	if not PROFILES.has(str(out["pool"])):
 		return {"error": "--pool must be mature, fresh or full"}
 	if str(out["build"]) not in ["adaptive", "random"]:
 		return {"error": "--build must be adaptive or random"}
-	return out
+	return _way_weights(out)
 static func _mix(opts: Dictionary) -> Dictionary:
 	var id: String = str(opts.get("mix", ""))
 	if id.is_empty():
@@ -650,3 +643,15 @@ static func _manifest(opts: Dictionary, overlay: String, identity: Dictionary) -
 	row["mix"] = str(opts["mix"]) if not str(opts.get("mix", "")).is_empty() \
 		else Incentives.SHIPPING_ID
 	return row
+
+
+## Flame readout 6's splash arm: --wayCommit and --wayOff are positive and need --way.
+static func _way_weights(out: Dictionary) -> Dictionary:
+	for key: String in ["wayCommit", "wayOff"]:
+		if str(out[key]).is_empty():
+			continue
+		if not str(out[key]).is_valid_float() or float(str(out[key])) <= 0.0:
+			return {"error": "--%s must be a positive number" % key}
+		if str(out["way"]) == "none":
+			return {"error": "--%s needs --way" % key}
+	return out
