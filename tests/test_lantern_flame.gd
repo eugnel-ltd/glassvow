@@ -1,10 +1,11 @@
 extends RefCounted
-## #577 lock PR 5: the Flame on the HUD, reward and shop lanterns. The reading is
-## the domain's (`EventTypes.FLAME`); these pin what presentation does with it:
-## the controller's targets and its tween, the HUD lantern it lights, the combat
-## screen that forwards it, the reward and shop lanterns main feeds after a
-## pick, and the reading main takes at an event's deck change. Visual proof is in
-## docs/design/2026-09-29-dusk-flame/hud/.
+## #577 lock PR 5: the Flame on the HUD, reward, shop and event lanterns. The
+## reading is the domain's (`EventTypes.FLAME`); these pin what presentation does
+## with it: the controller's targets and its tween, the HUD lantern it lights, the
+## combat screen that forwards it, the reward and shop lanterns main feeds after
+## a pick, and the event screen's, which main feeds at an event's deck change and
+## where the result beat carries it on. Visual proof is in
+## docs/design/2026-09-29-dusk-flame/hud/ and .../event/.
 
 const PoolCallers: GDScript = preload("res://tests/test_pool_callers.gd")
 const EPS: float = 0.0001
@@ -40,17 +41,6 @@ const DECK_MOVES: Dictionary = {
 }
 
 
-## A route screen that can show the flame, standing in for one that carries a
-## lantern: it keeps every reading it is handed.
-class LanternSpy:
-	extends Control
-
-	var seen: Array[Dictionary] = []
-
-	func show_flame(event: Dictionary, _instant: bool = false) -> void:
-		seen.append(event)
-
-
 static func _check(fails: Array[String], ok: bool, what: String) -> void:
 	if not ok:
 		fails.append("test_lantern_flame: %s" % what)
@@ -62,9 +52,14 @@ static func run(fails: Array[String]) -> void:
 	_retargets_not_snaps(fails)
 	_hud_lantern(fails)
 	_run_lantern_seat(fails)
+	_run_lantern_keeps_clear(fails)
 	_combat_forwards(fails)
 	_reward_and_shop(fails)
 	_event_deck_changes(fails)
+	_event_removal_speaks_once(fails)
+	_event_read_needs_no_lantern(fails)
+	_event_entry_reads_afresh(fails)
+	_event_lantern_stays_clear(fails)
 
 
 # ---------------------------------------------------------------- controller
@@ -246,6 +241,29 @@ static func _run_lantern_seat(fails: Array[String]) -> void:
 		hud.free()
 
 
+## A crowd at the lantern's left seat sends it to the right, the same size, inset
+## and height; a crowd elsewhere, or no stage to mirror across, leaves it be.
+static func _run_lantern_keeps_clear(fails: Array[String]) -> void:
+	for shape: StringName in StageShape.SHIPPING:
+		var stage: float = float(StageShape.REFERENCES[shape].x)
+		var lantern: RunLantern = RunLantern.new(shape)
+		var seat: Rect2 = Rect2(lantern._hang.position, lantern._hang.size)
+		lantern.keep_clear_of(stage, Rect2(seat.position + Vector2(seat.size.x * 0.5, 0.0), seat.size))
+		var right: Rect2 = Rect2(lantern._hang.position, lantern._hang.size)
+		_check(fails, is_equal_approx(right.end.x, stage - seat.position.x)
+				and is_equal_approx(right.position.y, seat.position.y)
+				and right.size.is_equal_approx(seat.size),
+			"%s: a crowd at the seat did not send the lantern to the right, mirrored" % shape)
+		lantern.keep_clear_of(stage, Rect2(seat.end.x + 40.0, seat.position.y, 200.0, seat.size.y))
+		_check(fails, lantern._hang.position.is_equal_approx(seat.position),
+			"%s: a crowd clear of the seat moved the lantern" % shape)
+		lantern.keep_clear_of(stage, seat)
+		lantern.keep_clear_of(0.0, seat)
+		_check(fails, lantern._hang.position.is_equal_approx(seat.position),
+			"%s: with no stage to mirror across the lantern left its seat" % shape)
+		lantern.free()
+
+
 ## The combat screen forwards the start batch's reading at once, keeps it for a
 ## HUD rebuilt on a new shape, and tweens one that arrives through the pump.
 ## An aspect without ways never lights the HUD lantern.
@@ -332,11 +350,12 @@ static func _reward_and_shop(fails: Array[String]) -> void:
 
 
 ## Main reads the Flame at an event's deck changes too (lock §4: it answers on
-## the spot), lantern or none: the event screens carry none, so the reading is
-## taken all the same, and reaches a route screen only if that screen says it can
-## show one. Every kind of event change is tried, each from a Kindling deck:
-## an immediate add, and a pick that removes, duplicates or adds a card, cross to
-## Steady; an upgrade keeps the card's id and moves nothing.
+## the spot), and the event screen shows it: the lantern opens on the deck's
+## reading, drawn at once, and turns after a change that moves the flame. Every
+## kind of event change is tried, each from a Kindling deck: an immediate add,
+## and a pick that removes, duplicates or adds a card, cross to Steady; an
+## upgrade keeps the card's id and moves nothing. The Ashwarden declares no ways,
+## so its events read nothing and grow no lantern.
 static func _event_deck_changes(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
 	var shrine: Dictionary = content.events["forgottenShrine"]
@@ -344,17 +363,19 @@ static func _event_deck_changes(fails: Array[String]) -> void:
 	var offering: Dictionary = choices[1]
 	offering["ops"] = [{"addCard": "quakeblow"}]
 	for case_v: Variant in EVENT_CASES:
-		for lantern: bool in [false, true]:
-			_at_an_event(content, case_v, lantern, fails)
+		_at_an_event(content, case_v, fails)
+	_at_an_ashen_event(content, fails)
 
 
-## One event from a Kindling deck (`added` to the starters): the choice, then the
-## card its pick takes. The flame is read before the choice, as the screen before
-## the event would have left it, and again only by the event's own change.
-static func _at_an_event(content: ContentDB, case_v: Variant, lantern: bool,
-		fails: Array[String]) -> void:
+## One event from a Kindling deck (`added` to the starters): the screen opens on
+## it, then the choice, then the card its pick takes. The lantern followed is the
+## one the player is shown, wherever it hangs by then: a change that moves the
+## flame is followed by a result beat, which carries the lantern on rather than
+## building its own, so the turn is seen on the beat and not lost with the
+## choice screen.
+static func _at_an_event(content: ContentDB, case_v: Variant, fails: Array[String]) -> void:
 	var case: Array = case_v
-	var label: String = "%s %s" % [case[0], "with a lantern" if lantern else "without one"]
+	var label: String = case[0]
 	var event_id: String = case[1]
 	var seed: int = case[2]
 	var added: Array = case[3]
@@ -362,32 +383,21 @@ static func _at_an_event(content: ContentDB, case_v: Variant, lantern: bool,
 	var kind: String = case[5]
 	var taken: String = case[6]
 	var steady: bool = case[7]
-	var run_state: RunState = RunState.new_run(content, seed, "flame-event", {"aspect": 0})
-	for id_v: Variant in added:
-		run_state.player.deck.append(CardInst.new(run_state.next_uid(), StringName(str(id_v)), false))
-	var walk: WorldMap = WorldMap.slice()
-	walk.at = 3
-	walk.nodes[3].type = "event"
-	run_state.node_id = walk.nodes[3].id
-	run_state.map = walk.to_dict()
-	run_state.quest_scratch["eventNode"] = event_id
-	var main: Main = PoolCallers._main(content)
-	main._continue_run(run_state)
-	var before: Array[Dictionary] = main.game.flame_events()
-	main.game.take_flame_lines()
-	_check(fails, before.size() == 1 and str(before[0]["tier"]) == "KINDLING",
-		"%s: the deck before the event must read Kindling, got %s" % [label, before])
-	var spy: LanternSpy = null
-	if lantern:
-		spy = LanternSpy.new()
-		main._route_screen = spy
-		main.add_child(spy)
+	var run_state: RunState = _event_run(content, seed, added, 0)
+	var main: Main = _event_main(content, run_state, event_id)
+	var opened: EventScreen = main._route_screen as EventScreen
+	var lantern: RunLantern = opened._lantern if opened != null else null
+	var painted: float = _inputs(lantern.flame)["painted"] if lantern != null else 0.0
+	_check(fails, lantern != null and not lantern.flame.tweening() and is_equal_approx(painted, 1.0),
+		"%s: the event screen did not open on the Kindling reading, drawn at once" % label)
+	_check(fails, main.game.take_flame_lines().is_empty() and main.game.flame_events().is_empty(),
+		"%s: opening the event read more than the Kindling deck" % label)
 	var cards_before: int = run_state.player.deck.size()
 	var upgraded_before: int = _upgraded(run_state.player.deck)
 	main._on_event_choice(str(choice), event_id)
 	if not kind.is_empty():
-		_check(fails, spy == null or spy.seen.is_empty(),
-			"%s: a choice that changed no card read the flame" % label)
+		_check(fails, lantern == null or not lantern.flame.tweening(),
+			"%s: a choice that changed no card turned the lantern" % label)
 		# A card in the deck is picked by its uid; a new card, by its id.
 		var picked: String = taken
 		for card: CardInst in run_state.player.deck:
@@ -399,11 +409,18 @@ static func _at_an_event(content: ContentDB, case_v: Variant, lantern: bool,
 	var expected_move: Array = DECK_MOVES[kind]
 	_check(fails, moved == expected_move,
 		"%s: the event moved the deck by %s, not %s" % [label, moved, expected_move])
-	var want_tiers: Array = ["STEADY"] if steady else []
-	if spy != null:
-		var tiers: Array = spy.seen.map(func(reading: Dictionary) -> String: return str(reading["tier"]))
-		_check(fails, tiers == want_tiers,
-			"%s: the lantern's route screen must be handed %s, got %s" % [label, want_tiers, tiers])
+	if lantern != null:
+		_check(fails, lantern.flame.tweening() == steady,
+			"%s: the lantern must be turning exactly when the flame has crossed" % label)
+		lantern.flame.advance(LanternFlame.TWEEN_TIME)
+		var rests: Color = LanternFlame.COLOUR["shatter"] if steady else LanternFlame.PAINTED_LIGHT
+		_check(fails, lantern.flame.light_now().is_equal_approx(rests),
+			"%s: the lantern did not come to rest on the deck's reading" % label)
+	if steady:
+		var beat: EventScreen = main._route_screen as EventScreen
+		_check(fails, beat != null and beat != opened and beat.beat == "c%d" % choice
+				and beat._lantern == lantern and opened._lantern == null,
+			"%s: the result beat did not carry the lantern on" % label)
 	# The lines first: a second reading would owe them itself.
 	var want_lines: Array = []
 	if steady:
@@ -413,6 +430,209 @@ static func _at_an_event(content: ContentDB, case_v: Variant, lantern: bool,
 	_check(fails, main.game.flame_events().is_empty(),
 		"%s: the event left its deck change unread" % label)
 	PoolCallers._dispose(main)
+
+
+## The Shrine's removal for an aspect that declares no ways: nothing is read at
+## the event, nothing is owed, and neither the choice nor the beat grows a lantern.
+static func _at_an_ashen_event(content: ContentDB, fails: Array[String]) -> void:
+	var run_state: RunState = _shrine_run(content, 1)
+	var main: Main = _event_main(content, run_state, "forgottenShrine")
+	var opened: EventScreen = main._route_screen as EventScreen
+	_check(fails, opened != null and opened._lantern == null,
+		"an event screen for an aspect without ways grew a lantern")
+	main._on_event_choice("0", "forgottenShrine")
+	main._on_event_pick(str(run_state.player.deck[0].uid), "remove")
+	var beat: EventScreen = main._route_screen as EventScreen
+	_check(fails, beat != null and beat != opened and beat._lantern == null,
+		"the result beat for an aspect without ways grew a lantern")
+	_check(fails, main.game.take_flame_lines().is_empty() and main.game.flame_events().is_empty(),
+		"an event for an aspect without ways read a flame")
+	PoolCallers._dispose(main)
+
+
+## The whole answer, from the Shrine's removal of War Cry: the lantern turns to
+## Steady Shatter on the result beat and stays there through the coda, without
+## the flame being read again, and the crossing's whisper is owed once and heard
+## once, after the next fight is won (`_on_combat_over` draws and queues it).
+static func _event_removal_speaks_once(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_full()
+	var run_state: RunState = _shrine_run(content, 0)
+	var main: Main = _event_main(content, run_state, "forgottenShrine")
+	var opened: EventScreen = main._route_screen as EventScreen
+	var lantern: RunLantern = opened._lantern if opened != null else null
+	_check(fails, lantern != null, "the Shrine did not open with a lantern")
+	if lantern == null:
+		PoolCallers._dispose(main)
+		return
+	main._on_event_choice("0", "forgottenShrine")
+	main._on_event_pick(str(_uid_of(run_state.player.deck, "warCry")), "remove")
+	var reading: Dictionary = Flame.read(content, run_state)
+	var way: String = str(reading["dominant"])
+	_check(fails, str(reading["tier"]) == Flame.TIER_STEADY and way == "shatter"
+			and str(reading["fringe"]).is_empty(),
+		"the Shrine's removal is not the Steady Shatter this test is about: %s" % reading)
+	var beat: EventScreen = main._route_screen as EventScreen
+	_check(fails, beat != null and beat.beat == "c0" and beat._lantern == lantern
+			and lantern.flame.tweening(),
+		"the removal's result beat does not show the flame turning")
+	lantern.flame.advance(LanternFlame.TWEEN_TIME)
+	_check(fails, _same(_inputs(lantern.flame), _want(LanternFlame.COLOUR[way],
+			LanternFlame.COLOUR[way], 0.0, LanternFlame.TIER_STABILITY[Flame.TIER_STEADY],
+			LanternFlame.TIER_HEIGHT[Flame.TIER_STEADY], LanternFlame.WAY_SHAPE[way], 0.0)),
+		"the lantern on the beat did not come to Steady Shatter: %s" % _inputs(lantern.flame))
+	main._on_event_story_continue()
+	var coda: EventScreen = main._route_screen as EventScreen
+	_check(fails, coda != null and coda.beat == "coda" and coda._lantern == lantern
+			and not lantern.flame.tweening() and main.game.flame_events().is_empty(),
+		"the coda did not keep the lantern at rest on Steady, or read the flame again")
+	main._on_event_story_continue()
+	_check(fails, not main.game.run.pool_beats.has(FlameLines.SLOT_STEADY),
+		"leaving the event drew the whisper before any fight was won")
+	main._owe_flame_lines(true)
+	_check(fails, main.game.run.pool_beats.has(FlameLines.SLOT_STEADY)
+			and main.game.run.pool_beats.has(FlameLines.CODEX_PREFIX + "shatter"),
+		"the next won fight did not draw the lines the event owed")
+	var scene: String = "line:%s" % FlameLines.SLOT_STEADY
+	_check(fails, main._stage_flame_line() and typeof(main.game.run.pending_scene) == TYPE_DICTIONARY
+			and str(main.game.run.pending_scene.get("id", "")) == scene,
+		"the first Steady, crossed at the event, was not queued to be whispered")
+	main._on_scene_finished()
+	_check(fails, main._vigil.scenes_seen.count(scene) == 1
+			and main.game.run.pool_draws.count(FlameLines.SLOT_STEADY) == 1
+			and typeof(main.game.run.pending_scene) != TYPE_DICTIONARY,
+		"the whisper was not heard exactly once")
+	main._owe_flame_lines(true)
+	_check(fails, not main._stage_flame_line(),
+		"a fight won after the whisper was heard whispered it again")
+	PoolCallers._dispose(main)
+
+
+## The reading is taken whether or not the route screen can show it: with the
+## event screen replaced by one that cannot (a bare Control), the deck change the
+## event makes is still read at the event, its crossing recorded and its lines
+## owed. Called at the read itself: the result beat that follows a choice reads
+## afresh on opening, and would owe the same lines without it.
+static func _event_read_needs_no_lantern(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_full()
+	var run_state: RunState = _shrine_run(content, 0)
+	var main: Main = _event_main(content, run_state, "forgottenShrine")
+	var bare: Control = Control.new()
+	main._route_screen = bare
+	main.add_child(bare)
+	for card: CardInst in run_state.player.deck:
+		if String(card.id) == "warCry":
+			run_state.player.deck.erase(card)
+			break
+	main._read_flame_at_event()
+	var want_lines: Array = [FlameLines.SLOT_STEADY, FlameLines.CODEX_PREFIX + "shatter"]
+	_check(fails, main.game.take_flame_lines() == want_lines and main.game.flame_events().is_empty(),
+		"a route screen that cannot show the flame stopped the event's reading being taken")
+	PoolCallers._dispose(main)
+
+
+## Only a result beat carries a lantern on. An event screen that is not a beat
+## opens on the flame as it stands, even over a live event screen (a rebuild, or
+## another Scenario put in its place): a lantern lit for that screen's deck is
+## never handed to a screen for another.
+static func _event_entry_reads_afresh(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_full()
+	var main: Main = _event_main(content, _shrine_run(content, 0), "forgottenShrine")
+	var opened: EventScreen = main._route_screen as EventScreen
+	var before: RunLantern = opened._lantern if opened != null else null
+	main._show_event()
+	var again: EventScreen = main._route_screen as EventScreen
+	var lantern: RunLantern = again._lantern if again != null else null
+	var painted: float = _inputs(lantern.flame)["painted"] if lantern != null else 0.0
+	_check(fails, again != opened and before != null and lantern != null and lantern != before
+			and not lantern.flame.tweening() and is_equal_approx(painted, 1.0),
+		"a rebuilt event screen took over the last one's lantern, or did not open on the flame as it stands")
+	PoolCallers._dispose(main)
+
+
+## The event lantern hangs clear of the event's own furniture at every shipping
+## shape: below the run HUD's chrome, off the title, the choices' window and the
+## pane, on the beat that replaces the choices as on the choices. It keeps the
+## reward and shop seat at the left where the window leaves it free (pad and
+## desktop) and hangs from the right where the window reaches it (the phone's
+## fills the left of the stage). A screen re-shaped by `set_shape` lands where a
+## screen built at that shape does.
+static func _event_lantern_stays_clear(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_full()
+	for shape: StringName in StageShape.SHIPPING:
+		var view: Vector2 = Vector2(StageShape.REFERENCES[shape])
+		var seat: Dictionary = LayoutBook.resolve(&"chrome", shape, 0).get("lantern", {})
+		var inset: float = LayoutBook.num(seat.get("left"))
+		var pane: Rect2 = DialogueBox.box_rect(view, shape, StageDirection.STYLE_SPEECH)
+		for event_id: String in content.events:
+			for beat: bool in [false, true]:
+				var event: Dictionary = content.events[event_id]
+				var screen: EventScreen = EventScreen.new(event_id, event,
+					"The road is quiet." if beat else "", not beat, beat, shape)
+				screen.show_flame(KINDLING, true)
+				var where: String = "%s %s %s" % [shape, event_id, "beat" if beat else "choices"]
+				var hang: Rect2 = Rect2(screen._lantern._hang.position, screen._lantern._hang.size)
+				var window: Rect2 = Rect2(screen._window.position, screen._window.size)
+				var title: Rect2 = Rect2(screen._title.position, screen._title.size)
+				_check(fails, Rect2(Vector2.ZERO, view).encloses(hang)
+						and hang.position.y >= RunHud.chrome_bottom(shape) and hang.end.y <= pane.position.y,
+					"%s: the lantern is not between the run HUD's chrome and the pane" % where)
+				_check(fails, not hang.intersects(window) and not hang.intersects(title)
+						and not hang.intersects(pane),
+					"%s: the lantern crowds the event's own furniture" % where)
+				var edge_gap: float = hang.position.x if shape != &"phone-landscape" \
+					else view.x - hang.end.x
+				_check(fails, is_equal_approx(edge_gap, inset),
+					"%s: the lantern hangs from the wrong edge" % where)
+				_check(fails, screen._lantern.get_index() < screen._title.get_index(),
+					"%s: the lantern is drawn over the title, the pane and the choices" % where)
+				screen.free()
+	var mirror: Dictionary = content.events["mirror"]
+	var moved: EventScreen = EventScreen.new("mirror", mirror, "", true, false, &"pad-landscape")
+	moved.show_flame(KINDLING, true)
+	moved.set_shape(&"phone-landscape")
+	var built: EventScreen = EventScreen.new("mirror", mirror, "", true, false, &"phone-landscape")
+	built.show_flame(KINDLING, true)
+	_check(fails, moved._lantern.shape == &"phone-landscape"
+			and moved._lantern._hang.position.is_equal_approx(built._lantern._hang.position)
+			and moved._lantern._hang.size.is_equal_approx(built._lantern._hang.size),
+		"a re-shaped event screen did not re-seat its lantern where a screen built at the shape does")
+	moved.free()
+	built.free()
+
+
+## The run behind the first case, the Shrine's removal, for `aspect`.
+static func _shrine_run(content: ContentDB, aspect: int) -> RunState:
+	var case: Array = EVENT_CASES[0]
+	var seed: int = case[2]
+	var added: Array = case[3]
+	return _event_run(content, seed, added, aspect)
+
+
+static func _event_run(content: ContentDB, seed: int, added: Array, aspect: int) -> RunState:
+	var run_state: RunState = RunState.new_run(content, seed, "flame-event", {"aspect": aspect})
+	for id_v: Variant in added:
+		run_state.player.deck.append(CardInst.new(run_state.next_uid(), StringName(str(id_v)), false))
+	return run_state
+
+
+## A Main standing on the event node of `run_state`, its event screen open.
+static func _event_main(content: ContentDB, run_state: RunState, event_id: String) -> Main:
+	var walk: WorldMap = WorldMap.slice()
+	walk.at = 3
+	walk.nodes[3].type = "event"
+	run_state.node_id = walk.nodes[3].id
+	run_state.map = walk.to_dict()
+	run_state.quest_scratch["eventNode"] = event_id
+	var main: Main = PoolCallers._main(content)
+	main._continue_run(run_state)
+	return main
+
+
+static func _uid_of(deck: Array[CardInst], id: String) -> int:
+	for card: CardInst in deck:
+		if String(card.id) == id:
+			return card.uid
+	return -1
 
 
 static func _upgraded(deck: Array[CardInst]) -> int:

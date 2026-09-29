@@ -7,7 +7,9 @@ extends Control
 ## pane, and offers the choices from a choice window above it. Each event
 ## carries its own weather and grade, and a result beat its own effect
 ## (`content/event-staging.json`) — played once, when the beat first arrives,
-## never on resume.
+## never on resume. The Flame's lantern hangs beside the choices once the run
+## has a reading to show (`show_flame`), so a card cut, copied or added here is
+## seen changing the flame here (lock §8, §9).
 
 signal choice_selected(ordinal: int)
 signal continue_requested
@@ -43,6 +45,8 @@ var _copy: DialogueBox
 var _window: PanelContainer
 var _scroll: ScrollContainer
 var _wash_goal: float = WASH_ALPHA
+## The Flame, once a reading arrives (`show_flame`).
+var _lantern: RunLantern = null
 
 
 func _init(event_id: String, event_definition: Dictionary,
@@ -242,6 +246,42 @@ func play_beat() -> void:
 		_sfx.play(StringName(cue))
 
 
+## The Flame's reading, in the hero's lantern beside the choices, so a card cut,
+## copied or added here is seen changing the flame here (lock §8, §9). Main hands
+## it the reading as the screen opens (`instant`) and again after each deck
+## change. The lantern is built on the first reading, so a run whose aspect has
+## no ways never grows one.
+func show_flame(event: Dictionary, instant: bool = false) -> void:
+	if _lantern == null:
+		_hang_lantern(RunLantern.new(shape))
+	_lantern.show_flame(event, instant)
+
+
+## Carry on the lantern of the event screen this one replaces, as it stands and
+## mid-tween if it is. A deck change is made on a choice and its result beat
+## replaces that screen at once, so the flame would turn on a screen already
+## gone; carried on, it turns on the one the player is looking at (lock §9:
+## nothing snaps). False when `previous` has no lantern to give.
+func inherit_lantern(previous: EventScreen) -> bool:
+	if previous == null or previous._lantern == null:
+		return false
+	var lantern: RunLantern = previous._lantern
+	previous._lantern = null
+	previous.remove_child(lantern)
+	lantern.set_shape(shape)
+	_hang_lantern(lantern)
+	return true
+
+
+func _hang_lantern(lantern: RunLantern) -> void:
+	_lantern = lantern
+	add_child(lantern)
+	# Under the title, the pane and the choices: were anything to crowd the
+	# lantern, the words would still read.
+	move_child(lantern, _title.get_index())
+	_layout()
+
+
 func _choose(ordinal: int) -> void:
 	for button: Button in _buttons:
 		button.disabled = true
@@ -272,6 +312,8 @@ func _process(delta: float) -> void:
 func set_shape(stage_shape: StringName) -> void:
 	if StageShape.REFERENCES.has(stage_shape):
 		shape = stage_shape
+		if _lantern != null:
+			_lantern.set_shape(shape)
 		_layout()
 
 
@@ -307,6 +349,10 @@ func _layout() -> void:
 	elif dock == "centre":
 		x = (view.x - w) * 0.5
 	_window.position = Vector2(clampf(x, 14.0, view.x - w - 14.0), pane.position.y - gap - h)
+	# The lantern keeps the reward and shop screens' seat, at the left under the
+	# run HUD's chrome, unless the choices reach it: the phone's window does.
+	if _lantern != null:
+		_lantern.keep_clear_of(view.x, Rect2(_window.position, _window.size))
 
 
 static func _rect(node_name: String, colour: Color) -> ColorRect:

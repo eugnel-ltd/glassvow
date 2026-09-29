@@ -226,7 +226,7 @@ The bias is soft on purpose. Good cards of the other ways still appear, so main-
 
 Presentation reads the flame from `EventTypes.FLAME` events emitted by the domain at every read (§4). It never computes purity itself.
 
-- **Where:** the combat HUD lantern (`presentation/combat/hud_bar.gd` already draws the lantern, its glow and ember pips); the reward and shop screens carry the same small lantern so the change after a pick is seen where the pick happens; the map's run HUD if it shows the lantern. The choice screen's title lantern is untouched.
+- **Where:** the combat HUD lantern (`presentation/combat/hud_bar.gd` already draws the lantern, its glow and ember pips); the reward, shop and event screens carry the same small lantern so the change after a pick is seen where the pick happens (an event is where §8's removal is made; [the event screen](event/README.md)); the map's run HUD if it shows the lantern. The choice screen's title lantern is untouched.
 - **What:** a flame shader with four inputs: dominant colour, fringe colour (drawn at the tips), stability (flicker amplitude: Soot guttering, Kindling lively, Steady calm, True still) and height (tier). Shape per way as in §6.
 - **How it moves:** a change tweens over about a second; it never snaps. A Soot flame throws occasional dust motes. A True flame has a faint halo.
 - **Later, after visual approval:** the Art's VFX and the chip VFX tinted by the dominant colour. Measure the budget before that; do not restructure until the flame itself is approved on the reference shapes.
