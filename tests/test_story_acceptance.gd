@@ -1,7 +1,7 @@
 extends RefCounted
 ## #356 story-complete acceptance: Phase 1 inventory plus bilingual journeys
-## A–F on the production hosts. Isolated save paths; production pair is
-## snapshotted and must return byte-identical.
+## A–F on the production hosts. Every Main here is bound to scratch save paths
+## through `TestProfile.install`, so the player's files are never reached.
 
 const RUN_PATH: String = "user://test_story_acceptance_run_v2.json"
 const VIGIL_PATH: String = "user://test_story_acceptance_vigil_v2.json"
@@ -36,8 +36,6 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 
 
 static func run(fails: Array[String]) -> void:
-	var prod_run: Variant = _file_snapshot(SaveService.RUN_PATH)
-	var prod_vigil: Variant = _file_snapshot(SaveService.VIGIL_PATH)
 	var previous: Locale = Locale.active
 	var content: ContentDB = ContentDB.load_full()
 	_inventory(content, fails)
@@ -55,14 +53,9 @@ static func run(fails: Array[String]) -> void:
 		_journey_e(content, code, fails)
 		_journey_f(content, code, fails)
 		loc.restore_content()
-	_isolation(content, fails)
+	_terminus_scenario(content, fails)
 	Locale.active = previous
-	_check(fails, _same_snap(_file_snapshot(SaveService.RUN_PATH), prod_run),
-		"production run was not restored byte-for-byte")
-	_check(fails, _same_snap(_file_snapshot(SaveService.VIGIL_PATH), prod_vigil),
-		"production Vigil was not restored byte-for-byte")
-	SaveService.clear(RUN_PATH)
-	SaveService.clear_vigil(VIGIL_PATH)
+	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
 	SaveService.clear(DEV_RUN)
 	SaveService.clear_vigil(DEV_VIGIL)
 	if FileAccess.file_exists(DEV_REF):
@@ -465,11 +458,9 @@ static func _journey_f(content: ContentDB, code: StringName, fails: Array[String
 	_dispose(finale_resumed)
 
 
-static func _isolation(content: ContentDB, fails: Array[String]) -> void:
+static func _terminus_scenario(content: ContentDB, fails: Array[String]) -> void:
 	var kernel: ScenarioKernel = ScenarioKernel.new(content, DEV_RUN, DEV_VIGIL, DEV_REF)
 	kernel.clear_profile()
-	var before_run: Variant = _file_snapshot(SaveService.RUN_PATH)
-	var before_vigil: Variant = _file_snapshot(SaveService.VIGIL_PATH)
 	var ref: ScenarioReference = ScenarioReference.new()
 	ref.load_from({
 		"id": "act-4-map-terminus", "revision": 1, "build": BUILD,
@@ -478,10 +469,7 @@ static func _isolation(content: ContentDB, fails: Array[String]) -> void:
 			"kind": "boss", "enemies": ["eternalKeeper"]},
 	})
 	var run: RunState = kernel.construct(ref)
-	_check(fails, run is RunState, "isolation: act-4-map-terminus did not construct")
-	_check(fails, _same_snap(_file_snapshot(SaveService.RUN_PATH), before_run)
-			and _same_snap(_file_snapshot(SaveService.VIGIL_PATH), before_vigil),
-		"isolation: Scenario construct touched the production pair")
+	_check(fails, run is RunState, "act-4-map-terminus did not construct")
 	kernel.clear_profile()
 
 
@@ -558,10 +546,6 @@ static func _same_ids(value: Variant, expected: PackedStringArray) -> bool:
 	for id_v: Variant in rows:
 		got.append(str(id_v))
 	return got == expected
-
-
-static func _same_snap(a: Variant, b: Variant) -> bool:
-	return str(a) == str(b)
 
 
 static func _playing(main: Main, scene_id: String) -> bool:
@@ -706,11 +690,9 @@ static func _main(content: ContentDB) -> Main:
 	SaveService.clear(RUN_PATH)
 	SaveService.clear_vigil(VIGIL_PATH)
 	var main: Main = Main.new()
+	TestProfile.install(main, RUN_PATH, VIGIL_PATH)
 	main._map_layout_compile = MapCompose.fake_layout_compile()
 	main.content = content
-	main._run_save_path = RUN_PATH
-	main._vigil_save_path = VIGIL_PATH
-	main._vigil = VigilState.blank()
 	main._transitions = TransitionLayer.new()
 	main._transitions.instant = true
 	main.add_child(main._transitions)
@@ -726,9 +708,3 @@ static func _dispose(main: Main) -> void:
 	for child: Node in main.get_children():
 		child.free()
 	main.free()
-
-
-static func _file_snapshot(path: String) -> Variant:
-	if not FileAccess.file_exists(path):
-		return null
-	return FileAccess.get_file_as_string(path)

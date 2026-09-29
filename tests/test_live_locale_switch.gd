@@ -77,6 +77,7 @@ static func _map_round_trip(fails: Array[String]) -> void:
 	var map: WorldMap = WorldMap.benchmark(run)
 	run.map = map.to_dict()
 	var main: Main = Main.new()
+	TestProfile.install(main)
 	var compiler: MapCompose.FakeLayoutCompiler = MapCompose.FakeLayoutCompiler.new()
 	main._map_layout_compile = Callable(compiler, "compile")
 	main.content = content
@@ -202,6 +203,7 @@ static func _has_waystone_tip(screen: WorldMapScreen, text: String) -> bool:
 static func _cleanup(main: Main, previous_locale: Locale,
 		previous_preferences: Preferences) -> void:
 	main.free()
+	TestProfile.wipe()
 	Locale.active = previous_locale
 	Preferences.active = previous_preferences
 

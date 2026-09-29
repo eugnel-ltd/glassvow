@@ -43,7 +43,7 @@ static func _legacy_import_once(fails: Array[String]) -> void:
 	legacy.save(TEST_LEGACY)
 	var prefs: Preferences = Preferences.read_from_disk(TEST_PATH, TEST_LEGACY)
 	if prefs.music_volume != 0.8 or not prefs.music_muted or prefs.sfx_volume != 0.15:
-		fails.append("preferences: legacy audio.cfg values were not imported")
+		fails.append("preferences: legacy audio file values were not imported")
 	if prefs.master_volume != Preferences.DEFAULT_MASTER:
 		fails.append("preferences: import invented a master value")
 	# ONE-TIME is the contract: once settings.cfg exists, a later edit to the
@@ -95,18 +95,18 @@ static func _language_resolution(fails: Array[String]) -> void:
 		fails.append("preferences: saved zh-Hant did not override the English OS locale")
 
 
+## The stand-in is what labs and tests read before a boot replaces it, and it
+## must never persist. Its gate is `_persistent`, not the file it names, so it is
+## pointed at a scratch file here: a write would show up there, and nothing in
+## this suite names the player's settings.
 static func _default_instance_never_writes(fails: Array[String]) -> void:
-	var absolute: String = ProjectSettings.globalize_path(Preferences.PATH)
-	var existed: bool = FileAccess.file_exists(absolute)
-	var stamp: int = FileAccess.get_modified_time(absolute) if existed else 0
+	_cleanup()
 	var standin: Preferences = Preferences.new()
+	standin._path = TEST_PATH
 	standin.set_volume(Preferences.MUSIC, 0.9)
 	standin.set_reduce_motion(true)
-	if existed:
-		if FileAccess.get_modified_time(absolute) != stamp:
-			fails.append("preferences: in-memory stand-in wrote the real file")
-	elif FileAccess.file_exists(absolute):
-		fails.append("preferences: in-memory stand-in created the real file")
+	if FileAccess.file_exists(TEST_PATH):
+		fails.append("preferences: in-memory stand-in wrote its file")
 
 
 static func _cleanup() -> void:

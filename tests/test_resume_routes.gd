@@ -1,12 +1,12 @@
 extends RefCounted
 
 const SAVE_PATH: String = "user://test_resume_routes_v2.json"
+const VIGIL_PATH: String = "user://test_resume_routes_vigil_v2.json"
 const MapCompose: GDScript = preload("res://tests/test_map_compose.gd")
 
 
 static func run(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
-	var default_before: Variant = _file_snapshot(SaveService.RUN_PATH)
 	for route: String in ["rest", "event", "shop", "treasure"]:
 		_ordinary_roundtrip(content, route, fails)
 	for kind: String in ["card", "remove", "duplicate", "upgrade"]:
@@ -16,9 +16,7 @@ static func run(fails: Array[String]) -> void:
 	_hollow_priority_roundtrip(content, fails)
 	_priority(content, fails)
 	_quarantine_cases(content, fails)
-	if _file_snapshot(SaveService.RUN_PATH) != default_before:
-		fails.append("resume routes: injected route tests touched the default save")
-	SaveService.clear(SAVE_PATH)
+	TestProfile.wipe(SAVE_PATH, VIGIL_PATH)
 
 
 static func _ordinary_roundtrip(content: ContentDB, route: String,
@@ -220,10 +218,9 @@ static func _route_run(content: ContentDB, route: String) -> RunState:
 
 static func _main(content: ContentDB) -> Main:
 	var main: Main = Main.new()
+	TestProfile.install(main, SAVE_PATH, VIGIL_PATH)
 	main._map_layout_compile = MapCompose.fake_layout_compile()
 	main.content = content
-	main._run_save_path = SAVE_PATH
-	main._vigil = VigilState.blank()
 	main._transitions = TransitionLayer.new()
 	main._transitions.instant = true
 	main.add_child(main._transitions)
@@ -271,10 +268,3 @@ static func _assert_same(run: RunState, before: Dictionary, tag: String,
 		fails: Array[String]) -> void:
 	if _fingerprint(run) != before:
 		fails.append("resume routes: %s changed save/RNG/map/scratch/pending" % tag)
-
-
-static func _file_snapshot(path: String) -> Variant:
-	if not FileAccess.file_exists(path):
-		return null
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	return file.get_as_text() if file != null else null

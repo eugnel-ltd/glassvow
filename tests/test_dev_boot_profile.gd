@@ -7,15 +7,16 @@ extends RefCounted
 ## `Main._ready` parses to the excluded boot and reads back what Main is bound
 ## to — run path, Vigil path and the Vigil that was loaded — which is the only
 ## proof available for a flag that stores nothing at start-up. The boot leg runs
-## the real `Main._ready` over sentinels standing in for the player's files and
+## the real `Main._ready` over sentinels standing at the player's paths and
 ## proves they came back byte-for-byte, which is what shows the profile is
 ## installed BEFORE the first store: a field assertion cannot claim that.
+##
+## Both legs run inside `TestProfile.in_sandbox`. They plant sentinels at the
+## player's paths and boot the real `_ready`, which reads and creates the settings
+## file, so `user://` has to be nobody's while they do.
 
 const MAIN_PATH: String = "res://application/main.gd"
 const PRODUCTION_FLAG: String = "--production-save"
-## Where a developer's real save waits while the sentinels stand in for it. The
-## same atomic-rename discipline `test_profile_isolation` uses.
-const STASH_SUFFIX: String = ".pretest"
 const SENTINEL_RUN_ID: String = "run-sentinel-360"
 const SENTINEL_SCENE: String = "sentinel-360"
 ## Only the Development Vigil carries this, so a Main that bound the paths but
@@ -40,15 +41,13 @@ static func run(fails: Array[String]) -> void:
 	if boot == null:
 		fails.append("dev boot profile: boot handler did not load")
 		return
-	var run_before: String = _digest(SaveService.RUN_PATH)
-	var vigil_before: String = _digest(SaveService.VIGIL_PATH)
+	TestProfile.in_sandbox(fails, _legs.bind(boot, fails))
+
+
+static func _legs(boot: GDScript, fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
 	_flag_leg(boot, content, fails)
 	_boot_leg(content, fails)
-	_check(fails, _digest(SaveService.RUN_PATH) == run_before,
-		"the production run was not restored byte-for-byte")
-	_check(fails, _digest(SaveService.VIGIL_PATH) == vigil_before,
-		"the production Vigil was not restored byte-for-byte")
 
 
 # ---------------------------------------------------------------- flag leg
@@ -112,8 +111,8 @@ static func _selects(
 	host._vigil = VigilState.blank()
 	boot.call("select_profile", host, args)
 	var tag: String = " ".join(args) if not args.is_empty() else "(no arguments)"
-	var want_run: String = kernel.run_path if dev else SaveService.RUN_PATH
-	var want_vigil: String = kernel.vigil_path if dev else SaveService.VIGIL_PATH
+	var want_run: String = kernel.run_path if dev else TestProfile.production_run_path()
+	var want_vigil: String = kernel.vigil_path if dev else TestProfile.production_vigil_path()
 	_check(fails, host._run_save_path == want_run,
 		"%s bound the run to %s, wanted %s" % [tag, host._run_save_path, want_run])
 	_check(fails, host._vigil_save_path == want_vigil,
@@ -165,8 +164,6 @@ static func _boot_leg(content: ContentDB, fails: Array[String]) -> void:
 	var previous_locale: Locale = Locale.active
 	var previous_preferences: Preferences = Preferences.active
 	var previous_gate: Variant = DevTools.forced
-	var run_stashed: bool = _stash(SaveService.RUN_PATH)
-	var vigil_stashed: bool = _stash(SaveService.VIGIL_PATH)
 	var kernel: ScenarioKernel = ScenarioKernel.new(content)
 	DevTools.forced = true
 	for flag: String in WRITING_BOOTS:
@@ -179,8 +176,6 @@ static func _boot_leg(content: ContentDB, fails: Array[String]) -> void:
 	_production_boot("a closed gate", PackedStringArray(["--map"]), false,
 		content, kernel, fails)
 	kernel.clear_profile()
-	_unstash(SaveService.RUN_PATH, run_stashed, fails)
-	_unstash(SaveService.VIGIL_PATH, vigil_stashed, fails)
 	DevTools.forced = previous_gate
 	Preferences.active = previous_preferences
 	Locale.active = previous_locale
@@ -199,8 +194,8 @@ static func _writing_boot(
 	flag: String, content: ContentDB, kernel: ScenarioKernel, fails: Array[String]
 ) -> void:
 	_reset(content, kernel, fails)
-	var run_mark: String = _digest(SaveService.RUN_PATH)
-	var vigil_mark: String = _digest(SaveService.VIGIL_PATH)
+	var run_mark: String = _digest(TestProfile.production_run_path())
+	var vigil_mark: String = _digest(TestProfile.production_vigil_path())
 	var main: Main = _boot(PackedStringArray([flag]))
 	_check(fails, main._run_save_path == kernel.run_path,
 		"%s did not bind the run to the Development profile" % flag)
@@ -235,8 +230,8 @@ static func _resuming_boot(
 	content: ContentDB, kernel: ScenarioKernel, fails: Array[String]
 ) -> void:
 	_reset(content, kernel, fails)
-	var run_mark: String = _digest(SaveService.RUN_PATH)
-	var vigil_mark: String = _digest(SaveService.VIGIL_PATH)
+	var run_mark: String = _digest(TestProfile.production_run_path())
+	var vigil_mark: String = _digest(TestProfile.production_vigil_path())
 	var main: Main = _boot(PackedStringArray([RESUME_BOOT]))
 	_check(fails, main.game == null,
 		"%s resumed a run although the Development profile holds none" % RESUME_BOOT)
@@ -252,14 +247,14 @@ static func _production_boot(
 	kernel: ScenarioKernel, fails: Array[String]
 ) -> void:
 	_reset(content, kernel, fails)
-	var before: String = _digest(SaveService.RUN_PATH)
+	var before: String = _digest(TestProfile.production_run_path())
 	DevTools.forced = gate
 	var main: Main = _boot(args)
 	DevTools.forced = true
-	_check(fails, main._run_save_path == SaveService.RUN_PATH
-			and main._vigil_save_path == SaveService.VIGIL_PATH,
+	_check(fails, main._run_save_path == TestProfile.production_run_path()
+			and main._vigil_save_path == TestProfile.production_vigil_path(),
 		"%s did not keep the production paths" % why)
-	_check(fails, _digest(SaveService.RUN_PATH) != before,
+	_check(fails, _digest(TestProfile.production_run_path()) != before,
 		"%s did not write the production run" % why)
 	_check(fails, not FileAccess.file_exists(kernel.run_path),
 		"%s still wrote the Development run" % why)
@@ -270,9 +265,9 @@ static func _production_boot(
 static func _intact(
 	tag: String, run_mark: String, vigil_mark: String, fails: Array[String]
 ) -> void:
-	_check(fails, _digest(SaveService.RUN_PATH) == run_mark,
+	_check(fails, _digest(TestProfile.production_run_path()) == run_mark,
 		"%s changed the production run" % tag)
-	_check(fails, _digest(SaveService.VIGIL_PATH) == vigil_mark,
+	_check(fails, _digest(TestProfile.production_vigil_path()) == vigil_mark,
 		"%s changed the production Vigil" % tag)
 
 
@@ -325,34 +320,11 @@ static func _poison(content: ContentDB) -> bool:
 	run.map = WorldMap.benchmark(run).to_dict()
 	var vigil: VigilState = VigilState.blank()
 	vigil.scenes_seen.append(SENTINEL_SCENE)
-	return SaveService.store(run, SaveService.RUN_PATH) \
-		and SaveService.store_vigil(vigil, SaveService.VIGIL_PATH)
+	return SaveService.store(run, TestProfile.production_run_path()) \
+		and SaveService.store_vigil(vigil, TestProfile.production_vigil_path())
 
 
 static func _digest(path: String) -> String:
 	if not FileAccess.file_exists(path):
 		return ""
 	return "%s:%d" % [FileAccess.get_sha256(path), FileAccess.get_file_as_bytes(path).size()]
-
-
-## Move a real save out of the way, atomically. Answers whether there was one.
-static func _stash(path: String) -> bool:
-	if not FileAccess.file_exists(path):
-		return false
-	return DirAccess.rename_absolute(
-		ProjectSettings.globalize_path(path),
-		ProjectSettings.globalize_path(path + STASH_SUFFIX)) == OK
-
-
-## Drop the sentinel this test wrote, then put the real save back. A failed
-## restore is a test failure: a developer's save left in the stash is how you
-## find out about it a week later.
-static func _unstash(path: String, stashed: bool, fails: Array[String]) -> void:
-	SaveService.clear(path)
-	if not stashed:
-		return
-	_check(fails, DirAccess.rename_absolute(
-			ProjectSettings.globalize_path(path + STASH_SUFFIX),
-			ProjectSettings.globalize_path(path)) == OK,
-		"could not restore %s from its stash — the real save is still at %s"
-			% [path, path + STASH_SUFFIX])

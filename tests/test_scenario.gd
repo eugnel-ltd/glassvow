@@ -84,38 +84,34 @@ static func _round_trips(
 		fails.append("scenario switch: previous development checkpoint survived")
 
 
+## Sandboxed, because this is the one place the player's paths must hold files: a
+## kernel that fell back to them would move the planted bytes.
 static func _isolation(
 	kernel: ScenarioKernel, content: ContentDB, fails: Array[String]
 ) -> void:
-	var before_run: String = _snap(SaveService.RUN_PATH)
-	var before_vigil: String = _snap(SaveService.VIGIL_PATH)
+	TestProfile.in_sandbox(fails, _isolation_in_sandbox.bind(kernel, content, fails))
+
+
+static func _isolation_in_sandbox(
+	kernel: ScenarioKernel, content: ContentDB, fails: Array[String]
+) -> void:
+	var run_path: String = TestProfile.production_run_path()
+	var vigil_path: String = TestProfile.production_vigil_path()
 	var plant: RunState = RunState.new_run(content, 7, "prod-isolation")
-	SaveService.store(plant, SaveService.RUN_PATH)
-	SaveService.store_vigil(VigilState.blank(), SaveService.VIGIL_PATH)
-	var planted_run: String = _snap(SaveService.RUN_PATH)
-	var planted_vigil: String = _snap(SaveService.VIGIL_PATH)
+	SaveService.store(plant, run_path)
+	SaveService.store_vigil(VigilState.blank(), vigil_path)
+	var planted_run: String = _snap(run_path)
+	var planted_vigil: String = _snap(vigil_path)
 	var run: RunState = kernel.construct(_custom(18305, {"gold": 9}))
 	kernel.reset()
 	kernel.switch_to(_custom(18306, {}))
 	kernel.clear_profile()
 	if run == null:
 		fails.append("scenario isolation: construct failed: %s" % kernel.last_error)
-	if _snap(SaveService.RUN_PATH) != planted_run:
+	if _snap(run_path) != planted_run:
 		fails.append("scenario isolation: production run path was mutated")
-	if _snap(SaveService.VIGIL_PATH) != planted_vigil:
+	if _snap(vigil_path) != planted_vigil:
 		fails.append("scenario isolation: production Vigil path was mutated")
-	SaveService.clear(SaveService.RUN_PATH)
-	SaveService.clear_vigil(SaveService.VIGIL_PATH)
-	if not before_run.is_empty():
-		var f: FileAccess = FileAccess.open(SaveService.RUN_PATH, FileAccess.WRITE)
-		if f != null:
-			f.store_string(before_run)
-			f.close()
-	if not before_vigil.is_empty():
-		var vf: FileAccess = FileAccess.open(SaveService.VIGIL_PATH, FileAccess.WRITE)
-		if vf != null:
-			vf.store_string(before_vigil)
-			vf.close()
 
 
 static func _rejection(kernel: ScenarioKernel, fails: Array[String]) -> void:

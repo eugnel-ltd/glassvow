@@ -9,7 +9,9 @@ extends RefCounted
 ## keeps `presentation/` from calling `SaveService` or reading Main's path
 ## fields. The live leg boots a named Development Scenario over deliberately
 ## poisoned production sentinels and proves the exercises left them
-## byte-identical, which is the part a source scan cannot claim.
+## byte-identical, which is the part a source scan cannot claim. It runs inside
+## `TestProfile.in_sandbox`, so the sentinels stand at the player's own paths
+## without ever meeting a real save.
 
 const MAIN_PATH: String = "res://application/main.gd"
 const PRESENTATION_ROOT: String = "res://presentation"
@@ -20,8 +22,6 @@ const SCENARIO_ID: String = "title-continue"
 const SCENARIO_SEED: int = 18501
 const SENTINEL_RUN_ID: String = "run-sentinel-329"
 const SENTINEL_SCENE: String = "sentinel-329"
-## Where a developer's real save waits while the sentinels stand in for it.
-const STASH_SUFFIX: String = ".pretest"
 const BUILD: String = "test-profile-isolation-sha"
 const MapCompose: GDScript = preload("res://tests/test_map_compose.gd")
 
@@ -49,18 +49,9 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 
 
 static func run(fails: Array[String]) -> void:
-	# `test_opening_flow.run()`'s convention, and it earns its place twice over
-	# here: this is the only suite that stands sentinels in for BOTH production
-	# files, so the end-to-end comparison is what proves they came back.
-	var run_before: String = _digest(SaveService.RUN_PATH)
-	var vigil_before: String = _digest(SaveService.VIGIL_PATH)
 	_census(fails)
 	_presentation_boundary(fails)
-	_live_isolation(fails)
-	_check(fails, _digest(SaveService.RUN_PATH) == run_before,
-		"the production run was not restored byte-for-byte")
-	_check(fails, _digest(SaveService.VIGIL_PATH) == vigil_before,
-		"the production Vigil was not restored byte-for-byte")
+	TestProfile.in_sandbox(fails, _live_isolation.bind(fails))
 
 
 # ------------------------------------------------------------------- census
@@ -116,23 +107,15 @@ static func _presentation_boundary(fails: Array[String]) -> void:
 
 # -------------------------------------------------------------- live profile
 
+## The production pair has to hold sentinels for the exercises to be worth
+## anything, which is why this runs in a sandbox: `user://` is an empty directory
+## of its own here, so there is no real save to move aside or to lose.
 static func _live_isolation(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
-	# The production pair has to hold sentinels for the exercises to be worth
-	# anything, and this suite shares `user://` with the real game — so a
-	# developer's own save is moved ASIDE rather than overwritten. Rename is
-	# atomic and leaves the file whole: kill the process anywhere below and the
-	# real save is sitting at `<path>.pretest`, recoverable by hand. The
-	# in-memory copy this replaced could not survive a crash, and its restore
-	# truncated the target before writing.
-	var run_stashed: bool = _stash(SaveService.RUN_PATH)
-	var vigil_stashed: bool = _stash(SaveService.VIGIL_PATH)
 	if not _poison_production(content, fails):
-		_unstash(SaveService.RUN_PATH, run_stashed, fails)
-		_unstash(SaveService.VIGIL_PATH, vigil_stashed, fails)
 		return
-	var run_mark: String = _digest(SaveService.RUN_PATH)
-	var vigil_mark: String = _digest(SaveService.VIGIL_PATH)
+	var run_mark: String = _digest(TestProfile.production_run_path())
+	var vigil_mark: String = _digest(TestProfile.production_vigil_path())
 	var before: Dictionary = _user_digests()
 
 	var kernel: ScenarioKernel = ScenarioKernel.new(content, RUN_PATH, VIGIL_PATH, REF_PATH)
@@ -147,13 +130,11 @@ static func _live_isolation(fails: Array[String]) -> void:
 	for name_v: Variant in _changed(before, _user_digests()):
 		var name: String = str(name_v)
 		_check(fails, false, "user://%s changed outside the development profile" % name)
-	_check(fails, _digest(SaveService.RUN_PATH) == run_mark,
+	_check(fails, _digest(TestProfile.production_run_path()) == run_mark,
 		"the production run sentinel was rewritten")
-	_check(fails, _digest(SaveService.VIGIL_PATH) == vigil_mark,
+	_check(fails, _digest(TestProfile.production_vigil_path()) == vigil_mark,
 		"the production Vigil sentinel was rewritten")
 	kernel.clear_profile()
-	_unstash(SaveService.RUN_PATH, run_stashed, fails)
-	_unstash(SaveService.VIGIL_PATH, vigil_stashed, fails)
 
 
 ## Every runtime shape the ticket names, in one profile, each followed by a
@@ -234,9 +215,9 @@ static func _exercise(
 static func _intact(
 	run_mark: String, vigil_mark: String, tag: String, fails: Array[String]
 ) -> void:
-	_check(fails, _digest(SaveService.RUN_PATH) == run_mark,
+	_check(fails, _digest(TestProfile.production_run_path()) == run_mark,
 		"%s changed the production run sentinel" % tag)
-	_check(fails, _digest(SaveService.VIGIL_PATH) == vigil_mark,
+	_check(fails, _digest(TestProfile.production_vigil_path()) == vigil_mark,
 		"%s changed the production Vigil sentinel" % tag)
 
 
@@ -247,8 +228,8 @@ static func _poison_production(content: ContentDB, fails: Array[String]) -> bool
 	run.map = WorldMap.benchmark(run).to_dict()
 	var vigil: VigilState = VigilState.blank()
 	vigil.scenes_seen.append(SENTINEL_SCENE)
-	var ok: bool = SaveService.store(run, SaveService.RUN_PATH) \
-		and SaveService.store_vigil(vigil, SaveService.VIGIL_PATH)
+	var ok: bool = SaveService.store(run, TestProfile.production_run_path()) \
+		and SaveService.store_vigil(vigil, TestProfile.production_vigil_path())
 	_check(fails, ok, "could not seed the production sentinels")
 	return ok
 
@@ -275,9 +256,7 @@ static func _main(content: ContentDB, kernel: ScenarioKernel) -> Main:
 	main.content = content
 	main._dev_claimed = true
 	main._forced_seed = 32900
-	main._run_save_path = kernel.run_path
-	main._vigil_save_path = kernel.vigil_path
-	main._vigil = main._load_vigil()
+	main.install_profile(kernel.run_path, kernel.vigil_path)
 	main._transitions = TransitionLayer.new()
 	main._transitions.instant = true
 	main.add_child(main._transitions)
@@ -338,29 +317,6 @@ static func _changed(before: Dictionary, after: Dictionary) -> Array[String]:
 			out.append(name)
 	out.sort()
 	return out
-
-
-## Move a real save out of the way, atomically. Answers whether there was one.
-static func _stash(path: String) -> bool:
-	if not FileAccess.file_exists(path):
-		return false
-	return DirAccess.rename_absolute(
-		ProjectSettings.globalize_path(path),
-		ProjectSettings.globalize_path(path + STASH_SUFFIX)) == OK
-
-
-## Drop the sentinel this test wrote, then put the real save back. Restoration
-## failure is a test failure — silently leaving a developer's save in the stash
-## is how you find out about it a week later.
-static func _unstash(path: String, stashed: bool, fails: Array[String]) -> void:
-	SaveService.clear(path)
-	if not stashed:
-		return
-	_check(fails, DirAccess.rename_absolute(
-			ProjectSettings.globalize_path(path + STASH_SUFFIX),
-			ProjectSettings.globalize_path(path)) == OK,
-		"could not restore %s from its stash — the real save is still at %s"
-			% [path, path + STASH_SUFFIX])
 
 
 # ------------------------------------------------------------------- parsing

@@ -13,8 +13,6 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 
 
 static func run(fails: Array[String]) -> void:
-	var default_run: Variant = _file_snapshot(SaveService.RUN_PATH)
-	var default_vigil: Variant = _file_snapshot(SaveService.VIGIL_PATH)
 	_map_select_not_before_opening(fails)
 	_map_select_fires_and_flush(fails)
 	_combat_states(fails)
@@ -22,11 +20,7 @@ static func run(fails: Array[String]) -> void:
 	_dev_and_scenario_silent(fails)
 	_skip_from_first_hint(fails)
 	_dismiss_retry_holds_vigil(fails)
-	if _file_snapshot(SaveService.RUN_PATH) != default_run \
-			or _file_snapshot(SaveService.VIGIL_PATH) != default_vigil:
-		fails.append("hint_system: tests touched the default save")
-	SaveService.clear(RUN_PATH)
-	SaveService.clear_vigil(VIGIL_PATH)
+	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
 
 
 static func _map_select_not_before_opening(fails: Array[String]) -> void:
@@ -56,7 +50,7 @@ static func _map_select_fires_and_flush(fails: Array[String]) -> void:
 	_check(fails, not live.is_empty(), "fresh map has no reachable node")
 	if not live.is_empty():
 		# Quarantine the route so the pick cannot fall into `_prepare_encounter`,
-		# which stores the run on the default path. before_pick still records.
+		# which stores the run. before_pick still records.
 		main._route_checkpoint_quarantined = true
 		main._map_screen.instant = true
 		main._map_screen.choose(live[0])
@@ -146,9 +140,7 @@ static func _combat_states(fails: Array[String]) -> void:
 	reward._show_pending_reward()
 	_check(fails, reward._hints.showing() == HintGuide.REWARD,
 		"reward did not fire on the first reward screen")
-	var default_run: Variant = _file_snapshot(SaveService.RUN_PATH)
 	reward._on_reward_claimed(&"gold", "")
-	_restore_snapshot(SaveService.RUN_PATH, default_run)
 	_check(fails, reward._vigil.hints_seen.has(HintGuide.REWARD),
 		"claiming a reward did not dismiss the hint")
 	_dispose(reward)
@@ -300,11 +292,9 @@ static func _main(content: ContentDB) -> Main:
 	SaveService.clear(RUN_PATH)
 	SaveService.clear_vigil(VIGIL_PATH)
 	var main: Main = Main.new()
+	TestProfile.install(main, RUN_PATH, VIGIL_PATH)
 	main._map_layout_compile = MapCompose.fake_layout_compile()
 	main.content = content
-	main._run_save_path = RUN_PATH
-	main._vigil_save_path = VIGIL_PATH
-	main._vigil = VigilState.blank()
 	main._transitions = TransitionLayer.new()
 	main._transitions.instant = true
 	main.add_child(main._transitions)
@@ -320,20 +310,3 @@ static func _dispose(main: Main) -> void:
 	for child: Node in main.get_children():
 		child.free()
 	main.free()
-
-
-static func _file_snapshot(path: String) -> Variant:
-	if not FileAccess.file_exists(path):
-		return null
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	return file.get_as_text() if file != null else null
-
-
-static func _restore_snapshot(path: String, snap: Variant) -> void:
-	if snap == null:
-		SaveService.clear(path)
-		return
-	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
-	if file != null:
-		file.store_string(str(snap))
-		file.close()

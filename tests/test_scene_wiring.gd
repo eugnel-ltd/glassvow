@@ -14,8 +14,6 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 
 
 static func run(fails: Array[String]) -> void:
-	var default_run: Variant = _file_snapshot(SaveService.RUN_PATH)
-	var default_vigil: Variant = _file_snapshot(SaveService.VIGIL_PATH)
 	_pending_scene_roundtrip(fails)
 	_scenes_seen_roundtrip(fails)
 	_guidance_skipped_roundtrip(fails)
@@ -41,11 +39,7 @@ static func run(fails: Array[String]) -> void:
 	_lamplighter_post_once(fails)
 	_lamplighter_post_resume(fails)
 	_lamplighter_does_not_inflate_unlocks(fails)
-	if _file_snapshot(SaveService.RUN_PATH) != default_run \
-			or _file_snapshot(SaveService.VIGIL_PATH) != default_vigil:
-		fails.append("scene_wiring: tests touched the default save")
-	SaveService.clear(RUN_PATH)
-	SaveService.clear_vigil(VIGIL_PATH)
+	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
 
 
 static func _pending_scene_roundtrip(fails: Array[String]) -> void:
@@ -698,11 +692,9 @@ static func _main(content: ContentDB) -> Main:
 	SaveService.clear(RUN_PATH)
 	SaveService.clear_vigil(VIGIL_PATH)
 	var main: Main = Main.new()
+	TestProfile.install(main, RUN_PATH, VIGIL_PATH)
 	main._map_layout_compile = MapCompose.fake_layout_compile()
 	main.content = content
-	main._run_save_path = RUN_PATH
-	main._vigil_save_path = VIGIL_PATH
-	main._vigil = VigilState.blank()
 	main._transitions = TransitionLayer.new()
 	main._transitions.instant = true
 	main.add_child(main._transitions)
@@ -718,10 +710,3 @@ static func _dispose(main: Main) -> void:
 	for child: Node in main.get_children():
 		child.free()
 	main.free()
-
-
-static func _file_snapshot(path: String) -> Variant:
-	if not FileAccess.file_exists(path):
-		return null
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	return file.get_as_text() if file != null else null
