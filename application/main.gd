@@ -325,7 +325,7 @@ func _ready() -> void:
 			# (#312): --finale-form=step | hold. Dev capture only.
 			FinaleStaging.form = StringName(arg.trim_prefix("--finale-form="))
 		elif arg in ["--enemies", "--chips", "--hud", "--reward", "--layout",
-				"--stagecraft"]:
+				"--stagecraft", "--flame"]:
 			lab_flag = arg
 	if performance_probe and (fight.is_empty() or not shot_path.is_empty()
 			or cards_lab or studio or not lab_flag.is_empty()):
@@ -435,6 +435,8 @@ func _ready() -> void:
 		# stage, and what that bench needs to vary is the stage it DRAWS.
 		"--layout": lab = LayoutLab.new(content)
 		"--stagecraft": lab = StagecraftLab.new(content)
+		# #577 step 1: the lantern flame spike. A lab over the HUD, no run.
+		"--flame": lab = FlameLab.new()
 	if lab != null:
 		add_child(lab)
 		if shot_path != "":
