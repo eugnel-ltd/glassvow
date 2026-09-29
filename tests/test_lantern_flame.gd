@@ -2,8 +2,9 @@ extends RefCounted
 ## #577 lock PR 5: the Flame on the HUD, reward and shop lanterns. The reading is
 ## the domain's (`EventTypes.FLAME`); these pin what presentation does with it:
 ## the controller's targets and its tween, the HUD lantern it lights, the combat
-## screen that forwards it, and the reward and shop lanterns main feeds after a
-## pick. Visual proof is in docs/design/2026-09-29-dusk-flame/hud/.
+## screen that forwards it, the reward and shop lanterns main feeds after a
+## pick, and the reading main takes at an event's deck change. Visual proof is in
+## docs/design/2026-09-29-dusk-flame/hud/.
 
 const PoolCallers: GDScript = preload("res://tests/test_pool_callers.gd")
 const EPS: float = 0.0001
@@ -21,6 +22,17 @@ const STEADY_EDGE: Dictionary = {"t": &"flame", "tier": "STEADY", "dominant": "e
 	"fringe": "", "shares": {"shatter": 0.20, "lantern": 0.20, "edge": 0.60}}
 
 
+## A route screen that can show the flame, standing in for one that carries a
+## lantern: it keeps every reading it is handed.
+class LanternSpy:
+	extends Control
+
+	var seen: Array[Dictionary] = []
+
+	func show_flame(event: Dictionary, _instant: bool = false) -> void:
+		seen.append(event)
+
+
 static func _check(fails: Array[String], ok: bool, what: String) -> void:
 	if not ok:
 		fails.append("test_lantern_flame: %s" % what)
@@ -34,6 +46,7 @@ static func run(fails: Array[String]) -> void:
 	_run_lantern_seat(fails)
 	_combat_forwards(fails)
 	_reward_and_shop(fails)
+	_event_deck_changes(fails)
 
 
 # ---------------------------------------------------------------- controller
@@ -297,4 +310,71 @@ static func _reward_and_shop(fails: Array[String]) -> void:
 	var bare: ShopScreen = main._route_screen as ShopScreen
 	_check(fails, bare != null and bare._lantern == null,
 		"a stall for an aspect without ways grew a lantern")
+	PoolCallers._dispose(main)
+
+
+## Main reads the Flame at an event's deck changes too (lock §4: it answers on
+## the spot), lantern or none: the event screens carry none, so the reading is
+## taken all the same, and reaches a route screen only if that screen says it can
+## show one. Two Kindling decks cross to Steady at an event: the Shrine's
+## removal takes War Cry out of 3 shatter, 2 edge and 1 lantern glass, and an
+## immediate op adds Quakeblow to 2 shatter, 1 edge and 1 lantern.
+static func _event_deck_changes(fails: Array[String]) -> void:
+	var content: ContentDB = ContentDB.load_full()
+	var shrine: Dictionary = content.events["forgottenShrine"]
+	var choices: Array = shrine["choices"]
+	var offering: Dictionary = choices[1]
+	offering["ops"] = [{"addCard": "quakeblow"}]
+	for lantern: bool in [false, true]:
+		var shown: String = "with a lantern" if lantern else "without one"
+		_at_the_shrine(content, "the Shrine's removal %s" % shown, 57704,
+			["uppercut", "quakeblow", "warCry"], 0, "warCry", lantern, fails)
+		_at_the_shrine(content, "an immediate add %s" % shown, 57705,
+			["uppercut"], 1, "", lantern, fails)
+
+
+## One event, from a Kindling deck (`added` to the starters) to the Steady the
+## choice, or the card `removed` from the deck by its pick, makes. The flame is
+## read before the choice, as the screen before the event would have left it.
+static func _at_the_shrine(content: ContentDB, label: String, seed: int, added: Array[String],
+		choice: int, removed: String, lantern: bool, fails: Array[String]) -> void:
+	var run_state: RunState = RunState.new_run(content, seed, "flame-event", {"aspect": 0})
+	for id: String in added:
+		run_state.player.deck.append(CardInst.new(run_state.next_uid(), StringName(id), false))
+	var walk: WorldMap = WorldMap.slice()
+	walk.at = 3
+	walk.nodes[3].type = "event"
+	run_state.node_id = walk.nodes[3].id
+	run_state.map = walk.to_dict()
+	run_state.quest_scratch["eventNode"] = "forgottenShrine"
+	var main: Main = PoolCallers._main(content)
+	main._continue_run(run_state)
+	var before: Array[Dictionary] = main.game.flame_events()
+	main.game.take_flame_lines()
+	_check(fails, before.size() == 1 and str(before[0]["tier"]) == "KINDLING",
+		"%s: the deck before the event must read Kindling, got %s" % [label, before])
+	var spy: LanternSpy = null
+	if lantern:
+		spy = LanternSpy.new()
+		main._route_screen = spy
+		main.add_child(spy)
+	main._on_event_choice(str(choice), "forgottenShrine")
+	if not removed.is_empty():
+		_check(fails, spy == null or spy.seen.is_empty(),
+			"%s: a choice that changed no card read the flame" % label)
+		var uid: int = -1
+		for card: CardInst in run_state.player.deck:
+			if String(card.id) == removed:
+				uid = card.uid
+		main._on_event_pick(str(uid), "remove")
+	if spy != null:
+		var tiers: Array = spy.seen.map(func(reading: Dictionary) -> String: return str(reading["tier"]))
+		_check(fails, tiers == ["STEADY"],
+			"%s: the lantern's route screen must be handed one Steady reading, got %s" % [label, tiers])
+	# The lines first: a second reading would owe them itself.
+	_check(fails, main.game.take_flame_lines()
+			== [FlameLines.SLOT_STEADY, FlameLines.CODEX_PREFIX + "shatter"],
+		"%s: the Steady crossed at the event owed no lines" % label)
+	_check(fails, main.game.flame_events().is_empty(),
+		"%s: the event left its deck change unread" % label)
 	PoolCallers._dispose(main)
