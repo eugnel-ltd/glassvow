@@ -1,6 +1,6 @@
 # The app icon against the signed rose-door brief (#545 inspection)
 
-**Status:** inspection complete, 2026-09-29. The shipped icon does not meet the brief. Four generated candidates wait for James to pick one and sign it at arm's length. Nothing here enters `assets/`; the shipped `glassvow-icon.png` and `glassvow.icns` are untouched. Owner: James. Author: Claude (Opus 5.5), for #545 under #409.
+**Status:** inspection complete, 2026-09-29. The shipped icon does not meet the brief. Eight generated candidates from two rounds, C1 to C4 from Grok and C5 to C8 from Codex, wait for James to pick one and sign it at arm's length. The recommendation is C6 (see Round 2). Nothing here enters `assets/`; the shipped `glassvow-icon.png` and `glassvow.icns` are untouched. Owner: James. Author: Claude (Opus 5.5), for #545 under #409.
 
 **Authority.** The brief is #409's icon line, which carries #243's resolution (signed 2026-08-19) unchanged. This record judges the current file against it and does not reopen it.
 
@@ -42,7 +42,9 @@ This changes no verdict above; it belongs to the integration step. The iOS expor
 
 Four calls on 2026-09-29, one image each; provenance is below. Every request kept the rose and asked for changes only to the hub and the panes. The variants test the two choices that decide legibility at 60 pt: the door's scale (C1 against C2) and the colour strategy (C3 against C4). Two of the four are not image-model output. For C2 and C3 the model kept drawing eight or twelve spokes, so Grok drew the icon itself in Pillow, resampling glass from its own generation.
 
-![Candidates at 1024 (shown at 25 %), 180, 120, 76 and 60 px on light and dark, with the current icon as the first row](contact-candidates.png)
+![Candidates at 1024 (shown at 25 %), 180, 120, 76 and 60 px on light and dark, with the current icon as the first row](contact-candidates-round1.png)
+
+This is the sheet as round 1 left it, with round 1's ranks. `contact-candidates.png` now shows all eight candidates with the round-2 ranking (see Round 2).
 
 Ranked against the brief: the door and its light at 60 pt first, then rose identity, then fidelity to the reference and fit to the Store slot. "Rose width" is the lit rose as a share of the canvas; iOS masks the corners, never the rose.
 
@@ -163,6 +165,141 @@ Same square icon, same near-black full-bleed ground, same amber-gold leaded rose
 
 </details>
 
+## Round 2: Codex
+
+**Why a second round.** James judged Codex's image generation better and more consistent than Grok's; a probe had already returned real alpha and output faithful to its reference. So a second round went to Codex: four calls on 2026-09-29, one image each, all from one prompt template, each with the shipped icon as the style reference. C5 is the brief as written, and each of the others changes one thing against it, so any difference can be traced to that change.
+
+| Candidate | What it tests | What changes against C5 |
+|---|---|---|
+| [C5 · rose door](candidate-5-rose-door.png) | The brief as written | Nothing: six spokes, a pointed-arch door at the hub about two fifths of the rose tall, one hairline of warm light, cold cobalt, violet and teal glass, worn gold on the lead, a warm-black surround. |
+| [C6 · edge to edge](candidate-6-edge-to-edge.png) | Scale for 60 pt | The rose fills the tile edge to edge, and the door is about 55 % of the rose tall. |
+| [C7 · dusk](candidate-7-dusk-rose.png) | Light | The rose is lit from behind at dusk, amber through the panes, with the door dark and the hairline its brightest point. |
+| [C8 · C1 regenerated](candidate-8-hub-door-codex.png) | Round 1's leader, remade | Round 1's C1 is passed as a second reference for its composition: the door at the hub about a third of the rose tall, and glass in shards radiating from it. The prompt names C1's faults to correct: eight divisions, a round head, gold panes and a hairline lost at 60 px. It also makes C1 against C8 a like-for-like comparison of Grok and Codex. |
+
+![All eight candidates at 1024 (shown at 25 %), 180, 120, 76 and 60 px on light and dark, current icon first, with the round-2 ranks](contact-candidates.png)
+
+**What came back.** All four hold the brief's geometry, which round 1 never managed with an image model. Each has exactly six spokes (one horizontal, two diagonal), a true pointed arch and a hairline down the whole seam. The glass is unpictured, there are no figures, stairs or text, and every tile is opaque and full-bleed. One deviation from its prompt: C6's leaves carry faint diagonal lead lines where the prompt asked for plain leaves. They show at 1024 and are gone below 180 px.
+
+### The eight ranked
+
+Ranked against the brief as in round 1: the door and its light at 60 pt first, then rose identity, then fidelity to the reference and fit to the Store slot. The two contrast columns are WCAG contrast ratios on the 60 px render. WCAG 2.1 SC 1.4.11 asks 3 : 1 of a graphical object a person must pick out, and only C5, C6 and C8 clear it on both counts.
+
+| Rank | Candidate | Made by | Rose width | Door height | Door against glass, 60 px | Hairline against leaves, 60 px | Why this rank |
+|---|---|---|---|---|---|---|---|
+| 1 | C6 · edge to edge | Codex, one call | 99 % | 44 % | 4.4 : 1 | 4.4 : 1 | **Reads best at 60 pt.** It has the largest door and is the only candidate at 4 : 1 or better on both counts, and six wedges of the game's glass still read as a rose around it. Against it: the ring touches the tile's edges, and faint lead lines cross the leaves at 1024. |
+| 2 | C8 · C1 regenerated | Codex, one call | 87 % | 33 % | 3.4 : 1 | 5.2 : 1 | **The strongest 1024 tile.** Every shard leads the eye to the door, and the tapered hairline reads as light pressing through a seam. It has the brightest hairline at 60 px, but its busier glass leaves the door only just over 3 : 1. |
+| 3 | C5 · rose door | Codex, one call | 89 % | 32 % | 4.1 : 1 | 3.4 : 1 | The cleanest reading of the brief, with large, quiet pieces and a crisp hairline. At 60 px its door is small, and the six alternating wedges compete with it where C6's larger door does not. |
+| 4 | C7 · dusk | Codex, one call | 87 % | 30 % | 8.5 : 1 | 2.8 : 1 | The most atmospheric tile and the strongest silhouette. But at 60 px the amber glow outshines the hairline, so the icon reads as light behind the door rather than a sealed door with a hairline, and the warm centre drifts toward the sun or lamp that sank C4. The hairline is the brightest point only at 1024, by 1.29×. |
+| 5 | C1 · hub door | Grok, image model, two edits | 79 % | 40 % | 3.6 : 1 | 2.7 : 1 | Round 1's leader. The door reads, but it has eight divisions, a round head and a hairline that thins to a pixel: the faults C8 corrects. |
+| 6 | C4 · lit rose, dark door | Grok, image model, two edits | 66 % | 43 % | 6.8 : 1 | 2.8 : 1 | A strong silhouette that reads as a sun or a lamp: eight spokes, and a door that shrinks to a slotted disc. |
+| 7 | C2 · large door | Grok, drawn in code | 84 % | 65 % | 1.7 : 1 | 1.2 : 1 | The rose shrinks to a ring around a flat brown door, and the hairline is gone at 60 px. |
+| 8 | C3 · cool rose, warm seam | Grok, drawn in code | 84 % | 41 % | 1.3 : 1 | 1.6 : 1 | The right geometry, but the slate door all but vanishes into its glass. |
+
+**Recommendation: C6.** The brief's working test is the 60 pt read, and signing at arm's length on a phone is that test. C6 passes it most clearly while keeping the rose and the game's glass. If James weighs the full tile above the small read, C8 is the alternative. If C6's ring touching the tile's edges bothers him at 1024, integration can inset the master a few per cent on its own warm-black ground, with nothing regenerated.
+
+**How it was measured.** The renders are round 1's: flattened on black, resized with Lanczos, masked as above. Rose width is round 1's measure, and it reproduces round 1's 79, 84, 84 and 66 % for C1 to C4. Door height runs from apex to threshold with the frame, as a share of the rose's width, read by hand from each 1024 master on a 32 px grid; C4's door is measured with its dark hub ring, because the two read as one disc. On the 60 px render the door is sampled in the middle of each leaf, clear of the seam and the arch. The glass is sampled in strips beside the door, clear of the horizontal spoke, and the hairline is the brightest of the one or two pixel columns its seam falls in. Every sampled region was checked by eye in an overlay. These ratios replace round 1's door-and-glass figures (C4 2.6×, C3 1.2×), which used a different measure. The 1024 brightest-point check compares the hairline's peak with the 99.5th percentile of the glass.
+
+### Provenance, round 2
+
+| | |
+|---|---|
+| Tool | Codex CLI 0.159.0, through `~/.claude/scripts/subagents/run-imagegen.sh`, which runs `codex exec` on the newest Terra model at run time: `gpt-5.6-terra`, low reasoning effort, workspace-write sandbox. Codex's working folder was a scratch folder outside the repository; the worktree was clean afterwards apart from this folder. Each candidate is one call to Codex's built-in `image_gen` tool. That tool takes only `prompt`, `transparent_background`, `referenced_image_paths` and `num_last_images_to_include`, so no request could set a size. No call fell back to Cursor. |
+| Image model | Each original carries OpenAI's C2PA content credentials: software agent ChatGPT `gpt-image`, action `c2pa.created`, signed by OpenAI OpCo, LLC. |
+| Date | 2026-09-29, London time; the four calls ran in parallel. `image_gen` call, then creation time from the C2PA manifest: C5 21:03:26, created 21:03:47; C6 21:03:36, created 21:03:57; C7 21:03:35, created 21:03:55; C8 21:03:58, created 21:04:20. |
+| References | Every call passed the shipped `assets/icon/glassvow-icon.png` (sha256 `4e4309be…`) by its absolute path in the delivery worktree as Image 1, the style reference. C8 also passed round 1's `candidate-1-hub-door.png` as Image 2, the concept reference. Neither was edited. |
+| What reached the model | Codex passed the C5, C6 and C8 prompts byte for byte, and the tool reported each back unrevised. For C7 Codex dropped the final clause of the Avoid line, "; an empty hub"; the door at C7's hub makes the clause moot. Every call set `transparent_background` to false. |
+| Size | The tool returned 1254 × 1254 opaque RGB PNGs. As briefed, each was retried once with the same request and a note that 1024 was required, and all four retries came back at 1254 × 1254 again. A rule was fixed before the retries returned: a retry would replace its first output only at the right size. So the files here are the first outputs, resized to 1024 × 1024 with Pillow 10.4.0's Lanczos and otherwise unchanged. The retries were not used and are not committed. |
+| Files here | Tool original (1254) and committed master (1024), sha256. C5 `7f51ced4f96023f3f47fac658b12154b61b744ec81581dd26784813019823aff` and `08370f061e3ad03f9c5bd823db1bdafc9e973ec3ac98aac0cb81812218447bb3`; C6 `567606c45002f1b475698dc3a5db1f7bdf3ffab5408ccde4f6b64d1d44efb808` and `3486af56e3beaa0f92c2a3bac5cad89f01d9085c27347e40e4dbc55c09661cf2`; C7 `e1b9b183117a35752f24159bbd8543dd0e780f3f52258f6805a509709804603d` and `5d4004c03040f08fc05ed07bb19e29c1294b440a3553629b68d3ab198b082f08`; C8 `a750850c5876fb0927099e1b9a6379073e4afd202c9113979edb3cb01bd74832` and `0571953031e0283f138e7ab4955ff0699c76975a617a085e0477b57ea4f96d78`. The originals keep their C2PA manifests, which the resize drops, and stay in Codex's generated-images folder under each session: C5 `01a0eec3-6cc6-7e70-84ee-adad266b9286`, C6 `01a0eec3-7429-72e3-a163-7b2753facdd0`, C7 `01a0eec3-791b-7c33-aa5e-708bb316c6d4`, C8 `01a0eec3-7f36-75a0-a499-4278d43872e5`. Integration can start from the original to carry the credentials into the ledger. |
+| Who picks | James, as in round 1. |
+
+<details>
+<summary>What Codex received: the request and the four prompts, verbatim</summary>
+
+Every call sent Codex this request. `{OUT}` was the candidate's absolute output path in the scratch folder, `{IMAGES}` its reference lines (`   Image 1 (style reference): <the shipped icon's absolute path>`, and for C8 also `   Image 2 (concept reference): <round 1's C1>`), and `{PROMPT}` its prompt below. The retry inserted one step after step 4: `5. This is a retry: the previous attempt at this request came back at 1254 x 1254 px, and the file must be 1024 x 1024 px. Whatever size the tool returns, copy it unchanged and report that size.`
+
+```text
+Generate one image with your built-in image_gen tool and save it as a PNG at exactly this absolute path: {OUT}
+
+Steps:
+1. First view the input image(s) at these absolute paths (read-only):
+{IMAGES}
+2. Make exactly one image_gen call. Pass the input image(s) in referenced_image_paths, in the order listed. Do not ask for a transparent background: this is an opaque App Store icon. Pass the prompt between the markers verbatim.
+3. Copy the generated file to the output path unchanged: no resizing, cropping, re-encoding or flattening, and no second generation.
+4. Reply with the output path, its pixel size and its colour mode (for example RGB or RGBA).
+
+Write no other file.
+
+--- PROMPT ---
+{PROMPT}
+--- END PROMPT ---
+```
+
+**C5 · rose door**
+
+```text
+Use case: stylized-concept
+Asset type: the iOS App Store app icon for Glassvow (琉璃誓言), a stained-glass roguelite deckbuilder; a 1024 x 1024 px opaque, full-bleed square master.
+Input images: Image 1 is the game's current icon, the STYLE REFERENCE. Take from it the rose's six-spoke layout, how its glass is rendered (painterly stained glass in irregular cut pieces, dark lead cames with narrow worn-gold edge highlights) and its cold cobalt, violet and teal glass. It has four faults this icon must not repeat: five of its six panes tell stories with figures (robed people, a gloved hand, a crown over a lantern, rising pages); one pane holds a staircase; its hub is an empty dark disc; and it sits on a rounded tile inside a transparent margin.
+Primary request: remake the rose window so that its hub is a sealed door with a hairline of light. The icon must read as one to three shapes when shrunk to 60 x 60 px: the rose, the door, the line of light.
+Subject: a circular leaded stained-glass rose window seen straight on. Exactly six straight dark lead spokes divide it into exactly six equal wedge panes, as in Image 1: one spoke runs horizontally through the hub and the other two cross it at 60 degrees, so one pane sits directly above the hub and one directly below it. A thin worn-gold ring edges the rose. Every pane is plain, unpictured glass. The hub is a sealed door: a closed Gothic pointed-arch (lancet) door of two leaves, seen straight on, standing upright where the spokes meet; the spokes end at its frame. The leaves are plain, dark, almost black glass framed in lead with a worn-gold edge, with no handles, hinges, studs, tracery or keyhole. Along the whole seam where the two leaves meet, from the threshold to the point of the arch, runs one hairline of warm light.
+Composition/framing: centred and symmetrical about the vertical axis. The rose's outer ring spans about 86 % of the canvas width, on a dark warm-black surround. The door is about two fifths of the rose's diameter tall.
+Lighting/mood: the cold glass is luminous and saturated, clearly lighter than the door, so the door reads as a dark silhouette. The hairline is the only warm light in the picture: pale gold, near-white at its core, crisp and about 1 % of the canvas wide, with a faint warm glow either side so it survives at 60 px. No other light leaves the door: no glow around the arch and no light beneath it.
+Color palette: cold cobalt blue, violet and teal glass; worn gold only as thin highlights on the lead and the ring; a near-black door; a dark warm-black surround (about #0c0907).
+Materials/textures: painterly stained glass with faint streaks and seeds, dark lead cames with narrow worn-gold edge highlights, as in Image 1. Keep the pieces large, a few to each pane rather than a fine mosaic, and the texture inside each piece quiet, so nothing turns to noise at 60 px.
+Constraints: exactly six spokes and six panes (not eight, not twelve); a pointed arch, not a round one; the door is the focal point; one opaque square whose surround runs unbroken to all four edges and corners, with no rounded tile, frame, border, drop shadow or transparent margin (iOS applies its own mask).
+Avoid: figures, people, faces or hands; stairs or steps; pictures, scenes or story panes; a crown, lantern, candle, flame, cards, pages, sun or star motif; text, letters, numerals or a signature; an empty hub.
+```
+
+**C6 · edge to edge**
+
+```text
+Use case: stylized-concept
+Asset type: the iOS App Store app icon for Glassvow (琉璃誓言), a stained-glass roguelite deckbuilder; a 1024 x 1024 px opaque, full-bleed square master.
+Input images: Image 1 is the game's current icon, the STYLE REFERENCE. Take from it the rose's six-spoke layout, how its glass is rendered (painterly stained glass in irregular cut pieces, dark lead cames with narrow worn-gold edge highlights) and its cold cobalt, violet and teal glass. It has four faults this icon must not repeat: five of its six panes tell stories with figures (robed people, a gloved hand, a crown over a lantern, rising pages); one pane holds a staircase; its hub is an empty dark disc; and it sits on a rounded tile inside a transparent margin.
+Primary request: remake the rose window so that its hub is a sealed door with a hairline of light. The icon must read as one to three shapes when shrunk to 60 x 60 px: the rose, the door, the line of light.
+Subject: a circular leaded stained-glass rose window seen straight on. Exactly six straight dark lead spokes divide it into exactly six equal wedge panes, as in Image 1: one spoke runs horizontally through the hub and the other two cross it at 60 degrees, so one pane sits directly above the hub and one directly below it. A thin worn-gold ring edges the rose. Every pane is plain, unpictured glass. The hub is a sealed door: a closed Gothic pointed-arch (lancet) door of two leaves, seen straight on, standing upright where the spokes meet; the spokes end at its frame. The leaves are plain, dark, almost black glass framed in lead with a worn-gold edge, with no handles, hinges, studs, tracery or keyhole. Along the whole seam where the two leaves meet, from the threshold to the point of the arch, runs one hairline of warm light.
+Composition/framing: centred and symmetrical about the vertical axis. The rose fills the canvas edge to edge: its outer ring touches all four edges, so the dark warm-black surround shows only in the four corners. The door is larger, about 55 % of the rose's diameter tall, its arch rising into the pane above the hub and its threshold resting in the pane below.
+Lighting/mood: the cold glass is luminous and saturated, clearly lighter than the door, so the door reads as a dark silhouette. The hairline is the only warm light in the picture: pale gold, near-white at its core, crisp and about 1 % of the canvas wide, with a faint warm glow either side so it survives at 60 px. No other light leaves the door: no glow around the arch and no light beneath it.
+Color palette: cold cobalt blue, violet and teal glass; worn gold only as thin highlights on the lead and the ring; a near-black door; a dark warm-black surround (about #0c0907).
+Materials/textures: painterly stained glass with faint streaks and seeds, dark lead cames with narrow worn-gold edge highlights, as in Image 1. Keep the pieces large, a few to each pane rather than a fine mosaic, and the texture inside each piece quiet, so nothing turns to noise at 60 px.
+Constraints: exactly six spokes and six panes (not eight, not twelve); a pointed arch, not a round one; the door is the focal point; one opaque square whose surround runs unbroken to all four edges and corners, with no rounded tile, frame, border, drop shadow or transparent margin (iOS applies its own mask).
+Avoid: figures, people, faces or hands; stairs or steps; pictures, scenes or story panes; a crown, lantern, candle, flame, cards, pages, sun or star motif; text, letters, numerals or a signature; an empty hub.
+```
+
+**C7 · dusk** (as sent to Codex; Codex dropped "; an empty hub" before calling the tool)
+
+```text
+Use case: stylized-concept
+Asset type: the iOS App Store app icon for Glassvow (琉璃誓言), a stained-glass roguelite deckbuilder; a 1024 x 1024 px opaque, full-bleed square master.
+Input images: Image 1 is the game's current icon, the STYLE REFERENCE. Take from it the rose's six-spoke layout, how its glass is rendered (painterly stained glass in irregular cut pieces, dark lead cames with narrow worn-gold edge highlights) and its cold cobalt, violet and teal glass. It has four faults this icon must not repeat: five of its six panes tell stories with figures (robed people, a gloved hand, a crown over a lantern, rising pages); one pane holds a staircase; its hub is an empty dark disc; and it sits on a rounded tile inside a transparent margin.
+Primary request: remake the rose window so that its hub is a sealed door with a hairline of light. The icon must read as one to three shapes when shrunk to 60 x 60 px: the rose, the door, the line of light.
+Subject: a circular leaded stained-glass rose window seen straight on. Exactly six straight dark lead spokes divide it into exactly six equal wedge panes, as in Image 1: one spoke runs horizontally through the hub and the other two cross it at 60 degrees, so one pane sits directly above the hub and one directly below it. A thin worn-gold ring edges the rose. Every pane is plain, unpictured glass. The hub is a sealed door: a closed Gothic pointed-arch (lancet) door of two leaves, seen straight on, standing upright where the spokes meet; the spokes end at its frame. The leaves are plain, dark, almost black glass framed in lead with a worn-gold edge, with no handles, hinges, studs, tracery or keyhole. Along the whole seam where the two leaves meet, from the threshold to the point of the arch, runs one hairline of warm light.
+Composition/framing: centred and symmetrical about the vertical axis. The rose's outer ring spans about 86 % of the canvas width, on a dark warm-black surround. The door is about two fifths of the rose's diameter tall.
+Lighting/mood: dusk, with the rose lit from behind: warm amber light glows through the panes, so the glass is luminous, amber and honey nearest the door and cooling to the violet and cobalt of Image 1 toward the rim. The door stays dark and unlit, a clean silhouette against the glowing glass. The hairline down its seam is the brightest point in the whole image: near-white gold at its core, brighter than any pane, crisp and about 1 % of the canvas wide, with a faint warm glow either side. No other light leaves the door: no glow around the arch and no light beneath it. The glow stays inside the ring; the surround stays dark.
+Color palette: amber and honey light through the glass, blending into violet and cobalt at the rim; worn gold on the lead and the ring; a near-black door; a dark warm-black surround (about #0c0907).
+Materials/textures: painterly stained glass with faint streaks and seeds, dark lead cames with narrow worn-gold edge highlights, as in Image 1. Keep the pieces large, a few to each pane rather than a fine mosaic, and the texture inside each piece quiet, so nothing turns to noise at 60 px.
+Constraints: exactly six spokes and six panes (not eight, not twelve); a pointed arch, not a round one; the door is the focal point; one opaque square whose surround runs unbroken to all four edges and corners, with no rounded tile, frame, border, drop shadow or transparent margin (iOS applies its own mask).
+Avoid: figures, people, faces or hands; stairs or steps; pictures, scenes or story panes; a crown, lantern, candle, flame, cards, pages, sun or star motif; text, letters, numerals or a signature; an empty hub.
+```
+
+**C8 · C1 regenerated**
+
+```text
+Use case: stylized-concept
+Asset type: the iOS App Store app icon for Glassvow (琉璃誓言), a stained-glass roguelite deckbuilder; a 1024 x 1024 px opaque, full-bleed square master.
+Input images: Image 1 is the game's current icon, the STYLE REFERENCE. Take from it the rose's six-spoke layout, how its glass is rendered (painterly stained glass in irregular cut pieces, dark lead cames with narrow worn-gold edge highlights) and its cold cobalt, violet and teal glass. It has four faults this icon must not repeat: five of its six panes tell stories with figures (robed people, a gloved hand, a crown over a lantern, rising pages); one pane holds a staircase; its hub is an empty dark disc; and it sits on a rounded tile inside a transparent margin. Image 2 is the leading candidate from the first round, and the CONCEPT this icon regenerates. Keep its composition: the dark door standing in the hub at about one third of the rose's diameter, the rose filling most of the square, and glass cut in shards that radiate from the door toward the ring. Fix its faults: it has eight divisions (this icon has six spokes), a round-headed door (this one is a pointed arch), gold and amber panes (this one's glass is cold blue, violet and teal, with gold only on the lead), a cool blue-black ground (this one's surround is warm black), and a hairline that fades to nothing at 60 px (this one's must survive). Generate it anew rather than editing Image 2.
+Primary request: remake the rose window so that its hub is a sealed door with a hairline of light. The icon must read as one to three shapes when shrunk to 60 x 60 px: the rose, the door, the line of light.
+Subject: a circular leaded stained-glass rose window seen straight on. Exactly six straight dark lead spokes divide it into exactly six equal wedge panes, as in Image 1: one spoke runs horizontally through the hub and the other two cross it at 60 degrees, so one pane sits directly above the hub and one directly below it. A thin worn-gold ring edges the rose. Every pane is plain, unpictured glass. The hub is a sealed door: a closed Gothic pointed-arch (lancet) door of two leaves, seen straight on, standing upright where the spokes meet; the spokes end at its frame. The leaves are plain, dark, almost black glass framed in lead with a worn-gold edge, with no handles, hinges, studs, tracery or keyhole. Along the whole seam where the two leaves meet, from the threshold to the point of the arch, runs one hairline of warm light.
+Composition/framing: centred and symmetrical about the vertical axis, as in Image 2. The rose's outer ring spans about 84 % of the canvas width, on a dark warm-black surround. The door stands in the hub, about one third of the rose's diameter tall.
+Lighting/mood: the cold glass is luminous and saturated, clearly lighter than the door, so the door reads as a dark silhouette. The hairline is the only warm light in the picture: pale gold, near-white at its core, crisp and about 1 % of the canvas wide, with a faint warm glow either side so it survives at 60 px. No other light leaves the door: no glow around the arch and no light beneath it.
+Color palette: cold cobalt blue, violet and teal glass; worn gold only as thin highlights on the lead and the ring; a near-black door; a dark warm-black surround (about #0c0907).
+Materials/textures: painterly stained glass with faint streaks and seeds, dark lead cames with narrow worn-gold edge highlights, as in Image 1. Cut the glass in shards that radiate from the door toward the ring, as in Image 2, but keep the texture inside each piece quiet, so nothing turns to noise at 60 px.
+Constraints: exactly six spokes and six panes (not eight, not twelve); a pointed arch, not a round one; the door is the focal point; one opaque square whose surround runs unbroken to all four edges and corners, with no rounded tile, frame, border, drop shadow or transparent margin (iOS applies its own mask).
+Avoid: figures, people, faces or hands; stairs or steps; pictures, scenes or story panes; a crown, lantern, candle, flame, cards, pages, sun or star motif; text, letters, numerals or a signature; an empty hub.
+```
+
+</details>
+
 ## The decision left for James
 
-Pick one candidate and sign it at arm's length on a phone, or reject all four by naming the brief criterion they miss; #545 allows no further aesthetic round without one. After a pick the rest is integration under #545: the full-bleed iOS master, the macOS grid master through `tools/make_icon_master.py`, the icns through `tools/make_icon.sh`, and the art-ledger row carrying the pick's request, its Imagine prompts and its hash from this record.
+Pick one of the eight and sign it at arm's length on a phone, or reject them all by naming the brief criterion they miss; #545 allows no further aesthetic round without one. The recommendation is C6, with C8 the alternative. After a pick the rest is integration under #545: the full-bleed iOS master, the macOS grid master through `tools/make_icon_master.py`, the icns through `tools/make_icon.sh`, and the art-ledger row. That row carries the pick's request, its prompts and its hash from this record, and for a Codex pick the C2PA credentials of its original.
