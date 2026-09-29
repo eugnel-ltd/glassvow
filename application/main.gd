@@ -2063,6 +2063,7 @@ func _show_shop() -> void:
 	screen.say(_shop_line(false))
 	screen.action_selected.connect(_on_shop_choice)
 	_show_route(screen, true, &"safeNodes")
+	_read_flame(screen.show_flame, true)
 
 
 func _refresh_shop(just_bought: bool = false) -> void:
@@ -2075,6 +2076,7 @@ func _refresh_shop(just_bought: bool = false) -> void:
 		game.quests.usurper_offer(game.run),
 		game.run.player.potions.has(""))
 	shop.say(_shop_line(just_bought))
+	_read_flame(shop.show_flame)
 	if _run_hud != null:
 		_run_hud.refresh(game.run)
 
@@ -2609,6 +2611,7 @@ func _show_pending_reward() -> void:
 	_reward_screen.claimed.connect(_on_reward_claimed)
 	_reward_screen.finished.connect(_on_reward_finished)
 	add_child(_reward_screen)
+	_read_flame(_reward_screen.show_flame, true)
 	_transitions.set_grain(true)
 	_transitions.screen_in(_reward_screen)
 	_attach_run_hud()
@@ -2649,8 +2652,20 @@ func _on_reward_claimed(what: StringName, id: String) -> void:
 			if not id.is_empty():
 				game.rewards.gain_relic(game.run, id)
 	taken[key] = true
+	if _reward_screen != null:
+		_read_flame(_reward_screen.show_flame)
 	if not _store_run():
 		_show_save_error("ui.persistence.detail.claimedRewardHold")
+
+
+## Flame lock §9: the reward and shop lanterns show the Flame where the pick is
+## made. Their deck changes happen here rather than through `apply`, so the
+## reading is taken here too: all of it when a screen opens (`fresh`, drawn at
+## once), and after each change (tweened; nothing when the deck did not move).
+## An aspect with no ways reads nothing, and its screens grow no lantern.
+func _read_flame(show: Callable, fresh: bool = false) -> void:
+	for event: Dictionary in game.flame_events(fresh):
+		show.call(event, fresh)
 
 
 func _show_potion_replace(id: String) -> void:

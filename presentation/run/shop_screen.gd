@@ -48,6 +48,8 @@ var _card_views: Array[CardView] = []
 var _slots: Array[Dictionary] = []
 ## Slots standing in the foreground rack, in the order they stand there.
 var _rack: Array[Dictionary] = []
+## The Flame, once a reading arrives (`show_flame`).
+var _lantern: RunLantern = null
 
 
 func update(stock: Dictionary, gold: int, quest_offer: Dictionary,
@@ -66,6 +68,18 @@ func update(stock: Dictionary, gold: int, quest_offer: Dictionary,
 ## The merchant's line. Empty restores the greeting.
 func say(text: String) -> void:
 	_say.text = text if not text.is_empty() else Locale.active.t("ui.shop.greeting")
+
+
+## The Flame's reading, in the hero's lantern over the stall, so a card bought
+## or cut here is seen changing the flame here (lock §9). Main hands it the
+## reading as the stall opens (`instant`) and again after each purchase. The
+## lantern is built on the first reading, so a run whose aspect has no ways
+## never grows one.
+func show_flame(event: Dictionary, instant: bool = false) -> void:
+	if _lantern == null:
+		_lantern = RunLantern.new(shape)
+		add_child(_lantern)
+	_lantern.show_flame(event, instant)
 
 
 func _init(stock: Dictionary, gold: int, content: ContentDB,
@@ -332,6 +346,8 @@ func _ready() -> void:
 func set_shape(stage_shape: StringName) -> void:
 	if StageShape.REFERENCES.has(stage_shape):
 		shape = stage_shape
+		if _lantern != null:
+			_lantern.set_shape(shape)
 		_relayout()
 
 

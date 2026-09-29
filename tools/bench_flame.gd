@@ -1,12 +1,13 @@
 extends SceneTree
-## Frame-time probe for the #577 flame spike: the flame lab at one shape, with
-## the lantern flame on or off, uncapped. A component diagnostic for the HUD
-## lane's budget before wiring, not release evidence.
+## Frame-time probe for the #577 lantern flame: the flame lab (the production
+## combat HUD, lit through `HudBar.show_flame`) at one shape, with the flame on
+## or off, uncapped. A component diagnostic for the HUD's budget, not release
+## evidence.
 ##
 ##   godot --path . -s res://tools/bench_flame.gd -- --shape=phone-landscape \
-##       --scale=3 --flame=on --inspect=off [--stress=100]
+##       --scale=3 --flame=on --pose=true-lantern --inspect=off [--stress=100]
 ##
-## FlameLab reads its own arguments (--shape, --flame, --inspect); this probe
+## FlameLab reads its own arguments (--shape, --flame, --pose, --inspect); this probe
 ## sizes the window to the shape's stage at --scale, turns vsync off, lets the
 ## lab settle, then samples. It reports the MEDIAN and p95, never the mean, of
 ## the whole-frame interval (uncapped, so not quantised by presentation), the

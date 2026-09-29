@@ -53,6 +53,7 @@ extends Control
 ##   --take=    gold,potion,relic,card — settle those rows first
 ##   --leave    press Continue — with spoils unclaimed that raises the confirm
 ##   --strip    keep the control strip in a --shot, for documenting the viewer
+##   --pose=    light the rows screen's lantern with a FlameLab pose (#577)
 ##
 ## The samples are HAND-WRITTEN, not rolled. gen_combat_rewards is seeded off
 ## the run and the slice's relic pools are all empty, so a real roll can never
@@ -153,6 +154,8 @@ var _shot: bool = false        # a capture is happening: run the clock out
 ## be: headless has no viewport texture, so the run hangs instead of failing.
 var _bare_shot: bool = false
 var _force_bar: bool = false
+## A FlameLab pose id for the screen's lantern; empty leaves it unlit.
+var _flame_pose: String = ""
 var _shape: StringName = StageShape.IDENTITY
 
 
@@ -181,6 +184,8 @@ func _init(content_ref: ContentDB) -> void:
 			_shot = true
 		elif arg == "--strip":
 			_force_bar = true
+		elif arg.begins_with("--pose="):
+			_flame_pose = arg.trim_prefix("--pose=")
 		# The lab reads the shape for the same reason main hands it to the
 		# production route: the rack is authored per shape, and a bench that
 		# always builds the identity one cannot show what a phone gets.
@@ -275,6 +280,10 @@ func _rebuild() -> void:
 	if _screen.has_signal(&"finished"):
 		_screen.connect(&"finished", _on_finished)
 	add_child(_screen)
+	# A FlameLab pose lights the screen's lantern, as main does with the run's
+	# own reading when the screen opens (#577).
+	if not _flame_pose.is_empty() and _screen.has_method(&"show_flame"):
+		_screen.call(&"show_flame", FlameLab.pose_event(_flame_pose), true)
 	# Siblings draw and pick front-to-back in child order, so the strip and the
 	# log have to stay last or the screen's full-rect scrim swallows both.
 	if _bar != null:

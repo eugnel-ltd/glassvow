@@ -145,7 +145,7 @@ still find in the tree and should special-case by hand:
   then read:
 
   ```markdown
-  At [hud_bar.gd:131 (`FAN_FACES`)](../../../presentation/combat/hud_bar.gd) the fan is capped at 16
+  At [hud_bar.gd:132 (`FAN_FACES`)](../../../presentation/combat/hud_bar.gd) the fan is capped at 16
   ```
 
   and `FAN_FACES` is indeed declared at `presentation/combat/hud_bar.gd` (`FAN_FACES`).
@@ -438,7 +438,7 @@ in the tree now.
 
 ```markdown
 <!-- link label: the annotation must go INSIDE the brackets -->
-At [hud_bar.gd:131 (`FAN_FACES`)](../../../presentation/combat/hud_bar.gd) the fan is capped at 16
+At [hud_bar.gd:132 (`FAN_FACES`)](../../../presentation/combat/hud_bar.gd) the fan is capped at 16
 ```
 
 ```gdscript

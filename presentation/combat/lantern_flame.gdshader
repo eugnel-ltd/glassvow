@@ -1,6 +1,6 @@
 shader_type canvas_item;
-// THE FLAME IN THE LANTERN. Issue #577 step 1, a spike: nothing in production
-// reads this file yet. `LanternFlame` drives it and `FlameLab` shows it.
+// THE FLAME IN THE LANTERN (issue #577, lock PR 5). `LanternFlame` drives it on
+// the combat HUD's lantern and on the reward and shop screens' `RunLantern`.
 //
 // The Duskblade's lantern burns whatever glass the hero carries (design lock,
 // docs/design/2026-09-29-dusk-flame/README.md §1 and §9). This material goes on
@@ -22,24 +22,26 @@ shader_type canvas_item;
 //                    that has declared no way. Weights rather than an index,
 //                    so a tween between two ways morphs straight across and
 //                    never passes through the third.
+//   painted          how much of the lantern's own painted light shows
+//                    through the glass instead of the relit flame: 1 is the
+//                    lantern exactly as painted, which is Kindling (lock §5,
+//                    "today's game"); 0 is every tier with a reading of its
+//                    own to show.
 //
 // EACH WAY IS DRAWN AT THE SIZE OF THE WHOLE GLASS. At HUD size the centre pane
-// is about twelve pixels wide on a pad and eight on a phone, and the ember
-// numeral covers its upper half. A flame drawn in that pane alone is a smudge
-// behind a digit. So a way is a figure the three lights carry together:
-// Shatter throws sharp tongues out into the side lights, the Lantern's hearth
-// fills the foot of all three, and Edge is one thin blade in the centre with
-// the side lights left dark. A silhouette at that scale survives a phone, a
-// greyscale screen and the numeral. The glass away from the figure is kept
-// deep and dim for the same reason: a bright figure on dark glass is legible
-// at eight pixels, a bright figure on bright glass is not.
+// is about twelve pixels wide on a pad and eight on a phone. A flame drawn in
+// that pane alone is a smudge. So a way is a figure the three lights carry
+// together: Shatter throws sharp tongues out into the side lights, the
+// Lantern's hearth fills the foot of all three, and Edge is one thin blade in
+// the centre with the side lights left dark. A silhouette at that scale
+// survives a phone and a greyscale screen. The glass away from the figure is
+// kept deep and dim for the same reason: a bright figure on dark glass is
+// legible at eight pixels, a bright figure on bright glass is not.
 //
-// TWO LOOKS, ONE FIGURE. `look` changes only how the figure is drawn:
-//   0  LEADED  the flame stands behind the glass: soft-edged, carried by the
-//              glass's own streaks, crossed by every lead line in the pane.
-//   1  VECTOR  a cut-glass tongue set in the pane: three flat bands, a hard
-//              edge and a lead came of its own, laid over the thin lead of the
-//              tracery but never over the iron.
+// THE LOOK is leaded: the flame stands behind the glass, soft-edged, carried by
+// the glass's own streaks and crossed by every lead line in the pane. The
+// spike's second look (a cut-glass tongue with a came of its own) stays in the
+// spike's history rather than here.
 
 uniform vec4 dominant_colour : source_color = vec4(1.0, 0.56, 0.23, 1.0);
 uniform vec4 fringe_colour : source_color = vec4(1.0, 1.0, 1.0, 1.0);
@@ -47,7 +49,7 @@ uniform float fringe_amount : hint_range(0.0, 1.0) = 0.0;
 uniform float stability : hint_range(0.0, 1.0) = 0.42;
 uniform float height : hint_range(0.0, 1.0) = 0.55;
 uniform vec4 shape_weights = vec4(0.0, 0.0, 0.0, 1.0);
-uniform int look = 0;
+uniform float painted : hint_range(0.0, 1.0) = 1.0;
 // Seconds. Driven by LanternFlame rather than read from TIME, so a still is
 // the same still every time it is taken.
 uniform float clock = 0.0;
@@ -63,9 +65,13 @@ const float REACH = 0.29;
 // The box the panes stand in (x0, y0, x1, y1). The bronze glints on the hood
 // and the foot are warm too; outside this box they are left as they are.
 const vec4 PANES = vec4(0.31, 0.43, 0.69, 0.795);
-const vec3 LEAD = vec3(0.045, 0.045, 0.07);
 // Soot's dust: pale ash, so a fleck still shows against the dark brown glass.
 const vec3 ASH = vec3(0.62, 0.57, 0.52);
+// How far the painted light flickers at full unrest. The Kindling lantern must
+// read as the painted one (lock §5) and still be livelier than a calm Steady
+// flame, so the flicker is small and quick, like a candle's: amplitude costs
+// parity, speed buys life. docs/design/2026-09-29-dusk-flame/hud/ measures both.
+const float PAINTED_BREATH = 0.07;
 
 
 float hash(vec2 p) {
@@ -133,7 +139,7 @@ float shard(vec2 p, vec2 root, vec2 tip, float w) {
 
 // 碎 Shatter, 霜焰: sharp tongues. A crown of five straight shards: one tall in
 // the centre light, and two a side leaning out across the iron so their points
-// stand in the side lights, where the numeral never covers them.
+// stand in the side lights.
 float shatter(vec2 p, float h) {
 	float spread = mix(0.8, 1.0, h);
 	float f = shard(p, vec2(0.0, -0.03), vec2(0.0, h), 0.11);
@@ -160,7 +166,9 @@ float blade(vec2 p, float h) {
 }
 
 
-// The plain flame, before any way is declared: a candle's teardrop.
+// The plain flame, before any way is declared: a candle's teardrop. Kindling
+// shows the painted light over it (`painted`), so this is the flame Soot
+// gutters, and the one a tween out of Kindling grows from.
 float candle(vec2 p, float h) {
 	return profile(p, 0.86 * h, 0.15, 0.5, 0.9);
 }
@@ -219,9 +227,9 @@ void fragment() {
 	float up = clamp(p.y / max(h, 0.001), 0.0, 1.0);
 	float heat = clamp(-field / core_depth, 0.0, 1.0) * (1.0 - 0.5 * smoothstep(0.25, 1.0, up));
 	// The light right round the flame. Edge's reaches the width of the centre
-	// light, so a thin blade still lights a whole column where the numeral
-	// leaves it room. The fringe burns on the flame's outer, upper flesh and in
-	// this light, never across the far glass: the dominant colour stays the read.
+	// light, so a thin blade still lights a whole column. The fringe burns on
+	// the flame's outer, upper flesh and in this light, never across the far
+	// glass: the dominant colour stays the read.
 	float near = exp(-max(field, 0.0) / (0.09 * (1.0 + 0.8 * w.z)));
 	float tips = fringe_amount * smoothstep(0.05, 0.45, up) * (1.0 - smoothstep(0.15, 0.6, heat));
 
@@ -247,30 +255,17 @@ void fragment() {
 	vec3 glow = mix(dom, fringe, tips * near * 0.8);
 	vec3 lit = mix(glow * glow * 0.8, glow, light) * (0.15 + light) * lum;
 
-	vec3 rgb;
-	if (look == 0) {
-		// LEADED: the flame is only ever seen through the glass.
-		float soft = max(fwidth(field) * 1.5, 0.02);
-		float inside = 1.0 - smoothstep(-soft, soft, field);
-		vec3 flame = mix(ramp(dom, heat), ramp(fringe, heat), tips);
-		vec3 through = mix(lit * mix(1.0, grain, 0.7), flame * glare * mix(1.0, grain, 0.3), inside);
-		rgb = mix(art.rgb, through, glass);
-	} else {
-		// VECTOR: flat cut-glass bands behind a came of its own, set in the
-		// lights. The aperture is the glass read from a blurred mip, so the thin
-		// lead of the tracery is bridged and the iron is not.
-		float fh = fwidth(heat) + 0.001;
-		float band = 0.5 * (smoothstep(0.3 - fh, 0.3 + fh, heat) + smoothstep(0.62 - fh, 0.62 + fh, heat));
-		vec3 cut = mix(ramp(dom, band), ramp(fringe, band), step(0.3, tips));
-		float px = fwidth(field);
-		float inside = 1.0 - smoothstep(-0.75 * px, 0.75 * px, field);
-		float came = 1.0 - smoothstep(0.5 * px, 1.3 * px, abs(field + 0.7 * px));
-		vec4 blurred = textureLod(TEXTURE, UV, 3.5);
-		float aperture = smoothstep(0.08, 0.3, glass_of(blurred.rgb)) * in_box.x * in_box.y;
-		rgb = mix(art.rgb, lit * mix(1.0, grain, 0.7), glass);
-		rgb = mix(rgb, cut * glare, inside * aperture);
-		rgb = mix(rgb, LEAD, came * aperture * 0.85);
-	}
+	// The flame is only ever seen through the glass.
+	float soft = max(fwidth(field) * 1.5, 0.02);
+	float inside = 1.0 - smoothstep(-soft, soft, field);
+	vec3 flame = mix(ramp(dom, heat), ramp(fringe, heat), tips);
+	vec3 through = mix(lit * mix(1.0, grain, 0.7), flame * glare * mix(1.0, grain, 0.3), inside);
+	// Kindling: the lantern as it is painted, its own amber light in every
+	// pane, flickering a little with the flame's unrest so it is alive.
+	float flicker = 1.0 + unrest * PAINTED_BREATH
+			* (0.5 * sin(t * 7.3 + 0.4) + 0.3 * sin(t * 11.9 + 1.3) + 0.2 * sin(t * 19.7 + 2.1));
+	through = mix(through, art.rgb * flicker, painted);
+	vec3 rgb = mix(art.rgb, through, glass);
 
 	// ── Soot throws dust: flecks of ash rising off the flame across the glass,
 	// inside the lantern, so they never read as one more ember pip ──
