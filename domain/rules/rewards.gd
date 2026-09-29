@@ -20,6 +20,10 @@ var rarity_uncommon_only: bool = false
 var gold_vow_mult: float = 1.0
 var elite_relic_second: float = 0.0
 
+## A lean on every way at once (flame lock §8, the Kindling lift): an entry with
+## at least 0.5 affinity to any way takes it once, whatever its colours.
+const EVERY_WAY: String = "*"
+
 
 func _init(content_db: ContentDB) -> void:
 	content = content_db
@@ -117,21 +121,28 @@ static func _pool_open(run: RunState, gate: Dictionary, id: String) -> bool:
 	return run.reveals.has(str(gate[id]))
 
 
-## Flame lock §8, like calls to like: {way id: draw-weight multiplier}. Once the
-## flame is Steady or True its dominant way leans by the aspect's `likeWeight`
-## and its fringe way by `fringeWeight`; Kindling, Soot and an aspect without
-## ways lean nowhere. The flame is read from the deck through the pure mirror,
-## never from FLAME events, because the application edits the deck directly.
-func _lean(run: RunState) -> Dictionary:
+## Flame lock §8, like calls to like: {way id: draw-weight multiplier} for the
+## draws of `kind` ("cards" or "relics"). Once the flame is Steady or True its
+## dominant way leans by the aspect's `likeWeight` and its fringe way by
+## `fringeWeight`. While it is Kindling, card draws lift coloured glass of every
+## colour alike by `kindlingLift` (EVERY_WAY), so the game offers the colours
+## without choosing one; a lift of 1 is no lean. Relics at Kindling, Soot and an
+## aspect without ways lean nowhere. The flame is read from the deck through the
+## pure mirror, never from FLAME events, because the application edits the deck
+## directly.
+func _lean(run: RunState, kind: String) -> Dictionary:
 	var reading: Dictionary = Flame.read(content, run)
-	if not _lit(reading):
-		return {}
 	var flame_v: Variant = _aspect_row(run).get("flame", {})
 	var flame: Dictionary = flame_v if typeof(flame_v) == TYPE_DICTIONARY else {}
-	var lean: Dictionary = {str(reading["dominant"]): float(str(flame.get("likeWeight", 1.0)))}
-	if not str(reading["fringe"]).is_empty():
-		lean[str(reading["fringe"])] = float(str(flame.get("fringeWeight", 1.0)))
-	return lean
+	if _lit(reading):
+		var lean: Dictionary = {str(reading["dominant"]): float(str(flame.get("likeWeight", 1.0)))}
+		if not str(reading["fringe"]).is_empty():
+			lean[str(reading["fringe"])] = float(str(flame.get("fringeWeight", 1.0)))
+		return lean
+	var lift: float = float(str(flame.get("kindlingLift", 1.0)))
+	if kind == "cards" and str(reading["tier"]) == Flame.TIER_KINDLING and lift != 1.0:
+		return {EVERY_WAY: lift}
+	return {}
 
 
 static func _lit(reading: Dictionary) -> bool:
@@ -139,11 +150,12 @@ static func _lit(reading: Dictionary) -> bool:
 
 
 ## One pick from `pool` ("cards" or "relics"), made as `Rng.pick_index` makes
-## it: a single draw whatever the pool, the lean or the weights, so a lit flame
-## never moves the cursor or any later draw. With no lean it is `pick_index`.
-## With one, an entry weighs the product of the lean of every way it carries at
-## least 0.5 affinity to (a duo bridging the dominant and the fringe way takes
-## both), and the same draw falls through the cumulative weights.
+## it: a single draw whatever the pool, the lean or the weights, so a leaning
+## flame never moves the cursor or any later draw. With no lean it is
+## `pick_index`. With one, an entry weighs the product of the lean of every way
+## it carries at least 0.5 affinity to (a duo bridging the dominant and the
+## fringe way takes both; EVERY_WAY is taken once by any coloured entry), and
+## the same draw falls through the cumulative weights.
 func _draw(rng: Rng, run: RunState, kind: String, pool: Array, lean: Dictionary) -> int:
 	if lean.is_empty() or pool.is_empty():
 		return rng.pick_index(pool.size())
@@ -154,7 +166,7 @@ func _draw(rng: Rng, run: RunState, kind: String, pool: Array, lean: Dictionary)
 			if kind == "relics" else Flame.card_affinity(content, run.aspect, str(id_v))
 		var weight: float = 1.0
 		for way: Variant in lean:
-			if float(str(affinity.get(way, 0.0))) >= 0.5:
+			if _takes(affinity, str(way)):
 				weight *= float(str(lean[way]))
 		total += weight
 		cumulative.append(total)
@@ -163,6 +175,17 @@ func _draw(rng: Rng, run: RunState, kind: String, pool: Array, lean: Dictionary)
 		if target < cumulative[i]:
 			return i
 	return cumulative.size() - 1
+
+
+## Whether an entry of this affinity takes the lean of `way`: at least 0.5
+## affinity to that way, or, for EVERY_WAY, to any way.
+static func _takes(affinity: Dictionary, way: String) -> bool:
+	if way != EVERY_WAY:
+		return float(str(affinity.get(way, 0.0))) >= 0.5
+	for weight_v: Variant in affinity.values():
+		if float(str(weight_v)) >= 0.5:
+			return true
+	return false
 
 
 ## Flame lock §7, recognition at the boss: [slot-1 crown, slot-2 crown], "" for
@@ -245,7 +268,7 @@ func _rarity_cuts(kind: String) -> Vector2:
 func _roll_card_reward(run: RunState, kind: String) -> Array:
 	# Detached chain: the web quirk discards these draws' cursor movement.
 	var crng: Rng = Rng.new(run.rng_state())
-	var lean: Dictionary = _lean(run)
+	var lean: Dictionary = _lean(run, "cards")
 	var out: Array = []  # may briefly hold one null from an empty-pool pick
 	var guard: Dictionary = {}
 	var wanted: int = 3 + (1 if run.has_relic("seersOrb") else 0) \
@@ -529,7 +552,8 @@ func reverse_boon(run: RunState) -> bool:
 func gen_shop(run: RunState) -> Dictionary:
 	var discount: float = (0.75 if run.has_relic("merchantsMark") else 1.0) \
 		* float(str(_omen_mods(run).get("shopMult", 1)))
-	var lean: Dictionary = _lean(run)
+	var lean: Dictionary = _lean(run, "cards")
+	var relic_lean: Dictionary = _lean(run, "relics")
 	var cards: Array = []
 	for tier: String in ["common", "common", "uncommon", "uncommon", "rare"]:
 		var pool: Array = offer_cards(run, tier)
@@ -546,7 +570,7 @@ func gen_shop(run: RunState) -> Dictionary:
 			func(id_v: Variant) -> bool: return not run.player.relics.has(str(id_v))
 		)
 		if not available.is_empty():
-			var id: String = str(available[_draw(run.rng, run, "relics", available, lean)])
+			var id: String = str(available[_draw(run.rng, run, "relics", available, relic_lean)])
 			var price_pair: Array = content.shop["relicPrice"][tier]
 			relics.append({
 				"id": id,

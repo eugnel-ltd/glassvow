@@ -1,10 +1,14 @@
 class_name BalancePilot
 extends RefCounted
-## Block lethal, else kill-lowest; Dusk favours Eclipse/Shatter, Ash stacks Smolder highest and blocks with Smother.
-## Routes favour treasure, then low-HP rest; rewards take the highest card/relic score; shops buy by value/gold.
+## A lethal turn plays what spares the most HP (Ward, Dimmed, a kill or a Stagger), else the best-scored card,
+## Ward and Dimmed counting alike against the coming blow; an aimed card weighs every foe (kill, Stagger, blow
+## spared, damage, then lowest HP); Dusk cracks glass and stokes Fervor before the hit and favours Shatter,
+## Ash stacks Smolder highest and blocks with Smother. The Art waits when it would leave a better Ember-cost
+## card unpaid. Routes favour treasure, then low-HP rest; rewards take the highest card/relic score; shops
+## buy by value/gold.
 ## Potions heal at 20 missing HP, block lethal intent, and spend offensive stock in elite/boss fights.
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
-const VERSION: String = "p8-d0-v1"
+const VERSION: String = "p8-d0-v2"
 const SHOP_MIN_RATIO: float = 0.06475653649074956
 ## T1a: keep a reward iff card_score >= this. #215 four-grid top-decile median.
 const CARD_DECLINE_DEFAULT: float = 14.0958831273019
@@ -20,6 +24,8 @@ const WAY_COMMIT: float = 3.0
 const WAY_OFF: float = 0.5
 ## Shop eligibility ceiling is appetite minus this. Not a sampled knob.
 const REMOVAL_SHOP_MARGIN: float = 2.0
+## The statuses a foe's blow reads (`CombatRules.preview_enemy_dmg`).
+const BLOW_STATUSES: Array[String] = ["weak", "str"]
 static var banned: Dictionary = {}
 static var vector: Dictionary = {}
 # Numeric weights retain the historical float(str(value)) rounding once per policy.
@@ -111,17 +117,35 @@ static func choose_node(map: WorldMap, run: RunState) -> int:
 	return best
 static func play_turn(game: GlassvowGame) -> void:
 	_use_potions(game)
-	if game.rules.can_use_art(game.run, game.cb):
-		game.apply({"t": "useArt"})
+	_use_art(game)
 	_play_cards(game)
 	if game.cb.over:
 		return
 	var kindle: CardInst = worst_card(game.run, game.content, game.cb.hand, true)
 	if kindle != null:
 		game.apply({"t": "kindleFromHand", "uid": kindle.uid})
-	if game.rules.can_use_art(game.run, game.cb):
-		game.apply({"t": "useArt"})
+	_use_art(game)
 	_play_cards(game) # Verdant Branch can draw from the kindle.
+## The Art, unless paying for it now would leave a better Ember-cost card in hand
+## unpaid: that card is played first and the Art waits for the Embers left.
+static func _use_art(game: GlassvowGame) -> void:
+	if game.rules.can_use_art(game.run, game.cb) and not _art_outranked(game):
+		game.apply({"t": "useArt"})
+## True when a playable card whose Ember price the lantern could not meet after
+## the Art outranks it: the card's catalogue score against the score of the
+## Art's own effects, the currency every play is ranked in.
+static func _art_outranked(game: GlassvowGame) -> bool:
+	var art: Dictionary = game.content.arts.get(String(game.run.art), {})
+	var left: int = game.cb.embers - game.rules.art_cost(game.run, game.cb)
+	var worth: float = card_score({"effects": art.get("effects", [])}, game.run.aspect)
+	var living: Array[EnemyCombatant] = game.cb.living_enemies()
+	var legal_target: Variant = living[0].idx if not living.is_empty() else null
+	for card: CardInst in game.cb.hand:
+		var price: int = int(float(str(game.rules.card_data(card).get("emberCost", 0))))
+		if price > left and game.rules.can_play(game.run, game.cb, card, legal_target) \
+				and catalogue_card_score(game.content, game.run.aspect, String(card.id), card.up) > worth:
+			return true
+	return false
 static func _play_cards(game: GlassvowGame) -> void:
 	if game.cb.over: return
 	for _guard: int in range(32):
@@ -145,10 +169,10 @@ static func _pick_play(game: GlassvowGame) -> Dictionary:
 				if game.rules.can_play(game.run, game.cb, card, target):
 					legal.append({"uid": card.uid, "target": target})
 		return {} if legal.is_empty() else legal[game.run.rng.pick_index(legal.size())]
-	var incoming: int = _incoming(game)
-	var unblocked: int = incoming - game.cb.player.block
+	var unblocked: int = _incoming(game) - game.cb.player.block
 	var lethal: bool = unblocked >= game.cb.player.hp
 	var best: Dictionary = {}
+	var best_spared: int = 0
 	var best_score: float = -INF
 	var dusk: bool = game.run.aspect == 0
 	var living: Array[EnemyCombatant] = game.cb.living_enemies()
@@ -165,21 +189,62 @@ static func _pick_play(game: GlassvowGame) -> Dictionary:
 			else game.rules.preview_play(game.cb, card, target, game.run)
 		var preview: Dictionary = preview_v if typeof(preview_v) == TYPE_DICTIONARY else {}
 		var block: int = int(float(str(preview.get("block", 0))))
-		if lethal and block > 0:
-			var block_score: float = 10000.0 + block
-			if block_score > best_score:
-				best = {"uid": card.uid, "target": target}
-				best_score = block_score
-			continue
-		if lethal and best_score >= 10000.0:
-			continue
-		if not _advances_fight(d) and (block <= 0 or unblocked <= 0):
+		# A lethal turn ranks plays first by the HP they spare this enemy phase:
+		# Ward and Dimmed alike, and the blow of a foe the play kills or staggers.
+		var spared: int = unblocked - _loss_after(game, d, target, preview) if lethal else 0
+		if spared <= 0 and not _advances_fight(d) and (block <= 0 or unblocked <= 0):
 			continue
 		var score: float = _combat_score(game, card, d, target, preview, unblocked, dusk)
-		if score > best_score:
+		if spared > best_spared or (spared == best_spared and score > best_score):
 			best = {"uid": card.uid, "target": target}
+			best_spared = spared
 			best_score = score
 	return best
+## The HP the coming enemy phase would take if this card were played now: its
+## Ward joins the block, and the foes stand as it would leave them.
+static func _loss_after(game: GlassvowGame, d: Dictionary, target: Variant,
+		preview: Dictionary) -> int:
+	var ward: int = game.cb.player.block + int(float(str(preview.get("block", 0))))
+	return maxi(0, _incoming(game, _foes_after(game, d, target, preview)) - ward)
+## Twins of the living foes as the enemy phase would find them after this card,
+## keyed by idx: the foe its preview kills is gone, the one it staggers skips its
+## move, and the Dimmed or Fervor it deals changes that foe's blow. The live
+## foes are never touched.
+static func _foes_after(game: GlassvowGame, d: Dictionary, target: Variant,
+		preview: Dictionary) -> Dictionary:
+	var foes: Dictionary = {}
+	for e: EnemyCombatant in game.cb.living_enemies():
+		var aimed: bool = typeof(target) == TYPE_INT and target == e.idx
+		var twin: EnemyCombatant = _twin(e)
+		for fx_v: Variant in d.get("effects", []):
+			var fx: Dictionary = fx_v
+			var who: String = str(fx.get("who", ""))
+			var id: String = str(fx.get("id", ""))
+			if str(fx.get("kind", "")) == "status" and BLOW_STATUSES.has(id) \
+					and (who == "allEnemies" or (who == "target" and aimed)):
+				twin.statuses[id] = int(float(str(twin.statuses.get(id, 0)))) \
+					+ int(float(str(fx.get("n", 0))))
+		if aimed and preview.get("lethal", false):
+			twin.hp = 0
+		elif aimed and preview.get("willShatter", false):
+			twin.staggered = true
+		foes[e.idx] = twin
+	return foes
+## A detached copy of a foe with its own statuses, holding what the blow and
+## Smolder forecasts read.
+static func _twin(e: EnemyCombatant) -> EnemyCombatant:
+	var twin: EnemyCombatant = EnemyCombatant.new()
+	twin.key = e.key
+	twin.def = e.def
+	twin.idx = e.idx
+	twin.hp = e.hp
+	twin.max_hp = e.max_hp
+	twin.block = e.block
+	twin.statuses = e.statuses.duplicate()
+	twin.staggered = e.staggered
+	twin.move_key = e.move_key
+	twin.flags = e.flags
+	return twin
 static func _combat_score(game: GlassvowGame, card: CardInst, d: Dictionary, target: Variant,
 		preview: Dictionary, unblocked: int, dusk: bool) -> float:
 	var cid: String = String(card.id)
@@ -187,8 +252,9 @@ static func _combat_score(game: GlassvowGame, card: CardInst, d: Dictionary, tar
 	var loss: int = int(float(str(preview.get("loss", 0))))
 	var block: int = int(float(str(preview.get("block", 0))))
 	score += float(loss) * _w("combat", "loss")
-	if unblocked > 0 and block > 0:
-		score += float(mini(block, unblocked)) * (_w("combat", "blockUrgent") \
+	var softened: int = _softened(game, d, target, block, unblocked)
+	if softened > 0:
+		score += float(softened) * (_w("combat", "blockUrgent") \
 			if unblocked * 2 >= game.cb.player.hp else _w("combat", "blockNormal"))
 	if preview.get("willShatter", false):
 		score += _w("combat", "shatterDusk") if dusk else _w("combat", "shatterAsh")
@@ -206,13 +272,18 @@ static func _combat_score(game: GlassvowGame, card: CardInst, d: Dictionary, tar
 	if _special_id(d) == "catalyst" and existing > 0:
 		score += float(existing) * (_w("combat", "catalystAsh") if not dusk else _w("combat", "catalystDusk"))
 	var vuln: int = 0 if foe == null else int(float(str(foe.statuses.get("vulnerable", 0))))
-	if dusk and cid == "eclipseSlash" and vuln <= 0:
+	# Setup before the hit: a card that cracks glass not yet Cracked goes first
+	# (sooner still with an attack to follow) and waits on glass that already is;
+	# one that stokes Fervor goes before the attacks that follow it.
+	var cracks: bool = _cracks(d)
+	var follows: bool = _attack_follows(game, card)
+	if dusk and cracks and _uncracked(game, foe):
 		score += _w("combat", "eclipse")
-		for other: CardInst in game.cb.hand:
-			if other != card and str(game.rules.card_data(other).get("type", "")) == "attack":
-				score += _w("combat", "eclipseFollow")
-				break
-	if dusk and vuln > 0 and str(d.get("type", "")) == "attack" and cid != "eclipseSlash":
+		if follows:
+			score += _w("combat", "eclipseFollow")
+	if dusk and follows and _stokes(d, vuln):
+		score += _w("combat", "eclipseFollow")
+	if dusk and vuln > 0 and str(d.get("type", "")) == "attack" and not cracks:
 		score += _w("combat", "vulnAttack")
 	if dusk and foe != null:
 		var chips: int = int(float(str(preview.get("chips", 0))))
@@ -241,26 +312,101 @@ static func _target(game: GlassvowGame, card: CardInst, d: Dictionary,
 			if e.hp > highest.hp:
 				highest = e
 		return highest.idx
-	if game.run.aspect == 0:
-		for e: EnemyCombatant in living:
-			var pv: Variant = game.rules.preview_play(game.cb, card, e.idx, game.run)
-			previews[e.idx] = pv
-			if typeof(pv) == TYPE_DICTIONARY and pv.get("willShatter", false):
-				return e.idx
-	var lowest: EnemyCombatant = living[0]
+	# Every other aimed card weighs each foe: a kill, then a Stagger, then the
+	# blow its Dimmed or lost Fervor would spare, then the damage it deals, then
+	# the lowest HP; a tie keeps the earlier foe.
+	var softens: bool = _softens(d)
+	var incoming: int = _incoming(game) if softens else 0
+	var best: Variant = null
+	var best_rank: Array[int] = []
 	for e: EnemyCombatant in living:
-		if e.hp < lowest.hp:
-			lowest = e
-	return lowest.idx
-static func _incoming(game: GlassvowGame) -> int:
+		var pv: Variant = game.rules.preview_play(game.cb, card, e.idx, game.run)
+		previews[e.idx] = pv
+		var preview: Dictionary = pv if typeof(pv) == TYPE_DICTIONARY else {}
+		var spared: int = incoming - _incoming(game, _foes_after(game, d, e.idx, {})) \
+			if softens else 0
+		var rank: Array[int] = [1 if preview.get("lethal", false) else 0,
+			1 if preview.get("willShatter", false) else 0, spared,
+			int(float(str(preview.get("loss", 0)))), -e.hp]
+		if best == null or _outranks(rank, best_rank):
+			best = e.idx
+			best_rank = rank
+	return best
+## Whether the card applies Cracked to the foe it aims at, or to every foe.
+static func _cracks(d: Dictionary) -> bool:
+	for fx_v: Variant in d.get("effects", []):
+		var fx: Dictionary = fx_v
+		if str(fx.get("kind", "")) == "status" and str(fx.get("id", "")) == "vulnerable" \
+				and str(fx.get("who", "")) in ["target", "allEnemies"]:
+			return true
+	return false
+## Whether there is glass left to crack: the aimed foe, or, for a card aimed at
+## no one foe, any living foe that is not Cracked yet.
+static func _uncracked(game: GlassvowGame, foe: EnemyCombatant) -> bool:
+	if foe != null:
+		return int(float(str(foe.statuses.get("vulnerable", 0)))) <= 0
+	for e: EnemyCombatant in game.cb.living_enemies():
+		if int(float(str(e.statuses.get("vulnerable", 0)))) <= 0:
+			return true
+	return false
+## Whether another attack in hand would follow this card.
+static func _attack_follows(game: GlassvowGame, card: CardInst) -> bool:
+	for other: CardInst in game.cb.hand:
+		if other != card and str(game.rules.card_data(other).get("type", "")) == "attack":
+			return true
+	return false
+## Whether playing the card now stokes the hero's Fervor: its own, or Cleft's on
+## glass already Cracked (`vuln`, the target's Cracked).
+static func _stokes(d: Dictionary, vuln: int) -> bool:
+	for fx_v: Variant in d.get("effects", []):
+		var fx: Dictionary = fx_v
+		var kind: String = str(fx.get("kind", ""))
+		if kind == "status" and str(fx.get("id", "")) == "str" and str(fx.get("who", "")) == "self" \
+				and int(float(str(fx.get("n", 0)))) > 0:
+			return true
+		if kind == "special" and int(float(str(fx.get("fervor", 0)))) > 0 and vuln > 0:
+			return true
+	return false
+## Whether the card deals a foe a status that changes its blow.
+static func _softens(d: Dictionary) -> bool:
+	for fx_v: Variant in d.get("effects", []):
+		var fx: Dictionary = fx_v
+		if str(fx.get("kind", "")) == "status" and BLOW_STATUSES.has(str(fx.get("id", ""))) \
+				and str(fx.get("who", "")) in ["target", "allEnemies"]:
+			return true
+	return false
+## The HP this card's Ward and Dimmed (or lost Fervor) spare the coming enemy
+## phase, Ward and Dimmed alike; the blow of a foe it kills or staggers is
+## scored apart.
+static func _softened(game: GlassvowGame, d: Dictionary, target: Variant, block: int,
+		unblocked: int) -> int:
+	if unblocked <= 0:
+		return 0
+	if not _softens(d):
+		return mini(block, unblocked)
+	return unblocked - _loss_after(game, d, target, {"block": block})
+## Lexicographic: the first entry that differs decides.
+static func _outranks(rank: Array[int], other: Array[int]) -> bool:
+	for i: int in range(rank.size()):
+		if rank[i] != other[i]:
+			return rank[i] > other[i]
+	return false
+## The damage the coming enemy phase would deal, forecast without moving the run
+## RNG. `foes` stands twins (keyed by idx) in for live foes, to ask what a play
+## would change.
+static func _incoming(game: GlassvowGame, foes: Dictionary = {}) -> int:
+	var standing: Array[EnemyCombatant] = []
+	for e: EnemyCombatant in game.cb.enemies:
+		var foe: EnemyCombatant = foes.get(e.idx, e)
+		standing.append(foe)
 	var hp: Array[int] = []
 	var smolder: Array[int] = []
-	for e: EnemyCombatant in game.cb.enemies:
+	for e: EnemyCombatant in standing:
 		hp.append(e.hp)
 		smolder.append(int(float(str(e.statuses.get("poison", 0)))))
 	var rng: Rng = Rng.new(game.run.rng_state()) # Forecast jumps without moving the run RNG.
 	var total: int = 0
-	for i: int in range(game.cb.enemies.size()):
+	for i: int in range(standing.size()):
 		if hp[i] <= 0:
 			continue
 		if smolder[i] > 0:
@@ -274,7 +420,7 @@ static func _incoming(game: GlassvowGame) -> int:
 				if smolder[i] > 0 and not living.is_empty():
 					smolder[living[rng.pick_index(living.size())]] += smolder[i]
 				continue
-		var e: EnemyCombatant = game.cb.enemies[i]
+		var e: EnemyCombatant = standing[i]
 		if e.staggered:
 			continue
 		var preview_v: Variant = game.rules.preview_enemy_dmg(game.cb, e, game.run)
@@ -355,7 +501,7 @@ static func card_score(d: Dictionary, aspect: int, card_id: String = "") -> floa
 			"ember": score += float(str(fx.get("n", 0))) * _w("card", "ember")
 			"loseHp": score -= float(str(fx.get("n", 0))) * _w("card", "loseHp")
 			"status": score += _status_value(str(fx.get("id", "")), int(float(str(fx.get("n", 0)))), dusk)
-			"special": score += _special_value(str(fx.get("id", "")), dusk)
+			"special": score += _special_value(fx, dusk)
 	if str(d.get("type", "")) == "power":
 		score += _w("card", "power")
 	score += float(str(d.get("chip", 0))) * (_w("card", "chipDusk") if dusk else _w("card", "chipAsh"))
@@ -390,13 +536,27 @@ static func _status_value(id: String, n: int, dusk: bool) -> float:
 		"nightsight", "emberflow":
 			return _w("status", "nightsight")
 	return 0.0
-static func _special_value(id: String, dusk: bool) -> float:
-	match id:
+## A special's worth. A special that strikes is worth its damage, every hit
+## counted, and a rider that needs a Cracked target (Faultline's and Tremor's
+## bonus, Cleft's Cracked and Fervor, Totality's doubling, one stack at least)
+## counts at the policy's `crackedShare` of what it gives. The other specials
+## keep their fitted weights; `execute` is now Honing Edge's alone.
+static func _special_value(fx: Dictionary, dusk: bool) -> float:
+	var n: float = float(str(fx.get("n", 0)))
+	var share: float = _w("special", "crackedShare")
+	match str(fx.get("id", "")):
+		"execute":
+			return (n + share * float(str(fx.get("bonus", 0)))) * float(str(fx.get("times", 1)))
+		"cleft":
+			return n + share * (_status_value("vulnerable", int(float(str(fx.get("cracked", 0)))), dusk)
+				+ _status_value("str", int(float(str(fx.get("fervor", 0)))), dusk))
+		"totality":
+			return n + share * _status_value("vulnerable", 1, dusk)
 		"catalyst":
 			return _w("special", "catalystAsh") if not dusk else _w("special", "catalystDusk")
 		"shatterEcho":
 			return _w("special", "shatterEchoDusk") if dusk else _w("special", "shatterEchoAsh")
-		"execute", "momentum":
+		"momentum":
 			return _w("special", "execute")
 		"leech", "devour", "phantom":
 			return _w("special", "leech")

@@ -271,7 +271,7 @@ Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds 
 | G2 parity | the ways are comparable | best committed − worst committed ≤ 10 pp at each vow |
 | G3 skill | reading offers is rewarded but commitment is not a trap | A ≥ best committed − 3 pp and A ≤ best committed + 15 pp |
 | G4 random loses | scattering cannot win | R ≤ worst committed − 25 pp; R < 35% at V0, < 15% at V5 |
-| G5 reachability | insisting gets there | committed arms reach Steady by the end of Act 1 in ≥ 70% of runs, True by the end of Act 2 in ≥ 40% |
+| G5 reachability | insisting gets there | full pool: committed arms reach Steady by the end of Act 1 in ≥ 70% of runs, True by the end of Act 2 in ≥ 40%; fresh pool: V0 ≥ 40% Steady by the end of Act 1, True not graded (readout 5) |
 | G6 diversity of adaptive play | different runs are different | among A's wins no way exceeds 60%; at least two ways hold ≥ 20% |
 | G7 guards | nothing degenerate, nothing broken | CEM stress: V5 best holdout < 90%; zero stalls and errors; deterministic replay; save lineage and internal IDs unchanged |
 | H human | it is fun | James plus two or three players each win at V0 with every way at least once across the group; easy / fun / hard labels; #205 verdict |

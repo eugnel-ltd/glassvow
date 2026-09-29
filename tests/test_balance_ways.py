@@ -51,7 +51,7 @@ TABLE = {
                   "C_edge": rows(5, "edge", 7, 4),
                   "A": rows(6, "none", win_ways=("shatter", "lantern", "edge")),
                   "R": rows(2, "none")},
-    (0, "fresh"): {"C_shatter": rows(5, "shatter", 6, 3), "C_lantern": rows(5, "lantern"),
+    (0, "fresh"): {"C_shatter": rows(5, "shatter", 3, 3), "C_lantern": rows(5, "lantern"),
                    "C_edge": rows(3, "edge"), "A": rows(9, "none", win_ways=("shatter",)),
                    "R": rows(4, "none", stalls=1)},
     (5, "full"): {"C_shatter": rows(3, "shatter"), "C_lantern": rows(3, "lantern"),
@@ -99,6 +99,9 @@ class BalanceWaysTest(unittest.TestCase):
         random_arm = ways.sim_command("godot", 0, "full", "R", 13000, 3, Path("/r.json"))
         self.assertIn("--way=none", random_arm)
         self.assertIn("--build=random", random_arm)
+        self.assertFalse(any(arg.startswith("--content=") for _, command in work for arg in command))
+        swept = ways.jobs("godot", (13000, 13199), Path("/out"), Path("/sweep/point.json"))
+        self.assertTrue(all(command[-1] == "--content=/sweep/point.json" for _, command in swept))
 
     def test_gates_pass_on_their_exact_thresholds_and_fail_beyond(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -107,9 +110,24 @@ class BalanceWaysTest(unittest.TestCase):
         self.assertEqual(["PASS"] * 7, verdicts(result, (0, "full")))
         self.assertEqual(["FAIL"] * 7, verdicts(result, (0, "fresh")))
         self.assertEqual("n/a", verdicts(result, (5, "fresh"))[0])
+        self.assertEqual("n/a", verdicts(result, (5, "fresh"))[4])
         stats = result["cells"][0, "full"]["stats"]
         self.assertEqual((0.7, 0.4), (float(stats["C_edge"]["steady1"]), float(stats["C_edge"]["true2"])))
         self.assertNotIn("steady1", stats["A"])
+
+    def test_g5_grades_the_fresh_pool_on_steady_alone(self) -> None:
+        def g5(steady: int) -> str:
+            table = copy.deepcopy(TABLE)
+            for arm, way in (("C_shatter", "shatter"), ("C_lantern", "lantern"), ("C_edge", "edge")):
+                table[0, "fresh"][arm] = rows(5, way, steady, 0)
+            with tempfile.TemporaryDirectory() as temp:
+                write_table(Path(temp), table)
+                gate = ways.grade(Path(temp), SEEDS)["cells"][0, "fresh"]["gates"][4]
+            self.assertIn("True not graded", gate[2])
+            return gate[3]
+
+        self.assertEqual("PASS", g5(4))
+        self.assertEqual("FAIL", g5(3))
 
     def test_render_prints_every_cell_and_gate(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -170,7 +188,9 @@ class BalanceWaysTest(unittest.TestCase):
                 code = ways.main(["--from-dir", temp, "--seeds", f"{SEEDS[0]}-{SEEDS[1]}"])
         self.assertEqual(0, code)
         self.assertIn("### V0, full pool", out.getvalue())
-        for argv in (["--quick", "--seeds", "13000-13009"], ["--seeds", "4000-4100"], ["--jobs", "0"]):
+        for argv in (["--quick", "--seeds", "13000-13009"], ["--seeds", "4000-4100"], ["--jobs", "0"],
+                     ["--content", "/no/such/catalogue.json"],
+                     ["--from-dir", "/tmp", "--content", __file__]):
             with self.subTest(argv=argv), contextlib.redirect_stderr(io.StringIO()), \
                     self.assertRaises(SystemExit) as caught:
                 ways.main(argv)

@@ -12,6 +12,7 @@ on incomplete data.
 
 Usage (repo root):
   python3 tools/balance_ways.py [--quick | --seeds 13000-13199] [--jobs 4] [--out-dir DIR]
+                                [--content FILE]   # a scratch catalogue, e.g. one sweep point
   python3 tools/balance_ways.py --from-dir DIR [--quick | --seeds A-B]   # re-grade saved reports
 """
 from __future__ import annotations
@@ -59,7 +60,11 @@ G2_SPREAD = Fraction(10, 100)
 G3_BELOW, G3_ABOVE = Fraction(3, 100), Fraction(15, 100)
 G4_GAP = Fraction(25, 100)
 G4_CEILING = {0: Fraction(35, 100), 5: Fraction(15, 100)}
-G5_STEADY, G5_TRUE = Fraction(70, 100), Fraction(40, 100)
+# G5: (Steady by the end of Act 1, True by the end of Act 2) over every run; None is
+# not graded. The fresh-pool figure is readout 5's; like G1, fresh is graded at V0 only.
+G5_FLOOR = {(0, "full"): (Fraction(70, 100), Fraction(40, 100)),
+            (5, "full"): (Fraction(70, 100), Fraction(40, 100)),
+            (0, "fresh"): (Fraction(40, 100), None)}
 G6_MAX, G6_HELD, G6_WAYS = Fraction(60, 100), Fraction(20, 100), 2
 
 
@@ -82,23 +87,27 @@ def replay_name(vow: int, pool: str) -> str:
 
 
 def sim_command(godot: str, vow: int, pool: str, arm: str, first: int, count: int,
-                out: Path) -> list[str]:
+                out: Path, content: Path | None = None) -> list[str]:
     way, build = ARMS[arm]
     return [godot, "--headless", "-s", "res://tools/balance_sim.gd", "--", "--aspect=duskblade",
             f"--vow={vow}", f"--runs={count}", f"--seed0={first}", f"--pool={pool}",
-            f"--way={way}", f"--build={build}", f"--out={out}"]
+            f"--way={way}", f"--build={build}", f"--out={out}"] \
+        + ([f"--content={content}"] if content is not None else [])
 
 
-def jobs(godot: str, seeds: tuple[int, int], directory: Path) -> list[tuple[str, list[str]]]:
+def jobs(godot: str, seeds: tuple[int, int], directory: Path,
+         content: Path | None = None) -> list[tuple[str, list[str]]]:
     first, count = seeds[0], seeds[1] - seeds[0] + 1
     out: list[tuple[str, list[str]]] = []
     for vow in VOWS:
         for pool in POOLS:
             for arm in ARMS:
                 out.append((report_name(vow, pool, arm)[:-5], sim_command(
-                    godot, vow, pool, arm, first, count, directory / report_name(vow, pool, arm))))
+                    godot, vow, pool, arm, first, count, directory / report_name(vow, pool, arm),
+                    content)))
             out.append((replay_name(vow, pool)[:-5], sim_command(
-                godot, vow, pool, "A", first, min(REPLAY, count), directory / replay_name(vow, pool))))
+                godot, vow, pool, "A", first, min(REPLAY, count), directory / replay_name(vow, pool),
+                content)))
     return out
 
 
@@ -197,6 +206,10 @@ def cell_gates(vow: int, pool: str, stats: dict[str, dict[str, Any]],
     floor = G1_FLOOR.get((vow, pool))
     steady = min(COMMITTED, key=lambda arm: stats[arm]["steady1"])
     true = min(COMMITTED, key=lambda arm: stats[arm]["true2"])
+    reach = G5_FLOOR.get((vow, pool))
+    reach_text = "no threshold for this cell" if reach is None else (
+        f">= {pct(reach[0])} and >= {pct(reach[1])} for every committed way" if reach[1] is not None
+        else f">= {pct(reach[0])} Steady for every committed way; True not graded")
     wins = Counter(row["flame"]["end"]["dominant"] for row in adaptive_rows if row["outcome"] == "win")
     total = sum(wins.values())
     shares = {way: Fraction(wins.get(way, 0), total) for way in WAYS} if total else {}
@@ -218,9 +231,9 @@ def cell_gates(vow: int, pool: str, stats: dict[str, dict[str, Any]],
          verdict(random_arm <= worst - G4_GAP and random_arm < G4_CEILING[vow])),
         ("G5 reachability: insisting gets there",
          f"Steady by end of Act 1 min {pct(stats[steady]['steady1'])} ({steady}); "
-         f"True by end of Act 2 min {pct(stats[true]['true2'])} ({true})",
-         ">= 70% and >= 40% for every committed way",
-         verdict(stats[steady]["steady1"] >= G5_STEADY and stats[true]["true2"] >= G5_TRUE)),
+         f"True by end of Act 2 min {pct(stats[true]['true2'])} ({true})", reach_text,
+         "n/a" if reach is None else verdict(stats[steady]["steady1"] >= reach[0]
+                                            and (reach[1] is None or stats[true]["true2"] >= reach[1]))),
         ("G6 diversity: different adaptive runs are different",
          ", ".join(f"{way} {pct(shares[way])}" for way in WAYS) + f" of {total} A wins"
          if total else "no A wins", "no way > 60%, >= 2 ways >= 20%",
@@ -299,9 +312,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--godot", default="godot")
     parser.add_argument("--out-dir", type=Path, help="new or empty directory for reports and logs")
     parser.add_argument("--from-dir", type=Path, help="grade the reports an earlier run saved")
+    parser.add_argument("--content", type=Path,
+                        help="run on this catalogue instead of content/full-content.json")
     opts = parser.parse_args(argv)
     if opts.quick and opts.seeds:
         parser.error("--quick and --seeds are exclusive")
+    if opts.content is not None and (opts.from_dir is not None or not opts.content.is_file()):
+        parser.error("--content must name an existing file and cannot re-grade saved reports")
     try:
         seeds = QUICK_SEEDS if opts.quick else parse_seeds(opts.seeds) if opts.seeds else DEFAULT_SEEDS
     except ValueError as exc:
@@ -317,7 +334,8 @@ def main(argv: list[str] | None = None) -> int:
         directory.mkdir(parents=True, exist_ok=True)
         print(f"reports: {directory}", file=sys.stderr)
         start = time.monotonic()
-        run_jobs(jobs(opts.godot, seeds, directory.resolve()), directory, opts.jobs)
+        content = opts.content.resolve() if opts.content is not None else None
+        run_jobs(jobs(opts.godot, seeds, directory.resolve(), content), directory, opts.jobs)
         wall = time.monotonic() - start
     print(render(grade(directory, seeds), wall))
     return 0
