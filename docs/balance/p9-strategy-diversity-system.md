@@ -1,3 +1,9 @@
+> **Historical record. Superseded on 2026-09-29 by the [Duskblade Flame design lock](../design/2026-09-29-dusk-flame/README.md).**
+>
+> This document is kept as the record of the P9 strategy-diversity programme (#421). Nothing below this header is current instruction, including its Status line, definitions, layers, thresholds, receipts and completion rule. The release bar's P9 pillar is now the Flame gates G1–G7 plus the human round H (lock §11), bound by [`docs/rc-bar.md`](../rc-bar.md). [`docs/reviews/549/obligation-map.md`](../reviews/549/obligation-map.md) records where each obligation below went. The body is preserved unedited as evidence.
+
+---
+
 # P9 Strategy-Diversity System
 
 **Status:** active programme method for [#421](https://github.com/fol2/glassvow/issues/421); the iOS release bar remains authoritative until a validated replacement detector is promoted.
