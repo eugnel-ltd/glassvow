@@ -51,14 +51,14 @@ Apple may separately give us crash reports and basic usage figures for the game 
 
 ## 4. Where your data lives
 
-- **On your device.** Your saved games and settings (audio, display, motion and language) are kept in the game's private storage on your device. The game does not upload or sync them. Deleting the game removes them, together with the random code described above. If you back up your device, the backup is made by Apple's system under your device settings, not by the game.
+- **On your device.** Your saved games and settings (audio, display, motion, language and diagnostics) are kept in the game's private storage on your device. The game does not upload or sync them. Deleting the game removes them, together with the random code described above. If you back up your device, the backup is made by Apple's system under your device settings, not by the game.
 - **At Sentry.** Reports are sent over the internet to Sentry's European Union region, which Sentry documents as hosted in Frankfurt, Germany.
 
 ## 5. How long we keep it, and your choices
 
 Sentry keeps error and crash reports for up to 90 days (the exact period depends on Sentry's plan) and then deletes them automatically. Other diagnostic records, such as the session summaries, are kept for the period set out in Sentry's retention policy.
 
-Reports carry only a random code that you cannot see, so we usually cannot tell which reports came from your device. The game currently has no setting to switch diagnostics off. If you have a question, want to withdraw from diagnostics or want us to delete anything we can find, email [contact email] and we will do what we can to help.
+Reports carry only a random code that you cannot see, so we usually cannot tell which reports came from your device. You can switch diagnostics off at any time in Settings. Reports already sent are deleted automatically after the period above. If you have a question, want to withdraw from diagnostics or want us to delete anything we can find, email [contact email] and we will do what we can to help.
 
 ## 6. Children
 

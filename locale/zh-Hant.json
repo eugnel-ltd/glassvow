@@ -560,7 +560,11 @@
       "volumeTip": "{name} 音量",
       "vsync": "垂直同步",
       "resetConfirmPlain": "這將抹去你目前的朝聖之路與整個守夜——功績、解鎖、誓言、紀念碑與低語。\n\n此舉無法復原。",
-      "eraseAllTitle": "抹除全部進度？"
+      "eraseAllTitle": "抹除全部進度？",
+      "privacy": "私隱",
+      "diagnostics": "傳送當機診斷資料",
+      "diagnosticsNote": "將於下次啟動遊戲時生效。",
+      "diagnosticsNotice": "為修正錯誤，遊戲會傳送當機診斷資料。\n你可在「設定」中關閉。"
     },
     "shop": {
       "cardRemoval": {

@@ -1,6 +1,6 @@
 # Traditional Chinese canonical glossary
 
-**Version:** 1.2
+**Version:** 1.3
 
 **Locale:** `zh-Hant`
 **Scope:** player-facing Glassvow copy
@@ -52,6 +52,8 @@ remain unchanged.
 | Unplayable | 無法打出 | A card that cannot be played from hand. |
 | Lamplighter | 掌燈人 | The keeper who offers gifts. |
 | Hollow Lamplighter | 空燈掌燈人 | The quest character on the Unlit Way. |
+| Crash diagnostics | 當機診斷資料 | The Settings switch (傳送當機診斷資料), its notice and section 5 of the privacy policy share this term; 診斷資料 once the context is set. Never 診斷數據. |
+| Privacy | 私隱 | The Settings section and 私隱政策. Hong Kong form; never 隱私. |
 
 ## Register standard
 

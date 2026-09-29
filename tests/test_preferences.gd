@@ -28,6 +28,8 @@ static func _fresh_boot_defaults(fails: Array[String]) -> void:
 		fails.append("preferences: fresh boot display defaults wrong")
 	if not prefs.screen_shake or prefs.reduce_motion:
 		fails.append("preferences: fresh boot motion defaults wrong")
+	if not prefs.diagnostics_enabled or prefs.diagnostics_notice_seen:
+		fails.append("preferences: fresh boot privacy defaults wrong")
 	if not FileAccess.file_exists(TEST_PATH):
 		fails.append("preferences: fresh boot did not create settings file")
 
@@ -61,6 +63,8 @@ static func _round_trip(fails: Array[String]) -> void:
 	prefs.set_screen_shake(false)
 	prefs.set_reduce_motion(true)
 	prefs.set_language("zh-Hant")
+	prefs.set_diagnostics_enabled(false)
+	prefs.mark_diagnostics_notice_seen()
 	var back: Preferences = Preferences.read_from_disk(TEST_PATH, TEST_LEGACY)
 	if back.master_volume != 0.5 or not back.sfx_muted:
 		fails.append("preferences: audio changes did not survive a reload")
@@ -68,6 +72,8 @@ static func _round_trip(fails: Array[String]) -> void:
 		fails.append("preferences: motion changes did not survive a reload")
 	if back.language != "zh-Hant":
 		fails.append("preferences: language did not survive a reload")
+	if back.diagnostics_enabled or not back.diagnostics_notice_seen:
+		fails.append("preferences: privacy changes did not survive a reload")
 
 
 static func _language_resolution(fails: Array[String]) -> void:

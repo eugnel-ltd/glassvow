@@ -1,9 +1,9 @@
 class_name SettingsPanel
 extends Control
-## The player-facing settings overlay: AUDIO / DISPLAY / MOTION / THE LEDGER,
-## with the route behind it staying visible. Reads and writes the main-owned
-## Preferences handle; the DISPLAY section hides itself where the platform
-## owns the window (web) or there is no window at all (headless).
+## The player-facing settings overlay: AUDIO / DISPLAY / MOTION / PRIVACY /
+## THE LEDGER, with the route behind it staying visible. Reads and writes the
+## main-owned Preferences handle; the DISPLAY section hides itself where the
+## platform owns the window (web) or there is no window at all (headless).
 
 signal closed
 signal reset_requested
@@ -21,6 +21,9 @@ var _sections: VBoxContainer
 var _language_toggle: Button
 var _language_label: Label
 var _language_deferred: bool
+## The one-line diagnostics notice, present only in the first panel built
+## after install (see `_add_diagnostics`).
+var _diagnostics_notice: Label
 
 
 func _init(preferences: Preferences, reset_disabled: bool = false,
@@ -68,7 +71,7 @@ func _init(preferences: Preferences, reset_disabled: bool = false,
 	title.add_theme_color_override("font_color", GOLD)
 	column.add_child(title)
 
-	# Four sections can outgrow a phone stage, so they live in a scroll while
+	# Five sections can outgrow a phone stage, so they live in a scroll while
 	# the title, close button and footer stay put.
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -120,6 +123,8 @@ func _init(preferences: Preferences, reset_disabled: bool = false,
 		func() -> bool: return _preferences.reduce_motion,
 		func(on: bool) -> void: _preferences.set_reduce_motion(on)))
 
+	_add_diagnostics(_section(Locale.active.t("ui.settings.privacy").to_upper(), GOLD))
+
 	# The destructive section sits deliberately OUTSIDE the shared rhythm —
 	# reaching it should take a beat.
 	var ledger_seat: MarginContainer = MarginContainer.new()
@@ -142,13 +147,8 @@ func _init(preferences: Preferences, reset_disabled: bool = false,
 	)
 	ledger.add_child(erase)
 
-	var warning: Label = Label.new()
-	warning.text = Locale.active.t("ui.settings.resetWarn")
+	var warning: Label = _note(Locale.active.t("ui.settings.resetWarn"))
 	warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	warning.add_theme_font_override("font", GlassStyle.face(GlassStyle.ALEGREYA_400))
-	warning.add_theme_font_size_override("font_size", 12)
-	warning.add_theme_color_override("font_color", GlassStyle.TEXT_DIM)
 	ledger.add_child(warning)
 
 	var close: Button = _button(Locale.active.t("ui.menu.close").to_upper(), GlassStyle.GLASS)
@@ -169,6 +169,12 @@ func _init(preferences: Preferences, reset_disabled: bool = false,
 	column.add_child(footer)
 
 	close.grab_focus.call_deferred()
+	# PRIVACY opens below the fold on a phone, and a notice recorded as shown
+	# must be on screen. Layout changes, never the player's own scrolling,
+	# bring its section into view while this first panel lives.
+	if _diagnostics_notice != null:
+		_sections.resized.connect(_reveal_notice, CONNECT_DEFERRED)
+		_scroll.resized.connect(_reveal_notice, CONNECT_DEFERRED)
 	# The warning label wraps, so the sections' minimum height is only honest
 	# once they have been laid out at the panel's real width — refit whenever
 	# that settles rather than trusting the first frame's measure.
@@ -198,6 +204,21 @@ func _fit() -> void:
 	var want: float = minf(_sections.get_combined_minimum_size().y, room)
 	if absf(_scroll.custom_minimum_size.y - want) > 0.5:
 		_scroll.custom_minimum_size.y = want
+
+
+## Opens at the top, as every later panel does, unless the notice would be
+## hidden there (a phone); then scrolls just far enough that the PRIVACY
+## section's last line sits at the foot of the view. It reads only the settled
+## layout, never the current scroll, so the last layout pass always lands the
+## same.
+func _reveal_notice() -> void:
+	var section: Control = _diagnostics_notice.get_parent() as Control
+	var notice_bottom: float = section.position.y + _diagnostics_notice.position.y \
+		+ _diagnostics_notice.size.y
+	if notice_bottom <= _scroll.size.y:
+		_scroll.scroll_vertical = 0
+		return
+	_scroll.scroll_vertical = ceili(section.position.y + section.size.y - _scroll.size.y)
 
 
 static func _display_supported() -> bool:
@@ -328,15 +349,31 @@ func _language_row() -> VBoxContainer:
 	row.add_child(_language_toggle)
 
 	if _language_deferred:
-		var note: Label = Label.new()
+		var note: Label = _note(Locale.active.t("ui.language.deferNote"))
 		note.name = "LanguageDeferNote"
-		note.text = Locale.active.t("ui.language.deferNote")
-		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		note.add_theme_font_override("font", GlassStyle.face(GlassStyle.ALEGREYA_400))
-		note.add_theme_font_size_override("font_size", 12)
-		note.add_theme_color_override("font_color", GlassStyle.TEXT_DIM)
 		body.add_child(note)
 	return body
+
+
+## Crash diagnostics. The main loop reads this switch before Sentry starts, so
+## the note under it says a change waits for the next launch. The first panel
+## built after install also carries the one-line notice, recorded as shown at
+## once so it never returns (docs/privacy/README.md, D1 option B).
+func _add_diagnostics(section: VBoxContainer) -> void:
+	var row: HBoxContainer = _toggle_row(
+		Locale.active.t("ui.settings.diagnostics").to_upper(),
+		func() -> bool: return _preferences.diagnostics_enabled,
+		func(on: bool) -> void: _preferences.set_diagnostics_enabled(on))
+	row.name = "DiagnosticsRow"
+	section.add_child(row)
+	if not _preferences.diagnostics_notice_seen:
+		_diagnostics_notice = _note(Locale.active.t("ui.settings.diagnosticsNotice"))
+		_diagnostics_notice.name = "DiagnosticsNotice"
+		section.add_child(_diagnostics_notice)
+		_preferences.mark_diagnostics_notice_seen()
+	var note: Label = _note(Locale.active.t("ui.settings.diagnosticsNote"))
+	note.name = "DiagnosticsNote"
+	section.add_child(note)
 
 
 ## Moves keyboard focus and the settings scroll to the language control.
@@ -353,14 +390,18 @@ func _toggle_row(label_text: String, getter: Callable, setter: Callable) -> HBox
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 
+	# A long label wraps beside the switch rather than widening the panel; the
+	# switch stays centred on it at its own height.
 	var label: Label = Label.new()
 	label.text = label_text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.add_theme_font_override("font", _tracked_font(GlassStyle.CINZEL_500, 1))
 	label.add_theme_font_size_override("font_size", 13)
 	row.add_child(label)
 
 	var toggle: Button = _small_button()
+	toggle.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var sync: Callable = func() -> void:
 		var on: bool = getter.call()
 		toggle.text = Locale.active.t(
@@ -501,6 +542,18 @@ static func _style_button(button: Button, accent: Color, vertical: float,
 	button.add_theme_color_override("font_focus_color", GlassStyle.TEXT)
 	button.add_theme_color_override("font_pressed_color", GlassStyle.TEXT)
 	button.add_theme_color_override("font_disabled_color", Color(GlassStyle.TEXT_DIM, 0.45))
+
+
+## A dim wrapped line under a control: the language defer note, the
+## diagnostics notice and note, and the ledger's warning.
+static func _note(text: String) -> Label:
+	var note: Label = Label.new()
+	note.text = text
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.add_theme_font_override("font", GlassStyle.face(GlassStyle.ALEGREYA_400))
+	note.add_theme_font_size_override("font_size", 12)
+	note.add_theme_color_override("font_color", GlassStyle.TEXT_DIM)
+	return note
 
 
 static func _tracked_font(path: String, glyph_spacing: int) -> FontVariation:

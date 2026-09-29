@@ -1,7 +1,8 @@
 class_name GlassvowMainLoop
 extends SceneTree
-## Inits Sentry before the main scene. Auto Init is off so `before_send` can
-## attach; `_initialize()` is still earlier than any game script.
+## Inits Sentry before the main scene, unless the player has switched crash
+## diagnostics off in Settings. Auto Init is off so `before_send` can attach;
+## `_initialize()` is still earlier than any game script.
 
 
 ## Numeric iOS CFBundleVersion. Must match both iOS export presets'
@@ -15,7 +16,20 @@ var _privacy: SentryPrivacy = SentryPrivacy.new()
 func _initialize() -> void:
 	if OS.has_feature("editor"):
 		return
-	SentrySDK.init(_configure)
+	start_if_enabled(func() -> void: SentrySDK.init(_configure))
+
+
+## Runs `start` unless the player has switched crash diagnostics off, and says
+## whether it ran. Sentry starts before Main loads Preferences, so the choice
+## is read from the settings file itself and a change waits for the next
+## launch. Tests pass their own `start` and file, so no suite run can start
+## the real SDK.
+static func start_if_enabled(start: Callable,
+		settings_path: String = Preferences.PATH) -> bool:
+	if not Preferences.read_diagnostics_enabled(settings_path):
+		return false
+	start.call()
+	return true
 
 
 func _configure(options: SentryOptions) -> void:

@@ -569,7 +569,11 @@
       "volumeTip": "{name} volume",
       "vsync": "Vsync",
       "resetConfirmPlain": "This erases your current run and the entire Vigil — deeds, unlocks, vows, monuments, and whispers.\n\nThis cannot be undone.",
-      "eraseAllTitle": "ERASE ALL PROGRESS?"
+      "eraseAllTitle": "ERASE ALL PROGRESS?",
+      "privacy": "Privacy",
+      "diagnostics": "Send Crash Diagnostics",
+      "diagnosticsNote": "Takes effect on the next launch.",
+      "diagnosticsNotice": "Crash diagnostics are sent to help fix bugs.\nYou can switch this off in Settings."
     },
     "shop": {
       "cardRemoval": {

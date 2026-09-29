@@ -1,6 +1,6 @@
 # Privacy policy drafts (issue #415, text slice)
 
-**Status: draft for James, written 2026-09-29 against `main` at `9f14e5db`.** Part of [#415](https://github.com/fol2/glassvow/issues/415); it does not close it. Nothing here is hosted, entered in App Store Connect or shipped in the app, and none of it is legal advice or a compliance finding.
+**Status: draft for James, written 2026-09-29 against `main` at `9f14e5db`; D1 updated the same day when option B was implemented.** Part of [#415](https://github.com/fol2/glassvow/issues/415); it does not close it. Nothing here is hosted, entered in App Store Connect or shipped in the app, and none of it is legal advice or a compliance finding.
 
 Every practice described comes from this repository's configuration and source, and from the pinned Sentry sources (sentry-godot 2.1.1, sentry-cocoa 9.24.0). None of it has been observed in a live payload. The tethered-device check still owed on #420 is what turns "configured" into "observed".
 
@@ -14,15 +14,15 @@ Both policies cover Glassvow on iPhone and iPad, as built by the store preset `i
 
 ## 1. Decisions that change the policy text or the App Privacy answers
 
-**D1. Consent and withdrawal (Apple guideline 5.1.1(ii)).** Sentry starts on every launch outside the editor. There is no first-run notice and no setting to turn it off, so both policies say in section 5 that there is no setting rather than claim otherwise. Apple's text: "Apps that collect user or usage data must secure user consent for the collection, even if such data is considered to be anonymous … Apps must also provide the customer with an easily accessible and understandable way to withdraw consent." `docs/rc-bar.md` (P7) asks for "a consent posture per Apple 5.1.1(ii)", but the repository does not define one, so this is your call.
+**D1. Consent and withdrawal (Apple guideline 5.1.1(ii)). Decided: B, implemented.** When this note was written, Sentry started on every launch outside the editor, with no first-run notice and no setting to turn it off, so both policies said in section 5 that there was no setting. Now a Settings switch, on by default, is read by the main loop before Sentry starts (a change takes effect on the next launch), a one-line notice is shown once on that Settings row, and section 5 of both policies carries the option B sentences below. Apple's text: "Apps that collect user or usage data must secure user consent for the collection, even if such data is considered to be anonymous … Apps must also provide the customer with an easily accessible and understandable way to withdraw consent." `docs/rc-bar.md` (P7) asks for "a consent posture per Apple 5.1.1(ii)", but the repository did not define one, so it was your call.
 
 | Option | What it means | Cost |
 |---|---|---|
 | A. Opt-in | First-run card; diagnostics stay off until accepted; switch in Settings | Strictest reading of 5.1.1(ii). You lose crash data, and the P8 crash-free-sessions rate, from everyone who declines |
 | B. Notice plus off switch | One-line notice; switch in Settings, on by default | Common practice, but weaker than the letter of 5.1.1(ii) |
-| C. Disclosure only (as built) | Policy and App Privacy answers only | Weakest. This draft describes it |
+| C. Disclosure only (as first built) | Policy and App Privacy answers only | Weakest. The first draft of the policies described it |
 
-A and B need code, and they change section 5. The switch has to be read from `user://settings.cfg` by the main loop, because Sentry is initialised there before `Main` loads `Preferences`. My recommendation is B as the minimum, and A if you want no review risk on this point. If you pick B, replace the sentence "The game currently has no setting to switch diagnostics off." with:
+A and B need code, and they change section 5. The switch has to be read from `user://settings.cfg` by the main loop, because Sentry is initialised there before `Main` loads `Preferences`. My recommendation is B as the minimum, and A if you want no review risk on this point. Option B replaced the sentence "The game currently has no setting to switch diagnostics off." with:
 
 - English: "You can switch diagnostics off at any time in Settings. Reports already sent are deleted automatically after the period above."
 - 繁體中文：「你可隨時在「設定」中關閉診斷資料。已傳送的報告會在上述期限屆滿後自動刪除。」
@@ -84,7 +84,7 @@ The in-app link (section 4) is compiled into the build, so the URL you choose no
 - A Privacy row in the settings panel (`presentation/run/settings_panel.gd`) that opens the locale-matched URL with `OS.shell_open`. This opens the browser and sends no app data, so it changes neither the policy nor the App Privacy answers.
 - Locale keys in `locale/en.json` and `locale/zh-Hant.json` (for example `ui.settings.privacy`), with the term 私隱政策 added to `docs/zh-hant-glossary.md`; `tests/test_locale.gd` already enforces paired keys.
 - The two URLs held in one place, identical to the App Store Connect values.
-- If you pick D1 option A or B: a `Preferences` key, read by the main loop in `application/sentry_loop.gd` before `SentrySDK.init`, plus the first-run notice or card.
+- D1 option B is implemented: a `Preferences` key, read by the main loop in `application/sentry_loop.gd` before `SentrySDK.init`, plus the one-line notice on the Settings row.
 - Done when: both-locale in-app screenshots at the reference shapes, the live pages, App Store Connect readback of the policy URL and App Privacy answers, and the #420 payload evidence all agree on the same candidate. The local core gate in `CLAUDE.md` applies, because `presentation/`, `locale/` and `application/sentry_*` are production scopes.
 
 ## 5. Checklist for you
@@ -98,7 +98,8 @@ Placeholders (each appears in both policies; search for `[`):
 
 Confirmations before publishing (facts I could not confirm from source):
 
-- [ ] D1 to D4 above decided; the policy edited if D1 is A or B, or if D4 is Yes.
+- [x] D1 decided (B) and implemented; section 5 of both policies edited.
+- [ ] D2 to D4 above decided; the policy edited if D4 is Yes.
 - [ ] Sentry organisation region is EU (Frankfurt) and the plan's retention is at most 90 days.
 - [ ] "Prevent Storing of IP Addresses" turned on.
 - [ ] Guideline 5.1.1(i) asks the policy to confirm that third parties give the same or equal protection. The draft states Sentry's own documented position (it processes reports to provide its service to you) and links Sentry's privacy policy. Add an explicit "equal protection" sentence only after checking the Sentry terms and data processing agreement on your account.
@@ -115,7 +116,7 @@ Re-open this note when any of these change: the Sentry pin or any `[sentry]` opt
 | Claim | Files |
 |---|---|
 | The only outbound connection is to Sentry's EU ingest host | `project.godot` `[sentry]` (host classified, not reproduced here). A source search of `application/`, `domain/`, `presentation/` and `content/` finds no network API. The only other GDScript networking code is the Funplay MCP editor plugin under `addons/`, which the store presets exclude in `export_presets.cfg` |
-| Sentry starts unconditionally outside the editor; there is no consent or off switch | `application/sentry_loop.gd`; `application/preferences.gd` holds audio, display, motion and language only; `presentation/run/settings_panel.gd` and both locale files contain no privacy or diagnostics text |
+| Sentry starts outside the editor unless the player has switched crash diagnostics off in Settings; the main loop reads that choice from `user://settings.cfg` before init, so a change takes effect on the next launch; a one-line notice is shown once on the Settings row | `application/sentry_loop.gd`; `application/preferences.gd` (section `privacy`); `presentation/run/settings_panel.gd`; the `ui.settings.diagnostics*` keys in both locale files; `tests/test_diagnostics_consent.gd` |
 | Privacy-minimal options: `send_default_pii=false`, `attach_log=false`, `attach_scene_tree=false`, `experimental/attach_screenshot=false`, `enable_logs=false`, `enable_metrics=false`, `godot_logger/include_variables=false`, `godot_logger/logs=0`, `godot_logger/breadcrumbs=15` (errors and warnings only, so `print()` output is excluded), app-hang tracking on | `project.godot` `[sentry]`, pinned by `tests/test_sentry_release.gd` |
 | Error text is filtered before sending: `user://` paths stripped, save-shaped JSON replaced, 240-character cap, repeats of one non-fatal error capped at 8, editor events dropped. It applies to exception values and the event message, not to breadcrumbs, so the policies say the main error message is filtered and the trail of recent events is not. The `user://` rule matches only paths inside the game's own storage, and the save-shaped rule matches only a message that starts with `{` and contains `"seed"`, `"deck"` or `glassvow_run` | `application/sentry_loop.gd`, `application/sentry_privacy.gd` |
 | Saves and settings are local files that the game never uploads | `application/save_service.gd` writes `user://glassvow_run_v2.json` and `user://glassvow_vigil_v2.json`; `application/preferences.gd` writes `user://settings.cfg` |

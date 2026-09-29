@@ -209,6 +209,7 @@ func _ready() -> void:
 	# tools/shot.sh --stagecraft --cursor=6 --freeze=0.12 --shot=…  (scene FX reel)
 	# tools/shot.sh --shop --shot=/tmp/shop.png           (Night Stall)
 	# tools/shot.sh --shop --locale=zh-Hant --shot=...    (review-state language)
+	# tools/shot.sh --settings --shot=...                 (Settings over the title)
 	var shot_path: String = ""
 	var enter_node: int = -1
 	var lab_flag: String = ""
@@ -229,6 +230,7 @@ func _ready() -> void:
 	var show_map: bool = false
 	var show_dawn_bench: bool = false
 	var show_shop_bench: bool = false
+	var show_settings: bool = false
 	var forced_locale: String = ""
 	var show_font_probe: bool = false
 	var performance_probe: bool = false
@@ -300,6 +302,8 @@ func _ready() -> void:
 			show_dawn_bench = true
 		elif arg == "--shop":
 			show_shop_bench = true
+		elif arg == "--settings":
+			show_settings = true
 		elif arg.begins_with("--locale="):
 			forced_locale = arg.trim_prefix("--locale=")
 		elif arg == "--font-probe":
@@ -509,6 +513,8 @@ func _ready() -> void:
 		_boot_onboard(_onboard)
 	else:
 		_route_idle()
+	if show_settings:
+		_show_settings()
 	if performance_probe:
 		_attach_performance_probe()
 	elif shot_path != "":
