@@ -39,6 +39,10 @@ static var shop_min_ratio: float = SHOP_MIN_RATIO
 static var random_build: bool = false
 static var random_play: bool = false
 static var way: String = "none"
+## A policy that carries `wayCommit` or `wayOff` replaces WAY_COMMIT or WAY_OFF
+## (flame readout 6's splash arm); one without them keeps the constants.
+static var way_commit: float = WAY_COMMIT
+static var way_off: float = WAY_OFF
 static func set_modes(build: bool, play: bool) -> void:
 	random_build = build
 	random_play = play
@@ -60,6 +64,8 @@ static func apply_policy(policy: Dictionary) -> void:
 	removal_min_copies = int(float(str(vector["removalMinCopies"])))
 	shop_min_ratio = float(str(vector["shopMinRatio"]))
 	way = str(vector.get("way", "none"))
+	way_commit = float(str(vector.get("wayCommit", WAY_COMMIT)))
+	way_off = float(str(vector.get("wayOff", WAY_OFF)))
 static func policy_snapshot() -> Dictionary:
 	if vector.is_empty():
 		apply_policy({})
@@ -481,7 +487,7 @@ static func build_card_score(content: ContentDB, aspect: int, card_id: String,
 static func _way_factor(affinity: Dictionary) -> float:
 	if affinity.is_empty():
 		return 1.0
-	return WAY_COMMIT if affinity.has(way) else WAY_OFF
+	return way_commit if affinity.has(way) else way_off
 
 
 static func card_score(d: Dictionary, aspect: int, card_id: String = "") -> float:

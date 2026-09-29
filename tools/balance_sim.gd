@@ -579,7 +579,7 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		"stage": "", "cardDecline": Pilot.CARD_DECLINE_DEFAULT,
 		"removalAppetite": Pilot.REMOVAL_APPETITE_DEFAULT,
 		"removalMinCopies": Pilot.REMOVAL_MIN_COPIES_DEFAULT,
-		"way": "none", "pool": "mature", "build": "adaptive"}
+		"way": "none", "pool": "mature", "build": "adaptive", "wayCommit": "", "wayOff": ""}
 	for arg: String in args:
 		if not arg.begins_with("--") or not arg.contains("="):
 			return {"error": "expected --name=value, got %s" % arg}
@@ -603,6 +603,13 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		return {"error": "unknown --mix %s" % out["mix"]}
 	if not Pilot.WAYS.has(str(out["way"])):
 		return {"error": "--way must be one of %s" % ", ".join(Pilot.WAYS)}
+	for key: String in ["wayCommit", "wayOff"]:
+		if str(out[key]).is_empty():
+			continue
+		if not str(out[key]).is_valid_float() or float(str(out[key])) <= 0.0:
+			return {"error": "--%s must be a positive number" % key}
+		if str(out["way"]) == "none":
+			return {"error": "--%s needs --way" % key}
 	if not PROFILES.has(str(out["pool"])):
 		return {"error": "--pool must be mature, fresh or full"}
 	if str(out["build"]) not in ["adaptive", "random"]:
@@ -619,6 +626,9 @@ static func _policy(opts: Dictionary) -> Dictionary:
 		"removalMinCopies": opts["removalMinCopies"]}
 	if str(opts.get("way", "none")) != "none":
 		over["way"] = str(opts["way"])
+		for key: String in ["wayCommit", "wayOff"]:
+			if not str(opts.get(key, "")).is_empty():
+				over[key] = float(str(opts[key]))
 	return Policy.resolve(over)
 static func _manifest(opts: Dictionary, overlay: String, identity: Dictionary) -> Dictionary:
 	var row: Dictionary = identity.duplicate()
