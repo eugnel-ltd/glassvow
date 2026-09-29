@@ -1,6 +1,7 @@
 class_name BalancePolicy
 extends RefCounted
-## Live default() is p8-d0-v1. sample_origin() is frozen p7-d2-v1 for sampler/CEM replay.
+## Live default() is the p8-d0-v1 vector plus `special.crackedShare` (pilot p8-d0-v2, flame
+## readout 5). sample_origin() is frozen p7-d2-v1 for sampler/CEM replay.
 
 static func default() -> Dictionary:
 	return {
@@ -33,6 +34,8 @@ static func default() -> Dictionary:
 			"shatterEchoDusk": 14.4155518047532, "shatterEchoAsh": 7.3614481384374955,
 			"execute": 10.7156203095633, "leech": 14.3692959512496, "doubleBlock": 7.67567992016291,
 			"pyreTithe": 5.52944612840346, "fallback": 7.51102251855123,
+			# The share of a rider that needs a Cracked target a strike special counts.
+			"crackedShare": 0.5,
 		},
 		"combat": {
 			"loss": 1.0766330860876399, "blockUrgent": 1.639448077985075, "blockNormal": 0.951755785258475,

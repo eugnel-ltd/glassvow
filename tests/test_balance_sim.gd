@@ -97,8 +97,8 @@ static func _check_valuation(content: ContentDB, fails: Array[String]) -> void:
 	var dusk_strike: float = Pilot.card_score(strike, 0, "strike")
 	if dusk_eclipse <= dusk_strike:
 		fails.append("balance pilot: Dusk eclipseSlash score %s should beat strike %s" % [dusk_eclipse, dusk_strike])
-	if Pilot.VERSION != "p8-d0-v1":
-		fails.append("balance pilot: VERSION expected p8-d0-v1 got %s" % Pilot.VERSION)
+	if Pilot.VERSION != "p8-d0-v2":
+		fails.append("balance pilot: VERSION expected p8-d0-v2 got %s" % Pilot.VERSION)
 	_check_grammar(content, fails)
 	_check_default_vector(content, fails)
 	var dusk_run: RunState = RunState.new_run(content, 7, "best-card")
