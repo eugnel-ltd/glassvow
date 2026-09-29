@@ -63,7 +63,7 @@ const TABLE: Array = [
 	["none left", [], ["uppercut", "quakeblow"],
 		["crownOfCinders", "hollowCrown", "crownOfTithes", "shatterersCrown", "crownOfTheHearth",
 			"crownOfTheEclipse"],
-		"STEADY", "shatterersCrown", ""],
+		"STEADY", "", ""],
 ]
 
 

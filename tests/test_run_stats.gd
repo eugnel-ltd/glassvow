@@ -1,12 +1,15 @@
 extends RefCounted
 ## Flame lock §11 run stats: `cracked` sums the Cracked the player applies and
-## `embersGained` the Embers the lantern catches. Both are additive to the v2
-## save: an older save without them still loads, at zero.
+## `embersGained` the Embers the lantern catches, those it opens a fight with
+## included. Both are additive to the v2 save: an older save without them still
+## loads, at zero.
 
 
 static func run(fails: Array[String]) -> void:
 	_cracked(fails)
 	_embers_gained(fails)
+	_embers_at_combat_start(fails)
+	_opening_embers_owe_no_tithe(fails)
 	_old_save_loads(fails)
 
 
@@ -72,6 +75,91 @@ static func _embers_gained(fails: Array[String]) -> void:
 	if gained != emitted or gained < 3:
 		fails.append("run stats: embersGained %d must equal the %d Embers caught (shatter 2, cap 1)"
 			% [gained, emitted])
+
+
+## The Embers a fight opens with, the Ember Wind omen's and the Crown of Cinders',
+## go straight into the lantern with no EMBER event, yet the lantern receives
+## them: the tally equals the Embers held, after the cap (the omen's fill the
+## plain cap of that moment, the Crown's are added under its own), whichever
+## aspect carries them. A fight with neither starts at nothing and tallies
+## nothing.
+static func _embers_at_combat_start(fails: Array[String]) -> void:
+	var plain_cap: int = CombatState.new().ember_cap
+	# [label, aspect, omen's start Embers or -1 for no omen, Crown held, held, cap]
+	var cases: Array = [
+		["neither", 0, -1, false, 0, plain_cap],
+		["the omen", 0, 2, false, 2, plain_cap],
+		["the Crown", 0, -1, true, 2, 12],
+		["the omen and the Crown", 0, 2, true, 4, 12],
+		["an omen past the cap", 0, 99, false, plain_cap, plain_cap],
+		["an omen past the cap and the Crown", 0, 99, true, plain_cap + 2, 12],
+		["the Ashwarden with neither", 1, -1, false, 0, plain_cap],
+		["the Ashwarden with the omen and the Crown", 1, 2, true, 4, 12],
+	]
+	for case_v: Variant in cases:
+		var case: Array = case_v
+		var label: String = str(case[0])
+		var aspect: int = case[1]
+		var omen_embers: int = case[2]
+		var crowned: bool = case[3]
+		var expected_held: int = case[4]
+		var expected_cap: int = case[5]
+		var opened: Dictionary = _opening(label, aspect, omen_embers, crowned)
+		var game: GlassvowGame = opened["game"]
+		var events: Array[Dictionary] = opened["events"]
+		var held: int = game.cb.embers
+		var tallied: int = _stat(game.run, "embersGained")
+		if held != expected_held or game.cb.ember_cap != expected_cap:
+			fails.append("run stats: %s opens with %d of %d Embers, expected %d of %d"
+				% [label, held, game.cb.ember_cap, expected_held, expected_cap])
+		if tallied != held:
+			fails.append("run stats: %s opens with %d Embers but embersGained is %d"
+				% [label, held, tallied])
+		for ev: Dictionary in events:
+			if ev.get("t") == EventTypes.EMBER:
+				fails.append("run stats: %s emitted an EMBER event at combat start: %s" % [label, ev])
+		var room: int = mini(1, game.cb.ember_cap - held)
+		game.rules.gain_embers(game.run, game.cb, 1)
+		if _stat(game.run, "embersGained") != tallied + room:
+			fails.append("run stats: %s: a later catch must add %d to the opening tally %d, got %d"
+				% [label, room, tallied, _stat(game.run, "embersGained")])
+
+
+## The opening Embers are put in, not caught as spilled fire, so the Hollow
+## Lamplighter's tithe (a share of every Ember gained while its debt stands)
+## leaves them whole and the debt as it was; they still count.
+static func _opening_embers_owe_no_tithe(fails: Array[String]) -> void:
+	var opened: Dictionary = _opening("tithe", 0, 2, true, 5)
+	var game: GlassvowGame = opened["game"]
+	var scratch: Dictionary = game.run.quest_scratch["hollowLamplighter"]
+	var debt: int = int(float(str(scratch.get("emberDebt", -1))))
+	if game.cb.embers != 4 or _stat(game.run, "embersGained") != 4 or debt != 5:
+		fails.append("run stats: the opening Embers must escape the tithe, got %d held, %d tallied, debt %d"
+			% [game.cb.embers, _stat(game.run, "embersGained"), debt])
+
+
+## A fight against one sporeling, opened on `startCombat` for an aspect whose run
+## holds the Ember Wind omen for act one (`omen_embers` Embers, or none below 0)
+## and, if `crowned`, the Crown of Cinders, and owes the Hollow Lamplighter `debt`
+## Embers when that is above 0. Returns {game, events}: the start batch as
+## `apply` gave it.
+static func _opening(tag: String, aspect: int, omen_embers: int, crowned: bool,
+		debt: int = 0) -> Dictionary:
+	var content: ContentDB = ContentDB.load_full(false)
+	var run_state: RunState = RunState.new_run(content, 42115, "stats-%s" % tag, {"aspect": aspect})
+	if omen_embers >= 0:
+		var omen: Dictionary = content.omens["emberWind"]
+		var mods: Dictionary = omen["mods"]
+		mods["startEmbers"] = omen_embers
+		run_state.omens[0] = "emberWind"
+	if crowned:
+		run_state.player.relics.append("crownOfCinders")
+	if debt > 0:
+		run_state.quest_scratch["hollowLamplighter"] = {"emberDebt": debt}
+	var game: GlassvowGame = GlassvowGame.new(content, run_state)
+	var events: Array[Dictionary] = game.apply(
+		{"t": "startCombat", "enemies": ["sporeling"], "kind": "normal"})
+	return {"game": game, "events": events}
 
 
 static func _old_save_loads(fails: Array[String]) -> void:

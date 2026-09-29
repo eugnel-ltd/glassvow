@@ -1837,6 +1837,7 @@ func _on_event_choice(choice_text: String, event_id: String) -> void:
 	game.run.quest_scratch["eventChoice"] = int(choice_text)
 	var ops: Array = choice.get("ops", [])
 	var pending: Dictionary = game.rewards.apply_event_ops(game.run, ops)
+	_read_flame_at_event()
 	# A narrated roll (the gambler's bones) is owed as its own beat. The id is
 	# persisted, never the text, so a resume narrates it in the live locale.
 	var roll: String = str(pending.get("rollId", ""))
@@ -1887,6 +1888,7 @@ func _on_event_pick(id: String, kind: String) -> void:
 				"duplicate":
 					game.run.player.deck.append(CardInst.new(
 						game.run.next_uid(), picked.id, picked.up))
+	_read_flame_at_event()
 	_continue_event_after_ops()
 
 
@@ -2662,10 +2664,27 @@ func _on_reward_claimed(what: StringName, id: String) -> void:
 ## made. Their deck changes happen here rather than through `apply`, so the
 ## reading is taken here too: all of it when a screen opens (`fresh`, drawn at
 ## once), and after each change (tweened; nothing when the deck did not move).
-## An aspect with no ways reads nothing, and its screens grow no lantern.
-func _read_flame(show: Callable, fresh: bool = false) -> void:
+## A screen with no lantern passes no `show`: the reading is still taken, which
+## is what records the tier and owes the lines. An aspect with no ways reads
+## nothing, and its screens grow no lantern.
+func _read_flame(show: Callable = Callable(), fresh: bool = false) -> void:
 	for event: Dictionary in game.flame_events(fresh):
-		show.call(event, fresh)
+		if show.is_valid():
+			show.call(event, fresh)
+
+
+## Flame lock §4: the flame answers a deck change on the spot, an event's
+## included. The application edits the deck at an event, so it reads there: a
+## tier the event crosses is recorded, and its lines owed, at that event rather
+## than at the next screen that reads, and a Steady passed between two events is
+## not lost. The event screens carry no lantern, so the events go only to a route
+## screen that says it can show one (`show_flame`), routed by capability as
+## `_reshape` routes `set_shape`.
+func _read_flame_at_event() -> void:
+	var show: Callable = Callable()
+	if _route_screen != null and _route_screen.has_method(&"show_flame"):
+		show = Callable(_route_screen, &"show_flame")
+	_read_flame(show)
 
 
 func _show_potion_replace(id: String) -> void:

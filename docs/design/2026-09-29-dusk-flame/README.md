@@ -168,7 +168,7 @@ Relics: crownOfTheEclipse (crown, **new**), executionersSeal 1.0, duskmirror 0.5
 
 **Clear glass** (no affinity): strike, defend, brace, bulwark, fortify, sidestep, deflect, guardedStrike, quickSlash, heavyBlow, cleave, tempest, shardstorm, twinFangs, flurry, leechBlade, phantomBlades, agility, ironSkin, regrowth, bastion, flawlessForm, nightSight, bloodRite. Curses and quest cards are excluded from N.
 
-**Excluded from Duskblade's offers** (pool hygiene; Smolder is blocked for aspect 0 in `combat.gd`, so these are dead or half-dead glass for the Duskblade): cards venomStrike, toxicMist, annihilate, catalyst, virulence, ashenChoir; relic smolderingCoal. The Ashwarden keeps all of them. Nothing is deleted from content.
+**Excluded from Duskblade's offers** (pool hygiene; Smolder is blocked for aspect 0 in `combat.gd`, so these are dead or half-dead glass for the Duskblade): cards venomStrike, toxicMist, annihilate, catalyst, virulence, ashenChoir; relic smolderingCoal. The Ashwarden keeps all of them. Nothing is deleted from content. Pool hygiene changes which cards a seeded aspect-0 run meets at events, shops and card rewards compared with pre-Flame content, by design; historical replays use the frozen copy at `docs/balance/data/421-h39/full-content.json`.
 
 ### 6.2 What Edge lacks, and what the content lane adds
 
@@ -215,7 +215,7 @@ No text says why the crown came. The first aha is "that crown was for my flame".
 
 Once the flame is Steady or True, the world leans toward it, softly:
 
-- `_roll_card_reward` and `gen_shop`: a pool entry whose affinity to the dominant way is at least 0.5 has its draw weight multiplied by `likeWeight` (initial **1.5**, CALIBRATE); to the fringe way, by `fringeWeight` (initial **1.2**). Kindling and Soot apply no weighting. Rarity cuts are unchanged. The draw count per offer is unchanged so replays stay deterministic.
+- `_roll_card_reward` and `gen_shop`: a pool entry whose affinity to the dominant way is at least 0.5 has its draw weight multiplied by `likeWeight` (initial **1.5**, CALIBRATE); to the fringe way, by `fringeWeight` (initial **1.2**). Kindling and Soot apply no weighting. Rarity cuts are unchanged. The shared seed cursor advances identically at every tier, so replays stay deterministic: a shop pick is one draw whatever the weights, and a card reward is rolled on a detached chain seeded from the cursor, so weighting may change how many draws that chain takes (a duplicate is drawn again) but never moves the cursor or any later draw.
 - Relic shop stock uses relic affinity the same way.
 - Pool hygiene (§6.1) applies at every tier.
 - Removal needs no rule. Removing off-colour glass raises purity and the flame answers on the spot. Players find "thin the deck, steady the flame" by themselves.
