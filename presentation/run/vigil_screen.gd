@@ -8,7 +8,7 @@ signal replay_requested
 
 const DEED_IDS: PackedStringArray = [
 	"paneBreaker", "lanternFed", "ashSermon", "untouched",
-	"darkWalker", "spendthrift", "hundredShards", "firstDawn",
+	"darkWalker", "spendthrift", "faultInGlass", "hundredShards", "firstDawn",
 ]
 const ROMAN: PackedStringArray = ["—", "I", "II", "III", "IV", "V"]
 static func _whisper_lines() -> Array:
@@ -174,7 +174,9 @@ func _add_deed(parent: VBoxContainer, id: String) -> void:
 	row.add_theme_constant_override("separation", 10)
 	panel.add_child(row)
 	var art: TextureRect = TextureRect.new()
-	art.texture = load("res://assets/art/deeds/%s.png" % id) as Texture2D
+	# A deed whose art is still owed (docs/art-ledger.md) keeps an empty slot.
+	var art_path: String = "res://assets/art/deeds/%s.png" % id
+	art.texture = load(art_path) as Texture2D if ResourceLoader.exists(art_path) else null
 	art.custom_minimum_size = Vector2(48, 48)
 	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

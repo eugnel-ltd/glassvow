@@ -1,32 +1,36 @@
 extends RefCounted
 ## Flame lock §6.1 pool hygiene: the Duskblade is never offered the Ashwarden's
 ## Smolder glass (card rewards, shop cards and relics, boss relics, event cards,
-## random relics) while the Ashwarden keeps all of it; the draw count per offer
-## does not move; checkpoints saved before the exclusion still validate.
+## random relics) while the Ashwarden keeps all of it, and the Ashwarden is never
+## offered the Duskblade's Edge cards and crown (lock PR 6) while the Duskblade
+## keeps them; the draw count per offer does not move; checkpoints saved before
+## the exclusion still validate.
 
 const SEEDS: int = 300
+const HEROES: Array[String] = ["the Duskblade", "the Ashwarden"]
 
 
 static func run(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full(false)
-	var dusk: Dictionary = _offered(content, 0)
-	var ash: Dictionary = _offered(content, 1)
-	for id: String in _excluded(content):
-		if dusk.has(id):
-			fails.append("pool hygiene: the Duskblade was offered excluded %s" % id)
-		if not ash.has(id):
-			fails.append("pool hygiene: the Ashwarden was never offered %s in %d seeds" % [id, SEEDS])
+	var offered: Array[Dictionary] = [_offered(content, 0), _offered(content, 1)]
+	for aspect: int in [0, 1]:
+		for id: String in _excluded(content, aspect):
+			if offered[aspect].has(id):
+				fails.append("pool hygiene: %s was offered excluded %s" % [HEROES[aspect], id])
+			if not offered[1 - aspect].has(id):
+				fails.append("pool hygiene: %s was never offered %s in %d seeds"
+					% [HEROES[1 - aspect], id, SEEDS])
 	_draw_counts_unchanged(fails)
 	_old_checkpoints_validate(fails)
 	_omissions_validate(fails)
 
 
-static func _excluded(content: ContentDB) -> Array[String]:
+static func _excluded(content: ContentDB, aspect: int = 0) -> Array[String]:
 	var out: Array[String] = []
-	var dusk: Dictionary = content.aspects[0]
-	var excludes: Dictionary = dusk["excludes"]
+	var row: Dictionary = content.aspects[aspect]
+	var excludes: Dictionary = row.get("excludes", {})
 	for kind: String in ["cards", "relics"]:
-		for id_v: Variant in excludes[kind]:
+		for id_v: Variant in excludes.get(kind, []):
 			out.append(str(id_v))
 	return out
 

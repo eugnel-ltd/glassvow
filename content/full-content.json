@@ -1649,6 +1649,219 @@
       "name": "Shardstorm",
       "text": "Deal @5@ damage to ALL enemies twice."
     },
+    "splinterCut": {
+      "type": "attack",
+      "rarity": "common",
+      "cost": 1,
+      "target": "enemy",
+      "vfx": "slash",
+      "effects": [
+        {
+          "kind": "dmg",
+          "n": 5
+        },
+        {
+          "kind": "status",
+          "who": "target",
+          "id": "vulnerable",
+          "n": 1
+        }
+      ],
+      "up": {
+        "effects": [
+          {
+            "kind": "dmg",
+            "n": 7
+          },
+          {
+            "kind": "status",
+            "who": "target",
+            "id": "vulnerable",
+            "n": 2
+          }
+        ],
+        "text": "Deal @7@ damage. Apply 2 Cracked."
+      },
+      "name": "Splinter Cut",
+      "text": "Deal @5@ damage. Apply 1 Cracked."
+    },
+    "dimTheGlass": {
+      "type": "skill",
+      "rarity": "common",
+      "cost": 1,
+      "target": "enemy",
+      "vfx": "void",
+      "effects": [
+        {
+          "kind": "status",
+          "who": "target",
+          "id": "weak",
+          "n": 2
+        },
+        {
+          "kind": "draw",
+          "n": 1
+        }
+      ],
+      "up": {
+        "cost": 0
+      },
+      "name": "Dim the Glass",
+      "text": "Apply 2 Dimmed. Draw 1 card."
+    },
+    "cleft": {
+      "type": "attack",
+      "rarity": "uncommon",
+      "cost": 1,
+      "target": "enemy",
+      "vfx": "slash",
+      "effects": [
+        {
+          "kind": "special",
+          "id": "cleft",
+          "n": 8,
+          "cracked": 1,
+          "fervor": 1
+        }
+      ],
+      "up": {
+        "effects": [
+          {
+            "kind": "special",
+            "id": "cleft",
+            "n": 11,
+            "cracked": 1,
+            "fervor": 1
+          }
+        ],
+        "text": "Deal @11@ damage. If the enemy is Cracked, apply 1 more Cracked and gain 1 Fervor."
+      },
+      "name": "Cleft",
+      "text": "Deal @8@ damage. If the enemy is Cracked, apply 1 more Cracked and gain 1 Fervor."
+    },
+    "eclipseStep": {
+      "type": "skill",
+      "rarity": "uncommon",
+      "cost": 1,
+      "target": "self",
+      "vfx": "void",
+      "effects": [
+        {
+          "kind": "block",
+          "n": 5
+        },
+        {
+          "kind": "status",
+          "who": "striker",
+          "id": "vulnerable",
+          "n": 1
+        }
+      ],
+      "up": {
+        "effects": [
+          {
+            "kind": "block",
+            "n": 8
+          },
+          {
+            "kind": "status",
+            "who": "striker",
+            "id": "vulnerable",
+            "n": 1
+          }
+        ],
+        "text": "Gain #8# Ward. Apply 1 Cracked to the enemy about to strike you."
+      },
+      "name": "Eclipse Step",
+      "text": "Gain #5# Ward. Apply 1 Cracked to the enemy about to strike you."
+    },
+    "tremor": {
+      "type": "attack",
+      "rarity": "uncommon",
+      "cost": 1,
+      "target": "enemy",
+      "vfx": "blunt",
+      "effects": [
+        {
+          "kind": "special",
+          "id": "execute",
+          "n": 3,
+          "bonus": 2,
+          "times": 3
+        }
+      ],
+      "up": {
+        "effects": [
+          {
+            "kind": "special",
+            "id": "execute",
+            "n": 4,
+            "bonus": 2,
+            "times": 3
+          }
+        ],
+        "text": "Deal @4@ damage 3 times. Each hit on Cracked glass deals 2 more."
+      },
+      "name": "Tremor",
+      "text": "Deal @3@ damage 3 times. Each hit on Cracked glass deals 2 more."
+    },
+    "totality": {
+      "type": "attack",
+      "rarity": "rare",
+      "cost": 2,
+      "target": "enemy",
+      "locked": "faultInGlass",
+      "vfx": "void",
+      "effects": [
+        {
+          "kind": "special",
+          "id": "totality",
+          "n": 14
+        }
+      ],
+      "up": {
+        "effects": [
+          {
+            "kind": "special",
+            "id": "totality",
+            "n": 18
+          }
+        ],
+        "text": "Deal @18@ damage, then double the enemy's Cracked."
+      },
+      "name": "Totality",
+      "text": "Deal @14@ damage, then double the enemy's Cracked."
+    },
+    "emberEye": {
+      "type": "skill",
+      "rarity": "rare",
+      "cost": 0,
+      "emberCost": 2,
+      "target": "allEnemies",
+      "vfx": "fire",
+      "exhaust": true,
+      "effects": [
+        {
+          "kind": "status",
+          "who": "allEnemies",
+          "id": "vulnerable",
+          "n": 2
+        }
+      ],
+      "up": {
+        "effects": [
+          {
+            "kind": "status",
+            "who": "allEnemies",
+            "id": "vulnerable",
+            "n": 3
+          }
+        ],
+        "text": "Spend 2 Embers: apply 3 Cracked to ALL enemies. Kindle."
+      },
+      "name": "Ember Eye",
+      "text": "Spend 2 Embers: apply 2 Cracked to ALL enemies. Kindle."
+    },
     "unreadablePage": {
       "type": "curse",
       "rarity": "special",
@@ -1709,7 +1922,9 @@
       "brace",
       "sidestep",
       "preparation",
-      "deflect"
+      "deflect",
+      "splinterCut",
+      "dimTheGlass"
     ],
     "uncommon": [
       "leechBlade",
@@ -1728,7 +1943,10 @@
       "empower",
       "agility",
       "ironSkin",
-      "regrowth"
+      "regrowth",
+      "cleft",
+      "eclipseStep",
+      "tremor"
     ],
     "rare": [
       "oblivionStrike",
@@ -1742,7 +1960,8 @@
       "risingLitany",
       "bastion",
       "frenzy",
-      "virulence"
+      "virulence",
+      "emberEye"
     ]
   },
   "statuses": {
@@ -2073,6 +2292,13 @@
       "tone": "#ff5964",
       "name": "Crown of the Hearth",
       "text": "At the end of combat, heal 3 HP for every Ember still in your lantern."
+    },
+    "crownOfTheEclipse": {
+      "rarity": "boss",
+      "glyph": "♔",
+      "tone": "#c04a86",
+      "name": "Crown of the Eclipse",
+      "text": "Cracked you apply no longer wears off."
     }
   },
   "relicPools": {
@@ -2107,7 +2333,8 @@
       "hollowCrown",
       "crownOfTithes",
       "shatterersCrown",
-      "crownOfTheHearth"
+      "crownOfTheHearth",
+      "crownOfTheEclipse"
     ]
   },
   "potions": {
@@ -4768,6 +4995,16 @@
       "name": "Fire Given Freely",
       "desc": "Spend 30 embers on Lantern Arts"
     },
+    "faultInGlass": {
+      "stat": "cracked",
+      "n": 40,
+      "unlocks": [
+        "card:totality",
+        "card:emberEye"
+      ],
+      "name": "Fault in the Glass",
+      "desc": "Apply 40 Cracked"
+    },
     "hundredShards": {
       "stat": "slain",
       "n": 100,
@@ -4825,7 +5062,8 @@
           "bloodRite",
           "devour",
           "annihilate",
-          "limitBreak"
+          "limitBreak",
+          "tremor"
         ],
         "relics": [
           "reapersBell",
@@ -4836,7 +5074,8 @@
       "poolWave3": {
         "cards": [
           "offering",
-          "catalyst"
+          "catalyst",
+          "emberEye"
         ],
         "relics": [
           "executionersSeal"
@@ -5004,8 +5243,10 @@
       "devour": "poolWave2",
       "annihilate": "poolWave2",
       "limitBreak": "poolWave2",
+      "tremor": "poolWave2",
       "offering": "poolWave3",
       "catalyst": "poolWave3",
+      "emberEye": "poolWave3",
       "risingLitany": "poolFull",
       "frenzy": "poolFull",
       "virulence": "poolFull"
@@ -5479,7 +5720,8 @@
             "novaflare": 1.0,
             "emberdance": 1.0,
             "cripple": 0.5,
-            "aegis": 0.5
+            "aegis": 0.5,
+            "emberEye": 0.5
           },
           "relics": {
             "verdantBranch": 1.0,
@@ -5490,6 +5732,10 @@
         },
         {
           "id": "edge",
+          "crown": "crownOfTheEclipse",
+          "capstones": [
+            "totality"
+          ],
           "affinity": {
             "eclipseSlash": 1.0,
             "warCry": 1.0,
@@ -5499,7 +5745,14 @@
             "lunge": 0.5,
             "frenzy": 1.0,
             "risingLitany": 1.0,
-            "resonantLance": 0.5
+            "resonantLance": 0.5,
+            "splinterCut": 1.0,
+            "dimTheGlass": 1.0,
+            "cleft": 1.0,
+            "eclipseStep": 1.0,
+            "tremor": 1.0,
+            "totality": 1.0,
+            "emberEye": 0.5
           },
           "relics": {
             "executionersSeal": 1.0,
@@ -5559,7 +5812,21 @@
       "startGold": 99,
       "name": "The Ashwarden",
       "nameBare": "Ashwarden",
-      "blurb": "Smoke given a shape. Lets the Smolder do the killing and kindles its own hand to feed the lantern. Slower, but it endures — and everything it touches burns."
+      "blurb": "Smoke given a shape. Lets the Smolder do the killing and kindles its own hand to feed the lantern. Slower, but it endures — and everything it touches burns.",
+      "excludes": {
+        "cards": [
+          "splinterCut",
+          "dimTheGlass",
+          "cleft",
+          "eclipseStep",
+          "tremor",
+          "totality",
+          "emberEye"
+        ],
+        "relics": [
+          "crownOfTheEclipse"
+        ]
+      }
     }
   ],
   "vows": [
