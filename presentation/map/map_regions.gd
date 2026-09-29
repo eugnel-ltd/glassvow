@@ -94,9 +94,9 @@ var weather: StringName = &"ash"
 
 ## `_content` is accepted so `WorldMapScreen` keeps its call shape. It is not
 ## read: palette truth lives in the constants above (#234, #207).
-static func for_act(act_i: int, _content: ContentDB = null) -> MapRegions:
+static func for_act(act_index: int, _content: ContentDB = null) -> MapRegions:
 	var cfg: MapRegions = MapRegions.new()
-	var index: int = clampi(act_i, 0, BAND_SHADE.size() - 1)
+	var index: int = clampi(act_index, 0, BAND_SHADE.size() - 1)
 	cfg.act = index
 	cfg.weather = WEATHER_BY_ACT[index]
 	cfg.sky = FALLBACK_SKIES[index]

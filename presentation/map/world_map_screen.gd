@@ -380,15 +380,15 @@ func _sync_sealed_door(run: RunState) -> void:
 		and run.act + 1 == run.final_act()
 
 
-func _set_act_theme(stage_act: int) -> void:
-	_region = MapRegions.for_act(stage_act, content)
+func _set_act_theme(act_index: int) -> void:
+	_region = MapRegions.for_act(act_index, content)
 	_act = _region.act
 	if content != null and not content.acts.is_empty():
-		_act = clampi(stage_act, 0, content.acts.size() - 1)
+		_act = clampi(act_index, 0, content.acts.size() - 1)
 	# MapRegions is the sole source; the content pack theme dict is not read.
 	# The 3D ramp binds band_shade/band_key on MapScene.
 	if _map_scene != null:
-		_map_scene.set_act(stage_act)
+		_map_scene.set_act(act_index)
 		_bind_compiled_layout()
 
 
@@ -648,10 +648,11 @@ func _pin_hit() -> float:
 
 
 ## Dress the bands in another act's region without mutating the run. Used by
-## `--map --act=N` so captures can see act 1/2 weather without reaching that
-## act in a run — domain map generation stays the run's act (scenery only).
-func set_act_scenery(stage_act: int) -> void:
-	_set_act_theme(stage_act)
+## `--map --act=N` so captures can see another act's weather without reaching
+## that act in a run — domain map generation stays the run's act (scenery only).
+## `act_index` is 0-based: `main.gd` has already translated the flag's act number.
+func set_act_scenery(act_index: int) -> void:
+	_set_act_theme(act_index)
 	_sync_waylights()
 	if content != null and _act < content.acts.size() and _title_label != null:
 		var act: Dictionary = content.acts[_act]

@@ -9,8 +9,11 @@ extends SceneTree
 ## So: build the real `CombatScreen` at a shape, let it lay out, and read the
 ## nodes back. Headless, so it costs no window and no focus.
 ##
-##   godot --headless -s res://tools/probe_layout.gd -- --shape=phone-landscape --act=0
+##   godot --headless -s res://tools/probe_layout.gd -- --shape=phone-landscape --act=1
 ##   godot --headless -s res://tools/probe_layout.gd -- --all
+##
+## `--act=` is the act number, counted from 1 (`ActFlag`), and the readout below
+## names the act the same way.
 ##
 ## Numbers are gaps from the edge each one is bound to, so they can be compared
 ## with the book without arithmetic.
@@ -22,12 +25,17 @@ const SHAPES: Array[StringName] = [
 
 func _initialize() -> void:
 	var shapes: Array[StringName] = []
-	var act: int = 0
+	var act_index: int = 0
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--shape="):
 			shapes.append(StringName(arg.trim_prefix("--shape=")))
-		elif arg.begins_with("--act="):
-			act = clampi(int(arg.trim_prefix("--act=")), 0, LayoutBook.ACTS - 1)
+		elif arg.begins_with(ActFlag.PREFIX):
+			var forced: Dictionary = ActFlag.parse(arg.trim_prefix(ActFlag.PREFIX))
+			if forced.has("error"):
+				push_error(str(forced["error"]))
+				quit(2)
+				return
+			act_index = forced["act_index"]
 		elif arg == "--all":
 			shapes = SHAPES.duplicate()
 	if shapes.is_empty():
@@ -36,15 +44,15 @@ func _initialize() -> void:
 		if not StageShape.SHIPPING.has(shape):
 			push_warning("probe_layout: ignoring non-shipping shape %s" % shape)
 			continue
-		await _probe(shape, act)
+		await _probe(shape, act_index)
 	quit(0)
 
 
-func _probe(shape: StringName, act: int) -> void:
+func _probe(shape: StringName, act_index: int) -> void:
 	var content: ContentDB = ContentDB.load_slice()
 	var game: GlassvowGame = GlassvowGame.new(content, RunState.new_run(content, 7))
 	var ref: Vector2i = StageShape.REFERENCES[shape]
-	var screen: CombatScreen = CombatScreen.new(game, shape, act)
+	var screen: CombatScreen = CombatScreen.new(game, shape, act_index)
 	# The screen anchors to its parent, and headless has no window of the right
 	# size — so it is given the reference frame explicitly rather than inheriting
 	# whatever the boot window happened to be.
@@ -60,7 +68,7 @@ func _probe(shape: StringName, act: int) -> void:
 	# low and the hero 11px left of where they settle.
 	for _i: int in range(4):
 		await create_timer(0.6).timeout
-	print("=== %s  act %d  %dx%d" % [shape, act, ref.x, ref.y])
+	print("=== %s  act %d  %dx%d" % [shape, ActFlag.number_of(act_index), ref.x, ref.y])
 	for row: Array in _rows(screen, Vector2(ref)):
 		print("  %-14s %s" % [row[0], row[1]])
 	host.queue_free()

@@ -339,6 +339,10 @@ def expected(plan: dict[str, Any], shape: str, language: str) -> dict[str, Any]:
         "seed": plan["seed"], "act": plan["act"], "shape": shape,
         "window": SHAPES[shape], "language": language,
     }
+def act_flag(act_index: int) -> str:
+    # The plan and the report carry the 0-based act index. The game's `--act=`
+    # takes the act number, counted from 1: Act I is `--act=1` (#451).
+    return f"--act={act_index + 1}"
 def profile(home: Path, language: str) -> None:
     directory = home / "Library/Application Support/Godot/app_userdata/Glassvow"
     directory.mkdir(parents=True)
@@ -491,7 +495,7 @@ def run_measure(args: argparse.Namespace) -> int:
                     app_command = ["/usr/bin/arch", "-arm64", str(executable),
                         "--disable-vsync", "--position", "-4000,-4000", "--",
                         f"--fight={','.join(plan['fight'])}", f"--kind={plan['kind']}",
-                        f"--seed={plan['seed']}", f"--act={plan['act']}",
+                        f"--seed={plan['seed']}", act_flag(plan["act"]),
                         f"--shape={shape}", f"--vp={width}x{height}",
                         f"--perf-language={language}", f"--perf-commit={plan['commit']}",
                         f"--perf-out={report}"]

@@ -484,11 +484,11 @@ var hint_guide: HintGuide = null
 ## default to the identity composition so every existing caller, and every
 ## headless test, gets exactly the screen it got before.
 func _init(game_ref: GlassvowGame, stage_shape: StringName = StageShape.IDENTITY,
-		stage_act: int = 0, sfx: SfxBus = null) -> void:
+		act_index: int = 0, sfx: SfxBus = null) -> void:
 	game = game_ref
 	_rules = game.rules
 	shape = stage_shape if StageShape.REFERENCES.has(stage_shape) else StageShape.IDENTITY
-	act = stage_act
+	act = act_index
 	_authored = LayoutBook.resolve(&"battlefield", shape, act)
 	seq.handler = _handle_event
 	set_anchors_preset(Control.PRESET_FULL_RECT)

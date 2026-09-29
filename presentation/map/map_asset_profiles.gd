@@ -76,13 +76,16 @@ func all_ids() -> PackedStringArray:
 	return _ordered_ids.duplicate()
 
 
-func ids_for_act(act: int, kind_filter: String = "") -> PackedStringArray:
+## The manifest counts acts from 0, so Act I is `act_index` 0 and the row `act`
+## -1 marks the kits every act shares. `--act=` counts from 1 (`ActFlag`).
+func ids_for_act(act_index: int, kind_filter: String = "") -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
 	for asset_id: String in _ordered_ids:
 		var row: Dictionary = _rows[asset_id]
-		var row_act: int = _int_value(row, "act", -99)
+		var row_act_index: int = _int_value(row, "act", -99)
 		var kind: String = _string_value(row, "kind")
-		if row_act in [-1, act] and (kind_filter.is_empty() or kind == kind_filter):
+		if row_act_index in [-1, act_index] \
+				and (kind_filter.is_empty() or kind == kind_filter):
 			out.append(asset_id)
 	return out
 

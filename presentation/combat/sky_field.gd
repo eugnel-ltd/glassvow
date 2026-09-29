@@ -183,8 +183,8 @@ class Field:
 			src.paint_motes(self)
 
 
-func _init(stage_act: int = 0) -> void:
-	var index: int = clampi(stage_act, 0, ACT_SKIES.size() - 1)
+func _init(act_index: int = 0) -> void:
+	var index: int = clampi(act_index, 0, ACT_SKIES.size() - 1)
 	_sky = ACT_SKIES[index]
 	_fog = ACT_FOGS[index]
 	_particles = ACT_PARTICLES[index]
