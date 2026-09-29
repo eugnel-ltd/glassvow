@@ -3359,16 +3359,17 @@ func _affix_tip(idx: int) -> Dictionary:
 
 
 ## `ce.lantern._tip` (combat.js:327). The art's own rule leads, then what the
-## lantern is for.
+## lantern is for. The price is the fight's own, read from the rules each time
+## the tip is asked for: the lantern's quality moves it (a Soot Art costs more,
+## a True Art less), so the content's `cost` would quote the wrong number.
 func _lantern_tip() -> Dictionary:
 	var art_id: String = str(game.run.art)
 	var art: Dictionary = game.content.arts.get(art_id, {})
 	if art.is_empty():
 		return {"title": Locale.active.t("ui.combat.lanternTitle"), "body": Locale.active.t("ui.combat.lanternBody"),
 			"sub": Locale.active.t("ui.combat.lanternSub")}
-	var art_cost: int = art.get("cost", 0)
 	var lead: String = Locale.active.t("ui.combat.lanternLead", {
-		"embers": art_cost, "text": str(art.get("text", "")),
+		"embers": _rules.art_cost(game.run, game.cb), "text": str(art.get("text", "")),
 	})
 	return {"title": Locale.active.t("ui.combat.lanternArtTitle", {
 			"name": str(art.get("name", art_id))}),

@@ -85,7 +85,7 @@ class Fan:
 ```
 
 Updating the pile stops allocating anything —
-[presentation/combat/hud_bar.gd:1286-1289](../../../presentation/combat/hud_bar.gd#L1286) (in `_sync_pile`):
+[presentation/combat/hud_bar.gd:1302-1305](../../../presentation/combat/hud_bar.gd#L1302) (in `_sync_pile`):
 
 ```gdscript
 var faces: int = mini(maxi(n, 0), FAN_FACES)
@@ -124,7 +124,7 @@ Two Godot details this ran into:
   `rect_origin - pivot`. Getting this wrong shifts the fan rather than erroring.
 - **An inner class cannot see the outer class's statics unqualified.**
   `_fan_angle(...)` inside `class Fan` fails to parse; `HudBar._fan_angle(...)`
-  resolves ([presentation/combat/hud_bar.gd:1294](../../../presentation/combat/hud_bar.gd#L973) (`_fan_angle`)).
+  resolves ([presentation/combat/hud_bar.gd:1310](../../../presentation/combat/hud_bar.gd#L973) (`_fan_angle`)).
 
 ## Why This Matters
 
@@ -188,7 +188,7 @@ benchmark's `src/pile-chrome.js:4-8` — `PILE_FAN_DEG`, `PILE_FAN_MAX_DEG`,
   `TextureRect` per flyer and gives each its own `Tween` — transient nodes that
   each need an independent animation, which is exactly the case the rule above
   carves out.
-- `presentation/combat/hud_bar.gd:439-461` (in `_sync_candles`) builds one
+- `presentation/combat/hud_bar.gd:444-466` (in `_sync_candles`) builds one
   non-interactive `TextureRect` per point of max energy. Node count scales with
   a gameplay value that stays small, which is the second carve-out.
 
