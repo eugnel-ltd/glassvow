@@ -16,6 +16,9 @@ var run: RunState
 var cb: CombatState = null
 ## Return value of the last op (web playCard/usePotion return bool).
 var last_ret: Variant = null
+## The deck (sorted card ids) behind the last FLAME reading.
+var _flame_deck: PackedStringArray = PackedStringArray()
+var _flame_read: bool = false
 
 
 func _init(content_db: ContentDB, run_state: RunState) -> void:
@@ -72,4 +75,31 @@ func apply(cmd: Dictionary) -> Array[Dictionary]:
 	if cb != null:
 		for k: int in range(q_before, cb.queue.size()):
 			out.append(cb.queue[k])
+	out.append_array(flame_events(t == "startCombat"))
+	return out
+
+
+## Flame lock §4: the lantern is read at every deck change and at combat start
+## (`force`), never while a fight is live, and only for an aspect with ways.
+## Returns the FLAME event when the deck changed since the last reading. The
+## reading rides on `apply`'s events, never on the combat log, so a deck the
+## application edits directly (rewards, shops, events) is read by the next
+## command or by calling this at that read point.
+func flame_events(force: bool = false) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if not force and cb != null and not cb.over:
+		return out
+	if Flame.ways(content, run.aspect).is_empty():
+		return out
+	var deck: PackedStringArray = PackedStringArray()
+	for card: CardInst in run.player.deck:
+		deck.append(String(card.id))
+	deck.sort()
+	if not force and _flame_read and deck == _flame_deck:
+		return out
+	_flame_deck = deck
+	_flame_read = true
+	var event: Dictionary = {"t": EventTypes.FLAME}
+	event.merge(Flame.read(content, run))
+	out.append(event)
 	return out

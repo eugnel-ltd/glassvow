@@ -12,6 +12,12 @@ const CARD_DECLINE_DEFAULT: float = 14.0958831273019
 const REMOVAL_APPETITE_DEFAULT: float = 16.4400114826858
 ## T1b: min copies of the worst card before a shop will remove it.
 const REMOVAL_MIN_COPIES_DEFAULT: int = 2
+## Flame lock §11 committed arms: the policy's `way` scales the build-side score
+## of its own glass by WAY_COMMIT and of other coloured glass by WAY_OFF.
+## Combat play (plays, targets, kindles, potions) never reads it.
+const WAYS: Array[String] = ["none", "shatter", "lantern", "edge"]
+const WAY_COMMIT: float = 3.0
+const WAY_OFF: float = 0.5
 ## Shop eligibility ceiling is appetite minus this. Not a sampled knob.
 const REMOVAL_SHOP_MARGIN: float = 2.0
 static var banned: Dictionary = {}
@@ -26,6 +32,7 @@ static var removal_min_copies: int = REMOVAL_MIN_COPIES_DEFAULT
 static var shop_min_ratio: float = SHOP_MIN_RATIO
 static var random_build: bool = false
 static var random_play: bool = false
+static var way: String = "none"
 static func set_modes(build: bool, play: bool) -> void:
 	random_build = build
 	random_play = play
@@ -46,6 +53,7 @@ static func apply_policy(policy: Dictionary) -> void:
 	removal_appetite = float(str(vector["removalAppetite"]))
 	removal_min_copies = int(float(str(vector["removalMinCopies"])))
 	shop_min_ratio = float(str(vector["shopMinRatio"]))
+	way = str(vector.get("way", "none"))
 static func policy_snapshot() -> Dictionary:
 	if vector.is_empty():
 		apply_policy({})
@@ -314,6 +322,22 @@ static func catalogue_card_score(content: ContentDB, aspect: int, card_id: Strin
 			definition.merge(upgrade, true)
 		scores[card_id] = card_score(definition, aspect, card_id)
 	return scores[card_id]
+## The score every build decision reads: rewards, shops, removals, events,
+## upgrades. It is the catalogue score scaled by the policy's way; combat
+## scoring keeps catalogue_card_score.
+static func build_card_score(content: ContentDB, aspect: int, card_id: String,
+		upgraded: bool = false) -> float:
+	var score: float = catalogue_card_score(content, aspect, card_id, upgraded)
+	return score if way == "none" \
+		else score * _way_factor(Flame.card_affinity(content, aspect, card_id))
+
+
+static func _way_factor(affinity: Dictionary) -> float:
+	if affinity.is_empty():
+		return 1.0
+	return WAY_COMMIT if affinity.has(way) else WAY_OFF
+
+
 static func card_score(d: Dictionary, aspect: int, card_id: String = "") -> float:
 	var dusk: bool = aspect == 0
 	var card_w: Dictionary = _group("card")
@@ -422,7 +446,7 @@ static func choose_card(ids: Array, content: ContentDB, aspect: int, rng: Rng = 
 		var id: String = str(id_v)
 		if is_banned(id):
 			continue
-		var candidate: float = catalogue_card_score(content, aspect, id)
+		var candidate: float = build_card_score(content, aspect, id)
 		if candidate > score:
 			best = id
 			score = candidate
@@ -451,7 +475,8 @@ static func worst_card(run: RunState, content: ContentDB, cards: Array, kindle: 
 	for card: CardInst in cards:
 		if kindle and str(content.cards.get(String(card.id), {}).get("type", "")) == "curse":
 			continue
-		var candidate: float = catalogue_card_score(content, run.aspect, String(card.id))
+		var candidate: float = catalogue_card_score(content, run.aspect, String(card.id)) if kindle \
+			else build_card_score(content, run.aspect, String(card.id))
 		if candidate < score:
 			worst = card
 			score = candidate
@@ -460,7 +485,7 @@ static func best_card(run: RunState, content: ContentDB, cards: Array) -> CardIn
 	var best: CardInst = null
 	var score: float = -INF
 	for card: CardInst in cards:
-		var candidate: float = catalogue_card_score(content, run.aspect, String(card.id))
+		var candidate: float = build_card_score(content, run.aspect, String(card.id))
 		if candidate > score:
 			best = card
 			score = candidate
@@ -474,7 +499,8 @@ static func relic_score(id: String, content: ContentDB, aspect: int) -> float:
 		score += _wf("relicDuskBonus")
 	if aspect == 1 and id in ["smolderingCoal", "ashenCore", "thornBand"]:
 		score += _wf("relicAshBonus")
-	return score
+	return score if way == "none" \
+		else score * _way_factor(Flame.relic_affinity(content, aspect, id))
 static func choose_shop(stock: Dictionary, run: RunState, content: ContentDB) -> Array[Dictionary]:
 	if random_build:
 		return _random_shop(stock, run)
@@ -503,7 +529,7 @@ static func choose_shop(stock: Dictionary, run: RunState, content: ContentDB) ->
 				if category == "relics":
 					value = relic_score(id, content, run.aspect)
 				elif category == "cards":
-					value = catalogue_card_score(content, run.aspect, id)
+					value = build_card_score(content, run.aspect, id)
 				elif id == "healing":
 					value = _wf("potionHealing")
 				var ratio: float = value / float(maxi(price, 1))
@@ -518,7 +544,7 @@ static func choose_shop(stock: Dictionary, run: RunState, content: ContentDB) ->
 				for card: CardInst in run.player.deck:
 					if String(card.id) == String(worst.id):
 						copies += 1
-				var wscore: float = catalogue_card_score(content, run.aspect, String(worst.id))
+				var wscore: float = build_card_score(content, run.aspect, String(worst.id))
 				if wants_shop_remove(copies, wscore):
 					var remove_ratio: float = remove_value(wscore) / float(maxi(remove_cost, 1))
 					if remove_ratio > best_ratio:

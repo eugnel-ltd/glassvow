@@ -39,3 +39,6 @@ const BOSS_INTRO: StringName = &"bossIntro"
 const VARIANT_DIALOGUE: StringName = &"variantDialogue"
 ## Act IV Keeper: a lethal blow does not kill. Combat ends; #312 takes the scene.
 const FINALE_HANDOFF: StringName = &"finaleHandoff"
+## Port-owned: the lantern's reading of the deck (`Flame.read`), emitted at every
+## deck change and at combat start, never mid-combat (flame lock §4, §9).
+const FLAME: StringName = &"flame"

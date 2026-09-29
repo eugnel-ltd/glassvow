@@ -6,7 +6,17 @@ const Policy: GDScript = preload("res://tools/balance_policy.gd")
 const Metrics: GDScript = preload("res://tools/balance_metrics.gd")
 const Incentives: GDScript = preload("res://tools/vow_incentives.gd")
 const PROFILE: String = "mature-three-act-no-side-state-v1"
+## Pool states (flame lock §11): `mature` is every reveal with no deed unlocks
+## (the historical profile); `fresh` a new Vigil (no reveals, so no pool waves,
+## and no deeds); `full` every reveal and every deed's unlocks.
+const PROFILES: Dictionary = {
+	"mature": PROFILE, "fresh": "fresh-three-act-no-side-state-v1",
+	"full": "full-three-act-no-side-state-v1",
+}
+## Per-fight rates recorded with each run (flame lock §11 descriptor).
+const RATE_STATS: Array[String] = ["shatters", "kindles", "embersSpent", "cracked", "embersGained"]
 static var _probe: Dictionary = {}
+static var _flame_acts: Array[Dictionary] = []
 func _initialize() -> void:
 	var opts: Dictionary = _options(OS.get_cmdline_user_args())
 	if opts.has("error"):
@@ -48,7 +58,8 @@ func _initialize() -> void:
 	for aspect: String in aspects:
 		for offset: int in range(int(float(str(opts["runs"])))):
 			rows.append(simulate(content, aspect, int(float(str(opts["seed0"]))) + offset,
-				int(float(str(opts["vow"]))), ban, _policy(opts), false, false, _mix(opts)))
+				int(float(str(opts["vow"]))), ban, _policy(opts), str(opts["build"]) == "random",
+				false, _mix(opts), null, false, str(opts["pool"])))
 	var report: Dictionary = Metrics.report(rows, _manifest(opts, overlay, identity))
 	if rows.size() == 1:
 		report["outcomeDigest"] = outcome_digest(rows[0])
@@ -67,8 +78,9 @@ func _initialize() -> void:
 static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0,
 		ban: PackedStringArray = PackedStringArray(), policy: Dictionary = {},
 		random_build: bool = false, random_play: bool = false, mix: Dictionary = {},
-		vigil: VigilState = null, strip_start_hex: bool = false) -> Dictionary:
+		vigil: VigilState = null, strip_start_hex: bool = false, pool: String = "") -> Dictionary:
 	_probe = {}
+	_flame_acts = []
 	Pilot.set_ban(ban)
 	Pilot.apply_policy(policy)
 	Pilot.set_modes(random_build, random_play)
@@ -77,6 +89,7 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 		"aspect": aspect_index, "vow": vow, "reveals": content.reveal_ids.duplicate(),
 		"unlocks": ["aspect2"], "quests": {}, "shards": [], "lamplighter": false,
 	}
+	_apply_pool(profile, content, pool)
 	if vigil != null:
 		profile["quests"] = vigil.quests.duplicate(true)
 		profile["shards"] = vigil.shards.duplicate()
@@ -110,6 +123,7 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 						fights, "", economy, vigil, content)
 				if node.type == "boss" and run.act == 2:
 					economy.append(_economy_row(run))
+					_flame_acts.append(Flame.read(content, run))
 					return _finish(run, aspect, seed, "win", fights, "", economy, vigil, content)
 				_claim_rewards(game, game.gen_combat_rewards(node.combat_kind(), game.cb.affix))
 			else:
@@ -117,6 +131,7 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 			map.clear_current()
 			if node.type == "boss" and not run.is_final_act():
 				economy.append(_economy_row(run))
+				_flame_acts.append(Flame.read(content, run))
 				var offered: Array[String] = game.rewards.roll_boss_relics(run)
 				for offered_id: String in offered:
 					if offered_id == "hollowCrown":
@@ -174,7 +189,7 @@ static func _claim_rewards(game: GlassvowGame, rewards: Dictionary) -> void:
 	var card: String = Pilot.choose_card(rewards.get("cards", []), game.content, game.run.aspect,
 		game.run.rng)
 	if not card.is_empty() and not Pilot.is_banned(card):
-		var score: float = Pilot.catalogue_card_score(game.content, game.run.aspect, card)
+		var score: float = Pilot.build_card_score(game.content, game.run.aspect, card)
 		if Pilot.accepts_card_reward(score):
 			game.run.player.deck.append(CardInst.new(game.run.next_uid(), StringName(card), false))
 	var potion_v: Variant = rewards.get("potion")
@@ -207,8 +222,8 @@ static func _upgrade_best(game: GlassvowGame) -> void:
 		var d: Dictionary = game.content.cards.get(String(card.id), {})
 		if card.up or not d.has("up"):
 			continue
-		var score: float = Pilot.catalogue_card_score(game.content, game.run.aspect, String(card.id), true) \
-			- Pilot.catalogue_card_score(game.content, game.run.aspect, String(card.id))
+		var score: float = Pilot.build_card_score(game.content, game.run.aspect, String(card.id), true) \
+			- Pilot.build_card_score(game.content, game.run.aspect, String(card.id))
 		if score > best_score:
 			best = card
 			best_score = score
@@ -282,7 +297,7 @@ static func _event_op_score(game: GlassvowGame, op_v: Variant) -> float:
 		return Pilot.card_score({"effects": [{"kind": "loseHp", "n": lost}]}, game.run.aspect)
 	if op.has("addCard"):
 		var card_id: String = str(op["addCard"])
-		return Pilot.catalogue_card_score(game.content, game.run.aspect, card_id)
+		return Pilot.build_card_score(game.content, game.run.aspect, card_id)
 	if op.has("addRelic"):
 		var relic_id: String = str(op["addRelic"])
 		if relic_id == "random":
@@ -294,7 +309,7 @@ static func _event_op_score(game: GlassvowGame, op_v: Variant) -> float:
 		var worst: CardInst = Pilot.worst_card(game.run, game.content, game.run.player.deck)
 		if worst == null:
 			return 0.0
-		var wscore: float = Pilot.catalogue_card_score(game.content, game.run.aspect, String(worst.id))
+		var wscore: float = Pilot.build_card_score(game.content, game.run.aspect, String(worst.id))
 		return Pilot.remove_value(wscore)
 	if op.has("pickCard"):
 		return _expected_card_max(game, int(float(str(op["pickCard"]))))
@@ -304,7 +319,7 @@ static func _event_op_score(game: GlassvowGame, op_v: Variant) -> float:
 		var best: CardInst = Pilot.best_card(game.run, game.content, game.run.player.deck)
 		if best == null:
 			return 0.0
-		return Pilot.catalogue_card_score(game.content, game.run.aspect, String(best.id))
+		return Pilot.build_card_score(game.content, game.run.aspect, String(best.id))
 	return 0.0
 static func _potion_shop_value(game: GlassvowGame) -> float:
 	var pair: Array = game.content.shop["potionPrice"]
@@ -317,11 +332,11 @@ static func _expected_card_max(game: GlassvowGame, n: int) -> float:
 	var copies: Dictionary = {"common": 2, "uncommon": 2, "rare": 1}
 	for tier: String in ["common", "uncommon", "rare"]:
 		var weight: int = int(float(str(copies[tier])))
-		for id_v: Variant in game.rewards.card_pool(game.run, tier):
+		for id_v: Variant in game.rewards.offer_cards(game.run, tier):
 			var id: String = str(id_v)
 			if Pilot.is_banned(id):
 				continue
-			var score: float = Pilot.catalogue_card_score(game.content, game.run.aspect, id)
+			var score: float = Pilot.build_card_score(game.content, game.run.aspect, id)
 			for _copy: int in range(weight):
 				scores.append(score)
 	var m: int = scores.size()
@@ -347,7 +362,7 @@ static func _expected_relic_score(game: GlassvowGame) -> float:
 	for tier: String in ["common", "uncommon", "rare"]:
 		var mean: float = 0.0
 		var n: int = 0
-		for id_v: Variant in game.rewards.relic_pool(game.run, tier):
+		for id_v: Variant in game.rewards.offer_relics(game.run, tier):
 			var id: String = str(id_v)
 			if game.run.player.relics.has(id) or Pilot.is_banned(id):
 				continue
@@ -363,8 +378,8 @@ static func _best_upgrade_delta(game: GlassvowGame) -> float:
 		var d: Dictionary = game.content.cards.get(String(card.id), {})
 		if card.up or not d.has("up"):
 			continue
-		var score: float = Pilot.catalogue_card_score(game.content, game.run.aspect, String(card.id), true) \
-			- Pilot.catalogue_card_score(game.content, game.run.aspect, String(card.id))
+		var score: float = Pilot.build_card_score(game.content, game.run.aspect, String(card.id), true) \
+			- Pilot.build_card_score(game.content, game.run.aspect, String(card.id))
 		if not found or score > best_score:
 			found = true
 			best_score = score
@@ -511,10 +526,35 @@ static func _finish(run: RunState, aspect: String, seed: int, outcome: String,
 		fights: Array[Dictionary], error: String, economy: Array[Dictionary],
 		vigil: VigilState, content: ContentDB) -> Dictionary:
 	var row: Dictionary = _result(run, aspect, seed, outcome, fights, error, economy)
+	row["flame"] = _flame_row(run, content, fights.size())
 	if vigil != null:
 		var commit: String = "win" if outcome == "win" else "death"
 		vigil.commit_run(run, commit, content)
 	return row
+
+
+## Flame lock §11 per-run descriptor: the policy's way, the reading at run end
+## and at the end of each act reached, and the per-fight rates of the stats the
+## ways produce. Derived from the run, so the outcome digest leaves it out.
+static func _flame_row(run: RunState, content: ContentDB, fights: int) -> Dictionary:
+	var rates: Dictionary = {}
+	for key: String in RATE_STATS:
+		rates[key] = float(_ji(run.stats.get(key, 0))) / float(fights) if fights > 0 else 0.0
+	return {"way": Pilot.way, "end": Flame.read(content, run), "acts": _flame_acts.duplicate(),
+		"rates": rates}
+
+
+static func _apply_pool(profile: Dictionary, content: ContentDB, pool: String) -> void:
+	if pool == "fresh":
+		profile["reveals"] = []
+		profile["unlocks"] = []
+	elif pool == "full":
+		var unlocks: Array = profile["unlocks"]
+		for deed_v: Variant in content.deeds.values():
+			var deed: Dictionary = deed_v
+			for unlock_v: Variant in deed.get("unlocks", []):
+				if not unlocks.has(unlock_v):
+					unlocks.append(unlock_v)
 
 
 static func _strip_hex(run: RunState) -> void:
@@ -528,13 +568,15 @@ static func _strip_hex(run: RunState) -> void:
 static func outcome_digest(row: Dictionary) -> String:
 	var copy: Dictionary = row.duplicate(true)
 	copy.erase("packageEvents")
+	copy.erase("flame")
 	return JSON.stringify(copy).sha256_text()
 static func _options(args: PackedStringArray) -> Dictionary:
 	var out: Dictionary = {"aspect": "all", "runs": 200, "seed0": 1000, "vow": 0, "mobs": "",
 		"out": "", "ban": "", "mix": "", "content": "", "space": BalanceCatalogue.DEFAULT_SPACE,
 		"stage": "", "cardDecline": Pilot.CARD_DECLINE_DEFAULT,
 		"removalAppetite": Pilot.REMOVAL_APPETITE_DEFAULT,
-		"removalMinCopies": Pilot.REMOVAL_MIN_COPIES_DEFAULT}
+		"removalMinCopies": Pilot.REMOVAL_MIN_COPIES_DEFAULT,
+		"way": "none", "pool": "mature", "build": "adaptive"}
 	for arg: String in args:
 		if not arg.begins_with("--") or not arg.contains("="):
 			return {"error": "expected --name=value, got %s" % arg}
@@ -556,6 +598,12 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		return {"error": "--runs must be positive and --vow must be 0..5"}
 	if not str(out["mix"]).is_empty() and not Incentives.has_id(str(out["mix"])):
 		return {"error": "unknown --mix %s" % out["mix"]}
+	if not Pilot.WAYS.has(str(out["way"])):
+		return {"error": "--way must be one of %s" % ", ".join(Pilot.WAYS)}
+	if not PROFILES.has(str(out["pool"])):
+		return {"error": "--pool must be mature, fresh or full"}
+	if str(out["build"]) not in ["adaptive", "random"]:
+		return {"error": "--build must be adaptive or random"}
 	return out
 static func _mix(opts: Dictionary) -> Dictionary:
 	var id: String = str(opts.get("mix", ""))
@@ -563,16 +611,22 @@ static func _mix(opts: Dictionary) -> Dictionary:
 		return Incentives.shipping()
 	return Incentives.by_id(id)
 static func _policy(opts: Dictionary) -> Dictionary:
-	return Policy.resolve({"cardDecline": opts["cardDecline"],
+	var over: Dictionary = {"cardDecline": opts["cardDecline"],
 		"removalAppetite": opts["removalAppetite"],
-		"removalMinCopies": opts["removalMinCopies"]})
+		"removalMinCopies": opts["removalMinCopies"]}
+	if str(opts.get("way", "none")) != "none":
+		over["way"] = str(opts["way"])
+	return Policy.resolve(over)
 static func _manifest(opts: Dictionary, overlay: String, identity: Dictionary) -> Dictionary:
 	var row: Dictionary = identity.duplicate()
 	row["contentSha256"] = str(identity.get("contentFileSha256", ""))
 	row["overlay"] = null if overlay.is_empty() else {"path": overlay,
 		"sha256": FileAccess.get_sha256(overlay)}
 	row["pilot"] = Pilot.VERSION
-	row["profile"] = PROFILE
+	row["profile"] = PROFILES[str(opts["pool"])]
+	row["pool"] = opts["pool"]
+	row["build"] = opts["build"]
+	row["way"] = opts["way"]
 	row["aspect"] = opts["aspect"]
 	row["vow"] = opts["vow"]
 	row["ban"] = opts["ban"]
