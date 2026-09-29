@@ -7,7 +7,7 @@ landing commit then copies each pick to its ledgered path, commits the
 `.import` sidecar, moves the ledger row to Shipped with the prompt that
 rendered it, and takes the stills the issues ask for.
 
-118 candidates were generated on 2026-09-29 in four rounds, and 73 survive.
+136 candidates were generated on 2026-09-29 in five rounds, and 87 survive.
 
 - **Rounds 1 to 3 (Grok Build, 69 candidates, 31 survivors).** Round 1 was the
   canonical prompts. Round 2 was an authorised follow-up for the four files
@@ -17,19 +17,25 @@ rendered it, and takes the stills the issues ask for.
   Codex on the owner's instruction, drawing the portraits on a transparent
   background rather than magenta. Each file is now ranked once across both
   tools (see Round 4).
+- **Round 5 (Codex, 18 candidates, 15 survivors).** Round 5 redid the Queue and
+  both plates after James reviewed rounds 1 to 4, with new sentences for the
+  Queue's margins and slate glass and for a clean plate finish. It also redid
+  `lamplighter-grieving` after James withdrew his pick, c3, over its pole, so
+  round 4 now keeps 41 survivors (see Round 5).
 
 Each family's contact sheet shows every candidate of every round, labelled,
 rejects included, and its tags carry that cross-round ranking. `survivors/`
-holds all of Grok's survivors and the Codex survivors ranked #1 or #2 in their
-file. The 25 MB cap left the rest on the sheets (see Round 4). Raw renders and
-rejects stay out of the tree.
+holds all of Grok's survivors and, from each Codex round, the two best Codex
+survivors per file (for round 4, those ranked #1 or #2 at the time). The 25 MB
+cap left the rest on the sheets (see Round 4). Raw renders and rejects stay out
+of the tree.
 
 | Family | Issue | Sheet | Generated (Grok + Codex) | Survivors (Grok + Codex) | Ranked first, across both |
 |---|---|---|---|---|---|
 | Keeper moods | #560 | [`contact-keeper.png`](contact-keeper.png) | 16 + 16 | 11 + 15 | tender-c2, offering-c3, weary-c2, beckon-c4 |
-| Hollow Lamplighter moods | #561 | [`contact-lamplighter.png`](contact-lamplighter.png) | 24 + 20 | 13 + 20 | wary-c4, asking-c1, recognising-b, urgent-c1, grieving-c3 |
-| Queue chorus | #562 | [`contact-queue.png`](contact-queue.png) | 9 + 5 | 3 + 0 | queue-chorus-h |
-| Unlit Way plates | #563 | [`contact-plates.png`](contact-plates.png) | 20 + 8 | 4 + 7 | unlit-way-c3, unlit-way-end-c1 |
+| Hollow Lamplighter moods | #561 | [`contact-lamplighter.png`](contact-lamplighter.png) | 24 + 24 | 13 + 23 | wary-c4, asking-c1, recognising-b, urgent-c1, grieving-c5 |
+| Queue chorus | #562 | [`contact-queue.png`](contact-queue.png) | 9 + 11 | 3 + 4 | queue-chorus-c9 |
+| Unlit Way plates | #563 | [`contact-plates.png`](contact-plates.png) | 20 + 16 | 4 + 14 | unlit-way-c5, unlit-way-end-c8 |
 
 **No gaps remain.** Every file has at least two survivors. Round 3 was Grok's
 last round.
@@ -68,7 +74,8 @@ last round.
 ## How they were made
 
 This section covers rounds 1 to 3, made with Grok Build. Round 4's Codex method,
-its unkeyed gate and the cross-round ranking are under Round 4.
+its unkeyed gate and the cross-round ranking are under Round 4, and round 5's
+changes to them under Round 5.
 
 - **Generation.** Through `~/.claude/scripts/subagents/run-grok-media.sh`:
   Grok Build CLI 1.0.41 with the model `grok-4.7` (the wrapper picks the newest
@@ -127,7 +134,10 @@ bottom-edge share in brackets; "not graded" marks the Queue's bottom edge.
 the share of visible pixels at alpha ≥ 240 (≥ 90%). **Verdict** in the
 family tables below ranks each file's survivors across rounds 1 to 3, Grok
 only. Round 4's tables and the contact sheets carry the ranking across both
-tools, and that is the ranking to pick from. James picks.
+tools, and that is the ranking to pick from. Round 5 re-ranks four files across
+every round (`queue-chorus`, `unlit-way`, `unlit-way-end` and
+`lamplighter-grieving`); for those, its tables and the sheets supersede Round
+4's verdicts. James picks.
 
 ## Round 2 — the authorised follow-up
 
@@ -289,6 +299,9 @@ this round came from Grok.
 | `unlit-way` | c3, c4, i, c1, c, c2 | Yes. c3 is the first of 16 renders to keep both bands clear with the seat on its mark, and c4 keeps both bands clear too. |
 | `unlit-way-end` | c1, c4, g, c3, f | Yes. In c1 the ground falls away into mist toward a small, far door at about 62% of the width; Grok's g stands on a flat plain. |
 
+Round 5 re-ranks the `lamplighter-grieving`, `queue-chorus`, `unlit-way` and
+`unlit-way-end` rows above; its cross-round ranking replaces them.
+
 ### The gate
 
 44 of 49 renders pass. All 36 Keeper and Lamplighter renders and all 8 plates
@@ -408,6 +421,305 @@ line, as a share of the width: `c1` 62%, `c2` 61–64%, `c3` 63–64%, `c4` 69%.
    Grok's round 2, with the same sentence, ranged 61–85%.
 8. **No rate limit.** The 49 calls ran over 27 minutes, three at a time, and
    none fell back to Cursor.
+
+## Round 5: Codex again for the Queue, the plates and grieving
+
+James reviewed every candidate of rounds 1 to 4 on 2026-09-29 and wrote,
+verbatim:
+
+- Queue: "try again. it looks different than shipped. but that's ok. try to use
+  codex image-gen again." A look that departs from the shipped
+  `scenes/unsealing-mirror-queue.png` is acceptable; the ledger's clauses still
+  bind.
+- Plates, holding Grok's `unlit-way-c` and `unlit-way-end-g` provisionally:
+  "Codex image-gen has noise. try to add prompt to denoise, or try to simplify
+  the image structure. try again."
+- At 22:30 he withdrew his pick `lamplighter-grieving-c3`: "the lamp pole is
+  different. look closer."
+
+Round 5 made 18 Codex renders, the round's cap: six for the Queue, four for
+each plate and four for grieving. Fifteen survive.
+
+- **Generation.** `run-imagegen.sh` now resolves to `gpt-6.1-sol` at xhigh
+  reasoning effort, through Codex CLI 0.159.0. The wrapper changed after round
+  4, which ran `gpt-5.6-terra` at low effort. One image per call, three calls at
+  a time, each in an empty working directory of its own: 18 calls of 100–199 s
+  (median 154 s). Codex served every call, none printed `FALLBACK:` or
+  `NOTE:`, and every call returned the briefed canvas and mode first time. The
+  first three calls (Queue c6 and both plates' c5) ran as a pilot, with the
+  same requests as the rest.
+- **Nothing edited after generation.** Every request now tells Codex to
+  generate exactly one image and to change nothing afterwards but a uniform
+  scale: round 4's `queue-chorus-c2` had been cropped and stretched to square.
+  The logs and the image tool's own files agree for all 18. There was one
+  generation per call; the plates are the tool's files byte for byte; and the
+  Queue (1254 px square) and grieving (1024×1536) renders are a uniform
+  LANCZOS scale of the tool's files, identical to the pixel. Codex wrote its
+  own image prompt from each request, as its image skill directs; those prompts
+  are kept with the raw renders.
+- **Requests.** Each file's round-4 request, verbatim, with round 5's sentences
+  added. The exact requests are below.
+  - Queue: the references lend no colour; the slate is "a muted slate
+    grey-blue ... NOT royal blue"; a MARGINS clause asks for an empty,
+    transparent margin of at least 8% of the width on the left, right and top;
+    the cut is spelled out (no feet, hems or ground); and round 2's
+    inside-edges sentence now says the last figure ends well inside the right
+    margin. The six vary the start. c6, c7 and c8 start at the centre-left,
+    with the front hood about 38% across; c9, c10 and c11 start in the left
+    third, at about 20%. c8 and c11 have four figures, the rest five.
+  - Plates: a FINISH paragraph follows the shared style block. It carries the
+    briefed wording ("clean, smooth painterly gradients; no film grain, no
+    noise, no speckle, no dithering, no texture overlay; large simple shapes")
+    and turns the style block's dust and embers into haze. The style block
+    itself stays verbatim. The subject paragraph becomes the simpler structure,
+    and each placement sentence names only that structure. The end plate's no
+    longer names the road or the seat, as round 2's shared sentence did; a seat
+    had bled into `unlit-way-end-e` and `-c2`.
+  - The style reference was a suspect: `opening-hearth.png` measures as grainy
+    as round 4's Codex plates (see Grain). So c5 and c6 of each plate attach it
+    for its palette and raking light only, where rounds 1 to 4 asked for its
+    "brushwork", and c7 and c8 attach no reference.
+  - Grieving: round 4's request plus a paragraph naming the reference's pole,
+    with sizes measured on it, and c3's fault as the thing not to repeat.
+- **The gate.** As in round 4: the Queue through `--no-key --expect 1024x1024
+  --cut-bottom`, grieving through `--no-key --expect 682x1024`, the plates
+  through `--plate`. 16 of 18 pass; the two Queue failures are below.
+- **New review aids.** These were measured outside the tool and are not
+  committed.
+  - *Grain*, for the plates: the mean absolute 4-neighbour Laplacian of the
+    luminance (Rec. 601, 0–255) over the whole 1536×1024 frame. Higher is
+    noisier. James's held picks set the baseline: `unlit-way-c` 3.33 and
+    `unlit-way-end-g` 3.73. A plate noisier than its baseline carries a caveat,
+    not a rejection. Immerkær's noise estimate orders the 36 plates of all
+    rounds much the same way (Spearman 0.88).
+  - *Margins*, for the Queue: the clear space left of, right of and above the
+    figures at alpha ≥ 128, as a share of the width. Also the saturated-blue
+    share of the solid figure (hue 200–250°, S ≥ 0.45, V ≥ 0.25): 10–19% on
+    round 4's Codex takes and 0.0% on Grok's.
+  - *The pole*, for grieving, read on a 50 px grid against
+    `hollow-lamplighter.png`: the staff's length from end to end, where its
+    crook is, the hand that holds it, and the lantern's size.
+- **Ranking.** Each file is ranked once across every round, as before. For the
+  plates, a load-bearing element in the right band still rejects, and a lamp
+  post in the left band or at a band's edge is a caveat. Grain above the
+  baseline is a caveat too, weighed as James weighed it: he held Grok's c and g
+  over round 4's noisier Codex plates, so those now rank below his held picks.
+  For grieving the pole comes first. Every earlier take's pole differs from the
+  reference's as c3's did, so each keeps its place in the running, with a note,
+  below the round-5 takes that put the crook back at the staff's end.
+- **What is committed.** The two best round-5 renders per file, as
+  `survivors/<file-stem>-c<n>.png`: `queue-chorus` c9 and c7, `unlit-way` c5 and
+  c6, `unlit-way-end` c8 and c7, and `lamplighter-grieving` c5 and c7, 10.1 MB.
+  With the three rebuilt sheets (0.7 MB more), round 5 adds 10.7 MB, within the
+  25 MB cap. The other round-5 survivors are sheet only. All 18 raw renders,
+  the call logs and Codex's own image prompts are kept outside the tree.
+  `lamplighter-grieving-c3.png` stays in `survivors/` as round 4 committed it,
+  marked withdrawn.
+- **Contact sheets.** Rebuilt by round 4's method (`--palette`, 90% of round 1's
+  tile heights). Rebuilding round 4's rows alone reproduces the committed
+  sheets pixel for pixel. Each re-rolled file gains a labelled round-5 row, and
+  the tags carry the new ranking; "(was #N)" marks a rank that changed since
+  round 4.
+
+<details><summary>Exact request: queue-chorus-c6, and how c7 to c11 differ</summary>
+
+```text
+Read the two style reference images at <repo>/assets/art/meta/keeper.png and <repo>/assets/art/scenes/unsealing-mirror-queue.png and produce a new image as a variation in their style: take the leaded stained-glass figure construction from the first and the single-file line of hooded walkers from the second. It is a new figure group, not an edit of either composition. Take no colours from either reference: not the blue, violet and red glass of the first, and not the purple robes or the gold window of the second.
+
+Serious cartoon-gothic stained-glass game art: chunky dark outer silhouettes, simplified exaggerated proportions, 3-5 large jewel-tone glass colour masses with very few thick lead dividers, matte painterly texture, warm amber rim light, soft controlled inner glow. No text, no labels, no watermark.
+
+CONSTRUCTION, this is the most important instruction: every figure is built from large flat panes of coloured glass separated by thick black lead came lines, like cathedral stained glass rendered as characters. Only a few big panes per figure, never lacework. The lead lines are heavy, black and clearly visible. Glass is cold gold, slate and pale teal with thin worn gold edging on the lead. The slate is a muted slate grey-blue, the grey of roofing slate with only a little blue in it: NOT royal blue, NOT cobalt or sapphire, and no violet or purple glass anywhere.
+
+Output a PNG with a TRANSPARENT background (alpha 0 outside the figures); no magenta, no floor, no shadow, no vignette. Black exists ONLY inside the hood voids. MARGINS: the left, right and top edges of the canvas each keep an empty, fully transparent margin at least 8 percent of the width wide (at least 82 px of 1024), with nothing in it: no figure, hood, robe, glow or lead line. Only the bottom edge touches the figures, where it cuts them. Make the whole group smaller if that is what it takes to fit inside these margins.
+
+The Queue: five hooded walker figures standing in ONE single-file line that recedes from the centre-left of the frame toward the right. The nearest and largest figure stands at the centre-left, its hood about 38 percent of the way across the canvas from the left edge; the others recede behind it toward the right. Each figure is a little smaller and dimmer than the one before it. Every hood opening is a deep black VOID with NO face, NO eyes. Each figure carries exactly one small point of warm amber light at the breast. They stand still, patient and quiet, facing slightly left. The bottom edge of the canvas cuts the figures at mid-thigh. No feet, hems or ground are visible: every figure runs off the bottom edge. They read as ONE line of the same walker, not a crowd. All five figures, including the last and smallest, stay fully inside the left and right margins: the last figure ends well inside the right margin, with clear transparent space between it and the right edge.
+
+Canvas: exactly 1024x1024 pixels. Draw the margins and the cut in the generated image itself. Generate exactly one image; do not crop, stretch, pad, move or repaint anything afterwards. If the image tool returns another size, only scale the whole image uniformly to 1024x1024.
+
+Save the result as a PNG file at <scratch>/r5/raw/queue-chorus-c6.png
+```
+
+- c7: identical to c6.
+- c8: as c6, with "four hooded walker figures" and "All four figures".
+- c9 and c10: as c6, with the line receding "from the left third of the frame"
+  and this start sentence: "The nearest and largest figure stands in the left
+  third, its hood about 20 percent of the way across the canvas from the left
+  edge and clear of the left margin; the others recede behind it toward the
+  right."
+- c11: as c9, with four figures.
+
+</details>
+
+<details><summary>Exact request: unlit-way-c5, and how the other plates differ</summary>
+
+```text
+Read the style reference image at <repo>/assets/art/scenes/opening-hearth.png and produce a new image that takes only its colour palette and its warm raking light. Do not copy its surface texture, grain, dithering or fine stonework detail. The composition and subject come entirely from the prompt below: do not keep its hall, hearth, fire, doorway or window.
+
+Cinematic gothic fantasy key art, painterly and richly rendered, in the visual language of a stained-glass world: deep environment perspective with real recession into the distance, asymmetric composition with the subject well off centre, strong raking light cutting through the dark, heavy chiaroscuro with most of the frame in warm-black shadow, dust motes and drifting embers in the light shafts, matte painterly brushwork with no photographic sheen and no visible generation noise. Palette: warm amber, honey and gold against cold slate, deep teal, indigo and violet — a candlelit cathedral at night. Every figure is built from large flat panes of coloured glass separated by thick black lead came lines with thin worn gold edging: cathedral stained glass rendered as a character, only a few big panes, never lacework or many small pieces. Hooded figures have no face — the hood opening is a deep black void with no glowing eyes. Landscape 1536x1024, full-bleed to every edge. Keep every load-bearing element inside the central 92 percent of the width and out of the bottom 12 percent of the height. NO TEXT of any kind, no caption, no letterbox bars, no logo, no watermark, no UI, no border frame.
+
+FINISH, this matters as much as the composition: clean, smooth painterly gradients; no film grain, no noise, no speckle, no dithering, no texture overlay; large simple shapes. The dark areas and the sky are smooth, even gradients, never mottled or crackled. The dust, embers and ash named above read as a soft haze in the light, never as specks or particles.
+
+TWO-SHOT FRAME: keep the left 28 percent and the right 28 percent of the width free of anything that reads as a figure, and keep the bottom 30 percent quiet (a dialogue pane covers it). NO people, walkers, lamplighter or hooded figures anywhere in the plate. For this two-shot plate the subject sits inside the central 44 percent of the width: the stone road receding into plain darkness, three or four dead iron lamp posts along its verge, and one flat roadside stone composed as an empty seat at about 55 to 60 percent of the width. The outer 28 percent on each side holds only ground, ash haze and sky. There is NO arch, NO door, NO light and NO dawn on the horizon: the road runs out into darkness.
+
+The Unlit Way at night, a simple structure with very few elements: a long stone road running east into darkness toward a faint horizon with no dawn; three or four tall iron lamp posts along its verge, every lamp dead and dark; a soft ash haze in the air; one flat roadside stone composed as a seat just right of centre, empty. Raking amber light from low left, as if from a fire far behind the viewer. Nothing else: no ruins, buildings, trees, rocks or extra props, and no clouds drawn as shapes; the sky is a smooth dark gradient.
+
+Canvas: exactly 1536x1024 pixels, an opaque RGB image. Generate exactly one image; do not filter, blur, denoise, crop, stretch or repaint it afterwards: the clean finish must come from the generation itself.
+
+Save the result as a PNG file at <scratch>/r5/raw/unlit-way-c5.png
+```
+
+- `unlit-way-c6`: identical to c5.
+- c7 and c8 of both plates replace the first paragraph with "Generate a new
+  image from the description below. No reference image is attached: the words
+  alone set the style."
+- `unlit-way-end` replaces the placement sentence with "For this two-shot plate
+  the subject (the broken slabs, the last dead lamp post and the faint far
+  arch) sits inside the central 44 percent of the width; the outer 28 percent
+  on each side holds only dark ground, mist and sky." Its subject paragraph
+  reads "Where the Unlit Way runs out, a simple structure with very few
+  elements: a few broken paving slabs at the centre of the frame where the road
+  ends; the last dead lamp post standing at the end of the road; beyond it,
+  mist; and far off on the eastern horizon a faint, small arch of light (the
+  door, never detailed). Nothing else: no ruins, towers, buildings, bench,
+  seat, rocks or crags, and no clouds drawn as shapes; the sky is a smooth dark
+  gradient. Emptier and colder than the first plate."
+
+</details>
+
+<details><summary>Exact request: lamplighter-grieving-c5 (c6 to c8 identical)</summary>
+
+```text
+Read the reference image at <repo>/assets/art/meta/hollow-lamplighter.png and produce an edited variation of it.
+
+Serious cartoon-gothic stained-glass game art: chunky dark outer silhouette, simplified exaggerated proportions, one iconic readable pose, 3-5 large jewel-tone glass colour masses with very few thick lead dividers, matte painterly texture, warm amber rim light, soft controlled inner glow. Designed to remain readable at 128px. No text, no labels, no watermark.
+
+CONSTRUCTION, this is the most important instruction: the figure is not painted cloth. His entire robe and body are built from large flat panes of coloured glass separated by thick black lead came lines, exactly like a cathedral stained-glass window rendered as a character. Each fold of the robe is a distinct glass pane with a hard lead border, not a soft painted fold. Only a few big panes, never lacework or many small pieces. The lead lines are heavy, black, and clearly visible across the whole figure. Glass is cold grey-green and deep teal, lit from within by a faint cold glow, with thin worn gold edging on the lead. Readable as a solid black shape if all internal detail were removed.
+
+Output a PNG with a TRANSPARENT background (alpha 0 outside the figure); no magenta, no floor, no shadow, no vignette. Black exists ONLY inside the head void. EDIT THE ATTACHED REFERENCE: keep the exact same canvas size, figure scale, position, bounding box, hem line, pane layout and palette; change ONLY the pose described below. Single complete figure, no cropped limbs.
+
+The Hollow Lamplighter, a gaunt keeper, tall and skull-thin, in a long floor-length robe. Bare head, no raised hood, face a deep black void with no glowing eyes. The one warm colour in the frame is an amber rim light falling on him from outside the frame, from a fire he is not carrying. He holds a tall iron lantern pole; the lantern hanging from it is DARK AND EMPTY, with cold dead glass panes and no flame inside, the single unlit object in the frame, in every pose.
+
+POSE CHANGE: the head is bowed; the dark lantern is lowered until it nearly rests on the ground by his feet; the free hand is pressed flat to his chest.
+
+THE LANTERN POLE IS THE SAME OBJECT AS IN THE REFERENCE, ONLY LOWERED. Keep it exactly: one straight iron staff about 1000 px long from end to end (the full height of the canvas, taller than his head), with raised iron rings along the shaft and a pointed iron foot at one end; at its other end the shepherd's crook, which IS the end of the staff, curving over about 90 px and finishing in a small curl; a round ring hanging from the crook's tip; and from that ring the same tall six-sided lantern, about 95 px wide and 235 px tall with its cap and bottom finial, dark and empty, with cold dead glass panes. He holds the staff in the same hand as in the reference, the hand on the viewer's right, and the lantern stays on the viewer's right. What went wrong last time, and must not happen again: the staff was cut to about 580 px, a ball knob replaced the crook at its end, and a smaller crook sprouted from the side of the shaft partway down, so it read as a different, shorter staff. Lowering the lantern means tipping the whole staff down in his hand, so that the crook end with the lantern comes down by his feet; tipped toward the viewer the staff may look shorter in perspective, but it is never cut, shortened, rebuilt or given a second crook or knob, and the lantern keeps its size. The palette and the amber rim on BOTH edges of the figure stay exactly as in the reference.
+
+Canvas: exactly 682x1024 pixels. Generate exactly one image; do not crop, stretch, pad, move or repaint anything afterwards, and do not paste, threshold or otherwise replace its alpha. If the image tool returns another size, only scale the whole image uniformly to 682x1024.
+
+Save the result as a PNG file at <scratch>/r5/raw/lamplighter-grieving-c5.png
+```
+
+</details>
+
+### Grain
+
+| | `unlit-way` | `unlit-way-end` |
+|---|---|---|
+| James's held Grok pick (the baseline) | c 3.33 | g 3.73 |
+| Round 4, Codex | c1 10.14, c2 9.49, c3 6.91, c4 12.58 | c1 8.38, c2 9.90, c3 12.30, c4 8.95 |
+| Round 5, style reference attached | c5 4.32, c6 4.13 | c5 2.49, c6 2.90 |
+| Round 5, no reference | c7 6.25, c8 4.68 | c7 2.73, c8 2.37 |
+
+For scale, Grok's twenty plates read 1.77–4.09, and the style reference
+`opening-hearth.png` reads 10.52.
+
+### Round 5 gate and verdicts
+
+#### Queue chorus (#562)
+
+Margins are the clear space left, right and above, as a share of the width; the
+request asks for at least 8% on each.
+
+| File | Size | Magenta | Frame dark (bottom edge) | Corners | ≥240 | Margins L / R / T | Gate | Verdict | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `queue-chorus-c6.png` | 1024×1024 | 2 | 1475 (1475, not graded) | 0 | 98.3% | 8.3 / 4.1 / 18.8% | pass | #3, sheet only | Five of one walker in one line from the centre-left, each smaller and dimmer, amber breast lights, black hood voids, facing left, cut at the canvas foot. Slate grey, pale teal and cold gold with no royal blue. Margins L 8.3%, R 4.1%, T 18.8%: the right one short of the 8% asked. More and smaller panes than the brief's few big ones, as Codex's own check noted. |
+| [`queue-chorus-c7.png`](survivors/queue-chorus-c7.png) | 1024×1024 | 1 | 1078 (1076, not graded) | 0 | 98.5% | 12.9 / 3.1 / 19.2% | pass | **#2** | Five walkers from the centre-left in slate, pale teal and cold gold, with the biggest panes and heaviest lead of the round; amber breast lights, black voids, facing left, cut at the foot. The right margin is the tightest of the survivors (L 12.9%, R 3.1%, T 19.2%), and the last three figures bunch together, so the line reads shorter than c9's. |
+| `queue-chorus-c8.png` | 1024×1024 | 0 | 1177 (1177, not graded) | 0 | 98.0% | 15.0 / 5.6 / 17.4% | pass | #6, sheet only | One of the two four-figure takes, from the centre-left. The palette is right, but the hoods are faceted boxes with square voids, so the figures read as crystal forms more than hooded walkers. Margins L 15.0%, R 5.6%, T 17.4%. |
+| [`queue-chorus-c9.png`](survivors/queue-chorus-c9.png) | 1024×1024 | 4 | 828 (768, not graded) | 0 | 97.8% | 3.8 / 5.2 / 15.0% | pass | **#1** | The clearest single-file line of all rounds: five of one walker from the left third, each step smaller and dimmer, amber breast lights, black voids, facing left, cut at the canvas foot, in bold slate, pale teal and cold gold panes with heavy lead. The group is centred on the canvas. Margins L 3.8%, R 5.2%, T 15.0%: clear of both edges but short of the 8% asked, and it starts in the left third rather than the ledger's centre-left. |
+| `queue-chorus-c10.png` | 1024×1024 | 1 | 1407 (1265, not graded) | [0, 0, 0, 1] | 98.6% | 4.1 / 0.5 / 16.9% | **fail** | reject | Gate fail: the bottom-right corner is at alpha 1, with 142 px of dark frame where the last figure reaches the right edge (right margin 0.5%). Five walkers from the left third; the teal and yellow run more saturated than slate (S 53). |
+| `queue-chorus-c11.png` | 1024×1024 | 0 | 1311 (1297, not graded) | [0, 0, 0, 1] | 98.0% | 3.4 / 0.7 / 22.3% | **fail** | reject | Gate fail: the bottom-right corner is at alpha 1; the last of four figures stops 7 px from the right edge (right margin 0.7%). Otherwise a strong four-figure line from the left third in the briefed palette. |
+
+#### Unlit Way plates (#563)
+
+| File | Size | Reference | Grain | Canvas | Verdict | Notes |
+|---|---|---|---|---|---|---|
+| [`unlit-way-c5.png`](survivors/unlit-way-c5.png) | 1536×1024 | attached | 4.32 | pass | **#1** | Both bands clear: dead posts on the road's left verge at 33-36%, 45%, 53% and 58%, and the flat stone seat at 55-71%, wide, its right end at the right band's edge. The road runs out into plain darkness with no arch, door or dawn; amber from low left. Clean: grain 4.32 against unlit-way-c's 3.33 and round 4's 6.91-12.58. The finish is photographic (lit stone and fog rather than a painting), and the road's lit paving fills the lower left of the bottom 30%. Mean luminance 23.9. |
+| [`unlit-way-c6.png`](survivors/unlit-way-c6.png) | 1536×1024 | attached | 4.13 | pass | **#2** | The nearest post stands at 28-31%, at the left band's edge behind the hero; the others at 40-49%. The seat is on its mark at 55-68%, the right band is empty, and the road runs into darkness. Clean (grain 4.13). Photographic finish; lit paving in the lower left of the bottom 30%. |
+| `unlit-way-c7.png` | 1536×1024 | none | 6.25 | pass | reject | No reference. The nearest post, the tallest thing in the frame, stands in the right band at 72-77% of the width, behind the Lamplighter's seat, with the row of posts on the right verge. The seat is at 59-71%. Painted rather than photographic; grain 6.25. |
+| `unlit-way-c8.png` | 1536×1024 | none | 4.68 | pass | #4, sheet only | No reference. Posts on both verges: at 33-42% on the left and, the tallest thing in the frame, at 66-72% on the right, at the right band's edge beside the Lamplighter's seat. The seat is on its mark at 56-66%; the road runs into darkness. Clean (grain 4.68) and a little more painted than c5 and c6; lit paving fills the bottom 30%. |
+| `unlit-way-end-c5.png` | 1536×1024 | attached | 2.49 | pass | #5, sheet only | The last dead lamp at 57-61% on broken slabs (28-72%), mist beyond, the door a small lit arch at 67-68%; the bottom 30% is dark. Clean (grain 2.49, below unlit-way-end-g's 3.73). But a warm amber shaft crosses the left band from the top-left corner, so the plate is warmer and more dramatic than 'emptier and colder', and the finish is photographic. |
+| `unlit-way-end-c6.png` | 1536×1024 | attached | 2.90 | pass | #3, sheet only | The last dead lamp at 37-41% where the broken slabs (22-70%) end, mist beyond, the door a small arch outline at 67-68%, a faint amber haze in the top-left corner; the bottom 30% is dark. Clean (grain 2.90). The finish is photographic, and the slabs reach just into the left band at ground level. |
+| [`unlit-way-end-c7.png`](survivors/unlit-way-end-c7.png) | 1536×1024 | none | 2.73 | pass | **#2** | No reference. The last lamp on a stone pedestal at 37-42%, broken slabs at 33-72% sinking into mist, the door a thin lit arch at 65-66%; a soft shaft of light in the upper right band, sky only. Painted and clean (grain 2.73); the bottom 30% is dark mist. |
+| [`unlit-way-end-c8.png`](survivors/unlit-way-end-c8.png) | 1536×1024 | none | 2.37 | pass | **#1** | No reference. The emptiest and coldest end plate of all rounds: the last dead lamp, its dark lantern on a bracket, at 40-45%; broken slabs at 20-72% sinking into mist; the door a small arch outline at 59% on the horizon; nothing else. Both bands hold only mist and a low slab edge; the bottom 30% is dark. Painted and the cleanest of the round (grain 2.37). |
+
+#### Hollow Lamplighter, grieving (#561)
+
+The reference's pole, measured: one straight staff about 1,000 px from end to
+end, from a pointed, ringed foot on the ground to the shepherd's crook at its
+top end, held in the hand on the viewer's right at upper-chest height. A ring
+hangs from the crook's tip, and the lantern (about 95 by 235 px with its cap
+and finial) hangs from the ring. c3's pole, measured the same way, is cut to
+about 580 px, with a ball knob where the crook should end the staff and a
+smaller crook sprouting from the shaft about 60% of the way down; the hand and
+the lantern's size match.
+
+| File | Size | Magenta | Frame dark (bottom edge) | Corners | ≥240 | Staff | Gate | Verdict | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| [`lamplighter-grieving-c5.png`](survivors/lamplighter-grieving-c5.png) | 682×1024 | 0 | 0 (0) | 0 | 95.0% | about 840 px, tipped across the body; crook at the end | pass | **#1** | The only take that keeps the reference's pole and lowers it by tipping it: the staff runs from its pointed, ringed foot at the upper left, across the body, through the hand on the viewer's right at the hip, to the crook at its end by his feet, where the ring hangs the same lantern just above the ground. About 840 px end to end (84% of the reference's 1,000), and not turned end over end. Head bowed, the free hand flat on the chest; palette and both rims as the reference (S 61, V 25; warm 22.8%, L:R 0.83 against 0.74). In the bust crop the staff crosses the torso, close to wary's pole across the body. |
+| `lamplighter-grieving-c6.png` | 682×1024 | 0 | 0 (0) | 0 | 94.4% | about 500 px, end over end; crook at the end | pass | #4, sheet only | The pole's parts are right (pointed ringed foot, crook at the end, ring, lantern), but it is turned end over end and cut to about 500 px, half the reference's: c3's fault in length. Head bowed, hand flat on the chest, lantern by his feet; palette and rims as the reference (S 61, V 25; warm 22.3%). |
+| [`lamplighter-grieving-c7.png`](survivors/lamplighter-grieving-c7.png) | 682×1024 | 1 | 48 (0) | 0 | 93.6% | about 735 px, end over end; crook at the end | pass | **#2** | The reference's pole turned end over end: the pointed foot rises past his head to 8 px from the top edge, and the crook at the other end hangs the same lantern by his feet. About 735 px (73%), gripped low at the hip. Head bowed deep, the free hand flat on the chest; palette and both rims as the reference (S 61, V 26; warm 22.7%). |
+| `lamplighter-grieving-c8.png` | 682×1024 | 0 | 16 (0) | 0 | 94.1% | about 750 px, end over end; crook at the end | pass | #3, sheet only | As c7, gripped higher at the chest, about 750 px (75%). The pointed foot touches the top edge (3 px), so the staff reads cut there. Palette and rims as the reference (S 62, V 24; warm 20.5%). |
+
+The earlier takes stay in the running, but none carries the reference's pole.
+Grok's a has a side crook partway down a staff of about 600 px, and b a finial
+where the crook should be, with a much larger lantern hung from its foot.
+Codex's c1 has an empty crook at the top and the lantern on a ring partway
+down (about 730 px), and c2 and c4 have c3's side crook (about 640 and 690 px).
+
+### Cross-round ranking after round 5
+
+| File | Ranking | What round 5 changed |
+|---|---|---|
+| `queue-chorus` | c9, c7, c6, h, g, c8, e | Round 5 leads. c9 and c7 keep the ledger's line of five in slate, pale teal and cold gold with no royal blue, inside both side edges and cut at the canvas foot, in bolder leaded glass than Grok's h. Neither keeps the 8% margins asked for: c9's sides are 3.8% and 5.2%, c7's right 3.1%. h, which James did not pick, drops to #4. |
+| `unlit-way` | c5, c6, c, c8, i, c3, c4, c1, c2 | Round 5 leads. c5 keeps both bands clear with the seat just right of centre, at grain 4.32 against round 4's 6.91–12.58; c6 does the same with its nearest post at the left band's edge. Both read photographic rather than painted. James's held c rises to #3, above round 4's noisier c3 and c4. |
+| `unlit-way-end` | c8, c7, c6, g, c5, c1, c4, f, c3 | Round 5 leads. c8 is the emptiest and coldest end plate of any round, with the door a small, far arch at 59%, and all four round-5 end plates are cleaner than James's held g (2.37–2.90 against 3.73). g rises to #4, above round 4's noisier c1 and c4. |
+| `lamplighter-grieving` | c5, c7, c8, c6, c4, c2, c1, b, a | Round 5 leads, on the pole. c5 keeps the reference's staff with the crook at its end and tips it across the body, so the lantern hangs by his feet; c7 and c8 turn it end over end; c6 cuts it to half. c3 is withdrawn, and every earlier take's pole differs from the reference's. |
+
+### Round 5 findings
+
+1. **The margin clause kept the centre-left Queues off the edges, but not at
+   8%.** All three centre-left takes pass the gate. Two of the three left-third
+   takes ran the line into the right edge again (c10 and c11, right margins
+   0.5% and 0.7%). No take kept 8% on the right: the four survivors keep
+   3.1–5.6%. Codex's own check reported c6's shortfall.
+2. **The slate sentence fixed the palette.** The saturated-blue share is 0.0% on
+   all six, against 10–19% on round 4's. Mean saturation is 27–34 on the
+   survivors, against round 4's 56–72 and Grok's 22–29.
+3. **The finish wording and the simpler structure took the noise out.** Grain
+   fell from 6.91–12.58 to 4.13–6.25 on `unlit-way`, and from 8.38–12.30 to
+   2.37–2.90 on the end plate. All four end plates are cleaner than James's
+   held g, and the two `unlit-way` plates on top are within 1.3 times his held
+   c.
+4. **The style reference was not the noise; it set the look.** The takes without
+   it were not cleaner (`unlit-way` 6.25 and 4.68 against 4.32 and 4.13; the end
+   plate 2.73 and 2.37 against 2.49 and 2.90). But the four takes that attached
+   it read photographic, lit stone in fog, and the four without it read more
+   painted.
+5. **Placement still drifts on `unlit-way`.** Its no-reference c7 lined the posts
+   along the right verge, the nearest in the right band, and c8 stood one at
+   that band's edge. All four end plates kept the door inside the centre band,
+   at 59–68% of the width.
+6. **Codex kept the one-image, no-edit rule in all 18 calls,** and the image
+   tool's own files prove it, so no round-5 render carries a borrowed alpha or
+   a crop.
+7. **The grieving pose cannot show the pole at full length in this canvas.**
+   With the lantern nearly resting on the ground, the crook's tip hangs about
+   715 px down, and no point of the 682×1024 canvas is more than about 930 px
+   from it. A 1,000 px staff therefore fits only foreshortened, which no take
+   drew. c5 tips it across the body at about 840 px, c7 and c8 turn it end over
+   end at about 735–750 px, and c6 cuts it to about 500. Every round-5 take puts
+   the crook back at the staff's end, which c3 had lost. Showing the full length
+   would need a smaller lowering, such as the lantern at knee height: a change
+   to the brief for James, not made here.
 
 ## Keeper — #560
 
