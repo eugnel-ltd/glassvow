@@ -22,7 +22,7 @@
 
 ## The images
 
-Every still is at the stage's device density (`--vp=2360x1640`, the 1180×820 pad stage at 2×; `--vp=2532x1170`, the 844×390 handset stage at 3×), shrunk to 1024 px on the long edge. The stills of the choice screens go through `tools/shot.sh`; the result beat and the turn strips come from a scratch driver that plays the same handlers the game calls (see *Reproduce*). The files say *handset* where the shape says *phone*: the CI classifier reads that word in a path as a release-platform change.
+Every capture is at the stage's device density (`--vp=2360x1640`, the 1180×820 pad stage at 2×; `--vp=2532x1170`, the 844×390 handset stage at 3×); the stills are shrunk to 1024 px on the long edge, the strips and the sweeps to 1400 px wide. The stills of the choice screens and the sweeps go through `tools/shot.sh`; the result beat and the turn strips come from a scratch driver that plays the same handlers the game calls (see *Reproduce*). The files say *handset* where the shape says *phone*: the CI classifier reads that word in a path as a release-platform change.
 
 | File | Shows |
 |---|---|
@@ -43,7 +43,7 @@ Every still is at the stage's device density (`--vp=2360x1640`, the 1180×820 pa
 
 ## Reproduce
 
-The choice-screen stills and the sweep are Development Scenarios (`tools/dev.py --scenario` builds the same runs). The Kindling still of the pad is:
+The choice-screen stills and the sweep are Development Scenarios, so they run on the isolated Development profile and never touch a real save. The Kindling still of the pad is:
 
 ```sh
 tools/shot.sh --scenario='{"id":"custom","revision":1,"seed":12,"locale":"en","overrides":{"act":0,"node":"2,4","gold":120,"add_cards":["uppercut","quakeblow","warCry"]}}' \
