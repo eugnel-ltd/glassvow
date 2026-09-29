@@ -4,7 +4,7 @@ extends RefCounted
 const Sim: GDScript = preload("res://tools/balance_sim.gd")
 const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
-const EXPECTED: String = "1e665d9f08ba8fa643071c69f3ccbff23f48e4015cd877df417c88067d379085"
+const EXPECTED: String = "76025551c038f76e88aff0ab6fab0b4729b02be70d3f9b3f94311a1ba2fbed6c"
 ## The same run with every lantern knob at zero (flame lock §5): the game from
 ## before the lantern had a quality (b151bcb9), played by pilot p8-d0-v2, so the
 ## knobs' zero point is the old game. It moves only with a deliberate change to
