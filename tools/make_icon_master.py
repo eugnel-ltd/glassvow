@@ -8,9 +8,10 @@ review of PR #53). A full-bleed square reads as a black tile in the Dock —
 
     tools/make_icon_master.py <candidate.png> <out.png>
 
-The candidate's lit disc (~759px) is scaled up ~10% and centred inside the
-live area; the ground is NIGHT_BOT; corners follow Apple's ~22.37% radius.
-Run tools/make_icon.sh afterwards to rebuild the icns ladder.
+The candidate fills the live area at its own scale, uncropped, so the
+composition is the one that was picked. Corners follow Apple's ~22.37% radius,
+drawn at 4x and box-reduced so the edge is anti-aliased. Run
+tools/make_icon.sh afterwards to rebuild the icns ladder.
 """
 import sys
 
@@ -20,7 +21,7 @@ NIGHT = (4, 5, 11, 255)
 CANVAS = 1024
 LIVE = 824
 RADIUS = round(LIVE * 0.2237)
-DISC_SCALE = 1.10
+SUPERSAMPLE = 4
 
 
 def main() -> int:
@@ -28,21 +29,18 @@ def main() -> int:
     art = Image.open(src_path).convert("RGBA")
     if art.size != (CANVAS, CANVAS):
         art = art.resize((CANVAS, CANVAS), Image.LANCZOS)
-    scaled = art.resize((round(CANVAS * DISC_SCALE),) * 2, Image.LANCZOS)
-    off = (scaled.width - CANVAS) // 2
-    art = scaled.crop((off, off, off + CANVAS, off + CANVAS))
 
     plate = Image.new("RGBA", (CANVAS, CANVAS), NIGHT)
     inset = (CANVAS - LIVE) // 2
     plate.paste(art.resize((LIVE, LIVE), Image.LANCZOS), (inset, inset))
 
-    mask = Image.new("L", (CANVAS, CANVAS), 0)
+    ss = SUPERSAMPLE
+    mask = Image.new("L", (CANVAS * ss,) * 2, 0)
     ImageDraw.Draw(mask).rounded_rectangle(
-        (inset, inset, inset + LIVE - 1, inset + LIVE - 1),
-        radius=RADIUS, fill=255)
-    out = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
-    out.paste(plate, (0, 0), mask)
-    out.save(out_path)
+        (inset * ss, inset * ss, (inset + LIVE) * ss - 1, (inset + LIVE) * ss - 1),
+        radius=RADIUS * ss, fill=255)
+    plate.putalpha(mask.reduce(ss))
+    plate.save(out_path)
     print(f"wrote {out_path} (live {LIVE}px, radius {RADIUS}px)")
     return 0
 
