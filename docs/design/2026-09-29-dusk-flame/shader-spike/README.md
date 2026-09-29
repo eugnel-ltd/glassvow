@@ -2,6 +2,8 @@
 
 **Status:** spike for the owner's approval on device, 2026-09-29. Nothing in production reads it: no HUD, reward or shop wiring, no PR. Branch `spike/flame-shader-lab`. Author: Claude, for the presentation lane. Authority: the Flame lock ([`../README.md`](../README.md)) §6 and §9; the task is step 1 of issue #577.
 
+> **Superseded for production by lock PR 5** ([`../hud/README.md`](../hud/README.md)): the shader and `LanternFlame` now live in `presentation/combat/`, the leaded look is the only look, Kindling burns as the lantern is painted, and the ember numeral sits under the lantern's foot. This record, its images and its scripts describe the spike as it was; the `--look` flag and the vector look it drives exist only on the spike branch.
+
 **The question.** Can one material on the HUD's own lantern art say the Flame implicitly at HUD size — colour from the dominant way with a fringe at the tips, tier from stability and height, way from shape — without competing with the ember pips, and what does it cost the frame?
 
 **The answer.** Yes, with one condition that belongs to the HUD lane: the ember numeral sits over the upper half of the lantern's glass and hides the top of every figure. Recommendation: the **leaded** look, the numeral moved off the glass, the budget treated as negligible on the Mac and re-measured on the floor devices in step 2. Details and the open questions are at the end.
