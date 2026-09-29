@@ -2,7 +2,7 @@
 title: "Capture through a long-lived host, not a process per screenshot"
 date: 2026-07-26
 last_refreshed: 2026-07-29
-last_updated: 2026-08-20
+last_updated: 2026-09-29
 category: tooling-decisions
 module: tools/live
 problem_type: tooling_decision
@@ -68,7 +68,7 @@ func _capture_and_quit(path: String) -> void:
 	get_tree().quit(0)
 ```
 
-(`application/main.gd:666` (`_capture_and_quit`).) It waits 30 frames for the
+(`application/main.gd:692` (`_capture_and_quit`).) It waits 30 frames for the
 first paint, optionally a `--settle=` timer and a targeting-hint extra settle,
 reads the viewport texture, and quits.
 
@@ -256,13 +256,16 @@ the host's own channel and each poll for up to 400 × 0.05s.
 (`application/main.gd` (`_capture_and_quit`)), which is the exact behaviour the
 host exists to avoid. `tools/live.gd` and `tools/live.sh` both say so.
 
-**Preflight the normal v2 profile before starting a run-shaped capture.**
-`Main._new_run()` now stores through `SaveService.RUN_PATH`, and a reload
-re-instantiates `Main` against the same `user://` directory. `--fight` and
-`--enter` can therefore replace an active run; `--resume` deliberately restores
-the durable checkpoint. Stop if a normal run or Vigil exists, or use a
-disposable profile context. Afterwards, clear only the known test run ID. The
-full safety pattern is recorded in
+**A run-shaped capture runs on the Development profile.** `Main._new_run()`
+stores through the active profile's run path, and a reload re-instantiates `Main`
+against the same `user://` directory and the same launch arguments. Since #360
+any launch that carries a game argument (`--fight`, `--enter`, `--map`,
+`--resume`, …) runs on the isolated `user://glassvow_dev_*` profile, so a
+run-shaped capture no longer replaces the player's run or Vigil and needs no
+preflight; `--resume` restores the Development profile's own checkpoint. A bare
+`tools/live.sh start` is still the player's own boot, and `--production-save`
+selects the player's profile on purpose (`docs/dev-tools.md`, Save profile). The
+pattern for driving whole-run routes is recorded in
 [Verify whole-run routes with headed input and throwaway application drivers](../workflow-issues/verify-whole-run-routes-with-headed-input-and-throwaway-drivers.md).
 
 ### Hot reload is the load-bearing part
@@ -422,9 +425,10 @@ with no further transitions across a subsequent `reload` and captures.
   gone. The rebuilt `Main` sees the same `user://` data and the same launch
   arguments: `--resume` reloads the saved checkpoint, while `--fight` and
   `--enter` create and store a run. Reproducibility therefore comes from a known
-  seed and a preflighted disposable profile, not from reload alone
-  (`application/main.gd` (`_new_run`), `application/main.gd`
-  (`_continue_run`), `application/save_service.gd` (`RUN_PATH`)).
+  seed, not from reload alone; the run they store is the Development profile's, so
+  the player's is never at risk (`application/main.gd` (`_new_run`),
+  `application/main.gd` (`_continue_run`), `application/save_service.gd`
+  (`RUN_PATH`)).
 
 - **Editing the host or the autoload set still needs a restart**, as the
   `tools/live.gd` module docstring records.

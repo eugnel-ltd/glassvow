@@ -53,10 +53,13 @@ identities (`pending_scene` is not an OVERRIDE_KEY — #202). `unsealing-replay`
 is the expressible named Scenario: Vigil with six panes, window-body tap
 replays this staging.
 
-**A `--scene=` shot leaves `user://glassvow_run_v2.json` behind, and four test
-files then diverge on it** (`test_opening_flow`, `test_resume_routes`,
-`test_scenario_catalogue`, `test_scene_wiring` — 26 failures, none real).
-Delete that file before running the suite after a capture session.
+A `--scene=` shot runs on the isolated Development profile
+(`user://glassvow_dev_*`), so it leaves the player's
+`user://glassvow_run_v2.json` alone and the suite has nothing to diverge on. Until
+#360 a capture boot did write that file, and four test files
+(`test_opening_flow`, `test_resume_routes`, `test_scenario_catalogue`,
+`test_scene_wiring`) failed on it. `--production-save` opts back in; see
+`docs/dev-tools.md`.
 
 ## Spec note
 

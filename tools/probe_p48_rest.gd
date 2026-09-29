@@ -1,10 +1,14 @@
 extends SceneTree
 ## Throwaway probe for the P4.8 overlay-choice verification. Domain-only: walks
 ## a fresh run's map to the last row before the guaranteed rest row (ROWS-2),
-## clearing nodes without fighting, and stores the save. A live host booted
-## afterwards continues this run one click away from the rest screen, whose
-## TEMPER A CARD choice is one of the five P4.8 scrim overlays.
+## clearing nodes without fighting, and stores the player's real save — on
+## purpose, so a live host can resume it. That host has to be booted with
+## `--production-save`: any other game argument runs on the isolated Development
+## profile and would never see this save. It then continues this run one click
+## away from the rest screen, whose TEMPER A CARD choice is one of the five P4.8
+## scrim overlays.
 ##   godot --headless -s res://tools/probe_p48_rest.gd
+##   tools/live.sh start --production-save
 
 
 func _initialize() -> void:

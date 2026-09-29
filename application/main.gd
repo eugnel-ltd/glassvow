@@ -56,10 +56,14 @@ var _run_over: bool = false
 var _bench_fight: bool = false
 var _run_save_path: String = SaveService.RUN_PATH
 var _vigil_save_path: String = SaveService.VIGIL_PATH
+## The launch arguments this boot reads: the process's own, unless a test stands
+## in for them before Main enters the tree (`Main.new()` alone never runs `_ready`).
+var _boot_args: PackedStringArray = OS.get_cmdline_user_args()
 ## Set when the optional Development boot handled this launch.
 var _dev_claimed: bool = false
 ## Dev boots (`--fight=` / `--map` / `--enter=` / `--dawn` / `--shop`) skip the
-## opening and the L0 departure plant — they construct against the real vigil.
+## opening and the L0 departure plant — they construct against the Development
+## profile's Vigil, which `install_profile` put in place before any of them ran.
 var _opening_suppressed: bool = false
 var last_dev_error: String = ""
 var _forced_seed: int = -1  # --seed=N: reproducible shots for layout diffing
@@ -149,6 +153,15 @@ func _rebuild_active_route() -> void:
 
 func _ready() -> void:
 	print("glassvow boot " + str(Engine.get_version_info()["string"]))
+	# Whose save this launch reads and writes is settled before anything else can
+	# touch one. A tooling boot lands on the isolated Development profile unless
+	# it names `--production-save`; the excluded boot owns that rule and Main only
+	# installs the answer (`install_profile`).
+	var boot: GDScript = null
+	if DevTools.available():
+		boot = load(DevTools.BOOT) as GDScript
+	if boot != null:
+		boot.call("select_profile", self, _boot_args)
 	content = ContentDB.load_full()
 	_vigil = _load_vigil()
 	Preferences.active = Preferences.read_from_disk()
@@ -175,6 +188,9 @@ func _ready() -> void:
 	# capture hangs rather than failing. For a LOOP of captures use tools/live.sh
 	# instead: it boots one instance and hot-reloads it, so only the first shot of
 	# a session takes the desktop off you.
+	# Every boot below carries an argument, so it runs on the Development profile
+	# (`user://glassvow_dev_*`) and leaves the player's run and Vigil alone; add
+	# --production-save to use the player's own on purpose (docs/dev-tools.md).
 	# tools/shot.sh --shot=/tmp/map.png [--seed=N] [--enter=0]
 	# tools/shot.sh --cards[=id,id] --shot=/tmp/cards.png        (card designer)
 	# tools/shot.sh --enemies|--chips|--hud|--reward --shot=...  (labs)
@@ -220,7 +236,7 @@ func _ready() -> void:
 	var map_asset_bench: bool = false
 	var scene_shot: String = ""
 	var scene_cursor: int = 0
-	for arg: String in OS.get_cmdline_user_args():
+	for arg: String in _boot_args:
 		if arg.begins_with("--shot="):
 			shot_path = arg.trim_prefix("--shot=")
 		elif arg.begins_with("--seed="):
@@ -327,7 +343,7 @@ func _ready() -> void:
 	# labs, --fight=, --vp=) owns its own window and must not be hijacked by a
 	# saved fullscreen choice. Applied before the shape pick so the stage is
 	# chosen against the window the player will actually see.
-	if OS.get_cmdline_user_args().is_empty():
+	if _boot_args.is_empty():
 		Preferences.active.apply_display()
 	_apply_shape()
 	var window: Window = get_window()
@@ -421,9 +437,8 @@ func _ready() -> void:
 			_capture_and_quit(shot_path)
 		return
 	if DevTools.available():
-		var boot: GDScript = load(DevTools.BOOT) as GDScript
 		if boot != null:
-			boot.call("apply", self, OS.get_cmdline_user_args())
+			boot.call("apply", self, _boot_args)
 		if _dev_claimed:
 			if performance_probe:
 				_attach_performance_probe()
@@ -593,12 +608,12 @@ func _quit_game() -> void:
 
 
 ## The whole profile boundary. `_run_save_path` / `_vigil_save_path` are the
-## authority — production defaults on a normal boot, the kernel's isolated
-## `user://glassvow_dev_*` files once `apply_dev_scenario` repoints them — and
-## these six helpers are the only place in this file allowed to name a
-## `SaveService` entry point. Every other runtime save, load and clear goes
-## through them, so a Scenario can never read or overwrite a real pilgrimage
-## and no screen has to know which profile is live.
+## authority — production defaults on a normal boot, the isolated
+## `user://glassvow_dev_*` files once `install_profile` repoints them (a
+## Scenario, or any tooling boot) — and these six helpers are the only place in
+## this file allowed to name a `SaveService` entry point. Every other runtime
+## save, load and clear goes through them, so a Scenario can never read or
+## overwrite a real pilgrimage and no screen has to know which profile is live.
 ## `tests/test_profile_isolation.gd` re-censuses this file and fails on any
 ## `SaveService` call outside these six, or on any one of the six that stops
 ## handing over its path field.
@@ -626,6 +641,17 @@ func _clear_run(expected_run_id: String = "") -> bool:
 
 func _clear_vigil() -> void:
 	SaveService.clear_vigil(_vigil_save_path)
+
+
+## The one place a profile is installed after construction. Both path fields and
+## the in-memory Vigil move together, so nothing read from one profile can be
+## written into another. A Scenario adopts its kernel's files through here, and
+## so does every tooling boot that carries no Scenario (`presentation/dev/boot.gd`
+## picks the files; this only binds them).
+func install_profile(run_path: String, vigil_path: String) -> void:
+	_run_save_path = run_path
+	_vigil_save_path = vigil_path
+	_vigil = _load_vigil()
 
 
 ## Window close is a clean quit: with `config/auto_accept_quit=false` the engine
@@ -1226,9 +1252,7 @@ func apply_dev_scenario(ref: ScenarioReference) -> bool:
 				push_error(last_dev_error)
 				return false
 			_content_hydration_pending = true
-	_run_save_path = kernel.run_path
-	_vigil_save_path = kernel.vigil_path
-	_vigil = _load_vigil()
+	install_profile(kernel.run_path, kernel.vigil_path)
 	if ref.scenario_id == "vigil" or ref.scenario_id == "unsealing-replay":
 		# Install the constructed run so no earlier run survives the profile
 		# switch; the Vigil is the destination, not a detour from a live run.
