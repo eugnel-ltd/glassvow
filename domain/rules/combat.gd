@@ -16,6 +16,7 @@ var quests: QuestRules
 const SPECIAL_IDS: Array[String] = [
 	"leech", "execute", "momentum", "doubleBlock", "phantom", "devour",
 	"pyreTithe", "catalyst", "shatterEcho", "flawless", "emberNova", "emberdance",
+	"cleft", "totality",
 ]
 const POTION_IDS: Array[String] = [
 	"healing", "strength", "swift", "block", "fire", "venom", "energy",
@@ -332,6 +333,15 @@ func _compute_intents(run: RunState, cb: CombatState) -> void:
 		cb.queue.append({"t": EventTypes.INTENT, "idx": e.idx, "move": String(e.move_key)})
 
 
+## The enemy about to strike you (Eclipse Step): the first living foe, not
+## Staggered, whose intent deals damage. null when no one is.
+static func _striker(cb: CombatState) -> EnemyCombatant:
+	for e: EnemyCombatant in cb.enemies:
+		if e.hp > 0 and not e.staggered and e.move().get("dmg") != null:
+			return e
+	return null
+
+
 func _start_player_turn(run: RunState, cb: CombatState) -> void:
 	if cb.over:
 		return
@@ -435,6 +445,13 @@ func gain_embers(run: RunState, cb: CombatState, n: int) -> int:
 	cb.embers = next
 	cb.queue.append({"t": EventTypes.EMBER, "n": delta, "total": cb.embers})
 	return delta
+
+
+## Embers paid out of the lantern (the Art, a card's Ember price, a spill),
+## tallied in `run.stats.embersSpent`.
+func _spend_embers(run: RunState, cb: CombatState, n: int) -> void:
+	run.stats["embersSpent"] = _ji(run.stats.get("embersSpent", 0)) + n
+	gain_embers(run, cb, -n)
 
 
 ## Damage the player. source: enemy idx | "thorns" | "poison" | "burn" | "self".
@@ -759,6 +776,10 @@ func can_play(run: RunState, cb: CombatState, inst: CardInst, target_idx: Varian
 		return false
 	if eff_cost(run, cb, inst) > cb.player.energy:
 		return false
+	# An Ember price the lantern cannot meet leaves the card unplayable, as it
+	# leaves the Art unusable.
+	if _ji(d.get("emberCost", 0)) > cb.embers:
+		return false
 	if str(d.get("target", "")) == "enemy":
 		if target_idx == null:
 			return false
@@ -791,6 +812,9 @@ func play_card(run: RunState, cb: CombatState, uid: int, target_idx: Variant = n
 	run.stats["cardsPlayed"] = _ji(run.stats.get("cardsPlayed", 0)) + 1
 	cb.queue.append({"t": EventTypes.PLAY, "uid": inst.uid, "id": String(inst.id), "targetIdx": target_idx})
 	cb.queue.append({"t": EventTypes.ENERGY, "n": p.energy})
+	var ember_cost: int = _ji(d.get("emberCost", 0))
+	if ember_cost > 0:
+		_spend_embers(run, cb, ember_cost)
 
 	var card_type: String = str(d.get("type", ""))
 	var seal_mult: int = 1
@@ -913,6 +937,10 @@ func _apply_effect(
 				for e: EnemyCombatant in cb.enemies:
 					if e.hp > 0:
 						add_status_enemy(cb, e, sid, sn, run)
+			elif who == "striker":
+				var striker: EnemyCombatant = _striker(cb)
+				if striker != null:
+					add_status_enemy(cb, striker, sid, sn, run)
 			elif target != null and target.hp > 0:
 				add_status_enemy(cb, target, sid, sn, run)
 		"addCard":
@@ -968,10 +996,14 @@ func _apply_special(
 			if leech_loss > 0:
 				heal_player(run, cb, leech_loss / 2)
 		"execute":
-			var bonus: int = 0
-			if _sget(target.statuses, "vulnerable") > 0:
-				bonus = _ji(fx.get("bonus", 0))
-			hit_enemy(run, cb, target, _ji(fx["n"]) + bonus, true, damage_mult)
+			# Each hit reads Cracked for itself: Faultline strikes once, Tremor thrice.
+			for _t: int in range(_ji(fx.get("times", 1))):
+				if cb.over:
+					return
+				var bonus: int = 0
+				if _sget(target.statuses, "vulnerable") > 0:
+					bonus = _ji(fx.get("bonus", 0))
+				hit_enemy(run, cb, target, _ji(fx["n"]) + bonus, true, damage_mult)
 		"momentum":
 			hit_enemy(run, cb, target, _ji(fx["n"]) + inst.bonus, true, damage_mult)
 			inst.bonus += _ji(fx.get("grow", 0))
@@ -1009,9 +1041,22 @@ func _apply_special(
 		"emberdance":
 			var spent: int = cb.embers
 			if spent > 0:
-				run.stats["embersSpent"] = _ji(run.stats.get("embersSpent", 0)) + spent
-				gain_embers(run, cb, -spent)
+				_spend_embers(run, cb, spent)
 				gain_block_player(cb, _ji(fx["n"]) * spent, false, run)
+		"cleft":
+			# The target is read as the blow lands: Cracked glass it kills still
+			# stokes the hand.
+			var was_cracked: bool = _sget(target.statuses, "vulnerable") > 0
+			hit_enemy(run, cb, target, _ji(fx["n"]), true, damage_mult)
+			if was_cracked and not cb.over:
+				if target.hp > 0:
+					add_status_enemy(cb, target, "vulnerable", _ji(fx["cracked"]), run)
+				add_status_player(cb, "str", _ji(fx["fervor"]))
+		"totality":
+			hit_enemy(run, cb, target, _ji(fx["n"]), true, damage_mult)
+			var cracked: int = _sget(target.statuses, "vulnerable")
+			if cracked > 0 and target.hp > 0 and not cb.over:
+				add_status_enemy(cb, target, "vulnerable", cracked, run)
 		_:
 			push_error("CombatRules: unknown special %s" % sid)
 
@@ -1138,7 +1183,11 @@ func end_turn(run: RunState, cb: CombatState) -> void:
 		var ritual: int = _sget(e.statuses, "ritual")
 		if ritual > 0:
 			add_status_enemy(cb, e, "str", ritual)
-		_tick_status(e.statuses, "vulnerable")
+		# The Crown of the Eclipse holds the Cracked you apply. Only the player
+		# cracks an enemy (no enemy move, omen or affix does), so the enemy's
+		# stack simply stops wearing off.
+		if not run.has_relic("crownOfTheEclipse"):
+			_tick_status(e.statuses, "vulnerable")
 		_tick_status(e.statuses, "weak")
 	if cb.over:
 		return
@@ -1207,9 +1256,7 @@ func use_art(run: RunState, cb: CombatState) -> bool:
 		return false
 	var art: Dictionary = content.arts[String(run.art)]
 	cb.art_used_turn = cb.turn
-	var cost: int = _ji(art.get("cost", 0))
-	run.stats["embersSpent"] = _ji(run.stats.get("embersSpent", 0)) + cost
-	gain_embers(run, cb, -cost)
+	_spend_embers(run, cb, _ji(art.get("cost", 0)))
 	cb.queue.append({"t": EventTypes.ART, "id": String(run.art)})
 	var effects: Array = art.get("effects", [])
 	for fx_v: Variant in effects:
@@ -1359,7 +1406,10 @@ func preview_play(
 				var bonus: int = 0
 				if target != null and _sget(target.statuses, "vulnerable") > 0:
 					bonus = _ji(fx.get("bonus", 0))
-				hits.append({"dmg": _preview_hit(p, target, _ji(fx["n"]) + bonus), "times": 1})
+				hits.append({"dmg": _preview_hit(p, target, _ji(fx["n"]) + bonus),
+					"times": _ji(fx.get("times", 1))})
+			elif sid == "cleft" or sid == "totality":
+				hits.append({"dmg": _preview_hit(p, target, _ji(fx["n"])), "times": 1})
 			elif sid == "momentum":
 				hits.append({"dmg": _preview_hit(p, target, _ji(fx["n"]) + inst.bonus), "times": 1})
 			elif sid == "doubleBlock":

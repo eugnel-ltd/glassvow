@@ -4,7 +4,7 @@ extends RefCounted
 const Sim: GDScript = preload("res://tools/balance_sim.gd")
 const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
-const EXPECTED: String = "1222aabe4ffa3759d75ed225d2006942e56cd42857c9ed04dd02efae2a3cfb5c"
+const EXPECTED: String = "ecd4edc11a7a9ce5be361907d4d1486dc8ddc1fec9450fa4173c06671f7f6025"
 
 
 static func run(fails: Array[String]) -> void:

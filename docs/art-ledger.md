@@ -1169,3 +1169,32 @@ their shipped art as the `sovereign` and `shade` actors, one mood each. Mood
 portraits wait until a scene needs more than one register from them; their
 voice rules (`02-cast.md`: the Sovereign's avoidance of "walk", the Shade's
 fragments) should shape the poses then.
+
+## Owed — shipped content still on its fallback
+
+Content that ships before its art exists. Each row renders today on the
+existing fallback, so nothing is broken, but nothing is finished either: a card
+without `cards/<id>.jpg` shows a bare pane (`presentation/combat/card_view.gd`),
+a relic without `relics/<id>.png` shows no image on the reward, shop and crown
+screens (each checks `ResourceLoader.exists` first), and a deed without
+`deeds/<id>.png` leaves its Vigil row's art slot empty. Generate against the
+bibles in the first section (`card-art-bible.md`, `relic-art-bible.md`, and
+`meta-art-bible.md` for deeds) at the siblings' sizes: cards 2048×1374 JPEG,
+relics 512×341 RGBA, deeds 512×512 RGBA. When an asset lands, delete its row
+and give it a section of its own with the prompt that made it.
+
+**The Edge way** (the Duskblade Flame lock, PR 6, 2026-09-29). The way's
+colour is violet-crimson; its glass reads as the precise cut: cracks, the
+eclipse, a light dimmed.
+
+| Asset | Content | Subject |
+|---|---|---|
+| `cards/splinterCut.jpg` | Splinter Cut 裂痕斬, common attack | A short, clean slash leaving one fine crack across a pane, violet-crimson light in the fracture. |
+| `cards/dimTheGlass.jpg` | Dim the Glass 暗琉, common skill | A gloved hand drawing a veil of smoke across a glowing pane; the light behind it has gone dull. |
+| `cards/cleft.jpg` | Cleft 裂隙, uncommon attack | A blade driven into an already cracked pane, splitting the crack wide open. |
+| `cards/eclipseStep.jpg` | Eclipse Step 蝕影步, uncommon skill | A cloaked figure slipping aside behind a crescent of shadow as a claw passes; a crack sparks on the attacker's glass. |
+| `cards/tremor.jpg` | Tremor 震紋, uncommon attack | Three rings of shock spreading from one impact through cracked glass. |
+| `cards/totality.jpg` | Totality 全蝕, rare attack, the way's capstone | A total eclipse: a black disc ringed in violet-crimson fire above a pane cracked through. |
+| `cards/emberEye.jpg` | Ember Eye 燼瞳, rare skill, the Lantern and Edge duo | An eye of ember light inside a lantern's glass, throwing thin cracks across the dark around it. |
+| `relics/crownOfTheEclipse.png` | Crown of the Eclipse 蝕月冠, boss relic, the way's crown | A dark circlet whose centre stone is an eclipsed moon ringed in violet-crimson. |
+| `deeds/faultInGlass.png` | Fault in the Glass 裂痕, the way's deed | One long fault line running the height of a tall pane, glowing violet-crimson along its length. |

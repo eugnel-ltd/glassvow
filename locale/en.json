@@ -868,6 +868,11 @@
         "text": "Deal @6@ damage to ALL enemies.",
         "textUp": "Deal @9@ damage to ALL enemies."
       },
+      "cleft": {
+        "name": "Cleft",
+        "text": "Deal @8@ damage. If the enemy is Cracked, apply 1 more Cracked and gain 1 Fervor.",
+        "textUp": "Deal @11@ damage. If the enemy is Cracked, apply 1 more Cracked and gain 1 Fervor."
+      },
       "cripple": {
         "name": "Gutter",
         "text": "Snuff an enemy's fire: it loses 2 Fervor. Kindle.",
@@ -888,10 +893,24 @@
         "text": "Deal @10@ damage. If this kills, swallow its fire: gain 3 Embers and heal 4. Kindle.",
         "textUp": "Deal @13@ damage. If this kills, swallow its fire: gain 4 Embers and heal 6. Kindle."
       },
+      "dimTheGlass": {
+        "name": "Dim the Glass",
+        "text": "Apply 2 Dimmed. Draw 1 card."
+      },
       "eclipseSlash": {
         "name": "Eclipse Slash",
         "text": "Deal @7@ damage. Apply 1 Cracked.",
         "textUp": "Deal @9@ damage. Apply 2 Cracked."
+      },
+      "eclipseStep": {
+        "name": "Eclipse Step",
+        "text": "Gain #5# Ward. Apply 1 Cracked to the enemy about to strike you.",
+        "textUp": "Gain #8# Ward. Apply 1 Cracked to the enemy about to strike you."
+      },
+      "emberEye": {
+        "name": "Ember Eye",
+        "text": "Spend 2 Embers: apply 2 Cracked to ALL enemies. Kindle.",
+        "textUp": "Spend 2 Embers: apply 3 Cracked to ALL enemies. Kindle."
       },
       "emberdance": {
         "name": "Emberdance",
@@ -1040,6 +1059,11 @@
         "text": "Gain #5# Ward. Apply 2 Smolder.",
         "textUp": "Gain #8# Ward. Apply 3 Smolder."
       },
+      "splinterCut": {
+        "name": "Splinter Cut",
+        "text": "Deal @5@ damage. Apply 1 Cracked.",
+        "textUp": "Deal @7@ damage. Apply 2 Cracked."
+      },
       "strike": {
         "name": "Edge",
         "text": "Deal @6@ damage.",
@@ -1060,10 +1084,20 @@
         "text": "Gain 2 Embers. Draw 1 card.",
         "textUp": "Gain 3 Embers. Draw 1 card."
       },
+      "totality": {
+        "name": "Totality",
+        "text": "Deal @14@ damage, then double the enemy's Cracked.",
+        "textUp": "Deal @18@ damage, then double the enemy's Cracked."
+      },
       "toxicMist": {
         "name": "Ashcloud",
         "text": "Apply 3 Smolder to ALL enemies.",
         "textUp": "Apply 5 Smolder to ALL enemies."
+      },
+      "tremor": {
+        "name": "Tremor",
+        "text": "Deal @3@ damage 3 times. Each hit on Cracked glass deals 2 more.",
+        "textUp": "Deal @4@ damage 3 times. Each hit on Cracked glass deals 2 more."
       },
       "twinFangs": {
         "name": "Twin Shards",
@@ -1106,6 +1140,10 @@
       "darkWalker": {
         "desc": "Enter 6 unlit lanterns",
         "name": "Walker of Unlit Ways"
+      },
+      "faultInGlass": {
+        "desc": "Apply 40 Cracked",
+        "name": "Fault in the Glass"
       },
       "firstDawn": {
         "desc": "Reach the sunrise once",
@@ -2085,6 +2123,10 @@
       "crownOfCinders": {
         "name": "Crown of Cinders",
         "text": "Your lantern holds 12 Embers and begins each combat holding 2."
+      },
+      "crownOfTheEclipse": {
+        "name": "Crown of the Eclipse",
+        "text": "Cracked you apply no longer wears off."
       },
       "crownOfTheHearth": {
         "name": "Crown of the Hearth",

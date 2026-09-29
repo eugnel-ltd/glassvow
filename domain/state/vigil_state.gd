@@ -10,10 +10,12 @@ const QUEST_IDS: Array[String] = [
 	"hollowLamplighter",
 ]
 const OUTCOMES: Array[String] = ["win", "death", "abandon"]
+## `cracked` (flame lock PR 6, the Edge deed) is additive to v2: a Vigil saved
+## before it loads the counter at zero.
 const DEFAULT_DEEDS: Dictionary = {
 	"runs": 0, "wins": 0, "slain": 0, "shatters": 0, "kindles": 0,
 	"perfects": 0, "smolderKills": 0, "unlitVisited": 0, "embersSpent": 0,
-	"bestVow": 0, "bestWaystone": 0,
+	"cracked": 0, "bestVow": 0, "bestWaystone": 0,
 }
 
 var deeds: Dictionary = DEFAULT_DEEDS.duplicate()
@@ -195,7 +197,7 @@ func commit_run(run: RunState, outcome: String, content: ContentDB) -> bool:
 		deeds["bestWaystone"] = maxi(_ji(deeds["bestWaystone"]), run.act * 15 + run.waystones_lit)
 		for key: String in [
 			"slain", "shatters", "kindles", "perfects", "smolderKills",
-			"unlitVisited", "embersSpent",
+			"unlitVisited", "embersSpent", "cracked",
 		]:
 			deeds[key] = _ji(deeds[key]) + _ji(run.stats.get(key, 0))
 		receipts["deeds"] = {"runId": run.run_id, "won": outcome == "win"}
