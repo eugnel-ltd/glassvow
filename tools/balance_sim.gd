@@ -317,7 +317,7 @@ static func _expected_card_max(game: GlassvowGame, n: int) -> float:
 	var copies: Dictionary = {"common": 2, "uncommon": 2, "rare": 1}
 	for tier: String in ["common", "uncommon", "rare"]:
 		var weight: int = int(float(str(copies[tier])))
-		for id_v: Variant in game.rewards.card_pool(game.run, tier):
+		for id_v: Variant in game.rewards.offer_cards(game.run, tier):
 			var id: String = str(id_v)
 			if Pilot.is_banned(id):
 				continue
@@ -347,7 +347,7 @@ static func _expected_relic_score(game: GlassvowGame) -> float:
 	for tier: String in ["common", "uncommon", "rare"]:
 		var mean: float = 0.0
 		var n: int = 0
-		for id_v: Variant in game.rewards.relic_pool(game.run, tier):
+		for id_v: Variant in game.rewards.offer_relics(game.run, tier):
 			var id: String = str(id_v)
 			if game.run.player.relics.has(id) or Pilot.is_banned(id):
 				continue
