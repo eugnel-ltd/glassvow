@@ -13,6 +13,7 @@ on incomplete data.
 Usage (repo root):
   python3 tools/balance_ways.py [--quick | --seeds 13000-13199] [--jobs 4] [--out-dir DIR]
                                 [--content FILE]   # a scratch catalogue, e.g. one sweep point
+                                [--way-weights 2.0/1.0]   # committed arms' own/other glass weights
   python3 tools/balance_ways.py --from-dir DIR [--quick | --seeds A-B]   # re-grade saved reports
 """
 from __future__ import annotations
@@ -86,17 +87,31 @@ def replay_name(vow: int, pool: str) -> str:
     return f"v{vow}-{pool}-replay.json"
 
 
+def parse_weights(text: str) -> tuple[float, float]:
+    commit, sep, off = text.partition("/")
+    try:
+        weights = float(commit), float(off)
+    except ValueError:
+        weights = (0.0, 0.0)
+    if not sep or min(weights) <= 0:
+        raise ValueError(f"--way-weights must be COMMIT/OFF, two positive numbers, got {text!r}")
+    return weights
+
+
 def sim_command(godot: str, vow: int, pool: str, arm: str, first: int, count: int,
-                out: Path, content: Path | None = None) -> list[str]:
+                out: Path, content: Path | None = None,
+                weights: tuple[float, float] | None = None) -> list[str]:
     way, build = ARMS[arm]
     return [godot, "--headless", "-s", "res://tools/balance_sim.gd", "--", "--aspect=duskblade",
             f"--vow={vow}", f"--runs={count}", f"--seed0={first}", f"--pool={pool}",
             f"--way={way}", f"--build={build}", f"--out={out}"] \
+        + ([f"--wayCommit={weights[0]}", f"--wayOff={weights[1]}"]
+           if weights is not None and way != "none" else []) \
         + ([f"--content={content}"] if content is not None else [])
 
 
-def jobs(godot: str, seeds: tuple[int, int], directory: Path,
-         content: Path | None = None) -> list[tuple[str, list[str]]]:
+def jobs(godot: str, seeds: tuple[int, int], directory: Path, content: Path | None = None,
+         weights: tuple[float, float] | None = None) -> list[tuple[str, list[str]]]:
     first, count = seeds[0], seeds[1] - seeds[0] + 1
     out: list[tuple[str, list[str]]] = []
     for vow in VOWS:
@@ -104,7 +119,7 @@ def jobs(godot: str, seeds: tuple[int, int], directory: Path,
             for arm in ARMS:
                 out.append((report_name(vow, pool, arm)[:-5], sim_command(
                     godot, vow, pool, arm, first, count, directory / report_name(vow, pool, arm),
-                    content)))
+                    content, weights)))
             out.append((replay_name(vow, pool)[:-5], sim_command(
                 godot, vow, pool, "A", first, min(REPLAY, count), directory / replay_name(vow, pool),
                 content)))
@@ -249,6 +264,7 @@ def grade(directory: Path, seeds: tuple[int, int]) -> dict[str, Any]:
     """Load every report of the cell table, check pairing and provenance, grade."""
     cells: dict[tuple[int, str], Any] = {}
     identity: set[tuple[str, str]] = set()
+    weights: set[tuple[Any, Any]] = set()
     for vow in VOWS:
         for pool in POOLS:
             stats: dict[str, dict[str, Any]] = {}
@@ -260,6 +276,9 @@ def grade(directory: Path, seeds: tuple[int, int]) -> dict[str, Any]:
                          and manifest.get("aspect") == "duskblade",
                          f"{report_name(vow, pool, arm)}: manifest is not this cell and arm")
                 identity.add((str(manifest.get("commit")), str(manifest.get("contentFileSha256"))))
+                if arm in COMMITTED:
+                    policy = manifest.get("policy") if isinstance(manifest.get("policy"), dict) else {}
+                    weights.add((policy.get("wayCommit"), policy.get("wayOff")))
                 stats[arm] = arm_stats(rows, way)
                 if arm == "A":
                     adaptive_rows = rows
@@ -270,14 +289,19 @@ def grade(directory: Path, seeds: tuple[int, int]) -> dict[str, Any]:
             cells[vow, pool] = {"stats": stats,
                                 "gates": cell_gates(vow, pool, stats, adaptive_rows, (same, len(replayed)))}
     _require(len(identity) == 1, f"reports come from more than one build: {sorted(identity)}")
+    _require(len(weights) == 1, f"committed arms weigh their glass differently: {sorted(map(str, weights))}")
     commit, content = identity.pop()
-    return {"seeds": seeds, "commit": commit, "content": content, "cells": cells}
+    commit_weight, off_weight = weights.pop()
+    return {"seeds": seeds, "commit": commit, "content": content, "cells": cells,
+            "weights": None if commit_weight is None and off_weight is None else (commit_weight, off_weight)}
 
 
 def render(result: dict[str, Any], wall: float | None = None) -> str:
     first, last = result["seeds"]
     lines = [f"Head `{result['commit']}`, content SHA-256 `{result['content'][:12]}...`; "
              f"Duskblade, seeds {first}-{last} ({last - first + 1} paired per arm), shipping incentives."
+             + (" Committed arms weigh their own glass x{} and other coloured glass x{} (--way-weights)."
+                .format(*result["weights"]) if result.get("weights") is not None else "")
              + (f" Wall time {wall:.0f} s." if wall is not None else "")]
     for (vow, pool), cell in result["cells"].items():
         stats = cell["stats"]
@@ -314,13 +338,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--from-dir", type=Path, help="grade the reports an earlier run saved")
     parser.add_argument("--content", type=Path,
                         help="run on this catalogue instead of content/full-content.json")
+    parser.add_argument("--way-weights",
+                        help="COMMIT/OFF: the committed arms' weights for their own and other coloured "
+                             "glass instead of the pilot's 3.0/0.5, e.g. 2.0/1.0 (a splash arm)")
     opts = parser.parse_args(argv)
     if opts.quick and opts.seeds:
         parser.error("--quick and --seeds are exclusive")
     if opts.content is not None and (opts.from_dir is not None or not opts.content.is_file()):
         parser.error("--content must name an existing file and cannot re-grade saved reports")
+    if opts.way_weights is not None and opts.from_dir is not None:
+        parser.error("--way-weights cannot re-grade saved reports")
     try:
         seeds = QUICK_SEEDS if opts.quick else parse_seeds(opts.seeds) if opts.seeds else DEFAULT_SEEDS
+        weights = parse_weights(opts.way_weights) if opts.way_weights is not None else None
     except ValueError as exc:
         parser.error(str(exc))
     if not 1 <= opts.jobs <= 16:
@@ -335,7 +365,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"reports: {directory}", file=sys.stderr)
         start = time.monotonic()
         content = opts.content.resolve() if opts.content is not None else None
-        run_jobs(jobs(opts.godot, seeds, directory.resolve(), content), directory, opts.jobs)
+        run_jobs(jobs(opts.godot, seeds, directory.resolve(), content, weights), directory, opts.jobs)
         wall = time.monotonic() - start
     print(render(grade(directory, seeds), wall))
     return 0

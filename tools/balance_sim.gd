@@ -579,7 +579,7 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		"stage": "", "cardDecline": Pilot.CARD_DECLINE_DEFAULT,
 		"removalAppetite": Pilot.REMOVAL_APPETITE_DEFAULT,
 		"removalMinCopies": Pilot.REMOVAL_MIN_COPIES_DEFAULT,
-		"way": "none", "pool": "mature", "build": "adaptive"}
+		"way": "none", "pool": "mature", "build": "adaptive", "wayCommit": "", "wayOff": ""}
 	for arg: String in args:
 		if not arg.begins_with("--") or not arg.contains("="):
 			return {"error": "expected --name=value, got %s" % arg}
@@ -607,7 +607,7 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		return {"error": "--pool must be mature, fresh or full"}
 	if str(out["build"]) not in ["adaptive", "random"]:
 		return {"error": "--build must be adaptive or random"}
-	return out
+	return _way_weights(out)
 static func _mix(opts: Dictionary) -> Dictionary:
 	var id: String = str(opts.get("mix", ""))
 	if id.is_empty():
@@ -619,6 +619,9 @@ static func _policy(opts: Dictionary) -> Dictionary:
 		"removalMinCopies": opts["removalMinCopies"]}
 	if str(opts.get("way", "none")) != "none":
 		over["way"] = str(opts["way"])
+		for key: String in ["wayCommit", "wayOff"]:
+			if not str(opts.get(key, "")).is_empty():
+				over[key] = float(str(opts[key]))
 	return Policy.resolve(over)
 static func _manifest(opts: Dictionary, overlay: String, identity: Dictionary) -> Dictionary:
 	var row: Dictionary = identity.duplicate()
@@ -640,3 +643,15 @@ static func _manifest(opts: Dictionary, overlay: String, identity: Dictionary) -
 	row["mix"] = str(opts["mix"]) if not str(opts.get("mix", "")).is_empty() \
 		else Incentives.SHIPPING_ID
 	return row
+
+
+## Flame readout 6's splash arm: --wayCommit and --wayOff are positive and need --way.
+static func _way_weights(out: Dictionary) -> Dictionary:
+	for key: String in ["wayCommit", "wayOff"]:
+		if str(out[key]).is_empty():
+			continue
+		if not str(out[key]).is_valid_float() or float(str(out[key])) <= 0.0:
+			return {"error": "--%s must be a positive number" % key}
+		if str(out["way"]) == "none":
+			return {"error": "--%s needs --way" % key}
+	return out
