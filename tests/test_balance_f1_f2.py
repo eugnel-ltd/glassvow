@@ -21,7 +21,7 @@ from balance_f1_f2 import (
 )
 from balance_f0 import evaluation_from_registry, evaluation_spec, stage_args
 from balance_f1_racing import racing_decisions
-from balance_seed_contract import check_invocation, load_contract
+from balance_seed_contract import H39_REL, check_invocation, load_contract
 
 
 class BalanceF1F2Test(unittest.TestCase):
@@ -33,12 +33,13 @@ class BalanceF1F2Test(unittest.TestCase):
             space["features"], [row["values"] for row in f0["candidates"]], 4, 458, 256)
         with tempfile.TemporaryDirectory(prefix="glassvow-f1-bundle-") as temp:
             out = Path(temp) / "bundle"
+            # The #458 bundle was cut from the #421 H39 catalogue, not live content.
             manifest = write_search_bundle(
-                repo / "content/full-content.json",
+                repo / H39_REL,
                 repo / "docs/balance/421-content-search-space-v1.json",
                 f0, supplemental, metrics, out, ("c000", "c002"), 458)
             self.assertEqual(6, manifest["count"])
-            self.assertEqual((repo / "content/full-content.json").read_bytes(),
+            self.assertEqual((repo / H39_REL).read_bytes(),
                              (out / "c000/full-content.json").read_bytes())
             self.assertEqual(6, len({row["semanticSha256"] for row in manifest["candidates"]}))
 

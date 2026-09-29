@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 from balance_content_doe import canonical_json_bytes, design_metrics, read_json, set_path, sha256_bytes
 from balance_s009_reconstruct import FINALISTS_REL, catalogue_bytes, reconstruct
+from balance_seed_contract import H39_REL
 REPO = Path(__file__).resolve().parents[1]
 REGISTRY_REL = "docs/balance/490-tier1-registry-v1.json"; FILES = ("content/full-content.json", "locale/en.json", "locale/zh-Hant.json")
 TOOL_ID = "glassvow-balance-tier1-design"; MARKER = f".{TOOL_ID}"  # RFC 6901 patches; v1 DOE uses incompatible dotted paths.
@@ -68,7 +69,8 @@ def _diff(before: Any, after: Any, pointer: str = "") -> list[dict[str, Any]]:
         out.append({"op": "replace", "path": pointer, "before": before, "after": after})
     return out
 def _base_roots(repo: Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-    sources = {relative: read_json(repo / relative) for relative in FILES}; packet = reconstruct(repo)
+    # The registry is anchored on the #421 H39 catalogue, not on live content.
+    sources = {relative: read_json(repo / (H39_REL if relative == FILES[0] else relative)) for relative in FILES}; packet = reconstruct(repo)
     targets = deepcopy(sources); targets[FILES[0]] = packet["content"]
     finalists = read_json(repo / FINALISTS_REL); row = next(item for item in finalists["orderedFinalists"] if item["id"] == "s009")
     for relative in FILES[1:]:
@@ -266,7 +268,7 @@ def compile_design(repo: Path = REPO, registry_path: Path | None = None,
         artefacts.append({"candidate": candidate, "blobs": blobs, "patches": {"candidate": candidate["id"], "files": patch_files}})
     manifest = {"tool": TOOL_ID, "registry": REGISTRY_REL, "features": 8,
                 "numericWrites": sum(len(feature["writes"]) for feature in registry["features"]),
-                "combinations": 3 ** 8, "seed": actual_seed, "count": 48, "baseIdentity": {key: value for key, value in packet["identity"].items() if key != "livePath"},
+                "combinations": 3 ** 8, "seed": actual_seed, "count": 48, "baseIdentity": {key: value for key, value in packet["identity"].items() if key != "basePath"},
                 "registryIdentity": _identity(path, registry), "historyIdentity": _identity(history_path, history),
                 "responseContractIdentity": _identity(response_path, response), "design": metrics, "candidates": candidates}
     return manifest, artefacts
