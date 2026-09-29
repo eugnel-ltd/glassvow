@@ -18,6 +18,15 @@ var discard: Array[CardInst] = []
 var exhaust: Array[CardInst] = []
 var embers: int = 0
 var ember_cap: int = 9
+## The lantern's quality this combat keeps (flame lock §5), set once from the
+## flame read at combat start: the Embers lost at the end of each of your turns,
+## the change to the Art's price, and the extra Embers on each turn's first
+## gain. A Steady or True cap bonus is already in `ember_cap`.
+var ember_leak: int = 0
+var art_cost_delta: int = 0
+var first_gain_bonus: int = 0
+## The turn whose first Ember gain has taken `first_gain_bonus`.
+var first_gain_turn: int = -1
 var art_used_turn: int = 0
 var kindled_turn: int = 0
 var kindles_this_turn: int = 0
