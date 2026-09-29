@@ -564,7 +564,7 @@
       "privacy": "私隱",
       "diagnostics": "傳送當機診斷資料",
       "diagnosticsNote": "將於下次啟動遊戲時生效。",
-      "diagnosticsNotice": "為修正錯誤，遊戲會傳送當機診斷資料。你可在「設定」中關閉。"
+      "diagnosticsNotice": "為修正錯誤，遊戲會傳送當機診斷資料。\n你可在「設定」中關閉。"
     },
     "shop": {
       "cardRemoval": {

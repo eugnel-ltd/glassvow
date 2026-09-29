@@ -15,9 +15,10 @@ const COPY: Dictionary = {
 	"ui.settings.privacy": ["Privacy", "私隱"],
 	"ui.settings.diagnostics": ["Send Crash Diagnostics", "傳送當機診斷資料"],
 	"ui.settings.diagnosticsNote": ["Takes effect on the next launch.", "將於下次啟動遊戲時生效。"],
+	# One sentence per line, so neither 「設定」 nor "Settings." can wrap apart.
 	"ui.settings.diagnosticsNotice": [
-		"Crash diagnostics are sent to help fix bugs. You can switch this off in Settings.",
-		"為修正錯誤，遊戲會傳送當機診斷資料。你可在「設定」中關閉。",
+		"Crash diagnostics are sent to help fix bugs.\nYou can switch this off in Settings.",
+		"為修正錯誤，遊戲會傳送當機診斷資料。\n你可在「設定」中關閉。",
 	],
 }
 

@@ -206,13 +206,19 @@ func _fit() -> void:
 		_scroll.custom_minimum_size.y = want
 
 
-## Scrolls just far enough that the PRIVACY section's last line sits at the
-## foot of the view. It reads only the settled layout, never the current
-## scroll, so however many layout passes call it, the last one lands the same.
+## Opens at the top, as every later panel does, unless the notice would be
+## hidden there (a phone); then scrolls just far enough that the PRIVACY
+## section's last line sits at the foot of the view. It reads only the settled
+## layout, never the current scroll, so the last layout pass always lands the
+## same.
 func _reveal_notice() -> void:
 	var section: Control = _diagnostics_notice.get_parent() as Control
-	var bottom: float = section.position.y + section.size.y
-	_scroll.scroll_vertical = maxi(0, ceili(bottom - _scroll.size.y))
+	var notice_bottom: float = section.position.y + _diagnostics_notice.position.y \
+		+ _diagnostics_notice.size.y
+	if notice_bottom <= _scroll.size.y:
+		_scroll.scroll_vertical = 0
+		return
+	_scroll.scroll_vertical = ceili(section.position.y + section.size.y - _scroll.size.y)
 
 
 static func _display_supported() -> bool:
