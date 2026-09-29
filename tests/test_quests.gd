@@ -284,8 +284,6 @@ static func _armed_eighth(
 
 
 static func _eighth_matrix(fails: Array[String]) -> void:
-	var production: Variant = _file_snapshot(SaveService.RUN_PATH)
-	var production_vigil: Variant = _file_snapshot(SaveService.VIGIL_PATH)
 	SaveService.clear(EIGHTH_RUN_PATH)
 	SaveService.clear_vigil(EIGHTH_VIGIL_PATH)
 	var content: ContentDB = ContentDB.load_full()
@@ -366,9 +364,6 @@ static func _eighth_matrix(fails: Array[String]) -> void:
 
 	SaveService.clear(EIGHTH_RUN_PATH)
 	SaveService.clear_vigil(EIGHTH_VIGIL_PATH)
-	if _file_snapshot(SaveService.RUN_PATH) != production \
-			or _file_snapshot(SaveService.VIGIL_PATH) != production_vigil:
-		fails.append("test_quests: eighth matrix touched the default save")
 
 
 static func _f3_terminal_fold(
@@ -543,9 +538,3 @@ static func _eighth_act3_complete_is_not_clear(
 			and not run.unlocks.has(RunState.MIRRORED_ROAD)
 			and vigil.shards.size() == 1),
 		"Eighth Act III completion was not distinct from an Act IV clear")
-
-
-static func _file_snapshot(path: String) -> Variant:
-	if not FileAccess.file_exists(path):
-		return null
-	return FileAccess.get_file_as_string(path)

@@ -56,6 +56,7 @@ static func _combat_latest_request_wins(fails: Array[String]) -> void:
 	run.player.relics.append("duskmirror")
 	var game: GlassvowGame = GlassvowGame.new(content, run)
 	var main: Main = Main.new()
+	TestProfile.install(main)
 	main.content = content
 	main.game = game
 	main._transitions = TransitionLayer.new()
@@ -144,6 +145,7 @@ static func _combat_defer_and_card_consumer(fails: Array[String]) -> void:
 	run.player.relics.append("duskmirror")
 	var game: GlassvowGame = GlassvowGame.new(baked, run)
 	var main: Main = Main.new()
+	TestProfile.install(main)
 	main.content = baked
 	main.game = game
 	main._transitions = TransitionLayer.new()
@@ -204,7 +206,7 @@ static func _combat_defer_and_card_consumer(fails: Array[String]) -> void:
 			fails.append("Main hydration integration: a new combat draw mixed in zh-Hant early")
 
 	# Abandon is the direct combat exit that does not pass through `_route_run`.
-	# Drive its run-end constructor without writing the production save path.
+	# Drive its run-end constructor without writing a save.
 	run.pending_run_end = {"outcome": "abandon", "bequestAnswered": true}
 	var save_before_route: String = JSON.stringify(run.to_save_dict())
 	main._show_run_end()

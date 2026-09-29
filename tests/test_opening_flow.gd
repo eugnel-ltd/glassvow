@@ -15,8 +15,6 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 
 
 static func run(fails: Array[String]) -> void:
-	var default_run: Variant = _file_snapshot(SaveService.RUN_PATH)
-	var default_vigil: Variant = _file_snapshot(SaveService.VIGIL_PATH)
 	_fresh_begin_skips_embark(fails)
 	_run_two_returns_embark(fails)
 	_choiceful_unseen_gets_embark(fails)
@@ -29,12 +27,8 @@ static func run(fails: Array[String]) -> void:
 	_new_run_retry_restages(fails)
 	_begin_anew_spares_production(fails)
 	_opening_completion_is_the_hint_gate(fails)
-	if _file_snapshot(SaveService.RUN_PATH) != default_run \
-			or _file_snapshot(SaveService.VIGIL_PATH) != default_vigil:
-		fails.append("opening_flow: tests touched the default save")
-	SaveService.clear(RUN_PATH)
+	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
 	SaveService.clear(DEV_PATH)
-	SaveService.clear_vigil(VIGIL_PATH)
 
 
 static func _fresh_begin_skips_embark(fails: Array[String]) -> void:
@@ -285,22 +279,26 @@ static func _begin_anew_spares_production(fails: Array[String]) -> void:
 	_check(fails, body.contains("_clear_run(game.run.run_id)"),
 		"Begin Anew clear does not route through the active-profile helper")
 	var content: ContentDB = ContentDB.load_full()
-	var prod_snap: Variant = _file_snapshot(SaveService.RUN_PATH)
+	TestProfile.in_sandbox(fails, _begin_anew_in_dev_profile.bind(content, fails))
+
+
+## Sandboxed, because the player's run path has to hold a run for a Begin Anew
+## that fell back to it to replace.
+static func _begin_anew_in_dev_profile(content: ContentDB, fails: Array[String]) -> void:
+	var production_path: String = TestProfile.production_run_path()
 	var prod: RunState = RunState.new_run(content, 32041, "run-prod-320")
 	prod.map = WorldMap.benchmark(prod).to_dict()
 	var dev: RunState = RunState.new_run(content, 32042, "run-dev-320")
 	dev.map = WorldMap.benchmark(dev).to_dict()
-	if not SaveService.store(prod, SaveService.RUN_PATH) \
+	if not SaveService.store(prod, production_path) \
 			or not SaveService.store(dev, DEV_PATH):
 		_check(fails, false, "could not seed production and dev-profile runs")
-		_restore_snapshot(SaveService.RUN_PATH, prod_snap)
-		SaveService.clear(DEV_PATH)
 		return
 	var main: Main = _main(content)
 	main._forced_seed = 32008
 	main._run_save_path = DEV_PATH
 	main._on_begin_anew("begin")
-	var prod_after: RunState = SaveService.load_run(content, SaveService.RUN_PATH)
+	var prod_after: RunState = SaveService.load_run(content, production_path)
 	_check(fails, prod_after != null and prod_after.run_id == "run-prod-320",
 		"Begin Anew in the dev profile touched the production save")
 	var leftover: RunState = SaveService.load_run(content, DEV_PATH)
@@ -309,18 +307,6 @@ static func _begin_anew_spares_production(fails: Array[String]) -> void:
 	_check(fails, leftover != null and leftover.run_id == main.game.run.run_id,
 		"Begin Anew in the dev profile did not create the new run on the injected path")
 	_dispose(main)
-	_restore_snapshot(SaveService.RUN_PATH, prod_snap)
-	SaveService.clear(DEV_PATH)
-
-
-static func _restore_snapshot(path: String, snap: Variant) -> void:
-	if snap == null:
-		SaveService.clear(path)
-		return
-	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
-	if file != null:
-		file.store_string(str(snap))
-		file.close()
 
 
 static func _opening_completion_is_the_hint_gate(fails: Array[String]) -> void:
@@ -353,11 +339,9 @@ static func _main(content: ContentDB) -> Main:
 	SaveService.clear(RUN_PATH)
 	SaveService.clear_vigil(VIGIL_PATH)
 	var main: Main = Main.new()
+	TestProfile.install(main, RUN_PATH, VIGIL_PATH)
 	main._map_layout_compile = MapCompose.fake_layout_compile()
 	main.content = content
-	main._run_save_path = RUN_PATH
-	main._vigil_save_path = VIGIL_PATH
-	main._vigil = VigilState.blank()
 	main._transitions = TransitionLayer.new()
 	main._transitions.instant = true
 	main.add_child(main._transitions)
@@ -373,10 +357,3 @@ static func _dispose(main: Main) -> void:
 	for child: Node in main.get_children():
 		child.free()
 	main.free()
-
-
-static func _file_snapshot(path: String) -> Variant:
-	if not FileAccess.file_exists(path):
-		return null
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	return file.get_as_text() if file != null else null

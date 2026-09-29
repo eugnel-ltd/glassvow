@@ -18,6 +18,7 @@ static func run(fails: Array[String]) -> void:
 	_entries(fails)
 	_console(fails)
 	_vigil_scenario(fails)
+	TestProfile.wipe()
 
 
 static func _parse(boot: GDScript, fails: Array[String]) -> void:
@@ -93,11 +94,14 @@ static func _parse(boot: GDScript, fails: Array[String]) -> void:
 		fails.append("dev tools: ScenarioReference must not resolve catalogue ENTRIES")
 
 
+## The Development profile is a pair of files of its own. The defaults are what
+## every tooling boot adopts, so they are asserted here rather than watched: a
+## default that named the player's files would be the leak itself.
 static func _isolation(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
-	var before_run: String = _snap(SaveService.RUN_PATH)
-	var before_vigil: String = _snap(SaveService.VIGIL_PATH)
 	var kernel: ScenarioKernel = ScenarioKernel.new(content)
+	if TestProfile.is_production(kernel.run_path) or TestProfile.is_production(kernel.vigil_path):
+		fails.append("dev tools: the Development profile defaults name the player's files")
 	kernel.clear_profile()
 	var ref: ScenarioReference = ScenarioReference.new()
 	ref.load_from({
@@ -107,15 +111,10 @@ static func _isolation(fails: Array[String]) -> void:
 	var run: RunState = kernel.construct(ref)
 	if run == null:
 		fails.append("dev tools: construct failed: %s" % kernel.last_error)
-	if _snap(SaveService.RUN_PATH) != before_run:
-		fails.append("dev tools: production run path was mutated")
-	if _snap(SaveService.VIGIL_PATH) != before_vigil:
-		fails.append("dev tools: production Vigil path was mutated")
 	kernel.clear_profile()
 
 
 static func _vigil_write(fails: Array[String]) -> void:
-	var before_vigil: String = _snap(SaveService.VIGIL_PATH)
 	var previous_locale: Locale = Locale.active
 	var previous_preferences: Preferences = Preferences.active
 	Preferences.active = Preferences.new()
@@ -145,8 +144,6 @@ static func _vigil_write(fails: Array[String]) -> void:
 			host._vigil.whispers = 99
 			if not host._store_vigil():
 				fails.append("dev tools: redirected Vigil write failed")
-			elif _snap(SaveService.VIGIL_PATH) != before_vigil:
-				fails.append("dev tools: Console-routed Vigil write touched the player Vigil")
 			else:
 				var stored: VigilState = SaveService.load_vigil(host._vigil_save_path)
 				if stored.whispers != 99:
@@ -166,8 +163,6 @@ static func _locale_apply(fails: Array[String]) -> void:
 		fails.append("dev tools: apply_dev_scenario does not apply locale")
 	if body.find("Preferences") >= 0:
 		fails.append("dev tools: apply_dev_scenario must not touch Preferences")
-	var before_run: String = _snap(SaveService.RUN_PATH)
-	var before_vigil: String = _snap(SaveService.VIGIL_PATH)
 	var previous_locale: Locale = Locale.active
 	var previous_preferences: Preferences = Preferences.active
 	Preferences.active = Preferences.new()
@@ -197,9 +192,6 @@ static func _locale_apply(fails: Array[String]) -> void:
 		fails.append("dev tools: omitted-locale apply failed: %s" % host.last_dev_error)
 	elif Locale.active.code != Locale.CODE_ZH_HANT:
 		fails.append("dev tools: omitted locale overwrote Locale.active")
-	if _snap(SaveService.RUN_PATH) != before_run \
-			or _snap(SaveService.VIGIL_PATH) != before_vigil:
-		fails.append("dev tools: locale apply mutated a production path")
 	ScenarioKernel.new(host.content).clear_profile()
 	host.free()
 	Locale.active = previous_locale
@@ -208,10 +200,6 @@ static func _locale_apply(fails: Array[String]) -> void:
 
 static func _arg(payload: Dictionary) -> PackedStringArray:
 	return PackedStringArray(["--scenario=%s" % JSON.stringify(payload)])
-
-
-static func _snap(path: String) -> String:
-	return FileAccess.get_file_as_string(path) if FileAccess.file_exists(path) else ""
 
 
 static func _entries(fails: Array[String]) -> void:
@@ -233,8 +221,6 @@ static func _entries(fails: Array[String]) -> void:
 
 
 static func _console(fails: Array[String]) -> void:
-	var before_run: String = _snap(SaveService.RUN_PATH)
-	var before_vigil: String = _snap(SaveService.VIGIL_PATH)
 	var script: GDScript = load(DevTools.CONSOLE) as GDScript
 	if script == null:
 		fails.append("dev tools: console script did not load")
@@ -262,14 +248,9 @@ static func _console(fails: Array[String]) -> void:
 		console.free()
 		Locale.active = previous
 	host.free()
-	if _snap(SaveService.RUN_PATH) != before_run \
-			or _snap(SaveService.VIGIL_PATH) != before_vigil:
-		fails.append("dev tools: console mutated a production path")
 
 
 static func _vigil_scenario(fails: Array[String]) -> void:
-	var before_run: String = _snap(SaveService.RUN_PATH)
-	var before_vigil: String = _snap(SaveService.VIGIL_PATH)
 	var host: Main = _bare_main()
 	var ref: ScenarioReference = ScenarioReference.new()
 	ref.load_from({
@@ -287,9 +268,6 @@ static func _vigil_scenario(fails: Array[String]) -> void:
 		fails.append("dev tools: vigil Scenario left a stale run installed")
 	ScenarioKernel.new(host.content).clear_profile()
 	host.free()
-	if _snap(SaveService.RUN_PATH) != before_run \
-			or _snap(SaveService.VIGIL_PATH) != before_vigil:
-		fails.append("dev tools: vigil Scenario mutated a production path")
 
 
 static func _labelled(root: Node) -> bool:
@@ -310,10 +288,11 @@ static func _has_text(root: Node, text: String) -> bool:
 
 
 static func _bare_main() -> Main:
+	TestProfile.wipe()
 	var main: Main = Main.new()
+	TestProfile.install(main)
 	main._map_layout_compile = MapCompose.fake_layout_compile()
 	main.content = ContentDB.load_full()
-	main._vigil = VigilState.blank()
 	main._music = MusicBus.new()
 	main.add_child(main._music)
 	main._sfx_bus = SfxBus.new()

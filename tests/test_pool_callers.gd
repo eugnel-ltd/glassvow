@@ -13,8 +13,6 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 
 
 static func run(fails: Array[String]) -> void:
-	var default_run: Variant = _file_snapshot(SaveService.RUN_PATH)
-	var default_vigil: Variant = _file_snapshot(SaveService.VIGIL_PATH)
 	_hearth_start_once(fails)
 	_hearth_resume_holds_row(fails)
 	_waystone_once(fails)
@@ -23,11 +21,7 @@ static func run(fails: Array[String]) -> void:
 	_rebuild_does_not_redraw(fails)
 	_h57_same_run(fails)
 	_shop_is_not_the_hearth(fails)
-	if _file_snapshot(SaveService.RUN_PATH) != default_run \
-			or _file_snapshot(SaveService.VIGIL_PATH) != default_vigil:
-		fails.append("test_pool_callers: tests touched the default save")
-	SaveService.clear(RUN_PATH)
-	SaveService.clear_vigil(VIGIL_PATH)
+	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
 
 
 static func _hearth_start_once(fails: Array[String]) -> void:
@@ -285,11 +279,9 @@ static func _main(content: ContentDB) -> Main:
 	SaveService.clear(RUN_PATH)
 	SaveService.clear_vigil(VIGIL_PATH)
 	var main: Main = Main.new()
+	TestProfile.install(main, RUN_PATH, VIGIL_PATH)
 	main._map_layout_compile = MapCompose.fake_layout_compile()
 	main.content = content
-	main._run_save_path = RUN_PATH
-	main._vigil_save_path = VIGIL_PATH
-	main._vigil = VigilState.blank()
 	main._transitions = TransitionLayer.new()
 	main._transitions.instant = true
 	main.add_child(main._transitions)
@@ -305,10 +297,3 @@ static func _dispose(main: Main) -> void:
 	for child: Node in main.get_children():
 		child.free()
 	main.free()
-
-
-static func _file_snapshot(path: String) -> Variant:
-	if not FileAccess.file_exists(path):
-		return null
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	return file.get_as_text() if file != null else null

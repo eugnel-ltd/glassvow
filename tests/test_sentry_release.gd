@@ -111,7 +111,7 @@ static func _cocoa_privacy_manifest(fails: Array[String]) -> void:
 
 
 static func _redact(fails: Array[String]) -> void:
-	if SentryPrivacy.redact("boom user://glassvow_run_v2.json") == "boom user://glassvow_run_v2.json":
+	if SentryPrivacy.redact("boom user://redaction_probe.json") == "boom user://redaction_probe.json":
 		fails.append("sentry: redact left a user:// path")
 	if SentryPrivacy.redact("{\"seed\": 12, \"deck\": []}") != "[redacted]":
 		fails.append("sentry: redact left a save-shaped payload")

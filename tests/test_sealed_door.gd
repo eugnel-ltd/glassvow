@@ -3,6 +3,7 @@ extends RefCounted
 ## on the generated final-act map, not a one-node Act IV graph.
 
 const SAVE_PATH: String = "user://test_sealed_door_run_v2.json"
+const VIGIL_PATH: String = "user://test_sealed_door_vigil_v2.json"
 const MapCompose: GDScript = preload("res://tests/test_map_compose.gd")
 
 
@@ -12,14 +13,11 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 
 
 static func run(fails: Array[String]) -> void:
-	var default_before: Variant = _file_snapshot(SaveService.RUN_PATH)
 	_new_run_keeps_ordinary_map(fails)
 	_door_on_final_act(fails)
 	_door_hidden_off_final_act(fails)
 	_door_opens_threshold(fails)
-	if _file_snapshot(SaveService.RUN_PATH) != default_before:
-		fails.append("test_sealed_door: tests touched the default save")
-	SaveService.clear(SAVE_PATH)
+	TestProfile.wipe(SAVE_PATH, VIGIL_PATH)
 
 
 static func _new_run_keeps_ordinary_map(fails: Array[String]) -> void:
@@ -129,10 +127,9 @@ static func _six_shard_vigil() -> VigilState:
 
 static func _main(content: ContentDB) -> Main:
 	var main: Main = Main.new()
+	TestProfile.install(main, SAVE_PATH, VIGIL_PATH)
 	main._map_layout_compile = MapCompose.fake_layout_compile()
 	main.content = content
-	main._run_save_path = SAVE_PATH
-	main._vigil = VigilState.blank()
 	main._transitions = TransitionLayer.new()
 	main._transitions.instant = true
 	main.add_child(main._transitions)
@@ -148,10 +145,3 @@ static func _dispose(main: Main) -> void:
 	for child: Node in main.get_children():
 		child.free()
 	main.free()
-
-
-static func _file_snapshot(path: String) -> Variant:
-	if not FileAccess.file_exists(path):
-		return null
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	return file.get_as_text() if file != null else null

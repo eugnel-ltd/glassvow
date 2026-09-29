@@ -3,6 +3,7 @@ extends RefCounted
 ## checkpoint is a reloadable, mutually exclusive RunEnd route.
 
 const TEST_RUN_PATH: String = "user://test_reloadable_abandon_v2.json"
+const TEST_VIGIL_PATH: String = "user://test_reloadable_abandon_vigil_v2.json"
 const MAIN_PATH: String = "res://application/main.gd"
 const RUN_STATE_PATH: String = "res://domain/state/run_state.gd"
 const Diff: GDScript = preload("res://tests/support/diff.gd")
@@ -72,9 +73,6 @@ static func _round_trip_abandon_routes(
 	if not _function_body(source, "_on_abandon_choice").contains("if _store_run():") \
 			or not _safe_injected_seam(source):
 		return
-	var default_existed: bool = FileAccess.file_exists(SaveService.RUN_PATH)
-	var default_before: String = FileAccess.get_file_as_string(SaveService.RUN_PATH) \
-		if default_existed else ""
 	var cases: Array[Dictionary] = [
 		{
 			"tag": "combat",
@@ -115,8 +113,7 @@ static func _round_trip_abandon_routes(
 	]
 	for case: Dictionary in cases:
 		_run_abandon_case(content, case, fails)
-	_assert_default_untouched(default_existed, default_before, fails)
-	SaveService.clear(TEST_RUN_PATH)
+	TestProfile.wipe(TEST_RUN_PATH, TEST_VIGIL_PATH)
 
 
 static func _run_abandon_case(
@@ -129,7 +126,6 @@ static func _run_abandon_case(
 		run_state.set(field, pending[field])
 	var preserved: Dictionary = _preserved_projection(run_state)
 	var main: Main = _main_for(content, run_state)
-	main.set("_run_save_path", TEST_RUN_PATH)
 	main._on_abandon_choice("yes")
 	var loaded: RunState = SaveService.load_run(content, TEST_RUN_PATH)
 	if loaded == null:
@@ -194,6 +190,7 @@ static func _preserved_projection(run_state: RunState) -> Dictionary:
 static func _main_for(content: ContentDB, run_state: RunState) -> Main:
 	Locale.active = Locale.new(Locale.CODE_EN)
 	var main: Main = Main.new()
+	TestProfile.install(main, TEST_RUN_PATH, TEST_VIGIL_PATH)
 	main._map_layout_compile = MapCompose.fake_layout_compile()
 	main.content = content
 	main.game = GlassvowGame.new(content, run_state)
@@ -206,14 +203,6 @@ static func _main_for(content: ContentDB, run_state: RunState) -> Main:
 	main._sfx_bus = SfxBus.new()
 	main.add_child(main._sfx_bus)
 	return main
-
-
-static func _assert_default_untouched(
-		before_existed: bool, before: String, fails: Array[String]) -> void:
-	if FileAccess.file_exists(SaveService.RUN_PATH) != before_existed:
-		fails.append("abandon injected path: production save existence changed")
-	elif before_existed and FileAccess.get_file_as_string(SaveService.RUN_PATH) != before:
-		fails.append("abandon injected path: production save contents changed")
 
 
 static func _safe_injected_seam(source: String) -> bool:

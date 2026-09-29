@@ -200,6 +200,7 @@ static func run(fails: Array[String]) -> void:
 	crown_run.start_next_act(full)
 	crown_run.start_next_act(full)
 	var crown_host: Main = Main.new()
+	TestProfile.install(crown_host)
 	crown_host.game = GlassvowGame.new(full, crown_run)
 	crown_host._map = boss_map
 	_check(fails, crown_host._has_pending_boss_relic(),

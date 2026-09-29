@@ -429,6 +429,7 @@ static func _dialog_shells(fails: Array[String]) -> void:
 	var previous: Locale = Locale.active
 	Locale.active = Locale.new(Locale.CODE_EN)
 	var main: Main = Main.new()
+	TestProfile.install(main)
 	main._sfx_bus = SfxBus.new()
 	main.add_child(main._sfx_bus)
 	main._transitions = TransitionLayer.new()
@@ -504,6 +505,7 @@ static func _persistence_calls_and_shell(fails: Array[String]) -> void:
 	var previous: Locale = Locale.active
 	Locale.active = Locale.new(Locale.CODE_EN)
 	var main: Main = Main.new()
+	TestProfile.install(main)
 	main._sfx_bus = SfxBus.new()
 	main.add_child(main._sfx_bus)
 	main._transitions = TransitionLayer.new()

@@ -257,8 +257,7 @@ else `main.gd` parses) runs against the isolated Development profile:
 | Vigil | `user://glassvow_vigil_v2.json` | `user://glassvow_dev_vigil_v2.json` |
 
 So `tools/shot.sh` and `tools/live.sh` sessions leave the player's run and Vigil
-alone, and a capture no longer leaves a stray `glassvow_run_v2.json` behind for
-the test suite to diverge on: there is nothing to delete before running it. The
+alone, and a capture no longer leaves a stray `glassvow_run_v2.json` behind. The
 Development profile is a real profile. A development boot still stores a
 resumable checkpoint in it and `--resume` picks that up, so
 `tools/shot.sh --map --shot=…` followed by `tools/shot.sh --resume --shot=…` works
@@ -285,6 +284,29 @@ boots until the profile is emptied.
   build happens to carry never moves the player onto another profile.
   `tests/test_dev_boot_profile.gd` holds it and `tests/test_dev_tools.gd` holds
   the Scenario binding it rests on.
+
+### The test suite never touches the player's profile
+
+`godot --headless -s res://tests/run_all.gd` reads and writes none of the player's
+files, on any machine and whatever is sitting in `user://`, so it is safe to run
+beside a real save. Every suite that drives a `Main` binds it to scratch files
+with `TestProfile.install` (`tests/support/test_profile.gd`) before it can store or
+load, and the few suites whose subject is the player's own files
+(`test_dev_boot_profile`, `test_profile_isolation`, and the isolation legs of
+`test_scenario` and `test_opening_flow`) run inside `TestProfile.in_sandbox`,
+which moves `user://` into an empty private directory for the duration and puts it
+back afterwards. `tests/test_suite_isolation.gd` fails the suite when any script
+names the player's files, calls a `SaveService` or `Preferences` entry point
+without saying which file, builds a `Main` and never installs a profile, or reaches
+the player's paths outside a sandbox. The old advice to delete
+`user://glassvow_run_v2.json` before running the suite is therefore withdrawn:
+never delete, move or edit a real save to get a green run. A suite that disagrees
+with what is in `user://` has found a bug in a test, and the fix belongs in the
+test. To see it on your own machine, put an `override.cfg` beside `project.godot`
+(`config/use_custom_user_dir=true` and a `config/custom_user_dir_name` of your
+choosing; never commit it), plant stand-in `glassvow_run_v2.json`,
+`glassvow_vigil_v2.json` and `settings.cfg` in that directory, run the suite, and
+check that their hashes and modification times are unchanged afterwards.
 
 ## Creation and maintenance contract
 

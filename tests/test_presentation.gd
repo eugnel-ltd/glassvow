@@ -128,6 +128,7 @@ static func run(fails: Array[String]) -> void:
 	# ---- screen drives a real fight headless (instant drain)
 	var game: GlassvowGame = GlassvowGame.new(content, rs)
 	var composition: Main = Main.new()
+	TestProfile.install(composition)
 	_check(fails, composition.theme != null
 		and composition.theme.default_font == GlassStyle.face(GlassStyle.NOTO_SERIF_TC_REGULAR),
 		"shipping Main owns the runtime default UI font")
