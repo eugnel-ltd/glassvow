@@ -5771,6 +5771,7 @@
         "fringeMin": 0.25,
         "likeWeight": 1.5,
         "fringeWeight": 1.2,
+        "kindlingLift": 1.0,
         "lantern": {
           "sootLeak": 1,
           "sootArtCost": 1,
