@@ -2324,5 +2324,109 @@
     "asserts": {
       "payoff": "standing-stone"
     }
+  },
+  {
+    "id": "flame.steady",
+    "speaker": "walker",
+    "slot": "flame.steady",
+    "conditions": "",
+    "priority": 0,
+    "once": true,
+    "cooldown_runs": 0,
+    "weight": 1,
+    "zh": "它認得你了。",
+    "en": "It knows you now.",
+    "asserts": {}
+  },
+  {
+    "id": "flame.fringe",
+    "speaker": "walker",
+    "slot": "flame.fringe",
+    "conditions": "",
+    "priority": 0,
+    "once": true,
+    "cooldown_runs": 0,
+    "weight": 1,
+    "zh": "火尖上有另一種顏色。",
+    "en": "There is another colour at the tip.",
+    "asserts": {}
+  },
+  {
+    "id": "flame.true",
+    "speaker": "walker",
+    "slot": "flame.true",
+    "conditions": "",
+    "priority": 0,
+    "once": true,
+    "cooldown_runs": 0,
+    "weight": 1,
+    "zh": "一種玻璃，一種火。",
+    "en": "One glass. One fire.",
+    "asserts": {}
+  },
+  {
+    "id": "flame.soot",
+    "speaker": "walker",
+    "slot": "flame.soot",
+    "conditions": "",
+    "priority": 0,
+    "once": true,
+    "cooldown_runs": 0,
+    "weight": 1,
+    "zh": "塵火照不亮路。",
+    "en": "A dusty flame lights no road.",
+    "asserts": {}
+  },
+  {
+    "id": "flame.sootDeath",
+    "speaker": "walker",
+    "slot": "flame.sootDeath",
+    "conditions": "",
+    "priority": 0,
+    "once": true,
+    "cooldown_runs": 0,
+    "weight": 1,
+    "zh": "你的火從未安定下來。",
+    "en": "Your flame never settled.",
+    "asserts": {}
+  },
+  {
+    "id": "codex.lantern.shatter",
+    "speaker": "keeper",
+    "slot": "codex.lantern.shatter",
+    "conditions": "",
+    "priority": 0,
+    "once": true,
+    "cooldown_runs": 0,
+    "weight": 1,
+    "zh": "霜白的火，焰尖如冰，在玻璃破開處燒得最亮。",
+    "en": "A frost-white fire, its tips sharp as ice, burns brightest where glass breaks.",
+    "asserts": {}
+  },
+  {
+    "id": "codex.lantern.lantern",
+    "speaker": "keeper",
+    "slot": "codex.lantern.lantern",
+    "conditions": "",
+    "priority": 0,
+    "once": true,
+    "cooldown_runs": 0,
+    "weight": 1,
+    "zh": "金黃的火與爐火同色同形；給它越多，它越暖。",
+    "en": "An amber fire burns like the hearth, in colour and in shape; the more you give it, the warmer it grows.",
+    "asserts": {}
+  },
+  {
+    "id": "codex.lantern.edge",
+    "speaker": "keeper",
+    "slot": "codex.lantern.edge",
+    "conditions": "",
+    "priority": 0,
+    "once": true,
+    "cooldown_runs": 0,
+    "weight": 1,
+    "zh": "血月色的火又瘦又高，總找得到最薄的地方。",
+    "en": "A blood-moon fire burns thin and tall, and always finds the thinnest place.",
+    "asserts": {}
   }
 ]

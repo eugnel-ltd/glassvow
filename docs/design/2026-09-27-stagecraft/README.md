@@ -130,7 +130,7 @@ figure in that mood's posture and light until the file lands.
 | Scene | Staging |
 |---|---|
 | Opening ① | `wake` from black into the hall; the Keeper seated on the hearth (the #283 figure), speaking from the fire; pane docked clear of the seat. |
-| Opening ② | Push-in to the two-shot: hero left (the run's own aspect), Keeper right in `offering` — sparks kindle from its hands to yours on 「帶上這個」 — then still, then `tender` on the city. The destination beat keeps its 1 s skip floor. |
+| Opening ② | Push-in to the two-shot: hero left (the run's own aspect), Keeper right in `offering` — sparks kindle from its hands to yours on 「帶上這個」, and, still offering, it names what the lantern burns (flame lock §10) — then still, then `tender` on the city. The destination beat keeps its 1 s skip floor. |
 | Opening ③④ | Back to the wide: the portraits leave, the Keeper is seated again (the L0 plant — 身後，爐火仍亮着); 「守夜開始了」 as a gold title card clear of the seat. |
 | Lamplighter m1–m5 | Night road (`dusk`, ash). Moods walk the five-price arc: `wary` → `recognising` → `asking` → `urgent` (m4's question, a small hop) → `grieving`. He steps back to the far seat on m3-post ("He steps back") and m5-post ("He steps aside"); in m5-pre he first stands centre, blocking the road. His embers kindle out of the hero's hands into the dark lantern, and the scene dims ("The lantern does not light"). |
 | Unsealing | Rose lighting untouched; rays when the fire is one again, dim when "the light does not pass through"; a cold flash as the window becomes a mirror; a crack on the full truth; the monuments' push is a quake and an impact; dim on 「你沒有開門。」 |
@@ -155,6 +155,8 @@ existing copy only:
 | The Queue at the door | `payoff.mirror` heard once, as a chorus under hearth light and rays, straight after act4-entry on the first Act IV crossing (or after the short door, for a Vigil that crossed before the row could play). | `PoolBeats.KEY_L3` |
 | The Eighth Omen's broken words | While that omen rules the act, each waystone's echo is followed by one of its four words as a title card, in turn by the waystone's row. The beat's cursor is saved, so a rebuild resumes on the words rather than replaying the echo. | `SceneScript.OMEN_ECHO` |
 | The Night Stall | The merchant's line carries the lantern: its price out of reach (`poor`), and the throne told the moment it is sold (`bought`); otherwise the greeting. | `ShopScreen.say` |
+| The flame's lines (flame lock §10) | Heard, not seen: each a `line:` run scene in the whisper style, owed by a change of the flame's tier between two readings (the first Steady; its fringe; the first True; the first Soot) and played once per Vigil, after the won fight that read it, after that win's own page and closers and before its reward. A fall or a run-ending win leaves the whisper owed for its next transition. A fall in Soot writes the flame's own whisper as that fall's epitaph, once. | `FlameLines`; line-table `flame.*`; `GlassvowGame.take_flame_lines` |
+| The Lantern's codex | How to Play's Lantern entry gains one sentence per colour seen steady (or true) in this Vigil, under its rules, in the hearth's warmer ink. | line-table `codex.lantern.<way>`; `FlameLines.codex` |
 
 Not staged, on purpose: the Night Stall's frame (the painting *is* the screen,
 James's concept C1 — it speaks only through its own merchant line), dawn memories (the rubric's ceremony cadence), the Vigil and its
@@ -190,7 +192,13 @@ replayed on resume without consuming randomness, and a scene marks
   and phone; CJK slower than Latin, stops breathe, shouts land, reduced motion
   lands; capture fires nothing, a live line fires its own; the opening shows
   exactly one Keeper at every cursor; pool rows (a walker's echo is heard, not
-  seen; a Keeper row seats the Keeper); the dev reel covers the vocabulary.
+  seen; a Keeper row seats the Keeper); the dev reel covers the vocabulary;
+  the flame's lines (the Keeper's lantern line straight after the kindle, the
+  whispers once each after their win and never after a fall, the codex under
+  the Lantern's rules).
+- `tests/test_line_table.gd` — the flame's triggers: owed by a change of tier,
+  drawn once through the once gates, the Soot fall's epitaph once, the codex
+  kept across the Vigil, the locked text, and no mechanic word.
 - `tests/test_scene_player.gd` — the grammar change above, pinned.
 - Stills: `godot --path . -- --scene=<id> --cursor=N --shot=…` (settled
   stage), and the reel `-- --stagecraft --cursor=N --freeze=SECONDS --shot=…`

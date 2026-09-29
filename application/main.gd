@@ -1032,7 +1032,11 @@ func _show_vigil(open_rose: bool = false) -> void:
 
 
 func _show_help() -> void:
-	var screen: HelpScreen = HelpScreen.new(_shape, _sfx_bus)
+	# The codex keeps the colours this Vigil has seen steady, the saved run's
+	# own included when the title opens it.
+	var run: RunState = game.run if game != null else _load_run()
+	var screen: HelpScreen = HelpScreen.new(_shape, _sfx_bus,
+		FlameLines.codex(content, _vigil, run))
 	screen.closed.connect(_close_overlay)
 	_show_overlay(screen)
 
@@ -2347,6 +2351,9 @@ func _on_combat_over(result: String) -> void:
 		_transitions.bloom()
 	else:
 		_transitions.crack()
+	var here: MapNode = _map.current()
+	_owe_flame_lines(result == "win"
+		and not (here != null and here.type == "boss" and game.run.is_final_act()))
 	if result != "win":
 		game.run.pending_combat = null
 		game.run.pending_enemy_ids = null
@@ -2380,6 +2387,7 @@ func _on_combat_over(result: String) -> void:
 		game.run.map = _map.to_dict()
 		var shade: Array[String] = ["ownShade"]
 		_stage_closer(shade)
+		_stage_flame_line()
 		if not _store_run():
 			_show_save_error("ui.persistence.detail.shadeVictoryHold")
 			return
@@ -2431,6 +2439,7 @@ func _on_combat_over(result: String) -> void:
 		"slain_enemy": slain_enemy,
 	}
 	_stage_boss_beats(node)
+	_stage_flame_line()
 	if not _store_run():
 		_show_save_error("ui.persistence.detail.victoryRewardsHold")
 		return
@@ -2499,8 +2508,31 @@ func _stage_line_scene(slot: String, key: String) -> bool:
 	return true
 
 
+## Flame lock §10: draw the lines the fight's flame readings owe. The codex
+## keeps every colour seen steady; the whispers are drawn only for a walker who
+## won and walks on, and play after that win's own scenes (`_stage_flame_line`).
+## A whisper not drawn stays unheard, owed again at its next transition.
+func _owe_flame_lines(spoken: bool) -> void:
+	var owed: Array[String] = game.take_flame_lines()
+	if not _story_flow():
+		return
+	for slot: String in owed:
+		if spoken or FlameLines.is_codex(slot):
+			PoolBeats.draw(game.run, _vigil, content, slot, slot)
+
+
+## Queue the first flame whisper this run has drawn and the Vigil has not yet
+## heard, as a run scene; the caller's store keeps it.
+func _stage_flame_line() -> bool:
+	for slot: String in FlameLines.SPOKEN:
+		if game.run.pool_beats.has(slot) and _stage_line_scene(slot, slot):
+			return true
+	return false
+
+
 ## What a finished run scene owes next: the boss win's closers after its page
-## and after each other, and the Queue after the first Act IV crossing.
+## and after each other, the Queue after the first Act IV crossing, and then
+## any flame whisper still owed.
 func _stage_after_scene(scene_id: String) -> void:
 	if scene_id.begins_with(SceneScript.PAGE_PREFIX):
 		_stage_closer(PoolBeats.BOSS_CLOSERS)
@@ -2514,6 +2546,7 @@ func _stage_after_scene(scene_id: String) -> void:
 		# crossing, or on a later one for a Vigil that crossed before the row
 		# could play.
 		_stage_line_scene(PoolBeats.SLOT_L3, PoolBeats.KEY_L3)
+	_stage_flame_line()
 
 
 ## The LineTable row a `line:` scene plays; empty for any other scene.

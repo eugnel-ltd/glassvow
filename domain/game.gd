@@ -19,6 +19,10 @@ var last_ret: Variant = null
 ## The deck (sorted card ids) behind the last FLAME reading.
 var _flame_deck: PackedStringArray = PackedStringArray()
 var _flame_read: bool = false
+## The last FLAME reading; a new or resumed run starts from the starter deck's.
+var _flame_before: Dictionary = FlameLines.START
+## The line slots the readings since `take_flame_lines` have owed, in order.
+var _flame_owed: Array[String] = []
 
 
 func _init(content_db: ContentDB, run_state: RunState) -> void:
@@ -101,5 +105,17 @@ func flame_events(force: bool = false) -> Array[Dictionary]:
 	_flame_read = true
 	var event: Dictionary = {"t": EventTypes.FLAME}
 	event.merge(Flame.read(content, run))
+	for slot: String in FlameLines.owed(_flame_before, event):
+		if not _flame_owed.has(slot):
+			_flame_owed.append(slot)
+	_flame_before = event
 	out.append(event)
+	return out
+
+
+## Flame lock §10: the line slots the readings since the last call have owed,
+## in the order they play. The caller's once gates decide which are unheard.
+func take_flame_lines() -> Array[String]:
+	var out: Array[String] = _flame_owed
+	_flame_owed = []
 	return out

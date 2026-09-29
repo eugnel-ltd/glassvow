@@ -603,6 +603,29 @@ only; 喚回 / 分身 / 窗成鏡 never stated. Genre: Roguelike 牌組構築, n
 no new player-facing lines. `acts[3]` / `rewardGold[3]` / `encounters[3]` land those
 settled names on the production book. Stage plates remain #221.
 
+## 燈火六句與 codex 三句(flame lock §10,PR 7)[六句 SETTLED — flame lock,James 2026-09-29;codex 三句 PROPOSED — 待 James review]
+
+`docs/design/2026-09-29-dusk-flame/README.md` §10。六句原文由 lock 定,zh 只按
+#177 正字把「著」改作「着」;codex「The Lantern」三句新寫,守爐人語域,無數字、
+無機制詞,只用字庫已有的字(顏色以霜白/金黃/血月色落字);每句並寫顏色與火形
+(焰尖如冰/與爐火同形/又瘦又高),合 lock §9 無障礙——單憑形狀亦認得出是哪一種
+火。出處:開場句是
+`story.opening.b2.lantern`;其餘是 line-table 行(`flame.*`、`codex.lantern.*`)。
+低語與 codex 的 channel 天花 L1、shard-0 可達(同 loss pool);開場句隨開場
+scene,天花 L0。
+
+| # | 句子 | 出處 | 級 | 表面讀法 | 揭後讀法 | 狀態 |
+|---|---|---|---|---|---|---|
+| 458 | 它燒的是你帶着的東西。 / It burns what you carry. | story.opening.b2.lantern(Keeper,燈點起的一刻) | L0 | 燈的唯一規矩:你帶甚麼玻璃,它就燒甚麼 | 字面真:火=意志,玻璃=記憶(00 §8.6);它把燈交到行者手上,燈一路燒的是行者自己帶着的東西——行者帶走意志,真死在路上(00 §3.2、§3.7);它甚麼都不帶,所以留下的從來不燒 | 新寫 [SETTLED — flame lock §10;「著」→「着」按 #177] |
+| 459 | 它認得你了。 / It knows you now. | flame.steady(低語;lock 定掌燈人說,未遇則低語——讀火從不落在會面之中,故今由低語說) | L1 | 燈火第一次定色:燈認出你走的路 | 燈由前人留下(row 86),提過它的每一位行者都是你(00 §1);它一早認得,只是今日才說出口 | 新寫 [SETTLED — flame lock §10] |
+| 460 | 火尖上有另一種顏色。 / There is another colour at the tip. | flame.fringe(低語) | L1 | 主色之外,第二條路的顏色 | 另一種顏色也是你——隊伍裏沒有別人(00 §1;02 隊伍) | 新寫 [SETTLED — flame lock §10] |
+| 461 | 一種玻璃，一種火。 / One glass. One fire. | flame.true(低語) | L1 | 純色:只帶一種玻璃,只燒一種火 | 門只認「完整的一團火」(00 §2.2、§2.6):原初之火本是一團、人本是一個——純火是碎裂之前的樣子 | 新寫 [SETTLED — flame lock §10] |
+| 462 | 塵火照不亮路。 / A dusty flame lights no road. | flame.soot(低語) | L1 | 散亂的玻璃燒不成火 | 灰=燒盡、無可凝者(00 §8.6):意志散了,照不出路,行者到不了門前 | 新寫 [SETTLED — flame lock §10] |
+| 463 | 你的火從未安定下來。 / Your flame never settled. | flame.sootDeath(守夜帳上的墓誌:在塵火中倒下的那一程,一次) | L1 | 這一程的火始終沒有定色 | 安定=沉澱:行者的火未及安定便熄;安定下來的,只有爐邊那一個(00 §2.4) | 新寫 [SETTLED — flame lock §10] |
+| 464 | 霜白的火，焰尖如冰，在玻璃破開處燒得最亮。 / A frost-white fire, its tips sharp as ice, burns brightest where glass breaks. | codex.lantern.shatter(守爐人語域;霜白之火首次定色後揭示;色與形並寫,色盲亦可憑形對上) | L1 | 霜白的火愛玻璃破開 | 一體之火撞門碎成六片,朝聖才有了形狀(00 §2.2);它溫和地說火在破開時最亮,說的正是這個安排的起點 | 新寫 [PROPOSED] |
+| 465 | 金黃的火與爐火同色同形；給它越多，它越暖。 / An amber fire burns like the hearth, in colour and in shape; the more you give it, the warmer it grows. | codex.lantern.lantern(同上;金黃之火) | L1 | 金黃的火靠人餵養 | 爐火是原初之火的餘燼,也是它的第二張臉(00 §2.2;02 Keeper);與它同色同形之火越餵越暖——每一個上路的行者都在餵這個安排(00 §2.4) | 新寫 [PROPOSED] |
+| 466 | 血月色的火又瘦又高，總找得到最薄的地方。 / A blood-moon fire burns thin and tall, and always finds the thinnest place. | codex.lantern.edge(同上;血月色之火) | L1 | 血月色的火專找弱處 | 最薄的地方=彩窗與封門同一道 threshold 的兩面(00 §8.1,#259 Q4):窗成鏡那刻,兩面之間只隔一層玻璃;血月就是月蝕,它不說出口 | 新寫 [PROPOSED] |
+
 ## `[REWRITE:climb]` 清單狀態 — 已關閉
 
 全量掃描由 #232 的十四-agent 量度完成,記錄於
