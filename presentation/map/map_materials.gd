@@ -131,8 +131,8 @@ func bind_act(region: MapRegions, positions: PackedVector3Array) -> Dictionary:
 	var ground_mean: float = 0.5
 	var prop_mean: float = 0.5
 	for row: Dictionary in _manifest_rows:
-		var row_act: int = _row_int(row, "act", -99)
-		if row_act != -1 and row_act != region.act:
+		var row_act_index: int = _row_int(row, "act", -99)
+		if row_act_index != -1 and row_act_index != region.act:
 			continue
 		var path: String = ASSET_ROOT + _row_string(row, "path")
 		var loaded: Variant = _resource_loader.call(path)

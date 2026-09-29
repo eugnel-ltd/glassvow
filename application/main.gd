@@ -76,18 +76,18 @@ var _shape: StringName = StageShape.IDENTITY
 ## bare wide window silently resolves to `desktop-landscape` and reads a
 ## different layout table entirely (docs/battlefield-parity.md).
 var _forced_shape: StringName = &""
-## --act=N: which act's scenery the fight or map is dressed in. **N IS 0-BASED**:
-## `--act=0` is Act I and `--act=1` is Act II, matching `map-assets.json`. Only
-## Act I has an authored kit set, so any higher N renders placeholder prisms and
-## no road -- indistinguishable from a broken renderer, which cost most of a
-## session to tell apart in #450. `_bind_asset_geometry` warns when it happens.
-## Whether the manifest should become 1-based instead is still open in #451.
-## The domain does
-## not model acts yet, so a fight from `--fight=` / a `--map` run is act 0 and
-## there was no way to see the other two outside the layout bench — while the
-## book authors the benchmark's three and exposes the optional fourth seam.
-## Map generation is never act-forced.
-var _forced_act: int = -1
+## --act=N: which act's scenery the fight or map is dressed in. **N IS AN ACT
+## NUMBER, COUNTED FROM 1**: `--act=1` is Act I and `--act=4` is Act IV. `ActFlag`
+## validates it (0, 5 and anything unreadable exit with the convention instead of
+## clamping to a neighbour) and is the one place that turns it into this 0-based
+## ACT INDEX, the number every table in the game is keyed by (`RunState.act`,
+## `LayoutBook`, `MapRegions`, `map-assets.json`). -1 means "not forced".
+##
+## The domain does not model acts yet, so a fight from `--fight=` / a `--map` run
+## is act index 0 and there was no way to see the others outside the layout bench
+## — while the book authors the benchmark's three and exposes the optional fourth
+## seam. Map generation is never act-forced.
+var _forced_act_index: int = -1
 ## --onboard=<id>: production-flow photo bench for first-run hints. Not a
 ## suppressed boot — scenes_seen gains "opening" in memory so the gate opens.
 var _onboard: String = ""
@@ -199,7 +199,7 @@ func _ready() -> void:
 	# godot --path . -- --fight=id[,id] [--kind=normal|elite|boss]   (battlefield)
 	# godot --path . -- --vp=1280x720            (watch the shape re-pick live)
 	# godot --path . -- --shape=phone-landscape   (force one; ?shape= ported)
-	# godot --path . -- --act=2                  (dress fight/map in act 2's scenery)
+	# godot --path . -- --act=2                  (dress fight/map in Act II; 1-based)
 	# tools/shot.sh --resume --shot=...          (exercise the durable router)
 	# tools/shot.sh --fight=… --settle=3 --shot=…  (photograph it at rest)
 	# tools/shot.sh --font-probe --shot=/tmp/font.png  (runtime default font)
@@ -269,8 +269,15 @@ func _ready() -> void:
 			_forced_shape = StringName(arg.trim_prefix("--shape="))
 		elif arg.begins_with("--settle="):
 			_settle = maxf(0.0, float(arg.trim_prefix("--settle=")))
-		elif arg.begins_with("--act="):
-			_forced_act = clampi(int(arg.trim_prefix("--act=")), 0, LayoutBook.ACTS - 1)
+		elif arg.begins_with(ActFlag.PREFIX):
+			# Refused before anything routes or saves: a wrong act is a plausible
+			# frame, so it must not be silently clamped into one (#451).
+			var forced: Dictionary = ActFlag.parse(arg.trim_prefix(ActFlag.PREFIX))
+			if forced.has("error"):
+				push_error(str(forced["error"]))
+				get_tree().quit(2)
+				return
+			_forced_act_index = forced["act_index"]
 		elif arg.begins_with("--vp="):
 			# Resize the OS window to see how the screen holds up, and to watch
 			# `_apply_shape` re-pick as you cross an aspect boundary. It DOES
@@ -1414,8 +1421,8 @@ func _show_map() -> void:
 	add_child(_map_screen)
 	_map_screen.refresh(game.run)
 	# --map --act=N: dress scenery only (domain map stays the run's act).
-	if _forced_act >= 0:
-		_map_screen.set_act_scenery(_forced_act)
+	if _forced_act_index >= 0:
+		_map_screen.set_act_scenery(_forced_act_index)
 	_transitions.set_grain(true)
 	_transitions.screen_in(_map_screen)
 	_attach_run_hud()
@@ -2183,7 +2190,7 @@ func _resume_pending_combat() -> void:
 	_transitions.set_grain(false)
 	_clear_route()
 	_screen = CombatScreen.new(game, _shape,
-		_forced_act if _forced_act >= 0 else game.run.act, _sfx_bus)
+		_forced_act_index if _forced_act_index >= 0 else game.run.act, _sfx_bus)
 	_screen.combat_over.connect(_on_combat_over)
 	_screen.result_continue.connect(_on_result_continue)
 	_screen.menu_requested.connect(_show_run_menu)
@@ -2225,7 +2232,7 @@ func _start_fight(ids: PackedStringArray, kind: String) -> void:
 	_bench_fight = true
 	_transitions.set_grain(false)
 	_clear_route()
-	_screen = CombatScreen.new(game, _shape, maxi(0, _forced_act), _sfx_bus)
+	_screen = CombatScreen.new(game, _shape, maxi(0, _forced_act_index), _sfx_bus)
 	_screen.combat_over.connect(_on_combat_over)
 	_screen.result_continue.connect(_on_result_continue)
 	_screen.menu_requested.connect(_show_run_menu)
@@ -2279,7 +2286,7 @@ func _boot_onboard(id: String) -> void:
 func _onboard_fight(ids: PackedStringArray, kind: String) -> void:
 	_transitions.set_grain(false)
 	_clear_route()
-	_screen = CombatScreen.new(game, _shape, maxi(0, _forced_act), _sfx_bus)
+	_screen = CombatScreen.new(game, _shape, maxi(0, _forced_act_index), _sfx_bus)
 	_screen.seq.instant = true
 	_screen.combat_over.connect(_on_combat_over)
 	_screen.result_continue.connect(_on_result_continue)

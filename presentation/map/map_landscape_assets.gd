@@ -33,10 +33,7 @@ func _init(act_index: int = 0) -> void:
 		return
 	var rows: Array = []
 	var defaults: Dictionary = {}
-	var ids: Array = SCENERY[act].duplicate()
-	ids.append(GATES[act])
-	if act == 0:
-		ids.append("vigil")
+	var ids: Array[String] = declared_ids(act)
 	for id: String in ids:
 		var spec: Dictionary = _spec(id)
 		var path: String = ROOT + str(spec["file"])
@@ -72,6 +69,29 @@ func _init(act_index: int = 0) -> void:
 		profiles[id] = profile
 		values.append(profile)
 	digest = registry.digest(values)
+
+
+## Every asset an act declares, in bind order: its scenery, its gate and, for
+## Act I only, the Vigil. The one answer to "what must this act resolve", read by
+## `_init` and by the count a partial resolve reports. `act_index` is 0-based and
+## must already be inside the tables, as `_init` clamps it.
+static func declared_ids(act_index: int) -> Array[String]:
+	var ids: Array[String] = []
+	ids.assign(SCENERY[act_index])
+	ids.append(GATES[act_index])
+	if act_index == 0:
+		ids.append("vigil")
+	return ids
+
+
+## `failure` in words that name the act and how much of its declared set resolved,
+## or "" when the set is whole. Resolution stops at the first asset that will not
+## load, so `meshes` holds exactly what resolved before it.
+func shortfall() -> String:
+	if failure.is_empty():
+		return ""
+	return "Act %d (act_index %d) declares %d landscape assets and resolved %d: %s" % [
+		ActFlag.number_of(act), act, declared_ids(act).size(), meshes.size(), failure]
 
 
 func bundle() -> Dictionary:

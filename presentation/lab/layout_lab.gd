@@ -67,7 +67,9 @@ const ORIGIN_INK: Dictionary[StringName, Color] = {
 var content: ContentDB
 
 var _shape: StringName = StageShape.IDENTITY
-var _act: int = 0
+## The 0-based act INDEX the bench is authoring. The tabs and status line show the
+## act NUMBER instead (`ActFlag.number_of`), so they read as `--act=` is typed.
+var _act_index: int = 0
 var _scope: StringName = &"battlefield"
 var _foes: Array[String] = ["sporeling", "sporeling"]
 var _selected: String = "hero"
@@ -107,8 +109,12 @@ func _init(content_ref: ContentDB) -> void:
 			var want: StringName = StringName(arg.trim_prefix("--shape="))
 			if StageShape.SHIPPING.has(want):
 				_shape = want
-		elif arg.begins_with("--act="):
-			_act = clampi(int(arg.trim_prefix("--act=")), 0, ACTS - 1)
+		elif arg.begins_with(ActFlag.PREFIX):
+			var forced: Dictionary = ActFlag.parse(arg.trim_prefix(ActFlag.PREFIX))
+			if forced.has("error"):
+				push_error(str(forced["error"]))
+			else:
+				_act_index = forced["act_index"]
 		elif arg.begins_with("--scope="):
 			var scope: StringName = StringName(arg.trim_prefix("--scope="))
 			if LayoutBook.SCOPES.has(scope):
@@ -170,7 +176,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_shape = shapes[index]
 		_rebuild()
 	elif key.keycode == KEY_COMMA or key.keycode == KEY_PERIOD:
-		_act = wrapi(_act + (1 if key.keycode == KEY_PERIOD else -1), 0, ACTS)
+		_act_index = wrapi(_act_index + (1 if key.keycode == KEY_PERIOD else -1), 0, ACTS)
 		_rebuild()
 	elif key.keycode == KEY_S:
 		var scopes: Array = LayoutBook.SCOPES.keys()
@@ -218,7 +224,7 @@ func _rebuild() -> void:
 	var ref: Vector2 = Vector2(StageShape.REFERENCES[_shape])
 	_host.size = ref
 	_game = GlassvowGame.new(content, RunState.new_run(content, SEED))
-	_screen = CombatScreen.new(_game, _shape, _act)
+	_screen = CombatScreen.new(_game, _shape, _act_index)
 	_host.add_child(_screen)
 	_host.move_child(_screen, 0)  # under the overlay, which draws last
 	_screen.start_encounter(_foes, "normal", "layout bench")
@@ -301,7 +307,7 @@ func _entry(path: String, form: StringName, label: String, rect: Rect2,
 	var at: String = prov if prov != "" else path
 	return {
 		"path": path, "form": form, "label": label, "rect": rect,
-		"origin": LayoutBook.origin(_scope, _shape, _act, at),
+		"origin": LayoutBook.origin(_scope, _shape, _act_index, at),
 	}
 
 
@@ -487,13 +493,13 @@ func _nudge(step: Vector2) -> void:
 	if box.is_empty():
 		return
 	var form: StringName = box["form"]
-	var target: Dictionary = LayoutBook.at(LayoutBook.resolve(_scope, _shape, _act), _selected)
+	var target: Dictionary = LayoutBook.at(LayoutBook.resolve(_scope, _shape, _act_index), _selected)
 	var moved: bool = false
 	for field: String in LayoutBook.fields(form):
 		var per_px: Vector2 = LayoutBook.drag_step(form, field)
 		if per_px.is_zero_approx() or not target.has(field):
 			continue
-		LayoutBook.author(_scope, _shape, _act, _level, _selected, field,
+		LayoutBook.author(_scope, _shape, _act_index, _level, _selected, field,
 			LayoutBook.num(target[field]) + per_px.dot(step))
 		moved = true
 	if moved:
@@ -513,9 +519,9 @@ func _nudge_field(delta: float) -> void:
 		return
 	var field: String = names[_field]
 	var spec: Dictionary = LayoutBook.FIELDS.get(StringName("%s/%s" % [form, field]), {})
-	var target: Dictionary = LayoutBook.at(LayoutBook.resolve(_scope, _shape, _act), _selected)
+	var target: Dictionary = LayoutBook.at(LayoutBook.resolve(_scope, _shape, _act_index), _selected)
 	var now: float = LayoutBook.num(target.get(field), LayoutBook.num(spec.get("default")))
-	LayoutBook.author(_scope, _shape, _act, _level, _selected, field, clampf(now + delta,
+	LayoutBook.author(_scope, _shape, _act_index, _level, _selected, field, clampf(now + delta,
 		LayoutBook.num(spec.get("min"), -INF), LayoutBook.num(spec.get("max"), INF)))
 	_reapply()
 
@@ -529,7 +535,7 @@ func _revert() -> void:
 	var names: PackedStringArray = LayoutBook.fields(form)
 	if _field < 0 or _field >= names.size():
 		return
-	LayoutBook.unauthor(_scope, _shape, _act, _level, _selected, names[_field])
+	LayoutBook.unauthor(_scope, _shape, _act_index, _level, _selected, names[_field])
 	_reapply()
 
 
@@ -586,9 +592,9 @@ func _build_panel() -> PanelContainer:
 	col.add_child(_heading("ACT"))
 	var acts: PackedStringArray = []
 	for i: int in ACTS:
-		acts.append("act %d" % i)
-	col.add_child(_tabs(acts, _act, func(i: int) -> void:
-		_act = i
+		acts.append("act %d" % ActFlag.number_of(i))
+	col.add_child(_tabs(acts, _act_index, func(i: int) -> void:
+		_act_index = i
 		_rebuild()))
 
 	col.add_child(_heading("SCOPE"))
@@ -695,7 +701,7 @@ func _tabs(labels: PackedStringArray, chosen: int, on_pick: Callable) -> Control
 
 ## Re-derive everything the panel and the overlay show from the resolved layout.
 func _refresh() -> void:
-	var layout: Dictionary = LayoutBook.resolve(_scope, _shape, _act)
+	var layout: Dictionary = LayoutBook.resolve(_scope, _shape, _act_index)
 	_boxes = _collect(layout)
 	var paths: PackedStringArray = []
 	for box: Dictionary in _boxes:
@@ -711,7 +717,7 @@ func _refresh() -> void:
 	_refresh_rows()
 	_over.queue_redraw()
 	var faults: PackedStringArray = LayoutBook.validate()
-	_status.text = "%s · %s · act %d · %s" % [_shape, _scope, _act,
+	_status.text = "%s · %s · act %d · %s" % [_shape, _scope, ActFlag.number_of(_act_index),
 		"book validates" if faults.is_empty() else "%d complaint(s)" % faults.size()]
 
 
@@ -737,7 +743,7 @@ func _refresh_rows() -> void:
 	var chosen: Dictionary = _box()
 	if chosen.is_empty():
 		return
-	var layout: Dictionary = LayoutBook.resolve(_scope, _shape, _act)
+	var layout: Dictionary = LayoutBook.resolve(_scope, _shape, _act_index)
 	var target: Dictionary = LayoutBook.at(layout, _path(chosen))
 	var form: StringName = chosen["form"]
 	_rows.add_child(_caption("%s — %s" % [chosen["label"], form]))
@@ -751,7 +757,7 @@ func _refresh_rows() -> void:
 		# A slot's origin is the formation's, for the same array-replace reason
 		# `_collect` gives; everything else is asked per field.
 		var origin: StringName = (_origin_of(chosen) if form == &"slot"
-			else LayoutBook.origin(_scope, _shape, _act, _path_of(chosen, field)))
+			else LayoutBook.origin(_scope, _shape, _act_index, _path_of(chosen, field)))
 		var value: String = ("%s %s" % [_number(LayoutBook.num(target.get(field))),
 			spec.get("unit", "")] if here else "—")
 		var moves: bool = not LayoutBook.drag_step(form, field).is_zero_approx()
@@ -782,7 +788,8 @@ func _refresh_levels() -> void:
 	_clear(_levels)
 	var labels: PackedStringArray = []
 	for level: StringName in LayoutBook.LEVELS:
-		labels.append("act %d" % _act if level == LayoutBook.FROM_ACT else String(level))
+		labels.append("act %d" % ActFlag.number_of(_act_index)
+			if level == LayoutBook.FROM_ACT else String(level))
 	_levels.add_child(_tabs(labels, LayoutBook.LEVELS.find(_level), func(i: int) -> void:
 		_level = LayoutBook.LEVELS[i]
 		_refresh_rows()))
