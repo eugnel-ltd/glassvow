@@ -2,9 +2,15 @@ extends RefCounted
 ## Flame lock §8, like calls to like (docs/design/2026-09-29-dusk-flame): once
 ## the flame is Steady or True, glass of the dominant way draws at `likeWeight`
 ## and glass of the fringe way at `fringeWeight`, in card rewards and in the
-## shop's cards and relics. Kindling and Soot lean nowhere. Every offer makes the
-## same draws whatever the flame (a leaning pick is still one draw), so prices,
-## gold, potions, rarity rolls and the run's cursor never move with it.
+## shop's cards and relics. Kindling and Soot lean nowhere.
+##
+## What keeps replays deterministic is the run's shared cursor: every offer
+## advances it by the same draws whatever the flame. A leaning shop pick is still
+## one draw, and a card reward is rolled on a detached chain seeded from the
+## cursor, so the weighting can lengthen that chain (a duplicate is drawn again)
+## but never moves the cursor. Prices, gold, potions and the first card's rarity
+## roll therefore never move with the flame, and a Kindling or Soot offer is
+## exactly the offer from before the weighting, every pick a plain `pick_index`.
 
 const SEEDS: int = 60
 const SAMPLES: int = 10000
@@ -26,6 +32,17 @@ const SOOT: Array = ["soot edge, lantern fringe", [],
 const TRUE_LANTERN: Array = ["true lantern", ["chisel", "eclipseSlash"],
 	["preparation", "surge", "devour", "offering"], "TRUE"]
 const STARTER: Array = ["starter", [], [], "KINDLING"]
+## The combat rewards an offer sequence draws, after the shop.
+const REWARDS: Array[String] = ["normal", "elite", "boss"]
+
+
+## The rewards as they were before §8: every pick a plain `pick_index`, one
+## uniform draw, whatever the flame. What an unlit offer must equal.
+class PlainRewards:
+	extends RewardRules
+
+	func _draw(rng: Rng, _run: RunState, _kind: String, pool: Array, _lean: Dictionary) -> int:
+		return rng.pick_index(pool.size())
 
 
 static func run(fails: Array[String]) -> void:
@@ -62,24 +79,37 @@ static func _dusk(content: ContentDB, seed: int, deck: Array, aspect: int = 0) -
 	return run_state
 
 
+## The shop, then a reward of each kind, one after another on the run's cursor:
+## what each offer was, and where the cursor stood after it ("cursors") and after
+## everything ("cursor").
 static func _offers(rules: RewardRules, run_state: RunState, boss_relics: bool) -> Dictionary:
 	var out: Dictionary = {"shop": rules.gen_shop(run_state)}
-	for kind: String in ["normal", "elite", "boss"]:
+	var cursors: Dictionary = {"shop": run_state.rng_state()}
+	for kind: String in REWARDS:
 		out[kind] = rules.gen_combat_rewards(run_state, kind)
+		cursors[kind] = run_state.rng_state()
 	if boss_relics:
 		out["crowns"] = rules.roll_boss_relics(run_state)
+	out["cursors"] = cursors
 	out["cursor"] = run_state.rng_state()
 	return out
 
 
-## Kindling and Soot decks of the same seed are offered exactly what the
-## starter deck is; the Ashwarden, with no ways, whatever glass it carries.
+## The starter, Kindling and Soot decks of the same seed are offered exactly the
+## offer from before the weighting (every pick a plain `pick_index`), the cursor
+## after each offer included; the Ashwarden, with no ways, whatever glass it
+## carries.
 static func _unlit_flames_lean_nowhere(content: ContentDB, fails: Array[String]) -> void:
 	var rules: RewardRules = RewardRules.new(content)
+	var plain: RewardRules = PlainRewards.new(content)
 	var coloured: Array = ["coloured", [], ["uppercut", "quakeblow", "oblivionStrike", "limitBreak",
 		"warCry", "empower"], "KINDLING"]
 	for seed: int in range(SEEDS):
 		var starter: Dictionary = _offers(rules, _dusk(content, seed, STARTER), false)
+		if starter != _offers(plain, _dusk(content, seed, STARTER), false):
+			fails.append("like calls to like: the starter deck's offer is not the pre-weighting offer (seed %d)"
+				% seed)
+			return
 		for deck: Array in [KINDLING, SOOT]:
 			if _offers(rules, _dusk(content, seed, deck), false) != starter:
 				fails.append("like calls to like: %s leaned (seed %d)" % [deck[0], seed])
@@ -90,29 +120,48 @@ static func _unlit_flames_lean_nowhere(content: ContentDB, fails: Array[String])
 			return
 
 
-## A lit flame changes which glass is drawn, never how many draws are made:
-## the cursor, every price, the gold, potions and relics, the card count and the
-## first card's rarity roll match the unlit deck's; a replay of the seed offers
-## the same again.
+## A lit flame changes which glass is drawn, never how far an offer moves the
+## run's cursor: after the shop and after each reward the cursor of a Steady and
+## of a True deck is the Kindling deck's, and what the pre-weighting draw leaves
+## on the same deck; every price, the gold, potions and relics, the card count and
+## the first card's rarity roll match too. A replay of the seed offers the same
+## again. The weighting must also change the glass somewhere, or those matches
+## would prove nothing.
 static func _lit_flames_keep_every_draw(content: ContentDB, fails: Array[String]) -> void:
 	var rules: RewardRules = RewardRules.new(content)
+	var plain: RewardRules = PlainRewards.new(content)
+	var leaned: Dictionary = {}
 	for seed: int in range(SEEDS):
 		var unlit: Dictionary = _offers(rules, _dusk(content, seed, STARTER), false)
 		for deck: Array in [LIT, TRUE_LANTERN]:
 			var lit: Dictionary = _offers(rules, _dusk(content, seed, deck), false)
+			var before: Dictionary = _offers(plain, _dusk(content, seed, deck), false)
 			var problem: String = _same_draws(content, unlit, lit)
+			if problem.is_empty():
+				problem = _same_draws(content, before, lit)
 			if problem.is_empty() and _offers(rules, _dusk(content, seed, deck), false) != lit:
 				problem = "offered differently on a replay"
 			if not problem.is_empty():
 				fails.append("like calls to like: %s seed %d %s" % [deck[0], seed, problem])
 				return
+			if lit != before:
+				leaned[str(deck[0])] = true
+	for deck: Array in [LIT, TRUE_LANTERN]:
+		if not leaned.has(str(deck[0])):
+			fails.append("like calls to like: %s never drew other glass than the pre-weighting draw"
+				% deck[0])
 
 
-static func _same_draws(content: ContentDB, unlit: Dictionary, lit: Dictionary) -> String:
-	if lit["cursor"] != unlit["cursor"]:
-		return "moved the run's cursor"
+## What in `lit` must be as in `reference` (offers made with no weighting, or by
+## the Kindling deck): the cursor after every offer, and everything but the glass.
+static func _same_draws(content: ContentDB, reference: Dictionary, lit: Dictionary) -> String:
+	var reference_cursors: Dictionary = reference["cursors"]
+	var lit_cursors: Dictionary = lit["cursors"]
+	for offer: String in lit_cursors:
+		if lit_cursors[offer] != reference_cursors[offer]:
+			return "moved the run's cursor after the %s offer" % offer
 	var shop: Dictionary = lit["shop"].duplicate(true)
-	var plain_shop: Dictionary = unlit["shop"].duplicate(true)
+	var plain_shop: Dictionary = reference["shop"].duplicate(true)
 	for category: String in ["cards", "relics"]:
 		for stock: Dictionary in [shop, plain_shop]:
 			for row_v: Variant in stock[category]:
@@ -120,9 +169,9 @@ static func _same_draws(content: ContentDB, unlit: Dictionary, lit: Dictionary) 
 				row.erase("id")
 	if shop != plain_shop:
 		return "moved a shop price, row or potion"
-	for kind: String in ["normal", "elite", "boss"]:
+	for kind: String in REWARDS:
 		var reward: Dictionary = lit[kind].duplicate(true)
-		var plain: Dictionary = unlit[kind].duplicate(true)
+		var plain: Dictionary = reference[kind].duplicate(true)
 		var cards: Array = reward["cards"]
 		var plain_cards: Array = plain["cards"]
 		if cards.size() != plain_cards.size() or _rarity(content, cards[0]) != _rarity(content, plain_cards[0]):
