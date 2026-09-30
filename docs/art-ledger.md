@@ -1034,6 +1034,99 @@ The Vigil's rose window remains concealed; the visible rose threshold belongs
 to Act IV. Native captures and final validation are recorded in
 `docs/reviews/map-reassembly/direction.md`; the concept image is not game proof.
 
+### `assets/icon/glassvow-icon-ios.png` and `assets/icon/glassvow-icon.png` — 1024×1024 — the app icon, C7 dusk rose (#545)
+
+The app icon, one mark for both locales: a leaded stained-glass rose window with
+six spokes and a worn-gold ring, a sealed pointed-arch door at the hub and one
+hairline of warm light down its seam, lit from behind at dusk (amber and honey by
+the door, cooling to violet and cobalt at the rim). No figures, stairs or text.
+James picked it on 2026-09-29 from eight candidates in two rounds; the
+reviewer's recommendation was C6. The brief is #243's resolution as #409
+restates it. The inspection, the ranking and the sheets are in
+`docs/design/2026-09-29-icon-check/README.md`; `landed-c7.png` there renders both
+masters.
+
+| File | Used by | Format | sha256 |
+|---|---|---|---|
+| `assets/icon/glassvow-icon-ios.png` | both iOS presets, `icons/icon_1024x1024` and `icons/app_store_1024x1024` | 1024×1024 RGB, opaque and full-bleed; C7 byte for byte | `5d4004c03040f08fc05ed07bb19e29c1294b440a3553629b68d3ab198b082f08` |
+| `assets/icon/glassvow-icon.png` | `config/icon`; the macOS grid master and the source of the icns | 1024×1024 RGBA; 824 px live area, transparent margin | `9a2a1268280ec0726341bc8ee83ab25209418a97aed0a735d9fb292e9a194bc3` |
+| `assets/icon/glassvow.icns` | the macOS preset's `application/icon`; `config/macos_native_icon` | icns ladder, 16 to 512 px at 1x and 2x | `ab527d136b1cc453e148f1c92ae8999bf70b61b2c2ebf6e7da682793b0360184` |
+
+Rebuild the macOS pair from the iOS master, which is C7 itself, with
+`python3 tools/make_icon_master.py assets/icon/glassvow-icon-ios.png assets/icon/glassvow-icon.png`
+and then `tools/make_icon.sh`. The tool keeps C7's own scale (no zoom) and
+anti-aliases the grid corners.
+
+Generated 2026-09-29, London time, by Codex CLI 0.159.0's built-in `image_gen`,
+through `~/.claude/scripts/subagents/run-imagegen.sh`, which runs `codex exec` on
+the newest Terra model at run time (`gpt-5.6-terra`, low reasoning effort,
+workspace-write sandbox). One call, `transparent_background` false, with the
+then-shipped icon (sha256 `4e4309be…`, replaced by this landing and still held
+as `assets/icon/candidates/icon-A-full-rose.png`) passed as Image 1, the style
+reference. The call ran at 21:03:35 and the image was created at 21:03:55. The
+tool takes no size and returned a 1254×1254 opaque RGB PNG (sha256
+`e1b9b183117a35752f24159bbd8543dd0e780f3f52258f6805a509709804603d`, kept in
+Codex's generated-images folder under session
+`01a0eec3-791b-7c33-aa5e-708bb316c6d4`); one retry, with a note that 1024 was
+required, also came back at 1254. The iOS master is that first output resized to
+1024×1024 with Pillow 10.4.0's Lanczos and otherwise unchanged. The original
+carries OpenAI's C2PA content credentials (software agent ChatGPT `gpt-image`,
+action `c2pa.created`, signed by OpenAI OpCo, LLC); the resize drops the
+manifest, so the shipped masters do not carry it.
+
+The request Codex received, verbatim from the design record. `{OUT}` was the
+output path in a scratch folder and `{PROMPT}` is the prompt that follows;
+`{IMAGES}` was the single line
+`Image 1 (style reference): <the then-shipped icon's absolute path>`.
+
+> Generate one image with your built-in image_gen tool and save it as a PNG at exactly this absolute path: {OUT}
+>
+> Steps:
+> 1. First view the input image(s) at these absolute paths (read-only):
+> {IMAGES}
+> 2. Make exactly one image_gen call. Pass the input image(s) in referenced_image_paths, in the order listed. Do not ask for a transparent background: this is an opaque App Store icon. Pass the prompt between the markers verbatim.
+> 3. Copy the generated file to the output path unchanged: no resizing, cropping, re-encoding or flattening, and no second generation.
+> 4. Reply with the output path, its pixel size and its colour mode (for example RGB or RGBA).
+>
+> Write no other file.
+>
+> --- PROMPT ---
+> {PROMPT}
+> --- END PROMPT ---
+
+The C7 prompt as sent to Codex, verbatim. Codex dropped the final clause of the
+Avoid line, "; an empty hub", before calling the tool; the door at the hub makes it
+moot.
+
+> Use case: stylized-concept
+>
+> Asset type: the iOS App Store app icon for Glassvow (琉璃誓言), a stained-glass roguelite deckbuilder; a 1024 x 1024 px opaque, full-bleed square master.
+>
+> Input images: Image 1 is the game's current icon, the STYLE REFERENCE. Take from it the rose's six-spoke layout, how its glass is rendered (painterly stained glass in irregular cut pieces, dark lead cames with narrow worn-gold edge highlights) and its cold cobalt, violet and teal glass. It has four faults this icon must not repeat: five of its six panes tell stories with figures (robed people, a gloved hand, a crown over a lantern, rising pages); one pane holds a staircase; its hub is an empty dark disc; and it sits on a rounded tile inside a transparent margin.
+>
+> Primary request: remake the rose window so that its hub is a sealed door with a hairline of light. The icon must read as one to three shapes when shrunk to 60 x 60 px: the rose, the door, the line of light.
+>
+> Subject: a circular leaded stained-glass rose window seen straight on. Exactly six straight dark lead spokes divide it into exactly six equal wedge panes, as in Image 1: one spoke runs horizontally through the hub and the other two cross it at 60 degrees, so one pane sits directly above the hub and one directly below it. A thin worn-gold ring edges the rose. Every pane is plain, unpictured glass. The hub is a sealed door: a closed Gothic pointed-arch (lancet) door of two leaves, seen straight on, standing upright where the spokes meet; the spokes end at its frame. The leaves are plain, dark, almost black glass framed in lead with a worn-gold edge, with no handles, hinges, studs, tracery or keyhole. Along the whole seam where the two leaves meet, from the threshold to the point of the arch, runs one hairline of warm light.
+>
+> Composition/framing: centred and symmetrical about the vertical axis. The rose's outer ring spans about 86 % of the canvas width, on a dark warm-black surround. The door is about two fifths of the rose's diameter tall.
+>
+> Lighting/mood: dusk, with the rose lit from behind: warm amber light glows through the panes, so the glass is luminous, amber and honey nearest the door and cooling to the violet and cobalt of Image 1 toward the rim. The door stays dark and unlit, a clean silhouette against the glowing glass. The hairline down its seam is the brightest point in the whole image: near-white gold at its core, brighter than any pane, crisp and about 1 % of the canvas wide, with a faint warm glow either side. No other light leaves the door: no glow around the arch and no light beneath it. The glow stays inside the ring; the surround stays dark.
+>
+> Color palette: amber and honey light through the glass, blending into violet and cobalt at the rim; worn gold on the lead and the ring; a near-black door; a dark warm-black surround (about #0c0907).
+>
+> Materials/textures: painterly stained glass with faint streaks and seeds, dark lead cames with narrow worn-gold edge highlights, as in Image 1. Keep the pieces large, a few to each pane rather than a fine mosaic, and the texture inside each piece quiet, so nothing turns to noise at 60 px.
+>
+> Constraints: exactly six spokes and six panes (not eight, not twelve); a pointed arch, not a round one; the door is the focal point; one opaque square whose surround runs unbroken to all four edges and corners, with no rounded tile, frame, border, drop shadow or transparent margin (iOS applies its own mask).
+>
+> Avoid: figures, people, faces or hands; stairs or steps; pictures, scenes or story panes; a crown, lantern, candle, flame, cards, pages, sun or star motif; text, letters, numerals or a signature; an empty hub.
+
+**Open caveat.** At 60 px the amber glow outshines the hairline, so the mark can
+read as light behind a door, or as a sun, rather than a sealed door with a
+hairline. On the design record's 60 px render the hairline is 2.8 : 1 against the
+leaves (WCAG 2.1 SC 1.4.11 asks 3 : 1) while the door is 8.5 : 1 against its glass,
+and the hairline is the brightest point only at 1024, by 1.29×. It stays open
+for the owner's phone check at TestFlight.
+
 ## Shipped — dialogue stagecraft portraits (2026-09-29)
 
 ### `portraits/` — Keeper and Hollow Lamplighter moods, 682×1024 RGBA
