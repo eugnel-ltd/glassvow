@@ -209,7 +209,7 @@
       "lanternBody": "Embers fuel your <b>Lantern Art</b> — one signature power, always available, once a turn (press <b>A</b>). Drag any card onto the lantern to <b>kindle</b> it: the card burns away and feeds the lantern 1 ember. Once a turn; curses refuse the fire.",
       "lanternTitle": "The Lantern",
       "title": "How to Play",
-      "vigilBody": "Nothing is wasted. At the start of each run the <b>Keeper</b> offers a boon and lets you choose your Lantern Art. When you fall, carve one thing into the stone — a <b>monument</b> your next run can recover in that same act. Every shatter, kindle and slaying feeds lifetime <b>Deeds</b> that unlock new cards, relics, and a second aspect, the <b>Ashwarden</b>. Reach the dawn once and the <b>Vows</b> open: an optional difficulty ladder for those who'd walk a crueler road.",
+      "vigilBody": "Nothing is wasted. At the start of each run the <b>Keeper</b> offers a boon and lets you choose your Lantern Art. When you fall, carve one thing into the stone — a <b>monument</b> your next run can recover in that same act. Every shatter, kindle and slaying feeds lifetime <b>Deeds</b> that unlock new cards and relics. Reach the dawn once and the <b>Vows</b> open: an optional difficulty ladder for those who'd walk a crueler road.",
       "vigilTitle": "The Vigil — What Death Leaves Behind",
       "wardBody": "<b>Ward</b> is held light that absorbs damage but expires each turn. <b>Cracked</b> ×1.5 damage taken · <b>Dimmed</b> −25% damage dealt · <b>Brittle</b> −25% Ward · <b>Smolder</b> burns each turn, and leaps to another enemy when its host dies or shatters.",
       "wardTitle": "Ward & Statuses"

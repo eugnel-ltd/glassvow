@@ -119,7 +119,9 @@ func _build() -> void:
 	rows.add_theme_constant_override("separation", 10)
 	_deed_list.add_child(rows)
 	for id: String in DEED_IDS:
-		_add_deed(rows, id)
+		# A deed no offered class can pursue would sit at 0 for ever (#543).
+		if ClassScope.shows_deed(_content, id):
+			_add_deed(rows, id)
 
 	if not _vigil.defeat_epitaphs.is_empty():
 		_epitaph_list = ScrollContainer.new()
@@ -197,8 +199,9 @@ func _add_deed(parent: VBoxContainer, id: String) -> void:
 	head.add_child(name)
 	head.add_child(_label("%d/%d" % [mini(current, target), target],
 		12, RunStyle.TEXT_DIM, false))
-	var desc: Label = _label("%s → %s" % [
-		deed.get("desc", ""), _reward_names(deed.get("unlocks", []))],
+	var rewards: String = _reward_names(deed.get("unlocks", []))
+	var desc: Label = _label(str(deed.get("desc", "")) if rewards.is_empty()
+		else "%s → %s" % [deed.get("desc", ""), rewards],
 		12, Color("#aab4d2"), false)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_child(desc)
@@ -216,8 +219,12 @@ func _add_deed(parent: VBoxContainer, id: String) -> void:
 func _reward_names(unlocks_v: Variant) -> String:
 	var names: PackedStringArray = []
 	var unlocks: Array = unlocks_v if typeof(unlocks_v) == TYPE_ARRAY else []
+	# A deferred class is never promised as a reward; the deed still counts.
+	var withheld: Array[String] = ClassScope.withheld_unlocks(_content)
 	for unlock_v: Variant in unlocks:
 		var unlock: String = str(unlock_v)
+		if withheld.has(unlock):
+			continue
 		if unlock == "aspect2":
 			names.append(Locale.active.t("ui.vigil.ashwarden"))
 			continue
