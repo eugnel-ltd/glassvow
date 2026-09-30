@@ -24,7 +24,19 @@ The compiler is therefore an authoring tool. It never runs on the player's path,
 
 Scenery, the Vigil and the gate are placed exactly as before: `MapScene.bind_layout` filters the seeded scenery candidates against node reserves, road corridors and hero zones. That filter now skips each exact polygon test when the two bounding boxes are already too far apart for it to fire. The accepted set is unchanged: all 20 probe layouts have the same digest with and without the skip, and 2,908 candidates compared rule by rule gave zero mismatches. Binding now takes about 175 ms instead of about 2 s.
 
-Measured on the M1 Max (headless, debug), `Main._show_map` takes about 0.7 s from call to a bound map. About 30 ms of that is layout generation. The rest is building the screen (the act's landscape catalogue is decoded twice, about 0.2 s each time), the scenery filter and the landscape mesh. `tools/shot.sh --map` returns in about 4 s, including engine start, where it used to time out at 240 s. The A12 has not been measured.
+## Opening the map
+
+Every return to the map (after a fight, event, shop or rest) builds a fresh `WorldMapScreen`. What it builds from is kept for the act instead of being made again (#621):
+
+- **The act's catalogue.** `MapLandscapeAssets.for_act` decodes the act's artwork once and keeps that one catalogue until another act is asked for, so the previous act's artwork is released on an act change. The screen binds its opening act first, so it no longer decodes Act I's artwork and then the act it shows.
+- **The canonical input.** `WorldMapScreen` keeps the last `MapLayoutInput` it built and what it was built from; pricing the camera poses for every shape is most of what the input costs. `Main` already kept the generated layout for that input.
+- **The binding.** `MapScene` keeps the last scenery binding and the landscape geometry it generated (ground, strata, ledges and road meshes), keyed by the layout digest, the catalogue digest and the salt, with the quality registry compared in full.
+
+Everything kept is shared by later screens and never edited. A fresh bind and a kept one draw the same frame: pad captures of seeds 1 and 717 in Acts I and II are pixel-identical to the build before, and so is a reopened map (`tests/test_map_open_cache.gd` checks the same at the node level).
+
+The road's bridge masonry used to append a box mesh by `SurfaceTool.append_from`, which reads the box back from the renderer on every call, a GPU stall each time. It now reads the box once (`MapLandscape.HeldSurface`); the road meshes are identical and take about 25 ms instead of about 0.4 s.
+
+Measured on the M1 Max with a real renderer (debug, pad shape, `--map --map-timing`, seeds 1 and 717), from the `_show_map` call to a bound map: the first open of an act takes about 0.62 s in Act I and 0.48–0.50 s in Act II (it was 1.2–1.4 s and 1.1 s), and every later open of that act takes 47–54 ms (it was 1.1–1.2 s). Of a first open, about 0.18–0.28 s is decoding the catalogue (almost all of it the lossless texture loads), about 0.13–0.17 s is the scenery filter, about 30 ms is layout generation and another 30 ms is the camera registry. Keeping the act costs video memory while another screen is up: 60 MB for Act I and 44 MB for Act II, measured; `tools/probe_map_seeds.gd` counts the catalogue's mipmapped textures at 50, 35, 19 and 43 MiB for Acts I–IV. The A12 has not been measured.
 
 ## What it does not guarantee
 

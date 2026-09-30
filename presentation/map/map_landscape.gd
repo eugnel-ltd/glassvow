@@ -16,6 +16,12 @@ var masonry: ShaderMaterial
 var seals: MultiMesh
 var node_ids: Array[String] = []
 var _lamps: Array[OmniLight3D] = []
+## The geometry `build` generates before it places anything: ground and strata
+## meshes per plate (`plates`), the ledge transforms (`ledges`) and the road
+## meshes (`road`). Empty until `build` fills it. A binder that has one for the
+## same layout, catalogue and salt hands it in, and `build` places it as it is.
+## The meshes are shared, never edited after they are generated.
+var bake: Dictionary = {}
 
 
 func prepare(data: Dictionary, catalogue: MapLandscapeAssets, seed: int) -> void:
@@ -48,8 +54,17 @@ func build(data: Dictionary) -> void:
 	masonry.set_shader_parameter("heath", false)
 	masonry.set_shader_parameter("metres_per_tile", 3.5)
 	masonry.set_shader_parameter("tint", Color(1.12, 1.18, 1.15))
-	for polygon: PackedVector2Array in boundaries:
-		land(polygon)
+	if bake.is_empty():
+		var generated: Array[Mesh] = []
+		for polygon: PackedVector2Array in boundaries:
+			generated.append_array(land_meshes(polygon))
+		bake = {"plates": generated, "ledges": ledges.duplicate(), "road": road_meshes()}
+	var plates: Array[Mesh] = bake["plates"]
+	for i: int in range(0, plates.size(), 2):
+		mesh_node("Slate heath", plates[i], mineral)
+		mesh_node("Exposed strata", plates[i + 1], masonry)
+	var baked_ledges: Array = bake["ledges"]
+	ledges.assign(baked_ledges)
 	batch("Broken ledges", assets.meshes["slate-cluster"], ledges, masonry)
 	var floor_mesh: PlaneMesh = PlaneMesh.new()
 	floor_mesh.size = Vector2(250, 180)
@@ -57,7 +72,8 @@ func build(data: Dictionary) -> void:
 	floor_material.set_shader_parameter("basin", true)
 	floor_material.set_shader_parameter("region_tint", MapRegions.WATER[assets.act])
 	mesh_node("Still water", floor_mesh, floor_material, Vector3(0, -0.8 if assets.act == 1 else -6.0, 0))
-	road()
+	var paved: Array[Mesh] = bake["road"]
+	road(paved)
 	var scenery: Dictionary = data["scenery_instances"]
 	var heroes: Dictionary = data["hero_placements"]
 	for id: String in assets.meshes:
@@ -255,6 +271,14 @@ func outline(plate: int) -> PackedVector2Array:
 
 
 func land(polygon: PackedVector2Array) -> void:
+	var plate: Array[Mesh] = land_meshes(polygon)
+	mesh_node("Slate heath", plate[0], mineral)
+	mesh_node("Exposed strata", plate[1], masonry)
+
+
+## One plate's ground and strata meshes, in that order. Its ledge transforms
+## join `ledges`, drawn from `rng`.
+func land_meshes(polygon: PackedVector2Array) -> Array[Mesh]:
 	var points: PackedVector2Array = polygon
 	# Native ear clipping respects every concave bank. Delaunay plus a centroid
 	# filter can keep a triangle whose edges cross open water.
@@ -270,7 +294,7 @@ func land(polygon: PackedVector2Array) -> void:
 			b = c
 			c = swap
 		triangle(top, ground_point(a), ground_point(b), ground_point(c), ground_colour(a), ground_colour(b), ground_colour(c))
-	mesh_node("Slate heath", finish(top), mineral)
+	var ground: ArrayMesh = finish(top)
 	var cliff: SurfaceTool = SurfaceTool.new()
 	cliff.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var centre: Vector2 = Vector2.ZERO
@@ -291,12 +315,13 @@ func land(polygon: PackedVector2Array) -> void:
 			var dv: Vector2 = a.move_toward(centre, next_inset)
 			quad(cliff, Vector3(av.x, y, av.y), Vector3(bv.x, y, bv.y),
 				Vector3(cv.x, y - 0.64, cv.y), Vector3(dv.x, y - 0.64, dv.y), shade)
-	mesh_node("Exposed strata", finish(cliff), masonry)
+	var strata: ArrayMesh = finish(cliff)
 	for i: int in range(0, polygon.size(), 4):
 		var point: Vector2 = polygon[i]
 		for level: int in range(2):
 			var basis: Basis = Basis(Vector3.UP, rng.randf_range(-PI, PI)).scaled_local(Vector3(0.8, 1.2, 0.6))
 			ledges.append(Transform3D(basis, Vector3(point.x, -0.5 - level * 1.75, point.y)))
+	return [ground, strata]
 
 
 func ground_point(p: Vector2) -> Vector3:
@@ -308,13 +333,33 @@ func ground_colour(p: Vector2) -> Color:
 	return Color("354646").lerp(Color("555a47"), moss)
 
 
-func road() -> void:
+## Places the road: `meshes` from `road_meshes`, generated here when empty.
+func road(meshes: Array[Mesh] = []) -> void:
+	var built: Array[Mesh] = meshes if not meshes.is_empty() else road_meshes()
+	var road_paint: ShaderMaterial = mineral.duplicate() as ShaderMaterial
+	road_paint.set_shader_parameter("tint", Color(0.73, 0.83, 0.88))
+	road_paint.set_shader_parameter("metres_per_tile", 9.5)
+	road_paint.set_shader_parameter("heath", true)
+	road_paint.set_shader_parameter("trail", true)
+	mesh_node("Processional paths", built[0], road_paint).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var paving_stone: StandardMaterial3D = StandardMaterial3D.new()
+	paving_stone.vertex_color_use_as_albedo = true
+	paving_stone.albedo_color = Color("4d5d60")
+	paving_stone.roughness = 1.0
+	mesh_node("Worn flagstones", built[1], paving_stone).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mesh_node("Bridge masonry", built[2], masonry)
+
+
+## The paving, flagstone and bridge-masonry meshes along every path, in that
+## order.
+func road_meshes() -> Array[Mesh]:
 	var paving: SurfaceTool = SurfaceTool.new()
 	var cobbles: SurfaceTool = SurfaceTool.new()
 	cobbles.begin(Mesh.PRIMITIVE_TRIANGLES)
 	paving.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var block: BoxMesh = BoxMesh.new()
-	block.size = Vector3.ONE
+	var box: BoxMesh = BoxMesh.new()
+	box.size = Vector3.ONE
+	var block: HeldSurface = HeldSurface.new(box)
 	var wall: SurfaceTool = SurfaceTool.new()
 	wall.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for line: PackedVector3Array in paths:
@@ -370,18 +415,7 @@ func road() -> void:
 				for angle: float in [TAU * side / 12.0, TAU * (side + 1) / 12.0]:
 					paving.set_uv(Vector2(1, 0))
 					paving.add_vertex(centre + Vector3(cos(angle), 0, sin(angle)) * 0.52)
-	var road_paint: ShaderMaterial = mineral.duplicate() as ShaderMaterial
-	road_paint.set_shader_parameter("tint", Color(0.73, 0.83, 0.88))
-	road_paint.set_shader_parameter("metres_per_tile", 9.5)
-	road_paint.set_shader_parameter("heath", true)
-	road_paint.set_shader_parameter("trail", true)
-	mesh_node("Processional paths", finish(paving), road_paint).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var paving_stone: StandardMaterial3D = StandardMaterial3D.new()
-	paving_stone.vertex_color_use_as_albedo = true
-	paving_stone.albedo_color = Color("4d5d60")
-	paving_stone.roughness = 1.0
-	mesh_node("Worn flagstones", finish(cobbles), paving_stone).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mesh_node("Bridge masonry", finish(wall), masonry)
+	return [finish(paving), finish(cobbles), finish(wall)]
 
 
 func mesh_node(label: String, mesh: Mesh, material: Material = null, at: Vector3 = Vector3.ZERO) -> MeshInstance3D:
@@ -419,3 +453,25 @@ static func v3(raw: Variant) -> Vector3:
 	var y: float = value[1]
 	var z: float = value[2]
 	return Vector3(x, y, z)
+
+
+## A triangle mesh's first surface held as arrays, for `SurfaceTool.append_from`.
+## A primitive or array mesh answers `surface_get_arrays` by reading its buffers
+## back from the renderer, a GPU stall on every call; the bridge masonry appends
+## one block hundreds of times, which cost about 0.4 s of every map open (#621).
+## This reads the surface back once, so every append receives exactly the arrays
+## it did before.
+class HeldSurface extends Mesh:
+	var _arrays: Array
+
+	func _init(source: Mesh) -> void:
+		_arrays = source.surface_get_arrays(0)
+
+	func _get_surface_count() -> int:
+		return 1
+
+	func _surface_get_arrays(_index: int) -> Array:
+		return _arrays
+
+	func _surface_get_primitive_type(_index: int) -> int:
+		return Mesh.PRIMITIVE_TRIANGLES

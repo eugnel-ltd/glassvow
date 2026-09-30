@@ -23,6 +23,9 @@ var resources: Array[Resource] = []
 var failure: String = ""
 var act: int = 0
 
+## The one catalogue `for_act` keeps for the life of the process.
+static var _kept: MapLandscapeAssets = null
+
 
 func _init(act_index: int = 0) -> void:
 	act = clampi(act_index, 0, 3)
@@ -69,6 +72,24 @@ func _init(act_index: int = 0) -> void:
 		profiles[id] = profile
 		values.append(profile)
 	digest = registry.digest(values)
+
+
+## The act's catalogue, decoded once and kept until another act is asked for
+## (#621). Decoding an act's artwork is most of the cost of opening the map, and
+## the player reopens the same act after every fight, event, shop and rest. Only
+## one act is kept, so the previous act's artwork is released on an act change
+## (the residency contract `tools/bench_map_assets.gd` measures, #295). A
+## catalogue that failed is returned but never kept. Callers treat the result as
+## read-only: every map screen of the act shares it.
+static func for_act(act_index: int) -> MapLandscapeAssets:
+	var wanted: int = clampi(act_index, 0, 3)
+	if _kept != null and _kept.act == wanted:
+		return _kept
+	_kept = null
+	var assets: MapLandscapeAssets = MapLandscapeAssets.new(wanted)
+	if assets.failure.is_empty():
+		_kept = assets
+	return assets
 
 
 ## Every asset an act declares, in bind order: its scenery, its gate and, for

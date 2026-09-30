@@ -35,6 +35,7 @@ RUNTIME_ALLOW = frozenset({
     ("application/main.gd", "tools/bench_map_assets.gd"),
     ("application/main.gd", "tools/bench_map_scene.gd"),
     ("application/main.gd", "tools/bench_combat.gd"),
+    ("application/main.gd", "tools/bench_map_open.gd"),
 })
 
 
