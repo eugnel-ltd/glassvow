@@ -91,14 +91,16 @@ Worked examples with Duskblade's starters (chisel 1 shatter, eclipseSlash 1 edge
 
 ## 5. Tiers and the lantern's quality (Option C)
 
-The flame changes only the lantern: how much fire it holds and how dearly the Art is paid. It never changes a way's own numbers, enemy numbers or card numbers. Initial knobs, all **CALIBRATE** in the order given in §11:
+The flame changes only the lantern: how much fire it holds and how dearly the Art is paid. It never changes a way's own numbers, enemy numbers or card numbers. Initial knobs, all **CALIBRATE** in the order given in §11; a value a readout has since moved carries that readout's name, and the initial values are kept in the note under the table:
 
 | Tier | Lantern effect | Player reading |
 |---|---|---|
 | Soot 塵 | At the end of each of your turns the lantern loses 1 Ember. The Lantern Art costs 1 more. | The flame gutters; the Art comes slowly |
 | Kindling 燃 | None. Today's game. | A small orange flame |
-| Steady 定 | Ember cap +2. The first Ember gain of each turn yields +1. | The colour shows; the flame is still |
-| True 真 | As Steady. The Lantern Art costs 1 less (minimum 1). | Pure colour, taller, a halo |
+| Steady 定 | Ember cap +4 (readout 6). The first Ember gain of each turn yields +2 (readout 6). | The colour shows; the flame is still |
+| True 真 | As Steady. The Lantern Art costs 2 less (readout 6), minimum 1. | Pure colour, taller, a halo |
+
+Readout 6 (2026-09-30) moved three of the initial values: the Steady cap from +2 to +4, the Steady first Ember gain from +1 to +2, and the True Art discount from 1 to 2 (the Flare costs 3, so a True lantern pays 1). The Soot values are as first set. The mechanism is unchanged and identical for every way; only a lit lantern feels it, so committed Edge and Lantern decks gain and Shatter's, rarely lit, do not. It is a step of calibration, not the answer: G1 and G4 still fail in every graded cell.
 
 Why this is enough to make scattered decks lose without touching enemies: all three ways run through the lantern (Shatter spills Embers, Kindle makes Embers, the Art and the capstones spend them). A scattered deck has a leaking lantern, a dearer Art, no capstone synergy, and no crown arriving for it (§7). Three structural reasons, one dial.
 

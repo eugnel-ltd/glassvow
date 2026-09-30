@@ -478,10 +478,14 @@ static func build_card_score(content: ContentDB, aspect: int, card_id: String,
 		else score * _way_factor(Flame.card_affinity(content, aspect, card_id))
 
 
+## A policy that carries `wayCommit` or `wayOff` replaces WAY_COMMIT or WAY_OFF
+## (flame readout 6's splash arm); one without them keeps the constants.
 static func _way_factor(affinity: Dictionary) -> float:
 	if affinity.is_empty():
 		return 1.0
-	return WAY_COMMIT if affinity.has(way) else WAY_OFF
+	if affinity.has(way):
+		return float(str(vector.get("wayCommit", WAY_COMMIT)))
+	return float(str(vector.get("wayOff", WAY_OFF)))
 
 
 static func card_score(d: Dictionary, aspect: int, card_id: String = "") -> float:

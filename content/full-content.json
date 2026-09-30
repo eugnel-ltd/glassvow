@@ -5775,9 +5775,9 @@
         "lantern": {
           "sootLeak": 1,
           "sootArtCost": 1,
-          "steadyCap": 2,
-          "steadyFirstGain": 1,
-          "trueArtCost": 1
+          "steadyCap": 4,
+          "steadyFirstGain": 2,
+          "trueArtCost": 2
         }
       },
       "sootCrown": "hollowCrown",

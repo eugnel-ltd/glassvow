@@ -102,6 +102,17 @@ class BalanceWaysTest(unittest.TestCase):
         self.assertFalse(any(arg.startswith("--content=") for _, command in work for arg in command))
         swept = ways.jobs("godot", (13000, 13199), Path("/out"), Path("/sweep/point.json"))
         self.assertTrue(all(command[-1] == "--content=/sweep/point.json" for _, command in swept))
+        self.assertFalse(any(arg.startswith("--way") and "=" in arg and not arg.startswith("--way=")
+                             for _, command in work for arg in command))
+
+    def test_way_weights_reach_only_the_committed_arms(self) -> None:
+        self.assertEqual((2.0, 1.0), ways.parse_weights("2.0/1.0"))
+        for bad in ("2.0", "2/0", "-1/1", "a/b", "2/1/1"):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                ways.parse_weights(bad)
+        for name, command in ways.jobs("godot", (13000, 13199), Path("/out"), None, (2.0, 1.0)):
+            weighted = "--wayCommit=2.0" in command and "--wayOff=1.0" in command
+            self.assertEqual(name.rsplit("-", 1)[-1] in ways.COMMITTED, weighted, name)
 
     def test_gates_pass_on_their_exact_thresholds_and_fail_beyond(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
