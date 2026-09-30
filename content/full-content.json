@@ -5943,6 +5943,13 @@
       "desc": "The dark drinks your rest — campfires heal 20%, not 30%."
     }
   ],
+  "hardship": {
+    "mods": {
+      "hpMult": 1.15,
+      "enemyDmgBonus": 1,
+      "eliteFacetDelta": 1
+    }
+  },
   "boons": {
     "fullPurse": {
       "ops": [
