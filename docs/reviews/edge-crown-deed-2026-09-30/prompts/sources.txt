@@ -1,0 +1,6 @@
+candidate	render	sha256 of the render	Codex original (authoring Mac)
+crownOfTheEclipse-a	1536x1024	df4ae7fb8b08c25b1dae4dccd6b98f3b62a066ddbd06414f33c43507d6a08305	/Users/jamesto/.codex/generated_images/01a0f2c8-ddb5-73a1-8d82-7dab74e1b155/exec-e27ce5ee-809f-441f-b842-396d13417305.png
+crownOfTheEclipse-b	1536x1024	4e4c218e04fcc423165495f3d630594ba4ddcf568d54118eef877abf69c4a8c3	/Users/jamesto/.codex/generated_images/01a0f2c8-df82-7da2-9ac2-1a42bff8cd18/exec-1ba2fc3d-19b0-4c94-b45e-9c8d18314aa3.png
+faultInGlass-a	1254x1254	578889b133f4e337cb50c5bfa520a1b84aac1da629da91f0a55185ac5f7e9037	/Users/jamesto/.codex/generated_images/01a0f2c8-e686-7092-a484-5fbdb472f03f/exec-b25aa62b-1d0b-4ca7-a89b-db537ee200e6.png
+faultInGlass-b	1254x1254	664eabef82d5df27dd28d3802b8b0192bc6c527c22c517374a53552d1f735990	/Users/jamesto/.codex/generated_images/01a0f2c8-ef01-7710-9fee-d04f5f7b8e5a/exec-519f58b3-5994-4af6-a0b2-6936261d5e1f.png
+faultInGlass-c	1254x1254	1bc67a89ea47b35a744dffe3ab38cf8acd709f70813a1602ad0c20755cd0be9c	/Users/jamesto/.codex/generated_images/01a0f2ce-1e96-72d0-ad26-ea84d7cb8b82/exec-33781386-b574-44c9-ae46-b6e9bef218d5.png
