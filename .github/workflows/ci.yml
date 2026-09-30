@@ -159,6 +159,14 @@ jobs:
         if: steps.scope.outputs.run_store_gate_tests == 'true'
         run: tools/test_check_store_dev_exclusion.sh
 
+      # docs/ carries a .gdignore, so a preload() of a file there parses in the
+      # editor and breaks in every export.  Runtime data lives under content/.
+      - name: Check exported scripts load only exported paths
+        if: steps.scope.outputs.run_export_paths == 'true'
+        run: |
+          python3 -B tools/check_export_paths.py --self-test
+          python3 -B tools/check_export_paths.py
+
       - name: Check developer-tool registry and coordinate conversion
         if: steps.scope.outputs.run_dev_tools == 'true'
         run: python3 -B tools/dev.py --check

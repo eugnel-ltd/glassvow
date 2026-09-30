@@ -56,6 +56,8 @@ CHECKS = (
     Check("run_locale_coverage", "Check narrative locale coverage", ("locale_content",)),
     Check("run_store_exclusion", "Check store Dev-tree exclusion", ("release_platform",)),
     Check("run_store_gate_tests", "Test store Dev-tree exclusion gate", ("release_platform",)),
+    Check("run_export_paths", "Check exported scripts load only exported paths", (
+        "godot_code", "release_platform")),
     Check("run_dev_tools", "Check developer-tool registry and coordinate conversion", ("dev_tools",)),
     Check("run_balance_doe", "Test balanced content DOE generator", ("balance_ml",)),
     Check("run_balance_seed", "Test content-search seed contract", ("balance_ml",)),
@@ -150,7 +152,8 @@ def _scope_matches(path: str) -> set[str]:
 
     map_named_test = _starts(lower, "tests/", "tools/") and (
         "map" in name or "waylight" in name)
-    if (_starts(lower, "presentation/map/", "domain/map_layout/", "docs/map/")
+    if (_starts(lower, "presentation/map/", "domain/map_layout/", "docs/map/",
+                "content/map/")
             or map_named_test):
         matches.add("map_code")
 
@@ -212,7 +215,11 @@ def _scope_matches(path: str) -> set[str]:
 
     release_named = any(token in lower for token in (
         "release", "performance", "containment", "phone", "store", "signing"))
+    # .gdignore hides a folder from the export as well as the editor, so it
+    # decides what an exported script may load.
     if (lower == "export_presets.cfg"
+            or name == ".gdignore"
+            or lower == "tools/check_export_paths.py"
             or _starts(lower, "scripts/", "addons/glassvow_ios_export/",
                        "addons/glassvow_web_export/", "addons/sentry/",
                        "application/sentry_")
