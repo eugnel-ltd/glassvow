@@ -24,6 +24,9 @@ var _language_deferred: bool
 ## The one-line diagnostics notice, present only in the first panel built
 ## after install (see `_add_diagnostics`).
 var _diagnostics_notice: Label
+## Opens an address in the system browser. A seam for tests, which hand in a
+## recorder so no suite run ever launches a browser.
+var open_url: Callable = Callable(OS, "shell_open")
 
 
 func _init(preferences: Preferences, reset_disabled: bool = false,
@@ -123,7 +126,10 @@ func _init(preferences: Preferences, reset_disabled: bool = false,
 		func() -> bool: return _preferences.reduce_motion,
 		func(on: bool) -> void: _preferences.set_reduce_motion(on)))
 
-	_add_diagnostics(_section(Locale.active.t("ui.settings.privacy").to_upper(), GOLD))
+	var privacy: VBoxContainer = _section(
+		Locale.active.t("ui.settings.privacy").to_upper(), GOLD)
+	_add_diagnostics(privacy)
+	_add_policy_link(privacy)
 
 	# The destructive section sits deliberately OUTSIDE the shared rhythm —
 	# reaching it should take a beat.
@@ -374,6 +380,25 @@ func _add_diagnostics(section: VBoxContainer) -> void:
 	var note: Label = _note(Locale.active.t("ui.settings.diagnosticsNote"))
 	note.name = "DiagnosticsNote"
 	section.add_child(note)
+
+
+## The privacy policy for the language on screen, opened in the system
+## browser. It sits last in PRIVACY, so focus order runs the switch, then the
+## policy, then THE LEDGER, as the rows read.
+func _add_policy_link(section: VBoxContainer) -> void:
+	var link: Button = _button(
+		Locale.active.t("ui.settings.privacyPolicy").to_upper(), GOLD)
+	link.name = "PrivacyPolicyButton"
+	link.pressed.connect(_open_policy)
+	section.add_child(link)
+
+
+func _open_policy() -> void:
+	_sfx.play(&"click")
+	var url: String = PrivacyPolicy.url_for(Locale.active.code)
+	var result: Variant = open_url.call(url)
+	if result is int and result != OK:
+		push_warning("Settings: could not open the privacy policy (error %d)" % result)
 
 
 ## Moves keyboard focus and the settings scroll to the language control.

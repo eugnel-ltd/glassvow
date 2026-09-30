@@ -91,13 +91,12 @@ The two URLs are the App Store Connect Privacy Policy URLs (one per localisation
 - Email Address Obfuscation, which is on by default in a new zone. It replaces addresses with a decoding script; with that script blocked, readers would see "[email protected]" instead of the contact address. The pages also wrap every address in `<!--email_off-->` markers, which Cloudflare honours.
 - Web Analytics automatic setup, Zaraz and Rocket Loader. Each injects a script, and this site is meant to carry no analytics of any kind.
 
-## 4. Next step (not done here): in-app link slice
+## 4. In-app link slice (implemented)
 
 **#415 slice 2: in-app privacy link (settings, en and zh-Hant).** Guideline 5.1.1(i) requires the policy link in the app "in an easily accessible manner" as well as in App Store Connect.
 
-- A Privacy row in the settings panel (`presentation/run/settings_panel.gd`) that opens the locale-matched URL with `OS.shell_open`. This opens the browser and sends no app data, so it changes neither the policy nor the App Privacy answers.
-- Locale keys in `locale/en.json` and `locale/zh-Hant.json` (for example `ui.settings.privacy`), with the term 私隱政策 added to `docs/zh-hant-glossary.md`; `tests/test_locale.gd` already enforces paired keys.
-- The two URLs from section 3 held in one place, identical to the App Store Connect values.
+- Implemented: a PRIVACY POLICY / 私隱政策 button at the foot of the PRIVACY section of the settings panel (`presentation/run/settings_panel.gd`). It opens the page for the language on screen with `OS.shell_open`, which opens the system browser and sends no app data, so it changes neither the policy nor the App Privacy answers. Keys: `ui.settings.privacyPolicy` in `locale/en.json` and `locale/zh-Hant.json`; the term 私隱政策 is in `docs/zh-hant-glossary.md`.
+- Implemented: the two URLs from section 3 are held in one place, `application/privacy_policy.gd`, and `tests/test_privacy_policy_link.gd` pins them to this section so the app, the site and the App Store Connect values cannot drift apart.
 - D1 option B is implemented: a `Preferences` key, read by the main loop in `application/sentry_loop.gd` before `SentrySDK.init`, plus the one-line notice on the Settings row.
 - Done when: both-locale in-app screenshots at the reference shapes, the live pages, App Store Connect readback of the policy URL and App Privacy answers, and the #420 payload evidence all agree on the same candidate. The local core gate in `CLAUDE.md` applies, because `presentation/`, `locale/` and `application/sentry_*` are production scopes.
 

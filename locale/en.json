@@ -573,7 +573,8 @@
       "privacy": "Privacy",
       "diagnostics": "Send Crash Diagnostics",
       "diagnosticsNote": "Takes effect on the next launch.",
-      "diagnosticsNotice": "Crash diagnostics are sent to help fix bugs.\nYou can switch this off in Settings."
+      "diagnosticsNotice": "Crash diagnostics are sent to help fix bugs.\nYou can switch this off in Settings.",
+      "privacyPolicy": "Privacy Policy"
     },
     "shop": {
       "cardRemoval": {
