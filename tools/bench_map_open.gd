@@ -1,13 +1,16 @@
 extends Node
-## Map open-cost bench for #621 item 5: times every `Main._show_map` by phase.
+## Map open-cost bench for #621 item 5: times whole `Main._show_map` calls with
+## its own clock, from the call to a bound map. Nothing on the player path is
+## instrumented.
 ##
 ## Hosted by application/main.gd behind `--map --map-timing`, which starts a run
-## on the map (the first open), then hands over here. The bench reopens the map
-## the way a return from a fight does, moves the run into Act II and opens that
-## act the same way, printing one `MAP_OPEN {json}` row per open. After each act
-## it leaves the map and prints `MAP_KEPT`: video memory with the act's caches
-## kept and after dropping them, which is what keeping an act costs in a fight.
-## Needs a real renderer (never --headless):
+## on the map, then hands over here. For Act I and then Act II the bench drops
+## the kept act (a cold open of the act, as after an act change), opens the map,
+## reopens it twice the way a return from a fight does, and leaves it. It prints
+## one `MAP_OPEN {json}` row per open and one `MAP_KEPT {json}` row per act: the
+## video memory the kept act holds once the map is left, with the caches kept
+## and after dropping them. Needs a real renderer (never --headless): the dummy
+## renderer hides GPU stalls such as a mesh read back from the renderer.
 ##
 ##   tools/shot.sh --map --map-timing --seed=1 --shape=pad-landscape
 ##
@@ -31,41 +34,35 @@ func _ready() -> void:
 
 
 func _run() -> void:
-	# The boot's own open, inside `_new_run`, is the run's first map of Act I.
-	_emit(1, 1)
 	await _frames(SETTLE_FRAMES)
-	for i: int in range(REOPENS):
-		await _open(1, i + 2)
-		if not _shot.is_empty():
-			await _frames(30)
-			get_viewport().get_texture().get_image().save_png(_shot)
-			print("shot saved: " + _shot)
-			get_tree().quit(0)
-			return
-	await _measure_kept(1)
+	if not _shot.is_empty():
+		await _open(1, 2)
+		await _frames(30)
+		get_viewport().get_texture().get_image().save_png(_shot)
+		print("shot saved: " + _shot)
+		get_tree().quit(0)
+		return
+	await _time_act(1)
 	var run: RunState = _host.game.run
 	var content: ContentDB = _host.content
 	run.start_next_act(content)
 	_host._map = WorldMap.for_run(run, content)
 	_host.game.quests.decorate_map(run, _host._map)
 	run.map = _host._map.to_dict()
-	for i: int in range(1 + REOPENS):
-		await _open(run.act + 1, i + 1)
-	await _measure_kept(run.act + 1)
+	await _time_act(run.act + 1)
 	get_tree().quit(0)
 
 
-## What the kept act costs while another screen is up: leave the map, then drop
-## the caches and measure again. The next open of the act starts cold.
-func _measure_kept(act: int) -> void:
+## A cold open of `act` (its number), then the reopens, then what keeping it costs.
+func _time_act(act: int) -> void:
+	_drop_kept()
+	await _frames(SETTLE_FRAMES)
+	for open: int in range(1, 2 + REOPENS):
+		await _open(act, open)
 	_host._clear_route()
 	await _frames(SETTLE_FRAMES)
 	var kept: float = _video_mib()
-	MapLandscapeAssets._kept = null
-	MapScene._bound = {}
-	MapScene._bound_key = ""
-	WorldMapScreen._input_kept = null
-	WorldMapScreen._input_sources = []
+	_drop_kept()
 	await _frames(SETTLE_FRAMES)
 	var dropped: float = _video_mib()
 	print("MAP_KEPT " + JSON.stringify({"act": act, "video_mib_kept": kept,
@@ -73,19 +70,22 @@ func _measure_kept(act: int) -> void:
 
 
 func _open(act: int, open: int) -> void:
+	var start: int = Time.get_ticks_usec()
 	_host._show_map()
-	_emit(act, open)
+	var total_ms: float = (Time.get_ticks_usec() - start) / 1000.0
+	print("MAP_OPEN " + JSON.stringify({"act": act, "open": open,
+		"seed": _host.game.run.seed, "total_ms": snappedf(total_ms, 0.1),
+		"video_mib": _video_mib()}))
 	await _frames(SETTLE_FRAMES)
 
 
-func _emit(act: int, open: int) -> void:
-	var row: Dictionary = {"act": act, "open": open, "seed": _host.game.run.seed,
-		"static_mib": snappedf(Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0, 0.1),
-		"video_mib": _video_mib()}
-	var phases: Dictionary[String, float] = MapOpenTiming.report()
-	for phase: String in phases:
-		row[phase] = snappedf(phases[phase], 0.1)
-	print("MAP_OPEN " + JSON.stringify(row))
+## Forgets every per-act cache, so the next open decodes and binds from nothing.
+func _drop_kept() -> void:
+	MapLandscapeAssets._kept = null
+	MapScene._bound = {}
+	MapScene._bound_key = ""
+	WorldMapScreen._input_kept = null
+	WorldMapScreen._input_sources = []
 
 
 func _video_mib() -> float:

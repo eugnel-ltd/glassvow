@@ -484,11 +484,9 @@ func _bind_compiled_layout() -> void:
 	if input_digest == _layout_input_digest:
 		return
 	_layout_input_digest = input_digest
-	var phase: int = MapOpenTiming.now()
 	var compiled_v: Variant = _layout_compile.call(input, quality, assets) \
 		if _layout_compile.is_valid() \
 		else MapLayoutPolicy.generate(input, quality, assets)
-	MapOpenTiming.add("layout", phase)
 	_layout_pending = compiled_v == null
 	if _layout_pending:
 		_layout_input_digest = ""

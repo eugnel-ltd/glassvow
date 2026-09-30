@@ -326,7 +326,6 @@ func _ready() -> void:
 			map_asset_bench = true
 		elif arg == "--map-timing":
 			map_timing = true
-			MapOpenTiming.enabled = true
 		elif arg.begins_with("--onboard="):
 			_onboard = arg.trim_prefix("--onboard=")
 		elif arg.begins_with("--scene="):
@@ -1513,17 +1512,14 @@ func _process(_delta: float) -> void:
 
 
 func _show_map() -> void:
-	MapOpenTiming.begin()
 	_remember_route(_show_map)
 	_apply_pending_content_hydration()
-	var phase: int = MapOpenTiming.now()
+	var act_index: int = 0
 	if game != null and game.run != null:
 		_transitions.wipe()
+		act_index = game.run.act
 	_clear_route()
-	MapOpenTiming.add("leave", phase)
-	phase = MapOpenTiming.now()
-	_map_screen = WorldMapScreen.new(_map, content, _shape, game.run.act)
-	MapOpenTiming.add("construct", phase)
+	_map_screen = WorldMapScreen.new(_map, content, _shape, act_index)
 	# ponytail: retain only the current identity; add a cache only if routes can
 	# revisit older semantic identities.
 	_map_screen._layout_compile = _compile_map_layout
@@ -1531,9 +1527,7 @@ func _show_map() -> void:
 	_map_screen.sealed_door_requested.connect(_on_sealed_door_requested)
 	_map_screen.before_pick = _on_map_before_pick
 	add_child(_map_screen)
-	phase = MapOpenTiming.now()
 	_map_screen.refresh(game.run)
-	MapOpenTiming.add("refresh", phase)
 	if _map_screen.layout_pending():
 		_show_map_charting()
 		return
@@ -1546,7 +1540,6 @@ func _show_map() -> void:
 	_music.play(&"map")
 	if _hints != null:
 		_hints.consider_map(_map_screen)
-	MapOpenTiming.finish()
 
 
 ## Holds the map's place while its layout compiles off the main thread. The

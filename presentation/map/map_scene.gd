@@ -514,9 +514,7 @@ func _bind_asset_geometry() -> void:
 	_terminus_id = ""
 	_threshold_id = ""
 	MapPinProjection.set_scenery([])
-	var phase: int = MapOpenTiming.now()
 	_landscape_assets = _landscape_source.call(_act)
-	MapOpenTiming.add("catalogue", phase)
 	if not _landscape_assets.failure.is_empty():
 		push_error("MapScene: " + _landscape_assets.shortfall())
 		_fail_layout(_landscape_assets.failure)
@@ -534,7 +532,6 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 		return _fail_layout("compiled result is null")
 	if _active_profiles.is_empty() or layout_hero_contract().is_empty():
 		return _fail_layout("active map asset profiles are incomplete")
-	var phase: int = MapOpenTiming.now()
 	var key: String = "|".join([compiled.digest(), _active_profile_digest, str(_scatter_salt)])
 	var kept: bool = key == _bound_key and quality == _bound["quality"]
 	var bound: Dictionary = _bound if kept else {}
@@ -551,7 +548,6 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 		bound = _filter_scenery(data, quality)
 		if bound.is_empty():
 			return _fail_layout("filtered result is invalid")
-	MapOpenTiming.add("scenery", phase)
 	var final_result: MapLayoutResult = bound["result"]
 	var edges: Dictionary = data["edges"]
 	if not _bind_waylights(edges):
@@ -571,9 +567,7 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 		"scenery_instances": scenery,
 		"rejections": rejections,
 	}
-	phase = MapOpenTiming.now()
 	_landscape.build(data)
-	MapOpenTiming.add("landscape", phase)
 	if not kept:
 		bound["bake"] = _landscape.bake
 		bound["quality"] = quality.duplicate(true)
