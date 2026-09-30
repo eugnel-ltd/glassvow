@@ -187,7 +187,11 @@ godot --headless -s res://tools/preview_map.gd -- --act-index=0 --seed=717 \
 ```
 
 Omit `--output` for native drag, zoom and keyboard inspection. The preview mounts
-the production `WorldMapScreen`, compiler, assets and HUD. It prepares map state
+the production `WorldMapScreen`, layout, assets and HUD. The production layout is
+`MapLayoutFast`; add `--map-compiler` to lay the map out with Map Compiler v2
+instead, which takes minutes per input (`docs/map/production-layout.md`).
+`godot --headless -s res://tools/probe_map_fast_layout.gd` times the production
+layout and prints its digests for five seeds in every act. It prepares map state
 without playing opening boons or encounters; it does not run the main game's
 encounter transition. `--cache=/tmp/map-preview-cache` optionally reuses a pure
 compiler result keyed by the complete input digest; production never reads this cache.

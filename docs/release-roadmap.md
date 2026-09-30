@@ -105,6 +105,7 @@ Assumptions: agents work daily on each lane; the M1 Max and the Linux VM are ava
 | Device evidence finds a performance miss | M4–M6 slip by the fix | P2 measured in W6, not W8 |
 | App Review rejection | up to one week | buffer in M6 |
 | Scope creep from 1.1 into 1.0 | every milestone | Ashwarden work does not start before M3 |
+| The shipped map runs the fast layout, not Map Compiler v2 (2026-09-30): crossings, near-misses and the farthest zoom miss the governed quality contract, and the map build (about 0.7 s on the M1 Max) is unmeasured on the A12 | none if the floor devices accept it; a device miss adds the fix to M4 | compiler is an authoring opt-in only (`docs/map/production-layout.md`); check Continue-to-map and the map at phone and pad on the iPad 8 in the next TestFlight |
 
 ## 9. Cadence and reporting
 
