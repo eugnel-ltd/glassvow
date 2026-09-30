@@ -84,7 +84,9 @@ should and should not exist, then work the checklist. **Scope now includes
 heroes** — same treatment, no separate session for them.
 
 ### Reward screen — `presentation/reward/`, `reward_lab.gd`
-**"Ember" is the chosen variant.** Open: polish ember.
+**"Ember" is the chosen variant.** Shipped as the game's reward screen on
+2026-09-30 (`RewardEmbers`, built by `Main._show_pending_reward`); `RewardScreen`
+stays as the lab's `rows` concept. Open: polish ember.
 Fixed along the way: a truncated gem. Standing note: do not move the default lamp.
 
 ### Combat HUD — `hud_bar.gd`, `hud_lab.gd`

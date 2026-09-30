@@ -33,7 +33,7 @@ var _map_layout_job: MapLayoutJob = null
 var _map_layout_retired: Array[MapLayoutJob] = []
 var _map_screen: WorldMapScreen = null
 var _choice_screen: Control = null
-var _reward_screen: RewardScreen = null
+var _reward_screen: RewardEmbers = null
 var _route_screen: Control = null
 var _run_hud: RunHud = null
 var _modal: Control = null
@@ -2709,10 +2709,15 @@ func _show_pending_reward() -> void:
 	var taken: Dictionary = pending["taken"]
 	var reward_kind: String = _map.current().combat_kind() \
 		if _map.current() != null else "normal"
+	# The embers are painted in the hue of what just died; a save from before
+	# `slain_enemy` existed has none, and the screen falls back to ember.
+	var slain_v: Variant = pending.get("slain_enemy")
+	var slain: Dictionary = slain_v if typeof(slain_v) == TYPE_DICTIONARY else {}
+	var hue: float = float(str(slain.get("hue", -1.0)))
 	_transitions.wipe()
 	_clear_route()
-	_reward_screen = RewardScreen.new(rewards, content,
-		reward_kind, false, _shape)
+	_reward_screen = RewardEmbers.new(rewards, content,
+		reward_kind, hue, _shape, true)
 	_reward_screen.claimed.connect(_on_reward_claimed)
 	_reward_screen.finished.connect(_on_reward_finished)
 	add_child(_reward_screen)
@@ -2730,7 +2735,10 @@ func _show_pending_reward() -> void:
 
 
 func _on_reward_claimed(what: StringName, id: String) -> void:
-	if _hints != null and not _hints.record_dismiss(HintGuide.REWARD):
+	# The hint is about the offering, and the announcements arrive unasked as
+	# the screen opens: only answering the card slot is the hint's action.
+	if what == &"card" and _hints != null \
+			and not _hints.record_dismiss(HintGuide.REWARD):
 		return
 	var pending: Dictionary = game.run.pending_reward
 	var taken: Dictionary = pending["taken"]
@@ -2757,6 +2765,10 @@ func _on_reward_claimed(what: StringName, id: String) -> void:
 			if not id.is_empty():
 				game.rewards.gain_relic(game.run, id)
 	taken[key] = true
+	# The purse and the relic row answer the claim on the spot: the embers bank
+	# them as they land, so the HUD over the screen must not lag a screen behind.
+	if _run_hud != null:
+		_run_hud.refresh(game.run)
 	if _reward_screen != null:
 		_read_flame(_reward_screen.show_flame)
 	if not _store_run():
