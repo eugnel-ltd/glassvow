@@ -26,9 +26,10 @@ var _rig: MapCameraRig
 var _key: DirectionalLight3D
 var _world: Node3D
 var _landscape_assets: MapLandscapeAssets
-## Builds an act's catalogue from its act index. A field so a test can hand the
-## binder a catalogue that resolves only in part, which no shipped act does.
-var _landscape_source: Callable = MapLandscapeAssets.new
+## Resolves an act's catalogue from its act index; the shared per-act copy in
+## production. A field so a test can hand the binder a catalogue that resolves
+## only in part, which no shipped act does.
+var _landscape_source: Callable = MapLandscapeAssets.for_act
 var _landscape: MapLandscape
 var _live: bool = false
 var _settle_frames: int = 0
@@ -53,9 +54,20 @@ var _lock_input: bool = false
 var _dragged: float = 0.0
 var _fling: Vector2 = Vector2.ZERO
 var _last_velocity: Vector2 = Vector2.ZERO
+## The last binding this process made, shared with the next map screen that
+## binds the same layout (#621): a return from a fight, event, shop or rest then
+## skips the scenery filter and the landscape geometry. A binding is a pure
+## function of the compiled result, the catalogue, the salt and the quality
+## registry: the first three are the key, and the registry is compared in full.
+## One entry: a new act or run replaces it.
+## Everything in it is read-only once stored.
+static var _bound_key: String = ""
+static var _bound: Dictionary = {}
 
 
-func _init() -> void:
+## `act_index` is the act to bind first. A screen that knows its act passes it,
+## so it never decodes Act I's artwork only to swap it out.
+func _init(act_index: int = 0) -> void:
 	name = "MapScene"
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -87,7 +99,7 @@ func _init() -> void:
 	add_child(_display)
 	process_priority = -1
 	set_process(true)
-	set_act(0)
+	set_act(act_index)
 
 
 func _ready() -> void:
@@ -496,7 +508,8 @@ func _bind_asset_geometry() -> void:
 	_layout_diagnostics.clear()
 	_layout_failure.clear()
 	_road_segments.clear()
-	_active_profiles.clear()
+	# Rebound, not cleared: the dictionary belongs to the shared catalogue.
+	_active_profiles = {}
 	_active_profile_digest = ""
 	_terminus_id = ""
 	_threshold_id = ""
@@ -519,13 +532,56 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 		return _fail_layout("compiled result is null")
 	if _active_profiles.is_empty() or layout_hero_contract().is_empty():
 		return _fail_layout("active map asset profiles are incomplete")
-	var data: Dictionary = compiled.identity_dict()
+	var key: String = "|".join([compiled.digest(), _active_profile_digest, str(_scatter_salt)])
+	var kept: bool = key == _bound_key and quality == _bound["quality"]
+	var bound: Dictionary = _bound if kept else {}
+	var data: Dictionary = bound["data"] if kept else compiled.identity_dict()
 	if _landscape != null:
 		_landscape.free()
 	_landscape = MapLandscape.new()
 	_world.add_child(_landscape)
 	_landscape.prepare(data, _landscape_assets, _scatter_salt)
 	_selection_half = _selection_reserve(quality)
+	if kept:
+		_landscape.bake = bound["bake"]
+	else:
+		bound = _filter_scenery(data, quality)
+		if bound.is_empty():
+			return _fail_layout("filtered result is invalid")
+	var final_result: MapLayoutResult = bound["result"]
+	var edges: Dictionary = data["edges"]
+	if not _bind_waylights(edges):
+		return _fail_layout("compiled edge cannot configure a bounded waylight")
+	_layout_result = final_result
+	_layout_failure.clear()
+	_road_segments = _flatten_edges(edges)
+	var scenery: Dictionary = data["scenery_instances"]
+	var rejections: Array[Dictionary] = bound["rejections"]
+	_layout_diagnostics = {
+		"status": "BOUND",
+		"input_digest": str(data["input_digest"]),
+		"layout_digest": final_result.digest(),
+		"candidate_count": bound["candidate_count"],
+		"accepted_count": scenery.size(),
+		"rejected_count": rejections.size(),
+		"scenery_instances": scenery,
+		"rejections": rejections,
+	}
+	_landscape.build(data)
+	if not kept:
+		bound["bake"] = _landscape.bake
+		bound["quality"] = quality.duplicate(true)
+		_bound_key = key
+		_bound = bound
+	_repaint()
+	return final_result
+
+
+## Deals the seeded scenery candidates and keeps the ones clear of the land edge,
+## the node reserves, the road corridors and the heroes. Writes the survivors
+## into `data` and returns the binding `bind_layout` keeps: `data`, the filtered
+## `result`, `candidate_count` and `rejections`. Empty when the result is invalid.
+func _filter_scenery(data: Dictionary, quality: Dictionary) -> Dictionary:
 	var candidates: Dictionary = _landscape.candidates()
 	var accepted: Dictionary = {}
 	var accepted_footprints: Array[Dictionary] = []
@@ -548,28 +604,11 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 		accepted[candidate_id] = candidate["placement"]
 		accepted_footprints.append(physical)
 	data["scenery_instances"] = MapLayoutCanonical.ordered_dictionary(accepted)
-	var final_result: MapLayoutResult = MapLayoutResult.create(data)
-	if final_result == null:
-		return _fail_layout("filtered result is invalid")
-	var edges: Dictionary = data["edges"]
-	if not _bind_waylights(edges):
-		return _fail_layout("compiled edge cannot configure a bounded waylight")
-	_layout_result = final_result
-	_layout_failure.clear()
-	_road_segments = _flatten_edges(edges)
-	_layout_diagnostics = {
-		"status": "BOUND",
-		"input_digest": str(data["input_digest"]),
-		"layout_digest": final_result.digest(),
-		"candidate_count": candidates.size(),
-		"accepted_count": accepted.size(),
-		"rejected_count": rejections.size(),
-		"scenery_instances": data["scenery_instances"],
-		"rejections": rejections,
-	}
-	_landscape.build(data)
-	_repaint()
-	return final_result
+	var result: MapLayoutResult = MapLayoutResult.create(data)
+	if result == null:
+		return {}
+	return {"data": data, "result": result, "candidate_count": candidates.size(),
+		"rejections": rejections}
 
 
 func _fail_layout(reason: String) -> MapLayoutResult:

@@ -77,6 +77,14 @@ var _layout_failure: Dictionary = {}
 ## the screen stays unbound and its owner routes back here once the layout lands.
 var _layout_compile: Callable = Callable()
 var _layout_pending: bool = false
+## The last canonical input this process built, its digest, and what it was
+## built from (#621). Building one prices a camera pose for every row, zoom and
+## shipping shape, the largest cost of a return to the map once the landscape
+## is kept, and nothing it reads changes between two visits to one act. One
+## entry, compared in full; the input is immutable, so screens share it.
+static var _input_sources: Array = []
+static var _input_kept: MapLayoutInput = null
+static var _input_digest_kept: String = ""
 ## Projection is shared by waystone layout and marker queries.
 var _projected_seats_cache: PackedVector2Array = PackedVector2Array()
 var _projected_pose: Vector2 = Vector2(INF, INF)
@@ -89,8 +97,10 @@ var _projected_view_size: Vector2i = Vector2i(-1, -1)
 var _seat_projection_passes: int = 0
 
 
+## `act_index` is the act the screen opens on, so its landscape binds that act
+## first rather than Act I; `refresh` still rebinds whatever the run says.
 func _init(world_map: WorldMap, content_ref: ContentDB,
-		stage_shape: StringName = StageShape.IDENTITY) -> void:
+		stage_shape: StringName = StageShape.IDENTITY, act_index: int = 0) -> void:
 	map = world_map
 	content = content_ref
 	shape = stage_shape if StageShape.REFERENCES.has(stage_shape) else StageShape.IDENTITY
@@ -98,7 +108,7 @@ func _init(world_map: WorldMap, content_ref: ContentDB,
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = GlassStyle.theme()
 	# World → marker glow → waystones → chips → chrome: child order is paint order.
-	_build_world_surface()
+	_build_world_surface(act_index)
 	_build_bands()
 	_build_waystones()
 	# Chips label the play plane and stay beneath the chrome.
@@ -106,7 +116,7 @@ func _init(world_map: WorldMap, content_ref: ContentDB,
 	_chip_band.host = self
 	add_child(_chip_band)
 	# Theme after the bands exist so apply_region reaches them.
-	_set_act_theme(0)
+	_set_act_theme(act_index)
 	_build_chrome()
 	_seat_marker()
 	_push_bands(true)
@@ -121,8 +131,8 @@ func _notification(what: int) -> void:
 
 # ---------------------------------------------------------------- build
 
-func _build_world_surface() -> void:
-	_map_scene = MapScene.new()
+func _build_world_surface(act_index: int) -> void:
+	_map_scene = MapScene.new(act_index)
 	_map_scene.surface_tapped.connect(_on_surface_tapped)
 	add_child(_map_scene)
 	# Construction-only callers have no RunState yet. Live refresh replaces these
@@ -445,25 +455,32 @@ func _bind_compiled_layout() -> void:
 	var edges: Array = bound["edges"]
 	var generator: Dictionary = MapLayoutPolicy.generator_fields(
 		MapLayoutPolicy.compiler_requested())
-	var input: MapLayoutInput = MapLayoutInput.from_dict({
-		"schema_version": MapLayoutInput.SCHEMA_VERSION,
-		"generator_schema": generator["generator_schema"],
-		"generator_version": generator["generator_version"],
-		"nodes": nodes, "edges": edges, "act": _run.act,
-		"run_seed": _run.seed,
-		"scenery_seed": _run.seed + SCENERY_SEED_OFFSET,
-		"asset_profile_digest": assets["digest"],
-		"camera_profile_digest": MapQualityEvaluator.camera_registry(
-			nodes, quality, edges)["digest"],
-		"hero_anchor_contract": heroes,
-		"quality_registry_digest": MapLayoutCanonical.digest(quality),
-	})
-	if input == null:
-		return _fail_compiled_layout({
-			"kind": "input", "id": "live_map",
-			"reason": "canonical live map input is invalid",
+	var sources: Array = [nodes, edges, _run.act, _run.seed, assets["digest"],
+		heroes, generator, quality]
+	if sources != _input_sources:
+		var built: MapLayoutInput = MapLayoutInput.from_dict({
+			"schema_version": MapLayoutInput.SCHEMA_VERSION,
+			"generator_schema": generator["generator_schema"],
+			"generator_version": generator["generator_version"],
+			"nodes": nodes, "edges": edges, "act": _run.act,
+			"run_seed": _run.seed,
+			"scenery_seed": _run.seed + SCENERY_SEED_OFFSET,
+			"asset_profile_digest": assets["digest"],
+			"camera_profile_digest": MapQualityEvaluator.camera_registry(
+				nodes, quality, edges)["digest"],
+			"hero_anchor_contract": heroes,
+			"quality_registry_digest": MapLayoutCanonical.digest(quality),
 		})
-	var input_digest: String = input.digest()
+		if built == null:
+			return _fail_compiled_layout({
+				"kind": "input", "id": "live_map",
+				"reason": "canonical live map input is invalid",
+			})
+		_input_sources = sources.duplicate(true)
+		_input_kept = built
+		_input_digest_kept = built.digest()
+	var input: MapLayoutInput = _input_kept
+	var input_digest: String = _input_digest_kept
 	if input_digest == _layout_input_digest:
 		return
 	_layout_input_digest = input_digest

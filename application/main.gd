@@ -244,6 +244,8 @@ func _ready() -> void:
 	var performance_probe: bool = false
 	var map_bench: bool = false
 	var map_asset_bench: bool = false
+	# --map --map-timing: time every map open (tools/bench_map_open.gd).
+	var map_timing: bool = false
 	var scene_shot: String = ""
 	var scene_cursor: int = 0
 	for arg: String in _boot_args:
@@ -322,6 +324,8 @@ func _ready() -> void:
 			map_bench = true
 		elif arg == "--map-asset-bench":
 			map_asset_bench = true
+		elif arg == "--map-timing":
+			map_timing = true
 		elif arg.begins_with("--onboard="):
 			_onboard = arg.trim_prefix("--onboard=")
 		elif arg.begins_with("--scene="):
@@ -502,6 +506,9 @@ func _ready() -> void:
 	elif show_map:
 		_opening_suppressed = true
 		_new_run()
+		if map_timing:
+			_attach_map_open_bench()
+			return
 	elif show_shop_bench:
 		# The Night Stall bench: a fresh run with payable gold and seeded
 		# stock, so `_show_shop` does not `_store_run` a new checkpoint.
@@ -531,6 +538,19 @@ func _ready() -> void:
 		_attach_performance_probe()
 	elif shot_path != "":
 		_capture_and_quit(shot_path)
+
+
+## The bench reopens the map this boot opened and photographs it itself, so
+## `--shot=` belongs to it rather than to `_capture_and_quit`.
+func _attach_map_open_bench() -> void:
+	var script: GDScript = load("res://tools/bench_map_open.gd") as GDScript
+	var instance: Variant = script.new() if script != null else null
+	if not instance is Node:
+		push_error("map open bench did not load")
+		get_tree().quit(2)
+		return
+	var bench: Node = instance
+	add_child(bench)
 
 
 func _attach_performance_probe() -> void:
@@ -1494,10 +1514,12 @@ func _process(_delta: float) -> void:
 func _show_map() -> void:
 	_remember_route(_show_map)
 	_apply_pending_content_hydration()
+	var act_index: int = 0
 	if game != null and game.run != null:
 		_transitions.wipe()
+		act_index = game.run.act
 	_clear_route()
-	_map_screen = WorldMapScreen.new(_map, content, _shape)
+	_map_screen = WorldMapScreen.new(_map, content, _shape, act_index)
 	# ponytail: retain only the current identity; add a cache only if routes can
 	# revisit older semantic identities.
 	_map_screen._layout_compile = _compile_map_layout
