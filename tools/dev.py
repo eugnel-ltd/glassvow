@@ -39,7 +39,7 @@ SURFACES = [
     {"id": "enemy_bench", "title": "Enemy bench", "group": "Editors", "base": ["--enemies", "--bench=duskfang"], "selectors": ["enemies"], "defaults": "", "note": "Interactive actor and fracture tuning. Click or drag the captured viewport."},
     {"id": "chips", "title": "Status & intent chips", "group": "Viewers", "base": ["--chips"], "selectors": ["chips"], "defaults": "", "note": "Production chips on representative grounds."},
     {"id": "hud", "title": "HUD mock", "group": "Mocks", "base": ["--hud"], "selectors": ["hud"], "defaults": "--state=0", "note": "Production HudBar over scripted combat states and a mock stage."},
-    {"id": "reward", "title": "Reward mock", "group": "Mocks", "base": ["--reward"], "selectors": ["reward"], "defaults": "", "note": "Production RewardScreen over fixed spoils, without a fight behind it."},
+    {"id": "reward", "title": "Reward mock", "group": "Mocks", "base": ["--reward"], "selectors": ["reward"], "defaults": "", "note": "Reward concepts over fixed spoils, opening on the shipped RewardEmbers, without a fight behind it."},
 ]
 BY_ID = {item["id"]: item for item in SURFACES}
 

@@ -140,9 +140,18 @@ static func _combat_states(fails: Array[String]) -> void:
 	reward._show_pending_reward()
 	_check(fails, reward._hints.showing() == HintGuide.REWARD,
 		"reward did not fire on the first reward screen")
+	_check(fails, reward._reward_screen != null
+			and reward._reward_screen.callout_anchor() == reward._reward_screen._rack,
+		"the reward hint does not point at the offering")
+	# The embers announce gold, phial and relic unasked as the screen opens, so
+	# an announcement must not spend the hint; answering the offering does.
 	reward._on_reward_claimed(&"gold", "")
+	_check(fails, reward._hints.showing() == HintGuide.REWARD
+			and not reward._vigil.hints_seen.has(HintGuide.REWARD),
+		"an announced spoil dismissed the offering's hint")
+	reward._on_reward_claimed(&"card", "")
 	_check(fails, reward._vigil.hints_seen.has(HintGuide.REWARD),
-		"claiming a reward did not dismiss the hint")
+		"answering the offering did not dismiss the hint")
 	_dispose(reward)
 
 

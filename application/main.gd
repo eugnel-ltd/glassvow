@@ -33,7 +33,7 @@ var _map_layout_job: MapLayoutJob = null
 var _map_layout_retired: Array[MapLayoutJob] = []
 var _map_screen: WorldMapScreen = null
 var _choice_screen: Control = null
-var _reward_screen: RewardScreen = null
+var _reward_screen: RewardEmbers = null
 var _route_screen: Control = null
 var _run_hud: RunHud = null
 var _modal: Control = null
@@ -2731,10 +2731,15 @@ func _show_pending_reward() -> void:
 	var taken: Dictionary = pending["taken"]
 	var reward_kind: String = _map.current().combat_kind() \
 		if _map.current() != null else "normal"
+	# The embers are painted in the hue of what just died; a save from before
+	# `slain_enemy` existed has none, and the screen falls back to ember.
+	var slain_v: Variant = pending.get("slain_enemy")
+	var slain: Dictionary = slain_v if typeof(slain_v) == TYPE_DICTIONARY else {}
+	var hue: float = float(str(slain.get("hue", -1.0)))
 	_transitions.wipe()
 	_clear_route()
-	_reward_screen = RewardScreen.new(rewards, content,
-		reward_kind, false, _shape)
+	_reward_screen = RewardEmbers.new(rewards, content,
+		reward_kind, hue, _shape, true)
 	_reward_screen.claimed.connect(_on_reward_claimed)
 	_reward_screen.finished.connect(_on_reward_finished)
 	add_child(_reward_screen)
@@ -2747,12 +2752,17 @@ func _show_pending_reward() -> void:
 	for key: String in ["gold", "card", "potion", "relic"]:
 		if taken.get(key, false):
 			_reward_screen.mark_taken(StringName(key))
-	if _hints != null:
+	# The hint is about the offering; a reward without one has nothing to spend it.
+	var offered: Array = rewards.get("cards", [])
+	if _hints != null and not offered.is_empty():
 		_hints.consider(HintGuide.REWARD, _reward_screen.callout_anchor())
 
 
 func _on_reward_claimed(what: StringName, id: String) -> void:
-	if _hints != null and not _hints.record_dismiss(HintGuide.REWARD):
+	# The hint is about the offering, and the announcements arrive unasked as
+	# the screen opens: only answering the card slot is the hint's action.
+	if what == &"card" and _hints != null \
+			and not _hints.record_dismiss(HintGuide.REWARD):
 		return
 	var pending: Dictionary = game.run.pending_reward
 	var taken: Dictionary = pending["taken"]
@@ -2779,6 +2789,10 @@ func _on_reward_claimed(what: StringName, id: String) -> void:
 			if not id.is_empty():
 				game.rewards.gain_relic(game.run, id)
 	taken[key] = true
+	# The purse and the relic row answer the claim on the spot: the embers bank
+	# them as they land, so the HUD over the screen must not lag a screen behind.
+	if _run_hud != null:
+		_run_hud.refresh(game.run)
 	if _reward_screen != null:
 		_read_flame(_reward_screen.show_flame)
 	if not _store_run():
@@ -2833,16 +2847,28 @@ func _show_potion_replace(id: String) -> void:
 func _on_potion_replace(choice: String, id: String) -> void:
 	if choice != "discard":
 		game.run.player.potions[int(choice)] = id
-	var pending: Dictionary = game.run.pending_reward
-	var taken: Dictionary = pending["taken"]
-	taken["potion"] = true
-	if _store_run():
+	# `_on_reward_finished` waits for this answer, so the reward is still
+	# pending here; a run without one keeps the phial choice and routes on.
+	var pending_v: Variant = game.run.pending_reward
+	if typeof(pending_v) == TYPE_DICTIONARY:
+		var pending: Dictionary = pending_v
+		var taken: Dictionary = pending["taken"]
+		taken["potion"] = true
+	if not _store_run():
+		_show_save_error("ui.persistence.detail.phialChoiceHold")
+	elif typeof(pending_v) == TYPE_DICTIONARY:
 		_show_pending_reward()
 	else:
-		_show_save_error("ui.persistence.detail.phialChoiceHold")
+		_route_run()
 
 
 func _on_reward_finished() -> void:
+	# Walking on banks every spoil at once, so a phial can still be asking which
+	# phial it replaces (`_show_potion_replace`). The reward is not over until
+	# that is answered: the answer rebuilds the reward, and the player walks on
+	# from there.
+	if _choice_screen != null:
+		return
 	game.run.pending_reward = null
 	_map.clear_current()
 	game.run.map = _map.to_dict()

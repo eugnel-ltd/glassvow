@@ -260,7 +260,7 @@ func _rebuild() -> void:
 		"lancet": _screen = RewardLancet.new(reward, content, kind, _enemy())
 		"rose": _screen = RewardRose.new(reward, content, kind)
 		"window": _screen = RewardWindow.new(reward, content, kind)
-		"embers": _screen = RewardEmbers.new(reward, content, kind, _hue())
+		"embers": _screen = RewardEmbers.new(reward, content, kind, _hue(), _shape)
 		"reliquary": _screen = RewardReliquary.new(reward, content, kind)
 		"husk": _screen = RewardStage.new(_enemy(), _hue())
 		_: _screen = RewardScreen.new(reward, content, kind, _bench, _shape)
