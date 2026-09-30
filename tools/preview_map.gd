@@ -1,6 +1,8 @@
 extends SceneTree
 ## Headed production map preview without the opening-boon screen.
 ## godot --path . -s res://tools/preview_map.gd -- --act-index=0 --seed=7 --output=/tmp/map.png
+## Add --map-compiler to lay the map out with Map Compiler v2 instead of the
+## production fast layout (minutes per input; docs/map/production-layout.md).
 ## Omit --output to explore the real map with drag, wheel and keyboard input.
 
 var _output: String = ""
@@ -54,6 +56,8 @@ func _run() -> void:
 			_cache = arg.trim_prefix("--cache=")
 		elif arg.begins_with("--quality="):
 			_quality_path = arg.trim_prefix("--quality=")
+		elif arg == MapLayoutPolicy.FLAG:
+			pass  # Read by MapLayoutPolicy: compile with Map Compiler v2.
 		else:
 			push_error("Unknown preview argument: " + arg)
 			quit(2)
@@ -148,14 +152,15 @@ func _run() -> void:
 		printerr(error_string(error))
 	quit(0 if error == OK else 1)
 
-## Preview-only reuse of a pure compiler result. The input digest includes all
+## Preview-only reuse of a pure layout result. Production's fast layout unless
+## `--map-compiler` asks for Map Compiler v2 (MapLayoutPolicy). The input digest includes all
 ## geometry authorities; runtime production never reads or writes this cache.
 func _compile(input: MapLayoutInput, quality: Dictionary, assets: Dictionary) -> Dictionary:
 	_input = input
 	_quality = quality
 	_assets = assets
 	if _cache.is_empty():
-		return MapLayoutCompiler.compile(input, quality, assets)
+		return MapLayoutPolicy.generate(input, quality, assets)
 	var path: String = _cache.path_join(input.digest() + ".bin")
 	if FileAccess.file_exists(path):
 		var cached: FileAccess = FileAccess.open(path, FileAccess.READ)
@@ -168,7 +173,7 @@ func _compile(input: MapLayoutInput, quality: Dictionary, assets: Dictionary) ->
 				return {"status": MapLayoutCompiler.COMPILED, "result": result,
 					"diagnostics": {"preview_cache": path}}
 	print("MAP_PREVIEW_COMPILE ", input.digest())
-	var compiled: Dictionary = MapLayoutCompiler.compile(input, quality, assets)
+	var compiled: Dictionary = MapLayoutPolicy.generate(input, quality, assets)
 	if compiled.get("result") is MapLayoutResult:
 		DirAccess.make_dir_recursive_absolute(_cache)
 		var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)

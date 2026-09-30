@@ -23,9 +23,9 @@ var _route_rebuilder: Callable = Callable()
 var _map_layout_compile: Callable = Callable()
 var _map_layout_input_digest: String = ""
 var _map_layout_packet: Variant = null
-## The player's own launch compiles map layouts on a worker thread behind a
-## charting veil; a boot that carries arguments (captures, scripted routes,
-## benches) keeps the synchronous compile so it lands on the finished map.
+## Map Compiler v2 opt-in only (MapLayoutPolicy): a launch without arguments
+## compiles on a worker behind a charting veil; a boot with arguments (captures,
+## scripted routes, benches) compiles synchronously to land on the finished map.
 var _map_layout_async: bool = true
 var _map_layout_job: MapLayoutJob = null
 ## Superseded jobs still running; joined once done, never waited on (a wait
@@ -1454,18 +1454,20 @@ func _quarantine_route() -> bool:
 	return false
 # ---------------------------------------------------------------- map
 
-## Null means the layout is compiling on a worker; `_process` routes back to
+## The production fast layout is ready at once (docs/map/production-layout.md).
+## Null means an opt-in compile is running on a worker; `_process` routes back to
 ## the map when it lands.
 func _compile_map_layout(input: MapLayoutInput, quality: Dictionary,
 		assets: Dictionary) -> Variant:
 	var input_digest: String = input.digest()
 	if input_digest == _map_layout_input_digest:
 		return _map_layout_packet
-	if _map_layout_compile.is_valid() or not _map_layout_async:
+	if _map_layout_compile.is_valid() or not _map_layout_async \
+			or not MapLayoutPolicy.is_compiler_input(input):
 		_map_layout_input_digest = input_digest
 		_map_layout_packet = _map_layout_compile.call(input, quality, assets) \
 			if _map_layout_compile.is_valid() \
-			else MapLayoutCompiler.compile(input, quality, assets)
+			else MapLayoutPolicy.generate(input, quality, assets)
 		return _map_layout_packet
 	if _map_layout_job == null or _map_layout_job.digest != input_digest:
 		if _map_layout_job != null:
