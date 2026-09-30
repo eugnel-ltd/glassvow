@@ -964,8 +964,8 @@
       },
       "hearthfall": {
         "name": "Hearthfall",
-        "text": "Spend 3 Embers: deal @16@ damage.",
-        "textUp": "Spend 3 Embers: deal @21@ damage."
+        "text": "Spend 3 Embers: deal @12@ damage.",
+        "textUp": "Spend 3 Embers: deal @16@ damage."
       },
       "hex": {
         "name": "Hex",

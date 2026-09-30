@@ -61,7 +61,7 @@ static func _spall(content: ContentDB, fails: Array[String]) -> void:
 
 
 ## Hearthfall costs no Energy and 3 Embers: under 3 it cannot be played and
-## nothing moves; with 3 it deals 16 (21 upgraded), empties those Embers into
+## nothing moves; with 3 it deals 12 (16 upgraded), empties those Embers into
 ## embersSpent and goes to the discard pile, not the fire.
 static func _hearthfall(content: ContentDB, fails: Array[String]) -> void:
 	var poor: GlassvowGame = _fight(content, "hearth-poor")
@@ -79,7 +79,7 @@ static func _hearthfall(content: ContentDB, fails: Array[String]) -> void:
 		var spent: int = _stat(game, "embersSpent")
 		var card: CardInst = _card(game, "hearthfall", up)
 		game.apply({"t": "playCard", "uid": card.uid, "target": 0})
-		var damage: int = 21 if up else 16
+		var damage: int = 16 if up else 12
 		if game.last_ret != true or HP - foe.hp != damage or game.cb.embers != 1 \
 				or game.cb.player.energy != 3 or _stat(game, "embersSpent") != spent + 3 \
 				or not game.cb.discard.has(card) or game.cb.exhaust.has(card):

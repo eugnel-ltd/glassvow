@@ -1944,20 +1944,20 @@
       "effects": [
         {
           "kind": "dmg",
-          "n": 16
+          "n": 12
         }
       ],
       "up": {
         "effects": [
           {
             "kind": "dmg",
-            "n": 21
+            "n": 16
           }
         ],
-        "text": "Spend 3 Embers: deal @21@ damage."
+        "text": "Spend 3 Embers: deal @16@ damage."
       },
       "name": "Hearthfall",
-      "text": "Spend 3 Embers: deal @16@ damage."
+      "text": "Spend 3 Embers: deal @12@ damage."
     }
   },
   "cardPools": {
