@@ -331,8 +331,17 @@ func _layout() -> void:
 	_title.add_theme_font_size_override("font_size", 18 if phone else 26)
 	var title_h: float = _title.get_combined_minimum_size().y
 	_title.size = Vector2(view.x * 0.8, title_h)
-	_title.position = Vector2(view.x * 0.1, view.y * (0.035 if phone else 0.09))
+	# On the phone the title takes its own band under the run HUD's top bar (the
+	# bar carries the location line, and the title used to overprint it), and the
+	# choices' window starts under the HUD's relic row, so nothing of the HUD's
+	# stands over the window (#595). The pad and the desktop have room to spare.
+	var title_y: float = view.y * 0.09
+	if phone:
+		title_y = RunHud.bar_bottom(shape) + RunHud.COLLECTION_GAP
+	_title.position = Vector2(view.x * 0.1, title_y)
 	var top: float = _title.position.y + title_h + (6.0 if phone else 18.0)
+	if phone:
+		top = maxf(top, RunHud.relic_row_bottom(shape) + RunHud.COLLECTION_GAP)
 	var gap: float = 8.0 if phone else 20.0
 	var w: float = minf(WINDOW_W, view.x - 28.0)
 	var room: float = maxf(80.0, pane.position.y - gap - top)

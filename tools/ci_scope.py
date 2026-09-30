@@ -88,6 +88,8 @@ CHECKS = (
         "release_platform", "presentation")),
     Check("run_hud_location", "Test run HUD location fit", (
         "release_platform", "presentation")),
+    Check("run_event_containment", "Test event phone containment", (
+        "release_platform", "presentation")),
 )
 
 
