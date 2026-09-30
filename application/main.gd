@@ -2730,7 +2730,9 @@ func _show_pending_reward() -> void:
 	for key: String in ["gold", "card", "potion", "relic"]:
 		if taken.get(key, false):
 			_reward_screen.mark_taken(StringName(key))
-	if _hints != null:
+	# The hint is about the offering; a reward without one has nothing to spend it.
+	var offered: Array = rewards.get("cards", [])
+	if _hints != null and not offered.is_empty():
 		_hints.consider(HintGuide.REWARD, _reward_screen.callout_anchor())
 
 
@@ -2823,16 +2825,28 @@ func _show_potion_replace(id: String) -> void:
 func _on_potion_replace(choice: String, id: String) -> void:
 	if choice != "discard":
 		game.run.player.potions[int(choice)] = id
-	var pending: Dictionary = game.run.pending_reward
-	var taken: Dictionary = pending["taken"]
-	taken["potion"] = true
-	if _store_run():
+	# `_on_reward_finished` waits for this answer, so the reward is still
+	# pending here; a run without one keeps the phial choice and routes on.
+	var pending_v: Variant = game.run.pending_reward
+	if typeof(pending_v) == TYPE_DICTIONARY:
+		var pending: Dictionary = pending_v
+		var taken: Dictionary = pending["taken"]
+		taken["potion"] = true
+	if not _store_run():
+		_show_save_error("ui.persistence.detail.phialChoiceHold")
+	elif typeof(pending_v) == TYPE_DICTIONARY:
 		_show_pending_reward()
 	else:
-		_show_save_error("ui.persistence.detail.phialChoiceHold")
+		_route_run()
 
 
 func _on_reward_finished() -> void:
+	# Walking on banks every spoil at once, so a phial can still be asking which
+	# phial it replaces (`_show_potion_replace`). The reward is not over until
+	# that is answered: the answer rebuilds the reward, and the player walks on
+	# from there.
+	if _choice_screen != null:
+		return
 	game.run.pending_reward = null
 	_map.clear_current()
 	game.run.map = _map.to_dict()

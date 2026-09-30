@@ -21,6 +21,7 @@ static func run(fails: Array[String]) -> void:
 	_resume_claims_nothing_twice(fails, content)
 	_walk_on_asks_first(fails, content)
 	_main_banks_every_slot(fails, content)
+	_full_rack_walk_on(fails, content)
 	_shapes_contain(fails, content)
 
 
@@ -168,6 +169,50 @@ static func _main_banks_every_slot(fails: Array[String], content: ContentDB) -> 
 	if is_instance_valid(screen):
 		screen.free()
 	PoolCallers._dispose(main)
+
+
+## Walking on at once banks every spoil in one go, and a phial with the rack
+## full asks which phial it replaces. The reward is not over until that is
+## answered: the answer rebuilds the reward, and walking on from there ends it.
+static func _full_rack_walk_on(fails: Array[String], content: ContentDB) -> void:
+	var main: Main = PoolCallers._on_map(content, 30931)
+	var rack: Array = main.game.run.player.potions
+	for slot: int in range(rack.size()):
+		rack[slot] = "fire"
+	main.game.run.pending_reward = {"rewards": {"gold": 5, "cards": [],
+		"potion": "healing", "relic": null}, "taken": {"gold": false, "card": false,
+		"potion": false, "relic": false}, "slain_enemy": {}}
+	main._show_pending_reward()
+	var screen: RewardEmbers = _root(main)
+	screen._walk_word.pressed.emit()
+	_check(fails, main.game.run.pending_reward != null and main._choice_screen != null,
+		"walking on past a full phial rack ended the reward over its open question")
+	if main._choice_screen == null or main.game.run.pending_reward == null:
+		PoolCallers._dispose(main)
+		return
+	main._choice_screen.emit_signal(&"chosen", "0")
+	var taken: Dictionary = main.game.run.pending_reward["taken"]
+	var potion_taken: bool = taken["potion"]
+	_check(fails, potion_taken and String(main.game.run.player.potions[0]) == "healing"
+			and main._reward_screen != null and main._reward_screen != screen,
+		"answering the phial rack did not bank the phial and rebuild the reward")
+	var again: RewardEmbers = _root(main)
+	again._walk_word.pressed.emit()
+	_check(fails, main.game.run.pending_reward == null,
+		"walking on from the rebuilt reward did not end it")
+	for node: RewardEmbers in [screen, again]:
+		if is_instance_valid(node):
+			node.free()
+	PoolCallers._dispose(main)
+
+
+## Main builds its screens off-tree in these fixtures; the entrance needs one.
+static func _root(main: Main) -> RewardEmbers:
+	var screen: RewardEmbers = main._reward_screen
+	main.remove_child(screen)
+	(Engine.get_main_loop() as SceneTree).root.add_child(screen)
+	screen._ready()
+	return screen
 
 
 ## Settled pose at each shipping shape: every card, spoil slab and word inside
