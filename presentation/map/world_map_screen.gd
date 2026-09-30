@@ -72,7 +72,10 @@ var _layout_input_digest: String = ""
 var _layout_diagnostics: Dictionary = {}
 var _layout_failure: Dictionary = {}
 ## Focused tests replace only the pure compiler call; production leaves this empty.
+## Returning null means the compile is still running off the main thread: the
+## screen stays unbound and its owner routes back here once the layout lands.
 var _layout_compile: Callable = Callable()
+var _layout_pending: bool = false
 ## Projection is shared by waystone layout and marker queries.
 var _projected_seats_cache: PackedVector2Array = PackedVector2Array()
 var _projected_pose: Vector2 = Vector2(INF, INF)
@@ -408,6 +411,11 @@ func layout_diagnostics() -> Dictionary:
 	return _layout_diagnostics.duplicate(true)
 
 
+## True while the injected compiler is still working on this screen's layout.
+func layout_pending() -> bool:
+	return _layout_pending
+
+
 func layout_failure() -> Dictionary:
 	return _layout_failure.duplicate(true)
 
@@ -459,6 +467,10 @@ func _bind_compiled_layout() -> void:
 	var compiled_v: Variant = _layout_compile.call(input, quality, assets) \
 		if _layout_compile.is_valid() \
 		else MapLayoutCompiler.compile(input, quality, assets)
+	_layout_pending = compiled_v == null
+	if _layout_pending:
+		_layout_input_digest = ""
+		return
 	if typeof(compiled_v) != TYPE_DICTIONARY:
 		return _fail_compiled_layout({
 			"kind": "compiler", "id": "live_map",
@@ -710,7 +722,7 @@ func _focus_xz(i: int) -> Vector2:
 	var world: Vector3
 	if anchors.size() == map.nodes.size():
 		world = anchors[i]
-	elif _run == null:
+	elif _run == null or _layout_pending:
 		world = MapPinProjection.world_anchor(map.nodes[i])
 	else:
 		push_error("WorldMapScreen cannot focus without the compiled node anchors")

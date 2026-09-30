@@ -23,6 +23,14 @@ var _route_rebuilder: Callable = Callable()
 var _map_layout_compile: Callable = Callable()
 var _map_layout_input_digest: String = ""
 var _map_layout_packet: Variant = null
+## The player's own launch compiles map layouts on a worker thread behind a
+## charting veil; a boot that carries arguments (captures, scripted routes,
+## benches) keeps the synchronous compile so it lands on the finished map.
+var _map_layout_async: bool = true
+var _map_layout_job: MapLayoutJob = null
+## Superseded jobs still running; joined once done, never waited on (a wait
+## would block the main thread for the rest of their compile).
+var _map_layout_retired: Array[MapLayoutJob] = []
 var _map_screen: WorldMapScreen = null
 var _choice_screen: Control = null
 var _reward_screen: RewardScreen = null
@@ -349,6 +357,8 @@ func _ready() -> void:
 	# chosen against the window the player will actually see.
 	if _boot_args.is_empty():
 		Preferences.active.apply_display()
+	else:
+		_map_layout_async = false
 	_apply_shape()
 	var window: Window = get_window()
 	if window != null:
@@ -668,6 +678,20 @@ func install_profile(run_path: String, vigil_path: String) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		_quit_game()
+	elif what == NOTIFICATION_PREDELETE:
+		_join_map_layout_jobs()
+
+
+## Every WorkerThreadPool task must be joined before its owner goes: an
+## unjoined compile crashed the engine at exit. A quit during the charting veil
+## therefore waits for the compile to end.
+func _join_map_layout_jobs() -> void:
+	if _map_layout_job != null:
+		_map_layout_retired.append(_map_layout_job)
+		_map_layout_job = null
+	for job: MapLayoutJob in _map_layout_retired:
+		job.finish()
+	_map_layout_retired.clear()
 
 
 ## A headed proof of the shipping root's default font. The Label carries no font
@@ -1430,16 +1454,39 @@ func _quarantine_route() -> bool:
 	return false
 # ---------------------------------------------------------------- map
 
+## Null means the layout is compiling on a worker; `_process` routes back to
+## the map when it lands.
 func _compile_map_layout(input: MapLayoutInput, quality: Dictionary,
 		assets: Dictionary) -> Variant:
 	var input_digest: String = input.digest()
 	if input_digest == _map_layout_input_digest:
 		return _map_layout_packet
-	_map_layout_input_digest = input_digest
-	_map_layout_packet = _map_layout_compile.call(input, quality, assets) \
-		if _map_layout_compile.is_valid() \
-		else MapLayoutCompiler.compile(input, quality, assets)
-	return _map_layout_packet
+	if _map_layout_compile.is_valid() or not _map_layout_async:
+		_map_layout_input_digest = input_digest
+		_map_layout_packet = _map_layout_compile.call(input, quality, assets) \
+			if _map_layout_compile.is_valid() \
+			else MapLayoutCompiler.compile(input, quality, assets)
+		return _map_layout_packet
+	if _map_layout_job == null or _map_layout_job.digest != input_digest:
+		if _map_layout_job != null:
+			_map_layout_retired.append(_map_layout_job)
+		_map_layout_job = MapLayoutJob.start(input, quality, assets)
+	return null
+
+
+func _process(_delta: float) -> void:
+	for retired: MapLayoutJob in _map_layout_retired.duplicate():
+		if retired.is_done():
+			retired.finish()
+			_map_layout_retired.erase(retired)
+	if _map_layout_job == null or not _map_layout_job.is_done():
+		return
+	var job: MapLayoutJob = _map_layout_job
+	_map_layout_job = null
+	_map_layout_input_digest = job.digest
+	_map_layout_packet = job.finish()
+	if _route_screen is MapChartingVeil and game != null:
+		_show_map()
 
 
 func _show_map() -> void:
@@ -1457,6 +1504,9 @@ func _show_map() -> void:
 	_map_screen.before_pick = _on_map_before_pick
 	add_child(_map_screen)
 	_map_screen.refresh(game.run)
+	if _map_screen.layout_pending():
+		_show_map_charting()
+		return
 	# --map --act=N: dress scenery only (domain map stays the run's act).
 	if _forced_act_index >= 0:
 		_map_screen.set_act_scenery(_forced_act_index)
@@ -1466,6 +1516,17 @@ func _show_map() -> void:
 	_music.play(&"map")
 	if _hints != null:
 		_hints.consider_map(_map_screen)
+
+
+## Holds the map's place while its layout compiles off the main thread. The
+## unbound map screen is dropped rather than shown half-built.
+func _show_map_charting() -> void:
+	remove_child(_map_screen)
+	_map_screen.queue_free()
+	_map_screen = null
+	_route_screen = MapChartingVeil.new()
+	add_child(_route_screen)
+	_transitions.screen_in(_route_screen)
 
 
 func _show_run_menu() -> void:
