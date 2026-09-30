@@ -289,3 +289,7 @@ jobs:
       - name: Test run HUD location fit
         if: steps.scope.outputs.run_hud_location == 'true'
         run: godot --headless -s res://tests/measure_hud_location.gd
+
+      - name: Test event phone containment
+        if: steps.scope.outputs.run_event_containment == 'true'
+        run: godot --headless -s res://tests/event_phone_containment.gd

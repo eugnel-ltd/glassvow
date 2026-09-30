@@ -172,7 +172,8 @@ class ScopeFixtureTests(unittest.TestCase):
         for check in ("run_store_exclusion", "run_store_gate_tests",
                       "run_release_identity_tests",
                       "run_performance_evidence", "run_choice_scroll",
-                      "run_boss_relic", "run_dawn_containment", "run_hud_location"):
+                      "run_boss_relic", "run_dawn_containment", "run_hud_location",
+                      "run_event_containment"):
             self.assertTrue(selection.checks[check], check)
         self.assertFalse(selection.checks["run_balance_doe"])
         self.assertFalse(CI.classify_paths(["README.md"]).checks["run_release_identity_tests"])
@@ -344,6 +345,7 @@ class WorkflowContractTests(unittest.TestCase):
             "res://tests/boss_relic_choice_containment.gd",
             "res://tests/dawn_phone_containment.gd",
             "res://tests/measure_hud_location.gd",
+            "res://tests/event_phone_containment.gd",
         )
         for command in commands:
             self.assertIn(command, self.workflow, command)

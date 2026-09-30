@@ -10,6 +10,8 @@ signal potion_requested(slot: int)
 
 const HP_FILL_A: Color = Color("#c22f43")
 const HP_FILL_B: Color = Color("#ff7060")
+## The collection's gap under the top bar.
+const COLLECTION_GAP: int = 4
 
 var shape: StringName = StageShape.IDENTITY
 var content: ContentDB
@@ -229,7 +231,7 @@ func _rebuild_collection(run: RunState, player: RunState.Player) -> void:
 
 func _content_art(folder: String, id: String, definition: Dictionary,
 		omen: bool) -> Control:
-	var side: int = _shape_value(30 if omen else 34, 42 if omen else 44)
+	var side: int = relic_side(shape) if not omen else _shape_value(30, 42)
 	var seat: PanelContainer = PanelContainer.new()
 	seat.custom_minimum_size = Vector2(side, side)
 	seat.tooltip_text = _tip(definition, "Unknown %s: %s" % [folder.trim_suffix("s"), id])
@@ -263,6 +265,25 @@ static func chrome_bottom(stage_shape: StringName) -> float:
 	return float(_bar_height(stage_shape) + (70 if compact else 96))
 
 
+## Where the top bar ends for a shape: the location line, the stats, the phial
+## seats and the deck and menu buttons all sit above it.
+static func bar_bottom(stage_shape: StringName) -> float:
+	return float(_bar_height(stage_shape))
+
+
+## Where the collection's first row ends: the relics and the omen sit in one row
+## under the bar until the row is full, so a screen that keeps its own furniture
+## below this is clear of them in every ordinary run. `chrome_bottom` is the
+## two-row bound for a widget that must stay clear of a full collection.
+static func relic_row_bottom(stage_shape: StringName) -> float:
+	return float(_bar_height(stage_shape) + COLLECTION_GAP + relic_side(stage_shape))
+
+
+## A relic seat's side for a shape.
+static func relic_side(stage_shape: StringName) -> int:
+	return 34 if stage_shape == &"phone-landscape" else 44
+
+
 ## Compact chrome is phone-landscape only (#382 wrap bar). pad-portrait retired
 ## with the landscape-only cut.
 static func _bar_height(stage_shape: StringName) -> int:
@@ -286,7 +307,7 @@ func _apply_shape() -> void:
 	_title.text_overrun_behavior = (
 		TextServer.OVERRUN_NO_TRIMMING if compact else TextServer.OVERRUN_TRIM_ELLIPSIS)
 	_title.max_lines_visible = 2 if compact else 1
-	_collection.offset_top = bar_height + 4
+	_collection.offset_top = bar_height + COLLECTION_GAP
 	_collection.offset_bottom = chrome_bottom(shape)
 
 
@@ -388,7 +409,14 @@ func _add_fallback(parent: Control, glyph: String, colour: Color) -> void:
 	fallback.set_anchors_preset(Control.PRESET_FULL_RECT)
 	fallback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	fallback.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	parent.add_child(fallback)
+	# Held in a bare Control, whose minimum size is nothing, so the glyph's line
+	# height cannot grow a phone seat past its side (37 px against 34) and push
+	# the collection's row past `relic_row_bottom`.
+	var holder: Control = Control.new()
+	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(fallback)
+	parent.add_child(holder)
 
 
 func _tip(definition: Dictionary, missing: String) -> String:
