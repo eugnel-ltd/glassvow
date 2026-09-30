@@ -51,8 +51,9 @@ static func _fresh_begin_skips_embark(fails: Array[String]) -> void:
 
 static func _choiceful_unseen_gets_embark(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
+	# An earned aspect2 is no longer a choice while its class is deferred (#543);
+	# test_class_scope.gd owns that case. The vow ladder still is one.
 	var cases: Array[Dictionary] = [
-		{"tag": "aspect2", "unlock": "aspect2", "vow": 0},
 		{"tag": "vow", "unlock": "", "vow": 1},
 	]
 	for case: Dictionary in cases:

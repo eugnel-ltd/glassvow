@@ -92,6 +92,27 @@ func offer_relics(run: RunState, tier: String) -> Array:
 	return _without(relic_pool(run, tier), _excluded(run, "relics"))
 
 
+## The same hygiene for the glass a run holds outside the card and relic pools
+## (#543): a phial, a Keeper's boon or a Lantern Art whose effect the aspect
+## blocks — the Duskblade's Smolder — is never offered to it. Content order is
+## kept, so an exclusion changes which id a draw lands on, never how many draws.
+func offer_potions(run: RunState) -> Array:
+	return _without(content.potions.keys(), _excluded(run, "potions"))
+
+
+func offer_boons(run: RunState) -> Array:
+	return _without(content.boons.keys(), _excluded(run, "boons"))
+
+
+func offer_arts(run: RunState) -> Dictionary:
+	var out: Dictionary = {}
+	var excluded: Array = _excluded(run, "arts")
+	for id: String in content.arts:
+		if not excluded.has(id):
+			out[id] = content.arts[id]
+	return out
+
+
 func _excluded(run: RunState, kind: String) -> Array:
 	var excludes_v: Variant = _aspect_row(run).get("excludes", {})
 	if typeof(excludes_v) != TYPE_DICTIONARY:
@@ -238,7 +259,7 @@ func gen_combat_rewards(run: RunState, kind: String, affix: StringName = &"") ->
 	if kind != "boss":
 		var potion_roll: float = run.rng.next()
 		if potion_roll < 0.4 and (run.reveals_all or run.reveals.has("phials")):
-			var potion_ids: Array = content.potions.keys()
+			var potion_ids: Array = offer_potions(run)
 			potion = potion_ids[run.rng.pick_index(potion_ids.size())]
 	var relic: Variant = null
 	var relic2: Variant = null
@@ -580,7 +601,7 @@ func gen_shop(run: RunState) -> Dictionary:
 			})
 	var potions: Array = []
 	if run.reveals_all or run.reveals.has("phials"):
-		var potion_ids: Array = content.potions.keys()
+		var potion_ids: Array = offer_potions(run)
 		var potion_price: Array = content.shop["potionPrice"]
 		for _i: int in range(2):
 			potions.append({
@@ -737,7 +758,7 @@ func apply_event_ops(run: RunState, ops: Array) -> Dictionary:
 				continue
 			var potion_id: String = str(op["potion"])
 			if potion_id == "random":
-				var potion_ids: Array = content.potions.keys()
+				var potion_ids: Array = offer_potions(run)
 				potion_id = str(potion_ids[run.rng.pick_index(potion_ids.size())])
 			var slot: int = run.player.potions.find("")
 			if slot >= 0:

@@ -966,10 +966,12 @@ func _on_title_choice(id: String, saved: RunState) -> void:
 
 func _begin_rekindle() -> void:
 	# Skip Embark only when the opening is unseen AND the screen would
-	# offer nothing (single aspect, vow 0). The skip exists because run 1
+	# offer nothing (one admitted class, vow 0). The skip exists because run 1
 	# has no real choice; a legacy v2 profile that never saw the opening
-	# but has aspect2 / vow_unlocked > 0 must not be forced onto defaults.
-	# Embark then creates the run, and `_plays_opening()` still fires.
+	# but has a second admitted class / vow_unlocked > 0 must not be forced
+	# onto defaults. An earned `aspect2` whose class this build defers is no
+	# choice (#543). Embark then creates the run, and `_plays_opening()` still
+	# fires.
 	if _vigil.scenes_seen.has("opening") or not _embark_is_zero_choice():
 		_show_embark()
 	else:
@@ -977,7 +979,8 @@ func _begin_rekindle() -> void:
 
 
 func _embark_is_zero_choice() -> bool:
-	return not _vigil.unlocks.has("aspect2") and _vigil.vow_unlocked <= 0
+	return ClassScope.admitted(content, _vigil.unlocks).size() <= 1 \
+		and _vigil.vow_unlocked <= 0
 
 
 func _show_embark() -> void:
@@ -986,7 +989,7 @@ func _show_embark() -> void:
 	var screen: EmbarkScreen = EmbarkScreen.new(
 		content.aspects,
 		content.vows,
-		_vigil.unlocks.has("aspect2"),
+		ClassScope.admitted(content, _vigil.unlocks).size() > 1,
 		_vigil.vow_unlocked,
 		saved,
 		_embark_aspect,
@@ -999,6 +1002,8 @@ func _show_embark() -> void:
 
 
 func _on_embark_begin(aspect: int, vow: int) -> void:
+	if not _admits_new_run(aspect):
+		return
 	_embark_aspect = aspect
 	_embark_vow = vow
 	if _load_run() == null:
@@ -1014,6 +1019,10 @@ func _on_embark_begin(aspect: int, vow: int) -> void:
 func _on_begin_anew(id: String) -> void:
 	if id == "back":
 		_show_title()
+		return
+	# Admission before abandonment: a refused class must leave the saved run,
+	# its receipt and the Vigil exactly as they were.
+	if not _admits_new_run(_embark_aspect):
 		return
 	var saved: RunState = _load_run()
 	if saved == null:
@@ -1179,7 +1188,11 @@ func _on_save_error_choice(id: String) -> void:
 		_show_title()
 
 
+## Every production start funnels through here, so the class gate holds for
+## title, Embark, Begin Anew, the result screen and the capture shortcuts alike.
 func _new_run(profile: Dictionary = {}) -> void:
+	if not _admits_new_run(int(float(str(profile.get("aspect", 0))))):
+		return
 	_route_checkpoint_quarantined = false
 	var run_seed: int = _forced_seed if _forced_seed >= 0 else randi() & 0x7FFFFFFF
 	var run_id: String = "run-%08x-%x" % [run_seed, int(Time.get_unix_time_from_system() * 1000.0)]
@@ -1215,6 +1228,18 @@ func _new_run(profile: Dictionary = {}) -> void:
 			_route_run()
 	else:
 		_show_save_error("ui.persistence.detail.pilgrimageStart")
+
+
+## The one new-run class gate (#543). A refusal happens before any seed, save
+## write or abandonment, and returns the player to Embark, which offers only
+## admitted classes. `_embark_aspect` is reset so the refusal cannot recur.
+func _admits_new_run(aspect: int) -> bool:
+	if ClassScope.admits(content, aspect, _vigil.unlocks):
+		return true
+	push_warning("Main: class %d is not offered for a new run" % aspect)
+	_embark_aspect = 0
+	_show_embark()
+	return false
 
 
 func _story_flow() -> bool:
@@ -3079,9 +3104,13 @@ func _on_terminal_commit(_id: String) -> void:
 			"body": Locale.active.t("ui.dawn.shardGrantCopy"),
 			"icon": "shard",
 		})
+	# A deferred class's unlock is earned and kept, but the Dawn never
+	# announces a class this build does not offer (#543).
+	var withheld: Array[String] = ClassScope.withheld_unlocks(content)
 	for unlock_v: Variant in _vigil.unlocks:
 		var unlock: String = str(unlock_v)
-		if not before_unlocks.has(unlock) and unlock != RunState.MIRRORED_ROAD:
+		if not before_unlocks.has(unlock) and unlock != RunState.MIRRORED_ROAD \
+				and not withheld.has(unlock):
 			var unlock_event: Dictionary = {
 				"kind": "unlock",
 				"title": _unlock_dawn_copy(unlock),
@@ -3714,7 +3743,8 @@ func _show_lamplighter() -> void:
 		offer = offer_v
 	else:
 		var pool: Array[String] = []
-		for id: String in content.boons:
+		for id_v: Variant in game.rewards.offer_boons(game.run):
+			var id: String = str(id_v)
 			var ops: Array = content.boons[id].get("ops", [])
 			var needs_phials: bool = ops.any(func(op_v: Variant) -> bool:
 				var op: Dictionary = op_v
@@ -3735,7 +3765,7 @@ func _show_lamplighter() -> void:
 	var screen: LamplighterScreen = LamplighterScreen.new(
 		aspect,
 		content.boons,
-		content.arts,
+		game.rewards.offer_arts(game.run),
 		boons,
 		game.run.art,
 		_shape,
@@ -3748,7 +3778,7 @@ func _on_lamplighter_confirmed(boon_id: String, art_id: StringName) -> void:
 	var offer: Dictionary = game.run.quest_scratch["lamplighterOffer"]
 	if not offer.get("boons", []).has(boon_id) \
 			or not content.boons.has(boon_id) \
-			or not content.arts.has(String(art_id)):
+			or not game.rewards.offer_arts(game.run).has(String(art_id)):
 		return
 	game.run.art = art_id
 	game.rewards.apply_boon(game.run, boon_id)

@@ -5792,6 +5792,18 @@
         ],
         "relics": [
           "smolderingCoal"
+        ],
+        "potions": [
+          "venom"
+        ],
+        "boons": [
+          "venomPouch"
+        ],
+        "arts": [
+          "ashfall"
+        ],
+        "deeds": [
+          "ashSermon"
         ]
       }
     },
@@ -5800,6 +5812,7 @@
       "hue": 26,
       "art": "ashfall",
       "unlock": "aspect2",
+      "deferred": true,
       "maxHp": 88,
       "energy": 3,
       "handSize": 5,

@@ -4,7 +4,9 @@ extends RefCounted
 ## random relics) while the Ashwarden keeps all of it, and the Ashwarden is never
 ## offered the Duskblade's Edge cards and crown (lock PR 6) while the Duskblade
 ## keeps them; the draw count per offer does not move; checkpoints saved before
-## the exclusion still validate.
+## the exclusion still validate. #543 carries the same rule to the Smolderphial,
+## the Keeper's Pouch of Ash and the Ashfall Art: a Duskblade is never offered
+## glass its blocked Smolder would leave dead.
 
 const SEEDS: int = 300
 const HEROES: Array[String] = ["the Duskblade", "the Ashwarden"]
@@ -23,13 +25,14 @@ static func run(fails: Array[String]) -> void:
 	_draw_counts_unchanged(fails)
 	_old_checkpoints_validate(fails)
 	_omissions_validate(fails)
+	_smolder_glass_hygiene(content, fails)
 
 
 static func _excluded(content: ContentDB, aspect: int = 0) -> Array[String]:
 	var out: Array[String] = []
 	var row: Dictionary = content.aspects[aspect]
 	var excludes: Dictionary = row.get("excludes", {})
-	for kind: String in ["cards", "relics"]:
+	for kind: String in ["cards", "relics", "potions"]:
 		for id_v: Variant in excludes.get(kind, []):
 			out.append(str(id_v))
 	return out
@@ -58,8 +61,9 @@ static func _offered(content: ContentDB, aspect: int) -> Dictionary:
 			ids.append_array(cards)
 			ids.append(reward["relic"])
 			ids.append(reward.get("relic2"))
+			ids.append(reward["potion"])
 		var stock: Dictionary = rules.gen_shop(run_state)
-		for category: String in ["cards", "relics"]:
+		for category: String in ["cards", "relics", "potions"]:
 			for row_v: Variant in stock[category]:
 				var row: Dictionary = row_v
 				ids.append(row["id"])
@@ -155,3 +159,29 @@ static func _omissions_validate(fails: Array[String]) -> void:
 	var claim: Dictionary = rules.claim_treasure(run_state)
 	if claim["relic"] != null or not rules.valid_treasure_checkpoint(run_state, claim):
 		fails.append("pool hygiene: a gold treasure with every offerable relic owned must validate")
+
+
+## The Keeper offers the Duskblade neither the Pouch of Ash (its Smolderphial)
+## nor the Ashfall Art, and the Ashwarden both; a Duskblade shop or run saved
+## holding that glass still loads, because validation reads the full catalogue.
+static func _smolder_glass_hygiene(content: ContentDB, fails: Array[String]) -> void:
+	var rules: RewardRules = RewardRules.new(content)
+	var dusk: RunState = _run(content, 0, 0)
+	var ash: RunState = _run(content, 0, 1)
+	if rules.offer_boons(dusk).has("venomPouch") or not rules.offer_boons(ash).has("venomPouch"):
+		fails.append("pool hygiene: the Pouch of Ash is not the Ashwarden's alone")
+	if rules.offer_arts(dusk).has("ashfall") or not rules.offer_arts(ash).has("ashfall"):
+		fails.append("pool hygiene: the Ashfall Art is not the Ashwarden's alone")
+	if rules.offer_arts(dusk).size() != content.arts.size() - 1:
+		fails.append("pool hygiene: the Duskblade lost an Art besides Ashfall")
+	var stock: Dictionary = rules.gen_shop(dusk)
+	var potions: Array = stock["potions"]
+	var row: Dictionary = potions[0]
+	row["id"] = "venom"
+	if not rules.valid_shop_checkpoint(dusk, stock):
+		fails.append("pool hygiene: a pre-#543 shop holding a Smolderphial no longer validates")
+	dusk.art = &"ashfall"
+	dusk.player.potions[0] = "venom"
+	var reloaded: RunState = RunState.from_save_dict(dusk.to_save_dict(), content)
+	if reloaded == null or reloaded.art != &"ashfall" or reloaded.player.potions[0] != "venom":
+		fails.append("pool hygiene: a Duskblade saved with Ashfall and a Smolderphial no longer loads")
