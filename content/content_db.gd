@@ -32,6 +32,9 @@ var shop: Dictionary = {}
 var shade_kits: Dictionary = {}
 var aspects: Array = []
 var vows: Array = []
+## Baseline enemy hardship every run plays at, beneath the vows: {"mods": {...}}
+## folded exactly like a vow's mods. Empty (no hardship) when the catalogue omits it.
+var hardship: Dictionary = {}
 var quest_ids: Array[String] = []
 var theme_order: Array[String] = []
 var acts: Array = []
@@ -460,6 +463,7 @@ func apply_catalogue(root: Dictionary) -> void:
 	player = _section(root, "player")
 	aspects = _array(root, "aspects")
 	vows = _array(root, "vows")
+	hardship = _section(root, "hardship")
 	acts = _array(root, "acts")
 	encounters = _array(root, "encounters")
 	for id_v: Variant in _array(root, "questIds"):

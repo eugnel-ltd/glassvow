@@ -54,24 +54,33 @@ func _omen_mods(run: RunState) -> Dictionary:
 	return omen.get("mods", {})
 
 
-func _vow_mods(run: RunState) -> Dictionary:
+## Everything that hardens a run's enemies beyond their catalogue rows: the
+## baseline hardship every run plays at, then each vow sworn. Both fold alike:
+## multipliers multiply, bonuses and facet deltas add.
+func _challenge_mods(run: RunState) -> Dictionary:
 	var out: Dictionary = {
-		"hpMult": 1.0, "enemyDmgBonus": 0, "bossFacetDelta": 0,
+		"hpMult": 1.0, "enemyDmgBonus": 0, "bossFacetDelta": 0, "eliteFacetDelta": 0,
 		"startHex": false,
 	}
+	var hardship_mods: Dictionary = content.hardship.get("mods", {})
+	_fold_challenge(out, hardship_mods)
 	for i: int in range(clampi(run.vow, 0, content.vows.size())):
 		var vow: Dictionary = content.vows[i]
-		var mods: Dictionary = vow.get("mods", {})
-		out["hpMult"] = float(str(out["hpMult"])) * float(str(mods.get("hpMult", 1)))
-		out["enemyDmgBonus"] = _ji(out["enemyDmgBonus"]) + _ji(mods.get("enemyDmgBonus", 0))
-		out["bossFacetDelta"] = _ji(out["bossFacetDelta"]) + _ji(mods.get("bossFacetDelta", 0))
-		if mods.get("startHex", false):
-			out["startHex"] = true
-		if mods.has("restHealFrac"):
-			out["restHealFrac"] = minf(
-				float(str(out.get("restHealFrac", 1))), float(str(mods["restHealFrac"]))
-			)
+		var vow_mods: Dictionary = vow.get("mods", {})
+		_fold_challenge(out, vow_mods)
 	return out
+
+
+static func _fold_challenge(out: Dictionary, mods: Dictionary) -> void:
+	out["hpMult"] = float(str(out["hpMult"])) * float(str(mods.get("hpMult", 1)))
+	for key: String in ["enemyDmgBonus", "bossFacetDelta", "eliteFacetDelta"]:
+		out[key] = _ji(out[key]) + _ji(mods.get(key, 0))
+	if mods.get("startHex", false):
+		out["startHex"] = true
+	if mods.has("restHealFrac"):
+		out["restHealFrac"] = minf(
+			float(str(out.get("restHealFrac", 1))), float(str(mods["restHealFrac"]))
+		)
 
 
 func _resolved_enemy(run: RunState, requested_id: String) -> Dictionary:
@@ -161,7 +170,7 @@ func start_combat(
 ) -> CombatState:
 	var rng: Rng = run.rng
 	var omen: Dictionary = _omen_mods(run)
-	var vow: Dictionary = _vow_mods(run)
+	var challenge: Dictionary = _challenge_mods(run)
 	var cb: CombatState = CombatState.new()
 	cb.kind = kind
 	# Every elite arrives wearing a title (web: opts.affix || pick(rng, keys)).
@@ -178,7 +187,7 @@ func start_combat(
 	var af_hp_mult: float = float(str(af.get("hpMult", 1)))
 	var af_facet_delta: int = _ji(af.get("facetDelta", 0))
 	var omen_hp_mult: float = float(str(omen.get("hpMult", 1)))
-	var vow_hp_mult: float = float(str(vow.get("hpMult", 1)))
+	var challenge_hp_mult: float = float(str(challenge.get("hpMult", 1)))
 
 	cb.player.hp = run.player.hp
 	cb.player.max_hp = run.player.max_hp
@@ -200,7 +209,7 @@ func start_combat(
 		e.name = str(d.get("name", ""))
 		var hp_pair: Array = d["hp"]
 		e.max_hp = int(roundf(float(rng.irange(_ji(hp_pair[0]), _ji(hp_pair[1]))) \
-			* omen_hp_mult * af_hp_mult * vow_hp_mult))
+			* omen_hp_mult * af_hp_mult * challenge_hp_mult))
 		e.hp = e.max_hp
 		e.block = _ji(af.get("startBlock", 0))
 		var start_status: Dictionary = d.get("startStatus", {})
@@ -225,7 +234,8 @@ func start_combat(
 		var facets: int = _ji(d.get("facets", facets_default))
 		# Every creature is glass: fill its facet gauge and it shatters.
 		e.facet_max = maxi(2, facets + _ji(omen.get("facetDelta", 0)) + af_facet_delta \
-			+ (_ji(vow.get("bossFacetDelta", 0)) if e.boss else 0))
+			+ (_ji(challenge.get("bossFacetDelta", 0)) if e.boss else 0) \
+			+ (_ji(challenge.get("eliteFacetDelta", 0)) if e.elite else 0))
 		cb.enemies.append(e)
 		_gate_death_dialogue(run, e)
 		i += 1
@@ -523,7 +533,7 @@ func damage_player(
 	if is_attack and attacker != null:
 		dmg += _sget(attacker.statuses, "str") + _ji(attacker.flags.get("rampBonus", 0))
 		dmg += _ji(_omen_mods(run).get("enemyDmgBonus", 0))
-		dmg += _ji(_vow_mods(run).get("enemyDmgBonus", 0))
+		dmg += _ji(_challenge_mods(run).get("enemyDmgBonus", 0))
 		if _sget(attacker.statuses, "weak") > 0:
 			dmg = int(floorf(float(dmg) * 0.75))
 		if _sget(p.statuses, "vulnerable") > 0:
@@ -1435,7 +1445,7 @@ func preview_enemy_dmg(
 	var dmg: int = _ji(dmg_v) + _sget(e.statuses, "str") + _ji(e.flags.get("rampBonus", 0))
 	if run != null:
 		dmg += _ji(_omen_mods(run).get("enemyDmgBonus", 0))
-		dmg += _ji(_vow_mods(run).get("enemyDmgBonus", 0))
+		dmg += _ji(_challenge_mods(run).get("enemyDmgBonus", 0))
 	if _sget(e.statuses, "weak") > 0:
 		dmg = int(floorf(float(dmg) * 0.75))
 	if _sget(cb.player.statuses, "vulnerable") > 0:

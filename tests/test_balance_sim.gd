@@ -4,12 +4,12 @@ extends RefCounted
 const Sim: GDScript = preload("res://tools/balance_sim.gd")
 const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
-const EXPECTED: String = "a54d677d8c318804d3a744b484fe06cd95a302402b3c6830c7c3f281bf073cb2"
+const EXPECTED: String = "33ba668d6ecc8377bff13d9462664d7148a9d23be30c51c32a4c5d4ac8738199"
 ## The same run with every lantern knob at zero (flame lock §5): the game from
 ## before the lantern had a quality (b151bcb9), played by pilot p8-d0-v2, so the
 ## knobs' zero point is the old game. It moves only with a deliberate change to
 ## that game or to the pilot.
-const EXPECTED_UNLIT: String = "f6d521a40d8e0a8cc2f1b4c1e590cc5691f04cea0cf84ab9b8708da8743c7224"
+const EXPECTED_UNLIT: String = "845e10059e0f25d853f4a3bb31962059e742e1b9d9f3d1f8842ba4dfcaf2350a"
 
 
 static func run(fails: Array[String]) -> void:

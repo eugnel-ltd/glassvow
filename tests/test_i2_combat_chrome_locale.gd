@@ -171,7 +171,7 @@ static func _runtime_hydrated_combat_chrome(fails: Array[String]) -> void:
 		"relic proc floater keeps the unknown-ID diagnostic fallback")
 	var intent_tip: Dictionary = screen._intent_tip(0)
 	_check(fails, intent_tip == {
-		"title": "Spore Spit", "body": "Intends to attack for [b]4[/b]."},
+		"title": "Spore Spit", "body": "Intends to attack for [b]5[/b]."},
 		"intent tooltip keeps exact hydrated English and BBCode")
 	var requested: Dictionary = Locale.active.get("_requested")
 	var ui_locale: Dictionary = requested["ui"]
@@ -181,7 +181,7 @@ static func _runtime_hydrated_combat_chrome(fails: Array[String]) -> void:
 	var summary_before: String = intent_locale["summary"]
 	intent_locale["attackFor"] = "MARK [b]{amount}[/b]"
 	intent_locale["summary"] = "PLAN {intent}"
-	_check(fails, str(screen._intent_tip(0)["body"]) == "PLAN MARK [b]4[/b]",
+	_check(fails, str(screen._intent_tip(0)["body"]) == "PLAN MARK [b]5[/b]",
 		"intent tooltip resolves its composed body through the catalogue")
 	intent_locale["attackFor"] = attack_before
 	intent_locale["summary"] = summary_before
