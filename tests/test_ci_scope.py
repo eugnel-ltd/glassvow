@@ -95,12 +95,13 @@ class ScopeFixtureTests(unittest.TestCase):
         self.assertTrue(selection.checks["run_agent_contracts"])
         self.assertFalse(selection.checks["run_doc_anchors"])
 
+        self.assertFalse(selection.checks["run_import_assets"])
+
     def test_code_change_verifies_doc_anchors(self) -> None:
         # Anchors point into code, so a code-only diff must re-check them
         # (#614 moved application/main.gd lines and broke main for docs PRs).
         for path in ("application/main.gd", "presentation/map/map_scene.gd"):
             self.assertTrue(CI.classify_paths([path]).checks["run_doc_anchors"], path)
-        self.assertFalse(selection.checks["run_import_assets"])
 
     def test_map_gdscript_and_map_test(self) -> None:
         paths = ["presentation/map/map_scene.gd", "tests/test_map_scene.gd"]
