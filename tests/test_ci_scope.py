@@ -175,6 +175,18 @@ class ScopeFixtureTests(unittest.TestCase):
             self.assertTrue(selection.checks[check], check)
         self.assertFalse(selection.checks["run_balance_doe"])
 
+    def test_runtime_map_registry_selects_map_quality_and_export_paths(self) -> None:
+        selection = CI.classify_paths(["content/map/map-quality-v2.json"])
+        self.assert_scopes(selection, "map_code", "locale_content")
+        self.assertTrue(selection.checks["run_map_quality"])
+
+    def test_export_path_guard_follows_scripts_presets_and_gdignore(self) -> None:
+        for path in ("presentation/map/world_map_screen.gd", "export_presets.cfg",
+                     "docs/.gdignore", "tools/check_export_paths.py"):
+            selection = CI.classify_paths([path])
+            self.assertTrue(selection.checks["run_export_paths"], path)
+        self.assertFalse(CI.classify_paths(["README.md"]).checks["run_export_paths"])
+
     def test_mixed_change_unions_scopes_and_checks(self) -> None:
         selection = CI.classify_paths([
             "README.md", "domain/map_layout/map_layout_input.gd", "locale/en.json"])

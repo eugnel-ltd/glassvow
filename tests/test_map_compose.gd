@@ -147,7 +147,7 @@ static func _compiled_result_binding(fails: Array[String]) -> void:
 	if not reachable.is_empty():
 		var i: int = reachable[0]
 		var quality: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(
-			"res://docs/map/map-quality-v2.json"))
+			"res://content/map/map-quality-v2.json"))
 		var bound: Dictionary = MapLayoutInputBinding.bind(screen.map, run.act)
 		var bound_nodes: Array = bound["nodes"]
 		var bound_edges: Array = bound["edges"]
