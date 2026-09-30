@@ -1166,11 +1166,13 @@ Landing, identical for every candidate: alpha from greenness `G − max(R, B)`,
 opaque at 24 or below and clear at 120 or above, linear between; green despilled
 by clamping `G` to `max(R, B)`; crop to the box where alpha exceeds 16; one
 uniform premultiplied Lanczos scale; centred on a transparent canvas. The crown
-fits a 440×331 box on 512×341, the width of its family (the shipped crowns span
-382 to 404 px); it lands at 440×307. The deed fits 484×484 on 512×512, the
-height the shipped deeds fill (94 to 96%); it lands at 218×484. No opaque pixel
-is green-dominant in the crown, and four faint ones (alpha 9 to 35) sit at the
-deed's apex tip.
+fits a 440×331 box on 512×341 and lands at 440×307: deliberately a little wider
+and shorter than the other five boss crowns (292 to 404 px wide, 327 to 338 px
+tall); fitted to their height, its broad outline would be 475 px wide. The deed fits 484×484 on
+512×512, the height the shipped deeds fill (94 to 96%); it lands at 218×484.
+Neither file carries a visible green cast. Where green still edges past red and
+blue it is resampling ringing on near-black pixels, 5 levels at most, plus five
+faint pixels (alpha 35 or less) at the deed's apex tip.
 
 Each asset had two candidates in deliberately different shapes. The deed has a
 third, `c`: after `a` and `b` were judged too narrow for the Vigil's slot, one
