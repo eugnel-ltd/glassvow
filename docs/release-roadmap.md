@@ -37,8 +37,8 @@ Dates are targets under the assumptions in §8. A milestone is met by its eviden
 | Milestone | Target | Exit evidence |
 |---|---|---|
 | M0 Lock merged | Tue 30 Sep | this roadmap, the lock and the template on `main`; #421 comment pointing at them |
-| M1 Flame playable | Fri 10 Oct | dev build with the flame in the HUD, mirror mode; readouts 1–3 posted; James plays two runs |
-| M2 Mechanism GO or fallback | Fri 17 Oct | Edge content in; readout 4 meets G1–G6 on the candidate SHA, or the fallback (§5) is chosen; exam plus independent re-run agree on every gate; lines in |
+| M1 Flame playable | Tue 30 Sep (pulled forward from Fri 10 Oct on the owner's word, 30 Sep) | macOS dev build with the flame in the HUD, reward, shop and event screens handed to James; readouts 1–6 posted; James plays when he can |
+| M2 Mechanism GO or fallback | Fri 17 Oct | Edge content in; readout 7 (each way's own wall) shipped or dropped; G2, G3, G5, G6 and G7 met on the candidate SHA with G1 and G4 reported as instrument readings (owner decision, 30 Sep: the game may be hard, the pilot is not a human); James's runs (H) recorded; lines in |
 | M3 Internal TestFlight | Fri 31 Oct | selected candidate integrated to `main`; #549 merged; #543 done; RC-shape export and twin; processed TestFlight build installed on iPhone and iPad with smoke evidence |
 | M4 Beta closed, feel signed | Fri 14 Nov | P6 round survived; #205 verdict recorded; P8 ledger current; player-facing-major changes re-evidenced |
 | M5 RC frozen and submitted | Fri 21 Nov | P0–P9 evidence on the exact RC commit; RC signature receipt; #428 submitted |
@@ -53,7 +53,7 @@ Dates are targets under the assumptions in §8. A milestone is met by its eviden
 | W1 29 Sep–3 Oct | PR 2: affinity, `flame.gd`, hygiene, stats, event, sim arms, readout 1 | shader spike on the lab | card sketches to numbers | #560–#564 generation starts | #549 draft; #545 icon; #415 policy text | decisions on readouts (30 min) |
 | W2 6–10 Oct | PR 3 recognition and steering, readout 2; PR 4 knobs, readout 3 | HUD lantern flame on device shapes | PR 6 content and art | assets landing; six lines authored | #546 screenshots plan; #420 Sentry on device prep | Fri: play two runs (M1) |
 | W3 13–17 Oct | calibration; exam on candidate; independent re-run | fringe and soot motes; approval | numbers finalised from readout 4 | PR 7 lines and codex | #541 export dry run | Fri: GO / fallback call (M2) |
-| W4 20–24 Oct | integrate to `main`; port_fixtures explicit update | VFX tint after approval | — | remaining assets | #549 merge; #543 integration; #415 / #420 evidence | — |
+| W4 20–24 Oct | port_fixtures explicit update if readout 7 changed behaviour | VFX tint after approval | — | remaining assets | #415 / #420 evidence (#549 merged and #543 started in W1, pulled forward) | — |
 | W5 27–31 Oct | support | — | — | — | RC-shape export, twin, upload (M3) | install and smoke on both devices |
 | W6 3–7 Nov | fixes from beta | — | — | — | P7 checklist | P2 and P4 sessions; beta starts; P3 journeys begin |
 | W7 10–14 Nov | fixes | — | — | — | ledger triage | beta close; feel verdict (M4) |
@@ -62,7 +62,7 @@ Dates are targets under the assumptions in §8. A milestone is met by its eviden
 
 ## 5. Fallbacks
 
-- **Mechanism.** If at M2 the Edge way cannot meet G1 and G2 while Shatter and Lantern do: ship with Shatter and Lantern as the two clear ways, Edge present as a fringe, and keep the Edge content on a branch for 1.0.x. The flame, recognition and steering ship regardless; they are the product feature. If G4 cannot be met at any Soot severity that keeps G3: raise the question to James with the two readouts side by side; enemy scalars are the last lever.
+- **Mechanism.** If at M2 the Edge way cannot meet G1 and G2 while Shatter and Lantern do: ship with Shatter and Lantern as the two clear ways, Edge present as a fringe, and keep the Edge content on a branch for 1.0.x. The flame, recognition and steering ship regardless; they are the product feature. If G4 cannot be met at any Soot severity that keeps G3: raise the question to James with the two readouts side by side; enemy scalars are the last lever. *Resolved 30 Sep:* readouts 5 and 6 showed no global lever reaches G1 or G4 and that enemy scalars lift every arm alike; the owner ruled that the game may be hard and that G1 and G4 are readings, not blockers. Calibration by global knobs is closed; the one remaining balance lane is each way's own wall (readout 7, one PR, then stop).
 - **Presentation.** If the shader is not approved on device by W4: ship a two-state flame (colour and stability only, no fringe or motes) and finish the fringe in 1.0.1.
 - **Devices.** If a floor device is unavailable: evidence on the other device plus the simulator for layout, with the missing device recorded as a known gap in the receipt; the bar's own rule decides whether that is a miss.
 - **App Review rejection.** One buffer week is in M6. A second rejection moves M6 by the fix's size, not by a fixed amount.
