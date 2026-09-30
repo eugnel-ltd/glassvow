@@ -1,0 +1,22 @@
+candidate	sha256 of the 1536x1024 render	Codex original (authoring Mac)
+cleft-a	325a94cd6113ee0115443a2b8f1493b6c3c76d5a1b88359c6902d85668202ba3	/Users/jamesto/.codex/generated_images/01a0f248-1d54-7122-87f6-b392fee40616/exec-bc36fc5c-43e2-4bc2-9916-fc6eb7deecc8.png
+cleft-b	81a7bbf383860aadad6816750484b0153b99a386ec6de5be90894cdb8ea56a11	/Users/jamesto/.codex/generated_images/01a0f248-1d50-7a13-90e6-82a20a1fcebc/exec-44b77580-8c3a-4fd4-bd33-ade4f2b5bda8.png
+dimTheGlass-a	ec65b9d4c6c6aecd679cebb6654ba58b119b427b078e0622dc16840c128c1736	/Users/jamesto/.codex/generated_images/01a0f248-1e09-7510-a341-c33657f6611c/exec-819034be-0eaf-4005-b299-d53f7b94e80f.png
+dimTheGlass-b	957bc37c016b4ef360058a1c6aca1dbc1eb963312f4eba30c628c755e166834e	/Users/jamesto/.codex/generated_images/01a0f248-1d91-75a3-adeb-8a61b9ec46a2/exec-e39bfb0b-aa00-49c9-801d-55f1130a836c.png
+eclipseStep-a	06a69c43a1962a6d21085ea5a2b5ae1ec604f5d84252c146b7cb84d687d276d3	/Users/jamesto/.codex/generated_images/01a0f248-1d86-7f31-a23a-48c0f864f15d/exec-6408081e-0396-447a-8b5d-8652a48ad193.png
+eclipseStep-b	c3a853948f53f59bdbd5b26b123aa1aa1b4ce59f5b03f9336fe2833c143f9c8c	/Users/jamesto/.codex/generated_images/01a0f24a-fd3c-7853-bde1-89ee2ec114b1/exec-f0fef9a3-f4f6-42cb-b7f6-136dea0354db.png
+emberEye-a	7d74909f442795edbf2359c5a01b03ca3002c59407322745aaee8e7e21124dc1	/Users/jamesto/.codex/generated_images/01a0f24b-4762-77f2-b73b-b8889dc27f80/exec-84bbe3c4-5045-4e99-ad0d-8e531a4576c1.png
+emberEye-b	5452e3f64b4e10551a8ad0d183015be6ca90bf9c85fc5f8a6346ed15b1015d9c	/Users/jamesto/.codex/generated_images/01a0f24b-67b9-7d21-9bdf-bf6abf0f7030/exec-34e93a39-395b-4e2b-8334-f58ed87da5ee.png
+hearthfall-a	949f3a4927cfec5cd3229e51b33ad1a4e7babab24e4a8029e75d5e3769fa367d	/Users/jamesto/.codex/generated_images/01a0f24b-704d-7cf0-9fe7-2cdc89ca6d88/exec-711e39dd-8fa1-4951-8619-37a1b4bb3ae5.png
+hearthfall-b	34f47cb273aa5cfceca5b673690fbffe2b03619c9646f32c22f50f377be7bb95	/Users/jamesto/.codex/generated_images/01a0f24b-94a5-76b0-876f-56f6c5f022ab/exec-bad9c561-2a5d-4b3b-8b3c-7431c17f9145.png
+spall-a	f886c6d64759b33684352c89a66d7a3364887437c6094e0d77d010e5a553b203	/Users/jamesto/.codex/generated_images/01a0f24e-3c45-76b2-9b9c-1a878a54a627/exec-08b4b9d3-b602-4593-a1e4-15a3d348dcfb.png
+spall-b	d0e566f3776c63701704112f2291feb94988218acf703d9bfdf6bb0820cc9191	/Users/jamesto/.codex/generated_images/01a0f24e-41ca-7673-bb84-66efcd882e63/exec-4d78d625-50a0-471d-9990-ee45a93496f1.png
+splinterCut-a	d7005af44f10b786973b1c6ede19c79b369ca98f9fab5e59331902d70908809a	/Users/jamesto/.codex/generated_images/01a0f24e-44b9-78f3-b3e7-9d53326f038e/exec-4f026426-cc48-4b21-bf01-7739fdf30ef7.png
+splinterCut-a0	ee96a9effceb540f0fb250dbe96df926ee2252cb0c38216fc7681782bd073e85	/Users/jamesto/.codex/generated_images/01a0f245-2681-7390-8681-9f1c40723c96/exec-f8f57151-93d0-4ba8-815e-31ed1789775b.png
+splinterCut-b	7849e2999447f8069cf0ac2b13afc0c4ba768765b0f3719500aceb7ff33c40a9	/Users/jamesto/.codex/generated_images/01a0f24e-633c-7bd2-8693-a7614fd005ac/exec-c2271da3-4645-44d2-a8d4-f13bbef0c459.png
+totality-a	b55d0f47bf3ff367b997897ad3ae9028742e29774a73a239ae833e101835f89c	/Users/jamesto/.codex/generated_images/01a0f24e-7bd4-7041-87c5-a7d752b354d8/exec-c4437d3c-7285-411b-a4ac-9ecde245e26a.png
+totality-b	7693ba9686e50f94a2ae6b8aad4e3c70ae54201a3ed0886a54846c6fe09f4d2f	/Users/jamesto/.codex/generated_images/01a0f250-ecc6-7a01-a0b6-0022c26e2617/exec-cf33fc2a-6c56-4a36-a239-1d1522d6755e.png
+tremor-a	9899beaec7bfeaa2712d7f136adb6b7a22fcc9f5bbf7475ad53e98baad327532	/Users/jamesto/.codex/generated_images/01a0f251-0709-72d1-9616-c8de7b26f2a7/exec-21da7ff2-4cd6-4283-8226-4fe699bd081b.png
+tremor-b	9dda1410595d8a2409b4ba114a2ed4b405a7bcc2e8a6cebfe6cfb856ddfa9d80	/Users/jamesto/.codex/generated_images/01a0f251-2b97-7350-b9e1-a06f8c7e69e8/exec-c71db2b3-b6d8-47a9-ac82-b24828324aef.png
+unreadablePage-a	9fd8c57452801fe70d26d3a43f0943150e0ec13b0f5657b15ec7652c8c00e73a	/Users/jamesto/.codex/generated_images/01a0f251-654d-7112-8ac1-a713c2e6fabb/exec-43ddc904-060a-45f7-b7b2-42e1e3cbca10.png
+unreadablePage-b	5f4c24d628210af96510ea0d5e384fb86f6c5d2f0e7ce715c9a956ecc8fcb40c	/Users/jamesto/.codex/generated_images/01a0f251-e46a-7152-8a1a-5deb774b8df6/exec-60e85a96-4a21-4b5d-8a6a-1c30ebd00a0c.png
