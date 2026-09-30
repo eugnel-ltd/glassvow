@@ -1127,6 +1127,63 @@ leaves (WCAG 2.1 SC 1.4.11 asks 3 : 1) while the door is 8.5 : 1 against its gla
 and the hairline is the brightest point only at 1024, by 1.29×. It stays open
 for the owner's phone check at TestFlight.
 
+## Shipped — card art for the Edge way, the way walls and the Unreadable Page (2026-09-30)
+
+### `cards/` — ten plates, 2048×1374 JPEG
+
+Ten cards that played on a bare pane now carry art: the Edge way's seven (Flame
+lock PR 6), Spall and Hearthfall (the way walls, #602), and The Unreadable Page,
+the Trail quest's curse card, which had shipped without art and without an Owed
+row. Each file is keyed by its content id, so `presentation/combat/card_view.gd`
+finds it and no code changed.
+
+The prompts follow `card-art-bible.md`'s template under `style-bible.md`'s style
+block and readability priority, with `refs/style-master.png` and two shipped
+cards (`eclipseSlash`, `lunge`) loaded as style references. Each subject is the
+one its Owed row gave, in the colour and shape the Flame lock's §6 gives its way.
+The Page had no row, so its subject is new: a book of dark glass bound shut by a
+padlocked chain, one leaf void-purple with its lead knotted into an illegible
+tangle, and a thin line of dawn light at the leaf's edge. The exact requests are
+in `docs/reviews/card-art-2026-09-30/prompts/`.
+
+Generated 2026-09-30 through `~/.claude/scripts/subagents/run-imagegen.sh`: Codex
+CLI 0.159.0 with `gpt-6.1-sol` at xhigh reasoning effort, drawing with Codex's
+built-in image tool, one 1536×1024 image per call. Codex served every call, and
+none fell back. Each card had two candidates in deliberately different
+compositions. Splinter Cut has a third, `a0`, the trial render made before the
+shared block was tightened to put glass on every surface and to thicken the
+mechanic's light. Each pick was judged against the style bible's readability
+priority on the 148×91 cover crop the card view makes, on a 64 px thumbnail and
+under a luminance threshold. It was then landed by a uniform Lanczos scale to
+2061×1374, a centre crop to 2048×1374, and JPEG quality 95 at 4:2:0: the
+siblings' size and quality, with no other processing.
+
+The review folder `docs/reviews/card-art-2026-09-30/` holds a contact sheet per
+card with its runners-up (`sheets/<id>.jpg`) and one sheet of all of them
+(`index.jpg`). `prompts/sources.txt` maps every candidate to its full-resolution
+original in Codex's store on the authoring Mac, so a swap only repeats the
+landing step. `capture/<id>-pad.jpg` is a real Act I fight at pad-landscape whose
+deck is five copies of the card, and `capture/hands.jpg` is each centre card at 2×.
+
+| Shipped | Pick | Content | Why this one |
+|---|---|---|---|
+| `splinterCut.jpg` | `b` | Splinter Cut 裂痕斬, Edge common attack | One violet-crimson crack is the whole read and survives at 64 px. `a` and `a0` read as arm and blade at card size, lose the crack, and sit close to `lunge`. |
+| `dimTheGlass.jpg` | `a` | Dim the Glass 暗琉, Edge common skill | The veil across a half-dulled crimson rose window is the Owed subject, and the grey-against-crimson split carries Dimmed. In `b` the snuffed enemy glass reads as a lantern, the Lantern way's emblem. |
+| `cleft.jpg` | `a` | Cleft 裂隙, Edge uncommon attack | The blade forces an existing crack wide on the attack diagonal, with Fervor's red-gold in the blade. `b` is busier and its blade lies flat. |
+| `eclipseStep.jpg` | `a` | Eclipse Step 蝕影步, Edge uncommon skill | A black crescent with a violet-crimson rim is the Ward arc. In `b` the crack on the claw sparks blue-white, Shatter's colour. |
+| `tremor.jpg` | `a` | Tremor 震紋, Edge uncommon attack | Exactly three rings from one impact, clean under the threshold. `b` drew four, which read as a spiral. |
+| `totality.jpg` | `a` | Totality 全蝕, Edge rare attack, the capstone | The eclipse is the heart of a rose window cracked through: the rare grammar's one ceremonial moment. `b` repeats `eclipseSlash`'s blade across a black disc. |
+| `emberEye.jpg` | `a` | Ember Eye 燼瞳, rare skill, the Lantern and Edge duo | A round amber lantern holds an ember eye with a violet-crimson slit and cracks every foe around it. In `b` the cracks read as beams and the eye is small at card size. |
+| `unreadablePage.jpg` | `b` | The Unreadable Page 無法辨讀之頁, special curse | The padlocked chain says it can be neither played nor removed; no letters are drawn. `a` is a dark slab at card size and its knot is decorative. |
+| `spall.jpg` | `a` | Spall 璃屑, Shatter common attack | One blue-white flake springs clear of the notch with a dark gap round it. `b`'s flake crowds the edge, and the card window crops it. |
+| `hearthfall.jpg` | `a` | Hearthfall 爐火墜, Lantern common attack | Lantern, pour and blade make one round amber shape, the cleanest silhouette of the ten. In `b` the figure competes with a thinner pour. |
+
+**For the device check.** The Unreadable Page, like every unplayable card, is
+dimmed in the hand. There its art window measures a mean luminance of 0.062
+against the shipped `hex`'s 0.067, so it is as dark as the existing curse, not
+darker; the book and chain still read. Dim the Glass is the quietest of the ten
+at hand size.
+
 ## Shipped — dialogue stagecraft portraits (2026-09-29)
 
 ### `portraits/` — Keeper and Hollow Lamplighter moods, 682×1024 RGBA
@@ -1414,21 +1471,5 @@ eclipse, a light dimmed.
 
 | Asset | Content | Subject |
 |---|---|---|
-| `cards/splinterCut.jpg` | Splinter Cut 裂痕斬, common attack | A short, clean slash leaving one fine crack across a pane, violet-crimson light in the fracture. |
-| `cards/dimTheGlass.jpg` | Dim the Glass 暗琉, common skill | A gloved hand drawing a veil of smoke across a glowing pane; the light behind it has gone dull. |
-| `cards/cleft.jpg` | Cleft 裂隙, uncommon attack | A blade driven into an already cracked pane, splitting the crack wide open. |
-| `cards/eclipseStep.jpg` | Eclipse Step 蝕影步, uncommon skill | A cloaked figure slipping aside behind a crescent of shadow as a claw passes; a crack sparks on the attacker's glass. |
-| `cards/tremor.jpg` | Tremor 震紋, uncommon attack | Three rings of shock spreading from one impact through cracked glass. |
-| `cards/totality.jpg` | Totality 全蝕, rare attack, the way's capstone | A total eclipse: a black disc ringed in violet-crimson fire above a pane cracked through. |
-| `cards/emberEye.jpg` | Ember Eye 燼瞳, rare skill, the Lantern and Edge duo | An eye of ember light inside a lantern's glass, throwing thin cracks across the dark around it. |
 | `relics/crownOfTheEclipse.png` | Crown of the Eclipse 蝕月冠, boss relic, the way's crown | A dark circlet whose centre stone is an eclipsed moon ringed in violet-crimson. |
 | `deeds/faultInGlass.png` | Fault in the Glass 裂痕, the way's deed | One long fault line running the height of a tall pane, glowing violet-crimson along its length. |
-
-**Each way's own wall** (flame readout 7, 2026-09-30). Two Duskblade commons,
-one for Shatter (blue-white, sharp: the facet chipped away) and one for the
-Lantern (amber-gold, round: the hearth's fire let fall).
-
-| Asset | Content | Subject |
-|---|---|---|
-| `cards/spall.jpg` | Spall 璃屑, common attack, Shatter | A single sharp flake of glass springing off a struck pane, blue-white light along its broken edge. |
-| `cards/hearthfall.jpg` | Hearthfall 爐火墜, common attack, the Lantern | A lantern tipped open above a blade, its banked amber fire pouring down along the steel in one heavy fall. |

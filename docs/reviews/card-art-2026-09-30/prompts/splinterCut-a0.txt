@@ -1,0 +1,16 @@
+$imagegen Generate exactly ONE new image with the built-in image generation tool, landscape 1536x1024, and save it as ./splinterCut-a.png in the current directory. Do not resize, crop or post-process it. Report the saved path.
+
+Before generating, open and look at these reference images, and match their palette handling, lead-line weight, glass texture and lantern lighting (they are style references only; make a NEW image, do not edit them): /Users/jamesto/Coding/roguecardv2-benchmark/docs/refs/style-master.png (the approved Duskblade hero, blue-violet glass cloak, hooded, glowing eyes, amber lantern), /Users/jamesto/Coding/glassvow/.claude/worktrees/agent-a96ea33f4053392af/assets/art/cards/eclipseSlash.jpg and /Users/jamesto/Coding/glassvow/.claude/worktrees/agent-a96ea33f4053392af/assets/art/cards/lunge.jpg (shipped cards from the same deck).
+
+Use case: stylized-concept
+Asset type: rectangular card art scene for a stained-glass roguelite deckbuilder (the art window of a card; the game draws the frame and text itself)
+Primary request: Splinter Cut, a wide rectangular scene: the Duskblade's dark armoured gauntlet and a slender, thin dark glass blade sweep from lower-left to upper-right in one short, clean diagonal cut across a tall narrow violet glass window pane. Where the edge passed, ONE fine, hair-thin crack runs across the pane and glows violet-crimson from inside; nothing else is broken.
+Gameplay read: attack, common, single enemy; show the clean cut first and the single fine crack (the Cracked mark) second.
+Story moment: The blade has only just passed; the pane has not yet fallen apart, it is only marked.
+Style/medium: serious cartoon-gothic stained-glass game art; chunky dark silhouettes; simplified theatrical scene; 3-5 large jewel-tone glass colour masses; very few thick dark lead dividers; matte painterly glass texture; warm amber rim light; controlled inner glow only at the focal action; no generic fantasy spell icon; no glossy 3D render; no anime card-art tropes; no lacework, no micro-panels, no scattered sparkles, no noisy bloom.
+Readability priority: silhouette first, pose second, weapon/core symbol third, colour fourth, texture last. The main action must still be recognisable as a black shadow with every internal detail removed, and must read at 64 px wide.
+Composition/framing: wide horizontal rectangle, 3:2 landscape (1536x1024); full-bleed illustrated background, a gothic cathedral interior of stained glass; one clear foreground subject/action kept inside the central 80% of the width (the left and right 8% will be cropped); background quieter and darker than the subject so they separate at distance; dark vignette edges; no bright corners; no card frame, no cropped main action, no motion blur, no centred isolated badge, no floating logo, no circular medallion.
+Lighting/mood: sober gothic mood; high value contrast on the main shape; the glow supports the mechanic and never hides the silhouette.
+Constraints: no text; no letters; no numbers; no labels; no watermark; no cost icon; no nameplate; no UI chrome; no full card mockup.
+Palette: deep violet and plum glass, black lead, one thin crimson-magenta line of fracture light, a small amber rim on the blade.
+Scene/backdrop: a dim gothic nave of tall, thin lancet windows in dark violet.
