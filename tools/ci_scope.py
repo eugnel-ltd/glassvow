@@ -58,6 +58,7 @@ CHECKS = (
     Check("run_store_gate_tests", "Test store Dev-tree exclusion gate", ("release_platform",)),
     Check("run_export_paths", "Check exported scripts load only exported paths", (
         "godot_code", "release_platform")),
+    Check("run_release_identity_tests", "Test release identity pins", ("release_platform",)),
     Check("run_dev_tools", "Check developer-tool registry and coordinate conversion", ("dev_tools",)),
     Check("run_balance_doe", "Test balanced content DOE generator", ("balance_ml",)),
     Check("run_balance_seed", "Test content-search seed contract", ("balance_ml",)),
