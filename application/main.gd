@@ -1820,14 +1820,29 @@ func _show_event() -> void:
 			event_id, event, prose, false, true, _shape, _sfx_bus)
 		story_screen.beat = beat
 		story_screen.continue_requested.connect(_on_event_story_continue)
-		_show_route(story_screen, true, &"map")
+		_show_event_screen(story_screen)
 		return
 	var screen: EventScreen = EventScreen.new(
 		event_id, event, "", true, false, _shape, _sfx_bus)
 	screen.choice_selected.connect(func(ordinal: int) -> void:
 		_on_event_choice(str(ordinal), event_id)
 	)
+	_show_event_screen(screen)
+
+
+## Route an event screen and light its lantern (lock §9). A result beat carries
+## on the lantern of the event screen it replaces, mid-tween as it stands: the
+## deck change is made on the choice, and the beat is where the player then
+## watches the flame answer. A choice screen never inherits one, whatever screen
+## it replaces (a rebuild, another Scenario): it opens on the flame as it stands,
+## drawn at once. An aspect with no ways grows no lantern.
+func _show_event_screen(screen: EventScreen) -> void:
+	var outgoing: EventScreen = null
+	if not screen.beat.is_empty():
+		outgoing = _route_screen as EventScreen
 	_show_route(screen, true, &"map")
+	if not screen.inherit_lantern(outgoing):
+		_read_flame(screen.show_flame, true)
 
 
 func _on_event_choice(choice_text: String, event_id: String) -> void:
@@ -2660,13 +2675,13 @@ func _on_reward_claimed(what: StringName, id: String) -> void:
 		_show_save_error("ui.persistence.detail.claimedRewardHold")
 
 
-## Flame lock §9: the reward and shop lanterns show the Flame where the pick is
-## made. Their deck changes happen here rather than through `apply`, so the
-## reading is taken here too: all of it when a screen opens (`fresh`, drawn at
-## once), and after each change (tweened; nothing when the deck did not move).
-## A screen with no lantern passes no `show`: the reading is still taken, which
-## is what records the tier and owes the lines. An aspect with no ways reads
-## nothing, and its screens grow no lantern.
+## Flame lock §9: the reward, shop and event lanterns show the Flame where the
+## pick is made. Their deck changes happen here rather than through `apply`, so
+## the reading is taken here too: all of it when a screen opens (`fresh`, drawn
+## at once), and after each change (tweened; nothing when the deck did not move).
+## A screen that cannot show it passes no `show`: the reading is still taken,
+## which is what records the tier and owes the lines. An aspect with no ways
+## reads nothing, and its screens grow no lantern.
 func _read_flame(show: Callable = Callable(), fresh: bool = false) -> void:
 	for event: Dictionary in game.flame_events(fresh):
 		if show.is_valid():
@@ -2677,9 +2692,10 @@ func _read_flame(show: Callable = Callable(), fresh: bool = false) -> void:
 ## included. The application edits the deck at an event, so it reads there: a
 ## tier the event crosses is recorded, and its lines owed, at that event rather
 ## than at the next screen that reads, and a Steady passed between two events is
-## not lost. The event screens carry no lantern, so the events go only to a route
-## screen that says it can show one (`show_flame`), routed by capability as
-## `_reshape` routes `set_shape`.
+## not lost. The event screen carries the lantern, so the readings go to the
+## route screen that says it can show one (`show_flame`), routed by capability as
+## `_reshape` routes `set_shape`; the result beat that follows carries the
+## lantern on (`_show_event_screen`).
 func _read_flame_at_event() -> void:
 	var show: Callable = Callable()
 	if _route_screen != null and _route_screen.has_method(&"show_flame"):
