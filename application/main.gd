@@ -3476,6 +3476,7 @@ func _show_scene() -> void:
 		cursor = int(float(str(pending.get("cursor", 0))))
 	var screen: ScenePlayer = ScenePlayer.new(
 		script, cursor, _shape, _sfx_bus, _line_row(script.id), _scene_hero())
+	screen.plate_act = _scene_plate_act()
 	screen.instant = _transitions != null and _transitions.instant
 	screen.advance_requested.connect(_on_scene_advance.bind(screen))
 	screen.finished.connect(_on_scene_finished)
@@ -3497,9 +3498,22 @@ func _show_scene_shot(scene_id: String, cursor: int) -> bool:
 	var screen: ScenePlayer = ScenePlayer.new(
 		script, clampi(cursor, 0, script.line_count()), _shape, _sfx_bus,
 		_line_row(scene_id), _scene_hero())
+	screen.plate_act = _scene_plate_act()
 	screen.instant = true
 	_show_route(screen, false, &"", false)
 	return true
+
+
+## The act whose stage backdrop a plate-less scene plays over (#563 stand-in):
+## the forced `--act=`, else the act of the run that owns the pending scene. A
+## Vigil-side scene (the opening, the unsealing) names none and keeps its look.
+func _scene_plate_act() -> int:
+	if _forced_act_index >= 0:
+		return _forced_act_index
+	if not _scene_replay and game != null and game.run != null \
+			and typeof(game.run.pending_scene) == TYPE_DICTIONARY:
+		return game.run.act
+	return -1
 
 
 ## The run's aspect id — the figure the `hero` actor wears in a scene. Empty

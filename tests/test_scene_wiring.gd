@@ -458,6 +458,9 @@ static func _lamplighter_pre_once(fails: Array[String]) -> void:
 		_check(fails, typeof(main.game.run.pending_scene) == TYPE_DICTIONARY
 				and str(main.game.run.pending_scene.get("id", "")) == scene_id,
 			"%s did not persist a run-side cursor" % scene_id)
+		if main._route_screen is ScenePlayer:
+			_check(fails, (main._route_screen as ScenePlayer).plate_act == main.game.run.act,
+				"%s was not handed the run's act for its plate" % scene_id)
 		_drive(main)
 		_check(fails, main._vigil.scenes_seen.has(scene_id),
 			"finishing %s did not mark scenes_seen" % scene_id)

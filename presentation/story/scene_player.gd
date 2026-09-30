@@ -32,6 +32,11 @@ const BEAT_REVEAL: int = 1
 const BEAT_WAIT: int = 2
 
 var instant: bool = false
+## The act index (0-based) whose stage backdrop stands in when no beat has
+## plate art yet (the Lamplighter's scenes, until the commissioned Unlit Way
+## plates land, #563). -1 leaves such a scene over the graded ground. Set by
+## the caller before the player enters the tree.
+var plate_act: int = -1
 var shape: StringName = StageShape.IDENTITY
 var _pool_row: Dictionary = {}
 
@@ -366,7 +371,16 @@ func _art_path(index: int) -> String:
 		var art: String = str(_script.beat_at(i).get("art", ""))
 		if not art.is_empty() and ResourceLoader.exists(art):
 			return art
-	return ""
+	return stage_backdrop(plate_act)
+
+
+## The stage backdrop combat paints for `act` (0-based), or "" when the act is
+## unknown or its plate is absent. Shares combat's path so the two never drift.
+static func stage_backdrop(act: int) -> String:
+	if act < 0:
+		return ""
+	var path: String = CombatScreen.STAGE_ART % [act + 1, "backdrop"]
+	return path if ResourceLoader.exists(path) else ""
 
 
 func _process(delta: float) -> void:
