@@ -1423,3 +1423,12 @@ eclipse, a light dimmed.
 | `cards/emberEye.jpg` | Ember Eye 燼瞳, rare skill, the Lantern and Edge duo | An eye of ember light inside a lantern's glass, throwing thin cracks across the dark around it. |
 | `relics/crownOfTheEclipse.png` | Crown of the Eclipse 蝕月冠, boss relic, the way's crown | A dark circlet whose centre stone is an eclipsed moon ringed in violet-crimson. |
 | `deeds/faultInGlass.png` | Fault in the Glass 裂痕, the way's deed | One long fault line running the height of a tall pane, glowing violet-crimson along its length. |
+
+**Each way's own wall** (flame readout 7, 2026-09-30). Two Duskblade commons,
+one for Shatter (blue-white, sharp: the facet chipped away) and one for the
+Lantern (amber-gold, round: the hearth's fire let fall).
+
+| Asset | Content | Subject |
+|---|---|---|
+| `cards/spall.jpg` | Spall 璃屑, common attack, Shatter | A single sharp flake of glass springing off a struck pane, blue-white light along its broken edge. |
+| `cards/hearthfall.jpg` | Hearthfall 爐火墜, common attack, the Lantern | A lantern tipped open above a blade, its banked amber fire pouring down along the steel in one heavy fall. |
