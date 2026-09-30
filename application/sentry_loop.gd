@@ -49,6 +49,6 @@ func _before_send(event: SentryEvent) -> SentryEvent:
 	event.set_message(SentryPrivacy.redact(event.get_message()))
 	if not event.is_crash():
 		var key: String = event.get_exception_value(0) + "\n" + event.get_message()
-		if not _privacy.allow_nonfatal(key):
+		if SentryPrivacy.is_known_noise(key) or not _privacy.allow_nonfatal(key):
 			return null
 	return event

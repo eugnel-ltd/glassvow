@@ -1143,15 +1143,46 @@ static func _substitution_children(binding: Dictionary, input: MapLayoutInput,
 						"binding": binding,
 					},
 				})
-	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		var a_priority: float = MapLayoutCanonical.float_value(a["priority"])
-		var b_priority: float = MapLayoutCanonical.float_value(b["priority"])
+	return _sorted_children(out, binding)
+
+
+## Orders children by priority, then by the substitution's canonical text,
+## descending. Keys are computed once per child, never inside the comparator:
+## encoding the whole binding on every comparison froze the main thread on an
+## A12 past the iOS launch watchdog (Sentry 1ec0d817, TestFlight build 8).
+## Every child shares the same `binding` and the same four keys, so all their
+## canonical texts share one prefix up to the end of the encoded binding, and
+## comparing the texts is comparing what follows it. The key therefore leaves
+## the binding out; an invalid binding still empties every key, as the full
+## text would, so ties resolve exactly as before.
+static func _sorted_children(out: Array[Dictionary],
+		binding: Dictionary) -> Array[Dictionary]:
+	var binding_valid: bool = not MapLayoutCanonical.canonical_text(
+		binding).is_empty()
+	var keyed: Array[Array] = []
+	for child: Dictionary in out:
+		var substitution: Dictionary = child["substitution"]
+		var key: String = "" if not binding_valid \
+			else MapLayoutCanonical.canonical_text({
+				"node_ids": substitution["node_ids"],
+				"from_candidate_ids": substitution["from_candidate_ids"],
+				"to_candidate_ids": substitution["to_candidate_ids"],
+			})
+		keyed.append([MapLayoutCanonical.float_value(child["priority"]), key,
+			child])
+	keyed.sort_custom(func(a: Array, b: Array) -> bool:
+		var a_priority: float = a[0]
+		var b_priority: float = b[0]
 		if not is_equal_approx(a_priority, b_priority):
 			return a_priority < b_priority
-		return MapLayoutCanonical.canonical_text(a["substitution"]) \
-			> MapLayoutCanonical.canonical_text(b["substitution"])
+		var a_key: String = a[1]
+		var b_key: String = b[1]
+		return a_key > b_key
 	)
-	return out
+	var sorted: Array[Dictionary] = []
+	for row: Array in keyed:
+		sorted.append(row[2])
+	return sorted
 
 
 static func _selection_distance(selection: Dictionary, node_sets: Dictionary,

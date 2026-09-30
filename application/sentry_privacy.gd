@@ -5,6 +5,11 @@ extends RefCounted
 
 const NONFATAL_CAP: int = 8
 const MAX_TEXT: int = 240
+## Engine chatter that names no Glassvow fault. iOS's display server logs the
+## mouse line on every launch, and each one arrived as a Sentry error event.
+const KNOWN_NOISE: PackedStringArray = [
+	"Mouse is not supported by this display server.",
+]
 
 var _nonfatal_counts: Dictionary = {}
 
@@ -20,6 +25,13 @@ static func redact(text: String) -> String:
 	if out.length() > MAX_TEXT:
 		return out.substr(0, MAX_TEXT)
 	return out
+
+
+static func is_known_noise(text: String) -> bool:
+	for noise: String in KNOWN_NOISE:
+		if text.contains(noise):
+			return true
+	return false
 
 
 func allow_nonfatal(key: String) -> bool:

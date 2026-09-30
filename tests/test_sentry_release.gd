@@ -15,6 +15,7 @@ static func run(fails: Array[String]) -> void:
 	_dist(fails)
 	_cocoa_privacy_manifest(fails)
 	_redact(fails)
+	_known_noise(fails)
 
 
 static func _pin(fails: Array[String]) -> void:
@@ -124,6 +125,22 @@ static func _redact(fails: Array[String]) -> void:
 		i += 1
 	if gate.allow_nonfatal("same"):
 		fails.append("sentry: noisy nonfatals were not bounded")
+
+
+## The iOS mouse line is dropped before it reaches Sentry; real errors are not.
+static func _known_noise(fails: Array[String]) -> void:
+	var mouse: String = "Mouse is not supported by this display server."
+	if not SentryPrivacy.is_known_noise("\n" + mouse):
+		fails.append("sentry: the iOS mouse line still reaches Sentry as a message")
+	if not SentryPrivacy.is_known_noise(mouse + "\n"):
+		fails.append("sentry: the iOS mouse line still reaches Sentry as an exception")
+	if SentryPrivacy.is_known_noise("WorldMapScreen compiled layout failed: compiler"):
+		fails.append("sentry: a real error was filtered as noise")
+	if SentryPrivacy.is_known_noise(""):
+		fails.append("sentry: an empty event was filtered as noise")
+	var loop_src: String = FileAccess.get_file_as_string("res://application/sentry_loop.gd")
+	if not loop_src.contains("SentryPrivacy.is_known_noise(key)"):
+		fails.append("sentry: before_send does not consult the known-noise filter")
 
 
 static func _sentry_value(project: String, key: String) -> String:

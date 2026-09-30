@@ -158,6 +158,23 @@ static func canonical_text(value: Variant) -> String:
 	return "%s|%s" % [CODEC_VERSION, _encode(value)]
 
 
+## Sorts `rows` in place by canonical text, ascending. Each row is encoded once
+## before the sort; the comparator only compares the precomputed strings, so the
+## order is the one `canonical_text(a) < canonical_text(b)` gives, at n encodings
+## rather than two per comparison.
+static func sort_by_canonical_text(rows: Array) -> void:
+	var keyed: Array[Array] = []
+	for row: Variant in rows:
+		keyed.append([canonical_text(row), row])
+	keyed.sort_custom(func(a: Array, b: Array) -> bool:
+		var a_text: String = a[0]
+		var b_text: String = b[0]
+		return a_text < b_text
+	)
+	for i: int in range(keyed.size()):
+		rows[i] = keyed[i][1]
+
+
 static func canonical_bytes(value: Variant) -> PackedByteArray:
 	return canonical_text(value).to_utf8_buffer()
 

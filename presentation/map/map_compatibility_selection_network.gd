@@ -151,9 +151,7 @@ static func _components(node_order: Array[String],
 			pending.sort()
 		component.sort()
 		out.append(component)
-	out.sort_custom(func(a: Array, b: Array) -> bool:
-		return MapLayoutCanonical.canonical_text(a) \
-			< MapLayoutCanonical.canonical_text(b))
+	MapLayoutCanonical.sort_by_canonical_text(out)
 	return out
 
 

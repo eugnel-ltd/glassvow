@@ -235,10 +235,7 @@ static func _selection_screen_summary(selected_ids: Array[String],
 			if not already_named:
 				violations.append(_violation(metric_id, "selection", selected_ids,
 					value, {}, {}))
-	violations.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return MapLayoutCanonical.canonical_text(a) \
-			< MapLayoutCanonical.canonical_text(b)
-	)
+	MapLayoutCanonical.sort_by_canonical_text(violations)
 	var weakest: float = _selection_priority_margin(priority_profiles, hard)
 	return MapLayoutCanonical.ordered_dictionary({
 		"hard_pass": violations.is_empty(),
@@ -354,10 +351,9 @@ static func _cached_pair_feasibility(local_nodes: Array,
 			metric_id, INF if minimum else 0.0))
 		values[metric_id] = minf(first_value, second_value) \
 			if minimum else maxf(first_value, second_value)
-	var rejection: Dictionary = _first_reason([
-		rows[0]["summary"].get("rejection_reason", {}),
-		rows[1]["summary"].get("rejection_reason", {}),
-	])
+	var first: Array = _earlier_reason([{}, ""],
+		rows[0]["summary"].get("rejection_reason", {}))
+	first = _earlier_reason(first, rows[1]["summary"].get("rejection_reason", {}))
 	var calibration: Dictionary = quality["calibration"]["shipping_touch_waystone"]
 	var radius: float = _f(calibration["ink_radius_px"]) \
 		* _f(calibration["default_layout_scale"])
@@ -383,11 +379,11 @@ static func _cached_pair_feasibility(local_nodes: Array,
 			_f(priority_values["node_ink_clearance_px"]), gap)
 		priority_profiles[profile_id] = priority_values
 		if gap + epsilon < _limit(hard, "node_ink_clearance_px"):
-			rejection = _first_reason([rejection, _violation(
+			first = _earlier_reason(first, _violation(
 				"node_ink_clearance_px", profile_id, selected_ids, gap,
 				{"a": local_anchors[selected_ids[0]],
 					"b": local_anchors[selected_ids[1]]},
-				{"a": _a2(a), "b": _a2(b), "radius": radius})])
+				{"a": _a2(a), "b": _a2(b), "radius": radius}))
 		var pair_violations: Array = []
 		if a.distance_squared_to(b) < diameter * diameter:
 			_overlap("node_node_ink_overlap_area_px2", _circle(a, radius),
@@ -399,7 +395,8 @@ static func _cached_pair_feasibility(local_nodes: Array,
 				_rect(b, Vector2.ONE * touch * 0.5), profile, selected_ids,
 				values, pair_violations, epsilon)
 		if not pair_violations.is_empty():
-			rejection = _first_reason([rejection, pair_violations[0]])
+			first = _earlier_reason(first, pair_violations[0])
+	var rejection: Dictionary = first[0]
 	var margins: Dictionary = {}
 	var finite_values: Dictionary = {}
 	for metric_id: String in SELECTION_SCREEN_METRICS:
@@ -427,16 +424,18 @@ static func _cached_pair_feasibility(local_nodes: Array,
 	})
 
 
-static func _first_reason(rows: Array) -> Dictionary:
-	var out: Dictionary = {}
-	for row_v: Variant in rows:
-		var row: Dictionary = row_v
-		if row.is_empty():
-			continue
-		if out.is_empty() or MapLayoutCanonical.canonical_text(row) \
-				< MapLayoutCanonical.canonical_text(out):
-			out = row
-	return out
+## The canonically first of the reasons seen so far and `candidate`, as
+## [reason, canonical text]. The incumbent's text is carried, not re-encoded:
+## one encoding per new reason instead of two per comparison, the same winner.
+static func _earlier_reason(best: Array, candidate: Dictionary) -> Array:
+	if candidate.is_empty():
+		return best
+	var incumbent: Dictionary = best[0]
+	var incumbent_text: String = best[1]
+	var candidate_text: String = MapLayoutCanonical.canonical_text(candidate)
+	if incumbent.is_empty() or candidate_text < incumbent_text:
+		return [candidate, candidate_text]
+	return best
 
 
 static func _cached_candidate_profiles(node: Dictionary, anchor: Variant,
