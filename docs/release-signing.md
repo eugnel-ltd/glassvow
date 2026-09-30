@@ -12,6 +12,7 @@ this pipeline is wayfinder #165.
 |---|---|---|
 | Godot 4.7.2.stable | `godot` on PATH | engine pin (SKILL.md §1) |
 | Export templates 4.7.2 | `~/Library/Application Support/Godot/export_templates/4.7.2.stable/` — must contain `ios.zip`, `android_source.zip`, `android_debug.apk`, `android_release.apk`; the selected mobile, macOS and no-thread web templates were installed 2026-08-21 from the checksum-verified official `.tpz` | must match engine version exactly |
+| **iOS template: local 4.7.3-rc build (since build 11, 2026-09-30)** | `export_templates/4.7.2.stable/ios.zip` is the official 4.7.2 zip with its device release slice (`libgodot.ios.release.xcframework/ios-arm64/libgodot.a`) replaced by a `scons platform=ios target=template_release arch=arm64 vulkan=no metal=yes` build of the Godot `4.7` branch at `83dec14` (4.7.3-rc, 2026-09-20) from `~/Coding/godot-4.7`; the official zip is kept beside it as `ios.zip.4.7.2-official`, and the zip carries `GLASSVOW-TEMPLATE-NOTE.txt`. The exported binary reports `Godot Engine v4.7.3.rc.custom_build` | Godot 4.7.2's Forward Mobile scene shader exceeds the 16 samplers per stage that Apple5/Apple6 GPUs allow under classic Metal binding, so every shaded 3D material fails to build its pipeline on the iPad 8 (A12): the map landscape and the enemy's shaded glass vanish. Fixed upstream by godot PR #121404 (remove AreaLight3D samplers), cherry-picked for 4.7.3. Reproduce on the Mac in seconds: `GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 tools/shot.sh --rendering-driver metal --onboard=map-select --seed=1 --shape=pad --shot=/tmp/x.png` prints `Error compiling shader SceneForwardMobileShaderRD:…: 'sampler' attribute parameter is out of bounds`. Switch back to the official template when 4.7.3-stable ships and re-run that check |
 | JDK 17 (Temurin 17.0.20) | `~/.local/share/jdk-17/Contents/Home`, wired into Godot's `export/android/java_sdk_path` editor setting | Godot 4.7's gradle template runs Gradle 8.11.1, which rejects JDK >23 ("Unsupported class file major version 69" on the machine's JDK 25); docs pin OpenJDK 17 |
 | Android SDK | `~/Library/Android/sdk` (platform android-36, build-tools 36.0.0) | Play requires target API 36 from 2026-08-31 |
 | Xcode 27.0 (27A266a) | `/Applications/Xcode.app`; a 27.0 beta also sits at `/Applications/Xcode-27.0-beta.app` and `xcode-select` points at the beta, so every store command below sets `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` | App Store uploads must be built with a release SDK; a beta-built upload is rejected |
@@ -163,7 +164,7 @@ deleted after use, never on the command line.
 `scripts/ios_export_options.plist` keeps `method = app-store-connect`,
 `teamID = V45S7U2LZB`, and `signingStyle = automatic`. It also pins
 `manageAppVersionAndBuildNumber = false` so App Store Connect cannot rewrite
-the tracked marketing version and build number (currently **1.0.0 (10)**; TestFlight already holds 1–9), and
+the tracked marketing version and build number (currently **1.0.0 (11)**; TestFlight already holds 1–10), and
 `uploadSymbols = true` so a direct
 App Store Connect upload includes symbols. With `destination = export`, retain
 the archive's `dSYMs/` for the later Apple and Sentry symbol-upload steps; dSYMs
