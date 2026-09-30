@@ -167,6 +167,10 @@ jobs:
           python3 -B tools/check_export_paths.py --self-test
           python3 -B tools/check_export_paths.py
 
+      - name: Test release identity pins
+        if: steps.scope.outputs.run_release_identity_tests == 'true'
+        run: godot --headless -s res://tests/run_all.gd -- --tests=res://tests/test_release_identity.gd,res://tests/test_sentry_release.gd
+
       - name: Check developer-tool registry and coordinate conversion
         if: steps.scope.outputs.run_dev_tools == 'true'
         run: python3 -B tools/dev.py --check

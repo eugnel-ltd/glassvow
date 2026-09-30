@@ -170,10 +170,12 @@ class ScopeFixtureTests(unittest.TestCase):
             "export_presets.cfg", "scripts/store_signing_wizard.sh"])
         self.assert_scopes(selection, "release_platform")
         for check in ("run_store_exclusion", "run_store_gate_tests",
+                      "run_release_identity_tests",
                       "run_performance_evidence", "run_choice_scroll",
                       "run_boss_relic", "run_dawn_containment", "run_hud_location"):
             self.assertTrue(selection.checks[check], check)
         self.assertFalse(selection.checks["run_balance_doe"])
+        self.assertFalse(CI.classify_paths(["README.md"]).checks["run_release_identity_tests"])
 
     def test_runtime_map_registry_selects_map_quality_and_export_paths(self) -> None:
         selection = CI.classify_paths(["content/map/map-quality-v2.json"])
