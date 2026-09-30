@@ -14,7 +14,7 @@ this pipeline is wayfinder #165.
 | Export templates 4.7.2 | `~/Library/Application Support/Godot/export_templates/4.7.2.stable/` — must contain `ios.zip`, `android_source.zip`, `android_debug.apk`, `android_release.apk`; the selected mobile, macOS and no-thread web templates were installed 2026-08-21 from the checksum-verified official `.tpz` | must match engine version exactly |
 | JDK 17 (Temurin 17.0.20) | `~/.local/share/jdk-17/Contents/Home`, wired into Godot's `export/android/java_sdk_path` editor setting | Godot 4.7's gradle template runs Gradle 8.11.1, which rejects JDK >23 ("Unsupported class file major version 69" on the machine's JDK 25); docs pin OpenJDK 17 |
 | Android SDK | `~/Library/Android/sdk` (platform android-36, build-tools 36.0.0) | Play requires target API 36 from 2026-08-31 |
-| Xcode 26 | `/Applications/Xcode.app` | App Store uploads must be built with the iOS 26 SDK since 2026-04-28 |
+| Xcode 27.0 (27A266a) | `/Applications/Xcode.app`; a 27.0 beta also sits at `/Applications/Xcode-27.0-beta.app` and `xcode-select` points at the beta, so every store command below sets `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` | App Store uploads must be built with a release SDK; a beta-built upload is rejected |
 | Android gradle template | `android/` (gitignored, machine-local) | reinstall any checkout: `mkdir -p android/build && unzip -o ~/Library/Application\ Support/Godot/export_templates/4.7.2.stable/android_source.zip -d android/build && echo 4.7.2.stable > android/.build_version && touch android/build/.gdignore` — the wizard's preflight does this automatically |
 | Sentry for Godot **2.1.1** | `addons/sentry` ([release](https://github.com/getsentry/sentry-godot/releases/tag/2.1.1), tree `d288ad9`) | crash reporting on iOS store + Dev Review; do not follow `latest`. Client DSN lives in `project.godot` `[sentry]`; privacy-minimal (`attach_log=false`). Android Gradle injection is a later wave |
 
@@ -125,18 +125,40 @@ the iOS release, before desktop/Steam (map #156 decision, 2026-08-13) —
 so iOS is the release path that matters now.
 
 ```bash
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+mkdir -p build/ios
 godot --headless --export-release "iOS" build/ios/glassvow.ipa   # emits build/ios/glassvow.xcodeproj
-# archive with development signing (verified headless on this machine):
+# archive UNSIGNED (verified headless 2026-09-30, build 6); -exportArchive signs everything:
 xcodebuild -project build/ios/glassvow.xcodeproj -scheme glassvow \
   -destination "generic/platform=iOS" archive \
   -archivePath build/ios/glassvow.xcarchive \
-  -allowProvisioningUpdates CODE_SIGN_IDENTITY="Apple Development"
-# re-sign with Apple Distribution + export the .ipa:
+  CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+# sign with Apple Distribution through the team API key + export the .ipa:
 xcodebuild -exportArchive -archivePath build/ios/glassvow.xcarchive \
   -exportPath build/ios/export \
   -exportOptionsPlist scripts/ios_export_options.plist \
-  -allowProvisioningUpdates
+  -allowProvisioningUpdates \
+  -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_<key-id>.p8 \
+  -authenticationKeyID <key-id> -authenticationKeyIssuerID <issuer-id>
+# verify, then upload (asc reads ASC_KEY_ID / ASC_ISSUER_ID / ASC_PRIVATE_KEY_PATH from the environment):
+codesign --verify --deep --strict build/ios/export/Payload/glassvow.app 2>/dev/null || true
+asc builds upload --app io.fol2.glassvow --ipa build/ios/export/glassvow.ipa
+asc builds list --app io.fol2.glassvow --build-number <n>   # processingState VALID before testers see it
 ```
+
+Why the archive is unsigned: Xcode's automatic development signing picks the
+first matching "Apple Development" identity across every keychain in the
+search list, and on this Mac those identities live in locked per-agent
+keychains (`octomiser-agent`, `octomiser-independent-166`), so `codesign` fails
+with `errSecInternalComponent`; forcing another identity trips the
+"conflicting provisioning settings" check, and manual signing fails because
+the managed wildcard profile does not include the login keychain's
+`iPhone Developer` certificate. Signing only at `-exportArchive` with the
+Apple Distribution identity (login keychain) needs none of that. The login
+keychain must be unlocked for this process tree (`security unlock-keychain`),
+and its keys pre-authorised once with `security set-key-partition-list -S
+apple-tool:,apple: -s`; hand the password over in a 0600 temp file that is
+deleted after use, never on the command line.
 
 `scripts/ios_export_options.plist` keeps `method = app-store-connect`,
 `teamID = V45S7U2LZB`, and `signingStyle = automatic`. It also pins
