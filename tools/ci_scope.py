@@ -70,7 +70,8 @@ CHECKS = (
     Check("run_balance_f1_f2", "Test F1/F2 racing and model adequacy rules", ("balance_ml",)),
     Check("run_provenance_evidence", "Test execution-provenance capability", (
         "provenance_evidence",)),
-    Check("run_doc_anchors", "Check doc file:line anchors", ("docs",)),
+    Check("run_doc_anchors", "Check doc file:line anchors", (
+        "docs", "godot_code", "map_code", "presentation", "release_platform")),
     Check("run_benchmark_freeze", "Check no new web-reference citations", ("docs",)),
     Check("run_privacy_site", "Check the privacy site is current", ("docs",)),
     Check("run_map_assets", "Check map tile and module assets", ("map_assets",)),
