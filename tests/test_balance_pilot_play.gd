@@ -24,9 +24,10 @@ static func run(fails: Array[String]) -> void:
 
 
 ## HP 22, 1 energy, a 28-damage blow coming, Ward and Dim the Glass in hand:
-## Ward leaves 23 to take and the hero dies; Dimmed cuts the blow to 21.
+## Ward leaves 23 to take and the hero dies; Dimmed cuts the blow to 21. The
+## blow is Spit 4, Fervor 23 and the baseline hardship's 1.
 static func _dimmed_spares_a_lethal_turn(content: ContentDB, fails: Array[String]) -> void:
-	var game: GlassvowGame = _fight(content, [{"hp": 30, "move": "spit", "statuses": {"str": 24}}],
+	var game: GlassvowGame = _fight(content, [{"hp": 30, "move": "spit", "statuses": {"str": 23}}],
 		["defend", "dimTheGlass"], 22, 1)
 	if Pilot._incoming(game) != 28:
 		fails.append("pilot play: the lethal row must forecast 28, got %d" % Pilot._incoming(game))
@@ -137,10 +138,11 @@ static func _setup_before_the_hit(content: ContentDB, fails: Array[String]) -> v
 
 ## Dimmed counts like Ward against the coming blow, not only in a lethal turn:
 ## against a 12 blow Dim the Glass spares 3 (12 to 9), worth what 3 Ward is
-## worth; against a foe that does not strike it spares nothing.
+## worth; against a foe that does not strike it spares nothing. The blow is
+## Spit 4, Fervor 7 and the baseline hardship's 1.
 static func _dimmed_counts_like_ward(content: ContentDB, fails: Array[String]) -> void:
 	var scores: Array[float] = []
-	for foe: Dictionary in [{"hp": 40, "move": "grow"}, {"hp": 40, "move": "spit", "statuses": {"str": 8}}]:
+	for foe: Dictionary in [{"hp": 40, "move": "grow"}, {"hp": 40, "move": "spit", "statuses": {"str": 7}}]:
 		var game: GlassvowGame = _fight(content, [foe], ["dimTheGlass"], 60, 1)
 		var card: CardInst = game.cb.hand[0]
 		scores.append(Pilot._combat_score(game, card, game.rules.card_data(card), 0, {},
