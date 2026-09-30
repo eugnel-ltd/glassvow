@@ -54,6 +54,10 @@ var _trail_layout: Dictionary = {}
 var _title_label: Label
 var _run: RunState = null
 var _act: int = 0
+## The act `set_act_scenery` dressed the bands in, or -1 for the run's own act. It
+## outlives `refresh`, which a shape re-pick calls: without it the screen would
+## fall back to the run's act, and the title bar with it (#578).
+var _scenery_act: int = -1
 ## Per-act region knobs. The 3D ramp reads this; it is built in
 ## `_set_act_theme` so a theme pick never leaves a stale palette behind.
 var _region: MapRegions = null
@@ -344,13 +348,8 @@ func refresh(run: RunState) -> void:
 		# `_set_act_theme` is what rebinds the geometry that reads it.
 		if _map_scene != null:
 			_map_scene.set_scatter_salt(run.seed + SCENERY_SEED_OFFSET)
-		_set_act_theme(run.act)
-		var act: Dictionary = content.acts[_act]
-		var act_name: String = Locale.active.t("ui.pilgrimage.roseWindow") \
-			if map.region == "rose_window" \
-			else str(act.get("name", REGION_NAME))
-		_title_label.text = _act_line(act_name.to_upper(),
-			str(act.get("bossName", "")).to_upper())
+		_set_act_theme(run.act if _scenery_act < 0 else _scenery_act)
+		_sync_title()
 	var live: Array[int] = map.reachable()
 	var first_live: GlassWaystone = null
 	for i: int in range(_waystones.size()):
@@ -652,14 +651,25 @@ func _pin_hit() -> float:
 ## that act in a run — domain map generation stays the run's act (scenery only).
 ## `act_index` is 0-based: `main.gd` has already translated the flag's act number.
 func set_act_scenery(act_index: int) -> void:
+	_scenery_act = act_index
 	_set_act_theme(act_index)
 	_sync_waylights()
-	if content != null and _act < content.acts.size() and _title_label != null:
-		var act: Dictionary = content.acts[_act]
-		_title_label.text = _act_line(
-			str(act.get("name", REGION_NAME)).to_upper(),
-			str(act.get("bossName", "")).to_upper())
+	_sync_title()
 	_push_bands(true)
+
+
+## Name the act the bands are dressed in (`_act`) on the title bar. The Rose Window
+## is the run's own final map, so it names itself only while the scenery is the
+## run's: a dressed act is named for what is drawn.
+func _sync_title() -> void:
+	if content == null or _act >= content.acts.size() or _title_label == null:
+		return
+	var act: Dictionary = content.acts[_act]
+	var act_name: String = Locale.active.t("ui.pilgrimage.roseWindow") \
+		if _scenery_act < 0 and map.region == "rose_window" \
+		else str(act.get("name", REGION_NAME))
+	_title_label.text = _act_line(act_name.to_upper(),
+		str(act.get("bossName", "")).to_upper())
 
 
 ## Put the camera where the marker's node sits. Called on every `refresh`, which
