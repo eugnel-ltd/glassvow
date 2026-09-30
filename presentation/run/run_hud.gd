@@ -409,7 +409,14 @@ func _add_fallback(parent: Control, glyph: String, colour: Color) -> void:
 	fallback.set_anchors_preset(Control.PRESET_FULL_RECT)
 	fallback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	fallback.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	parent.add_child(fallback)
+	# Held in a bare Control, whose minimum size is nothing, so the glyph's line
+	# height cannot grow a phone seat past its side (37 px against 34) and push
+	# the collection's row past `relic_row_bottom`.
+	var holder: Control = Control.new()
+	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(fallback)
+	parent.add_child(holder)
 
 
 func _tip(definition: Dictionary, missing: String) -> String:

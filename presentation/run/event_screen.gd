@@ -17,6 +17,8 @@ signal continue_requested
 const EVENT_ART: String = "res://assets/art/events/%s.png"
 const STAGING_PATH: String = "res://content/event-staging.json"
 const WINDOW_W: float = 520.0
+## The phone's side inset for the title and the window (the pane's own).
+const PHONE_INSET: float = 14.0
 const WASH_ALPHA: float = 0.34
 const DIM_ALPHA: float = 0.58
 
@@ -330,15 +332,21 @@ func _layout() -> void:
 	_front.set_view(view)
 	_title.add_theme_font_size_override("font_size", 18 if phone else 26)
 	var title_h: float = _title.get_combined_minimum_size().y
-	_title.size = Vector2(view.x * 0.8, title_h)
 	# On the phone the title takes its own band under the run HUD's top bar (the
-	# bar carries the location line, and the title used to overprint it), and the
-	# choices' window starts under the HUD's relic row, so nothing of the HUD's
-	# stands over the window (#595). The pad and the desktop have room to spare.
+	# bar carries the location line, and the title used to overprint it), centred
+	# in the right half of the stage: the relic row runs from the left edge and
+	# would print over a title centred on the stage once a run holds nine relics.
+	# The choices' window starts under the relic row, so nothing of the HUD's
+	# stands over it (#595). The pad and the desktop have room to spare.
+	var title_x: float = view.x * 0.1
+	var title_w: float = view.x * 0.8
 	var title_y: float = view.y * 0.09
 	if phone:
+		title_x = view.x * 0.5
+		title_w = view.x * 0.5 - PHONE_INSET
 		title_y = RunHud.bar_bottom(shape) + RunHud.COLLECTION_GAP
-	_title.position = Vector2(view.x * 0.1, title_y)
+	_title.size = Vector2(title_w, title_h)
+	_title.position = Vector2(title_x, title_y)
 	var top: float = _title.position.y + title_h + (6.0 if phone else 18.0)
 	if phone:
 		top = maxf(top, RunHud.relic_row_bottom(shape) + RunHud.COLLECTION_GAP)

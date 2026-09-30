@@ -22,8 +22,12 @@ extends SceneTree
 const SHAPES: Array[StringName] = [
 	&"phone-landscape", &"pad-landscape", &"desktop-landscape",
 ]
-## Relics beyond the starting one: enough to run the collection well along its
-## first row, the case a title centred under the bar is most likely to meet.
+## Relics beyond the starting one. The phone is held to a collection well along
+## its first row: with the omen, thirteen seats, which end near x 476 of 844 (a
+## seat is 34 px at a 36 px pitch), the case the title's seat is most likely to
+## meet. The pad and the desktop keep the modest collection: a centred pad title
+## already meets the ninth seat, an older defect outside #595's phone scope.
+const EXTRA_RELICS_PHONE: int = 11
 const EXTRA_RELICS: int = 4
 const MAX_REPORTED: int = 24
 
@@ -73,7 +77,7 @@ func _check_event(content: ContentDB, locale_code: StringName,
 		stage_shape: StringName, event_id: String, completed: bool) -> void:
 	var reference: Vector2i = StageShape.REFERENCES[stage_shape]
 	_viewport.size = reference
-	var hud: RunHud = RunHud.new(_dressed_run(content), content, stage_shape)
+	var hud: RunHud = RunHud.new(_dressed_run(content, stage_shape), content, stage_shape)
 	var definition: Dictionary = content.events[event_id].duplicate(true)
 	var screen: EventScreen = EventScreen.new(event_id, definition, "",
 		not completed, completed, stage_shape)
@@ -166,14 +170,15 @@ func _ink_rect(label: Label) -> Rect2:
 
 ## A run as the HUD sees one mid-act: the starting relic and more, the act's
 ## omen and a full rack of phial seats.
-func _dressed_run(content: ContentDB) -> RunState:
+func _dressed_run(content: ContentDB, stage_shape: StringName) -> RunState:
 	var run: RunState = RunState.new_run(content, 1)
 	run.waystones_lit = 3
 	run.player.gold = 120
+	var extra: int = EXTRA_RELICS_PHONE if stage_shape == &"phone-landscape" else EXTRA_RELICS
 	var ids: Array = content.relics.keys()
 	ids.sort()
 	for id_v: Variant in ids:
-		if run.player.relics.size() > EXTRA_RELICS:
+		if run.player.relics.size() > extra:
 			break
 		if not run.player.relics.has(str(id_v)):
 			run.player.relics.append(str(id_v))
