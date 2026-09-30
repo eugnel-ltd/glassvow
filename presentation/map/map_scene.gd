@@ -14,6 +14,9 @@ var _salt_dirty: bool = false
 const TAP_SLOP: float = 12.0
 const FLING_DAMP: float = 0.06
 const FLING_MAX: float = 48.0
+## Box separation must beat a scenery rule's threshold by this much before the
+## exact polygon test is skipped (`_scenery_rejection`).
+const _BOX_SLACK_M: float = 0.01
 
 signal surface_tapped(screen: Vector2)
 
@@ -525,9 +528,9 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 	_selection_half = _selection_reserve(quality)
 	var candidates: Dictionary = _landscape.candidates()
 	var accepted: Dictionary = {}
-	var accepted_footprints: Array[PackedVector2Array] = []
+	var accepted_footprints: Array[Dictionary] = []
 	var rejections: Array[Dictionary] = []
-	var contract: Dictionary = layout_hero_contract()
+	var reserves: Dictionary = _scenery_reserves(data, layout_hero_contract(), quality)
 	for candidate_id: String in MapLayoutCanonical.sorted_keys(candidates):
 		var candidate: Dictionary = candidates[candidate_id]
 		var footprint: PackedVector2Array = _placement_footprint(candidate)
@@ -535,14 +538,15 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 			rejections.append({"candidate_id": candidate_id, "reason": "land edge", "blocker_id": "terrain"})
 			continue
 		var selection: PackedVector2Array = _selection_footprint(candidate, footprint)
+		var physical: Dictionary = _shape(footprint)
 		var rejection: Dictionary = _scenery_rejection(
-			selection, footprint, accepted_footprints, data, contract, quality)
+			_shape(selection), physical, accepted_footprints, reserves)
 		if not rejection.is_empty():
 			rejection["candidate_id"] = candidate_id
 			rejections.append(rejection)
 			continue
 		accepted[candidate_id] = candidate["placement"]
-		accepted_footprints.append(footprint)
+		accepted_footprints.append(physical)
 	data["scenery_instances"] = MapLayoutCanonical.ordered_dictionary(accepted)
 	var final_result: MapLayoutResult = MapLayoutResult.create(data)
 	if final_result == null:
@@ -617,47 +621,125 @@ func _clear_waylights() -> void:
 	_waylights.clear()
 
 
-func _scenery_rejection(footprint: PackedVector2Array, physical: PackedVector2Array,
-		accepted: Array[PackedVector2Array], data: Dictionary,
-		contract: Dictionary, quality: Dictionary) -> Dictionary:
-	if footprint.is_empty():
-		return {"reason": "invalid transformed footprint", "blocker_id": "profile"}
+## Everything a scenery candidate is tested against, resolved once per bind:
+## node reserves, road-and-waylight corridors (segment by segment) and hero
+## zones, each with the distance below which it rejects, in the order the
+## rejection is reported.
+func _scenery_reserves(data: Dictionary, contract: Dictionary,
+		quality: Dictionary) -> Dictionary:
 	var epsilon: float = MapLayoutCanonical.float_value(quality["epsilon"]["world_m"])
+	var nodes: Array[Dictionary] = []
 	var anchors: Dictionary = data["node_anchors"]
 	for node_id: String in MapLayoutCanonical.sorted_keys(anchors):
-		if MapQualityEvaluator._polygon_distance(footprint,
-				MapQualityEvaluator._rect(_xz(anchors[node_id]), _selection_half)) <= epsilon:
-			return {"reason": "node reserve", "blocker_id": node_id}
+		var shape: Dictionary = _shape(
+			MapQualityEvaluator._rect(_xz(anchors[node_id]), _selection_half))
+		shape["id"] = node_id
+		nodes.append(shape)
 	var road_clearance: float = MapLayoutCanonical.float_value(
 		quality["geometry"]["road_corridor"]["world_clearance_m"])
+	var roads: Array[Dictionary] = []
 	var edges: Dictionary = data["edges"]
 	for edge_id: String in MapLayoutCanonical.sorted_keys(edges):
 		var edge: Dictionary = edges[edge_id]
 		var reserve: float = MapLayoutCanonical.float_value(edge["corridor_width"]) \
 			* 0.5 + road_clearance
 		var points: Array = edge["centerline"]
+		var segments: Array[Dictionary] = []
 		for i: int in range(points.size() - 1):
-			if MapQualityEvaluator._segment_polygon(_xz(points[i]), _xz(points[i + 1]),
-					footprint) < reserve - epsilon:
-				return {"reason": "road and waylight corridor", "blocker_id": edge_id}
-	var zones: Dictionary = contract["protected_zones"]
-	for zone_id: String in MapLayoutCanonical.sorted_keys(zones):
-		var zone: Dictionary = zones[zone_id]
+			segments.append(_shape(PackedVector2Array([_xz(points[i]), _xz(points[i + 1])])))
+		roads.append({"id": edge_id, "reserve": reserve,
+			"box": _union_box(segments), "segments": segments})
+	var zones: Array[Dictionary] = []
+	var zone_rows: Dictionary = contract["protected_zones"]
+	for zone_id: String in MapLayoutCanonical.sorted_keys(zone_rows):
+		var zone: Dictionary = zone_rows[zone_id]
 		var geometry_id: String = "%s_protected_zone" % str(zone["role"])
 		var geometry: Dictionary = quality["geometry"]
-		if not geometry.has(geometry_id):
-			return {"reason": "unknown hero protected zone", "blocker_id": zone_id}
-		var rule: Dictionary = geometry[geometry_id]
-		var padding: float = MapLayoutCanonical.float_value(rule["padding_m"])
-		if MapQualityEvaluator._polygon_distance(footprint,
-				MapQualityEvaluator._poly(zone["polygon"])) < padding - epsilon:
-			return {"reason": "hero protected zone", "blocker_id": zone_id}
+		var shape: Dictionary = _shape(MapQualityEvaluator._poly(zone["polygon"]))
+		shape["id"] = zone_id
+		shape["padding"] = MapLayoutCanonical.float_value(geometry[geometry_id]["padding_m"]) \
+			if geometry.has(geometry_id) else NAN
+		zones.append(shape)
+	return {"epsilon": epsilon, "nodes": nodes, "roads": roads, "zones": zones}
+
+
+## The first rule a candidate breaks, or {} when it may stand. Each exact
+## polygon test runs only when the two bounding boxes are close enough for it
+## to fire: box separation is a lower bound on the true distance, and
+## `_BOX_SLACK_M` keeps float rounding in the exact test from ever mattering.
+## The decision and its reported blocker are therefore those of the full scan.
+func _scenery_rejection(footprint: Dictionary, physical: Dictionary,
+		accepted: Array[Dictionary], reserves: Dictionary) -> Dictionary:
+	var polygon: PackedVector2Array = footprint["points"]
+	if polygon.is_empty():
+		return {"reason": "invalid transformed footprint", "blocker_id": "profile"}
+	var box: Vector4 = footprint["box"]
+	var epsilon: float = reserves["epsilon"]
+	for node: Dictionary in reserves["nodes"]:
+		var node_box: Vector4 = node["box"]
+		var node_rect: PackedVector2Array = node["points"]
+		if _box_gap(box, node_box) <= epsilon + _BOX_SLACK_M \
+				and MapQualityEvaluator._polygon_distance(polygon, node_rect) <= epsilon:
+			return {"reason": "node reserve", "blocker_id": node["id"]}
+	for road: Dictionary in reserves["roads"]:
+		var reserve: float = road["reserve"]
+		var road_box: Vector4 = road["box"]
+		if _box_gap(box, road_box) > reserve + _BOX_SLACK_M:
+			continue
+		for segment: Dictionary in road["segments"]:
+			var ends: PackedVector2Array = segment["points"]
+			var segment_box: Vector4 = segment["box"]
+			if _box_gap(box, segment_box) <= reserve + _BOX_SLACK_M \
+					and MapQualityEvaluator._segment_polygon(ends[0], ends[1],
+						polygon) < reserve - epsilon:
+				return {"reason": "road and waylight corridor", "blocker_id": road["id"]}
+	for zone: Dictionary in reserves["zones"]:
+		var padding: float = zone["padding"]
+		if is_nan(padding):
+			return {"reason": "unknown hero protected zone", "blocker_id": zone["id"]}
+		var zone_box: Vector4 = zone["box"]
+		var zone_polygon: PackedVector2Array = zone["points"]
+		if _box_gap(box, zone_box) <= padding + _BOX_SLACK_M \
+				and MapQualityEvaluator._polygon_distance(polygon, zone_polygon) \
+					< padding - epsilon:
+			return {"reason": "hero protected zone", "blocker_id": zone["id"]}
 	# Canopies may overlap one another, as in a grove. Physical footprints
 	# remain disjoint; the full projected reserve above protects all gameplay.
-	for prior: PackedVector2Array in accepted:
-		if MapQualityEvaluator._polygon_distance(physical, prior) <= epsilon:
+	var physical_box: Vector4 = physical["box"]
+	var physical_points: PackedVector2Array = physical["points"]
+	for prior: Dictionary in accepted:
+		var prior_box: Vector4 = prior["box"]
+		var prior_points: PackedVector2Array = prior["points"]
+		if _box_gap(physical_box, prior_box) <= epsilon + _BOX_SLACK_M \
+				and MapQualityEvaluator._polygon_distance(physical_points,
+					prior_points) <= epsilon:
 			return {"reason": "accepted scenery footprint", "blocker_id": "scenery"}
 	return {}
+
+
+## A point set with its bounding box (min x, min z, max x, max z). The box is
+## taken from the points themselves, so it is exact at their precision.
+static func _shape(points: PackedVector2Array) -> Dictionary:
+	var box: Vector4 = Vector4(INF, INF, -INF, -INF)
+	for point: Vector2 in points:
+		box = Vector4(minf(box.x, point.x), minf(box.y, point.y),
+			maxf(box.z, point.x), maxf(box.w, point.y))
+	return {"points": points, "box": box}
+
+
+static func _union_box(shapes: Array[Dictionary]) -> Vector4:
+	var out: Vector4 = Vector4(INF, INF, -INF, -INF)
+	for shape: Dictionary in shapes:
+		var box: Vector4 = shape["box"]
+		out = Vector4(minf(out.x, box.x), minf(out.y, box.y),
+			maxf(out.z, box.z), maxf(out.w, box.w))
+	return out
+
+
+## Separation of two boxes along the axis where they are furthest apart; zero
+## when they overlap. Never more than the distance between anything inside them.
+static func _box_gap(a: Vector4, b: Vector4) -> float:
+	return maxf(maxf(a.x - b.z, b.x - a.z), maxf(maxf(a.y - b.w, b.y - a.w), 0.0))
 
 
 func _a3(value: Vector3) -> Array[float]:

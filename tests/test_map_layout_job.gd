@@ -1,8 +1,10 @@
 extends RefCounted
-## The player's launch compiles the world layout on a worker thread behind a
-## charting veil, and lands on the same map a main-thread compile draws.
-## A main-thread compile froze an A12 past the iOS watchdog (Sentry 1ec0d817,
-## TestFlight 1.0.0 build 8), so the veil must be the route while the job runs.
+## With the Map Compiler v2 opt-in on (MapLayoutPolicy), a launch without
+## arguments compiles the world layout on a worker thread behind a charting
+## veil, and lands on the same map a main-thread compile draws. A main-thread
+## compile froze an A12 past the iOS watchdog (Sentry 1ec0d817, TestFlight
+## 1.0.0 build 8), so the veil must be the route while the job runs. Production
+## never opts in (docs/map/production-layout.md; tests/test_map_layout_fast.gd).
 
 const RUN_PATH: String = "user://test_map_layout_job_run_v2.json"
 const VIGIL_PATH: String = "user://test_map_layout_job_vigil_v2.json"
@@ -19,6 +21,15 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 
 
 static func run(fails: Array[String]) -> void:
+	var opted_in: Variant = ProjectSettings.get_setting(MapLayoutPolicy.SETTING, null)
+	ProjectSettings.set_setting(MapLayoutPolicy.SETTING, true)
+	_check(fails, MapLayoutPolicy.compiler_requested(),
+		"the project setting opts this desktop process into the compiler")
+	_run(fails)
+	ProjectSettings.set_setting(MapLayoutPolicy.SETTING, opted_in)
+
+
+static func _run(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
 	var sync_main: Main = _map_main(content, false)
 	_check(fails, sync_main._map_screen != null

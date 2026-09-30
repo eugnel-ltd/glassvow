@@ -1,6 +1,6 @@
 class_name WorldMapScreen
 extends Control
-## The pilgrimage graph bound to the canonical compiled 3D map.
+## The pilgrimage graph bound to the canonical 3D map layout (`MapLayoutPolicy`).
 ##
 ## Presentation only. It reads the WorldMap graph and animates; the map's own
 ## `enter()` gate decides what is legal. Fully built in _init (no tree
@@ -71,9 +71,10 @@ var _layout_data: Dictionary = {}
 var _layout_input_digest: String = ""
 var _layout_diagnostics: Dictionary = {}
 var _layout_failure: Dictionary = {}
-## Focused tests replace only the pure compiler call; production leaves this empty.
-## Returning null means the compile is still running off the main thread: the
-## screen stays unbound and its owner routes back here once the layout lands.
+## Focused tests replace only the pure generator call; Main routes it through its
+## layout cache. Empty, the screen asks `MapLayoutPolicy` directly.
+## Returning null means an opt-in compile is still running off the main thread:
+## the screen stays unbound and its owner routes back here once the layout lands.
 var _layout_compile: Callable = Callable()
 var _layout_pending: bool = false
 ## Projection is shared by waystone layout and marker queries.
@@ -442,10 +443,12 @@ func _bind_compiled_layout() -> void:
 		})
 	var nodes: Array = bound["nodes"]
 	var edges: Array = bound["edges"]
+	var generator: Dictionary = MapLayoutPolicy.generator_fields(
+		MapLayoutPolicy.compiler_requested())
 	var input: MapLayoutInput = MapLayoutInput.from_dict({
 		"schema_version": MapLayoutInput.SCHEMA_VERSION,
-		"generator_schema": "map-compiler-v2",
-		"generator_version": MapLayoutCompiler.VERSION,
+		"generator_schema": generator["generator_schema"],
+		"generator_version": generator["generator_version"],
 		"nodes": nodes, "edges": edges, "act": _run.act,
 		"run_seed": _run.seed,
 		"scenery_seed": _run.seed + SCENERY_SEED_OFFSET,
@@ -466,7 +469,7 @@ func _bind_compiled_layout() -> void:
 	_layout_input_digest = input_digest
 	var compiled_v: Variant = _layout_compile.call(input, quality, assets) \
 		if _layout_compile.is_valid() \
-		else MapLayoutCompiler.compile(input, quality, assets)
+		else MapLayoutPolicy.generate(input, quality, assets)
 	_layout_pending = compiled_v == null
 	if _layout_pending:
 		_layout_input_digest = ""
