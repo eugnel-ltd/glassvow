@@ -1127,6 +1127,75 @@ leaves (WCAG 2.1 SC 1.4.11 asks 3 : 1) while the door is 8.5 : 1 against its gla
 and the hairline is the brightest point only at 1024, by 1.29×. It stays open
 for the owner's phone check at TestFlight.
 
+## Shipped — the Edge way's crown and deed (2026-09-30)
+
+### `relics/crownOfTheEclipse.png` — 512×341 RGBA; `deeds/faultInGlass.png` — 512×512 RGBA
+
+The Edge way's last two Owed rows (Flame lock PR 6, #583): its crown, Crown of
+the Eclipse, and its deed, Fault in the Glass. Each file is keyed by its content
+id, so the run HUD's relic row (`presentation/run/run_hud.gd` through
+`HudBar.icon`), the reward, shop and crown screens, and the Vigil's deed row
+(`presentation/run/vigil_screen.gd`) find them, and no code changed. Both match
+their siblings' format: 8-bit RGBA PNG with a fully transparent background, the
+relic on the relics' 512×341 canvas and the deed on the deeds' 512×512.
+
+The prompts follow `relic-art-bible.md` and the deed emblems of
+`meta-art-bible.md` under `style-bible.md`'s style block and readability
+priority, in the step 1 prompt shape of `generated-art-workflow.md`, with
+`refs/style-master.png` loaded as the master reference. The crown also loads two
+shipped crowns (`shatterersCrown`, `crownOfTheHearth`) for the crown family's
+read, silhouette first, and `cards/totality.jpg` for its eclipse. The deed loads
+three shipped deeds (`darkWalker`, `firstDawn`, `untouched`) and
+`cards/totality.jpg` for the crack light. Each subject is the one its Owed row
+gave, in the Edge palette that Totality set: a black disc in a violet-crimson
+corona, dark violet and plum glass, black lead, a thin amber rim. The exact
+requests are in `docs/reviews/edge-crown-deed-2026-09-30/prompts/`.
+
+Generated 2026-09-30 through `~/.claude/scripts/subagents/run-imagegen.sh`: Codex
+CLI 0.159.0 with `gpt-6.1-sol` at xhigh reasoning effort, drawing with Codex's
+built-in image tool, one image per call. Codex served every call, and none fell
+back. The crown renders are 1536×1024 as asked; the deed renders came back
+1254×1254 where 1024×1024 was asked, which the landing step absorbs. Two
+workflow departures, both deliberate. The chroma key is flat `#00ff00`, not the
+workflow's default `#ff00ff`, because both subjects are violet-crimson and the
+workflow asks for another key colour when the subject needs magenta. And, as for
+the card plates, there is no Nano Banana Pro pass: the Codex render is landed
+directly.
+
+Landing, identical for every candidate: alpha from greenness `G − max(R, B)`,
+opaque at 24 or below and clear at 120 or above, linear between; green despilled
+by clamping `G` to `max(R, B)`; crop to the box where alpha exceeds 16; one
+uniform premultiplied Lanczos scale; centred on a transparent canvas. The crown
+fits a 440×331 box on 512×341, the width of its family (the shipped crowns span
+382 to 404 px); it lands at 440×307. The deed fits 484×484 on 512×512, the
+height the shipped deeds fill (94 to 96%); it lands at 218×484. No opaque pixel
+is green-dominant in the crown, and four faint ones (alpha 9 to 35) sit at the
+deed's apex tip.
+
+Each asset had two candidates in deliberately different shapes. The deed has a
+third, `c`: after `a` and `b` were judged too narrow for the Vigil's slot, one
+more render repeated `a`'s request with only the pane's proportions changed. Each
+pick was judged at the size the UI shows it, against shipped siblings, with a
+black silhouette: the relic at 64 and 32 px (the run HUD seats it in a 34 to
+44 px circle, where the 512×341 plate draws about 44×29), the deed at the Vigil
+row's 48 px slot (40 on phone) and at 32 px.
+
+The review folder `docs/reviews/edge-crown-deed-2026-09-30/` holds a contact
+sheet per asset with its runners-up and two shipped siblings
+(`sheets/<id>.jpg`); `prompts/sources.txt` maps every candidate to its
+full-resolution original in Codex's store on the authoring Mac, so a swap only
+repeats the landing step. `capture/crownOfTheEclipse-pad.jpg` is the Act I shop
+at pad-landscape with the crown held, in the run HUD's relic row beside
+Emberheart (`-hud-x5.jpg` is that row enlarged); combat hides the row, so the
+shop is where it shows. `capture/faultInGlass-pad.jpg` is the Vigil at
+pad-landscape, its deed list scrolled to the end (`-row-x3.jpg` is the row
+enlarged).
+
+| Shipped | Pick | Content | Why this one |
+|---|---|---|---|
+| `relics/crownOfTheEclipse.png` | `a` | Crown of the Eclipse 蝕月冠, Edge boss relic, the way's crown | Five thin, tall lancet points give the crown family's silhouette first. Totality's ringed black disc sits in a rose-window medallion on the band, and its cracks run out through the glass: the rule, Cracked that no longer wears off, drawn as cracks that stay open. The disc still reads at 32 px. `b` is the Owed row's literal circlet, but its low band and single arch read as an eye or a helmet at 32 px, not as a crown. |
+| `deeds/faultInGlass.png` | `c` | Fault in the Glass 裂痕, Edge deed | One bright fault runs the pane from apex to base, and the pane is broad enough (width 0.45 of height) to read as a window in the 48 px slot. `a` is the same design only a third as wide as it is tall, 15 px wide in the slot. `b` hangs the fault from a small eclipse, which shortens the fault and becomes a dot at 32 px. |
+
 ## Shipped — card art for the Edge way, the way walls and the Unreadable Page (2026-09-30)
 
 ### `cards/` — ten plates, 2048×1374 JPEG
@@ -1465,11 +1534,5 @@ bibles in the first section (`card-art-bible.md`, `relic-art-bible.md`, and
 relics 512×341 RGBA, deeds 512×512 RGBA. When an asset lands, delete its row
 and give it a section of its own with the prompt that made it.
 
-**The Edge way** (the Duskblade Flame lock, PR 6, 2026-09-29). The way's
-colour is violet-crimson; its glass reads as the precise cut: cracks, the
-eclipse, a light dimmed.
-
-| Asset | Content | Subject |
-|---|---|---|
-| `relics/crownOfTheEclipse.png` | Crown of the Eclipse 蝕月冠, boss relic, the way's crown | A dark circlet whose centre stone is an eclipsed moon ringed in violet-crimson. |
-| `deeds/faultInGlass.png` | Fault in the Glass 裂痕, the way's deed | One long fault line running the height of a tall pane, glowing violet-crimson along its length. |
+Nothing is owed at present (2026-09-30). The Edge way's last two rows, its crown
+and its deed, shipped in the section of that date above.
