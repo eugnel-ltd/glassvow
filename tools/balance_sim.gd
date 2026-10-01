@@ -2,6 +2,7 @@ class_name BalanceSim
 extends SceneTree
 ## Domain-only whole runs: all reveals, no quests or cross-run side state.
 const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
+const Search: GDScript = preload("res://tools/balance_search.gd")
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
 const Metrics: GDScript = preload("res://tools/balance_metrics.gd")
 const Incentives: GDScript = preload("res://tools/vow_incentives.gd")
@@ -18,8 +19,14 @@ const RATE_STATS: Array[String] = ["shatters", "kindles", "embersSpent", "cracke
 ## A fight still running at this turn is cut off and counted a stall (flame
 ## readout 5: 30 cut off a won 32-turn fight with the 650-HP final boss).
 const TURN_GUARD: int = 40
+## Who plays the fights (flame readout 8): the greedy pilot, or the search
+## player built on it. Everything off the board is the pilot's either way.
+const PLAYERS: Dictionary = {"greedy": Pilot, "search": Search}
 static var _probe: Dictionary = {}
 static var _flame_acts: Array[Dictionary] = []
+static var _flame_fights: Array[Dictionary] = []
+static var _player: GDScript = Pilot
+static var _play: String = "greedy"
 func _initialize() -> void:
 	var opts: Dictionary = _options(OS.get_cmdline_user_args())
 	if opts.has("error"):
@@ -62,7 +69,7 @@ func _initialize() -> void:
 		for offset: int in range(int(float(str(opts["runs"])))):
 			rows.append(simulate(content, aspect, int(float(str(opts["seed0"]))) + offset,
 				int(float(str(opts["vow"]))), ban, _policy(opts), str(opts["build"]) == "random",
-				false, _mix(opts), null, false, str(opts["pool"])))
+				false, _mix(opts), null, false, str(opts["pool"]), str(opts["play"])))
 	var report: Dictionary = Metrics.report(rows, _manifest(opts, overlay, identity))
 	if rows.size() == 1:
 		report["outcomeDigest"] = outcome_digest(rows[0])
@@ -81,9 +88,13 @@ func _initialize() -> void:
 static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0,
 		ban: PackedStringArray = PackedStringArray(), policy: Dictionary = {},
 		random_build: bool = false, random_play: bool = false, mix: Dictionary = {},
-		vigil: VigilState = null, strip_start_hex: bool = false, pool: String = "") -> Dictionary:
+		vigil: VigilState = null, strip_start_hex: bool = false, pool: String = "",
+		play: String = "greedy") -> Dictionary:
 	_probe = {}
 	_flame_acts = []
+	_flame_fights = []
+	_play = play
+	_player = PLAYERS[play]
 	Pilot.set_ban(ban)
 	Pilot.apply_policy(policy)
 	Pilot.set_modes(random_build, random_play)
@@ -154,9 +165,10 @@ static func _fight(game: GlassvowGame, node: MapNode) -> Dictionary:
 	if enemies.is_empty():
 		enemies = game.rewards.roll_encounter(game.run, node.type, node.row, node)
 	var shatters_before: int = int(float(str(game.run.stats.get("shatters", 0))))
+	var reading: Dictionary = Flame.read(game.content, game.run)
 	game.apply({"t": "startCombat", "enemies": enemies, "kind": node.combat_kind()})
 	while not game.cb.over:
-		Pilot.play_turn(game)
+		_player.play_turn(game)
 		if game.cb.over:
 			break
 		if game.cb.turn >= TURN_GUARD:
@@ -164,10 +176,22 @@ static func _fight(game: GlassvowGame, node: MapNode) -> Dictionary:
 			break
 		game.apply({"t": "endTurn"})
 	var smolder_kills: int = 0
+	var plays: Dictionary = {}
 	for event: Dictionary in game.cb.queue:
 		if event.get("t") == EventTypes.HIT_ENEMY and event.get("poison", false) \
 				and event.get("dead", false):
 			smolder_kills += 1
+		elif event.get("t") == EventTypes.PLAY:
+			var affinity: Dictionary = Flame.card_affinity(game.content, game.run.aspect,
+				str(event.get("id", "")))
+			for way_v: Variant in affinity:
+				plays[way_v] = float(str(plays.get(way_v, 0.0))) + float(str(affinity[way_v]))
+	# Readout 8's feel proxies ride on the flame row, outside the outcome digest:
+	# the reading the fight starts with, the coloured glass it played (affinity
+	# weight per way), and the HP the hero leaves it on.
+	_flame_fights.append({"dominant": reading.get("dominant", ""), "tier": reading.get("tier", ""),
+		"plays": plays, "hp": maxi(0, game.run.player.hp if game.cb.over else game.cb.player.hp),
+		"maxHp": game.run.player.max_hp})
 	return {
 		"act": game.run.act + 1, "kind": node.combat_kind(), "enemies": enemies,
 		"result": game.cb.result if game.cb.over else "stall", "turns": game.cb.turn,
@@ -544,7 +568,7 @@ static func _flame_row(run: RunState, content: ContentDB, fights: int) -> Dictio
 	for key: String in RATE_STATS:
 		rates[key] = float(_ji(run.stats.get(key, 0))) / float(fights) if fights > 0 else 0.0
 	return {"way": Pilot.way, "end": Flame.read(content, run), "acts": _flame_acts.duplicate(),
-		"rates": rates}
+		"rates": rates, "play": _play, "fights": _flame_fights.duplicate()}
 
 
 static func _apply_pool(profile: Dictionary, content: ContentDB, pool: String) -> void:
@@ -579,7 +603,8 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		"stage": "", "cardDecline": Pilot.CARD_DECLINE_DEFAULT,
 		"removalAppetite": Pilot.REMOVAL_APPETITE_DEFAULT,
 		"removalMinCopies": Pilot.REMOVAL_MIN_COPIES_DEFAULT,
-		"way": "none", "pool": "mature", "build": "adaptive", "wayCommit": "", "wayOff": ""}
+		"way": "none", "pool": "mature", "build": "adaptive", "wayCommit": "", "wayOff": "",
+		"play": "greedy"}
 	for arg: String in args:
 		if not arg.begins_with("--") or not arg.contains("="):
 			return {"error": "expected --name=value, got %s" % arg}
@@ -607,6 +632,8 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		return {"error": "--pool must be mature, fresh or full"}
 	if str(out["build"]) not in ["adaptive", "random"]:
 		return {"error": "--build must be adaptive or random"}
+	if not PLAYERS.has(str(out["play"])):
+		return {"error": "--play must be greedy or search"}
 	return _way_weights(out)
 static func _mix(opts: Dictionary) -> Dictionary:
 	var id: String = str(opts.get("mix", ""))
@@ -629,6 +656,9 @@ static func _manifest(opts: Dictionary, overlay: String, identity: Dictionary) -
 	row["overlay"] = null if overlay.is_empty() else {"path": overlay,
 		"sha256": FileAccess.get_sha256(overlay)}
 	row["pilot"] = Pilot.VERSION
+	row["play"] = opts["play"]
+	if str(opts["play"]) == "search":
+		row["search"] = {"version": Search.VERSION, "lineCap": Search.LINE_CAP}
 	row["profile"] = PROFILES[str(opts["pool"])]
 	row["pool"] = opts["pool"]
 	row["build"] = opts["build"]
