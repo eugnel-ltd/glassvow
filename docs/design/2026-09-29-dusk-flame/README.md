@@ -276,7 +276,7 @@ Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds 
 | G5 reachability | insisting gets there | full pool: committed arms reach Steady by the end of Act 1 in ≥ 70% of runs, True by the end of Act 2 in ≥ 40%; fresh pool: V0 ≥ 40% Steady by the end of Act 1, True not graded (readout 5) |
 | G6 diversity of adaptive play | different runs are different | among A's wins no way exceeds 60%; at least two ways hold ≥ 20% |
 | G7 guards | nothing degenerate, nothing broken | CEM stress: V5 best holdout < 90%; zero stalls and errors; deterministic replay; save lineage and internal IDs unchanged |
-| H human | it is fun | James plus two or three players each win at V0 with every way at least once across the group; easy / fun / hard labels; #205 verdict |
+| B bot round | every way can be won and has a feel | Replaces the human row (owner ruling, 2026-10-01). The headless simulator's search player ([readout 8](readouts/readout-8.md)) plays the cell table above, at least 200 paired seeds per cell, every figure graded on its 95% interval. (1) Every committed way wins at V0 with the search player: win rate ≥ 20% in the full pool and ≥ 10% in the fresh pool. (2) No way has no feel: at V0 in both pools each committed way's coloured plays favour its own glass in ≥ 60% of its fights (expression), and 1–10% of its won fights end under 20% HP (close calls). James's play reports are input, never a gate. |
 
 **Calibration order**, one commit and one ten-minute readout per step; the step that reaches G4 with the least damage to G3 is kept:
 
@@ -287,7 +287,7 @@ Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds 
 
 **Seeds:** development 12000–12999; calibration 13000–13399, paired across arms; the historical holdout 5000–5199 is used once on the final candidate; the CEM stress keeps 4200–4999 for training and 5000–5199 for its ceiling. Acceptance seeds 3000–5199 stay otherwise untouched.
 
-**Exam:** the final candidate SHA runs the full cell table above plus the CEM stress. An independent re-run from a clean checkout on any host must agree on every gate's verdict (owner ruling of 2026-09-27; numbers need not match). Then the human feel round.
+**Exam:** the final candidate SHA runs the full cell table above plus the CEM stress. An independent re-run from a clean checkout on any host must agree on every gate's verdict (owner ruling of 2026-09-27; numbers need not match). Then the bot round (B).
 
 ## 12. Implementation map
 

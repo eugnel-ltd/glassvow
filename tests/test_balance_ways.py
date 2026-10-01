@@ -191,6 +191,84 @@ class BalanceWaysTest(unittest.TestCase):
         self.assertEqual("FAIL", gates[6][-1])
         self.assertIn("replay 2/3 identical", gates[6][1])
 
+    def test_play_reaches_every_command_and_must_agree_across_reports(self) -> None:
+        searched = ways.jobs("godot", (13000, 13199), Path("/out"), play="search")
+        self.assertTrue(all(command[-1] == "--play=search" for _, command in searched))
+        self.assertFalse(any("--play" in arg for _, command in ways.jobs("godot", (13000, 13199), Path("/out"))
+                             for arg in command))
+        with tempfile.TemporaryDirectory() as temp:
+            write_table(Path(temp))
+            self.assertEqual("greedy", ways.grade(Path(temp), SEEDS)["play"])
+            other = Path(temp) / ways.report_name(0, "full", "R")
+            report = json.loads(other.read_text())
+            report["manifest"]["play"] = "search"
+            other.write_text(json.dumps(report))
+            with self.assertRaisesRegex(ValueError, "more than one player"):
+                ways.grade(Path(temp), SEEDS)
+
+    def test_a_split_table_runs_and_grades_one_vow(self) -> None:
+        self.assertEqual((0,), ways.parse_vows("0"))
+        self.assertEqual((0, 5), ways.parse_vows("5,0"))
+        for bad in ("", "1", "0,x", "0,,5"):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                ways.parse_vows(bad)
+        work = ways.jobs("godot", (13000, 13399), Path("/out"), vows=(5,))
+        self.assertEqual(2 * (len(ways.ARMS) + 1), len(work))
+        self.assertTrue(all(name.startswith("v5-") for name, _ in work))
+        with tempfile.TemporaryDirectory() as temp:
+            write_table(Path(temp))
+            for name in Path(temp).iterdir():
+                if name.name.startswith("v0-"):
+                    name.unlink()
+            self.assertEqual([(5, "fresh"), (5, "full")],
+                             list(ways.grade(Path(temp), SEEDS, (5,))["cells"]))
+            with self.assertRaises(ValueError):
+                ways.grade(Path(temp), SEEDS)
+
+    def test_interval_verdicts_leave_a_straddled_threshold_undecided(self) -> None:
+        low, high = ways.wilson(50, 100)
+        self.assertEqual((0.5, low, high), ways.interval(50, 100))
+        d, d_low, d_high = ways.difference((60, 100), (40, 100))
+        self.assertAlmostEqual(0.2, d)
+        self.assertTrue(d_low < 0.2 < d_high and d_high - d_low < 0.3)
+        self.assertEqual(ways.difference((40, 100), (60, 100))[1], -d_high)
+        self.assertEqual("PASS", ways.decided([True, True]))
+        self.assertEqual("FAIL", ways.decided([True, None, False]))
+        self.assertEqual("UNDECIDED", ways.decided([True, None]))
+        self.assertIs(True, ways.at_least((0.6, 0.55, 0.65), 0.5))
+        self.assertIsNone(ways.at_least((0.52, 0.45, 0.6), 0.5))
+        self.assertIs(False, ways.at_most((0.8, 0.7, 0.9), 0.6))
+        # V0 full sits exactly on each point threshold with 10 seeds: the intervals cannot decide.
+        with tempfile.TemporaryDirectory() as temp:
+            write_table(Path(temp))
+            intervals = ways.grade(Path(temp), SEEDS)["cells"][0, "full"]["intervals"]
+        self.assertEqual("UNDECIDED", intervals[0][1])
+        self.assertIn("n=10", intervals[0][0])
+        self.assertEqual("PASS", intervals[6][1])
+
+    def test_feel_reads_the_per_fight_flame_rows(self) -> None:
+        self.assertEqual("edge", ways.expressed({"edge": 2.0, "shatter": 1.0}))
+        self.assertEqual("", ways.expressed({"edge": 1.0, "shatter": 1.0}))
+        self.assertEqual("", ways.expressed({}))
+        self.assertIsNone(ways.feel(rows(5, "edge"), "edge"))
+
+        def fight(result: str, hp: int, plays: dict, act: int = 1) -> tuple[dict, dict]:
+            return ({"act": act, "result": result, "turns": 4, "hpLost": 10},
+                    {"dominant": "lantern", "tier": "STEADY", "plays": plays, "hp": hp, "maxHp": 80})
+
+        won = [fight("win", 15, {"edge": 1.0}), fight("win", 60, {"lantern": 1.0}),
+               fight("win", 70, {"edge": 0.5, "lantern": 0.5})]
+        lost = [fight("win", 50, {"edge": 1.0}), fight("loss", 0, {"edge": 1.0}, act=2)]
+        runs = [{"seed": 1, "outcome": "win", "fights": [f for f, _ in won],
+                 "flame": {"fights": [g for _, g in won]}},
+                {"seed": 2, "outcome": "loss", "fights": [f for f, _ in lost],
+                 "flame": {"fights": [g for _, g in lost]}}]
+        edge = ways.feel(runs, "edge")
+        self.assertEqual((5, 4, 1, 3), (edge["fights"], edge["won"], edge["close"], edge["shown"]))
+        self.assertEqual((0, 1, 0), edge["deaths"])
+        self.assertEqual(4.0, edge["turns"])
+        self.assertEqual(1, ways.feel(runs, "none")["shown"])  # A and R read the starting flame
+
     def test_cli_grades_saved_reports_and_rejects_bad_options(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             write_table(Path(temp))

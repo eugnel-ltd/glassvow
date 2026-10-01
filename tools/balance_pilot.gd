@@ -117,6 +117,10 @@ static func choose_node(map: WorldMap, run: RunState) -> int:
 	return best
 static func play_turn(game: GlassvowGame) -> void:
 	_use_potions(game)
+	play_hand(game)
+## The turn after the potions: the Art, the cards, one kindle, then both again.
+## Flame readout 8's search player plays this turn whenever no line it finds beats it.
+static func play_hand(game: GlassvowGame) -> void:
 	_use_art(game)
 	_play_cards(game)
 	if game.cb.over:
@@ -395,8 +399,12 @@ static func _outranks(rank: Array[int], other: Array[int]) -> bool:
 ## RNG. `foes` stands twins (keyed by idx) in for live foes, to ask what a play
 ## would change.
 static func _incoming(game: GlassvowGame, foes: Dictionary = {}) -> int:
+	return incoming_on(game.rules, game.run, game.cb, foes)
+## `_incoming` for any run and fight, live or a search's detached copy.
+static func incoming_on(rules: CombatRules, run: RunState, cb: CombatState,
+		foes: Dictionary = {}) -> int:
 	var standing: Array[EnemyCombatant] = []
-	for e: EnemyCombatant in game.cb.enemies:
+	for e: EnemyCombatant in cb.enemies:
 		var foe: EnemyCombatant = foes.get(e.idx, e)
 		standing.append(foe)
 	var hp: Array[int] = []
@@ -404,7 +412,7 @@ static func _incoming(game: GlassvowGame, foes: Dictionary = {}) -> int:
 	for e: EnemyCombatant in standing:
 		hp.append(e.hp)
 		smolder.append(int(float(str(e.statuses.get("poison", 0)))))
-	var rng: Rng = Rng.new(game.run.rng_state()) # Forecast jumps without moving the run RNG.
+	var rng: Rng = Rng.new(run.rng_state()) # Forecast jumps without moving the run RNG.
 	var total: int = 0
 	for i: int in range(standing.size()):
 		if hp[i] <= 0:
@@ -423,7 +431,7 @@ static func _incoming(game: GlassvowGame, foes: Dictionary = {}) -> int:
 		var e: EnemyCombatant = standing[i]
 		if e.staggered:
 			continue
-		var preview_v: Variant = game.rules.preview_enemy_dmg(game.cb, e, game.run)
+		var preview_v: Variant = rules.preview_enemy_dmg(cb, e, run)
 		if typeof(preview_v) == TYPE_DICTIONARY:
 			var preview: Dictionary = preview_v
 			total += int(float(str(preview["dmg"]))) * int(float(str(preview["times"])))
