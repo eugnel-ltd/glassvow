@@ -848,7 +848,9 @@ var _ignite: float = 0.0
 ## exists ONLY where the creature is broken.
 var _glass_area: float = 0.45
 var _glass_mat: ShaderMaterial = null
-var _shard_shader: Shader = null
+## One shard shader for every actor: its code never varies, and one shared resource is
+## what `warm_death_rite` can warm before any actor needs it.
+static var _shard_shader: Shader = null
 var _debris: Node3D = null
 var _cam: Camera3D = null
 var _shake: float = 0.0
@@ -1888,7 +1890,15 @@ func _build_stage(tex: Texture2D, enemy_idx: int) -> void:
 	if tex.get_height() > 0:
 		aspect = float(tex.get_width()) / float(tex.get_height())
 	_quad_w = _box_u * aspect
-	_read_contact(tex)
+	# One GPU read-back for both readers. A foe keeps the full image for the death cull
+	# (`_touches_art`), so the rite does not stall the fight on a read-back of its own; a
+	# hero never breaks and keeps nothing.
+	var art: Image = tex.get_image()
+	if art != null and art.is_compressed():
+		art.decompress()
+	_read_contact(art)
+	if tier != "hero":
+		_art_img = art
 
 	_stage = SubViewport.new()
 	var vp_px: int = mini(int(_span * oversample), VP_MAX)
@@ -1999,6 +2009,8 @@ func _build_stage(tex: Texture2D, enemy_idx: int) -> void:
 
 	# Outside the vessel: the ground does not breathe with the creature.
 	_build_shadow(tex)
+	if tier != "hero":
+		warm_death_rite()
 
 	# Ground for the shards to land on, at the creature's own feet.
 	var floor_body: StaticBody3D = StaticBody3D.new()
@@ -2212,13 +2224,10 @@ const CAST_MAX: float = 1.31
 ## horizontal centroid of that band is where its weight sits. Downsampled first
 ## — a contact point does not need 1024 rows, and a per-pixel scan of the full
 ## image in GDScript would cost more than the whole stage build.
-func _read_contact(tex: Texture2D) -> void:
-	var img: Image = tex.get_image()
-	if img == null:
+func _read_contact(art: Image) -> void:
+	if art == null:
 		return
-	img = img.duplicate()
-	if img.is_compressed():
-		img.decompress()
+	var img: Image = art.duplicate()
 	img.resize(64, 64, Image.INTERPOLATE_BILINEAR)
 	var bottom: int = -1
 	for y: int in range(63, -1, -1):
@@ -3985,12 +3994,6 @@ func shatter() -> void:
 		return  # see mark_dead(): a hero's vessel never breaks
 	_dead = true
 	clear_intent()
-	if _art_img == null and _body_mat != null:
-		var t: Texture2D = _body_mat.get_shader_parameter("body_tex")
-		if t != null:
-			_art_img = t.get_image()
-			if _art_img != null and _art_img.is_compressed():
-				_art_img.decompress()
 	# The handoff: the standing vessel vanishes THIS frame; its pieces replace it.
 	# Its shadow goes with it — nothing is standing there to cast one.
 	_vessel.transform = Transform3D.IDENTITY
@@ -4012,15 +4015,7 @@ func shatter() -> void:
 	_debris = Node3D.new()
 	_stage.add_child(_debris)
 	var burst: Vector2 = Vector2(0.0, _box_u * 0.05)
-	var body_tex: Variant = null
-	if _body_mat != null:
-		body_tex = _body_mat.get_shader_parameter("body_tex")
-	if _shard_shader == null:
-		_shard_shader = Shader.new()
-		_shard_shader.code = with_tint(with_erode(SHARD_SHADER))
-	# Thinner than the overlay plate: a thick prism reads as a crouton, all
-	# fracture-face and no painting.
-	var thick: float = _box_u * GLASS_THICK * 0.9
+	var thick: float = _shard_thick()
 	var spin: float = 10.0 / maxf(1.0, sqrt(_box_u))
 	for cell: PackedVector2Array in _death_cells(burst):
 		var centre: Vector2 = Vector2.ZERO
@@ -4030,16 +4025,7 @@ func shatter() -> void:
 		var mesh: ArrayMesh = _prism(cell, thick, Vector2(_quad_w, _box_u), centre)
 		if mesh == null:
 			continue
-		var smat: ShaderMaterial = ShaderMaterial.new()
-		smat.shader = _shard_shader
-		smat.set_shader_parameter("body_tex", body_tex)
-		smat.set_shader_parameter("erode", erode_uv)
-		# Explicit, not redundant: a ShaderMaterial returns nil for any uniform
-		# never set on the MATERIAL (defaults live in the shader), and a Tween
-		# with a nil start value refuses the property outright.
-		smat.set_shader_parameter("heat", 1.0)
-		smat.set_shader_parameter("dissolve", 0.0)
-		_apply_tint(smat)
+		var smat: ShaderMaterial = _shard_material()
 		var rb: RigidBody3D = RigidBody3D.new()
 		rb.physics_material_override = _bounce(0.35, 0.4)
 		rb.gravity_scale = 2.4
@@ -4094,6 +4080,58 @@ func shatter() -> void:
 	var d_t: Tween = _debris.create_tween()
 	d_t.tween_interval(2.4)
 	d_t.tween_callback(_debris.queue_free)
+
+
+## Thinner than the overlay plate: a thick prism reads as a crouton, all
+## fracture-face and no painting.
+func _shard_thick() -> float:
+	return _box_u * GLASS_THICK * 0.9
+
+
+## The shared shard shader, compiled once per process — see `_shard_shader`.
+static func shard_shader() -> Shader:
+	if _shard_shader == null:
+		_shard_shader = Shader.new()
+		_shard_shader.code = with_tint(with_erode(SHARD_SHADER))
+	return _shard_shader
+
+
+## One flying piece's material, whole and white-hot.
+func _shard_material() -> ShaderMaterial:
+	var smat: ShaderMaterial = ShaderMaterial.new()
+	smat.shader = shard_shader()
+	if _body_mat != null:
+		smat.set_shader_parameter("body_tex", _body_mat.get_shader_parameter("body_tex"))
+	smat.set_shader_parameter("erode", erode_uv)
+	# Explicit, not redundant: a ShaderMaterial returns nil for any uniform
+	# never set on the MATERIAL (defaults live in the shader), and a Tween
+	# with a nil start value refuses the property outright.
+	smat.set_shader_parameter("heat", 1.0)
+	smat.set_shader_parameter("dissolve", 0.0)
+	_apply_tint(smat)
+	return smat
+
+
+## THE FIRST DEATH MUST NOT PAY FOR THE RITE'S SHADERS. The shard material and the
+## additive flash/ember material belong to nothing until a foe breaks, so the first death
+## of a session used to compile both mid-fight: a 1.25 s frame on an M-series Mac with
+## its shader caches cold, and the 2.4 s freeze the A12 iPad showed.
+##
+## Measured, not assumed: assigning a shader's code compiles nothing, and making a
+## MATERIAL from it starts the compile on worker threads — that is the whole warm-up.
+## The first frame that draws the material only waits for whatever is still left. So a
+## foe makes one throwaway material per rite shader as it is built, under the fight's
+## entrance; on the Mac the compile was done well before the first strike could land,
+## and the first death's frame fell to what the second death's costs. Drawing them
+## instead, invisibly, made it worse: the draw turned the background compile into a
+## foreground wait (1.3 s on the opening frame, 0.3 s even 0.7 s in).
+##
+## Also loads the two FX textures, the rite's other first-use read.
+static func warm_death_rite() -> void:
+	var shard: ShaderMaterial = ShaderMaterial.new()
+	shard.shader = shard_shader()
+	_add_mat(_fx_tex("burst"))
+	_fx_tex("ember")
 
 
 ## One-shot ember burst: sparks thrown with the shards, floating a beat longer.
