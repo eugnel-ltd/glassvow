@@ -55,6 +55,7 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 static func run(fails: Array[String]) -> void:
 	_policy_defaults(fails)
 	_constants_follow_the_registry(fails)
+	_three_crossing_roads_are_reported(fails)
 	var quality: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(
 		"res://content/map/map-quality-v2.json"))
 	var content: ContentDB = ContentDB.load_full()
@@ -113,7 +114,7 @@ static func _constants_follow_the_registry(fails: Array[String]) -> void:
 	for step: int in range(-120, 121):
 		var angle: float = float(step) * 0.173
 		worst = maxf(worst, absf(MapRavine.sine(angle) - sin(angle)))
-	_check(fails, worst < 1e-9, "the ravine's sine is within %s of the engine's" % str(worst))
+	_check(fails, worst < 1e-10, "the ravine's sine is within %s of the engine's" % str(worst))
 
 
 ## The registry's ink pitch at the least two nodes' ink centres may stand: two
@@ -139,6 +140,26 @@ static func _ink_radius_px(quality: Dictionary) -> float:
 ## A constant covers the registry's figure with less than a pixel to spare.
 static func _pitch_matches(constant: float, needed: float) -> bool:
 	return constant >= needed and constant - needed < 1.0
+
+
+## Three roads that cross one another between the same two rows would need
+## three levels; the lattice never makes them, so they are built by hand here.
+static func _three_crossing_roads_are_reported(fails: Array[String]) -> void:
+	var quality: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(
+		"res://content/map/map-quality-v2.json"))
+	var nodes: Array = []
+	var anchors: Dictionary = {}
+	for column: int in range(3):
+		for row: int in range(2):
+			var id: String = "%d,%d" % [row, column]
+			nodes.append({"id": id, "row": row, "col": column})
+			anchors[id] = [5.14 * float(row), 0.0, 6.0 * float(column)]
+	var edges: Array = [{"id": "e0", "from": "0,0", "to": "1,2"},
+		{"id": "e1", "from": "0,1", "to": "1,1"}, {"id": "e2", "from": "0,2", "to": "1,0"}]
+	var roads: Dictionary = MapLayoutFastRoads.new(nodes, edges, anchors, quality).route()
+	_check(fails, roads["bridges"].size() == 3 and roads["stacked"] == ["e1"],
+		"three mutually crossing roads report the one that is above and below: %s"
+			% [roads["stacked"]])
 
 
 static func _live_layout(fails: Array[String], content: ContentDB,
@@ -318,6 +339,11 @@ static func _check_roads(fails: Array[String], label: String, input: MapLayoutIn
 					break
 	_check(fails, grazed.is_empty(),
 		"%s roads stay clear of the waystones they do not serve: %s" % [label, grazed])
+	var diagnostics: Dictionary = MapLayoutFast.compile(input, quality, _assets)[
+		"diagnostics"]
+	_check(fails, diagnostics["stacked_roads"].is_empty(),
+		"%s no road is above one road and below another: %s"
+			% [label, diagnostics["stacked_roads"]])
 	var grade: Dictionary = MapGradeSeparation.evaluate(edges, quality)
 	var loose: int = 0
 	var short: int = 0

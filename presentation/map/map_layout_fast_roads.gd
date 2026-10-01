@@ -144,8 +144,9 @@ func _init(nodes: Array, edge_rows: Array, anchors: Dictionary,
 				_add_pair(str(here[i]), other)
 
 
-## Every road, by edge ID: `from`, `to`, `centerline` and `corridor_width`, and
-## the `bridges` as [upper, lower] edge ID pairs.
+## Every road, by edge ID: `from`, `to`, `centerline` and `corridor_width`, the
+## `bridges` as [upper, lower] edge ID pairs, and the `stacked` roads (see
+## `MapLayoutFastBridges.stacked`).
 func route() -> Dictionary:
 	for id: String in ids:
 		_pull_start[id] = AXIS_PULL
@@ -160,7 +161,8 @@ func route() -> Dictionary:
 	bridges.route_through(crossings)
 	_clear_obstacles()
 	var edges: Dictionary = _edges()
-	return {"edges": edges, "bridges": bridges.span(edges, crossings)}
+	return {"edges": edges, "bridges": bridges.span(edges, crossings),
+		"stacked": bridges.stacked(crossings)}
 
 
 func _add_pair(a: String, b: String) -> void:
@@ -211,7 +213,7 @@ func shape(id: String, through: Array) -> void:
 		var stop_x: float = _f(stops[index][0])
 		var stop_z: float = _f(stops[index][1])
 		var last: bool = index == stops.size() - 1
-		var leg: int = SEGMENTS - spent
+		var leg: int = maxi(1, SEGMENTS - spent)
 		if not last:
 			leg = 1 if _is_join(from_x, from_z, stop_x, stop_z) else steps
 		var end_x: float = finish[0] if last else _f(stops[index][2])

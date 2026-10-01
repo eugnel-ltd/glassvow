@@ -40,7 +40,7 @@ Measured on the M1 Max with a real renderer (debug, pad shape, `--map --map-timi
 
 ## What it does not guarantee
 
-Measured against the governed hard rules with `tools/preview_map.gd --compile-only --quality=…` (Act I, seeds 1, 717 and 17634), the fast layout keeps journey order, the row and lane envelopes, both protected zones, the node, scenery and hero silhouette rules, the touch-target minimum, the focused safe frame and, since #621, node spacing at every zoom, the road corridor around every waystone and the road corridors between every pair of roads that do not cross. Distinct violations before and after the polish of #621 (the same seeds and rules; [`docs/reviews/map-polish-2026-10-01/`](../reviews/map-polish-2026-10-01/) has the captures):
+Measured against the governed hard rules with `tools/preview_map.gd --compile-only --quality=…` (Act I, seeds 1, 717 and 17634), the fast layout keeps journey order, the row and lane envelopes, both protected zones, the node, scenery and hero silhouette rules, the touch-target minimum and the focused safe frame. Since #621 it also measures clean for node spacing at every zoom, the road corridor around every waystone and the corridors between every pair of roads that do not cross (the bump passes are bounded, so this is measured on these seeds and the probe's five, not proved). Distinct violations before and after the polish of #621 (the same seeds and rules; [`docs/reviews/map-polish-2026-10-01/`](../reviews/map-polish-2026-10-01/) has the captures):
 
 | Rule | Seed 1 | Seed 717 | Seed 17634 |
 |---|---|---|---|

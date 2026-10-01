@@ -35,7 +35,7 @@ static func compile(input: MapLayoutInput, quality: Dictionary,
 		"schema_version": 1, "version": VERSION,
 		"input_digest": "" if input == null else input.digest(),
 		"spaced_nodes": [], "displaced_nodes": {}, "unresolved_nodes": [],
-		"bridges": [],
+		"bridges": [], "stacked_roads": [],
 	}
 	if input == null:
 		return _failure(diagnostics, "input", "validated input is null")
@@ -62,6 +62,7 @@ static func compile(input: MapLayoutInput, quality: Dictionary,
 	var roads: Dictionary = MapLayoutFastRoads.new(nodes, edge_rows, anchors, quality).route()
 	var edges: Dictionary = roads["edges"]
 	diagnostics["bridges"] = roads["bridges"]
+	diagnostics["stacked_roads"] = roads["stacked"]
 	var result: MapLayoutResult = MapLayoutResult.create({
 		"schema_version": MapLayoutResult.SCHEMA_VERSION,
 		"generator_version": source["generator_version"],

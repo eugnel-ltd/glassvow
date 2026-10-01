@@ -15,7 +15,7 @@ extends RefCounted
 ##
 ## Scalar arithmetic and square roots only, like the roads it reads.
 
-## Deck height where a crossing's governed span does not fit: the renderer draws
+## Deck height where a road's governed span does not fit: the renderer draws
 ## bridge masonry wherever a road stands above 0.15 m.
 const FALLBACK_DECK_M: float = 0.45
 ## Half the length of the straight segment the lower road crosses by.
@@ -76,33 +76,57 @@ func route_through(crossings: Array[Dictionary]) -> void:
 func span(edges: Dictionary, crossings: Array[Dictionary]) -> Array:
 	var bridges: Array = []
 	var spans: Dictionary = {}
-	var fallbacks: Dictionary = {}
+	var ats: Dictionary = {}
+	var short: Dictionary = {}
 	for crossing: Dictionary in crossings:
 		var upper: String = crossing["upper"]
 		var lower: String = crossing["lower"]
 		bridges.append([upper, lower])
+		if not spans.has(upper):
+			spans[upper] = []
+			ats[upper] = []
+		ats[upper].append(crossing["at"])
 		var option: Dictionary = MapGradeSeparation.span_option(upper, edges[upper],
 			lower, edges[lower])
 		if option.get("ok", false) == true:
-			if not spans.has(upper):
-				spans[upper] = []
 			spans[upper].append(option["span"])
 		else:
-			if not fallbacks.has(upper):
-				fallbacks[upper] = []
-			fallbacks[upper].append(crossing["at"])
-	if not spans.is_empty():
-		var merged: Dictionary = MapGradeSeparation.merged_spans(spans)
+			short[upper] = true
+	# A road with one crossing the governed span does not fit takes the plain
+	# deck over all of them, so no crossing of it is left at grade.
+	var governed: Dictionary = {}
+	for id: String in spans:
+		if short.has(id):
+			_lift(edges[id]["centerline"], ats[id])
+		else:
+			governed[id] = spans[id]
+	if not governed.is_empty():
+		var merged: Dictionary = MapGradeSeparation.merged_spans(governed)
 		var graded: Dictionary = {}
-		for id: String in spans:
+		for id: String in governed:
 			graded[id] = edges[id]
 		graded = MapGradeSeparation.apply_spans(graded, merged["spans"])
-		for id: String in spans:
+		for id: String in governed:
 			edges[id] = graded[id]
-	for id: String in MapLayoutCanonical.sorted_keys(fallbacks):
-		if not spans.has(id):
-			_lift(edges[id]["centerline"], fallbacks[id])
 	return bridges
+
+
+## The roads that are the upper of one crossing and the lower of another, by
+## edge ID. The governed contract has two levels, so such a road cannot stand
+## above one road and below another, and three roads that cross one another
+## between the same two rows would read as a junction. The lattice never makes
+## them (an edge moves one lane at most); this reports it should a layout.
+func stacked(crossings: Array[Dictionary]) -> Array[String]:
+	var uppers: Dictionary = {}
+	var lowers: Dictionary = {}
+	for crossing: Dictionary in crossings:
+		uppers[str(crossing["upper"])] = true
+		lowers[str(crossing["lower"])] = true
+	var out: Array[String] = []
+	for id: String in MapLayoutCanonical.sorted_keys(uppers):
+		if lowers.has(id):
+			out.append(id)
+	return out
 
 
 ## Where two roads first cross, as [a's progress, b's progress] in 0..1 of their
