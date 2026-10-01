@@ -26,7 +26,7 @@ Scenery, the Vigil and the gate are placed exactly as before: `MapScene.bind_lay
 
 ## Opening the map
 
-Every return to the map (after a fight, event, shop or rest) builds a fresh `WorldMapScreen`. What it builds from is kept for the act instead of being made again (#621):
+The first open of an act builds a `WorldMapScreen`; every return to the map within the act (after a fight, event, shop or rest) re-attaches that same screen (see [Keeping the screen](#keeping-the-screen)). What a screen is built from is kept for the act instead of being made again (#621):
 
 - **The act's catalogue.** `MapLandscapeAssets.for_act` decodes the act's artwork once and keeps that one catalogue until another act is asked for, so the previous act's artwork is released on an act change. The screen binds its opening act first, so it no longer decodes Act I's artwork and then the act it shows.
 - **The canonical input.** `WorldMapScreen` keeps the last `MapLayoutInput` it built and what it was built from; pricing the camera poses for every shape is most of what the input costs. `Main` already kept the generated layout for that input.
@@ -53,7 +53,32 @@ Measured on the M1 Max with a real renderer (debug, pad shape, `--map --map-timi
 
 The warm-up itself took 0.50 s (Act I) and 0.35 s (Act II) on its worker, and the longest frame while it ran was 13–15 ms, against 11–16 ms over as many idle frames just before it. The catalogue's textures hold the same video memory on both builds (57.6 MiB for Act I, measured around `MapLandscapeAssets.new`). The bench's `MAP_KEPT` row reads 43.9 MiB for Act II, as before, and 61.2 MiB for Act I against 61.0 MiB; that 0.2 MiB lies outside the catalogue, stays when the new pipeline runs serially on the main thread with no warm-up, and was not traced further.
 
-What remains of a warmed open is the screen itself: building `WorldMapScreen` (about 30–75 ms), generating the layout (about 30 ms), and the canonical input, camera registry, scenery filter and landscape geometry (about 300 ms, in one call) while the machine was loaded. Each of these runs as one indivisible step longer than a 16 ms frame, so none of them can be prepared ahead in idle frames on the main thread without a visible hitch, and this change does not try. Moving the layout and scenery filter of the next act onto a worker is the next step if the A12 needs it.
+What remained of a warmed open was the screen itself: building `WorldMapScreen` (about 30–75 ms), generating the layout (about 30 ms), and the canonical input, camera registry, scenery filter and landscape geometry (about 300 ms, in one call) while the machine was loaded. Each of these runs as one indivisible step longer than a 16 ms frame, so none of them can be prepared ahead in idle frames on the main thread without a visible hitch, and this change does not try. Moving the layout and scenery filter of the next act onto a worker is the next step if the A12 needs it.
+
+### Keeping the screen
+
+A return to the map within an act no longer builds a screen. When the route leaves the map, `Main._clear_route` hands the screen to a [`MapScreenKeep`](../../presentation/map/map_screen_keep.gd), which takes it off the tree and holds it with what it was built for: the map, the run, the act, the shape and the language. The next `_show_map` with the same identity re-attaches it and calls `WorldMapScreen.reopen`, which applies only what a run changes within an act:
+
+- each waystone whose node changed face (an unlit node the player has since visited, its bounty paid) is rebuilt, and every other waystone is kept;
+- the live, cleared and current waystones, the lit roads, the instruction, the camera's seat on the current node and the sealed door are set as `refresh` sets them;
+- whatever a fresh screen starts with is restored: no scripted walk, the default zoom, the pointer drift at rest, and the instruction undecided until the hint guide looks again, so the map-select hint, the selection bracket and keyboard focus behave as on a fresh screen.
+
+The layout, the scenery, the landscape and the title stand, because the identity guarantees they would bind the same. The run HUD is still built per open, as on every other routed screen. A screen is kept only when its layout is bound and no walk is under way, so the charting veil of an opt-in compile never keeps one.
+
+Anything else frees it. Another map (an act change, a new or resumed run, the title) releases it as `Main._map` is replaced; a shape or language change builds a new screen and frees the kept one (the shape it is kept under is the one it has when it is left, since a live screen follows a re-pick); an ended run releases it as it routes or as any screen replaces another, such as the run's end shown from the run menu during a fight, and a map left by an ended run is not kept. A run standing on the boss of an act that is not the last releases it before the next act's landscape warms, because the kept screen holds this act's artwork and only one act's may be held at a time.
+
+Off the tree, `MapScene` parks its stage at 2×2 (`MapScene.PARKED_STAGE`), which hands back the stage's render buffers (colour, 4x MSAA and depth: 48.5 MiB at the 1180×820 pad stage), and `_fit` sizes them again as the scene returns. The screen's own kept share is then 2.0 MiB in Act I and 2.1 MiB in Act II (0.8 MiB of it vertex and instance buffers by `Performance.RENDER_BUFFER_MEM_USED`; the texture counter underflows on this build, so the rest is not itemised).
+
+A screen can now enter the tree more than once, so `TransitionLayer.screen_in` numbers each entrance on its root and lets only the latest write: an entrance cut short by a route change does not resume against the next one. The reopen also stopped paying for two things every refresh paid for: `_focus_xz` keeps the candidate envelopes of the screen's graph instead of deriving them per call, and the bound node anchors are read from the screen's bind-time copy of the layout instead of `MapLayoutResult.to_dict`, a deep copy of the whole result that cost every focus, pick and projection pass about 7 ms.
+
+Measured on the M1 Max with a real renderer (debug, pad shape, `--map --map-timing --seed=1`, three interleaved runs each of this build and the one before while other work held the load average between 130 and 160), the medians from the call to a bound map, and to the first frame drawn after it, were:
+
+| Act | Before: reopen | Reopen (kept) | Rebuilt (caches only) | Kept video memory, before → after |
+|---|---|---|---|---|
+| I | 54.6 / 80.7 ms | 6.0 / 13.0 ms | 48.0 / 64.9 ms | 61.0 → 62.4 MiB (60.4 for the act, 2.0 for the screen) |
+| II | 51.0 / 72.9 ms | 6.0 / 12.3 ms | 49.0 / 71.4 ms | 43.9 → 45.9 MiB (43.8 for the act, 2.1 for the screen) |
+
+The bench's `rebuilt` row drops only the kept screen and opens once more, which is what every return did before. The first open of an act (`cold`, `warmed` and `early`) builds as before.
 
 ## What it does not guarantee
 

@@ -192,10 +192,13 @@ the production `WorldMapScreen`, layout, assets and HUD. The production layout i
 instead, which takes minutes per input (`docs/map/production-layout.md`).
 `tools/shot.sh --map --map-timing --seed=N` times whole `Main._show_map` calls
 from the bench's own clock (`tools/bench_map_open.gd`; nothing on the player path
-is instrumented): a cold open of Act I and two reopens as after a fight, then the
-same in Act II, one `MAP_OPEN` JSON row each with the time to the call's end
-(`total_ms`) and to the first frame drawn after it (`frame_ms`). After each act a
-`MAP_KEPT` row gives the video memory the kept act holds once the map is left,
+is instrumented): a cold open of Act I, two reopens as after a fight (the kept
+screen re-attached) and a `rebuilt` open (the kept screen dropped, the act's caches
+kept, as every return was before the screen was kept), then the same in Act II,
+one `MAP_OPEN` JSON row each with the time to the call's end (`total_ms`) and to
+the first frame drawn after it (`frame_ms`). After each act a `MAP_KEPT` row gives
+the video memory held once the map is left (`kept_mib`), split into the kept
+screen's share (`screen_mib`) and the act's caches (`act_mib`),
 then a `MAP_WARM` row times the act's landscape warm-up on its worker thread and
 the worst frame meanwhile, a `warmed` open follows the finished warm-up, and an
 `early` open starts the warm-up and opens at once, as resuming onto the map does.

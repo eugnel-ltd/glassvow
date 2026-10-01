@@ -275,8 +275,17 @@ func _hide_wipe() -> void:
 ## Every screen root's entrance: fade in with a 1.015 → 1 settle about the
 ## centre. The pivot needs a laid-out size, so the scale half waits one frame
 ## and is skipped when the root has none to offer.
+##
+## A root can enter more than once: the map screen is kept off the tree between
+## visits (`MapScreenKeep`). Each entrance is numbered on the root, and only the
+## latest may write, so an entrance cut short by a route change and resumed
+## when the root re-enters never fights the new one.
 func screen_in(root: Control) -> void:
-	if instant or Preferences.active.reduce_motion or root == null:
+	if root == null:
+		return
+	var entry: int = _entrance_of(root) + 1
+	root.set_meta(&"screen_in", entry)
+	if instant or Preferences.active.reduce_motion:
 		return
 	root.modulate.a = 0.0
 	var tree: SceneTree = get_tree()
@@ -284,7 +293,8 @@ func screen_in(root: Control) -> void:
 		root.modulate.a = 1.0
 		return
 	await tree.process_frame
-	if not is_instance_valid(root):
+	if not is_instance_valid(root) or not root.is_inside_tree() \
+			or _entrance_of(root) != entry:
 		return
 	var sized: bool = root.size.x > 0.0 and root.size.y > 0.0
 	if sized:
@@ -293,12 +303,18 @@ func screen_in(root: Control) -> void:
 	# The tween is bound to the root, so a mid-entrance route swap kills it
 	# with the screen instead of writing into freed memory.
 	var entrance: Callable = func(eased: float) -> void:
-		if not is_instance_valid(root):
+		if not is_instance_valid(root) or _entrance_of(root) != entry:
 			return
 		root.modulate.a = eased
 		if sized:
 			root.scale = Vector2.ONE * lerpf(SCREEN_IN_SCALE, 1.0, eased)
 	Motion.bez(root, entrance, SCREEN_IN_TIME, Motion.SCREEN_IN)
+
+
+## The number of the latest `screen_in` on `root`; zero before its first.
+static func _entrance_of(root: Control) -> int:
+	var entry: int = root.get_meta(&"screen_in", 0)
+	return entry
 
 
 ## The combat entry: dark covers the screen the moment this is called, then
