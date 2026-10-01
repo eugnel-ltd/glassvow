@@ -16,7 +16,7 @@ applies_when:
 symptoms:
   - "--strict reported 226 anchors carrying no (symbol); the audit worked a set of 225"
   - "Roughly a third of those anchors had already drifted, and a mechanical annotation pass would have stamped each broken one as verified"
-  - "enemy_view.gd:2148 really is inside _process, but the sentence citing it is about set_ward_shell, 165 lines away"
+  - "enemy_view.gd:2163 really is inside _process, but the sentence citing it is about set_ward_shell, 165 lines away"
   - "enemy_view.gd:496-526 opens on NAME_BOSS while its paragraph means IDLE_PROFILES, twenty-one lines in"
   - "The checker fell back to any line mentioning the name, so a call site satisfied an (in set_profile) annotation in a file declaring no such symbol"
 related_components:
@@ -80,7 +80,7 @@ trust them. The docs would end up **more** misleading once annotated than they
 were bare.
 
 The clearest instance was measured live at the audit commit. `docs/actor-animation-checklist.md`
-carried `enemy_view.gd:2148+` in a sentence about the ward shell. Line 2148 is
+carried `enemy_view.gd:2163+` in a sentence about the ward shell. Line 2148 is
 genuinely inside `_process`, which is declared at
 `presentation/combat/enemy_view.gd` (`_process`). The function the sentence is about,
 `set_ward_shell`, is declared at `presentation/combat/enemy_view.gd` (`set_ward_shell`) — 165
@@ -241,7 +241,7 @@ whose extension the old resolver had been matching.
 The `(in set_profile)` case I could **not** confirm, and the honest thing is to
 say so rather than repeat it. There is no `(in set_profile)` annotation in
 `docs/` or `CONCEPTS.md` at any of the four commits; the only `set_profile`
-annotation on the branch is `` `enemy_view.gd:2857` (`set_profile`) `` in
+annotation on the branch is `` `enemy_view.gd:2869` (`set_profile`) `` in
 [Drive the lab the way the game drives it](../tooling-decisions/drive-the-lab-the-way-the-game-drives-it.md),
 and that one is correct — `func set_profile` is declared at
 `presentation/combat/enemy_view.gd` (`set_profile`). The likeliest reading is that the
@@ -409,7 +409,7 @@ reports:
 ```
 DISAGREE  docs/actor-animation-checklist.md:362  enemy_view.gd:41-43
           structural=(PREVIEW_WARM) prose=(PREVIEW_PULSE)  -> write prose
-DISAGREE  docs/actor-animation-checklist.md:484  enemy_view.gd:3076-3085
+DISAGREE  docs/actor-animation-checklist.md:484  enemy_view.gd:3088-3097
           structural=(ANYWHERE) prose=(crack)  -> write prose
 DISAGREE  docs/actor-animation-checklist.md:544  combat_screen.gd:1175-1196
           structural=(_slots) prose=(_stand)  -> write prose

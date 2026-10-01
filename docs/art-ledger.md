@@ -107,8 +107,8 @@ three were technically shippable — see the rejection note below.
 ### `enemies/fx/burst.png` — 512×512 RGB, `enemies/fx/ember.png` — 128×128 RGB
 
 Death-rite particle sprites, sampled by `presentation/combat/enemy_view.gd`
-(the path is built at `enemy_view.gd:4171`). Both are **RGB with no alpha
-channel** — that is deliberate and `enemy_view.gd:4197` documents why.
+(the path is built at `enemy_view.gd:4212`). Both are **RGB with no alpha
+channel** — that is deliberate and `enemy_view.gd:4238` documents why.
 Introduced by 26b49af. **Prompt not recorded** — reconstruct and add it here
 the next time these are touched.
 

@@ -56,7 +56,7 @@ arrive; `CombatScreen._enter` moved the Control with the exact `Motion.ENTER`
 curve, the hero's −70px and the `_stand` re-anchor, and had no stagger. The
 Control is the correct element and the stagger is the correct behaviour, so they
 are one function: `EnemyView.enter(delay, done)` owns the motion and the fill,
-`_play_entrance` owns the seat delay and the re-anchor (`enemy_view.gd:3035` (`enter`),
+`_play_entrance` owns the seat delay and the re-anchor (`enemy_view.gd:3047` (`enter`),
 `combat_screen.gd:1530` (`_play_entrance`)). The `view.enter(...)` call in `_build_battlefield`,
 which fired a frame earlier and set foe alpha to zero under the other path's
 nose, is gone.
@@ -83,7 +83,7 @@ Benchmark runs idle at two levels:
 Here: the **mesh layer matches**. `IDLE_PROFILES` matches the benchmark
 `PROFILE` table, `_read_idle` overlays the character's `mesh` block, and the six
 terms run in `BODY_SHADER` (`enemy_view.gd:589-609` (`IDLE_PROFILES`),
-`enemy_view.gd:2819-2823` (`_read_idle`), `enemy_view.gd:956-1281` (`BODY_SHADER`)).
+`enemy_view.gd:2831-2835` (`_read_idle`), `enemy_view.gd:958-1283` (`BODY_SHADER`)).
 
 **The kind layer is built (2026-07-27).** All four shapes, at the source's own
 amplitudes and periods, composed onto the vessel beside the recoil rather than
@@ -134,7 +134,7 @@ card's first non-Art hit, and for a foe on an attack intent
 (`src/ui/combat.js:1953-1977`, `src/ui/drain.js:494-505`, `src/ui/drain.js:898-925`).
 
 Here: built as `EnemyView.lunge` with the same three kind sets and keyframe
-numbers (`enemy_view.gd:294-329` (`HEAVY_KINDS`), `enemy_view.gd:2987-3010` (`lunge`)). The hero swings once
+numbers (`enemy_view.gd:294-329` (`HEAVY_KINDS`), `enemy_view.gd:2999-3022` (`lunge`)). The hero swings once
 per non-Art card (`combat_screen.gd:1785`, `combat_screen.gd:2086-2091`); a foe
 telegraphs, waits 300ms, then lunges (`combat_screen.gd:2281-2287`). Durations
 and keyframes match; the
@@ -152,7 +152,7 @@ Poison, burn, self-damage and thorns deliberately do **not** recoil the body
 
 Here: direct hits now give foes and the hero the same ±9px displacement, 3%
 squash, 300ms duration and 160ms square-wave white material beat
-(`enemy_view.gd:2511-2565`, `combat_screen.gd:2100`,
+(`enemy_view.gd:2523-2577`, `combat_screen.gd:2100`,
 `combat_screen.gd:2195`). The recoil still differs: the benchmark reaches its
 peak at 25% (75ms) with `cubic-bezier(.22,1,.36,1)`, while Godot starts at the
 peak at 0ms and decays with `TRANS_QUINT/EASE_OUT`.
@@ -160,7 +160,7 @@ peak at 0ms and decays with `TRANS_QUINT/EASE_OUT`.
 The white beat's wiring closed 2026-07-31: `take_hit` now fires `_white_beat`
 only on the `direct` branch — with the recoil, the way `meshFlash` only rides
 inside `choreoHit` — so poison, facet shatter and indirect hero damage no
-longer flash (`enemy_view.gd:3190` (`take_hit`)).
+longer flash (`enemy_view.gd:3202` (`take_hit`)).
 
 ### 1.5 Hurt flash — **FIX** the extra hero nudge
 
@@ -171,16 +171,16 @@ with an 18px white glow and `X +7px`, at 60% `X -5px`. Fires on **every**
 
 Here: the foe beat is live. It peaks after 90ms, lasts 300ms and follows the
 benchmark's +7/−5px nudge; poison gets it without recoil
-(`enemy_view.gd:2570-2601`, `combat_screen.gd:2160-2163`). The material is an
+(`enemy_view.gd:2582-2613`, `combat_screen.gd:2160-2163`). The material is an
 intentional shader translation rather than a numeric CSS match: benchmark
 brightness 2.6, saturation .4 and an 18px halo become `flare_gain = 1`, up to
 1.8× albedo with 10% desaturation, a ×4 light term and a small rim emission
-(`enemy_view.gd:1010-1044`).
+(`enemy_view.gd:1012-1046`).
 
 The extra hero nudge closed 2026-07-31: an indirect blow to the hero now moves
 nothing at all — the `_nudge` leg of `take_hit` is a foe's, alongside the
 flare, because `hurtFlash` hangs off `.enemy.hurt` and carries its own
-keyframe nudge (`enemy_view.gd:3190` (`take_hit`)).
+keyframe nudge (`enemy_view.gd:3202` (`take_hit`)).
 
 ### 1.6 Stagger — **FIX** the curve
 
@@ -190,7 +190,7 @@ Benchmark: `choreoStagger` — foe art only, 360ms
 ignition (`src/ui/combat.js:1991-2000`, `src/ui/drain.js:551-570`).
 
 Here: built and wired to dying. `EnemyView.stagger` is the same 5px / −2.5° /
-0.6 modulate / 0.36s (`enemy_view.gd:3137-3148` (`stagger`)). `_die` awaits it before
+0.6 modulate / 0.36s (`enemy_view.gd:3149-3160` (`stagger`)). `_die` awaits it before
 `mark_dead` (`presentation/combat/combat_screen.gd` (`_die`)). The `STAGGERED` status still floats
 its label and runs `reseam` (`presentation/combat/combat_screen.gd` (`_handle_event`)) — that is the facet
 reseam, not this death slump, and matches the benchmark's split. The remaining
@@ -207,7 +207,7 @@ paths go white (`src/styles.css:95-110`, `src/ui/drain.js:551-566`).
 Here: boss-only timing, 820ms world-stop, 110ms hit-stop, .22s transition,
 .07 saturation, .85 brightness and .09s tremble are built and wired
 (`combat_screen.gd:155-160` (`WORLDSTOP_SAT`), `presentation/combat/combat_screen.gd` (`_hit_player`),
-`enemy_view.gd:236-239`, `enemy_view.gd:2032-2038`). The actor pixels
+`enemy_view.gd:236-239`, `enemy_view.gd:2047-2053`). The actor pixels
 desaturate too, unlike the benchmark's separate mesh canvas; that is a documented
 structural departure (`presentation/combat/combat_screen.gd` (`WORLDSTOP_SAT`)).
 
@@ -231,7 +231,7 @@ shards hold full opacity 650ms, fade over 380ms; the corpse class switches at 83
 (`src/ui/combat.js:2011-2037`, `src/vfx.js:283-345`, `src/ui/drain.js:566-584`).
 
 Here: `mark_dead(beat)` ignites over the caller's beat — combat passes 0.2s /
-0.32s boss (`combat_screen.gd:2244-2247`, `enemy_view.gd:3770-3801` (`mark_dead`)) — then real
+0.32s boss (`combat_screen.gd:2244-2247`, `enemy_view.gd:3782-3813` (`mark_dead`)) — then real
 `RigidBody3D` shards with engine gravity, per-shard cool and dissolve, burst
 flash, embers and camera shake. Ignition timing matches; physics is the Godot
 substitute and stays. Its numbers deliberately differ: Godot uses `gravity_scale = 2.4`,
@@ -280,7 +280,7 @@ skew reduced 35%, from a base of `scale(1,.24)`, opacity `.62`, blur `1.5px`
 (`src/char-meta.js:8`, `src/ui/combat.js:1771-1819`, `src/styles.css:767-782`).
 
 Here: derived by projecting the silhouette along the key light
-(`enemy_view.gd:2397` (`_update_shadow`)). **Built out 2026-07-27** — the grade
+(`enemy_view.gd:2409` (`_update_shadow`)). **Built out 2026-07-27** — the grade
 above was the shape; the lift response was neither matched nor alive.
 
 Two defects, both fixed. **It never ran.** `_update_shadow` was called at build,
@@ -340,17 +340,17 @@ Benchmark has two separate things:
 
 Here: the shell was decided and built against "an envelope around the body". It
 is a cut gem held in front of the mob (`WARD_*` block, `enemy_view.gd:219-253` (`WARD_OPACITY`),
-`set_ward_shell` at `enemy_view.gd:2696-2732` (`set_ward_shell`)) — ordered facets, no hash, breaks on
+`set_ward_shell` at `enemy_view.gd:2708-2744` (`set_ward_shell`)) — ordered facets, no hash, breaks on
 its own cuts. Initial grow (560ms), opacity (.4) and colour match. Re-gain now
 matches too (closed 2026-07-31): sites shrink for 252ms then regrow for 308ms,
 two smoothsteps on separate clocks, mirroring `mesh.js`'s 'shrink'/'grow'
 phase pair (`enemy_view.gd:230-231` (`WARD_SHRINK`),
-`enemy_view.gd:2738` (`_step_ward`)). Full design reasoning is in
+`enemy_view.gd:2750` (`_step_ward`)). Full design reasoning is in
 `docs/fracture-model.md` §9.
 
 The actor chip now pulses on first and subsequent gains: a first hidden→visible
 gain waits one layout frame before starting, then every gain runs 0.4s to a
-1.3-scale / 22px-glow peak and home (`enemy_view.gd:4951` (`_block_pulse`)).
+1.3-scale / 22px-glow peak and home (`enemy_view.gd:4992` (`_block_pulse`)).
 Those numbers match, and since 2026-07-31 the curve does too: one linear clock
 through the keyframe list read via `Motion.css_keyframe` with `CSS_EASE_OUT`,
 which is exactly what `animation: blockPulse 0.4s ease-out` computes.
@@ -365,7 +365,7 @@ real raster facet pips — the rule survives only on the HP-preview bar
 (`src/styles.css:987-1063`).
 
 Here: `FacetPips.pop` is the 1.35 peak over 0.4s (`facet_pips.gd:127-134` (`pop`)), driven
-from `set_facets(..., pop)` (`enemy_view.gd:4985-4992` (`set_facets`)). HP-preview `pvPulse` is
+from `set_facets(..., pop)` (`enemy_view.gd:5026-5033` (`set_facets`)). HP-preview `pvPulse` is
 ported on the rail (`PREVIEW_PULSE` 0.9 / dip 0.4, `enemy_view.gd:41-43`,
 `presentation/combat/enemy_view.gd` (`_process`)) — that is the live rule, not a pip animation.
 The duration and 1.35 peak match, and since 2026-07-31 the curve does too —
@@ -379,8 +379,8 @@ Benchmark: no entry or exit animation. The row is rebuilt synchronously
 (`src/ui/combat.js:660-674`, `src/ui/drain.js:635-645`). `.schip.pop` exists in CSS
 but nothing ever adds the class (`src/styles.css:890-891`) — dead.
 
-Here: `StatusRow` / `StatusChip` are integrated (`enemy_view.gd:3684-3688`,
-`enemy_view.gd:4126-4127`). No enter/exit animation — correct. The old
+Here: `StatusRow` / `StatusChip` are integrated (`enemy_view.gd:3696-3700`,
+`enemy_view.gd:4167-4168`). No enter/exit animation — correct. The old
 `" · "`-joined `Label` is gone.
 
 ### 3.5 Intent telegraph — **FIX** the curve and transient glow
@@ -408,7 +408,7 @@ pulse and goes to a solid 22px glow with `brightness(1.25)`
 Closed 2026-07-31: `set_targetable(on, hovered)` carries both states — the
 1s 6→18px pulse on every legal target (`css_pulse` clock in `_process`), and
 hover killing the pulse for a solid 22px rim with a 1.25 lift on the art
-(`enemy_view.gd:4350` (`set_targetable`)). An armed single-target card now
+(`enemy_view.gd:4391` (`set_targetable`)). An armed single-target card now
 lights ALL legal foes; the hovered one alone goes still
 (`combat_screen.gd:3291`). The rim keeps the character table's aim tint rather
 than the benchmark's flat red — the merged rim/aim outline departure,
@@ -493,8 +493,8 @@ shadow, idle deformation, ward shell and hit recoil as a foe. It explicitly
 
 Here: the hero is an `EnemyView` with `tier: hero` (`combat_screen.gd:1024-1033`).
 Same idle, shadow, ward gem and recoil. `mark_dead` and `shatter` refuse a hero,
-and player damage never calls `crack` (`enemy_view.gd:3076-3085`,
-`enemy_view.gd:3770-3801` (`mark_dead`), `combat_screen.gd:2193-2195`). Chrome matches the
+and player damage never calls `crack` (`enemy_view.gd:3088-3097`,
+`enemy_view.gd:3782-3813` (`mark_dead`), `combat_screen.gd:2193-2195`). Chrome matches the
 benchmark DOM: no intent, no facet row, no name line on the hero plate
 (`presentation/combat/enemy_view.gd` (`_build_chrome`), `presentation/combat/enemy_view.gd` (`_build_chrome`)). `hud_bar.gd` still
 carries run chrome (energy, lantern, piles); the hero plate owns HP and ward on
@@ -507,7 +507,7 @@ in pad landscape (`src/ui/assets.js:43-48`,
 Godot read the aspect from the content book from 2026-07-31
 (`combat_screen.gd:1608` (`_hero_look`)); the hard-code survives only as the
 no-run fallback for labs and tests. The square 285×285px box remains
-(`enemy_view.gd:1544-1556`).
+(`enemy_view.gd:1546-1558`).
 
 ### 5.2 `footX` / `footY` — **KEEP** the offsets; stage data differ
 
@@ -555,7 +555,7 @@ backdrop, mid, ledge — with mist between mid and ledge
 against painted ground again. See appendix for layer visibility and drift.
 
 The offset mechanism is live: metadata `footX` / `footY` are read and `_stand`
-applies both against the battlefield ground edge (`enemy_view.gd:1544-1556`,
+applies both against the battlefield ground edge (`enemy_view.gd:1546-1558`,
 `combat_screen.gd:1175-1196`). It is not full stage-data parity. Godot currently
 freezes act-1 art and `GROUND_Y = 232`, while the benchmark uses 220 in act 2;
 current `duskfang.scale` is 1.77 versus the benchmark's .95
@@ -571,9 +571,9 @@ the painted silhouette; only its missing-art fallback is a blob
 `src/ui/combat.js:1795-1818`, `src/styles.css:769-778`).
 
 Godot derives eight of the nine from the painting alpha, the ground plane and the
-key light (`enemy_view.gd:2215` (`_read_contact`), `enemy_view.gd:2397`
+key light (`enemy_view.gd:2230` (`_read_contact`), `enemy_view.gd:2409`
 (`_update_shadow`)). **The ninth, `dy`, is now read** (2026-07-27,
-`enemy_view.gd:2847` (`_read_hover`)) — this entry previously called the whole
+`enemy_view.gd:2859` (`_read_hover`)) — this entry previously called the whole
 block vestigial and that was wrong about one knob.
 
 Contact point, lean, length and softening are all in the image or in the light.
@@ -593,7 +593,7 @@ corrected accordingly.
 `_stage.render_target_update_mode = SubViewport.UPDATE_ALWAYS`, one stage per
 actor. `oversample = 2.0` and MSAA 4× remain the chosen baseline, but the stage
 now multiplies that size by the live canvas scale, rounds to 64px and caps at
-2048² on window-size changes (`enemy_view.gd:1577-1641`). Measured by the organiser in
+2048² on window-size changes (`enemy_view.gd:1579-1643`). Measured by the organiser in
 `docs/actor-stage-frame-budget.md`:
 
 - **Current whole product:** #105's exported-combat matrix, proposed P8.1 Mac
