@@ -61,6 +61,10 @@ TABLE = {
                    "C_edge": rows(2, "edge"), "A": rows(2, "none", win_ways=("shatter", "edge")),
                    "R": rows(0, "none")},
 }
+# The flame-aware adaptive arm plays as A in the fixture, so every gate it reads
+# grades as A's floor row does; one test moves it apart.
+for _arms in TABLE.values():
+    _arms["A_lit"] = copy.deepcopy(_arms["A"])
 
 
 def write_table(directory: Path, table: dict = TABLE, commit: str = "c0ffee") -> None:
@@ -118,13 +122,39 @@ class BalanceWaysTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             write_table(Path(temp))
             result = ways.grade(Path(temp), SEEDS)
-        self.assertEqual(["PASS"] * 7, verdicts(result, (0, "full")))
-        self.assertEqual(["FAIL"] * 7, verdicts(result, (0, "fresh")))
+        self.assertEqual(["PASS"] * 9, verdicts(result, (0, "full")))
+        self.assertEqual(["FAIL"] * 9, verdicts(result, (0, "fresh")))
         self.assertEqual("n/a", verdicts(result, (5, "fresh"))[0])
         self.assertEqual("n/a", verdicts(result, (5, "fresh"))[4])
         stats = result["cells"][0, "full"]["stats"]
         self.assertEqual((0.7, 0.4), (float(stats["C_edge"]["steady1"]), float(stats["C_edge"]["true2"])))
         self.assertNotIn("steady1", stats["A"])
+        self.assertNotIn("steady1", stats["A_lit"])
+
+    def test_g3_and_g6_read_a_lit_and_keep_a_as_the_floor(self) -> None:
+        self.assertEqual(("none", "lit"), ways.ARMS["A_lit"])
+        lit = ways.sim_command("godot", 0, "full", "A_lit", 13000, 3, Path("/l.json"))
+        self.assertIn("--way=none", lit)
+        self.assertIn("--build=lit", lit)
+        table = copy.deepcopy(TABLE)
+        # A_lit wins 9 of 10, all Shatter: G3 (above +15 pp) and G6 fail on it;
+        # A, unchanged, still passes both floor rows.
+        table[0, "full"]["A_lit"] = rows(9, "none", win_ways=("shatter",))
+        with tempfile.TemporaryDirectory() as temp:
+            write_table(Path(temp), table)
+            result = ways.grade(Path(temp), SEEDS)
+            text = ways.render(result)
+        gates = result["cells"][0, "full"]["gates"]
+        self.assertEqual(["PASS", "PASS", "FAIL", "PASS", "PASS", "FAIL", "PASS", "PASS", "PASS"],
+                         [gate[-1] for gate in gates])
+        self.assertIn("A_lit 90.0%", gates[2][1])
+        self.assertIn("A 60.0%", gates[7][1])
+        self.assertIn("of 9 A_lit wins", gates[5][1])
+        self.assertIn("of 6 A wins", gates[8][1])
+        intervals = result["cells"][0, "full"]["intervals"]
+        self.assertTrue(intervals[2][0].startswith("A_lit - ") and intervals[7][0].startswith("A - "))
+        self.assertIn("| A_lit | 9/10 | 90.0% |", text)
+        self.assertIn("| G3 floor: the commit-blind adaptive arm |", text)
 
     def test_g5_grades_the_fresh_pool_on_steady_alone(self) -> None:
         def g5(steady: int) -> str:
@@ -163,6 +193,7 @@ class BalanceWaysTest(unittest.TestCase):
 
         self.assertIn("missing flame metrics", broken(lambda t: t[5, "full"]["C_edge"][3].pop("flame")))
         self.assertIn("per-fight rates", broken(lambda t: t[0, "full"]["A"][0]["flame"].update(rates={})))
+        self.assertIn("do not pair", broken(lambda t: t[0, "full"]["A_lit"].pop()))
         self.assertIn("malformed flame reading",
                       broken(lambda t: t[0, "full"]["C_lantern"][2]["flame"]["acts"].append({})))
         self.assertIn("do not pair", broken(lambda t: t[0, "fresh"]["R"].pop()))
