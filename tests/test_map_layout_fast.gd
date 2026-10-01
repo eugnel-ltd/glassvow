@@ -10,29 +10,34 @@ const VIGIL_PATH: String = "user://test_map_layout_fast_vigil_v2.json"
 ## the 200 ms budget on the evidence host.
 const GENERATE_GUARD_MS: float = 1000.0
 const SEEDS: Array[int] = [1, 42, 717, 17634, 543001]
+## A pair of waystones may stay close at the farthest zoom only when both stand
+## within this many metres of a ravine's centre line.
+const RAVINE_CROWDED_M: float = 4.0
+## The most waystones a map may stand on a ravine's pier.
+const MAX_PIERS: int = 4
 ## Geometry digest (node anchors and routed edges) per "seed/act number",
 ## recorded by tools/probe_map_fast_layout.gd in a separate process. A change
 ## here is a deliberate layout change and belongs in its own commit.
 const GOLDEN_GEOMETRY: Dictionary = {
-	"1/1": "428ba54522f352c883b678caceb0cd972a3c4e20c2e8095fc41fcd82f2061c4c",
-	"1/2": "2a615ca50974444c7a2d2aad05beb801925a84f5fae646d7c31cb3d1d4ad6d24",
-	"1/3": "2a615ca50974444c7a2d2aad05beb801925a84f5fae646d7c31cb3d1d4ad6d24",
+	"1/1": "21a655653a1e645b050de71ee41f1baa636db70edb065c370781f528187e6dd8",
+	"1/2": "f547670ffc0058cc84c1c15fd6a177b2f3e160052723c874f0aa4533cf781b9d",
+	"1/3": "f547670ffc0058cc84c1c15fd6a177b2f3e160052723c874f0aa4533cf781b9d",
 	"1/4": "28ede9f07c4005d86dfa1d259ff5f2db3e882558de845541db366d2549f8aa02",
-	"42/1": "73bc81221af38b5d001a0b0d5a8c79b75003f404cb6faf95349503afe9b5832a",
-	"42/2": "02759e7f2cf7d250bd82832e3b7506e1ba41a54e1d0ac1154d11e52ab00da3a1",
-	"42/3": "02759e7f2cf7d250bd82832e3b7506e1ba41a54e1d0ac1154d11e52ab00da3a1",
+	"42/1": "1c3dea8c17286a3e5cd5884a6e6cb2adf7e3062c1fd6ee158a291c8667dfe175",
+	"42/2": "4c7a0810c2b6c926405a7724b22172b9ed07b29eccd72e9e21aa7b7e01b4f5c6",
+	"42/3": "4c7a0810c2b6c926405a7724b22172b9ed07b29eccd72e9e21aa7b7e01b4f5c6",
 	"42/4": "28ede9f07c4005d86dfa1d259ff5f2db3e882558de845541db366d2549f8aa02",
-	"717/1": "f07d202dc4161fdad95e6420083c246fbc2160fc4e4332e20e0fd09d82588d61",
-	"717/2": "c9a4f5d6b930861ac7f30c700658c61e404024674578fc0dd2ab6a5d6d4dee63",
-	"717/3": "c9a4f5d6b930861ac7f30c700658c61e404024674578fc0dd2ab6a5d6d4dee63",
+	"717/1": "c06075b97e34bfd3704fec71f2f04777b597d095eb6fe28dd6565f76c04bb26e",
+	"717/2": "f8e82d96e543ba85c1b8386e88779f77acb995845fbe34932a2ca4f9f76acd05",
+	"717/3": "f8e82d96e543ba85c1b8386e88779f77acb995845fbe34932a2ca4f9f76acd05",
 	"717/4": "28ede9f07c4005d86dfa1d259ff5f2db3e882558de845541db366d2549f8aa02",
-	"17634/1": "fc8cfc5500a8f6713ee203b9104179e0cdd280d0591fb594b85cc4d7c19d07f0",
-	"17634/2": "fc8cfc5500a8f6713ee203b9104179e0cdd280d0591fb594b85cc4d7c19d07f0",
-	"17634/3": "fc8cfc5500a8f6713ee203b9104179e0cdd280d0591fb594b85cc4d7c19d07f0",
+	"17634/1": "728d82b09cb0c13e0580a40308a5456283b25ec94c0375c0ef9dee78f6711d34",
+	"17634/2": "728d82b09cb0c13e0580a40308a5456283b25ec94c0375c0ef9dee78f6711d34",
+	"17634/3": "728d82b09cb0c13e0580a40308a5456283b25ec94c0375c0ef9dee78f6711d34",
 	"17634/4": "28ede9f07c4005d86dfa1d259ff5f2db3e882558de845541db366d2549f8aa02",
-	"543001/1": "72d61c708644d198548761075f97c83844c31051d50ce5246c87aae7b969b511",
-	"543001/2": "5c9107452eb0b120b01ed1ad4591cbbe54b0b8bb5cfbe21e86f17670b6072536",
-	"543001/3": "5c9107452eb0b120b01ed1ad4591cbbe54b0b8bb5cfbe21e86f17670b6072536",
+	"543001/1": "94b85aa5bd94496390ed887731aa6521b2901e78cc2b47c2a9ee7ec724261112",
+	"543001/2": "689db14b9ba21ec01e62b761645370edbbb36cbe15653d8e9a20b285f38ba757",
+	"543001/3": "689db14b9ba21ec01e62b761645370edbbb36cbe15653d8e9a20b285f38ba757",
 	"543001/4": "28ede9f07c4005d86dfa1d259ff5f2db3e882558de845541db366d2549f8aa02",
 }
 
@@ -50,6 +55,7 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 static func run(fails: Array[String]) -> void:
 	_policy_defaults(fails)
 	_constants_follow_the_registry(fails)
+	_three_crossing_roads_are_reported(fails)
 	var quality: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(
 		"res://content/map/map-quality-v2.json"))
 	var content: ContentDB = ContentDB.load_full()
@@ -87,20 +93,73 @@ static func _constants_follow_the_registry(fails: Array[String]) -> void:
 	var shortest: float = INF
 	for shape: Array in quality["profiles"]["shapes"].values():
 		shortest = minf(shortest, float(shape[1]))
-	var zoom: float = MapCameraRig.ZOOM_STOPS[MapCameraRig.DEFAULT_STOP]
+	var zoom: float = MapCameraRig.ZOOM_STOPS[MapCameraRig.ZOOM_STOPS.size() - 1]
 	var tilt: float = deg_to_rad(absf(MapCameraRig.TILT_DEGREES))
-	var needed: float = (2.0 * ink + clearance) / (shortest / zoom * sin(tilt))
-	_check(fails, MapLayoutFast.LANE_GAP_M >= needed
-			and MapLayoutFast.LANE_GAP_M - needed < 0.01,
-		"LANE_GAP_M %.4f matches the registry's default-zoom phone clearance %.4f"
-			% [MapLayoutFast.LANE_GAP_M, needed])
-	var along: float = (2.0 * ink + clearance) / (shortest / zoom)
-	_check(fails, MapLayoutFast.ROW_GAP_M >= along
-			and MapLayoutFast.ROW_GAP_M - along < 0.01,
-		"ROW_GAP_M %.4f matches the same clearance along the journey %.4f"
-			% [MapLayoutFast.ROW_GAP_M, along])
-	_check(fails, absf(MapLayoutFast.COT_TILT - 1.0 / tan(tilt)) < 1e-9,
+	var along: float = shortest / zoom
+	_check(fails, absf(MapLayoutFastSeating.FAR_PX_PER_M - along) < 1e-9,
+		"FAR_PX_PER_M %.6f is the phone's pixels per metre at the farthest zoom %.6f"
+			% [MapLayoutFastSeating.FAR_PX_PER_M, along])
+	_check(fails, absf(MapLayoutFastSeating.FAR_PX_PER_M_LANE - along * sin(tilt)) < 1e-9,
+		"FAR_PX_PER_M_LANE %.6f is the same across the journey under the tilt"
+			% MapLayoutFastSeating.FAR_PX_PER_M_LANE)
+	_check(fails, _pitch_matches(MapLayoutFastSeating.INK_PITCH_PX, _ink_pitch_px(quality)),
+		"INK_PITCH_PX %.2f holds two inks and the ink clearance (%.2f px)"
+			% [MapLayoutFastSeating.INK_PITCH_PX, _ink_pitch_px(quality)])
+	_check(fails, _pitch_matches(MapLayoutFastSeating.TOUCH_PITCH_PX, _touch_px(quality)),
+		"TOUCH_PITCH_PX %.2f holds one hit region (%.2f px)"
+			% [MapLayoutFastSeating.TOUCH_PITCH_PX, _touch_px(quality)])
+	_check(fails, absf(MapLayoutFastSeating.COT_TILT - 1.0 / tan(tilt)) < 1e-9,
 		"COT_TILT is the camera tilt's cotangent")
+	var worst: float = 0.0
+	for step: int in range(-120, 121):
+		var angle: float = float(step) * 0.173
+		worst = maxf(worst, absf(MapRavine.sine(angle) - sin(angle)))
+	_check(fails, worst < 1e-10, "the ravine's sine is within %s of the engine's" % str(worst))
+
+
+## The registry's ink pitch at the least two nodes' ink centres may stand: two
+## ink radii and the clearance, in pixels.
+static func _ink_pitch_px(quality: Dictionary) -> float:
+	var clearance: float = 0.0
+	for rule: Dictionary in quality["hard"]:
+		if str(rule["id"]) == "node_ink_clearance_px":
+			clearance = float(rule["limit"])
+	return 2.0 * _ink_radius_px(quality) + clearance
+
+
+static func _touch_px(quality: Dictionary) -> float:
+	return maxf(float(quality["calibration"]["shipping_touch_waystone"][
+		"phone_touch_floor_px"]), 2.0 * _ink_radius_px(quality))
+
+
+static func _ink_radius_px(quality: Dictionary) -> float:
+	var calibration: Dictionary = quality["calibration"]["shipping_touch_waystone"]
+	return float(calibration["ink_radius_px"]) * float(calibration["default_layout_scale"])
+
+
+## A constant covers the registry's figure with less than a pixel to spare.
+static func _pitch_matches(constant: float, needed: float) -> bool:
+	return constant >= needed and constant - needed < 1.0
+
+
+## Three roads that cross one another between the same two rows would need
+## three levels; the lattice never makes them, so they are built by hand here.
+static func _three_crossing_roads_are_reported(fails: Array[String]) -> void:
+	var quality: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(
+		"res://content/map/map-quality-v2.json"))
+	var nodes: Array = []
+	var anchors: Dictionary = {}
+	for column: int in range(3):
+		for row: int in range(2):
+			var id: String = "%d,%d" % [row, column]
+			nodes.append({"id": id, "row": row, "col": column})
+			anchors[id] = [5.14 * float(row), 0.0, 6.0 * float(column)]
+	var edges: Array = [{"id": "e0", "from": "0,0", "to": "1,2"},
+		{"id": "e1", "from": "0,1", "to": "1,1"}, {"id": "e2", "from": "0,2", "to": "1,0"}]
+	var roads: Dictionary = MapLayoutFastRoads.new(nodes, edges, anchors, quality).route()
+	_check(fails, roads["bridges"].size() == 3 and roads["stacked"] == ["e1"],
+		"three mutually crossing roads report the one that is above and below: %s"
+			% [roads["stacked"]])
 
 
 static func _live_layout(fails: Array[String], content: ContentDB,
@@ -130,7 +189,7 @@ static func _live_layout(fails: Array[String], content: ContentDB,
 	_check(fails, str(data["generator_version"]) == MapLayoutFast.VERSION
 			and not MapLayoutPolicy.is_compiler_input(input),
 		"%s is laid out by MapLayoutFast" % label)
-	_check_geometry(fails, label, input, data, quality)
+	_check_geometry(fails, label, input, data, quality, act <= 1)
 	_check_determinism(fails, label, input, quality, result, seed_value, act)
 	_check_playable(fails, label, screen, data, quality)
 	tree.root.remove_child(screen)
@@ -148,9 +207,12 @@ static func _capturing_generate(input: MapLayoutInput, quality: Dictionary,
 
 
 ## Every node and edge, endpoints exact, inside the governed envelopes, in
-## journey order, same-row lanes spaced and clear of every hero zone.
+## journey order, waystones spaced and clear of every hero zone. The roads' own
+## rules cost seconds to measure, so they are checked for `roads_too` (Acts I
+## and II; Acts II and III lay out identically, and Act IV has no crossing).
 static func _check_geometry(fails: Array[String], label: String,
-		input: MapLayoutInput, data: Dictionary, quality: Dictionary) -> void:
+		input: MapLayoutInput, data: Dictionary, quality: Dictionary,
+		roads_too: bool) -> void:
 	var nodes: Array = input.node_records()
 	var edges: Array = input.edge_records()
 	var anchors: Dictionary = data["node_anchors"]
@@ -161,7 +223,6 @@ static func _check_geometry(fails: Array[String], label: String,
 	var bounds: Dictionary = MapQualityEvaluator.node_candidate_bounds(
 		nodes, edges, quality)
 	var epsilon: float = float(quality["epsilon"]["world_m"])
-	var by_row: Dictionary = {}
 	for node: Dictionary in nodes:
 		var id: String = str(node["id"])
 		var anchor: Vector3 = _v3(anchors[id])
@@ -171,19 +232,9 @@ static func _check_geometry(fails: Array[String], label: String,
 				and anchor.z >= float(limit["min_z"]) - epsilon
 				and anchor.z <= float(limit["max_z"]) + epsilon,
 			"%s node %s stays inside its legal envelope" % [label, id])
-		var row: int = int(node["row"])
-		if not by_row.has(row):
-			by_row[row] = []
-		by_row[row].append([int(node["col"]), anchor.z])
-	for row_v: Variant in by_row:
-		var lanes: Array = by_row[row_v]
-		lanes.sort()
-		for i: int in range(lanes.size() - 1):
-			if int(lanes[i + 1][0]) - int(lanes[i][0]) == 1:
-				_check(fails, float(lanes[i + 1][1]) - float(lanes[i][1])
-						>= MapLayoutFast.LANE_GAP_M - epsilon,
-					"%s row %d lanes %d and %d are spaced" % [label, int(row_v),
-						int(lanes[i][0]), int(lanes[i + 1][0])])
+	_check_waystones(fails, label, nodes, anchors, quality)
+	if roads_too:
+		_check_roads(fails, label, input, data, quality)
 	for edge: Dictionary in edges:
 		var edge_id: String = str(edge["id"])
 		var route: Dictionary = routed.get(edge_id, {})
@@ -205,13 +256,121 @@ static func _check_geometry(fails: Array[String], label: String,
 		for zone_id: String in MapLayoutCanonical.sorted_keys(zones):
 			var zone: Dictionary = zones[zone_id]
 			var role: String = str(zone["role"])
-			if MapLayoutFast._exempt(str(node["type"]), role):
+			if MapLayoutFastSeating.exempt(str(node["type"]), role):
 				continue
 			var padding: float = float(quality["geometry"][
 				"%s_protected_zone" % role]["padding_m"])
 			_check(fails, MapQualityEvaluator._polygon_distance(rect,
 					MapQualityEvaluator._poly(zone["polygon"])) >= padding - epsilon,
 				"%s node %s keeps clear of %s" % [label, id, zone_id])
+
+
+## Waystones clear each other at the farthest zoom on the phone, and few stand
+## on a ravine's pier. The two give way to each other only where both cannot
+## hold: a pair may stay close only beside a ravine (its banks leave no room),
+## and a waystone may stand on a pier only where spacing needed the ravine's
+## ground or the layout reports no open point for it. The lattice itself puts
+## seven to eleven waystones a map there.
+static func _check_waystones(fails: Array[String], label: String, nodes: Array,
+		anchors: Dictionary, quality: Dictionary) -> void:
+	var ink_px: float = _ink_pitch_px(quality)
+	var touch_px: float = _touch_px(quality)
+	var epsilon_px: float = float(quality["epsilon"]["screen_px"])
+	var ids: Array = anchors.keys()
+	ids.sort()
+	var piers: int = 0
+	for i: int in range(ids.size()):
+		var a: Vector3 = _v3(anchors[ids[i]])
+		if MapRavine.holds(a.x, a.z, MapRavine.PIER_MARGIN):
+			piers += 1
+		for j: int in range(i + 1, ids.size()):
+			var b: Vector3 = _v3(anchors[ids[j]])
+			var along: float = absf(a.x - b.x) * MapLayoutFastSeating.FAR_PX_PER_M
+			var across: float = absf(a.z - b.z) * MapLayoutFastSeating.FAR_PX_PER_M_LANE
+			var apart: bool = sqrt(along * along + across * across) >= ink_px - epsilon_px \
+				and (along >= touch_px - epsilon_px or across >= touch_px - epsilon_px)
+			_check(fails, apart or (MapRavine.holds(a.x, a.z, RAVINE_CROWDED_M)
+					and MapRavine.holds(b.x, b.z, RAVINE_CROWDED_M)),
+				"%s waystones %s and %s clear each other at the farthest zoom"
+					% [label, ids[i], ids[j]])
+	_check(fails, piers <= MAX_PIERS, "%s %d waystones stand on a ravine's pier" % [label, piers])
+
+
+## Roads keep clear of the waystones and of each other, and where two cross the
+## upper one is bridged. The fast layout does not promise every governed road
+## rule, and these bounds are what it keeps: no road within its corridor of a
+## waystone it does not serve, no pair of roads close without crossing, at most
+## one crossing per map where the roads are too short for the governed span
+## (two ramps and the whole corridor overlap), and at most one pair of branches
+## per map that read as one road at the farthest zoom.
+static func _check_roads(fails: Array[String], label: String, input: MapLayoutInput,
+		data: Dictionary, quality: Dictionary) -> void:
+	var nodes: Array = input.node_records()
+	var anchors: Dictionary = data["node_anchors"]
+	var edges: Dictionary = data["edges"]
+	var corridor: Dictionary = quality["geometry"]["road_corridor"]
+	var reach: float = float(corridor["physical_half_width_m"]) \
+		+ float(corridor["world_clearance_m"])
+	var epsilon: float = float(quality["epsilon"]["world_m"])
+	var grazed: Array[String] = []
+	for edge_id: String in edges:
+		var edge: Dictionary = edges[edge_id]
+		var line: Array = edge["centerline"]
+		var low: Vector2 = Vector2(INF, INF)
+		var high: Vector2 = Vector2(-INF, -INF)
+		for point: Variant in line:
+			var xz: Vector2 = Vector2(_v3(point).x, _v3(point).z)
+			low = Vector2(minf(low.x, xz.x), minf(low.y, xz.y))
+			high = Vector2(maxf(high.x, xz.x), maxf(high.y, xz.y))
+		for node: Dictionary in nodes:
+			var node_id: String = str(node["id"])
+			var at: Vector3 = _v3(anchors[node_id])
+			if node_id == str(edge["from"]) or node_id == str(edge["to"]) \
+					or at.x < low.x - reach - 1.0 or at.x > high.x + reach + 1.0 \
+					or at.z < low.y - reach - 1.0 or at.z > high.y + reach + 1.0:
+				continue
+			var rect: PackedVector2Array = MapQualityEvaluator._node_world(at, quality)
+			for i: int in range(line.size() - 1):
+				var a: Vector3 = _v3(line[i])
+				var b: Vector3 = _v3(line[i + 1])
+				if reach - MapQualityEvaluator._segment_polygon(Vector2(a.x, a.z),
+						Vector2(b.x, b.z), rect) > epsilon:
+					grazed.append("%s past %s" % [edge_id, node_id])
+					break
+	_check(fails, grazed.is_empty(),
+		"%s roads stay clear of the waystones they do not serve: %s" % [label, grazed])
+	var diagnostics: Dictionary = MapLayoutFast.compile(input, quality, _assets)[
+		"diagnostics"]
+	_check(fails, diagnostics["stacked_roads"].is_empty(),
+		"%s no road is above one road and below another: %s"
+			% [label, diagnostics["stacked_roads"]])
+	var grade: Dictionary = MapGradeSeparation.evaluate(edges, quality)
+	var loose: int = 0
+	var short: int = 0
+	for violation: Dictionary in grade["violations"]:
+		if str(violation["metric_id"]) != "unrelated_edge_intersection_count":
+			continue
+		if str(violation["world"]["reason"]) == "insufficient_vertical_clearance":
+			short += 1
+		else:
+			loose += 1
+	_check(fails, loose == 0, "%s no two roads run close without crossing" % label)
+	_check(fails, short <= 1, "%s at most one crossing lacks the governed clearance (%d)"
+		% [label, short])
+	_check(fails, float(grade["hard_values"]["maximum_ramp_grade"])
+			<= MapGradeSeparation.MAXIMUM_RAMP_GRADE + epsilon,
+		"%s no ramp is steeper than the governed grade" % label)
+	var phone: Vector2i = StageShape.REFERENCES[&"phone-landscape"]
+	var profile: Dictionary = {"stage": [phone.x, phone.y],
+		"zoom": MapCameraRig.ZOOM_STOPS[MapCameraRig.ZOOM_STOPS.size() - 1],
+		"tilt": MapCameraRig.TILT_DEGREES, "height": MapCameraRig.CAM_HEIGHT,
+		"pose": [0.0, 0.0], "id": "phone-landscape/far"}
+	var hard: Dictionary = MapQualityEvaluator._index(quality["hard"])
+	var fanout: Dictionary = MapQualityEvaluator._fanout(profile, input.edge_records(),
+		edges, quality, hard)
+	_check(fails, fanout["violations"].size() <= 1,
+		"%s at most one pair of branches reads as one road at the farthest zoom (%d)"
+			% [label, fanout["violations"].size()])
 
 
 ## Same input, same digest: twice in this process, from a reordered input, and

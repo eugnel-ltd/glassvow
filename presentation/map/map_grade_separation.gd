@@ -39,9 +39,9 @@ static func apply(routes: Dictionary, quality: Dictionary) -> Dictionary:
 		var first_route: Dictionary = routes[str(edge_ids[0])]
 		var second_route: Dictionary = routes[str(edge_ids[1])]
 		options.append([
-			_span_option(str(edge_ids[0]), first_route,
+			span_option(str(edge_ids[0]), first_route,
 				str(edge_ids[1]), second_route),
-			_span_option(str(edge_ids[1]), second_route,
+			span_option(str(edge_ids[1]), second_route,
 				str(edge_ids[0]), first_route),
 		])
 	var best: Dictionary = {}
@@ -64,11 +64,11 @@ static func apply(routes: Dictionary, quality: Dictionary) -> Dictionary:
 			orientations.append(option["receipt"])
 		if not feasible:
 			continue
-		var merged: Dictionary = _merged_spans(spans_by_edge)
+		var merged: Dictionary = merged_spans(spans_by_edge)
 		if merged.get("ok", false) != true:
 			continue
 		var merged_rows: Dictionary = merged["spans"]
-		var graded_routes: Dictionary = _apply_spans(routes, merged_rows)
+		var graded_routes: Dictionary = apply_spans(routes, merged_rows)
 		var evaluation: Dictionary = evaluate(graded_routes, quality)
 		if evaluation.get("hard_pass", false) != true:
 			continue
@@ -192,7 +192,9 @@ static func evaluate(routes: Dictionary, quality: Dictionary) -> Dictionary:
 	}
 
 
-static func _span_option(elevated_id: String, elevated: Dictionary,
+## The span that lifts `elevated` over `ground` with the governed clearance, or
+## `{"ok": false, ...}` when the ramps do not fit. `elevated` must be all-ground.
+static func span_option(elevated_id: String, elevated: Dictionary,
 		ground_id: String, ground: Dictionary) -> Dictionary:
 	var line: Array = elevated["centerline"]
 	var ground_line: Array = ground["centerline"]
@@ -204,7 +206,7 @@ static func _span_option(elevated_id: String, elevated: Dictionary,
 		MapLayoutCanonical.float_value(elevated["corridor_width"])
 		+ MapLayoutCanonical.float_value(ground["corridor_width"])
 	) * 0.5
-	var overlap: Vector2 = _overlap_envelope(line, ground_line, limit)
+	var overlap: Vector2 = overlap_envelope(line, ground_line, limit)
 	if not is_finite(overlap.x):
 		return {"ok": false, "reason": "no swept XZ overlap envelope"}
 	var deck_start: float = maxf(0.0,
@@ -230,7 +232,8 @@ static func _span_option(elevated_id: String, elevated: Dictionary,
 			"ground_edge_id": ground_id, "span": span}}
 
 
-static func _merged_spans(spans_by_edge: Dictionary) -> Dictionary:
+## Merges each edge's overlapping spans into one.
+static func merged_spans(spans_by_edge: Dictionary) -> Dictionary:
 	var out: Dictionary = {}
 	for edge_id: String in MapLayoutCanonical.sorted_keys(spans_by_edge):
 		var spans: Array = spans_by_edge[edge_id].duplicate(true)
@@ -265,7 +268,8 @@ static func _merged_spans(spans_by_edge: Dictionary) -> Dictionary:
 	return {"ok": true, "spans": MapLayoutCanonical.ordered_dictionary(out)}
 
 
-static func _apply_spans(routes: Dictionary, spans_by_edge: Dictionary) -> Dictionary:
+## `routes` with each edge in `spans_by_edge` graded along its spans.
+static func apply_spans(routes: Dictionary, spans_by_edge: Dictionary) -> Dictionary:
 	var out: Dictionary = routes.duplicate(true)
 	for edge_id: String in MapLayoutCanonical.sorted_keys(spans_by_edge):
 		var edge: Dictionary = out[edge_id]
@@ -339,6 +343,10 @@ static func _better(a: Dictionary, b: Dictionary) -> bool:
 
 static func _xz_conflicts(routes: Dictionary, epsilon: float) -> Array[Dictionary]:
 	var ids: Array[String] = MapLayoutCanonical.sorted_keys(routes)
+	var boxes: Dictionary = {}
+	for id: String in ids:
+		var line: Array = routes[id]["centerline"]
+		boxes[id] = _bounds(line)
 	var out: Array[Dictionary] = []
 	for first_index: int in range(ids.size()):
 		var first: Dictionary = routes[ids[first_index]]
@@ -347,14 +355,20 @@ static func _xz_conflicts(routes: Dictionary, epsilon: float) -> Array[Dictionar
 			if str(first["from"]) in [str(second["from"]), str(second["to"])] \
 					or str(first["to"]) in [str(second["from"]), str(second["to"])]:
 				continue
-			var first_line: Array = first["centerline"]
-			var second_line: Array = second["centerline"]
-			var minimum: float = _polyline_xz_distance(
-				first_line, second_line)
 			var required: float = (
 				MapLayoutCanonical.float_value(first["corridor_width"])
 				+ MapLayoutCanonical.float_value(second["corridor_width"])
 			) * 0.5
+			# Lines whose bounds stay a corridor apart cannot conflict.
+			var a: PackedFloat64Array = boxes[ids[first_index]]
+			var b: PackedFloat64Array = boxes[ids[second_index]]
+			if a[0] > b[2] + required or b[0] > a[2] + required \
+					or a[1] > b[3] + required or b[1] > a[3] + required:
+				continue
+			var first_line: Array = first["centerline"]
+			var second_line: Array = second["centerline"]
+			var minimum: float = _polyline_xz_distance(
+				first_line, second_line)
 			if minimum >= required - epsilon:
 				continue
 			out.append({
@@ -365,6 +379,18 @@ static func _xz_conflicts(routes: Dictionary, epsilon: float) -> Array[Dictionar
 					first_line, second_line, epsilon),
 			})
 	return out
+
+
+## A line's XZ bounds as [min x, min z, max x, max z].
+static func _bounds(line: Array) -> PackedFloat64Array:
+	var box: PackedFloat64Array = PackedFloat64Array([INF, INF, -INF, -INF])
+	for point_v: Variant in line:
+		var point: Vector3 = _v3(point_v)
+		box[0] = minf(box[0], point.x)
+		box[1] = minf(box[1], point.z)
+		box[2] = maxf(box[2], point.x)
+		box[3] = maxf(box[3], point.z)
+	return box
 
 
 static func _proper_crossing_count(first: Array, second: Array,
@@ -430,7 +456,9 @@ static func _minimum_vertical_clearance(first: Dictionary, second: Dictionary,
 	return 0.0 if not is_finite(minimum) else minimum
 
 
-static func _overlap_envelope(first: Array, second: Array,
+## The arc interval of `first` (metres from its start) whose XZ points lie
+## within `radius` of `second`, or (INF, -INF) when none do.
+static func overlap_envelope(first: Array, second: Array,
 		radius: float) -> Vector2:
 	var out: Vector2 = Vector2(INF, -INF)
 	var arc: float = 0.0
@@ -439,10 +467,15 @@ static func _overlap_envelope(first: Array, second: Array,
 		var b: Vector2 = _xz(_v3(first[first_index + 1]))
 		var segment_length: float = a.distance_to(b)
 		for second_index: int in range(second.size() - 1):
-			var interval: Vector2 = _segment_capsule_interval(
-				a, b, _xz(_v3(second[second_index])),
-				_xz(_v3(second[second_index + 1])), radius
-			)
+			var c: Vector2 = _xz(_v3(second[second_index]))
+			var d: Vector2 = _xz(_v3(second[second_index + 1]))
+			# Segments whose bounds stay a radius apart cannot come within it.
+			if maxf(c.x, d.x) < minf(a.x, b.x) - radius \
+					or minf(c.x, d.x) > maxf(a.x, b.x) + radius \
+					or maxf(c.y, d.y) < minf(a.y, b.y) - radius \
+					or minf(c.y, d.y) > maxf(a.y, b.y) + radius:
+				continue
+			var interval: Vector2 = _segment_capsule_interval(a, b, c, d, radius)
 			if _valid_interval(interval):
 				out.x = minf(out.x, arc + interval.x * segment_length)
 				out.y = maxf(out.y, arc + interval.y * segment_length)
