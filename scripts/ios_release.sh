@@ -15,17 +15,21 @@
 # Credentials are read from the environment and never stored in the repository:
 #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_PRIVATE_KEY_PATH   (App Store Connect team key)
 # Optional overrides:
-#   ASC_APP_ID, ASC_BETA_GROUP_ID, IOS_DEVICE_UDID, DEVELOPER_DIR, SENTRY_ORG,
-#   SENTRY_PROJECT, PROCESSING_POLL_LIMIT, PROCESSING_POLL_SECONDS
+#   ASC_APP_ID, ASC_BETA_GROUP_ID, DEVELOPER_DIR, SENTRY_ORG, SENTRY_PROJECT,
+#   PROCESSING_POLL_LIMIT, PROCESSING_POLL_SECONDS
+# Required unless --no-device (the repository is public, so no default is committed):
+#   IOS_DEVICE_UDID                                   (the iPad's UDID; from
+#                                                      `xcrun devicectl list devices`)
+# Sentry dSYM upload also needs SENTRY_AUTH_TOKEN (or a sentry-cli login).
 #
 # Logs: build/ios/logs/<step><build-number>.log (kept between runs).
 
 set -euo pipefail
 
-# Not secrets: the App Store Connect app, its internal beta group, the iPad 8.
+# Not secrets: the App Store Connect app and its internal beta group.
 ASC_APP_ID="${ASC_APP_ID:-6803851427}"
 ASC_BETA_GROUP_ID="${ASC_BETA_GROUP_ID:-ac0496a3-70a9-4385-9eff-d3db7f9eac0d}"
-IOS_DEVICE_UDID="${IOS_DEVICE_UDID:-00008020-000C30C2118A402E}"
+IOS_DEVICE_UDID="${IOS_DEVICE_UDID:-}"
 SENTRY_ORG="${SENTRY_ORG:-pgnetwork}"
 SENTRY_PROJECT="${SENTRY_PROJECT:-glassvow}"
 PROCESSING_POLL_LIMIT="${PROCESSING_POLL_LIMIT:-60}"
@@ -97,6 +101,9 @@ if [[ $DO_UPLOAD -eq 1 ]]; then
   [[ -f "$ASC_PRIVATE_KEY_PATH" ]] || die "ASC_PRIVATE_KEY_PATH does not point at a file: $ASC_PRIVATE_KEY_PATH"
   command -v asc >/dev/null 2>&1 || die "asc is not on PATH"
   command -v sentry-cli >/dev/null 2>&1 || die "sentry-cli is not on PATH"
+  # Fail now, not after the TestFlight upload: this makes an authenticated request.
+  sentry-cli info --no-defaults --quiet >/dev/null 2>&1 \
+    || die "sentry-cli is not authenticated (source ~/.config/glassvow/sentry.sh or set SENTRY_AUTH_TOKEN)"
   python3 -c 'import jwt, cryptography' 2>/dev/null \
     || die "python3 needs PyJWT and cryptography: pip install pyjwt cryptography"
 else
@@ -109,6 +116,8 @@ fi
 command -v godot >/dev/null 2>&1 || die "godot is not on PATH"
 
 if [[ $DO_DEVICE -eq 1 ]]; then
+  [[ -n "$IOS_DEVICE_UDID" ]] \
+    || die "IOS_DEVICE_UDID is not set (see xcrun devicectl list devices), or pass --no-device"
   # Captured, not piped: grep -q closing early would SIGPIPE devicectl under pipefail.
   DEVICES="$(xcrun devicectl list devices 2>/dev/null || true)"
   grep -qF "$IOS_DEVICE_UDID" <<<"$DEVICES" \
@@ -192,7 +201,12 @@ if [[ $DO_UPLOAD -eq 1 ]]; then
   UUID_PATTERN='[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
   for ((i = 1; i <= PROCESSING_POLL_LIMIT; i++)); do
     LISTING="$(asc builds list --app "$ASC_APP_ID" --build-number "$BUILD" 2>/dev/null || true)"
-    VALID_LINE="$(grep -m1 VALID <<<"$LISTING" || true)"
+    # -w: INVALID must not satisfy the VALID match.
+    if grep -qw INVALID <<<"$LISTING"; then
+      BUILD_ID="INVALID"
+      break
+    fi
+    VALID_LINE="$(grep -w -m1 VALID <<<"$LISTING" || true)"
     if [[ -n "$VALID_LINE" ]]; then
       echo "$VALID_LINE"
       BUILD_ID="$(grep -o -E -m1 "$UUID_PATTERN" <<<"$VALID_LINE" || true)"
@@ -201,7 +215,11 @@ if [[ $DO_UPLOAD -eq 1 ]]; then
     sleep "$PROCESSING_POLL_SECONDS"
   done
 
-  if [[ -z "$BUILD_ID" ]]; then
+  if [[ "$BUILD_ID" == INVALID ]]; then
+    BUILD_ID="invalid"
+    ATTACH_STATUS="NOT ATTEMPTED (App Store Connect marked build $BUILD INVALID; see the upload log and your email)"
+    CLEAN=0
+  elif [[ -z "$BUILD_ID" ]]; then
     BUILD_ID="not found"
     ATTACH_STATUS="NOT ATTEMPTED (build not VALID after $PROCESSING_POLL_LIMIT polls)"
     CLEAN=0

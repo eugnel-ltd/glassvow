@@ -217,13 +217,22 @@ Preconditions (the script cannot satisfy these for you):
   archived binary; a release engine should read `Godot Engine v4.7.3.rc.custom_build`
   until 4.7.3-stable replaces it, so check that line before trusting the build.
 - **iPad 8 tethered, unlocked and trusted** (`tunnelState: connected`; see the
-  tethered-device section). Its UDID is `IOS_DEVICE_UDID` in the script header
-  (default `00008020-000C30C2118A402E`); set the variable for another device.
+  tethered-device section). The device UDID is read from `IOS_DEVICE_UDID`,
+  which lives only in the operator's shell (take it from
+  `xcrun devicectl list devices`). The repository is public, so no UDID is
+  committed anywhere and the script has no default: without it the run refuses
+  before building, unless `--no-device` is given.
 - Xcode 27.0 release at `/Applications/Xcode.app` (override with `DEVELOPER_DIR`),
-  and `godot`, `asc` and `sentry-cli` on `PATH`.
+  and `godot`, `asc` and `sentry-cli` on `PATH`. `sentry-cli` must be
+  authenticated (`SENTRY_AUTH_TOKEN`, see above); the script checks it with
+  `sentry-cli info` before building, so a missing token cannot abort the run
+  after the TestFlight upload.
 - `pip install pyjwt cryptography` for the group-attach step, which is
   `scripts/asc_attach_build.py` (an ES256 JWT, then a POST to the beta group's
-  builds relationship; HTTP 409 counts as already attached).
+  builds relationship). ASC also answers 409 for a build in an invalid state or
+  missing compliance, so on a 409 the script lists the group's builds and
+  succeeds only if the build id is already there; otherwise it prints the error
+  body and fails.
 
 Where things live. Credentials are only ever read from the environment; the key
 and issuer IDs are not in the repository. The numeric App Store Connect app id
@@ -242,8 +251,9 @@ with the rest of `build/`, kept between runs; the rest of `build/ios` is wiped
 at the start of each run). The closing summary prints the `.ipa` SHA-256, the
 engine version string, the iPad install result, the App Store Connect build id
 and the group-attach status. The script exits non-zero (2) when the iPad install
-fails, processing does not reach `VALID` within `PROCESSING_POLL_LIMIT` polls
-(default 60 at 45 s), or the group attach is refused.
+fails, App Store Connect reports the build `INVALID`, processing does not reach
+`VALID` within `PROCESSING_POLL_LIMIT` polls (default 60 at 45 s), or the group
+attach is refused.
 
 ## iOS build on a tethered device — the measurement path, not the store path
 
