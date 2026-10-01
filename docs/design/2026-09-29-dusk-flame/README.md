@@ -274,7 +274,10 @@ The previous programme measured shatters and Smolder kills, one of which is the 
 |---|---|---|---|
 | C_shatter, C_lantern, C_edge | committed | competent | "I chose this way and I insist" |
 | A | adaptive (today's arm 1) | competent | "I read the offers" |
+| A_lit | adaptive, reading its own flame ([readout 10](readouts/readout-10.md)) | competent | "I read the offers and my lantern" |
 | R | random (today's arm 2) | competent | "I scatter" |
+
+A_lit is A until its lantern burns a way's colour, Steady or True; from then, until the flame dims, it values that way's glass ×2.0 (`litLean`) and other coloured glass ×0.5 (`litOff`), and counts that colour's riders (§6.4) in full. From readout 10 on, G3 and G6 are read against A_lit, and B2 reads A_lit's feel beside the committed arms' (its expression against the colour each fight begins in, as the grader's feel table measures the adaptive arms); A stays in the table as the floor.
 
 Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds (common random numbers across arms). About 4,000 runs; minutes on the #558 simulator.
 
