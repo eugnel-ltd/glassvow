@@ -28,7 +28,8 @@ Player-facing surfaces, complete list:
 2. which crowns appear at an act boss;
 3. which cards tend to appear once the flame is lit;
 4. six short lines, each heard once, and the Vigil's whispers;
-5. one sentence per colour in the codex entry "The Lantern", revealed after that colour has first been seen steady.
+5. one sentence per colour in the codex entry "The Lantern", revealed after that colour has first been seen steady;
+6. a rider on some of a way's own glass that names that way's flame colour, as the codex names it ("Blood-moon flame: gain 3 Ward."), and resolves only while the lantern burns that colour ([§6.4](#64-lit-glass-readout-9), readout 9).
 
 Not present, by decision: a path chooser, path names on cards, sigils on cards or map nodes, tooltip explanations of purity, per-way stat bonuses, tutorial text.
 
@@ -193,6 +194,18 @@ Seven cards, one crown, one deed. After this, each way has roughly ten coloured 
 ### 6.3 Deeds already teach the ways
 
 The deeds system already rewards playing a way with more of that way: "Breaker of Panes" (shatters) unlocks quakeblow and resonantLance; "The Lantern Fed" (kindles) unlocks tithe and pyreheart; "Fire Given Freely" (embers spent) unlocks novaflare and emberdance. The new Edge deed completes the set. This is D2's "find your route" as meta-progression, and it is why viability must be measured under both a fresh pool and a full pool (§11).
+
+### 6.4 Lit glass (readout 9)
+
+Each way's payoff that only a committed deck collects, added by [readout 9](readouts/readout-9.md). A card effect may carry `lit` with a way's id; it resolves only while the lantern burns that way's colour, Steady or True, as the fight began. It reads the same flame reading as §5's lantern quality, once at combat start, so the tier a combat starts with is the tier it keeps. The rest of the card always resolves. The printed rider names the colour and nothing else: no tier word, no path name.
+
+| Way | Rider (en / zh-Hant) | On |
+|---|---|---|
+| 碎 Shatter | Frost-white flame: chip 1 more Facet. / 霜白之火：再琢擊 1 格璃面。 | chisel, spall, quakeblow |
+| 燼 Lantern | Amber flame: gain 1 Ember. / 金黃之火：獲得 1 點餘燼。 | preparation (Tinder), surge (Struck Match), hearthfall, tithe |
+| 蝕 Edge | Blood-moon flame: gain #3# Ward. / 血月之火：獲得 #3# 點護光。 (`#…#` marks the Ward number, as on every Ward card) | eclipseSlash, splinterCut, dimTheGlass, warCry (Shatterhymn) |
+
+Why it is not the set bonus §5 rules out: the rider is printed on the way's own glass and pays per card played, as any card synergy does; a deck that holds none of it gets nothing from a lit flame beyond §5. Why it reaches committed decks: with readout 8's search player at V0, a committed deck fights 54–78% of its fights in its own colour, the adaptive arm 12–17% and the random arm 11–13% in any colour. The rider sizes are content, numbers set against readout 9.
 
 ## 7. Recognition at the boss
 

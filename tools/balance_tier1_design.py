@@ -10,6 +10,8 @@ from balance_s009_reconstruct import FINALISTS_REL, catalogue_bytes, reconstruct
 from balance_seed_contract import H39_REL
 REPO = Path(__file__).resolve().parents[1]
 REGISTRY_REL = "docs/balance/490-tier1-registry-v1.json"; FILES = ("content/full-content.json", "locale/en.json", "locale/zh-Hant.json")
+# The registry's hydration texts are frozen with its catalogue (flame readout 9 made the first live text change).
+FROZEN_LOCALE_REL = {"locale/en.json": "docs/balance/data/tier1-registry-locale-en.json", "locale/zh-Hant.json": "docs/balance/data/tier1-registry-locale-zh-Hant.json"}
 TOOL_ID = "glassvow-balance-tier1-design"; MARKER = f".{TOOL_ID}"  # RFC 6901 patches; v1 DOE uses incompatible dotted paths.
 def _tokens(pointer: str) -> list[str]:
     if not isinstance(pointer, str) or not pointer.startswith("/") or pointer == "/":
@@ -70,7 +72,7 @@ def _diff(before: Any, after: Any, pointer: str = "") -> list[dict[str, Any]]:
     return out
 def _base_roots(repo: Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     # The registry is anchored on the #421 H39 catalogue, not on live content.
-    sources = {relative: read_json(repo / (H39_REL if relative == FILES[0] else relative)) for relative in FILES}; packet = reconstruct(repo)
+    sources = {relative: read_json(repo / (H39_REL if relative == FILES[0] else FROZEN_LOCALE_REL[relative])) for relative in FILES}; packet = reconstruct(repo)
     targets = deepcopy(sources); targets[FILES[0]] = packet["content"]
     finalists = read_json(repo / FINALISTS_REL); row = next(item for item in finalists["orderedFinalists"] if item["id"] == "s009")
     for relative in FILES[1:]:

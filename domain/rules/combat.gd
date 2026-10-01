@@ -151,6 +151,13 @@ func _with_counterfactual(run: RunState, requested_id: String, def: Dictionary) 
 	return out
 
 
+## A card effect marked `lit` resolves only while the lantern burns that way's
+## colour, Steady or True, as the fight began (flame readout 9); every other
+## effect always resolves.
+static func effect_lit(cb: CombatState, fx: Dictionary) -> bool:
+	return not fx.has("lit") or str(fx["lit"]) == cb.lit_way
+
+
 ## Resolved card data: base def merged with its `up` overrides when upgraded.
 func card_data(inst: CardInst) -> Dictionary:
 	var base: Dictionary = content.card(inst.id)
@@ -326,9 +333,13 @@ func _apply_start_relics(run: RunState, cb: CombatState) -> void:
 ## Cinders) and adds to each turn's first Ember gain; True is Steady with a
 ## cheaper Art; Kindling, and any aspect without ways, is the plain lantern.
 ## The effect is the same for every way. Every number is a `flame.lantern`
-## knob of the aspect's content.
+## knob of the aspect's content. The same reading names the way whose `lit`
+## card effects resolve this fight (flame readout 9).
 func _set_lantern_quality(run: RunState, cb: CombatState) -> void:
-	var tier: String = str(Flame.read(content, run)["tier"])
+	var reading: Dictionary = Flame.read(content, run)
+	var tier: String = str(reading["tier"])
+	if tier == Flame.TIER_STEADY or tier == Flame.TIER_TRUE:
+		cb.lit_way = str(reading["dominant"])
 	match tier:
 		Flame.TIER_SOOT:
 			cb.ember_leak = _lantern_knob(run, "sootLeak")
@@ -901,7 +912,8 @@ func play_card(run: RunState, cb: CombatState, uid: int, target_idx: Variant = n
 		if cb.over:
 			break
 		var fx: Dictionary = fx_v
-		_apply_effect(run, cb, inst, d, fx, target, seal_mult)
+		if effect_lit(cb, fx):
+			_apply_effect(run, cb, inst, d, fx, target, seal_mult)
 	if cb.pending_chips_active and not cb.over:
 		var per: int = 0
 		if card_type == "attack":
@@ -1338,7 +1350,8 @@ func use_art(run: RunState, cb: CombatState) -> bool:
 		if cb.over:
 			break
 		var fx: Dictionary = fx_v
-		_apply_art_effect(run, cb, fx)
+		if effect_lit(cb, fx):
+			_apply_art_effect(run, cb, fx)
 	return true
 
 
@@ -1470,6 +1483,8 @@ func preview_play(
 	var effects: Array = d.get("effects", [])
 	for fx_v: Variant in effects:
 		var fx: Dictionary = fx_v
+		if not effect_lit(cb, fx):
+			continue
 		var kind: String = str(fx.get("kind", ""))
 		if kind == "dmg":
 			hits.append({"dmg": _preview_hit(p, target, _ji(fx["n"])), "times": _ji(fx.get("times", 1))})
@@ -1492,7 +1507,7 @@ func preview_play(
 	var fx_chips: int = 0
 	for fx_v: Variant in effects:
 		var fx: Dictionary = fx_v
-		if str(fx.get("kind", "")) == "chip":
+		if str(fx.get("kind", "")) == "chip" and effect_lit(cb, fx):
 			fx_chips += _ji(fx["n"])
 	if hits.is_empty() and block == 0 and fx_chips == 0:
 		return null

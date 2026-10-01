@@ -569,6 +569,10 @@ func validate(fails: Array[String]) -> void:
 		if typeof(upgraded_v) == TYPE_DICTIONARY:
 			var upgraded: Dictionary = upgraded_v
 			_validate_effects(upgraded.get("effects", []), fails)
+	for art_v: Variant in arts.values():
+		if typeof(art_v) == TYPE_DICTIONARY:
+			var art: Dictionary = art_v
+			_validate_effects(art.get("effects", []), fails)
 	for potion_id: String in potions:
 		if not CombatRules.handles_potion(potion_id):
 			fails.append("ContentDB: potion %s has no handler" % potion_id)
@@ -622,3 +626,19 @@ func _validate_effects(effects_v: Variant, fails: Array[String]) -> void:
 			var id_key: String = str(effect.get("id"))
 			if not CombatRules.handles_special(id_key):
 				fails.append("ContentDB: card special %s has no handler" % id_key)
+		if effect.has("lit") and not _way_ids().has(str(effect["lit"])):
+			fails.append("ContentDB: card effect lit by %s names no way" % str(effect["lit"]))
+
+
+## Every way id an aspect declares; a `lit` card effect must name one.
+func _way_ids() -> Array[String]:
+	var out: Array[String] = []
+	for aspect_v: Variant in aspects:
+		if typeof(aspect_v) != TYPE_DICTIONARY:
+			continue
+		var aspect: Dictionary = aspect_v
+		for way_v: Variant in aspect.get("ways", []):
+			if typeof(way_v) == TYPE_DICTIONARY:
+				var way: Dictionary = way_v
+				out.append(str(way.get("id", "")))
+	return out
