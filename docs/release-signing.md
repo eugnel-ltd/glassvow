@@ -181,6 +181,80 @@ lives under `~/.appstoreconnect/private_keys/`; its key + issuer IDs are in
 for Octomiser's TestFlight uploads — IDs deliberately not reproduced here:
 public repo). The same key later serves upload/TestFlight automation.
 
+## One-script release
+
+`scripts/ios_release.sh` runs the whole TestFlight route above in one go: export,
+unsigned archive, Apple Distribution export, development export, iPad install,
+`asc` upload, Sentry dSYMs, a wait for processing, and attach to the beta group.
+It was proven end to end on 2026-10-01 (TestFlight 1.0.0 build 11). The manual
+recipe above stays as the reference for what each step does and for debugging a
+single step.
+
+```bash
+export ASC_KEY_ID=<key-id> ASC_ISSUER_ID=<issuer-id> \
+       ASC_PRIVATE_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_<key-id>.p8
+source ~/.config/glassvow/sentry.sh        # SENTRY_AUTH_TOKEN for the dSYM upload
+scripts/ios_release.sh <build-number> <expected-main-sha> [--no-upload] [--no-device]
+```
+
+It refuses, before building anything, when HEAD is not `<expected-main-sha>`,
+when the tree is dirty (the machine-local `.wrangler/` folder is tolerated),
+when `application/version` in the **`iOS`** preset of `export_presets.cfg` is
+not `<build-number>`, when any of the three `ASC_*` variables is missing, or
+(without `--no-device`) when the iPad is not known to `devicectl`. Bump and
+commit the pin first, merge, then run from a clean `main`. `--no-upload` stops
+after the signed App Store `.ipa` (no `asc`, Sentry, wait or attach);
+`--no-device` skips the development export and the iPad install.
+
+Preconditions (the script cannot satisfy these for you):
+
+- **Login keychain unlocked** for this process tree, with its keys pre-authorised
+  once (see "Why the archive is unsigned" above). A locked keychain fails the
+  export step.
+- **Patched iOS template** installed, the 4.7.3-rc device slice described in the
+  "iOS template" row of the toolchain table. The script prints
+  `GLASSVOW-TEMPLATE-NOTE.txt` and the engine version string found in the
+  archived binary; a release engine should read `Godot Engine v4.7.3.rc.custom_build`
+  until 4.7.3-stable replaces it, so check that line before trusting the build.
+- **iPad 8 tethered, unlocked and trusted** (`tunnelState: connected`; see the
+  tethered-device section). The device UDID is read from `IOS_DEVICE_UDID`,
+  which lives only in the operator's shell (take it from
+  `xcrun devicectl list devices`). The repository is public, so no UDID is
+  committed anywhere and the script has no default: without it the run refuses
+  before building, unless `--no-device` is given.
+- Xcode 27.0 release at `/Applications/Xcode.app` (override with `DEVELOPER_DIR`),
+  and `godot`, `asc` and `sentry-cli` on `PATH`. `sentry-cli` must be
+  authenticated (`SENTRY_AUTH_TOKEN`, see above); the script checks it with
+  `sentry-cli info` before building, so a missing token cannot abort the run
+  after the TestFlight upload.
+- `pip install pyjwt cryptography` for the group-attach step, which is
+  `scripts/asc_attach_build.py` (an ES256 JWT, then a POST to the beta group's
+  builds relationship). ASC also answers 409 for a build in an invalid state or
+  missing compliance, so on a 409 the script lists the group's builds and
+  succeeds only if the build id is already there; otherwise it prints the error
+  body and fails.
+
+Where things live. Credentials are only ever read from the environment; the key
+and issuer IDs are not in the repository. The numeric App Store Connect app id
+(`ASC_APP_ID`) and the internal beta group id (`ASC_BETA_GROUP_ID`) are defaults
+in the script header, overridable from the environment; that header is their
+single source. `scripts/ios_export_options_development.plist` holds the
+development signing pin for the iPad install: manual signing with the Apple
+Development certificate's SHA-1 fingerprint and the profile name
+`Glassvow device QA 2026-09-30` for `io.fol2.glassvow`. A fingerprint and a
+profile name are identifiers, not secrets (the private key stays in the
+keychain). When the profile is regenerated or the certificate renewed, update
+both values in that file.
+
+Output: every step logs to `build/ios/logs/<step><build-number>.log` (gitignored
+with the rest of `build/`, kept between runs; the rest of `build/ios` is wiped
+at the start of each run). The closing summary prints the `.ipa` SHA-256, the
+engine version string, the iPad install result, the App Store Connect build id
+and the group-attach status. The script exits non-zero (2) when the iPad install
+fails, App Store Connect reports the build `INVALID`, processing does not reach
+`VALID` within `PROCESSING_POLL_LIMIT` polls (default 60 at 45 s), or the group
+attach is refused.
+
 ## iOS build on a tethered device — the measurement path, not the store path
 
 Performance tickets need a `dev_tools` build running on real hardware (#233
