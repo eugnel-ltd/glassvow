@@ -22,6 +22,9 @@ const TURN_GUARD: int = 40
 ## Who plays the fights (flame readout 8): the greedy pilot, or the search
 ## player built on it. Everything off the board is the pilot's either way.
 const PLAYERS: Dictionary = {"greedy": Pilot, "search": Search}
+## How the build is chosen: by the pilot's scores, at random, or by the pilot's
+## scores leaning on the lantern's lit colour (flame readout 10's A_lit arm).
+const BUILDS: Array[String] = ["adaptive", "random", "lit"]
 static var _probe: Dictionary = {}
 static var _flame_acts: Array[Dictionary] = []
 static var _flame_fights: Array[Dictionary] = []
@@ -208,6 +211,7 @@ static func _enter_node(run: RunState, node: MapNode) -> void:
 		run.stats["goldEarned"] = int(float(str(run.stats.get("goldEarned", 0)))) + bounty
 		run.stats["unlitVisited"] = int(float(str(run.stats.get("unlitVisited", 0)))) + 1
 static func _claim_rewards(game: GlassvowGame, rewards: Dictionary) -> void:
+	Pilot.see_flame(game.content, game.run)
 	var gold: int = int(float(str(rewards.get("gold", 0))))
 	game.run.player.gold += gold
 	game.run.stats["goldEarned"] = int(float(str(game.run.stats.get("goldEarned", 0)))) + gold
@@ -231,6 +235,7 @@ static func _claim_rewards(game: GlassvowGame, rewards: Dictionary) -> void:
 	if relic2_v != null and not Pilot.is_banned(str(relic2_v)):
 		game.rewards.gain_relic(game.run, str(relic2_v))
 static func _resolve_safe_node(game: GlassvowGame, node: MapNode) -> void:
+	Pilot.see_flame(game.content, game.run)
 	match node.type:
 		"rest":
 			if game.run.player.hp * 100 <= game.run.player.max_hp * Pilot._wi("restHpPct"):
@@ -275,6 +280,7 @@ static func _resolve_event(game: GlassvowGame) -> void:
 			choice = row
 	var ops: Array = choice.get("ops", [])
 	var pending: Dictionary = game.rewards.apply_event_ops(game.run, ops)
+	Pilot.see_flame(game.content, game.run) # The choice's ops may have changed the deck.
 	match str(pending.get("kind", "")):
 		"card":
 			for pending_card: Variant in pending.get("cards", []):
@@ -630,8 +636,10 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		return {"error": "--way must be one of %s" % ", ".join(Pilot.WAYS)}
 	if not PROFILES.has(str(out["pool"])):
 		return {"error": "--pool must be mature, fresh or full"}
-	if str(out["build"]) not in ["adaptive", "random"]:
-		return {"error": "--build must be adaptive or random"}
+	if str(out["build"]) not in BUILDS:
+		return {"error": "--build must be adaptive, random or lit"}
+	if str(out["build"]) == "lit" and str(out["way"]) != "none":
+		return {"error": "--build=lit is an adaptive arm: it takes no --way"}
 	if not PLAYERS.has(str(out["play"])):
 		return {"error": "--play must be greedy or search"}
 	return _way_weights(out)
@@ -644,6 +652,9 @@ static func _policy(opts: Dictionary) -> Dictionary:
 	var over: Dictionary = {"cardDecline": opts["cardDecline"],
 		"removalAppetite": opts["removalAppetite"],
 		"removalMinCopies": opts["removalMinCopies"]}
+	if str(opts.get("build", "adaptive")) == "lit":
+		over["litLean"] = Pilot.LIT_LEAN
+		over["litOff"] = Pilot.LIT_OFF
 	if str(opts.get("way", "none")) != "none":
 		over["way"] = str(opts["way"])
 		for key: String in ["wayCommit", "wayOff"]:

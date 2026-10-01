@@ -22,6 +22,15 @@ const REMOVAL_MIN_COPIES_DEFAULT: int = 2
 const WAYS: Array[String] = ["none", "shatter", "lantern", "edge"]
 const WAY_COMMIT: float = 3.0
 const WAY_OFF: float = 0.5
+## Flame readout 10's flame-aware adaptive arm (A_lit): a policy carrying
+## `litLean` reads its own lantern before each build decision (`see_flame`).
+## While the lantern burns a way's colour, Steady or True, the build score values
+## that way's glass `litLean` times and other coloured glass `litOff` times, and
+## a rider lit by that way counts in full instead of at `crackedShare`. At
+## Kindling or Soot, and under every policy without `litLean`, it is arm A's
+## score. Combat play never reads it.
+const LIT_LEAN: float = 2.0
+const LIT_OFF: float = 0.5
 ## Shop eligibility ceiling is appetite minus this. Not a sampled knob.
 const REMOVAL_SHOP_MARGIN: float = 2.0
 ## The statuses a foe's blow reads (`CombatRules.preview_enemy_dmg`).
@@ -39,6 +48,11 @@ static var shop_min_ratio: float = SHOP_MIN_RATIO
 static var random_build: bool = false
 static var random_play: bool = false
 static var way: String = "none"
+static var lit_lean: float = 0.0
+static var lit_off: float = 1.0
+## The way whose colour the lantern burned, Steady or True, when the A_lit arm
+## last looked (`see_flame`); empty otherwise and for every other arm.
+static var lit: String = ""
 static func set_modes(build: bool, play: bool) -> void:
 	random_build = build
 	random_play = play
@@ -60,6 +74,9 @@ static func apply_policy(policy: Dictionary) -> void:
 	removal_min_copies = int(float(str(vector["removalMinCopies"])))
 	shop_min_ratio = float(str(vector["shopMinRatio"]))
 	way = str(vector.get("way", "none"))
+	lit_lean = float(str(vector.get("litLean", 0.0)))
+	lit_off = float(str(vector.get("litOff", 1.0)))
+	lit = ""
 static func policy_snapshot() -> Dictionary:
 	if vector.is_empty():
 		apply_policy({})
@@ -469,21 +486,50 @@ static func catalogue_card_score(content: ContentDB, aspect: int, card_id: Strin
 	# card_score distinguishes Dusk (0) from all other aspects, and base/up.
 	var scores: Dictionary = _card_scores[(2 if aspect == 0 else 0) + int(upgraded)]
 	if not scores.has(card_id):
-		var definition: Dictionary = content.cards.get(card_id, {})
-		if upgraded and definition.has("up"):
-			definition = definition.duplicate()
-			var upgrade: Dictionary = definition["up"]
-			definition.merge(upgrade, true)
-		scores[card_id] = card_score(definition, aspect, card_id)
+		scores[card_id] = card_score(_definition(content, card_id, upgraded), aspect, card_id)
 	return scores[card_id]
+static func _definition(content: ContentDB, card_id: String, upgraded: bool) -> Dictionary:
+	var definition: Dictionary = content.cards.get(card_id, {})
+	if upgraded and definition.has("up"):
+		definition = definition.duplicate()
+		var upgrade: Dictionary = definition["up"]
+		definition.merge(upgrade, true)
+	return definition
 ## The score every build decision reads: rewards, shops, removals, events,
-## upgrades. It is the catalogue score scaled by the policy's way; combat
-## scoring keeps catalogue_card_score.
+## upgrades. It is the catalogue score scaled by the policy's way, or, for the
+## A_lit arm under a lit lantern, the lit score; combat scoring keeps
+## catalogue_card_score.
 static func build_card_score(content: ContentDB, aspect: int, card_id: String,
 		upgraded: bool = false) -> float:
+	if way == "none" and not lit.is_empty():
+		return _lit_card_score(content, aspect, card_id, upgraded)
 	var score: float = catalogue_card_score(content, aspect, card_id, upgraded)
 	return score if way == "none" \
 		else score * _way_factor(Flame.card_affinity(content, aspect, card_id))
+
+
+## What the A_lit arm sees before a build decision: the colour its lantern
+## burns, as the HUD shows it and as the next fight will light its riders
+## (`CombatRules._set_lantern_quality`). Every other arm leaves `lit` empty.
+static func see_flame(content: ContentDB, run: RunState) -> void:
+	lit = ""
+	if lit_lean <= 0.0 or way != "none":
+		return
+	var reading: Dictionary = Flame.read(content, run)
+	if str(reading["tier"]) in [Flame.TIER_STEADY, Flame.TIER_TRUE]:
+		lit = str(reading["dominant"])
+
+
+## The A_lit build score under a lantern lit in `lit`: the card's score with
+## that way's riders in full, times `litLean` for that way's glass and `litOff`
+## for other coloured glass; clear glass keeps its score.
+static func _lit_card_score(content: ContentDB, aspect: int, card_id: String,
+		upgraded: bool) -> float:
+	var score: float = card_score(_definition(content, card_id, upgraded), aspect, card_id, lit)
+	var affinity: Dictionary = Flame.card_affinity(content, aspect, card_id)
+	if affinity.is_empty():
+		return score
+	return score * (lit_lean if affinity.has(lit) else lit_off)
 
 
 ## A policy that carries `wayCommit` or `wayOff` replaces WAY_COMMIT or WAY_OFF
@@ -496,7 +542,10 @@ static func _way_factor(affinity: Dictionary) -> float:
 	return float(str(vector.get("wayOff", WAY_OFF)))
 
 
-static func card_score(d: Dictionary, aspect: int, card_id: String = "") -> float:
+## `lit_way` names the way whose lantern the score assumes lit (the A_lit arm's
+## lean): a rider lit by it counts in full. Empty, every rider counts at
+## `crackedShare`.
+static func card_score(d: Dictionary, aspect: int, card_id: String = "", lit_way: String = "") -> float:
 	var dusk: bool = aspect == 0
 	var card_w: Dictionary = _group("card")
 	var rarity_v: Variant = card_w["rarity"]
@@ -517,8 +566,10 @@ static func card_score(d: Dictionary, aspect: int, card_id: String = "") -> floa
 			"special": worth = _special_value(fx, dusk)
 		# A `lit` rider resolves only in a lantern of its way's colour (flame
 		# readout 9): like a rider that needs a Cracked target, it counts at the
-		# policy's `crackedShare` of what it gives.
-		score += worth * (_w("special", "crackedShare") if fx.has("lit") else 1.0)
+		# policy's `crackedShare` of what it gives, unless the score assumes its
+		# colour lit.
+		score += worth * (_w("special", "crackedShare")
+			if fx.has("lit") and str(fx["lit"]) != lit_way else 1.0)
 	if str(d.get("type", "")) == "power":
 		score += _w("card", "power")
 	score += float(str(d.get("chip", 0))) * (_w("card", "chipDusk") if dusk else _w("card", "chipAsh"))
