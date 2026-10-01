@@ -88,6 +88,12 @@ heroes** — same treatment, no separate session for them.
 2026-09-30 (`RewardEmbers`, built by `Main._show_pending_reward`); `RewardScreen`
 stays as the lab's `rows` concept. Open: polish ember.
 Fixed along the way: a truncated gem. Standing note: do not move the default lamp.
+2026-10-01 finish (`docs/reviews/reward-embers-finish-2026-10-01/`): on pad and
+desktop a relic's or phial's rules hang under its slab, on the night, at 16 px
+(was 13 px on the slab, 3.5:1); the phone keeps them beside the art at 13 px
+with a night outline. One heading line over the spoils (VICTORY / ELITE SLAIN /
+BOSS VANQUISHED, the rows screen's keys) in the dead enemy's light. The rebuild
+after the phial-rack answer resumes settled instead of breaking the husk again.
 
 ### Combat HUD — `hud_bar.gd`, `hud_lab.gd`
 **All redesigns rejected.** "None of your work is better than original one…

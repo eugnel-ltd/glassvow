@@ -4,8 +4,10 @@ extends RefCounted
 ## through the entrance as `claimed` in gold, phial, relic order; the offering is
 ## the one decision; `finished` is always last; a reward resumed with
 ## `pendingReward.taken` partly true never claims a slot twice; walking on past an
-## unanswered offering asks first; and at every shipping shape each card, spoil
-## and word stands inside the stage and below the run HUD.
+## unanswered offering asks first; at every shipping shape each card, spoil,
+## rules line, word and the heading stands inside the stage and below the run
+## HUD; and the rebuild after the phial-rack answer resumes settled instead of
+## breaking the husk a second time.
 
 const PoolCallers: GDScript = preload("res://tests/test_pool_callers.gd")
 
@@ -22,6 +24,8 @@ static func run(fails: Array[String]) -> void:
 	_walk_on_asks_first(fails, content)
 	_main_banks_every_slot(fails, content)
 	_full_rack_walk_on(fails, content)
+	_full_rack_mid_entrance(fails, content)
+	_heading_names_the_fight(fails, content)
 	_shapes_contain(fails, content)
 
 
@@ -197,6 +201,8 @@ static func _full_rack_walk_on(fails: Array[String], content: ContentDB) -> void
 			and main._reward_screen != null and main._reward_screen != screen,
 		"answering the phial rack did not bank the phial and rebuild the reward")
 	var again: RewardEmbers = _root(main)
+	_check(fails, _is_quiet(again),
+		"the rebuild after the phial answer played the entrance again")
 	again._walk_word.pressed.emit()
 	_check(fails, main.game.run.pending_reward == null,
 		"walking on from the rebuilt reward did not end it")
@@ -204,6 +210,74 @@ static func _full_rack_walk_on(fails: Array[String], content: ContentDB) -> void
 		if is_instance_valid(node):
 			node.free()
 	PoolCallers._dispose(main)
+
+
+## The phial-rack question can arrive DURING the entrance: the phial is
+## announced before the relic. The answer rebuilds the screen settled, and the
+## relic the entrance had not reached yet is banked by that settling, once.
+static func _full_rack_mid_entrance(fails: Array[String], content: ContentDB) -> void:
+	var main: Main = PoolCallers._on_map(content, 30932)
+	var rack: Array = main.game.run.player.potions
+	for slot: int in range(rack.size()):
+		rack[slot] = "fire"
+	var relics: int = main.game.run.player.relics.count("warFetish")
+	var gold: int = main.game.run.player.gold
+	main.game.run.pending_reward = {"rewards": {"gold": 7, "cards": ["surge"],
+		"potion": "healing", "relic": "warFetish"}, "taken": {"gold": false,
+		"card": false, "potion": false, "relic": false}, "slain_enemy": {}}
+	main._show_pending_reward()
+	var screen: RewardEmbers = _root(main)
+	# Past the phial's beat (the second, 0.05 s after the gold's) and short of
+	# the relic's (0.05 s after that).
+	screen.advance(RewardEmbers.SIT + RewardEmbers.BLAZE + RewardEmbers.BURST * 0.66 + 0.07)
+	var taken: Dictionary = main.game.run.pending_reward["taken"]
+	var relic_early: bool = taken["relic"]
+	_check(fails, main._choice_screen != null and not relic_early,
+		"the fixture did not stop on the phial question before the relic: %s" % [taken])
+	if main._choice_screen == null:
+		PoolCallers._dispose(main)
+		return
+	main._choice_screen.emit_signal(&"chosen", "discard")
+	var again: RewardEmbers = main._reward_screen
+	var relic_taken: bool = taken["relic"]
+	_check(fails, again != null and again != screen and _is_quiet(again),
+		"the rebuild after a mid-entrance phial answer did not resume settled")
+	_check(fails, relic_taken
+			and main.game.run.player.relics.count("warFetish") == relics + 1
+			and main.game.run.player.gold == gold + 7,
+		"the settled rebuild lost or doubled the spoils the entrance had not reached")
+	for node: RewardEmbers in [screen, again]:
+		if is_instance_valid(node):
+			node.free()
+	PoolCallers._dispose(main)
+
+
+## Settled on arrival: every piece home, the heading and the faces lit, the
+## cards up, and the clock stopped, so there is no frame of the break to replay.
+static func _is_quiet(screen: RewardEmbers) -> bool:
+	return screen._settled and is_equal_approx(screen._burst, 1.0) \
+		and is_equal_approx(screen._head_a, 1.0) \
+		and screen._face_a.all(func(a: float) -> bool: return is_equal_approx(a, 1.0)) \
+		and screen._card_a.all(func(a: float) -> bool: return is_equal_approx(a, 1.0))
+
+
+## The heading says which fight this was, in the rows screen's own keys, and
+## it comes up with the blaze rather than before the husk has done anything.
+static func _heading_names_the_fight(fails: Array[String], content: ContentDB) -> void:
+	var keys: Dictionary = {"normal": "ui.reward.victory", "elite": "ui.reward.eliteSlain",
+		"boss": "ui.reward.bossVanquished"}
+	for kind: String in keys:
+		var screen: RewardEmbers = RewardEmbers.new(FULL.duplicate(true), content, kind,
+			22.0, StageShape.IDENTITY, true)
+		_check(fails, screen._heading.text == Locale.active.t(str(keys[kind])),
+			"%s: the heading reads %s" % [kind, screen._heading.text])
+		screen.advance(RewardEmbers.SIT * 0.5)
+		_check(fails, screen._heading.modulate.a == 0.0,
+			"%s: the heading was up before the husk blazed" % kind)
+		screen.settle()
+		_check(fails, is_equal_approx(screen._heading.modulate.a, 1.0),
+			"%s: the heading did not come up" % kind)
+		screen.free()
 
 
 ## Main builds its screens off-tree in these fixtures; the entrance needs one.
@@ -253,8 +327,11 @@ static func _contain(fails: Array[String], screen: RewardEmbers, shape: StringNa
 			first = false
 		slabs.append(box)
 	var words: Rect2 = Rect2(screen._bar.position, screen._bar.size)
+	var head: Rect2 = Rect2(screen._heading.position, screen._heading.size)
+	var rules: Array[Rect2] = _rules_rects(screen)
 	var where: String = "%s with %d cards" % [shape, screen._cards.size()]
-	for r: Rect2 in cards + slabs + [words]:
+	_check(fails, rules.size() == 2, "%s: a relic or phial lost its rules line" % where)
+	for r: Rect2 in cards + slabs + rules + [words, head]:
 		_check(fails, stage.encloses(r.grow(-0.5)),
 			"%s: %s runs outside the stage or under the HUD" % [where, r])
 		_check(fails, not lantern.intersects(r),
@@ -263,5 +340,60 @@ static func _contain(fails: Array[String], screen: RewardEmbers, shape: StringNa
 		for card: Rect2 in cards:
 			_check(fails, not slab.intersects(card),
 				"%s: a spoil slab %s runs into a card %s" % [where, slab, card])
+		_check(fails, not slab.intersects(head),
+			"%s: the heading %s stands on a slab %s" % [where, head, slab])
+	for rule: Rect2 in rules:
+		for card: Rect2 in cards:
+			_check(fails, not rule.intersects(card),
+				"%s: a rules line %s runs into a card %s" % [where, rule, card])
+		# On the column the wreckage rests in the fire, never through the words.
+		if not screen._compact:
+			for shard: Dictionary in screen._shards:
+				var carries: int = shard["seat"]
+				if carries < 0:
+					var piece: Rect2 = _debris_rect(screen, shard)
+					_check(fails, not rule.grow(-1.0).intersects(piece),
+						"%s: wreckage %s rests across a rules line %s" % [where, piece, rule])
+	# The legibility floor: on the pad the rules are the card's own body size,
+	# and on the phone never under 13 pt.
+	var floor_px: int = RewardEmbers.RULE_PX_COMPACT if screen._compact \
+		else RewardEmbers.RULE_PX
+	for label: Label in _rules_labels(screen):
+		var px: int = label.get_theme_font_size("font_size")
+		_check(fails, px >= floor_px and px >= 13,
+			"%s: a rules line is %d px, under the legibility floor" % [where, px])
 	_check(fails, screen._bar.get_combined_minimum_size().x <= words.size.x,
 		"%s: the words do not fit their row" % where)
+
+
+## Each spoil face's rules line, if it has one (gold has none).
+static func _rules_labels(screen: RewardEmbers) -> Array[Label]:
+	var out: Array[Label] = []
+	for face: Control in screen._faces:
+		for child: Node in face.get_children():
+			var label: Label = child as Label
+			if label != null and label.autowrap_mode != TextServer.AUTOWRAP_OFF:
+				out.append(label)
+	return out
+
+
+## The rules lines in screen px, as tall as the lines they wrap to.
+static func _rules_rects(screen: RewardEmbers) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	for label: Label in _rules_labels(screen):
+		var face: Control = label.get_parent()
+		var lines: int = mini(label.get_line_count(), label.max_lines_visible)
+		var pitch: float = RewardEmbers.RULE_LINE_H_COMPACT if screen._compact \
+			else RewardEmbers.RULE_LINE_H
+		var tall: float = float(lines) * pitch
+		out.append(Rect2(face.position + label.position, Vector2(label.size.x, tall)))
+	return out
+
+
+## A piece of wreckage at rest: at home, unspun, at its resting scale.
+static func _debris_rect(screen: RewardEmbers, shard: Dictionary) -> Rect2:
+	var at: Vector2 = screen._centre + screen._shard_at(shard)
+	var box: Rect2 = Rect2(at, Vector2.ZERO)
+	for p: Vector2 in shard["poly"]:
+		box = box.expand(at + p * RewardEmbers.DEBRIS_SCALE)
+	return box

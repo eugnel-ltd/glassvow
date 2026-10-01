@@ -2724,7 +2724,10 @@ func _on_result_continue() -> void:
 
 # ---------------------------------------------------------------- rewards and acts
 
-func _show_pending_reward() -> void:
+## `quiet` is the rebuild of a reward the player is already looking at (the
+## phial-rack answer): no wipe, no fade-in, and the embers resume settled
+## instead of breaking the husk a second time.
+func _show_pending_reward(quiet: bool = false) -> void:
 	_remember_route(_show_pending_reward)
 	var pending: Dictionary = game.run.pending_reward
 	var rewards: Dictionary = pending["rewards"]
@@ -2736,7 +2739,8 @@ func _show_pending_reward() -> void:
 	var slain_v: Variant = pending.get("slain_enemy")
 	var slain: Dictionary = slain_v if typeof(slain_v) == TYPE_DICTIONARY else {}
 	var hue: float = float(str(slain.get("hue", -1.0)))
-	_transitions.wipe()
+	if not quiet:
+		_transitions.wipe()
 	_clear_route()
 	_reward_screen = RewardEmbers.new(rewards, content,
 		reward_kind, hue, _shape, true)
@@ -2745,13 +2749,17 @@ func _show_pending_reward() -> void:
 	add_child(_reward_screen)
 	_read_flame(_reward_screen.show_flame, true)
 	_transitions.set_grain(true)
-	_transitions.screen_in(_reward_screen)
+	if not quiet:
+		_transitions.screen_in(_reward_screen)
 	_attach_run_hud()
 	if reward_kind == "boss":
 		_music.play(&"victory")
 	for key: String in ["gold", "card", "potion", "relic"]:
 		if taken.get(key, false):
 			_reward_screen.mark_taken(StringName(key))
+	# After the marks, so only a spoil the entrance had not reached is banked.
+	if quiet:
+		_reward_screen.settle()
 	# The hint is about the offering; a reward without one has nothing to spend it.
 	var offered: Array = rewards.get("cards", [])
 	if _hints != null and not offered.is_empty():
@@ -2857,7 +2865,8 @@ func _on_potion_replace(choice: String, id: String) -> void:
 	if not _store_run():
 		_show_save_error("ui.persistence.detail.phialChoiceHold")
 	elif typeof(pending_v) == TYPE_DICTIONARY:
-		_show_pending_reward()
+		# The player has watched this husk break: resume, do not replay it.
+		_show_pending_reward(true)
 	else:
 		_route_run()
 

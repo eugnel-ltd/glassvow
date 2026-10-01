@@ -30,24 +30,31 @@ const SLAB_REACH: float = 1.16
 ## Where the fire lies, as a fraction of the band: low, but high enough that the
 ## wreckage along it stays inside the frame.
 const FLOOR: float = 0.80
+## The heading's line over the spoils column: its height and the gap under it.
+## The offering keeps the full band; the heading only takes the column's top.
+const HEAD: float = 26.0
+const OVERHANG: float = 0.08
 
 
 ## `stage` is the screen's size, `top`/`bottom` the band left once the HUD and
-## the floor margin come off, `card` one offered card's drawn size and
-## `left_clear` the x the lantern's seat ends at.
+## the floor margin come off, `card` one offered card's drawn size,
+## `left_clear` the x the lantern's seat ends at and `head` the height the
+## heading takes off the top of the spoils column.
 static func lay_out(stage: Vector2, top: float, bottom: float, spoils: int,
-		cards: int, card: Vector2, gap: float, left_clear: float) -> Dictionary:
+		cards: int, card: Vector2, gap: float, left_clear: float,
+		head: float = 0.0) -> Dictionary:
 	var band: float = maxf(0.0, bottom - top)
+	var col_band: float = maxf(0.0, band - head)
 	var rack_w: float = float(cards) * card.x + float(maxi(0, cards - 1)) * gap
 	var rack_x: float = stage.x - EDGE - rack_w
 	var col_right: float = rack_x - COLUMN_GAP if cards > 0 else stage.x - EDGE
 	var foot: float = 0.0 if cards > 0 else LEAN_FOOT
-	var pitch: float = minf(PITCH, (band - foot) / float(maxi(1, spoils)))
+	var pitch: float = minf(PITCH, (col_band - foot) / float(maxi(1, spoils)))
 	var seat: Vector2 = Vector2(minf(SEAT.x, (col_right - left_clear) / SLAB_REACH),
 		pitch - 18.0)
 	var stack: float = float(spoils) * pitch - (pitch - seat.y)
 	var col_x: float = (left_clear + col_right) * 0.5
-	var col_top: float = top + maxf(0.0, (band - foot - stack) * 0.5)
+	var col_top: float = top + head + maxf(0.0, (col_band - foot - stack) * 0.5)
 	# The fire lies on the floor, between the column and the rack: the column
 	# stands in it and the rack is backlit from its left.
 	var centre: Vector2 = Vector2(
@@ -65,6 +72,11 @@ static func lay_out(stage: Vector2, top: float, bottom: float, spoils: int,
 		"seat_rel": seat_rel,
 		"card_rel": card_rel,
 		"husk_at": Vector2(0.0, -24.0),
+		# The heading stands right on the column it names, above the slabs'
+		# overhang (`RewardEmbers.SEAT_RISE` past the box's half), the full width
+		# the column has, and never under the HUD.
+		"head": Rect2(left_clear, maxf(top, col_top - seat.y * OVERHANG - head),
+			col_right - left_clear, head - 4.0),
 		"bed_y": 0.0,
 		# `RewardEmbers` hangs the word row 28 below this; with no offering the
 		# row sits 10 under the column instead.
