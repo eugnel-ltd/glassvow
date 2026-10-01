@@ -52,6 +52,7 @@ static func run(fails: Array[String]) -> void:
 	_chinese_wraps_between_characters(fails)
 	_chinese_kinsoku(fails)
 	_chinese_keywords_stay_whole(fails)
+	_chinese_doubled_marks_stay_paired(fails)
 	_mixed_keeps_its_spaces(fails)
 	Locale.active = previous
 
@@ -116,6 +117,20 @@ static func _chinese_keywords_stay_whole(fails: Array[String]) -> void:
 	_check(fails, seen == (["護光", "陰燃", "燃燼"] as Array[String]),
 		"a keyword is never cut between its characters")
 	body.free()
+
+
+static func _chinese_doubled_marks_stay_paired(fails: Array[String]) -> void:
+	# Swept a pixel at a time so some width puts the break inside each pair.
+	for text: String in ["焚去的牌——每張都曾餵提燈一點餘燼", "等待……然後抽牌……再等待"]:
+		for step: int in range(60, int(CARD_WIDTH) + 1):
+			var body: RulesText = _wrapped(text, float(step))
+			var lines: Array[String] = _lines_of(body)
+			for li: int in range(lines.size() - 1):
+				var split: bool = (lines[li].ends_with("—") and lines[li + 1].begins_with("—")) \
+					or (lines[li].ends_with("…") and lines[li + 1].begins_with("…"))
+				_check(fails, not split,
+					"a doubled dash or ellipsis is never split (width %d, line %d)" % [step, li])
+			body.free()
 
 
 static func _mixed_keeps_its_spaces(fails: Array[String]) -> void:

@@ -227,6 +227,9 @@ static func _no_break_after(c: String) -> bool:
 static func _may_break_between(before: String, after: String) -> bool:
 	if not (_is_cjk(before) or _is_cjk(after)):
 		return false
+	# zh-Hant sets the em dash and ellipsis as doubled marks, so never split a pair.
+	if before == after and (before == "—" or before == "…"):
+		return false
 	return not _no_break_after(before) and not _no_break_before(after)
 
 
