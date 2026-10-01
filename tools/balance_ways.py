@@ -3,10 +3,11 @@
 
 docs/design/2026-09-29-dusk-flame/README.md, section 11. Runs the Duskblade
 over vows {0, 5} x pool states {fresh, full} x paired seeds, with common random
-numbers across five arms: C_shatter, C_lantern and C_edge (committed pilots),
-A (adaptive, today's arm 1) and R (random build, today's arm 2). Prints one
-Markdown table per cell and the G1-G7 rows with PASS/FAIL against the initial
-thresholds. A run without its flame metrics, arms whose seeds do not pair,
+numbers across six arms: C_shatter, C_lantern and C_edge (committed pilots),
+A (adaptive, today's arm 1), A_lit (adaptive and reading its own flame, readout
+10) and R (random build, today's arm 2). Prints one Markdown table per cell and
+the G1-G7 rows with PASS/FAIL against the initial thresholds; G3 and G6 read
+A_lit, and are shown again against A, the commit-blind floor. A run without its flame metrics, arms whose seeds do not pair,
 mixed builds or any Godot error stop the readout (exit 1): nothing is graded
 on incomplete data.
 
@@ -49,9 +50,13 @@ ARMS = {  # arm -> (policy way, build)
     "C_lantern": ("lantern", "adaptive"),
     "C_edge": ("edge", "adaptive"),
     "A": ("none", "adaptive"),
+    "A_lit": ("none", "lit"),
     "R": ("none", "random"),
 }
 COMMITTED = ("C_shatter", "C_lantern", "C_edge")
+# Lock section 11 from readout 10: G3 and G6 read the flame-aware adaptive arm;
+# the commit-blind A stays in the table as their floor.
+SKILLED, FLOOR = "A_lit", "A"
 WAYS = ("shatter", "lantern", "edge")
 VOWS = (0, 5)
 POOLS = ("fresh", "full")
@@ -303,8 +308,28 @@ def _count(stats: dict[str, Any], key: str) -> tuple[int, int]:
     return int(stats[key] * stats["n"]), stats["n"]
 
 
+def _g3_interval(rate: dict[str, tuple[int, int]], arm: str, best: str) -> tuple[str, str]:
+    skill = difference(rate[arm], rate[best])
+    return (f"{arm} - {best} {show(skill, rate[arm][1], rate[best][1], points=True)}",
+            decided([at_least(skill, -float(G3_BELOW)), at_most(skill, float(G3_ABOVE))]))
+
+
+def _g6_interval(adaptive_rows: list[dict[str, Any]], arm: str) -> tuple[str, str]:
+    wins = Counter(row["flame"]["end"]["dominant"] for row in adaptive_rows if row["outcome"] == "win")
+    total = sum(wins.values())
+    if total == 0:
+        return (f"no {arm} wins", "FAIL")
+    shares = {way: interval(wins.get(way, 0), total) for way in WAYS}
+    lead = max(WAYS, key=lambda way: shares[way][0])
+    held_sure = sum(share[1] >= G6_HELD for share in shares.values())
+    held_maybe = sum(share[2] >= G6_HELD for share in shares.values())
+    return (f"lead {lead} {show(shares[lead], total, unit=f' {arm} wins')}",
+            decided([at_most(share, float(G6_MAX)) for share in shares.values()]
+                    + [True if held_sure >= G6_WAYS else (False if held_maybe < G6_WAYS else None)]))
+
+
 def cell_intervals(vow: int, pool: str, stats: dict[str, dict[str, Any]],
-                   adaptive_rows: list[dict[str, Any]], point_g7: str) -> list[tuple[str, str]]:
+                   adaptive_rows: dict[str, list[dict[str, Any]]], point_g7: str) -> list[tuple[str, str]]:
     """Each gate of `cell_gates` on its 95% interval: (measured with interval and N, verdict)."""
     rate = {arm: (stats[arm]["wins"], stats[arm]["n"]) for arm in ARMS}
     committed = {arm: stats[arm]["rate"] for arm in COMMITTED}
@@ -321,9 +346,7 @@ def cell_intervals(vow: int, pool: str, stats: dict[str, dict[str, Any]],
                  decided([True if max(abs(d[1]), abs(d[2])) <= G2_SPREAD
                           else (False if d[1] > G2_SPREAD or d[2] < -G2_SPREAD else None)
                           for d in spread.values()])))
-    skill = difference(rate["A"], rate[best])
-    rows.append((f"A - {best} {show(skill, rate['A'][1], rate[best][1], points=True)}",
-                 decided([at_least(skill, -float(G3_BELOW)), at_most(skill, float(G3_ABOVE))])))
+    rows.append(_g3_interval(rate, SKILLED, best))
     gap, random_rate = difference(rate["R"], rate[worst]), interval(*rate["R"])
     rows.append((f"R - {worst} {show(gap, rate['R'][1], rate[worst][1], points=True)}; "
                  f"R {show(random_rate, rate['R'][1])}",
@@ -342,28 +365,36 @@ def cell_intervals(vow: int, pool: str, stats: dict[str, dict[str, Any]],
             text += f"; True min {true_arm} {show(true[true_arm], stats[true_arm]['n'])}"
             checks += [at_least(true[arm], float(reach[1])) for arm in COMMITTED]
         rows.append((text, decided(checks)))
-    wins = Counter(row["flame"]["end"]["dominant"] for row in adaptive_rows if row["outcome"] == "win")
-    total = sum(wins.values())
-    if total == 0:
-        rows.append(("no A wins", "FAIL"))
-    else:
-        shares = {way: interval(wins.get(way, 0), total) for way in WAYS}
-        lead = max(WAYS, key=lambda way: shares[way][0])
-        held_sure = sum(share[1] >= G6_HELD for share in shares.values())
-        held_maybe = sum(share[2] >= G6_HELD for share in shares.values())
-        rows.append((f"lead {lead} {show(shares[lead], total, unit=' A wins')}",
-                     decided([at_most(share, float(G6_MAX)) for share in shares.values()]
-                             + [True if held_sure >= G6_WAYS else (False if held_maybe < G6_WAYS else None)])))
+    rows.append(_g6_interval(adaptive_rows[SKILLED], SKILLED))
     rows.append(("counts (no interval)", point_g7))
+    rows.append(_g3_interval(rate, FLOOR, best))
+    rows.append(_g6_interval(adaptive_rows[FLOOR], FLOOR))
     return rows
 
 
+def _g3(stats: dict[str, dict[str, Any]], arm: str, best_arm: str, gate: str) -> tuple[str, ...]:
+    adaptive, best = stats[arm]["rate"], stats[best_arm]["rate"]
+    return (gate, f"{arm} {pct(adaptive)} vs best {pct(best)} ({pp(adaptive - best)})", "-3 pp to +15 pp",
+            verdict(best - G3_BELOW <= adaptive <= best + G3_ABOVE))
+
+
+def _g6(adaptive_rows: list[dict[str, Any]], arm: str, gate: str) -> tuple[str, ...]:
+    wins = Counter(row["flame"]["end"]["dominant"] for row in adaptive_rows if row["outcome"] == "win")
+    total = sum(wins.values())
+    shares = {way: Fraction(wins.get(way, 0), total) for way in WAYS} if total else {}
+    return (gate, ", ".join(f"{way} {pct(shares[way])}" for way in WAYS) + f" of {total} {arm} wins"
+            if total else f"no {arm} wins", "no way > 60%, >= 2 ways >= 20%",
+            verdict(bool(shares) and max(shares.values()) <= G6_MAX
+                    and sum(share >= G6_HELD for share in shares.values()) >= G6_WAYS))
+
+
 def cell_gates(vow: int, pool: str, stats: dict[str, dict[str, Any]],
-               adaptive_rows: list[dict[str, Any]], replay: tuple[int, int]) -> list[tuple[str, ...]]:
+               adaptive_rows: dict[str, list[dict[str, Any]]], replay: tuple[int, int]) -> list[tuple[str, ...]]:
+    """G1-G7, G3 and G6 on the flame-aware A_lit, then G3 and G6 again on A, the floor."""
     committed = {arm: stats[arm]["rate"] for arm in COMMITTED}
     best_arm, worst_arm = max(committed, key=committed.get), min(committed, key=committed.get)
     best, worst = committed[best_arm], committed[worst_arm]
-    adaptive, random_arm = stats["A"]["rate"], stats["R"]["rate"]
+    random_arm = stats["R"]["rate"]
     floor = G1_FLOOR.get((vow, pool))
     steady = min(COMMITTED, key=lambda arm: stats[arm]["steady1"])
     true = min(COMMITTED, key=lambda arm: stats[arm]["true2"])
@@ -371,9 +402,6 @@ def cell_gates(vow: int, pool: str, stats: dict[str, dict[str, Any]],
     reach_text = "no threshold for this cell" if reach is None else (
         f">= {pct(reach[0])} and >= {pct(reach[1])} for every committed way" if reach[1] is not None
         else f">= {pct(reach[0])} Steady for every committed way; True not graded")
-    wins = Counter(row["flame"]["end"]["dominant"] for row in adaptive_rows if row["outcome"] == "win")
-    total = sum(wins.values())
-    shares = {way: Fraction(wins.get(way, 0), total) for way in WAYS} if total else {}
     stalls = sum(stats[arm]["stalls"] for arm in ARMS)
     errors = sum(stats[arm]["errors"] for arm in ARMS)
     same, replayed = replay
@@ -383,9 +411,7 @@ def cell_gates(vow: int, pool: str, stats: dict[str, dict[str, Any]],
          verdict(worst >= floor) if floor is not None else "n/a"),
         ("G2 parity: the ways are comparable", f"{pp(best - worst, False)} ({best_arm} - {worst_arm})",
          f"<= {pp(G2_SPREAD, False)}", verdict(best - worst <= G2_SPREAD)),
-        ("G3 skill: reading offers pays, commitment is no trap",
-         f"A {pct(adaptive)} vs best {pct(best)} ({pp(adaptive - best)})", "-3 pp to +15 pp",
-         verdict(best - G3_BELOW <= adaptive <= best + G3_ABOVE)),
+        _g3(stats, SKILLED, best_arm, "G3 skill: reading offers and flame pays, commitment is no trap"),
         ("G4 random loses: scattering cannot win",
          f"R {pct(random_arm)} vs worst {pct(worst)} ({pp(random_arm - worst)})",
          f"R <= worst - 25 pp and R < {pct(G4_CEILING[vow])}",
@@ -395,14 +421,12 @@ def cell_gates(vow: int, pool: str, stats: dict[str, dict[str, Any]],
          f"True by end of Act 2 min {pct(stats[true]['true2'])} ({true})", reach_text,
          "n/a" if reach is None else verdict(stats[steady]["steady1"] >= reach[0]
                                             and (reach[1] is None or stats[true]["true2"] >= reach[1]))),
-        ("G6 diversity: different adaptive runs are different",
-         ", ".join(f"{way} {pct(shares[way])}" for way in WAYS) + f" of {total} A wins"
-         if total else "no A wins", "no way > 60%, >= 2 ways >= 20%",
-         verdict(bool(shares) and max(shares.values()) <= G6_MAX
-                 and sum(share >= G6_HELD for share in shares.values()) >= G6_WAYS)),
+        _g6(adaptive_rows[SKILLED], SKILLED, "G6 diversity: different adaptive runs are different"),
         ("G7 guards: nothing stalls, errors or replays differently",
          f"{stalls} stalls, {errors} errors; replay {same}/{replayed} identical",
          "zero, zero, all identical", verdict(stalls == 0 and errors == 0 and same == replayed)),
+        _g3(stats, FLOOR, best_arm, "G3 floor: the commit-blind adaptive arm"),
+        _g6(adaptive_rows[FLOOR], FLOOR, "G6 floor: the commit-blind adaptive arm"),
     ]
 
 
@@ -422,7 +446,7 @@ def grade(directory: Path, seeds: tuple[int, int], vows: tuple[int, ...] = VOWS)
     for vow in vows:
         for pool in POOLS:
             stats: dict[str, dict[str, Any]] = {}
-            adaptive_rows: list[dict[str, Any]] = []
+            adaptive_rows: dict[str, list[dict[str, Any]]] = {}
             for arm, (way, build) in ARMS.items():
                 manifest, rows = load_report(directory / report_name(vow, pool, arm), seeds)
                 _require(manifest.get("vow") == vow and manifest.get("pool") == pool
@@ -435,15 +459,15 @@ def grade(directory: Path, seeds: tuple[int, int], vows: tuple[int, ...] = VOWS)
                     policy = manifest.get("policy") if isinstance(manifest.get("policy"), dict) else {}
                     weights.add((policy.get("wayCommit"), policy.get("wayOff")))
                 stats[arm] = arm_stats(rows, way)
-                if arm == "A":
-                    adaptive_rows = rows
+                if arm in (SKILLED, FLOOR):
+                    adaptive_rows[arm] = rows
             _, replayed = load_report(directory / replay_name(vow, pool), None)
-            by_seed = {row["seed"]: row for row in adaptive_rows}
+            by_seed = {row["seed"]: row for row in adaptive_rows[FLOOR]}
             same = sum(json.dumps(row, sort_keys=True) == json.dumps(by_seed.get(row["seed"]), sort_keys=True)
                        for row in replayed)
             gates = cell_gates(vow, pool, stats, adaptive_rows, (same, len(replayed)))
             cells[vow, pool] = {"stats": stats, "gates": gates,
-                                "intervals": cell_intervals(vow, pool, stats, adaptive_rows, gates[-1][-1])}
+                                "intervals": cell_intervals(vow, pool, stats, adaptive_rows, gates[6][-1])}
     _require(len(identity) == 1, f"reports come from more than one build: {sorted(identity)}")
     _require(len(weights) == 1, f"committed arms weigh their glass differently: {sorted(map(str, weights))}")
     _require(len(plays) == 1, f"reports come from more than one player: {sorted(plays)}")
