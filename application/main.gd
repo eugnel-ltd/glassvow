@@ -41,7 +41,7 @@ var _map_screen: WorldMapScreen = null
 ## The map screen left for another route, re-attached by the next `_show_map`
 ## of the same map, run, act, shape and language (`_map_screen_key`).
 var _map_keep: MapScreenKeep = MapScreenKeep.new()
-var _map_screen_key: Array = []
+var _map_screen_key: Dictionary = {}
 var _choice_screen: Control = null
 var _reward_screen: RewardEmbers = null
 var _route_screen: Control = null
@@ -799,11 +799,18 @@ func _clear_route() -> void:
 	]:
 		if screen != null:
 			screen.queue_free()
+	var run_over: bool = game == null or game.run == null or game.run.pending_run_end != null
+	if run_over:
+		# Wherever the run ends (a fight, the run menu over any screen), the map
+		# kept for it goes with it.
+		_map_keep.release()
 	if _map_screen != null:
-		if game != null and game.run != null and game.run.pending_run_end == null:
-			_map_keep.keep(_map_screen, _map_screen_key)
-		else:
+		if run_over:
 			_map_screen.queue_free()
+		else:
+			# Keyed by the shape the screen now has: `_reshape` may have moved it.
+			_map_screen_key["shape"] = _map_screen.shape
+			_map_keep.keep(_map_screen, _map_screen_key)
 	_screen = null
 	_map_screen = null
 	_choice_screen = null
@@ -1560,8 +1567,9 @@ func _show_map() -> void:
 		_transitions.wipe()
 		act_index = game.run.act
 	_clear_route()
-	_map_screen_key = [_map.get_instance_id(), game.run.get_instance_id(), act_index,
-		_shape, Locale.active.code, _forced_act_index]
+	_map_screen_key = {"map": _map.get_instance_id(), "run": game.run.get_instance_id(),
+		"act": act_index, "shape": _shape, "language": Locale.active.code,
+		"scenery_act": _forced_act_index}
 	_map_screen = _map_keep.take(_map_screen_key)
 	if _map_screen != null:
 		add_child(_map_screen)

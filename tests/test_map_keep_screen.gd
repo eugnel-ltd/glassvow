@@ -126,6 +126,19 @@ static func _shape_and_act_changes_rebuild(fails: Array[String], content: Conten
 			and main._map_screen._act == main.game.run.act,
 		"the next act's map is built for that act")
 	_dispose(main)
+	# A screen that followed a shape re-pick while live is kept for the shape it
+	# now has, so a return under the shape it was built for builds anew.
+	var turned: Main = _map_main(content, 61005)
+	var built_pad: WorldMapScreen = turned._map_screen
+	turned._shape = &"phone-landscape"
+	turned._reshape()
+	turned._clear_route()
+	turned._shape = &"pad-landscape"
+	turned._show_map()
+	_check(fails, turned._map_screen != built_pad and built_pad.is_queued_for_deletion()
+			and turned._map_screen.shape == &"pad-landscape",
+		"a screen re-picked to another shape is not shown under its first one")
+	_dispose(turned)
 
 
 static func _ended_run_and_finished_act_free_it(fails: Array[String],
@@ -163,6 +176,17 @@ static func _ended_run_and_finished_act_free_it(fails: Array[String],
 	main._route_run()
 	_check(fails, main._map_keep.kept() == null and third.is_queued_for_deletion(),
 		"routing an ended run frees the kept screen")
+	# The run menu's abandon from a fight shows the run's end directly, with the
+	# map already kept and no map screen live.
+	main.game.run.pending_run_end = null
+	main._show_map()
+	var fourth: WorldMapScreen = main._map_screen
+	main._clear_route()
+	_check(fails, main._map_keep.kept() == fourth, "kept while a fight is up")
+	main.game.run.pending_run_end = {"outcome": "abandon", "bequestAnswered": true}
+	main._show_run_end()
+	_check(fails, main._map_keep.kept() == null and fourth.is_queued_for_deletion(),
+		"showing the run's end frees the map kept for it")
 	_dispose(main)
 
 

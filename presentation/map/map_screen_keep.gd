@@ -10,17 +10,17 @@ extends RefCounted
 ## resumed run, the title) and when the run ends; dropping the keep frees it too.
 
 var _screen: WorldMapScreen = null
-var _key: Array = []
+var _key: Dictionary = {}
 
 
 ## The kept screen when it was kept for `key`, detached and ready to re-attach.
 ## Otherwise null, and whatever was kept is freed. Either way nothing stays kept:
 ## the caller owns what it is given.
-func take(key: Array) -> WorldMapScreen:
+func take(key: Dictionary) -> WorldMapScreen:
 	var screen: WorldMapScreen = _screen if is_instance_valid(_screen) else null
 	var same: bool = key == _key
 	_screen = null
-	_key = []
+	_key = {}
 	if screen == null or same:
 		return screen
 	screen.queue_free()
@@ -31,14 +31,14 @@ func take(key: Array) -> WorldMapScreen:
 ## kept before. A screen that could not come back as it stands
 ## (`WorldMapScreen.can_keep`) is freed instead, as every route change freed it
 ## before the keep existed.
-func keep(screen: WorldMapScreen, key: Array) -> void:
+func keep(screen: WorldMapScreen, key: Dictionary) -> void:
 	if screen == null:
 		return
 	if screen != _screen:
 		release()
 	if not screen.can_keep():
 		_screen = null
-		_key = []
+		_key = {}
 		screen.queue_free()
 		return
 	var parent: Node = screen.get_parent()
@@ -59,7 +59,7 @@ func release() -> void:
 	if is_instance_valid(_screen) and not _screen.is_queued_for_deletion():
 		_screen.queue_free()
 	_screen = null
-	_key = []
+	_key = {}
 
 
 func _notification(what: int) -> void:

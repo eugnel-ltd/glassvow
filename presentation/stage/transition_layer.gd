@@ -281,10 +281,12 @@ func _hide_wipe() -> void:
 ## latest may write, so an entrance cut short by a route change and resumed
 ## when the root re-enters never fights the new one.
 func screen_in(root: Control) -> void:
-	if instant or Preferences.active.reduce_motion or root == null:
+	if root == null:
 		return
 	var entry: int = _entrance_of(root) + 1
 	root.set_meta(&"screen_in", entry)
+	if instant or Preferences.active.reduce_motion:
+		return
 	root.modulate.a = 0.0
 	var tree: SceneTree = get_tree()
 	if tree == null:
