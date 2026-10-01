@@ -123,6 +123,10 @@ static func _status_lean(def: Dictionary) -> Dictionary:
 		if typeof(fx_v) != TYPE_DICTIONARY:
 			continue
 		var fx: Dictionary = fx_v
+		# A `lit` rider resolves only in its way's colour (flame readout 9), so it
+		# says nothing about what the deck leans on: a card's lean is its own text.
+		if fx.has("lit"):
+			continue
 		if str(fx.get("kind", "")) == "block":
 			ward = true
 		if str(fx.get("id", "")) == "poison":

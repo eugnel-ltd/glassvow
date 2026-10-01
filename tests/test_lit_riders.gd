@@ -35,6 +35,7 @@ static func run(fails: Array[String]) -> void:
 	_validation(fails)
 	_copy(content, fails)
 	_search_copy(content, fails)
+	_lean(content, fails)
 
 
 ## A Duskblade fight against one foe at 200 HP with no Ward, no statuses and a
@@ -171,16 +172,27 @@ static func _preview(content: ContentDB, fails: Array[String]) -> void:
 				% [preview.get("block"), game.cb.lit_way, expected])
 
 
-## A `lit` effect must name a way some aspect declares.
+## A `lit` effect must name a way some aspect declares, on a card or on an Art.
 static func _validation(fails: Array[String]) -> void:
-	var content: ContentDB = ContentDB.load_full(false)
-	var spall: Dictionary = content.cards["spall"]
-	var effects: Array = spall["effects"]
-	effects.append({"kind": "block", "n": 1, "lit": "ember"})
-	var faults: Array[String] = []
-	content.validate(faults)
-	if not faults.any(func(f: String) -> bool: return f.contains("lit by ember")):
-		fails.append("Lit validation: a rider lit by an unknown way passed validation: %s" % [faults])
+	for where: String in ["card", "art"]:
+		var content: ContentDB = ContentDB.load_full(false)
+		var owner: Dictionary = content.cards["spall"] if where == "card" else content.arts["flare"]
+		var effects: Array = owner["effects"]
+		effects.append({"kind": "block", "n": 1, "lit": "ember"})
+		var faults: Array[String] = []
+		content.validate(faults)
+		if not faults.any(func(f: String) -> bool: return f.contains("lit by ember")):
+			fails.append("Lit validation: a %s rider lit by an unknown way passed validation: %s"
+				% [where, faults])
+
+
+## The counterfactual self reads a deck's lean from what its cards always do: a
+## lit Ward rider makes no card a ward card, so Splinter Cut stays neither.
+static func _lean(content: ContentDB, fails: Array[String]) -> void:
+	var card: Dictionary = content.cards["splinterCut"]
+	var lean: Dictionary = CounterfactualSelf._status_lean(card)
+	if lean != {"toxin": false, "ward": false}:
+		fails.append("Lit lean: Splinter Cut's lean must stay neither toxin nor ward, got %s" % lean)
 
 
 ## Each rider's card is authored in both catalogues, and the English matches content.

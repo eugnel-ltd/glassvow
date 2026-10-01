@@ -569,6 +569,10 @@ func validate(fails: Array[String]) -> void:
 		if typeof(upgraded_v) == TYPE_DICTIONARY:
 			var upgraded: Dictionary = upgraded_v
 			_validate_effects(upgraded.get("effects", []), fails)
+	for art_v: Variant in arts.values():
+		if typeof(art_v) == TYPE_DICTIONARY:
+			var art: Dictionary = art_v
+			_validate_effects(art.get("effects", []), fails)
 	for potion_id: String in potions:
 		if not CombatRules.handles_potion(potion_id):
 			fails.append("ContentDB: potion %s has no handler" % potion_id)

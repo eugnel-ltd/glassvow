@@ -1350,7 +1350,8 @@ func use_art(run: RunState, cb: CombatState) -> bool:
 		if cb.over:
 			break
 		var fx: Dictionary = fx_v
-		_apply_art_effect(run, cb, fx)
+		if effect_lit(cb, fx):
+			_apply_art_effect(run, cb, fx)
 	return true
 
 

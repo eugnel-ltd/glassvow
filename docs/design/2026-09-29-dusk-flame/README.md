@@ -203,7 +203,7 @@ Each way's payoff that only a committed deck collects, added by [readout 9](read
 |---|---|---|
 | 碎 Shatter | Frost-white flame: chip 1 more Facet. / 霜白之火：再琢擊 1 格璃面。 | chisel, spall, quakeblow |
 | 燼 Lantern | Amber flame: gain 1 Ember. / 金黃之火：獲得 1 點餘燼。 | preparation (Tinder), surge (Struck Match), hearthfall, tithe |
-| 蝕 Edge | Blood-moon flame: gain 3 Ward. / 血月之火：獲得 #3# 點護光。 | eclipseSlash, splinterCut, dimTheGlass, warCry (Shatterhymn) |
+| 蝕 Edge | Blood-moon flame: gain #3# Ward. / 血月之火：獲得 #3# 點護光。 (`#…#` marks the Ward number, as on every Ward card) | eclipseSlash, splinterCut, dimTheGlass, warCry (Shatterhymn) |
 
 Why it is not the set bonus §5 rules out: the rider is printed on the way's own glass and pays per card played, as any card synergy does; a deck that holds none of it gets nothing from a lit flame beyond §5. Why it reaches committed decks: with readout 8's search player at V0, a committed deck fights 54–78% of its fights in its own colour, the adaptive arm 12–17% and the random arm 11–13% in any colour. The rider sizes are content, numbers set against readout 9.
 
