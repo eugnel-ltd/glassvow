@@ -2,7 +2,6 @@ class_name MapLandscape
 extends Node3D
 ## Layered land and depth-tested paths assembled from the final compiler result.
 
-const CUTS: Array[float] = [-20.5, 10.5]
 const PLINTH_HEIGHT: float = 0.12
 var anchors: PackedVector3Array = []
 var paths: Array[PackedVector3Array] = []
@@ -187,7 +186,7 @@ func _build_seals() -> void:
 
 
 func plinth_transform(anchor: Vector3) -> Transform3D:
-	var height: float = (1.0 if assets.act == 1 else 6.2) if is_gap(anchor, 0.8) else PLINTH_HEIGHT
+	var height: float = (1.0 if assets.act == 1 else 6.2) if is_gap(anchor, MapRavine.PIER_MARGIN) else PLINTH_HEIGHT
 	return Transform3D(Basis.from_scale(Vector3(1, height / PLINTH_HEIGHT, 1)),
 		anchor + Vector3.UP * (0.045 - height * 0.5))
 
@@ -247,25 +246,22 @@ static func placement_transform(placement: Dictionary) -> Transform3D:
 
 
 func gap(cut: float, z: float) -> float:
-	return cut + sin(z * 0.19) * 1.4 + sin(z * 0.61) * 0.3
+	return MapRavine.centre(cut, z)
 
 
 func is_gap(p: Vector3, margin: float = 0.0) -> bool:
-	for cut: float in CUTS:
-		if absf(p.x - gap(cut, p.z)) < 1.5 + margin:
-			return true
-	return false
+	return MapRavine.holds(p.x, p.z, margin)
 
 
 func outline(plate: int) -> PackedVector2Array:
 	var points: PackedVector2Array = []
 	for i: int in range(45):
 		var z: float = -27.0 + i * 1.25
-		var x: float = -49.0 + sin(z * 0.25) * 1.2 if plate == 0 else gap(CUTS[plate - 1], z) + 1.5
+		var x: float = -49.0 + sin(z * 0.25) * 1.2 if plate == 0 else gap(MapRavine.CUTS[plate - 1], z) + MapRavine.HALF_WIDTH
 		points.append(Vector2(x, z))
 	for i: int in range(44, -1, -1):
 		var z: float = -27.0 + i * 1.25
-		var x: float = 48.0 + sin(z * 0.31) * 1.5 if plate == 2 else gap(CUTS[plate], z) - 1.5
+		var x: float = 48.0 + sin(z * 0.31) * 1.5 if plate == 2 else gap(MapRavine.CUTS[plate], z) - MapRavine.HALF_WIDTH
 		points.append(Vector2(x, z))
 	return points
 
