@@ -40,6 +40,9 @@ TEMPLATE_ZIP="$HOME/Library/Application Support/Godot/export_templates/4.7.2.sta
 die() { echo "ios_release: $*" >&2; exit 1; }
 step() { echo "== $* $(date)"; }
 
+# Checked first: with a bad path even the system git shim fails with an opaque xcrun error.
+[[ -d "$DEVELOPER_DIR" ]] || die "DEVELOPER_DIR does not exist: $DEVELOPER_DIR"
+
 usage() {
   sed -n '2,/^$/p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2
   exit 64
@@ -104,7 +107,6 @@ else
   [[ -f "$ASC_PRIVATE_KEY_PATH" ]] || die "ASC_PRIVATE_KEY_PATH does not point at a file: $ASC_PRIVATE_KEY_PATH"
 fi
 command -v godot >/dev/null 2>&1 || die "godot is not on PATH"
-[[ -d "$DEVELOPER_DIR" ]] || die "DEVELOPER_DIR does not exist: $DEVELOPER_DIR"
 
 if [[ $DO_DEVICE -eq 1 ]]; then
   # Captured, not piped: grep -q closing early would SIGPIPE devicectl under pipefail.
