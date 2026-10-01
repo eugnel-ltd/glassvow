@@ -862,8 +862,8 @@
       },
       "chisel": {
         "name": "Chisel",
-        "text": "Deal @4@ damage. Chip 1 extra Facet.",
-        "textUp": "Deal @7@ damage. Chip 1 extra Facet."
+        "text": "Deal @4@ damage. Chip 1 extra Facet. Frost-white flame: chip 1 more Facet.",
+        "textUp": "Deal @7@ damage. Chip 1 extra Facet. Frost-white flame: chip 1 more Facet."
       },
       "cleave": {
         "name": "Fan of Glass",
@@ -897,12 +897,12 @@
       },
       "dimTheGlass": {
         "name": "Dim the Glass",
-        "text": "Apply 2 Dimmed. Draw 1 card."
+        "text": "Apply 2 Dimmed. Draw 1 card. Blood-moon flame: gain #3# Ward."
       },
       "eclipseSlash": {
         "name": "Eclipse Slash",
-        "text": "Deal @7@ damage. Apply 1 Cracked.",
-        "textUp": "Deal @9@ damage. Apply 2 Cracked."
+        "text": "Deal @7@ damage. Apply 1 Cracked. Blood-moon flame: gain #3# Ward.",
+        "textUp": "Deal @9@ damage. Apply 2 Cracked. Blood-moon flame: gain #3# Ward."
       },
       "eclipseStep": {
         "name": "Eclipse Step",
@@ -966,8 +966,8 @@
       },
       "hearthfall": {
         "name": "Hearthfall",
-        "text": "Spend 3 Embers: deal @12@ damage.",
-        "textUp": "Spend 3 Embers: deal @16@ damage."
+        "text": "Spend 3 Embers: deal @12@ damage. Amber flame: gain 1 Ember.",
+        "textUp": "Spend 3 Embers: deal @16@ damage. Amber flame: gain 1 Ember."
       },
       "hex": {
         "name": "Hex",
@@ -1024,8 +1024,8 @@
       },
       "preparation": {
         "name": "Tinder",
-        "text": "Draw 2 cards. Kindle.",
-        "textUp": "Draw 2 cards."
+        "text": "Draw 2 cards. Kindle. Amber flame: gain 1 Ember.",
+        "textUp": "Draw 2 cards. Amber flame: gain 1 Ember."
       },
       "pyreheart": {
         "name": "Pyreheart",
@@ -1033,8 +1033,8 @@
       },
       "quakeblow": {
         "name": "Quakeblow",
-        "text": "Deal @8@ damage. Chip 2 extra Facets.",
-        "textUp": "Deal @11@ damage. Chip 3 extra Facets."
+        "text": "Deal @8@ damage. Chip 2 extra Facets. Frost-white flame: chip 1 more Facet.",
+        "textUp": "Deal @11@ damage. Chip 3 extra Facets. Frost-white flame: chip 1 more Facet."
       },
       "quickSlash": {
         "name": "Flicker",
@@ -1068,13 +1068,13 @@
       },
       "spall": {
         "name": "Spall",
-        "text": "Deal @5@ damage. Chip 1 extra Facet.",
-        "textUp": "Deal @8@ damage. Chip 1 extra Facet."
+        "text": "Deal @5@ damage. Chip 1 extra Facet. Frost-white flame: chip 1 more Facet.",
+        "textUp": "Deal @8@ damage. Chip 1 extra Facet. Frost-white flame: chip 1 more Facet."
       },
       "splinterCut": {
         "name": "Splinter Cut",
-        "text": "Deal @5@ damage. Apply 1 Cracked.",
-        "textUp": "Deal @7@ damage. Apply 2 Cracked."
+        "text": "Deal @5@ damage. Apply 1 Cracked. Blood-moon flame: gain #3# Ward.",
+        "textUp": "Deal @7@ damage. Apply 2 Cracked. Blood-moon flame: gain #3# Ward."
       },
       "strike": {
         "name": "Edge",
@@ -1083,8 +1083,8 @@
       },
       "surge": {
         "name": "Struck Match",
-        "text": "Gain 1 Energy. Draw 1 card. Kindle.",
-        "textUp": "Gain 2 Energy. Draw 1 card. Kindle."
+        "text": "Gain 1 Energy. Draw 1 card. Kindle. Amber flame: gain 1 Ember.",
+        "textUp": "Gain 2 Energy. Draw 1 card. Kindle. Amber flame: gain 1 Ember."
       },
       "tempest": {
         "name": "Hailglass",
@@ -1093,8 +1093,8 @@
       },
       "tithe": {
         "name": "Tithe of Panes",
-        "text": "Gain 2 Embers. Draw 1 card.",
-        "textUp": "Gain 3 Embers. Draw 1 card."
+        "text": "Gain 2 Embers. Draw 1 card. Amber flame: gain 1 Ember.",
+        "textUp": "Gain 3 Embers. Draw 1 card. Amber flame: gain 1 Ember."
       },
       "totality": {
         "name": "Totality",
@@ -1136,8 +1136,8 @@
       },
       "warCry": {
         "name": "Shatterhymn",
-        "text": "Apply 1 Dimmed and 1 Cracked to ALL enemies.",
-        "textUp": "Apply 2 Dimmed and 2 Cracked to ALL enemies."
+        "text": "Apply 1 Dimmed and 1 Cracked to ALL enemies. Blood-moon flame: gain #3# Ward.",
+        "textUp": "Apply 2 Dimmed and 2 Cracked to ALL enemies. Blood-moon flame: gain #3# Ward."
       },
       "wound": {
         "name": "Shard",

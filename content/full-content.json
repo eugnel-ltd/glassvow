@@ -95,6 +95,11 @@
           "who": "target",
           "id": "vulnerable",
           "n": 1
+        },
+        {
+          "kind": "block",
+          "n": 3,
+          "lit": "edge"
         }
       ],
       "up": {
@@ -108,12 +113,17 @@
             "who": "target",
             "id": "vulnerable",
             "n": 2
+          },
+          {
+            "kind": "block",
+            "n": 3,
+            "lit": "edge"
           }
         ],
-        "text": "Deal @9@ damage. Apply 2 Cracked."
+        "text": "Deal @9@ damage. Apply 2 Cracked. Blood-moon flame: gain #3# Ward."
       },
       "name": "Eclipse Slash",
-      "text": "Deal @7@ damage. Apply 1 Cracked."
+      "text": "Deal @7@ damage. Apply 1 Cracked. Blood-moon flame: gain #3# Ward."
     },
     "chisel": {
       "type": "attack",
@@ -126,6 +136,11 @@
         {
           "kind": "dmg",
           "n": 4
+        },
+        {
+          "kind": "chip",
+          "n": 1,
+          "lit": "shatter"
         }
       ],
       "up": {
@@ -133,12 +148,17 @@
           {
             "kind": "dmg",
             "n": 7
+          },
+          {
+            "kind": "chip",
+            "n": 1,
+            "lit": "shatter"
           }
         ],
-        "text": "Deal @7@ damage. Chip 1 extra Facet."
+        "text": "Deal @7@ damage. Chip 1 extra Facet. Frost-white flame: chip 1 more Facet."
       },
       "name": "Chisel",
-      "text": "Deal @4@ damage. Chip 1 extra Facet."
+      "text": "Deal @4@ damage. Chip 1 extra Facet. Frost-white flame: chip 1 more Facet."
     },
     "firstSpark": {
       "type": "skill",
@@ -515,6 +535,11 @@
         {
           "kind": "draw",
           "n": 2
+        },
+        {
+          "kind": "ember",
+          "n": 1,
+          "lit": "lantern"
         }
       ],
       "up": {
@@ -523,12 +548,17 @@
           {
             "kind": "draw",
             "n": 2
+          },
+          {
+            "kind": "ember",
+            "n": 1,
+            "lit": "lantern"
           }
         ],
-        "text": "Draw 2 cards."
+        "text": "Draw 2 cards. Amber flame: gain 1 Ember."
       },
       "name": "Tinder",
-      "text": "Draw 2 cards. Kindle."
+      "text": "Draw 2 cards. Kindle. Amber flame: gain 1 Ember."
     },
     "deflect": {
       "type": "skill",
@@ -773,6 +803,11 @@
         {
           "kind": "draw",
           "n": 1
+        },
+        {
+          "kind": "ember",
+          "n": 1,
+          "lit": "lantern"
         }
       ],
       "up": {
@@ -784,12 +819,17 @@
           {
             "kind": "draw",
             "n": 1
+          },
+          {
+            "kind": "ember",
+            "n": 1,
+            "lit": "lantern"
           }
         ],
-        "text": "Gain 2 Energy. Draw 1 card. Kindle."
+        "text": "Gain 2 Energy. Draw 1 card. Kindle. Amber flame: gain 1 Ember."
       },
       "name": "Struck Match",
-      "text": "Gain 1 Energy. Draw 1 card. Kindle."
+      "text": "Gain 1 Energy. Draw 1 card. Kindle. Amber flame: gain 1 Ember."
     },
     "toxicMist": {
       "type": "skill",
@@ -866,6 +906,11 @@
           "who": "allEnemies",
           "id": "vulnerable",
           "n": 1
+        },
+        {
+          "kind": "block",
+          "n": 3,
+          "lit": "edge"
         }
       ],
       "up": {
@@ -881,12 +926,17 @@
             "who": "allEnemies",
             "id": "vulnerable",
             "n": 2
+          },
+          {
+            "kind": "block",
+            "n": 3,
+            "lit": "edge"
           }
         ],
-        "text": "Apply 2 Dimmed and 2 Cracked to ALL enemies."
+        "text": "Apply 2 Dimmed and 2 Cracked to ALL enemies. Blood-moon flame: gain #3# Ward."
       },
       "name": "Shatterhymn",
-      "text": "Apply 1 Dimmed and 1 Cracked to ALL enemies."
+      "text": "Apply 1 Dimmed and 1 Cracked to ALL enemies. Blood-moon flame: gain #3# Ward."
     },
     "fortify": {
       "type": "skill",
@@ -1394,6 +1444,11 @@
         {
           "kind": "dmg",
           "n": 8
+        },
+        {
+          "kind": "chip",
+          "n": 1,
+          "lit": "shatter"
         }
       ],
       "up": {
@@ -1402,12 +1457,17 @@
           {
             "kind": "dmg",
             "n": 11
+          },
+          {
+            "kind": "chip",
+            "n": 1,
+            "lit": "shatter"
           }
         ],
-        "text": "Deal @11@ damage. Chip 3 extra Facets."
+        "text": "Deal @11@ damage. Chip 3 extra Facets. Frost-white flame: chip 1 more Facet."
       },
       "name": "Quakeblow",
-      "text": "Deal @8@ damage. Chip 2 extra Facets."
+      "text": "Deal @8@ damage. Chip 2 extra Facets. Frost-white flame: chip 1 more Facet."
     },
     "resonantLance": {
       "type": "attack",
@@ -1451,6 +1511,11 @@
         {
           "kind": "draw",
           "n": 1
+        },
+        {
+          "kind": "ember",
+          "n": 1,
+          "lit": "lantern"
         }
       ],
       "up": {
@@ -1462,12 +1527,17 @@
           {
             "kind": "draw",
             "n": 1
+          },
+          {
+            "kind": "ember",
+            "n": 1,
+            "lit": "lantern"
           }
         ],
-        "text": "Gain 3 Embers. Draw 1 card."
+        "text": "Gain 3 Embers. Draw 1 card. Amber flame: gain 1 Ember."
       },
       "name": "Tithe of Panes",
-      "text": "Gain 2 Embers. Draw 1 card."
+      "text": "Gain 2 Embers. Draw 1 card. Amber flame: gain 1 Ember."
     },
     "pyreheart": {
       "type": "power",
@@ -1665,6 +1735,11 @@
           "who": "target",
           "id": "vulnerable",
           "n": 1
+        },
+        {
+          "kind": "block",
+          "n": 3,
+          "lit": "edge"
         }
       ],
       "up": {
@@ -1678,12 +1753,17 @@
             "who": "target",
             "id": "vulnerable",
             "n": 2
+          },
+          {
+            "kind": "block",
+            "n": 3,
+            "lit": "edge"
           }
         ],
-        "text": "Deal @7@ damage. Apply 2 Cracked."
+        "text": "Deal @7@ damage. Apply 2 Cracked. Blood-moon flame: gain #3# Ward."
       },
       "name": "Splinter Cut",
-      "text": "Deal @5@ damage. Apply 1 Cracked."
+      "text": "Deal @5@ damage. Apply 1 Cracked. Blood-moon flame: gain #3# Ward."
     },
     "dimTheGlass": {
       "type": "skill",
@@ -1701,13 +1781,18 @@
         {
           "kind": "draw",
           "n": 1
+        },
+        {
+          "kind": "block",
+          "n": 3,
+          "lit": "edge"
         }
       ],
       "up": {
         "cost": 0
       },
       "name": "Dim the Glass",
-      "text": "Apply 2 Dimmed. Draw 1 card."
+      "text": "Apply 2 Dimmed. Draw 1 card. Blood-moon flame: gain #3# Ward."
     },
     "cleft": {
       "type": "attack",
@@ -1920,6 +2005,11 @@
         {
           "kind": "dmg",
           "n": 5
+        },
+        {
+          "kind": "chip",
+          "n": 1,
+          "lit": "shatter"
         }
       ],
       "up": {
@@ -1927,12 +2017,17 @@
           {
             "kind": "dmg",
             "n": 8
+          },
+          {
+            "kind": "chip",
+            "n": 1,
+            "lit": "shatter"
           }
         ],
-        "text": "Deal @8@ damage. Chip 1 extra Facet."
+        "text": "Deal @8@ damage. Chip 1 extra Facet. Frost-white flame: chip 1 more Facet."
       },
       "name": "Spall",
-      "text": "Deal @5@ damage. Chip 1 extra Facet."
+      "text": "Deal @5@ damage. Chip 1 extra Facet. Frost-white flame: chip 1 more Facet."
     },
     "hearthfall": {
       "type": "attack",
@@ -1945,6 +2040,11 @@
         {
           "kind": "dmg",
           "n": 12
+        },
+        {
+          "kind": "ember",
+          "n": 1,
+          "lit": "lantern"
         }
       ],
       "up": {
@@ -1952,12 +2052,17 @@
           {
             "kind": "dmg",
             "n": 16
+          },
+          {
+            "kind": "ember",
+            "n": 1,
+            "lit": "lantern"
           }
         ],
-        "text": "Spend 3 Embers: deal @16@ damage."
+        "text": "Spend 3 Embers: deal @16@ damage. Amber flame: gain 1 Ember."
       },
       "name": "Hearthfall",
-      "text": "Spend 3 Embers: deal @12@ damage."
+      "text": "Spend 3 Embers: deal @12@ damage. Amber flame: gain 1 Ember."
     }
   },
   "cardPools": {
