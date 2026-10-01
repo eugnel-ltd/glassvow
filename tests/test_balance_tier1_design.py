@@ -6,7 +6,8 @@ from copy import deepcopy
 from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(REPO / "tools"))
 from balance_s009_reconstruct import reconstruct  # noqa: E402
-from balance_tier1_design import compile_design, generate_bundle, replay_patches  # noqa: E402
+from balance_seed_contract import H39_REL  # noqa: E402
+from balance_tier1_design import FROZEN_LOCALE_REL, compile_design, generate_bundle, replay_patches  # noqa: E402
 class BalanceTier1DesignTest(unittest.TestCase):
     def test_design_and_fail_closed_bundle(self) -> None:
         first, _ = compile_design(REPO); second, _ = compile_design(REPO); changed, _ = compile_design(REPO, seed=491)
@@ -21,7 +22,9 @@ class BalanceTier1DesignTest(unittest.TestCase):
             self.assertEqual(reconstruct(REPO)["blob"], (out / "t1-c000/full-content.json").read_bytes())
             packet = json.loads((out / "t1-c047/hydration-patches.json").read_text())
             for relative, target in packet["files"].items():
-                replayed = replay_patches(json.loads((REPO / relative).read_text()), target["patch"])
+                # Patches are diffs from the registry's frozen sources (H39 and its locale snapshots).
+                source = H39_REL if relative == "content/full-content.json" else FROZEN_LOCALE_REL[relative]
+                replayed = replay_patches(json.loads((REPO / source).read_text()), target["patch"])
                 self.assertEqual(target["semanticSha256"], generated["candidates"][47]["files"][relative]["semanticSha256"])
                 self.assertEqual(target["semanticSha256"], target["replaySemanticSha256"]); self.assertEqual(target["fileSha256"], target["replayFileSha256"]); self.assertIsInstance(replayed, dict)
         with tempfile.TemporaryDirectory(prefix="glassvow-tier1-unsafe-") as temp:

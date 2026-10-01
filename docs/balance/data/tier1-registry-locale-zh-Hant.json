@@ -1,0 +1,2668 @@
+{
+  "formatVersion": 1,
+  "ui": {
+    "brand": {
+      "secrets": " · {n} 個秘密已現",
+      "stats": "{runs} 次朝聖 · {wins} 次破曉 · {slain} 敵隕落",
+      "tagline": "Roguelite 卡牌構築 · 守夜銘記",
+      "title": "琉璃誓言"
+    },
+    "combat": {
+      "affixTitle": "{name} — 菁英封號",
+      "ashes": "灰燼",
+      "ashesPileAria": "灰燼牌堆",
+      "ashesSub": "焚去的牌——每張都曾餵提燈一點餘燼",
+      "ashesTitle": "灰燼",
+      "buff": "增益",
+      "debuff": "減益",
+      "discard": "棄牌",
+      "discardPileAria": "棄牌堆",
+      "discardPileTitle": "棄牌堆",
+      "draw": "抽牌",
+      "drawPileAria": "抽牌堆",
+      "drawPileSub": "順序隱藏——依字序顯示",
+      "drawPileTitle": "抽牌堆",
+      "end": "結束",
+      "enemyTurn": "敵方回合",
+      "energyAria": "能量",
+      "facetsBody": "每個生物皆是琉璃。攻擊造成未被格擋的傷害時，會琢擊一格璃面；填滿量表，琉璃便會[b]碎裂[/b]——它會失去下一次行動、陷入裂痕，並將餘燼灑入你的提燈。",
+      "facetsTitle": "璃面",
+      "glassHolds": "琉璃仍持",
+      "guardShattered": "護光粉碎",
+      "lanternBody": "提燈盛放碎裂與擊殺所灑的<b>餘燼</b>。將任意卡牌拖上即可<b>燃燼</b>——焚去該牌換取一點餘燼，每回合一次。詛咒拒火。",
+      "lanternBodyLead": "<b>{cost} 點餘燼，每回合一次：</b>{text}<br><br>",
+      "lanternSub": "A · 施展提燈術",
+      "lanternTitle": "提燈",
+      "lanternTitleArt": "提燈術——{name}",
+      "monumentGift": "石碑歸還遺贈",
+      "perfectBanner": "完美",
+      "reshuffle": "重洗",
+      "shatter": "碎裂",
+      "staggered": "踉蹌",
+      "staggeredTipBody": "琉璃已碎——此生物在重新接合前失去下一次行動。",
+      "staggeredTipTitle": "踉蹌",
+      "stoneRemembers": "石碑銘記",
+      "yourTurn": "你的回合",
+      "perfect": "完美",
+      "lanternArtTitle": "提燈術——{name}",
+      "lanternLead": "<b>{embers} 餘燼，每回合一次：</b> {text}<br><br>",
+      "staggeredTitle": "踉蹌",
+      "staggeredBody": "琉璃已碎——此生物在重新接合前失去下一次行動。",
+      "lanternAria": "提燈——耗用一點餘燼",
+      "deckInspectorTitle": "牌庫",
+      "inspectorCardCountOne": "1 張牌",
+      "inspectorCardCountMany": "{count} 張牌",
+      "inspectorEmpty": "沒有牌",
+      "adamant": "不摧",
+      "turn": "回合 {turn}",
+      "encounterHeader": "{kind}  ·  第 {act} 幕",
+      "encounterKind": {
+        "boss": "首領",
+        "elite": "菁英",
+        "monster": "怪物"
+      },
+      "intent": {
+        "attackFor": "攻擊造成 [b]{amount}[/b] 點傷害",
+        "gainWard": "獲得護光",
+        "healSelf": "治療自身",
+        "afflictYou": "向你施加狀態",
+        "empower": "強化自身",
+        "act": "行動",
+        "summary": "意圖：{intent}。"
+      }
+    },
+    "common": {
+      "cancel": "取消",
+      "continue": "繼續",
+      "retry": "重試",
+      "skip": "跳過",
+      "leave": "離開",
+      "use": "使用",
+      "stay": "留下",
+      "title": "主畫面"
+    },
+    "dawn": {
+      "act4RevealCopy": "六片琉璃窗片燃起。王冠之後有甚麼在等待。",
+      "eighthResolvedKicker": "破碎字形終於解明",
+      "pageKicker": "第 {n} 頁",
+      "questCompleteKicker": "{mode}完成",
+      "questProgressKicker": "旅跡仍在延伸",
+      "questRevealKicker": "{mode}顯現",
+      "questUnlockKicker": "洞見甦醒",
+      "reloadSaved": "重新載入已保存的破曉",
+      "saveFailedClear": "所有畫面均已看過，但已保存的破曉未能釋放。離開此畫面前請重試。",
+      "saveFailedCursor": "此畫面已顯現，但它在破曉中的位置未能保存。儀式繼續前請重試。",
+      "saveFailedTitle": "破曉未能守住",
+      "shadeResolvedKicker": "影終於直言",
+      "shardGrantCopy": "一片窗片作出回應。",
+      "whisperKicker": "一聲低語抵達破曉",
+      "witchlightCopy": "蒼白路徑如今將留下標記。",
+      "witchlightLens": "巫光透鏡",
+      "title": "入城",
+      "subtitle": "破曉時，守夜銘記。",
+      "quietTitle": "破曉",
+      "quietBody": "守夜靜默。",
+      "kickerWhisper": "破曉低語",
+      "kickerQuest": "旅途顯現",
+      "kickerProgress": "旅途續行",
+      "kickerShard": "餘燼琉璃碎片",
+      "kickerUnlock": "守夜敞開",
+      "kickerDefault": "破曉",
+      "complete": "破曉完成",
+      "progress": "破曉 {n} / {total} · 當前記憶已燃",
+      "inputHint": "點擊或按空白鍵繼續  ·  長按跳過",
+      "memoryTitle": "守夜銘記",
+      "memoryBody": "勝利 · {count} 片碎片已點亮",
+      "unlock": {
+        "lamplighter": "空燈掌燈人踏上路途。",
+        "phials": "朝聖之路上如今可找到藥瓶。",
+        "omens": "今後長夜將在凶兆下升起。",
+        "pool": "新卡牌與遺物加入朝聖之路。",
+        "emberglass": "餘燼琉璃彩窗開啟。",
+        "act4": "王冠之後的封印之門已開。"
+      }
+    },
+    "embark": {
+      "aspectLabel": "誰執提燈",
+      "noVows": "路如常。未立任何誓言。",
+      "subChoose": "選擇你面對路途的方式。",
+      "subWait": "提燈已燃。路在等待。",
+      "title": "朝聖啟程",
+      "vowLevel": "誓言 {level}  / {max}",
+      "warnSaved": "重新開始將拋棄已保存的朝聖之路。"
+    },
+    "end": {
+      "arrived": "入城",
+      "arrivedSub": "永恆君王已化塵。破曉越過長路——這是漫長年代中的第一次。",
+      "bequestDone": "✦ 石碑守住你的{name}。<br>它會在{act}等候你。",
+      "bequestNote": {
+        "card": "你最上乘的卡牌",
+        "gold": "{n} 金幣",
+        "goldCache": "一囊金幣",
+        "relic": "你最稀有的遺物"
+      },
+      "bequestTitle": "將一事刻入石中——下一段朝聖之路可在 {act} 取回。",
+      "bequestUnpaid": "未付的遺贈仍留在矗立石中",
+      "cardsPlayed": "出牌數",
+      "deckSize": "牌庫張數",
+      "dmgDealt": "造成傷害",
+      "dmgTaken": "受到傷害",
+      "elitesBosses": "菁英與首領",
+      "fallen": "隕落",
+      "fallenSub": "一段朝聖之路在第 <b>{n}</b> 塊引路石終結。<br>路留下它所奪走的——守夜卻會銘記。",
+      "finalDeckTitle": "最終牌庫",
+      "waystones": "引路石數",
+      "returnVigil": "返回守夜",
+      "runTime": "用時",
+      "slain": "擊殺",
+      "unlock": {
+        "ashwarden": "灰衛",
+        "aspect": "面向已解鎖",
+        "card": "卡牌已解鎖",
+        "header": "✦ {kind}",
+        "relic": "遺物已解鎖"
+      },
+      "viewDeck": "檢視最終牌庫",
+      "abandoned": "誓言擱置",
+      "abandonedSub": "朝聖止於此。守夜將記下這筆。",
+      "fallenLantern": "你的提燈在第 {n} 塊引路石熄滅。",
+      "elitesBossesPlus": "菁英 + 首領",
+      "monument": {
+        "body": "前一位朝聖者站在石中。",
+        "bodyWithBequest": "前一位朝聖者站在石中。\n其手中仍留有一物。",
+        "title": "上次墜落的紀念碑",
+        "claim": "觸碰矗立的琉璃",
+        "leave": "置之不理"
+      }
+    },
+    "event": {
+      "chooseCardSub": "仍有一頁泛着微光。",
+      "chooseCardTitle": "選擇一張牌",
+      "duplicateSub": "鏡子仍記得。",
+      "duplicateTitle": "複製一張牌",
+      "removeSub": "讓它離去。",
+      "removeTitle": "移除一張牌",
+      "upgradeSub": "鍛爐飢渴。",
+      "upgradeTitle": "升級一張牌",
+      "strangePlace": "異樣之地",
+      "continue": "繼續",
+      "chooseCardBody": "選擇本身也是代價。"
+    },
+    "help": {
+      "roadBody": "沿提燈之路前行。擊敗怪物、收集卡牌、遺物與藥瓶，並打倒每一幕的首領，共 <b>{count} 幕</b>。未燃之燈隱匿其所藏——但首次踏足會贈予金幣賞金。",
+      "roadTitle": "朝聖之路",
+      "combatBody": "每回合你抽 <b>5 張牌</b>並獲得 <b>3 點能量</b>（⬤）。點擊或拖曳出牌——若場上尚有多名敵人，攻擊須選定目標。敵人頭頂會預示其<b>意圖</b>。",
+      "combatTitle": "戰鬥",
+      "firesBody": "休息處可回復 <b>30%</b> 生命或升級一張牌。商店販售卡牌、遺物、藥瓶——亦可自牌庫中<b>移除</b>一張。保持牌庫精簡；每份戰利皆可放棄。",
+      "firesTitle": "爐火與商人",
+      "glassBody": "每個生物皆是琉璃，生命條下有一列<b>璃面</b>。攻擊若未被護光擋下而見血，便會琢擊一格璃面（重型卡牌會琢擊更多格）。填滿量表，琉璃便會<b>碎裂</b>：它會失去下一次行動、陷入裂痕，並將<b>餘燼</b>灑入你的提燈。把握碎裂時機，擋下你無法承受的一擊。",
+      "glassTitle": "琉璃",
+      "lanternBody": "餘燼驅動你的<b>提燈術</b>——按 <b>A</b> 施展，每回合一次。將任意卡牌拖到提燈上即可<b>燃燼</b>：牌被焚去，提燈得 1 餘燼。每回合一次；詛咒拒火。",
+      "lanternTitle": "提燈",
+      "title": "玩法說明",
+      "vigilBody": "一切皆不白費。每段朝聖之路開始時，<b>守爐人</b>贈予恩賜並讓你選擇提燈術。倒下時，將一事刻入石中——一座<b>紀念碑</b>，下一段旅程可在同一幕取回。每次碎裂、燃燼與擊殺皆累積畢生<b>功績</b>，解鎖新牌與遺物。抵達破曉一次後，<b>誓言</b>開啟：一條可選的嚴酷難度之梯，留給願意踏上更殘酷朝聖之路的人。",
+      "vigilTitle": "守夜——死亡留下之物",
+      "wardBody": "<b>護光</b>可吸收傷害，但每回合開始時消散。<b>裂痕</b> ×1.5 受傷 · <b>黯淡</b> −25% 輸出 · <b>脆裂</b> −25% 護光 · <b>陰燃</b>每回合灼燒，宿主死亡或碎裂時躍至另一敵人。",
+      "wardTitle": "護光與狀態"
+    },
+    "hint": {
+      "mapSelect": "點選一盞亮着的引路石，踏上朝聖之路。",
+      "dragPlay": "把牌拖到敵人身上，即可打出。",
+      "targeting": "把牌放到你要打的那個敵人身上。",
+      "endTurn": "能量用盡時，點選結束。",
+      "intent": "敵人頭頂的意圖，會預示下一擊。",
+      "reward": "選一張牌加入牌庫，或跳過以保持精簡。",
+      "skip": "跳過指引"
+    },
+    "hollow": {
+      "kicker": "未燃之路 · 第 {current} 份代價，共 {total} 份",
+      "payPrice": "付上代價",
+      "pricePaid": "代價已付",
+      "returnLater": "稍後再來",
+      "routeFailed": "前路未能備妥。",
+      "routeSaveFailed": "前路尚未保存。儲存空間可用時請重試。",
+      "saveFailed": "代價尚未保存。請重試保存。",
+      "title": "空燈掌燈人",
+      "message": {
+        "inactive": "空燈沒有回應。",
+        "emberDebt": "接下來三點餘燼歸於空燈。",
+        "needGold": "帶來 160 金幣。",
+        "vesselTooFragile": "你的容器承受不起這代價。",
+        "needBoon": "帶來一份尚未花掉的恩賜。",
+        "paneLit": "又一片空燈窗片燃起。",
+        "noPriceWaiting": "目前沒有空燈代價等候支付。"
+      }
+    },
+    "hud": {
+      "actWaystone": "第 {act} 幕 · 第 {n} 塊引路石",
+      "deckAria": "牌庫",
+      "deckCount": "{n} 張牌",
+      "deckTitle": "你的牌庫",
+      "menuAria": "選單",
+      "omenSub": "籠罩第 {act} 幕",
+      "omenTitle": "凶兆——{name}",
+      "potionTip": "點擊使用或丟棄",
+      "tossPotion": "丟棄",
+      "usePotion": "使用 {name}",
+      "viewDeck": "檢視牌庫",
+      "menu": "選單",
+      "emptyPhial": "空藥瓶位",
+      "hpFraction": "生命 {hp}／{maxHp}",
+      "location": "{act} · 第 {n} 塊引路石 · {boss}",
+      "deckOverlayTitle": "牌庫",
+      "deckOverlayCount": "攜帶 {count} 張牌",
+      "usePotionOn": "對 {name} 使用"
+    },
+    "keywords": {
+      "chip": "琢擊可直傷琉璃本身：推進碎裂，無需見血。",
+      "cinder": "留在手中時每回合結束受到 2 點傷害。",
+      "ember": "提燈術的燃料。碎裂、死亡與燃燼所灑；盛於提燈。",
+      "energy": "用於出牌。每回合回滿。",
+      "facetDesc": "每個生物皆是帶有璃面量表的琉璃。填滿則碎裂——失去下一動、陷入裂痕，並將餘燼灑入你的提燈。",
+      "hex": "詛咒：留在手中時每回合結束失去 1 點生命。無法燃燼。",
+      "kindle": "焚去直至本場戰鬥結束——提燈獲得 1 餘燼。",
+      "shard": "無法打出的廢璃。仍可燃燼。",
+      "staggered": "碎裂的琉璃在重新接合前失去下一動。",
+      "unplayable": "此牌無法打出。",
+      "ward": "可阻擋傷害的護光。於你的回合開始時消散。",
+      "terms": {
+        "vulnerable": [
+          "裂痕"
+        ],
+        "weak": [
+          "黯淡"
+        ],
+        "frail": [
+          "脆裂"
+        ],
+        "poison": [
+          "陰燃"
+        ],
+        "str": [
+          "熾心"
+        ],
+        "dex": [
+          "沉穩"
+        ],
+        "kindle": [
+          "燃燼"
+        ],
+        "ward": [
+          "護光"
+        ],
+        "energy": [
+          "能量"
+        ],
+        "ember": [
+          "餘燼",
+          "餘燼"
+        ],
+        "chip": [
+          "琢擊"
+        ],
+        "facetDesc": [
+          "璃面",
+          "璃面",
+          "碎裂",
+          "碎裂"
+        ],
+        "staggered": [
+          "踉蹌"
+        ],
+        "unplayable": [
+          "無法打出"
+        ],
+        "shard": [
+          "碎片"
+        ],
+        "hex": [
+          "咒印"
+        ],
+        "cinder": [
+          "燼屑"
+        ]
+      }
+    },
+    "lamp": {
+      "artHint": "（戰鬥中按 A）",
+      "artLabel": "你的提燈術",
+      "boonLabel": "路上的恩賜",
+      "sub": "{aspect} 立於路途起點。取一份臨別贈禮——並選擇提燈將攜的火。",
+      "title": "掌燈人"
+    },
+    "map": {
+      "click": "點擊",
+      "drag": "拖曳",
+      "hint": {
+        "boss": "本幕止於此。整備你的牌庫。",
+        "elite": "有封號之敵——風險更高，遺物級獎賞。",
+        "event": "命運未書。任何事都可能發生。",
+        "hollow": "空燈掌燈人以代價相候。",
+        "monster": "一場戰鬥。迅捷者得餘燼與金幣。",
+        "rest": "回復，或將一張牌鍛成 + 型。",
+        "shop": "金幣換卡牌、遺物、藥瓶。",
+        "treasure": "無需戰鬥的箱子。"
+      },
+      "node": {
+        "elite": "菁英 — 當心",
+        "event": "未知事件",
+        "hollow": "空燈",
+        "monster": "怪物",
+        "rest": "休息處",
+        "shop": "商人",
+        "treasure": "寶箱",
+        "act4": "第四幕",
+        "monument": "紀念碑"
+      },
+      "openDoor": {
+        "hold": "按住不放，一直行到門前。",
+        "step": "按一下，行一步。"
+      },
+      "scroll": "滾動",
+      "sealedDoor": {
+        "aria": "封印之門",
+        "inscription": "朝聖仍在繼續",
+        "label": "封印之門",
+        "sub": "六片窗片在你身後燃燒。鎖回應了，卻未開啟。",
+        "title": "封印之門"
+      },
+      "walkIn": "門開着。行入去。",
+      "tap": "輕觸",
+      "travelHere": "{action} 以前往此處。",
+      "unlitBody": "此處所藏仍是未知——但首次點亮會獲得金幣賞金。",
+      "unlitTitle": "未燃之燈",
+      "witchlightBody": "蒼白琉璃在此等候。",
+      "witchlightTitle": "巫光顫動",
+      "holdFast": "琉璃堅守。路尚未開。",
+      "standThreshold": "立於門檻",
+      "returnVigil": "返回守夜"
+    },
+    "menu": {
+      "abandon": "放棄",
+      "abandonConfirmBody": "這段朝聖之路將告終；守夜會留下你所得的一切。",
+      "abandonConfirmTitle": "放棄此行？",
+      "abandonRun": "放棄此行",
+      "back": "返回",
+      "beginAnew": "重新開始",
+      "beginAnewBody": "新的朝聖之路開始前，目前這段旅程會記作放棄。",
+      "beginAnewTitle": "重新開始？",
+      "rekindle": "續火",
+      "chooseBoon": "選擇恩賜",
+      "close": "關閉",
+      "backToRoad": "返回路上",
+      "credits": "製作人員",
+      "fightOn": "繼續前行",
+      "howToPlay": "玩法說明",
+      "stayOnRoad": "留在路上",
+      "lightTheWay": "點亮前路",
+      "mute": "靜音",
+      "muteSound": "靜音",
+      "quit": "離開",
+      "quitGame": "結束遊戲",
+      "return": "返回",
+      "returnTitle": "返回標題",
+      "settings": "設定",
+      "theVigil": "守夜",
+      "unmute": "取消靜音",
+      "unmuteSound": "取消靜音",
+      "leaveRoadTitle": "離開路途？",
+      "leaveRoadBody": "提燈會守住你的行程。"
+    },
+    "persistence": {
+      "hollowRouteBody": "此目的地仍待保存。釋出儲存空間後重試，或重新載入已保存的確切目的地。",
+      "reloadRoad": "重新載入已保存的朝聖之路",
+      "reloadDestination": "重新載入已保存的目的地",
+      "reloadDuel": "重新載入已保存的決鬥",
+      "reloadFinalisation": "重新載入已保存的結算",
+      "retryFinalisation": "重試結算",
+      "retrySave": "重試保存",
+      "runSaveBody": "朝聖之路未能保存。釋出儲存空間後重試，或重新載入上次確實保存的狀態。",
+      "runSaveRetryFail": "仍未能保存。請釋出儲存空間，然後重試或重新載入上次確實保存的狀態。",
+      "saveFailedTitle": "保存失敗",
+      "stoneBody": "石碑未能守住這場決鬥。請釋出儲存空間後再試。",
+      "stoneTitle": "石碑未能守住",
+      "vigilBody": "這次旅程終結已安全記錄，但守夜帳冊或最終破曉未能保存。請釋出儲存空間後重試，或重新載入已保存的結算。",
+      "vigilTitle": "守夜未能守住",
+      "lightWouldNotHoldTitle": "光未能守住",
+      "noProgressDiscarded": "進度並未丟失。",
+      "detail": {
+        "currentPilgrimageClose": "目前的朝聖之路未能結束。",
+        "currentPilgrimageClear": "目前的朝聖之路未能清除。",
+        "pilgrimageStart": "朝聖之路未能開始。",
+        "savedPilgrimageMapUnreadable": "已保存的朝聖地圖無法讀取。",
+        "abandonmentHold": "放棄決定未能保存。",
+        "phialChoiceHold": "藥瓶選擇未能保存。",
+        "chosenWaystoneHold": "所選引路石未能保存。",
+        "clearedWaystoneHold": "已走過的引路石未能保存。",
+        "eventHold": "事件未能保存。",
+        "eventChoiceHold": "事件選擇未能保存。",
+        "treasureHold": "寶箱未能保存。",
+        "merchantStockHold": "商人貨物未能保存。",
+        "emptyLanternPurchaseHold": "空燈交易未能保存。",
+        "purchaseHold": "購買結果未能保存。",
+        "removedCardHold": "移除卡牌未能保存。",
+        "encounterFreeze": "戰鬥狀態未能封存。",
+        "standingBequestClear": "矗立石中的遺贈未能清除。",
+        "fallHold": "墜落結果未能保存。",
+        "shadeVictoryHold": "影之決鬥勝果未能保存。",
+        "finalVictoryHold": "最終勝果未能保存。",
+        "victoryRewardsHold": "勝利獎賞未能保存。",
+        "claimedRewardHold": "已領獎賞未能保存。",
+        "crownRelicsHold": "王冠遺物未能保存。",
+        "nextActHold": "下一幕未能保存。",
+        "bequestHold": "遺贈未能保存。",
+        "vigilRecord": "守夜未能記下這段朝聖之路。",
+        "completedRunClose": "已完成的朝聖之路未能結束。",
+        "dawnHold": "破曉未能保存。",
+        "dawnCursorHold": "破曉進度未能保存。",
+        "sceneCursorHold": "這場進度未能保存。",
+        "sceneHold": "這場未能保存。",
+        "shadeDuelHold": "影之決鬥未能保存。",
+        "hollowPriceHold": "空燈代價未能保存。",
+        "heldHollowDestinationUnreadable": "已保存的空燈目的地無法讀取。",
+        "hollowDestinationHold": "空燈目的地未能保存。",
+        "lamplighterGiftsHold": "掌燈人的贈禮未能保存。",
+        "lamplighterGiftHold": "掌燈人的贈禮選擇未能保存。"
+      }
+    },
+    "rest": {
+      "healedFloat": "+{hp} 生命",
+      "restBtn": "休息",
+      "restHeal": "— 回復 {hp} 生命",
+      "smithBtn": "鍛造",
+      "smithSub": "— 升級一張牌",
+      "sub": "爐火噼啪。片刻之間，路安靜。",
+      "title": "休息處",
+      "upgradeSub": "把一張牌鍛成 + 型。",
+      "upgradeTitle": "升級一張牌",
+      "upgradedSub": "新力量在牌面閃耀。",
+      "upgradedTitle": "升級完成！",
+      "restHealBtn": "休息 — 回復 {hp} 生命",
+      "hpFrac": "{cur} / {max} 生命",
+      "temperCardTitle": "淬鍊一張牌",
+      "temperCardBody": "選擇一張牌加以強化。"
+    },
+    "reward": {
+      "addCardRow": "將一張牌加入牌庫",
+      "bossRelicSub": "選擇一件——其力量將永久相隨。",
+      "bossRelicTitle": "首領遺物呼喚",
+      "bossVanquished": "首領已敗",
+      "cardAdded": "已加入 {name}",
+      "chooseCardSub": "選一張加入牌庫——或跳過，保持精簡。",
+      "chooseCardTitle": "選擇一張牌",
+      "eliteSlain": "菁英殞落",
+      "goldRow": "[b][color=#{tone}]{n}[/color][/b] 金幣",
+      "leaveConfirmBody": "琉璃上仍有尚未領取的戰利品。要捨下它們繼續前行嗎？",
+      "leaveConfirmNo": "返回",
+      "leaveConfirmTitle": "捨下獎賞？",
+      "leaveConfirmYes": "捨下",
+      "perfectSeal": "✦ 完美——琉璃無痕 ✦",
+      "potionSlotsFull": "藥瓶欄已滿！",
+      "takeNone": "都不拿",
+      "victory": "勝利",
+      "continue": "繼續",
+      "skip": "跳過",
+      "leaveIt": "不取",
+      "walkOn": "繼續前行",
+      "takeOneLight": "攜一點光上路",
+      "takeOneFromLight": "從光中取一件",
+      "onePiece": "一件戰利品隨你上路",
+      "addCard": "將一張牌加入牌庫",
+      "offeredTakeOne": "提供 {n} 件 · 選一件",
+      "goldAmount": "{n} 金幣",
+      "chooseCardBody": "將一張牌加入牌庫——或跳過以保持精簡。",
+      "replacePotion": "替換 {name}",
+      "discardNewPhial": "捨棄新藥瓶",
+      "phialRackFullTitle": "藥瓶架已滿",
+      "phialRackFullBody": "選擇要離架的一瓶。",
+      "bossTakeNone": "不取王冠",
+      "bossCrownTitle": "破璃之冠",
+      "bossCrownBody": "下一夜來臨前，選擇一件遺物。"
+    },
+    "rose": {
+      "dormantPane": "沉睡的餘燼琉璃窗片 {n}",
+      "finalWhisper": "最後的低語在每次破曉歸來。",
+      "openLabel": "打開餘燼琉璃彩窗",
+      "paneDark": "這片窗片仍然黯淡。",
+      "selectedPane": "已選的餘燼琉璃窗片",
+      "shardRecovered": "{name}，碎片已尋回",
+      "shardRecoveredShort": "碎片已尋回",
+      "unknownPane": "未知的餘燼琉璃窗片 {n}",
+      "whisperLogTitle": "破曉所聞低語",
+      "whisperLogTitleUpper": "破曉所聞低語",
+      "finalWhisperMark": "∞  最後的低語在每次破曉歸來。",
+      "shardRecoveredStack": "{name}\n碎片已尋回",
+      "replayUnsealing": "再看開封"
+    },
+    "settings": {
+      "audio": "音訊",
+      "debugLabel": "偵錯",
+      "display": "顯示",
+      "eraseAll": "抹除全部進度",
+      "eraseEverything": "抹除一切",
+      "fullscreen": "全螢幕",
+      "ledger": "總帳",
+      "master": "主音量",
+      "motion": "動態",
+      "music": "音樂",
+      "mute": "靜音",
+      "off": "關",
+      "on": "開",
+      "reduceMotion": "減少動態",
+      "resetConfirmBody": "這會抹去你的<b>目前朝聖之路</b>及整個<b>守夜</b>——功績、解鎖、誓言、紀念碑與低語。<br><br><span style=\"color:#ff8d8d\">此舉無法復原。</span>",
+      "resetConfirmTitle": "重置存檔？",
+      "resetSave": "重置存檔",
+      "resetWarn": "將抹去目前朝聖之路與全部守夜進度。此舉無法復原。",
+      "screenShake": "畫面震動",
+      "sfx": "音效",
+      "title": "設定",
+      "unmute": "取消靜音",
+      "volumeTip": "{name} 音量",
+      "vsync": "垂直同步",
+      "resetConfirmPlain": "這將抹去你目前的朝聖之路與整個守夜——功績、解鎖、誓言、紀念碑與低語。\n\n此舉無法復原。",
+      "eraseAllTitle": "抹除全部進度？",
+      "privacy": "私隱",
+      "diagnostics": "傳送當機診斷資料",
+      "diagnosticsNote": "將於下次啟動遊戲時生效。",
+      "diagnosticsNotice": "為修正錯誤，遊戲會傳送當機診斷資料。\n你可在「設定」中關閉。",
+      "privacyPolicy": "私隱政策"
+    },
+    "shop": {
+      "cardRemoval": {
+        "desc": "從牌庫永久移除一張牌。",
+        "pickSub": "割捨無用之重。",
+        "pickTitle": "移除一張牌",
+        "title": "移除卡牌",
+        "confirmBody": "商人收下破碎的璃片。"
+      },
+      "gate": "門檻",
+      "greeting": "「黃金換榮耀，異鄉人。就算你命定殞落——價錢仍然公道。」",
+      "leave": "離開商店",
+      "potionSlotsFull": "藥瓶欄已滿！",
+      "removalSpent": "已用",
+      "sold": "售罄",
+      "title": "商人",
+      "leaveUpper": "離開商店"
+    },
+    "smoke": {
+      "hello": "你好，{name}"
+    },
+    "treasure": {
+      "coinsOnly": "只餘金幣——[color=#{tone}]+{gold} 金幣[/color]。",
+      "empty": "寶箱空無一物。",
+      "openBtn": "打開箱子",
+      "relicClaim": "你取得 <b style=\"color:{tone}\">{name}</b>——<i>{text}</i>",
+      "sub": "沉重的金箍箱。要打開嗎？",
+      "title": "寶箱",
+      "continue": "繼續",
+      "relicClaimPlain": "你取得 [color=#{tone}]{name}[/color]——[i]{text}[/i]"
+    },
+    "vigil": {
+      "deeds": "功績",
+      "title": "守夜",
+      "return": "返回",
+      "ashwarden": "灰衛",
+      "stats": "{runs} 次朝聖 · {wins} 次破曉 · 最深誓言：{vow}",
+      "deedsTab": "功績",
+      "roseTab": "彩窗",
+      "epitaphTab": "遺言"
+    },
+    "pilgrimage": {
+      "survey": "滾動或拖曳以巡視朝聖之路",
+      "surveyChoose": "滾動或拖曳 · 選擇一盞已燃提燈",
+      "roadEnds": "此路已盡",
+      "charting": "正在繪製前路",
+      "unlitWay": "未燃之路",
+      "roseWindow": "彩窗",
+      "hearth": "爐火",
+      "awaits": "{region}——{boss}正在等待",
+      "notNow": "暫時不要"
+    },
+    "credits": {
+      "title": "製作人員",
+      "headingBrand": "琉璃誓言",
+      "bodyBrand": "Roguelite 卡牌構築 · 作者 fol2",
+      "headingGlass": "琉璃",
+      "bodyGlass": "平行移植自 roguecardv2。",
+      "headingMusic": "音樂 — 彩繪玻璃",
+      "headingSound": "音效 — 灰璃守夜",
+      "headingType": "字型",
+      "bodyCinzel": "Cinzel — Natanael Gama（OFL）",
+      "bodyAlegreya": "Alegreya — Juan Pablo del Peral, Huerta Tipográfica（OFL）",
+      "bodyNoto": "Noto Serif TC + Noto Sans Symbols2 — Google（OFL）",
+      "headingEngine": "引擎",
+      "bodyEngine": "以 Godot 引擎製作",
+      "close": "關閉",
+      "engineLicences": "引擎授權",
+      "fontLicences": "字型授權（OFL）",
+      "components": "組件",
+      "licenceTexts": "授權全文",
+      "themeLine": "灰璃守夜",
+      "footer": "© 2026 fol2 · 感謝你長守此夜",
+      "musicAttribution": "以 Suno 作曲",
+      "musicAttributionCount": "{count} 首樂曲 · 以 Suno 作曲",
+      "musicTracklistFallback": "彩繪琉璃曲目",
+      "sfxAttribution": "以 ElevenLabs 合成",
+      "sfxAttributionCount": "{count} 段音效 · 以 ElevenLabs 合成"
+    },
+    "omen": {
+      "prefix": "凶兆——"
+    },
+    "language": {
+      "label": "語言",
+      "en": "English",
+      "zhHant": "繁體中文",
+      "deferNote": "將於下一畫面生效。"
+    },
+    "card": {
+      "type": {
+        "attack": "攻擊",
+        "curse": "詛咒",
+        "power": "能力",
+        "skill": "技巧",
+        "status": "狀態"
+      }
+    },
+    "rarity": {
+      "boss": "首領",
+      "common": "普通",
+      "rare": "稀有",
+      "special": "特殊",
+      "starter": "初始牌",
+      "uncommon": "罕見"
+    },
+    "scene": {
+      "skipGuidance": {
+        "keep": "保留指引",
+        "skip": "跳過指引",
+        "title": "跳過教學指引？"
+      },
+      "speaker": {
+        "keeper": "守爐人",
+        "lamplighter": "掌燈人",
+        "queue": "隊伍"
+      }
+    }
+  },
+  "content": {
+    "acts": {
+      "0": {
+        "bossName": "根脈之心",
+        "name": "灰燼樹林"
+      },
+      "1": {
+        "bossName": "利維坦之喉",
+        "name": "沉沒之城"
+      },
+      "2": {
+        "bossName": "永恆君王",
+        "name": "黑曜王庭"
+      },
+      "3": {
+        "bossName": "永恆留者",
+        "name": "鏡中歸途"
+      }
+    },
+    "affixes": {
+      "adamant": {
+        "name": "不摧",
+        "text": "其琉璃首次將要碎裂時，仍會堅守。"
+      },
+      "cinderVeined": {
+        "name": "燼脈",
+        "text": "其每次擊中你，皆留下 1 層陰燃。"
+      },
+      "emberFat": {
+        "name": "飽燼",
+        "text": "將其斬殺可獲雙倍金幣。"
+      },
+      "fervent": {
+        "name": "熾烈",
+        "text": "戰鬥開始時獲得 2 層熾心。"
+      },
+      "veiled": {
+        "name": "蒙紗",
+        "text": "戰鬥開始時身披 15 點護光。"
+      },
+      "vitrified": {
+        "name": "琉化",
+        "text": "琉璃更厚：璃面量表 +2 格，生命 +15%。"
+      }
+    },
+    "arts": {
+      "ashfall": {
+        "name": "灰落",
+        "text": "灰衛之息。對所有敵人施加 6 層陰燃，並獲得 5 點護光。"
+      },
+      "beacon": {
+        "name": "引炬",
+        "text": "高舉燈火。本回合你的攻擊額外琢擊 1 格璃面。"
+      },
+      "emberveil": {
+        "name": "燼幕",
+        "text": "懸而未發的火簾。獲得 12 點護光。"
+      },
+      "flare": {
+        "name": "焰閃",
+        "text": "提燈吐焰。對所有敵人造成 9 點傷害。"
+      },
+      "mendglass": {
+        "name": "補璃",
+        "text": "暖光縫合裂紋。回復 8 點生命。"
+      },
+      "stoke": {
+        "name": "添薪",
+        "text": "把火餵給執燈之手。獲得 1 點能量，抽 2 張牌。"
+      }
+    },
+    "aspects": {
+      "ashwarden": {
+        "blurb": "煙灰凝成形體。讓陰燃奪命，亦燃燼手牌以餵養提燈。步伐較慢，卻能久持——所觸一切，終將燃燒。",
+        "name": "灰衛",
+        "nameBare": "灰衛"
+      },
+      "duskblade": {
+        "blurb": "琉璃磨成殺伐之鋒。揮斬、碎裂，再以破碎璃面化作薪火——任何長夜皆可劈開前路。",
+        "name": "暮刃",
+        "nameBare": "暮刃"
+      }
+    },
+    "boons": {
+      "emberFlask": {
+        "name": "餘燼瓶",
+        "text": "攜帶一瓶烈火藥瓶與一瓶活力藥瓶上路。"
+      },
+      "fullPurse": {
+        "name": "滿囊金幣",
+        "text": "出發時額外獲得 120 金幣。"
+      },
+      "keenEye": {
+        "name": "守望者之眼",
+        "text": "開始時獲得一件隨機遺物。"
+      },
+      "pilgrimsCache": {
+        "name": "朝聖者遺藏",
+        "text": "獲得 60 金幣與一瓶護光藥瓶。"
+      },
+      "temperedGlass": {
+        "name": "淬鍊琉璃",
+        "text": "生命上限提高 14。"
+      },
+      "twinPhials": {
+        "name": "雙生藥瓶",
+        "text": "攜帶一瓶迅捷藥瓶與一瓶能量藥瓶上路。"
+      },
+      "venomPouch": {
+        "name": "灰燼囊",
+        "text": "獲得 40 金幣與一瓶毒焰藥瓶。"
+      },
+      "warmHearth": {
+        "name": "溫暖爐火",
+        "text": "生命回復至全滿，並提高 6 點生命上限。"
+      }
+    },
+    "cards": {
+      "aegis": {
+        "name": "聖堂琉璃",
+        "text": "獲得 #30# 點護光。燃燼。",
+        "textUp": "獲得 #40# 點護光。燃燼。"
+      },
+      "agility": {
+        "name": "琉匠沉穩",
+        "text": "獲得 2 層沉穩。",
+        "textUp": "獲得 3 層沉穩。"
+      },
+      "annihilate": {
+        "name": "安魂曲",
+        "text": "對所有敵人造成 @9@ 點傷害，並施加 3 層陰燃。",
+        "textUp": "對所有敵人造成 @12@ 點傷害，並施加 4 層陰燃。"
+      },
+      "risingLitany": {
+        "name": "昇華聖詠",
+        "text": "每回合開始時獲得 2 層熾心。",
+        "textUp": "每回合開始時獲得 3 層熾心。"
+      },
+      "ashBite": {
+        "name": "灰噬",
+        "text": "造成 @6@ 點傷害。施加 2 層陰燃。",
+        "textUp": "造成 @8@ 點傷害。施加 3 層陰燃。"
+      },
+      "ashenChoir": {
+        "name": "灰燼合唱",
+        "text": "施加 4 層陰燃。陰燃中的琉璃死亡時，火會躍至另一敵人。",
+        "textUp": "施加 6 層陰燃。陰燃中的琉璃死亡時，火會躍至另一敵人。"
+      },
+      "bastion": {
+        "name": "退火",
+        "text": "護光不再於你的回合開始時消散。"
+      },
+      "bloodRite": {
+        "name": "以血易油",
+        "text": "失去 3 點生命。獲得 2 點能量。",
+        "textUp": "失去 3 點生命。獲得 3 點能量。"
+      },
+      "brace": {
+        "name": "持光",
+        "text": "獲得 #8# 點護光。",
+        "textUp": "獲得 #11# 點護光。"
+      },
+      "bulwark": {
+        "name": "琉璃壁",
+        "text": "獲得 #13# 點護光。",
+        "textUp": "獲得 #18# 點護光。"
+      },
+      "burn": {
+        "name": "燼屑",
+        "text": "無法打出。若此牌留在手中，你的回合結束時受到 2 點傷害。"
+      },
+      "catalyst": {
+        "name": "風箱",
+        "text": "令一名敵人的陰燃層數加倍。燃燼。",
+        "textUp": "令一名敵人的陰燃層數增至三倍。燃燼。"
+      },
+      "chisel": {
+        "name": "璃鑿",
+        "text": "造成 @4@ 點傷害。額外琢擊 1 格璃面。",
+        "textUp": "造成 @7@ 點傷害。額外琢擊 1 格璃面。"
+      },
+      "cleave": {
+        "name": "琉璃扇",
+        "text": "對所有敵人造成 @6@ 點傷害。",
+        "textUp": "對所有敵人造成 @9@ 點傷害。"
+      },
+      "cleft": {
+        "name": "裂隙",
+        "text": "造成 @8@ 點傷害。若該敵人帶有裂痕，再施加 1 層裂痕並獲得 1 層熾心。",
+        "textUp": "造成 @11@ 點傷害。若該敵人帶有裂痕，再施加 1 層裂痕並獲得 1 層熾心。"
+      },
+      "cripple": {
+        "name": "熄火槽",
+        "text": "撲滅一名敵人的內火：令其失去 2 層熾心。燃燼。",
+        "textUp": "撲滅一名敵人的內火：令其失去 3 層熾心。燃燼。"
+      },
+      "defend": {
+        "name": "護光",
+        "text": "獲得 #5# 點護光。",
+        "textUp": "獲得 #8# 點護光。"
+      },
+      "deflect": {
+        "name": "折光",
+        "text": "獲得 #6# 點護光。抽 1 張牌。",
+        "textUp": "獲得 #9# 點護光。抽 1 張牌。"
+      },
+      "devour": {
+        "name": "噬火",
+        "text": "造成 @10@ 點傷害。若以此斬殺，便吞下其火：獲得 3 點餘燼並回復 4 點生命。燃燼。",
+        "textUp": "造成 @13@ 點傷害。若以此斬殺，便吞下其火：獲得 4 點餘燼並回復 6 點生命。燃燼。"
+      },
+      "dimTheGlass": {
+        "name": "暗琉",
+        "text": "施加 2 層黯淡。抽 1 張牌。"
+      },
+      "eclipseSlash": {
+        "name": "蝕月斬",
+        "text": "造成 @7@ 點傷害。施加 1 層裂痕。",
+        "textUp": "造成 @9@ 點傷害。施加 2 層裂痕。"
+      },
+      "eclipseStep": {
+        "name": "蝕影步",
+        "text": "獲得 #5# 點護光。對即將攻擊你的敵人施加 1 層裂痕。",
+        "textUp": "獲得 #8# 點護光。對即將攻擊你的敵人施加 1 層裂痕。"
+      },
+      "emberEye": {
+        "name": "燼瞳",
+        "text": "花費 2 點餘燼：對所有敵人施加 2 層裂痕。燃燼。",
+        "textUp": "花費 2 點餘燼：對所有敵人施加 3 層裂痕。燃燼。"
+      },
+      "emberdance": {
+        "name": "餘燼舞",
+        "text": "傾盡提燈：每花費 1 點餘燼，獲得 3 點護光。燃燼。",
+        "textUp": "傾盡提燈：每花費 1 點餘燼，獲得 4 點護光。燃燼。"
+      },
+      "empower": {
+        "name": "內焰",
+        "text": "獲得 2 層熾心。",
+        "textUp": "獲得 3 層熾心。"
+      },
+      "executioner": {
+        "name": "斷層",
+        "text": "造成 @8@ 點傷害。帶有裂痕的敵人額外受到 6 點傷害。",
+        "textUp": "造成 @11@ 點傷害。帶有裂痕的敵人額外受到 8 點傷害。"
+      },
+      "firstSpark": {
+        "name": "初火",
+        "text": "抽 1 張牌。燃燼。",
+        "textUp": "抽 2 張牌。燃燼。"
+      },
+      "flawlessForm": {
+        "name": "無瑕之形",
+        "text": "獲得 #8# 點護光。若你的琉璃在本場戰鬥中未受傷，再獲得 #8# 點。",
+        "textUp": "獲得 #11# 點護光。若你的琉璃在本場戰鬥中未受傷，再獲得 #11# 點。"
+      },
+      "flurry": {
+        "name": "碎屑風暴",
+        "text": "造成 3 次 @2@ 點傷害。",
+        "textUp": "造成 3 次 @3@ 點傷害。"
+      },
+      "fortify": {
+        "name": "鏡光",
+        "text": "令你的護光加倍。",
+        "textUp": "令你的護光加倍。"
+      },
+      "frenzy": {
+        "name": "熾光過盛",
+        "text": "你的琉璃過熱：獲得 2 層裂痕。每回合開始時獲得 1 點能量。",
+        "textUp": "你的琉璃過熱：獲得 1 層裂痕。每回合開始時獲得 1 點能量。"
+      },
+      "guardedStrike": {
+        "name": "守望者之鋒",
+        "text": "造成 @5@ 點傷害。獲得 #4# 點護光。",
+        "textUp": "造成 @7@ 點傷害。獲得 #6# 點護光。"
+      },
+      "heavyBlow": {
+        "name": "採石重槌",
+        "text": "造成 @12@ 點傷害。",
+        "textUp": "造成 @16@ 點傷害。額外琢擊 1 格璃面。"
+      },
+      "hearthfall": {
+        "name": "爐火墜",
+        "text": "花費 3 點餘燼：造成 @12@ 點傷害。",
+        "textUp": "花費 3 點餘燼：造成 @16@ 點傷害。"
+      },
+      "hex": {
+        "name": "咒印",
+        "text": "無法打出。若此牌留在手中，你的回合結束時失去 1 點生命。此牌拒火。"
+      },
+      "ironSkin": {
+        "name": "琉化",
+        "text": "你的回合結束時獲得 3 點護光。",
+        "textUp": "你的回合結束時獲得 4 點護光。"
+      },
+      "leechBlade": {
+        "name": "渴血碎片",
+        "text": "造成 @9@ 點傷害。回復等同未被格擋傷害一半的生命。",
+        "textUp": "造成 @13@ 點傷害。回復等同未被格擋傷害一半的生命。"
+      },
+      "limitBreak": {
+        "name": "退火儀式",
+        "text": "琢擊每名敵人的 2 格璃面。燃燼。",
+        "textUp": "琢擊每名敵人的 3 格璃面。燃燼。"
+      },
+      "lunge": {
+        "name": "黯光斬",
+        "text": "造成 @6@ 點傷害。施加 1 層黯淡。",
+        "textUp": "造成 @9@ 點傷害。施加 2 層黯淡。"
+      },
+      "momentum": {
+        "name": "磨礪之鋒",
+        "text": "造成 @6@ 點傷害。本場戰鬥每次打出，此牌傷害 +4。",
+        "textUp": "造成 @8@ 點傷害。本場戰鬥每次打出，此牌傷害 +6。"
+      },
+      "nightSight": {
+        "name": "夜視",
+        "text": "每回合開始時額外抽 1 張牌。"
+      },
+      "novaflare": {
+        "name": "新星焰",
+        "text": "提燈每有 1 點餘燼，造成 @3@ 點傷害。",
+        "textUp": "提燈每有 1 點餘燼，造成 @4@ 點傷害。"
+      },
+      "oblivionStrike": {
+        "name": "鳴鐘擊",
+        "text": "造成 @30@ 點傷害。額外琢擊 2 格璃面。",
+        "textUp": "造成 @40@ 點傷害。額外琢擊 3 格璃面。"
+      },
+      "offering": {
+        "name": "火葬什一",
+        "text": "焚去手中所有其他牌——每張都餵養提燈。抽 3 張牌。燃燼。",
+        "textUp": "焚去手中所有其他牌——每張都餵養提燈。抽 4 張牌。燃燼。"
+      },
+      "phantomBlades": {
+        "name": "幻影雙刃",
+        "text": "手牌每有 1 張，造成 @3@ 點傷害。",
+        "textUp": "手牌每有 1 張，造成 @4@ 點傷害。"
+      },
+      "preparation": {
+        "name": "火絨",
+        "text": "抽 2 張牌。燃燼。",
+        "textUp": "抽 2 張牌。"
+      },
+      "pyreheart": {
+        "name": "爐心",
+        "text": "每回合開始時獲得 1 點餘燼。"
+      },
+      "quakeblow": {
+        "name": "震地擊",
+        "text": "造成 @8@ 點傷害。額外琢擊 2 格璃面。",
+        "textUp": "造成 @11@ 點傷害。額外琢擊 3 格璃面。"
+      },
+      "quickSlash": {
+        "name": "閃光",
+        "text": "造成 @4@ 點傷害。抽 1 張牌。",
+        "textUp": "造成 @6@ 點傷害。抽 1 張牌。"
+      },
+      "regrowth": {
+        "name": "爐光新生",
+        "text": "你的回合結束時回復 2 點生命。",
+        "textUp": "你的回合結束時回復 3 點生命。"
+      },
+      "resonantLance": {
+        "name": "共鳴長槍",
+        "text": "造成 @7@ 點傷害。對踉蹌或帶有裂痕的琉璃造成雙倍傷害。",
+        "textUp": "造成 @10@ 點傷害。對踉蹌或帶有裂痕的琉璃造成雙倍傷害。"
+      },
+      "shardstorm": {
+        "name": "碎片風暴",
+        "text": "對所有敵人造成 2 次 @5@ 點傷害。",
+        "textUp": "對所有敵人造成 2 次 @7@ 點傷害。"
+      },
+      "sidestep": {
+        "name": "琉步",
+        "text": "獲得 #3# 點護光。抽 1 張牌。",
+        "textUp": "獲得 #5# 點護光。抽 1 張牌。"
+      },
+      "smother": {
+        "name": "窒焰",
+        "text": "獲得 #5# 點護光。施加 2 層陰燃。",
+        "textUp": "獲得 #8# 點護光。施加 3 層陰燃。"
+      },
+      "spall": {
+        "name": "璃屑",
+        "text": "造成 @5@ 點傷害。額外琢擊 1 格璃面。",
+        "textUp": "造成 @8@ 點傷害。額外琢擊 1 格璃面。"
+      },
+      "splinterCut": {
+        "name": "裂痕斬",
+        "text": "造成 @5@ 點傷害。施加 1 層裂痕。",
+        "textUp": "造成 @7@ 點傷害。施加 2 層裂痕。"
+      },
+      "strike": {
+        "name": "刃鋒",
+        "text": "造成 @6@ 點傷害。",
+        "textUp": "造成 @9@ 點傷害。"
+      },
+      "surge": {
+        "name": "燃火柴",
+        "text": "獲得 1 點能量。抽 1 張牌。燃燼。",
+        "textUp": "獲得 2 點能量。抽 1 張牌。燃燼。"
+      },
+      "tempest": {
+        "name": "琉璃冰雹",
+        "text": "對所有敵人造成 2 次 @4@ 點傷害。",
+        "textUp": "對所有敵人造成 2 次 @6@ 點傷害。"
+      },
+      "tithe": {
+        "name": "璃片什一",
+        "text": "獲得 2 點餘燼。抽 1 張牌。",
+        "textUp": "獲得 3 點餘燼。抽 1 張牌。"
+      },
+      "totality": {
+        "name": "全蝕",
+        "text": "造成 @14@ 點傷害，然後令該敵人的裂痕層數加倍。",
+        "textUp": "造成 @18@ 點傷害，然後令該敵人的裂痕層數加倍。"
+      },
+      "toxicMist": {
+        "name": "灰霧",
+        "text": "對所有敵人施加 3 層陰燃。",
+        "textUp": "對所有敵人施加 5 層陰燃。"
+      },
+      "tremor": {
+        "name": "震紋",
+        "text": "造成 3 次 @3@ 點傷害。每次命中帶有裂痕的琉璃，額外造成 2 點傷害。",
+        "textUp": "造成 3 次 @4@ 點傷害。每次命中帶有裂痕的琉璃，額外造成 2 點傷害。"
+      },
+      "twinFangs": {
+        "name": "雙生碎片",
+        "text": "造成 2 次 @4@ 點傷害。",
+        "textUp": "造成 2 次 @6@ 點傷害。"
+      },
+      "unreadablePage": {
+        "name": "無法辨讀之頁",
+        "text": "無法打出，亦無法移除。攜它走到破曉，字句或會自行顯現。"
+      },
+      "uppercut": {
+        "name": "鳴響重擊",
+        "text": "造成 @10@ 點傷害。額外琢擊 1 格璃面。施加 1 層黯淡。",
+        "textUp": "造成 @13@ 點傷害。額外琢擊 2 格璃面。施加 2 層黯淡。"
+      },
+      "venomStrike": {
+        "name": "餘燼噬",
+        "text": "造成 @4@ 點傷害。施加 4 層陰燃。",
+        "textUp": "造成 @6@ 點傷害。施加 5 層陰燃。"
+      },
+      "virulence": {
+        "name": "燼牙",
+        "text": "每當你打出一張攻擊牌，對該敵人施加 1 層陰燃。"
+      },
+      "warCry": {
+        "name": "碎裂聖詠",
+        "text": "對所有敵人施加 1 層黯淡與 1 層裂痕。",
+        "textUp": "對所有敵人施加 2 層黯淡與 2 層裂痕。"
+      },
+      "wound": {
+        "name": "碎片",
+        "text": "無法打出。碎璃在你的牌庫中沙沙作響。"
+      }
+    },
+    "deeds": {
+      "ashSermon": {
+        "desc": "讓陰燃奪去 10 條性命",
+        "name": "灰燼佈道"
+      },
+      "darkWalker": {
+        "desc": "踏入 6 盞未燃提燈",
+        "name": "未燃之路行者"
+      },
+      "faultInGlass": {
+        "desc": "施加 40 層裂痕",
+        "name": "裂痕"
+      },
+      "firstDawn": {
+        "desc": "抵達破曉一次",
+        "name": "初次破曉"
+      },
+      "hundredShards": {
+        "desc": "斬殺 100 隻生物",
+        "name": "百片碎璃"
+      },
+      "lanternFed": {
+        "desc": "親手燃燼 20 張牌",
+        "name": "餵飽提燈"
+      },
+      "paneBreaker": {
+        "desc": "碎裂 15 格璃面",
+        "name": "碎璃者"
+      },
+      "spendthrift": {
+        "desc": "施展提燈術耗用 30 點餘燼",
+        "name": "火贈無吝"
+      },
+      "untouched": {
+        "desc": "毫髮無傷贏得 3 場戰鬥",
+        "name": "琉璃無痕"
+      }
+    },
+    "enemies": {
+      "abyssalKnight": {
+        "moves": {
+          "blade": {
+            "name": "虛空刃"
+          },
+          "condemn": {
+            "name": "定罪"
+          },
+          "execute": {
+            "name": "處決"
+          },
+          "oath": {
+            "name": "暗誓"
+          }
+        },
+        "name": "深淵騎士"
+      },
+      "alphaFang": {
+        "moves": {
+          "howl": {
+            "name": "領牙長嚎"
+          },
+          "savage": {
+            "name": "兇襲"
+          },
+          "throat": {
+            "name": "撕喉"
+          }
+        },
+        "name": "暮牙首領"
+      },
+      "ashAcolyte": {
+        "moves": {
+          "ritual": {
+            "name": "暗儀"
+          },
+          "scorch": {
+            "name": "灼燒"
+          }
+        },
+        "name": "灰燼侍徒"
+      },
+      "chaosHound": {
+        "moves": {
+          "bite": {
+            "name": "混沌之咬"
+          },
+          "howl": {
+            "name": "扭曲長嚎"
+          }
+        },
+        "name": "混沌獵犬"
+      },
+      "deepmaw": {
+        "moves": {
+          "bite": {
+            "name": "噬咬"
+          },
+          "lure": {
+            "name": "明光誘餌"
+          },
+          "swallow": {
+            "name": "吞噬"
+          }
+        },
+        "name": "深淵巨口"
+      },
+      "drownedOne": {
+        "moves": {
+          "claw": {
+            "name": "利爪"
+          },
+          "frenzy": {
+            "name": "狂亂"
+          },
+          "gurgle": {
+            "name": "溺鳴"
+          }
+        },
+        "name": "溺亡者"
+      },
+      "duskfang": {
+        "moves": {
+          "bite": {
+            "name": "噬咬"
+          },
+          "howl": {
+            "name": "長嚎"
+          },
+          "rend": {
+            "name": "撕裂"
+          }
+        },
+        "name": "暮牙"
+      },
+      "eternalKeeper": {
+        "moves": {
+          "cinderFall": {
+            "name": "灰落回家"
+          },
+          "hearthBlow": {
+            "name": "爐前一擊"
+          },
+          "keepTheFire": {
+            "name": "火留給我"
+          },
+          "kindWord": {
+            "name": "溫言"
+          },
+          "neverLeave": {
+            "name": "我在這裏"
+          },
+          "sitDown": {
+            "name": "坐下"
+          }
+        },
+        "name": "永恆留者"
+      },
+      "gloomslime": {
+        "moves": {
+          "harden": {
+            "name": "凝結"
+          },
+          "ooze": {
+            "name": "蝕骨黏液"
+          },
+          "slam": {
+            "name": "猛擊"
+          }
+        },
+        "name": "幽暗黏怪"
+      },
+      "gravewarden": {
+        "moves": {
+          "bulwark": {
+            "name": "壁壘"
+          },
+          "crush": {
+            "name": "碾壓"
+          },
+          "entomb": {
+            "name": "封入墓穴"
+          }
+        },
+        "name": "墓園守衛"
+      },
+      "heraldOfEnd": {
+        "moves": {
+          "doom": {
+            "name": "末日之歌"
+          },
+          "flame": {
+            "name": "黑焰"
+          },
+          "reave": {
+            "name": "奪魂"
+          },
+          "rise": {
+            "name": "登神"
+          }
+        },
+        "name": "終焉使者"
+      },
+      "leviathan": {
+        "moves": {
+          "brine": {
+            "name": "黑潮鹵水"
+          },
+          "cataclysm": {
+            "name": "滅世洪災"
+          },
+          "consume": {
+            "name": "吞盡深海"
+          },
+          "crush": {
+            "name": "碎骨巨顎"
+          },
+          "tide": {
+            "name": "怒潮漸漲"
+          }
+        },
+        "name": "利維坦之喉"
+      },
+      "mirelurker": {
+        "moves": {
+          "barb": {
+            "name": "倒刺"
+          },
+          "burrow": {
+            "name": "潛泥"
+          },
+          "sting": {
+            "name": "毒焰刺"
+          }
+        },
+        "name": "泥沼伏獸"
+      },
+      "obsidianGolem": {
+        "moves": {
+          "harden": {
+            "name": "硬化"
+          },
+          "pound": {
+            "name": "重搥"
+          },
+          "quake": {
+            "name": "震地"
+          }
+        },
+        "name": "黑曜魔像"
+      },
+      "rootheart": {
+        "moves": {
+          "awaken": {
+            "name": "甦醒"
+          },
+          "entangle": {
+            "name": "纏根"
+          },
+          "lash": {
+            "name": "根鞭"
+          },
+          "slam": {
+            "name": "巨木震擊"
+          },
+          "spores": {
+            "name": "窒息孢子"
+          }
+        },
+        "name": "根脈之心"
+      },
+      "shade": {
+        "moves": {
+          "gloom": {
+            "name": "幽黯"
+          },
+          "slash": {
+            "name": "雙刃斬"
+          },
+          "vanish": {
+            "name": "消影"
+          }
+        },
+        "name": "影"
+      },
+      "shellback": {
+        "moves": {
+          "jet": {
+            "name": "水箭"
+          },
+          "shell": {
+            "name": "縮殼"
+          },
+          "snap": {
+            "name": "鉗咬"
+          }
+        },
+        "name": "甲殼獸"
+      },
+      "siren": {
+        "moves": {
+          "mend": {
+            "name": "癒合"
+          },
+          "rend": {
+            "name": "裂爪"
+          },
+          "shriek": {
+            "name": "尖嘯"
+          },
+          "song": {
+            "name": "輓歌"
+          }
+        },
+        "name": "海妖"
+      },
+      "sovereign": {
+        "moves": {
+          "annihilation": {
+            "name": "湮滅"
+          },
+          "holdCourt": {
+            "name": "臨朝"
+          },
+          "gravitas": {
+            "name": "君威"
+          },
+          "ruin": {
+            "name": "毀滅敕令"
+          },
+          "scepter": {
+            "name": "權杖擊"
+          },
+          "starfall": {
+            "name": "星墜"
+          }
+        },
+        "name": "永恆君王"
+      },
+      "sporeling": {
+        "moves": {
+          "grow": {
+            "name": "綻放"
+          },
+          "spit": {
+            "name": "孢子噴吐"
+          }
+        },
+        "name": "孢子幼體"
+      },
+      "starCultist": {
+        "moves": {
+          "ritual": {
+            "name": "星辰儀式"
+          },
+          "scorch": {
+            "name": "星火"
+          }
+        },
+        "name": "星辰教徒"
+      },
+      "thornling": {
+        "moves": {
+          "bristle": {
+            "name": "豎刺"
+          },
+          "burst": {
+            "name": "棘刺迸發"
+          },
+          "prick": {
+            "name": "針刺"
+          }
+        },
+        "name": "棘刺幼體"
+      },
+      "tidecaller": {
+        "moves": {
+          "bolt": {
+            "name": "水光彈"
+          },
+          "surge": {
+            "name": "潮汐祝福"
+          },
+          "undertow": {
+            "name": "暗流"
+          }
+        },
+        "name": "喚潮者"
+      },
+      "uncarvedSelf": {
+        "moves": {
+          "darkStamp": {
+            "name": "未下的印"
+          },
+          "doorWard": {
+            "name": "封前之守"
+          },
+          "glyphVolley": {
+            "name": "未印的字"
+          },
+          "sealCrack": {
+            "name": "未承的封"
+          },
+          "stoneCut": {
+            "name": "未刻的石"
+          },
+          "waitStone": {
+            "name": "未推的石"
+          }
+        },
+        "name": "【未刻者】"
+      },
+      "uncrossedSelf": {
+        "moves": {
+          "brineBite": {
+            "name": "未學的潮"
+          },
+          "closedShell": {
+            "name": "未離的殼"
+          },
+          "falseLamp": {
+            "name": "說謊的燈"
+          },
+          "librarySpine": {
+            "name": "未寫的一頁"
+          },
+          "stillWater": {
+            "name": "不動的水"
+          },
+          "undertowEcho": {
+            "name": "未坐之等"
+          }
+        },
+        "name": "【未渡者】"
+      },
+      "unlitSelf": {
+        "moves": {
+          "greyAsh": {
+            "name": "未散的灰"
+          },
+          "lampWait": {
+            "name": "未舉的燈"
+          },
+          "pairedDark": {
+            "name": "未點的雙燈"
+          },
+          "rootLash": {
+            "name": "未斬的根"
+          },
+          "stillRoot": {
+            "name": "未動的根"
+          },
+          "wickUnlit": {
+            "name": "未燃的芯"
+          }
+        },
+        "name": "【未點者】"
+      },
+      "unobsidianSelf": {
+        "moves": {
+          "courtWait": {
+            "name": "未入的庭"
+          },
+          "darkHarden": {
+            "name": "未凝的黑"
+          },
+          "eyeMeet": {
+            "name": "未視的眼"
+          },
+          "lightHang": {
+            "name": "未落的光"
+          },
+          "obsidianWard": {
+            "name": "未成的曜"
+          },
+          "starGaze": {
+            "name": "未望的星"
+          }
+        },
+        "name": "【未曜者】"
+      },
+      "unopenedSelf": {
+        "moves": {
+          "darkPane": {
+            "name": "未亮的窗"
+          },
+          "glassCut": {
+            "name": "未開的窗"
+          },
+          "reliefWait": {
+            "name": "封印未讀"
+          },
+          "roseWard": {
+            "name": "彩窗之守"
+          },
+          "sealBlow": {
+            "name": "未開的門"
+          },
+          "shardVolley": {
+            "name": "未落的片"
+          }
+        },
+        "name": "【未開者】"
+      },
+      "unsunkSelf": {
+        "moves": {
+          "brineWake": {
+            "name": "未醒的水"
+          },
+          "stackWard": {
+            "name": "未合的庫"
+          },
+          "stillTide": {
+            "name": "未退的漲"
+          },
+          "tideCut": {
+            "name": "未破的流"
+          },
+          "unreadVolley": {
+            "name": "未看的頁"
+          },
+          "waitPage": {
+            "name": "未完的句"
+          }
+        },
+        "name": "【未沉者】"
+      },
+      "unwalkedSelf": {
+        "moves": {
+          "gravitasEcho": {
+            "name": "未坐之位"
+          },
+          "ringbreak": {
+            "name": "裂開的環"
+          },
+          "ringward": {
+            "name": "斷了的光環"
+          },
+          "ruinEcho": {
+            "name": "未出口的禍"
+          },
+          "scepterEcho": {
+            "name": "放下的權杖"
+          },
+          "starfallEcho": {
+            "name": "未喚之星"
+          }
+        },
+        "name": "【未行者】"
+      },
+      "unwoodedSelf": {
+        "moves": {
+          "branchCut": {
+            "name": "未長的枝"
+          },
+          "cinderHush": {
+            "name": "未冷的燼"
+          },
+          "roadVolley": {
+            "name": "未鋪的路"
+          },
+          "standWood": {
+            "name": "未立的林"
+          },
+          "woodBlow": {
+            "name": "未焚的林"
+          },
+          "woodWard": {
+            "name": "未歇的林"
+          }
+        },
+        "name": "【未林者】"
+      },
+      "voidColossus": {
+        "moves": {
+          "fortify": {
+            "name": "固守"
+          },
+          "shatter": {
+            "name": "碎裂"
+          },
+          "slam": {
+            "name": "虛空震擊"
+          }
+        },
+        "name": "虛空鑄成巨像"
+      },
+      "voidWisp": {
+        "moves": {
+          "siphon": {
+            "name": "汲取"
+          },
+          "zap": {
+            "name": "虛空電光"
+          }
+        },
+        "name": "虛空幽火"
+      },
+      "voltEel": {
+        "moves": {
+          "coil": {
+            "name": "盤繞"
+          },
+          "discharge": {
+            "name": "放電"
+          },
+          "shock": {
+            "name": "震電"
+          }
+        },
+        "name": "伏電鰻"
+      },
+      "watcherEye": {
+        "moves": {
+          "beam": {
+            "name": "毀滅光束"
+          },
+          "blink": {
+            "name": "瞬目"
+          },
+          "gaze": {
+            "name": "穿心凝視"
+          }
+        },
+        "name": "守望之眼"
+      },
+      "waylayer": {
+        "moves": {
+          "smoke": {
+            "name": "煙幕"
+          },
+          "stab": {
+            "name": "刺擊"
+          },
+          "trick": {
+            "name": "卑劣伎倆"
+          }
+        },
+        "name": "伏路者"
+      }
+    },
+    "events": {
+      "cursedIdol": {
+        "choices": {
+          "0": {
+            "label": "取走",
+            "sub": "獲得一件遺物。獲得一張咒印牌。"
+          },
+          "1": {
+            "label": "置之不理",
+            "sub": ""
+          }
+        },
+        "name": "受詛神像",
+        "text": "一尊玉像坐在顱骨砌成的座台上，散發微暖。它被留在此處，顯然另有緣由。"
+      },
+      "emberFountain": {
+        "choices": {
+          "0": {
+            "label": "沐浴",
+            "sub": "回復生命上限的 35%。"
+          },
+          "1": {
+            "label": "盛入瓶中",
+            "sub": "獲得一瓶破曉藥瓶。"
+          },
+          "2": {
+            "label": "離開",
+            "sub": ""
+          }
+        },
+        "name": "餘燼泉",
+        "text": "液態光芒聚在裂盆之中，迸出的火星不會灼人。那氣味像盛夏，也像久遠的勝利。"
+      },
+      "fleshTrader": {
+        "choices": {
+          "0": {
+            "label": "交易",
+            "sub": "失去 8 點生命上限。獲得一件遺物。"
+          },
+          "1": {
+            "label": "拒絕",
+            "sub": ""
+          }
+        },
+        "name": "血肉商人",
+        "text": "「生命也是貨幣。」披着商人外衣的東西輕聲低鳴。「而你看來身家豐厚。」修長手指攤開，露出一件遺物。"
+      },
+      "forge": {
+        "choices": {
+          "0": {
+            "label": "淬鍊",
+            "sub": "升級一張牌。"
+          },
+          "1": {
+            "label": "離開",
+            "sub": ""
+          }
+        },
+        "name": "被遺忘的鍛爐",
+        "text": "黑色星鐵鑄成的鐵砧仍有餘溫。錘子懸在架上，等待那雙早在一個時代以前便已死去的手。"
+      },
+      "forgottenShrine": {
+        "choices": {
+          "0": {
+            "label": "祈禱",
+            "sub": "從牌庫移除一張牌。"
+          },
+          "1": {
+            "label": "褻瀆",
+            "sub": "獲得 90 金幣。獲得一張咒印牌。"
+          },
+          "2": {
+            "label": "離開",
+            "sub": ""
+          }
+        },
+        "name": "荒忘神龕",
+        "text": "苔蘚侵蝕的神龕嗡鳴着古老力量。骨與銀製祭品散落座下。石中有甚麼正凝視着你。"
+      },
+      "gambler": {
+        "choices": {
+          "0": {
+            "label": "下注 40 金幣",
+            "sub": "有 45% 機會贏得 110 金幣。"
+          },
+          "1": {
+            "label": "轉身離去",
+            "sub": ""
+          }
+        },
+        "name": "骨骰賭徒",
+        "rolls": {
+          "lose": {
+            "text": "骨骰滾出與你相悖的命數。賭注已失。"
+          },
+          "win": {
+            "text": "骨骰落定，命數眷顧你。你取走 110 金幣。"
+          }
+        },
+        "text": "咧嘴而笑的身影搖着一杯指骨骰。「只擲一次，陌生人。命運偏愛不顧一切的人。」"
+      },
+      "library": {
+        "choices": {
+          "0": {
+            "label": "研讀",
+            "sub": "從 5 張牌中選 1 張加入牌庫。"
+          },
+          "1": {
+            "label": "在書架間歇息",
+            "sub": "回復生命上限的 20%。"
+          }
+        },
+        "name": "沉沒書庫",
+        "text": "一列列擺滿泡水魔典的書架延伸入黑暗。大多數書頁已化成紙漿——但仍有幾頁泛着微光。"
+      },
+      "mirror": {
+        "choices": {
+          "0": {
+            "label": "映照",
+            "sub": "複製牌庫中的一張牌。"
+          },
+          "1": {
+            "label": "將它打碎",
+            "sub": "失去 6 點生命。從牌庫移除一張牌。"
+          },
+          "2": {
+            "label": "離開",
+            "sub": ""
+          }
+        },
+        "name": "鍍銀之鏡",
+        "text": "一面高鏡立在瓦礫中，完好無缺。鏡中的你比真身慢了半口氣——而且正在微笑。"
+      },
+      "ruinedCamp": {
+        "choices": {
+          "0": {
+            "label": "歇息",
+            "sub": "回復生命上限的 15%。"
+          },
+          "1": {
+            "label": "搜掠",
+            "sub": "獲得 45 金幣與一瓶隨機藥瓶。"
+          }
+        },
+        "name": "荒廢營地",
+        "text": "營火仍在陰燃，睡鋪已被撕破。曾在此入睡的人匆匆離去——連行囊也棄下。"
+      },
+      "voidChest": {
+        "choices": {
+          "0": {
+            "label": "打開",
+            "sub": "裏面或許藏着遺物……也或許是利齒。"
+          },
+          "1": {
+            "label": "離開",
+            "sub": ""
+          }
+        },
+        "name": "低鳴寶箱",
+        "text": "黑鐵箱獨坐幽暗，低鳴透入齒間。它的鎖早已破開。"
+      },
+      "woundedKnight": {
+        "choices": {
+          "0": {
+            "label": "救助他",
+            "sub": "失去 8 點生命。他以一件遺物作謝。"
+          },
+          "1": {
+            "label": "劫掠他",
+            "sub": "獲得 65 金幣。獲得一張咒印牌。"
+          },
+          "2": {
+            "label": "離開",
+            "sub": ""
+          }
+        },
+        "name": "負傷騎士",
+        "text": "騎士癱靠在碎裂石柱上，呼吸在凹陷面甲後嘶啞作響。一隻鐵手緊握遺物，另一隻招你靠近。"
+      }
+    },
+    "omens": {
+      "ashfall": {
+        "name": "灰落",
+        "text": "灰燼噎滅每團火：敵人開戰時帶有 2 層陰燃，但其攻擊亦會在你身上留下 1 層陰燃。"
+      },
+      "eighthOmen": {
+        "name": "第八凶兆",
+        "text": "每場尋常戰鬥皆有題名。破碎的字句追隨每一塊引路石。"
+      },
+      "emberWind": {
+        "name": "餘燼之風",
+        "text": "火星乘風入燈：每場戰鬥開始時獲得 2 點餘燼，但只抽 4 張牌，而非 5 張。"
+      },
+      "heavyAir": {
+        "name": "沉光之氣",
+        "text": "空氣如水般托住光芒：你與敵人獲得的所有護光皆提高四分之一。"
+      },
+      "hungryDark": {
+        "name": "飢渴長暗",
+        "text": "黑暗吞金，卻磨亮選擇：商店價格提高四分之一，卡牌獎賞則多提供 1 個選項。"
+      },
+      "longNight": {
+        "name": "漫漫長夜",
+        "text": "朝聖之路延綿不盡：敵人生命提高 12%，但每場勝利獲得的金幣增加 40%。"
+      },
+      "thinGlass": {
+        "name": "薄璃之夜",
+        "text": "今夜所有琉璃皆薄：每道璃面量表少 1 格，但敵人攻擊傷害提高 2。"
+      },
+      "waningMoon": {
+        "name": "殘月",
+        "text": "月亮把最後一縷光贈你：每回合打出的第一張牌少耗 1 點能量，但休息處只回復 20% 生命。"
+      }
+    },
+    "potions": {
+      "block": {
+        "name": "持光藥瓶",
+        "text": "獲得 12 點護光。"
+      },
+      "energy": {
+        "name": "餘燼藥瓶",
+        "text": "獲得 3 點餘燼。"
+      },
+      "fire": {
+        "name": "風暴琉璃藥瓶",
+        "text": "對一名敵人造成 20 點傷害。"
+      },
+      "healing": {
+        "name": "破曉藥瓶",
+        "text": "回復 20 點生命。"
+      },
+      "strength": {
+        "name": "熾心藥瓶",
+        "text": "獲得 2 層熾心。"
+      },
+      "swift": {
+        "name": "墨飲",
+        "text": "抽 3 張牌。"
+      },
+      "venom": {
+        "name": "陰燃藥瓶",
+        "text": "對一名敵人施加 7 層陰燃。"
+      }
+    },
+    "quests": {
+      "eighthOmen": {
+        "waystoneEchoes": [
+          "// 窗片凝視 //",
+          "// 八並非數字 //",
+          "// 攜錯誤之光向東 //",
+          "// 王冠只是一副面具 //"
+        ],
+        "inscription": "在第八凶兆籠罩下抵達破曉。",
+        "mode": "門檻",
+        "name": "第八凶兆",
+        "resolved": "第八凶兆從來不是凶兆。它是一扇門投下的影。"
+      },
+      "hollowLamplighter": {
+        "inscription": "沿未燃之路，向空燈掌燈人付出五重代價。",
+        "meetings": [
+          {
+            "accepted": "接下來三點餘燼，歸於空燈。",
+            "ask": "你的提燈太吵。把它接下來收集的三點餘燼交給我。",
+            "cannot": "現在便許下餘燼。提燈會先於你付清。",
+            "paid": "六片窗片曾從一扇無牆可承的窗中被帶走。"
+          },
+          {
+            "ask": "金幣記得每一隻手。讓一百六十枚忘記你的手。",
+            "cannot": "你的錢囊尚暖，卻還不夠暖。",
+            "paid": "蒼白眾凝望着指向王冠之後的路。"
+          },
+          {
+            "ask": "路清點容器。把十二格容量交給我。",
+            "cannot": "我不會把你挖空至三十以下。換一副更大的容器再來。",
+            "paid": "你的前身站立而死，面向東方。"
+          },
+          {
+            "ask": "守爐人贈過你一份恩賜。我要那份贈禮，不要你的感激。",
+            "cannot": "你已花掉那份贈禮。帶一份仍屬於你的來。",
+            "paid": "空燈就是換取面見那副面具的信物。"
+          },
+          {
+            "ask": "最後代價：只留一記心跳在這提燈裏。其餘全歸黑暗。",
+            "cannot": "一記心跳已足夠。如今只剩拒絕才算貧乏。",
+            "paid": "點亮窗片。門會認得你。"
+          }
+        ],
+        "mode": "旅跡",
+        "name": "空燈掌燈人"
+      },
+      "ownShade": {
+        "final": "我們從來不是為了逃出去而朝聖；我們一直把光送往鎖孔。",
+        "fragments": [
+          "我記得那塊石。你轉身離去時，我仍未停止呼喚。",
+          "你留下過一道形影。這條路，已學會留住我們。",
+          "我見過。永恆君王之後沒有破曉——只有一扇偽裝成破曉的門。"
+        ],
+        "inscription": "擊敗那個仍記得路的自己。三道影必須熄滅。",
+        "mode": "旅跡",
+        "name": "自身之影"
+      },
+      "paleOnes": {
+        "huntInscription": "擊敗三名蒼白之敵，追隨它們留下的寒冷光塵。",
+        "huntName": "狩獵蒼白眾",
+        "inscription": "狩獵蒼白眾。從忘卻色彩的琉璃中收集九粒光塵。",
+        "mode": "旅跡",
+        "name": "蒼白眾",
+        "progress": [
+          "沒有光塵回應透鏡。",
+          "第一粒蒼白光塵令提燈生寒。"
+        ]
+      },
+      "unreadablePage": {
+        "inscription": "攜無法辨讀之頁贏得五次破曉。",
+        "mode": "旅跡",
+        "name": "無法辨讀之頁",
+        "pages": [
+          "第一頁——六片窗片從同一團火中切下，於第一次守夜前散落各處。",
+          "第二頁——蒼白身影把碎片攜往西方，使門後之物無從追隨。",
+          "第三頁——一名朝聖者站着死去。他止步之處，路未止。",
+          "第四頁——永恆君王取來一盞空燈，在鎖上披起王者形貌。",
+          "第五頁——彩窗是一幅地圖，不是紀念碑。將它點亮，再望向王冠之後。"
+        ]
+      },
+      "usurper": {
+        "bought": "如今，王座知曉你攜着何物。",
+        "death": "面具已碎。望向王冠之後。",
+        "inscription": "攜無焰提燈行至封門之前，揭穿篡位者的面具。",
+        "itemName": "無焰提燈",
+        "itemText": "冰冷琉璃。沒有燈芯。商人不肯說是誰留下它。",
+        "mode": "門檻",
+        "name": "篡位者",
+        "poor": "貨冷，價暖。帶着足以買下一次破曉的金幣再來。"
+      }
+    },
+    "relics": {
+      "ashenCore": {
+        "name": "灰燼核心",
+        "text": "每場戰鬥開始時，所有敵人帶有 3 層陰燃。"
+      },
+      "basaltIdol": {
+        "name": "玄武岩神像",
+        "text": "每場戰鬥開始時獲得 10 點護光。"
+      },
+      "bellOfEndings": {
+        "name": "終焉之鐘",
+        "text": "每當琉璃碎裂，其他所有敵人受到 4 點傷害。"
+      },
+      "crownOfCinders": {
+        "name": "燼冠",
+        "text": "你的提燈可盛 12 點餘燼，並在每場戰鬥開始時持有 2 點。"
+      },
+      "crownOfTheEclipse": {
+        "name": "蝕月冠",
+        "text": "你施加的裂痕不再消退。"
+      },
+      "crownOfTheHearth": {
+        "name": "爐火之冠",
+        "text": "戰鬥結束時，提燈每剩 1 點餘燼，便回復 3 點生命。"
+      },
+      "crownOfTithes": {
+        "name": "什一之冠",
+        "text": "每回合可燃燼兩次；每次燃燼獲得 3 點護光。"
+      },
+      "duskmirror": {
+        "name": "暮色鏡",
+        "text": "每回合打出的第一張牌耗能為 0。"
+      },
+      "emberHeart": {
+        "name": "餘燼之心",
+        "text": "戰鬥結束時回復 3 點生命。"
+      },
+      "emberLantern": {
+        "name": "餘燼提燈",
+        "text": "第一回合額外獲得 1 點能量。"
+      },
+      "executionersSeal": {
+        "name": "劊子手印記",
+        "text": "每打出 10 張攻擊牌，第 10 張造成雙倍傷害。"
+      },
+      "frozenCore": {
+        "name": "冰封核心",
+        "text": "未用能量可保留至下一回合。"
+      },
+      "gravebloom": {
+        "name": "墓綻花",
+        "text": "戰鬥後若生命不多於 50%，回復 10 點生命。"
+      },
+      "hollowCrown": {
+        "name": "空心之冠",
+        "text": "每回合獲得 1 點能量。琉璃隨之黯淡：拾取時失去 10 點生命上限。"
+      },
+      "ironTalisman": {
+        "name": "鐵符",
+        "text": "每打出 3 張攻擊牌，獲得 1 層熾心。"
+      },
+      "merchantsMark": {
+        "name": "商人印記",
+        "text": "商店價格降低 25%。"
+      },
+      "prismCharm": {
+        "name": "稜鏡護符",
+        "text": "每場戰鬥首次碎裂時，額外灑出 2 點餘燼。"
+      },
+      "reapersBell": {
+        "name": "收魂者之鐘",
+        "text": "每當一名敵人死亡，獲得 1 點能量並抽 1 張牌。"
+      },
+      "riverPearl": {
+        "name": "河珠",
+        "text": "每場戰鬥開始時獲得 1 層沉穩。"
+      },
+      "seersOrb": {
+        "name": "先見者寶珠",
+        "text": "卡牌獎賞額外提供 1 個選項。"
+      },
+      "shatterersCrown": {
+        "name": "碎璃者之冠",
+        "text": "敵人琉璃變薄：所有璃面量表少 1 格。敵人開戰時獲得 1 層熾心。"
+      },
+      "silkFan": {
+        "name": "絲扇",
+        "text": "每場戰鬥中每打出 3 張牌，便獲得 3 點護光。"
+      },
+      "smolderingCoal": {
+        "name": "陰燃煤塊",
+        "text": "每場戰鬥開始時，所有敵人帶有 2 層陰燃。"
+      },
+      "sunBlossom": {
+        "name": "日華花",
+        "text": "所有治療效果提高 50%。"
+      },
+      "sweetRoot": {
+        "name": "甘根",
+        "text": "拾取時：生命上限提高 8。"
+      },
+      "thiefOfWicks": {
+        "name": "竊芯者",
+        "text": "未燃提燈的金幣賞金加倍。"
+      },
+      "thornBand": {
+        "name": "荊棘環",
+        "text": "每場戰鬥開始時獲得 2 層璃刺。"
+      },
+      "travelersPack": {
+        "name": "旅人行囊",
+        "text": "第一回合額外抽 2 張牌。"
+      },
+      "verdantBranch": {
+        "name": "翠綠枝條",
+        "text": "每當一張牌被燃燼或焚去，抽 1 張牌。"
+      },
+      "vialOfLife": {
+        "name": "生命之瓶",
+        "text": "每場戰鬥開始時回復 2 點生命。"
+      },
+      "warFetish": {
+        "name": "戰爭神物",
+        "text": "每場戰鬥開始時獲得 1 層熾心。"
+      },
+      "wardingCharm": {
+        "name": "護光符",
+        "text": "敵人攻擊若原本造成不多於 5 點傷害，改為造成 1 點。"
+      }
+    },
+    "shadeKits": {
+      "ashwarden": {
+        "moves": {
+          "ashbite": {
+            "name": "憶中灰噬"
+          },
+          "ashfall": {
+            "name": "初灰，終息"
+          },
+          "smother": {
+            "name": "憶中窒焰"
+          }
+        },
+        "namePattern": "{aspect}之影"
+      },
+      "duskblade": {
+        "moves": {
+          "chisel": {
+            "name": "憶中璃鑿"
+          },
+          "eclipse": {
+            "name": "憶中蝕月"
+          },
+          "spark": {
+            "name": "初火，終光"
+          }
+        },
+        "namePattern": "{aspect}之影"
+      }
+    },
+    "status": {
+      "barricade": {
+        "desc": "護光不再消散。",
+        "name": "退火"
+      },
+      "beacon": {
+        "desc": "攻擊額外琢擊 N 格璃面。回合結束時消退。",
+        "name": "引炬"
+      },
+      "dex": {
+        "desc": "護光牌額外給予 N 點護光。",
+        "name": "沉穩"
+      },
+      "emberflow": {
+        "desc": "每回合開始時獲得 N 點餘燼。",
+        "name": "爐心"
+      },
+      "energized": {
+        "desc": "每回合開始時額外獲得 N 點能量。",
+        "name": "燃亮"
+      },
+      "frail": {
+        "desc": "獲得的護光減少 25%。每回合消退。",
+        "name": "脆裂"
+      },
+      "metallicize": {
+        "desc": "每回合結束時獲得 N 點護光。",
+        "name": "琉化"
+      },
+      "nightsight": {
+        "desc": "每回合開始時額外抽 N 張牌。",
+        "name": "夜視"
+      },
+      "poison": {
+        "desc": "火從內裏灼燒：其回合開始時失去 N 點生命，然後陰燃減少 1 層。陰燃中的琉璃碎裂或死亡時，火會躍至另一名敵人。",
+        "name": "陰燃"
+      },
+      "rampage": {
+        "desc": "每次施展，攻擊都更為強烈。",
+        "name": "漸強"
+      },
+      "regen": {
+        "desc": "每回合結束時回復 N 點生命。",
+        "name": "暖意"
+      },
+      "ritual": {
+        "desc": "每回合開始時獲得 N 層熾心。",
+        "name": "聖詠"
+      },
+      "str": {
+        "desc": "內火添薪：攻擊額外造成 N 點傷害。",
+        "name": "熾心"
+      },
+      "thorns": {
+        "desc": "攻擊者受到 N 點反傷。",
+        "name": "璃刺"
+      },
+      "venomous": {
+        "desc": "攻擊施加 N 層陰燃。",
+        "name": "燼牙"
+      },
+      "vulnerable": {
+        "desc": "琉璃已刻痕：受到的攻擊傷害提高 50%。每回合消退。",
+        "name": "裂痕"
+      },
+      "weak": {
+        "desc": "火焰搖曳欲熄：造成的攻擊傷害降低 25%。每回合消退。",
+        "name": "黯淡"
+      }
+    },
+    "variants": {
+      "ownShade1": {
+        "deathDialogue": "我記得那塊石。你轉身離去時，我仍未停止呼喚。",
+        "dialogue": [],
+        "name": "墜落之影"
+      },
+      "ownShade2": {
+        "deathDialogue": "你留下過一道形影。這條路，已學會留住我們。",
+        "dialogue": [],
+        "name": "歸來之影"
+      },
+      "ownShade3": {
+        "deathDialogue": "我見過。永恆君王之後沒有破曉——只有一扇偽裝成破曉的門。",
+        "dialogue": [],
+        "name": "銘記之影"
+      },
+      "paleDrownedOne": {
+        "dialogue": [],
+        "name": "蒼白溺亡者"
+      },
+      "paleDuskfang": {
+        "dialogue": [],
+        "name": "蒼白暮牙"
+      },
+      "paleVoidWisp": {
+        "dialogue": [],
+        "name": "蒼白虛空幽火"
+      },
+      "usurpedSovereign": {
+        "dialogue": [
+          "{aspect}。終於，提燈為我帶來一個名字。",
+          "永恆君王只是一副面具。你已付出代價，得見其下真容。",
+          "打碎我，空燈自會記起火光。"
+        ],
+        "name": "篡位者"
+      }
+    },
+    "vows": {
+      "0": {
+        "desc": "每隻生物更難打破——敵人生命 +12%。",
+        "name": "鐵之誓"
+      },
+      "1": {
+        "desc": "敵人的重擊更沉——敵人攻擊傷害 +1。",
+        "name": "惡意之誓"
+      },
+      "2": {
+        "desc": "首領以甲守護核心——首領璃面量表 +1 格。",
+        "name": "深淵之誓"
+      },
+      "3": {
+        "desc": "起行時已受詛咒——每次朝聖皆以一張咒印牌開始。",
+        "name": "烙印之誓"
+      },
+      "4": {
+        "desc": "黑暗啜飲你的休憩——營火回復 20% 生命，而非 30%。",
+        "name": "殘月之誓"
+      }
+    },
+    "whispers": [
+      "有一種顏色，長路拒絕為它命名。",
+      "一隻蒼白的手觸過琉璃的暗面。",
+      "六處空位在等候，那裏不曾立過窗。",
+      "死者朝聖兩次：一次以肉身，一次以記憶。",
+      "無焰的提燈仍是一把鑰匙。",
+      "數一數接不住破曉的窗片。",
+      "這一頁，唯有捱過破曉，方能讀懂。",
+      "第八凶兆不寫在七者之中。",
+      "枯瘦的掌燈人記得你未走的路。",
+      "蒼白微粒如霜，聚在隱縫周圍。",
+      "你的紀念碑並不總是躺下。",
+      "商人櫃下藏着一件冰冷之物。",
+      "破碎字形是完整句子的影子。",
+      "五頁成章；五重代價成懺言。",
+      "死過三次，你的影便學會直言。",
+      "守夜有一扇窗，卻沒有牆承住它。",
+      "每一片燼璃，點亮彩窗的一格。",
+      "蒼白眾並非在獵你。他們在指向東方。",
+      "永恆君王，只是門前披上的一副面具。",
+      "當彩窗六格燃起，望向王冠之後。",
+      "王冠之後，有一扇封印之門。",
+      "那銘文，等得比守夜還久。",
+      "帶六片碎片到彩窗。",
+      "朝聖仍在繼續。"
+    ]
+  },
+  "story": {
+    "opening": {
+      "b1": {"l1": "你醒了。", "l2": "慢慢來。路不會走掉。"},
+      "b2": {"l1": "帶上這個。前人留下的，如今是你的了。", "lantern": "它燒的是你帶着的東西。", "l2":"路向東，盡頭有一道封門。尋回六片燼璃，門便會開。", "l3": "他們說，門後是金城。到了那裏，你便到家了。"},
+      "b3": {"l1": "你提起燈，推門而出。長路向東，天未亮。", "l2": "身後，爐火仍亮着。"},
+      "b4": {"l1": "守夜開始了。"}
+    },
+    "lamplighter-m1": {
+      "pre": {
+        "l1": "路上坐着一個提燈的老人。燈是空的，沒有火。",
+        "l2": "你的燈燒得太滿。滿燈的人，我見得多。",
+        "l3": "這張面孔，又是往東走的。"
+      },
+      "post": {
+        "l1": "油可以分，火不能分。火要自己帶到最後。",
+        "l2": "他把三點餘燼收進空燈。燈沒有亮。"
+      }
+    },
+    "lamplighter-m2": {
+      "pre": {
+        "l1": "未燃之路再向東，老人又在等。空燈放在身前。",
+        "l2": "上次是你。三點餘燼，一分不少。這雙手，我記得。",
+        "l3": "手瘦了。路上的日子，誰都一樣。"
+      },
+      "post": {
+        "l1": "他把金幣一枚一枚數過，不收起，只沿路放好，向東。",
+        "l2": "去。忘記是要學的。"
+      }
+    },
+    "lamplighter-m3": {
+      "pre": {
+        "l1": "這一次，老人站着等你。未看清你的面孔，他不開口。",
+        "l2": "站近一點。提高你的燈，讓我看一看這張面孔。",
+        "l3": "額上多了一道傷痕。上次沒有。……路上的事，自然。"
+      },
+      "post": {
+        "l1": "別那樣看我。老人家見到什麼，便說什麼。",
+        "l2": "他退後一步，再看你一眼——由面孔，看到腳。"
+      }
+    },
+    "lamplighter-m4": {
+      "pre": {
+        "l1": "老人的目光越過你，落在你帶着的東西上，一件一件地數。",
+        "l2": "西面爐火出來的東西，我一眼認得。這麼多年，樣式沒有變過。",
+        "l3": "回我一句就好。上次站在這裏的，是不是你?",
+        "l4": "你還未出聲，他已擺了擺手，像不願知道那一句之後的事。"
+      },
+      "post": {
+        "l1": "他把贈禮收好。空燈放在腳前，依然黑着。",
+        "l2": "下一程遠。自己要慢慢用。"
+      }
+    },
+    "lamplighter-m5": {
+      "pre": {
+        "l1": "未燃之路的盡頭，老人提着空燈，站在路的正中，不讓你過。",
+        "l2": "最後一次。過了我，這條路上再沒有人向你收東西。",
+        "l3": "我提這盞燈，認了一生的人。面孔，我認得出;人，我從來不曾說得定。"
+      },
+      "post": {
+        "l1": "去。這一段，我送過太多人。",
+        "l2": "他讓開路，提起空燈，向東照了照——燈中沒有光;他仍是照了。",
+        "l3": "路上若再見提燈的，替我看一看那張面孔。"
+      }
+    },
+    "dawn": {
+      "paleOnes": {
+        "p1": "第一粒光塵落進透鏡，冷得像霜。蒼白眾不追你，他們只朝東站着。守夜記下這一粒:在你之前，已有人把這段路走到這裏。",
+        "p2": "透鏡漸滿。每一粒光塵，都是有人耗到最後才留下的餘光。你數的不是戰果，是別人的盡頭。",
+        "done": "九粒收足，透鏡不再生寒。彩窗有一格回應了你。窗上那點光不是新的:它是有人一直帶着，而沒有帶到門前的光。"
+      },
+      "ownShade": {
+        "p1": "第一道影熄了。它認得你，喚過你的名字;你沒有停。它熄滅之處，地上沒有留下任何東西——影從來只是記憶。",
+        "p2": "第二道影熄了。碎句一次比一次完整，像有人終於學會直說。你熄得越多，路越沉默。",
+        "done": "第三道影熄了，彩窗回應。守夜記下:你熄掉的，是自己之中仍懂得行路的那一部分。此後你照樣出發，只是路上再沒有東西喚你的名字。"
+      },
+      "usurper": {
+        "p1": "無焰提燈到手。玻璃是冷的，燈芯不曾燒過。商人不肯說是誰留下它，只說這一種東西，總會自己回到西面來。",
+        "done": "面具已碎，王座沒有空出來。你行過他，他照樣坐着，等下一個走到門前的人。守夜記下:被打退的是那一句不肯，不是那個人。"
+      },
+      "eighthOmen": {
+        "p1": "第八凶兆升起。冊上只有七個，第八個不在冊上。它落在路面，形狀太正，正得不像凶兆，倒像一件關着的東西投下的影。",
+        "done": "破曉來了，凶兆仍在。它不是凶兆:它是一扇門的影。影落得到這裏，就是說門一直都在，而且一直關着。"
+      },
+      "unreadablePage": {
+        "p1": "第一頁認得出字了:六格由同一團火切下，散落於第一次守夜之前。守夜記下——寫這一頁的人，不在場。",
+        "p2": "第二頁:蒼白身影把碎片攜往西方。頁上說，那是為了不讓門後之物追隨。碎片西行是真的;理由是頁自己補上的。",
+        "p3": "第三頁:一名朝聖者站着死去，他止步之處，路未止。這一頁字最少，連一句形容都沒有——像親眼見過的人，才寫得出這樣的句。",
+        "p4": "第四頁:永恆君王取來一盞空燈，在鎖上披起王者形貌。守夜記下:王冠之下是一把鎖，不是一個頭。",
+        "done": "五頁讀全。第五頁說彩窗是一幅地圖，不是紀念碑;地圖畫的是甚麼，頁上沒有寫。你越點亮它，它越不像一扇窗。"
+      },
+      "hollowLamplighter": {
+        "p1": "三點餘燼歸了空燈，燈沒有亮。老人把燈舉起來看——看的不是燈，是你。第一次會面，他認的是面孔。",
+        "p2": "一百六十枚金幣離手。他一枚都不收起，只沿路放好，向東。那個樣子，像有人在數一列早已站好的東西。",
+        "p3": "十二格容量交了出去。他先看傷痕，再看面孔，然後自己把對不上的地方解釋走。老實人就是這樣:見到的全對，說出來的全錯。",
+        "p4": "守爐人的贈禮到了老人手上。他認得那個樣式，說這麼多年都沒有變過。然後他沒有再說下去——說到那裏，他便擺手。",
+        "done": "最後一價已付:提燈裏只剩一記心跳。老人讓開路，把空燈向東照了照——燈裏沒有光，他仍是照了。彩窗回應一格。他看着你的樣子，像看着一張認了一生的面孔。"
+      },
+      "pane": {
+        "1": "第一格亮起，其餘五格仍黑。一格還不是窗，只是暗裏一個亮點。",
+        "2": "兩格亮了。窗開始有形狀:亮的位置不是隨意的，像早已為它們留好。",
+        "3": "三格，一半。窗亮到一半的時候，玻璃開始映人:你走近，窗裏那樣東西也走近。",
+        "4": "四格亮，火比從前暖。你越看那扇窗，它越不像是用來望出去的。",
+        "5": "五格亮，尚餘一格。窗裏的光不再各留各格，它們接連起來，像一件本來就是一整塊的東西。最後一片，還在路上。"
+      }
+    },
+    "unsealing": {
+      "b1": {
+        "l1": "第六片燼璃回到窗上。",
+        "l2": "六格，一格不缺。火在窗裏重新為一。",
+        "l3": "光沒有透出去。"
+      },
+      "b2": {
+        "l1": "窗亮到盡處，便不再是窗。",
+        "l2": "你在窗中看見自己。",
+        "l3": "再看:自己之後，還有一個。"
+      },
+      "b3": {
+        "l1": "一列人，由窗的一頭，直到另一頭。",
+        "l2": "每一個都是你。每人身上一點光。",
+        "l3": "他們的數目，與你出發過的次數相同。",
+        "l4": "每一次續火，推門出去的都是一個真正的你。你從來沒有出發過。"
+      },
+      "b4": {
+        "l1": "路上的碑，同時動了。那不是紀念:每一座都是一個站着死去的行者。他們沒有躺下，他們在等門開。",
+        "l2": "他們站直，列隊，把門推開。門認的是行過的人，與完整的一團火——整條隊，每一個都行過。",
+        "l3": "門不是你開的。"
+      }
+    },
+    "unsealing-short": {
+      "b1": {
+        "l1": "門仍開着。推門的人仍在門的兩面站着。你行入去。"
+      }
+    },
+    "act4-entry": {
+      "b1": {
+        "l1": "你由窗步入。窗的另一面，就是門的另一面。",
+        "l2": "爐光在這一面是倒轉的:向前一步，便亮一分。",
+        "l3": "路是同一條。你由盡頭那一面，走回去。"
+      }
+    },
+    "act4-node1": {
+      "b1": {
+        "l1": "我們一直站在這一面。你望過它許多次，卻從未站過。",
+        "l2": "路你認得。你只是一直由另一面認得它。"
+      }
+    },
+    "act4-node2": {
+      "b1": {
+        "l1": "王還坐着。我們行過他，一個都沒有坐下。",
+        "l2": "斷環的聲，這一面仍在響。我們行過的時候，沒有一個回頭。"
+      }
+    },
+    "act4-node3": {
+      "b1": {
+        "l1": "城還在等。我們不等了，所以我們在這裏。",
+        "l2": "水裏那點光不是燈。這一面也一樣。"
+      }
+    },
+    "act4-node4": {
+      "b1": {
+        "l1": "碑最密的一段在這裏。最早停下的人，離爐火最近。",
+        "l2": "灰是他們燒剩的。樹靠灰長大，你行的路由他們的力氣鋪成。",
+        "l3": "兩盞燈仍並亮。點燈的人沒有走遠，他就在燈下站着。",
+        "l4": "沒有人阻你。碑向兩面讓開，像一直為這一程留着中間那條路。",
+        "l5": "這一段最長，也最靜。你可以在這裏坐一會——他們等得起。"
+      }
+    },
+    "act4-node5": {
+      "b1": {
+        "l1": "你到了。這裏你認得。",
+        "l2": "我一句都沒有說錯。我只是從來沒有說過，出去的那個是誰。",
+        "l3": "每一次撕開，不肯走的那部分都留在這裏。留得多了，便有了一張面孔。這一張。",
+        "l4": "坐下。讓一個出去就是了——一直都是這樣的。"
+      }
+    },
+    "finale": {
+      "b1": {
+        "l1": "六片重歸一團，隊伍已到。",
+        "l2": "這一次沒有一半可以留下。火不撕你:不肯走的那一半，無位可立。",
+        "l3": "它坐下。你站起來。"
+      },
+      "b2": {
+        "l1": "門在前面。第一個走到這裏的人，就是在這一步之前坐下的。",
+        "l2": "行一步。",
+        "l3": "再一步。",
+        "l4": "這一步，是你自己的腳行的。"
+      }
+    },
+    "finale-win": {
+      "b1": {
+        "l1": "門開着。相同的身影一個接一個入城，次序與他們停下的次序相同。",
+        "l2": "你行在最後。整條隊都到了。",
+        "l3": "城門之內，是一團認得你的火。入城即是歸家。"
+      }
+    },
+    "finale-loss": {
+      "b1": {
+        "l1": "這一個，也沒有回來。",
+        "l2": "門重新閉上。六格仍亮，隊伍長了一個人。西面的火照樣燒着，等有人坐回去。"
+      }
+    },
+    "event-mirror": {
+      "c0": "鏡照出兩張同樣的牌。你只帶得走一張，另一張留在鏡裏，像有人替你收着。",
+      "c1": "玻璃碎了。同一個你散在每一塊碎片上，仍在笑。你從中取走一件不願再帶的東西，血沿手指流下。",
+      "c2": "你轉身。鏡裏那個慢了半口氣才轉身，之後便一直望着你走遠。",
+      "coda": "路上不止一面鏡。每一面都比你慢半口氣。"
+    },
+    "event-woundedKnight": {
+      "c0": "你替他止血。他把遺物按進你手裏，然後靠着石柱站起來，說他只是要行得再遠一點。",
+      "c1": "你取走鐵手裏的東西。他不推不擋，也沒有躺下;凹面甲後面的呼吸，慢慢停了。",
+      "c2": "你走開。回頭再看一眼，他仍靠着石柱，站着。",
+      "coda": "你下一次行過這裏，石柱前多了一座碑。"
+    },
+    "event-library": {
+      "c0": "你在泡水的書頁之間找到一張仍讀得出的。字是城中人寫的，寫的全是門開那日的打算。",
+      "c1": "你在書架之間坐下。水聲遠了，呼吸慢下來。這座城最不缺的，就是坐下來等的位。",
+      "coda": "他們把等待寫足了一座書庫。沒有一頁寫過出發。"
+    },
+    "event-fleshTrader": {
+      "c0": "你交出一塊血肉，換一件遺物。他收得順手，像同一件事重複過許多次。",
+      "c1": "你拒絕。他不追，只把長指合上:「下次。」說得像早已知道有下次。",
+      "coda": "他從不追價。他見得多:每一個往東的都不會回來——而總有下一個往東。"
+    },
+    "event-forgottenShrine": {
+      "c0": "你把一件不願再帶的東西放在龕前。石中那樣東西看着你，沒有回應——它等的不是祈禱。",
+      "c1": "你把骨與銀的祭品收進行囊。石中那樣東西沒有動，只是記下了。",
+      "c2": "你退開，轉身。龕聲不變——它嗡了不知多少年，不缺你這一次。",
+      "coda": "苔蘚長回祭品之上。這座龕收過的東西，比它應許過的多。"
+    }
+  }
+}
