@@ -1897,7 +1897,10 @@ func _build_stage(tex: Texture2D, enemy_idx: int) -> void:
 	if art != null and art.is_compressed():
 		art.decompress()
 	_read_contact(art)
-	if tier != "hero":
+	if tier != "hero" and art != null:
+		# Alpha only, half the bytes: the cull reads `.a` and nothing else, and the iPad 8 is
+		# watchdog-killed for RAM, so a fight must not hold 4 MiB of RGBA per foe.
+		art.convert(Image.FORMAT_LA8)
 		_art_img = art
 
 	_stage = SubViewport.new()

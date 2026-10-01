@@ -44,6 +44,8 @@ static func _foe_warms_the_rite(fails: Array[String]) -> void:
 	_check(fails, EnemyView._fx_cache.has("burst") and EnemyView._fx_cache.has("ember"),
 		"building a foe loads the rite's FX textures")
 	_check(fails, foe._art_img != null, "a foe reads its painting back at build")
+	_check(fails, foe._art_img != null and foe._art_img.get_format() == Image.FORMAT_LA8,
+		"a foe keeps its painting as alpha-bearing LA8, not full RGBA, for the fight")
 	var other: EnemyView = EnemyView.new(1, "Duskfang", 210.0, &"duskfang")
 	_check(fails, EnemyView.shard_shader() == shard,
 		"the shard shader is made once and shared by every foe")
