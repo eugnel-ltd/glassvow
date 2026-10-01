@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>development</string>
+	<key>destination</key>
+	<string>export</string>
+	<key>teamID</key>
+	<string>V45S7U2LZB</string>
+	<key>signingStyle</key>
+	<string>manual</string>
+	<key>signingCertificate</key>
+	<string>1DF1405515AC5A0D3E4CB38AA85189FD8D9D6A0E</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>io.fol2.glassvow</key>
+		<string>Glassvow device QA 2026-09-30</string>
+	</dict>
+	<key>compileBitcode</key>
+	<false/>
+	<key>thinning</key>
+	<string>&lt;none&gt;</string>
+</dict>
+</plist>
