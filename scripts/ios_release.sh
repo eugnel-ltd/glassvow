@@ -209,7 +209,9 @@ if [[ $DO_UPLOAD -eq 1 ]]; then
     VALID_LINE="$(grep -w -m1 VALID <<<"$LISTING" || true)"
     if [[ -n "$VALID_LINE" ]]; then
       echo "$VALID_LINE"
-      BUILD_ID="$(grep -o -E -m1 "$UUID_PATTERN" <<<"$VALID_LINE" || true)"
+      # The listing is one JSON line, so -m1 alone still yields every UUID on
+      # it (build, pre-release version, ...); the build's own id comes first.
+      BUILD_ID="$(grep -o -E "$UUID_PATTERN" <<<"$VALID_LINE" | head -n 1 || true)"
       break
     fi
     sleep "$PROCESSING_POLL_SECONDS"
