@@ -6,11 +6,15 @@ extends Node
 ## Hosted by application/main.gd behind `--map --map-timing`, which starts a run
 ## on the map, then hands over here. For Act I and then Act II the bench drops
 ## the kept act (a cold open of the act, as after an act change), opens the map,
-## reopens it twice the way a return from a fight does, and leaves it. It prints
-## one `MAP_OPEN {json}` row per open and one `MAP_KEPT {json}` row per act: the
-## video memory the kept act holds once the map is left, with the caches kept
-## and after dropping them. Then it drops everything again, warms the act's
-## landscape the way a run start or an act change does
+## reopens it twice the way a return from a fight does (the kept screen is
+## re-attached), then drops only the kept screen and opens once more: a
+## `rebuilt` open builds a new screen from the act's caches, as every return did
+## before the screen was kept. It prints one `MAP_OPEN {json}` row per open and
+## one `MAP_KEPT {json}` row per act: the video memory held once the map is
+## left, with everything kept, with the screen dropped and the act's caches
+## kept, and with both dropped (`kept_mib` is all of it, `screen_mib` the kept
+## screen's share and `act_mib` the caches'). Then it drops everything again,
+## warms the act's landscape the way a run start or an act change does
 ## (`MapLandscapeAssets.prefetch`), waits for the worker without opening
 ## anything, and opens the map once more: a `MAP_WARM` row times the warm-up and
 ## its worst frame, and the `warmed` open row is what the player's first open of
@@ -23,8 +27,8 @@ extends Node
 ##   tools/shot.sh --map --map-timing --seed=1 --shape=pad-landscape
 ##
 ## With `--shot=PATH` it stops after the first reopen of Act I and photographs
-## that map instead, so a reopened map can be compared with a fresh one
-## (`tools/shot.sh --map --shot=…`).
+## that map (the kept screen, re-attached) instead, so a reopened map can be
+## compared with a fresh one (`tools/shot.sh --map --shot=…`).
 
 const REOPENS: int = 2
 const SETTLE_FRAMES: int = 20
@@ -70,21 +74,31 @@ func _time_act(act: int) -> void:
 	for open: int in range(1, 2 + REOPENS):
 		await _open(act, open, "cold" if open == 1 else "reopen")
 	_host._clear_route()
+	_host._map_keep.release()
+	await _frames(SETTLE_FRAMES)
+	await _open(act, 2 + REOPENS, "rebuilt")
+	_host._clear_route()
 	await _frames(SETTLE_FRAMES)
 	var kept: float = _video_mib()
+	_host._map_keep.release()
+	await _frames(SETTLE_FRAMES)
+	var screen_dropped: float = _video_mib()
 	_drop_kept()
 	await _frames(SETTLE_FRAMES)
 	var dropped: float = _video_mib()
 	print("MAP_KEPT " + JSON.stringify({"act": act, "video_mib_kept": kept,
-		"video_mib_dropped": dropped, "kept_mib": snappedf(kept - dropped, 0.1)}))
+		"video_mib_screen_dropped": screen_dropped, "video_mib_dropped": dropped,
+		"kept_mib": snappedf(kept - dropped, 0.1),
+		"screen_mib": snappedf(kept - screen_dropped, 0.1),
+		"act_mib": snappedf(screen_dropped - dropped, 0.1)}))
 	await _warm(act)
-	await _open(act, 2 + REOPENS, "warmed")
+	await _open(act, 3 + REOPENS, "warmed")
 	_host._clear_route()
 	_drop_kept()
 	await _frames(SETTLE_FRAMES)
 	var run: RunState = _host.game.run
 	MapLandscapeAssets.prefetch(run.act)
-	await _open(act, 3 + REOPENS, "early")
+	await _open(act, 4 + REOPENS, "early")
 	_host._clear_route()
 	await _frames(SETTLE_FRAMES)
 
@@ -133,8 +147,11 @@ func _open(act: int, open: int, kind: String) -> void:
 	await _frames(SETTLE_FRAMES)
 
 
-## Forgets every per-act cache, so the next open decodes and binds from nothing.
+## Forgets every per-act cache and the kept screen, so the next open decodes,
+## builds and binds from nothing.
 func _drop_kept() -> void:
+	_host._clear_route()
+	_host._map_keep.release()
 	MapLandscapeAssets.release()
 	MapScene._bound = {}
 	MapScene._bound_key = ""

@@ -46,6 +46,9 @@ var _travel_t: float = 0.0
 var _travel_from_xz: Vector2 = MapCameraRig.DEFAULT_XZ
 var _travel_to_xz: Vector2 = MapCameraRig.DEFAULT_XZ
 var _waystones: Array[GlassWaystone] = []
+## The face each waystone was built with (`_face`), so a kept screen rebuilds
+## only the waystones whose node changed while it was away (`reopen`).
+var _faces: Array[Array] = []
 var _hint_label: Label
 ## H1 retires the persistent survey copy so the map does not double-teach.
 var _survey_retired: bool = false
@@ -91,6 +94,11 @@ var _projected_pose: Vector2 = Vector2(INF, INF)
 var _projected_zoom_stop: int = -1
 var _projected_control_size: Vector2 = Vector2(-1.0, -1.0)
 var _projected_view_size: Vector2i = Vector2i(-1, -1)
+## The candidate envelopes `_focus_xz` frames a node within, and the act they
+## were bound as. A pure function of this screen's graph (which never changes)
+## and the act, so a refresh, and a kept screen's reopen, reuse them.
+var _envelopes: Dictionary = {}
+var _envelopes_act: int = -1
 ## Test-visible count of actual whole-map projection passes. It is deliberately
 ## not reset: a camera or shape change should add one pass, while every reader
 ## at the same pose should reuse it.
@@ -275,17 +283,34 @@ func _scale_chrome() -> void:
 
 func _build_waystones() -> void:
 	for i: int in range(map.nodes.size()):
-		var n: MapNode = map.nodes[i]
-		var shown_kind: String = "unlit" if n.unlit else n.type
-		var caption: String = Locale.active.t("ui.pilgrimage.unlitWay") \
-			if n.unlit else _node_caption(n)
-		var ws: GlassWaystone = GlassWaystone.new(
-			i, shown_kind, _node_hue(n), caption, n.quest_marked,
-			n.bounty if n.unlit else 0)
-		ws.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		ws.chosen.connect(_on_waystone_chosen)
+		_faces.append([])
+		var ws: GlassWaystone = _new_waystone(i)
 		add_child(ws)
 		_waystones.append(ws)
+
+
+## The waystone for node `i`, wearing the node's current face (`_face`).
+func _new_waystone(i: int) -> GlassWaystone:
+	var face: Array = _face(map.nodes[i])
+	_faces[i] = face
+	var kind: String = face[0]
+	var hue: float = face[1]
+	var caption: String = face[2]
+	var marked: bool = face[3]
+	var bounty: int = face[4]
+	var ws: GlassWaystone = GlassWaystone.new(i, kind, hue, caption, marked, bounty)
+	ws.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ws.chosen.connect(_on_waystone_chosen)
+	return ws
+
+
+## What a waystone is built with: its kind, hue, caption, quest mark and bounty.
+## An unlit node shows none of its kind until it is visited.
+func _face(n: MapNode) -> Array:
+	var caption: String = Locale.active.t("ui.pilgrimage.unlitWay") \
+		if n.unlit else _node_caption(n)
+	return ["unlit" if n.unlit else n.type, _node_hue(n), caption, n.quest_marked,
+		n.bounty if n.unlit else 0]
 
 
 ## Creature nodes wear their enemy's hue (sporeling green, duskfang violet …);
@@ -364,6 +389,13 @@ func refresh(run: RunState) -> void:
 			_map_scene.set_scatter_salt(run.seed + SCENERY_SEED_OFFSET)
 		_set_act_theme(run.act if _scenery_act < 0 else _scenery_act)
 		_sync_title()
+	_sync_run_state(run)
+
+
+## The part of `refresh` a run's progress through one act can change: which
+## waystones are live, cleared and current, the lit roads, the instruction, the
+## camera's seat on the current node and the sealed door.
+func _sync_run_state(run: RunState) -> void:
 	var live: Array[int] = map.reachable()
 	var first_live: GlassWaystone = null
 	for i: int in range(_waystones.size()):
@@ -384,6 +416,45 @@ func refresh(run: RunState) -> void:
 	_seat_marker()
 	_push_bands(true)
 	_sync_sealed_door(run)
+
+
+## Brings back a screen `MapScreenKeep` held while another route was up, for
+## the same map, run, act, shape and language: whatever a fresh screen would
+## start with is restored (no scripted walk, the default zoom, the pointer drift
+## at rest, the instruction undecided until the hint guide sees it again), each
+## waystone whose node changed face is rebuilt (an unlit node the player has
+## since visited), and the run's state is applied: the visited node, the lit
+## roads and the live waystones. The act, its title, the layout, the scenery and
+## the landscape stand, as the keep's identity guarantees they would bind the
+## same (`refresh` would find nothing to rebind but still pay to look).
+func reopen(run: RunState) -> void:
+	instant = false
+	# An entrance the last route change cut short stops where it was; this one
+	# starts from rest, as on a fresh screen (`TransitionLayer.screen_in`).
+	modulate.a = 1.0
+	scale = Vector2.ONE
+	_survey_retired = false
+	_drift = PointerDrift.new()
+	if _map_scene != null and _map_scene.get_rig().zoom_stop != MapCameraRig.DEFAULT_STOP:
+		_map_scene.get_rig().set_zoom_stop(MapCameraRig.DEFAULT_STOP)
+	for i: int in range(_waystones.size()):
+		if _face(map.nodes[i]) == _faces[i]:
+			continue
+		var old: GlassWaystone = _waystones[i]
+		var ws: GlassWaystone = _new_waystone(i)
+		add_child(ws)
+		move_child(ws, old.get_index())
+		remove_child(old)
+		old.free()
+		_waystones[i] = ws
+	_run = run
+	_sync_run_state(run)
+
+
+## Whether `MapScreenKeep` may hold this screen and show it again as it stands:
+## its layout is bound and no walk is under way.
+func can_keep() -> bool:
+	return _layout_result != null and not _layout_pending and not _travelling
 
 
 func _sync_sealed_door(run: RunState) -> void:
@@ -600,12 +671,14 @@ func _route_states() -> Dictionary:
 	return out
 
 
-func _ordered_layout_anchors(result: MapLayoutResult = _layout_result) \
-		-> PackedVector3Array:
+## The bound node anchors in `map.nodes` order. Read from `_layout_data`, the
+## copy taken at bind: `MapLayoutResult.to_dict` deep-copies the whole result,
+## scenery and all, which cost every focus, pick and projection pass ~7 ms.
+func _ordered_layout_anchors() -> PackedVector3Array:
 	var out: PackedVector3Array = PackedVector3Array()
-	if result == null:
+	if _layout_result == null:
 		return out
-	var anchors: Dictionary = result.to_dict()["node_anchors"]
+	var anchors: Dictionary = _layout_data.get("node_anchors", {})
 	for node: MapNode in map.nodes:
 		if not anchors.has(node.id):
 			return PackedVector3Array()
@@ -747,14 +820,17 @@ func _focus_xz(i: int) -> Vector2:
 	else:
 		push_error("WorldMapScreen cannot focus without the compiled node anchors")
 		return MapCameraRig.DEFAULT_XZ
-	var bound: Dictionary = _InputBinding.bind(map, _act)
-	if bound.get("ok", false) != true:
-		push_error("WorldMapScreen cannot bind the focused candidate envelope")
-		return MapCameraRig.DEFAULT_XZ
-	var bound_nodes: Array = bound["nodes"]
-	var bound_edges: Array = bound["edges"]
-	var envelopes: Dictionary = MapQualityEvaluator.node_candidate_bounds(
-		bound_nodes, bound_edges, quality)
+	if _envelopes_act != _act:
+		var bound: Dictionary = _InputBinding.bind(map, _act)
+		if bound.get("ok", false) != true:
+			push_error("WorldMapScreen cannot bind the focused candidate envelope")
+			return MapCameraRig.DEFAULT_XZ
+		var bound_nodes: Array = bound["nodes"]
+		var bound_edges: Array = bound["edges"]
+		_envelopes = MapQualityEvaluator.node_candidate_bounds(
+			bound_nodes, bound_edges, quality)
+		_envelopes_act = _act
+	var envelopes: Dictionary = _envelopes
 	return _map_scene.get_rig().pose_leading(
 		world, reference, MapQualityEvaluator.focused_touch_inset_px(quality),
 		MapQualityEvaluator.focused_anchor_envelope(map.nodes[i].id, envelopes))

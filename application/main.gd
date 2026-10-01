@@ -11,7 +11,13 @@ const ChoiceScreenType: GDScript = preload("res://presentation/run/choice_screen
 
 var content: ContentDB
 var game: GlassvowGame
-var _map: WorldMap
+## Replacing the map (an act change, a new or resumed run, the title) frees the
+## screen kept for the old one.
+var _map: WorldMap:
+	set(value):
+		if value != _map:
+			_map_keep.release()
+		_map = value
 var _screen: CombatScreen = null
 ## A fight owns one complete language. Settings may persist a request during
 ## combat, but Locale and ContentDB change together only at the next route seam.
@@ -32,6 +38,10 @@ var _map_layout_job: MapLayoutJob = null
 ## would block the main thread for the rest of their compile).
 var _map_layout_retired: Array[MapLayoutJob] = []
 var _map_screen: WorldMapScreen = null
+## The map screen left for another route, re-attached by the next `_show_map`
+## of the same map, run, act, shape and language (`_map_screen_key`).
+var _map_keep: MapScreenKeep = MapScreenKeep.new()
+var _map_screen_key: Array = []
 var _choice_screen: Control = null
 var _reward_screen: RewardEmbers = null
 var _route_screen: Control = null
@@ -785,11 +795,15 @@ func _clear_route() -> void:
 	if _hints != null:
 		_hints.hide_callout()
 	for screen: Control in [
-		_screen, _map_screen, _choice_screen, _reward_screen,
-		_route_screen, _run_hud, _modal,
+		_screen, _choice_screen, _reward_screen, _route_screen, _run_hud, _modal,
 	]:
 		if screen != null:
 			screen.queue_free()
+	if _map_screen != null:
+		if game != null and game.run != null and game.run.pending_run_end == null:
+			_map_keep.keep(_map_screen, _map_screen_key)
+		else:
+			_map_screen.queue_free()
 	_screen = null
 	_map_screen = null
 	_choice_screen = null
@@ -1371,6 +1385,9 @@ func _continue_run(saved: RunState) -> void:
 
 func _route_run() -> void:
 	_apply_pending_content_hydration()
+	# An ended run never shows its map again: free the kept screen now.
+	if game == null or game.run.pending_run_end != null:
+		_map_keep.release()
 	_warm_map_landscape()
 	if game == null:
 		_route_idle()
@@ -1411,6 +1428,10 @@ func _warm_map_landscape() -> void:
 		return
 	var node: MapNode = _map.current()
 	var past_boss: bool = node != null and node.type == "boss" and not game.run.is_final_act()
+	if past_boss:
+		# The next map is the next act's, and the kept screen holds this act's
+		# artwork: it goes first, so one act's artwork is held at a time.
+		_map_keep.release()
 	MapLandscapeAssets.prefetch(game.run.act + (1 if past_boss else 0))
 
 
@@ -1539,15 +1560,22 @@ func _show_map() -> void:
 		_transitions.wipe()
 		act_index = game.run.act
 	_clear_route()
-	_map_screen = WorldMapScreen.new(_map, content, _shape, act_index)
-	# ponytail: retain only the current identity; add a cache only if routes can
-	# revisit older semantic identities.
-	_map_screen._layout_compile = _compile_map_layout
-	_map_screen.node_chosen.connect(_on_node_chosen)
-	_map_screen.sealed_door_requested.connect(_on_sealed_door_requested)
-	_map_screen.before_pick = _on_map_before_pick
-	add_child(_map_screen)
-	_map_screen.refresh(game.run)
+	_map_screen_key = [_map.get_instance_id(), game.run.get_instance_id(), act_index,
+		_shape, Locale.active.code, _forced_act_index]
+	_map_screen = _map_keep.take(_map_screen_key)
+	if _map_screen != null:
+		add_child(_map_screen)
+		_map_screen.reopen(game.run)
+	else:
+		_map_screen = WorldMapScreen.new(_map, content, _shape, act_index)
+		# ponytail: retain only the current identity; add a cache only if routes can
+		# revisit older semantic identities.
+		_map_screen._layout_compile = _compile_map_layout
+		_map_screen.node_chosen.connect(_on_node_chosen)
+		_map_screen.sealed_door_requested.connect(_on_sealed_door_requested)
+		_map_screen.before_pick = _on_map_before_pick
+		add_child(_map_screen)
+		_map_screen.refresh(game.run)
 	if _map_screen.layout_pending():
 		_show_map_charting()
 		return

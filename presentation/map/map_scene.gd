@@ -6,6 +6,8 @@ extends Control
 
 const OVERSAMPLE: float = 1.0
 const VP_MAX: int = 2048
+## The stage's size while the scene is off the tree.
+const PARKED_STAGE: Vector2i = Vector2i(2, 2)
 const THRESHOLD_XZ: Vector2 = Vector2(-41.3, 6.5)
 ## Clears the fixed boss with the new landmark silhouettes at every zoom.
 const TERMINUS_XZ: Vector2 = Vector2(43.0, 0.0)
@@ -106,6 +108,17 @@ func _ready() -> void:
 	_rig.get_camera().current = true
 	_fit()
 	resized.connect(_fit)
+
+
+## Off the tree, as when its screen is kept between visits (`MapScreenKeep`),
+## the stage draws nothing, so it hands back its render buffers (the colour,
+## the 4x MSAA and the depth of a stage-sized view); `_fit` sizes them again
+## as the scene returns.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_EXIT_TREE:
+		_stage.size = PARKED_STAGE
+	elif what == NOTIFICATION_ENTER_TREE and is_node_ready():
+		_fit()
 
 
 func get_rig() -> MapCameraRig:
