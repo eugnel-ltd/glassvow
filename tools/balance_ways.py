@@ -15,6 +15,7 @@ Usage (repo root):
                                 [--content FILE]   # a scratch catalogue, e.g. one sweep point
                                 [--way-weights 2.0/1.0]   # committed arms' own/other glass weights
                                 [--play search]   # readout 8's search player on the board
+                                [--vows 0]   # one vow's cells only (a split table: V0 and V5 on their own seeds)
   python3 tools/balance_ways.py --from-dir DIR [--quick | --seeds A-B]   # re-grade saved reports
 
 Every gate is graded twice: on the point estimate (the verdict readouts 1-7 used)
@@ -124,10 +125,10 @@ def sim_command(godot: str, vow: int, pool: str, arm: str, first: int, count: in
 
 def jobs(godot: str, seeds: tuple[int, int], directory: Path, content: Path | None = None,
          weights: tuple[float, float] | None = None,
-         play: str = "greedy") -> list[tuple[str, list[str]]]:
+         play: str = "greedy", vows: tuple[int, ...] = VOWS) -> list[tuple[str, list[str]]]:
     first, count = seeds[0], seeds[1] - seeds[0] + 1
     out: list[tuple[str, list[str]]] = []
-    for vow in VOWS:
+    for vow in vows:
         for pool in POOLS:
             for arm in ARMS:
                 out.append((report_name(vow, pool, arm)[:-5], sim_command(
@@ -405,13 +406,20 @@ def cell_gates(vow: int, pool: str, stats: dict[str, dict[str, Any]],
     ]
 
 
-def grade(directory: Path, seeds: tuple[int, int]) -> dict[str, Any]:
+def parse_vows(text: str) -> tuple[int, ...]:
+    vows = tuple(sorted({int(part) for part in text.split(",") if part.strip().isdigit()}))
+    if not vows or any(vow not in VOWS for vow in vows) or len(vows) != len(text.split(",")):
+        raise ValueError(f"--vows must name some of {VOWS} separated by commas, got {text!r}")
+    return vows
+
+
+def grade(directory: Path, seeds: tuple[int, int], vows: tuple[int, ...] = VOWS) -> dict[str, Any]:
     """Load every report of the cell table, check pairing and provenance, grade."""
     cells: dict[tuple[int, str], Any] = {}
     identity: set[tuple[str, str]] = set()
     weights: set[tuple[Any, Any]] = set()
     plays: set[str] = set()
-    for vow in VOWS:
+    for vow in vows:
         for pool in POOLS:
             stats: dict[str, dict[str, Any]] = {}
             adaptive_rows: list[dict[str, Any]] = []
@@ -485,7 +493,7 @@ def render(result: dict[str, Any], wall: float | None = None) -> str:
                   in zip(cell["gates"], cell["intervals"])]
     lines += ["", "G7 here covers stalls, errors and a replay of arm A's first "
               f"{REPLAY} seeds per cell. The CEM stress and the save-lineage check belong to the "
-              "exam; H is the human round."]
+              "exam; B, the bot round, reads this table played by the search player (--play search)."]
     return "\n".join(lines)
 
 
@@ -502,6 +510,9 @@ def main(argv: list[str] | None = None) -> int:
                         help="run on this catalogue instead of content/full-content.json")
     parser.add_argument("--play", choices=PLAYS, default="greedy",
                         help="who plays the fights: the greedy pilot or readout 8's search player")
+    parser.add_argument("--vows", default="0,5",
+                        help="the vows whose cells to run or grade (default 0,5): a split table runs "
+                             "each vow on its own seed range")
     parser.add_argument("--way-weights",
                         help="COMMIT/OFF: the committed arms' weights for their own and other coloured "
                              "glass instead of the pilot's 3.0/0.5, e.g. 2.0/1.0 (a splash arm)")
@@ -515,6 +526,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         seeds = QUICK_SEEDS if opts.quick else parse_seeds(opts.seeds) if opts.seeds else DEFAULT_SEEDS
         weights = parse_weights(opts.way_weights) if opts.way_weights is not None else None
+        vows = parse_vows(opts.vows)
     except ValueError as exc:
         parser.error(str(exc))
     if not 1 <= opts.jobs <= 16:
@@ -529,10 +541,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"reports: {directory}", file=sys.stderr)
         start = time.monotonic()
         content = opts.content.resolve() if opts.content is not None else None
-        run_jobs(jobs(opts.godot, seeds, directory.resolve(), content, weights, opts.play), directory,
+        run_jobs(jobs(opts.godot, seeds, directory.resolve(), content, weights, opts.play, vows), directory,
                  opts.jobs)
         wall = time.monotonic() - start
-    print(render(grade(directory, seeds), wall))
+    print(render(grade(directory, seeds, vows), wall))
     return 0
 
 
