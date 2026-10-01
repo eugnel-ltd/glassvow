@@ -85,10 +85,13 @@ const RING: int = 6
 const SPLIT: int = 2
 const THROW: float = 2.15
 
-## Where everything comes to rest, as offsets from the screen's centre.
+## Where everything comes to rest, as offsets from the screen's centre. The
+## seats stand 232 above the rack's line rather than the first cut's 272: the
+## heading took 40 from the top of the column, and the fire band between the
+## slabs and the cards was the one place with height to give.
 const SEAT: Vector2 = Vector2(198.0, 128.0)
 const SEAT_GAP: float = 40.0
-const SEAT_Y: float = -272.0
+const SEAT_Y: float = -232.0
 ## No offering: the one announcement drops toward the fire and the chrome comes
 ## up under it. Held at the full set-out, a gold-only win is a slab at the top,
 ## a fire in the middle and three hundred empty pixels of nothing — the layout
@@ -100,7 +103,35 @@ const FOOT_REACH: float = 72.0
 ## How far a seat slab reaches above its own centre, as a fraction of SEAT —
 ## `_slab`'s highest vertex, with a little over for the spin.
 const SEAT_RISE: float = 0.58
+## How far a seat slab reaches below its own centre, as a fraction of SEAT:
+## `_slab`'s lowest vertex, which the rules line hangs under.
+const SLAB_FOOT: float = 0.56
 const ART_H: float = 74.0
+## WHAT A RELIC DOES has to read at arm's length on a pad, so on the column it
+## hangs UNDER its slab, on the night, rather than on the slab's own face. On
+## the slab it was 13 px of dim ink on the item's colour, pressed against the
+## rim: War Fetish's orange slab measured 3.5:1. Under the slab the ground is
+## the night and the ink is near-white (13:1 or better), the line can be as
+## wide as the slab's pitch, and the tapered bottom of the slab no longer
+## crops it. A NIGHT outline keeps it whole where a piece of wreckage drifts
+## under it.
+const RULE_PX: int = 16
+const RULE_PX_COMPACT: int = 13
+const RULE_DROP: float = 3.0         # under the slab's lowest point
+const RULE_LINES: int = 3
+## The line pitch, set outright: Alegreya's own is ~1.75 em, which on the
+## phone pushed a second line off the bottom of its slab.
+const RULE_LINE_H: float = 23.0
+const RULE_LINE_H_COMPACT: float = 17.0
+const RULE: Color = Color(0.878, 0.890, 0.925)
+## THE HEADING. The rows screen announced the fight (VICTORY / ELITE SLAIN /
+## BOSS VANQUISHED, the same keys); here it is one quiet line over the spoils,
+## in the light of the thing that died, arriving as the husk blazes.
+const HEAD_PX: int = 20
+const HEAD_PX_COMPACT: int = 15
+const HEAD_H: float = 28.0
+const HEAD_GAP: float = 12.0
+const HEAD_W_MIN: float = 480.0
 ## The bed: where the husk came down, and the only light in the scene. It gets
 ## its own band. Parked behind the rack its hot core sat squarely under three
 ## opaque cards — the brightest thing on the screen, invisible, with only the
@@ -124,6 +155,7 @@ const BURST: float = 0.46            # it coming apart
 const COOL: float = 0.40             # white-hot fracture -> the item's colour
 const CARD_IN: float = 0.28
 const DEBRIS_A: float = 0.90
+const DEBRIS_SCALE: float = 0.60     # a piece of wreckage at rest, against its cut
 ## A card not taken, once the offering has been answered.
 const PASSED_A: float = 0.14
 
@@ -184,6 +216,9 @@ var _picked: bool = false
 var _left: bool = false
 var _lean: bool = false
 var _take_line: Label = null
+var _heading: Label = null
+var _head_rect: Rect2 = Rect2()      # where the heading stands, in screen px
+var _head_a: float = 0.0
 var _bar: HBoxContainer = null
 var _skip_word: Button = null
 var _walk_word: Button = null
@@ -327,6 +362,15 @@ func _build_shards() -> void:
 			# Wide, but not off the edge: a piece clipped by the frame stops being
 			# wreckage and becomes a rendering artefact.
 			land.x = _husk_at.x + (land.x - _husk_at.x) * 1.06
+			# ...and under the words. On the column the rules hang under the
+			# slabs, and the two crown wedges came to rest standing up through
+			# them, a white fracture edge struck through "enemy". They lie
+			# lower in the fire instead, top edge below the rules' second line.
+			if not _compact:
+				var reach: float = 0.0
+				for p: Vector2 in poly:
+					reach = minf(reach, p.y)
+				land.y = maxf(land.y, _rules_floor() - reach * DEBRIS_SCALE)
 			if size.x > 0.0:
 				land.x = clampf(land.x, 24.0 - _centre.x, size.x - 24.0 - _centre.x)
 				land.y = minf(land.y, size.y - 16.0 - HUSK_R.y * 0.5 * _k - _centre.y)
@@ -363,13 +407,20 @@ static func _slab(i: int, box: Vector2 = SEAT) -> PackedVector2Array:
 		Vector2(-0.22 + 0.14 * j, -0.54),
 		Vector2(0.50, -0.42 - 0.12 * j),
 		Vector2(0.58 + 0.08 * j, 0.24 - 0.10 * j),
-		Vector2(0.06 - 0.18 * j, 0.56),
+		Vector2(0.06 - 0.18 * j, SLAB_FOOT),
 		Vector2(-0.44 + 0.10 * j, 0.34 + 0.14 * j),
 	])
 	var out: PackedVector2Array = PackedVector2Array()
 	for p: Vector2 in pts:
 		out.append(p * box)
 	return out
+
+
+## Where the column's rules lines end, as an offset from the centre: two lines
+## under the slab row, which is all but the longest relic text.
+func _rules_floor() -> float:
+	return (SEAT_Y_LEAN if _lean else SEAT_Y) + SEAT.y * SLAB_FOOT + RULE_DROP \
+		+ 2.0 * RULE_LINE_H
 
 
 func _husk_outline() -> PackedVector2Array:
@@ -440,7 +491,7 @@ func _draw_shard(shard: Dictionary) -> void:
 	var spin_at: float = shard["spin"]
 	var spin: float = spin_at * (1.0 - _burst)
 	var lit: float = shard["lit"]
-	var scale: float = lerpf(1.0, 0.60, _burst) if seat < 0 \
+	var scale: float = lerpf(1.0, DEBRIS_SCALE, _burst) if seat < 0 \
 		else lerpf(0.22, 1.0, _burst)
 
 	# How near this piece is to the bed decides how hot it still is. Nothing
@@ -541,6 +592,14 @@ func _build_plate() -> void:
 	_rack = Control.new()
 	_rack.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_plate.add_child(_rack)
+
+	_heading = _caption(Locale.active.t(_heading_key()), HEAD_PX, _hue_at(0.22, 1.0), 6)
+	_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_heading.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
+	_heading.add_theme_constant_override("shadow_offset_y", 2)
+	_heading.modulate.a = _head_a
+	_plate.add_child(_heading)
 	for i: int in range(_card_ids.size()):
 		var card: CardView = RewardSpoils.card(content, _card_ids[i],
 			9100 + i, _card_scale, _take_card)
@@ -566,6 +625,14 @@ func _build_plate() -> void:
 		_bar.add_child(_skip_word)
 	_walk_word = _word(Locale.active.t("ui.reward.walkOn"), _on_walk_on)
 	_bar.add_child(_walk_word)
+
+
+## The fight this reward came out of, in the rows screen's own words.
+func _heading_key() -> String:
+	match encounter_kind:
+		"elite": return "ui.reward.eliteSlain"
+		"boss": return "ui.reward.bossVanquished"
+		_: return "ui.reward.victory"
 
 
 ## The spoils' faces, for the current set-out. Built by `_place` once the seat
@@ -642,25 +709,47 @@ func _spoil_face(sp: Dictionary) -> Control:
 	var sub: String = sp["sub"]
 	var sub_label: Label = null
 	if sub != "":
-		sub_label = _caption(sub, 11, TEXT_DIM, 0)
-		sub_label.add_theme_font_override("font",
-			RewardKit.font(GlassStyle.ALEGREYA_400, 0))
-		sub_label.add_theme_font_size_override("font_size", 12 if _compact else 13)
-		sub_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		sub_label.max_lines_visible = 2
+		sub_label = _rules(sub)
 		sub_label.horizontal_alignment = name_label.horizontal_alignment
-		sub_label.size = Vector2(text_w, 34.0)
 		box.add_child(sub_label)
 	if _compact:
-		var top: float = (_seat.y - (20.0 + (36.0 if sub_label != null else 0.0))) * 0.5
+		# The phone has no night under its slabs to hang the line on: they are
+		# a stack. So the line stays beside the art, near-white and outlined.
+		var rules_h: float = 2.0 * RULE_LINE_H_COMPACT
+		var top: float = (_seat.y - (20.0 + (rules_h if sub_label != null else 0.0))) * 0.5
 		name_label.position = Vector2(text_x, top)
 		if sub_label != null:
-			sub_label.position = Vector2(text_x, top + 21.0)
+			sub_label.max_lines_visible = 2
+			sub_label.size = Vector2(text_w, rules_h)
+			sub_label.position = Vector2(text_x, top + 20.0)
 	else:
 		name_label.position = Vector2(0.0, ART_H + 6.0)
 		if sub_label != null:
-			sub_label.position = Vector2(0.0, ART_H + 27.0)
+			# As wide as the slab's pitch, centred under it: the next slab's line
+			# starts a gap's width on.
+			var wide: float = _seat.x + SEAT_GAP - 8.0
+			sub_label.size = Vector2(wide, RULE_LINE_H * RULE_LINES)
+			sub_label.position = Vector2((_seat.x - wide) * 0.5,
+				_seat.y * (0.5 + SLAB_FOOT) + RULE_DROP)
 	return box
+
+
+## A spoil's rules: Alegreya, near-white, wrapped, with a NIGHT outline so a
+## shard drifting under the words or the slab's colour beside them never takes
+## the ink's edge away.
+func _rules(text: String) -> Label:
+	var px: int = RULE_PX_COMPACT if _compact else RULE_PX
+	var pitch: float = RULE_LINE_H_COMPACT if _compact else RULE_LINE_H
+	var font: Font = RewardKit.font(GlassStyle.ALEGREYA_400, 0)
+	var l: Label = _caption(text, px, RULE, 0)
+	l.add_theme_font_override("font", font)
+	l.add_theme_constant_override("outline_size", 8 if _compact else 6)
+	l.add_theme_color_override("font_outline_color", Color(NIGHT, 0.85))
+	l.add_theme_constant_override("line_spacing", roundi(pitch - font.get_height(px)))
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.max_lines_visible = RULE_LINES
+	l.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	return l
 
 
 func _caption(text: String, px: int, col: Color, tracking: int) -> Label:
@@ -710,6 +799,7 @@ func advance(delta: float) -> void:
 		return
 	_t += delta
 	_set_blaze(_ramp(SIT, BLAZE))
+	_set_head(_ramp(SIT, BLAZE + BURST * 0.5))
 	_set_burst(1.0 - pow(1.0 - _ramp(SIT + BLAZE, BURST), 5.0))     # quint out
 	_set_cool(_ramp(SIT + BLAZE + BURST * 0.5, COOL))
 	for i: int in range(_spoils.size()):
@@ -721,10 +811,27 @@ func advance(delta: float) -> void:
 	for i: int in range(_cards.size()):
 		var wait: float = SIT + BLAZE + BURST * 0.72 + 0.06 * float(i)
 		_card_in(1.0 - pow(1.0 - _ramp(wait, rise), 3.0), i)            # cubic out
-	if _t >= SIT + BLAZE + BURST + 0.06 * float(_cards.size()) + rise:
+	if _t >= _entrance_end():
 		_settled = true
 		set_process(false)
 		_on_entrance_done()
+
+
+## Resume WITHOUT the entrance: the state a screen is rebuilt into when the
+## player has already watched this husk break (Main's phial-rack answer). The
+## clock jumps to its end, so every piece is home, the heading and the faces
+## are lit and the cards are up in one frame. It is the entrance's own last
+## beat, not a second path: any spoil not yet banked is announced on the way,
+## in order, exactly once, so call it after `mark_taken`.
+func settle() -> void:
+	if _settled:
+		return
+	advance(_entrance_end() - _t)
+
+
+## The entrance's length: the last card's rise ends it.
+func _entrance_end() -> float:
+	return SIT + BLAZE + BURST + 0.06 * float(_cards.size()) + CARD_IN + 0.08
 
 
 ## 0 until `start`, 1 from `start + span`, linear between, on the entrance clock.
@@ -760,6 +867,11 @@ func _set_cool(v: float) -> void:
 	_cool = v
 	_field.queue_redraw()
 	_bed.queue_redraw()
+
+
+func _set_head(v: float) -> void:
+	_head_a = v
+	_heading.modulate.a = v
 
 
 func _reveal_face(v: float, i: int) -> void:
@@ -802,7 +914,8 @@ func _on_entrance_done() -> void:
 ## spoils are what the screen is for. With no insets this lands within four
 ## pixels of the raw centre, so nothing moves on a screen that owns its canvas.
 func _anchor() -> Vector2:
-	var rise: float = -(SEAT_Y_LEAN if _lean else SEAT_Y) + SEAT.y * SEAT_RISE
+	var rise: float = -(SEAT_Y_LEAN if _lean else SEAT_Y) + SEAT.y * SEAT_RISE \
+		+ HEAD_GAP + HEAD_H
 	var drop: float = (LEAN_FOOT if _lean
 		else CARD_Y + _card_h()) + FOOT_REACH
 	var top: float = _top()
@@ -850,6 +963,9 @@ func _place() -> void:
 	if not _card_rel.is_empty():
 		_rack.position = _centre + _card_rel[0]
 		_rack.size = Vector2(_card_rel[-1].x - _card_rel[0].x + _card_w(), _card_h())
+	_heading.position = _head_rect.position
+	_heading.size = _head_rect.size
+	_heading.add_theme_font_size_override("font_size", HEAD_PX_COMPACT if _compact else HEAD_PX)
 	var span: float = _foot_x.y - _foot_x.x
 	if _take_line != null:
 		_take_line.size = Vector2(span, 22.0)
@@ -874,6 +990,14 @@ func _layout_column() -> void:
 		_card_rel.append(Vector2(-span * 0.5 + float(i) * (_card_w() + _card_gap), CARD_Y))
 	_foot_y = _centre.y + (LEAN_FOOT if _lean else CARD_Y + _card_h())
 	_foot_x = Vector2(0.0, size.x)
+	# Over the spoils it names, no wider than their row (and never so narrow a
+	# boss's line wraps), so it keeps clear of the lantern at the left.
+	var seat_top: float = _centre.y + (SEAT_Y_LEAN if _lean else SEAT_Y) - SEAT.y * SEAT_RISE
+	var seats: int = _spoils.size()
+	var head_w: float = maxf(HEAD_W_MIN,
+		float(seats) * SEAT.x + float(maxi(0, seats - 1)) * SEAT_GAP)
+	_head_rect = Rect2(_centre.x - head_w * 0.5, seat_top - HEAD_GAP - HEAD_H,
+		head_w, HEAD_H)
 
 
 ## The phone (`RewardEmbersPhone`): the offering at the right, the spoils as a
@@ -884,7 +1008,7 @@ func _layout_compact() -> void:
 		size.y - maxf(safe_bottom, FLOOR_GAP), _spoils.size(), _card_ids.size(),
 		Vector2(_card_w(), _card_h()), _card_gap,
 		LayoutBook.num(lantern.get("left")) + LayoutBook.num(lantern.get("w"),
-			RunLantern.NATURAL) + 10.0)
+			RunLantern.NATURAL) + 10.0, RewardEmbersPhone.HEAD)
 	_centre = set_out["centre"]
 	_seat = set_out["seat"]
 	_husk_at = set_out["husk_at"]
@@ -893,6 +1017,7 @@ func _layout_compact() -> void:
 	_card_rel = set_out["card_rel"]
 	_foot_y = set_out["foot_y"]
 	_foot_x = set_out["foot_x"]
+	_head_rect = set_out["head"]
 
 
 ## Faces ride their shard out rather than appearing where it lands, so the item
