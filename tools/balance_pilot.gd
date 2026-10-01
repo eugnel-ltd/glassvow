@@ -505,15 +505,20 @@ static func card_score(d: Dictionary, aspect: int, card_id: String = "") -> floa
 		- float(str(d.get("cost", 0)))
 	for fx_v: Variant in d.get("effects", []):
 		var fx: Dictionary = fx_v
+		var worth: float = 0.0
 		match str(fx.get("kind", "")):
-			"dmg": score += float(str(fx.get("n", 0))) * float(str(fx.get("times", 1)))
-			"block", "heal": score += float(str(fx.get("n", 0))) * _w("card", "blockHeal")
-			"draw", "energy": score += float(str(fx.get("n", 0))) * _w("card", "drawEnergy")
-			"chip": score += float(str(fx.get("n", 0))) * (_w("card", "chipDusk") if dusk else _w("card", "chipAsh"))
-			"ember": score += float(str(fx.get("n", 0))) * _w("card", "ember")
-			"loseHp": score -= float(str(fx.get("n", 0))) * _w("card", "loseHp")
-			"status": score += _status_value(str(fx.get("id", "")), int(float(str(fx.get("n", 0)))), dusk)
-			"special": score += _special_value(fx, dusk)
+			"dmg": worth = float(str(fx.get("n", 0))) * float(str(fx.get("times", 1)))
+			"block", "heal": worth = float(str(fx.get("n", 0))) * _w("card", "blockHeal")
+			"draw", "energy": worth = float(str(fx.get("n", 0))) * _w("card", "drawEnergy")
+			"chip": worth = float(str(fx.get("n", 0))) * (_w("card", "chipDusk") if dusk else _w("card", "chipAsh"))
+			"ember": worth = float(str(fx.get("n", 0))) * _w("card", "ember")
+			"loseHp": worth = -float(str(fx.get("n", 0))) * _w("card", "loseHp")
+			"status": worth = _status_value(str(fx.get("id", "")), int(float(str(fx.get("n", 0)))), dusk)
+			"special": worth = _special_value(fx, dusk)
+		# A `lit` rider resolves only in a lantern of its way's colour (flame
+		# readout 9): like a rider that needs a Cracked target, it counts at the
+		# policy's `crackedShare` of what it gives.
+		score += worth * (_w("special", "crackedShare") if fx.has("lit") else 1.0)
 	if str(d.get("type", "")) == "power":
 		score += _w("card", "power")
 	score += float(str(d.get("chip", 0))) * (_w("card", "chipDusk") if dusk else _w("card", "chipAsh"))

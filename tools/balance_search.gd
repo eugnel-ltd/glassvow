@@ -373,6 +373,7 @@ static func clone_combat(cb: CombatState) -> CombatState:
 	out.art_cost_delta = cb.art_cost_delta
 	out.first_gain_bonus = cb.first_gain_bonus
 	out.first_gain_turn = cb.first_gain_turn
+	out.lit_way = cb.lit_way
 	out.art_used_turn = cb.art_used_turn
 	out.kindled_turn = cb.kindled_turn
 	out.kindles_this_turn = cb.kindles_this_turn

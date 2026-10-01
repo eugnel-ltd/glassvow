@@ -27,6 +27,10 @@ var art_cost_delta: int = 0
 var first_gain_bonus: int = 0
 ## The turn whose first Ember gain has taken `first_gain_bonus`.
 var first_gain_turn: int = -1
+## The way whose colour the lantern shows, Steady or True, at combat start;
+## empty at Kindling or Soot. A card effect marked `lit` with this way's id
+## resolves; one marked with another way's id does not (flame readout 9).
+var lit_way: String = ""
 var art_used_turn: int = 0
 var kindled_turn: int = 0
 var kindles_this_turn: int = 0
