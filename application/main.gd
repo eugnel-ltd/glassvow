@@ -163,13 +163,11 @@ func _ready() -> void:
 	print("glassvow boot " + str(Engine.get_version_info()["string"]))
 	# Whose save this launch reads and writes is settled before anything else can
 	# touch one. A tooling boot lands on the isolated Development profile unless
-	# it names `--production-save`; the excluded boot owns that rule and Main only
-	# installs the answer (`install_profile`).
+	# it names `--production-save`, on exported builds as much as in the editor.
+	select_profile(_boot_args)
 	var boot: GDScript = null
 	if DevTools.available():
 		boot = load(DevTools.BOOT) as GDScript
-	if boot != null:
-		boot.call("select_profile", self, _boot_args)
 	content = ContentDB.load_full()
 	_vigil = _load_vigil()
 	Preferences.active = Preferences.read_from_disk()
@@ -684,12 +682,21 @@ func _clear_vigil() -> void:
 ## The one place a profile is installed after construction. Both path fields and
 ## the in-memory Vigil move together, so nothing read from one profile can be
 ## written into another. A Scenario adopts its kernel's files through here, and
-## so does every tooling boot that carries no Scenario (`presentation/dev/boot.gd`
-## picks the files; this only binds them).
+## so does every tooling boot that carries no Scenario (`select_profile` below).
 func install_profile(run_path: String, vigil_path: String) -> void:
 	_run_save_path = run_path
 	_vigil_save_path = vigil_path
 	_vigil = _load_vigil()
+
+
+## The profile step every launch passes through: any argument-carrying (tooling)
+## boot binds the Development profile before anything can read or write a save,
+## whether or not the excluded boot handler is packed (`DevTools.selects_dev_profile`
+## holds the rule). A plain player boot, and a boot naming
+## `DevTools.PRODUCTION_SAVE_FLAG`, keep the player's profile.
+func select_profile(args: PackedStringArray) -> void:
+	if DevTools.selects_dev_profile(args):
+		install_profile(ScenarioKernel.RUN_PATH, ScenarioKernel.VIGIL_PATH)
 
 
 ## Window close is a clean quit: with `config/auto_accept_quit=false` the engine
