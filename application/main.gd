@@ -1266,6 +1266,7 @@ func _new_run(profile: Dictionary = {}) -> void:
 	_map = WorldMap.benchmark(game.run)
 	game.quests.decorate_map(game.run, _map)
 	game.run.map = _map.to_dict()
+	_warm_map_landscape()
 	_run_over = false
 	if _plays_opening():
 		game.run.pending_scene = {"id": "opening", "cursor": 0}
@@ -1370,6 +1371,7 @@ func _continue_run(saved: RunState) -> void:
 
 func _route_run() -> void:
 	_apply_pending_content_hydration()
+	_warm_map_landscape()
 	if game == null:
 		_route_idle()
 	elif typeof(game.run.pending_scene) == TYPE_DICTIONARY:
@@ -1399,6 +1401,17 @@ func _route_run() -> void:
 		pass
 	else:
 		_show_map()
+
+
+## Decodes the landscape of the act the next map shows on a worker thread, so
+## its first open does not (a new or resumed run, and the act after a boss,
+## warmed through its reward). `prefetch` ignores an act already kept or warming.
+func _warm_map_landscape() -> void:
+	if game == null or game.run == null or _map == null or game.run.pending_run_end != null:
+		return
+	var node: MapNode = _map.current()
+	var past_boss: bool = node != null and node.type == "boss" and not game.run.is_final_act()
+	MapLandscapeAssets.prefetch(game.run.act + (1 if past_boss else 0))
 
 
 func _dispatch_current_route() -> bool:
