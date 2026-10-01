@@ -125,7 +125,7 @@ The honest limits:
 Before, and stale within hours of being written:
 
 ```markdown
-The ward is a cut gem held in front of the mob (`enemy_view.gd:2313-2350`
+The ward is a cut gem held in front of the mob (`enemy_view.gd:2325-2362`
 (`set_ward_shell`)).
 ```
 
@@ -139,7 +139,7 @@ The ward is a cut gem held in front of the mob
 A line number that should stay, because the passage is about the number:
 
 ```markdown
-`enemy_view.gd:2148` is genuinely inside `_process`; the sentence citing it is
+`enemy_view.gd:2163` is genuinely inside `_process`; the sentence citing it is
 about `set_ward_shell`, 165 lines away.
 ```
 
