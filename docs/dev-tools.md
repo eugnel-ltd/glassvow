@@ -193,9 +193,13 @@ instead, which takes minutes per input (`docs/map/production-layout.md`).
 `tools/shot.sh --map --map-timing --seed=N` times whole `Main._show_map` calls
 from the bench's own clock (`tools/bench_map_open.gd`; nothing on the player path
 is instrumented): a cold open of Act I and two reopens as after a fight, then the
-same in Act II, one `MAP_OPEN` JSON row each. After each act a `MAP_KEPT` row
-gives the video memory the kept act holds once the map is left. Add
-`--shot=PATH` to photograph the first reopen instead. It needs a real renderer:
+same in Act II, one `MAP_OPEN` JSON row each with the time to the call's end
+(`total_ms`) and to the first frame drawn after it (`frame_ms`). After each act a
+`MAP_KEPT` row gives the video memory the kept act holds once the map is left,
+then a `MAP_WARM` row times the act's landscape warm-up on its worker thread and
+the worst frame meanwhile, a `warmed` open follows the finished warm-up, and an
+`early` open starts the warm-up and opens at once, as resuming onto the map does.
+Add `--shot=PATH` to photograph the first reopen instead. It needs a real renderer:
 the headless dummy hides GPU stalls such as a mesh read back from the renderer.
 `godot --headless -s res://tools/probe_map_fast_layout.gd` times the production
 layout and prints its digests for five seeds in every act. It prepares map state
