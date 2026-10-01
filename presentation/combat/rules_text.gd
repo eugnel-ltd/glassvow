@@ -67,7 +67,7 @@ var line_height: float = 17.0
 var _font_plain: Font
 var _font_bold: Font
 var _tokens: Array = []          # [{text:String, kind:int}]
-var _lines: Array = []           # [[{text, kind, w, space, space_w}]] after wrapping
+var _lines: Array = []           # [[{text, kind, w, space, brk, space_w}]] after wrapping
 var _line_widths: PackedFloat32Array = PackedFloat32Array()
 
 
@@ -201,6 +201,35 @@ func _color_for(kind: int) -> Color:
 			return plain_color
 
 
+## Ideographs, kana and fullwidth forms. Chinese text carries no spaces, so each
+## of these is its own break opportunity; the em dash and ellipsis are typeset
+## full-width in zh-Hant and are treated the same way.
+static func _is_cjk(c: String) -> bool:
+	var cp: int = c.unicode_at(0)
+	return (cp >= 0x4E00 and cp <= 0x9FFF) or (cp >= 0x3400 and cp <= 0x4DBF) \
+		or (cp >= 0x3000 and cp <= 0x30FF) or (cp >= 0xFF00 and cp <= 0xFFEF) \
+		or cp == 0x2014 or cp == 0x2026
+
+
+## Kinsoku: closing marks stay on the line of the character they follow.
+static func _no_break_before(c: String) -> bool:
+	return "。、，．：；！？」』）】》".contains(c)
+
+
+## Kinsoku: opening brackets stay on the line of the character they open.
+static func _no_break_after(c: String) -> bool:
+	return "「『（【《".contains(c)
+
+
+## A break between two adjacent characters with no space between them. It needs
+## a CJK character on at least one side, so Latin text keeps its space-only
+## breaks, and neither kinsoku rule may forbid it.
+static func _may_break_between(before: String, after: String) -> bool:
+	if not (_is_cjk(before) or _is_cjk(after)):
+		return false
+	return not _no_break_after(before) and not _no_break_before(after)
+
+
 ## Greedy wrap on word boundaries, keeping each word's style with it. Runs are
 ## split into words up front so a run can break across lines like plain text.
 func _wrap(width: float) -> void:
@@ -220,7 +249,8 @@ func _wrap(width: float) -> void:
 			var c: String = body[ci]
 			if c == " ":
 				if cur != "":
-					words.append({"text": cur, "kind": cur_kind, "space": true})
+					words.append({"text": cur, "kind": cur_kind, "space": true,
+						"brk": false})
 					cur = ""
 				continue
 			# A word also ends where its STYLE ends, not only where a space is.
@@ -229,14 +259,23 @@ func _wrap(width: float) -> void:
 			# one keyword word, which ran the dotted rule under the full stop and
 			# made the glossary look up "Ward." — a key no glossary has. The
 			# break carries `space: false`, so nothing is inserted between them.
-			if cur != "" and kind != cur_kind:
-				words.append({"text": cur, "kind": cur_kind, "space": false})
-				cur = ""
+			# Between CJK characters there is no space to break on, so a word
+			# also ends where `_may_break_between` allows a break. `brk` marks
+			# that opportunity: a break with nothing inserted. A keyword is never
+			# cut inside, because the glossary and `keyword_at` look it up by the
+			# word's whole text.
+			if cur != "":
+				var inside_keyword: bool = kind == KIND_KEYWORD and cur_kind == KIND_KEYWORD
+				var brk: bool = not inside_keyword and _may_break_between(cur[-1], c)
+				if kind != cur_kind or brk:
+					words.append({"text": cur, "kind": cur_kind, "space": false,
+						"brk": brk})
+					cur = ""
 			if cur == "":
 				cur_kind = kind
 			cur += c
 	if cur != "":
-		words.append({"text": cur, "kind": cur_kind, "space": false})
+		words.append({"text": cur, "kind": cur_kind, "space": false, "brk": false})
 
 	# A space is the same width whatever word precedes it — it depends only on
 	# the face and the size. Measure the two faces once instead of once per word.
@@ -244,28 +283,41 @@ func _wrap(width: float) -> void:
 		HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
 	var space_bold: float = _font_bold.get_string_size(" ",
 		HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-	var line: Array = []
-	var line_w: float = 0.0
 	for word: Dictionary in words:
 		var wkind: int = word["kind"]
-		var f: Font = _font_for(wkind)
-		var ww: float = f.get_string_size(str(word["text"]),
+		word["w"] = _font_for(wkind).get_string_size(str(word["text"]),
 			HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-		var space_w: float = space_bold if wkind == KIND_VALUE else space_plain
+		word["space_w"] = space_bold if wkind == KIND_VALUE else space_plain
+	# Words that cannot be separated from their successor ("Ward" + ".", or an
+	# opening bracket and the character it opens) travel together. Measuring the
+	# first alone let the rest hang past the edge — a 3px full stop in English,
+	# a whole clipped glyph in CJK — so a break is judged on the whole chain.
+	var chain_w: Array[float] = []
+	chain_w.resize(words.size())
+	for wi: int in range(words.size() - 1, -1, -1):
+		var tail: Dictionary = words[wi]
+		var tail_w: float = tail["w"]
+		var detached: bool = tail["space"] or tail["brk"] or wi == words.size() - 1
+		chain_w[wi] = tail_w if detached else tail_w + chain_w[wi + 1]
+	var line: Array = []
+	var line_w: float = 0.0
+	for wi: int in range(words.size()):
+		var word: Dictionary = words[wi]
+		var ww: float = word["w"]
+		var space_w: float = word["space_w"]
 		var has_space: bool = word["space"]
-		# A line may only break where a space was. Splitting a word at its style
-		# boundary created neighbours with no space between them ("Ward" + "."),
-		# and a greedy wrap would happily strand the full stop on the next line.
+		# A line may only break where a space was, or where a CJK break
+		# opportunity was. Splitting a word at its style boundary created
+		# neighbours with no space between them ("Ward" + "."), and a greedy
+		# wrap would happily strand the full stop on the next line.
 		var can_break: bool = false
 		if not line.is_empty():
 			var prev: Dictionary = line[-1]
-			can_break = prev["space"]
-		if can_break and line_w + ww > width:
+			can_break = prev["space"] or prev["brk"]
+		if can_break and line_w + chain_w[wi] > width:
 			_push_line(line, line_w)
 			line = []
 			line_w = 0.0
-		word["w"] = ww
-		word["space_w"] = space_w
 		line.append(word)
 		line_w += ww + (space_w if has_space else 0.0)
 	if not line.is_empty():
