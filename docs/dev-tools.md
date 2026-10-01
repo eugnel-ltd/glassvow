@@ -291,8 +291,12 @@ boots until the profile is emptied.
   disposable.
 - Any argument selects the profile, not a list of flags, so a flag added later is
   isolated without anyone remembering to register it. The rule lives in
-  `presentation/dev/boot.gd`, which store builds exclude, so an argument a store
-  build happens to carry never moves the player onto another profile.
+  `DevTools.selects_dev_profile` and is applied by `Main.select_profile`, both of
+  which store builds pack (`presentation/dev/*` is excluded). A dev boot launched
+  on a device (`devicectl ... -- --map`) is therefore isolated too: it used to bind
+  the player's `glassvow_run_v2.json` because the excluded boot was the only place
+  the profile was chosen. A player's launch passes no `--` argument, so it is
+  unaffected.
   `tests/test_dev_boot_profile.gd` holds it and `tests/test_dev_tools.gd` holds
   the Scenario binding it rests on.
 

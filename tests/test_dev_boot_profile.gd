@@ -1,10 +1,13 @@
 extends RefCounted
 ## #360 gate: every tooling boot runs on the isolated Development profile unless
 ## it names `--production-save`, so a `tools/shot.sh` or `tools/live.sh` session
-## leaves the player's run and Vigil alone.
+## leaves the player's run and Vigil alone. The rule is `Main.select_profile`'s,
+## not the excluded boot's, so it also holds on an exported build, where
+## `presentation/dev/*` is not packed and `DevTools.available()` is false: a dev
+## boot launched on a device must not overwrite the player's run either.
 ##
 ## Two legs, because neither is enough on its own. The flag leg feeds every flag
-## `Main._ready` parses to the excluded boot and reads back what Main is bound
+## `Main._ready` parses to `Main.select_profile` and reads back what Main is bound
 ## to — run path, Vigil path and the Vigil that was loaded — which is the only
 ## proof available for a flag that stores nothing at start-up. The boot leg runs
 ## the real `Main._ready` over sentinels standing at the player's paths and
@@ -26,6 +29,9 @@ const DEV_MARK: String = "dev-mark-360"
 const WRITING_BOOTS: Array[String] = [
 	"--fight=duskfang", "--map", "--enter=0", "--dawn", "--onboard=map-select",
 ]
+## The boots replayed with the gate closed, as an exported build runs them: one
+## that writes a run and one that writes only the Vigil.
+const CLOSED_GATE_BOOTS: Array[String] = ["--map", "--onboard=map-select"]
 ## The flag that reads a checkpoint instead: it must not find the player's.
 const RESUME_BOOT: String = "--resume"
 const MapCompose: GDScript = preload("res://tests/test_map_compose.gd")
@@ -60,13 +66,20 @@ static func _flag_leg(boot: GDScript, content: ContentDB, fails: Array[String]) 
 	if not SaveService.store_vigil(dev_vigil, kernel.vigil_path):
 		fails.append("dev boot profile: could not seed the Development Vigil")
 		return
-	for flag: String in _parsed_flags(fails):
-		_selects(boot, kernel, PackedStringArray([flag]), true, fails)
-		_selects(boot, kernel, PackedStringArray([flag, PRODUCTION_FLAG]), false, fails)
-	# A player's plain launch carries no argument, and the opt-out alone says
-	# nothing about which tool it is for: both keep the production profile.
-	_selects(boot, kernel, PackedStringArray(), false, fails)
-	_selects(boot, kernel, PackedStringArray([PRODUCTION_FLAG]), false, fails)
+	var flags: PackedStringArray = _parsed_flags(fails)
+	# The rule must not depend on the excluded boot being packed, so every flag is
+	# checked with the gate open and again as an exported build sees it: closed.
+	var previous_gate: Variant = DevTools.forced
+	for gate: bool in [true, false]:
+		DevTools.forced = gate
+		for flag: String in flags:
+			_selects(kernel, PackedStringArray([flag]), true, fails)
+			_selects(kernel, PackedStringArray([flag, PRODUCTION_FLAG]), false, fails)
+		# A player's plain launch carries no argument, and the opt-out alone says
+		# nothing about which tool it is for: both keep the production profile.
+		_selects(kernel, PackedStringArray(), false, fails)
+		_selects(kernel, PackedStringArray([PRODUCTION_FLAG]), false, fails)
+	DevTools.forced = previous_gate
 	_scenario_stays_isolated(boot, content, kernel, fails)
 	kernel.clear_profile()
 
@@ -104,12 +117,11 @@ static func _parsed_flags(fails: Array[String]) -> PackedStringArray:
 ## One boot's arguments, handed to the excluded boot as a fresh Main would
 ## receive them: where does it end up bound, and whose Vigil did it load?
 static func _selects(
-	boot: GDScript, kernel: ScenarioKernel, args: PackedStringArray, dev: bool,
-	fails: Array[String]
+	kernel: ScenarioKernel, args: PackedStringArray, dev: bool, fails: Array[String]
 ) -> void:
 	var host: Main = Main.new()
 	host._vigil = VigilState.blank()
-	boot.call("select_profile", host, args)
+	host.select_profile(args)
 	var tag: String = " ".join(args) if not args.is_empty() else "(no arguments)"
 	var want_run: String = kernel.run_path if dev else TestProfile.production_run_path()
 	var want_vigil: String = kernel.vigil_path if dev else TestProfile.production_vigil_path()
@@ -141,7 +153,7 @@ static func _scenario_stays_isolated(
 		"--scenario=%s" % reference, PRODUCTION_FLAG,
 	])
 	var host: Main = _bare_main(content)
-	boot.call("select_profile", host, args)
+	host.select_profile(args)
 	boot.call("apply", host, args)
 	_check(fails, host.last_dev_error.is_empty(),
 		"the Scenario boot failed: %s" % host.last_dev_error)
@@ -171,10 +183,22 @@ static func _boot_leg(content: ContentDB, fails: Array[String]) -> void:
 	_resuming_boot(content, kernel, fails)
 	_production_boot("the production opt-out", PackedStringArray(
 		["--map", PRODUCTION_FLAG]), true, content, kernel, fails)
-	# A store build has no boot handler: an argument it happens to carry must
-	# never move the player onto another profile.
-	_production_boot("a closed gate", PackedStringArray(["--map"]), false,
-		content, kernel, fails)
+	# An exported build has no boot handler, and a dev boot launched on a device
+	# (an iPad run with `--map`) used to overwrite the player's run through it.
+	# With the gate closed it must land on the Development profile all the same.
+	for flag: String in CLOSED_GATE_BOOTS:
+		DevTools.forced = false
+		_writing_boot(flag, content, kernel, fails)
+		DevTools.forced = true
+	_closed_gate_resume(content, kernel, fails)
+	# A plain player boot is unaffected by the gate: it keeps the player's paths.
+	DevTools.forced = false
+	var plain: Main = _boot(PackedStringArray())
+	DevTools.forced = true
+	_check(fails, plain._run_save_path == TestProfile.production_run_path()
+			and plain._vigil_save_path == TestProfile.production_vigil_path(),
+		"a plain boot on a closed gate did not keep the production paths")
+	_dispose(plain)
 	kernel.clear_profile()
 	DevTools.forced = previous_gate
 	Preferences.active = previous_preferences
@@ -236,6 +260,24 @@ static func _resuming_boot(
 	_check(fails, main.game == null,
 		"%s resumed a run although the Development profile holds none" % RESUME_BOOT)
 	_intact(RESUME_BOOT, run_mark, vigil_mark, fails)
+	_dispose(main)
+
+
+## `--resume` on an exported build: it reads the Development checkpoint, never the
+## player's run, exactly as it does with the gate open.
+static func _closed_gate_resume(
+	content: ContentDB, kernel: ScenarioKernel, fails: Array[String]
+) -> void:
+	_reset(content, kernel, fails)
+	var run_mark: String = _digest(TestProfile.production_run_path())
+	var vigil_mark: String = _digest(TestProfile.production_vigil_path())
+	DevTools.forced = false
+	var main: Main = _boot(PackedStringArray([RESUME_BOOT]))
+	DevTools.forced = true
+	_check(fails, main._run_save_path == kernel.run_path and main.game == null,
+		"%s on a closed gate resumed from somewhere other than the Development profile"
+			% RESUME_BOOT)
+	_intact("%s on a closed gate" % RESUME_BOOT, run_mark, vigil_mark, fails)
 	_dispose(main)
 
 
