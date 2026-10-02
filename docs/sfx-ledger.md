@@ -1,4 +1,4 @@
-# SFX ledger — ashglass-v1-unsealing
+# SFX ledger — ashglass-v1-opening
 
 Port-scoped inventory of the sound pack Glassvow ships. The full generation
 ledger (prompt set, category law, render pipeline) lives at
@@ -15,8 +15,9 @@ this pack. REST fallback is `POST /v1/sound-generation`.
 
 The immutable **ashglass-v1** pack: 36 one-shot sounds at
 `assets/audio/sfx/`, plus the **ashglass-v1-unsealing** addendum
-(`unsealingSting`). Theme: Ashglass Vigil — glass, ash, lantern, and the
-small metallic ticks of a climb. `pack_id` is `ashglass-v1-unsealing`.
+(`unsealingSting`), and the **ashglass-v1-opening** addendum (six start-up
+cues, two of them rotations). Theme: Ashglass Vigil — glass, ash, lantern, and
+the small metallic ticks of a climb. `pack_id` is `ashglass-v1-opening`.
 v1 bytes stay untouched.
 
 ## Provenance
@@ -57,21 +58,72 @@ Prompt that rendered (`eleven_text_to_sound_v2`, `duration_seconds` 1.5,
 Do not steal a music-bus slot; this is a sting over the ceremony bed.
 Beat 4’s low door-push is a separate cue.
 
-## Commissioned — opening and start-up cues (2026-10-02, audition owed)
+## Shipped — opening and start-up cues (2026-10-02)
 
 Billed by the opening lane (`docs/design/2026-10-02-opening-start/README.md`
-§11). The code already asks for each cue by id through `SfxBus.play_owed`
-and **plays a landed file with no code change**; until then it plays the
-fallback below (or stays silent), and the missing file warns once.
+§11). Owner audition: **James, 2 October 2026, via the audition page**; the
+picks below are his, so the technical-only preflight that stood in for a
+perceptual score no longer gates anything. `pack_id` bumped to
+`ashglass-v1-opening`; the 36 v1 files and `unsealingSting` are byte-identical.
+Every candidate stays in `docs/design/2026-10-02-opening-start/sfx/candidates/`.
 
-| cue | fires on | fallback today | duration |
-|---|---|---|---|
-| `kindleCatch` | the launch rite's flame catching (0.4 s) | `kindle` | 1.6 s |
-| `glassTakesLight` | the lantern's glass taking light (0.9 s) | silent | 2.0 s |
-| `paneRise` | first launch: the two language panes rising | silent | 0.6 s |
-| `paneChoose` | a language pane chosen; the lantern pressed | `click` | 0.7 s |
-| `roomOpen` | the settings room opening | silent | 1.0 s |
-| `roomClose` | the settings room closing | silent | 0.8 s |
+`SfxBus.play_owed` asks for each cue by id. The four single cues play their
+file. `roomOpen` and `roomClose` are **rotations**: each play draws one numbered
+variant at random from the engine RNG (never the run's seeded RNG) through
+`SfxBus.resolve`, and neither bare `roomOpen.mp3` nor `roomClose.mp3` exists.
+The manifest carries one row per cue (so the credits count is cues, now 43),
+with a `files` list on the rotations.
+
+| cue | fires on | pick | files | fallback |
+|---|---|---|---|---|
+| `kindleCatch` | the launch rite's flame catching | **b** | `kindleCatch.mp3` | `kindle` if the file is missing |
+| `glassTakesLight` | the lantern's glass taking light | **b** | `glassTakesLight.mp3` | silent |
+| `paneRise` | first launch: the two language panes rising | **c** | `paneRise.mp3` | silent |
+| `paneChoose` | a language pane chosen; the lantern pressed | **a** | `paneChoose.mp3` | `click` |
+| `roomOpen` | the settings room opening | **b**, rotating | `roomOpen-1` = b, `-2` = d, `-3` = e, `-4` = f | silent |
+| `roomClose` | the settings room closing | **c**, rotating | `roomClose-1` = a, `-2` = b, `-3` = c | silent |
+
+`roomOpen` a and c are excluded from the rotation: near-silent
+(−29.2 and −30.7 dBFS peak).
+
+**Loudness.** The room candidates sit 15–25 dB under the other cues, so every
+landed file was peak-normalised to −3 dBFS with ffmpeg (`volume=<gain>dB`,
+libmp3lame 128 kbit/s, 44.1 kHz stereo, no trimming; durations are unchanged).
+The mp3 re-encode moves the decoded peak by a few tenths of a dB, so the gain
+was refined until the landed peak read within about ±0.4 dB of −3. Gains are
+applied to the candidate file, not cumulative with any earlier gain.
+
+Preflight re-run on the landed files (full-precision decode to float32,
+per-channel sample peak, RMS over both channels; silent = share of 10 ms
+windows under −60 dBFS RMS; tail = peak of the last 10 ms):
+
+| file | cue | source candidate | gain dB | duration | peak before → after dBFS | RMS dBFS | silent | tail dBFS |
+|---|---|---|---|---|---|---|---|---|
+| `kindleCatch.mp3` | `kindleCatch` | `kindleCatch-b.mp3` | -2.13 | 1.600 s | -0.4 → -3.02 | -17.8 | 0.21 | -56.4 |
+| `glassTakesLight.mp3` | `glassTakesLight` | `glassTakesLight-b.mp3` | +0.34 | 2.000 s | -2.9 → -3.01 | -12.1 | 0.02 | -63.7 |
+| `paneRise.mp3` | `paneRise` | `paneRise-c.mp3` | +3.65 | 0.600 s | -6.6 → -3.23 | -23.6 | 0.30 | -51.0 |
+| `paneChoose.mp3` | `paneChoose` | `paneChoose-a.mp3` | +14.13 | 0.680 s | -16.7 → -2.92 | -19.5 | 0.24 | -35.1 |
+| `roomOpen-1.mp3` | `roomOpen` | `roomOpen-b.mp3` | +22.72 | 1.000 s | -25.3 → -3.00 | -29.2 | 0.05 | -47.5 |
+| `roomOpen-2.mp3` | `roomOpen` | `roomOpen-d.mp3` | +26.43 | 1.000 s | -28.3 → -3.27 | -24.2 | 0.00 | -38.3 |
+| `roomOpen-3.mp3` | `roomOpen` | `roomOpen-e.mp3` | +22.60 | 1.000 s | -25.1 → -3.13 | -24.5 | 0.06 | -46.5 |
+| `roomOpen-4.mp3` | `roomOpen` | `roomOpen-f.mp3` | +16.02 | 1.000 s | -18.9 → -2.77 | -27.1 | 0.11 | -51.5 |
+| `roomClose-1.mp3` | `roomClose` | `roomClose-a.mp3` | +8.49 | 0.800 s | -10.7 → -3.37 | -26.3 | 0.07 | -56.9 |
+| `roomClose-2.mp3` | `roomClose` | `roomClose-b.mp3` | +1.07 | 0.800 s | -3.5 → -3.06 | -32.7 | 0.19 | -64.8 |
+| `roomClose-3.mp3` | `roomClose` | `roomClose-c.mp3` | +15.71 | 0.800 s | -18.3 → -2.99 | -23.5 | 0.04 | -48.9 |
+
+Peaks here are per-channel sample peaks of the decoded float, so the
+"before" column reads up to 3 dB hotter than the candidate table the lane first
+recorded (`sfx/preflight.json`), which measured a different downmix; the gain
+was derived from the figures in this table. A large gain lifts the room tone:
+`roomOpen-2` ends at −38 dBFS in its last 10 ms rather than near silence;
+nothing was trimmed, per the owner's instruction.
+
+**Playback check of the landed files (2026-10-02).** `afplay` returned
+`AudioQueueStart failed (-66681)` on every file: the lane's session has no audio
+output device, as before. So the landed files were not heard here. Core Audio
+did decode each one (`afconvert` to 16-bit WAV, durations matching the table),
+and the owner auditioned the unnormalised candidates on the audition page; the
+landed files differ only by the gain above.
 
 Prompts (`eleven_text_to_sound_v2`, `prompt_influence` 0.6, one-shot):
 
@@ -86,39 +138,6 @@ Prompts (`eleven_text_to_sound_v2`, `prompt_influence` 0.6, one-shot):
 > **roomOpen** — first batch (a–c): One-shot: an old wooden window shutter swinging open in a stone gatehouse at night, a soft wooden creak and a muffled latch, faint distant night wind behind it. Close and quiet. No door slam, no footsteps, no music. All three rendered near-silent, so the second batch (d–f) asked: One-shot, close-mic and clearly audible: an old wooden window shutter swinging open, a distinct wooden creak on its iron hinge and a soft latch lifting, in a stone room at night. Present and intimate, not distant. No door slam, no footsteps, no music, no long reverb.
 
 > **roomClose** — One-shot: an old wooden window shutter swinging closed in a stone gatehouse at night, a soft wooden creak and a gentle muffled latch click. Close and quiet. No slam, no footsteps, no music.
-
-Candidates sit in `docs/design/2026-10-02-opening-start/sfx/candidates/`.
-Deterministic preflight (decode, duration, channels, peak, RMS, silent
-fraction, last-10 ms tail); eligibility is technical only:
-
-| file | duration | ch | peak dBFS | RMS dBFS | silent | eligible |
-|---|---|---|---|---|---|---|
-| `glassTakesLight-a.mp3` | 2.0 s | 2 | -4.3 | -14.3 | 0.06 | yes |
-| `glassTakesLight-b.mp3` | 2.0 s | 2 | -2.9 | -12.0 | 0.03 | yes |
-| `glassTakesLight-c.mp3` | 2.0 s | 2 | -5.5 | -16.4 | 0.02 | yes |
-| `kindleCatch-a.mp3` | 1.6 s | 2 | -16.7 | -32.8 | 0.36 | yes |
-| `kindleCatch-b.mp3` | 1.6 s | 2 | -0.5 | -15.3 | 0.34 | yes |
-| `kindleCatch-c.mp3` | 1.6 s | 2 | -16.8 | -30.0 | 0.06 | yes |
-| `paneChoose-a.mp3` | 0.68 s | 2 | -17.5 | -33.3 | 0.4 | yes |
-| `paneChoose-b.mp3` | 0.68 s | 2 | -7.9 | -24.6 | 0.31 | yes |
-| `paneChoose-c.mp3` | 0.68 s | 2 | -18.1 | -36.5 | 0.38 | yes |
-| `paneRise-a.mp3` | 0.6 s | 2 | -10.2 | -31.8 | 0.22 | yes |
-| `paneRise-b.mp3` | 0.6 s | 2 | -7.6 | -28.3 | 0.32 | yes |
-| `paneRise-c.mp3` | 0.6 s | 2 | -10.0 | -29.8 | 0.32 | yes |
-| `roomClose-a.mp3` | 0.8 s | 2 | -11.7 | -34.0 | 0.42 | yes |
-| `roomClose-b.mp3` | 0.8 s | 2 | -5.1 | -34.0 | 0.56 | yes |
-| `roomClose-c.mp3` | 0.8 s | 2 | -18.8 | -38.7 | 0.33 | yes |
-| `roomOpen-a.mp3` | 1.0 s | 2 | -29.2 | -49.5 | 0.43 | **no** (too quiet) |
-| `roomOpen-b.mp3` | 1.0 s | 2 | -26.4 | -52.5 | 0.6 | **no** (too quiet) |
-| `roomOpen-c.mp3` | 1.0 s | 2 | -30.7 | -53.5 | 0.46 | **no** (too quiet) |
-| `roomOpen-d.mp3` / `-e` / `-f` | 1.0 s | 2 | −28.3 / −25.1 / −18.9 | −49.9 / −46.5 / −42.8 | — | no / no / **yes** |
-
-**Audition: not done, so nothing ships.** The lane played every eligible
-candidate with `afplay` on 2026-10-02 and each returned `AudioQueueStart
-failed (-66681)`: the session had no audio output device. No perceptual
-criterion is scored. Owed: one owner audition per cue, then the pick moves to
-`assets/audio/sfx/<cue>.mp3` with a manifest row and the `pack_id` bump
-(the 36 v1 files and `unsealingSting` stay byte-identical).
 
 ## Pointer
 

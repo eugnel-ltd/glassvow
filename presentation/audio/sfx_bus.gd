@@ -5,7 +5,9 @@ extends Node
 ## The benchmark ships two things behind `sfx.<id>()`: a bank of 36 ElevenLabs
 ## samples (pack `ashglass-v1`), and a WebAudio oscillator fallback for when the
 ## sample has not finished loading. This port adds the unsealing sting as
-## `ashglass-v1-unsealing`; v1 bytes are untouched. Only the samples are ported.
+## `ashglass-v1-unsealing`, and the opening lane adds six start-up cues as
+## `ashglass-v1-opening` (two of them rotations); v1 bytes are untouched. Only
+## the samples are ported.
 ## The fallback exists because a browser fetches its audio over the network and
 ## the first click can beat the download; a Godot project has its bank on disk
 ## before the window opens, so the branch it guards cannot be reached.
@@ -30,6 +32,15 @@ const VOICES: int = 12
 ## was entirely soaked still sounds like the blow it was.
 const HEAVY_AT: int = 16
 const LIGHT_AT: int = 5
+
+## Cues that rotate: the cue id maps to how many numbered variants ship
+## (`roomOpen-1.mp3` .. `roomOpen-4.mp3`). Each play draws one at random so a
+## cue heard often does not wear a groove. The draw uses the engine RNG, never
+## the run's seeded RNG, so presentation cannot disturb replayable game truth.
+const ROTATIONS: Dictionary[StringName, int] = {
+	&"roomOpen": 4,
+	&"roomClose": 3,
+}
 
 var muted: bool = false
 var last_cue: StringName = &""
@@ -60,9 +71,38 @@ func _init() -> void:
 ## branch is otherwise a sound that silently never plays.
 func play(id: StringName, gain: float = SOURCE_GAIN) -> void:
 	last_cue = id
+	_fire(resolve(id), gain)
+
+
+## The file stem a play of `id` would use: the cue itself, or one numbered
+## variant of it drawn at random when the cue rotates.
+func resolve(id: StringName) -> StringName:
+	var count: int = ROTATIONS.get(id, 0)
+	if count <= 0:
+		return id
+	return variant_id(id, randi_range(1, count))
+
+
+## Every file stem that can answer `id`; a single cue answers with itself.
+func variants_of(id: StringName) -> Array[StringName]:
+	var stems: Array[StringName] = []
+	var count: int = ROTATIONS.get(id, 0)
+	if count <= 0:
+		stems.append(id)
+		return stems
+	for n: int in range(1, count + 1):
+		stems.append(variant_id(id, n))
+	return stems
+
+
+static func variant_id(id: StringName, n: int) -> StringName:
+	return StringName("%s-%d" % [id, n])
+
+
+func _fire(stem: StringName, gain: float) -> void:
 	if muted or _players.is_empty():
 		return
-	var stream: AudioStream = _stream(id)
+	var stream: AudioStream = _stream(stem)
 	if stream == null:
 		return
 	# Round-robin rather than first-free: a voice that is still ringing is the
@@ -90,8 +130,10 @@ func attack(who: StringName, amount: int, blocked: int = 0) -> void:
 ## its own file lands, which then plays with no code change. A missing file
 ## still warns once; the fallback is the ledger's, never a silent guess.
 func play_owed(id: StringName, fallback: StringName = &"", gain: float = SOURCE_GAIN) -> void:
-	if _stream(id) != null:
-		play(id, gain)
+	var stem: StringName = resolve(id)
+	if _stream(stem) != null:
+		last_cue = id
+		_fire(stem, gain)
 	elif not fallback.is_empty():
 		play(fallback, gain)
 
