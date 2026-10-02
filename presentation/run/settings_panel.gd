@@ -124,6 +124,9 @@ func _init(preferences: Preferences, reset_disabled: bool = false,
 	_brand_line = footer
 
 	close.grab_focus.call_deferred()
+	# The room's shutter (commissioned cues; silent until they land).
+	_sfx.play_owed(&"roomOpen")
+	closed.connect(func() -> void: _sfx.play_owed(&"roomClose"))
 	# A notice recorded as shown must be on screen: the first panel after
 	# install opens on PRIVACY.
 	if _diagnostics_notice != null:

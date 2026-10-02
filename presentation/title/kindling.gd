@@ -18,7 +18,7 @@ const EMBER_REACH: float = 0.08
 
 
 ## `t` holds the targets: lantern, world, veil, chain, wordmark, words (Array of
-## CanvasItem) and rose.
+## CanvasItem), rose and, optionally, sfx (the bus its cues play on).
 static func build(t: Dictionary) -> LeadlightRite:
 	var lantern: LeadlightLantern = t["lantern"]
 	var world: TitleWorld = t["world"]
@@ -69,4 +69,9 @@ static func build(t: Dictionary) -> LeadlightRite:
 	rite.step(0.9, 1.5, take_light, LeadlightMotion.BREATH)
 	rite.step(1.3, LENGTH, light_reach, LeadlightMotion.REVEAL)
 	rite.step(1.9, LENGTH, name_the_place, LeadlightMotion.REVEAL)
+	var sfx: SfxBus = t.get("sfx", null)
+	if sfx != null:
+		# Commissioned cues with the ledger's fallbacks (docs/sfx-ledger.md).
+		rite.at(HOLD, func() -> void: sfx.play_owed(&"kindleCatch", &"kindle"))
+		rite.at(0.9, func() -> void: sfx.play_owed(&"glassTakesLight"))
 	return rite

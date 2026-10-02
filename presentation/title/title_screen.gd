@@ -315,7 +315,9 @@ func kindle_now() -> void:
 	var resume: bool = _context.get("resume", false) == true
 	if _context.get("rite", false) == true or resume:
 		rite = TitleKindling.build({"lantern": lantern, "world": world, "veil": _veil, "chain": _chain,
-			"wordmark": _wordmark, "rose": rose, "words": _light_words()})
+			"wordmark": _wordmark, "rose": rose, "words": _light_words(), "sfx": _sfx})
+		if not _language.is_empty():
+			rite.at(0.05, func() -> void: _sfx.play_owed(&"paneRise"))
 		if not _language.is_empty():
 			rite.hold_at(TitleKindling.HOLD)
 		rite.finished.connect(_on_rite_done)
@@ -409,11 +411,12 @@ func _on_lantern() -> void:
 		rite.skip()
 		return
 	LeadlightMotion.press(lantern)
-	_choose(_primary_id)
+	_sfx.play_owed(&"paneChoose", &"click")
+	_choose(_primary_id, false)
 
 
 func _on_language(code: StringName) -> void:
-	_sfx.play(&"click")
+	_sfx.play_owed(&"paneChoose", &"click")
 	for pane: LeadlightPane in _language:
 		pane.lit = pane.get_meta(&"code") == code
 	language_chosen.emit(code)
@@ -431,13 +434,14 @@ func resume_after_language() -> void:
 		rite.skip()
 
 
-func _choose(id: String) -> void:
+func _choose(id: String, click: bool = true) -> void:
 	if _leaving:
 		return
 	if rite != null and rite.is_running():
 		rite.skip()
 		return
-	_sfx.play(&"relic" if id == "rose" else &"click")
+	if click:
+		_sfx.play(&"relic" if id == "rose" else &"click")
 	chosen.emit(id)
 
 

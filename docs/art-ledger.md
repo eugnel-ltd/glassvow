@@ -277,7 +277,8 @@ and short downward spike … serious cartoon-gothic stained-glass game art,
 matte painterly texture … glass exclusively bright warm saturated amber-gold
 … iron predominantly dark grey-black with ONLY thin restrained worn gold
 edging … genuine alpha transparency … Candidate 1: closest faithful copy of
-the reference." The full prompts for all four are in the lane report.
+the reference." The full prompts for all four are in
+`lantern/generation-prompts.txt` beside the candidates.
 
 **Registered, not cropped.** `lantern_flame.gdshader` lights the art in its
 own UV (wick 0.5, 0.785; panes 0.31–0.69 × 0.43–0.795) and finds the glass by

@@ -13,6 +13,7 @@ extends RefCounted
 signal finished
 
 var _steps: Array[Dictionary] = []
+var _cues: Array[Dictionary] = []
 var _time: float = 0.0
 var _duration: float = 0.0
 var _hold: float = -1.0
@@ -25,6 +26,13 @@ func step(from: float, to: float, apply: Callable,
 		curve: Vector2i = LeadlightMotion.REVEAL) -> LeadlightRite:
 	_steps.append({"from": from, "to": maxf(to, from), "apply": apply, "curve": curve})
 	_duration = maxf(_duration, to)
+	return self
+
+
+## Fire `cue` once when the clock passes `at` seconds (a sound). A skipped rite
+## lands silently: cues still pending are dropped, never fired in a burst.
+func at(time_s: float, cue: Callable) -> LeadlightRite:
+	_cues.append({"at": time_s, "cue": cue, "fired": false})
 	return self
 
 
@@ -73,6 +81,13 @@ func advance(delta: float) -> void:
 	var limit: float = _hold if _hold >= 0.0 else _duration
 	_time = minf(_time + maxf(delta, 0.0), maxf(limit, _time))
 	_apply_all()
+	for c: Dictionary in _cues:
+		var due: float = c["at"]
+		if not c["fired"] and _time >= due:
+			c["fired"] = true
+			var cue: Callable = c["cue"]
+			if cue.is_valid():
+				cue.call()
 	if _time >= _duration and _hold < 0.0:
 		_finish()
 
@@ -86,6 +101,8 @@ func skip() -> void:
 	_hold = -1.0
 	_time = _duration
 	_running = true
+	for c: Dictionary in _cues:
+		c["fired"] = true
 	_apply_all()
 	_finish()
 

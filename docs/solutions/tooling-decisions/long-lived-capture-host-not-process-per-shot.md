@@ -34,7 +34,7 @@ tags: [godot, macos, window-focus, screenshot-capture, hot-reload, gdscript-relo
 ## Context
 
 The visual-iteration loop in this project is a screenshot hook in the game's own
-entry point. `application/main.gd:172-195` (in `_ready`) documents it and
+entry point. `application/main.gd:178-201` (in `_ready`) documents it and
 `application/main.gd:212-214` (in `_ready`) parses `--shot=` out of
 `OS.get_cmdline_user_args()`:
 
@@ -68,7 +68,7 @@ func _capture_and_quit(path: String) -> void:
 	get_tree().quit(0)
 ```
 
-(`application/main.gd:761` (`_capture_and_quit`).) It waits 30 frames for the
+(`application/main.gd:767` (`_capture_and_quit`).) It waits 30 frames for the
 first paint, optionally a `--settle=` timer and a targeting-hint extra settle,
 reads the viewport texture, and quits.
 

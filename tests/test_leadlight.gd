@@ -17,6 +17,7 @@ static func run(fails: Array[String]) -> void:
 	_rite_lands_whole_under_reduce_motion(fails)
 	_shapes(fails)
 	_numerals(fails)
+	_rite_cues(fails)
 
 
 ## The aliasing must not have moved a single colour: these literals are the
@@ -150,3 +151,22 @@ static func _numerals(fails: Array[String]) -> void:
 	for n: int in han:
 		_check(fails, LeadlightNumerals.hanzi(n) == str(han[n]),
 			"hanzi(%d) = %s, want %s" % [n, LeadlightNumerals.hanzi(n), han[n]])
+
+
+## A rite's sound cues fire once as the clock passes them; a skipped rite
+## lands silently rather than firing every pending cue at once.
+static func _rite_cues(fails: Array[String]) -> void:
+	var previous: bool = Preferences.active.reduce_motion
+	Preferences.active.reduce_motion = false
+	var fired: Array[String] = []
+	var rite: LeadlightRite = LeadlightRite.new()
+	rite.step(0.0, 2.0, func(_p: float) -> void: pass)
+	rite.at(0.4, func() -> void: fired.append("catch"))
+	rite.at(0.9, func() -> void: fired.append("glass"))
+	rite.start()
+	rite.advance(0.5)
+	rite.advance(0.1)
+	_check(fails, fired == ["catch"], "a cue fires once when its moment passes")
+	rite.skip()
+	_check(fails, fired == ["catch"], "a skipped rite drops its pending cues")
+	Preferences.active.reduce_motion = previous
