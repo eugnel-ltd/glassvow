@@ -626,6 +626,19 @@ scene,天花 L0。
 | 465 | 金黃的火與爐火同色同形；給它越多，它越暖。 / An amber fire burns like the hearth, in colour and in shape; the more you give it, the warmer it grows. | codex.lantern.lantern(同上;金黃之火) | L1 | 金黃的火靠人餵養 | 爐火是原初之火的餘燼,也是它的第二張臉(00 §2.2;02 Keeper);與它同色同形之火越餵越暖——每一個上路的行者都在餵這個安排(00 §2.4) | 新寫 [PROPOSED] |
 | 466 | 血月色的火又瘦又高，總找得到最薄的地方。 / A blood-moon fire burns thin and tall, and always finds the thinnest place. | codex.lantern.edge(同上;血月色之火) | L1 | 血月色的火專找弱處 | 最薄的地方=彩窗與封門同一道 threshold 的兩面(00 §8.1,#259 Q4):窗成鏡那刻,兩面之間只隔一層玻璃;血月就是月蝕,它不說出口 | 新寫 [PROPOSED] |
 
+## 開場與首次啟動(opening lane,2026-10-02)[PROPOSED — routine copy under settled canon;orchestrator 批准落地]
+
+`docs/design/2026-10-02-opening-start/README.md` §9。首次啟動時在標題的路上刻
+一句當機診斷同意;zh-Hant 為源語,英文重寫非直譯。只用字庫已有的字(初稿
+「破損/報告」有兩字不在字庫,改作「出錯/診斷資料」,與設定頁現有說法一致)。
+禁詞七項全無。channel = UI chrome,天花 L0;此句不碰真相任何一級。守夜功績改以
+數字刻字(羅馬/中文數字)只改數字寫法,沿用 shipped `ui.brand.stats` /
+`ui.brand.secrets` 原句,不新增文字,不另入賬。
+
+| # | 句子 | 出處 | 級 | 表面讀法 | 揭後讀法 | 狀態 |
+|---|---|---|---|---|---|---|
+| 467 | 遊戲若出錯，會傳送當機診斷資料，好讓這條路得以修補。 / If the game breaks, it sends crash diagnostics so the road can be mended. | ui.firstLight.diagnostics(首次啟動,標題路面上的同意句,配一個開關) | L0 | 當機報告幫忙修好遊戲;「這條路」= 你將要走的遊戲 | 字面仍真,只是更冷:被修補、得以一直走下去的,正是那條把行者一個個留在路上的路(00 §1)。句子沒有帶入任何玩家未見過的事實,只多了一層反諷 | 新寫 [PROPOSED] |
+
 ## `[REWRITE:climb]` 清單狀態 — 已關閉
 
 全量掃描由 #232 的十四-agent 量度完成,記錄於
