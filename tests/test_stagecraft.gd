@@ -531,7 +531,7 @@ static func _flame_lines_play_once(fails: Array[String]) -> void:
 			and main._vigil.scenes_seen.has("line:flame.fringe"),
 		"the whispers did not hand on to the reward, heard")
 	var run_state: RunState = main.game.run
-	run_state.player.deck.append(CardInst.new(run_state.next_uid(), &"empower", false))
+	run_state.player.deck.append(CardInst.new(run_state.next_uid(), &"cleft", false))
 	main.game.flame_events(true)
 	run_state.player.deck.pop_back()
 	main.game.flame_events(true)

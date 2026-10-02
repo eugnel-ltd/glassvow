@@ -24,11 +24,11 @@ const TOLERANCE: float = 0.15
 ## edge with a lantern fringe, so the unlit decks would lean exactly as the lit
 ## one does if Kindling or Soot leaned at all.
 const LIT: Array = ["steady edge, lantern fringe", ["chisel"],
-	["warCry", "empower", "executioner", "preparation"], "STEADY"]
+	["warCry", "cleft", "executioner", "preparation"], "STEADY"]
 const KINDLING: Array = ["kindling edge, lantern fringe", [],
-	["warCry", "empower", "preparation"], "KINDLING"]
+	["warCry", "cleft", "preparation"], "KINDLING"]
 const SOOT: Array = ["soot edge, lantern fringe", [],
-	["warCry", "empower", "executioner", "preparation", "surge", "uppercut"], "SOOT"]
+	["warCry", "cleft", "executioner", "preparation", "surge", "uppercut"], "SOOT"]
 const TRUE_LANTERN: Array = ["true lantern", ["chisel", "eclipseSlash"],
 	["preparation", "surge", "devour", "offering"], "TRUE"]
 const STARTER: Array = ["starter", [], [], "KINDLING"]
@@ -103,7 +103,7 @@ static func _unlit_flames_lean_nowhere(content: ContentDB, fails: Array[String])
 	var rules: RewardRules = RewardRules.new(content)
 	var plain: RewardRules = PlainRewards.new(content)
 	var coloured: Array = ["coloured", [], ["uppercut", "quakeblow", "oblivionStrike", "limitBreak",
-		"warCry", "empower"], "KINDLING"]
+		"warCry", "cleft"], "KINDLING"]
 	for seed: int in range(SEEDS):
 		var starter: Dictionary = _offers(rules, _dusk(content, seed, STARTER), false)
 		if starter != _offers(plain, _dusk(content, seed, STARTER), false):

@@ -159,17 +159,16 @@ Relics: crownOfCinders (crown), crownOfTheHearth and crownOfTithes (crown altern
 |---|---|---|
 | eclipseSlash | 1.0 | starter |
 | warCry | 1.0 | base pool |
-| empower | 1.0 | base pool |
 | executioner | 1.0 | poolWave2 |
 | momentum | 0.5 | poolWave2 |
 | lunge | 0.5 | base pool |
-| frenzy | 1.0 | poolFull |
-| risingLitany | 1.0 | poolFull |
 | resonantLance | 0.5 | duo, see Shatter |
+
+Empower (Inner Blaze), frenzy (Overglow) and risingLitany (Rising Litany) were Edge 1.0 here until [readout 11](readouts/readout-11.md) made them clear glass: stat powers that any deck takes coloured the adaptive player's lantern blood-moon, as no other power in the Duskblade's offers does.
 
 Relics: crownOfTheEclipse (crown, **new**), executionersSeal 1.0, duskmirror 0.5, warFetish 0.5, ironTalisman 0.5.
 
-**Clear glass** (no affinity): strike, defend, brace, bulwark, fortify, sidestep, deflect, guardedStrike, quickSlash, heavyBlow, cleave, tempest, shardstorm, twinFangs, flurry, leechBlade, phantomBlades, agility, ironSkin, regrowth, bastion, flawlessForm, nightSight, bloodRite. Curses and quest cards are excluded from N.
+**Clear glass** (no affinity): strike, defend, brace, bulwark, fortify, sidestep, deflect, guardedStrike, quickSlash, heavyBlow, cleave, tempest, shardstorm, twinFangs, flurry, leechBlade, phantomBlades, agility, ironSkin, regrowth, bastion, flawlessForm, nightSight, bloodRite, and from readout 11 empower, frenzy and risingLitany. Curses and quest cards are excluded from N.
 
 **Excluded from Duskblade's offers** (pool hygiene; Smolder is blocked for aspect 0 in `combat.gd`, so these are dead or half-dead glass for the Duskblade): cards venomStrike, toxicMist, annihilate, catalyst, virulence, ashenChoir; relic smolderingCoal. The Ashwarden keeps all of them. Nothing is deleted from content. Pool hygiene changes which cards a seeded aspect-0 run meets at events, shops and card rewards compared with pre-Flame content, by design; historical replays use the frozen copy at `docs/balance/data/421-h39/full-content.json`.
 
@@ -278,6 +277,8 @@ The previous programme measured shatters and Smolder kills, one of which is the 
 | R | random (today's arm 2) | competent | "I scatter" |
 
 A_lit is A until its lantern burns a way's colour, Steady or True; from then, until the flame dims, it values that way's glass ×2.0 (`litLean`) and other coloured glass ×0.5 (`litOff`), and counts that colour's riders (§6.4) in full. From readout 10 on, G3 and G6 are read against A_lit, and B2 reads A_lit's feel beside the committed arms' (its expression against the colour each fight begins in, as the grader's feel table measures the adaptive arms); A stays in the table as the floor.
+
+**Status (readout 11, 2026-10-02).** With Edge's three stat powers clear glass ([readout 11](readouts/readout-11.md)), G6 passes on its point estimate in all four cells and on its interval at V0 fresh and V5 full (V0 full and V5 fresh are UNDECIDED), G5 fresh, G7 and B1 pass, and B2 passes for committed Edge in both pools, committed Shatter in the fresh pool and A_lit at V0 full. G2 fails on point at V0 in both pools (interval UNDECIDED), G3 fails on point in both full cells (interval UNDECIDED) and keeps only a point PASS in the fresh cells, A_lit's own B2 fails at V0 fresh (58.7%, decided), G5 fails in the full pool, and G1 and G4 fail as instrument readings.
 
 Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds (common random numbers across arms). About 4,000 runs; minutes on the #558 simulator.
 
