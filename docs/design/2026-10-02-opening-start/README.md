@@ -191,22 +191,28 @@ completes on one tap (or any key / button), cross-fading to its end state in
 every travel, scale and radial with an opacity change of at most 150 ms, or
 lands the state instantly, and never adds a wait.
 
-| # | Transition | Duration | Curve | Tap-skip | Reduced motion |
-|---|---|---|---|---|---|
-| T0 | OS launch screen → first Godot frame | 0 (the splash *is* frame 0: black, one ember at the flame's seat) | none | n/a | same |
-| T1 | Kindling: ember breathes 0 to 0.4 s; flame catches 0.4 to 0.9; glass takes light 0.9 to 1.5; the world revealed 1.5 to 2.4; wordmark lit 1.9 to 2.4 | 2.4 s (A); B tracing 2.8 s; C chain 2.6 s | catch: BACK/OUT (overshoot 1.15); glass: SINE/IN_OUT; reveal: QUINT/OUT | completes in 120 ms; the tap does not choose | title lands whole with a 150 ms fade |
-| T2 | Language panes rise (first launch only; the rite holds at 0.4 s) | 320 ms, 12 px rise + fade | QUINT/OUT | n/a (waits for input) | panes appear whole |
-| T2b | Language chosen: the chosen pane flares, the other sinks and fades, the rite resumes | 180 ms flare, 320 ms sink | CUBIC/OUT, CUBIC/IN | completes | chosen state lands; rite resumes |
-| T3 | Consent line appears (first title only) | 320 ms fade, with the last 30% of T1 | SINE/OUT | completes with T1 | appears whole |
-| T4 | Focus (keyboard, pad, hover) | 180 ms | CUBIC/OUT | n/a | instant |
-| T5 | Press | 90 ms down to 0.97 with a glass flare; release 180 ms | QUAD/OUT; BACK/OUT | n/a | flare only |
-| T6 | Title → Back to the Road | flame flares 180 ms, then light floods outwards from the flame (inverse iris) 480 ms; the save load starts on the tap and runs under the cover; the map plays its existing 450 ms screen-in | CUBIC/IN for the flood | the second tap skips the flood; the load is never waited on longer than it takes | 150 ms fade to cover |
-| T7 | Title → Rekindle → opening (first run) | push into the lantern 600 ms (scale 1.0 → 1.6, flame fills the frame), then the opening's existing `wake` (2.6 s) starts from the same orange: the ember match-cuts to the hearth fire | QUINT/IN | skips to beat 1 | cut to beat 1 |
-| T7b | Title → Rekindle → Embark (later runs) | the room motion of T8 (Embark is built from the same kit) | as T8 | as T8 | as T8 |
-| T8 | Title → Settings room | world dims to 0.62 over 320 ms; room rises 480 ms (A: from the lantern's light; B: the vestry opens; C: camera dolly 600 ms); lantern glides to its seat 480 ms | QUINT/OUT | completes | room appears whole, 150 ms |
-| T8b | Settings room → title | 320 ms, the reverse | CUBIC/IN | completes | instant |
-| T9 | Opening beat 4 title card → departure / map | the card uses the wordmark's glass type; exit is the lantern's light flooding outwards from the hero's lantern seat, 480 ms | CUBIC/IN | skips | 150 ms fade |
-| T10 | Idle (title at rest) | flame breath 2.8 s loop; light pool ±4%; ash weather as today | SINE/IN_OUT | n/a | flame flicker only, no pool breath, no weather drift |
+| # | Transition | Duration | Curve | Tap-skip | Reduced motion | Idle motion (at rest) |
+|---|---|---|---|---|---|---|
+| T0 | OS launch screen → first Godot frame | 0 (the splash *is* frame 0: black, one ember at the flame's seat) | none | n/a | same | OS launch screen: static by platform (one frame); Godot's first frame is the ember, which flickers |
+| T1 | Kindling: ember breathes 0 to 0.4 s; flame catches 0.4 to 0.9; glass takes light 0.9 to 1.5; the world revealed 1.5 to 2.4; wordmark lit 1.9 to 2.4 | 2.4 s (A); B tracing 2.8 s; C chain 2.6 s | catch: BACK/OUT (overshoot 1.15); glass: SINE/IN_OUT; reveal: QUINT/OUT | completes in 120 ms; the tap does not choose | title lands whole with a 150 ms fade | the rite itself; the ember flickers before it catches |
+| T2 | Language panes rise (first launch only; the rite holds at 0.4 s) | 320 ms, 12 px rise + fade | QUINT/OUT | n/a (waits for input) | panes appear whole | ember flicker and its light on the road; the road's ash faintly through the dark; the pre-lit pane breathes |
+| T2b | Language chosen: the chosen pane flares, the other sinks and fades, the rite resumes | 180 ms flare, 320 ms sink | CUBIC/OUT, CUBIC/IN | completes | chosen state lands; rite resumes | as T2 until the rite resumes |
+| T3 | Consent line appears (first title only) | 320 ms fade, with the last 30% of T1 | SINE/OUT | completes with T1 | appears whole | the title's idle (T10) behind the consent line |
+| T4 | Focus (keyboard, pad, hover) | 180 ms | CUBIC/OUT | n/a | instant | — |
+| T5 | Press | 90 ms down to 0.97 with a glass flare; release 180 ms | QUAD/OUT; BACK/OUT | n/a | flare only | — |
+| T6 | Title → Back to the Road | flame flares 180 ms, then light floods outwards from the flame (inverse iris) 480 ms; the save load starts on the tap and runs under the cover; the map plays its existing 450 ms screen-in | CUBIC/IN for the flood | the second tap skips the flood; the load is never waited on longer than it takes | 150 ms fade to cover | the flood itself; the map's own idle after |
+| T7 | Title → Rekindle → opening (first run) | push into the lantern 600 ms (scale 1.0 → 1.6, flame fills the frame), then the opening's existing `wake` (2.6 s) starts from the same orange: the ember match-cuts to the hearth fire | QUINT/IN | skips to beat 1 | cut to beat 1 | the opening's idle (T9) |
+| T7b | Title → Rekindle → Embark (later runs) | the room motion of T8 (Embark is built from the same kit) | as T8 | as T8 | as T8 | Embark: the room's light drifts and breathes on the leaded glass, the leading glints, the road behind breathes |
+| T8 | Title → Settings room | world dims to 0.62 over 320 ms; room rises 480 ms (A: from the lantern's light; B: the vestry opens; C: camera dolly 600 ms); lantern glides to its seat 480 ms | QUINT/OUT | completes | room appears whole, 150 ms | the room's light drifts and breathes on the leaded glass, the leading glints; the title behind keeps breathing (it is never frozen under the room) |
+| T8b | Settings room → title | 320 ms, the reverse | CUBIC/IN | completes | instant | the title's idle (T10) |
+| T9 | Opening beat 4 title card → departure / map | the card uses the wordmark's glass type; exit is the lantern's light flooding outwards from the hero's lantern seat, 480 ms | CUBIC/IN | skips | 150 ms fade | between lines: embers and motes drift; a hearth beat's firelight breathes on the plate |
+| T10 | Idle (title at rest) | flame breath 2.8 s loop; light pool ±4%; ash weather as today | SINE/IN_OUT | n/a | flame flicker only, no pool breath, no weather drift | flame breath; light pool ±4%; ash weather and motes; lamplighter flicker on the painted lanterns; held shards pulse in the rose; the camera breathes and answers the pointer |
+
+No screen of the lane is a still frame while it waits for input (owner
+ruling, 2026-10-02): every state lists what moves at rest in the last column,
+all of it draw-only. Reduce Motion stops all of it but the flame's flicker
+(the ember, the flame in the glass); the eye still answers the pointer, as
+shipped.
 
 Budget rule: no rite exceeds 3 s, none is replayed in a session (the second
 title of a session lands the world already lit; only the flame breathes), and
@@ -375,7 +381,7 @@ block recorded through `docs/art-ledger.md`.
 | 9 | SFX `paneRise` (0.6 s) | ElevenLabs | all | "a small glass pane sliding into a lead frame, soft chime with a tiny metallic tick" |
 | 10 | SFX `paneChoose` (0.7 s) | ElevenLabs | all | "a bright clear glass chime with a soft warm flare, a satisfying confirmation, short tail" |
 | 11 | SFX `roomOpen` / `roomClose` (1.0 / 0.8 s) | ElevenLabs | all | "an old wooden shutter swinging open in a stone gatehouse, muffled, distant night wind" / the closing variant |
-| 12 | Music: `kindling` intro, 6 to 9 s, resolving into the `title` cue's first bar | Suno, via a **commissioned** row in `docs/music-ledger.md` (James renders) | all | "solo low cello harmonic and a single breathy glass-harmonica tone, rising slowly, warm, the last two seconds opening into the title theme's key; no drums" |
+| 12 | ~~Music: `kindling` intro~~ — **dropped** 2026-10-02 (owner ruling: no new music; the rite and the title use the shipped `title` cue) | — | — | — |
 
 The shipped `kindle.mp3`, `ember.mp3`, `click.mp3` and `hover.mp3` stay; the
 new SFX cover what the pack has no word for (glass taking light, a room). The
@@ -442,7 +448,7 @@ leaves headroom for the A12.
    (the lane's preference is to commission in Phase 2; nothing blocks on it).
 3. **PROPOSED copy** in §9 goes to the story skill: one sentence and a
    numeral formatter.
-4. **Kindling music** row (#12) waits on James's Suno render; Phase 2 ships
+4. ~~**Kindling music** row (#12)~~ — dropped by owner ruling (no new music). Was: waits on James's Suno render; Phase 2 ships
    the rite with the shipped `title` cue and adds the intro when it lands.
 
 ## 15. Files and re-rendering
@@ -469,7 +475,7 @@ leaves headroom for the A12.
 | (e) Settings | `SettingsPanel` on `LeadlightRoom` | Class, signals, constructor, `set_shape`, `focus_language` and every tested node name unchanged. |
 | (f) Embark | lighter re-dress, as the ruling allows | Leaded room, glass cards (`LeadlightGlassBox.chosen`), glass actions; phone cards grow to 84 px with two-line blurbs (the shipped 66 px card spilled its copy in both languages). |
 | (g) Opening | staging only, script untouched | The lantern's routes leave in its own light (flare + flood from the wick); the Keeper's kindle sparks burn the Kindling colour; the beat-4 card uses the wordmark's lettering; the opening floods out to the road. |
-| (h) Assets and ledgers | `docs/art-ledger.md`, `docs/sfx-ledger.md`, `docs/music-ledger.md`, `docs/story/05-foreshadow-ledger.md` row 467 | Hero lantern: four candidates + contact sheet in `lantern/`, the pick registered onto the HUD lantern's set-out (`lantern/register.py`) so the shipped flame shader lights it unchanged — lane pick, owner re-pick open. |
+| (h) Assets and ledgers | `docs/art-ledger.md`, `docs/sfx-ledger.md`, `docs/story/05-foreshadow-ledger.md` row 467 (no music: owner ruling) | Hero lantern: four candidates + contact sheet in `lantern/`, the pick registered onto the HUD lantern's set-out (`lantern/register.py`) so the shipped flame shader lights it unchanged — lane pick, owner re-pick open. |
 
 ### 16.2 Evidence
 
@@ -477,6 +483,15 @@ leaves headroom for the A12.
   `first-launch.png`, `settings.png`, `embark.png` (each: phone-landscape,
   pad-landscape = identity, desktop-landscape; English and zh-Hant),
   `rite.png` (six moments of the launch rite), `a12-metal.png`.
+- Idle motion (`stills/idle-motion.png`): three frames one second apart per
+  state, nothing touched, with the share of pixels that changed between
+  frames — title 6.5 / 4.8 %, first launch 0.9 / 0.3 % (a dark frame by
+  design: the ember, its light on the road, the ash through the dark, the
+  breathing pane), consent 6.6 / 4.7 %, settings 0.8 / 5.6 %, Embark
+  4.5 / 6.5 %, the opening between lines 1.5 % (frames from separate boots;
+  the first pair includes the line arriving). Under Reduce Motion the title
+  still changes 5.7 / 2.8 %: the shipped camera easing to the pointer, which
+  Reduce Motion keeps by design; the lane's own idle motion stops.
 - Tests: `tests/test_leadlight.gd`, `tests/test_title_screen.gd`; the title
   tests in `tests/test_presentation.gd` now pin the title as a place,
   including a no-overlap check at every shape in both languages (it caught a
@@ -517,7 +532,9 @@ warm-up; the rite from its first frame):
 On this Mac the Metal swapchain paces the window to the display even with
 vsync off, so the wall interval is display-bound in both trees (median
 ~8.7 ms); the §12 "≤ 8 ms p95" reading cannot be taken here and the CPU
-render time is the comparable cost — equal or lower on every row. The rite's
+render time is the comparable cost — equal or lower on every row. With the
+idle motion added, the title at rest measures CPU render p95 0.079 ms (pad)
+and 0.077 ms (phone). The rite's
 worst frame is ~50–60 ms longer than main's: the flame shader's pipeline
 compile, deferred into the ember's breath where nothing moves. Device
 confirmation on the iPad 8 remains the way to close P2.
@@ -543,8 +560,8 @@ confirmation on the iPad 8 remains the way to close P2.
    failed (`AudioQueueStart -66681`, no output device), so nothing ships. The
    code already asks for each cue with the ledger's fallback; one owner
    audition per cue, then the pick, manifest row and `pack_id` bump.
-2. **`kindling` intro** awaits James's Suno render (`docs/music-ledger.md`);
-   landing the file is the whole change.
+2. ~~`kindling` intro~~ — dropped by owner ruling (no new music); nothing
+   remains of it in code or ledgers.
 3. **Hero lantern** is the lane pick (candidate 1); owner re-pick open.
 4. **Copy** `ui.firstLight.diagnostics` is ledgered PROPOSED (row 467).
 5. **Device**: an iPad 8 launch-and-frame-pacing pass for P2.
