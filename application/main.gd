@@ -255,6 +255,8 @@ func _ready() -> void:
 	var show_settings: bool = false
 	var forced_locale: String = ""
 	var show_font_probe: bool = false
+	# --launch-timing: print when the title first accepts input, then quit.
+	var launch_timing: bool = false
 	var performance_probe: bool = false
 	var map_bench: bool = false
 	var map_asset_bench: bool = false
@@ -332,6 +334,8 @@ func _ready() -> void:
 			forced_locale = arg.trim_prefix("--locale=")
 		elif arg == "--font-probe":
 			show_font_probe = true
+		elif arg == "--launch-timing":
+			launch_timing = true
 		elif arg.begins_with("--perf-out="):
 			performance_probe = true
 		elif arg == "--map-bench":
@@ -548,6 +552,8 @@ func _ready() -> void:
 		_route_idle()
 	if show_settings:
 		_show_settings()
+	if launch_timing:
+		_report_launch()
 	if performance_probe:
 		_attach_performance_probe()
 	elif shot_path != "":
@@ -764,6 +770,16 @@ func _show_runtime_font_probe() -> void:
 ## it in the hand — which makes a before/after comparison of a layout change
 ## unreadable. `--settle=` buys the extra time when the shot is of a settled
 ## composition rather than of the entrance.
+## Cold launch -> title interactive (docs/design/2026-10-02-opening-start §12):
+## the title takes input from the first frame it is drawn, so the clock stops
+## on that frame. Ticks count from engine start; the shell's wall clock around
+## the process adds the boot before it.
+func _report_launch() -> void:
+	await get_tree().process_frame
+	print("LAUNCH title_interactive_ms=%d" % Time.get_ticks_msec())
+	get_tree().quit(0)
+
+
 func _capture_and_quit(path: String) -> void:
 	for _i: int in range(30):  # let layout + first paint settle
 		await get_tree().process_frame

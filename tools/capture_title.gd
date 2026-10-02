@@ -7,7 +7,7 @@ extends SceneTree
 ##
 ##   godot --path . --position 40,40 -s res://tools/capture_title.gd -- \
 ##       --shape=pad-landscape --locale=en --state=saved --out=/tmp/t.png \
-##       [--rite=1.6] [--settings] [--embark] [--reduce-motion] [--scale=2]
+##       [--rite=1.6] [--settings] [--embark] [--flood=0.3] [--reduce-motion] [--scale=2]
 ##
 ## The boot splash is this harness at --state=fresh --rite=0 --scale=2 on the
 ## identity shape: frame 0 of the launch rite (assets/art/title/splash.png).
@@ -67,6 +67,12 @@ func _initialize() -> void:
 		root.add_child(panel)
 	for _i: int in range(SETTLE_FRAMES):
 		await process_frame
+	if _args.has("flood"):
+		# The lantern's exit (§7 T6) photographed T seconds into the flood.
+		var layer: TransitionLayer = TransitionLayer.new()
+		root.add_child(layer)
+		layer.flood(screen.wick_on_stage(), screen.lantern.light(), func() -> void: pass)
+		await create_timer(float(str(_args.get("flood", "0.3")))).timeout
 	var out: String = str(_args.get("out", "/tmp/glassvow-title.png"))
 	root.get_viewport().get_texture().get_image().save_png(out)
 	print("title still: " + out)
