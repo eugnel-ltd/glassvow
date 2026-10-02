@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Glassvow · Concept A · Held Light</title>
+<link rel="stylesheet" href="mock-base.css">
+<style>
+/* Concept A — Held Light. First person: the hero's lantern is the foreground
+   hero object on the road's axis; the sealed door is what it is held up to.
+   Everything is lit by distance from the flame. */
+.world { position: absolute; background: url("../../../assets/art/title-background/background.png") no-repeat;
+  filter: brightness(.62) saturate(.92); }
+.vignette { background:
+  radial-gradient(70% 60% at 50% 86%, transparent 0 30%, rgba(5,7,14,.55) 70%, rgba(5,7,14,.88) 100%),
+  linear-gradient(180deg, rgba(5,7,14,.35) 0%, transparent 22%, transparent 60%, rgba(5,7,14,.6) 100%); }
+.lightpool { mix-blend-mode: screen; }
+.doorglow { mix-blend-mode: screen; }
+.wordmark { position: absolute; transform: translateX(-50%); filter: drop-shadow(0 4px 18px rgba(0,0,0,.8)); }
+.rose { position: absolute; transform: translate(-50%, -50%); }
+.slab { position: absolute; transform: translateX(-50%) perspective(300px) rotateX(36deg); transform-origin: 50% 100%;
+  color: rgba(242,193,78,.58); text-align: center; white-space: nowrap; font-size: var(--slab-size, 15px);
+  text-shadow: 0 -1px 0 rgba(0,0,0,.9), 0 1px 0 rgba(255,233,172,.12); }
+.slab b { color: rgba(242,193,78,.18); font-weight: 400; margin: 0 .5em; }
+.consent { position: absolute; transform: translateX(-50%); width: var(--cw); display: flex; gap: 14px; align-items: center; }
+.consent .ctl { flex-direction: column; gap: 4px !important; margin: 0 !important; }
+.consent p { font-size: var(--c-size, 15px); line-height: 1.45; color: #c3c8d9; }
+.consent .ctl { margin-top: 10px; display: flex; gap: 18px; justify-content: center; align-items: center; }
+.consent .pp { font-style: normal; color: var(--gold-dim); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.room { position: absolute; transform: translateX(-50%); display: grid; grid-template-columns: auto 1fr; align-content: start; gap: 26px;
+  padding: 150px 48px 34px; background:
+    repeating-linear-gradient(60deg, transparent 0 34px, rgba(4,5,11,.5) 34px 36px),
+    repeating-linear-gradient(-60deg, transparent 0 34px, rgba(4,5,11,.5) 34px 36px),
+    radial-gradient(90% 70% at 18% 100%, color-mix(in srgb, var(--flame) 22%, transparent), transparent 70%),
+    linear-gradient(180deg, rgba(14,18,36,.94), rgba(8,10,22,.96));
+  clip-path: polygon(0 100%, 0 30%, 4% 20%, 11% 11%, 21% 4.5%, 34% 1%, 50% 0, 66% 1%, 79% 4.5%, 89% 11%, 96% 20%, 100% 30%, 100% 100%);
+  box-shadow: inset 0 0 0 3px var(--lead); }
+.room::before { content: ""; position: absolute; inset: 0; clip-path: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 3px var(--lead), inset 0 0 0 4px rgba(156,124,52,.5), inset 0 0 60px rgba(0,0,0,.6); }
+.room h2 { position: absolute; left: 0; right: 0; top: 96px; text-align: center; color: var(--gold); font-size: 16px; }
+.dim { background: rgba(5,7,14,.62); backdrop-filter: blur(3px); }
+body.s-first .world { filter: brightness(.16) saturate(.6); }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="world" id="world"></div>
+  <div class="layer doorglow" id="doorglow"></div>
+  <div class="layer vignette"></div>
+  <div class="layer lightpool" id="pool"></div>
+  <img class="wordmark" id="wordmark" alt="">
+  <div class="rose" id="rose"></div>
+
+  <div class="plaque t-primary" id="plaque"><div class="name" data-t="back"></div><div class="sub t-read"><i></i><span data-t="backSub"></span></div></div>
+  <div class="lantern" id="lantern"><div class="halo"></div><img src="../../../assets/art/ui/lantern.png" alt=""><div class="glass-tint"></div><div class="flame"></div></div>
+
+  <div class="pane t-label" id="rekindle" data-t="rekindle"></div>
+  <div class="quiet t-label near" id="vigil" data-t="vigil"></div>
+  <div class="quiet t-label" id="help" data-t="help"></div>
+  <div class="quiet t-label focus" id="settings" data-t="settings"></div>
+  <div class="quiet t-label" id="credits" data-t="credits"></div>
+  <div class="quiet t-label" id="quit" data-t="quit"></div>
+
+  <div class="slab t-carved" id="slabL"></div>
+  <div class="slab t-carved" id="slabR"></div>
+  <div class="consent" id="consent"><div class="ctl"><span class="toggle on"></span></div><p class="t-read"><span data-t="diag"></span> <em class="t-read pp" data-t="privacy"></em></p></div>
+
+  <div class="pane t-label" id="langZh" data-t="langZh"></div>
+  <div class="pane t-label" id="langEn" data-t="langEn"></div>
+
+  <div class="layer dim" id="dim"></div>
+  <div class="room" id="room"><h2 class="t-label" data-t="settings"></h2></div>
+  <div class="version" id="version">1.0.0</div>
+</div>
+<script src="mock-base.js"></script>
+<script>
+const L = {
+  pad: {
+    world: { w: 1350, h: 900, x: -85, y: -77 }, rose: { x: 596, y: 250, r: 48 },
+    word: { x: 590, y: 22, w: 430 }, plaque: { x: 590, y: 446 }, lantern: { x: 590, y: 492, w: 340 },
+    flame: { x: 590, y: 700 },
+    left: [["rekindle", 474, 586], ["vigil", 438, 662], ["help", 424, 720]],
+    right: [["settings", 712, 596], ["credits", 744, 662], ["quit", 756, 720]],
+    slabs: [[214, 774], [966, 774]], slabSize: "14px",
+    consent: { x: 590, y: 120, w: 520 }, lang: [[360, 676], [820, 676]],
+    room: { x: 600, y: 60, w: 780, h: 640 }, roomLantern: { x: 132, y: 470, w: 330 },
+    version: { r: 12, b: 8 },
+  },
+  phone: {
+    world: { w: 900, h: 600, x: -28, y: -100 }, rose: { x: 426, y: 120, r: 26 },
+    word: { x: 422, y: 8, w: 226 }, plaque: { x: 422, y: 148 }, lantern: { x: 422, y: 182, w: 232 },
+    flame: { x: 422, y: 318 },
+    left: [["rekindle", 318, 208], ["vigil", 292, 262], ["help", 282, 306]],
+    right: [["settings", 528, 214], ["credits", 556, 262], ["quit", 566, 306]],
+    slabs: [[150, 350], [694, 350]], slabSize: "11px",
+    consent: { x: 422, y: 70, w: 420 }, lang: [[250, 300], [594, 300]],
+    room: { x: 476, y: 6, w: 700, h: 384 }, roomLantern: { x: 60, y: 210, w: 190 },
+    version: { r: 8, b: 4 },
+  },
+}[SHAPE];
+
+fillCopy();
+const $ = (id) => document.getElementById(id);
+const world = $("world");
+world.style.cssText += `left:${L.world.x}px;top:${L.world.y}px;width:${L.world.w}px;height:${L.world.h}px;background-size:${L.world.w}px ${L.world.h}px`;
+$("wordmark").src = WORDMARK; place($("wordmark"), { x: L.word.x, y: L.word.y, w: L.word.w });
+$("rose").innerHTML = roseSVG(L.rose.r, SHARDS_HELD); place($("rose"), { x: L.rose.x, y: L.rose.y });
+place($("plaque"), { x: L.plaque.x, y: L.plaque.y, "--plaque-size": SHAPE === "phone" ? "17px" : "24px", "--plaque-sub": SHAPE === "phone" ? "10px" : "12px" });
+place($("lantern"), { x: L.lantern.x, y: L.lantern.y, "--lw": L.lantern.w + "px" });
+for (const [id, x, y] of L.left) { const n = $(id); place(n, { x, y, "--quiet-size": SHAPE === "phone" ? "12px" : "15px", "--pane-h": SHAPE === "phone" ? "34px" : "44px", "--pane-size": SHAPE === "phone" ? "12px" : "15px" }); n.style.transform = "translateX(-100%)"; }
+for (const [id, x, y] of L.right) { place($(id), { x, y, "--quiet-size": SHAPE === "phone" ? "12px" : "15px" }); }
+$("slabL").innerHTML = `${COPY.deeds[0]}<b>◆</b>${COPY.deeds[1]}`;
+$("slabR").innerHTML = `${COPY.deeds[2]}<b>◆</b>${COPY.deeds[3]}`;
+place($("slabL"), { x: L.slabs[0][0], y: L.slabs[0][1], "--slab-size": L.slabSize });
+place($("slabR"), { x: L.slabs[1][0], y: L.slabs[1][1], "--slab-size": L.slabSize });
+// The flame lights the road: a pool of the run's colour around the lantern.
+$("pool").style.background = `radial-gradient(${SHAPE === "phone" ? 300 : 460}px ${SHAPE === "phone" ? 220 : 330}px at ${L.flame.x}px ${L.flame.y}px,
+  color-mix(in srgb, var(--flame) 26%, transparent), color-mix(in srgb, var(--flame) 7%, transparent) 55%, transparent 100%)`;
+// Moonlit fog behind the door so its arch reads against the forest.
+$("doorglow").style.background = `radial-gradient(${L.rose.r * 4.2}px ${L.rose.r * 6}px at ${L.rose.x}px ${L.rose.y + L.rose.r * 2.2}px, rgba(120,150,220,.20), rgba(70,90,160,.08) 55%, transparent 100%)`;
+const v = $("version"); v.style.right = L.version.r + "px"; v.style.bottom = L.version.b + "px";
+
+const hide = (...ids) => ids.forEach((id) => { $(id).style.display = "none"; });
+hide("consent", "langZh", "langEn", "dim", "room");
+
+if (FRESH || STATE === "first") {
+  // A fresh install: no saved run, no deeds. The lantern is cold until kindled.
+  $("plaque").querySelector(".name").textContent = COPY.rekindle;
+  $("plaque").querySelector(".sub").style.display = "none";
+  hide("rekindle", "slabL", "slabR");
+  // Two words on the left: they take the two slots nearest the flame.
+  [["vigil", L.left[0]], ["help", L.left[1]]].forEach(([id, [, x, y]]) => place($(id), { x: x - 30, y: y + 30 }));
+  document.documentElement.style.setProperty("--flame", "var(--kindling)");
+}
+if (STATE === "consent") {
+  // Fresh install, first title: the one consent line sits where history will be written.
+  hide("slabL", "slabR");
+  $("consent").style.display = "";
+  place($("consent"), SHAPE === "phone" ? { x: 150, y: 340, "--cw": "270px", "--c-size": "11px" } : { x: 236, y: 762, "--cw": "420px", "--c-size": "13px" });
+}
+if (STATE === "first") {
+  // Before the title exists: one ember, two panes. The OS language is pre-lit.
+  $("lantern").classList.add("cold");
+  hide("wordmark", "rose", "plaque", "vigil", "help", "settings", "credits", "quit", "pool", "version");
+  for (const [id, [x, y]] of [["langZh", L.lang[0]], ["langEn", L.lang[1]]]) {
+    const n = $(id); n.style.display = ""; place(n, { x, y, "--pane-h": SHAPE === "phone" ? "40px" : "52px", "--pane-size": SHAPE === "phone" ? "14px" : "18px" });
+    n.style.transform = "translateX(-50%)";
+  }
+  $(LANG === "zh" ? "langZh" : "langEn").classList.add("lit");
+}
+if (STATE === "settings") {
+  // The lantern is lowered to the left; its light falls on a leaded window
+  // set in the gatehouse wall. The road stays visible, dimmed, behind.
+  hide("plaque", "rekindle", "vigil", "help", "settings", "credits", "quit", "slabL", "slabR", "version", "wordmark");
+  $("dim").style.display = "";
+  const room = $("room"); room.style.display = ""; room.insertAdjacentHTML("beforeend", settingsHTML());
+  place(room, { x: L.room.x, y: L.room.y, w: L.room.w, h: L.room.h });
+  if (SHAPE === "phone") { room.style.padding = "84px 30px 12px"; room.style.gap = "18px"; room.querySelector("h2").style.top = "50px"; room.querySelector("h2").style.fontSize = "12px"; }
+  const lan = $("lantern"); lan.style.zIndex = 5; place(lan, { x: L.roomLantern.x, y: L.roomLantern.y, "--lw": L.roomLantern.w + "px" });
+  $("pool").style.zIndex = 4;
+  $("pool").style.background = `radial-gradient(${SHAPE === "phone" ? 260 : 420}px at ${L.roomLantern.x}px ${L.roomLantern.y + L.roomLantern.w * 0.6}px, color-mix(in srgb, var(--flame) 22%, transparent), transparent 100%)`;
+}
+</script>
+</body>
+</html>
