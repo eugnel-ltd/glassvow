@@ -1,7 +1,8 @@
 class_name ChoiceScreen
 extends Control
 ## One quiet glass panel for every non-combat decision. The application owns
-## routing and domain mutation; this view only emits the selected id.
+## routing and domain mutation; this view only emits the selected id. The title
+## is its own screen since 2026-10-02 (presentation/title/title_screen.gd).
 
 signal chosen(id: String)
 
@@ -100,7 +101,6 @@ func _init(title_text: String, body_text: String, choices: Array[Dictionary],
 	var asked: StringName = StringName(str(context.get("shape", StageShape.IDENTITY)))
 	shape = asked if StageShape.REFERENCES.has(asked) else StageShape.IDENTITY
 	_panel_layout = LayoutBook.resolve(&"run", shape)
-	_title_variant = str(context.get("variant", "")) == "title"
 	_overlay = context.get("overlay", false) == true
 	if context.has("cancel"):
 		_has_cancel = true
@@ -108,10 +108,7 @@ func _init(title_text: String, body_text: String, choices: Array[Dictionary],
 	_card_mode = choices.any(func(row: Dictionary) -> bool: return row.has("card"))
 	_card_pick = choices.any(func(row: Dictionary) -> bool:
 		return row.has("card") and not row.get("disabled", false))
-	if _title_variant:
-		_build_title(title_text, body_text, choices, context)
-	else:
-		_build_standard(title_text, body_text, choices)
+	_build_standard(title_text, body_text, choices)
 
 
 func _build_standard(title_text: String, body_text: String,
@@ -282,212 +279,6 @@ func _card_scale() -> float:
 			return 1.17 if _card_pick else 1.0
 		_:
 			return 0.99 if _card_pick else 0.87
-
-
-## The benchmark title is a composition, not a panel: the authored raster sits
-## over the living sky, the wordmark owns the centre, and utility actions share
-## one row at the 1180x820 reference stage.
-func _build_title(title_text: String, tagline_text: String, choices: Array[Dictionary],
-		context: Dictionary) -> void:
-	add_child(TitleWorld.new())
-
-	# The banner's drop-shadow, added FIRST so it sits under the plate it belongs
-	# to. `styles.css:343` has carried it since the reference was written and the
-	# port never had it, which is why the raster ended flush against the sky.
-	_banner_shadow = ColorRect.new()
-	var shadow_mat: ShaderMaterial = ShaderMaterial.new()
-	shadow_mat.shader = BANNER_SHADOW_SHADER
-	shadow_mat.set_shader_parameter("sigma", BANNER_SHADOW_BLUR * 0.5)
-	shadow_mat.set_shader_parameter("shade", BANNER_SHADOW_INK)
-	_banner_shadow.material = shadow_mat
-	_banner_shadow.color = Color(1.0, 1.0, 1.0, 1.0)
-	_banner_shadow.modulate.a = BANNER_ALPHA
-	_banner_shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_banner_shadow)
-
-	_title_banner = TextureRect.new()
-	_title_banner.texture = load(TITLE_BACKGROUND) as Texture2D
-	_title_banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_title_banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_title_banner.modulate.a = BANNER_ALPHA
-	_title_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_title_banner)
-
-	var vignette: TextureRect = TextureRect.new()
-	vignette.texture = GlassStyle.grad_tex(
-		PackedColorArray([
-			Color(0.016, 0.020, 0.047, 0.0),
-			Color(0.016, 0.020, 0.047, 0.0),
-			Color(0.016, 0.020, 0.047, 0.58),
-		]),
-		PackedFloat32Array([0.0, 0.55, 1.0]), true,
-		Vector2(0.5, 0.45), Vector2(1.0, 0.45))
-	vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vignette.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	vignette.stretch_mode = TextureRect.STRETCH_SCALE
-	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(vignette)
-
-	_lantern = TextureRect.new()
-	_lantern.texture = RunStyle.lantern_bloom()
-	_lantern.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_lantern.stretch_mode = TextureRect.STRETCH_SCALE
-	_lantern.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_lantern.size = TITLE_LANTERN_SIZE
-	add_child(_lantern)
-
-	var centre: CenterContainer = CenterContainer.new()
-	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
-	centre.offset_left = 16.0
-	centre.offset_top = 16.0
-	centre.offset_right = -16.0
-	centre.offset_bottom = -16.0
-	add_child(centre)
-
-	_title_column = VBoxContainer.new()
-	_title_column.alignment = BoxContainer.ALIGNMENT_CENTER
-	_title_column.add_theme_constant_override("separation", 8)
-	centre.add_child(_title_column)
-
-	_wordmark_slot = Control.new()
-	_title_column.add_child(_wordmark_slot)
-	_wordmark = TextureRect.new()
-	_wordmark.texture = load(TITLE_WORDMARK) as Texture2D
-	_wordmark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_wordmark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_wordmark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_wordmark.anchor_left = 0.5
-	_wordmark.anchor_right = 0.5
-	_wordmark.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_wordmark_slot.add_child(_wordmark)
-	# Two authored rasters exist: the English wordmark and the zh-Hant
-	# wordmark, cut in the same stained glass (docs/art-ledger.md). Any other
-	# locale paints its catalogue title through the display-face fallback
-	# chain rather than baking more languages into art.
-	if title_text == "琉璃誓言":
-		_wordmark.texture = load(TITLE_WORDMARK_ZH) as Texture2D
-	elif title_text != "GLASSVOW":
-		_wordmark.visible = false
-		_wordmark_label = Label.new()
-		_wordmark_label.text = title_text
-		_wordmark_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_wordmark_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_wordmark_label.add_theme_font_override(
-			"font", _tracked_font(GlassStyle.CINZEL_700, 8))
-		_wordmark_label.add_theme_color_override("font_color", PARCHMENT)
-		_wordmark_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.72))
-		_wordmark_label.add_theme_constant_override("shadow_offset_x", 0)
-		_wordmark_label.add_theme_constant_override("shadow_offset_y", 5)
-		_wordmark_label.anchor_left = 0.5
-		_wordmark_label.anchor_right = 0.5
-		_wordmark_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
-		_wordmark_slot.add_child(_wordmark_label)
-
-	_tagline_slot = Control.new()
-	_tagline_slot.custom_minimum_size.y = 20.0
-	_title_column.add_child(_tagline_slot)
-	_tagline = Label.new()
-	_tagline.text = tagline_text.to_upper()
-	_tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_tagline.add_theme_font_override("font", _tracked_font(GlassStyle.CINZEL_500, 5))
-	_tagline.add_theme_font_size_override("font_size", 14)
-	_tagline.add_theme_color_override("font_color", BENCH_TEXT_DIM)
-	_tagline.anchor_left = 0.5
-	_tagline.anchor_right = 0.5
-	_tagline.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_tagline_slot.add_child(_tagline)
-
-	var actions: Array[Dictionary] = []
-	var utilities: Array[Dictionary] = []
-	var dev_row: Dictionary = {}
-	for row: Dictionary in choices:
-		if str(row.get("id", "")) == "dev":
-			dev_row = row
-		elif row.get("quiet", false):
-			utilities.append(row)
-		else:
-			actions.append(row)
-
-	_primary = VBoxContainer.new()
-	_primary.alignment = BoxContainer.ALIGNMENT_CENTER
-	_primary.add_theme_constant_override("separation", 12)
-	_primary.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_title_column.add_child(_primary)
-
-	for i: int in range(actions.size()):
-		var ceremonial: bool = i == 0
-		var button: TitleFacetButton = _ceremonial_button(
-			str(actions[i].get("label", actions[i].get("id", ""))), ceremonial)
-		button.disabled = actions[i].get("disabled", false)
-		button.tooltip_text = str(actions[i].get("hint", ""))
-		button.set_meta("title_label", button.text)
-		_wire_button(button, str(actions[i].get("id", "")))
-		_primary.add_child(button)
-		_primary_buttons.append(button)
-	if not _primary_buttons.is_empty():
-		# The bloom is placed from the plate's rect, which the container only
-		# assigns on its layout pass AFTER this build — following the rect
-		# keeps the bloom under the plate instead of at the screen origin
-		# (where the first capture found it).
-		_primary_buttons[0].item_rect_changed.connect(_place_lantern)
-
-	_seam = TitleSeam.new()
-	_seam.custom_minimum_size = Vector2(TITLE_SEAM_W, 12.0)
-	_seam.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_seam.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_title_column.add_child(_seam)
-
-	_utility = HBoxContainer.new()
-	_utility.alignment = BoxContainer.ALIGNMENT_CENTER
-	_utility.add_theme_constant_override("separation", 0)
-	_utility.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_title_column.add_child(_utility)
-	for i: int in range(utilities.size()):
-		if i > 0:
-			_utility.add_child(_utility_pip())
-		var button: Button = _utility_word(
-			str(utilities[i].get("label", utilities[i].get("id", ""))))
-		button.disabled = utilities[i].get("disabled", false)
-		button.tooltip_text = str(utilities[i].get("hint", ""))
-		button.set_meta("title_label", button.text)
-		_wire_button(button, str(utilities[i].get("id", "")))
-		_utility.add_child(button)
-		_utility_buttons.append(button)
-	_add_title_rose(context)
-
-	var stats: Label = Label.new()
-	stats.text = str(context.get("stats", ""))
-	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stats.add_theme_font_override("font", _tracked_font(GlassStyle.ALEGREYA_400, 1))
-	stats.add_theme_font_size_override("font_size", 14)
-	stats.add_theme_color_override("font_color", BENCH_TEXT_DIM)
-	_title_column.add_child(stats)
-
-	var version: Label = Label.new()
-	version.text = str(context.get("version", ""))
-	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	version.add_theme_font_override("font", GlassStyle.face(GlassStyle.ALEGREYA_400))
-	version.add_theme_font_size_override("font_size", 11)
-	version.add_theme_color_override("font_color", Color(BENCH_TEXT_DIM, 0.7))
-	version.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	version.offset_left = -198.0
-	version.offset_top = -34.0
-	version.offset_right = -18.0
-	version.offset_bottom = -18.0
-	version.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(version)
-
-	if not dev_row.is_empty():
-		_dev_button = _utility_word(str(dev_row.get("label", "dev")))
-		_dev_button.disabled = dev_row.get("disabled", false)
-		_dev_button.set_meta("title_label", _dev_button.text)
-		_wire_button(_dev_button, str(dev_row.get("id", "dev")))
-		_dev_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-		_dev_button.offset_left = -280.0
-		_dev_button.offset_top = -98.0
-		_dev_button.offset_right = -18.0
-		_dev_button.offset_bottom = -34.0
-		add_child(_dev_button)
 
 
 func _add_title_rose(context: Dictionary) -> void:
@@ -729,20 +520,6 @@ func _ready() -> void:
 	var focus: Button = _cancel_button if _cancel_button != null else _first_button
 	if focus != null:
 		focus.grab_focus()
-	if _title_variant:
-		pivot_offset = size * 0.5
-		# REDUCE MOTION: the title arrives standing (`.logo { animation:
-		# none; }`, styles.css:2039) instead of breathing in.
-		if Preferences.active.reduce_motion:
-			modulate.a = 1.0
-			scale = Vector2.ONE
-			return
-		modulate.a = 0.0
-		scale = Vector2.ONE * 1.015
-		var tween: Tween = create_tween().set_parallel()
-		tween.tween_property(self, "modulate:a", 1.0, 0.45)
-		tween.tween_property(self, "scale", Vector2.ONE, 0.45) \
-			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 
 ## The panel's authored width, held inside what the stage can actually give it.
@@ -753,9 +530,6 @@ func _ready() -> void:
 ## with, or that the type inside should shrink too. The book supplies the
 ## authored width and the clamp keeps holding the floor and the ceiling.
 func _fit() -> void:
-	if _title_variant:
-		_fit_title()
-		return
 	if _panel != null:
 		var inset: float = _panel_num("inset", PANEL_INSET)
 		_panel.custom_minimum_size.x = minf(_authored_panel_width(),
@@ -828,101 +602,6 @@ func set_shape(stage_shape: StringName) -> void:
 	if _card_mode:
 		_apply_card_scale()
 	_fit()
-
-
-## The title screen's set-out, from the book.
-##
-## It used to open on `size.x >= 1000.0 and size.y <= 860.0`, which selects
-## exactly pad-landscape and desktop-landscape and nothing else — an enumeration
-## of two shapes written as though it were a measurement of one stage. The two
-## are not the same claim, and the difference shows up twice: flex leaves the
-## test only 38px of margin at pad-landscape's lower bound, and the sixth shape
-## anybody authors lands in whichever bucket the arithmetic happens to put it
-## in, silently.
-##
-## Twelve fields across five branches came out, and all twelve were dumped
-## through the resolver at all five shapes and compared against the expressions
-## they replaced: sixty comparisons, zero differences. The three width formulas
-## collapsed to one each on the way, without changing a single resolved output:
-## the phone-landscape column was `minf(760, size.x - 32)` and the others were
-## flat numbers, which is the same expression once the cap is authored.
-func _fit_title() -> void:
-	if size.x <= 0.0 or size.y <= 0.0:
-		return
-	var wordmark_w: float = minf(_title_num("wordmarkMax", 520.0),
-		size.x * _title_num("wordmarkRate", 0.60))
-	var wordmark_h: float = wordmark_w * 399.0 / 1536.0
-	_wordmark_slot.custom_minimum_size.y = wordmark_h
-	_wordmark.offset_left = -wordmark_w * 0.5
-	_wordmark.offset_top = 0.0
-	_wordmark.offset_right = wordmark_w * 0.5
-	_wordmark.offset_bottom = wordmark_h
-	if _wordmark_label != null:
-		_wordmark_label.offset_left = -wordmark_w * 0.5
-		_wordmark_label.offset_top = 0.0
-		_wordmark_label.offset_right = wordmark_w * 0.5
-		_wordmark_label.offset_bottom = wordmark_h
-		_wordmark_label.add_theme_font_size_override(
-			"font_size", roundi(clampf(wordmark_h * 0.52, 30.0, 68.0)))
-
-	var tagline_w: float = minf(760.0, size.x - 32.0)
-	_tagline.offset_left = -tagline_w * 0.5
-	_tagline.offset_top = 0.0
-	_tagline.offset_right = tagline_w * 0.5
-	_tagline.offset_bottom = 20.0
-	_tagline_slot.visible = _title_num("tagline", 1.0) >= 1.0
-	_tagline.add_theme_font_override("font", _tracked_font(GlassStyle.CINZEL_500,
-		roundi(_title_num("taglineTrack", 5.0))))
-	_tagline.add_theme_font_size_override(
-		"font_size", roundi(_title_num("taglinePt", 14.0)))
-
-	_title_column.custom_minimum_size.x = size.x - 32.0
-	_title_column.add_theme_constant_override(
-		"separation", roundi(_title_num("gap", 12.0)))
-	if _primary != null:
-		_primary.add_theme_constant_override(
-			"separation", roundi(_title_num("gap", 12.0)))
-	var plate_w: float = minf(_title_num("columnW", 400.0), size.x - 32.0)
-	var primary_pt: int = roundi(_title_num("primaryPt", 27.0))
-	var secondary_pt: int = maxi(roundi(float(primary_pt) * 21.0 / 27.0), 11)
-	var utility_pt: int = roundi(_title_num("utilityPt", 15.0))
-	for i: int in range(_primary_buttons.size()):
-		var button: Button = _primary_buttons[i]
-		var ceremonial: bool = i == 0
-		button.custom_minimum_size.x = plate_w
-		button.custom_minimum_size.y = TITLE_PRIMARY_H if ceremonial else TITLE_SECONDARY_H
-		button.add_theme_font_size_override(
-			"font_size", primary_pt if ceremonial else secondary_pt)
-	if _seam != null:
-		_seam.custom_minimum_size.x = minf(TITLE_SEAM_W, size.x - 32.0)
-	var util_pt: int = utility_pt
-	var budget: float = size.x - 32.0
-	while util_pt >= 8:
-		_apply_utility_pt(util_pt)
-		if _utility_row_width() <= budget:
-			break
-		util_pt -= 1
-	# Container sorting is deferred, so the plate's global rect is stale here
-	# (measured at (16,16) mid-_fit_title) and its item_rect_changed never
-	# re-fires for ancestor moves. The deferred call lands after the queued
-	# sorts and reads the settled rect.
-	_place_lantern.call_deferred()
-
-	var image_aspect: float = 1536.0 / 1024.0
-	var banner_h: float = minf(size.y * BANNER_H_RATE, size.x * BANNER_W_RATE / image_aspect)
-	var banner_w: float = banner_h * image_aspect
-	var banner_at: Vector2 = Vector2(
-		(size.x - banner_w) * 0.5,
-		size.y - size.y * BANNER_LIFT - banner_h)
-	_title_banner.position = banner_at
-	_title_banner.size = Vector2(banner_w, banner_h)
-	_seat_banner_shadow(banner_at, Vector2(banner_w, banner_h))
-	if _rose_medallion != null:
-		var rose_side: float = _title_num("roseSide", 78.0)
-		_rose_medallion.offset_left = 18.0
-		_rose_medallion.offset_top = -18.0 - rose_side
-		_rose_medallion.offset_right = 18.0 + rose_side
-		_rose_medallion.offset_bottom = -18.0
 
 
 ## Waystone-facet plate: chamfered came + glass, transcribed from title-b.html.

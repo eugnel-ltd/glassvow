@@ -59,8 +59,8 @@ class Layout:
 		# boot splash's ember is: frame 0 and the first frame register.
 		l.lantern_y = 181.0
 		l.lantern = 226.0
-		l.left = [Vector2(-104.0, 206.0), Vector2(-130.0, 256.0), Vector2(-140.0, 302.0)]
-		l.right = [Vector2(104.0, 206.0), Vector2(130.0, 256.0), Vector2(140.0, 302.0)]
+		l.left = [Vector2(-108.0, 218.0), Vector2(-132.0, 264.0), Vector2(-142.0, 308.0)]
+		l.right = [Vector2(108.0, 218.0), Vector2(132.0, 264.0), Vector2(142.0, 308.0)]
 		l.slab_dx = 272.0
 		l.slab_y = 346.0
 		l.slab_w = 250.0
@@ -445,7 +445,7 @@ func _layout() -> void:
 	var side: float = spec.lantern * k
 	lantern.position = Vector2(cx - side * 0.5, spec.lantern_y * k)
 	lantern.size = Vector2(side, side)
-	_plaque.size = Vector2(minf(size.x, 520.0 * k), 0.0)
+	_plaque.size = _plaque.get_combined_minimum_size()
 	_plaque.position = Vector2(cx - _plaque.size.x * 0.5, spec.plaque_y * k)
 	_veil.centre = lantern.position + lantern.wick()
 	var rose_at: Vector2 = TitleLampChain.to_stage(Vector2(ROSE_ART.x, ROSE_ART.y), size)

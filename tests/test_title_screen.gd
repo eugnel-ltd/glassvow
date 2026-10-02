@@ -121,14 +121,18 @@ static func _first_launch(fails: Array[String]) -> void:
 	screen.queue_free()
 
 
+## Moved from test_locale (the title was ChoiceScreen's variant until
+## 2026-10-02): each authored raster paints at every shipping shape.
 static func _wordmark(fails: Array[String]) -> void:
-	for row: Array in [["GLASSVOW", TitleScreen.WORDMARK_EN], ["琉璃誓言", TitleScreen.WORDMARK_ZH]]:
-		var screen: TitleScreen = _screen({"choices": _choices(false), "brand": row[0]})
+	for row: Array in [["GLASSVOW", TitleScreen.WORDMARK_EN, "pad-landscape"],
+			["琉璃誓言", TitleScreen.WORDMARK_ZH, "pad-landscape"],
+			["琉璃誓言", TitleScreen.WORDMARK_ZH, "phone-landscape"]]:
+		var screen: TitleScreen = _screen({"choices": _choices(false), "brand": row[0], "shape": row[2]})
 		var art: TextureRect = null
 		for node: Node in screen.find_children("", "TextureRect", false, false):
 			if (node as TextureRect).texture == load(str(row[1])):
 				art = node as TextureRect
-		_check(fails, art != null, "%s paints its authored wordmark" % row[0])
+		_check(fails, art != null, "%s paints its authored wordmark at %s" % [row[0], row[2]])
 		screen.free()
 	var other: TitleScreen = _screen({"choices": _choices(false), "brand": "GLASVOGT"})
 	var label: Label = null

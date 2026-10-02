@@ -31,7 +31,8 @@ func _init(label: String = "", stage_shape: StringName = StageShape.IDENTITY) ->
 	add_theme_font_size_override("font_size", px)
 	add_theme_constant_override("outline_size", 6)
 	add_theme_color_override("font_outline_color", Color(LeadlightTokens.VOID, 0.75))
-	custom_minimum_size.y = RunStyle.hit_floor(32.0)
+	# The touch floor always: words sit in open air, so the hit rect is free.
+	custom_minimum_size.y = 44.0
 	focus_mode = Control.FOCUS_ALL
 	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
 	empty.content_margin_left = 10.0
