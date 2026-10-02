@@ -12,8 +12,10 @@ with the shipped fonts (`assets/fonts`), the shipped tokens (`RunStyle`,
 `GlassStyle`, `TitleWorld`, `LanternFlame.COLOUR`) and shipped art. Phase 2
 re-derives geometry in Godot and replaces stand-in art.
 
-**The decision asked for:** pick one of the three concepts in §3 to §5. The
-lane recommends **A, Held Light** (§13).
+**Decided 2026-10-02 (orchestrator):** Concept **A, Held Light**, with both
+borrowings (C's lamplighter chain during the reveal, B's carved-stone
+deeds). **Phase 2 is built** — see §16 for what shipped, the evidence and
+what stays open. §1 to §15 are the Phase 1 dossier, kept as written.
 
 ## 0. One correction to the lane spawn
 
@@ -453,3 +455,99 @@ leaves headroom for the A12.
 | `concept-{a,b,c}-*.html` | the mocks; query `l=en|zh`, `s=title|first|consent|settings`, `fresh=1` |
 | `mock-base.css`, `mock-base.js` | shared tokens, kit controls, copy and the rose drawing |
 | `render.sh` | `./render.sh concept-a-held-light.html out.png 1180 820 "l=en"` (headless Chrome; it passes the stage size because headless Chrome's viewport is shorter than its window) |
+
+## 16. Phase 2 — as built
+
+### 16.1 What shipped
+
+| Scope | Where | Notes |
+|---|---|---|
+| (a) Leadlight kit | `presentation/ui/` (tokens, theme, motion, rite, shapes, numerals) and `presentation/ui/components/` (glass box, pane, word, plaque, toggle, slider, choice, row, sheet, room, rose, inscription, lantern) | `RunStyle` / `GlassStyle` constants are aliases of `LeadlightTokens`, values pinned by `tests/test_leadlight.gd`; the canonical Theme lives in `LeadlightTheme` and is built once per process. |
+| (b) TransitionLayer | `flood`, `flare`, `skip` | The flood reuses the iris shader (a `feather` uniform whose default keeps the iris edge identical); grain stays the one screen reader. Headless runs the flood's callback at once. |
+| (c) Kindling, splash, TitleScreen | `presentation/title/`, `assets/art/title/splash.png`, `assets/art/title/lantern-hero.png` | The splash is frame 0 of the rite, rendered from the production screen (`tools/capture_title.gd --rite=0 --scale=2`). `ChoiceScreen`'s title variant is retired (two commits, per-file size). |
+| (d) First launch | `TitleScreen` + `FirstLight` | Existing keys only: language when `Preferences.language` is empty and the player is new (else persisted silently); consent while `diagnostics_notice_seen` is false. |
+| (e) Settings | `SettingsPanel` on `LeadlightRoom` | Class, signals, constructor, `set_shape`, `focus_language` and every tested node name unchanged. |
+| (f) Embark | lighter re-dress, as the ruling allows | Leaded room, glass cards (`LeadlightGlassBox.chosen`), glass actions; phone cards grow to 84 px with two-line blurbs (the shipped 66 px card spilled its copy in both languages). |
+| (g) Opening | staging only, script untouched | The lantern's routes leave in its own light (flare + flood from the wick); the Keeper's kindle sparks burn the Kindling colour; the beat-4 card uses the wordmark's lettering; the opening floods out to the road. |
+| (h) Assets and ledgers | `docs/art-ledger.md`, `docs/sfx-ledger.md`, `docs/music-ledger.md`, `docs/story/05-foreshadow-ledger.md` row 467 | Hero lantern: four candidates + contact sheet in `lantern/`, the pick registered onto the HUD lantern's set-out (`lantern/register.py`) so the shipped flame shader lights it unchanged — lane pick, owner re-pick open. |
+
+### 16.2 Evidence
+
+- Stills (`stills/`): `title-fresh.png`, `title-saved.png`, `title-vigil.png`,
+  `first-launch.png`, `settings.png`, `embark.png` (each: phone-landscape,
+  pad-landscape = identity, desktop-landscape; English and zh-Hant),
+  `rite.png` (six moments of the launch rite), `a12-metal.png`.
+- Tests: `tests/test_leadlight.gd`, `tests/test_title_screen.gd`; the title
+  tests in `tests/test_presentation.gd` now pin the title as a place,
+  including a no-overlap check at every shape in both languages (it caught a
+  real phone overlap, fixed).
+- Real boot: a dev scenario (saved run + three shards + Shatter cards) then a
+  plain `tools/shot.sh` title shows Main handing the title its real
+  `Flame.read` (Steady Frostlight), the shards and the carved deeds.
+
+### 16.3 Performance (Mac, M1 Max, `GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 --rendering-driver metal`)
+
+Cold launch → title interactive, `--launch-timing`, fresh profile (the worst
+case: first launch with the language and consent), eleven runs each, first
+discarded, interleaved; `origin/main` 9d7207b8 measured with the same patch
+in a detached worktree:
+
+| | origin/main | lane head | Δ |
+|---|---|---|---|
+| title phase (title entered → interactive), median / p90 | 171.5 / 183 ms | 218.5 / 238 ms | **+47 ms** |
+| engine ticks at interactive, median / p90 | 3107.5 / 3215 ms | 3180.5 / 3300 ms | +73 ms |
+| process wall clock, median / p90 | 3838 / 3905 ms | 3889.5 / 4006 ms | +51 ms |
+
+The engine boot before `Main._ready` swings by ±300 ms run to run, so the
+title phase is the number this lane owns; it passes the +50 ms rule. It came
+down from +70 ms by caching the Theme, chaining Noto Serif TC Black only in
+zh-Hant, loading nothing for an unheld rose pane, drawing two switch icons
+instead of four, and deferring the lantern's lit layer one frame.
+
+Title frame time, `tools/bench_title.gd` (1500 frames at rest after a 4 s
+warm-up; the rite from its first frame):
+
+| | wall med / p95 / max (ms) | CPU render med / p95 (ms) |
+|---|---|---|
+| pad rest, main → lane | 8.70 / 18.25 / 50.9 → 8.71 / 15.72 / 129.9 | 0.083 / 0.103 → 0.076 / 0.086 |
+| pad rite, main → lane | 8.56 / 22.02 / 192.7 → 8.52 / 13.36 / 242.6 | 0.077 / 0.091 → 0.076 / 0.089 |
+| phone rest, main → lane | 8.81 / 18.35 / 130.0 → 8.65 / 19.12 / 45.1 | 0.077 / 0.094 → 0.077 / 0.087 |
+| phone rite, main → lane | 8.78 / 22.87 / 208.0 → 9.02 / 22.87 / 266.1 | 0.079 / 0.093 → 0.074 / 0.086 |
+
+On this Mac the Metal swapchain paces the window to the display even with
+vsync off, so the wall interval is display-bound in both trees (median
+~8.7 ms); the §12 "≤ 8 ms p95" reading cannot be taken here and the CPU
+render time is the comparable cost — equal or lower on every row. The rite's
+worst frame is ~50–60 ms longer than main's: the flame shader's pipeline
+compile, deferred into the ember's breath where nothing moves. Device
+confirmation on the iPad 8 remains the way to close P2.
+
+### 16.4 Deviations from the dossier, with reasons
+
+- **Language control in Settings** stays a single pane that names the
+  language on screen and asks for the other (not the segmented choice of the
+  mock): three Main-level locale tests pin exactly that contract, and a
+  segmented control would make their assertions vacuous.
+- **Settings room** has no second lantern: the title's own lantern and light
+  stay visible behind the veil; the room is lit in the ember colour.
+- **Embark** is the lighter re-dress the ruling allows, not a rebuild.
+- **Focus** comes to the lantern on the first key or pad input, never by
+  default, so touch players never see a selection ring.
+- **Utility words** are 44 px tall always (the touch floor), not hit-floor
+  dependent.
+
+### 16.5 Open
+
+1. **SFX audition owed.** Nineteen candidates for six cues are rendered and
+   preflighted (`sfx/`, `docs/sfx-ledger.md`); playback on the lane's Mac
+   failed (`AudioQueueStart -66681`, no output device), so nothing ships. The
+   code already asks for each cue with the ledger's fallback; one owner
+   audition per cue, then the pick, manifest row and `pack_id` bump.
+2. **`kindling` intro** awaits James's Suno render (`docs/music-ledger.md`);
+   landing the file is the whole change.
+3. **Hero lantern** is the lane pick (candidate 1); owner re-pick open.
+4. **Copy** `ui.firstLight.diagnostics` is ledgered PROPOSED (row 467).
+5. **Device**: an iPad 8 launch-and-frame-pacing pass for P2.
+6. **Follow-ups outside this lane:** `LayoutBook`'s `titlescreen/*` keys are
+   now unused data; the shipped `ui.brand.stats` reads "I pilgrimages" at a
+   count of one (a plural the copy never had).
