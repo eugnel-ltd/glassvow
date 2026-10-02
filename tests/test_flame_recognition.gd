@@ -25,9 +25,9 @@ const TABLE: Array = [
 		"STEADY", "crownOfCinders", "shatterersCrown"],
 	["true lantern", ["chisel", "eclipseSlash"], ["preparation", "surge", "devour", "offering"], [],
 		"TRUE", "crownOfCinders", ""],
-	["steady edge, lantern fringe", ["chisel"], ["warCry", "empower", "executioner", "preparation"],
+	["steady edge, lantern fringe", ["chisel"], ["warCry", "cleft", "executioner", "preparation"],
 		[], "STEADY", "crownOfTheEclipse", "crownOfCinders"],
-	["true edge", ["chisel", "firstSpark"], ["warCry", "empower", "executioner", "frenzy"], [],
+	["true edge", ["chisel", "firstSpark"], ["warCry", "cleft", "executioner", "totality"], [],
 		"TRUE", "crownOfTheEclipse", ""],
 	["soot", [], ["uppercut", "preparation", "warCry"], [], "SOOT", "hollowCrown", ""],
 	# Held crowns: crownOf walks the alternates; a slot with none left draws.
@@ -43,7 +43,7 @@ const TABLE: Array = [
 	["steady shatter, its crown held", [], ["uppercut", "quakeblow"], ["shatterersCrown"],
 		"STEADY", "", ""],
 	["true edge, its crown held", ["chisel", "firstSpark"],
-		["warCry", "empower", "executioner", "frenzy"], ["crownOfTheEclipse"], "TRUE", "", ""],
+		["warCry", "cleft", "executioner", "totality"], ["crownOfTheEclipse"], "TRUE", "", ""],
 	["soot, the hollow crown held", [], ["uppercut", "preparation", "warCry"], ["hollowCrown"],
 		"SOOT", "", ""],
 	# The next act, same rule: a hybrid that took Cinders is offered the Hearth
@@ -57,7 +57,7 @@ const TABLE: Array = [
 	["two left, soot", [], ["uppercut", "preparation", "warCry"],
 		["crownOfCinders", "crownOfTheHearth", "crownOfTithes", "crownOfTheEclipse"],
 		"SOOT", "hollowCrown", ""],
-	["one left, the fringe crown", ["chisel"], ["warCry", "empower", "executioner", "preparation"],
+	["one left, the fringe crown", ["chisel"], ["warCry", "cleft", "executioner", "preparation"],
 		["hollowCrown", "crownOfTheHearth", "crownOfTithes", "shatterersCrown", "crownOfTheEclipse"],
 		"STEADY", "", "crownOfCinders"],
 	["none left", [], ["uppercut", "quakeblow"],
@@ -165,7 +165,7 @@ static func _judge(offer: Array[String], drawn: Array[String], crowns: Array[Str
 static func _ashwarden_untouched(content: ContentDB, rules: RewardRules, fails: Array[String]) -> void:
 	var decks: Array = [
 		[], ["uppercut", "quakeblow", "oblivionStrike", "limitBreak"],
-		["uppercut", "preparation", "warCry", "surge", "empower"],
+		["uppercut", "preparation", "warCry", "surge", "cleft"],
 	]
 	for seed: int in range(SEEDS):
 		for added_v: Variant in decks:

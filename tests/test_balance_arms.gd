@@ -63,7 +63,7 @@ static func _combat_play_ignores_the_way(content: ContentDB, fails: Array[String
 static func _fight_log(content: ContentDB, seed: int, way: String) -> Array:
 	Pilot.apply_policy({} if way == "none" else {"way": way})
 	var run_state: RunState = RunState.new_run(content, seed, "arms-fight-%d" % seed, {"aspect": 0})
-	for id: String in ["uppercut", "quakeblow", "firstSpark", "surge", "warCry", "empower"]:
+	for id: String in ["uppercut", "quakeblow", "firstSpark", "surge", "warCry", "cleft"]:
 		run_state.player.deck.append(CardInst.new(run_state.next_uid(), StringName(id), false))
 	var game: GlassvowGame = GlassvowGame.new(content, run_state)
 	game.apply({"t": "startCombat", "enemies": ["sporeling", "sporeling"], "kind": "normal"})
