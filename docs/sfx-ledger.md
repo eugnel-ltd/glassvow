@@ -100,7 +100,7 @@ windows under −60 dBFS RMS; tail = peak of the last 10 ms):
 | file | cue | source candidate | gain dB | duration | peak before → after dBFS | RMS dBFS | silent | tail dBFS |
 |---|---|---|---|---|---|---|---|---|
 | `kindleCatch.mp3` | `kindleCatch` | `kindleCatch-b.mp3` | -2.13 | 1.600 s | -0.4 → -3.02 | -17.8 | 0.21 | -56.4 |
-| `glassTakesLight.mp3` | `glassTakesLight` | `glassTakesLight-b.mp3` | +0.34 | 2.000 s | -2.9 → -3.01 | -12.1 | 0.02 | -63.7 |
+| `glassTakesLight.mp3` | `glassTakesLight` | `glassTakesLight-b.mp3` | −5.66 (owner, 2 Oct 23:38: "lower volume"; peak −9 dBFS) | 2.000 s | -2.9 → -9.0 | -18.1 | 0.02 | -69.7 |
 | `paneRise.mp3` | `paneRise` | `paneRise-c.mp3` | +3.65 | 0.600 s | -6.6 → -3.23 | -23.6 | 0.30 | -51.0 |
 | `paneChoose.mp3` | `paneChoose` | `paneChoose-a.mp3` | +14.13 | 0.680 s | -16.7 → -2.92 | -19.5 | 0.24 | -35.1 |
 | `roomOpen-1.mp3` | `roomOpen` | `roomOpen-b.mp3` | +22.72 | 1.000 s | -25.3 → -3.00 | -29.2 | 0.05 | -47.5 |
