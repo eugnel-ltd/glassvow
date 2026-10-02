@@ -75,10 +75,11 @@ uniform vec2 centre = vec2(0.0, 0.0);
 uniform float radius = 0.0;
 uniform vec2 rect_size = vec2(1.0, 1.0);
 uniform vec4 ink : source_color = vec4(0.0196, 0.0275, 0.0549, 1.0);
+uniform float feather = 0.75;
 
 void fragment() {
 	float d = distance(UV * rect_size, centre);
-	COLOR = vec4(ink.rgb, ink.a * (1.0 - smoothstep(radius - 0.75, radius + 0.75, d)));
+	COLOR = vec4(ink.rgb, ink.a * (1.0 - smoothstep(radius - feather, radius + feather, d)));
 }
 """
 ## `#grain` (styles.css:74-81): whole-pixel jitter jumps, eight per 0.9s —
@@ -134,6 +135,14 @@ var _wipe_tween: Tween = null
 ## The transit-slot guard, `navigation.js`'s `transitionSeq`: a later leaf
 ## takes the slot and an earlier one's finish must not hide it.
 var _transit_seq: int = 0
+## The Leadlight leaves (docs/design/2026-10-02-opening-start §8.5): the flood
+## (light filling the screen from a point, the iris's own shader in reverse)
+## and the flare (the bloom, centred where the light is).
+var _flood: ColorRect
+var _flood_mat: ShaderMaterial
+var _flood_tween: Tween = null
+var _flare: TextureRect
+var _flare_tween: Tween = null
 
 
 func _init() -> void:
@@ -214,6 +223,21 @@ func _init() -> void:
 	_plate_omen = Label.new()
 	_plate_omen.add_theme_font_size_override("font_size", 15)
 	_plate_omen_row.add_child(_plate_omen)
+	_flood_mat = ShaderMaterial.new()
+	_flood_mat.shader = iris_sh
+	_flood = ColorRect.new()
+	_flood.material = _flood_mat
+	_flood.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_flood.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_flood.visible = false
+	add_child(_flood)
+	_flare = TextureRect.new()
+	_flare.texture = bloom_tex
+	_flare.stretch_mode = TextureRect.STRETCH_SCALE
+	_flare.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_flare.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_flare.visible = false
+	add_child(_flare)
 	var sh: Shader = Shader.new()
 	sh.code = GRAIN_SHADER
 	_grain_mat = ShaderMaterial.new()
@@ -417,6 +441,74 @@ static func _tracked(path: String, glyph_spacing: int,
 	tracked.base_font = GlassStyle.face(path, cjk_path)
 	tracked.spacing_glyph = glyph_spacing
 	return tracked
+
+
+## Light floods the screen from `at` (stage px) in `colour`, then `on_covered`
+## runs under the full cover — the route swap's hitch happens there — and the
+## light clears over the arriving screen. Reduce Motion: a 150 ms fade to
+## cover instead of the growing disc. `instant` (tests, captures): the
+## callback runs at once and nothing is drawn.
+func flood(at: Vector2, colour: Color, on_covered: Callable) -> void:
+	var stage: Vector2 = _stage_size()
+	if instant or stage.x <= 0.0:
+		on_covered.call()
+		return
+	if _flood_tween != null:
+		_flood_tween.kill()
+	var full: float = stage.length() * IRIS_SPAN
+	var reduced: bool = Preferences.active.reduce_motion
+	_flood_mat.set_shader_parameter("rect_size", stage)
+	_flood_mat.set_shader_parameter("centre", at)
+	_flood_mat.set_shader_parameter("ink", Color(colour.lerp(Color("#05070e"), 0.55), 1.0))
+	_flood_mat.set_shader_parameter("feather", stage.y * 0.18)
+	_flood_mat.set_shader_parameter("radius", full if reduced else 0.0)
+	_flood.modulate.a = 0.0 if reduced else 1.0
+	_flood.visible = true
+	_flood_tween = create_tween()
+	if reduced:
+		_flood_tween.tween_property(_flood, "modulate:a", 1.0, LeadlightMotion.REDUCED_FADE)
+	else:
+		_flood_tween.tween_method(func(r: float) -> void:
+			_flood_mat.set_shader_parameter("radius", r), 0.0, full, IRIS_TIME) \
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_flood_tween.tween_callback(on_covered)
+	_flood_tween.tween_property(_flood, "modulate:a", 0.0,
+		LeadlightMotion.REDUCED_FADE if reduced else LeadlightMotion.SETTLE)
+	_flood_tween.tween_callback(func() -> void: _flood.visible = false)
+
+
+## The flame's flare: the bloom leaf, centred on `at` instead of the stage's
+## fixed point. Draw-only; skipped under Reduce Motion like every leaf.
+func flare(at: Vector2) -> void:
+	if instant or Preferences.active.reduce_motion:
+		return
+	var stage: Vector2 = _stage_size()
+	var r: float = stage.length() * 0.45
+	_flare.size = Vector2(r, r) * 2.0
+	_flare.position = at - Vector2(r, r)
+	_flare.modulate.a = 0.0
+	_flare.visible = true
+	if _flare_tween != null:
+		_flare_tween.kill()
+	var walk: Callable = func(x: float) -> void:
+		_flare.modulate.a = Motion.keyframe(Motion.ease(Motion.TRANSIT, x), BLOOM_AT, BLOOM_TRACK)
+	_flare_tween = create_tween()
+	_flare_tween.tween_method(walk, 0.0, 1.0, BLOOM_TIME * 0.6)
+	_flare_tween.tween_callback(func() -> void: _flare.visible = false)
+
+
+## The rite tap: every running leaf lands at its end. A flood that has not yet
+## covered runs its callback first, so a skipped transition still arrives.
+func skip() -> void:
+	if _flood_tween != null and _flood_tween.is_valid():
+		_flood_tween.custom_step(60.0)
+	_flood_tween = null
+	_flood.visible = false
+	if _flare_tween != null:
+		_flare_tween.kill()
+		_flare_tween = null
+	_flare.visible = false
+	clear()
 
 
 func set_grain(on: bool) -> void:

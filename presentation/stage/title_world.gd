@@ -125,6 +125,11 @@ var _road_scr: PackedVector2Array = PackedVector2Array()
 var _line_scr: PackedVector2Array = PackedVector2Array()
 var _road_col: PackedColorArray = PackedColorArray()
 var _field: Control
+## The lamplighter chain (docs/design/2026-10-02-opening-start §13): 0 leaves
+## every roadside lantern dark, 1 has them all lit (the resting world, and the
+## default, so the run screens' backdrop is unchanged). Between, the pairs
+## catch one after another from the nearest to the door.
+var lamplight: float = 1.0
 
 
 class Field:
@@ -543,7 +548,8 @@ func _poly(points: Array[Vector2], w: float, h: float, colour: Color,
 ## the bloom read once the sprites arrive at their true sizes.
 func paint_field(host: CanvasItem) -> void:
 	var tex: Texture2D = SkyField.disc()
-	for flame: Vector3 in _lanterns:
+	for index: int in _lanterns.size():
+		var flame: Vector3 = _lanterns[index]
 		var p: Vector3 = _project(flame)
 		if p.z <= 0.0:
 			continue
@@ -551,7 +557,7 @@ func paint_field(host: CanvasItem) -> void:
 		if w < 0.5:
 			continue
 		var col: Color = MAIN
-		col.a = 0.72 * (1.0 - _fog_of(p.z))
+		col.a = 0.72 * (1.0 - _fog_of(p.z)) * lit_of(index / 2)
 		if col.a < 0.01:
 			continue
 		host.draw_texture_rect(tex, Rect2(Vector2(p.x - w, p.y - w),
@@ -573,6 +579,11 @@ func paint_field(host: CanvasItem) -> void:
 		ACCENT_ALPHA + sin(_time * 0.9) * 0.12)
 	_stamp(host, _weather, WEATHER_SIZE, MAIN.lerp(Color.WHITE, 0.55),
 		WEATHER_ALPHA)
+
+
+## How lit lantern pair `pair` is under the lamplighter chain.
+func lit_of(pair: int) -> float:
+	return LeadlightMotion.chain(lamplight, pair, LANTERN_PAIRS)
 
 
 ## Size-attenuated points: world size × focal ÷ depth, like every sprite. The
