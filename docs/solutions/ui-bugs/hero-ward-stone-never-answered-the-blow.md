@@ -40,7 +40,7 @@ Two calls fire together when a warded creature eats a blow, and they are
 deliberately two:
 
 - `take_hit(direct)` — the BODY recoiling from being struck.
-- `ward_hit(from)` (`presentation/combat/enemy_view.gd:2692` (`ward_hit`)) — the
+- `ward_hit(from)` (`presentation/combat/enemy_view.gd:2701` (`ward_hit`)) — the
   STONE answering for having stopped it: it rings the facets facing the blow and
   drives the shield back along it.
 
@@ -141,7 +141,7 @@ match each other, and nothing in a parity audit's frame asks that question.
 
 The first move was to boot a real fight, play a Ward card and photograph the hero
 mid-blow. That failed for a measurable reason: the ring decays over `WARD_RING`,
-200 ms (`presentation/combat/enemy_view.gd:262` (`WARD_RING`)), against a
+200 ms (`presentation/combat/enemy_view.gd:266` (`WARD_RING`)), against a
 live-host screenshot round trip of roughly half a second (per this session's
 measurement). The live host could confirm the stone was RAISED. It could never
 have confirmed whether the stone RANG. Sampling was not close.
@@ -184,15 +184,15 @@ screen-space heading pointing from the creature toward whoever struck it. It
 drives the shield AWAY from that side — the flinch is computed as `-_ward_from`
 scaled by the decaying ring and `WARD_FLINCH`
 (`presentation/combat/enemy_view.gd:2809-2810`, in `_step_ward`;
-`presentation/combat/enemy_view.gd:263` (`WARD_FLINCH`)) and applied to
+`presentation/combat/enemy_view.gd:267` (`WARD_FLINCH`)) and applied to
 `_ward_root.position` on top of the vessel's own motion — and it lights the
 facets ON that side, through the shader's `hit_from` uniform
-(`presentation/combat/enemy_view.gd:1342` (`hit_from`)) weighting the ring term
+(`presentation/combat/enemy_view.gd:1351` (`hit_from`)) weighting the ring term
 by `dot(axis, -hit_from)`
 (`presentation/combat/enemy_view.gd` (`WARD_SHADER`)).
 
 `ward_hit`'s default is `Vector2.LEFT`
-(`presentation/combat/enemy_view.gd:2692` (`ward_hit`)), correct for a foe struck
+(`presentation/combat/enemy_view.gd:2701` (`ward_hit`)), correct for a foe struck
 by the hero, who stands on the foe's left. The hero is struck from the RIGHT.
 Passing the default would have driven the hero's stone INTO the blow — a wrong
 value that still renders as a plausible effect, which is the failure mode that
@@ -227,7 +227,7 @@ The work landed directly on `main` — there is no PR — in
 The stone's response is a single decaying scalar plus a direction, and both are
 set by the one call. `ward_hit` writes `_ward_hit = 1.0` and normalises `from`
 into `_ward_from` (`presentation/combat/enemy_view.gd:2695-2696`, in `ward_hit`).
-`_step_ward` (`presentation/combat/enemy_view.gd:2750` (`_step_ward`)) then does
+`_step_ward` (`presentation/combat/enemy_view.gd:2759` (`_step_ward`)) then does
 everything else on its own clock: it decays `_ward_hit` linearly by
 `delta / WARD_RING`, offsets `_ward_root` along `-_ward_from`, and pushes the
 squared value to the shader
