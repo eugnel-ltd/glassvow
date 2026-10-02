@@ -9,7 +9,14 @@ extends RefCounted
 ## card seats) — they do not fork the palette.
 
 
+## Built once per process: it is pure in the tokens and nothing mutates a
+## Theme at runtime, and every screen asked for its own copy at ~20 ms each.
+static var _built: Theme = null
+
+
 static func build() -> Theme:
+	if _built != null:
+		return _built
 	var t: Theme = Theme.new()
 	# Keep the default UI face in the runtime resource chain. A project-level
 	# custom font is resolved before cache-cold import has produced its fontdata,
@@ -20,6 +27,7 @@ static func build() -> Theme:
 	_theme_chrome(t)
 	_theme_fields(t)
 	_theme_toggles(t)
+	_built = t
 	return t
 
 

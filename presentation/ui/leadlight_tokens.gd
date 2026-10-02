@@ -100,7 +100,11 @@ static func font(role: StringName, px: int) -> FontVariation:
 		return _fonts[key]
 	var spec: Dictionary = ROLES.get(role, ROLES[ROLE_READ])
 	var variation: FontVariation = FontVariation.new()
-	variation.base_font = GlassStyle.face(str(spec["latin"]), str(spec["cjk"]))
+	# The zh-Hant face is chained only when zh-Hant is on screen: English text
+	# never reaches it, and the Black weight is a whole extra font on the
+	# launch path. English chains the reading/heading faces the theme loads.
+	var cjk: String = str(spec["cjk"]) if zh else ""
+	variation.base_font = GlassStyle.face(str(spec["latin"]), cjk)
 	variation.spacing_glyph = tracking(role, px, zh)
 	_fonts[key] = variation
 	return variation

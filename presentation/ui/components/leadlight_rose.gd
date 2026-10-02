@@ -10,6 +10,7 @@ const MURAL: String = "res://assets/art/meta/emberglass-mural.png"
 const FRAME: String = "res://assets/art/meta/emberglass-frame.png"
 const MASK: String = "res://assets/art/meta/emberglass-mask-%s.png"
 const PANE_SHADER: Shader = preload("res://presentation/run/rose_pane.gdshader")
+const DARK_PANE: Color = Color(0.10, 0.12, 0.22, 0.85)
 const SHARDS: Array[String] = [
 	"eighthOmen", "hollowLamplighter", "ownShade", "paleOnes", "unreadablePage", "usurper",
 ]
@@ -21,7 +22,6 @@ var glow: float = 1.0:
 		_apply()
 
 var _lit: Array[TextureRect] = []
-var _dark: Array[TextureRect] = []
 var _held: int = 0
 
 
@@ -37,24 +37,24 @@ func _init(held: Array = []) -> void:
 	backing.set_anchors_preset(Control.PRESET_FULL_RECT)
 	backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(backing)
-	var mural: Texture2D = load(MURAL) as Texture2D
+	# A held pane shows the mural's own glass through the Rose Window's shader;
+	# a dark pane loads nothing, so a fresh install (no shard) loads neither the
+	# mural, the masks nor the shader on the launch path.
+	var mural: Texture2D = load(MURAL) as Texture2D if not held.is_empty() else null
 	for id: String in SHARDS:
 		var path: String = MASK % id
-		if not ResourceLoader.exists(path):
+		if not held.has(id) or not ResourceLoader.exists(path):
+			# A dark pane is the backing disc showing through the tracery.
 			continue
-		var on: bool = held.has(id)
 		var pane: TextureRect = _layer(load(path) as Texture2D)
 		var material: ShaderMaterial = ShaderMaterial.new()
 		material.shader = PANE_SHADER
 		material.set_shader_parameter("mural", mural)
-		material.set_shader_parameter("show_mural", on)
-		material.set_shader_parameter("fill_colour", Color(0.10, 0.12, 0.22, 0.85) if not on else Color.TRANSPARENT)
+		material.set_shader_parameter("show_mural", true)
+		material.set_shader_parameter("fill_colour", Color.TRANSPARENT)
 		pane.material = material
-		if on:
-			_lit.append(pane)
-			_held += 1
-		else:
-			_dark.append(pane)
+		_lit.append(pane)
+		_held += 1
 	_layer(load(FRAME) as Texture2D)
 	focus_mode = Control.FOCUS_ALL if _held > 0 else Control.FOCUS_NONE
 	mouse_filter = Control.MOUSE_FILTER_STOP if _held > 0 else Control.MOUSE_FILTER_IGNORE
@@ -86,6 +86,7 @@ class _Disc extends Control:
 	func _draw() -> void:
 		var r: float = minf(size.x, size.y) * 0.46
 		draw_circle(size * 0.5, r, Color(0.027, 0.035, 0.07, 0.92))
+		draw_circle(size * 0.5, r * 0.9, Color(DARK_PANE, 0.55))
 
 
 class _Ring extends StyleBox:

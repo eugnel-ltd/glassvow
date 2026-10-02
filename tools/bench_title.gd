@@ -44,6 +44,10 @@ func _initialize() -> void:
 
 func _process(_delta: float) -> bool:
 	_frame += 1
+	if _frame <= 2:
+		# Main applies the player's vsync preference in its `_ready`; an
+		# uncapped probe re-asserts its own setting once Main is up.
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	var now_us: int = Time.get_ticks_usec()
 	var elapsed: float = float(now_us - _started_us) / 1000000.0
 	var rite: bool = str(_args.get("phase", "rest")) == "rite"

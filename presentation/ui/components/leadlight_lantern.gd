@@ -88,6 +88,19 @@ func _init() -> void:
 
 func _ready() -> void:
 	_seat()
+	# The lit layer carries the flame shader, whose pipeline the first frame
+	# would otherwise wait on (~0.14 s on Metal, cold). The launch's first
+	# frames show only the ember and the cold lantern, so the lit layer joins
+	# one frame later and its compile lands inside the ember's breath; the
+	# title takes input from its first frame either way.
+	_lit.visible = false
+	_glow.visible = false
+	get_tree().process_frame.connect(_show_lit, CONNECT_ONE_SHOT)
+
+
+func _show_lit() -> void:
+	_lit.visible = true
+	_glow.visible = true
 
 
 func _notification(what: int) -> void:

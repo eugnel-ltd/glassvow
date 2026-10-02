@@ -22,14 +22,12 @@ func _init(getter: Callable = Callable(), setter: Callable = Callable()) -> void
 	add_theme_font_override("font", LeadlightTokens.font(LeadlightTokens.ROLE_LABEL, 12))
 	add_theme_font_size_override("font_size", 12)
 	add_theme_constant_override("h_separation", 10)
-	for name: String in ["checked", "checked_mirrored"]:
-		add_theme_icon_override(name, icon_for(true, false))
-	for name: String in ["unchecked", "unchecked_mirrored"]:
-		add_theme_icon_override(name, icon_for(false, false))
-	for name: String in ["checked_disabled", "checked_disabled_mirrored"]:
-		add_theme_icon_override(name, icon_for(true, true))
-	for name: String in ["unchecked_disabled", "unchecked_disabled_mirrored"]:
-		add_theme_icon_override(name, icon_for(false, true))
+	# Two switches, drawn once per process; a disabled switch is the same
+	# drawing dimmed by the Button's own disabled modulate, not two more.
+	for name: String in ["checked", "checked_mirrored", "checked_disabled", "checked_disabled_mirrored"]:
+		add_theme_icon_override(name, icon_for(true))
+	for name: String in ["unchecked", "unchecked_mirrored", "unchecked_disabled", "unchecked_disabled_mirrored"]:
+		add_theme_icon_override(name, icon_for(false))
 	add_theme_stylebox_override("focus", LeadlightGlassBox.make(
 		LeadlightGlassBox.Shape.RECT, "focus", false, 0.0))
 	pressed.connect(_flip)
@@ -56,14 +54,13 @@ func _flip() -> void:
 
 
 ## The switch, drawn once per state: a rounded leaded track and a knob.
-static func icon_for(on: bool, disabled: bool) -> ImageTexture:
-	var key: String = "%s|%s" % [on, disabled]
+static func icon_for(on: bool) -> ImageTexture:
+	var key: String = str(on)
 	if _icons.has(key):
 		return _icons[key]
 	var img: Image = Image.create(W, H, false, Image.FORMAT_RGBA8)
 	var r: float = float(H) * 0.5
 	var knob_c: Vector2 = Vector2(float(W) - r if on else r, r)
-	var fade: float = 0.45 if disabled else 1.0
 	for y: int in range(H):
 		for x: int in range(W):
 			var p: Vector2 = Vector2(float(x) + 0.5, float(y) + 0.5)
@@ -83,7 +80,6 @@ static func icon_for(on: bool, disabled: bool) -> ImageTexture:
 					else Color("#6b7290").lerp(Color("#2a2f45"), t)
 				knob.a = clampf(kr - kd + 0.5, 0.0, 1.0)
 				colour = colour.blend(knob)
-			colour.a *= fade
 			img.set_pixel(x, y, colour)
 	var texture: ImageTexture = ImageTexture.create_from_image(img)
 	_icons[key] = texture
