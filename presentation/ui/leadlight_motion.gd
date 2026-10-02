@@ -98,6 +98,16 @@ static func focus(node: Object, on: bool) -> Tween:
 	return tween
 
 
+## A chain of `count` lights catching one after another as `progress` runs
+## 0..1: light `index` (0 first) is how lit? Each catches over its own slice,
+## overlapping the next a little, so the light walks rather than steps. Pure.
+static func chain(progress: float, index: int, count: int) -> float:
+	if progress >= 1.0:
+		return 1.0
+	var span: float = 1.0 / float(maxi(count, 1))
+	return clampf((progress - float(index) * span * 0.85) / (span * 1.6), 0.0, 1.0)
+
+
 ## A slow breath, -1..1, for anything that idles (the flame's pool). Still
 ## under Reduce Motion. Pure in `time`.
 static func breath(time: float, period: float = 2.8) -> float:

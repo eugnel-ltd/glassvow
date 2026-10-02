@@ -16,6 +16,7 @@ static func run(fails: Array[String]) -> void:
 	_rite_runs_holds_and_skips(fails)
 	_rite_lands_whole_under_reduce_motion(fails)
 	_shapes(fails)
+	_numerals(fails)
 
 
 ## The aliasing must not have moved a single colour: these literals are the
@@ -137,3 +138,15 @@ static func _shapes(fails: Array[String]) -> void:
 	for p: Vector2 in lines:
 		inside = inside and Rect2(9.9, 9.9, 120.2, 80.2).has_point(p)
 	_check(fails, inside, "quarry leading stays inside its pane")
+
+
+static func _numerals(fails: Array[String]) -> void:
+	var roman: Dictionary = {1: "I", 4: "IV", 12: "XII", 214: "CCXIV", 1999: "MCMXCIX", 0: "0", 4000: "4000"}
+	for n: int in roman:
+		_check(fails, LeadlightNumerals.roman(n) == str(roman[n]),
+			"roman(%d) = %s, want %s" % [n, LeadlightNumerals.roman(n), roman[n]])
+	var han: Dictionary = {0: "零", 3: "三", 10: "十", 12: "十二", 20: "二十", 105: "一百零五",
+		214: "二百一十四", 1005: "一千零五", 1010: "一千零一十", 32000: "三萬二千", 10001: "一萬零一"}
+	for n: int in han:
+		_check(fails, LeadlightNumerals.hanzi(n) == str(han[n]),
+			"hanzi(%d) = %s, want %s" % [n, LeadlightNumerals.hanzi(n), han[n]])
