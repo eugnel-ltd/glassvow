@@ -8,7 +8,7 @@ extends RefCounted
 ## buy by value/gold.
 ## Potions heal at 20 missing HP, block lethal intent, and spend offensive stock in elite/boss fights.
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
-const VERSION: String = "p8-d0-v2"
+const VERSION: String = "p8-d0-v3"
 const SHOP_MIN_RATIO: float = 0.06475653649074956
 ## T1a: keep a reward iff card_score >= this. #215 four-grid top-decile median.
 const CARD_DECLINE_DEFAULT: float = 14.0958831273019
@@ -22,6 +22,14 @@ const REMOVAL_MIN_COPIES_DEFAULT: int = 2
 const WAYS: Array[String] = ["none", "shatter", "lantern", "edge"]
 const WAY_COMMIT: float = 3.0
 const WAY_OFF: float = 0.5
+## Flame readout 13's instrument fixes for the committed arms, so that they build
+## as a player who insists on a way does. WAY_COMMIT covers WAY_COPIES copies of a
+## card: once the deck holds that many, a further copy offered is weighed as clear
+## glass, so a cheap card that speaks the way is not hoarded. And an off-colour
+## starter seed is the first card a removal takes (the lock's §4 worked example
+## removes Eclipse Slash at the shop), whatever its copies, its removal worth the
+## full `removalAppetite`, as a card worth nothing to the committed deck.
+const WAY_COPIES: int = 2
 ## Flame readout 10's flame-aware adaptive arm (A_lit): a policy carrying
 ## `litLean` reads its own lantern before each build decision (`see_flame`).
 ## While the lantern burns a way's colour, Steady or True, the build score values
@@ -53,6 +61,9 @@ static var lit_off: float = 1.0
 ## The way whose colour the lantern burned, Steady or True, when the A_lit arm
 ## last looked (`see_flame`); empty otherwise and for every other arm.
 static var lit: String = ""
+## Copies of each card id in the committed bot's deck when it last looked
+## (`see_flame`), read by `offer_card_score`; empty for every other arm.
+static var held: Dictionary = {}
 static func set_modes(build: bool, play: bool) -> void:
 	random_build = build
 	random_play = play
@@ -77,6 +88,7 @@ static func apply_policy(policy: Dictionary) -> void:
 	lit_lean = float(str(vector.get("litLean", 0.0)))
 	lit_off = float(str(vector.get("litOff", 1.0)))
 	lit = ""
+	held.clear()
 static func policy_snapshot() -> Dictionary:
 	if vector.is_empty():
 		apply_policy({})
@@ -508,11 +520,26 @@ static func build_card_score(content: ContentDB, aspect: int, card_id: String,
 		else score * _way_factor(Flame.card_affinity(content, aspect, card_id))
 
 
-## What the A_lit arm sees before a build decision: the colour its lantern
-## burns, as the HUD shows it and as the next fight will light its riders
-## (`CombatRules._set_lantern_quality`). Every other arm leaves `lit` empty.
+## The score of a card offered to the deck (rewards, shop cards, event picks):
+## the build score, except that a committed bot whose deck already holds
+## WAY_COPIES copies of a card of its way weighs a further copy as clear glass.
+static func offer_card_score(content: ContentDB, aspect: int, card_id: String) -> float:
+	if way != "none" and int(float(str(held.get(card_id, 0)))) >= WAY_COPIES \
+			and Flame.card_affinity(content, aspect, card_id).has(way):
+		return catalogue_card_score(content, aspect, card_id)
+	return build_card_score(content, aspect, card_id)
+
+
+## What the bot sees before a build decision. The A_lit arm sees the colour its
+## lantern burns, as the HUD shows it and as the next fight will light its riders
+## (`CombatRules._set_lantern_quality`); a committed bot counts the copies its
+## deck holds (`held`). Every other arm leaves `lit` and `held` empty.
 static func see_flame(content: ContentDB, run: RunState) -> void:
 	lit = ""
+	held.clear()
+	if way != "none":
+		for card: CardInst in run.player.deck:
+			held[String(card.id)] = int(float(str(held.get(String(card.id), 0)))) + 1
 	if lit_lean <= 0.0 or way != "none":
 		return
 	var reading: Dictionary = Flame.read(content, run)
@@ -674,7 +701,7 @@ static func choose_card(ids: Array, content: ContentDB, aspect: int, rng: Rng = 
 		var id: String = str(id_v)
 		if is_banned(id):
 			continue
-		var candidate: float = build_card_score(content, aspect, id)
+		var candidate: float = offer_card_score(content, aspect, id)
 		if candidate > score:
 			best = id
 			score = candidate
@@ -709,6 +736,25 @@ static func worst_card(run: RunState, content: ContentDB, cards: Array, kindle: 
 			worst = card
 			score = candidate
 	return worst
+## The card a removal takes: a committed bot's off-colour starter seed while the
+## deck holds one (the lowest scored), else the deck's worst card.
+static func removal_target(run: RunState, content: ContentDB) -> CardInst:
+	var seeds: Array[CardInst] = []
+	for card: CardInst in run.player.deck:
+		if is_off_colour_seed(content, run.aspect, String(card.id)):
+			seeds.append(card)
+	return worst_card(run, content, seeds if not seeds.is_empty() else run.player.deck)
+## What removing the card is worth: the full appetite for a committed bot's
+## off-colour seed, else the appetite less the card's build score.
+static func removal_worth(content: ContentDB, aspect: int, card_id: String) -> float:
+	return removal_appetite if is_off_colour_seed(content, aspect, card_id) \
+		else remove_value(build_card_score(content, aspect, card_id))
+## A starter card coloured for another way than the committed bot's own.
+static func is_off_colour_seed(content: ContentDB, aspect: int, card_id: String) -> bool:
+	if way == "none" or str(content.cards.get(card_id, {}).get("rarity", "")) != "starter":
+		return false
+	var affinity: Dictionary = Flame.card_affinity(content, aspect, card_id)
+	return not affinity.is_empty() and not affinity.has(way)
 static func best_card(run: RunState, content: ContentDB, cards: Array) -> CardInst:
 	var best: CardInst = null
 	var score: float = -INF
@@ -757,7 +803,7 @@ static func choose_shop(stock: Dictionary, run: RunState, content: ContentDB) ->
 				if category == "relics":
 					value = relic_score(id, content, run.aspect)
 				elif category == "cards":
-					value = build_card_score(content, run.aspect, id)
+					value = offer_card_score(content, run.aspect, id)
 				elif id == "healing":
 					value = _wf("potionHealing")
 				var ratio: float = value / float(maxi(price, 1))
@@ -766,15 +812,17 @@ static func choose_shop(stock: Dictionary, run: RunState, content: ContentDB) ->
 					best = {"category": category, "id": id, "price": price, "key": key}
 		var remove_cost: int = int(float(str(stock.get("removeCost", 75))))
 		if not removed and gold >= remove_cost:
-			var worst: CardInst = worst_card(run, content, run.player.deck)
+			var worst: CardInst = removal_target(run, content)
 			if worst != null:
 				var copies: int = 0
 				for card: CardInst in run.player.deck:
 					if String(card.id) == String(worst.id):
 						copies += 1
 				var wscore: float = build_card_score(content, run.aspect, String(worst.id))
-				if wants_shop_remove(copies, wscore):
-					var remove_ratio: float = remove_value(wscore) / float(maxi(remove_cost, 1))
+				if is_off_colour_seed(content, run.aspect, String(worst.id)) \
+						or wants_shop_remove(copies, wscore):
+					var remove_ratio: float = removal_worth(content, run.aspect, String(worst.id)) \
+						/ float(maxi(remove_cost, 1))
 					if remove_ratio > best_ratio:
 						best = {"category": "remove", "id": String(worst.id),
 							"price": remove_cost, "uid": worst.uid}
@@ -787,6 +835,8 @@ static func choose_shop(stock: Dictionary, run: RunState, content: ContentDB) ->
 			removed = true
 		else:
 			taken[str(best["key"])] = true
+			if str(best["category"]) == "cards" and way != "none":
+				held[str(best["id"])] = int(float(str(held.get(str(best["id"]), 0)))) + 1
 			if str(best["category"]) == "potions":
 				potion_free -= 1
 	return bought

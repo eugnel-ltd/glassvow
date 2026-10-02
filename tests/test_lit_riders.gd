@@ -9,6 +9,7 @@ const Search: GDScript = preload("res://tools/balance_search.gd")
 const HP: int = 200
 ## The shipped riders: card id -> [way, effect kind, amount]. Every `lit` effect
 ## in the catalogue is one of these, on the card and on its upgrade alike.
+## Hearthfall's Amber rider left with flame readout 13.
 const RIDERS: Dictionary = {
 	"eclipseSlash": ["edge", "block", 3],
 	"splinterCut": ["edge", "block", 3],
@@ -19,7 +20,6 @@ const RIDERS: Dictionary = {
 	"quakeblow": ["shatter", "chip", 1],
 	"preparation": ["lantern", "ember", 1],
 	"surge": ["lantern", "ember", 1],
-	"hearthfall": ["lantern", "ember", 1],
 	"tithe": ["lantern", "ember", 1],
 }
 ## Two of these beside the starters read Steady in that way (3 of 5 coloured).

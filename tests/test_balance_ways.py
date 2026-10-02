@@ -170,6 +170,30 @@ class BalanceWaysTest(unittest.TestCase):
         self.assertEqual("PASS", g5(4))
         self.assertEqual("FAIL", g5(3))
 
+    def test_g5_grades_the_runs_alive_at_the_act_end(self) -> None:
+        """Readout 13: a run that died before an act's end has no reading there and
+        leaves G5's denominator; the all-runs figure is still printed beside it."""
+        table = copy.deepcopy(TABLE)
+        for arm, way in (("C_shatter", "shatter"), ("C_lantern", "lantern"), ("C_edge", "edge")):
+            runs = rows(5, way, 7, 4)
+            for row in runs[5:]:  # five die in Act 1; their acts are empty
+                row["flame"]["acts"] = []
+            table[0, "full"][arm] = runs
+        with tempfile.TemporaryDirectory() as temp:
+            write_table(Path(temp), table)
+            result = ways.grade(Path(temp), SEEDS)
+            text = ways.render(result)
+        stats = result["cells"][0, "full"]["stats"]["C_edge"]
+        self.assertEqual((5, 5), stats["steady1Alive"])
+        self.assertEqual((4, 5), stats["true2Alive"])
+        self.assertEqual((0.5, 0.4), (float(stats["steady1"]), float(stats["true2"])))
+        gate = result["cells"][0, "full"]["gates"][4]
+        self.assertEqual("PASS", gate[3])  # 100% and 80% of the alive, against 50% and 40% of all
+        self.assertIn("100.0% of runs alive", gate[1])
+        self.assertIn("all runs 50.0%", gate[1])
+        self.assertIn("5 alive", result["cells"][0, "full"]["intervals"][4][0])
+        self.assertIn("| 50.0% (100.0% of 5) | 40.0% (80.0% of 5) |", text)
+
     def test_render_prints_every_cell_and_gate(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             write_table(Path(temp))

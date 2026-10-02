@@ -206,8 +206,10 @@ Each way's payoff that only a committed deck collects, added by [readout 9](read
 | Way | Rider (en / zh-Hant) | On |
 |---|---|---|
 | 碎 Shatter | Frost-white flame: chip 1 more Facet. / 霜白之火：再琢擊 1 格璃面。 | chisel, spall, quakeblow |
-| 燼 Lantern | Amber flame: gain 1 Ember. / 金黃之火：獲得 1 點餘燼。 | preparation (Tinder), surge (Struck Match), hearthfall, tithe |
+| 燼 Lantern | Amber flame: gain 1 Ember. / 金黃之火：獲得 1 點餘燼。 | preparation (Tinder), surge (Struck Match), tithe |
 | 蝕 Edge | Blood-moon flame: gain #3# Ward. / 血月之火：獲得 #3# 點護光。 (`#…#` marks the Ward number, as on every Ward card) | eclipseSlash, splinterCut, dimTheGlass, warCry (Shatterhymn) |
+
+Hearthfall carried the Lantern's rider until [readout 13](readouts/readout-13.md): on the Lantern's own Ember-spend card it refunded a third of the cost and carried the committed Lantern's fresh-pool lead, so it left.
 
 Why it is not the set bonus §5 rules out: the rider is printed on the way's own glass and pays per card played, as any card synergy does; a deck that holds none of it gets nothing from a lit flame beyond §5. Why it reaches committed decks: with readout 8's search player at V0, a committed deck fights 54–78% of its fights in its own colour, the adaptive arm 12–17% and the random arm 11–13% in any colour. The rider sizes are content, numbers set against readout 9.
 
@@ -272,7 +274,7 @@ The previous programme measured shatters and Smolder kills, one of which is the 
 
 **Descriptor per run:** dominant way and tier at run end, plus the per-fight rates. Absolute, deterministic, identical in game and simulator.
 
-**Arms** (policy gains a `way` field in {none, shatter, lantern, edge}; a committed policy multiplies the pilot's card and relic scores of its way by `commit` = 3.0 and other coloured glass by 0.5, and steers shop and removal the same way; it does not change combat play):
+**Arms** (policy gains a `way` field in {none, shatter, lantern, edge}; a committed policy multiplies the pilot's card and relic scores of its way by `commit` = 3.0, for two copies of a card (readout 13), and other coloured glass by 0.5, steers shop and removal the same way and removes its off-colour starter seeds first (readout 13); it does not change combat play):
 
 | Arm | Build | Play | Meaning |
 |---|---|---|---|
@@ -283,7 +285,7 @@ The previous programme measured shatters and Smolder kills, one of which is the 
 
 A_lit is A until its lantern burns a way's colour, Steady or True; from then, until the flame dims, it values that way's glass ×2.0 (`litLean`) and other coloured glass ×0.5 (`litOff`), and counts that colour's riders (§6.4) in full. From readout 10 on, G3 and G6 are read against A_lit, and B2 reads A_lit's feel beside the committed arms' (its expression against the colour each fight begins in, as the grader's feel table measures the adaptive arms); A stays in the table as the floor.
 
-**Status (readout 12, 2026-10-02).** With Quarry Maul and Fan of Glass Shatter glass and True at three in four ([readout 12](readouts/readout-12.md)), G5 full passes its True floor at V0 for every way (45–52% by the end of Act 2) and Shatter reaches Steady by the end of Act 1 in 77% of runs, but the committed Lantern's 68.8% leaves V0 full G5 FAIL on point (interval UNDECIDED), and V5 full G5 fails because only 44–60% of committed runs survive Act 1. G3 passes on point in all cells but V0 fresh (intervals UNDECIDED; V5 full reads −3.8 pp on 4,000 paired seeds, FAIL on point and UNDECIDED, on its threshold). G6 passes on point in every cell and on interval at V0 fresh, V5 fresh and V5 full. G5 fresh, G7 and B1 pass; B2 passes for committed Edge in both pools and A_lit at V0 full. Verdicts that worsen with readout 12: G2 at V0 fresh is now a decided FAIL (+17.9 pp, the Lantern over Shatter), G3 at V0 fresh fails on point (−5.8 pp), and committed Shatter's B2 at V0 fresh moves from PASS to UNDECIDED; G2 at V0 full still fails on point (+10.9 pp). A_lit's own B2 at V0 fresh stays a decided FAIL (59.1%), and G1 and G4 fail as instrument readings.
+**Status (readout 13, 2026-10-02).** With the committed bot fixed (it removes its off-colour seeds and its ×3 covers two copies), G5 read over the runs alive at the act's end, and Hearthfall's amber rider gone ([readout 13](readouts/readout-13.md)): G5 passes on point and interval in every graded cell. G2 passes on point at V0 full (9.7 pp, interval UNDECIDED) and at V5 in both pools; at V0 fresh the Lantern's lead is 12.8 pp, FAIL on point and UNDECIDED (readout 12: a decided FAIL at 17.9 pp). G3 passes on point at V0 fresh (−1.6 pp), V0 full (−2.2 pp) and V5 fresh (−0.3 pp, PASS on interval too); at V5 full it reads −3.5 pp on 4,000 paired seeds (−5.0 to −2.0), FAIL on point and UNDECIDED, which about 36,000 paired seeds would decide. G6 passes on point in every cell for A_lit; arm A's floor fails on point at V0 full (Edge 61.3% of its wins). G7 and B1 pass; B2 passes for committed Edge in both pools and A_lit at V0 full, A_lit's own B2 at V0 fresh stays a decided FAIL (59.2%), and G1 and G4 fail as instrument readings. Verdicts that worsen with readout 13: G6's floor at V0 full (PASS to FAIL on point), G3 at V5 full on the table's band (PASS to FAIL on point; readout 12's 4,000-seed reading was already FAIL), G3's floor at V5 full (interval UNDECIDED to FAIL), and the committed Lantern at V5, now the joint weakest way at V5 full (12.2%).
 
 Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds (common random numbers across arms). About 4,000 runs; minutes on the #558 simulator.
 
@@ -295,10 +297,14 @@ Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds 
 | G2 parity | the ways are comparable | best committed − worst committed ≤ 10 pp at each vow |
 | G3 skill | reading offers is rewarded but commitment is not a trap | A ≥ best committed − 3 pp and A ≤ best committed + 15 pp |
 | G4 random loses | scattering cannot win | R ≤ worst committed − 25 pp; R < 35% at V0, < 15% at V5 |
-| G5 reachability | insisting gets there | full pool: committed arms reach Steady by the end of Act 1 in ≥ 70% of runs, True by the end of Act 2 in ≥ 40%; fresh pool: V0 ≥ 40% Steady by the end of Act 1, True not graded (readout 5) |
+| G5 reachability | insisting gets there | full pool: committed arms reach Steady by the end of Act 1 in ≥ 70% of runs alive at the end of Act 1, True by the end of Act 2 in ≥ 40% of runs alive at the end of Act 2; fresh pool: V0 ≥ 40% Steady by the end of Act 1 of runs alive then, True not graded (readout 5). The all-runs figure is reported beside it (readout 13) |
 | G6 diversity of adaptive play | different runs are different | among A's wins no way exceeds 60%; at least two ways hold ≥ 20% |
 | G7 guards | nothing degenerate, nothing broken | CEM stress: V5 best holdout < 90%; zero stalls and errors; deterministic replay; save lineage and internal IDs unchanged |
 | B bot round | every way can be won and has a feel | Replaces the human row (owner ruling, 2026-10-01). The headless simulator's search player ([readout 8](readouts/readout-8.md)) plays the cell table above, at least 200 paired seeds per cell, every figure graded on its 95% interval. (1) Every committed way wins at V0 with the search player: win rate ≥ 20% in the full pool and ≥ 10% in the fresh pool. (2) No way has no feel: at V0 in both pools each committed way's coloured plays favour its own glass in ≥ 60% of its fights (expression), and 1–10% of its won fights end under 20% HP (close calls). James's play reports are input, never a gate. |
+
+**G5 over survivors (orchestrator ruling, 2026-10-02, applied from [readout 13](readouts/readout-13.md)).** Reachability is a question about the flame, not survival. A run that dies before an act's end has no flame reading there, so it leaves that act's denominator: Steady by the end of Act 1 is graded among runs alive at the end of Act 1, True by the end of Act 2 among runs alive at the end of Act 2. The all-runs figure stays in every table beside it. Readouts 1–12 graded G5 over every run and stay as recorded; at V5 that reading was bounded by survival (only 44–60% of committed runs lived to the end of Act 1 in readout 12).
+
+**The committed bot from readout 13.** The committed arms' build (pilot `p8-d0-v3`) removes its two off-colour starter seeds first whenever a removal is offered, as §4's worked example does, and its ×`commit` covers two copies of a card; a further copy offered is weighed as clear glass. Readouts 1–12 used the earlier bot (two copies of the worst card before a shop removal, the shrine taking a Strike or a Defend, and ×3 on every copy) and stay as recorded; from readout 13 on, the improved bot is the reading of record. Arm A, A_lit and R build as before (an A_lit that removed the seeds off its lit colour lost 2.7 pp at V0 full, p = 0.01, in readout 13's check).
 
 **Calibration order**, one commit and one ten-minute readout per step; the step that reaches G4 with the least damage to G3 is kept:
 

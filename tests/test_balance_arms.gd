@@ -13,7 +13,96 @@ static func run(fails: Array[String]) -> void:
 	_combat_play_ignores_the_way(content, fails)
 	_pool_states(content, fails)
 	_flame_row(content, fails)
+	_removal_takes_the_off_colour_seeds(content, fails)
+	_colour_weighting_covers_two_copies(content, fails)
 	Pilot.apply_policy({})
+
+
+## Flame readout 13: a committed bot's removal (shop, shrine and its worth at an
+## event) takes its off-colour starter seeds first, the lowest scored, whatever
+## their copies and at the full appetite; its own seed stays, and arm A removes
+## its worst card as before.
+static func _removal_takes_the_off_colour_seeds(content: ContentDB, fails: Array[String]) -> void:
+	var expected: Dictionary = {"shatter": "firstSpark", "lantern": "chisel", "edge": "firstSpark"}
+	var shrine: Dictionary = content.events["forgottenShrine"]["choices"][0]
+	for way: String in expected:
+		Pilot.apply_policy({"way": way})
+		var run_state: RunState = RunState.new_run(content, 61300, "arms-removal", {"aspect": 0})
+		var target: CardInst = Pilot.removal_target(run_state, content)
+		if target == null or String(target.id) != str(expected[way]):
+			fails.append("balance arms: %s must remove %s first, took %s" % [way, expected[way], target])
+			continue
+		if Pilot.removal_worth(content, 0, String(target.id)) != Pilot.removal_appetite:
+			fails.append("balance arms: an off-colour seed's removal must be worth the full appetite")
+		var game: GlassvowGame = GlassvowGame.new(content, run_state)
+		if Sim._event_choice_score(game, shrine) != Pilot.removal_appetite:
+			fails.append("balance arms: %s's shrine removal must be worth the full appetite" % way)
+		var bought: Array[Dictionary] = Pilot.choose_shop({"removeCost": 75}, run_state, content)
+		if bought.size() != 1 or str(bought[0]["category"]) != "remove" \
+				or str(bought[0]["id"]) != str(expected[way]):
+			fails.append("balance arms: %s's shop must buy out its single %s, bought %s"
+				% [way, expected[way], bought])
+		var own: Dictionary = {"shatter": "chisel", "lantern": "firstSpark", "edge": "eclipseSlash"}
+		if Pilot.is_off_colour_seed(content, 0, str(own[way])) \
+				or Pilot.is_off_colour_seed(content, 0, "strike"):
+			fails.append("balance arms: %s's own seed and clear starters are never off-colour" % way)
+		for card: CardInst in run_state.player.deck.duplicate():
+			if Pilot.is_off_colour_seed(content, 0, String(card.id)):
+				run_state.player.deck.erase(card)
+		var worst: CardInst = Pilot.worst_card(run_state, content, run_state.player.deck)
+		var after: CardInst = Pilot.removal_target(run_state, content)
+		if after == null or after.uid != worst.uid:
+			fails.append("balance arms: with its seeds gone %s must remove its worst card" % way)
+	Pilot.apply_policy({})
+	var plain: RunState = RunState.new_run(content, 61300, "arms-removal", {"aspect": 0})
+	var worst_a: CardInst = Pilot.worst_card(plain, content, plain.player.deck)
+	var target_a: CardInst = Pilot.removal_target(plain, content)
+	if target_a == null or target_a.uid != worst_a.uid \
+			or Pilot.is_off_colour_seed(content, 0, "eclipseSlash") \
+			or Pilot.removal_worth(content, 0, String(worst_a.id)) \
+				!= Pilot.remove_value(Pilot.build_card_score(content, 0, String(worst_a.id))):
+		fails.append("balance arms: arm A must remove its worst card at appetite less its score")
+
+
+## Flame readout 13: WAY_COMMIT covers two copies of a card. With two Fans of
+## Glass in the deck, a committed Shatter bot weighs a third at catalogue worth
+## and takes Deflect over it; with one, it takes the third at x3. Off-colour and
+## clear glass, cards already in the deck, and arm A never read the count.
+static func _colour_weighting_covers_two_copies(content: ContentDB, fails: Array[String]) -> void:
+	var offer: Array = ["cleave", "deflect"]
+	for held_copies: int in [1, 2]:
+		Pilot.apply_policy({"way": "shatter"})
+		var run_state: RunState = RunState.new_run(content, 61301, "arms-copies", {"aspect": 0})
+		for _i: int in range(held_copies):
+			run_state.player.deck.append(CardInst.new(run_state.next_uid(), &"cleave", false))
+		Pilot.see_flame(content, run_state)
+		var capped: bool = held_copies >= Pilot.WAY_COPIES
+		var base: float = Pilot.catalogue_card_score(content, 0, "cleave")
+		var offered: float = Pilot.offer_card_score(content, 0, "cleave")
+		if not is_equal_approx(offered, base * (1.0 if capped else Pilot.WAY_COMMIT)):
+			fails.append("balance arms: with %d held a Fan of Glass offered must score %s, got %s"
+				% [held_copies, base * (1.0 if capped else Pilot.WAY_COMMIT), offered])
+		var held_score: float = Pilot.build_card_score(content, 0, "cleave")
+		if not is_equal_approx(held_score, base * Pilot.WAY_COMMIT):
+			fails.append("balance arms: the copy count must not touch the build score of cards held")
+		var taken: String = Pilot.choose_card(offer, content, 0)
+		if taken != ("deflect" if capped else "cleave"):
+			fails.append("balance arms: with %d Fans of Glass held, shatter must take %s, took %s"
+				% [held_copies, "deflect" if capped else "cleave", taken])
+	Pilot.apply_policy({"way": "edge"})
+	var edge_run: RunState = RunState.new_run(content, 61301, "arms-copies", {"aspect": 0})
+	for _i: int in range(3):
+		edge_run.player.deck.append(CardInst.new(edge_run.next_uid(), &"cleave", false))
+	Pilot.see_flame(content, edge_run)
+	var off_offer: float = Pilot.offer_card_score(content, 0, "cleave")
+	var off_base: float = Pilot.catalogue_card_score(content, 0, "cleave")
+	if not is_equal_approx(off_offer, off_base * Pilot.WAY_OFF):
+		fails.append("balance arms: off-colour glass keeps its x0.5 at any count")
+	Pilot.apply_policy({})
+	Pilot.see_flame(content, edge_run)
+	if not Pilot.held.is_empty() or Pilot.offer_card_score(content, 0, "cleave") \
+			!= Pilot.catalogue_card_score(content, 0, "cleave"):
+		fails.append("balance arms: arm A must not count its copies")
 
 
 static func _way_scales_build_scores(content: ContentDB, fails: Array[String]) -> void:

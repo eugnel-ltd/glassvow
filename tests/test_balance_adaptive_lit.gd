@@ -22,6 +22,7 @@ static func run(fails: Array[String]) -> void:
 	_leans_on_the_lit_way(content, fails)
 	_riders_count_in_full(content, fails)
 	_arm_a_is_untouched(content, fails)
+	_keeps_arm_a_removal(content, fails)
 	_simulator_arm(fails)
 	Pilot.apply_policy({})
 
@@ -127,6 +128,20 @@ static func _arm_a_is_untouched(content: ContentDB, fails: Array[String]) -> voi
 	Pilot.see_flame(content, _run(content, STEADY))
 	if not Pilot.lit.is_empty():
 		fails.append("A_lit: a committed arm must never see the flame")
+
+
+## Flame readout 13: the off-colour seed removal is the committed arms' alone.
+## Even while its lantern burns Edge, A_lit removes its worst card as arm A
+## does, and copies count for nothing.
+static func _keeps_arm_a_removal(content: ContentDB, fails: Array[String]) -> void:
+	Pilot.apply_policy(LIT_POLICY)
+	var lit_run: RunState = _run(content, STEADY)
+	Pilot.see_flame(content, lit_run)
+	var worst: CardInst = Pilot.worst_card(lit_run, content, lit_run.player.deck)
+	var target: CardInst = Pilot.removal_target(lit_run, content)
+	if Pilot.lit != "edge" or target == null or target.uid != worst.uid \
+			or Pilot.is_off_colour_seed(content, 0, "firstSpark") or not Pilot.held.is_empty():
+		fails.append("A_lit: lit Edge must remove its worst card as arm A does, took %s" % target)
 
 
 ## `--build=lit` is the arm: its policy carries the lean, it takes no way, and

@@ -9,7 +9,9 @@ A (adaptive, today's arm 1), A_lit (adaptive and reading its own flame, readout
 the G1-G7 rows with PASS/FAIL against the initial thresholds; G3 and G6 read
 A_lit, and are shown again against A, the commit-blind floor. A run without its flame metrics, arms whose seeds do not pair,
 mixed builds or any Godot error stop the readout (exit 1): nothing is graded
-on incomplete data.
+on incomplete data. From readout 13, G5 is graded over the runs alive at the end of the
+act in question (Steady by the end of Act 1 among runs that reach it, True by the end
+of Act 2 likewise), the all-runs figure printed beside it.
 
 Usage (repo root):
   python3 tools/balance_ways.py [--quick | --seeds 13000-13199] [--jobs 4] [--out-dir DIR]
@@ -74,8 +76,10 @@ G2_SPREAD = Fraction(10, 100)
 G3_BELOW, G3_ABOVE = Fraction(3, 100), Fraction(15, 100)
 G4_GAP = Fraction(25, 100)
 G4_CEILING = {0: Fraction(35, 100), 5: Fraction(15, 100)}
-# G5: (Steady by the end of Act 1, True by the end of Act 2) over every run; None is
-# not graded. The fresh-pool figure is readout 5's; like G1, fresh is graded at V0 only.
+# G5: (Steady by the end of Act 1, True by the end of Act 2); None is not graded. From
+# readout 13 each is graded over the runs alive at that act's end (reachability is a
+# question about the flame, not survival). The fresh-pool figure is readout 5's; like
+# G1, fresh is graded at V0 only.
 G5_FLOOR = {(0, "full"): (Fraction(70, 100), Fraction(40, 100)),
             (5, "full"): (Fraction(70, 100), Fraction(40, 100)),
             (0, "fresh"): (Fraction(40, 100), None)}
@@ -200,7 +204,21 @@ def _fraction(rows: list[dict[str, Any]], test) -> Fraction:
 
 def _reached(row: dict[str, Any], act: int, tiers: tuple[str, ...], way: str) -> bool:
     acts = row["flame"]["acts"]
-    return len(acts) > act and acts[act]["tier"] in tiers and acts[act]["dominant"] == way
+    return _alive(row, act) and acts[act]["tier"] in tiers and acts[act]["dominant"] == way
+
+
+def _alive(row: dict[str, Any], act: int) -> bool:
+    """Whether the run lived to the end of act `act` + 1 (it has that act's reading)."""
+    return len(row["flame"]["acts"]) > act
+
+
+def reach(stats: dict[str, Any], key: str) -> tuple[int, int]:
+    """G5's count: (runs that reached the tier, runs alive at that act's end)."""
+    return stats[key + "Alive"]
+
+
+def survivor_rate(count: tuple[int, int]) -> Fraction:
+    return Fraction(count[0], count[1]) if count[1] else Fraction(0)
 
 
 def expressed(plays: dict[str, Any]) -> str:
@@ -245,6 +263,9 @@ def arm_stats(rows: list[dict[str, Any]], way: str) -> dict[str, Any]:
         stats["own"] = _fraction(rows, lambda row: row["flame"]["end"]["dominant"] == way)
         stats["steady1"] = _fraction(rows, lambda row: _reached(row, 0, STEADY_OR_TRUE, way))
         stats["true2"] = _fraction(rows, lambda row: _reached(row, 1, ("TRUE",), way))
+        for key, act, tiers in (("steady1", 0, STEADY_OR_TRUE), ("true2", 1, ("TRUE",))):
+            stats[key + "Alive"] = (sum(_reached(row, act, tiers, way) for row in rows),
+                                    sum(_alive(row, act) for row in rows))
     return stats
 
 
@@ -304,10 +325,6 @@ def show(span: tuple[float, float, float], *ns: int, points: bool = False, unit:
     return f"{pct(span[0])} ({pct(span[1])}-{pct(span[2])}, {n})"
 
 
-def _count(stats: dict[str, Any], key: str) -> tuple[int, int]:
-    return int(stats[key] * stats["n"]), stats["n"]
-
-
 def _g3_interval(rate: dict[str, tuple[int, int]], arm: str, best: str) -> tuple[str, str]:
     skill = difference(rate[arm], rate[best])
     return (f"{arm} - {best} {show(skill, rate[arm][1], rate[best][1], points=True)}",
@@ -351,19 +368,20 @@ def cell_intervals(vow: int, pool: str, stats: dict[str, dict[str, Any]],
     rows.append((f"R - {worst} {show(gap, rate['R'][1], rate[worst][1], points=True)}; "
                  f"R {show(random_rate, rate['R'][1])}",
                  decided([at_most(gap, -float(G4_GAP)), below(random_rate, float(G4_CEILING[vow]))])))
-    reach = G5_FLOOR.get((vow, pool))
-    steady = {arm: interval(*_count(stats[arm], "steady1")) for arm in COMMITTED}
-    true = {arm: interval(*_count(stats[arm], "true2")) for arm in COMMITTED}
+    floors = G5_FLOOR.get((vow, pool))
+    steady = {arm: interval(*reach(stats[arm], "steady1")) for arm in COMMITTED}
+    true = {arm: interval(*reach(stats[arm], "true2")) for arm in COMMITTED}
     low_arm = min(COMMITTED, key=lambda arm: steady[arm][0])
-    text = f"Steady min {low_arm} {show(steady[low_arm], stats[low_arm]['n'])}"
-    if reach is None:
+    text = f"Steady min {low_arm} {show(steady[low_arm], reach(stats[low_arm], 'steady1')[1], unit=' alive')}"
+    if floors is None:
         rows.append((text, "n/a"))
     else:
-        checks = [at_least(steady[arm], float(reach[0])) for arm in COMMITTED]
-        if reach[1] is not None:
+        checks = [at_least(steady[arm], float(floors[0])) for arm in COMMITTED]
+        if floors[1] is not None:
             true_arm = min(COMMITTED, key=lambda arm: true[arm][0])
-            text += f"; True min {true_arm} {show(true[true_arm], stats[true_arm]['n'])}"
-            checks += [at_least(true[arm], float(reach[1])) for arm in COMMITTED]
+            text += (f"; True min {true_arm} "
+                     f"{show(true[true_arm], reach(stats[true_arm], 'true2')[1], unit=' alive')}")
+            checks += [at_least(true[arm], float(floors[1])) for arm in COMMITTED]
         rows.append((text, decided(checks)))
     rows.append(_g6_interval(adaptive_rows[SKILLED], SKILLED))
     rows.append(("counts (no interval)", point_g7))
@@ -396,12 +414,15 @@ def cell_gates(vow: int, pool: str, stats: dict[str, dict[str, Any]],
     best, worst = committed[best_arm], committed[worst_arm]
     random_arm = stats["R"]["rate"]
     floor = G1_FLOOR.get((vow, pool))
-    steady = min(COMMITTED, key=lambda arm: stats[arm]["steady1"])
-    true = min(COMMITTED, key=lambda arm: stats[arm]["true2"])
-    reach = G5_FLOOR.get((vow, pool))
-    reach_text = "no threshold for this cell" if reach is None else (
-        f">= {pct(reach[0])} and >= {pct(reach[1])} for every committed way" if reach[1] is not None
-        else f">= {pct(reach[0])} Steady for every committed way; True not graded")
+    alive = {arm: {key: survivor_rate(reach(stats[arm], key)) for key in ("steady1", "true2")}
+             for arm in COMMITTED}
+    steady = min(COMMITTED, key=lambda arm: alive[arm]["steady1"])
+    true = min(COMMITTED, key=lambda arm: alive[arm]["true2"])
+    floors = G5_FLOOR.get((vow, pool))
+    reach_text = "no threshold for this cell" if floors is None else (
+        f">= {pct(floors[0])} and >= {pct(floors[1])} for every committed way, of runs alive"
+        if floors[1] is not None
+        else f">= {pct(floors[0])} Steady for every committed way, of runs alive; True not graded")
     stalls = sum(stats[arm]["stalls"] for arm in ARMS)
     errors = sum(stats[arm]["errors"] for arm in ARMS)
     same, replayed = replay
@@ -417,10 +438,12 @@ def cell_gates(vow: int, pool: str, stats: dict[str, dict[str, Any]],
          f"R <= worst - 25 pp and R < {pct(G4_CEILING[vow])}",
          verdict(random_arm <= worst - G4_GAP and random_arm < G4_CEILING[vow])),
         ("G5 reachability: insisting gets there",
-         f"Steady by end of Act 1 min {pct(stats[steady]['steady1'])} ({steady}); "
-         f"True by end of Act 2 min {pct(stats[true]['true2'])} ({true})", reach_text,
-         "n/a" if reach is None else verdict(stats[steady]["steady1"] >= reach[0]
-                                            and (reach[1] is None or stats[true]["true2"] >= reach[1]))),
+         f"Steady by end of Act 1 min {pct(alive[steady]['steady1'])} of runs alive ({steady}; "
+         f"all runs {pct(stats[steady]['steady1'])}); True by end of Act 2 min "
+         f"{pct(alive[true]['true2'])} of runs alive ({true}; all runs {pct(stats[true]['true2'])})",
+         reach_text,
+         "n/a" if floors is None else verdict(alive[steady]["steady1"] >= floors[0]
+                                             and (floors[1] is None or alive[true]["true2"] >= floors[1]))),
         _g6(adaptive_rows[SKILLED], SKILLED, "G6 diversity: different adaptive runs are different"),
         ("G7 guards: nothing stalls, errors or replays differently",
          f"{stalls} stalls, {errors} errors; replay {same}/{replayed} identical",
@@ -488,14 +511,16 @@ def render(result: dict[str, Any], wall: float | None = None) -> str:
     for (vow, pool), cell in result["cells"].items():
         stats = cell["stats"]
         lines += ["", f"### V{vow}, {pool} pool", "",
-                  "| Arm | Wins | Win rate | Wilson 95% | Own way at end | Steady by end of Act 1 "
-                  "| True by end of Act 2 | Stalls | Errors |",
+                  "| Arm | Wins | Win rate | Wilson 95% | Own way at end | Steady by end of Act 1, "
+                  "all runs (of runs alive) | True by end of Act 2, all runs (of runs alive) | Stalls | Errors |",
                   "|---|---:|---:|---|---:|---:|---:|---:|---:|"]
         for arm, row in stats.items():
             low, high = row["wilson"]
-            reach = [pct(row[key]) if key in row else "-" for key in ("own", "steady1", "true2")]
+            cells = [pct(row["own"]) if "own" in row else "-"] + [
+                f"{pct(row[key])} ({pct(survivor_rate(reach(row, key)))} of {reach(row, key)[1]})"
+                if key in row else "-" for key in ("steady1", "true2")]
             lines.append(f"| {arm} | {row['wins']}/{row['n']} | {pct(row['rate'])} | "
-                         f"{pct(low)}-{pct(high)} | {' | '.join(reach)} | {row['stalls']} | {row['errors']} |")
+                         f"{pct(low)}-{pct(high)} | {' | '.join(cells)} | {row['stalls']} | {row['errors']} |")
         lines += ["", "| Per fight | Shatters | Kindles | Embers spent | Cracked | Embers gained |",
                   "|---|---:|---:|---:|---:|---:|"]
         for arm, row in stats.items():
