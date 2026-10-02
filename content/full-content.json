@@ -5849,7 +5849,9 @@
             "limitBreak": 1.0,
             "quakeblow": 1.0,
             "resonantLance": 0.5,
-            "spall": 1.0
+            "spall": 1.0,
+            "heavyBlow": 1.0,
+            "cleave": 1.0
           },
           "relics": {
             "bellOfEndings": 1.0,
