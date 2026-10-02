@@ -14,7 +14,7 @@ const EXPECTED: String = "bb86394a2ed6328ec7018fc73754c3254a67c731029eca41447ef9
 ## Edge's stat powers are clear glass (it stays Kindling to its death), so its
 ## knobs-at-1 run could not move off and the check would be vacuous.
 const UNLIT_SEED: int = 1001
-const EXPECTED_UNLIT: String = "5960861130a972a59e06f8c32c3f96d7a100f78d7b3de1751aa944e03bfc2977"
+const EXPECTED_UNLIT: String = "7b8a17ccf6f2d0611a70feb442af899425e42d11a960572e9e3f24f0e7082ada"
 
 
 static func run(fails: Array[String]) -> void:
