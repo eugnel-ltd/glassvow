@@ -323,9 +323,11 @@ New durations come from `LeadlightMotion`. Grain stays the only
   tap on it, or on the flame, accepts and persists it through
   `Main._on_language_changed`.
 - The consent line shows on the first title while
-  `diagnostics_notice_seen == false`; showing it calls
-  `Preferences.mark_diagnostics_notice_seen()`, exactly as the Settings
-  first-panel notice does today. The default stays on
+  `diagnostics_notice_seen == false`; once the line is lit on screen (the
+  rite's reveal has run, or the title landed lit) the title calls
+  `Preferences.mark_diagnostics_notice_seen()`, as the Settings first-panel
+  notice does when shown — never at build, so the title held at the ember
+  for the language does not spend it (PR #650 review). The default stays on
   (posture B, `DEFAULT_DIAGNOSTICS`). Toggling calls
   `Preferences.set_diagnostics_enabled` and shows the shipped
   `ui.settings.diagnosticsNote` ("Takes effect on the next launch.").
@@ -471,7 +473,7 @@ leaves headroom for the A12.
 | (a) Leadlight kit | `presentation/ui/` (tokens, theme, motion, rite, shapes, numerals) and `presentation/ui/components/` (glass box, pane, word, plaque, toggle, slider, choice, row, sheet, room, rose, inscription, lantern) | `RunStyle` / `GlassStyle` constants are aliases of `LeadlightTokens`, values pinned by `tests/test_leadlight.gd`; the canonical Theme lives in `LeadlightTheme` and is built once per process. |
 | (b) TransitionLayer | `flood`, `flare`, `skip` | The flood reuses the iris shader (a `feather` uniform whose default keeps the iris edge identical); grain stays the one screen reader. Headless runs the flood's callback at once. |
 | (c) Kindling, splash, TitleScreen | `presentation/title/`, `assets/art/title/splash.png`, `assets/art/title/lantern-hero.png` | The splash is frame 0 of the rite, rendered from the production screen (`tools/capture_title.gd --rite=0 --scale=2`). `ChoiceScreen`'s title variant is retired (two commits, per-file size). |
-| (d) First launch | `TitleScreen` + `FirstLight` | Existing keys only: language when `Preferences.language` is empty and the player is new (else persisted silently); consent while `diagnostics_notice_seen` is false. |
+| (d) First launch | `TitleScreen` + `FirstLight` | Existing keys only: language when `Preferences.language` is empty and the player is new (a returning player is not asked and keeps following the OS language); consent while `diagnostics_notice_seen` is false, recorded once its line is lit. |
 | (e) Settings | `SettingsPanel` on `LeadlightRoom` | Class, signals, constructor, `set_shape`, `focus_language` and every tested node name unchanged. |
 | (f) Embark | lighter re-dress, as the ruling allows | Leaded room, glass cards (`LeadlightGlassBox.chosen`), glass actions; phone cards grow to 84 px with two-line blurbs (the shipped 66 px card spilled its copy in both languages). |
 | (g) Opening | staging only, script untouched | The lantern's routes leave in its own light (flare + flood from the wick); the Keeper's kindle sparks burn the Kindling colour; the beat-4 card uses the wordmark's lettering; the opening floods out to the road. |
@@ -552,6 +554,11 @@ confirmation on the iPad 8 remains the way to close P2.
   default, so touch players never see a selection ring.
 - **Utility words** are 44 px tall always (the touch floor), not hit-floor
   dependent.
+- **A returning player with no language set** (a pre-lane profile) is not
+  asked and nothing is written: they keep following the OS language, as
+  shipped. An earlier lane head persisted the resolved language for them,
+  which would have stopped a later OS-language change from following them;
+  the PR #650 review flagged it and it is reverted.
 
 ### 16.5 Open
 
@@ -604,3 +611,31 @@ desktop-landscape:
 Re-taken: `stills/title-fresh.png`, `title-saved.png`, `title-vigil.png`,
 `first-launch.png`, `settings.png`, `rite.png`, `idle-motion.png` (title at
 rest now changes 11.7 / 4.7 % of its pixels per second).
+
+### 16.7 Review fix — the first-launch consent line (PR #650)
+
+The independent review found that a first-launch player never saw the
+consent line: the first title recorded the notice as it was built, while the
+rite held unlit at the ember for the language, so the title rebuilt in the
+chosen language no longer offered it (and the Settings notice was spent).
+The still harness bypasses Main, so it hid the bug. Fixed: the notice is
+recorded only once the line is lit. The same real boot then showed the row's
+switch missing and its privacy word clipped (an autowrapping sentence with no
+width made the row hundreds of pixels tall in a live tree); the sentence now
+wraps inside the row and the switch sits by its first line, and the row is
+re-seated on the room a fresh install leaves.
+
+- Test: `tests/test_first_launch_flow.gd` drives Main on a fresh profile —
+  first title (language held, notice unspent), language chosen through the
+  flame, rebuilt title offers the consent line, reveal lights it and records
+  the notice, Settings shows none. It fails on the old code (four checks).
+  `tests/test_presentation.gd` holds the consent row's wrap width and switch
+  seat at every shape in both languages.
+- Evidence from a real boot, not the harness:
+  `stills/first-launch-consent-real-boot.png`. Each frame is a fresh
+  isolated profile (an uncommitted `override.cfg` naming
+  `glassvow-opening-consent`) holding only `[locale] language="<code>"`, so
+  the first title shows the consent line, then
+  `tools/shot.sh --shape=<shape> --settle=3.5 --shot=<png>` for
+  pad-landscape en, pad-landscape zh-Hant and phone-landscape en; after each
+  boot the profile's `settings.cfg` holds `diagnostics_notice_seen=true`.

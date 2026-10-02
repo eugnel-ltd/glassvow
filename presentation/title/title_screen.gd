@@ -50,7 +50,7 @@ class Layout:
 	var slab_w: float = 360.0
 	var lang_dx: float = 240.0
 	var lang_y: float = 688.0
-	var consent: Vector3 = Vector3(26.0, 758.0, 400.0)
+	var consent: Vector3 = Vector3(26.0, 730.0, 470.0)
 
 	static func for_shape(stage_shape: StringName) -> Layout:
 		var l: Layout = Layout.new()
@@ -72,7 +72,9 @@ class Layout:
 		l.slab_w = 250.0
 		l.lang_dx = 170.0
 		l.lang_y = 300.0
-		l.consent = Vector3(14.0, 334.0, 290.0)
+		# Under the two left words a fresh install shows, with room for the
+		# privacy word at the touch floor: on the stage, whole.
+		l.consent = Vector3(14.0, 312.0, 300.0)
 		return l
 
 var shape: StringName = StageShape.IDENTITY
@@ -301,9 +303,10 @@ func _build_first_light() -> void:
 			_language.append(pane)
 			add_child(pane)
 	if _context.get("ask_consent", false) == true:
-		_consent = FirstLight.consent_row(_preferences, shape)
+		var spec: Layout = Layout.for_shape(shape)
+		var k: float = 1.0 if size.y <= 0.0 else size.y / spec.ref_h
+		_consent = FirstLight.consent_row(_preferences, shape, spec.consent.z * k)
 		add_child(_consent)
-		_preferences.mark_diagnostics_notice_seen()
 
 
 func _ready() -> void:
@@ -375,12 +378,23 @@ func _land() -> void:
 	_chain.progress = 1.0
 	_veil.strength = 0.0
 	_catcher.visible = false
+	_record_consent_shown()
 	for language: LeadlightPane in _language:
 		language.queue_free()
 	_language.clear()
 
 
+## The consent notice is recorded only once its line is lit on screen — the
+## rite's reveal has run, or the title landed lit — never when it is built: a
+## first title held at the ember for the language never lights it, and the
+## title rebuilt in the chosen language must still offer it.
+func _record_consent_shown() -> void:
+	if _consent != null and is_instance_valid(_consent):
+		_preferences.mark_diagnostics_notice_seen()
+
+
 func _on_rite_done() -> void:
+	_record_consent_shown()
 	_catcher.visible = false
 	for language: LeadlightPane in _language:
 		LeadlightMotion.exit(language)

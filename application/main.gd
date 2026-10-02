@@ -1024,12 +1024,11 @@ func _show_title() -> void:
 	if not OS.has_feature("web"):
 		choices.append({"id": "quit", "label": Locale.active.t("ui.menu.quit"), "quiet": true})
 
-	# First launch asks the language only of a new player: an existing player
-	# whose language was never set keeps what the OS gave them, persisted.
+	# First launch asks the language only of a new player. A returning player
+	# whose language was never set is not asked and keeps following the OS
+	# language, as shipped (nothing is written for them).
 	var newcomer: bool = saved == null and _deed("runs") == 0
 	var ask_language: bool = Preferences.active.language.is_empty() and newcomer
-	if Preferences.active.language.is_empty() and not newcomer:
-		Preferences.active.set_language(String(Preferences.active.effective_language()))
 	var rite: bool = not _title_kindled or _title_rite_resume
 	var screen: TitleScreen = TitleScreen.new(
 		_title_context(saved, choices, rite, ask_language), _sfx_bus)

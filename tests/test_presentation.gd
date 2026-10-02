@@ -344,6 +344,37 @@ static func _title_ceremonial_menu(fails: Array[String]) -> void:
 			_check(fails, not help.text.contains("\n"), "How to Play does not wrap at %s" % shape)
 			_title_no_overlap(fails, title, shape)
 			title.free()
+		# The first title of a fresh install: no run, no deeds, the consent
+		# line where the deeds will be carved — on the stage, clear of all.
+		for code: StringName in [Locale.CODE_EN, Locale.CODE_ZH_HANT]:
+			var previous: Locale = Locale.active
+			Locale.active = Locale.new(code)
+			var fresh_rows: Array[Dictionary] = []
+			for row: Dictionary in (shipped if code == Locale.CODE_EN else zh_rows):
+				if str(row.get("id")) != "continue":
+					fresh_rows.append(row)
+			var first: TitleScreen = TitleScreen.new({"shape": shape, "choices": fresh_rows,
+				"ask_consent": true})
+			first.set_anchors_preset(Control.PRESET_TOP_LEFT)
+			first.size = Vector2(StageShape.REFERENCES[shape])
+			first._layout()
+			_check(fails, first._consent != null, "%s %s: the first title has no consent line" % [shape, code])
+			if first._consent != null:
+				# An autowrapping sentence with no width measures its height at
+				# zero width in a live tree: the row grew hundreds of pixels tall
+				# and the switch, centred on it, left the stage (PR #650 capture).
+				# Outside a tree that never shows, so hold the cause itself: the
+				# sentence wraps inside the row and the switch sits by its first line.
+				var line: Label = first._consent.find_child("DiagnosticsLine", true, false) as Label
+				var toggle: Control = first._consent.find_child("DiagnosticsToggle", true, false) as Control
+				_check(fails, line != null and line.custom_minimum_size.x >= 120.0
+						and line.custom_minimum_size.x <= first._consent.size.x,
+					"%s %s: the consent sentence has no width to wrap in" % [shape, code])
+				_check(fails, toggle != null and toggle.size_flags_vertical == Control.SIZE_SHRINK_BEGIN,
+					"%s %s: the consent switch is not seated by the first line" % [shape, code])
+			_title_no_overlap(fails, first, shape)
+			first.free()
+			Locale.active = previous
 
 
 ## Every interactive or lettered piece of the title keeps clear of the others
@@ -357,6 +388,8 @@ static func _title_no_overlap(fails: Array[String], title: TitleScreen, shape: S
 			pieces.append(word_v)
 	for slab: LeadlightInscription in title._slabs:
 		pieces.append(slab)
+	if title._consent != null:
+		pieces.append(title._consent)
 	var art: Rect2 = Rect2(title.lantern.position, title.lantern.size)
 	var glass: Rect2 = Rect2(art.position + art.size * Vector2(0.30, 0.42), art.size * Vector2(0.40, 0.40))
 	var stage: Rect2 = Rect2(Vector2.ZERO, title.size)

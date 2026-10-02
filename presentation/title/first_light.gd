@@ -4,12 +4,16 @@ extends RefCounted
 ## start §9). The language is two glass panes on the title itself; this builds
 ## the other: one sentence and one switch for crash diagnostics, set where the
 ## deeds will one day be carved. Existing keys only: the switch writes
-## `Preferences.set_diagnostics_enabled` (default on, posture B) and showing it
-## records `diagnostics_notice_seen`, exactly as the Settings notice does.
+## `Preferences.set_diagnostics_enabled` (default on, posture B), and the
+## title records `diagnostics_notice_seen` once the line is lit on screen
+## (TitleScreen._record_consent_shown), as the Settings notice does when shown.
 
 
+## `width` is the row's own width: the sentence wraps inside it. An autowrapping
+## label given no width measures its height at zero width, which made the row
+## hundreds of pixels tall and put the switch, centred on it, off the stage.
 static func consent_row(preferences: Preferences, stage_shape: StringName,
-		open_url: Callable = Callable(OS, "shell_open")) -> HBoxContainer:
+		width: float = 300.0, open_url: Callable = Callable(OS, "shell_open")) -> HBoxContainer:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.name = "FirstLightConsent"
 	row.add_theme_constant_override("separation", 12)
@@ -17,7 +21,8 @@ static func consent_row(preferences: Preferences, stage_shape: StringName,
 		func() -> bool: return preferences.diagnostics_enabled,
 		func(on: bool) -> void: preferences.set_diagnostics_enabled(on))
 	toggle.name = "DiagnosticsToggle"
-	toggle.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	# Beside the sentence's first line, not centred on the row.
+	toggle.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(toggle)
 	var words: VBoxContainer = VBoxContainer.new()
 	words.add_theme_constant_override("separation", 0)
@@ -28,6 +33,8 @@ static func consent_row(preferences: Preferences, stage_shape: StringName,
 	line.name = "DiagnosticsLine"
 	line.text = Locale.active.t("ui.firstLight.diagnostics")
 	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# The switch measures a little wider once its font applies; leave room.
+	line.custom_minimum_size.x = maxf(120.0, width - toggle.get_combined_minimum_size().x - 36.0)
 	line.add_theme_font_override("font", LeadlightTokens.font(LeadlightTokens.ROLE_READ, px))
 	line.add_theme_font_size_override("font_size", px)
 	line.add_theme_color_override("font_color", Color("#c3c8d9"))

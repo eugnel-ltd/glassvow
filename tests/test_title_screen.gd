@@ -105,7 +105,8 @@ static func _first_launch(fails: Array[String]) -> void:
 		return
 	screen.rite.advance(2.0)
 	_check(fails, screen.rite.held(), "first launch holds the rite at the ember for the language")
-	_check(fails, prefs.diagnostics_notice_seen, "showing the consent line records the notice")
+	_check(fails, not prefs.diagnostics_notice_seen,
+		"a consent line held unlit at the ember must not record the notice")
 	_check(fails, screen.find_child("FirstLightConsent", true, false) != null
 			and screen.find_child("DiagnosticsToggle", true, false) is Button,
 		"the consent line carries its switch")
@@ -119,6 +120,7 @@ static func _first_launch(fails: Array[String]) -> void:
 	screen.resume_after_language()
 	screen.rite.advance(5.0)
 	_check(fails, screen.rite.is_done(), "the rite runs on once the language is answered")
+	_check(fails, prefs.diagnostics_notice_seen, "the consent line, lit, records the notice")
 	screen.queue_free()
 
 
