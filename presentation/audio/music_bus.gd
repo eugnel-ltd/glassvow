@@ -32,13 +32,6 @@ const FILES: Dictionary[StringName, String] = {
 	&"defeat": "defeat",
 }
 
-## Intros play once and hand on to a looping cue. `kindling` is the launch
-## rite's (docs/music-ledger.md, commissioned): until its file exists the rite
-## simply opens on the cue it hands to, so landing the render needs no code.
-const INTROS: Dictionary[StringName, String] = {
-	&"kindling": "kindling",
-}
-
 var current_cue: StringName = &""
 
 var _players: Array[AudioStreamPlayer] = []
@@ -71,39 +64,13 @@ func play(cue: StringName) -> void:
 	if not ResourceLoader.exists(path):
 		push_warning("music: no track for '%s'" % cue)
 		return
-	var stream: AudioStream = _stream(path, true)
-	if stream != null:
-		_crossfade_to(stream, cue)
-
-
-## Play `intro` once, then `then` as usual. A missing intro plays `then` now.
-func play_intro(intro: StringName, then: StringName) -> void:
-	var path: String = DIR % INTROS.get(intro, "")
-	if _players.is_empty() or not INTROS.has(intro) or not ResourceLoader.exists(path):
-		play(then)
-		return
-	var stream: AudioStream = _stream(path, false)
-	if stream == null:
-		play(then)
-		return
-	var player: AudioStreamPlayer = _crossfade_to(stream, intro)
-	var hand_on: Callable = func() -> void:
-		if current_cue == intro:
-			play(then)
-	player.finished.connect(hand_on, CONNECT_ONE_SHOT)
-
-
-func _stream(path: String, loop: bool) -> AudioStream:
 	var stream: AudioStream = load(path) as AudioStream
 	if stream == null:
-		return null
+		return
 	stream = stream.duplicate() as AudioStream
 	if stream is AudioStreamMP3:
-		(stream as AudioStreamMP3).loop = loop
-	return stream
+		(stream as AudioStreamMP3).loop = true
 
-
-func _crossfade_to(stream: AudioStream, cue: StringName) -> AudioStreamPlayer:
 	var outgoing: AudioStreamPlayer = _players[_active]
 	var incoming_index: int = 1 - _active
 	var incoming: AudioStreamPlayer = _players[incoming_index]
@@ -123,7 +90,6 @@ func _crossfade_to(stream: AudioStream, cue: StringName) -> AudioStreamPlayer:
 		)
 	_active = incoming_index
 	current_cue = cue
-	return incoming
 
 
 func stop() -> void:

@@ -1044,10 +1044,7 @@ func _show_title() -> void:
 	_transitions.set_grain(true)
 	if not rite:
 		_transitions.screen_in(screen)
-	if rite and not _title_rite_resume:
-		_music.play_intro(&"kindling", &"title")
-	else:
-		_music.play(&"title")
+	_music.play(&"title")
 	_title_kindled = true
 	_title_rite_resume = false
 

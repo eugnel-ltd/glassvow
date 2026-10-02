@@ -80,25 +80,6 @@ Prompt that rendered (Custom style field, Instrumental on):
 
 Held candidates (kept in the repo, not wired): combat **A** 104 s (`a7613abf-f0f6-47a5-9e7b-830bb421b3c2`), **B** 153 s (`83a2af85-b971-4771-b644-18ac345a2e42`), **D** 98 s (`e5e1d8fa-509d-4900-b64d-6916edcf77df`); boss **B** 153 s (`6ed76c50-5e2b-4034-9cbd-ae27ff7c9f89`).
 
-## Commissioned — `kindling` intro (2026-10-02, James renders)
-
-The launch rite's intro (`docs/design/2026-10-02-opening-start` §7 T1, §11
-#12). `MusicBus.play_intro(&"kindling", &"title")` plays it once and hands on
-to `title`; `MusicBus.INTROS` maps `kindling` → `kindling.mp3`, so landing
-`assets/audio/music/kindling.mp3` (and its manifest row) is the whole change.
-Until then the rite opens on the shipped `title` cue.
-
-| cue | file | duration | loops | hands on to |
-|---|---|---|---|---|
-| `kindling` | `kindling.mp3` | 6–9 s | no | `title` |
-
-Brief for Suno (Custom style field, Instrumental on): Not a loop: a 6 to 9
-second intro. A single low cello harmonic and one breathy glass-harmonica
-tone in the dark, rising slowly as a flame catches; warm, close, intimate;
-the last two seconds open into the key and colour of the title theme
-("Stained Glass Inscription") so the loop can take over without a seam. No
-drums, no choir, no vocals, no brass, no climb.
-
 ## Pointer
 
 For prompts, motif law and the render pipeline, see

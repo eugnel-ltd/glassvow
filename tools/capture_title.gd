@@ -7,14 +7,16 @@ extends SceneTree
 ##
 ##   godot --path . --position 40,40 -s res://tools/capture_title.gd -- \
 ##       --shape=pad-landscape --locale=en --state=saved --out=/tmp/t.png \
-##       [--rite=1.6] [--settings] [--embark] [--flood=0.3] [--reduce-motion] [--scale=2]
+##       [--rite=1.6] [--settings] [--embark] [--flood=0.3] [--burst=3] [--reduce-motion] [--scale=2]
 ##
 ## The boot splash is this harness at --state=fresh --rite=0 --scale=2 on the
 ## identity shape: frame 0 of the launch rite (assets/art/title/splash.png).
 ##
 ## --state: fresh (no run, no deeds), first (first launch: language and
 ## consent), saved (a run with a Steady Frostlight flame), vigil (saved run,
-## deeds and three shards). --rite=T photographs the launch rite T seconds in.
+## deeds and three shards), consent (the first title after the language: the
+## consent line). --rite=T photographs the launch rite T seconds in;
+## --burst=N takes N frames one second apart (idle motion).
 ## Never --headless: a headless run has no viewport texture.
 
 const SETTLE_FRAMES: int = 45
@@ -74,8 +76,19 @@ func _initialize() -> void:
 		layer.flood(screen.wick_on_stage(), screen.lantern.light(), func() -> void: pass)
 		await create_timer(float(str(_args.get("flood", "0.3")))).timeout
 	var out: String = str(_args.get("out", "/tmp/glassvow-title.png"))
-	root.get_viewport().get_texture().get_image().save_png(out)
-	print("title still: " + out)
+	var burst: int = int(str(_args.get("burst", "1")))
+	if burst <= 1:
+		root.get_viewport().get_texture().get_image().save_png(out)
+		print("title still: " + out)
+		quit(0)
+		return
+	# Idle-motion proof: `burst` frames one second apart, nothing touched.
+	for k: int in range(burst):
+		var path: String = out.get_basename() + "-%d.png" % (k + 1)
+		root.get_viewport().get_texture().get_image().save_png(path)
+		print("title still: " + path)
+		if k + 1 < burst:
+			await create_timer(1.0).timeout
 	quit(0)
 
 
@@ -92,7 +105,8 @@ static func context(shape: StringName, state: String, rite: bool) -> Dictionary:
 		"shape": String(shape), "choices": choices,
 		"brand": Locale.active.t("ui.brand.title"), "version": "1.0.0",
 		"rite": rite or state == "first", "ask_language": state == "first",
-		"language_default": String(Locale.active.code), "ask_consent": state == "first",
+		"language_default": String(Locale.active.code),
+		"ask_consent": state == "first" or state == "consent",
 	}
 	if saved:
 		ctx["sub"] = Locale.active.t("ui.hud.actWaystone", {"act": 2, "n": 4})

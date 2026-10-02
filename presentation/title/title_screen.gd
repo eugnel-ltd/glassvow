@@ -98,6 +98,7 @@ var _offers: Dictionary = {}
 var _primary_id: String = "begin"
 var _started: bool = false
 var _leaving: bool = false
+var _idle: float = 0.0
 
 
 ## `context`: shape, choices (id/label rows, Main's route ids), sub (where a
@@ -333,6 +334,18 @@ func kindle_now() -> void:
 func _process(delta: float) -> void:
 	if rite != null and rite.is_running() and not hold_rite:
 		rite.advance(delta)
+	_idle += delta
+	# First launch waits on the language without going still: the ember's
+	# own light flickers on the road round it (the flame's light, so it stays
+	# under Reduce Motion), and the pre-lit pane breathes.
+	if rite != null and rite.held():
+		_veil.reach = TitleKindling.EMBER_REACH * (0.55 + 0.45 * lantern.ember_flicker())
+		# The dark is not empty: the road's ash drifts faintly through it.
+		_veil.strength = 0.9
+	if not LeadlightMotion.reduced():
+		for pane: LeadlightPane in _language:
+			var glow: float = 1.0 + (0.10 * (0.5 + 0.5 * LeadlightMotion.breath(_idle, 2.6)) if pane.lit else 0.0)
+			pane.self_modulate = Color(glow, glow, glow, 1.0)
 
 
 ## Everything the light brings up as it reaches: the words, plaque, slabs.

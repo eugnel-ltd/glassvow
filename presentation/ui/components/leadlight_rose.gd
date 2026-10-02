@@ -22,6 +22,7 @@ var glow: float = 1.0:
 		_apply()
 
 var _lit: Array[TextureRect] = []
+var _time: float = 0.0
 var _held: int = 0
 
 
@@ -77,9 +78,19 @@ func _layer(texture: Texture2D) -> TextureRect:
 	return rect
 
 
+## Held glass breathes at rest, a slow pulse a little above its own light;
+## still under Reduce Motion.
+func _process(delta: float) -> void:
+	if _lit.is_empty() or LeadlightMotion.reduced():
+		return
+	_time += delta
+	_apply()
+
+
 func _apply() -> void:
+	var pulse: float = 1.0 + 0.16 * (0.5 + 0.5 * LeadlightMotion.breath(_time, 4.2))
 	for pane: TextureRect in _lit:
-		pane.modulate = Color(1.0, 1.0, 1.0, 0.25 + 0.75 * glow)
+		pane.modulate = Color(pulse, pulse, pulse, 0.25 + 0.75 * glow)
 
 
 class _Disc extends Control:

@@ -48,17 +48,21 @@ var _time: float = 0.0
 class Ember extends Control:
 	var strength: float = 1.0
 	var colour: Color = LeadlightTokens.EMBER
+	## The ember's own flicker, 0.85..1.1: a flame, so it stays under Reduce
+	## Motion (T10 keeps the flame's flicker).
+	var flicker: float = 1.0
 
 	func _draw() -> void:
-		if strength <= 0.01:
+		if strength * flicker <= 0.01:
 			return
 		var c: Vector2 = size * 0.5
 		var r: float = size.x * 0.5
 		var disc: Texture2D = SkyField.disc()
-		draw_texture_rect(disc, Rect2(c - Vector2(r, r) * 2.4, Vector2(r, r) * 4.8), false,
-			Color(colour, 0.45 * strength))
+		var s: float = strength * flicker
+		draw_texture_rect(disc, Rect2(c - Vector2(r, r) * 2.4 * flicker, Vector2(r, r) * 4.8 * flicker),
+			false, Color(colour, 0.45 * s))
 		draw_texture_rect(disc, Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), false,
-			Color(Color("#ffd2a0"), strength))
+			Color(Color("#ffd2a0"), minf(s, 1.0)))
 
 
 func _init() -> void:
@@ -125,12 +129,24 @@ func wick() -> Vector2:
 	return _art_rect().position + _art_rect().size * WICK_UV
 
 
+## The ember's flicker, 0.85..1.1, for anything its light falls on.
+func ember_flicker() -> float:
+	return _ember.flicker
+
+
 func glass_centre() -> Vector2:
 	return _art_rect().position + _art_rect().size * GLASS_CENTRE_UV
 
 
 func _process(delta: float) -> void:
 	_time += delta
+	if _ember.strength > 0.01:
+		_ember.flicker = 0.92 + 0.10 * sin(_time * 9.1) * sin(_time * 3.7 + 1.3) + 0.06 * sin(_time * 1.9)
+		_ember.queue_redraw()
+	# Under Reduce Motion the pool holds still; only the flame in the glass
+	# flickers (motion spec T10).
+	if LeadlightMotion.reduced():
+		return
 	var breath: float = LeadlightMotion.breath(_time)
 	_pool.modulate.a = _pool_alpha() * (1.0 + 0.04 * breath)
 	_pool.modulate = Color(light(), _pool.modulate.a)
