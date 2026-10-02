@@ -648,6 +648,9 @@
     "omen": {
       "prefix": "凶兆——"
     },
+    "firstLight": {
+      "diagnostics": "遊戲若出錯，會傳送當機診斷資料，好讓這條路得以修補。"
+    },
     "language": {
       "label": "語言",
       "en": "English",

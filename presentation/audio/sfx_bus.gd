@@ -86,6 +86,16 @@ func attack(who: StringName, amount: int, blocked: int = 0) -> void:
 	play(StringName(prefix + tier))
 
 
+## A commissioned cue (docs/sfx-ledger.md) with the shipped cue it borrows until
+## its own file lands, which then plays with no code change. A missing file
+## still warns once; the fallback is the ledger's, never a silent guess.
+func play_owed(id: StringName, fallback: StringName = &"", gain: float = SOURCE_GAIN) -> void:
+	if _stream(id) != null:
+		play(id, gain)
+	elif not fallback.is_empty():
+		play(fallback, gain)
+
+
 func _stream(id: StringName) -> AudioStream:
 	if _streams.has(id):
 		return _streams[id]

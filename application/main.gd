@@ -43,6 +43,12 @@ var _map_screen: WorldMapScreen = null
 var _map_keep: MapScreenKeep = MapScreenKeep.new()
 var _map_screen_key: Dictionary = {}
 var _choice_screen: Control = null
+## The launch rite plays once a session: the first title kindles, every later
+## title arrives already lit (docs/design/2026-10-02-opening-start §7).
+var _title_kindled: bool = false
+## Set while the first-launch language rebuilds the title: the rite resumes
+## past the ember instead of starting over.
+var _title_rite_resume: bool = false
 var _reward_screen: RewardEmbers = null
 var _route_screen: Control = null
 var _run_hud: RunHud = null
@@ -249,6 +255,8 @@ func _ready() -> void:
 	var show_settings: bool = false
 	var forced_locale: String = ""
 	var show_font_probe: bool = false
+	# --launch-timing: print when the title first accepts input, then quit.
+	var launch_timing: bool = false
 	var performance_probe: bool = false
 	var map_bench: bool = false
 	var map_asset_bench: bool = false
@@ -326,6 +334,8 @@ func _ready() -> void:
 			forced_locale = arg.trim_prefix("--locale=")
 		elif arg == "--font-probe":
 			show_font_probe = true
+		elif arg == "--launch-timing":
+			launch_timing = true
 		elif arg.begins_with("--perf-out="):
 			performance_probe = true
 		elif arg == "--map-bench":
@@ -542,6 +552,8 @@ func _ready() -> void:
 		_route_idle()
 	if show_settings:
 		_show_settings()
+	if launch_timing:
+		_report_launch()
 	if performance_probe:
 		_attach_performance_probe()
 	elif shot_path != "":
@@ -758,6 +770,16 @@ func _show_runtime_font_probe() -> void:
 ## it in the hand — which makes a before/after comparison of a layout change
 ## unreadable. `--settle=` buys the extra time when the shot is of a settled
 ## composition rather than of the entrance.
+## Cold launch -> title interactive (docs/design/2026-10-02-opening-start §12):
+## the title takes input from the first frame it is drawn, so the clock stops
+## on that frame. Ticks count from engine start; the shell's wall clock around
+## the process adds the boot before it.
+func _report_launch() -> void:
+	await get_tree().process_frame
+	print("LAUNCH title_interactive_ms=%d" % Time.get_ticks_msec())
+	get_tree().quit(0)
+
+
 func _capture_and_quit(path: String) -> void:
 	for _i: int in range(30):  # let layout + first paint settle
 		await get_tree().process_frame
@@ -993,7 +1015,7 @@ func _show_title() -> void:
 		{"id": "settings", "label": Locale.active.t("ui.menu.settings"), "quiet": true},
 		{"id": "credits", "label": Locale.active.t("ui.menu.credits"), "quiet": true},
 	])
-	# Dev-only — ChoiceScreen seats this outside the ceremonial three-tier.
+	# Dev-only — TitleScreen seats this in the top corner, outside the arcs.
 	if DevTools.available():
 		var dev_label: String = _dev_console_label()
 		if not dev_label.is_empty():
@@ -1002,25 +1024,109 @@ func _show_title() -> void:
 	if not OS.has_feature("web"):
 		choices.append({"id": "quit", "label": Locale.active.t("ui.menu.quit"), "quiet": true})
 
-	var title_stats: String = Locale.active.t("ui.brand.stats", {
-		"runs": int(float(str(_vigil.deeds.get("runs", 0)))),
-		"wins": int(float(str(_vigil.deeds.get("wins", 0)))),
-		"slain": int(float(str(_vigil.deeds.get("slain", 0)))),
-	})
-	if not _vigil.unlocks.is_empty():
-		title_stats += Locale.active.t("ui.brand.secrets", {"n": _vigil.unlocks.size()})
-	_show_choice(Locale.active.t("ui.brand.title"),
-		Locale.active.t("ui.brand.tagline"), choices,
-		_on_title_choice.bind(saved), {
-		"variant": "title",
-		"stats": title_stats,
-		# One build string, one source: the same setting the settings-panel
-		# footer reads. The benchmark's 0.5.0+6e06911 stamp lives on in the
-		# parity docs, not on the player's title screen.
-		"version": str(ProjectSettings.get_setting("application/config/version", "")),
-		"rose_shards": _vigil.shards,
-	})
+	# First launch asks the language only of a new player. A returning player
+	# whose language was never set is not asked and keeps following the OS
+	# language, as shipped (nothing is written for them).
+	var newcomer: bool = saved == null and _deed("runs") == 0
+	var ask_language: bool = Preferences.active.language.is_empty() and newcomer
+	var rite: bool = not _title_kindled or _title_rite_resume
+	var screen: TitleScreen = TitleScreen.new(
+		_title_context(saved, choices, rite, ask_language), _sfx_bus)
+	screen.chosen.connect(_on_title_pick.bind(screen, saved))
+	screen.language_chosen.connect(_on_first_language)
+	screen.hurry.connect(_transitions.skip)
+	if game != null and game.run != null:
+		_transitions.wipe()
+	_clear_route()
+	_choice_screen = screen
+	add_child(screen)
+	_transitions.set_grain(true)
+	if not rite:
+		_transitions.screen_in(screen)
 	_music.play(&"title")
+	_title_kindled = true
+	_title_rite_resume = false
+
+
+## The lantern's routes leave in its own light (opening-start §7 T6, T7): the
+## flame flares, the light floods out from the wick in the flame's colour, and
+## the route is built under the cover. Every other route goes at once.
+func _on_title_pick(id: String, screen: TitleScreen, saved: RunState) -> void:
+	if (id == "continue" or id == "begin") and is_instance_valid(screen):
+		screen.leave()
+		var wick: Vector2 = screen.wick_on_stage()
+		_transitions.flare(wick)
+		_transitions.flood(wick, screen.lantern.light(), _on_title_choice.bind(id, saved))
+		return
+	_on_title_choice(id, saved)
+
+
+## Everything the title shows of the player's history: the saved run's flame
+## and where it stands, the shards in the rose, the deeds carved in numerals.
+func _title_context(saved: RunState, choices: Array[Dictionary], rite: bool,
+		ask_language: bool) -> Dictionary:
+	var context: Dictionary = {
+		"shape": String(_shape),
+		"choices": choices,
+		"brand": Locale.active.t("ui.brand.title"),
+		# One build string, one source: the same setting the settings-panel
+		# footer reads.
+		"version": str(ProjectSettings.get_setting("application/config/version", "")),
+		"shards": _vigil.shards,
+		"deeds": _carved_deeds(),
+		"rite": rite,
+		"resume": _title_rite_resume,
+		"ask_language": ask_language,
+		"language_default": String(Preferences.active.effective_language()),
+		"ask_consent": not Preferences.active.diagnostics_notice_seen,
+	}
+	if saved != null:
+		context["sub"] = Locale.active.t("ui.hud.actWaystone", {
+			"act": saved.act + 1, "n": maxi(1, saved.waystones_lit)})
+		context["reading"] = Flame.read(content, saved)
+	return context
+
+
+## The Vigil's deeds as inscriptions: the shipped stats copy, its counts in
+## carved numerals, one deed per line, and only deeds that were done.
+func _carved_deeds() -> Array[String]:
+	var lines: Array[String] = []
+	if _deed("runs") == 0:
+		return lines
+	var stats: String = Locale.active.t("ui.brand.stats", {
+		"runs": LeadlightNumerals.carved(_deed("runs")),
+		"wins": LeadlightNumerals.carved(_deed("wins")),
+		"slain": LeadlightNumerals.carved(_deed("slain")),
+	})
+	var keys: Array[String] = ["runs", "wins", "slain"]
+	var parts: PackedStringArray = stats.split(" · ")
+	for i: int in parts.size():
+		if i < keys.size() and i > 0 and _deed(keys[i]) == 0:
+			continue
+		lines.append(_carve(parts[i]))
+	if not _vigil.unlocks.is_empty():
+		var secrets: String = Locale.active.t("ui.brand.secrets", {
+			"n": LeadlightNumerals.carved(_vigil.unlocks.size())})
+		lines.append(_carve(secrets.trim_prefix(" · ")))
+	return lines
+
+
+func _deed(key: String) -> int:
+	return int(float(str(_vigil.deeds.get(key, 0))))
+
+
+## Chinese numerals sit against their counter word: no space is carved.
+static func _carve(line: String) -> String:
+	var text: String = line.strip_edges()
+	return text.replace(" ", "") if LeadlightTokens.is_zh() else text
+
+
+## First launch: the language pane the player lit. Main's one language
+## transaction applies it; the title is rebuilt in that language and its rite
+## resumes past the ember.
+func _on_first_language(code: StringName) -> void:
+	_title_rite_resume = true
+	_on_language_changed(code, false)
 
 
 func _on_title_choice(id: String, saved: RunState) -> void:
@@ -1166,7 +1272,7 @@ func _show_settings(focus_language: bool = false) -> void:
 ## Main owns the language transaction. Non-combat activates, hydrates and
 ## rebuilds one route atomically; combat persists the request but keeps its
 ## entire Locale/ContentDB pair until the next route constructor.
-func _on_language_changed(code: StringName) -> void:
+func _on_language_changed(code: StringName, reopen_settings: bool = true) -> void:
 	if code != Locale.CODE_EN and code != Locale.CODE_ZH_HANT:
 		return
 	Preferences.active.set_language(String(code))
@@ -1176,11 +1282,13 @@ func _on_language_changed(code: StringName) -> void:
 		_pending_language = &""
 	_close_overlay()
 	if _screen != null:
-		_show_settings(true)
+		if reopen_settings:
+			_show_settings(true)
 		return
 	_apply_pending_content_hydration()
 	_rebuild_active_route()
-	_show_settings(true)
+	if reopen_settings:
+		_show_settings(true)
 
 
 func _confirm_reset() -> void:
@@ -3707,7 +3815,14 @@ func _on_scene_finished() -> void:
 			and not _vigil.guidance_skipped:
 		_show_skip_guidance_offer()
 		return
-	if game != null:
+	if game != null and scene_id == "opening":
+		# The opening leaves in the lantern's light (opening-start §7 T9): it
+		# floods from the hero's lantern, at the stage's left, into the road.
+		var view: Viewport = get_viewport()
+		var stage: Vector2 = view.get_visible_rect().size if view != null else Vector2.ZERO
+		_transitions.flood(Vector2(stage.x * 0.3, stage.y * 0.62),
+			LanternFlame.COLOUR[Flame.TIER_KINDLING], _route_run)
+	elif game != null:
 		_route_run()
 	else:
 		_show_title()

@@ -2,15 +2,16 @@ class_name RunStyle
 extends RefCounted
 ## Exact benchmark tokens for title-to-run presentation surfaces.
 
-const GOLD: Color = Color("#f2c14e")
-const GOLD_DIM: Color = Color("#9c7c34")
-const INK: Color = Color("#0b0e1a")
-const PARCHMENT: Color = Color("#e8dfc8")
-const TEXT: Color = Color("#d7dcea")
-const TEXT_DIM: Color = Color("#8b93ad")
-const PANEL: Color = Color(0.055, 0.071, 0.133, 0.86)
-const PANEL_LINE: Color = Color(GOLD, 0.28)
-const DANGER: Color = Color("#ff8d8d")
+## Aliases of the Leadlight tokens (presentation/ui/leadlight_tokens.gd).
+const GOLD: Color = LeadlightTokens.GOLD
+const GOLD_DIM: Color = LeadlightTokens.GOLD_DIM
+const INK: Color = LeadlightTokens.INK
+const PARCHMENT: Color = LeadlightTokens.PARCHMENT
+const TEXT: Color = LeadlightTokens.TEXT
+const TEXT_DIM: Color = LeadlightTokens.TEXT_DIM
+const PANEL: Color = LeadlightTokens.PANEL
+const PANEL_LINE: Color = LeadlightTokens.PANEL_LINE
+const DANGER: Color = LeadlightTokens.DANGER
 
 
 static func add_backdrop(parent: Control) -> void:

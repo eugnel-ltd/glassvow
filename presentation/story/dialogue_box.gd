@@ -291,9 +291,10 @@ func _apply_style() -> void:
 		StageDirection.STYLE_CHORUS:
 			colour = TEXT_CHORUS
 		StageDirection.STYLE_TITLE:
-			face = RunStyle.tracked(GlassStyle.CINZEL_700, 3)
-			colour = TITLE_GOLD
+			# The title card speaks in the wordmark's lettering (opening-start §10).
 			size_px = 20 if short else 34
+			face = LeadlightTokens.font(LeadlightTokens.ROLE_PRIMARY, size_px)
+			colour = TITLE_GOLD
 			align = HORIZONTAL_ALIGNMENT_CENTER
 	var valign: VerticalAlignment = VERTICAL_ALIGNMENT_TOP
 	if style == StageDirection.STYLE_NARRATION or style == StageDirection.STYLE_TITLE:

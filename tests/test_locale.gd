@@ -215,7 +215,6 @@ static func run(fails: Array[String]) -> void:
 	_persistence_calls_and_shell(fails)
 	_zh_hant_catalogue_contract(fails)
 	_retired_vertical_vocabulary(fails)
-	_title_wordmark_locale(fails)
 
 
 static func _english_seed(fails: Array[String]) -> void:
@@ -347,8 +346,12 @@ static func _remaining_run_screen_call_sites(fails: Array[String]) -> void:
 			"_pane_accessible_name": ["ui.rose.dormantPane", "ui.rose.unknownPane"],
 			"_add_replay": ["ui.rose.replayUnsealing"],
 		},
-		"res://presentation/run/choice_screen.gd": {
-			"_add_title_rose": ["ui.rose.openLabel"],
+		"res://presentation/ui/components/leadlight_rose.gd": {
+			"_init": ["ui.rose.openLabel"],
+		},
+		"res://presentation/title/first_light.gd": {
+			"consent_row": ["ui.firstLight.diagnostics", "ui.settings.diagnosticsNote",
+				"ui.settings.privacyPolicy"],
 		},
 		"res://presentation/run/dawn_screen.gd": {
 			"_build": ["ui.dawn.inputHint"],
@@ -372,6 +375,8 @@ static func _remaining_run_screen_call_sites(fails: Array[String]) -> void:
 			"_act_line": ["ui.pilgrimage.awaits"],
 		},
 		"res://application/main.gd": {
+			"_title_context": ["ui.brand.title", "ui.hud.actWaystone"],
+			"_carved_deeds": ["ui.brand.stats", "ui.brand.secrets"],
 			"_show_run_deck": ["ui.hud.deckOverlayTitle", "ui.hud.deckOverlayCount",
 				"ui.menu.close"],
 			"_show_potion_menu": ["ui.common.use", "ui.hud.tossPotion", "ui.menu.close"],
@@ -726,45 +731,3 @@ static func _first_paths(paths: Array[String]) -> String:
 	for index: int in range(mini(paths.size(), 8)):
 		shown.append(paths[index])
 	return ", ".join(shown)
-
-
-static func _title_wordmark_locale(fails: Array[String]) -> void:
-	var context: Dictionary = {"variant": "title"}
-	var en: ChoiceScreen = ChoiceScreen.new("GLASSVOW", "", [], context)
-	_check(fails, en._wordmark != null and en._wordmark.visible,
-		"English title no longer uses the exact authored raster")
-	_check(fails, en.get("_wordmark_label") == null,
-		"English title gained a duplicate text wordmark")
-	en.free()
-	for shape: StringName in [&"pad-landscape", &"phone-landscape"]:
-		var zh_context: Dictionary = {"variant": "title", "shape": shape}
-		var zh: ChoiceScreen = ChoiceScreen.new("琉璃誓言", "", [], zh_context)
-		zh.set_anchors_preset(Control.PRESET_TOP_LEFT)
-		zh.size = Vector2(StageShape.REFERENCES[shape])
-		zh._fit_title()
-		# zh-Hant has its own authored raster, cut in the same stained glass
-		# as the English wordmark (docs/art-ledger.md) — no text fallback.
-		_check(fails, zh._wordmark != null and zh._wordmark.visible
-			and zh._wordmark.texture == load(ChoiceScreen.TITLE_WORDMARK_ZH),
-			"zh-Hant title does not paint its authored raster at %s" % shape)
-		_check(fails, zh.get("_wordmark_label") == null,
-			"zh-Hant title gained a duplicate text wordmark at %s" % shape)
-		zh.free()
-	# Any locale WITHOUT an authored raster still paints its catalogue title
-	# through the display-face fallback chain.
-	var other: ChoiceScreen = ChoiceScreen.new("GLASVOGT", "", [],
-		{"variant": "title", "shape": &"pad-landscape"})
-	other.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	other.size = Vector2(StageShape.REFERENCES[&"pad-landscape"])
-	other._fit_title()
-	var label_v: Variant = other.get("_wordmark_label")
-	var label: Label = label_v if label_v is Label else null
-	_check(fails, other._wordmark != null and not other._wordmark.visible,
-		"rasterless locale title still paints the English raster")
-	_check(fails, label != null and label.text == "GLASVOGT",
-		"rasterless locale title does not paint its catalogue wordmark")
-	if label != null:
-		var font: Font = label.get_theme_font("font")
-		_check(fails, font != null and font.has_char("誓".unicode_at(0)),
-			"rasterless locale wordmark cannot shape representative glyph 誓")
-	other.free()

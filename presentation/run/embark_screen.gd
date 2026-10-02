@@ -1,6 +1,8 @@
 class_name EmbarkScreen
 extends Control
-## Aspect/Vow selection, matching the benchmark's one-screen embark flow.
+## Aspect/Vow selection, matching the benchmark's one-screen embark flow,
+## dressed as a room in the same house as Settings (Leadlight kit): a leaded
+## window over the road, glass cards, glass actions.
 
 signal begin_requested(aspect: int, vow: int)
 signal back_requested
@@ -17,6 +19,7 @@ var _saved_run: bool
 var _selected_aspect: int
 var _selected_vow: int
 var _sfx: SfxBus
+var _room: LeadlightSheet
 var _centre: CenterContainer
 var _column: VBoxContainer
 var _title: Label
@@ -60,6 +63,10 @@ func _init(aspects: Array, vows: Array, aspect_unlocked: bool,
 
 
 func _build() -> void:
+	_room = LeadlightSheet.new()
+	_room.spring = 0.10
+	_room.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_room)
 	var margin: MarginContainer = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 20)
@@ -88,7 +95,7 @@ func _build() -> void:
 	_centre.add_child(_column)
 
 	_title = _label(Locale.active.t("ui.embark.title"), 26, RunStyle.GOLD, true)
-	_title.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_700, 4))
+	_title.add_theme_font_override("font", LeadlightTokens.font(LeadlightTokens.ROLE_PRIMARY, 26))
 	_column.add_child(_title)
 
 	_sub = _label(
@@ -244,7 +251,16 @@ func _select_aspect(index: int) -> void:
 
 func _refresh_aspects() -> void:
 	for index: int in range(_aspect_cards.size()):
-		RunStyle.style_card(_aspect_cards[index], index == _selected_aspect)
+		_style_card(_aspect_cards[index], index == _selected_aspect)
+
+
+## A glass card: cold glass, warmed with a gold came when it is the choice.
+static func _style_card(card: Button, selected: bool) -> void:
+	for state: String in ["normal", "hover", "pressed", "disabled", "focus"]:
+		var box: LeadlightGlassBox = LeadlightGlassBox.make(
+			LeadlightGlassBox.Shape.RECT, state, false, 0.0)
+		box.chosen = selected
+		card.add_theme_stylebox_override(state, box)
 
 
 func _change_vow(delta: int) -> void:
@@ -314,8 +330,8 @@ func _fit() -> void:
 			var card_size: Vector2 = Vector2(232, 254)
 			var hero_size: float = 70 if short_landscape else 92
 			if phone_landscape:
-				card_size = Vector2(252, 66)
-				hero_size = 44
+				card_size = Vector2(252, 84)
+				hero_size = 52
 			_aspect_cards[index].custom_minimum_size = card_size
 			_hero_art[index].custom_minimum_size = Vector2.ONE * hero_size
 			_aspect_copies[index].custom_minimum_size.x = maxf(
@@ -329,6 +345,11 @@ func _fit() -> void:
 				"font_size", 14 if horizontal else (16 if short_landscape else 18))
 			_aspect_blurbs[index].add_theme_font_size_override(
 				"font_size", 11 if horizontal else 12)
+			# A phone card is 84 px tall: two lines of blurb, then an ellipsis,
+			# rather than copy spilling over the vow picker below it.
+			_aspect_blurbs[index].max_lines_visible = 2 if horizontal else -1
+			_aspect_blurbs[index].text_overrun_behavior = \
+				TextServer.OVERRUN_TRIM_ELLIPSIS if horizontal else TextServer.OVERRUN_NO_TRIMMING
 	if _vow_desc != null:
 		_vow_desc.custom_minimum_size.x = minf(
 			700.0 if phone_landscape else 460.0, maxf(280.0, size.x - 40.0))
@@ -336,6 +357,11 @@ func _fit() -> void:
 		_actions.columns = 2 if phone_landscape else 1
 		_actions.custom_minimum_size.x = 0 if phone_landscape else minf(
 			340.0, maxf(280.0, size.x - 40.0))
+	# The room stands round the column with air on every side, inside the stage.
+	var need: Vector2 = _column.get_combined_minimum_size() + Vector2(96.0, 110.0 if not phone_landscape else 60.0)
+	var room: Vector2 = Vector2(minf(need.x, size.x - 16.0), minf(need.y, size.y - 8.0))
+	_room.size = room
+	_room.position = (size - room) * 0.5
 
 
 static func _label(text: String, font_size: int, colour: Color,
@@ -351,21 +377,15 @@ static func _label(text: String, font_size: int, colour: Color,
 
 
 static func _action(text: String, primary: bool) -> Button:
-	var button: Button = Button.new()
-	button.text = text
-	button.custom_minimum_size.y = 40
+	var button: LeadlightPane = LeadlightPane.new(text)
+	button.lit = primary
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_700, 1))
-	button.add_theme_font_size_override("font_size", 15)
-	RunStyle.style_button(button, primary)
 	return button
 
 
 static func _step_button(text: String) -> Button:
-	var button: Button = Button.new()
-	button.text = text
+	var button: LeadlightPane = LeadlightPane.new(text, StageShape.IDENTITY, LeadlightGlassBox.Shape.RECT)
 	var side: float = RunStyle.hit_floor(34.0)
 	button.custom_minimum_size = Vector2(side, side)
 	button.add_theme_font_size_override("font_size", 20)
-	RunStyle.style_button(button, false, RunStyle.GOLD, true)
 	return button

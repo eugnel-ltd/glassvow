@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Glassvow · Concept C · The Long Road</title>
+<link rel="stylesheet" href="mock-base.css">
+<style>
+/* Concept C — The Long Road. Lateral and cinematic: the pilgrim stands at
+   the road's near end, lantern held out; the road runs away to the door on
+   the far horizon. The choices are the lamp posts along the road, lit one
+   after another by the pilgrim's flame. The camera travels; screens are
+   places along the road. */
+svg.scene { position: absolute; left: 0; top: 0; }
+.wordmark { position: absolute; filter: drop-shadow(0 4px 14px rgba(0,0,0,.85)); }
+.pilgrim { position: absolute; transform: scaleX(-1); filter: brightness(.12) saturate(.3)
+  drop-shadow(-3px 0 2px color-mix(in srgb, var(--flame) 55%, transparent)); }
+.post-label { position: absolute; transform: translate(-50%, 0); white-space: nowrap; padding: 6px 14px;
+  font-size: var(--pl, 13px); color: var(--parchment); text-shadow: 0 1px 2px #000;
+  background: linear-gradient(180deg, rgba(30,38,72,.92), rgba(13,17,36,.94));
+  box-shadow: inset 0 0 0 1.5px var(--lead), inset 0 0 0 2.5px rgba(156,124,52,.5), 0 0 18px rgba(242,193,78,.18); }
+.post-label.focus { box-shadow: inset 0 0 0 1.5px var(--lead), inset 0 0 0 2.5px var(--gold), 0 0 22px rgba(242,193,78,.55); }
+.milestone { position: absolute; text-align: center; color: rgba(242,193,78,.55); line-height: 1.75;
+  text-shadow: 0 -1px 0 #000, 0 1px 0 rgba(255,233,172,.1); }
+.room { position: absolute; display: grid; grid-template-columns: auto 1fr; align-content: start; gap: 24px; padding: 70px 36px 26px;
+  background: repeating-linear-gradient(60deg, transparent 0 30px, rgba(4,5,11,.5) 30px 32px),
+    repeating-linear-gradient(-60deg, transparent 0 30px, rgba(4,5,11,.5) 30px 32px),
+    linear-gradient(180deg, rgba(16,20,40,.95), rgba(8,10,22,.97));
+  border-radius: 50% 50% 0 0 / 22% 22% 0 0; box-shadow: inset 0 0 0 3px var(--lead), inset 0 0 0 4px rgba(156,124,52,.5), 0 0 0 10px #10142a, 0 0 0 12px #04050b; }
+.room h2 { position: absolute; left: 0; right: 0; text-align: center; top: 52px; color: var(--gold); font-size: 15px; }
+.consent { position: absolute; display: flex; gap: 12px; align-items: center; }
+.consent p { font-size: var(--c-size, 13px); line-height: 1.45; color: #c3c8d9; text-shadow: 0 1px 2px #000; }
+.consent .pp { font-style: normal; color: var(--gold-dim); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <svg class="scene" id="scene"></svg>
+  <img class="wordmark" id="wordmark" alt="">
+  <img class="pilgrim" id="pilgrim" src="../../../assets/art/heroes/duskblade.png" alt="">
+  <div class="lantern" id="lantern"><div class="halo"></div><img src="../../../assets/art/ui/lantern.png" alt=""><div class="glass-tint"></div><div class="flame"></div></div>
+  <div class="plaque t-primary" id="plaque"><div class="name" data-t="back"></div><div class="sub t-read"><i></i><span data-t="backSub"></span></div></div>
+  <div class="pane t-label" id="rekindle" data-t="rekindle"></div>
+  <div class="post-label t-label" id="p0" data-t="vigil"></div>
+  <div class="post-label t-label" id="p1" data-t="help"></div>
+  <div class="post-label t-label focus" id="p2" data-t="settings"></div>
+  <div class="post-label t-label" id="p3" data-t="credits"></div>
+  <div class="milestone t-carved" id="milestone"></div>
+  <div class="quiet t-label" id="quit" data-t="quit"></div>
+  <div class="version" id="version">1.0.0</div>
+  <div class="consent" id="consent"><span class="toggle on"></span><p class="t-read"><span data-t="diag"></span> <em class="pp" data-t="privacy"></em></p></div>
+  <div class="pane t-label" id="langZh" data-t="langZh"></div>
+  <div class="pane t-label" id="langEn" data-t="langEn"></div>
+  <div class="room" id="room"><h2 class="t-label" data-t="settings"></h2></div>
+</div>
+<script src="mock-base.js"></script>
+<script>
+const W = SW, H = SH, k = SHAPE === "phone" ? 0.476 : 1;   // phone is the pad scene at 0.476 vertical scale, re-spaced
+const L = {
+  pad: {
+    horizon: 470, door: { x: 800, y: 486, h: 150 }, stars: { x: 800, y: 182, r: 76 },
+    word: { x: 56, y: 54, w: 400 }, pilgrim: { x: 40, y: 290, h: 560 }, lantern: { x: 372, y: 520, w: 170 },
+    plaque: { x: 360, y: 728 }, rekindle: { x: 360, y: 778 },
+    posts: [[612, 800, 290], [902, 708, 190], [1092, 620, 124], [880, 530, 78]], plSize: [15, 14, 13, 12],
+    road: "M330,820 C560,790 900,760 1040,690 C1130,640 1060,590 960,550 C890,522 830,500 806,488 L816,488 C850,500 930,522 1010,552 C1140,600 1190,660 1080,730 C960,800 760,820 640,820 Z",
+    mile: { x: 1100, y: 690, w: 120, h: 130, size: 10 }, quit: { x: 1100, y: 30 },
+  },
+  phone: {
+    horizon: 222, door: { x: 572, y: 232, h: 72 }, stars: { x: 572, y: 82, r: 42 },
+    word: { x: 24, y: 16, w: 210 }, pilgrim: { x: 4, y: 104, h: 300 }, lantern: { x: 200, y: 214, w: 96 },
+    plaque: { x: 206, y: 318 }, rekindle: { x: 206, y: 362 },
+    posts: [[438, 384, 150], [646, 338, 100], [784, 296, 66], [630, 254, 40]], plSize: [12, 11, 11, 10],
+    road: "M236,390 C400,376 640,362 744,330 C810,306 760,282 690,262 C640,248 596,238 576,233 L582,233 C608,238 664,248 724,262 C816,286 850,314 772,348 C690,382 546,390 460,390 Z",
+    mile: { x: 786, y: 296, w: 110, h: 94, size: 7.5 }, quit: { x: 790, y: 14 },
+  },
+}[SHAPE];
+fillCopy();
+const $ = (id) => document.getElementById(id);
+
+// Seeded silhouettes so the mock is stable between renders.
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function ridge(y0, amp, step, colour, spikes) {
+  let d = `M0,${H} L0,${y0}`;
+  for (let x = 0; x <= W + step; x += step) {
+    const y = y0 - rnd() * amp;
+    d += spikes ? ` L${x - step * 0.4},${y + amp * 0.6} L${x},${y - amp * 0.9}` : ` L${x},${y}`;
+  }
+  return `<path d="${d} L${W},${H} Z" fill="${colour}"/>`;
+}
+function door(x, y, h) {
+  const w = h * 0.52, s = y - h * 0.55, r = w * 0.9, ah = w / 2, hh = Math.sqrt(2 * ah * r - ah * ah);
+  return `<path d="M${x - ah},${y} L${x - ah},${s} A${r},${r} 0 0 1 ${x},${s - hh} A${r},${r} 0 0 1 ${x + ah},${s} L${x + ah},${y} Z" fill="#04050b" stroke="#141a2e" stroke-width="2"/>
+    <circle cx="${x}" cy="${s - hh * 0.1}" r="${w * 0.2}" fill="none" stroke="#2a3355" stroke-width="1.5"/>
+    <line x1="${x}" y1="${s + h * 0.05}" x2="${x}" y2="${y}" stroke="#141a2e" stroke-width="1.5"/>`;
+}
+function post(x, y, h, lit) {
+  const w = Math.max(2.5, h * 0.03), arm = h * 0.2, lamp = h * 0.075;
+  return `<rect x="${x - w / 2}" y="${y - h}" width="${w}" height="${h}" fill="#05060c" stroke="#232a44" stroke-width=".8"/>
+    <rect x="${x}" y="${y - h + w}" width="${arm}" height="${w * 0.8}" fill="#05060c"/>
+    <circle cx="${x + arm - lamp * 0.2}" cy="${y - h + lamp * 1.25}" r="${lamp * 2.4}" fill="url(#lampGlow)" opacity="${lit ? 1 : 0}"/>
+    <path d="M${x + arm - lamp * 0.6},${y - h + w * 1.6} l${lamp * 0.8},0 l${lamp * 0.25},${lamp * 0.5} l0,${lamp} l-${lamp * 0.65},${lamp * 0.35} l-${lamp * 0.65},-${lamp * 0.35} l0,-${lamp} Z"
+      fill="${lit ? "#ffcf7a" : "#141826"}" stroke="#04050b" stroke-width="${Math.max(1, w * 0.4)}"/>`;
+}
+function stars(cx, cy, r, held) {
+  let s = "", pts = [];
+  for (let i = 0; i < 6; i++) { const a = (i * 60 - 90) * Math.PI / 180; pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); }
+  for (let i = 0; i < 6; i++) {
+    const [x0, y0] = pts[i], [x1, y1] = pts[(i + 1) % 6], on = held.includes(i) && held.includes((i + 1) % 6);
+    s += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${on ? "#f2c14e" : "#2a3150"}" stroke-opacity="${on ? 0.55 : 0.6}" stroke-width="${on ? 1.3 : 1}" stroke-dasharray="${on ? "" : "2 4"}"/>`;
+  }
+  pts.forEach(([x, y], i) => {
+    const on = held.includes(i), c = SHARD_GLASS[i], rr = r * 0.11;
+    s += on ? `<circle cx="${x}" cy="${y}" r="${rr * 3.2}" fill="${c}" opacity=".18"/><path d="M${x},${y - rr * 1.6} L${x + rr * 0.55},${y} L${x},${y + rr * 1.6} L${x - rr * 0.55},${y} Z" fill="${c}" stroke="#fff" stroke-opacity=".5" stroke-width=".8"/>`
+      : `<path d="M${x},${y - rr} L${x + rr * 0.4},${y} L${x},${y + rr} L${x - rr * 0.4},${y} Z" fill="#1a2036" stroke="#3a4266" stroke-width=".8"/>`;
+  });
+  return s;
+}
+let motes = "";
+for (let i = 0; i < (SHAPE === "phone" ? 70 : 140); i++) motes += `<circle cx="${(rnd() * W).toFixed(0)}" cy="${(rnd() * H * 0.95).toFixed(0)}" r="${(0.5 + rnd() * 1.4).toFixed(1)}" fill="${rnd() > 0.8 ? "#66ff9e" : "#ffa04d"}" opacity="${(0.15 + rnd() * 0.45).toFixed(2)}"/>`;
+
+const lit = STATE !== "first";
+const svg = `<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05070e"/><stop offset=".55" stop-color="#0b0e1a"/><stop offset="1" stop-color="#1c2240"/></linearGradient>
+  <radialGradient id="dusk" cx=".8" cy=".58" r=".5"><stop offset="0" stop-color="#ff9a4d" stop-opacity=".22"/><stop offset="1" stop-color="#ff9a4d" stop-opacity="0"/></radialGradient>
+  <linearGradient id="roadG" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5a4128"/><stop offset=".45" stop-color="#2e2318"/><stop offset="1" stop-color="#15110d"/></linearGradient>
+  <radialGradient id="lampGlow"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".55"/><stop offset="1" stop-color="#ff9a4d" stop-opacity="0"/></radialGradient>
+  <radialGradient id="pool" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="var(--flame)" stop-opacity=".32"/><stop offset="1" stop-color="var(--flame)" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="${W}" height="${H}" fill="url(#sky)"/>
+<rect width="${W}" height="${H}" fill="url(#dusk)"/>
+<mask id="cres"><rect width="${W}" height="${H}" fill="#fff"/><circle cx="${W * 0.55 + H * 0.016}" cy="${H * 0.12 - H * 0.01}" r="${H * 0.03}" fill="#000"/></mask>
+<circle cx="${W * 0.55}" cy="${H * 0.12}" r="${H * 0.032}" fill="#dfe6ff" opacity=".7" mask="url(#cres)"/>
+${stars(L.stars.x, L.stars.y, L.stars.r, SHARDS_HELD)}
+${ridge(L.horizon - 70 * k, 50 * k, 70 * k, "#0e1328", false)}
+${ridge(L.horizon - 20 * k, 60 * k, 26 * k, "#0a0e1e", true)}
+${door(L.door.x, L.door.y, L.door.h)}
+${ridge(L.horizon + 14 * k, 34 * k, 16 * k, "#070a15", true)}
+<path d="M0,${L.horizon + 4 * k} L${W},${L.horizon - 6 * k} L${W},${H} L0,${H} Z" fill="#06070d"/>
+<path d="${L.road}" fill="url(#roadG)"/>
+${L.posts.map(([x, y, h]) => post(x, y, h, lit)).join("")}
+<ellipse cx="${L.lantern.x}" cy="${L.lantern.y + L.lantern.w * 0.62}" rx="${L.lantern.w * 2.6}" ry="${L.lantern.w * 1.5}" fill="url(#pool)"/>
+<path d="M${L.mile.x - L.mile.w / 2},${H} L${L.mile.x - L.mile.w / 2},${L.mile.y + L.mile.w * 0.35} Q${L.mile.x},${L.mile.y - L.mile.w * 0.15} ${L.mile.x + L.mile.w / 2},${L.mile.y + L.mile.w * 0.35} L${L.mile.x + L.mile.w / 2},${H} Z" fill="#12162a" stroke="#04050b" stroke-width="3"/>
+${motes}`;
+const sc = $("scene"); sc.setAttribute("width", W); sc.setAttribute("height", H); sc.setAttribute("viewBox", `0 0 ${W} ${H}`); sc.innerHTML = svg;
+
+$("wordmark").src = WORDMARK; place($("wordmark"), L.word);
+place($("pilgrim"), { x: L.pilgrim.x, y: L.pilgrim.y, h: L.pilgrim.h });
+place($("lantern"), { x: L.lantern.x, y: L.lantern.y, "--lw": L.lantern.w + "px" });
+place($("plaque"), { x: L.plaque.x, y: L.plaque.y, "--plaque-size": SHAPE === "phone" ? "14px" : "22px", "--plaque-sub": SHAPE === "phone" ? "9px" : "11px" });
+const rk = $("rekindle"); place(rk, { x: L.rekindle.x, y: L.rekindle.y, "--pane-h": SHAPE === "phone" ? "26px" : "34px", "--pane-size": SHAPE === "phone" ? "10px" : "13px" }); rk.style.transform = "translateX(-50%)";
+L.posts.forEach(([x, y, h], i) => {
+  const lamp = h * 0.075, arm = h * 0.2;
+  place($("p" + i), { x: x + arm - lamp * 0.2, y: y - h + lamp * 3.4, "--pl": L.plSize[i] + "px" });
+});
+const m = $("milestone");
+m.innerHTML = COPY.deeds.map((d) => `<div>${d}</div>`).join("");
+place(m, { x: L.mile.x - L.mile.w / 2, y: L.mile.y + L.mile.w * 0.3, w: L.mile.w });
+m.style.fontSize = L.mile.size + "px";
+place($("quit"), { x: L.quit.x, y: L.quit.y, "--quiet-size": SHAPE === "phone" ? "11px" : "14px" });
+const v = $("version"); v.style.right = "8px"; v.style.bottom = "4px"; v.style.zIndex = 3;
+
+const hide = (...ids) => ids.forEach((id) => { $(id).style.display = "none"; });
+hide("langZh", "langEn", "room", "consent");
+if (FRESH) {
+  $("plaque").querySelector(".name").textContent = COPY.rekindle;
+  $("plaque").querySelector(".sub").style.display = "none";
+  hide("rekindle", "milestone");
+  document.documentElement.style.setProperty("--flame", "var(--kindling)");
+}
+if (STATE === "consent") {
+  // The blank milestone holds the one question until deeds are carved there.
+  $("consent").style.display = "";
+  place($("consent"), SHAPE === "phone" ? { x: 600, y: 330, w: 236, "--c-size": "10px" } : { x: 880, y: 708, w: 280 });
+}
+if (STATE === "first") {
+  // Unlit road. The pilgrim waits with one ember; the two nearest posts carry the languages.
+  $("lantern").classList.add("cold");
+  hide("plaque", "wordmark", "p2", "p3", "quit", "version");
+  sc.style.filter = "brightness(.45)";
+  [["p0", "langZh"], ["p1", "langEn"]].forEach(([id, key]) => {
+    const n = $(id); n.textContent = COPY[key];
+    n.style.setProperty("--pl", (SHAPE === "phone" ? 13 : 17) + "px");
+    n.classList.toggle("focus", (LANG === "zh") === (key === "langZh"));
+  });
+}
+if (STATE === "settings") {
+  // The camera has travelled along the road to the waystone shrine; the
+  // settings room is its leaded window. The pilgrim waits at the left edge.
+  hide("plaque", "rekindle", "p0", "p1", "p2", "p3", "milestone", "quit", "wordmark", "version");
+  sc.style.transform = `translateX(${-W * 0.18}px) scale(1.08)`; sc.style.transformOrigin = "70% 60%"; sc.style.filter = "brightness(.55) blur(1.5px)";
+  const room = $("room"); room.style.display = ""; room.insertAdjacentHTML("beforeend", settingsHTML());
+  place(room, SHAPE === "phone" ? { x: 270, y: 14, w: 560, h: 376 } : { x: 400, y: 60, w: 720, h: 760 });
+  room.style.paddingTop = SHAPE === "phone" ? "70px" : "130px";
+  if (SHAPE === "phone") { room.style.padding = "70px 22px 10px"; room.querySelector("h2").style.top = "38px"; }
+  $("pilgrim").style.left = (SHAPE === "phone" ? -40 : -60) + "px";
+  place($("lantern"), { x: SHAPE === "phone" ? 150 : 270, y: SHAPE === "phone" ? 200 : 470 });
+}
+</script>
+</body>
+</html>

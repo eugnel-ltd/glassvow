@@ -202,8 +202,11 @@ static func _ashwarden_save_plays_to_its_end(content: ContentDB, fails: Array[St
 		"the Ashwarden fixture did not load as itself")
 	_check(fails, FileAccess.get_file_as_string(RUN_PATH) == bytes,
 		"showing the title rewrote the Ashwarden save")
-	var title: ChoiceScreen = main._choice_screen as ChoiceScreen
-	_check(fails, title != null and _has_button(title, Locale.active.t("ui.menu.backToRoad")),
+	# The lantern is the title's primary action: with a saved run it is Back to
+	# the Road, named on the plaque that belongs to it.
+	var title: TitleScreen = main._choice_screen as TitleScreen
+	_check(fails, title != null and title.primary_id() == "continue"
+			and title.plaque_text().to_lower() == Locale.active.t("ui.menu.backToRoad").to_lower(),
 		"the title does not offer the Ashwarden run back")
 	if saved == null:
 		_dispose(main)
@@ -303,13 +306,6 @@ static func _help_promises_no_ashwarden(fails: Array[String]) -> void:
 			and not en_body.contains("aspect"), "en Help still promises the Ashwarden")
 	_check(fails, not zh_body.is_empty() and not zh_body.contains("灰衛")
 			and not zh_body.contains("面向"), "zh-Hant Help still promises the Ashwarden")
-
-
-static func _has_button(screen: Node, text: String) -> bool:
-	for node: Node in screen.find_children("*", "Button", true, false):
-		if (node as Button).text.to_lower() == text.to_lower():
-			return true
-	return false
 
 
 static func _labels(node: Node) -> Array[Label]:

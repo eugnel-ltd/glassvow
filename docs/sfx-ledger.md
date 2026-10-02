@@ -57,6 +57,69 @@ Prompt that rendered (`eleven_text_to_sound_v2`, `duration_seconds` 1.5,
 Do not steal a music-bus slot; this is a sting over the ceremony bed.
 Beat 4’s low door-push is a separate cue.
 
+## Commissioned — opening and start-up cues (2026-10-02, audition owed)
+
+Billed by the opening lane (`docs/design/2026-10-02-opening-start/README.md`
+§11). The code already asks for each cue by id through `SfxBus.play_owed`
+and **plays a landed file with no code change**; until then it plays the
+fallback below (or stays silent), and the missing file warns once.
+
+| cue | fires on | fallback today | duration |
+|---|---|---|---|
+| `kindleCatch` | the launch rite's flame catching (0.4 s) | `kindle` | 1.6 s |
+| `glassTakesLight` | the lantern's glass taking light (0.9 s) | silent | 2.0 s |
+| `paneRise` | first launch: the two language panes rising | silent | 0.6 s |
+| `paneChoose` | a language pane chosen; the lantern pressed | `click` | 0.7 s |
+| `roomOpen` | the settings room opening | silent | 1.0 s |
+| `roomClose` | the settings room closing | silent | 0.8 s |
+
+Prompts (`eleven_text_to_sound_v2`, `prompt_influence` 0.6, one-shot):
+
+> **kindleCatch** — One-shot: a single ember breathing in total darkness, a faint dry crackle, then a soft airy whoosh as a small candle-sized flame catches inside an iron lantern. Intimate, close-mic, warm. No music, no choir, no fire roar, no explosion, no long tail.
+
+> **glassTakesLight** — One-shot: warm resonant glass hum swelling as light fills old stained glass, a soft crystalline shimmer and a bowed-glass tone rising gently and settling. Calm, luminous, intimate. No choir, no vocals, no bells, no whoosh, no sparkle arpeggio, no long cinematic tail.
+
+> **paneRise** — One-shot UI sound: a small leaded glass pane sliding up into its frame, a soft glass tone with a tiny metallic tick of lead at the end. Quiet, short, close. No beep, no whoosh, no bell, no reverb tail.
+
+> **paneChoose** — One-shot UI confirmation: a bright clear glass chime struck once with a soft warm flare under it, satisfying and short. Not a bell tower, no choir, no beep, no sparkle arpeggio, short tail.
+
+> **roomOpen** — first batch (a–c): One-shot: an old wooden window shutter swinging open in a stone gatehouse at night, a soft wooden creak and a muffled latch, faint distant night wind behind it. Close and quiet. No door slam, no footsteps, no music. All three rendered near-silent, so the second batch (d–f) asked: One-shot, close-mic and clearly audible: an old wooden window shutter swinging open, a distinct wooden creak on its iron hinge and a soft latch lifting, in a stone room at night. Present and intimate, not distant. No door slam, no footsteps, no music, no long reverb.
+
+> **roomClose** — One-shot: an old wooden window shutter swinging closed in a stone gatehouse at night, a soft wooden creak and a gentle muffled latch click. Close and quiet. No slam, no footsteps, no music.
+
+Candidates sit in `docs/design/2026-10-02-opening-start/sfx/candidates/`.
+Deterministic preflight (decode, duration, channels, peak, RMS, silent
+fraction, last-10 ms tail); eligibility is technical only:
+
+| file | duration | ch | peak dBFS | RMS dBFS | silent | eligible |
+|---|---|---|---|---|---|---|
+| `glassTakesLight-a.mp3` | 2.0 s | 2 | -4.3 | -14.3 | 0.06 | yes |
+| `glassTakesLight-b.mp3` | 2.0 s | 2 | -2.9 | -12.0 | 0.03 | yes |
+| `glassTakesLight-c.mp3` | 2.0 s | 2 | -5.5 | -16.4 | 0.02 | yes |
+| `kindleCatch-a.mp3` | 1.6 s | 2 | -16.7 | -32.8 | 0.36 | yes |
+| `kindleCatch-b.mp3` | 1.6 s | 2 | -0.5 | -15.3 | 0.34 | yes |
+| `kindleCatch-c.mp3` | 1.6 s | 2 | -16.8 | -30.0 | 0.06 | yes |
+| `paneChoose-a.mp3` | 0.68 s | 2 | -17.5 | -33.3 | 0.4 | yes |
+| `paneChoose-b.mp3` | 0.68 s | 2 | -7.9 | -24.6 | 0.31 | yes |
+| `paneChoose-c.mp3` | 0.68 s | 2 | -18.1 | -36.5 | 0.38 | yes |
+| `paneRise-a.mp3` | 0.6 s | 2 | -10.2 | -31.8 | 0.22 | yes |
+| `paneRise-b.mp3` | 0.6 s | 2 | -7.6 | -28.3 | 0.32 | yes |
+| `paneRise-c.mp3` | 0.6 s | 2 | -10.0 | -29.8 | 0.32 | yes |
+| `roomClose-a.mp3` | 0.8 s | 2 | -11.7 | -34.0 | 0.42 | yes |
+| `roomClose-b.mp3` | 0.8 s | 2 | -5.1 | -34.0 | 0.56 | yes |
+| `roomClose-c.mp3` | 0.8 s | 2 | -18.8 | -38.7 | 0.33 | yes |
+| `roomOpen-a.mp3` | 1.0 s | 2 | -29.2 | -49.5 | 0.43 | **no** (too quiet) |
+| `roomOpen-b.mp3` | 1.0 s | 2 | -26.4 | -52.5 | 0.6 | **no** (too quiet) |
+| `roomOpen-c.mp3` | 1.0 s | 2 | -30.7 | -53.5 | 0.46 | **no** (too quiet) |
+| `roomOpen-d.mp3` / `-e` / `-f` | 1.0 s | 2 | −28.3 / −25.1 / −18.9 | −49.9 / −46.5 / −42.8 | — | no / no / **yes** |
+
+**Audition: not done, so nothing ships.** The lane played every eligible
+candidate with `afplay` on 2026-10-02 and each returned `AudioQueueStart
+failed (-66681)`: the session had no audio output device. No perceptual
+criterion is scored. Owed: one owner audition per cue, then the pick moves to
+`assets/audio/sfx/<cue>.mp3` with a manifest row and the `pack_id` bump
+(the 36 v1 files and `unsealingSting` stay byte-identical).
+
 ## Pointer
 
 For the generation bible and category law, see

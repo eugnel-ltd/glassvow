@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Glassvow · Concept B · The Sealed Door</title>
+<link rel="stylesheet" href="mock-base.css">
+<style>
+/* Concept B — The Sealed Door. Frontal and monumental: the door the whole
+   game walks toward fills the frame. Its rose window is the Vigil's six
+   shards, its arch carries the deeds, its lancets are the choices, and the
+   hero's lantern hangs from the iron hook at its heart. */
+.forest { position: absolute; inset: -40px; background: url("../../../assets/art/title-background/background.png") center 30%/cover no-repeat;
+  filter: blur(6px) brightness(.38) saturate(.8); }
+svg.door { position: absolute; inset: 0; }
+.wordmark { position: absolute; transform: translateX(-50%); filter: drop-shadow(0 3px 10px rgba(0,0,0,.9)); }
+.rose { position: absolute; transform: translate(-50%, -50%); }
+.lancet-label { position: absolute; transform: translate(-50%, -50%); text-align: center; white-space: nowrap;
+  color: #aab2cc; font-size: var(--ll, 14px); text-shadow: 0 1px 2px #000, 0 0 8px rgba(5,7,14,.9); }
+.lancet-label.lit { color: #1d1204 !important; font-weight: 700; text-shadow: 0 1px 0 rgba(255,240,200,.55); }
+.room { position: absolute; display: grid; grid-template-columns: 1fr; align-content: start; gap: 18px;
+  padding: 120px 40px 30px; background:
+    repeating-linear-gradient(60deg, transparent 0 30px, rgba(4,5,11,.5) 30px 32px),
+    repeating-linear-gradient(-60deg, transparent 0 30px, rgba(4,5,11,.5) 30px 32px),
+    linear-gradient(180deg, rgba(16,20,40,.96), rgba(8,10,22,.97));
+  clip-path: polygon(0 100%, 0 22%, 6% 13%, 16% 6%, 32% 1.5%, 50% 0, 68% 1.5%, 84% 6%, 94% 13%, 100% 22%, 100% 100%); }
+.room::before { content: ""; position: absolute; inset: 0; clip-path: inherit;
+  box-shadow: inset 0 0 0 3px var(--lead), inset 0 0 0 4px rgba(156,124,52,.5), inset 0 0 50px rgba(0,0,0,.6); }
+.room h2 { position: absolute; left: 0; right: 0; top: 70px; text-align: center; color: var(--gold); font-size: 15px; }
+.room .s-tabs { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+.room .s-tab { clip-path: none; padding: 9px 14px; }
+.veil { background: rgba(5,7,14,.55); }
+.consent { position: absolute; display: flex; gap: 12px; align-items: center; }
+.consent p { font-size: var(--c-size, 13px); line-height: 1.45; color: #c3c8d9; text-shadow: 0 1px 2px #000; }
+.consent .pp { font-style: normal; color: var(--gold-dim); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="forest"></div>
+  <svg class="door" id="door"></svg>
+  <div class="rose" id="rose"></div>
+  <img class="wordmark" id="wordmark" alt="">
+  <div class="lancet-label t-label" id="l0" data-t="vigil"></div>
+  <div class="lancet-label t-label" id="l1" data-t="help"></div>
+  <div class="lancet-label t-label lit" id="l2" data-t="settings"></div>
+  <div class="lancet-label t-label" id="l3" data-t="credits"></div>
+  <div class="lantern" id="lantern"><div class="halo"></div><img src="../../../assets/art/ui/lantern.png" alt=""><div class="glass-tint"></div><div class="flame"></div></div>
+  <div class="plaque t-primary" id="plaque"><div class="name" data-t="back"></div><div class="sub t-read"><i></i><span data-t="backSub"></span></div></div>
+  <div class="pane t-label" id="rekindle" data-t="rekindle"></div>
+  <div class="quiet t-label" id="quit" data-t="quit"></div>
+  <div class="version" id="version">1.0.0</div>
+  <div class="consent" id="consent"><span class="toggle on"></span><p class="t-read"><span data-t="diag"></span> <em class="pp" data-t="privacy"></em></p></div>
+  <div class="pane t-label" id="langZh" data-t="langZh"></div>
+  <div class="pane t-label" id="langEn" data-t="langEn"></div>
+  <div class="layer veil" id="veil"></div>
+  <div class="room" id="room"><h2 class="t-label" data-t="settings"></h2></div>
+</div>
+<script src="mock-base.js"></script>
+<script>
+const W = SW, H = SH;
+const L = {
+  pad: { x0: 150, x1: 1030, spring: 520, r: 493, band: 40, rose: { y: 232, r: 122 }, lintel: 384, lintelH: 86,
+         leafTop: 470, mull: 40, lancet: { top: 496, bot: 690, gap: 22, inset: 26 }, word: 392,
+         lantern: { y: 462, w: 230 }, plaque: 712, rekindle: 770, label: 14, wordW: 360, step: 704 },
+  phone: { x0: 70, x1: 774, spring: 330, r: 430, band: 26, rose: { y: 72, r: 62 }, lintel: 140, lintelH: 50,
+           leafTop: 190, mull: 30, lancet: { top: 202, bot: 318, gap: 14, inset: 18 }, word: 145,
+           lantern: { y: 196, w: 128 }, plaque: 330, rekindle: 0, label: 11, wordW: 190, step: 324 },
+}[SHAPE];
+fillCopy();
+const $ = (id) => document.getElementById(id);
+const cx = W / 2, a = (L.x1 - L.x0) / 2;
+
+// Two-centred pointed arch from x0..x1 springing at `spring`, radius r.
+function arch(x0, x1, spring, r, bottom) {
+  const ah = (x1 - x0) / 2, h = Math.sqrt(2 * ah * r - ah * ah);
+  return { d: `M${x0},${bottom} L${x0},${spring} A${r},${r} 0 0 1 ${(x0 + x1) / 2},${spring - h} A${r},${r} 0 0 1 ${x1},${spring} L${x1},${bottom} Z`, apex: spring - h };
+}
+// The arch's crown alone, left springing to right springing: the inscription's baseline.
+function archTop(x0, x1, spring, r) {
+  const ah = (x1 - x0) / 2, h = Math.sqrt(2 * ah * r - ah * ah);
+  return `M${x0},${spring} A${r},${r} 0 0 1 ${(x0 + x1) / 2},${spring - h} A${r},${r} 0 0 1 ${x1},${spring}`;
+}
+function lancet(x0, x1, top, bot) {
+  const w = x1 - x0, r = w * 0.9, s = top + w * 0.75;
+  const ah = w / 2, h = Math.sqrt(2 * ah * r - ah * ah);
+  return `M${x0},${bot} L${x0},${s} A${r},${r} 0 0 1 ${(x0 + x1) / 2},${s - h} A${r},${r} 0 0 1 ${x1},${s} L${x1},${bot} Z`;
+}
+
+const outer = arch(L.x0 - L.band, L.x1 + L.band, L.spring, L.r + L.band, H + 10);
+const inner = arch(L.x0, L.x1, L.spring, L.r, H + 10);
+const mid = arch(L.x0 - L.band / 2, L.x1 + L.band / 2, L.spring, L.r + L.band / 2, H + 10);
+const leafL = [L.x0 + 22, cx - L.mull], leafR = [cx + L.mull, L.x1 - 22];
+const lw = (leafL[1] - leafL[0] - L.lancet.gap - 2 * L.lancet.inset) / 2;
+const lancets = [
+  [leafL[0] + L.lancet.inset, leafL[0] + L.lancet.inset + lw],
+  [leafL[1] - L.lancet.inset - lw, leafL[1] - L.lancet.inset],
+  [leafR[0] + L.lancet.inset, leafR[0] + L.lancet.inset + lw],
+  [leafR[1] - L.lancet.inset - lw, leafR[1] - L.lancet.inset],
+];
+const FOCUSED = 2;
+const deedLine = COPY.deeds.join("  ◆  ");
+const svg = `
+<defs>
+  <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1f33"/><stop offset=".6" stop-color="#11152a"/><stop offset="1" stop-color="#0a0d1a"/></linearGradient>
+  <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#06070e"/><stop offset=".5" stop-color="#0b0e1b"/><stop offset="1" stop-color="#06070e"/></linearGradient>
+  <linearGradient id="glassCold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f2a52"/><stop offset=".7" stop-color="#121a38"/><stop offset="1" stop-color="#0a0f22"/></linearGradient>
+  <radialGradient id="glassLit" cx=".5" cy=".85" r=".9"><stop offset="0" stop-color="#ffe9ac"/><stop offset=".45" stop-color="#f2c14e"/><stop offset="1" stop-color="#8a5a12"/></radialGradient>
+  <radialGradient id="flamewash" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="var(--flame)" stop-opacity=".30"/><stop offset="1" stop-color="var(--flame)" stop-opacity="0"/></radialGradient>
+  <pattern id="quarry" width="20" height="34" patternUnits="userSpaceOnUse"><path d="M10,0 L20,17 L10,34 L0,17 Z" fill="none" stroke="#04050b" stroke-width="1.6"/></pattern>
+  <path id="bandPath" d="${archTop(L.x0 - L.band / 2, L.x1 + L.band / 2, L.spring, L.r + L.band / 2)}"/>
+</defs>
+<path d="${outer.d}" fill="url(#stone)" stroke="#04050b" stroke-width="3"/>
+<path d="${mid.d}" fill="none" stroke="#9c7c34" stroke-opacity=".28" stroke-width="1"/>
+<path d="${inner.d}" fill="url(#leaf)" stroke="#04050b" stroke-width="4"/>
+<path d="${inner.d}" fill="none" stroke="#9c7c34" stroke-opacity=".35" stroke-width="1" transform="translate(0,0)"/>
+<text class="t-carved" font-size="${SHAPE === "phone" ? 9 : 12}" fill="#9c7c34" fill-opacity=".75" letter-spacing="${SHAPE === "phone" ? 2.5 : 4}">
+  <textPath href="#bandPath" startOffset="50%" text-anchor="middle" dominant-baseline="middle">${deedLine}</textPath></text>
+<rect x="${L.x0}" y="${L.lintel}" width="${L.x1 - L.x0}" height="${L.lintelH}" fill="url(#stone)" stroke="#04050b" stroke-width="3"/>
+<line x1="${L.x0}" y1="${L.lintel + 4}" x2="${L.x1}" y2="${L.lintel + 4}" stroke="#9c7c34" stroke-opacity=".3"/>
+<line x1="${L.x0}" y1="${L.lintel + L.lintelH - 4}" x2="${L.x1}" y2="${L.lintel + L.lintelH - 4}" stroke="#9c7c34" stroke-opacity=".3"/>
+<rect x="${cx - L.mull}" y="${L.leafTop}" width="${L.mull * 2}" height="${H - L.leafTop}" fill="#0e1222" stroke="#04050b" stroke-width="2"/>
+${[...Array(14)].map((_, i) => `<line x1="${L.x0 + (i + 1) * (L.x1 - L.x0) / 15}" y1="${L.leafTop}" x2="${L.x0 + (i + 1) * (L.x1 - L.x0) / 15}" y2="${H}" stroke="#04050b" stroke-opacity=".6"/>`).join("")}
+${lancets.map(([x0, x1], i) => `
+  <path d="${lancet(x0 - 6, x1 + 6, L.lancet.top - 6, L.lancet.bot + 6)}" fill="#151a2c" stroke="#04050b" stroke-width="2"/>
+  <path d="${lancet(x0, x1, L.lancet.top, L.lancet.bot)}" fill="url(#${i === FOCUSED ? "glassLit" : "glassCold"})"/>
+  <path d="${lancet(x0, x1, L.lancet.top, L.lancet.bot)}" fill="url(#quarry)" opacity="${i === FOCUSED ? 0.55 : 0.8}"/>
+  <path d="${lancet(x0, x1, L.lancet.top, L.lancet.bot)}" fill="none" stroke="#04050b" stroke-width="3"/>
+  ${i === FOCUSED ? `<path d="${lancet(x0 - 9, x1 + 9, L.lancet.top - 9, L.lancet.bot + 9)}" fill="none" stroke="#f2c14e" stroke-width="1.5" opacity=".9" filter="url(#none)"/>` : ""}`).join("")}
+<ellipse cx="${cx}" cy="${L.lantern.y + L.lantern.w * 0.62}" rx="${L.lantern.w * 2.2}" ry="${L.lantern.w * 1.6}" fill="url(#flamewash)"/>
+<line x1="${cx}" y1="${L.lintel + L.lintelH}" x2="${cx}" y2="${L.lantern.y + 6}" stroke="#2a2f45" stroke-width="3"/>
+<rect x="0" y="${L.step}" width="${W}" height="${H - L.step}" fill="#0a0d18"/>
+<line x1="0" y1="${L.step}" x2="${W}" y2="${L.step}" stroke="#9c7c34" stroke-opacity=".35"/>
+<ellipse cx="${cx}" cy="${L.step + 6}" rx="${L.lantern.w * 1.8}" ry="${L.lantern.w * 0.22}" fill="url(#flamewash)"/>`;
+$("door").setAttribute("viewBox", `0 0 ${W} ${H}`); $("door").setAttribute("width", W); $("door").setAttribute("height", H);
+$("door").innerHTML = svg;
+
+$("rose").innerHTML = roseSVG(L.rose.r, SHARDS_HELD); place($("rose"), { x: cx, y: L.rose.y });
+$("wordmark").src = WORDMARK; place($("wordmark"), { x: cx, y: L.word, w: L.wordW });
+lancets.forEach(([x0, x1], i) => {
+  const n = $("l" + i);
+  place(n, { x: (x0 + x1) / 2, y: L.lancet.bot - (L.lancet.bot - L.lancet.top) * 0.30, "--ll": L.label + "px" });
+});
+place($("lantern"), { x: cx, y: L.lantern.y, "--lw": L.lantern.w + "px" });
+place($("plaque"), { x: cx, y: L.plaque, "--plaque-size": SHAPE === "phone" ? "14px" : "20px", "--plaque-sub": SHAPE === "phone" ? "9px" : "11px" });
+const rk = $("rekindle"); place(rk, { x: SHAPE === "phone" ? cx + 210 : cx, y: SHAPE === "phone" ? L.plaque + 2 : L.rekindle, "--pane-h": SHAPE === "phone" ? "28px" : "38px", "--pane-size": SHAPE === "phone" ? "11px" : "13px" }); rk.style.transform = "translateX(-50%)";
+place($("quit"), { x: W - (SHAPE === "phone" ? 52 : 96), y: H - (SHAPE === "phone" ? 34 : 66), "--quiet-size": SHAPE === "phone" ? "11px" : "14px" });
+const v = $("version"); v.style.right = "8px"; v.style.bottom = "4px";
+
+const hide = (...ids) => ids.forEach((id) => { $(id).style.display = "none"; });
+hide("langZh", "langEn", "veil", "room", "consent");
+if (FRESH || STATE === "first") {
+  $("plaque").querySelector(".name").textContent = COPY.rekindle;
+  $("plaque").querySelector(".sub").style.display = "none";
+  hide("rekindle");
+  document.documentElement.style.setProperty("--flame", "var(--kindling)");
+  document.querySelector("textPath").textContent = "";
+}
+if (STATE === "consent") {
+  // Carved on the threshold step, the one place a fresh door has no inscription yet.
+  $("consent").style.display = "";
+  place($("consent"), SHAPE === "phone" ? { x: 12, y: 334, w: 300, "--c-size": "10.5px" } : { x: 40, y: 742, w: 400 });
+}
+if (STATE === "first") {
+  // The door is still dark; the two side lancets nearest the hook carry the languages.
+  $("lantern").classList.add("cold");
+  hide("plaque", "wordmark", "l0", "l1", "l2", "l3", "quit", "version");
+  $("door").querySelectorAll("path[fill^='url(#glassLit']").forEach((p) => p.setAttribute("fill", "url(#glassCold)"));
+  $("door").querySelectorAll("path[stroke='#f2c14e']").forEach((p) => p.remove());
+  document.querySelector(".forest").style.filter = "blur(6px) brightness(.15)";
+  $("door").style.filter = "brightness(.55)";
+  $("rose").style.filter = "brightness(.5)";
+  [[1, "l1", "langZh"], [2, "l2", "langEn"]].forEach(([i, , id]) => {
+    const [x0, x1] = lancets[i];
+    const lab = $("l" + i); lab.style.display = ""; lab.textContent = COPY[id]; lab.style.setProperty("--ll", (SHAPE === "phone" ? 13 : 18) + "px"); lab.classList.toggle("lit", (LANG === "zh") === (id === "langZh"));
+  });
+  $("door").querySelectorAll("path[fill='url(#glassCold)']").forEach((p, k) => {
+    if ((LANG === "zh" && k === 1) || (LANG === "en" && k === 2)) p.setAttribute("fill", "url(#glassLit)");
+  });
+}
+if (STATE === "settings") {
+  // The right lancet opens into the vestry: the settings room is a tall
+  // leaded window set in the door's own stone, the rose still above it.
+  hide("plaque", "rekindle", "l0", "l1", "l2", "l3", "quit", "version");
+  $("veil").style.display = "";
+  const room = $("room"); room.style.display = ""; room.insertAdjacentHTML("beforeend", settingsHTML());
+  const rw = SHAPE === "phone" ? 560 : 700;
+  place(room, SHAPE === "phone" ? { x: cx - rw / 2, y: 6, w: rw, h: 384 } : { x: cx - rw / 2, y: 372, w: rw, h: 448 });
+  room.style.clipPath = "polygon(0 100%, 0 14%, 10% 6%, 28% 1.5%, 50% 0, 72% 1.5%, 90% 6%, 100% 14%, 100% 100%)";
+  room.style.padding = SHAPE === "phone" ? "70px 26px 10px" : "74px 40px 24px";
+  room.querySelector("h2").style.top = SHAPE === "phone" ? "40px" : "34px";
+  if (SHAPE === "phone") $("rose").style.display = "none"; else $("rose").style.zIndex = 6;
+  $("lantern").style.zIndex = 6;
+  place($("lantern"), { x: SHAPE === "phone" ? 70 : 140, y: SHAPE === "phone" ? 230 : 560, "--lw": (SHAPE === "phone" ? 130 : 210) + "px" });
+}
+</script>
+</body>
+</html>

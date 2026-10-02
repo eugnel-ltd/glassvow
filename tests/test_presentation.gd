@@ -283,91 +283,131 @@ static func _collect_gd_sources(path: String, out: Array[String]) -> void:
 	dir.list_dir_end()
 
 
-## Pins variant B (ceremonial): three tiers, gold-moves-down, unboxed utilities,
-## How to Play never wraps, Developer Console outside the shipped row.
+## Pins the title as a place (docs/design/2026-10-02-opening-start, Concept
+## A): the lantern carries the primary route, Rekindle drops to a cold glass
+## pane beside a saved run, the utilities are unboxed words at the touch floor
+## that never wrap, the dev console sits outside the arcs, and at every
+## shipping shape in both languages no word, pane or plaque lands on another
+## or on the lantern's glass.
 static func _title_ceremonial_menu(fails: Array[String]) -> void:
 	var shipped: Array[Dictionary] = [
 		{"id": "continue", "label": "Back to the Road"},
 		{"id": "begin", "label": "Rekindle"},
-		{"id": "vigil", "label": "The Vigil", "quiet": true},
-		{"id": "help", "label": "How to Play", "quiet": true},
-		{"id": "settings", "label": "Settings", "quiet": true},
-		{"id": "credits", "label": "Credits", "quiet": true},
-		{"id": "quit", "label": "Quit", "quiet": true},
-		{"id": "dev", "label": "Developer Console", "quiet": true},
+		{"id": "vigil", "label": "The Vigil"},
+		{"id": "help", "label": "How to Play"},
+		{"id": "settings", "label": "Settings"},
+		{"id": "credits", "label": "Credits"},
+		{"id": "quit", "label": "Quit"},
+		{"id": "dev", "label": "Developer Console"},
 	]
-	var saved: ChoiceScreen = _title_menu(shipped, &"pad-landscape")
-	_check(fails, saved._primary_buttons.size() == 2,
-		"saved-run title has Continue + Begin as the two action plates")
-	var continue_btn: ChoiceScreen.TitleFacetButton = saved._primary_buttons[0] as ChoiceScreen.TitleFacetButton
-	var begin_btn: ChoiceScreen.TitleFacetButton = saved._primary_buttons[1] as ChoiceScreen.TitleFacetButton
-	_check(fails, continue_btn != null and continue_btn.text == "Back to the Road"
-		and continue_btn.ceremonial,
-		"saved-run gold primary stays on Back to the Road")
-	_check(fails, begin_btn != null and begin_btn.text == "Rekindle"
-		and not begin_btn.ceremonial,
-		"saved-run Rekindle is the plain secondary")
-	_check(fails, saved._utility_buttons.size() == 5,
-		"five shipped utilities sit in the unboxed row")
-	_check(fails, saved._utility is HBoxContainer,
-		"utilities are one row, not a grid")
-	_check(fails, saved._seam != null,
-		"gold hairline + lozenge seam sits between actions and utilities")
-	_check(fails, saved._lantern != null and saved._lantern.visible,
-		"lantern bloom rises under the primary")
-	var help_en: Button = saved._utility_buttons[1]
+	var saved: TitleScreen = _title_menu(shipped, &"pad-landscape")
+	_check(fails, saved.primary_id() == "continue" and saved.plaque_text() == "BACK TO THE ROAD",
+		"saved-run title puts Back to the Road on the lantern")
+	var rekindle: LeadlightPane = saved._secondary
+	_check(fails, rekindle != null and rekindle.text == "Rekindle" and not rekindle.lit,
+		"saved-run Rekindle is the cold secondary pane")
+	_check(fails, saved._words.size() == 6, "five shipped utilities and the dev console are words")
+	var help_en: Button = saved._words["help"]
 	_check(fails, help_en.text == "How to Play" and not help_en.text.contains("\n"),
 		"How to Play is not wrapped on the identity stage")
-	_check(fails, help_en.custom_minimum_size.y >= 64.0,
-		"utility tap height is at least 64 px")
+	_check(fails, help_en.custom_minimum_size.y >= 44.0, "utility tap height is at least 44 px")
 	_check(fails, help_en.get_theme_stylebox("normal") is StyleBoxEmpty,
 		"utility words have no drawn box")
-	_check(fails, saved._dev_button != null
-		and saved._dev_button.text == "Developer Console"
-		and saved._utility_buttons.find(saved._dev_button) < 0,
-		"Developer Console is present and outside the utility row")
+	var dev: Control = saved._words["dev"]
+	_check(fails, dev.position.y < saved.lantern.position.y * 0.25,
+		"Developer Console sits outside the arcs, in the top corner")
 	saved.free()
 
 	var fresh: Array[Dictionary] = []
 	for row: Dictionary in shipped:
 		if str(row.get("id")) != "continue":
 			fresh.append(row)
-	var none: ChoiceScreen = _title_menu(fresh, &"pad-landscape")
-	var none_begin: ChoiceScreen.TitleFacetButton = none._primary_buttons[0] as ChoiceScreen.TitleFacetButton
-	_check(fails, none._primary_buttons.size() == 1 and none_begin != null
-		and none_begin.text == "Rekindle" and none_begin.ceremonial,
-		"no saved run: gold primary moves to Rekindle")
+	var none: TitleScreen = _title_menu(fresh, &"pad-landscape")
+	_check(fails, none.primary_id() == "begin" and none._secondary == null
+		and none.plaque_text() == "REKINDLE",
+		"no saved run: the lantern is Rekindle and no secondary pane stands")
 	none.free()
 
 	var zh_rows: Array[Dictionary] = [
+		{"id": "continue", "label": "返回路上"},
 		{"id": "begin", "label": "續火"},
-		{"id": "vigil", "label": "守夜", "quiet": true},
-		{"id": "help", "label": "玩法說明", "quiet": true},
-		{"id": "settings", "label": "設定", "quiet": true},
-		{"id": "credits", "label": "製作人員", "quiet": true},
-		{"id": "quit", "label": "離開", "quiet": true},
+		{"id": "vigil", "label": "守夜"},
+		{"id": "help", "label": "玩法說明"},
+		{"id": "settings", "label": "設定"},
+		{"id": "credits", "label": "製作人員"},
+		{"id": "quit", "label": "離開"},
 	]
-	for shape: StringName in [&"pad-landscape", &"phone-landscape"]:
-		var zh: ChoiceScreen = _title_menu(zh_rows, shape)
-		var help_zh: Button = zh._utility_buttons[1]
-		_check(fails, help_zh.text == "玩法說明" and not help_zh.text.contains("\n"),
-			"zh-Hant How to Play does not wrap at %s" % shape)
-		_check(fails, help_zh.custom_minimum_size.y >= 64.0,
-			"zh-Hant utility tap height is at least 64 px at %s" % shape)
-		zh.free()
-		var en: ChoiceScreen = _title_menu(fresh, shape)
-		var help: Button = en._utility_buttons[1]
-		_check(fails, help.text == "How to Play" and not help.text.contains("\n"),
-			"English How to Play does not wrap at %s" % shape)
-		en.free()
+	for shape: StringName in [&"pad-landscape", &"phone-landscape", &"desktop-landscape"]:
+		for rows: Array[Dictionary] in [shipped, zh_rows]:
+			var title: TitleScreen = _title_menu(rows, shape)
+			var help: Button = title._words["help"]
+			_check(fails, not help.text.contains("\n"), "How to Play does not wrap at %s" % shape)
+			_title_no_overlap(fails, title, shape)
+			title.free()
+		# The first title of a fresh install: no run, no deeds, the consent
+		# line where the deeds will be carved — on the stage, clear of all.
+		for code: StringName in [Locale.CODE_EN, Locale.CODE_ZH_HANT]:
+			var previous: Locale = Locale.active
+			Locale.active = Locale.new(code)
+			var fresh_rows: Array[Dictionary] = []
+			for row: Dictionary in (shipped if code == Locale.CODE_EN else zh_rows):
+				if str(row.get("id")) != "continue":
+					fresh_rows.append(row)
+			var first: TitleScreen = TitleScreen.new({"shape": shape, "choices": fresh_rows,
+				"ask_consent": true})
+			first.set_anchors_preset(Control.PRESET_TOP_LEFT)
+			first.size = Vector2(StageShape.REFERENCES[shape])
+			first._layout()
+			_check(fails, first._consent != null, "%s %s: the first title has no consent line" % [shape, code])
+			if first._consent != null:
+				# An autowrapping sentence with no width measures its height at
+				# zero width in a live tree: the row grew hundreds of pixels tall
+				# and the switch, centred on it, left the stage (PR #650 capture).
+				# Outside a tree that never shows, so hold the cause itself: the
+				# sentence wraps inside the row and the switch sits by its first line.
+				var line: Label = first._consent.find_child("DiagnosticsLine", true, false) as Label
+				var toggle: Control = first._consent.find_child("DiagnosticsToggle", true, false) as Control
+				_check(fails, line != null and line.custom_minimum_size.x >= 120.0
+						and line.custom_minimum_size.x <= first._consent.size.x,
+					"%s %s: the consent sentence has no width to wrap in" % [shape, code])
+				_check(fails, toggle != null and toggle.size_flags_vertical == Control.SIZE_SHRINK_BEGIN,
+					"%s %s: the consent switch is not seated by the first line" % [shape, code])
+			_title_no_overlap(fails, first, shape)
+			first.free()
+			Locale.active = previous
 
 
-static func _title_menu(choices: Array[Dictionary], shape: StringName) -> ChoiceScreen:
-	var screen: ChoiceScreen = ChoiceScreen.new(
-		"GLASSVOW", "", choices, {"variant": "title", "shape": shape})
+## Every interactive or lettered piece of the title keeps clear of the others
+## and of the lantern's glass, and stays on the stage.
+static func _title_no_overlap(fails: Array[String], title: TitleScreen, shape: StringName) -> void:
+	var pieces: Array[Control] = [title._plaque]
+	if title._secondary != null:
+		pieces.append(title._secondary)
+	for word_v: Variant in title._words.values():
+		if word_v is Control:
+			pieces.append(word_v)
+	for slab: LeadlightInscription in title._slabs:
+		pieces.append(slab)
+	if title._consent != null:
+		pieces.append(title._consent)
+	var art: Rect2 = Rect2(title.lantern.position, title.lantern.size)
+	var glass: Rect2 = Rect2(art.position + art.size * Vector2(0.30, 0.42), art.size * Vector2(0.40, 0.40))
+	var stage: Rect2 = Rect2(Vector2.ZERO, title.size)
+	for i: int in pieces.size():
+		var a: Rect2 = Rect2(pieces[i].position, pieces[i].size)
+		_check(fails, stage.encloses(a), "%s: a title piece runs off the stage at %s" % [shape, a])
+		_check(fails, not a.intersects(glass), "%s: a title piece lands on the lantern's glass" % shape)
+		for j: int in range(i + 1, pieces.size()):
+			var b: Rect2 = Rect2(pieces[j].position, pieces[j].size)
+			_check(fails, not a.intersects(b), "%s: two title pieces overlap (%s, %s)" % [shape, a, b])
+
+
+static func _title_menu(choices: Array[Dictionary], shape: StringName) -> TitleScreen:
+	var screen: TitleScreen = TitleScreen.new({"shape": shape, "choices": choices, "sub": "Act 2 · Waystone 4",
+		"deeds": ["XII pilgrimages", "III dawns", "CCXIV slain", "IV secrets unearthed"]})
 	screen.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	screen.size = Vector2(StageShape.REFERENCES[shape])
-	screen._fit_title()
+	screen._layout()
 	return screen
 
 

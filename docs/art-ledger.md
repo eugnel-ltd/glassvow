@@ -241,11 +241,52 @@ Four decisions worth keeping:
   Inspected at full size first; the sunset gradient and cloud sea in `act4-node5`
   are the hardest case in the set and show no visible banding.
 
-### `title/splash.png` — 2360×1640 RGBA
+### `title/splash.png` — 2360×1640 — frame 0 of the launch rite
 
-The Godot boot splash, wired at `project.godot:20`. Last corrected by 4007c11
-("the splash stops clipping its own name"). **Prompt not recorded** —
-reconstruct and add it here the next time it is touched.
+The Godot boot splash (`project.godot` `boot_splash/image`, fullsize, on the
+`#05070e` ground the title's veil uses). Since 2026-10-02 it is not a logo
+card: it is the first frame of the kindling (docs/design/2026-10-02-opening-
+start §7 T0) — night and one ember at the lantern's wick — rendered from the
+production TitleScreen, so the splash and the first frame register:
+
+    godot --path . --position 0,0 -s res://tools/capture_title.gd -- \
+        --shape=pad-landscape --locale=en --state=fresh --rite=0 --scale=2 \
+        --out=assets/art/title/splash.png
+
+No model made it; re-run the command after any change to the lantern's wick
+or the ember. The wick sits at 0.918 of the stage height on pad and phone so
+the fitted splash's ember lands on it. The previous splash (the wordmark on
+black; prompt never recorded) is in git history at 4007c11.
+
+### `title/lantern-hero.png` — 1024×1024 RGBA — lane pick, owner re-pick open
+
+The hero's lantern on the title (`LeadlightLantern`, docs/design/2026-10-02-
+opening-start): the combat HUD lantern (`ui/lantern.png`) repainted at hero
+size, so the title's flame is the same object as the HUD's. Four candidates
+and a labelled contact sheet live in `docs/design/2026-10-02-opening-start/
+lantern/`; candidate 1 (closest to the HUD art) is the pick. Generated
+2026-10-02 by the `image-gen` agent (it routed to the Codex image tool,
+image-to-image with `ui/lantern.png` attached as the identity reference),
+1024×1536 with real alpha. Prompt (binding clauses): "the SAME Gothic
+hexagonal hanging iron lantern as the reference, front view, perfectly
+centred, upright, symmetrical … chain ring and connecting link at the top,
+tiered pointed hexagonal roof with its small corner finials, dark chunky
+hexagonal cage, exactly three visible pointed-arch glass lights … thick
+black lead came and diamond-like pointed lead tracery, faceted bottom ledge
+and short downward spike … serious cartoon-gothic stained-glass game art,
+matte painterly texture … glass exclusively bright warm saturated amber-gold
+… iron predominantly dark grey-black with ONLY thin restrained worn gold
+edging … genuine alpha transparency … Candidate 1: closest faithful copy of
+the reference." The full prompts for all four are in
+`lantern/generation-prompts.txt` beside the candidates.
+
+**Registered, not cropped.** `lantern_flame.gdshader` lights the art in its
+own UV (wick 0.5, 0.785; panes 0.31–0.69 × 0.43–0.795) and finds the glass by
+colour. `lantern/register.py` measured the pick's centre light with the
+shader's own glass test and placed it with one uniform scale onto the HUD
+art's set-out at twice its resolution: centre light 0.474–0.782 (HUD
+0.475–0.785), lights 0.344–0.401 / 0.441–0.554 / 0.595–0.651 (HUD .344–.400 /
+.441–.553 / .594–.650). The shader lights it unchanged.
 
 ### `title/title-zh.png` — 1536×512 RGBA
 
@@ -550,7 +591,7 @@ Prompt (binding clauses):
 
 ### `title-background/background.png` — 1536×1024 RGB — title banner plate
 
-The translucent title banner (`choice_screen.gd`, opacity 0.35) that sits
+The translucent title banner (`title_screen.gd`, opacity 0.35) that sits
 over the living `TitleWorld`. Import `compress/mode=0`, no mipmaps, **RGB
 with no alpha** — the banner drop-shadow is a closed-form blur of an opaque
 rectangle; an alpha channel would change that contract.

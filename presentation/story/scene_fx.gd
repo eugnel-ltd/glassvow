@@ -523,8 +523,10 @@ func _draw_spark(spark: Spark) -> void:
 	var p: Vector2 = Motion.quad(spark.from, mid, spark.to, e)
 	var r: float = spark.radius
 	var a: float = sin(u * PI)
+	# The kindle burns the Kindling flame's colour: the same fire the title's
+	# lantern caught at launch, handed on by the Keeper (opening-start §10).
 	draw_texture_rect(_disc, Rect2(p - Vector2(r, r) * 4.0, Vector2(r, r) * 8.0), false,
-		Color(1.0, 0.62, 0.26, 0.45 * a))
+		Color(LanternFlame.COLOUR[Flame.TIER_KINDLING], 0.5 * a))
 	draw_circle(p, r * 0.6, Color(1.0, 0.9, 0.6, a))
 
 

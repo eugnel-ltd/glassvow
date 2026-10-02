@@ -128,8 +128,7 @@ func _check_plain_choices(count: int) -> void:
 	var viewport_mid: float = page.get_global_rect().get_center().x
 	_check(absf(panel_mid - viewport_mid) <= 8.0,
 		"%d plain choices keep horizontal centring" % count)
-	var last: Button = screen._primary_buttons.back() if not screen._primary_buttons.is_empty() \
-		else _buttons(screen).back()
+	var last: Button = _buttons(screen).back()
 	await _focus_until(last)
 	_check_inside("focused final control for %d plain choices" % count, last, page)
 	await _capture("plain-%d" % count)

@@ -1,0 +1,52 @@
+Generation mode: built-in imagegen
+Reference image: assets/art/ui/lantern.png
+Transparent background: true
+Final PNGs copied without pixel modification.
+
+CANDIDATE 1
+Use case: precise-object-edit.
+Asset type: transparent Gothic lantern game-art candidate.
+Input image: the supplied local lantern PNG is the identity, silhouette, material and composition reference. Preserve its recognisable identity very closely.
+Output: one single PNG, portrait 2:3, exactly 1024 pixels wide by 1536 pixels tall, with genuine alpha transparency. The background and all empty spaces around the lantern and within its suspension ring must be transparent, never an opaque fill or painted checkerboard.
+Subject: the SAME Gothic hexagonal hanging iron lantern as the reference, front view, perfectly centred, upright, symmetrical. Retain the chain ring and connecting link at the top, tiered pointed hexagonal roof with its small corner finials, dark chunky hexagonal cage, exactly three visible pointed-arch glass lights (large centre and narrower left and right), thick black lead came and diamond-like pointed lead tracery, faceted bottom ledge and short downward spike. Keep the reference's characteristic angular silhouette and stylised exaggerated proportions.
+Style: serious cartoon-gothic stained-glass game art, matte painterly texture, crisp edges, hero-size detail, controlled soft internal glow, warm amber rim light.
+Palette: glass exclusively bright warm saturated amber-gold, amber orange and golden yellow. Absolutely no white, cream, pale desaturated yellow, green, blue, purple or red glass. Small hidden internal flame, no visible exposed flame. Iron must remain predominantly dark grey-black with ONLY thin restrained worn gold edging; avoid large gold metal surfaces. Any glow must remain controlled within the glass and thin edge light; surrounding space stays transparent.
+Composition: show the whole prop including ring and bottom spike with a small clear transparent margin on every side, nothing cropped. Single isolated lantern, no scenery, no pedestal, no shadows on a background, no additional objects.
+Text: none. No labels, logos, watermark or border.
+Candidate 1: closest faithful copy of the reference. Preserve the same simple bold black lead pattern, roof, proportions, weathered dark iron and thin worn gold edge accents. Improve to hero-size detail without redesigning it.
+
+CANDIDATE 2
+Use case: precise-object-edit.
+Asset type: transparent Gothic lantern game-art candidate.
+Input image: the supplied local lantern PNG is the identity, silhouette, material and composition reference. Preserve its recognisable identity very closely.
+Output: one single PNG, portrait 2:3, exactly 1024 pixels wide by 1536 pixels tall, with genuine alpha transparency. The background and all empty spaces around the lantern and within its suspension ring must be transparent, never an opaque fill or painted checkerboard.
+Subject: the SAME Gothic hexagonal hanging iron lantern as the reference, front view, perfectly centred, upright, symmetrical. Retain the chain ring and connecting link at the top, tiered pointed hexagonal roof with its small corner finials, dark chunky hexagonal cage, exactly three visible pointed-arch glass lights (large centre and narrower left and right), thick black lead came and diamond-like pointed lead tracery, faceted bottom ledge and short downward spike. Keep the reference's characteristic angular silhouette and stylised exaggerated proportions.
+Style: serious cartoon-gothic stained-glass game art, matte painterly texture, crisp edges, hero-size detail, controlled soft internal glow, warm amber rim light.
+Palette: glass exclusively bright warm saturated amber-gold, amber orange and golden yellow. Absolutely no white, cream, pale desaturated yellow, green, blue, purple or red glass. Small hidden internal flame, no visible exposed flame. Iron must remain predominantly dark grey-black with ONLY thin restrained worn gold edging; avoid large gold metal surfaces. Any glow must remain controlled within the glass and thin edge light; surrounding space stays transparent.
+Composition: show the whole prop including ring and bottom spike with a small clear transparent margin on every side, nothing cropped. Single isolated lantern, no scenery, no pedestal, no shadows on a background, no additional objects.
+Text: none. No labels, logos, watermark or border.
+Candidate 2: change ONLY the glass lead tracery to be slightly more ornate, with a few extra tasteful Gothic pointed subdivisions inside the three existing pointed-arch glass lights. Keep the reference roof, cage silhouette, dimensions, suspension and bottom spike.
+
+CANDIDATE 3
+Use case: precise-object-edit.
+Asset type: transparent Gothic lantern game-art candidate.
+Input image: the supplied local lantern PNG is the identity, silhouette, material and composition reference. Preserve its recognisable identity very closely.
+Output: one single PNG, portrait 2:3, exactly 1024 pixels wide by 1536 pixels tall, with genuine alpha transparency. The background and all empty spaces around the lantern and within its suspension ring must be transparent, never an opaque fill or painted checkerboard.
+Subject: the SAME Gothic hexagonal hanging iron lantern as the reference, front view, perfectly centred, upright, symmetrical. Retain the chain ring and connecting link at the top, tiered pointed hexagonal roof with its small corner finials, dark chunky hexagonal cage, exactly three visible pointed-arch glass lights (large centre and narrower left and right), thick black lead came and diamond-like pointed lead tracery, faceted bottom ledge and short downward spike. Keep the reference's characteristic angular silhouette and stylised exaggerated proportions.
+Style: serious cartoon-gothic stained-glass game art, matte painterly texture, crisp edges, hero-size detail, controlled soft internal glow, warm amber rim light.
+Palette: glass exclusively bright warm saturated amber-gold, amber orange and golden yellow. Absolutely no white, cream, pale desaturated yellow, green, blue, purple or red glass. Small hidden internal flame, no visible exposed flame. Iron must remain predominantly dark grey-black with ONLY thin restrained worn gold edging; avoid large gold metal surfaces. Any glow must remain controlled within the glass and thin edge light; surrounding space stays transparent.
+Composition: show the whole prop including ring and bottom spike with a small clear transparent margin on every side, nothing cropped. Single isolated lantern, no scenery, no pedestal, no shadows on a background, no additional objects.
+Text: none. No labels, logos, watermark or border.
+Candidate 3: change ONLY the iron age and weight subtly: slightly heavier-looking darker old iron, visible restrained muted dark verdigris patina in crevices and more worn thin gold edging. Patina is confined to dark non-luminous metal, not glass. Preserve the reference geometry and lead tracery, and keep every glass pane purely bright warm amber-gold.
+
+CANDIDATE 4
+Use case: precise-object-edit.
+Asset type: transparent Gothic lantern game-art candidate.
+Input image: the supplied local lantern PNG is the identity, silhouette, material and composition reference. Preserve its recognisable identity very closely.
+Output: one single PNG, portrait 2:3, exactly 1024 pixels wide by 1536 pixels tall, with genuine alpha transparency. The background and all empty spaces around the lantern and within its suspension ring must be transparent, never an opaque fill or painted checkerboard.
+Subject: the SAME Gothic hexagonal hanging iron lantern as the reference, front view, perfectly centred, upright, symmetrical. Retain the chain ring and connecting link at the top, tiered pointed hexagonal roof with its small corner finials, dark chunky hexagonal cage, exactly three visible pointed-arch glass lights (large centre and narrower left and right), thick black lead came and diamond-like pointed lead tracery, faceted bottom ledge and short downward spike. Keep the reference's characteristic angular silhouette and stylised exaggerated proportions.
+Style: serious cartoon-gothic stained-glass game art, matte painterly texture, crisp edges, hero-size detail, controlled soft internal glow, warm amber rim light.
+Palette: glass exclusively bright warm saturated amber-gold, amber orange and golden yellow. Absolutely no white, cream, pale desaturated yellow, green, blue, purple or red glass. Small hidden internal flame, no visible exposed flame. Iron must remain predominantly dark grey-black with ONLY thin restrained worn gold edging; avoid large gold metal surfaces. Any glow must remain controlled within the glass and thin edge light; surrounding space stays transparent.
+Composition: show the whole prop including ring and bottom spike with a small clear transparent margin on every side, nothing cropped. Single isolated lantern, no scenery, no pedestal, no shadows on a background, no additional objects.
+Text: none. No labels, logos, watermark or border.
+Candidate 4: make the same lantern proportions slightly slimmer, about 8 percent narrower through the cage and roof, while retaining the same overall Gothic hexagonal shape, ring, finials, three pointed-arch lights, simple thick black lead tracery and bottom spike.

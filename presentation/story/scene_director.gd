@@ -57,6 +57,10 @@ var _view: Vector2 = Vector2.ZERO
 var _shape: StringName = StageShape.IDENTITY
 var _clear_right: float = 0.0
 var _veil_rate: float = 0.0
+## The beat's grade as authored, and the clock its hearth light breathes on.
+var _grade_base: Color = Color(0, 0, 0, 0)
+var _grade_tone: StringName = &"none"
+var _clock: float = 0.0
 var _wash_goal: float = WASH_ALPHA
 var _last_style: StringName = &""
 
@@ -81,6 +85,8 @@ func begin_beat(beat: Dictionary, animate: bool) -> void:
 	ambient_fx.set_ambient(weather)
 	var tone: StringName = beat.get("grade", &"none")
 	grade.color = GRADES.get(tone, GRADES[&"none"])
+	_grade_base = grade.color
+	_grade_tone = tone
 	front_fx.clear()
 	var arrival: StringName = beat.get("transition", &"cut")
 	if not animate or reduce_motion and arrival != &"wake":
@@ -135,6 +141,13 @@ func present(lines: Array[Dictionary], cursor: int, text: String, animate: bool,
 
 
 func tick(delta: float) -> bool:
+	_clock += delta
+	# A hearth beat is never a still frame: its firelight breathes on the
+	# plate between lines (opening-start §7 idle motion). Still under Reduce
+	# Motion.
+	if _grade_tone == &"hearth" and not reduce_motion:
+		var breath: float = 0.5 + 0.5 * sin(_clock * TAU / 3.4) + 0.12 * sin(_clock * 7.3)
+		grade.color = Color(_grade_base, _grade_base.a * (0.7 + 0.75 * breath))
 	var typed: bool = box.advance_type(delta)
 	stage.tick(delta)
 	ambient_fx.tick(delta)
