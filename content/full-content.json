@@ -5898,12 +5898,9 @@
           "affinity": {
             "eclipseSlash": 1.0,
             "warCry": 1.0,
-            "empower": 1.0,
             "executioner": 1.0,
             "momentum": 0.5,
             "lunge": 0.5,
-            "frenzy": 1.0,
-            "risingLitany": 1.0,
             "resonantLance": 0.5,
             "splinterCut": 1.0,
             "dimTheGlass": 1.0,
