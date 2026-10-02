@@ -22,9 +22,14 @@ func _init() -> void:
 	add_child(_content)
 
 
+func _ready() -> void:
+	_seat()
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		_seat()
+		queue_redraw()
 
 
 ## The seat for this room's contents (one child).
@@ -66,7 +71,7 @@ func _draw() -> void:
 	var glazing: Rect2 = Rect2(Vector2(0.0, size.y * spring), Vector2(size.x, size.y * (1.0 - spring)))
 	var lines: PackedVector2Array = LeadlightShapes.quarry(glazing, quarry_pitch)
 	if not lines.is_empty():
-		draw_multiline(lines, Color(LeadlightTokens.LEAD, 0.55), 1.6)
+		draw_multiline(lines, Color(LeadlightTokens.LEAD, 0.38), 1.4)
 	var loop: PackedVector2Array = body.duplicate()
 	loop.append(body[0])
 	draw_polyline(loop, LeadlightTokens.LEAD, 5.0, true)

@@ -49,7 +49,10 @@ func _initialize() -> void:
 		screen.hold_rite = true
 		screen.rite.advance(rite_at)
 		screen.lantern.flame.pinned = true
+	await process_frame
 	if _args.has("settings"):
+		if state != "first":
+			Preferences.active.diagnostics_notice_seen = true
 		var panel: SettingsPanel = SettingsPanel.new(Preferences.active)
 		panel.set_shape(shape)
 		root.add_child(panel)
