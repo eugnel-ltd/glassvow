@@ -24,6 +24,13 @@ var flare: float = 0.0:
 	set(value):
 		flare = value
 		_apply_kindle()
+## How much of the lantern itself is there, 0..1. Frame 0 of the launch is
+## one ember in the dark (the boot splash), so the iron and glass come up
+## after it; the ember is drawn apart and is not dimmed by this.
+var presence: float = 1.0:
+	set(value):
+		presence = value
+		_apply_kindle()
 ## How much light the lantern throws onto the world (the pool), 0..1.
 var reach: float = 1.0:
 	set(value):
@@ -168,9 +175,9 @@ func _apply_kindle() -> void:
 		return
 	# Glass takes light: the lit art crosses over the cold one.
 	var lit: float = smoothstep(0.25, 0.85, kindle)
-	_lit.modulate = Color(1.0 + flare * 0.25, 1.0 + flare * 0.2, 1.0 + flare * 0.1, lit)
-	_glow.modulate.a = lit
-	_cold.modulate.a = 1.0 - lit * 0.85
+	_lit.modulate = Color(1.0 + flare * 0.25, 1.0 + flare * 0.2, 1.0 + flare * 0.1, lit * presence)
+	_glow.modulate.a = lit * presence
+	_cold.modulate.a = (1.0 - lit * 0.85) * presence
 	# The ember: alone at 0, growing as the flame catches, gone once lit.
 	_ember.strength = (1.0 - smoothstep(0.55, 0.9, kindle)) * (0.65 + 0.35 * smoothstep(0.0, 0.3, kindle))
 	_ember.queue_redraw()

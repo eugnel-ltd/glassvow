@@ -7,7 +7,10 @@ extends SceneTree
 ##
 ##   godot --path . --position 40,40 -s res://tools/capture_title.gd -- \
 ##       --shape=pad-landscape --locale=en --state=saved --out=/tmp/t.png \
-##       [--rite=1.6] [--settings] [--reduce-motion]
+##       [--rite=1.6] [--settings] [--reduce-motion] [--scale=2]
+##
+## The boot splash is this harness at --state=fresh --rite=0 --scale=2 on the
+## identity shape: frame 0 of the launch rite (assets/art/title/splash.png).
 ##
 ## --state: fresh (no run, no deeds), first (first launch: language and
 ## consent), saved (a run with a Steady Frostlight flame), vigil (saved run,
@@ -28,7 +31,8 @@ func _initialize() -> void:
 			_args[arg.trim_prefix("--")] = "true"
 	var shape: StringName = StringName(str(_args.get("shape", "pad-landscape")))
 	var stage: Vector2i = StageShape.REFERENCES.get(shape, Vector2i(1180, 820))
-	DisplayServer.window_set_size(stage)
+	var scale: float = float(str(_args.get("scale", "1")))
+	DisplayServer.window_set_size(Vector2i(Vector2(stage) * scale))
 	root.content_scale_size = stage
 	var code: StringName = StringName(str(_args.get("locale", "en")))
 	Locale.active = Locale.new(code)
@@ -39,10 +43,10 @@ func _initialize() -> void:
 	var rite_at: float = float(str(_args.get("rite", "-1")))
 	var screen: TitleScreen = TitleScreen.new(context(shape, state, rite_at >= 0.0))
 	root.add_child(screen)
-	for _i: int in range(4):
-		await process_frame
+	screen.kindle_now()
 	if rite_at >= 0.0 and screen.rite != null:
-		screen.set_process(false)
+		# Held at T: the screen's own clock never moves the rite on.
+		screen.hold_rite = true
 		screen.rite.advance(rite_at)
 		screen.lantern.flame.pinned = true
 	if _args.has("settings"):

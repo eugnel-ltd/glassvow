@@ -241,11 +241,22 @@ Four decisions worth keeping:
   Inspected at full size first; the sunset gradient and cloud sea in `act4-node5`
   are the hardest case in the set and show no visible banding.
 
-### `title/splash.png` — 2360×1640 RGBA
+### `title/splash.png` — 2360×1640 — frame 0 of the launch rite
 
-The Godot boot splash, wired at `project.godot:20`. Last corrected by 4007c11
-("the splash stops clipping its own name"). **Prompt not recorded** —
-reconstruct and add it here the next time it is touched.
+The Godot boot splash (`project.godot` `boot_splash/image`, fullsize, on the
+`#05070e` ground the title's veil uses). Since 2026-10-02 it is not a logo
+card: it is the first frame of the kindling (docs/design/2026-10-02-opening-
+start §7 T0) — night and one ember at the lantern's wick — rendered from the
+production TitleScreen, so the splash and the first frame register:
+
+    godot --path . --position 0,0 -s res://tools/capture_title.gd -- \
+        --shape=pad-landscape --locale=en --state=fresh --rite=0 --scale=2 \
+        --out=assets/art/title/splash.png
+
+No model made it; re-run the command after any change to the lantern's wick
+or the ember. The wick sits at 0.918 of the stage height on pad and phone so
+the fitted splash's ember lands on it. The previous splash (the wordmark on
+black; prompt never recorded) is in git history at 4007c11.
 
 ### `title/lantern-hero.png` — 1024×1024 RGBA — lane pick, owner re-pick open
 

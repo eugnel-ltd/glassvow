@@ -15,12 +15,12 @@ var radius: float = 0.0:
 	set(value):
 		radius = value
 		queue_redraw()
-## How far the light has reached, 0..1: from a small disc round the flame to
-## past every corner of the stage. Sets `radius` from the veil's own size.
+## How far the light has reached, 0..1 of a radius that clears every corner.
+## Sets `radius` from the veil's own size.
 var reach: float = 0.0:
 	set(value):
 		reach = value
-		radius = lerpf(0.08, 1.0, clampf(value, 0.0, 1.0)) * full_radius()
+		radius = clampf(value, 0.0, 1.0) * full_radius()
 ## 0 lifts the veil entirely; 1 is full night outside the light.
 var strength: float = 1.0:
 	set(value):

@@ -54,8 +54,10 @@ class Layout:
 		l.ref_h = 390.0
 		l.word_y = 8.0
 		l.word_w = 226.0
-		l.plaque_y = 150.0
-		l.lantern_y = 192.0
+		l.plaque_y = 148.0
+		# The wick sits at 0.918 of the stage height on every shape, where the
+		# boot splash's ember is: frame 0 and the first frame register.
+		l.lantern_y = 181.0
 		l.lantern = 226.0
 		l.left = [Vector2(-104.0, 206.0), Vector2(-130.0, 256.0), Vector2(-140.0, 302.0)]
 		l.right = [Vector2(104.0, 206.0), Vector2(130.0, 256.0), Vector2(140.0, 302.0)]
@@ -72,6 +74,8 @@ var world: TitleWorld
 var lantern: LeadlightLantern
 var rose: LeadlightRose
 var rite: LeadlightRite
+## A still holds the rite where it is (tools/capture_title.gd); play never sets it.
+var hold_rite: bool = false
 
 var _context: Dictionary
 var _sfx: SfxBus
@@ -309,7 +313,7 @@ func kindle_now() -> void:
 
 
 func _process(delta: float) -> void:
-	if rite != null and rite.is_running():
+	if rite != null and rite.is_running() and not hold_rite:
 		rite.advance(delta)
 
 
@@ -330,6 +334,7 @@ func _light_words() -> Array:
 ## The title as it rests once lit: the second title of a session lands here.
 func _land() -> void:
 	lantern.kindle = 1.0
+	lantern.presence = 1.0
 	lantern.reach = 1.0
 	world.lamplight = 1.0
 	_chain.progress = 1.0

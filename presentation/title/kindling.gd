@@ -13,6 +13,8 @@ extends RefCounted
 
 const HOLD: float = 0.4
 const LENGTH: float = 2.4
+## How far the caught flame lights the road before the light reaches out.
+const EMBER_REACH: float = 0.08
 
 
 ## `t` holds the targets: lantern, world, veil, chain, wordmark, words (Array of
@@ -25,18 +27,24 @@ static func build(t: Dictionary) -> LeadlightRite:
 	var wordmark: CanvasItem = t["wordmark"]
 	var rose: LeadlightRose = t["rose"]
 	var words: Array = t["words"]
+	# Frame 0 is the boot splash: one ember, nothing else. The lantern comes up
+	# round it as the ember breathes.
 	var breathe: Callable = func(p: float) -> void:
 		lantern.kindle = 0.05 + 0.1 * p
+		lantern.presence = p
 	# Each later step leaves the lantern alone until it begins, so the steps
 	# hand the flame on rather than fighting over it.
 	var catch_flame: Callable = func(p: float) -> void:
 		if p > 0.0:
 			lantern.kindle = 0.15 + 0.45 * p
+			veil.reach = EMBER_REACH * p
 	var take_light: Callable = func(p: float) -> void:
 		if p > 0.0:
 			lantern.kindle = 0.6 + 0.4 * p
 	var light_reach: Callable = func(p: float) -> void:
-		veil.reach = p
+		if p <= 0.0:
+			return
+		veil.reach = lerpf(EMBER_REACH, 1.0, p)
 		veil.strength = 1.0 - smoothstep(0.82, 1.0, p)
 		world.lamplight = p
 		chain.progress = p
@@ -49,6 +57,12 @@ static func build(t: Dictionary) -> LeadlightRite:
 			if item_v is CanvasItem:
 				var item: CanvasItem = item_v
 				item.modulate.a = p
+	# Frame 0, before any step: night, every roadside lamp out, no reach.
+	veil.reach = 0.0
+	veil.strength = 1.0
+	world.lamplight = 0.0
+	chain.progress = 0.0
+	lantern.reach = 0.0
 	var rite: LeadlightRite = LeadlightRite.new()
 	rite.step(0.0, HOLD, breathe, LeadlightMotion.BREATH)
 	rite.step(HOLD, 0.9, catch_flame, LeadlightMotion.CATCH)
