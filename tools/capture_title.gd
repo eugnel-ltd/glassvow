@@ -7,7 +7,7 @@ extends SceneTree
 ##
 ##   godot --path . --position 40,40 -s res://tools/capture_title.gd -- \
 ##       --shape=pad-landscape --locale=en --state=saved --out=/tmp/t.png \
-##       [--rite=1.6] [--settings] [--reduce-motion] [--scale=2]
+##       [--rite=1.6] [--settings] [--embark] [--reduce-motion] [--scale=2]
 ##
 ## The boot splash is this harness at --state=fresh --rite=0 --scale=2 on the
 ## identity shape: frame 0 of the launch rite (assets/art/title/splash.png).
@@ -50,6 +50,15 @@ func _initialize() -> void:
 		screen.rite.advance(rite_at)
 		screen.lantern.flame.pinned = true
 	await process_frame
+	if _args.has("embark"):
+		# Embark over the road, as Main shows it on a later run: both aspects
+		# offered, three vows unlocked, a saved run to warn about.
+		var content: ContentDB = ContentDB.load_full()
+		Locale.active.hydrate_content(content)
+		var embark: EmbarkScreen = EmbarkScreen.new(content.aspects, content.vows,
+			true, 3, state == "saved" or state == "vigil", 0, 1, shape)
+		screen.queue_free()
+		root.add_child(embark)
 	if _args.has("settings"):
 		if state != "first":
 			Preferences.active.diagnostics_notice_seen = true
