@@ -1,0 +1,229 @@
+extends RefCounted
+## Shared scratch helpers for the concept dressers: road distance field,
+## procedural meshes and the hide list. Proof-of-look only, not production.
+
+const CELL: float = 0.5
+const X0: float = -52.0
+const Z0: float = -30.0
+const NX: int = 210
+const NZ: int = 122
+
+
+## Distance (m) from every grid cell to the nearest road centreline or node:
+## exact near the seeds, chamfer-propagated beyond. Fast enough for a scratch bind.
+static func road_field(land: MapLandscape, reach: float = 12.0) -> PackedFloat32Array:
+	return field_for(land.paths, land.anchors, reach)
+
+
+static func field_for(paths: Array[PackedVector3Array], anchors: PackedVector3Array, reach: float = 12.0) -> PackedFloat32Array:
+	var field: PackedFloat32Array = PackedFloat32Array()
+	field.resize(NX * NZ)
+	field.fill(reach)
+	var seeds: PackedVector2Array = PackedVector2Array()
+	for line: PackedVector3Array in paths:
+		for i: int in range(line.size() - 1):
+			var a: Vector2 = Vector2(line[i].x, line[i].z)
+			var b: Vector2 = Vector2(line[i + 1].x, line[i + 1].z)
+			var n: int = maxi(1, int(a.distance_to(b) / 0.2))
+			for k: int in range(n + 1):
+				seeds.append(a.lerp(b, float(k) / n))
+	for anchor: Vector3 in anchors:
+		seeds.append(Vector2(anchor.x, anchor.z))
+	for p: Vector2 in seeds:
+		var cx: int = int(roundf((p.x - X0) / CELL))
+		var cz: int = int(roundf((p.y - Z0) / CELL))
+		for dz: int in range(-2, 3):
+			for dx: int in range(-2, 3):
+				var ix: int = cx + dx
+				var iz: int = cz + dz
+				if ix < 0 or iz < 0 or ix >= NX or iz >= NZ:
+					continue
+				var d: float = p.distance_to(Vector2(X0 + ix * CELL, Z0 + iz * CELL))
+				var k: int = iz * NX + ix
+				if d < field[k]:
+					field[k] = d
+	var diag: float = CELL * sqrt(2.0)
+	for iz: int in range(NZ):
+		for ix: int in range(NX):
+			var k: int = iz * NX + ix
+			var v: float = field[k]
+			if ix > 0: v = minf(v, field[k - 1] + CELL)
+			if iz > 0: v = minf(v, field[k - NX] + CELL)
+			if ix > 0 and iz > 0: v = minf(v, field[k - NX - 1] + diag)
+			if ix < NX - 1 and iz > 0: v = minf(v, field[k - NX + 1] + diag)
+			field[k] = v
+	for iz: int in range(NZ - 1, -1, -1):
+		for ix: int in range(NX - 1, -1, -1):
+			var k: int = iz * NX + ix
+			var v: float = field[k]
+			if ix < NX - 1: v = minf(v, field[k + 1] + CELL)
+			if iz < NZ - 1: v = minf(v, field[k + NX] + CELL)
+			if ix < NX - 1 and iz < NZ - 1: v = minf(v, field[k + NX + 1] + diag)
+			if ix > 0 and iz < NZ - 1: v = minf(v, field[k + NX - 1] + diag)
+			field[k] = v
+	return field
+
+
+## Distance from (x, z) to the nearer ravine bank; negative inside a ravine.
+static func bank_distance(x: float, z: float) -> float:
+	var best: float = 99.0
+	for cut: float in MapRavine.CUTS:
+		best = minf(best, absf(x - MapRavine.centre(cut, z)) - MapRavine.HALF_WIDTH)
+	return best
+
+
+static func sample(field: PackedFloat32Array, x: float, z: float) -> float:
+	var fx: float = clampf((x - X0) / CELL, 0.0, NX - 1.001)
+	var fz: float = clampf((z - Z0) / CELL, 0.0, NZ - 1.001)
+	var ix: int = int(fx)
+	var iz: int = int(fz)
+	var tx: float = fx - ix
+	var tz: float = fz - iz
+	var a: float = lerpf(field[iz * NX + ix], field[iz * NX + ix + 1], tx)
+	var b: float = lerpf(field[(iz + 1) * NX + ix], field[(iz + 1) * NX + ix + 1], tx)
+	return lerpf(a, b, tz)
+
+
+static func hide(land: Node, names: Array[String]) -> void:
+	for child: Node in land.get_children():
+		if str(child.name) in names and child is Node3D:
+			(child as Node3D).visible = false
+
+
+## A ragged conifer: trunk plus `tiers` drooping, jagged skirts, unit height 1.
+static func conifer(tiers: int, foliage: Color, trunk: Color, slim: float) -> ArrayMesh:
+	var st: SurfaceTool = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_cone(st, Vector3.ZERO, 0.03, 0.02, 0.3, trunk, trunk, 5)
+	var sides: int = 11
+	for t: int in range(tiers):
+		var f: float = float(t) / tiers
+		var base: float = 0.14 + f * 0.7
+		var radius: float = (0.36 - f * 0.27) * slim
+		var tip: float = base + 0.30 - f * 0.08
+		var tone: Color = foliage.lightened(f * 0.10)
+		for k: int in range(sides):
+			var a0: float = TAU * k / sides
+			var a1: float = TAU * (k + 1) / sides
+			var r0: float = radius * (0.78 + 0.22 * absf(sin(a0 * 3.7 + t * 1.3)))
+			var r1: float = radius * (0.78 + 0.22 * absf(sin(a1 * 3.7 + t * 1.3)))
+			var droop0: float = -0.05 * absf(sin(a0 * 2.0 + t))
+			var droop1: float = -0.05 * absf(sin(a1 * 2.0 + t))
+			var p0: Vector3 = Vector3(cos(a0) * r0, base + droop0, sin(a0) * r0)
+			var p1: Vector3 = Vector3(cos(a1) * r1, base + droop1, sin(a1) * r1)
+			var q: Vector3 = Vector3(0, tip, 0)
+			st.set_color(tone.darkened(0.45)); st.add_vertex(p0)
+			st.set_color(tone); st.add_vertex(q)
+			st.set_color(tone.darkened(0.45)); st.add_vertex(p1)
+			st.set_color(tone.darkened(0.7)); st.add_vertex(p0)
+			st.set_color(tone.darkened(0.7)); st.add_vertex(p1)
+			st.set_color(tone.darkened(0.7)); st.add_vertex(Vector3(0, base + 0.02, 0))
+	st.generate_normals()
+	return st.commit()
+
+
+## A bare burnt snag with three crooked limbs, unit height 1.
+static func snag(bark: Color) -> ArrayMesh:
+	var st: SurfaceTool = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_cone(st, Vector3.ZERO, 0.06, 0.012, 1.0, bark.darkened(0.3), bark, 6)
+	for i: int in range(3):
+		var y: float = 0.45 + i * 0.16
+		var dir: Vector3 = Vector3(cos(i * 2.3), 0.7, sin(i * 2.3)).normalized()
+		_limb(st, Vector3(0, y, 0), dir * (0.28 - i * 0.05), 0.022, bark)
+	st.generate_normals()
+	return st.commit()
+
+
+## A low rounded shrub, unit height 1.
+static func shrub(colour: Color) -> ArrayMesh:
+	var sphere: SphereMesh = SphereMesh.new()
+	sphere.radius = 0.5
+	sphere.height = 1.0
+	sphere.radial_segments = 8
+	sphere.rings = 4
+	var st: SurfaceTool = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st.set_color(colour)
+	for i: int in range(3):
+		var at: Vector3 = Vector3(cos(i * 2.1) * 0.35, 0.32, sin(i * 2.1) * 0.3)
+		var arrays: Array = sphere.get_mesh_arrays()
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var idx: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+		for k: int in idx:
+			var v: Vector3 = verts[k] * Vector3(1.0, 0.7, 1.0) * (0.85 - i * 0.12) + at
+			st.set_color(colour.darkened(0.25 - clampf(v.y, 0.0, 0.6) * 0.4))
+			st.add_vertex(v)
+	st.generate_normals()
+	return st.commit()
+
+
+static func _cone(st: SurfaceTool, at: Vector3, r0: float, r1: float, h: float, c0: Color, c1: Color, sides: int) -> void:
+	for s: int in range(sides):
+		var a0: float = TAU * s / sides
+		var a1: float = TAU * (s + 1) / sides
+		var p0: Vector3 = at + Vector3(cos(a0) * r0, 0, sin(a0) * r0)
+		var p1: Vector3 = at + Vector3(cos(a1) * r0, 0, sin(a1) * r0)
+		var q0: Vector3 = at + Vector3(cos(a0) * r1, h, sin(a0) * r1)
+		var q1: Vector3 = at + Vector3(cos(a1) * r1, h, sin(a1) * r1)
+		st.set_color(c0); st.add_vertex(p0)
+		st.set_color(c1); st.add_vertex(q1)
+		st.set_color(c0); st.add_vertex(p1)
+		if r1 > 0.0:
+			st.set_color(c0); st.add_vertex(p0)
+			st.set_color(c1); st.add_vertex(q0)
+			st.set_color(c1); st.add_vertex(q1)
+		else:
+			pass
+	# underside cap so cones read solid from the tilted camera
+	for s: int in range(sides):
+		var a0: float = TAU * s / sides
+		var a1: float = TAU * (s + 1) / sides
+		st.set_color(c0.darkened(0.4)); st.add_vertex(at)
+		st.set_color(c0.darkened(0.4)); st.add_vertex(at + Vector3(cos(a0) * r0, 0, sin(a0) * r0))
+		st.set_color(c0.darkened(0.4)); st.add_vertex(at + Vector3(cos(a1) * r0, 0, sin(a1) * r0))
+
+
+static func _limb(st: SurfaceTool, from: Vector3, along: Vector3, r: float, c: Color) -> void:
+	var side: Vector3 = along.cross(Vector3.UP).normalized() * r
+	var up: Vector3 = along.cross(side).normalized() * r
+	var tip: Vector3 = from + along
+	for pair: Array in [[side, up], [up, -side], [-side, -up], [-up, side]]:
+		var a: Vector3 = pair[0]
+		var b: Vector3 = pair[1]
+		st.set_color(c); st.add_vertex(from + a)
+		st.set_color(c); st.add_vertex(tip)
+		st.set_color(c); st.add_vertex(from + b)
+
+
+static func multimesh(label: String, mesh: Mesh, transforms: Array[Transform3D], colours: Array[Color], material: Material, shadows: bool) -> MultiMeshInstance3D:
+	var mm: MultiMesh = MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_colors = not colours.is_empty()
+	mm.mesh = mesh
+	mm.instance_count = transforms.size()
+	for i: int in range(transforms.size()):
+		mm.set_instance_transform(i, transforms[i])
+		if not colours.is_empty():
+			mm.set_instance_color(i, colours[i])
+	var node: MultiMeshInstance3D = MultiMeshInstance3D.new()
+	node.name = label
+	node.multimesh = mm
+	node.material_override = material
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return node
+
+
+static func edge_states(scene: MapScene) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for edge_id: String in MapLayoutCanonical.sorted_keys(scene._waylights):
+		var tracer: MapWaylightTracer = scene._waylights[edge_id]
+		out.append(tracer.route_state())
+	return out
+
+
+static func node_states(screen: WorldMapScreen) -> Dictionary:
+	var out: Dictionary = {}
+	for stone: GlassWaystone in screen._waystones:
+		out[stone.index] = "current" if stone.current else ("open" if stone.reachable else ("walked" if stone.cleared else "cold"))
+	return out

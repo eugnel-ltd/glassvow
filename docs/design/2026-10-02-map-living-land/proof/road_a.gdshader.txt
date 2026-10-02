@@ -1,0 +1,25 @@
+shader_type spatial;
+render_mode diffuse_burley, specular_disabled;
+// Scratch path for concept A: packed warm earth with set stones, ragged verges.
+// The ribbon's UV.x runs across the road. 1 sampler.
+uniform sampler2D mineral : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+varying vec3 wpos;
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vnoise(vec2 p) {
+	vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+}
+void vertex() { wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+void fragment() {
+	vec3 stone = texture(mineral, wpos.xz / 2.2).rgb;
+	float across = abs(UV.x - 0.5) * 2.0;
+	float n = vnoise(wpos.xz * 3.0) * 0.5 + vnoise(wpos.xz * 9.0) * 0.5;
+	float verge = smoothstep(0.55, 1.0, across + (n - 0.5) * 0.5);
+	float rut = 1.0 - smoothstep(0.0, 0.25, abs(across - 0.55));
+	vec3 earth = vec3(0.27, 0.205, 0.16) * (0.8 + 0.4 * n);
+	vec3 c = mix(earth, stone * vec3(0.5, 0.44, 0.38), smoothstep(0.45, 0.7, vnoise(wpos.xz * 4.0)) * 0.5);
+	c *= 1.0 - rut * 0.18;
+	c = mix(c, c * 0.45, verge);
+	ALBEDO = c;
+	ROUGHNESS = 1.0;
+}

@@ -1,0 +1,200 @@
+extends RefCounted
+## Concept B, "The Leaded Pane": the act is a backlit stained-glass window laid
+## on the pilgrim's table. The land is glass cut along the layout: honey glass
+## for the open road, settled gold for the walked road, smoked glass for roads
+## not yet reachable, viridian and crimson panes where the groves stand, cobalt
+## in the ravines. A heavy lead-and-iron frame and two candles close the frame.
+## Scratch proof-of-look.
+
+const S = preload("res://scratch_lane/look_shared.gd")
+
+
+static func dress(screen: WorldMapScreen, act: int) -> void:
+	var scene: MapScene = screen._map_scene
+	var land: MapLandscape = scene._landscape
+	var world: Node3D = scene._world
+	S.hide(land, ["Still water", "Contact shade", "ash-copse", "ash-tree", "heath-tuft",
+		"Waystone seals", "Worn flagstones", "Exposed strata", "Broken ledges", "slate-cluster",
+		"Processional paths", "Waystone plinths"])
+	for child: Node in land.get_children():
+		if child is MeshInstance3D and str(child.name).begins_with("@MeshInstance3D"):
+			(child as MeshInstance3D).visible = false
+	var texture: ImageTexture = _data(screen, scene, land)
+	var glass: ShaderMaterial = ShaderMaterial.new()
+	glass.shader = load("res://scratch_lane/glass_b.gdshader") as Shader
+	glass.set_shader_parameter("data", texture)
+	# One flat pane under the whole act, ravines included: the ravine is cobalt
+	# glass, so the plates are no longer separate islands.
+	var pane: PlaneMesh = PlaneMesh.new()
+	pane.size = Vector2(100, 58)
+	var node: MeshInstance3D = MeshInstance3D.new()
+	node.name = "Leaded pane"
+	node.mesh = pane
+	node.material_override = glass
+	node.position = Vector3(0, -0.02, 0)
+	land.add_child(node)
+	(land.get_node("Slate heath") as MeshInstance3D).visible = false
+	_bridges(land, texture)
+	_frame(land)
+	_light(scene, world)
+
+
+## RGBA8 data map: R road distance /12 m, G road state at the nearest road
+## (1 open, 0.5 walked, 0 cold), B grove density, A node distance /12 m.
+static func _data(screen: WorldMapScreen, scene: MapScene, land: MapLandscape) -> ImageTexture:
+	var states: Array[StringName] = S.edge_states(scene)
+	var open_paths: Array[PackedVector3Array] = []
+	var walked_paths: Array[PackedVector3Array] = []
+	for e: int in range(land.paths.size()):
+		if states[e] == &"open":
+			open_paths.append(land.paths[e])
+		elif states[e] == &"walked":
+			walked_paths.append(land.paths[e])
+	var roads: PackedFloat32Array = S.field_for(land.paths, PackedVector3Array())
+	var opened: PackedFloat32Array = S.field_for(open_paths, PackedVector3Array())
+	var walked: PackedFloat32Array = S.field_for(walked_paths, PackedVector3Array())
+	var nodes: PackedFloat32Array = S.field_for([], screen._ordered_layout_anchors())
+	var groves: PackedFloat32Array = PackedFloat32Array()
+	groves.resize(S.NX * S.NZ)
+	var diag: Dictionary = scene.layout_diagnostics()
+	for placement: Dictionary in diag["scenery_instances"].values():
+		var id: String = str(placement["asset_id"])
+		if id not in ["ash-copse", "ash-tree"]:
+			continue
+		var tr: Dictionary = placement["transform"]
+		var o: Array = tr["origin"]
+		var sc: Array = tr["scale"]
+		var at: Vector2 = Vector2(MapLayoutCanonical.float_value(o[0]), MapLayoutCanonical.float_value(o[2]))
+		var r: float = (3.6 if id == "ash-copse" else 2.2) * MapLayoutCanonical.float_value(sc[0]) + 1.4
+		var c0: Vector2i = Vector2i(int((at.x - r - S.X0) / S.CELL), int((at.y - r - S.Z0) / S.CELL))
+		var c1: Vector2i = Vector2i(int((at.x + r - S.X0) / S.CELL) + 1, int((at.y + r - S.Z0) / S.CELL) + 1)
+		for iz: int in range(maxi(c0.y, 0), mini(c1.y, S.NZ)):
+			for ix: int in range(maxi(c0.x, 0), mini(c1.x, S.NX)):
+				var p: Vector2 = Vector2(S.X0 + ix * S.CELL, S.Z0 + iz * S.CELL)
+				var w: float = 1.0 - clampf(p.distance_to(at) / r, 0.0, 1.0)
+				groves[iz * S.NX + ix] = maxf(groves[iz * S.NX + ix], w)
+	var image: Image = Image.create(S.NX, S.NZ, false, Image.FORMAT_RGBA8)
+	for iz: int in range(S.NZ):
+		for ix: int in range(S.NX):
+			var k: int = iz * S.NX + ix
+			var state: float = 1.0 if opened[k] <= roads[k] + 0.05 and opened[k] < 0.8 else (0.5 if walked[k] <= roads[k] + 0.05 and walked[k] < 0.8 else 0.0)
+			var x: float = S.X0 + ix * S.CELL
+			var z: float = S.Z0 + iz * S.CELL
+			var grove: float = groves[k]
+			# Off the plates (the ravines) every pane is cobalt water glass.
+			if S.bank_distance(x, z) < 0.0:
+				grove = 0.0
+			image.set_pixel(ix, iz, Color(clampf(roads[k] / 12.0, 0.0, 1.0), state, grove, clampf(nodes[k] / 12.0, 0.0, 1.0)))
+	return ImageTexture.create_from_image(image)
+
+
+static func _bridges(land: MapLandscape, texture: ImageTexture) -> void:
+	var lead: StandardMaterial3D = StandardMaterial3D.new()
+	lead.albedo_color = Color("3a2c1c")
+	lead.metallic = 0.7
+	lead.roughness = 0.45
+	(land.get_node("Bridge masonry") as MeshInstance3D).material_override = lead
+	# Cobalt water glass in the ravines, laid just under the pane's plane.
+	var water: ShaderMaterial = ShaderMaterial.new()
+	water.shader = load("res://scratch_lane/glass_b.gdshader") as Shader
+	water.set_shader_parameter("land_a", Color(0.06, 0.16, 0.42))
+	water.set_shader_parameter("land_b", Color(0.05, 0.26, 0.40))
+	water.set_shader_parameter("cell", 0.9)
+	water.set_shader_parameter("data", texture)
+	water.set_shader_parameter("grove_a", Color(0.04, 0.12, 0.36))
+	water.set_shader_parameter("grove_b", Color(0.05, 0.22, 0.34))
+	for cut: float in MapRavine.CUTS:
+		var st: SurfaceTool = SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var z: float = -29.0
+		while z < 29.0:
+			var x0: float = MapRavine.centre(cut, z)
+			var x1: float = MapRavine.centre(cut, z + 1.0)
+			var w: float = MapRavine.HALF_WIDTH + 0.05
+			for v: Vector3 in [Vector3(x0 - w, 0, z), Vector3(x0 + w, 0, z), Vector3(x1 + w, 0, z + 1.0),
+					Vector3(x0 - w, 0, z), Vector3(x1 + w, 0, z + 1.0), Vector3(x1 - w, 0, z + 1.0)]:
+				st.set_normal(Vector3.UP)
+				st.add_vertex(v)
+			z += 1.0
+		var node: MeshInstance3D = MeshInstance3D.new()
+		node.mesh = st.commit()
+		node.material_override = water
+		node.position = Vector3(0, -0.01, 0)
+		land.add_child(node)
+
+
+## The window's heavy lead-and-iron frame, the table it lies on, two candles.
+static func _frame(land: MapLandscape) -> void:
+	var iron: StandardMaterial3D = StandardMaterial3D.new()
+	iron.albedo_color = Color("1a1714")
+	iron.metallic = 0.8
+	iron.roughness = 0.4
+	var gilt: StandardMaterial3D = StandardMaterial3D.new()
+	gilt.albedo_color = Color("8a6a3a")
+	gilt.metallic = 0.9
+	gilt.roughness = 0.35
+	for side: Array in [[Vector3(0, 0.15, -29.6), Vector3(103, 0.5, 3.2)], [Vector3(0, 0.15, 29.6), Vector3(103, 0.5, 3.2)],
+			[Vector3(-51.2, 0.15, 0), Vector3(3.2, 0.5, 62.4)], [Vector3(51.2, 0.15, 0), Vector3(3.2, 0.5, 62.4)]]:
+		var box: BoxMesh = BoxMesh.new()
+		box.size = side[1]
+		var m: MeshInstance3D = MeshInstance3D.new()
+		m.mesh = box
+		m.material_override = iron
+		m.position = side[0]
+		land.add_child(m)
+		var trim: BoxMesh = BoxMesh.new()
+		var size: Vector3 = side[1]
+		trim.size = Vector3(maxf(size.x - 2.4, 0.3) if size.x > 10 else 0.3, 0.12, maxf(size.z - 2.4, 0.3) if size.z > 10 else 0.3)
+		var t: MeshInstance3D = MeshInstance3D.new()
+		t.mesh = trim
+		t.material_override = gilt
+		var pos: Vector3 = side[0]
+		t.position = pos + Vector3(0, 0.3, 0) - Vector3(signf(pos.x) * 1.2, 0, signf(pos.z) * 1.2)
+		land.add_child(t)
+	var table: PlaneMesh = PlaneMesh.new()
+	table.size = Vector2(300, 220)
+	var wood: StandardMaterial3D = StandardMaterial3D.new()
+	wood.albedo_color = Color("1c120c")
+	wood.roughness = 0.6
+	var top: MeshInstance3D = MeshInstance3D.new()
+	top.mesh = table
+	top.material_override = wood
+	top.position = Vector3(0, -0.12, 0)
+	land.add_child(top)
+	for at: Vector3 in [Vector3(-56, 0, 34), Vector3(57, 0, -34)]:
+		var wax: CylinderMesh = CylinderMesh.new()
+		wax.top_radius = 0.9
+		wax.bottom_radius = 1.0
+		wax.height = 4.0
+		var candle: MeshInstance3D = MeshInstance3D.new()
+		candle.mesh = wax
+		var cream: StandardMaterial3D = StandardMaterial3D.new()
+		cream.albedo_color = Color("d8c9a8")
+		candle.material_override = cream
+		candle.position = at + Vector3(0, 2.0, 0)
+		land.add_child(candle)
+		var flame: OmniLight3D = OmniLight3D.new()
+		flame.light_color = Color("ffb060")
+		flame.light_energy = 6.0
+		flame.omni_range = 30.0
+		flame.position = at + Vector3(0, 5.0, 0)
+		land.add_child(flame)
+
+
+static func _light(scene: MapScene, world: Node3D) -> void:
+	var key: DirectionalLight3D = scene.get_key()
+	key.rotation_degrees = Vector3(-55, -30, 0)
+	key.light_color = Color("aab6dc")
+	key.light_energy = 0.5
+	key.shadow_enabled = true
+	var env: Environment = (world.get_node("MapEnvironment") as WorldEnvironment).environment
+	env.background_color = Color("070507")
+	env.ambient_light_color = Color("3a2c2a")
+	env.ambient_light_energy = 0.4
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 1.1
+	env.fog_enabled = false
+	env.glow_enabled = true
+	env.glow_intensity = 0.7
+	env.glow_bloom = 0.05
+	env.glow_hdr_threshold = 0.8

@@ -1,0 +1,155 @@
+extends RefCounted
+## Concept C, "The Painted Road": the act stays a painted plate. The ground is a
+## painted night plate whose light is painted in (the lantern corridor, pooled
+## grove shadow); the house-style painted cards stay and grow denser; a painted
+## sky band and near foreground silhouettes slide at their own parallax rates,
+## so the fixed camera reads as depth. Scratch proof-of-look.
+
+const S = preload("res://scratch_lane/look_shared.gd")
+const LookB = preload("res://scratch_lane/look_b.gd")
+
+
+static func dress(screen: WorldMapScreen, act: int) -> void:
+	var scene: MapScene = screen._map_scene
+	var land: MapLandscape = scene._landscape
+	var world: Node3D = scene._world
+	S.hide(land, ["Worn flagstones", "Waystone seals"])
+	var data: ImageTexture = LookB._data(screen, scene, land)
+	var ground: ShaderMaterial = ShaderMaterial.new()
+	ground.shader = load("res://scratch_lane/ground_c.gdshader") as Shader
+	ground.set_shader_parameter("groundcover", land.assets.ground)
+	ground.set_shader_parameter("mineral", land.assets.stone)
+	ground.set_shader_parameter("data", data)
+	for child: Node in land.get_children():
+		var item: MeshInstance3D = child as MeshInstance3D
+		if item != null and item.material_override == land.mineral:
+			item.material_override = ground
+	var paths: MeshInstance3D = land.get_node("Processional paths") as MeshInstance3D
+	var paint: ShaderMaterial = ShaderMaterial.new()
+	paint.shader = load("res://scratch_lane/road_a.gdshader") as Shader
+	paint.set_shader_parameter("mineral", land.assets.stone)
+	paint.set_shader_parameter("mineral", land.assets.ground)
+	var unshaded_road: ShaderMaterial = paint
+	paths.material_override = unshaded_road
+	_cards(scene, land)
+	_glows(scene, land)
+	_layers(screen, scene)
+	var env: Environment = (world.get_node("MapEnvironment") as WorldEnvironment).environment
+	env.background_color = Color("06060c")
+	env.glow_enabled = true
+	env.glow_intensity = 0.8
+	env.glow_hdr_threshold = 0.9
+	env.fog_enabled = false
+	scene.get_key().light_energy = 0.55
+
+
+## The painted cards stay; moonlit, and doubled where the land has room. The
+## same crown-height cap as concept A keeps each new card clear of every road
+## and waystone up-screen.
+static func _cards(scene: MapScene, land: MapLandscape) -> void:
+	var field: PackedFloat32Array = S.road_field(land)
+	var noise: FastNoiseLite = FastNoiseLite.new()
+	noise.seed = 4700
+	noise.frequency = 0.045
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 53
+	var copse: Array[Transform3D] = []
+	var tree: Array[Transform3D] = []
+	for i: int in range(5200):
+		var at: Vector2 = Vector2(rng.randf_range(-48, 48), rng.randf_range(-27, 27))
+		var d: float = S.sample(field, at.x, at.y)
+		if d < 2.6 or S.bank_distance(at.x, at.y) < 1.5:
+			continue
+		if noise.get_noise_2d(at.x * 1.3 + 40.0, at.y * 1.3) < 0.0:
+			continue
+		if at.distance_to(MapScene.THRESHOLD_XZ) < 7.0 or at.distance_to(MapScene.TERMINUS_XZ) < 7.5:
+			continue
+		var cap: float = (d - 1.2) / 1.19
+		var big: bool = rng.randf() < 0.45
+		var s: float = minf(rng.randf_range(0.5, 0.95), cap / (4.4 if big else 3.6))
+		if s < 0.3:
+			continue
+		var t: Transform3D = Transform3D(Basis.IDENTITY.scaled(Vector3(s, s, s)), Vector3(at.x, 0.0, at.y))
+		if big:
+			copse.append(t)
+		else:
+			tree.append(t)
+	copse.sort_custom(func(a: Transform3D, b: Transform3D) -> bool: return a.origin.z < b.origin.z)
+	tree.sort_custom(func(a: Transform3D, b: Transform3D) -> bool: return a.origin.z < b.origin.z)
+	var copse_mesh: Mesh = land.assets.meshes["ash-copse"]
+	var tree_mesh: Mesh = land.assets.meshes["ash-tree"]
+	land.add_child(S.multimesh("Copse infill", copse_mesh, copse, [], null, false))
+	land.add_child(S.multimesh("Tree infill", tree_mesh, tree, [], null, false))
+	for id: String in ["ash-copse", "ash-tree", "heath-tuft"]:
+		var mesh: Mesh = land.assets.meshes[id]
+		var material: StandardMaterial3D = mesh.surface_get_material(0) as StandardMaterial3D
+		if material != null:
+			material.albedo_color = Color(0.62, 0.62, 0.78)
+
+
+static func _glows(scene: MapScene, land: MapLandscape) -> void:
+	var states: Array[StringName] = S.edge_states(scene)
+	var flare: QuadMesh = QuadMesh.new()
+	flare.size = Vector2(0.55, 0.55)
+	var gradient: Gradient = Gradient.new()
+	gradient.colors = PackedColorArray([Color(1.0, 0.75, 0.4, 1.0), Color(1.0, 0.5, 0.2, 0.0)])
+	var tex: GradientTexture2D = GradientTexture2D.new()
+	tex.gradient = gradient
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(0.5, 0.0)
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.albedo_texture = tex
+	mat.albedo_color = Color(1.6, 1.15, 0.7)
+	var at: Array[Transform3D] = []
+	for e: int in range(land.paths.size()):
+		if states[e] != &"open":
+			continue
+		var line: PackedVector3Array = land.paths[e]
+		var total: float = 0.0
+		var next_at: float = 1.6
+		for i: int in range(line.size() - 1):
+			var seg: float = line[i].distance_to(line[i + 1])
+			while next_at <= total + seg:
+				var p: Vector3 = line[i].lerp(line[i + 1], (next_at - total) / seg)
+				at.append(Transform3D(Basis.IDENTITY, p + Vector3(0, 0.7, 0)))
+				next_at += 3.2
+			total += seg
+	land.add_child(S.multimesh("Lantern glow", flare, at, [], mat, false))
+
+
+## The sky band under the HUD and the foreground silhouettes, children of the
+## MapScene so they draw over the land and under the waystones.
+static func _layers(screen: WorldMapScreen, scene: MapScene) -> void:
+	var size: Vector2 = scene.size
+	var pan: float = scene.get_rig().camera_xz().x / 37.0
+	var backdrop: Texture2D = load("res://assets/art/stage/act1-backdrop.png") as Texture2D
+	var band: ColorRect = ColorRect.new()
+	band.name = "Sky band"
+	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	band.position = Vector2.ZERO
+	band.size = Vector2(size.x, size.y * 0.24)
+	var bm: ShaderMaterial = ShaderMaterial.new()
+	bm.shader = load("res://scratch_lane/band_c.gdshader") as Shader
+	bm.set_shader_parameter("ridge", backdrop)
+	bm.set_shader_parameter("pan", pan)
+	band.material = bm
+	scene.add_child(band)
+	for flip: bool in [false, true]:
+		var fore: ColorRect = ColorRect.new()
+		fore.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var w: float = size.x * 0.3
+		var h: float = size.y * 0.26
+		fore.size = Vector2(w, h)
+		fore.position = Vector2(0.0 if not flip else size.x - w, size.y - h * 0.82)
+		var fm: ShaderMaterial = ShaderMaterial.new()
+		fm.shader = load("res://scratch_lane/fore_c.gdshader") as Shader
+		fm.set_shader_parameter("silhouette", backdrop)
+		fm.set_shader_parameter("pan", pan * 1.3)
+		fm.set_shader_parameter("flip", flip)
+		fore.material = fm
+		scene.add_child(fore)
