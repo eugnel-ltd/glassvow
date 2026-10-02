@@ -220,7 +220,7 @@ static func _claim_rewards(game: GlassvowGame, rewards: Dictionary) -> void:
 	var card: String = Pilot.choose_card(rewards.get("cards", []), game.content, game.run.aspect,
 		game.run.rng)
 	if not card.is_empty() and not Pilot.is_banned(card):
-		var score: float = Pilot.build_card_score(game.content, game.run.aspect, card)
+		var score: float = Pilot.offer_card_score(game.content, game.run.aspect, card)
 		if Pilot.accepts_card_reward(score):
 			game.run.player.deck.append(CardInst.new(game.run.next_uid(), StringName(card), false))
 	var potion_v: Variant = rewards.get("potion")
@@ -291,7 +291,7 @@ static func _resolve_event(game: GlassvowGame) -> void:
 				game.run.player.deck.append(CardInst.new(game.run.next_uid(), StringName(id), false))
 		"upgrade": _upgrade_best(game)
 		"remove":
-			var worst: CardInst = Pilot.worst_card(game.run, game.content, game.run.player.deck)
+			var worst: CardInst = Pilot.removal_target(game.run, game.content)
 			if worst != null:
 				game.run.player.deck.erase(worst)
 				if event_id == "forgottenShrine":
@@ -330,7 +330,7 @@ static func _event_op_score(game: GlassvowGame, op_v: Variant) -> float:
 		return Pilot.card_score({"effects": [{"kind": "loseHp", "n": lost}]}, game.run.aspect)
 	if op.has("addCard"):
 		var card_id: String = str(op["addCard"])
-		return Pilot.build_card_score(game.content, game.run.aspect, card_id)
+		return Pilot.offer_card_score(game.content, game.run.aspect, card_id)
 	if op.has("addRelic"):
 		var relic_id: String = str(op["addRelic"])
 		if relic_id == "random":
@@ -339,11 +339,10 @@ static func _event_op_score(game: GlassvowGame, op_v: Variant) -> float:
 	if op.has("potion"):
 		return _potion_shop_value(game)
 	if op.get("pickRemove", false):
-		var worst: CardInst = Pilot.worst_card(game.run, game.content, game.run.player.deck)
+		var worst: CardInst = Pilot.removal_target(game.run, game.content)
 		if worst == null:
 			return 0.0
-		var wscore: float = Pilot.build_card_score(game.content, game.run.aspect, String(worst.id))
-		return Pilot.remove_value(wscore)
+		return Pilot.removal_worth(game.content, game.run.aspect, String(worst.id))
 	if op.has("pickCard"):
 		return _expected_card_max(game, int(float(str(op["pickCard"]))))
 	if op.get("pickUpgrade", false):
@@ -369,7 +368,7 @@ static func _expected_card_max(game: GlassvowGame, n: int) -> float:
 			var id: String = str(id_v)
 			if Pilot.is_banned(id):
 				continue
-			var score: float = Pilot.build_card_score(game.content, game.run.aspect, id)
+			var score: float = Pilot.offer_card_score(game.content, game.run.aspect, id)
 			for _copy: int in range(weight):
 				scores.append(score)
 	var m: int = scores.size()
@@ -447,7 +446,7 @@ static func _resolve_shop(game: GlassvowGame) -> void:
 					remove = card
 					break
 			if remove == null:
-				remove = Pilot.worst_card(game.run, game.content, game.run.player.deck)
+				remove = Pilot.removal_target(game.run, game.content)
 			if remove != null:
 				game.run.player.deck.erase(remove)
 static func _claim_treasure(game: GlassvowGame) -> void:
