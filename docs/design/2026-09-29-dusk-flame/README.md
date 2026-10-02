@@ -70,7 +70,7 @@ Initial constants (content, per aspect; every one is **CALIBRATE**):
 |---|---|---|
 | `minMass` | 5 | The starter deck's three seeds plus two picks before the flame can declare |
 | `steadyMin` | 0.60 | Six in ten of the coloured glass is one way |
-| `trueMin` | 0.80 | Eight in ten |
+| `trueMin` | 0.75 ([readout 12](readouts/readout-12.md); initially 0.80) | Three in four |
 | `sootMass` | 6 | Enough coloured glass to be judged scattered |
 | `sootMax` | 0.45 | No way reaches even 45% |
 | `fringeMin` | 0.25 | The second way shows at the flame's tip from 25% |
@@ -132,8 +132,13 @@ Shape carries the way as well as colour, so a colour-blind player still reads th
 | limitBreak | 1.0 | poolWave2 (capstone) |
 | quakeblow | 1.0 | deed "Breaker of Panes" |
 | resonantLance | 0.5 (+0.5 Edge) | deed "Breaker of Panes" (duo) |
+| spall | 1.0 | base pool (common) |
+| heavyBlow (Quarry Maul) | 1.0 | base pool (common; [readout 12](readouts/readout-12.md)) |
+| cleave (Fan of Glass) | 1.0 | base pool (common; [readout 12](readouts/readout-12.md)) |
 
 Relics: shatterersCrown (crown), bellOfEndings 1.0, prismCharm 0.5 (+0.5 Lantern). Art: Beacon is the Ashwarden's; Flare is Duskblade's and belongs to no way.
+
+Quarry Maul and Fan of Glass were clear glass until [readout 12](readouts/readout-12.md) made them Shatter: Spall was Shatter's only common, so a committed Shatter deck ended Act 1 one pick short of Steady. Both are attacks whose chip is the point (Quarry Maul chips when upgraded; Fan of Glass chips every enemy it bloods), and a commit-blind deck keeps them rarely (13% and 5% of offers).
 
 **燼 Lantern**
 
@@ -168,7 +173,7 @@ Empower (Inner Blaze), frenzy (Overglow) and risingLitany (Rising Litany) were E
 
 Relics: crownOfTheEclipse (crown, **new**), executionersSeal 1.0, duskmirror 0.5, warFetish 0.5, ironTalisman 0.5.
 
-**Clear glass** (no affinity): strike, defend, brace, bulwark, fortify, sidestep, deflect, guardedStrike, quickSlash, heavyBlow, cleave, tempest, shardstorm, twinFangs, flurry, leechBlade, phantomBlades, agility, ironSkin, regrowth, bastion, flawlessForm, nightSight, bloodRite, and from readout 11 empower, frenzy and risingLitany. Curses and quest cards are excluded from N.
+**Clear glass** (no affinity): strike, defend, brace, bulwark, fortify, sidestep, deflect, guardedStrike, quickSlash, tempest, shardstorm, twinFangs, flurry, leechBlade, phantomBlades, agility, ironSkin, regrowth, bastion, flawlessForm, nightSight, bloodRite, and from readout 11 empower, frenzy and risingLitany. Curses and quest cards are excluded from N.
 
 **Excluded from Duskblade's offers** (pool hygiene; Smolder is blocked for aspect 0 in `combat.gd`, so these are dead or half-dead glass for the Duskblade): cards venomStrike, toxicMist, annihilate, catalyst, virulence, ashenChoir; relic smolderingCoal. The Ashwarden keeps all of them. Nothing is deleted from content. Pool hygiene changes which cards a seeded aspect-0 run meets at events, shops and card rewards compared with pre-Flame content, by design; historical replays use the frozen copy at `docs/balance/data/421-h39/full-content.json`.
 
@@ -278,7 +283,7 @@ The previous programme measured shatters and Smolder kills, one of which is the 
 
 A_lit is A until its lantern burns a way's colour, Steady or True; from then, until the flame dims, it values that way's glass ×2.0 (`litLean`) and other coloured glass ×0.5 (`litOff`), and counts that colour's riders (§6.4) in full. From readout 10 on, G3 and G6 are read against A_lit, and B2 reads A_lit's feel beside the committed arms' (its expression against the colour each fight begins in, as the grader's feel table measures the adaptive arms); A stays in the table as the floor.
 
-**Status (readout 11, 2026-10-02).** With Edge's three stat powers clear glass ([readout 11](readouts/readout-11.md)), G6 passes on its point estimate in all four cells and on its interval at V0 fresh and V5 full (V0 full and V5 fresh are UNDECIDED), G5 fresh, G7 and B1 pass, and B2 passes for committed Edge in both pools, committed Shatter in the fresh pool and A_lit at V0 full. G2 fails on point at V0 in both pools (interval UNDECIDED), G3 fails on point in both full cells (interval UNDECIDED) and keeps only a point PASS in the fresh cells, A_lit's own B2 fails at V0 fresh (58.7%, decided), G5 fails in the full pool, and G1 and G4 fail as instrument readings.
+**Status (readout 12, 2026-10-02).** With Quarry Maul and Fan of Glass Shatter glass and True at three in four ([readout 12](readouts/readout-12.md)), G5 full passes its True floor at V0 for every way (45–52% by the end of Act 2) and Shatter reaches Steady by the end of Act 1 in 77% of runs, but the committed Lantern's 68.8% leaves V0 full G5 FAIL on point (interval UNDECIDED), and V5 full G5 fails because only 44–60% of committed runs survive Act 1. G3 passes on point in all cells but V0 fresh (intervals UNDECIDED; V5 full reads −3.8 pp on 4,000 paired seeds, FAIL on point and UNDECIDED, on its threshold). G6 passes on point in every cell and on interval at V0 fresh, V5 fresh and V5 full. G5 fresh, G7 and B1 pass; B2 passes for committed Edge in both pools and A_lit at V0 full. Verdicts that worsen with readout 12: G2 at V0 fresh is now a decided FAIL (+17.9 pp, the Lantern over Shatter), G3 at V0 fresh fails on point (−5.8 pp), and committed Shatter's B2 at V0 fresh moves from PASS to UNDECIDED; G2 at V0 full still fails on point (+10.9 pp). A_lit's own B2 at V0 fresh stays a decided FAIL (59.1%), and G1 and G4 fail as instrument readings.
 
 Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds (common random numbers across arms). About 4,000 runs; minutes on the #558 simulator.
 
