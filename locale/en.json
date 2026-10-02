@@ -665,6 +665,9 @@
     "omen": {
       "prefix": "OMEN - "
     },
+    "firstLight": {
+      "diagnostics": "If the game breaks, it sends crash diagnostics so the road can be mended."
+    },
     "language": {
       "label": "Language",
       "en": "English",

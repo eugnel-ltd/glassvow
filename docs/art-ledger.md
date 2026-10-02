@@ -247,6 +247,35 @@ The Godot boot splash, wired at `project.godot:20`. Last corrected by 4007c11
 ("the splash stops clipping its own name"). **Prompt not recorded** —
 reconstruct and add it here the next time it is touched.
 
+### `title/lantern-hero.png` — 1024×1024 RGBA — lane pick, owner re-pick open
+
+The hero's lantern on the title (`LeadlightLantern`, docs/design/2026-10-02-
+opening-start): the combat HUD lantern (`ui/lantern.png`) repainted at hero
+size, so the title's flame is the same object as the HUD's. Four candidates
+and a labelled contact sheet live in `docs/design/2026-10-02-opening-start/
+lantern/`; candidate 1 (closest to the HUD art) is the pick. Generated
+2026-10-02 by the `image-gen` agent (it routed to the Codex image tool,
+image-to-image with `ui/lantern.png` attached as the identity reference),
+1024×1536 with real alpha. Prompt (binding clauses): "the SAME Gothic
+hexagonal hanging iron lantern as the reference, front view, perfectly
+centred, upright, symmetrical … chain ring and connecting link at the top,
+tiered pointed hexagonal roof with its small corner finials, dark chunky
+hexagonal cage, exactly three visible pointed-arch glass lights … thick
+black lead came and diamond-like pointed lead tracery, faceted bottom ledge
+and short downward spike … serious cartoon-gothic stained-glass game art,
+matte painterly texture … glass exclusively bright warm saturated amber-gold
+… iron predominantly dark grey-black with ONLY thin restrained worn gold
+edging … genuine alpha transparency … Candidate 1: closest faithful copy of
+the reference." The full prompts for all four are in the lane report.
+
+**Registered, not cropped.** `lantern_flame.gdshader` lights the art in its
+own UV (wick 0.5, 0.785; panes 0.31–0.69 × 0.43–0.795) and finds the glass by
+colour. `lantern/register.py` measured the pick's centre light with the
+shader's own glass test and placed it with one uniform scale onto the HUD
+art's set-out at twice its resolution: centre light 0.474–0.782 (HUD
+0.475–0.785), lights 0.344–0.401 / 0.441–0.554 / 0.595–0.651 (HUD .344–.400 /
+.441–.553 / .594–.650). The shader lights it unchanged.
+
 ### `title/title-zh.png` — 1536×512 RGBA
 
 The zh-Hant title wordmark — 琉璃誓言 cut in the same stained glass as the
@@ -550,7 +579,7 @@ Prompt (binding clauses):
 
 ### `title-background/background.png` — 1536×1024 RGB — title banner plate
 
-The translucent title banner (`choice_screen.gd`, opacity 0.35) that sits
+The translucent title banner (`title_screen.gd`, opacity 0.35) that sits
 over the living `TitleWorld`. Import `compress/mode=0`, no mipmaps, **RGB
 with no alpha** — the banner drop-shadow is a closed-form blur of an opaque
 rectangle; an alpha channel would change that contract.
