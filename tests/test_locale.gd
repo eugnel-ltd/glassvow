@@ -346,8 +346,12 @@ static func _remaining_run_screen_call_sites(fails: Array[String]) -> void:
 			"_pane_accessible_name": ["ui.rose.dormantPane", "ui.rose.unknownPane"],
 			"_add_replay": ["ui.rose.replayUnsealing"],
 		},
-		"res://presentation/run/choice_screen.gd": {
-			"_add_title_rose": ["ui.rose.openLabel"],
+		"res://presentation/ui/components/leadlight_rose.gd": {
+			"_init": ["ui.rose.openLabel"],
+		},
+		"res://presentation/title/first_light.gd": {
+			"consent_row": ["ui.firstLight.diagnostics", "ui.settings.diagnosticsNote",
+				"ui.settings.privacyPolicy"],
 		},
 		"res://presentation/run/dawn_screen.gd": {
 			"_build": ["ui.dawn.inputHint"],
@@ -371,6 +375,8 @@ static func _remaining_run_screen_call_sites(fails: Array[String]) -> void:
 			"_act_line": ["ui.pilgrimage.awaits"],
 		},
 		"res://application/main.gd": {
+			"_title_context": ["ui.brand.title", "ui.hud.actWaystone"],
+			"_carved_deeds": ["ui.brand.stats", "ui.brand.secrets"],
 			"_show_run_deck": ["ui.hud.deckOverlayTitle", "ui.hud.deckOverlayCount",
 				"ui.menu.close"],
 			"_show_potion_menu": ["ui.common.use", "ui.hud.tossPotion", "ui.menu.close"],
