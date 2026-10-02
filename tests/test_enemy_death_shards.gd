@@ -88,6 +88,11 @@ static func _break_takes_the_prepared_cut(fails: Array[String]) -> void:
 	_wound(foe)
 	foe.mark_dead()
 	_check(fails, foe._cut_task >= 0, "mark_dead starts the cut on a worker")
+	if foe._cut_task < 0:
+		# No task to wait for: the regression is already recorded, so stop here
+		# instead of spinning on an invalid task id until CI times out.
+		foe.free()
+		return
 	while not WorkerThreadPool.is_task_completed(foe._cut_task):
 		OS.delay_msec(1)
 	_check(fails, foe._cut_out.size() > 4, "the worker cuts the relieved net into pieces")
