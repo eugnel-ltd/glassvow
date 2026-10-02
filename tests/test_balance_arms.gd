@@ -82,7 +82,8 @@ static func _colour_weighting_covers_two_copies(content: ContentDB, fails: Array
 		if not is_equal_approx(offered, base * (1.0 if capped else Pilot.WAY_COMMIT)):
 			fails.append("balance arms: with %d held a Fan of Glass offered must score %s, got %s"
 				% [held_copies, base * (1.0 if capped else Pilot.WAY_COMMIT), offered])
-		if not is_equal_approx(Pilot.build_card_score(content, 0, "cleave"), base * Pilot.WAY_COMMIT):
+		var held_score: float = Pilot.build_card_score(content, 0, "cleave")
+		if not is_equal_approx(held_score, base * Pilot.WAY_COMMIT):
 			fails.append("balance arms: the copy count must not touch the build score of cards held")
 		var taken: String = Pilot.choose_card(offer, content, 0)
 		if taken != ("deflect" if capped else "cleave"):
@@ -93,8 +94,9 @@ static func _colour_weighting_covers_two_copies(content: ContentDB, fails: Array
 	for _i: int in range(3):
 		edge_run.player.deck.append(CardInst.new(edge_run.next_uid(), &"cleave", false))
 	Pilot.see_flame(content, edge_run)
-	if not is_equal_approx(Pilot.offer_card_score(content, 0, "cleave"),
-			Pilot.catalogue_card_score(content, 0, "cleave") * Pilot.WAY_OFF):
+	var off_offer: float = Pilot.offer_card_score(content, 0, "cleave")
+	var off_base: float = Pilot.catalogue_card_score(content, 0, "cleave")
+	if not is_equal_approx(off_offer, off_base * Pilot.WAY_OFF):
 		fails.append("balance arms: off-colour glass keeps its x0.5 at any count")
 	Pilot.apply_policy({})
 	Pilot.see_flame(content, edge_run)
