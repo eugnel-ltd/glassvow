@@ -37,6 +37,15 @@ var reach: float = 1.0:
 		reach = value
 		_apply_kindle()
 
+## The light pool's shape and strength: half-extent in art sides (x, y), how
+## far below the glass it is centred (art sides), its core alpha and its
+## breath. The defaults are the phone's; the title widens and strengthens the
+## pool on pad and desktop so the road visibly carries the flame's colour.
+var pool_spread: Vector2 = Vector2(1.7, 1.36)
+var pool_drop: float = 0.0
+var pool_core: float = 0.55
+var pool_breath: float = 0.04
+
 var _cold: TextureRect
 var _lit: TextureRect
 var _glow: TextureRect
@@ -74,9 +83,7 @@ func _init() -> void:
 		add_theme_stylebox_override(state, empty)
 	add_theme_stylebox_override("focus", _FocusHalo.new())
 	var texture: Texture2D = _art()
-	_pool = _layer(GlassStyle.grad_tex(
-		PackedColorArray([Color(1, 1, 1, 0.55), Color(1, 1, 1, 0.16), Color(1, 1, 1, 0.0)]),
-		PackedFloat32Array([0.0, 0.32, 1.0]), true, Vector2(0.5, 0.5), Vector2(1.0, 0.5)), true)
+	_pool = _layer(pool_texture(pool_core), true)
 	_glow = _layer(null, true)
 	_cold = _layer(texture, false)
 	_cold.modulate = COLD_TINT
@@ -148,8 +155,25 @@ func _process(delta: float) -> void:
 	if LeadlightMotion.reduced():
 		return
 	var breath: float = LeadlightMotion.breath(_time)
-	_pool.modulate.a = _pool_alpha() * (1.0 + 0.04 * breath)
+	_pool.modulate.a = _pool_alpha() * (1.0 + pool_breath * breath)
 	_pool.modulate = Color(light(), _pool.modulate.a)
+
+
+## Set the pool's shape and strength (see `pool_spread`).
+func set_pool(spread: Vector2, drop: float, core: float, breath_amount: float) -> void:
+	pool_spread = spread
+	pool_drop = drop
+	pool_breath = breath_amount
+	if not is_equal_approx(core, pool_core):
+		pool_core = core
+		_pool.texture = pool_texture(core)
+	_seat()
+
+
+static func pool_texture(core: float) -> GradientTexture2D:
+	return GlassStyle.grad_tex(
+		PackedColorArray([Color(1, 1, 1, core), Color(1, 1, 1, core * 0.3), Color(1, 1, 1, 0.0)]),
+		PackedFloat32Array([0.0, 0.32, 1.0]), true, Vector2(0.5, 0.5), Vector2(1.0, 0.5))
 
 
 func _art() -> Texture2D:
@@ -185,10 +209,10 @@ func _seat() -> void:
 	for layer: TextureRect in [_cold, _lit, _glow]:
 		layer.position = art.position
 		layer.size = art.size
-	var pool_r: float = art.size.x * 1.7
-	var at: Vector2 = glass_centre()
-	_pool.position = at - Vector2(pool_r, pool_r * 0.8)
-	_pool.size = Vector2(pool_r * 2.0, pool_r * 1.6)
+	var half: Vector2 = art.size.x * pool_spread
+	var at: Vector2 = glass_centre() + Vector2(0.0, art.size.x * pool_drop)
+	_pool.position = at - half
+	_pool.size = half * 2.0
 	var ember_r: float = art.size.x * 0.026
 	_ember.position = wick() - Vector2(ember_r, ember_r * 2.6)
 	_ember.size = Vector2(ember_r * 2.0, ember_r * 2.0)

@@ -568,3 +568,39 @@ confirmation on the iPad 8 remains the way to close P2.
 6. **Follow-ups outside this lane:** `LayoutBook`'s `titlescreen/*` keys are
    now unused data; the shipped `ui.brand.stats` reads "I pilgrimages" at a
    count of one (a plural the copy never had).
+
+### 16.6 Polish round — pad and desktop (orchestrator review)
+
+Phone was accepted as is and is unchanged. On pad-landscape and
+desktop-landscape:
+
+- **The lantern is the largest thing on the stage**: its box grows 340 →
+  420 stage px, so the lantern stands ~46% of the stage height (the review
+  read it at ~22% before; its art measured ~36%, cropped at the foot). Its wick stays at 0.918 of the height, so the
+  `register.py` set-out and the splash registration hold; the light pool
+  scales with it.
+- **The vertical axis spans the frame**: the wordmark at 8% from the top, the
+  door's rose 1.5× (`Layout.rose_grow` 1.95 against the phone's 1.3), the
+  plaque standing on the lantern's ring, the six words flanking its glass.
+- **The rose's held panes read lit**: `LeadlightRose.radiance` brightens them
+  and adds a warm halo that grows with the shards held; the phone keeps 0.
+- **The flame colours the road**: a wider, lower, stronger pool
+  (`LeadlightLantern.set_pool`, core 0.8, breath ±9%), draw-only.
+- **The deeds are carved**: the carved role (14 px, gold at 55%) with a dark
+  groove so it reads on busy stone, lying on the flagstones and leaning
+  toward the road's vanishing point. Slab boxes now fit their text.
+- The no-overlap test now holds the carved slabs too, at all three shapes in
+  both languages.
+- **Frame 0 moved by 8 px** (the larger lantern's ember), so the splash is
+  re-rendered from it; the ember now lands at 0.896 of the height on pad
+  and 0.894 on phone.
+- **Cost**: CPU render p95 at rest, interleaved A/B against the previous head
+  on identical fresh profiles: phone 0.165–0.169 ms against 0.165–0.174 ms,
+  pad 0.174–0.176 ms against 0.170–0.173 ms (+0.003 ms, inside the run-to-run
+  spread). (A first reading looked twice as high; the lane's dev profile then
+  held a scenario's saved run and three lit shards, so like was not compared
+  with like.)
+
+Re-taken: `stills/title-fresh.png`, `title-saved.png`, `title-vigil.png`,
+`first-launch.png`, `settings.png`, `rite.png`, `idle-motion.png` (title at
+rest now changes 11.7 / 4.7 % of its pixels per second).

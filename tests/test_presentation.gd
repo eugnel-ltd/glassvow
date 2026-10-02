@@ -355,6 +355,8 @@ static func _title_no_overlap(fails: Array[String], title: TitleScreen, shape: S
 	for word_v: Variant in title._words.values():
 		if word_v is Control:
 			pieces.append(word_v)
+	for slab: LeadlightInscription in title._slabs:
+		pieces.append(slab)
 	var art: Rect2 = Rect2(title.lantern.position, title.lantern.size)
 	var glass: Rect2 = Rect2(art.position + art.size * Vector2(0.30, 0.42), art.size * Vector2(0.40, 0.40))
 	var stage: Rect2 = Rect2(Vector2.ZERO, title.size)
@@ -368,7 +370,8 @@ static func _title_no_overlap(fails: Array[String], title: TitleScreen, shape: S
 
 
 static func _title_menu(choices: Array[Dictionary], shape: StringName) -> TitleScreen:
-	var screen: TitleScreen = TitleScreen.new({"shape": shape, "choices": choices, "sub": "Act 2 · Waystone 4"})
+	var screen: TitleScreen = TitleScreen.new({"shape": shape, "choices": choices, "sub": "Act 2 · Waystone 4",
+		"deeds": ["XII pilgrimages", "III dawns", "CCXIV slain", "IV secrets unearthed"]})
 	screen.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	screen.size = Vector2(StageShape.REFERENCES[shape])
 	screen._layout()

@@ -21,7 +21,18 @@ var glow: float = 1.0:
 		glow = value
 		_apply()
 
+## Extra light in the held panes and a warm halo round a rose that holds
+## shards, 0..1. 0 is the phone's rose; the title raises it on pad and
+## desktop, where the rose is larger and its panes must read lit.
+var radiance: float = 0.0:
+	set(value):
+		radiance = value
+		_apply()
+		if _halo != null:
+			_halo.queue_redraw()
+
 var _lit: Array[TextureRect] = []
+var _halo: _Halo = null
 var _time: float = 0.0
 var _held: int = 0
 
@@ -34,6 +45,10 @@ func _init(held: Array = []) -> void:
 	for state: String in ["normal", "hover", "pressed", "disabled"]:
 		add_theme_stylebox_override(state, empty)
 	add_theme_stylebox_override("focus", _Ring.new())
+	_halo = _Halo.new()
+	_halo.rose = self
+	_halo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_halo)
 	var backing: _Disc = _Disc.new()
 	backing.set_anchors_preset(Control.PRESET_FULL_RECT)
 	backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -67,6 +82,12 @@ func held_count() -> int:
 	return _held
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and _halo != null:
+		_halo.position = Vector2.ZERO
+		_halo.size = size
+
+
 func _layer(texture: Texture2D) -> TextureRect:
 	var rect: TextureRect = TextureRect.new()
 	rect.texture = texture
@@ -88,9 +109,33 @@ func _process(delta: float) -> void:
 
 
 func _apply() -> void:
-	var pulse: float = 1.0 + 0.16 * (0.5 + 0.5 * LeadlightMotion.breath(_time, 4.2))
+	var swell: float = 0.5 + 0.5 * LeadlightMotion.breath(_time, 4.2)
+	var pulse: float = 1.0 + 0.9 * radiance + (0.16 + 0.24 * radiance) * swell
 	for pane: TextureRect in _lit:
 		pane.modulate = Color(pulse, pulse, pulse, 0.25 + 0.75 * glow)
+	if _halo != null and radiance > 0.0:
+		_halo.swell = swell
+		_halo.queue_redraw()
+
+
+## The warm halo round a rose that holds light, drawn additively behind it.
+class _Halo extends Control:
+	var rose: LeadlightRose = null
+	var swell: float = 0.0
+
+	func _init() -> void:
+		var mat: CanvasItemMaterial = CanvasItemMaterial.new()
+		mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		material = mat
+
+	func _draw() -> void:
+		if rose == null or rose.radiance <= 0.0 or rose.held_count() == 0:
+			return
+		var c: Vector2 = rose.size * 0.5
+		var r: float = minf(rose.size.x, rose.size.y) * (0.95 + 0.06 * swell)
+		var share: float = float(rose.held_count()) / 6.0
+		draw_texture_rect(SkyField.disc(), Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), false,
+			Color(Color("#ffd99a"), rose.radiance * (0.10 + 0.22 * share) * (0.85 + 0.3 * swell)))
 
 
 class _Disc extends Control:

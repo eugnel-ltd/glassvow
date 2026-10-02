@@ -24,9 +24,6 @@ const BANNER_ALPHA: float = 0.35
 ## The painting's own rose window (painting px) and its radius: the Emberglass
 ## rose is set into the door the player can see.
 const ROSE_ART: Vector3 = Vector3(775.0, 375.0, 47.0)
-## The rose is drawn a little larger than the painted one it covers, so the
-## shards read as the end game's mirror.
-const ROSE_GROW: float = 1.3
 const LEFT_IDS: Array[String] = ["begin", "vigil", "help"]
 const RIGHT_IDS: Array[String] = ["settings", "credits", "quit"]
 
@@ -34,26 +31,33 @@ const RIGHT_IDS: Array[String] = ["settings", "credits", "quit"]
 ## Layout in reference units for a shape class: x is an offset from the stage
 ## centre, y from the top, both scaled by height / reference height.
 class Layout:
+	# Pad and desktop (orchestrator polish round): the lantern is the largest
+	# thing on the stage, ~46% of its height, its wick still at 0.918 of the
+	# height where the splash's ember is (0.918 × 820 − 0.785 × 420 = 423);
+	# the wordmark sits at 8%, the rose grows 1.5×, the plaque stands on the
+	# lantern's ring and the six words flank its glass.
 	var ref_h: float = 820.0
-	var word_y: float = 22.0
+	var word_y: float = 66.0
 	var word_w: float = 430.0
-	var plaque_y: float = 440.0
-	var lantern_y: float = 486.0
-	var lantern: float = 340.0
-	var left: Array[Vector2] = [Vector2(-116.0, 586.0), Vector2(-152.0, 660.0), Vector2(-166.0, 718.0)]
-	var right: Array[Vector2] = [Vector2(116.0, 586.0), Vector2(152.0, 660.0), Vector2(166.0, 718.0)]
-	var slab_dx: float = 376.0
-	var slab_y: float = 760.0
+	var plaque_y: float = 386.0
+	var lantern_y: float = 423.0
+	var lantern: float = 420.0
+	var rose_grow: float = 1.95
+	var left: Array[Vector2] = [Vector2(-182.0, 606.0), Vector2(-214.0, 670.0), Vector2(-226.0, 734.0)]
+	var right: Array[Vector2] = [Vector2(182.0, 606.0), Vector2(214.0, 670.0), Vector2(226.0, 734.0)]
+	var slab_dx: float = 380.0
+	var slab_y: float = 768.0
 	var slab_w: float = 360.0
-	var lang_dx: float = 230.0
-	var lang_y: float = 676.0
-	var consent: Vector3 = Vector3(26.0, 744.0, 430.0)
+	var lang_dx: float = 240.0
+	var lang_y: float = 688.0
+	var consent: Vector3 = Vector3(26.0, 758.0, 400.0)
 
 	static func for_shape(stage_shape: StringName) -> Layout:
 		var l: Layout = Layout.new()
 		if not LeadlightTokens.is_phone(stage_shape):
 			return l
 		l.ref_h = 390.0
+		l.rose_grow = 1.3
 		l.word_y = 8.0
 		l.word_w = 226.0
 		l.plaque_y = 148.0
@@ -484,11 +488,17 @@ func _layout() -> void:
 	var side: float = spec.lantern * k
 	lantern.position = Vector2(cx - side * 0.5, spec.lantern_y * k)
 	lantern.size = Vector2(side, side)
+	if not LeadlightTokens.is_phone(shape):
+		# The flame colours the road under the lantern, and breathes on it.
+		lantern.set_pool(Vector2(2.1, 1.05), 0.22, 0.8, 0.09)
+		rose.radiance = 1.0
 	_plaque.size = _plaque.get_combined_minimum_size()
 	_plaque.position = Vector2(cx - _plaque.size.x * 0.5, spec.plaque_y * k)
 	_veil.centre = lantern.position + lantern.wick()
 	var rose_at: Vector2 = TitleLampChain.to_stage(Vector2(ROSE_ART.x, ROSE_ART.y), size)
-	var rose_r: float = ROSE_ART.z * ROSE_GROW * TitleLampChain.scale_for(size)
+	# The rose is drawn larger than the painted one it covers, so the shards
+	# read as the end game's mirror.
+	var rose_r: float = ROSE_ART.z * spec.rose_grow * TitleLampChain.scale_for(size)
 	rose.position = rose_at - Vector2(rose_r, rose_r)
 	rose.size = Vector2(rose_r, rose_r) * 2.0
 	_place_side(LEFT_IDS, spec.left, -1.0, k, cx)
@@ -500,7 +510,17 @@ func _layout() -> void:
 	for i: int in _slabs.size():
 		var dx: float = spec.slab_dx * k * (-1.0 if i == 0 else 1.0)
 		_slabs[i].position = Vector2(cx + dx - slab_w * 0.5, spec.slab_y * k)
-		_slabs[i].size = Vector2(slab_w, 52.0 * k)
+		# The box is the carved text's own height: lines × leading, no more.
+		var px: float = float(LeadlightTokens.size_for(LeadlightTokens.SIZE_CARVED, shape))
+		_slabs[i].size = Vector2(slab_w, float(_slabs[i].lines.size()) * px * 1.6 + 4.0)
+		if not LeadlightTokens.is_phone(shape):
+			# The carved role (14 px, gold at 55%) with a groove, lying on the
+			# flagstones and leaning toward the road's vanishing point.
+			_slabs[i].colour = Color(LeadlightTokens.GOLD, 0.55)
+			_slabs[i].groove = true
+			_slabs[i].lie = 0.3
+			_slabs[i].shear = 0.28 if i == 0 else -0.28
+			_slabs[i].queue_redraw()
 	for i: int in _language.size():
 		var pane: LeadlightPane = _language[i]
 		var w: float = pane.get_combined_minimum_size().x + 24.0

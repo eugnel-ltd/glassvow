@@ -8,6 +8,11 @@ var lines: PackedStringArray = PackedStringArray()
 var lie: float = 0.45
 var align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_CENTER
 var colour: Color = Color(LeadlightTokens.GOLD, 0.62)
+## Perspective on the flagstones: the lines lean toward the road's vanishing
+## point (left slab positive, right slab negative). 0 stands them square.
+var shear: float = 0.0
+## A dark groove cut round each letter, so carved gold reads on busy stone.
+var groove: bool = false
 var _px: int = 14
 
 
@@ -27,12 +32,16 @@ func _draw() -> void:
 	var font: Font = LeadlightTokens.font(LeadlightTokens.ROLE_CARVED, _px)
 	var squash: float = 1.0 - clampf(lie, 0.0, 0.9) * 0.7
 	var line_h: float = float(_px) * 1.6
-	draw_set_transform(Vector2(0.0, size.y * (1.0 - squash) * 0.5), 0.0, Vector2(1.0, squash))
+	var slant: Transform2D = Transform2D(Vector2(1.0, 0.0), Vector2(shear, squash),
+		Vector2(-shear * size.y * 0.5, size.y * (1.0 - squash) * 0.5))
+	draw_set_transform_matrix(slant)
 	for i: int in range(lines.size()):
 		var text: String = lines[i] if LeadlightTokens.is_zh() else lines[i].to_upper()
 		var y: float = float(i) * line_h + float(_px)
 		var at: Vector2 = Vector2(0.0, y)
+		if groove:
+			draw_string_outline(font, at, text, align, size.x, _px, 5, Color(0.0, 0.0, 0.0, 0.62))
 		draw_string(font, at + Vector2(0.0, -1.0), text, align, size.x, _px, Color(0, 0, 0, 0.85))
 		draw_string(font, at + Vector2(0.0, 1.0), text, align, size.x, _px, Color(LeadlightTokens.PARCHMENT, 0.10))
 		draw_string(font, at, text, align, size.x, _px, colour)
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	draw_set_transform_matrix(Transform2D.IDENTITY)
