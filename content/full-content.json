@@ -2040,11 +2040,6 @@
         {
           "kind": "dmg",
           "n": 12
-        },
-        {
-          "kind": "ember",
-          "n": 1,
-          "lit": "lantern"
         }
       ],
       "up": {
@@ -2052,17 +2047,12 @@
           {
             "kind": "dmg",
             "n": 16
-          },
-          {
-            "kind": "ember",
-            "n": 1,
-            "lit": "lantern"
           }
         ],
-        "text": "Spend 3 Embers: deal @16@ damage. Amber flame: gain 1 Ember."
+        "text": "Spend 3 Embers: deal @16@ damage."
       },
       "name": "Hearthfall",
-      "text": "Spend 3 Embers: deal @12@ damage. Amber flame: gain 1 Ember."
+      "text": "Spend 3 Embers: deal @12@ damage."
     }
   },
   "cardPools": {
