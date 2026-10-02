@@ -5923,7 +5923,7 @@
       "flame": {
         "minMass": 5,
         "steadyMin": 0.6,
-        "trueMin": 0.8,
+        "trueMin": 0.75,
         "sootMass": 6,
         "sootMax": 0.45,
         "fringeMin": 0.25,
