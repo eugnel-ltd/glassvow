@@ -446,11 +446,11 @@ static func _tracked(path: String, glyph_spacing: int,
 ## Light floods the screen from `at` (stage px) in `colour`, then `on_covered`
 ## runs under the full cover — the route swap's hitch happens there — and the
 ## light clears over the arriving screen. Reduce Motion: a 150 ms fade to
-## cover instead of the growing disc. `instant` (tests, captures): the
-## callback runs at once and nothing is drawn.
+## cover instead of the growing disc. `instant` (captures) and the headless
+## renderer (tests, where nothing draws): the callback runs at once.
 func flood(at: Vector2, colour: Color, on_covered: Callable) -> void:
 	var stage: Vector2 = _stage_size()
-	if instant or stage.x <= 0.0:
+	if instant or stage.x <= 0.0 or DisplayServer.get_name() == "headless":
 		on_covered.call()
 		return
 	if _flood_tween != null:

@@ -1017,8 +1017,9 @@ func _show_title() -> void:
 	var rite: bool = not _title_kindled or _title_rite_resume
 	var screen: TitleScreen = TitleScreen.new(
 		_title_context(saved, choices, rite, ask_language), _sfx_bus)
-	screen.chosen.connect(_on_title_choice.bind(saved))
+	screen.chosen.connect(_on_title_pick.bind(screen, saved))
 	screen.language_chosen.connect(_on_first_language)
+	screen.hurry.connect(_transitions.skip)
 	if game != null and game.run != null:
 		_transitions.wipe()
 	_clear_route()
@@ -1033,6 +1034,19 @@ func _show_title() -> void:
 		_music.play(&"title")
 	_title_kindled = true
 	_title_rite_resume = false
+
+
+## The lantern's routes leave in its own light (opening-start §7 T6, T7): the
+## flame flares, the light floods out from the wick in the flame's colour, and
+## the route is built under the cover. Every other route goes at once.
+func _on_title_pick(id: String, screen: TitleScreen, saved: RunState) -> void:
+	if (id == "continue" or id == "begin") and is_instance_valid(screen):
+		screen.leave()
+		var wick: Vector2 = screen.wick_on_stage()
+		_transitions.flare(wick)
+		_transitions.flood(wick, screen.lantern.light(), _on_title_choice.bind(id, saved))
+		return
+	_on_title_choice(id, saved)
 
 
 ## Everything the title shows of the player's history: the saved run's flame
@@ -3789,7 +3803,14 @@ func _on_scene_finished() -> void:
 			and not _vigil.guidance_skipped:
 		_show_skip_guidance_offer()
 		return
-	if game != null:
+	if game != null and scene_id == "opening":
+		# The opening leaves in the lantern's light (opening-start §7 T9): it
+		# floods from the hero's lantern, at the stage's left, into the road.
+		var view: Viewport = get_viewport()
+		var stage: Vector2 = view.get_visible_rect().size if view != null else Vector2.ZERO
+		_transitions.flood(Vector2(stage.x * 0.3, stage.y * 0.62),
+			LanternFlame.COLOUR[Flame.TIER_KINDLING], _route_run)
+	elif game != null:
 		_route_run()
 	else:
 		_show_title()

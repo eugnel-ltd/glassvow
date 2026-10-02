@@ -21,6 +21,7 @@ static func run(fails: Array[String]) -> void:
 	_rite_reduce_motion(fails)
 	_first_launch(fails)
 	_wordmark(fails)
+	_leaving(fails)
 	Locale.active = previous_locale
 	Preferences.active = previous_prefs
 
@@ -142,3 +143,24 @@ static func _wordmark(fails: Array[String]) -> void:
 	_check(fails, label != null and label.get_theme_font("font").has_char("誓".unicode_at(0)),
 		"a locale with no authored raster paints its catalogue title in the display face")
 	other.free()
+
+
+## Once the lantern's route is taken the title takes no other choice, and a
+## tap hurries the light carrying it away.
+static func _leaving(fails: Array[String]) -> void:
+	var screen: TitleScreen = _screen({"choices": _choices(true)})
+	var picked: Array[String] = []
+	screen.chosen.connect(func(id: String) -> void: picked.append(id))
+	var hurried: Array[bool] = [false]
+	screen.hurry.connect(func() -> void: hurried[0] = true)
+	screen.leave()
+	screen.lantern.pressed.emit()
+	var settings: Button = screen._words["settings"]
+	settings.pressed.emit()
+	_check(fails, picked.is_empty(), "a leaving title takes no further choice")
+	var tap: InputEventMouseButton = InputEventMouseButton.new()
+	tap.button_index = MOUSE_BUTTON_LEFT
+	tap.pressed = true
+	screen._on_catcher_input(tap)
+	_check(fails, hurried[0], "a tap on a leaving title hurries its transition")
+	screen.free()

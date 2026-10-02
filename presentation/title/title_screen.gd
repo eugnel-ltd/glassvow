@@ -14,6 +14,8 @@ extends Control
 
 signal chosen(id: String)
 signal language_chosen(code: StringName)
+## A tap while the title is leaving: hurry the transition carrying it away.
+signal hurry
 
 const TITLE_BACKGROUND: String = "res://assets/art/title-background/background.png"
 const WORDMARK_EN: String = "res://assets/art/title/title.png"
@@ -95,6 +97,7 @@ var _version: Label
 var _offers: Dictionary = {}
 var _primary_id: String = "begin"
 var _started: bool = false
+var _leaving: bool = false
 
 
 ## `context`: shape, choices (id/label rows, Main's route ids), sub (where a
@@ -125,6 +128,19 @@ func offers(id: String) -> bool:
 
 func label_of(id: String) -> String:
 	return str(_offers.get(id, ""))
+
+
+## The title stops taking choices and holds every tap for the transition
+## carrying it away (Main floods the lantern's light over it).
+func leave() -> void:
+	_leaving = true
+	_catcher.visible = true
+	_catcher.move_to_front()
+
+
+## The wick on the stage: where the lantern's light floods out from.
+func wick_on_stage() -> Vector2:
+	return lantern.global_position + lantern.wick()
 
 
 ## The route the lantern takes: Back to the Road with a saved run, else Rekindle.
@@ -356,6 +372,10 @@ func _on_rite_done() -> void:
 func _on_catcher_input(event: InputEvent) -> void:
 	var press: bool = (event is InputEventMouseButton and (event as InputEventMouseButton).pressed) \
 		or (event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed)
+	if press and _leaving:
+		hurry.emit()
+		accept_event()
+		return
 	if press and rite != null and not rite.is_done() and not rite.held():
 		rite.skip()
 		accept_event()
@@ -412,6 +432,8 @@ func resume_after_language() -> void:
 
 
 func _choose(id: String) -> void:
+	if _leaving:
+		return
 	if rite != null and rite.is_running():
 		rite.skip()
 		return
