@@ -98,6 +98,10 @@ const FOV_DEG: float = 28.0
 ## Glass plate thickness as a fraction of the box — thin, but NOT zero: thickness
 ## is what makes a shard catch a highlight on its edge and refract at all.
 const GLASS_THICK: float = 0.035
+## The grid a shard's collider points sit on, in world units. Godot's `TriangleMesh`
+## snaps to this when it welds vertices, and the colliders were built through one until
+## `_hull_points` replaced the read-back — kept so the hull did not move.
+const HULL_SNAP: float = 0.0001
 ## How many cracks one creature can ever carry. Owner's ruling, 2026-07-26: a
 ## crack is NOT one per hit, and a mob caps out well under ten. Landing on eight
 ## rather than five is arithmetic — the reference caps its own drawn cracks at the
@@ -714,6 +718,11 @@ var _sites: PackedVector2Array = PackedVector2Array()
 var _net: CrackNet = null
 var _frac_field: FractureField = null
 var _cracks: CrackField = null
+## The death's pieces, cut on a WorkerThreadPool task while the vessel ignites — see
+## `_start_cut`. `-1` when no cut is in flight; `_cut_out` is the task's to write until it
+## is joined.
+var _cut_task: int = -1
+var _cut_out: Array = []
 ## Blows delivered, capped at `MAX_SITES`. Counted separately from `_sites` because
 ## `_sites` only fills while `discs` is on, and the cap is on IMPACTS either way
 ## (`CONCEPTS.md` › Crack).
@@ -3403,9 +3412,28 @@ func _cells() -> Array[PackedVector2Array]:
 ## reads COLOR.r as "fracture surface" and pours the molten glow only there.
 static func _prism(cell: PackedVector2Array, thick: float, box: Vector2,
 		origin: Vector2 = Vector2.ZERO) -> ArrayMesh:
+	var arrays: Array = _prism_arrays(cell, thick, box, origin)
+	if arrays.is_empty():
+		return null
+	return _mesh_of(arrays)
+
+
+## The same mesh as `SurfaceTool.commit()` makes: `commit()` is `commit_to_arrays()` handed
+## to `add_surface_from_arrays`, and the split is what lets a worker build the arrays
+## while only the server-facing upload stays on the main thread.
+static func _mesh_of(arrays: Array) -> ArrayMesh:
+	var mesh: ArrayMesh = ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+## `_prism`'s surface, as arrays. Pure: it touches no server, so it is safe off the main
+## thread. Empty when the cell does not triangulate.
+static func _prism_arrays(cell: PackedVector2Array, thick: float, box: Vector2,
+		origin: Vector2 = Vector2.ZERO) -> Array:
 	var tri: PackedInt32Array = Geometry2D.triangulate_polygon(cell)
 	if tri.is_empty():
-		return null
+		return []
 	var st: SurfaceTool = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var z: float = thick * 0.5
@@ -3468,7 +3496,27 @@ static func _prism(cell: PackedVector2Array, thick: float, box: Vector2,
 		for v: Vector3 in quad:
 			st.set_uv(Vector2(v.x / box.x + 0.5, 0.5 - v.y / box.y))
 			st.add_vertex(v - Vector3(origin.x, origin.y, 0.0))
-	return st.commit()
+	return st.commit_to_arrays()
+
+
+## The collider's points: the prism's corners, taken from the cell they were extruded
+## from rather than read back out of the mesh. Every corner of `_prism` is a cell point at
+## `±thick / 2`, re-centred on `origin` exactly as the mesh re-centres it, and a hull
+## depends only on the point set. `get_faces()` read back every triangle corner — several
+## thousand points per death, over half the frame the vessel broke on — and
+## returned them through a `TriangleMesh`, which snaps each to `HULL_SNAP`; the snap is
+## kept, so the collider is the very hull the signed-off rite tumbled.
+static func _hull_points(cell: PackedVector2Array, thick: float,
+		origin: Vector2) -> PackedVector3Array:
+	var z: float = thick * 0.5
+	var n: int = cell.size()
+	var pts: PackedVector3Array = PackedVector3Array()
+	pts.resize(n * 2)
+	for i: int in range(n):
+		var p: Vector2 = cell[i]
+		pts[i] = Vector3(p.x - origin.x, p.y - origin.y, z).snappedf(HULL_SNAP)
+		pts[n + i] = Vector3(p.x - origin.x, p.y - origin.y, -z).snappedf(HULL_SNAP)
+	return pts
 
 
 ## Rebuild the shard set from the current sites. Cheap enough to redo on every
@@ -3590,6 +3638,8 @@ func strike(at: Vector2 = ANYWHERE, dir: Vector2 = Vector2.ZERO,
 		energy: float = DEFAULT_ENERGY, sharp: float = 0.5) -> void:
 	if _glass_root == null or _blows >= MAX_SITES:
 		return
+	# A blow after the rite began changes the net a cut in flight is reading.
+	_drop_cut()
 	var p: Vector2 = at
 	if p.x < 0.0:
 		p = _somewhere_on_body()
@@ -3710,6 +3760,7 @@ func _push_crack_field() -> void:
 
 
 func reset_glass() -> void:
+	_drop_cut()
 	_dead = false
 	_ignite = 0.0
 	_shake = 0.0
@@ -3806,6 +3857,7 @@ func mark_dead(beat: float = 0.2) -> void:
 	# `CONCEPTS.md` › Crack was not kept, because it made every death break into the same
 	# number of pieces however it had been earned. `Carve` reads the net, so the shard
 	# count follows the damage and the padding is not just unnecessary but wrong.
+	_start_cut()
 	var tw: Tween = create_tween()
 	tw.tween_method(set_ignite, _ignite, 1.0, maxf(0.01, beat)).set_trans(Tween.TRANS_CUBIC)
 	tw.tween_callback(shatter)
@@ -3904,29 +3956,37 @@ func _break_sites(burst: Vector2) -> PackedVector2Array:
 ## does exactly that, and so does any caller that skips straight to the ending.
 func _death_cells(burst: Vector2) -> Array[PackedVector2Array]:
 	if _net != null and not _net.is_empty():
-		var carved: Array[PackedVector2Array] = []
-		# `Carve.MIN_AREA` and not `CELL_MIN_AREA`, and not a conversion between them.
-		# Both are fractions of the body — UV area 1.0 IS the quad — so dividing by the
-		# quad's world area was a unit error that made the floor ten times too permissive
-		# and let one-pixel specks through with a RigidBody each. The carve's floor is
-		# also derived differently, because a carved network throws thin offcuts where a
-		# Voronoi partition threw compact cells.
-		for shard: PackedVector2Array in Carve.shards(_net, CrackField.APERTURE):
-			var cell: PackedVector2Array = PackedVector2Array()
-			for v: Vector2 in shard:
-				cell.append(_from_uv(v))
-			var centre: Vector2 = Vector2.ZERO
-			for v: Vector2 in cell:
-				centre += v
-			centre /= float(cell.size())
-			# The same cull the disc path used: a shard covering no painting is a pane of
-			# empty box, and the shard shader would render it as nothing while the physics
-			# still tumbled it.
-			if _touches_art(cell, centre):
-				carved.append(cell)
+		var carved: Array[PackedVector2Array] = _carved_cells(_net)
 		if not carved.is_empty():
 			return carved
 	return _voronoi_cells(burst)
+
+
+## The carve path's cells. Reads only `net`, the plate's size and the painting kept at
+## build, and draws nothing from `_frac` — which is what makes it safe on the worker
+## `_start_cut` hands it to.
+func _carved_cells(net: CrackNet) -> Array[PackedVector2Array]:
+	var carved: Array[PackedVector2Array] = []
+	# `Carve.MIN_AREA` and not `CELL_MIN_AREA`, and not a conversion between them.
+	# Both are fractions of the body — UV area 1.0 IS the quad — so dividing by the
+	# quad's world area was a unit error that made the floor ten times too permissive
+	# and let one-pixel specks through with a RigidBody each. The carve's floor is
+	# also derived differently, because a carved network throws thin offcuts where a
+	# Voronoi partition threw compact cells.
+	for shard: PackedVector2Array in Carve.shards(net, CrackField.APERTURE):
+		var cell: PackedVector2Array = PackedVector2Array()
+		for v: Vector2 in shard:
+			cell.append(_from_uv(v))
+		var centre: Vector2 = Vector2.ZERO
+		for v: Vector2 in cell:
+			centre += v
+		centre /= float(cell.size())
+		# The same cull the disc path used: a shard covering no painting is a pane of
+		# empty box, and the shard shader would render it as nothing while the physics
+		# still tumbled it.
+		if _touches_art(cell, centre):
+			carved.append(cell)
+	return carved
 
 
 ## The disc path's cells, kept for a vessel that breaks without ever having been struck.
@@ -4018,16 +4078,14 @@ func shatter() -> void:
 	_debris = Node3D.new()
 	_stage.add_child(_debris)
 	var burst: Vector2 = Vector2(0.0, _box_u * 0.05)
-	var thick: float = _shard_thick()
 	var spin: float = 10.0 / maxf(1.0, sqrt(_box_u))
-	for cell: PackedVector2Array in _death_cells(burst):
-		var centre: Vector2 = Vector2.ZERO
-		for v: Vector2 in cell:
-			centre += v
-		centre /= float(cell.size())
-		var mesh: ArrayMesh = _prism(cell, thick, Vector2(_quad_w, _box_u), centre)
-		if mesh == null:
-			continue
+	# The pieces `mark_dead()` started cutting; cut here, as before, when nothing did.
+	var cuts: Array[ShardCut] = _take_cut()
+	if cuts.is_empty():
+		cuts = _cut(_death_cells(burst))
+	for cut: ShardCut in cuts:
+		var centre: Vector2 = cut.centre
+		var mesh: ArrayMesh = _mesh_of(cut.arrays)
 		var smat: ShaderMaterial = _shard_material()
 		var rb: RigidBody3D = RigidBody3D.new()
 		rb.physics_material_override = _bounce(0.35, 0.4)
@@ -4039,7 +4097,7 @@ func shatter() -> void:
 		rb.add_child(mi)
 		var shape: CollisionShape3D = CollisionShape3D.new()
 		var conv: ConvexPolygonShape3D = ConvexPolygonShape3D.new()
-		conv.points = mesh.get_faces()
+		conv.points = cut.hull
 		shape.shape = conv
 		rb.add_child(shape)
 		rb.position = Vector3(centre.x, centre.y, 0.0)
@@ -4083,6 +4141,88 @@ func shatter() -> void:
 	var d_t: Tween = _debris.create_tween()
 	d_t.tween_interval(2.4)
 	d_t.tween_callback(_debris.queue_free)
+
+
+## One death shard, cut but not yet built: its centre, its prism's surface arrays and its
+## collider's points. Plain data that touches no server, so a worker can make it.
+class ShardCut:
+	var centre: Vector2 = Vector2.ZERO
+	var arrays: Array = []
+	var hull: PackedVector3Array = PackedVector3Array()
+
+
+## Cells to shards, everything short of the server-facing build. `_prism_arrays` and
+## `_hull_points` re-centre on the same centroid, so the collider sits on the mesh.
+func _cut(cells: Array[PackedVector2Array]) -> Array[ShardCut]:
+	var thick: float = _shard_thick()
+	var box: Vector2 = Vector2(_quad_w, _box_u)
+	var out: Array[ShardCut] = []
+	for cell: PackedVector2Array in cells:
+		var centre: Vector2 = Vector2.ZERO
+		for v: Vector2 in cell:
+			centre += v
+		centre /= float(cell.size())
+		var arrays: Array = _prism_arrays(cell, thick, box, centre)
+		if arrays.is_empty():
+			continue
+		var cut: ShardCut = ShardCut.new()
+		cut.centre = centre
+		cut.arrays = arrays
+		cut.hull = _hull_points(cell, thick, centre)
+		out.append(cut)
+	return out
+
+
+## THE DEATH FRAME MUST NOT CUT THE BODY. Carving the net and extruding every piece was
+## most of the frame the vessel broke on — the carve alone 11–13 ms on an M1 Max with a
+## six-blow net, and the A12 iPad pays several times that — and none of it depends on
+## anything after `mark_dead()`: the relieved net is final there, the carve draws no
+## randomness, and the burst only aims the impulses. So the cut starts on a worker as the vessel ignites and
+## `shatter()` collects it a beat later; the main thread keeps only the uploads and the
+## nodes.
+##
+## Only the carve path goes to the worker. The Voronoi fallback draws from `_frac`, whose
+## order the impulses depend on, so it stays where it always ran.
+##
+## The task reads this view, so anything that would change what it reads — a blow
+## (`strike`), a reset, the view going away — joins it first (`_drop_cut`).
+func _start_cut() -> void:
+	_drop_cut()
+	if _net == null or _net.is_empty():
+		return
+	_cut_out = []
+	_cut_task = WorkerThreadPool.add_task(_cut_into.bind(_net, _cut_out), true,
+		"death shards")
+
+
+func _cut_into(net: CrackNet, out: Array) -> void:
+	out.append_array(_cut(_carved_cells(net)))
+
+
+## The cut `mark_dead()` started, joined; empty when none was started, it was dropped,
+## or the carve culled every piece — `shatter()` then cuts on the spot, as it always did.
+func _take_cut() -> Array[ShardCut]:
+	var cuts: Array[ShardCut] = []
+	if _cut_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_cut_task)
+		_cut_task = -1
+		cuts.assign(_cut_out)
+	_cut_out = []
+	return cuts
+
+
+## Join any cut in flight and forget it.
+func _drop_cut() -> void:
+	if _cut_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_cut_task)
+		_cut_task = -1
+	_cut_out = []
+
+
+func _notification(what: int) -> void:
+	# An unjoined WorkerThreadPool task must not outlive what it reads.
+	if what == NOTIFICATION_PREDELETE:
+		_drop_cut()
 
 
 ## Thinner than the overlay plate: a thick prism reads as a crouton, all
