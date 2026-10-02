@@ -4,13 +4,17 @@ extends RefCounted
 const Sim: GDScript = preload("res://tools/balance_sim.gd")
 const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
-const EXPECTED: String = "0955531ab18bd60e009570a93f7f4bb2a60d8bf8d38de9d5fcf3b59176bad26d"
-## The same run with every lantern knob at zero (flame lock §5): the game from
-## before the lantern had a quality (b151bcb9), played by pilot p8-d0-v2, so the
-## knobs' zero point is the old game. It moves only with a deliberate change to
-## that game or to the pilot. Readout 9's lit riders are such a change: they read
-## the flame's tier, not the knobs, so they resolve at zero knobs too.
-const EXPECTED_UNLIT: String = "6e0d5797ec47ef1415857ee429a3d53d4b98fa167ebeff161ea9d88d1df39d76"
+const EXPECTED: String = "bb86394a2ed6328ec7018fc73754c3254a67c731029eca41447ef981800ee196"
+## A run with every lantern knob at zero (flame lock §5): the game from before
+## the lantern had a quality (b151bcb9), played by pilot p8-d0-v2, so the knobs'
+## zero point is the old game. It moves only with a deliberate change to that
+## game or to the pilot. Readout 9's lit riders are such a change: they read the
+## flame's tier, not the knobs, so they resolve at zero knobs too. From readout
+## 11 it is seed 1001's run: seed 1000's deck no longer burns a colour once
+## Edge's stat powers are clear glass (it stays Kindling to its death), so its
+## knobs-at-1 run could not move off and the check would be vacuous.
+const UNLIT_SEED: int = 1001
+const EXPECTED_UNLIT: String = "5960861130a972a59e06f8c32c3f96d7a100f78d7b3de1751aa944e03bfc2977"
 
 
 static func run(fails: Array[String]) -> void:
@@ -34,7 +38,7 @@ static func run(fails: Array[String]) -> void:
 	_check_unlit(fails)
 
 
-## Flame lock §5: with every lantern knob at zero the seed-1000 run replays the
+## Flame lock §5: with every lantern knob at zero the UNLIT_SEED run replays the
 ## game from before the lantern had a quality; with every knob at 1 it does not,
 ## so the run meets a lit or sooty lantern and the replay is not vacuous.
 static func _check_unlit(fails: Array[String]) -> void:
@@ -45,10 +49,10 @@ static func _check_unlit(fails: Array[String]) -> void:
 		var lantern: Dictionary = flame["lantern"]
 		for key: Variant in lantern.keys():
 			lantern[key] = knob
-		var digest: String = Sim.outcome_digest(Sim.simulate(content, "duskblade", 1000, 0))
+		var digest: String = Sim.outcome_digest(Sim.simulate(content, "duskblade", UNLIT_SEED, 0))
 		if (digest == EXPECTED_UNLIT) != (knob == 0):
-			fails.append("balance sim: seed 1000 with every lantern knob at %d must %s %s, got %s"
-				% [knob, "replay" if knob == 0 else "move off", EXPECTED_UNLIT, digest])
+			fails.append("balance sim: seed %d with every lantern knob at %d must %s %s, got %s"
+				% [UNLIT_SEED, knob, "replay" if knob == 0 else "move off", EXPECTED_UNLIT, digest])
 
 
 static func _check_sampler(content: ContentDB, fails: Array[String]) -> void:
