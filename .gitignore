@@ -64,3 +64,4 @@ docs/design/2026-08-16-scene-plates/review.html
 # Inspect license/hosts before vendoring. Do not enable on export.
 addons/tripo*/
 addons/Tripo*/
+.wrangler/
