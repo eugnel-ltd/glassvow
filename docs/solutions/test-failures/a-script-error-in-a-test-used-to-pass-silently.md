@@ -89,6 +89,16 @@ cold, but a screen that enters a sized root is laid out at once and has already
 projected its pose. The check now reads first from a pose that nothing has
 projected yet, and asserts exactly what it did before.
 
+The root being in the tree also changed what adding a node under it does: the
+engine now delivers `_ready` there and then. Suites written for the old runner
+called `node._ready()` by hand after adding it, so those nodes were readied
+twice. The reward embers connected `resized` twice, which showed only as nine
+plain engine errors in the full gate. A suite now calls `TreeReady.once(node)`
+(`tests/support/tree_ready.gd`), which runs `_ready` only when the engine has
+not. Across the 13 suites that drive nodes by hand, 234 nodes were built
+outside the tree and are readied once by hand, as before. The other nine had
+already been readied by the engine.
+
 What it deliberately does not do:
 
 - **Plain engine errors and warnings fail nothing.** `ERROR_TYPE_ERROR`,
@@ -193,6 +203,8 @@ logged only as a plain error, so it stays the test's own job to notice (see
 - Grade the suite by its exit status and its `PASS (N tests)` line. Stderr
   still carries harmless renderer noise. A script error now turns into a
   `FAIL` line, so you no longer need to look for it on stderr.
+- To drive a node by hand, call `TreeReady.once(node)`, never `node._ready()`.
+  The root is in the tree, so a node added under it has already been readied.
 - Never turn `Engine.print_error_messages` off in a test, and join every worker
   a test starts before it returns. Both take an error out of the guard's view
   or out of its test.
