@@ -4,17 +4,21 @@ extends RefCounted
 ## `MapLandscapeAssets.prefetch` decodes an act's pictures before it opens.
 ##
 ## `Main` starts it whenever the next map it will open is the journey act's:
-## when it routes a run, and from the title, once the launch rite has landed,
-## for the saved run Back to the Road restores. Main steps it every frame. Its
-## main-thread setup is one small piece per frame, so the title it runs under
-## keeps its frames: it waits for the act's pictures to decode on a worker,
-## builds the act's catalogue a piece at a time
-## (`MapLandscapeAssets.prepare_step`) and holds the kit's scenes one at a time
-## (`Kit.preload_step`). A map that opens meanwhile finishes that setup at once
-## (`hurry`). Then the canonical layout input, the layout (the production
-## generator) and the land are built on one worker-pool task. The finished land
-## is handed to `MapScene` as its kept land under the binding key the screen
-## will ask for, so the first open re-parents it instead of building.
+## when it routes a run, and from the title, before the launch rite's first
+## frame, for the saved run Back to the Road restores. Main steps it every
+## frame. Its main-thread setup is a little per frame, so the rite and the
+## title it runs under keep their frames: it holds the kit's scenes one at a
+## time (`Kit.preload_step`) while the act's pictures decode on the pool, and
+## builds the act's catalogue from them a few small pieces at a time
+## (`MapLandscapeAssets.prepare_step`). A map that opens meanwhile finishes that
+## setup at once (`hurry`). Then the canonical layout input, the layout (the
+## production generator) and the land are built on one worker-pool task, paced
+## until a map is waiting for it. The layout input, the layout and the screen's
+## scenery binding are handed over as soon as the worker has them
+## (`_take_layout`), so a map that opens while the land is still building does
+## not make them again on the main thread. The finished land is handed to
+## `MapScene` as its kept land under the binding key the screen will ask for,
+## so the first open re-parents it instead of building.
 ##
 ## One journey land at a time: a prefetch for another layout drops the older
 ## one and frees the land it built, and `release` lets go of both when the next
@@ -22,6 +26,10 @@ extends RefCounted
 
 enum Step { WAITING_PICTURES, CATALOGUE, KIT, BUILDING, DONE, FAILED }
 const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
+## How long a frame of the setup may spend on the act's catalogue. Its pieces
+## are small (a card laid out on the CPU, one profile, the digest), so a frame
+## builds as many as fit, and the land's build is not kept waiting for them.
+const CATALOGUE_BUDGET_US: int = 2000
 
 static var _current: MapJourneyPrefetch = null
 
@@ -44,9 +52,15 @@ var _land: MapJourneyLandscape = null
 ## while the title is up, all at once when a map is waiting for the land.
 var _pacing: Meshes.Pacing = null
 ## The generator's packet for the layout input digested as `_input_digest`,
-## once built: Main's compile hands it to the screen (`layout_packet`).
+## once handed over: Main's compile hands it to the screen (`layout_packet`).
 var _packet: Dictionary = {}
 var _input_digest: String = ""
+## What the worker hands over once it has bound the layout, before it builds
+## the land: `[input, input digest, packet, binding, key]`, written under
+## `_layout_lock` and never touched by the worker again.
+var _layout: Array = []
+var _layout_lock: Mutex = Mutex.new()
+var _layout_taken: bool = false
 
 
 ## Starts a prefetch of `map`'s land for `run` when its act is the journey act
@@ -105,8 +119,7 @@ static func busy() -> bool:
 ## digested as `input_digest`, or {} when it made none for it. Main's compile
 ## takes it instead of generating the same layout again on the main thread.
 static func layout_packet(input_digest: String) -> Dictionary:
-	if _current == null or _current.step != Step.DONE or input_digest.is_empty() \
-			or _current._input_digest != input_digest:
+	if _current == null or input_digest.is_empty() or _current._input_digest != input_digest:
 		return {}
 	return _current._packet
 
@@ -173,8 +186,25 @@ func _same(other: MapJourneyPrefetch) -> bool:
 		and _edges == other._edges
 
 
-## One piece of the main-thread setup, or (`hurry`) all of it; then the build.
+## One frame's piece of the main-thread setup, or (`hurry`) all of it; then
+## the build. The kit needs no pictures, so a scene of it is held every frame
+## of the setup: while the pictures decode, and beside each piece of the
+## catalogue built from them.
 func _advance(hurry: bool) -> void:
+	if step == Step.BUILDING:
+		_take_layout()
+		if WorkerThreadPool.is_task_completed(_task):
+			WorkerThreadPool.wait_for_task_completion(_task)
+			_task = -1
+			_finish()
+		return
+	if step == Step.DONE or step == Step.FAILED:
+		return
+	var kit_held: bool = true
+	if hurry:
+		MapJourneyLandscape.Kit.preload_scenes()
+	else:
+		kit_held = MapJourneyLandscape.Kit.preload_step()
 	if step == Step.WAITING_PICTURES:
 		var warming: MapLandscapeAssets.Pictures = MapLandscapeAssets.warming()
 		if not hurry and warming != null and warming.act == _act and not warming.is_done():
@@ -182,7 +212,7 @@ func _advance(hurry: bool) -> void:
 		step = Step.CATALOGUE
 	if step == Step.CATALOGUE:
 		var assets: MapLandscapeAssets = MapLandscapeAssets.for_act(_act) if hurry \
-			else MapLandscapeAssets.prepare_step(_act)
+			else _catalogue_pieces()
 		if assets == null:
 			return
 		if not _take(assets):
@@ -191,16 +221,18 @@ func _advance(hurry: bool) -> void:
 		step = Step.KIT
 		if not hurry:
 			return
-	if step == Step.KIT:
-		if hurry:
-			MapJourneyLandscape.Kit.preload_scenes()
-		elif not MapJourneyLandscape.Kit.preload_step():
-			return
+	if kit_held:
 		_launch(not hurry)
-	elif step == Step.BUILDING and WorkerThreadPool.is_task_completed(_task):
-		WorkerThreadPool.wait_for_task_completion(_task)
-		_task = -1
-		_finish()
+
+
+## As many pieces of the act's catalogue as fit in `CATALOGUE_BUDGET_US`, at
+## least one; the catalogue once it is complete, else null.
+func _catalogue_pieces() -> MapLandscapeAssets:
+	var until: int = Time.get_ticks_usec() + CATALOGUE_BUDGET_US
+	var assets: MapLandscapeAssets = MapLandscapeAssets.prepare_step(_act)
+	while assets == null and Time.get_ticks_usec() < until:
+		assets = MapLandscapeAssets.prepare_step(_act)
+	return assets
 
 
 ## What the worker needs from the act's catalogue; false when it is incomplete.
@@ -220,30 +252,31 @@ func _launch(paced: bool) -> void:
 	_land = land
 	_pacing = Meshes.Pacing.new()
 	_pacing.on = paced
-	_task = WorkerThreadPool.add_task(_paced_build.bind(_pacing, _out, land, _assets, _bundle,
-		_heroes, _quality.duplicate(true), _nodes.duplicate(true), _edges.duplicate(true),
-		_act, _seed, _salt), not paced, "journey land prefetch")
+	_task = WorkerThreadPool.add_task(_paced_build.bind(_pacing, _out, _layout, _layout_lock,
+		land, _assets, _bundle, _heroes, _quality.duplicate(true), _nodes.duplicate(true),
+		_edges.duplicate(true), _act, _seed, _salt), not paced, "journey land prefetch")
 	step = Step.BUILDING
 
 
 ## On the worker: `_build`, its meshes handed over as `pacing` says.
-static func _paced_build(pacing: Meshes.Pacing, out: Array, land: MapJourneyLandscape,
-		assets: MapLandscapeAssets, bundle: Dictionary, heroes: Dictionary,
-		quality: Dictionary, nodes: Array, edges: Array, act: int, run_seed: int,
-		salt: int) -> void:
+static func _paced_build(pacing: Meshes.Pacing, out: Array, layout: Array,
+		layout_lock: Mutex, land: MapJourneyLandscape, assets: MapLandscapeAssets,
+		bundle: Dictionary, heroes: Dictionary, quality: Dictionary, nodes: Array,
+		edges: Array, act: int, run_seed: int, salt: int) -> void:
 	Meshes.pace(pacing)
-	_build(pacing, out, land, assets, bundle, heroes, quality, nodes, edges, act, run_seed,
-		salt)
+	_build(pacing, out, layout, layout_lock, land, assets, bundle, heroes, quality, nodes,
+		edges, act, run_seed, salt)
 	Meshes.pace(null)
 
 
-## On the worker: input, layout, the screen's scenery binding and the land,
-## written into `out` as `[land, key, failure, input, input digest, packet,
-## binding]`. A build given up (`pacing.stopped`) ends at its next stage.
-static func _build(pacing: Meshes.Pacing, out: Array, land: MapJourneyLandscape,
-		assets: MapLandscapeAssets, bundle: Dictionary, heroes: Dictionary,
-		quality: Dictionary, nodes: Array, edges: Array, act: int, run_seed: int,
-		salt: int) -> void:
+## On the worker: input, layout and the screen's scenery binding, handed over
+## in `layout` (under `layout_lock`) before the land is built, then the land,
+## written into `out` as `[land, key, failure]`. A build given up
+## (`pacing.stopped`) ends at its next stage.
+static func _build(pacing: Meshes.Pacing, out: Array, layout: Array, layout_lock: Mutex,
+		land: MapJourneyLandscape, assets: MapLandscapeAssets, bundle: Dictionary,
+		heroes: Dictionary, quality: Dictionary, nodes: Array, edges: Array, act: int,
+		run_seed: int, salt: int) -> void:
 	out.append(land)
 	var generator: Dictionary = MapLayoutPolicy.generator_fields(false)
 	var input: MapLayoutInput = WorldMapScreen.layout_input(nodes, edges, act, run_seed,
@@ -275,10 +308,13 @@ static func _build(pacing: Meshes.Pacing, out: Array, land: MapJourneyLandscape,
 	if not binding.is_empty():
 		binding["bake"] = {}
 		binding["quality"] = quality.duplicate(true)
+	var key: String = "|".join([result.digest(), bundle["digest"], str(salt)])
+	layout_lock.lock()
+	layout.append_array([input, input_digest, packet, binding, key])
+	layout_lock.unlock()
 	land.prepare(data, assets, salt)
 	land.build_detached(data, pacing)
-	out.append_array(["|".join([result.digest(), bundle["digest"], str(salt)]), land.failure,
-		input, input_digest, packet, binding])
+	out.append_array([key, land.failure])
 
 
 ## On the worker: whether the build was given up (`pacing.stopped`); if so its
@@ -291,22 +327,37 @@ static func _given_up(pacing: Meshes.Pacing, land: MapJourneyLandscape, out: Arr
 	return true
 
 
+## Hands the screen what the worker has made of the layout so far, once: the
+## input, the layout and the scenery binding, each kept where the screen looks
+## for it (`layout_packet`, `MapScene.keep_binding`, `WorldMapScreen.keep_input`).
+func _take_layout() -> void:
+	if _layout_taken:
+		return
+	_layout_lock.lock()
+	var ready: bool = not _layout.is_empty()
+	_layout_lock.unlock()
+	if not ready:
+		return
+	_layout_taken = true
+	var input: MapLayoutInput = _layout[0]
+	_input_digest = str(_layout[1])
+	_packet = _layout[2]
+	var binding: Dictionary = _layout[3]
+	if not binding.is_empty():
+		MapScene.keep_binding(str(_layout[4]), binding)
+	WorldMapScreen.keep_input(WorldMapScreen.input_sources(_nodes, _edges, _act, _seed,
+		str(_bundle["digest"]), _heroes, MapLayoutPolicy.generator_fields(false), _quality),
+		input, _input_digest)
+
+
 func _finish() -> void:
 	var land: MapJourneyLandscape = _land
 	_land = null
+	_take_layout()
 	key = str(_out[1])
 	if key.is_empty() or not str(_out[2]).is_empty():
 		land.free()
 		step = Step.FAILED
 		return
 	MapScene.adopt_journey(key, land)
-	var input: MapLayoutInput = _out[3]
-	_input_digest = str(_out[4])
-	_packet = _out[5]
-	var binding: Dictionary = _out[6]
-	if not binding.is_empty():
-		MapScene.keep_binding(key, binding)
-	WorldMapScreen.keep_input(WorldMapScreen.input_sources(_nodes, _edges, _act, _seed,
-		str(_bundle["digest"]), _heroes, MapLayoutPolicy.generator_fields(false), _quality),
-		input, _input_digest)
 	step = Step.DONE

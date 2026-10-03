@@ -25,6 +25,11 @@ const LIT_EMISSION: Color = Color("aa7841")
 const COLD_GLASS: Color = Color("49424f")
 ## The failure of a build given up before it ended (`Meshes.Pacing.stopped`).
 const STOPPED: String = "Stopped: no map waits for this land"
+## How many pool threads work a paced build's heights out: behind the launch
+## rite the title's warm-up builds the land the player may ask for as the rite
+## lands (#660), and the heights need no renderer, so two threads take them,
+## leaving the rest of the pool to the rite and the title.
+const PACED_HEIGHT_THREADS: int = 2
 
 var terrain: Terrain
 var kit: Kit
@@ -92,13 +97,15 @@ func build(data: Dictionary) -> void:
 ## node outside the tree. The kit's scenes must already be held
 ## (`Kit.preload_scenes`, on the main thread). `pacing` is how the build hands
 ## its meshes to the renderer: unpaced (a map is waiting for the land), the
-## heights are worked out across the pool, as a map's own build works them
-## out; and a build given up (`stopped`) ends after its current stage, as a
-## failure nothing adopts.
+## heights are worked out across the whole pool, as a map's own build works
+## them out, and paced (behind the launch rite or the lit title) across
+## `PACED_HEIGHT_THREADS` of it; and a build given up (`stopped`) ends after its
+## current stage, as a failure nothing adopts.
 func build_detached(data: Dictionary, pacing: Meshes.Pacing = null) -> void:
 	_started = Time.get_ticks_msec()
 	_begin(data, pacing)
-	terrain.start_heights(pacing != null and not pacing.on)
+	terrain.start_heights(pacing != null,
+		PACED_HEIGHT_THREADS if pacing != null and pacing.on else -1)
 	_stage = Stage.HEIGHTS
 	terrain.finish_heights()
 	if not _halted():

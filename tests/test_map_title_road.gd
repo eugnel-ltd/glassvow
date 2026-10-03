@@ -1,8 +1,10 @@
 extends RefCounted
-## #660: Back to the Road opens a drawn map. Once the title is lit (never during
-## its launch rite) it warms the saved run's Act I land on the worker pool, and
-## Continue's restore adopts it without a second build, with the same layout a
-## cold open binds, also when the tap comes before the warm-up has ended. The
+## #660: Back to the Road opens a drawn map. From the launch rite's first frame
+## the title warms the saved run's Act I land on the worker pool (the kit held
+## while the pictures decode), and Continue's restore adopts it without a second
+## build, with the same layout a cold open binds, also when the tap comes before
+## the warm-up has ended: a map that opens mid-build takes the layout the
+## worker has already made, and the flare and flood play over a paced build. The
 ## warm land is keyed by what it is built from: another save is never given it,
 ## and Begin Anew and Erase Everything let it go, stopping a build in flight; a
 ## language change keeps it, on the title and on the map, since the land holds
@@ -35,9 +37,10 @@ static func run(fails: Array[String]) -> void:
 	_headless_builds_inline(fails, content)
 	var reference: Dictionary = _cold_reference(content, SEED_A)
 	MapScene.journey_async = true
-	var serial_heights: PackedFloat32Array = _title_warms_and_continue_adopts(fails, content,
+	var warm_heights: PackedFloat32Array = _title_warms_and_continue_adopts(fails, content,
 		reference)
-	_early_continue_adopts_the_build(fails, content, reference, serial_heights)
+	_early_continue_adopts_the_build(fails, content, reference, warm_heights)
+	_map_opened_mid_build_takes_the_layout(fails, content)
 	MapScene.journey_async = false
 	_release_all()
 	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
@@ -155,28 +158,47 @@ static func _cold_reference(content: ContentDB, run_seed: int) -> Dictionary:
 
 
 ## The title's warm-up, adopted by Continue, kept and let go; returns the warm
-## land's heights, worked out on one thread under the title.
+## land's heights, worked out on a few of the pool's threads under the title.
 static func _title_warms_and_continue_adopts(fails: Array[String], content: ContentDB,
 		reference: Dictionary) -> PackedFloat32Array:
 	var main: Main = _main(content)
 	var saved: RunState = _store_run(content, SEED_A)
-	# The first title of a session plays the launch rite: nothing warms under it.
+	# The kit is held again, so this warm-up holds it as a title's first would.
+	MapJourneyLandscape.Kit._held_kinds = 0
+	MapJourneyLandscape.Kit._held.clear()
+	MapJourneyLandscape.Kit._requested.clear()
+	# The first title of a session plays the launch rite, and the warm-up starts
+	# with it, before its first frame.
 	main._show_title()
 	var title: TitleScreen = main._choice_screen as TitleScreen
 	title.kindle_now()
-	main._process(0.016)
-	_check(fails, title.rite != null and title.rite.is_running()
-			and MapJourneyPrefetch.current_step() == -1,
-		"nothing warms while the launch rite plays")
+	_check(fails, title.rite != null and title.rite.is_running() and MapJourneyPrefetch.busy()
+			and MapLandscapeAssets.warming() != null,
+		"the saved run's land warms from the launch rite's first frame")
+	# The kit needs no pictures: its scenes are held while they decode.
+	var kit_until: int = Time.get_ticks_msec() + SETTLE_MS
+	while MapJourneyPrefetch.current_step() == MapJourneyPrefetch.Step.WAITING_PICTURES \
+			and MapJourneyLandscape.Kit._held_kinds == 0 and Time.get_ticks_msec() < kit_until:
+		main._process(0.016)
+		OS.delay_msec(1)
+	_check(fails, MapJourneyLandscape.Kit._held_kinds > 0
+			and MapJourneyPrefetch.current_step() == MapJourneyPrefetch.Step.WAITING_PICTURES,
+		"the warm-up holds the kit's scenes while the pictures decode")
 	title.rite.skip()
 	main._process(0.016)
-	_check(fails, MapJourneyPrefetch.busy(), "the lit title warms the saved run's land")
+	_check(fails, MapJourneyPrefetch.busy(), "the warm-up goes on once the rite has landed")
 	_check(fails, _settle(main) and MapJourneyPrefetch.current_step()
 			== MapJourneyPrefetch.Step.DONE and MapScene._journey_kept != null,
 		"the title's warm-up builds the land")
 	var warm: MapJourneyLandscape = MapScene._journey_kept
-	var serial_heights: PackedFloat32Array = warm.terrain._grid if warm != null \
+	var warm_heights: PackedFloat32Array = warm.terrain._grid.duplicate() if warm != null \
 		else PackedFloat32Array()
+	if warm != null:
+		warm.terrain.start_heights(false)
+		warm.terrain.finish_heights()
+	_check(fails, warm != null and not warm_heights.is_empty()
+			and warm.terrain._grid == warm_heights,
+		"the warm-up's heights, worked out on the pool's threads, are those worked out on one")
 	_check(fails, MapJourneyPrefetch._current._pacing != null and MapJourneyPrefetch._current._pacing.on,
 		"the title's build hands the renderer its meshes a frame's worth at a time")
 	_check(fails, MapScene._bound_key == MapScene._journey_kept_key
@@ -256,7 +278,7 @@ static func _title_warms_and_continue_adopts(fails: Array[String], content: Cont
 		OS.delay_msec(4)
 	_check(fails, MapScene._abandoned.is_empty(), "a land given up mid-build is freed once built")
 	_dispose(main)
-	return serial_heights
+	return warm_heights
 
 
 ## The map's own screen changes keep the land: a language change on the map
@@ -295,7 +317,7 @@ static func _map_keeps_the_land(fails: Array[String], main: Main,
 ## tapped mid-build, the build stops pacing. Either way the map draws that
 ## build's land, the land a cold open binds.
 static func _early_continue_adopts_the_build(fails: Array[String], content: ContentDB,
-		reference: Dictionary, serial_heights: PackedFloat32Array) -> void:
+		reference: Dictionary, warm_heights: PackedFloat32Array) -> void:
 	for mid_build: bool in [false, true]:
 		_release_all()
 		var main: Main = _main(content)
@@ -341,9 +363,9 @@ static func _early_continue_adopts_the_build(fails: Array[String], content: Cont
 					and not cold_binding.is_empty() and binding == cold_binding,
 				"a Continue %s binds the layout and scenery a cold open binds" % when)
 		if not mid_build:
-			_check(fails, drawn != null and not serial_heights.is_empty()
-					and drawn.terrain._grid == serial_heights,
-				"heights worked out across the pool are those worked out on one thread")
+			_check(fails, drawn != null and not warm_heights.is_empty()
+					and drawn.terrain._grid == warm_heights,
+				"heights worked out across the whole pool are the warm-up's")
 		_dispose(main)
 	_stopped_build_ends_early(fails, content)
 
@@ -381,6 +403,63 @@ static func _stopped_build_ends_early(fails: Array[String], content: ContentDB) 
 	_check(fails, not is_instance_valid(given_up) and MapScene._abandoned.is_empty(),
 		"a stopped build's land is freed once its task ends")
 	_dispose(main)
+
+
+## A tap on Back to the Road mid-build: the build stays paced while the flare
+## and flood play over the title, so they keep their frames, and stops pacing
+## once the map opens under the flood. The worker hands the layout over before
+## it builds the land, so that map takes the input, layout and scenery binding
+## instead of making them again, then draws the build's land.
+static func _map_opened_mid_build_takes_the_layout(fails: Array[String],
+		content: ContentDB) -> void:
+	_release_all()
+	var main: Main = _main(content)
+	var held: HeldFlood = HeldFlood.new()
+	held.instant = true
+	main.remove_child(main._transitions)
+	main._transitions.free()
+	main._transitions = held
+	main.add_child(held)
+	_store_run(content, SEED_A)
+	main._title_kindled = true
+	main._show_title()
+	var job: MapJourneyPrefetch = MapJourneyPrefetch._current
+	var until: int = Time.get_ticks_msec() + SETTLE_MS
+	while job != null and MapJourneyPrefetch.busy() and Time.get_ticks_msec() < until \
+			and not (job.step == MapJourneyPrefetch.Step.BUILDING and job._layout_taken):
+		main._process(0.016)
+		OS.delay_msec(1)
+	var building: MapJourneyLandscape = job._land if job != null else null
+	_check(fails, job != null and job.step == MapJourneyPrefetch.Step.BUILDING
+			and job._layout_taken and job._pacing.on and MapScene._journey_kept == null
+			and not MapJourneyPrefetch.layout_packet(WorldMapScreen._input_digest_kept).is_empty()
+			and MapScene._bound_key == str(job._layout[4]),
+		"the worker hands the layout over before the land is built")
+	(main._choice_screen as TitleScreen).chosen.emit("continue")
+	_check(fails, job != null and job._pacing.on and main._map_screen == null
+			and held.covered.is_valid() and job.step == MapJourneyPrefetch.Step.BUILDING,
+		"the flare and flood of a tap on Back to the Road play over a paced build")
+	held.covered.call()
+	var screen: WorldMapScreen = main._map_screen
+	_check(fails, screen != null and screen.landscape_pending() and job != null
+			and not job._pacing.on
+			and is_same(main._map_layout_packet, job._packet)
+			and is_same(MapScene._bound, job._layout[3]),
+		"a map opened mid-build takes the worker's layout and scenery binding")
+	_pump_screen(main)
+	_check(fails, screen != null and screen._map_scene.journey_landscape() == building
+			and building != null and building.is_built(),
+		"the map opened mid-build draws the build's land")
+	_dispose(main)
+
+
+## The flood of a tap held over the title: its callback (the restore) runs
+## when the test calls it, as the real flood's does once it covers.
+class HeldFlood extends TransitionLayer:
+	var covered: Callable = Callable()
+
+	func flood(_at: Vector2, _colour: Color, on_covered: Callable) -> void:
+		covered = on_covered
 
 
 ## A screen let go with `queue_free`, freed now: the test frames never come.

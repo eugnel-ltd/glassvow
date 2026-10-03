@@ -157,9 +157,10 @@ func height_at(x: float, z: float) -> float:
 ## pure over data `setup` fixed, so the columns share nothing but what they
 ## read. Later surface queries on the lattice read this grid instead of
 ## re-solving the landform.
-## `parallel` spreads the columns over the worker pool; a caller that is
-## itself a pool task bakes them in turn (it may not wait on the pool).
-func start_heights(parallel: bool = true) -> void:
+## `parallel` spreads the columns over `threads` of the worker pool (all of it
+## when -1); a caller that is itself a pool task bakes them in turn (it may not
+## wait on the pool).
+func start_heights(parallel: bool = true, threads: int = -1) -> void:
 	_heights_started = Time.get_ticks_msec()
 	_columns = int(bounds.size.x / CELL) + 1
 	_rows = int(bounds.size.y / CELL) + 1
@@ -169,7 +170,7 @@ func start_heights(parallel: bool = true) -> void:
 		for ix: int in range(_columns):
 			_bake_column(ix)
 		return
-	_heights_task = WorkerThreadPool.add_group_task(_bake_column, _columns, -1, true,
+	_heights_task = WorkerThreadPool.add_group_task(_bake_column, _columns, threads, true,
 		"journey land heights")
 
 

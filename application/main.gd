@@ -42,10 +42,6 @@ var _map_screen: WorldMapScreen = null
 ## of the same map, run, act, shape and language (`_map_screen_key`).
 var _map_keep: MapScreenKeep = MapScreenKeep.new()
 var _map_screen_key: Dictionary = {}
-## The run the title's Back to the Road restores (null when it offers none),
-## and whether that title has yet to warm its map (`_warm_title_road`).
-var _title_road: RunState = null
-var _title_road_due: bool = false
 var _choice_screen: Control = null
 ## The launch rite plays once a session: the first title kindles, every later
 ## title arrives already lit (docs/design/2026-10-02-opening-start §7).
@@ -1263,21 +1259,23 @@ func _show_title() -> void:
 	var ask_language: bool = Preferences.active.language.is_empty() and newcomer
 	var rite: bool = not _title_kindled or _title_rite_resume
 	if rite and saved != null and saved.act == 0 and MapScene.journey_async:
-		# The lit title will warm this run's Act I land (`_warm_title_road`):
-		# what that would read back from the renderer is read now, before the
-		# rite's first frame, and only for a player it serves.
+		# The title warms this run's Act I land (`_warm_title_road`): what that
+		# would read back from the renderer is read now, before the rite's
+		# first frame, and only for a player it serves.
 		MapJourneyPrefetch.prime()
-	var screen: TitleScreen = TitleScreen.new(
-		_title_context(saved, choices, rite, ask_language), _sfx_bus)
-	screen.chosen.connect(_on_title_pick.bind(screen, saved))
-	screen.language_chosen.connect(_on_first_language)
-	screen.hurry.connect(_transitions.skip)
 	# The road persists across a rebuild (§7 item 12): the new title continues
 	# the world it replaces, the title's or the departure's.
 	var road: TitleWorld = _standing_road()
 	if game != null and game.run != null:
 		_transitions.wipe()
 	_clear_route()
+	# Before the title is built, so the pictures are decoding meanwhile.
+	_warm_title_road(saved)
+	var screen: TitleScreen = TitleScreen.new(
+		_title_context(saved, choices, rite, ask_language), _sfx_bus)
+	screen.chosen.connect(_on_title_pick.bind(screen, saved))
+	screen.language_chosen.connect(_on_first_language)
+	screen.hurry.connect(_transitions.skip)
 	_choice_screen = screen
 	add_child(screen)
 	screen.world.inherit(road)
@@ -1290,8 +1288,6 @@ func _show_title() -> void:
 	_music.play(&"title")
 	_title_kindled = true
 	_title_rite_resume = false
-	_title_road = saved
-	_title_road_due = true
 	_warm_rooms()
 
 
@@ -1905,21 +1901,17 @@ func _warm_landscape_for(map: WorldMap, run: RunState) -> void:
 		MapJourneyPrefetch.start(map, run)
 
 
-## Back to the Road opens a drawn map (#660). Once the title is lit and taking
-## input (never during the launch rite, whose frames are a shipped acceptance
-## on the iPad 8), the saved run's next map is warmed as `_route_run` warms it
-## when Continue restores that run, so the restore finds its land built; the
-## prefetch's main-thread work is one small piece per frame. A title with no
-## run to return to holds no map's artwork (Erase Everything, a run that ended).
-func _warm_title_road() -> void:
-	var title: TitleScreen = _choice_screen as TitleScreen
-	if title != null and title.rite != null and not title.rite.is_done():
-		return
-	var saved: RunState = _title_road
-	_title_road = null
-	_title_road_due = false
+## Back to the Road opens a drawn map (#660). The title warms `saved`'s next
+## map as `_route_run` warms it when Continue restores that run, so the restore
+## finds its land built. It starts with the title, before the launch rite's
+## first frame, so that a tap as the rite lands finds the land built or nearly:
+## the pictures decode and the land builds on the worker pool, paced, and the
+## prefetch's main-thread setup is a little per frame, under the rite as under
+## the lit title. A title with no run to return to holds no map's artwork
+## (Erase Everything, a run that ended).
+func _warm_title_road(saved: RunState) -> void:
 	# A headless boot (tests, tools) has no frames to warm anything under.
-	if title == null or not MapScene.journey_async:
+	if not MapScene.journey_async:
 		return
 	var restored: WorldMap = WorldMap.from_dict(saved.map) if saved != null else null
 	if restored == null or saved.pending_run_end != null:
@@ -2039,8 +2031,6 @@ func _compile_map_layout(input: MapLayoutInput, quality: Dictionary,
 
 
 func _process(_delta: float) -> void:
-	if _title_road_due:
-		_warm_title_road()
 	MapJourneyPrefetch.step_current()
 	for retired: MapLayoutJob in _map_layout_retired.duplicate():
 		if retired.is_done():
