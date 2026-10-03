@@ -89,21 +89,35 @@ candidates (`cmp`-identical) at `assets/audio/music/`; the originals stay in
 `act4Combat` (not the shared `elite` cue); the choice uses the bus's own
 engine RNG, never the run's seeded RNG.
 
-| scenario | cue | plays | file | Suno id | duration | credits title (provisional) |
+| scenario | cue | plays | file | Suno id | duration | credits title |
 |---|---|---|---|---|---|---|
 | Act IV normal fight | `act4Combat` | **C**, default | `act4-combat.mp3` | `ef55956e-5c4d-4848-9457-690663c41fc1` | 103 s | Hearthlight Runs Back |
-| Act IV elite fight | `act4Combat` | **A**, one of three at random | `act4-combat-a.mp3` | `a7613abf-f0f6-47a5-9e7b-830bb421b3c2` | 104 s | Cinders Rising |
-| Act IV elite fight | `act4Combat` | **B**, one of three at random | `act4-combat-b.mp3` | `83a2af85-b971-4771-b644-18ac345a2e42` | 153 s | The Warm Field Ahead |
-| Act IV elite fight | `act4Combat` | **D**, one of three at random | `act4-combat-d.mp3` | `e5e1d8fa-509d-4900-b64d-6916edcf77df` | 98 s | Cadence Before the Step |
+| Act IV elite fight | `act4Combat` | **A**, one of three at random | `act4-combat-a.mp3` | `a7613abf-f0f6-47a5-9e7b-830bb421b3c2` | 104 s | **Not One Turned Round** |
+| Act IV elite fight | `act4Combat` | **B**, one of three at random | `act4-combat-b.mp3` | `83a2af85-b971-4771-b644-18ac345a2e42` | 153 s | **Each Step Brighter** |
+| Act IV elite fight | `act4Combat` | **D**, one of three at random | `act4-combat-d.mp3` | `e5e1d8fa-509d-4900-b64d-6916edcf77df` | 98 s | **The Far Side of the Door** |
 | Act IV boss, first meeting | `act4Boss` | **A**, default | `act4-boss.mp3` | `5c3b0b31-aa55-4721-b28d-c4d003cba803` | 99 s | The Seat That Would Not Leave |
-| Act IV boss, return | `act4Boss` | **B** | `act4-boss-b.mp3` | `6ed76c50-5e2b-4034-9cbd-ae27ff7c9f89` | 153 s | Stillness Is the Threat |
+| Act IV boss, return | `act4Boss` | **B** | `act4-boss-b.mp3` | `6ed76c50-5e2b-4034-9cbd-ae27ff7c9f89` | 153 s | **You Know This Place** |
 
 "Return" means the Vigil has met the boss in an earlier run, read from
 existing Vigil data with no save change: `deeds.wins > 0`, or
 `deeds.bestWaystone` at least 3 x 15 + 15 (the boss node lit). Both deeds
-commit at run end, so a first meeting is always A. The four alternate titles
-are working display copy for the credits and need owner and story-bible
-sign-off before release.
+commit at run end, so a first meeting is always A.
+
+The four alternate titles were drafted through the story skill on 3 Oct 2026;
+the owner may re-title. Each one takes a clause of a shipped Act IV line, the
+way `sealedDoor` shares row 82. The credits render the English verbatim and
+have no zh-Hant form, so the zh below is the record gloss. Credits are
+reachable at shard 0, so each title is held to L1 at this site (foreshadow
+ledger rows 468–471):
+
+- **Not One Turned Round** (沒有一個回頭): row 349, `story.act4-node2.b1.l2`, the Queue's 「我們行過的時候，沒有一個回頭。」
+- **Each Step Brighter** (向前一步，便亮一分): row 344, `story.act4-entry.b1.l2`, second clause; C's "Hearthlight Runs Back" is the first.
+- **The Far Side of the Door** (門的另一面): row 343, `story.act4-entry.b1.l1`, the door half only; the window half is L4.
+- **You Know This Place** (這裏你認得): row 357, `story.act4-node5.b1.l1`, the Keeper's greeting at node 5; true after a win or a loss.
+
+The provisional titles (Cinders Rising, The Warm Field Ahead, Cadence Before
+the Step, Stillness Is the Threat) never reached `main`, so they get no row
+under "Title changes since v1".
 
 ## Pointer
 
