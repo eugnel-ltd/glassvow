@@ -109,6 +109,10 @@ mt_trace() {
     echo $MT_PID > $OUT/$label.pid
     sleep $delay
     rm -rf $OUT/$label.trace
+    # devicectl lets its tunnel drop between commands, and xctrace then waits
+    # for the device to "boot" until it times out: bring the tunnel and the
+    # developer services up just before recording.
+    xcrun devicectl device info ddiServices --device $UDID >/dev/null 2>&1
     # xctrace cannot attach to a device pid ("Cannot find process for provided
     # pid"): it records every process, and the analysis keeps this pid.
     xcrun xctrace record --device "$target" --template 'Metal System Trace' --all-processes \

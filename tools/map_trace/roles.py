@@ -9,9 +9,16 @@ Metal driver labels no encoders, so passes are named by structure:
   compute                         particles
   renders before the main pass    shadow 1, shadow 2, ...
   main 3D                         the render with the most vertex time
-  renders after it, up to a blit  glow 1, ..., tonemap (the last)
-  renders after that blit         2D 1, 2D 2, ... (the stage's display, the
-                                  tilt-shift view, the HUD, any grain passes)
+  the next --post3d renders       glow 1, ..., tonemap (the last)
+  every render after those        2D 1, 2D 2, ... (the tilt-shift view, the
+                                  display and HUD, any grain passes)
+
+Where a blit falls varies between the Mac and the iPad, so the end of the 3D
+chain is given, not guessed: the journey land's environment draws three glow
+passes and the tonemap after its main pass (--post3d 4, the default; confirm a
+new environment with --trace-kill=glow). A present pass the driver puts in a
+command buffer of its own (about 1 ms at display resolution on the iPad, in
+every build) is not part of the stage frame and is not counted.
 
 The GPU clock moves between runs (DVFS), so every time is scaled to the
 reference clock by a pass whose work the change under test leaves alone. The
@@ -22,8 +29,8 @@ trace spike). Use `--ref-ms` for another view (R2's fresh-run opening view:
 5.24) and `--ref-pass` for another reference pass.
 
 Usage:
-  python3 tools/map_trace/roles.py <passes.txt> [--ref-pass main] [--ref-ms 4.091]
-          [--names "2D 1=tilt-shift view,2D 2=display+HUD"]
+  python3 tools/map_trace/roles.py <passes.txt> [--ref-pass "main 3D"] [--ref-ms 4.091]
+          [--post3d 4] [--names "2D 1=tilt-shift view,2D 2=display+HUD"]
   python3 tools/map_trace/roles.py --self-test
 """
 
@@ -62,7 +69,7 @@ def stage_frame(groups: list[dict]) -> dict:
     return max((g for g in common if g["cbs"] >= 0.4 * top), key=lambda g: g["n"])
 
 
-def roles(enc: list[dict]) -> list[str]:
+def roles(enc: list[dict], post3d: int = 4) -> list[str]:
     names = [""] * len(enc)
     renders = [i for i, e in enumerate(enc) if "Render" in e["label"]]
     blits = [i for i, e in enumerate(enc) if "Blit" in e["label"]]
@@ -75,19 +82,19 @@ def roles(enc: list[dict]) -> list[str]:
     names[main] = "main 3D"
     for k, i in enumerate(i for i in renders if i < main):
         names[i] = "shadow %d" % (k + 1)
-    end = next((b for b in blits if b > main), len(enc))
-    post = [i for i in renders if main < i < end]
+    after = [i for i in renders if i > main]
+    post = after[:post3d]
     for k, i in enumerate(post):
         names[i] = "tonemap" if k == len(post) - 1 else "glow %d" % (k + 1)
-    for k, i in enumerate(i for i in renders if i > end):
+    for k, i in enumerate(after[post3d:]):
         names[i] = "2D %d" % (k + 1)
     return names
 
 
 def report(text: str, ref_pass: str = "main 3D", ref_ms: float = REF_MS,
-           aliases: dict[str, str] | None = None) -> dict:
+           aliases: dict[str, str] | None = None, post3d: int = 4) -> dict:
     group = stage_frame(parse(text))
-    names = roles(group["enc"])
+    names = roles(group["enc"], post3d)
     ref = sum(e["f"] for e, n in zip(group["enc"], names) if n == ref_pass)
     k = ref_ms / ref if ref else 1.0
     passes = []
@@ -137,7 +144,7 @@ SAMPLE = """command buffers: 30
 
 
 def self_test() -> int:
-    r = report(SAMPLE, ref_ms=4.0, aliases={"2D 1": "tilt-shift view"})
+    r = report(SAMPLE, ref_ms=4.0, aliases={"2D 1": "tilt-shift view"}, post3d=2)
     names = [p["name"] for p in r["passes"]]
     expect = ["blit", "particles", "blit", "shadow 1", "shadow 2", "main 3D", "glow 1", "tonemap", "blit",
               "tilt-shift view", "2D 2", "blit"]
@@ -149,7 +156,7 @@ def self_test() -> int:
     assert "BUDGET LINE" in render(r)
     with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as handle:
         handle.write(SAMPLE)
-    assert main([handle.name, "--ref-ms", "4.0"]) == 0
+    assert main([handle.name, "--ref-ms", "4.0", "--post3d", "2"]) == 0
     print("roles self-test OK")
     return 0
 
@@ -161,11 +168,12 @@ def main(argv: list[str]) -> int:
     parser.add_argument("passes")
     parser.add_argument("--ref-pass", default="main 3D")
     parser.add_argument("--ref-ms", type=float, default=REF_MS)
+    parser.add_argument("--post3d", type=int, default=4, help="renders after the main pass that are 3D")
     parser.add_argument("--names", default="", help='aliases, "2D 1=tilt-shift view,2D 2=display+HUD"')
     args = parser.parse_args(argv)
     aliases = dict(part.split("=", 1) for part in args.names.split(",") if "=" in part)
     with open(args.passes) as handle:
-        print(render(report(handle.read(), args.ref_pass, args.ref_ms, aliases)))
+        print(render(report(handle.read(), args.ref_pass, args.ref_ms, aliases, args.post3d)))
     return 0
 
 

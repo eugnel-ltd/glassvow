@@ -347,7 +347,11 @@ How to read it:
 - Godot's Metal driver labels no encoders and its GPU timestamps read 0, so a
   pass is named by its place in the frame and confirmed by hiding one part per
   launch (`--trace-kill`). Encoder layouts differ between the Mac and the iPad;
-  map them on the device.
+  map them on the device. The 3D chain ends a fixed number of renders after
+  the main pass (`--post3d`, 4 for the journey land: three glow passes and the
+  tonemap); every render after that is the 2D composite. The driver also
+  presents each frame from a command buffer of its own (about 1 ms on the
+  iPad, in every build), which the stage frame does not include.
 - The GPU clock moves between launches. `roles.py` scales every time by a pass
   the change under test leaves alone, by default the main 3D pass's fragment
   time, 4.091 ms at the reference clock (R2's Journey view, rendered every
@@ -355,7 +359,10 @@ How to read it:
   view, or another `--ref-pass`.
 - `xctrace record --attach <pid>` fails on the device ("Cannot find process for
   provided pid"), so `mt_trace` records every process; both QA and TestFlight
-  apps are called `glassvow`, so it never attaches by name either.
+  apps are called `glassvow`, so it never attaches by name either. devicectl
+  lets its tunnel to the iPad drop between commands, and xctrace then gives
+  "Timed out waiting for device to boot": `mt_trace` brings the tunnel up
+  with a devicectl call just before recording, and retries.
 - Starting a recording or a screenshot hitches the app: keep both out of the
   holds whose frame intervals a gate reads.
 - On the Mac the same probe runs under the A12 Metal condition
