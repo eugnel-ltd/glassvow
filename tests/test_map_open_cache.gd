@@ -43,6 +43,17 @@ static func _rebind_leaves_the_shared_catalogue_whole(fails: Array[String]) -> v
 ## Act II, a painted act: Act I draws the journey land, which has no painted
 ## road (`_journey_return_reuses_the_land`).
 static func _return_reuses_the_binding(fails: Array[String]) -> void:
+	# The painted landscape's contract (Acts II-IV keep it). Since R1, Act I
+	# draws the journey land, which has no painted bridge masonry: this check
+	# then died on a null node before its remaining assertions ran. The kept
+	# journey land's reuse is test_map_title_road's.
+	var journey_was: bool = MapScene.journey_enabled
+	MapScene.journey_enabled = false
+	_painted_return_reuses_the_binding(fails)
+	MapScene.journey_enabled = journey_was
+
+
+static func _painted_return_reuses_the_binding(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
 	var run: RunState = RunState.new_run(content, 717, "run-map-open-cache")
 	run.act = 1
