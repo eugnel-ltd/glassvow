@@ -1,0 +1,14 @@
+Pin-ring contrast (WCAG ratio, rim against the land just outside it; R2's measure), Mac, A12 Metal condition, Journey mid-route, seed 1, each shape's production profile.
+R2 minimum per shape to hold: phone 1.41, pad 2.17, desktop 1.18 (r2-plan.md §8, measured before R2's camera change).
+  phone-landscape    R2 8815da34    min rim 1.03, min disc 1.01 (pins 11)
+  phone-landscape    R3.1a en       min rim 1.03, min disc 1.01 (pins 11)
+  phone-landscape    R3.1a zh-Hant  min rim 1.04, min disc 1.00 (pins 11)
+  phone-landscape    per pin rim, R3.1a minus R2: +0.00 +0.00 -0.01 +0.00 +0.00 +0.00 +0.00 +0.00 -0.01 +0.00 +0.00
+  pad-landscape      R2 8815da34    min rim 1.01, min disc 1.19 (pins 10)
+  pad-landscape      R3.1a en       min rim 1.01, min disc 1.19 (pins 10)
+  pad-landscape      R3.1a zh-Hant  min rim 1.01, min disc 1.20 (pins 10)
+  pad-landscape      per pin rim, R3.1a minus R2: +0.00 -0.01 +0.00 +0.01 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00
+  desktop-landscape  R2 8815da34    min rim 1.02, min disc 1.21 (pins 10)
+  desktop-landscape  R3.1a en       min rim 1.02, min disc 1.21 (pins 10)
+  desktop-landscape  R3.1a zh-Hant  min rim 1.02, min disc 1.21 (pins 10)
+  desktop-landscape  per pin rim, R3.1a minus R2: +0.00 +0.00 +0.01 +0.00 -0.01 +0.00 +0.00 +0.01 +0.00 +0.00

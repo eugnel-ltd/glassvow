@@ -1,0 +1,21 @@
+#!/bin/zsh
+# mac_map.zsh <ctl|head> <label> [probe args]: a 2 s Metal System Trace of the
+# lean pad map on the Mac (A12 Metal condition), to name each encoder.
+R=<r31a-scratch>
+W=$R/wt-$1; L=$2; shift 2; M=$R/mac-map; mkdir -p $M
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+TOOLS=<scratch>/map-lane/wt-r31a/tools/map_trace
+GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 godot --path $W --rendering-driver metal --rendering-method mobile --position 1400,900 -- --map --map-trace-probe --map-lean --map-steps=2 --seed=1 --shape=pad-landscape --probe-nonce=mac-$L --holds=live --hold-frames=1500 "$@" > $M/$L.log 2>&1 &
+gp=$!
+sleep 16
+rm -rf $M/$L.trace
+xcrun xctrace record --template 'Metal System Trace' --attach $gp --time-limit 2s --output $M/$L.trace --no-prompt > $M/$L.xctrace.log 2>&1
+wait $gp
+mkdir -p $M/$L
+for s in metal-gpu-intervals metal-application-encoders-list; do
+  xcrun xctrace export --input $M/$L.trace --xpath "/trace-toc/run[@number=\"1\"]/data/table[@schema=\"$s\"]" > $M/$L/$s.xml 2>/dev/null
+done
+python3 $TOOLS/frames.py $M/$L godot > $M/$L.passes.txt 2>&1
+echo "== $L shader errors: $(grep -ciE 'shader.*error' $M/$L.log)"
+grep -E 'hold_end' $M/$L.log | cut -c1-220
+grep -A30 'encoders: ' $M/$L.passes.txt | head -60

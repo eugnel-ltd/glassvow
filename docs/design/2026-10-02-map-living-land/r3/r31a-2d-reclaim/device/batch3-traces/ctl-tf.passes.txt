@@ -1,0 +1,51 @@
+command buffers: 899
+== 1 encoders: 642 command buffers, GPU busy median 0.090 ms, p95 1.197 ms
+  [0] Blit Command 0       V  0.000  F  0.000  C  0.008  wall  0.090  cpu  1.543
+== 15 encoders: 255 command buffers, GPU busy median 12.934 ms, p95 16.553 ms
+  [0] Blit Command 0       V  0.000  F  0.000  C  0.005  wall  0.005  cpu  0.033
+  [1] Render Command 1     V  0.020  F  0.360  C  0.000  wall  0.420  cpu  0.037
+  [2] Render Command 2     V  0.182  F  0.195  C  0.000  wall  0.470  cpu  0.116
+  [3] Blit Command 3       V  0.000  F  0.000  C  0.002  wall  0.002  cpu  0.012
+  [4] Compute Command 4    V  0.000  F  0.000  C  0.198  wall  0.560  cpu  0.058
+  [5] Render Command 5     V  2.257  F  5.102  C  0.000  wall  7.235  cpu  0.327
+  [6] Render Command 6     V  0.006  F  0.254  C  0.000  wall  5.208  cpu  0.022
+  [7] Render Command 7     V  0.029  F  0.020  C  0.000  wall  5.161  cpu  0.018
+  [8] Render Command 8     V  0.013  F  0.025  C  0.000  wall  5.163  cpu  0.017
+  [9] Render Command 9     V  0.015  F  0.265  C  0.000  wall  5.384  cpu  0.020
+  [10] Render Command 10   V  0.333  F  1.892  C  0.000  wall  7.109  cpu  0.289
+  [11] Render Command 11   V  0.022  F  0.012  C  0.000  wall  6.791  cpu  0.014
+  [12] Blit Command 12     V  0.000  F  0.000  C  0.009  wall  0.009  cpu  0.010
+  [13] Render Command 13   V  0.052  F  1.287  C  0.000  wall  8.045  cpu  0.017
+  [14] Render Command 14   V  0.146  F  1.891  C  0.000  wall  3.125  cpu  0.021
+== 17 encoders: 1 command buffers, GPU busy median 18.727 ms, p95 18.727 ms
+  [0] Blit Command 0       V  0.000  F  0.000  C  0.007  wall  0.007  cpu  0.097
+  [1] Render Command 1     V  0.026  F  0.483  C  0.000  wall  0.547  cpu  0.075
+  [2] Render Command 2     V  0.291  F  0.287  C  0.000  wall  0.800  cpu  0.440
+  [3] Blit Command 3       V  0.000  F  0.000  C  0.003  wall  0.003  cpu  0.032
+  [4] Compute Command 4    V  0.000  F  0.000  C  0.689  wall  0.689  cpu  0.068
+  [5] Blit Command 5       V  0.000  F  0.000  C  0.004  wall  0.004  cpu  0.019
+  [6] Compute Command 6    V  0.000  F  0.000  C  0.641  wall  0.641  cpu  0.031
+  [7] Render Command 7     V  3.057  F  6.521  C  0.000  wall  9.621  cpu  0.876
+  [8] Render Command 8     V  0.008  F  0.260  C  0.000  wall  6.613  cpu  0.091
+  [9] Render Command 9     V  0.045  F  0.026  C  0.000  wall  6.577  cpu  0.039
+  [10] Render Command 10   V  0.029  F  0.025  C  0.000  wall  6.562  cpu  0.042
+  [11] Render Command 11   V  0.023  F  0.273  C  0.000  wall  6.799  cpu  0.053
+  [12] Render Command 12   V  0.499  F  2.792  C  0.000  wall  9.553  cpu  0.771
+  [13] Render Command 13   V  0.030  F  0.018  C  0.000  wall  9.056  cpu  0.039
+  [14] Blit Command 14     V  0.000  F  0.000  C  0.010  wall  0.010  cpu  0.037
+  [15] Render Command 15   V  0.075  F  1.910  C  0.000  wall 10.999  cpu  0.047
+  [16] Render Command 16   V  0.243  F  2.611  C  0.000  wall  4.467  cpu  0.052
+== 13 encoders: 1 command buffers, GPU busy median 6.811 ms, p95 6.811 ms
+  [0] Blit Command 0       V  0.000  F  0.000  C  0.005  wall  0.005  cpu  0.037
+  [1] Render Command 1     V  0.017  F  0.299  C  0.000  wall  0.357  cpu  0.035
+  [2] Render Command 2     V  0.183  F  0.199  C  0.000  wall  0.530  cpu  0.185
+  [3] Blit Command 3       V  0.000  F  0.000  C  0.002  wall  0.002  cpu  0.013
+  [4] Compute Command 4    V  0.000  F  0.000  C  0.184  wall  0.184  cpu  0.032
+  [5] Render Command 5     V  1.895  F  4.312  C  0.000  wall  6.250  cpu  0.339
+  [6] Render Command 6     V  0.005  F  0.215  C  0.000  wall  4.406  cpu  0.025
+  [7] Render Command 7     V  0.025  F  0.000  C  0.000  wall  0.025  cpu  0.022
+  [8] Render Command 8     V  0.006  F  0.000  C  0.000  wall  0.006  cpu  0.023
+  [9] Render Command 9     V  0.013  F  0.000  C  0.000  wall  0.013  cpu  0.025
+  [10] Render Command 10   V  0.417  F  0.000  C  0.000  wall  0.417  cpu  0.391
+  [11] Render Command 11   V  0.020  F  0.000  C  0.000  wall  0.020  cpu  0.020
+  [13] Render Command 13   V  0.046  F  0.000  C  0.000  wall  0.046  cpu  0.023

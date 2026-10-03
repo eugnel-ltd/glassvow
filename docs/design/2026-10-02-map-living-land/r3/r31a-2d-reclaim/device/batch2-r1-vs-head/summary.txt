@@ -1,0 +1,22 @@
+rows rejected (nonce or incomplete): none
+view                 mode     build | mean ms per launch                 | p95 ms per launch            | missed       | summary
+Journey mid-route    cadence  r1    | 17.218 16.661 16.828               | 23.96 21.06 22.31            | 12 0 3       | mean 16.902, p95 median 22.31, missed 15
+Journey mid-route    cadence  head  | 16.660 16.659 16.660               | 18.49 18.59 18.61            | 0 0 0        | mean 16.660, p95 median 18.59, missed 0
+Journey mid-route    live     r1    | 16.662 16.663 16.661               | 18.10 17.92 17.90            | 0 0 0        | mean 16.662, p95 median 17.92, missed 0
+Journey mid-route    live     head  | 16.663 16.661 16.664               | 17.54 17.54 17.61            | 0 0 0        | mean 16.663, p95 median 17.54, missed 0
+fresh-run opening    cadence  r1    | 19.456 19.961 19.499               | 41.39 33.66 32.42            | 96 106 97    | mean 19.639, p95 median 33.66, missed 299
+fresh-run opening    cadence  head  | 16.657 16.656 16.661               | 21.81 21.37 21.31            | 0 0 0        | mean 16.658, p95 median 21.37, missed 0
+fresh-run opening    live     r1    | 16.661 16.656 16.665               | 19.73 19.68 19.61            | 0 0 0        | mean 16.661, p95 median 19.68, missed 0
+fresh-run opening    live     head  | 16.717 16.663 16.658               | 19.31 19.27 19.27            | 1 0 0        | mean 16.679, p95 median 19.27, missed 1
+
+GATE (['head'] against r1, same batch):
+Journey mid-route    cadence  mean 16.660 <= 16.70 | p95 18.59 vs 22.31 ok | missed 0 vs 15 ok
+Journey mid-route    live     mean 16.663 <= 16.70 | p95 17.54 vs 17.92 ok | missed 0 vs 0 ok
+fresh-run opening    cadence  mean 16.658 <= 16.70 | p95 21.37 vs 33.66 ok | missed 0 vs 299 ok
+fresh-run opening    live     mean 16.679 <= 16.70 | p95 19.27 vs 19.68 ok | missed 1 vs 0 OVER
+
+video_mib at the cadence hold start:
+  fresh-run opening    head  [237.7, 233.7, 237.7]
+  fresh-run opening    r1    [244.7, 244.7, 244.7]
+  Journey mid-route    head  [237.7, 237.7, 237.7]
+  Journey mid-route    r1    [245.6, 245.6, 245.6]

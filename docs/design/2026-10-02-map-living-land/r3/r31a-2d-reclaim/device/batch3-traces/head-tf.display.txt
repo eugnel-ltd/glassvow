@@ -1,0 +1,8 @@
+frames shown: 27; on-screen time in vsyncs: {1: 27}
+cpu-to-display latency ms: median 30.9 p95 31.2
+GPU busy per app frame ms: median 14.49 p95 16.91 max 18.24 (n=30)
+GPU first-to-last span per frame ms: median 16.45 p95 18.68 max 20.15
+GPU performance state share: {'Medium': '36%', 'Minimum': '64%'} labelled induced: ['Yes']
+GPU consistent state: available Yes, enabled No, sustained No, state 0
+GPU desired states over the trace: ['0']
+thermal: [('Nominal', 'induced No')]

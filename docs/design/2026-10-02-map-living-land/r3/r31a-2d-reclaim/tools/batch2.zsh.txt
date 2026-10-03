@@ -1,0 +1,53 @@
+#!/bin/zsh
+# R3.1a device batch 2: R1 (0f5aeda6 + probe) and head (2d86d1c7 +
+# probe), QA app only, interleaved reinstalls under the shared batch lock.
+set -u
+S=<scratch>
+R=$S/map-lane/r31a; FLOW=$S/device13/flow; LOCK=$FLOW/ipad_lock.sh; OWNER=map-r31a
+OUT=$R/device/batch2; mkdir -p $OUT
+source $S/map-lane/wt-r31a/tools/map_trace/device.zsh
+$LOCK acquire $OWNER
+trap "$LOCK release $OWNER; echo released \$(date +%T)" EXIT
+echo "lock $(date +%T)"
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+xcrun devicectl device info details --device $UDID --json-output $OUT/.details.json >/dev/null 2>&1
+python3 - $OUT/.details.json > $OUT/device-details.txt <<'PY'
+import json, sys
+d = json.load(open(sys.argv[1]))["result"]
+def walk(x, path=""):
+    if isinstance(x, dict):
+        for k, v in x.items():
+            walk(v, path + "." + k)
+    elif isinstance(x, list):
+        for i, v in enumerate(x):
+            walk(v, "%s[%d]" % (path, i))
+    else:
+        low = path.lower()
+        if any(t in low for t in ("condition", "thermal", "performance", "gpu", "lowpower", "power", "productversion", "marketing", "devicetype", "producttype")):
+            print("%s = %s" % (path, x))
+walk(d)
+PY
+rm -f $OUT/.details.json
+echo "device details: $(wc -l < $OUT/device-details.txt) matching fields"
+BASE=(--map --map-trace-probe --seed=1 --shape=pad-landscape)
+HOLD=(--holds=cadence,live --hold-frames=600 --linger=8)
+round() {  # round <build> <n>
+  local b=$1 n=$2
+  MT_WAIT=40 mt_launch $b-j$n "${BASE[@]}" "${HOLD[@]}" --map-steps=2
+  MT_WAIT=36 mt_launch $b-f$n "${BASE[@]}" "${HOLD[@]}"
+}
+install() { mt_install $R/ipa/$1.ipa && echo "installed $1 $(date +%T)"; }
+install r1 || exit 1
+MT_WAIT=25 mt_launch r1-warm "${BASE[@]}" --map-steps=2 --holds=cadence --hold-frames=120
+round r1 1
+install head || exit 1; round head 1
+install r1 || exit 1; round r1 2
+install head || exit 1; round head 2
+install r1 || exit 1; round r1 3
+install head || exit 1; round head 3
+xcrun devicectl device info ddiServices --device $UDID 2>&1 | mt_redact | tail -5 > $OUT/ddi-services.txt
+mt_trace head-tj 4 24 "${BASE[@]}" --map-steps=2 --holds=live --hold-frames=2400
+install ctl || exit 1
+mt_trace ctl-tj 4 24 "${BASE[@]}" --map-steps=2 --holds=live --hold-frames=2400
+echo "done $(date +%T)"
+

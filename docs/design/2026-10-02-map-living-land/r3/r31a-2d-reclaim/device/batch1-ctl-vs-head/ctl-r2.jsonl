@@ -1,0 +1,8 @@
+{"adapter":"Apple A12 GPU (Apple5)","args":["--map","--map-trace-probe","--seed=1","--shape=pad-landscape","--holds=cadence,live","--hold-frames=600","--linger=8","--map-steps=2","--probe-view=river","--probe-nonce=ctl-r2-2524522976"],"method":"mobile","nonce":"ctl-r2-2524522976","probe":"start","screen":[2160,1620],"t_ms":2862}
+{"nonce":"ctl-r2-2524522976","probe":"view","t_ms":4951,"view":"river"}
+{"band":true,"display":[1180.0,885.0],"mode":"cadence","nonce":"ctl-r2-2524522976","probe":"hold_start","render":{"shadow_draw_calls":62,"shadow_primitives":29618,"stage_draw_calls":68,"stage_primitives":69836},"stage":[885,663],"t_ms":9206,"video_mib":254.1}
+{"frames":600,"max_ms":43.19,"mean_ms":17.159,"missed":18,"mode":"cadence","nonce":"ctl-r2-2524522976","p50_ms":16.9,"p95_ms":22.91,"probe":"hold_end","process_ms":25.59,"t_ms":19504}
+{"band":true,"display":[1180.0,885.0],"mode":"live","nonce":"ctl-r2-2524522976","probe":"hold_start","render":{"shadow_draw_calls":62,"shadow_primitives":29618,"stage_draw_calls":68,"stage_primitives":69836},"stage":[885,663],"t_ms":20502,"video_mib":254.1}
+{"frames":600,"max_ms":20.26,"mean_ms":16.661,"missed":0,"mode":"live","nonce":"ctl-r2-2524522976","p50_ms":16.63,"p95_ms":17.96,"probe":"hold_end","process_ms":18.22,"t_ms":30500}
+{"nonce":"ctl-r2-2524522976","probe":"holds_done","t_ms":30501}
+{"code":0,"nonce":"ctl-r2-2524522976","probe":"done","t_ms":38521}

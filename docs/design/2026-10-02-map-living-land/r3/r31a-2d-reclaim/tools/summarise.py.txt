@@ -1,0 +1,79 @@
+"""Device gate table from a batch's probe rows: <build>-<view><round>.jsonl.
+Usage: summarise.py <batch-dir> [builds...]"""
+import collections
+import glob
+import json
+import os
+import re
+import statistics
+import sys
+
+VIEWS = {"j": "Journey mid-route", "f": "fresh-run opening", "w": "Whole act", "r": "river-framed"}
+
+
+def rows(path):
+    out = []
+    for line in open(path):
+        line = line.strip()
+        if line:
+            out.append(json.loads(line))
+    return out
+
+
+def main(d, builds):
+    table = collections.defaultdict(list)
+    vram = collections.defaultdict(list)
+    bad = []
+    for path in sorted(glob.glob(os.path.join(d, "*.jsonl"))):
+        label = os.path.basename(path)[:-6]
+        m = re.match(r"(\w+)-([jfwr])(\d)$", label)
+        if not m:
+            continue
+        build, view, rnd = m.group(1), m.group(2), int(m.group(3))
+        rs = rows(path)
+        nonces = {r.get("nonce") for r in rs}
+        if len(nonces) != 1 or not str(next(iter(nonces))).startswith(label + "-") \
+                or not any(r.get("probe") == "done" for r in rs):
+            bad.append(label)
+            continue
+        for r in rs:
+            if r.get("probe") == "hold_end":
+                table[(view, r["mode"], build)].append((rnd, r))
+            if r.get("probe") == "hold_start" and r["mode"] == "cadence":
+                vram[(view, build)].append(r["video_mib"])
+    print("rows rejected (nonce or incomplete): %s" % (bad or "none"))
+    print("%-20s %-8s %-5s | %-34s | %-28s | %-12s | %s" % ("view", "mode", "build", "mean ms per launch", "p95 ms per launch", "missed", "summary"))
+    verdicts = []
+    for view in "jfwr":
+        for mode in ("cadence", "live"):
+            ref = table.get((view, mode, builds[0]))
+            for build in builds:
+                got = sorted(table.get((view, mode, build), []), key=lambda x: x[0])
+                if not got:
+                    continue
+                means = [r["mean_ms"] for _, r in got]
+                p95s = [r["p95_ms"] for _, r in got]
+                missed = [r["missed"] for _, r in got]
+                summ = "mean %.3f, p95 median %.2f, missed %d" % (statistics.mean(means), statistics.median(p95s), sum(missed))
+                print("%-20s %-8s %-5s | %-34s | %-28s | %-12s | %s" % (
+                    VIEWS[view], mode, build, " ".join("%.3f" % x for x in means),
+                    " ".join("%.2f" % x for x in p95s), " ".join(str(x) for x in missed), summ))
+                if build != builds[0] and ref:
+                    rp = statistics.median(r["p95_ms"] for _, r in ref)
+                    rm = sum(r["missed"] for _, r in ref)
+                    ok_mean = statistics.mean(means) <= 16.70
+                    ok_p95 = statistics.median(p95s) <= rp
+                    ok_missed = sum(missed) <= rm
+                    verdicts.append("%-20s %-8s mean %.3f %s 16.70 | p95 %.2f vs %.2f %s | missed %d vs %d %s" % (
+                        VIEWS[view], mode, statistics.mean(means), "<=" if ok_mean else ">",
+                        statistics.median(p95s), rp, "ok" if ok_p95 else "OVER",
+                        sum(missed), rm, "ok" if ok_missed else "OVER"))
+    print("\nGATE (%s against %s, same batch):" % (builds[1:], builds[0]))
+    print("\n".join(verdicts))
+    print("\nvideo_mib at the cadence hold start:")
+    for (view, build), v in sorted(vram.items()):
+        print("  %-20s %-5s %s" % (VIEWS[view], build, v))
+
+
+if __name__ == "__main__":
+    main(sys.argv[1], sys.argv[2:] or ["ctl", "head"])

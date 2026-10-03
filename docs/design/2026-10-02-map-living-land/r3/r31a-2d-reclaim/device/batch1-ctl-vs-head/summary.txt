@@ -1,0 +1,38 @@
+rows rejected (nonce or incomplete): none
+view                 mode     build | mean ms per launch                 | p95 ms per launch            | missed       | summary
+Journey mid-route    cadence  ctl   | 17.105 16.885 16.855               | 23.01 21.52 21.25            | 15 10 7      | mean 16.948, p95 median 21.52, missed 32
+Journey mid-route    cadence  head  | 16.662 16.660 16.661               | 18.53 18.63 18.80            | 0 0 0        | mean 16.661, p95 median 18.63, missed 0
+Journey mid-route    live     ctl   | 16.660 16.660 16.662               | 17.76 17.75 16.94            | 0 0 0        | mean 16.661, p95 median 17.75, missed 0
+Journey mid-route    live     head  | 16.660 16.659 16.662               | 17.74 17.72 17.43            | 0 0 0        | mean 16.660, p95 median 17.72, missed 0
+fresh-run opening    cadence  ctl   | 17.183 16.690 16.859               | 24.46 22.10 23.02            | 22 12 12     | mean 16.911, p95 median 23.02, missed 46
+fresh-run opening    cadence  head  | 16.658 16.661 16.662               | 21.67 21.34 21.76            | 0 0 0        | mean 16.660, p95 median 21.67, missed 0
+fresh-run opening    live     ctl   | 16.667 16.691 16.658               | 19.32 19.07 19.20            | 0 1 0        | mean 16.672, p95 median 19.20, missed 1
+fresh-run opening    live     head  | 16.661 16.659 16.661               | 19.22 19.21 19.29            | 0 0 0        | mean 16.660, p95 median 19.22, missed 0
+Whole act            cadence  ctl   | 20.295 17.841 19.060               | 27.48 27.07 27.58            | 132 46 83    | mean 19.065, p95 median 27.48, missed 261
+Whole act            cadence  head  | 16.713 16.712 16.747               | 21.88 22.33 22.53            | 1 1 2        | mean 16.724, p95 median 22.33, missed 4
+Whole act            live     ctl   | 16.658 16.652 16.688               | 19.58 19.16 19.41            | 0 0 0        | mean 16.666, p95 median 19.41, missed 0
+Whole act            live     head  | 16.714 16.662 16.667               | 19.42 19.38 19.22            | 1 0 0        | mean 16.681, p95 median 19.38, missed 1
+river-framed         cadence  ctl   | 17.302 17.159 17.217               | 23.89 22.91 23.05            | 22 18 20     | mean 17.226, p95 median 23.05, missed 60
+river-framed         cadence  head  | 16.716 16.661 16.662               | 21.39 21.19 21.25            | 1 0 0        | mean 16.680, p95 median 21.25, missed 1
+river-framed         live     ctl   | 16.663 16.661 16.661               | 17.87 17.96 17.89            | 0 0 0        | mean 16.662, p95 median 17.89, missed 0
+river-framed         live     head  | 16.661 16.661 16.661               | 18.38 17.86 17.92            | 0 0 0        | mean 16.661, p95 median 17.92, missed 0
+
+GATE (['head'] against ctl, same batch):
+Journey mid-route    cadence  mean 16.661 <= 16.70 | p95 18.63 vs 21.52 ok | missed 0 vs 32 ok
+Journey mid-route    live     mean 16.660 <= 16.70 | p95 17.72 vs 17.75 ok | missed 0 vs 0 ok
+fresh-run opening    cadence  mean 16.660 <= 16.70 | p95 21.67 vs 23.02 ok | missed 0 vs 46 ok
+fresh-run opening    live     mean 16.660 <= 16.70 | p95 19.22 vs 19.20 OVER | missed 0 vs 1 ok
+Whole act            cadence  mean 16.724 > 16.70 | p95 22.33 vs 27.48 ok | missed 4 vs 261 ok
+Whole act            live     mean 16.681 <= 16.70 | p95 19.38 vs 19.41 ok | missed 1 vs 0 OVER
+river-framed         cadence  mean 16.680 <= 16.70 | p95 21.25 vs 23.05 ok | missed 1 vs 60 ok
+river-framed         live     mean 16.661 <= 16.70 | p95 17.92 vs 17.89 OVER | missed 0 vs 0 ok
+
+video_mib at the cadence hold start:
+  fresh-run opening    ctl   [254.1, 254.1, 254.1]
+  fresh-run opening    head  [237.7, 237.7, 237.7]
+  Journey mid-route    ctl   [254.1, 254.1, 254.1]
+  Journey mid-route    head  [237.7, 237.7, 237.7]
+  river-framed         ctl   [254.1, 254.1, 254.1]
+  river-framed         head  [237.7, 237.7, 237.7]
+  Whole act            ctl   [254.2, 256.2, 254.2]
+  Whole act            head  [237.9, 237.9, 237.9]

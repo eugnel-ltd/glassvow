@@ -1,0 +1,8 @@
+.hardwareProperties.deviceType = iPad
+.hardwareProperties.marketingName = iPad (8th generation)
+.hardwareProperties.productType = iPad11,6
+.hardwareProperties.thinningProductType = iPad11,6
+.properties.hardware.deviceType = iPad
+.properties.hardware.marketingName = iPad (8th generation)
+.properties.hardware.productType = iPad11,6
+.properties.hardware.thinningProductType = iPad11,6

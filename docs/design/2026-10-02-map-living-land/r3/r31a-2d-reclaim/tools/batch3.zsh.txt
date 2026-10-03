@@ -1,0 +1,21 @@
+#!/bin/zsh
+# R3.1a device batch 3: one Metal System Trace per build (head, control) at
+# the Journey view, live. Takes over batch 2's hold on the lock (same owner).
+set -u
+S=<scratch>
+R=$S/map-lane/r31a; FLOW=$S/device13/flow; LOCK=$FLOW/ipad_lock.sh; OWNER=map-r31a
+OUT=$R/device/batch3; mkdir -p $OUT
+source $S/map-lane/wt-r31a/tools/map_trace/device.zsh
+$LOCK acquire $OWNER
+trap "$LOCK release $OWNER; echo released \$(date +%T)" EXIT
+echo "lock $(date +%T)"
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+BASE=(--map --map-trace-probe --seed=1 --shape=pad-landscape)
+install() { mt_install $R/ipa/$1.ipa && echo "installed $1 $(date +%T)"; }
+install head || exit 1
+mt_trace head-tj 4 24 "${BASE[@]}" --map-steps=2 --holds=live --hold-frames=2400
+mt_trace head-tf 4 24 "${BASE[@]}" --holds=live --hold-frames=2400
+install ctl || exit 1
+mt_trace ctl-tj 4 24 "${BASE[@]}" --map-steps=2 --holds=live --hold-frames=2400
+mt_trace ctl-tf 4 24 "${BASE[@]}" --holds=live --hold-frames=2400
+echo "done $(date +%T)"
