@@ -10,7 +10,10 @@ extends Node3D
 const FLAME_SHADER: Shader = preload("res://presentation/map/landscape/flame.gdshader")
 const FLIPBOOK: Texture2D = preload("res://assets/art/map-journey/textures/flame-flipbook.png")
 ## The Mobile renderer lights a mesh with at most eight omni lights; four lamps
-## and the Flame leave room under that on every terrain chunk.
+## and the Flame leave room under that on every terrain chunk. The lean profile
+## (`MapScene.lean_profile`, phones and tablets) has none: measured on the
+## iPad 8, real lights were the only part of the lamps that cost frames, and
+## the pools, glass, flames and bloom carry the lamps' light without them.
 const REAL_LIGHTS: int = 4
 const FLAME_SIZE: Vector2 = Vector2(.30, .44)
 const LIGHT_COLOUR: Color = Color("ffa04a")
@@ -43,7 +46,7 @@ func build(points: PackedVector3Array) -> void:
 	flames.multimesh = multi
 	flames.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(flames)
-	for i: int in range(REAL_LIGHTS):
+	for i: int in range(0 if MapScene.lean_profile() else REAL_LIGHTS):
 		var light: OmniLight3D = OmniLight3D.new()
 		light.name = "Lamp light %d" % i
 		light.light_color = LIGHT_COLOUR

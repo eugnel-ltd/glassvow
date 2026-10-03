@@ -110,7 +110,8 @@ static func _lamps(fails: Array[String], screen: WorldMapScreen,
 		"one flame for each lantern and each of the gateway's two lamps")
 	land.focus_lamps(lamps.anchors[0])
 	var lit: PackedVector3Array = lamps.lit()
-	var nearest: bool = lit.size() == mini(MapJourneyLandscape.Lamps.REAL_LIGHTS, lamps.anchors.size())
+	var real: int = 0 if MapScene.lean_profile() else MapJourneyLandscape.Lamps.REAL_LIGHTS
+	var nearest: bool = lit.size() == mini(real, lamps.anchors.size())
 	for p: Vector3 in lamps.anchors:
 		if not lit.has(p) and not lit.is_empty():
 			nearest = nearest and p.distance_to(lamps.anchors[0]) >= lit[-1].distance_to(lamps.anchors[0]) - 0.001
@@ -119,6 +120,15 @@ static func _lamps(fails: Array[String], screen: WorldMapScreen,
 		shadowless = shadowless and not light.shadow_enabled
 	_check(fails, nearest and shadowless,
 		"the four shadowless lamp lights go to the lamps nearest the focus")
+	var lean_was: int = MapScene.lean_override
+	MapScene.lean_override = 1
+	var lean_lamps: MapJourneyLandscape.Lamps = MapJourneyLandscape.Lamps.new()
+	lean_lamps.build(lamps.anchors)
+	_check(fails, lean_lamps.lights.is_empty()
+			and lean_lamps.flames.multimesh.instance_count == lamps.anchors.size(),
+		"phones and tablets keep every flame and give no lamp a real light")
+	lean_lamps.free()
+	MapScene.lean_override = lean_was
 
 
 ## Journey frames the pilgrim's stone and its next stones on the 55° camera,

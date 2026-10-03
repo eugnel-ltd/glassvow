@@ -69,11 +69,13 @@ func _ready() -> void:
 	for x: float in [-1,1]:
 		for z: float in [-1,1]:
 			Meshes.box(lamp,Vector3(x*.073,.05,z*.073),Vector3(.022,.24,.022),iron,"Lantern corner")
-	# The Flame is one of the land's real lights (R2): it carries a small pool of
-	# the run's colour along the road.
+	# The Flame carries a pool of the run's colour along the road (R2): a wider
+	# one on the desktop; on phones and tablets (the lean profile) R1's small
+	# one, which the iPad 8 measured free.
+	var lean: bool = MapScene.lean_profile()
 	_light = OmniLight3D.new()
-	_light.light_energy = .9
-	_light.omni_range = 2.6
+	_light.light_energy = .32 if lean else .9
+	_light.omni_range = 1.4 if lean else 2.6
 	_light.shadow_enabled = false
 	lamp.add_child(_light)
 	set_flame(flame)
