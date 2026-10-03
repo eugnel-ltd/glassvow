@@ -68,3 +68,5 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE and is_instance_valid(_screen) \
 			and not _screen.is_queued_for_deletion():
 		_screen.free()
+	if what == NOTIFICATION_PREDELETE:
+		MapScene.release_kept_journey()

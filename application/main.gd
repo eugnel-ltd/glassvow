@@ -187,6 +187,9 @@ func _ready() -> void:
 	# touch one. A tooling boot lands on the isolated Development profile unless
 	# it names `--production-save`, on exported builds as much as in the editor.
 	select_profile(_boot_args)
+	# The game builds Act I's journey land on the worker pool behind a veil;
+	# a headless boot (tests) has no frames to wait through, so it builds inline.
+	MapScene.journey_async = DisplayServer.get_name() != "headless"
 	var boot: GDScript = null
 	if DevTools.available():
 		boot = load(DevTools.BOOT) as GDScript
@@ -268,6 +271,8 @@ func _ready() -> void:
 	var map_asset_bench: bool = false
 	# --map --map-timing: time every map open (tools/bench_map_open.gd).
 	var map_timing: bool = false
+	# --map --map-rest: time the map at rest and walking (tools/bench_map_rest.gd).
+	var map_rest: bool = false
 	var scene_shot: String = ""
 	var scene_cursor: int = 0
 	for arg: String in _boot_args:
@@ -350,6 +355,8 @@ func _ready() -> void:
 			map_asset_bench = true
 		elif arg == "--map-timing":
 			map_timing = true
+		elif arg == "--map-rest":
+			map_rest = true
 		elif arg.begins_with("--onboard="):
 			_onboard = arg.trim_prefix("--onboard=")
 		elif arg.begins_with("--scene="):
@@ -532,6 +539,10 @@ func _ready() -> void:
 		_new_run()
 		if map_timing:
 			_attach_map_open_bench()
+			return
+		if map_rest:
+			var rest_bench: Node = (load("res://tools/bench_map_rest.gd") as GDScript).new()
+			add_child(rest_bench)
 			return
 	elif show_shop_bench:
 		# The Night Stall bench: a fresh run with payable gold and seeded
@@ -796,6 +807,15 @@ func _report_launch() -> void:
 func _capture_and_quit(path: String) -> void:
 	for _i: int in range(30):  # let layout + first paint settle
 		await get_tree().process_frame
+	# Act I's journey land builds on a worker under its veil: photograph the
+	# land, not the veil (bounded, so a stuck build still produces a shot).
+	var waited: int = 0
+	while is_instance_valid(_map_screen) and _map_screen.landscape_pending() and waited < 1200:
+		await get_tree().process_frame
+		waited += 1
+	if waited > 0:
+		for _k: int in range(20):
+			await get_tree().process_frame
 	if _settle > 0.0:
 		await get_tree().create_timer(_settle).timeout
 	if _onboard == "targeting" or _onboard == HintGuide.TARGETING:
@@ -1592,6 +1612,10 @@ func _warm_map_landscape() -> void:
 		# artwork: it goes first, so one act's artwork is held at a time.
 		_map_keep.release()
 	MapLandscapeAssets.prefetch(game.run.act + (1 if past_boss else 0))
+	# Act I's journey land is built ahead too, once its pictures are decoded.
+	# The next act's map does not exist yet past a boss, so only this act's.
+	if not past_boss and MapScene.journey_async:
+		MapJourneyPrefetch.start(_map, game.run)
 
 
 func _dispatch_current_route() -> bool:
@@ -1697,6 +1721,7 @@ func _compile_map_layout(input: MapLayoutInput, quality: Dictionary,
 
 
 func _process(_delta: float) -> void:
+	MapJourneyPrefetch.step_current()
 	for retired: MapLayoutJob in _map_layout_retired.duplicate():
 		if retired.is_done():
 			retired.finish()
@@ -1747,7 +1772,15 @@ func _show_map() -> void:
 	_attach_run_hud()
 	_music.play(&"map")
 	if _hints != null:
-		_hints.consider_map(_map_screen)
+		# Act I's land may still be building under its veil: the hint points at
+		# a waystone, so it waits until the land (and the camera) are settled.
+		if _map_screen.landscape_pending():
+			var screen: WorldMapScreen = _map_screen
+			screen.landscape_ready.connect(func() -> void:
+				if _hints != null and _map_screen == screen:
+					_hints.consider_map(screen), CONNECT_ONE_SHOT)
+		else:
+			_hints.consider_map(_map_screen)
 
 
 ## Holds the map's place while its layout compiles off the main thread. The

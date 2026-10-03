@@ -21,6 +21,11 @@ const FLING_MAX: float = 48.0
 const _BOX_SLACK_M: float = 0.01
 
 signal surface_tapped(screen: Vector2)
+## A wheel or pinch on the journey camera, which has two framings rather than
+## zoom stops: `outward` asks for Whole act, inward for Journey.
+signal journey_zoom_requested(outward: bool)
+## The journey land finished building on its worker and is now drawn.
+signal landscape_ready
 
 var _stage: SubViewport
 var _display: TextureRect
@@ -33,6 +38,18 @@ var _landscape_assets: MapLandscapeAssets
 ## only in part, which no shipped act does.
 var _landscape_source: Callable = MapLandscapeAssets.for_act
 var _landscape: MapLandscape
+## Build the journey land on the worker pool (the game) rather than on the
+## calling thread (tests, tools and captures, which want a bound map at once).
+static var journey_async: bool = false
+## The last journey land built, kept across screens of the same act: a screen
+## rebuilt for the same layout, catalogue and salt re-parents it for free.
+static var _journey_kept: MapJourneyLandscape = null
+static var _journey_kept_key: String = ""
+var _journey_pending: bool = false
+var _journey_key: String = ""
+var _journey_data: Dictionary = {}
+var _rest_tick: int = 0
+var _node_states: Dictionary = {}
 var _live: bool = false
 var _settle_frames: int = 0
 var _selection_half: Vector2 = Vector2.ZERO
@@ -115,7 +132,9 @@ func _ready() -> void:
 ## the 4x MSAA and the depth of a stage-sized view); `_fit` sizes them again
 ## as the scene returns.
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_EXIT_TREE:
+	if what == NOTIFICATION_PREDELETE:
+		_release_landscape()
+	elif what == NOTIFICATION_EXIT_TREE:
 		_stage.size = PARKED_STAGE
 	elif what == NOTIFICATION_ENTER_TREE and is_node_ready():
 		_fit()
@@ -167,14 +186,23 @@ func layout_asset_bundle() -> Dictionary:
 
 
 func layout_hero_contract() -> Dictionary:
-	if _terminus_id.is_empty() or not _active_profiles.has(_terminus_id):
+	return hero_contract(_asset_profiles, _active_profiles, _terminus_id, _threshold_id)
+
+
+## The heroes' anchors and protected zones for a catalogue's profiles: the
+## act's gate at `TERMINUS_XZ` and, when the act has one, the Vigil at
+## `THRESHOLD_XZ`. Static, so the journey prefetch builds the same contract
+## without a scene.
+static func hero_contract(registry: MapAssetProfiles, profiles: Dictionary,
+		terminus_id: String, threshold_id: String) -> Dictionary:
+	if terminus_id.is_empty() or not profiles.has(terminus_id):
 		return {}
 	var anchors: Dictionary = {}
 	var zones: Dictionary = {}
-	_add_hero_contract(anchors, zones, "terminus", _terminus_id,
+	_add_hero_contract(registry, profiles, anchors, zones, "terminus", terminus_id,
 		Vector3(TERMINUS_XZ.x, 0.0, TERMINUS_XZ.y))
-	if not _threshold_id.is_empty() and _active_profiles.has(_threshold_id):
-		_add_hero_contract(anchors, zones, "vigil", _threshold_id,
+	if not threshold_id.is_empty() and profiles.has(threshold_id):
+		_add_hero_contract(registry, profiles, anchors, zones, "vigil", threshold_id,
 			Vector3(THRESHOLD_XZ.x, 0.0, THRESHOLD_XZ.y))
 	return {
 		"schema_version": MapLayoutInput.HERO_ANCHOR_SCHEMA_VERSION,
@@ -225,12 +253,13 @@ func set_waylight_states(states: Dictionary) -> bool:
 	return true
 
 
-func _add_hero_contract(anchors: Dictionary, zones: Dictionary, role: String,
+static func _add_hero_contract(registry: MapAssetProfiles, profiles: Dictionary,
+		anchors: Dictionary, zones: Dictionary, role: String,
 		profile_id: String, position: Vector3) -> void:
-	var profile: Dictionary = _active_profiles[profile_id]
-	var yaw_degrees: float = _asset_profiles.fixed_yaw(profile)
-	var scale: Vector3 = Vector3.ONE * _asset_profiles.default_scale(profile)
-	var polygon: PackedVector2Array = _asset_profiles.transformed_footprint(
+	var profile: Dictionary = profiles[profile_id]
+	var yaw_degrees: float = registry.fixed_yaw(profile)
+	var scale: Vector3 = Vector3.ONE * registry.default_scale(profile)
+	var polygon: PackedVector2Array = registry.transformed_footprint(
 		profile, position, yaw_degrees, scale)
 	if polygon.is_empty():
 		return
@@ -263,9 +292,14 @@ func set_act(act_index: int) -> void:
 ## starts in Act I. `set_act` no-ops on an unchanged act, so on its own it
 ## would leave the new run standing in the previous run's wood.
 func _deal_act(_region: MapRegions) -> void:
-	_key.light_color = MapRegions.LAND_KEY[_act]
 	var setting: WorldEnvironment = _world.get_node("MapEnvironment") as WorldEnvironment
+	_painted_light(_key, setting.environment)
+	_key.light_color = MapRegions.LAND_KEY[_act]
 	setting.environment.ambient_light_color = MapRegions.LAND_AMBIENT[_act]
+	if is_journey_act():
+		MapJourneyLandscape.light(_key, setting.environment)
+	else:
+		_rig.leave_journey()
 	_salt_dirty = false
 	_bind_asset_geometry()
 	_repaint()
@@ -359,12 +393,20 @@ func _gui_input(event: InputEvent) -> void:
 		if button.pressed and button.button_index in [
 				MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
 			var inward: int = -1 if button.button_index == MOUSE_BUTTON_WHEEL_UP else 1
-			_rig.nudge_zoom(inward)
+			if _rig.journey_mode:
+				journey_zoom_requested.emit(inward > 0)
+			else:
+				_rig.nudge_zoom(inward)
 			set_live(false)
 			accept_event()
 		elif button.button_index == MOUSE_BUTTON_LEFT:
 			_on_press(button.pressed, button.position)
 			accept_event()
+		return
+	var pinch: InputEventMagnifyGesture = event as InputEventMagnifyGesture
+	if pinch != null and _rig.journey_mode and absf(pinch.factor - 1.0) > 0.02:
+		journey_zoom_requested.emit(pinch.factor < 1.0)
+		accept_event()
 		return
 	var motion: InputEventMouseMotion = event as InputEventMouseMotion
 	if motion != null and _dragging:
@@ -411,15 +453,21 @@ func _on_drag(relative: Vector2, velocity: Vector2) -> void:
 
 func _screen_to_world(delta_px: Vector2) -> Vector2:
 	var k: float = _rig.get_camera().size / maxf(_view_height(), 1.0)
-	var tilt: float = deg_to_rad(absf(MapCameraRig.TILT_DEGREES))
+	var tilt: float = absf(_rig.get_camera().rotation.x)
 	return Vector2(-delta_px.x * k, -delta_px.y * k / sin(tilt))
 
 
 func _process(delta: float) -> void:
+	if not _abandoned.is_empty():
+		reap()
+	if _journey_pending:
+		_poll_journey()
 	if not _live and _settle_frames > 0:
 		_settle_frames -= 1
 		if _settle_frames == 0:
 			_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+	elif not _live and _settle_frames == 0:
+		_rest_cadence()
 	if _dragging or _lock_input:
 		return
 	if _fling.length() > 0.02:
@@ -456,31 +504,40 @@ func _view_height() -> float:
 func _add_key(world: Node3D) -> void:
 	_key = DirectionalLight3D.new()
 	_key.name = "MapKey"
-	_key.rotation_degrees = Vector3(-47, -34, 0)
-	_key.light_color = Color("f2e7cd")
-	_key.light_energy = 1.1
-	_key.shadow_enabled = true
-	_key.directional_shadow_max_distance = 110
 	_key.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	world.add_child(_key)
 
 
 func _add_environment(world: Node3D) -> void:
 	var environment: Environment = Environment.new()
+	var world_environment: WorldEnvironment = WorldEnvironment.new()
+	world_environment.name = "MapEnvironment"
+	world_environment.environment = environment
+	world.add_child(world_environment)
+	_painted_light(_key, environment)
+
+
+## The painted acts' key and environment. `_deal_act` re-applies it on every act
+## change, so leaving Act I's journey light never leaves it behind.
+static func _painted_light(key: DirectionalLight3D, environment: Environment) -> void:
+	key.rotation_degrees = Vector3(-47, -34, 0)
+	key.light_color = Color("f2e7cd")
+	key.light_energy = 1.1
+	key.light_specular = 0.5
+	key.shadow_enabled = true
+	key.shadow_opacity = 1.0
+	key.directional_shadow_max_distance = 110
 	environment.background_mode = Environment.BG_COLOR
 	environment.background_color = Color("11242c")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color("98b1c2")
 	environment.ambient_light_energy = 0.35
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	environment.tonemap_exposure = 1.0
 	environment.fog_enabled = true
 	environment.fog_light_color = Color("304852")
 	environment.fog_light_energy = 0.45
 	environment.fog_density = 0.0015
-	var world_environment: WorldEnvironment = WorldEnvironment.new()
-	world_environment.name = "MapEnvironment"
-	world_environment.environment = environment
-	world.add_child(world_environment)
 
 
 func _placement_footprint(candidate: Dictionary) -> PackedVector2Array:
@@ -513,9 +570,7 @@ func _placement_footprint(candidate: Dictionary) -> PackedVector2Array:
 ## warning path left to keep. An act added to `LayoutBook.ACTS` without a matching
 ## `MapLandscapeAssets` entry is caught by `tests/test_map_asset_shortfall.gd`.
 func _bind_asset_geometry() -> void:
-	if _landscape != null:
-		_landscape.free()
-		_landscape = null
+	_release_landscape()
 	_clear_waylights()
 	_layout_result = null
 	_layout_diagnostics.clear()
@@ -549,10 +604,10 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 	var kept: bool = key == _bound_key and quality == _bound["quality"]
 	var bound: Dictionary = _bound if kept else {}
 	var data: Dictionary = bound["data"] if kept else compiled.identity_dict()
-	if _landscape != null:
-		_landscape.free()
-	_landscape = MapLandscape.new()
-	_world.add_child(_landscape)
+	_release_landscape()
+	_landscape = MapJourneyLandscape.new() if is_journey_act() else MapLandscape.new()
+	if not is_journey_act():
+		_world.add_child(_landscape)
 	_landscape.prepare(data, _landscape_assets, _scatter_salt)
 	_selection_half = _selection_reserve(quality)
 	if kept:
@@ -580,7 +635,11 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 		"scenery_instances": scenery,
 		"rejections": rejections,
 	}
-	_landscape.build(data)
+	if is_journey_act():
+		if not _bind_journey(key, data):
+			return null
+	else:
+		_landscape.build(data)
 	if not kept:
 		bound["bake"] = _landscape.bake
 		bound["quality"] = quality.duplicate(true)
@@ -632,9 +691,7 @@ func _fail_layout(reason: String) -> MapLayoutResult:
 	_layout_diagnostics = {"status": "FAILED", "failure": _layout_failure.duplicate(true)}
 	_road_segments = PackedVector3Array()
 	_clear_waylights()
-	if _landscape != null:
-		_landscape.free()
-		_landscape = null
+	_release_landscape()
 	_repaint()
 	return null
 
@@ -661,6 +718,8 @@ func _bind_waylights(edges: Dictionary) -> bool:
 			tracer.free()
 			_clear_waylights()
 			return false
+		# The journey land carries the road's state on its own lamps and glass.
+		tracer.visible = not is_journey_act()
 		_world.add_child(tracer)
 		_waylights[edge_id] = tracer
 		index += 1
@@ -794,7 +853,7 @@ static func _box_gap(a: Vector4, b: Vector4) -> float:
 	return maxf(maxf(a.x - b.z, b.x - a.z), maxf(maxf(a.y - b.w, b.y - a.w), 0.0))
 
 
-func _a3(value: Vector3) -> Array[float]:
+static func _a3(value: Vector3) -> Array[float]:
 	return [value.x, value.y, value.z]
 
 
@@ -814,7 +873,8 @@ func _xz(value: Variant) -> Vector2:
 
 
 func set_node_states(states: Dictionary) -> void:
-	if _landscape != null:
+	_node_states = states.duplicate()
+	if _landscape != null and not _journey_pending:
 		_landscape.set_node_states(states)
 		_repaint()
 
@@ -850,3 +910,167 @@ static func _selection_reserve(quality: Dictionary) -> Vector2:
 			pixels_per_metre = minf(pixels_per_metre, MapLayoutCanonical.float_value(shape[1]) / zoom)
 	var half: float = radius / pixels_per_metre
 	return Vector2(half, half / sin(deg_to_rad(absf(MapCameraRig.TILT_DEGREES))))
+
+
+## How many display frames pass between two renders of a land that moves at
+## rest (the journey's water, flame and pilgrim): every other frame (30 Hz on a
+## 60 Hz display), every fourth under Reduce Motion. A painted act, which does
+## not move at rest, stays frozen (`UPDATE_ONCE`, then nothing).
+const REST_EVERY: int = 2
+const REST_EVERY_REDUCED: int = 4
+
+
+func _rest_cadence() -> void:
+	var land: MapJourneyLandscape = journey_landscape()
+	if land == null or _journey_pending or not land.is_built():
+		return
+	_rest_tick += 1
+	var every: int = REST_EVERY_REDUCED if Preferences.active.reduce_motion else REST_EVERY
+	if _rest_tick % every == 0:
+		_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+
+## Whether Act I is drawn as the journey land. Always on in the game; a test of
+## the painted landscape's own contract (which Acts II–IV keep) may turn it off.
+static var journey_enabled: bool = true
+
+
+## Whether this act is drawn as the journey woodland (`MapJourneyLandscape`).
+## Act I only; the other acts keep the painted landscape.
+func is_journey_act() -> bool:
+	return _act == 0 and journey_enabled
+
+
+func journey_landscape() -> MapJourneyLandscape:
+	return _landscape as MapJourneyLandscape
+
+
+## Where node `id`'s waystone stands in the drawn world: the journey stone's
+## seat in Act I, the record's anchor elsewhere.
+func seat_of(id: String, anchor: Vector3) -> Vector3:
+	var journey: MapJourneyLandscape = journey_landscape()
+	return journey.seat(id, anchor) if journey != null else anchor
+
+
+## Draws the journey land for the bound layout: the kept land when it was built
+## for `key`, otherwise a new build, on the worker pool when `journey_async`.
+## False (and a failed layout) when the land cannot be built.
+func _bind_journey(key: String, data: Dictionary) -> bool:
+	var land: MapJourneyLandscape = _landscape as MapJourneyLandscape
+	if key == _journey_kept_key and is_instance_valid(_journey_kept) \
+			and _journey_kept.get_parent() == null:
+		land.free()
+		land = _journey_kept
+		_landscape = land
+	elif journey_async:
+		_journey_pending = true
+		_journey_key = key
+		_journey_data = data
+		if not MapJourneyPrefetch.busy():
+			land.start(data)
+		return true
+	else:
+		land.build(data)
+	if not land.failure.is_empty():
+		_fail_layout(land.failure)
+		return false
+	_keep_journey(key, land)
+	_world.add_child(land)
+	land.set_node_states(_node_states)
+	return true
+
+
+func _poll_journey() -> void:
+	var land: MapJourneyLandscape = _landscape as MapJourneyLandscape
+	if land == null:
+		_journey_pending = false
+		return
+	if not land.is_started():
+		# A prefetch was under way when this map bound: take its land when it
+		# turns out to be this layout's, otherwise build our own.
+		if MapJourneyPrefetch.busy():
+			return
+		if _journey_key == _journey_kept_key and is_instance_valid(_journey_kept) \
+				and _journey_kept.get_parent() == null:
+			land.free()
+			land = _journey_kept
+			_landscape = land
+		else:
+			land.start(_journey_data)
+			return
+	elif not land.poll():
+		return
+	_journey_pending = false
+	if not land.failure.is_empty():
+		_fail_layout(land.failure)
+		return
+	_keep_journey(_journey_key, land)
+	_world.add_child(land)
+	land.set_node_states(_node_states)
+	_repaint()
+	landscape_ready.emit()
+
+
+func landscape_pending() -> bool:
+	return _journey_pending
+
+
+## Makes `land`, built for binding `key` (`MapJourneyPrefetch`), the kept land.
+static func adopt_journey(key: String, land: MapJourneyLandscape) -> void:
+	_keep_journey(key, land)
+
+
+## Frees the kept journey land when nothing draws it (process exit, tests).
+static func release_kept_journey() -> void:
+	if is_instance_valid(_journey_kept) and _journey_kept.get_parent() == null:
+		_journey_kept.free()
+	# A land still building is left to `reap`: waiting on its worker here could
+	# wait on a worker that waits on this thread.
+	reap()
+	_journey_kept = null
+	_journey_kept_key = ""
+
+
+static func _keep_journey(key: String, land: MapJourneyLandscape) -> void:
+	if _journey_kept != land and is_instance_valid(_journey_kept) \
+			and _journey_kept.get_parent() == null:
+		_journey_kept.free()
+	_journey_kept = land
+	_journey_kept_key = key
+
+
+## Lets go of the drawn land: the kept journey land is only detached, a land
+## mid-build is joined first (a worker may still be writing into it), and any
+## other land is freed.
+func _release_landscape() -> void:
+	if _landscape == null:
+		return
+	var land: MapJourneyLandscape = _landscape as MapJourneyLandscape
+	_journey_pending = false
+	if land != null and land == _journey_kept:
+		if land.get_parent() != null:
+			land.get_parent().remove_child(land)
+	elif land != null and land.busy():
+		abandon(land)
+	else:
+		_landscape.free()
+	_landscape = null
+
+
+## Lands given up while a worker still builds them, freed once it ends.
+static var _abandoned: Array[MapJourneyLandscape] = []
+
+
+static func abandon(land: MapJourneyLandscape) -> void:
+	if land.get_parent() != null:
+		land.get_parent().remove_child(land)
+	_abandoned.append(land)
+
+
+## Frees the abandoned lands whose worker has ended. Any map's frame runs it.
+static func reap() -> void:
+	for land: MapJourneyLandscape in _abandoned.duplicate():
+		if not land.busy():
+			land.settle()
+			_abandoned.erase(land)
+			land.free()

@@ -31,6 +31,10 @@ const CAM_FAR: float = 80.0
 
 signal zoom_stop_changed(index: int)
 
+## Act I's journey camera (`MapJourneyView`): pitch, height, size and pan
+## bounds come from the pose it applies, not from the constants above, which
+## stay the governed contract of the painted acts and of the layout.
+var journey_mode: bool = false
 var zoom_stop: int = DEFAULT_STOP
 var pan_bounds: Rect2
 
@@ -65,7 +69,8 @@ func camera_xz() -> Vector2:
 
 func set_zoom_stop(index: int) -> void:
 	zoom_stop = clampi(index, 0, ZOOM_STOPS.size() - 1)
-	_camera.size = ZOOM_STOPS[zoom_stop]
+	if not journey_mode:
+		_camera.size = ZOOM_STOPS[zoom_stop]
 	zoom_stop_changed.emit(zoom_stop)
 
 
@@ -190,7 +195,7 @@ static func look_dz() -> float:
 ## is `size / sin(|tilt|)`, the same identity the #255 bench asserts.
 func pan_screen(delta_px: Vector2, view_height: float) -> void:
 	var k: float = _camera.size / maxf(view_height, 1.0)
-	var tilt: float = deg_to_rad(absf(TILT_DEGREES))
+	var tilt: float = absf(_camera.rotation.x)
 	pan_world(Vector2(-delta_px.x * k, -delta_px.y * k / sin(tilt)))
 
 
@@ -208,7 +213,44 @@ func _apply_pose(xz: Vector2) -> void:
 	var hi: Vector2 = pan_bounds.end
 	var pos: Vector3 = _camera.position
 	pos.x = clampf(xz.x, lo.x, hi.x)
-	pos.y = CAM_HEIGHT
+	pos.y = _camera.position.y if journey_mode else CAM_HEIGHT
 	pos.z = clampf(xz.y, lo.y, hi.y)
 	_camera.position = pos
-	_camera.size = ZOOM_STOPS[zoom_stop]
+	if not journey_mode:
+		_camera.size = ZOOM_STOPS[zoom_stop]
+
+
+## Puts the camera on a `MapJourneyView` pose: pitch, position, size and pan
+## bounds. Journey reads as the default stop, Whole act as the farthest. False,
+## and nothing moves, when the pose is not `ok`.
+func apply_journey_pose(pose: Dictionary) -> bool:
+	if not pose.get("ok", false):
+		return false
+	journey_mode = true
+	var bounds_v: Variant = pose.get("pan_bounds", null)
+	if bounds_v is Rect2:
+		pan_bounds = bounds_v
+	var pitch: float = pose["pitch"]
+	var position: Vector3 = pose["position"]
+	var zoom: float = pose["zoom"]
+	_camera.rotation_degrees = Vector3(-pitch, 0.0, 0.0)
+	_camera.position = position
+	_camera.size = zoom
+	_camera.far = 400.0
+	var stop: int = ZOOM_STOPS.size() - 1 if pose.get("overview", false) else DEFAULT_STOP
+	if stop != zoom_stop:
+		zoom_stop = stop
+		zoom_stop_changed.emit(zoom_stop)
+	return true
+
+
+## Back to the governed painted-act camera, at the default stop and pose.
+func leave_journey() -> void:
+	if not journey_mode:
+		return
+	journey_mode = false
+	_camera.rotation_degrees = Vector3(TILT_DEGREES, 0.0, 0.0)
+	_camera.far = CAM_FAR
+	pan_bounds = bounds_from_lattice()
+	zoom_stop = DEFAULT_STOP
+	_apply_pose(DEFAULT_XZ)

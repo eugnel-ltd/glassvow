@@ -17,11 +17,17 @@ static func touch_size(stage: Vector2) -> float:
 static func projected_plane(point: Vector3) -> Vector2:
 	return Vector2(point.x, point.z*sin(deg_to_rad(PITCH))-point.y*cos(deg_to_rad(PITCH)))
 
-static func resolve(points: PackedVector3Array, stage: Vector2, overview: bool = false, landmarks: PackedVector3Array = []) -> Dictionary:
+## The archive's chrome: a 60 px title bar and an 88 px navigation panel.
+const ARCHIVE_INSETS: Vector4 = Vector4(42, 106, 42, 130)
+## Main's chrome: the run HUD and act title across the top, the instruction
+## line at the foot. Left, top, right, bottom, in reference px.
+const MAIN_INSETS: Vector4 = Vector4(42, 76, 42, 46)
+
+static func resolve(points: PackedVector3Array, stage: Vector2, overview: bool = false, landmarks: PackedVector3Array = [], insets: Vector4 = ARCHIVE_INSETS) -> Dictionary:
 	if points.is_empty() or stage.x <= 0.0 or stage.y <= 0.0:
 		return {"ok": false, "reason": "empty group or invalid viewport"}
-	# Reserve complete touch/ink extents above the 88 px navigation panel.
-	var safe: Rect2 = Rect2(Vector2(42,106),stage-Vector2(84,236))
+	# Reserve complete touch/ink extents inside the chrome's safe frame.
+	var safe: Rect2 = Rect2(Vector2(insets.x,insets.y),stage-Vector2(insets.x+insets.z,insets.y+insets.w))
 	var usable: Vector2 = safe.size
 	if usable.x <= 0.0 or usable.y <= 0.0:
 		return {"ok": false, "reason": "viewport has no safe decision area"}
@@ -65,7 +71,7 @@ static func screen_point(point: Vector3, resolved: Dictionary, stage: Vector2) -
 	var zoom: float = resolved["zoom"]
 	return stage*.5+local*stage.y/zoom
 
-static func audit_surface(anchors: Dictionary, edges: Dictionary, framing: Dictionary = {}) -> Dictionary:
+static func audit_surface(anchors: Dictionary, edges: Dictionary, framing: Dictionary = {}, insets: Vector4 = ARCHIVE_INSETS) -> Dictionary:
 	var groups: Dictionary = {}
 	for id: String in MapLayoutCanonical.sorted_keys(anchors): groups[id] = [id]
 	for edge: Dictionary in edges.values(): groups[str(edge["from"])].append(str(edge["to"]))
@@ -79,7 +85,7 @@ static func audit_surface(anchors: Dictionary, edges: Dictionary, framing: Dicti
 		for shape: StringName in StageShape.SHIPPING:
 			var stage: Vector2i = StageShape.REFERENCES[shape]
 			var landmarks: PackedVector3Array = framing.get(id,PackedVector3Array())
-			var pose: Dictionary = resolve(points,Vector2(stage),false,landmarks)
+			var pose: Dictionary = resolve(points,Vector2(stage),false,landmarks,insets)
 			checked += 1
 			if not pose["ok"]:
 				failures.append({"focus":id,"shape":str(shape),"members":groups[id].duplicate(),"reason":pose["reason"]})
