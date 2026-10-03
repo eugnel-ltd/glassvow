@@ -1,509 +1,333 @@
 class_name CreditsScreen
-extends Control
-## Manifest-driven credits overlay — same skeleton as HelpScreen: scrim over
-## the living title world, centred glass panel, Escape / scrim-click to close.
+extends LeadlightRoomHost
+## Credits is a place: the road onward (docs/design/2026-10-03-title-rooms
+## §4.3). The title's furniture goes, the lantern is lowered to the seat, and
+## the title's own wordmark stays where it is and heads the roll (CreditsRoll),
+## the word "Credits" riding down to the roll's first heading under it. The
+## roll stands on a soft band of night over the living road, each line warming
+## as it crosses the lamp line; after a still moment the roll drifts on its own
+## and the eye walks a little way on down the road with it, so the lamps really
+## pass; any touch, drag, wheel or key takes over and the drift resumes three
+## seconds later. Under Reduce Motion it is a plain scroll.
+##
+## The licences are their own glasses (CreditsLicences.Glass) over the paused
+## roll, faded nearly away; the seat's Return and Escape close an open glass
+## first.
 
-signal closed
+## The bundled fonts' licences (CreditsLicences owns the texts).
+const FONT_LICENCES: Array[Dictionary] = CreditsLicences.FONT_LICENCES
+## The roll's column (pad and desktop, phone): its width, the top of its view,
+## and how far above the stage's foot its view ends (clear of the seat).
+const ROLL_W: Vector2 = Vector2(600.0, 520.0)
+const ROLL_TOP: Vector2 = Vector2(20.0, 6.0)
+const ROLL_FOOT: Vector2 = Vector2(90.0, 60.0)
+## The lamp line, as a share of the stage's height, and how far its warmth reaches.
+const LAMP_LINE: float = 0.56
+const LAMP_REACH: float = 0.16
+## How far in from the roll's top and foot a line fades out (pad, phone), so
+## no line is ever cut through by the view's edge.
+const EDGE_FADE: Vector2 = Vector2(40.0, 24.0)
+## The drift, px/s (pad, phone); after DRIFT_AFTER s still, DRIFT_RESUME s after a touch.
+const DRIFT: Vector2 = Vector2(22.0, 16.0)
+const DRIFT_AFTER: float = 1.2
+const DRIFT_RESUME: float = 3.0
+## The first step on arrival, and the band's strength at its centre.
+const FIRST_STEP: float = 0.4
+const BAND_ALPHA: float = 0.7
 
-const PANEL_MAX_WIDTH: float = 640.0
-const PANEL_MAX_HEIGHT: float = 0.88
-## Matches `GlassStyle.pane` `set_content_margin_all(12)` — the real inset the
-## column must subtract when sizing against the pane (not a dead DESKTOP/PHONE
-## knob that never bound to the stylebox).
-const PANE_INSET: float = 12.0
-const MUSIC_MANIFEST: String = "res://assets/audio/music/manifest.json"
-const SFX_MANIFEST: String = "res://assets/audio/sfx/manifest.json"
+## The band's soft light, made once: the same texture every opening.
+static var _band_light: GradientTexture2D = null
 
-const FONT_LICENCES: Array[Dictionary] = [
-	{"family": "Cinzel", "path": "res://assets/fonts/OFL-Cinzel.txt"},
-	{"family": "Alegreya", "path": "res://assets/fonts/OFL-Alegreya.txt"},
-	# Noto Serif CJK TC is an Adobe/Google Noto CJK family and remains OFL.
-	{"family": "Noto Serif CJK TC", "path": "res://assets/fonts/OFL.txt"},
-	{"family": "Noto Sans Symbols2", "path": "res://assets/fonts/OFL-NotoSansSymbols2.txt"},
-]
-
-var shape: StringName = StageShape.IDENTITY
-
-var _panel: PanelContainer
-var _column: VBoxContainer
-var _scroll: ScrollContainer
 var _sfx: SfxBus
-var _licence_wrap: MarginContainer
-var _licence_toggle: Button
-var _licence_built: bool = false
+var _band: TextureRect
+var _scroll: ScrollContainer
+var _roll: CreditsRoll
+var _licences: CreditsLicences.Shelf
+## The folds the licence texts are built into, on first opening.
 var _font_licence_wrap: MarginContainer
-var _font_licence_toggle: Button
-var _font_licence_built: bool = false
+var _licence_wrap: MarginContainer
+var _quiet: float = 0.0
+var _wait: float = DRIFT_AFTER
+var _drift_y: float = 0.0
+var _landed: bool = false
+var _time: float = 0.0
+## Where the leaving began: the walk and the wordmark go home from here.
+var _leave_from: Vector2 = Vector2.INF
 
 
-func _init(stage_shape: StringName = StageShape.IDENTITY,
-		sfx: SfxBus = null) -> void:
-	shape = stage_shape if StageShape.REFERENCES.has(stage_shape) else StageShape.IDENTITY
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_STOP
-	theme = GlassStyle.theme()
-
+func _init(stage_shape: StringName = StageShape.IDENTITY, sfx: SfxBus = null,
+		unsealed: bool = false, now_playing: StringName = &"") -> void:
+	_host(stage_shape)
+	veil_closes = false
+	veil().color = Color(LeadlightTokens.VOID, 0.0)
 	_sfx = sfx if sfx != null else SfxBus.new()
 	if sfx == null:
 		add_child(_sfx)
-
-	var scrim: ColorRect = ColorRect.new()
-	scrim.color = GlassStyle.scrim()
-	scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	scrim.gui_input.connect(_on_scrim_input)
-	add_child(scrim)
-
-	var centre: CenterContainer = CenterContainer.new()
-	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
-	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(centre)
-
-	_panel = PanelContainer.new()
-	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	_panel.add_theme_stylebox_override("panel", GlassStyle.pane(GlassStyle.GLASS, 0.94))
-	centre.add_child(_panel)
-
-	var shell: VBoxContainer = VBoxContainer.new()
-	shell.add_theme_constant_override("separation", 10)
-	_panel.add_child(shell)
-
+	_band = TextureRect.new()
+	_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if _band_light == null:
+		_band_light = LeadlightShapes.soft_light(PackedFloat32Array([1.0, 0.92, 0.75, 0.4, 0.0]))
+	_band.texture = _band_light
+	_band.self_modulate = Color(LeadlightTokens.VOID, BAND_ALPHA)
+	_band.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	add_child(_band)
 	_scroll = ScrollContainer.new()
+	_scroll.name = "Roll"
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	_scroll.follow_focus = true
-	_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	shell.add_child(_scroll)
-
-	_column = VBoxContainer.new()
-	_column.add_theme_constant_override("separation", 4)
-	_scroll.add_child(_column)
-
-	var title: Label = Label.new()
-	title.text = Locale.active.t("ui.credits.title")
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_700, 3))
-	title.add_theme_font_size_override("font_size", 26)
-	title.add_theme_color_override("font_color", RunStyle.PARCHMENT)
-	_column.add_child(title)
-
-	var rule_centre: CenterContainer = CenterContainer.new()
-	rule_centre.custom_minimum_size.y = 10
-	_column.add_child(rule_centre)
-	var rule: HSeparator = HSeparator.new()
-	rule.custom_minimum_size.x = 84
-	var rule_line: StyleBoxLine = StyleBoxLine.new()
-	rule_line.color = Color(GlassStyle.GOLD, 0.55)
-	rule_line.thickness = 1
-	rule.add_theme_stylebox_override("separator", rule_line)
-	rule_centre.add_child(rule)
-
-	_add_heading(Locale.active.t("ui.credits.headingBrand"))
-	_add_body(Locale.active.t("ui.credits.bodyBrand"))
-
-	_add_heading(Locale.active.t("ui.credits.headingGlass"))
-	_add_body(Locale.active.t("ui.credits.bodyGlass"))
-
-	_add_heading(Locale.active.t("ui.credits.headingMusic"))
-	var music_manifest: Variant = _read_manifest(MUSIC_MANIFEST)
-	_add_pack_id(_pack_id_of(music_manifest, "stained-glass-v1"))
-	_add_music_attribution(music_manifest)
-	_add_music_rows(music_manifest)
-
-	_add_heading(Locale.active.t("ui.credits.headingSound"))
-	var sfx_manifest: Variant = _read_manifest(SFX_MANIFEST)
-	_add_pack_id(_pack_id_of(sfx_manifest, "ashglass-v1"))
-	_add_sfx_rows(sfx_manifest)
-
-	_add_heading(Locale.active.t("ui.credits.headingType"))
-	_add_body(Locale.active.t("ui.credits.bodyCinzel"))
-	_add_body(Locale.active.t("ui.credits.bodyAlegreya"))
-	_add_body(Locale.active.t("ui.credits.bodyNoto"))
-	_add_font_licence_fold()
-
-	_add_heading(Locale.active.t("ui.credits.headingEngine"))
-	_add_body(Locale.active.t("ui.credits.bodyEngine"))
-	_add_licence_fold()
-
-	var footer: Label = _body_label(
-		Locale.active.t("ui.credits.footer"), GlassStyle.TEXT_DIM)
-	var footer_seat: MarginContainer = MarginContainer.new()
-	footer_seat.add_theme_constant_override("margin_top", 14)
-	footer_seat.add_child(footer)
-	_column.add_child(footer_seat)
-
-	# Fixed-foot seam: gold hairline marks the scroll/foot boundary so the
-	# last track title is not sliced against the Close row (#54 NIT).
-	var hairline: ColorRect = ColorRect.new()
-	hairline.custom_minimum_size = Vector2(0, 1)
-	hairline.color = Color(GlassStyle.GOLD, 0.25)
-	hairline.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hairline.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	shell.add_child(hairline)
-
-	# The panel's primary action is LEAVING it — a visible, focused dismiss
-	# at the foot of the pane, outside the scroll so it never hides below
-	# the fold (Help's "Fight On" contract). First-frame focus lands here.
-	var close_centre: CenterContainer = CenterContainer.new()
-	shell.add_child(close_centre)
-	var close: Button = Button.new()
-	close.text = Locale.active.t("ui.credits.close")
-	close.custom_minimum_size = Vector2(150, 44)
-	close.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_500, 1))
-	close.add_theme_font_size_override("font_size", 17)
-	RunStyle.style_button(close)
-	close.pressed.connect(func() -> void:
-		_sfx.play(&"click")
-		closed.emit()
-	)
-	close_centre.add_child(close)
-	LeadlightFocus.give_deferred(close)
-
-	resized.connect(_fit)
-	_fit.call_deferred()
+	add_child(_scroll)
+	_roll = CreditsRoll.new(shape, unsealed, now_playing)
+	_roll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_roll.licence_requested.connect(_open_licence)
+	_scroll.add_child(_roll)
+	_licences = CreditsLicences.Shelf.new(shape)
+	_licences.shut.connect(close_licence)
+	add_child(_licences)
+	_font_licence_wrap = _licences.fonts.wrap
+	_licence_wrap = _licences.engine.wrap
+	_seat_last()
 
 
-func set_shape(stage_shape: StringName) -> void:
-	if stage_shape == shape or not StageShape.REFERENCES.has(stage_shape):
-		return
-	shape = stage_shape
-	_fit()
+func roll() -> CreditsRoll:
+	return _roll
+
+
+func scroll() -> ScrollContainer:
+	return _scroll
+
+
+## "Credits", where the word that opened the room lands: while it is on view.
+func crown() -> Control:
+	var at: Rect2 = _roll.heading_node.get_global_rect()
+	return _roll.heading_node if _scroll.get_global_rect().intersects(at) else null
+
+
+func content_rects() -> Array[Rect2]:
+	var rects: Array[Rect2] = [Rect2(_scroll.position, _scroll.size)]
+	if _licences.opened != null:
+		rects.append(Rect2(_licences.opened.sheet.position, _licences.opened.sheet.size))
+	return rects
+
+
+func arrival_time() -> float:
+	return 0.60
+
+
+func departure_time() -> float:
+	return 0.48
+
+
+## The roll is gone by 0.18 s: "Credits" rides back from 0.14, the furniture
+## from 0.20, never over a line still lit.
+func crown_leaves_at() -> float:
+	return 0.14
+
+
+func furniture_returns_at() -> float:
+	return 0.20
 
 
 func _fit() -> void:
-	var reference: Vector2i = StageShape.REFERENCES[shape]
-	var stage_size: Vector2 = size if size.x > 0.0 and size.y > 0.0 else Vector2(reference)
-	var phone: bool = shape == &"phone-landscape"
-	var panel_width: float = minf(PANEL_MAX_WIDTH, stage_size.x)
-	var panel_height: float = stage_size.y if phone else stage_size.y * PANEL_MAX_HEIGHT
-	_panel.custom_minimum_size = Vector2(panel_width, panel_height)
-	_column.custom_minimum_size.x = maxf(240.0, panel_width - PANE_INSET * 2.0)
-
-
-func _pack_id_of(manifest: Variant, fallback: String) -> String:
-	if typeof(manifest) != TYPE_DICTIONARY:
-		return fallback
-	var pack: Dictionary = manifest
-	var pack_id: String = str(pack.get("pack_id", fallback))
-	return pack_id if not pack_id.is_empty() else fallback
-
-
-func _read_manifest(path: String) -> Variant:
-	if not FileAccess.file_exists(path):
-		return null
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	if file == null:
-		return null
-	return JSON.parse_string(file.get_as_text())
-
-
-func _add_music_attribution(manifest: Variant) -> void:
-	var count: int = 0
-	if typeof(manifest) == TYPE_DICTIONARY:
-		var pack: Dictionary = manifest
-		var items_raw: Variant = pack.get("items", null)
-		if typeof(items_raw) == TYPE_DICTIONARY:
-			var items: Dictionary = items_raw
-			count = items.size()
-	var line: String = Locale.active.t("ui.credits.musicAttribution")
-	if count > 0:
-		line = Locale.active.t("ui.credits.musicAttributionCount", {"count": count})
-	# Breath below the attribution: its gap to the first track must exceed
-	# the track pitch, or the line reads as track zero.
-	var seat: MarginContainer = MarginContainer.new()
-	seat.add_theme_constant_override("margin_bottom", 8)
-	seat.add_child(_body_label(line, GlassStyle.TEXT))
-	_column.add_child(seat)
-
-
-func _add_music_rows(manifest: Variant) -> void:
-	if typeof(manifest) != TYPE_DICTIONARY:
-		_add_body(Locale.active.t("ui.credits.musicTracklistFallback"), GlassStyle.TEXT_DIM)
+	if _scroll == null or size.x <= 0.0 or size.y <= 0.0:
 		return
-	var pack: Dictionary = manifest
-	var items_raw: Variant = pack.get("items", null)
-	if typeof(items_raw) != TYPE_DICTIONARY:
-		_add_body(Locale.active.t("ui.credits.musicTracklistFallback"), GlassStyle.TEXT_DIM)
+	var phone: bool = LeadlightTokens.is_phone(shape)
+	var width: float = ROLL_W.y if phone else ROLL_W.x
+	var top: float = ROLL_TOP.y if phone else ROLL_TOP.x
+	var foot: float = ROLL_FOOT.y if phone else ROLL_FOOT.x
+	_scroll.position = Vector2((size.x - width) * 0.5, top)
+	_scroll.size = Vector2(width, size.y - top - foot)
+	_roll.custom_minimum_size.x = width
+	# The roll starts under the title's wordmark, which heads it.
+	var spec: TitleScreen.Layout = TitleScreen.Layout.for_shape(shape)
+	var k: float = size.y / spec.ref_h
+	var mark_foot: float = (spec.word_y + spec.word_w * 399.0 / 1536.0) * k
+	_roll.head_gap.custom_minimum_size.y = maxf(mark_foot + 6.0 - top, 0.0)
+	_band.size = Vector2(width * 1.7, size.y * 1.15)
+	_band.position = Vector2((size.x - _band.size.x) * 0.5, (size.y - _band.size.y) * 0.5)
+	_licences.place(shape, size)
+
+
+# ---------------------------------------------------------------- the passage
+
+## C1: the band rises, the roll comes up line by line from the wordmark down
+## (a line the word in flight crosses waits for it to pass), each at the warmth
+## the lamp line gives it, and the eye takes its first step on down the road.
+func arrive_at(t: float, _wick: Vector2, _colour: Color) -> void:
+	_band.modulate.a = LeadlightMotion.ease_on(t / 0.32, LeadlightMotion.SETTLE_OUT)
+	var i: int = 0
+	# The heading is the crown: the word in flight lands there (the passage's).
+	for item: Node in _roll.get_children():
+		if item is Control and item != _roll.head_gap and item != _roll.heading_node:
+			var from: float = minf(maxf(0.12 + 0.04 * float(i), _clear_of_ghost(item as Control)), 0.40)
+			_reveal(item as Control, LeadlightMotion.ease_on((t - from) / 0.2, LeadlightMotion.REVEAL))
+			i += 1
+	_warm()
+	if title != null:
+		title.lend_wordmark(true)
+		if not LeadlightMotion.reduced():
+			title.set_walk(FIRST_STEP * LeadlightMotion.ease_on(t / 0.6, LeadlightMotion.BREATH))
+
+
+func rest(_wick: Vector2, _colour: Color) -> void:
+	_roll.finish()
+	_band.modulate.a = 1.0
+	for item: Node in _roll.get_children():
+		if item is Control:
+			_reveal(item as Control, 1.0)
+	_warm()
+	if title != null:
+		title.lend_wordmark(true)
+		title.set_walk(0.0 if LeadlightMotion.reduced() else FIRST_STEP)
+	_landed = true
+
+
+## C2: the roll fades from the frame Return is tapped, farthest from the lamp
+## line first, and is gone by 0.18 s; the band goes, the eye walks back and the
+## wordmark glides home to its seat.
+func leave_at(t: float, _wick: Vector2, _colour: Color) -> void:
+	_landed = false
+	if _leave_from == Vector2.INF:
+		_leave_from = Vector2(title.world.walk if title != null else 0.0, -float(_scroll.scroll_vertical))
+	var lamp: float = size.y * LAMP_LINE
+	for item: Node in _roll.get_children():
+		if item is Control and item != _roll.heading_node:
+			var far: float = clampf(absf((item as Control).get_global_rect().get_center().y - lamp)
+				/ (size.y * 0.5), 0.0, 1.0)
+			var from: float = 0.06 * (1.0 - far)
+			_reveal(item as Control, 1.0 - LeadlightMotion.ease_on((t - from) / 0.12,
+				LeadlightMotion.SETTLE_OUT), false)
+	_band.modulate.a = 1.0 - LeadlightMotion.ease_on(t / 0.40, LeadlightMotion.SETTLE_OUT)
+	if _licences.opened != null:
+		_licences.opened.modulate.a = _band.modulate.a
+	if title != null:
+		var home: float = LeadlightMotion.ease_on(t / departure_time(), LeadlightMotion.IN_OUT)
+		title.set_walk(lerpf(_leave_from.x, 0.0, home))
+		title.offset_wordmark(lerpf(_leave_from.y, 0.0,
+			LeadlightMotion.ease_on(t / departure_time(), LeadlightMotion.REVEAL)))
+		if t >= departure_time():
+			title_returns()
+
+
+## The title's road and wordmark as they were, whatever the leaving.
+func title_returns() -> void:
+	if title != null:
+		title.set_walk(0.0)
+		title.lend_wordmark(false)
+
+
+# ---------------------------------------------------------------- at rest
+
+func _process(delta: float) -> void:
+	_time += delta
+	if _roll.now_glyph != null and not LeadlightMotion.reduced():
+		var glow: float = 1.0 + 0.18 * LeadlightMotion.breath(_time, 2.8)
+		_roll.now_glyph.modulate = Color(glow, glow, glow, 1.0)
+	if not _landed:
 		return
-	var items: Dictionary = items_raw
-	var titles: Array[String] = []
-	for cue_raw: Variant in items.values():
-		if typeof(cue_raw) != TYPE_DICTIONARY:
-			continue
-		var cue: Dictionary = cue_raw
-		if cue.has("title"):
-			titles.append(str(cue["title"]))
-	if titles.is_empty():
-		_add_body(Locale.active.t("ui.credits.musicTracklistFallback"), GlassStyle.TEXT_DIM)
+	_drift(delta)
+	if title != null:
+		title.offset_wordmark(-float(_scroll.scroll_vertical))
+		if not LeadlightMotion.reduced():
+			var span: float = maxf(_roll.size.y - _scroll.size.y, 1.0)
+			var progress: float = clampf(float(_scroll.scroll_vertical) / span, 0.0, 1.0)
+			title.set_walk(lerpf(FIRST_STEP, TitleWorld.WALK_MAX, progress))
+	_warm()
+
+
+## Each line's warmth from the lamp line, and its fade at the view's edges.
+func _warm() -> void:
+	var edge: float = EDGE_FADE.y if LeadlightTokens.is_phone(shape) else EDGE_FADE.x
+	var view: Rect2 = _scroll.get_global_rect()
+	_roll.warm(size.y * LAMP_LINE, size.y * LAMP_REACH, view.position.y, view.end.y, edge)
+
+
+## The roll drifts on its own after a still moment, until the footer reaches
+## the lamp line; never under Reduce Motion or under an open licence glass.
+func _drift(delta: float) -> void:
+	_quiet += delta
+	if LeadlightMotion.reduced() or _licences.opened != null or _quiet < _wait:
 		return
-	for track_title: String in titles:
-		_add_body(track_title)
+	var footer_y: float = _roll.footer_node.get_global_rect().get_center().y
+	if footer_y <= size.y * LAMP_LINE:
+		return
+	_drift_y += (DRIFT.y if LeadlightTokens.is_phone(shape) else DRIFT.x) * delta
+	_scroll.scroll_vertical = int(_drift_y)
 
 
-func _add_sfx_rows(manifest: Variant) -> void:
-	var count: int = 0
-	var theme_line: String = Locale.active.t("ui.credits.themeLine")
-	if typeof(manifest) == TYPE_DICTIONARY:
-		var pack: Dictionary = manifest
-		var items_raw: Variant = pack.get("items", null)
-		if typeof(items_raw) == TYPE_DICTIONARY:
-			var items: Dictionary = items_raw
-			count = items.size()
-		var packed: String = str(pack.get("theme", "")).strip_edges()
-		if not packed.is_empty():
-			theme_line = packed
-	if count > 0:
-		_add_body(Locale.active.t("ui.credits.sfxAttributionCount", {"count": count}))
-	else:
-		_add_body(Locale.active.t("ui.credits.sfxAttribution"))
-	_add_body(theme_line, GlassStyle.TEXT_DIM)
+## Any touch, drag, wheel, key or pad press takes the roll over; the drift
+## waits DRIFT_RESUME seconds after the last.
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton or event is InputEventScreenTouch \
+			or event is InputEventScreenDrag or event is InputEventKey \
+			or event is InputEventJoypadButton \
+			or (event is InputEventMouseMotion and (event as InputEventMouseMotion).button_mask != 0):
+		_took_over()
 
 
-func _add_licence_fold() -> void:
-	var seat: MarginContainer = MarginContainer.new()
-	seat.add_theme_constant_override("margin_top", 8)
-	_column.add_child(seat)
-	var fold: VBoxContainer = VBoxContainer.new()
-	fold.add_theme_constant_override("separation", 8)
-	seat.add_child(fold)
-
-	_licence_toggle = Button.new()
-	_licence_toggle.text = Locale.active.t("ui.credits.engineLicences")
-	_licence_toggle.custom_minimum_size = Vector2(0, 36)
-	_licence_toggle.add_theme_font_override("font",
-		GlassStyle.face(GlassStyle.ALEGREYA_400))
-	_licence_toggle.add_theme_font_size_override("font_size", 15)
-	GlassStyle.style_button(_licence_toggle, GlassStyle.GLASS)
-	_licence_toggle.pressed.connect(_on_licence_toggle)
-	fold.add_child(_licence_toggle)
-
-	_licence_wrap = MarginContainer.new()
-	_licence_wrap.visible = false
-	fold.add_child(_licence_wrap)
+func _took_over() -> void:
+	_quiet = 0.0
+	_wait = DRIFT_RESUME
+	_drift_y = float(_scroll.scroll_vertical)
 
 
-func _add_font_licence_fold() -> void:
-	var seat: MarginContainer = MarginContainer.new()
-	seat.add_theme_constant_override("margin_top", 8)
-	_column.add_child(seat)
-	var fold: VBoxContainer = VBoxContainer.new()
-	fold.add_theme_constant_override("separation", 8)
-	seat.add_child(fold)
-
-	_font_licence_toggle = Button.new()
-	_font_licence_toggle.text = Locale.active.t("ui.credits.fontLicences")
-	_font_licence_toggle.custom_minimum_size = Vector2(0, 36)
-	_font_licence_toggle.add_theme_font_override("font",
-		GlassStyle.face(GlassStyle.ALEGREYA_400))
-	_font_licence_toggle.add_theme_font_size_override("font_size", 15)
-	GlassStyle.style_button(_font_licence_toggle, GlassStyle.GLASS)
-	_font_licence_toggle.pressed.connect(_on_font_licence_toggle)
-	fold.add_child(_font_licence_toggle)
-
-	_font_licence_wrap = MarginContainer.new()
-	_font_licence_wrap.visible = false
-	fold.add_child(_font_licence_wrap)
+## A focus change is the player's once the room has landed: the passage's own
+## focus on arrival is not a touch, so the first drift keeps its still moment.
+func _on_focus_changed(_focus: Control) -> void:
+	if _landed:
+		_took_over()
 
 
-func _on_licence_toggle() -> void:
-	_sfx.play(&"click")
-	if not _licence_built:
-		_build_licence()
-		_licence_built = true
-	_licence_wrap.visible = not _licence_wrap.visible
-	if _licence_wrap.visible:
-		_scroll.ensure_control_visible.call_deferred(_licence_wrap)
+func _ready() -> void:
+	get_viewport().gui_focus_changed.connect(_on_focus_changed)
 
 
-func _on_font_licence_toggle() -> void:
-	_sfx.play(&"click")
-	if not _font_licence_built:
-		_build_font_licences()
-		_font_licence_built = true
-	_font_licence_wrap.visible = not _font_licence_wrap.visible
-	if _font_licence_wrap.visible:
-		_scroll.ensure_control_visible.call_deferred(_font_licence_wrap)
+# ---------------------------------------------------------------- the licences
+
+## C3: the licence glass rises over the roll and takes the focus (its own
+## scroll, which a key or pad scrolls). One glass at a time, opened once.
+func _open_licence(which: StringName) -> void:
+	if _licences.opened != null:
+		return
+	if _sfx != null:
+		_sfx.play_owed(&"paneRise", &"click")
+	LeadlightFocus.give(_licences.open(which, shape, _scroll).scroll)
+
+
+## Close an open licence glass (the seat's Return, Escape, a tap off it).
+func close_licence() -> void:
+	var glass: CreditsLicences.Glass = _licences.close(_scroll)
+	if glass == null:
+		return
+	if _sfx != null:
+		_sfx.play_owed(&"roomClose", &"click")
+	LeadlightFocus.give(_roll.font_pane if glass == _licences.fonts else _roll.engine_pane)
+	_took_over()
+
+
+func open_licence() -> CreditsLicences.Glass:
+	return _licences.opened
+
+
+## The seat's Return and Escape close an open glass before the credits.
+func leave() -> void:
+	if _licences.opened != null:
+		close_licence()
+		return
+	super()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"ui_cancel") and _licences.opened != null:
+		get_viewport().set_input_as_handled()
+		close_licence()
+		return
+	super(event)
 
 
 func _build_licence() -> void:
-	# One scrollbar only: the outer panel carries the licence text — a well
-	# with its own scroll inside a scrolling panel is a wheel-capture trap.
-	_licence_wrap.add_theme_constant_override("margin_bottom", 8)
-	var fold: VBoxContainer = VBoxContainer.new()
-	fold.add_theme_constant_override("separation", 8)
-	fold.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_licence_wrap.add_child(fold)
-
-	var engine_text: RichTextLabel = _licence_body(Engine.get_license_text())
-	fold.add_child(engine_text)
-
-	fold.add_child(_fold_heading(Locale.active.t("ui.credits.components")))
-
-	var copyright_info: Array = Engine.get_copyright_info()
-	for entry_raw: Variant in copyright_info:
-		if typeof(entry_raw) != TYPE_DICTIONARY:
-			continue
-		var entry: Dictionary = entry_raw
-		var lines: PackedStringArray = PackedStringArray()
-		var parts_raw: Variant = entry.get("parts", [])
-		if typeof(parts_raw) == TYPE_ARRAY:
-			var parts: Array = parts_raw
-			for part_raw: Variant in parts:
-				if typeof(part_raw) != TYPE_DICTIONARY:
-					continue
-				var part: Dictionary = part_raw
-				var cr_raw: Variant = part.get("copyright", [])
-				var cr_bits: PackedStringArray = PackedStringArray()
-				if typeof(cr_raw) == TYPE_ARRAY:
-					var cr_list: Array = cr_raw
-					for cr_item: Variant in cr_list:
-						cr_bits.append(str(cr_item))
-				elif typeof(cr_raw) == TYPE_STRING:
-					var cr_str: String = str(cr_raw).strip_edges()
-					if not cr_str.is_empty():
-						cr_bits.append(cr_str)
-				if not cr_bits.is_empty():
-					lines.append("© " + "; ".join(cr_bits))
-				var lic_id: String = str(part.get("license", "")).strip_edges()
-				if not lic_id.is_empty():
-					lines.append(lic_id)
-		# Two-tier entry: the name a step brighter than its © lines, and the
-		# intra-entry gap tighter than the roll's separation, so ~100
-		# near-identical entries stay scannable.
-		var component: VBoxContainer = VBoxContainer.new()
-		component.add_theme_constant_override("separation", 2)
-		var name_line: Label = Label.new()
-		name_line.text = str(entry.get("name", ""))
-		name_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		name_line.add_theme_font_override("font", GlassStyle.face(GlassStyle.ALEGREYA_400))
-		name_line.add_theme_font_size_override("font_size", 12)
-		name_line.add_theme_color_override("font_color", GlassStyle.TEXT)
-		component.add_child(name_line)
-		if not lines.is_empty():
-			var part_lines: Label = Label.new()
-			part_lines.text = "\n".join(lines)
-			part_lines.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			part_lines.add_theme_font_override("font", GlassStyle.face(GlassStyle.ALEGREYA_400))
-			part_lines.add_theme_font_size_override("font_size", 11)
-			part_lines.add_theme_color_override("font_color", GlassStyle.TEXT_DIM)
-			component.add_child(part_lines)
-		fold.add_child(component)
-
-	fold.add_child(_fold_heading(Locale.active.t("ui.credits.licenceTexts")))
-
-	var licence_info: Dictionary = Engine.get_license_info()
-	for name_raw: Variant in licence_info.keys():
-		# Seated heading: the gap above each licence name must beat a blank
-		# line inside its body, or the strongest break reads weakest.
-		fold.add_child(_fold_heading(str(name_raw)))
-		var text_raw: Variant = licence_info[name_raw]
-		fold.add_child(_licence_body(str(text_raw), 11))
+	_licences.build(&"engine", shape)
 
 
 func _build_font_licences() -> void:
-	_font_licence_wrap.add_theme_constant_override("margin_bottom", 8)
-	var fold: VBoxContainer = VBoxContainer.new()
-	fold.add_theme_constant_override("separation", 8)
-	fold.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_font_licence_wrap.add_child(fold)
-
-	for entry: Dictionary in FONT_LICENCES:
-		var family: String = str(entry["family"])
-		var path: String = str(entry["path"])
-		fold.add_child(_fold_heading(family))
-		if not FileAccess.file_exists(path):
-			var missing: Label = Label.new()
-			missing.text = "licence file not found: %s" % family
-			missing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			missing.add_theme_font_override("font",
-				GlassStyle.face(GlassStyle.ALEGREYA_400))
-			missing.add_theme_font_size_override("font_size", 11)
-			missing.add_theme_color_override("font_color", GlassStyle.TEXT_DIM)
-			fold.add_child(missing)
-			continue
-		var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-		if file == null:
-			var missing_open: Label = Label.new()
-			missing_open.text = "licence file not found: %s" % family
-			missing_open.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			missing_open.add_theme_font_override("font",
-				GlassStyle.face(GlassStyle.ALEGREYA_400))
-			missing_open.add_theme_font_size_override("font_size", 11)
-			missing_open.add_theme_color_override("font_color", GlassStyle.TEXT_DIM)
-			fold.add_child(missing_open)
-			continue
-		fold.add_child(_licence_body(file.get_as_text(), 11))
-
-
-func _fold_heading(text: String) -> MarginContainer:
-	var seat: MarginContainer = MarginContainer.new()
-	seat.add_theme_constant_override("margin_top", 12)
-	var heading: Label = Label.new()
-	heading.text = text
-	heading.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_700, 1))
-	heading.add_theme_font_size_override("font_size", 13)
-	heading.add_theme_color_override("font_color", GlassStyle.GOLD)
-	seat.add_child(heading)
-	return seat
-
-
-func _licence_body(text: String, font_size: int = 12) -> RichTextLabel:
-	var body: RichTextLabel = RichTextLabel.new()
-	body.fit_content = true
-	body.scroll_active = false
-	body.selection_enabled = true
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.text = text
-	body.add_theme_font_override("normal_font", GlassStyle.face(GlassStyle.ALEGREYA_400))
-	body.add_theme_font_size_override("normal_font_size", font_size)
-	body.add_theme_color_override("default_color", GlassStyle.TEXT_DIM)
-	return body
-
-
-func _add_heading(text: String) -> void:
-	var seat: MarginContainer = MarginContainer.new()
-	seat.add_theme_constant_override("margin_top", 20)
-	_column.add_child(seat)
-	var heading: Label = Label.new()
-	heading.text = text
-	heading.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_700, 2))
-	heading.add_theme_font_size_override("font_size", 17)
-	heading.add_theme_color_override("font_color", GlassStyle.GOLD)
-	heading.add_theme_constant_override("line_spacing", 0)
-	seat.add_child(heading)
-
-
-## Pack-id dim line: wrap so the extra breath sits below the id (toward the
-## list), not between heading and id.
-func _add_pack_id(text: String) -> void:
-	var seat: MarginContainer = MarginContainer.new()
-	seat.add_theme_constant_override("margin_bottom", 8)
-	seat.add_child(_body_label(text, GlassStyle.TEXT_DIM))
-	_column.add_child(seat)
-
-
-func _add_body(text: String, colour: Color = GlassStyle.TEXT) -> void:
-	_column.add_child(_body_label(text, colour))
-
-
-func _body_label(text: String, colour: Color) -> Label:
-	var body: Label = Label.new()
-	body.text = text
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_theme_font_override("font", GlassStyle.face(GlassStyle.ALEGREYA_400))
-	body.add_theme_font_size_override("font_size", 16)
-	body.add_theme_color_override("font_color", colour)
-	return body
-
-
-func _on_scrim_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed:
-		closed.emit()
-
-
-## Scrim `gui_input` never receives keys; Escape / ui_cancel closes via the
-## unhandled path — `_unhandled_input` so gamepad ui_cancel reaches it too.
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed(&"ui_cancel"):
-		closed.emit()
-		get_viewport().set_input_as_handled()
+	_licences.build(&"fonts", shape)

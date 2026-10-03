@@ -1,0 +1,44 @@
+# §11.4 on the PR B code after its review (9b145866; no later commit touches a room at rest but the
+# licence glasses, not burst here): tools/capture_rooms.gd --burst=3, each room at rest, three frames 1 s
+# apart.
+# Gate: from each frame to the next at least 0.5% of the room's own pixels (its glass, or Credits' roll)
+# change by 3/255 or more on a channel; graded at full motion, recorded under Reduce Motion (where every
+# room rests still but the seated flame, outside the room's rect, as §2.7 asks). The frames are
+# burst-<room>-<shape>-<locale>-<n>.jpg beside this file.
+
+rooms still: burst-settings-pad-landscape-en-1.jpg
+rooms still: burst-settings-pad-landscape-en-2.jpg
+rooms still: burst-settings-pad-landscape-en-3.jpg
+idle gate PASS: the least change between frames 1 s apart is 18.94% of the room's pixels (floor 0.5%)
+rooms still: burst-help-pad-landscape-en-1.jpg
+rooms still: burst-help-pad-landscape-en-2.jpg
+rooms still: burst-help-pad-landscape-en-3.jpg
+idle gate PASS: the least change between frames 1 s apart is 15.17% of the room's pixels (floor 0.5%)
+rooms still: burst-credits-pad-landscape-en-1.jpg
+rooms still: burst-credits-pad-landscape-en-2.jpg
+rooms still: burst-credits-pad-landscape-en-3.jpg
+idle gate PASS: the least change between frames 1 s apart is 26.66% of the room's pixels (floor 0.5%)
+rooms still: burst-settings-phone-landscape-zh-Hant-1.jpg
+rooms still: burst-settings-phone-landscape-zh-Hant-2.jpg
+rooms still: burst-settings-phone-landscape-zh-Hant-3.jpg
+idle gate PASS: the least change between frames 1 s apart is 31.37% of the room's pixels (floor 0.5%)
+rooms still: burst-help-phone-landscape-zh-Hant-1.jpg
+rooms still: burst-help-phone-landscape-zh-Hant-2.jpg
+rooms still: burst-help-phone-landscape-zh-Hant-3.jpg
+idle gate PASS: the least change between frames 1 s apart is 34.98% of the room's pixels (floor 0.5%)
+rooms still: burst-credits-phone-landscape-zh-Hant-1.jpg
+rooms still: burst-credits-phone-landscape-zh-Hant-2.jpg
+rooms still: burst-credits-phone-landscape-zh-Hant-3.jpg
+idle gate PASS: the least change between frames 1 s apart is 16.24% of the room's pixels (floor 0.5%)
+rooms still: burst-rm-settings-pad-landscape-en-1.jpg
+rooms still: burst-rm-settings-pad-landscape-en-2.jpg
+rooms still: burst-rm-settings-pad-landscape-en-3.jpg
+idle gate FAIL: the least change between frames 1 s apart is 0.00% of the room's pixels (floor 0.5%) (reported under --rm)
+rooms still: burst-rm-help-pad-landscape-en-1.jpg
+rooms still: burst-rm-help-pad-landscape-en-2.jpg
+rooms still: burst-rm-help-pad-landscape-en-3.jpg
+idle gate FAIL: the least change between frames 1 s apart is 0.00% of the room's pixels (floor 0.5%) (reported under --rm)
+rooms still: burst-rm-credits-pad-landscape-en-1.jpg
+rooms still: burst-rm-credits-pad-landscape-en-2.jpg
+rooms still: burst-rm-credits-pad-landscape-en-3.jpg
+idle gate FAIL: the least change between frames 1 s apart is 0.00% of the room's pixels (floor 0.5%) (reported under --rm)

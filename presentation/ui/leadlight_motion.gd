@@ -24,6 +24,7 @@ const EXIT: Vector2i = Vector2i(Tween.TRANS_CUBIC, Tween.EASE_IN)
 const BREATH: Vector2i = Vector2i(Tween.TRANS_SINE, Tween.EASE_IN_OUT)
 const CATCH: Vector2i = Vector2i(Tween.TRANS_BACK, Tween.EASE_OUT)
 const SETTLE_OUT: Vector2i = Vector2i(Tween.TRANS_CUBIC, Tween.EASE_OUT)
+const IN_OUT: Vector2i = Vector2i(Tween.TRANS_CUBIC, Tween.EASE_IN_OUT)
 
 
 static func reduced() -> bool:
@@ -36,6 +37,21 @@ static func ease_on(t: float, curve: Vector2i) -> float:
 	var eased: float = Tween.interpolate_value(0.0, 1.0, clamped, 1.0,
 		curve.x as Tween.TransitionType, curve.y as Tween.EaseType)
 	return eased
+
+
+## The `t` (0..1) at which `curve` has eased to `eased` (0..1): `ease_on`'s
+## inverse, for a curve that only rises. Pure.
+static func inverse_on(eased: float, curve: Vector2i) -> float:
+	var target: float = clampf(eased, 0.0, 1.0)
+	var lo: float = 0.0
+	var hi: float = 1.0
+	for _i: int in range(24):
+		var mid: float = (lo + hi) * 0.5
+		if ease_on(mid, curve) < target:
+			lo = mid
+		else:
+			hi = mid
+	return hi
 
 
 ## Fade an element in, rising RISE px into its seat. Returns the tween, or null

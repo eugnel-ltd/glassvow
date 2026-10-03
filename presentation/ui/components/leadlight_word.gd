@@ -2,12 +2,25 @@ class_name LeadlightWord
 extends Button
 ## A quiet utility word: no box. Rest is dim; `near` (closest the flame) is a
 ## little brighter; hover and focus bring parchment and a gold hairline beneath
-## — the shared lantern ring in its unboxed form.
+## — the shared lantern ring in its unboxed form. A press shows the hairline at
+## once, as the rubric asks of every pressed state.
 
 var near: bool = false:
 	set(value):
 		near = value
 		_recolour()
+## The least height a tap takes, centred on the word (the rubric's 60 px at pad
+## and desktop): the word is drawn where it is and only its hit grows.
+var hit_height: float = 0.0
+## How long the word a room was left back to keeps its glow (§5.2, G2).
+const AFTERGLOW: float = 0.6
+var _glow_t: float = -1.0
+## 0..1: the glow of the word a room was left back to (the afterglow).
+var glow: float = 0.0:
+	set(value):
+		glow = value
+		var lift: float = 0.55 * glow
+		modulate = Color(1.0 + lift, 1.0 + lift * 0.8, 1.0 + lift * 0.4, modulate.a)
 
 
 class Hairline extends StyleBox:
@@ -37,8 +50,8 @@ func _init(label: String = "", stage_shape: StringName = StageShape.IDENTITY) ->
 	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
 	empty.content_margin_left = 10.0
 	empty.content_margin_right = 10.0
-	for state: String in ["normal", "pressed", "disabled"]:
-		add_theme_stylebox_override(state, empty)
+	add_theme_stylebox_override("disabled", empty)
+	add_theme_stylebox_override("normal", empty)
 	var hover: Hairline = Hairline.new()
 	hover.strength = 0.55
 	hover.content_margin_left = 10.0
@@ -46,7 +59,56 @@ func _init(label: String = "", stage_shape: StringName = StageShape.IDENTITY) ->
 	add_theme_stylebox_override("hover", hover)
 	var focus: Hairline = Hairline.new()
 	add_theme_stylebox_override("focus", focus)
+	# Pressed: the full hairline under the gold word, from the frame it is down.
+	var down: Hairline = Hairline.new()
+	down.content_margin_left = 10.0
+	down.content_margin_right = 10.0
+	add_theme_stylebox_override("pressed", down)
+	add_theme_stylebox_override("hover_pressed", down)
 	_recolour()
+
+
+func _ready() -> void:
+	set_process(false)
+
+
+## "You came from here": a glow that fades over AFTERGLOW, SINE/OUT. A glow,
+## never the hairline. None under Reduce Motion.
+func afterglow() -> void:
+	if LeadlightMotion.reduced():
+		return
+	_glow_t = 0.0
+	glow = 1.0
+	set_process(true)
+
+
+## Put the glow out at once.
+func quench() -> void:
+	_glow_t = -1.0
+	glow = 0.0
+	set_process(false)
+
+
+func _process(delta: float) -> void:
+	if _glow_t < 0.0:
+		set_process(false)
+		return
+	_glow_t += delta
+	var u: float = _glow_t / AFTERGLOW
+	if u >= 1.0:
+		quench()
+	else:
+		glow = 1.0 - LeadlightMotion.ease_on(u, Vector2i(Tween.TRANS_SINE, Tween.EASE_OUT))
+
+
+## The word's tap, in its own coordinates: its rect, grown to `hit_height`.
+func hit_rect() -> Rect2:
+	var tall: float = maxf(size.y, hit_height)
+	return Rect2(Vector2(0.0, (size.y - tall) * 0.5), Vector2(size.x, tall))
+
+
+func _has_point(point: Vector2) -> bool:
+	return hit_rect().has_point(point)
 
 
 func _recolour() -> void:

@@ -74,6 +74,23 @@ var _refocus_after_thaw: BaseButton = null
 var _refocus_shown: bool = false
 ## Whether the current `_modal` froze the world — the run-menu drawer does not.
 var _modal_froze: bool = false
+## The lantern's passage into every room and back (LeadlightPassage), made with
+## the first title (`_passage_node`): it must see the tap that opens a room.
+var _passage: LeadlightPassage = null
+## The title word the room now opening was tapped from (its route id).
+var _room_word: String = ""
+## The rooms' first opening in a launch, paid for ahead while the title rests
+## (RoomWarm), and the languages and shapes already paid for.
+var _room_warm: RoomWarm = null
+var _rooms_warmed: Dictionary = {}
+## Set while Settings' language toggle rebuilds the route under the room: the
+## old room lingers, the title is not faded in, the new room lands built.
+var _relanguage: bool = false
+## Set while Settings gives way to its Erase question: it sinks, and the lantern
+## stays at the seat for the answer.
+var _sinking: bool = false
+## Set while a room is opened already arrived (Settings at boot, `--settings`).
+var _land_rooms: bool = false
 ## Above RunHud's z 100 (run_hud.gd:37): the veil must outdraw the chrome it
 ## subdues, or a frozen HUD is the brightest thing on a veiled screen.
 const MODAL_Z: int = 200
@@ -590,7 +607,10 @@ func _ready() -> void:
 	else:
 		_route_idle()
 	if show_settings:
+		# Opened at boot it lands whole, with no passage (§4.5).
+		_land_rooms = true
 		_show_settings()
+		_land_rooms = false
 	if launch_timing:
 		_report_launch()
 	if performance_probe:
@@ -698,6 +718,8 @@ func _reshape() -> void:
 	]:
 		if screen != null and screen.has_method(&"set_shape"):
 			screen.call(&"set_shape", _shape)
+	if _passage != null:
+		_passage.shape = _shape
 
 
 ## The physical screen diagonal in inches, or 0 when it cannot be measured —
@@ -935,6 +957,9 @@ func _clear_route() -> void:
 	if _hints != null:
 		_hints.hide_callout()
 	_cross_fade()
+	# Whatever the passage still carries lands and goes with the route.
+	if _passage != null:
+		_passage.clear()
 	for screen: Control in [
 		_screen, _choice_screen, _reward_screen, _route_screen, _run_hud, _modal,
 	]:
@@ -964,10 +989,45 @@ func _clear_route() -> void:
 ## Under Reduce Motion every change of what is on screen (a route, a room or
 ## a confirm opening or closing) is a 150 ms cross-fade from the frame before
 ## it (TransitionLayer.cross_fade, docs/design/2026-10-03-title-rooms §2.7),
-## never a cut; called before the change. Full motion is as shipped.
-func _cross_fade() -> void:
-	if _transitions != null:
-		_transitions.cross_fade()
+## never a cut; called before the change. Full motion is as shipped. True when
+## the frame before is on screen fading out.
+func _cross_fade() -> bool:
+	return _transitions != null and _transitions.cross_fade()
+
+
+## The passage, made once and kept current: the stage's shape, the sound bus,
+## and whether it lands at once (captures and the headless suite; a suite that
+## steps it by hand says so).
+func _passage_node() -> LeadlightPassage:
+	if _passage == null or not is_instance_valid(_passage):
+		_passage = LeadlightPassage.new(_sfx_bus)
+		add_child(_passage)
+	_passage.sfx = _sfx_bus
+	_passage.shape = _shape
+	_passage.instant = _transitions == null or _transitions.instant \
+		or (DisplayServer.get_name() == "headless" and not _passage.stepped)
+	return _passage
+
+
+## A modal leaves: a room through the passage (its departure, its sinking
+## under the Erase question, or its lingering over a language reopen), a
+## yes-or-stay sheet by its own exit, the run menu folding as a room opens over
+## it (`fold`, X1: it answers at once), anything else at once.
+func _release_modal(node: Control, faded: bool, fold: bool = false) -> void:
+	if node is LeadlightRoomHost:
+		var room: LeadlightRoomHost = node
+		if _relanguage:
+			_passage_node().linger(room)
+		elif _sinking:
+			_passage_node().sink(room, faded)
+		else:
+			_passage_node().depart(room, faded)
+	elif node is LeadlightConfirm:
+		_passage_node().dismiss(node, faded)
+	elif fold:
+		_passage_node().dismiss(node, faded, LeadlightMotion.SETTLE_OUT)
+	else:
+		node.queue_free()
 
 
 func _freeze_under_modal() -> void:
@@ -1079,11 +1139,11 @@ func _attach_run_hud() -> void:
 ## Under Reduce Motion a room never lands or leaves in one frame: it
 ## cross-fades with the screen it opens over (`_cross_fade`).
 func _show_overlay(screen: Control, freeze: bool = true) -> void:
-	_cross_fade()
+	var faded: bool = _cross_fade()
 	if _modal != null:
 		if _modal_froze:
 			_thaw_under_modal()
-		_modal.queue_free()
+		_release_modal(_modal, faded)
 	_modal = screen
 	screen.z_index = MODAL_Z
 	add_child(screen)
@@ -1093,19 +1153,29 @@ func _show_overlay(screen: Control, freeze: bool = true) -> void:
 	# RunHud's Escape rung must not fire under an overlay — the modal owns cancel.
 	if _run_hud != null:
 		_run_hud.set_process_unhandled_key_input(false)
+	# A room is carried in by the lantern: the title's, when it is the title
+	# the room opens over (docs/design/2026-10-03-title-rooms §2).
+	if screen is LeadlightRoomHost:
+		var title: TitleScreen = _choice_screen as TitleScreen
+		_passage_node().arrive(screen as LeadlightRoomHost, title, _room_word, faded,
+			_relanguage or _land_rooms)
+	_room_word = ""
 
 
-func _close_overlay() -> void:
+## `fold`: a room opens over the modal next (the run menu's How to Play and
+## Settings), so it folds away under the room's arrival instead of vanishing.
+func _close_overlay(fold: bool = false) -> void:
 	if _modal == null:
 		return
-	_cross_fade()
-	_modal.queue_free()
+	var faded: bool = _cross_fade()
+	var leaving: Control = _modal
 	_modal = null
 	if _modal_froze:
 		_thaw_under_modal()
 	_modal_froze = false
 	if _run_hud != null:
 		_run_hud.set_process_unhandled_key_input(true)
+	_release_modal(leaving, faded, fold)
 
 
 ## Every yes-or-stay question — Begin Anew, Leave the Road, Abandon Run, Erase
@@ -1202,25 +1272,88 @@ func _show_title() -> void:
 	screen.chosen.connect(_on_title_pick.bind(screen, saved))
 	screen.language_chosen.connect(_on_first_language)
 	screen.hurry.connect(_transitions.skip)
+	# The road persists across a rebuild (§7 item 12): the new title continues
+	# the world it replaces, the title's or the departure's.
+	var road: TitleWorld = _standing_road()
 	if game != null and game.run != null:
 		_transitions.wipe()
 	_clear_route()
 	_choice_screen = screen
 	add_child(screen)
+	screen.world.inherit(road)
+	# Made with the title, before any tap: it reads the tap that opens a room.
+	_passage_node()
 	_transitions.set_grain(true)
-	if not rite:
+	# Under a language reopen the old room stands over the rebuilt title.
+	if not rite and not _relanguage:
 		_transitions.screen_in(screen)
 	_music.play(&"title")
 	_title_kindled = true
 	_title_rite_resume = false
 	_title_road = saved
 	_title_road_due = true
+	_warm_rooms()
+
+
+## While the title rests, its rooms' first-opening work is done ahead (once a
+## launch for each language and shape), so the first tap on a room word costs
+## no more than the next (§11.6). Never in the headless suite.
+func _warm_rooms() -> void:
+	var key: String = "%s|%s" % [Locale.active.code, _shape]
+	if DisplayServer.get_name() == "headless" or _rooms_warmed.has(key) \
+			or (_room_warm != null and is_instance_valid(_room_warm)):
+		return
+	_rooms_warmed[key] = true
+	var shape: StringName = _shape
+	var builders: Array[Callable] = [
+		func() -> Control:
+			# Its own throwaway preferences: nothing is read from or written to disk.
+			var preferences: Preferences = Preferences.new()
+			preferences.language = Preferences.active.language
+			preferences.diagnostics_notice_seen = true
+			var settings: SettingsPanel = SettingsPanel.new(preferences, false, _sfx_bus)
+			settings.set_shape(shape)
+			settings.measure()
+			return settings,
+		func() -> Control:
+			var help: HelpScreen = HelpScreen.new(shape, _sfx_bus, FlameLines.codex(content, _vigil, _load_run()))
+			for id: StringName in HelpScreen.SECTION_IDS:
+				help.room().select(id)
+			return help,
+		func() -> Control:
+			var credits: CreditsScreen = CreditsScreen.new(shape, _sfx_bus, _vigil.scenes_seen.has("unsealing"))
+			credits.roll().finish()
+			return credits,
+	]
+	_room_warm = RoomWarm.new(builders, _title_rests)
+	add_child(_room_warm)
+
+
+## The title on screen with nothing over it or moving: no room, no passage,
+## no rite.
+func _title_rests() -> bool:
+	var title: TitleScreen = _choice_screen as TitleScreen
+	return title != null and _modal == null and _route_screen == null \
+		and (title.rite == null or title.rite.is_done()) \
+		and (_passage == null or not (_passage.arriving() or _passage.leaving()))
+
+
+## The road on screen now, if the screen stands on the title's road.
+func _standing_road() -> TitleWorld:
+	if _choice_screen is TitleScreen:
+		return (_choice_screen as TitleScreen).world
+	if _route_screen is DepartureScreen:
+		return (_route_screen as DepartureScreen).world
+	return null
 
 
 ## The lantern's routes leave in its own light (opening-start §7 T6, T7): the
 ## flame flares, the light floods out from the wick in the flame's colour, and
 ## the route is built under the cover. Every other route goes at once.
 func _on_title_pick(id: String, screen: TitleScreen, saved: RunState) -> void:
+	# A room's word: the passage carries the lantern to the room from it.
+	if TitleScreen.ROOM_IDS.has(id):
+		_room_word = id
 	if (id == "continue" or id == "begin") and is_instance_valid(screen):
 		screen.leave()
 		var wick: Vector2 = screen.wick_on_stage()
@@ -1405,7 +1538,10 @@ func _show_help() -> void:
 
 
 func _show_credits() -> void:
-	var screen: CreditsScreen = CreditsScreen.new(_shape, _sfx_bus)
+	# The Act IV titles are carved dots until the unsealing; the track playing
+	# carries a flame.
+	var screen: CreditsScreen = CreditsScreen.new(_shape, _sfx_bus,
+		_vigil.scenes_seen.has("unsealing"), _music.current_cue)
 	screen.closed.connect(_close_overlay)
 	_show_overlay(screen)
 
@@ -1448,19 +1584,29 @@ func _on_language_changed(code: StringName, reopen_settings: bool = true) -> voi
 	_content_hydration_pending = code != Locale.active.code
 	if not _content_hydration_pending:
 		_pending_language = &""
+	# The reopen (S8): the old room lingers frozen over the rebuild and fades,
+	# the new one is built already arrived, with no second room sound.
+	_relanguage = reopen_settings and _modal is SettingsPanel
 	_close_overlay()
 	if _screen != null:
 		if reopen_settings:
 			_show_settings(true)
+		_relanguage = false
 		return
 	_apply_pending_content_hydration()
 	_rebuild_active_route()
 	if reopen_settings:
+		if _choice_screen is TitleScreen:
+			_room_word = "settings"
 		_show_settings(true)
+	_relanguage = false
 
 
 func _confirm_reset() -> void:
+	# Settings sinks under the question (S5); the lantern stays at the seat.
+	_sinking = true
 	_close_overlay()
+	_sinking = false
 	_confirm(Locale.active.t("ui.settings.eraseAllTitle"),
 		Locale.active.t("ui.settings.resetConfirmPlain"),
 		{"id": "yes", "label": Locale.active.t("ui.settings.eraseEverything")},
@@ -1470,14 +1616,28 @@ func _confirm_reset() -> void:
 
 func _on_reset_choice(id: String) -> void:
 	if id != "yes":
+		# Cancel (S6): back to the title, the lantern carried home from the seat.
+		var faded: bool = _cross_fade()
 		_close_overlay()
+		if _passage != null:
+			_passage.return_title(faded)
 		return
-	_clear_run()
-	_clear_vigil()
-	game = null
-	_map = null
-	_vigil = _load_vigil()
-	_show_title()
+	var erase: Callable = func() -> void:
+		_clear_run()
+		_clear_vigil()
+		game = null
+		_map = null
+		_vigil = _load_vigil()
+		_show_title()
+	# Erase Everything (S7): the light goes out from the seated lantern's wick,
+	# and the fresh title is built under the dark.
+	var title: TitleScreen = _passage.lent_title() if _passage != null else null
+	if title == null or not title.is_inside_tree():
+		erase.call()
+		return
+	title.leave()
+	_passage.release_title()
+	_transitions.flood(title.wick_on_stage(), LeadlightTokens.VOID, erase)
 
 
 func _show_save_error(detail_key: String) -> void:
@@ -1960,11 +2120,11 @@ func _show_run_menu() -> void:
 	var menu: RunMenuPanel = RunMenuPanel.new(_shape, _run_over, _sfx_bus)
 	menu.closed.connect(_close_overlay)
 	menu.help_requested.connect(func() -> void:
-		_close_overlay()
+		_close_overlay(true)
 		_show_help()
 	)
 	menu.settings_requested.connect(func() -> void:
-		_close_overlay()
+		_close_overlay(true)
 		_show_settings()
 	)
 	menu.dev_requested.connect(func() -> void:

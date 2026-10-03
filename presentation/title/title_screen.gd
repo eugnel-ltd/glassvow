@@ -28,6 +28,8 @@ const LEFT_IDS: Array[String] = ["begin", "vigil", "help"]
 ## How far the lantern's reach runs past the plaque's words (x each side, y above).
 const REACH_PAD: Vector2 = Vector2(18.0, 10.0)
 const RIGHT_IDS: Array[String] = ["settings", "credits", "quit"]
+## The rooms a word opens over the title: the passage plays their sound.
+const ROOM_IDS: Array[String] = ["help", "settings", "credits"]
 
 
 ## Layout in reference units for a shape class: x is an offset from the stage
@@ -124,6 +126,16 @@ var _leaving: bool = false
 var _idle: float = 0.0
 ## Frame 0's cover while the landed title under it builds the rite's pipelines.
 var _warm: Control = null
+## Lent to a room (docs/design/2026-10-03-title-rooms §2.2): the lantern is at
+## the room's seat and the title takes no input of its own.
+var _lent: bool = false
+## Where the passage holds the lantern instead of its home; empty at home.
+var _lantern_at: Rect2 = Rect2()
+## The painting over the road, and the wordmark's seat and how far a room's
+## roll has carried it (Credits leads its roll with the title's own wordmark).
+var _painting: Control = null
+var _wordmark_home: Vector2 = Vector2.ZERO
+var _wordmark_dy: float = 0.0
 
 
 ## `context`: shape, choices (id/label rows, Main's route ids), sub (where a
@@ -181,7 +193,106 @@ func plaque_text() -> String:
 func set_shape(stage_shape: StringName) -> void:
 	if StageShape.REFERENCES.has(stage_shape):
 		shape = stage_shape
+		_size_hits()
 		_layout()
+
+
+# ------------------------------------------------------------- lent to a room
+
+## A room opens over the title (§2.2): the lantern goes to the room's seat (the
+## passage carries it), draws over the room and leaves its taps to the seat;
+## the idle ember is held; the title takes none of its own input.
+func lend() -> void:
+	_lent = true
+	_beckon.hold()
+	lantern.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lantern.z_index = 205
+
+
+func lent() -> bool:
+	return _lent
+
+
+## The room is leaving: the title takes input again from the next frame while
+## the lantern is carried home.
+func begin_return() -> void:
+	_lent = false
+
+
+## The lantern home and the title whole, its ember re-armed.
+func reclaim() -> void:
+	_lent = false
+	_lantern_at = Rect2()
+	lantern.settle()
+	lantern.z_index = 0
+	lantern.mouse_filter = Control.MOUSE_FILTER_STOP
+	_layout()
+	_beckon.arm()
+
+
+## Hold the lantern at `rect` (title px) instead of its home.
+func place_lantern(rect: Rect2) -> void:
+	_lantern_at = rect
+	if lantern.position != rect.position:
+		lantern.position = rect.position
+	if lantern.size != rect.size:
+		lantern.size = rect.size
+
+
+## Credits' road onward (§4.3): the eye walks `metres` on down the road and
+## the painting and its lamps scale about the door's rose, only ever growing,
+## so no edge of the painting can show.
+func set_walk(metres: float) -> void:
+	world.walk = metres
+	var grow: float = 1.0 + world.walk * 0.012
+	var about: Vector2 = rose.position + rose.size * 0.5
+	for layer: Control in [_painting, _chain]:
+		if layer != null:
+			layer.pivot_offset = about
+			layer.scale = Vector2(grow, grow)
+
+
+## The wordmark lent to a room's roll: drawn over the room, `dy` from its seat.
+func lend_wordmark(lent_to_room: bool) -> void:
+	_wordmark.z_index = 201 if lent_to_room else 0
+	if not lent_to_room:
+		offset_wordmark(0.0)
+
+
+func offset_wordmark(dy: float) -> void:
+	_wordmark_dy = dy
+	_wordmark.position = _wordmark_home + Vector2(0.0, dy)
+
+
+func wordmark() -> Control:
+	return _wordmark
+
+
+## The lantern's home square on this stage (the layout's).
+func home_rect() -> Rect2:
+	var spec: Layout = Layout.for_shape(shape)
+	var k: float = size.y / spec.ref_h if size.y > 0.0 else 1.0
+	var side: float = spec.lantern * k
+	return Rect2(Vector2(size.x * 0.5 - side * 0.5, spec.lantern_y * k), Vector2(side, side))
+
+
+## The title word for route `id`, or null.
+func word(id: String) -> Control:
+	return _words.get(id, null)
+
+
+## What goes from the road while a room is open: the plaque, the Rekindle pane,
+## the words (but `except`, which becomes the room's crown), the carved deeds,
+## the consent line and the build number; with `wordmark`, the wordmark too (a
+## room that stands over it).
+func furniture(except: Control = null, wordmark: bool = false) -> Array:
+	var items: Array = []
+	for item: Variant in _light_words():
+		if item != except and item is CanvasItem:
+			items.append(item)
+	if wordmark:
+		items.append(_wordmark)
+	return items
 
 
 ## The road at dusk the title stands on — the living world, the painting
@@ -214,6 +325,7 @@ static func add_road(host: Control) -> TitleWorld:
 
 func _build() -> void:
 	world = add_road(self)
+	_painting = find_child("Painting", false, false) as Control
 	_chain = TitleLampChain.new()
 	add_child(_chain)
 	rose = LeadlightRose.new(context_array("shards"))
@@ -292,14 +404,35 @@ func _build_words() -> void:
 	if _primary_id == "continue" and _offers.has("begin"):
 		_secondary = LeadlightPane.new(label_of("begin"), shape)
 		_secondary.pressed.connect(_choose.bind("begin"))
+		_secondary.button_down.connect(_pressed_now.bind(_secondary))
 		add_child(_secondary)
 	for id: String in LEFT_IDS + RIGHT_IDS + ["dev"]:
 		if id == "begin" or not _offers.has(id):
 			continue
 		var word: LeadlightWord = LeadlightWord.new(label_of(id), shape)
 		word.pressed.connect(_choose.bind(id))
+		word.button_down.connect(_pressed_now.bind(word))
 		_words[id] = word
 		add_child(word)
+	_size_hits()
+
+
+## The rubric's pressed state, on the frame the finger is down: the dip.
+func _pressed_now(control: Control) -> void:
+	if not _leaving and not _lent:
+		LeadlightMotion.press(control)
+
+
+## The quiet words and the Rekindle pane take a tap 60 px tall at pad and on
+## desktop (the rubric's floor), and 44 on a phone (the touch floor; the pane's
+## glass is drawn 34 there), where they are drawn.
+func _size_hits() -> void:
+	var tall: float = LeadlightTokens.room_hit(shape)
+	for word_v: Variant in _words.values():
+		var word: LeadlightWord = word_v
+		word.hit_height = tall
+	if _secondary != null:
+		_secondary.hit_height = tall
 
 
 func _build_history() -> void:
@@ -544,7 +677,7 @@ func _input(event: InputEvent) -> void:
 ## it hidden — and acts on nothing; the next one acts. A bare modifier (a
 ## screenshot shortcut) is not a key here. True when this press was that first.
 func _reveals_focus(event: InputEvent) -> bool:
-	if not _is_key_press(event) or _leaving or not is_visible_in_tree() \
+	if not _is_key_press(event) or _leaving or _lent or not is_visible_in_tree() \
 			or lantern.focus_mode == Control.FOCUS_NONE:
 		return false
 	if rite != null and rite.is_running() and not rite.held():
@@ -571,6 +704,9 @@ static func _is_key_press(event: InputEvent) -> bool:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Lent to a room: Main bars only the key variant, which this never was.
+	if _lent:
+		return
 	if _is_key_press(event) and rite != null and rite.is_running() and not rite.held():
 		rite.skip()
 		get_viewport().set_input_as_handled()
@@ -619,7 +755,8 @@ func _choose(id: String, click: bool = true) -> void:
 	if rite != null and rite.is_running():
 		rite.skip()
 		return
-	if click:
+	# One cue per tap (§2.9): a room's word is heard as the room opening.
+	if click and not ROOM_IDS.has(id):
 		_sfx.play(&"relic" if id == "rose" else &"click")
 	chosen.emit(id)
 
@@ -649,11 +786,16 @@ func _layout() -> void:
 	var cx: float = size.x * 0.5
 	var word_w: float = spec.word_w * k
 	var mark_h: float = word_w * 399.0 / 1536.0 if _wordmark is TextureRect else 60.0 * k
-	_wordmark.position = Vector2(cx - word_w * 0.5, spec.word_y * k)
+	_wordmark_home = Vector2(cx - word_w * 0.5, spec.word_y * k)
+	_wordmark.position = _wordmark_home + Vector2(0.0, _wordmark_dy)
 	_wordmark.size = Vector2(word_w, mark_h)
 	var side: float = spec.lantern * k
-	lantern.position = Vector2(cx - side * 0.5, spec.lantern_y * k)
-	lantern.size = Vector2(side, side)
+	var home: Rect2 = home_rect()
+	if _lantern_at.has_area():
+		place_lantern(_lantern_at)
+	else:
+		lantern.position = home.position
+		lantern.size = home.size
 	if not LeadlightTokens.is_phone(shape):
 		# The flame colours the road under the lantern, and breathes on it.
 		lantern.set_pool(Vector2(2.1, 1.05), 0.22, 0.8, 0.09)
@@ -661,14 +803,14 @@ func _layout() -> void:
 	_plaque.size = _plaque.get_combined_minimum_size()
 	# The plaque stands on the lantern's ring, never over it: a taller plaque
 	# (its sub-line at the rubric's 18 px) rises rather than reaching the chain.
-	var ring_top: float = lantern.position.y + side * LeadlightLantern.RING_TOP_UV
+	var ring_top: float = home.position.y + side * LeadlightLantern.RING_TOP_UV
 	_plaque.position = Vector2(cx - _plaque.size.x * 0.5,
 		minf(spec.plaque_y * k, ring_top - _plaque.size.y))
 	_reach.position = _plaque.position - Vector2(REACH_PAD.x, REACH_PAD.y)
-	var reach_bottom: float = maxf(_plaque.position.y + _plaque.size.y + REACH_PAD.y, lantern.position.y)
+	var reach_bottom: float = maxf(_plaque.position.y + _plaque.size.y + REACH_PAD.y, home.position.y)
 	_reach.size = Vector2(_plaque.size.x + REACH_PAD.x * 2.0,
 		maxf(reach_bottom - _reach.position.y, 44.0))
-	_veil.centre = lantern.position + lantern.wick()
+	_veil.centre = home.position + home.size * LeadlightLantern.WICK_UV
 	var rose_at: Vector2 = TitleLampChain.to_stage(Vector2(ROSE_ART.x, ROSE_ART.y), size)
 	# The rose is drawn larger than the painted one it covers, so the shards
 	# read as the end game's mirror.

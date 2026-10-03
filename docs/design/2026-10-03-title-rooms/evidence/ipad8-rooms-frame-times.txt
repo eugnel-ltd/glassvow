@@ -1,0 +1,173 @@
+# §11.6, iPad 8 (A12, iPad11,6, iPadOS 26.1; the stage 1180x885 drawn into 2160x1620 at 60 Hz). The QA
+# app (io.fol2.glassvow.qa, never the production bundle) built from the PR B head named on each block,
+# with the QA-only bench patch applied for the export and reverted at once (evidence/pr-b-qa_rooms_patch.py.txt:
+# it attaches tools/bench_rooms.gd's Bench node to Main when launched with --rooms-bench, and writes which
+# licence files the pack holds). The batch (evidence/pr-b-device_batch.sh.txt) holds the shared iPad's
+# lock from install to the last launch, checks before each launch that the installed QA app is the one it
+# built, launches it with --rooms-bench --qa-nonce=<label>-<epoch> --locale=<code>, and keeps a launch's
+# rows only when they carry that nonce and the label ipad8-<head>; the device is found by model at run time.
+#
+# A saved run's title, 30 s at rest (from PR B's review on, once the rooms' warm is done); then each room's
+# word tapped through the engine's own input path (a touch parsed in screen pixels), the room held (30 s
+# at rest on its first opening, 3 s after) and its Return tapped: 10 laps a room. "First opening" is the
+# room's first opening in that launch: every launch is a new process, so every launch pays it, not only
+# the first after an install (the rows before the review called it "the first since install"; that was
+# wrong). Each block says which launch on its install it was: only the first launch after an install also
+# compiles pipelines for the first time, the cost §11.6 exempts.
+# "tap->first moved": from the release to the draw of the tap frame, which already moves (the passage takes
+# its first step in that frame's process step). The bench parses the release in a frame's process step, so
+# it waits out the rest of that frame (about 16 ms here, the present wait being inside the draw): the
+# worst case for a finger. "tap frame": the wall interval of the frame the room is built on. "passage":
+# every frame after the tap frame inside the passage's own span (520 or 600 ms arriving, 400 or 480
+# leaving; before the review the bench also counted 0.2 s of the room at rest after each, and those rows
+# are re-read here inside the span). On iOS a frame's work includes the present wait, so the wall interval
+# is the number. The title at rest is itself about 18 ms at P95 (vsync jitter): §11.6's 16.7 ms passage P95
+# is not met by any passage, nor by the title at rest (§14, open for the owner).
+
+## After the review: c041b68e (QA build from worktree head c041b68e; rows labelled ipad8-c041b68e)
+== en-1.jsonl  nonce en-1-1791061572  label ipad8-c041b68e-en  (the first launch after this install)
+   title at rest: 1803 frames; wall P95 18.04 ms; the rooms' warm done before it: True
+   settings first opening tap->first moved 53.0/53.0/53.0 ms; tap frame 38.4/38.4/38.4 ms (min/median/max)
+                          passage (inside its span) wall P95 19.87 max 32.48 (n 53), over 33 ms: 0; at rest wall P95 17.27 (n 1803)
+   settings laps 2-10     tap->first moved 36.9/38.3/41.1 ms; tap frame 21.8/22.6/24.4 ms (min/median/max)
+                          passage (inside its span) wall P95 17.40 max 22.93 (n 491), over 33 ms: 0
+   help     first opening tap->first moved 45.8/45.8/45.8 ms; tap frame 29.7/29.7/29.7 ms (min/median/max)
+                          passage (inside its span) wall P95 17.67 max 21.03 (n 54), over 33 ms: 0; at rest wall P95 17.45 (n 1803)
+   help     laps 2-10     tap->first moved 35.6/37.7/42.0 ms; tap frame 21.1/21.9/24.5 ms (min/median/max)
+                          passage (inside its span) wall P95 17.57 max 23.10 (n 493), over 33 ms: 0
+   credits  first opening tap->first moved 44.5/44.5/44.5 ms; tap frame 28.2/28.2/28.2 ms (min/median/max)
+                          passage (inside its span) wall P95 18.02 max 22.60 (n 63), over 33 ms: 0; at rest wall P95 17.73 (n 1803)
+   credits  laps 2-10     tap->first moved 36.0/36.4/38.2 ms; tap frame 19.8/20.1/20.5 ms (min/median/max)
+                          passage (inside its span) wall P95 17.44 max 22.53 (n 576), over 33 ms: 0
+   zh-Hant: not measured. The launch after en-1 ran, but from 22:15 every file copy from the QA
+   container hung (devicectl copy and info files time out while app listing, launch and screenshots
+   answer), so its rows could not be fetched; the 03cf374a block below has zh-Hant on the same passage code.
+   licence files in the pack:
+     {"nonce":"en-1-1791061572","ofl_cinzel":true,"ofl_noto":true,"sentry_licence":true,"sentry_sdk":true}
+
+## The review's fixes before Settings was fitted ahead: 03cf374a (QA build from worktree head 03cf374a; rows labelled ipad8-03cf374a)
+== en-1.jsonl  nonce en-1-1791060854  label ipad8-03cf374a-en  (the first launch after this install)
+   title at rest: 1803 frames; wall P95 17.99 ms; the rooms' warm done before it: True
+   settings first opening tap->first moved 49.7/49.7/49.7 ms; tap frame 34.6/34.6/34.6 ms (min/median/max)
+                          passage (inside its span) wall P95 19.37 max 20.64 (n 55), over 33 ms: 0; at rest wall P95 17.97 (n 1803)
+   settings laps 2-10     tap->first moved 36.5/40.9/44.6 ms; tap frame 22.1/24.2/28.1 ms (min/median/max)
+                          passage (inside its span) wall P95 17.33 max 58.19 (n 488), over 33 ms: 1
+   help     first opening tap->first moved 42.3/42.3/42.3 ms; tap frame 26.2/26.2/26.2 ms (min/median/max)
+                          passage (inside its span) wall P95 20.03 max 21.16 (n 53), over 33 ms: 0; at rest wall P95 17.69 (n 1803)
+   help     laps 2-10     tap->first moved 35.7/37.8/38.4 ms; tap frame 21.3/21.7/22.4 ms (min/median/max)
+                          passage (inside its span) wall P95 17.45 max 23.27 (n 491), over 33 ms: 0
+   credits  first opening tap->first moved 40.7/40.7/40.7 ms; tap frame 24.2/24.2/24.2 ms (min/median/max)
+                          passage (inside its span) wall P95 18.04 max 21.63 (n 63), over 33 ms: 0; at rest wall P95 17.64 (n 1803)
+   credits  laps 2-10     tap->first moved 35.7/36.3/36.5 ms; tap frame 19.9/20.2/20.3 ms (min/median/max)
+                          passage (inside its span) wall P95 17.46 max 22.56 (n 576), over 33 ms: 0
+== zh-1.jsonl  nonce zh-1-1791061135  label ipad8-03cf374a-zh-Hant  (the second launch on this install)
+   title at rest: 1801 frames; wall P95 18.04 ms; the rooms' warm done before it: True
+   settings first opening tap->first moved 49.3/49.3/49.3 ms; tap frame 33.5/33.5/33.5 ms (min/median/max)
+                          passage (inside its span) wall P95 19.84 max 22.45 (n 54), over 33 ms: 0; at rest wall P95 17.38 (n 1803)
+   settings laps 2-10     tap->first moved 39.9/43.0/44.0 ms; tap frame 25.6/27.1/29.3 ms (min/median/max)
+                          passage (inside its span) wall P95 18.23 max 23.31 (n 482), over 33 ms: 0
+   help     first opening tap->first moved 44.5/44.5/44.5 ms; tap frame 28.6/28.6/28.6 ms (min/median/max)
+                          passage (inside its span) wall P95 18.96 max 22.41 (n 54), over 33 ms: 0; at rest wall P95 17.78 (n 1803)
+   help     laps 2-10     tap->first moved 40.0/41.0/42.2 ms; tap frame 24.3/25.4/26.5 ms (min/median/max)
+                          passage (inside its span) wall P95 18.40 max 23.11 (n 486), over 33 ms: 0
+   credits  first opening tap->first moved 44.3/44.3/44.3 ms; tap frame 28.0/28.0/28.0 ms (min/median/max)
+                          passage (inside its span) wall P95 18.95 max 22.89 (n 63), over 33 ms: 0; at rest wall P95 17.77 (n 1803)
+   credits  laps 2-10     tap->first moved 38.4/39.7/40.0 ms; tap frame 23.1/23.3/23.9 ms (min/median/max)
+                          passage (inside its span) wall P95 17.45 max 22.19 (n 576), over 33 ms: 0
+
+## Before the review: 11aa2233 (rows labelled ipad8-11aa2233), re-read with the passage inside its span
+== en-1.jsonl  nonce en-1-1791053625  label ipad8-11aa2233-en  (the first launch after its install)
+   title at rest: 1803 frames; wall P95 17.84 ms
+   settings first opening tap->first moved 52.6/52.6/52.6 ms; tap frame 37.6/37.6/37.6 ms (min/median/max)
+                          passage (inside its span) wall P95 17.48 max 37.40 (n 53), over 33 ms: 1; at rest wall P95 17.29 (n 1803)
+   settings laps 2-10     tap->first moved 37.3/38.4/41.0 ms; tap frame 21.7/22.6/24.8 ms (min/median/max)
+                          passage (inside its span) wall P95 17.50 max 22.70 (n 492), over 33 ms: 0
+   help     first opening tap->first moved 51.7/51.7/51.7 ms; tap frame 37.1/37.1/37.1 ms (min/median/max)
+                          passage (inside its span) wall P95 18.97 max 31.30 (n 53), over 33 ms: 0; at rest wall P95 17.74 (n 1803)
+   help     laps 2-10     tap->first moved 35.7/37.8/41.8 ms; tap frame 21.3/21.6/23.6 ms (min/median/max)
+                          passage (inside its span) wall P95 17.71 max 23.68 (n 492), over 33 ms: 0
+   credits  first opening tap->first moved 54.7/54.7/54.7 ms; tap frame 38.4/38.4/38.4 ms (min/median/max)
+                          passage (inside its span) wall P95 21.52 max 50.18 (n 61), over 33 ms: 1; at rest wall P95 17.50 (n 1803)
+   credits  laps 2-10     tap->first moved 34.0/35.4/37.3 ms; tap frame 17.9/19.4/20.0 ms (min/median/max)
+                          passage (inside its span) wall P95 17.25 max 22.85 (n 576), over 33 ms: 0
+== zh-1.jsonl  nonce zh-1-1791053898  label ipad8-11aa2233-zh-Hant  (the second launch on that install)
+   title at rest: 1803 frames; wall P95 17.88 ms
+   settings first opening tap->first moved 57.2/57.2/57.2 ms; tap frame 43.6/43.6/43.6 ms (min/median/max)
+                          passage (inside its span) wall P95 18.33 max 34.09 (n 53), over 33 ms: 1; at rest wall P95 17.31 (n 1803)
+   settings laps 2-10     tap->first moved 42.4/43.5/47.3 ms; tap frame 26.3/27.4/37.5 ms (min/median/max)
+                          passage (inside its span) wall P95 17.99 max 23.38 (n 486), over 33 ms: 0
+   help     first opening tap->first moved 70.9/70.9/70.9 ms; tap frame 54.7/54.7/54.7 ms (min/median/max)
+                          passage (inside its span) wall P95 18.50 max 36.27 (n 53), over 33 ms: 1; at rest wall P95 17.59 (n 1803)
+   help     laps 2-10     tap->first moved 39.2/41.6/43.4 ms; tap frame 24.8/25.7/26.6 ms (min/median/max)
+                          passage (inside its span) wall P95 18.40 max 23.72 (n 486), over 33 ms: 0
+   credits  first opening tap->first moved 64.7/64.7/64.7 ms; tap frame 48.6/48.6/48.6 ms (min/median/max)
+                          passage (inside its span) wall P95 21.02 max 52.22 (n 60), over 33 ms: 1; at rest wall P95 17.57 (n 1803)
+   credits  laps 2-10     tap->first moved 33.6/38.7/45.0 ms; tap frame 22.3/22.5/27.4 ms (min/median/max)
+                          passage (inside its span) wall P95 17.68 max 22.02 (n 575), over 33 ms: 0
+
+## As written before the review (its own definitions: the passage padded with 0.2 s of rest, "first since install")
+## After the staged builds and the licence filter: 11aa2233 (QA build from worktree head e3ee97c4, whose commits after 11aa2233 touch docs only; rows labelled ipad8-11aa2233)
+== en-1.jsonl  nonce en-1-1791053625  label ipad8-11aa2233-en
+   title at rest: 1803 frames; wall P95 17.84 ms; work P95 17.57 ms
+   settings first opening tap->first moved 52.6/52.6/52.6 ms; tap frame 37.6/37.6/37.6 ms; leave: tap->moved 32.2, tap frame 16.4;
+                          passage wall P95 17.25 max 37.40 (n 80), work P95 17.04 max 27.12; at rest wall P95 17.29, work P95 17.05 (n 1803)
+   settings laps 2-10     tap->first moved 37.3/38.4/41.0 ms; tap frame 21.7/22.6/24.8 ms; leave: tap->moved 33.0, tap frame 17.4;
+                          passage wall P95 17.46 max 22.70 (n 719), work P95 17.16 max 22.48; at rest wall P95 17.25, work P95 17.02 (n 1645)
+   help     first opening tap->first moved 51.7/51.7/51.7 ms; tap frame 37.1/37.1/37.1 ms; leave: tap->moved 32.5, tap frame 16.7;
+                          passage wall P95 17.48 max 31.30 (n 80), work P95 17.13 max 20.96; at rest wall P95 17.74, work P95 17.49 (n 1803)
+   help     laps 2-10     tap->first moved 35.7/37.8/41.8 ms; tap frame 21.3/21.6/23.6 ms; leave: tap->moved 32.7, tap frame 17.0;
+                          passage wall P95 17.71 max 23.68 (n 722), work P95 17.39 max 23.49; at rest wall P95 17.46, work P95 17.21 (n 1646)
+   credits  first opening tap->first moved 54.7/54.7/54.7 ms; tap frame 38.4/38.4/38.4 ms; leave: tap->moved 32.9, tap frame 16.7;
+                          passage wall P95 20.00 max 50.18 (n 87), work P95 17.74 max 40.73; at rest wall P95 17.50, work P95 17.23 (n 1803)
+   credits  laps 2-10     tap->first moved 34.0/35.4/37.3 ms; tap frame 17.9/19.4/20.0 ms; leave: tap->moved 33.8, tap frame 17.6;
+                          passage wall P95 17.30 max 22.85 (n 810), work P95 17.09 max 22.64; at rest wall P95 17.47, work P95 17.17 (n 1646)
+== zh-1.jsonl  nonce zh-1-1791053898  label ipad8-11aa2233-zh-Hant
+   title at rest: 1803 frames; wall P95 17.88 ms; work P95 17.60 ms
+   settings first opening tap->first moved 57.2/57.2/57.2 ms; tap frame 43.6/43.6/43.6 ms; leave: tap->moved 31.9, tap frame 16.4;
+                          passage wall P95 18.33 max 34.09 (n 79), work P95 17.38 max 29.68; at rest wall P95 17.31, work P95 17.02 (n 1803)
+   settings laps 2-10     tap->first moved 42.4/43.5/47.3 ms; tap frame 26.3/27.4/37.5 ms; leave: tap->moved 32.9, tap frame 18.2;
+                          passage wall P95 17.84 max 23.38 (n 715), work P95 17.22 max 23.14; at rest wall P95 17.33, work P95 16.96 (n 1642)
+   help     first opening tap->first moved 70.9/70.9/70.9 ms; tap frame 54.7/54.7/54.7 ms; leave: tap->moved 32.3, tap frame 16.0;
+                          passage wall P95 18.50 max 36.27 (n 80), work P95 18.25 max 26.48; at rest wall P95 17.59, work P95 17.33 (n 1803)
+   help     laps 2-10     tap->first moved 39.2/41.6/43.4 ms; tap frame 24.8/25.7/26.6 ms; leave: tap->moved 32.5, tap frame 17.0;
+                          passage wall P95 18.25 max 23.72 (n 716), work P95 17.95 max 23.48; at rest wall P95 17.74, work P95 17.48 (n 1645)
+   credits  first opening tap->first moved 64.7/64.7/64.7 ms; tap frame 48.6/48.6/48.6 ms; leave: tap->moved 32.7, tap frame 16.6;
+                          passage wall P95 19.50 max 52.22 (n 86), work P95 17.72 max 51.98; at rest wall P95 17.57, work P95 17.29 (n 1803)
+   credits  laps 2-10     tap->first moved 33.6/38.7/45.0 ms; tap frame 22.3/22.5/27.4 ms; leave: tap->moved 33.3, tap frame 17.0;
+                          passage wall P95 17.37 max 22.02 (n 809), work P95 17.10 max 21.74; at rest wall P95 17.64, work P95 17.35 (n 1642)
+   licence files in the pack:
+     {"nonce":"en-1-1791053625","ofl_cinzel":true,"ofl_noto":true,"sentry_licence":true,"sentry_sdk":true}
+     {"nonce":"zh-1-1791053898","ofl_cinzel":true,"ofl_noto":true,"sentry_licence":true,"sentry_sdk":true}
+
+## Before them: c04a168d (QA build from worktree head c04a168d, rows labelled ipad8-c04a168d), the rows that found How to Play's and Credits' tap frames over 33 ms and the licence texts missing
+== en-1.jsonl  nonce en-1-1791047293  label ipad8-c04a168d-en
+   title at rest: 1803 frames; wall P95 18.25 ms; work P95 18.02 ms
+   settings first opening tap->first moved 53.4/53.4/53.4 ms; tap frame 40.4/40.4/40.4 ms; leave: tap->moved 32.9, tap frame 16.8;
+                          passage wall P95 17.25 max 30.06 (n 80), work P95 17.01 max 22.56; at rest wall P95 18.19, work P95 17.92 (n 1803)
+   settings laps 2-10     tap->first moved 37.1/38.7/42.4 ms; tap frame 20.9/22.5/25.4 ms; leave: tap->moved 33.0, tap frame 17.1;
+                          passage wall P95 17.56 max 22.51 (n 721), work P95 17.30 max 22.22; at rest wall P95 17.35, work P95 17.08 (n 1644)
+   help     first opening tap->first moved 70.3/70.3/70.3 ms; tap frame 54.4/54.4/54.4 ms; leave: tap->moved 32.7, tap frame 16.8;
+                          passage wall P95 18.61 max 42.74 (n 79), work P95 18.39 max 32.30; at rest wall P95 17.48, work P95 17.22 (n 1803)
+   help     laps 2-10     tap->first moved 49.2/51.2/52.6 ms; tap frame 33.2/35.3/42.7 ms; leave: tap->moved 32.7, tap frame 17.2;
+                          passage wall P95 19.06 max 23.22 (n 719), work P95 16.92 max 20.50; at rest wall P95 18.11, work P95 16.90 (n 1645)
+   credits  first opening tap->first moved 65.6/65.6/65.6 ms; tap frame 58.5/58.5/58.5 ms; leave: tap->moved 33.1, tap frame 17.0;
+                          passage wall P95 17.43 max 39.22 (n 87), work P95 16.82 max 38.55; at rest wall P95 17.70, work P95 17.14 (n 1803)
+   credits  laps 2-10     tap->first moved 42.3/46.8/48.9 ms; tap frame 26.0/31.0/39.1 ms; leave: tap->moved 32.9, tap frame 18.0;
+                          passage wall P95 17.80 max 22.65 (n 803), work P95 17.20 max 22.15; at rest wall P95 17.55, work P95 17.16 (n 1644)
+== zh-1.jsonl  nonce zh-1-1791047579  label ipad8-c04a168d-zh-Hant
+   title at rest: 1803 frames; wall P95 17.88 ms; work P95 17.61 ms
+   settings first opening tap->first moved 57.8/57.8/57.8 ms; tap frame 41.8/41.8/41.8 ms; leave: tap->moved 32.4, tap frame 16.7;
+                          passage wall P95 17.61 max 33.78 (n 80), work P95 17.20 max 27.91; at rest wall P95 17.27, work P95 17.00 (n 1803)
+   settings laps 2-10     tap->first moved 42.0/42.7/45.2 ms; tap frame 26.0/26.6/28.8 ms; leave: tap->moved 33.1, tap frame 17.5;
+                          passage wall P95 17.61 max 22.01 (n 718), work P95 17.28 max 21.50; at rest wall P95 17.36, work P95 17.10 (n 1646)
+   help     first opening tap->first moved 78.2/78.2/78.2 ms; tap frame 65.2/65.2/65.2 ms; leave: tap->moved 32.1, tap frame 16.6;
+                          passage wall P95 18.39 max 42.43 (n 80), work P95 18.13 max 27.45; at rest wall P95 17.41, work P95 17.16 (n 1803)
+   help     laps 2-10     tap->first moved 48.1/49.6/52.4 ms; tap frame 32.5/33.9/45.1 ms; leave: tap->moved 33.7, tap frame 18.8;
+                          passage wall P95 19.12 max 23.14 (n 723), work P95 16.84 max 22.64; at rest wall P95 18.18, work P95 16.83 (n 1643)
+   credits  first opening tap->first moved 82.3/82.3/82.3 ms; tap frame 68.9/68.9/68.9 ms; leave: tap->moved 32.7, tap frame 16.4;
+                          passage wall P95 17.51 max 60.08 (n 87), work P95 17.25 max 47.46; at rest wall P95 17.61, work P95 17.35 (n 1803)
+   credits  laps 2-10     tap->first moved 36.4/51.3/57.5 ms; tap frame 22.0/35.3/37.5 ms; leave: tap->moved 33.0, tap frame 18.7;
+                          passage wall P95 18.18 max 22.97 (n 802), work P95 16.81 max 20.00; at rest wall P95 17.49, work P95 16.94 (n 1646)
+   licence files in the pack:
+     {"nonce":"en-1-1791047293","ofl_cinzel":false,"ofl_noto":false,"sentry_licence":false,"sentry_sdk":true}
+     {"nonce":"zh-1-1791047579","ofl_cinzel":false,"ofl_noto":false,"sentry_licence":false,"sentry_sdk":true}

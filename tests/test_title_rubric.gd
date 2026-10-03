@@ -9,6 +9,9 @@ extends RefCounted
 ## smaller), nothing on the title over anything else, and no word, pane or
 ## consent line under the lantern's hit, at every shape, in both languages, in
 ## every state the title shows (the consent line owed with a saved run too).
+## Every word and the Rekindle pane take a tap at the rubric's 60 px at pad and
+## on desktop (the touch floor's 44 on a phone) where they are drawn, and no
+## two taps overlap (rooms spec §7 item 8).
 
 const FLOOR: int = 18
 const PHONE_FLOOR: int = 14
@@ -32,8 +35,32 @@ static func run(fails: Array[String]) -> void:
 					PHONE_FLOOR if LeadlightTokens.is_phone(shape) else FLOOR)
 				_sits_whole(fails, screen, where)
 				_nothing_over_anything(fails, screen, where)
+				_taps(fails, screen, where, LeadlightTokens.is_phone(shape))
 				screen.free()
 	Locale.active = previous
+
+
+## The quiet words' and the Rekindle pane's taps: 60 px tall at pad and on
+## desktop, the visuals unmoved; a phone's at the touch floor; none over another.
+static func _taps(fails: Array[String], screen: TitleScreen, where: String, phone: bool) -> void:
+	var tall: float = 44.0 if phone else 60.0
+	var hits: Dictionary = {}
+	for id: String in screen._words:
+		var word: LeadlightWord = screen._words[id]
+		if word.visible:
+			hits["word %s" % id] = Rect2(word.position + word.hit_rect().position, word.hit_rect().size)
+	if screen._secondary != null:
+		var pane: LeadlightPane = screen._secondary
+		hits["Rekindle pane"] = Rect2(pane.position + pane.hit_rect().position, pane.hit_rect().size)
+	var names: Array = hits.keys()
+	for i: int in names.size():
+		var hit: Rect2 = hits[names[i]]
+		_check(fails, hit.size.y >= tall - 0.5, "%s: %s takes a tap %d px tall, under %d" % [
+			where, names[i], int(hit.size.y), int(tall)])
+		for j: int in range(i + 1, names.size()):
+			var other: Rect2 = hits[names[j]]
+			_check(fails, not hit.grow(-0.5).intersects(other.grow(-0.5)),
+				"%s: the taps of %s and %s overlap" % [where, names[i], names[j]])
 
 
 ## Every text the player reads or taps on the title, by name, with the size it

@@ -52,6 +52,21 @@ func arm() -> void:
 	_fired = false
 
 
+## Held while a room is open (docs/design/2026-10-03-title-rooms §7 item 10):
+## nothing beckons and nothing counts until `arm` again, so no ember flies to
+## the plaque a second after a room closes.
+func hold() -> void:
+	_armed = false
+	_fired = false
+	_idle = 0.0
+	if _pulse >= 0.0 or _glint >= 0.0:
+		_shine(0.0)
+	_pulse = -1.0
+	_rise = -1.0
+	_glint = -1.0
+	queue_redraw()
+
+
 ## Any input: the player is here. The next ember waits for the next idle spell.
 func touched() -> void:
 	_idle = 0.0

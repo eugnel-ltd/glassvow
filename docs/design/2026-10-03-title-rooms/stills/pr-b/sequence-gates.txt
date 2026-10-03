@@ -1,0 +1,78 @@
+# §11.5 on the PR B code after its review (the head 95593fda; each sequence taken on the last commit that
+# touches it: the arrivals and G3 on 9b145866, C3 and the Reduce Motion sequences on 03cf374a, every
+# departure on 95593fda; no later commit touches what they show): tools/capture_rooms.gd --seq, headed,
+# --fixed-fps 60, a saved run (Back to the Road). Frame 0 is the settled source, the tap lands on frame 1,
+# every frame after it is saved; the contact sheet seq-<name>.jpg lays them out a quarter size, six to a
+# row. Grey gate: no frame with more than 0.5% of its pixels within +-4 of RGB (77, 77, 77). Cut gate: no
+# frame-to-frame change above an eighth of the whole change plus idle noise (the larger of the source's
+# and the settled destination's); graded under --rm, reported under full motion, where it reads how much
+# of the change any one frame carries (PR A's Settings opened in one frame: 0.0940 of a 0.0937 whole, all
+# of it on frame 1; here the largest step is 13% to 29% of the whole, and a section change, a small change
+# overall, 67% to 76% on its first frame, the pane lighting under the finger as the old page goes).
+# Names: g1/g2 a glass room opening/leaving (G1, G2), g3 a section change (G3), c1/c2/c3 Credits
+# opening/leaving and its font glass (C1, C2, C3), x1 How to Play from the run menu over the map (X1).
+
+-- g1-settings-pad-en: --shape=pad-landscape --locale=en --seq=open --room=settings --frames=36 
+contact sheet: seq-g1-settings-pad-en.jpg (37 frames)
+grey gate PASS: worst frame 0 has 0.07% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0200 at frame 9, whole change 0.0961, idle 0.0003, limit 0.0123 (reported, not graded without --rm)
+-- g2-settings-pad-en: --shape=pad-landscape --locale=en --seq=close --room=settings --frames=28 
+contact sheet: seq-g2-settings-pad-en.jpg (29 frames)
+grey gate PASS: worst frame 18 has 0.07% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0179 at frame 18, whole change 0.0905, idle 0.0004, limit 0.0117 (reported, not graded without --rm)
+-- g3-settings-pad-en: --shape=pad-landscape --locale=en --seq=section --room=settings --frames=18 --section=privacy
+contact sheet: seq-g3-settings-pad-en.jpg (19 frames)
+grey gate PASS: worst frame 10 has 0.03% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0128 at frame 1, whole change 0.0192, idle 0.0001, limit 0.0025 (reported, not graded without --rm)
+-- g1-help-pad-en: --shape=pad-landscape --locale=en --seq=open --room=help --frames=36 
+contact sheet: seq-g1-help-pad-en.jpg (37 frames)
+grey gate PASS: worst frame 0 has 0.07% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0212 at frame 10, whole change 0.1182, idle 0.0003, limit 0.0151 (reported, not graded without --rm)
+-- g2-help-pad-en: --shape=pad-landscape --locale=en --seq=close --room=help --frames=28 
+contact sheet: seq-g2-help-pad-en.jpg (29 frames)
+grey gate PASS: worst frame 4 has 0.07% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0189 at frame 3, whole change 0.1124, idle 0.0004, limit 0.0145 (reported, not graded without --rm)
+-- g3-help-pad-en: --shape=pad-landscape --locale=en --seq=section --room=help --frames=18 --section=combat
+contact sheet: seq-g3-help-pad-en.jpg (19 frames)
+grey gate PASS: worst frame 10 has 0.02% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0208 at frame 1, whole change 0.0275, idle 0.0001, limit 0.0036 (reported, not graded without --rm)
+-- c1-credits-pad-en: --shape=pad-landscape --locale=en --seq=open --room=credits --frames=40 
+contact sheet: seq-c1-credits-pad-en.jpg (41 frames)
+grey gate PASS: worst frame 0 has 0.07% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0155 at frame 10, whole change 0.0869, idle 0.0008, limit 0.0116 (reported, not graded without --rm)
+-- c2-credits-pad-en: --shape=pad-landscape --locale=en --seq=close --room=credits --frames=33 
+contact sheet: seq-c2-credits-pad-en.jpg (34 frames)
+grey gate PASS: worst frame 17 has 0.11% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0175 at frame 19, whole change 0.0819, idle 0.0005, limit 0.0107 (reported, not graded without --rm)
+-- c3-credits-pad-en: --shape=pad-landscape --locale=en --seq=glass --room=credits --frames=24 --section=fonts
+contact sheet: seq-c3-credits-pad-en.jpg (25 frames)
+grey gate PASS: worst frame 2 has 0.11% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0144 at frame 7, whole change 0.0515, idle 0.0029, limit 0.0094 (reported, not graded without --rm)
+-- x1-help-pad-en: --shape=pad-landscape --locale=en --seq=run --room=help --frames=36 
+contact sheet: seq-x1-help-pad-en.jpg (37 frames)
+grey gate PASS: worst frame 9 has 0.05% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0148 at frame 9, whole change 0.0810, idle 0.0030, limit 0.0131 (reported, not graded without --rm)
+-- g1-settings-phone-zh: --shape=phone-landscape --locale=zh-Hant --seq=open --room=settings --frames=36 
+contact sheet: seq-g1-settings-phone-zh.jpg (37 frames)
+grey gate PASS: worst frame 19 has 0.08% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0325 at frame 9, whole change 0.1135, idle 0.0005, limit 0.0147 (reported, not graded without --rm)
+-- g2-settings-phone-zh: --shape=phone-landscape --locale=zh-Hant --seq=close --room=settings --frames=28 
+contact sheet: seq-g2-settings-phone-zh.jpg (29 frames)
+grey gate PASS: worst frame 19 has 0.09% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0211 at frame 4, whole change 0.1106, idle 0.0003, limit 0.0141 (reported, not graded without --rm)
+-- c1-credits-phone-zh: --shape=phone-landscape --locale=zh-Hant --seq=open --room=credits --frames=40 
+contact sheet: seq-c1-credits-phone-zh.jpg (41 frames)
+grey gate PASS: worst frame 1 has 0.07% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0150 at frame 12, whole change 0.0762, idle 0.0007, limit 0.0102 (reported, not graded without --rm)
+-- g1-settings-pad-en-rm: --shape=pad-landscape --locale=en --seq=open --room=settings --frames=16 --rm
+contact sheet: seq-g1-settings-pad-en-rm.jpg (17 frames)
+grey gate PASS: worst frame 2 has 0.06% grey (limit 0.5%)
+cut gate PASS: largest step 0.0107 at frame 5, whole change 0.0920, idle 0.0000, limit 0.0115
+-- g2-settings-pad-en-rm: --shape=pad-landscape --locale=en --seq=close --room=settings --frames=16 --rm
+contact sheet: seq-g2-settings-pad-en-rm.jpg (17 frames)
+grey gate PASS: worst frame 7 has 0.13% grey (limit 0.5%)
+cut gate PASS: largest step 0.0108 at frame 5, whole change 0.0916, idle 0.0000, limit 0.0115
+-- c1-credits-pad-en-rm: --shape=pad-landscape --locale=en --seq=open --room=credits --frames=16 --rm
+contact sheet: seq-c1-credits-pad-en-rm.jpg (17 frames)
+grey gate PASS: worst frame 4 has 0.09% grey (limit 0.5%)
+cut gate PASS: largest step 0.0092 at frame 5, whole change 0.0808, idle 0.0000, limit 0.0101

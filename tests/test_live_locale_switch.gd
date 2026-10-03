@@ -23,9 +23,11 @@ static func _source_contract(fails: Array[String]) -> void:
 		fails.append("live locale owner: SettingsPanel still mutates language state")
 	if not settings.contains('Locale.active.t("ui.language.deferNote")'):
 		fails.append("live locale settings: combat defer note is not rendered")
+	# The language control takes a room's tap (60 px at pad, the 44 px touch
+	# floor on a phone: docs/design/2026-10-03-title-rooms §3.3).
 	if not settings.contains("func focus_language()") \
 			or not _function_body(settings, "_small_button").contains(
-				"RunStyle.hit_floor(26.0)"):
+				"LeadlightTokens.room_hit("):
 		fails.append("live locale settings: language control misses focus or touch sizing")
 	var run_style: Script = load(RUN_STYLE_PATH) as Script
 	if run_style == null or not run_style.has_method("hit_floor_for"):

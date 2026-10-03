@@ -563,6 +563,7 @@ static func _flame_lines_play_once(fails: Array[String]) -> void:
 static func _codex_in_the_help(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full(false)
 	var bare: HelpScreen = HelpScreen.new()
+	bare.room().select(&"lantern")
 	_check(fails, bare.find_child("Coda", true, false) == null,
 		"the codex showed a colour before one was seen")
 	bare.free()
@@ -572,13 +573,15 @@ static func _codex_in_the_help(fails: Array[String]) -> void:
 	]
 	var zh: bool = Locale.active.code == Locale.CODE_ZH_HANT
 	var help: HelpScreen = HelpScreen.new(StageShape.IDENTITY, null, rows)
+	help.room().select(&"lantern")
 	var coda: RichTextLabel = help.find_child("Coda", true, false) as RichTextLabel
 	_check(fails, coda != null and coda.text
 			== LineTable.text(rows[0], zh) + "\n" + LineTable.text(rows[1], zh),
 		"the codex did not show the colours seen steady, one to a line")
 	if coda != null:
+		# The Coda's breath follows the body inside the Lantern's own page.
 		var breath: Node = coda.get_parent()
-		var body: RichTextLabel = help._column.get_child(breath.get_index() - 1) as RichTextLabel
+		var body: RichTextLabel = breath.get_parent().get_child(breath.get_index() - 1) as RichTextLabel
 		_check(fails, body != null and body.text == Locale.active.t("ui.help.lanternBody")
 				.replace("<b>", "[b]").replace("</b>", "[/b]"),
 			"the colours are not under the Lantern's rules")

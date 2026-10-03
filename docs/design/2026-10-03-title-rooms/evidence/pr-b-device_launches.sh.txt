@@ -1,0 +1,68 @@
+#!/bin/zsh
+# The #655 PR B iPad 8 batch (docs/design/2026-10-03-title-rooms §11.6). Holds the
+# shared iPad's batch lock from the QA install to the last launch (released on any
+# exit), builds the QA app (io.fol2.glassvow.qa, never the production bundle) from
+# the worktree with the QA-only bench patch applied and reverted at once, and
+# launches it once per label with `--rooms-bench` and a per-launch nonce. Before
+# every launch the installed QA app must still be the one this batch installed;
+# after it, the rows must carry that launch's nonce and the build label; a stale or
+# foreign row set is discarded and the launch redone (up to three times).
+# usage: device_launches.sh <worktree> <out-dir> <build-label> <installation url> (launch-only, the build already installed)
+set -uo pipefail
+WT=$1; OUT=$2; BUILD=$3; MINE=$4
+FLOW=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/device13/flow
+HERE=${0:A:h}
+OWNER=rooms-b
+B=io.fol2.glassvow.qa
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+mkdir -p $OUT
+log() { echo "$(date +%T) $*" | tee -a $OUT/batch.log; }
+cleanup() {
+  $FLOW/ipad_lock.sh release $OWNER
+  log "lock released"
+}
+trap cleanup EXIT
+udid() { xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for d in json.load(sys.stdin)["result"]["devices"]:
+    h=d.get("hardwareProperties") or {}
+    if h.get("productType")=="iPad11,6": print(h.get("udid")); break'; }
+app_url() { xcrun devicectl device info apps --device $1 --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for a in json.load(sys.stdin)["result"]["apps"]:
+    if a.get("bundleIdentifier")=="io.fol2.glassvow.qa": print(a.get("url"))'; }
+
+log "launch-only batch for $BUILD (installed $MINE)"
+$FLOW/ipad_lock.sh acquire $OWNER || exit 1
+launch() {  # label locale
+  local label=$1 locale=$2 f=$OUT/$1.jsonl
+  for attempt in 1 2 3; do
+    local U=$(udid); [[ -n "$U" ]] || { log "no iPad"; return 1; }
+    if [[ -n "$MINE" && "$(app_url $U)" != "$MINE" ]]; then log "$label: the QA app is not this batch's build; stopping"; return 1; fi
+    local nonce="$label-$(date +%s)"
+    rm -f $f
+    $FLOW/ipad_lock.sh acquire $OWNER
+    xcrun devicectl device process launch --terminate-existing --device $U $B -- --rooms-bench --qa-nonce=$nonce --locale=$locale > $OUT/launch-$label.log 2>&1
+    log "$label: launched ($nonce, attempt $attempt)"
+    sleep 60
+    for k in $(seq 1 60); do
+      timeout 90 xcrun devicectl device copy from --device $U --domain-type appDataContainer --domain-identifier $B \
+        --source Documents/bench_rooms.jsonl --destination $f > /dev/null 2>&1
+      if [[ -f $f ]] && grep -q '"probe":"done"' $f; then break; fi
+      sleep 10
+    done
+    timeout 90 xcrun devicectl device copy from --device $U --domain-type appDataContainer --domain-identifier $B \
+      --source Documents/bench_files.json --destination $OUT/$label-files.json > /dev/null 2>&1
+    if [[ -f $f ]] && grep -q -- "\"nonce\":\"$nonce\"" $f && grep -q '"probe":"done"' $f && grep -q "ipad8-$BUILD" $f; then
+      log "$label: $(grep -c . $f) rows, nonce and build match"
+      return 0
+    fi
+    log "$label: attempt $attempt stale or incomplete; discarded"
+    mv $f $f.discarded-$attempt 2>/dev/null
+  done
+  return 1
+}
+launch zh-1 zh-Hant
+launch en-2 en
+launch zh-2 zh-Hant
+log "batch done"
