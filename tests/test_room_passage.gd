@@ -450,11 +450,12 @@ static func _word_crosses_nothing_lit(fails: Array[String], tree: SceneTree, hos
 	_dispose(main)
 
 
-## A lit thing (alpha over 0.2) the word in flight stands on, if any.
-static func _crossing(fails: Array[String], main: Main, modal: LeadlightRoomHost, room: String,
+## A lit thing (alpha over 0.2) the word in flight stands on, if any. The room
+## is checked while it stands. A departure frees it, so it is passed untyped:
+## a freed room handed to a typed parameter is a script error in the caller.
+## The title's furniture is checked for as long as the word is in the air.
+static func _crossing(fails: Array[String], main: Main, room_v: Variant, room: String,
 		phase: String, furniture: Array) -> void:
-	if not is_instance_valid(modal):
-		return
 	var flight: Rect2 = Rect2()
 	for node: Node in main._passage.find_children("GhostWord", "", false, false):
 		for label: Node in node.get_children():
@@ -465,13 +466,14 @@ static func _crossing(fails: Array[String], main: Main, modal: LeadlightRoomHost
 		return
 	var lit: Array[Control] = []
 	var view: Rect2 = Rect2(Vector2(-1.0e6, -1.0e6), Vector2(2.0e6, 2.0e6))
-	if modal is CreditsScreen:
-		var credits: CreditsScreen = modal
+	if is_instance_valid(room_v) and room_v is CreditsScreen:
+		var credits: CreditsScreen = room_v
 		view = credits.scroll().get_global_rect()
 		for item: Node in credits.roll().get_children():
 			if item is Control and item != credits.roll().head_gap and item != credits.roll().heading_node:
 				lit.append(item as Control)
-	else:
+	elif is_instance_valid(room_v) and room_v is LeadlightRoomHost:
+		var modal: LeadlightRoomHost = room_v
 		lit.assign(modal.reveal_groups())
 	for item: Control in lit:
 		var rect: Rect2 = item.get_global_rect().intersection(view)
