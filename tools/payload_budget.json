@@ -2,7 +2,7 @@
   "_note": "MiB of .pck payload for the iOS preset (tools/payload_report.py). Group budgets are 3% above the 2026-10-03 measurement (build 18 tree, export-pack 432 MiB); the total is the owner's 400 MiB ceiling. Lower a budget when a group shrinks; raise one only with a reason in the PR.",
   "total_mb": 400,
   "groups_mb": {
-    "assets/art/cards": 201,
+    "assets/art/cards": 130,
     "assets/audio/music": 72,
     "assets/art/map-atelier": 32,
     "assets/art/map": 31,
