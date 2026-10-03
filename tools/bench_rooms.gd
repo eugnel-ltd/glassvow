@@ -73,6 +73,7 @@ class Bench extends Node:
 	signal done
 
 	const ROOMS: Array[String] = ["settings", "help", "credits"]
+	const TAP_WAIT: float = 3.0
 
 	var main: Main
 	var laps: int = 10
@@ -171,20 +172,29 @@ class Bench extends Node:
 	## A finger down, a frame, a finger up: the tap is timed from the release,
 	## which is when a button acts. The engine flushes the event at the start of
 	## the next frame; the tap frame (i 0) is the frame the room appears or
-	## leaves on, found by the modal changing (`_process`).
+	## leaves on, found by the modal changing (`_process`). `at` is a stage
+	## point: an input event arrives in the window's pixels, which a device
+	## scales from the stage (the iPad 8 draws 1180×885 into 2160×1620). A tap
+	## that has not acted in TAP_WAIT seconds is recorded and the lap goes on.
 	func _tap(at: Vector2, phase: String) -> void:
+		var screen: Vector2 = get_viewport().get_screen_transform() * at
 		for pressed: bool in [true, false]:
 			var touch: InputEventScreenTouch = InputEventScreenTouch.new()
 			touch.index = 0
-			touch.position = at
+			touch.position = screen
 			touch.pressed = pressed
 			if not pressed:
 				_armed = phase
 				_tap_us = Time.get_ticks_usec()
 			Input.parse_input_event(touch)
 			await get_tree().process_frame
-		while not _armed.is_empty():
+		var until: int = Time.get_ticks_msec() + roundi(TAP_WAIT * 1000.0)
+		while not _armed.is_empty() and Time.get_ticks_msec() < until:
 			await get_tree().process_frame
+		if not _armed.is_empty():
+			_write({"nonce": nonce, "label": label, "room": _room, "lap": _lap, "error": "tap did not act",
+				"phase": _armed, "at": [at.x, at.y], "screen": [screen.x, screen.y]})
+			_armed = ""
 
 	func _process(_delta: float) -> void:
 		var acted: bool = (_armed == "open" and main._modal is LeadlightRoomHost) \
