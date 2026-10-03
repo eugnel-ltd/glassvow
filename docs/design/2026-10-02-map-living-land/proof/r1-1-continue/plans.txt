@@ -370,3 +370,124 @@ b-cand-e0-7 early 1 --qa-tap-after=0
 b-late-e0-7 late 1 --qa-tap-after=0
 b-cand-e0-8 early 1 --qa-tap-after=0
 b-late-e0-8 late 1 --qa-tap-after=0
+
+# --- rebased round (7091fc1e, on main 1b00ac3c): plan-rb1
+# R1.1 rebased round (on R2 and the #664 notes): one QA install, rested block
+# (12 s between launches), then one back-to-back block (no rest).
+warmup early 1 --qa-tap-after=0
+sleep 12
+# --- rested: tap as the rite lands, cand / late interleaved, R2's read-back cones beside
+r-cand-e0-1 early 1 --qa-tap-after=0
+sleep 12
+r-late-e0-1 late 1 --qa-tap-after=0
+sleep 12
+r-cone-e0-1 cone 1 --qa-tap-after=0
+sleep 12
+r-cand-e0-2 early 1 --qa-tap-after=0
+sleep 12
+r-late-e0-2 late 1 --qa-tap-after=0
+sleep 12
+r-cone-e0-2 cone 1 --qa-tap-after=0
+sleep 12
+r-cand-e0-3 early 1 --qa-tap-after=0
+sleep 12
+r-late-e0-3 late 1 --qa-tap-after=0
+sleep 12
+r-cone-e0-3 cone 1 --qa-tap-after=0
+sleep 12
+r-cand-e0-4 early 1 --qa-tap-after=0
+sleep 12
+r-late-e0-4 late 1 --qa-tap-after=0
+sleep 12
+r-cone-e0-4 cone 1 --qa-tap-after=0
+sleep 12
+r-cand-e0-5 early 1 --qa-tap-after=0
+sleep 12
+r-late-e0-5 late 1 --qa-tap-after=0
+sleep 12
+r-cand-e0-6 early 1 --qa-tap-after=0
+sleep 12
+r-late-e0-6 late 1 --qa-tap-after=0
+sleep 12
+# --- rested: a tap lands the rite 0.5 s in, then Continue
+r-cand-skip-1 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-late-skip-1 late 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-cand-skip-2 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-late-skip-2 late 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-cand-skip-3 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-late-skip-3 late 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-cand-skip-4 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-late-skip-4 late 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-cand-skip-5 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-late-skip-5 late 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+# --- rested: after the warm (360 title frames, then the tap)
+r-cand-aw-1 early 1
+sleep 10
+r-late-aw-1 late 1
+sleep 10
+r-nowarm-aw-1 nowarm 1
+sleep 10
+r-cand-aw-2 early 1
+sleep 10
+r-late-aw-2 late 1
+sleep 10
+r-nowarm-aw-2 nowarm 1
+sleep 10
+r-cand-aw-3 early 1
+sleep 10
+r-late-aw-3 late 1
+sleep 10
+r-nowarm-aw-3 nowarm 1
+sleep 10
+r-cand-aw-4 early 1
+sleep 10
+r-late-aw-4 late 1
+sleep 10
+r-nowarm-aw-4 nowarm 1
+sleep 10
+r-cand-aw-5 early 1
+sleep 10
+r-late-aw-5 late 1
+sleep 10
+r-nowarm-aw-5 nowarm 1
+sleep 10
+# --- rested: a later title with a saved Act I run (first title: an Act II run)
+r-lt-prime-1 early 2 --qa-later-title
+sleep 10
+r-lt-noprime-1 noprime 2 --qa-later-title
+sleep 10
+r-lt-prime-2 early 2 --qa-later-title
+sleep 10
+r-lt-noprime-2 noprime 2 --qa-later-title
+sleep 10
+r-lt-prime-3 early 2 --qa-later-title
+sleep 10
+r-lt-noprime-3 noprime 2 --qa-later-title
+sleep 10
+r-lt-prime-4 early 2 --qa-later-title
+sleep 10
+r-lt-noprime-4 noprime 2 --qa-later-title
+sleep 10
+# --- back to back: no rest between launches
+b-cand-e0-1 early 1 --qa-tap-after=0
+b-late-e0-1 late 1 --qa-tap-after=0
+b-cand-e0-2 early 1 --qa-tap-after=0
+b-late-e0-2 late 1 --qa-tap-after=0
+b-cand-e0-3 early 1 --qa-tap-after=0
+b-late-e0-3 late 1 --qa-tap-after=0
+b-cand-e0-4 early 1 --qa-tap-after=0
+b-late-e0-4 late 1 --qa-tap-after=0
+b-cand-e0-5 early 1 --qa-tap-after=0
+b-late-e0-5 late 1 --qa-tap-after=0
+b-cand-e0-6 early 1 --qa-tap-after=0
+b-late-e0-6 late 1 --qa-tap-after=0

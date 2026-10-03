@@ -2,14 +2,15 @@
 # R1.1 device batch on the shared iPad 8 (QA app only). Holds the batch lock
 # from the QA install to the last launch, installs wt-r11's QA build, and runs
 # the launch plan file given: one launch per line, "label arm act [game args]".
-# Arms: early (the candidate), norush, late (this build, its warm-up held until
+# Arms: early (the candidate), late (this build, its warm-up held until
 # the rite lands: PR #664's timing, not PR #664's code), nowarm, and the
-# experiment arms in qa_patch.py.txt.
+# rebased round's arms: cone (R2's read-back shadow cones), noprime (only the
+# rite's title primes).
 # Every launch carries a nonce its rows must echo; a launch whose rows are
 # stale or incomplete is retried, and a mismatch is never kept.
 # usage: batch.sh <name> <plan file>
 set -uo pipefail
-R=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r11
+R=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r11x
 F=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/device13/flow
 W=$R/../wt-r11
 NAME=$1; PLAN=$2
@@ -48,6 +49,8 @@ launch() {  # label arm act [args]
     piclow) envs='{"QA_PIC_LOW":"1"}' ;;
     h0) envs='{"QA_HEIGHT_THREADS":"0"}' ;;
     kf) envs='{"QA_KIT_FIRST_FRAME":"1"}' ;;
+    cone) envs='{"QA_RENDERER_CONE":"1"}' ;;
+    noprime) envs='{"QA_NO_LATER_PRIME":"1"}' ;;
   esac
   local f=$OUT/$label.jsonl
   for attempt in 1 2 3; do

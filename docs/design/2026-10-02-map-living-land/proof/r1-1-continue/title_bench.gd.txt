@@ -8,8 +8,11 @@ extends Node
 ## instead taps MS after the rite lands, whatever the warm-up has reached (an
 ## early tap), and records the phase it found. With `--qa-skip-at=MS` a tap
 ## lands the rite MS into it (a tap during the rite completes it), and the
-## Continue tap follows `--qa-tap-after` after that. Rows:
-## user://title_probe.jsonl.
+## Continue tap follows `--qa-tap-after` after that. With `--qa-later-title`
+## the first title (a saved run of another act, `--qa-act=2`) lands its rite
+## and warms; then a fresh Act I run is saved and a later title shown, as the
+## run menu's door shows one, and its frames are sampled before the Continue
+## tap. Rows: user://title_probe.jsonl.
 
 const ROW_PATH: String = "user://title_probe.jsonl"
 var _host: Node = null
@@ -17,6 +20,7 @@ var _rows: FileAccess = null
 var _quit_at: String = ""
 var _tap_after_ms: int = -1
 var _skip_at_ms: int = -1
+var _later: bool = false
 
 
 func _ready() -> void:
@@ -29,13 +33,17 @@ func _ready() -> void:
 			_tap_after_ms = int(arg.trim_prefix("--qa-tap-after="))
 		elif arg.begins_with("--qa-skip-at="):
 			_skip_at_ms = int(arg.trim_prefix("--qa-skip-at="))
+		elif arg == "--qa-later-title":
+			_later = true
 	var t0: int = Time.get_ticks_usec()
 	BoxMesh.new().get_mesh_arrays()
 	var boot_readback_ms: float = (Time.get_ticks_usec() - t0) / 1000.0
-	_row({"probe": "start", "build": "r11-9a1f1eff", "tap_after_ms": _tap_after_ms,
+	_row({"probe": "start", "build": "r11-BUILD_LABEL", "tap_after_ms": _tap_after_ms,
 		"skip_at_ms": _skip_at_ms,
 		"args": " ".join(OS.get_cmdline_user_args()), "busy": OS.get_environment("QA_BUSY"), "warm": OS.get_environment("QA_NO_TITLE_WARM").is_empty(),
 		"late": not OS.get_environment("QA_LATE").is_empty(),
+		"renderer_cone": not OS.get_environment("QA_RENDERER_CONE").is_empty(),
+		"no_later_prime": not OS.get_environment("QA_NO_LATER_PRIME").is_empty(),
 		"no_rush": not OS.get_environment("QA_NO_RUSH").is_empty(),
 		"warm_start_ms": Engine.get_meta("qa_warm_start_ms", -1.0),
 		"prime_ms": Engine.get_meta("qa_prime_ms", -1.0), "boot_readback_ms": boot_readback_ms,
@@ -106,6 +114,9 @@ func _run() -> void:
 	if _tap_after_ms >= 0:
 		await _early_tap(Time.get_ticks_usec())
 		return
+	if _later:
+		await _later_title()
+		return
 	var all: Array[float] = []
 	var by_phase: Dictionary = {}
 	var slow: Array = []
@@ -161,6 +172,71 @@ func _run() -> void:
 	_row({"probe": "title_readback", "cost_and_frame_ms": rb})
 	await _frames(10)
 	await _tap_and_time(lit_at, "after_warm")
+
+
+## The later title: once the first title's warm has ended, a fresh Act I run
+## is saved and a title shown in a frame, as the run menu's door shows one.
+## Rows: how long the title took to build, its first frame, whether what the
+## warm-up reads back was read before it, and 360 of its frames by phase.
+func _later_title() -> void:
+	for i: int in range(600):
+		if MapLandscapeAssets.warming() == null or MapLandscapeAssets.warming().is_done():
+			break
+		await get_tree().process_frame
+	await _frames(60)
+	_host._qa_seed_saved_run(1)
+	Engine.set_meta("qa_prime_ms", -1.0)
+	var unit_before: bool = not MapJourneyLandscape.Kit.Meshes._unit_arrays.is_empty()
+	var slate_before: bool = MapLandscapeAssets._slate != null
+	await get_tree().process_frame
+	var frame_start: int = Time.get_ticks_usec()
+	QaMarks.mark("later_title")
+	_host._show_title()
+	var show_ms: float = (Time.get_ticks_usec() - frame_start) / 1000.0
+	var unit_after: bool = not MapJourneyLandscape.Kit.Meshes._unit_arrays.is_empty()
+	var slate_after: bool = MapLandscapeAssets._slate != null
+	await get_tree().process_frame
+	var first: float = (Time.get_ticks_usec() - frame_start) / 1000.0
+	var all: Array[float] = []
+	var by_phase: Dictionary = {}
+	var slow: Array = []
+	var last: int = Time.get_ticks_usec()
+	var lit_at: int = last
+	var done_at: int = -1
+	for i: int in range(360):
+		var phase: String = _phase()
+		await get_tree().process_frame
+		var now: int = Time.get_ticks_usec()
+		var dt: float = (now - last) / 1000.0
+		last = now
+		all.append(dt)
+		if not by_phase.has(phase):
+			by_phase[phase] = []
+		var bucket: Array = by_phase[phase]
+		bucket.append(dt)
+		if dt > 20.0:
+			slow.append([i, phase, snappedf(dt, 0.1), now])
+		if done_at < 0 and _phase() in ["done", "failed"]:
+			done_at = now
+	var phases: Dictionary = {}
+	for key: String in by_phase:
+		var raw: Array = by_phase[key]
+		var bucket: Array[float] = []
+		bucket.assign(raw)
+		phases[key] = _stats(bucket)
+	_row({"probe": "later_title", "show_ms": snappedf(show_ms, 0.01),
+		"first_frame_ms": snappedf(first, 0.01), "prime_ms": Engine.get_meta("qa_prime_ms", -1.0),
+		"read_before": [unit_before, slate_before], "read_by_title": [unit_after, slate_after],
+		"all": _stats(all), "phases": phases, "slow": slow,
+		"warm_done_ms": -1.0 if done_at < 0 else (done_at - lit_at) / 1000.0,
+		"kit_preload_ms": MapJourneyLandscape.Kit.preload_ms, "phase_end": _phase(),
+		"video_mib": _vmib()})
+	for i: int in range(600):
+		if not MapJourneyPrefetch.busy():
+			break
+		await get_tree().process_frame
+	await _frames(30)
+	await _tap_and_time(lit_at, "later")
 
 
 ## Taps `_tap_after_ms` after the rite landed (`lit_at`), sampling the title's

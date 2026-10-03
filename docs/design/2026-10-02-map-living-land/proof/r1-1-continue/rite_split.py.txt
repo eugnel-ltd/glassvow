@@ -1,0 +1,48 @@
+"""Rebased round: the launch rite's frames split into the title's first frame
+(which builds the rite's pipelines) and the rest, per arm, from committed rows;
+plus a permutation test of the other frames' max and of frames over 20 ms,
+candidate against each other arm.
+usage: rite_split.py <device-rows-*.jsonl>"""
+import json, sys, random, statistics as st
+launches = {}
+for l in open(sys.argv[1]):
+    if l.strip():
+        r = json.loads(l); launches.setdefault(r["launch"], {})[r["probe"]] = r
+def ok(name, by):
+    return any(a.startswith("--qa-nonce=" + name + "-") for a in by.get("start", {}).get("args", "").split()) and "done" in by
+def pct(v, q):
+    t = sorted(v); return t[int(len(t) * q)]
+def med(v):
+    return round(st.median(v), 2) if v else None
+def perm(a, b, n=20000):
+    obs = abs(st.median(a) - st.median(b)); pool = a + b; k = len(a); hits = 0
+    rng = random.Random(660)
+    for _ in range(n):
+        rng.shuffle(pool)
+        if abs(st.median(pool[:k]) - st.median(pool[k:])) >= obs - 1e-9: hits += 1
+    return round(hits / n, 3)
+groups = {}
+for label, prefixes in [("cand (e0+aw, rested)", ["r-cand-e0-", "r-cand-aw-"]),
+                        ("late (e0+aw, rested)", ["r-late-e0-", "r-late-aw-"]),
+                        ("nowarm (aw, rested)", ["r-nowarm-aw-"]),
+                        ("cone (e0, rested)", ["r-cone-e0-"]),
+                        ("cand e0 only", ["r-cand-e0-"]),
+                        ("late e0 only", ["r-late-e0-"]),
+                        ("cand back to back", ["b-cand-e0-"]),
+                        ("late back to back", ["b-late-e0-"])]:
+    f1, rmax, rp95, over, p50, p95, mx = [], [], [], [], [], [], []
+    for name, by in sorted(launches.items()):
+        if not ok(name, by) or not any(name.startswith(p) and name[len(p):].isdigit() for p in prefixes):
+            continue
+        frames = by["lit"]["rite_frames"]; s = by["lit"]["rite"]
+        p50.append(s["p50_ms"]); p95.append(s["p95_ms"]); mx.append(s["max_ms"])
+        f1.append(frames[1]); rest = frames[2:]
+        rmax.append(max(rest)); rp95.append(pct(rest, 0.95)); over.append(len([v for v in rest if v > 20.0]))
+    groups[label] = (rmax, over)
+    print("%-28s n=%d  p50 med %s worst %s | p95 med %s worst %s | max med %s worst %s" % (label, len(p50), med(p50), max(p50), med(p95), max(p95), med(mx), max(mx)))
+    print("%-28s       first frame med %s worst %s | other frames: max med %s worst %s, p95 med %s worst %s, >20 ms med %s worst %s"
+          % ("", med(f1), max(f1), med(rmax), max(rmax), med(rp95), max(rp95), med(over), max(over)))
+c = groups["cand (e0+aw, rested)"]
+for other in ["late (e0+aw, rested)", "nowarm (aw, rested)", "cone (e0, rested)"]:
+    o = groups[other]
+    print("cand vs %-22s other frames' max: p=%s; frames > 20 ms: p=%s" % (other, perm(c[0], o[0]), perm(c[1], o[1])))
