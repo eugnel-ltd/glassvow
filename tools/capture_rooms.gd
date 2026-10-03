@@ -9,27 +9,41 @@ extends SceneTree
 ##
 ##   godot --path . --position 40,40 [--fixed-fps 60] -s res://tools/capture_rooms.gd -- \
 ##       --shape=pad-landscape --locale=en --state=saved --out=/abs/still.png \
-##       [--path=rest|settings|help|credits|vigil|rite|shift|tab|pressed|departure|confirm]
+##       [--path=rest|settings|help|credits|vigil|rite|shift|tab|pressed|departure|confirm|
+##               back|runmenu|abandon|leave|ledger|erase]
 ##       [--hold] [--burst=3]
 ##       [--seq=open|close --room=settings|help|credits|vigil --frames=40] [--rm]
+##       [--measure=/abs/image]   (the oval measures of an existing still, at this shape)
+##       [--control=/abs/image]   (a cold-boot still of the same state: the oval beyond it)
 ##
 ## --state: fresh (no run, no deeds), consent (fresh, with the first launch's
 ## consent line), saved (a run in Act II), vigil (the run, twelve pilgrimages
-## of deeds and three shards).
+## of deeds and three shards); --consent owes the consent line in any state.
 ## --path: rest is the title at rest. settings, help, credits and vigil tap the
 ## room's word, then tap the room's own way back (a touch player's round trip).
 ## rite taps the lantern while the launch rite runs; shift presses a bare Shift
 ## (a screenshot shortcut); tab presses Tab (a keyboard player); pressed holds a
 ## finger down on the plaque; departure taps Rekindle (the departure's first
-## beat) and confirm answers it over a saved run (the Begin Anew sheet). With
-## --hold a room path stops in the room. Each still is taken 1 s after landing
-## and prints the focus report and the oval count (a pass is a title at rest's
-## own count: the road's lamps alone).
+## beat) and confirm answers it over a saved run (the Begin Anew sheet); back
+## taps the departure's Back (§6.3 path c); runmenu takes the road to the map,
+## opens the run menu from the HUD and taps Return to Title (path e); abandon
+## and leave stop on the run menu's Abandon Run and Leave the Road sheets,
+## ledger on Settings' Ledger page and erase on its Erase Everything sheet. With --hold a room path stops in
+## the room. Each still is taken 1 s after landing and prints the focus report
+## and §6.3's oval measures (`_oval_measures`): the spec's 64 gold samples and
+## gold band, and the ring line that catches the shipped ring where the spec's
+## gold does not; --measure gives a before still's at the same geometry.
+## The phone Vigil's RETURN stands below the stage until #655 PR C seats it:
+## there the tap is delivered to the button as the viewport delivers a tap
+## (a touch noted, focus held hidden, pressed), and the run says so.
 ## --seq saves every frame from the settled source (frame 0), runs the grey gate
 ## (no frame with more than 0.5% of its pixels within ±4 of the engine's 0.3
 ## grey) and the cut gate (no frame-to-frame change above an eighth of the whole
-## change plus idle noise; graded under --rm, reported otherwise), and exits 1
-## when a graded gate fails.
+## change plus idle noise, the larger of the source's and the settled
+## destination's; graded under --rm, reported otherwise), and exits 1 when a
+## graded gate fails. --seq=fight takes a saved run's road to the map and
+## enters its first fight through Main's own node handler (the map's 3D nodes
+## have no 2D hit to tap).
 ## Never --headless: a headless run has no viewport texture.
 
 const SETTLE_FRAMES: int = 45
@@ -81,15 +95,21 @@ func _run() -> void:
 	# Settings held in memory only: nothing this tool sets is written to disk.
 	var preferences: Preferences = Preferences.new()
 	preferences.language = str(_args.get("locale", "en"))
-	# --state=consent: the first title after the language, its consent line lit.
-	preferences.diagnostics_notice_seen = str(_args.get("state", "")) != "consent"
+	# --state=consent: the first title after the language, its consent line lit;
+	# --consent owes the line in any state (a player from before it existed).
+	preferences.diagnostics_notice_seen = str(_args.get("state", "")) != "consent" \
+		and not _args.has("consent")
 	preferences.reduce_motion = _args.has("rm")
 	Preferences.active = preferences
 	var path: String = str(_args.get("path", "rest"))
 	_main._title_kindled = path != "rite"
 	_main._show_title()
 	_hide_dev_word()
-	if _args.has("seq"):
+	if _args.has("measure"):
+		await _settle()
+		var image: Image = Image.load_from_file(str(_args["measure"]))
+		print("measured %s: %s" % [str(_args["measure"]), _oval_measures(image)])
+	elif _args.has("seq"):
 		await _sequence(str(_args.get("seq", "open")), str(_args.get("room", "settings")))
 	else:
 		await _drive(path)
@@ -166,7 +186,7 @@ func _drive(path: String) -> void:
 			await _key(KEY_TAB)
 		"pressed":
 			await _press(title._plaque.get_global_rect().get_center(), true)
-		"departure", "confirm":
+		"departure", "confirm", "back":
 			var rekindle: Control = title._secondary if title._secondary != null else title.lantern
 			await _tap(rekindle.get_global_rect().get_center())
 			# The lantern's light floods out and clears before the departure takes a tap.
@@ -175,29 +195,74 @@ func _drive(path: String) -> void:
 			var departure: DepartureScreen = _main._route_screen as DepartureScreen
 			if path == "confirm" and departure != null:
 				await _tap(departure.primary().get_global_rect().get_center())
+			elif path == "back" and departure != null:
+				await _tap_control(departure.find_child("Back", true, false) as Control)
+		"runmenu", "abandon", "leave":
+			await _open_run_menu(title)
+			var key: String = {"runmenu": "ui.menu.returnTitle", "abandon": "ui.menu.abandonRun",
+				"leave": "ui.menu.quitGame"}[path]
+			await _tap_control(_labelled(_main._modal, Locale.active.t(key)) if _main._modal != null else null)
+		"ledger", "erase":
+			await _tap(_word(title, "settings").get_global_rect().get_center())
+			await _settle()
+			await _tap_control(_labelled(_main._modal, Locale.active.t("ui.settings.ledger")))
+			await _settle()
+			if path == "erase":
+				await _tap_control(_labelled(_main._modal, Locale.active.t("ui.settings.eraseAll")))
 		"settings", "help", "credits", "vigil":
 			await _tap(_word(title, path).get_global_rect().get_center())
 			await _settle()
 			if _args.has("hold"):
 				await _settle()
 				return
-			var exit: Vector2 = _exit_point(path)
-			if exit.x < 0.0:
-				push_error("capture_rooms: no way back found in %s" % path)
-				_failed = true
-				return
-			await _tap(exit)
+			var key: String = str(ROOM_EXITS[path])
+			if key.is_empty():
+				await _tap(VEIL_TAP)
+			else:
+				await _tap_control(_labelled(_main, Locale.active.t(key)))
 	await _settle()
 	await _wait(1.0)
 
 
-## Where a touch player taps to leave `room`; negative when there is no way.
-func _exit_point(room: String) -> Vector2:
-	var key: String = str(ROOM_EXITS[room])
-	if key.is_empty():
-		return VEIL_TAP
-	var exit: Control = _labelled(_main, Locale.active.t(key))
-	return exit.get_global_rect().get_center() if exit != null else Vector2(-1.0, -1.0)
+## Back to the Road by tap, the map's HUD menu by tap: the run menu open.
+func _open_run_menu(title: TitleScreen) -> void:
+	await _tap(title.lantern.get_global_rect().get_center())
+	await _settle()
+	await _wait(1.5)
+	var menu: Control = null
+	if _main._run_hud != null:
+		for node: Node in _main._run_hud.find_children("", "BaseButton", true, false):
+			var button: BaseButton = node
+			if button.is_visible_in_tree() and button.tooltip_text == Locale.active.t("ui.hud.menu"):
+				menu = button
+	await _tap_control(menu)
+	await _settle()
+
+
+## A tap on `control`, or, when it stands off the stage, the same tap delivered
+## to it as the viewport would (a touch noted, focus held hidden, pressed).
+func _tap_control(control: Control) -> void:
+	if control == null:
+		push_error("capture_rooms: nothing to tap on this path")
+		_failed = true
+		return
+	_tap_control_now(control)
+	await _frames(2)
+
+
+## The same tap on this frame.
+func _tap_control_now(control: Control) -> void:
+	var at: Vector2 = control.get_global_rect().get_center()
+	if Rect2(Vector2.ZERO, Vector2(root.size)).has_point(at):
+		_tap_now(at)
+		return
+	print("delivered: '%s' stands below the stage at %s; its tap is delivered directly" % [
+		(control as Button).text if control is Button else control.name, at])
+	var touch: InputEventScreenTouch = InputEventScreenTouch.new()
+	touch.pressed = true
+	LeadlightFocus.note(touch)
+	control.grab_focus(true)
+	(control as BaseButton).pressed.emit()
 
 
 func _word(title: TitleScreen, room: String) -> Control:
@@ -223,7 +288,7 @@ func _still(out: String) -> void:
 		var file: String = out if burst <= 1 else out.get_basename() + "-%d.png" % (k + 1)
 		var image: Image = root.get_texture().get_image()
 		image.save_png(file)
-		print("rooms still: %s  oval %d/64" % [file, _oval_count(image)])
+		print("rooms still: %s  %s" % [file, _oval_measures(image)])
 		if k + 1 < burst:
 			await _wait(1.0)
 
@@ -243,36 +308,109 @@ func _report() -> void:
 		title != null and title._plaque.focused])
 
 
-## §6.3: gold samples on the old focus ring's path round the title's lantern.
-## Measured thresholds (hue within 20° of GOLD, saturation over 0.25, value
-## over 0.45): the shipped ring after a Vigil return scores 30/64 over the
-## Frostlight road and a title at rest 1/64, so a pass is the rest count.
-func _oval_count(image: Image) -> int:
+## §6.3's oval measures on `image`, at the title's own lantern geometry: the
+## 64 ring samples and the ±6 px band at the spec's gold, then the samples
+## where a ring line stands (a ridge: see `_ridge`), and, with --control (a
+## cold-boot still of the same state), those ridges the control lacks.
+func _oval_measures(image: Image) -> String:
+	var out: String = "oval %d/64, ring band gold %d px; ring line %d/64" % [
+		_oval_count(image), _band_gold(image), _ridge_count(image)]
+	if _args.has("control"):
+		var control: Image = Image.load_from_file(str(_args["control"]))
+		out += ", beyond the control %d/64" % _ridge_count(image, control)
+	return out
+
+
+## The old focus ring's ellipse round the title's lantern: centre and radii.
+func _ring() -> Array[Vector2]:
 	var title: TitleScreen = _title()
 	if title == null:
-		return -1
+		return []
 	var rect: Rect2 = title.lantern.get_global_rect()
 	var side: float = minf(rect.size.x, rect.size.y)
-	var centre: Vector2 = rect.get_center() + Vector2(0.0, side * 0.04)
-	var radius: Vector2 = Vector2(side * 0.36, side * 0.50)
+	return [rect.get_center() + Vector2(0.0, side * 0.04), Vector2(side * 0.36, side * 0.50)]
+
+
+## §6.3: of 64 samples on the old ring's path (±2 px), how many are gold.
+func _oval_count(image: Image) -> int:
+	var ring: Array[Vector2] = _ring()
+	if ring.is_empty():
+		return -1
 	var hits: int = 0
 	for i: int in range(64):
-		var angle: float = TAU * float(i) / 64.0
-		var dir: Vector2 = Vector2(cos(angle), sin(angle))
+		var dir: Vector2 = Vector2.from_angle(TAU * float(i) / 64.0)
 		for d: int in range(-2, 3):
-			var at: Vector2i = Vector2i(centre + dir * (radius + Vector2(d, d)))
-			if _is_gold(image, at):
+			if _is_gold(image, Vector2i(ring[0] + dir * (ring[1] + Vector2(d, d)))):
 				hits += 1
 				break
 	return hits
 
 
+## Of the 64 samples on the old ring's path that fall on the stage, how many
+## hold a ring line, and (with a control) how many the control does not. The
+## spec's gold misses the shipped ring itself: a 1.2 px line of GOLD at 0.55
+## over the blue road reads at saturation 0.10 to 0.15 (before/22 scores 1/64).
+## A line is what it is, though: within ±2 px of the path, a pixel brighter by
+## 0.12 than the road 4 px to either side of it, along the radius, at a sample
+## and at one beside it (a ring runs on; a passing mote does not).
+func _ridge_count(image: Image, control: Image = null) -> int:
+	var ring: Array[Vector2] = _ring()
+	if ring.is_empty():
+		return -1
+	var here: Array[bool] = []
+	var there: Array[bool] = []
+	for i: int in range(64):
+		var dir: Vector2 = Vector2.from_angle(TAU * float(i) / 64.0)
+		here.append(_ridge(image, ring, dir))
+		there.append(control != null and _ridge(control, ring, dir))
+	var hits: int = 0
+	for i: int in range(64):
+		var line: bool = here[i] and (here[(i + 63) % 64] or here[(i + 1) % 64])
+		if line and not there[i]:
+			hits += 1
+	return hits
+
+
+static func _ridge(image: Image, ring: Array[Vector2], dir: Vector2) -> bool:
+	for d: int in range(-2, 3):
+		var at: float = _value(image, ring[0] + dir * (ring[1] + Vector2(d, d)))
+		var inside: float = _value(image, ring[0] + dir * (ring[1] + Vector2(d - 4, d - 4)))
+		var outside: float = _value(image, ring[0] + dir * (ring[1] + Vector2(d + 4, d + 4)))
+		if at > 0.45 and at - maxf(inside, outside) > 0.12:
+			return true
+	return false
+
+
+static func _value(image: Image, at: Vector2) -> float:
+	var pixel: Vector2i = Vector2i(at)
+	if pixel.x < 0 or pixel.y < 0 or pixel.x >= image.get_width() or pixel.y >= image.get_height():
+		return 1.0
+	return image.get_pixelv(pixel).v
+
+
+## §6.3: the gold pixels (the spec's gold) within ±6 px of the old ring's path.
+func _band_gold(image: Image) -> int:
+	var ring: Array[Vector2] = _ring()
+	if ring.is_empty():
+		return -1
+	var seen: Dictionary = {}
+	for i: int in range(1440):
+		var angle: float = TAU * float(i) / 1440.0
+		var dir: Vector2 = Vector2(cos(angle), sin(angle))
+		for d: int in range(-6, 7):
+			var at: Vector2i = Vector2i(ring[0] + dir * (ring[1] + Vector2(d, d)))
+			if not seen.has(at):
+				seen[at] = _is_gold(image, at)
+	return seen.values().count(true)
+
+
+## §6.3's gold: within ±12° of GOLD's hue, saturation over 0.45, value over 0.55.
 static func _is_gold(image: Image, at: Vector2i) -> bool:
 	if at.x < 0 or at.y < 0 or at.x >= image.get_width() or at.y >= image.get_height():
 		return false
 	var c: Color = image.get_pixelv(at)
 	var hue_gap: float = absf(fposmod(c.h - LeadlightTokens.GOLD.h + 0.5, 1.0) - 0.5) * 360.0
-	return hue_gap <= 20.0 and c.s > 0.25 and c.v > 0.45
+	return hue_gap <= 12.0 and c.s > 0.45 and c.v > 0.55
 
 
 ## A route change, frame by frame from the settled source: open taps the room's
@@ -280,16 +418,31 @@ static func _is_gold(image: Image, at: Vector2i) -> bool:
 func _sequence(kind: String, room: String) -> void:
 	await _settle()
 	var title: TitleScreen = _title()
+	var fight: MapNode = null
 	if kind == "close":
 		await _tap(_word(title, room).get_global_rect().get_center())
 		await _settle()
 		await _wait(0.6)
+	elif kind == "fight":
+		await _tap(title.lantern.get_global_rect().get_center())
+		await _settle()
+		await _wait(1.5)
+		for node: MapNode in _main._map.nodes:
+			if node.type == "monster" and fight == null:
+				fight = node
 	var frames: Array[Image] = []
 	await _frames(1)
 	var idle: Image = root.get_texture().get_image()
 	await _frames(1)
 	frames.append(root.get_texture().get_image())
-	_tap_now(_word(title, room).get_global_rect().get_center() if kind == "open" else _exit_point(room))
+	if fight != null:
+		_main._prepare_encounter(fight)
+	elif kind == "open":
+		_tap_now(_word(title, room).get_global_rect().get_center())
+	elif str(ROOM_EXITS[room]).is_empty():
+		_tap_now(VEIL_TAP)
+	else:
+		_tap_control_now(_labelled(_main, Locale.active.t(str(ROOM_EXITS[room]))))
 	for _i: int in range(int(str(_args.get("frames", "40")))):
 		_hide_dev_word()
 		await process_frame
@@ -312,7 +465,11 @@ func _gates(frames: Array[Image], idle: Image) -> void:
 	print("grey gate %s: worst frame %d has %.2f%% grey (limit %.1f%%)" % [
 		"PASS" if grey_pass else "FAIL", worst_at, worst_grey * 100.0, GREY_SHARE * 100.0])
 	var whole: float = _change(frames[0], frames[frames.size() - 1])
-	var noise: float = _change(idle, frames[0])
+	# Idle noise at both ends: the source's before the tap, the settled
+	# destination's between its last two frames (a flame flickers under
+	# Reduce Motion too).
+	var noise: float = maxf(_change(idle, frames[0]),
+		_change(frames[frames.size() - 2], frames[frames.size() - 1]))
 	var step: float = 0.0
 	var step_at: int = 0
 	for i: int in range(1, frames.size()):

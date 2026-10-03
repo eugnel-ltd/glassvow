@@ -225,6 +225,18 @@ and the room. The lantern fades out at home over 75 ms and in at the seat over 7
 composition is identical. No ghost word, trace, front, swing, slide, walk or plate motion. Section,
 look and pane changes cross-fade in 150 ms (the plate jumps under the fade). `TransitionLayer.screen_in`
 becomes a 150 ms fade game-wide instead of today's hard cut. The flood keeps its shipped 0.15 s form.
+
+*As built in PR A:* every change of what is on screen under Reduce Motion (each route, each room, confirm
+or run menu opening or closing) is one cross-fade from the frame before it. Main asks the transition
+layer for it just before the change (`TransitionLayer.cross_fade`); the layer copies the frame on screen
+(a GPU texture copy, about 0.04 ms on the M1; a read-back where the renderer has no device), lays it over
+whatever the change puts there and fades it out in 150 ms, linear, never more than a ninth a frame, so a
+route built on the tap frame cannot spend the fade unseen. The new screen stands whole beneath it from its
+first frame. Fading the leaving nodes through their root instead was tried and rejected: every stacked
+layer blends on its own, which bunches the change into the fade's last frames (the Vigil's last step was
+3.6 times its first), and it keeps a screen alive and able to route after the change. The screen that
+leaves is freed at once, as under full motion. With nothing copied (the headless renderer), `screen_in`
+fades up from the night.
 Idle motion follows opening §7: the flame's flicker (and the Vigil's firelight, which is the fire's
 flicker) stays; everything else at rest stops.
 
@@ -794,6 +806,12 @@ the full ellipse and the hairline, with a touch player's input only). Keyboard f
 6. **The keyboard ring becomes a rim**, not an ellipse across the road: a silhouette of the lantern art
    (a white alpha mask built once per process from `lantern-hero.png` at 256², lazily on the first
    visible focus) drawn behind the art in GOLD at 0.45, scaled ×1.04 about the glass centre.
+   *As built:* grown outward evenly instead (the union of the body's silhouette shifted 3 mask px, and
+   half that, every way: about 5 px at 1180×820, 2.6 px on a phone), since a scale about the glass centre
+   thickens the band with distance from it, into a solid cap over the chain. The chain is not rimmed: the
+   rim starts at the roof (the art's 240 of 1024 px), so it never climbs to the plaque on the chain's ring.
+   The plaque's hairline runs in the clear band between the name's ink and the sub-line's, measured from
+   the shaped glyphs (`LeadlightPlaque.hairline_y`), since the sub-line is tucked into the name's line box.
 7. **Smooth light.** The plaque halo uses a six-stop smoothstep falloff, grown 10% across and 60% up and
    down (was 18% and 90%), its height tied to the name's width so its aspect never exceeds 2.6:1; the
    lantern pool texture goes to 512² with six stops; under Reduce Motion the pool takes the flame's
@@ -836,6 +854,16 @@ h, i and j, each 1 s after landing. Pass:
 - a crop of the plaque with levels lifted shows no halo edge;
 - path j (Tab) shows the silhouette rim (gold within 6 px outside the art's alpha edge on at least 60% of
   its perimeter samples) and no ellipse.
+
+*As measured in PR A* (`stills/pr-a/focus-paths.txt`): every path a, c, e, g, h, i and j at pad and phone
+scores 0 of 64 on the gold samples and a band count equal to the cold-boot control's. The spec's gold does
+not see the shipped ring, though: a 1.2 px line of GOLD at 0.55 over the blue road reads at saturation
+0.10–0.15, so `before/22` scores 1 of 64 and less band gold than the control. The ring is therefore also
+measured as what it is, a line (a pixel 0.12 brighter than the road 4 px either side, at a sample and one
+beside it): `before/22` 43 of 64, `before/03` 44 of 64, every path above 0 of 64, absolutely and beyond the
+control. The plaque crop with levels lifted is `oval-plaque-levels-pad-en.jpg`; the rim covers 97–100% of
+the perimeter samples. The phone Vigil's RETURN stands below the stage until PR C, so on that path its
+tap is delivered to the button as the viewport delivers a tap (the run says so).
 
 ---
 
@@ -1090,7 +1118,8 @@ Every row of §5.1 at pad en with `--fixed-fps 60`, frames 0 to settled + 4, as 
 V1, V3 and C1 also at phone zh-Hant and under Reduce Motion. **Grey gate:** no frame of any sequence has
 more than 0.5% of its pixels within ±4 of RGB (77, 77, 77). **Cut gate:** under Reduce Motion no frame differs from
 the one before it by more than an eighth of the whole change plus idle noise (a 150 ms fade moves about a
-ninth per frame at 60 fps; today's hard cut moves all of it in one).
+ninth per frame at 60 fps; today's hard cut moves all of it in one). The idle noise is the larger of the source's (two frames before the tap) and
+the settled destination's (its last two frames), since a flame flickers under Reduce Motion too.
 
 ### 11.6 Frame times
 
@@ -1193,31 +1222,44 @@ cross-fades; one cue per tap.
    18 at pad and 14 at phone (the plaque stays 24 / 17): the quiet words, the Rekindle pane, the carved
    deeds, the plaque's act and waystone line and the first launch's consent line, note and Privacy Policy
    word. The composition is kept by layout, not by smaller type: the plaque stands on the lantern's ring
-   with its sub-line tucked into Cinzel's spare line height, the deed slabs sit higher and nearer the
-   road, a long Roman count is set with its tracking closed up rather than cut (never smaller), and the
-   consent sentence reads across its row in balanced lines with the switch and the link under it, the
-   left words standing from the top of their arc while it shows so the row clears them at the 44 px
-   touch floor. Raising
-   the four shared tokens also lifts the departure's, the confirm sheets' and Settings' kit words and
-   panes to 18 at pad; each was checked at the three shapes in both languages. Settings' rows are rebuilt
-   in PR B and are not part of this. Pinned by `tests/test_title_rubric.gd`.
+   with its sub-line tucked into Cinzel's spare line height, a long Roman count is set with its tracking
+   closed up rather than cut (never smaller), and the consent sentence reads across its row in balanced
+   lines with the switch and the link under it, the left words standing from the top of their arc while
+   it shows so the row clears them at the 44 px touch floor. Settings' rows are rebuilt in PR B and are
+   not part of this. Pinned by `tests/test_title_rubric.gd`, at every shape, in both languages and in every
+   state the title shows (the consent line owed with a saved run and deeds included), with nothing on the
+   title standing on anything else.
 
-   **Waivers, recorded.** (a) The build number (`TitleScreen._version`, 11 px, dim, bottom right) is not
+   **Waiver, recorded.** The build number (`TitleScreen._version`, 11 px, dim, bottom right) is not
    functional text: it is a build identifier for reports, read by no player decision; it stays below the
-   floor, and the test fails if it ever grows past it unnoticed. (b) The carved deeds are set at 18 px and
-   drawn lying on the flagstones (`lie` 0.3 on pad, the shipped perspective), so their capitals stand about
-   14 px tall on the stage; the set size meets the floor and the foreshortening is the owner-signed look of
-   an inscription in the road, not a smaller type.
+   floor, and the test fails if it ever grows past it unnoticed. It is the only waiver. The carved deeds
+   meet the floor as they are drawn: lying on the road foreshortens them, so they are set larger
+   (`LeadlightInscription`: the set size is the role's size over the lie's squash, 20 px for 18 at pad and
+   desktop, 16 for 14 on a phone, with the lie eased to 0.14), and the test reads the drawn size.
+
+   *As built after the PR A review:* the deeds stand in the road's two corners, each from its own edge of
+   the stage (clear of the build number), two close lines with their foot near the stage's foot, lower and
+   further out than the words, so they no longer read as a fourth row of the menu. The consent line takes
+   the foot of the left side only when it is free (a fresh install's two left words); with a saved run's
+   three left words it stands in the open sky top right instead, clear of the wordmark, so it never lies
+   over How to Play or the deeds (a player from before the consent line existed). Its zh-Hant sentence
+   breaks at the "，" that best balances it, never inside a word such as 資料, and the switch's ON / OFF
+   (開 / 關) is set at the caption's size like the sentence. Settings' row panes (Erase All Progress, Close,
+   Privacy Policy) keep their shipped 15 px: they are rebuilt with the room in PR B. The departure's and the
+   confirm sheets' words and panes do rise with the kit's tokens (18 at pad and desktop, 14 on a phone):
+   the Begin Anew, Abandon Run, Leave the Road and Erase Everything sheets and the departure are in
+   `stills/pr-a/` at the three shapes in both languages.
 
    **Found while raising it:** the lantern's button took a tap anywhere in its 420 px square, so in
    zh-Hant on pad the middle of 設定 (and, at 18 px, of 續火) fell on the lantern and took the road. The
    lantern's hit is now its own body (`LeadlightLantern.HIT_UV`, the art's opaque bounds); every word's
    and pane's rect is held clear of it at every shape, in both languages.
 
-   **Evidence:** `stills/pr-a/` (the title in four states at three shapes in both languages, the
-   returns and the keyboard rim with `focus-paths.txt`, the before and after sheets, the Reduce
-   Motion and grey-frame sequences with `sequence-gates.txt`, the kit surfaces at 18 px), taken with
-   `tools/capture_rooms.gd`.
+   **Evidence:** `stills/pr-a/` (the title in five states, fresh, saved, the Vigil's deeds, the consent
+   line and the deeds with the consent line still owed, at three shapes in both languages; the returns
+   a, c, e, g, h, i and the keyboard rim j at pad and phone with `focus-paths.txt`; the oval, rim,
+   plaque and type before-and-after sheets; the Reduce Motion and grey-frame sequences with
+   `sequence-gates.txt`; the kit surfaces, `kit-surfaces-at-18px-*`), taken with `tools/capture_rooms.gd`.
 
 Everything else is decided here: Erase → Cancel lands on the title (behaviour unchanged); the Sentry
 notice ships when the addon is in the export; the Act IV track titles are held until the unsealing; the
