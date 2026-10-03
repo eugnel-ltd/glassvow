@@ -260,7 +260,7 @@ func _ready() -> void:
 	# tools/shot.sh --enemies|--chips|--hud|--reward --shot=...  (labs)
 	# godot --path . -- --cards=bastion --surfaces[=gilt,holofoil]  (materials)
 	# godot --path . -- --studio[=bastion] [--zoom=3]   (material bench)
-	# tools/shot.sh --turns[=bastion] --zoom=2 --settle=1 --shot=...  (turn sheet)
+	# tools/shot.sh --turns[=bastion] --vp=2916x1640 --settle=1 --shot=...  (turn sheet)
 	# godot --path . -- --fight=id[,id] [--kind=normal|elite|boss]   (battlefield)
 	# godot --path . -- --vp=1280x720            (watch the shape re-pick live)
 	# godot --path . -- --shape=phone-landscape   (force one; ?shape= ported)
@@ -506,7 +506,7 @@ func _ready() -> void:
 	if turns:
 		# The turn sheet: one card turned by both renderers, back by back.
 		add_child(CardTurnSheet.new(content,
-			cards_only[0] if not cards_only.is_empty() else "", cards_zoom))
+			cards_only[0] if not cards_only.is_empty() else ""))
 		if shot_path != "":
 			_capture_and_quit(shot_path)
 		return

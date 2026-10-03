@@ -4,10 +4,15 @@ extends Control
 ## CardView.turn's renderers, for every back in the catalogue. Each back gets
 ## two rows, the live turn over the picture turn, so the two can be compared
 ## down a column and the whole sheet against an earlier still. It is the
-## turn's regression still (docs/design/2026-10-03-cards-real-objects/stills/).
+## turn's regression still
+## (docs/design/2026-10-03-cards-real-objects/stills/14-turn-sheet-live-over-picture.jpg).
 ##
-##   godot --path . -- --turns[=bastion] [--zoom=2]
-##   tools/shot.sh --turns --zoom=2 --settle=1 --shot=/tmp/turns.png
+##   godot --path . -- --turns[=bastion]
+##   tools/shot.sh --turns --vp=2916x1640 --settle=1 --shot=/tmp/turns.png
+##
+## The sheet is laid out on the 1458 x 820 desktop stage; a window twice that
+## size draws it at twice the pixels (the stage stretch re-rasterises), which
+## is how the still is taken.
 ##
 ## Every back is baked first and worn as the table's back (CardTurn.prewarm),
 ## as a fight's load does, so each row turns exactly as a fight's card would.
@@ -28,16 +33,13 @@ const HEADER_H: float = 26.0
 
 var content: ContentDB
 var _card_id: String = DEFAULT_CARD
-var _zoom: float = 1.0
 var _uid: int = 1
 
 
-func _init(content_ref: ContentDB, card_id: String = "", zoom: float = 1.0) -> void:
+func _init(content_ref: ContentDB, card_id: String = "") -> void:
 	content = content_ref
 	if card_id != "":
 		_card_id = card_id
-	_zoom = maxf(1.0, zoom)
-	CardView.oversample = maxf(2.0, _zoom)
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = GlassStyle.theme()
 	var field: ColorRect = ColorRect.new()
@@ -48,10 +50,6 @@ func _init(content_ref: ContentDB, card_id: String = "", zoom: float = 1.0) -> v
 
 
 func _ready() -> void:
-	if not is_equal_approx(_zoom, 1.0):
-		var win: Window = get_window()
-		win.content_scale_factor = _zoom
-		win.size = Vector2i(Vector2(win.size) * _zoom)
 	await get_tree().process_frame
 	var data: Dictionary = CardLab.load_catalog(content).get(_card_id, {})
 	if data.is_empty():

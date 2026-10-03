@@ -221,7 +221,7 @@ and back to rest is the card as built, every canvas pixel and stage texel
 (`REST`). It exits 0 on a pass, 1 on a failure and 2 under `--headless`:
 
 ```bash
-tools/shot.sh --turns[=bastion] --zoom=2 --vp=1458x820 --settle=1 --shot=/tmp/turns.png
+tools/shot.sh --turns[=bastion] --vp=2916x1640 --settle=1 --shot=/tmp/turns.png
 godot --path . -s res://tools/check_card_turn.gd -- --out=/tmp/card-turn [--card=bastion]
 ```
 
