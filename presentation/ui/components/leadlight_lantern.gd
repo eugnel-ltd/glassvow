@@ -92,6 +92,8 @@ var _ember_flame: TextureRect
 var _ember_fire: LanternFlame
 static var _blank: Texture2D = null
 static var _rim_mask: Texture2D = null
+## Whether a lantern has drawn its lit layer this session (its pipeline warm).
+static var _lit_warm: bool = false
 var _time: float = 0.0
 var _focus_shown: bool = false
 ## The rim's two silhouettes (halo, then rim), made on the first shown focus.
@@ -159,7 +161,12 @@ func _ready() -> void:
 	# would otherwise wait on (~0.14 s on Metal, cold). The launch's first
 	# frames show only the ember and the cold lantern, so the lit layer joins
 	# one frame later and its compile lands inside the ember's breath; the
-	# title takes input from its first frame either way.
+	# title takes input from its first frame either way. Once a lantern has
+	# lit, the pipeline is warm: a later lantern (a title rebuilt on a return)
+	# is lit from its first frame, never a cold lantern for one (#655: it
+	# showed through a Reduce Motion cross-fade).
+	if _lit_warm:
+		return
 	_lit.visible = false
 	_glow.visible = false
 	get_tree().process_frame.connect(_show_lit, CONNECT_ONE_SHOT)
@@ -168,6 +175,7 @@ func _ready() -> void:
 func _show_lit() -> void:
 	_lit.visible = true
 	_glow.visible = true
+	_lit_warm = true
 
 
 func _notification(what: int) -> void:

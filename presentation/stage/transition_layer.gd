@@ -114,9 +114,22 @@ void fragment() {
 }
 """
 
+## The most a Reduce Motion fade moves in one frame: a route built on the tap
+## frame (a long frame) cannot spend the fade before it is seen, so a fade of
+## REDUCED_FADE always takes at least nine drawn frames at 60 fps.
+const FADE_STEP_MAX: float = 1.0 / 60.0
+## A frame's colour formats and their sRGB views (`_capture`).
+const SRGB_OF: Dictionary = {
+	RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM: RenderingDevice.DATA_FORMAT_R8G8B8A8_SRGB,
+	RenderingDevice.DATA_FORMAT_B8G8R8A8_UNORM: RenderingDevice.DATA_FORMAT_B8G8R8A8_SRGB,
+}
+
 ## Captures and headless drives must never wait on a tween: every ceremony
 ## method returns immediately when set. Main sets it from `--shot=`.
 var instant: bool = false
+## Where `cross_fade` takes the frame on screen from: the viewport's own image
+## (`_capture`). A suite stands in for it, the headless renderer having none.
+var snapshot_source: Callable = Callable()
 
 var _wipe: TextureRect
 var _iris: ColorRect
@@ -143,10 +156,27 @@ var _flood_mat: ShaderMaterial
 var _flood_tween: Tween = null
 var _flare: TextureRect
 var _flare_tween: Tween = null
+## The Reduce Motion fades running now, one per item: {"from", "to", "t",
+## "entry" (an entrance's number, or -1 for the snapshot)}.
+var _fades: Dictionary = {}
+## Reduce Motion's cross-fade: the last frame drawn, laid over whatever the
+## change puts on screen and faded out (`cross_fade`). Under the leaves.
+var _snapshot: TextureRect
+## The frame `_snapshot` was taken on: an entrance then lands whole under it.
+var _snapshot_frame: int = -1
+## The GPU texture `_snapshot` shows, when the renderer made one; freed with it.
+var _snapshot_rid: RID = RID()
 
 
 func _init() -> void:
 	layer = 10
+	_snapshot = TextureRect.new()
+	_snapshot.name = "ReducedMotionSnapshot"
+	_snapshot.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_snapshot.stretch_mode = TextureRect.STRETCH_SCALE
+	_snapshot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_snapshot.visible = false
+	add_child(_snapshot)
 	_wipe = TextureRect.new()
 	_wipe.texture = _band_texture()
 	_wipe.stretch_mode = TextureRect.STRETCH_SCALE
@@ -252,6 +282,8 @@ func _init() -> void:
 
 
 func _process(delta: float) -> void:
+	if not _fades.is_empty():
+		advance_fades(delta)
 	# `#grain { display: none; }` under prefers-reduced-motion
 	# (styles.css:2037): the film disappears entirely — a noise plate held
 	# still would read as dirt on the glass. Faded rather than hidden so
@@ -298,10 +330,14 @@ func _hide_wipe() -> void:
 
 ## Every screen root's entrance: fade in with a 1.015 → 1 settle about the
 ## centre. The pivot needs a laid-out size, so the scale half waits one frame
-## and is skipped when the root has none to offer. Under Reduce Motion it is a
-## REDUCED_FADE linear fade with no settle (docs/design/2026-10-03-title-rooms
-## §2.7): a route change is never a hard cut. Either way the screen comes up
-## out of the night, the project's clear colour (§2.8), never the engine's grey.
+## and is skipped when the root has none to offer. The screen comes up out of
+## the night, the project's clear colour (docs/design/2026-10-03-title-rooms
+## §2.8), never the engine's grey.
+##
+## Under Reduce Motion a route change is a REDUCED_FADE cross-fade, never a
+## hard cut (§2.7): the frame it replaces fades out over it (`cross_fade`), so
+## the entrance lands whole beneath; with nothing copied, it fades up from the
+## night with no settle.
 ##
 ## A root can enter more than once: the map screen is kept off the tree between
 ## visits (`MapScreenKeep`). Each entrance is numbered on the root, and only the
@@ -319,7 +355,7 @@ func screen_in(root: Control) -> void:
 		root.modulate.a = 1.0
 		return
 	if Preferences.active.reduce_motion:
-		_fade_in(root, entry)
+		_reduced_entrance(root, entry)
 		return
 	root.modulate.a = 0.0
 	await tree.process_frame
@@ -341,17 +377,140 @@ func screen_in(root: Control) -> void:
 	Motion.bez(root, entrance, SCREEN_IN_TIME, Motion.SCREEN_IN)
 
 
-## Reduce Motion's entrance: from nothing on the call's own frame to whole in
-## REDUCED_FADE, linear, at full scale. Bound to the root, so a route change
-## mid-fade frees it with the screen; numbered, so only the latest entrance
-## writes.
-func _fade_in(root: Control, entry: int) -> void:
+## Reduce Motion's form of every change of screen (docs/design/2026-10-03-title-
+## rooms §2.7): a 150 ms linear cross-fade, never a cut. Called before the
+## change: the frame on screen now (the screen leaving, or the screen before a
+## room opens or closes over it) is copied and laid over whatever the change
+## puts there, then fades out in REDUCED_FADE, so every frame between is a
+## straight blend of the two. A copy of the drawn frame, not the leaving nodes
+## faded through their root: that blends each of its stacked layers on its
+## own and bunches the change into the fade's last frames, and it would keep
+## a screen alive (and able to route) after the change. One copy a frame,
+## however many changes the frame makes. True when the cross-fade runs; false
+## under full motion, for a capture, or with no frame to copy (headless).
+func cross_fade() -> bool:
+	if instant or not Preferences.active.reduce_motion or get_tree() == null:
+		return false
+	var now: int = Engine.get_process_frames()
+	if _snapshot_frame == now:
+		return true
+	_release_snapshot()
+	var frame: Texture2D = snapshot_source.call() if snapshot_source.is_valid() else _capture()
+	if frame == null:
+		return false
+	_snapshot_frame = now
+	_snapshot.texture = frame
+	_snapshot.position = Vector2.ZERO
+	_snapshot.size = _stage_size()
+	var vp: Viewport = get_viewport()
+	if vp != null:
+		# The copy is the whole window; the stage may be scaled into it.
+		var window: Rect2 = vp.get_stretch_transform().affine_inverse() \
+			* Rect2(Vector2.ZERO, Vector2(frame.get_size()))
+		if window.size.x > 0.0 and window.size.y > 0.0:
+			_snapshot.position = window.position
+			_snapshot.size = window.size
+	_snapshot.modulate.a = 1.0
+	_snapshot.visible = true
+	_fades[_snapshot] = {"from": 1.0, "to": 0.0, "t": 0.0, "entry": -1}
+	return true
+
+
+## Whether a cross-fade is on screen now.
+func cross_fading() -> bool:
+	return _snapshot.visible
+
+
+## The frame on screen as a texture: copied on the GPU when the renderer has a
+## device (Forward+, Mobile: a copy of a few hundredths of a millisecond),
+## read back otherwise (Compatibility); null in the headless renderer.
+func _capture() -> Texture2D:
+	var vp: Viewport = get_viewport()
+	if vp == null or DisplayServer.get_name() == "headless":
+		return null
+	var source: ViewportTexture = vp.get_texture()
+	var device: RenderingDevice = RenderingServer.get_rendering_device()
+	if device != null:
+		var from: RID = RenderingServer.texture_get_rd_texture(source.get_rid())
+		if from.is_valid():
+			var format: RDTextureFormat = device.texture_get_format(from)
+			if format.usage_bits & RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT:
+				var copy: RDTextureFormat = RDTextureFormat.new()
+				copy.width = format.width
+				copy.height = format.height
+				copy.format = format.format
+				copy.usage_bits = RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT \
+					| RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT
+				# The canvas samples a colour texture through an sRGB view too:
+				# the copy must allow one, or it is no texture to the canvas.
+				var srgb: int = SRGB_OF.get(format.format, -1)
+				if srgb >= 0:
+					copy.add_shareable_format(format.format)
+					copy.add_shareable_format(srgb as RenderingDevice.DataFormat)
+				var to: RID = device.texture_create(copy, RDTextureView.new())
+				if to.is_valid() and device.texture_copy(from, to, Vector3.ZERO, Vector3.ZERO,
+						Vector3(format.width, format.height, 1), 0, 0, 0, 0) == OK:
+					_snapshot_rid = to
+					var texture: Texture2DRD = Texture2DRD.new()
+					texture.texture_rd_rid = to
+					return texture
+				if to.is_valid():
+					device.free_rid(to)
+	var image: Image = source.get_image()
+	if image == null or image.is_empty():
+		return null
+	return ImageTexture.create_from_image(image)
+
+
+func _release_snapshot() -> void:
+	_snapshot.visible = false
+	_snapshot.texture = null
+	_fades.erase(_snapshot)
+	if _snapshot_rid.is_valid():
+		var device: RenderingDevice = RenderingServer.get_rendering_device()
+		if device != null:
+			device.free_rid(_snapshot_rid)
+		_snapshot_rid = RID()
+
+
+## Whole under a cross-fade taken this frame; otherwise (nothing could be
+## copied) from nothing on the call's own frame to whole in REDUCED_FADE,
+## linear, at full scale. Numbered, so only the latest entrance writes.
+func _reduced_entrance(root: Control, entry: int) -> void:
 	root.scale = Vector2.ONE
+	if _snapshot_frame == Engine.get_process_frames():
+		_fades.erase(root)
+		root.modulate.a = 1.0
+		return
 	root.modulate.a = 0.0
-	var fade: Callable = func(alpha: float) -> void:
-		if is_instance_valid(root) and _entrance_of(root) == entry:
-			root.modulate.a = alpha
-	root.create_tween().tween_method(fade, 0.0, 1.0, LeadlightMotion.REDUCED_FADE)
+	_fades[root] = {"from": 0.0, "to": 1.0, "t": 0.0, "entry": entry}
+
+
+## Moves every Reduce Motion fade on by `delta` seconds, never by more than
+## FADE_STEP_MAX. Called each frame; a suite calls it to step the fades.
+func advance_fades(delta: float) -> void:
+	var step: float = minf(delta, FADE_STEP_MAX) / LeadlightMotion.REDUCED_FADE
+	for key: Variant in _fades.keys():
+		var fade: Dictionary = _fades[key]
+		if not is_instance_valid(key):
+			_fades.erase(key)
+			continue
+		var item: CanvasItem = key
+		var entry: int = fade["entry"]
+		if entry >= 0 and _entrance_of(item as Control) != entry:
+			_fades.erase(item)
+			continue
+		var was: float = fade["t"]
+		var from: float = fade["from"]
+		var to: float = fade["to"]
+		var t: float = minf(was + step, 1.0)
+		fade["t"] = t
+		item.modulate.a = lerpf(from, to, t)
+		if t < 1.0:
+			continue
+		_fades.erase(item)
+		if item == _snapshot:
+			_release_snapshot()
 
 
 ## The number of the latest `screen_in` on `root`; zero before its first.

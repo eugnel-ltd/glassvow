@@ -70,6 +70,8 @@ var _defocused_under_modal: Array[Dictionary] = []
 ## The button holding focus when the veil rose — thaw hands it back, so the
 ## title does not come back keyboard-dead.
 var _refocus_after_thaw: BaseButton = null
+## Whether that focus was shown (a keyboard's) or held hidden (a tap's).
+var _refocus_shown: bool = false
 ## Whether the current `_modal` froze the world — the run-menu drawer does not.
 var _modal_froze: bool = false
 ## Above RunHud's z 100 (run_hud.gd:37): the veil must outdraw the chrome it
@@ -926,6 +928,7 @@ func _clear_route() -> void:
 	_thaw_surfaces()
 	if _hints != null:
 		_hints.hide_callout()
+	_cross_fade()
 	for screen: Control in [
 		_screen, _choice_screen, _reward_screen, _route_screen, _run_hud, _modal,
 	]:
@@ -950,6 +953,15 @@ func _clear_route() -> void:
 	_route_screen = null
 	_run_hud = null
 	_modal = null
+
+
+## Under Reduce Motion every change of what is on screen (a route, a room or
+## a confirm opening or closing) is a 150 ms cross-fade from the frame before
+## it (TransitionLayer.cross_fade, docs/design/2026-10-03-title-rooms §2.7),
+## never a cut; called before the change. Full motion is as shipped.
+func _cross_fade() -> void:
+	if _transitions != null:
+		_transitions.cross_fade()
 
 
 func _freeze_under_modal() -> void:
@@ -981,6 +993,8 @@ func _freeze_under_modal() -> void:
 			if button.focus_mode != Control.FOCUS_NONE:
 				if button.has_focus():
 					_refocus_after_thaw = button
+					# Shown or held hidden: the thaw gives it back the same way.
+					_refocus_shown = button.has_focus(true)
 					button.release_focus()
 				_defocused_under_modal.append({
 					"button": button, "mode": button.focus_mode,
@@ -1007,10 +1021,13 @@ func _thaw_surfaces() -> void:
 			button.focus_mode = mode as Control.FocusMode
 	_defocused_under_modal.clear()
 	if _refocus_after_thaw != null and is_instance_valid(_refocus_after_thaw):
-		# Back where it was, shown only to a keyboard or pad player: a tapped
-		# Close no longer leaves a ring under the word that opened the room.
-		LeadlightFocus.give(_refocus_after_thaw)
+		# Back where it was and as it was (docs/design/2026-10-03-title-rooms
+		# §6.2 item 4): a word a tap opened gets its focus back hidden, however
+		# the room was left, so a tapped word never comes back ringed; a word a
+		# keyboard opened gets its ring back.
+		_refocus_after_thaw.grab_focus(not _refocus_shown)
 	_refocus_after_thaw = null
+	_refocus_shown = false
 	if _choice_screen != null and is_instance_valid(_choice_screen):
 		_choice_screen.set_process_unhandled_key_input(true)
 	if _run_hud != null and is_instance_valid(_run_hud):
@@ -1019,6 +1036,7 @@ func _thaw_surfaces() -> void:
 
 func _close_choice_overlay() -> void:
 	if _choice_screen != null:
+		_cross_fade()
 		_choice_screen.queue_free()
 		_choice_screen = null
 	_thaw_under_modal()
@@ -1052,7 +1070,10 @@ func _attach_run_hud() -> void:
 	add_child(_run_hud)
 
 
+## Under Reduce Motion a room never lands or leaves in one frame: it
+## cross-fades with the screen it opens over (`_cross_fade`).
 func _show_overlay(screen: Control, freeze: bool = true) -> void:
+	_cross_fade()
 	if _modal != null:
 		if _modal_froze:
 			_thaw_under_modal()
@@ -1071,6 +1092,7 @@ func _show_overlay(screen: Control, freeze: bool = true) -> void:
 func _close_overlay() -> void:
 	if _modal == null:
 		return
+	_cross_fade()
 	_modal.queue_free()
 	_modal = null
 	if _modal_froze:
@@ -1108,6 +1130,7 @@ func _show_choice(title: String, body: String, choices: Array[Dictionary], handl
 	var live: bool = _route_screen != null or _map_screen != null or _reward_screen != null
 	if overlay and live:
 		# Keep the routed surface; veil + freeze instead of a wipe/clear.
+		_cross_fade()
 		if _choice_screen != null:
 			_close_choice_overlay()
 		_freeze_under_modal()
