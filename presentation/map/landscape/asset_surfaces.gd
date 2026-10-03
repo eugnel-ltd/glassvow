@@ -9,7 +9,6 @@ extends RefCounted
 ## than order-dependent blending, and sways (R2 step 3; `foliage.gdshader`).
 const FOLIAGE: Shader = preload("res://presentation/map/landscape/foliage.gdshader")
 const BANNER: Shader = preload("res://presentation/map/landscape/banner.gdshader")
-const LandMotion = preload("res://presentation/map/landscape/land_motion.gd")
 const STONE: Texture2D = preload("res://assets/art/map-journey/textures/ash-stone-colour.png")
 const TWIGS: Texture2D = preload("res://assets/art/map-journey/textures/ash-twigs.png")
 const SPRAYS: Texture2D = preload("res://assets/art/map-journey/textures/conifer-sprays.png")
@@ -77,7 +76,6 @@ static func _foliage(original: StandardMaterial3D, source: Texture2D) -> ShaderM
 	material.set_shader_parameter("albedo_texture_size",
 		Vector2i(texture.get_size()) if texture != null else Vector2i.ONE)
 	material.set_shader_parameter("specular", original.metallic_specular)
-	LandMotion.register(material)
 	return material
 
 
@@ -89,5 +87,4 @@ static func _banner(original: StandardMaterial3D) -> ShaderMaterial:
 	material.shader = BANNER
 	material.set_shader_parameter("albedo", original.albedo_color)
 	material.set_shader_parameter("roughness", original.roughness)
-	LandMotion.register(material)
 	return material
