@@ -50,9 +50,14 @@ const PROFILES: Dictionary = {
 static var _held: Array[PackedScene] = []
 
 
+## How long `preload_scenes` took on the main thread (benches and probes).
+static var preload_ms: float = 0.0
+
+
 static func preload_scenes() -> void:
 	if not _held.is_empty():
 		return
+	var started: int = Time.get_ticks_usec()
 	var paths: Dictionary = {}
 	for kind: String in PROFILES:
 		var path: String = "res://assets/art/map-journey/%s.glb" % kind
@@ -64,6 +69,7 @@ static func preload_scenes() -> void:
 	var failure: String = preload("res://presentation/map/landscape/static_scenery.gd").prepare_templates(paths)
 	if not failure.is_empty():
 		push_error("Journey kit: " + failure)
+	preload_ms = (Time.get_ticks_usec() - started) / 1000.0
 
 
 func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dictionary = {}, cache: Resource = null) -> void:
