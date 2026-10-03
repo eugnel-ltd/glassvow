@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "pack_id": "ashglass-v1-unsealing",
+  "pack_id": "ashglass-v1-opening",
   "theme": "Ashglass Vigil",
   "source": "docs/sfx-ledger.md",
   "items": {
@@ -214,6 +214,20 @@
       "usage": "Energy gain sample",
       "review_note": "Small but noticeable; should not fight piano attacks in BGM."
     },
+    "glassTakesLight": {
+      "file": "glassTakesLight.mp3",
+      "bytes": 33061,
+      "duration_seconds": 2.0,
+      "requested_duration_seconds": 2.0,
+      "prompt_influence": 0.6,
+      "prompt": "One-shot: warm resonant glass hum swelling as light fills old stained glass, a soft crystalline shimmer and a bowed-glass tone rising gently and settling. Calm, luminous, intimate. No choir, no vocals, no bells, no whoosh, no sparkle arpeggio, no long cinematic tail.",
+      "source_candidates": [
+        "glassTakesLight-b.mp3"
+      ],
+      "normalisation_gain_db": 0.3400000035762787,
+      "usage": "Launch rite: the lantern's glass taking light",
+      "review_note": "Owner pick (James, 2 Oct 2026, audition page). Peak-normalised to -3 dBFS; see docs/sfx-ledger.md."
+    },
     "heal": {
       "file": "heal.mp3",
       "bytes": 10911,
@@ -254,6 +268,20 @@
       "usage": "Kindle / lantern feed",
       "review_note": "More physical than `ember`; less explosive than `art`."
     },
+    "kindleCatch": {
+      "file": "kindleCatch.mp3",
+      "bytes": 26792,
+      "duration_seconds": 1.6,
+      "requested_duration_seconds": 1.6,
+      "prompt_influence": 0.6,
+      "prompt": "One-shot: a single ember breathing in total darkness, a faint dry crackle, then a soft airy whoosh as a small candle-sized flame catches inside an iron lantern. Intimate, close-mic, warm. No music, no choir, no fire roar, no explosion, no long tail.",
+      "source_candidates": [
+        "kindleCatch-b.mp3"
+      ],
+      "normalisation_gain_db": -2.130000114440918,
+      "usage": "Launch rite: the lantern's flame catching",
+      "review_note": "Owner pick (James, 2 Oct 2026, audition page). Peak-normalised to -3 dBFS; see docs/sfx-ledger.md."
+    },
     "map": {
       "file": "map.mp3",
       "bytes": 11328,
@@ -273,6 +301,34 @@
       "prompt": "Omen banner reveal: dark bass breath, broken-glass rune vibration, short ominous swell, restrained gothic ceremony, no choir, no spoken whisper, no pipe organ, no horror scream, no long tail.",
       "usage": "Omen banner / omen reveal on act entry",
       "review_note": "Can be darker than other UI, but avoid over-scoring the BGM."
+    },
+    "paneChoose": {
+      "file": "paneChoose.mp3",
+      "bytes": 12163,
+      "duration_seconds": 0.68,
+      "requested_duration_seconds": 0.7,
+      "prompt_influence": 0.6,
+      "prompt": "One-shot UI confirmation: a bright clear glass chime struck once with a soft warm flare under it, satisfying and short. Not a bell tower, no choir, no beep, no sparkle arpeggio, short tail.",
+      "source_candidates": [
+        "paneChoose-a.mp3"
+      ],
+      "normalisation_gain_db": 14.130000114440918,
+      "usage": "A language pane chosen; the lantern pressed",
+      "review_note": "Owner pick (James, 2 Oct 2026, audition page). Peak-normalised to -3 dBFS; see docs/sfx-ledger.md."
+    },
+    "paneRise": {
+      "file": "paneRise.mp3",
+      "bytes": 10492,
+      "duration_seconds": 0.6,
+      "requested_duration_seconds": 0.6,
+      "prompt_influence": 0.6,
+      "prompt": "One-shot UI sound: a small leaded glass pane sliding up into its frame, a soft glass tone with a tiny metallic tick of lead at the end. Quiet, short, close. No beep, no whoosh, no bell, no reverb tail.",
+      "source_candidates": [
+        "paneRise-c.mp3"
+      ],
+      "normalisation_gain_db": 3.6500000953674316,
+      "usage": "First launch: the two language panes rising",
+      "review_note": "Owner pick (James, 2 Oct 2026, audition page). Peak-normalised to -3 dBFS; see docs/sfx-ledger.md."
     },
     "poison": {
       "file": "poison.mp3",
@@ -303,6 +359,83 @@
       "prompt": "Relic gained or monument claimed: antique glass-and-metal object settles into place, warm ceremonial chime, small stone thump, restrained gothic fantasy, no choir, no vocals, no full melody.",
       "usage": "Relic gain, lamplighter confirm, unlock toasts, monument claim",
       "review_note": "This is the premium reward sound; dignified, not flashy."
+    },
+    "roomClose": {
+      "files": [
+        "roomClose-1.mp3",
+        "roomClose-2.mp3",
+        "roomClose-3.mp3"
+      ],
+      "bytes": [
+        13835,
+        13835,
+        13835
+      ],
+      "duration_seconds": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "rotation": "random",
+      "requested_duration_seconds": 0.8,
+      "prompt_influence": 0.6,
+      "prompt": "One-shot: an old wooden window shutter swinging closed in a stone gatehouse at night, a soft wooden creak and a gentle muffled latch click. Close and quiet. No slam, no footsteps, no music.",
+      "source_candidates": [
+        "roomClose-a.mp3",
+        "roomClose-b.mp3",
+        "roomClose-c.mp3"
+      ],
+      "normalisation_gain_db": [
+        8.489999771118164,
+        1.0700000524520874,
+        15.710000038146973
+      ],
+      "usage": "The settings room closing; rotates at random among three variants",
+      "review_note": "Owner pick (James, 2 Oct 2026, audition page). Peak-normalised to -3 dBFS; see docs/sfx-ledger.md."
+    },
+    "roomOpen": {
+      "files": [
+        "roomOpen-1.mp3",
+        "roomOpen-2.mp3",
+        "roomOpen-3.mp3",
+        "roomOpen-4.mp3"
+      ],
+      "bytes": [
+        17179,
+        17179,
+        17179,
+        17179
+      ],
+      "duration_seconds": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "rotation": "random",
+      "requested_duration_seconds": 1.0,
+      "prompt_influence": 0.6,
+      "prompt": "One-shot: an old wooden window shutter swinging open in a stone gatehouse at night, a soft wooden creak and a muffled latch, faint distant night wind behind it. Close and quiet. No door slam, no footsteps, no music.",
+      "source_candidates": [
+        "roomOpen-b.mp3",
+        "roomOpen-d.mp3",
+        "roomOpen-e.mp3",
+        "roomOpen-f.mp3"
+      ],
+      "normalisation_gain_db": [
+        22.719999313354492,
+        26.43000030517578,
+        22.600000381469727,
+        16.020000457763672
+      ],
+      "usage": "The settings room opening; rotates at random among four variants",
+      "review_note": "Owner pick (James, 2 Oct 2026, audition page). Peak-normalised to -3 dBFS; see docs/sfx-ledger.md.",
+      "prompt_variants": [
+        "One-shot: an old wooden window shutter swinging open in a stone gatehouse at night, a soft wooden creak and a muffled latch, faint distant night wind behind it. Close and quiet. No door slam, no footsteps, no music.",
+        "One-shot, close-mic and clearly audible: an old wooden window shutter swinging open, a distinct wooden creak on its iron hinge and a soft latch lifting, in a stone room at night. Present and intimate, not distant. No door slam, no footsteps, no music, no long reverb.",
+        "One-shot, close-mic and clearly audible: an old wooden window shutter swinging open, a distinct wooden creak on its iron hinge and a soft latch lifting, in a stone room at night. Present and intimate, not distant. No door slam, no footsteps, no music, no long reverb.",
+        "One-shot, close-mic and clearly audible: an old wooden window shutter swinging open, a distinct wooden creak on its iron hinge and a soft latch lifting, in a stone room at night. Present and intimate, not distant. No door slam, no footsteps, no music, no long reverb."
+      ]
     },
     "shatter": {
       "file": "shatter.mp3",
