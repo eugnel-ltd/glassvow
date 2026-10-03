@@ -162,7 +162,7 @@ static func _map_main(content: ContentDB, seed: int) -> Main:
 	main._forced_seed = seed
 	main._vigil.scenes_seen.append("opening")
 	main._new_run()
-	if main._route_screen is LamplighterScreen:
+	if main._route_screen is DepartureScreen:
 		var offer: Dictionary = main.game.run.quest_scratch["lamplighterOffer"]
 		main._on_lamplighter_confirmed(str(offer["boons"][0]), main.game.run.art)
 	if main._map_screen == null or main._route_screen is DepartureStaging:

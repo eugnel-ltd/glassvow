@@ -76,6 +76,12 @@ var _sfx_bus: SfxBus
 var _vigil: VigilState
 var _embark_aspect: int = 0
 var _embark_vow: int = 0
+## This session's last setting-out ({"aspect", "vow", "art"}), offered as
+## "set out as before". Session memory only: no save or preference key.
+var _last_setup: Dictionary = {}
+## A new run's departure is on screen and owes the road its opening or its
+## staging once the Lamplighter's gift is answered.
+var _setting_out: bool = false
 var _run_over: bool = false
 var _bench_fight: bool = false
 var _run_save_path: String = SaveService.RUN_PATH
@@ -1190,17 +1196,12 @@ func _embark_is_zero_choice() -> bool:
 func _show_embark() -> void:
 	_remember_route(_show_embark)
 	var saved: bool = _load_run() != null
-	var screen: EmbarkScreen = EmbarkScreen.new(
-		content.aspects,
-		content.vows,
-		ClassScope.admitted(content, _vigil.unlocks).size() > 1,
-		_vigil.vow_unlocked,
-		saved,
-		_embark_aspect,
-		_embark_vow,
-		_shape,
-		_sfx_bus)
-	screen.begin_requested.connect(_on_embark_begin)
+	var screen: DepartureScreen = DepartureScreen.new(_shape, _sfx_bus)
+	screen.show_embark(content.aspects, content.vows,
+		ClassScope.admitted(content, _vigil.unlocks).size() > 1, _vigil.vow_unlocked,
+		saved, _embark_aspect, _embark_vow,
+		_last_setup if _last_setup.size() == 3 else {}, _vigil.unlocks.has("lamplighter"))
+	screen.embark_chosen.connect(_on_embark_begin)
 	screen.back_requested.connect(_show_title)
 	_show_route(screen, false, &"embark")
 
@@ -1210,6 +1211,8 @@ func _on_embark_begin(aspect: int, vow: int) -> void:
 		return
 	_embark_aspect = aspect
 	_embark_vow = vow
+	_last_setup["aspect"] = aspect
+	_last_setup["vow"] = vow
 	if _load_run() == null:
 		_new_run({"aspect": _embark_aspect, "vow": _embark_vow})
 	else:
@@ -1420,12 +1423,36 @@ func _new_run(profile: Dictionary = {}) -> void:
 		PoolBeats.stage(game.run, _vigil, content, PoolBeats.SLOT_HEARTH,
 			PoolBeats.KEY_START, PoolBeats.RESUME_MAP)
 	if _store_run():
-		if _plays_departure_staging():
-			_show_departure_staging()
+		if game.run.pending_lamplighter:
+			# Setting out is one departure (DepartureScreen): the Lamplighter's
+			# gift comes before the road, and its last answer flows into it.
+			_setting_out = true
+			_show_lamplighter()
 		else:
-			_route_run()
+			_flood_from_departure(_set_out)
 	else:
 		_show_save_error("ui.persistence.detail.pilgrimageStart")
+
+
+func _set_out() -> void:
+	_setting_out = false
+	if _plays_departure_staging():
+		_show_departure_staging()
+	else:
+		_route_run()
+
+
+## The departure's last answer flows into the hero's lantern, as the title's
+## does: flare and flood from its wick, then `next`. From anywhere else,
+## `next` at once.
+func _flood_from_departure(next: Callable) -> void:
+	var departure: DepartureScreen = _route_screen as DepartureScreen
+	if departure == null or not is_instance_valid(departure) or _transitions == null:
+		next.call()
+		return
+	var wick: Vector2 = departure.wick_on_stage()
+	_transitions.flare(wick)
+	_transitions.flood(wick, departure.lantern.light(), next)
 
 
 ## The one new-run class gate (#543). A refusal happens before any seed, save
@@ -4078,16 +4105,15 @@ func _show_lamplighter() -> void:
 			return
 	var aspect: Dictionary = content.aspects[game.run.aspect]
 	var boons: Array = offer.get("boons", [])
-	var screen: LamplighterScreen = LamplighterScreen.new(
-		aspect,
-		content.boons,
-		game.rewards.offer_arts(game.run),
-		boons,
-		game.run.art,
-		_shape,
-		_sfx_bus)
-	screen.confirmed.connect(_on_lamplighter_confirmed)
-	_show_route(screen, false, &"map")
+	# Continuing a departure already on screen (Embark answered): the gift
+	# rises in the same place. Otherwise the departure opens at the gift.
+	var screen: DepartureScreen = _route_screen as DepartureScreen
+	if screen == null or not is_instance_valid(screen):
+		screen = DepartureScreen.new(_shape, _sfx_bus)
+		_show_route(screen, false, &"map")
+	if not screen.gift_chosen.is_connected(_on_lamplighter_confirmed):
+		screen.gift_chosen.connect(_on_lamplighter_confirmed)
+	screen.show_gift(aspect, content.boons, game.rewards.offer_arts(game.run), boons, game.run.art)
 
 
 func _on_lamplighter_confirmed(boon_id: String, art_id: StringName) -> void:
@@ -4100,10 +4126,22 @@ func _on_lamplighter_confirmed(boon_id: String, art_id: StringName) -> void:
 	game.rewards.apply_boon(game.run, boon_id)
 	game.run.pending_lamplighter = false
 	game.run.quest_scratch.erase("lamplighterOffer")
+	_last_setup["art"] = art_id
 	if _store_run():
-		_show_map()
+		_flood_from_departure(_after_lamplighter)
 	else:
 		_show_save_error("ui.persistence.detail.lamplighterGiftHold")
+
+
+## After the gift: a new run sets out (the opening or the departure staging it
+## staged); a Lamplighter met on the road returns to the map.
+func _after_lamplighter() -> void:
+	if game == null or game.run == null:
+		_route_idle()
+	elif _setting_out:
+		_set_out()
+	else:
+		_show_map()
 
 
 ## Route kinds are stable mechanics IDs. Only their display parameter crosses

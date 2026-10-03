@@ -8,7 +8,7 @@ extends SceneTree
 ##   godot --path . --position 40,40 -s res://tools/capture_title.gd -- \
 ##       --shape=pad-landscape --locale=en --state=saved --out=/tmp/t.png \
 ##       [--rite=1.6] [--settings] [--embark] [--flood=0.3] [--burst=3] [--reduce-motion] [--scale=2]
-##       [--pose=pressed|focused|beckon|ember]
+##       [--pose=pressed|focused|beckon|ember] [--departure=embark|same|gift|art]
 ##
 ## The boot splash is this harness at --state=fresh --rite=0 --scale=2 on the
 ## identity shape: frame 0 of the launch rite (assets/art/title/splash.png).
@@ -56,15 +56,8 @@ func _initialize() -> void:
 		screen.rite.advance(rite_at)
 		screen.lantern.flame.pinned = true
 	await process_frame
-	if _args.has("embark"):
-		# Embark over the road, as Main shows it on a later run: both aspects
-		# offered, three vows unlocked, a saved run to warn about.
-		var content: ContentDB = ContentDB.load_full()
-		Locale.active.hydrate_content(content)
-		var embark: EmbarkScreen = EmbarkScreen.new(content.aspects, content.vows,
-			true, 3, state == "saved" or state == "vigil", 0, 1, shape)
-		screen.queue_free()
-		root.add_child(embark)
+	if _args.has("embark") or _args.has("departure"):
+		_depart(screen, shape, state, str(_args.get("departure", "embark")))
 	if _args.has("settings"):
 		if state != "first":
 			Preferences.active.diagnostics_notice_seen = true
@@ -73,7 +66,8 @@ func _initialize() -> void:
 		root.add_child(panel)
 	for _i: int in range(SETTLE_FRAMES):
 		await process_frame
-	_pose(screen, str(_args.get("pose", "")))
+	if is_instance_valid(screen):
+		_pose(screen, str(_args.get("pose", "")))
 	await process_frame
 	await process_frame
 	if _args.has("flood"):
@@ -97,6 +91,29 @@ func _initialize() -> void:
 		if k + 1 < burst:
 			await create_timer(1.0).timeout
 	quit(0)
+
+
+## The departure on the road (DepartureScreen) as Main shows it on a later run
+## with the Lamplighter met: (a) both classes and three vows, a saved run to
+## warn about ("same" adds setting out as before), (b) his gift, (c) the art.
+## --embark is the older name for --departure=embark.
+func _depart(screen: TitleScreen, shape: StringName, state: String, beat: String) -> void:
+	var content: ContentDB = ContentDB.load_full()
+	Locale.active.hydrate_content(content)
+	var departure: DepartureScreen = DepartureScreen.new(shape)
+	if beat == "embark" or beat == "same":
+		var same: Dictionary = {"aspect": 0, "vow": 1, "art": "flare"} if beat == "same" else {}
+		departure.show_embark(content.aspects, content.vows, true, 3,
+			state == "saved" or state == "vigil", 0, 1, same, true)
+	else:
+		var boon_ids: Array = content.boons.keys().slice(0, 3)
+		var aspect: Dictionary = content.aspects[0]
+		departure.show_gift(aspect, content.boons, content.arts, boon_ids,
+			StringName(str(content.arts.keys()[0])))
+	screen.queue_free()
+	root.add_child(departure)
+	if beat == "art":
+		departure._pick_boon(str(departure._boon_ids[0]))
 
 
 func _pose(screen: TitleScreen, pose: String) -> void:

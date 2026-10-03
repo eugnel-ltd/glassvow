@@ -131,6 +131,9 @@
         "act4": "A sealed door opens beyond the crown."
       }
     },
+    "departure": {
+      "same": "Set out as before"
+    },
     "embark": {
       "aspectLabel": "Who carries the lantern",
       "noVows": "The road as it is. No vows sworn.",

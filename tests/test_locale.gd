@@ -360,10 +360,14 @@ static func _remaining_run_screen_call_sites(fails: Array[String]) -> void:
 			"_build": ["ui.vigil.title", "ui.vigil.stats", "ui.vigil.deedsTab",
 				"ui.vigil.roseTab", "ui.vigil.epitaphTab", "ui.vigil.return"],
 		},
-		"res://presentation/run/lamplighter_screen.gd": {
-			"_build": ["ui.lamp.title", "ui.lamp.sub", "ui.lamp.boonLabel",
-				"ui.lamp.artLabel", "ui.lamp.artHint", "ui.menu.chooseBoon"],
-			"_refresh": ["ui.menu.lightTheWay", "ui.menu.chooseBoon"],
+		"res://presentation/run/departure_screen.gd": {
+			"_build_embark": ["ui.embark.title", "ui.embark.subChoose", "ui.embark.subWait",
+				"ui.departure.same", "ui.embark.aspectLabel", "ui.embark.warnSaved",
+				"ui.menu.beginAnew", "ui.menu.back"],
+			"_refresh_vow": ["ui.embark.vowLevel", "ui.embark.noVows"],
+			"_build_gift": ["ui.lamp.title", "ui.lamp.sub", "ui.lamp.boonLabel"],
+			"_build_art": ["ui.lamp.artLabel", "ui.lamp.artHint", "ui.menu.lightTheWay",
+				"ui.lamp.boonLabel"],
 		},
 		"res://presentation/run/run_hud.gd": {
 			"refresh": ["ui.hud.hpFraction"],

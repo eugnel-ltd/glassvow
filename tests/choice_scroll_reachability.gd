@@ -6,7 +6,6 @@ extends SceneTree
 const STAGE_SIZE: Vector2i = Vector2i(844, 390)
 
 var _fails: Array[String] = []
-var _mutate_follow_focus: bool = false
 var _mutate_boon_height: bool = false
 var _viewport: SubViewport
 var _confirmed: bool = false
@@ -15,7 +14,6 @@ var _embarked: bool = false
 var _capture_dir: String = ""
 
 func _initialize() -> void:
-	_mutate_follow_focus = "--mutate-follow-focus" in OS.get_cmdline_user_args()
 	_mutate_boon_height = "--mutate-boon-height" in OS.get_cmdline_user_args()
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--capture-dir="):
@@ -41,73 +39,67 @@ func _run() -> void:
 			print("FAIL choice_scroll_reachability: %s" % failure)
 		quit(1)
 
+## The departure (DepartureScreen) has no scroll: every beat is seated on the
+## stage, so its final control must be on the stage, focused or reachable.
 func _check_embark() -> void:
 	var content: ContentDB = ContentDB.load_full(false)
-	var screen: EmbarkScreen = EmbarkScreen.new(
-		content.aspects, content.vows, false, 0, false,
-		0, 0, &"phone-landscape")
+	var screen: DepartureScreen = DepartureScreen.new(&"phone-landscape")
+	screen.show_embark(content.aspects, content.vows, false, 0, false, 0, 0)
 	_hide_backdrop(screen)
 	_viewport.add_child(screen)
 	await _settle()
-	var scroll: ScrollContainer = _vertical_scrolls(screen)[0]
-	_check(_viewport.gui_get_focus_owner() == screen._begin,
+	_check(_viewport.gui_get_focus_owner() == screen.primary(),
 		"Embark opens with its primary action focused")
-	_check_inside("keyboard-focused Embark primary action", screen._begin, scroll)
+	_check_on_stage("keyboard-focused Embark primary action", screen.primary())
 	await _capture("embark")
 	_embarked = false
-	screen.begin_requested.connect(func(_aspect: int, _vow: int) -> void:
+	screen.embark_chosen.connect(func(_aspect: int, _vow: int) -> void:
 		_embarked = true)
 	await _action(&"ui_accept")
 	_check(_embarked, "keyboard-focused Embark primary action activates")
 	_drop(screen)
 
 func _check_lamplighter_keyboard() -> void:
-	var screen: LamplighterScreen = _lamplighter()
+	var screen: DepartureScreen = _lamplighter()
 	_viewport.add_child(screen)
 	await _settle()
-	var scroll: ScrollContainer = _vertical_scrolls(screen)[0]
-	if _mutate_follow_focus:
-		scroll.follow_focus = false
 	if _mutate_boon_height:
-		for button: Button in screen._boon_buttons.values():
-			button.custom_minimum_size.y = 100
+		for card: Node in screen.find_children("Boon_*", "", true, false):
+			(card as Control).custom_minimum_size.y = 40
 		await _settle()
 	_check_boon_copy_clear(screen, "phone-landscape")
-	var first_boon: Button = screen._boon_buttons[screen._boon_ids[0]]
-	screen._select_boon(screen._boon_ids[0])
-	first_boon.grab_focus()
-	await process_frame
-	await _focus_until(screen._begin)
+	_check(_viewport.gui_get_focus_owner() == screen.primary(),
+		"the gift opens with its first boon focused")
+	await _action(&"ui_accept")
+	await _settle()
+	_check(screen.beat == DepartureScreen.BEAT_C, "a keyboard-chosen boon moves on to the lantern art")
 	var focused: Control = _viewport.gui_get_focus_owner()
-	_check(focused == screen._begin, "keyboard reaches CHOOSE A BOON")
-	_check_inside("keyboard-focused CHOOSE A BOON", screen._begin, scroll)
+	_check(focused == screen.primary(), "keyboard reaches LIGHT THE WAY")
+	_check_on_stage("keyboard-focused LIGHT THE WAY", screen.primary())
 	await _capture("lamplighter-keyboard")
 	_confirmed = false
-	screen.confirmed.connect(func(_boon: String, _art: StringName) -> void:
+	screen.gift_chosen.connect(func(_boon: String, _art: StringName) -> void:
 		_confirmed = true)
 	await _action(&"ui_accept")
-	_check(_confirmed, "keyboard-focused CHOOSE A BOON activates")
+	_check(_confirmed, "keyboard-focused LIGHT THE WAY activates")
 	_drop(screen)
 
 
 func _check_lamplighter_mouse_drag() -> void:
-	var screen: LamplighterScreen = _lamplighter()
+	var screen: DepartureScreen = _lamplighter()
 	_viewport.add_child(screen)
 	await _settle()
-	var scroll: ScrollContainer = _vertical_scrolls(screen)[0]
-	screen._select_boon(screen._boon_ids[0])
-	var bar_rect: Rect2 = scroll.get_v_scroll_bar().get_global_rect()
-	var drag_from: Vector2 = bar_rect.position + Vector2(bar_rect.size.x * 0.5, 40.0)
-	var drag_to: Vector2 = bar_rect.position + Vector2(bar_rect.size.x * 0.5, 300.0)
-	await _mouse_drag(drag_from, drag_to)
-	_check(scroll.scroll_vertical > 0, "mouse drag moves the Lamplighter scrollbar")
-	_check_inside("mouse-drag-reached CHOOSE A BOON", screen._begin, scroll)
-	await _capture("lamplighter-mouse-drag")
+	var boon: Control = screen.primary()
+	await _mouse_click(boon.get_global_rect().get_center())
+	await _settle()
+	_check(screen.beat == DepartureScreen.BEAT_C, "a clicked boon moves on to the lantern art")
+	_check_on_stage("mouse-reached LIGHT THE WAY", screen.primary())
+	await _capture("lamplighter-mouse")
 	_confirmed = false
-	screen.confirmed.connect(func(_boon: String, _art: StringName) -> void:
+	screen.gift_chosen.connect(func(_boon: String, _art: StringName) -> void:
 		_confirmed = true)
-	await _mouse_click(screen._begin.get_global_rect().get_center())
-	_check(_confirmed, "mouse-drag-reached CHOOSE A BOON activates by mouse")
+	await _mouse_click(screen.primary().get_global_rect().get_center())
+	_check(_confirmed, "LIGHT THE WAY activates by mouse")
 	_drop(screen)
 func _check_plain_choices(count: int) -> void:
 	var choices: Array[Dictionary] = []
@@ -139,29 +131,30 @@ func _check_plain_choices(count: int) -> void:
 		"final control for %d plain choices activates" % count)
 	_drop(screen)
 
-func _lamplighter(stage_shape: StringName = &"phone-landscape") -> LamplighterScreen:
+func _lamplighter(stage_shape: StringName = &"phone-landscape") -> DepartureScreen:
 	var content: ContentDB = ContentDB.load_full(false)
 	var boon_ids: Array[String] = []
 	for id_v: Variant in content.boons.keys().slice(0, 3):
 		boon_ids.append(str(id_v))
 	var aspect: Dictionary = content.aspects[0]
-	var screen: LamplighterScreen = LamplighterScreen.new(
-		aspect, content.boons, content.arts, boon_ids,
-		StringName(str(content.arts.keys()[0])), stage_shape)
+	var screen: DepartureScreen = DepartureScreen.new(stage_shape)
+	screen.show_gift(aspect, content.boons, content.arts, boon_ids,
+		StringName(str(content.arts.keys()[0])))
 	_hide_backdrop(screen)
 	return screen
 
-func _check_boon_copy_clear(screen: LamplighterScreen, stage_shape: String) -> void:
-	var heading_rect: Rect2 = screen._art_heading.get_global_rect()
-	for id: String in screen._boon_ids:
-		var description_rect: Rect2 = screen._boon_descriptions[id].get_global_rect()
-		var card_rect: Rect2 = screen._boon_buttons[id].get_global_rect()
-		print("EVIDENCE %s boon=%s card=%s description=%s heading=%s" % [
-			stage_shape, id, card_rect, description_rect, heading_rect])
-		_check(card_rect.encloses(description_rect),
-			"%s boon description %s stays inside its card" % [stage_shape, id])
-		_check(not description_rect.intersects(heading_rect),
-			"%s boon description %s does not overlap the art heading" % [stage_shape, id])
+func _check_boon_copy_clear(screen: DepartureScreen, stage_shape: String) -> void:
+	var stage: Rect2 = Rect2(Vector2.ZERO, Vector2(STAGE_SIZE))
+	for node: Node in screen.find_children("Boon_*", "", true, false):
+		var card: Control = node as Control
+		var card_rect: Rect2 = card.get_global_rect()
+		_check(stage.encloses(card_rect), "%s boon %s stays on the stage" % [stage_shape, card.name])
+		for label_node: Node in card.find_children("", "Label", true, false):
+			var label: Label = label_node as Label
+			var text_rect: Rect2 = Rect2(label.global_position, label.get_combined_minimum_size())
+			print("EVIDENCE %s %s card=%s text=%s" % [stage_shape, card.name, card_rect, text_rect])
+			_check(card_rect.grow(0.5).encloses(text_rect),
+				"%s boon %s keeps its copy inside its card" % [stage_shape, card.name])
 
 func _hide_backdrop(screen: Control) -> void:
 	for backdrop: Node in screen.find_children("", "TitleWorld", true, false):
@@ -234,6 +227,13 @@ func _mouse_drag(from: Vector2, to: Vector2) -> void:
 	up.global_position = to
 	_viewport.push_input(up, true)
 	await process_frame
+
+
+func _check_on_stage(label: String, control: Control) -> void:
+	var rect: Rect2 = control.get_global_rect() if control != null else Rect2()
+	print("EVIDENCE %s control=%s" % [label, rect])
+	_check(control != null and Rect2(Vector2.ZERO, Vector2(STAGE_SIZE)).encloses(rect),
+		"%s is fully on the stage" % label)
 
 
 func _check_inside(label: String, control: Control, viewport: ScrollContainer) -> void:

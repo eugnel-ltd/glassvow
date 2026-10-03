@@ -90,7 +90,6 @@ var hold_rite: bool = false
 var _context: Dictionary
 var _sfx: SfxBus
 var _preferences: Preferences
-var _banner: TextureRect
 var _wordmark: Control
 var _plaque: LeadlightPlaque
 ## The plaque, its sub-line and the gap down to the lantern: one press with the
@@ -173,17 +172,21 @@ func set_shape(stage_shape: StringName) -> void:
 		_layout()
 
 
-func _build() -> void:
-	world = TitleWorld.new()
-	add_child(world)
-	_banner = TextureRect.new()
-	_banner.texture = load(TITLE_BACKGROUND) as Texture2D
-	_banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	_banner.modulate.a = BANNER_ALPHA
-	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_banner.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(_banner)
+## The road at dusk the title stands on — the living world, the painting
+## over it and the vignette — added to `host`. The departure (DepartureScreen)
+## stands in the same place.
+static func add_road(host: Control) -> TitleWorld:
+	var road: TitleWorld = TitleWorld.new()
+	host.add_child(road)
+	var banner: TextureRect = TextureRect.new()
+	banner.name = "Painting"
+	banner.texture = load(TITLE_BACKGROUND) as Texture2D
+	banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	banner.modulate.a = BANNER_ALPHA
+	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	banner.set_anchors_preset(Control.PRESET_FULL_RECT)
+	host.add_child(banner)
 	var vignette: TextureRect = TextureRect.new()
 	vignette.texture = GlassStyle.grad_tex(
 		PackedColorArray([Color(LeadlightTokens.VOID, 0.0), Color(LeadlightTokens.VOID, 0.0),
@@ -193,7 +196,12 @@ func _build() -> void:
 	vignette.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	vignette.stretch_mode = TextureRect.STRETCH_SCALE
 	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(vignette)
+	host.add_child(vignette)
+	return road
+
+
+func _build() -> void:
+	world = add_road(self)
 	_chain = TitleLampChain.new()
 	add_child(_chain)
 	rose = LeadlightRose.new(context_array("shards"))
