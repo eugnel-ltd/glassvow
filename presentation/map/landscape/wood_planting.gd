@@ -119,6 +119,7 @@ var _route_size: Vector2i = Vector2i.ZERO
 var _route_scale: Vector2 = Vector2.ONE
 var _toward: Vector3
 var _pitch_sin: float
+var _pitch_cos: float
 ## The picture-plane grid: per fine and coarse cell, the least depth of what
 ## it protects (INF where nothing).
 var _plane_origin: Vector2
@@ -150,7 +151,8 @@ func _begin(terrain: Terrain) -> void:
 	_ground.resize(_columns * _rows)
 	var pitch: float = deg_to_rad(MapJourneyCameraContract.PITCH)
 	_pitch_sin = sin(pitch)
-	_toward = Vector3(0, _pitch_sin, cos(pitch))
+	_pitch_cos = cos(pitch)
+	_toward = Vector3(0, _pitch_sin, _pitch_cos)
 	# The roads' distance field the ground paints with (8 texels a metre,
 	# exact within about a metre of every road on the ground).
 	var ground: MeshInstance3D = terrain.get_node_or_null("Quiet sculpted ground") as MeshInstance3D
@@ -478,8 +480,10 @@ func road_distance(x: float, z: float) -> float:
 ## the picture plane protects: every protected cell under its silhouette lies
 ## in front of it.
 func _fits(tile: int, base: Vector3, scale_value: float) -> bool:
-	var rect: Rect2 = Atlas.rect(tile, base, scale_value)
-	var limit: float = base.dot(_toward) + Atlas.shift(tile) * scale_value + DEPTH_MARGIN
+	# `Atlas.rect`, with the camera's pitch worked out once.
+	var rect: Rect2 = Rect2(Vector2(base.x, base.z * _pitch_sin - base.y * _pitch_cos)
+		+ Atlas.low[tile] * scale_value, Atlas.size[tile] * scale_value)
+	var limit: float = base.dot(_toward) + Atlas.shifts[tile] * scale_value + DEPTH_MARGIN
 	var coarse_size: float = FINE * COARSE
 	var c0: int = maxi(0, floori((rect.position.x - _plane_origin.x) / coarse_size))
 	var c1: int = mini(_coarse_columns - 1, floori((rect.end.x - _plane_origin.x) / coarse_size))

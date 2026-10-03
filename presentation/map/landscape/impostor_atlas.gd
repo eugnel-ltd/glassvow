@@ -36,6 +36,8 @@ static var low: PackedVector2Array = []
 static var size: PackedVector2Array = []
 static var front: PackedFloat32Array = []
 static var top: PackedFloat32Array = []
+## Per tile, `shift` worked out once.
+static var shifts: PackedFloat32Array = []
 static var spans: Array[PackedVector2Array] = []
 static var span_m: float = 0.25
 ## Each kind's tiles, in yaw order.
@@ -113,6 +115,7 @@ static func _read_tiles() -> void:
 		size.append(_v2(extent))
 		front.append(float(str(tile["front"])))
 		top.append(float(str(tile["top"])))
+		shifts.append(clampf((low[i].y + size[i].y) * 1.25 + 0.1, 0.3, front[i]))
 		var rows: PackedVector2Array = []
 		for row: Array in tile["spans"]:
 			rows.append(_v2(row))
@@ -138,7 +141,7 @@ static func tile_for(kind: String, yaw: float) -> int:
 ## just far enough that the card's foot clears the ground in front of it
 ## (`low.y + size.y` is how far the picture reaches below the base).
 static func shift(tile: int) -> float:
-	return clampf((low[tile].y + size[tile].y) * 1.25 + 0.1, 0.3, front[tile])
+	return shifts[tile]
 
 
 ## The card's pose for a plant of tile `tile` standing at `base`, at `scale`.
