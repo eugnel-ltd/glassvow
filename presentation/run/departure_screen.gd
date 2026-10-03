@@ -58,6 +58,9 @@ var _art_line: Label
 ## Setting out as before: {"aspect", "vow", "art"} from earlier this session.
 var _same: Dictionary = {}
 var _same_taken: bool = false
+## The first beat has been answered: the road is being set out on (Main floods
+## from the lantern, or asks Begin Anew over a saved run), so there is no Back.
+var _embarked: bool = false
 var _aspect_name: String = ""
 
 
@@ -173,7 +176,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if is_inside_tree():
 		get_viewport().set_input_as_handled()
-	back_requested.emit()
+	_go_back()
+
+
+## Back, by its word or by Escape: only before the first beat is answered. Once
+## it is, the road is being set out on, and a Back in the flood that follows
+## would show the title only for the run to be routed over it.
+func _go_back() -> void:
+	if not _embarked:
+		back_requested.emit()
 
 
 var _layout_queued: bool = false
@@ -317,7 +328,7 @@ func _build_embark() -> void:
 	go.pressed.connect(func() -> void: _answer_embark(_aspect, _vow))
 	var back: LeadlightWord = LeadlightWord.new(Locale.active.t("ui.menu.back"), shape)
 	back.name = "Back"
-	back.pressed.connect(func() -> void: back_requested.emit())
+	back.pressed.connect(_go_back)
 	_actions(go, back)
 
 
@@ -357,6 +368,10 @@ func _set_out_as_before() -> void:
 
 
 func _answer_embark(aspect: int, vow: int) -> void:
+	# Answered once: a second press in the flood that follows sets out nothing.
+	if _embarked:
+		return
+	_embarked = true
 	_sfx.play_owed(&"paneChoose", &"click")
 	if _primary != null:
 		LeadlightMotion.press(_primary as Control)

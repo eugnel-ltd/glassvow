@@ -23,6 +23,7 @@ static func run(fails: Array[String]) -> void:
 	_set_out_as_before(fails, content)
 	_beats_fit_the_stage(fails, content)
 	_escape_on_the_first_beat(fails, content)
+	_no_back_once_answered(fails, content)
 	_title_forgets_setting_out(fails, content)
 	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
 
@@ -146,6 +147,28 @@ static func _escape_on_the_first_beat(fails: Array[String], content: ContentDB) 
 		_check(fails, backs[0] == 0 and main._route_screen == departure,
 			"Escape on the gift went back, which has no Back")
 	_dispose(main)
+
+
+## Once the first beat is answered the road is being set out on (Main floods
+## from the lantern for 0.48 s, then routes the run): neither Escape nor Back
+## goes back, which would show the title only for the run to be routed over it,
+## and a second Set Out sets out nothing.
+static func _no_back_once_answered(fails: Array[String], content: ContentDB) -> void:
+	var screen: DepartureScreen = DepartureScreen.new()
+	screen.show_embark(content.aspects, content.vows, false, 0, false, 0, 0, {}, false)
+	var backs: Array[int] = [0]
+	var set_outs: Array[int] = [0]
+	screen.back_requested.connect(func() -> void: backs[0] += 1)
+	screen.embark_chosen.connect(func(_aspect: int, _vow: int) -> void: set_outs[0] += 1)
+	screen.primary().pressed.emit()
+	_check(fails, set_outs[0] == 1 and screen.beat == DepartureScreen.BEAT_A,
+		"Set Out did not answer the first beat")
+	screen._unhandled_input(_cancel())
+	(screen.find_child("Back", true, false) as BaseButton).pressed.emit()
+	_check(fails, backs[0] == 0, "Escape or Back after Set Out still goes back, into the flood")
+	screen.primary().pressed.emit()
+	_check(fails, set_outs[0] == 1, "a second Set Out set out again")
+	screen.free()
 
 
 ## A departure left before its gift is answered must not leave the next title
