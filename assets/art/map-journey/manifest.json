@@ -416,6 +416,29 @@
         ]
       ],
       "grounded": true
+    },
+    {
+      "id": "bridge-banner",
+      "file": "bridge-banner.glb",
+      "source": "tools/map_atelier/journey/sources/bridge-banner.blend",
+      "description": "Red cloth banner with a gold band, hung from a bridge parapet; R2 motion, lane pick",
+      "triangles": 232,
+      "materials": 3,
+      "blender_xyz_bounds": [
+        [
+          -0.45,
+          0.45
+        ],
+        [
+          -0.03,
+          0.03
+        ],
+        [
+          -1.55,
+          0.03
+        ]
+      ],
+      "grounded": false
     }
   ]
 }
