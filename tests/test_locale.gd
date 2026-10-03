@@ -440,24 +440,41 @@ static func _dialog_shells(fails: Array[String]) -> void:
 	main._transitions = TransitionLayer.new()
 	main.add_child(main._transitions)
 	main._confirm_abandon()
-	var abandon: ChoiceScreen = main._modal as ChoiceScreen
+	var abandon: LeadlightConfirm = main._modal as LeadlightConfirm
 	_check(fails, abandon != null, "abandon confirmation did not open as an overlay")
 	if abandon != null:
-		_check_dialog(fails, abandon, "ABANDON RUN?",
+		_check_confirm(fails, abandon, "ABANDON RUN?",
 			"This pilgrimage will end. The Vigil will keep what was earned.",
-			["Abandon Run", "Stay on the Road"], "no", "Abandon Run", "abandon")
+			["Abandon Run", "Stay on the Road"], "no", "abandon")
 	main._close_overlay()
 	main._show_run_menu()
 	var menu: RunMenuPanel = main._modal as RunMenuPanel
 	_check(fails, menu != null, "run menu did not open")
 	if menu != null:
 		menu.quit_requested.emit()
-	var leave: ChoiceScreen = main._choice_screen as ChoiceScreen
+	var leave: LeadlightConfirm = main._modal as LeadlightConfirm
 	_check(fails, leave != null, "Leave Road confirmation did not open")
 	if leave != null:
-		_check_dialog(fails, leave, "LEAVE THE ROAD?", "The lantern keeps your place.",
-			["Leave", "Stay"], "no", "Leave", "leave")
+		_check_confirm(fails, leave, "LEAVE THE ROAD?", "The lantern keeps your place.",
+			["Leave", "Stay"], "no", "leave")
 	Locale.active = previous
+
+
+## A LeadlightConfirm: its title in the crown, its one line, the action pane
+## then the quiet word, and the quiet word as the safe answer.
+static func _check_confirm(fails: Array[String], sheet: LeadlightConfirm,
+		title: String, body: String, actions: Array[String], cancel: String,
+		label: String) -> void:
+	var labels: Array[String] = []
+	for node: Node in sheet.find_children("", "Label", true, false):
+		labels.append(str((node as Label).text))
+	var buttons: Array[String] = []
+	for node: Node in sheet.find_children("", "Button", true, false):
+		buttons.append(str((node as Button).text))
+	_check(fails, labels.has(title), "%s title changed" % label)
+	_check(fails, labels.has(body), "%s body changed" % label)
+	_check(fails, buttons == actions, "%s action order changed: %s" % [label, buttons])
+	_check(fails, sheet.quiet_id() == cancel, "%s cancel action changed" % label)
 
 
 static func _check_dialog(fails: Array[String], screen: ChoiceScreen,

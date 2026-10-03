@@ -70,8 +70,9 @@ func _init(stage_shape: StringName, terminal_locked: bool = false,
 		abandon.pressed.connect(_request.bind(&"abandon"))
 		actions.add_child(abandon)
 
-	# Desktop only — web has no process to leave, and the tab chrome owns close.
-	if not OS.has_feature("web"):
+	# Only where the app may close itself (AppExit): the web tab owns close,
+	# and iOS and Android ignore an app's own quit — a dead button there.
+	if AppExit.available():
 		var quit: Button = _button(Locale.active.t("ui.menu.quitGame"))
 		quit.pressed.connect(_request.bind(&"quit"))
 		actions.add_child(quit)

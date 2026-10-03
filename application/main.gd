@@ -661,7 +661,14 @@ func _screen_diagonal() -> float:
 ## Saves are durable at every boundary, so this needs no flush — it exists so
 ## every quit door (title, run menu, window close) goes through one frame, today
 ## and when the path grows.
+## Tests stand in for the process exit; the game never sets it.
+var _quit: Callable = Callable()
+
+
 func _quit_game() -> void:
+	if _quit.is_valid():
+		_quit.call()
+		return
 	get_tree().quit()
 
 
@@ -968,6 +975,23 @@ func _close_overlay() -> void:
 		_run_hud.set_process_unhandled_key_input(true)
 
 
+## Every yes-or-stay question — Begin Anew, Leave the Road, Abandon Run, Erase
+## Everything — is one LeadlightConfirm over the dimmed, held route (or over
+## the title). The sheet closes before its answer is acted on.
+func _confirm(title: String, body: String, primary: Dictionary, quiet: Dictionary,
+		handler: Callable, danger: bool = false) -> LeadlightConfirm:
+	var sheet: LeadlightConfirm = LeadlightConfirm.new(title, body, primary, quiet, _shape,
+		_sfx_bus, danger)
+	sheet.chosen.connect(_on_confirm_answered.bind(handler))
+	_show_overlay(sheet)
+	return sheet
+
+
+func _on_confirm_answered(id: String, handler: Callable) -> void:
+	_close_overlay()
+	handler.call(id)
+
+
 func _show_choice(title: String, body: String, choices: Array[Dictionary], handler: Callable,
 		context: Dictionary = {}) -> void:
 	# The shape rides in the context rather than in a fifth positional argument:
@@ -1020,8 +1044,8 @@ func _show_title() -> void:
 		var dev_label: String = _dev_console_label()
 		if not dev_label.is_empty():
 			choices.append({"id": "dev", "label": dev_label, "quiet": true})
-	# Desktop only — web has no process to leave.
-	if not OS.has_feature("web"):
+	# Only where the app may close itself (AppExit): never web, iOS or Android.
+	if AppExit.available():
 		choices.append({"id": "quit", "label": Locale.active.t("ui.menu.quit"), "quiet": true})
 
 	# First launch asks the language only of a new player. A returning player
@@ -1187,11 +1211,11 @@ func _on_embark_begin(aspect: int, vow: int) -> void:
 	if _load_run() == null:
 		_new_run({"aspect": _embark_aspect, "vow": _embark_vow})
 	else:
-		_show_choice(Locale.active.t("ui.menu.beginAnew").to_upper(),
+		_confirm(Locale.active.t("ui.menu.beginAnew"),
 			Locale.active.t("ui.menu.beginAnewBody"),
-			[{"id": "begin", "label": Locale.active.t("ui.menu.beginAnew")},
-				{"id": "back", "label": Locale.active.t("ui.menu.stayOnRoad"), "quiet": true}],
-			_on_begin_anew, {"cancel": "back"})
+			{"id": "begin", "label": Locale.active.t("ui.menu.beginAnew")},
+			{"id": "back", "label": Locale.active.t("ui.menu.stayOnRoad")},
+			_on_begin_anew, true)
 
 
 func _on_begin_anew(id: String) -> void:
@@ -1293,20 +1317,11 @@ func _on_language_changed(code: StringName, reopen_settings: bool = true) -> voi
 
 func _confirm_reset() -> void:
 	_close_overlay()
-	# Typed local, not an inline literal: `.new()` does not convert an untyped
-	# Array to the `Array[Dictionary]` parameter and construction fails.
-	var choices: Array[Dictionary] = [
-		{"id": "yes", "label": Locale.active.t("ui.settings.eraseEverything")},
-		{"id": "no", "label": Locale.active.t("ui.common.cancel"), "quiet": true},
-	]
-	var screen: Control = ChoiceScreenType.new(
-		Locale.active.t("ui.settings.eraseAllTitle"),
+	_confirm(Locale.active.t("ui.settings.eraseAllTitle"),
 		Locale.active.t("ui.settings.resetConfirmPlain"),
-		choices,
-		{"shape": String(_shape), "cancel": "no", "overlay": true},
-		_sfx_bus)
-	screen.connect("chosen", _on_reset_choice)
-	_show_overlay(screen)
+		{"id": "yes", "label": Locale.active.t("ui.settings.eraseEverything")},
+		{"id": "no", "label": Locale.active.t("ui.common.cancel")},
+		_on_reset_choice, true)
 
 
 func _on_reset_choice(id: String) -> void:
@@ -1743,14 +1758,11 @@ func _show_run_menu() -> void:
 	)
 	menu.quit_requested.connect(func() -> void:
 		_close_overlay()
-		_show_choice(Locale.active.t("ui.menu.leaveRoadTitle"),
+		_confirm(Locale.active.t("ui.menu.leaveRoadTitle"),
 			Locale.active.t("ui.menu.leaveRoadBody"),
-			[{"id": "yes", "label": Locale.active.t("ui.common.leave")},
-				{"id": "no", "label": Locale.active.t("ui.common.stay"), "quiet": true}],
-			func(id: String) -> void:
-				if id == "yes":
-					_quit_game(),
-			{"cancel": "no", "overlay": true})
+			{"id": "yes", "label": Locale.active.t("ui.common.leave")},
+			{"id": "no", "label": Locale.active.t("ui.common.stay")},
+			_on_leave_road)
 	)
 	menu.abandon_requested.connect(_confirm_abandon)
 	# The drawer neither veils nor freezes: seeing the world stay alive is the
@@ -1758,21 +1770,18 @@ func _show_run_menu() -> void:
 	_show_overlay(menu, false)
 
 
+func _on_leave_road(id: String) -> void:
+	if id == "yes":
+		_quit_game()
+
+
 func _confirm_abandon() -> void:
 	_close_overlay()
-	# Typed local, not an inline literal — see `_confirm_reset`.
-	var choices: Array[Dictionary] = [
-		{"id": "yes", "label": Locale.active.t("ui.menu.abandonRun")},
-		{"id": "no", "label": Locale.active.t("ui.menu.stayOnRoad"), "quiet": true},
-	]
-	var screen: Control = ChoiceScreenType.new(
-		Locale.active.t("ui.menu.abandonConfirmTitle").to_upper(),
+	_confirm(Locale.active.t("ui.menu.abandonConfirmTitle"),
 		Locale.active.t("ui.menu.abandonConfirmBody"),
-		choices,
-		{"shape": String(_shape), "cancel": "no", "overlay": true},
-		_sfx_bus)
-	screen.connect("chosen", _on_abandon_choice)
-	_show_overlay(screen)
+		{"id": "yes", "label": Locale.active.t("ui.menu.abandonRun")},
+		{"id": "no", "label": Locale.active.t("ui.menu.stayOnRoad")},
+		_on_abandon_choice, true)
 
 
 func _on_abandon_choice(id: String) -> void:
