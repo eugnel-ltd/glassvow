@@ -1,0 +1,204 @@
+extends SceneTree
+## Scratch proof-of-look runner for the map living-land concept dossier.
+## Mounts the production WorldMapScreen exactly as tools/preview_map.gd does
+## (real MapLayoutFast layout, real MapCameraRig, real pins and RunHud), then
+## lets one concept dresser re-dress the 3D world before the capture.
+## godot --path . -s res://scratch_lane/concept_look.gd -- --concept=a --shape=pad-landscape --output=/tmp/x.png
+
+const LookA = preload("res://scratch_lane/look_a.gd")
+const LookB = preload("res://scratch_lane/look_b.gd")
+const LookC = preload("res://scratch_lane/look_c.gd")
+const LookR2 = preload("res://scratch_lane/look_r2.gd")
+
+func _initialize() -> void:
+	_run.call_deferred()
+
+func _run() -> void:
+	var act: int = 0
+	var seed_value: int = 1
+	var shape: StringName = &"pad-landscape"
+	var pose: String = "focused"
+	var zoom: int = 2
+	var output: String = ""
+	var concept: String = "none"
+	var dump: bool = false
+	var settle: int = 24
+	var burst: int = 0
+	var steps: int = 0
+	var measure: bool = false
+	for arg: String in OS.get_cmdline_user_args():
+		var value: String = arg.get_slice("=", 1)
+		if arg.begins_with("--act-index="): act = int(value)
+		elif arg.begins_with("--seed="): seed_value = int(value)
+		elif arg.begins_with("--shape="): shape = StringName(value)
+		elif arg.begins_with("--pose="): pose = value
+		elif arg.begins_with("--zoom-stop="): zoom = int(value)
+		elif arg.begins_with("--output="): output = value
+		elif arg.begins_with("--concept="): concept = value
+		elif arg.begins_with("--settle="): settle = int(value)
+		elif arg.begins_with("--burst="): burst = int(value)
+		elif arg.begins_with("--steps="): steps = int(value)
+		elif arg == "--dump": dump = true
+		elif arg == "--measure": measure = true
+	if OS.get_environment("LEAN") == "1":
+		MapScene.lean_override = 1
+	var dimensions: Vector2i = StageShape.REFERENCES[shape]
+	DisplayServer.window_set_size(dimensions)
+	root.size = dimensions
+	root.content_scale_size = dimensions
+	Locale.active = Locale.new(&"en")
+	var content: ContentDB = ContentDB.load_full()
+	Locale.active.hydrate_content(content)
+	var run: RunState = RunState.new_run(content, seed_value)
+	run.act = act
+	var world_map: WorldMap = WorldMap.for_run(run, content)
+	for step: int in range(clampi(steps, 0, 14)):
+		var next: Array[int] = world_map.reachable()
+		if not next.is_empty():
+			world_map.enter(next[0])
+			world_map.clear_current()
+	var screen: WorldMapScreen = WorldMapScreen.new(world_map, content, shape)
+	root.add_child(screen)
+	screen.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	screen.size = Vector2(dimensions)
+	screen.refresh(run)
+	screen.set_survey_retired(steps > 0)
+	if screen.layout_result() == null:
+		printerr(JSON.stringify(screen.layout_failure()))
+		quit(1)
+		return
+	root.add_child(RunHud.new(run, content, shape))
+	var scene: MapScene = screen._map_scene
+	var rig: MapCameraRig = scene.get_rig()
+	rig.set_zoom_stop(zoom)
+	if pose == "opening":
+		rig.set_camera_xz(MapCameraRig.DEFAULT_XZ)
+	elif pose == "middle":
+		rig.set_camera_xz(MapCameraRig.pose_for_world(Vector3.ZERO))
+	elif pose == "terminus":
+		rig.set_camera_xz(MapCameraRig.pose_for_world(Vector3(33.0, 0.0, 0.0)))
+	elif pose == "overview":
+		# Establishing shot: beyond the governed zoom stops on purpose. Pins are
+		# hidden because tappability is not claimed at this framing.
+		rig.get_camera().size = 66.0 if shape != &"phone-landscape" else 48.0
+		rig.get_camera().position.x = 0.5
+		rig.get_camera().position.z = MapCameraRig.look_dz() + 1.0
+	screen._layout_waystones()
+	screen._push_bands(true)
+	if pose == "overview":
+		for stone: GlassWaystone in screen._waystones:
+			stone.visible = false
+		screen._chip_band.visible = false
+	var t0: int = Time.get_ticks_msec()
+	match concept:
+		"a": LookA.dress(screen, act)
+		"b": LookB.dress(screen, act)
+		"c": LookC.dress(screen, act)
+		_:
+			if concept.begins_with("r2"):
+				if pose == "gateway":
+					LookR2.frame_gateway(screen)
+				elif pose == "river":
+					LookR2.frame_river(screen)
+				for t: String in concept.trim_prefix("r2").split("+", false):
+					LookR2.apply(screen, t)
+	var dress_ms: int = Time.get_ticks_msec() - t0
+	if pose == "overview":
+		rig.get_camera().size = 66.0 if shape != &"phone-landscape" else 48.0
+		screen._chip_band.visible = false
+	if dump:
+		_dump(screen)
+	for stone: GlassWaystone in screen._waystones:
+		stone.set_process(false)
+	scene.set_live(true)
+	for frame: int in range(settle):
+		await process_frame
+	if measure:
+		await _measure_rest(scene)
+	print("CONCEPT ", JSON.stringify({"concept": concept, "shape": shape, "pose": pose,
+		"dress_ms": dress_ms, "draw_calls": Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+		"vram_mib": Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0,
+		"layout_digest": screen.layout_digest()}))
+	if output.is_empty():
+		return
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(output)
+	for i: int in range(burst):
+		for frame: int in range(10):
+			await process_frame
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png(output.replace(".png", "-t%d.png" % (i + 1)))
+	quit(0)
+
+
+func _dump(screen: WorldMapScreen) -> void:
+	var scene: MapScene = screen._map_scene
+	var land: MapLandscape = scene._landscape
+	var diag: Dictionary = scene.layout_diagnostics()
+	var by_id: Dictionary = {}
+	for placement: Dictionary in diag["scenery_instances"].values():
+		var id: String = str(placement["asset_id"])
+		by_id[id] = by_id.get(id, 0) + 1
+	var reasons: Dictionary = {}
+	for rejection: Dictionary in diag["rejections"]:
+		var r: String = str(rejection["reason"])
+		reasons[r] = reasons.get(r, 0) + 1
+	var heath: MeshInstance3D = land.get_node("Slate heath") as MeshInstance3D
+	var road_len: float = 0.0
+	for line: PackedVector3Array in land.paths:
+		for i: int in range(line.size() - 1):
+			road_len += line[i].distance_to(line[i + 1])
+	var cam: Camera3D = scene.get_rig().get_camera()
+	var stage: Vector2 = Vector2(scene.get_stage().size)
+	var corners: Array = []
+	for c: Vector2 in [Vector2.ZERO, Vector2(stage.x, 0), stage, Vector2(0, stage.y)]:
+		var origin: Vector3 = cam.project_ray_origin(c)
+		var normal: Vector3 = cam.project_ray_normal(c)
+		var t: float = -origin.y / normal.y
+		var hit: Vector3 = origin + normal * t
+		corners.append([snappedf(hit.x, 0.1), snappedf(hit.z, 0.1)])
+	var children: Array = []
+	for child: Node in land.get_children():
+		children.append(child.name)
+	var aabb: AABB = heath.get_aabb()
+	print("DUMP ", JSON.stringify({
+		"nodes": land.anchors.size(), "edges": land.paths.size(), "road_m": snappedf(road_len, 0.1),
+		"scenery_by_id": by_id, "candidates": diag["candidate_count"], "accepted": diag["accepted_count"],
+		"rejections_by_reason": reasons,
+		"ground_y_range_m": [snappedf(aabb.position.y, 0.001), snappedf(aabb.end.y, 0.001)],
+		"ground_xz_extent_m": [snappedf(aabb.size.x, 0.1), snappedf(aabb.size.z, 0.1)],
+		"camera_ground_corners_xz": corners, "camera_size_m": cam.size,
+		"pan_bounds": [scene.get_rig().pan_bounds.position.x, scene.get_rig().pan_bounds.position.y,
+			scene.get_rig().pan_bounds.end.x, scene.get_rig().pan_bounds.end.y],
+		"waylight_tracers": scene._waylights.size(),
+		"landscape_children": children,
+		"anchors_xz": Array(land.anchors).map(func(a: Vector3) -> Array: return [snappedf(a.x, 0.01), snappedf(a.y, 0.01), snappedf(a.z, 0.01)]),
+	}))
+
+
+## Continuous render at rest (what living motion costs): 150 frames, vsync off,
+## the first 30 discarded. Mac proxy only; Metal exposes no GPU timer here.
+func _measure_rest(scene: MapScene) -> void:
+	var rid: RID = scene.get_stage().get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(rid, true)
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	scene.set_live(true)
+	var intervals: Array[float] = []
+	var cpu: Array[float] = []
+	var before: int = Time.get_ticks_usec()
+	for frame: int in range(150):
+		await process_frame
+		var now: int = Time.get_ticks_usec()
+		if frame >= 30:
+			intervals.append((now - before) / 1000.0)
+			cpu.append(RenderingServer.viewport_get_measured_render_time_cpu(rid))
+		before = now
+	intervals.sort()
+	cpu.sort()
+	print("REST ", JSON.stringify({"frame_p50_ms": intervals[60], "frame_p95_ms": intervals[113],
+		"viewport_cpu_p95_ms": cpu[113],
+		"stage_draw_calls": RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
+		"stage_primitives": RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME),
+		"shadow_draw_calls": RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_SHADOW, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
+		"shadow_primitives": RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_SHADOW, RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME),
+		"vram_mib": Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0}))

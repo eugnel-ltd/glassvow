@@ -96,6 +96,16 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 
 
 static func run(fails: Array[String]) -> void:
+	# This file holds the painted landscape's contract (pins on the compiled
+	# anchors, travel on the compiled centreline), which Acts II–IV draw. Act I's
+	# journey land has its own contract in test_map_journey.gd.
+	var journey: bool = MapScene.journey_enabled
+	MapScene.journey_enabled = false
+	_run_painted(fails)
+	MapScene.journey_enabled = journey
+
+
+static func _run_painted(fails: Array[String]) -> void:
 	_compiled_result_binding(fails)
 	_five_shapes(fails)
 	_surface_rects(fails)

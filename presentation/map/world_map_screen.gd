@@ -11,6 +11,8 @@ extends Control
 
 signal node_chosen(index: int)
 signal sealed_door_requested
+## The journey land finished building and the veil over it has lifted.
+signal landscape_ready
 ## Optional persist-first gate. Main binds hint dismissal here so a failed
 ## Vigil flush cannot let the lantern walk before the record is on disk.
 var before_pick: Callable = Callable()
@@ -67,6 +69,9 @@ var _region: MapRegions = null
 
 var _drift: PointerDrift = PointerDrift.new()
 var _map_scene: MapScene = null
+## Act I's journey land: its camera, its pilgrim and its waystone seats.
+var _journey: MapJourneyDirector = null
+var _landscape_veil: MapChartingVeil = null
 var _path_band: MapBand.PathBand = null
 var _chip_band: MapBand.ChipBand = null
 var _layout_result: MapLayoutResult = null
@@ -142,6 +147,9 @@ func _notification(what: int) -> void:
 func _build_world_surface(act_index: int) -> void:
 	_map_scene = MapScene.new(act_index)
 	_map_scene.surface_tapped.connect(_on_surface_tapped)
+	_journey = MapJourneyDirector.new(self)
+	_map_scene.journey_zoom_requested.connect(_journey.zoom)
+	_map_scene.landscape_ready.connect(_on_landscape_ready)
 	add_child(_map_scene)
 	# Construction-only callers have no RunState yet. Live refresh replaces these
 	# anchors before a frame is presented; a failed compile never returns here.
@@ -389,7 +397,9 @@ func refresh(run: RunState) -> void:
 			_map_scene.set_scatter_salt(run.seed + SCENERY_SEED_OFFSET)
 		_set_act_theme(run.act if _scenery_act < 0 else _scenery_act)
 		_sync_title()
+		_journey.read_flame(content, run)
 	_sync_run_state(run)
+	_sync_landscape_veil()
 
 
 ## The part of `refresh` a run's progress through one act can change: which
@@ -437,6 +447,7 @@ func reopen(run: RunState) -> void:
 	_drift = PointerDrift.new()
 	if _map_scene != null and _map_scene.get_rig().zoom_stop != MapCameraRig.DEFAULT_STOP:
 		_map_scene.get_rig().set_zoom_stop(MapCameraRig.DEFAULT_STOP)
+	_journey.view.level = MapJourneyView.Level.JOURNEY
 	for i: int in range(_waystones.size()):
 		if _face(map.nodes[i]) == _faces[i]:
 			continue
@@ -474,6 +485,32 @@ func _set_act_theme(act_index: int) -> void:
 	if _map_scene != null:
 		_map_scene.set_act(act_index)
 		_bind_compiled_layout()
+
+
+## Whether the journey land is still building on its worker (Act I's first
+## open). The map is bound and shown; the charting veil covers it meanwhile.
+func landscape_pending() -> bool:
+	return _map_scene != null and _map_scene.landscape_pending()
+
+
+func _sync_landscape_veil() -> void:
+	if landscape_pending() and _landscape_veil == null:
+		_landscape_veil = MapChartingVeil.new()
+		add_child(_landscape_veil)
+	elif not landscape_pending() and _landscape_veil != null:
+		_landscape_veil.queue_free()
+		_landscape_veil = null
+
+
+func _on_landscape_ready() -> void:
+	_invalidate_projection()
+	_sync_waylights()
+	_journey.read_flame(content, _run)
+	_seat_marker()
+	_layout_waystones()
+	_push_bands(true)
+	_sync_landscape_veil()
+	landscape_ready.emit()
 
 
 func layout_result() -> MapLayoutResult:
@@ -526,22 +563,11 @@ func _bind_compiled_layout() -> void:
 	var edges: Array = bound["edges"]
 	var generator: Dictionary = MapLayoutPolicy.generator_fields(
 		MapLayoutPolicy.compiler_requested())
-	var sources: Array = [nodes, edges, _run.act, _run.seed, assets["digest"],
-		heroes, generator, quality]
+	var sources: Array = input_sources(nodes, edges, _run.act, _run.seed,
+		str(assets["digest"]), heroes, generator, quality)
 	if sources != _input_sources:
-		var built: MapLayoutInput = MapLayoutInput.from_dict({
-			"schema_version": MapLayoutInput.SCHEMA_VERSION,
-			"generator_schema": generator["generator_schema"],
-			"generator_version": generator["generator_version"],
-			"nodes": nodes, "edges": edges, "act": _run.act,
-			"run_seed": _run.seed,
-			"scenery_seed": _run.seed + SCENERY_SEED_OFFSET,
-			"asset_profile_digest": assets["digest"],
-			"camera_profile_digest": MapQualityEvaluator.camera_registry(
-				nodes, quality, edges)["digest"],
-			"hero_anchor_contract": heroes,
-			"quality_registry_digest": MapLayoutCanonical.digest(quality),
-		})
+		var built: MapLayoutInput = layout_input(nodes, edges, _run.act, _run.seed,
+			assets, heroes, generator, quality)
 		if built == null:
 			return _fail_compiled_layout({
 				"kind": "input", "id": "live_map",
@@ -610,6 +636,50 @@ func _bind_compiled_layout() -> void:
 	_invalidate_projection()
 
 
+## The canonical layout input for a bound graph: the one place it is built, so
+## the screen and the journey prefetch (`MapJourneyPrefetch`) hand the
+## generator the same input, digest for digest. Pure over plain data (the
+## camera registry is static arithmetic), so a worker thread may call it.
+static func layout_input(nodes: Array, edges: Array, act: int, run_seed: int,
+		assets: Dictionary, heroes: Dictionary, generator: Dictionary,
+		quality: Dictionary) -> MapLayoutInput:
+	return MapLayoutInput.from_dict({
+		"schema_version": MapLayoutInput.SCHEMA_VERSION,
+		"generator_schema": generator["generator_schema"],
+		"generator_version": generator["generator_version"],
+		"nodes": nodes, "edges": edges, "act": act,
+		"run_seed": run_seed,
+		"scenery_seed": run_seed + SCENERY_SEED_OFFSET,
+		"asset_profile_digest": assets["digest"],
+		"camera_profile_digest": MapQualityEvaluator.camera_registry(
+			nodes, quality, edges)["digest"],
+		"hero_anchor_contract": heroes,
+		"quality_registry_digest": MapLayoutCanonical.digest(quality),
+	})
+
+
+## What a layout input is built from, as the screen compares it with the
+## input it keeps (`_input_sources`).
+static func input_sources(nodes: Array, edges: Array, act: int, run_seed: int,
+		assets_digest: String, heroes: Dictionary, generator: Dictionary,
+		quality: Dictionary) -> Array:
+	return [nodes, edges, act, run_seed, assets_digest, heroes, generator, quality]
+
+
+## Keeps `input`, built from `sources` (`input_sources`), as the input the next
+## screen binding the same sources takes: the journey prefetch built it on a
+## worker, so the first open does not build it again.
+static func keep_input(sources: Array, input: MapLayoutInput, input_digest: String) -> void:
+	_input_sources = sources.duplicate(true)
+	_input_kept = input
+	_input_digest_kept = input_digest
+
+
+static func quality_registry() -> Dictionary:
+	var value: Variant = _MAP_QUALITY.data
+	return value if typeof(value) == TYPE_DICTIONARY else {}
+
+
 func _fail_compiled_layout(failure: Dictionary) -> void:
 	_layout_result = null
 	_layout_data.clear()
@@ -630,8 +700,7 @@ func _fail_compiled_layout(failure: Dictionary) -> void:
 
 
 func _quality_registry() -> Dictionary:
-	var value: Variant = _MAP_QUALITY.data
-	return value if typeof(value) == TYPE_DICTIONARY else {}
+	return quality_registry()
 
 
 func _sync_waylights() -> void:
@@ -709,7 +778,7 @@ func projected_seats() -> PackedVector2Array:
 			or _projected_zoom_stop != rig.zoom_stop \
 			or not _projected_control_size.is_equal_approx(size) \
 			or _projected_view_size != view_size:
-		var anchors: PackedVector3Array = _ordered_layout_anchors()
+		var anchors: PackedVector3Array = _pin_anchors()
 		_projected_seats_cache = _map_scene.project_anchors(anchors) \
 			if not anchors.is_empty() else (
 				_map_scene.project_pins(map.nodes) if _run == null \
@@ -741,10 +810,17 @@ func first_live_waystone() -> Control:
 func pick_node_at(screen: Vector2) -> int:
 	if _map_scene == null:
 		return -1
-	var anchors: PackedVector3Array = _ordered_layout_anchors()
+	var anchors: PackedVector3Array = _pin_anchors()
 	if not anchors.is_empty():
 		return _map_scene.anchor_at(screen, anchors, _pin_hit())
 	return _map_scene.pin_at(screen, map.nodes, _pin_hit()) if _run == null else -1
+
+
+## Where the waystones are drawn: on the journey stones in Act I, on the
+## record's anchors elsewhere.
+func _pin_anchors() -> PackedVector3Array:
+	var anchors: PackedVector3Array = _ordered_layout_anchors()
+	return _journey.pin_seats(anchors) if _journey.active() and not anchors.is_empty() else anchors
 
 
 func _pin_hit() -> float:
@@ -791,6 +867,10 @@ func _seat_marker() -> void:
 		_map_scene.set_lock_input(true)
 	if _travelling:
 		return
+	if _journey.active():
+		_map_scene.set_lock_input(false)
+		_journey.frame(map.at)
+		return
 	if _map_scene != null:
 		_map_scene.set_lock_input(false)
 		_map_scene.get_rig().set_camera_xz(seat)
@@ -800,6 +880,11 @@ func _seat_marker() -> void:
 func _focus_xz(i: int) -> Vector2:
 	if i < 0 or i >= map.nodes.size() or _map_scene == null:
 		return MapCameraRig.DEFAULT_XZ
+	if _journey.active():
+		var pose: Dictionary = _journey.pose_for(i)
+		if pose.get("ok", false):
+			var position: Vector3 = pose["position"]
+			return Vector2(position.x, position.z)
 	# Aspect comes from the STAGE SHAPE, not from `_map_scene.size`. The child
 	# Control only has its real size after a layout pass, so reading it here
 	# would make the camera seat depend on WHEN the seat is asked for — a
@@ -879,22 +964,27 @@ func _glide(i: int, was_unlit: bool) -> void:
 	# Reduce-motion skips the walk but still arrives through one path so the
 	# travelling flag clears the same way a tween finish would. No kindle
 	# ceremony — art corrects on the next _show_map rebuild, as today.
+	var walk: float = _journey.begin_walk(i) if _journey.active() else 0.0
 	if Preferences.active.reduce_motion:
-		if _map_scene != null:
+		if _map_scene != null and not _journey.active():
 			_map_scene.get_rig().set_camera_xz(_travel_to_xz)
 		_on_arrived(i)
 		return
 	if was_unlit and i >= 0 and i < _waystones.size():
 		_waystones[i].kindle_reveal(map.nodes[i].type)
-	# Hold the glide so the 0.45s bloom lands before the route swap.
+	# Hold the glide so the 0.45s bloom lands before the route swap. On the
+	# journey land the pilgrim walks the road at its own pace.
 	var dur: float = maxf(TRAVEL_TIME, 0.5) if was_unlit else TRAVEL_TIME
+	dur = maxf(dur, walk)
 	Motion.bez(self, _set_travel_t, dur, Motion.CSS_EASE) \
 		.finished.connect(_on_arrived.bind(i))
 
 
 func _set_travel_t(v: float) -> void:
 	_travel_t = v
-	if _map_scene != null:
+	if _journey.active():
+		_journey.walk(v)
+	elif _map_scene != null:
 		_map_scene.get_rig().set_camera_xz(
 			_travel_from_xz.lerp(_travel_to_xz, v))
 	var path_d: Vector2 = Vector2(
@@ -905,6 +995,8 @@ func _set_travel_t(v: float) -> void:
 
 func _on_arrived(i: int) -> void:
 	_travelling = false
+	if _journey.active():
+		_journey.arrive()
 	_travel_from_i = -1
 	_hint_label.modulate.a = 1.0
 	if _map_scene != null:
@@ -918,6 +1010,8 @@ func _on_arrived(i: int) -> void:
 func marker_world_position() -> Vector3:
 	if _layout_result == null or map.at < 0 or map.at >= map.nodes.size():
 		return Vector3.INF
+	if _journey.active():
+		return _journey.position(_travel_t if _travelling else 1.0)
 	if _travelling and _travel_from_i >= 0 and _travel_from_i < map.nodes.size():
 		var edge_id: String = MapLayoutInput.edge_id(
 			map.nodes[_travel_from_i].id, map.nodes[map.at].id)
@@ -981,6 +1075,8 @@ func _rig_cam_x() -> float:
 func _on_surface_tapped(screen: Vector2) -> void:
 	if _travelling:
 		return
+	if _journey.active() and _journey.tap(screen):
+		return
 	var i: int = pick_node_at(screen)
 	if i >= 0:
 		choose(i)
@@ -1014,6 +1110,9 @@ func _layout_waystones() -> void:
 	var k: float = _trail_num("scale", 0.36)
 	var touch: float = _trail_num("touch", 0.0)
 	var seats: PackedVector2Array = projected_seats()
+	# On the journey land the pilgrim carries the Flame; the glow marker stands down.
+	if _path_band != null:
+		_path_band.visible = not (_journey != null and _journey.active())
 	for i: int in range(_waystones.size()):
 		var ws: GlassWaystone = _waystones[i]
 		var node_scale: float = k

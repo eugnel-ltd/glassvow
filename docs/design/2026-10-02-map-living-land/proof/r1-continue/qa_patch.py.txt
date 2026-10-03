@@ -1,0 +1,79 @@
+"""QA-only patch for #660 (never in the game): `--title-probe` stores a fresh
+saved run in the dev profile, shows the title, and attaches the probe; the
+QA_NO_TITLE_WARM env var disables the title-time warm for the control."""
+import sys
+
+W = sys.argv[1]
+p = W + "/application/main.gd"
+s = open(p).read()
+
+
+def rep(a, b):
+    global s
+    assert s.count(a) == 1, a[:80]
+    s = s.replace(a, b)
+
+
+rep('''	var map_rest: bool = false
+''', '''	var map_rest: bool = false
+	var title_probe: bool = false
+	var qa_act: int = 1
+''')
+rep('''		elif arg == "--map-rest":
+			map_rest = true
+''', '''		elif arg == "--map-rest":
+			map_rest = true
+		elif arg == "--title-probe":
+			title_probe = true
+		elif arg.begins_with("--qa-act="):
+			qa_act = int(arg.trim_prefix("--qa-act="))
+''')
+rep('''	elif not _onboard.is_empty():
+		_boot_onboard(_onboard)
+	else:
+		_route_idle()
+''', '''	elif not _onboard.is_empty():
+		_boot_onboard(_onboard)
+	elif title_probe:
+		_qa_seed_saved_run(qa_act)
+		_route_idle()
+		var probe_v: Variant = (load("res://tools/t660_title_bench.gd") as GDScript).new()
+		if probe_v is Node:
+			var probe_node: Node = probe_v
+			add_child(probe_node)
+	else:
+		_route_idle()
+''')
+rep('''		MapJourneyPrefetch.prime()
+	var screen: TitleScreen = TitleScreen.new(
+''', '''		var qa_t0: int = Time.get_ticks_usec()
+		MapJourneyPrefetch.prime()
+		Engine.set_meta("qa_prime_ms", (Time.get_ticks_usec() - qa_t0) / 1000.0)
+	var screen: TitleScreen = TitleScreen.new(
+''')
+rep('''func _warm_title_road() -> void:
+''', '''func _warm_title_road() -> void:
+	if not OS.get_environment("QA_NO_TITLE_WARM").is_empty():
+		_title_road_due = false
+		return
+''')
+s += '''
+
+func _qa_seed_saved_run(act_number: int) -> void:
+	var run_seed: int = _forced_seed if _forced_seed >= 0 else 1
+	var rs: RunState = RunState.new_run(content, run_seed, "run-qa-title-%d" % run_seed,
+		{"aspect": 0, "vow": 0, "unlocks": _vigil.unlocks})
+	var g: GlassvowGame = GlassvowGame.new(content, rs)
+	g.quests.prepare_run(rs)
+	var m: WorldMap = WorldMap.benchmark(rs)
+	g.quests.decorate_map(rs, m)
+	for i: int in range(maxi(0, act_number - 1)):
+		rs.start_next_act(content)
+		m = WorldMap.for_run(rs, content)
+		g.quests.decorate_map(rs, m)
+	rs.map = m.to_dict()
+	rs.pending_lamplighter = false
+	print("QA saved run act=%d seed=%d ok=%s" % [rs.act, run_seed, str(SaveService.store(rs, _run_save_path))])
+'''
+open(p, "w").write(s)
+print("patched")

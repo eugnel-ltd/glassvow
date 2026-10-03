@@ -16,7 +16,14 @@ static func run(fails: Array[String]) -> void:
 				id + " carries its real three-dimensional silhouette")
 			_check(fails, absf(bounds.position.y) <= 0.001, id + " is grounded")
 	_check_concave_shore(fails)
-	var scene: MapScene = MapScene.new()
+	# Act IV keeps the painted landscape (and Act I's ash-tree profile the
+	# projection check reads); Act I draws the journey land.
+	_check_bound_route(fails, 3)
+	_check_bound_route(fails, 0)
+
+
+static func _check_bound_route(fails: Array[String], act: int) -> void:
+	var scene: MapScene = MapScene.new(act)
 	var quality: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(
 		"res://content/map/map-quality-v2.json"))
 	var heroes: Dictionary = {}
@@ -44,12 +51,23 @@ static func run(fails: Array[String]) -> void:
 		_check(fails, final_edges == edges,
 			"all route bends and elevation remain the generator's exact centreline")
 		_check(fails, scene.road_segments().size() == 6, "three physical route legs")
-		var bridge: MeshInstance3D = scene.find_child("Bridge masonry", true, false) as MeshInstance3D
-		_check(fails, bridge != null and bridge.mesh.get_faces().size() > 0,
-			"a real deck and parapets span the ravine")
-		var plinths: MultiMeshInstance3D = scene.find_child("Waystone plinths", true, false) as MultiMeshInstance3D
-		_check(fails, plinths != null and plinths.multimesh.instance_count == 2,
-			"one physical plinth per canonical node")
+		var journey: MapJourneyLandscape = scene.journey_landscape()
+		if journey == null:
+			var bridge: MeshInstance3D = scene.find_child("Bridge masonry", true, false) as MeshInstance3D
+			_check(fails, bridge != null and bridge.mesh.get_faces().size() > 0,
+				"a real deck and parapets span the ravine")
+			var plinths: MultiMeshInstance3D = scene.find_child("Waystone plinths", true, false) as MultiMeshInstance3D
+			_check(fails, plinths != null and plinths.multimesh.instance_count == 2,
+				"one physical plinth per canonical node")
+		else:
+			var deck: MeshInstance3D = journey.find_child("Continuous bridge decks", true, false) as MeshInstance3D
+			var masonry: MeshInstance3D = journey.find_child("Joined bridge masonry", true, false) as MeshInstance3D
+			_check(fails, deck != null and deck.mesh.get_faces().size() > 0
+				and masonry != null and masonry.mesh.get_faces().size() > 0,
+				"journey land: a real deck and masonry span the ravine")
+			_check(fails, journey.journey.bases.size() == 2,
+				"journey land: one seated waystone per canonical node")
+			_check(fails, act == 0 and scene.is_journey_act(), "Act I draws the journey land")
 		_check(fails, MapLayoutCanonical.int_value(scene.layout_diagnostics()["accepted_count"]) > 0,
 			"safe scenery survives the full projection reserve")
 		_check_projection(fails, scene)
@@ -70,9 +88,11 @@ static func run(fails: Array[String]) -> void:
 	scene.bind_layout(null, quality)
 	_check(fails, scene.layout_digest().is_empty(),
 		"failed binding clears geometry identity")
-	_check(fails, scene.find_child("Waystone plinths", true, false) == null,
+	_check(fails, scene.find_child("Waystone plinths", true, false) == null
+		and scene.journey_landscape() == null,
 		"failed binding does not retain a navigable old landscape")
 	scene.free()
+	MapScene.release_kept_journey()
 
 
 static func _check_concave_shore(fails: Array[String]) -> void:

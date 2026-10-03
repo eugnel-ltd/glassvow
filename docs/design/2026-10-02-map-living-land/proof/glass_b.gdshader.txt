@@ -1,0 +1,84 @@
+shader_type spatial;
+render_mode diffuse_burley, specular_schlick_ggx;
+// Scratch concept B: the act as a leaded stained-glass pane, backlit.
+// One data texture (road distance, road state, grove density, node distance)
+// read at each glass cell's centre, so every pane takes one flat colour.
+// Procedural Voronoi; 1 sampler.
+uniform sampler2D data : filter_linear, repeat_disable;
+uniform vec4 data_rect = vec4(-52.0, -30.0, 105.0, 61.0);
+uniform float cell = 1.7;
+uniform vec3 lead : source_color = vec3(0.025, 0.022, 0.03);
+uniform vec3 gilt : source_color = vec3(0.62, 0.47, 0.25);
+uniform vec3 grove_a : source_color = vec3(0.07, 0.24, 0.21);
+uniform vec3 grove_b : source_color = vec3(0.42, 0.10, 0.09);
+uniform vec3 land_a : source_color = vec3(0.16, 0.11, 0.17);
+uniform vec3 land_b : source_color = vec3(0.10, 0.12, 0.22);
+uniform vec3 road_open : source_color = vec3(1.0, 0.68, 0.26);
+uniform vec3 road_walked : source_color = vec3(0.62, 0.46, 0.24);
+uniform vec3 road_cold : source_color = vec3(0.36, 0.31, 0.36);
+uniform float backlight = 1.0;
+varying vec3 wpos;
+
+vec2 h2(vec2 p) {
+	p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+	return fract(sin(p) * 43758.5453);
+}
+float h1(vec2 p) { return fract(sin(dot(p, vec2(41.3, 289.1))) * 15731.743); }
+
+vec4 sample_data(vec2 xz) { return texture(data, (xz - data_rect.xy) / data_rect.zw); }
+
+void vertex() { wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+
+void fragment() {
+	vec4 here = sample_data(wpos.xz);
+	// Finer panes on and near the road, broad panes in the open land.
+	float here_road = here.r * 12.0;
+	float sc = here_road < 0.75 ? 0.5 : cell;
+	vec2 p = wpos.xz / sc;
+	vec2 ip = floor(p);
+	vec2 fp = fract(p);
+	float f1 = 9.0; float f2 = 9.0; vec2 id = vec2(0.0); vec2 centre = vec2(0.0);
+	for (int j = -1; j <= 1; j++) {
+		for (int i = -1; i <= 1; i++) {
+			vec2 g = vec2(float(i), float(j));
+			vec2 o = h2(ip + g) * 0.8 + 0.1;
+			vec2 r = g + o - fp;
+			float d = dot(r, r);
+			if (d < f1) { f2 = f1; f1 = d; id = ip + g; centre = (ip + g + o) * sc; }
+			else if (d < f2) { f2 = d; }
+		}
+	}
+	float edge = (sqrt(f2) - sqrt(f1)) * sc;
+	vec4 at = sample_data(centre);
+	float road_m = at.r * 12.0;
+	float node_m = at.a * 12.0;
+	float v = h1(id);
+	// Large colour masses: a slow field decides which land glass a pane takes.
+	float mass = sin(centre.x * 0.11 + sin(centre.y * 0.17) * 1.7) * 0.5 + 0.5;
+	vec3 glass = mix(land_a, land_b, step(0.5, mass + (h1(id + 3.1) - 0.5) * 0.35));
+	float kind = step(0.5, sin(centre.x * 0.21 + 1.3) * sin(centre.y * 0.27) * 0.5 + 0.5 + (h1(id + 7.7) - 0.5) * 0.3);
+	glass = mix(glass, mix(grove_a, grove_b, kind), step(0.22, at.b));
+	vec3 road_c = at.g > 0.75 ? road_open : (at.g > 0.25 ? road_walked : road_cold);
+	float on_road = here_road < 0.75 ? 1.0 : 0.0;
+	glass = mix(glass, road_c, on_road);
+	// Waystone roundels: a ring of lead with a bright cell inside.
+	float ring = abs(here.a * 12.0 - 1.05);
+	glass *= 0.82 + 0.36 * v;
+	// Light through glass: brighter toward each pane's heart, a slow sweep.
+	float heart = 1.0 - smoothstep(0.0, 0.5, sqrt(f1));
+	float sweep = 0.5 + 0.5 * sin(wpos.x * 0.08 - wpos.z * 0.05 - TIME * 0.25);
+	float glow = backlight * (0.55 + 0.35 * heart + 0.25 * sweep);
+	if (on_road > 0.5 && at.g > 0.75) { glow *= 1.6; }
+	float leadw = here_road < 0.75 ? 0.035 : 0.075;
+	float is_lead = 1.0 - smoothstep(leadw, leadw + 0.02, edge);
+	float node_lead = 1.0 - smoothstep(0.07, 0.1, ring);
+	float road_lead = 1.0 - smoothstep(0.05, 0.08, abs(here_road - 0.75));
+	is_lead = max(is_lead, max(node_lead, road_lead));
+	float gilt_edge = smoothstep(leadw - 0.03, leadw, edge) * is_lead;
+	vec3 c = glass * glow;
+	ALBEDO = mix(c * 0.35, lead, is_lead);
+	EMISSION = mix(c * 0.75, gilt * 0.25 * gilt_edge, is_lead);
+	ROUGHNESS = mix(0.32, 0.7, is_lead);
+	SPECULAR = 0.35;
+	METALLIC = is_lead * 0.6;
+}

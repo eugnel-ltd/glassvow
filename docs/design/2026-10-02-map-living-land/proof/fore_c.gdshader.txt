@@ -1,0 +1,15 @@
+shader_type canvas_item;
+// Scratch concept C: near foreground silhouettes, darker than anything in the
+// land, with a thin warm rim, sliding faster than the pan. 1 sampler.
+uniform sampler2D silhouette : source_color, filter_linear;
+uniform float pan = 0.0;
+uniform bool flip = false;
+void fragment() {
+	vec2 uv = vec2(flip ? 1.0 - UV.x : UV.x, UV.y);
+	uv.x = 0.38 + uv.x * 0.55 + pan * 0.06;
+	uv.y = 0.25 + uv.y * 0.75;
+	vec4 s = texture(silhouette, uv);
+	vec4 above = texture(silhouette, uv - vec2(0.0, 0.012));
+	float rim = clamp(s.a - above.a, 0.0, 1.0);
+	COLOR = vec4(vec3(0.02, 0.015, 0.03) + vec3(0.6, 0.3, 0.15) * rim, s.a * 0.96);
+}

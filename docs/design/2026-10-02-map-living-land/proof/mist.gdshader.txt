@@ -1,0 +1,20 @@
+shader_type spatial;
+render_mode unshaded, blend_mix, depth_draw_never, cull_disabled;
+// Scratch cloud sea / ravine mist: two drifting value-noise octaves. 0 samplers.
+uniform vec4 tint : source_color = vec4(0.42, 0.40, 0.58, 0.85);
+uniform float scale = 0.08;
+uniform float drift = 0.02;
+varying vec3 wpos;
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vnoise(vec2 p) {
+	vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+}
+void vertex() { wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+void fragment() {
+	vec2 p = wpos.xz * scale;
+	float n = vnoise(p + vec2(TIME * drift, 0.0)) * 0.6 + vnoise(p * 2.7 - vec2(0.0, TIME * drift * 1.7)) * 0.4;
+	float a = smoothstep(0.25, 0.85, n);
+	ALBEDO = tint.rgb * (0.75 + 0.5 * n);
+	ALPHA = tint.a * a;
+}

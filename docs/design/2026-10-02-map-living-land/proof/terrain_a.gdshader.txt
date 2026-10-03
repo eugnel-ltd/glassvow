@@ -1,0 +1,36 @@
+shader_type spatial;
+render_mode diffuse_burley, specular_disabled;
+// Scratch terrain for concept A. Two painted tiles (groundcover, mineral),
+// blended by slope and road wear; a slow cloud-shadow term. 2 samplers.
+uniform sampler2D groundcover : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D mineral : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+varying vec3 wpos;
+varying vec3 wn;
+
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vnoise(vec2 p) {
+	vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+}
+
+void vertex() {
+	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	wn = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+}
+
+void fragment() {
+	float wear = COLOR.r;
+	float high = COLOR.g;
+	vec3 floor_c = texture(groundcover, wpos.xz / 7.5).rgb;
+	vec3 rock_c = texture(mineral, wpos.xz / 5.0).rgb;
+	float slope = 1.0 - clamp(wn.y, 0.0, 1.0);
+	float patches = vnoise(wpos.xz * 0.12) * 0.6 + vnoise(wpos.xz * 0.5) * 0.4;
+	vec3 moss = floor_c * mix(vec3(1.05, 0.78, 0.74), vec3(0.95, 1.0, 0.92), patches) * 1.25;
+	vec3 earth = floor_c * vec3(0.95, 0.72, 0.55) * 0.9;
+	vec3 c = mix(moss, rock_c * vec3(0.85, 0.85, 0.95), smoothstep(0.25, 0.55, slope));
+	c = mix(c, earth, smoothstep(0.1, 0.8, wear) * 0.7);
+	c *= mix(1.0, 0.8, high);
+	float cloud = smoothstep(0.35, 0.75, vnoise(wpos.xz * 0.035 + vec2(TIME * 0.012, TIME * 0.004)));
+	ALBEDO = c * mix(1.0, 0.7, cloud);
+	ROUGHNESS = 1.0;
+}

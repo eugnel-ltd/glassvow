@@ -1,0 +1,51 @@
+"""QA-only (never committed): timestamps of the journey land's build phases."""
+import re, sys
+W = sys.argv[1]
+open(W + "/tools/qa_marks.gd", "w").write('''class_name QaMarks
+extends RefCounted
+## QA-only: build-phase timestamps from any thread (never committed).
+static var marks: Array = []
+static var _lock: Mutex = Mutex.new()
+
+
+static func mark(label: String) -> void:
+	_lock.lock()
+	marks.append([Time.get_ticks_usec(), label])
+	_lock.unlock()
+''')
+
+def after_lines(path, pattern, label_expr):
+    s = open(path).read().split("\n")
+    out = []
+    n = 0
+    for line in s:
+        out.append(line)
+        m = re.match(r"^(\s*)" + pattern, line)
+        if m:
+            out.append("%sQaMarks.mark(%s)" % (m.group(1), label_expr(line)))
+            n += 1
+    open(path, "w").write("\n".join(out))
+    assert n > 0, path
+    return n
+
+lab = lambda line: '"' + re.search(r'\["(\w+)"\]', line).group(1) + '"'
+print(after_lines(W + "/presentation/map/landscape/terrain.gd", r'build_timings_ms\["\w+"\] =', lab))
+print(after_lines(W + "/presentation/map/landscape/bridge_geometry.gd", r'parent\.build_timings_ms\["\w+"\] =', lab))
+print(after_lines(W + "/presentation/map/map_journey_landscape.gd", r'timings_ms\["\w+"\] =', lambda l: '"land_" + "' + re.search(r'\["(\w+)"\]', l).group(1) + '"'))
+p = W + "/presentation/map/map_journey_prefetch.gd"
+s = open(p).read()
+for a, b in [
+    ("	out.append(land)\n	var generator", "	out.append(land)\n	QaMarks.mark(\"build_start\")\n	var generator"),
+    ("	var packet: Dictionary = MapLayoutPolicy.generate(input, quality, bundle)\n", "	QaMarks.mark(\"input\")\n	var packet: Dictionary = MapLayoutPolicy.generate(input, quality, bundle)\n	QaMarks.mark(\"generated\")\n"),
+    ("	dealer.free()\n", "	dealer.free()\n	QaMarks.mark(\"bound\")\n"),
+    ("	land.build_detached(data, pacing)\n", "	QaMarks.mark(\"prepared\")\n	land.build_detached(data, pacing)\n	QaMarks.mark(\"built \" + land.failure)\n"),
+    ("	_current._advance(true)\n", "	QaMarks.mark(\"hurry \" + str(_current.step))\n	_current._advance(true)\n"),
+    ("	step = Step.BUILDING\n", "	QaMarks.mark(\"launch paced\" if paced else \"launch unpaced\")\n	step = Step.BUILDING\n"),
+    ("	MapScene.adopt_journey(key, land)\n", "	QaMarks.mark(\"adopted_main\")\n	MapScene.adopt_journey(key, land)\n"),
+]:
+    assert s.count(a) == 1, a[:50]
+    s = s.replace(a, b)
+open(p, "w").write(s)
+print(after_lines(W + "/presentation/map/landscape/kit.gd", r'if static_scenery!=null: static_scenery\.call\("finish"\)', lambda l: '"kit_static_finish"'))
+print(after_lines(W + "/presentation/map/landscape/mesh_tools.gd", r'OS\.delay_msec\(PACE_PAUSE_MS\)', lambda l: '"pace"'))
+print("marks patched")

@@ -1,0 +1,44 @@
+shader_type spatial;
+render_mode unshaded, cull_back;
+// Scratch concept C: a painted night plate. Two painted tiles at two scales,
+// large colour masses, the lantern corridor and painted grove shadow read from
+// one data texture (road distance, road state, grove density, node distance).
+// Unshaded: the painting carries its own light. 3 samplers.
+uniform sampler2D groundcover : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D mineral : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D data : filter_linear, repeat_disable;
+uniform vec4 data_rect = vec4(-52.0, -30.0, 105.0, 61.0);
+uniform vec3 night_a : source_color = vec3(0.17, 0.12, 0.16);
+uniform vec3 night_b : source_color = vec3(0.10, 0.14, 0.18);
+uniform vec3 lantern : source_color = vec3(1.0, 0.62, 0.30);
+uniform vec3 corridor : source_color = vec3(0.42, 0.36, 0.40);
+varying vec3 wpos;
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vnoise(vec2 p) {
+	vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+}
+void vertex() { wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+void fragment() {
+	vec4 d = texture(data, (wpos.xz - data_rect.xy) / data_rect.zw);
+	float road_m = d.r * 12.0;
+	vec3 t1 = texture(groundcover, wpos.xz / 9.0).rgb;
+	vec3 t2 = texture(groundcover, mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8)) * wpos.xz / 23.0).rgb;
+	vec3 rock = texture(mineral, wpos.xz / 6.0).rgb;
+	float lum = dot(mix(t1, t2, 0.45), vec3(0.3, 0.55, 0.15));
+	float mass = vnoise(wpos.xz * 0.045) * 0.65 + vnoise(wpos.xz * 0.13) * 0.35;
+	vec3 base = mix(night_a, night_b, smoothstep(0.35, 0.65, mass)) * (0.55 + 1.1 * lum);
+	base = mix(base, rock * vec3(0.32, 0.33, 0.42), smoothstep(0.62, 0.8, vnoise(wpos.xz * 0.3 + 11.0)) * 0.5);
+	// The corridor: every road is a paler, warmer band; the walked road settles,
+	// the open road burns.
+	float band = 1.0 - smoothstep(0.6, 2.6, road_m + (vnoise(wpos.xz * 1.7) - 0.5) * 0.8);
+	base = mix(base, corridor * (0.7 + 0.6 * lum), band * 0.55);
+	float warm = smoothstep(0.55, 0.95, d.g) * 0.65 + smoothstep(0.2, 0.5, d.g) * 0.35;
+	float pool = (1.0 - smoothstep(0.0, 3.2, road_m)) * warm;
+	base += lantern * pool * pool * 0.32;
+	// Painted shadow pooled under the groves, cooled.
+	base *= mix(1.0, 0.55, smoothstep(0.15, 0.7, d.b));
+	base = mix(base, base * vec3(0.8, 0.9, 1.15), smoothstep(0.15, 0.7, d.b));
+	float cloud = smoothstep(0.35, 0.75, vnoise(wpos.xz * 0.035 + vec2(TIME * 0.012, TIME * 0.004)));
+	ALBEDO = base * mix(1.0, 0.78, cloud);
+}

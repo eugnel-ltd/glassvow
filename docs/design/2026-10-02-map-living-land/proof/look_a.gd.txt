@@ -1,0 +1,503 @@
+extends RefCounted
+## Concept A, "The Lantern Road": real terrain under the layout, one moon key
+## with cast shadows, lantern posts that burn along the open road, 3D groves on
+## the existing scenery placements, height fog in the ravines, falling ash.
+## Scratch proof-of-look; numbers are first guesses, not tuned production.
+
+const S = preload("res://scratch_lane/look_shared.gd")
+const TERRAIN_SHADER: String = "res://scratch_lane/terrain_a.gdshader"
+
+static var _field: PackedFloat32Array
+
+
+static func height(x: float, z: float, noise: FastNoiseLite, boundaries: Array[PackedVector2Array]) -> float:
+	var d: float = S.sample(_field, x, z)
+	var open_land: float = clampf((d - 1.7) / 5.0, 0.0, 1.0)
+	var hills: float = (noise.get_noise_2d(x, z) * 0.5 + 0.5) * 2.4 + noise.get_noise_2d(x * 3.1, z * 3.1) * 0.25
+	var h: float = open_land * open_land * hills + clampf((d - 1.4) * 0.12, 0.0, 0.25)
+	# Occlusion guard: a rise in front of a road never hides the road behind it.
+	h = minf(h, maxf(0.0, (d - 1.5) * 0.5))
+	# The far edge rises into a wooded ridge that stands for the horizon.
+	if z < -20.0:
+		h += pow((-20.0 - z) / 7.0, 1.6) * 5.0
+	# The near edge settles low so nothing stands between the camera and the road.
+	if z > 21.0:
+		h *= clampf(1.0 - (z - 21.0) / 4.0, 0.2, 1.0)
+	# Meet the ravine strata at the plate edge.
+	h *= clampf((S.bank_distance(x, z) - 0.3) / 2.2, 0.0, 1.0)
+	return h - 0.03
+
+
+static func dress(screen: WorldMapScreen, act: int) -> void:
+	var scene: MapScene = screen._map_scene
+	var land: MapLandscape = scene._landscape
+	var world: Node3D = scene._world
+	S.hide(land, ["Slate heath", "Still water", "Contact shade", "ash-copse", "ash-tree", "heath-tuft", "Waystone seals", "Worn flagstones"])
+	_field = S.road_field(land)
+	var noise: FastNoiseLite = FastNoiseLite.new()
+	noise.seed = 4700 + act
+	noise.frequency = 0.045
+	noise.fractal_octaves = 3
+	_light_world(scene, world)
+	_terrain(land, noise)
+	_groves(scene, land, noise)
+	_lanterns(screen, scene, land)
+	_ravine(land)
+	_road_paint(land)
+	_weather(world)
+	_skirts(land, noise)
+
+
+static func _light_world(scene: MapScene, world: Node3D) -> void:
+	var key: DirectionalLight3D = scene.get_key()
+	key.rotation_degrees = Vector3(-30, -52, 0)
+	key.light_color = Color("c3cbe8")
+	key.light_energy = 1.7
+	key.shadow_enabled = true
+	key.shadow_blur = 1.6
+	key.shadow_opacity = 0.85
+	key.directional_shadow_max_distance = 80
+	var env: Environment = (world.get_node("MapEnvironment") as WorldEnvironment).environment
+	env.background_color = Color("05070f")
+	env.ambient_light_color = Color("564a72")
+	env.ambient_light_energy = 0.45
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 1.05
+	env.fog_enabled = true
+	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
+	env.fog_light_color = Color("2a2848")
+	env.fog_light_energy = 1.0
+	env.fog_density = 0.0025
+	env.fog_height = -0.6
+	env.fog_height_density = 0.12
+	env.fog_sun_scatter = 0.0
+	env.glow_enabled = true
+	env.glow_intensity = 0.9
+	env.glow_strength = 1.1
+	env.glow_bloom = 0.04
+	env.glow_hdr_threshold = 0.85
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
+	env.adjustment_enabled = true
+	env.adjustment_saturation = 1.08
+	env.adjustment_contrast = 1.06
+	if OS.get_environment("LOOK_DEBUG") == "shadow":
+		env.ambient_light_energy = 0.0
+		env.fog_enabled = false
+		key.light_energy = 3.0
+	if OS.get_environment("LOOK_DEBUG") == "nofog":
+		env.fog_enabled = false
+		env.glow_enabled = false
+
+
+static func _terrain(land: MapLandscape, noise: FastNoiseLite) -> void:
+	var shader: Shader = load(TERRAIN_SHADER) as Shader
+	var material: ShaderMaterial = ShaderMaterial.new()
+	material.shader = shader
+	material.set_shader_parameter("groundcover", land.assets.ground)
+	material.set_shader_parameter("mineral", land.assets.stone)
+	var chunk: float = 8.0
+	var step: float = 0.5
+	for plate: PackedVector2Array in land.boundaries:
+		var lo: Vector2 = Vector2(INF, INF)
+		var hi: Vector2 = Vector2(-INF, -INF)
+		for p: Vector2 in plate:
+			lo = lo.min(p)
+			hi = hi.max(p)
+		var cx: float = lo.x
+		while cx < hi.x:
+			var cz: float = lo.y
+			while cz < hi.y:
+				var mesh: ArrayMesh = _chunk(plate, Vector2(cx, cz), chunk, step, noise, land.boundaries)
+				if mesh != null:
+					var node: MeshInstance3D = MeshInstance3D.new()
+					node.name = "Terrain"
+					node.mesh = mesh
+					node.material_override = material
+					node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+					land.add_child(node)
+				cz += chunk
+			cx += chunk
+
+
+static func _chunk(plate: PackedVector2Array, origin: Vector2, size: float, step: float,
+		noise: FastNoiseLite, boundaries: Array[PackedVector2Array]) -> ArrayMesh:
+	var n: int = int(size / step)
+	var st: SurfaceTool = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var count: int = 0
+	var cache: Dictionary = {}
+	for iz: int in range(n):
+		for ix: int in range(n):
+			var quad: Array[Vector2] = [origin + Vector2(ix, iz) * step, origin + Vector2(ix + 1, iz) * step,
+				origin + Vector2(ix + 1, iz + 1) * step, origin + Vector2(ix, iz + 1) * step]
+			var inside: int = 0
+			for q: Vector2 in quad:
+				if Geometry2D.is_point_in_polygon(q, plate):
+					inside += 1
+			if inside == 0:
+				continue
+			var v: Array[Vector3] = []
+			for q: Vector2 in quad:
+				var key: Vector2i = Vector2i(roundi(q.x * 4), roundi(q.y * 4))
+				if not cache.has(key):
+					var at: Vector2 = q
+					if not Geometry2D.is_point_in_polygon(q, plate):
+						at = _closest_on(q, plate)
+					cache[key] = Vector3(at.x, height(at.x, at.y, noise, boundaries), at.y)
+				v.append(cache[key])
+			for tri: PackedInt32Array in [PackedInt32Array([0, 1, 2]), PackedInt32Array([0, 2, 3])]:
+				for k: int in tri:
+					var d: float = S.sample(_field, v[k].x, v[k].z)
+					st.set_color(Color(clampf(1.0 - (d - 0.45) / 1.1, 0.0, 1.0), clampf(v[k].y / 5.0, 0.0, 1.0), 0.0))
+					st.set_uv(Vector2(v[k].x, v[k].z))
+					st.add_vertex(v[k])
+			count += 1
+	if count == 0:
+		return null
+	st.generate_normals()
+	return st.commit()
+
+
+static func _closest_on(p: Vector2, polygon: PackedVector2Array) -> Vector2:
+	var best: Vector2 = p
+	var best_d: float = INF
+	for i: int in range(polygon.size()):
+		var c: Vector2 = Geometry2D.get_closest_point_to_segment(p, polygon[i], polygon[(i + 1) % polygon.size()])
+		var d: float = c.distance_squared_to(p)
+		if d < best_d:
+			best_d = d
+			best = c
+	return best
+
+
+static func _groves(scene: MapScene, land: MapLandscape, noise: FastNoiseLite) -> void:
+	var diag: Dictionary = scene.layout_diagnostics()
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 97
+	var pine: ArrayMesh = S.conifer(6, Color("2f4440"), Color("3a2a22"), 1.0)
+	var spruce: ArrayMesh = S.conifer(7, Color("4e3430"), Color("3a2a22"), 0.85)
+	var dead: ArrayMesh = S.snag(Color("2a2624"))
+	var bush: ArrayMesh = S.shrub(Color("3a2a30"))
+	var trees: Array[Transform3D] = []
+	var tree_c: Array[Color] = []
+	var reds: Array[Transform3D] = []
+	var red_c: Array[Color] = []
+	var snags: Array[Transform3D] = []
+	var bushes: Array[Transform3D] = []
+	var bush_c: Array[Color] = []
+	var boundaries: Array[PackedVector2Array] = land.boundaries
+	var place: Callable = func(at: Vector2, h: float, kind: int) -> void:
+		var y: float = height(at.x, at.y, noise, boundaries)
+		var basis: Basis = Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(h, h, h) * Vector3(rng.randf_range(0.85, 1.1), 1.0, rng.randf_range(0.85, 1.1)))
+		var t: Transform3D = Transform3D(basis, Vector3(at.x, y - 0.05, at.y))
+		var tint: Color = Color(1, 1, 1).darkened(rng.randf_range(0.0, 0.3))
+		if kind == 0:
+			trees.append(t); tree_c.append(tint)
+		elif kind == 1:
+			reds.append(t); red_c.append(tint.lerp(Color("c87a5a"), rng.randf_range(0.0, 0.25)))
+		elif kind == 2:
+			snags.append(t)
+		else:
+			bushes.append(t); bush_c.append(tint.lerp(Color("7a4a3a"), rng.randf_range(0.0, 0.3)))
+	for placement: Dictionary in diag["scenery_instances"].values():
+		var id: String = str(placement["asset_id"])
+		var tr: Dictionary = placement["transform"]
+		var o: Array = tr["origin"]
+		var sc: Array = tr["scale"]
+		var at: Vector2 = Vector2(MapLayoutCanonical.float_value(o[0]), MapLayoutCanonical.float_value(o[2]))
+		var s: float = MapLayoutCanonical.float_value(sc[0])
+		if id == "ash-copse":
+			var width: float = 6.6 * s
+			for i: int in range(rng.randi_range(7, 11)):
+				var off: Vector2 = Vector2(rng.randf_range(-0.38, 0.38) * width, rng.randf_range(-0.22, 0.22) * width)
+				place.call(at + off, 4.4 * s * rng.randf_range(0.6, 1.0), rng.randi_range(0, 1) if i % 4 != 3 else 2)
+		elif id == "ash-tree":
+			place.call(at, 3.6 * s * rng.randf_range(0.75, 1.0), rng.randi_range(0, 2))
+		elif id == "heath-tuft":
+			for i: int in range(rng.randi_range(2, 4)):
+				place.call(at + Vector2(rng.randf_range(-0.6, 0.6), rng.randf_range(-0.3, 0.3)) * 2.0 * s, 0.85 * s * rng.randf_range(0.6, 1.0), 3)
+	# Grove infill on open land, clustered by noise, height-capped so no crown
+	# can reach a road or a waystone's touch region up-screen (approximation of
+	# the production scenery rule; Phase 2 runs the real rejection).
+	for i: int in range(5200):
+		var at: Vector2 = Vector2(rng.randf_range(-48, 48), rng.randf_range(-21.5, 24))
+		var d: float = S.sample(_field, at.x, at.y)
+		if d < 2.4 or S.bank_distance(at.x, at.y) < 0.8:
+			continue
+		if noise.get_noise_2d(at.x * 1.3 + 40.0, at.y * 1.3) < -0.02:
+			continue
+		if at.distance_to(MapScene.THRESHOLD_XZ) < 7.0 or at.distance_to(MapScene.TERMINUS_XZ) < 7.5:
+			continue
+		var cap: float = (d - 1.2) / 1.19
+		place.call(at, minf(rng.randf_range(2.0, 4.4), cap), rng.randi_range(0, 1) if rng.randf() > 0.12 else 2)
+	# Forest walls outside the play field: the far ridge and both act ends.
+	for i: int in range(900):
+		var at: Vector2 = Vector2(rng.randf_range(-50, 50), rng.randf_range(-30, 29))
+		var far: bool = at.y < -21.5
+		var near: bool = at.y > 24.5
+		var ends: bool = absf(at.x) > 45.0
+		if not (far or near or ends):
+			continue
+		if S.sample(_field, at.x, at.y) < 3.5:
+			continue
+		if MapRavine.holds(at.x, at.y, 1.0):
+			continue
+		if at.distance_to(MapScene.THRESHOLD_XZ) < 7.0 or at.distance_to(MapScene.TERMINUS_XZ) < 7.5:
+			continue
+		place.call(at, rng.randf_range(2.6, 4.8) if not near else rng.randf_range(1.2, 2.2), rng.randi_range(0, 1))
+	var foliage: StandardMaterial3D = StandardMaterial3D.new()
+	foliage.vertex_color_use_as_albedo = true
+	foliage.roughness = 1.0
+	foliage.albedo_color = Color(0.9, 0.95, 1.0)
+	land.add_child(S.multimesh("Pines", pine, trees, tree_c, foliage, true))
+	land.add_child(S.multimesh("Rust spruce", spruce, reds, red_c, foliage, true))
+	land.add_child(S.multimesh("Ash snags", dead, snags, [], foliage, true))
+	land.add_child(S.multimesh("Heather", bush, bushes, bush_c, foliage, true))
+
+
+static func _lanterns(screen: WorldMapScreen, scene: MapScene, land: MapLandscape) -> void:
+	var states: Array[StringName] = S.edge_states(scene)
+	var post: BoxMesh = BoxMesh.new()
+	post.size = Vector3(0.05, 1.05, 0.05)
+	var head: BoxMesh = BoxMesh.new()
+	head.size = Vector3(0.2, 0.24, 0.2)
+	var iron: StandardMaterial3D = StandardMaterial3D.new()
+	iron.albedo_color = Color("1d1a1a")
+	iron.roughness = 0.8
+	var lit: StandardMaterial3D = StandardMaterial3D.new()
+	lit.albedo_color = Color("ffb35c")
+	lit.emission_enabled = true
+	lit.emission = Color("ffa040")
+	lit.emission_energy_multiplier = 4.0
+	var cold: StandardMaterial3D = StandardMaterial3D.new()
+	cold.albedo_color = Color("2a2c33")
+	cold.emission_enabled = true
+	cold.emission = Color("6a3a20")
+	cold.emission_energy_multiplier = 0.12
+	var walked: StandardMaterial3D = cold.duplicate() as StandardMaterial3D
+	walked.emission = Color("b0743a")
+	walked.emission_energy_multiplier = 1.0
+	var posts: Array[Transform3D] = []
+	var heads_open: Array[Transform3D] = []
+	var heads_cold: Array[Transform3D] = []
+	var heads_walked: Array[Transform3D] = []
+	var lamps: Array[Vector3] = []
+	for e: int in range(land.paths.size()):
+		var line: PackedVector3Array = land.paths[e]
+		var state: String = str(states[e]) if e < states.size() else "cold"
+		var total: float = 0.0
+		var next_at: float = 1.4
+		var side: float = 1.0
+		for i: int in range(line.size() - 1):
+			var a: Vector3 = line[i]
+			var b: Vector3 = line[i + 1]
+			var seg: float = a.distance_to(b)
+			while next_at <= total + seg:
+				var t: float = (next_at - total) / seg
+				var p: Vector3 = a.lerp(b, t)
+				var right: Vector3 = (b - a).cross(Vector3.UP).normalized()
+				var at: Vector3 = p + right * side * 0.78
+				if not MapRavine.holds(at.x, at.z, 0.4):
+					posts.append(Transform3D(Basis.IDENTITY, at + Vector3(0, 0.5, 0)))
+					var lamp_t: Transform3D = Transform3D(Basis.IDENTITY, at + Vector3(0, 1.08, 0))
+					if state == "open":
+						heads_open.append(lamp_t)
+					elif state == "walked":
+						heads_walked.append(lamp_t)
+					else:
+						heads_cold.append(lamp_t)
+					if state == "open":
+						lamps.append(at + Vector3(0, 1.1, 0))
+				side = -side
+				next_at += 3.6
+			total += seg
+	land.add_child(S.multimesh("Lantern posts", post, posts, [], iron, true))
+	land.add_child(S.multimesh("Lanterns lit", head, heads_open, [], lit, false))
+	land.add_child(S.multimesh("Lanterns cold", head, heads_cold, [], cold, false))
+	land.add_child(S.multimesh("Lanterns walked", head, heads_walked, [], walked, false))
+	for at: Vector3 in lamps:
+		_omni(land, at, Color("ffab5a"), 3.0, 4.6)
+	# The Flame at the current waystone, and kindled shrines at the reachable ones.
+	var anchors: PackedVector3Array = screen._ordered_layout_anchors()
+	var nodes: Dictionary = S.node_states(screen)
+	var stone: CylinderMesh = CylinderMesh.new()
+	stone.top_radius = 0.42
+	stone.bottom_radius = 0.62
+	stone.height = 0.5
+	stone.radial_segments = 7
+	var stones: Array[Transform3D] = []
+	for i: int in range(anchors.size()):
+		stones.append(Transform3D(Basis.IDENTITY, anchors[i] + Vector3(0, 0.2, 0)))
+		var state: String = str(nodes.get(i, "cold"))
+		if state == "current":
+			_omni(land, anchors[i] + Vector3(0, 1.6, 0.6), Color("ffc27a"), 3.2, 7.5)
+		elif state == "open":
+			_omni(land, anchors[i] + Vector3(0, 1.2, 0.4), Color("ff9f50"), 1.6, 3.4)
+	var masonry: Material = land.masonry
+	land.add_child(S.multimesh("Waystone cairns", stone, stones, [], masonry, true))
+
+
+static func _road_paint(land: MapLandscape) -> void:
+	var paths: MeshInstance3D = land.get_node("Processional paths") as MeshInstance3D
+	var paint: ShaderMaterial = ShaderMaterial.new()
+	paint.shader = load("res://scratch_lane/road_a.gdshader") as Shader
+	paint.set_shader_parameter("mineral", land.assets.stone)
+	paths.material_override = paint
+
+
+## The land past the plates: wooded ridges rise beyond the far edge, and the
+## near edge drops to a drifting cloud sea; each ravine gets a floor and mist.
+static func _skirts(land: MapLandscape, noise: FastNoiseLite) -> void:
+	var st: SurfaceTool = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var step: float = 1.0
+	var z: float = -62.0
+	while z < -26.0:
+		var x: float = -70.0
+		while x < 70.0:
+			var q: Array[Vector3] = []
+			for c: Vector2 in [Vector2(x, z), Vector2(x + step, z), Vector2(x + step, z + step), Vector2(x, z + step)]:
+				var rise: float = clampf((-26.0 - c.y) / 30.0, 0.0, 1.0)
+				var h: float = rise * 9.0 + (noise.get_noise_2d(c.x * 0.6, c.y * 0.6) * 0.5 + 0.5) * 4.0 * rise + 0.5
+				q.append(Vector3(c.x, h, c.y))
+			for k: int in [0, 1, 2, 0, 2, 3]:
+				st.set_color(Color(0.0, 0.6, 0.0))
+				st.set_uv(Vector2(q[k].x, q[k].z))
+				st.add_vertex(q[k])
+			x += step
+		z += step
+	st.generate_normals()
+	var ridge: MeshInstance3D = MeshInstance3D.new()
+	ridge.name = "Far ridges"
+	ridge.mesh = st.commit()
+	ridge.material_override = (land.get_node("Terrain") as MeshInstance3D).material_override
+	land.add_child(ridge)
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 311
+	var pine: ArrayMesh = S.conifer(6, Color("26383a"), Color("2a201c"), 1.0)
+	var trees: Array[Transform3D] = []
+	var colours: Array[Color] = []
+	for i: int in range(2600):
+		var at: Vector2 = Vector2(rng.randf_range(-70, 70), rng.randf_range(-62, -26.5))
+		var rise: float = clampf((-26.0 - at.y) / 30.0, 0.0, 1.0)
+		var h: float = rise * 9.0 + (noise.get_noise_2d(at.x * 0.6, at.y * 0.6) * 0.5 + 0.5) * 4.0 * rise + 0.5
+		var s: float = rng.randf_range(3.0, 5.5)
+		trees.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(s, s, s)), Vector3(at.x, h - 0.1, at.y)))
+		colours.append(Color(1, 1, 1).darkened(rng.randf_range(0.1, 0.45)).lerp(Color("b06a50"), rng.randf_range(0.0, 0.2)))
+	var foliage: StandardMaterial3D = StandardMaterial3D.new()
+	foliage.vertex_color_use_as_albedo = true
+	foliage.roughness = 1.0
+	land.add_child(S.multimesh("Ridge forest", pine, trees, colours, foliage, true))
+	var mist: ShaderMaterial = ShaderMaterial.new()
+	mist.shader = load("res://scratch_lane/mist.gdshader") as Shader
+	mist.set_shader_parameter("tint", Color(0.26, 0.25, 0.40, 0.9))
+	mist.set_shader_parameter("scale", 0.05)
+	var sea: PlaneMesh = PlaneMesh.new()
+	sea.size = Vector2(260, 200)
+	var cloud: MeshInstance3D = MeshInstance3D.new()
+	cloud.name = "Cloud sea"
+	cloud.mesh = sea
+	cloud.material_override = mist
+	cloud.position = Vector3(0, -3.5, 120)
+	land.add_child(cloud)
+	var under: MeshInstance3D = cloud.duplicate() as MeshInstance3D
+	under.position = Vector3(0, -2.6, 0)
+	var ravine_mist: ShaderMaterial = mist.duplicate() as ShaderMaterial
+	ravine_mist.set_shader_parameter("tint", Color(0.16, 0.17, 0.30, 0.75))
+	ravine_mist.set_shader_parameter("scale", 0.22)
+	under.material_override = ravine_mist
+	land.add_child(under)
+	var floor_mesh: PlaneMesh = PlaneMesh.new()
+	floor_mesh.size = Vector2(240, 120)
+	var floor_mat: StandardMaterial3D = StandardMaterial3D.new()
+	floor_mat.albedo_color = Color("0d0f1c")
+	var floor_node: MeshInstance3D = MeshInstance3D.new()
+	floor_node.mesh = floor_mesh
+	floor_node.material_override = floor_mat
+	floor_node.position = Vector3(0, -5.9, 0)
+	land.add_child(floor_node)
+
+
+static func _omni(parent: Node3D, at: Vector3, colour: Color, energy: float, reach: float) -> void:
+	var lamp: OmniLight3D = OmniLight3D.new()
+	lamp.position = at
+	lamp.light_color = colour
+	lamp.light_energy = energy
+	lamp.omni_range = reach
+	lamp.omni_attenuation = 1.4
+	lamp.shadow_enabled = false
+	parent.add_child(lamp)
+
+
+static func _ravine(land: MapLandscape) -> void:
+	# A cold stream along each ravine floor, glinting; the mist is the height fog.
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.albedo_color = Color("0b1e2c")
+	material.emission_enabled = true
+	material.emission = Color("24506e")
+	material.emission_energy_multiplier = 0.9
+	material.roughness = 0.2
+	for cut: float in MapRavine.CUTS:
+		var st: SurfaceTool = SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var z: float = -28.0
+		while z < 28.0:
+			var x0: float = MapRavine.centre(cut, z)
+			var x1: float = MapRavine.centre(cut, z + 1.0)
+			var w: float = 0.55
+			st.add_vertex(Vector3(x0 - w, -5.4, z)); st.add_vertex(Vector3(x1 + w, -5.4, z + 1.0)); st.add_vertex(Vector3(x0 + w, -5.4, z))
+			st.add_vertex(Vector3(x0 - w, -5.4, z)); st.add_vertex(Vector3(x1 - w, -5.4, z + 1.0)); st.add_vertex(Vector3(x1 + w, -5.4, z + 1.0))
+			z += 1.0
+		st.generate_normals()
+		var node: MeshInstance3D = MeshInstance3D.new()
+		node.mesh = st.commit()
+		node.material_override = material
+		land.add_child(node)
+
+
+static func _weather(world: Node3D) -> void:
+	var ash: GPUParticles3D = GPUParticles3D.new()
+	ash.name = "Ash fall"
+	ash.amount = 420
+	ash.lifetime = 9.0
+	ash.preprocess = 9.0
+	ash.visibility_aabb = AABB(Vector3(-60, -10, -40), Vector3(120, 30, 80))
+	var pm: ParticleProcessMaterial = ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	pm.emission_box_extents = Vector3(55, 0.5, 34)
+	pm.gravity = Vector3(0.25, -0.45, 0.1)
+	pm.initial_velocity_min = 0.0
+	pm.initial_velocity_max = 0.2
+	pm.turbulence_enabled = true
+	pm.turbulence_noise_strength = 0.6
+	pm.scale_min = 0.6
+	pm.scale_max = 1.4
+	ash.process_material = pm
+	var quad: QuadMesh = QuadMesh.new()
+	quad.size = Vector2(0.045, 0.045)
+	var flake: StandardMaterial3D = StandardMaterial3D.new()
+	flake.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	flake.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	flake.albedo_color = Color(0.7, 0.68, 0.7, 0.45)
+	flake.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	quad.material = flake
+	ash.draw_pass_1 = quad
+	ash.position = Vector3(0, 7, 0)
+	world.add_child(ash)
+	var embers: GPUParticles3D = ash.duplicate() as GPUParticles3D
+	embers.name = "Embers"
+	embers.amount = 160
+	var em: ParticleProcessMaterial = pm.duplicate() as ParticleProcessMaterial
+	em.gravity = Vector3(0.1, 0.12, 0.0)
+	embers.process_material = em
+	embers.position = Vector3(0, 0.5, 0)
+	var spark: QuadMesh = QuadMesh.new()
+	spark.size = Vector2(0.06, 0.06)
+	var glow: StandardMaterial3D = flake.duplicate() as StandardMaterial3D
+	glow.albedo_color = Color(1.0, 0.55, 0.2, 1.0)
+	glow.emission_enabled = true
+	glow.emission = Color("ff8a30")
+	glow.emission_energy_multiplier = 3.0
+	spark.material = glow
+	embers.draw_pass_1 = spark
+	world.add_child(embers)

@@ -42,6 +42,10 @@ var _map_screen: WorldMapScreen = null
 ## of the same map, run, act, shape and language (`_map_screen_key`).
 var _map_keep: MapScreenKeep = MapScreenKeep.new()
 var _map_screen_key: Dictionary = {}
+## The run the title's Back to the Road restores (null when it offers none),
+## and whether that title has yet to warm its map (`_warm_title_road`).
+var _title_road: RunState = null
+var _title_road_due: bool = false
 var _choice_screen: Control = null
 ## The launch rite plays once a session: the first title kindles, every later
 ## title arrives already lit (docs/design/2026-10-02-opening-start §7).
@@ -124,6 +128,13 @@ var _onboard: String = ""
 ## --settle=SECONDS: extra wait before a `--shot=` capture, so a composition is
 ## photographed at rest rather than mid-entrance.
 var _settle: float = 0.0
+## --map captures: --map-steps=N walks the run N waystones in before the map
+## opens; --map-view=close|journey|whole frames Act I's journey camera before
+## the shot; --map-walk=SECONDS starts the walk to the first lit waystone and
+## photographs it that far in.
+var _map_steps: int = 0
+var _map_view: String = ""
+var _map_walk: float = -1.0
 ## The ceremony layer — wipe, transit leaves, grain — living above every routed
 ## screen so a leaf started before a route swap finishes over the incoming
 ## screen. Screens never see it; main fires it around its own route helpers.
@@ -187,6 +198,9 @@ func _ready() -> void:
 	# touch one. A tooling boot lands on the isolated Development profile unless
 	# it names `--production-save`, on exported builds as much as in the editor.
 	select_profile(_boot_args)
+	# The game builds Act I's journey land on the worker pool behind a veil;
+	# a headless boot (tests) has no frames to wait through, so it builds inline.
+	MapScene.journey_async = DisplayServer.get_name() != "headless"
 	var boot: GDScript = null
 	if DevTools.available():
 		boot = load(DevTools.BOOT) as GDScript
@@ -268,6 +282,8 @@ func _ready() -> void:
 	var map_asset_bench: bool = false
 	# --map --map-timing: time every map open (tools/bench_map_open.gd).
 	var map_timing: bool = false
+	# --map --map-rest: time the map at rest and walking (tools/bench_map_rest.gd).
+	var map_rest: bool = false
 	var scene_shot: String = ""
 	var scene_cursor: int = 0
 	for arg: String in _boot_args:
@@ -330,6 +346,12 @@ func _ready() -> void:
 			resume_run = true
 		elif arg == "--map":
 			show_map = true
+		elif arg.begins_with("--map-steps="):
+			_map_steps = clampi(int(arg.trim_prefix("--map-steps=")), 0, 14)
+		elif arg.begins_with("--map-view="):
+			_map_view = arg.trim_prefix("--map-view=")
+		elif arg.begins_with("--map-walk="):
+			_map_walk = maxf(0.0, float(arg.trim_prefix("--map-walk=")))
 		elif arg == "--dawn":
 			show_dawn_bench = true
 		elif arg == "--shop":
@@ -350,6 +372,8 @@ func _ready() -> void:
 			map_asset_bench = true
 		elif arg == "--map-timing":
 			map_timing = true
+		elif arg == "--map-rest":
+			map_rest = true
 		elif arg.begins_with("--onboard="):
 			_onboard = arg.trim_prefix("--onboard=")
 		elif arg.begins_with("--scene="):
@@ -530,8 +554,12 @@ func _ready() -> void:
 	elif show_map:
 		_opening_suppressed = true
 		_new_run()
+		_walk_map_steps()
 		if map_timing:
 			_attach_map_open_bench()
+			return
+		if map_rest:
+			_attach_map_rest_bench()
 			return
 	elif show_shop_bench:
 		# The Night Stall bench: a fresh run with payable gold and seeded
@@ -564,6 +592,19 @@ func _ready() -> void:
 		_attach_performance_probe()
 	elif shot_path != "":
 		_capture_and_quit(shot_path)
+
+
+## The rest and walking frame bench (tools/bench_map_rest.gd), as the open
+## bench is attached: a developer flag only, null-checked.
+func _attach_map_rest_bench() -> void:
+	var script: GDScript = load("res://tools/bench_map_rest.gd") as GDScript
+	var instance: Variant = script.new() if script != null else null
+	if not instance is Node:
+		push_error("map rest bench did not load")
+		get_tree().quit(2)
+		return
+	var bench: Node = instance
+	add_child(bench)
 
 
 ## The bench reopens the map this boot opened and photographs it itself, so
@@ -746,7 +787,8 @@ func _notification(what: int) -> void:
 
 ## Every WorkerThreadPool task must be joined before its owner goes: an
 ## unjoined compile crashed the engine at exit. A quit during the charting veil
-## therefore waits for the compile to end.
+## therefore waits for the compile to end, and a quit during a map's warm-up
+## (the title's, #660) for the pictures and the land it is building.
 func _join_map_layout_jobs() -> void:
 	if _map_layout_job != null:
 		_map_layout_retired.append(_map_layout_job)
@@ -754,6 +796,8 @@ func _join_map_layout_jobs() -> void:
 	for job: MapLayoutJob in _map_layout_retired:
 		job.finish()
 	_map_layout_retired.clear()
+	MapJourneyPrefetch.join()
+	MapLandscapeAssets.join()
 
 
 ## A headed proof of the shipping root's default font. The Label carries no font
@@ -796,6 +840,16 @@ func _report_launch() -> void:
 func _capture_and_quit(path: String) -> void:
 	for _i: int in range(30):  # let layout + first paint settle
 		await get_tree().process_frame
+	# Act I's journey land builds on a worker under its veil: photograph the
+	# land, not the veil (bounded, so a stuck build still produces a shot).
+	var waited: int = 0
+	while is_instance_valid(_map_screen) and _map_screen.landscape_pending() and waited < 1200:
+		await get_tree().process_frame
+		waited += 1
+	if waited > 0:
+		for _k: int in range(20):
+			await get_tree().process_frame
+	await _stage_map_capture()
 	if _settle > 0.0:
 		await get_tree().create_timer(_settle).timeout
 	if _onboard == "targeting" or _onboard == HintGuide.TARGETING:
@@ -806,6 +860,43 @@ func _capture_and_quit(path: String) -> void:
 	img.save_png(path)
 	print("shot saved: " + path)
 	get_tree().quit(0)
+
+
+## --map-steps: walks the fresh run's map that many waystones in (each node
+## entered and cleared, as a played step leaves it) and shows the map again.
+func _walk_map_steps() -> void:
+	if _map_steps <= 0 or _map == null or game == null:
+		return
+	for _i: int in range(_map_steps):
+		var next: Array[int] = _map.reachable()
+		if next.is_empty():
+			break
+		_map.enter(next[0])
+		_map.clear_current()
+	game.run.map = _map.to_dict()
+	_map_keep.release()
+	_show_map()
+
+
+## --map-view and --map-walk: frames Act I's journey camera, or starts the walk
+## to the first lit waystone, before a --shot capture.
+func _stage_map_capture() -> void:
+	if not is_instance_valid(_map_screen) or _map_screen._journey == null \
+			or not _map_screen._journey.active():
+		return
+	var levels: Dictionary = {"close": MapJourneyView.Level.CLOSE,
+		"journey": MapJourneyView.Level.JOURNEY, "whole": MapJourneyView.Level.WHOLE}
+	if levels.has(_map_view):
+		_map_screen._journey.view.level = levels[_map_view]
+		_map_screen._journey.frame(_map.at)
+		for _i: int in range(20):
+			await get_tree().process_frame
+	if _map_walk >= 0.0:
+		var next: Array[int] = _map.reachable()
+		if not next.is_empty():
+			_map_screen.node_chosen.disconnect(_on_node_chosen)
+			_map_screen.choose(next[0])
+			await get_tree().create_timer(_map_walk).timeout
 
 
 func _onboard_arm_target() -> void:
@@ -1060,6 +1151,11 @@ func _show_title() -> void:
 	var newcomer: bool = saved == null and _deed("runs") == 0
 	var ask_language: bool = Preferences.active.language.is_empty() and newcomer
 	var rite: bool = not _title_kindled or _title_rite_resume
+	if rite and saved != null and saved.act == 0 and MapScene.journey_async:
+		# The lit title will warm this run's Act I land (`_warm_title_road`):
+		# what that would read back from the renderer is read now, before the
+		# rite's first frame, and only for a player it serves.
+		MapJourneyPrefetch.prime()
 	var screen: TitleScreen = TitleScreen.new(
 		_title_context(saved, choices, rite, ask_language), _sfx_bus)
 	screen.chosen.connect(_on_title_pick.bind(screen, saved))
@@ -1076,6 +1172,8 @@ func _show_title() -> void:
 	_music.play(&"title")
 	_title_kindled = true
 	_title_rite_resume = false
+	_title_road = saved
+	_title_road_due = true
 
 
 ## The lantern's routes leave in its own light (opening-start §7 T6, T7): the
@@ -1585,13 +1683,49 @@ func _route_run() -> void:
 func _warm_map_landscape() -> void:
 	if game == null or game.run == null or _map == null or game.run.pending_run_end != null:
 		return
-	var node: MapNode = _map.current()
-	var past_boss: bool = node != null and node.type == "boss" and not game.run.is_final_act()
+	_warm_landscape_for(_map, game.run)
+
+
+## What `_warm_map_landscape` warms for `map` and `run`, which the title also
+## warms for the run Back to the Road restores (`_warm_title_road`).
+func _warm_landscape_for(map: WorldMap, run: RunState) -> void:
+	var node: MapNode = map.current()
+	var past_boss: bool = node != null and node.type == "boss" and not run.is_final_act()
 	if past_boss:
 		# The next map is the next act's, and the kept screen holds this act's
-		# artwork: it goes first, so one act's artwork is held at a time.
+		# artwork: it goes first, so one act's artwork is held at a time. This
+		# act's journey land is never drawn again either.
 		_map_keep.release()
-	MapLandscapeAssets.prefetch(game.run.act + (1 if past_boss else 0))
+		MapJourneyPrefetch.release()
+	MapLandscapeAssets.prefetch(run.act + (1 if past_boss else 0))
+	# Act I's journey land is built ahead too, once its pictures are decoded.
+	# The next act's map does not exist yet past a boss, so only this act's.
+	if not past_boss and MapScene.journey_async:
+		MapJourneyPrefetch.start(map, run)
+
+
+## Back to the Road opens a drawn map (#660). Once the title is lit and taking
+## input (never during the launch rite, whose frames are a shipped acceptance
+## on the iPad 8), the saved run's next map is warmed as `_route_run` warms it
+## when Continue restores that run, so the restore finds its land built; the
+## prefetch's main-thread work is one small piece per frame. A title with no
+## run to return to holds no map's artwork (Erase Everything, a run that ended).
+func _warm_title_road() -> void:
+	var title: TitleScreen = _choice_screen as TitleScreen
+	if title != null and title.rite != null and not title.rite.is_done():
+		return
+	var saved: RunState = _title_road
+	_title_road = null
+	_title_road_due = false
+	# A headless boot (tests, tools) has no frames to warm anything under.
+	if title == null or not MapScene.journey_async:
+		return
+	var restored: WorldMap = WorldMap.from_dict(saved.map) if saved != null else null
+	if restored == null or saved.pending_run_end != null:
+		MapJourneyPrefetch.release()
+		MapLandscapeAssets.release()
+		return
+	_warm_landscape_for(restored, saved)
 
 
 func _dispatch_current_route() -> bool:
@@ -1682,6 +1816,13 @@ func _compile_map_layout(input: MapLayoutInput, quality: Dictionary,
 	var input_digest: String = input.digest()
 	if input_digest == _map_layout_input_digest:
 		return _map_layout_packet
+	# The journey prefetch generated this very input on a worker (#660).
+	var prefetched: Dictionary = {} if _map_layout_compile.is_valid() \
+		else MapJourneyPrefetch.layout_packet(input_digest)
+	if not prefetched.is_empty():
+		_map_layout_input_digest = input_digest
+		_map_layout_packet = prefetched
+		return prefetched
 	if _map_layout_compile.is_valid() or not _map_layout_async \
 			or not MapLayoutPolicy.is_compiler_input(input):
 		_map_layout_input_digest = input_digest
@@ -1697,6 +1838,9 @@ func _compile_map_layout(input: MapLayoutInput, quality: Dictionary,
 
 
 func _process(_delta: float) -> void:
+	if _title_road_due:
+		_warm_title_road()
+	MapJourneyPrefetch.step_current()
 	for retired: MapLayoutJob in _map_layout_retired.duplicate():
 		if retired.is_done():
 			retired.finish()
@@ -1747,7 +1891,15 @@ func _show_map() -> void:
 	_attach_run_hud()
 	_music.play(&"map")
 	if _hints != null:
-		_hints.consider_map(_map_screen)
+		# Act I's land may still be building under its veil: the hint points at
+		# a waystone, so it waits until the land (and the camera) are settled.
+		if _map_screen.landscape_pending():
+			var screen: WorldMapScreen = _map_screen
+			screen.landscape_ready.connect(func() -> void:
+				if _hints != null and _map_screen == screen:
+					_hints.consider_map(screen), CONNECT_ONE_SHOT)
+		else:
+			_hints.consider_map(_map_screen)
 
 
 ## Holds the map's place while its layout compiles off the main thread. The

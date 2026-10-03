@@ -1,0 +1,35 @@
+import sys
+W = sys.argv[1]
+p = W + "/application/main.gd"
+s = open(p).read()
+a = '''		elif arg == "--map-rest":
+			map_rest = true'''
+b = '''		elif arg == "--map-rest":
+			map_rest = true
+		elif arg == "--map-probe":
+			map_probe = true
+		elif arg == "--map-r2-probe":
+			map_r2_probe = true'''
+assert s.count(a) == 1; s = s.replace(a, b)
+a = '''	var map_rest: bool = false'''
+b = '''	var map_rest: bool = false
+	var map_probe: bool = false
+	var map_r2_probe: bool = false'''
+assert s.count(a) == 1; s = s.replace(a, b)
+a = '''		if map_rest:'''
+b = '''		if map_probe:
+			var probe: Variant = (load("res://tools/qa_map_probe.gd") as GDScript).new()
+			if probe is Node:
+				var probe_node: Node = probe
+				add_child(probe_node)
+			return
+		if map_r2_probe:
+			var r2_probe: Variant = (load("res://tools/qa_r2_probe.gd") as GDScript).new()
+			if r2_probe is Node:
+				var r2_probe_node: Node = r2_probe
+				add_child(r2_probe_node)
+			return
+		if map_rest:'''
+assert s.count(a) == 1; s = s.replace(a, b)
+open(p, "w").write(s)
+print("patched")
