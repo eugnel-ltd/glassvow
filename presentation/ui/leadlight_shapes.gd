@@ -96,3 +96,20 @@ static func arc_points(centre: Vector2, radius: Vector2, a0: float, a1: float,
 		var a: float = lerpf(a0, a1, float(i) / float(count - 1))
 		points.append(centre + Vector2(cos(a), sin(a)) * radius)
 	return points
+
+
+## A radial light with no contour in its falloff: white, so the drawing colour
+## tints it, with `alphas` at evenly spaced stops from the centre (0) to the rim
+## (1) joined by cubic interpolation, `size` px square.
+static func soft_light(alphas: PackedFloat32Array, size: int = 256) -> GradientTexture2D:
+	var colours: PackedColorArray = PackedColorArray()
+	var offsets: PackedFloat32Array = PackedFloat32Array()
+	for i: int in range(alphas.size()):
+		offsets.append(float(i) / float(maxi(alphas.size() - 1, 1)))
+		colours.append(Color(1.0, 1.0, 1.0, alphas[i]))
+	var light: GradientTexture2D = GlassStyle.grad_tex(colours, offsets, true,
+		Vector2(0.5, 0.5), Vector2(1.0, 0.5))
+	light.gradient.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_CUBIC
+	light.width = size
+	light.height = size
+	return light

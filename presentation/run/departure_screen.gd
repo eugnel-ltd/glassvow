@@ -250,7 +250,7 @@ func _enter(next: StringName, mood: StringName, rise: bool = true) -> void:
 
 func _focus() -> void:
 	if is_inside_tree() and _primary != null:
-		_primary.grab_focus()
+		LeadlightFocus.give(_primary)
 
 
 # ── (a) ───────────────────────────────────────────────────────────────────

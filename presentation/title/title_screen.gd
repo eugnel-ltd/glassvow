@@ -264,8 +264,9 @@ func _build_lantern() -> void:
 		part.mouse_exited.connect(_light_plaque.bind(0.0))
 		part.button_down.connect(_light_plaque.bind(1.0))
 		part.button_up.connect(_light_plaque.bind(0.0))
-	lantern.focus_entered.connect(func() -> void: _plaque.focused = true)
-	lantern.focus_exited.connect(func() -> void: _plaque.focused = false)
+	# The plaque's hairline follows focus SHOWN on the lantern: a tap holds
+	# focus hidden, and a touch player sees no ring and no hairline.
+	lantern.focus_shown.connect(func(shown: bool) -> void: _plaque.focused = shown)
 	_beckon = TitleBeckon.new(lantern, _plaque)
 	add_child(_beckon)
 
@@ -516,21 +517,46 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouse or event is InputEventScreenTouch or event is InputEventKey \
 			or event is InputEventJoypadButton or event is InputEventScreenDrag:
 		_beckon.touched()
+	if _reveals_focus(event):
+		# Consumed here, so Main's `_input` never sees it: note it first.
+		LeadlightFocus.note(event)
+		get_viewport().set_input_as_handled()
+
+
+## Focus is for the keyboard and the pad: a touch player never sees a ring.
+## The first key or button shows focus — on the lantern, or where a tap left
+## it hidden — and acts on nothing; the next one acts. A bare modifier (a
+## screenshot shortcut) is not a key here. True when this press was that first.
+func _reveals_focus(event: InputEvent) -> bool:
+	if not _is_key_press(event) or _leaving or not is_visible_in_tree() \
+			or lantern.focus_mode == Control.FOCUS_NONE:
+		return false
+	if rite != null and rite.is_running() and not rite.held():
+		return false
+	var owner: Control = get_viewport().gui_get_focus_owner()
+	if owner == null:
+		_focus_first(true)
+		return true
+	if is_ancestor_of(owner) and not owner.has_focus(true):
+		LeadlightFocus.give(owner, true)
+		return true
+	return false
+
+
+static func _is_key_press(event: InputEvent) -> bool:
+	if event is InputEventKey:
+		var key: InputEventKey = event
+		return key.pressed and not key.echo and LeadlightFocus.is_navigation(key)
+	if event is InputEventJoypadButton:
+		return event.is_pressed()
+	if event is InputEventJoypadMotion:
+		return absf((event as InputEventJoypadMotion).axis_value) > 0.5
+	return false
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	var key_or_pad: bool = event is InputEventKey or event is InputEventJoypadButton \
-		or event is InputEventJoypadMotion
-	if not key_or_pad or not event.is_pressed():
-		return
-	if rite != null and rite.is_running() and not rite.held():
+	if _is_key_press(event) and rite != null and rite.is_running() and not rite.held():
 		rite.skip()
-		get_viewport().set_input_as_handled()
-		return
-	# Focus is for the keyboard and the pad: a touch player never sees a ring.
-	# The first key or button brings it to the lantern; the next one acts.
-	if get_viewport().gui_get_focus_owner() == null:
-		_focus_first(true)
 		get_viewport().set_input_as_handled()
 
 
@@ -582,17 +608,21 @@ func _choose(id: String, click: bool = true) -> void:
 	chosen.emit(id)
 
 
+## Focus to the lantern (or the pre-lit language pane), shown only to a
+## keyboard or pad player, or with `force` (a key asked for it). Unforced, it
+## moves focus only when something holds it: a cold launch places none, while a
+## return finds the old screen's tapped button still holding hidden focus (its
+## free waits for the frame's end) and takes it over, hidden, for the lantern.
 func _focus_first(force: bool = false) -> void:
 	if not is_inside_tree():
 		return
 	if not force and get_viewport().gui_get_focus_owner() == null:
 		return
-	if not _language.is_empty():
-		for pane: LeadlightPane in _language:
-			if pane.lit:
-				pane.grab_focus()
-				return
-	lantern.grab_focus()
+	var target: Control = lantern
+	for pane: LeadlightPane in _language:
+		if pane.lit:
+			target = pane
+	LeadlightFocus.give(target, force)
 
 
 func _layout() -> void:

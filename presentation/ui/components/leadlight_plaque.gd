@@ -5,9 +5,21 @@ extends VBoxContainer
 ## The flame is shown, never named (dusk-flame lock: the player discovers it).
 
 ## The plaque is part of the lantern's button (TitleScreen's reach): it lights
-## with it. `glow` 0..1 brightens the gold (hover, the beckon, the press);
-## `focused` lays the lantern ring's gold hairline beneath the name.
+## with it. `glow` 0..1 brightens the gold (hover, the beckon, the press) and
+## warms the ember light behind the name; `focused` (focus shown on the lantern,
+## never merely held) lays the lantern ring's gold hairline beneath the name.
 const LIT_GOLD: Color = Color("#fff1c4")
+## The ember light behind the name: wider than the name by HALO_GROW.x of its
+## width, taller by HALO_GROW.y of its height each way, never flatter than
+## HALO_ASPECT (a flat halo read as a second oval), with a contourless falloff.
+const HALO_GROW: Vector2 = Vector2(0.10, 0.60)
+const HALO_ASPECT: float = 2.6
+const HALO_FALLOFF: PackedFloat32Array = [1.0, 0.6, 0.32, 0.17, 0.06, 0.0]
+## The name's glow-outline: the same at rest and pressed. A press is the fill
+## going LIT_GOLD over a warmer ember light, never a heavier pale stroke.
+const SHADOW_ALPHA: float = 0.30
+const SHADOW_SIZE: int = 10
+static var _halo: Texture2D = null
 var glow: float = 0.0:
 	set(value):
 		glow = clampf(value, 0.0, 1.0)
@@ -53,7 +65,7 @@ func _init(stage_shape: StringName = StageShape.IDENTITY) -> void:
 	_name.add_theme_font_override("font", LeadlightTokens.font(LeadlightTokens.ROLE_PRIMARY, px))
 	_name.add_theme_font_size_override("font_size", px)
 
-	_name.add_theme_constant_override("shadow_outline_size", 10)
+	_name.add_theme_constant_override("shadow_outline_size", SHADOW_SIZE)
 	_name.add_theme_constant_override("shadow_offset_x", 0)
 	_name.add_theme_constant_override("shadow_offset_y", 0)
 	_name.add_theme_color_override("font_outline_color", Color(LeadlightTokens.VOID, 0.85))
@@ -97,9 +109,22 @@ func _relight() -> void:
 	if _name == null:
 		return
 	_name.add_theme_color_override("font_color", LeadlightTokens.GOLD.lerp(LIT_GOLD, glow))
-	_name.add_theme_color_override("font_shadow_color", Color(LeadlightTokens.GOLD, 0.30 + 0.6 * glow))
-	_name.add_theme_constant_override("shadow_outline_size", 10 + roundi(10.0 * glow))
+	_name.add_theme_color_override("font_shadow_color", Color(LeadlightTokens.GOLD, SHADOW_ALPHA))
 	queue_redraw()
+
+
+## Where the ember light behind a name of `name_rect` falls. Pure.
+static func halo_rect(name_rect: Rect2) -> Rect2:
+	var grown: Vector2 = Vector2(name_rect.size.x * (1.0 + HALO_GROW.x * 2.0),
+		name_rect.size.y * (1.0 + HALO_GROW.y * 2.0))
+	grown.y = maxf(grown.y, grown.x / HALO_ASPECT)
+	return Rect2(name_rect.get_center() - grown * 0.5, grown)
+
+
+static func halo_texture() -> Texture2D:
+	if _halo == null:
+		_halo = LeadlightShapes.soft_light(HALO_FALLOFF)
+	return _halo
 
 
 func _draw() -> void:
@@ -107,9 +132,8 @@ func _draw() -> void:
 	var light: float = maxf(glow, 0.35 if focused else 0.0)
 	if light > 0.01:
 		# The lantern's light on the plaque: warm behind the name.
-		var halo: Rect2 = name_rect.grow_individual(name_rect.size.x * 0.18, name_rect.size.y * 0.9,
-			name_rect.size.x * 0.18, name_rect.size.y * 0.9)
-		draw_texture_rect(SkyField.disc(), halo, false, Color(LeadlightTokens.EMBER, 0.38 * light))
+		draw_texture_rect(halo_texture(), halo_rect(name_rect), false,
+			Color(LeadlightTokens.EMBER, 0.38 * light))
 	if not focused:
 		return
 	# The lantern ring in its unboxed form, under the name (LeadlightWord's hairline).

@@ -775,6 +775,12 @@ func select_profile(args: PackedStringArray) -> void:
 		install_profile(ScenarioKernel.RUN_PATH, ScenarioKernel.VIGIL_PATH)
 
 
+## Every input says whether the player is on a key or pad or a pointer, which
+## decides whether code-path focus is shown (LeadlightFocus). Never consumed.
+func _input(event: InputEvent) -> void:
+	LeadlightFocus.note(event)
+
+
 ## Window close is a clean quit: with `config/auto_accept_quit=false` the engine
 ## hands us NOTIFICATION_WM_CLOSE_REQUEST instead of exiting itself. No save
 ## flush — durable at every boundary; the interception is the single path.
@@ -1001,7 +1007,9 @@ func _thaw_surfaces() -> void:
 			button.focus_mode = mode as Control.FocusMode
 	_defocused_under_modal.clear()
 	if _refocus_after_thaw != null and is_instance_valid(_refocus_after_thaw):
-		_refocus_after_thaw.grab_focus()
+		# Back where it was, shown only to a keyboard or pad player: a tapped
+		# Close no longer leaves a ring under the word that opened the room.
+		LeadlightFocus.give(_refocus_after_thaw)
 	_refocus_after_thaw = null
 	if _choice_screen != null and is_instance_valid(_choice_screen):
 		_choice_screen.set_process_unhandled_key_input(true)

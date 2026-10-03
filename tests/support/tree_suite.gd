@@ -58,8 +58,8 @@ func _initialize() -> void:
 func _run(suite: String, host: SubViewport) -> void:
 	var fails: Array[String] = []
 	var script: Script = load(suite) as Script if suite.begins_with("res://tests/test_") else null
-	if script == null:
-		fails.append("%s is not a suite under res://tests/" % suite)
+	if script == null or not script.can_instantiate():
+		fails.append("%s is not a suite under res://tests/ that loads" % suite)
 	else:
 		await script.call("run_in_tree", self, host, fails)
 	for message: String in fails:
