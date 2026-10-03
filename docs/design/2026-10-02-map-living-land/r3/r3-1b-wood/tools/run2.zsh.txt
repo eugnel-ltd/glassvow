@@ -1,0 +1,36 @@
+#!/bin/zsh
+# Lane R3.1b device batch 2: the Metal System Traces batch 1 could not record
+# (xctrace: "Timed out waiting for device to boot"), with a lock-state check and
+# a retry. QA app only, under the shared batch lock; rows nonce-checked.
+set -u
+source /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/device/lib.zsh
+OUT=$D/batch2; mkdir -p $OUT
+fast_acquire() {
+  local L=$FLOW/ipad.lock
+  while ! mkdir $L 2>/dev/null; do
+    local age=$(( $(date +%s) - $(stat -f %m $L/owner 2>/dev/null || date +%s) ))
+    (( age > 3600 )) && { $LOCK acquire $OWNER; return; }
+    sleep 3
+  done
+  echo $OWNER > $L/owner
+}
+fast_acquire
+trap "$LOCK release $OWNER" EXIT
+echo "lock $(date +%T)"
+UDID=$(udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+xcrun devicectl device info lockState --device $UDID 2>&1 | redact | tail -3
+# A two-second probe recording with nothing launched: does Instruments reach the device?
+xcrun xctrace record --device $UDID --template 'Metal System Trace' --all-processes --time-limit 2s \
+  --output $OUT/probe.trace --no-prompt 2>&1 | redact | tail -3
+for build in dev ctl; do
+  IPAD_LOCK_OWNER=$OWNER $FLOW/qa_export.sh $R/$build-wt > $OUT/flow-$build.out 2>&1 || { echo "$build build failed"; tail -5 $OUT/flow-$build.out; exit 1; }
+  grep -E 'worktree|bundle id' $OUT/flow-$build.out | redact | tail -2
+  echo "$build installed $(date +%T)"
+  probe_run $build-warm --probe-views=opening --probe-frames=120 --probe-modes=cadence
+  trace_run $build-tj 4 --map-steps=2 --probe-views=journey --probe-modes=live
+  [[ -d $OUT/$build-tj.trace ]] || trace_run $build-tj-retry 4 --map-steps=2 --probe-views=journey --probe-modes=live
+  if [[ $build == dev ]]; then
+    trace_run dev-tj-kwood 4 --map-steps=2 --probe-views=journey --probe-modes=live --trace-kill=wood
+  fi
+done
+echo "done $(date +%T)"

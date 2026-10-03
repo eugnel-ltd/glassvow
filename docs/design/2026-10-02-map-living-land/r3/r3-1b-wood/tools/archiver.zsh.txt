@@ -1,0 +1,13 @@
+#!/bin/zsh
+# Keeps every nonce's rows: copies each batch jsonl to archive/<label>-<nonce>.jsonl
+# once its run is done (the batch reuses some labels).
+OUT=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/device/batch1
+while true; do
+  for f in $OUT/*.jsonl(N); do
+    grep -q '"probe":"done"' $f || continue
+    n=$(grep -o '"nonce":"[0-9]*"' $f | head -1 | cut -d'"' -f4)
+    [[ -n $n && ! -f $OUT/archive/${f:t:r}-$n.jsonl ]] && cp $f $OUT/archive/${f:t:r}-$n.jsonl
+  done
+  sleep 2
+  grep -q "^done " $OUT/../batch1.log 2>/dev/null && break
+done

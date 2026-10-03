@@ -1,0 +1,33 @@
+"""Applies lane R3.1b's QA-only probe hook to a measurement worktree's
+application/main.gd (never committed): `--map --map-wood-probe` hosts
+tools/qa_wood_probe.gd."""
+import shutil
+import sys
+W = sys.argv[1]
+p = W + "/application/main.gd"
+s = open(p).read()
+a = '''		elif arg == "--map-rest":
+			map_rest = true'''
+b = '''		elif arg == "--map-rest":
+			map_rest = true
+		elif arg == "--map-wood-probe":
+			map_wood_probe = true'''
+assert s.count(a) == 1; s = s.replace(a, b)
+a = '''	var map_rest: bool = false'''
+b = '''	var map_rest: bool = false
+	var map_wood_probe: bool = false'''
+assert s.count(a) == 1; s = s.replace(a, b)
+a = '''		if map_rest:
+			_attach_map_rest_bench()'''
+b = '''		if map_wood_probe:
+			var wood_probe: Variant = (load("res://tools/qa_wood_probe.gd") as GDScript).new()
+			if wood_probe is Node:
+				var wood_node: Node = wood_probe
+				add_child(wood_node)
+			return
+		if map_rest:
+			_attach_map_rest_bench()'''
+assert s.count(a) == 1; s = s.replace(a, b)
+open(p, "w").write(s)
+shutil.copy(sys.argv[2], W + "/tools/qa_wood_probe.gd")
+print("patched", W)

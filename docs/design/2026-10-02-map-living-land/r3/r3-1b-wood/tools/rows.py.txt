@@ -1,0 +1,16 @@
+import json, sys
+for l in open(sys.argv[1]):
+    r = json.loads(l)
+    p = r["probe"]
+    if p == "ready":
+        lm = r.get("land_ms", {}); w = r.get("wood", {})
+        print("   ready %d ms | land total %s scenery %s wood %s | plants %s plant %s draws %s | kit preload %.0f ms" % (
+            r["ready_ms"], lm.get("total"), lm.get("scenery"), lm.get("wood"), w.get("plants"),
+            (w.get("timings_ms") or {}).get("plant"), (w.get("timings_ms") or {}).get("draws"), r.get("kit_preload_ms", 0)))
+    elif p == "hold_start":
+        x = r["render"]
+        print("   %-8s %-7s stage %s draws %s prims %s shadow %s/%s video %s MiB" % (r["view"], r["mode"], r["stage"], x["stage_draws"], x["stage_prims"], x["shadow_draws"], x["shadow_prims"], x["video_mib"]))
+    elif p == "hold_end":
+        print("   %-8s %-7s mean %.3f p50 %.2f p95 %.2f missed %d max %.1f (%d)" % (r["view"], r["mode"], r["mean_ms"], r["p50_ms"], r["p95_ms"], r["missed"], r["max_ms"], r["frames"]))
+    elif p in ("burst", "kill"):
+        print("  ", p, {k: v for k, v in r.items() if k not in ("t_ms",)})

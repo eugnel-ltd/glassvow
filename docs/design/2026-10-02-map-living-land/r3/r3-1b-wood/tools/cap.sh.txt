@@ -1,0 +1,7 @@
+#!/bin/zsh
+# cap.sh <worktree> <out.png> [game/look args...]: one A12-condition capture.
+WT=$1; OUT=$2; shift 2
+GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 240 godot --path $WT --rendering-driver metal --rendering-method mobile --position 1400,900 \
+  -s /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/harness/look.gd -- --map --seed=1 --look-out=$OUT "$@" > ${OUT%.png}.log 2>&1
+echo "exit $? $(grep -c 'SHADER ERROR' ${OUT%.png}.log) shader errors, $(grep -c 'SCRIPT ERROR' ${OUT%.png}.log) script errors"
+grep -E "^LOOK" ${OUT%.png}.log | cut -c1-400

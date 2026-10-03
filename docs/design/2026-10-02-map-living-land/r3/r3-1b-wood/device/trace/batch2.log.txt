@@ -1,0 +1,18 @@
+lock 00:08:47
+• deviceIdentifier: <redacted>
+• passcodeRequired: false
+• unlockedSinceBoot: true
+
+Recording completed. Saving output file...
+Output file saved as: probe.trace
+worktree:        /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/dev-wt (af34d97a)
+bundle id:       io.fol2.glassvow.qa
+dev installed 00:11:30
+== dev-warm nonce 70032722 00:11:57: rows fresh
+   ready 12396 ms | land total 2761 scenery 642 wood 92 | plants 2806 plant 76.289 draws 15.104 | kit preload 372 ms
+   opening  cadence stage [885, 663] draws 101 prims 68118 shadow 90/37879 video 258.6 MiB
+   opening  cadence mean 16.656 p50 16.66 p95 17.05 missed 0 max 17.1 (120)
+== dev-tj nonce 1279617381 pid 39316 00:13:00: rows fresh
+   ready 5989 ms | land total 2207 scenery 470 wood 87 | plants 2806 plant 73.044 draws 13.615 | kit preload 29 ms
+   journey  live    stage [885, 663] draws 80 prims 56946 shadow 71/33193 video 259.6 MiB
+   journey  live    mean 16.662 p50 16.70 p95 17.79 missed 0 max 22.8 (2701)

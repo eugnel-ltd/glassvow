@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+"""Woodland motion over a burst (lane R3.1b scratch tool, committed as .txt):
+the share of woodland pixels (the capture against `-bare.png`) that change by
+more than 0.06 between the capture and `-later.png` (taken 0.6 s apart, the
+drifting air hidden). Usage: flutter.py <capture.png> [--safe=l,t,r,b]"""
+import sys
+import numpy as np
+from PIL import Image
+
+path = sys.argv[1]
+safe = (42, 76, 42, 46)
+for a in sys.argv[2:]:
+    if a.startswith("--safe="):
+        safe = tuple(int(v) for v in a[7:].split(","))
+load = lambda p: np.asarray(Image.open(p).convert("RGB")).astype(float) / 255.0
+a = load(path); b = load(path.replace(".png", "-later.png")); bare = load(path.replace(".png", "-bare.png"))
+h, w, _ = a.shape
+l, t, r, bt = safe
+sl = (slice(t, h - bt), slice(l, w - r))
+wood = np.abs(a - bare).max(-1)[sl] > 0.06
+moved = np.abs(a - b).max(-1)[sl] > 0.06
+print({"woodland_px": int(wood.sum()), "changed_in_wood": round(float((moved & wood).sum() / max(wood.sum(), 1)), 4),
+       "changed_outside": round(float((moved & ~wood).sum() / max((~wood).sum(), 1)), 4)})

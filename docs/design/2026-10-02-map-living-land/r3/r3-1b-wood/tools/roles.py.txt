@@ -1,0 +1,77 @@
+"""Name the passes of the dominant stage-frame shape and normalise each run's
+pass times to the baseline's GPU clock, using the grain passes (constant work
+in every R2 variant) as the reference.
+
+Usage: roles.py <passes.txt> [<reference grain ms>]
+"""
+import re
+import sys
+
+ROLE_16 = ["upload", "particles", "upload2", "shadow A", "shadow B", "main 3D", "glow 1", "glow 2", "glow 3",
+           "tonemap", "blit", "2D: display+band+HUD", "2D: split", "2D: backbuffer blit", "2D: grain copy", "2D: grain+final"]
+
+
+def parse(path):
+    groups = []
+    cur = None
+    for line in open(path):
+        m = re.match(r"== (\d+) encoders: (\d+) command buffers, GPU busy median ([\d.]+) ms, p95 ([\d.]+)", line)
+        if m:
+            cur = {"n": int(m.group(1)), "cbs": int(m.group(2)), "busy": float(m.group(3)), "p95": float(m.group(4)), "enc": []}
+            groups.append(cur)
+            continue
+        m = re.match(r"\s+(.+?)\s+V\s+([\d.]+)\s+F\s+([\d.]+)\s+C\s+([\d.]+)\s+wall\s+([\d.]+)\s+cpu\s+([\d.]+)", line)
+        if m and cur is not None:
+            cur["enc"].append({"label": m.group(1), "v": float(m.group(2)), "f": float(m.group(3)), "c": float(m.group(4)), "cpu": float(m.group(6))})
+    return groups
+
+
+def roles(enc):
+    """Map by kind sequence: the 3D chain ends at the last render before the
+    second blit; the 2D chain is what follows."""
+    n = len(enc)
+    names = [""] * n
+    blits = [i for i, e in enumerate(enc) if "Blit" in e["label"]]
+    renders = [i for i, e in enumerate(enc) if "Render" in e["label"]]
+    comp = [i for i, e in enumerate(enc) if "Compute" in e["label"]]
+    for i in comp:
+        names[i] = "particles (compute)"
+    for i in blits:
+        names[i] = "blit"
+    # The main 3D pass is the render with the largest vertex time.
+    main = max(renders, key=lambda i: enc[i]["v"])
+    names[main] = "main 3D"
+    pre = [i for i in renders if i < main]
+    for k, i in enumerate(pre):
+        names[i] = "shadow %d" % (k + 1)
+    second_blit = next((b for b in blits if b > main), n)
+    post = [i for i in renders if main < i < second_blit]
+    for k, i in enumerate(post):
+        names[i] = "tonemap" if k == len(post) - 1 else "glow %d" % (k + 1)
+    tail = [i for i in renders if i > second_blit]
+    tail_names = ["2D: display+band+HUD", "2D: split", "2D: grain copy", "2D: grain+final"]
+    if len(tail) == 2:
+        tail_names = ["2D: display+band+HUD", "2D: final"]
+    for k, i in enumerate(tail):
+        names[i] = tail_names[k] if k < len(tail_names) else "2D %d" % k
+    return names
+
+
+if __name__ == "__main__":
+    # The stage-frame shape: the most encoders among the common shapes (at the
+    # rest cadence, stage and non-stage frames are equally common).
+    groups = parse(sys.argv[1])
+    top = max(x["cbs"] for x in groups if x["n"] > 6)
+    g = max((x for x in groups if x["cbs"] >= 0.4 * top and x["n"] > 6), key=lambda x: x["n"])
+    names = roles(g["enc"])
+    grain = sum(e["f"] for e, nm in zip(g["enc"], names) if nm.startswith("2D: grain"))
+    ref = float(sys.argv[2]) if len(sys.argv) > 2 else grain
+    k = ref / grain if grain else 1.0
+    print("stage frames %d, %d encoders, GPU busy median %.2f ms (p95 %.2f); clock factor %.2f (grain %.2f vs ref %.2f)" % (g["cbs"], g["n"], g["busy"], g["p95"], k, grain, ref))
+    agg = {}
+    for e, nm in zip(g["enc"], names):
+        key = nm.split(" ")[0] if nm.startswith(("glow", "shadow", "blit")) else nm
+        a = agg.setdefault(key, [0, 0, 0, 0])
+        a[0] += e["v"]; a[1] += e["f"]; a[2] += e["c"]; a[3] += e["cpu"]
+    for key, (v, f, c, cpu) in agg.items():
+        print("  %-24s V %5.2f  F %5.2f  C %5.2f | normalised V %5.2f F %5.2f | cpu encode %5.2f" % (key, v, f, c, v * k, f * k, cpu))

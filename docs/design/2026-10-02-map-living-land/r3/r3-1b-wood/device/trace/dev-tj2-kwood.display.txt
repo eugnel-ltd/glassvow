@@ -1,0 +1,3 @@
+GPU busy per app frame ms: median 13.74 p95 16.14 max 20.77 (n=271)
+GPU first-to-last span per frame ms: median 16.31 p95 19.55 max 24.69
+GPU performance state share: {'Medium': '44%', 'Minimum': '56%'} induced: ['Yes']

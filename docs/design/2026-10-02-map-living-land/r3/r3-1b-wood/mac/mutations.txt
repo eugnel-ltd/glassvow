@@ -1,0 +1,27 @@
+atlas baked caught
+atlas spans caught
+kit holds no card scenes caught
+slab caught
+ground road caught
+ground water caught
+ground decks caught
+ground seats caught
+picture lanes caught
+picture seats caught
+mix conifers caught
+kit kept caught
+scales caught
+draws posed caught
+draws ordered caught
+casters caught
+buffer rows caught
+cards sway caught
+journey swaying caught
+title kit scenes not caught: test_map_title_road counts against Kit._scene_kinds() itself; the card kinds leaving the kit is pinned by test_map_wood (kit holds no card scenes, caught)
+settle frames caught (rerun: the first run left an empty if-block, a parse error, not a test miss)
+global declared caught
+flame frames caught
+flame flicker caught
+pools caught
+lamps steady caught
+SUMMARY 25 of 26 caught; the one not caught is an adapted count, pinned elsewhere

@@ -1,0 +1,29 @@
+pad-landscape en lean: exit 0 0 shader errors, 0 script errors
+pad-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+pad-landscape en full: exit 0 0 shader errors, 0 script errors
+pad-landscape en full whole: exit 0 0 shader errors, 0 script errors
+pad-landscape en lean reduce-motion: exit 0 0 shader errors, 0 script errors
+pad-landscape contrast rim min 1.01 disc min 1.18 pins 10 shader errors 0
+phone-landscape en lean: exit 0 0 shader errors, 0 script errors
+phone-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+phone-landscape en full: exit 0 0 shader errors, 0 script errors
+phone-landscape en full whole: exit 0 0 shader errors, 0 script errors
+phone-landscape en lean reduce-motion: exit 0 0 shader errors, 0 script errors
+phone-landscape contrast rim min 1.02 disc min 1.0 pins 10 shader errors 0
+desktop-landscape en lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape en full: exit 0 0 shader errors, 0 script errors
+desktop-landscape en full whole: exit 0 0 shader errors, 0 script errors
+desktop-landscape en lean reduce-motion: exit 0 0 shader errors, 0 script errors
+desktop-landscape contrast rim min 1.01 disc min 1.18 pins 10 shader errors 0
+pad journey lean: exit 0 0 shader errors, 0 script errors
+pad journey metrics {'red': 0.2256, 'cover': 0.4609}
+pad whole lean: exit 0 0 shader errors, 0 script errors
+pad whole metrics {'red': 0.1843, 'cover': 0.4487}
+pad fresh lean: exit 0 0 shader errors, 0 script errors
+pad fresh metrics {'red': 0.1827, 'cover': 0.4275}
+exit 0 0 shader errors, 0 script errors
+pad motion burst {'woodland_px': 352877, 'changed_in_wood': 0.027, 'changed_outside': 0.0022}
+exit 0 0 shader errors, 0 script errors
+pad reduce-motion burst {'woodland_px': 351962, 'changed_in_wood': 0.0006, 'changed_outside': 0.0005}
+shader errors in all logs: 0, script errors: 0

@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+"""Side-by-side panels with captions (lane R3.1b scratch tool).
+compose.py <out.jpg> <height> <caption>=<image> [...]"""
+import sys
+from PIL import Image, ImageDraw, ImageFont
+out, height = sys.argv[1], int(sys.argv[2])
+panels = []
+for spec in sys.argv[3:]:
+    caption, path = spec.split("=", 1)
+    im = Image.open(path).convert("RGB")
+    w = round(im.width * height / im.height)
+    panels.append((caption, im.resize((w, height), Image.LANCZOS)))
+bar = 34
+W = sum(p[1].width for p in panels) + 8 * (len(panels) - 1)
+canvas = Image.new("RGB", (W, height + bar), (255, 255, 255))
+d = ImageDraw.Draw(canvas)
+try:
+    font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 20)
+except OSError:
+    font = ImageFont.load_default()
+x = 0
+for caption, im in panels:
+    canvas.paste(im, (x, bar))
+    d.text((x + 8, 6), caption, fill=(0, 0, 0), font=font)
+    x += im.width + 8
+canvas.save(out, quality=86)
+print(out, canvas.size)
