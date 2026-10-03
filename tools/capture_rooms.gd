@@ -11,8 +11,9 @@ extends SceneTree
 ##       --shape=pad-landscape --locale=en --state=saved --out=/abs/still.png \
 ##       [--path=rest|settings|help|credits|vigil|rite|shift|tab|pressed|departure|confirm|
 ##               back|runmenu|abandon|leave|ledger|erase]
-##       [--hold] [--burst=3]
-##       [--seq=open|close --room=settings|help|credits|vigil --frames=40] [--rm]
+##       [--hold] [--section=<id>] [--at=<ms>] [--burst=3]
+##       [--seq=open|close|section|glass|run --room=settings|help|credits|vigil --frames=40]
+##       [--sheet=/abs/sheet.jpg] [--rm] [--window=1180x885]
 ##       [--measure=/abs/image]   (the oval measures of an existing still, at this shape)
 ##       [--control=/abs/image]   (a cold-boot still of the same state: the oval beyond it)
 ##
@@ -36,6 +37,19 @@ extends SceneTree
 ## The phone Vigil's RETURN stands below the stage until #655 PR C seats it:
 ## there the tap is delivered to the button as the viewport delivers a tap
 ## (a touch noted, focus held hidden, pressed), and the run says so.
+## The rooms (#655 PR B): with --hold a room path stays in the room, at
+## --section (a section's pane tapped: Settings' audio..ledger, How to Play's
+## road..vigil) or, in Credits, at a part of its roll (music, end) or a licence
+## glass (fonts, engine); --at holds the room's passage at that many ms after
+## the tap (the passage's clock stopped there). --burst=3 with a room open also
+## grades §11.4's idle gate: at least 0.5% of the room's own pixels change from
+## each frame to the next, 1 s apart (reported, not graded, under --rm).
+## --seq=section taps --section in a settled room (G3), --seq=glass taps a
+## licence pane at the end of Credits' roll (C3), --seq=run opens --room from
+## the run menu over the map (X1); --sheet lays every frame of a sequence out
+## as one contact sheet, a quarter size, left to right and down. --window sizes
+## the window off the shape's reference, for a device's flex stage (the iPad 8's
+## 1180×885); a still saved as .jpg is a JPEG.
 ## --seq saves every frame from the settled source (frame 0), runs the grey gate
 ## (no frame with more than 0.5% of its pixels within ±4 of the engine's 0.3
 ## grey) and the cut gate (no frame-to-frame change above an eighth of the whole
@@ -56,13 +70,16 @@ const ROOM_WORDS: Dictionary = {
 	"settings": "ui.menu.settings", "help": "ui.menu.howToPlay",
 	"credits": "ui.menu.credits", "vigil": "ui.menu.theVigil",
 }
-## Each room's own way back, as shipped (the seat's Return replaces them in #655
-## PR B). How to Play's Fight On waits at the foot of its scroll, below the fold
-## for a touch player, so its way back is a tap on the veil.
+## Each room's own way back: the seat's Return in the title's rooms (#655 PR B);
+## the Vigil's RETURN until PR C seats it.
 const ROOM_EXITS: Dictionary = {
-	"settings": "ui.menu.close", "help": "",
-	"credits": "ui.credits.close", "vigil": "ui.vigil.return",
+	"settings": "ui.menu.return", "help": "ui.menu.return",
+	"credits": "ui.menu.return", "vigil": "ui.vigil.return",
 }
+## The idle gate (§11.4): the least share of a room's pixels that changes
+## between frames 1 s apart, and what counts as a change.
+const IDLE_SHARE: float = 0.005
+const IDLE_STEP: int = 3
 const VEIL_TAP: Vector2 = Vector2(24.0, 24.0)
 
 var _args: Dictionary = {}
@@ -79,6 +96,9 @@ func _initialize() -> void:
 			_args[arg.trim_prefix("--")] = "true"
 	var shape: StringName = StringName(str(_args.get("shape", "pad-landscape")))
 	var stage: Vector2i = StageShape.REFERENCES.get(shape, Vector2i(1180, 820))
+	if _args.has("window"):
+		var wh: PackedStringArray = str(_args["window"]).split("x")
+		stage = Vector2i(int(wh[0]), int(wh[1]))
 	DisplayServer.window_set_size(stage)
 	_seed(str(_args.get("state", "saved")))
 	_main = (load("res://application/main.tscn") as PackedScene).instantiate() as Main
@@ -210,10 +230,15 @@ func _drive(path: String) -> void:
 			if path == "erase":
 				await _tap_control(_labelled(_main._modal, Locale.active.t("ui.settings.eraseAll")))
 		"settings", "help", "credits", "vigil":
+			if _args.has("at"):
+				await _hold_at(title, path, float(str(_args["at"])) / 1000.0)
+				return
 			await _tap(_word(title, path).get_global_rect().get_center())
 			await _settle()
 			if _args.has("hold"):
-				await _settle()
+				# A passage runs on time, not frames: an uncapped frame is ~3 ms.
+				await _wait(1.2)
+				await _section(str(_args.get("section", "")))
 				return
 			var key: String = str(ROOM_EXITS[path])
 			if key.is_empty():
@@ -222,6 +247,52 @@ func _drive(path: String) -> void:
 				await _tap_control(_labelled(_main, Locale.active.t(key)))
 	await _settle()
 	await _wait(1.0)
+
+
+## --at: the room's passage held `seconds` after the tap that opened it.
+func _hold_at(title: TitleScreen, room: String, seconds: float) -> void:
+	_tap_now(_word(title, room).get_global_rect().get_center())
+	await process_frame
+	var passage: LeadlightPassage = _main._passage
+	passage.set_process(false)
+	var step: float = 1.0 / 60.0
+	var at: float = step
+	while at < seconds:
+		passage.advance(step)
+		at += step
+	await _frames(2)
+
+
+## --section: a tap on that section's pane in the open room, then its page at rest.
+func _section(id: String) -> void:
+	if id.is_empty() or not (_main._modal is LeadlightRoomHost):
+		return
+	if _main._modal is CreditsScreen:
+		await _credits_at(_main._modal as CreditsScreen, id)
+		return
+	var room: LeadlightRoom = (_main._modal as LeadlightRoomHost).sheet() as LeadlightRoom
+	if room == null or room.tab(StringName(id)) == null:
+		push_error("capture_rooms: no section '%s' here" % id)
+		_failed = true
+		return
+	await _tap_control(room.tab(StringName(id)))
+	await _wait(0.6)
+
+
+## Credits at a part of its roll: head (as it lands), music, end, or a licence
+## glass (fonts, engine) opened by a tap on its pane at the end of the roll.
+func _credits_at(credits: CreditsScreen, part: String) -> void:
+	var roll: CreditsRoll = credits.roll()
+	var to: Control = {"music": roll.find_child("Tracks", true, false), "end": roll.footer_node,
+		"fonts": roll.font_pane, "engine": roll.engine_pane}.get(part, null)
+	if to == null:
+		return
+	credits.scroll().ensure_control_visible(to)
+	credits._took_over()
+	await _frames(2)
+	if part == "fonts" or part == "engine":
+		await _tap_control(to)
+	await _wait(0.8)
 
 
 ## Back to the Road by tap, the map's HUD menu by tap: the run menu open.
@@ -284,13 +355,52 @@ func _still(out: String) -> void:
 	await _frames(1)
 	_report()
 	var burst: int = int(str(_args.get("burst", "1")))
+	var shots: Array[Image] = []
 	for k: int in range(burst):
-		var file: String = out if burst <= 1 else out.get_basename() + "-%d.png" % (k + 1)
+		var file: String = out if burst <= 1 else out.get_basename() + "-%d.%s" % [k + 1, out.get_extension()]
 		var image: Image = root.get_texture().get_image()
-		image.save_png(file)
+		_save(image, file)
+		shots.append(image)
 		print("rooms still: %s  %s" % [file, _oval_measures(image)])
 		if k + 1 < burst:
 			await _wait(1.0)
+	if burst > 1 and _main._modal is LeadlightRoomHost:
+		_idle_gate(shots, (_main._modal as LeadlightRoomHost).content_rects()[0])
+
+
+## A still as PNG, or JPEG where the name asks for one.
+static func _save(image: Image, file: String) -> void:
+	if file.get_extension().to_lower() in ["jpg", "jpeg"]:
+		image.save_jpg(file, 0.88)
+	else:
+		image.save_png(file)
+
+
+## §11.4: a room at rest is alive: from each frame of a burst to the next (1 s
+## apart) at least IDLE_SHARE of the room's own pixels change.
+func _idle_gate(shots: Array[Image], rect: Rect2) -> void:
+	var least: float = 1.0
+	for i: int in range(1, shots.size()):
+		least = minf(least, _changed_share(shots[i - 1], shots[i], rect))
+	var ok: bool = least >= IDLE_SHARE
+	var graded: bool = not _args.has("rm")
+	print("idle gate %s: the least change between frames 1 s apart is %.2f%% of the room's pixels (floor %.1f%%)%s" % [
+		"PASS" if ok else "FAIL", least * 100.0, IDLE_SHARE * 100.0, "" if graded else " (reported under --rm)"])
+	_failed = _failed or (graded and not ok)
+
+
+static func _changed_share(a: Image, b: Image, rect: Rect2) -> float:
+	var changed: int = 0
+	var seen: int = 0
+	var box: Rect2i = Rect2i(rect).intersection(Rect2i(Vector2i.ZERO, a.get_size()))
+	for y: int in range(box.position.y, box.end.y, 2):
+		for x: int in range(box.position.x, box.end.x, 2):
+			var p: Color = a.get_pixel(x, y)
+			var q: Color = b.get_pixel(x, y)
+			seen += 1
+			if maxi(maxi(absi(p.r8 - q.r8), absi(p.g8 - q.g8)), absi(p.b8 - q.b8)) >= IDLE_STEP:
+				changed += 1
+	return float(changed) / float(maxi(seen, 1))
 
 
 ## Who holds focus, and is it shown? A touch player must see none of it.
@@ -419,6 +529,17 @@ func _sequence(kind: String, room: String) -> void:
 	await _settle()
 	var title: TitleScreen = _title()
 	var fight: MapNode = null
+	var trigger: Control = null
+	if kind == "section" or kind == "glass":
+		await _tap(_word(title, room).get_global_rect().get_center())
+		await _settle()
+		await _wait(1.0)
+		trigger = _section_trigger(str(_args.get("section", "fonts" if kind == "glass" else "")))
+		await _frames(2)
+	elif kind == "run":
+		await _open_run_menu(title)
+		trigger = _labelled(_main._modal, Locale.active.t(
+			"ui.menu.howToPlay" if room == "help" else "ui.menu.settings"))
 	if kind == "close":
 		await _tap(_word(title, room).get_global_rect().get_center())
 		await _settle()
@@ -437,6 +558,8 @@ func _sequence(kind: String, room: String) -> void:
 	frames.append(root.get_texture().get_image())
 	if fight != null:
 		_main._prepare_encounter(fight)
+	elif trigger != null:
+		_tap_control_now(trigger)
 	elif kind == "open":
 		_tap_now(_word(title, room).get_global_rect().get_center())
 	elif str(ROOM_EXITS[room]).is_empty():
@@ -450,7 +573,40 @@ func _sequence(kind: String, room: String) -> void:
 	var out: String = str(_args.get("out", "/tmp/glassvow-seq.png"))
 	for i: int in range(frames.size()):
 		frames[i].save_png(out.get_basename() + "-%02d.png" % i)
+	if _args.has("sheet"):
+		_sheet(frames, str(_args["sheet"]))
 	_gates(frames, idle)
+
+
+## The pane a G3 or C3 sequence taps: a section's, or a licence pane at the end
+## of Credits' roll (scrolled into view first).
+func _section_trigger(id: String) -> Control:
+	if _main._modal is CreditsScreen:
+		var credits: CreditsScreen = _main._modal
+		var pane: Control = credits.roll().font_pane if id == "fonts" else credits.roll().engine_pane
+		credits.scroll().ensure_control_visible(pane)
+		return pane
+	var host: LeadlightRoomHost = _main._modal as LeadlightRoomHost
+	var room: LeadlightRoom = host.sheet() as LeadlightRoom if host != null else null
+	return room.tab(StringName(id)) if room != null else null
+
+
+## Every frame of a sequence on one sheet: a quarter size, six to a row.
+static func _sheet(frames: Array[Image], file: String) -> void:
+	if frames.is_empty():
+		return
+	var cell: Vector2i = frames[0].get_size() / 4
+	var across: int = 6
+	var rows: int = ceili(float(frames.size()) / float(across))
+	var sheet: Image = Image.create(cell.x * across, cell.y * rows, false, Image.FORMAT_RGB8)
+	sheet.fill(Color(LeadlightTokens.VOID))
+	for i: int in range(frames.size()):
+		var small: Image = frames[i].duplicate()
+		small.convert(Image.FORMAT_RGB8)
+		small.resize(cell.x, cell.y, Image.INTERPOLATE_BILINEAR)
+		sheet.blit_rect(small, Rect2i(Vector2i.ZERO, cell), Vector2i(i % across, i / across) * cell)
+	_save(sheet, file)
+	print("contact sheet: %s (%d frames)" % [file, frames.size()])
 
 
 func _gates(frames: Array[Image], idle: Image) -> void:
