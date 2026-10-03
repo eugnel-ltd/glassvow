@@ -72,3 +72,29 @@
      - rooms_rubric: en settings 1180x820 settings: 'LANGUAGE' takes a 194x48 tap, under 60 px
      - rooms_rubric: en settings 1180x820 settings: 'MOTION' takes a 194x48 tap, under 60 px
      - rooms_rubric: en settings 1180x820 settings: 'PRIVACY' takes a 194x48 tap, under 60 px
+
+# After the iPad 8 rows: four more rules, each broken by hand in the same way (one exact replacement,
+# the one suite run headless, the file restored byte for byte from a backup), on the code committed as
+# b73919cc (the licence filter) and 446f8f73 (the staged builds; only two comments changed after the runs).
+
+== credits_roll: the iOS preset's include filter emptied (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (5)
+     - credits_roll: the iOS export leaves out res://addons/sentry/LICENSE.md
+     - credits_roll: the iOS export leaves out res://assets/fonts/OFL-Cinzel.txt
+     - credits_roll: the iOS export leaves out res://assets/fonts/OFL-Alegreya.txt
+     - credits_roll: the iOS export leaves out res://assets/fonts/OFL.txt
+== help_room: every page filled with the room (tests/test_help_room.gd) -> CAUGHT
+   FAIL res://tests/test_help_room.gd
+   FAIL (6)
+     - help_room: the combat page was built with the room
+     - help_room: the glass page was built with the room
+== credits_roll: the roll finished in _init (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (2)
+     - credits_roll: the roll was built whole with the room (28 rows)
+     - credits_roll: the roll's foot was built in the frame it entered on
+== credits_roll: the roll never completes itself (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (1)
+     - credits_roll: the roll did not complete itself in the tree

@@ -597,8 +597,10 @@ on the bare road never closes Credits (`LeadlightRoomHost.veil_closes`); the sea
 and close an open licence glass first. The licence texts are set at the rooms' 18 px floor and their
 headings at 20, inside their glasses (`CreditsLicences.Shelf` and `Glass`; the glass has its own night at
 0.5 over the dimmed roll, so the roll never reads round it). The Sentry SDK's MIT notice shows where
-`addons/sentry/LICENSE.md` is in the pack and the SDK is loaded; the iOS export's include filter carries no
-`.md` file, so on the device it is not there (§14). The door's nimbus breathing once the roll stops was
+`addons/sentry/LICENSE.md` is in the pack and the SDK is loaded; every export's include filter now carries
+it and the fonts' OFL texts (§14). The roll is built with the room down to the ninth row of each column,
+and the rest a part a frame after the tap frame, below the fold and unseen under the arrival's reveal
+(§11.6). The door's nimbus breathing once the roll stops was
 not built: the road's own motes, weather and lamps, the lamp line and the now-playing flame keep it alive.
 
 ### 4.4 Settings: the lantern-maker's window
@@ -1237,15 +1239,48 @@ the settled destination's (its last two frames), since a flame flickers under Re
   the grey gate (worst 0.12%); the three Reduce Motion sequences pass the cut gate (largest step 0.0093 to
   0.0109 of a 0.081 to 0.092 whole, frame 5 each, as a 150 ms fade moves). Under full motion no room's
   passage puts more than 32% of its change on one frame (PR A's Settings opened in one: 100%); a section
-  change (G3), a small change overall, puts 57% on its first frame, the pane lighting at once under the finger.
+  change (G3), a small change overall, puts 57% on its first frame in Settings and 68% in How to Play, the
+  pane lighting at once under the finger. The rooms' staged builds (§14) were retaken against all of this
+  (`retake-staged-builds.txt`): every How to Play and Credits still within 0.24% of its twin (idle motion),
+  every gate line of the eight sequences through those rooms equal to the fourth decimal.
+- **Frame times, iPad 8** (§11.6, `evidence/ipad8-rooms-frame-times.txt`, the QA app, 10 laps a room in
+  each language, the first opening after install apart). "First moved" is the tap frame itself: the
+  passage takes its first step in that frame's process step, after the input that opened the room (a
+  --fixed-fps 60 capture shows the veil darkening the stage by 6% on it). The bench's release is parsed in
+  a frame's process step and waits out the rest of that frame, about 16 ms here: the worst case for a
+  finger, which lifts at any moment. On the PR B code (`11aa2233`, built from `e3ee97c4`, whose later
+  commits touch docs only), laps 2 to 10, median (max), en and zh-Hant:
+
+  | Measure | Pass | Settings | How to Play | Credits |
+  |---|---|---|---|---|
+  | Tap → first moved frame | ≤ 50 ms | 38.4 (41.0), 43.5 (47.3) | 37.8 (41.8), 41.6 (43.4) | 35.4 (37.3), 38.7 (45.0) |
+  | The tap frame | ≤ 33 ms | 22.6 (24.8), 27.4 (37.5) | 21.6 (23.6), 25.7 (26.6) | 19.4 (20.0), 22.5 (27.4) |
+  | Other passage frames, P95 (max) | ≤ 16.7 ms (none over 33) | 17.5 (22.7), 17.8 (23.4) | 17.7 (23.7), 18.2 (23.7) | 17.3 (22.8), 17.4 (22.0) |
+  | At rest, P95, against the title's 17.8 and 17.9 | ≤ the title's + 0.5 ms | 17.2, 17.3 | 17.5, 17.7 | 17.5, 17.6 |
+
+  Every tap to first moved frame is under 50 ms and every tap frame under 33 but one: Settings' last
+  zh-Hant lap, 37.5 ms, its other seventeen 22 to 30 (Settings is unchanged since the first rows, where its
+  worst was 28.8). On iOS a frame's present wait is inside its draw, so the title at rest is itself 17.8 to
+  17.9 ms at P95 (vsync jitter): no passage can meet a 16.7 ms P95 the title at rest does not, so they are
+  read against the title's own, within 0.4 ms of it, and no passage frame after a first opening passes
+  24 ms. The first opening after install: tap frame 37 to 55 ms, tap to first moved 52 to 71 ms, its
+  passage's worst frame 31 to 52 ms (pipelines compiled on first use; Credits' first passage builds the
+  rest of its roll).
+  Render CPU is 0.2 ms in every tap frame: the work is text shaped as a room enters the tree. The first
+  rows, on `c04a168d`, before How to Play and Credits built only what is on view (§14), had How to Play's
+  tap frame at 35.3 and 33.9 ms (median) and Credits' at 31.0 and 35.3, their taps to first moved 46.8 to
+  51.3; Settings' were as now. The same rows found the licence texts missing from the pack; the later
+  ones find them there.
 - **Frame times, Mac** (§11.6, `mac-frame-times.txt`, M1 Max on the A12's Metal path, 20 laps a room at
-  pad and phone in both languages): the tap frame (the room built) 8 to 15 ms after the first opening and
-  up to 28 ms on it; tap to first moved frame 13 to 21 ms after the first opening, 17 to 48 ms on it
-  (Credits' first opening the longest); every other frame of a passage P95 3.1 to 4.2 ms of work; each room
-  at rest within 0.1 to 0.6 ms of work of the title at rest (P95). Rare 30 to 270 ms frames fall anywhere,
-  the title at rest included, while other lanes' suites ran on the shared Mac.
-- **Mutation proof** (`evidence/pr-b-mutations.txt`): eleven rules broken one at a time in the shipped code,
-  each caught by the suite that guards it.
+  pad and phone in both languages, on `11aa2233`): the tap frame 7.3 to 11.8 ms (median, laps 2 to 20) and
+  12.2 to 22.1 ms on the first opening; tap to first moved 10.1 to 19.8 ms, 15.5 to 27.8 on the first
+  opening. At pad en, drawn uncapped, every other frame of a passage is 3.5 to 3.7 ms of work at P95 after
+  the first opening (5.6 on Credits' first) and each room at rest within 0.5 ms of the title's; the shared Mac paced the other three runs at about 9.4
+  ms, where only the tap frames compare. Against `40ade5b8` at pad, How to Play's tap frame fell from 13.5
+  to 8.0 ms (en) and 14.4 to 9.9 (zh-Hant), Credits' from 12.2 to 7.3 and 14.6 to 8.7; Settings' did not
+  move. Rare 30 to 240 ms frames fall anywhere, the title at rest included, while other lanes' suites ran.
+- **Mutation proof** (`evidence/pr-b-mutations.txt`): fifteen rules broken one at a time in the shipped
+  code, each caught by the suite that guards it.
 
 ### 11.7 What closes each PR
 
@@ -1386,16 +1421,24 @@ applies, as built; together:
 - **`TitleWorld.pan_px`, `TransitionLayer.lift`, the held title, the music resume and the Vigil's warm
   loads** are PR C's and are not in PR B: nothing PR B builds needs them (YAGNI).
 - **The run's HUD** carries no lantern, so a room in a run is lit from the bottom-left (§4.5, as built).
+- **The licence texts ship in every export.** On the iPad 8 the QA build's Fonts glass read "licence file
+  not found" for all four families and the engine glass had no Sentry notice: an OFL `.txt` or
+  `LICENSE.md` is not an imported resource, so it reaches a pack only through its preset's include
+  filter, and every preset's was empty. The decision above (the Sentry notice ships when the addon is in
+  the export) and the OFL's own condition (each copy of the fonts carries the licence) settle it: every
+  preset in `export_presets.cfg` includes `assets/fonts/OFL*.txt` and `addons/sentry/LICENSE.md`, and
+  `tests/test_credits_roll.gd` fails if any preset's filter leaves out a text `CreditsLicences` reads. The
+  device's own file probe, before and after, is in `evidence/ipad8-rooms-frame-times.txt`.
+- **A room builds what is on view in its tap frame.** Text is shaped as it enters the tree, and the first
+  iPad 8 rows (the QA build of `c04a168d`) put How to Play's tap frame and Credits' over §11.6's 33 ms
+  (render CPU 0.2 ms: none of it drawing). How to Play builds its lit page with the room and each other page on its first showing;
+  Credits builds its roll's head and the first nine rows of each column, and the rest a part a frame
+  after (§4.3); the band's light and the parsed manifests are made once a session. No pixel at rest and
+  no frame of a passage changes (`stills/pr-b/retake-staged-builds.txt`).
 
-**Open, for the owner** (PR B builds around each; none blocks it):
+**Open, for the owner** (PR B builds around it; it does not block it):
 
-1. **The Sentry SDK's MIT notice on the device.** It is read from `addons/sentry/LICENSE.md`, and the iOS
-   export preset's include filter carries no `.md` file, so the notice is not in the iPad's pack and the
-   engine glass shows the engine's licences without it. Shipping it needs `addons/sentry/LICENSE.md` in the
-   export's include filter: a release-config change (`export_presets.cfg`), left to the owner. The bundled
-   fonts' OFL `.txt` files are in the same position and were before this lane (the font glass says
-   "licence file not found" where a file is not in the pack); the same filter change would carry them.
-2. **Copy** (§13's debts stand; PR B wrote none): no new locale key was needed. `ui.credits.headingBrand`,
+1. **Copy** (§13's debts stand; PR B wrote none): no new locale key was needed. `ui.credits.headingBrand`,
    `ui.credits.close`, `ui.credits.themeLine` and `ui.menu.fightOn` are no longer read; they stay in both
    bundles for a separate clean-up, as §2.13 says.
 
