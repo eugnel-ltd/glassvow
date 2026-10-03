@@ -1,0 +1,93 @@
+extends RefCounted
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH PROOF (issue #657) — a card-back catalogue and its baker.
+##
+## A back is data: a picture (a painting on disk, or a procedural canvas
+## shader) plus a surface recipe from CardSurface. It is built through the
+## existing CardView back path (`data.back`), so the stock, the edge, the
+## shadow and the finish are the same system the fronts wear, and baked once:
+##   stage  the lit back as the card stage renders it (400x528 at 2x, the card
+##          is the centre 304x432) — what a pile and a canvas flip draw
+##   inner  the back's 2D face (336x464 at 2x) — what a slab's back plate
+##          samples through card_surface.gdshader
+
+const CATALOGUE: Dictionary = {
+	"vault": {"art": "res://assets/art/piles/draw.png", "surface": "aurora"},
+	"rose": {"shader": "res://qa_cards/back_rose.gdshader", "surface": "prism"},
+	"eclipse": {"shader": "res://qa_cards/back_eclipse.gdshader", "surface": "gilt"},
+}
+const STAGE_CARD: Rect2 = Rect2(48.0, 48.0, 304.0, 432.0)
+
+
+static func data_of(id: String) -> Dictionary:
+	var entry: Dictionary = CATALOGUE.get(id, CATALOGUE["vault"])
+	# Every back rides CardView's painting path; a shader back swaps the
+	# painting node for its own plate after construction (see build()).
+	return {"back": str(entry.get("art", "res://assets/art/piles/draw.png")),
+		"surface": str(entry.get("surface", "aurora")), "type": "", "name": id}
+
+
+static func build(id: String, uid: int) -> CardView:
+	var data: Dictionary = data_of(id)
+	var view: CardView = CardView.new(CardInst.new(uid, StringName("back_" + id)), data, 0)
+	var entry: Dictionary = CATALOGUE.get(id, CATALOGUE["vault"])
+	if entry.has("shader"):
+		var sh: Shader = load(str(entry["shader"])) as Shader
+		var painting: TextureRect = _painting_of(view)
+		if painting != null and sh != null:
+			var plate: ColorRect = ColorRect.new()
+			var m: ShaderMaterial = ShaderMaterial.new()
+			m.shader = sh
+			plate.material = m
+			plate.set_anchors_preset(Control.PRESET_FULL_RECT)
+			plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			var parent: Node = painting.get_parent()
+			parent.add_child(plate)
+			parent.move_child(plate, painting.get_index())
+			painting.queue_free()
+	return view
+
+
+## The back painting node inside the face viewport: the one TextureRect whose
+## texture is the cropped AtlasTexture CardView builds for a back.
+static func _painting_of(view: CardView) -> TextureRect:
+	for n: Node in view._inner.find_children("", "TextureRect", true, false):
+		var tr: TextureRect = n as TextureRect
+		if tr != null and tr.texture is AtlasTexture:
+			return tr
+	return null
+
+
+## Build, render, read back, free. Returns stage + inner textures and the
+## material the back wears, so a slab plate can be lit the same way.
+static func bake(host: Node, id: String) -> Dictionary:
+	var view: CardView = build(id, -9000 - CATALOGUE.keys().find(id))
+	view.position = Vector2(-3000.0, -3000.0)
+	host.add_child(view)
+	for _i: int in range(5):
+		await host.get_tree().process_frame
+	var stage_img: Image = view._stage.get_texture().get_image()
+	var inner_img: Image = view._inner.get_texture().get_image()
+	stage_img.generate_mipmaps()
+	var out: Dictionary = {
+		"id": id,
+		"stage": ImageTexture.create_from_image(stage_img),
+		"inner": ImageTexture.create_from_image(inner_img),
+		"surface": view.surface,
+		"params": CardSurface.params(view.surface),
+		"tint": GlassStyle.GLASS,
+	}
+	view.queue_free()
+	return out
+
+
+## The card region of a baked stage texture, for canvas draws.
+static func card_region(baked: Dictionary) -> AtlasTexture:
+	var at: AtlasTexture = AtlasTexture.new()
+	var tex: Texture2D = baked["stage"]
+	at.atlas = tex
+	# The stage is (card + 2 * PAD_3D) * oversample wide; the card sits PAD_3D in.
+	var o: float = float(tex.get_width()) / (CardView.CARD_W + 2.0 * CardView.PAD_3D)
+	at.region = Rect2(Vector2(CardView.PAD_3D, CardView.PAD_3D) * o,
+		Vector2(CardView.CARD_W, CardView.CARD_H) * o)
+	return at

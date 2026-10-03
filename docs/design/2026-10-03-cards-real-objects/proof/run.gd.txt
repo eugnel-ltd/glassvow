@@ -1,0 +1,14 @@
+extends SceneTree
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH PROOF (#657): boot the real game (main.tscn reads the usual
+## `-- --fight=…` args) and attach the cards proof beside it.
+
+
+func _initialize() -> void:
+	var main_scene: PackedScene = load("res://application/main.tscn") as PackedScene
+	var main: Node = main_scene.instantiate()
+	root.add_child(main)
+	current_scene = main
+	var proof_script: GDScript = load("res://qa_cards/proof.gd") as GDScript
+	var made: Object = proof_script.new()
+	root.add_child(made as Node)

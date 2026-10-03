@@ -1,0 +1,10 @@
+import sys
+W = sys.argv[1]
+p = W + "/application/main.gd"
+s = open(p).read()
+a = "func _ready() -> void:\n\tprint(\"glassvow boot \" + str(Engine.get_version_info()[\"string\"]))\n"
+assert s.count(a) == 1
+b = a + "\tif not OS.get_environment(\"CARDS_PROOF\").is_empty():\n\t\tvar cards_proof_v: Variant = (load(\"res://qa_cards/proof.gd\") as GDScript).new()\n\t\tvar cards_proof: Node = cards_proof_v\n\t\tadd_child.call_deferred(cards_proof)\n"
+s = s.replace(a, b)
+open(p, "w").write(s)
+print("attach patched")

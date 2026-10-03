@@ -1,0 +1,129 @@
+extends SceneTree
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH PROOF (#657): one card at six turn angles under each option, and a
+## ten-card pile beside each row. Env: OUT=<png>, ZOOM=2, BACK=rose, CARD=id.
+##   row 1  C  the card's own slab turns in its own stage (back plate)
+##   row 2  B  the frozen stage texture warped on the canvas (warp.gdshader)
+##   row 3  A  one shared 3D table, the card as a mesh in it
+
+const Backs: GDScript = preload("res://qa_cards/backs.gd")
+const PileStack: GDScript = preload("res://qa_cards/pile_stack.gd")
+const Table: GDScript = preload("res://qa_cards/table3d.gd")
+const WARP: Shader = preload("res://qa_cards/warp.gdshader")
+const YAWS: Array[float] = [0.0, 35.0, 70.0, 100.0, 140.0, 180.0]
+const PITCH: float = -10.0
+const COL: float = 178.0
+const ROW: float = 262.0
+const X0: float = 150.0
+const Y0: float = 40.0
+
+
+func _initialize() -> void:
+	var z: float = float(OS.get_environment("ZOOM")) if OS.get_environment("ZOOM") != "" else 1.0
+	root.content_scale_size = Vector2i(0, 0)
+	root.content_scale_factor = z
+	CardView.oversample = 2.0 * z
+	# Deferred one frame: during _initialize the root is not yet in the tree.
+	process_frame.connect(func() -> void: _run(z), CONNECT_ONE_SHOT)
+
+
+func _label(host: Control, text: String, at: Vector2) -> void:
+	var l: Label = Label.new()
+	l.text = text
+	l.position = at
+	l.add_theme_font_size_override("font_size", 13)
+	l.add_theme_color_override("font_color", Color(0.85, 0.82, 0.74))
+	host.add_child(l)
+
+
+func _run(z: float) -> void:
+	var host: Control = Control.new()
+	host.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var bg: TextureRect = TextureRect.new()
+	bg.texture = load("res://assets/art/stage/act1-ledge.png") as Texture2D
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.modulate = Color(0.55, 0.5, 0.5)
+	host.add_child(bg)
+	root.add_child(host)
+	var content: ContentDB = ContentDB.load_full()
+	var card_id: String = OS.get_environment("CARD") if OS.get_environment("CARD") != "" else "eclipseSlash"
+	var data: Dictionary = content.cards.get(card_id, {})
+	var back: Dictionary = await Backs.bake(host, OS.get_environment("BACK") if OS.get_environment("BACK") != "" else "rose")
+	var stage: Vector2 = Vector2(root.size) / z
+	var names: Array[String] = ["C  slab turns in its own stage", "B  canvas warp of the frozen card", "A  one shared 3D table"]
+	for r: int in range(3):
+		_label(host, names[r], Vector2(12.0, Y0 + float(r) * ROW - 18.0 + 0.0))
+	# Row C and row B: real CardViews.
+	var uid: int = 100
+	for r: int in range(2):
+		for i: int in range(YAWS.size()):
+			var v: CardView = CardView.new(CardInst.new(uid, StringName(card_id)), data, 2)
+			uid += 1
+			v.position = Vector2(X0 + float(i) * COL, Y0 + float(r) * ROW)
+			host.add_child(v)
+			if r == 0:
+				var plate: MeshInstance3D = MeshInstance3D.new()
+				plate.mesh = Table.face_mesh()
+				var m: ShaderMaterial = Table.back_material(back)
+				plate.material_override = m
+				var thick: float = CardSurface.params(v.surface)["thick"]
+				plate.position = Vector3(0.0, 0.0, -thick * 0.5 - 0.05)
+				plate.rotation_degrees = Vector3(0.0, 180.0, 0.0)
+				v._slab.add_child(plate)
+				v._lit.append(m)
+				v._push_lamp()
+				v._slab.rotation_degrees = Vector3(PITCH, YAWS[i], 0.0)
+			else:
+				var w: ShaderMaterial = ShaderMaterial.new()
+				w.shader = WARP
+				w.set_shader_parameter("back_tex", back["stage"])
+				w.set_shader_parameter("yaw", YAWS[i])
+				w.set_shader_parameter("pitch", -PITCH)
+				for c: Node in v.get_children():
+					var tr: TextureRect = c as TextureRect
+					if tr != null and tr.texture == v._stage.get_texture():
+						tr.material = w
+			v._shadow.pivot_offset = v.size * 0.5
+			v._shadow.scale.x = maxf(absf(cos(deg_to_rad(YAWS[i]))), 0.03)
+		var ps: Control = PileStack.new()
+		ps.set("tex", Backs.card_region(back))
+		ps.set("card_px", Vector2(CardView.CARD_W, CardView.CARD_H))
+		ps.set("count", 10)
+		ps.position = Vector2(X0 + 6.0 * COL + 10.0, Y0 + float(r) * ROW - 16.0)
+		ps.size = Vector2(CardView.CARD_W + 10.0, CardView.CARD_H + 16.0)
+		host.add_child(ps)
+	# Row A: the shared table across the whole sheet.
+	var table: Control = Table.new()
+	host.add_child(table)
+	table.call("setup", stage, z, back)
+	table.position = Vector2.ZERO
+	table.size = stage
+	for i: int in range(YAWS.size()):
+		var v: CardView = CardView.new(CardInst.new(uid, StringName(card_id)), data, 2)
+		uid += 1
+		# Its own holder, so every card in the row sits on the same depth layer.
+		var holder: Control = Control.new()
+		holder.position = Vector2(X0 + float(i) * COL, Y0 + 2.0 * ROW)
+		host.add_child(holder)
+		holder.add_child(v)
+		table.call("track", v)
+		var flips: Dictionary = table.get("flips")
+		flips[v.uid] = Vector2(PITCH, YAWS[i])
+	table.call("build_pile", Vector2(X0 + 6.0 * COL + 10.0 + CardView.CARD_W * 0.5 + 5.0,
+		Y0 + 2.0 * ROW + CardView.CARD_H * 0.5), 10, 1.0)
+	for _i: int in range(14):
+		await process_frame
+	for c: Node in host.find_children("", "Control", true, false):
+		var v: CardView = c as CardView
+		if v != null:
+			v._stage.render_target_update_mode = SubViewport.UPDATE_ONCE \
+				if v.modulate.a > 0.5 else SubViewport.UPDATE_DISABLED
+	for _i: int in range(4):
+		await process_frame
+	var out: String = OS.get_environment("OUT")
+	if out != "":
+		root.get_texture().get_image().save_png(out)
+		print("saved ", out)
+	quit()

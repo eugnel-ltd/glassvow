@@ -55,19 +55,13 @@ const HOVER_TIME: float = 0.18
 const HEADING_H: float = 34.0
 const RARITY_ORDER: Array = ["starter", "common", "uncommon", "rare", "special"]
 
-## The card backs, as pseudo catalogue entries: not cards the game deals, but
-## the studio and the surfaces sheet must be able to stand one up like any
-## card. `back` routes CardView into its back build; `surface` names the recipe
-## the back wears until a picker says otherwise. Kept OFF the full sheet, which
+## Lab ids for the card backs: `back:<id>` for every back in the catalogue
+## (content/card-backs.json), e.g. `--cards=back:vault,back:rose,back:eclipse`
+## or `--studio=back:rose`. They are not cards the game deals, but the studio
+## and the surfaces sheet must be able to stand one up like any card, wearing
+## the catalogue's own picture and recipe. Kept OFF the full sheet, which
 ## answers to the benchmark's 61-card gallery and must stay 61 cards long.
-const BACKS: Dictionary = {
-	"back:draw": {"name": "Back · Draw", "rarity": "back",
-		"back": "res://assets/art/piles/draw.png", "surface": "aurora"},
-	"back:discard": {"name": "Back · Discard", "rarity": "back",
-		"back": "res://assets/art/piles/discard.png", "surface": "aurora"},
-	"back:ashes": {"name": "Back · Ashes", "rarity": "back",
-		"back": "res://assets/art/piles/ashes.png", "surface": "aurora"},
-}
+const BACK_PREFIX: String = "back:"
 
 var content: ContentDB
 
@@ -99,15 +93,28 @@ static func load_catalog(fallback: ContentDB) -> Dictionary:
 				var cards: Variant = doc.get("cards")
 				if typeof(cards) == TYPE_DICTIONARY:
 					var out: Dictionary = cards
-					out.merge(BACKS)
+					out.merge(back_entries())
 					return out
 	push_warning("card lab: %s unreadable — falling back to the slice registry"
 		% CATALOG_PATH)
 	# Duplicated before the merge: the fallback is the live content registry,
 	# and the backs must not leak into it.
 	var merged: Dictionary = fallback.cards.duplicate()
-	merged.merge(BACKS)
+	merged.merge(back_entries())
 	return merged
+
+
+## The catalogue's backs as lab entries: the CardView data CardBacks builds,
+## plus the name and the `back` tier the sheet sorts and heads them by.
+static func back_entries() -> Dictionary:
+	var out: Dictionary = {}
+	var catalogue: CardBackCatalogue = CardBacks.catalogue()
+	for id: String in catalogue.ids():
+		var row: Dictionary = catalogue.card_data(id)
+		row["name"] = "Back · %s" % id.capitalize()
+		row["rarity"] = "back"
+		out[BACK_PREFIX + id] = row
+	return out
 
 
 ## Place the sheet against the live stage size. Runs after any window resize, so

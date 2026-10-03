@@ -2,9 +2,9 @@ class_name Preferences
 extends RefCounted
 ## Player-facing settings persisted at user://settings.cfg — audio (Master/
 ## Music/SFX), display (fullscreen, vsync), motion (screen shake, reduce
-## motion) and privacy (crash diagnostics). Supersedes the audio-only
-## user://audio.cfg: its values are imported once, the first time this file
-## is created, and never re-read.
+## motion), privacy (crash diagnostics) and cosmetics (the card back).
+## Supersedes the audio-only user://audio.cfg: its values are imported once,
+## the first time this file is created, and never re-read.
 ##
 ## `active` is the main-owned handle (SKILL §2: no autoloads). Main replaces
 ## it with the disk-backed instance at boot; the default is an in-memory
@@ -30,6 +30,11 @@ const DIAGNOSTICS_KEY: String = "diagnostics_enabled"
 const DIAGNOSTICS_NOTICE_KEY: String = "diagnostics_notice_seen"
 const DEFAULT_DIAGNOSTICS: bool = true
 
+## The card back the player chose (CardBacks). Additive: an older build reading
+## the file ignores the section.
+const COSMETICS_SECTION: String = "cosmetics"
+const CARD_BACK_KEY: String = "card_back"
+
 static var active: Preferences = Preferences.new()
 
 var master_volume: float = DEFAULT_MASTER
@@ -51,6 +56,10 @@ var language: String = ""
 var diagnostics_enabled: bool = DEFAULT_DIAGNOSTICS
 ## Whether the one-line diagnostics notice has been shown.
 var diagnostics_notice_seen: bool = false
+## The chosen card back's id, stored as given; empty = never chosen. Never
+## validated here: CardBacks.chosen() owns the catalogue and the unlocks, and
+## resolves an empty, unknown or locked id to the default back.
+var card_back: String = ""
 
 ## Only the instance read from disk writes back to disk; the default `active`
 ## stand-in stays in memory whatever a lab does to it.
@@ -159,6 +168,11 @@ func set_diagnostics_enabled(on: bool) -> void:
 	_store()
 
 
+func set_card_back(id: String) -> void:
+	card_back = id
+	_store()
+
+
 func mark_diagnostics_notice_seen() -> void:
 	if diagnostics_notice_seen:
 		return
@@ -219,6 +233,8 @@ func _read(config: ConfigFile) -> void:
 	diagnostics_enabled = _diagnostics_value(config)
 	diagnostics_notice_seen = _bool_value(
 		config.get_value(PRIVACY_SECTION, DIAGNOSTICS_NOTICE_KEY, false), false)
+	var back: Variant = config.get_value(COSMETICS_SECTION, CARD_BACK_KEY, "")
+	card_back = back if back is String else ""
 
 
 func _import_legacy(legacy_audio_path: String) -> void:
@@ -276,6 +292,7 @@ func _store() -> void:
 	config.set_value("locale", "language", language)
 	config.set_value(PRIVACY_SECTION, DIAGNOSTICS_KEY, diagnostics_enabled)
 	config.set_value(PRIVACY_SECTION, DIAGNOSTICS_NOTICE_KEY, diagnostics_notice_seen)
+	config.set_value(COSMETICS_SECTION, CARD_BACK_KEY, card_back)
 	var error: Error = config.save(_path)
 	if error != OK:
 		push_warning("preferences: could not save (%s)" % error_string(error))

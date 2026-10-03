@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "default": "vault",
+  "backs": {
+    "vault": {"art": "res://assets/art/piles/draw.png", "surface": "aurora", "unlock": {"kind": "default"}},
+    "rose": {"shader": "res://presentation/cards/backs/rose.gdshader", "surface": "prism", "unlock": {"kind": "shards", "at": 1}},
+    "eclipse": {"shader": "res://presentation/cards/backs/eclipse.gdshader", "surface": "gilt", "unlock": {"kind": "deed", "deed": "wins", "at": 1}}
+  }
+}

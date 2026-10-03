@@ -1,0 +1,109 @@
+extends Control
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH PROOF (#657) — a pile drawn as a stack of the same card, backs up,
+## with thickness that follows the count. One `_draw()`, no nodes per card:
+## the lower cards are edge slivers, the top is the baked back.
+##
+## Thickness law: 1px a card up to ten, then 0.35px a card, capped at CAP_PX,
+## so a 10-card pile and a 40-card pile read differently and a 99-card pile
+## never becomes a tower. Edges alternate two tones so single cards resolve.
+
+const CAP_PX: float = 14.0
+const PER_CARD: float = 1.0
+const TAIL: float = 0.35
+
+var tex: Texture2D = null
+var count: int = 10
+var card_px: Vector2 = Vector2(80.0, 114.0)
+## Which way the pile leans and how loose it is: 0 is a squared deck, 1 a
+## thrown discard pile.
+var loose: float = 0.0
+var face_up_top: Texture2D = null
+## 0 a clean pile, 1 the ash pile: the same backs, charred, with an ember rim.
+var burnt: float = 0.0
+var _sb_ember: StyleBoxFlat = StyleBoxFlat.new()
+var edge_light: Color = Color(0.72, 0.66, 0.52)
+var edge_dark: Color = Color(0.16, 0.14, 0.13)
+var _sb_edge: StyleBoxFlat = StyleBoxFlat.new()
+var _sb_shadow: StyleBoxFlat = StyleBoxFlat.new()
+
+
+func _init() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_sb_shadow.bg_color = Color(0, 0, 0, 0)
+	_sb_shadow.shadow_color = Color(0, 0, 0, 0.55)
+	_sb_shadow.shadow_size = 9
+	_sb_shadow.shadow_offset = Vector2(0.0, 5.0)
+
+
+static func thickness(n: int) -> float:
+	if n <= 0:
+		return 0.0
+	var t: float = float(mini(n, 10)) * PER_CARD + float(maxi(n - 10, 0)) * TAIL
+	return minf(t, CAP_PX)
+
+
+## Where the top card sits, in this control's space — the launch point of a
+## draw and the landing point of a discard.
+func top_rect(n: int = -1) -> Rect2:
+	var c: int = count if n < 0 else n
+	var th: float = thickness(c)
+	var x0: float = (size.x - card_px.x) * 0.5
+	var y0: float = size.y - card_px.y - th
+	return Rect2(Vector2(x0, y0), card_px)
+
+
+func set_count(n: int) -> void:
+	if n == count:
+		return
+	count = n
+	queue_redraw()
+
+
+func _draw() -> void:
+	if count <= 0 or tex == null:
+		return
+	var th: float = thickness(count)
+	var layers: int = clampi(roundi(th / 1.0), 1, 24)
+	var x0: float = (size.x - card_px.x) * 0.5
+	var y_top: float = size.y - card_px.y - th
+	var r: int = roundi(11.0 * card_px.x / 152.0)
+	_sb_shadow.set_corner_radius_all(r)
+	_sb_edge.set_corner_radius_all(r)
+	draw_style_box(_sb_shadow, Rect2(Vector2(x0, y_top + th), card_px))
+	for i: int in range(layers, 0, -1):
+		var off: float = float(i) * th / float(layers)
+		var h: float = _hash(i)
+		var jx: float = (h - 0.5) * (1.2 + 6.0 * loose)
+		var jr: float = (_hash(i + 17) - 0.5) * deg_to_rad(1.2 + 10.0 * loose)
+		_sb_edge.bg_color = edge_light.lerp(edge_dark, 0.35 + 0.5 * float(i % 2)) \
+			.darkened(0.25 * float(i) / float(layers)).lerp(Color(0.08, 0.05, 0.04), burnt * 0.7)
+		if burnt > 0.0:
+			_sb_edge.border_color = Color(1.0, 0.45, 0.12, 0.75 * burnt * (0.4 + 0.6 * _hash(i + 5)))
+			_sb_edge.set_border_width_all(0)
+			_sb_edge.border_width_bottom = 1
+		var c: Vector2 = Vector2(x0 + jx, y_top + off) + card_px * 0.5
+		draw_set_transform(c, jr, Vector2.ONE)
+		draw_style_box(_sb_edge, Rect2(-card_px * 0.5, card_px))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var top: Texture2D = face_up_top if face_up_top != null else tex
+	var tint: Color = Color.WHITE.lerp(Color(0.42, 0.36, 0.33), burnt)
+	var tr: float = (_hash(3) - 0.5) * deg_to_rad(9.0 * loose)
+	draw_set_transform(Vector2(x0, y_top) + card_px * 0.5, tr, Vector2.ONE)
+	draw_texture_rect(top, Rect2(-card_px * 0.5, card_px), false, tint)
+	if burnt > 0.0:
+		# The ember rim: the card's edge still glowing where it caught.
+		var r2: int = roundi(11.0 * card_px.x / 152.0)
+		_sb_ember.set_corner_radius_all(r2)
+		_sb_ember.bg_color = Color(0, 0, 0, 0)
+		_sb_ember.draw_center = false
+		_sb_ember.border_color = Color(1.0, 0.5, 0.15, 0.55 * burnt)
+		_sb_ember.set_border_width_all(1)
+		_sb_ember.shadow_color = Color(1.0, 0.42, 0.1, 0.35 * burnt)
+		_sb_ember.shadow_size = 6
+		draw_style_box(_sb_ember, Rect2(-card_px * 0.5, card_px))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+static func _hash(i: int) -> float:
+	return fposmod(sin(float(i) * 12.9898) * 43758.5453, 1.0)
