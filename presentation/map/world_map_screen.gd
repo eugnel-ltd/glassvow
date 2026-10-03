@@ -1113,6 +1113,8 @@ func _layout_waystones() -> void:
 	# On the journey land the pilgrim carries the Flame; the glow marker stands down.
 	if _path_band != null:
 		_path_band.visible = not (_journey != null and _journey.active())
+	if _journey != null and _journey.active():
+		_journey.sync_focus_band(seats)
 	for i: int in range(_waystones.size()):
 		var ws: GlassWaystone = _waystones[i]
 		var node_scale: float = k

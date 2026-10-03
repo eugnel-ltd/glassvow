@@ -29,6 +29,7 @@ static func run(fails: Array[String]) -> void:
 	_seats(fails, screen, land)
 	_lamps(fails, screen, land)
 	_framing(fails, screen)
+	_focus_band(fails, screen)
 	_whole_act(fails, screen)
 	_walk(fails, screen, land, content, run)
 	_rest_cadence(fails, scene)
@@ -154,6 +155,30 @@ static func _framing(fails: Array[String], screen: WorldMapScreen) -> void:
 	_check(fails, inside, "the framed waystones are on screen and on their own touch squares")
 
 
+## The tilt-shift's sharp band covers every waystone the camera frames, at every
+## landscape reference shape, and Whole act has none.
+static func _focus_band(fails: Array[String], screen: WorldMapScreen) -> void:
+	var scene: MapScene = screen._map_scene
+	for shape: StringName in [&"phone-landscape", &"pad-landscape", &"desktop-landscape"]:
+		_mount(screen, shape)
+		screen._journey.frame(screen.map.at)
+		screen._layout_waystones()
+		var band: Vector2 = scene.focus_band
+		var seats: PackedVector2Array = screen.projected_seats()
+		var covered: bool = band.is_finite() and not screen._journey.focus_members.is_empty()
+		for i: int in screen._journey.focus_members:
+			covered = covered and seats[i].y >= band.x and seats[i].y <= band.y
+		_check(fails, covered, "the sharp band covers every framed waystone at %s" % shape)
+	_mount(screen, StageShape.IDENTITY)
+	screen._journey.zoom(true)
+	screen._layout_waystones()
+	_check(fails, not scene.focus_band.is_finite() and scene._display.material == null,
+		"Whole act has no tilt-shift")
+	screen._journey.zoom(false)
+	screen._layout_waystones()
+	_check(fails, scene.focus_band.is_finite(), "looking closer brings the band back")
+
+
 ## Whole act is for looking: it frames the act, and a tap looks closer without
 ## choosing a waystone.
 static func _whole_act(fails: Array[String], screen: WorldMapScreen) -> void:
@@ -245,6 +270,8 @@ static func _act_switch(fails: Array[String], screen: WorldMapScreen, run: RunSt
 	screen.refresh(run)
 	_check(fails, not environment.glow_enabled and not environment.adjustment_enabled,
 		"Act II's painted light neither grades nor blooms")
+	_check(fails, screen._map_scene._display.material == null,
+		"Act II has no tilt-shift")
 	var rig: MapCameraRig = screen._map_scene.get_rig()
 	_check(fails, not rig.journey_mode and screen._map_scene.journey_landscape() == null
 			and is_equal_approx(rig.get_camera().rotation_degrees.x, MapCameraRig.TILT_DEGREES),

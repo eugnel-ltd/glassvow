@@ -32,6 +32,9 @@ signal landscape_ready
 
 var _stage: SubViewport
 var _display: TextureRect
+## The journey land's tilt-shift band (`MapTiltShift`) in this Control's px,
+## (top, bottom); `Vector2.INF` while there is none.
+var focus_band: Vector2 = Vector2.INF
 var _rig: MapCameraRig
 var _key: DirectionalLight3D
 var _world: Node3D
@@ -302,11 +305,28 @@ func _deal_act(_region: MapRegions) -> void:
 		MapJourneyLandscape.light(_key, setting.environment)
 	else:
 		_rig.leave_journey()
+		set_focus_band(Vector2.INF)
 	if is_node_ready():
 		_fit()
 	_salt_dirty = false
 	_bind_asset_geometry()
 	_repaint()
+
+
+## Sharpens the band `band` (top, bottom in this Control's px) of the journey
+## land and softens the rest; `Vector2.INF`, or any painted act, takes it off.
+func set_focus_band(band: Vector2) -> void:
+	if not is_journey_act() or not band.is_finite() or size.y <= 1.0:
+		focus_band = Vector2.INF
+		_display.material = null
+		return
+	if _display.material == null:
+		_display.material = MapTiltShift.material()
+	var shift: ShaderMaterial = _display.material as ShaderMaterial
+	focus_band = band
+	shift.set_shader_parameter("band", band / size.y)
+	shift.set_shader_parameter("radius_texels", MapTiltShift.STRENGTH_PX
+		* size.y / MapTiltShift.IDENTITY_HEIGHT * float(_stage.size.y) / size.y)
 
 
 func project_pins(nodes: Array[MapNode]) -> PackedVector2Array:
