@@ -124,7 +124,7 @@ func _init(stage_shape: StringName = StageShape.IDENTITY,
 	RunStyle.style_button(fight_on)
 	fight_on.pressed.connect(_close_with_sound)
 	action_centre.add_child(fight_on)
-	(func() -> void: LeadlightFocus.give(fight_on)).call_deferred()
+	LeadlightFocus.give_deferred(fight_on)
 
 	resized.connect(_fit)
 	_fit.call_deferred()

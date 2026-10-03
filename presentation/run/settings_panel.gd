@@ -123,7 +123,7 @@ func _init(preferences: Preferences, reset_disabled: bool = false,
 	_room.footer().add_child(footer)
 	_brand_line = footer
 
-	(func() -> void: LeadlightFocus.give(close)).call_deferred()
+	LeadlightFocus.give_deferred(close)
 	# The room's shutter (commissioned cues; silent until they land).
 	_sfx.play_owed(&"roomOpen")
 	closed.connect(func() -> void: _sfx.play_owed(&"roomClose"))
@@ -278,7 +278,7 @@ func focus_language() -> void:
 	if _language_toggle == null:
 		return
 	_room.select(&"display")
-	(func() -> void: LeadlightFocus.give(_language_toggle)).call_deferred()
+	LeadlightFocus.give_deferred(_language_toggle)
 	_room.scroll().ensure_control_visible.call_deferred(_language_toggle)
 
 

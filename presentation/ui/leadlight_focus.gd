@@ -46,3 +46,17 @@ static func give(control: Control, force_visible: bool = false) -> void:
 	if control == null or not control.is_inside_tree():
 		return
 	control.grab_focus(not (keyed or force_visible))
+
+
+## `give` once the frame's deferred calls run, for a control just built. The
+## control is held weakly: a screen freed before then (a language rebuild, a
+## room closed at once, a test tearing down) is skipped without an error.
+static func give_deferred(control: Control, force_visible: bool = false) -> void:
+	_give_held.call_deferred(weakref(control), force_visible)
+
+
+static func _give_held(held: WeakRef, force_visible: bool) -> void:
+	var held_object: Object = held.get_ref()
+	var control: Control = held_object as Control
+	if control != null:
+		give(control, force_visible)
