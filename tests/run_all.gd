@@ -1,20 +1,36 @@
 extends SceneTree
 ## Headless test runner: discovers res://tests/test_*.gd and calls static run(fails).
 ## Pass -- --tests=res://tests/test_a.gd,res://tests/test_b.gd for a fail-closed subset.
+##
+## A GDScript error raised while a test loads or runs fails that test, naming
+## where it was raised (`ScriptErrorGuard`): the error aborts only the function
+## it is raised in, so without the guard the test printed "ok" while every check
+## after the error never ran. Script errors raised after the last test (at exit)
+## belong to no test: they are reported after the result and do not change it.
+## A test that does not parse, or has no static run(fails), is never called: the
+## call error would abort this runner itself, which then never quits.
+
+const ScriptErrorGuard = preload("res://tests/support/script_error_guard.gd")
+
+var _guard: ScriptErrorGuard = ScriptErrorGuard.new()
 
 
 func _initialize() -> void:
+	OS.add_logger(_guard)
 	var fails: Array[String] = []
 	var scripts: Array[String] = _select_scripts(fails)
 	if scripts.is_empty():
 		print("run_all: no test_*.gd selected under res://tests/")
 	for path: String in scripts:
 		var script: Script = load(path) as Script
-		if script == null:
-			fails.append("%s: failed to load" % path)
+		var unrunnable: String = _unrunnable(script)
+		if not unrunnable.is_empty():
+			fails.append("%s: %s" % [path, unrunnable])
+			_fail_on_script_errors(path, fails)
 			continue
 		var before: int = fails.size()
 		script.call("run", fails)
+		_fail_on_script_errors(path, fails)
 		if fails.size() == before:
 			print("ok   %s" % path)
 		else:
@@ -27,6 +43,37 @@ func _initialize() -> void:
 		for msg: String in fails:
 			print("  - %s" % msg)
 		quit(1)
+
+
+## Records every script error raised since the previous test as a failure of
+## the test at `path`.
+func _fail_on_script_errors(path: String, fails: Array[String]) -> void:
+	for message: String in _guard.take():
+		fails.append("%s: script error at %s" % [path, message])
+
+
+## Why `script` cannot be run, or "" when it parsed and declares a static
+## run(fails).
+static func _unrunnable(script: Script) -> String:
+	if script == null or not script.can_instantiate():
+		return "failed to load"
+	for method: Dictionary in script.get_script_method_list():
+		var flags: int = method["flags"]
+		var args: Array = method["args"]
+		if method["name"] == "run" and flags & METHOD_FLAG_STATIC and args.size() == 1:
+			return ""
+	return "has no static run(fails)"
+
+
+## Runs once the tree has been torn down, after the result above was printed.
+func _finalize() -> void:
+	var late: Array[String] = _guard.take()
+	OS.remove_logger(_guard)
+	if late.is_empty():
+		return
+	print("run_all: script errors after the last test, attributed to no test (the result stands):")
+	for message: String in late:
+		print("  - %s" % message)
 
 
 func _select_scripts(fails: Array[String]) -> Array[String]:
