@@ -4,23 +4,34 @@ extends RefCounted
 ## deck overlay and every deck picker (CardGrid) — draw one baked picture per
 ## distinct card instead of a live CardView per card.
 ##
-## WHY. A live card holds about 13 MB of video memory here: two offscreen
-## passes and a 3D stage with 4x MSAA. A face holds one picture, 0.65 MB at the
-## game's 2x oversample.
+## WHY. A live card holds about 13 MB of video memory here (17 MB at its peak
+## as it is built): two offscreen passes and a 3D stage with 4x MSAA. A face
+## holds one picture, 0.65 MB at the game's 2x oversample.
 ##
 ## WHAT IT SAVES (tools/bench_deck_view.gd, iPad 8 at 2160 x 1620, the QA
-## build). The deck overlay used to build a live card per deck card: it held
-## 130 MB more than the closed map at the 10-card starter deck and 397 MB more
+## build; video memory above the closed map). The deck overlay used to build a
+## live card per deck card: 130 MB open at the 10-card starter deck and 397 MB
 ## at 30 cards, 509 MB at the peak of the open (660 MB on the session's first);
-## its open call took 67-90 ms and its worst frame 75-117 ms. On faces, a
-## 30-card deck of 26 distinct cards opened on an empty cache holds 19.8 MB
-## more once open and 55.4 MB at the peak, while the last cards bake and their
-## live stages wait for the renderer to free them; it bakes over 28 frames at
-## the iPad's 16.7 ms, the worst 21-26 ms, none over 33 ms. A reopen holds
-## 0.3 MB more, its open call 8-14 ms and its worst frame 18-21 ms. Closing
-## costs under 25 ms (was 35-53 ms). The session's first open still pays the
-## card shaders' first compile in one frame, as the live cards did (40-450 ms
-## against 70-1,060 ms).
+## its open call took 67-90 ms, its worst frame 75-117 ms, and closing it
+## 27-53 ms. On faces, a 30-card deck of 26 distinct cards opened on an empty
+## cache holds 19.8 MB once open and 55.4 MB at the peak, while the last cards
+## bake and their live stages wait for the renderer to free them. Opened as the
+## session's first sight of any card (a late run continued straight into the
+## deck view), it holds 32.0 MB and 67.6 MB at the peak: 12 MB of that is the
+## first-use allocation the first card drawn in a session pays wherever it is
+## drawn. It bakes over 28 frames at the iPad's 16.7 ms, the worst 21-26 ms;
+## the session's first open also pays the card shaders' first compile in one
+## frame, as the live cards did (40-450 ms against 70-1,060 ms on a cold
+## shader cache, 53-60 ms on a warm one). A reopen holds 0.3 MB more, its open
+## call 3-14 ms and its worst frame 17-21 ms; closing costs 17-23 ms. Closed,
+## the cache keeps its faces (16.1 MB at the starter deck, 19.7 at 30 cards)
+## until `keep_only` or `forget` lets them go.
+##
+## A pointer on the open view stands a live card in (CardGrid): 17.0 MB more
+## while it stands; the card it left springing back beside the next, 30-37 MB;
+## a mouse swept along a row, 43-51 MB at the peak while the cards it passed
+## wait to be freed. The first card touched after the view opens costs one
+## frame of 33-46 ms as its live card is built; later ones 23-30 ms.
 ##
 ## WHAT A FACE IS. The card's stage at rest, exactly as the live card draws it
 ## on the canvas, plus the two things the live card draws beside it there: its
