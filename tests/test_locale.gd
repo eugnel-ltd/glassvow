@@ -338,7 +338,9 @@ static func _remaining_run_screen_call_sites(fails: Array[String]) -> void:
 				"ui.credits.sfxAttributionCount", "ui.credits.themeLine"],
 			"_add_licence_fold": ["ui.credits.engineLicences"],
 			"_add_font_licence_fold": ["ui.credits.fontLicences"],
-			"_build_licence": ["ui.credits.components", "ui.credits.licenceTexts"],
+		},
+		"res://presentation/run/credits_licences.gd": {
+			"fill_engine": ["ui.credits.components", "ui.credits.licenceTexts"],
 		},
 		"res://presentation/run/rose_window_view.gd": {
 			"_pane_copy": ["ui.rose.shardRecoveredStack"],
