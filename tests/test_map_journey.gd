@@ -29,6 +29,7 @@ static func run(fails: Array[String]) -> void:
 	_seats(fails, screen, land)
 	_lamps(fails, screen, land)
 	_framing(fails, screen)
+	_clip_slab(fails, screen, land)
 	_focus_band(fails, screen)
 	_whole_act(fails, screen)
 	_walk(fails, screen, land, content, run)
@@ -134,7 +135,7 @@ static func _lamps(fails: Array[String], screen: WorldMapScreen,
 	MapScene.lean_override = lean_was
 
 
-## Journey frames the pilgrim's stone and its next stones on the 55° camera,
+## Journey frames the pilgrim's stone and its next stones on the journey camera,
 ## every one inside the stage and on its own touch square.
 static func _framing(fails: Array[String], screen: WorldMapScreen) -> void:
 	var rig: MapCameraRig = screen._map_scene.get_rig()
@@ -350,6 +351,26 @@ static func _shadow_proxies(fails: Array[String]) -> void:
 			silent = silent and part["shadow"] == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_check(fails, leafy == 1 and parts.size() == 2 and proxies == 1 and silent,
 		"a conifer casts through one shadow-only cone, not its cut-out foliage")
+
+
+## The journey camera clips to the land's slab, which is also the reach of its
+## directional shadow (an orthographic camera's shadow covers near to far), and
+## the whole built land lies inside the heights that slab is cut for.
+static func _clip_slab(fails: Array[String], screen: WorldMapScreen, land: MapJourneyLandscape) -> void:
+	var camera: Camera3D = screen._map_scene.get_rig().get_camera()
+	var depth: Vector2 = MapJourneyCameraContract.depth_range(camera.size)
+	_check(fails, is_equal_approx(camera.near, depth.x) and is_equal_approx(camera.far, depth.y)
+			and depth.x > 10.0 and depth.y < 100.0,
+		"the Journey camera clips to the land's slab (%.1f to %.1f m)" % [camera.near, camera.far])
+	var low: float = INF
+	var high: float = -INF
+	for node: Node in land.find_children("*", "GeometryInstance3D", true, false):
+		var item: GeometryInstance3D = node as GeometryInstance3D
+		var box: AABB = item.global_transform * item.get_aabb()
+		low = minf(low, box.position.y)
+		high = maxf(high, box.end.y)
+	_check(fails, low >= MapJourneyCameraContract.LAND_LOW and high <= MapJourneyCameraContract.LAND_HIGH,
+		"the built land lies within the clip slab's heights (%.2f to %.2f m)" % [low, high])
 
 
 ## Leaving Act I gives the painted acts back their governed camera, and their

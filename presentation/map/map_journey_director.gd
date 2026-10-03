@@ -161,6 +161,7 @@ func walk(v: float) -> void:
 		var from_zoom: float = _from_pose["zoom"]
 		var to_zoom: float = _to_pose["zoom"]
 		camera.size = lerpf(from_zoom, to_zoom, v)
+		screen._map_scene.get_rig().fit_journey_depth()
 	var at: Vector3 = position(v)
 	var ahead: Vector3 = position(minf(1.0, v + 0.005))
 	land().set_traveller(at, ahead, true)

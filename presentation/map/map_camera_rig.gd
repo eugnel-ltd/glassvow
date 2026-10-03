@@ -236,7 +236,7 @@ func apply_journey_pose(pose: Dictionary) -> bool:
 	_camera.rotation_degrees = Vector3(-pitch, 0.0, 0.0)
 	_camera.position = position
 	_camera.size = zoom
-	_camera.far = 400.0
+	fit_journey_depth()
 	var stop: int = ZOOM_STOPS.size() - 1 if pose.get("overview", false) \
 		else (DEFAULT_STOP - 1 if pose.get("close", false) else DEFAULT_STOP)
 	if stop != zoom_stop:
@@ -245,12 +245,21 @@ func apply_journey_pose(pose: Dictionary) -> bool:
 	return true
 
 
+## Clips the journey camera to the land at its current view height
+## (`MapJourneyCameraContract.depth_range`). Call after any journey zoom change.
+func fit_journey_depth() -> void:
+	var depth: Vector2 = MapJourneyCameraContract.depth_range(_camera.size)
+	_camera.near = depth.x
+	_camera.far = depth.y
+
+
 ## Back to the governed painted-act camera, at the default stop and pose.
 func leave_journey() -> void:
 	if not journey_mode:
 		return
 	journey_mode = false
 	_camera.rotation_degrees = Vector3(TILT_DEGREES, 0.0, 0.0)
+	_camera.near = 0.05
 	_camera.far = CAM_FAR
 	pan_bounds = bounds_from_lattice()
 	zoom_stop = DEFAULT_STOP

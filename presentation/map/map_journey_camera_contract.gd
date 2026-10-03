@@ -15,6 +15,10 @@ const PITCH: float = 40.0
 const MIN_ZOOM: float = 12.0
 const PREFERRED_ZOOM: float = 19.2
 const HEIGHT: float = 36.0
+## The land lies between these heights (metres): the river's incised bed
+## below, the tallest conifer on the upland above, with a margin each way.
+const LAND_LOW: float = -5.0
+const LAND_HIGH: float = 12.0
 const TOUCH_DESIGN_PX: float = 60.0
 const TOUCH_FLOOR_PX: float = 60.0
 const INK_RADIUS_PX: float = 30.0
@@ -22,6 +26,16 @@ const INK_GAP_PX: float = 8.0
 
 static func touch_size(stage: Vector2) -> float:
 	return maxf(TOUCH_FLOOR_PX, TOUCH_DESIGN_PX*stage.y/820.0)
+
+## The near and far clip distances that hold the land at view height `zoom`,
+## and no more. An orthographic camera's directional shadow covers its whole
+## near-to-far slice (the engine ignores the light's max distance for one), so
+## this slab is also how far the shadow reaches and what it spends its texels on.
+static func depth_range(zoom: float) -> Vector2:
+	var pitch: float = deg_to_rad(PITCH)
+	var half: float = zoom * 0.5 / tan(pitch)
+	return Vector2(maxf(0.05, (HEIGHT - LAND_HIGH) / sin(pitch) - half),
+		(HEIGHT - LAND_LOW) / sin(pitch) + half)
 
 static func projected_plane(point: Vector3) -> Vector2:
 	return Vector2(point.x, point.z*sin(deg_to_rad(PITCH))-point.y*cos(deg_to_rad(PITCH)))
