@@ -91,6 +91,7 @@ static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]
 		await _instant(fails, tree, host, content, room)
 		await _sound(fails, tree, host, content, room)
 	await _settings_paths(fails, tree, host, content)
+	await _in_a_run(fails, tree, host, content)
 	Preferences.active = kept
 
 
@@ -329,6 +330,47 @@ static func _settings_paths(fails: Array[String], tree: SceneTree, host: SubView
 		else:
 			_check(fails, main._choice_screen is TitleScreen and main._choice_screen != title,
 				"Erase Everything did not rebuild a fresh title")
+		_dispose(main)
+
+
+## X1: How to Play and Settings from the run menu over the map: the same rooms,
+## the seat's word alone (no title lantern), one cue each way and no click,
+## the map kept beneath.
+static func _in_a_run(fails: Array[String], tree: SceneTree, host: SubViewport,
+		content: ContentDB) -> void:
+	for room: StringName in [&"help", &"settings"]:
+		var main: Main = await _boot(tree, host, content)
+		main._forced_seed = 65702
+		main._new_run()
+		if main._route_screen is DepartureScreen:
+			var offer: Dictionary = main.game.run.quest_scratch["lamplighterOffer"]
+			main._on_lamplighter_confirmed(str(offer["boons"][0]), main.game.run.art)
+		if main._map_screen == null or main._route_screen is DepartureStaging:
+			main._show_map()
+		await tree.process_frame
+		var map: Control = main._map_screen
+		main._show_run_menu()
+		var spy: SpyBus = main._sfx_bus as SpyBus
+		spy.heard.clear()
+		var menu: RunMenuPanel = main._modal as RunMenuPanel
+		if menu == null:
+			_check(fails, false, "X1 %s: the run menu did not open" % room)
+			_dispose(main)
+			continue
+		menu._request(room)
+		var opened: LeadlightRoomHost = main._modal as LeadlightRoomHost
+		_check(fails, opened != null and main._passage.lent_title() == null
+				and not opened.seat().lantern_hit().visible,
+			"X1 %s: the room in a run is not the room with the word alone" % room)
+		await _step(tree, main, 40)
+		if opened != null:
+			opened.leave()
+		await _step(tree, main, 40)
+		_check(fails, main._modal == null and main._map_screen == map,
+			"X1 %s: leaving did not return to the map as it was" % room)
+		_check(fails, spy.heard.count(&"roomOpen") == 1 and spy.heard.count(&"roomClose") == 1
+				and not spy.heard.has(&"click"),
+			"X1 %s: the run menu's room was not one roomOpen and one roomClose: %s" % [room, spy.heard])
 		_dispose(main)
 
 

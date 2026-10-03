@@ -101,7 +101,10 @@ func _on_scrim_input(event: InputEvent) -> void:
 
 
 func _request(action: StringName) -> void:
-	_sfx.play(&"click")
+	# A room opening is heard as the room (one cue per tap,
+	# docs/design/2026-10-03-title-rooms §2.9).
+	if action != &"help" and action != &"settings":
+		_sfx.play(&"click")
 	match action:
 		&"help":
 			help_requested.emit()

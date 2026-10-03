@@ -85,6 +85,8 @@ var _relanguage: bool = false
 ## Set while Settings gives way to its Erase question: it sinks, and the lantern
 ## stays at the seat for the answer.
 var _sinking: bool = false
+## Set while a room is opened already arrived (Settings at boot, `--settings`).
+var _land_rooms: bool = false
 ## Above RunHud's z 100 (run_hud.gd:37): the veil must outdraw the chrome it
 ## subdues, or a frozen HUD is the brightest thing on a veiled screen.
 const MODAL_Z: int = 200
@@ -601,7 +603,10 @@ func _ready() -> void:
 	else:
 		_route_idle()
 	if show_settings:
+		# Opened at boot it lands whole, with no passage (§4.5).
+		_land_rooms = true
 		_show_settings()
+		_land_rooms = false
 	if launch_timing:
 		_report_launch()
 	if performance_probe:
@@ -1145,7 +1150,8 @@ func _show_overlay(screen: Control, freeze: bool = true) -> void:
 	# the room opens over (docs/design/2026-10-03-title-rooms §2).
 	if screen is LeadlightRoomHost:
 		var title: TitleScreen = _choice_screen as TitleScreen
-		_passage_node().arrive(screen as LeadlightRoomHost, title, _room_word, faded, _relanguage)
+		_passage_node().arrive(screen as LeadlightRoomHost, title, _room_word, faded,
+			_relanguage or _land_rooms)
 	_room_word = ""
 
 
