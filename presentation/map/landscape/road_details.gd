@@ -65,7 +65,6 @@ static func build(terrain: Node3D) -> void:
 		Meshes.node(terrain,Meshes.finish(stone),material,"Embedded road fragments")
 	if fallen>0:
 		Meshes.node(terrain,Meshes.finish(leaves),material,"Fallen verge leaves").cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	print("ROAD_DETAILS ",JSON.stringify({"groups":groups,"fragments":fragments,"leaves":fallen,"slate_remnants":slabs}))
 
 static func _slate(surface: SurfaceTool, at: Vector3, rng: RandomNumberGenerator) -> void:
 	var radius: float = rng.randf_range(.10,.20)

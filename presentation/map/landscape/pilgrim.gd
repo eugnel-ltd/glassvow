@@ -4,6 +4,10 @@ const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 var cloak: Node3D
 var lamp: Node3D
 var boots: Array[Node3D] = []
+## The run's Flame: the lantern's glass and the light it throws (`set_flame`).
+var flame: Color = Color("e9ab54")
+var _ember: StandardMaterial3D
+var _light: OmniLight3D
 
 func _ready() -> void:
 	var cloth: StandardMaterial3D = Meshes.material(Color("38333e"))
@@ -58,25 +62,36 @@ func _ready() -> void:
 	add_child(lamp)
 	Meshes.box(lamp,Vector3(0,.17,0),Vector3(.18,.035,.18),iron,"Lantern cap")
 	Meshes.box(lamp,Vector3(0,-.07,0),Vector3(.17,.035,.17),iron,"Lantern foot")
-	var glass: StandardMaterial3D = Meshes.material(Color("edbd71"))
-	glass.emission_enabled = true
-	glass.emission = Color("e9ab54")
-	glass.emission_energy_multiplier = 1.8
-	Meshes.box(lamp,Vector3(0,.05,0),Vector3(.115,.20,.115),glass,"Carried ember")
+	_ember = Meshes.material(Color("edbd71"))
+	_ember.emission_enabled = true
+	_ember.emission_energy_multiplier = 1.8
+	Meshes.box(lamp,Vector3(0,.05,0),Vector3(.115,.20,.115),_ember,"Carried ember")
 	for x: float in [-1,1]:
 		for z: float in [-1,1]:
 			Meshes.box(lamp,Vector3(x*.073,.05,z*.073),Vector3(.022,.24,.022),iron,"Lantern corner")
-	var light: OmniLight3D = OmniLight3D.new()
-	light.light_color = Color("e9b76d")
-	light.light_energy = .32
-	light.omni_range = 1.4
-	lamp.add_child(light)
+	_light = OmniLight3D.new()
+	_light.light_energy = .32
+	_light.omni_range = 1.4
+	lamp.add_child(_light)
+	set_flame(flame)
 	Meshes.box(lamp,Vector3(0,.21,0),Vector3(.025,.12,.025),iron,"Lantern handle")
 
 func pose(distance: float, walking: bool) -> void:
+	if cloak == null:
+		return
 	cloak.rotation.z = sin(distance*5)*.025 if walking else 0.0
 	lamp.rotation.x = sin(distance*5)*.12 if walking else 0.0
 	for i: int in range(boots.size()):
 		var stride: float = sin(distance*5+i*PI) if walking else 0.0
 		boots[i].position.z = .05+stride*.09
 		boots[i].position.y = .06+maxf(0,stride)*.045
+
+
+## Burns the carried lantern in the run's Flame colour: its glass and its light.
+func set_flame(colour: Color) -> void:
+	flame = colour
+	if _ember == null:
+		return
+	_ember.albedo_color = colour.lightened(0.25)
+	_ember.emission = colour
+	_light.light_color = colour.lightened(0.15)

@@ -5,6 +5,7 @@ const Paths = preload("res://presentation/map/landscape/road_paths.gd")
 const Surfaces = preload("res://presentation/map/landscape/bridge_surfaces.gd")
 
 static func build(parent: Node3D, lines: Array[PackedVector3Array], elevated: Callable, paint: ShaderMaterial) -> int:
+	var _t0: int = Time.get_ticks_msec()
 	var top: SurfaceTool = SurfaceTool.new()
 	top.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var masonry: SurfaceTool = SurfaceTool.new()
@@ -57,14 +58,18 @@ static func build(parent: Node3D, lines: Array[PackedVector3Array], elevated: Ca
 		chains.append({"points":points,"lengths":lengths,"weights":weights})
 	if spans.is_empty():
 		return 0
+	parent.build_timings_ms["roads_chains"] = Time.get_ticks_msec() - _t0
 	var surface: Surfaces = Surfaces.new()
 	surface.setup(spans,Callable(parent,"surface_height"),Callable(parent,"bridge_height"))
+	parent.build_timings_ms["roads_setup"] = Time.get_ticks_msec() - _t0
 	surface.append(top,masonry)
+	parent.build_timings_ms["roads_append"] = Time.get_ticks_msec() - _t0
 	parent.set_meta("bridge_field",surface)
 	# _stonework is appended to its own mesh so imported box formats cannot reset the barrel.
 	var kerbs: SurfaceTool = SurfaceTool.new()
 	kerbs.begin(Mesh.PRIMITIVE_TRIANGLES)
 	_stonework(kerbs,chains,surface,lines)
+	parent.build_timings_ms["roads_stonework"] = Time.get_ticks_msec() - _t0
 	Meshes.node(parent,Meshes.finish(kerbs),Meshes.material(Color("49454b")),"Bridge parapet stones")
 	var deck_paint: ShaderMaterial = paint.duplicate() as ShaderMaterial
 	deck_paint.set_shader_parameter("bridge_surface",true)
@@ -76,8 +81,7 @@ static func build(parent: Node3D, lines: Array[PackedVector3Array], elevated: Ca
 
 static func _stonework(masonry: SurfaceTool, chains: Array[Dictionary], surface: Surfaces,
 		lines: Array[PackedVector3Array]) -> void:
-	var box: BoxMesh = BoxMesh.new()
-	box.size = Vector3.ONE
+	var box: Mesh = Meshes.unit_box()
 	for chain: Dictionary in chains:
 		var points: PackedVector3Array = chain["points"]
 		var lengths: PackedFloat32Array = chain["lengths"]

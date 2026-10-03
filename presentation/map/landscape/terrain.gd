@@ -6,8 +6,6 @@ const River = preload("res://presentation/map/landscape/river.gd")
 var bounds: Rect2 = Rect2(-48,-30,96,60)
 var river_half_length: float = 35.0
 var restored: bool = false
-var adaptive_river: bool = false
-var river_centre_x: float = -5.0
 var failure: String = ""
 var lines: Array[PackedVector3Array] = []
 var source_edges: Dictionary = {}
@@ -17,15 +15,35 @@ var bridge_spans: int = 0
 var greybox: bool = true
 var height_cache: Dictionary = {}
 var build_timings_ms: Dictionary = {}
+## `distance_to_roads`: grid cell and the distance it answers exactly within.
+const ROAD_CELL_M: float = 6.0
+const ROAD_REACH_M: float = 6.0
+var _segment_cells: Dictionary = {}
+var _grid: PackedFloat32Array = PackedFloat32Array()
+var _columns: int = 0
+var _rows: int = 0
+var _baked: Array = []
+var _bake_lock: Mutex = Mutex.new()
+var _heights_task: int = -1
+var _heights_started: int = 0
 var landform: RefCounted = preload("res://presentation/map/landscape/landform.gd").new()
 const CELL: float = .5
 const WATER: float = River.LEVEL
 
-func build(sample: Dictionary, grey: bool, extent: Rect2 = Rect2(-48,-30,96,60), cache: Resource = null) -> void:
+## The whole build on the calling thread: `prepare`, the heights, then `finish`.
+func build(sample: Dictionary, grey: bool, extent: Rect2 = Rect2(-48,-30,96,60)) -> void:
+	prepare(sample, grey, extent)
+	start_heights()
+	finish_heights()
+	finish()
+
+
+## Reads the source and fixes the landform; cheap, on the calling thread.
+func prepare(sample: Dictionary, grey: bool, extent: Rect2 = Rect2(-48,-30,96,60)) -> void:
 	var lo: Vector2 = (extent.position/CELL).floor()*CELL
 	var hi: Vector2 = (extent.end/CELL).ceil()*CELL
 	bounds = Rect2(lo,hi-lo)
-	river_half_length = maxf(absf(lo.y),absf(hi.y))+5.0
+	river_half_length = maxf(absf(lo.y),absf(hi.y))
 	set_meta("world_bounds",bounds)
 	greybox = grey
 	source_edges = sample["edges"]
@@ -35,15 +53,6 @@ func build(sample: Dictionary, grey: bool, extent: Rect2 = Rect2(-48,-30,96,60),
 		for point: Array in edge["centerline"]:
 			points.append(Meshes.v3(point))
 		lines.append(points)
-	if adaptive_river:
-		landform.identify_passages(lines)
-		var cuts: Array[Dictionary] = landform.cuts
-		var course: Dictionary = preload("res://presentation/map/landscape/river_course.gd").choose(cuts,bounds)
-		if course["ok"]!=true:
-			failure="No river course clears the physical dry passages"
-			return
-		river_centre_x=course["centre_x"]
-		landform.river_centre_x=river_centre_x
 	var source_points: PackedVector3Array = []
 	for raw: Array in anchors.values():
 		source_points.append(Meshes.v3(raw))
@@ -54,44 +63,131 @@ func build(sample: Dictionary, grey: bool, extent: Rect2 = Rect2(-48,-30,96,60),
 	var started: int = Time.get_ticks_msec()
 	landform.setup(lines)
 	build_timings_ms["landform"] = Time.get_ticks_msec()-started
-	if cache != null and not cache.get("meshes").is_empty():
-		started = Time.get_ticks_msec()
-		_restore(cache)
-		build_timings_ms["cache_restore"] = Time.get_ticks_msec()-started
-		restored = true
-		return
-	started = Time.get_ticks_msec()
+
+
+## The land's meshes, roads, bridges and rivers. Touches only this node's own
+## subtree, so it may run on a worker while the node is outside the tree.
+func finish() -> void:
+	var started: int = Time.get_ticks_msec()
 	_land()
 	build_timings_ms["ground"] = Time.get_ticks_msec()-started
 	started = Time.get_ticks_msec()
 	_roads()
 	build_timings_ms["roads"] = Time.get_ticks_msec()-started
 	started = Time.get_ticks_msec()
-	var river: River = River.new()
-	add_child(river)
-	river.build(self)
+	for cut: float in MapRavine.CUTS:
+		var river: River = River.new()
+		river.cut = cut
+		add_child(river)
+		river.build(self)
 	build_timings_ms["river"] = Time.get_ticks_msec()-started
 
+
+## Distance from `p` to the nearest road centreline (XZ). Exact within
+## `ROAD_REACH_M`; beyond it the answer is only "at least `ROAD_REACH_M`", which
+## is all every caller asks (their thresholds are a few metres). Segments are
+## found through a grid built once, so a query reads a few cells rather than
+## every road.
 func distance_to_roads(p: Vector3) -> float:
-	var best: float = INF
+	if _segment_cells.is_empty():
+		_index_roads()
 	var q: Vector2 = Vector2(p.x, p.z)
-	for line: PackedVector3Array in lines:
-		for i: int in range(line.size() - 1):
-			var a: Vector2 = Vector2(line[i].x, line[i].z)
-			var b: Vector2 = Vector2(line[i + 1].x, line[i + 1].z)
-			best = minf(best, q.distance_to(Geometry2D.get_closest_point_to_segment(q, a, b)))
+	var best: float = ROAD_REACH_M
+	var cx: int = floori(q.x / ROAD_CELL_M)
+	var cz: int = floori(q.y / ROAD_CELL_M)
+	for x: int in range(cx - 1, cx + 2):
+		for z: int in range(cz - 1, cz + 2):
+			var bucket: PackedVector4Array = _segment_cells.get(Vector2i(x, z), PackedVector4Array())
+			for seg: Vector4 in bucket:
+				var a: Vector2 = Vector2(seg.x, seg.y)
+				var b: Vector2 = Vector2(seg.z, seg.w)
+				best = minf(best, q.distance_to(Geometry2D.get_closest_point_to_segment(q, a, b)))
 	return best
 
+
+func _index_roads() -> void:
+	_segment_cells[Vector2i(1 << 20, 1 << 20)] = PackedVector4Array()
+	for line: PackedVector3Array in lines:
+		for i: int in range(line.size() - 1):
+			var seg: Vector4 = Vector4(line[i].x, line[i].z, line[i + 1].x, line[i + 1].z)
+			var lo: Vector2 = Vector2(minf(seg.x, seg.z), minf(seg.y, seg.w))
+			var hi: Vector2 = Vector2(maxf(seg.x, seg.z), maxf(seg.y, seg.w))
+			for x: int in range(floori(lo.x / ROAD_CELL_M), floori(hi.x / ROAD_CELL_M) + 1):
+				for z: int in range(floori(lo.y / ROAD_CELL_M), floori(hi.y / ROAD_CELL_M) + 1):
+					var key: Vector2i = Vector2i(x, z)
+					var bucket: PackedVector4Array = _segment_cells.get(key, PackedVector4Array())
+					bucket.append(seg)
+					_segment_cells[key] = bucket
+
 func stream_distance(x: float, z: float) -> float:
-	return absf(x - river_centre_x - sin(z * 0.12) * 2.2)
+	return River.distance(x, z)
 
 func height_at(x: float, z: float) -> float:
+	var fx: float = (x - bounds.position.x) / CELL
+	var fz: float = (z - bounds.position.y) / CELL
+	var ix: int = roundi(fx)
+	var iz: int = roundi(fz)
+	if not _grid.is_empty() and absf(fx - ix) < 0.0001 and absf(fz - iz) < 0.0001 \
+			and ix >= 0 and iz >= 0 and ix < _columns and iz < _rows:
+		return _grid[ix * _rows + iz]
 	var key: Vector2 = Vector2(x,z)
 	if height_cache.has(key):
 		return height_cache[key]
 	var result: float = landform.height(x,z)
 	height_cache[key] = result
 	return result
+
+
+## Every land vertex's height, once, side by side on the worker pool: one
+## column per task (`start_heights`, `finish_heights`). `landform.height` is
+## pure over data `setup` fixed, so the columns share nothing but what they
+## read. Later surface queries on the lattice read this grid instead of
+## re-solving the landform.
+## `parallel` spreads the columns over the worker pool; a caller that is
+## itself a pool task bakes them in turn (it may not wait on the pool).
+func start_heights(parallel: bool = true) -> void:
+	_heights_started = Time.get_ticks_msec()
+	_columns = int(bounds.size.x / CELL) + 1
+	_rows = int(bounds.size.y / CELL) + 1
+	_baked.clear()
+	_baked.resize(_columns)
+	if not parallel:
+		for ix: int in range(_columns):
+			_bake_column(ix)
+		return
+	_heights_task = WorkerThreadPool.add_group_task(_bake_column, _columns, -1, true,
+		"journey land heights")
+
+
+func heights_ready() -> bool:
+	return _heights_task < 0 or WorkerThreadPool.is_group_task_completed(_heights_task)
+
+
+## Joins the height columns into the grid (waiting for them if need be).
+func finish_heights() -> void:
+	if _heights_task >= 0:
+		WorkerThreadPool.wait_for_group_task_completion(_heights_task)
+		_heights_task = -1
+	var grid: PackedFloat32Array = PackedFloat32Array()
+	grid.resize(_columns * _rows)
+	for ix: int in range(_columns):
+		var column: PackedFloat32Array = _baked[ix]
+		for iz: int in range(_rows):
+			grid[ix * _rows + iz] = column[iz]
+	_baked.clear()
+	_grid = grid
+	build_timings_ms["heights"] = Time.get_ticks_msec() - _heights_started
+
+
+func _bake_column(ix: int) -> void:
+	var column: PackedFloat32Array = PackedFloat32Array()
+	column.resize(_rows)
+	var x: float = bounds.position.x + ix * CELL
+	for iz: int in range(_rows):
+		column[iz] = landform.height(x, bounds.position.y + iz * CELL)
+	_bake_lock.lock()
+	_baked[ix] = column
+	_bake_lock.unlock()
 
 func surface_height(x: float, z: float) -> float:
 	# Match the actual two triangles of each land cell, not the curved source
@@ -138,38 +234,65 @@ func present(p: Vector3, upper: bool = false) -> Vector3:
 	return Vector3(p.x,height,p.z)
 
 func is_dry(p: Vector3) -> bool:
-	return not River.contains(p.x,p.z,river_half_length,river_centre_x) or surface_height(p.x,p.z)>WATER+.20
+	return not River.contains(p.x,p.z,river_half_length) or surface_height(p.x,p.z)>WATER+.20
 
 func is_elevated(p: Vector3) -> bool:
 	return p.y > 0.015 or stream_distance(p.x, p.z) < 3.8
 
+## The land in chunks of `CHUNK_CELLS` square, so the camera and the shadow
+## pass cull what they cannot see. Normals come from the height grid, not from
+## each chunk's own triangles, so no seam shows where two chunks meet. Every
+## chunk shares one material; the first keeps the name other parts look up.
+const CHUNK_CELLS: int = 32
+
+
 func _land() -> void:
-	var surface: SurfaceTool = SurfaceTool.new()
-	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	# Share exact grid vertices. SurfaceTool preserves the original smooth
-	# normals and winding, without uploading each corner six times.
+	var _land_started: int = Time.get_ticks_msec()
 	var columns: int = int(bounds.size.x/CELL)+1
 	var rows: int = int(bounds.size.y/CELL)+1
-	for ix: int in range(columns):
-		for iz: int in range(rows):
-			var x: float = bounds.position.x+ix*CELL
-			var z: float = bounds.position.y+iz*CELL
-			var shade: float = .96+.05*sin(x*.22+z*.15)
-			var colour: Color = Color("555663") if greybox else Color("302b30")
-			surface.set_color(colour*shade)
-			surface.add_vertex(Vector3(x,height_at(x,z),z))
-	for ix: int in range(columns-1):
-		for iz: int in range(rows-1):
-			var first: int = ix*rows+iz
-			for index: int in [first,first+rows+1,first+1,first,first+rows,first+rows+1]:
-				surface.add_index(index)
+	var meshes: Array[ArrayMesh] = []
+	for cx: int in range(0, columns - 1, CHUNK_CELLS):
+		for cz: int in range(0, rows - 1, CHUNK_CELLS):
+			meshes.append(_land_chunk(cx, cz, mini(cx + CHUNK_CELLS, columns - 1),
+				mini(cz + CHUNK_CELLS, rows - 1), rows))
+	build_timings_ms["ground_heights"] = Time.get_ticks_msec() - _land_started
+	var paint_started: int = Time.get_ticks_msec()
 	var mat: StandardMaterial3D = Meshes.material(Color.WHITE)
 	mat.vertex_color_use_as_albedo = true
 	mat.vertex_color_is_srgb = true
 	var ground_mat: Material = mat if greybox else Paint.create(lines, is_elevated, bounds)
+	build_timings_ms["ground_paint"] = Time.get_ticks_msec() - paint_started
 	if ground_mat is ShaderMaterial:
-		ground_mat.set_shader_parameter("river_centre_x",river_centre_x)
-	Meshes.node(self, Meshes.finish(surface), ground_mat, "Quiet sculpted ground")
+		ground_mat.set_shader_parameter("river_cuts",Vector2(MapRavine.CUTS[0],MapRavine.CUTS[1]))
+		ground_mat.set_shader_parameter("channel",River.CHANNEL)
+	for i: int in range(meshes.size()):
+		Meshes.node(self, meshes[i], ground_mat, "Quiet sculpted ground" if i == 0 else "Ground chunk %d" % i)
+
+
+func _land_chunk(x0: int, z0: int, x1: int, z1: int, rows: int) -> ArrayMesh:
+	var surface: SurfaceTool = SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var span: int = z1 - z0 + 1
+	for ix: int in range(x0, x1 + 1):
+		for iz: int in range(z0, z1 + 1):
+			var x: float = bounds.position.x+ix*CELL
+			var z: float = bounds.position.y+iz*CELL
+			var shade: float = .96+.05*sin(x*.22+z*.15)
+			var colour: Color = Color("555663") if greybox else Color("302b30")
+			var left: float = _grid[maxi(ix - 1, 0) * rows + iz]
+			var right: float = _grid[mini(ix + 1, _columns - 1) * rows + iz]
+			var near: float = _grid[ix * rows + maxi(iz - 1, 0)]
+			var far: float = _grid[ix * rows + mini(iz + 1, rows - 1)]
+			surface.set_color(colour*shade)
+			surface.set_normal(Vector3(left - right, 2.0 * CELL, near - far).normalized())
+			surface.add_vertex(Vector3(x,_grid[ix * rows + iz],z))
+	for ix: int in range(x1 - x0):
+		for iz: int in range(z1 - z0):
+			var first: int = ix*span+iz
+			for index: int in [first,first+span+1,first+1,first,first+span,first+span+1]:
+				surface.add_index(index)
+	return surface.commit()
+
 
 func _roads() -> void:
 	if not greybox:
@@ -226,29 +349,3 @@ func _roads() -> void:
 	Meshes.node(self, Meshes.finish(top), mat, "Compiled roads").cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	if bridge_spans > 0:
 		Meshes.node(self, Meshes.finish(bridge), Meshes.material(Color("65616b")), "Supported bridge spans")
-
-func _restore(cache: Resource) -> void:
-	var spans: Array[Dictionary] = []
-	var saved_spans: Array = cache.get("bridge_spans")
-	spans.assign(saved_spans)
-	if not spans.is_empty():
-		var field: RefCounted = preload("res://presentation/map/landscape/bridge_surfaces.gd").new()
-		field.setup(spans,surface_height,bridge_height)
-		set_meta("bridge_field",field)
-	var rows: Array = cache.get("meshes")
-	for row: Dictionary in rows:
-		var item: MeshInstance3D = River.new() if row["water"] else MeshInstance3D.new()
-		item.name = row["name"]
-		item.mesh = row["mesh"]
-		var material: Material = row["material"]
-		item.material_override = material.duplicate() as Material
-		item.transform = row["transform"]
-		item.layers = row["layers"]
-		item.cast_shadow = row["shadows"]
-		add_child(item)
-		if item is River:
-			item.field_image = row["field"]
-			item.half_length = river_half_length
-			item.centre_x = river_centre_x
-			item.field_size = item.field_image.get_size()
-			item.set_time(0)

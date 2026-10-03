@@ -6,8 +6,10 @@ const ShaderSource: Shader = preload("res://presentation/map/landscape/terrain_p
 const Paths = preload("res://presentation/map/landscape/road_paths.gd")
 
 static func create(lines: Array[PackedVector3Array], _elevated: Callable, bounds: Rect2 = Rect2(-48,-30,96,60)) -> ShaderMaterial:
-	var width: int = ceili(bounds.size.x*16)
-	var height: int = ceili(bounds.size.y*16)
+	# 8 texels a metre: the road's edge is a smooth distance, read bilinearly,
+	# and a quarter of the archive's 16 cut its build by about three quarters.
+	var width: int = ceili(bounds.size.x*8)
+	var height: int = ceili(bounds.size.y*8)
 	var values: PackedFloat32Array = []
 	values.resize(width * height)
 	values.fill(4.0)

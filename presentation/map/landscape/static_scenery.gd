@@ -2,27 +2,51 @@ extends Node3D
 ## Static imported meshes share spatially bounded draw batches. Placement anchors
 ## retain identity; each actual GPU instance is linked back to its source part.
 const Surfaces = preload("res://presentation/map/landscape/asset_surfaces.gd")
-const CELL: float = 16.0
+const CELL: float = 32.0
+## Ground-hugging kinds whose shadows the 55° camera barely sees: they render
+## lit but stay out of the shadow pass, which keeps that pass inside the A12
+## budget (trees, banks, ridges and the gateway still cast).
+const NO_SHADOW: PackedStringArray = ["ash-heath", "ash-copse", "ash-fern", "ash-bramble", "slate-scree"]
 var failure: String = ""
 var templates: Dictionary = {}
 var groups: Dictionary = {}
 var material_pool: Dictionary = {}
 var draw_count: int = 0
+## Every kit scene's parts, collected once on the main thread
+## (`prepare_templates`): collecting duplicates each part's mesh, which reads it
+## back from the renderer and so may not run on the worker that builds the land.
+static var _shared: Dictionary = {}
+
+
+static func prepare_templates(paths: Dictionary) -> String:
+	for path: String in paths:
+		if _shared.has(path):
+			continue
+		var packed: PackedScene = load(path) as PackedScene
+		if packed == null:
+			return "Cannot load static scenery: " + path
+		var kind: String = paths[path]
+		var original: Node3D = packed.instantiate() as Node3D
+		var pool: Dictionary = {}
+		var surfaces: int = Surfaces.prepare(original, pool)
+		if (kind.begins_with("conifer") or kind.begins_with("ash-")) and kind not in ["conifer-snag","ash-fern"] and surfaces==0:
+			original.free()
+			return "Static foliage has no prepared cut-out surface: "+kind
+		var parts: Array[Dictionary] = []
+		var failure: String = _collect(original, original.transform.affine_inverse(), parts)
+		_shared[path] = {"root":original.transform,"parts":parts,"kind":kind}
+		original.free()
+		if not failure.is_empty():
+			return failure
+	return ""
+
+
 func prepare(path: String, kind: String) -> Node3D:
 	if not templates.has(path):
-		var packed: PackedScene = load(path) as PackedScene
-		if packed==null:
-			failure="Cannot load static scenery: "+path
+		if not _shared.has(path):
+			failure = "Static scenery template was not prepared: " + path
 			return null
-		var original: Node3D = packed.instantiate() as Node3D
-		var surfaces: int = Surfaces.prepare(original,material_pool)
-		if (kind.begins_with("conifer") or kind.begins_with("ash-")) and kind not in ["conifer-snag","ash-fern"] and surfaces==0:
-			failure="Static foliage has no prepared cut-out surface: "+kind
-		var parts: Array[Dictionary] = []
-		_collect(original,original.transform.affine_inverse(),parts)
-		templates[path]={"root":original.transform,"parts":parts}
-		original.free()
-		if not failure.is_empty(): return null
+		templates[path] = _shared[path]
 	var anchor: Node3D = Node3D.new()
 	anchor.name=kind
 	anchor.transform=templates[path]["root"]
@@ -35,7 +59,7 @@ func register(anchor: Node3D) -> void:
 	var cell: Vector2i = Vector2i(floori(anchor.position.x/CELL),floori(anchor.position.z/CELL))
 	for index: int in range(parts.size()):
 		var key: String = path+"/%d/%d/%d"%[index,cell.x,cell.y]
-		if not groups.has(key): groups[key]={"part":parts[index],"placements":[]}
+		if not groups.has(key): groups[key]={"part":parts[index],"placements":[],"kind":templates[path]["kind"]}
 		groups[key]["placements"].append(anchor)
 func finish() -> void:
 	for key: String in groups:
@@ -49,7 +73,7 @@ func finish() -> void:
 		var draw: MultiMeshInstance3D = MultiMeshInstance3D.new()
 		draw.multimesh=multi
 		draw.layers=part["layers"]
-		draw.cast_shadow=part["shadow"]
+		draw.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if str(groups[key]["kind"]) in NO_SHADOW else part["shadow"]
 		add_child(draw)
 		for i: int in range(anchors.size()):
 			var anchor: Node3D = anchors[i]
@@ -57,19 +81,21 @@ func finish() -> void:
 			var links: Array = anchor.get_meta("static_draws")
 			links.append({"draw":draw,"index":i,"part":relative})
 		draw_count+=1
-func _collect(node: Node, parent: Transform3D, parts: Array[Dictionary]) -> void:
+static func _collect(node: Node, parent: Transform3D, parts: Array[Dictionary]) -> String:
 	var pose: Transform3D = parent
 	if node is Node3D:
 		var spatial: Node3D = node as Node3D
-		if not spatial.visible: return
+		if not spatial.visible: return ""
 		pose=parent*spatial.transform
 	if node is MeshInstance3D:
 		var item: MeshInstance3D = node as MeshInstance3D
 		if item.skin!=null or not item.mesh is ArrayMesh:
-			failure="Static scenery contains unsupported deforming geometry"
-			return
+			return "Static scenery contains unsupported deforming geometry"
 		var mesh: ArrayMesh = item.mesh.duplicate() as ArrayMesh
 		for surface: int in range(mesh.get_surface_count()):
 			mesh.surface_set_material(surface,item.get_active_material(surface))
 		parts.append({"mesh":mesh,"transform":pose,"layers":item.layers,"shadow":item.cast_shadow})
-	for child: Node in node.get_children(): _collect(child,pose,parts)
+	for child: Node in node.get_children():
+		var failure: String = _collect(child,pose,parts)
+		if not failure.is_empty(): return failure
+	return ""

@@ -1,5 +1,7 @@
 shader_type spatial;
-uniform float river_centre_x = -5.0;
+// The ravine's line: MapRavine.centre(river_cut, z), on the GPU's sine.
+uniform float river_cut = 0.0;
+uniform float channel = 1.0;
 uniform float river_length_m = 70.0;
 render_mode cull_disabled, diffuse_burley, specular_schlick_ggx;
 uniform sampler2D bathymetry : filter_linear, repeat_disable;
@@ -14,9 +16,10 @@ float noise(vec2 p) {
  vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
  return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);
 }
-vec2 river_uv(vec2 p) { return vec2((p.x-river_centre_x-sin(p.y*.12)*2.2)/8.0+.5,p.y/river_length_m+.5); }
+float river_line(float z) { return river_cut+sin(z*.19)*1.4+sin(z*.61)*.3; }
+vec2 river_uv(vec2 p) { return vec2((p.x-river_line(p.y))/(8.0*channel)+.5,p.y/river_length_m+.5); }
 vec2 current(vec2 p) {
- vec2 q=vec2(p.x-river_centre_x-sin(p.y*.12)*2.2,p.y);
+ vec2 q=vec2(p.x-river_line(p.y),p.y);
  // Streamlines bend around the immersed support footprints.
  for(int i=0;i<pier_count;i++) {
   vec2 delta=p-piers[i].xy;

@@ -5,6 +5,7 @@ const Terrain = preload("res://presentation/map/landscape/terrain.gd")
 var stone: SurfaceTool = SurfaceTool.new()
 var stone_count: int = 0
 var terrain: Terrain
+var _unit: Mesh = Meshes.unit_box()
 
 func begin(surface: Terrain) -> void:
 	terrain = surface
@@ -26,9 +27,8 @@ func _pad(at: Vector3, footprint: Vector2, yaw: float) -> void:
 			var p: Vector3 = at + Vector3(x * footprint.x, 0, z * footprint.y).rotated(Vector3.UP, yaw)
 			low = minf(low, terrain.surface_height(p.x, p.z) - 0.06)
 	var depth: float = at.y + 0.025 - low
-	var block: BoxMesh = BoxMesh.new()
-	block.size = Vector3(footprint.x, depth, footprint.y)
-	stone.append_from(block, 0, Transform3D(Basis(Vector3.UP, yaw), Vector3(at.x, low + depth * 0.5, at.z)))
+	stone.append_from(_unit, 0, Transform3D(Basis(Vector3.UP, yaw).scaled_local(
+		Vector3(footprint.x, depth, footprint.y)), Vector3(at.x, low + depth * 0.5, at.z)))
 	stone_count += 1
 
 func finish() -> void:

@@ -44,6 +44,28 @@ const PROFILES: Dictionary = {
 	"amber-arch": Vector2(2.65, 5.50),
 }
 
+## Every kit scene, loaded once on the main thread and held for the process,
+## so a build on a worker only ever reads the resource cache (an uncached
+## `load` from a worker thread can return null in Godot 4.7.2).
+static var _held: Array[PackedScene] = []
+
+
+static func preload_scenes() -> void:
+	if not _held.is_empty():
+		return
+	var paths: Dictionary = {}
+	for kind: String in PROFILES:
+		var path: String = "res://assets/art/map-journey/%s.glb" % kind
+		var scene: PackedScene = load(path) as PackedScene
+		if scene != null:
+			_held.append(scene)
+			if kind != "amber-arch":
+				paths[path] = kind
+	var failure: String = preload("res://presentation/map/landscape/static_scenery.gd").prepare_templates(paths)
+	if not failure.is_empty():
+		push_error("Journey kit: " + failure)
+
+
 func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dictionary = {}, cache: Resource = null) -> void:
 	for kind: String in ["conifer","conifer-spire","conifer-wind","conifer-snag"]:
 		var envelope: PackedVector2Array = Envelope.load_conifer(kind)
@@ -82,8 +104,9 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 		replay_timings["batches"]=(Time.get_ticks_usec()-replay_start)/1000.0
 		build_complete = true
 		return
+	# The gateway arch is dressing: a layout with no straight dry leg for it is
+	# drawn without one rather than failing the map.
 	_landmark(grey)
-	if not failure.is_empty(): return
 	for role: String in heroes:
 		var hero: Dictionary = heroes[role]
 		var kind: String = hero["asset_id"]
@@ -143,14 +166,11 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 	var counts: Dictionary = {}
 	for item: Dictionary in placed:
 		counts[item["kind"]] = int(str(counts.get(item["kind"],0))) + 1
-	print("WORKSHOP_VARIETIES ",JSON.stringify(counts))
 	build_complete = true
 
 func _landmark(grey: bool) -> void:
 	var site: Dictionary = GatewaySites.choose(terrain, anchors)
 	if site.is_empty():
-		failure = "No clear gateway passage in this workshop sample"
-		push_error(failure)
 		return
 	var at: Vector3 = site["position"]
 	var yaw: float = float(str(site["yaw"]))
@@ -166,7 +186,6 @@ func _landmark(grey: bool) -> void:
 	_companion("conifer", at + Vector3(-5, 0, -7), 1.2, 0.7, grey)
 	_companion("conifer-spire", at + Vector3(1, 0, -8), 1.15, -0.4, grey)
 	_companion("conifer", at + Vector3(6, 0, -5), 1.05, 0.3, grey)
-	print("WORKSHOP_GATEWAY ", JSON.stringify(site))
 
 func _companion(kind: String, target: Vector3, scale_value: float, yaw: float, grey: bool) -> void:
 	var profile: Vector2 = PROFILES[kind] * scale_value
@@ -237,7 +256,7 @@ func _accents(grey: bool) -> void:
 	var groups: Array[Dictionary] = placed.duplicate()
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 7631
-	var hero: Vector3 = groups[0]["position"]
+	var hero: Vector3 = groups[0]["position"] if not groups.is_empty() else Vector3.INF
 	var limits: Dictionary = {"ash-fern":22,"ash-bramble":10,"slate-scree":7,"slate-shard":3,"conifer-wind":3,"conifer-snag":2}
 	var counts: Dictionary = {}
 	for group: Dictionary in groups:
@@ -271,7 +290,6 @@ func _accents(grey: bool) -> void:
 				_place(kind,p,scale_value,angle,grey)
 				counts[kind] = count+1
 				break
-	print("WORKSHOP_ACCENTS ",JSON.stringify(counts))
 
 func clear(p: Vector3, radius: float, height: float, kind: String = "") -> bool:
 	var started: int = Time.get_ticks_usec()

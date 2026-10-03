@@ -6,7 +6,7 @@ var cuts: Array[Dictionary] = []
 var ground_cells: Dictionary = {}
 var abutments: PackedVector2Array = []
 var terrace_centre: Vector2 = Vector2(-19.565,14.756)
-var river_centre_x: float = -5.0
+const River = preload("res://presentation/map/landscape/river.gd")
 
 func setup(lines: Array[PackedVector3Array]) -> void:
 	identify_passages(lines)
@@ -64,14 +64,14 @@ func cut_depth(x: float, z: float) -> float:
 
 func natural_height(x: float, z: float) -> float:
 	var h: float = upland(x,z)-cut_depth(x,z)
-	var river: float = absf(x-river_centre_x-sin(z*.12)*2.2)
+	var river: float = River.distance(x,z)
 	# The steep bank sits back from the water; a dry ledge reads below the deck.
 	var ledge: float = lerpf(-4.15,-2.65,smoothstep(1.15,1.95,river))
 	return lerpf(ledge,h,smoothstep(2.05,3.8,river))
 
 func height(x: float, z: float) -> float:
 	var h: float = natural_height(x,z)
-	if absf(x-river_centre_x-sin(z*.12)*2.2)<3.8:
+	if River.distance(x,z)<3.8:
 		return h
 	var at: Vector2 = Vector2(x,z)
 	var best: float = 2.2

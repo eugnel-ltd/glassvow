@@ -4,7 +4,7 @@ extends RefCounted
 const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 # Subdivide the land's .5 m cells using the same diagonal. An unrelated grid
 # can cut through a land triangle between otherwise sound contact vertices.
-const CELL: float = .125
+const CELL: float = .5
 const HALF: float = .80
 var query_cell_size: float = CELL
 var spans: Array[Dictionary] = []

@@ -1,5 +1,7 @@
 shader_type spatial;
-uniform float river_centre_x = -5.0;
+// The layout's two ravines (MapRavine.CUTS) and the river's channel scale.
+uniform vec2 river_cuts = vec2(-20.5, 10.5);
+uniform float channel = 1.0;
 uniform vec4 world_bounds = vec4(-48,-30,96,60);
 uniform sampler2D route_distance : filter_linear, repeat_disable;
 uniform sampler2D habitat : filter_linear, repeat_disable;
@@ -46,7 +48,8 @@ void fragment() {
  float centre=1.0-smoothstep(.10,.48,d);
  float forest=setting.r;
  float mineral=setting.g;
- float bank=1.0-smoothstep(2.5,5.0,abs(p.x-river_centre_x-sin(p.y*.12)*2.2));
+ float wander=sin(p.y*.19)*1.4+sin(p.y*.61)*.3;
+ float bank=1.0-smoothstep(2.5,5.0,min(abs(p.x-river_cuts.x-wander),abs(p.x-river_cuts.y-wander))/channel);
  float entrance=1.0-smoothstep(1.3,3.8,distance(p,gateway_position));
  vec3 earth=soil_colour.rgb*(.94+.11*broad);
  // Broad slate faces expose the landform; fine noise stays out of open soil.
