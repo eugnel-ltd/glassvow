@@ -364,14 +364,17 @@ static func _title_ceremonial_menu(fails: Array[String]) -> void:
 				# zero width in a live tree: the row grew hundreds of pixels tall
 				# and the switch, centred on it, left the stage (PR #650 capture).
 				# Outside a tree that never shows, so hold the cause itself: the
-				# sentence wraps inside the row and the switch sits by its first line.
+				# sentence wraps inside the row, and the switch stands in its own
+				# row under it (#655: at 18 px the sentence reads across the row),
+				# never centred on the sentence's height.
 				var line: Label = first._consent.find_child("DiagnosticsLine", true, false) as Label
 				var toggle: Control = first._consent.find_child("DiagnosticsToggle", true, false) as Control
 				_check(fails, line != null and line.custom_minimum_size.x >= 120.0
 						and line.custom_minimum_size.x <= first._consent.size.x,
 					"%s %s: the consent sentence has no width to wrap in" % [shape, code])
-				_check(fails, toggle != null and toggle.size_flags_vertical == Control.SIZE_SHRINK_BEGIN,
-					"%s %s: the consent switch is not seated by the first line" % [shape, code])
+				_check(fails, toggle != null and line != null and toggle.get_parent() != line.get_parent()
+						and toggle.get_parent().get_index() > line.get_index(),
+					"%s %s: the consent switch is not in its own row under the sentence" % [shape, code])
 			_title_no_overlap(fails, first, shape)
 			first.free()
 			Locale.active = previous

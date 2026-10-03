@@ -74,14 +74,18 @@ const ROLES: Dictionary = {
 	ROLE_READ: {"latin": "res://assets/fonts/Alegreya-400.woff2",
 		"cjk": "res://assets/fonts/NotoSerifTC-Regular.woff2", "em": 0.0, "em_zh": 0.04},
 }
-## Sizes per shape class, pad first then phone. Nothing interactive drops
-## below 11px on a phone; the floor for any text is 10px.
+## Sizes per shape class, pad (and desktop) first then phone. The functional
+## title roles (word, pane, carved deeds, caption) meet the rubric's 18 px
+## floor at 1180×820 (docs/commercial-rubric.md; #655, open decision 1 of
+## docs/design/2026-10-03-title-rooms) and scale to 14 on a phone, whose stage
+## is drawn larger on its glass. Nothing interactive drops below 11px on a
+## phone; the floor for any text there is 10px.
 const SIZE_PLAQUE: Vector2i = Vector2i(24, 17)
-const SIZE_PANE: Vector2i = Vector2i(15, 12)
-const SIZE_WORD: Vector2i = Vector2i(15, 12)
-const SIZE_CARVED: Vector2i = Vector2i(14, 11)
+const SIZE_PANE: Vector2i = Vector2i(18, 14)
+const SIZE_WORD: Vector2i = Vector2i(18, 14)
+const SIZE_CARVED: Vector2i = Vector2i(18, 14)
 const SIZE_READ: Vector2i = Vector2i(16, 14)
-const SIZE_CAPTION: Vector2i = Vector2i(12, 10)
+const SIZE_CAPTION: Vector2i = Vector2i(18, 14)
 const PHONE_FLOOR: int = 10
 
 static var _fonts: Dictionary = {}

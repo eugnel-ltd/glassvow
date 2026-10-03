@@ -12,6 +12,14 @@ const ART_FALLBACK: String = "res://assets/art/ui/lantern.png"
 ## The wick and the glass in the art's own UV (lantern_flame.gdshader set-out).
 const WICK_UV: Vector2 = Vector2(0.5, 0.785)
 const GLASS_CENTRE_UV: Vector2 = Vector2(0.5, 0.63)
+## The top of the chain's ring, as a share of the art's height (the art's
+## opaque bounds start at 54 of 1024 px): what the plaque stands on.
+const RING_TOP_UV: float = 0.053
+## Where a tap is the lantern's: its own body (the art's opaque bounds, 259–762
+## by 54–988 of 1024 px, with a little to spare), never the road either side of
+## it inside its square, where the title's words stand (#655: a tap on the
+## middle of 設定 took the road).
+const HIT_UV: Rect2 = Rect2(0.24, 0.04, 0.52, 0.94)
 ## The ember's flame quad, as a share of the art's side: the shader's wick sits
 ## at the lantern's wick and its tallest flame is REACH (0.29) of this.
 const EMBER_QUAD: float = 0.55
@@ -20,6 +28,27 @@ const EMBER_QUAD: float = 0.55
 ## takes it over.
 const EMBER_HEIGHT: Vector2 = Vector2(0.42, 0.78)
 const COLD_TINT: Color = Color(0.17, 0.17, 0.21, 1.0)
+## The light pool's falloff, centre to rim: one smooth curve, so no contour
+## shows where two linear ramps meet (docs/design/2026-10-03-title-rooms §6.2).
+const POOL_FALLOFF: PackedFloat32Array = [1.0, 0.6, 0.32, 0.17, 0.06, 0.0]
+const POOL_TEXTURE: int = 512
+## Keyboard focus is a gold rim on the lantern's own silhouette (§6.2): the
+## body's outline grown outward by the same RIM_WIDTH all round (a share of the
+## art's side: about 5 px at 1180×820), drawn behind the iron and over the
+## light it throws, in GOLD at RIM_ALPHA. Grown evenly, never scaled about a
+## centre, which thickened the rim with distance from it into a cap over the
+## chain. The chain is not rimmed: the rim starts at the roof (RIM_TOP_UV, the
+## art's 240 of 1024 px), so it never climbs to the plaque on the chain's ring.
+## Over the pool, not under it: the pool's additive light washed it to white.
+const RIM_ALPHA: float = 0.45
+const RIM_WIDTH: float = 3.0 / 256.0
+const RIM_TOP_UV: float = 0.235
+const RIM_MASK: int = 256
+
+## Focus shown on the lantern (a keyboard or pad player's), as against merely
+## held (a tap holds it hidden). The plaque lights with this, never with focus
+## alone.
+signal focus_shown(shown: bool)
 
 var flame: LanternFlame
 var kindle: float = 1.0:
@@ -64,7 +93,13 @@ var _ember: Ember
 var _ember_flame: TextureRect
 var _ember_fire: LanternFlame
 static var _blank: Texture2D = null
+static var _rim_mask: Texture2D = null
+## Whether a lantern has drawn its lit layer this session (its pipeline warm).
+static var _lit_warm: bool = false
 var _time: float = 0.0
+var _focus_shown: bool = false
+## The rim, made on the first shown focus.
+var _rim: TextureRect = null
 
 
 ## The light the ember throws round itself (a soft halo, no hard disc: the
@@ -94,7 +129,8 @@ func _init() -> void:
 	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
 	for state: String in ["normal", "hover", "pressed", "disabled"]:
 		add_theme_stylebox_override(state, empty)
-	add_theme_stylebox_override("focus", _FocusHalo.new())
+	# Focus is the rim (`_show_rim`), never a box or an ellipse.
+	add_theme_stylebox_override("focus", empty)
 	var texture: Texture2D = _art()
 	_pool = _layer(pool_texture(pool_core), true)
 	_glow = _layer(null, true)
@@ -127,7 +163,12 @@ func _ready() -> void:
 	# would otherwise wait on (~0.14 s on Metal, cold). The launch's first
 	# frames show only the ember and the cold lantern, so the lit layer joins
 	# one frame later and its compile lands inside the ember's breath; the
-	# title takes input from its first frame either way.
+	# title takes input from its first frame either way. Once a lantern has
+	# lit, the pipeline is warm: a later lantern (a title rebuilt on a return)
+	# is lit from its first frame, never a cold lantern for one (#655: it
+	# showed through a Reduce Motion cross-fade).
+	if _lit_warm:
+		return
 	_lit.visible = false
 	_glow.visible = false
 	get_tree().process_frame.connect(_show_lit, CONNECT_ONE_SHOT)
@@ -136,11 +177,90 @@ func _ready() -> void:
 func _show_lit() -> void:
 	_lit.visible = true
 	_glow.visible = true
+	_lit_warm = true
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		_seat()
+	elif what == NOTIFICATION_FOCUS_ENTER or what == NOTIFICATION_FOCUS_EXIT \
+			or what == NOTIFICATION_DRAW:
+		# Godot redraws a control whenever its focus is shown or hidden, so the
+		# draw also catches hidden focus becoming shown on the same control.
+		_sync_focus_shown()
+
+
+func _sync_focus_shown() -> void:
+	var shown: bool = is_inside_tree() and has_focus(true)
+	if shown != _focus_shown:
+		_focus_shown = shown
+		_show_rim(shown)
+		focus_shown.emit(shown)
+
+
+func _show_rim(on: bool) -> void:
+	if on and _rim == null:
+		var mask: Texture2D = rim_mask()
+		if mask == null:
+			return
+		_rim = TextureRect.new()
+		_rim.name = "FocusRim"
+		_rim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_rim.texture = mask
+		_rim.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_rim.stretch_mode = TextureRect.STRETCH_SCALE
+		_rim.modulate = Color(LeadlightTokens.GOLD, RIM_ALPHA)
+		add_child(_rim)
+		# Over the pool and the glow, under the iron and the glass.
+		move_child(_rim, _cold.get_index())
+		_seat()
+	if _rim != null:
+		_rim.visible = on
+
+
+## The lantern's body grown by RIM_WIDTH all round, as a white mask the art's
+## size (its own alpha, the chain above RIM_TOP_UV left out), built once per
+## process on the first focus a keyboard shows. The growth is the union of the
+## body shifted RIM_WIDTH (and half of it) every way: an even band, drawn by
+## the image's own blend, with the body's soft edge kept.
+static func rim_mask() -> Texture2D:
+	if _rim_mask != null:
+		return _rim_mask
+	var path: String = ART if ResourceLoader.exists(ART) else ART_FALLBACK
+	var art: Texture2D = load(path) as Texture2D
+	var image: Image = art.get_image() if art != null else null
+	if image == null:
+		return null
+	if image.is_compressed():
+		image.decompress()
+	image.convert(Image.FORMAT_RGBA8)
+	image.resize(RIM_MASK, RIM_MASK, Image.INTERPOLATE_LANCZOS)
+	var data: PackedByteArray = image.get_data()
+	for i: int in range(0, data.size(), 4):
+		data[i] = 255
+		data[i + 1] = 255
+		data[i + 2] = 255
+	var body: Image = Image.create_from_data(RIM_MASK, RIM_MASK, false, Image.FORMAT_RGBA8, data)
+	body.fill_rect(Rect2i(0, 0, RIM_MASK, roundi(RIM_TOP_UV * RIM_MASK)), Color(1.0, 1.0, 1.0, 0.0))
+	var grown: Image = Image.create(RIM_MASK, RIM_MASK, false, Image.FORMAT_RGBA8)
+	var whole: Rect2i = Rect2i(0, 0, RIM_MASK, RIM_MASK)
+	var reach: float = RIM_WIDTH * float(RIM_MASK)
+	for ring: Vector2 in [Vector2(reach, 16.0), Vector2(reach * 0.5, 8.0)]:
+		for i: int in range(int(ring.y)):
+			var angle: float = TAU * float(i) / ring.y
+			grown.blend_rect(body, whole, Vector2i(roundi(cos(angle) * ring.x), roundi(sin(angle) * ring.x)))
+	_rim_mask = ImageTexture.create_from_image(grown)
+	return _rim_mask
+
+
+func _has_point(point: Vector2) -> bool:
+	return hit_rect().has_point(point)
+
+
+## The lantern's hit, in its own coordinates.
+func hit_rect() -> Rect2:
+	var art: Rect2 = _art_rect()
+	return Rect2(art.position + art.size * HIT_UV.position, art.size * HIT_UV.size)
 
 
 ## The saved run's reading, landed at once (no reading arrives on the title).
@@ -252,9 +372,10 @@ func set_pool(spread: Vector2, drop: float, core: float, breath_amount: float) -
 
 
 static func pool_texture(core: float) -> GradientTexture2D:
-	return GlassStyle.grad_tex(
-		PackedColorArray([Color(1, 1, 1, core), Color(1, 1, 1, core * 0.3), Color(1, 1, 1, 0.0)]),
-		PackedFloat32Array([0.0, 0.32, 1.0]), true, Vector2(0.5, 0.5), Vector2(1.0, 0.5))
+	var alphas: PackedFloat32Array = PackedFloat32Array()
+	for alpha: float in POOL_FALLOFF:
+		alphas.append(alpha * core)
+	return LeadlightShapes.soft_light(alphas, POOL_TEXTURE)
 
 
 func _art() -> Texture2D:
@@ -290,6 +411,9 @@ func _seat() -> void:
 	for layer: TextureRect in [_cold, _lit, _glow]:
 		layer.position = art.position
 		layer.size = art.size
+	if _rim != null:
+		_rim.position = art.position
+		_rim.size = art.size
 	var half: Vector2 = art.size.x * pool_spread
 	var at: Vector2 = glass_centre() + Vector2(0.0, art.size.x * pool_drop)
 	_pool.position = at - half
@@ -322,18 +446,5 @@ func _apply_kindle() -> void:
 	_ember_flame.visible = _ember.strength > 0.004
 	_ember_fire.material.set_shader_parameter(&"height", ember_height(kindle))
 	if _pool != null:
-		_pool.modulate.a = _pool_alpha()
-
-
-class _FocusHalo extends StyleBox:
-	func _draw(ci: RID, rect: Rect2) -> void:
-		var side: float = minf(rect.size.x, rect.size.y)
-		# A halo round the whole lantern, not a line across its glass.
-		var c: Vector2 = rect.position + Vector2(rect.size.x * 0.5, rect.size.y * 0.5 + side * 0.04)
-		var radius: Vector2 = Vector2(side * 0.36, side * 0.50)
-		var points: PackedVector2Array = LeadlightShapes.arc_points(c, radius, 0.0, TAU, 49)
-		RenderingServer.canvas_item_add_polyline(ci, points,
-			PackedColorArray([Color(LeadlightTokens.GOLD, 0.55)]), 1.2, true)
-		var halo: PackedVector2Array = LeadlightShapes.arc_points(c, radius + Vector2(4, 4), 0.0, TAU, 49)
-		RenderingServer.canvas_item_add_polyline(ci, halo,
-			PackedColorArray([Color(LeadlightTokens.GOLD, 0.18)]), 4.0, true)
+		# The flame's colour even when the pool holds still (Reduce Motion).
+		_pool.modulate = Color(light(), _pool_alpha())

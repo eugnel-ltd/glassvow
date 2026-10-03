@@ -1,0 +1,75 @@
+# §11.5 on the final head: tools/capture_rooms.gd --seq, headed, --fixed-fps 60, saved run. Grey gate: no frame
+# with more than 0.5% of its pixels within +-4 of RGB (77, 77, 77). Cut gate: no frame-to-frame change above an
+# eighth of the whole change plus idle noise (the larger of the source's and the settled destination's); graded
+# under --rm, reported under full motion (which fades up from the night over 0.45 s, as specified). --seq=fight
+# enters the first fight of the saved run's map through Main's own node handler. The contact sheet is
+# reduce-motion-route-vigil-before-after.jpg.
+
+== --shape=pad-landscape --locale=en --state=saved --seq=open --room=vigil --frames=36
+grey gate PASS: worst frame 0 has 0.06% grey (limit 0.5%)
+cut gate FAIL: largest step 0.1138 at frame 1, whole change 0.1017, idle 0.0003, limit 0.0130 (reported, not graded without --rm)
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=close --room=vigil --frames=36
+grey gate PASS: worst frame 7 has 0.08% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0422 at frame 1, whole change 0.1018, idle 0.0041, limit 0.0168 (reported, not graded without --rm)
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=open --room=settings --frames=16
+grey gate PASS: worst frame 0 has 0.06% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0940 at frame 1, whole change 0.0937, idle 0.0003, limit 0.0120 (reported, not graded without --rm)
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=close --room=settings --frames=16
+grey gate PASS: worst frame 2 has 0.04% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0851 at frame 1, whole change 0.0863, idle 0.0040, limit 0.0148 (reported, not graded without --rm)
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=open --room=vigil --frames=16 --rm
+grey gate PASS: worst frame 3 has 0.06% grey (limit 0.5%)
+cut gate PASS: largest step 0.0111 at frame 5, whole change 0.0970, idle 0.0000, limit 0.0121
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=close --room=vigil --frames=16 --rm
+grey gate PASS: worst frame 6 has 0.06% grey (limit 0.5%)
+cut gate PASS: largest step 0.0111 at frame 5, whole change 0.0969, idle 0.0000, limit 0.0121
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=open --room=settings --frames=16 --rm
+grey gate PASS: worst frame 2 has 0.06% grey (limit 0.5%)
+cut gate PASS: largest step 0.0106 at frame 5, whole change 0.0902, idle 0.0000, limit 0.0113
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=close --room=settings --frames=16 --rm
+grey gate PASS: worst frame 7 has 0.07% grey (limit 0.5%)
+cut gate PASS: largest step 0.0106 at frame 5, whole change 0.0900, idle 0.0000, limit 0.0112
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=open --room=help --frames=16 --rm
+grey gate PASS: worst frame 0 has 0.05% grey (limit 0.5%)
+cut gate PASS: largest step 0.0117 at frame 5, whole change 0.1009, idle 0.0000, limit 0.0126
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=close --room=help --frames=16 --rm
+grey gate PASS: worst frame 7 has 0.06% grey (limit 0.5%)
+cut gate PASS: largest step 0.0117 at frame 5, whole change 0.1006, idle 0.0000, limit 0.0126
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=open --room=credits --frames=16 --rm
+grey gate PASS: worst frame 0 has 0.05% grey (limit 0.5%)
+cut gate PASS: largest step 0.0112 at frame 5, whole change 0.0963, idle 0.0000, limit 0.0120
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=close --room=credits --frames=16 --rm
+grey gate PASS: worst frame 9 has 0.05% grey (limit 0.5%)
+cut gate PASS: largest step 0.0112 at frame 5, whole change 0.0960, idle 0.0000, limit 0.0120
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=fight --room=settings --frames=16 --rm
+grey gate PASS: worst frame 3 has 0.08% grey (limit 0.5%)
+cut gate PASS: largest step 0.0226 at frame 8, whole change 0.1182, idle 0.0096, limit 0.0244
+exit 0
+== --shape=phone-landscape --locale=zh-Hant --state=saved --seq=open --room=vigil --frames=16 --rm
+grey gate PASS: worst frame 0 has 0.06% grey (limit 0.5%)
+cut gate PASS: largest step 0.0083 at frame 5, whole change 0.0723, idle 0.0000, limit 0.0090
+exit 0
+== --shape=phone-landscape --locale=zh-Hant --state=saved --seq=close --room=vigil --frames=16 --rm
+grey gate PASS: worst frame 8 has 0.07% grey (limit 0.5%)
+cut gate PASS: largest step 0.0083 at frame 5, whole change 0.0723, idle 0.0000, limit 0.0090
+exit 0
+== --shape=phone-landscape --locale=zh-Hant --state=saved --seq=open --room=settings --frames=16 --rm
+grey gate PASS: worst frame 4 has 0.10% grey (limit 0.5%)
+cut gate PASS: largest step 0.0116 at frame 5, whole change 0.1031, idle 0.0000, limit 0.0129
+exit 0
+== --shape=phone-landscape --locale=zh-Hant --state=saved --seq=close --room=settings --frames=16 --rm
+grey gate PASS: worst frame 5 has 0.10% grey (limit 0.5%)
+cut gate PASS: largest step 0.0116 at frame 5, whole change 0.1028, idle 0.0000, limit 0.0129
+exit 0

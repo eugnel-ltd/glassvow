@@ -123,7 +123,7 @@ func _init(preferences: Preferences, reset_disabled: bool = false,
 	_room.footer().add_child(footer)
 	_brand_line = footer
 
-	close.grab_focus.call_deferred()
+	LeadlightFocus.give_deferred(close)
 	# The room's shutter (commissioned cues; silent until they land).
 	_sfx.play_owed(&"roomOpen")
 	closed.connect(func() -> void: _sfx.play_owed(&"roomClose"))
@@ -278,7 +278,7 @@ func focus_language() -> void:
 	if _language_toggle == null:
 		return
 	_room.select(&"display")
-	_language_toggle.grab_focus.call_deferred()
+	LeadlightFocus.give_deferred(_language_toggle)
 	_room.scroll().ensure_control_visible.call_deferred(_language_toggle)
 
 
@@ -305,8 +305,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+## A row's pane (Erase All Progress, Close, the Privacy Policy link). Its type
+## stays at the shipped 15 px however the kit's pane token moves: Settings'
+## rows are rebuilt with the room (docs/design/2026-10-03-title-rooms, PR B).
+const ROW_PX: int = 15
+
+
 static func _button(text: String, accent: Color) -> Button:
 	var button: LeadlightPane = LeadlightPane.new(text)
+	button.set_px(ROW_PX)
 	button.accent = accent
 	button.lit = false
 	return button

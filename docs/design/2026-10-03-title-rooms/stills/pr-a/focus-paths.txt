@@ -1,0 +1,109 @@
+# The oval (§6.3): each path driven as a player drives it in the real Main (tools/capture_rooms.gd,
+# headed, the lane's isolated user dir, saved run in Act II, Frostlight lantern), still taken 1 s after
+# landing. "focus" is who holds focus and whether it is shown; then the measures on the old ring's path
+# round the title's lantern (centre rect.centre + (0, side x 0.04), radii (0.36, 0.50) x side):
+#   oval            64 samples (+-2 px) at the spec's gold (+-12 deg of GOLD, s > 0.45, v > 0.55). Pass: 0.
+#   ring band gold  the spec's gold pixels within +-6 px of the path. Pass: the control's count (the
+#                   lantern's own gilded metal and the road's lamps).
+#   ring line       the samples where a ring line stands: within +-2 px of the path, a pixel brighter by 0.12
+#                   than the road 4 px either side along the radius, at that sample and one beside it.
+#                   Needed because the spec's gold misses the shipped ring itself: a 1.2 px line of GOLD at
+#                   0.55 over the blue road reads at saturation 0.10 to 0.15, so before/22 scores 1/64 on
+#                   "oval" (and 10 px of band gold, under the control's 20). Pass: 0 (before/22 scores 43).
+#   beyond control  ring-line samples the cold-boot control (control-rest-*) lacks. Pass: 0.
+# A levels-lifted crop of the plaque (x3), before and after: oval-plaque-levels-pad-en.jpg.
+
+## The shipped build (before/, measured at the same geometry, against before/01 as control)
+before/22-oval-after-vigil-return-pad.jpg            oval 1/64, ring band gold 10 px; ring line 43/64, beyond the control 40/64
+before/03-title-focused-pad.jpg                      oval 1/64, ring band gold 16 px; ring line 44/64, beyond the control 41/64
+before/23-oval-after-settings-close-pad.jpg          oval 0/64, ring band gold 2 px; ring line 0/64, beyond the control 0/64
+before/01-title-saved-pad.jpg                        oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+
+## pad-landscape, en
+control: the title at rest, cold boot (no input)  [control-rest-pad-landscape-en.jpg]
+  focus: owner none; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 20 px; ring line 0/64, beyond the control 0/64
+g: Settings opened and closed by tap (its CLOSE)  [oval-return-settings-pad-landscape-en.jpg]
+  focus: owner /root/Main/@Control@105/@Button@84; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 19 px; ring line 0/64, beyond the control 0/64
+g: How to Play opened by tap, closed by a tap on its veil  [oval-return-help-pad-landscape-en.jpg]
+  focus: owner /root/Main/@Control@105/@Button@83; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 19 px; ring line 0/64, beyond the control 0/64
+g: Credits opened and closed by tap (its Close)  [oval-return-credits-pad-landscape-en.jpg]
+  focus: owner /root/Main/@Control@105/@Button@85; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 21 px; ring line 0/64, beyond the control 0/64
+a: The Vigil by tap, its RETURN by tap  [oval-return-vigil-pad-landscape-en.jpg]
+  focus: owner /root/Main/@Control@227/@Button@219; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 18 px; ring line 0/64, beyond the control 0/64
+c: Rekindle by tap to the departure, its Back by tap  [oval-return-departure-pad-landscape-en.jpg]
+  focus: owner /root/Main/@Control@156/@Button@148; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 17 px; ring line 0/64, beyond the control 0/64
+e: Back to the Road by tap, the HUD menu by tap, Return to Title by tap  [oval-return-runmenu-pad-landscape-en.jpg]
+  focus: owner /root/Main/@Control@444/@Button@436; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 17 px; ring line 0/64, beyond the control 0/64
+h: a tap on the lantern while the launch rite runs  [oval-rite-tap-pad-landscape-en.jpg]
+  focus: owner /root/Main/@Control@105/@Button@97; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 12 px; ring line 0/64, beyond the control 0/64
+i: a bare Shift (a screenshot shortcut)  [oval-bare-shift-pad-landscape-en.jpg]
+  focus: owner none; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 18 px; ring line 0/64, beyond the control 0/64
+j: Tab (a keyboard player)  [keyboard-rim-pad-landscape-en.jpg]
+  focus: owner /root/Main/@Control@105/@Button@97; shown on ["/root/Main/@Control@105/@Button@97"]; lantern shown true; plaque lit true
+  measures: oval 0/64, ring band gold 19 px; ring line 0/64, beyond the control 0/64
+a finger held down on the plaque  [plaque-pressed-pad-landscape-en.jpg]
+  focus: owner none; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 20 px; ring line 0/64, beyond the control 0/64
+
+## phone-landscape, en
+control: the title at rest, cold boot (no input)  [control-rest-phone-landscape-en.jpg]
+  focus: owner none; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+g: Settings opened and closed by tap (its CLOSE)  [oval-return-settings-phone-landscape-en.jpg]
+  focus: owner /root/Main/@Control@105/@Button@84; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+g: How to Play opened by tap, closed by a tap on its veil  [oval-return-help-phone-landscape-en.jpg]
+  focus: owner /root/Main/@Control@105/@Button@83; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+g: Credits opened and closed by tap (its Close)  [oval-return-credits-phone-landscape-en.jpg]
+  focus: owner /root/Main/@Control@105/@Button@85; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+a: The Vigil by tap, its RETURN by tap  [oval-return-vigil-phone-landscape-en.jpg]
+  delivered (the phone Vigil's RETURN stands below the stage until PR C): 'RETURN' stands below the stage at (422.0, 420.4622); its tap is delivered directly
+  focus: owner /root/Main/@Control@227/@Button@219; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+c: Rekindle by tap to the departure, its Back by tap  [oval-return-departure-phone-landscape-en.jpg]
+  focus: owner /root/Main/@Control@156/@Button@148; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+e: Back to the Road by tap, the HUD menu by tap, Return to Title by tap  [oval-return-runmenu-phone-landscape-en.jpg]
+  focus: owner /root/Main/@Control@444/@Button@436; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+h: a tap on the lantern while the launch rite runs  [oval-rite-tap-phone-landscape-en.jpg]
+  focus: owner /root/Main/@Control@105/@Button@97; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+i: a bare Shift (a screenshot shortcut)  [oval-bare-shift-phone-landscape-en.jpg]
+  focus: owner none; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+j: Tab (a keyboard player)  [keyboard-rim-phone-landscape-en.jpg]
+  focus: owner /root/Main/@Control@105/@Button@97; shown on ["/root/Main/@Control@105/@Button@97"]; lantern shown true; plaque lit true
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+a finger held down on the plaque  [plaque-pressed-phone-landscape-en.jpg]
+  focus: owner none; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+a finger held down on the plaque  [plaque-pressed-phone-landscape-en.jpg]
+  focus: owner /root/Main/@Control@105/@Button@97; shown on ["/root/Main/@Control@105/@Button@97"]; lantern shown true; plaque lit true
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+a finger held down on the plaque  [plaque-pressed-phone-landscape-en.jpg]
+  focus: owner /root/Main/@Control@103/@Button@95; shown on ["/root/Main/@Control@103/@Button@95"]; lantern shown true; plaque lit true
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+a finger held down on the plaque  [plaque-pressed-phone-landscape-en.jpg]
+  focus: owner none; shown on nothing; lantern shown false; plaque lit false
+  measures: oval 0/64, ring band gold 0 px; ring line 0/64, beyond the control 0/64
+
+## The keyboard rim (path j): gold within 6 px outside the body's outline, against the rest still
+# (spec: at least 60% of the perimeter samples; the chain is not rimmed, by design)
+pad en, saved (keyboard-rim-pad-landscape-en.jpg): rim on 125 of 126 perimeter samples (99%)
+pad zh-Hant, saved (keyboard-rim-pad-landscape-zh-Hant.jpg): rim on 125 of 126 perimeter samples (99%)
+pad en, fresh (keyboard-rim-fresh-pad-landscape-en.jpg): rim on 122 of 126 perimeter samples (97%)
+phone en, saved (keyboard-rim-phone-landscape-en.jpg): rim on 63 of 63 perimeter samples (100%)
+
+## Not stills: the headless proof of every path (a to l) is tests/test_focus_modality.gd.

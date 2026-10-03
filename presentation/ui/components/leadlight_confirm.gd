@@ -95,7 +95,7 @@ func _init(title_text: String, body_text: String, primary: Dictionary, quiet: Di
 
 func _ready() -> void:
 	_layout()
-	_quiet.grab_focus()
+	LeadlightFocus.give(_quiet)
 	if _sfx != null:
 		_sfx.play_owed(&"roomOpen")
 	LeadlightMotion.enter(_sheet)

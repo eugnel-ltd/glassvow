@@ -34,6 +34,13 @@ func _init(getter: Callable = Callable(), setter: Callable = Callable()) -> void
 	sync()
 
 
+## Its ON / OFF words at `px` (the title's consent switch reads at the
+## caption's size; Settings' rows keep the shipped 12 until they are rebuilt).
+func set_px(px: int) -> void:
+	add_theme_font_override("font", LeadlightTokens.font(LeadlightTokens.ROLE_LABEL, px))
+	add_theme_font_size_override("font_size", px)
+
+
 ## Restate the stored value: ON / OFF words, the switch, the lit ink.
 func sync() -> void:
 	var on: bool = _getter.call() if _getter.is_valid() else button_pressed

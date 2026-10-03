@@ -156,7 +156,7 @@ func _init(stage_shape: StringName = StageShape.IDENTITY,
 		closed.emit()
 	)
 	close_centre.add_child(close)
-	close.grab_focus.call_deferred()
+	LeadlightFocus.give_deferred(close)
 
 	resized.connect(_fit)
 	_fit.call_deferred()
