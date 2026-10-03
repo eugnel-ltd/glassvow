@@ -526,6 +526,10 @@ static func _projection_cache(fails: Array[String]) -> void:
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	tree.root.add_child(screen)
 	_mount(screen, StageShape.IDENTITY)
+	# Read from a pose nothing has projected yet. Under a sized root window the
+	# screen is laid out as it enters the tree, so it may already have projected
+	# the pose it was mounted at.
+	screen._map_scene.get_rig().pan_world(Vector2(1.0, 0.0))
 	var before: int = screen._seat_projection_passes
 	var first: PackedVector2Array = screen.projected_seats()
 	var after_first: int = screen._seat_projection_passes
