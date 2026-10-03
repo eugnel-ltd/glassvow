@@ -34,6 +34,8 @@ const SEAT_FROM: float = 0.36
 const SEAT_IN: float = 0.16
 ## On leaving, the lantern sets off home this long after the tap (BREATH).
 const LANTERN_BACK_FROM: float = 0.04
+## The least time a piece of the title's furniture takes to come back.
+const FURNITURE_IN: float = 0.14
 ## How fast the furniture the word lifts through as it sets off goes (three
 ## frames), and how soon after the tap the word must reach it to count.
 const CROSSED_GONE: float = 0.05
@@ -541,14 +543,16 @@ func _return_lanes(entry: Leaving, host: LeadlightRoomHost, t: float, span: floa
 	title.place_lantern(LeadlightSeat.path(title.home_rect(), _seat_art(), 1.0 - p))
 	title.lantern.reach = lerpf(POOL_SEATED, 1.0, p)
 	title.lantern.flare = 0.35 * sin(PI * clampf((t - (span - 0.2)) / 0.2, 0.0, 1.0))
-	var stagger: float = minf(0.03, 0.12 / maxf(float(entry.order.size() - 1), 1.0))
+	# Each piece takes at least FURNITURE_IN to come back, easing in (a quint's
+	# first frame put the wordmark at half in one step behind How to Play).
+	var stagger: float = minf(0.03, 0.08 / maxf(float(entry.order.size() - 1), 1.0))
 	var back: float = host.furniture_returns_at() if host != null else 0.16
 	for i: int in entry.order.size():
 		var item: CanvasItem = entry.order[i]
 		if is_instance_valid(item):
-			var from: float = maxf(back + stagger * float(i), entry.holds[i] if i < entry.holds.size() else 0.0)
-			item.modulate.a = LeadlightMotion.ease_on((t - from) / maxf(span - from, 0.1),
-				LeadlightMotion.REVEAL)
+			var from: float = minf(maxf(back + stagger * float(i), entry.holds[i] if i < entry.holds.size() else 0.0),
+				span - FURNITURE_IN)
+			item.modulate.a = LeadlightMotion.ease_on((t - from) / (span - from), LeadlightMotion.SETTLE_OUT)
 	var word: Control = entry.word if is_instance_valid(entry.word) else null
 	if entry.ghost != null:
 		var leaves: float = host.crown_leaves_at() if host != null else 0.0

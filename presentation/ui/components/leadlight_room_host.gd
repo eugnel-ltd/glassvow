@@ -213,10 +213,14 @@ func leave_at(t: float, wick: Vector2, colour: Color) -> void:
 		return
 	glass.reach = 1.0 - LeadlightMotion.ease_on(t / 0.22, LeadlightMotion.SETTLE_OUT)
 	glass.trace = 1.0 - LeadlightMotion.ease_on((t - 0.02) / 0.22, LeadlightMotion.SETTLE_OUT)
-	var radius: float = LeadlightSheet.reach_radius(glass.outline(), glass.reach_from, glass.reach)
+	# The content goes far to near from the seat, each group over 100 ms and
+	# all of it by 160: tied to the light's edge, a whole group (the panes'
+	# column) went in half a frame once that edge ran fast.
+	var far: float = LeadlightSheet.far_radius(glass.outline(), glass.reach_from)
 	for group: Control in reveal_groups():
-		var d: float = glass.reach_from.distance_to(_centre_in(glass, group))
-		_reveal(group, clampf((radius - d) / 80.0 + 0.5, 0.0, 1.0), false)
+		var d: float = clampf(glass.reach_from.distance_to(_centre_in(glass, group)) / maxf(far, 1.0), 0.0, 1.0)
+		var from: float = 0.06 * (1.0 - d)
+		_reveal(group, 1.0 - LeadlightMotion.ease_on((t - from) / 0.10, LeadlightMotion.SETTLE_OUT), false)
 
 
 ## The room whole, at rest: every lane at its end.
