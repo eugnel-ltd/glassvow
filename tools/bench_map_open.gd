@@ -111,9 +111,13 @@ func _warm(act: int) -> void:
 	var start: int = Time.get_ticks_usec()
 	var run: RunState = _host.game.run
 	MapLandscapeAssets.prefetch(run.act)
+	if MapScene.journey_async:
+		var map: WorldMap = _host._map
+		MapJourneyPrefetch.start(map, run)
 	var warming: MapLandscapeAssets.Pictures = MapLandscapeAssets.warming()
 	var worst_ms: float = await _worst_frame(
-		func() -> bool: return warming == null or warming.is_done(), -1)
+		func() -> bool: return (warming == null or warming.is_done()) \
+			and not MapJourneyPrefetch.busy(), -1)
 	print("MAP_WARM " + JSON.stringify({"act": act,
 		"warm_ms": snappedf((Time.get_ticks_usec() - start) / 1000.0, 0.1),
 		"worst_frame_ms": snappedf(worst_ms, 0.1),
@@ -141,9 +145,16 @@ func _open(act: int, open: int, kind: String) -> void:
 	var total_ms: float = (Time.get_ticks_usec() - start) / 1000.0
 	await RenderingServer.frame_post_draw
 	var frame_ms: float = (Time.get_ticks_usec() - start) / 1000.0
+	# Act I's journey land may still be building under its veil: `ready_ms` is
+	# when it is drawn, `build_worst_frame_ms` the longest frame meanwhile.
+	var screen: WorldMapScreen = _host._map_screen
+	var worst_ms: float = await _worst_frame(
+		func() -> bool: return not is_instance_valid(screen) or not screen.landscape_pending(), -1)
+	var ready_ms: float = (Time.get_ticks_usec() - start) / 1000.0
 	print("MAP_OPEN " + JSON.stringify({"act": act, "open": open, "kind": kind,
 		"seed": _host.game.run.seed, "total_ms": snappedf(total_ms, 0.1),
-		"frame_ms": snappedf(frame_ms, 0.1), "video_mib": _video_mib()}))
+		"frame_ms": snappedf(frame_ms, 0.1), "ready_ms": snappedf(ready_ms, 0.1),
+		"build_worst_frame_ms": snappedf(worst_ms, 0.1), "video_mib": _video_mib()}))
 	await _frames(SETTLE_FRAMES)
 
 
@@ -153,6 +164,8 @@ func _drop_kept() -> void:
 	_host._clear_route()
 	_host._map_keep.release()
 	MapLandscapeAssets.release()
+	MapJourneyPrefetch.release()
+	MapScene.release_kept_journey()
 	MapScene._bound = {}
 	MapScene._bound_key = ""
 	WorldMapScreen._input_kept = null
