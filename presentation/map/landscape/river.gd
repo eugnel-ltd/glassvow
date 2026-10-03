@@ -40,16 +40,20 @@ static func contains(x: float,z: float, length_half: float = HALF_LENGTH) -> boo
 func build(land: Node3D) -> void:
 	name = "Stream"
 	half_length = land.river_half_length
-	var rows: int = ceili(half_length*2/.25)
+	# The lean river (phones and tablets) has half the grid each way: its waves
+	# stay smooth at map scale and the A12 draws a quarter of the triangles.
+	var lean: bool = MapScene.lean_profile()
+	var columns: int = 16 if lean else 32
+	var rows: int = ceili(half_length*2/(.5 if lean else .25))
 	field_size = Vector2i(FIELD_SIZE.x,ceili(half_length*2*4))
 	layers = 2
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var top: SurfaceTool = SurfaceTool.new()
 	top.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for iz: int in range(rows):
-		for ix: int in range(32):
+		for ix: int in range(columns):
 			for corner: Vector2i in [Vector2i(0,0),Vector2i(1,1),Vector2i(0,1),Vector2i(0,0),Vector2i(1,0),Vector2i(1,1)]:
-				var uv: Vector2 = Vector2(ix+corner.x,iz+corner.y)/Vector2(32,rows)
+				var uv: Vector2 = Vector2(ix+corner.x,iz+corner.y)/Vector2(columns,rows)
 				var z: float = lerpf(-half_length,half_length,uv.y)
 				var x: float = centre(z,cut)+lerpf(-HALF_WIDTH,HALF_WIDTH,uv.x)*CHANNEL
 				top.set_uv(uv)

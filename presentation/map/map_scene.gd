@@ -8,6 +8,7 @@ const OVERSAMPLE: float = 1.0
 ## The stage's scale on a phone or tablet (`lean_profile`), where the journey
 ## land is fill-rate bound on the A12.
 const LEAN_OVERSAMPLE: float = 0.75
+const LEAN_LOD_THRESHOLD: float = 6.0
 ## The scale the lean stage draws at: `LEAN_OVERSAMPLE`, or a device probe's.
 static var lean_oversample: float = LEAN_OVERSAMPLE
 const VP_MAX: int = 2048
@@ -103,6 +104,10 @@ func _init(act_index: int = 0) -> void:
 	_stage.transparent_bg = false
 	_stage.size = Vector2i(64, 64)
 	_stage.msaa_3d = Viewport.MSAA_DISABLED if lean_profile() else Viewport.MSAA_4X
+	# The lean stage takes the imported meshes' coarser LODs a little sooner
+	# (6 px of error against the default 1): at the 40° camera the trees were
+	# half the triangles in view, and the A12's stage is bound by them.
+	_stage.mesh_lod_threshold = LEAN_LOD_THRESHOLD if lean_profile() else 1.0
 	_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
 	add_child(_stage)
 	_world = Node3D.new()

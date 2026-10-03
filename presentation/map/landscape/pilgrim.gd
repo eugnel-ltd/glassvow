@@ -40,6 +40,10 @@ func _ready() -> void:
 	var face: SphereMesh = SphereMesh.new()
 	face.radius = .13
 	face.height = .28
+	# A few pixels on the map: the default 64 x 32 sphere is 4k triangles in
+	# both the stage and the shadow pass.
+	face.radial_segments = 10
+	face.rings = 5
 	var hollow: MeshInstance3D = Meshes.node(cloak,face,dark,"Hood shadow")
 	hollow.position = Vector3(0,1.47,.215)
 	hollow.scale.z = .42
@@ -56,6 +60,8 @@ func _ready() -> void:
 	var glove: SphereMesh = SphereMesh.new()
 	glove.radius = .07
 	glove.height = .15
+	glove.radial_segments = 8
+	glove.rings = 4
 	Meshes.node(cloak,glove,iron,"Worn glove").position = Vector3(.38,.80,.14)
 	lamp = Node3D.new()
 	lamp.position = Vector3(.40,.58,.19)
