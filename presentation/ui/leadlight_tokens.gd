@@ -87,6 +87,18 @@ const SIZE_CARVED: Vector2i = Vector2i(18, 14)
 const SIZE_READ: Vector2i = Vector2i(16, 14)
 const SIZE_CAPTION: Vector2i = Vector2i(18, 14)
 const PHONE_FLOOR: int = 10
+## The rooms the title opens (docs/design/2026-10-03-title-rooms §3.3): every
+## text in them is at least the rubric's 18 px at 1180×820 and on desktop.
+const SIZE_ROOM_CROWN: Vector2i = Vector2i(24, 15)
+const SIZE_ROOM_HEAD: Vector2i = Vector2i(20, 15)
+const SIZE_ROOM_READ: Vector2i = Vector2i(18, 14)
+const SIZE_ROOM_LABEL: Vector2i = Vector2i(18, 13)
+const SIZE_ROOM_CARVED: Vector2i = Vector2i(18, 12)
+## The least a tap in a room may take (pad and desktop, phone): the rubric's
+## 60 px, and the touch floor on a phone, whose stage is drawn larger.
+const HIT_ROOM: Vector2i = Vector2i(60, 44)
+## The night a room is seen through: the veil over the road behind it.
+const VEIL_ROOM: float = 0.62
 
 static var _fonts: Dictionary = {}
 
@@ -128,6 +140,11 @@ static func size_for(token: Vector2i, shape: StringName) -> int:
 
 static func is_phone(shape: StringName) -> bool:
 	return shape == &"phone-landscape"
+
+
+## The least hit a room's tap takes on `shape` (HIT_ROOM).
+static func room_hit(shape: StringName) -> float:
+	return float(size_for(HIT_ROOM, shape))
 
 
 ## The lead came as a stylebox border: dark lead with a gold-dim inner line is

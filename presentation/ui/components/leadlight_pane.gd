@@ -10,6 +10,9 @@ var lit: bool = false:
 		_restyle()
 var shape_kind: LeadlightGlassBox.Shape = LeadlightGlassBox.Shape.LOZENGE
 var accent: Color = LeadlightTokens.GOLD
+## The least height a tap takes, centred on the pane (the rubric's 60 px at pad
+## and desktop): the glass is drawn as it is and only its hit grows.
+var hit_height: float = 0.0
 var _shape: StringName = StageShape.IDENTITY
 var _px: int = 15
 
@@ -35,6 +38,16 @@ func set_px(px: int) -> void:
 	_px = px
 	add_theme_font_override("font", LeadlightTokens.font(LeadlightTokens.ROLE_LABEL, px))
 	add_theme_font_size_override("font_size", px)
+
+
+## The pane's tap, in its own coordinates: its rect, grown to `hit_height`.
+func hit_rect() -> Rect2:
+	var tall: float = maxf(size.y, hit_height)
+	return Rect2(Vector2(0.0, (size.y - tall) * 0.5), Vector2(size.x, tall))
+
+
+func _has_point(point: Vector2) -> bool:
+	return hit_rect().has_point(point)
 
 
 func _restyle() -> void:

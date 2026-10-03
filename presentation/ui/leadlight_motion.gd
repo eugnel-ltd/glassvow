@@ -24,6 +24,7 @@ const EXIT: Vector2i = Vector2i(Tween.TRANS_CUBIC, Tween.EASE_IN)
 const BREATH: Vector2i = Vector2i(Tween.TRANS_SINE, Tween.EASE_IN_OUT)
 const CATCH: Vector2i = Vector2i(Tween.TRANS_BACK, Tween.EASE_OUT)
 const SETTLE_OUT: Vector2i = Vector2i(Tween.TRANS_CUBIC, Tween.EASE_OUT)
+const IN_OUT: Vector2i = Vector2i(Tween.TRANS_CUBIC, Tween.EASE_IN_OUT)
 
 
 static func reduced() -> bool:
