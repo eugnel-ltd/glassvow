@@ -7,14 +7,26 @@ extends SceneTree
 ## It needs a real renderer, so it refuses `--headless` (exit 2):
 ##
 ##   godot --path . -s res://tools/bench_deck_view.gd -- --map --seed=1 \
-##     --shape=pad-landscape [--out=<file stem>]
+##     --shape=pad-landscape [--sizes=30,10] [--out=<file stem>]
 ##
 ## The deck is the starter deck (10 cards) and then 30 cards: the starter
 ## plus twenty distinct player cards in id order, every third upgraded, so
-## the 30-card view is the worst case for a cache of distinct faces. For each
-## size, after the map has settled, it opens and closes the overlay ROUNDS
-## times and prints one `DECK {json}` row per open. The first open of each size
-## is a cold one: a tree with a face cache (CardFaces) has it dropped first.
+## the 30-card view is the worst case for a cache of distinct faces. --sizes=
+## picks the sizes and their order; the first size's first open is the
+## session's first sight of a card, first-use allocations and all, so
+## --sizes=30,10 measures the worst open a player can meet (a late run
+## continued straight into the deck view). For each size, after the map has
+## settled, it opens and closes the overlay ROUNDS times and prints one
+## `DECK {json}` row per open. The first open of each size is a cold one: a
+## tree with a face cache (CardFaces) has it dropped first. Then, the overlay
+## open again, it points at the cards through the real input path and prints
+## one `POINT {json}` row each for a tap on a card (touch down, a hold, lift),
+## a tap on the next card, and the mouse swept along the first row:
+##
+##   worst_ms, p50_ms, over_33   frame times over the gesture and its settle
+##   vram_peak_mib               the most it held above the open overlay
+##   live_max                    the most live cards standing at once
+##   stood                       live cards stood in over the gesture
 ##
 ##   vram_closed_mib     video memory with the overlay closed, before it opens
 ##   vram_open_mib       above that, once the open overlay has settled
@@ -32,7 +44,8 @@ extends SceneTree
 ##
 ## The deck is grown in memory on the Development profile (any launch with an
 ## argument runs there) and never saved. --out= also writes the rows to
-## <stem>.jsonl. A device build attaches `Probe` to the running Main instead.
+## <stem>.jsonl, closed by an `END` row. A device build attaches `Probe` to the
+## running Main instead.
 
 const ROUNDS: int = 3
 ## Between opens: a time and some frames, so an unthrottled window settles too.
@@ -42,6 +55,13 @@ const OPEN_FRAMES: int = 120
 const CLOSE_FRAMES: int = 60
 const SIZES: Array[int] = [10, 30]
 const FACES: String = "res://presentation/cards/card_faces.gd"
+## The pointer, in seconds, so an unthrottled window sees the same gestures:
+## how long a finger is held down, how long a gesture is watched after (past a
+## card's spring back), and how long the sweep spends on each card it crosses.
+const HOLD_SECONDS: float = 0.1
+const WATCH_SECONDS: float = 1.25
+const SWEEP_SECONDS: float = 0.1
+const SWEEP_CARDS: int = 5
 
 
 func _initialize() -> void:
@@ -72,6 +92,9 @@ class Probe:
 	var _rows: PackedStringArray = PackedStringArray()
 	var _stamps: Array[int] = []
 	var _vram: Array[float] = []
+	var _lives: Array[int] = []
+	var _cards: Array[Node] = []
+	var _t0: int = 0
 
 	func _init(main: Node, out: String) -> void:
 		_main = main
@@ -84,6 +107,10 @@ class Probe:
 	func _process(_delta: float) -> void:
 		_stamps.append(Time.get_ticks_usec())
 		_vram.append(_vram_mib())
+		var lives: int = 0
+		for card: Node in _cards:
+			lives += 1 if card.call("live") != null else 0
+		_lives.append(lives)
 
 	func _run() -> void:
 		await _settle()
@@ -92,14 +119,108 @@ class Probe:
 		_row("RUN %s display=%s window=%s starter=%d" % [
 			Engine.get_version_info()["string"], DisplayServer.get_name(),
 			str(get_window().size), starter.size()])
-		for want: int in SIZES:
+		for want: int in _sizes():
 			_set_deck(run, starter, want)
 			_forget_faces()
 			for round_i: int in range(ROUNDS):
 				await _settle()
 				await _measure(run.player.deck.size(), round_i + 1)
+			await _settle()
+			await _point(run.player.deck.size())
+		_row("END")
 		_write()
 		finished.emit()
+
+	func _sizes() -> Array[int]:
+		for arg: String in OS.get_cmdline_user_args():
+			if arg.begins_with("--sizes="):
+				var out: Array[int] = []
+				for part: String in arg.trim_prefix("--sizes=").split(",", false):
+					out.append(int(part))
+				return out
+		return SIZES
+
+	## The overlay open, a tap on a card, a tap on the next, and the mouse
+	## swept along the first row, each through Input as a device sends it.
+	func _point(deck_n: int) -> void:
+		_main.call("_show_run_deck")
+		await _frames(OPEN_FRAMES)
+		var modal: Node = _main.get("_modal")
+		_cards = modal.find_children("", "BakedCard", true, false)
+		if _cards.size() < SWEEP_CARDS + 1:
+			_row("POINT skipped: %d cards" % _cards.size())
+		else:
+			var base: float = _vram_mib()
+			_begin()
+			await _tap(_centre(_cards[0]))
+			_point_row(deck_n, "tap", base)
+			_begin()
+			await _tap(_centre(_cards[1]))
+			_point_row(deck_n, "tap_next", base)
+			# A tap off every card lets the last one go before the sweep.
+			await _tap(_centre(modal) * Vector2(1.0, 0.2))
+			_begin()
+			var from: Vector2 = _centre(_cards[0])
+			var to: Vector2 = _centre(_cards[SWEEP_CARDS - 1])
+			var t0: int = Time.get_ticks_msec()
+			var span: float = SWEEP_SECONDS * SWEEP_CARDS * 1000.0
+			var t: float = 0.0
+			while t < 1.0:
+				t = minf(1.0, float(Time.get_ticks_msec() - t0) / span)
+				_move(from.lerp(to, t))
+				await get_tree().process_frame
+			_move(_centre(modal) * Vector2(1.0, 0.2))
+			await _wait(WATCH_SECONDS)
+			_point_row(deck_n, "sweep", base)
+		_cards = []
+		_main.call("_close_overlay")
+		await _frames(CLOSE_FRAMES)
+
+	func _point_row(deck_n: int, kind: String, base: float) -> void:
+		var got: Dictionary = _end(_t0)
+		var peak: float = got["peak"]
+		var live_max: int = 0
+		var stood: int = 0
+		for i: int in range(_lives.size()):
+			live_max = maxi(live_max, _lives[i])
+			if i > 0 and _lives[i] > _lives[i - 1]:
+				stood += _lives[i] - _lives[i - 1]
+		_row("POINT " + JSON.stringify({
+			"deck": deck_n, "kind": kind,
+			"worst_ms": got["worst"], "p50_ms": got["p50"], "over_33": got["over_33"],
+			"vram_peak_mib": snappedf(peak - base, 0.1),
+			"live_max": live_max, "stood": stood,
+		}))
+
+	## A card's centre in the window's pixels, where Input takes a pointer.
+	func _centre(node: Node) -> Vector2:
+		var control: Control = node as Control
+		return get_viewport().get_final_transform() \
+			* control.get_global_transform_with_canvas() * (control.size * 0.5)
+
+	## A finger down at `at` for HOLD_SECONDS, lifted, and WATCH_SECONDS after.
+	func _tap(at: Vector2) -> void:
+		_touch(at, true)
+		await _wait(HOLD_SECONDS)
+		_touch(at, false)
+		await _wait(WATCH_SECONDS)
+
+	func _wait(seconds: float) -> void:
+		await get_tree().create_timer(seconds).timeout
+		await get_tree().process_frame
+
+	func _touch(at: Vector2, pressed: bool) -> void:
+		var ev: InputEventScreenTouch = InputEventScreenTouch.new()
+		ev.index = 0
+		ev.position = at
+		ev.pressed = pressed
+		Input.parse_input_event(ev)
+
+	func _move(at: Vector2) -> void:
+		var ev: InputEventMouseMotion = InputEventMouseMotion.new()
+		ev.position = at
+		ev.global_position = at
+		Input.parse_input_event(ev)
 
 	## Each size's first open is a cold one: a tree that bakes its faces
 	## (presentation/cards/card_faces.gd) drops them, one that does not is
@@ -168,6 +289,8 @@ class Probe:
 	func _begin() -> void:
 		_stamps.clear()
 		_vram.clear()
+		_lives.clear()
+		_t0 = Time.get_ticks_usec()
 		set_process(true)
 
 	## Frame times from the call at `t0`; the first gap is the call's own frame.
