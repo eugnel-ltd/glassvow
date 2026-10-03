@@ -646,6 +646,17 @@ sources), the per-GLB extracted PNGs are gone, and the three sources import
 VRAM-compressed with mipmaps. `presentation/map/landscape/asset_surfaces.gd`
 gives each kit material the shared source its authored name calls for.
 
+**R2 additions (the living land, 3 Oct 2026), lane picks, owner re-pick open:**
+
+| Asset | Recipe | Notes |
+|---|---|---|
+| `lantern-post.glb` | `tools/map_atelier/journey/living_kit.py` (Blender, `blender -b -P`), master `sources/lantern-post.blend` | A stone post (plinth, shaft, cap in the kit's ash stone, `stone_finish`) carrying the gateway's amber lantern (`build_kit.lantern`, without its chain). 296 triangles, no textures of its own. The flame sits at the glass centre, 1.38 m up (`Kit.LAMP_ANCHORS`). Candidate kept: this is the only one. |
+| `textures/flame-flipbook.png` | `tools/map_atelier/journey/flame_flipbook.py` (numpy, Pillow; seed 7411) | 256×256, sixteen 64×64 frames of one looping flicker (value noise sampled round a circle in time, so the loop closes). Imports VRAM-compressed with mipmaps. Drawn additively on every lamp by `presentation/map/landscape/flame.gdshader`. |
+
+`build_kit.py` gained a `__main__` guard (importing it builds nothing) and a
+`chain` switch on `lantern()` that defaults to the R1 lamp; rebuilding the R1
+kit gives byte-identical GLBs.
+
 ## Rejection note — what "technically shippable" means
 
 Judging generated character art by eye is not enough; two of the five

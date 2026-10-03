@@ -118,7 +118,7 @@ def pointed_outline(width, base, spring, apex):
         (-width*.36,spring+(apex-spring)*.5),(-width/2,spring)]
 
 
-def lantern(x, y, z):
+def lantern(x, y, z, chain=True):
     block('Lamp foot', (x,y,z), (.39,.39,.1), METAL)
     block('Amber light', (x,y,z+.31), (.27,.27,.49), AMBER, .015)
     for dx in [-.17,.17]:
@@ -126,7 +126,8 @@ def lantern(x, y, z):
             rod('Lamp leading', (x+dx,y+dy,z), (x+dx*.85,y+dy*.85,z+.6), .023,METAL,5)
     bpy.ops.mesh.primitive_cone_add(vertices=4,radius1=.32,radius2=.07,depth=.23,location=(x,y,z+.70),rotation=(0,0,math.pi/4))
     bpy.context.object.data.materials.append(METAL)
-    rod('Lamp chain',(x,y,z+.80),(x,y,z+1.13),.018,METAL,5)
+    if chain:
+        rod('Lamp chain',(x,y,z+.80),(x,y,z+1.13),.018,METAL,5)
 
 
 def arch():
@@ -307,7 +308,7 @@ def save(name,description,budget,grounded=True):
     obj.data.materials.clear()
     for mat in materials:obj.data.materials.append(mat)
     for p,i in zip(obj.data.polygons,indices):p.material_index=i
-    if name.startswith('slate-') or name in ['amber-arch','memorial','waystone','bridge-bay']:
+    if name.startswith('slate-') or name in ['amber-arch','memorial','waystone','bridge-bay','lantern-post']:
         stone_finish.apply(obj,OUT/'textures/ash-stone-colour.png')
     if any(mat.name.startswith('Foliage /') for mat in materials):
         assert obj.data.uv_layers and obj.data.uv_layers[0].name == 'UVMap'
@@ -324,10 +325,13 @@ def save(name,description,budget,grounded=True):
     MANIFEST.append({'id':name,'file':name+'.glb','source':'tools/map_atelier/journey/sources/'+name+'.blend','description':description,'triangles':triangles,'materials':len(materials),'blender_xyz_bounds':bounds,'grounded':grounded})
     print('JOURNEY_ASSET',name,triangles,len(materials),flush=True)
 
-for builder in [arch,conifer,copse,rock,memorial,waystone,bridge,lamp_pair]:builder()
-foliage.conifer(reset, rod, mesh, save, BARK, OUT, slender=True)
-foliage.copse(reset, rod, mesh, save, BARK, OUT, spreading=True)
-rock(ridge=True)
-natural_variants.build(reset, rod, mesh, bevel, save, BARK, STONE, OUT)
-(OUT/'manifest.json').write_text(json.dumps({'status':'Step 3 sample; awaiting native visual review','generator':'tools/map_atelier/journey/build_kit.py','seed':7403,'assets':MANIFEST},indent=2)+'\n')
-print('JOURNEY_KIT_OK',len(MANIFEST),flush=True)
+# Imported by living_kit.py for its helpers and materials: building the R1
+# kit happens only when this file is the script Blender runs.
+if __name__ == '__main__':
+    for builder in [arch,conifer,copse,rock,memorial,waystone,bridge,lamp_pair]:builder()
+    foliage.conifer(reset, rod, mesh, save, BARK, OUT, slender=True)
+    foliage.copse(reset, rod, mesh, save, BARK, OUT, spreading=True)
+    rock(ridge=True)
+    natural_variants.build(reset, rod, mesh, bevel, save, BARK, STONE, OUT)
+    (OUT/'manifest.json').write_text(json.dumps({'status':'Step 3 sample; awaiting native visual review','generator':'tools/map_atelier/journey/build_kit.py','seed':7403,'assets':MANIFEST},indent=2)+'\n')
+    print('JOURNEY_KIT_OK',len(MANIFEST),flush=True)

@@ -393,6 +393,29 @@
         ]
       ],
       "grounded": true
+    },
+    {
+      "id": "lantern-post",
+      "file": "lantern-post.glb",
+      "source": "tools/map_atelier/journey/sources/lantern-post.blend",
+      "description": "Roadside stone post carrying an amber lantern; R2 light, lane pick",
+      "triangles": 296,
+      "materials": 5,
+      "blender_xyz_bounds": [
+        [
+          -0.2263,
+          0.2263
+        ],
+        [
+          -0.2263,
+          0.2263
+        ],
+        [
+          0.0,
+          1.885
+        ]
+      ],
+      "grounded": true
     }
   ]
 }
