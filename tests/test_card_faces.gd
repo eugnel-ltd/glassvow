@@ -436,11 +436,11 @@ static func _choice_screen_builds_no_live_card(fails: Array[String],
 	screen.free()
 
 
-## The runner calls the suite before the tree starts, so nothing added to it
-## is readied: a card asks for its face when this stands in for that.
+## A card asks for its face when it is readied: by the engine under a parent in
+## the tree, by hand under one outside it (`TreeReady.once`).
 static func _add(parent: Node, card: BakedCard) -> void:
 	parent.add_child(card)
-	card._ready()
+	TreeReady.once(card)
 
 
 ## A grid of four cards (the last shown only) with its faces landed, its
@@ -496,7 +496,7 @@ static func _bake(content: ContentDB, ids: Array[StringName], ups: Array[StringN
 static func _ready_all(root: Node) -> void:
 	for node: Node in root.find_children("", "BakedCard", true, false):
 		var card: BakedCard = node
-		card._ready()
+		TreeReady.once(card)
 
 
 static func _host() -> Control:
