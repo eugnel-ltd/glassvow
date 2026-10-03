@@ -1,4 +1,76 @@
 # §11.6, Mac: tools/bench_rooms.gd on the M1 Max (GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1,
+# --rendering-driver metal, Forward Mobile, the A12's own driver path), on the PR B code after its review
+# (c041b68e: the rooms' first opening paid while the title rests, Settings fitted ahead, the bench counting
+# a passage's frames inside its own span). A saved run's title, measured 5 s at rest once the rooms' warm
+# is done; then each room's word tapped, the room held (5 s on the first lap, 1 s after), its Return
+# tapped, 20 laps a room, through the engine's own input path. "tap->first moved" runs from the release to
+# the draw of the tap frame, which already moves. "tap frame" is that frame's wall interval. "passage" is
+# every frame after it inside the passage's own span (520 or 600 ms arriving, 400 or 480 leaving). In all
+# four runs the shared Mac paced every frame at about 9.4 ms (other lanes' suites ran beside it), so only
+# the tap frames compare: the first opening in the launch is 9.2 to 12.5 ms against 8.1 to 11.5 (median)
+# on every later lap. Maxima of 27 to 242 ms fall in later laps while other suites ran. The iPad 8 rows
+# (evidence/ipad8-rooms-frame-times.txt) are the acceptance.
+
+== pad-landscape-en.jsonl  nonce mac-pad-landscape-en-1791061708  label mac-pad-landscape-en  (pad, en)
+   title at rest: 602 frames; wall P95 9.39 ms; the rooms' warm done before it: True
+   settings first opening tap->first moved 19.1/19.1/19.1 ms; tap frame 11.2/11.2/11.2 ms (min/median/max)
+                          passage (inside its span) wall P95 9.52 max 9.87 (n 109), over 33 ms: 0; at rest wall P95 9.48 (n 602)
+   settings laps 2-20     tap->first moved 15.1/17.2/19.3 ms; tap frame 7.9/9.2/11.0 ms (min/median/max)
+                          passage (inside its span) wall P95 9.49 max 42.35 (n 2067), over 33 ms: 1
+   help     first opening tap->first moved 16.6/16.6/16.6 ms; tap frame 9.2/9.2/9.2 ms (min/median/max)
+                          passage (inside its span) wall P95 9.52 max 14.26 (n 109), over 33 ms: 0; at rest wall P95 9.44 (n 575)
+   help     laps 2-20     tap->first moved 15.5/16.5/17.7 ms; tap frame 7.6/8.4/9.6 ms (min/median/max)
+                          passage (inside its span) wall P95 9.50 max 56.65 (n 2034), over 33 ms: 3
+   credits  first opening tap->first moved 18.5/18.5/18.5 ms; tap frame 10.9/10.9/10.9 ms (min/median/max)
+                          passage (inside its span) wall P95 9.56 max 9.74 (n 129), over 33 ms: 0; at rest wall P95 9.38 (n 573)
+   credits  laps 2-20     tap->first moved 15.1/16.5/17.7 ms; tap frame 7.7/8.5/10.3 ms (min/median/max)
+                          passage (inside its span) wall P95 9.51 max 218.79 (n 2339), over 33 ms: 9
+== pad-landscape-zh-Hant.jsonl  nonce mac-pad-landscape-zh-Hant-1791061912  label mac-pad-landscape-zh-Hant  (pad, zh-Hant)
+   title at rest: 602 frames; wall P95 9.41 ms; the rooms' warm done before it: True
+   settings first opening tap->first moved 21.6/21.6/21.6 ms; tap frame 12.5/12.5/12.5 ms (min/median/max)
+                          passage (inside its span) wall P95 9.44 max 9.71 (n 110), over 33 ms: 0; at rest wall P95 9.53 (n 603)
+   settings laps 2-20     tap->first moved 17.9/19.8/21.7 ms; tap frame 10.5/11.5/13.6 ms (min/median/max)
+                          passage (inside its span) wall P95 9.54 max 26.96 (n 2057), over 33 ms: 0
+   help     first opening tap->first moved 19.8/19.8/19.8 ms; tap frame 12.1/12.1/12.1 ms (min/median/max)
+                          passage (inside its span) wall P95 9.61 max 9.75 (n 109), over 33 ms: 0; at rest wall P95 9.49 (n 603)
+   help     laps 2-20     tap->first moved 16.5/18.1/24.0 ms; tap frame 9.1/10.3/16.0 ms (min/median/max)
+                          passage (inside its span) wall P95 9.47 max 35.85 (n 2069), over 33 ms: 1
+   credits  first opening tap->first moved 18.8/18.8/18.8 ms; tap frame 11.3/11.3/11.3 ms (min/median/max)
+                          passage (inside its span) wall P95 9.50 max 9.75 (n 128), over 33 ms: 0; at rest wall P95 9.27 (n 602)
+   credits  laps 2-20     tap->first moved 15.5/16.6/18.4 ms; tap frame 7.9/8.7/10.5 ms (min/median/max)
+                          passage (inside its span) wall P95 9.43 max 12.66 (n 2432), over 33 ms: 0
+== phone-landscape-en.jsonl  nonce mac-phone-landscape-en-1791062117  label mac-phone-landscape-en  (phone, en)
+   title at rest: 603 frames; wall P95 9.16 ms; the rooms' warm done before it: True
+   settings first opening tap->first moved 18.9/18.9/18.9 ms; tap frame 11.7/11.7/11.7 ms (min/median/max)
+                          passage (inside its span) wall P95 9.49 max 9.55 (n 109), over 33 ms: 0; at rest wall P95 9.47 (n 602)
+   settings laps 2-20     tap->first moved 16.2/17.7/19.4 ms; tap frame 9.1/9.5/10.4 ms (min/median/max)
+                          passage (inside its span) wall P95 9.48 max 9.85 (n 2080), over 33 ms: 0
+   help     first opening tap->first moved 19.0/19.0/19.0 ms; tap frame 10.1/10.1/10.1 ms (min/median/max)
+                          passage (inside its span) wall P95 9.41 max 9.71 (n 109), over 33 ms: 0; at rest wall P95 9.30 (n 602)
+   help     laps 2-20     tap->first moved 15.2/16.3/17.2 ms; tap frame 7.2/8.1/9.4 ms (min/median/max)
+                          passage (inside its span) wall P95 9.49 max 10.54 (n 2078), over 33 ms: 0
+   credits  first opening tap->first moved 19.5/19.5/19.5 ms; tap frame 11.0/11.0/11.0 ms (min/median/max)
+                          passage (inside its span) wall P95 9.39 max 9.84 (n 129), over 33 ms: 0; at rest wall P95 9.35 (n 602)
+   credits  laps 2-20     tap->first moved 15.1/16.4/17.5 ms; tap frame 7.4/8.3/8.8 ms (min/median/max)
+                          passage (inside its span) wall P95 9.39 max 91.94 (n 2427), over 33 ms: 1
+== phone-landscape-zh-Hant.jsonl  nonce mac-phone-landscape-zh-Hant-1791062321  label mac-phone-landscape-zh-Hant  (phone, zh-Hant)
+   title at rest: 563 frames; wall P95 9.21 ms; the rooms' warm done before it: True
+   settings first opening tap->first moved 19.5/19.5/19.5 ms; tap frame 12.5/12.5/12.5 ms (min/median/max)
+                          passage (inside its span) wall P95 9.46 max 9.91 (n 108), over 33 ms: 0; at rest wall P95 9.38 (n 561)
+   settings laps 2-20     tap->first moved 17.8/20.0/25.2 ms; tap frame 10.7/11.5/13.2 ms (min/median/max)
+                          passage (inside its span) wall P95 9.45 max 148.66 (n 1952), over 33 ms: 8
+   help     first opening tap->first moved 18.9/18.9/18.9 ms; tap frame 10.2/10.2/10.2 ms (min/median/max)
+                          passage (inside its span) wall P95 9.47 max 9.74 (n 109), over 33 ms: 0; at rest wall P95 9.57 (n 500)
+   help     laps 2-20     tap->first moved 14.3/16.6/137.1 ms; tap frame 7.7/8.6/129.7 ms (min/median/max)
+                          passage (inside its span) wall P95 9.54 max 107.53 (n 1964), over 33 ms: 14
+   credits  first opening tap->first moved 20.5/20.5/20.5 ms; tap frame 11.8/11.8/11.8 ms (min/median/max)
+                          passage (inside its span) wall P95 9.42 max 9.68 (n 129), over 33 ms: 0; at rest wall P95 9.31 (n 570)
+   credits  laps 2-20     tap->first moved 15.4/16.3/126.1 ms; tap frame 7.6/8.5/42.9 ms (min/median/max)
+                          passage (inside its span) wall P95 9.39 max 241.97 (n 2300), over 33 ms: 8
+
+## Before the review: 11aa2233 (the rows of the time, their passage frames including 0.2 s of the room at rest after each)
+
+# §11.6, Mac: tools/bench_rooms.gd on the M1 Max (GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1,
 # --rendering-driver metal, Forward Mobile, the A12's own driver path), on the code of 11aa2233 (How to
 # Play's pages built on first showing, the Credits roll's lower parts after the tap frame). A saved run's
 # title; the title measured 5 s at rest, then each room's word tapped, the room held (5 s on the first lap,
