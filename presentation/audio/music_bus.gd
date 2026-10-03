@@ -6,8 +6,10 @@ const DIR: String = "res://assets/audio/music/%s.mp3"
 ## Same-scene alternates: cue -> context -> the stems that may answer it. A cue
 ## or context absent from the file plays the `FILES` default.
 const VARIANTS_PATH: String = "res://assets/audio/music/variants.json"
-## Act IV is act index 3; its boss node sits on the last row of the map.
+## Act IV is act index 3. It is the authored five-node Mirrored Road
+## (`WorldMap.ACT4_TYPES`), not the fifteen-row map, so its boss is node 5.
 const ACT4_INDEX: int = 3
+## `VigilState.commit_run` records the best waystone as act * 15 + lit.
 const WAYSTONES_PER_ACT: int = 15
 const CROSSFADE: float = 0.8
 const SILENT_DB: float = -60.0
@@ -83,14 +85,14 @@ static func combat_context(kind: String, act_index: int, vigil: VigilState) -> S
 
 
 ## True once this Vigil has reached the Act IV boss in an earlier run: the
-## best waystone ever lit covers the boss node, which a run lights on entering
-## it, so a loss to the boss counts. A win does not: a run without six shards
+## best waystone ever lit covers the boss node (node 5 of the Mirrored Road),
+## which a run lights on entering it, so a loss to the boss counts. A win does not: a run without six shards
 ## ends after Act III and never meets this boss. Existing Vigil data only.
 static func boss_met_before(vigil: VigilState) -> bool:
 	if vigil == null:
 		return false
 	var best: int = int(float(str(vigil.deeds.get("bestWaystone", 0))))
-	return best >= ACT4_INDEX * WAYSTONES_PER_ACT + WorldMap.ROWS
+	return best >= ACT4_INDEX * WAYSTONES_PER_ACT + WorldMap.ACT4_TYPES.size()
 
 
 ## The file stem a play of `cue` in `context` would use: the default, or one

@@ -34,21 +34,18 @@ static func run(fails: Array[String]) -> void:
 	# Boss: return is B, first meeting is A.
 	_check(fails, bus.resolve(&"act4Boss", &"return") == "act4-boss-b", "boss return is B")
 
-	# The decision path: context from the real Vigil data.
-	var vigil: VigilState = VigilState.blank()
-	var boss_row: int = MusicBus.ACT4_INDEX * MusicBus.WAYSTONES_PER_ACT + WorldMap.ROWS
-	_check(fails, MusicBus.combat_context("boss", 3, vigil) == &"",
+	# The decision path through the real maps and the real commit: what a
+	# Vigil records when a run ends where it ends.
+	var content: ContentDB = ContentDB.load_full()
+	_check(fails, MusicBus.combat_context("boss", 3, VigilState.blank()) == &"",
 		"a fresh Vigil meets the boss for the first time")
-	vigil.deeds["bestWaystone"] = boss_row - 1
-	_check(fails, MusicBus.combat_context("boss", 3, vigil) == &"",
-		"reaching the node before the boss is not meeting it")
-	vigil.deeds["bestWaystone"] = boss_row
-	_check(fails, MusicBus.combat_context("boss", 3, vigil) == &"return",
-		"having reached the boss node before is a return")
-	vigil.deeds["bestWaystone"] = 2 * MusicBus.WAYSTONES_PER_ACT + WorldMap.ROWS
-	vigil.deeds["wins"] = 1
-	_check(fails, MusicBus.combat_context("boss", 3, vigil) == &"",
+	_check(fails, _boss_context_after(content, "death", 3, "boss") == &"return",
+		"a loss to the Act IV boss makes the next meeting a return")
+	_check(fails, _boss_context_after(content, "death", 3, "elite") == &"",
+		"a death at the Act IV elite has not met the boss")
+	_check(fails, _boss_context_after(content, "win", 2, "boss") == &"",
 		"a win that ended after Act III never met the Act IV boss")
+	var vigil: VigilState = VigilState.blank()
 	_check(fails, MusicBus.combat_context("boss", 3, null) == &"", "no Vigil, no return")
 	_check(fails, MusicBus.combat_context("boss", 2, vigil) == &"",
 		"only the Act IV boss varies")
@@ -67,3 +64,25 @@ static func run(fails: Array[String]) -> void:
 	_check(fails, bus.variants_of(&"act4Combat").size() == 4
 		and bus.variants_of(&"act4Boss").size() == 2, "variant lists are C+A/B/D and A+B")
 	bus.free()
+
+
+## The boss context after one run ends at the last node of `node_type` on the
+## real map of act index `act`, committed through `VigilState.commit_run`.
+static func _boss_context_after(content: ContentDB, outcome: String, act: int,
+		node_type: String) -> StringName:
+	var run: RunState = RunState.new_run(content, 65900 + act,
+		"run-music-%s-%d-%s" % [outcome, act, node_type])
+	run.act = act
+	var map: WorldMap = WorldMap.act4(run, content) \
+		if act == MusicBus.ACT4_INDEX else WorldMap.benchmark(run)
+	var node: MapNode = null
+	for candidate: MapNode in map.nodes:
+		if candidate.type == node_type:
+			node = candidate
+	if node == null:
+		return &"no-node"
+	run.waystones_lit = node.row + 1
+	var vigil: VigilState = VigilState.blank()
+	if not vigil.commit_run(run, outcome, content):
+		return &"no-commit"
+	return MusicBus.combat_context("boss", MusicBus.ACT4_INDEX, vigil)

@@ -100,10 +100,12 @@ engine RNG, never the run's seeded RNG.
 
 "Return" means the Vigil has met the boss in an earlier run, read from
 existing Vigil data with no save change: `deeds.bestWaystone` at least
-3 x 15 + 15. A run lights the boss node on entering it, so a loss to the boss
-counts; a win alone does not, because a run without six shards ends after
-Act III and never meets this boss. The deed commits at run end, so a first
-meeting is always A.
+3 x 15 + 5. Act IV is the authored five-node Mirrored Road
+(`WorldMap.ACT4_TYPES`), so its boss is node 5, and a run lights a node on
+entering it: a loss to the boss counts. A death at the Act IV elite (48) does
+not, and neither does a win alone, because a run without six shards ends
+after Act III (45) and never meets this boss. The deed commits at run end, so
+a first meeting is always A.
 
 The four alternate titles were drafted through the story skill on 3 Oct 2026;
 the owner may re-title. Each one takes a clause of a shipped Act IV line, the
