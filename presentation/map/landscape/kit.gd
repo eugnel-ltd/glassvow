@@ -7,6 +7,7 @@ const Envelope = preload("res://presentation/map/landscape/foliage_envelope.gd")
 const GroundContacts = preload("res://presentation/map/landscape/ground_contacts.gd")
 const GatewaySites = preload("res://presentation/map/landscape/gateway_sites.gd")
 const Terrain = preload("res://presentation/map/landscape/terrain.gd")
+const ImpostorAtlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
 var tree_envelopes: Dictionary = {}
 var material_pool: Dictionary = {}
 var asset_scenes: Dictionary = {}
@@ -93,9 +94,11 @@ static func preload_scenes() -> void:
 
 
 ## Readies the next kit scene on the main thread and answers whether every one
-## is ready. A batched kind is loaded as its own copy, so its static template
-## takes the meshes without reading them back from the renderer; the arch is
-## loaded through the cache and held, as the worker loads it there. Stepped
+## is ready, and the woodland's impostor atlas with them (`ImpostorAtlas`; the
+## foliage kinds it draws load no scene). A batched kind is loaded as its own
+## copy, so its static template takes the meshes without reading them back
+## from the renderer; the arch is loaded through the cache and held, as the
+## worker loads it there. Stepped
 ## (the journey prefetch under the title, one scene per frame), the scenes load
 ## on the loader's threads, the next one asked for as this one is taken, so
 ## their meshes reach the GPU a scene per frame rather than together; a step
@@ -104,9 +107,10 @@ static func preload_scenes() -> void:
 ## renderer is kept in step, as the engine's own wait does, but without running
 ## the deferred calls that wait would run in the middle of a frame.
 static func preload_step(wait: bool = false) -> bool:
-	var kinds: Array = PROFILES.keys()
+	var kinds: Array = _scene_kinds()
+	ImpostorAtlas.request()
 	if _held_kinds >= kinds.size():
-		return true
+		return ImpostorAtlas.prepare_step(wait)
 	var started: int = Time.get_ticks_usec()
 	Meshes.prepare_unit_box()
 	var kind: String = kinds[_held_kinds]
@@ -135,7 +139,14 @@ static func preload_step(wait: bool = false) -> bool:
 	if not failure.is_empty():
 		push_error("Journey kit: " + failure)
 	preload_ms += (Time.get_ticks_usec() - started) / 1000.0
-	return _held_kinds >= kinds.size()
+	return _held_kinds >= kinds.size() and ImpostorAtlas.prepare_step(wait)
+
+
+## The kinds whose scenes the kit holds: all but the foliage the woodland
+## draws as impostors.
+static func _scene_kinds() -> Array:
+	return PROFILES.keys().filter(func(kind: String) -> bool:
+		return not ImpostorAtlas.KIT_KINDS.has(kind))
 
 
 static func _request(kind: String) -> void:

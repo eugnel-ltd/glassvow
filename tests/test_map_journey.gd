@@ -323,9 +323,9 @@ static func _rest_cadence(fails: Array[String], scene: MapScene) -> void:
 
 
 ## R2 step 3: banners hang on the bridges, facing the camera and off the walking
-## lane; the kit's foliage and the banners' cloth move under `LandMotion`; and
-## Reduce Motion stills them and takes the embers and ash away (lantern flicker
-## and the water keep their own cadence).
+## lane; the woodland's cards (R3.1) and the banners' cloth move under
+## `LandMotion`; and Reduce Motion stills them and takes the embers and ash
+## away (the water keeps its own cadence).
 static func _living_motion(fails: Array[String], scene: MapScene,
 		land: MapJourneyLandscape) -> void:
 	var banners: Array[Dictionary] = []
@@ -344,13 +344,14 @@ static func _living_motion(fails: Array[String], scene: MapScene,
 		var mesh: Mesh = (node as MultiMeshInstance3D).multimesh.mesh
 		for i: int in range(mesh.get_surface_count()):
 			var material: ShaderMaterial = mesh.surface_get_material(i) as ShaderMaterial
-			if material == null:
-				continue
-			if material.shader == preload("res://presentation/map/landscape/foliage.gdshader"):
-				swaying += 1
-			elif material.shader == preload("res://presentation/map/landscape/banner.gdshader"):
+			if material != null and material.shader == preload("res://presentation/map/landscape/banner.gdshader"):
 				rippling += 1
-	_check(fails, swaying > 0 and rippling > 0, "the foliage sways and the banners ripple")
+	for card: MultiMeshInstance3D in land.wood.cards:
+		var material: ShaderMaterial = card.material_override as ShaderMaterial
+		if material != null and material.shader == preload("res://presentation/map/landscape/impostor.gdshader"):
+			swaying += 1
+	_check(fails, swaying > 0 and swaying == land.wood.cards.size() and rippling > 0,
+		"the woodland sways and the banners ripple")
 	_check(fails, land.air.embers.preprocess == 0.0 and land.air.ash.preprocess == 0.0,
 		"the air fills in rather than pre-simulating in the land's first frame")
 	var reduced: bool = Preferences.active.reduce_motion
