@@ -298,7 +298,10 @@ func _hide_wipe() -> void:
 
 ## Every screen root's entrance: fade in with a 1.015 → 1 settle about the
 ## centre. The pivot needs a laid-out size, so the scale half waits one frame
-## and is skipped when the root has none to offer.
+## and is skipped when the root has none to offer. Under Reduce Motion it is a
+## REDUCED_FADE linear fade with no settle (docs/design/2026-10-03-title-rooms
+## §2.7): a route change is never a hard cut. Either way the screen comes up
+## out of the night, the project's clear colour (§2.8), never the engine's grey.
 ##
 ## A root can enter more than once: the map screen is kept off the tree between
 ## visits (`MapScreenKeep`). Each entrance is numbered on the root, and only the
@@ -309,13 +312,16 @@ func screen_in(root: Control) -> void:
 		return
 	var entry: int = _entrance_of(root) + 1
 	root.set_meta(&"screen_in", entry)
-	if instant or Preferences.active.reduce_motion:
+	if instant:
 		return
-	root.modulate.a = 0.0
 	var tree: SceneTree = get_tree()
 	if tree == null:
 		root.modulate.a = 1.0
 		return
+	if Preferences.active.reduce_motion:
+		_fade_in(root, entry)
+		return
+	root.modulate.a = 0.0
 	await tree.process_frame
 	if not is_instance_valid(root) or not root.is_inside_tree() \
 			or _entrance_of(root) != entry:
@@ -333,6 +339,19 @@ func screen_in(root: Control) -> void:
 		if sized:
 			root.scale = Vector2.ONE * lerpf(SCREEN_IN_SCALE, 1.0, eased)
 	Motion.bez(root, entrance, SCREEN_IN_TIME, Motion.SCREEN_IN)
+
+
+## Reduce Motion's entrance: from nothing on the call's own frame to whole in
+## REDUCED_FADE, linear, at full scale. Bound to the root, so a route change
+## mid-fade frees it with the screen; numbered, so only the latest entrance
+## writes.
+func _fade_in(root: Control, entry: int) -> void:
+	root.scale = Vector2.ONE
+	root.modulate.a = 0.0
+	var fade: Callable = func(alpha: float) -> void:
+		if is_instance_valid(root) and _entrance_of(root) == entry:
+			root.modulate.a = alpha
+	root.create_tween().tween_method(fade, 0.0, 1.0, LeadlightMotion.REDUCED_FADE)
 
 
 ## The number of the latest `screen_in` on `root`; zero before its first.
