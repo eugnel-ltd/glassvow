@@ -239,6 +239,7 @@ static func _keeping_the_deck(fails: Array[String], content: ContentDB) -> void:
 ## fight begins.
 static func _main_lets_faces_go(fails: Array[String], content: ContentDB) -> void:
 	var main: Main = Main.new()
+	TestProfile.install(main)
 	main.content = content
 	_bake(content, [&"strike"], [])
 	main._apply_content_hydration()
