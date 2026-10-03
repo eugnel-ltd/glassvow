@@ -32,6 +32,9 @@ static func consent_row(preferences: Preferences, stage_shape: StringName,
 	line.add_theme_color_override("font_color", Color("#c3c8d9"))
 	line.add_theme_color_override("font_outline_color", Color(LeadlightTokens.VOID, 0.8))
 	line.add_theme_constant_override("outline_size", 4)
+	# Alegreya's line box is tall: closed up, two lines and the switch's row at
+	# the touch floor fit under the words on a phone.
+	line.add_theme_constant_override("line_spacing", -roundi(float(px) * 0.3))
 	row.add_child(line)
 	var controls: HBoxContainer = HBoxContainer.new()
 	controls.add_theme_constant_override("separation", 12)

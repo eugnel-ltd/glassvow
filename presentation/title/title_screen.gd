@@ -52,7 +52,7 @@ class Layout:
 	# and the build number in its corner; wide enough that no count is cut
 	# (a carved line is clipped to its slab).
 	var slab_dx: float = 350.0
-	var slab_y: float = 752.0
+	var slab_y: float = 757.0
 	var slab_w: float = 400.0
 	var lang_dx: float = 240.0
 	var lang_y: float = 688.0
@@ -665,7 +665,9 @@ func _layout() -> void:
 	var rose_r: float = ROSE_ART.z * spec.rose_grow * TitleLampChain.scale_for(size)
 	rose.position = rose_at - Vector2(rose_r, rose_r)
 	rose.size = Vector2(rose_r, rose_r) * 2.0
-	_place_side(LEFT_IDS, spec.left, -1.0, k, cx)
+	# The consent line takes the foot of the left side, so the words there
+	# stand from the top of their arc instead of centred on it.
+	_place_side(LEFT_IDS, spec.left, -1.0, k, cx, _consent != null)
 	_place_side(RIGHT_IDS, spec.right, 1.0, k, cx)
 	if _words.has("dev"):
 		var dev: Control = _words["dev"]
@@ -703,8 +705,10 @@ func _layout() -> void:
 
 
 ## Seat a side's words on its arc, nearest the flame first; a short side is
-## centred on its arc so the two sides stay balanced.
-func _place_side(ids: Array[String], slots: Array[Vector2], dir: float, k: float, cx: float) -> void:
+## centred on its arc so the two sides stay balanced, or stands from its top
+## (`from_top`) when the foot of the side is taken.
+func _place_side(ids: Array[String], slots: Array[Vector2], dir: float, k: float, cx: float,
+		from_top: bool = false) -> void:
 	var items: Array[Control] = []
 	for id: String in ids:
 		if id == "begin":
@@ -712,7 +716,7 @@ func _place_side(ids: Array[String], slots: Array[Vector2], dir: float, k: float
 				items.append(_secondary)
 		elif _words.has(id):
 			items.append(_words[id])
-	var start: float = float(slots.size() - items.size()) * 0.5
+	var start: float = 0.0 if from_top else float(slots.size() - items.size()) * 0.5
 	for i: int in items.size():
 		var at: float = start + float(i)
 		var lo: int = clampi(floori(at), 0, slots.size() - 1)

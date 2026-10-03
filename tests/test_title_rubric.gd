@@ -101,6 +101,7 @@ static func _sits_whole(fails: Array[String], screen: TitleScreen, where: String
 		_check(fails, stage.encloses(row), "%s: the consent line runs off the stage (%s)" % [where, row])
 		_check(fails, not row.intersects(hit),
 			"%s: the consent line reaches under the lantern (%s against %s)" % [where, row, hit])
+		_consent_on_touch(fails, screen, where)
 
 
 ## The title as Main builds it for `state`, the longest deeds a Vigil can carve
@@ -132,3 +133,27 @@ static func _title(shape: StringName, state: String) -> TitleScreen:
 	screen.size = Vector2(StageShape.REFERENCES[shape])
 	screen._layout()
 	return screen
+
+
+## On a touch screen the switch and the link stand at the 44 px touch floor,
+## taller than on this desktop runner: the row, risen to stay on the stage at
+## that height, must still clear the words above it.
+static func _consent_on_touch(fails: Array[String], screen: TitleScreen, where: String) -> void:
+	var line: Label = screen._consent.find_child("DiagnosticsLine", true, false) as Label
+	if line == null:
+		return
+	var px: int = line.get_theme_font_size("font_size")
+	var font: Font = line.get_theme_font("font")
+	var whole: float = font.get_string_size(line.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var lines: int = ceili(whole / line.custom_minimum_size.x)
+	var pitch: float = font.get_height(px) + float(line.get_theme_constant("line_spacing"))
+	var tall: float = float(lines) * pitch + float(screen._consent.get_theme_constant("separation")) + 44.0
+	var spec: TitleScreen.Layout = TitleScreen.Layout.for_shape(screen.shape)
+	var k: float = screen.size.y / spec.ref_h
+	var top: float = minf(spec.consent.y * k, screen.size.y - tall - 6.0 * k)
+	for id: String in screen._words:
+		var word: Control = screen._words[id]
+		if word.position.x + word.size.x < screen.size.x * 0.5:
+			_check(fails, word.position.y + word.size.y <= top + 0.5,
+				"%s: at the touch floor the consent line (top %d) runs into %s (bottom %d)" % [
+					where, int(top), word.text, int(word.position.y + word.size.y)])
