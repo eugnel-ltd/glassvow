@@ -22,6 +22,8 @@ extends SceneTree
 ##           turn, a decal in the picture turn) — and on the light: the live
 ##           turn's finish answers the angle, the picture's is a still.
 ##   DOWN    face down (180, 0): each render against the bake it shows.
+##   TINT    the unplayable dim (CardView's modulate) on a turned card: the
+##           picture turn carries it as the live turn's canvas draw does.
 ##   REST    a card turned to each pose by each renderer and back to rest is
 ##           the card as built: every pixel of it on the canvas and every
 ##           texel of its stage, max delta 0.
@@ -36,6 +38,8 @@ const MIN_IOU: float = 0.985
 const MAX_MEAN_DELTA: float = 24.0    # of 255, colour where both renders cover
 const SETTLE_FRAMES: int = 3
 const REST_CARD: String = "strike"
+## CardView's unplayable tint (`_apply_tint`).
+const UNPLAYABLE: Color = Color(0.6, 0.6, 0.6, 0.8)
 
 var _out: String = ""
 var _card_id: String = CardTurnSheet.DEFAULT_CARD
@@ -148,6 +152,8 @@ class Probe:
 			_row("AGREE %s yaw=%d pitch=%d iou=%.4f coverage_differs=%d of %d mean_delta=%.1f %s" % [
 				back_id, roundi(pose.x), roundi(pose.y), cmp["iou"], cmp["differs"],
 				cmp["covered"], cmp["mean"], "ok" if good else "FAIL"])
+			if pose == CardTurnSheet.POSES[1] and back_id == CardBacks.catalogue().default_id:
+				ok = await _tint(target, card, pose) and ok
 			if is_equal_approx(pose.x, 180.0) and is_equal_approx(pose.y, 0.0):
 				var to_live: Dictionary = _compare(live, bake)
 				var to_picture: Dictionary = _compare(picture, bake)
@@ -156,6 +162,22 @@ class Probe:
 					to_picture["mean"], to_picture["max"]])
 		target.queue_free()
 		return ok
+
+	## The unplayable dim on a turned card, through both renderers.
+	func _tint(target: SubViewport, card: CardView, pose: Vector2) -> bool:
+		card.modulate = UNPLAYABLE
+		card.turn(pose.x, pose.y, true)
+		await _frames(SETTLE_FRAMES)
+		var live: Image = target.get_texture().get_image()
+		card.turn(pose.x, pose.y, false)
+		await _frames(SETTLE_FRAMES)
+		var cmp: Dictionary = _compare(live, target.get_texture().get_image())
+		card.modulate = Color.WHITE
+		var good: bool = cmp["iou"] >= MIN_IOU and cmp["mean"] <= MAX_MEAN_DELTA
+		_row("TINT yaw=%d pitch=%d modulate=%s iou=%.4f mean_delta=%.1f %s" % [
+			roundi(pose.x), roundi(pose.y), str(UNPLAYABLE), cmp["iou"], cmp["mean"],
+			"ok" if good else "FAIL"])
+		return good
 
 	func _rest() -> bool:
 		var made: Array = _target(REST_CARD)

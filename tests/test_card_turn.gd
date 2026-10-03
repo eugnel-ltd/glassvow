@@ -1,8 +1,8 @@
 extends RefCounted
 ## Turning a card over (issue #657, PR 3): one pose maths for both renderers,
 ## CardView.turn's two renderers and its rest, the back plate a bake dresses a
-## card in, the pre-warm's bake and warmer, and every fight's load paying for
-## them with the back the player wears.
+## card in, a back cut without a stone, the pre-warm's bake and warmer, and
+## every fight's load paying for them with the back the player wears.
 ##
 ## The bakes run on a fake render step (CardBacks.use_renderer): the suite is
 ## headless, where no frame is ever drawn. That the two renderers put the card
@@ -21,6 +21,7 @@ static func run(fails: Array[String]) -> void:
 	_footprint(fails)
 	_picture_shader(fails)
 	_plate_of_a_bake(fails)
+	_back_has_no_stone(fails, content)
 	var render: _FakeRender = _FakeRender.new()
 	CardBacks.use_renderer(render.render)
 	await _prewarm(fails, render)
@@ -93,6 +94,19 @@ static func _plate_of_a_bake(fails: Array[String]) -> void:
 		if plate.get_shader_parameter(key) != face.get_shader_parameter(key):
 			fails.append("card turn: a bake's plate does not wear the back's `%s`" % key)
 	back.free()
+
+
+## A back is cut without a stone: no surface to silence, so nothing for the
+## pre-warm's bake to compile that the fight's own cards have not.
+static func _back_has_no_stone(fails: Array[String], content: ContentDB) -> void:
+	var back: CardView = CardBacks.build("vault")
+	var front: CardView = _card(content, &"strike")
+	if back._slab.mesh.get_surface_count() != 2 or front._slab.mesh.get_surface_count() != 3 \
+			or front._slab.get_surface_override_material(2) == null:
+		fails.append("card turn: a back's prism carries %d surfaces and a front's %d, want 2 and 3 with the stone"
+			% [back._slab.mesh.get_surface_count(), front._slab.mesh.get_surface_count()])
+	back.free()
+	front.free()
 
 
 static func _prewarm(fails: Array[String], render: _FakeRender) -> void:

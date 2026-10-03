@@ -326,9 +326,10 @@ var surface: Array = []
 var _spr_free: Vector2 = Vector2(11.0, 0.55)
 var _shadow_size: int = SHADOW_SIZE
 
-## Geometry depends only on the card constants and the stock's thickness, so
-## one prism serves every card of a given stock — six meshes for the catalogue.
-## Materials differ per card and live on the MeshInstance3D as overrides.
+## Geometry depends only on the card constants, the stock's thickness and
+## whether the card carries a stone, so one prism serves every card of a given
+## stock and kind. Materials differ per card and live on the MeshInstance3D as
+## overrides.
 static var _prism_cache: Dictionary = {}
 
 
@@ -763,10 +764,11 @@ func _build_stage(content: Control, mat: Dictionary, tint: Color,
 	_stage.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(_stage)
 
-	if not _prism_cache.has(thick):
-		_prism_cache[thick] = _prism_mesh(thick)
+	var cut: Vector2 = Vector2(thick, 0.0 if _is_back else 1.0)
+	if not _prism_cache.has(cut):
+		_prism_cache[cut] = _prism_mesh(thick, not _is_back)
 	_slab = MeshInstance3D.new()
-	_slab.mesh = _prism_cache[thick]
+	_slab.mesh = _prism_cache[cut]
 
 	# The side band is a cross-section of the material, not a lit surface —
 	# unshaded, one flat colour, the only place you see the stock itself.
@@ -785,15 +787,11 @@ func _build_stage(content: Control, mat: Dictionary, tint: Color,
 	# property of a sheet and there is no sheet here. It is set over the leaf,
 	# cut, and lit by the same lamp — see card_gem.gdshader.
 	#
-	# A back has no cost, so no stone: the gem surface stays in the mesh (one
-	# cached prism per thickness, shared with the fronts) and is silenced with a
-	# fully transparent override instead.
-	if _is_back:
-		var no_gem: StandardMaterial3D = StandardMaterial3D.new()
-		no_gem.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		no_gem.albedo_color = Color(0, 0, 0, 0)
-		_slab.set_surface_override_material(2, no_gem)
-	else:
+	# A back has no cost, so no stone: its prism is cut without one. It used to
+	# carry the stone silenced by a transparent, lit material, which drew
+	# nothing and cost the A12 seconds to compile the first time a back was
+	# built (#657: 8-10 s on the iPad 8 from a cold shader cache).
+	if not _is_back:
 		_slab.set_surface_override_material(2, _gem_plate(free))
 	_push_lamp()   # the room's lamp, before the card has ever been touched
 	_stage.add_child(_slab)
@@ -1036,8 +1034,8 @@ static func _add_fan(mesh: ArrayMesh, z: float) -> void:
 ## Its base sits ON the face rather than over it, which is what keeps the
 ## painted footprint from peeking out from under the crown when the card leans:
 ## a raised table shifts about half a pixel at full tilt, a base at the same
-## plane shifts none.
-static func _prism_mesh(thick: float) -> ArrayMesh:
+## plane shifts none. A back's prism (`gem_cut` false) stops at surface 1.
+static func _prism_mesh(thick: float, gem_cut: bool = true) -> ArrayMesh:
 	var pts: PackedVector2Array = _outline()
 	var n: int = pts.size()
 	var hz: float = thick * 0.5
@@ -1061,6 +1059,8 @@ static func _prism_mesh(thick: float) -> ArrayMesh:
 	side.commit(mesh)
 
 	_add_fan(mesh, hz)
+	if not gem_cut:
+		return mesh
 
 	var gem: SurfaceTool = SurfaceTool.new()
 	gem.begin(Mesh.PRIMITIVE_TRIANGLES)
