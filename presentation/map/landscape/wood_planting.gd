@@ -31,6 +31,11 @@ const CELL: float = 0.5
 const WET: int = 1
 const NO_TREE: int = 2
 const NO_SHRUB: int = 4
+## Beside a wet cell: the banks fall steeply within a cell, so a candidate
+## here is checked against the river exactly.
+const BANK: int = 8
+## No plant within this of a river's line (channel units, `River.distance`).
+const RIVER_BANK: float = 2.6
 ## The picture-plane grid: fine cells (metres), and fine cells per coarse cell.
 const FINE: float = 0.25
 const COARSE: int = 4
@@ -168,12 +173,12 @@ func _begin(terrain: Terrain) -> void:
 
 
 ## The river and its wet banks: a row's cells within a few metres of each
-## ravine's line are checked (everything else is dry), and every wet cell
-## wets its neighbours, since the banks fall steeply within a cell.
+## ravine's line are checked (everything else is dry), and every wet cell's
+## neighbours are marked as its bank.
 func _mask_water() -> void:
 	var half_length: float = _terrain.river_half_length
 	var reach: float = River.HALF_WIDTH * River.CHANNEL + CELL
-	var bank: float = 2.6 * River.CHANNEL
+	var bank: float = RIVER_BANK * River.CHANNEL
 	var wet: PackedInt32Array = []
 	for row: int in range(_rows):
 		var z: float = _origin.y + (row + 0.5) * CELL
@@ -191,7 +196,9 @@ func _mask_water() -> void:
 		var column: int = index % _columns
 		for r: int in range(maxi(0, row - 1), mini(_rows, row + 2)):
 			for c: int in range(maxi(0, column - 1), mini(_columns, column + 2)):
-				_ground[r * _columns + c] |= WET
+				_ground[r * _columns + c] |= BANK
+	for index: int in wet:
+		_ground[index] |= WET
 
 
 ## Raised roads (bridges and their ramps), abutments, waystones and every
@@ -428,7 +435,7 @@ func _ground_ok(x: float, z: float, flag: int, road: float) -> bool:
 		_reject("edge")
 		return false
 	var flags: int = _ground[row * _columns + column]
-	if flags & WET:
+	if flags & WET or (flags & BANK and _wet(x, z)):
 		_reject("water")
 		return false
 	if flags & flag:
@@ -438,6 +445,14 @@ func _ground_ok(x: float, z: float, flag: int, road: float) -> bool:
 		_reject("road")
 		return false
 	return true
+
+
+## Whether (x, z) is in the river or on its wet bank, exactly.
+func _wet(x: float, z: float) -> bool:
+	if River.distance(x, z) < RIVER_BANK:
+		return true
+	return River.contains(x, z, _terrain.river_half_length) \
+		and _terrain.surface_height(x, z) <= River.LEVEL + 0.2
 
 
 ## Distance from (x, z) to the nearest road on the ground (from the ground
