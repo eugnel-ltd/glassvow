@@ -7,14 +7,22 @@ extends RefCounted
 ## It keeps that grain's identity: one grain per display pixel, the same overlay
 ## strength, the same whole-pixel jumps at the same rate, and none under Reduce
 ## Motion. The noise is a fixed tile, so every capture of the same frame grains
-## it the same way. While the map shows, Main turns the TransitionLayer's grain
-## off, so the land is grained once.
+## it the same way; each tile-sized cell of the screen reads it from its own
+## place, so no two neighbouring cells repeat each other. Main decides which
+## grain a frame shows (`Main._sync_map_grain`): this one while only the map,
+## its HUD and its pins are on screen, the TransitionLayer's under a room, a
+## sheet or a transition leaf, so the land is grained once.
 
 const SHADER: Shader = preload("res://presentation/map/map_display.gdshader")
-## The noise tile's side in display pixels: its repeat is not seen at the
-## grain's 5% overlay.
+## The noise tile's side in display pixels.
 const TILE: int = 256
 const SEED: int = 3101
+## Where each cell reads the tile: the fractional parts of cell.x * CELL_X +
+## cell.y * CELL_Y, in tiles. Two irrational steps (the plastic number's R2
+## pair and sqrt 2, sqrt 3) place every cell of a 4K screen apart from every
+## other, nearest neighbours at least 32 texels apart on the tile.
+const CELL_X: Vector2 = Vector2(0.7548776662, 0.5698402910)
+const CELL_Y: Vector2 = Vector2(0.4142135624, 0.7320508076)
 
 static var _noise: ImageTexture = null
 
@@ -26,6 +34,8 @@ static func material(shown: bool) -> ShaderMaterial:
 	out.set_shader_parameter("noise", noise())
 	out.set_shader_parameter("step_s", TransitionLayer.GRAIN_STEP)
 	out.set_shader_parameter("jumps", PackedVector2Array(TransitionLayer.GRAIN_JUMPS))
+	out.set_shader_parameter("cell_x", CELL_X)
+	out.set_shader_parameter("cell_y", CELL_Y)
 	show(out, shown)
 	return out
 

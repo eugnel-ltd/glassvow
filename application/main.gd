@@ -2080,6 +2080,7 @@ func _compile_map_layout(input: MapLayoutInput, quality: Dictionary,
 
 
 func _process(_delta: float) -> void:
+	_sync_map_grain()
 	if _title_road_due:
 		_warm_title_road_once_lit()
 	MapJourneyPrefetch.step_current()
@@ -2128,9 +2129,7 @@ func _show_map() -> void:
 	# --map --act=N: dress scenery only (domain map stays the run's act).
 	if _forced_act_index >= 0:
 		_map_screen.set_act_scenery(_forced_act_index)
-	# The map's display draws its own grain (`MapFilmGrain`) without reading
-	# the screen: the layer's grain stays off while the map shows.
-	_transitions.set_grain(false)
+	_sync_map_grain()
 	_transitions.screen_in(_map_screen)
 	_attach_run_hud()
 	_music.play(&"map")
@@ -2148,6 +2147,21 @@ func _show_map() -> void:
 
 ## Holds the map's place while its layout compiles off the main thread. The
 ## unbound map screen is dropped rather than shown half-built.
+## One grain a frame while the map is the route (R3.1, #660). The map grains
+## its own land (`MapFilmGrain`, no copy of the screen) while only the map, its
+## HUD and its pins are on screen. Under a room or a sheet, or while a
+## transition leaf crosses the map, the TransitionLayer's grain covers the
+## screen instead, as on every other route, so a room over the map looks as it
+## does over any route. Under Reduce Motion neither shows on the map.
+func _sync_map_grain() -> void:
+	if _map_screen == null or _transitions == null:
+		return
+	var covered: bool = _modal != null or _choice_screen != null \
+		or _transitions.leaves_showing()
+	_transitions.set_grain(covered and not Preferences.active.reduce_motion)
+	_map_screen.set_grain(not covered)
+
+
 func _show_map_charting() -> void:
 	remove_child(_map_screen)
 	_map_screen.queue_free()

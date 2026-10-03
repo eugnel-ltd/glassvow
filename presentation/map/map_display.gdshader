@@ -1,25 +1,34 @@
 shader_type canvas_item;
-render_mode unshaded, blend_disabled;
+render_mode unshaded;
 // The map's display (`MapScene`): the stage's picture, or the tilt-shift's
 // view of it, upscaled to the screen, with the film grain (`MapFilmGrain`)
 // folded in. The grain is one fetch of a tiled white-noise texture per display
 // pixel, moved by the whole-pixel `jumps`, one every `step_s` seconds, and
-// overlaid at `amount`: the TransitionLayer grain's look without its copy of
-// the screen. `amount` 0 (Reduce Motion) leaves the picture untouched.
+// overlaid at `amount`. Each tile-sized cell of the screen reads the tile from
+// its own place (`cell_x`, `cell_y`), so the grain has no period on screen.
+// COLOR arrives as the picture times the screen's modulate and is blended
+// like any canvas item's, so the land fades with its screen. `amount` 0
+// (Reduce Motion, or the TransitionLayer's grain on screen) leaves the
+// picture untouched.
 uniform sampler2D noise : filter_nearest, repeat_enable;
 uniform float amount = 0.0;
 uniform float step_s = 0.1125;
 uniform vec2 jumps[8];
+uniform vec2 cell_x = vec2(0.0);
+uniform vec2 cell_y = vec2(0.0);
 
 void fragment() {
-	vec3 base = texture(TEXTURE, UV).rgb;
+	vec4 picture = COLOR;
 	if (amount > 0.0) {
-		vec2 jitter = jumps[int(mod(floor(TIME / step_s), 8.0))];
 		vec2 tile = vec2(textureSize(noise, 0));
-		float g = texture(noise, (floor(FRAGCOORD.xy) + jitter + 0.5) / tile).r;
+		vec2 at = floor(FRAGCOORD.xy) + jumps[int(mod(floor(TIME / step_s), 8.0))];
+		vec2 cell = floor(at / tile);
+		vec2 place = floor(fract(cell.x * cell_x + cell.y * cell_y) * tile);
+		float g = texture(noise, (at + place + 0.5) / tile).r;
+		vec3 base = picture.rgb;
 		vec3 over = mix(2.0 * base * g, 1.0 - 2.0 * (1.0 - base) * (1.0 - g),
 			step(vec3(0.5), base));
-		base = mix(base, over, amount);
+		picture.rgb = mix(base, over, amount);
 	}
-	COLOR = vec4(base, 1.0);
+	COLOR = picture;
 }

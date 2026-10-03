@@ -44,6 +44,9 @@ var _shift_rect: TextureRect
 ## The stage, or its tilt-shift, upscaled to the screen with the film grain
 ## (`MapFilmGrain`) and nothing else.
 var _display: TextureRect
+## Whether the screen wants this map's own grain (`set_grain`), and whether it
+## shows: never under Reduce Motion.
+var _grain_wanted: bool = true
 var _grain_shown: bool = true
 ## The journey land's tilt-shift band (`MapTiltShift`) in this Control's px,
 ## (top, bottom); `Vector2.INF` while there is none.
@@ -150,7 +153,7 @@ func _init(act_index: int = 0) -> void:
 	# from the resolved rect in `_fit` instead.
 	_display.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_display.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_grain_shown = not Preferences.active.reduce_motion
+	_grain_shown = _grain_wanted and not Preferences.active.reduce_motion
 	_display.material = MapFilmGrain.material(_grain_shown)
 	add_child(_display)
 	process_priority = -1
@@ -359,6 +362,20 @@ func set_focus_band(band: Vector2) -> void:
 	_sync_shift()
 
 
+## This map's own film grain on the land, or off while another grain covers
+## the screen (`Main._sync_map_grain`). Reduce Motion keeps it off either way.
+func set_grain(on: bool) -> void:
+	_grain_wanted = on
+	_sync_grain()
+
+
+func _sync_grain() -> void:
+	var shown: bool = _grain_wanted and not Preferences.active.reduce_motion
+	if shown != _grain_shown:
+		_grain_shown = shown
+		MapFilmGrain.show(_display.material as ShaderMaterial, shown)
+
+
 ## Points the display at the tilt-shift's view while there is a band, at the
 ## stage itself while there is none, and redraws the view for a moved band.
 func _sync_shift() -> void:
@@ -540,10 +557,7 @@ func _process(delta: float) -> void:
 		reap()
 	if _journey_pending:
 		_poll_journey()
-	var grain: bool = not Preferences.active.reduce_motion
-	if grain != _grain_shown:
-		_grain_shown = grain
-		MapFilmGrain.show(_display.material as ShaderMaterial, grain)
+	_sync_grain()
 	if not _live and _settle_frames > 0:
 		_settle_frames -= 1
 		if _settle_frames == 0:
