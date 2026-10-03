@@ -38,6 +38,9 @@ var _language_toggle: Button
 var _language_label: Label
 var _language_deferred: bool
 var _reset_disabled: bool
+## The volume sliders, whose lantern discs breathe with the room's light.
+var _sliders: Array[LeadlightSlider] = []
+var _time: float = 0.0
 ## The one-line diagnostics notice, present only in the first panel built
 ## after install (see `_add_diagnostics`).
 var _diagnostics_notice: Label
@@ -139,6 +142,7 @@ func set_shape(stage_shape: StringName) -> void:
 	shape = stage_shape
 	remove_child(_room)
 	_room.free()
+	_sliders.clear()
 	remove_child(_seat)
 	_seat.free()
 	_build()
@@ -205,6 +209,18 @@ func _needed_height() -> float:
 	return ceilf((body + footer + margins) / (1.0 - _room.spring)) + 6.0
 
 
+## Alive at rest (§4.4): the sliders' lantern discs breathe ±6% in step with
+## the lit pane (3.3 s); still under Reduce Motion, as the glass is.
+func _process(delta: float) -> void:
+	if LeadlightMotion.reduced():
+		return
+	_time += delta
+	var glow: float = 1.0 + 0.06 * LeadlightMotion.breath(_time, 3.3)
+	for slider: LeadlightSlider in _sliders:
+		if is_instance_valid(slider):
+			slider.self_modulate = Color(glow, glow, glow, 1.0)
+
+
 static func _display_supported() -> bool:
 	return not OS.has_feature("web") and DisplayServer.get_name() != "headless"
 
@@ -218,6 +234,7 @@ func _audio_row(label_text: String, bus: StringName) -> LeadlightRow:
 	controls.add_theme_constant_override("separation", 10)
 	controls.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var slider: LeadlightSlider = LeadlightSlider.new(roundf(_preferences.volume(bus) * 100.0))
+	_sliders.append(slider)
 	slider.tooltip_text = Locale.active.t("ui.settings.volumeTip", {"name": label_text})
 	slider.custom_minimum_size.y = LeadlightTokens.room_hit(shape)
 	controls.add_child(slider)

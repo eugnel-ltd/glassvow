@@ -18,6 +18,9 @@ extends RefCounted
 
 const SUITE: String = "res://tests/test_rooms_rubric.gd"
 const FLOOR: int = 18
+## The rubric's own numbers, never the kit's tokens (a token lowered must fail
+## here): 60×60 at pad and desktop, the 44 px touch floor on a phone.
+const HIT_FLOOR: Vector2i = Vector2i(60, 44)
 const WAIVED: Array[String] = ["BrandLine"]
 const STAGES: Array[Array] = [
 	[&"pad-landscape", Vector2i(1180, 820)], [&"desktop-landscape", Vector2i(1458, 820)],
@@ -80,7 +83,7 @@ static func _room(room: String, shape: StringName) -> LeadlightRoomHost:
 
 static func _rubric(fails: Array[String], screen: LeadlightRoomHost, shape: StringName, where: String) -> void:
 	var phone: bool = LeadlightTokens.is_phone(shape)
-	var hit_floor: float = float(LeadlightTokens.HIT_ROOM.y if phone else LeadlightTokens.HIT_ROOM.x)
+	var hit_floor: float = float(HIT_FLOOR.y if phone else HIT_FLOOR.x)
 	for node: Node in screen.find_children("", "BaseButton", true, false):
 		var button: BaseButton = node
 		if not button.is_visible_in_tree():

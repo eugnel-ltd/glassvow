@@ -14,6 +14,10 @@ const FLEX: Array[Array] = [
 ]
 
 
+## The rubric's tap floors (pad and desktop, phone), never the kit's tokens.
+const HIT_FLOOR: Vector2i = Vector2i(60, 44)
+
+
 static func _check(fails: Array[String], ok: bool, what: String) -> void:
 	if not ok:
 		fails.append("leadlight_seat: %s" % what)
@@ -39,7 +43,7 @@ static func _rule(fails: Array[String], shape: StringName, stage: Vector2) -> vo
 	var whole: Rect2 = Rect2(Vector2.ZERO, stage)
 	var body: Rect2 = seat["lantern_hit"]
 	var word: Rect2 = seat["word"]
-	var floor_px: float = LeadlightTokens.room_hit(shape)
+	var floor_px: float = float(HIT_FLOOR.y if LeadlightTokens.is_phone(shape) else HIT_FLOOR.x)
 	for part: Array in [["the lantern's body", body], ["the Return word", word]]:
 		var rect: Rect2 = part[1]
 		_check(fails, whole.encloses(rect), "%s: %s runs off the stage (%s)" % [where, part[0], rect])
