@@ -205,6 +205,11 @@ logged only as a plain error, so it stays the test's own job to notice (see
   `FAIL` line, so you no longer need to look for it on stderr.
 - To drive a node by hand, call `TreeReady.once(node)`, never `node._ready()`.
   The root is in the tree, so a node added under it has already been readied.
+- Free a node whose method a worker may be running with `queue_free()` and a
+  frame, as the game does, not with `free()`. A script `free()` is refused
+  while the worker's call holds the node's lock, and the node leaks.
+  `test_enemy_death_shards` did this, and the guard caught it as an
+  intermittent `Attempted to free a locked object` in the full suite.
 - Never turn `Engine.print_error_messages` off in a test, and join every worker
   a test starts before it returns. Both take an error out of the guard's view
   or out of its test.
