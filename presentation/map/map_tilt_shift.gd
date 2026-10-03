@@ -14,8 +14,8 @@ const SHADER: Shader = preload("res://presentation/map/map_tilt_shift.gdshader")
 ## `MIDDLE` (a member at the very edge may leave it); with none on screen it is
 ## the narrowest band about the middle. The sharp band stays where the player
 ## is looking.
-const MIN_BAND: float = 0.34
-const MAX_BAND: float = 0.64
+const MIN_BAND: float = 0.52
+const MAX_BAND: float = 0.7
 const MIDDLE: Vector2 = Vector2(0.3, 0.7)
 ## How far past the band (a share of the height) the blur reaches full.
 const FEATHER: float = 0.16

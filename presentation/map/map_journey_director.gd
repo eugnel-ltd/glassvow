@@ -139,7 +139,7 @@ func sync_focus_band(seats: PackedVector2Array) -> void:
 	for i: int in focus_members:
 		if i < seats.size():
 			heights.append(seats[i].y)
-	var margin: float = MapJourneyCameraContract.touch_size(screen.size) * 0.6
+	var margin: float = MapJourneyCameraContract.touch_size(screen.size)
 	scene.set_focus_band(MapTiltShift.band(heights, scene.size.y, margin))
 
 
