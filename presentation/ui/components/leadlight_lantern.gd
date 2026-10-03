@@ -44,6 +44,10 @@ const RIM_ALPHA: float = 0.45
 const RIM_WIDTH: float = 3.0 / 256.0
 const RIM_TOP_UV: float = 0.235
 const RIM_MASK: int = 256
+## The damped swing on its chain as it is set down at a room's seat
+## (docs/design/2026-10-03-title-rooms §5.2): ±SWING_DEG, still by SWING_TIME.
+const SWING_DEG: float = 3.0
+const SWING_TIME: float = 0.52
 
 ## Focus shown on the lantern (a keyboard or pad player's), as against merely
 ## held (a tap holds it hidden). The plaque lights with this, never with focus
@@ -100,6 +104,8 @@ var _time: float = 0.0
 var _focus_shown: bool = false
 ## The rim, made on the first shown focus.
 var _rim: TextureRect = null
+## Time into a swing; below 0 when it hangs still.
+var _swing_t: float = -1.0
 
 
 ## The light the ember throws round itself (a soft halo, no hard disc: the
@@ -263,6 +269,34 @@ func hit_rect() -> Rect2:
 	return Rect2(art.position + art.size * HIT_UV.position, art.size * HIT_UV.size)
 
 
+## Swing once on the chain, damped (never under Reduce Motion, never blocking).
+func swing() -> void:
+	if not LeadlightMotion.reduced():
+		_swing_t = 0.0
+
+
+## Hang still at once.
+func settle() -> void:
+	_swing_t = -1.0
+	set_swing(0.0)
+
+
+func swinging() -> bool:
+	return _swing_t >= 0.0
+
+
+## The lantern swinging on its chain by `angle` radians about the top of its
+## ring. Zero hangs it still again, pivoted at the wick as it rests.
+func set_swing(angle: float) -> void:
+	if is_zero_approx(angle):
+		rotation = 0.0
+		pivot_offset = wick()
+		return
+	var art: Rect2 = _art_rect()
+	pivot_offset = Vector2(art.get_center().x, art.position.y + art.size.y * RING_TOP_UV)
+	rotation = angle
+
+
 ## The saved run's reading, landed at once (no reading arrives on the title).
 func set_reading(event: Dictionary) -> void:
 	flame.show_event(event, true)
@@ -346,6 +380,13 @@ static func blank() -> Texture2D:
 
 func _process(delta: float) -> void:
 	_time += delta
+	if _swing_t >= 0.0:
+		_swing_t += delta
+		var u: float = _swing_t / SWING_TIME
+		if u >= 1.0:
+			settle()
+		else:
+			set_swing(deg_to_rad(SWING_DEG) * sin(u * TAU * 1.5) * pow(1.0 - u, 2.0))
 	# A still pins the lantern's flame; the ember's clock stops with it.
 	_ember_fire.pinned = flame.pinned
 	if _ember.strength > 0.01:

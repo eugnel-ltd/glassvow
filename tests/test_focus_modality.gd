@@ -167,7 +167,8 @@ static func _run_menu_title(fails: Array[String], tree: SceneTree, host: SubView
 static func _rooms_closed_by_tap(fails: Array[String], tree: SceneTree, host: SubViewport,
 		content: ContentDB) -> void:
 	# How to Play's Fight On waits below the fold for a touch player: its veil.
-	var exits: Dictionary = {"settings": "ui.menu.close", "help": "", "credits": "ui.credits.close"}
+	# Settings leaves by the seat's Return (docs/design/2026-10-03-title-rooms §2.2).
+	var exits: Dictionary = {"settings": "ui.menu.return", "help": "", "credits": "ui.credits.close"}
 	for room: String in ["settings", "help", "credits"]:
 		var main: Main = await _boot(tree, host, content, true)
 		await _tap(tree, host, _word(main, room))
@@ -281,7 +282,7 @@ static func _thaw_keeps_visibility(fails: Array[String], tree: SceneTree, host: 
 	settings.grab_focus()
 	await _key_tap(tree, host, KEY_ENTER)
 	_check(fails, main._modal is SettingsPanel, "(l) Enter on Settings did not open it")
-	await _tap(tree, host, _button(main._modal, Locale.active.t("ui.menu.close")))
+	await _tap(tree, host, _button(main._modal, Locale.active.t("ui.menu.return")))
 	_check(fails, main._modal == null and settings.has_focus(true),
 		"(l) Settings opened by the keyboard and closed by a tap lost its ring")
 	_dispose(main)
@@ -308,8 +309,8 @@ static func _language_toggle_and_return(fails: Array[String], tree: SceneTree, h
 	if panel != null:
 		_check(fails, _shown(main).is_empty(),
 			"(f) the reopened Settings shows focus to a touch player: %s" % [_shown(main)])
-		await _tap(tree, host, _button(panel, Locale.active.t("ui.menu.close")))
-		_check(fails, main._modal == null, "(f) Settings' Close did not close it")
+		await _tap(tree, host, _button(panel, Locale.active.t("ui.menu.return")))
+		_check(fails, main._modal == null, "(f) Settings' Return did not close it")
 	_no_ring(fails, main, "(f) Settings, the language toggle and Close, by tap")
 	_dispose(main)
 	Locale.active.restore_content()
