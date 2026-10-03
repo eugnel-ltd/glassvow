@@ -53,6 +53,11 @@ uniform float painted : hint_range(0.0, 1.0) = 1.0;
 // Seconds. Driven by LanternFlame rather than read from TIME, so a still is
 // the same still every time it is taken.
 uniform float clock = 0.0;
+// 1 draws the flame alone, without the lantern: its body, its core and the
+// light right round it, on transparent. The launch rite's ember is this flame
+// (TitleKindling), so the first light the player sees is the lantern's own
+// flame, small, before the glass takes it; 0 everywhere else.
+uniform float isolate : hint_range(0.0, 1.0) = 0.0;
 
 // ── the set-out, in the art's own UV ────────────────────────────────────────
 // Where the flame stands: the foot of the centre pane.
@@ -292,5 +297,9 @@ void fragment() {
 	float alpha = art.a + aura * (1.0 - art.a);
 	rgb = (rgb * art.a + aura_rgb * aura * (1.0 - art.a)) / max(alpha, 0.0001);
 
-	COLOR = vec4(rgb, alpha) * tint;
+	// The flame alone (isolate): the light round it fades out to nothing, so
+	// the quad's edge is never seen.
+	vec4 alone = vec4(mix(dom * lum, flame * glare, inside),
+			clamp(inside + (1.0 - inside) * near * 0.55 * lum, 0.0, 1.0));
+	COLOR = mix(vec4(rgb, alpha), alone, isolate) * tint;
 }

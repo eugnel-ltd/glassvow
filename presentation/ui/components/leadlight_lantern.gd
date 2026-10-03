@@ -12,6 +12,13 @@ const ART_FALLBACK: String = "res://assets/art/ui/lantern.png"
 ## The wick and the glass in the art's own UV (lantern_flame.gdshader set-out).
 const WICK_UV: Vector2 = Vector2(0.5, 0.785)
 const GLASS_CENTRE_UV: Vector2 = Vector2(0.5, 0.63)
+## The ember's flame quad, as a share of the art's side: the shader's wick sits
+## at the lantern's wick and its tallest flame is REACH (0.29) of this.
+const EMBER_QUAD: float = 0.55
+## The ember's flame height (the shader's `height`) as it catches: a small
+## candle at first light, grown towards the lantern's own by the time the glass
+## takes it over.
+const EMBER_HEIGHT: Vector2 = Vector2(0.42, 0.78)
 const COLD_TINT: Color = Color(0.17, 0.17, 0.21, 1.0)
 
 var flame: LanternFlame
@@ -51,9 +58,17 @@ var _lit: TextureRect
 var _glow: TextureRect
 var _pool: TextureRect
 var _ember: Ember
+## The ember is the lantern's own flame drawn alone (lantern_flame.gdshader,
+## `isolate`), in Kindling's colour, with its own clock. Visible from frame 0,
+## it also compiles the flame's pipeline before the glass ever needs it.
+var _ember_flame: TextureRect
+var _ember_fire: LanternFlame
+static var _blank: Texture2D = null
 var _time: float = 0.0
 
 
+## The light the ember throws round itself (a soft halo, no hard disc: the
+## ember itself is a flame, `_ember_flame`).
 class Ember extends Control:
 	var strength: float = 1.0
 	var colour: Color = LeadlightTokens.EMBER
@@ -70,8 +85,6 @@ class Ember extends Control:
 		var s: float = strength * flicker
 		draw_texture_rect(disc, Rect2(c - Vector2(r, r) * 2.4 * flicker, Vector2(r, r) * 4.8 * flicker),
 			false, Color(colour, 0.45 * s))
-		draw_texture_rect(disc, Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), false,
-			Color(Color("#ffd2a0"), minf(s, 1.0)))
 
 
 func _init() -> void:
@@ -91,6 +104,17 @@ func _init() -> void:
 	_ember = Ember.new()
 	_ember.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_ember)
+	_ember_fire = LanternFlame.new()
+	add_child(_ember_fire)
+	_ember_fire.material.set_shader_parameter(&"isolate", 1.0)
+	_ember_flame = TextureRect.new()
+	_ember_flame.name = "EmberFlame"
+	_ember_flame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ember_flame.texture = blank()
+	_ember_flame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_ember_flame.stretch_mode = TextureRect.STRETCH_SCALE
+	_ember_flame.material = _ember_fire.material
+	add_child(_ember_flame)
 	flame = LanternFlame.new()
 	add_child(flame)
 	flame.light(_lit, _glow)
@@ -145,8 +169,19 @@ func glass_centre() -> Vector2:
 	return _art_rect().position + _art_rect().size * GLASS_CENTRE_UV
 
 
+## A 4×4 white texture: the ember's quad has no art, only the shader's flame.
+static func blank() -> Texture2D:
+	if _blank == null:
+		var image: Image = Image.create(4, 4, false, Image.FORMAT_RGBA8)
+		image.fill(Color.WHITE)
+		_blank = ImageTexture.create_from_image(image)
+	return _blank
+
+
 func _process(delta: float) -> void:
 	_time += delta
+	# A still pins the lantern's flame; the ember's clock stops with it.
+	_ember_fire.pinned = flame.pinned
 	if _ember.strength > 0.01:
 		_ember.flicker = 0.92 + 0.10 * sin(_time * 9.1) * sin(_time * 3.7 + 1.3) + 0.06 * sin(_time * 1.9)
 		_ember.queue_redraw()
@@ -216,6 +251,9 @@ func _seat() -> void:
 	var ember_r: float = art.size.x * 0.026
 	_ember.position = wick() - Vector2(ember_r, ember_r * 2.6)
 	_ember.size = Vector2(ember_r * 2.0, ember_r * 2.0)
+	var quad: float = art.size.x * EMBER_QUAD
+	_ember_flame.position = wick() - Vector2(quad * WICK_UV.x, quad * WICK_UV.y)
+	_ember_flame.size = Vector2(quad, quad)
 	pivot_offset = wick()
 
 
@@ -234,6 +272,10 @@ func _apply_kindle() -> void:
 	# The ember: alone at 0, growing as the flame catches, gone once lit.
 	_ember.strength = (1.0 - smoothstep(0.55, 0.9, kindle)) * (0.65 + 0.35 * smoothstep(0.0, 0.3, kindle))
 	_ember.queue_redraw()
+	_ember_flame.modulate.a = _ember.strength
+	_ember_flame.visible = _ember.strength > 0.004
+	_ember_fire.material.set_shader_parameter(&"height",
+		lerpf(EMBER_HEIGHT.x, EMBER_HEIGHT.y, smoothstep(0.05, 0.7, kindle)))
 	if _pool != null:
 		_pool.modulate.a = _pool_alpha()
 
