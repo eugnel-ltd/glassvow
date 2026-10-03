@@ -13,7 +13,9 @@ extends SceneTree
 ##    "cpu_ms" and "gpu_ms" (the viewport's measured render times)}
 ##
 ## and the run ends with one summary row per room: tap to first moved frame
-## (the tap frame and the one after it, from the tap to that frame's draw),
+## (from the tap to the tap frame's draw: the passage takes its first step in
+## the tap frame's own process, after the input that opened it, and a capture
+## at --fixed-fps 60 shows the veil darkening the stage by 6% on that frame),
 ## the tap frame, the passage's other frames (P95 and max), and the room at
 ## rest against the title at rest (P95, wall and CPU). The first lap of each
 ## room is the first opening this session (cold pipelines after an install),
@@ -176,6 +178,9 @@ class Bench extends Node:
 	## point: an input event arrives in the window's pixels, which a device
 	## scales from the stage (the iPad 8 draws 1180×885 into 2160×1620). A tap
 	## that has not acted in TAP_WAIT seconds is recorded and the lap goes on.
+	## The release is parsed in a frame's process step and waits out the rest
+	## of that frame (on iOS nearly a whole one, its present wait inside the
+	## draw): the worst case, where a real finger lifts at any moment.
 	func _tap(at: Vector2, phase: String) -> void:
 		var screen: Vector2 = get_viewport().get_screen_transform() * at
 		for pressed: bool in [true, false]:
@@ -243,7 +248,6 @@ class Bench extends Node:
 						continue
 					if _i(row, "i") == 0:
 						tap_frames.append(_f(row, "wall_ms"))
-					elif _i(row, "i") == 1:
 						taps.append(_f(row, "since_tap_ms"))
 				out["tap_to_moved_ms"] = _stats(taps)
 				out["tap_frame_ms"] = _stats(tap_frames)
