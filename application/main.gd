@@ -1313,6 +1313,7 @@ func _warm_rooms() -> void:
 			preferences.diagnostics_notice_seen = true
 			var settings: SettingsPanel = SettingsPanel.new(preferences, false, _sfx_bus)
 			settings.set_shape(shape)
+			settings.measure()
 			return settings,
 		func() -> Control:
 			var help: HelpScreen = HelpScreen.new(shape, _sfx_bus, FlameLines.codex(content, _vigil, _load_run()))

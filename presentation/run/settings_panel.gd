@@ -206,6 +206,13 @@ func _fit() -> void:
 	_brand_line.visible = not LeadlightTokens.is_phone(shape)
 
 
+## Fit the room for its shape and language once, ahead of its first opening
+## (RoomWarm builds it off the tree while the title rests), so that opening
+## shapes only its lit section's text.
+func measure() -> void:
+	_needed_height()
+
+
 ## The height that holds the tallest section, the crown, the footer and the
 ## glass's margins: the arch's spring is a share of the height, so it is solved.
 func _needed_height() -> float:

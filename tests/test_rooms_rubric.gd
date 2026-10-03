@@ -15,6 +15,8 @@ extends RefCounted
 ##   rects, and the seat stands where its rule says;
 ## - and the project's ground is the night (LeadlightTokens.VOID).
 ## A room opened in a run (X1) is the same room, its seat the word alone.
+## Settings fitted ahead of its first opening (the title's RoomWarm measures it
+## off the tree) stands exactly as tall as one that fits itself.
 
 const SUITE: String = "res://tests/test_rooms_rubric.gd"
 const FLOOR: int = 18
@@ -74,7 +76,31 @@ static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]
 				await tree.process_frame
 	host.size = TreeSuite.STAGE
 	Locale.active = kept
+	await _settings_fitted_ahead(fails, tree, host)
 	Preferences.active = kept_preferences
+
+
+static func _settings_fitted_ahead(fails: Array[String], tree: SceneTree, host: SubViewport) -> void:
+	Preferences.active.diagnostics_notice_seen = true
+	for shape: StringName in [&"pad-landscape", &"phone-landscape"]:
+		var heights: Array[float] = []
+		for ahead: bool in [false, true]:
+			SettingsPanel._heights.clear()
+			if ahead:
+				var off: SettingsPanel = SettingsPanel.new(Preferences.active)
+				off.set_shape(shape)
+				off.measure()
+				off.free()
+			var settings: SettingsPanel = SettingsPanel.new(Preferences.active)
+			settings.set_shape(shape)
+			host.add_child(settings)
+			await _frames(tree, 2)
+			heights.append(settings._room.size.y)
+			settings.queue_free()
+			await tree.process_frame
+		_check(fails, is_equal_approx(heights[0], heights[1]),
+			"%s: Settings fitted ahead stands %.0f tall, fitting itself %.0f" % [shape, heights[1], heights[0]])
+	SettingsPanel._heights.clear()
 
 
 static func _room(room: String, shape: StringName) -> LeadlightRoomHost:
