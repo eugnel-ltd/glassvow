@@ -5,7 +5,16 @@ metal-application-encoders-list.xml (and optionally the counters), exported
 by `xctrace export`. Output: per encoder index (the encoder's position in its
 command buffer), the median vertex, fragment and compute time, CPU encode time,
 grouped by frame structure; and per-frame GPU busy time.
+
+Starting a recording hitches the app and leaves the GPU governor low for a
+while, so the first `--skip-s` seconds of the app's GPU work (default 1.5) are
+left out; the `window` line says how much was read. `--json <path>` also
+writes every command buffer read, with each encoder's V/F/C intervals, for
+`roles.py` to count overlapping work once.
+
+Usage: frames.py <dir> [process-substring] [--skip-s 1.5] [--json <path>]
 """
+import argparse
 import collections
 import re
 import json
@@ -20,7 +29,7 @@ def ns(cell):
     return int(cell[1]) if cell else 0
 
 
-def load(d, pid_filter=None):
+def load(d, pid_filter=None, skip_ns=0):
     _, gi = rows(d + "/metal-gpu-intervals.xml")
     _, el = rows(d + "/metal-application-encoders-list.xml")
     enc = {}
@@ -37,9 +46,10 @@ def load(d, pid_filter=None):
                                   "cpu_start": ns(r["start"])})
         e["cpu_ns"] += ns(r["duration"])
     gpu = collections.defaultdict(lambda: {"Vertex": 0, "Fragment": 0, "Compute": 0, "spans": []})
-    for r in gi:
-        proc = r["process"][0] if r["process"] else ""
-        if pid_filter and pid_filter not in proc:
+    mine = [r for r in gi if not pid_filter or (r["process"] and pid_filter in r["process"][0])]
+    first = min((ns(r["start"]) for r in mine), default=0)
+    for r in mine:
+        if ns(r["start"]) < first + skip_ns:
             continue
         eid = r["encoder-id"][0] if r["encoder-id"] else None
         ch = r["channel-name"][0] if r["channel-name"] else None
@@ -88,7 +98,8 @@ def frames(enc, gpu):
         out.append({"cb": cb, "start": start, "end": end, "busy": union([(s, e) for s, e, _ in spans]),
                     "encoders": [{"label": e.get("label", "?"), "v": g["Vertex"], "f": g["Fragment"],
                                   "c": g["Compute"], "cpu": e.get("cpu_ns", 0),
-                                  "wall": max(x for _, x, _ in g["spans"]) - min(s for s, _, _ in g["spans"])}
+                                  "wall": max(x for _, x, _ in g["spans"]) - min(s for s, _, _ in g["spans"]),
+                                  "spans": g["spans"]}
                                  for eid, g, e in items]})
     out.sort(key=lambda f: f["start"])
     return out
@@ -115,11 +126,22 @@ def summarise(fs):
 
 
 if __name__ == "__main__":
-    d = sys.argv[1]
-    pid = sys.argv[2] if len(sys.argv) > 2 else None
-    enc, gpu = load(d, pid)
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("dir")
+    parser.add_argument("process", nargs="?", default=None)
+    parser.add_argument("--skip-s", type=float, default=1.5)
+    parser.add_argument("--json", default="")
+    args = parser.parse_args()
+    enc, gpu = load(args.dir, args.process, int(args.skip_s * 1e9))
     fs = frames(enc, gpu)
     res = summarise(fs)
+    if args.json:
+        with open(args.json, "w") as handle:
+            json.dump([{"cb": f["cb"], "start": f["start"], "busy": f["busy"],
+                        "encoders": [{"label": e["label"], "v": e["v"], "f": e["f"], "c": e["c"],
+                                      "spans": e["spans"]} for e in f["encoders"]]} for f in fs], handle)
+    span = (fs[-1]["end"] - fs[0]["start"]) / 1e9 if fs else 0.0
+    print("window: %.2f s read after skipping %.1f s" % (span, args.skip_s))
     print("command buffers:", len(fs))
     for sig, g in res.items():
         print("== %d encoders: %d command buffers, GPU busy median %.3f ms, p95 %.3f ms" % (sig, g["frames"], g["busy_ms_median"], g["busy_ms_p95"]))

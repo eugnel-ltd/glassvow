@@ -314,11 +314,11 @@ promoted from the R3 trace spike (#660, R3.0).
 
 | File | What it does |
 |---|---|
-| `probe.gd` | Holds the map's rest at the production cadence and/or live (every view of the map rendered every frame, forced after every other script's `_process`), 600 frames a hold by default; rows with the launch's nonce go to `user://trace_probe.jsonl`. Also photographs the map (`--probe-shot`), frames Whole act or the ravine (`--probe-view`), takes the grain off (`--probe-grain=off`), stills motion in memory (`--probe-rm`) and hides one part (`--trace-kill`). Its header lists every argument. |
-| `qa_patch.py` | Arms a detached measuring worktree: copies the probe in as `tools/qa_map_trace_probe.gd` and adds `--map-trace-probe` and `--map-lean` to that worktree's `main.gd`, uncommitted. Refuses a worktree on a branch. |
-| `device.zsh` | Sourced by a batch script: `mt_install` (refuses any bundle id but the QA app's), `mt_launch` (nonce, launch, rows kept only if they echo it), `mt_trace` (a Metal System Trace of every process; the analysis keeps the launch's pid), `mt_export` (exports the tables and runs the two readers below). The iPad's identifier is looked up at run time and redacted. |
-| `frames.py`, `display.py`, `counters.py`, `xtable.py` | Per-encoder GPU time by frame shape; on-screen time per frame, GPU states and whether a device condition held the GPU (consistent state, desired state, induced thermal state); GPU counters per encoder; the `xctrace export` reader. |
-| `roles.py` | Names the stage frame's passes by structure and scales them to the reference clock; prints the BUDGET LINE (2D composite, 3D chain, GPU busy). `--self-test` checks it. |
+| `probe.gd` | Holds the map's rest at the production cadence and/or live (every view of the map rendered every frame, forced after every other script's `_process`), 600 frames a hold by default, and the pilgrim's walk to the next waystone (`walk`, held last: the room it opens ends the run); rows with the launch's nonce go to `user://trace_probe.jsonl`, and the start row names the build (`BUILD`, stamped by `qa_patch.py`). Each hold's start row records whether the TransitionLayer's grain and the map's own are on. Also photographs the map (`--probe-shot`), frames Whole act or the ravine (`--probe-view`), takes the grain off (`--probe-grain=off`), stills motion in memory (`--probe-rm`) and hides one part (`--trace-kill`). Its header lists every argument. |
+| `qa_patch.py` | Arms a detached measuring worktree: copies the probe in as `tools/qa_map_trace_probe.gd`, stamped with the worktree's commit (`+dirty` when a tracked file other than the armed `main.gd` differs), and adds `--map-trace-probe` and `--map-lean` to that worktree's `main.gd`, uncommitted. Refuses a worktree on a branch. Re-run it after any checkout to restamp. |
+| `device.zsh` | Sourced by a batch script: `mt_install` (refuses any bundle id but the QA app's), `mt_launch` (nonce, launch, rows kept only if they echo it), `mt_trace` (a Metal System Trace of every process; the analysis keeps the launch's pid; a recording that did not run its whole time limit is thrown away and retried, and `<label>.window` records the one kept), `mt_export` (exports the tables and runs the two readers below, `frames.py` skipping the first `MT_SKIP_S` seconds, default 1.5). The iPad's identifier is looked up at run time and redacted. |
+| `frames.py`, `display.py`, `counters.py`, `xtable.py` | Per-encoder GPU time by frame shape, after skipping the recording-start hitch (`--skip-s`), with every command buffer's intervals in a `--json` sidecar; on-screen time per frame, GPU states and the device-condition fields (consistent state, desired state, induced thermal state); GPU counters per encoder; the `xctrace export` reader. |
+| `roles.py` | Names the stage frame's passes by structure and scales them to the reference clock; prints the BUDGET LINE (2D composite and 3D chain as fragment sums, the gate figures, and with `--frames` the GPU time each group occupies with overlapping work counted once), a CROSS-CHECK by a second constant pass (the tonemap), and the 2D composite read raw from the frames that ran within 10% of the reference clock. It warns CLOCK DISAGREES when the two scalings differ by more than 10% and SHORT WINDOW below 120 stage frames. `--self-test` checks it. |
 
 Nothing here ships. The store presets exclude `tools/map_*`, the Python and zsh
 files are never packed, and the probe is not wired into the committed
@@ -337,9 +337,11 @@ python3 tools/map_trace/qa_patch.py <wt>
 source tools/map_trace/device.zsh            # OUT=<scratch folder>
 UDID=$(mt_udid); mt_install <wt>/build/ios-qa/export-dev/glassvow.ipa
 mt_launch j1 --map --map-trace-probe --seed=1 --shape=pad-landscape --map-steps=2 --holds=cadence,live
-mt_trace tj 4 24 --map --map-trace-probe --seed=1 --shape=pad-landscape --map-steps=2 --holds=live --hold-frames=2400
+mt_launch j2 --map --map-trace-probe --seed=1 --shape=pad-landscape --map-steps=2 --holds=cadence,live,walk
+mt_trace tj 6 24 --map --map-trace-probe --seed=1 --shape=pad-landscape --map-steps=2 --holds=live --hold-frames=2400
 mt_export tj
-python3 tools/map_trace/roles.py $OUT/tj.passes.txt --names "2D 1=tilt-shift view,2D 2=display+HUD"
+python3 tools/map_trace/roles.py $OUT/tj.passes.txt --frames $OUT/tj.frames.json \
+  --names "2D 1=tilt-shift view,2D 2=display+HUD"
 ```
 
 How to read it:
@@ -356,15 +358,25 @@ How to read it:
   the change under test leaves alone, by default the main 3D pass's fragment
   time, 4.091 ms at the reference clock (R2's Journey view, rendered every
   frame, at the Medium state). Pass `--ref-ms 5.24` for the fresh-run opening
-  view, or another `--ref-pass`.
+  view, or another `--ref-pass`; a step that changes the 3D scene scales by the
+  tonemap instead (`--ref-pass tonemap --ref-ms 0.270`). Passes do not slow
+  alike when the governor drops, so trust a figure when the CROSS-CHECK agrees
+  and the near-reference frames confirm it; a CLOCK DISAGREES or SHORT WINDOW
+  warning means record again.
+- Vertex work of one pass runs beside fragment work of another, so a sum of
+  V+F overstates a group's cost. The gate figures are fragment sums (R2's
+  6.3 ms 2D composite is one); the occupied figures merge every interval.
 - `xctrace record --attach <pid>` fails on the device ("Cannot find process for
   provided pid"), so `mt_trace` records every process; both QA and TestFlight
   apps are called `glassvow`, so it never attaches by name either. devicectl
   lets its tunnel to the iPad drop between commands, and xctrace then gives
   "Timed out waiting for device to boot": `mt_trace` brings the tunnel up
   with a devicectl call just before recording, and retries.
-- Starting a recording or a screenshot hitches the app: keep both out of the
-  holds whose frame intervals a gate reads.
+- Starting a recording or a screenshot hitches the app (a 200 ms frame, and
+  the governor at its Minimum state for a while after): keep both out of the
+  holds whose frame intervals a gate reads. `mt_export` reads the trace from
+  1.5 s in, so record 6 s for a 4.5 s window. The recording sometimes ends
+  early with "Device got disconnected"; `mt_trace` then records again.
 - On the Mac the same probe runs under the A12 Metal condition
   (`GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 godot --path <wt> --rendering-driver metal
   --rendering-method mobile -- --map --map-trace-probe --map-lean ...`), and

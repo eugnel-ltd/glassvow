@@ -11,8 +11,13 @@
 #                                     probe rows; keeps them only if they echo it
 #   mt_trace <label> <s> <delay> [game args]
 #                                     launch as above and record a Metal System
-#                                     Trace of <s> seconds, <delay> seconds in
+#                                     Trace of <s> seconds, <delay> seconds in;
+#                                     a recording that ends early (the device
+#                                     "disconnected") is thrown away and retried
 #   mt_export <label>                 export the trace's tables and analyse them
+#                                     (frames.py skips the first MT_SKIP_S
+#                                     seconds, default 1.5: the recording-start
+#                                     hitch)
 #
 # MT_SHOT=<seconds> makes mt_launch take a screenshot that far in; MT_WAIT is the
 # first wait before pulling rows (default 40 s).
@@ -97,9 +102,23 @@ mt_launch() {
   _mt_rows $label
 }
 
+## The recorded window from the trace's table of contents: "<seconds> <why it
+## ended>", the reason with its spaces as underscores.
+_mt_window() {
+  xcrun xctrace export --input $1 --toc 2>/dev/null | python3 -c '
+import re, sys
+t = sys.stdin.read()
+d = re.search(r"<duration>([\d.]+)</duration>", t)
+r = re.search(r"<end-reason>([^<]*)</end-reason>", t)
+print(d.group(1) if d else "0", (r.group(1) if r else "unknown").replace(" ", "_"))'
+}
+
 ## A recording sometimes fails to start ("Timed out waiting for device to
-## boot"); each of up to three attempts relaunches with a fresh nonce, and the
-## later ones name the device rather than give its identifier.
+## boot") or ends early ("Device got disconnected, ending recording..."), which
+## leaves a short window read across the recording-start hitch. Each of up to
+## three attempts relaunches with a fresh nonce; a trace is kept only when it
+## ran its whole time limit (its window is written to <label>.window), and the
+## later attempts name the device rather than give its identifier.
 mt_trace() {
   local label=$1 seconds=$2 delay=$3 attempt target; shift 3
   for attempt in 1 2 3; do
@@ -118,8 +137,18 @@ mt_trace() {
     xcrun xctrace record --device "$target" --template 'Metal System Trace' --all-processes \
       --time-limit ${seconds}s --output $OUT/$label.trace --no-prompt 2>&1 | mt_redact > $OUT/$label.xctrace.log
     _mt_rows $label
-    [[ -d $OUT/$label.trace ]] && return 0
-    echo "== $label: no trace (attempt $attempt): $(tail -1 $OUT/$label.xctrace.log)"
+    if [[ -d $OUT/$label.trace ]]; then
+      local window=($(_mt_window $OUT/$label.trace))
+      echo "${window[1]} s, ${window[2]}" > $OUT/$label.window
+      if [[ ${window[2]} == Time_limit_reached ]] && (( ${window[1]} >= 0.95 * seconds )); then
+        echo "== $label: trace ${window[1]} s"; return 0
+      fi
+      echo "== $label: trace cut short (${window[1]} s, ${window[2]}; attempt $attempt)"
+      mv $OUT/$label.xctrace.log $OUT/$label.short$attempt.xctrace.log
+      rm -rf $OUT/$label.trace
+    else
+      echo "== $label: no trace (attempt $attempt): $(tail -1 $OUT/$label.xctrace.log)"
+    fi
   done
   return 1
 }
@@ -134,6 +163,7 @@ mt_export() {
       --xpath "/trace-toc/run[@number=\"1\"]/data/table[@schema=\"$s\"]" > $x/$s.xml 2>/dev/null
   done
   local p="glassvow ($(cat $OUT/$label.pid))"
-  python3 $MT_DIR/frames.py $x "$p" > $OUT/$label.passes.txt 2>&1
+  python3 $MT_DIR/frames.py $x "$p" --skip-s ${MT_SKIP_S:-1.5} --json $OUT/$label.frames.json \
+    > $OUT/$label.passes.txt 2>&1
   python3 $MT_DIR/display.py $x "$p" > $OUT/$label.display.txt 2>&1
 }

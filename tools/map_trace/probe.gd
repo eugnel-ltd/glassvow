@@ -13,13 +13,18 @@ extends Node
 ##
 ## User arguments:
 ##   --probe-nonce=<n>      echoed in every row; a batch keeps only its own rows
-##   --holds=cadence,live   the modes to hold, in order (default cadence):
+##   --holds=cadence,live,walk   the modes to hold, in order (default cadence):
 ##                          cadence = the production rest (the stage every second
 ##                          frame); live = every view of the map rendered every
 ##                          frame, forced after every other script's _process
 ##                          (WorldMapScreen puts a still map back to rest each
-##                          frame, so `set_live(true)` alone does not hold)
-##   --hold-frames=<n>      frames per hold (default 600)
+##                          frame, so `set_live(true)` alone does not hold);
+##                          walk = the pilgrim's walk to the lowest-numbered open
+##                          waystone, as a tap on it starts it, held for the
+##                          walk's frames (not the arrival frame, which builds
+##                          the room the walk opens); that room ends the run,
+##                          so hold it last
+##   --hold-frames=<n>      frames per rest hold (default 600)
 ##   --linger=<s>           seconds to stay at the cadence rest after the holds,
 ##                          for a device screenshot (default 0)
 ##   --probe-view=whole|river   frame Whole act, or the ravine, before holding
@@ -31,9 +36,13 @@ extends Node
 ##   --trace-kill=<what>    hide one part for the whole run: shadows, kit,
 ##                          ground, land, glow, band, grain, display, hud
 ## Rows go to user://trace_probe.jsonl (flushed per row) and to stdout with the
-## prefix TRACE_PROBE.
+## prefix TRACE_PROBE. The start row carries BUILD, the commit `qa_patch.py`
+## stamps in when it arms a measuring worktree ("+dirty" when tracked files
+## other than the armed `main.gd` differ from it), so every row names its build.
 
+const BUILD: String = "unstamped"
 const ROW_PATH: String = "user://trace_probe.jsonl"
+const WALK_FRAMES_MAX: int = 3000
 const SETTLE_FRAMES: int = 180
 const MISSED_MS: float = 25.0
 
@@ -47,7 +56,7 @@ func _ready() -> void:
 	process_priority = 1000
 	_host = get_parent()
 	_rows = FileAccess.open(ROW_PATH, FileAccess.WRITE)
-	_row({"probe": "start", "adapter": RenderingServer.get_video_adapter_name(),
+	_row({"probe": "start", "build": BUILD, "adapter": RenderingServer.get_video_adapter_name(),
 		"method": RenderingServer.get_current_rendering_method(),
 		"screen": [DisplayServer.screen_get_size().x, DisplayServer.screen_get_size().y],
 		"args": OS.get_cmdline_user_args()})
@@ -116,7 +125,7 @@ func _run() -> void:
 		return
 	var frames: int = int(_arg("--hold-frames", "600"))
 	for mode: String in _arg("--holds", "cadence").split(",", false):
-		await _hold(mode, frames)
+		await _hold(mode, frames, screen)
 	_force_live = false
 	_row({"probe": "holds_done"})
 	await get_tree().create_timer(float(_arg("--linger", "0"))).timeout
@@ -138,9 +147,17 @@ func _view(screen: WorldMapScreen, view: String) -> void:
 	_row({"probe": "view", "view": view if not view.is_empty() else "default"})
 
 
-func _hold(mode: String, count: int) -> void:
+func _hold(mode: String, count: int, screen: WorldMapScreen) -> void:
 	_force_live = mode == "live"
 	await _frames(60)
+	var walking: bool = mode == "walk"
+	if walking:
+		var open: Array[int] = screen.map.reachable()
+		open.sort()
+		if open.is_empty() or not screen.choose(open[0]):
+			_row({"probe": "error", "why": "no walk", "open": open})
+			return
+		count = WALK_FRAMES_MAX
 	var stage: SubViewport = _scene.get_stage()
 	var rid: RID = stage.get_viewport_rid()
 	var info: Dictionary = {}
@@ -154,6 +171,7 @@ func _hold(mode: String, count: int) -> void:
 	_row({"probe": "hold_start", "mode": mode, "stage": [stage.size.x, stage.size.y],
 		"display": [get_viewport().get_visible_rect().size.x, get_viewport().get_visible_rect().size.y],
 		"band": _scene.focus_band.is_finite(), "render": info,
+		"layer_grain": _layer_grain(), "map_grain": _map_grain(),
 		"video_mib": snappedf(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, 0.1)})
 	var intervals: Array[float] = []
 	var process_ms: float = 0.0
@@ -164,6 +182,12 @@ func _hold(mode: String, count: int) -> void:
 		intervals.append((now - last) / 1000.0)
 		last = now
 		process_ms += Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+		var travelling: Variant = screen.get("_travelling")
+		if walking and travelling != true:
+			# The arrival frame also builds the room the walk opens: not the walk.
+			intervals.pop_back()
+			break
+	count = intervals.size()
 	var total: float = 0.0
 	var missed: int = 0
 	for v: float in intervals:
@@ -175,6 +199,25 @@ func _hold(mode: String, count: int) -> void:
 		"mean_ms": snappedf(total / count, 0.001), "missed": missed,
 		"p50_ms": snappedf(sorted[count / 2], 0.01), "p95_ms": snappedf(sorted[int(count * 0.95)], 0.01),
 		"max_ms": snappedf(sorted[-1], 0.01), "process_ms": snappedf(process_ms / count, 0.01)})
+
+
+## Whether the TransitionLayer's screen-reading grain is on screen.
+func _layer_grain() -> bool:
+	var layer: Variant = _host.get("_transitions")
+	if not layer is TransitionLayer:
+		return false
+	var transitions: TransitionLayer = layer
+	return transitions._grain.visible
+
+
+## The map's own grain strength (R3.1 on; -1 on a build without one).
+func _map_grain() -> float:
+	var grain: ShaderMaterial = _scene._display.material as ShaderMaterial
+	if grain == null or grain.shader == null \
+			or not grain.shader.resource_path.ends_with("map_display.gdshader"):
+		return -1.0
+	var amount: float = grain.get_shader_parameter("amount")
+	return amount
 
 
 ## Live: every enabled view of the map renders this frame. Runs after every
