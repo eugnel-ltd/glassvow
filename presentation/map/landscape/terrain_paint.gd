@@ -5,6 +5,27 @@ const HEIGHT: int = 960
 const ShaderSource: Shader = preload("res://presentation/map/landscape/terrain_paint.gdshader")
 const Paths = preload("res://presentation/map/landscape/road_paths.gd")
 
+## The parameters the ground's paint holds when the bridge decks copy it:
+## `create`'s own, and the river and profile values `Terrain` sets on it.
+const DECK_SHARED: PackedStringArray = ["world_bounds", "route_distance", "habitat",
+	"river_cuts", "channel", "lite"]
+
+
+## The bridge decks' paint: `source`'s shader and shared values, with the deck
+## flag. Not `Resource.duplicate`, which lists a ShaderMaterial's properties and
+## so asks the renderer for the shader's uniforms, waiting for the main thread
+## while the land builds on a worker.
+static func deck_variant(source: ShaderMaterial) -> ShaderMaterial:
+	var deck: ShaderMaterial = ShaderMaterial.new()
+	deck.shader = source.shader
+	for key: String in DECK_SHARED:
+		var value: Variant = source.get_shader_parameter(key)
+		if value != null:
+			deck.set_shader_parameter(key, value)
+	deck.set_shader_parameter("bridge_surface", true)
+	return deck
+
+
 static func create(lines: Array[PackedVector3Array], _elevated: Callable, bounds: Rect2 = Rect2(-48,-30,96,60)) -> ShaderMaterial:
 	# 8 texels a metre: the road's edge is a smooth distance, read bilinearly,
 	# and a quarter of the archive's 16 cut its build by about three quarters.

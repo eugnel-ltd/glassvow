@@ -71,8 +71,7 @@ static func build(parent: Node3D, lines: Array[PackedVector3Array], elevated: Ca
 	_stonework(kerbs,chains,surface,lines)
 	parent.build_timings_ms["roads_stonework"] = Time.get_ticks_msec() - _t0
 	Meshes.node(parent,Meshes.finish(kerbs),Meshes.material(Color("49454b")),"Bridge parapet stones")
-	var deck_paint: ShaderMaterial = paint.duplicate() as ShaderMaterial
-	deck_paint.set_shader_parameter("bridge_surface",true)
+	var deck_paint: ShaderMaterial = preload("res://presentation/map/landscape/terrain_paint.gd").deck_variant(paint)
 	Meshes.node(parent,Meshes.finish(top),deck_paint,"Continuous bridge decks")
 	var stone: ShaderMaterial = ShaderMaterial.new()
 	stone.shader = preload("res://presentation/map/landscape/bridge_stone.gdshader")

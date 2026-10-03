@@ -38,15 +38,28 @@ static func v3(value: Array) -> Vector3:
 	return Vector3(float(str(value[0])), float(str(value[1])), float(str(value[2])))
 
 
-## A unit cube's surface held as arrays, for `SurfaceTool.append_from`. A
-## `BoxMesh` (or any primitive or array mesh) answers `surface_get_arrays` by
-## reading its buffers back from the renderer, which off the main thread waits
-## on the main thread: the land is built on a worker, so every append reads
-## arrays generated on the CPU instead (`PrimitiveMesh.get_mesh_arrays`).
-static func unit_box() -> Mesh:
+## A unit cube's surface held as arrays, for `SurfaceTool.append_from`. Every
+## way of reading a mesh's arrays (`PrimitiveMesh.get_mesh_arrays` included)
+## reads them back from the renderer, which off the main thread waits for the
+## main thread to flush: a worker doing it stalls once per call, and a quit
+## during the build deadlocks. So the cube is read once on the main thread
+## (`prepare_unit_box`, from `Kit.preload_scenes`) and workers append the copy.
+static var _unit_arrays: Array = []
+
+
+static func prepare_unit_box() -> void:
+	if not _unit_arrays.is_empty():
+		return
+	if OS.get_thread_caller_id() != OS.get_main_thread_id():
+		push_error("mesh_tools: the unit cube was first read on a worker (a renderer stall)")
 	var box: BoxMesh = BoxMesh.new()
 	box.size = Vector3.ONE
-	return HeldArrays.new(box.get_mesh_arrays())
+	_unit_arrays = box.get_mesh_arrays()
+
+
+static func unit_box() -> Mesh:
+	prepare_unit_box()
+	return HeldArrays.new(_unit_arrays)
 
 
 class HeldArrays extends Mesh:

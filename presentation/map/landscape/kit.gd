@@ -55,6 +55,7 @@ static var preload_ms: float = 0.0
 
 
 static func preload_scenes() -> void:
+	Meshes.prepare_unit_box()
 	if not _held.is_empty():
 		return
 	var started: int = Time.get_ticks_usec()

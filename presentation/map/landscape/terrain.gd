@@ -308,8 +308,7 @@ func _roads() -> void:
 	top.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var bridge: SurfaceTool = SurfaceTool.new()
 	bridge.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var blocks: BoxMesh = BoxMesh.new()
-	blocks.size = Vector3.ONE
+	var blocks: Mesh = Meshes.unit_box()
 	for line: PackedVector3Array in lines:
 		for i: int in range(line.size() - 1):
 			road_segments += 1
