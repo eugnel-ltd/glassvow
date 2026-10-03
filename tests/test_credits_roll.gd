@@ -339,7 +339,8 @@ static func _licence_glass(fails: Array[String], tree: SceneTree, host: SubViewp
 	_check(fails, glass != null and glass.visible, "the font licences did not open in their own glass")
 	await tree.create_timer(CreditsLicences.Glass.IN_TIME + 0.1).timeout
 	_check(fails, glass.scroll.has_focus(), "the licence glass did not take the focus on its own scroll")
-	_check(fails, credits.scroll().modulate.a <= CreditsLicences.Glass.BEHIND + 0.01,
+	# The review's own number: at 0.4 the roll read round the arch.
+	_check(fails, credits.scroll().modulate.a <= 0.15,
 		"the roll behind the glass is left at %.2f, legible round its arch" % credits.scroll().modulate.a)
 	var crown_foot: float = glass.crown.get_global_rect().end.y
 	var spring: float = glass.sheet.global_position.y + glass.sheet.size.y * glass.sheet.spring

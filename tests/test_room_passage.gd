@@ -394,6 +394,7 @@ static func _in_a_run(fails: Array[String], tree: SceneTree, host: SubViewport,
 		_check(fails, opened != null and main._passage.lent_title() == null
 				and not opened.seat().lantern_hit().visible,
 			"X1 %s: the room in a run is not the room with the word alone" % room)
+		await tree.process_frame
 		_check(fails, is_instance_valid(menu) and menu.is_inside_tree() and menu.modulate.a > 0.5,
 			"X1 %s: the run menu vanished on the tap instead of folding under the room" % room)
 		if opened != null:
@@ -430,9 +431,9 @@ static func _word_crosses_nothing_lit(fails: Array[String], tree: SceneTree, hos
 	var settle: float = ROOMS[room]
 	var furniture: Array = _title(main).furniture(word, true)
 	for i: int in range(ceili(settle / STEP)):
-		# The word lifts off through its neighbours as they go: from its fourth
+		# The word lifts off through its neighbours as they go: from its third
 		# frame nothing it crosses is lit.
-		_crossing(fails, main, modal, room, "arriving", furniture if i >= 3 else [])
+		_crossing(fails, main, modal, room, "arriving", furniture if i >= 2 else [])
 		await _step(tree, main, 1)
 	await _step(tree, main, 6)
 	await _tap(tree, host, modal.seat().word())
