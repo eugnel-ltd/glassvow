@@ -639,6 +639,29 @@ scene,天花 L0。
 |---|---|---|---|---|---|---|
 | 467 | 遊戲若出錯，會傳送當機診斷資料，好讓這條路得以修補。 / If the game breaks, it sends crash diagnostics so the road can be mended. | ui.firstLight.diagnostics(首次啟動,標題路面上的同意句,配一個開關) | L0 | 當機報告幫忙修好遊戲;「這條路」= 你將要走的遊戲 | 字面仍真,只是更冷:被修補、得以一直走下去的,正是那條把行者一個個留在路上的路(00 §1)。句子沒有帶入任何玩家未見過的事實,只多了一層反諷 | 新寫 [PROPOSED] |
 
+## Act IV 同場備選音軌名(music alternates,#659,2026-10-03)[PROPOSED — routine copy under settled canon;owner 可改名]
+
+James 2026-10-02:不做新音樂,同一 prompt 的 held candidates 作同場備選。四條音軌名
+寫入 `assets/audio/music/manifest.json`,由 `credits_screen.gd` `_add_music_rows`
+按 manifest 次序原文渲染——只有英文、沒有 locale key,zh 一欄是記錄用的對照,
+不出貨。做法同 row 82(一語三址):每個名都取一句已出貨 Act IV 句子的一截。
+`04-delivery` 的 channel 天花表沒有 credits 一行;credits 由標題選單直達、shard 0
+可達,故比照 loss pool 定天花 L1。來源句屬 Act IV 全區 L4,入名時只取表面讀法
+不越 L1 的半句。禁詞七項全無,動向全屬水平。音軌名一律不點名任何一隻精英、
+不替八個無聲的鏡像代言(07 §4)。
+
+合讀(credits 連讀時鄰行可成句,逐對記賬):act4Combat C「Hearthlight Runs Back」
+與本區 row 469 合起來重組 row 344 全句;row 470 與 row 471 在 manifest 相鄰,連讀似
+「門的另一面,這裏你認得」(暗指金城=爐邊,#259 Q3)。兩對單看各自 L1,連讀仍是
+「可疑,不可證」,不確認任何真相,故仍 L1。
+
+| # | 句子 | 出處 | 級 | 表面讀法 | 揭後讀法 | 狀態 |
+|---|---|---|---|---|---|---|
+| 468 | 沒有一個回頭 / Not One Turned Round | manifest `act4CombatA.title`(credits;Act IV 精英戰三選一)。取 row 349 `story.act4-node2.b1.l2` 後半句,去掉「我們」 | L1 | 一群人上路,沒有一個回頭望;精英戰的一路向前 | 沒有一個行者回頭,合 spine《行嗰個從來冇返嚟》;不肯走的那部分(沉澱,00 §2.4;#340 單位鎖,不寫「一半」)從來沒有出發,一直留在爐邊。與 C「Hearthlight Runs Back」對讀:光倒流,人不回頭 | 新寫 [PROPOSED] |
+| 469 | 向前一步，便亮一分 / Each Step Brighter | manifest `act4CombatB.title`(credits;Act IV 精英戰三選一)。取 row 344 `story.act4-entry.b1.l2` 後半句;前半句即 C 的「Hearthlight Runs Back」 | L1 | 愈行愈亮,一句盼望 | 愈近盡頭愈亮,因為盡頭就是爐火(00 §2.4)。「each step」是泛指,不搶 rows 364–367 終戰那一「步」 | 新寫 [PROPOSED] |
+| 470 | 門的另一面 / The Far Side of the Door | manifest `act4CombatD.title`(credits;Act IV 精英戰三選一)。取 row 343 `story.act4-entry.b1.l1` 門的半句;窗門同體的半句(L4,#259 Q4)不取 | L1 | 門後之地:「門會開、門後有目的地」是表面虛構,任何級都可直說(00 §5,#262 Q3) | 門的另一面就是窗的另一面,即爐邊(00 §8.1)。說的是「一面」,不是「門後之物」,不復活 row 12 的 legend-drift;方位水平,合 row 31「王冠之後」公式 | 新寫 [PROPOSED] |
+| 471 | 這裏你認得 / You Know This Place | manifest `act4BossB.title`(credits;Act IV boss 重逢——守夜帳已勝過或已到過 boss)。取 row 357 `story.act4-node5.b1.l1`(守爐人)後半句 | L1 | 似曾相識;你來過這裏 | hearth′=爐邊真貌(00 §2.4,#259 Q3),你從未離開過。字面真,守爐人四條聲線規則全過:不催出發,不以第一身講路,不說「你回來了」(#259 Q1)。勝過或敗過都成立,不倚賴勝後守爐人狀態(07 §5:未入 00-truth 不得落筆) | 新寫 [PROPOSED] |
+
 ## `[REWRITE:climb]` 清單狀態 — 已關閉
 
 全量掃描由 #232 的十四-agent 量度完成,記錄於

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "source": "docs/music-ledger.md",
+  "note": "Held Act IV candidates used as same-scene alternates (issue 659). A cue without a context entry plays its MusicBus.FILES default. Stems resolve to res://assets/audio/music/<stem>.mp3.",
+  "cues": {
+    "act4Combat": {
+      "contexts": {
+        "elite": ["act4-combat-a", "act4-combat-b", "act4-combat-d"]
+      }
+    },
+    "act4Boss": {
+      "contexts": {
+        "return": ["act4-boss-b"]
+      }
+    }
+  }
+}
