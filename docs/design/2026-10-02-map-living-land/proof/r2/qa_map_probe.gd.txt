@@ -1,0 +1,219 @@
+extends Node
+## QA-only device probe for the revived Act I map (never committed). Hosted by
+## Main behind `--map --map-probe`: cold open (land built behind the veil),
+## two reopens, a rebuilt open, a warmed open (journey prefetch), then rest and
+## walking frame intervals. Rows go to user://map_probe.jsonl, flushed per row.
+
+const ROW_PATH: String = "user://map_probe.jsonl"
+var _host: Node = null
+var _rows: FileAccess = null
+
+func _ready() -> void:
+	_host = get_parent()
+	_rows = FileAccess.open(ROW_PATH, FileAccess.WRITE)
+	_row({"probe": "start", "adapter": RenderingServer.get_video_adapter_name(),
+		"method": RenderingServer.get_current_rendering_method(),
+		"screen": [DisplayServer.screen_get_size().x, DisplayServer.screen_get_size().y]})
+	_run.call_deferred()
+
+func _row(data: Dictionary) -> void:
+	var line: String = JSON.stringify(data)
+	print("MAP_PROBE " + line)
+	if _rows != null:
+		_rows.store_line(line)
+		_rows.flush()
+
+func _run() -> void:
+	await _frames(30)
+	# The boot already opened the map once (cold, possibly prefetched); start clean.
+	_drop()
+	await _frames(30)
+	await _open("cold")
+	await _open("reopen")
+	await _open("reopen")
+	_host._clear_route()
+	_host._map_keep.release()
+	await _frames(30)
+	await _open("rebuilt")
+	_drop()
+	await _frames(30)
+	var run: RunState = _host.game.run
+	var map: WorldMap = _host._map
+	MapLandscapeAssets.prefetch(run.act)
+	MapJourneyPrefetch.start(map, run)
+	var start: int = Time.get_ticks_usec()
+	var worst: float = await _worst(func() -> bool: return not MapJourneyPrefetch.busy())
+	_row({"probe": "warm", "warm_ms": (Time.get_ticks_usec() - start) / 1000.0, "worst_frame_ms": worst})
+	await _open("warmed")
+	await _frames(90)
+	await _rest()
+	_row({"probe": "done"})
+	get_tree().quit(0)
+
+func _drop() -> void:
+	_host._clear_route()
+	_host._map_keep.release()
+	MapLandscapeAssets.release()
+	MapJourneyPrefetch.release()
+	MapScene.release_kept_journey()
+	MapScene._bound = {}
+	MapScene._bound_key = ""
+	WorldMapScreen._input_kept = null
+	WorldMapScreen._input_sources = []
+
+func _open(kind: String) -> void:
+	var start: int = Time.get_ticks_usec()
+	var kit_before: float = MapJourneyLandscape.Kit.preload_ms
+	_host._show_map()
+	var total: float = (Time.get_ticks_usec() - start) / 1000.0
+	await RenderingServer.frame_post_draw
+	var frame: float = (Time.get_ticks_usec() - start) / 1000.0
+	var screen: WorldMapScreen = _host._map_screen
+	var slow: Array = []
+	var worst: float = await _worst(func() -> bool:
+		return not is_instance_valid(screen) or not screen.landscape_pending(), slow, start)
+	var ready: float = (Time.get_ticks_usec() - start) / 1000.0
+	# The frames after the land attaches: its first draws compile pipelines.
+	var after: Array = []
+	var last: int = Time.get_ticks_usec()
+	for i: int in range(10):
+		await get_tree().process_frame
+		var now: int = Time.get_ticks_usec()
+		after.append(snappedf((now - last) / 1000.0, 0.1))
+		last = now
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape() if is_instance_valid(screen) else null
+	_row({"probe": "open_detail", "kind": kind, "slow_frames": slow, "after_attach_ms": after,
+		"kit_preload_ms": MapJourneyLandscape.Kit.preload_ms - kit_before,
+		"land_timings": land.timings_ms if land != null else {}})
+	_row({"probe": "open", "kind": kind, "total_ms": total, "frame_ms": frame,
+		"ready_ms": ready, "build_worst_frame_ms": worst,
+		"video_mib": Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0,
+		"texture_mib": Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED) / 1048576.0,
+		"static_mib": OS.get_static_memory_usage() / 1048576.0})
+	await _frames(30)
+
+func _rest() -> void:
+	var screen: WorldMapScreen = _host._map_screen
+	var scene: MapScene = screen._map_scene
+	var rid: RID = scene.get_stage().get_viewport_rid()
+	var rest: Dictionary = await _sample(func() -> bool: return true, 300)
+	var info: Dictionary = {}
+	for kind: Array in [["stage", RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE],
+			["shadow", RenderingServer.VIEWPORT_RENDER_INFO_TYPE_SHADOW]]:
+		var type: int = kind[1]
+		info[str(kind[0]) + "_draw_calls"] = RenderingServer.viewport_get_render_info(rid, type, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
+		info[str(kind[0]) + "_primitives"] = RenderingServer.viewport_get_render_info(rid, type, RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME)
+	_row({"probe": "rest", "stage": [scene.get_stage().size.x, scene.get_stage().size.y], "rest": rest, "render": info})
+	await _variants(screen, scene)
+	var reach: Array[int] = screen.map.reachable()
+	if reach.is_empty():
+		return
+	screen.node_chosen.disconnect(Callable(_host, "_on_node_chosen"))
+	if screen.choose(reach[0]):
+		var walk: Dictionary = await _sample(func() -> bool: return screen._travelling, 900, true)
+		_row({"probe": "walk", "walk": walk})
+	await _frames(60)
+	await _painted(screen, scene)
+
+
+func _painted(screen: WorldMapScreen, scene: MapScene) -> void:
+	# The painted act on the same screen: main's map cost on this device.
+	var run: RunState = _host.game.run
+	run.act = 1
+	screen.refresh(run)
+	await _frames(120)
+	_row({"probe": "variant", "name": "painted_act2_cadence", "stage": [scene.get_stage().size.x, scene.get_stage().size.y], "rest": await _sample(func() -> bool: return true, 300)})
+	scene.set_live(true)
+	await _frames(20)
+	_row({"probe": "variant", "name": "painted_act2_live", "rest": await _sample(func() -> bool: return true, 240)})
+	scene.set_live(false)
+	run.act = 0
+	screen.refresh(run)
+	await _frames(120)
+
+
+## What each remaining cost costs on this device, at rest, live render.
+func _variants(screen: WorldMapScreen, scene: MapScene) -> void:
+	var land: MapJourneyLandscape = scene.journey_landscape()
+	var stage: SubViewport = scene.get_stage()
+	scene.set_live(true)
+	await _frames(30)
+	_row({"probe": "variant", "name": "live_lean", "msaa": stage.msaa_3d, "stage": [stage.size.x, stage.size.y], "rest": await _sample(func() -> bool: return true, 240)})
+	scene.get_key().shadow_enabled = false
+	await _frames(20)
+	_row({"probe": "variant", "name": "shadows_off", "rest": await _sample(func() -> bool: return true, 240)})
+	scene.get_key().shadow_enabled = true
+	var rivers: Array[Node] = land.terrain.find_children("Stream*", "", false, false)
+	for river: Node in rivers:
+		(river as Node3D).visible = false
+	await _frames(20)
+	_row({"probe": "variant", "name": "rivers_hidden", "rest": await _sample(func() -> bool: return true, 240)})
+	for river: Node in rivers:
+		(river as Node3D).visible = true
+	var ground: Array[Node] = land.terrain.find_children("*", "MeshInstance3D", false, false)
+	for g: Node in ground:
+		if str(g.name).begins_with("Ground chunk") or str(g.name) == "Quiet sculpted ground":
+			(g as Node3D).visible = false
+	await _frames(20)
+	_row({"probe": "variant", "name": "ground_hidden", "rest": await _sample(func() -> bool: return true, 240)})
+	for g: Node in ground:
+		(g as Node3D).visible = true
+	land.kit.visible = false
+	await _frames(20)
+	_row({"probe": "variant", "name": "kit_hidden", "rest": await _sample(func() -> bool: return true, 240)})
+	land.kit.visible = true
+	land.visible = false
+	await _frames(20)
+	_row({"probe": "variant", "name": "land_hidden", "rest": await _sample(func() -> bool: return true, 240)})
+	land.visible = true
+	var lean_size: Vector2i = stage.size
+	stage.size = Vector2i(roundi(lean_size.x * 0.67 / 0.75), roundi(lean_size.y * 0.67 / 0.75))
+	await _frames(20)
+	_row({"probe": "variant", "name": "scale_067", "stage": [stage.size.x, stage.size.y], "rest": await _sample(func() -> bool: return true, 240)})
+	stage.size = lean_size
+	RenderingServer.directional_shadow_atlas_set_size(1024, true)
+	await _frames(20)
+	_row({"probe": "variant", "name": "shadow_atlas_1024", "rest": await _sample(func() -> bool: return true, 240)})
+	stage.size = Vector2i(roundi(lean_size.x * 0.67 / 0.75), roundi(lean_size.y * 0.67 / 0.75))
+	await _frames(20)
+	_row({"probe": "variant", "name": "scale_067_atlas_1024", "rest": await _sample(func() -> bool: return true, 240)})
+	stage.size = lean_size
+	RenderingServer.directional_shadow_atlas_set_size(2048, true)
+	scene.set_live(false)
+	await _frames(30)
+	_row({"probe": "variant", "name": "rest_cadence", "rest": await _sample(func() -> bool: return true, 300)})
+
+
+func _sample(going: Callable, limit: int, drop_last: bool = false) -> Dictionary:
+	var t: Array[float] = []
+	var last: int = Time.get_ticks_usec()
+	while going.call() and t.size() < limit:
+		await get_tree().process_frame
+		var now: int = Time.get_ticks_usec()
+		t.append((now - last) / 1000.0)
+		last = now
+	if drop_last and not t.is_empty():
+		t.remove_at(t.size() - 1)
+	if t.is_empty():
+		return {}
+	t.sort()
+	return {"frames": t.size(), "p50_ms": t[t.size() / 2], "p95_ms": t[int(t.size() * 0.95)], "max_ms": t[-1]}
+
+func _worst(done: Callable, slow: Array = [], origin: int = 0) -> float:
+	var worst: float = 0.0
+	var last: int = Time.get_ticks_usec()
+	var n: int = 0
+	while not done.call() and n < 6000:
+		await get_tree().process_frame
+		var now: int = Time.get_ticks_usec()
+		var interval: float = (now - last) / 1000.0
+		worst = maxf(worst, interval)
+		if interval > 50.0:
+			slow.append([snappedf((now - origin) / 1000.0, 1.0), snappedf(interval, 1.0)])
+		last = now
+		n += 1
+	return worst
+
+func _frames(count: int) -> void:
+	for i: int in range(count):
+		await get_tree().process_frame

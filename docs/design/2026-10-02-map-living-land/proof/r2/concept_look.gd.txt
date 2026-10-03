@@ -40,6 +40,8 @@ func _run() -> void:
 		elif arg.begins_with("--steps="): steps = int(value)
 		elif arg == "--dump": dump = true
 		elif arg == "--measure": measure = true
+	if OS.get_environment("STILL") == "1":
+		Preferences.active.reduce_motion = true
 	if OS.get_environment("LEAN") == "1":
 		MapScene.lean_override = 1
 	var dimensions: Vector2i = StageShape.REFERENCES[shape]
@@ -108,6 +110,43 @@ func _run() -> void:
 		screen._chip_band.visible = false
 	if dump:
 		_dump(screen)
+	var jl: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	if jl != null:
+		var posts: int = 0
+		for item: Dictionary in jl.kit.placed:
+			if str(item["kind"]) == "lantern-post":
+				posts += 1
+			if str(item["kind"]) == "bridge-banner":
+				print("BANNER ", item["position"])
+		var pins: Array = []
+		for stone: GlassWaystone in screen._waystones:
+			if stone.visible:
+				var centre: Vector2 = stone.get_global_rect().get_center()
+				pins.append([centre.x, centre.y, stone.pane_radius()])
+		print("PINS ", JSON.stringify(pins))
+		for chain: Dictionary in jl.terrain.get_meta("bridge_chains", []):
+			var pts: PackedVector3Array = chain["points"]
+			var w: PackedFloat32Array = chain["weights"]
+			var raised: int = 0
+			var wet: int = 0
+			var facing: int = 0
+			for k: int in range(pts.size() - 1):
+				if minf(w[k], w[k + 1]) >= 0.95:
+					raised += 1
+					if jl.terrain.stream_distance(pts[k].x, pts[k].z) <= 5.0:
+						wet += 1
+						var fwd: Vector3 = (pts[k + 1] - pts[k]).normalized()
+						var acr: Vector3 = fwd.cross(Vector3.UP).normalized()
+						if absf(acr.z) >= 0.5:
+							facing += 1
+							var near_end: float = INF
+							for line: PackedVector3Array in jl.terrain.lines:
+								near_end = minf(near_end, minf(Vector2(pts[k].x - line[0].x, pts[k].z - line[0].z).length(), Vector2(pts[k].x - line[-1].x, pts[k].z - line[-1].z).length()))
+							print("SEG end_dist=", snappedf(near_end, 0.1))
+			if raised > 0:
+				print("CHAIN n=", pts.size(), " raised=", raised, " wet=", wet, " facing=", facing, " from ", pts[0], " to ", pts[-1])
+		print("BAND ", JSON.stringify({"band": [screen._map_scene.focus_band.x, screen._map_scene.focus_band.y], "members": screen._journey.focus_members, "height": screen._map_scene.size.y}))
+		print("LAMPS ", JSON.stringify({"posts": posts, "anchors": jl.lamps.anchors.size(), "lit": Array(jl.lamps.lit()), "lines": jl.terrain.lines.size()}))
 	for stone: GlassWaystone in screen._waystones:
 		stone.set_process(false)
 	scene.set_live(true)

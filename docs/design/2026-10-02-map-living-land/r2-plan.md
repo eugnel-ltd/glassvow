@@ -435,29 +435,71 @@ run of the map probe whose mean frame interval at rest stays at 16.66 ms
 device gate is fixed or cut before the next one starts.
 
 1. **Light and grade.** Act I's golden-hour key, ambient, exposure and
-   adjustments; two-level bloom; the flame flipbook on every lamp, real lights
-   on the Flame and the four nearest lamps, painted pools on the rest; the
-   flame material added to the veil's shader warm-up. The pin-contrast check
-   joins the capture test.
+   adjustments; two-level bloom; lantern posts along the roads with the flame
+   flipbook on every lamp and a painted pool under each; real lights on the
+   Flame and the four nearest lamps on the desktop only (on the iPad 8 they
+   were the one part of the lamps that cost frames, so the lean profile has
+   none); the flames draw in the land's first frame, behind the veil. Pin
+   contrast measured at every shape. *(Built: §8.)*
+   - **1b. Contact and canopy light.** (from the owner's Tiny Delivery reference,
+     below). A soft contact shadow under every prop, post, stone and waystone:
+     one more 4 px/m channel painted by `bind_habitat` from each placement's
+     footprint and read once in the ground shader (the habitat map's four
+     channels are taken). Dappled canopy light: inside the woodland's reach the
+     ground shader breaks the key into patches with one low-frequency noise
+     (ALU only). A backlight rim on foliage edges facing the key, in
+     `foliage.gdshader` (`BACKLIGHT`, ALU only). Expected cost: one texture
+     read and a few ALU on the ground, a few on the foliage; gated on the
+     device like step 1, cut piece by piece if the mean leaves 16.66 ms.
 2. **Tilt-shift.** The screen band on the stage display, framed by the Journey
    group, off in Whole act, with the band-covers-the-group test.
 3. **Living motion.** Foliage sway in the kit's cut-out materials (shadow pass
    included), banners on the bridges (one small GLB from the Blender recipes),
    embers and ash; all off under Reduce Motion except lantern flicker.
+   *(Built: §8.)*
+   - **3b. Small life.** (from the reference). Moths circling the burning
+     lanterns: one MultiMesh of tiny wing cards orbiting each lamp anchor in the
+     vertex shader (one draw for every lamp, no CPU per frame). Crows: a few
+     per act, a small low-poly crow from the Blender recipes (two poses), each
+     perched by rule on a stone, post or verge away from every waystone; when the
+     pilgrim walks within 3 m one hops and flies off along a short scripted arc
+     and settles again further on (the only CPU-driven motion, a handful of
+     nodes, only while walking). Both off under Reduce Motion, both kept out of
+     the pins' touch squares, both local (a moth never leaves its lamp's 1 m).
 4. **Wet ground.** Puddles in the ground paint with analytic lamp glints, the
    act's sky tint; measured with and without glints on the device.
 5. **Water.** Foam folded into the river shader, bounded mist, the waterfall
    step at one crossing and its card strip.
-6. **Density.** Opaque cover kinds from the Blender recipes, the fill pass
-   with the clearance rule and per-cell limit, litter paint beyond the far
-   band; the kit's acceptance digests in an explicit commit. This is the step
-   most likely to need a second device iteration, so it comes after the
-   free techniques have shipped.
+6. **Density and ground detail.** Opaque cover kinds from the Blender
+   recipes, the fill pass with the clearance rule and per-cell limit, litter
+   paint beyond the far band; the kit's acceptance digests in an explicit
+   commit. With it, the reference's ground-detail pass: the ground paint gains
+   a macro and a micro scale so no area reads as one flat colour; instanced
+   ground cover and flower clusters (opaque, the Ashen Woods palette: ash-grey
+   soil, red leaf litter, pale ash flowers, ember berries) drawn to every hard
+   edge, at wall and post bases, waystone footings, bridge abutments and road
+   verges; ragged verges and wheel ruts on the main road in the paint. And
+   story props in small composed groups along the road (fallen lantern posts,
+   broken waystones, abandoned pilgrim packs and staffs, a collapsed shrine
+   arch); what the Ashen Woods may hold goes through the story skill first.
+   This is the step most likely to need a second device iteration, so it comes
+   after the free techniques have shipped.
 7. **God rays,** only if the owner wants them after seeing step 6.
 
 Steps 1–3 deliver most of the gap at no measured cost; that is why they come
-first. Steps 4–5 are local; step 6 is the costly one and is built against its
-own saving.
+first. Steps 1b and 3b are cheap additions gated the same way. Steps 4–5 are
+local; step 6 is the costly one and is built against its own saving.
+
+**The owner's second reference (3 October, 11:05).** James shared an 18 s
+trailer of the indie game *Tiny Delivery*
+(https://x.com/artem_sini39436/status/2106289186567590144; the clip and its
+frames stay in the lane's scratch, never in the repository) as "some idea for
+the map design too. some details". It is a reference for detail and life,
+not palette: the owner's target (red woodland, golden hour) stays the look.
+What it shows is three scales of ground variation, growth softening every
+hard edge, ruins in small composed groups, contact and dappled shadows, and
+small local life. Those are steps 1b, 3b and the ground-detail half of step
+6. Its slow camera pan is a trailer move: the map's camera stays fixed (§6).
 
 ## 5. Size
 
@@ -471,8 +513,13 @@ mipmaps), shared where it can be, and never embedded in a GLB:
 | Three or four opaque cover kinds, sharing the kit's foliage and stone textures | about 1.5 MiB |
 | Colour-correction LUT, 32³ | 0.13 MiB |
 | Waterfall card strip texture (256×1024) | about 0.2 MiB |
+| Contact-shadow channel (step 1b), 384×240 R8, built at run time | 0 in the package, 0.09 MiB of VRAM |
+| Moth wing card (step 3b), 64×64, shared by every moth | under 0.01 MiB |
+| Crow GLB, two poses (step 3b), flat colours | about 0.05 MiB |
+| Ground cover and flower clusters (step 6), four or five kinds sharing one 512×512 atlas | about 0.6 MiB |
+| Story props (step 6), five to seven GLBs on the kit's existing stone and bark sources | about 1.0 MiB |
 
-About 2.3 MiB for Act I's R2, on top of R1's 6.0 MiB (`tools/payload_report.py`:
+About 4 MiB for Act I's R2 in all, on top of R1's 6.0 MiB (`tools/payload_report.py`:
 254.8 → 260.8 MiB against origin/main `dc6d8fb3`; `assets/art/map-journey`
 5.7 MiB, now budgeted at 6 MiB). Acts II–IV each stay within +25 MB, reusing
 the techniques and sharing textures across acts. The proof stills and
@@ -487,6 +534,10 @@ sources live under `docs/`, which the export never packs.
   after R2's look is approved.
 - **Acts II–IV:** each act's journey land after Act I's R2 is reviewed, at ≤ +25
   MB each.
+- **Idle camera drift, an open idea only.** The map is a fixed camera by owner
+  decision. If the owner ever wants the reference's sense of a moving view:
+  drift of at most 0.3 m after 4 s idle, stopped by any touch, and only if the
+  pins and their touch squares stay put. Not planned.
 
 ## 7. How to rerun the proofs
 
@@ -509,3 +560,40 @@ export flow with `proof/r2/qa_r2_probe.gd.txt` as `tools/qa_r2_probe.gd`,
 `application/main.gd`, launched with
 `devicectl … -- --map --map-r2-probe --r2=<techniques> --seed=1 --shape=pad-landscape`;
 rows go to `Documents/r2_probe.jsonl`.
+
+## 8. Build log: steps 1–3 (branch `map/r2-light-2026-10-03`)
+
+Every step was gated on the iPad 8 (A12, lean profile, live rest render, 360
+frames) against R1 in the same launch (`proof/r2/` `r1look`: Review 10's light,
+no lamps, pools, band, motion or air), on the Mac with the A12 Metal condition
+(0 errors at pad and phone, lean and full), and at the three shapes in both
+locales. Stills: [`frames/r2-build/`](frames/r2-build/).
+
+| Step | Head | iPad 8 rest, mean (ms) | p95 gap to R1, same launch (ms) | Notes |
+|---|---|---|---|---|
+| 1, first build | `01167f24` | 16.76, 16.75 | +4.0, +0.42 | Failed: real lamp lights cost frames (each ingredient removed in its own launch; only the lights moved p95, 21.3 → 20.2) |
+| 1 | `239855a0` | 16.66, 16.66, 16.66 | −0.30, +0.07, +0.06 | No real lamp lights on the lean profile |
+| 2 | `d3cd5f15` | 16.67, 16.67, 16.66 | −0.30, +0.05, −0.25 | Placement follow-up `7553b706` changes no pixel cost |
+| 3 | `2537127d` | 16.76¹, 16.66, 16.66, 16.66, 16.66, 16.67 | −0.03, +0.20, −0.07, +0.11, +0.37, −0.43 | ¹ first launch after install |
+| 3, air fix | `4d7a6420` | — | — | Removes a 133 ms frame on attach (below) |
+
+Opens on the iPad 8 (map probe, pad, seed 1): R1 cold ready 2.70 s, warmed
+350 ms, reopen 42–51 ms. Step 1: cold 2.90 s (main thread 967 ms, worst frame
+17 ms), warmed 341 ms, reopen 48–57 ms, walk p95 16.8 ms. Step 3 at
+`2537127d` showed a 133 ms frame right after the land attached, on cold and
+warmed opens alike (cold worst frame 50–82 ms): each new land's embers and
+ash pre-simulated a whole lifetime in its first frame. `4d7a6420` starts the
+air empty instead.
+
+Pin contrast (rim against the land just outside it, WCAG ratio; R1 light →
+R2, same land): phone min 1.26 → 1.41, pad 2.00 → 2.17, desktop 1.22 → 1.18
+(one pin at the frame's edge; every other desktop pin holds or rises). Disc
+against land: phone 1.75 → 2.17, pad 1.16 → 1.13, desktop 1.16 → 1.13.
+
+Mac (pad, desktop profile, `4d7a6420`): cold open 2.08 s (main thread 654 ms,
+worst frame 23 ms), warmed 222 ms, reopen 15–19 ms, kept VRAM 68.0 MiB; rest
+p95 7.4–10.9 ms, walk p95 3.0–3.6 ms; stage 155 calls and 144k primitives,
+shadow pass 70k primitives. Act II unchanged.
+
+Payload (`tools/payload_report.py`): `assets/art/map-journey` 5.8 MiB of its
+6 MiB budget; the iOS pck estimate 260.9 MiB of 400.
