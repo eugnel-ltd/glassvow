@@ -2544,7 +2544,7 @@ func _resume_pending_combat() -> void:
 	var combat_kind: String = "normal" if route_kind == "monster" else route_kind
 	_screen.start_encounter(enemies, combat_kind,
 		_combat_encounter_header(route_kind, game.run.act + 1))
-	_music.play(_combat_music(route_kind))
+	_play_combat_music(route_kind)
 
 
 ## The battlefield bench: a REAL fight, not a mock — the same GlassvowGame, the
@@ -2583,7 +2583,7 @@ func _start_fight(ids: PackedStringArray, kind: String) -> void:
 	_screen.hint_guide = _hints
 	add_child(_screen)
 	_screen.start_encounter(known, kind, "Bench  ·  %s" % kind.capitalize())
-	_music.play(_combat_music(kind))
+	_play_combat_music(kind)
 
 
 ## Production-flow stills of the six first-run hints. Not a suppressed boot:
@@ -2660,6 +2660,11 @@ func _onboard_reward() -> void:
 	_show_pending_reward()
 
 
+func _play_combat_music(kind: String) -> void:
+	_music.play(_combat_music(kind),
+		MusicBus.combat_context(kind, game.run.act, _vigil))
+
+
 func _combat_music(kind: String) -> StringName:
 	var quest: String = str(game.run.pending_quest_id) \
 		if game.run.pending_quest_id != null else ""
@@ -2671,7 +2676,9 @@ func _combat_music(kind: String) -> StringName:
 			and game.run.omens[game.run.act] == "eighthOmen":
 		return &"eighthOmen"
 	if kind == "elite":
-		return &"elite"
+		# Act IV elites share the act's combat cue, whose elite context draws
+		# among the held takes (variants.json); other acts keep `elite`.
+		return &"act4Combat" if game.run.act == MusicBus.ACT4_INDEX else &"elite"
 	var act: int = clampi(game.run.act + 1, 1, LayoutBook.ACTS)
 	return StringName("act%dBoss" % act if kind == "boss" \
 		else "act%dCombat" % act)

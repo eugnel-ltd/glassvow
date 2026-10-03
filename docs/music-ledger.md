@@ -13,7 +13,7 @@ AceDataCloud is an optional third-party wrapper with its *own* token
 ## What
 
 The immutable **stained-glass-v1** pack: 22 looped tracks, plus the
-**stained-glass-v1-act4** addendum: 2 Act IV loops. Files live at
+**stained-glass-v1-act4** addendum: 2 Act IV loops and 4 held alternates. Files live at
 `assets/audio/music/`. Direction: classical gothic stained-glass chamber
 music — dark panes, cold stone, a lantern kept lit. `pack_id` is
 `stained-glass-v1-act4`. v1 bytes are untouched.
@@ -78,7 +78,32 @@ Prompt that rendered (Custom style field, Instrumental on):
 - `act4Combat`: Loop. The Mirrored Road, not a new biome: the Act I–III chamber palette heard *backwards* — phrases inverted, cadence arriving before the step. Low strings and glass harmonics; a far amber pedal that brightens as the phrase repeats. No choir, no vocals, no climb, no brass fanfare.
 - `act4Boss`: Loop. The Eternal Keeper's fight: the hearth theme at original speed (node 5 is "home"), but the harmony sits one degree colder than `vigil` / the opening hearth. Stillness is the threat — long held tones, a slow cracked-glass ostinato, no chase. No choir, no vocals, no sovereign-court brass.
 
-Held candidates (kept in the repo, not wired): combat **A** 104 s (`a7613abf-f0f6-47a5-9e7b-830bb421b3c2`), **B** 153 s (`83a2af85-b971-4771-b644-18ac345a2e42`), **D** 98 s (`e5e1d8fa-509d-4900-b64d-6916edcf77df`); boss **B** 153 s (`6ed76c50-5e2b-4034-9cbd-ae27ff7c9f89`).
+## Held candidates as same-scene alternates (#659)
+
+James, 2 Oct 2026: no new music; the held candidates from the same prompt are
+alternates for the same scene, and the shipped picks stay the default. The
+map is `assets/audio/music/variants.json`, read by `MusicBus`; every other cue
+plays its `MusicBus.FILES` default. Alternates are byte copies of the
+candidates (`cmp`-identical) at `assets/audio/music/`; the originals stay in
+`docs/design/2026-08-17-act4-audio/candidates/`. The Act IV elite plays
+`act4Combat` (not the shared `elite` cue); the choice uses the bus's own
+engine RNG, never the run's seeded RNG.
+
+| scenario | cue | plays | file | Suno id | duration | credits title (provisional) |
+|---|---|---|---|---|---|---|
+| Act IV normal fight | `act4Combat` | **C**, default | `act4-combat.mp3` | `ef55956e-5c4d-4848-9457-690663c41fc1` | 103 s | Hearthlight Runs Back |
+| Act IV elite fight | `act4Combat` | **A**, one of three at random | `act4-combat-a.mp3` | `a7613abf-f0f6-47a5-9e7b-830bb421b3c2` | 104 s | Cinders Rising |
+| Act IV elite fight | `act4Combat` | **B**, one of three at random | `act4-combat-b.mp3` | `83a2af85-b971-4771-b644-18ac345a2e42` | 153 s | The Warm Field Ahead |
+| Act IV elite fight | `act4Combat` | **D**, one of three at random | `act4-combat-d.mp3` | `e5e1d8fa-509d-4900-b64d-6916edcf77df` | 98 s | Cadence Before the Step |
+| Act IV boss, first meeting | `act4Boss` | **A**, default | `act4-boss.mp3` | `5c3b0b31-aa55-4721-b28d-c4d003cba803` | 99 s | The Seat That Would Not Leave |
+| Act IV boss, return | `act4Boss` | **B** | `act4-boss-b.mp3` | `6ed76c50-5e2b-4034-9cbd-ae27ff7c9f89` | 153 s | Stillness Is the Threat |
+
+"Return" means the Vigil has met the boss in an earlier run, read from
+existing Vigil data with no save change: `deeds.wins > 0`, or
+`deeds.bestWaystone` at least 3 x 15 + 15 (the boss node lit). Both deeds
+commit at run end, so a first meeting is always A. The four alternate titles
+are working display copy for the credits and need owner and story-bible
+sign-off before release.
 
 ## Pointer
 

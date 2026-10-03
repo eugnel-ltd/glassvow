@@ -3,6 +3,12 @@ extends Node
 ## Two-player loop/crossfade layer matching the benchmark's Music Cue contract.
 
 const DIR: String = "res://assets/audio/music/%s.mp3"
+## Same-scene alternates: cue -> context -> the stems that may answer it. A cue
+## or context absent from the file plays the `FILES` default.
+const VARIANTS_PATH: String = "res://assets/audio/music/variants.json"
+## Act IV is act index 3; its boss node sits on the last row of the map.
+const ACT4_INDEX: int = 3
+const WAYSTONES_PER_ACT: int = 15
 const CROSSFADE: float = 0.8
 const SILENT_DB: float = -60.0
 const FILES: Dictionary[StringName, String] = {
@@ -32,7 +38,17 @@ const FILES: Dictionary[StringName, String] = {
 	&"defeat": "defeat",
 }
 
+static var _variants: Dictionary = {}
+static var _variants_loaded: bool = false
+
 var current_cue: StringName = &""
+## The file stem the last `play` actually started, for logs and tests.
+var current_stem: String = ""
+
+## Engine-side RNG owned by the bus, never the run's seeded RNG, so choosing a
+## track cannot disturb replayable game truth (same rule as `SfxBus`).
+var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _context: StringName = &""
 
 var _players: Array[AudioStreamPlayer] = []
 var _active: int = 0
@@ -41,6 +57,7 @@ var _fade: Tween = null
 
 func _init() -> void:
 	name = "MusicBus"
+	_rng.randomize()
 	if DisplayServer.get_name() == "headless":
 		return
 	for index: int in range(2):
@@ -52,15 +69,101 @@ func _init() -> void:
 		add_child(player)
 
 
-func play(cue: StringName) -> void:
+## Which alternates may answer a combat cue. Act IV elites draw from the held
+## combat takes; a return to the Act IV boss within the same Vigil hears the
+## second take. `vigil` is read, never written.
+static func combat_context(kind: String, act_index: int, vigil: VigilState) -> StringName:
+	if act_index != ACT4_INDEX:
+		return &""
+	if kind == "elite":
+		return &"elite"
+	if kind == "boss" and boss_met_before(vigil):
+		return &"return"
+	return &""
+
+
+## True once this Vigil has reached the Act IV boss in an earlier run (the best
+## waystone ever lit covers the boss node) or has won a run. Existing Vigil
+## data only; no new save field.
+static func boss_met_before(vigil: VigilState) -> bool:
+	if vigil == null:
+		return false
+	var best: int = int(float(str(vigil.deeds.get("bestWaystone", 0))))
+	var wins: int = int(float(str(vigil.deeds.get("wins", 0))))
+	return wins > 0 or best >= ACT4_INDEX * WAYSTONES_PER_ACT + WorldMap.ROWS
+
+
+## The file stem a play of `cue` in `context` would use: the default, or one
+## allowed alternate drawn at random.
+func resolve(cue: StringName, context: StringName = &"") -> String:
+	var pool: Array[String] = _pool(cue, context)
+	if pool.is_empty():
+		return str(FILES.get(cue, ""))
+	return pool[_rng.randi_range(0, pool.size() - 1)]
+
+
+## Every stem that can answer `cue` in any context, the default first.
+func variants_of(cue: StringName) -> Array[String]:
+	var stems: Array[String] = []
+	if FILES.has(cue):
+		stems.append(FILES[cue])
+	var contexts: Dictionary = _contexts_of(cue)
+	for context_key: Variant in contexts:
+		for stem: String in _pool(cue, StringName(str(context_key))):
+			if not stems.has(stem):
+				stems.append(stem)
+	return stems
+
+
+static func _variants_data() -> Dictionary:
+	if _variants_loaded:
+		return _variants
+	_variants_loaded = true
+	var file: FileAccess = FileAccess.open(VARIANTS_PATH, FileAccess.READ)
+	if file == null:
+		push_warning("music: no variants file at %s" % VARIANTS_PATH)
+		return _variants
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if typeof(parsed) == TYPE_DICTIONARY:
+		var root: Dictionary = parsed
+		var cues: Variant = root.get("cues", {})
+		if typeof(cues) == TYPE_DICTIONARY:
+			_variants = cues
+	return _variants
+
+
+func _contexts_of(cue: StringName) -> Dictionary:
+	var entry: Variant = _variants_data().get(str(cue), {})
+	if typeof(entry) != TYPE_DICTIONARY:
+		return {}
+	var entry_dict: Dictionary = entry
+	var contexts: Variant = entry_dict.get("contexts", {})
+	if typeof(contexts) != TYPE_DICTIONARY:
+		return {}
+	var contexts_dict: Dictionary = contexts
+	return contexts_dict
+
+
+func _pool(cue: StringName, context: StringName) -> Array[String]:
+	var stems: Array[String] = []
+	var raw: Variant = _contexts_of(cue).get(str(context), [])
+	if typeof(raw) != TYPE_ARRAY:
+		return stems
+	for stem_v: Variant in raw:
+		stems.append(str(stem_v))
+	return stems
+
+
+func play(cue: StringName, context: StringName = &"") -> void:
 	if _players.is_empty():
 		return
-	if cue == current_cue and _players[_active].playing:
+	if cue == current_cue and context == _context and _players[_active].playing:
 		return
 	if not FILES.has(cue):
 		push_warning("music: unknown cue '%s'" % cue)
 		return
-	var path: String = DIR % FILES[cue]
+	var stem: String = resolve(cue, context)
+	var path: String = DIR % stem
 	if not ResourceLoader.exists(path):
 		push_warning("music: no track for '%s'" % cue)
 		return
@@ -90,10 +193,15 @@ func play(cue: StringName) -> void:
 		)
 	_active = incoming_index
 	current_cue = cue
+	current_stem = stem
+	_context = context
+	if not OS.get_environment("GLASSVOW_MUSIC_LOG").is_empty():
+		print("music: cue=%s context=%s stream=%s" % [cue, context, path])
 
 
 func stop() -> void:
 	current_cue = &""
+	_context = &""
 	if _players.is_empty():
 		return
 	if _fade != null and _fade.is_valid():
