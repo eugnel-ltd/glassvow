@@ -330,6 +330,42 @@ choosing; never commit it), plant stand-in `glassvow_run_v2.json`,
 `glassvow_vigil_v2.json` and `settings.cfg` in that directory, run the suite, and
 check that their hashes and modification times are unchanged afterwards.
 
+## Test runner
+
+`godot --headless -s res://tests/run_all.gd` loads every `tests/test_*.gd` and
+calls its static `run(fails)`. Add `-- --tests=res://tests/test_a.gd,...` to run
+a subset; a malformed or unknown path fails the run. Judge a run by its exit
+status and its `PASS (N tests)` line.
+
+A GDScript error raised while a test loads or runs (a null access, a failed
+`assert`, a parse error) fails that test. The failure names the test, plus the
+file, line, function and message of the error. Until 2026-10-03 such an error
+stopped only the function it was raised in, so the test still printed `ok` and
+its later checks never ran. The runner now registers
+`tests/support/script_error_guard.gd`, a `Logger` that records these errors
+(`docs/solutions/test-failures/a-script-error-in-a-test-used-to-pass-silently.md`).
+It grades each test only after two more frames have run. An error from a
+deferred call, processing or a queued free that the test left behind is
+therefore charged to that test, and a `run` that awaits is awaited. Frames run
+before the first test too, so every test runs inside a frame with the root
+window sized, alone or in the whole suite. Because the root is in the tree, a
+node a test adds under it gets `_ready` from the engine there and then. A test
+that drives a node by hand calls `TreeReady.once(node)`
+(`tests/support/tree_ready.gd`), not `node._ready()`, so the node is readied
+once whether or not it was added to the tree. Plain
+engine errors and warnings on stderr still fail nothing. These include the
+headless renderer's null materials, the leak report at exit, `push_error`, and
+a signal handler the engine could not call. Script errors raised while the
+tree is torn down at exit are listed after the result and do not change it.
+The guard sees nothing while `Engine.print_error_messages` is off, so a test
+that leaves it off fails, and no test should turn it off. A test must also join
+any worker it starts, or the worker's error may land on another test or after
+the guard has gone. A test that does not parse, or has no static `run` the
+runner can call with its `Array[String]`, is recorded as a failure and never
+called. Calling one used to abort the runner itself and leave it waiting
+forever. `tests/test_run_all.gd` runs the runner in a child Godot against the
+fixtures in `tests/support/run_all_fixtures/` to hold all of this.
+
 ## Creation and maintenance contract
 
 1. First reuse a shipping screen, existing lab mode or existing probe. Do not

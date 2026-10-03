@@ -17,6 +17,11 @@ const STAGE: Vector2i = Vector2i(1180, 820)
 const WATCHDOG: float = 90.0
 const FAIL_MARK: String = "tree suite fail: "
 const DONE_MARK: String = "tree suite done"
+const ScriptErrorGuard = preload("res://tests/support/script_error_guard.gd")
+
+## The runner's guard does not reach this child process, so the child keeps its
+## own: a script error in the in-tree half fails the suite as it does in a test.
+var _guard: ScriptErrorGuard = ScriptErrorGuard.new()
 
 
 ## Run `suite`'s in-tree half in a child process and add its failures to
@@ -41,6 +46,7 @@ static func spawn(fails: Array[String], suite: String) -> void:
 
 
 func _initialize() -> void:
+	OS.add_logger(_guard)
 	var suite: String = ""
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--suite="):
@@ -62,6 +68,12 @@ func _run(suite: String, host: SubViewport) -> void:
 		fails.append("%s is not a suite under res://tests/ that loads" % suite)
 	else:
 		await script.call("run_in_tree", self, host, fails)
+	# Deferred calls and the frame's processing still belong to the suite.
+	await process_frame
+	await process_frame
+	for message: String in _guard.take():
+		fails.append("%s: script error at %s" % [suite, message])
+	OS.remove_logger(_guard)
 	for message: String in fails:
 		print(FAIL_MARK + message)
 	print(DONE_MARK)

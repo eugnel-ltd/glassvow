@@ -69,7 +69,7 @@ static func _skip_distinct_from_tap(fails: Array[String], opening: SceneScript) 
 	var tapped: Array[int] = [0]
 	var tap: ScenePlayer = ScenePlayer.new(opening, 0)
 	tap.advance_requested.connect(func() -> void: tapped[0] += 1)
-	tap._ready()
+	TreeReady.once(tap)
 	tap._press(true)
 	tap._process(0.05)
 	tap._press(false)
@@ -88,7 +88,7 @@ static func _skip_distinct_from_tap(fails: Array[String], opening: SceneScript) 
 	var skipped: Array[int] = [0]
 	var hold: ScenePlayer = ScenePlayer.new(opening, 0)
 	hold.advance_requested.connect(func() -> void: skipped[0] += 1)
-	hold._ready()
+	TreeReady.once(hold)
 	hold._process(ScenePlayer.REVEAL_TIME + 0.01)
 	hold._press(true)
 	hold._process(ScenePlayer.SKIP_HOLD)
@@ -105,7 +105,7 @@ static func _skip_dwells_on_named_beat(fails: Array[String], opening: SceneScrip
 	var asked: Array[int] = [0]
 	var player: ScenePlayer = ScenePlayer.new(opening, 0)
 	player.advance_requested.connect(func() -> void: asked[0] += 1)
-	player._ready()
+	TreeReady.once(player)
 	player._process(ScenePlayer.REVEAL_TIME + 0.01)
 	player._press(true)
 	player._process(ScenePlayer.SKIP_HOLD)
@@ -132,7 +132,7 @@ static func _skip_floor_once_from_destination(
 	var asked: Array[int] = [0]
 	var player: ScenePlayer = ScenePlayer.new(opening, 2)
 	player.advance_requested.connect(func() -> void: asked[0] += 1)
-	player._ready()
+	TreeReady.once(player)
 	_settle(player)
 	player._press(true)
 	player._process(ScenePlayer.SKIP_HOLD)
@@ -217,7 +217,7 @@ static func _missing_plates(fails: Array[String], opening: SceneScript) -> void:
 ## never be walked past a line the reveal has only just settled.
 static func _dwell_reads_the_line(fails: Array[String], opening: SceneScript) -> void:
 	var player: ScenePlayer = ScenePlayer.new(opening, 0)
-	player._ready()
+	TreeReady.once(player)
 	var line: Label = player.find_child("Line", true, false) as Label
 	if line == null:
 		_check(fails, false, "no line label to pace")
@@ -239,7 +239,7 @@ static func _dwell_reads_the_line(fails: Array[String], opening: SceneScript) ->
 	var waiting: ScenePlayer = ScenePlayer.new(opening, 0)
 	waiting.instant = false
 	waiting.advance_requested.connect(func() -> void: asked[0] += 1)
-	waiting._ready()
+	TreeReady.once(waiting)
 	var paced: Label = waiting.find_child("Line", true, false) as Label
 	if paced == null:
 		_check(fails, false, "no line label to wait on")
@@ -271,7 +271,7 @@ static func _skip_lands_a_typing_line(fails: Array[String], opening: SceneScript
 	var asked: Array[int] = [0]
 	var player: ScenePlayer = ScenePlayer.new(opening, 0)
 	player.advance_requested.connect(func() -> void: asked[0] += 1)
-	player._ready()
+	TreeReady.once(player)
 	player._press(true)
 	player._process(ScenePlayer.SKIP_HOLD)
 	_check(fails, player._skipping and player._beat == ScenePlayer.BEAT_WAIT,
@@ -290,7 +290,7 @@ static func _live(script: SceneScript, cursor: int, asked: Array[int],
 	player.advance_requested.connect(func() -> void: asked[0] += 1)
 	if not done.is_empty():
 		player.finished.connect(func() -> void: done[0] += 1)
-	player._ready()
+	TreeReady.once(player)
 	player._process(0.016)
 	return player
 
@@ -315,7 +315,7 @@ static func _ask_via_input(opening: SceneScript, events: Array[InputEvent]) -> i
 	var asked: Array[int] = [0]
 	var player: ScenePlayer = ScenePlayer.new(opening, 0)
 	player.advance_requested.connect(func() -> void: asked[0] += 1)
-	player._ready()
+	TreeReady.once(player)
 	_settle(player)
 	for event: InputEvent in events:
 		if event is InputEventMouseButton:

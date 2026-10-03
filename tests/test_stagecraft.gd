@@ -421,7 +421,7 @@ static func _pool_rows(fails: Array[String]) -> void:
 	var echo: ScenePlayer = ScenePlayer.new(SceneScript.pool_beat(""), 0,
 		StageShape.IDENTITY, null, {"speaker": "walker", "en": "An echo.", "zh": "迴聲。"})
 	echo.instant = true
-	echo._ready()
+	TreeReady.once(echo)
 	_check(fails, echo._copy.style == StageDirection.STYLE_WHISPER,
 		"a walker's echo is not whispered")
 	_check(fails, echo._speaker.text.is_empty(), "a walker's echo grew a name")
@@ -430,7 +430,7 @@ static func _pool_rows(fails: Array[String]) -> void:
 	var hearth: ScenePlayer = ScenePlayer.new(SceneScript.pool_beat(""), 0,
 		StageShape.IDENTITY, null, {"speaker": "keeper", "en": "Rest.", "zh": "歇歇。"})
 	hearth.instant = true
-	hearth._ready()
+	TreeReady.once(hearth)
 	_check(fails, hearth._director.stage.has_actor("keeper"),
 		"a Keeper pool line did not seat the Keeper")
 	_check(fails, hearth._speaker.text == Locale.active.t("ui.scene.speaker.keeper"),
@@ -495,7 +495,7 @@ static func _flame_whispers(fails: Array[String]) -> void:
 		var whisper: ScenePlayer = ScenePlayer.new(SceneScript.pool_beat("", slot), 0,
 			StageShape.IDENTITY, null, row)
 		whisper.instant = true
-		whisper._ready()
+		TreeReady.once(whisper)
 		_check(fails, whisper._copy.style == StageDirection.STYLE_WHISPER
 				and whisper._speaker.text.is_empty()
 				and whisper._director.stage.standing().is_empty(),
@@ -634,7 +634,7 @@ static func _flame_dispose(main: Main) -> void:
 static func _player(script: SceneScript, cursor: int, still: bool) -> ScenePlayer:
 	var player: ScenePlayer = ScenePlayer.new(script, cursor)
 	player.instant = still
-	player._ready()
+	TreeReady.once(player)
 	player._process(0.016)
 	return player
 

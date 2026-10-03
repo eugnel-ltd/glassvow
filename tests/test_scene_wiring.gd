@@ -181,7 +181,7 @@ static func _hearth_plant_art_gate(fails: Array[String]) -> void:
 	dark.instant = false
 	var dark_done: Array[int] = [0]
 	dark.finished.connect(func() -> void: dark_done[0] += 1)
-	dark._ready()
+	TreeReady.once(dark)
 	_check(fails, ResourceLoader.exists(DepartureStaging.HEARTH_PLATE),
 		"the real hearth plate is missing; #310 shipped it")
 	_check(fails, dark.find_child("HearthPlant", true, false) == null,
@@ -193,7 +193,7 @@ static func _hearth_plant_art_gate(fails: Array[String]) -> void:
 	lit.instant = false
 	var lit_done: Array[int] = [0]
 	lit.finished.connect(func() -> void: lit_done[0] += 1)
-	lit._ready()
+	TreeReady.once(lit)
 	_check(fails, lit.find_child("HearthPlant", true, false) != null
 			and lit.find_child(WindowReflection.NAME, true, false) != null,
 		"a present hearth plate did not stage the plant")
@@ -648,7 +648,7 @@ static func _hollow(content: ContentDB, meeting: int, paid: bool) -> Main:
 static func _wake(main: Main) -> void:
 	var player: ScenePlayer = main._route_screen as ScenePlayer
 	if player != null and player._beat == ScenePlayer.BEAT_IDLE and not player._done:
-		player._ready()
+		TreeReady.once(player)
 
 
 static func _drive(main: Main) -> void:

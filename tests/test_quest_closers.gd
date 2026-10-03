@@ -89,7 +89,7 @@ static func _boss_win_closers(fails: Array[String], content: ContentDB) -> void:
 	_dispose(resumed)
 	var player: ScenePlayer = main._route_screen as ScenePlayer
 	if player != null:
-		player._ready()
+		TreeReady.once(player)
 		_check(fails, player._director.stage.has_actor("usurper"),
 			"the Usurper's closer did not seat the Usurper")
 		_check(fails, player._copy.line_label().text
@@ -102,7 +102,7 @@ static func _boss_win_closers(fails: Array[String], content: ContentDB) -> void:
 		"the chained closer is not a loadable save")
 	var omen: ScenePlayer = main._route_screen as ScenePlayer
 	if omen != null:
-		omen._ready()
+		TreeReady.once(omen)
 		var grade: StringName = omen._script.beats[0]["grade"]
 		_check(fails, omen._copy.style == StageDirection.STYLE_TITLE and grade == &"inverted",
 			"the Eighth Omen's closer is not a title card in the inverted grade")
@@ -144,7 +144,7 @@ static func _shade_closer(fails: Array[String], content: ContentDB) -> void:
 		"the shade's closer is not a loadable save")
 	var player: ScenePlayer = main._route_screen as ScenePlayer
 	if player != null:
-		player._ready()
+		TreeReady.once(player)
 		_check(fails, player._copy.style == StageDirection.STYLE_WHISPER
 				and player._director.stage.has_actor("shade"),
 			"the Own Shade's closer is not whispered by the shade")
@@ -181,7 +181,7 @@ static func _page_scenes(fails: Array[String], content: ContentDB) -> void:
 		_check(fails, _playing(main, scene_id), "page %d was not read" % n)
 		var player: ScenePlayer = main._route_screen as ScenePlayer
 		if player != null:
-			player._ready()
+			TreeReady.once(player)
 			_check(fails, player._copy.line_label().text == Locale.active.t(
 					SceneScript.PAGE_KEY % (n - 1)),
 				"page %d is not its authored text" % n)
@@ -220,7 +220,7 @@ static func _queue_at_the_door(fails: Array[String], content: ContentDB) -> void
 		"the Queue's owed line is not a loadable save")
 	var player: ScenePlayer = main._route_screen as ScenePlayer
 	if player != null:
-		player._ready()
+		TreeReady.once(player)
 		_check(fails, player._copy.style == StageDirection.STYLE_CHORUS,
 			"the Queue does not speak as a chorus")
 	main._on_scene_finished()
@@ -305,7 +305,7 @@ static func _omen_echoes(fails: Array[String], content: ContentDB) -> void:
 	_check(fails, rebuilt != null and rebuilt._cursor == 1,
 		"a rebuilt waystone beat replayed the echo before the omen's words")
 	if rebuilt != null:
-		rebuilt._ready()
+		TreeReady.once(rebuilt)
 		_check(fails, rebuilt._copy.line_label().text == Locale.active.t(
 				"content.quests.eighthOmen.waystoneEchoes.2")
 				and not rebuilt._director.front_fx.active(),
@@ -317,14 +317,14 @@ static func _omen_echoes(fails: Array[String], content: ContentDB) -> void:
 	var row_d: Dictionary = {"speaker": "walker", "en": "An echo.", "zh": "迴聲。"}
 	var first: ScenePlayer = ScenePlayer.new(script, 0, StageShape.IDENTITY, null, row_d)
 	first.instant = true
-	first._ready()
+	TreeReady.once(first)
 	_check(fails, first._copy.line_label().text == "An echo."
 			and first._copy.style == StageDirection.STYLE_WHISPER,
 		"the waystone's own echo did not play first")
 	first.free()
 	var second: ScenePlayer = ScenePlayer.new(script, 1, StageShape.IDENTITY, null, row_d)
 	second.instant = true
-	second._ready()
+	TreeReady.once(second)
 	_check(fails, second._copy.line_label().text
 			== Locale.active.t("content.quests.eighthOmen.waystoneEchoes.1")
 			and second._copy.style == StageDirection.STYLE_TITLE,

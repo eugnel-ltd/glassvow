@@ -110,7 +110,7 @@ static func _walk_line_owes_the_hand(fails: Array[String]) -> void:
 	var asked: Array[int] = [0]
 	var player: ScenePlayer = ScenePlayer.new(finale, walk_at)
 	player.advance_requested.connect(func() -> void: asked[0] += 1)
-	player._ready()
+	TreeReady.once(player)
 	player._process(ScenePlayer.REVEAL_TIME + 0.01)
 	player._process(60.0)
 	_check(fails, asked[0] == 0, "a walk line advanced on its own dwell")
@@ -130,7 +130,7 @@ static func _walk_line_owes_the_hand(fails: Array[String]) -> void:
 	var still: ScenePlayer = ScenePlayer.new(finale, walk_at)
 	still.instant = true
 	still.advance_requested.connect(func() -> void: instant_asked[0] += 1)
-	still._ready()
+	TreeReady.once(still)
 	still._process(0.016)
 	_check(fails, instant_asked[0] == 1, "instant mode stalled on the walk line")
 	still.free()
@@ -147,7 +147,7 @@ static func _walk_forms(fails: Array[String]) -> void:
 	var asked: Array[int] = [0]
 	var player: ScenePlayer = ScenePlayer.new(finale, walk_at)
 	player.advance_requested.connect(func() -> void: asked[0] += 1)
-	player._ready()
+	TreeReady.once(player)
 	player._process(ScenePlayer.REVEAL_TIME + 0.01)
 	player._press(true)
 	player._process(FinaleStaging.HOLD_TIME + 0.5)
@@ -273,7 +273,7 @@ static func _shard_run(content: ContentDB, act: int) -> RunState:
 static func _wake(main: Main) -> void:
 	var player: ScenePlayer = main._route_screen as ScenePlayer
 	if player != null and player._beat == ScenePlayer.BEAT_IDLE and not player._done:
-		player._ready()
+		TreeReady.once(player)
 
 
 ## Wakes each frame: a chained scene (finale → finale-win) arrives as a new

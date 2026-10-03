@@ -334,17 +334,17 @@ static func _bare_main(content: ContentDB) -> Main:
 
 ## The real `Main._ready`, run on the given arguments with nothing else faked but
 ## the map compiler, which the other suites fake for the same reason (the real
-## one searches for minutes). Suites run inside the runner's `_initialize`,
-## before the tree has started, so no node is ever inside a tree here and the
-## engine never delivers `_ready`: it is called directly, as `test_bespoke_staging`
-## does for its nodes. A route that then reaches for `get_tree()` (the transition
-## timers) logs an engine error and stops; every store the assertions rely on has
-## happened by then, so that noise is expected and harmless.
+## one searches for minutes). This Main is never added to a tree, so the engine
+## never delivers `_ready`: it is called directly (`TreeReady.once`), as
+## `test_bespoke_staging` does for its nodes. A route that then reaches for
+## `get_tree()` (the transition timers) logs an engine error and stops; every
+## store the assertions rely on has happened by then, so that noise is expected
+## and harmless.
 static func _boot(args: PackedStringArray) -> Main:
 	var main: Main = Main.new()
 	main._map_layout_compile = MapCompose.fake_layout_compile()
 	main._boot_args = args
-	main._ready()
+	TreeReady.once(main)
 	return main
 
 

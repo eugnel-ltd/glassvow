@@ -106,7 +106,7 @@ static func _departure_lags_the_figure(fails: Array[String]) -> void:
 	var dark: DepartureStaging = DepartureStaging.new(
 		"res://assets/art/scenes/__no_such_plate__.png")
 	dark.instant = false
-	dark._ready()
+	TreeReady.once(dark)
 	_check(fails, dark.find_child(HearthFigure.NAME, true, false) == null,
 		"a missing plate still seated the figure")
 	_check(fails, dark.find_child(WindowReflection.NAME, true, false) == null,
@@ -120,7 +120,7 @@ static func _departure_linger(fails: Array[String], view: Vector2) -> void:
 	lit.instant = false
 	lit.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	lit.size = view
-	lit._ready()
+	TreeReady.once(lit)
 	# The hall is painted once. A second full-bleed copy IS the mirror defect.
 	_check(fails, _texture_copies(lit, "opening-hearth.png") == 1,
 		"linger paints the hall %d times" % _texture_copies(lit, "opening-hearth.png"))
@@ -312,7 +312,7 @@ static func _live(script: SceneScript, cursor: int, asked: Array[int] = [],
 		player.advance_requested.connect(func() -> void: asked[0] += 1)
 	if not done.is_empty():
 		player.finished.connect(func() -> void: done[0] += 1)
-	player._ready()
+	TreeReady.once(player)
 	player._process(0.016)
 	return player
 

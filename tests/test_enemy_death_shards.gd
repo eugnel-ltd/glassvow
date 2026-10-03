@@ -22,7 +22,7 @@ static func run(fails: Array[String]) -> void:
 	_break_takes_the_prepared_cut(fails)
 	_a_blow_or_reset_drops_the_cut(fails)
 	_no_net_cuts_on_the_frame(fails)
-	_freeing_joins_the_cut(fails)
+	await _freeing_joins_the_cut(fails)
 
 
 static func _foe() -> EnemyView:
@@ -150,10 +150,16 @@ static func _no_net_cuts_on_the_frame(fails: Array[String]) -> void:
 	foe.free()
 
 
+## The foe goes the way the game frees it, through the tree's delete queue. A
+## script `free()` is refused while the worker is inside the view's `_cut_into`
+## (the call holds the object's lock), so it would race the cut and leak the foe.
 static func _freeing_joins_the_cut(fails: Array[String]) -> void:
 	var foe: EnemyView = _foe()
 	_wound(foe)
 	foe.mark_dead()
 	var task: int = foe._cut_task
-	foe.free()
+	var held: WeakRef = weakref(foe)
+	foe.queue_free()
+	await (Engine.get_main_loop() as SceneTree).process_frame
 	_check(fails, task >= 0, "the freed foe had a cut in flight")
+	_check(fails, held.get_ref() == null, "a foe with a cut in flight was not freed")

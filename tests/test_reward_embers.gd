@@ -41,11 +41,11 @@ static func _screen(content: ContentDB, reward: Dictionary, log: Array[String]) 
 	screen.claimed.connect(func(what: StringName, id: String) -> void:
 		log.append("%s:%s" % [what, id]))
 	screen.finished.connect(func() -> void: log.append("finished"))
-	# The suite runs inside `_initialize`, before the root is in the tree, so
-	# `_ready` has to be run by hand, as the scene tests do; the entrance is
-	# then driven by `advance` rather than by frames.
+	# The runner lets frames run before every test, so the root is in the tree
+	# and adding the screen delivers `_ready`; `TreeReady.once` keeps it to one.
+	# The entrance is driven by `advance` rather than by frames.
 	(Engine.get_main_loop() as SceneTree).root.add_child(screen)
-	screen._ready()
+	TreeReady.once(screen)
 	return screen
 
 
@@ -155,7 +155,7 @@ static func _main_banks_every_slot(fails: Array[String], content: ContentDB) -> 
 	# Main builds its screens off-tree in this fixture; the entrance needs one.
 	main.remove_child(screen)
 	(Engine.get_main_loop() as SceneTree).root.add_child(screen)
-	screen._ready()
+	TreeReady.once(screen)
 	screen.advance(SETTLE)
 	var taken: Dictionary = main.game.run.pending_reward["taken"]
 	var gold_taken: bool = taken["gold"]
@@ -285,7 +285,7 @@ static func _root(main: Main) -> RewardEmbers:
 	var screen: RewardEmbers = main._reward_screen
 	main.remove_child(screen)
 	(Engine.get_main_loop() as SceneTree).root.add_child(screen)
-	screen._ready()
+	TreeReady.once(screen)
 	return screen
 
 

@@ -325,7 +325,7 @@ static func _opening_completion_is_the_hint_gate(fails: Array[String]) -> void:
 static func _wake(main: Main) -> void:
 	var player: ScenePlayer = main._route_screen as ScenePlayer
 	if player != null and player._beat == ScenePlayer.BEAT_IDLE and not player._done:
-		player._ready()
+		TreeReady.once(player)
 
 
 static func _drive(main: Main) -> void:
