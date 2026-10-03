@@ -12,6 +12,10 @@ extends LeadlightRoomHost
 ## each colour this Vigil has seen steady, one to a line, beside a small flame
 ## of that colour, shown and never named. Two pages are alive: the Glass page's
 ## facets chip and refill, the Lantern page's ember flies into its lantern.
+##
+## A page's text is shaped as it enters the tree, so the room is built with
+## its lit page only, and each other page on its first showing: seven pages at
+## once made its tap frame 34 to 35 ms on the iPad 8, over §11.6's 33.
 
 const SECTION_IDS: Array[StringName] = [&"road", &"combat", &"glass", &"lantern", &"ward",
 	&"fires", &"vigil"]
@@ -184,6 +188,8 @@ var _sfx: SfxBus
 var _room: LeadlightRoom
 var _codex: Array[Dictionary] = []
 var _coda: RichTextLabel = null
+## The sections whose pages are not built yet, by id.
+var _unbuilt: Dictionary[StringName, Dictionary] = {}
 var _swipe_from: Vector2 = Vector2.INF
 
 
@@ -207,13 +213,17 @@ func _build() -> void:
 	if not phone:
 		_room.set_tab_width(TAB_W)
 	var sections: Array[Dictionary] = _sections(3, _lantern_coda(codex))
+	_unbuilt.clear()
 	for i: int in sections.size():
-		_add_section(i, sections[i], codex)
+		_add_section(i, sections[i])
+	_room.section_selected.connect(_fill)
+	_fill(_room.selected())
 	_room.scroll().gui_input.connect(_on_page_input)
 	_seat_last()
 
 
-func _add_section(i: int, section: Dictionary, codex: Array[Dictionary]) -> void:
+## A section's pane, and its page still empty (`_fill` builds it).
+func _add_section(i: int, section: Dictionary) -> void:
 	var id: StringName = SECTION_IDS[i]
 	var numeral: String = LeadlightNumerals.carved(i + 1)
 	var title: String = str(section["title"])
@@ -227,6 +237,18 @@ func _add_section(i: int, section: Dictionary, codex: Array[Dictionary]) -> void
 		pane.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		pane.custom_minimum_size.y = TAB_H
 		pane.hit_height = TAB_H
+	_unbuilt[id] = section
+
+
+## Section `id`'s page, built the first time it is about to show.
+func _fill(id: StringName) -> void:
+	if not _unbuilt.has(id):
+		return
+	var section: Dictionary = _unbuilt[id]
+	_unbuilt.erase(id)
+	var numeral: String = LeadlightNumerals.carved(SECTION_IDS.find(id) + 1)
+	var title: String = str(section["title"])
+	var page_node: VBoxContainer = _room.page(id)
 	# The heading is the whole title: its name, and what follows the dash as a
 	# quieter line under it (tracked capitals would split a zh-Hant "——").
 	var name_text: String = short_title(title)
@@ -258,7 +280,7 @@ func _add_section(i: int, section: Dictionary, codex: Array[Dictionary]) -> void
 		page_node.add_child(_diagram(FacetRow.new(), "FacetRow"))
 	var coda: String = str(section.get("coda", ""))
 	if not coda.is_empty():
-		_add_coda(page_node, coda, codex)
+		_add_coda(page_node, coda, _codex)
 	if id == &"lantern":
 		page_node.add_child(_diagram(EmberFlight.new(), "EmberFlight"))
 

@@ -563,6 +563,7 @@ static func _flame_lines_play_once(fails: Array[String]) -> void:
 static func _codex_in_the_help(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full(false)
 	var bare: HelpScreen = HelpScreen.new()
+	bare.room().select(&"lantern")
 	_check(fails, bare.find_child("Coda", true, false) == null,
 		"the codex showed a colour before one was seen")
 	bare.free()
@@ -572,6 +573,7 @@ static func _codex_in_the_help(fails: Array[String]) -> void:
 	]
 	var zh: bool = Locale.active.code == Locale.CODE_ZH_HANT
 	var help: HelpScreen = HelpScreen.new(StageShape.IDENTITY, null, rows)
+	help.room().select(&"lantern")
 	var coda: RichTextLabel = help.find_child("Coda", true, false) as RichTextLabel
 	_check(fails, coda != null and coda.text
 			== LineTable.text(rows[0], zh) + "\n" + LineTable.text(rows[1], zh),

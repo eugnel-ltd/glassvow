@@ -31,6 +31,9 @@ const DRIFT_RESUME: float = 3.0
 const FIRST_STEP: float = 0.4
 const BAND_ALPHA: float = 0.7
 
+## The band's soft light, made once: the same texture every opening.
+static var _band_light: GradientTexture2D = null
+
 var _sfx: SfxBus
 var _band: TextureRect
 var _scroll: ScrollContainer
@@ -58,7 +61,9 @@ func _init(stage_shape: StringName = StageShape.IDENTITY, sfx: SfxBus = null,
 		add_child(_sfx)
 	_band = TextureRect.new()
 	_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_band.texture = LeadlightShapes.soft_light(PackedFloat32Array([1.0, 0.92, 0.75, 0.4, 0.0]))
+	if _band_light == null:
+		_band_light = LeadlightShapes.soft_light(PackedFloat32Array([1.0, 0.92, 0.75, 0.4, 0.0]))
+	_band.texture = _band_light
 	_band.self_modulate = Color(LeadlightTokens.VOID, BAND_ALPHA)
 	_band.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	add_child(_band)
@@ -149,6 +154,7 @@ func arrive_at(t: float, _wick: Vector2, _colour: Color) -> void:
 
 
 func rest(_wick: Vector2, _colour: Color) -> void:
+	_roll.finish()
 	_band.modulate.a = 1.0
 	for item: Node in _roll.get_children():
 		if item is Control:

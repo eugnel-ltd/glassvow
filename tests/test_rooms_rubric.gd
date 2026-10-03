@@ -57,6 +57,13 @@ static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]
 				var screen: LeadlightRoomHost = _room(room, shape)
 				host.add_child(screen)
 				await _frames(tree, 3)
+				if room == "help":
+					# Every page, each built on its first showing.
+					var pages: LeadlightRoom = (screen as HelpScreen).room()
+					for id: StringName in HelpScreen.SECTION_IDS:
+						pages.select(id)
+					pages.select(HelpScreen.SECTION_IDS[0])
+					await tree.process_frame
 				if room == "credits":
 					var credits: CreditsScreen = screen as CreditsScreen
 					credits._build_font_licences()

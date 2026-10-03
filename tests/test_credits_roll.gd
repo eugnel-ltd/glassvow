@@ -7,7 +7,8 @@ extends RefCounted
 ## before the room; no line carries a pack id; Act IV's titles are carved dots
 ## until the unsealing and the titles after it; the track now playing carries
 ## the flame. The held list is the music ledger's Act IV list. Every export
-## packs the licence texts the credits read.
+## packs the licence texts the credits read. The roll is built with the room
+## down to its first rows, and whole a few frames on with nobody asking.
 
 const SUITE: String = "res://tests/test_credits_roll.gd"
 const STEP: float = 1.0 / 60.0
@@ -20,6 +21,7 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 
 
 static func run(fails: Array[String]) -> void:
+	_built_in_parts(fails)
 	_held_rows(fails)
 	_now_playing(fails)
 	_no_pack_ids(fails)
@@ -50,9 +52,25 @@ static func _licences_ship(fails: Array[String]) -> void:
 			_check(fails, packed, "the %s export leaves out %s" % [preset, path])
 
 
+## The tap frame shapes the roll's head and first rows only (§11.6).
+static func _built_in_parts(fails: Array[String]) -> void:
+	var tracks: Array[Dictionary] = CreditsRoll.wired_items(CreditsRoll._read_manifest(CreditsRoll.MUSIC_MANIFEST))
+	var roll: CreditsRoll = CreditsRoll.new(&"phone-landscape")
+	var rows: int = roll.find_children("Track_*", "Label", true, false).size()
+	_check(fails, rows == mini(tracks.size(), CreditsRoll.ROWS_NOW) and roll.footer_node == null,
+		"the roll was built whole with the room (%d rows)" % rows)
+	roll.finish()
+	_check(fails, roll.find_children("Track_*", "Label", true, false).size() == tracks.size()
+			and roll.footer_node != null and roll.font_pane != null,
+		"the roll is not whole when finished")
+	roll.free()
+
+
 static func _held_rows(fails: Array[String]) -> void:
 	var before: CreditsRoll = CreditsRoll.new(&"pad-landscape", false)
 	var after: CreditsRoll = CreditsRoll.new(&"pad-landscape", true)
+	before.finish()
+	after.finish()
 	for id: StringName in CreditsRoll.HELD_UNTIL_UNSEALING:
 		var held: Label = before.find_child("Track_%s" % id, true, false) as Label
 		var told: Label = after.find_child("Track_%s" % id, true, false) as Label
@@ -69,14 +87,17 @@ static func _held_rows(fails: Array[String]) -> void:
 
 static func _now_playing(fails: Array[String]) -> void:
 	var playing: CreditsRoll = CreditsRoll.new(&"pad-landscape", true, &"title")
+	playing.finish()
 	_check(fails, playing.now_glyph != null and playing.now_glyph.get_parent()
 			.find_child("Track_title", false, false) != null,
 		"the track playing does not carry the flame")
 	playing.free()
 	var quiet: CreditsRoll = CreditsRoll.new(&"pad-landscape", false, &"act4Combat")
+	quiet.finish()
 	_check(fails, quiet.now_glyph == null, "a held track playing shows its flame and so its place")
 	quiet.free()
 	var none: CreditsRoll = CreditsRoll.new()
+	none.finish()
 	_check(fails, none.now_glyph == null, "a flame shows with nothing playing")
 	none.free()
 
@@ -86,6 +107,7 @@ static func _no_pack_ids(fails: Array[String]) -> void:
 		var kept: Locale = Locale.active
 		Locale.active = Locale.new(code)
 		var credits: CreditsScreen = CreditsScreen.new()
+		credits.roll().finish()
 		for node: Node in credits.find_children("*", "Label", true, false):
 			var text: String = (node as Label).text
 			_check(fails, not text.contains("stained-glass-v1") and not text.contains("ashglass-v1")
@@ -132,6 +154,7 @@ static func _has_line(roll: CreditsRoll, text: String) -> bool:
 static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]) -> void:
 	var kept: Preferences = Preferences.active
 	Preferences.active = Preferences.new()
+	await _whole_unasked(fails, tree, host)
 	await _drift(fails, tree, host)
 	Preferences.active.reduce_motion = true
 	await _still_under_reduced_motion(fails, tree, host)
@@ -150,6 +173,20 @@ static func _credits(tree: SceneTree, host: SubViewport) -> CreditsScreen:
 		await tree.process_frame
 	credits.rest(Vector2.ZERO, Color.WHITE)
 	return credits
+
+
+## In the tree the roll completes itself a part a frame, never in the frame
+## it entered on, whether or not the room comes to rest.
+static func _whole_unasked(fails: Array[String], tree: SceneTree, host: SubViewport) -> void:
+	var credits: CreditsScreen = CreditsScreen.new(&"pad-landscape")
+	host.add_child(credits)
+	await tree.process_frame
+	_check(fails, credits.roll().footer_node == null, "the roll's foot was built in the frame it entered on")
+	for _i: int in range(6):
+		await tree.process_frame
+	_check(fails, credits.roll().footer_node != null, "the roll did not complete itself in the tree")
+	credits.queue_free()
+	await tree.process_frame
 
 
 static func _step(credits: CreditsScreen, seconds: float) -> void:

@@ -5,7 +5,8 @@ extends RefCounted
 ## the foot); each pane shows its own page; at pad every page fits its glass
 ## without scrolling, in both languages; the Flame codex stands under the
 ## Lantern's rules, a flame beside each line, and nothing before a colour is
-## seen; a phone's numerals show the lit section's name beside them.
+## seen; a phone's numerals show the lit section's name beside them. The room
+## is built with its lit page only, each other page on its first showing.
 
 const SUITE: String = "res://tests/test_help_room.gd"
 const RUN_PATH: String = "user://test_help_room_run_v2.json"
@@ -25,6 +26,7 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 
 static func run(fails: Array[String]) -> void:
 	_names(fails)
+	_pages_built_on_showing(fails)
 	TreeSuite.spawn(fails, SUITE)
 	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
 
@@ -35,6 +37,23 @@ static func _names(fails: Array[String]) -> void:
 		"the English title is not cut at its dash")
 	_check(fails, HelpScreen.short_title("守夜——死亡留下之物") == "守夜", "the zh-Hant title is not cut at its dash")
 	_check(fails, HelpScreen.short_title("Combat") == "Combat", "a title with no dash is cut")
+
+
+## The tap frame shapes one page, not seven (§11.6): a page stays empty until
+## its section is first shown, and is whole from then on.
+static func _pages_built_on_showing(fails: Array[String]) -> void:
+	var help: HelpScreen = HelpScreen.new(&"pad-landscape")
+	var room: LeadlightRoom = help.room()
+	for id: StringName in HelpScreen.SECTION_IDS:
+		var built: bool = room.page(id).get_child_count() > 0
+		_check(fails, built == (id == &"road"), "the %s page was %s with the room" % [
+			id, "built" if built else "not built"])
+	room.select(&"combat")
+	_check(fails, room.page(&"combat").find_child("Body", false, false) != null,
+		"the Combat page was not built on showing")
+	room.select(&"road")
+	_check(fails, room.page(&"combat").get_child_count() > 0, "a shown page was emptied when left")
+	help.free()
 
 
 static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]) -> void:
@@ -103,11 +122,13 @@ static func _pages_fit(fails: Array[String], tree: SceneTree, host: SubViewport,
 
 static func _coda(fails: Array[String], tree: SceneTree, host: SubViewport, content: ContentDB) -> void:
 	var bare: HelpScreen = HelpScreen.new()
+	bare.room().select(&"lantern")
 	_check(fails, bare.find_child("Coda", true, false) == null, "the codex showed before a colour was seen")
 	bare.free()
 	var rows: Array[Dictionary] = _codex_rows(content)
 	var help: HelpScreen = HelpScreen.new(&"pad-landscape", null, rows)
 	host.add_child(help)
+	help.room().select(&"lantern")
 	await _frames(tree, 2)
 	var coda: RichTextLabel = help.find_child("Coda", true, false) as RichTextLabel
 	_check(fails, coda != null and coda.get_parent().get_parent() == help.room().page(&"lantern"),

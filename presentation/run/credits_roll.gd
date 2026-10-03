@@ -12,6 +12,12 @@ extends VBoxContainer
 ## been seen (Help says three acts; the credits no longer contradict it), and
 ## the count line counts them all. No pack id is shown, and no item the
 ## manifest marks unwired.
+##
+## The roll is built with the room down to ROWS_NOW rows of each column, and
+## the rest a part a frame from the frame after (`finish` builds it at once):
+## every line's text is shaped as it enters the tree, and the whole roll in
+## the tap frame put Credits over §11.6's 33 ms on the iPad 8. What comes later
+## stands below the fold at every shape, and the passage holds it unseen.
 
 signal licence_requested(which: StringName)
 
@@ -24,6 +30,9 @@ const HELD_UNTIL_UNSEALING: Array[StringName] = [&"act4Combat", &"act4Boss", &"a
 const HELD_MARK: String = "· · ·"
 ## A line under the lamp: warm parchment.
 const WARM: Color = Color("#fff1d0")
+## Track rows a column builds with the roll: more than any stage shows before
+## the roll moves (six at pad, seven on the iPad 8's taller stage).
+const ROWS_NOW: int = 9
 
 var shape: StringName = StageShape.IDENTITY
 ## Where the wordmark stands over the roll: the gap before its first heading.
@@ -39,6 +48,12 @@ var font_pane: LeadlightPane
 var engine_pane: LeadlightPane
 var _unsealed: bool = false
 var _now: StringName = &""
+## The manifests, read once a session (they ship with the build), so the
+## 25 KB sound manifest is not parsed again in every opening's tap frame.
+static var _manifests: Dictionary[String, Dictionary] = {}
+## The parts still to build, in order, and the frame the roll entered on.
+var _later: Array[Callable] = []
+var _entered: int = -1
 
 
 func _init(stage_shape: StringName = StageShape.IDENTITY, unsealed: bool = false,
@@ -70,6 +85,29 @@ func _init(stage_shape: StringName = StageShape.IDENTITY, unsealed: bool = false
 	else:
 		_secondary(Locale.active.t("ui.credits.musicAttributionCount", {"count": tracks.size()}))
 		_add_tracks(tracks)
+	_later.append(_add_sound_and_type)
+	_later.append(_add_engine_and_footer)
+
+
+func _ready() -> void:
+	_entered = Engine.get_process_frames()
+
+
+func _process(_delta: float) -> void:
+	if Engine.get_process_frames() > _entered and not _later.is_empty():
+		_later.pop_front().call()
+	if _later.is_empty():
+		set_process(false)
+
+
+## The whole roll now (the room at rest, a capture, a suite).
+func finish() -> void:
+	while not _later.is_empty():
+		_later.pop_front().call()
+	set_process(false)
+
+
+func _add_sound_and_type() -> void:
 	_heading(Locale.active.t("ui.credits.headingSound"))
 	var sound: Array[Dictionary] = wired_items(_read_manifest(SFX_MANIFEST))
 	_secondary(Locale.active.t("ui.credits.sfxAttributionCount", {"count": sound.size()})
@@ -77,6 +115,9 @@ func _init(stage_shape: StringName = StageShape.IDENTITY, unsealed: bool = false
 	_heading(Locale.active.t("ui.credits.headingType"))
 	for key: String in ["ui.credits.bodyCinzel", "ui.credits.bodyAlegreya", "ui.credits.bodyNoto"]:
 		_body(Locale.active.t(key))
+
+
+func _add_engine_and_footer() -> void:
 	_heading(Locale.active.t("ui.credits.headingEngine"))
 	_body(Locale.active.t("ui.credits.bodyEngine"))
 	_add_licence_panes()
@@ -113,10 +154,15 @@ static func track_text(item: Dictionary, unsealed: bool) -> String:
 
 
 static func _read_manifest(path: String) -> Dictionary:
-	if not FileAccess.file_exists(path):
-		return {}
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	return parsed if typeof(parsed) == TYPE_DICTIONARY else {}
+	if _manifests.has(path):
+		return _manifests[path]
+	var manifest: Dictionary = {}
+	if FileAccess.file_exists(path):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+		if typeof(parsed) == TYPE_DICTIONARY:
+			manifest = parsed
+	_manifests[path] = manifest
+	return manifest
 
 
 func _add_tracks(tracks: Array[Dictionary]) -> void:
@@ -134,8 +180,16 @@ func _add_tracks(tracks: Array[Dictionary]) -> void:
 		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(column)
-		for i: int in range(c * per, mini(tracks.size(), (c + 1) * per)):
-			column.add_child(_track(tracks[i]))
+		var first: int = c * per
+		var last: int = mini(tracks.size(), first + per)
+		_add_rows(column, tracks.slice(first, mini(last, first + ROWS_NOW)))
+		if last > first + ROWS_NOW:
+			_later.append(_add_rows.bind(column, tracks.slice(first + ROWS_NOW, last)))
+
+
+func _add_rows(column: VBoxContainer, items: Array[Dictionary]) -> void:
+	for item: Dictionary in items:
+		column.add_child(_track(item))
 
 
 func _track(item: Dictionary) -> Control:
