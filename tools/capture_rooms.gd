@@ -585,6 +585,8 @@ func _section_trigger(id: String) -> Control:
 		var credits: CreditsScreen = _main._modal
 		var pane: Control = credits.roll().font_pane if id == "fonts" else credits.roll().engine_pane
 		credits.scroll().ensure_control_visible(pane)
+		# A player scrolled there: the roll's own drift waits, as after a touch.
+		credits._took_over()
 		return pane
 	var host: LeadlightRoomHost = _main._modal as LeadlightRoomHost
 	var room: LeadlightRoom = host.sheet() as LeadlightRoom if host != null else null

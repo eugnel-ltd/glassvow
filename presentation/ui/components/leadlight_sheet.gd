@@ -14,6 +14,9 @@ extends Control
 
 ## Where the arch springs, as a share of the height from the top.
 var spring: float = 0.16
+## The contents' top margin below the arch's spring, when a crown stands in the
+## arch over them (a licence glass); below 0, the contents start in the arch.
+var content_top: float = -1.0
 var sharpness: float = 1.25
 var light_at: Vector2 = Vector2(0.12, 1.0)
 var light_colour: Color = LeadlightTokens.EMBER
@@ -94,7 +97,8 @@ func _seat() -> void:
 	var inset: float = clampf(size.x * 0.05, 18.0, 44.0)
 	_content.add_theme_constant_override("margin_left", int(inset))
 	_content.add_theme_constant_override("margin_right", int(inset))
-	_content.add_theme_constant_override("margin_top", int(size.y * spring * 0.55 + 18.0))
+	var top: float = size.y * spring + content_top if content_top >= 0.0 else size.y * spring * 0.55 + 18.0
+	_content.add_theme_constant_override("margin_top", int(top))
 	_content.add_theme_constant_override("margin_bottom", int(clampf(size.y * 0.035, 10.0, 26.0)))
 
 

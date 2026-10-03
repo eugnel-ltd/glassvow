@@ -14,6 +14,10 @@ const HEAD: Vector2i = LeadlightTokens.SIZE_ROOM_HEAD
 
 ## Text set at a shape's room sizes; the folds below read it.
 static var shape: StringName = StageShape.IDENTITY
+## A line with words in it, and a list item's or a notice's start (`reflow`),
+## made once.
+static var _words: RegEx = null
+static var _item: RegEx = null
 
 const FONT_LICENCES: Array[Dictionary] = [
 	{"family": "Cinzel", "path": "res://assets/fonts/OFL-Cinzel.txt"},
@@ -157,11 +161,57 @@ static func body(text: String, font_size: int = 0) -> RichTextLabel:
 	prose.selection_enabled = true
 	prose.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	prose.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	prose.text = text
+	prose.text = reflow(text)
 	prose.add_theme_font_override("normal_font", GlassStyle.face(GlassStyle.ALEGREYA_400))
 	prose.add_theme_font_size_override("normal_font_size", font_size)
 	prose.add_theme_color_override("default_color", GlassStyle.TEXT_DIM)
 	return prose
+
+
+## A licence text as its own column sets it. The texts come hard-wrapped near
+## 78 characters; set at 18 px in a narrower glass every long line also broke
+## at the glass's edge ("…DEALINGS IN" / "THE" / "SOFTWARE."). A line that was
+## wrapped (it runs to near the text's width, and the next line goes on in the
+## same block) joins the next; a short line, a blank one, a rule, a line ending
+## in a colon, and a list item or a step out of an indented block keep their
+## break, as does a line before another copyright notice. A text written
+## unwrapped is left as it is. Pure.
+static func reflow(text: String) -> String:
+	var lines: PackedStringArray = text.replace("\r\n", "\n").split("\n")
+	var width: int = 0
+	for line: String in lines:
+		var length: int = line.strip_edges(false, true).length()
+		if length <= 100:
+			width = maxi(width, length)
+	var wrapped_at: int = maxi(roundi(float(width) * 0.72), 40)
+	var out: PackedStringArray = PackedStringArray()
+	var joined: bool = false
+	for i: int in lines.size():
+		var line: String = lines[i].strip_edges(false, true)
+		var piece: String = line.strip_edges(true, false) if joined else line
+		joined = i + 1 < lines.size() and _runs_on(line, lines[i + 1], wrapped_at)
+		out.append(piece + (" " if joined else ("\n" if i + 1 < lines.size() else "")))
+	return "".join(out)
+
+
+## Whether `line` was wrapped into `next`, not ended there.
+static func _runs_on(line: String, next: String, wrapped_at: int) -> bool:
+	var body_text: String = line.strip_edges()
+	var next_text: String = next.strip_edges()
+	if body_text.length() < wrapped_at or next_text.is_empty() or body_text.ends_with(":"):
+		return false
+	if _words == null:
+		_words = RegEx.create_from_string("[A-Za-z]")
+		_item = RegEx.create_from_string("^(([-*\\x{2022}]|\\(?[0-9A-Za-z]{1,3}[.)])\\s|Copyright\\b|\\x{00A9})")
+	if _words.search(body_text) == null or _words.search(next_text) == null:
+		return false
+	if _item.search(next_text) != null:
+		return false
+	return _indent(next) >= _indent(line)
+
+
+static func _indent(line: String) -> int:
+	return line.length() - line.strip_edges(true, false).length()
 
 
 ## The credits' two licence glasses, the fonts' and the engine's, one open at
@@ -218,22 +268,35 @@ class Shelf extends Control:
 		glass.built = true
 
 
-## A licence glass (§4.3, C3): a leaded sheet over the paused, dimmed roll,
-## its crown the pane's own name and its own scroll, so a long text never folds
-## open inside the roll. A tap off the glass (released without a drag) or
-## Escape closes it; the seat's Return closes it before the credits.
+## A licence glass (§4.3, C3): a leaded sheet over the paused roll, its crown
+## the pane's own name and its own scroll, so a long text never folds open
+## inside the roll. The scroll takes the focus (a key or pad scrolls it, and
+## focus stays in the glass); the text fades into the glass at the scroll's
+## top and foot. A tap off the glass (released without a drag) or Escape closes
+## it; the seat's Return closes it before the credits.
 class Glass extends Control:
 	signal shut
 
 	const IN_TIME: float = 0.32
 	const OUT_TIME: float = 0.24
 	const RISE: float = 12.0
+	## The roll behind an open glass: nearly gone, so it never reads round the
+	## arch (at 0.4 under the night it did, cut by the lead).
+	const BEHIND: float = 0.1
+	## The text's clear below the arch's spring, where the crown stands above it.
+	const CLEAR: float = 30.0
+	## A key's step down the text, and the fade at the scroll's ends (pad, phone).
+	const LINE: float = 48.0
+	const FADE: Vector2 = Vector2(28.0, 16.0)
 
 	var wrap: MarginContainer
 	var sheet: LeadlightSheet
 	var scroll: ScrollContainer
 	var crown: Label
 	var built: bool = false
+	var _shape: StringName = StageShape.IDENTITY
+	var _fade_top: TextureRect
+	var _fade_foot: TextureRect
 	var _down: bool = false
 	var _from: Vector2 = Vector2.ZERO
 	var _seat: Rect2 = Rect2()
@@ -250,9 +313,11 @@ class Glass extends Control:
 		night.set_anchors_preset(Control.PRESET_FULL_RECT)
 		night.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(night)
+		_shape = stage_shape
 		sheet = LeadlightSheet.new()
 		sheet.name = "LicenceGlass"
 		sheet.spring = 0.12
+		sheet.content_top = CLEAR
 		add_child(sheet)
 		crown = Label.new()
 		crown.text = title_text if LeadlightTokens.is_zh() else title_text.to_upper()
@@ -264,12 +329,22 @@ class Glass extends Control:
 		crown.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		sheet.add_child(crown)
 		scroll = ScrollContainer.new()
+		scroll.name = "LicenceScroll"
 		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		# A ScrollContainer takes no focus and no keys of its own: this one does,
+		# and keeps them, so a keyboard or pad reads the text, not the roll.
+		scroll.focus_mode = Control.FOCUS_ALL
+		for side: String in ["focus_neighbor_top", "focus_neighbor_bottom", "focus_neighbor_left",
+				"focus_neighbor_right", "focus_next", "focus_previous"]:
+			scroll.set(side, NodePath("."))
+		scroll.gui_input.connect(_on_scroll_key)
 		sheet.content().add_child(scroll)
 		wrap = MarginContainer.new()
 		wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		wrap.add_theme_constant_override("margin_right", 10)
 		scroll.add_child(wrap)
+		_fade_top = _fade(true)
+		_fade_foot = _fade(false)
 
 	## C3: in, the glass rises RISE px and fades in while `behind` (the roll)
 	## dims to 0.4; out, the reverse. Reduce Motion: 150 ms fades.
@@ -280,7 +355,7 @@ class Glass extends Control:
 		if not is_inside_tree():
 			modulate.a = 1.0 if opening else 0.0
 			visible = opening
-			behind.modulate.a = 0.4 if opening else 1.0
+			behind.modulate.a = BEHIND if opening else 1.0
 			return
 		var reduced: bool = LeadlightMotion.reduced()
 		var span: float = LeadlightMotion.REDUCED_FADE if reduced else (IN_TIME if opening else OUT_TIME)
@@ -290,7 +365,7 @@ class Glass extends Control:
 		_tween = create_tween().set_parallel()
 		_tween.tween_property(self, "modulate:a", 1.0 if opening else 0.0, span) \
 			.from(0.0 if opening else modulate.a).set_trans(trans).set_ease(ease_kind)
-		_tween.tween_property(behind, "modulate:a", 0.4 if opening else 1.0, span)
+		_tween.tween_property(behind, "modulate:a", BEHIND if opening else 1.0, span)
 		if not reduced:
 			var top: float = _seat.position.y
 			_tween.tween_property(sheet, "position:y", top if opening else top + RISE, span) \
@@ -300,15 +375,69 @@ class Glass extends Control:
 				visible = false
 				sheet.position.y = _seat.position.y)
 
-	## Stand the glass in `rect` (stage px); its text starts below the crown.
+	## Stand the glass in `rect` (stage px); its text starts below the crown
+	## (the sheet's `content_top`), and fades into the glass at the scroll's ends.
 	func place(rect: Rect2) -> void:
 		_seat = rect
 		sheet.position = rect.position
 		sheet.size = rect.size
 		var top: float = rect.size.y * sheet.spring
-		sheet.content().add_theme_constant_override("margin_top", int(top + 30.0))
 		crown.position = Vector2(0.0, maxf(top * 0.55 - crown.get_combined_minimum_size().y * 0.5, 2.0))
 		crown.size = Vector2(rect.size.x, 0.0)
+		# The scroll's rect in the sheet, as LeadlightSheet seats its contents;
+		# the fades leave the scroll bar clear.
+		var inset: float = clampf(rect.size.x * 0.05, 18.0, 44.0)
+		var text_top: float = floorf(top + CLEAR)
+		var foot: float = rect.size.y - floorf(clampf(rect.size.y * 0.035, 10.0, 26.0))
+		var fade: float = FADE.y if LeadlightTokens.is_phone(_shape) else FADE.x
+		var width: float = rect.size.x - inset * 2.0 - 14.0
+		_fade_top.position = Vector2(inset, text_top)
+		_fade_top.size = Vector2(width, fade)
+		_fade_foot.position = Vector2(inset, foot - fade)
+		_fade_foot.size = Vector2(width, fade)
+		_fade_top.texture = _ramp(text_top / rect.size.y, true)
+		_fade_foot.texture = _ramp(foot / rect.size.y, false)
+
+	## A band over one end of the text in the glass's own night (LeadlightSheet's
+	## glazing at that height), clear towards the middle.
+	func _fade(top_end: bool) -> TextureRect:
+		var band: TextureRect = TextureRect.new()
+		band.name = "FadeTop" if top_end else "FadeFoot"
+		band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		band.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		band.stretch_mode = TextureRect.STRETCH_SCALE
+		sheet.add_child(band)
+		return band
+
+	static func _ramp(at: float, top_end: bool) -> GradientTexture2D:
+		var night: Color = Color(0.063, 0.078, 0.157).lerp(Color(0.031, 0.039, 0.086), clampf(at, 0.0, 1.0))
+		var gradient: Gradient = Gradient.new()
+		gradient.set_color(0, Color(night, 0.94 if top_end else 0.0))
+		gradient.set_color(1, Color(night, 0.0 if top_end else 0.94))
+		var ramp: GradientTexture2D = GradientTexture2D.new()
+		ramp.gradient = gradient
+		ramp.width = 4
+		ramp.height = 32
+		ramp.fill_from = Vector2(0.0, 0.0)
+		ramp.fill_to = Vector2(0.0, 1.0)
+		return ramp
+
+	## Up and Down step the text, Page Up and Page Down a screen of it.
+	func _on_scroll_key(event: InputEvent) -> void:
+		var page: float = scroll.size.y * 0.85
+		var step: float = 0.0
+		if event.is_action_pressed(&"ui_down", true):
+			step = LINE
+		elif event.is_action_pressed(&"ui_up", true):
+			step = -LINE
+		elif event.is_action_pressed(&"ui_page_down", true):
+			step = page
+		elif event.is_action_pressed(&"ui_page_up", true):
+			step = -page
+		else:
+			return
+		scroll.scroll_vertical += roundi(step)
+		scroll.accept_event()
 
 	func _on_input(event: InputEvent) -> void:
 		var button: InputEventMouseButton = event as InputEventMouseButton
