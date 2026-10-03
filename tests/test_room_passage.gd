@@ -546,7 +546,7 @@ static func _lent_title(fails: Array[String], tree: SceneTree, host: SubViewport
 
 ## Under Reduce Motion a room lands whole beneath the cross-fade of the frame
 ## before, which still shows the lantern where it was: the lantern in its new
-## place comes in over the fade's second half, each way.
+## place comes in from the fade's middle (75 to 225 ms), each way.
 static func _reduced_lantern(fails: Array[String], tree: SceneTree, host: SubViewport,
 		content: ContentDB, room: String) -> void:
 	Preferences.active.reduce_motion = true
@@ -559,14 +559,14 @@ static func _reduced_lantern(fails: Array[String], tree: SceneTree, host: SubVie
 	_check(fails, not main._passage.arriving() and lantern.presence < 0.05,
 		"%s: under the cross-fade the seated lantern shows at once (%.2f)" % [room, lantern.presence])
 	await _step(tree, main, 5)
-	_check(fails, lantern.presence < 0.5, "%s: the seated lantern came in before the fade's second half" % room)
-	await _step(tree, main, 6)
-	_check(fails, is_equal_approx(lantern.presence, 1.0), "%s: the seated lantern is not whole by 180 ms" % room)
+	_check(fails, lantern.presence < 0.5, "%s: the seated lantern came in before the fade's middle" % room)
+	await _step(tree, main, 10)
+	_check(fails, is_equal_approx(lantern.presence, 1.0), "%s: the seated lantern is not whole by 250 ms" % room)
 	await _tap(tree, host, (main._modal as LeadlightRoomHost).seat().word())
 	_check(fails, lantern.presence < 0.05 and lantern.position.is_equal_approx(_title(main).home_rect().position),
 		"%s: under the cross-fade the lantern shows home at once (%.2f)" % [room, lantern.presence])
-	await _step(tree, main, 11)
-	_check(fails, is_equal_approx(lantern.presence, 1.0), "%s: the lantern is not whole at home by 180 ms" % room)
+	await _step(tree, main, 15)
+	_check(fails, is_equal_approx(lantern.presence, 1.0), "%s: the lantern is not whole at home by 250 ms" % room)
 	_dispose(main)
 	Preferences.active.reduce_motion = false
 

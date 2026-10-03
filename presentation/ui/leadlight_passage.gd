@@ -15,8 +15,8 @@ extends Control
 ## leaving room is inert from its first frame and any press lands it. Captures
 ## and the headless suite (`instant`) land everything on the frame it starts.
 ## Under Reduce Motion the change is the transition layer's 150 ms cross-fade
-## of the frame before it, the lantern landed beneath it coming in over the
-## fade's second half; with nothing copied, the room fades over 150 ms.
+## of the frame before it, the lantern landed beneath it coming in from the
+## fade's middle; with nothing copied, the room fades over 150 ms.
 ##
 ## What the word crosses waits for it: on arrival the room's content under its
 ## flight rises once it has passed, and on leaving it sets off only once the
@@ -107,7 +107,7 @@ var _guard_at: Vector2 = Vector2.INF
 var _guard_left: float = 0.0
 var _press_at: Vector2 = Vector2.INF
 ## Under Reduce Motion, the lantern landed beneath the cross-fade and how far
-## into it: it comes in over the fade's second half.
+## into it: it comes in from the fade's middle.
 var _faded_lantern: LeadlightLantern = null
 var _faded_t: float = -1.0
 
@@ -327,7 +327,7 @@ func advance(delta: float) -> void:
 	if _faded_t >= 0.0:
 		_faded_t += minf(delta, TransitionLayer.FADE_STEP_MAX)
 		var half: float = LeadlightMotion.REDUCED_FADE * 0.5
-		var shown: float = clampf((_faded_t - half) / half, 0.0, 1.0)
+		var shown: float = clampf((_faded_t - half) / LeadlightMotion.REDUCED_FADE, 0.0, 1.0)
 		if _faded_lantern != null and is_instance_valid(_faded_lantern):
 			_faded_lantern.presence = shown
 		if shown >= 1.0:
@@ -461,8 +461,10 @@ func _ghost_clear(rect: Rect2, a: Arrival) -> float:
 
 
 ## Under Reduce Motion `lantern` stands in its new place beneath the cross-fade
-## of the frame before, which still shows it where it was: it comes in over the
-## fade's second half, as the old one has half gone (§2.7, as built).
+## of the frame before, which still shows it where it was: it comes in from the
+## fade's middle, as the old one has half gone, over a fade's length (to 225
+## ms), so the two never show at more than half each and no frame carries more
+## of the change than the fade's own step (§2.7, as built; §11.5's cut gate).
 func _lantern_after_fade(lantern: LeadlightLantern) -> void:
 	_lantern_whole()
 	_faded_lantern = lantern
