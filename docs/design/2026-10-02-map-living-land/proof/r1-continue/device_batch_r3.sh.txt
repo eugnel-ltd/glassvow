@@ -1,0 +1,64 @@
+#!/bin/zsh
+# The #660 round-3 device batch, guarded against the shared iPad: waits for a
+# quiet device (no other device job for 3 minutes), installs this lane's QA
+# build, and before every launch checks that the installed QA app is still the
+# one it installed; every launch carries a nonce its first row must echo.
+# A launch whose rows are stale (another lane's build) is redone after waiting
+# for quiet and reinstalling. usage: batch8.sh
+set -uo pipefail
+L=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/t660
+F=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/device13/flow
+OUT=$L/rows8; mkdir -p $OUT
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+B=io.fol2.glassvow.qa
+others() { pgrep -x devicectl >/dev/null || pgrep -f 'ios_release[.]sh' >/dev/null || pgrep -f 'qa_export[.]sh' >/dev/null || pgrep -f 'xcodebuild.*(archive|exportArchive)' >/dev/null; }
+quiet() { local n=0; while [ $n -lt 9 ]; do if others; then n=0; echo "$(date +%T) device busy"; else n=$((n+1)); fi; sleep 20; done; }
+udid() { xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for d in json.load(sys.stdin)["result"]["devices"]:
+    h=d.get("hardwareProperties") or {}
+    if h.get("productType")=="iPad11,6": print(h.get("udid")); break'; }
+app_url() { xcrun devicectl device info apps --device $1 --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for a in json.load(sys.stdin)["result"]["apps"]:
+    if a.get("bundleIdentifier")=="io.fol2.glassvow.qa": print(a.get("url"))'; }
+MINE=""
+install() {
+  quiet
+  $F/qa_export.sh $L/qa-wt > $L/qa_export8.out 2>&1 || { echo "QA EXPORT FAILED"; tail -5 $L/qa_export8.out; exit 1; }
+  MINE=$(grep -o 'installationURL: [^ ]*' $L/qa_export8.out | awk '{print $2}')
+  echo "$(date +%T) installed $MINE"
+}
+launch() {  # label mode act [args]
+  local label=$1 mode=$2 act=$3; shift 3
+  local envs='{"QA_MODE":"warm"}'; [ "$mode" = "nowarm" ] && envs='{"QA_NO_TITLE_WARM":"1"}'
+  local f=$OUT/$label.jsonl
+  for attempt in 1 2 3; do
+    while others; do echo "$(date +%T) busy before $label"; sleep 60; done
+    local U=$(udid); [ -n "$U" ] || { echo "no iPad"; exit 1; }
+    if [ "$(app_url $U)" != "$MINE" ]; then echo "$(date +%T) QA app replaced by another lane; waiting and reinstalling"; install; U=$(udid); fi
+    local nonce="$label-$(date +%s)"
+    rm -f $f
+    xcrun devicectl device process launch --terminate-existing --device $U --environment-variables "$envs" $B -- --title-probe --seed=1 --qa-act=$act --qa-nonce=$nonce "$@" > $L/launch8.log 2>&1
+    sleep 22
+    for k in $(seq 1 14); do
+      xcrun devicectl device copy from --device $U --domain-type appDataContainer --domain-identifier $B --source Documents/title_probe.jsonl --destination $f > /dev/null 2>&1
+      if [ -f $f ] && ! grep -q -- "--qa-nonce=$nonce" $f; then break; fi
+      if [ -f $f ] && grep -q '"probe":"done"' $f; then break; fi
+      sleep 5
+    done
+    if [ -f $f ] && grep -q -- "--qa-nonce=$nonce" $f && grep -q '"probe":"done"' $f; then
+      echo "$(date +%T) $label: $(grep -c . $f) rows $(grep -o '"ready_ms":[0-9.]*' $f | head -1) $(grep -o '"phase_at_tap":"[a-z]*"' $f | head -1)"
+      return 0
+    fi
+    echo "$(date +%T) $label: attempt $attempt incomplete or stale ($(grep -c . $f 2>/dev/null) rows); waiting for quiet"
+    quiet
+  done
+  echo "$(date +%T) $label: GAVE UP"
+}
+install
+launch v8warmup warm 1
+for i in 1 2 3 4 5; do launch v8w1-$i warm 1; launch v8c1-$i nowarm 1; done
+for i in 1 2 3; do for d in 0 1000 2000 3000; do launch v8e$d-$i warm 1 --qa-tap-after=$d; done; done
+for i in 1 2 3; do launch v8w2-$i warm 2; launch v8c2-$i nowarm 2; done
+echo "$(date +%T) batch8 done"

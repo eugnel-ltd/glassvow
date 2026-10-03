@@ -38,7 +38,9 @@ for a, b in [
     ("	out.append(land)\n	var generator", "	out.append(land)\n	QaMarks.mark(\"build_start\")\n	var generator"),
     ("	var packet: Dictionary = MapLayoutPolicy.generate(input, quality, bundle)\n", "	QaMarks.mark(\"input\")\n	var packet: Dictionary = MapLayoutPolicy.generate(input, quality, bundle)\n	QaMarks.mark(\"generated\")\n"),
     ("	dealer.free()\n", "	dealer.free()\n	QaMarks.mark(\"bound\")\n"),
-    ("	land.build_detached(data)\n", "	QaMarks.mark(\"prepared\")\n	land.build_detached(data)\n	QaMarks.mark(\"built\")\n"),
+    ("	land.build_detached(data, pacing)\n", "	QaMarks.mark(\"prepared\")\n	land.build_detached(data, pacing)\n	QaMarks.mark(\"built \" + land.failure)\n"),
+    ("	_current._advance(true)\n", "	QaMarks.mark(\"hurry \" + str(_current.step))\n	_current._advance(true)\n"),
+    ("	step = Step.BUILDING\n", "	QaMarks.mark(\"launch paced\" if paced else \"launch unpaced\")\n	step = Step.BUILDING\n"),
     ("	MapScene.adopt_journey(key, land)\n", "	QaMarks.mark(\"adopted_main\")\n	MapScene.adopt_journey(key, land)\n"),
 ]:
     assert s.count(a) == 1, a[:50]
