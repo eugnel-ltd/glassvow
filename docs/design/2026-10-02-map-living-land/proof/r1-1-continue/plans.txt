@@ -1,0 +1,237 @@
+# --- b1
+warmup early 1 --qa-tap-after=0
+b1-late-e0-1 late 1 --qa-tap-after=0
+b1-early-e0-1 early 1 --qa-tap-after=0
+b1-norush-e0-1 norush 1 --qa-tap-after=0
+b1-late-e0-2 late 1 --qa-tap-after=0
+b1-early-e0-2 early 1 --qa-tap-after=0
+b1-norush-e0-2 norush 1 --qa-tap-after=0
+b1-late-e0-3 late 1 --qa-tap-after=0
+b1-early-e0-3 early 1 --qa-tap-after=0
+b1-norush-e0-3 norush 1 --qa-tap-after=0
+b1-late-e0-4 late 1 --qa-tap-after=0
+b1-early-e0-4 early 1 --qa-tap-after=0
+b1-norush-e0-4 norush 1 --qa-tap-after=0
+b1-late-e0-5 late 1 --qa-tap-after=0
+b1-early-e0-5 early 1 --qa-tap-after=0
+b1-norush-e0-5 norush 1 --qa-tap-after=0
+b1-early-skip-1 early 1 --qa-skip-at=500 --qa-tap-after=0
+b1-late-skip-1 late 1 --qa-skip-at=500 --qa-tap-after=0
+b1-early-skip-2 early 1 --qa-skip-at=500 --qa-tap-after=0
+b1-late-skip-2 late 1 --qa-skip-at=500 --qa-tap-after=0
+b1-early-skip-3 early 1 --qa-skip-at=500 --qa-tap-after=0
+b1-early-aw-1 early 1
+b1-nowarm-aw-1 nowarm 1
+b1-late-aw-1 late 1
+b1-early-aw-2 early 1
+b1-nowarm-aw-2 nowarm 1
+b1-late-aw-2 late 1
+b1-early-aw-3 early 1
+b1-nowarm-aw-3 nowarm 1
+# --- b2
+warmup early 1 --qa-tap-after=0
+b2-late-e0-1 late 1 --qa-tap-after=0
+b2-early-e0-1 early 1 --qa-tap-after=0
+b2-p1-e0-1 p1 1 --qa-tap-after=0
+b2-late-e0-2 late 1 --qa-tap-after=0
+b2-early-e0-2 early 1 --qa-tap-after=0
+b2-p1-e0-2 p1 1 --qa-tap-after=0
+b2-late-e0-3 late 1 --qa-tap-after=0
+b2-early-e0-3 early 1 --qa-tap-after=0
+b2-p1-e0-3 p1 1 --qa-tap-after=0
+b2-late-e0-4 late 1 --qa-tap-after=0
+b2-early-e0-4 early 1 --qa-tap-after=0
+b2-late-e0-5 late 1 --qa-tap-after=0
+b2-early-e0-5 early 1 --qa-tap-after=0
+b2-early-skip-1 early 1 --qa-skip-at=500 --qa-tap-after=0
+b2-early-skip-2 early 1 --qa-skip-at=500 --qa-tap-after=0
+b2-early-skip-3 early 1 --qa-skip-at=500 --qa-tap-after=0
+b2-early-aw-1 early 1
+b2-nowarm-aw-1 nowarm 1
+b2-early-aw-2 early 1
+b2-nowarm-aw-2 nowarm 1
+b2-early-aw-3 early 1
+# --- b3
+warmup early 1 --qa-tap-after=0
+b3-late-e0-1 late 1 --qa-tap-after=0
+b3-early-e0-1 early 1 --qa-tap-after=0
+b3-norush-e0-1 norush 1 --qa-tap-after=0
+b3-piclow-e0-1 piclow 1 --qa-tap-after=0
+b3-late-e0-2 late 1 --qa-tap-after=0
+b3-early-e0-2 early 1 --qa-tap-after=0
+b3-norush-e0-2 norush 1 --qa-tap-after=0
+b3-piclow-e0-2 piclow 1 --qa-tap-after=0
+b3-late-e0-3 late 1 --qa-tap-after=0
+b3-early-e0-3 early 1 --qa-tap-after=0
+b3-norush-e0-3 norush 1 --qa-tap-after=0
+b3-piclow-e0-3 piclow 1 --qa-tap-after=0
+b3-late-e0-4 late 1 --qa-tap-after=0
+b3-early-e0-4 early 1 --qa-tap-after=0
+b3-norush-e0-4 norush 1 --qa-tap-after=0
+b3-late-e0-5 late 1 --qa-tap-after=0
+b3-early-e0-5 early 1 --qa-tap-after=0
+b3-norush-e0-5 norush 1 --qa-tap-after=0
+b3-early-skip-1 early 1 --qa-skip-at=500 --qa-tap-after=0
+b3-early-skip-2 early 1 --qa-skip-at=500 --qa-tap-after=0
+b3-early-skip-3 early 1 --qa-skip-at=500 --qa-tap-after=0
+b3-early-aw-1 early 1
+b3-late-aw-1 late 1
+b3-nowarm-aw-1 nowarm 1
+b3-early-aw-2 early 1
+b3-late-aw-2 late 1
+b3-nowarm-aw-2 nowarm 1
+b3-early-aw-3 early 1
+# --- b4
+warmup early 1 --qa-tap-after=0
+b4-late-e0-1 late 1 --qa-tap-after=0
+b4-p3-e0-1 early 1 --qa-tap-after=0
+b4-p2-e0-1 p2 1 --qa-tap-after=0
+b4-p1-e0-1 p1 1 --qa-tap-after=0
+b4-late-e0-2 late 1 --qa-tap-after=0
+b4-p3-e0-2 early 1 --qa-tap-after=0
+b4-p2-e0-2 p2 1 --qa-tap-after=0
+b4-p1-e0-2 p1 1 --qa-tap-after=0
+b4-late-e0-3 late 1 --qa-tap-after=0
+b4-p3-e0-3 early 1 --qa-tap-after=0
+b4-p2-e0-3 p2 1 --qa-tap-after=0
+b4-p1-e0-3 p1 1 --qa-tap-after=0
+b4-late-e0-4 late 1 --qa-tap-after=0
+b4-p3-e0-4 early 1 --qa-tap-after=0
+b4-p2-e0-4 p2 1 --qa-tap-after=0
+b4-p1-e0-4 p1 1 --qa-tap-after=0
+b4-late-e0-5 late 1 --qa-tap-after=0
+b4-p3-e0-5 early 1 --qa-tap-after=0
+b4-p2-e0-5 p2 1 --qa-tap-after=0
+b4-p1-e0-5 p1 1 --qa-tap-after=0
+# --- final
+warmup early 1 --qa-tap-after=0
+f-cand-e0-1 early 1 --qa-tap-after=0
+f-late-e0-1 late 1 --qa-tap-after=0
+f-h0-e0-1 h0 1 --qa-tap-after=0
+f-cand-e0-2 early 1 --qa-tap-after=0
+f-late-e0-2 late 1 --qa-tap-after=0
+f-h0-e0-2 h0 1 --qa-tap-after=0
+f-cand-e0-3 early 1 --qa-tap-after=0
+f-late-e0-3 late 1 --qa-tap-after=0
+f-h0-e0-3 h0 1 --qa-tap-after=0
+f-cand-e0-4 early 1 --qa-tap-after=0
+f-late-e0-4 late 1 --qa-tap-after=0
+f-h0-e0-4 h0 1 --qa-tap-after=0
+f-cand-e0-5 early 1 --qa-tap-after=0
+f-late-e0-5 late 1 --qa-tap-after=0
+f-h0-e0-5 h0 1 --qa-tap-after=0
+f-cand-e0-6 early 1 --qa-tap-after=0
+f-cand-e0-7 early 1 --qa-tap-after=0
+f-cand-skip-1 early 1 --qa-skip-at=500 --qa-tap-after=0
+f-cand-skip-2 early 1 --qa-skip-at=500 --qa-tap-after=0
+f-cand-skip-3 early 1 --qa-skip-at=500 --qa-tap-after=0
+f-cand-skip-4 early 1 --qa-skip-at=500 --qa-tap-after=0
+f-cand-skip-5 early 1 --qa-skip-at=500 --qa-tap-after=0
+f-cand-aw-1 early 1
+f-late-aw-1 late 1
+f-nowarm-aw-1 nowarm 1
+f-cand-aw-2 early 1
+f-late-aw-2 late 1
+f-nowarm-aw-2 nowarm 1
+f-cand-aw-3 early 1
+f-late-aw-3 late 1
+f-nowarm-aw-3 nowarm 1
+f-cand-aw-4 early 1
+f-cand-aw-5 early 1
+f-cand-a2e0-1 early 2 --qa-tap-after=0
+f-late-a2e0-1 late 2 --qa-tap-after=0
+f-cand-a2e0-2 early 2 --qa-tap-after=0
+f-late-a2e0-2 late 2 --qa-tap-after=0
+f-cand-a2e0-3 early 2 --qa-tap-after=0
+f-late-a2e0-3 late 2 --qa-tap-after=0
+f-cand-a2aw-1 early 2
+f-cand-a2aw-2 early 2
+# --- final2
+warmup early 1 --qa-tap-after=0
+sleep 15
+g-cand-e0-1 early 1 --qa-tap-after=0
+sleep 15
+g-late-e0-1 late 1 --qa-tap-after=0
+sleep 15
+g-kf-e0-1 kf 1 --qa-tap-after=0
+sleep 15
+g-cand-e0-2 early 1 --qa-tap-after=0
+sleep 15
+g-late-e0-2 late 1 --qa-tap-after=0
+sleep 15
+g-kf-e0-2 kf 1 --qa-tap-after=0
+sleep 15
+g-cand-e0-3 early 1 --qa-tap-after=0
+sleep 15
+g-late-e0-3 late 1 --qa-tap-after=0
+sleep 15
+g-kf-e0-3 kf 1 --qa-tap-after=0
+sleep 15
+g-cand-e0-4 early 1 --qa-tap-after=0
+sleep 15
+g-late-e0-4 late 1 --qa-tap-after=0
+sleep 15
+g-kf-e0-4 kf 1 --qa-tap-after=0
+sleep 15
+g-cand-e0-5 early 1 --qa-tap-after=0
+sleep 15
+g-late-e0-5 late 1 --qa-tap-after=0
+sleep 15
+g-kf-e0-5 kf 1 --qa-tap-after=0
+sleep 15
+g-cand-e0-6 early 1 --qa-tap-after=0
+sleep 15
+g-late-e0-6 late 1 --qa-tap-after=0
+sleep 15
+g-kf-e0-6 kf 1 --qa-tap-after=0
+sleep 15
+g-cand-e0-7 early 1 --qa-tap-after=0
+sleep 15
+g-cand-skip-1 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 10
+g-cand-skip-2 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 10
+g-cand-skip-3 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 10
+g-cand-skip-4 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 10
+g-cand-skip-5 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 10
+g-cand-aw-1 early 1
+sleep 10
+g-late-aw-1 late 1
+sleep 10
+g-nowarm-aw-1 nowarm 1
+sleep 10
+g-cand-aw-2 early 1
+sleep 10
+g-late-aw-2 late 1
+sleep 10
+g-nowarm-aw-2 nowarm 1
+sleep 10
+g-cand-aw-3 early 1
+sleep 10
+g-late-aw-3 late 1
+sleep 10
+g-nowarm-aw-3 nowarm 1
+sleep 10
+g-cand-aw-4 early 1
+sleep 10
+g-cand-aw-5 early 1
+sleep 10
+g-cand-a2e0-1 early 2 --qa-tap-after=0
+sleep 10
+g-late-a2e0-1 late 2 --qa-tap-after=0
+sleep 10
+g-cand-a2e0-2 early 2 --qa-tap-after=0
+sleep 10
+g-late-a2e0-2 late 2 --qa-tap-after=0
+sleep 10
+g-cand-a2e0-3 early 2 --qa-tap-after=0
+sleep 10
+g-late-a2e0-3 late 2 --qa-tap-after=0
+sleep 10
+g-cand-a2aw-1 early 2
+sleep 10
+g-cand-a2aw-2 early 2
+sleep 10

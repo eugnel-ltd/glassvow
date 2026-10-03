@@ -1,0 +1,143 @@
+"""QA-only patch for #660 R1.1 (never in the game): `--title-probe` stores a
+fresh saved run in the dev profile, shows the title, and attaches the probe.
+Arms, by environment variable, in one build:
+  QA_NO_TITLE_WARM=1  the title warms nothing (VRAM and frame baseline);
+  QA_LATE=1           as PR #664: the warm waits for the rite to land;
+  QA_PIC_THREADS=N    the pictures decode on N pool threads;
+  QA_PIC_LOW=1        the pictures decode as a low-priority group (as in v2);
+  QA_HEIGHT_THREADS=N a paced build works its heights out on N threads (0: in
+                      turn on its own thread, as in v1-v4);
+  QA_KIT_FIRST_FRAME=1 the prefetch's setup starts in the title's first frame
+                      (as at e3d96d05).
+"""
+import sys
+
+W = sys.argv[1]
+p = W + "/application/main.gd"
+s = open(p).read()
+
+
+def rep(a, b):
+    global s
+    assert s.count(a) == 1, a[:80]
+    s = s.replace(a, b)
+
+
+rep('''	var map_rest: bool = false
+''', '''	var map_rest: bool = false
+	var title_probe: bool = false
+	var qa_act: int = 1
+''')
+rep('''		elif arg == "--map-rest":
+			map_rest = true
+''', '''		elif arg == "--map-rest":
+			map_rest = true
+		elif arg == "--title-probe":
+			title_probe = true
+		elif arg.begins_with("--qa-act="):
+			qa_act = int(arg.trim_prefix("--qa-act="))
+''')
+rep('''	elif not _onboard.is_empty():
+		_boot_onboard(_onboard)
+	else:
+		_route_idle()
+''', '''	elif not _onboard.is_empty():
+		_boot_onboard(_onboard)
+	elif title_probe:
+		_qa_seed_saved_run(qa_act)
+		_route_idle()
+		var probe_v: Variant = (load("res://tools/r11_title_bench.gd") as GDScript).new()
+		if probe_v is Node:
+			var probe_node: Node = probe_v
+			add_child(probe_node)
+	else:
+		_route_idle()
+''')
+rep('''		MapJourneyPrefetch.prime()
+	if game != null and game.run != null:
+''', '''		var qa_t0: int = Time.get_ticks_usec()
+		MapJourneyPrefetch.prime()
+		Engine.set_meta("qa_prime_ms", (Time.get_ticks_usec() - qa_t0) / 1000.0)
+	if game != null and game.run != null:
+''')
+rep('''	# Before the title is built, so the pictures are decoding meanwhile.
+	_warm_title_road(saved)
+''', '''	# Before the title is built, so the pictures are decoding meanwhile.
+	var qa_w0: int = Time.get_ticks_usec()
+	_warm_title_road(saved)
+	Engine.set_meta("qa_warm_start_ms", (Time.get_ticks_usec() - qa_w0) / 1000.0)
+''')
+rep('''func _warm_title_road(saved: RunState) -> void:
+''', '''func _warm_title_road(saved: RunState) -> void:
+	if not OS.get_environment("QA_NO_TITLE_WARM").is_empty():
+		return
+	if not OS.get_environment("QA_LATE").is_empty() and not _qa_late_go:
+		_qa_late_road = saved
+		_qa_late_due = true
+		return
+	_qa_late_go = false
+''')
+rep('''func _process(_delta: float) -> void:
+	MapJourneyPrefetch.step_current()
+''', '''func _process(_delta: float) -> void:
+	if _qa_late_due:
+		var qa_title: TitleScreen = _choice_screen as TitleScreen
+		if qa_title != null and (qa_title.rite == null or qa_title.rite.is_done()):
+			_qa_late_due = false
+			_qa_late_go = true
+			_warm_title_road(_qa_late_road)
+	MapJourneyPrefetch.step_current()
+''')
+s += '''
+
+var _qa_late_road: RunState = null
+var _qa_late_due: bool = false
+var _qa_late_go: bool = false
+
+
+func _qa_seed_saved_run(act_number: int) -> void:
+	var run_seed: int = _forced_seed if _forced_seed >= 0 else 1
+	var rs: RunState = RunState.new_run(content, run_seed, "run-qa-title-%d" % run_seed,
+		{"aspect": 0, "vow": 0, "unlocks": _vigil.unlocks})
+	var g: GlassvowGame = GlassvowGame.new(content, rs)
+	g.quests.prepare_run(rs)
+	var m: WorldMap = WorldMap.benchmark(rs)
+	g.quests.decorate_map(rs, m)
+	for i: int in range(maxi(0, act_number - 1)):
+		rs.start_next_act(content)
+		m = WorldMap.for_run(rs, content)
+		g.quests.decorate_map(rs, m)
+	rs.map = m.to_dict()
+	rs.pending_lamplighter = false
+	print("QA saved run act=%d seed=%d ok=%s" % [rs.act, run_seed, str(SaveService.store(rs, _run_save_path))])
+'''
+open(p, "w").write(s)
+
+p = W + "/presentation/map/map_landscape_assets.gd"
+s = open(p).read()
+rep('''		PICTURE_THREADS, true, "Map landscape pictures")
+''', '''		PICTURE_THREADS if OS.get_environment("QA_PIC_THREADS").is_empty()
+		else int(OS.get_environment("QA_PIC_THREADS")), OS.get_environment("QA_PIC_LOW").is_empty(),
+		"Map landscape pictures")
+''')
+open(p, "w").write(s)
+
+p = W + "/presentation/map/map_journey_prefetch.gd"
+s = open(p).read()
+rep('''	if not hurry and not _first_frame_gone:
+''', '''	if not hurry and not _first_frame_gone and OS.get_environment("QA_KIT_FIRST_FRAME").is_empty():
+''')
+open(p, "w").write(s)
+
+p = W + "/presentation/map/map_journey_landscape.gd"
+s = open(p).read()
+rep('''	terrain.start_heights(pacing != null,
+		PACED_HEIGHT_THREADS if pacing != null and pacing.on else -1)
+''', '''	var qa_h: String = OS.get_environment("QA_HEIGHT_THREADS")
+	var qa_threads: int = PACED_HEIGHT_THREADS if qa_h.is_empty() else int(qa_h)
+	var qa_paced: bool = pacing != null and pacing.on
+	terrain.start_heights(pacing != null and not (qa_paced and qa_threads == 0),
+		qa_threads if qa_paced else -1)
+''')
+open(p, "w").write(s)
+print("patched")

@@ -1,0 +1,79 @@
+== cand-a2aw (2 launches)
+  ready ms: median 1092.7 worst 1095.2  [1095.2, 1090.2]
+  rite p50 [16.64, 16.67] | p95 [19.27, 21.33] | max [52.25, 58.64]
+  rite medians p50 16.66 p95 20.3 max 55.45; worst p95 21.33 max 58.64; frame-1 (title warm frame) [52.3, 58.6]
+  flare/flood frames > 30 ms per launch [0, 0]
+  boot main_ready->first frame ms [202.1, 195.2] (median 198.65); first frame since start ms median 1926.94
+  video MiB at lit [197.6, 205.6]
+  title after rite p50 [16.64, 16.65] p95 [18.96, 19.17] max [23.81, 23.86]
+  warm done after lit ms [-1.0, -1.0]; video MiB on the title [201.8, 209.8]
+== cand-a2e0 (3 launches)
+  ready ms: median 1082.1 worst 1125.3  [1125.3, 1082.1, 1079.2]
+  rite p50 [16.66, 16.67, 16.66] | p95 [23.8, 18.97, 19.34] | max [59.6, 58.43, 57.46]
+  rite medians p50 16.66 p95 19.34 max 58.43; worst p95 23.8 max 59.6; frame-1 (title warm frame) [59.6, 58.4, 57.5]
+  flare/flood frames > 30 ms per launch [0, 1, 0]
+  boot main_ready->first frame ms [205.2, 194.1, 194.4] (median 194.4); first frame since start ms median 1951.61
+  video MiB at lit [197.6, 197.6, 197.6]
+== cand-aw (5 launches)
+  ready ms: median 712.8 worst 744.9  [744.9, 698.5, 712.8, 698.6, 715.6]
+  rite p50 [16.66, 16.66, 16.66, 16.66, 16.64] | p95 [18.14, 16.75, 16.77, 16.75, 19.46] | max [57.7, 56.89, 58.93, 55.08, 59.5]
+  rite medians p50 16.66 p95 16.77 max 57.7; worst p95 19.46 max 59.5; frame-1 (title warm frame) [57.7, 56.9, 58.9, 55.1, 59.5]
+  flare/flood frames > 30 ms per launch [0, 0, 0, 0, 0]
+  boot main_ready->first frame ms [242.5, 218.1, 219.5, 210.1, 211.1] (median 218.1); first frame since start ms median 1983.56
+  video MiB at lit [229.5, 225.5, 229.5, 221.5, 228.2]
+  title after rite p50 [16.64, 16.66, 16.67, 16.66, 16.64] p95 [18.92, 19.11, 19.54, 18.73, 18.82] max [22.4, 48.51, 48.14, 48.72, 22.77]
+  warm done after lit ms [783.537, 749.484, 766.128, 749.795, 865.444]; video MiB on the title [234.6, 230.0, 234.0, 226.6, 235.1]
+== cand-e0 (7 launches)
+  ready ms: median 694.5 worst 725.2  [690.3, 694.5, 685.7, 699.1, 704.0, 725.2, 690.7]
+  rite p50 [16.65, 16.68, 16.66, 16.66, 16.66, 16.66, 16.66] | p95 [18.31, 17.49, 16.77, 16.75, 16.78, 18.31, 16.75] | max [52.51, 57.96, 58.8, 52.86, 58.63, 49.79, 47.84]
+  rite medians p50 16.66 p95 16.78 max 52.86; worst p95 18.31 max 58.8; frame-1 (title warm frame) [52.5, 58.0, 58.8, 52.9, 58.6, 49.8, 47.8]
+  flare/flood frames > 30 ms per launch [0, 0, 0, 0, 0, 3, 0]
+  boot main_ready->first frame ms [243.3, 205.0, 206.5, 216.1, 205.3, 215.2, 213.4] (median 213.4); first frame since start ms median 1947.9
+  video MiB at lit [229.5, 228.3, 222.1, 229.5, 222.5, 222.0, 229.5]
+== cand-skip (5 launches)
+  ready ms: median 2169.8 worst 2272.9  [2207.9, 2272.9, 2169.7, 2169.8, 2168.3]
+  rite p50 [16.67, 16.61, 16.66, 16.63, 16.65] | p95 [16.83, 23.5, 16.81, 21.26, 25.75] | max [59.93, 51.2, 59.47, 57.58, 51.28]
+  rite medians p50 16.65 p95 21.26 max 57.58; worst p95 25.75 max 59.93; frame-1 (title warm frame) [59.9, 51.2, 59.5, 57.6, 51.3]
+  flare/flood frames > 30 ms per launch [3, 0, 0, 0, 3]
+  boot main_ready->first frame ms [209.5, 218.6, 211.4, 211.4, 216.9] (median 211.4); first frame since start ms median 1964.15
+  video MiB at lit [222.6, 222.7, 222.6, 222.7, 214.6]
+== kf-e0 (6 launches)
+  ready ms: median 700.0 worst 733.8  [704.3, 733.8, 695.7, 691.7, 712.3, 692.8]
+  rite p50 [16.66, 16.66, 16.64, 16.66, 16.66, 16.65] | p95 [17.72, 16.74, 18.33, 16.76, 16.75, 17.69] | max [58.67, 60.11, 62.41, 51.72, 64.85, 62.53]
+  rite medians p50 16.66 p95 17.23 max 61.26; worst p95 18.33 max 64.85; frame-1 (title warm frame) [58.7, 60.1, 62.4, 51.7, 64.8, 62.5]
+  flare/flood frames > 30 ms per launch [0, 0, 0, 0, 0, 0]
+  boot main_ready->first frame ms [215.9, 220.8, 207.9, 228.4, 227.5, 208.2] (median 218.35); first frame since start ms median 1983.94
+  video MiB at lit [228.2, 221.5, 220.3, 229.2, 229.5, 229.5]
+== late-a2e0 (3 launches)
+  ready ms: median 1096.2 worst 1100.1  [1100.1, 1086.4, 1096.2]
+  rite p50 [16.67, 16.66, 16.65] | p95 [23.08, 20.5, 19.1] | max [59.9, 57.63, 59.14]
+  rite medians p50 16.66 p95 20.5 max 59.14; worst p95 23.08 max 59.9; frame-1 (title warm frame) [59.9, 57.6, 59.1]
+  flare/flood frames > 30 ms per launch [0, 5, 0]
+  boot main_ready->first frame ms [188.6, 187.1, 188.0] (median 188.0); first frame since start ms median 1913.1
+  video MiB at lit [156.2, 156.2, 156.2]
+== late-aw (3 launches)
+  ready ms: median 714.9 worst 733.8  [714.9, 733.8, 700.6]
+  rite p50 [16.67, 16.63, 16.63] | p95 [19.31, 19.21, 19.3] | max [60.83, 58.16, 59.09]
+  rite medians p50 16.63 p95 19.3 max 59.09; worst p95 19.31 max 60.83; frame-1 (title warm frame) [60.8, 58.2, 59.1]
+  flare/flood frames > 30 ms per launch [0, 0, 0]
+  boot main_ready->first frame ms [205.4, 202.3, 205.8] (median 205.4); first frame since start ms median 1978.47
+  video MiB at lit [155.7, 155.7, 155.7]
+  title after rite p50 [16.66, 16.64, 16.65] p95 [19.3, 18.55, 18.15] max [48.44, 20.69, 22.62]
+  warm done after lit ms [3283.384, 3316.033, 3348.413]; video MiB on the title [234.0, 234.6, 234.0]
+== late-e0 (6 launches)
+  ready ms: median 2983.5 worst 3073.0  [2946.9, 3020.1, 3073.0, 2938.2, 2913.3, 3064.6]
+  rite p50 [16.67, 16.65, 16.66, 16.65, 16.62, 16.66] | p95 [19.23, 19.09, 19.86, 21.76, 19.08, 18.3] | max [58.1, 59.35, 55.05, 56.67, 53.57, 47.84]
+  rite medians p50 16.66 p95 19.16 max 55.86; worst p95 21.76 max 59.35; frame-1 (title warm frame) [58.1, 59.3, 55.1, 56.7, 53.6, 47.8]
+  flare/flood frames > 30 ms per launch [2, 0, 0, 0, 3, 0]
+  boot main_ready->first frame ms [203.6, 194.8, 195.5, 195.7, 195.1, 203.7] (median 195.6); first frame since start ms median 1966.08
+  video MiB at lit [155.7, 155.7, 155.7, 155.7, 155.7, 155.7]
+== nowarm-aw (3 launches)
+  ready ms: median 3248.1 worst 3373.6  [3217.2, 3373.6, 3248.1]
+  rite p50 [16.66, 16.68, 16.69] | p95 [18.83, 19.16, 47.71] | max [57.3, 60.2, 56.53]
+  rite medians p50 16.68 p95 19.16 max 57.3; worst p95 47.71 max 60.2; frame-1 (title warm frame) [57.3, 60.2, 56.5]
+  flare/flood frames > 30 ms per launch [0, 0, 0]
+  boot main_ready->first frame ms [204.1, 203.8, 204.2] (median 204.1); first frame since start ms median 1982.57
+  video MiB at lit [155.7, 155.7, 155.7]
+  title after rite p50 [16.66, 16.65, 16.65] p95 [18.85, 18.84, 19.48] max [21.74, 20.78, 47.77]
+  warm done after lit ms [-1.0, -1.0, -1.0]; video MiB on the title [159.8, 160.3, 159.8]
+dropped (nonce or incomplete): []

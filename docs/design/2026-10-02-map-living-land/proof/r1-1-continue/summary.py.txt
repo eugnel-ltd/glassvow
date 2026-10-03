@@ -1,0 +1,64 @@
+"""R1.1 summary of one batch: per arm, Continue tap to a drawn interactive map
+(median, worst, every launch), the rite's frames (p50/p95/max per launch and
+their medians), the flare and flood frames, title frames after the rite, the
+warm's end, video memory and boot-to-first-frame. Nonce-checked: a launch whose
+rows do not echo its own nonce is dropped. usage: final_summ.py <rows-dir | device-rows-*.jsonl>"""
+import json, sys, glob, os, statistics as st
+d = sys.argv[1]
+arms = {}
+dropped = []
+launches = {}
+if os.path.isdir(d):
+    for f in sorted(glob.glob(d + "/*.jsonl")):
+        launches[os.path.basename(f)[:-6]] = [json.loads(l) for l in open(f) if l.strip()]
+else:
+    for l in open(d):
+        if l.strip():
+            r = json.loads(l)
+            launches.setdefault(r["launch"], []).append(r)
+for name in sorted(launches):
+    if name == "warmup":
+        continue
+    rows = launches[name]
+    by = {r["probe"]: r for r in rows}
+    args = by.get("start", {}).get("args", "").split()
+    nonce = [a for a in args if a.startswith("--qa-nonce=")]
+    if not nonce or not nonce[0].startswith("--qa-nonce=" + name + "-") or "done" not in by:
+        dropped.append(name)
+        continue
+    arms.setdefault("-".join(name.split("-")[1:-1]), []).append((name, by))
+def med(v): return round(st.median(v), 2) if v else None
+for arm, launches in arms.items():
+    ready, rite, flare_long, ff, boot, vram_lit, vram_tf, title, warm_done, fr1 = [], [], [], [], [], [], [], [], [], []
+    for name, by in launches:
+        c = by["continue"]; lit = by["lit"]
+        ready.append(c["ready_ms"])
+        rite.append(lit["rite"])
+        fr1.append(lit["rite_frames"][1] if len(lit["rite_frames"]) > 1 else None)
+        fl = []
+        for v in c["frames"]:
+            if v > 100: break
+            fl.append(v)
+        flare_long.append(len([v for v in fl if v > 30]))
+        marks = c["marks"]
+        t_ff = next(t for t, l in marks if l == "first_frame")
+        t_mr = next(t for t, l in marks if l == "main_ready")
+        boot.append(round((t_ff - t_mr) / 1000, 1))
+        ff.append(lit["first_frame_ms"])
+        vram_lit.append(lit["video_mib"])
+        if "title_frames" in by:
+            tf = by["title_frames"]
+            title.append(tf["all"]); vram_tf.append(tf["video_mib"]); warm_done.append(tf["warm_done_ms"])
+    print("== %s (%d launches)" % (arm, len(launches)))
+    print("  ready ms: median %.1f worst %.1f  [%s]" % (st.median(ready), max(ready), ", ".join("%.1f" % v for v in ready)))
+    print("  rite p50 %s | p95 %s | max %s" % ([r["p50_ms"] for r in rite], [r["p95_ms"] for r in rite], [r["max_ms"] for r in rite]))
+    print("  rite medians p50 %s p95 %s max %s; worst p95 %s max %s; frame-1 (title warm frame) %s" % (
+        med([r["p50_ms"] for r in rite]), med([r["p95_ms"] for r in rite]), med([r["max_ms"] for r in rite]),
+        max(r["p95_ms"] for r in rite), max(r["max_ms"] for r in rite), fr1))
+    print("  flare/flood frames > 30 ms per launch %s" % flare_long)
+    print("  boot main_ready->first frame ms %s (median %s); first frame since start ms median %s" % (boot, med(boot), med(ff)))
+    print("  video MiB at lit %s" % vram_lit)
+    if title:
+        print("  title after rite p50 %s p95 %s max %s" % ([t["p50_ms"] for t in title], [t["p95_ms"] for t in title], [t["max_ms"] for t in title]))
+        print("  warm done after lit ms %s; video MiB on the title %s" % (warm_done, vram_tf))
+print("dropped (nonce or incomplete):", dropped)

@@ -1,0 +1,78 @@
+#!/bin/zsh
+# R1.1 device batch on the shared iPad 8 (QA app only). Holds the batch lock
+# from the QA install to the last launch, installs wt-r11's QA build, and runs
+# the launch plan file given: one launch per line, "label arm act [game args]".
+# Arms: early (the candidate), norush, late (PR #664's behaviour), nowarm.
+# Every launch carries a nonce its rows must echo; a launch whose rows are
+# stale or incomplete is retried, and a mismatch is never kept.
+# usage: batch.sh <name> <plan file>
+set -uo pipefail
+R=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r11
+F=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/device13/flow
+W=$R/../wt-r11
+NAME=$1; PLAN=$2
+OUT=$R/rows-$NAME; mkdir -p $OUT
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+B=io.fol2.glassvow.qa
+OWNER=map-r11
+# Waits for a free lock checking every 3 s, then takes it through the lock
+# script (which waits again if another lane took it first).
+until [[ "$($F/ipad_lock.sh status)" == free* ]]; do sleep 3; done
+$F/ipad_lock.sh acquire $OWNER
+trap "$F/ipad_lock.sh release $OWNER; echo \"\$(date +%T) lock released\"" EXIT
+echo "$(date +%T) lock acquired"
+udid() { xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for d in json.load(sys.stdin)["result"]["devices"]:
+    h=d.get("hardwareProperties") or {}
+    if h.get("productType")=="iPad11,6": print(h.get("udid")); break'; }
+app_url() { xcrun devicectl device info apps --device $1 --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for a in json.load(sys.stdin)["result"]["apps"]:
+    if a.get("bundleIdentifier")=="io.fol2.glassvow.qa": print(a.get("url"))'; }
+IPAD_LOCK_OWNER=$OWNER $F/qa_export.sh $W > $OUT/qa_export.out 2>&1 || { echo "QA EXPORT FAILED"; tail -5 $OUT/qa_export.out; exit 1; }
+MINE=$(grep -o 'installationURL: [^ ]*' $OUT/qa_export.out | awk '{print $2}')
+echo "$(date +%T) installed $MINE ($(git -C $W rev-parse --short HEAD))"
+touch $OUT/.installed
+launch() {  # label arm act [args]
+  local label=$1 arm=$2 act=$3; shift 3
+  local envs='{"QA_ARM":"early"}'
+  case $arm in
+    nowarm) envs='{"QA_NO_TITLE_WARM":"1"}' ;;
+    late) envs='{"QA_LATE":"1"}' ;;
+    norush) envs='{"QA_NO_RUSH":"1"}' ;;
+    p1) envs='{"QA_PIC_THREADS":"1"}' ;;
+    p2) envs='{"QA_PIC_THREADS":"2"}' ;;
+    piclow) envs='{"QA_PIC_LOW":"1"}' ;;
+    h0) envs='{"QA_HEIGHT_THREADS":"0"}' ;;
+    kf) envs='{"QA_KIT_FIRST_FRAME":"1"}' ;;
+  esac
+  local f=$OUT/$label.jsonl
+  for attempt in 1 2 3; do
+    local U=$(udid); [ -n "$U" ] || { echo "no iPad"; exit 1; }
+    if [ "$(app_url $U)" != "$MINE" ]; then echo "$(date +%T) QA app is not this batch's build; stopping"; exit 1; fi
+    local nonce="$label-$(date +%s)"
+    rm -f $f
+    xcrun devicectl device process launch --terminate-existing --device $U --environment-variables "$envs" $B -- --title-probe --seed=1 --qa-act=$act --qa-nonce=$nonce "$@" > $OUT/launch.log 2>&1
+    sleep 10
+    for k in $(seq 1 16); do
+      xcrun devicectl device copy from --device $U --domain-type appDataContainer --domain-identifier $B --source Documents/title_probe.jsonl --destination $f > /dev/null 2>&1
+      if [ -f $f ] && ! grep -q -- "--qa-nonce=$nonce" $f; then sleep 3; continue; fi
+      if [ -f $f ] && grep -q '"probe":"done"' $f; then break; fi
+      sleep 3
+    done
+    if [ -f $f ] && grep -q -- "--qa-nonce=$nonce" $f && grep -q '"probe":"done"' $f; then
+      echo "$(date +%T) $label: $(grep -c . $f) rows $(grep -o '"ready_ms":[0-9.]*' $f | head -1) $(grep -o '"phase_at_tap":"[a-z]*"' $f | head -1)"
+      return 0
+    fi
+    echo "$(date +%T) $label: attempt $attempt incomplete or stale ($(grep -c . $f 2>/dev/null) rows)"
+    rm -f $f
+  done
+  echo "$(date +%T) $label: GAVE UP"
+}
+PLAN_LINES=("${(@f)$(grep -v '^#' $PLAN | grep -v '^[[:space:]]*$')}")
+for line in $PLAN_LINES; do
+  if [[ "$line" == sleep* ]]; then ${=line}; continue; fi
+  launch ${=line} < /dev/null
+done
+echo "$(date +%T) batch $NAME done"
