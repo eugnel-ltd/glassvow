@@ -555,8 +555,7 @@ func _ready() -> void:
 			_attach_map_open_bench()
 			return
 		if map_rest:
-			var rest_bench: Node = (load("res://tools/bench_map_rest.gd") as GDScript).new()
-			add_child(rest_bench)
+			_attach_map_rest_bench()
 			return
 	elif show_shop_bench:
 		# The Night Stall bench: a fresh run with payable gold and seeded
@@ -589,6 +588,19 @@ func _ready() -> void:
 		_attach_performance_probe()
 	elif shot_path != "":
 		_capture_and_quit(shot_path)
+
+
+## The rest and walking frame bench (tools/bench_map_rest.gd), as the open
+## bench is attached: a developer flag only, null-checked.
+func _attach_map_rest_bench() -> void:
+	var script: GDScript = load("res://tools/bench_map_rest.gd") as GDScript
+	var instance: Variant = script.new() if script != null else null
+	if not instance is Node:
+		push_error("map rest bench did not load")
+		get_tree().quit(2)
+		return
+	var bench: Node = instance
+	add_child(bench)
 
 
 ## The bench reopens the map this boot opened and photographs it itself, so
