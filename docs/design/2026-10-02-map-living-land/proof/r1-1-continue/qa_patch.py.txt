@@ -2,7 +2,8 @@
 fresh saved run in the dev profile, shows the title, and attaches the probe.
 Arms, by environment variable, in one build:
   QA_NO_TITLE_WARM=1  the title warms nothing (VRAM and frame baseline);
-  QA_LATE=1           as PR #664: the warm waits for the rite to land;
+  QA_LATE=1           this build with its warm-up held until the rite lands
+                      (PR #664's timing on this build's code, not PR #664);
   QA_PIC_THREADS=N    the pictures decode on N pool threads;
   QA_PIC_LOW=1        the pictures decode as a low-priority group (as in v2);
   QA_HEIGHT_THREADS=N a paced build works its heights out on N threads (0: in

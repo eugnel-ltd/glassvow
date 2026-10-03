@@ -235,3 +235,138 @@ g-cand-a2aw-1 early 2
 sleep 10
 g-cand-a2aw-2 early 2
 sleep 10
+
+# --- review round (9a1f1eff): rested block, then back to back
+warmup early 1 --qa-tap-after=0
+sleep 12
+r-cand-e0-1 early 1 --qa-tap-after=0
+sleep 12
+r-late-e0-1 late 1 --qa-tap-after=0
+sleep 12
+r-cand-e0-2 early 1 --qa-tap-after=0
+sleep 12
+r-late-e0-2 late 1 --qa-tap-after=0
+sleep 12
+r-cand-e0-3 early 1 --qa-tap-after=0
+sleep 12
+r-late-e0-3 late 1 --qa-tap-after=0
+sleep 12
+r-cand-e0-4 early 1 --qa-tap-after=0
+sleep 12
+r-late-e0-4 late 1 --qa-tap-after=0
+sleep 12
+r-cand-e0-5 early 1 --qa-tap-after=0
+sleep 12
+r-late-e0-5 late 1 --qa-tap-after=0
+sleep 12
+r-cand-e0-6 early 1 --qa-tap-after=0
+sleep 12
+r-late-e0-6 late 1 --qa-tap-after=0
+sleep 12
+r-cand-skip-1 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-late-skip-1 late 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-cand-skip-2 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-late-skip-2 late 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-cand-skip-3 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-late-skip-3 late 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-cand-skip-4 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-late-skip-4 late 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-cand-skip-5 early 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-late-skip-5 late 1 --qa-skip-at=500 --qa-tap-after=0
+sleep 12
+r-cand-aw-1 early 1
+sleep 10
+r-late-aw-1 late 1
+sleep 10
+r-nowarm-aw-1 nowarm 1
+sleep 10
+r-cand-aw-2 early 1
+sleep 10
+r-late-aw-2 late 1
+sleep 10
+r-nowarm-aw-2 nowarm 1
+sleep 10
+r-cand-aw-3 early 1
+sleep 10
+r-late-aw-3 late 1
+sleep 10
+r-nowarm-aw-3 nowarm 1
+sleep 10
+r-cand-aw-4 early 1
+sleep 10
+r-late-aw-4 late 1
+sleep 10
+r-nowarm-aw-4 nowarm 1
+sleep 10
+r-cand-aw-5 early 1
+sleep 10
+r-late-aw-5 late 1
+sleep 10
+r-nowarm-aw-5 nowarm 1
+sleep 10
+r-cand-a2e0-1 early 2 --qa-tap-after=0
+sleep 10
+r-nowarm-a2e0-1 nowarm 2 --qa-tap-after=0
+sleep 10
+r-cand-a2e0-2 early 2 --qa-tap-after=0
+sleep 10
+r-nowarm-a2e0-2 nowarm 2 --qa-tap-after=0
+sleep 10
+r-cand-a2e0-3 early 2 --qa-tap-after=0
+sleep 10
+r-nowarm-a2e0-3 nowarm 2 --qa-tap-after=0
+sleep 10
+r-cand-a2e0-4 early 2 --qa-tap-after=0
+sleep 10
+r-nowarm-a2e0-4 nowarm 2 --qa-tap-after=0
+sleep 10
+r-cand-a2e0-5 early 2 --qa-tap-after=0
+sleep 10
+r-nowarm-a2e0-5 nowarm 2 --qa-tap-after=0
+sleep 10
+r-cand-a2aw-1 early 2
+sleep 10
+r-nowarm-a2aw-1 nowarm 2
+sleep 10
+r-cand-a2aw-2 early 2
+sleep 10
+r-nowarm-a2aw-2 nowarm 2
+sleep 10
+r-cand-a2aw-3 early 2
+sleep 10
+r-nowarm-a2aw-3 nowarm 2
+sleep 10
+r-cand-a2aw-4 early 2
+sleep 10
+r-nowarm-a2aw-4 nowarm 2
+sleep 10
+r-cand-a2aw-5 early 2
+sleep 10
+r-nowarm-a2aw-5 nowarm 2
+sleep 10
+# --- back to back: no rest between launches
+b-cand-e0-1 early 1 --qa-tap-after=0
+b-late-e0-1 late 1 --qa-tap-after=0
+b-cand-e0-2 early 1 --qa-tap-after=0
+b-late-e0-2 late 1 --qa-tap-after=0
+b-cand-e0-3 early 1 --qa-tap-after=0
+b-late-e0-3 late 1 --qa-tap-after=0
+b-cand-e0-4 early 1 --qa-tap-after=0
+b-late-e0-4 late 1 --qa-tap-after=0
+b-cand-e0-5 early 1 --qa-tap-after=0
+b-late-e0-5 late 1 --qa-tap-after=0
+b-cand-e0-6 early 1 --qa-tap-after=0
+b-late-e0-6 late 1 --qa-tap-after=0
+b-cand-e0-7 early 1 --qa-tap-after=0
+b-late-e0-7 late 1 --qa-tap-after=0
+b-cand-e0-8 early 1 --qa-tap-after=0
+b-late-e0-8 late 1 --qa-tap-after=0

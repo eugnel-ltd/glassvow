@@ -20,13 +20,124 @@ Continue row's ready_ms is the tap to a drawn, interactive map.
 
 Arms (environment variables of one QA build; see qa_patch.py.txt):
   early / cand  the build under test (its default behaviour);
-  late          as PR #664: the warm waits for the rite to land (the
-                same-build control for the rite's frames);
+  late          this build with its warm-up held until the rite lands: PR
+                #664's timing on this build's code, not PR #664 itself (it
+                shares the faster pictures, catalogue, layout hand-over and
+                heights). It is the same-build control for the rite's frames;
+                PR #664's own numbers are in ../r1-continue (cross-build);
   nowarm        the title warms nothing (video memory and frame baseline);
   norush        (b1, b3) no unpacing at the tap;
   p1, p2, piclow  pictures on 1 or 2 high-priority threads, or low priority;
   h0            a paced build works its heights out on one thread;
   kf            the prefetch's setup starts in the title's first frame.
+
+Review round: 9a1f1eff (2026-10-03)
+===================================
+
+What changed (code commit 9a1f1eff, on 25028b66): only a saved Act I run
+warms from before the rite's first frame; Acts II-IV wait for the rite to land
+again (their map opened no faster from an early warm: 1079-1125 against
+1086-1113 ms). The compile takes a layout the worker handed over within the
+restore's frame. A paced build spreads its heights only on a pool of three
+threads or more (the iPad 8 has six, so its behaviour is unchanged).
+The early Act II warm's rite frames had been inconclusive at n=3 a batch:
+p95 median 22.54 (worst 27.27 with aw) against the control's 19.08 (19.33)
+at e3d96d05, 19.34 against 20.50 at 9803bd95. It is gone.
+
+Batch r2: one QA install of 9a1f1eff (bench label r11-9a1f1eff; the bench is
+title_bench.gd.txt, which differs between batches only in that label;
+qa_patch-9a1f1eff.py.txt is this round's QA patch), 74 launches under the
+iPad batch lock, all nonce-matched, none dropped. Arms: cand, late (above),
+nowarm. Plan in plans.txt. A rested block first, with 10-12 s between launches,
+then a back-to-back block with no rest, launches about 11 s apart, after the
+25 minutes of the rested block. Rows: device-rows-review-9a1f1eff.jsonl;
+summary-review-9a1f1eff.txt (summary2.py.txt) and
+review-tables-9a1f1eff.txt (review_tables.py.txt, with 9803bd95's rows for
+the pooled rite frames). The test's mutation proof: mutations-9a1f1eff.txt.
+
+Back to the Road, tap as the rite lands (Act I), tap to a drawn interactive
+map:
+  rested         cand 690.6-748.4 ms (median 693.0, n=6); late 3061-3168.
+                 9803bd95 (rested, same Act I code under the rite):
+                 685.7-725.2 (median 694.5, n=7).
+  back to back   cand 706.3-4816.8 ms (median 1964.9, n=8): 706, 863, 837,
+                 then 4817, 2664, 1964, 1966, 2119. late 3170-5123
+                 (median 4459). e3d96d05 (back to back; the same Act I path
+                 but for the kit's first frame): 691.5-2466.1 (median 720.6,
+                 n=7; 2466 and 1193 missed, rounds 6 and 7 had no control).
+  The 1.0 s goal holds on a rested iPad 8 and not on one relaunched every
+  11 s under load. From the fourth back-to-back round the device slowed down
+  in both arms at once (main_ready to first frame 265-400 ms against about
+  190-230 rested; the late control lost 1.3-2.0 s). The candidate's paced
+  build normally has 35-54 ms left when the map opens (the hurry, about 525 ms
+  after the tap); slowed down it had 1.3-4.0 s left. The map waits for that.
+  Reaching 1.0 s on a slowed device needs the land built in less work or not
+  built at launch at all (the on-disk cache, R2), which is outside R1.1.
+
+A tap that lands the rite 500 ms in, then Continue (same build, interleaved):
+  cand 2169.0-2356.4 ms (median 2234.1, n=5); late 3039.2-3135.0 (median
+  3098.2, n=5): about 0.86 s faster. At 9803bd95 cand read 2168-2273 and at
+  e3d96d05 2269-2568, so this case moves 100-300 ms between batches.
+
+The launch rite's frames (ms; p50 / p95 / max per launch, median and worst):
+  Act I rested   cand 16.66 / 16.79 (17.64) / 57.35 (60.72), n=6
+                 late 16.66 / 19.35 (47.88) / 51.25 (57.96), n=6
+  pooled with 9803bd95 (same Act I code under the rite):
+                 cand 16.66 / 16.78 (18.31) / 56.23 (60.72), n=13
+                 late 16.66 / 19.26 (47.88) / 53.89 (59.35), n=12
+  Every launch's max is the title's first frame, which builds the rite's
+  pipelines: cand 47.8-60.7, late 46.1-59.3, median +2.3 ms (permutation
+  test p = 0.60, no difference shown). The other frames' max: cand median
+  20.9 (worst 26.5), late 25.45 (48.6).
+  Act II         cand 16.66 / 19.24 (21.9) / 56.86 (61.01), n=10 (5 e0 + 5 aw)
+                 nowarm 16.66 / 19.17 (41.59) / 56.9 (60.89), n=10
+  Acts III and IV run the same code under the rite as Act II (nothing
+  warms until the rite lands, pinned by tests/test_map_title_road.gd with an
+  Act II save), so they were not measured separately.
+
+After the warm (Act I, 360 title frames after the rite, then the tap):
+  ready  cand 706.0-724.9 (median 720.4, n=5); late 697.9-723.8 (median
+         710.3, n=5); PR #664 (../r1-continue, t660-v7, cross-build)
+         709.2-730.2 (n=5). In this path, once the warm is done, the
+         candidate runs the same code as PR #664 (the prefetch is DONE: the
+         new hand-over and the polls return at once).
+  title frames after the rite, p50 / p95 / max, median (worst):
+         cand 16.66 / 18.83 (18.88) / 22.01 (48.12); late 16.65 / 18.36
+         (18.52) / 21.85 (23.99); nowarm 16.64 / 19.02 (19.14) / 21.78
+         (23.47). PR #664 cross-build: warm p95 16.76-18.37, max
+         17.07-23.75; no warm p95 18.78-20.61, max 20.21-48.63.
+  Bursts of about 48 ms title frames (three vsyncs): over the three batches
+  of this build's after-warm arms, cand 6 of 15 launches, all once the warm
+  had finished, 1.3-2.8 s after the rite landed; late 2 of 11 and nowarm 2
+  of 11, while the pictures decoded or the land built, or as the rite landed
+  (Fisher p = 0.26); PR #664 warm 0 of 5, no warm 1 of 5. p50 and p95 are
+  unaffected; the cause is not identified (open).
+  The warm ends 699-1033 ms after the rite lands (late: 3347-3548).
+Act II after the warm (the pictures now decode after the rite, on two
+high-priority threads; PR #664 used one low-priority thread):
+  ready cand 1089.2-1145.1 (median 1110.1); tap at 0 1078.0-1111.9 (median
+  1089.4) against nowarm 1256.7-1292.0 and PR #664's 1092.9-1099.3.
+  Title frames after the rite: cand 16.65 / 19.0 (23.56) / 22.66 (46.83);
+  nowarm 16.64 / 19.01 (19.08) / 22.32 (45.46). The frames during the
+  decode (19-21 per launch) had p95 17.4-19.9 and max 17.6-20.1. The one
+  launch with p95 23.56 had its slow frames from 27 frames after the decode
+  had ended.
+
+Video memory: Act I at lit cand 215.6-229.5 MiB against late and nowarm
+155.7; on the title after the warm cand 226.5-234.6 against nowarm
+159.8-160.3, so +66 to +75 MiB, under the 80 MiB per-act kept budget.
+Act II at lit 156.2 in every arm (nothing decodes under the rite now);
+on the title after the warm 201.8-210.3 against 160.3-160.8 (+41 to +50).
+
+Boot, Main._ready to the first frame (median): Act I cand 225.6 ms (e0 and
+aw, n=11) against late 203.2 (n=11) and nowarm 207.8 (n=5); at 9803bd95 213
+against 196. The early warm adds about 20 ms before the first frame for a
+saved Act I run (prime about 10 ms, the warm's start and the picture
+threads). Act II cand 189.2 (e0) and 192.0 (aw) against nowarm 188.3 and
+193.0: no change.
+
+Earlier batches
+===============
 
 Batches (start rows carry the build label):
   b1  r11-v1  warm from the title's first process frame, kit while the
@@ -51,8 +162,11 @@ order), device_batch.sh.txt (the batch runner, under the iPad batch lock).
 
 The e3d96d05 batch ran 42 launches back to back: its fifth round was slow in
 every arm at once (main_ready to first frame 229-390 ms, the paced build about
-twice as long; late 3827 ms, h0 1517 ms, cand 2466 ms), the device rather than
-an arm. The 9803bd95 batch rests 10-15 s between launches.
+twice as long; late 3827 ms, h0 1517 ms, cand 2466 ms). Its sixth and seventh
+candidate launches, with no control beside them, took 1193 and 897 ms. The
+9803bd95 batch rests 10-15 s between launches. The review round (above)
+measured the back-to-back case against an interleaved control: the slowdown
+is the device's, and under it the candidate misses 1.0 s.
 
 9803bd95, iPad 8 (summary-final-9803bd95.txt), same build, interleaved:
   Back to the Road at 0 s after the rite lands, tap to a drawn interactive map:

@@ -32,7 +32,7 @@ func _ready() -> void:
 	var t0: int = Time.get_ticks_usec()
 	BoxMesh.new().get_mesh_arrays()
 	var boot_readback_ms: float = (Time.get_ticks_usec() - t0) / 1000.0
-	_row({"probe": "start", "build": "r11-9803bd95", "tap_after_ms": _tap_after_ms,
+	_row({"probe": "start", "build": "r11-9a1f1eff", "tap_after_ms": _tap_after_ms,
 		"skip_at_ms": _skip_at_ms,
 		"args": " ".join(OS.get_cmdline_user_args()), "busy": OS.get_environment("QA_BUSY"), "warm": OS.get_environment("QA_NO_TITLE_WARM").is_empty(),
 		"late": not OS.get_environment("QA_LATE").is_empty(),

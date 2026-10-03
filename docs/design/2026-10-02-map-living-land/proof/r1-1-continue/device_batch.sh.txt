@@ -2,7 +2,9 @@
 # R1.1 device batch on the shared iPad 8 (QA app only). Holds the batch lock
 # from the QA install to the last launch, installs wt-r11's QA build, and runs
 # the launch plan file given: one launch per line, "label arm act [game args]".
-# Arms: early (the candidate), norush, late (PR #664's behaviour), nowarm.
+# Arms: early (the candidate), norush, late (this build, its warm-up held until
+# the rite lands: PR #664's timing, not PR #664's code), nowarm, and the
+# experiment arms in qa_patch.py.txt.
 # Every launch carries a nonce its rows must echo; a launch whose rows are
 # stale or incomplete is retried, and a mismatch is never kept.
 # usage: batch.sh <name> <plan file>

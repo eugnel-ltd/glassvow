@@ -1,0 +1,114 @@
+== b-cand-e0 (8 launches)
+  ready ms: median 1964.9 worst 4816.8  [706.3, 862.8, 837.2, 4816.8, 2664.2, 1964.1, 1965.7, 2119.3]
+  rite p50 [16.65, 16.66, 16.65, 16.64, 16.65, 16.66, 16.72, 16.66] | p95 [18.58, 20.34, 18.32, 19.88, 17.86, 16.91, 30.59, 24.47] | max [56.44, 64.32, 55.1, 74.6, 66.56, 65.47, 74.03, 66.7] | >20ms [4, 7, 1, 6, 2, 1, 20, 14]
+  rite medians p50 16.66 p95 19.23 max 66.02; worst p50 16.72 p95 30.59 max 74.6; frames > 20 ms median 5.0
+  flare/flood frames > 30 ms per launch [0, 0, 0, 4, 0, 3, 3, 0]
+  boot main_ready->first frame ms [212.9, 223.4, 221.6, 393.7, 400.5, 280.8, 331.5, 280.8] (median 280.8)
+  video MiB at lit [230.2, 217.9, 220.9, 222.6, 223.7, 217.6, 215.8, 215.8]
+  build left when the map opened (hurry to built) ms [40.3, 217.5, 166.0, 4045.9, 1982.2, 1274.1, 1303.4, 1442.6]
+== b-late-e0 (8 launches)
+  ready ms: median 4458.6 worst 5123.1  [3170.0, 3314.8, 3372.1, 5123.1, 4640.6, 4527.8, 4976.3, 4389.5]
+  rite p50 [16.65, 16.65, 16.63, 16.66, 16.66, 16.66, 16.66, 16.66] | p95 [19.26, 19.27, 19.0, 40.85, 16.98, 19.83, 19.25, 17.08] | max [48.66, 58.41, 59.71, 59.05, 65.6, 65.42, 64.12, 60.16] | >20ms [3, 6, 2, 15, 1, 6, 3, 2]
+  rite medians p50 16.66 p95 19.26 max 59.94; worst p50 16.66 p95 40.85 max 65.6; frames > 20 ms median 3.0
+  flare/flood frames > 30 ms per launch [0, 0, 0, 3, 0, 0, 0, 1]
+  boot main_ready->first frame ms [205.9, 196.4, 201.1, 288.8, 275.9, 273.0, 267.7, 264.9] (median 266.3)
+  video MiB at lit [155.7, 155.7, 155.7, 155.7, 155.7, 155.7, 155.5, 155.7]
+  build left when the map opened (hurry to built) ms [2182.9, 2321.0, 2345.4, 4038.8, 3537.9, 3451.9, 3826.8, 3208.8]
+== r-cand-a2aw (5 launches)
+  ready ms: median 1110.1 worst 1145.1  [1096.1, 1110.1, 1089.2, 1145.1, 1114.8]
+  rite p50 [16.66, 16.67, 16.65, 16.66, 16.68] | p95 [19.07, 21.28, 19.0, 21.9, 19.73] | max [56.15, 60.26, 61.01, 51.21, 52.99] | >20ms [4, 9, 1, 11, 6]
+  rite medians p50 16.66 p95 19.73 max 56.15; worst p50 16.68 p95 21.9 max 61.01; frames > 20 ms median 6
+  flare/flood frames > 30 ms per launch [0, 0, 0, 0, 0]
+  boot main_ready->first frame ms [187.4, 188.0, 192.0, 198.5, 202.4] (median 192.0)
+  video MiB at lit [156.2, 156.2, 156.2, 156.2, 156.2]
+  title after rite p50 [16.65, 16.65, 16.73, 16.67, 16.64] p95 [19.02, 18.84, 23.56, 18.9, 19.0] max [22.83, 22.44, 46.83, 19.84, 22.66]
+  title after rite medians p50 16.65 p95 19.0 max 22.66; worst p95 23.56 max 46.83
+  warm done after lit ms [-1.0, -1.0, -1.0, -1.0, -1.0]; video MiB on the title [210.3, 201.8, 202.3, 201.8, 202.8]
+== r-cand-a2e0 (5 launches)
+  ready ms: median 1089.4 worst 1111.9  [1108.1, 1111.9, 1078.0, 1081.4, 1089.4]
+  rite p50 [16.61, 16.62, 16.65, 16.67, 16.66] | p95 [19.25, 19.18, 19.24, 19.58, 18.99] | max [48.11, 59.87, 57.56, 49.77, 59.93] | >20ms [3, 5, 3, 6, 2]
+  rite medians p50 16.65 p95 19.24 max 57.56; worst p50 16.67 p95 19.58 max 59.93; frames > 20 ms median 3
+  flare/flood frames > 30 ms per launch [0, 0, 1, 2, 0]
+  boot main_ready->first frame ms [205.4, 189.2, 187.1, 195.3, 186.5] (median 189.2)
+  video MiB at lit [156.2, 156.2, 156.2, 156.2, 156.2]
+== r-cand-aw (5 launches)
+  ready ms: median 720.4 worst 724.9  [722.8, 720.4, 724.9, 713.9, 706.0]
+  rite p50 [16.66, 16.66, 16.66, 16.66, 16.66] | p95 [16.76, 16.77, 19.03, 16.77, 16.8] | max [56.07, 60.29, 60.0, 48.12, 58.74] | >20ms [2, 1, 4, 2, 1]
+  rite medians p50 16.66 p95 16.77 max 58.74; worst p50 16.66 p95 19.03 max 60.29; frames > 20 ms median 2
+  flare/flood frames > 30 ms per launch [0, 0, 0, 0, 0]
+  boot main_ready->first frame ms [208.0, 268.8, 269.1, 231.9, 229.2] (median 231.9)
+  video MiB at lit [229.5, 221.6, 229.5, 219.0, 228.2]
+  title after rite p50 [16.67, 16.65, 16.65, 16.67, 16.66] p95 [16.95, 18.83, 18.83, 18.35, 18.88] max [17.23, 48.11, 22.01, 20.38, 48.12]
+  title after rite medians p50 16.66 p95 18.83 max 22.01; worst p95 18.88 max 48.12
+  warm done after lit ms [749.551, 699.351, 783.197, 1032.613, 799.434]; video MiB on the title [234.6, 227.1, 234.6, 226.5, 234.6]
+== r-cand-e0 (6 launches)
+  ready ms: median 693.0 worst 748.4  [693.9, 692.0, 690.9, 748.4, 690.6, 723.9]
+  rite p50 [16.66, 16.65, 16.66, 16.65, 16.66, 16.66] | p95 [16.76, 17.64, 16.79, 17.59, 16.78, 16.74] | max [52.04, 59.91, 60.72, 58.47, 56.23, 48.42] | >20ms [1, 1, 2, 2, 2, 1]
+  rite medians p50 16.66 p95 16.79 max 57.35; worst p50 16.66 p95 17.64 max 60.72; frames > 20 ms median 1.5
+  flare/flood frames > 30 ms per launch [0, 0, 0, 0, 0, 0]
+  boot main_ready->first frame ms [280.9, 225.6, 213.5, 210.9, 218.7, 221.0] (median 219.85)
+  video MiB at lit [215.6, 228.2, 228.2, 229.5, 229.5, 221.5]
+  build left when the map opened (hurry to built) ms [34.8, 54.4, 37.8, 47.6, 52.0, 40.8]
+== r-cand-skip (5 launches)
+  ready ms: median 2234.1 worst 2356.4  [2169.0, 2286.4, 2234.1, 2199.5, 2356.4]
+  rite p50 [16.67, 16.66, 16.67, 16.66, 16.69] | p95 [22.72, 21.48, 23.03, 17.27, 22.23] | max [48.93, 52.18, 57.43, 69.05, 58.63] | >20ms [2, 2, 2, 1, 2]
+  rite medians p50 16.67 p95 22.23 max 57.43; worst p50 16.69 p95 23.03 max 69.05; frames > 20 ms median 2
+  flare/flood frames > 30 ms per launch [0, 1, 0, 3, 0]
+  boot main_ready->first frame ms [218.5, 215.4, 209.2, 267.6, 208.2] (median 215.4)
+  video MiB at lit [214.7, 214.7, 222.6, 222.6, 214.7]
+  build left when the map opened (hurry to built) ms [1542.1, 1643.5, 1602.1, 1571.0, 1726.4]
+== r-late-aw (5 launches)
+  ready ms: median 710.3 worst 723.8  [723.8, 710.3, 703.5, 697.9, 723.7]
+  rite p50 [16.63, 16.66, 16.66, 16.65, 16.65] | p95 [19.56, 17.03, 19.57, 18.95, 19.19] | max [47.07, 51.22, 55.54, 58.53, 56.47] | >20ms [5, 2, 2, 1, 4]
+  rite medians p50 16.65 p95 19.19 max 55.54; worst p50 16.66 p95 19.57 max 58.53; frames > 20 ms median 2
+  flare/flood frames > 30 ms per launch [0, 0, 0, 0, 0]
+  boot main_ready->first frame ms [202.5, 210.9, 206.0, 203.2, 204.6] (median 204.6)
+  video MiB at lit [155.7, 155.7, 155.7, 155.7, 155.7]
+  title after rite p50 [16.65, 16.66, 16.66, 16.65, 16.65] p95 [18.52, 16.75, 18.39, 18.35, 18.36] max [23.99, 17.21, 21.85, 22.39, 20.91]
+  title after rite medians p50 16.65 p95 18.36 max 21.85; worst p95 18.52 max 23.99
+  warm done after lit ms [3350.805, 3548.434, 3347.027, 3431.617, 3400.525]; video MiB on the title [226.6, 234.6, 226.1, 234.6, 234.0]
+== r-late-e0 (6 launches)
+  ready ms: median 3079.9 worst 3168.2  [3168.2, 3079.2, 3167.2, 3080.6, 3067.9, 3061.2]
+  rite p50 [16.67, 16.66, 16.64, 16.65, 16.66, 16.7] | p95 [19.29, 19.14, 19.41, 19.1, 19.98, 47.88] | max [46.12, 50.83, 51.68, 57.96, 47.9, 54.21] | >20ms [3, 4, 3, 2, 6, 20]
+  rite medians p50 16.66 p95 19.35 max 51.25; worst p50 16.7 p95 47.88 max 57.96; frames > 20 ms median 3.5
+  flare/flood frames > 30 ms per launch [3, 0, 0, 0, 4, 3]
+  boot main_ready->first frame ms [223.1, 202.4, 201.3, 216.9, 199.9, 192.5] (median 201.85)
+  video MiB at lit [155.7, 155.7, 155.7, 155.7, 155.7, 155.7]
+  build left when the map opened (hurry to built) ms [2183.6, 2124.0, 2213.3, 2136.3, 2128.0, 2107.8]
+== r-late-skip (5 launches)
+  ready ms: median 3098.2 worst 3135.0  [3135.0, 3102.9, 3082.3, 3039.2, 3098.2]
+  rite p50 [16.77, 16.66, 16.66, 16.66, 16.59] | p95 [24.89, 21.02, 21.1, 18.57, 19.23] | max [59.33, 52.09, 52.27, 55.45, 58.19] | >20ms [2, 2, 3, 1, 1]
+  rite medians p50 16.66 p95 21.02 max 55.45; worst p50 16.77 p95 24.89 max 59.33; frames > 20 ms median 2
+  flare/flood frames > 30 ms per launch [2, 4, 3, 0, 0]
+  boot main_ready->first frame ms [204.9, 203.3, 216.2, 205.4, 197.1] (median 204.9)
+  video MiB at lit [155.7, 155.7, 155.7, 155.7, 155.7]
+  build left when the map opened (hurry to built) ms [2173.8, 2154.9, 2158.3, 2074.7, 2158.9]
+== r-nowarm-a2aw (5 launches)
+  ready ms: median 1273.6 worst 1292.0  [1285.4, 1273.6, 1272.4, 1292.0, 1262.5]
+  rite p50 [16.66, 16.67, 16.65, 16.66, 16.65] | p95 [17.09, 18.92, 19.55, 19.17, 19.15] | max [56.52, 56.6, 51.67, 51.15, 57.2] | >20ms [2, 1, 5, 6, 3]
+  rite medians p50 16.66 p95 19.15 max 56.52; worst p50 16.67 p95 19.55 max 57.2; frames > 20 ms median 3
+  flare/flood frames > 30 ms per launch [0, 0, 0, 0, 0]
+  boot main_ready->first frame ms [193.0, 191.7, 194.7, 199.2, 192.0] (median 193.0)
+  video MiB at lit [156.2, 156.2, 156.2, 156.2, 156.2]
+  title after rite p50 [16.65, 16.64, 16.63, 16.63, 16.65] p95 [19.01, 19.06, 18.83, 19.08, 18.75] max [45.46, 22.56, 21.27, 21.8, 22.32]
+  title after rite medians p50 16.64 p95 19.01 max 22.32; worst p95 19.08 max 45.46
+  warm done after lit ms [-1.0, -1.0, -1.0, -1.0, -1.0]; video MiB on the title [160.3, 160.8, 160.3, 160.3, 160.8]
+== r-nowarm-a2e0 (5 launches)
+  ready ms: median 1268.9 worst 1271.0  [1268.9, 1270.5, 1264.8, 1271.0, 1256.7]
+  rite p50 [16.66, 16.66, 16.63, 16.66, 16.63] | p95 [41.59, 19.17, 19.44, 17.08, 19.2] | max [60.57, 58.84, 56.08, 60.89, 59.56] | >20ms [15, 6, 5, 1, 2]
+  rite medians p50 16.66 p95 19.2 max 59.56; worst p50 16.66 p95 41.59 max 60.89; frames > 20 ms median 5
+  flare/flood frames > 30 ms per launch [0, 0, 0, 3, 0]
+  boot main_ready->first frame ms [197.1, 188.3, 187.8, 188.0, 188.5] (median 188.3)
+  video MiB at lit [156.2, 156.2, 156.2, 156.2, 156.2]
+== r-nowarm-aw (5 launches)
+  ready ms: median 3322.3 worst 3406.7  [3249.5, 3322.3, 3315.2, 3406.7, 3338.2]
+  rite p50 [16.65, 16.67, 16.67, 16.68, 16.65] | p95 [19.47, 22.8, 19.06, 41.06, 19.2] | max [52.21, 52.02, 58.95, 56.02, 59.12] | >20ms [4, 12, 2, 17, 4]
+  rite medians p50 16.67 p95 19.47 max 56.02; worst p50 16.68 p95 41.06 max 59.12; frames > 20 ms median 4
+  flare/flood frames > 30 ms per launch [0, 0, 0, 0, 0]
+  boot main_ready->first frame ms [207.8, 214.5, 205.2, 219.7, 205.5] (median 207.8)
+  video MiB at lit [155.7, 155.7, 155.7, 155.7, 155.7]
+  build left when the map opened (hurry to built) ms [2067.8, 2158.2, 2141.1, 2205.2, 2168.4]
+  title after rite p50 [16.64, 16.63, 16.64, 16.65, 16.64] p95 [19.14, 18.9, 18.84, 19.02, 19.11] max [21.85, 20.2, 23.47, 21.2, 21.78]
+  title after rite medians p50 16.64 p95 19.02 max 21.78; worst p95 19.14 max 23.47
+  warm done after lit ms [-1.0, -1.0, -1.0, -1.0, -1.0]; video MiB on the title [160.3, 159.8, 160.3, 159.8, 159.8]
+dropped (nonce or incomplete): []
