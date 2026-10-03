@@ -92,6 +92,7 @@ static func _vigil_return(fails: Array[String], tree: SceneTree, host: SubViewpo
 	await _tap(tree, host, _word(main, "vigil"))
 	_check(fails, main._route_screen is VigilScreen, "(a) a tap on The Vigil did not open it")
 	await _tap(tree, host, _button(main._route_screen, Locale.active.t("ui.vigil.return")))
+	_check(fails, main._route_screen == null, "(a) the Vigil's Return did not return")
 	_no_ring(fails, main, "(a) the Vigil's Return by tap")
 	_dispose(main)
 
@@ -162,8 +163,8 @@ static func _run_menu_title(fails: Array[String], tree: SceneTree, host: SubView
 ## (g) Settings, How to Play and Credits, each opened and closed by tap.
 static func _rooms_closed_by_tap(fails: Array[String], tree: SceneTree, host: SubViewport,
 		content: ContentDB) -> void:
-	var exits: Dictionary = {"settings": "ui.menu.close", "help": "ui.menu.fightOn",
-		"credits": "ui.credits.close"}
+	# How to Play's Fight On waits below the fold for a touch player: its veil.
+	var exits: Dictionary = {"settings": "ui.menu.close", "help": "", "credits": "ui.credits.close"}
 	for room: String in ["settings", "help", "credits"]:
 		var main: Main = await _boot(tree, host, content, true)
 		await _tap(tree, host, _word(main, room))
@@ -173,7 +174,12 @@ static func _rooms_closed_by_tap(fails: Array[String], tree: SceneTree, host: Su
 			continue
 		_check(fails, _shown(main).is_empty(), "(g) %s opened showing focus to a touch player: %s" % [
 			room, _shown(main)])
-		await _tap(tree, host, _button(main._modal, Locale.active.t(str(exits[room]))))
+		var key: String = str(exits[room])
+		if key.is_empty():
+			await _tap_at(tree, host, Vector2(24.0, 24.0))
+		else:
+			await _tap(tree, host, _button(main._modal, Locale.active.t(key)))
+		_check(fails, main._modal == null, "(g) %s did not close by tap" % room)
 		_no_ring(fails, main, "(g) %s closed by tap" % room)
 		_dispose(main)
 
@@ -257,6 +263,7 @@ static func _language_toggle_and_return(fails: Array[String], tree: SceneTree, h
 		_check(fails, _shown(main).is_empty(),
 			"(f) the reopened Settings shows focus to a touch player: %s" % [_shown(main)])
 		await _tap(tree, host, _button(panel, Locale.active.t("ui.menu.close")))
+		_check(fails, main._modal == null, "(f) Settings' Close did not close it")
 	_no_ring(fails, main, "(f) Settings, the language toggle and Close, by tap")
 	_dispose(main)
 	Locale.active.restore_content()
@@ -357,7 +364,10 @@ static func _frames(tree: SceneTree, count: int) -> void:
 static func _tap(tree: SceneTree, host: SubViewport, control: Control) -> void:
 	if control == null:
 		return
-	var at: Vector2 = control.get_global_rect().get_center()
+	await _tap_at(tree, host, control.get_global_rect().get_center())
+
+
+static func _tap_at(tree: SceneTree, host: SubViewport, at: Vector2) -> void:
 	var motion: InputEventMouseMotion = InputEventMouseMotion.new()
 	motion.position = at
 	motion.global_position = at
