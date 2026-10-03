@@ -1132,6 +1132,8 @@ func _show_choice(title: String, body: String, choices: Array[Dictionary], handl
 
 func _show_title() -> void:
 	_remember_route(_show_title)
+	# A title never inherits a setting-out from a departure it replaced.
+	_setting_out = false
 	_apply_pending_content_hydration()
 	var saved: RunState = _load_run()
 	var choices: Array[Dictionary] = []

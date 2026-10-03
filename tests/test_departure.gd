@@ -22,6 +22,8 @@ static func run(fails: Array[String]) -> void:
 	_one_place_from_embark_to_the_road(fails, content)
 	_set_out_as_before(fails, content)
 	_beats_fit_the_stage(fails, content)
+	_escape_on_the_first_beat(fails, content)
+	_title_forgets_setting_out(fails, content)
 	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
 
 
@@ -114,6 +116,53 @@ static func _beats_fit_the_stage(fails: Array[String], content: ContentDB) -> vo
 					"%s %s %s: the beat lands on the lantern's glass" % [code, shape, beat])
 				screen.free()
 	Locale.active = previous
+
+
+## Escape on the first beat goes back to the title (desktop and keyboard; Back
+## is on screen); the gift and the art have no Back, so it does nothing there.
+static func _escape_on_the_first_beat(fails: Array[String], content: ContentDB) -> void:
+	var main: Main = _main(content)
+	main._vigil.scenes_seen.append("opening")
+	main._vigil.unlocks.append("lamplighter")
+	main._show_title()
+	main._on_title_choice("begin", null)
+	var departure: DepartureScreen = main._route_screen as DepartureScreen
+	_check(fails, departure != null and departure.beat == DepartureScreen.BEAT_A,
+		"Rekindle did not open the departure at its first beat")
+	if departure == null:
+		_dispose(main)
+		return
+	departure._unhandled_input(_cancel())
+	_check(fails, main._choice_screen is TitleScreen and main._route_screen == null,
+		"Escape on the departure's first beat did not return to the title")
+	main._on_title_choice("begin", null)
+	departure = main._route_screen as DepartureScreen
+	if departure != null:
+		departure.primary().pressed.emit()
+		_check(fails, departure.beat == DepartureScreen.BEAT_B, "setting out did not reach the gift")
+		var backs: Array[int] = [0]
+		departure.back_requested.connect(func() -> void: backs[0] += 1)
+		departure._unhandled_input(_cancel())
+		_check(fails, backs[0] == 0 and main._route_screen == departure,
+			"Escape on the gift went back, which has no Back")
+	_dispose(main)
+
+
+## A departure left before its gift is answered must not leave the next title
+## owing the road its opening.
+static func _title_forgets_setting_out(fails: Array[String], content: ContentDB) -> void:
+	var main: Main = _main(content)
+	main._setting_out = true
+	main._show_title()
+	_check(fails, not main._setting_out, "the title kept a stale setting-out from a departure")
+	_dispose(main)
+
+
+static func _cancel() -> InputEventAction:
+	var event: InputEventAction = InputEventAction.new()
+	event.action = &"ui_cancel"
+	event.pressed = true
+	return event
 
 
 static func _main(content: ContentDB) -> Main:

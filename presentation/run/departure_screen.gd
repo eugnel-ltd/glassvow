@@ -165,6 +165,17 @@ func _ready() -> void:
 	_focus()
 
 
+## Escape (or a pad's cancel) on the first beat is its Back, as it was before
+## the departure became one place (#654 review): the gift and the art have no
+## Back, so there it does nothing.
+func _unhandled_input(event: InputEvent) -> void:
+	if beat != BEAT_A or not event.is_action_pressed(&"ui_cancel"):
+		return
+	if is_inside_tree():
+		get_viewport().set_input_as_handled()
+	back_requested.emit()
+
+
 var _layout_queued: bool = false
 
 
