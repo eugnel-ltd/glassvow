@@ -1262,7 +1262,12 @@ func _show_title() -> void:
 	var newcomer: bool = saved == null and _deed("runs") == 0
 	var ask_language: bool = Preferences.active.language.is_empty() and newcomer
 	var rite: bool = not _title_kindled or _title_rite_resume
-	var journey: bool = saved != null and saved.act == 0 and MapScene.journey_async
+	# The map Back to the Road restores. A headless boot warms nothing, so it
+	# reads none.
+	var road: WorldMap = _title_road_map(saved) if MapScene.journey_async else null
+	# Whether that map is Act I's own: an Act I run at or past its boss opens
+	# Act II's next, which has no land to build.
+	var journey: bool = road != null and saved.act == 0 and not _past_boss(road, saved)
 	if journey:
 		# The title warms this run's Act I land (`_warm_title_road`): what that
 		# would read back from the renderer is read now, before the title's
@@ -1276,12 +1281,13 @@ func _show_title() -> void:
 		_transitions.wipe()
 	_clear_route()
 	# Act I's land warms from before the title is built, so its pictures decode
-	# meanwhile. Any other act's map opens as fast with its pictures decoded
-	# once the launch rite has landed, so under the rite they wait.
+	# meanwhile. Any other act's map has no land to build: its pictures wait
+	# for the launch rite to land, so they neither compete with the rite's
+	# frames nor are held in video memory under it.
 	_title_road_due = rite and not journey
 	_title_road = saved if _title_road_due else null
 	if not _title_road_due:
-		_warm_title_road(saved)
+		_warm_title_road(saved, road)
 	var screen: TitleScreen = TitleScreen.new(
 		_title_context(saved, choices, rite, ask_language), _sfx_bus)
 	screen.chosen.connect(_on_title_pick.bind(screen, saved))
@@ -1897,8 +1903,7 @@ func _warm_map_landscape() -> void:
 ## What `_warm_map_landscape` warms for `map` and `run`, which the title also
 ## warms for the run Back to the Road restores (`_warm_title_road`).
 func _warm_landscape_for(map: WorldMap, run: RunState) -> void:
-	var node: MapNode = map.current()
-	var past_boss: bool = node != null and node.type == "boss" and not run.is_final_act()
+	var past_boss: bool = _past_boss(map, run)
 	if past_boss:
 		# The next map is the next act's, and the kept screen holds this act's
 		# artwork: it goes first, so one act's artwork is held at a time. This
@@ -1913,31 +1918,47 @@ func _warm_landscape_for(map: WorldMap, run: RunState) -> void:
 
 
 ## Back to the Road opens a drawn map (#660). The title warms `saved`'s next
-## map as `_route_run` warms it when Continue restores that run, so the restore
-## finds its land built. A saved Act I run's warm-up starts with the title,
-## before the launch rite's first frame, so that a tap as the rite lands finds
-## its land built or nearly: the pictures decode and the land builds on the
-## worker pool, paced, and the prefetch's main-thread setup is a little per
-## frame, under the rite as under the lit title. Any other act's waits for the
-## rite to land (`_warm_title_road_once_lit`). A title with no run to return to
-## holds no map's artwork (Erase Everything, a run that ended).
-func _warm_title_road(saved: RunState) -> void:
+## map (`restored`, its saved map) as `_route_run` warms it when Continue
+## restores that run, so the restore finds its land built. A saved run whose
+## next map is Act I's warms from before the launch rite's first frame, so that
+## a tap as the rite lands finds its land built or nearly: the pictures decode
+## and the land builds on the worker pool, paced, and the prefetch's
+## main-thread setup is a little per frame, under the rite as under the lit
+## title. Any other warms once the rite has landed
+## (`_warm_title_road_once_lit`). A title with no run to return to holds no
+## map's artwork (Erase Everything, a run that ended).
+func _warm_title_road(saved: RunState, restored: WorldMap) -> void:
 	# A headless boot (tests, tools) has no frames to warm anything under.
 	if not MapScene.journey_async:
 		return
-	var restored: WorldMap = WorldMap.from_dict(saved.map) if saved != null else null
-	if restored == null or saved.pending_run_end != null:
+	if restored == null:
 		MapJourneyPrefetch.release()
 		MapLandscapeAssets.release()
 		return
 	_warm_landscape_for(restored, saved)
 
 
-## The title's warm-up that waits for the launch rite (a saved run of another
-## act than Act I, or none): it runs once the rite has landed, if the title is
-## still up. Its map has no land to build, and on the iPad 8 it opens as fast
-## from a tap as the rite lands either way, so nothing of it competes with the
-## rite's frames.
+## The map Back to the Road restores for `saved`, or null when there is none to
+## return to: no saved run, a run that has ended, a map that does not load.
+static func _title_road_map(saved: RunState) -> WorldMap:
+	if saved == null or saved.pending_run_end != null:
+		return null
+	return WorldMap.from_dict(saved.map)
+
+
+## Whether the next map `run` opens from `map` is the next act's: its marker is
+## on a boss short of the last act (in the fight, or past it).
+static func _past_boss(map: WorldMap, run: RunState) -> bool:
+	var node: MapNode = map.current()
+	return node != null and node.type == "boss" and not run.is_final_act()
+
+
+## The title's warm-up that waits for the launch rite (a saved run whose next
+## map is not Act I's, or none): it runs once the rite has landed, if the title
+## is still up. Its map has no land to build, and on the iPad 8 it opened no
+## sooner from a tap as the rite landed when its pictures decoded under the
+## rite (the R1.1 notes, docs/design/2026-10-02-map-living-land/proof/), so
+## nothing of it competes with the rite's frames.
 func _warm_title_road_once_lit() -> void:
 	var title: TitleScreen = _choice_screen as TitleScreen
 	if title != null and title.rite != null and not title.rite.is_done():
@@ -1946,7 +1967,7 @@ func _warm_title_road_once_lit() -> void:
 	_title_road = null
 	_title_road_due = false
 	if title != null:
-		_warm_title_road(saved)
+		_warm_title_road(saved, _title_road_map(saved))
 
 
 func _dispatch_current_route() -> bool:

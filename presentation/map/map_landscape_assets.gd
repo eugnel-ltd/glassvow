@@ -76,8 +76,8 @@ func _init(act_index: int = 0, pictures: Pictures = null, stepped: bool = false)
 ## one's profile, then the digest. No piece reads a mesh back from the renderer,
 ## a stall until the GPU has drained that the title's frames cannot pay: a card
 ## is laid out on the CPU and profiled from its own arrays, and the slate
-## cluster's faces were read before the first frame (`prime`). `prepare_step`
-## spreads the pieces over frames.
+## cluster's faces were read before the title was built (`prime`).
+## `prepare_step` spreads the pieces over frames.
 func step() -> bool:
 	if _complete:
 		return true
@@ -405,10 +405,11 @@ func _profile_mesh(id: String) -> Mesh:
 	return meshes[id]
 
 
-## Reads the slate cluster's faces back from the renderer once, before the
-## first frame, when nothing is in flight and a read-back costs next to
-## nothing, and holds the cluster for the process: the mesh keeps its faces,
-## so no catalogue reads them back under a frame (Main's boot).
+## Reads the slate cluster's faces back from the renderer once and holds the
+## cluster for the process: the mesh keeps its faces, so no catalogue reads
+## them back under a frame. `MapJourneyPrefetch.prime` calls it before a title
+## that warms Act I's land is built; the read-back waits for the frames in
+## flight, none before the session's first frame.
 static func prime() -> void:
 	if _slate != null:
 		return

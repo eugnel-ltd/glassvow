@@ -15,10 +15,12 @@ extends RefCounted
 ## kit and conifer shadow cones are checked against the renderer's own: and a
 ## headless boot warms nothing and still builds inline. Every title that warms a
 ## saved Act I run reads back first what the warm-up would read under its frames,
-## the rite's or a later title's. A screen covering the title leaves Act I's warm
-## alone, and the next title warms another act's map at once. A finished warm
-## whose land was freed warms again, and a screen going while it builds its own
-## land gives the build up and waits for it instead of leaving it running.
+## the rite's or a later title's; an Act I run past its boss warms Act II's
+## pictures once the rite has landed, as an Act II run does. A screen covering
+## the title leaves Act I's warm alone, and the next title warms another act's
+## map at once. A finished warm whose land was freed warms again, and a screen
+## going while it builds its own land gives the build up and waits for it
+## instead of leaving it running.
 
 const RUN_PATH: String = "user://test_map_title_road_run_v2.json"
 const VIGIL_PATH: String = "user://test_map_title_road_vigil_v2.json"
@@ -594,27 +596,36 @@ static func _map_opened_mid_build_takes_the_layout(fails: Array[String],
 	_dispose(main)
 
 
-## A saved run of another act has no land to build, and its map opens as fast
-## from a tap as the rite lands with its pictures decoded once the rite has
-## landed: nothing of it warms under the rite, and the lit title warms them.
+## A saved run whose next map is another act's has no land to build, and its
+## map opens as fast from a tap as the rite lands with its pictures decoded
+## once the rite has landed: nothing of it warms or is read back under the
+## rite, and the lit title warms its pictures. So for an Act II run, and for an
+## Act I run past its boss (stored as the crown relic's offer stores it), whose
+## next map is Act II's.
 static func _other_act_warms_once_lit(fails: Array[String], content: ContentDB) -> void:
-	_release_all()
-	var main: Main = _main(content)
-	_store_run(content, SEED_A, 1)
-	main._show_title()
-	var title: TitleScreen = main._choice_screen as TitleScreen
-	title.kindle_now()
-	main._process(0.016)
-	_check(fails, title.rite != null and title.rite.is_running()
-			and MapLandscapeAssets.warming() == null and MapLandscapeAssets._kept == null
-			and MapJourneyPrefetch.current_step() == -1,
-		"nothing of another act's map warms while the launch rite plays")
-	title.rite.skip()
-	main._process(0.016)
-	var warming: MapLandscapeAssets.Pictures = MapLandscapeAssets.warming()
-	_check(fails, warming != null and warming.act == 1 and MapJourneyPrefetch.current_step() == -1,
-		"once the rite has landed the title warms another act's pictures, and no land")
-	_dispose(main)
+	for past_boss: bool in [false, true]:
+		var which: String = "an Act I run past its boss" if past_boss else "an Act II run"
+		_release_all()
+		_unprime()
+		var main: Main = _main(content)
+		_store_run(content, SEED_A, 0 if past_boss else 1, past_boss)
+		main._show_title()
+		var title: TitleScreen = main._choice_screen as TitleScreen
+		title.kindle_now()
+		main._process(0.016)
+		_check(fails, title.rite != null and title.rite.is_running()
+				and MapLandscapeAssets.warming() == null and MapLandscapeAssets._kept == null
+				and MapJourneyPrefetch.current_step() == -1
+				and MapLandscapeAssets._slate == null and Meshes._unit_arrays.is_empty(),
+			"nothing of the next map warms or is read back under the launch rite (%s)" % which)
+		title.rite.skip()
+		main._process(0.016)
+		var warming: MapLandscapeAssets.Pictures = MapLandscapeAssets.warming()
+		_check(fails, warming != null and warming.act == 1
+				and MapJourneyPrefetch.current_step() == -1,
+			"once the rite has landed the title warms Act II's pictures for %s, and no land"
+				% which)
+		_dispose(main)
 	_release_all()
 
 
@@ -794,7 +805,10 @@ static func _pump_screen(main: Main) -> void:
 
 ## A saved Act I run on the scratch profile, stored as a new run stores it,
 ## without warming anything; `acts_on` acts later, the opening map of that act.
-static func _store_run(content: ContentDB, run_seed: int, acts_on: int = 0) -> RunState:
+## `past_boss` seats the marker on that map's boss, cleared, as a run waiting on
+## its crown relic is stored.
+static func _store_run(content: ContentDB, run_seed: int, acts_on: int = 0,
+		past_boss: bool = false) -> RunState:
 	var run: RunState = RunState.new_run(content, run_seed, "run-title-road-%d" % run_seed)
 	var game: GlassvowGame = GlassvowGame.new(content, run)
 	game.quests.prepare_run(run)
@@ -804,6 +818,11 @@ static func _store_run(content: ContentDB, run_seed: int, acts_on: int = 0) -> R
 		run.start_next_act(content)
 		map = WorldMap.for_run(run, content)
 		game.quests.decorate_map(run, map)
+	if past_boss:
+		for index: int in range(map.nodes.size()):
+			if map.nodes[index].type == "boss":
+				map.at = index
+				map.clear_current()
 	run.map = map.to_dict()
 	SaveService.store(run, RUN_PATH)
 	return run

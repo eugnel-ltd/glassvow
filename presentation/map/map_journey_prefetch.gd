@@ -133,11 +133,15 @@ static func layout_packet(input_digest: String) -> Dictionary:
 	return _current._packet
 
 
-## Reads back from the renderer, before the first frame, when nothing is in
-## flight and a read-back costs next to nothing, the two meshes a prefetch
-## would otherwise read back under the title's frames: the kit's unit cube and
-## the slate cluster's faces. Main's first title calls it, on the game's
-## renderer, only when it has a saved Act I run to warm.
+## Reads back from the renderer the two meshes a prefetch would otherwise read
+## back under the title's frames: the kit's unit cube and the slate cluster's
+## faces. Main calls it on the game's renderer as it builds any title that
+## warms a saved run's Act I land, before that title's first frame; once a
+## process, since both are held after. A read-back waits for the frames in
+## flight: before the session's first frame there are none (about 10 ms on the
+## iPad 8, behind the launch screen); before a later title (one reached from
+## the run menu) it stalls the frame that builds that title (about 21-23 ms),
+## which the title's lit frames would otherwise pay in 40-48 ms frames.
 static func prime() -> void:
 	MapJourneyLandscape.Kit.Meshes.prepare_unit_box()
 	MapLandscapeAssets.prime()
