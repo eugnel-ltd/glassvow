@@ -61,6 +61,8 @@ var _input_digest: String = ""
 var _layout: Array = []
 var _layout_lock: Mutex = Mutex.new()
 var _layout_taken: bool = false
+## Whether the setup has let its first frame go by (`_advance`).
+var _first_frame_gone: bool = false
 
 
 ## Starts a prefetch of `map`'s land for `run` when its act is the journey act
@@ -189,7 +191,10 @@ func _same(other: MapJourneyPrefetch) -> bool:
 ## One frame's piece of the main-thread setup, or (`hurry`) all of it; then
 ## the build. The kit needs no pictures, so a scene of it is held every frame
 ## of the setup: while the pictures decode, and beside each piece of the
-## catalogue built from them.
+## catalogue built from them. The first frame after the prefetch starts holds
+## nothing: the title starts it before its first frame, which builds every
+## pipeline the launch rite will show (`TitleScreen._warm_pipelines`), and the
+## kit's loads beside that frame lengthened it on the iPad 8.
 func _advance(hurry: bool) -> void:
 	if step == Step.BUILDING:
 		_take_layout()
@@ -199,6 +204,9 @@ func _advance(hurry: bool) -> void:
 			_finish()
 		return
 	if step == Step.DONE or step == Step.FAILED:
+		return
+	if not hurry and not _first_frame_gone:
+		_first_frame_gone = true
 		return
 	var kit_held: bool = true
 	if hurry:

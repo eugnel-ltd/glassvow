@@ -175,6 +175,12 @@ static func _title_warms_and_continue_adopts(fails: Array[String], content: Cont
 	_check(fails, title.rite != null and title.rite.is_running() and MapJourneyPrefetch.busy()
 			and MapLandscapeAssets.warming() != null,
 		"the saved run's land warms from the launch rite's first frame")
+	# The title's first frame builds the rite's pipelines: the warm-up leaves
+	# it alone.
+	main._process(0.016)
+	_check(fails, MapJourneyLandscape.Kit._requested.is_empty()
+			and MapJourneyLandscape.Kit._held_kinds == 0,
+		"the title's first frame, which builds the rite's pipelines, loads none of the kit")
 	# The kit needs no pictures: its scenes are held while they decode.
 	var kit_until: int = Time.get_ticks_msec() + SETTLE_MS
 	while MapJourneyPrefetch.current_step() == MapJourneyPrefetch.Step.WAITING_PICTURES \
