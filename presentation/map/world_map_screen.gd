@@ -563,8 +563,8 @@ func _bind_compiled_layout() -> void:
 	var edges: Array = bound["edges"]
 	var generator: Dictionary = MapLayoutPolicy.generator_fields(
 		MapLayoutPolicy.compiler_requested())
-	var sources: Array = [nodes, edges, _run.act, _run.seed, assets["digest"],
-		heroes, generator, quality]
+	var sources: Array = input_sources(nodes, edges, _run.act, _run.seed,
+		str(assets["digest"]), heroes, generator, quality)
 	if sources != _input_sources:
 		var built: MapLayoutInput = layout_input(nodes, edges, _run.act, _run.seed,
 			assets, heroes, generator, quality)
@@ -656,6 +656,23 @@ static func layout_input(nodes: Array, edges: Array, act: int, run_seed: int,
 		"hero_anchor_contract": heroes,
 		"quality_registry_digest": MapLayoutCanonical.digest(quality),
 	})
+
+
+## What a layout input is built from, as the screen compares it with the
+## input it keeps (`_input_sources`).
+static func input_sources(nodes: Array, edges: Array, act: int, run_seed: int,
+		assets_digest: String, heroes: Dictionary, generator: Dictionary,
+		quality: Dictionary) -> Array:
+	return [nodes, edges, act, run_seed, assets_digest, heroes, generator, quality]
+
+
+## Keeps `input`, built from `sources` (`input_sources`), as the input the next
+## screen binding the same sources takes: the journey prefetch built it on a
+## worker, so the first open does not build it again.
+static func keep_input(sources: Array, input: MapLayoutInput, input_digest: String) -> void:
+	_input_sources = sources.duplicate(true)
+	_input_kept = input
+	_input_digest_kept = input_digest
 
 
 static func quality_registry() -> Dictionary:

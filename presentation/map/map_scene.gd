@@ -55,7 +55,6 @@ var _rest_tick: int = 0
 var _node_states: Dictionary = {}
 var _live: bool = false
 var _settle_frames: int = 0
-var _selection_half: Vector2 = Vector2.ZERO
 var _asset_profiles: MapAssetProfiles
 var _active_profile_digest: String = ""
 var _active_profiles: Dictionary = {}
@@ -547,13 +546,18 @@ static func _painted_light(key: DirectionalLight3D, environment: Environment) ->
 
 
 func _placement_footprint(candidate: Dictionary) -> PackedVector2Array:
+	return _footprint_of(candidate, _asset_profiles, _active_profiles)
+
+
+static func _footprint_of(candidate: Dictionary, registry: MapAssetProfiles,
+		profiles: Dictionary) -> PackedVector2Array:
 	var placement: Dictionary = candidate["placement"]
 	var transform: Dictionary = placement["transform"]
 	var profile_id: String = str(placement["profile_id"])
-	if not _active_profiles.has(profile_id):
+	if not profiles.has(profile_id):
 		return PackedVector2Array()
-	var profile: Dictionary = _active_profiles[profile_id]
-	return _asset_profiles.transformed_footprint(
+	var profile: Dictionary = profiles[profile_id]
+	return registry.transformed_footprint(
 		profile, _v3(transform["origin"]),
 		rad_to_deg(MapLayoutCanonical.float_value(transform["yaw_radians"])),
 		_v3(transform["scale"]))
@@ -615,7 +619,6 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 	if not is_journey_act():
 		_world.add_child(_landscape)
 	_landscape.prepare(data, _landscape_assets, _scatter_salt)
-	_selection_half = _selection_reserve(quality)
 	if kept:
 		_landscape.bake = bound["bake"]
 	else:
@@ -655,23 +658,33 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 	return final_result
 
 
-## Deals the seeded scenery candidates and keeps the ones clear of the land edge,
-## the node reserves, the road corridors and the heroes. Writes the survivors
-## into `data` and returns the binding `bind_layout` keeps: `data`, the filtered
-## `result`, `candidate_count` and `rejections`. Empty when the result is invalid.
 func _filter_scenery(data: Dictionary, quality: Dictionary) -> Dictionary:
-	var candidates: Dictionary = _landscape.candidates()
+	return scenery_binding(data, _landscape, _asset_profiles, _active_profiles,
+		layout_hero_contract(), quality)
+
+
+## Deals `land`'s seeded scenery candidates (`land` prepared for `data`) and
+## keeps the ones clear of the land edge, the node reserves, the road corridors
+## and the heroes. Writes the survivors into `data` and returns the binding
+## `bind_layout` keeps: `data`, the filtered `result`, `candidate_count` and
+## `rejections`. Empty when the result is invalid. Static over plain inputs, so
+## the journey prefetch binds on its worker exactly as a screen binds
+## (`keep_binding`).
+static func scenery_binding(data: Dictionary, land: MapLandscape, registry: MapAssetProfiles,
+		profiles: Dictionary, contract: Dictionary, quality: Dictionary) -> Dictionary:
+	var candidates: Dictionary = land.candidates()
 	var accepted: Dictionary = {}
 	var accepted_footprints: Array[Dictionary] = []
 	var rejections: Array[Dictionary] = []
-	var reserves: Dictionary = _scenery_reserves(data, layout_hero_contract(), quality)
+	var reserves: Dictionary = _scenery_reserves(data, contract, quality,
+		_selection_reserve(quality))
 	for candidate_id: String in MapLayoutCanonical.sorted_keys(candidates):
 		var candidate: Dictionary = candidates[candidate_id]
-		var footprint: PackedVector2Array = _placement_footprint(candidate)
-		if not _landscape.supports(footprint):
+		var footprint: PackedVector2Array = _footprint_of(candidate, registry, profiles)
+		if not land.supports(footprint):
 			rejections.append({"candidate_id": candidate_id, "reason": "land edge", "blocker_id": "terrain"})
 			continue
-		var selection: PackedVector2Array = _selection_footprint(candidate, footprint)
+		var selection: PackedVector2Array = _selection_of(candidate, footprint, profiles)
 		var physical: Dictionary = _shape(footprint)
 		var rejection: Dictionary = _scenery_rejection(
 			_shape(selection), physical, accepted_footprints, reserves)
@@ -742,14 +755,14 @@ func _clear_waylights() -> void:
 ## node reserves, road-and-waylight corridors (segment by segment) and hero
 ## zones, each with the distance below which it rejects, in the order the
 ## rejection is reported.
-func _scenery_reserves(data: Dictionary, contract: Dictionary,
-		quality: Dictionary) -> Dictionary:
+static func _scenery_reserves(data: Dictionary, contract: Dictionary,
+		quality: Dictionary, selection_half: Vector2) -> Dictionary:
 	var epsilon: float = MapLayoutCanonical.float_value(quality["epsilon"]["world_m"])
 	var nodes: Array[Dictionary] = []
 	var anchors: Dictionary = data["node_anchors"]
 	for node_id: String in MapLayoutCanonical.sorted_keys(anchors):
 		var shape: Dictionary = _shape(
-			MapQualityEvaluator._rect(_xz(anchors[node_id]), _selection_half))
+			MapQualityEvaluator._rect(_xz(anchors[node_id]), selection_half))
 		shape["id"] = node_id
 		nodes.append(shape)
 	var road_clearance: float = MapLayoutCanonical.float_value(
@@ -785,7 +798,7 @@ func _scenery_reserves(data: Dictionary, contract: Dictionary,
 ## to fire: box separation is a lower bound on the true distance, and
 ## `_BOX_SLACK_M` keeps float rounding in the exact test from ever mattering.
 ## The decision and its reported blocker are therefore those of the full scan.
-func _scenery_rejection(footprint: Dictionary, physical: Dictionary,
+static func _scenery_rejection(footprint: Dictionary, physical: Dictionary,
 		accepted: Array[Dictionary], reserves: Dictionary) -> Dictionary:
 	var polygon: PackedVector2Array = footprint["points"]
 	if polygon.is_empty():
@@ -863,7 +876,7 @@ static func _a3(value: Vector3) -> Array[float]:
 	return [value.x, value.y, value.z]
 
 
-func _v3(value: Variant) -> Vector3:
+static func _v3(value: Variant) -> Vector3:
 	if value is Vector3:
 		return value
 	var row: Array = value
@@ -873,7 +886,7 @@ func _v3(value: Variant) -> Vector3:
 		MapLayoutCanonical.float_value(row[2]))
 
 
-func _xz(value: Variant) -> Vector2:
+static func _xz(value: Variant) -> Vector2:
 	var point: Vector3 = _v3(value)
 	return Vector2(point.x, point.z)
 
@@ -886,8 +899,13 @@ func set_node_states(states: Dictionary) -> void:
 
 
 func _selection_footprint(candidate: Dictionary, footprint: PackedVector2Array) -> PackedVector2Array:
+	return _selection_of(candidate, footprint, _active_profiles)
+
+
+static func _selection_of(candidate: Dictionary, footprint: PackedVector2Array,
+		profiles: Dictionary) -> PackedVector2Array:
 	var placement: Dictionary = candidate["placement"]
-	var profile: Dictionary = _active_profiles[str(placement["profile_id"])]
+	var profile: Dictionary = profiles[str(placement["profile_id"])]
 	var transform: Dictionary = placement["transform"]
 	var height: float = MapLayoutCanonical.float_value(profile["grounded_height"]) * _v3(transform["scale"]).y
 	# AABB extrusion is the evaluator's conservative silhouette. Project it back
@@ -982,7 +1000,11 @@ func _bind_journey(key: String, data: Dictionary) -> bool:
 		_journey_pending = true
 		_journey_key = key
 		_journey_data = data
-		if not MapJourneyPrefetch.busy():
+		if MapJourneyPrefetch.busy():
+			# The map is opening now: the prefetch's setup runs at once, and its
+			# land is taken if it turns out to be this layout's (`_poll_journey`).
+			MapJourneyPrefetch.hurry()
+		else:
 			land.start(data)
 		return true
 	else:
@@ -1036,7 +1058,25 @@ static func adopt_journey(key: String, land: MapJourneyLandscape) -> void:
 	_keep_journey(key, land)
 
 
-## Frees the kept journey land when nothing draws it (process exit, tests).
+## Keeps `bound`, the binding `scenery_binding` made for `key` off any screen
+## (the journey prefetch, on its worker), as the one the next screen of that
+## layout, catalogue and salt takes; it carries `bake` and `quality` as
+## `bind_layout` stores them.
+static func keep_binding(key: String, bound: Dictionary) -> void:
+	_bound_key = key
+	_bound = bound
+
+
+## Frees the kept journey land when it was kept for `key` and nothing draws it
+## (a prefetch given up for another layout's).
+static func release_journey(key: String) -> void:
+	if key == _journey_kept_key:
+		release_kept_journey()
+
+
+## Lets go of the kept journey land: freed now when nothing draws it, else by
+## the scene that draws it (the next map is not the journey act's, process
+## exit, tests).
 static func release_kept_journey() -> void:
 	if is_instance_valid(_journey_kept) and _journey_kept.get_parent() == null:
 		_journey_kept.free()
@@ -1083,8 +1123,18 @@ static func abandon(land: MapJourneyLandscape) -> void:
 	_abandoned.append(land)
 
 
+## Waits for every abandoned land's worker and frees the land (process exit).
+static func join_abandoned() -> void:
+	for land: MapJourneyLandscape in _abandoned:
+		land.settle()
+		land.free()
+	_abandoned.clear()
+
+
 ## Frees the abandoned lands whose worker has ended. Any map's frame runs it.
 static func reap() -> void:
+	if _abandoned.is_empty():
+		return
 	for land: MapJourneyLandscape in _abandoned.duplicate():
 		if not land.busy():
 			land.settle()

@@ -42,6 +42,10 @@ var _map_screen: WorldMapScreen = null
 ## of the same map, run, act, shape and language (`_map_screen_key`).
 var _map_keep: MapScreenKeep = MapScreenKeep.new()
 var _map_screen_key: Dictionary = {}
+## The run the title's Back to the Road restores (null when it offers none),
+## and whether that title has yet to warm its map (`_warm_title_road`).
+var _title_road: RunState = null
+var _title_road_due: bool = false
 var _choice_screen: Control = null
 ## The launch rite plays once a session: the first title kindles, every later
 ## title arrives already lit (docs/design/2026-10-02-opening-start §7).
@@ -197,6 +201,8 @@ func _ready() -> void:
 	# The game builds Act I's journey land on the worker pool behind a veil;
 	# a headless boot (tests) has no frames to wait through, so it builds inline.
 	MapScene.journey_async = DisplayServer.get_name() != "headless"
+	if MapScene.journey_async:
+		MapJourneyPrefetch.prime()
 	var boot: GDScript = null
 	if DevTools.available():
 		boot = load(DevTools.BOOT) as GDScript
@@ -783,7 +789,8 @@ func _notification(what: int) -> void:
 
 ## Every WorkerThreadPool task must be joined before its owner goes: an
 ## unjoined compile crashed the engine at exit. A quit during the charting veil
-## therefore waits for the compile to end.
+## therefore waits for the compile to end, and a quit during a map's warm-up
+## (the title's, #660) for the pictures and the land it is building.
 func _join_map_layout_jobs() -> void:
 	if _map_layout_job != null:
 		_map_layout_retired.append(_map_layout_job)
@@ -791,6 +798,8 @@ func _join_map_layout_jobs() -> void:
 	for job: MapLayoutJob in _map_layout_retired:
 		job.finish()
 	_map_layout_retired.clear()
+	MapJourneyPrefetch.join()
+	MapLandscapeAssets.join()
 
 
 ## A headed proof of the shipping root's default font. The Label carries no font
@@ -1160,6 +1169,8 @@ func _show_title() -> void:
 	_music.play(&"title")
 	_title_kindled = true
 	_title_rite_resume = false
+	_title_road = saved
+	_title_road_due = true
 
 
 ## The lantern's routes leave in its own light (opening-start §7 T6, T7): the
@@ -1669,17 +1680,48 @@ func _route_run() -> void:
 func _warm_map_landscape() -> void:
 	if game == null or game.run == null or _map == null or game.run.pending_run_end != null:
 		return
-	var node: MapNode = _map.current()
-	var past_boss: bool = node != null and node.type == "boss" and not game.run.is_final_act()
+	_warm_landscape_for(_map, game.run)
+
+
+## What `_warm_map_landscape` warms for `map` and `run`, which the title also
+## warms for the run Back to the Road restores (`_warm_title_road`).
+func _warm_landscape_for(map: WorldMap, run: RunState) -> void:
+	var node: MapNode = map.current()
+	var past_boss: bool = node != null and node.type == "boss" and not run.is_final_act()
 	if past_boss:
 		# The next map is the next act's, and the kept screen holds this act's
-		# artwork: it goes first, so one act's artwork is held at a time.
+		# artwork: it goes first, so one act's artwork is held at a time. This
+		# act's journey land is never drawn again either.
 		_map_keep.release()
-	MapLandscapeAssets.prefetch(game.run.act + (1 if past_boss else 0))
+		MapJourneyPrefetch.release()
+	MapLandscapeAssets.prefetch(run.act + (1 if past_boss else 0))
 	# Act I's journey land is built ahead too, once its pictures are decoded.
 	# The next act's map does not exist yet past a boss, so only this act's.
 	if not past_boss and MapScene.journey_async:
-		MapJourneyPrefetch.start(_map, game.run)
+		MapJourneyPrefetch.start(map, run)
+
+
+## Back to the Road opens a drawn map (#660). Once the title is lit and taking
+## input (never during the launch rite, whose frames are a shipped acceptance
+## on the iPad 8), the saved run's next map is warmed as `_route_run` warms it
+## when Continue restores that run, so the restore finds its land built; the
+## prefetch's main-thread work is one small piece per frame. A title with no
+## run to return to holds no map's artwork (Erase Everything, a run that ended).
+func _warm_title_road() -> void:
+	var title: TitleScreen = _choice_screen as TitleScreen
+	if title != null and title.rite != null and not title.rite.is_done():
+		return
+	var saved: RunState = _title_road
+	_title_road = null
+	_title_road_due = false
+	if title == null:
+		return
+	var restored: WorldMap = WorldMap.from_dict(saved.map) if saved != null else null
+	if restored == null or saved.pending_run_end != null:
+		MapJourneyPrefetch.release()
+		MapLandscapeAssets.release()
+		return
+	_warm_landscape_for(restored, saved)
 
 
 func _dispatch_current_route() -> bool:
@@ -1770,6 +1812,13 @@ func _compile_map_layout(input: MapLayoutInput, quality: Dictionary,
 	var input_digest: String = input.digest()
 	if input_digest == _map_layout_input_digest:
 		return _map_layout_packet
+	# The journey prefetch generated this very input on a worker (#660).
+	var prefetched: Dictionary = {} if _map_layout_compile.is_valid() \
+		else MapJourneyPrefetch.layout_packet(input_digest)
+	if not prefetched.is_empty():
+		_map_layout_input_digest = input_digest
+		_map_layout_packet = prefetched
+		return prefetched
 	if _map_layout_compile.is_valid() or not _map_layout_async \
 			or not MapLayoutPolicy.is_compiler_input(input):
 		_map_layout_input_digest = input_digest
@@ -1785,6 +1834,8 @@ func _compile_map_layout(input: MapLayoutInput, quality: Dictionary,
 
 
 func _process(_delta: float) -> void:
+	if _title_road_due:
+		_warm_title_road()
 	MapJourneyPrefetch.step_current()
 	for retired: MapLayoutJob in _map_layout_retired.duplicate():
 		if retired.is_done():
