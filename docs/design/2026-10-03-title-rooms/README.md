@@ -1195,7 +1195,9 @@ cross-fades; one cue per tap.
    word. The composition is kept by layout, not by smaller type: the plaque stands on the lantern's ring
    with its sub-line tucked into Cinzel's spare line height, the deed slabs sit higher and nearer the
    road, a long Roman count is set with its tracking closed up rather than cut (never smaller), and the
-   consent sentence reads across its row in balanced lines with the switch and the link under it. Raising
+   consent sentence reads across its row in balanced lines with the switch and the link under it, the
+   left words standing from the top of their arc while it shows so the row clears them at the 44 px
+   touch floor. Raising
    the four shared tokens also lifts the departure's, the confirm sheets' and Settings' kit words and
    panes to 18 at pad; each was checked at the three shapes in both languages. Settings' rows are rebuilt
    in PR B and are not part of this. Pinned by `tests/test_title_rubric.gd`.
@@ -1211,6 +1213,11 @@ cross-fades; one cue per tap.
    zh-Hant on pad the middle of 設定 (and, at 18 px, of 續火) fell on the lantern and took the road. The
    lantern's hit is now its own body (`LeadlightLantern.HIT_UV`, the art's opaque bounds); every word's
    and pane's rect is held clear of it at every shape, in both languages.
+
+   **Evidence:** `stills/pr-a/` (the title in four states at three shapes in both languages, the
+   returns and the keyboard rim with `focus-paths.txt`, the before and after sheets, the Reduce
+   Motion and grey-frame sequences with `sequence-gates.txt`, the kit surfaces at 18 px), taken with
+   `tools/capture_rooms.gd`.
 
 Everything else is decided here: Erase → Cancel lands on the title (behaviour unchanged); the Sentry
 notice ships when the addon is in the export; the Act IV track titles are held until the unsealing; the

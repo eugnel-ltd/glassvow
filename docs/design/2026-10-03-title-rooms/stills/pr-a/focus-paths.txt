@@ -1,0 +1,58 @@
+# tools/capture_rooms.gd, saved run (Frostlight), en, one still per path 1 s after landing.
+# "oval N/64": gold samples on the old focus ring's path; the pass is the control's count
+# (control-rest: pad 1/64, phone 2/64, the road's own lamps). "shown on": every button
+# under Main showing focus. Before this PR the same driver read: Vigil return 30/64 with
+# the lantern shown and the plaque lit, rite tap 28/64, bare Shift 29/64, Settings and
+# Credits returns with their words' hairline shown.
+== pad-landscape settings
+focus: owner /root/Main/@Control@105/@Button@84; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-settings-pad-landscape-en.png  oval 1/64
+== pad-landscape help (veil)
+focus: owner /root/Main/@Control@105/@Button@83; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-help-pad-landscape-en.png  oval 1/64
+== pad-landscape credits
+focus: owner /root/Main/@Control@105/@Button@85; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-credits-pad-landscape-en.png  oval 1/64
+== pad-landscape vigil
+focus: owner /root/Main/@Control@227/@Button@219; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-vigil-pad-landscape-en.png  oval 1/64
+== pad-landscape rite
+focus: owner /root/Main/@Control@105/@Button@97; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-rite-pad-landscape-en.png  oval 1/64
+== pad-landscape shift
+focus: owner none; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-shift-pad-landscape-en.png  oval 1/64
+== pad-landscape tab
+focus: owner /root/Main/@Control@105/@Button@97; shown on ["/root/Main/@Control@105/@Button@97"]; lantern shown true; plaque lit true
+rooms still: path-tab-pad-landscape-en.png  oval 3/64
+== pad-landscape pressed
+focus: owner none; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-pressed-pad-landscape-en.png  oval 1/64
+== phone-landscape settings
+focus: owner /root/Main/@Control@105/@Button@84; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-settings-phone-landscape-en.png  oval 2/64
+== phone-landscape help (veil)
+focus: owner /root/Main/@Control@105/@Button@83; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-help-phone-landscape-en.png  oval 2/64
+== phone-landscape credits
+focus: owner /root/Main/@Control@105/@Button@85; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-credits-phone-landscape-en.png  oval 2/64
+== phone-landscape vigil
+focus: owner none; shown on nothing; lantern shown false; plaque lit false
+(no still: the Vigil's RETURN sits below the phone stage, survey B defect 1, fixed in PR C; the tap lands nowhere and the Vigil stays)
+== phone-landscape rite
+focus: owner /root/Main/@Control@105/@Button@97; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-rite-phone-landscape-en.png  oval 2/64
+== phone-landscape shift
+focus: owner none; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-shift-phone-landscape-en.png  oval 2/64
+== phone-landscape tab
+focus: owner /root/Main/@Control@105/@Button@97; shown on ["/root/Main/@Control@105/@Button@97"]; lantern shown true; plaque lit true
+rooms still: path-tab-phone-landscape-en.png  oval 5/64
+== phone-landscape pressed
+focus: owner none; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-pressed-phone-landscape-en.png  oval 2/64
+focus: owner none; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-rest-pad-landscape-en.png  oval 1/64
+focus: owner none; shown on nothing; lantern shown false; plaque lit false
+rooms still: path-rest-phone-landscape-en.png  oval 2/64

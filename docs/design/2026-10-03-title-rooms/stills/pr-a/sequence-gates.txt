@@ -1,0 +1,32 @@
+== --shape=pad-landscape --locale=en --state=saved --seq=open --room=vigil --frames=36 
+grey gate PASS: worst frame 0 has 0.06% grey (limit 0.5%)
+cut gate FAIL: largest step 0.1138 at frame 1, whole change 0.1017, idle 0.0003, limit 0.0130 (reported, not graded without --rm)
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=close --room=vigil --frames=36 
+grey gate PASS: worst frame 7 has 0.08% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0422 at frame 1, whole change 0.1018, idle 0.0002, limit 0.0129 (reported, not graded without --rm)
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=open --room=vigil --frames=16 --rm 
+grey gate PASS: worst frame 0 has 0.05% grey (limit 0.5%)
+cut gate FAIL: largest step 0.1028 at frame 1, whole change 0.0970, idle 0.0000, limit 0.0121
+exit 1
+== --shape=pad-landscape --locale=en --state=saved --seq=close --room=vigil --frames=16 --rm 
+grey gate PASS: worst frame 6 has 0.06% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0325 at frame 1, whole change 0.0969, idle 0.0000, limit 0.0121
+exit 1
+== --shape=phone-landscape --locale=zh-Hant --state=saved --seq=open --room=vigil --frames=16 --rm 
+grey gate PASS: worst frame 6 has 0.09% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0849 at frame 1, whole change 0.0723, idle 0.0000, limit 0.0090
+exit 1
+== --shape=pad-landscape --locale=en --state=saved --seq=open --room=settings --frames=16 
+grey gate PASS: worst frame 0 has 0.06% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0940 at frame 1, whole change 0.0937, idle 0.0003, limit 0.0120 (reported, not graded without --rm)
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=close --room=settings --frames=16 
+grey gate PASS: worst frame 2 has 0.04% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0851 at frame 1, whole change 0.0862, idle 0.0001, limit 0.0109 (reported, not graded without --rm)
+exit 0
+== --shape=pad-landscape --locale=en --state=saved --seq=open --room=settings --frames=16 --rm 
+grey gate PASS: worst frame 0 has 0.05% grey (limit 0.5%)
+cut gate FAIL: largest step 0.0902 at frame 1, whole change 0.0902, idle 0.0000, limit 0.0113
+exit 1
