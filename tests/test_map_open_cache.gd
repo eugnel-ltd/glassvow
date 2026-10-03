@@ -51,6 +51,7 @@ static func _return_reuses_the_binding(fails: Array[String]) -> void:
 	MapScene._bound_key = ""
 	MapScene._bound = {}
 	var fresh: WorldMapScreen = _open(world_map, content, run)
+	var bound: Dictionary = MapScene._bound
 	var again: WorldMapScreen = _open(world_map, content, run)
 	var screens: Array[WorldMapScreen] = [fresh, again]
 	_check(fails, fresh.layout_result() != null and again.layout_result() != null,
@@ -68,6 +69,8 @@ static func _return_reuses_the_binding(fails: Array[String]) -> void:
 	var fresh_binding: Dictionary = fresh.layout_diagnostics()["live_binding"]
 	var again_binding: Dictionary = again.layout_diagnostics()["live_binding"]
 	_check(fails, again_binding == fresh_binding, "a return reports the same scenery decisions")
+	_check(fails, is_same(MapScene._bound, bound),
+		"a return reuses the scenery binding instead of filtering the scenery again")
 	var first_land: MapLandscape = fresh._map_scene._landscape
 	var second_land: MapLandscape = again._map_scene._landscape
 	_check(fails, _placement(second_land) == _placement(first_land),
@@ -93,9 +96,9 @@ static func _return_reuses_the_binding(fails: Array[String]) -> void:
 ## the first screen built. Leaving the map frees the screen but only detaches
 ## its land, which is kept for the act (`MapScene._journey_kept`); the next
 ## screen of that layout, catalogue and salt draws it instead of building
-## another. Another run's salt builds its own. The title's warm land, its
-## adoption and a screen replaced while it still draws the land are
-## test_map_title_road.gd.
+## another. Another run's salt builds its own, even while the first run's land
+## is kept and free to take. The title's warm land, its adoption and a screen
+## replaced while it still draws the land are test_map_title_road.gd.
 static func _journey_return_reuses_the_land(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
 	var run: RunState = RunState.new_run(content, 717, "run-map-open-cache")
@@ -115,28 +118,36 @@ static func _journey_return_reuses_the_land(fails: Array[String]) -> void:
 	var layout: String = fresh.layout_digest()
 	var input: String = fresh.layout_input_digest()
 	var binding: Dictionary = fresh.layout_diagnostics()["live_binding"]
+	var bound: Dictionary = MapScene._bound
 	var terrain: Node = land.terrain
+	var land_id: int = land.get_instance_id()
 	_close([fresh])
 	_check(fails, is_instance_valid(land) and land.get_parent() == null
 			and MapScene._journey_kept == land,
 		"leaving the map keeps its journey land, off the tree")
 	var again: WorldMapScreen = _open(world_map, content, run)
-	var screens: Array[WorldMapScreen] = [again]
 	_check(fails, again.layout_digest() == layout and again.layout_input_digest() == input,
 		"a return binds the same layout and scenery")
 	var again_binding: Dictionary = again.layout_diagnostics()["live_binding"]
 	_check(fails, again_binding == binding, "a return reports the same scenery decisions")
+	_check(fails, is_same(MapScene._bound, bound),
+		"a return reuses the scenery binding instead of filtering the scenery again")
 	_check(fails, again._map_scene.journey_landscape() == land and is_instance_valid(land)
 			and land.terrain == terrain and land.is_built() and not again.landscape_pending(),
 		"a return draws the land the first screen built, without building another")
+	# Leave again, so the first run's land is kept off the tree, where a screen
+	# could take it: another run's salt must still build its own.
+	_close([again])
+	_check(fails, is_instance_valid(land) and land.get_parent() == null
+			and MapScene._journey_kept == land,
+		"leaving the map again keeps the same land, off the tree")
 	var other_run: RunState = RunState.new_run(content, 1, "run-map-open-cache-other")
 	var other: WorldMapScreen = _open(WorldMap.for_run(other_run, content), content, other_run)
-	screens.append(other)
 	var other_land: MapJourneyLandscape = other._map_scene.journey_landscape()
 	_check(fails, other.layout_digest() != layout and other_land != null
-			and other_land.is_built() and other_land != land,
-		"another run binds and builds its own journey land")
-	_close(screens)
+			and other_land.is_built() and other_land.get_instance_id() != land_id,
+		"another run binds and builds its own journey land, not the first run's kept land")
+	_close([other])
 	MapScene.release_kept_journey()
 
 
