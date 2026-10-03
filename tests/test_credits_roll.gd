@@ -6,7 +6,8 @@ extends RefCounted
 ## a glass of their own, built on first opening, and Return closes the glass
 ## before the room; no line carries a pack id; Act IV's titles are carved dots
 ## until the unsealing and the titles after it; the track now playing carries
-## the flame. The held list is the music ledger's Act IV list.
+## the flame. The held list is the music ledger's Act IV list. Every export
+## packs the licence texts the credits read.
 
 const SUITE: String = "res://tests/test_credits_roll.gd"
 const STEP: float = 1.0 / 60.0
@@ -24,7 +25,29 @@ static func run(fails: Array[String]) -> void:
 	_no_pack_ids(fails)
 	_held_is_the_ledgers(fails)
 	_walk_is_held(fails)
+	_licences_ship(fails)
 	TreeSuite.spawn(fails, SUITE)
+
+
+## A file that is not an imported resource reaches a pack only through its
+## preset's include filter: without it the iPad 8's Fonts glass read "licence
+## file not found" for every family, and the engine glass lost Sentry's notice.
+static func _licences_ship(fails: Array[String]) -> void:
+	var presets: ConfigFile = ConfigFile.new()
+	_check(fails, presets.load("res://export_presets.cfg") == OK, "export_presets.cfg does not load")
+	var texts: Array[String] = [CreditsLicences.SENTRY_LICENCE]
+	for entry: Dictionary in CreditsLicences.FONT_LICENCES:
+		texts.append(str(entry["path"]))
+	for section: String in presets.get_sections():
+		if section.ends_with(".options"):
+			continue
+		var preset: String = str(presets.get_value(section, "name", section))
+		var include: PackedStringArray = str(presets.get_value(section, "include_filter", "")).split(",", false)
+		for path: String in texts:
+			var packed: bool = false
+			for pattern: String in include:
+				packed = packed or path.trim_prefix("res://").match(pattern.strip_edges())
+			_check(fails, packed, "the %s export leaves out %s" % [preset, path])
 
 
 static func _held_rows(fails: Array[String]) -> void:
