@@ -6,6 +6,10 @@ uniform vec4 world_bounds = vec4(-48,-30,96,60);
 uniform sampler2D route_distance : filter_linear, repeat_disable;
 uniform sampler2D habitat : filter_linear, repeat_disable;
 uniform bool bridge_surface = false;
+// The A12 profile: the fine noise (grain, the second edge scale, strata and
+// the flag jitter) and the per-pixel relief are left out; the broad marks of
+// the road, verge, bank and paving stay.
+uniform bool lite = false;
 uniform float river_level = -1000.0;
 uniform vec2 gateway_position = vec2(-1000.0);
 uniform vec4 soil_colour : source_color = vec4(.19,.173,.185,1.0);
@@ -37,10 +41,10 @@ void fragment() {
  vec3 setting=texture(habitat,uv).rgb;
  float broad=noise(p*.48);
  float patches=noise(p*1.8+8.0);
- float grain=noise(p*12.0);
+ float grain=lite ? .5 : noise(p*12.0);
  // Three edge scales make intermittent shoulders, with a calm worn centre.
  // Variation lives in the trail and verge; the open ground stays quiet.
- float edge=(noise(p*2.5)-.5)*.13+(noise(p*9.0)-.5)*.045;
+ float edge=(noise(p*2.5)-.5)*.13+(lite ? 0.0 : (noise(p*9.0)-.5)*.045);
  float width=.60+(noise(p*.62)-.5)*.20;
  width+=setting.b*.16;
  float core=1.0-smoothstep(width-.045,width+.03,d+edge);
@@ -54,7 +58,7 @@ void fragment() {
  vec3 earth=soil_colour.rgb*(.94+.11*broad);
  // Broad slate faces expose the landform; fine noise stays out of open soil.
  float scarp=smoothstep(.10,.50,1.0-abs(terrain_normal.y));
- float strata=.88+.10*noise(vec2(p.x*.19+p.y*.11,world_at.y*1.1));
+ float strata=lite ? .93 : .88+.10*noise(vec2(p.x*.19+p.y*.11,world_at.y*1.1));
  earth=mix(earth,rock_colour.rgb*strata,scarp*.70);
  // Vegetation colour reaches the bank through scattered litter, not a halo.
  float litter=forest*smoothstep(.35,.75,patches)*shoulder*(1.0-centre*.85);
@@ -72,17 +76,17 @@ void fragment() {
  float row=floor(stone.y);
  stone.x*=.88+.26*hash(vec2(row,23.0));
  stone.x+=hash(vec2(row,17.0))*.72;
- stone+=(vec2(noise(p*3.0),noise(p*3.0+17.0))-.5)*.12;
+ if(!lite) { stone+=(vec2(noise(p*3.0),noise(p*3.0+17.0))-.5)*.12; }
  vec2 cell_id=floor(stone);
  vec2 cell=abs(fract(stone)-.5);
  vec2 corner=cell-vec2(.418,.425);
  float stone_edge=length(max(corner,vec2(0)))+min(max(corner.x,corner.y),0.0)+.43;
- stone_edge+=(noise(p*17.0)-.5)*.025;
+ if(!lite) { stone_edge+=(noise(p*17.0)-.5)*.025; }
  float joint=smoothstep(.468,.492,stone_edge);
  float slab=hash(cell_id+9.0);
  vec3 masonry=paving_colour.rgb*(.89+.19*slab);
  masonry*=1.0-joint*.19;
- masonry*=.97+.06*noise(p*5.0);
+ masonry*=lite ? 1.0 : .97+.06*noise(p*5.0);
  float wear=smoothstep(.3,.76,noise(p*1.1+31.0));
  float paving=entrance*(.65+.35*broad)*core;
  if(bridge_surface) {
@@ -105,6 +109,9 @@ void fragment() {
  if(!bridge_surface) { trail=mix(trail,trail*vec3(.65,.72,.75),wetted); }
  ALBEDO=trail;
  // Fine relief belongs to the worn surface; the surrounding soil remains calm.
+ ROUGHNESS=.97;
+ SPECULAR=.10;
+ if(!lite) {
  float relief=core*((patches-.5)*.006+(grain-.5)*.002);
  float bevel=1.0-smoothstep(.38,.49,stone_edge);
  relief=mix(relief,bevel*.008+(noise(p*5.0)-.5)*.002,paving);
@@ -117,6 +124,5 @@ void fragment() {
   vec3 gradient=(r1*dFdx(relief)+r2*dFdy(relief))/determinant;
   NORMAL=normalize(NORMAL-gradient);
  }
- ROUGHNESS=.97;
- SPECULAR=.10;
+ }
 }

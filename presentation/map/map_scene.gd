@@ -5,6 +5,9 @@ extends Control
 ## three render warm-up frames, then freezes until input or content changes.
 
 const OVERSAMPLE: float = 1.0
+## The stage's scale on a phone or tablet (`lean_profile`), where the journey
+## land is fill-rate bound on the A12.
+const LEAN_OVERSAMPLE: float = 0.75
 const VP_MAX: int = 2048
 ## The stage's size while the scene is off the tree.
 const PARKED_STAGE: Vector2i = Vector2i(2, 2)
@@ -95,7 +98,7 @@ func _init(act_index: int = 0) -> void:
 	_stage.own_world_3d = true
 	_stage.transparent_bg = false
 	_stage.size = Vector2i(64, 64)
-	_stage.msaa_3d = Viewport.MSAA_4X
+	_stage.msaa_3d = Viewport.MSAA_DISABLED if lean_profile() else Viewport.MSAA_4X
 	_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
 	add_child(_stage)
 	_world = Node3D.new()
@@ -300,6 +303,8 @@ func _deal_act(_region: MapRegions) -> void:
 		MapJourneyLandscape.light(_key, setting.environment)
 	else:
 		_rig.leave_journey()
+	if is_node_ready():
+		_fit()
 	_salt_dirty = false
 	_bind_asset_geometry()
 	_repaint()
@@ -487,9 +492,10 @@ func _fit() -> void:
 		return
 	_display.position = Vector2.ZERO
 	_display.size = size
+	var scale: float = LEAN_OVERSAMPLE if lean_profile() and is_journey_act() else OVERSAMPLE
 	var next: Vector2i = Vector2i(
-			mini(maxi(int(size.x * OVERSAMPLE), 1), VP_MAX),
-			mini(maxi(int(size.y * OVERSAMPLE), 1), VP_MAX))
+			mini(maxi(int(size.x * scale), 1), VP_MAX),
+			mini(maxi(int(size.y * scale), 1), VP_MAX))
 	if _stage.size == next:
 		return
 	_stage.size = next
@@ -928,6 +934,16 @@ func _rest_cadence() -> void:
 	var every: int = REST_EVERY_REDUCED if Preferences.active.reduce_motion else REST_EVERY
 	if _rest_tick % every == 0:
 		_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+
+## The lean profile for phones and tablets (A12 floor): the stage draws without
+## MSAA, the journey land's stage at `LEAN_OVERSAMPLE`, and its ground without
+## fine noise. Measured on the iPad 8 (docs/design/2026-10-02-map-living-land).
+static var lean_override: int = -1
+
+
+static func lean_profile() -> bool:
+	return lean_override == 1 if lean_override >= 0 else OS.has_feature("mobile")
 
 
 ## Whether Act I is drawn as the journey land. Always on in the game; a test of

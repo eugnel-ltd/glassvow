@@ -85,6 +85,7 @@ func start(data: Dictionary, parallel: bool = true) -> void:
 		Kit.preload_scenes()
 	_source = Source.from_layout(data)
 	terrain = Terrain.new()
+	terrain.lite_surfaces = MapScene.lean_profile()
 	add_child(terrain)
 	terrain.prepare(_source, false, MAP_BOUNDS)
 	terrain.start_heights(parallel)

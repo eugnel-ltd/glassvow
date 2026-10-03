@@ -25,6 +25,8 @@ var _rows: int = 0
 var _baked: Array = []
 var _bake_lock: Mutex = Mutex.new()
 var _heights_task: int = -1
+## The A12 profile's ground (`terrain_paint.gdshader` `lite`): set by the host.
+var lite_surfaces: bool = false
 var _heights_started: int = 0
 var landform: RefCounted = preload("res://presentation/map/landscape/landform.gd").new()
 const CELL: float = .5
@@ -265,6 +267,7 @@ func _land() -> void:
 	if ground_mat is ShaderMaterial:
 		ground_mat.set_shader_parameter("river_cuts",Vector2(MapRavine.CUTS[0],MapRavine.CUTS[1]))
 		ground_mat.set_shader_parameter("channel",River.CHANNEL)
+		ground_mat.set_shader_parameter("lite", lite_surfaces)
 	for i: int in range(meshes.size()):
 		Meshes.node(self, meshes[i], ground_mat, "Quiet sculpted ground" if i == 0 else "Ground chunk %d" % i)
 
