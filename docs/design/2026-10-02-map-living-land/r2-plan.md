@@ -486,6 +486,14 @@ device gate is fixed or cut before the next one starts.
    after the free techniques have shipped.
 7. **God rays,** only if the owner wants them after seeing step 6.
 
+**Revised order (orchestrator review of steps 1–3, 3 October).** The three
+largest remaining gaps against the target are the bare ground, the near
+top-down camera and the two-stone framing. Next: (a) a camera study, as
+scratch proofs ([camera-study.md](camera-study.md): the pick is 40°
+orthographic with the Journey view at 1.6 times today's floor); (b) step 6,
+density and ground detail, built at the chosen camera against its own saving;
+(c) then steps 3b, 4, 5 and 7.
+
 Steps 1–3 deliver most of the gap at no measured cost; that is why they come
 first. Steps 1b and 3b are cheap additions gated the same way. Steps 4–5 are
 local; step 6 is the costly one and is built against its own saving.

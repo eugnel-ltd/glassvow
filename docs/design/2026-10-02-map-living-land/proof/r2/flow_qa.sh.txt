@@ -1,0 +1,22 @@
+#!/bin/zsh
+# Map lane device build: the given commit, with the QA probes patched in, built
+# and installed as the separate QA app (Glassvow QA, io.fol2.glassvow.qa) by the
+# shared recipe scratchpad/device13/flow/qa_export.sh. Never the production
+# bundle, never its container.
+set -uo pipefail
+S=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad
+L=$S/map-lane/device; W=$S/map-lane/device-wt; HEAD=$1
+QA=$S/device13/flow/qa_export.sh
+cd /Users/jamesto/Coding/glassvow && git worktree add --detach $W $HEAD >/dev/null 2>&1 || true
+cd $W && git checkout -q -- . && git clean -fdq -e .godot -e build -e override.cfg && git checkout -q --detach $HEAD && git rev-parse HEAD || exit 1
+[ -d .godot ] || cp -R $S/map-lane/wt-r2/.godot .
+printf '[application]\nconfig/use_custom_user_dir=true\nconfig/custom_user_dir_name="glassvow-map-lane"\n' > override.cfg
+cp $L/qa_map_probe.gd tools/qa_map_probe.gd
+cp $L/qa_r2_probe.gd tools/qa_r2_probe.gd
+cp $S/map-lane/wt-r2/scratch_lane/look_r2.gd tools/look_r2.gd
+cp $S/map-lane/wt-r2/scratch_lane/look_cam.gd tools/look_cam.gd
+python3 $L/patch.py $W || exit 1
+timeout 900 godot --headless --import --path . > $L/import.log 2>&1; echo "import rc=$?"
+tools/check_scripts.sh application/main.gd tools/qa_map_probe.gd tools/qa_r2_probe.gd tools/look_r2.gd tools/look_cam.gd 2>&1 | tail -1
+git status --short export_presets.cfg
+$QA $W "${@:2}"

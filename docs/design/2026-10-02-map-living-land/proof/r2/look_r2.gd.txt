@@ -16,7 +16,19 @@ static func frame_gateway(screen: WorldMapScreen, zoom: float = 13.0) -> void:
 	screen._invalidate_projection()
 
 
+const LookCam = preload("look_cam.gd")
+
+
 static func apply(screen: WorldMapScreen, technique: String) -> void:
+	if technique.begins_with("cam"):
+		# "cam38f45w1.6": the Journey framing at 38 degrees, perspective 45 (f0 =
+		# ortho), the view at least 1.6 times the 12 m floor (w omitted = 1).
+		var spec: PackedStringArray = technique.trim_prefix("cam").split("f")
+		var rest: PackedStringArray = spec[1].split("w")
+		var wide: float = float(rest[1]) if rest.size() > 1 else 1.0
+		LookCam.frame(screen, float(spec[0]), float(rest[0]), wide)
+		LookCam.place_pins(screen)
+		return
 	var scene: MapScene = screen._map_scene
 	var land: MapJourneyLandscape = scene.journey_landscape()
 	var world: Node3D = scene._world

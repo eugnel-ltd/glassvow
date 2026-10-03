@@ -1,0 +1,188 @@
+extends RefCounted
+## Scratch camera study (R2 (a)): the Journey framing of the same stones at
+## another pitch, orthographic or perspective, and what it shows. Not
+## production code. Pins and the tilt-shift band are placed from the camera's
+## true projection (MapPinProjection is orthographic only).
+
+const Contract = preload("res://presentation/map/map_journey_camera_contract.gd")
+
+
+static func _plane(point: Vector3, pitch: float) -> Vector2:
+	return Vector2(point.x, point.z * sin(pitch) - point.y * cos(pitch))
+
+
+## The production fit (`MapJourneyCameraContract.resolve`) at `pitch_deg`.
+static func _ortho(points: PackedVector3Array, stage: Vector2, pitch_deg: float) -> Dictionary:
+	var pitch: float = deg_to_rad(pitch_deg)
+	var insets: Vector4 = Contract.MAIN_INSETS
+	var safe: Rect2 = Rect2(Vector2(insets.x, insets.y), stage - Vector2(insets.x + insets.z, insets.y + insets.w))
+	var lo: Vector2 = Vector2(INF, INF)
+	var hi: Vector2 = Vector2(-INF, -INF)
+	for p: Vector3 in points:
+		var q: Vector2 = _plane(p, pitch)
+		lo = lo.min(q)
+		hi = hi.max(q)
+	var span: Vector2 = hi - lo
+	var zoom: float = maxf(12.0, maxf(span.x * stage.y / safe.size.x, span.y * stage.y / safe.size.y))
+	var centre: Vector2 = (lo + hi) * 0.5 + (stage * 0.5 - safe.get_center()) * zoom / stage.y
+	var h: float = Contract.HEIGHT
+	return {"zoom": zoom, "position": Vector3(centre.x, h, centre.y / sin(pitch) + h / tan(pitch)), "safe": safe}
+
+
+static func frame(screen: WorldMapScreen, pitch_deg: float, fov_deg: float, wide: float = 1.0) -> Dictionary:
+	var scene: MapScene = screen._map_scene
+	var cam: Camera3D = scene.get_rig().get_camera()
+	var stage: Vector2 = Vector2(StageShape.REFERENCES[screen.shape])
+	var members: Array[int] = screen._journey.focus_members
+	var all_seats: PackedVector3Array = screen._journey.pin_seats(screen._ordered_layout_anchors())
+	var points: PackedVector3Array = PackedVector3Array()
+	for i: int in members:
+		points.append(all_seats[i])
+	var fit: Dictionary = _ortho(points, stage, pitch_deg)
+	# `wide` frames more of the road around the group: the view's height at
+	# the group is at least `wide` times the 12 m floor.
+	var fitted: float = fit["zoom"]
+	var zoom: float = maxf(fitted, 12.0 * wide)
+	cam.rotation_degrees = Vector3(-pitch_deg, 0, 0)
+	cam.far = 400.0
+	if fov_deg <= 0.0:
+		cam.projection = Camera3D.PROJECTION_ORTHOGONAL
+		cam.position = fit["position"]
+		cam.size = zoom
+	else:
+		cam.projection = Camera3D.PROJECTION_PERSPECTIVE
+		cam.fov = fov_deg
+		cam.near = 0.5
+		var forward: Vector3 = -cam.global_transform.basis.z
+		var centroid: Vector3 = Vector3.ZERO
+		for p: Vector3 in points:
+			centroid += p
+		centroid /= float(points.size())
+		var start: Vector3 = fit["position"]
+		var along: float = (centroid - start).dot(forward)
+		var aim: Vector3 = start + forward * along
+		# The orthographic fit never frames less than 12 m of height
+		# (`resolve`'s floor); perspective keeps the same floor at the group.
+		var least: float = zoom * 0.5 / tan(deg_to_rad(fov_deg) * 0.5)
+		var distance: float = least
+		var safe: Rect2 = fit["safe"]
+		var view: Vector2 = Vector2(scene.get_stage().size)
+		var to_stage: Vector2 = view / stage
+		var right: Vector3 = cam.global_transform.basis.x
+		var up: Vector3 = cam.global_transform.basis.y
+		for k: int in range(8):
+			cam.position = aim - forward * distance
+			var lo: Vector2 = Vector2(INF, INF)
+			var hi: Vector2 = Vector2(-INF, -INF)
+			for p: Vector3 in points:
+				var s: Vector2 = cam.unproject_position(p) / to_stage
+				lo = lo.min(s)
+				hi = hi.max(s)
+			var span: Vector2 = hi - lo
+			var scale: float = maxf(span.x / safe.size.x, span.y / safe.size.y)
+			var shift: Vector2 = safe.get_center() - (lo + hi) * 0.5
+			var metres_per_px: float = 2.0 * distance * tan(deg_to_rad(fov_deg) * 0.5) / stage.y
+			aim -= right * shift.x * metres_per_px - up * shift.y * metres_per_px
+			distance = maxf(least, distance * maxf(scale, 0.3))
+	screen._invalidate_projection()
+	return {"pitch": pitch_deg, "fov": fov_deg, "wide": wide, "members": members.duplicate(), "zoom": fit["zoom"],
+		"position": cam.position, "distance": cam.position.distance_to(Vector3(cam.position.x, 0, cam.position.z))}
+
+
+## Puts every pin on its stone by the camera's own projection, and the band
+## on the framed group.
+static func place_pins(screen: WorldMapScreen) -> PackedVector2Array:
+	var scene: MapScene = screen._map_scene
+	var cam: Camera3D = scene.get_rig().get_camera()
+	var seats3: PackedVector3Array = screen._journey.pin_seats(screen._ordered_layout_anchors())
+	var to_control: Vector2 = scene.size / Vector2(scene.get_stage().size)
+	var out: PackedVector2Array = PackedVector2Array()
+	for i: int in range(screen._waystones.size()):
+		var behind: bool = cam.is_position_behind(seats3[i])
+		var s: Vector2 = cam.unproject_position(seats3[i]) * to_control
+		out.append(s)
+		var ws: GlassWaystone = screen._waystones[i]
+		ws.visible = not behind
+		ws.position = s - ws.size * ws.scale * 0.5
+	var heights: PackedFloat32Array = PackedFloat32Array()
+	for i: int in screen._journey.focus_members:
+		heights.append(out[i].y)
+	var margin: float = Contract.touch_size(screen.size) * 0.6
+	scene.set_focus_band(MapTiltShift.band(heights, scene.size.y, margin))
+	return out
+
+
+## What the framing shows: touch spacing and containment of the framed stones,
+## stones hidden by land or the kit, stones on screen.
+static func measure(screen: WorldMapScreen, seats: PackedVector2Array) -> Dictionary:
+	var scene: MapScene = screen._map_scene
+	var cam: Camera3D = scene.get_rig().get_camera()
+	var land: MapJourneyLandscape = scene.journey_landscape()
+	var touch: float = Contract.touch_size(screen.size)
+	var insets: Vector4 = Contract.MAIN_INSETS
+	var safe: Rect2 = Rect2(Vector2(insets.x, insets.y), screen.size - Vector2(insets.x + insets.z, insets.y + insets.w))
+	var members: Array[int] = screen._journey.focus_members
+	var min_gap: float = INF
+	var inside: bool = true
+	for a: int in range(members.size()):
+		inside = inside and safe.has_point(seats[members[a]])
+		for b: int in range(a + 1, members.size()):
+			var d: Vector2 = (seats[members[a]] - seats[members[b]]).abs()
+			min_gap = minf(min_gap, maxf(d.x, d.y))
+	var seats3: PackedVector3Array = screen._journey.pin_seats(screen._ordered_layout_anchors())
+	var hidden: Array = []
+	var on_screen: int = 0
+	var frame: Rect2 = Rect2(Vector2.ZERO, screen.size)
+	for i: int in range(seats3.size()):
+		if not frame.has_point(seats[i]) or cam.is_position_behind(seats3[i]):
+			continue
+		on_screen += 1
+		var by: String = _occluder(cam, land, seats3[i] - MapJourneyDirector.PIN_LIFT + Vector3(0, 0.6, 0))
+		if not by.is_empty():
+			hidden.append([i, by])
+	return {"touch": touch, "min_member_gap": min_gap, "members_inside_safe": inside,
+		"members": members.size(), "stones_on_screen": on_screen, "hidden": hidden}
+
+
+static func _occluder(cam: Camera3D, land: MapJourneyLandscape, target: Vector3) -> String:
+	var from: Vector3 = cam.global_position
+	if cam.projection == Camera3D.PROJECTION_ORTHOGONAL:
+		from = target + cam.global_transform.basis.z * 80.0
+	var steps: int = 200
+	for k: int in range(1, steps):
+		var t: float = float(k) / steps
+		var p: Vector3 = target.lerp(from, t)
+		if p.distance_to(target) < 0.5:
+			continue
+		if land.terrain.height_at(p.x, p.z) > p.y + 0.05:
+			return "land"
+		for item: Dictionary in land.kit.neighbours.query(p, 3.0):
+			var at: Vector3 = item["position"]
+			var radius: float = float(str(item["radius"])) * 0.6
+			var height: float = float(str(item["height"])) * 0.9
+			if Vector2(p.x - at.x, p.z - at.z).length() < radius and p.y > at.y and p.y < at.y + height:
+				return str(item["kind"])
+	return ""
+
+
+## The mask pass: the ground flat magenta, the background flat cyan, no grade,
+## bloom, band or HUD, so a capture counts ground and void.
+static func mask(screen: WorldMapScreen) -> void:
+	var scene: MapScene = screen._map_scene
+	var land: MapJourneyLandscape = scene.journey_landscape()
+	var env: Environment = (scene._world.get_node("MapEnvironment") as WorldEnvironment).environment
+	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	env.tonemap_exposure = 1.0
+	env.adjustment_enabled = false
+	env.glow_enabled = false
+	env.background_color = Color(0, 1, 1)
+	scene.set_focus_band(Vector2.INF)
+	var flat: StandardMaterial3D = StandardMaterial3D.new()
+	flat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	flat.albedo_color = Color(1, 0, 1)
+	for node: Node in land.terrain.find_children("*", "MeshInstance3D", true, false):
+		var m: ShaderMaterial = (node as MeshInstance3D).material_override as ShaderMaterial
+		if m != null and m.shader != null and m.shader.resource_path.ends_with("terrain_paint.gdshader"):
+			(node as MeshInstance3D).material_override = flat
+	for stone: GlassWaystone in screen._waystones:
+		stone.visible = false
