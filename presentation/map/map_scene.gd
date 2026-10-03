@@ -8,6 +8,8 @@ const OVERSAMPLE: float = 1.0
 ## The stage's scale on a phone or tablet (`lean_profile`), where the journey
 ## land is fill-rate bound on the A12.
 const LEAN_OVERSAMPLE: float = 0.75
+## The scale the lean stage draws at: `LEAN_OVERSAMPLE`, or a device probe's.
+static var lean_oversample: float = LEAN_OVERSAMPLE
 const VP_MAX: int = 2048
 ## The stage's size while the scene is off the tree.
 const PARKED_STAGE: Vector2i = Vector2i(2, 2)
@@ -511,7 +513,7 @@ func _fit() -> void:
 		return
 	_display.position = Vector2.ZERO
 	_display.size = size
-	var scale: float = LEAN_OVERSAMPLE if lean_profile() and is_journey_act() else OVERSAMPLE
+	var scale: float = lean_oversample if lean_profile() and is_journey_act() else OVERSAMPLE
 	var next: Vector2i = Vector2i(
 			mini(maxi(int(size.x * scale), 1), VP_MAX),
 			mini(maxi(int(size.y * scale), 1), VP_MAX))

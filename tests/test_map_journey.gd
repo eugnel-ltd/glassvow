@@ -34,6 +34,7 @@ static func run(fails: Array[String]) -> void:
 	_walk(fails, screen, land, content, run)
 	_rest_cadence(fails, scene)
 	_living_motion(fails, scene, land)
+	_shadow_proxies(fails)
 	_act_switch(fails, screen, run)
 	_free(screen)
 
@@ -326,6 +327,29 @@ static func _tick(scene: MapScene, land: MapJourneyLandscape) -> void:
 	for frame: int in range(10):
 		scene._process(0.0)
 	land.air._process(0.0)
+
+
+## Phones and tablets: a conifer's leafy mesh casts no shadow and one opaque
+## shadow-only cone casts for it.
+static func _shadow_proxies(fails: Array[String]) -> void:
+	const Scenery = preload("res://presentation/map/landscape/static_scenery.gd")
+	var scene: PackedScene = load("res://assets/art/map-journey/conifer.glb") as PackedScene
+	var tree: Node3D = scene.instantiate() as Node3D
+	preload("res://presentation/map/landscape/asset_surfaces.gd").prepare(tree, {})
+	var parts: Array[Dictionary] = []
+	Scenery._collect(tree, tree.transform.affine_inverse(), parts)
+	tree.free()
+	var leafy: int = parts.size()
+	Scenery._proxy_shadows(parts)
+	var proxies: int = 0
+	var silent: bool = true
+	for part: Dictionary in parts:
+		if part["shadow"] == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY:
+			proxies += 1
+		else:
+			silent = silent and part["shadow"] == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_check(fails, leafy == 1 and parts.size() == 2 and proxies == 1 and silent,
+		"a conifer casts through one shadow-only cone, not its cut-out foliage")
 
 
 ## Leaving Act I gives the painted acts back their governed camera, and their

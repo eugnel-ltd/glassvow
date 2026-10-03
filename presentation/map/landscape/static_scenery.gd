@@ -34,6 +34,8 @@ static func prepare_template(path: String, kind: String, packed: PackedScene) ->
 		return "Static foliage has no prepared cut-out surface: "+kind
 	var parts: Array[Dictionary] = []
 	var failure: String = _collect(original, original.transform.affine_inverse(), parts)
+	if failure.is_empty() and MapScene.lean_profile() and kind not in NO_SHADOW:
+		_proxy_shadows(parts)
 	_shared[path] = {"root":original.transform,"parts":parts,"kind":kind}
 	original.free()
 	return failure
@@ -71,7 +73,10 @@ func finish() -> void:
 		var draw: MultiMeshInstance3D = MultiMeshInstance3D.new()
 		draw.multimesh=multi
 		draw.layers=part["layers"]
-		draw.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if str(groups[key]["kind"]) in NO_SHADOW else part["shadow"]
+		# A shadow proxy only ever casts; every other part of a NO_SHADOW kind
+		# draws without casting.
+		var proxy: bool = part["shadow"] == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		draw.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if str(groups[key]["kind"]) in NO_SHADOW and not proxy else part["shadow"]
 		add_child(draw)
 		for i: int in range(anchors.size()):
 			var anchor: Node3D = anchors[i]
@@ -97,3 +102,37 @@ static func _collect(node: Node, parent: Transform3D, parts: Array[Dictionary]) 
 		var failure: String = _collect(child,pose,parts)
 		if not failure.is_empty(): return failure
 	return ""
+
+
+## On phones and tablets (`MapScene.lean_profile`) a leafy part of a kind that
+## casts at all (not `NO_SHADOW`; in practice the conifers) casts no shadow
+## of its own: its cut-out foliage would discard fragment by fragment in the
+## shadow pass, which the A12 pays for. An opaque six-sided cone fitted to the
+## part's bounds casts instead (shadows only), one more batch per cell.
+static func _proxy_shadows(parts: Array[Dictionary]) -> void:
+	for index: int in range(parts.size()):
+		var part: Dictionary = parts[index]
+		var mesh: ArrayMesh = part["mesh"]
+		var leafy: bool = false
+		for surface: int in range(mesh.get_surface_count()):
+			var material: Material = mesh.surface_get_material(surface)
+			leafy = leafy or (material != null and material.resource_name.begins_with("Foliage /"))
+		if not leafy:
+			continue
+		# The part's whole bounds, trunk and crown: its vertices are not read
+		# back from the renderer (`prepare_template`).
+		var crown: AABB = mesh.get_aabb()
+		part["shadow"] = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var cone: CylinderMesh = CylinderMesh.new()
+		cone.top_radius = 0.05
+		cone.bottom_radius = maxf(crown.size.x, crown.size.z) * 0.42
+		cone.height = crown.size.y
+		cone.radial_segments = 6
+		cone.rings = 0
+		cone.cap_top = false
+		var proxy: ArrayMesh = ArrayMesh.new()
+		proxy.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, cone.get_mesh_arrays())
+		var relative: Transform3D = part["transform"]
+		parts.append({"mesh": proxy, "layers": part["layers"],
+			"transform": relative * Transform3D(Basis(), crown.get_center()),
+			"shadow": GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY})

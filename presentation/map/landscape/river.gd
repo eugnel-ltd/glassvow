@@ -64,7 +64,10 @@ func build(land: Node3D) -> void:
 			var ground: float = land.surface_height(x,z)
 			field_image.set_pixel(ix,iz,Color(LEVEL-ground,0,0))
 	var water: ShaderMaterial = ShaderMaterial.new()
-	water.shader = preload("res://presentation/map/landscape/river.gdshader")
+	# Phones and tablets draw the lean river (`river_lite.gdshader`): no screen
+	# or depth read, which the A12 measured as the river's cost.
+	water.shader = preload("res://presentation/map/landscape/river_lite.gdshader") \
+		if MapScene.lean_profile() else preload("res://presentation/map/landscape/river.gdshader")
 	water.set_shader_parameter("river_length_m",half_length*2)
 	water.set_shader_parameter("river_cut",cut)
 	water.set_shader_parameter("channel",CHANNEL)
