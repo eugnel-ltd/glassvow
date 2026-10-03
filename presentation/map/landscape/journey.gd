@@ -4,6 +4,7 @@ const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 const Terrain = preload("res://presentation/map/landscape/terrain.gd")
 const Paths = preload("res://presentation/map/landscape/road_paths.gd")
 const Pilgrim = preload("res://presentation/map/landscape/pilgrim.gd")
+const AssetSurfaces = preload("res://presentation/map/landscape/asset_surfaces.gd")
 var terrain: Terrain
 var anchors: PackedVector3Array
 var walker: Pilgrim
@@ -22,6 +23,10 @@ func build(surface: Terrain, points: PackedVector3Array, source_points: PackedVe
 	terrain = surface
 	anchors = points
 	var packed: PackedScene = preload("res://assets/art/map-journey/waystone.glb")
+	# The kit's GLBs import without their pictures; each stone takes the shared
+	# stone source as every other kit piece does (`asset_surfaces.gd`), or it
+	# renders untextured white. One pool, so all waystones share materials.
+	var surfaces: Dictionary = {}
 	for i: int in range(points.size()):
 		var source: Vector3 = source_points[i]
 		var at: Vector3 = seat(terrain,source)
@@ -32,6 +37,7 @@ func build(surface: Terrain, points: PackedVector3Array, source_points: PackedVe
 			contacts.append(contact)
 			at.y = maxf(at.y,contact.y)
 		var base: Node3D = packed.instantiate() as Node3D
+		AssetSurfaces.prepare(base, surfaces)
 		add_child(base)
 		base.position = at
 		# The imported glass faces -Z. Turn towards the default journey camera.
