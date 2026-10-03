@@ -323,24 +323,19 @@ static func _default_active(fails: Array[String]) -> void:
 ## call site below.
 static func _remaining_run_screen_call_sites(fails: Array[String]) -> void:
 	var seams: Dictionary = {
-		"res://presentation/run/credits_screen.gd": {
-			"_init": ["ui.credits.title", "ui.credits.headingBrand",
-				"ui.credits.bodyBrand", "ui.credits.headingGlass",
+		"res://presentation/run/credits_roll.gd": {
+			"_init": ["ui.credits.title", "ui.credits.bodyBrand", "ui.credits.headingGlass",
 				"ui.credits.bodyGlass", "ui.credits.headingMusic",
-				"ui.credits.headingSound", "ui.credits.headingType",
-				"ui.credits.bodyCinzel", "ui.credits.bodyAlegreya",
-				"ui.credits.bodyNoto", "ui.credits.headingEngine",
-				"ui.credits.bodyEngine", "ui.credits.footer", "ui.credits.close"],
-			"_add_music_attribution": ["ui.credits.musicAttribution",
-				"ui.credits.musicAttributionCount"],
-			"_add_music_rows": ["ui.credits.musicTracklistFallback"],
-			"_add_sfx_rows": ["ui.credits.sfxAttribution",
-				"ui.credits.sfxAttributionCount", "ui.credits.themeLine"],
-			"_add_licence_fold": ["ui.credits.engineLicences"],
-			"_add_font_licence_fold": ["ui.credits.fontLicences"],
+				"ui.credits.musicAttribution", "ui.credits.musicTracklistFallback",
+				"ui.credits.musicAttributionCount", "ui.credits.headingSound",
+				"ui.credits.sfxAttributionCount", "ui.credits.sfxAttribution",
+				"ui.credits.headingType", "ui.credits.headingEngine",
+				"ui.credits.bodyEngine", "ui.credits.footer"],
+			"_add_licence_panes": ["ui.credits.fontLicences", "ui.credits.engineLicences"],
 		},
 		"res://presentation/run/credits_licences.gd": {
 			"fill_engine": ["ui.credits.components", "ui.credits.licenceTexts"],
+			"_init": ["ui.credits.fontLicences", "ui.credits.engineLicences"],
 		},
 		"res://presentation/run/rose_window_view.gd": {
 			"_pane_copy": ["ui.rose.shardRecoveredStack"],

@@ -131,6 +131,11 @@ var _warm: Control = null
 var _lent: bool = false
 ## Where the passage holds the lantern instead of its home; empty at home.
 var _lantern_at: Rect2 = Rect2()
+## The painting over the road, and the wordmark's seat and how far a room's
+## roll has carried it (Credits leads its roll with the title's own wordmark).
+var _painting: Control = null
+var _wordmark_home: Vector2 = Vector2.ZERO
+var _wordmark_dy: float = 0.0
 
 
 ## `context`: shape, choices (id/label rows, Main's route ids), sub (where a
@@ -234,6 +239,35 @@ func place_lantern(rect: Rect2) -> void:
 		lantern.size = rect.size
 
 
+## Credits' road onward (§4.3): the eye walks `metres` on down the road and
+## the painting and its lamps scale about the door's rose, only ever growing,
+## so no edge of the painting can show.
+func set_walk(metres: float) -> void:
+	world.walk = metres
+	var grow: float = 1.0 + world.walk * 0.012
+	var about: Vector2 = rose.position + rose.size * 0.5
+	for layer: Control in [_painting, _chain]:
+		if layer != null:
+			layer.pivot_offset = about
+			layer.scale = Vector2(grow, grow)
+
+
+## The wordmark lent to a room's roll: drawn over the room, `dy` from its seat.
+func lend_wordmark(lent_to_room: bool) -> void:
+	_wordmark.z_index = 201 if lent_to_room else 0
+	if not lent_to_room:
+		offset_wordmark(0.0)
+
+
+func offset_wordmark(dy: float) -> void:
+	_wordmark_dy = dy
+	_wordmark.position = _wordmark_home + Vector2(0.0, dy)
+
+
+func wordmark() -> Control:
+	return _wordmark
+
+
 ## The lantern's home square on this stage (the layout's).
 func home_rect() -> Rect2:
 	var spec: Layout = Layout.for_shape(shape)
@@ -291,6 +325,7 @@ static func add_road(host: Control) -> TitleWorld:
 
 func _build() -> void:
 	world = add_road(self)
+	_painting = find_child("Painting", false, false) as Control
 	_chain = TitleLampChain.new()
 	add_child(_chain)
 	rose = LeadlightRose.new(context_array("shards"))
@@ -751,7 +786,8 @@ func _layout() -> void:
 	var cx: float = size.x * 0.5
 	var word_w: float = spec.word_w * k
 	var mark_h: float = word_w * 399.0 / 1536.0 if _wordmark is TextureRect else 60.0 * k
-	_wordmark.position = Vector2(cx - word_w * 0.5, spec.word_y * k)
+	_wordmark_home = Vector2(cx - word_w * 0.5, spec.word_y * k)
+	_wordmark.position = _wordmark_home + Vector2(0.0, _wordmark_dy)
 	_wordmark.size = Vector2(word_w, mark_h)
 	var side: float = spec.lantern * k
 	var home: Rect2 = home_rect()

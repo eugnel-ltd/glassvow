@@ -130,6 +130,13 @@ var _field: Control
 ## default, so the run screens' backdrop is unchanged). Between, the pairs
 ## catch one after another from the nearest to the door.
 var lamplight: float = 1.0
+## How far the eye has walked on down the road, in metres (Credits' road
+## onward, docs/design/2026-10-03-title-rooms §4.3): added to the eye's depth
+## and its look, so the roadside lamps really pass. Held to 0..WALK_MAX.
+const WALK_MAX: float = 2.0
+var walk: float = 0.0:
+	set(value):
+		walk = clampf(value, 0.0, WALK_MAX)
 
 
 class Field:
@@ -158,6 +165,26 @@ func _init() -> void:
 
 func _ready() -> void:
 	_step_camera(0.0)
+
+
+## A title rebuilt over this road continues it (§2.1, §7 item 12): its clocks,
+## the eye and its chase, the walk and the drifting motes and weather carry
+## over, so a rebuild (a language change, a return) does not restart the road.
+## The seeded geometry is the same in every world already.
+func inherit(source: TitleWorld) -> void:
+	if source == null or source == self or not is_instance_valid(source):
+		return
+	_time = source._time
+	_cam = source._cam
+	_look = source._look
+	_roll = source._roll
+	_drift = source._drift
+	walk = source.walk
+	_main = source._main.duplicate()
+	_accent = source._accent.duplicate()
+	_weather = source._weather.duplicate()
+	_step_camera(0.0)
+	queue_redraw()
 
 
 ## World geometry, seeded once in a fixed order so two boots agree.
@@ -293,9 +320,9 @@ func _step_camera(dt: float) -> void:
 	var target: Vector3 = Vector3(
 		_drift.n.x * SWAY.x,
 		ALT + 3.1 - _drift.n.y * SWAY.y + sin(_time * BREATH_Y_RATE) * BREATH_Y,
-		10.0 + sin(_time * BREATH_Z_RATE) * BREATH_Z)
+		10.0 - walk + sin(_time * BREATH_Z_RATE) * BREATH_Z)
 	_cam = _cam.lerp(target, minf(1.0, dt * CAM_CHASE))
-	_look = _look.lerp(Vector3(0.0, ALT, -6.0), minf(1.0, dt * CAM_CHASE))
+	_look = _look.lerp(Vector3(0.0, ALT, -6.0 - walk), minf(1.0, dt * CAM_CHASE))
 	_fwd = (_look - _cam).normalized()
 	_right = _fwd.cross(Vector3.UP).normalized()
 	_up = _right.cross(_fwd)

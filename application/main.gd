@@ -1257,11 +1257,15 @@ func _show_title() -> void:
 	screen.chosen.connect(_on_title_pick.bind(screen, saved))
 	screen.language_chosen.connect(_on_first_language)
 	screen.hurry.connect(_transitions.skip)
+	# The road persists across a rebuild (§7 item 12): the new title continues
+	# the world it replaces, the title's or the departure's.
+	var road: TitleWorld = _standing_road()
 	if game != null and game.run != null:
 		_transitions.wipe()
 	_clear_route()
 	_choice_screen = screen
 	add_child(screen)
+	screen.world.inherit(road)
 	# Made with the title, before any tap: it reads the tap that opens a room.
 	_passage_node()
 	_transitions.set_grain(true)
@@ -1273,6 +1277,15 @@ func _show_title() -> void:
 	_title_rite_resume = false
 	_title_road = saved
 	_title_road_due = true
+
+
+## The road on screen now, if the screen stands on the title's road.
+func _standing_road() -> TitleWorld:
+	if _choice_screen is TitleScreen:
+		return (_choice_screen as TitleScreen).world
+	if _route_screen is DepartureScreen:
+		return (_route_screen as DepartureScreen).world
+	return null
 
 
 ## The lantern's routes leave in its own light (opening-start §7 T6, T7): the
@@ -1466,7 +1479,10 @@ func _show_help() -> void:
 
 
 func _show_credits() -> void:
-	var screen: CreditsScreen = CreditsScreen.new(_shape, _sfx_bus)
+	# The Act IV titles are carved dots until the unsealing; the track playing
+	# carries a flame.
+	var screen: CreditsScreen = CreditsScreen.new(_shape, _sfx_bus,
+		_vigil.scenes_seen.has("unsealing"), _music.current_cue)
 	screen.closed.connect(_close_overlay)
 	_show_overlay(screen)
 

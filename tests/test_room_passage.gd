@@ -30,7 +30,9 @@ const MapCompose: GDScript = preload("res://tests/test_map_compose.gd")
 const STEP: float = 1.0 / 60.0
 const VEIL_AT: Vector2 = Vector2(1160.0, 40.0)
 ## The rooms the title opens over itself, and how long each takes to arrive.
-const ROOMS: Dictionary = {"settings": 0.52, "help": 0.52}
+const ROOMS: Dictionary = {"settings": 0.52, "help": 0.52, "credits": 0.60}
+## A place (Credits) has no veil to tap: its bare road never closes it.
+const PLACES: Array[String] = ["credits"]
 
 
 class QuietMain extends Main:
@@ -151,7 +153,10 @@ static func _veil(fails: Array[String], tree: SceneTree, host: SubViewport,
 	await _press(tree, host, VEIL_AT, true)
 	_check(fails, closed[0] == 0, "%s: the veil closed on press, not release" % room)
 	await _press(tree, host, VEIL_AT, false)
-	_check(fails, closed[0] == 1 and main._modal == null, "%s: a tap on the veil did not close the room" % room)
+	if PLACES.has(room):
+		_check(fails, closed[0] == 0 and main._modal == modal, "%s: a tap on the bare road closed the place" % room)
+	else:
+		_check(fails, closed[0] == 1 and main._modal == null, "%s: a tap on the veil did not close the room" % room)
 	_dispose(main)
 
 

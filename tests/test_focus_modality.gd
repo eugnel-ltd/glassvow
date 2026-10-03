@@ -166,9 +166,9 @@ static func _run_menu_title(fails: Array[String], tree: SceneTree, host: SubView
 ## (g) Settings, How to Play and Credits, each opened and closed by tap.
 static func _rooms_closed_by_tap(fails: Array[String], tree: SceneTree, host: SubViewport,
 		content: ContentDB) -> void:
-	# How to Play's Fight On waits below the fold for a touch player: its veil.
-	# Settings leaves by the seat's Return (docs/design/2026-10-03-title-rooms §2.2).
-	var exits: Dictionary = {"settings": "ui.menu.return", "help": "", "credits": "ui.credits.close"}
+	# Settings and Credits leave by the seat's Return (docs/design/2026-10-03-
+	# title-rooms §2.2), How to Play by a tap on its veil.
+	var exits: Dictionary = {"settings": "ui.menu.return", "help": "", "credits": "ui.menu.return"}
 	for room: String in ["settings", "help", "credits"]:
 		var main: Main = await _boot(tree, host, content, true)
 		await _tap(tree, host, _word(main, room))

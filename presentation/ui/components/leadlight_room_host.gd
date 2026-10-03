@@ -19,6 +19,10 @@ const DRAG: float = 10.0
 var shape: StringName = StageShape.IDENTITY
 ## Set by the passage while the room arrives.
 var arriving: bool = false
+## The title lent to the room (its lantern at the seat), while it is lent.
+var title: TitleScreen = null
+## A tap on the veil closes the room (glass rooms); a place has no veil to tap.
+var veil_closes: bool = true
 var _veil: ColorRect
 var _seat: LeadlightSeat
 var _veil_down: bool = false
@@ -107,6 +111,11 @@ func content_rects() -> Array[Rect2]:
 	if glass != null:
 		rects.append(Rect2(glass.position, glass.size))
 	return rects
+
+
+## The lent title is coming home: anything the room borrowed goes back.
+func title_returns() -> void:
+	pass
 
 
 ## How long the room's arrival and departure run (glass: 520 / 400 ms).
@@ -252,7 +261,7 @@ func _on_veil_input(event: InputEvent) -> void:
 		accept_event()
 	elif up:
 		var at: Vector2 = button.position if button != null else touch.position
-		if _veil_down and at.distance_to(_veil_from) <= DRAG:
+		if _veil_down and veil_closes and at.distance_to(_veil_from) <= DRAG:
 			leave()
 		_veil_down = false
 		accept_event()

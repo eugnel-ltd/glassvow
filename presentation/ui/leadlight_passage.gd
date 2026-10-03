@@ -100,6 +100,7 @@ func arrive(host: LeadlightRoomHost, title: TitleScreen = null, word_id: String 
 	_open = host
 	var lend: bool = title != null and is_instance_valid(title)
 	host.seat().set_lantern(lend)
+	host.title = title if lend else null
 	var word: Control = title.word(word_id) if lend else null
 	if lend:
 		_title = title
@@ -467,6 +468,10 @@ func _return_title_now(entry: Leaving) -> void:
 	entry.title = false
 	if title == null:
 		return
+	var host: LeadlightRoomHost = entry.node as LeadlightRoomHost if is_instance_valid(entry.node) else null
+	if host != null:
+		host.title_returns()
+		host.title = null
 	for item: CanvasItem in title.furniture(null, true):
 		item.modulate.a = 1.0
 	title.lantern.flare = 0.0
