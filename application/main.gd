@@ -79,6 +79,10 @@ var _modal_froze: bool = false
 var _passage: LeadlightPassage = null
 ## The title word the room now opening was tapped from (its route id).
 var _room_word: String = ""
+## The rooms' first opening in a launch, paid for ahead while the title rests
+## (RoomWarm), and the languages and shapes already paid for.
+var _room_warm: RoomWarm = null
+var _rooms_warmed: Dictionary = {}
 ## Set while Settings' language toggle rebuilds the route under the room: the
 ## old room lingers, the title is not faded in, the new room lands built.
 var _relanguage: bool = false
@@ -1288,6 +1292,49 @@ func _show_title() -> void:
 	_title_rite_resume = false
 	_title_road = saved
 	_title_road_due = true
+	_warm_rooms()
+
+
+## While the title rests, its rooms' first-opening work is done ahead (once a
+## launch for each language and shape), so the first tap on a room word costs
+## no more than the next (§11.6). Never in the headless suite.
+func _warm_rooms() -> void:
+	var key: String = "%s|%s" % [Locale.active.code, _shape]
+	if DisplayServer.get_name() == "headless" or _rooms_warmed.has(key) \
+			or (_room_warm != null and is_instance_valid(_room_warm)):
+		return
+	_rooms_warmed[key] = true
+	var shape: StringName = _shape
+	var builders: Array[Callable] = [
+		func() -> Control:
+			# Its own throwaway preferences: nothing is read from or written to disk.
+			var preferences: Preferences = Preferences.new()
+			preferences.language = Preferences.active.language
+			preferences.diagnostics_notice_seen = true
+			var settings: SettingsPanel = SettingsPanel.new(preferences, false, _sfx_bus)
+			settings.set_shape(shape)
+			return settings,
+		func() -> Control:
+			var help: HelpScreen = HelpScreen.new(shape, _sfx_bus, FlameLines.codex(content, _vigil, _load_run()))
+			for id: StringName in HelpScreen.SECTION_IDS:
+				help.room().select(id)
+			return help,
+		func() -> Control:
+			var credits: CreditsScreen = CreditsScreen.new(shape, _sfx_bus, _vigil.scenes_seen.has("unsealing"))
+			credits.roll().finish()
+			return credits,
+	]
+	_room_warm = RoomWarm.new(builders, _title_rests)
+	add_child(_room_warm)
+
+
+## The title on screen with nothing over it or moving: no room, no passage,
+## no rite.
+func _title_rests() -> bool:
+	var title: TitleScreen = _choice_screen as TitleScreen
+	return title != null and _modal == null and _route_screen == null \
+		and (title.rite == null or title.rite.is_done()) \
+		and (_passage == null or not (_passage.arriving() or _passage.leaving()))
 
 
 ## The road on screen now, if the screen stands on the title's road.

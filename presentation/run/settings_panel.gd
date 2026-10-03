@@ -30,6 +30,12 @@ const PHONE_RIGHT: float = 6.0
 const PHONE_TOP: float = 6.0
 const PHONE_FOOT: float = 60.0
 
+## The room's height for its tallest section, measured once a launch for each
+## shape, language and set of notes: measuring it shapes every page's text, the
+## four unseen ones included, which put a later opening's tap frame at the
+## whole room's cost (§11.6, as built).
+static var _heights: Dictionary = {}
+
 var _preferences: Preferences
 var _sfx: SfxBus
 var _room: LeadlightRoom
@@ -203,6 +209,11 @@ func _fit() -> void:
 ## The height that holds the tallest section, the crown, the footer and the
 ## glass's margins: the arch's spring is a share of the height, so it is solved.
 func _needed_height() -> float:
+	var key: String = "%s|%s|%s|%s|%s" % [shape, Locale.active.code, _display_supported(),
+		_diagnostics_notice != null, _language_deferred]
+	if _heights.has(key):
+		var known: float = _heights[key]
+		return known
 	var body: float = _room.tabs().get_combined_minimum_size().y
 	for id: StringName in _room.section_ids():
 		var page_node: Control = _room.page(id)
@@ -212,7 +223,9 @@ func _needed_height() -> float:
 		page_node.visible = shown
 	var footer: float = _room.footer().get_combined_minimum_size().y + 10.0
 	var margins: float = 12.0 + 18.0
-	return ceilf((body + footer + margins) / (1.0 - _room.spring)) + 6.0
+	var tall: float = ceilf((body + footer + margins) / (1.0 - _room.spring)) + 6.0
+	_heights[key] = tall
+	return tall
 
 
 ## Alive at rest (§4.4): the sliders' lantern discs breathe ±6% in step with

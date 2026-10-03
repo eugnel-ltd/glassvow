@@ -10,15 +10,18 @@ extends SceneTree
 ##    frame's index from the tap (0 is the tap frame), "wall_ms" (from the last
 ##    frame's draw), "busy_ms" (the frame's own work, from its process step to
 ##    its draw: the number that compares when the wall is display-bound),
-##    "cpu_ms" and "gpu_ms" (the viewport's measured render times)}
+##    "cpu_ms" and "gpu_ms" (the viewport's measured render times), and in a
+##    passage "after_ms" (from the tap frame's draw) and "span_ms" (the
+##    passage's own length: 520 or 600 ms arriving, 400 or 480 leaving)}
 ##
 ## and the run ends with one summary row per room: tap to first moved frame
 ## (from the tap to the tap frame's draw: the passage takes its first step in
 ## the tap frame's own process, after the input that opened it, and a capture
 ## at --fixed-fps 60 shows the veil darkening the stage by 6% on that frame),
-## the tap frame, the passage's other frames (P95 and max), and the room at
-## rest against the title at rest (P95, wall and CPU). The first lap of each
-## room is the first opening this session (cold pipelines after an install),
+## the tap frame, the passage's other frames (P95 and max: only the frames
+## inside the passage's own span, never the rest frames the tour waits out
+## after it), and the room at rest against the title at rest (P95, wall and
+## CPU). The first lap of each room is its first opening in this launch,
 ## reported apart. On the Mac the wall interval is display-bound: the CPU and
 ## GPU render times are the comparable numbers.
 ##
@@ -98,6 +101,9 @@ class Bench extends Node:
 	## The tap's passage, armed at the release until the frame that acts on it.
 	var _armed: String = ""
 	var _viewport_rid: RID
+	## The passage acted on: its own span, and when its tap frame was drawn.
+	var _span_ms: float = 0.0
+	var _tap_drawn_us: int = 0
 
 	## A run in Act II in the Development profile: the title a returning player
 	## sees (Back to the Road), before Main reads it.
@@ -151,6 +157,14 @@ class Bench extends Node:
 		while title.rite != null and not title.rite.is_done():
 			await get_tree().process_frame
 		await _seconds(2.0)
+		# The rooms' first-opening work (RoomWarm) is done while the title
+		# rests, before the title at rest is measured.
+		var until: int = Time.get_ticks_msec() + 10000
+		while main._room_warm != null and is_instance_valid(main._room_warm) \
+				and Time.get_ticks_msec() < until:
+			await get_tree().process_frame
+		_write({"nonce": nonce, "label": label, "probe": "warm",
+			"done": main._room_warm == null or not is_instance_valid(main._room_warm)})
 
 	## One lap: the word tapped, the room held, its Return tapped.
 	func _tour(room: String, lap: int) -> void:
@@ -207,7 +221,18 @@ class Bench extends Node:
 		if acted:
 			_phase = _armed
 			_index = 0
+			var host: LeadlightRoomHost = main._modal as LeadlightRoomHost if _armed == "open" else null
+			_span_ms = 1000.0 * (host.arrival_time() if host != null else 0.0)
+			if _armed == "close":
+				_span_ms = 1000.0 * _leaving_span()
 			_armed = ""
+
+	## The departure's span: the leaving room's, which the passage holds.
+	func _leaving_span() -> float:
+		for node: Node in main.get_children():
+			if node is LeadlightRoomHost and node != main._modal:
+				return (node as LeadlightRoomHost).departure_time()
+		return 0.40
 
 	func _seconds(span: float) -> void:
 		var until: int = Time.get_ticks_msec() + roundi(span * 1000.0)
@@ -224,6 +249,11 @@ class Bench extends Node:
 				"gpu_ms": RenderingServer.viewport_get_measured_render_time_gpu(_viewport_rid)}
 			if _index <= 1 and (_phase == "open" or _phase == "close"):
 				row["since_tap_ms"] = float(now - _tap_us) / 1000.0
+			if _phase == "open" or _phase == "close":
+				if _index == 0:
+					_tap_drawn_us = now
+				row["after_ms"] = float(now - _tap_drawn_us) / 1000.0
+				row["span_ms"] = _span_ms
 			_rows.append(row)
 			_write(row)
 		_index += 1
@@ -255,7 +285,7 @@ class Bench extends Node:
 				for phase: String in ["open", "close"]:
 					for row: Dictionary in _rows:
 						if row["room"] == room and (_i(row, "lap") == 0) == first and row["phase"] == phase \
-								and _i(row, "i") >= 1:
+								and _i(row, "i") >= 1 and _within(row):
 							passage.append(_f(row, "wall_ms"))
 				out["passage_ms"] = _stats(passage)
 				out["passage_cpu_ms"] = _stats(_pick(room, "open", "cpu", first) + _pick(room, "close", "cpu", first))
@@ -276,7 +306,7 @@ class Bench extends Node:
 				continue
 			if phase != "title" and (_i(row, "lap") == 0) != first:
 				continue
-			if phase != "room" and phase != "title" and _i(row, "i") < 1:
+			if phase != "room" and phase != "title" and (_i(row, "i") < 1 or not _within(row)):
 				continue
 			var proc: float = row["busy_ms"]
 			var render: float = row["cpu_ms"]
@@ -285,6 +315,10 @@ class Bench extends Node:
 				value = row[field]
 			values.append(value)
 		return values
+
+	## A passage frame inside the passage's own span (from its tap frame).
+	static func _within(row: Dictionary) -> bool:
+		return _f(row, "after_ms") <= _f(row, "span_ms")
 
 	static func _stats(values: Array[float]) -> Dictionary:
 		if values.is_empty():
