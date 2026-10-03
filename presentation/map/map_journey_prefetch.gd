@@ -82,7 +82,10 @@ static func step_current() -> void:
 
 
 ## A map is opening now: whatever main-thread setup the current prefetch has
-## left runs at once, and its worker starts, or stops pacing its meshes.
+## left runs at once, and its worker starts (unpaced, as a high-priority task
+## that works the land's heights out across the pool, so it never queues
+## behind the title's own loads or a build given up), or stops pacing its
+## meshes.
 static func hurry() -> void:
 	if _current == null:
 		return
@@ -111,7 +114,8 @@ static func layout_packet(input_digest: String) -> Dictionary:
 ## Reads back from the renderer, before the first frame, when nothing is in
 ## flight and a read-back costs next to nothing, the two meshes a prefetch
 ## would otherwise read back under the title's frames: the kit's unit cube and
-## the slate cluster's faces (Main's boot, on the game's renderer only).
+## the slate cluster's faces. Main's first title calls it, on the game's
+## renderer, only when it has a saved Act I run to warm.
 static func prime() -> void:
 	MapJourneyLandscape.Kit.Meshes.prepare_unit_box()
 	MapLandscapeAssets.prime()
@@ -134,23 +138,29 @@ static func release() -> void:
 ## Joins the prefetch's worker and every abandoned land's, for the process's
 ## exit (`Main`): a task left running holds the layout records it made, and
 ## freeing them after the scripting has shut down crashed the engine at exit.
-## The build never waits on the main thread, so this waits at most for the
-## rest of one build.
+## The build never waits on the main thread, and a build waited for here is
+## given up first (unpaced and stopped, `Meshes.Pacing.stop`), as every
+## abandoned one already is, so this waits at most for the current stage of
+## each.
 static func join() -> void:
 	if _current != null and _current.step == Step.BUILDING:
+		_current._pacing.stop()
 		WorkerThreadPool.wait_for_task_completion(_current._task)
 		_current._land.free()
 	_current = null
 	MapScene.join_abandoned()
 
 
-## Gives up the current prefetch. Its worker is never waited on here: the land
-## it builds is abandoned to `MapScene.reap`, which frees it once the task ends.
+## Gives up the current prefetch. Its worker is never waited on here: the
+## build is stopped (`Meshes.Pacing.stop`: unpaced, it ends after its current
+## stage and frees the pool's thread for the next build) and the land it was
+## building is abandoned to `MapScene.reap`, which frees it once the task ends.
 ## A land it finished is freed unless a map draws it.
 static func _drop() -> void:
 	if _current == null:
 		return
 	if _current.step == Step.BUILDING and _current._land != null:
+		_current._pacing.stop()
 		_current._land.adopt_task(_current._task)
 		MapScene.abandon(_current._land)
 	elif _current.step == Step.DONE:
@@ -203,6 +213,8 @@ func _take(assets: MapLandscapeAssets) -> bool:
 	return not (_bundle.is_empty() or _heroes.is_empty() or _quality.is_empty())
 
 
+## Starts the build on the pool: `paced` under a lit screen, as a low-priority
+## task; unpaced and high-priority when a map is already waiting (`hurry`).
 func _launch(paced: bool) -> void:
 	var land: MapJourneyLandscape = MapJourneyLandscape.new()
 	_land = land
@@ -210,7 +222,7 @@ func _launch(paced: bool) -> void:
 	_pacing.on = paced
 	_task = WorkerThreadPool.add_task(_paced_build.bind(_pacing, _out, land, _assets, _bundle,
 		_heroes, _quality.duplicate(true), _nodes.duplicate(true), _edges.duplicate(true),
-		_act, _seed, _salt), false, "journey land prefetch")
+		_act, _seed, _salt), not paced, "journey land prefetch")
 	step = Step.BUILDING
 
 
@@ -220,16 +232,18 @@ static func _paced_build(pacing: Meshes.Pacing, out: Array, land: MapJourneyLand
 		quality: Dictionary, nodes: Array, edges: Array, act: int, run_seed: int,
 		salt: int) -> void:
 	Meshes.pace(pacing)
-	_build(out, land, assets, bundle, heroes, quality, nodes, edges, act, run_seed, salt)
+	_build(pacing, out, land, assets, bundle, heroes, quality, nodes, edges, act, run_seed,
+		salt)
 	Meshes.pace(null)
 
 
 ## On the worker: input, layout, the screen's scenery binding and the land,
 ## written into `out` as `[land, key, failure, input, input digest, packet,
-## binding]`.
-static func _build(out: Array, land: MapJourneyLandscape, assets: MapLandscapeAssets,
-		bundle: Dictionary, heroes: Dictionary, quality: Dictionary, nodes: Array,
-		edges: Array, act: int, run_seed: int, salt: int) -> void:
+## binding]`. A build given up (`pacing.stopped`) ends at its next stage.
+static func _build(pacing: Meshes.Pacing, out: Array, land: MapJourneyLandscape,
+		assets: MapLandscapeAssets, bundle: Dictionary, heroes: Dictionary,
+		quality: Dictionary, nodes: Array, edges: Array, act: int, run_seed: int,
+		salt: int) -> void:
 	out.append(land)
 	var generator: Dictionary = MapLayoutPolicy.generator_fields(false)
 	var input: MapLayoutInput = WorldMapScreen.layout_input(nodes, edges, act, run_seed,
@@ -237,10 +251,14 @@ static func _build(out: Array, land: MapJourneyLandscape, assets: MapLandscapeAs
 	if input == null:
 		out.append_array(["", "invalid input"])
 		return
+	if _given_up(pacing, land, out):
+		return
 	var packet: Dictionary = MapLayoutPolicy.generate(input, quality, bundle)
 	var result_v: Variant = packet.get("result", null)
 	if not result_v is MapLayoutResult:
 		out.append_array(["", "layout failed"])
+		return
+	if _given_up(pacing, land, out):
 		return
 	var input_digest: String = input.digest()
 	var result: MapLayoutResult = result_v
@@ -258,9 +276,19 @@ static func _build(out: Array, land: MapJourneyLandscape, assets: MapLandscapeAs
 		binding["bake"] = {}
 		binding["quality"] = quality.duplicate(true)
 	land.prepare(data, assets, salt)
-	land.build_detached(data)
+	land.build_detached(data, pacing)
 	out.append_array(["|".join([result.digest(), bundle["digest"], str(salt)]), land.failure,
 		input, input_digest, packet, binding])
+
+
+## On the worker: whether the build was given up (`pacing.stopped`); if so its
+## land fails as `STOPPED` and `out` says so.
+static func _given_up(pacing: Meshes.Pacing, land: MapJourneyLandscape, out: Array) -> bool:
+	if not pacing.stopped:
+		return false
+	land.failure = MapJourneyLandscape.STOPPED
+	out.append_array(["", land.failure])
+	return true
 
 
 func _finish() -> void:

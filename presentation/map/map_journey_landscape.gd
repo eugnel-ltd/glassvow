@@ -15,10 +15,13 @@ const Kit = preload("res://presentation/map/landscape/kit.gd")
 const Journey = preload("res://presentation/map/landscape/journey.gd")
 const Details = preload("res://presentation/map/landscape/road_details.gd")
 const Source = preload("res://presentation/map/landscape/layout_source.gd")
+const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 const MAP_BOUNDS: Rect2 = Rect2(-48, -30, 96, 60)
 const LIT_GLASS: Color = Color("b38d57")
 const LIT_EMISSION: Color = Color("aa7841")
 const COLD_GLASS: Color = Color("49424f")
+## The failure of a build given up before it ended (`Meshes.Pacing.stopped`).
+const STOPPED: String = "Stopped: no map waits for this land"
 
 var terrain: Terrain
 var kit: Kit
@@ -67,11 +70,19 @@ func build(data: Dictionary) -> void:
 
 ## The whole build from a worker-pool task (`MapJourneyPrefetch`), with the
 ## node outside the tree. The kit's scenes must already be held
-## (`Kit.preload_scenes`, on the main thread).
-func build_detached(data: Dictionary) -> void:
-	start(data, false)
+## (`Kit.preload_scenes`, on the main thread). `pacing` is how the build hands
+## its meshes to the renderer: unpaced (a map is waiting for the land), the
+## heights are worked out across the pool, as a map's own build works them
+## out; and a build given up (`stopped`) ends after its current stage, as a
+## failure nothing adopts.
+func build_detached(data: Dictionary, pacing: Meshes.Pacing = null) -> void:
+	_started = Time.get_ticks_msec()
+	_begin(data, pacing)
+	terrain.start_heights(pacing != null and not pacing.on)
+	_stage = Stage.HEIGHTS
 	terrain.finish_heights()
-	_finish()
+	if not _halted():
+		_finish()
 	_stage = Stage.DONE
 	timings_ms["total"] = Time.get_ticks_msec() - _started
 
@@ -83,13 +94,29 @@ func start(data: Dictionary, parallel: bool = true) -> void:
 	_started = Time.get_ticks_msec()
 	if parallel:
 		Kit.preload_scenes()
+	_begin(data, null)
+	terrain.start_heights(parallel)
+	_stage = Stage.HEIGHTS
+
+
+## The cheap preparation every build begins with: the record's source and the
+## terrain's landform.
+func _begin(data: Dictionary, pacing: Meshes.Pacing) -> void:
 	_source = Source.from_layout(data)
 	terrain = Terrain.new()
 	terrain.lite_surfaces = MapScene.lean_profile()
+	terrain.pacing = pacing
 	add_child(terrain)
 	terrain.prepare(_source, false, MAP_BOUNDS)
-	terrain.start_heights(parallel)
-	_stage = Stage.HEIGHTS
+
+
+## Whether the build was given up (`build_detached`); it then fails as
+## `STOPPED` and is left incomplete.
+func _halted() -> bool:
+	if terrain == null or not terrain.stopped():
+		return false
+	failure = STOPPED
+	return true
 
 
 ## Advances an asynchronous build; true once it has finished (or failed).
@@ -145,6 +172,8 @@ func _finish() -> void:
 	terrain.finish()
 	timings_ms["terrain"] = Time.get_ticks_msec() - started
 	timings_ms["terrain_parts"] = terrain.build_timings_ms
+	if _halted():
+		return
 	started = Time.get_ticks_msec()
 	var resolved: PackedVector3Array = PackedVector3Array()
 	for point: Vector3 in anchors:
@@ -158,6 +187,8 @@ func _finish() -> void:
 		failure = kit.failure if not kit.failure.is_empty() else "Woodland assembly incomplete"
 		return
 	timings_ms["scenery"] = Time.get_ticks_msec() - started
+	if _halted():
+		return
 	started = Time.get_ticks_msec()
 	Details.build(terrain)
 	timings_ms["road_details"] = Time.get_ticks_msec() - started

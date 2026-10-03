@@ -2,11 +2,13 @@ extends RefCounted
 ## #660: Back to the Road opens a drawn map. Once the title is lit (never during
 ## its launch rite) it warms the saved run's Act I land on the worker pool, and
 ## Continue's restore adopts it without a second build, with the same layout a
-## cold open binds. The warm land is keyed by what it is built from: another
-## save is never given it, and Begin Anew and Erase Everything let it go; a
-## language change keeps it, since the land holds no words. The warm-up reads
-## nothing back from the renderer, so its cards and kit are checked against the
-## renderer's own: and a headless boot still builds inline.
+## cold open binds, also when the tap comes before the warm-up has ended. The
+## warm land is keyed by what it is built from: another save is never given it,
+## and Begin Anew and Erase Everything let it go, stopping a build in flight; a
+## language change keeps it, on the title and on the map, since the land holds
+## no words. The warm-up reads nothing back from the renderer, so its cards and
+## kit are checked against the renderer's own: and a headless boot warms
+## nothing and still builds inline.
 
 const RUN_PATH: String = "user://test_map_title_road_run_v2.json"
 const VIGIL_PATH: String = "user://test_map_title_road_vigil_v2.json"
@@ -14,6 +16,7 @@ const SEED_A: int = 6601
 const SEED_B: int = 6602
 const SEED_C: int = 6603
 const SETTLE_MS: int = 120000
+const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 
 
 static func _check(fails: Array[String], ok: bool, what: String) -> void:
@@ -32,7 +35,9 @@ static func run(fails: Array[String]) -> void:
 	_headless_builds_inline(fails, content)
 	var reference: Dictionary = _cold_reference(content, SEED_A)
 	MapScene.journey_async = true
-	_title_warms_and_continue_adopts(fails, content, reference)
+	var serial_heights: PackedFloat32Array = _title_warms_and_continue_adopts(fails, content,
+		reference)
+	_early_continue_adopts_the_build(fails, content, reference, serial_heights)
 	MapScene.journey_async = false
 	_release_all()
 	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
@@ -118,8 +123,9 @@ static func _headless_builds_inline(fails: Array[String], content: ContentDB) ->
 	main._title_kindled = true
 	main._show_title()
 	main._process(0.016)
-	_check(fails, MapJourneyPrefetch.current_step() == -1 and MapScene._journey_kept == null,
-		"a headless title warms nothing")
+	_check(fails, MapJourneyPrefetch.current_step() == -1 and MapScene._journey_kept == null
+			and MapLandscapeAssets.warming() == null and MapLandscapeAssets._kept == null,
+		"a headless title warms nothing, not even the act's pictures")
 	main._on_title_choice("continue", saved)
 	var screen: WorldMapScreen = main._map_screen
 	_check(fails, screen != null and not screen.landscape_pending()
@@ -148,8 +154,10 @@ static func _cold_reference(content: ContentDB, run_seed: int) -> Dictionary:
 	return out
 
 
+## The title's warm-up, adopted by Continue, kept and let go; returns the warm
+## land's heights, worked out on one thread under the title.
 static func _title_warms_and_continue_adopts(fails: Array[String], content: ContentDB,
-		reference: Dictionary) -> void:
+		reference: Dictionary) -> PackedFloat32Array:
 	var main: Main = _main(content)
 	var saved: RunState = _store_run(content, SEED_A)
 	# The first title of a session plays the launch rite: nothing warms under it.
@@ -167,6 +175,8 @@ static func _title_warms_and_continue_adopts(fails: Array[String], content: Cont
 			== MapJourneyPrefetch.Step.DONE and MapScene._journey_kept != null,
 		"the title's warm-up builds the land")
 	var warm: MapJourneyLandscape = MapScene._journey_kept
+	var serial_heights: PackedFloat32Array = warm.terrain._grid if warm != null \
+		else PackedFloat32Array()
 	_check(fails, MapJourneyPrefetch._current._pacing != null and MapJourneyPrefetch._current._pacing.on,
 		"the title's build hands the renderer its meshes a frame's worth at a time")
 	_check(fails, MapScene._bound_key == MapScene._journey_kept_key
@@ -195,6 +205,7 @@ static func _title_warms_and_continue_adopts(fails: Array[String], content: Cont
 				and screen.layout_input_digest() == str(reference.get("input", ""))
 				and binding == cold_binding,
 			"the warm open binds the layout and scenery a cold open binds")
+	_map_keeps_the_land(fails, main, warm)
 	# Back on the title with the same save: the land is kept, nothing rebuilt.
 	_to_title(main)
 	main._process(0.016)
@@ -245,6 +256,137 @@ static func _title_warms_and_continue_adopts(fails: Array[String], content: Cont
 		OS.delay_msec(4)
 	_check(fails, MapScene._abandoned.is_empty(), "a land given up mid-build is freed once built")
 	_dispose(main)
+	return serial_heights
+
+
+## The map's own screen changes keep the land: a language change on the map
+## rebuilds the screen, and a title reached with the run still live (a save
+## error's door) keeps the screen until Continue restores the run again. Either
+## way the screen that held the land is freed at the frame's end and the new one
+## binds first: it takes the land over instead of building another.
+static func _map_keeps_the_land(fails: Array[String], main: Main,
+		warm: MapJourneyLandscape) -> void:
+	var before: WorldMapScreen = main._map_screen
+	main._show_title()
+	main._process(0.016)
+	main._continue_run(main._load_run())
+	var after: WorldMapScreen = main._map_screen
+	_check(fails, after != null and after != before and not after.landscape_pending()
+			and after._map_scene.journey_landscape() == warm and is_instance_valid(warm)
+			and warm.get_parent() != null and not MapJourneyPrefetch.busy(),
+		"a run restored over its kept screen draws the same land, without building another")
+	_free_left(before)
+	before = after
+	main._on_language_changed(Locale.CODE_ZH_HANT, false)
+	after = main._map_screen
+	_check(fails, after != null and after != before and not after.landscape_pending()
+			and after._map_scene.journey_landscape() == warm and is_instance_valid(warm)
+			and warm.get_parent() != null and not MapJourneyPrefetch.busy(),
+		"a language change on the map draws the same land, without building another")
+	_free_left(before)
+	before = after
+	main._on_language_changed(Locale.CODE_EN, false)
+	_free_left(before)
+
+
+## A tap on Back to the Road before the title's warm-up has ended: the map
+## hurries the warm-up instead of building again. Tapped during its setup, the
+## build starts at once, unpaced, its heights worked out across the pool;
+## tapped mid-build, the build stops pacing. Either way the map draws that
+## build's land, the land a cold open binds.
+static func _early_continue_adopts_the_build(fails: Array[String], content: ContentDB,
+		reference: Dictionary, serial_heights: PackedFloat32Array) -> void:
+	for mid_build: bool in [false, true]:
+		_release_all()
+		var main: Main = _main(content)
+		_store_run(content, SEED_A)
+		main._title_kindled = true
+		main._show_title()
+		main._process(0.016)
+		var setup: Array[int] = [MapJourneyPrefetch.Step.WAITING_PICTURES,
+			MapJourneyPrefetch.Step.CATALOGUE, MapJourneyPrefetch.Step.KIT]
+		if mid_build:
+			var until: int = Time.get_ticks_msec() + SETTLE_MS
+			while MapJourneyPrefetch.current_step() in setup and Time.get_ticks_msec() < until:
+				main._process(0.016)
+				OS.delay_msec(1)
+		var job: MapJourneyPrefetch = MapJourneyPrefetch._current
+		var when: String = "mid-build" if mid_build else "during the warm-up's setup"
+		var at_tap: bool = job != null and job.step in setup
+		if mid_build:
+			at_tap = job != null and job.step == MapJourneyPrefetch.Step.BUILDING \
+				and job._pacing.on
+		_check(fails, at_tap, "the title's warm-up is %s when the lantern is tapped" % when)
+		var paced: Meshes.Pacing = job._pacing if job != null else null
+		var building: MapJourneyLandscape = job._land if job != null else null
+		(main._choice_screen as TitleScreen).chosen.emit("continue")
+		var screen: WorldMapScreen = main._map_screen
+		if not mid_build and job != null:
+			paced = job._pacing
+			building = job._land
+		_check(fails, screen != null and screen.landscape_pending()
+				and MapJourneyPrefetch._current == job and paced != null and not paced.on
+				and job.step == MapJourneyPrefetch.Step.BUILDING,
+			"a Continue %s builds that land unpaced" % when)
+		_pump_screen(main)
+		var drawn: MapJourneyLandscape = screen._map_scene.journey_landscape() \
+			if screen != null else null
+		_check(fails, drawn != null and drawn == building and drawn.is_built()
+				and drawn.failure.is_empty(),
+			"a Continue %s draws the warm-up's land, without building another" % when)
+		if screen != null:
+			var binding: Dictionary = screen.layout_diagnostics().get("live_binding", {})
+			var cold_binding: Dictionary = reference.get("binding", {})
+			_check(fails, screen.layout_digest() == str(reference.get("layout", ""))
+					and not cold_binding.is_empty() and binding == cold_binding,
+				"a Continue %s binds the layout and scenery a cold open binds" % when)
+		if not mid_build:
+			_check(fails, drawn != null and not serial_heights.is_empty()
+					and drawn.terrain._grid == serial_heights,
+				"heights worked out across the pool are those worked out on one thread")
+		_dispose(main)
+	_stopped_build_ends_early(fails, content)
+
+
+## Begin Anew mid-build gives the title's build up: it stops pacing and ends at
+## its next stage as a failure nothing adopts, freeing the pool's thread for
+## the new run's build.
+static func _stopped_build_ends_early(fails: Array[String], content: ContentDB) -> void:
+	_release_all()
+	var main: Main = _main(content)
+	_store_run(content, SEED_A)
+	main._title_kindled = true
+	main._show_title()
+	main._process(0.016)
+	var until: int = Time.get_ticks_msec() + SETTLE_MS
+	while MapJourneyPrefetch.current_step() != MapJourneyPrefetch.Step.BUILDING \
+			and MapJourneyPrefetch.busy() and Time.get_ticks_msec() < until:
+		main._process(0.016)
+		OS.delay_msec(1)
+	var job: MapJourneyPrefetch = MapJourneyPrefetch._current
+	var given_up: MapJourneyLandscape = job._land if job != null else null
+	var pacing: Meshes.Pacing = job._pacing if job != null else null
+	main._vigil.scenes_seen.append("opening")
+	main._forced_seed = SEED_B
+	main._new_run()
+	_check(fails, pacing != null and pacing.stopped and not pacing.on
+			and MapScene._abandoned.has(given_up),
+		"Begin Anew stops the title's build in flight, unpaced")
+	until = Time.get_ticks_msec() + SETTLE_MS
+	while given_up != null and given_up.busy() and Time.get_ticks_msec() < until:
+		OS.delay_msec(2)
+	_check(fails, given_up != null and given_up.failure == MapJourneyLandscape.STOPPED,
+		"a build given up ends early, as a failure nothing adopts")
+	_settle(main)
+	_check(fails, not is_instance_valid(given_up) and MapScene._abandoned.is_empty(),
+		"a stopped build's land is freed once its task ends")
+	_dispose(main)
+
+
+## A screen let go with `queue_free`, freed now: the test frames never come.
+static func _free_left(screen: WorldMapScreen) -> void:
+	if is_instance_valid(screen) and screen.get_parent() == null:
+		screen.free()
 
 
 ## Back to the title from a run (the run menu's door), and the frame's end that

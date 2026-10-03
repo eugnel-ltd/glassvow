@@ -201,8 +201,6 @@ func _ready() -> void:
 	# The game builds Act I's journey land on the worker pool behind a veil;
 	# a headless boot (tests) has no frames to wait through, so it builds inline.
 	MapScene.journey_async = DisplayServer.get_name() != "headless"
-	if MapScene.journey_async:
-		MapJourneyPrefetch.prime()
 	var boot: GDScript = null
 	if DevTools.available():
 		boot = load(DevTools.BOOT) as GDScript
@@ -1153,6 +1151,11 @@ func _show_title() -> void:
 	var newcomer: bool = saved == null and _deed("runs") == 0
 	var ask_language: bool = Preferences.active.language.is_empty() and newcomer
 	var rite: bool = not _title_kindled or _title_rite_resume
+	if rite and saved != null and saved.act == 0 and MapScene.journey_async:
+		# The lit title will warm this run's Act I land (`_warm_title_road`):
+		# what that would read back from the renderer is read now, before the
+		# rite's first frame, and only for a player it serves.
+		MapJourneyPrefetch.prime()
 	var screen: TitleScreen = TitleScreen.new(
 		_title_context(saved, choices, rite, ask_language), _sfx_bus)
 	screen.chosen.connect(_on_title_pick.bind(screen, saved))
@@ -1714,7 +1717,8 @@ func _warm_title_road() -> void:
 	var saved: RunState = _title_road
 	_title_road = null
 	_title_road_due = false
-	if title == null:
+	# A headless boot (tests, tools) has no frames to warm anything under.
+	if title == null or not MapScene.journey_async:
 		return
 	var restored: WorldMap = WorldMap.from_dict(saved.map) if saved != null else null
 	if restored == null or saved.pending_run_end != null:

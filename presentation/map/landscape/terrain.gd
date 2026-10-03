@@ -27,6 +27,9 @@ var _bake_lock: Mutex = Mutex.new()
 var _heights_task: int = -1
 ## The A12 profile's ground (`terrain_paint.gdshader` `lite`): set by the host.
 var lite_surfaces: bool = false
+## The build's pacing when a worker builds the land ahead of its map: a build
+## given up (`stopped`) ends after its current part.
+var pacing: Meshes.Pacing = null
 var _heights_started: int = 0
 var landform: RefCounted = preload("res://presentation/map/landscape/landform.gd").new()
 const CELL: float = .5
@@ -73,9 +76,13 @@ func finish() -> void:
 	var started: int = Time.get_ticks_msec()
 	_land()
 	build_timings_ms["ground"] = Time.get_ticks_msec()-started
+	if stopped():
+		return
 	started = Time.get_ticks_msec()
 	_roads()
 	build_timings_ms["roads"] = Time.get_ticks_msec()-started
+	if stopped():
+		return
 	started = Time.get_ticks_msec()
 	for cut: float in MapRavine.CUTS:
 		var river: River = River.new()
@@ -83,6 +90,11 @@ func finish() -> void:
 		add_child(river)
 		river.build(self)
 	build_timings_ms["river"] = Time.get_ticks_msec()-started
+
+
+## Whether the build was given up (`pacing`); the land is then incomplete.
+func stopped() -> bool:
+	return pacing != null and pacing.stopped
 
 
 ## Distance from `p` to the nearest road centreline (XZ). Exact within

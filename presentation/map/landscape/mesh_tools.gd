@@ -41,7 +41,8 @@ static func finish(surface: SurfaceTool) -> ArrayMesh:
 ## frame: the ground's chunks together cost the title a 43 ms frame on the
 ## iPad 8. A thread `pace`d pauses for a frame once it has committed
 ## `PACE_VERTICES` vertices or `PACE_MESHES` meshes since its last pause, until
-## its `Pacing` is turned off (the map is opening now).
+## its `Pacing` is turned off (the map is opening now, or no one wants the
+## build any more).
 const PACE_VERTICES: int = 6000
 const PACE_MESHES: int = 4
 const PACE_PAUSE_MS: int = 17
@@ -51,8 +52,17 @@ static var _paced_lock: Mutex = Mutex.new()
 
 class Pacing extends RefCounted:
 	var on: bool = true
+	## No one wants the build any more (`MapJourneyPrefetch` gave it up): it
+	## ends at its next stage, a failure nothing adopts, and frees the thread.
+	var stopped: bool = false
 	var vertices: int = 0
 	var meshes: int = 0
+
+	## Gives the build up: unpaced, so its thread is not held by pauses, and
+	## stopped at its next stage.
+	func stop() -> void:
+		on = false
+		stopped = true
 
 
 ## Paces the calling thread's commits by `pacing`; null ends it.

@@ -991,10 +991,10 @@ func seat_of(id: String, anchor: Vector3) -> Vector3:
 ## False (and a failed layout) when the land cannot be built.
 func _bind_journey(key: String, data: Dictionary) -> bool:
 	var land: MapJourneyLandscape = _landscape as MapJourneyLandscape
-	if key == _journey_kept_key and is_instance_valid(_journey_kept) \
-			and _journey_kept.get_parent() == null:
+	var kept: MapJourneyLandscape = _kept_for(key)
+	if kept != null:
 		land.free()
-		land = _journey_kept
+		land = kept
 		_landscape = land
 	elif journey_async:
 		_journey_pending = true
@@ -1028,10 +1028,10 @@ func _poll_journey() -> void:
 		# turns out to be this layout's, otherwise build our own.
 		if MapJourneyPrefetch.busy():
 			return
-		if _journey_key == _journey_kept_key and is_instance_valid(_journey_kept) \
-				and _journey_kept.get_parent() == null:
+		var kept: MapJourneyLandscape = _kept_for(_journey_key)
+		if kept != null:
 			land.free()
-			land = _journey_kept
+			land = kept
 			_landscape = land
 		else:
 			land.start(_journey_data)
@@ -1051,6 +1051,28 @@ func _poll_journey() -> void:
 
 func landscape_pending() -> bool:
 	return _journey_pending
+
+
+## The kept land when it was kept for `key` and this screen may draw it: drawn
+## by no screen, or by one on its way out. A screen replaced or let go is freed
+## at the frame's end (`queue_free`: `Main._show_map`, `MapScreenKeep.take`),
+## and the screen that replaces it binds in the same frame, so the leaving
+## screen hands the land over now instead of a second build starting (a
+## language change on the map, a run restored over a kept screen).
+static func _kept_for(key: String) -> MapJourneyLandscape:
+	if key != _journey_kept_key or not is_instance_valid(_journey_kept):
+		return null
+	var holder: Node = _journey_kept.get_parent()
+	var leaving: bool = false
+	var scene: MapScene = null
+	while holder != null:
+		leaving = leaving or holder.is_queued_for_deletion()
+		if scene == null and holder is MapScene:
+			scene = holder
+		holder = holder.get_parent()
+	if leaving and scene != null and scene._landscape == _journey_kept:
+		scene._release_landscape()
+	return _journey_kept if _journey_kept.get_parent() == null else null
 
 
 ## Makes `land`, built for binding `key` (`MapJourneyPrefetch`), the kept land.
