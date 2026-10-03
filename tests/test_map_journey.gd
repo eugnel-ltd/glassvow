@@ -141,6 +141,8 @@ static func _framing(fails: Array[String], screen: WorldMapScreen) -> void:
 			and is_equal_approx(rig.get_camera().rotation_degrees.x, -MapJourneyCameraContract.PITCH)
 			and rig.zoom_stop == MapCameraRig.DEFAULT_STOP,
 		"Act I opens on the journey camera's Journey framing")
+	_check(fails, rig.get_camera().size >= MapJourneyCameraContract.PREFERRED_ZOOM - 0.01,
+		"the Journey view holds the road round the framed stones (%.1f m)" % rig.get_camera().size)
 	var stage: Vector2 = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
 	var touch: float = MapJourneyCameraContract.touch_size(stage)
 	var seats: PackedVector2Array = screen.projected_seats()

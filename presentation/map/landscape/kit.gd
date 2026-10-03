@@ -502,13 +502,15 @@ func _clear(p: Vector3, radius: float, height: float, kind: String) -> bool:
 		var profile: Vector2 = PROFILES[kind]
 		for point: Vector2 in tree_envelopes[kind]:
 			silhouette.append(point * (height / profile.y))
+	# Out of every waystone's line of sight from the journey camera.
+	var pitch: float = deg_to_rad(MapJourneyCameraContract.PITCH)
 	for point: Vector3 in anchors:
 		var delta: Vector3 = p - point
-		var projected_z: float = delta.z - (p.y - point.y) / tan(deg_to_rad(55))
-		if absf(delta.x) < radius + 1.2 and projected_z > -radius - 1.3 and projected_z < radius + height / tan(deg_to_rad(55)) + 1.3:
+		var projected_z: float = delta.z - (p.y - point.y) / tan(pitch)
+		if absf(delta.x) < radius + 1.2 and projected_z > -radius - 1.3 and projected_z < radius + height / tan(pitch) + 1.3:
 			if not kind.begins_with("conifer"):
 				return false
-			var projected: Vector2 = Vector2(-delta.x, -delta.z + (p.y - point.y) / tan(deg_to_rad(55)))
+			var projected: Vector2 = Vector2(-delta.x, -delta.z + (p.y - point.y) / tan(pitch))
 			var reserve: PackedVector2Array = [projected + Vector2(-1.2,-1.3), projected + Vector2(1.2,-1.3), projected + Vector2(1.2,1.3), projected + Vector2(-1.2,1.3)]
 			if not Geometry2D.intersect_polygons(silhouette, reserve).is_empty():
 				return false

@@ -3,8 +3,17 @@ extends RefCounted
 ## Shared projection contract for local decisions and non-interactive overview.
 ## Fitting the group is insufficient: the same pose must preserve distinct ink
 ## and touch rectangles. Infeasible groups are reported to the layout solver.
-const VERSION: String = "journey-camera-v2"
-const PITCH: float = 55.0
+const VERSION: String = "journey-camera-v3"
+## The journey camera's elevation. 40° (R2 camera study,
+## `docs/design/2026-10-02-map-living-land/camera-study.md`): low enough to
+## show the land's faces and hold a cluster of the road, as the owner's target
+## does, while staying orthographic, so pins, hit tests and panning are exact.
+const PITCH: float = 40.0
+## A decision pose's least view height (metres): the framed stones and the road
+## round them. Never below `MIN_ZOOM`; widened toward `PREFERRED_ZOOM` only as
+## far as the framed stones' touch squares stay apart.
+const MIN_ZOOM: float = 12.0
+const PREFERRED_ZOOM: float = 19.2
 const HEIGHT: float = 36.0
 const TOUCH_DESIGN_PX: float = 60.0
 const TOUCH_FLOOR_PX: float = 60.0
@@ -47,7 +56,7 @@ static func resolve(points: PackedVector3Array, stage: Vector2, overview: bool =
 		minimum=minimum.min(projected)
 		maximum=maximum.max(projected)
 	var span: Vector2 = maximum-minimum
-	var zoom: float = maxf(12.0, maxf(span.x*stage.y/usable.x, span.y*stage.y/usable.y))
+	var zoom: float = maxf(MIN_ZOOM, maxf(span.x*stage.y/usable.x, span.y*stage.y/usable.y))
 	var maximum_zoom: float = INF
 	if not overview:
 		for i: int in range(plane.size()):
@@ -58,6 +67,8 @@ static func resolve(points: PackedVector3Array, stage: Vector2, overview: bool =
 	if zoom > maximum_zoom+.0001:
 		return {"ok": false, "reason": "group cannot fit without overlapping targets",
 			"minimum_zoom": zoom, "maximum_zoom": maximum_zoom}
+	if not overview:
+		zoom = maxf(zoom, minf(PREFERRED_ZOOM, maximum_zoom))
 	var centre: Vector2 = (minimum+maximum)*.5+(stage*.5-safe.get_center())*zoom/stage.y
 	var position: Vector3 = Vector3(centre.x, HEIGHT,
 		centre.y/sin(deg_to_rad(PITCH))+HEIGHT/tan(deg_to_rad(PITCH)))
