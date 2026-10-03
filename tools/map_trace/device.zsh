@@ -31,6 +31,15 @@ print(found[0] if len(found) == 1 else "")'
 
 mt_redact() { sed "s/${UDID:-no-udid}/<device>/g"; }
 
+## The iPad's name, which xctrace also takes in place of its identifier.
+mt_name() {
+  xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c '
+import json, sys
+for d in json.load(sys.stdin)["result"]["devices"]:
+    if (d.get("hardwareProperties") or {}).get("udid") == sys.argv[1]:
+        print(d["deviceProperties"]["name"])' "$UDID"
+}
+
 mt_install() {
   local ipa=$1 id
   id=$(unzip -p "$ipa" Payload/glassvow.app/Info.plist | plutil -extract CFBundleIdentifier raw -o - -)
@@ -50,14 +59,15 @@ _mt_pull() {
 
 _mt_fresh() { grep -q "\"nonce\":\"$2\"" $1 2>/dev/null && grep -q '"probe":"done"' $1; }
 
-## Launches the QA app; prints its pid. Sets MT_NONCE.
+## Launches the QA app with a fresh nonce. Sets MT_NONCE and MT_PID (empty if
+## the launch failed); call it directly, never in a subshell.
 _mt_start() {
   local label=$1; shift
   MT_NONCE=$label-$RANDOM$RANDOM
   xcrun devicectl device process launch --terminate-existing --device $UDID \
     --json-output $OUT/.launch.json $MT_QA -- "$@" --probe-nonce=$MT_NONCE 2>&1 | mt_redact > $OUT/$label.launch.txt
-  python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["result"]["process"]["processIdentifier"])' \
-    $OUT/.launch.json 2>/dev/null
+  MT_PID=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["result"]["process"]["processIdentifier"])' \
+    $OUT/.launch.json 2>/dev/null)
   rm -f $OUT/.launch.json
 }
 
@@ -75,8 +85,8 @@ _mt_rows() {
 
 mt_launch() {
   local label=$1; shift
-  local pid=$(_mt_start $label "$@")
-  [[ -n "$pid" ]] || { echo "== $label: launch failed"; return 1; }
+  _mt_start $label "$@"
+  [[ -n "$MT_PID" ]] || { echo "== $label: launch failed"; return 1; }
   if [[ -n "${MT_SHOT:-}" ]]; then
     sleep $MT_SHOT
     xcrun devicectl device capture screenshot --device $UDID --destination $OUT/$label.png >/dev/null 2>&1
@@ -87,18 +97,27 @@ mt_launch() {
   _mt_rows $label
 }
 
+## A recording sometimes fails to start ("Timed out waiting for device to
+## boot"); each of up to three attempts relaunches with a fresh nonce, and the
+## later ones name the device rather than give its identifier.
 mt_trace() {
-  local label=$1 seconds=$2 delay=$3; shift 3
-  local pid=$(_mt_start $label "$@")
-  [[ -n "$pid" ]] || { echo "== $label: launch failed"; return 1; }
-  echo $pid > $OUT/$label.pid
-  sleep $delay
-  rm -rf $OUT/$label.trace
-  # xctrace cannot attach to a device pid ("Cannot find process for provided
-  # pid"): it records every process, and the analysis keeps this pid.
-  xcrun xctrace record --device $UDID --template 'Metal System Trace' --all-processes \
-    --time-limit ${seconds}s --output $OUT/$label.trace --no-prompt 2>&1 | mt_redact > $OUT/$label.xctrace.log
-  _mt_rows $label
+  local label=$1 seconds=$2 delay=$3 attempt target; shift 3
+  for attempt in 1 2 3; do
+    target=$UDID; (( attempt > 1 )) && target=$(mt_name)
+    _mt_start $label "$@"
+    [[ -n "$MT_PID" ]] || { echo "== $label: launch failed"; return 1; }
+    echo $MT_PID > $OUT/$label.pid
+    sleep $delay
+    rm -rf $OUT/$label.trace
+    # xctrace cannot attach to a device pid ("Cannot find process for provided
+    # pid"): it records every process, and the analysis keeps this pid.
+    xcrun xctrace record --device "$target" --template 'Metal System Trace' --all-processes \
+      --time-limit ${seconds}s --output $OUT/$label.trace --no-prompt 2>&1 | mt_redact > $OUT/$label.xctrace.log
+    _mt_rows $label
+    [[ -d $OUT/$label.trace ]] && return 0
+    echo "== $label: no trace (attempt $attempt): $(tail -1 $OUT/$label.xctrace.log)"
+  done
+  return 1
 }
 
 mt_export() {
