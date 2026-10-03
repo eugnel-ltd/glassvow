@@ -82,15 +82,15 @@ static func combat_context(kind: String, act_index: int, vigil: VigilState) -> S
 	return &""
 
 
-## True once this Vigil has reached the Act IV boss in an earlier run (the best
-## waystone ever lit covers the boss node) or has won a run. Existing Vigil
-## data only; no new save field.
+## True once this Vigil has reached the Act IV boss in an earlier run: the
+## best waystone ever lit covers the boss node, which a run lights on entering
+## it, so a loss to the boss counts. A win does not: a run without six shards
+## ends after Act III and never meets this boss. Existing Vigil data only.
 static func boss_met_before(vigil: VigilState) -> bool:
 	if vigil == null:
 		return false
 	var best: int = int(float(str(vigil.deeds.get("bestWaystone", 0))))
-	var wins: int = int(float(str(vigil.deeds.get("wins", 0))))
-	return wins > 0 or best >= ACT4_INDEX * WAYSTONES_PER_ACT + WorldMap.ROWS
+	return best >= ACT4_INDEX * WAYSTONES_PER_ACT + WorldMap.ROWS
 
 
 ## The file stem a play of `cue` in `context` would use: the default, or one

@@ -99,9 +99,11 @@ engine RNG, never the run's seeded RNG.
 | Act IV boss, return | `act4Boss` | **B** | `act4-boss-b.mp3` | `6ed76c50-5e2b-4034-9cbd-ae27ff7c9f89` | 153 s | **You Know This Place** |
 
 "Return" means the Vigil has met the boss in an earlier run, read from
-existing Vigil data with no save change: `deeds.wins > 0`, or
-`deeds.bestWaystone` at least 3 x 15 + 15 (the boss node lit). Both deeds
-commit at run end, so a first meeting is always A.
+existing Vigil data with no save change: `deeds.bestWaystone` at least
+3 x 15 + 15. A run lights the boss node on entering it, so a loss to the boss
+counts; a win alone does not, because a run without six shards ends after
+Act III and never meets this boss. The deed commits at run end, so a first
+meeting is always A.
 
 The four alternate titles were drafted through the story skill on 3 Oct 2026;
 the owner may re-title. Each one takes a clause of a shipped Act IV line, the

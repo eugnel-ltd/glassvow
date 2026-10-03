@@ -45,10 +45,10 @@ static func run(fails: Array[String]) -> void:
 	vigil.deeds["bestWaystone"] = boss_row
 	_check(fails, MusicBus.combat_context("boss", 3, vigil) == &"return",
 		"having reached the boss node before is a return")
-	vigil.deeds["bestWaystone"] = 0
+	vigil.deeds["bestWaystone"] = 2 * MusicBus.WAYSTONES_PER_ACT + WorldMap.ROWS
 	vigil.deeds["wins"] = 1
-	_check(fails, MusicBus.combat_context("boss", 3, vigil) == &"return",
-		"a Vigil that has won has met the boss")
+	_check(fails, MusicBus.combat_context("boss", 3, vigil) == &"",
+		"a win that ended after Act III never met the Act IV boss")
 	_check(fails, MusicBus.combat_context("boss", 3, null) == &"", "no Vigil, no return")
 	_check(fails, MusicBus.combat_context("boss", 2, vigil) == &"",
 		"only the Act IV boss varies")
