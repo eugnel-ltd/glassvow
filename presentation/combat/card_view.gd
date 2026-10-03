@@ -361,10 +361,7 @@ func _init(inst: CardInst, data: Dictionary, cost: int) -> void:
 		Color(ink.darkened(0.45), 0.55), 0.20 * gives_back)
 	_shadow_sb.shadow_size = _shadow_size
 	_shadow_sb.shadow_offset = SHADOW_OFFSET
-	_shadow = Panel.new()
-	_shadow.add_theme_stylebox_override("panel", _shadow_sb)
-	_shadow.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_shadow = shadow_panel(_shadow_sb)
 	add_child(_shadow)
 	# Where the will-burn glow returns to — the stock's own weighted shadow.
 	_shadow_home_color = _shadow_sb.shadow_color
@@ -586,6 +583,25 @@ func face_image() -> Image:
 	return _inner.get_texture().get_image()
 
 
+## The lit stage itself, live: what a face bake copies on the GPU (CardFaces).
+func stage_texture() -> Texture2D:
+	return _stage.get_texture()
+
+
+## The table shadow as it is at rest — the stock's own weight and colour, not a
+## lift's or a will-burn glow's — for a bake to lay under its picture.
+func rest_shadow() -> StyleBoxFlat:
+	var sb: StyleBoxFlat = _shadow_sb.duplicate() as StyleBoxFlat
+	sb.shadow_color = _shadow_home_color
+	sb.shadow_size = _shadow_home_size
+	return sb
+
+
+## Whether the card wears the rare's gilt shine over its picture.
+func has_shine() -> bool:
+	return _is_rare
+
+
 ## Place a node as a horizontal band on the face, inset from both sides.
 ##
 ## Under TOP_WIDE the right anchor sits at 1.0, so offset_right insets from the
@@ -775,28 +791,84 @@ func _build_stage(content: Control, mat: Dictionary, tint: Color,
 	cam.far = dist * 1.5
 	_stage.add_child(cam)
 
-	var display: TextureRect = TextureRect.new()
-	display.texture = _stage.get_texture()
-	display.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	display.stretch_mode = TextureRect.STRETCH_SCALE
+	add_child(picture(_stage.get_texture()))
+	if _is_rare:
+		add_child(shine())
+
+
+## The card's table shadow, a flat panel under the slab. A baked card
+## (BakedCard) lays its bake's shadow through this same node.
+static func shadow_panel(sb: StyleBoxFlat) -> Panel:
+	var panel: Panel = Panel.new()
+	panel.add_theme_stylebox_override("panel", sb)
+	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return panel
+
+
+## The stage render back on the canvas over the stage's whole rect, PAD_3D out
+## on every side, so at rest the slab lands exactly on the card's rect. A baked
+## card (BakedCard) draws its bake through this same node: the stage cropped to
+## `reach`, laid on the same rect, its cut-away margin sampled past the crop's
+## clear edge. The same quad puts every texel where the live stage puts it,
+## scaled or not; a quad cut to the crop is snapped and filtered differently,
+## a level or two apart where the card is scaled (tools/check_card_faces.gd).
+static func picture(stage: Texture2D, reach: float = PAD_3D) -> Control:
+	var display: Control = null
+	if reach < PAD_3D:
+		display = _Crop.new(stage, stage_inset(reach))
+	else:
+		var whole: TextureRect = TextureRect.new()
+		whole.texture = stage
+		whole.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		whole.stretch_mode = TextureRect.STRETCH_SCALE
+		display = whole
 	display.position = Vector2(-PAD_3D, -PAD_3D)
 	display.size = Vector2(CARD_W + 2.0 * PAD_3D, CARD_H + 2.0 * PAD_3D)
 	display.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(display)
-	# `.card.r-rare .card-inner::after` — the 4.5s gilt shine, on the canvas
-	# rather than in the slab so a rare at rest keeps its viewports frozen
-	# (see card_shine.gdshader for the whole argument). Under the cost gem,
-	# which the stylesheet also keeps above it (z-index 4 vs the ::after).
-	if _is_rare:
-		var shine: ColorRect = ColorRect.new()
-		var shine_mat: ShaderMaterial = ShaderMaterial.new()
-		shine_mat.shader = preload("res://presentation/combat/card_shine.gdshader")
-		shine_mat.set_shader_parameter("card_px", Vector2(CARD_W, CARD_H))
-		shine_mat.set_shader_parameter("radius_px", float(RADIUS))
-		shine.material = shine_mat
-		shine.set_anchors_preset(Control.PRESET_FULL_RECT)
-		shine.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(shine)
+	return display
+
+
+## Texels of a stage render that lie more than `reach` out from the card, on
+## each side, at the oversample: what a crop to `reach` cuts away.
+static func stage_inset(reach: float) -> int:
+	return roundi((PAD_3D - reach) * oversample)
+
+
+## A stage render cropped `cut` texels in from every side, drawn over the whole
+## stage's rect: its UVs run past the texture and clamp to its edge, which is
+## clear glass.
+class _Crop:
+	extends Control
+	var texture: Texture2D
+	var cut: int
+
+	func _init(crop: Texture2D, texels: int) -> void:
+		texture = crop
+		cut = texels
+		texture_repeat = CanvasItem.TEXTURE_REPEAT_DISABLED
+
+	func _draw() -> void:
+		var margin: Vector2 = Vector2(cut, cut)
+		draw_texture_rect_region(texture, Rect2(Vector2.ZERO, size),
+			Rect2(-margin, texture.get_size() + margin * 2.0), Color.WHITE, false, false)
+
+
+## `.card.r-rare .card-inner::after` — the 4.5s gilt shine, on the canvas
+## rather than in the slab so a rare at rest keeps its viewports frozen
+## (see card_shine.gdshader for the whole argument). Under the cost gem,
+## which the stylesheet also keeps above it (z-index 4 vs the ::after). TIME
+## drives it, so a baked rare's shine runs in step with a live one's.
+static func shine() -> ColorRect:
+	var rect: ColorRect = ColorRect.new()
+	var shine_mat: ShaderMaterial = ShaderMaterial.new()
+	shine_mat.shader = preload("res://presentation/combat/card_shine.gdshader")
+	shine_mat.set_shader_parameter("card_px", Vector2(CARD_W, CARD_H))
+	shine_mat.set_shader_parameter("radius_px", float(RADIUS))
+	rect.material = shine_mat
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
 
 
 ## Anything on the slab that reads the face and takes the light. The two shaders
@@ -1071,7 +1143,14 @@ func _ready() -> void:
 		return  # the hold armed the repaint; what it set reaches the shot
 	await get_tree().process_frame
 	await get_tree().process_frame
-	if not _hovered:
+	_freeze_if_idle()
+
+
+## Freeze the passes unless something moves the card. One pointed at and let
+## go inside its first frames is still springing back: _process freezes it
+## once it settles, and freezing it here would hold a half-lit frame meanwhile.
+func _freeze_if_idle() -> void:
+	if not _hovered and not is_processing():
 		_set_live(false)
 
 
@@ -1159,6 +1238,29 @@ func _on_mouse_exited() -> void:
 	_tilt_target = _rest_tilt
 	_light_up(0.0)
 	hover_changed.emit(uid, false)
+
+
+## The pointer, handed in from outside: a BakedCard owns the input of its slot
+## and lends it to the live card standing in for it (which takes none itself).
+## `local_pos` is in card px. Same effect as the mouse entering and moving.
+func point_at(local_pos: Vector2) -> void:
+	if not _hovered:
+		_on_mouse_entered()
+	_track_lamp(local_pos)
+
+
+## The lent pointer has gone; the card springs back to rest.
+func point_away() -> void:
+	if _hovered:
+		_on_mouse_exited()
+
+
+## Nothing points at the card, its spring has settled and the edge glint has
+## faded: it looks exactly as it did when it was built, so a bake of it can
+## take its place unseen.
+func at_rest() -> bool:
+	return not _hovered and not is_processing() \
+		and (_light_tw == null or not _light_tw.is_valid() or not _light_tw.is_running())
 
 
 ## One lamp, two surfaces. The face's share is the point light itself, which

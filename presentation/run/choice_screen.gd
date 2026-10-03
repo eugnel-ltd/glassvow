@@ -36,8 +36,8 @@ var _column: VBoxContainer
 var _scroll: ScrollContainer = null
 var _card_mode: bool = false
 var _card_pick: bool = false
-var _card_views: Array[CardView] = []
-var _card_pedestals: Array[Control] = []
+## Card mode's cards: baked faces with one live card under the pointer (#657).
+var _grid: CardGrid = null
 var _sfx: SfxBus
 ## When set, Escape emits `chosen` with this id (safe cancel). Absent → Escape ignored.
 var _cancel_id: String = ""
@@ -171,31 +171,12 @@ func _build_card_grid(column: VBoxContainer, choices: Array[Dictionary],
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_child(_scroll)
-	var grid: HFlowContainer = HFlowContainer.new()
-	grid.alignment = FlowContainer.ALIGNMENT_CENTER
-	grid.add_theme_constant_override("h_separation", roundi(16.0 * k))
-	grid.add_theme_constant_override("v_separation", roundi(16.0 * k))
-	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_scroll.add_child(grid)
-	for row: Dictionary in choices:
-		if not row.has("card"):
-			continue
-		var inst: CardInst = row["card"]
-		var definition: Dictionary = row.get("definition", {})
-		var cost_v: Variant = definition.get("cost")
-		var cost: int = 0 if cost_v == null else int(float(str(cost_v)))
-		var view: CardView = CardView.new(inst, definition, cost)
-		if not row.get("disabled", false):
-			var choice_id: String = str(row.get("id", ""))
-			view.released_at.connect(func(_uid: int, _position: Vector2) -> void:
-				_sfx.play(&"card")
-				chosen.emit(choice_id)
-			)
-		var pedestal: Control = Control.new()
-		grid.add_child(pedestal)
-		pedestal.add_child(view)
-		_card_views.append(view)
-		_card_pedestals.append(pedestal)
+	_grid = CardGrid.new(choices, 16.0 * k)
+	_grid.picked.connect(func(choice_id: String) -> void:
+		_sfx.play(&"card")
+		chosen.emit(choice_id)
+	)
+	_scroll.add_child(_grid)
 	_apply_card_scale()
 
 	var actions: HBoxContainer = HBoxContainer.new()
@@ -216,14 +197,8 @@ func _build_card_grid(column: VBoxContainer, choices: Array[Dictionary],
 
 
 func _apply_card_scale() -> void:
-	var card_scale: float = _card_scale()
-	for i: int in range(_card_views.size()):
-		var span: Vector2 = Vector2(CardView.CARD_W, CardView.CARD_H) * card_scale
-		var view: CardView = _card_views[i]
-		var pedestal: Control = _card_pedestals[i]
-		pedestal.custom_minimum_size = span
-		view.position = (span - Vector2(CardView.CARD_W, CardView.CARD_H)) * 0.5
-		view.scale = Vector2.ONE * card_scale
+	if _grid != null:
+		_grid.set_card_scale(_card_scale())
 
 
 func _card_scale() -> float:
