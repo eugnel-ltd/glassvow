@@ -1,0 +1,379 @@
+extends RefCounted
+## Scratch R2 proofs: one technique at a time on the revived Act I land.
+## Not production code; each technique is the cheapest honest stand-in.
+
+static func frame_gateway(screen: WorldMapScreen, zoom: float = 13.0) -> void:
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	var at: Vector3 = Vector3.ZERO
+	for i: int in range(land.kit.placed.size()):
+		if str(land.kit.placed[i]["kind"]) == "amber-arch":
+			at = land.kit.placed[i]["position"]
+	var pitch: float = deg_to_rad(MapJourneyCameraContract.PITCH)
+	var cam: Camera3D = screen._map_scene.get_rig().get_camera()
+	var h: float = MapJourneyCameraContract.HEIGHT
+	cam.position = Vector3(at.x + 2.0, at.y + h, at.z + h / tan(pitch) - 1.0)
+	cam.size = zoom
+	screen._invalidate_projection()
+
+
+static func apply(screen: WorldMapScreen, technique: String) -> void:
+	var scene: MapScene = screen._map_scene
+	var land: MapJourneyLandscape = scene.journey_landscape()
+	var world: Node3D = scene._world
+	var env: Environment = (world.get_node("MapEnvironment") as WorldEnvironment).environment
+	var cam: Camera3D = scene.get_rig().get_camera()
+	match technique:
+		"dof":
+			var attrs: CameraAttributesPractical = CameraAttributesPractical.new()
+			attrs.dof_blur_far_enabled = true
+			attrs.dof_blur_near_enabled = true
+			var depth: float = MapJourneyCameraContract.HEIGHT / sin(deg_to_rad(MapJourneyCameraContract.PITCH))
+			attrs.dof_blur_far_distance = depth + 1.5
+			attrs.dof_blur_far_transition = 3.0
+			attrs.dof_blur_near_distance = depth - 1.5
+			attrs.dof_blur_near_transition = 2.5
+			attrs.dof_blur_amount = 0.22
+			cam.attributes = attrs
+		"doffar":
+			var far: CameraAttributesPractical = CameraAttributesPractical.new()
+			far.dof_blur_far_enabled = true
+			var reach: float = MapJourneyCameraContract.HEIGHT / sin(deg_to_rad(MapJourneyCameraContract.PITCH))
+			far.dof_blur_far_distance = reach + 1.5
+			far.dof_blur_far_transition = 3.0
+			far.dof_blur_amount = 0.22
+			cam.attributes = far
+		"bloom2":
+			env.glow_enabled = true
+			for level: int in range(7):
+				env.set_glow_level(level, 1.0 if level < 2 else 0.0)
+			env.glow_intensity = 0.8
+			env.glow_hdr_threshold = 0.95
+		"densitycover":
+			_density(land, false)
+		"tiltshift":
+			_tilt_shift(scene)
+		"density":
+			_density(land)
+		"fire":
+			_fire(land, env)
+		"wet":
+			_wet(land)
+		"torrent":
+			_torrent(land)
+		"embers":
+			_embers(world, cam)
+		"rays":
+			_rays(land)
+		"grade":
+			_grade(scene, env)
+		"sway":
+			_sway(land)
+
+
+static func _grade(scene: MapScene, env: Environment) -> void:
+	env.tonemap_exposure = 1.15
+	env.adjustment_enabled = true
+	env.adjustment_saturation = 1.18
+	env.adjustment_contrast = 1.06
+	env.glow_enabled = true
+	env.glow_intensity = 0.6
+	env.glow_bloom = 0.03
+	env.glow_hdr_threshold = 0.85
+	var key: DirectionalLight3D = scene.get_key()
+	key.light_color = Color("ffd1a0")
+	key.light_energy = key.light_energy * 1.45
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color("7d86a8")
+	env.ambient_light_energy = 0.55
+
+
+static func _tilt_shift(scene: MapScene) -> void:
+	var shader: Shader = Shader.new()
+	shader.code = """shader_type canvas_item;
+uniform float focus = 0.55;
+uniform float band = 0.16;
+uniform float strength = 9.0;
+void fragment() {
+	float d = max(abs(UV.y - focus) - band, 0.0) / (1.0 - band);
+	float r = smoothstep(0.0, 0.55, d) * strength;
+	vec2 px = TEXTURE_PIXEL_SIZE * r;
+	vec4 c = texture(TEXTURE, UV) * 0.2;
+	c += texture(TEXTURE, UV + vec2(px.x, 0.0)) * 0.1;
+	c += texture(TEXTURE, UV - vec2(px.x, 0.0)) * 0.1;
+	c += texture(TEXTURE, UV + vec2(0.0, px.y)) * 0.1;
+	c += texture(TEXTURE, UV - vec2(0.0, px.y)) * 0.1;
+	c += texture(TEXTURE, UV + px) * 0.1;
+	c += texture(TEXTURE, UV - px) * 0.1;
+	c += texture(TEXTURE, UV + vec2(px.x, -px.y)) * 0.1;
+	c += texture(TEXTURE, UV + vec2(-px.x, px.y)) * 0.1;
+	COLOR = c;
+}"""
+	var mat: ShaderMaterial = ShaderMaterial.new()
+	mat.shader = shader
+	scene._display.material = mat
+
+
+static func _density(land: MapJourneyLandscape, casts: bool = true) -> void:
+	# Second planting pass through the kit's own clearance rule.
+	var kit: MapJourneyLandscape.Kit = land.kit
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 99
+	var cam: Camera3D = land.get_viewport().get_camera_3d()
+	var focus: Vector3 = cam.position + (-cam.global_transform.basis.z) * (MapJourneyCameraContract.HEIGHT / sin(deg_to_rad(MapJourneyCameraContract.PITCH)))
+	var b: Rect2 = Rect2(focus.x - 16.0, focus.z - 11.0, 32.0, 22.0)
+	var added: int = 0
+	var kinds: Array[String] = ["ash-heath", "ash-heath", "ash-copse", "ash-fern", "ash-bramble", "conifer", "ash-copse", "conifer-spire"]
+	if not casts:
+		# Ground cover only: kinds StaticScenery.NO_SHADOW keeps out of the shadow pass.
+		kinds = ["ash-heath", "ash-heath", "ash-copse", "ash-fern", "ash-bramble"]
+	for i: int in range(30000):
+		var kind: String = kinds[i % kinds.size()]
+		var p: Vector3 = Vector3(rng.randf_range(b.position.x, b.end.x), 0, rng.randf_range(b.position.y, b.end.y))
+		var s: float = rng.randf_range(0.8, 1.2)
+		var profile: Vector2 = kit.PROFILES[kind]
+		p.y = land.terrain.surface_height(p.x, p.z)
+		if not land.terrain.is_dry(p) or not kit.clear(p, profile.x * s * 0.45, profile.y * s, kind):
+			continue
+		kit._place(kind, p, s, rng.randf_range(-PI, PI), false)
+		added += 1
+	if kit.static_scenery != null:
+		for old: Node in kit.static_scenery.get_children():
+			if old is MultiMeshInstance3D:
+				old.free()
+		kit.static_scenery.call("finish")
+	print("DENSITY added ", added)
+
+
+static func _fire(land: MapJourneyLandscape, env_glow: Environment) -> void:
+	# Flame cards on the gateway lamps and a few roadside lamps, light pools.
+	var flame: ShaderMaterial = ShaderMaterial.new()
+	var sh: Shader = Shader.new()
+	sh.code = """shader_type spatial;
+render_mode unshaded, blend_add, cull_disabled, depth_draw_never;
+void vertex() { MODELVIEW_MATRIX = VIEW_MATRIX * mat4(INV_VIEW_MATRIX[0], INV_VIEW_MATRIX[1], INV_VIEW_MATRIX[2], MODEL_MATRIX[3]); }
+float h(vec2 p) { return fract(sin(dot(p, vec2(12.9, 78.2))) * 43758.5); }
+void fragment() {
+	vec2 uv = UV * 2.0 - 1.0;
+	float t = TIME * 6.0;
+	float flick = 0.85 + 0.15 * sin(t + h(floor(NODE_POSITION_WORLD.xz * 3.0)) * 6.0);
+	float shape = 1.0 - smoothstep(0.0, 1.0, length(vec2(uv.x * 1.7, (uv.y + 0.2) * 0.9 + uv.x * uv.x * 0.6)));
+	vec3 c = mix(vec3(1.0, 0.35, 0.05), vec3(1.0, 0.85, 0.5), shape);
+	ALBEDO = c * shape * 2.4 * flick;
+	ALPHA = shape;
+}"""
+	flame.shader = sh
+	var quad: QuadMesh = QuadMesh.new()
+	quad.size = Vector2(0.32, 0.5)
+	for item: Node3D in land.kit.placed_nodes:
+		for lamp: Node in item.find_children("Amber lamp*", "OmniLight3D", true, false):
+			var f: MeshInstance3D = MeshInstance3D.new()
+			f.mesh = quad
+			f.material_override = flame
+			(lamp as OmniLight3D).add_child(f)
+			f.position = Vector3(0, 0.05, 0)
+			(lamp as OmniLight3D).light_energy = 3.0
+			(lamp as OmniLight3D).omni_range = 4.5
+			(lamp as OmniLight3D).light_color = Color("ff9a4a")
+	env_glow.glow_enabled = true
+	env_glow.glow_intensity = 0.8
+	env_glow.glow_hdr_threshold = 0.95
+	env_glow.glow_bloom = 0.02
+
+
+static func _wet(land: MapJourneyLandscape) -> void:
+	var ground: MeshInstance3D = land.terrain.get_node("Quiet sculpted ground") as MeshInstance3D
+	var mat: ShaderMaterial = ground.material_override as ShaderMaterial
+	var code: String = mat.shader.code
+	code = code.replace(" ROUGHNESS=.97;\n SPECULAR=.10;", " float puddle=smoothstep(.66,.72,noise(p*1.1+3.0))*smoothstep(.2,.8,core+shoulder*.5);\n float rim=smoothstep(.60,.66,noise(p*1.1+3.0))*(1.0-puddle)*core;\n ALBEDO=mix(ALBEDO,ALBEDO*.35,puddle);\n ALBEDO=mix(ALBEDO,ALBEDO*.8,rim);\n float fres=pow(1.0-clamp(dot(NORMAL,VIEW),0.0,1.0),3.0);\n EMISSION=puddle*(vec3(.05,.06,.08)+vec3(.9,.55,.25)*smoothstep(.7,.95,noise(p*2.3+11.0))*.18);\n ROUGHNESS=mix(.97,.12,puddle);\n SPECULAR=mix(.10,.45,puddle);")
+	var sh: Shader = Shader.new()
+	sh.code = code
+	mat.shader = sh
+
+
+static func _torrent(land: MapJourneyLandscape) -> void:
+	for river: Node in land.terrain.find_children("Stream*", "", false, false):
+		var m: ShaderMaterial = (river as MeshInstance3D).material_override as ShaderMaterial
+		m.set_shader_parameter("flow_time", 3.0)
+		var foam: ShaderMaterial = ShaderMaterial.new()
+		var fs: Shader = Shader.new()
+		fs.code = """shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled;
+float h(vec2 p) { return fract(sin(dot(p, vec2(12.9, 78.2))) * 43758.5); }
+float n(vec2 p) { vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+void fragment() {
+	float across = smoothstep(0.0, 0.5, UV.x) * smoothstep(1.0, 0.5, UV.x);
+	float along = smoothstep(0.0, 0.3, UV.y) * smoothstep(1.0, 0.6, UV.y);
+	float streak = n(vec2(UV.x * 3.0, UV.y * 6.0 - TIME * 2.5));
+	ALBEDO = vec3(0.86, 0.9, 0.93);
+	ALPHA = across * along * smoothstep(0.35, 0.8, streak) * 0.7;
+}"""
+		foam.shader = fs
+		foam.render_priority = 10
+		var cut: float = (river as Node).get("cut")
+		var st: SurfaceTool = SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+		rng.seed = int(cut * 10.0)
+		var z: float = -29.0
+		while z < 29.0:
+			var x: float = MapRavine.centre(cut, z) + rng.randf_range(-0.7, 0.7)
+			var w: float = rng.randf_range(0.12, 0.3)
+			var l: float = rng.randf_range(0.4, 1.4)
+			var y: float = preload("res://presentation/map/landscape/river.gd").LEVEL + 0.03
+			var corners: Array[Vector3] = [Vector3(x - w, y, z), Vector3(x + w, y, z), Vector3(x + w, y, z + l), Vector3(x - w, y, z + l)]
+			var uvs: Array[Vector2] = [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)]
+			for k: int in [0, 1, 2, 0, 2, 3]:
+				st.set_uv(uvs[k])
+				st.add_vertex(corners[k])
+			z += rng.randf_range(0.3, 0.9)
+		var node: MeshInstance3D = MeshInstance3D.new()
+		node.mesh = st.commit()
+		node.material_override = foam
+		land.terrain.add_child(node)
+		_mist(land, cut)
+
+
+static func _mist(land: MapJourneyLandscape, cut: float) -> void:
+	var sh: Shader = Shader.new()
+	sh.code = """shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled;
+void vertex() { MODELVIEW_MATRIX = VIEW_MATRIX * mat4(INV_VIEW_MATRIX[0], INV_VIEW_MATRIX[1], INV_VIEW_MATRIX[2], MODEL_MATRIX[3]); }
+void fragment() {
+	float r = length(UV * 2.0 - 1.0);
+	ALBEDO = vec3(0.82, 0.86, 0.9);
+	ALPHA = smoothstep(1.0, 0.0, r) * 0.22;
+}"""
+	var m: ShaderMaterial = ShaderMaterial.new()
+	m.shader = sh
+	m.render_priority = 11
+	var q: QuadMesh = QuadMesh.new()
+	q.size = Vector2(2.2, 1.6)
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 3
+	for i: int in range(18):
+		var z: float = rng.randf_range(-10.0, 16.0)
+		var puff: MeshInstance3D = MeshInstance3D.new()
+		puff.mesh = q
+		puff.material_override = m
+		puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		land.add_child(puff)
+		puff.position = Vector3(MapRavine.centre(cut, z) + rng.randf_range(-0.5, 0.5), -1.9 + rng.randf_range(0.0, 0.6), z)
+
+
+static func _embers(world: Node3D, cam: Camera3D) -> void:
+	var p: GPUParticles3D = GPUParticles3D.new()
+	p.amount = 260
+	p.lifetime = 6.0
+	p.preprocess = 6.0
+	var pm: ParticleProcessMaterial = ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	pm.emission_box_extents = Vector3(14, 0.5, 10)
+	pm.gravity = Vector3(0.2, 0.25, -0.1)
+	pm.turbulence_enabled = true
+	pm.turbulence_noise_strength = 0.8
+	pm.scale_min = 0.6
+	pm.scale_max = 1.3
+	p.process_material = pm
+	var q: QuadMesh = QuadMesh.new()
+	q.size = Vector2(0.05, 0.05)
+	var m: StandardMaterial3D = StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	m.albedo_color = Color(1.0, 0.55, 0.2)
+	m.emission_enabled = true
+	m.emission = Color("ff8a30")
+	m.emission_energy_multiplier = 3.0
+	q.material = m
+	p.draw_pass_1 = q
+	var look: Vector3 = cam.position + (-cam.global_transform.basis.z) * (MapJourneyCameraContract.HEIGHT / sin(deg_to_rad(MapJourneyCameraContract.PITCH)))
+	p.position = look + Vector3(0, 1.0, 0)
+	p.visibility_aabb = AABB(Vector3(-20, -5, -20), Vector3(40, 15, 40))
+	world.add_child(p)
+
+
+static func _rays(land: MapJourneyLandscape) -> void:
+	var sh: Shader = Shader.new()
+	sh.code = """shader_type spatial;
+render_mode unshaded, blend_add, cull_disabled, depth_draw_never, shadows_disabled;
+uniform float strength = 0.05;
+void fragment() {
+	float across = 1.0 - abs(UV.x * 2.0 - 1.0);
+	float along = smoothstep(0.0, 0.35, UV.y) * smoothstep(1.0, 0.55, UV.y);
+	float fade = clamp(1.0 + dot(NORMAL, VIEW) * 0.0, 0.0, 1.0);
+	ALBEDO = vec3(1.0, 0.74, 0.42) * across * across * across * along * strength * fade;
+}"""
+	var mat: ShaderMaterial = ShaderMaterial.new()
+	mat.shader = sh
+	var cam: Camera3D = land.get_viewport().get_camera_3d()
+	var focus: Vector3 = cam.position + (-cam.global_transform.basis.z) * (MapJourneyCameraContract.HEIGHT / sin(deg_to_rad(MapJourneyCameraContract.PITCH)))
+	var key: DirectionalLight3D = null
+	for n: Node in land.get_parent().find_children("*", "DirectionalLight3D", true, false):
+		key = n as DirectionalLight3D
+	var down: Vector3 = -key.global_transform.basis.z if key != null else Vector3(0.4, -1, 0.3).normalized()
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 7
+	for k: int in range(5):
+		var q: QuadMesh = QuadMesh.new()
+		q.size = Vector2(rng.randf_range(0.8, 1.8), 16.0)
+		var card: MeshInstance3D = MeshInstance3D.new()
+		card.mesh = q
+		card.material_override = mat
+		card.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		land.add_child(card)
+		var ground: Vector3 = focus + Vector3(rng.randf_range(-12, 12), 0, rng.randf_range(-8, 8))
+		card.global_position = ground - down * 8.0
+		card.look_at(card.global_position + Vector3(down.z, 0, -down.x).normalized(), -down)
+		card.rotate_object_local(Vector3.RIGHT, PI * 0.5)
+
+
+static func _sway(land: MapJourneyLandscape) -> void:
+	# A pose of the sway: foliage bent as wind would at one instant.
+	var sh: Shader = Shader.new()
+	sh.code = """shader_type spatial;
+render_mode cull_disabled;
+uniform sampler2D albedo_tex : source_color, filter_linear_mipmap;
+uniform vec4 tint : source_color = vec4(1.0);
+uniform float scissor = 0.3;
+void vertex() {
+	vec3 w = (MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+	float sway = sin(TIME * 1.3 + w.x * 0.4 + w.z * 0.3) * 0.08 * max(VERTEX.y, 0.0);
+	VERTEX.x += sway;
+	VERTEX.z += sway * 0.5;
+}
+void fragment() {
+	vec4 c = texture(albedo_tex, UV) * tint;
+	if (c.a < scissor) { discard; }
+	ALBEDO = c.rgb;
+	ROUGHNESS = 0.96;
+}"""
+	var swapped: int = 0
+	for node: Node in land.kit.find_children("*", "MultiMeshInstance3D", true, false):
+		var mm: MultiMesh = (node as MultiMeshInstance3D).multimesh
+		if mm == null or not mm.mesh is ArrayMesh:
+			continue
+		var mesh: ArrayMesh = (mm.mesh as ArrayMesh).duplicate() as ArrayMesh
+		for i: int in range(mesh.get_surface_count()):
+			var sm: StandardMaterial3D = mesh.surface_get_material(i) as StandardMaterial3D
+			if sm == null or sm.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR:
+				continue
+			var m: ShaderMaterial = ShaderMaterial.new()
+			m.shader = sh
+			m.set_shader_parameter("albedo_tex", sm.albedo_texture)
+			m.set_shader_parameter("tint", sm.albedo_color)
+			m.set_shader_parameter("scissor", sm.alpha_scissor_threshold)
+			mesh.surface_set_material(i, m)
+			swapped += 1
+		mm.mesh = mesh
+	print("SWAY surfaces ", swapped)
+
+
+static func frame_river(screen: WorldMapScreen, zoom: float = 14.0) -> void:
+	var z: float = 4.0
+	var x: float = MapRavine.centre(MapRavine.CUTS[1], z)
+	var pitch: float = deg_to_rad(MapJourneyCameraContract.PITCH)
+	var cam: Camera3D = screen._map_scene.get_rig().get_camera()
+	var h: float = MapJourneyCameraContract.HEIGHT
+	cam.position = Vector3(x, h, z + h / tan(pitch))
+	cam.size = zoom
+	screen._invalidate_projection()

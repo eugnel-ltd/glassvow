@@ -1,0 +1,95 @@
+extends Node
+## QA-only device probe for the R2 technique costs (never committed). Hosted by
+## Main behind `--map --map-r2-probe --r2=a+b`: waits for the Act I land, samples
+## a live-rendered rest, applies the named scratch techniques (tools/look_r2.gd),
+## and samples again. Rows go to user://r2_probe.jsonl.
+
+const LookR2 = preload("res://tools/look_r2.gd")
+const ROW_PATH: String = "user://r2_probe.jsonl"
+var _host: Node = null
+var _rows: FileAccess = null
+
+func _ready() -> void:
+	_host = get_parent()
+	_rows = FileAccess.open(ROW_PATH, FileAccess.WRITE)
+	_run.call_deferred()
+
+func _row(data: Dictionary) -> void:
+	var line: String = JSON.stringify(data)
+	print("R2_PROBE " + line)
+	if _rows != null:
+		_rows.store_line(line)
+		_rows.flush()
+
+func _techniques() -> String:
+	for arg: String in OS.get_cmdline_args() + OS.get_cmdline_user_args():
+		if arg.begins_with("--r2="):
+			return arg.get_slice("=", 1)
+	return ""
+
+func _run() -> void:
+	var names: String = _techniques()
+	var screen: WorldMapScreen = null
+	await _frames(30)
+	_row({"probe": "start", "names": names, "has_screen": is_instance_valid(_host._map_screen),
+		"act": _host.game.run.act if _host.game != null and _host.game.run != null else -1})
+	if not is_instance_valid(_host._map_screen):
+		_host._show_map()
+	for i: int in range(3000):
+		await get_tree().process_frame
+		screen = _host._map_screen
+		if is_instance_valid(screen) and not screen.landscape_pending() and screen._map_scene.journey_landscape() != null:
+			break
+	if not is_instance_valid(screen) or screen._map_scene.journey_landscape() == null:
+		_row({"probe": "no_land", "names": names, "has_screen": is_instance_valid(screen)})
+		get_tree().quit(1)
+		return
+	await _frames(120)
+	var scene: MapScene = screen._map_scene
+	if names.contains("gateway"):
+		LookR2.frame_gateway(screen)
+	elif names.contains("river"):
+		LookR2.frame_river(screen)
+	scene.set_live(true)
+	await _frames(60)
+	_row({"probe": "base", "names": names, "stage": [scene.get_stage().size.x, scene.get_stage().size.y],
+		"rest": await _sample(360), "render": _info(scene)})
+	for t: String in names.split("+", false):
+		if t != "gateway" and t != "river":
+			LookR2.apply(screen, t)
+	await _frames(90)
+	_row({"probe": "applied", "names": names, "rest": await _sample(360), "render": _info(scene)})
+	_row({"probe": "done"})
+	get_tree().quit(0)
+
+func _info(scene: MapScene) -> Dictionary:
+	var rid: RID = scene.get_stage().get_viewport_rid()
+	var info: Dictionary = {}
+	for kind: Array in [["stage", RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE],
+			["shadow", RenderingServer.VIEWPORT_RENDER_INFO_TYPE_SHADOW]]:
+		var type: int = kind[1]
+		info[str(kind[0]) + "_draws"] = RenderingServer.viewport_get_render_info(rid, type, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
+		info[str(kind[0]) + "_prims"] = RenderingServer.viewport_get_render_info(rid, type, RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME)
+	return info
+
+func _sample(limit: int) -> Dictionary:
+	var t: Array[float] = []
+	var last: int = Time.get_ticks_usec()
+	while t.size() < limit:
+		await get_tree().process_frame
+		var now: int = Time.get_ticks_usec()
+		t.append((now - last) / 1000.0)
+		last = now
+	var total: float = 0.0
+	var over: int = 0
+	for v: float in t:
+		total += v
+		if v > 18.0:
+			over += 1
+	t.sort()
+	return {"frames": t.size(), "mean_ms": snappedf(total / t.size(), 0.01), "p50_ms": t[t.size() / 2],
+		"p95_ms": t[int(t.size() * 0.95)], "over_18_share": snappedf(float(over) / t.size(), 0.001)}
+
+func _frames(count: int) -> void:
+	for i: int in range(count):
+		await get_tree().process_frame

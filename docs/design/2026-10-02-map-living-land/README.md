@@ -8,7 +8,9 @@
 > audit and revival plan are in [revival.md](revival.md). The diagnosis (§1), the
 > living-motion spec (§3) and the A12 and performance plans (§4, §6) still apply
 > to the polish programme that follows the revival. The three concepts and
-> their ranking (§2, §8) are kept only as a record.
+> their ranking (§2, §8) are kept only as a record. R1 (Act I revived on main)
+> is done on this branch; the plan for reaching the owner's target
+> ([`target/`](target/)) is [r2-plan.md](r2-plan.md).
 
 Design lane, 2 to 3 October 2026. Owner instruction (James, 23:49 BST, 2 October):
 the map "is nothing like an AAA commercial game"; the goal is "immersive,
