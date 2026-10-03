@@ -3,19 +3,25 @@ extends Control
 ## One card of a many-card view (CardGrid). At rest it draws its baked face
 ## (CardFaces) — picture, table shadow and a rare's shine — through CardView's
 ## own nodes, so it is the live card's pixels for a twentieth of its video
-## memory. While a pointer is on it, a live CardView stands in for it: built on
-## the spot, lent this node's pointer (the live card takes no input itself),
-## and dropped once it has sprung back to rest, when the swap is invisible.
-## Which card may stand live is the grid's call (`pointer_changed`).
+## memory (to a level on a few pixels where the card is scaled:
+## tools/check_card_faces.gd). While a pointer is on it, a live CardView stands
+## in for it: built on the spot, lent this node's pointer (the live card takes
+## no input itself), and dropped once it has sprung back to rest, when the swap
+## is invisible. Which card may stand live is the grid's call
+## (`pointer_changed`).
 ##
 ## The node keeps the CardView's footprint and pivot, so a grid seats and
 ## scales it exactly as it did a live card. It takes input only once its face
 ## is worn; until then it is invisible, and a face that lands after the view
 ## opened fades in over FACE_IN (at once under Reduce Motion).
 ##
-## Touch and the mouse take one path each. A touch screen also sends every
-## contact as an emulated mouse, which is ignored here so a tap is one press:
-## a finger lends the pointer while it is down, a mouse while it is over.
+## The pointer comes as the live cards had it. A mouse is on the card from the
+## moment it is over it (a wheel scroll that brings the card under a resting
+## cursor too) until it leaves. A finger is on it from touch-down, and a finger
+## lifted on the card leaves it standing lifted and lit, as a tap left a live
+## card under the touch screen's emulated mouse, until a touch lands elsewhere.
+## Touch and the mouse take one path each: the emulated mouse's own events are
+## ignored, so a tap is one press, and only its enter and exit are heard.
 
 ## A pointer came onto the card (`on`), or left it.
 signal pointer_changed(card: BakedCard, on: bool)
@@ -137,8 +143,8 @@ func _gui_input(event: InputEvent) -> void:
 		_touching = touch.pressed
 		if touch.pressed:
 			_point(touch.position)
-		else:
-			_leave()
+		elif not Rect2(Vector2.ZERO, size).has_point(touch.position):
+			_leave()    # lifted off the card; lifted on it, the card stays up
 		_press(touch.pressed)
 		return
 	var drag: InputEventScreenDrag = event as InputEventScreenDrag
@@ -156,8 +162,14 @@ func _gui_input(event: InputEvent) -> void:
 		_point(motion.position)
 
 
+## The mouse's enter and exit, real or a touch's emulated one. While a finger
+## is down its own events say where it is.
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_MOUSE_EXIT and not _touching:
+	if _touching:
+		return
+	if what == NOTIFICATION_MOUSE_ENTER:
+		_point(get_local_mouse_position())
+	elif what == NOTIFICATION_MOUSE_EXIT:
 		_leave()
 
 

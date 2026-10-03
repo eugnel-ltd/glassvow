@@ -25,8 +25,11 @@ extends RefCounted
 ## WHAT A FACE IS. The card's stage at rest, exactly as the live card draws it
 ## on the canvas, plus the two things the live card draws beside it there: its
 ## table shadow and, on a rare, the gilt shine. BakedCard lays all three through
-## CardView's own nodes (`shadow_panel`, `picture`, `shine`), so a baked card at
-## rest is the live card's pixels.
+## CardView's own nodes (`shadow_panel`, `picture`, `shine`). The face's texels
+## are the live stage's, every one, and `picture` lays them on the live stage's
+## own quad, so a baked card at rest is the live card's pixels: exactly where
+## the card is drawn unscaled, and to one level on a few hundredths of a
+## percent of its pixels where it is scaled (tools/check_card_faces.gd).
 ##
 ## HOW A FACE IS BAKED. The card is built hidden under the view that asked,
 ## drawn once (one draw renders both passes, the face before the stage that
@@ -39,12 +42,14 @@ extends RefCounted
 ##
 ## THE CACHE holds one face per distinct card — its id, upgrade, cost and
 ## definition, so a hydrated name or text is a different face — for one locale
-## and oversample: asking in another drops every face first. It lasts until
-## `forget()`, which Main calls whenever it shows the title, so a run bakes each
-## card it shows once, and every later open of a view is drawn from the cache.
-## Two asks for one card share one bake. A face's GPU copy is freed with the
-## face, when the cache and the last card wearing it have let it go; the cache
-## is also dropped as the tree shuts down, before the renderer is.
+## and oversample: asking in another drops every face first. Main drops it all
+## (`forget`) at the title, on a change of language and on the OS's memory
+## warning, and keeps only the deck's (`keep_only`) as each fight begins, so it
+## never holds more than the deck's faces and what one stretch of the road
+## added, and a later open of a view is drawn from it. Two asks for one card
+## share one bake. A face's GPU copy is freed with the face, when the cache and
+## the last card wearing it have let it go; the cache is also dropped as the
+## tree shuts down, before the renderer is.
 
 ## Cards baked per frame.
 const PER_FRAME: int = 1
@@ -144,10 +149,16 @@ static func key_of(inst: CardInst, definition: Dictionary, cost: int) -> String:
 	return "%s%s|%d|%d" % [inst.id, "+" if inst.up else "", cost, definition.hash()]
 
 
+## The cost a many-card view shows a card at: its definition's, 0 for none.
+static func cost_of(definition: Dictionary) -> int:
+	var cost_v: Variant = definition.get("cost")
+	return 0 if cost_v == null else int(float(str(cost_v)))
+
+
 ## The part of a stage render of `size` texels a face keeps: REACH past the
 ## card on every side, on the stage's own texel grid.
 static func crop_of(size: Vector2i) -> Rect2i:
-	var inset: int = roundi((CardView.PAD_3D - REACH) * CardView.oversample)
+	var inset: int = CardView.stage_inset(REACH)
 	return Rect2i(Vector2i(inset, inset), size - Vector2i(inset, inset) * 2)
 
 
@@ -197,6 +208,21 @@ static func forget() -> void:
 	_faces.clear()
 	_jobs.clear()
 	_queue.clear()
+
+
+## Keep only the faces of these cards — rows as a CardGrid takes them, a
+## `card` and its `definition` — and drop the rest. Main keeps the deck's as a
+## fight begins, so a card tempered, removed or passed by does not hold its
+## face for the rest of the run.
+static func keep_only(rows: Array[Dictionary]) -> void:
+	var wanted: Dictionary = {}
+	for row: Dictionary in rows:
+		var inst: CardInst = row["card"]
+		var definition: Dictionary = row.get("definition", {})
+		wanted[key_of(inst, definition, cost_of(definition))] = true
+	for key: String in _faces.keys():
+		if not wanted.has(key):
+			_faces.erase(key)
 
 
 ## How many faces the cache holds.
@@ -260,13 +286,23 @@ static func _land(job: _Job, face: Face) -> void:
 			job.landed[i].call(face)
 
 
-## The live render step: each card built hidden under its host, drawn once,
-## kept and freed. All null in a headless run, which never draws a frame.
+## The live render step. All null in a headless run, which never draws a frame.
 static func _render_live(batch: Array[_Job]) -> Array:
+	if DisplayServer.get_name() == "headless":
+		var none: Array = []
+		none.resize(batch.size())
+		return none
+	return await _render_with(batch, _frame_drawn, _keep)
+
+
+## The render step's body: each card built hidden under its host, drawn once,
+## kept and freed, so no bake leaves a live card behind. Its two engine-bound
+## parts are handed in, so the suite can run it headless: `drawn`, a coroutine
+## that returns once a frame has been drawn, and `keep`, which makes the face
+## of a drawn card.
+static func _render_with(batch: Array, drawn: Callable, keep: Callable) -> Array:
 	var out: Array = []
 	out.resize(batch.size())
-	if DisplayServer.get_name() == "headless":
-		return out
 	var views: Array = []
 	for job: _Job in batch:
 		var view: CardView = CardView.new(job.inst, job.definition, job.cost)
@@ -275,18 +311,25 @@ static func _render_live(batch: Array[_Job]) -> Array:
 		view.visible = false
 		job.host().add_child(view)
 		views.append(view)
-	await RenderingServer.frame_post_draw
+	await drawn.call()
 	for i: int in range(views.size()):
 		if not is_instance_valid(views[i]):
 			continue    # its host was freed, and the card with it
 		var view: CardView = views[i]
-		if view.is_inside_tree():
-			out[i] = _keep(view)
+		out[i] = keep.call(view)
 		view.queue_free()
 	return out
 
 
+static func _frame_drawn() -> void:
+	await RenderingServer.frame_post_draw
+
+
+## The face of a drawn card, or null for one whose host left the tree before
+## the frame (it never drew).
 static func _keep(view: CardView) -> Face:
+	if not view.is_inside_tree():
+		return null
 	var face: Face = Face.new()
 	face.shadow = view.rest_shadow()
 	face.shine = view.has_shine()

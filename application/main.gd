@@ -167,6 +167,9 @@ static func rest_heal_amount(max_hp: int, fraction: float) -> int:
 
 func _apply_content_hydration() -> int:
 	_content_hydration_pending = false
+	# Every baked face carries the old catalogue's words: let them go now, not
+	# at the next deck view.
+	CardFaces.forget()
 	return Locale.active.hydrate_content(content)
 
 
@@ -791,6 +794,9 @@ func _notification(what: int) -> void:
 		_quit_game()
 	elif what == NOTIFICATION_PREDELETE:
 		_join_map_layout_jobs()
+	elif what == NOTIFICATION_OS_MEMORY_WARNING:
+		# The deck views' baked faces are the one cache that can be rebuilt.
+		CardFaces.forget()
 
 
 ## Every WorkerThreadPool task must be joined before its owner goes: an
@@ -2019,9 +2025,7 @@ func _on_abandon_choice(id: String) -> void:
 
 
 func _show_run_deck() -> void:
-	var choices: Array[Dictionary] = []
-	for card: CardInst in game.run.player.deck:
-		choices.append(_card_choice(card, "card:%d" % card.uid, true))
+	var choices: Array[Dictionary] = _deck_rows()
 	choices.append({"id": "close", "label": Locale.active.t("ui.menu.close"), "quiet": true})
 	var deck: Control = ChoiceScreenType.new(
 		Locale.active.t("ui.hud.deckOverlayTitle"),
@@ -2030,6 +2034,14 @@ func _show_run_deck() -> void:
 		_sfx_bus)
 	deck.connect("chosen", func(_id: String) -> void: _close_overlay())
 	_show_overlay(deck)
+
+
+## The run's deck as the deck view shows it: every card, none to be chosen.
+func _deck_rows() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for card: CardInst in game.run.player.deck:
+		rows.append(_card_choice(card, "card:%d" % card.uid, true))
+	return rows
 
 
 func _card_choice(card: CardInst, id: String, disabled: bool = false) -> Dictionary:
@@ -2719,6 +2731,8 @@ func _resume_pending_combat() -> void:
 	# fade over heroIn.
 	_transitions.set_grain(false)
 	_clear_route()
+	# Faces of cards the road took or changed go; the deck's stay for its view.
+	CardFaces.keep_only(_deck_rows())
 	_screen = CombatScreen.new(game, _shape,
 		_forced_act_index if _forced_act_index >= 0 else game.run.act, _sfx_bus)
 	_screen.combat_over.connect(_on_combat_over)

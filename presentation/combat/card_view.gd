@@ -806,19 +806,52 @@ static func shadow_panel(sb: StyleBoxFlat) -> Panel:
 	return panel
 
 
-## The stage render back on the canvas, `reach` out on every side (the whole
-## PAD_3D margin for a live stage), so at rest the slab lands exactly on the
-## card's rect. A baked card draws its cropped bake through this same node, so
-## the two cannot drift apart.
-static func picture(stage: Texture2D, reach: float = PAD_3D) -> TextureRect:
-	var display: TextureRect = TextureRect.new()
-	display.texture = stage
-	display.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	display.stretch_mode = TextureRect.STRETCH_SCALE
-	display.position = Vector2(-reach, -reach)
-	display.size = Vector2(CARD_W + 2.0 * reach, CARD_H + 2.0 * reach)
+## The stage render back on the canvas over the stage's whole rect, PAD_3D out
+## on every side, so at rest the slab lands exactly on the card's rect. A baked
+## card (BakedCard) draws its bake through this same node: the stage cropped to
+## `reach`, laid on the same rect, its cut-away margin sampled past the crop's
+## clear edge. The same quad puts every texel where the live stage puts it,
+## scaled or not; a quad cut to the crop is snapped and filtered differently,
+## a level or two apart where the card is scaled (tools/check_card_faces.gd).
+static func picture(stage: Texture2D, reach: float = PAD_3D) -> Control:
+	var display: Control = null
+	if reach < PAD_3D:
+		display = _Crop.new(stage, stage_inset(reach))
+	else:
+		var whole: TextureRect = TextureRect.new()
+		whole.texture = stage
+		whole.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		whole.stretch_mode = TextureRect.STRETCH_SCALE
+		display = whole
+	display.position = Vector2(-PAD_3D, -PAD_3D)
+	display.size = Vector2(CARD_W + 2.0 * PAD_3D, CARD_H + 2.0 * PAD_3D)
 	display.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return display
+
+
+## Texels of a stage render that lie more than `reach` out from the card, on
+## each side, at the oversample: what a crop to `reach` cuts away.
+static func stage_inset(reach: float) -> int:
+	return roundi((PAD_3D - reach) * oversample)
+
+
+## A stage render cropped `cut` texels in from every side, drawn over the whole
+## stage's rect: its UVs run past the texture and clamp to its edge, which is
+## clear glass.
+class _Crop:
+	extends Control
+	var texture: Texture2D
+	var cut: int
+
+	func _init(crop: Texture2D, texels: int) -> void:
+		texture = crop
+		cut = texels
+		texture_repeat = CanvasItem.TEXTURE_REPEAT_DISABLED
+
+	func _draw() -> void:
+		var margin: Vector2 = Vector2(cut, cut)
+		draw_texture_rect_region(texture, Rect2(Vector2.ZERO, size),
+			Rect2(-margin, texture.get_size() + margin * 2.0), Color.WHITE, false, false)
 
 
 ## `.card.r-rare .card-inner::after` — the 4.5s gilt shine, on the canvas
@@ -1110,7 +1143,14 @@ func _ready() -> void:
 		return  # the hold armed the repaint; what it set reaches the shot
 	await get_tree().process_frame
 	await get_tree().process_frame
-	if not _hovered:
+	_freeze_if_idle()
+
+
+## Freeze the passes unless something moves the card. One pointed at and let
+## go inside its first frames is still springing back: _process freezes it
+## once it settles, and freezing it here would hold a half-lit frame meanwhile.
+func _freeze_if_idle() -> void:
+	if not _hovered and not is_processing():
 		_set_live(false)
 
 

@@ -1,16 +1,19 @@
 extends RefCounted
 ## Baked card faces (issue #657, PR 2): the deck overlay and every deck picker
-## draw one baked face per distinct card and stand at most one live card in,
-## under the pointer. The suite proves the bake's job rules (one bake per
-## distinct card, at most PER_FRAME a frame, in the order asked; a cache hit
-## at once; a locale, oversample or `forget` dropping the cache and any bake
-## in flight; an asker that leaves), that a baked card wears what the live card
-## draws at rest, the grid's one-live rule and its picks over touch and mouse,
-## and that a 30-card ChoiceScreen builds no live card at all.
+## draw one baked face per distinct card and stand a live card in only under
+## the pointer and for the last card it left. The suite proves the bake's job
+## rules (one bake per distinct card, at most PER_FRAME a frame, in the order
+## asked; a cache hit at once; a locale, oversample or `forget` dropping the
+## cache and any bake in flight; an asker that leaves), that the render step
+## frees every card it builds, what lets the cache go (a fight keeping only the
+## deck's, a change of language, a memory warning, the title), that a baked
+## card wears what the live card draws at rest, the grid's pointer rules over
+## touch and mouse and its picks, and that a 30-card ChoiceScreen builds no
+## live card at all.
 ##
-## The bakes run on a fake render step (CardFaces.use_renderer): the suite is
+## The bakes run on a fake frame (CardFaces.use_renderer): the suite is
 ## headless, where no frame is ever drawn. What the live step renders, and that
-## it is the live card's pixels, is proved windowed by
+## it is the live card's texels, is proved windowed by
 ## tools/check_card_faces.gd.
 
 const DECK_ROWS: int = 30
@@ -25,8 +28,13 @@ static func run(fails: Array[String]) -> void:
 	_forgetting(fails, content)
 	_askers_that_leave(fails, content)
 	_live_render_headless(fails, content)
+	_render_step_frees_its_cards(fails, content)
+	_keeping_the_deck(fails, content)
+	_main_lets_faces_go(fails, content)
 	_baked_card_wears_the_rest_look(fails, content)
-	_grid_keeps_one_live_card(fails, content)
+	_grid_touch(fails, content)
+	_grid_mouse(fails, content)
+	_stand_in_let_go_at_once(fails, content)
 	_choice_screen_builds_no_live_card(fails, content)
 	CardFaces.use_renderer(Callable())
 	CardFaces.forget()
@@ -175,6 +183,80 @@ static func _live_render_headless(fails: Array[String], content: ContentDB) -> v
 	host.free()
 
 
+## The production render step builds each card hidden under the view that
+## asked, and once the frame is drawn and the face kept, frees it: no bake
+## leaves a live card standing (a stage each, about 13 MB).
+static func _render_step_frees_its_cards(fails: Array[String], content: ContentDB) -> void:
+	CardFaces.forget()
+	var frame: _Frame = _Frame.new()
+	var kept: Array[CardView] = []
+	CardFaces.use_renderer(func(batch: Array) -> Array:
+		return await CardFaces._render_with(batch, frame.wait,
+			func(view: CardView) -> CardFaces.Face:
+				kept.append(view)
+				return _face()))
+	var host: Control = _host()
+	var cards: Array[BakedCard] = [
+		_card(content, &"strike"), _card(content, &"defend"), _card(content, &"strike")]
+	for card: BakedCard in cards:
+		_add(host, card)
+	var waiting: Array[CardView] = _standing(host)
+	if waiting.size() != 1 or waiting[0].visible:
+		fails.append("card faces: a bake waiting for its frame stands %d cards, want 1 hidden"
+			% waiting.size())
+	frame.drain()
+	if cards.any(func(c: BakedCard) -> bool: return c.face() == null) or kept.size() != 2:
+		fails.append("card faces: the render step kept %d of 2 faces" % kept.size())
+	if not _standing(host).is_empty():
+		fails.append("card faces: the render step left %d live cards standing"
+			% _standing(host).size())
+	for node: Node in host.find_children("", "CardView", true, false):
+		var view: CardView = node
+		for surface: int in 3:
+			view._slab.set_surface_override_material(surface, null)
+	host.free()
+	CardFaces.use_renderer(Callable())
+
+
+## A fight keeps the deck's faces and drops the rest: a card tempered (its
+## unupgraded face), removed, or offered and passed by.
+static func _keeping_the_deck(fails: Array[String], content: ContentDB) -> void:
+	_bake(content, [&"strike", &"defend", &"aegis"], [&"strike"])
+	var row: Dictionary = content.card(&"strike")
+	var deck: Array[Dictionary] = [
+		_row(content, &"strike", "card:1"),
+		{"id": "card:2", "card": CardInst.new(2, &"strike", true), "definition": row}]
+	CardFaces.keep_only(deck)
+	if CardFaces.count() != 2 \
+			or CardFaces.cached(CardInst.new(3, &"strike"), row, _cost(row)) == null \
+			or CardFaces.cached(CardInst.new(4, &"strike", true), row, _cost(row)) == null:
+		fails.append("card faces: keeping the deck kept %d faces, want strike and strike+"
+			% CardFaces.count())
+
+
+## Main lets the cache go when its words go stale (a change of language), when
+## the OS runs short of memory, at the title, and keeps only the deck's as a
+## fight begins.
+static func _main_lets_faces_go(fails: Array[String], content: ContentDB) -> void:
+	var main: Main = Main.new()
+	main.content = content
+	_bake(content, [&"strike"], [])
+	main._apply_content_hydration()
+	if CardFaces.count() != 0:
+		fails.append("card faces: a change of language left faces baked in the old one")
+	_bake(content, [&"strike"], [])
+	main.notification(Node.NOTIFICATION_OS_MEMORY_WARNING)
+	if CardFaces.count() != 0:
+		fails.append("card faces: a memory warning left the faces baked")
+	main.free()
+	var source: String = FileAccess.get_file_as_string("res://application/main.gd")
+	if not _body(source, "_show_title").contains("CardFaces.forget()"):
+		fails.append("card faces: the title no longer drops the faces")
+	if not _body(source, "_resume_pending_combat").contains("CardFaces.keep_only(_deck_rows())"):
+		fails.append("card faces: a fight no longer keeps only the deck's faces")
+	CardFaces.forget()
+
+
 ## What a baked card lays at rest is what the live card draws: its stock's own
 ## shadow, the picture at the stage's rect, and the gilt shine on a rare only.
 static func _baked_card_wears_the_rest_look(fails: Array[String], content: ContentDB) -> void:
@@ -197,19 +279,18 @@ static func _baked_card_wears_the_rest_look(fails: Array[String], content: Conte
 				or sb.shadow_offset != live_sb.shadow_offset \
 				or sb.corner_radius_top_left != live_sb.corner_radius_top_left:
 			fails.append("card faces: %s's baked shadow is not its live shadow at rest" % id)
-		var shown: TextureRect = baked.get_child(1) as TextureRect
+		var shown: Control = baked.get_child(1) as Control
 		var live_display: TextureRect = null
 		for child: Node in live.get_children():
 			if child is TextureRect:
 				live_display = child
-		# The bake is the stage cropped to REACH: laid that much further in.
-		var cut: Vector2 = Vector2.ONE * (CardView.PAD_3D - CardFaces.REACH)
-		if shown == null or live_display == null \
-				or shown.position != live_display.position + cut \
-				or shown.size != live_display.size - cut * 2.0 \
-				or shown.stretch_mode != live_display.stretch_mode:
-			fails.append("card faces: %s's baked picture is not laid where the live stage is" % id)
+		# The bake is the stage cropped to REACH, laid on the live stage's own
+		# quad with the cut-away margin reaching past it.
 		var crop: Rect2i = CardFaces.crop_of(Vector2i(400, 528))
+		if shown == null or live_display == null \
+				or shown.position != live_display.position or shown.size != live_display.size \
+				or shown.get("texture") != face.picture or shown.get("cut") != crop.position.x:
+			fails.append("card faces: %s's baked picture is not laid on the live stage's quad" % id)
 		if CardView.oversample == 2.0 and crop != Rect2i(28, 28, 344, 472):
 			fails.append("card faces: a 2x stage crops to %s, want 28,28 344x472" % str(crop))
 		var shines: int = baked.find_children("", "ColorRect", false, false).size()
@@ -220,24 +301,17 @@ static func _baked_card_wears_the_rest_look(fails: Array[String], content: Conte
 	host.free()
 
 
-static func _grid_keeps_one_live_card(fails: Array[String], content: ContentDB) -> void:
-	CardFaces.forget()
-	var render: _FakeRender = _FakeRender.new()
-	CardFaces.use_renderer(render.render)
-	var host: Control = _host()
-	var rows: Array[Dictionary] = [
-		_row(content, &"strike", "a"), _row(content, &"defend", "b"),
-		_row(content, &"eclipseSlash", "c", true)]
-	var grid: CardGrid = CardGrid.new(rows, 16.0)
-	host.add_child(grid)
-	_ready_all(grid)
-	render.drain()
-	var picks: Array[String] = []
-	grid.picked.connect(func(id: String) -> void: picks.append(id))
+## Touch: a finger stands the card in live and its tap picks it once; lifted
+## on the card, the card stays up (as a tap left a live card hovered under the
+## emulated mouse), until the next touch lands elsewhere; lifted off it, it
+## springs back. The emulated mouse's own press and release change nothing.
+static func _grid_touch(fails: Array[String], content: ContentDB) -> void:
+	var made: Array = _grid(content)
+	var host: Control = made[0]
+	var grid: CardGrid = made[1]
+	var picks: Array[String] = made[2]
 	var cards: Array[BakedCard] = grid.cards()
 	var at: Vector2 = Vector2(40.0, 60.0)
-	# A finger on the first card stands it in live; the touch screen's emulated
-	# mouse for the same contact changes nothing.
 	_touch(cards[0], true, at)
 	_mouse_button(cards[0], true, InputEvent.DEVICE_ID_EMULATION)
 	if cards[0].live() == null or _live_cards(grid) != 1:
@@ -246,35 +320,86 @@ static func _grid_keeps_one_live_card(fails: Array[String], content: ContentDB) 
 	_touch(cards[0], false, at)
 	if picks != ["a"]:
 		fails.append("card faces: one tap picked %s, want [a]" % str(picks))
-	# A mouse reaching the second card drops the first at once.
+	if cards[0].live() == null or not cards[0].live()._hovered:
+		fails.append("card faces: a finger lifted on a card let it fall")
+	# The next touch lands on another card: the emulated mouse leaves the first.
+	cards[0].notification(Control.NOTIFICATION_MOUSE_EXIT)
+	_touch(cards[1], true, at)
+	if cards[0].live() == null or cards[0].live()._hovered or cards[1].live() == null:
+		fails.append("card faces: a touch on the next card did not let the first spring back")
+	# Lifted off the card, it springs back.
+	_touch(cards[1], false, Vector2(-20.0, at.y))
+	if cards[1].live() == null or cards[1].live()._hovered:
+		fails.append("card faces: a finger lifted off a card left it up")
+	host.free()
+
+
+## Mouse: the card under the pointer stands live; the one it left springs back
+## beside it, as the live cards did, and so do the last two it left once it is
+## on none. A pointer reaching a card past that drops the one springing back
+## longest at once, so no more than LIVE_MAX ever stand. A card coming back
+## under the pointer while it springs back is not dropped. (A card brought
+## under a resting cursor by a wheel scroll stands in on its enter alone; that
+## needs a cursor, so tools/check_card_faces.gd proves it.)
+static func _grid_mouse(fails: Array[String], content: ContentDB) -> void:
+	var made: Array = _grid(content)
+	var host: Control = made[0]
+	var grid: CardGrid = made[1]
+	var picks: Array[String] = made[2]
+	var cards: Array[BakedCard] = grid.cards()
+	var at: Vector2 = Vector2(40.0, 60.0)
+	_mouse_motion(cards[0], at)
 	_mouse_motion(cards[1], at)
-	if cards[0].live() != null or cards[1].live() == null or _live_cards(grid) != 1:
-		fails.append("card faces: two cards stood live at once, or the new one did not")
-	# Leaving: the live card springs back to rest, then the face returns.
+	cards[0].notification(Control.NOTIFICATION_MOUSE_EXIT)
+	if cards[0].live() == null or cards[0].live()._hovered or cards[1].live() == null:
+		fails.append("card faces: the card the pointer left snapped flat instead of springing back")
+	# Off every card: the last two it left both spring back.
+	cards[1].notification(Control.NOTIFICATION_MOUSE_EXIT)
+	if cards[0].live() == null or cards[1].live() == null:
+		fails.append("card faces: leaving a second card dropped the first while it sprang back")
+	_mouse_motion(cards[2], at)
+	if cards[0].live() != null or cards[1].live() == null or cards[2].live() == null \
+			or _live_cards(grid) != CardGrid.LIVE_MAX:
+		fails.append("card faces: on a third card, %d live cards stood, want %d (not the first)"
+			% [_live_cards(grid), CardGrid.LIVE_MAX])
+	_mouse_motion(cards[1], at)
+	if cards[1].live() == null or not cards[1].live()._hovered or cards[2].live() == null:
+		fails.append("card faces: a card pointed at again while it sprang back was dropped")
 	cards[1].notification(Control.NOTIFICATION_MOUSE_EXIT)
 	var live: CardView = cards[1].live()
-	if live == null:
-		fails.append("card faces: the live card was dropped before it came to rest")
-	else:
-		# No frame runs in the suite: step the spring by hand, and end the edge
-		# glint's quarter-second fade, a tween that only steps in a running tree.
-		for _i: int in range(600):
-			if not live.is_processing():
-				break
-			live._process(1.0 / 30.0)
-		cards[1]._process(1.0 / 30.0)
-		if cards[1].live() == null:
-			fails.append("card faces: the live card gave way before its glint had faded")
-		if live._light_tw != null:
-			live._light_tw.kill()
-		cards[1]._process(1.0 / 30.0)
-		if cards[1].live() != null or not cards[1].get_child(1).visible:
-			fails.append("card faces: a settled live card did not give way to its face")
+	_settle(cards[1])
+	if live == null or cards[1].live() != null or not cards[1].get_child(1).visible:
+		fails.append("card faces: a settled live card did not give way to its face")
 	# A shown-only card takes the pointer but is never picked.
-	_mouse_button(cards[2], true, 0)
-	_mouse_button(cards[2], false, 0)
-	if picks != ["a"]:
+	_mouse_motion(cards[3], at)
+	if cards[3].live() == null or _live_cards(grid) > CardGrid.LIVE_MAX:
+		fails.append("card faces: a shown-only card did not stand in under the pointer")
+	_mouse_button(cards[3], true, 0)
+	_mouse_button(cards[3], false, 0)
+	if not picks.is_empty():
 		fails.append("card faces: a disabled card was picked (%s)" % str(picks))
+	host.free()
+
+
+## A stand-in pointed at and let go before its first frames are out keeps
+## drawing while it springs back; one never pointed at freezes as before.
+static func _stand_in_let_go_at_once(fails: Array[String], content: ContentDB) -> void:
+	var host: Control = _host()
+	var row: Dictionary = content.card(&"strike")
+	var flicked: CardView = CardView.new(CardInst.new(1, &"strike"), row, 1)
+	var still: CardView = CardView.new(CardInst.new(2, &"strike"), row, 1)
+	host.add_child(flicked)
+	host.add_child(still)
+	flicked.point_at(Vector2(40.0, 60.0))
+	flicked.point_away()
+	flicked._freeze_if_idle()
+	still._freeze_if_idle()
+	if flicked._stage.render_target_update_mode != SubViewport.UPDATE_ALWAYS:
+		fails.append("card faces: a card let go in its first frames froze mid-spring")
+	if still._stage.render_target_update_mode != SubViewport.UPDATE_ONCE:
+		fails.append("card faces: a card at rest did not freeze after its first frames")
+	_free_card(flicked)
+	_free_card(still)
 	host.free()
 
 
@@ -317,6 +442,56 @@ static func _add(parent: Node, card: BakedCard) -> void:
 	card._ready()
 
 
+## A grid of four cards (the last shown only) with its faces landed, its
+## host and the picks it makes: [host, grid, picks].
+static func _grid(content: ContentDB) -> Array:
+	CardFaces.forget()
+	var render: _FakeRender = _FakeRender.new()
+	CardFaces.use_renderer(render.render)
+	var host: Control = _host()
+	var rows: Array[Dictionary] = [
+		_row(content, &"strike", "a"), _row(content, &"defend", "b"),
+		_row(content, &"aegis", "c"), _row(content, &"eclipseSlash", "d", true)]
+	var grid: CardGrid = CardGrid.new(rows, 16.0)
+	host.add_child(grid)
+	_ready_all(grid)
+	render.drain()
+	var picks: Array[String] = []
+	grid.picked.connect(func(id: String) -> void: picks.append(id))
+	return [host, grid, picks]
+
+
+## Step a card's live card to rest by hand (no frame runs in the suite), end
+## the edge glint's fade (a tween only steps in a running tree), and let the
+## card notice.
+static func _settle(card: BakedCard) -> void:
+	var live: CardView = card.live()
+	if live == null:
+		return
+	for _i: int in range(600):
+		if not live.is_processing():
+			break
+		live._process(1.0 / 30.0)
+	if live._light_tw != null:
+		live._light_tw.kill()
+	card._process(1.0 / 30.0)
+
+
+## The faces of `ids`, and of `ups` upgraded, baked into an empty cache.
+static func _bake(content: ContentDB, ids: Array[StringName], ups: Array[StringName]) -> void:
+	CardFaces.forget()
+	var render: _FakeRender = _FakeRender.new()
+	CardFaces.use_renderer(render.render)
+	var host: Control = _host()
+	for id: StringName in ids:
+		_add(host, _card(content, id))
+	for id: StringName in ups:
+		_add(host, _card(content, id, true))
+	render.drain()
+	host.free()
+	CardFaces.use_renderer(Callable())
+
+
 static func _ready_all(root: Node) -> void:
 	for node: Node in root.find_children("", "BakedCard", true, false):
 		var card: BakedCard = node
@@ -346,12 +521,35 @@ static func _row(content: ContentDB, id: StringName, choice: String,
 
 
 static func _cost(row: Dictionary) -> int:
-	var cost_v: Variant = row.get("cost")
-	return 0 if cost_v == null else int(float(str(cost_v)))
+	return CardFaces.cost_of(row)
 
 
 static func _live_cards(root: Node) -> int:
 	return root.find_children("", "CardView", true, false).size()
+
+
+## The live cards under `root` that are not on their way out.
+static func _standing(root: Node) -> Array[CardView]:
+	var out: Array[CardView] = []
+	for node: Node in root.find_children("", "CardView", true, false):
+		if not node.is_queued_for_deletion():
+			out.append(node as CardView)
+	return out
+
+
+static func _face() -> CardFaces.Face:
+	var face: CardFaces.Face = CardFaces.Face.new()
+	face.picture = _texture()
+	face.shadow = StyleBoxFlat.new()
+	return face
+
+
+static func _body(source: String, name: String) -> String:
+	var start: int = source.find("func %s(" % name)
+	if start < 0:
+		return ""
+	var finish: int = source.find("\nfunc ", start + 1)
+	return source.substr(start) if finish < 0 else source.substr(start, finish - start)
 
 
 static func _texture() -> Texture2D:
@@ -421,6 +619,25 @@ class _FakeRender:
 			if _waiting == 0:
 				return
 			open.emit()
+
+
+## A frame the test draws by hand: `wait` returns once `drain` says so.
+class _Frame:
+	extends RefCounted
+	signal drawn
+	var _waiting: int = 0
+
+	func wait() -> void:
+		_waiting += 1
+		await drawn
+		_waiting -= 1
+
+	## Draw every frame waited for, including the ones each drawing queues up.
+	func drain() -> void:
+		for _i: int in range(64):
+			if _waiting == 0:
+				return
+			drawn.emit()
 
 
 ## The script errors the engine reports while this is registered.
