@@ -5,7 +5,7 @@ extends RefCounted
 ## distinct card instead of a live CardView per card.
 ##
 ## WHY. A live card holds about 16 MB of video memory: two offscreen passes and
-## a 3D stage with 4x MSAA. A face holds one picture, 0.8 MB at the game's 2x
+## a 3D stage with 4x MSAA. A face holds one picture, 0.65 MB at the game's 2x
 ## oversample. Before this, the deck overlay built a live card for every card in
 ## the deck: on the Mac that held 131 MB more for the 10-card starter deck and
 ## 399 MB more for 30 cards, 511 MB at the peak of the open.
@@ -36,6 +36,14 @@ extends RefCounted
 
 ## Cards baked per frame.
 const PER_FRAME: int = 1
+## How far a face's picture reaches past the card, in card px: the cost gem's
+## overhang (CardView.PAD_IN) and two px of clear glass beyond it, so the
+## filtered edge of the crop only ever samples transparent texels. A resting
+## stage holds nothing further out — over every card and upgrade in the
+## catalogue its content reaches 8 px above the card, 5.5 px left of it and
+## nothing past the right or bottom edge — so the rest of the PAD_3D the live
+## stage keeps for its tilt is cut away: a quarter of the face's memory.
+const REACH: float = CardView.PAD_IN + 2.0
 ## How many times one card's bake is tried before its askers are given up on.
 const TRIES: int = 2
 
@@ -55,8 +63,9 @@ static var _renderer: Callable = Callable()
 ## One card, baked.
 class Face:
 	extends RefCounted
-	## The lit stage at rest — (card + 2 * PAD_3D) at the oversample, the card
-	## centred PAD_3D in — drawn by CardView.picture exactly as the live stage is.
+	## The lit stage at rest, cropped to REACH past the card on every side (at
+	## the oversample), drawn by CardView.picture as the live stage is, on the
+	## same texel grid.
 	var picture: Texture2D
 	## The card's table shadow at rest (CardView.rest_shadow).
 	var shadow: StyleBoxFlat
@@ -65,20 +74,20 @@ class Face:
 	## The GPU copy this face owns, when the picture is one.
 	var _gpu: RID = RID()
 
-	## Copy `stage` on `rd` into a texture this face owns, and wear it.
-	func copy_on_gpu(rd: RenderingDevice, stage: Texture2D) -> void:
+	## Copy the `crop` of `stage` on `rd` into a texture this face owns, and
+	## wear it.
+	func copy_on_gpu(rd: RenderingDevice, stage: Texture2D, crop: Rect2i) -> void:
 		var source: RID = RenderingServer.texture_get_rd_texture(stage.get_rid())
-		var from: RDTextureFormat = rd.texture_get_format(source)
 		var into: RDTextureFormat = RDTextureFormat.new()
-		into.width = from.width
-		into.height = from.height
-		into.format = from.format
+		into.width = crop.size.x
+		into.height = crop.size.y
+		into.format = rd.texture_get_format(source).format
 		into.usage_bits = RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT \
 			| RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT \
 			| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
 		_gpu = rd.texture_create(into, RDTextureView.new())
-		rd.texture_copy(source, _gpu, Vector3.ZERO, Vector3.ZERO,
-			Vector3(from.width, from.height, 1), 0, 0, 0, 0)
+		rd.texture_copy(source, _gpu, Vector3(crop.position.x, crop.position.y, 0),
+			Vector3.ZERO, Vector3(crop.size.x, crop.size.y, 1), 0, 0, 0, 0)
 		var copy: Texture2DRD = Texture2DRD.new()
 		copy.texture_rd_rid = _gpu
 		picture = copy
@@ -121,6 +130,13 @@ class _Job:
 ## The face of a card: the same card, upgrade, cost and definition share one.
 static func key_of(inst: CardInst, definition: Dictionary, cost: int) -> String:
 	return "%s%s|%d|%d" % [inst.id, "+" if inst.up else "", cost, definition.hash()]
+
+
+## The part of a stage render of `size` texels a face keeps: REACH past the
+## card on every side, on the stage's own texel grid.
+static func crop_of(size: Vector2i) -> Rect2i:
+	var inset: int = roundi((CardView.PAD_3D - REACH) * CardView.oversample)
+	return Rect2i(Vector2i(inset, inset), size - Vector2i(inset, inset) * 2)
 
 
 ## The baked face of this card, or null while there is none.
@@ -262,9 +278,11 @@ static func _keep(view: CardView) -> Face:
 	var face: Face = Face.new()
 	face.shadow = view.rest_shadow()
 	face.shine = view.has_shine()
+	var stage: Texture2D = view.stage_texture()
+	var crop: Rect2i = crop_of(Vector2i(stage.get_width(), stage.get_height()))
 	var rd: RenderingDevice = RenderingServer.get_rendering_device()
 	if rd != null and RenderingServer.is_on_render_thread():
-		face.copy_on_gpu(rd, view.stage_texture())
+		face.copy_on_gpu(rd, stage, crop)
 	else:
-		face.picture = ImageTexture.create_from_image(view.stage_image())
+		face.picture = ImageTexture.create_from_image(view.stage_image().get_region(crop))
 	return face

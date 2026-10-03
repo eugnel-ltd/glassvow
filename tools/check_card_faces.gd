@@ -16,9 +16,10 @@ extends SceneTree
 ## and the longest rules text first, then the starter deck, so the first rows
 ## on screen cover every kind of face. Once every face has landed:
 ##
-##   SAME   for every card at least a third on screen, the frame with its baked face
-##          against the frame with a live card standing in for it at rest,
-##          over the card and its shadow's reach: every channel of every pixel.
+##   SAME   for every card at least a third on screen, the frame with its
+##          baked face against the frame with a live card standing in for it
+##          at rest, over the card and its shadow's reach: every channel of
+##          every pixel.
 ##          A rare's gilt shine runs on TIME, so two frames never agree on it;
 ##          it is hidden on both sides of the comparison (it is the same node,
 ##          CardView.shine, on both). So are the map, the HUD and the film
@@ -27,14 +28,20 @@ extends SceneTree
 ##          the swap shows no empty or half-drawn frame.
 ##   BACK   a pointer visits the first card and leaves: a live card stood in,
 ##          sprang back and gave way, and the frame is the baked one again.
-##   TEXEL  for every distinct face, its picture against a settled live card's
-##          stage read back: every RGBA channel of every texel.
+##   TEXEL  for every distinct face, its picture against the same crop of a
+##          settled live card's stage read back: every RGBA channel of every
+##          texel, and nothing the stage drew lies outside the crop.
 ##
-## Exit 0 when every comparison is within MAX_DELTA, 1 otherwise. --out= also
-## writes the rows and a still: the overlay, then each compared card baked
-## (top) over live (bottom).
+## Exit 0 when every texel is exact and every pixel within MAX_DELTA, 1
+## otherwise. --out= also writes the rows and a still: the overlay, then each
+## compared card baked (top) over live (bottom).
 
-const MAX_DELTA: int = 2           # of 255, per channel
+## Of 255, per channel, on screen. A face is the stage cropped to its reach,
+## so the canvas samples the same texels through a smaller quad: where the
+## card is scaled, the filter's sub-texel steps can land a channel a level or
+## three apart (measured: 0 at the desktop's 1:1, 1 at the pad, 3 at the
+## phone). The texels themselves must match exactly.
+const MAX_DELTA: int = 4
 ## A tooling window may run unthrottled, so a settle is a time and a few
 ## frames, never frames alone: past a face's fade-in and a card's first draws.
 const SETTLE_SECONDS: float = 0.5
@@ -204,6 +211,7 @@ class Probe:
 
 	func _same(kind: String, card: BakedCard, want: Image, got: Image, area: Rect2i) -> bool:
 		var worst: int = 0
+		var differ: int = 0
 		var over: int = 0
 		for y: int in range(area.position.y, area.end.y):
 			for x: int in range(area.position.x, area.end.x):
@@ -212,9 +220,10 @@ class Probe:
 				var d: int = roundi(255.0 * maxf(maxf(absf(a.r - b.r), absf(a.g - b.g)),
 					absf(a.b - b.b)))
 				worst = maxi(worst, d)
+				differ += 1 if d > 0 else 0
 				over += 1 if d > MAX_DELTA else 0
-		_row("%s %s%s max_delta=%d px_over=%d of %d" % [kind, card.inst.id,
-			"+" if card.inst.up else "", worst, over, area.get_area()])
+		_row("%s %s%s max_delta=%d px_differ=%d px_over=%d of %d" % [kind, card.inst.id,
+			"+" if card.inst.up else "", worst, differ, over, area.get_area()])
 		return worst <= MAX_DELTA
 
 	## Every distinct face against a settled live card of it, texel by texel.
@@ -230,7 +239,9 @@ class Probe:
 			live.visible = false
 			add_child(live)
 			await _settle()
-			var want: Image = live.stage_image()
+			var stage: Image = live.stage_image()
+			var want: Image = stage.get_region(CardFaces.crop_of(stage.get_size()))
+			var drawn: Rect2i = stage.get_used_rect()
 			live.queue_free()
 			var got: Image = face.picture.get_image()
 			var worst: int = 0
@@ -241,11 +252,14 @@ class Probe:
 					worst = maxi(worst, roundi(255.0 * maxf(
 						maxf(absf(a.r - b.r), absf(a.g - b.g)),
 						maxf(absf(a.b - b.b), absf(a.a - b.a)))))
-			_row("TEXEL %s%s %s max_delta=%d (%dx%d, %s)" % [card.inst.id,
+			# Nothing the stage drew may lie outside the crop.
+			var kept: bool = CardFaces.crop_of(stage.get_size()).encloses(drawn)
+			_row("TEXEL %s%s %s max_delta=%d (%dx%d of %dx%d, %s, %s)" % [card.inst.id,
 				"+" if card.inst.up else "", face.picture.get_class(), worst,
-				got.get_width(), got.get_height(),
-				"same size" if got.get_size() == want.get_size() else "SIZE DIFFERS"])
-			ok = ok and worst <= MAX_DELTA and got.get_size() == want.get_size()
+				got.get_width(), got.get_height(), stage.get_width(), stage.get_height(),
+				"same size" if got.get_size() == want.get_size() else "SIZE DIFFERS",
+				"all drawn texels kept" if kept else "DRAWN TEXELS CUT"])
+			ok = ok and worst == 0 and got.get_size() == want.get_size() and kept
 		return ok
 
 	## Where the card lands in the window's pixels, grown by `before` up and

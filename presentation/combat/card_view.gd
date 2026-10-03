@@ -806,16 +806,17 @@ static func shadow_panel(sb: StyleBoxFlat) -> Panel:
 	return panel
 
 
-## The stage render back on the canvas, PAD_3D out on every side, so at rest
-## the slab lands exactly on the card's rect. A baked card draws its baked
-## stage through this same node, so the two cannot drift apart.
-static func picture(stage: Texture2D) -> TextureRect:
+## The stage render back on the canvas, `reach` out on every side (the whole
+## PAD_3D margin for a live stage), so at rest the slab lands exactly on the
+## card's rect. A baked card draws its cropped bake through this same node, so
+## the two cannot drift apart.
+static func picture(stage: Texture2D, reach: float = PAD_3D) -> TextureRect:
 	var display: TextureRect = TextureRect.new()
 	display.texture = stage
 	display.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	display.stretch_mode = TextureRect.STRETCH_SCALE
-	display.position = Vector2(-PAD_3D, -PAD_3D)
-	display.size = Vector2(CARD_W + 2.0 * PAD_3D, CARD_H + 2.0 * PAD_3D)
+	display.position = Vector2(-reach, -reach)
+	display.size = Vector2(CARD_W + 2.0 * reach, CARD_H + 2.0 * reach)
 	display.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return display
 

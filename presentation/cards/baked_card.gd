@@ -123,7 +123,7 @@ func _landed(face: CardFaces.Face) -> void:
 func _wear(face: CardFaces.Face) -> void:
 	_face = face
 	_rest.append(CardView.shadow_panel(face.shadow))
-	_rest.append(CardView.picture(face.picture))
+	_rest.append(CardView.picture(face.picture, CardFaces.REACH))
 	if face.shine:
 		_rest.append(CardView.shine())
 	for node: Control in _rest:

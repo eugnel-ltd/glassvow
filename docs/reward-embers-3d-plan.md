@@ -53,7 +53,7 @@ Nothing below is invented. It is read out of two lanes that already solved it.
 | Transparent 3D stage inside a Control | `enemy_view.gd:1906-1922` (in `_build_stage`), `card_view.gd:719` (`_build_stage`) | `own_world_3d`, `transparent_bg`, `BG_CLEAR_COLOR` with `AMBIENT_SOURCE_SKY` + `REFLECTION_SOURCE_SKY` — keeps the alpha while still giving glass something to mirror. |
 | Tonemap | `enemy_view.gd:1921-1923` (in `_build_stage`) | `TONE_MAPPER_LINEAR`, never ACES: the filmic curve lifts blacks and desaturates, which on near-black art reads as fog over everything. |
 | The lamp itself | `enemy_view.gd:1928-1933` (in `_build_stage`) | Warm `DirectionalLight3D`, `rotation_degrees(-38, -32, 0)`. This is the generic lamp, and the reward stage uses the same numbers so the wreckage and the cards do not disagree about where the light is. |
-| Freezing an idle viewport | `card_view.gd:1074-1078` (`_set_live`) | `UPDATE_ALWAYS` → `UPDATE_ONCE` when a thing stops moving. |
+| Freezing an idle viewport | `card_view.gd:1075-1079` (`_set_live`) | `UPDATE_ALWAYS` → `UPDATE_ONCE` when a thing stops moving. |
 
 **Ownership constraint:** `enemy_view.gd` belongs to the Enemy / hero lane. This
 lane may read it and may not edit it. The prism builder is therefore **copied

@@ -202,9 +202,16 @@ static func _baked_card_wears_the_rest_look(fails: Array[String], content: Conte
 		for child: Node in live.get_children():
 			if child is TextureRect:
 				live_display = child
-		if shown == null or live_display == null or shown.position != live_display.position \
-				or shown.size != live_display.size or shown.stretch_mode != live_display.stretch_mode:
+		# The bake is the stage cropped to REACH: laid that much further in.
+		var cut: Vector2 = Vector2.ONE * (CardView.PAD_3D - CardFaces.REACH)
+		if shown == null or live_display == null \
+				or shown.position != live_display.position + cut \
+				or shown.size != live_display.size - cut * 2.0 \
+				or shown.stretch_mode != live_display.stretch_mode:
 			fails.append("card faces: %s's baked picture is not laid where the live stage is" % id)
+		var crop: Rect2i = CardFaces.crop_of(Vector2i(400, 528))
+		if CardView.oversample == 2.0 and crop != Rect2i(28, 28, 344, 472):
+			fails.append("card faces: a 2x stage crops to %s, want 28,28 344x472" % str(crop))
 		var shines: int = baked.find_children("", "ColorRect", false, false).size()
 		if shines != (1 if id == &"oblivionStrike" else 0) or face.shine != (shines == 1):
 			fails.append("card faces: %s wears %d shines, want one on a rare only" % [id, shines])
