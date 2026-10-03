@@ -1,0 +1,85 @@
+"""Mutation proof for the rules the PR B review asked for (#655): each mutation
+breaks one rule in the shipped code, runs the suite that guards it, records
+whether it failed, and restores the file byte for byte from a backup copy."""
+import os, shutil, subprocess, sys
+W = sys.argv[1]
+OUT = sys.argv[2]
+P = "presentation/ui/leadlight_passage.gd"
+H = "presentation/ui/components/leadlight_room_host.gd"
+C = "presentation/run/credits_screen.gd"
+L = "presentation/run/credits_licences.gd"
+RP = "tests/test_room_passage.gd"
+CR = "tests/test_credits_roll.gd"
+M = [
+  ("the idle ember not held while a room is open (§7 item 10)", "presentation/title/title_screen.gd",
+   "	_lent = true\n	_beckon.hold()\n", "	_lent = true\n", RP),
+  ("a lent title takes its own keys (§7 item 11)", "presentation/title/title_screen.gd",
+   "	if _lent:\n		return\n	if _is_key_press(event) and rite", "	if _is_key_press(event) and rite", RP),
+  ("Enter does not land an arrival (§2.6)", P,
+   "		elif event.is_action_pressed(&\"ui_accept\"):", "		elif false and event.is_action_pressed(&\"ui_accept\"):", RP),
+  ("the title words' taps at their drawn height (§7 item 8)", "presentation/title/title_screen.gd",
+   "	var tall: float = LeadlightTokens.room_hit(shape)", "	var tall: float = 0.0", "tests/test_title_rubric.gd"),
+  ("no afterglow on the word left back to (§7 item 9)", P,
+   "				(word as LeadlightWord).afterglow()", "				pass", RP),
+  ("leaving starts slowly again (EXIT)", H,
+   "	glass.reach = 1.0 - LeadlightMotion.ease_on(t / 0.22, LeadlightMotion.SETTLE_OUT)",
+   "	glass.reach = 1.0 - LeadlightMotion.ease_on(t / 0.22, LeadlightMotion.EXIT)", RP),
+  ("the room's content does not wait for the word in flight", H,
+   "	if not ghost_clear.is_valid():\n		return 0.0", "	if true:\n		return 0.0", RP),
+  ("the crown rides back at once over lit content", H,
+   "func crown_leaves_at() -> float:\n	return 0.08", "func crown_leaves_at() -> float:\n	return 0.0", RP),
+  ("the furniture comes back under the word riding home", P,
+   "		entry.holds.append(_passed_on_return(entry, host, item))", "		entry.holds.append(0.0)", RP),
+  ("the neighbours the word lifts through dim at the slow pace", P,
+   "			item.modulate.a = quick if a.crossed.has(item) else gone", "			item.modulate.a = gone", RP),
+  ("a rebuilt seat gets the lantern's tap back in a run", H,
+   "	_seat = LeadlightSeat.new(shape, _seat_lantern)", "	_seat = LeadlightSeat.new(shape)", RP),
+  ("the run menu vanishes under the room it opens (X1)", "application/main.gd",
+   "	elif fold:\n		_passage_node().dismiss(node, faded, LeadlightMotion.SETTLE_OUT)",
+   "	elif false:\n		_passage_node().dismiss(node, faded, LeadlightMotion.SETTLE_OUT)", RP),
+  ("Reduce Motion shows the seated lantern under the cross-fade at once", P,
+   "			_lantern_after_fade(title.lantern)", "			pass", RP),
+  ("the passage's arrival focus holds the first drift", C,
+   "	if _landed:\n		_took_over()", "	_took_over()", CR),
+  ("the roll arrives unwarmed and dims as it lands", C,
+   "			i += 1\n	_warm()", "			i += 1", CR),
+  ("the roll's edges cut its lines", "presentation/run/credits_roll.gd",
+   "	return smoothstep(0.0, edge, y - top) * smoothstep(0.0, edge, foot - y)", "	return 1.0", CR),
+  ("the licence glass's scroll takes no focus", L,
+   "		scroll.focus_mode = Control.FOCUS_ALL", "		scroll.focus_mode = Control.FOCUS_NONE", CR),
+  ("the licence text starts in the arch under its crown", L,
+   "		sheet.content_top = CLEAR\n", "", CR),
+  ("an open licence glass is opened again", C,
+   "	if _licences.opened != null:\n		return\n	if _sfx != null:\n		_sfx.play_owed(&\"paneRise\"",
+   "	if _sfx != null:\n		_sfx.play_owed(&\"paneRise\"", CR),
+  ("the roll stays legible round the licence glass", L,
+   "	const BEHIND: float = 0.1", "	const BEHIND: float = 0.4", CR),
+  ("the licence texts keep their hard wraps", L,
+   "	var wrapped_at: int = maxi(roundi(float(width) * 0.72), 40)", "	var wrapped_at: int = 100000", CR),
+  ("a section change prints both pages over each other (G3)", "presentation/ui/components/leadlight_room.gd",
+   "const IN_FROM: float = 0.06", "const IN_FROM: float = 0.0", "tests/test_help_room.gd"),
+  ("the word in flight is measured from where it enters, not leaves", "presentation/ui/components/leadlight_ghost_word.gd",
+   "			return -1.0\n	return hi", "			return -1.0\n	return lo", RP),
+]
+ONLY = sys.argv[3] if len(sys.argv) > 3 else ""
+with open(OUT, "a") as log:
+    for name, path, a, b, test in M:
+        if ONLY and ONLY not in name:
+            continue
+        full = W + "/" + path
+        src = open(full).read()
+        assert src.count(a) == 1, (name, a[:60], src.count(a))
+        shutil.copyfile(full, full + ".mutation-backup")
+        open(full, "w").write(src.replace(a, b))
+        try:
+            r = subprocess.run(["timeout", "900", "godot", "--headless", "--path", W, "-s", "res://tests/run_all.gd",
+                                "--", "--tests=res://" + test], capture_output=True, text=True)
+            lines = [l for l in r.stdout.splitlines() if l.startswith("  - ") or l.startswith("FAIL") or l.startswith("PASS") or "SCRIPT ERROR" in l]
+        finally:
+            shutil.copyfile(full + ".mutation-backup", full)
+            os.remove(full + ".mutation-backup")
+        caught = any(l.startswith("FAIL (") for l in lines)
+        log.write("== %s (%s) -> %s\n" % (name, test, "CAUGHT" if caught else "MISSED"))
+        for l in lines[:6]:
+            log.write("   " + l + "\n")
+        log.flush()

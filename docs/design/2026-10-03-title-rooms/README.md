@@ -179,6 +179,14 @@ capitals over the last third of the flight; zh-Hant needs no case change. On lea
 back and becomes the word, which keeps a 0.6 s afterglow ("you came from here"). The ghost is a
 `Label` owned by the passage at `z_index` 210 and freed on landing.
 
+*As built after the PR B review:* the word never runs through lit text. Arriving, it lifts off at once
+and eases into the crown (SETTLE_OUT over 420 ms: REVEAL's quint start outran the dimming furniture);
+the neighbours it lifts through as it sets off (any it reaches inside 100 ms) go in 50 ms, the rest of
+the furniture in 180; and any of the room's content its path crosses rises only once it has passed
+(`LeadlightGhostWord.leaves_at`, the room host's `ghost_clear`). Leaving, the crown waits until the
+content behind its path is dark (80 ms in a glass room, 140 in Credits, whose roll is gone by 180)
+and then rides home by 360 ms; furniture it crosses on the way comes back behind it.
+
 ### 2.4 The light reaches the room
 
 Glass rooms are drawn by the light of the seated lantern, in `LeadlightSheet._draw`, with no shader:
@@ -242,7 +250,15 @@ fades up from the night.
 
 *As built in PR B:* a room's passage takes the same form: Main copies the frame before the room opens or
 leaves (`TransitionLayer.cross_fade`), and the room lands whole beneath it, the lantern already at the
-seat or home, so the lantern's 75 + 75 ms is the one cross-fade. With nothing copied (the headless
+seat or home. One copied frame cannot hold the lantern out of itself, so the text's 75 + 75 ms is met
+in part: the lantern in its new place comes in from the fade's middle over a fade's length (75 to 225
+ms), kindling as it comes. For the first half only the old one shows, going; then the old one (under
+half) and the new one (under half) show together, faintly, for about five frames; and the plaque and the
+crown dissolve through each other as any cross-fade does (`stills/pr-b/seq-g1-settings-pad-en-rm.jpg`).
+Before the review the new lantern was whole beneath the copy from the first frame, so both showed for
+the whole fade. Bringing it in over the second half alone (75 to 150 ms) put more than an eighth of the
+change on one frame leaving Settings (§11.5's cut gate: 0.0127 against 0.0115); over 75 to 225 every
+Reduce Motion sequence passes. With nothing copied (the headless
 renderer) the room fades over 150 ms, linear, from its first frame; a leaving room fades out the same way
 while the title is back whole at once.
 Idle motion follows opening §7: the flame's flicker (and the Vigil's firelight, which is the fire's
@@ -595,13 +611,29 @@ alternates `act4CombatA`, `act4CombatB`, `act4CombatD`, `act4BossB`): the ledger
 the unsealing's own. The band is the kit's soft light in VOID at 0.7. A place has no veil to tap: a tap
 on the bare road never closes Credits (`LeadlightRoomHost.veil_closes`); the seat's Return and Escape do,
 and close an open licence glass first. The licence texts are set at the rooms' 18 px floor and their
-headings at 20, inside their glasses (`CreditsLicences.Shelf` and `Glass`; the glass has its own night at
-0.5 over the dimmed roll, so the roll never reads round it). The Sentry SDK's MIT notice shows where
+headings at 20, inside their glasses (`CreditsLicences.Shelf` and `Glass`). The Sentry SDK's MIT notice shows where
 `addons/sentry/LICENSE.md` is in the pack and the SDK is loaded; every export's include filter now carries
 it and the fonts' OFL texts (§14). The roll is built with the room down to the ninth row of each column,
 and the rest a part a frame after the tap frame, below the fold and unseen under the arrival's reveal
 (§11.6). The door's nimbus breathing once the roll stops was
 not built: the road's own motes, weather and lamps, the lamp line and the now-playing flame keep it alive.
+
+*As built after the PR B review:* each line comes up at the warmth the lamp line gives it, so nothing
+dims in one step as the room lands (it did: every line away from the lamp fell to 0.75 on the landing
+frame), and a line fades out over the roll's top and foot (40 px, 24 on a phone) instead of being cut
+through by the view's edge. Leaving (C2), the roll fades from the frame Return is tapped, farthest from
+the lamp line first, and is gone by 180 ms; "Credits" rides back from 140 ms and the title's furniture
+returns from 200, so the plaque never prints over a line still lit. The passage's own focus on arrival
+is not a touch: the first drift comes 1.2 s after the landing. A licence glass sets its text below its
+crown (the arch's spring plus 30 px; the glass's own seat had put it in the arch, under the crown, its
+scroll bar out past the lead), fades the text into the glass at its scroll's top and foot, and fades
+the roll behind it to 0.1 under its own night of 0.5 (at the text's 0.4 the roll still read round the
+arch, cut by its lead). Its scroll takes the focus on arrival (a ScrollContainer takes none of its own):
+Up, Down, Page Up and Page Down read it, focus stays in it, and Enter on the pane behind does not open
+it again. The licence texts are set to the glass's column: their hard wraps at about 78 characters are
+joined where a line runs on, and kept at a short line, a blank, a rule, a colon, a list item or a
+copyright notice (`CreditsLicences.reflow`), so no line breaks twice ("…DEALINGS IN" / "THE" /
+"SOFTWARE.").
 
 ### 4.4 Settings: the lantern-maker's window
 
@@ -628,7 +660,9 @@ phone it fills the stage beside the seat (108 to 6 from the right, 6 to 60 from 
 toggles, notes and panes are at the rooms' sizes (18 px, 60 px hits at pad and desktop): the shipped
 15 px row panes and 12 px notes are gone. The build line in its footer is the title's build identifier
 and keeps its 10 px under the same waiver (§14). A change of shape rebuilds the room on the lit section,
-since its rows are cut for their shape. The slider discs breathe as a brightness of ±6%.
+since its rows are cut for their shape. The slider discs breathe as a brightness of ±6%. Fitting the room
+to its tallest section shapes every section's text, the four unseen ones included; the height is kept
+for the launch (by shape, language and the notes the room carries), so only the first opening pays it.
 
 ### 4.5 Rooms opened in a run
 
@@ -640,7 +674,9 @@ shipped), and the passage runs without the lantern and ghost lanes (X1). Setting
 
 *As built in PR B:* the run's HUD carries no lantern in this build, so a room in a run is lit from the
 stage's bottom-left corner. The run menu's How to Play and Settings no longer play their own click: the
-room's `roomOpen` is the tap's one cue.
+room's `roomOpen` is the tap's one cue. The run menu folds away under the room it opens (180 ms,
+SETTLE_OUT, from the tap frame) instead of vanishing on it, and a room rebuilt on a change of shape keeps
+its seat without a lantern's tap (`LeadlightRoomHost.lend_seat`).
 
 ---
 
@@ -819,6 +855,20 @@ keeps a lingering room); everything else the passage holds is landed and freed b
 night (VOID) from the seated wick, the title asked to `leave()` first so no invisible word can take a tap
 under the dark. The opening word is hidden on every path, the crown being the word now.
 
+*As built after the PR B review* (the timings above stand; these curves and windows moved, each because
+the frames showed it): leaving answers on the frame Return is tapped. On EXIT's slow start a room stood
+almost whole for eight frames (about 7% of the change in the first third of G2) and then the lantern
+whipped home in eight, a lag and then a rush. Now in G2 the glass goes dark and its lead retracts from
+0 (SETTLE_OUT over 220 ms), the content goes far to near from the seat by time (each group over 100 ms,
+all of it by 160: tied to the light's edge, the panes' column went in half a frame), the veil lifts from
+0 (SETTLE_OUT to 400), the seat's word goes in 160, the lantern sets off home at 40 ms on a sine (BREATH)
+to 400, and the furniture returns from 160, each piece easing in (SETTLE_OUT, not a quint whose first
+frame took the wordmark to half) over at least 140 ms, 80 ms of stagger in all; C2 is the same with the
+roll gone by 180 (farthest from the lamp line first), the band lifting from 0 and the furniture from 200. Arriving, the furniture goes from the first frame (SETTLE_OUT over 180), and the
+seat's Return comes in from 360 to 520 ms, once the lantern is nearly seated, never under it in flight.
+A section change (G3) lets the leaving page go first (SETTLE_OUT over 80 ms) and brings the new one in
+from 60 to 220, so the two pages' text never prints over each other. The word in flight is §2.3's.
+
 Reference storyboards: `mocks/free-storyboard-title-settings.jpg` and
 `mocks/free-storyboard-title-vigil.jpg` (the lanes and the ghost word; the build's times are this
 section's, not the mocks'), `mocks/lantern-storyboard-reach-and-fold.jpg` (the light front, the trace
@@ -953,7 +1003,8 @@ tap is delivered to the button as the viewport delivers a tap (the run says so).
 7. **A pressed state within one frame** on every title word and the Rekindle pane:
    `LeadlightMotion.press` on `button_down`, with the hairline (rubric).
 8. **Hit rects.** The six quiet words and the Rekindle pane get 60 px tall hits at pad and desktop; the
-   visuals do not move.
+   visuals do not move. *As built:* and 44 on a phone, the touch floor (the Rekindle pane's glass is drawn
+   34 tall there); no two taps overlap (`tests/test_title_rubric.gd`).
 9. **The afterglow** on the word you came back to (G2).
 10. **The beckon** is held while a room is open and re-armed on return, so the idle ember never flies
     to the plaque a second after a room closes.
@@ -1225,62 +1276,67 @@ the settled destination's (its last two frames), since a flame flickers under Re
 | At rest in a room | P95 ≤ the title's at-rest P95 + 0.5 ms |
 
 *As built in PR B* (evidence in `stills/pr-b/`, taken with `tools/capture_rooms.gd` and
-`tools/bench_rooms.gd` on the PR B head):
+`tools/bench_rooms.gd`; after the PR B review every still, burst and sequence was retaken on the code
+that shows it, each file's header naming the commit):
 
 - **Stills** (§11.3): Settings (AUDIO, PRIVACY), How to Play (I, IV) and Credits (its head, the music,
   the end of the roll, both licence glasses) at rest at 844×390, 1180×820 and 1458×820 in en and zh-Hant,
   and Settings at the flex stages 845×390 and 1180×885 (the iPad 8's), as `<room>-<part>-<shape>-<locale>.jpg`.
 - **Idle bursts** (§11.4, `idle-gates.txt`): at full motion every room passes, the least change between
-  frames 1 s apart being 7.1% to 24.2% of the room's own pixels; under Reduce Motion the rooms rest still
+  frames 1 s apart being 15.2% to 35.0% of the room's own pixels; under Reduce Motion the rooms rest still
   (0.00%), recorded as §2.7 asks.
 - **Sequences** (§11.5, `sequence-gates.txt`, contact sheets `seq-*.jpg`): G1, G2 and G3 (Settings and How
   to Play), C1, C2 and C3 (Credits and its font glass) and X1 (How to Play from the run menu) at pad en;
   G1, G2 and C1 at phone zh-Hant; G1, G2 and C1 under Reduce Motion. Every frame of every sequence passes
-  the grey gate (worst 0.12%); the three Reduce Motion sequences pass the cut gate (largest step 0.0093 to
-  0.0109 of a 0.081 to 0.092 whole, frame 5 each, as a 150 ms fade moves). Under full motion no room's
-  passage puts more than 32% of its change on one frame (PR A's Settings opened in one: 100%); a section
-  change (G3), a small change overall, puts 57% on its first frame in Settings and 68% in How to Play, the
-  pane lighting at once under the finger. The rooms' staged builds (§14) were retaken against all of this
-  (`retake-staged-builds.txt`): every How to Play and Credits still within 0.24% of its twin (idle motion),
-  every gate line of the eight sequences through those rooms equal to the fourth decimal.
-- **Frame times, iPad 8** (§11.6, `evidence/ipad8-rooms-frame-times.txt`, the QA app, 10 laps a room in
-  each language, the first opening after install apart). "First moved" is the tap frame itself: the
-  passage takes its first step in that frame's process step, after the input that opened the room (a
-  --fixed-fps 60 capture shows the veil darkening the stage by 6% on it). The bench's release is parsed in
-  a frame's process step and waits out the rest of that frame, about 16 ms here: the worst case for a
-  finger, which lifts at any moment. On the PR B code (`11aa2233`, built from `e3ee97c4`, whose later
-  commits touch docs only), laps 2 to 10, median (max), en and zh-Hant:
+  the grey gate (worst 0.13%); the three Reduce Motion sequences pass the cut gate (largest step 0.0092 to
+  0.0108 of a 0.081 to 0.092 whole, as a 150 ms fade moves). Under full motion no room's passage puts more
+  than 29% of its change on one frame (PR A's Settings opened in one: 100%), and every departure now moves
+  from its first frame (G2's first eight frames carried 7% of its change before the review); a section
+  change (G3), a small change overall, puts 67% on its first frame in Settings and 76% in How to Play, the
+  pane lighting under the finger as the old page goes. Before the review the rooms' staged builds (§14)
+  were retaken against the stills of the time (`retake-staged-builds.txt`, on `11aa2233`): every How to
+  Play and Credits still within 0.24% of its twin, every gate line equal to the fourth decimal.
+- **Frame times, iPad 8** (§11.6, `evidence/ipad8-rooms-frame-times.txt`, the QA app, 10 laps a room,
+  each room's first opening in the launch apart). "First moved" is the tap frame itself: the passage takes
+  its first step in that frame's process step, after the input that opened the room. The bench's release
+  is parsed in a frame's process step and waits out the rest of that frame, about 16 ms here: the worst
+  case for a finger, which lifts at any moment. A passage's frames are those inside its own span (before
+  the review the bench padded each with 0.2 s of the room at rest, which drew its P95 towards the title's;
+  those rows are re-read inside the span in the evidence). en on the review's code (`c041b68e`, the first
+  launch after its install); zh-Hant on `03cf374a` (the same passages, before Settings was fitted ahead:
+  the `c041b68e` zh-Hant launch ran, but every file copy from the QA container hung from then on, so its
+  rows could not be fetched). Laps 2 to 10, median (max), en and zh-Hant:
 
   | Measure | Pass | Settings | How to Play | Credits |
   |---|---|---|---|---|
-  | Tap → first moved frame | ≤ 50 ms | 38.4 (41.0), 43.5 (47.3) | 37.8 (41.8), 41.6 (43.4) | 35.4 (37.3), 38.7 (45.0) |
-  | The tap frame | ≤ 33 ms | 22.6 (24.8), 27.4 (37.5) | 21.6 (23.6), 25.7 (26.6) | 19.4 (20.0), 22.5 (27.4) |
-  | Other passage frames, P95 (max) | ≤ 16.7 ms (none over 33) | 17.5 (22.7), 17.8 (23.4) | 17.7 (23.7), 18.2 (23.7) | 17.3 (22.8), 17.4 (22.0) |
-  | At rest, P95, against the title's 17.8 and 17.9 | ≤ the title's + 0.5 ms | 17.2, 17.3 | 17.5, 17.7 | 17.5, 17.6 |
+  | Tap → first moved frame | ≤ 50 ms | 38.3 (41.1), 43.0 (44.0) | 37.7 (42.0), 41.0 (42.2) | 36.4 (38.2), 39.7 (40.0) |
+  | The tap frame | ≤ 33 ms | 22.6 (24.4), 27.1 (29.3) | 21.9 (24.5), 25.4 (26.5) | 20.1 (20.5), 23.3 (23.9) |
+  | Other passage frames, P95 (max) | ≤ 16.7 ms (none over 33) | 17.4 (22.9), 18.2 (23.3) | 17.6 (23.1), 18.4 (23.1) | 17.4 (22.5), 17.5 (22.2) |
+  | At rest, P95, against the title's 18.0 and 18.0 | ≤ the title's + 0.5 ms | 17.3, 17.4 | 17.5, 17.8 | 17.7, 17.8 |
 
-  Every tap to first moved frame is under 50 ms and every tap frame under 33 but one: Settings' last
-  zh-Hant lap, 37.5 ms, its other seventeen 22 to 30 (Settings is unchanged since the first rows, where its
-  worst was 28.8). On iOS a frame's present wait is inside its draw, so the title at rest is itself 17.8 to
-  17.9 ms at P95 (vsync jitter): no passage can meet a 16.7 ms P95 the title at rest does not, so they are
-  read against the title's own, within 0.4 ms of it, and no passage frame after a first opening passes
-  24 ms. The first opening after install: tap frame 37 to 55 ms, tap to first moved 52 to 71 ms, its
-  passage's worst frame 31 to 52 ms (pipelines compiled on first use; Credits' first passage builds the
-  rest of its roll).
-  Render CPU is 0.2 ms in every tap frame: the work is text shaped as a room enters the tree. The first
-  rows, on `c04a168d`, before How to Play and Credits built only what is on view (§14), had How to Play's
-  tap frame at 35.3 and 33.9 ms (median) and Credits' at 31.0 and 35.3, their taps to first moved 46.8 to
-  51.3; Settings' were as now. The same rows found the licence texts missing from the pack; the later
-  ones find them there.
+  Every tap to first moved frame is under 50 ms and every later tap frame under 33 (Settings' zh-Hant
+  worst is now 29.3; it was 37.5). **Shortfall:** no passage meets §11.6's 16.7 ms P95 as written (17.4 to
+  18.4 ms): on iOS a frame's present wait is inside its draw, so the title at rest is itself 18.0 ms at P95
+  (vsync jitter), and the passages stand within 0.4 ms of it. Reading the bar against the title's own P95
+  is a reinterpretation the owner has not made (§14, open). No passage frame passes 33 ms but one, 58 ms
+  on `03cf374a` (Settings' tenth lap, en, with 10.5 ms of its own work: the display held the frame).
+  **The first opening in a launch** was labelled "the first opening after install" before the review; it
+  is paid by every launch, since each is a new process. RoomWarm (§14) now pays its work while the title
+  rests. On a second launch on its install (`03cf374a`, zh-Hant), the first opening's tap frame is 28.6 ms
+  for How to Play and 28.0 for Credits (54.7 and 48.6 before the review) and its tap to first moved 44.5
+  and 44.3 (70.9 and 64.7); Settings' is 33.5 ms, 0.5 over, and tap to first moved 49.3. That last cost is
+  Settings fitting itself to its tallest section, which `c041b68e` now does ahead in the warm; its effect
+  on a second launch is not yet measured on the device. The first launch after an install also compiles
+  pipelines for the first time (§11.6 reports it apart): on `c041b68e` en its tap frames are 38.4, 29.7
+  and 28.2 ms and its taps to first moved 53.0, 45.8 and 44.5.
 - **Frame times, Mac** (§11.6, `mac-frame-times.txt`, M1 Max on the A12's Metal path, 20 laps a room at
-  pad and phone in both languages, on `11aa2233`): the tap frame 7.3 to 11.8 ms (median, laps 2 to 20) and
-  12.2 to 22.1 ms on the first opening; tap to first moved 10.1 to 19.8 ms, 15.5 to 27.8 on the first
-  opening. At pad en, drawn uncapped, every other frame of a passage is 3.5 to 3.7 ms of work at P95 after
-  the first opening (5.6 on Credits' first) and each room at rest within 0.5 ms of the title's; the shared Mac paced the other three runs at about 9.4
-  ms, where only the tap frames compare. Against `40ade5b8` at pad, How to Play's tap frame fell from 13.5
-  to 8.0 ms (en) and 14.4 to 9.9 (zh-Hant), Credits' from 12.2 to 7.3 and 14.6 to 8.7; Settings' did not
-  move. Rare 30 to 240 ms frames fall anywhere, the title at rest included, while other lanes' suites ran.
+  pad and phone in both languages, on `c041b68e`): the shared Mac paced every frame of all four runs at
+  about 9.4 ms, so only the tap frames compare: 8.1 to 11.5 ms (median, laps 2 to 20), and 9.2 to 12.5 on
+  each room's first opening in the launch (12.2 to 22.1 on `11aa2233`, before the warm). Rare 27 to 242 ms
+  frames fall in later laps while other lanes' suites ran.
 - **Mutation proof** (`evidence/pr-b-mutations.txt`): fifteen rules broken one at a time in the shipped
-  code, each caught by the suite that guards it.
+  code, each caught by the suite that guards it; and after the review, the 23 rules it asked for, each
+  caught (three were not, at first: their tests were tightened).
 
 ### 11.7 What closes each PR
 
@@ -1436,11 +1492,35 @@ applies, as built; together:
   after (§4.3); the band's light and the parsed manifests are made once a session. No pixel at rest and
   no frame of a passage changes (`stills/pr-b/retake-staged-builds.txt`).
 
+**Decided after the PR B review** (each recorded where it applies):
+
+- **The word in flight never crosses lit text**, either way (§2.3, as built), and **every departure moves
+  from the frame Return is tapped** (§5.2, as built): EXIT's slow start no longer opens any leaving lane.
+- **The first opening in a launch is paid while the title rests.** `RoomWarm`
+  (`presentation/ui/room_warm.gd`): once the title has rested 0.8 s with nothing over it or moving, it
+  builds each room once off the tree (a frame each), fits Settings to its tallest section, rasterises the
+  glyphs the rooms set at their sizes within 1.5 ms a frame, draws each font page once under the road at
+  0.004, and frees itself; one a launch for each language and shape, never in the headless suite. The
+  warm was chosen over building the rooms in the tree ahead (§12's contingency), which would have put a
+  20 to 25 ms frame at rest into the title three times. Settings keeps its fitted height for the launch.
+- **Credits' roll fades at its edges and warms from its arrival; a licence glass reads as a glass**
+  (focus, keys, its text under its crown, fades where it runs on, its texts set to its column, the roll
+  behind at 0.1) (§4.3, as built).
+- **The run menu folds away** under a room it opens (§4.5, as built).
+- **The title's taps are 44 px on a phone** too (§7 item 8, as built).
+- **Reduce Motion's lantern** comes in from the cross-fade's middle (§2.7, as built).
+
 **Open, for the owner** (PR B builds around it; it does not block it):
 
 1. **Copy** (§13's debts stand; PR B wrote none): no new locale key was needed. `ui.credits.headingBrand`,
    `ui.credits.close`, `ui.credits.themeLine` and `ui.menu.fightOn` are no longer read; they stay in both
    bundles for a separate clean-up, as §2.13 says.
+2. **§11.6's 16.7 ms passage P95 on the iPad 8.** No passage meets it as written (17.4 to 18.4 ms inside
+   their own spans), and neither does the title at rest (18.0 ms): on iOS a frame's present wait is inside
+   its draw, so vsync jitter lifts every P95 over 16.7. The passages stand within 0.4 ms of the title's own
+   P95 and no frame of one passes 33 ms but a single display stall. The choice: read the bar against the
+   title at rest (the passages pass), or measure the passages another way (the frame's own work, which
+   the device cannot separate from its present wait). PR B does not decide it.
 
 ---
 

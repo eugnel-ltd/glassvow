@@ -1,10 +1,11 @@
-# Mutation proof for #655 PR B's suites. Each line breaks one rule in the shipped code (one exact
-# replacement), runs the one suite that guards it headless, records whether the suite failed, and
-# restores the file byte for byte from a backup copy. Run on the PR B code at 262d7d31 (B5) and
-# again, for the one miss, after it was fixed: "room hits at 48 px" first passed because
-# test_rooms_rubric read its floor from the very token it guards; the floors are now the rubric's own
-# numbers (commit 20ca9ee2), and the rerun at the end of this file is caught. The driver is
-# pr-b-mutate.py.txt beside this file (python3, run from the worktree; never part of the game).
+# Mutation proof for #655 PR B's suites (the review's rules are at the end of this file). Each line
+# breaks one rule in the shipped code (one exact replacement), runs the one suite that guards it
+# headless, records whether the suite failed, and restores the file byte for byte from a backup copy.
+# Run on the PR B code at 262d7d31 (B5) and again, for the one miss, after it was fixed: "room hits at
+# 48 px" first passed because test_rooms_rubric read its floor from the very token it guards; the floors
+# are now the rubric's own numbers (commit 20ca9ee2), and the rerun at the end of this file is caught.
+# The driver is pr-b-mutate.py.txt beside this file (python3, run from the worktree; never part of the
+# game).
 
 == room_passage: the double-tap guard removed (tests/test_room_passage.gd) -> CAUGHT
    FAIL res://tests/test_room_passage.gd
@@ -98,3 +99,130 @@
    FAIL res://tests/test_credits_roll.gd
    FAIL (1)
      - credits_roll: the roll did not complete itself in the tree
+
+# After the PR B review: each rule the review asked for, broken one at a time, on 95593fda (the one later
+# code commit, c041b68e, touches Settings' fit and the warm only, none of the lines broken here), in an
+# isolated copy of the tree with its own user dir, so no capture or device build ever saw a broken file.
+# The driver is pr-b-mutate-review.py.txt beside this file. A first pass on c86e700f's parent found three
+# rules unguarded (the neighbours' quick fade, the run menu's fold, the roll's dimming under a licence
+# glass); their tests were tightened in c86e700f, and this pass catches all 23.
+
+== the idle ember not held while a room is open (§7 item 10) (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (1)
+     - room_passage: the idle ember still counts while a room is open
+== a lent title takes its own keys (§7 item 11) (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (1)
+     - room_passage: a lent title took a key of its own
+== Enter does not land an arrival (§2.6) (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (3)
+     - room_passage: settings: Enter did not land the arrival
+     - room_passage: help: Enter did not land the arrival
+     - room_passage: credits: Enter did not land the arrival
+== the title words' taps at their drawn height (§7 item 8) (tests/test_title_rubric.gd) -> CAUGHT
+   FAIL res://tests/test_title_rubric.gd
+   FAIL (144)
+     - title_rubric: en pad-landscape fresh: word vigil takes a tap 44 px tall, under 60
+     - title_rubric: en pad-landscape fresh: word help takes a tap 44 px tall, under 60
+     - title_rubric: en pad-landscape fresh: word settings takes a tap 44 px tall, under 60
+     - title_rubric: en pad-landscape fresh: word credits takes a tap 44 px tall, under 60
+== no afterglow on the word left back to (§7 item 9) (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (1)
+     - room_passage: the word the room was left back to does not glow (0.00)
+== leaving starts slowly again (EXIT) (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (2)
+     - room_passage: settings: two frames after Return the room stands whole (1.00)
+     - room_passage: help: two frames after Return the room stands whole (1.00)
+== the room's content does not wait for the word in flight (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (21)
+     - room_passage: settings arriving: the word in flight runs through @ScrollContainer@1288, lit at 0.48
+     - room_passage: settings arriving: the word in flight runs through @ScrollContainer@1288, lit at 0.67
+     - room_passage: settings arriving: the word in flight runs through @ScrollContainer@1288, lit at 0.80
+     - room_passage: settings arriving: the word in flight runs through @ScrollContainer@1288, lit at 0.88
+== the crown rides back at once over lit content (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (5)
+     - room_passage: settings leaving: the word in flight runs through @ScrollContainer@1288, lit at 0.61
+     - room_passage: settings leaving: the word in flight runs through @ScrollContainer@1288, lit at 0.32
+     - room_passage: help leaving: the word in flight runs through @VBoxContainer@2349, lit at 1.00
+     - room_passage: help leaving: the word in flight runs through @VBoxContainer@2349, lit at 0.61
+== the furniture comes back under the word riding home (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (1)
+     - room_passage: credits leaving: the word in flight runs through the title's Settings, lit at 0.23
+== the neighbours the word lifts through dim at the slow pace (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (2)
+     - room_passage: help arriving: the word in flight runs through the title's Rekindle, lit at 0.54
+     - room_passage: credits arriving: the word in flight runs through the title's Settings, lit at 0.54
+== a rebuilt seat gets the lantern's tap back in a run (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (2)
+     - room_passage: X1 help: a rebuilt seat in a run took an invisible lantern's tap back
+     - room_passage: X1 settings: a rebuilt seat in a run took an invisible lantern's tap back
+== the run menu vanishes under the room it opens (X1) (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (2)
+     - room_passage: X1 help: the run menu vanished on the tap instead of folding under the room
+     - room_passage: X1 settings: the run menu vanished on the tap instead of folding under the room
+== Reduce Motion shows the seated lantern under the cross-fade at once (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (6)
+     - room_passage: settings: under the cross-fade the seated lantern shows at once (1.00)
+     - room_passage: settings: the seated lantern came in before the fade's middle
+     - room_passage: help: under the cross-fade the seated lantern shows at once (1.00)
+     - room_passage: help: the seated lantern came in before the fade's middle
+== the passage's arrival focus holds the first drift (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (1)
+     - credits_roll: the passage's focus on arrival counted as a touch and held the first drift
+== the roll arrives unwarmed and dims as it lands (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (1)
+     - credits_roll: a line dims by 1.00 in one step as Credits lands
+== the roll's edges cut its lines (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (2)
+     - credits_roll: a line on the view's edge is not faded out
+     - credits_roll: 'THE GLASS', cut by the view's top, is lit at 0.75
+== the licence glass's scroll takes no focus (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (3)
+     - credits_roll: the licence glass did not take the focus on its own scroll
+     - credits_roll: a key did not scroll the licence text, or took the focus out of the glass
+     - credits_roll: the text scrolled under the crown is cut, not faded
+== the licence text starts in the arch under its crown (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (1)
+     - credits_roll: the licence text starts at 88, in the arch under the crown (its foot 101, the spring 110)
+== an open licence glass is opened again (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (1)
+     - credits_roll: the open glass was opened again (it flashed)
+== the roll stays legible round the licence glass (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (1)
+     - credits_roll: the roll behind the glass is left at 0.40, legible round its arch
+== the licence texts keep their hard wraps (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (4)
+     - credits_roll: a paragraph of the engine's licence is still broken at its hard wraps: Permission is hereby granted, free of charge, to any person 
+     - credits_roll: a paragraph of the engine's licence is still broken at its hard wraps: The above copyright notice and this permission notice shall 
+     - credits_roll: a paragraph of the engine's licence is still broken at its hard wraps: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KI
+     - credits_roll: the licence's wrapped lines were not joined
+== a section change prints both pages over each other (G3) (tests/test_help_room.gd) -> CAUGHT
+   FAIL res://tests/test_help_room.gd
+   FAIL (1)
+     - help_room: the two pages print over each other during a section change (both at 0.42)
+== the word in flight is measured from where it enters, not leaves (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (23)
+     - room_passage: a word leaving a box it crosses is placed at 0.350, not 0.65
+     - room_passage: settings arriving: the word in flight runs through @ScrollContainer@1288, lit at 0.48
+     - room_passage: settings arriving: the word in flight runs through @ScrollContainer@1288, lit at 0.67
+     - room_passage: settings arriving: the word in flight runs through @ScrollContainer@1288, lit at 0.80
