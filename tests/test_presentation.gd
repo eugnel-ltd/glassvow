@@ -393,6 +393,14 @@ static func _title_no_overlap(fails: Array[String], title: TitleScreen, shape: S
 	var art: Rect2 = Rect2(title.lantern.position, title.lantern.size)
 	var glass: Rect2 = Rect2(art.position + art.size * Vector2(0.30, 0.42), art.size * Vector2(0.40, 0.40))
 	var stage: Rect2 = Rect2(Vector2.ZERO, title.size)
+	# The lantern's reach (the plaque's press) takes no word's or pane's tap.
+	var reach: Rect2 = Rect2(title._reach.position, title._reach.size)
+	_check(fails, reach.encloses(Rect2(title._plaque.position, title._plaque.size)) and reach.size.y >= 44.0,
+		"%s: the lantern's reach does not hold the whole plaque at the touch floor" % shape)
+	for piece: Control in pieces:
+		if piece != title._plaque:
+			_check(fails, not reach.intersects(Rect2(piece.position, piece.size)),
+				"%s: the lantern's reach covers %s" % [shape, piece.name])
 	for i: int in pieces.size():
 		var a: Rect2 = Rect2(pieces[i].position, pieces[i].size)
 		_check(fails, stage.encloses(a), "%s: a title piece runs off the stage at %s" % [shape, a])

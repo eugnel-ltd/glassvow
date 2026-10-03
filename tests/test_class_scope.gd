@@ -91,7 +91,7 @@ static func _earned_aspect2_is_no_choice(content: ContentDB, fails: Array[String
 	main._vigil.unlocks.append("aspect2")
 	main._show_title()
 	main._on_title_choice("begin", null)
-	_check(fails, not (main._route_screen is EmbarkScreen),
+	_check(fails, not (main._route_screen is DepartureScreen),
 		"an earned but deferred aspect2 still opened Embark")
 	_check(fails, main.game != null and main.game.run.aspect == DUSK,
 		"an earned aspect2 profile did not begin a Duskblade run")
@@ -105,13 +105,14 @@ static func _embark_offers_no_ashwarden(content: ContentDB, fails: Array[String]
 	main._embark_aspect = ASH  # a stale selection from an older build
 	main._show_title()
 	main._on_title_choice("begin", null)
-	var screen: EmbarkScreen = main._route_screen as EmbarkScreen
-	_check(fails, screen != null, "a returning profile did not reach Embark")
+	var screen: DepartureScreen = main._route_screen as DepartureScreen
+	_check(fails, screen != null and screen.beat == DepartureScreen.BEAT_A,
+		"a returning profile did not reach Embark")
 	if screen != null:
-		_check(fails, screen._aspect_cards.is_empty() and screen._aspect_row == null,
+		_check(fails, not screen._aspect_pick and screen.find_child("Boon_*", true, false) == null,
 			"Embark offered a class picker with only the Duskblade admitted")
-		_check(fails, screen._selected_aspect == DUSK, "Embark selected the Ashwarden")
-		screen._begin.pressed.emit()
+		_check(fails, screen._aspect == DUSK, "Embark selected the Ashwarden")
+		screen.primary().pressed.emit()
 	_check(fails, main.game != null and main.game.run.aspect == DUSK,
 		"Embark's Begin did not start a Duskblade run")
 	_dispose(main)
@@ -124,7 +125,7 @@ static func _embark_refuses_ashwarden(content: ContentDB, fails: Array[String]) 
 	main._on_embark_begin(ASH, 0)
 	_check(fails, main.game == null, "a direct Ashwarden begin created a run")
 	_check(fails, not FileAccess.file_exists(RUN_PATH), "a refused Ashwarden begin wrote a save")
-	_check(fails, main._route_screen is EmbarkScreen and main._embark_aspect == DUSK,
+	_check(fails, main._route_screen is DepartureScreen and main._embark_aspect == DUSK,
 		"a refused Ashwarden begin did not return to Embark on the Duskblade")
 	_dispose(main)
 
@@ -243,9 +244,9 @@ static func _ashwarden_save_plays_to_its_end(content: ContentDB, fails: Array[St
 	_check(fails, main.game == null and not FileAccess.file_exists(RUN_PATH),
 		"the finished Ashwarden run was not closed")
 	main._on_title_choice("begin", null)
-	var embark: EmbarkScreen = main._route_screen as EmbarkScreen
+	var embark: DepartureScreen = main._route_screen as DepartureScreen
 	if embark != null:
-		embark._begin.pressed.emit()
+		embark.primary().pressed.emit()
 	_check(fails, main.game != null and main.game.run.aspect == DUSK,
 		"the run after the Ashwarden is not a Duskblade")
 	_dispose(main)
@@ -262,7 +263,7 @@ static func _keeper_hides_ashfall_from_duskblade(content: ContentDB, fails: Arra
 		main.game = GlassvowGame.new(content, rs)
 		main._map = WorldMap.from_dict(rs.map)
 		main._show_lamplighter()
-		var screen: LamplighterScreen = main._route_screen as LamplighterScreen
+		var screen: DepartureScreen = main._route_screen as DepartureScreen
 		_check(fails, screen != null, "the Keeper did not open for aspect %d" % aspect)
 		if screen != null:
 			_check(fails, screen._arts.has("ashfall") == (aspect == ASH),

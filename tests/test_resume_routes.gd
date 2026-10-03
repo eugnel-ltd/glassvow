@@ -151,7 +151,7 @@ static func _hollow_priority_roundtrip(content: ContentDB,
 		fails.append("resume routes: Hollow receipt lost priority over Lamplighter")
 	_assert_same(resumed.game.run, expected, "Hollow/Lamplighter coexistence", fails)
 	resumed._finish_node()
-	if not resumed._route_screen is LamplighterScreen:
+	if not resumed._route_screen is DepartureScreen:
 		fails.append("resume routes: Lamplighter did not resume after Hollow destination")
 	_dispose(resumed)
 

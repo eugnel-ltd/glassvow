@@ -19,6 +19,7 @@ static func run(fails: Array[String]) -> void:
 	_primary_follows_the_save(fails)
 	_rite_one_tap(fails)
 	_rite_reduce_motion(fails)
+	_rite_is_continuous(fails)
 	_first_launch(fails)
 	_wordmark(fails)
 	_leaving(fails)
@@ -76,6 +77,42 @@ static func _rite_one_tap(fails: Array[String]) -> void:
 	screen.lantern.pressed.emit()
 	_check(fails, picked == ["continue"], "after the rite the lantern chooses")
 	screen.queue_free()
+
+
+## Build 18: "the first light isn't looks like a flame, and the light up seems
+## not too smooth". Frame 0's ember is the lantern's own flame shader, drawn
+## alone and visible (so its pipeline is built before the glass needs it), and
+## at 120 Hz the flame, the reach and the lamplight only ever rise, never
+## jumping: no step pulls the light back, none starts from a standstill.
+static func _rite_is_continuous(fails: Array[String]) -> void:
+	var screen: TitleScreen = _screen({"choices": _choices(false), "rite": true})
+	screen.kindle_now()
+	var ember: TextureRect = screen.lantern.find_child("EmberFlame", true, false) as TextureRect
+	var shader_material: ShaderMaterial = ember.material as ShaderMaterial if ember != null else null
+	var isolate: float = 0.0
+	if shader_material != null and shader_material.get_shader_parameter(&"isolate") is float:
+		isolate = shader_material.get_shader_parameter(&"isolate")
+	_check(fails, shader_material != null and shader_material.shader == LanternFlame.SHADER
+			and is_equal_approx(isolate, 1.0),
+		"the ember is not the lantern's flame drawn alone")
+	_check(fails, ember != null and ember.visible and ember.modulate.a > 0.5,
+		"frame 0 does not show the ember's flame")
+	var step: float = 1.0 / 120.0
+	var last: Vector3 = Vector3(screen.lantern.kindle, screen._veil.reach, screen.world.lamplight)
+	var worst_jump: float = 0.0
+	var dipped: bool = false
+	while not screen.rite.is_done():
+		screen.rite.advance(step)
+		var now: Vector3 = Vector3(screen.lantern.kindle, screen._veil.reach, screen.world.lamplight)
+		var change: Vector3 = now - last
+		dipped = dipped or change.x < -0.0001 or change.y < -0.0001 or change.z < -0.0001
+		worst_jump = maxf(worst_jump, maxf(change.x, maxf(change.y, change.z)))
+		last = now
+	_check(fails, not dipped, "the rite's light dips back at some frame")
+	_check(fails, worst_jump < 0.02, "the rite's light jumps %.3f in one 120 Hz frame" % worst_jump)
+	_check(fails, is_equal_approx(last.x, 1.0) and is_equal_approx(last.y, 1.0) and is_equal_approx(last.z, 1.0),
+		"the rite does not end fully lit")
+	screen.free()
 
 
 static func _rite_reduce_motion(fails: Array[String]) -> void:

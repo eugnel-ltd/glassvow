@@ -639,3 +639,148 @@ re-seated on the room a fresh install leaves.
   `tools/shot.sh --shape=<shape> --settle=3.5 --shot=<png>` for
   pad-landscape en, pad-landscape zh-Hant and phone-landscape en; after each
   boot the profile's `settings.cfg` holds `diagnostics_notice_seen=true`.
+
+## 17. Build 18 play round (owner report, iPad 8, 3 Oct 2026)
+
+Four items from the owner's play of TestFlight build 18, fixed in order
+1, 3, 2, 4, each its own commit on `ui/opening-polish-2-2026-10-03`.
+
+### 17.1 The lantern's words are its button
+
+"I cannot understand that the lantern is actually continue. I keep tapping
+the text above but doesn't work." The plaque (Back to the Road / Rekindle)
+and its act-and-waystone line were mouse-ignoring labels, so a tap on them
+picked the title itself and did nothing.
+
+- One press: `PrimaryReach`, a transparent button over the plaque, its
+  sub-line and the gap down to the lantern (at least 44 px tall, clear of
+  every word and pane), takes the lantern's own `_on_lantern`: the same dip,
+  cue and route. The plaque lights with it: hover, press (lit gold and a
+  warm light behind the name) and keyboard focus (the lantern ring's
+  hairline beneath it).
+- Wordless "this is the button" (`TitleBeckon`): on the first title of a
+  session the flame breathes brighter twice with the plaque's gold; after
+  6 s with no input one ember rises from the flame to the plaque (Reduce
+  Motion: the plaque brightens in place).
+- Test: `tests/test_title_reach.gd`. Taps at the plaque's name, its sub-line
+  and the gap take the flame's route through Main (a mirror of Godot's GUI
+  pick, since the runner works before the tree runs; it fails when the reach
+  ignores the mouse). `test_presentation` holds the reach clear of every
+  word at every shape.
+- Stills: `stills/lantern-button-states.png`
+  (`tools/capture_title.gd --state=saved --pose=pressed|focused|beckon|ember`).
+
+### 17.2 The confirms, and the dead Leave
+
+"Leave the road menu is off style and doesn't work" (also Begin Anew).
+
+- **Root cause.** The Quit entries (run menu Quit Game, title Quit) were
+  gated on `not OS.has_feature("web")` only, so iOS offered them, and Leave
+  calls `SceneTree.quit()`, which Godot ignores on iOS: the tap did nothing.
+  Reproduced from a real Mac boot with injected clicks through the owner's
+  path (title, lantern, map, menu, Quit Game, Stay; and Begin Anew from the
+  title): there Stay closes, Begin Anew begins and no title input catcher
+  survives into the run; the dead tap is Leave on iOS. `AppExit.available()`
+  now asks the platform (never web, iOS or Android) and both entries ask it.
+  Desktop Leave still quits; on the iPad the way off the road is Return to
+  Title (the confirm's line, "the lantern keeps your place", holds there).
+- **One sheet.** Begin Anew, Leave the Road, Abandon Run and Erase
+  Everything ask through `LeadlightConfirm`: a leaded arch over the dimmed,
+  held route (or the title), its title in the crown, one line, the action as
+  a lit pane and the way back as a quiet word that holds focus and answers
+  Escape and a tap on the veil.
+- Test: `tests/test_confirm_sheets.gd` (Leave the Road from the map: Stay
+  closes onto the map, Leave leaves; Abandon and Erase; Begin Anew over the
+  title; the veil's answer; no Quit on a mobile build, which fails on the
+  old gate).
+
+### 17.3 The first light is a flame
+
+"The first light isn't looks like a flame, and the light up seems not too
+smooth."
+
+- The ember is the lantern's own flame: `lantern_flame.gdshader` gains an
+  opt-in `isolate` (default 0: the HUD, reward and shop lanterns draw exactly
+  as before) that draws the flame alone. The ember is that flame in
+  Kindling's colour with its own clock, breathing from frame 0 and growing
+  until the glass takes it over. The splash is re-rendered from it.
+- One continuous rite: a back-eased catch overshot to 0.645 and the next step
+  pulled the flame back to 0.6, then a sine ease stalled it. One linear clock
+  now drives kindle, reach and lamplight as overlapping smoothsteps, so the
+  glass taking light and the world's reveal crossfade. `test_title_screen`
+  samples the rite at 120 Hz: nothing dips or jumps 0.02 (it fails on the old
+  rite).
+- Frame 0 builds every pipeline the rite will reach for: the title is drawn
+  landed under a cover of the night and the ember alone (what frame 0 shows,
+  and what the splash shows); the rite starts from 0 on the next frame. A
+  real Mac boot's first two frames match the splash to one pixel.
+- **Mac** (M1 Max, Metal, pad, `tools/bench_title.gd --phase=rite --rows=…`,
+  3 runs each, before the warm-up): after frame 0's render no frame over
+  20 ms (worst 18.7 ms vsync at 120 Hz, 14.8 ms uncapped). Later Mac runs were
+  taken under a load average of 10–19 from other lanes and show unrelated
+  stalls; the device is the acceptance.
+- **iPad 8** (A12, Metal, 60 Hz; QA probe from boot, Development profile,
+  never committed; rows in `evidence/ipad8-rite-frame-times.txt`):
+  - before the warm-up, the cold launch after install (every fresh
+    TestFlight install) stalled 42–48 ms at 0.58–0.78 s, as the glass's glow
+    and pool first appeared;
+  - after it, the cold launch after install: median 16.66 ms, worst
+    17.3 ms, no frame over 20 ms;
+  - warm launches (21 runs): median 16.65 ms; most have one 21–28 ms frame
+    at about 0.1 s, the first after the warm frame;
+  - 4 of 21 warm launches show bursts of 43–48 ms frames (three vsyncs) at
+    random times. They are not the rite's: in one run they span the rite and
+    stop on the static title, in another the rite is clean and they land on
+    the static title 3.8–5.1 s in. Metal on iOS reports no GPU time to the
+    probe, so their cause is not isolated; they read as device state
+    (back-to-back launch and terminate cycles).
+- Stills: `stills/rite-every-0.2s.png` (Mac) and
+  `stills/rite-every-0.2s-ipad8.png` (the device, the rite held and stepped
+  0.2 s per shot).
+
+### 17.4 Setting out is one departure
+
+"The setup page please be immersive", "seems repeated the choices".
+`DepartureScreen` replaces Embark and the Lamplighter screen: the title's
+road (`TitleScreen.add_road`), the Hollow Lamplighter standing at its head
+(`LamplighterFigure`: the existing portraits lit as stagecraft, a warm rim
+from the hero's lantern and a cool backlight from the door, breathing at
+rest), the hero's lantern in the foreground, and beats that rise one out of
+the last in that place: (a) who carries the lantern and the vow, only when
+there is a choice (mood: recognising); (b) the parting gift, three boons in
+glass (asking); (c) the lantern art, the chosen one kindled (urgent). The
+last answer floods from the lantern's wick into the opening or the
+departure staging.
+
+- A fresh run with the Lamplighter owed now takes the gift before the road;
+  a Lamplighter met mid-run still returns to the map, and resume routing is
+  unchanged (a run killed mid-gift resumes staging first, as before).
+- "Set out as before" (`ui.departure.same`: "Set out as before" /
+  「如前上路」 (the bundled CJK subset has no 舊), **PROPOSED**, a UI label, not story copy) carries this
+  session's class, vow and art in one tap; the gift stays a real choice. It
+  is session memory only: remembering across launches needs a new save or
+  preference key, which this lane may not add (§17.5).
+- No new art: the four portraits carry the beats. Route ids,
+  `_on_embark_begin`, `_on_lamplighter_confirmed` and their domain commands
+  are unchanged.
+- Test: `tests/test_departure.gd` (Embark, gift and art as beats of one screen
+  ending on the road; "as before"; every beat in the busiest case on the
+  stage and clear of the lantern's glass at three shapes in both languages,
+  measured with the fonts, failing on the earlier phone layout).
+  `tests/choice_scroll_reachability.gd` (CI) now holds the departure at
+  844×390.
+- Stills: `stills/departure-1180x820.png`, `stills/departure-1458x820.png`,
+  `stills/departure-844x390.png`, `stills/departure-idle.png` (the gift at rest
+  changes 3.4 % of its pixels per second),
+  `tools/capture_title.gd --state=saved --departure=embark|same|gift|art`.
+
+### 17.5 Open for the owner
+
+- **"Set out as before" across launches.** It needs a persisted default
+  (aspect, vow, art): a new `VigilState` field or `Preferences` key, which is
+  a save-lineage decision.
+- **The 43–48 ms bursts on the iPad** in 4 of 21 warm launches, also on the
+  static title (§17.3). Worth one look from the owner's own launches before
+  more device time.
+- **`ui.departure.same`** copy, both locales.
+- The iPad carries the QA dev build until TestFlight reinstalls it.

@@ -107,6 +107,12 @@ func skip() -> void:
 	_finish()
 
 
+## Re-apply every step at the current time (after anything else moved the
+## targets, such as the title's frame-0 pipeline warm-up).
+func refresh() -> void:
+	_apply_all()
+
+
 func _apply_all() -> void:
 	for s: Dictionary in _steps:
 		var from: float = s["from"]

@@ -122,6 +122,9 @@
         "act4": "王冠之後的封印之門已開。"
       }
     },
+    "departure": {
+      "same": "如前上路"
+    },
     "embark": {
       "aspectLabel": "誰執提燈",
       "noVows": "路如常。未立任何誓言。",

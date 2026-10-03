@@ -40,8 +40,8 @@ static func _fresh_begin_skips_embark(fails: Array[String]) -> void:
 	_check(fails, main.game != null, "續火 did not create a run")
 	_check(fails, main._route_screen is ScenePlayer,
 		"fresh profile 續火 did not play the opening")
-	_check(fails, not (main._route_screen is EmbarkScreen)
-			and not (main._choice_screen is EmbarkScreen),
+	_check(fails, not (main._route_screen is DepartureScreen)
+			and not (main._choice_screen is DepartureScreen),
 		"fresh profile 續火 still opened Embark")
 	_check(fails, typeof(main.game.run.pending_scene) == TYPE_DICTIONARY
 			and str(main.game.run.pending_scene.get("id", "")) == "opening",
@@ -65,7 +65,7 @@ static func _choiceful_unseen_gets_embark(fails: Array[String]) -> void:
 		main._vigil.vow_unlocked = vow
 		main._show_title()
 		main._on_title_choice("begin", null)
-		_check(fails, main._route_screen is EmbarkScreen,
+		_check(fails, main._route_screen is DepartureScreen,
 			"choiceful-but-unseen (%s) skipped Embark" % str(case["tag"]))
 		_check(fails, not (main._route_screen is ScenePlayer),
 			"choiceful-but-unseen (%s) played the opening before Embark" % str(case["tag"]))
@@ -82,7 +82,7 @@ static func _run_two_returns_embark(fails: Array[String]) -> void:
 	main._vigil.scenes_seen.append("opening")
 	main._show_title()
 	main._on_title_choice("begin", null)
-	_check(fails, main._route_screen is EmbarkScreen,
+	_check(fails, main._route_screen is DepartureScreen,
 		"run 2 續火 did not return Embark")
 	_check(fails, not (main._route_screen is ScenePlayer),
 		"run 2 續火 replayed the opening")

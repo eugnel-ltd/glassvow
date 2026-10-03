@@ -194,7 +194,7 @@ static func _journey_b(content: ContentDB, code: StringName, fails: Array[String
 	main._vigil.scenes_seen.append("opening")
 	main._show_title()
 	main._on_title_choice("begin", null)
-	_check(fails, main._route_screen is EmbarkScreen,
+	_check(fails, main._route_screen is DepartureScreen,
 		"%s: returning 續火 did not return Embark" % tag)
 	_check(fails, not (main._route_screen is ScenePlayer),
 		"%s: returning 續火 replayed the opening" % tag)

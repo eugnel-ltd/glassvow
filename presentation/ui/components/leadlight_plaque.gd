@@ -4,6 +4,19 @@ extends VBoxContainer
 ## optional sub-line: a flame glyph in the run's colour and where the run stands.
 ## The flame is shown, never named (dusk-flame lock: the player discovers it).
 
+## The plaque is part of the lantern's button (TitleScreen's reach): it lights
+## with it. `glow` 0..1 brightens the gold (hover, the beckon, the press);
+## `focused` lays the lantern ring's gold hairline beneath the name.
+const LIT_GOLD: Color = Color("#fff1c4")
+var glow: float = 0.0:
+	set(value):
+		glow = clampf(value, 0.0, 1.0)
+		_relight()
+var focused: bool = false:
+	set(value):
+		focused = value
+		queue_redraw()
+
 var _name: Label
 var _sub_row: HBoxContainer
 var _glyph: Glyph
@@ -39,8 +52,7 @@ func _init(stage_shape: StringName = StageShape.IDENTITY) -> void:
 	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name.add_theme_font_override("font", LeadlightTokens.font(LeadlightTokens.ROLE_PRIMARY, px))
 	_name.add_theme_font_size_override("font_size", px)
-	_name.add_theme_color_override("font_color", LeadlightTokens.GOLD)
-	_name.add_theme_color_override("font_shadow_color", Color(LeadlightTokens.GOLD, 0.30))
+
 	_name.add_theme_constant_override("shadow_outline_size", 10)
 	_name.add_theme_constant_override("shadow_offset_x", 0)
 	_name.add_theme_constant_override("shadow_offset_y", 0)
@@ -48,6 +60,7 @@ func _init(stage_shape: StringName = StageShape.IDENTITY) -> void:
 	_name.add_theme_constant_override("outline_size", 4)
 	_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_name)
+	_relight()
 	_sub_row = HBoxContainer.new()
 	_sub_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_sub_row.add_theme_constant_override("separation", 8)
@@ -78,3 +91,32 @@ func set_text(title: String, sub: String, flame_colour: Color = LeadlightTokens.
 
 func title_label() -> Label:
 	return _name
+
+
+func _relight() -> void:
+	if _name == null:
+		return
+	_name.add_theme_color_override("font_color", LeadlightTokens.GOLD.lerp(LIT_GOLD, glow))
+	_name.add_theme_color_override("font_shadow_color", Color(LeadlightTokens.GOLD, 0.30 + 0.6 * glow))
+	_name.add_theme_constant_override("shadow_outline_size", 10 + roundi(10.0 * glow))
+	queue_redraw()
+
+
+func _draw() -> void:
+	var name_rect: Rect2 = Rect2(_name.position, _name.size)
+	var light: float = maxf(glow, 0.35 if focused else 0.0)
+	if light > 0.01:
+		# The lantern's light on the plaque: warm behind the name.
+		var halo: Rect2 = name_rect.grow_individual(name_rect.size.x * 0.18, name_rect.size.y * 0.9,
+			name_rect.size.x * 0.18, name_rect.size.y * 0.9)
+		draw_texture_rect(SkyField.disc(), halo, false, Color(LeadlightTokens.EMBER, 0.38 * light))
+	if not focused:
+		return
+	# The lantern ring in its unboxed form, under the name (LeadlightWord's hairline).
+	var y: float = name_rect.end.y + 1.0
+	var a: Vector2 = Vector2(name_rect.position.x + name_rect.size.x * 0.06, y)
+	var b: Vector2 = Vector2(name_rect.end.x - name_rect.size.x * 0.06, y)
+	var gold: Color = LeadlightTokens.GOLD
+	var clear: Color = Color(LeadlightTokens.GOLD, 0.0)
+	draw_polyline_colors(PackedVector2Array([a, (a + b) * 0.5, b]),
+		PackedColorArray([clear, gold, clear]), 2.0, true)

@@ -24,12 +24,11 @@ func _initialize() -> void:
 	_rose.size = Vector2(520.0, 560.0)
 	host.add_child(_rose)
 
-	# The real lamplighter geometry (lamplighter_screen.gd:176): a 138×56
-	# stadium — radius 28 is half the height, not a circle.
-	_art = Button.new()
-	_art.custom_minimum_size = Vector2(138.0, 56.0)
+	# The lantern art's pane as the departure seats it (DepartureScreen._card,
+	# leaded glass since build 18's departure; the stadium button retired).
+	_art = LeadlightPane.new("Flare", &"pad-landscape", LeadlightGlassBox.Shape.RECT)
+	_art.custom_minimum_size = Vector2(150.0, 104.0)
 	_art.position = Vector2(640.0, 120.0)
-	LamplighterScreen._art_style(_art, false)
 	host.add_child(_art)
 
 	var content: ContentDB = ContentDB.load_slice()

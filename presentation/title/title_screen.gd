@@ -25,6 +25,8 @@ const BANNER_ALPHA: float = 0.35
 ## rose is set into the door the player can see.
 const ROSE_ART: Vector3 = Vector3(775.0, 375.0, 47.0)
 const LEFT_IDS: Array[String] = ["begin", "vigil", "help"]
+## How far the lantern's reach runs past the plaque's words (x each side, y above).
+const REACH_PAD: Vector2 = Vector2(18.0, 10.0)
 const RIGHT_IDS: Array[String] = ["settings", "credits", "quit"]
 
 
@@ -88,9 +90,12 @@ var hold_rite: bool = false
 var _context: Dictionary
 var _sfx: SfxBus
 var _preferences: Preferences
-var _banner: TextureRect
 var _wordmark: Control
 var _plaque: LeadlightPlaque
+## The plaque, its sub-line and the gap down to the lantern: one press with the
+## lantern (build 18: the owner tapped the words, and nothing happened).
+var _reach: Button
+var _beckon: TitleBeckon
 var _secondary: LeadlightPane = null
 var _words: Dictionary = {}
 var _slabs: Array[LeadlightInscription] = []
@@ -105,6 +110,8 @@ var _primary_id: String = "begin"
 var _started: bool = false
 var _leaving: bool = false
 var _idle: float = 0.0
+## Frame 0's cover while the landed title under it builds the rite's pipelines.
+var _warm: Control = null
 
 
 ## `context`: shape, choices (id/label rows, Main's route ids), sub (where a
@@ -165,17 +172,21 @@ func set_shape(stage_shape: StringName) -> void:
 		_layout()
 
 
-func _build() -> void:
-	world = TitleWorld.new()
-	add_child(world)
-	_banner = TextureRect.new()
-	_banner.texture = load(TITLE_BACKGROUND) as Texture2D
-	_banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	_banner.modulate.a = BANNER_ALPHA
-	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_banner.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(_banner)
+## The road at dusk the title stands on — the living world, the painting
+## over it and the vignette — added to `host`. The departure (DepartureScreen)
+## stands in the same place.
+static func add_road(host: Control) -> TitleWorld:
+	var road: TitleWorld = TitleWorld.new()
+	host.add_child(road)
+	var banner: TextureRect = TextureRect.new()
+	banner.name = "Painting"
+	banner.texture = load(TITLE_BACKGROUND) as Texture2D
+	banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	banner.modulate.a = BANNER_ALPHA
+	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	banner.set_anchors_preset(Control.PRESET_FULL_RECT)
+	host.add_child(banner)
 	var vignette: TextureRect = TextureRect.new()
 	vignette.texture = GlassStyle.grad_tex(
 		PackedColorArray([Color(LeadlightTokens.VOID, 0.0), Color(LeadlightTokens.VOID, 0.0),
@@ -185,7 +196,12 @@ func _build() -> void:
 	vignette.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	vignette.stretch_mode = TextureRect.STRETCH_SCALE
 	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(vignette)
+	host.add_child(vignette)
+	return road
+
+
+func _build() -> void:
+	world = add_road(self)
 	_chain = TitleLampChain.new()
 	add_child(_chain)
 	rose = LeadlightRose.new(context_array("shards"))
@@ -231,6 +247,32 @@ func _build_lantern() -> void:
 	var sub: String = str(_context.get("sub", "")) if _primary_id == "continue" else ""
 	_plaque.set_text(label_of(_primary_id), sub, lantern.light())
 	add_child(_plaque)
+	_reach = Button.new()
+	_reach.name = "PrimaryReach"
+	_reach.flat = true
+	_reach.focus_mode = Control.FOCUS_NONE
+	_reach.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_reach.tooltip_text = lantern.tooltip_text
+	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
+	for state: String in ["normal", "hover", "pressed", "disabled", "focus"]:
+		_reach.add_theme_stylebox_override(state, empty)
+	_reach.pressed.connect(_on_lantern)
+	add_child(_reach)
+	# The plaque lights with the lantern under the hand, the key and the press.
+	for part: BaseButton in [lantern, _reach]:
+		part.mouse_entered.connect(_light_plaque.bind(0.35))
+		part.mouse_exited.connect(_light_plaque.bind(0.0))
+		part.button_down.connect(_light_plaque.bind(1.0))
+		part.button_up.connect(_light_plaque.bind(0.0))
+	lantern.focus_entered.connect(func() -> void: _plaque.focused = true)
+	lantern.focus_exited.connect(func() -> void: _plaque.focused = false)
+	_beckon = TitleBeckon.new(lantern, _plaque)
+	add_child(_beckon)
+
+
+func _light_plaque(amount: float) -> void:
+	if not _leaving:
+		_plaque.glow = amount
 
 
 func _build_words() -> void:
@@ -333,13 +375,59 @@ func kindle_now() -> void:
 		rite.start()
 		if resume:
 			rite.advance(TitleKindling.HOLD)
+		_warm_pipelines()
 	else:
 		_land()
 	_focus_first()
 
 
+## Build on frame 0 every pipeline the rite will reach for (build 18: the
+## A12 stalled 40-50 ms as the glass's glow, the light pool and the world
+## first appeared on a cold launch). For that one frame the title is drawn
+## landed — every layer, blend and glyph the rite will show — under a cover
+## of the night and the ember alone, which is exactly what frame 0 shows (the
+## splash). The cover goes on the next frame and the rite starts from 0
+## then, without the warm frame's delta.
+func _warm_pipelines() -> void:
+	if not is_inside_tree() or rite == null or not rite.is_running() or LeadlightMotion.reduced():
+		return
+	lantern.kindle = 1.0
+	lantern.presence = 1.0
+	lantern.reach = 1.0
+	world.lamplight = 1.0
+	_chain.progress = 1.0
+	_veil.reach = 1.0
+	_veil.strength = 0.0
+	_wordmark.modulate.a = 1.0
+	rose.glow = 1.0
+	for item_v: Variant in _light_words():
+		if item_v is CanvasItem:
+			var item: CanvasItem = item_v
+			item.modulate.a = 1.0
+	_warm = Control.new()
+	_warm.name = "FrameZeroCover"
+	_warm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_warm.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var night: ColorRect = ColorRect.new()
+	night.color = LeadlightTokens.VOID
+	night.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	night.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_warm.add_child(night)
+	_warm.add_child(lantern.ember_alone(TitleKindling.kindle_at(rite.time())))
+	add_child(_warm)
+
+
+func _end_warm() -> void:
+	_warm.queue_free()
+	_warm = null
+	rite.refresh()
+
+
 func _process(delta: float) -> void:
-	if rite != null and rite.is_running() and not hold_rite:
+	if _warm != null:
+		# The warm frame's delta is the compile, not the rite's time.
+		_end_warm()
+	elif rite != null and rite.is_running() and not hold_rite:
 		rite.advance(delta)
 	_idle += delta
 	# First launch waits on the language without going still: the ember's
@@ -382,6 +470,15 @@ func _land() -> void:
 	for language: LeadlightPane in _language:
 		language.queue_free()
 	_language.clear()
+	_wake_beckon()
+
+
+## The title is lit and taking input: the first of a session shows which thing
+## is the button; every one counts idleness for the rising ember.
+func _wake_beckon() -> void:
+	_beckon.arm()
+	if _context.get("beckon", false) == true:
+		_beckon.pulse()
 
 
 ## The consent notice is recorded only once its line is lit on screen — the
@@ -396,6 +493,7 @@ func _record_consent_shown() -> void:
 func _on_rite_done() -> void:
 	_record_consent_shown()
 	_catcher.visible = false
+	_wake_beckon()
 	for language: LeadlightPane in _language:
 		LeadlightMotion.exit(language)
 	_focus_first()
@@ -412,6 +510,12 @@ func _on_catcher_input(event: InputEvent) -> void:
 	if press and rite != null and not rite.is_done() and not rite.held():
 		rite.skip()
 		accept_event()
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouse or event is InputEventScreenTouch or event is InputEventKey \
+			or event is InputEventJoypadButton or event is InputEventScreenDrag:
+		_beckon.touched()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -442,6 +546,8 @@ func _on_lantern() -> void:
 		rite.skip()
 		return
 	LeadlightMotion.press(lantern)
+	LeadlightMotion.press(_plaque)
+	_plaque.glow = 1.0
 	_sfx.play_owed(&"paneChoose", &"click")
 	_choose(_primary_id, false)
 
@@ -508,6 +614,10 @@ func _layout() -> void:
 		rose.radiance = 1.0
 	_plaque.size = _plaque.get_combined_minimum_size()
 	_plaque.position = Vector2(cx - _plaque.size.x * 0.5, spec.plaque_y * k)
+	_reach.position = _plaque.position - Vector2(REACH_PAD.x, REACH_PAD.y)
+	var reach_bottom: float = maxf(_plaque.position.y + _plaque.size.y + REACH_PAD.y, lantern.position.y)
+	_reach.size = Vector2(_plaque.size.x + REACH_PAD.x * 2.0,
+		maxf(reach_bottom - _reach.position.y, 44.0))
 	_veil.centre = lantern.position + lantern.wick()
 	var rose_at: Vector2 = TitleLampChain.to_stage(Vector2(ROSE_ART.x, ROSE_ART.y), size)
 	# The rose is drawn larger than the painted one it covers, so the shards
