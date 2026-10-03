@@ -73,7 +73,10 @@ func _system(label: String, amount: int, lifetime: float, intensity: float,
 	system.name = label
 	system.amount = amount
 	system.lifetime = lifetime
-	system.preprocess = lifetime
+	# No preprocess: pre-simulating a lifetime of motes runs every step of it in
+	# the land's first frame (a 133 ms frame on the iPad 8). The air fills in
+	# over its first few seconds instead.
+	system.preprocess = 0.0
 	system.process_material = process
 	system.draw_pass_1 = mote
 	system.position = offset

@@ -299,6 +299,8 @@ static func _living_motion(fails: Array[String], scene: MapScene,
 			elif material.shader == preload("res://presentation/map/landscape/banner.gdshader"):
 				rippling += 1
 	_check(fails, swaying > 0 and rippling > 0, "the foliage sways and the banners ripple")
+	_check(fails, land.air.embers.preprocess == 0.0 and land.air.ash.preprocess == 0.0,
+		"the air fills in rather than pre-simulating in the land's first frame")
 	var reduced: bool = Preferences.active.reduce_motion
 	Preferences.active.reduce_motion = false
 	scene.set_live(false)
