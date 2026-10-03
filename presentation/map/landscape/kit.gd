@@ -44,33 +44,81 @@ const PROFILES: Dictionary = {
 	"amber-arch": Vector2(2.65, 5.50),
 }
 
-## Every kit scene, loaded once on the main thread and held for the process,
+## The kit scene the worker places as a scene (the arch), held for the process
 ## so a build on a worker only ever reads the resource cache (an uncached
 ## `load` from a worker thread can return null in Godot 4.7.2).
 static var _held: Array[PackedScene] = []
+## How many of `PROFILES`' scenes are ready so far, in its order.
+static var _held_kinds: int = 0
+## Whether the kit's scenes have been asked of the loader's threads.
+static var _requested: bool = false
+## The scene the build places as itself; every other kind is drawn from its
+## static template (`static_scenery.gd`).
+const ARCH: String = "amber-arch"
 
 
-## How long `preload_scenes` took on the main thread (benches and probes).
+## How long holding the kit has taken on the main thread (benches and probes).
 static var preload_ms: float = 0.0
 
 
+## Readies every kit scene now (a map opening, tests and tools).
 static func preload_scenes() -> void:
-	Meshes.prepare_unit_box()
-	if not _held.is_empty():
-		return
+	while not preload_step(true):
+		pass
+
+
+## Readies the next kit scene on the main thread and answers whether every one
+## is ready. A batched kind is loaded as its own copy, so its static template
+## takes the meshes without reading them back from the renderer; the arch is
+## loaded through the cache and held, as the worker loads it there. Stepped
+## (the journey prefetch under the title, one scene per frame), the scenes load
+## on the loader's threads, all asked for at the first step, and a step takes
+## the next one once it has loaded. `wait`ing (a map opening now), a scene not
+## asked for loads here, and one being loaded is waited for while the renderer
+## is kept in step, as the engine's own wait does, but without running the
+## deferred calls that wait would run in the middle of a frame.
+static func preload_step(wait: bool = false) -> bool:
+	var kinds: Array = PROFILES.keys()
+	if _held_kinds >= kinds.size():
+		return true
 	var started: int = Time.get_ticks_usec()
-	var paths: Dictionary = {}
-	for kind: String in PROFILES:
-		var path: String = "res://assets/art/map-journey/%s.glb" % kind
-		var scene: PackedScene = load(path) as PackedScene
-		if scene != null:
-			_held.append(scene)
-			if kind != "amber-arch":
-				paths[path] = kind
-	var failure: String = preload("res://presentation/map/landscape/static_scenery.gd").prepare_templates(paths)
+	Meshes.prepare_unit_box()
+	if not wait and not _requested:
+		_requested = true
+		for each: String in kinds:
+			ResourceLoader.load_threaded_request(_path(each), "PackedScene", false, _cache_mode(each))
+	var kind: String = kinds[_held_kinds]
+	var path: String = _path(kind)
+	var scene: PackedScene = null
+	if _requested:
+		while ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			if not wait:
+				preload_ms += (Time.get_ticks_usec() - started) / 1000.0
+				return false
+			RenderingServer.force_sync()
+			OS.delay_usec(500)
+		scene = ResourceLoader.load_threaded_get(path) as PackedScene
+	else:
+		scene = ResourceLoader.load(path, "PackedScene", _cache_mode(kind)) as PackedScene
+	_held_kinds += 1
+	var failure: String = "Cannot load " + path if scene == null else ""
+	if scene != null and kind == ARCH:
+		_held.append(scene)
+	elif scene != null:
+		failure = preload("res://presentation/map/landscape/static_scenery.gd") \
+			.prepare_template(path, kind, scene)
 	if not failure.is_empty():
 		push_error("Journey kit: " + failure)
-	preload_ms = (Time.get_ticks_usec() - started) / 1000.0
+	preload_ms += (Time.get_ticks_usec() - started) / 1000.0
+	return _held_kinds >= kinds.size()
+
+
+static func _cache_mode(kind: String) -> ResourceLoader.CacheMode:
+	return ResourceLoader.CACHE_MODE_REUSE if kind == ARCH else ResourceLoader.CACHE_MODE_IGNORE
+
+
+static func _path(kind: String) -> String:
+	return "res://assets/art/map-journey/%s.glb" % kind
 
 
 func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dictionary = {}, cache: Resource = null) -> void:

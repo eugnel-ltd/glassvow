@@ -13,32 +13,30 @@ var groups: Dictionary = {}
 var material_pool: Dictionary = {}
 var draw_count: int = 0
 ## Every kit scene's parts, collected once on the main thread
-## (`prepare_templates`): collecting duplicates each part's mesh, which reads it
-## back from the renderer and so may not run on the worker that builds the land.
+## (`prepare_template`), before any worker builds a land from them.
 static var _shared: Dictionary = {}
 
 
-static func prepare_templates(paths: Dictionary) -> String:
-	for path: String in paths:
-		if _shared.has(path):
-			continue
-		var packed: PackedScene = load(path) as PackedScene
-		if packed == null:
-			return "Cannot load static scenery: " + path
-		var kind: String = paths[path]
-		var original: Node3D = packed.instantiate() as Node3D
-		var pool: Dictionary = {}
-		var surfaces: int = Surfaces.prepare(original, pool)
-		if (kind.begins_with("conifer") or kind.begins_with("ash-")) and kind not in ["conifer-snag","ash-fern"] and surfaces==0:
-			original.free()
-			return "Static foliage has no prepared cut-out surface: "+kind
-		var parts: Array[Dictionary] = []
-		var failure: String = _collect(original, original.transform.affine_inverse(), parts)
-		_shared[path] = {"root":original.transform,"parts":parts,"kind":kind}
+## Collects the parts of the kit scene `packed`, loaded for `path` as its own
+## copy (`ResourceLoader.CACHE_MODE_IGNORE`): each part takes its mesh as it is
+## and is given its prepared materials. Duplicating a mesh shared with the
+## cache instead would read it back from the renderer, a stall per buffer.
+static func prepare_template(path: String, kind: String, packed: PackedScene) -> String:
+	if _shared.has(path):
+		return ""
+	if packed == null:
+		return "Cannot load static scenery: " + path
+	var original: Node3D = packed.instantiate() as Node3D
+	var pool: Dictionary = {}
+	var surfaces: int = Surfaces.prepare(original, pool)
+	if (kind.begins_with("conifer") or kind.begins_with("ash-")) and kind not in ["conifer-snag","ash-fern"] and surfaces==0:
 		original.free()
-		if not failure.is_empty():
-			return failure
-	return ""
+		return "Static foliage has no prepared cut-out surface: "+kind
+	var parts: Array[Dictionary] = []
+	var failure: String = _collect(original, original.transform.affine_inverse(), parts)
+	_shared[path] = {"root":original.transform,"parts":parts,"kind":kind}
+	original.free()
+	return failure
 
 
 func prepare(path: String, kind: String) -> Node3D:
@@ -91,7 +89,7 @@ static func _collect(node: Node, parent: Transform3D, parts: Array[Dictionary]) 
 		var item: MeshInstance3D = node as MeshInstance3D
 		if item.skin!=null or not item.mesh is ArrayMesh:
 			return "Static scenery contains unsupported deforming geometry"
-		var mesh: ArrayMesh = item.mesh.duplicate() as ArrayMesh
+		var mesh: ArrayMesh = item.mesh as ArrayMesh
 		for surface: int in range(mesh.get_surface_count()):
 			mesh.surface_set_material(surface,item.get_active_material(surface))
 		parts.append({"mesh":mesh,"transform":pose,"layers":item.layers,"shadow":item.cast_shadow})
