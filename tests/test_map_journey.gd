@@ -169,6 +169,15 @@ static func _focus_band(fails: Array[String], screen: WorldMapScreen) -> void:
 		for i: int in screen._journey.focus_members:
 			covered = covered and seats[i].y >= band.x and seats[i].y <= band.y
 		_check(fails, covered, "the sharp band covers every framed waystone at %s" % shape)
+	# Panned away: the band covers what is left on screen near the middle, and
+	# with nothing on screen it is the narrowest band about the middle.
+	var panned: Vector2 = MapTiltShift.band(PackedFloat32Array([-300.0, 40.0]), 820.0, 30.0)
+	var away: Vector2 = MapTiltShift.band(PackedFloat32Array([-300.0, 1200.0]), 820.0, 30.0)
+	_check(fails, (panned.x + panned.y) * 0.5 >= MapTiltShift.MIDDLE.x * 820.0 - 0.01
+			and panned.y - panned.x <= MapTiltShift.MAX_BAND * 820.0 + 0.01
+			and is_equal_approx(away.x + away.y, 820.0)
+			and is_equal_approx(away.y - away.x, MapTiltShift.MIN_BAND * 820.0),
+		"a group panned off screen leaves the sharp band where the player looks")
 	_mount(screen, StageShape.IDENTITY)
 	screen._journey.zoom(true)
 	screen._layout_waystones()
