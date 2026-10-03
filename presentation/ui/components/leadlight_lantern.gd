@@ -169,6 +169,52 @@ func glass_centre() -> Vector2:
 	return _art_rect().position + _art_rect().size * GLASS_CENTRE_UV
 
 
+## How strongly the ember shows at `kindle`: alone at 0, growing as the flame
+## catches, gone once the glass is lit. Pure.
+static func ember_strength(at_kindle: float) -> float:
+	return (1.0 - smoothstep(0.55, 0.9, at_kindle)) * (0.65 + 0.35 * smoothstep(0.0, 0.3, at_kindle))
+
+
+## The ember's flame height (the shader's `height`) at `kindle`. Pure.
+static func ember_height(at_kindle: float) -> float:
+	return lerpf(EMBER_HEIGHT.x, EMBER_HEIGHT.y, smoothstep(0.05, 0.7, at_kindle))
+
+
+## What the launch's frame 0 shows of this lantern — its ember alone at
+## `at_kindle`, halo and flame, clock at 0 — as a control in the lantern's
+## parent's space. TitleScreen covers the rest of the title with it for the
+## one frame that builds the rite's pipelines, so that frame shows exactly
+## the splash's picture.
+func ember_alone(at_kindle: float) -> Control:
+	var holder: Control = Control.new()
+	holder.name = "EmberAlone"
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.position = position
+	holder.size = size
+	var halo: Ember = Ember.new()
+	halo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	halo.position = _ember.position
+	halo.size = _ember.size
+	halo.strength = ember_strength(at_kindle)
+	holder.add_child(halo)
+	var fire: LanternFlame = LanternFlame.new()
+	fire.pinned = true
+	fire.material.set_shader_parameter(&"isolate", 1.0)
+	fire.material.set_shader_parameter(&"height", ember_height(at_kindle))
+	holder.add_child(fire)
+	var rect: TextureRect = TextureRect.new()
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.texture = blank()
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.material = fire.material
+	rect.position = _ember_flame.position
+	rect.size = _ember_flame.size
+	rect.modulate.a = halo.strength
+	holder.add_child(rect)
+	return holder
+
+
 ## A 4×4 white texture: the ember's quad has no art, only the shader's flame.
 static func blank() -> Texture2D:
 	if _blank == null:
@@ -270,12 +316,11 @@ func _apply_kindle() -> void:
 	_glow.modulate.a = lit * presence
 	_cold.modulate.a = (1.0 - lit * 0.85) * presence
 	# The ember: alone at 0, growing as the flame catches, gone once lit.
-	_ember.strength = (1.0 - smoothstep(0.55, 0.9, kindle)) * (0.65 + 0.35 * smoothstep(0.0, 0.3, kindle))
+	_ember.strength = ember_strength(kindle)
 	_ember.queue_redraw()
 	_ember_flame.modulate.a = _ember.strength
 	_ember_flame.visible = _ember.strength > 0.004
-	_ember_fire.material.set_shader_parameter(&"height",
-		lerpf(EMBER_HEIGHT.x, EMBER_HEIGHT.y, smoothstep(0.05, 0.7, kindle)))
+	_ember_fire.material.set_shader_parameter(&"height", ember_height(kindle))
 	if _pool != null:
 		_pool.modulate.a = _pool_alpha()
 

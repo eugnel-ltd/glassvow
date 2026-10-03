@@ -111,6 +111,8 @@ var _primary_id: String = "begin"
 var _started: bool = false
 var _leaving: bool = false
 var _idle: float = 0.0
+## Frame 0's cover while the landed title under it builds the rite's pipelines.
+var _warm: Control = null
 
 
 ## `context`: shape, choices (id/label rows, Main's route ids), sub (where a
@@ -365,13 +367,59 @@ func kindle_now() -> void:
 		rite.start()
 		if resume:
 			rite.advance(TitleKindling.HOLD)
+		_warm_pipelines()
 	else:
 		_land()
 	_focus_first()
 
 
+## Build on frame 0 every pipeline the rite will reach for (build 18: the
+## A12 stalled 40-50 ms as the glass's glow, the light pool and the world
+## first appeared on a cold launch). For that one frame the title is drawn
+## landed — every layer, blend and glyph the rite will show — under a cover
+## of the night and the ember alone, which is exactly what frame 0 shows (the
+## splash). The cover goes on the next frame and the rite starts from 0
+## then, without the warm frame's delta.
+func _warm_pipelines() -> void:
+	if not is_inside_tree() or rite == null or not rite.is_running() or LeadlightMotion.reduced():
+		return
+	lantern.kindle = 1.0
+	lantern.presence = 1.0
+	lantern.reach = 1.0
+	world.lamplight = 1.0
+	_chain.progress = 1.0
+	_veil.reach = 1.0
+	_veil.strength = 0.0
+	_wordmark.modulate.a = 1.0
+	rose.glow = 1.0
+	for item_v: Variant in _light_words():
+		if item_v is CanvasItem:
+			var item: CanvasItem = item_v
+			item.modulate.a = 1.0
+	_warm = Control.new()
+	_warm.name = "FrameZeroCover"
+	_warm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_warm.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var night: ColorRect = ColorRect.new()
+	night.color = LeadlightTokens.VOID
+	night.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	night.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_warm.add_child(night)
+	_warm.add_child(lantern.ember_alone(TitleKindling.kindle_at(rite.time())))
+	add_child(_warm)
+
+
+func _end_warm() -> void:
+	_warm.queue_free()
+	_warm = null
+	rite.refresh()
+
+
 func _process(delta: float) -> void:
-	if rite != null and rite.is_running() and not hold_rite:
+	if _warm != null:
+		# The warm frame's delta is the compile, not the rite's time.
+		_end_warm()
+	elif rite != null and rite.is_running() and not hold_rite:
 		rite.advance(delta)
 	_idle += delta
 	# First launch waits on the language without going still: the ember's
