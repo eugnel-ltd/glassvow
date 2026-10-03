@@ -43,6 +43,9 @@ static func consent_row(preferences: Preferences, stage_shape: StringName,
 		func() -> bool: return preferences.diagnostics_enabled,
 		func(on: bool) -> void: preferences.set_diagnostics_enabled(on))
 	toggle.name = "DiagnosticsToggle"
+	# Its ON / OFF is the switch's state in words: functional text on the
+	# title, so at the caption's size like the sentence (#655).
+	toggle.set_px(px)
 	toggle.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	controls.add_child(toggle)
 	var policy: LeadlightWord = LeadlightWord.new(Locale.active.t("ui.settings.privacyPolicy"), stage_shape)
@@ -74,11 +77,42 @@ static func consent_row(preferences: Preferences, stage_shape: StringName,
 	return row
 
 
+## Where a zh-Hant line may end by choice: after its own punctuation.
+const ZH_PAUSES: String = "，、；：。"
+
+
 ## The width that sets `text` (reading role, `px`) in as few lines as `width`
 ## allows, each about as long as the others: no last word left alone ("mended."
-## under a full line), no single character in zh-Hant.
+## under a full line). zh-Hant, which may break between any two characters,
+## breaks at a pause instead (after "，"), never inside a word such as 資料.
 static func balanced_width(text: String, px: int, width: float) -> float:
-	var whole: float = LeadlightTokens.font(LeadlightTokens.ROLE_READ, px).get_string_size(
-		text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var font: Font = LeadlightTokens.font(LeadlightTokens.ROLE_READ, px)
+	var whole: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 	var lines: int = maxi(1, ceili(whole / width))
+	if lines == 2:
+		var pause: float = _pause_width(text, font, px, width)
+		if pause > 0.0:
+			return pause
 	return minf(width, whole / float(lines) + float(px) * 2.0)
+
+
+## For a two-line zh-Hant sentence: the width whose first line ends exactly at
+## the pause that best balances the two lines (each fitting `width`), so the
+## next character no longer fits it; 0 when the text has no such pause.
+static func _pause_width(text: String, font: Font, px: int, width: float) -> float:
+	var best: float = 0.0
+	var best_gap: float = INF
+	for at: int in range(text.length() - 1):
+		if not ZH_PAUSES.contains(text[at]):
+			continue
+		var first: float = font.get_string_size(text.substr(0, at + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+		var rest: float = font.get_string_size(text.substr(at + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+		# The first line must be the longer: a wider box would pull the second
+		# line's opening characters up after the pause.
+		if first > width or rest > first:
+			continue
+		var gap: float = first - rest
+		if gap < best_gap:
+			best_gap = gap
+			best = first + 1.0
+	return best

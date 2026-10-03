@@ -47,16 +47,23 @@ class Layout:
 	var rose_grow: float = 1.95
 	var left: Array[Vector2] = [Vector2(-182.0, 606.0), Vector2(-214.0, 670.0), Vector2(-226.0, 734.0)]
 	var right: Array[Vector2] = [Vector2(182.0, 606.0), Vector2(214.0, 670.0), Vector2(226.0, 734.0)]
-	# The deeds carved at the rubric's 18 px (#655): a little higher and nearer
-	# the road than at 14, so the longest Roman count clears the stage's foot
-	# and the build number in its corner; wide enough that no count is cut
-	# (a carved line is clipped to its slab).
-	var slab_dx: float = 350.0
-	var slab_y: float = 757.0
+	# The deeds, carved at the rubric's 18 px as they are seen (#655): two
+	# close inscriptions in the road's two corners, each standing from its own
+	# edge of the stage (slab_margin, kept clear of the build number) with its
+	# foot on slab_foot, lying a little (slab_lie) and leaning toward the
+	# road's vanishing point (slab_shear). Lower and further out than the
+	# words, and set closer, so they never read as a fourth row of the menu.
+	var slab_margin: float = 52.0
+	var slab_foot: float = 812.0
 	var slab_w: float = 400.0
+	var slab_lie: float = 0.14
+	var slab_shear: float = 0.28
 	var lang_dx: float = 240.0
 	var lang_y: float = 688.0
 	var consent: Vector3 = Vector3(26.0, 730.0, 440.0)
+	# Where the consent line stands when the left foot is taken (a saved run's
+	# three left words): the open sky top right, clear of the wordmark.
+	var consent_high: Vector3 = Vector3(26.0, 40.0, 330.0)
 
 	static func for_shape(stage_shape: StringName) -> Layout:
 		var l: Layout = Layout.new()
@@ -73,14 +80,15 @@ class Layout:
 		l.lantern = 226.0
 		l.left = [Vector2(-108.0, 218.0), Vector2(-132.0, 264.0), Vector2(-142.0, 308.0)]
 		l.right = [Vector2(108.0, 218.0), Vector2(132.0, 264.0), Vector2(142.0, 308.0)]
-		l.slab_dx = 236.0
-		l.slab_y = 340.0
-		l.slab_w = 290.0
+		l.slab_margin = 44.0
+		l.slab_foot = 386.0
+		l.slab_w = 310.0
 		l.lang_dx = 170.0
 		l.lang_y = 300.0
 		# Under the two left words a fresh install shows, with room for the
 		# privacy word at the touch floor, clear of the lantern: on the stage, whole.
 		l.consent = Vector3(14.0, 312.0, 300.0)
+		l.consent_high = Vector3(14.0, 10.0, 268.0)
 		return l
 
 var shape: StringName = StageShape.IDENTITY
@@ -352,7 +360,9 @@ func _build_first_light() -> void:
 	if _context.get("ask_consent", false) == true:
 		var spec: Layout = Layout.for_shape(shape)
 		var k: float = 1.0 if size.y <= 0.0 else size.y / spec.ref_h
-		_consent = FirstLight.consent_row(_preferences, shape, spec.consent.z * k)
+		var low: bool = _side_items(LEFT_IDS).size() < spec.left.size()
+		_consent = FirstLight.consent_row(_preferences, shape,
+			(spec.consent.z if low else spec.consent_high.z) * k)
 		# The note under the switch grows the row: it stays on the stage.
 		_consent.minimum_size_changed.connect(_layout)
 		add_child(_consent)
@@ -665,28 +675,15 @@ func _layout() -> void:
 	var rose_r: float = ROSE_ART.z * spec.rose_grow * TitleLampChain.scale_for(size)
 	rose.position = rose_at - Vector2(rose_r, rose_r)
 	rose.size = Vector2(rose_r, rose_r) * 2.0
-	# The consent line takes the foot of the left side, so the words there
-	# stand from the top of their arc instead of centred on it.
-	_place_side(LEFT_IDS, spec.left, -1.0, k, cx, _consent != null)
+	# The consent line takes the foot of the left side when it is free, so the
+	# words there stand from the top of their arc instead of centred on it.
+	var consent_low: bool = _consent != null and _side_items(LEFT_IDS).size() < spec.left.size()
+	_place_side(LEFT_IDS, spec.left, -1.0, k, cx, consent_low)
 	_place_side(RIGHT_IDS, spec.right, 1.0, k, cx)
 	if _words.has("dev"):
 		var dev: Control = _words["dev"]
 		dev.position = Vector2(size.x - dev.get_combined_minimum_size().x - 12.0, 10.0)
-	var slab_w: float = spec.slab_w * k
-	for i: int in _slabs.size():
-		var dx: float = spec.slab_dx * k * (-1.0 if i == 0 else 1.0)
-		_slabs[i].position = Vector2(cx + dx - slab_w * 0.5, spec.slab_y * k)
-		# The box is the carved text's own height: lines × leading, no more.
-		var px: float = float(LeadlightTokens.size_for(LeadlightTokens.SIZE_CARVED, shape))
-		_slabs[i].size = Vector2(slab_w, float(_slabs[i].lines.size()) * px * 1.6 + 4.0)
-		if not LeadlightTokens.is_phone(shape):
-			# The carved role (14 px, gold at 55%) with a groove, lying on the
-			# flagstones and leaning toward the road's vanishing point.
-			_slabs[i].colour = Color(LeadlightTokens.GOLD, 0.55)
-			_slabs[i].groove = true
-			_slabs[i].lie = 0.3
-			_slabs[i].shear = 0.28 if i == 0 else -0.28
-			_slabs[i].queue_redraw()
+	_place_slabs(spec, k)
 	for i: int in _language.size():
 		var pane: LeadlightPane = _language[i]
 		var w: float = pane.get_combined_minimum_size().x + 24.0
@@ -697,11 +694,39 @@ func _layout() -> void:
 		# Its height is its own (the sentence's lines, the switch's row, the
 		# note once shown): the row rises from its seat to stay on the stage.
 		var own: Vector2 = _consent.get_combined_minimum_size()
-		_consent.position = Vector2(spec.consent.x * k,
-			minf(spec.consent.y * k, size.y - own.y - 6.0 * k))
+		if consent_low:
+			_consent.position = Vector2(spec.consent.x * k,
+				minf(spec.consent.y * k, size.y - own.y - 6.0 * k))
+		else:
+			_consent.position = Vector2(size.x - spec.consent_high.x * k - own.x,
+				spec.consent_high.y * k)
 		_consent.size = own
 	_version.position = Vector2(size.x - _version.get_combined_minimum_size().x - 10.0,
 		size.y - _version.get_combined_minimum_size().y - 4.0)
+
+
+## The deeds in the road's two corners (see `Layout`): each slab stands from its
+## own edge, clear of the build number in the right-hand corner and the same
+## distance in from the left, its carved foot on the layout's line.
+func _place_slabs(spec: Layout, k: float) -> void:
+	if _slabs.is_empty():
+		return
+	var margin: float = maxf(spec.slab_margin * k, _version.get_combined_minimum_size().x + 22.0)
+	var slab_w: float = spec.slab_w * k
+	for i: int in _slabs.size():
+		var slab: LeadlightInscription = _slabs[i]
+		var left: bool = i == 0
+		if not is_equal_approx(slab.lie, spec.slab_lie):
+			slab.lie = spec.slab_lie
+		slab.shear = spec.slab_shear * (1.0 if left else -1.0)
+		slab.align = HORIZONTAL_ALIGNMENT_LEFT if left else HORIZONTAL_ALIGNMENT_RIGHT
+		# The carved role, gold at 55%, cut with a groove so it reads on stone.
+		slab.colour = Color(LeadlightTokens.GOLD, 0.55)
+		slab.groove = true
+		slab.size = Vector2(slab_w, slab.box_height())
+		slab.position = Vector2(margin if left else size.x - margin - slab_w, 0.0)
+		slab.position.y = spec.slab_foot * k - slab.drawn_rect().end.y
+		slab.queue_redraw()
 
 
 ## Seat a side's words on its arc, nearest the flame first; a short side is
@@ -709,13 +734,7 @@ func _layout() -> void:
 ## (`from_top`) when the foot of the side is taken.
 func _place_side(ids: Array[String], slots: Array[Vector2], dir: float, k: float, cx: float,
 		from_top: bool = false) -> void:
-	var items: Array[Control] = []
-	for id: String in ids:
-		if id == "begin":
-			if _secondary != null:
-				items.append(_secondary)
-		elif _words.has(id):
-			items.append(_words[id])
+	var items: Array[Control] = _side_items(ids)
 	var start: float = 0.0 if from_top else float(slots.size() - items.size()) * 0.5
 	for i: int in items.size():
 		var at: float = start + float(i)
@@ -731,3 +750,15 @@ func _place_side(ids: Array[String], slots: Array[Vector2], dir: float, k: float
 		item.position = Vector2(x, slot.y - item_size.y * 0.5)
 		if item is LeadlightWord:
 			(item as LeadlightWord).near = i == 0
+
+
+## The words and the Rekindle pane a side shows, nearest the flame first.
+func _side_items(ids: Array[String]) -> Array[Control]:
+	var items: Array[Control] = []
+	for id: String in ids:
+		if id == "begin":
+			if _secondary != null:
+				items.append(_secondary)
+		elif _words.has(id):
+			items.append(_words[id])
+	return items

@@ -305,8 +305,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+## A row's pane (Erase All Progress, Close, the Privacy Policy link). Its type
+## stays at the shipped 15 px however the kit's pane token moves: Settings'
+## rows are rebuilt with the room (docs/design/2026-10-03-title-rooms, PR B).
+const ROW_PX: int = 15
+
+
 static func _button(text: String, accent: Color) -> Button:
 	var button: LeadlightPane = LeadlightPane.new(text)
+	button.set_px(ROW_PX)
 	button.accent = accent
 	button.lit = false
 	return button
