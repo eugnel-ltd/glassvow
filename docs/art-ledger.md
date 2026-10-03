@@ -627,6 +627,25 @@ Subject:
 Generated 2026-08-17 through Cursor `GenerateImage`. Cropped/resized to
 1536×1024 RGB so the banner's contain-fit and drop-shadow stay valid.
 
+### `map-journey/` — Act I journey kit, revived 3 Oct 2026
+
+The September journey rebuild's Act I woodland kit (owner-approved at its
+Step 3, Review 10), revived on the production map by the map lane on 3 Oct
+2026 (`docs/design/2026-10-02-map-living-land/revival.md`). Copied unchanged
+from the archive (`archive/superseded-20260929/jamesto/map-journey-rebuild`
+at `7d64678b`): 15 GLBs built by the Blender recipes in
+`tools/map_atelier/journey/` (`build_kit.py`, `foliage.py`,
+`natural_variants.py`, `stone_finish.py`; `.blend` sources beside them), and
+the three painted sources in `textures/`, generated 5 Sep 2026 with the
+built-in image generator against the approved Act I concept
+(`textures/README.md` records the source outputs).
+
+**Changed on revival, pixels untouched:** the GLBs import without their
+embedded images (every GLB carried its own copy of one of the three
+sources), the per-GLB extracted PNGs are gone, and the three sources import
+VRAM-compressed with mipmaps. `presentation/map/landscape/asset_surfaces.gd`
+gives each kit material the shared source its authored name calls for.
+
 ## Rejection note — what "technically shippable" means
 
 Judging generated character art by eye is not enough; two of the five
