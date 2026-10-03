@@ -18,15 +18,19 @@ extends RefCounted
 ## back through the CardView back path, lets it render, reads both passes back
 ## once and frees the card.
 ##
-## WHAT A BAKE COSTS (tools/check_card_back_bake.gd). The first bake of a back
-## compiles its shaders on the main thread, inside the draw: that one frame
-## runs long (on the M1 Max a first-ever bake took 290-384 ms; with only
-## Godot's shader cache off, its longest frame is 90-100 ms), and the frame
-## wait cannot spread it. The engine's shader cache keeps the compile
-## across launches; warm, a bake's longest frame is 3-4 ms, its wall time
-## 13-30 ms, and a cached repeat 0.01 ms. So the game bakes the chosen back
-## once, at a still moment where a long frame shows nothing moving (a load, a
-## held title), never behind an animated transition and never mid-fight; every
+## WHAT A BAKE COSTS (tools/check_card_back_bake.gd, on the Mac and, through a
+## QA build, on the iPad 8). The first bake of a back compiles its shaders on
+## the main thread, inside the draw: that one frame runs long, and the frame
+## wait cannot spread it. On the iPad 8 straight after an install, the
+## session's first bake (Vault, the first card the session built) held one
+## frame for 3.7 s, Rose's 0.58 s and Eclipse's 0.47 s; on the M1 Max a
+## first-ever bake took 290-384 ms. The engine's shader cache keeps those
+## compiles across launches, but even warm an iPad 8 bake holds a frame for
+## 33-58 ms (wall 77-118 ms; the Mac 3-7 ms and 11-39 ms). A cached repeat
+## costs 0.03 ms. The session's first bake also holds about 10 MiB more video
+## memory than later ones on both. So the game bakes the chosen back once, at
+## a still moment where a long frame shows nothing moving (a load, a held
+## title), never behind an animated transition and never mid-fight; every
 ## later screen reads the cache, which lasts the session.
 ##
 ## THE CACHE holds one bake per back, at the oversample it was made at (a bake
