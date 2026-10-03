@@ -12,6 +12,14 @@ const ART_FALLBACK: String = "res://assets/art/ui/lantern.png"
 ## The wick and the glass in the art's own UV (lantern_flame.gdshader set-out).
 const WICK_UV: Vector2 = Vector2(0.5, 0.785)
 const GLASS_CENTRE_UV: Vector2 = Vector2(0.5, 0.63)
+## The top of the chain's ring, as a share of the art's height (the art's
+## opaque bounds start at 54 of 1024 px): what the plaque stands on.
+const RING_TOP_UV: float = 0.053
+## Where a tap is the lantern's: its own body (the art's opaque bounds, 259–762
+## by 54–988 of 1024 px, with a little to spare), never the road either side of
+## it inside its square, where the title's words stand (#655: a tap on the
+## middle of 設定 took the road).
+const HIT_UV: Rect2 = Rect2(0.24, 0.04, 0.52, 0.94)
 ## The ember's flame quad, as a share of the art's side: the shader's wick sits
 ## at the lantern's wick and its tallest flame is REACH (0.29) of this.
 const EMBER_QUAD: float = 0.55
@@ -224,6 +232,16 @@ static func rim_mask() -> Texture2D:
 	_rim_mask = ImageTexture.create_from_image(
 		Image.create_from_data(RIM_MASK, RIM_MASK, false, Image.FORMAT_RGBA8, data))
 	return _rim_mask
+
+
+func _has_point(point: Vector2) -> bool:
+	return hit_rect().has_point(point)
+
+
+## The lantern's hit, in its own coordinates.
+func hit_rect() -> Rect2:
+	var art: Rect2 = _art_rect()
+	return Rect2(art.position + art.size * HIT_UV.position, art.size * HIT_UV.size)
 
 
 ## The saved run's reading, landed at once (no reading arrives on the title).

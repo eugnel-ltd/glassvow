@@ -47,12 +47,16 @@ class Layout:
 	var rose_grow: float = 1.95
 	var left: Array[Vector2] = [Vector2(-182.0, 606.0), Vector2(-214.0, 670.0), Vector2(-226.0, 734.0)]
 	var right: Array[Vector2] = [Vector2(182.0, 606.0), Vector2(214.0, 670.0), Vector2(226.0, 734.0)]
-	var slab_dx: float = 380.0
-	var slab_y: float = 768.0
-	var slab_w: float = 360.0
+	# The deeds carved at the rubric's 18 px (#655): a little higher and nearer
+	# the road than at 14, so the longest Roman count clears the stage's foot
+	# and the build number in its corner; wide enough that no count is cut
+	# (a carved line is clipped to its slab).
+	var slab_dx: float = 350.0
+	var slab_y: float = 752.0
+	var slab_w: float = 400.0
 	var lang_dx: float = 240.0
 	var lang_y: float = 688.0
-	var consent: Vector3 = Vector3(26.0, 730.0, 470.0)
+	var consent: Vector3 = Vector3(26.0, 730.0, 440.0)
 
 	static func for_shape(stage_shape: StringName) -> Layout:
 		var l: Layout = Layout.new()
@@ -69,13 +73,13 @@ class Layout:
 		l.lantern = 226.0
 		l.left = [Vector2(-108.0, 218.0), Vector2(-132.0, 264.0), Vector2(-142.0, 308.0)]
 		l.right = [Vector2(108.0, 218.0), Vector2(132.0, 264.0), Vector2(142.0, 308.0)]
-		l.slab_dx = 272.0
-		l.slab_y = 346.0
-		l.slab_w = 250.0
+		l.slab_dx = 236.0
+		l.slab_y = 340.0
+		l.slab_w = 290.0
 		l.lang_dx = 170.0
 		l.lang_y = 300.0
 		# Under the two left words a fresh install shows, with room for the
-		# privacy word at the touch floor: on the stage, whole.
+		# privacy word at the touch floor, clear of the lantern: on the stage, whole.
 		l.consent = Vector3(14.0, 312.0, 300.0)
 		return l
 
@@ -99,7 +103,7 @@ var _beckon: TitleBeckon
 var _secondary: LeadlightPane = null
 var _words: Dictionary = {}
 var _slabs: Array[LeadlightInscription] = []
-var _consent: HBoxContainer = null
+var _consent: VBoxContainer = null
 var _language: Array[LeadlightPane] = []
 var _veil: TitleVeil
 var _chain: TitleLampChain
@@ -349,6 +353,8 @@ func _build_first_light() -> void:
 		var spec: Layout = Layout.for_shape(shape)
 		var k: float = 1.0 if size.y <= 0.0 else size.y / spec.ref_h
 		_consent = FirstLight.consent_row(_preferences, shape, spec.consent.z * k)
+		# The note under the switch grows the row: it stays on the stage.
+		_consent.minimum_size_changed.connect(_layout)
 		add_child(_consent)
 
 
@@ -643,7 +649,11 @@ func _layout() -> void:
 		lantern.set_pool(Vector2(2.1, 1.05), 0.22, 0.8, 0.09)
 		rose.radiance = 1.0
 	_plaque.size = _plaque.get_combined_minimum_size()
-	_plaque.position = Vector2(cx - _plaque.size.x * 0.5, spec.plaque_y * k)
+	# The plaque stands on the lantern's ring, never over it: a taller plaque
+	# (its sub-line at the rubric's 18 px) rises rather than reaching the chain.
+	var ring_top: float = lantern.position.y + side * LeadlightLantern.RING_TOP_UV
+	_plaque.position = Vector2(cx - _plaque.size.x * 0.5,
+		minf(spec.plaque_y * k, ring_top - _plaque.size.y))
 	_reach.position = _plaque.position - Vector2(REACH_PAD.x, REACH_PAD.y)
 	var reach_bottom: float = maxf(_plaque.position.y + _plaque.size.y + REACH_PAD.y, lantern.position.y)
 	_reach.size = Vector2(_plaque.size.x + REACH_PAD.x * 2.0,
@@ -682,8 +692,12 @@ func _layout() -> void:
 		pane.size = Vector2(w, pane.get_combined_minimum_size().y)
 		pane.position = Vector2(cx + dx - w * 0.5, spec.lang_y * k - pane.size.y * 0.5)
 	if _consent != null:
-		_consent.position = Vector2(spec.consent.x * k, spec.consent.y * k)
-		_consent.size = Vector2(spec.consent.z * k, 0.0)
+		# Its height is its own (the sentence's lines, the switch's row, the
+		# note once shown): the row rises from its seat to stay on the stage.
+		var own: Vector2 = _consent.get_combined_minimum_size()
+		_consent.position = Vector2(spec.consent.x * k,
+			minf(spec.consent.y * k, size.y - own.y - 6.0 * k))
+		_consent.size = own
 	_version.position = Vector2(size.x - _version.get_combined_minimum_size().x - 10.0,
 		size.y - _version.get_combined_minimum_size().y - 4.0)
 

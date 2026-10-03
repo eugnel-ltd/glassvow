@@ -14,6 +14,8 @@ var shear: float = 0.0
 ## A dark groove cut round each letter, so carved gold reads on busy stone.
 var groove: bool = false
 var _px: int = 14
+## Each line's face, fitted to the slab's width (see `face_for`).
+var _faces: Dictionary = {}
 
 
 func _init(stage_shape: StringName = StageShape.IDENTITY) -> void:
@@ -23,20 +25,54 @@ func _init(stage_shape: StringName = StageShape.IDENTITY) -> void:
 
 func set_lines(text_lines: PackedStringArray) -> void:
 	lines = text_lines
+	_faces.clear()
 	queue_redraw()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		_faces.clear()
+
+
+## The line as it is carved: upper case in Latin script.
+func carved_text(line: String) -> String:
+	return line if LeadlightTokens.is_zh() else line.to_upper()
+
+
+## The face `text` is carved in: the carved role at full size, its tracking
+## closed up (never below none) when a long count would not otherwise fit the
+## slab, so a line is set tighter rather than cut, and never set smaller.
+func face_for(text: String) -> Font:
+	if _faces.has(text):
+		return _faces[text]
+	var face: FontVariation = LeadlightTokens.font(LeadlightTokens.ROLE_CARVED, _px)
+	var wide: float = face.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _px).x
+	if size.x > 0.0 and wide > size.x:
+		var tighter: FontVariation = face.duplicate() as FontVariation
+		while wide > size.x and tighter.spacing_glyph > 0:
+			tighter.spacing_glyph -= 1
+			wide = tighter.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _px).x
+		face = tighter
+	_faces[text] = face
+	return face
+
+
+## How wide `text` is carved on this slab.
+func carved_width(text: String) -> float:
+	return face_for(text).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _px).x
 
 
 func _draw() -> void:
 	if lines.is_empty():
 		return
-	var font: Font = LeadlightTokens.font(LeadlightTokens.ROLE_CARVED, _px)
 	var squash: float = 1.0 - clampf(lie, 0.0, 0.9) * 0.7
 	var line_h: float = float(_px) * 1.6
 	var slant: Transform2D = Transform2D(Vector2(1.0, 0.0), Vector2(shear, squash),
 		Vector2(-shear * size.y * 0.5, size.y * (1.0 - squash) * 0.5))
 	draw_set_transform_matrix(slant)
 	for i: int in range(lines.size()):
-		var text: String = lines[i] if LeadlightTokens.is_zh() else lines[i].to_upper()
+		var text: String = carved_text(lines[i])
+		var font: Font = face_for(text)
 		var y: float = float(i) * line_h + float(_px)
 		var at: Vector2 = Vector2(0.0, y)
 		if groove:

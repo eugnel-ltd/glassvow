@@ -58,8 +58,12 @@ class Glyph extends Control:
 func _init(stage_shape: StringName = StageShape.IDENTITY) -> void:
 	alignment = BoxContainer.ALIGNMENT_CENTER
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_theme_constant_override("separation", 2)
 	var px: int = LeadlightTokens.size_for(LeadlightTokens.SIZE_PLAQUE, stage_shape)
+	var sub_px: int = LeadlightTokens.size_for(LeadlightTokens.SIZE_CAPTION, stage_shape)
+	# Cinzel's line box carries room for accents the capitals never use: the
+	# sub-line tucks up into it, so the plaque at the rubric's sizes still
+	# stands between the rose and the lantern's ring.
+	add_theme_constant_override("separation", -roundi(float(sub_px) * 0.35))
 	_name = Label.new()
 	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name.add_theme_font_override("font", LeadlightTokens.font(LeadlightTokens.ROLE_PRIMARY, px))
@@ -78,7 +82,6 @@ func _init(stage_shape: StringName = StageShape.IDENTITY) -> void:
 	_sub_row.add_theme_constant_override("separation", 8)
 	_sub_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_sub_row)
-	var sub_px: int = LeadlightTokens.size_for(LeadlightTokens.SIZE_CAPTION, stage_shape)
 	_glyph = Glyph.new()
 	_glyph.custom_minimum_size = Vector2(float(sub_px) * 0.7, float(sub_px) * 1.1)
 	_glyph.size_flags_vertical = Control.SIZE_SHRINK_CENTER
