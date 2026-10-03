@@ -305,6 +305,64 @@ from 0, so `--act=1` rendered Act II, `--act=9` quietly rendered Act IV and
 `tools/run_performance_budget.py` keeps the index in its plan and reports, so
 archived evidence still reads the same, and asks the game for `--act=` one higher.
 
+## Map trace: GPU work per pass on the iPad
+
+`tools/map_trace/` reads what each GPU pass of the map costs on the iPad 8 (A12),
+at one reference clock, so a map step's gate can state its budget line rather
+than only its frame intervals (which sit on the vsync and hide headroom). It was
+promoted from the R3 trace spike (#660, R3.0).
+
+| File | What it does |
+|---|---|
+| `probe.gd` | Holds the map's rest at the production cadence and/or live (every view of the map rendered every frame, forced after every other script's `_process`), 600 frames a hold by default; rows with the launch's nonce go to `user://trace_probe.jsonl`. Also photographs the map (`--probe-shot`), frames Whole act or the ravine (`--probe-view`), takes the grain off (`--probe-grain=off`), stills motion in memory (`--probe-rm`) and hides one part (`--trace-kill`). Its header lists every argument. |
+| `qa_patch.py` | Arms a detached measuring worktree: copies the probe in as `tools/qa_map_trace_probe.gd` and adds `--map-trace-probe` and `--map-lean` to that worktree's `main.gd`, uncommitted. Refuses a worktree on a branch. |
+| `device.zsh` | Sourced by a batch script: `mt_install` (refuses any bundle id but the QA app's), `mt_launch` (nonce, launch, rows kept only if they echo it), `mt_trace` (a Metal System Trace of every process; the analysis keeps the launch's pid), `mt_export` (exports the tables and runs the two readers below). The iPad's identifier is looked up at run time and redacted. |
+| `frames.py`, `display.py`, `counters.py`, `xtable.py` | Per-encoder GPU time by frame shape; on-screen time per frame, GPU states and whether a device condition held the GPU (consistent state, desired state, induced thermal state); GPU counters per encoder; the `xctrace export` reader. |
+| `roles.py` | Names the stage frame's passes by structure and scales them to the reference clock; prints the BUDGET LINE (2D composite, 3D chain, GPU busy). `--self-test` checks it. |
+
+Nothing here ships. The store presets exclude `tools/map_*`, the Python and zsh
+files are never packed, and the probe is not wired into the committed
+`main.gd`: QA builds export the store "iOS" preset, so the probe reaches a QA
+build only through `qa_patch.py` on a measuring worktree.
+
+A measuring batch, using the lane's QA flow (`qa_export.sh` and the batch lock,
+outside the repository):
+
+```bash
+git worktree add --detach <wt> <commit>      # plus an override.cfg with both user-dir keys
+godot --headless --path <wt> --import
+python3 tools/map_trace/qa_patch.py <wt>
+<flow>/qa_export.sh <wt> --no-install        # the signed QA .ipa
+# in the batch script, holding the lock:
+source tools/map_trace/device.zsh            # OUT=<scratch folder>
+UDID=$(mt_udid); mt_install <wt>/build/ios-qa/export-dev/glassvow.ipa
+mt_launch j1 --map --map-trace-probe --seed=1 --shape=pad-landscape --map-steps=2 --holds=cadence,live
+mt_trace tj 4 24 --map --map-trace-probe --seed=1 --shape=pad-landscape --map-steps=2 --holds=live --hold-frames=2400
+mt_export tj
+python3 tools/map_trace/roles.py $OUT/tj.passes.txt --names "2D 1=tilt-shift view,2D 2=display+HUD"
+```
+
+How to read it:
+
+- Godot's Metal driver labels no encoders and its GPU timestamps read 0, so a
+  pass is named by its place in the frame and confirmed by hiding one part per
+  launch (`--trace-kill`). Encoder layouts differ between the Mac and the iPad;
+  map them on the device.
+- The GPU clock moves between launches. `roles.py` scales every time by a pass
+  the change under test leaves alone, by default the main 3D pass's fragment
+  time, 4.091 ms at the reference clock (R2's Journey view, rendered every
+  frame, at the Medium state). Pass `--ref-ms 5.24` for the fresh-run opening
+  view, or another `--ref-pass`.
+- `xctrace record --attach <pid>` fails on the device ("Cannot find process for
+  provided pid"), so `mt_trace` records every process; both QA and TestFlight
+  apps are called `glassvow`, so it never attaches by name either.
+- Starting a recording or a screenshot hitches the app: keep both out of the
+  holds whose frame intervals a gate reads.
+- On the Mac the same probe runs under the A12 Metal condition
+  (`GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 godot --path <wt> --rendering-driver metal
+  --rendering-method mobile -- --map --map-trace-probe --map-lean ...`), and
+  `xctrace record --attach <pid>` works there.
+
 ## Save profile
 
 A development boot never touches the player's save. Any launch that carries a
