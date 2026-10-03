@@ -143,7 +143,8 @@ class FacetRow extends Control:
 
 
 ## The Lantern page, alive: every 4 s an ember flies along a short arc into a
-## lantern's glass and it brightens. Still under Reduce Motion.
+## lantern (ring, roof, glass, base, in lead) and its glass brightens. Still
+## under Reduce Motion.
 class EmberFlight extends Control:
 	var _time: float = 0.0
 
@@ -155,19 +156,26 @@ class EmberFlight extends Control:
 
 	func _draw() -> void:
 		var u: float = fmod(_time, 4.0) / 1.4
-		var glass: Rect2 = Rect2(Vector2(168.0, 6.0), Vector2(22.0, 30.0))
+		var glass: Rect2 = Rect2(Vector2(170.0, 14.0), Vector2(20.0, 22.0))
 		var lift: float = 0.0 if u < 1.0 else clampf(1.0 - (u - 1.0) * 0.6, 0.0, 1.0)
+		var c: Vector2 = glass.get_center()
 		draw_texture_rect(SkyField.disc(), glass.grow(10.0 + 8.0 * lift), false,
 			Color(LeadlightTokens.EMBER, 0.18 + 0.35 * lift))
-		var body: PackedVector2Array = LeadlightShapes.lozenge(glass, 6.0)
+		var body: PackedVector2Array = LeadlightShapes.lozenge(glass, 5.0)
 		draw_colored_polygon(body, Color(LeadlightTokens.GOLD, 0.25 + 0.5 * lift))
 		body.append(body[0])
 		draw_polyline(body, LeadlightTokens.LEAD, 2.0, true)
-		draw_line(glass.position + Vector2(11.0, -5.0), glass.position + Vector2(11.0, 0.0), LeadlightTokens.LEAD, 2.0)
+		# The roof, the ring it hangs by, and the base.
+		var roof: PackedVector2Array = PackedVector2Array([glass.position + Vector2(-3.0, 0.0),
+			Vector2(c.x, glass.position.y - 9.0), Vector2(glass.end.x + 3.0, glass.position.y)])
+		draw_polyline(roof, LeadlightTokens.LEAD, 2.5, true)
+		draw_polyline(roof, Color(LeadlightTokens.GOLD_DIM, 0.8), 1.0, true)
+		draw_arc(Vector2(c.x, glass.position.y - 12.0), 3.0, 0.0, TAU, 12, Color(LeadlightTokens.GOLD_DIM, 0.9), 1.2, true)
+		draw_line(Vector2(glass.position.x - 1.0, glass.end.y + 2.0), Vector2(glass.end.x + 1.0, glass.end.y + 2.0),
+			Color(LeadlightTokens.GOLD_DIM, 0.8), 2.5, true)
 		if u < 1.0:
-			var from: Vector2 = Vector2(8.0, 30.0)
-			var to: Vector2 = glass.get_center()
-			var at: Vector2 = from.lerp(to, u) + Vector2(0.0, -sin(u * PI) * 18.0)
+			var from: Vector2 = Vector2(8.0, 34.0)
+			var at: Vector2 = from.lerp(c, u) + Vector2(0.0, -sin(u * PI) * 18.0)
 			draw_texture_rect(SkyField.disc(), Rect2(at - Vector2(7.0, 7.0), Vector2(14.0, 14.0)), false,
 				Color(LeadlightTokens.EMBER, 0.8 * sin(u * PI)))
 
