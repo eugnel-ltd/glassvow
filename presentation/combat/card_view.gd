@@ -422,12 +422,16 @@ func _init(inst: CardInst, data: Dictionary, cost: int) -> void:
 	# silhouette, edge, shadow and the whole surface stack build exactly as they
 	# do for a front, and everything that SAYS something — the art window, the
 	# name, the rubric, the rules, the cost gem — simply never exists. `back`
-	# names the painting.
+	# names the picture: a painting on disk, or a procedural canvas shader that
+	# paints the face in card px (the catalogue's backs, CardBacks).
 	var back_path: String = str(data.get("back", ""))
 	_is_back = back_path != ""
 	if back_path != "":
-		var back_tex: Texture2D = load(back_path)
-		if back_tex != null:
+		var picture: Resource = load(back_path)
+		var back_tex: Texture2D = picture as Texture2D
+		if picture is Shader:
+			layer.add_child(_shader_plate(picture as Shader))
+		elif back_tex != null:
 			# The pile paintings sit in a 512 canvas with transparent margins,
 			# so the ink is cropped to its own used rect before placing.
 			var crop: AtlasTexture = AtlasTexture.new()
@@ -556,6 +560,30 @@ func _init(inst: CardInst, data: Dictionary, cost: int) -> void:
 
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
+
+
+## A procedural back's plate: the whole face, painted by `sh` in card px. The
+## size rides in as a uniform so the shader and the slab cannot disagree about
+## how big a card is.
+static func _shader_plate(sh: Shader) -> ColorRect:
+	var m: ShaderMaterial = ShaderMaterial.new()
+	m.shader = sh
+	m.set_shader_parameter("card", Vector2(CARD_W, CARD_H))
+	var plate: ColorRect = ColorRect.new()
+	plate.material = m
+	plate.set_anchors_preset(Control.PRESET_FULL_RECT)
+	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return plate
+
+
+## The two offscreen passes as they last rendered — the lit stage and the 2D
+## face — read back for a bake (CardBacks). Each call is a GPU readback.
+func stage_image() -> Image:
+	return _stage.get_texture().get_image()
+
+
+func face_image() -> Image:
+	return _inner.get_texture().get_image()
 
 
 ## Place a node as a horizontal band on the face, inset from both sides.
