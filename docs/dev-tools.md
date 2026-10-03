@@ -344,12 +344,23 @@ stopped only the function it was raised in, so the test still printed `ok` and
 its later checks never ran. The runner now registers
 `tests/support/script_error_guard.gd`, a `Logger` that records these errors
 (`docs/solutions/test-failures/a-script-error-in-a-test-used-to-pass-silently.md`).
-Plain engine errors and warnings on stderr still fail nothing. These include
-the headless renderer's null materials, the leak report at exit, and
-`push_error`. Script errors raised after the last test are listed after the
-result and do not change it. A test that does not parse, or has no static
-`run(fails)`, is recorded as a failure and never called. Calling one used to
-abort the runner itself and leave it waiting forever.
+It grades each test only after two more frames have run. An error from a
+deferred call, processing or a queued free that the test left behind is
+therefore charged to that test, and a `run` that awaits is awaited. Frames run
+before the first test too, so every test runs inside a frame with the root
+window sized, alone or in the whole suite. Plain
+engine errors and warnings on stderr still fail nothing. These include the
+headless renderer's null materials, the leak report at exit, `push_error`, and
+a signal handler the engine could not call. Script errors raised while the
+tree is torn down at exit are listed after the result and do not change it.
+The guard sees nothing while `Engine.print_error_messages` is off, so a test
+that leaves it off fails, and no test should turn it off. A test must also join
+any worker it starts, or the worker's error may land on another test or after
+the guard has gone. A test that does not parse, or has no static `run` the
+runner can call with its `Array[String]`, is recorded as a failure and never
+called. Calling one used to abort the runner itself and leave it waiting
+forever. `tests/test_run_all.gd` runs the runner in a child Godot against the
+fixtures in `tests/support/run_all_fixtures/` to hold all of this.
 
 ## Creation and maintenance contract
 
