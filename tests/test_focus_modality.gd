@@ -11,7 +11,8 @@ extends RefCounted
 ##
 ## Focus needs nodes inside a running tree, so the paths run in `TreeSuite`.
 ## Mutation proof (PR): with `LeadlightFocus.give` reverted to a plain
-## `grab_focus()` the suite fails paths a to h.
+## `grab_focus()` the suite fails paths a to h; with Main's `_input` removed it
+## fails path k.
 
 const SUITE: String = "res://tests/test_focus_modality.gd"
 const RUN_PATH: String = "user://test_focus_modality_run_v2.json"
@@ -79,6 +80,8 @@ static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]
 	await _rite_tap(fails, tree, host, content)
 	await _bare_modifiers(fails, tree, host, content)
 	await _keyboard_keeps_its_ring(fails, tree, host, content)
+	await _key_then_touch(fails, tree, host, content)
+	await _thaw_keeps_visibility(fails, tree, host, content)
 	await _language_toggle_and_return(fails, tree, host, content)
 	Preferences.active = kept
 
@@ -238,6 +241,49 @@ static func _keyboard_keeps_its_ring(fails: Array[String], tree: SceneTree, host
 	await _key_tap(tree, host, KEY_ESCAPE)
 	_check(fails, main._modal == null and settings.has_focus(true),
 		"(j) a keyboard player's Escape from Settings did not hand the ring back to Settings")
+	_dispose(main)
+
+
+## (k) a player who pressed one key and then plays by touch: Main reads the
+## tap as a pointer again, so the title rebuilt after a tapped Vigil return
+## shows no ring. Only Main's `_input` sees the tap (the title consumes keys
+## alone), so this path fails if Main stops noting input.
+static func _key_then_touch(fails: Array[String], tree: SceneTree, host: SubViewport,
+		content: ContentDB) -> void:
+	var main: Main = await _boot(tree, host, content, true)
+	await _key_tap(tree, host, KEY_TAB)
+	_check(fails, LeadlightFocus.keyed and _title(main).lantern.has_focus(true),
+		"(k) Tab did not read as a keyboard and show the lantern's focus")
+	await _tap(tree, host, _word(main, "vigil"))
+	_check(fails, not LeadlightFocus.keyed, "(k) a tap after a key was still read as a keyboard")
+	await _tap(tree, host, _button(main._route_screen, Locale.active.t("ui.vigil.return")))
+	_no_ring(fails, main, "(k) a key, then the Vigil and its Return by tap")
+	_dispose(main)
+
+
+## (l) A word's focus comes back from a room as it went in (§6.2 item 4),
+## however the room was left: opened by tap and left by Escape, Settings holds
+## its focus hidden; opened by the keyboard and left by a tap on Close, it shows
+## it again.
+static func _thaw_keeps_visibility(fails: Array[String], tree: SceneTree, host: SubViewport,
+		content: ContentDB) -> void:
+	var main: Main = await _boot(tree, host, content, true)
+	var settings: Control = _word(main, "settings")
+	await _tap(tree, host, settings)
+	_check(fails, main._modal is SettingsPanel, "(l) a tap on Settings did not open it")
+	await _key_tap(tree, host, KEY_ESCAPE)
+	_check(fails, main._modal == null and settings.has_focus() and not settings.has_focus(true),
+		"(l) Settings opened by tap and left by Escape came back showing a ring")
+	_dispose(main)
+	main = await _boot(tree, host, content, true)
+	settings = _word(main, "settings")
+	await _key_tap(tree, host, KEY_TAB)
+	settings.grab_focus()
+	await _key_tap(tree, host, KEY_ENTER)
+	_check(fails, main._modal is SettingsPanel, "(l) Enter on Settings did not open it")
+	await _tap(tree, host, _button(main._modal, Locale.active.t("ui.menu.close")))
+	_check(fails, main._modal == null and settings.has_focus(true),
+		"(l) Settings opened by the keyboard and closed by a tap lost its ring")
 	_dispose(main)
 
 

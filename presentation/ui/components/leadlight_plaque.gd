@@ -139,11 +139,60 @@ func _draw() -> void:
 			Color(LeadlightTokens.EMBER, 0.38 * light))
 	if not focused:
 		return
-	# The lantern ring in its unboxed form, under the name (LeadlightWord's hairline).
-	var y: float = name_rect.end.y + 1.0
+	# The lantern ring in its unboxed form, under the name (LeadlightWord's
+	# hairline), in the clear band between the name's letters and the
+	# sub-line's: the sub-line is tucked up into the name's line box, so the
+	# box's own foot would strike through its capitals.
+	var y: float = hairline_y()
 	var a: Vector2 = Vector2(name_rect.position.x + name_rect.size.x * 0.06, y)
 	var b: Vector2 = Vector2(name_rect.end.x - name_rect.size.x * 0.06, y)
 	var gold: Color = LeadlightTokens.GOLD
 	var clear: Color = Color(LeadlightTokens.GOLD, 0.0)
 	draw_polyline_colors(PackedVector2Array([a, (a + b) * 0.5, b]),
 		PackedColorArray([clear, gold, clear]), 2.0, true)
+
+
+## Where the focus hairline runs, in the plaque's own coordinates: halfway
+## across the clear band between the foot of the name's ink and the top of the
+## sub-line's (a little below the name when there is no sub-line).
+func hairline_y() -> float:
+	var name_ink: Vector2 = ink_span(_name)
+	var foot: float = _name.position.y + name_ink.y
+	if not _sub_row.visible:
+		return foot + float(_name.get_theme_font_size("font_size")) * 0.25
+	var top: float = _sub_row.position.y + _sub.position.y + ink_span(_sub).x
+	return (foot + top) * 0.5
+
+
+## The top and foot of `label`'s ink (its first line), down from its own top:
+## the shaped line's glyph bounds, so a capital, an ideograph and a fallback
+## face are each measured as drawn. A Label sets its first baseline at its
+## face's full ascent (the zh-Hant fallback's included), which Latin capitals
+## alone do not reach.
+static func ink_span(label: Label) -> Vector2:
+	var px: int = label.get_theme_font_size("font_size")
+	var face: Font = label.get_theme_font("font")
+	var line: TextLine = TextLine.new()
+	line.add_string(label.text, face, px)
+	var server: TextServer = TextServerManager.get_primary_interface()
+	var ascent: float = face.get_ascent(px)
+	var top: float = INF
+	var foot: float = -INF
+	for glyph: Dictionary in server.shaped_text_get_glyphs(line.get_rid()):
+		var font: RID = glyph.get("font_rid", RID())
+		var index: int = glyph.get("index", 0)
+		var glyph_px: int = glyph.get("font_size", px)
+		var shift: Vector2 = glyph.get("offset", Vector2.ZERO)
+		if not font.is_valid() or index == 0:
+			continue
+		var size: Vector2i = Vector2i(glyph_px, 0)
+		var offset: Vector2 = server.font_get_glyph_offset(font, size, index)
+		var ink: Vector2 = server.font_get_glyph_size(font, size, index)
+		if ink.y <= 0.0:
+			continue
+		var at: float = shift.y + offset.y
+		top = minf(top, at)
+		foot = maxf(foot, at + ink.y)
+	if top == INF:
+		return Vector2(0.0, ascent)
+	return Vector2(ascent + top, ascent + foot)

@@ -33,14 +33,16 @@ const COLD_TINT: Color = Color(0.17, 0.17, 0.21, 1.0)
 const POOL_FALLOFF: PackedFloat32Array = [1.0, 0.6, 0.32, 0.17, 0.06, 0.0]
 const POOL_TEXTURE: int = 512
 ## Keyboard focus is a gold rim on the lantern's own silhouette (§6.2): the
-## silhouette drawn behind the art and over the light it throws, this much
-## larger about the glass centre, in GOLD at RIM_ALPHA, with a fainter halo
-## beyond it. Over the pool, not under it: the pool's additive light washed
-## the rim to white.
-const RIM_SCALE: float = 1.04
-const RIM_ALPHA: float = 0.62
-const RIM_HALO_SCALE: float = 1.085
-const RIM_HALO_ALPHA: float = 0.2
+## body's outline grown outward by the same RIM_WIDTH all round (a share of the
+## art's side: about 5 px at 1180×820), drawn behind the iron and over the
+## light it throws, in GOLD at RIM_ALPHA. Grown evenly, never scaled about a
+## centre, which thickened the rim with distance from it into a cap over the
+## chain. The chain is not rimmed: the rim starts at the roof (RIM_TOP_UV, the
+## art's 240 of 1024 px), so it never climbs to the plaque on the chain's ring.
+## Over the pool, not under it: the pool's additive light washed it to white.
+const RIM_ALPHA: float = 0.45
+const RIM_WIDTH: float = 3.0 / 256.0
+const RIM_TOP_UV: float = 0.235
 const RIM_MASK: int = 256
 
 ## Focus shown on the lantern (a keyboard or pad player's), as against merely
@@ -96,8 +98,8 @@ static var _rim_mask: Texture2D = null
 static var _lit_warm: bool = false
 var _time: float = 0.0
 var _focus_shown: bool = false
-## The rim's two silhouettes (halo, then rim), made on the first shown focus.
-var _rim: Array[TextureRect] = []
+## The rim, made on the first shown focus.
+var _rim: TextureRect = null
 
 
 ## The light the ember throws round itself (a soft halo, no hard disc: the
@@ -197,29 +199,30 @@ func _sync_focus_shown() -> void:
 
 
 func _show_rim(on: bool) -> void:
-	if on and _rim.is_empty():
+	if on and _rim == null:
 		var mask: Texture2D = rim_mask()
 		if mask == null:
 			return
-		for alpha: float in [RIM_HALO_ALPHA, RIM_ALPHA]:
-			var rim: TextureRect = TextureRect.new()
-			rim.name = "FocusRim"
-			rim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			rim.texture = mask
-			rim.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			rim.stretch_mode = TextureRect.STRETCH_SCALE
-			rim.modulate = Color(LeadlightTokens.GOLD, alpha)
-			add_child(rim)
-			# Over the pool and the glow, under the iron and the glass.
-			move_child(rim, _cold.get_index())
-			_rim.append(rim)
+		_rim = TextureRect.new()
+		_rim.name = "FocusRim"
+		_rim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_rim.texture = mask
+		_rim.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_rim.stretch_mode = TextureRect.STRETCH_SCALE
+		_rim.modulate = Color(LeadlightTokens.GOLD, RIM_ALPHA)
+		add_child(_rim)
+		# Over the pool and the glow, under the iron and the glass.
+		move_child(_rim, _cold.get_index())
 		_seat()
-	for rim: TextureRect in _rim:
-		rim.visible = on
+	if _rim != null:
+		_rim.visible = on
 
 
-## The lantern art as a white silhouette (its own alpha), built once per
-## process on the first focus a keyboard shows: the rim's mask.
+## The lantern's body grown by RIM_WIDTH all round, as a white mask the art's
+## size (its own alpha, the chain above RIM_TOP_UV left out), built once per
+## process on the first focus a keyboard shows. The growth is the union of the
+## body shifted RIM_WIDTH (and half of it) every way: an even band, drawn by
+## the image's own blend, with the body's soft edge kept.
 static func rim_mask() -> Texture2D:
 	if _rim_mask != null:
 		return _rim_mask
@@ -237,8 +240,16 @@ static func rim_mask() -> Texture2D:
 		data[i] = 255
 		data[i + 1] = 255
 		data[i + 2] = 255
-	_rim_mask = ImageTexture.create_from_image(
-		Image.create_from_data(RIM_MASK, RIM_MASK, false, Image.FORMAT_RGBA8, data))
+	var body: Image = Image.create_from_data(RIM_MASK, RIM_MASK, false, Image.FORMAT_RGBA8, data)
+	body.fill_rect(Rect2i(0, 0, RIM_MASK, roundi(RIM_TOP_UV * RIM_MASK)), Color(1.0, 1.0, 1.0, 0.0))
+	var grown: Image = Image.create(RIM_MASK, RIM_MASK, false, Image.FORMAT_RGBA8)
+	var whole: Rect2i = Rect2i(0, 0, RIM_MASK, RIM_MASK)
+	var reach: float = RIM_WIDTH * float(RIM_MASK)
+	for ring: Vector2 in [Vector2(reach, 16.0), Vector2(reach * 0.5, 8.0)]:
+		for i: int in range(int(ring.y)):
+			var angle: float = TAU * float(i) / ring.y
+			grown.blend_rect(body, whole, Vector2i(roundi(cos(angle) * ring.x), roundi(sin(angle) * ring.x)))
+	_rim_mask = ImageTexture.create_from_image(grown)
 	return _rim_mask
 
 
@@ -400,11 +411,9 @@ func _seat() -> void:
 	for layer: TextureRect in [_cold, _lit, _glow]:
 		layer.position = art.position
 		layer.size = art.size
-	var glass: Vector2 = glass_centre()
-	for i: int in range(_rim.size()):
-		var grow: float = RIM_HALO_SCALE if i == 0 else RIM_SCALE
-		_rim[i].position = glass + (art.position - glass) * grow
-		_rim[i].size = art.size * grow
+	if _rim != null:
+		_rim.position = art.position
+		_rim.size = art.size
 	var half: Vector2 = art.size.x * pool_spread
 	var at: Vector2 = glass_centre() + Vector2(0.0, art.size.x * pool_drop)
 	_pool.position = at - half
