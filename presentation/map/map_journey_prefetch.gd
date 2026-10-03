@@ -68,7 +68,8 @@ var _first_frame_gone: bool = false
 ## Starts a prefetch of `map`'s land for `run` when its act is the journey act
 ## and nothing is already prefetched or prefetching for the same layout. For
 ## any other act the journey land is let go (`release`): it is never drawn
-## there.
+## there. A finished prefetch whose kept land has since been freed holds
+## nothing any more, so it is started again.
 static func start(map: WorldMap, run: RunState) -> void:
 	if map == null or run == null or run.act != 0:
 		release()
@@ -82,7 +83,7 @@ static func start(map: WorldMap, run: RunState) -> void:
 	job._salt = run.seed + WorldMapScreen.SCENERY_SEED_OFFSET
 	job._nodes = bound["nodes"]
 	job._edges = bound["edges"]
-	if _current != null and _current._same(job):
+	if _current != null and _current._same(job) and not _current._land_lost():
 		return
 	_drop()
 	_current = job
@@ -192,6 +193,11 @@ static func _drop() -> void:
 func _same(other: MapJourneyPrefetch) -> bool:
 	return _act == other._act and _seed == other._seed and _nodes == other._nodes \
 		and _edges == other._edges
+
+
+## Whether this prefetch finished and the land it handed `MapScene` is gone.
+func _land_lost() -> bool:
+	return step == Step.DONE and not is_instance_valid(MapScene._journey_kept)
 
 
 ## One frame's piece of the main-thread setup, or (`hurry`) all of it; then

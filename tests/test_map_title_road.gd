@@ -11,9 +11,14 @@ extends RefCounted
 ## warm land is keyed by what it is built from: another save is never given it,
 ## and Begin Anew and Erase Everything let it go, stopping a build in flight; a
 ## language change keeps it, on the title and on the map, since the land holds
-## no words. The warm-up reads nothing back from the renderer, so its cards and
-## kit are checked against the renderer's own: and a headless boot warms
-## nothing and still builds inline.
+## no words. The warm-up reads nothing back from the renderer, so its cards,
+## kit and conifer shadow cones are checked against the renderer's own: and a
+## headless boot warms nothing and still builds inline. Every title that warms a
+## saved Act I run reads back first what the warm-up would read under its frames,
+## the rite's or a later title's. A screen covering the title leaves Act I's warm
+## alone, and the next title warms another act's map at once. A finished warm
+## whose land was freed warms again, and a screen going while it builds its own
+## land gives the build up and waits for it instead of leaving it running.
 
 const RUN_PATH: String = "user://test_map_title_road_run_v2.json"
 const VIGIL_PATH: String = "user://test_map_title_road_vigil_v2.json"
@@ -37,6 +42,7 @@ static func run(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
 	_cards_are_the_renderers(fails)
 	_kit_templates_are_the_scenes(fails)
+	_shadow_cones_are_the_renderers(fails)
 	_headless_builds_inline(fails, content)
 	var reference: Dictionary = _cold_reference(content, SEED_A)
 	MapScene.journey_async = true
@@ -46,6 +52,10 @@ static func run(fails: Array[String]) -> void:
 	for polled: bool in [true, false]:
 		_map_opened_mid_build_takes_the_layout(fails, content, polled)
 	_other_act_warms_once_lit(fails, content)
+	_later_title_primes(fails, content)
+	_covered_title_keeps_the_warm(fails, content)
+	_freed_land_warms_again(fails, content)
+	_screen_going_mid_build_waits(fails, content)
 	MapScene.journey_async = false
 	_release_all()
 	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
@@ -108,6 +118,67 @@ static func _kit_templates_are_the_scenes(fails: Array[String]) -> void:
 					and arrays == meshes[index].surface_get_arrays(surface) \
 					and part.surface_get_material(surface) != null
 	_check(fails, same, "each kit template draws its scene's meshes with the prepared materials")
+
+
+## A conifer's shadow cone on a phone or tablet is laid out on the CPU: the
+## arrays the renderer's `CylinderMesh` gives back, and the kit's templates
+## (prepared under the launch rite's frames) read no mesh back to make it.
+static func _shadow_cones_are_the_renderers(fails: Array[String]) -> void:
+	const Scenery = preload("res://presentation/map/landscape/static_scenery.gd")
+	var same: bool = true
+	for size: Vector2 in [Vector2(0.4, 0.9), Vector2(1.3, 2.5), Vector2(2.2, 6.4)]:
+		var cone: CylinderMesh = CylinderMesh.new()
+		cone.top_radius = Scenery.CONE_TOP
+		cone.bottom_radius = size.x
+		cone.height = size.y
+		cone.radial_segments = Scenery.CONE_SIDES
+		cone.rings = 0
+		cone.cap_top = false
+		var renderer: Array = cone.get_mesh_arrays()
+		var cpu: Array = Scenery.cone_arrays(Scenery.CONE_TOP, size.x, size.y)
+		same = same and cpu[Mesh.ARRAY_INDEX] == renderer[Mesh.ARRAY_INDEX] \
+			and _near(cpu[Mesh.ARRAY_VERTEX], renderer[Mesh.ARRAY_VERTEX], 0.00001) \
+			and _near(cpu[Mesh.ARRAY_TEX_UV], renderer[Mesh.ARRAY_TEX_UV], 0.00001) \
+			and _near(cpu[Mesh.ARRAY_NORMAL], renderer[Mesh.ARRAY_NORMAL], 0.001) \
+			and _near(cpu[Mesh.ARRAY_TANGENT], renderer[Mesh.ARRAY_TANGENT], 0.001)
+		for slot: int in range(Mesh.ARRAY_MAX):
+			same = same and (cpu[slot] == null) == (renderer[slot] == null)
+	_check(fails, same, "a shadow cone laid out on the CPU is the renderer's cone, array for array")
+	var reads: PackedStringArray = []
+	for path: String in ["res://presentation/map/landscape/static_scenery.gd",
+			"res://presentation/map/landscape/kit.gd",
+			"res://presentation/map/landscape/asset_surfaces.gd"]:
+		var source: String = FileAccess.get_file_as_string(path)
+		for call: String in ["get_mesh_arrays(", "surface_get_arrays(", "get_faces("]:
+			if source.contains(call):
+				reads.append("%s %s" % [path.get_file(), call])
+	_check(fails, reads.is_empty(),
+		"the kit's templates read no mesh back from the renderer: %s" % ", ".join(reads))
+
+
+## Whether two packed arrays hold the same values to within `tolerance`.
+static func _near(a: Variant, b: Variant, tolerance: float) -> bool:
+	if typeof(a) != typeof(b) or a.size() != b.size():
+		return false
+	for i: int in range(a.size()):
+		var x: Variant = a[i]
+		var y: Variant = b[i]
+		var gap: float = INF
+		if x is float and y is float:
+			var p: float = x
+			var q: float = y
+			gap = absf(p - q)
+		elif x is Vector2 and y is Vector2:
+			var p: Vector2 = x
+			var q: Vector2 = y
+			gap = p.distance_to(q)
+		elif x is Vector3 and y is Vector3:
+			var p: Vector3 = x
+			var q: Vector3 = y
+			gap = p.distance_to(q)
+		if gap > tolerance:
+			return false
+	return true
 
 
 ## The meshes a template collects from a scene: every mesh instance whose
@@ -544,6 +615,135 @@ static func _other_act_warms_once_lit(fails: Array[String], content: ContentDB) 
 	_check(fails, warming != null and warming.act == 1 and MapJourneyPrefetch.current_step() == -1,
 		"once the rite has landed the title warms another act's pictures, and no land")
 	_dispose(main)
+	_release_all()
+
+
+## A title that warms a saved Act I run reads back what the warm-up would read
+## back under its frames before its own first frame, the rite's title or a later
+## one (a session whose first title had no Act I run to warm, back from the
+## run menu); a title warming no Act I run reads nothing.
+static func _later_title_primes(fails: Array[String], content: ContentDB) -> void:
+	_release_all()
+	var main: Main = _main(content)
+	main._title_kindled = true
+	_store_run(content, SEED_A, 1)
+	_unprime()
+	main._show_title()
+	_check(fails, MapLandscapeAssets._slate == null and Meshes._unit_arrays.is_empty(),
+		"a title warming no Act I run reads nothing back")
+	_store_run(content, SEED_A)
+	main._show_title()
+	_check(fails, (main._choice_screen as TitleScreen).rite == null
+			and MapLandscapeAssets._slate != null and not Meshes._unit_arrays.is_empty()
+			and MapJourneyPrefetch.busy(),
+		"a later title warming an Act I run reads back before its first frame what the warm-up would")
+	_settle(main)
+	_dispose(main)
+	_release_all()
+
+
+## Forgets what `MapJourneyPrefetch.prime` read, as a process that has not
+## primed yet.
+static func _unprime() -> void:
+	MapLandscapeAssets._slate = null
+	Meshes._unit_arrays = []
+
+
+## A screen in the title's place before Act I's warm-up has ended (a saved map
+## that would not load, a save that would not hold) leaves the warm-up running:
+## it started before the title and needs nothing of it, and the title after
+## that screen takes its land. Another act's warm-up waits for the rite: with
+## the title gone it lets go, and the next title, which plays no rite, warms
+## that act's map at once.
+static func _covered_title_keeps_the_warm(fails: Array[String], content: ContentDB) -> void:
+	for act: int in [0, 1]:
+		_release_all()
+		var main: Main = _main(content)
+		_store_run(content, SEED_A, act)
+		main._show_title()
+		(main._choice_screen as TitleScreen).kindle_now()
+		main._process(0.016)
+		var job: MapJourneyPrefetch = MapJourneyPrefetch._current
+		main._show_save_error("ui.persistence.detail.savedPilgrimageMapUnreadable")
+		main._process(0.016)
+		main._process(0.016)
+		if act == 0:
+			_check(fails, job != null and main._choice_screen != null
+					and not main._choice_screen is TitleScreen
+					and MapJourneyPrefetch._current == job and MapJourneyPrefetch.busy(),
+				"Act I's warm-up goes on under a screen shown in the title's place")
+			_settle(main)
+			var warm: MapJourneyLandscape = MapScene._journey_kept
+			main._on_save_error_choice("title")
+			main._process(0.016)
+			_check(fails, warm != null and MapJourneyPrefetch._current == job
+					and MapScene._journey_kept == warm and not MapJourneyPrefetch.busy(),
+				"the title after that screen keeps the land its warm-up built")
+		else:
+			_check(fails, MapLandscapeAssets.warming() == null and MapLandscapeAssets._kept == null,
+				"another act's warm-up lets go when the title is gone before its rite landed")
+			main._on_save_error_choice("title")
+			var warming: MapLandscapeAssets.Pictures = MapLandscapeAssets.warming()
+			_check(fails, warming != null and warming.act == 1,
+				"the next title warms another act's map at once")
+		_dispose(main)
+	_release_all()
+
+
+## A finished warm-up whose land has since been freed (`release_kept_journey`,
+## as a kept screen's owner going does) is not taken for a warm one: the next
+## title of the same save warms it again.
+static func _freed_land_warms_again(fails: Array[String], content: ContentDB) -> void:
+	_release_all()
+	var main: Main = _main(content)
+	_store_run(content, SEED_A)
+	main._title_kindled = true
+	main._show_title()
+	_settle(main)
+	var job: MapJourneyPrefetch = MapJourneyPrefetch._current
+	_check(fails, job != null and job.step == MapJourneyPrefetch.Step.DONE
+			and MapScene._journey_kept != null,
+		"the title's warm-up builds the land before it is freed")
+	MapScene.release_kept_journey()
+	main._show_title()
+	_check(fails, MapJourneyPrefetch._current != job and MapJourneyPrefetch.busy(),
+		"a finished warm-up whose land was freed warms again")
+	_check(fails, _settle(main) and MapScene._journey_kept != null
+			and is_instance_valid(MapScene._journey_kept),
+		"the warm-up started again builds the land")
+	_dispose(main)
+	_release_all()
+
+
+## A map screen building its own land (no warm-up had it) that goes before the
+## build ends, as one does when the game quits inside the charting veil after
+## Main's exit join: the build is given up and waited for there, and its land
+## freed, instead of being left to a worker nothing waits for.
+static func _screen_going_mid_build_waits(fails: Array[String], content: ContentDB) -> void:
+	_release_all()
+	var run: RunState = RunState.new_run(content, SEED_C, "run-title-road-own-build")
+	var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run, content), content)
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	tree.root.add_child(screen)
+	screen.size = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
+	screen.set_shape(StageShape.IDENTITY)
+	screen.refresh(run)
+	var scene: MapScene = screen._map_scene
+	var land: MapJourneyLandscape = scene.journey_landscape() if scene != null else null
+	var until: int = Time.get_ticks_msec() + SETTLE_MS
+	while land != null and land._stage != MapJourneyLandscape.Stage.REST \
+			and scene.landscape_pending() and Time.get_ticks_msec() < until:
+		scene._process(0.016)
+		OS.delay_msec(1)
+	var building: bool = land != null and scene.landscape_pending() and land.busy()
+	var pacing: Meshes.Pacing = land.terrain.pacing if land != null else null
+	_check(fails, building and MapJourneyPrefetch.current_step() == -1,
+		"a map screen with no warm-up builds its own land on the pool")
+	tree.root.remove_child(screen)
+	screen.free()
+	_check(fails, building and not is_instance_valid(land) and MapScene._abandoned.is_empty()
+			and pacing != null and pacing.stopped,
+		"a screen going mid-build gives its own build up and waits for it")
 	_release_all()
 
 

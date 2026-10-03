@@ -118,12 +118,15 @@ func build_detached(data: Dictionary, pacing: Meshes.Pacing = null) -> void:
 
 ## Begins a build: the cheap preparation here, the land's heights on the
 ## worker pool. `poll` carries it on; the node must stay outside the tree until
-## `poll` reports done, because the rest is built on a worker.
+## `poll` reports done, because the rest is built on a worker. Unpaced, and
+## given up as a prefetch's build is (`give_up`).
 func start(data: Dictionary, parallel: bool = true) -> void:
 	_started = Time.get_ticks_msec()
 	if parallel:
 		Kit.preload_scenes()
-	_begin(data, null)
+	var pacing: Meshes.Pacing = Meshes.Pacing.new()
+	pacing.on = false
+	_begin(data, pacing)
 	terrain.start_heights(parallel)
 	_stage = Stage.HEIGHTS
 
@@ -162,9 +165,9 @@ func poll() -> bool:
 	return _stage == Stage.DONE
 
 
-## Whether a worker may still be writing into this land. The main thread never
-## waits on that task (it may itself wait on the main thread for the renderer):
-## a land given up mid-build is freed once its task ends (`MapScene.reap`).
+## Whether a worker may still be writing into this land. No frame waits on
+## that task: a land given up mid-build is freed once its task ends
+## (`MapScene.reap`). Only a land whose screen is going waits (`give_up`).
 func busy() -> bool:
 	if _task >= 0:
 		return not WorkerThreadPool.is_task_completed(_task)
@@ -179,6 +182,16 @@ func busy() -> bool:
 func adopt_task(task: int) -> void:
 	_task = task
 	_stage = Stage.REST
+
+
+## Gives the build up (it ends after its current stage, as a failure nothing
+## adopts) and waits for its worker, so the land can be freed at once. The
+## worker reads nothing back from the renderer, so it never waits on the main
+## thread that waits on it here (`MapScene`'s predelete).
+func give_up() -> void:
+	if terrain != null and terrain.pacing != null:
+		terrain.pacing.stop()
+	settle()
 
 
 ## Ends the bookkeeping of a finished task so the land can be freed.

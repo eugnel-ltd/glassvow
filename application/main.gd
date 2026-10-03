@@ -1263,10 +1263,11 @@ func _show_title() -> void:
 	var ask_language: bool = Preferences.active.language.is_empty() and newcomer
 	var rite: bool = not _title_kindled or _title_rite_resume
 	var journey: bool = saved != null and saved.act == 0 and MapScene.journey_async
-	if rite and journey:
+	if journey:
 		# The title warms this run's Act I land (`_warm_title_road`): what that
-		# would read back from the renderer is read now, before the rite's
-		# first frame, and only for a player it serves.
+		# would read back from the renderer is read now, before the title's
+		# first frame (the rite's, or a later title's), and only for a player
+		# it serves. Once a process: a primed process reads nothing again.
 		MapJourneyPrefetch.prime()
 	# The road persists across a rebuild (§7 item 12): the new title continues
 	# the world it replaces, the title's or the departure's.
