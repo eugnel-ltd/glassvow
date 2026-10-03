@@ -1,5 +1,15 @@
 # The map as a living land: concept dossier (Phase 1)
 
+> **Superseded direction (3 October 2026).** The owner rejected concepts A, B and
+> C below ("They all fail") and chose to revive the September journey rebuild
+> instead: the archived woodland map with terrain derived from the routes, a
+> filled river, arched bridges, seated 3D waystones and the cloaked pilgrim. That
+> map is the base; the redesign, upgrade and polish happen on top of it. The
+> audit and revival plan are in [revival.md](revival.md). The diagnosis (§1), the
+> living-motion spec (§3) and the A12 and performance plans (§4, §6) still apply
+> to the polish programme that follows the revival. The three concepts and
+> their ranking (§2, §8) are kept only as a record.
+
 Design lane, 2 to 3 October 2026. Owner instruction (James, 23:49 BST, 2 October):
 the map "is nothing like an AAA commercial game"; the goal is "immersive,
 dynamic, living, stunning, AAA class". Brief: orchestrator's `map-lane/brief.md`
