@@ -259,18 +259,27 @@ func _protect(kit: Node3D, seats: PackedVector3Array) -> void:
 			_protect_rect(Rect2(at + Vector2(-0.6, -1.8), Vector2(1.2, 2.2)), base.dot(_toward) - 0.5)
 
 
-## The raised points of every bridge chain, about `step` metres apart.
+## The raised points of every bridge chain, `step` metres apart along it (a
+## chain's own points are much closer than a stamp needs), and each raised
+## run's last point.
 func _decks(step: float) -> PackedVector3Array:
 	var out: PackedVector3Array = []
 	for chain: Dictionary in _terrain.get_meta("bridge_chains", []):
 		var points: PackedVector3Array = chain["points"]
 		var weights: PackedFloat32Array = chain["weights"]
+		var since: float = INF
 		for i: int in range(points.size() - 1):
 			if maxf(weights[i], weights[i + 1]) < DECK_WEIGHT:
+				if since < INF:
+					out.append(points[i])
+				since = INF
 				continue
-			var steps: int = maxi(1, ceili(points[i].distance_to(points[i + 1]) / step))
-			for k: int in range(steps):
-				out.append(points[i].lerp(points[i + 1], float(k) / steps))
+			var length: float = points[i].distance_to(points[i + 1])
+			var at: float = 0.0 if since >= step else step - since
+			while at < length:
+				out.append(points[i].lerp(points[i + 1], at / length))
+				at += step
+			since = length - (at - step)
 	return out
 
 
