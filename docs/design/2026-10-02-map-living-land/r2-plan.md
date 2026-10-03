@@ -605,3 +605,63 @@ shadow pass 70k primitives. Act II unchanged.
 
 Payload (`tools/payload_report.py`): `assets/art/map-journey` 5.8 MiB of its
 6 MiB budget; the iOS pck estimate 260.9 MiB of 400.
+
+## 9. Build log: (b) camera, room, density (rebased onto `0f5aeda6`)
+
+The order the review set: the camera change, then room made at the new camera
+until the rest mean is back at 16.66–16.7 ms, then density against that room.
+Every device row comes from the QA app (`io.fol2.glassvow.qa`) on the iPad 8,
+lean profile, under the batch lock, each launch checked by a nonce its rows
+echo. The map probe's rest is 600 frames at the Journey view, mid-route (two
+steps, pad); missed means intervals over 25 ms.
+
+**1. Camera** (`72aaed4b`, `916d534f`, `d9d18b6e`, envelopes `2caf16f3`):
+the contract at 40°, the 12 m floor, planting reserves and the conifer
+envelopes at the new pitch, the sharp band sized to the framed cluster, the
+seated waystones' stone texture restored. Fresh comparison with the target:
+[`frames/r2-build/vs-target-after-camera.jpg`](frames/r2-build/vs-target-after-camera.jpg).
+
+**2. Room** (`545822f3`, `abef1d9e`, `9f11d63e`):
+
+| Change | Where the cost went |
+|---|---|
+| River without screen or depth reads on the lean profile (`river_lite.gdshader`), half the grid | about 0.85 ms of mean in river frames |
+| Conifers cast through one opaque cone each (lean), not their cut-out foliage | 0.3 ms mean, 1.9 ms p95 |
+| Ground chunks cast no shadow; `mesh_lod_threshold` 6 on the lean stage; lighter pilgrim spheres | stage 98.9k → 72.0k primitives, shadow 62.3k → 31.1k (Mac, lean) |
+| The journey camera clips to the land's slab (`MapJourneyCameraContract.depth_range`) | an orthographic camera's shadow covers its whole near-to-far slice (the engine ignores the light's max distance for one); 0.05–400 m became about 26–75 m; shadow draws 87 → 63 |
+| Stage scale on the lean profile (0.67, 0.60) | nothing: the stage is not fill-bound (kept at 0.75) |
+
+Not changed, and why: a higher LOD threshold or a per-kind LOD bias removes
+the trees' and shrubs' cut-out leaves outright (the generated LODs collapse
+the cards), so it buys triangles with the woodland itself; shadows off saved
+nothing measurable (16.80 → 16.80 in one launch).
+
+At the rebased head `9f11d63e`: rest mean **16.80** and **16.96 ms** (missed 6
+and 12 in 600 frames); R1's camera and light in the same launch 16.80 →
+16.66 ms, p95 −0.96 ms. Before the rebase, `e9d566e7`: p50 16.73 ms. The p95
+half of the gate holds; the mean does not reach 16.66–16.7 at the new camera.
+Scripts take about 0.9 ms of main thread a frame and the stage's render setup
+0.6 ms, at spikes as at rest, so the missed frames are GPU or presentation
+time, not script time (Metal reports no GPU timestamps to the probe).
+
+The fresh run's opening view frames five stones at a 29.9 m view (the Journey
+view is 19.2 m), so it draws more: 111 stage draws and 91k primitives against
+87 and 72k. It is the same cause as R1's drop and is mostly fixed with it: R1
+p50 19.8 ms there, now 17.2 (mean 17.13, missed 19).
+
+Opens at `9f11d63e` (with main's title warm): cold ready 2.15–2.27 s, warmed
+100–103 ms, reopen 37–56 ms.
+
+**3. Density** (built, **not landed**: branch `wip/r2-density-2026-10-03`):
+the ground's three scales, ruts and ragged verges in `terrain_paint.gdshader`;
+eight opaque cover and story pieces (art ledger); clumps at the foot of every
+hard edge, along the verges and in a few open patches, 1.2 m off every road
+centreline, held to 3,200 triangles per 16 m cell and merged into one
+shadowless draw per cell from pieces baked offline (no mesh is read back from
+the renderer at run time). Story groups use settled Act I canon only: stones,
+spore caps, roots, a pale mask; no walker's belongings. Measured in
+interleaved launches of one build of it: cover hidden 17.05 and 17.36 ms, shown
+17.52 ms (missed 15 and 29 against 34); on the Mac the Journey view gains 9
+draws and 22k primitives. Comparison with the target:
+[`frames/r2-build/vs-target-density-candidate.jpg`](frames/r2-build/vs-target-density-candidate.jpg):
+the clumps read, the target's packed wood does not.
