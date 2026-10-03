@@ -11,7 +11,11 @@ extends Logger
 ## and ignores the rest. Plain engine errors and warnings, such as a null
 ## material on the headless renderer or a leaked RID at exit, stay on stderr and
 ## fail nothing. `push_error` logs as a plain engine error, so it fails nothing
-## either.
+## either, and so does a call the engine refuses to make (a signal handler that
+## takes the wrong arguments): its body never runs, but the engine logs that as
+## a plain error. While `Engine.print_error_messages` is off the engine hands no
+## logger anything, so the guard sees nothing; the runner fails a test that
+## leaves it off.
 ##
 ## The engine may call `_log_error` from any thread (a worker-pool build reports
 ## its errors on its worker), so the record is guarded by a mutex. It must never
