@@ -25,6 +25,12 @@ var _rows: int = 0
 var _baked: Array = []
 var _bake_lock: Mutex = Mutex.new()
 var _heights_task: int = -1
+## How many pool threads worked the heights out (`start_heights`): 0 on the
+## calling thread, -1 the whole pool.
+var heights_threads: int = 0
+## How many threads the worker pool runs: `threading/worker_pool/max_threads`,
+## or one per logical core when that is unset. Tests stand in smaller pools.
+static var pool_threads: int = _configured_pool_threads()
 ## The A12 profile's ground (`terrain_paint.gdshader` `lite`): set by the host.
 var lite_surfaces: bool = false
 ## The build's pacing when a worker builds the land ahead of its map: a build
@@ -158,10 +164,12 @@ func height_at(x: float, z: float) -> float:
 ## read. Later surface queries on the lattice read this grid instead of
 ## re-solving the landform.
 ## `parallel` spreads the columns over `threads` of the worker pool (all of it
-## when -1); a caller that is itself a pool task bakes them in turn (it may not
-## wait on the pool).
+## when -1). A caller that is itself a pool task holds its thread while it
+## waits for them and does none of their work, so it spreads them only when
+## `pool_spares_threads`, and otherwise bakes them in turn.
 func start_heights(parallel: bool = true, threads: int = -1) -> void:
 	_heights_started = Time.get_ticks_msec()
+	heights_threads = threads if parallel else 0
 	_columns = int(bounds.size.x / CELL) + 1
 	_rows = int(bounds.size.y / CELL) + 1
 	_baked.clear()
@@ -172,6 +180,20 @@ func start_heights(parallel: bool = true, threads: int = -1) -> void:
 		return
 	_heights_task = WorkerThreadPool.add_group_task(_bake_column, _columns, threads, true,
 		"journey land heights")
+
+
+## Whether a pool task may spread the heights over the pool and wait for them:
+## the pool has a thread for them beside the waiting task and beside a build
+## given up that may still be waiting for its own. Two such waits on a pool of
+## two threads never end, nor one on a pool of one.
+static func pool_spares_threads() -> bool:
+	return pool_threads >= 3
+
+
+static func _configured_pool_threads() -> int:
+	var setting: Variant = ProjectSettings.get_setting("threading/worker_pool/max_threads", -1)
+	var configured: int = setting if setting is int else -1
+	return configured if configured > 0 else OS.get_processor_count()
 
 
 func heights_ready() -> bool:

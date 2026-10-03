@@ -99,13 +99,15 @@ func build(data: Dictionary) -> void:
 ## its meshes to the renderer: unpaced (a map is waiting for the land), the
 ## heights are worked out across the whole pool, as a map's own build works
 ## them out, and paced (behind the launch rite or the lit title) across
-## `PACED_HEIGHT_THREADS` of it; and a build given up (`stopped`) ends after its
-## current stage, as a failure nothing adopts.
+## `PACED_HEIGHT_THREADS` of it, each only on a pool with threads to spare
+## (`Terrain.pool_spares_threads`; otherwise on the build's own thread); and a
+## build given up (`stopped`) ends after its current stage, as a failure
+## nothing adopts.
 func build_detached(data: Dictionary, pacing: Meshes.Pacing = null) -> void:
 	_started = Time.get_ticks_msec()
 	_begin(data, pacing)
-	terrain.start_heights(pacing != null,
-		PACED_HEIGHT_THREADS if pacing != null and pacing.on else -1)
+	var spread: bool = pacing != null and Terrain.pool_spares_threads()
+	terrain.start_heights(spread, PACED_HEIGHT_THREADS if spread and pacing.on else -1)
 	_stage = Stage.HEIGHTS
 	terrain.finish_heights()
 	if not _halted():

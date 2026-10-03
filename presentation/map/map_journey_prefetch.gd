@@ -119,9 +119,15 @@ static func busy() -> bool:
 
 ## The generator's packet the current prefetch made for the layout input
 ## digested as `input_digest`, or {} when it made none for it. Main's compile
-## takes it instead of generating the same layout again on the main thread.
+## takes it instead of generating the same layout again on the main thread. A
+## layout the worker has handed over since this frame's step (`step_current`)
+## is taken now, so a map opening later in the frame (the flood's restore runs
+## after `_process`) finds it, and its scenery binding with it.
 static func layout_packet(input_digest: String) -> Dictionary:
-	if _current == null or input_digest.is_empty() or _current._input_digest != input_digest:
+	if _current == null or input_digest.is_empty():
+		return {}
+	_current._take_layout()
+	if _current._input_digest != input_digest:
 		return {}
 	return _current._packet
 
