@@ -85,7 +85,7 @@ static func _live(script: SceneScript, cursor: int, act: int) -> ScenePlayer:
 	var player: ScenePlayer = ScenePlayer.new(script, cursor)
 	player.instant = true
 	player.plate_act = act
-	player._ready()
+	TreeReady.once(player)
 	player._process(0.016)
 	return player
 

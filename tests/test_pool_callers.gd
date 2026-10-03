@@ -257,7 +257,7 @@ static func _wake(main: Main) -> void:
 		return
 	var player: ScenePlayer = main._route_screen as ScenePlayer
 	if player != null and player._beat == ScenePlayer.BEAT_IDLE and not player._done:
-		player._ready()
+		TreeReady.once(player)
 
 
 ## Finish the interstitial by hand. A tap on a line still typing only lands

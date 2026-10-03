@@ -131,7 +131,7 @@ static func _journey_a(content: ContentDB, code: StringName, fails: Array[String
 		return
 	var dest: ScenePlayer = ScenePlayer.new(opening, 4)
 	dest.instant = true
-	dest._ready()
+	TreeReady.once(dest)
 	var dest_line: Label = dest.find_child("Line", true, false) as Label
 	var caption: Label = dest.find_child("Caption", true, false) as Label
 	_check(fails, dest_line != null
@@ -147,7 +147,7 @@ static func _journey_a(content: ContentDB, code: StringName, fails: Array[String
 		"%s: opening lost tap/hold skip grammar" % tag)
 	var city: ScenePlayer = ScenePlayer.new(opening, 5)
 	city.instant = true
-	city._ready()
+	TreeReady.once(city)
 	var city_line: Label = city.find_child("Line", true, false) as Label
 	_check(fails, city_line != null and (
 			(zh and city_line.text.contains("金城"))
@@ -204,7 +204,7 @@ static func _journey_b(content: ContentDB, code: StringName, fails: Array[String
 	if m2 != null:
 		var player: ScenePlayer = ScenePlayer.new(m2, 1)
 		player.instant = true
-		player._ready()
+		TreeReady.once(player)
 		var line: Label = player.find_child("Line", true, false) as Label
 		_check(fails, line != null
 				and line.text == Locale.active.t("story.lamplighter-m2.pre.l2"),
@@ -594,7 +594,7 @@ static func _wake(main: Main) -> void:
 		return
 	var player: ScenePlayer = main._route_screen as ScenePlayer
 	if player != null and player._beat == ScenePlayer.BEAT_IDLE and not player._done:
-		player._ready()
+		TreeReady.once(player)
 
 
 static func _drive(main: Main) -> void:

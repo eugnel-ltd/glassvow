@@ -348,7 +348,11 @@ It grades each test only after two more frames have run. An error from a
 deferred call, processing or a queued free that the test left behind is
 therefore charged to that test, and a `run` that awaits is awaited. Frames run
 before the first test too, so every test runs inside a frame with the root
-window sized, alone or in the whole suite. Plain
+window sized, alone or in the whole suite. Because the root is in the tree, a
+node a test adds under it gets `_ready` from the engine there and then. A test
+that drives a node by hand calls `TreeReady.once(node)`
+(`tests/support/tree_ready.gd`), not `node._ready()`, so the node is readied
+once whether or not it was added to the tree. Plain
 engine errors and warnings on stderr still fail nothing. These include the
 headless renderer's null materials, the leak report at exit, `push_error`, and
 a signal handler the engine could not call. Script errors raised while the

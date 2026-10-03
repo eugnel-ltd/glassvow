@@ -259,7 +259,7 @@ static func _scene_player_hosts(fails: Array[String]) -> void:
 			continue
 		var player: ScenePlayer = ScenePlayer.new(script, 0)
 		player.instant = true
-		player._ready()
+		TreeReady.once(player)
 		var line: Label = player.find_child("Line", true, false) as Label
 		_check(fails, line != null and line.text \
 				== Locale.active.t(str(script.lines[0]["key"])),
