@@ -142,6 +142,16 @@ step "export build $BUILD"
 godot --headless --export-release "iOS" build/ios/glassvow.ipa > "$LOGS/export$BUILD.log" 2>&1
 engine_version "build/ios/glassvow.xcframework/ios-arm64/libgodot.a"
 
+# Size watch: report only, it does not fail the release (yet).
+step "payload report"
+mib() { awk -v b="$1" 'BEGIN { printf "%.1f MiB", b / 1048576 }'; }
+if [[ -f build/ios/glassvow.pck ]]; then
+  echo "pck size:        $(mib "$(stat -f %z build/ios/glassvow.pck)")"
+fi
+if ! python3 tools/payload_report.py 2>&1 | tee "$LOGS/payload$BUILD.log"; then
+  echo "ios_release: WARNING: payload report failed or is over budget (tools/payload_budget.json); the release continues" >&2
+fi
+
 step "archive"
 xcodebuild -project build/ios/glassvow.xcodeproj -scheme glassvow \
   -destination "generic/platform=iOS" archive -archivePath build/ios/glassvow.xcarchive \
@@ -158,6 +168,7 @@ xcodebuild -exportArchive -archivePath build/ios/glassvow.xcarchive \
   > "$LOGS/export-ipa$BUILD.log" 2>&1
 grep -q "EXPORT SUCCEEDED" "$LOGS/export-ipa$BUILD.log" || die "export failed, see $LOGS/export-ipa$BUILD.log"
 IPA_SHA256="$(shasum -a 256 build/ios/export/glassvow.ipa)"
+echo "ipa size:        $(mib "$(stat -f %z build/ios/export/glassvow.ipa)")"
 echo "$IPA_SHA256" | tee "$LOGS/ipa$BUILD.sha256"
 
 # ---- iPad --------------------------------------------------------------------
