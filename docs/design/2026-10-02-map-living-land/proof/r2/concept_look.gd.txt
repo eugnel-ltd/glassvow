@@ -9,6 +9,7 @@ const LookA = preload("res://scratch_lane/look_a.gd")
 const LookB = preload("res://scratch_lane/look_b.gd")
 const LookC = preload("res://scratch_lane/look_c.gd")
 const LookR2 = preload("res://scratch_lane/look_r2.gd")
+const LookCam = preload("res://scratch_lane/look_cam.gd")
 
 func _initialize() -> void:
 	_run.call_deferred()
@@ -26,6 +27,8 @@ func _run() -> void:
 	var burst: int = 0
 	var steps: int = 0
 	var measure: bool = false
+	var cam_spec: String = ""
+	var cam_mask: bool = false
 	for arg: String in OS.get_cmdline_user_args():
 		var value: String = arg.get_slice("=", 1)
 		if arg.begins_with("--act-index="): act = int(value)
@@ -40,6 +43,10 @@ func _run() -> void:
 		elif arg.begins_with("--steps="): steps = int(value)
 		elif arg == "--dump": dump = true
 		elif arg == "--measure": measure = true
+		elif arg.begins_with("--cam="): cam_spec = value
+		elif arg == "--mask": cam_mask = true
+	if OS.get_environment("STILL") == "1":
+		Preferences.active.reduce_motion = true
 	if OS.get_environment("LEAN") == "1":
 		MapScene.lean_override = 1
 	var dimensions: Vector2i = StageShape.REFERENCES[shape]
@@ -103,11 +110,52 @@ func _run() -> void:
 				for t: String in concept.trim_prefix("r2").split("+", false):
 					LookR2.apply(screen, t)
 	var dress_ms: int = Time.get_ticks_msec() - t0
+	if not cam_spec.is_empty():
+		var parts: PackedStringArray = cam_spec.split(",")
+		var wide: float = float(parts[2]) if parts.size() > 2 else 1.0
+		print("CAMPOSE ", JSON.stringify(LookCam.frame(screen, float(parts[0]), float(parts[1]), wide)))
 	if pose == "overview":
 		rig.get_camera().size = 66.0 if shape != &"phone-landscape" else 48.0
 		screen._chip_band.visible = false
 	if dump:
 		_dump(screen)
+	var jl: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	if jl != null:
+		var posts: int = 0
+		for item: Dictionary in jl.kit.placed:
+			if str(item["kind"]) == "lantern-post":
+				posts += 1
+			if str(item["kind"]) == "bridge-banner":
+				print("BANNER ", item["position"])
+		var pins: Array = []
+		for stone: GlassWaystone in screen._waystones:
+			if stone.visible:
+				var centre: Vector2 = stone.get_global_rect().get_center()
+				pins.append([centre.x, centre.y, stone.pane_radius()])
+		print("PINS ", JSON.stringify(pins))
+		for chain: Dictionary in jl.terrain.get_meta("bridge_chains", []):
+			var pts: PackedVector3Array = chain["points"]
+			var w: PackedFloat32Array = chain["weights"]
+			var raised: int = 0
+			var wet: int = 0
+			var facing: int = 0
+			for k: int in range(pts.size() - 1):
+				if minf(w[k], w[k + 1]) >= 0.95:
+					raised += 1
+					if jl.terrain.stream_distance(pts[k].x, pts[k].z) <= 5.0:
+						wet += 1
+						var fwd: Vector3 = (pts[k + 1] - pts[k]).normalized()
+						var acr: Vector3 = fwd.cross(Vector3.UP).normalized()
+						if absf(acr.z) >= 0.5:
+							facing += 1
+							var near_end: float = INF
+							for line: PackedVector3Array in jl.terrain.lines:
+								near_end = minf(near_end, minf(Vector2(pts[k].x - line[0].x, pts[k].z - line[0].z).length(), Vector2(pts[k].x - line[-1].x, pts[k].z - line[-1].z).length()))
+							print("SEG end_dist=", snappedf(near_end, 0.1))
+			if raised > 0:
+				print("CHAIN n=", pts.size(), " raised=", raised, " wet=", wet, " facing=", facing, " from ", pts[0], " to ", pts[-1])
+		print("BAND ", JSON.stringify({"band": [screen._map_scene.focus_band.x, screen._map_scene.focus_band.y], "members": screen._journey.focus_members, "height": screen._map_scene.size.y}))
+		print("LAMPS ", JSON.stringify({"posts": posts, "anchors": jl.lamps.anchors.size(), "lit": Array(jl.lamps.lit()), "lines": jl.terrain.lines.size()}))
 	for stone: GlassWaystone in screen._waystones:
 		stone.set_process(false)
 	scene.set_live(true)
@@ -121,8 +169,29 @@ func _run() -> void:
 		"layout_digest": screen.layout_digest()}))
 	if output.is_empty():
 		return
+	if not cam_spec.is_empty():
+		var seats: PackedVector2Array = LookCam.place_pins(screen)
+		for frame: int in range(4):
+			await process_frame
+		seats = LookCam.place_pins(screen)
+		screen.set_process(false)
+		print("CAM ", JSON.stringify(LookCam.measure(screen, seats)))
+		var flat: Array = []
+		for v: Vector2 in seats:
+			flat.append([v.x, v.y])
+		print("SEATS ", JSON.stringify(flat))
+		if OS.get_environment("NOPINS") == "1":
+			for stone: GlassWaystone in screen._waystones:
+				stone.visible = false
+			screen._map_scene.set_focus_band(Vector2.INF)
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png(output)
+	if cam_mask:
+		LookCam.mask(screen)
+		for frame: int in range(6):
+			await process_frame
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png(output.replace(".png", "-mask.png"))
 	for i: int in range(burst):
 		for frame: int in range(10):
 			await process_frame

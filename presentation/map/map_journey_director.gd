@@ -13,6 +13,9 @@ const PIN_LIFT: Vector3 = Vector3(0.0, 0.48, 0.14)
 var screen: WorldMapScreen
 var view: MapJourneyView = MapJourneyView.new()
 var flame: Color = LanternFlame.COLOUR[Flame.TIER_KINDLING]
+## The waystones the camera frames (the pose's members), which the
+## tilt-shift's sharp band follows; empty in Whole act.
+var focus_members: Array[int] = []
 var _from_pose: Dictionary = {}
 var _to_pose: Dictionary = {}
 
@@ -57,8 +60,10 @@ func pose_for(focus: int) -> Dictionary:
 ## Frames the pilgrim's waystone and seats the pilgrim there.
 func frame(focus: int) -> void:
 	var rig: MapCameraRig = screen._map_scene.get_rig()
-	if not rig.apply_journey_pose(pose_for(focus)):
+	var pose: Dictionary = pose_for(focus)
+	if not rig.apply_journey_pose(pose):
 		push_error("MapJourneyDirector: no journey pose frames node %d" % focus)
+	_follow(pose)
 	park()
 	screen._invalidate_projection()
 	screen._map_scene.set_live(false)
@@ -66,14 +71,19 @@ func frame(focus: int) -> void:
 
 func park() -> void:
 	var at: int = screen.map.at
+	var anchors: PackedVector3Array = screen._ordered_layout_anchors()
 	if at < 0 or at >= screen.map.nodes.size():
 		land().set_traveller(Vector3.INF, Vector3.INF, false)
+		# Before the first step the lamps light the road out of the start.
+		var next: Array[int] = screen.map.reachable()
+		if not next.is_empty() and next[0] < anchors.size():
+			land().focus_lamps(land().seat(screen.map.nodes[next[0]].id, anchors[next[0]]))
 		return
 	var id: String = screen.map.nodes[at].id
-	var anchors: PackedVector3Array = screen._ordered_layout_anchors()
 	var spot: Vector3 = land().parked(id, anchors[at]) if at < anchors.size() else Vector3.INF
 	land().set_traveller(spot, spot, false)
 	land().set_flame(flame)
+	land().focus_lamps(spot)
 
 
 ## Wheel or pinch: one level outward (Close, Journey, Whole act) or inward.
@@ -111,10 +121,34 @@ func begin_walk(to_i: int) -> float:
 	_to_pose = pose_for(to_i)
 	if not _to_pose.get("ok", false):
 		_to_pose = _from_pose
+	_follow(_to_pose)
 	var from_i: int = screen._travel_from_i
 	if from_i < 0:
 		return 0.0
 	return land().travel_duration(screen.map.nodes[from_i].id, screen.map.nodes[to_i].id)
+
+
+## Keeps the tilt-shift's sharp band on the framed group, at the seats the
+## screen has just laid its pins out on (`WorldMapScreen._layout_waystones`).
+func sync_focus_band(seats: PackedVector2Array) -> void:
+	var scene: MapScene = screen._map_scene
+	if view.overview or focus_members.is_empty():
+		scene.set_focus_band(Vector2.INF)
+		return
+	var heights: PackedFloat32Array = PackedFloat32Array()
+	for i: int in focus_members:
+		if i < seats.size():
+			heights.append(seats[i].y)
+	var margin: float = MapJourneyCameraContract.touch_size(screen.size)
+	scene.set_focus_band(MapTiltShift.band(heights, scene.size.y, margin))
+
+
+func _follow(pose: Dictionary) -> void:
+	focus_members.clear()
+	if view.overview or not pose.get("ok", false):
+		return
+	for member: Variant in pose.get("members", []):
+		focus_members.append(int(str(member)))
 
 
 ## One step of the walk at progress `v` (0..1): camera and pilgrim.
@@ -127,6 +161,7 @@ func walk(v: float) -> void:
 		var from_zoom: float = _from_pose["zoom"]
 		var to_zoom: float = _to_pose["zoom"]
 		camera.size = lerpf(from_zoom, to_zoom, v)
+		screen._map_scene.get_rig().fit_journey_depth()
 	var at: Vector3 = position(v)
 	var ahead: Vector3 = position(minf(1.0, v + 0.005))
 	land().set_traveller(at, ahead, true)

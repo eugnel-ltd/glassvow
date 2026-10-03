@@ -27,10 +27,15 @@ static func run(fails: Array[String]) -> void:
 		return
 	_same_layout(fails, content, run, screen)
 	_seats(fails, screen, land)
+	_lamps(fails, screen, land)
 	_framing(fails, screen)
+	_clip_slab(fails, screen, land)
+	_focus_band(fails, screen)
 	_whole_act(fails, screen)
 	_walk(fails, screen, land, content, run)
 	_rest_cadence(fails, scene)
+	_living_motion(fails, scene, land)
+	_shadow_proxies(fails)
 	_act_switch(fails, screen, run)
 	_free(screen)
 
@@ -85,7 +90,52 @@ static func _seats(fails: Array[String], screen: WorldMapScreen,
 			"a tap on reachable waystone %d picks it" % i)
 
 
-## Journey frames the pilgrim's stone and its next stones on the 55° camera,
+## R2 light: lanterns along the roads, each off the walking lane and clear of
+## every waystone; one flame per lamp; at most four real lamp lights, without
+## shadows, given to the lamps nearest the pilgrim.
+static func _lamps(fails: Array[String], screen: WorldMapScreen,
+		land: MapJourneyLandscape) -> void:
+	var posts: Array[Vector3] = []
+	for item: Dictionary in land.kit.placed:
+		if str(item["kind"]) == "lantern-post":
+			posts.append(item["position"])
+	_check(fails, posts.size() >= 10, "lanterns stand along the roads (%d)" % posts.size())
+	var anchors: PackedVector3Array = screen._ordered_layout_anchors()
+	var clear: bool = true
+	for p: Vector3 in posts:
+		clear = clear and land.terrain.distance_to_roads(p) >= 1.2
+		for i: int in range(anchors.size()):
+			var seat: Vector3 = land.seat(screen.map.nodes[i].id, anchors[i])
+			clear = clear and Vector2(p.x - seat.x, p.z - seat.z).length() >= 1.5
+	_check(fails, clear, "every lantern stands off the walking lane and clear of every waystone")
+	var lamps: MapJourneyLandscape.Lamps = land.lamps
+	_check(fails, lamps.anchors.size() == posts.size() + 2
+			and lamps.flames.multimesh.instance_count == lamps.anchors.size(),
+		"one flame for each lantern and each of the gateway's two lamps")
+	land.focus_lamps(lamps.anchors[0])
+	var lit: PackedVector3Array = lamps.lit()
+	var real: int = 0 if MapScene.lean_profile() else MapJourneyLandscape.Lamps.REAL_LIGHTS
+	var nearest: bool = lit.size() == mini(real, lamps.anchors.size())
+	for p: Vector3 in lamps.anchors:
+		if not lit.has(p) and not lit.is_empty():
+			nearest = nearest and p.distance_to(lamps.anchors[0]) >= lit[-1].distance_to(lamps.anchors[0]) - 0.001
+	var shadowless: bool = true
+	for light: OmniLight3D in lamps.lights:
+		shadowless = shadowless and not light.shadow_enabled
+	_check(fails, nearest and shadowless,
+		"the four shadowless lamp lights go to the lamps nearest the focus")
+	var lean_was: int = MapScene.lean_override
+	MapScene.lean_override = 1
+	var lean_lamps: MapJourneyLandscape.Lamps = MapJourneyLandscape.Lamps.new()
+	lean_lamps.build(lamps.anchors)
+	_check(fails, lean_lamps.lights.is_empty()
+			and lean_lamps.flames.multimesh.instance_count == lamps.anchors.size(),
+		"phones and tablets keep every flame and give no lamp a real light")
+	lean_lamps.free()
+	MapScene.lean_override = lean_was
+
+
+## Journey frames the pilgrim's stone and its next stones on the journey camera,
 ## every one inside the stage and on its own touch square.
 static func _framing(fails: Array[String], screen: WorldMapScreen) -> void:
 	var rig: MapCameraRig = screen._map_scene.get_rig()
@@ -93,6 +143,8 @@ static func _framing(fails: Array[String], screen: WorldMapScreen) -> void:
 			and is_equal_approx(rig.get_camera().rotation_degrees.x, -MapJourneyCameraContract.PITCH)
 			and rig.zoom_stop == MapCameraRig.DEFAULT_STOP,
 		"Act I opens on the journey camera's Journey framing")
+	_check(fails, rig.get_camera().size >= MapJourneyCameraContract.PREFERRED_ZOOM - 0.01,
+		"the Journey view holds the road round the framed stones (%.1f m)" % rig.get_camera().size)
 	var stage: Vector2 = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
 	var touch: float = MapJourneyCameraContract.touch_size(stage)
 	var seats: PackedVector2Array = screen.projected_seats()
@@ -106,6 +158,39 @@ static func _framing(fails: Array[String], screen: WorldMapScreen) -> void:
 			var delta: Vector2 = (a - seats[int(str(members[m]))]).abs()
 			inside = inside and maxf(delta.x, delta.y) >= touch - 0.5
 	_check(fails, inside, "the framed waystones are on screen and on their own touch squares")
+
+
+## The tilt-shift's sharp band covers every waystone the camera frames, at every
+## landscape reference shape, and Whole act has none.
+static func _focus_band(fails: Array[String], screen: WorldMapScreen) -> void:
+	var scene: MapScene = screen._map_scene
+	for shape: StringName in [&"phone-landscape", &"pad-landscape", &"desktop-landscape"]:
+		_mount(screen, shape)
+		screen._journey.frame(screen.map.at)
+		screen._layout_waystones()
+		var band: Vector2 = scene.focus_band
+		var seats: PackedVector2Array = screen.projected_seats()
+		var covered: bool = band.is_finite() and not screen._journey.focus_members.is_empty()
+		for i: int in screen._journey.focus_members:
+			covered = covered and seats[i].y >= band.x and seats[i].y <= band.y
+		_check(fails, covered, "the sharp band covers every framed waystone at %s" % shape)
+	# Panned away: the band covers what is left on screen near the middle, and
+	# with nothing on screen it is the narrowest band about the middle.
+	var panned: Vector2 = MapTiltShift.band(PackedFloat32Array([-300.0, 40.0]), 820.0, 30.0)
+	var away: Vector2 = MapTiltShift.band(PackedFloat32Array([-300.0, 1200.0]), 820.0, 30.0)
+	_check(fails, (panned.x + panned.y) * 0.5 >= MapTiltShift.MIDDLE.x * 820.0 - 0.01
+			and panned.y - panned.x <= MapTiltShift.MAX_BAND * 820.0 + 0.01
+			and is_equal_approx(away.x + away.y, 820.0)
+			and is_equal_approx(away.y - away.x, MapTiltShift.MIN_BAND * 820.0),
+		"a group panned off screen leaves the sharp band where the player looks")
+	_mount(screen, StageShape.IDENTITY)
+	screen._journey.zoom(true)
+	screen._layout_waystones()
+	_check(fails, not scene.focus_band.is_finite() and scene._display.material == null,
+		"Whole act has no tilt-shift")
+	screen._journey.zoom(false)
+	screen._layout_waystones()
+	_check(fails, scene.focus_band.is_finite(), "looking closer brings the band back")
 
 
 ## Whole act is for looking: it frames the act, and a tap looks closer without
@@ -189,10 +274,117 @@ static func _rest_cadence(fails: Array[String], scene: MapScene) -> void:
 	Preferences.active.reduce_motion = reduced
 
 
-## Leaving Act I gives the painted acts back their governed camera.
+## R2 step 3: banners hang on the bridges, facing the camera and off the walking
+## lane; the kit's foliage and the banners' cloth move under `LandMotion`; and
+## Reduce Motion stills them and takes the embers and ash away (lantern flicker
+## and the water keep their own cadence).
+static func _living_motion(fails: Array[String], scene: MapScene,
+		land: MapJourneyLandscape) -> void:
+	var banners: Array[Dictionary] = []
+	for item: Dictionary in land.kit.placed:
+		if str(item["kind"]) == "bridge-banner":
+			banners.append(item)
+	var hung: bool = banners.size() >= 4
+	for item: Dictionary in banners:
+		var yaw: float = float(str(item["yaw"]))
+		var at: Vector3 = item["position"]
+		hung = hung and cos(yaw) >= 0.5 and land.terrain.distance_to_roads(at) >= 0.9
+	_check(fails, hung, "banners hang outside the bridges, facing the camera (%d)" % banners.size())
+	var swaying: int = 0
+	var rippling: int = 0
+	for node: Node in land.kit.find_children("*", "MultiMeshInstance3D", true, false):
+		var mesh: Mesh = (node as MultiMeshInstance3D).multimesh.mesh
+		for i: int in range(mesh.get_surface_count()):
+			var material: ShaderMaterial = mesh.surface_get_material(i) as ShaderMaterial
+			if material == null:
+				continue
+			if material.shader == preload("res://presentation/map/landscape/foliage.gdshader"):
+				swaying += 1
+			elif material.shader == preload("res://presentation/map/landscape/banner.gdshader"):
+				rippling += 1
+	_check(fails, swaying > 0 and rippling > 0, "the foliage sways and the banners ripple")
+	_check(fails, land.air.embers.preprocess == 0.0 and land.air.ash.preprocess == 0.0,
+		"the air fills in rather than pre-simulating in the land's first frame")
+	var reduced: bool = Preferences.active.reduce_motion
+	Preferences.active.reduce_motion = false
+	scene.set_live(false)
+	_tick(scene, land)
+	var moving: bool = MapJourneyLandscape.LandMotion.enabled and land.air.visible
+	Preferences.active.reduce_motion = true
+	_tick(scene, land)
+	var still: bool = not MapJourneyLandscape.LandMotion.enabled and not land.air.visible \
+		and not land.air.embers.emitting and not land.air.ash.emitting
+	_check(fails, still, "Reduce Motion stills the foliage and banners and clears the air")
+	Preferences.active.reduce_motion = false
+	_tick(scene, land)
+	_check(fails, moving and MapJourneyLandscape.LandMotion.enabled and land.air.visible,
+		"the land moves without Reduce Motion, and again once it is off")
+	Preferences.active.reduce_motion = reduced
+	_tick(scene, land)
+
+
+## Runs the scene past its settle frames into the rest cadence.
+static func _tick(scene: MapScene, land: MapJourneyLandscape) -> void:
+	for frame: int in range(10):
+		scene._process(0.0)
+	land.air._process(0.0)
+
+
+## Phones and tablets: a conifer's leafy mesh casts no shadow and one opaque
+## shadow-only cone casts for it.
+static func _shadow_proxies(fails: Array[String]) -> void:
+	const Scenery = preload("res://presentation/map/landscape/static_scenery.gd")
+	var scene: PackedScene = load("res://assets/art/map-journey/conifer.glb") as PackedScene
+	var tree: Node3D = scene.instantiate() as Node3D
+	preload("res://presentation/map/landscape/asset_surfaces.gd").prepare(tree, {})
+	var parts: Array[Dictionary] = []
+	Scenery._collect(tree, tree.transform.affine_inverse(), parts)
+	tree.free()
+	var leafy: int = parts.size()
+	Scenery._proxy_shadows(parts)
+	var proxies: int = 0
+	var silent: bool = true
+	for part: Dictionary in parts:
+		if part["shadow"] == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY:
+			proxies += 1
+		else:
+			silent = silent and part["shadow"] == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_check(fails, leafy == 1 and parts.size() == 2 and proxies == 1 and silent,
+		"a conifer casts through one shadow-only cone, not its cut-out foliage")
+
+
+## The journey camera clips to the land's slab, which is also the reach of its
+## directional shadow (an orthographic camera's shadow covers near to far), and
+## the whole built land lies inside the heights that slab is cut for.
+static func _clip_slab(fails: Array[String], screen: WorldMapScreen, land: MapJourneyLandscape) -> void:
+	var camera: Camera3D = screen._map_scene.get_rig().get_camera()
+	var depth: Vector2 = MapJourneyCameraContract.depth_range(camera.size)
+	_check(fails, is_equal_approx(camera.near, depth.x) and is_equal_approx(camera.far, depth.y)
+			and depth.x > 10.0 and depth.y < 100.0,
+		"the Journey camera clips to the land's slab (%.1f to %.1f m)" % [camera.near, camera.far])
+	var low: float = INF
+	var high: float = -INF
+	for node: Node in land.find_children("*", "GeometryInstance3D", true, false):
+		var item: GeometryInstance3D = node as GeometryInstance3D
+		var box: AABB = item.global_transform * item.get_aabb()
+		low = minf(low, box.position.y)
+		high = maxf(high, box.end.y)
+	_check(fails, low >= MapJourneyCameraContract.LAND_LOW and high <= MapJourneyCameraContract.LAND_HIGH,
+		"the built land lies within the clip slab's heights (%.2f to %.2f m)" % [low, high])
+
+
+## Leaving Act I gives the painted acts back their governed camera, and their
+## own light: Act I's grade and bloom stay in Act I.
 static func _act_switch(fails: Array[String], screen: WorldMapScreen, run: RunState) -> void:
+	var environment: Environment = (screen._map_scene._world.get_node("MapEnvironment") as WorldEnvironment).environment
+	_check(fails, environment.glow_enabled and environment.adjustment_enabled,
+		"Act I's journey light grades and blooms")
 	run.act = 1
 	screen.refresh(run)
+	_check(fails, not environment.glow_enabled and not environment.adjustment_enabled,
+		"Act II's painted light neither grades nor blooms")
+	_check(fails, screen._map_scene._display.material == null,
+		"Act II has no tilt-shift")
 	var rig: MapCameraRig = screen._map_scene.get_rig()
 	_check(fails, not rig.journey_mode and screen._map_scene.journey_landscape() == null
 			and is_equal_approx(rig.get_camera().rotation_degrees.x, MapCameraRig.TILT_DEGREES),

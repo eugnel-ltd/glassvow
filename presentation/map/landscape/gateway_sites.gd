@@ -25,7 +25,7 @@ static func choose(terrain: Node3D, anchors: PackedVector3Array, resolve_height:
 				var available: bool = true
 				for anchor: Vector3 in anchors:
 					var delta: Vector3 = p - anchor
-					if absf(delta.x) < half_x + 1.2 and delta.z > -half_z - 1.3 and delta.z < half_z + 5.5 / tan(deg_to_rad(55)) + 1.3:
+					if absf(delta.x) < half_x + 1.2 and delta.z > -half_z - 1.3 and delta.z < half_z + 5.5 / tan(deg_to_rad(MapJourneyCameraContract.PITCH)) + 1.3:
 						available = false
 				for sign_value: float in [-1, 1]:
 					var pier: Vector3 = p + side * sign_value * 1.70

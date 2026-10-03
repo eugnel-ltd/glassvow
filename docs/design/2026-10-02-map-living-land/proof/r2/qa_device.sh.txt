@@ -1,0 +1,7 @@
+# Sourced helpers for the QA app on the shared iPad (Glassvow QA only).
+QA_BUNDLE=io.fol2.glassvow.qa
+qa_udid() { xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c 'import json,sys; print(next(d["hardwareProperties"]["udid"] for d in json.load(sys.stdin)["result"]["devices"] if d["hardwareProperties"].get("productType")=="iPad11,6"))'; }
+qa_busy() { ps -axo pid,command | grep -v grep | grep -v "^ *$$ " | grep -qE "devicectl|ios_release|qa_flow|batch\.sh|qa_export\.sh"; }
+qa_waitfree() { while true; do while qa_busy; do sleep 60; done; sleep 30; qa_busy || break; done; }
+qa_launch() { xcrun devicectl device process launch --terminate-existing --device "$(qa_udid)" $QA_BUNDLE -- "$@"; }
+qa_pull() { xcrun devicectl device copy from --device "$(qa_udid)" --domain-type appDataContainer --domain-identifier $QA_BUNDLE --source Documents/$1 --destination $2 >/dev/null 2>&1; }

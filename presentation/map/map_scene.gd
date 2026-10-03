@@ -8,6 +8,9 @@ const OVERSAMPLE: float = 1.0
 ## The stage's scale on a phone or tablet (`lean_profile`), where the journey
 ## land is fill-rate bound on the A12.
 const LEAN_OVERSAMPLE: float = 0.75
+const LEAN_LOD_THRESHOLD: float = 6.0
+## The scale the lean stage draws at: `LEAN_OVERSAMPLE`, or a device probe's.
+static var lean_oversample: float = LEAN_OVERSAMPLE
 const VP_MAX: int = 2048
 ## The stage's size while the scene is off the tree.
 const PARKED_STAGE: Vector2i = Vector2i(2, 2)
@@ -32,6 +35,9 @@ signal landscape_ready
 
 var _stage: SubViewport
 var _display: TextureRect
+## The journey land's tilt-shift band (`MapTiltShift`) in this Control's px,
+## (top, bottom); `Vector2.INF` while there is none.
+var focus_band: Vector2 = Vector2.INF
 var _rig: MapCameraRig
 var _key: DirectionalLight3D
 var _world: Node3D
@@ -98,6 +104,10 @@ func _init(act_index: int = 0) -> void:
 	_stage.transparent_bg = false
 	_stage.size = Vector2i(64, 64)
 	_stage.msaa_3d = Viewport.MSAA_DISABLED if lean_profile() else Viewport.MSAA_4X
+	# The lean stage takes the imported meshes' coarser LODs a little sooner
+	# (6 px of error against the default 1): at the 40° camera the trees were
+	# half the triangles in view, and the A12's stage is bound by them.
+	_stage.mesh_lod_threshold = LEAN_LOD_THRESHOLD if lean_profile() else 1.0
 	_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
 	add_child(_stage)
 	_world = Node3D.new()
@@ -302,11 +312,28 @@ func _deal_act(_region: MapRegions) -> void:
 		MapJourneyLandscape.light(_key, setting.environment)
 	else:
 		_rig.leave_journey()
+		set_focus_band(Vector2.INF)
 	if is_node_ready():
 		_fit()
 	_salt_dirty = false
 	_bind_asset_geometry()
 	_repaint()
+
+
+## Sharpens the band `band` (top, bottom in this Control's px) of the journey
+## land and softens the rest; `Vector2.INF`, or any painted act, takes it off.
+func set_focus_band(band: Vector2) -> void:
+	if not is_journey_act() or not band.is_finite() or size.y <= 1.0:
+		focus_band = Vector2.INF
+		_display.material = null
+		return
+	if _display.material == null:
+		_display.material = MapTiltShift.material()
+	var shift: ShaderMaterial = _display.material as ShaderMaterial
+	focus_band = band
+	shift.set_shader_parameter("band", band / size.y)
+	shift.set_shader_parameter("radius_texels", MapTiltShift.STRENGTH_PX
+		* size.y / MapTiltShift.IDENTITY_HEIGHT * float(_stage.size.y) / size.y)
 
 
 func project_pins(nodes: Array[MapNode]) -> PackedVector2Array:
@@ -491,7 +518,7 @@ func _fit() -> void:
 		return
 	_display.position = Vector2.ZERO
 	_display.size = size
-	var scale: float = LEAN_OVERSAMPLE if lean_profile() and is_journey_act() else OVERSAMPLE
+	var scale: float = lean_oversample if lean_profile() and is_journey_act() else OVERSAMPLE
 	var next: Vector2i = Vector2i(
 			mini(maxi(int(size.x * scale), 1), VP_MAX),
 			mini(maxi(int(size.y * scale), 1), VP_MAX))
@@ -543,6 +570,10 @@ static func _painted_light(key: DirectionalLight3D, environment: Environment) ->
 	environment.fog_light_color = Color("304852")
 	environment.fog_light_energy = 0.45
 	environment.fog_density = 0.0015
+	# Act I's journey light grades and blooms (`MapJourneyLandscape.light`); the
+	# painted acts do neither.
+	environment.adjustment_enabled = false
+	environment.glow_enabled = false
 
 
 func _placement_footprint(candidate: Dictionary) -> PackedVector2Array:
@@ -950,6 +981,7 @@ func _rest_cadence() -> void:
 		return
 	_rest_tick += 1
 	var every: int = REST_EVERY_REDUCED if Preferences.active.reduce_motion else REST_EVERY
+	MapJourneyLandscape.LandMotion.apply(not Preferences.active.reduce_motion)
 	if _rest_tick % every == 0:
 		_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
 

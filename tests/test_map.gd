@@ -444,11 +444,13 @@ static func run(fails: Array[String]) -> void:
 	glider.map.clear_current()
 	glider.map.enter(2)
 	glider.size = Vector2(StageShape.REFERENCES[&"phone-landscape"])
-	# Anchored to look_dz() rather than written flat: the legal pan window is
-	# the lattice offset by it, so a literal z here silently falls outside the
-	# bounds the moment the camera tilt changes, and the clamp — not the
+	# Anchored inside the rig's live pan window rather than written flat: a
+	# literal z (or one from the painted rig's look_dz()) silently falls outside
+	# the bounds the moment the camera tilt changes (Act I's journey camera is
+	# 40°, the painted acts' rig its own), and then the clamp — not the
 	# mid-glide gate this test is about — is what moves the camera.
-	var held: Vector2 = Vector2(10.0, MapCameraRig.look_dz() - 4.0)
+	var window: Rect2 = glider._map_scene.get_rig().pan_bounds
+	var held: Vector2 = Vector2(10.0, window.position.y + 4.0)
 	glider._map_scene.get_rig().set_camera_xz(held)
 	glider._travelling = true
 	glider._travel_from_xz = held

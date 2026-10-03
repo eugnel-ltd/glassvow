@@ -281,7 +281,13 @@ func _land() -> void:
 		ground_mat.set_shader_parameter("channel",River.CHANNEL)
 		ground_mat.set_shader_parameter("lite", lite_surfaces)
 	for i: int in range(meshes.size()):
-		Meshes.node(self, meshes[i], ground_mat, "Quiet sculpted ground" if i == 0 else "Ground chunk %d" % i)
+		var chunk: MeshInstance3D = Meshes.node(self, meshes[i], ground_mat,
+			"Quiet sculpted ground" if i == 0 else "Ground chunk %d" % i)
+		# The lean profile's ground casts no shadow onto itself: on the A12 it
+		# was 40% of the shadow pass at the 40° camera, for a mostly flat
+		# ground whose slopes the key light still shades.
+		if lite_surfaces:
+			chunk.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 func _land_chunk(x0: int, z0: int, x1: int, z1: int, rows: int) -> ArrayMesh:

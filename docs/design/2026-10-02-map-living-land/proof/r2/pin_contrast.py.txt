@@ -1,0 +1,33 @@
+"""Pin legibility on the land: WCAG contrast of each visible pin's rim band
+against the land just outside it (beyond any halo). Scratch measurement."""
+import json, sys
+import numpy as np
+from PIL import Image
+
+def lum(rgb):
+    c = rgb / 255.0
+    c = np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+    return 0.2126 * c[..., 0] + 0.7152 * c[..., 1] + 0.0722 * c[..., 2]
+
+def measure(png, pins):
+    img = np.asarray(Image.open(png).convert('RGB')).astype(float)
+    L = lum(img)
+    h, w = L.shape
+    yy, xx = np.mgrid[0:h, 0:w]
+    out = []
+    for cx, cy, radius in pins:
+        if cx < 40 or cy < 70 or cx > w - 40 or cy > h - 40:
+            continue
+        d = np.hypot(xx - cx, yy - cy)
+        rim = L[(d >= radius - 5) & (d <= radius - 1)].mean()
+        disc = np.median(L[(d >= radius * 0.55) & (d <= radius - 6)])
+        land = np.median(L[(d >= radius + 16) & (d <= radius + 28)])
+        ratio = lambda a, b: (max(a, b) + 0.05) / (min(a, b) + 0.05)
+        out.append({'at': [round(cx), round(cy)], 'disc_vs_land': round(ratio(disc, land), 2), 'rim_vs_land': round(ratio(rim, land), 2)})
+    return out
+
+if __name__ == '__main__':
+    png, log = sys.argv[1], sys.argv[2]
+    pins = json.loads([l for l in open(log) if l.startswith('PINS ')][-1][5:])
+    rows = measure(png, pins)
+    print(json.dumps({'min_disc_vs_land': min(r['disc_vs_land'] for r in rows), 'min_rim_vs_land': min(r['rim_vs_land'] for r in rows), 'pins': rows}))

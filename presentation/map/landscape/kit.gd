@@ -42,7 +42,32 @@ const PROFILES: Dictionary = {
 	"slate-bank": Vector2(1.90, 1.70),
 	"memorial": Vector2(0.55, 1.95),
 	"amber-arch": Vector2(2.65, 5.50),
+	"lantern-post": Vector2(0.35, 1.70),
+	"bridge-banner": Vector2(0.40, 1.60),
 }
+
+## Where each lamp-carrying kind holds its flame (the lantern glass's centre),
+## in the model's space; `lantern-post` follows `living_kit.py`'s
+## `LANTERN_GLASS_Z`, the gateway its two hanging lamps.
+const LAMP_ANCHORS: Dictionary = {
+	"amber-arch": [Vector3(-2.30, 2.21, 0.46), Vector3(2.30, 2.21, 0.46)],
+	"lantern-post": [Vector3(0.0, 1.38, 0.0)],
+}
+## Lanterns along the roads: about one stone post per `LANTERN_SPACING` metres
+## of road (one on any road of `LANTERN_SHORTEST` or more), spread evenly along
+## it, `LANTERN_OFFSET` off the centreline on alternating sides, and never two
+## within `LANTERN_GAP` (junctions and parallel roads share).
+const LANTERN_SPACING: float = 9.0
+const LANTERN_SHORTEST: float = 4.0
+const LANTERN_OFFSET: float = 1.3
+const LANTERN_GAP: float = 6.0
+## Banners on the bridges: one every `BANNER_SPACING` metres of deck raised
+## over the river, hung clear of the parapet stones and the masonry below them
+## (`BANNER_OFFSET` off the deck's centreline), on the side facing the journey
+## camera (whose yaw never turns): the far side's would hang behind the deck.
+const BANNER_SPACING: float = 3.5
+const BANNER_OFFSET: float = 1.0
+const BANNER_HEIGHT: float = 0.30
 
 ## The kit scene the worker places as a scene (the arch), held for the process
 ## so a build on a worker only ever reads the resource cache (an uncached
@@ -182,6 +207,7 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 		_place(kind,at,float(str(transform_data["scale"][0])),float(str(transform_data["yaw_radians"])),grey)
 		if not failure.is_empty(): return
 		placed_nodes[-1].set_meta("hero_role",role)
+	_lanterns(grey)
 	planting_bounds = Rect2(terrain.bounds.position+Vector2(5,7),terrain.bounds.size-Vector2(10,14))
 	var planting: Rect2 = planting_bounds
 	var area_ratio: float = planting.get_area()/(86.0*46.0)
@@ -221,14 +247,113 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 	_undergrowth(grey)
 	_verges(grey)
 	_accents(grey)
+	_banners(grey)
 	contacts.finish()
 	if static_scenery!=null: static_scenery.call("finish")
 	if not grey:
-		preload("res://presentation/map/landscape/terrain_paint.gd").bind_habitat(terrain,placed,terrain.lines,terrain.is_elevated)
+		preload("res://presentation/map/landscape/terrain_paint.gd").bind_habitat(terrain,placed,terrain.lines,terrain.is_elevated,lamp_anchors())
 	var counts: Dictionary = {}
 	for item: Dictionary in placed:
 		counts[item["kind"]] = int(str(counts.get(item["kind"],0))) + 1
 	build_complete = true
+
+## Stone lantern posts along the roads (R2 light). They go in right after the
+## gateway and the heroes, before the woodland, so the groves leave them room
+## (the woodland's placements move where a lantern now stands), and through the
+## kit's own clearance, which keeps any non-conifer off the walking lane and out
+## of every waystone's reserve.
+func _lanterns(grey: bool) -> void:
+	var profile: Vector2 = PROFILES["lantern-post"]
+	var posts: Array[Vector2] = []
+	var side: float = 1.0
+	for line: PackedVector3Array in terrain.lines:
+		var total: float = 0.0
+		for i: int in range(line.size() - 1):
+			total += Vector2(line[i + 1].x - line[i].x, line[i + 1].z - line[i].z).length()
+		if total < LANTERN_SHORTEST:
+			continue
+		var count: int = maxi(1, roundi(total / LANTERN_SPACING))
+		var travelled: float = 0.0
+		var next: float = total / count * 0.5
+		for i: int in range(line.size() - 1):
+			var a: Vector3 = line[i]
+			var b: Vector3 = line[i + 1]
+			var run: Vector2 = Vector2(b.x - a.x, b.z - a.z)
+			var length: float = run.length()
+			while length > 0.0 and next <= travelled + length:
+				var at: Vector3 = a.lerp(b, (next - travelled) / length)
+				next += total / count
+				side = -side
+				var across: Vector2 = Vector2(-run.y, run.x) / length * side * LANTERN_OFFSET
+				var p: Vector3 = Vector3(at.x + across.x, 0.0, at.z + across.y)
+				p.y = terrain.surface_height(p.x, p.z)
+				if terrain.is_elevated(at) or not terrain.is_dry(p) \
+						or absf(p.y - terrain.route_height(at)) > 0.45:
+					continue
+				if posts.any(func(other: Vector2) -> bool:
+						return other.distance_to(Vector2(p.x, p.z)) < LANTERN_GAP):
+					continue
+				if not clear(p, profile.x, profile.y, "lantern-post"):
+					continue
+				_place("lantern-post", p, 1.0, atan2(run.x, run.y), grey)
+				posts.append(Vector2(p.x, p.z))
+			travelled += length
+
+
+## Banners hung from the bridge parapets over the river (R2 motion). They are
+## part of the bridge, not the ground, so they skip the ground clearance, and
+## go in last: the undergrowth and verges draw from every placement before
+## them, so placing banners earlier would move the woodland. They keep clear of
+## the roads' ends, where waystones and junctions stand.
+func _banners(grey: bool) -> void:
+	var chains: Array = terrain.get_meta("bridge_chains", [])
+	for chain: Dictionary in chains:
+		var points: PackedVector3Array = chain["points"]
+		var lengths: PackedFloat32Array = chain["lengths"]
+		var weights: PackedFloat32Array = chain["weights"]
+		var next: float = 0.0
+		for i: int in range(points.size() - 1):
+			if lengths[i + 1] < next:
+				continue
+			var p: Vector3 = points[i]
+			var q: Vector3 = points[i + 1]
+			var middle: Vector3 = (p + q) * 0.5
+			if minf(weights[i], weights[i + 1]) < 0.95 \
+					or terrain.stream_distance(middle.x, middle.z) > 5.0 \
+					or terrain.lines.any(func(line: PackedVector3Array) -> bool:
+						return _flat(middle).distance_to(_flat(line[0])) < 2.0 \
+							or _flat(middle).distance_to(_flat(line[-1])) < 2.0):
+				continue
+			var forward: Vector3 = (q - p).normalized()
+			var across: Vector3 = forward.cross(Vector3.UP).normalized()
+			if across.z < 0.0:
+				across = -across
+			if across.z < 0.5:
+				continue
+			var at: Vector3 = middle + across * BANNER_OFFSET + Vector3.UP * BANNER_HEIGHT
+			_place("bridge-banner", at, 1.0, atan2(across.x, across.z), grey)
+			next = lengths[i + 1] + BANNER_SPACING
+
+
+static func _flat(p: Vector3) -> Vector2:
+	return Vector2(p.x, p.z)
+
+
+## Every lamp's flame centre on the land: the gateway's two and each post's.
+func lamp_anchors() -> PackedVector3Array:
+	var out: PackedVector3Array = PackedVector3Array()
+	for item: Dictionary in placed:
+		var kind: String = item["kind"]
+		if not LAMP_ANCHORS.has(kind):
+			continue
+		var scale_value: float = float(str(item["scale"]))
+		var at: Vector3 = item["position"]
+		var pose: Transform3D = Transform3D(
+			Basis(Vector3.UP, float(str(item["yaw"]))).scaled(Vector3.ONE * scale_value), at)
+		for local: Vector3 in LAMP_ANCHORS[kind]:
+			out.append(pose * local)
+	return out
+
 
 func _landmark(grey: bool) -> void:
 	var site: Dictionary = GatewaySites.choose(terrain, anchors)
@@ -377,13 +502,15 @@ func _clear(p: Vector3, radius: float, height: float, kind: String) -> bool:
 		var profile: Vector2 = PROFILES[kind]
 		for point: Vector2 in tree_envelopes[kind]:
 			silhouette.append(point * (height / profile.y))
+	# Out of every waystone's line of sight from the journey camera.
+	var pitch: float = deg_to_rad(MapJourneyCameraContract.PITCH)
 	for point: Vector3 in anchors:
 		var delta: Vector3 = p - point
-		var projected_z: float = delta.z - (p.y - point.y) / tan(deg_to_rad(55))
-		if absf(delta.x) < radius + 1.2 and projected_z > -radius - 1.3 and projected_z < radius + height / tan(deg_to_rad(55)) + 1.3:
+		var projected_z: float = delta.z - (p.y - point.y) / tan(pitch)
+		if absf(delta.x) < radius + 1.2 and projected_z > -radius - 1.3 and projected_z < radius + height / tan(pitch) + 1.3:
 			if not kind.begins_with("conifer"):
 				return false
-			var projected: Vector2 = Vector2(-delta.x, -delta.z + (p.y - point.y) / tan(deg_to_rad(55)))
+			var projected: Vector2 = Vector2(-delta.x, -delta.z + (p.y - point.y) / tan(pitch))
 			var reserve: PackedVector2Array = [projected + Vector2(-1.2,-1.3), projected + Vector2(1.2,-1.3), projected + Vector2(1.2,1.3), projected + Vector2(-1.2,1.3)]
 			if not Geometry2D.intersect_polygons(silhouette, reserve).is_empty():
 				return false
@@ -437,8 +564,6 @@ func _place(kind: String, p: Vector3, scale_value: float, yaw: float, grey: bool
 		if kind == "amber-arch" and not hero_override.is_empty():
 			if not AssetLights.attach_trial(item):
 				failure = "Missing trial lamp attachment"
-		else:
-			AssetLights.attach(item, kind)
 	else:
 		var profile: Vector2 = PROFILES[kind]
 		var height: float = profile.y

@@ -16,13 +16,77 @@ static func frame_gateway(screen: WorldMapScreen, zoom: float = 13.0) -> void:
 	screen._invalidate_projection()
 
 
+const LookCam = preload("look_cam.gd")
+
+
 static func apply(screen: WorldMapScreen, technique: String) -> void:
+	if technique.begins_with("cam"):
+		# "cam38f45w1.6": the Journey framing at 38 degrees, perspective 45 (f0 =
+		# ortho), the view at least 1.6 times the 12 m floor (w omitted = 1).
+		var spec: PackedStringArray = technique.trim_prefix("cam").split("f")
+		var rest: PackedStringArray = spec[1].split("w")
+		var wide: float = float(rest[1]) if rest.size() > 1 else 1.0
+		LookCam.frame(screen, float(spec[0]), float(rest[0]), wide)
+		LookCam.place_pins(screen)
+		return
 	var scene: MapScene = screen._map_scene
 	var land: MapJourneyLandscape = scene.journey_landscape()
 	var world: Node3D = scene._world
 	var env: Environment = (world.get_node("MapEnvironment") as WorldEnvironment).environment
 	var cam: Camera3D = scene.get_rig().get_camera()
 	match technique:
+		"notilt":
+			scene.set_focus_band(Vector2.INF)
+		"nolights":
+			if land.lamps != null:
+				for light: OmniLight3D in land.lamps.lights:
+					light.visible = false
+			for light: Node in land.journey.walker.find_children("*", "OmniLight3D", true, false):
+				(light as OmniLight3D).visible = false
+		"twolights":
+			if land.lamps != null:
+				for k: int in range(2, land.lamps.lights.size()):
+					land.lamps.lights[k].visible = false
+		"noglow":
+			env.glow_enabled = false
+		"nograde":
+			env.adjustment_enabled = false
+		"noflames":
+			if land.lamps != null:
+				land.lamps.flames.visible = false
+		"nopools":
+			for node: Node in land.terrain.find_children("*", "MeshInstance3D", true, false):
+				var pm: ShaderMaterial = (node as MeshInstance3D).material_override as ShaderMaterial
+				if pm != null and pm.shader != null and pm.shader.resource_path.ends_with("terrain_paint.gdshader"):
+					pm.set_shader_parameter("pool_strength", 0.0)
+		"r1look":
+			# R1 (Review 10) as it was before R2: the workshop light, no grade,
+			# no bloom, no lamps, no pools. Probe and capture baseline only.
+			var key: DirectionalLight3D = scene.get_key()
+			key.light_color = Color("ddd7d2")
+			key.light_energy = 0.95
+			key.shadow_opacity = 0.68
+			env.background_color = Color("252530")
+			env.ambient_light_color = Color("a19caa")
+			env.ambient_light_energy = 0.50
+			env.tonemap_exposure = 1.0
+			env.adjustment_enabled = false
+			env.glow_enabled = false
+			if land.lamps != null:
+				land.lamps.visible = false
+			var air_node: Variant = land.get("air")
+			if air_node is Node3D:
+				var air: Node3D = air_node
+				air.visible = false
+				air.set_process(false)
+			scene.set_focus_band(Vector2.INF)
+			var motion: Script = load("res://presentation/map/landscape/land_motion.gd") as Script
+			if motion != null:
+				motion.call("apply", false)
+			for node: Node in land.terrain.find_children("*", "MeshInstance3D", true, false):
+				var m: ShaderMaterial = (node as MeshInstance3D).material_override as ShaderMaterial
+				if m != null and m.shader != null and m.shader.resource_path.ends_with("terrain_paint.gdshader"):
+					m.set_shader_parameter("pool_strength", 0.0)
 		"dof":
 			var attrs: CameraAttributesPractical = CameraAttributesPractical.new()
 			attrs.dof_blur_far_enabled = true
