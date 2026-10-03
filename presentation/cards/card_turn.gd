@@ -27,11 +27,25 @@ extends RefCounted
 ## THE TABLE'S BACK is the player's chosen back (CardBacks.chosen), baked.
 ## `prewarm` records it; `back()` hands its bake to whoever turns a card.
 ##
-## PRE-WARMING. A turn's first use would otherwise compile shaders and bake a
-## back mid-fight: on the iPad 8 the first bake after an install held one
-## frame for 3.7 s, a procedural back's shader 0.5 s, and the picture turn's
-## shader is new to the session too. `prewarm` pays all of it in the frame
-## that builds the fight (see there), so none of it reaches the fight's frames.
+## PRE-WARMING. A turn's first use would otherwise compile a shader and bake
+## a back mid-fight. `prewarm` pays both in the frame that builds the fight
+## (see there), so none of it reaches the fight's frames.
+##
+## WHAT IT COSTS, on the iPad 8 (a QA build of #657 PR 3, a probe opening the
+## bench fight from the settled map, then one picture turn and one live turn,
+## each over and back; Vault worn). From a cold shader cache, the state of a
+## fresh install, without the pre-warm the session's first picture turn held
+## one frame for 0.70-0.76 s (its shader compiling) after a 43-62 ms bake
+## frame; with it, no frame of either turn ran longer than the same run's own
+## rest (38-43 ms against 38-40: a cold launch idles at about 23 ms a frame).
+## The live turn never hitched: its plate compiles nothing the cards have not.
+## The pre-warm adds about 1.7 s to that first fight's load (0.4 s to the
+## frame that builds it, 1.35 s to that frame's draw, and 0.1 s back off the
+## entrance's first frame, which follows a drained GPU) — a load that already
+## takes about 12.6 s cold, compiling the fight itself. Warm, the load grows
+## by 0.15-0.22 s, and the first picture turn's one 41 ms frame goes. The
+## bake holds 14 MB of video memory for the session, 11 MB more than one made
+## later in the fight. A later fight pays nothing more (on the Mac, measured).
 
 const PICTURE_SHADER: Shader = preload("res://presentation/cards/card_turn.gdshader")
 ## The narrowest the table shadow gets, edge-on, as a share of the card.

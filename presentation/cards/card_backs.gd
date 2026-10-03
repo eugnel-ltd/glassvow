@@ -28,7 +28,10 @@ extends RefCounted
 ## compiles across launches, but even warm an iPad 8 bake holds a frame for
 ## 33-58 ms (wall 77-118 ms; the Mac 3-7 ms and 11-39 ms). A cached repeat
 ## costs 0.03 ms. The session's first bake also holds about 10 MiB more video
-## memory than later ones on both. So the game bakes the chosen back once, at
+## memory than later ones on both. Since #657 PR 3 a back's slab carries no
+## stone (CardView), so its lit, invisible material no longer compiles: on the
+## iPad 8 from a cold cache, Vault's first bake in a fight then held a 43-62 ms
+## frame where it had held 8.3-9.6 s. So the game bakes the chosen back once, at
 ## a still moment where a long frame shows nothing moving (a load, a held
 ## title), never behind an animated transition and never mid-fight; every
 ## later screen reads the cache, which lasts the session.
