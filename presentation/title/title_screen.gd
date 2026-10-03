@@ -249,12 +249,15 @@ func word(id: String) -> Control:
 
 ## What goes from the road while a room is open: the plaque, the Rekindle pane,
 ## the words (but `except`, which becomes the room's crown), the carved deeds,
-## the consent line and the build number.
-func furniture(except: Control = null) -> Array:
+## the consent line and the build number; with `wordmark`, the wordmark too (a
+## room that stands over it).
+func furniture(except: Control = null, wordmark: bool = false) -> Array:
 	var items: Array = []
 	for item: Variant in _light_words():
 		if item != except and item is CanvasItem:
 			items.append(item)
+	if wordmark:
+		items.append(_wordmark)
 	return items
 
 

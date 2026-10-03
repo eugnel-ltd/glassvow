@@ -30,7 +30,7 @@ const MapCompose: GDScript = preload("res://tests/test_map_compose.gd")
 const STEP: float = 1.0 / 60.0
 const VEIL_AT: Vector2 = Vector2(1160.0, 40.0)
 ## The rooms the title opens over itself, and how long each takes to arrive.
-const ROOMS: Dictionary = {"settings": 0.52}
+const ROOMS: Dictionary = {"settings": 0.52, "help": 0.52}
 
 
 class QuietMain extends Main:

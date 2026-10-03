@@ -320,7 +320,7 @@ func _apply_arrival(a: Arrival, t: float) -> void:
 	var title: TitleScreen = lent_title()
 	if title != null:
 		var gone: float = 1.0 - LeadlightMotion.ease_on(t / 0.18, LeadlightMotion.EXIT)
-		for item: CanvasItem in title.furniture(a.word):
+		for item: CanvasItem in title.furniture(a.word, host.covers_wordmark()):
 			item.modulate.a = gone
 		var p: float = LeadlightMotion.ease_on(t / 0.48, LeadlightMotion.IN_OUT)
 		title.place_lantern(LeadlightSeat.path(title.home_rect(), _seat_art(), p))
@@ -467,7 +467,7 @@ func _return_title_now(entry: Leaving) -> void:
 	entry.title = false
 	if title == null:
 		return
-	for item: CanvasItem in title.furniture(null):
+	for item: CanvasItem in title.furniture(null, true):
 		item.modulate.a = 1.0
 	title.lantern.flare = 0.0
 	title.lantern.reach = 1.0
@@ -481,7 +481,8 @@ func _furniture_order(entry: Leaving) -> void:
 		return
 	var home: Vector2 = title.home_rect().get_center()
 	var items: Array[CanvasItem] = []
-	for item: CanvasItem in title.furniture(entry.word):
+	var host: LeadlightRoomHost = entry.node as LeadlightRoomHost if is_instance_valid(entry.node) else null
+	for item: CanvasItem in title.furniture(entry.word, host != null and host.covers_wordmark()):
 		items.append(item)
 	items.sort_custom(func(a: CanvasItem, b: CanvasItem) -> bool:
 		return _centre_of(a).distance_to(home) < _centre_of(b).distance_to(home))

@@ -119,13 +119,15 @@ func set_tab_width(width: float) -> void:
 
 
 ## A new section: its pane and its page. Returns the page. `pane_text`, when
-## given, is the pane's own label (a numeral) in place of the heading.
+## given, is the pane's own label (a numeral) in place of the heading; `upper`
+## sets it in capitals (Settings' panes), else as written (Cinzel's small
+## capitals, as the title's own words are).
 func add_section(id: StringName, heading: String,
-		accent: Color = LeadlightTokens.GOLD, pane_text: String = "") -> VBoxContainer:
+		accent: Color = LeadlightTokens.GOLD, pane_text: String = "", upper: bool = true) -> VBoxContainer:
 	var phone: bool = LeadlightTokens.is_phone(_shape)
 	var label: String = pane_text if not pane_text.is_empty() else heading
 	var tab: LeadlightPane = LeadlightPane.new(
-		label if LeadlightTokens.is_zh() else label.to_upper(), _shape,
+		label if LeadlightTokens.is_zh() or not upper else label.to_upper(), _shape,
 		LeadlightGlassBox.Shape.LOZENGE if _across else LeadlightGlassBox.Shape.TAB)
 	tab.name = "Section%s" % String(id).capitalize().replace(" ", "")
 	tab.accent = accent
@@ -133,7 +135,7 @@ func add_section(id: StringName, heading: String,
 	tab.set_px(LeadlightTokens.size_for(LeadlightTokens.SIZE_ROOM_LABEL, _shape))
 	var hit: float = LeadlightTokens.room_hit(_shape)
 	if _across:
-		tab.custom_minimum_size = Vector2(hit, hit)
+		tab.custom_minimum_size = Vector2(maxf(hit, float(LeadlightTokens.HIT_ROOM.x)), hit)
 	else:
 		tab.custom_minimum_size = Vector2(_tab_width, hit - 8.0 if not phone else hit - 4.0)
 		tab.hit_height = hit
@@ -189,6 +191,16 @@ func tabs() -> Control:
 	return _tabs
 
 
+## At rest the lit pane breathes with the room's light (3.3 s); still under
+## Reduce Motion, as the glass is.
+func _process(delta: float) -> void:
+	super(delta)
+	var lit: LeadlightPane = tab(selected())
+	if lit != null:
+		var glow: float = 1.0 + 0.07 * (0.5 + 0.5 * LeadlightMotion.breath(_time, 3.3))
+		lit.self_modulate = Color(glow, glow, glow, 1.0)
+
+
 ## Light section `id` at once, with no passage: its pane lit, its page shown,
 ## scrolled to the top.
 func select(id: StringName) -> void:
@@ -227,6 +239,7 @@ func _show(id: StringName, animate: bool, slide: float = 0.0) -> void:
 	for id_v: Variant in _tab_by_id:
 		var pane: LeadlightPane = _tab_by_id[id_v]
 		pane.lit = StringName(str(id_v)) == id
+		pane.self_modulate = Color.WHITE
 	if _name_line != null:
 		_name_line.text = str(_name_by_id.get(id, ""))
 	if _change != null and _change.is_valid():

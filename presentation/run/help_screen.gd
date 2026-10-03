@@ -1,13 +1,35 @@
 class_name HelpScreen
-extends Control
-## Read-only How to Play overlay, copied from roguecardv2@6e06911.
+extends LeadlightRoomHost
+## How to Play: seven panes of one window (docs/design/2026-10-03-title-rooms
+## §4.2). A glass room in the same house as Settings, lit from the seat: the
+## seven sections are panes in a column, each with its carved numeral and its
+## title up to the dash, and the lit one's page stands beside them, its heading
+## whole. On a phone's short glass the panes are numerals across the top with
+## the lit section's name beside them, and a swipe across the page turns it.
+## Every page fits its glass at pad; each still sits in a scroll, opened at 0.
+##
+## The Lantern's page keeps the Flame codex under its rules (flame lock §10):
+## each colour this Vigil has seen steady, one to a line, beside a small flame
+## of that colour, shown and never named. Two pages are alive: the Glass page's
+## facets chip and refill, the Lantern page's ember flies into its lantern.
 
-signal closed
+const SECTION_IDS: Array[StringName] = [&"road", &"combat", &"glass", &"lantern", &"ward",
+	&"fires", &"vigil"]
+## The room on the identity stage (§3.2): its centre this far right of the
+## stage's, from 22 px under the top to 66 px over the foot (the seat's word).
+const ROOM_W: float = 832.0
+const ROOM_SHIFT: float = 142.0
+const ROOM_TOP: float = 22.0
+const ROOM_FOOT: float = 66.0
+const TAB_W: float = 264.0
+const TAB_H: float = 64.0
+const PHONE_LEFT: float = 108.0
+const PHONE_RIGHT: float = 6.0
+const PHONE_TOP: float = 6.0
+const PHONE_FOOT: float = 60.0
+## A swipe across a phone's page that turns it.
+const SWIPE: float = 60.0
 
-const PANEL_MAX_WIDTH: float = 620.0
-const PANEL_MAX_HEIGHT: float = 0.88
-const DESKTOP_INSET: float = 28.0
-const PHONE_INSET: float = 18.0
 
 static func _sections(act_count: int, lantern_coda: String = "") -> Array[Dictionary]:
 	var params: Dictionary = {"count": act_count}
@@ -39,173 +61,327 @@ static func _lantern_coda(codex: Array[Dictionary]) -> String:
 	return "\n".join(lines)
 
 
-var shape: StringName = StageShape.IDENTITY
+## A section's title up to its dash (" — " in English, "——" in zh-Hant): the
+## pane's name. The page heading carries the whole title.
+static func short_title(title: String) -> String:
+	for dash: String in [" — ", "——"]:
+		var at: int = title.find(dash)
+		if at > 0:
+			return title.substr(0, at)
+	return title
 
-var _panel: PanelContainer
-var _column: VBoxContainer
+
+## The flame colour a codex row describes (its slot names the flame).
+static func codex_colour(row: Dictionary) -> Color:
+	var slot: String = str(row.get("slot", ""))
+	var flame: String = slot.trim_prefix(FlameLines.CODEX_PREFIX)
+	return LanternFlame.COLOUR.get(flame, LeadlightTokens.EMBER)
+
+
+## The codex's flames: one beside each line of the Coda, in its colour,
+## breathing (2.8 s). Drawn over the Coda's own left margin.
+class CodaFlames extends Control:
+	var colours: Array[Color] = []
+	var _time: float = 0.0
+
+	func _process(delta: float) -> void:
+		if LeadlightMotion.reduced():
+			return
+		_time += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		var coda: RichTextLabel = get_parent() as RichTextLabel
+		if coda == null:
+			return
+		var px: float = float(coda.get_theme_font_size("normal_font_size"))
+		for i: int in colours.size():
+			var top: float = coda.get_theme_stylebox("normal").content_margin_top \
+				+ (coda.get_paragraph_offset(i) if i < coda.get_paragraph_count() else 0.0)
+			var breath: float = 1.0 + 0.12 * LeadlightMotion.breath(_time + float(i) * 0.7, 2.8)
+			var w: float = px * 0.62 * breath
+			var h: float = px * 0.95 * breath
+			var at: Vector2 = Vector2(4.0 + px * 0.31 - w * 0.5, top + px * 0.6 - h * 0.5)
+			var flame: PackedVector2Array = PackedVector2Array()
+			for k: int in range(17):
+				var t: float = float(k) / 16.0 * TAU
+				var x: float = sin(t) * w * 0.42
+				var y: float = h * 0.62 - cos(t) * h * 0.36
+				if cos(t) > 0.0:
+					y -= cos(t) * h * 0.22
+					x *= 1.0 - cos(t) * 0.45
+				flame.append(at + Vector2(w * 0.5 + x, y))
+			draw_texture_rect(SkyField.disc(), Rect2(at - Vector2(w, h * 0.4), Vector2(w * 3.0, h * 1.8)),
+				false, Color(colours[i], 0.40))
+			draw_colored_polygon(flame, colours[i].lerp(Color.WHITE, 0.3))
+
+
+## The Glass page, alive: five facets, one chipping every 2.4 s until the glass
+## shatters and the row refills. Still under Reduce Motion.
+class FacetRow extends Control:
+	var _time: float = 0.0
+
+	func _process(delta: float) -> void:
+		if LeadlightMotion.reduced():
+			return
+		_time += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		var chipped: int = int(_time / 2.4) % 6
+		var w: float = 34.0
+		for i: int in range(5):
+			var rect: Rect2 = Rect2(Vector2(4.0 + float(i) * (w + 8.0), 8.0), Vector2(w, 18.0))
+			var lit: bool = i >= chipped
+			var body: PackedVector2Array = LeadlightShapes.lozenge(rect, 7.0)
+			draw_colored_polygon(body, Color(LeadlightTokens.GLASS, 0.55) if lit else Color(LeadlightTokens.FOG, 0.9))
+			body.append(body[0])
+			draw_polyline(body, LeadlightTokens.LEAD, 2.0, true)
+			if not lit:
+				draw_line(rect.position + Vector2(w * 0.35, 3.0), rect.end - Vector2(w * 0.4, 4.0),
+					Color(LeadlightTokens.GLASS, 0.6), 1.0, true)
+
+
+## The Lantern page, alive: every 4 s an ember flies along a short arc into a
+## lantern's glass and it brightens. Still under Reduce Motion.
+class EmberFlight extends Control:
+	var _time: float = 0.0
+
+	func _process(delta: float) -> void:
+		if LeadlightMotion.reduced():
+			return
+		_time += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		var u: float = fmod(_time, 4.0) / 1.4
+		var glass: Rect2 = Rect2(Vector2(168.0, 6.0), Vector2(22.0, 30.0))
+		var lift: float = 0.0 if u < 1.0 else clampf(1.0 - (u - 1.0) * 0.6, 0.0, 1.0)
+		draw_texture_rect(SkyField.disc(), glass.grow(10.0 + 8.0 * lift), false,
+			Color(LeadlightTokens.EMBER, 0.18 + 0.35 * lift))
+		var body: PackedVector2Array = LeadlightShapes.lozenge(glass, 6.0)
+		draw_colored_polygon(body, Color(LeadlightTokens.GOLD, 0.25 + 0.5 * lift))
+		body.append(body[0])
+		draw_polyline(body, LeadlightTokens.LEAD, 2.0, true)
+		draw_line(glass.position + Vector2(11.0, -5.0), glass.position + Vector2(11.0, 0.0), LeadlightTokens.LEAD, 2.0)
+		if u < 1.0:
+			var from: Vector2 = Vector2(8.0, 30.0)
+			var to: Vector2 = glass.get_center()
+			var at: Vector2 = from.lerp(to, u) + Vector2(0.0, -sin(u * PI) * 18.0)
+			draw_texture_rect(SkyField.disc(), Rect2(at - Vector2(7.0, 7.0), Vector2(14.0, 14.0)), false,
+				Color(LeadlightTokens.EMBER, 0.8 * sin(u * PI)))
+
+
 var _sfx: SfxBus
+var _room: LeadlightRoom
+var _codex: Array[Dictionary] = []
+var _coda: RichTextLabel = null
+var _swipe_from: Vector2 = Vector2.INF
 
 
 func _init(stage_shape: StringName = StageShape.IDENTITY,
 		sfx: SfxBus = null, codex: Array[Dictionary] = []) -> void:
-	shape = stage_shape if StageShape.REFERENCES.has(stage_shape) else StageShape.IDENTITY
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_STOP
-	theme = GlassStyle.theme()
-
+	_host(stage_shape)
+	_codex = codex
 	_sfx = sfx if sfx != null else SfxBus.new()
 	if sfx == null:
 		add_child(_sfx)
-
-	var scrim: ColorRect = ColorRect.new()
-	scrim.color = GlassStyle.scrim()
-	scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	scrim.gui_input.connect(_on_scrim_input)
-	add_child(scrim)
-
-	var centre: CenterContainer = CenterContainer.new()
-	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
-	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(centre)
-
-	_panel = PanelContainer.new()
-	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	centre.add_child(_panel)
-
-	var scroll: ScrollContainer = ScrollContainer.new()
-	# Same reachability defect as #72's boon screen: FIGHT ON is the last child
-	# of this scrolled column, and it grabs focus on open — without this the
-	# view stays at the top and the focused button is off-screen.
-	scroll.follow_focus = true
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_panel.add_child(scroll)
-
-	_column = VBoxContainer.new()
-	_column.add_theme_constant_override("separation", 4)
-	scroll.add_child(_column)
-
-	var title: Label = Label.new()
-	title.text = Locale.active.t("ui.help.title")
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_700, 3))
-	title.add_theme_font_size_override("font_size", 26)
-	title.add_theme_color_override("font_color", RunStyle.PARCHMENT)
-	_column.add_child(title)
-
-	var rule_centre: CenterContainer = CenterContainer.new()
-	rule_centre.custom_minimum_size.y = 10
-	_column.add_child(rule_centre)
-	var rule: HSeparator = HSeparator.new()
-	rule.custom_minimum_size.x = 84
-	# HSeparator's separator is a STYLEBOX, not a colour — a Color override
-	# is a silent no-op. 0.55 reads as the help title's centred flourish.
-	var rule_line: StyleBoxLine = StyleBoxLine.new()
-	rule_line.color = Color(RunStyle.GOLD, 0.55)
-	rule_line.thickness = 1
-	rule.add_theme_stylebox_override("separator", rule_line)
-	rule_centre.add_child(rule)
-
-	for section: Dictionary in _sections(3, _lantern_coda(codex)):
-		_add_section(str(section["title"]), str(section["body"]),
-			str(section.get("coda", "")))
-
-	var action_margin: MarginContainer = MarginContainer.new()
-	action_margin.add_theme_constant_override("margin_top", 16)
-	_column.add_child(action_margin)
-	var action_centre: CenterContainer = CenterContainer.new()
-	action_margin.add_child(action_centre)
-	var fight_on: Button = Button.new()
-	fight_on.text = Locale.active.t("ui.menu.fightOn")
-	fight_on.custom_minimum_size = Vector2(150, 44)
-	fight_on.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_500, 1))
-	fight_on.add_theme_font_size_override("font_size", 17)
-	RunStyle.style_button(fight_on)
-	fight_on.pressed.connect(_close_with_sound)
-	action_centre.add_child(fight_on)
-	LeadlightFocus.give_deferred(fight_on)
-
-	resized.connect(_fit)
-	_fit.call_deferred()
+	_build()
 
 
-func _add_section(title_text: String, body_html: String, coda: String = "") -> void:
+func _build() -> void:
+	var codex: Array[Dictionary] = _codex
+	var phone: bool = LeadlightTokens.is_phone(shape)
+	_room = LeadlightRoom.new(Locale.active.t("ui.help.title"), shape, phone)
+	_room.name = "HelpRoom"
+	_room.section_chosen.connect(func(_id: StringName) -> void: _sfx.play_owed(&"paneChoose", &"click"))
+	add_child(_room)
+	if not phone:
+		_room.set_tab_width(TAB_W)
+	var sections: Array[Dictionary] = _sections(3, _lantern_coda(codex))
+	for i: int in sections.size():
+		_add_section(i, sections[i], codex)
+	_room.scroll().gui_input.connect(_on_page_input)
+	_seat_last()
+
+
+func _add_section(i: int, section: Dictionary, codex: Array[Dictionary]) -> void:
+	var id: StringName = SECTION_IDS[i]
+	var numeral: String = LeadlightNumerals.carved(i + 1)
+	var title: String = str(section["title"])
+	var phone: bool = LeadlightTokens.is_phone(shape)
+	var pane_text: String = numeral if phone else "%s  %s" % [numeral, short_title(title)]
+	var page_node: VBoxContainer = _room.add_section(id, short_title(title), LeadlightTokens.GOLD,
+		pane_text, false)
+	page_node.add_theme_constant_override("separation", 10 if not phone else 6)
+	var pane: LeadlightPane = _room.tab(id)
+	if not phone:
+		pane.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		pane.custom_minimum_size.y = TAB_H
+		pane.hit_height = TAB_H
+	# The heading is the whole title: its name, and what follows the dash as a
+	# quieter line under it (tracked capitals would split a zh-Hant "——").
+	var name_text: String = short_title(title)
 	var heading: Label = Label.new()
-	heading.text = title_text
-	heading.add_theme_font_override("font", GlassStyle.face(GlassStyle.CINZEL_700))
-	heading.add_theme_font_size_override("font_size", 17)
-	heading.add_theme_color_override("font_color", RunStyle.GOLD)
-	heading.add_theme_constant_override("line_spacing", 0)
-	_column.add_child(heading)
+	heading.name = "Heading"
+	heading.text = "%s · %s" % [numeral, name_text if LeadlightTokens.is_zh() else name_text.to_upper()]
+	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var head_px: int = LeadlightTokens.size_for(LeadlightTokens.SIZE_ROOM_HEAD, shape)
+	heading.add_theme_font_override("font", LeadlightTokens.font(LeadlightTokens.ROLE_PRIMARY, head_px))
+	heading.add_theme_font_size_override("font_size", head_px)
+	heading.add_theme_color_override("font_color", LeadlightTokens.GOLD)
+	page_node.add_child(heading)
+	var rest: String = title.substr(name_text.length()).lstrip(" —").strip_edges()
+	if not rest.is_empty():
+		var subtitle: Label = Label.new()
+		subtitle.name = "Subtitle"
+		subtitle.text = rest
+		subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		var read_px: int = LeadlightTokens.size_for(LeadlightTokens.SIZE_ROOM_READ, shape)
+		subtitle.add_theme_font_override("font", LeadlightTokens.font(LeadlightTokens.ROLE_READ, read_px))
+		subtitle.add_theme_font_size_override("font_size", read_px)
+		subtitle.add_theme_color_override("font_color", Color(LeadlightTokens.GOLD, 0.72))
+		page_node.add_child(subtitle)
+	var body: RichTextLabel = _prose(LeadlightTokens.TEXT, true, shape)
+	body.name = "Body"
+	body.text = _markup(str(section["body"]), shape)
+	page_node.add_child(body)
+	if id == &"glass":
+		page_node.add_child(_diagram(FacetRow.new(), "FacetRow"))
+	var coda: String = str(section.get("coda", ""))
+	if not coda.is_empty():
+		_add_coda(page_node, coda, codex)
+	if id == &"lantern":
+		page_node.add_child(_diagram(EmberFlight.new(), "EmberFlight"))
 
-	var body: RichTextLabel = _prose(RunStyle.TEXT, true)
-	body.text = body_html.replace("{count}", "3").replace("<b>", "[b]").replace("</b>", "[/b]")
-	body.add_theme_font_override("bold_font", GlassStyle.face(GlassStyle.ALEGREYA_700))
-	body.add_theme_font_size_override("bold_font_size", 16)
-	body.add_theme_color_override("font_selected_color", RunStyle.PARCHMENT)
-	_column.add_child(body)
-	if coda.is_empty():
-		return
-	# Plain text, never markup: the coda is authored copy in the hearth's
-	# warmer ink, a breath below the rules it follows.
-	var note: RichTextLabel = _prose(RunStyle.PARCHMENT, false)
-	note.name = "Coda"
-	note.text = coda
+
+## Plain text, never markup: the coda is authored copy in the hearth's warmer
+## ink, a breath below the rules it follows, each line beside its flame.
+func _add_coda(page_node: VBoxContainer, coda: String, codex: Array[Dictionary]) -> void:
+	_coda = _prose(LeadlightTokens.PARCHMENT, false, shape)
+	_coda.name = "Coda"
+	_coda.text = coda
+	var margin: StyleBoxEmpty = StyleBoxEmpty.new()
+	margin.content_margin_left = float(LeadlightTokens.size_for(LeadlightTokens.SIZE_ROOM_READ, shape)) + 12.0
+	_coda.add_theme_stylebox_override("normal", margin)
+	var flames: CodaFlames = CodaFlames.new()
+	flames.name = "CodaFlames"
+	flames.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flames.set_anchors_preset(Control.PRESET_FULL_RECT)
+	for row: Dictionary in codex:
+		flames.colours.append(codex_colour(row))
+	_coda.add_child(flames)
 	var breath: MarginContainer = MarginContainer.new()
-	breath.add_theme_constant_override("margin_top", 6)
-	breath.add_child(note)
-	_column.add_child(breath)
+	breath.add_theme_constant_override("margin_top", 4)
+	breath.add_child(_coda)
+	page_node.add_child(breath)
 
 
-static func _prose(colour: Color, markup: bool) -> RichTextLabel:
+static func _diagram(diagram: Control, node_name: String) -> Control:
+	diagram.name = node_name
+	diagram.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	diagram.custom_minimum_size = Vector2(220.0, 42.0)
+	return diagram
+
+
+## The shipped bodies as markup: the energy glyph (a symbol face's taller line)
+## set a little smaller so it stops stretching its line.
+static func _markup(body_html: String, stage_shape: StringName) -> String:
+	var px: int = LeadlightTokens.size_for(LeadlightTokens.SIZE_ROOM_READ, stage_shape)
+	return body_html.replace("{count}", "3").replace("<b>", "[b]").replace("</b>", "[/b]") \
+		.replace("⬤", "[font_size=%d]⬤[/font_size]" % roundi(float(px) * 0.78))
+
+
+static func _prose(colour: Color, markup: bool, stage_shape: StringName) -> RichTextLabel:
+	var px: int = LeadlightTokens.size_for(LeadlightTokens.SIZE_ROOM_READ, stage_shape)
 	var prose: RichTextLabel = RichTextLabel.new()
 	prose.bbcode_enabled = markup
 	prose.fit_content = true
 	prose.scroll_active = false
 	prose.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	prose.add_theme_font_override("normal_font", GlassStyle.face(GlassStyle.ALEGREYA_400))
-	prose.add_theme_font_size_override("normal_font_size", 16)
+	prose.mouse_filter = Control.MOUSE_FILTER_PASS
+	prose.add_theme_font_override("normal_font", LeadlightTokens.font(LeadlightTokens.ROLE_READ, px))
+	prose.add_theme_font_size_override("normal_font_size", px)
+	prose.add_theme_font_override("bold_font", GlassStyle.face(GlassStyle.ALEGREYA_700,
+		"res://assets/fonts/NotoSerifTC-SemiBold.woff2" if LeadlightTokens.is_zh() else ""))
+	prose.add_theme_font_size_override("bold_font_size", px)
 	prose.add_theme_color_override("default_color", colour)
-	prose.add_theme_constant_override("line_separation", 7)
+	# Line height 1.45.
+	prose.add_theme_constant_override("line_separation", roundi(float(px) * 0.45))
 	return prose
 
 
+func sheet() -> LeadlightSheet:
+	return _room
+
+
+func crown() -> Control:
+	return _room.crown()
+
+
+func reveal_groups() -> Array[Control]:
+	return [_room.tabs(), _room.scroll()]
+
+
+## The lit section's pane (the first, on arrival).
+func first_focus() -> Control:
+	return _room.tab(_room.selected())
+
+
+## The glass stands over the title's wordmark: it goes with the furniture.
+func covers_wordmark() -> bool:
+	return not LeadlightTokens.is_phone(shape)
+
+
+func content_rects() -> Array[Rect2]:
+	return [Rect2(_room.position, _room.size)]
+
+
+func room() -> LeadlightRoom:
+	return _room
+
+
+## A new shape class (pad or phone) rebuilds the room on the lit section: the
+## panes stand across a phone and in a column elsewhere.
 func set_shape(stage_shape: StringName) -> void:
-	if stage_shape == shape or not StageShape.REFERENCES.has(stage_shape):
-		return
-	shape = stage_shape
-	_fit()
+	if StageShape.REFERENCES.has(stage_shape) \
+			and LeadlightTokens.is_phone(stage_shape) != LeadlightTokens.is_phone(shape):
+		var lit: StringName = _room.selected()
+		shape = stage_shape
+		for node: Node in [_room, _seat]:
+			remove_child(node)
+			node.free()
+		_build()
+		_room.select(lit)
+	super(stage_shape)
 
 
+## The room stands right of the seat (§3.2); on a phone it fills the stage
+## beside the seat.
 func _fit() -> void:
-	var reference: Vector2i = StageShape.REFERENCES[shape]
-	var stage_size: Vector2 = size if size.x > 0.0 and size.y > 0.0 else Vector2(reference)
-	var phone: bool = shape == &"phone-landscape"
-	var inset: float = PHONE_INSET if phone else DESKTOP_INSET
-	var panel_width: float = minf(PANEL_MAX_WIDTH, stage_size.x)
-	var panel_height: float = stage_size.y if phone else stage_size.y * PANEL_MAX_HEIGHT
-	_panel.custom_minimum_size = Vector2(panel_width, panel_height)
-	_panel.add_theme_stylebox_override(
-		"panel", RunStyle.panel(0 if phone else 16, inset, 0.92))
-	_column.custom_minimum_size.x = maxf(240.0, panel_width - inset * 2.0)
+	if _room == null or size.x <= 0.0 or size.y <= 0.0:
+		return
+	if LeadlightTokens.is_phone(shape):
+		_room.position = Vector2(PHONE_LEFT, PHONE_TOP)
+		_room.size = Vector2(size.x - PHONE_LEFT - PHONE_RIGHT, size.y - PHONE_TOP - PHONE_FOOT)
+	else:
+		_room.position = Vector2((size.x - ROOM_W) * 0.5 + ROOM_SHIFT, ROOM_TOP)
+		_room.size = Vector2(ROOM_W, size.y - ROOM_TOP - ROOM_FOOT)
 
 
-func _close_with_sound() -> void:
-	_sfx.play(&"click")
-	closed.emit()
-
-
-func _on_scrim_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed:
-		closed.emit()
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		closed.emit()
-
-
-## Scrim `gui_input` never receives keys; Escape / ui_cancel closes via the
-## unhandled path — `_unhandled_input` so gamepad ui_cancel reaches it too.
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed(&"ui_cancel"):
-		closed.emit()
-		get_viewport().set_input_as_handled()
+## A phone's swipe across the page turns it (a shortcut: the numerals stay).
+func _on_page_input(event: InputEvent) -> void:
+	if not LeadlightTokens.is_phone(shape):
+		return
+	var button: InputEventMouseButton = event as InputEventMouseButton
+	if button == null or button.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if button.pressed:
+		_swipe_from = button.position
+		return
+	if _swipe_from == Vector2.INF:
+		return
+	var moved: Vector2 = button.position - _swipe_from
+	_swipe_from = Vector2.INF
+	if absf(moved.x) >= SWIPE and absf(moved.x) > absf(moved.y) * 1.5:
+		_room.step_section(-1 if moved.x > 0.0 else 1)

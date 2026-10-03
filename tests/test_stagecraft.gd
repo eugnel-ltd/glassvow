@@ -577,8 +577,9 @@ static func _codex_in_the_help(fails: Array[String]) -> void:
 			== LineTable.text(rows[0], zh) + "\n" + LineTable.text(rows[1], zh),
 		"the codex did not show the colours seen steady, one to a line")
 	if coda != null:
+		# The Coda's breath follows the body inside the Lantern's own page.
 		var breath: Node = coda.get_parent()
-		var body: RichTextLabel = help._column.get_child(breath.get_index() - 1) as RichTextLabel
+		var body: RichTextLabel = breath.get_parent().get_child(breath.get_index() - 1) as RichTextLabel
 		_check(fails, body != null and body.text == Locale.active.t("ui.help.lanternBody")
 				.replace("<b>", "[b]").replace("</b>", "[/b]"),
 			"the colours are not under the Lantern's rules")

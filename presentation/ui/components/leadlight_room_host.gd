@@ -89,6 +89,12 @@ func reveal_groups() -> Array[Control]:
 	return []
 
 
+## Whether the room stands over the title's wordmark (it then goes with the
+## title's furniture while the room is open).
+func covers_wordmark() -> bool:
+	return false
+
+
 ## The control focus goes to on arrival.
 func first_focus() -> Control:
 	return _focus_first if _focus_first != null else _seat.word()
