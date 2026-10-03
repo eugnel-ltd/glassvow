@@ -161,7 +161,9 @@ static func _framing(fails: Array[String], screen: WorldMapScreen) -> void:
 
 
 ## The tilt-shift's sharp band covers every waystone the camera frames, at every
-## landscape reference shape, and Whole act has none.
+## landscape reference shape, and Whole act has none. Since R3.1 the band is
+## drawn at the stage's resolution in a view of its own, and the screen's asking
+## every frame re-applies nothing while the band stands still.
 static func _focus_band(fails: Array[String], screen: WorldMapScreen) -> void:
 	var scene: MapScene = screen._map_scene
 	for shape: StringName in [&"phone-landscape", &"pad-landscape", &"desktop-landscape"]:
@@ -174,6 +176,7 @@ static func _focus_band(fails: Array[String], screen: WorldMapScreen) -> void:
 		for i: int in screen._journey.focus_members:
 			covered = covered and seats[i].y >= band.x and seats[i].y <= band.y
 		_check(fails, covered, "the sharp band covers every framed waystone at %s" % shape)
+		_stage_resolution_band(fails, scene, shape)
 	# Panned away: the band covers what is left on screen near the middle, and
 	# with nothing on screen it is the narrowest band about the middle.
 	var panned: Vector2 = MapTiltShift.band(PackedFloat32Array([-300.0, 40.0]), 820.0, 30.0)
@@ -186,11 +189,43 @@ static func _focus_band(fails: Array[String], screen: WorldMapScreen) -> void:
 	_mount(screen, StageShape.IDENTITY)
 	screen._journey.zoom(true)
 	screen._layout_waystones()
-	_check(fails, not scene.focus_band.is_finite() and scene._display.material == null,
-		"Whole act has no tilt-shift")
+	_check(fails, not scene.focus_band.is_finite()
+			and scene._display.texture == scene.get_stage().get_texture()
+			and scene._shift.render_target_update_mode == SubViewport.UPDATE_DISABLED,
+		"Whole act has no tilt-shift: the display draws the stage and the band's view rests")
 	screen._journey.zoom(false)
 	screen._layout_waystones()
 	_check(fails, scene.focus_band.is_finite(), "looking closer brings the band back")
+
+
+## The band's pass reads the stage texel for texel in its own view, which the
+## stage is a child of (the engine draws a child view first, so the band never
+## shows the last frame's stage); the display only upscales it. A band that has
+## not moved is not applied again on the next frame.
+static func _stage_resolution_band(fails: Array[String], scene: MapScene,
+		shape: StringName) -> void:
+	var shift: ShaderMaterial = scene._shift_rect.material as ShaderMaterial
+	_check(fails, scene._display.texture == scene._shift.get_texture()
+			and scene._shift.size == scene.get_stage().size
+			and scene._shift_rect.size == Vector2(scene.get_stage().size)
+			and scene.get_stage().get_parent() == scene._shift
+			and scene._shift.disable_3d,
+		"the band is drawn at the stage's size, after the stage, at %s" % shape)
+	var band: Vector2 = shift.get_shader_parameter("band")
+	var radius: float = shift.get_shader_parameter("radius_texels")
+	_check(fails, band == scene.focus_band / scene.size.y
+			and is_equal_approx(radius,
+				MapTiltShift.STRENGTH_PX * scene.get_stage().size.y / MapTiltShift.IDENTITY_HEIGHT),
+		"the band's uniforms are the band and its stage-texel radius at %s" % shape)
+	var screen: WorldMapScreen = scene.get_parent() as WorldMapScreen
+	shift.set_shader_parameter("band", Vector2(-1.0, -1.0))
+	scene._shift.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	screen._layout_waystones()
+	band = shift.get_shader_parameter("band")
+	_check(fails, band == Vector2(-1.0, -1.0)
+			and scene._shift.render_target_update_mode == SubViewport.UPDATE_DISABLED,
+		"a band that has not moved is not applied again at %s" % shape)
+	shift.set_shader_parameter("band", scene.focus_band / scene.size.y)
 
 
 ## Whole act is for looking: it frames the act, and a tap looks closer without
@@ -254,23 +289,35 @@ static func _walk(fails: Array[String], screen: WorldMapScreen, land: MapJourney
 
 
 ## At rest the land renders every `REST_EVERY` frames (30 Hz), every
-## `REST_EVERY_REDUCED` under Reduce Motion: its water and lamps move.
+## `REST_EVERY_REDUCED` under Reduce Motion: its water and lamps move. The
+## tilt-shift's view renders exactly when the stage does.
 static func _rest_cadence(fails: Array[String], scene: MapScene) -> void:
 	var reduced: bool = Preferences.active.reduce_motion
+	scene.set_focus_band(Vector2(scene.size.y * 0.3, scene.size.y * 0.7))
 	for mode: bool in [false, true]:
 		Preferences.active.reduce_motion = mode
 		scene.set_live(false)
 		for frame: int in range(3):
 			scene._process(0.0)
 		var renders: int = 0
+		var together: bool = true
 		for frame: int in range(8):
 			scene.get_stage().render_target_update_mode = SubViewport.UPDATE_DISABLED
+			scene._shift.render_target_update_mode = SubViewport.UPDATE_DISABLED
 			scene._process(0.0)
 			if scene.get_stage().render_target_update_mode == SubViewport.UPDATE_ONCE:
 				renders += 1
+			together = together and (scene._shift.render_target_update_mode
+				== scene.get_stage().render_target_update_mode)
 		var every: int = MapScene.REST_EVERY_REDUCED if mode else MapScene.REST_EVERY
 		_check(fails, not scene.is_live() and renders == 8 / every,
 			"at rest the land renders every %d frames (%s)" % [every, "reduced" if mode else "full"])
+		_check(fails, together, "the band's view renders with the stage at rest (%s)"
+			% ("reduced" if mode else "full"))
+	scene.set_live(true)
+	_check(fails, scene._shift.render_target_update_mode == SubViewport.UPDATE_ALWAYS,
+		"the band's view renders every frame while the land is live")
+	scene.set_live(false)
 	Preferences.active.reduce_motion = reduced
 
 
@@ -383,7 +430,8 @@ static func _act_switch(fails: Array[String], screen: WorldMapScreen, run: RunSt
 	screen.refresh(run)
 	_check(fails, not environment.glow_enabled and not environment.adjustment_enabled,
 		"Act II's painted light neither grades nor blooms")
-	_check(fails, screen._map_scene._display.material == null,
+	_check(fails, not screen._map_scene.focus_band.is_finite()
+			and screen._map_scene._display.texture == screen._map_scene.get_stage().get_texture(),
 		"Act II has no tilt-shift")
 	var rig: MapCameraRig = screen._map_scene.get_rig()
 	_check(fails, not rig.journey_mode and screen._map_scene.journey_landscape() == null

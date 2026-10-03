@@ -2128,7 +2128,9 @@ func _show_map() -> void:
 	# --map --act=N: dress scenery only (domain map stays the run's act).
 	if _forced_act_index >= 0:
 		_map_screen.set_act_scenery(_forced_act_index)
-	_transitions.set_grain(true)
+	# The map's display draws its own grain (`MapFilmGrain`) without reading
+	# the screen: the layer's grain stays off while the map shows.
+	_transitions.set_grain(false)
 	_transitions.screen_in(_map_screen)
 	_attach_run_hud()
 	_music.play(&"map")
