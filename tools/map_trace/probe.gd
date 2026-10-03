@@ -102,11 +102,13 @@ func _run() -> void:
 		await _frames(30)
 		var count: int = int(_arg("--probe-seq", "0"))
 		var times: Array[int] = []
+		var images: Array[Image] = []
 		for i: int in range(maxi(count, 1)):
 			await RenderingServer.frame_post_draw
-			var path: String = shot if count == 0 else "%s-%02d.png" % [shot.trim_suffix(".png"), i]
 			times.append(Time.get_ticks_usec())
-			get_viewport().get_texture().get_image().save_png(path)
+			images.append(get_viewport().get_texture().get_image())
+		for i: int in range(images.size()):
+			images[i].save_png(shot if count == 0 else "%s-%02d.png" % [shot.trim_suffix(".png"), i])
 		_row({"probe": "shot", "path": shot, "pins": _pins(screen), "times_us": times,
 			"band": [_scene.focus_band.x, _scene.focus_band.y]})
 		print("PINS ", JSON.stringify(_pins(screen)))
@@ -187,12 +189,18 @@ func _process(_delta: float) -> void:
 		shift.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 
 
+## Each visible pin's centre and pane radius in the window's pixels, the space
+## a capture is in (the stage shape's stretch included), as R2's pin-contrast
+## measure reads them.
 func _pins(screen: WorldMapScreen) -> Array:
 	var pins: Array = []
+	var stretch: Transform2D = get_viewport().get_stretch_transform()
 	for stone: GlassWaystone in screen._waystones:
 		if stone.visible:
-			var centre: Vector2 = stone.get_global_rect().get_center()
-			pins.append([centre.x, centre.y, stone.pane_radius()])
+			var to_window: Transform2D = stretch * stone.get_global_transform_with_canvas()
+			var centre: Vector2 = to_window * (stone.size * 0.5)
+			var radius: float = stone.pane_radius() * stretch.get_scale().x
+			pins.append([centre.x, centre.y, radius])
 	return pins
 
 
