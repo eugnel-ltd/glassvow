@@ -217,7 +217,13 @@ func _deal() -> void:
 		var vram_after: float = Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0
 		_vram_per_card = (vram_before - vram_after) / float(maxi(held, 1))
 		_row("VRAM %d cards freed: %.2f MB -> %.2f MB = %.2f MB/card" % [held, vram_before, vram_after, _vram_per_card])
-	var cards: Array[CardInst] = combat.game.cb.hand
+	var cards: Array[CardInst] = combat.game.cb.hand.duplicate()
+	# Always a full five-card deal: top up from the draw pile when the fight
+	# opened with a shorter hand (presentation only; the domain is not told).
+	for c: CardInst in combat.game.cb.draw:
+		if cards.size() >= 5:
+			break
+		cards.append(c)
 	var n: int = mini(cards.size(), 5)
 	var start_count: int = int(cfg["pile"]) + n
 	_set_pile(start_count)

@@ -22,9 +22,9 @@ Give its 3D slab a back face, and turn cards over in two ways behind one API:
 Draw the piles, the reshuffle stream and the top-menu deck as stacks of one
 baked back. Move the many-card views (the deck overlay, the pile inspector) to
 baked faces, with a live card only under the finger. Both turns leave the
-resting hand pixel-identical to today. On the iPad 8 a deal costs **+0.25 ms**
-per frame with the picture turn and **+1.4 ms** with the live turn, and nothing
-at rest.
+resting hand pixel-identical to today. On the iPad 8 a full five-card deal adds
+**+0.2 ms** per frame with the picture turn (today's face-up deal adds +0.3 ms)
+and **+1.9 ms** with the live turn, and nothing at rest.
 
 ---
 
@@ -137,8 +137,8 @@ per-back baking and cache invalidation never reached git, on any branch.
 
 ### 1.7 Device facts that bound every option
 
-- **The iPad 8 (A12) frame budget is already full.** Across all twelve device
-  runs the combat screen *at rest* measured 16.7 to 21.1 ms median per frame
+- **The iPad 8 (A12) frame budget is already full.** Across all eighteen device
+  runs the combat screen *at rest* measured 16.6 to 21.1 ms median per frame
   (60 Hz is 16.7 ms). Anything that adds per-frame work drops frames.
 - **A12 spatial shaders.** Godot 4.7.2's Forward Mobile path breaks *shaded*
   spatial materials on A12 (16-sampler Metal limit). The card's surface and gem
@@ -215,7 +215,8 @@ band. The perspective is exact and no viewport renders while it turns.
   facets are a picture of the card at rest, turned; a cheap Lambert falloff
   stands in for the light. At deal speed (0.42 s) it is hard to tell from C in
   stills; in a slow reveal it shows.
-- **iPad 8: +0.25 ms** mean per deal frame over rest (two interleaved runs).
+- **iPad 8: +0.2 ms** mean per deal frame over rest in five-card deals (+0.25 ms
+  in four-card deals), the same as today's face-up deal (+0.3 ms).
 - Complexity: one canvas shader (two samplers), no change to input.
 
 ### (C) The card's own slab turns in its own stage — the "live turn"
@@ -232,10 +233,10 @@ baked back (`pile_stack.gd`).
 - **In the turn, the material is live.** The finish, the foil band and the gem
   answer the angle as the card turns, because the same renderer is doing the
   same job (`stills/04-turn-sheet-C-B-A.jpg`, top row).
-- **iPad 8: +1.4 ms** mean per deal frame over rest (two interleaved runs; the
-  per-run medians were +0.4 and +2.0, round 1 gave +2.1). That is about
-  0.5 to 0.6 ms per card while it turns (about 2.4 cards are in the air at
-  once in the device's four-card deal). Turning MSAA off in flight (variant
+- **iPad 8: +1.9 ms** mean per deal frame over rest in five-card deals (runs
+  +1.3 and +2.7), +1.4 ms in four-card deals (round 2), +2.1 ms median in
+  round 1. That is about 0.5 to 0.7 ms per card while it turns (2.4 to 2.7
+  cards are in the air at once). Turning MSAA off in flight (variant
   C2) did **not** reduce it (+2.1 ms), so the stage render itself, not its
   anti-aliasing, is the cost.
 - Complexity: one child mesh and one material per card; the flight code gains
@@ -293,7 +294,7 @@ spanned 16.7 to 20.4 ms: that spread is device state (thermal and background),
 not the cards. Round 2 was therefore run interleaved, and the comparison is
 always against the same run's own rest.
 
-### 2.4 Cost, iPad 8, round 2 (interleaved: C, today, B, C2, C, today, B, C2)
+### 2.4 Cost, iPad 8, round 2: four-card deals (interleaved: C, today, B, C2, C, today, B, C2)
 
 | Run | Rest p50 (ms) | Deal p50 / p95 / max (ms) | Deal frames > 20 ms | Deal − rest (median) |
 |---|---|---|---|---|
@@ -312,6 +313,30 @@ rest frame in the same runs:
 | | Today | B (picture turn) | C (live turn) | C2 (live, no MSAA in flight) | A (round 1) |
 |---|---|---|---|---|---|
 | Added per deal frame | +0.10 ms | **+0.25 ms** | **+1.36 ms** | +2.09 ms | about +8.6 ms |
+
+### 2.4b Cost, iPad 8, round 3: full five-card deals (interleaved: C, B, today, C, B, today)
+
+The proof now tops the hand up to five from the draw pile, so these are full
+five-card deals (confirmed by the memory peak: five live cards' worth above
+rest).
+
+| Run | Rest p50 (ms) | Deal p50 / p95 / max (ms) | Deal frames > 20 ms | Deal − rest (median) | Mean deal − mean rest |
+|---|---|---|---|---|---|
+| C #1 | 16.6 | 17.2 / 23.4 / 51.1 | 18% | +0.5 | +1.30 |
+| B #1 | 18.7 | 18.4 / 22.6 / 55.7 | 20% | −0.2 | +0.06 |
+| Today #1 | 20.6 | 20.5 / 27.1 / 49.0 | 67% | −0.1 | +0.31 |
+| C #2 | 19.8 | 21.7 / 37.6 / 41.2 | 77% | +1.9 | +2.73 |
+| B #2 | 20.3 | 20.3 / 25.2 / 50.8 | 59% | −0.0 | +0.35 |
+| Today #2 | 20.3 | 20.4 / 25.6 / 46.9 | 65% | +0.1 | +0.25 |
+
+| Five-card deal, pooled | Today | B (picture turn) | C (live turn) |
+|---|---|---|---|
+| Deal p50 / p95 / max (ms) | 20.4 / 26.3 / 49.0 | 19.6 / 23.7 / 55.7 | 19.3 / 28.3 / 51.1 |
+| Added per deal frame (mean, build frame excluded) | +0.28 ms | **+0.20 ms** | **+1.85 ms** |
+
+The share of deal frames over 20 ms mostly tracks the device's state in that
+run (compare the two rows of the same option); the added-per-frame figure is
+the one that separates the options.
 
 Per live card on the A12: **15.77 MB** of video memory in every option except A
 (whose per-card stage is disabled; A pays 160 MB for the table instead). The
@@ -484,10 +509,11 @@ Dawn as a card turning over. Settings stays for settings.
    (C) for slow, single-card reveals. Piles, the reshuffle and the top-menu
    deck are canvas stacks of one baked back; many-card views use baked faces.
    It puts the live material where the eye has time to see it, and keeps the
-   deal at +0.25 ms on a device that is already at budget.
-2. **C everywhere.** One renderer, the best look in every flight, +1.4 ms per
-   deal frame on the iPad 8. The right choice if one mechanism matters more
-   than that cost.
+   five-card deal at +0.2 ms (no more than today's) on a device that is
+   already at budget.
+2. **C everywhere.** One renderer, the best look in every flight, +1.9 ms per
+   frame during a five-card deal on the iPad 8. The right choice if one
+   mechanism matters more than that cost.
 3. **B everywhere.** The cheapest; the material is frozen even in slow
    reveals, which is where the owner's "real object" is most visible.
 4. **A, the shared table — rejected.** It changes the tuned look at rest,
@@ -527,8 +553,8 @@ nothing.
 
 ### 6.3 Risks
 
-- **The A12 is already at budget at rest** (16.7 to 21.1 ms medians in every
-  device run). The idle rule in §3 and the picture turn for bulk flights are
+- **The A12 is already at budget at rest** (16.6 to 21.1 ms medians across
+  eighteen device runs). The idle rule in §3 and the picture turn for bulk flights are
   what keep the new work from becoming permanent cost.
 - **Video memory per live card (15.8 MB) is the real hazard** of "piles of real
   cards" and of the deck view. Anything that wants many cards must use baked
