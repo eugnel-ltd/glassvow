@@ -234,6 +234,17 @@ back, not live cards. That is the rule for the piles, the reshuffle and the
 top-menu deck as #657 builds them; until then the game wears no back outside
 the card lab, and the piles keep their own paintings.
 
+### Baked face
+A card's face at rest, kept as one picture: the card's lit stage copied once,
+with its table shadow and a rare's shine laid beside it exactly as the live
+card lays them, so a baked card at rest is the live card's pixels. A view that
+shows many cards at once — the deck overlay and every deck picker — draws baked
+faces, one per distinct card, and stands a live card in only for the one under
+the pointer, which goes back to its face once it has sprung back to rest. A
+live card holds about 16 MB of video memory and a baked face under 1 MB, so a
+deck of any size costs its distinct faces and one live card. Baked faces last a
+run (the title drops them) and are baked again in another language.
+
 ---
 
 ## The actor

@@ -177,6 +177,26 @@ pass, 1 on a failure and 2 under `--headless`:
 godot --path . -s res://tools/check_card_back_bake.gd -- --out=/tmp/card-backs
 ```
 
+The deck overlay's baked faces (`presentation/cards/card_faces.gd`, #657) have
+their job rules, the grid's one-live-card rule and its picks in the suite
+(`tests/test_card_faces.gd`, on a fake render step). Two windowed tools boot
+the game on the map, so the shape and language flags are the game's own. The
+proof opens the run's deck and compares every card on screen, baked and with a
+live card standing in, pixel for pixel (the first frame of the swap too, and
+the frame after a pointer has visited and left), and every distinct face's
+texels with a settled live card's; it exits 0 on a pass, 1 on a failure and 2
+under `--headless`. The bench opens and closes
+the overlay at 10 and 30 cards and prints the video memory it holds and its
+frame times; it drives only `Main._show_run_deck` and `Main._close_overlay`, so
+it measures any tree, before and after:
+
+```bash
+godot --path . -s res://tools/check_card_faces.gd -- --map --seed=1 \
+  --vp=1180x820 [--locale=zh-Hant] --out=/tmp/card-faces
+godot --path . -s res://tools/bench_deck_view.gd -- --map --seed=1 \
+  --shape=pad-landscape --out=/tmp/deck-view
+```
+
 Whole-run balance calibration is a CLI-only, domain simulation. The default
 replays both aspects over the same 200 contiguous seeds; `--out` retains the
 manifest, every run row, derived metrics and calibration verdict as JSON:

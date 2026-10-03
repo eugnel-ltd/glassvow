@@ -1157,6 +1157,8 @@ func _show_title() -> void:
 	_remember_route(_show_title)
 	# A title never inherits a setting-out from a departure it replaced.
 	_setting_out = false
+	# The deck views' baked faces last a run; at the title no run is in hand.
+	CardFaces.forget()
 	_apply_pending_content_hydration()
 	var saved: RunState = _load_run()
 	var choices: Array[Dictionary] = []
