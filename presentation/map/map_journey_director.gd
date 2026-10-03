@@ -51,7 +51,7 @@ func pose_for(focus: int) -> Dictionary:
 		for i: int in range(0, screen._map_scene.road_segments().size(), 6):
 			roads.append(screen._map_scene.road_segments()[i])
 	return MapJourneyView.pose(seats, MapJourneyView.group(screen.map, focus), stage,
-		view.overview, roads)
+		view.overview, roads, view.level == MapJourneyView.Level.CLOSE)
 
 
 ## Frames the pilgrim's waystone and seats the pilgrim there.
@@ -76,11 +76,12 @@ func park() -> void:
 	land().set_flame(flame)
 
 
-## Wheel or pinch: Whole act outward, back to Journey inward.
+## Wheel or pinch: one level outward (Close, Journey, Whole act) or inward.
 func zoom(outward: bool) -> void:
-	if screen._travelling or view.overview == outward:
+	var next: int = clampi(int(view.level) + (1 if outward else -1), 0, 2)
+	if screen._travelling or next == int(view.level):
 		return
-	view.overview = outward
+	view.level = next as MapJourneyView.Level
 	frame(screen.map.at)
 
 

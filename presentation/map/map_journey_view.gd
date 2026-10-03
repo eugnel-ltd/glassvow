@@ -11,7 +11,17 @@ extends RefCounted
 ## nearest members and leaves the rest a pan away; it never shrinks a target.
 
 const Contract = preload("res://presentation/map/map_journey_camera_contract.gd")
-var overview: bool = false
+## Close looks nearer than Journey around the same waystones (its touch
+## squares only grow); Whole act frames the act.
+enum Level { CLOSE, JOURNEY, WHOLE }
+## How much nearer Close stands than Journey.
+const CLOSE_FACTOR: float = 0.68
+var level: Level = Level.JOURNEY
+var overview: bool:
+	get:
+		return level == Level.WHOLE
+	set(value):
+		level = Level.WHOLE if value else Level.JOURNEY
 
 
 ## The waystones Journey frames from `focus` (-1 before the first step: the
@@ -32,7 +42,7 @@ static func group(map: WorldMap, focus: int) -> Array[int]:
 ## The camera pose for `members` of `seats` on a `stage`-sized screen, or
 ## `{"ok": false}`. Whole act when `whole` (`members` ignored).
 static func pose(seats: PackedVector3Array, members: Array[int], stage: Vector2,
-		whole: bool, roads: PackedVector3Array = PackedVector3Array()) -> Dictionary:
+		whole: bool, roads: PackedVector3Array = PackedVector3Array(), close: bool = false) -> Dictionary:
 	if seats.is_empty():
 		return {"ok": false, "reason": "no seats"}
 	var out: Dictionary
@@ -51,6 +61,10 @@ static func pose(seats: PackedVector3Array, members: Array[int], stage: Vector2,
 				break
 			kept.remove_at(_farthest(seats, kept))
 		out["members"] = kept
+	if out.get("ok", false) and close:
+		var near: float = out["zoom"]
+		out["zoom"] = near * CLOSE_FACTOR
+		out["close"] = true
 	if out.get("ok", false):
 		var zoom: float = out["zoom"]
 		var bounds: Rect2 = pan_bounds(stage, zoom)

@@ -124,6 +124,13 @@ var _onboard: String = ""
 ## --settle=SECONDS: extra wait before a `--shot=` capture, so a composition is
 ## photographed at rest rather than mid-entrance.
 var _settle: float = 0.0
+## --map captures: --map-steps=N walks the run N waystones in before the map
+## opens; --map-view=close|journey|whole frames Act I's journey camera before
+## the shot; --map-walk=SECONDS starts the walk to the first lit waystone and
+## photographs it that far in.
+var _map_steps: int = 0
+var _map_view: String = ""
+var _map_walk: float = -1.0
 ## The ceremony layer — wipe, transit leaves, grain — living above every routed
 ## screen so a leaf started before a route swap finishes over the incoming
 ## screen. Screens never see it; main fires it around its own route helpers.
@@ -335,6 +342,12 @@ func _ready() -> void:
 			resume_run = true
 		elif arg == "--map":
 			show_map = true
+		elif arg.begins_with("--map-steps="):
+			_map_steps = clampi(int(arg.trim_prefix("--map-steps=")), 0, 14)
+		elif arg.begins_with("--map-view="):
+			_map_view = arg.trim_prefix("--map-view=")
+		elif arg.begins_with("--map-walk="):
+			_map_walk = maxf(0.0, float(arg.trim_prefix("--map-walk=")))
 		elif arg == "--dawn":
 			show_dawn_bench = true
 		elif arg == "--shop":
@@ -537,6 +550,7 @@ func _ready() -> void:
 	elif show_map:
 		_opening_suppressed = true
 		_new_run()
+		_walk_map_steps()
 		if map_timing:
 			_attach_map_open_bench()
 			return
@@ -816,6 +830,7 @@ func _capture_and_quit(path: String) -> void:
 	if waited > 0:
 		for _k: int in range(20):
 			await get_tree().process_frame
+	await _stage_map_capture()
 	if _settle > 0.0:
 		await get_tree().create_timer(_settle).timeout
 	if _onboard == "targeting" or _onboard == HintGuide.TARGETING:
@@ -826,6 +841,43 @@ func _capture_and_quit(path: String) -> void:
 	img.save_png(path)
 	print("shot saved: " + path)
 	get_tree().quit(0)
+
+
+## --map-steps: walks the fresh run's map that many waystones in (each node
+## entered and cleared, as a played step leaves it) and shows the map again.
+func _walk_map_steps() -> void:
+	if _map_steps <= 0 or _map == null or game == null:
+		return
+	for _i: int in range(_map_steps):
+		var next: Array[int] = _map.reachable()
+		if next.is_empty():
+			break
+		_map.enter(next[0])
+		_map.clear_current()
+	game.run.map = _map.to_dict()
+	_map_keep.release()
+	_show_map()
+
+
+## --map-view and --map-walk: frames Act I's journey camera, or starts the walk
+## to the first lit waystone, before a --shot capture.
+func _stage_map_capture() -> void:
+	if not is_instance_valid(_map_screen) or _map_screen._journey == null \
+			or not _map_screen._journey.active():
+		return
+	var levels: Dictionary = {"close": MapJourneyView.Level.CLOSE,
+		"journey": MapJourneyView.Level.JOURNEY, "whole": MapJourneyView.Level.WHOLE}
+	if levels.has(_map_view):
+		_map_screen._journey.view.level = levels[_map_view]
+		_map_screen._journey.frame(_map.at)
+		for _i: int in range(20):
+			await get_tree().process_frame
+	if _map_walk >= 0.0:
+		var next: Array[int] = _map.reachable()
+		if not next.is_empty():
+			_map_screen.node_chosen.disconnect(_on_node_chosen)
+			_map_screen.choose(next[0])
+			await get_tree().create_timer(_map_walk).timeout
 
 
 func _onboard_arm_target() -> void:

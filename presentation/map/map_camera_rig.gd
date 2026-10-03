@@ -237,7 +237,8 @@ func apply_journey_pose(pose: Dictionary) -> bool:
 	_camera.position = position
 	_camera.size = zoom
 	_camera.far = 400.0
-	var stop: int = ZOOM_STOPS.size() - 1 if pose.get("overview", false) else DEFAULT_STOP
+	var stop: int = ZOOM_STOPS.size() - 1 if pose.get("overview", false) \
+		else (DEFAULT_STOP - 1 if pose.get("close", false) else DEFAULT_STOP)
 	if stop != zoom_stop:
 		zoom_stop = stop
 		zoom_stop_changed.emit(zoom_stop)

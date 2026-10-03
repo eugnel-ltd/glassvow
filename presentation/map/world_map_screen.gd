@@ -447,6 +447,7 @@ func reopen(run: RunState) -> void:
 	_drift = PointerDrift.new()
 	if _map_scene != null and _map_scene.get_rig().zoom_stop != MapCameraRig.DEFAULT_STOP:
 		_map_scene.get_rig().set_zoom_stop(MapCameraRig.DEFAULT_STOP)
+	_journey.view.level = MapJourneyView.Level.JOURNEY
 	for i: int in range(_waystones.size()):
 		if _face(map.nodes[i]) == _faces[i]:
 			continue
