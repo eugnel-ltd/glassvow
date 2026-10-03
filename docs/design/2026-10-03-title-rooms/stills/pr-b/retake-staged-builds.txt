@@ -1,0 +1,91 @@
+# The staged builds (446f8f73: How to Play's pages built on first showing, the Credits roll's lower parts
+# a part a frame after the tap frame) retaken against the evidence in this folder, to show they change no
+# pixel a player sees. Every How to Play and Credits still (7 parts x 3 shapes x 2 languages, tools/capture_rooms.gd
+# --hold, as before) compared with its committed twin: the share of pixels that moved by 24 levels or more.
+# All are at most 0.24%, the road's motes, lamps and flame between two captures; the one local difference
+# is the Lantern page's ember diagram, whose clock now starts when its page is first shown (a different
+# phase of the same loop). The committed stills stand.
+  credits-end-desktop-landscape-en.jpg             0.20% moved >=24, bbox (0, 2, 1445, 816)
+  credits-end-desktop-landscape-zh-Hant.jpg        0.17% moved >=24, bbox (15, 2, 1448, 818)
+  credits-end-pad-landscape-en.jpg                 0.21% moved >=24, bbox (35, 0, 1169, 814)
+  credits-end-pad-landscape-zh-Hant.jpg            0.01% moved >=24, bbox (117, 527, 1085, 819)
+  credits-end-phone-landscape-en.jpg               0.00% moved >=24, bbox (641, 379, 642, 380)
+  credits-end-phone-landscape-zh-Hant.jpg          0.04% moved >=24, bbox (88, 141, 800, 381)
+  credits-engine-desktop-landscape-en.jpg          0.00% moved >=24, bbox (78, 106, 1306, 705)
+  credits-engine-desktop-landscape-zh-Hant.jpg     0.00% moved >=24, bbox (1066, 784, 1067, 785)
+  credits-engine-pad-landscape-en.jpg              0.00% moved >=24, bbox (422, 99, 887, 575)
+  credits-engine-pad-landscape-zh-Hant.jpg         0.00% moved >=24, bbox None
+  credits-engine-phone-landscape-en.jpg            0.00% moved >=24, bbox (179, 130, 196, 147)
+  credits-engine-phone-landscape-zh-Hant.jpg       0.00% moved >=24, bbox (179, 130, 196, 147)
+  credits-fonts-desktop-landscape-en.jpg           0.00% moved >=24, bbox (70, 287, 1306, 761)
+  credits-fonts-desktop-landscape-zh-Hant.jpg      0.00% moved >=24, bbox None
+  credits-fonts-pad-landscape-en.jpg               0.00% moved >=24, bbox (76, 155, 802, 746)
+  credits-fonts-pad-landscape-zh-Hant.jpg          0.00% moved >=24, bbox (163, 154, 796, 777)
+  credits-fonts-phone-landscape-en.jpg             0.00% moved >=24, bbox (30, 28, 567, 349)
+  credits-fonts-phone-landscape-zh-Hant.jpg        0.00% moved >=24, bbox None
+  credits-head-desktop-landscape-en.jpg            0.00% moved >=24, bbox (947, 715, 1199, 719)
+  credits-head-desktop-landscape-zh-Hant.jpg       0.02% moved >=24, bbox (136, 225, 1425, 808)
+  credits-head-pad-landscape-en.jpg                0.01% moved >=24, bbox (152, 585, 946, 808)
+  credits-head-pad-landscape-zh-Hant.jpg           0.15% moved >=24, bbox (0, 28, 1180, 820)
+  credits-head-phone-landscape-en.jpg              0.00% moved >=24, bbox (644, 340, 645, 341)
+  credits-head-phone-landscape-zh-Hant.jpg         0.00% moved >=24, bbox (568, 317, 616, 370)
+  credits-music-desktop-landscape-en.jpg           0.07% moved >=24, bbox (50, 59, 1401, 807)
+  credits-music-desktop-landscape-zh-Hant.jpg      0.21% moved >=24, bbox (24, 5, 1458, 818)
+  credits-music-pad-landscape-en.jpg               0.24% moved >=24, bbox (12, 15, 1176, 820)
+  credits-music-pad-landscape-zh-Hant.jpg          0.16% moved >=24, bbox (3, 15, 1180, 820)
+  credits-music-phone-landscape-en.jpg             0.00% moved >=24, bbox (528, 343, 652, 344)
+  credits-music-phone-landscape-zh-Hant.jpg        0.00% moved >=24, bbox (462, 102, 726, 382)
+  help-lantern-desktop-landscape-en.jpg            0.03% moved >=24, bbox (94, 145, 1045, 775)
+  help-lantern-desktop-landscape-zh-Hant.jpg       0.03% moved >=24, bbox (73, 172, 973, 769)
+  help-lantern-pad-landscape-en.jpg                0.04% moved >=24, bbox (721, 334, 832, 362)
+  help-lantern-pad-landscape-zh-Hant.jpg           0.04% moved >=24, bbox (74, 194, 964, 781)
+  help-lantern-phone-landscape-en.jpg              0.11% moved >=24, bbox (222, 214, 336, 241)
+  help-lantern-phone-landscape-zh-Hant.jpg         0.11% moved >=24, bbox (222, 217, 336, 245)
+  help-road-desktop-landscape-en.jpg               0.00% moved >=24, bbox (69, 351, 800, 760)
+  help-road-desktop-landscape-zh-Hant.jpg          0.00% moved >=24, bbox (94, 165, 1079, 763)
+  help-road-pad-landscape-en.jpg                   0.00% moved >=24, bbox None
+  help-road-pad-landscape-zh-Hant.jpg              0.00% moved >=24, bbox None
+  help-road-phone-landscape-en.jpg                 0.00% moved >=24, bbox (180, 119, 430, 182)
+  help-road-phone-landscape-zh-Hant.jpg            0.00% moved >=24, bbox None
+
+# The sequences that pass through the changed rooms, retaken at --fixed-fps 60: every gate line equals
+# the committed one in sequence-gates.txt to the fourth decimal (largest step, its frame, the whole change, idle), and
+# every grey gate passes. The committed sheets stand. How to Play's own section change (g3-help, the third
+# below, seq-g3-help-pad-en.jpg) is new: it lights the pane under the finger at once (68% of its small change
+# on frame 1, Settings' G3 57%) and cross-fades the pages over frames 2-5, the new page built on that tap.
+  -- g1-help-pad-en: --shape=pad-landscape --locale=en --seq=open --room=help --frames=36 
+  contact sheet: seq-g1-help-pad-en.jpg (37 frames)
+  grey gate PASS: worst frame 0 has 0.07% grey (limit 0.5%)
+  cut gate FAIL: largest step 0.0279 at frame 10, whole change 0.1182, idle 0.0003, limit 0.0151 (reported, not graded without --rm)
+  -- g2-help-pad-en: --shape=pad-landscape --locale=en --seq=close --room=help --frames=28 
+  contact sheet: seq-g2-help-pad-en.jpg (29 frames)
+  grey gate PASS: worst frame 16 has 0.07% grey (limit 0.5%)
+  cut gate FAIL: largest step 0.0258 at frame 17, whole change 0.1124, idle 0.0004, limit 0.0145 (reported, not graded without --rm)
+  -- g3-help-pad-en: --shape=pad-landscape --locale=en --seq=section --room=help --frames=18 --section=combat
+  contact sheet: seq-g3-help-pad-en.jpg (19 frames)
+  grey gate PASS: worst frame 10 has 0.02% grey (limit 0.5%)
+  cut gate FAIL: largest step 0.0188 at frame 1, whole change 0.0275, idle 0.0001, limit 0.0036 (reported, not graded without --rm)
+  -- c1-credits-pad-en: --shape=pad-landscape --locale=en --seq=open --room=credits --frames=40 
+  contact sheet: seq-c1-credits-pad-en.jpg (41 frames)
+  grey gate PASS: worst frame 0 has 0.07% grey (limit 0.5%)
+  cut gate FAIL: largest step 0.0163 at frame 10, whole change 0.0869, idle 0.0008, limit 0.0116 (reported, not graded without --rm)
+  -- c2-credits-pad-en: --shape=pad-landscape --locale=en --seq=close --room=credits --frames=33 
+  contact sheet: seq-c2-credits-pad-en.jpg (34 frames)
+  grey gate PASS: worst frame 20 has 0.09% grey (limit 0.5%)
+  cut gate FAIL: largest step 0.0221 at frame 19, whole change 0.0819, idle 0.0005, limit 0.0107 (reported, not graded without --rm)
+  -- c3-credits-pad-en: --shape=pad-landscape --locale=en --seq=glass --room=credits --frames=24 --section=fonts
+  contact sheet: seq-c3-credits-pad-en.jpg (25 frames)
+  grey gate PASS: worst frame 2 has 0.12% grey (limit 0.5%)
+  cut gate FAIL: largest step 0.0161 at frame 10, whole change 0.0521, idle 0.0030, limit 0.0095 (reported, not graded without --rm)
+  -- x1-help-pad-en: --shape=pad-landscape --locale=en --seq=run --room=help --frames=36 
+  contact sheet: seq-x1-help-pad-en.jpg (37 frames)
+  grey gate PASS: worst frame 9 has 0.05% grey (limit 0.5%)
+  cut gate FAIL: largest step 0.0159 at frame 1, whole change 0.0810, idle 0.0030, limit 0.0131 (reported, not graded without --rm)
+  -- c1-credits-phone-zh: --shape=phone-landscape --locale=zh-Hant --seq=open --room=credits --frames=40 
+  contact sheet: seq-c1-credits-phone-zh.jpg (41 frames)
+  grey gate PASS: worst frame 1 has 0.07% grey (limit 0.5%)
+  cut gate FAIL: largest step 0.0155 at frame 12, whole change 0.0762, idle 0.0007, limit 0.0102 (reported, not graded without --rm)
+  -- c1-credits-pad-en-rm: --shape=pad-landscape --locale=en --seq=open --room=credits --frames=16 --rm
+  contact sheet: seq-c1-credits-pad-en-rm.jpg (17 frames)
+  grey gate PASS: worst frame 4 has 0.09% grey (limit 0.5%)
+  cut gate PASS: largest step 0.0093 at frame 5, whole change 0.0808, idle 0.0000, limit 0.0101
