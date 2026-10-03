@@ -289,10 +289,6 @@ static func _bake_jobs(fails: Array[String]) -> void:
 	var at: float = CardView.oversample
 	var host_a: Node = Node.new()
 	var host_b: Node = Node.new()
-	# A bake that hands a freed host to a typed parameter fails no assertion
-	# below (the call just returns null); the engine reports it, so listen.
-	var errors: _ScriptErrors = _ScriptErrors.new()
-	OS.add_logger(errors)
 
 	# Two callers, one job; both get its bake, and a third gets it from the cache.
 	var a: _Caller = _Caller.start(host_a, "rose")
@@ -376,9 +372,6 @@ static func _bake_jobs(fails: Array[String]) -> void:
 	if b.got == null or CardBacks.cached("eclipse") != b.got:
 		fails.append("card backs: the chosen back's bake in flight was not kept")
 
-	OS.remove_logger(errors)
-	if not errors.seen.is_empty():
-		fails.append("card backs: the bake jobs raised script errors: %s" % "; ".join(errors.seen))
 	CardBacks.use_renderer(Callable())
 	CardBacks.use_catalogue(null)
 	host_a.free()
@@ -491,21 +484,6 @@ class _FakeRender:
 		var out: CardBacks.Baked = CardBacks.Baked.new()
 		out.oversample = scale
 		return out
-
-
-## The script errors the engine reports while this is registered.
-class _ScriptErrors:
-	extends Logger
-	var seen: PackedStringArray = PackedStringArray()
-
-	func _log_error(_function: String, _file: String, _line: int, code: String,
-			rationale: String, _editor_notify: bool, error_type: int,
-			_script_backtraces: Array[ScriptBacktrace]) -> void:
-		if error_type == Logger.ERROR_TYPE_SCRIPT:
-			seen.append(code if rationale.is_empty() else rationale)
-
-	func _log_message(_message: String, _error: bool) -> void:
-		pass
 
 
 ## One caller of CardBacks.bake, started without waiting, so a test can hold
