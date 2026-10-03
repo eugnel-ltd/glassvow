@@ -40,11 +40,13 @@ extends RefCounted
 ## asked for it and never kept. So straight after a choice the cache holds the
 ## chosen back at most, and afterwards whatever is baked from then on.
 
-## Frames drawn before the readback. One draw renders both passes (the face
-## viewport is drawn before the stage that samples it); the others are margin.
-## A first-use shader compile does not need a frame of its own: it stalls the
-## draw it happens in.
-const BAKE_FRAMES: int = 3
+## Frames drawn before the readback: one. That draw renders both passes (the
+## face viewport is drawn before the stage that samples it), and a first-use
+## shader compile does not need a frame of its own: it stalls the draw it
+## happens in. One frame is what lets a fight's load bake its back inside the
+## frame that builds it (CardTurn.prewarm): the readback lands straight after
+## that frame's draw, before the next frame begins.
+const BAKE_FRAMES: int = 1
 
 static var _catalogue: CardBackCatalogue = null
 static var _bakes: Dictionary = {}     # back id -> Baked
@@ -68,6 +70,10 @@ class Baked:
 	## The back's 2D face — (card + 2 * PAD_IN) at the oversample — the texture
 	## a slab's back plate samples through card_surface.gdshader.
 	var inner: Texture2D
+	## The back card's own face material over `inner`: what the live turn's
+	## back plate wears (CardTurn.plate), so the plate is that card's face,
+	## finish and all.
+	var plate: ShaderMaterial
 	## The oversample the card was BUILT at, which is what its pixels are.
 	var oversample: float = 0.0
 
@@ -207,7 +213,10 @@ static func _render_live(host: Node, id: String, scale: float) -> Baked:
 	if not is_instance_valid(view):
 		return null    # its host was freed, and the card with it
 	var out: Baked = _read_back(view, scale) if view.is_inside_tree() else null
-	view.queue_free()
+	# Freed now, not queued: the readback lands straight after the draw, and a
+	# queued free would land the card's teardown in the next frame, the first
+	# frame a fight's entrance plays (CardTurn.prewarm).
+	view.free()
 	return out
 
 
@@ -217,8 +226,17 @@ static func _read_back(view: CardView, scale: float) -> Baked:
 	stage_img.generate_mipmaps()
 	out.stage = ImageTexture.create_from_image(stage_img)
 	out.inner = ImageTexture.create_from_image(view.face_image())
+	out.plate = plate_of(view, out.inner)
 	out.oversample = scale
 	return out
+
+
+## `view`'s face material over `inner` in place of its live face: the back
+## plate a bake of `view` dresses a turning card in.
+static func plate_of(view: CardView, inner: Texture2D) -> ShaderMaterial:
+	var plate: ShaderMaterial = view.face_material().duplicate() as ShaderMaterial
+	plate.set_shader_parameter("face_tex", inner)
+	return plate
 
 
 ## `id` when the catalogue knows it, else the default (said loudly: callers

@@ -70,6 +70,7 @@ failing halfway through one.
 | Real combat bench | `--fight=… --kind=… --seed=…` | `Combat bench` |
 | Card catalogue / materials | `--cards`, `--surfaces` | `Card catalogue` |
 | Card material editor | `--studio` | `Card studio` |
+| Card turn sheet | `--turns[=card]` | CLI only |
 | Enemy roster / states / fracture sheet | `--enemies` | `Enemy roster` |
 | Enemy and fracture editor | `--enemies --bench` | `Enemy bench` |
 | Status and intent chips | `--chips` | `Status & intent chips` |
@@ -205,6 +206,23 @@ godot --path . -s res://tools/check_card_faces.gd -- --map --seed=1 \
   --out=/tmp/card-faces
 godot --path . -s res://tools/bench_deck_view.gd -- --map --seed=1 \
   --shape=pad-landscape [--sizes=30,10] --out=/tmp/deck-view
+```
+
+The card turn (`CardView.turn`, `presentation/cards/card_turn.gd`, #657) has
+its pose maths, both renderers' state, rest, the back plate a bake dresses a
+card in, the pre-warm and every fight's load paying for it in the suite
+(`tests/test_card_turn.gd`, on a fake bake). The turn sheet is its regression
+still: one card at six poses, the live turn over the picture turn, for every
+back in the catalogue. The windowed proof draws one card alone into a
+transparent target at the 2x oversample and, for every back, compares the two
+renderers' silhouettes and colour at each turned pose (`AGREE`), each against
+the bake face down (`DOWN`), and checks that a card turned by either renderer
+and back to rest is the card as built, every canvas pixel and stage texel
+(`REST`). It exits 0 on a pass, 1 on a failure and 2 under `--headless`:
+
+```bash
+tools/shot.sh --turns[=bastion] --zoom=2 --vp=1458x820 --settle=1 --shot=/tmp/turns.png
+godot --path . -s res://tools/check_card_turn.gd -- --out=/tmp/card-turn [--card=bastion]
 ```
 
 Whole-run balance calibration is a CLI-only, domain simulation. The default

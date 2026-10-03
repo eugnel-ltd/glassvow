@@ -291,6 +291,19 @@ var _hovered: bool = false
 var _body: RulesText = null
 ## Built as a card back — a painting on the slab, no face furniture, no stone.
 var _is_back: bool = false
+## The stage render as the canvas shows it, the rare's shine over it, and what
+## a turn needs of the slab: its thickness and its side band's colour.
+var _display: Control = null
+var _shine: Control = null
+var _thick: float = 0.0
+var _side: Color = Color.BLACK
+## TURNING OVER (`turn`): the pose the card is laid at, the share of it the
+## slab itself wears (a live turn's), the picture turn's material and the live
+## turn's back plate. Rest, and nothing built, until the card is first turned.
+var _pose: Basis = Basis.IDENTITY
+var _slab_turn: Basis = Basis.IDENTITY
+var _warp: ShaderMaterial = null
+var _back_plate: MeshInstance3D = null
 var _tilt: Vector2 = Vector2.ZERO         # (rot_x, rot_y) degrees
 var _tilt_v: Vector2 = Vector2.ZERO
 var _tilt_target: Vector2 = Vector2.ZERO
@@ -602,6 +615,12 @@ func has_shine() -> bool:
 	return _is_rare
 
 
+## The material the slab's face wears: a back's bake dresses the live turn's
+## back plate in a copy of it (CardBacks, CardTurn.plate).
+func face_material() -> ShaderMaterial:
+	return _slab.get_surface_override_material(1) as ShaderMaterial
+
+
 ## Place a node as a horizontal band on the face, inset from both sides.
 ##
 ## Under TOP_WIDE the right anchor sits at 1.0, so offset_right insets from the
@@ -719,6 +738,7 @@ func _build_cost_gem(parent: Control, cost: int, free: bool) -> void:
 func _build_stage(content: Control, mat: Dictionary, tint: Color,
 		free: bool) -> void:
 	var thick: float = mat["thick"]
+	_thick = thick
 	_inner = SubViewport.new()
 	_inner.size = Vector2i(
 		int((CARD_W + 2.0 * PAD_IN) * oversample),
@@ -753,6 +773,7 @@ func _build_stage(content: Control, mat: Dictionary, tint: Color,
 	var side_mat: StandardMaterial3D = StandardMaterial3D.new()
 	side_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	side_mat.albedo_color = CardSurface.body_color(mat, tint)
+	_side = side_mat.albedo_color
 	side_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_slab.set_surface_override_material(0, side_mat)
 
@@ -784,16 +805,23 @@ func _build_stage(content: Control, mat: Dictionary, tint: Color,
 	# ...measured to the FRONT face, not the slab's mid-plane. Frame the mid-
 	# plane instead and the face — nearer the lens by half the thickness —
 	# comes out half a percent oversize, overhanging its own shadow.
-	var dist: float = (CARD_H + 2.0 * PAD_3D) * 0.5 \
-		/ tan(deg_to_rad(FOV_DEG * 0.5))
+	var dist: float = lens()
 	cam.position = Vector3(0.0, 0.0, dist + thick * 0.5)
 	cam.near = dist * 0.5
 	cam.far = dist * 1.5
 	_stage.add_child(cam)
 
-	add_child(picture(_stage.get_texture()))
+	_display = picture(_stage.get_texture())
+	add_child(_display)
 	if _is_rare:
-		add_child(shine())
+		_shine = shine()
+		add_child(_shine)
+
+
+## The stage camera's distance to the slab's front face, in card px: where the
+## stage's rect maps 1:1 onto logical pixels.
+static func lens() -> float:
+	return (CARD_H + 2.0 * PAD_3D) * 0.5 / tan(deg_to_rad(FOV_DEG * 0.5))
 
 
 ## The card's table shadow, a flat panel under the slab. A baked card
@@ -970,6 +998,34 @@ static func _facet(st: SurfaceTool, base_z: float,
 		st.add_vertex(Vector3(p.x, p.y, p.z + base_z))
 
 
+## The face alone, a fan over the outline at height `z` with the face
+## texture's UVs: the live turn's back plate (CardTurn.plate) is this, built by
+## the same code as the slab's front, so the two share one vertex layout.
+static func face_fan(z: float) -> ArrayMesh:
+	var mesh: ArrayMesh = ArrayMesh.new()
+	_add_fan(mesh, z)
+	return mesh
+
+
+## Godot's front faces wind CLOCKWISE seen from outside — the outline is
+## counterclockwise from the camera, so each fan triangle goes centre → b → a.
+static func _add_fan(mesh: ArrayMesh, z: float) -> void:
+	var pts: PackedVector2Array = _outline()
+	var n: int = pts.size()
+	var face: SurfaceTool = SurfaceTool.new()
+	face.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i: int in range(n):
+		var a: Vector2 = pts[i]
+		var b: Vector2 = pts[(i + 1) % n]
+		face.set_uv(_uv(0.0, 0.0))
+		face.add_vertex(Vector3(0.0, 0.0, z))
+		face.set_uv(_uv(b.x, b.y))
+		face.add_vertex(Vector3(b.x, b.y, z))
+		face.set_uv(_uv(a.x, a.y))
+		face.add_vertex(Vector3(a.x, a.y, z))
+	face.commit(mesh)
+
+
 ## Surface 0: the side band — the glass's cross-section, visible only when
 ## the pane leans. Surface 1: the front face, a fan over the outline; its
 ## rounded silhouette is geometry, so the tilted card's edge stays clean
@@ -1004,20 +1060,7 @@ static func _prism_mesh(thick: float) -> ArrayMesh:
 		side.add_vertex(ba)
 	side.commit(mesh)
 
-	# Godot's front faces wind CLOCKWISE seen from outside — the outline is
-	# counterclockwise from the camera, so each fan triangle goes centre → b → a.
-	var face: SurfaceTool = SurfaceTool.new()
-	face.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for i: int in range(n):
-		var a: Vector2 = pts[i]
-		var b: Vector2 = pts[(i + 1) % n]
-		face.set_uv(_uv(0.0, 0.0))
-		face.add_vertex(Vector3(0.0, 0.0, hz))
-		face.set_uv(_uv(b.x, b.y))
-		face.add_vertex(Vector3(b.x, b.y, hz))
-		face.set_uv(_uv(a.x, a.y))
-		face.add_vertex(Vector3(a.x, a.y, hz))
-	face.commit(mesh)
+	_add_fan(mesh, hz)
 
 	var gem: SurfaceTool = SurfaceTool.new()
 	gem.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -1204,12 +1247,60 @@ func _process(delta: float) -> void:
 ## the reading that ties the two together. It never rotates, because a shadow
 ## on a flat table cannot.
 func _apply_transform() -> void:
-	_slab.rotation_degrees = Vector3(_tilt.x, _tilt.y, 0.0)
+	if CardTurn.is_rest(_slab_turn):
+		_slab.rotation_degrees = Vector3(_tilt.x, _tilt.y, 0.0)
+	else:
+		# The pointer's tilt is the table's, so it leans the turned card.
+		_slab.basis = Basis.from_euler(Vector3(deg_to_rad(_tilt.x),
+			deg_to_rad(_tilt.y), 0.0)) * _slab_turn
 	_slab.position.z = _lift
 	var h: float = _lift / MAX_LIFT
 	_shadow.position = Vector2(_tilt.y, _tilt.x) * 0.28 + Vector2(0.0, 4.0 * h)
 	_shadow.modulate.a = 1.0 - 0.22 * h
 	_shadow_sb.shadow_size = _shadow_size + roundi(4.0 * h)
+
+
+## ── TURNING OVER ─────────────────────────────────────────────────────────
+## Lay the card at a pose: `yaw` degrees about its vertical axis (0 face up,
+## 180 face down) and `pitch` about its horizontal one (CardTurn.pose). A
+## `live` turn turns the slab in its own stage, its back plate wearing the
+## table's back and lit by the card's own lamp, and renders the stage once for
+## the pose; otherwise the picture turn warps the frozen stage on the canvas
+## and nothing renders. Both put every point of the card in the same place
+## (CardTurn). The table shadow narrows with the card and a rare's shine,
+## which is painted on the canvas over the card at rest, waits for rest.
+##
+## turn(0, 0, either) is rest: no material on the picture, the plate hidden,
+## the slab where it was built, the stage rendered once more if it had turned.
+## The plate and the material are built at the card's first turn.
+func turn(yaw: float, pitch: float, live: bool) -> void:
+	_pose = CardTurn.pose(yaw, pitch)
+	var turned: bool = not CardTurn.is_rest(_pose)
+	var slab_moves: bool = live and turned or not CardTurn.is_rest(_slab_turn)
+	_slab_turn = _pose if live and turned else Basis.IDENTITY
+	if live and turned and _back_plate == null:
+		_back_plate = CardTurn.plate(CardTurn.back(), _thick)
+		if _back_plate != null:
+			_slab.add_child(_back_plate)
+			_lit.append(_back_plate.material_override as ShaderMaterial)
+			_push_lamp()
+	if _back_plate != null:
+		_back_plate.visible = live and turned
+	if turned and not live:
+		if _warp == null:
+			_warp = CardTurn.picture(CardTurn.back(), _thick, _side)
+		CardTurn.set_pose(_warp, _pose)
+		_display.material = _warp
+	else:
+		_display.material = null
+	if _shine != null:
+		_shine.visible = not turned
+	_shadow.pivot_offset = size * 0.5
+	_shadow.scale = CardTurn.footprint(_pose)
+	_apply_transform()
+	# A hovered card's stage already renders every frame.
+	if slab_moves and not _hovered and not is_processing():
+		_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
 
 
 static func _font(path: String, tracking: int) -> Font:
@@ -1259,7 +1350,7 @@ func point_away() -> void:
 ## faded: it looks exactly as it did when it was built, so a bake of it can
 ## take its place unseen.
 func at_rest() -> bool:
-	return not _hovered and not is_processing() \
+	return not _hovered and not is_processing() and CardTurn.is_rest(_pose) \
 		and (_light_tw == null or not _light_tw.is_valid() or not _light_tw.is_running())
 
 
