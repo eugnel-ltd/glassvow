@@ -6,7 +6,9 @@ extends RefCounted
 ## without scrolling, in both languages; the Flame codex stands under the
 ## Lantern's rules, a flame beside each line, and nothing before a colour is
 ## seen; a phone's numerals show the lit section's name beside them. The room
-## is built with its lit page only, each other page on its first showing.
+## is built with its lit page only, each other page on its first showing. A
+## section change (G3) never prints the two pages over each other: the page
+## leaving goes at once, the page arriving rises as it clears.
 
 const SUITE: String = "res://tests/test_help_room.gd"
 const RUN_PATH: String = "user://test_help_room_run_v2.json"
@@ -70,6 +72,7 @@ static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]
 	Locale.active = Locale.new(Locale.CODE_EN)
 	await _coda(fails, tree, host, content)
 	await _phone(fails, tree, host)
+	await _pages_never_overprint(fails, tree, host)
 	Locale.active = kept_locale
 	Preferences.active = kept
 
@@ -162,6 +165,28 @@ static func _phone(fails: Array[String], tree: SceneTree, host: SubViewport) -> 
 	var pane: LeadlightPane = room.tab(&"road")
 	_check(fails, pane.size.x >= 60.0 - 0.5 and pane.size.y >= 44.0 - 0.5,
 		"a phone's numeral pane is under 60×44 (%s)" % pane.size)
+	help.queue_free()
+	await tree.process_frame
+
+
+## G3, stepped at 60 fps: at no step are both pages more than faintly there.
+static func _pages_never_overprint(fails: Array[String], tree: SceneTree, host: SubViewport) -> void:
+	var help: HelpScreen = HelpScreen.new(&"pad-landscape")
+	host.add_child(help)
+	await _frames(tree, 2)
+	var room: LeadlightRoom = help.room()
+	var leaving: Control = room.page(&"road")
+	room._choose(&"combat")
+	var arriving: Control = room.page(&"combat")
+	var worst: float = 0.0
+	var steps: int = 0
+	while room.changing() and steps < 60:
+		room._change.custom_step(1.0 / 60.0)
+		steps += 1
+		if leaving.visible and arriving.visible:
+			worst = maxf(worst, minf(leaving.modulate.a, arriving.modulate.a))
+	_check(fails, steps > 3, "the section change did not run as a passage")
+	_check(fails, worst <= 0.15, "the two pages print over each other during a section change (both at %.2f)" % worst)
 	help.queue_free()
 	await tree.process_frame
 

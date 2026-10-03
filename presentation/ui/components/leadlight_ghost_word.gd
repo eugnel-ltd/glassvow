@@ -50,6 +50,44 @@ static func _label_like(source: Control) -> Label:
 	return label
 
 
+## Half the word's extent in flight: the larger of the word and the crown, so
+## what it passes is measured against the most it covers.
+func half_extent() -> Vector2:
+	var a: Vector2 = _from.get_combined_minimum_size()
+	var b: Vector2 = _to.get_combined_minimum_size()
+	var pa: float = float(_from.get_theme_font_size("font_size"))
+	var pb: float = float(_to.get_theme_font_size("font_size"))
+	# Each label is drawn scaled to the other's size at the far end.
+	return Vector2(maxf(a.x * maxf(1.0, pb / pa), b.x * maxf(1.0, pa / pb)),
+		maxf(a.y * maxf(1.0, pb / pa), b.y * maxf(1.0, pa / pb))) * 0.5
+
+
+## Where along a straight flight from `from` to `to` (0..1) a word of `half`
+## extent last overlaps `rect`, or -1 when it never does (§2.3: what the word
+## crosses waits for it, so it never runs through lit text). Pure.
+static func leaves_at(from: Vector2, to: Vector2, half: Vector2, rect: Rect2) -> float:
+	var box: Rect2 = rect.grow_individual(half.x, half.y, half.x, half.y)
+	var d: Vector2 = to - from
+	var lo: float = 0.0
+	var hi: float = 1.0
+	for axis: int in range(2):
+		var p: float = from[axis]
+		var v: float = d[axis]
+		var a: float = box.position[axis]
+		var b: float = box.end[axis]
+		if absf(v) < 0.0001:
+			if p < a or p > b:
+				return -1.0
+			continue
+		var t0: float = (a - p) / v
+		var t1: float = (b - p) / v
+		lo = maxf(lo, minf(t0, t1))
+		hi = minf(hi, maxf(t0, t1))
+		if lo > hi:
+			return -1.0
+	return hi
+
+
 ## The word `g` (0..1) of the way from `from_node` to `to_node`, each read
 ## where it stands now (a room still laying out moves its crown).
 func fly(g: float, from_node: Control, to_node: Control) -> void:

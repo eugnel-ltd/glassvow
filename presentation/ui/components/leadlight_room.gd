@@ -7,8 +7,9 @@ extends LeadlightSheet
 ## the tree, so keyboard order is the order they read; only the lit page shows.
 ##
 ## A section change is a passage of its own (docs/design/2026-10-03-title-rooms
-## §5.2, G3): the page leaving fades, the page arriving rises 6 px into place
-## (or slides in from a phone swipe's side), and a glint runs along the lead
+## §5.2, G3): the page leaving goes at once, the page arriving rises 6 px into
+## place (or slides in from a phone swipe's side) as it clears, so the two
+## pages' text never prints over each other, and a glint runs along the lead
 ## from the pane to the page. A new choice retargets at once. Under Reduce
 ## Motion it is a 150 ms cross-fade.
 
@@ -17,9 +18,9 @@ signal section_selected(id: StringName)
 ## A section chosen by the player (its pane pressed): the room's sound.
 signal section_chosen(id: StringName)
 
-const OUT_TIME: float = 0.10
-const IN_FROM: float = 0.02
-const IN_TIME: float = 0.20
+const OUT_TIME: float = 0.08
+const IN_FROM: float = 0.06
+const IN_TIME: float = 0.16
 const GLINT_FROM: float = 0.04
 const GLINT_TIME: float = 0.18
 const RISE: float = 6.0
@@ -267,8 +268,8 @@ func _show(id: StringName, animate: bool, slide: float = 0.0) -> void:
 		_change.tween_property(arriving, "modulate:a", 1.0, LeadlightMotion.REDUCED_FADE)
 	else:
 		_change.tween_property(leaving, "modulate:a", 0.0, OUT_TIME) \
-			.set_trans(LeadlightMotion.EXIT.x as Tween.TransitionType) \
-			.set_ease(LeadlightMotion.EXIT.y as Tween.EaseType)
+			.set_trans(LeadlightMotion.SETTLE_OUT.x as Tween.TransitionType) \
+			.set_ease(LeadlightMotion.SETTLE_OUT.y as Tween.EaseType)
 		_change.tween_property(arriving, "modulate:a", 1.0, IN_TIME).set_delay(IN_FROM) \
 			.set_trans(LeadlightMotion.REVEAL.x as Tween.TransitionType) \
 			.set_ease(LeadlightMotion.REVEAL.y as Tween.EaseType)

@@ -280,11 +280,24 @@ func _label(text: String, role: StringName, token: Vector2i, colour: Color) -> L
 
 ## Warm every line by how near the lamp line (`lamp_y`, stage px) it stands:
 ## alpha 0.75 to 1, its colour towards warm parchment. A modulate per label.
-func warm(lamp_y: float, reach: float) -> void:
+## A line within `edge` px of the view's `top` or `foot` (stage px) fades out
+## towards it, as do the now-playing flame and the licence panes, so the view's
+## edge never cuts a lit line through.
+func warm(lamp_y: float, reach: float, top: float = -INF, foot: float = INF, edge: float = 0.0) -> void:
 	for label: Label in lines:
 		var y: float = label.get_global_rect().get_center().y
 		var w: float = 1.0 - clampf(absf(y - lamp_y) / maxf(reach, 1.0), 0.0, 1.0)
 		var base: Color = label.get_meta(&"base", LeadlightTokens.PARCHMENT)
 		var to: Color = base.lerp(WARM, 0.6 * w)
 		label.self_modulate = Color(to.r / maxf(base.r, 0.01), to.g / maxf(base.g, 0.01),
-			to.b / maxf(base.b, 0.01), 0.75 + 0.25 * w)
+			to.b / maxf(base.b, 0.01), (0.75 + 0.25 * w) * edge_fade(y, top, foot, edge))
+	for item: Control in [now_glyph, font_pane, engine_pane]:
+		if item != null and is_instance_valid(item):
+			item.self_modulate.a = edge_fade(item.get_global_rect().get_center().y, top, foot, edge)
+
+
+## 1 inside the view, falling to 0 at its top and foot over `edge` px. Pure.
+static func edge_fade(y: float, top: float, foot: float, edge: float) -> float:
+	if edge <= 0.0:
+		return 1.0
+	return smoothstep(0.0, edge, y - top) * smoothstep(0.0, edge, foot - y)

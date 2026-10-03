@@ -15,10 +15,29 @@ extends Control
 ## leaving room is inert from its first frame and any press lands it. Captures
 ## and the headless suite (`instant`) land everything on the frame it starts.
 ## Under Reduce Motion the change is the transition layer's 150 ms cross-fade
-## of the frame before it; with nothing copied, the room fades over 150 ms.
+## of the frame before it, the lantern landed beneath it coming in over the
+## fade's second half; with nothing copied, the room fades over 150 ms.
+##
+## What the word crosses waits for it: on arrival the room's content under its
+## flight rises once it has passed, and on leaving it sets off only once the
+## content behind its path is dark, so it never runs through lit text. Every
+## departure answers on the frame Return is tapped.
 
 const SWING_FROM: float = 0.38
 const AFTERGLOW_FROM: float = 0.36
+## The word's flight to the crown, from the tap: it lifts off at once and
+## settles into the crown, never outrunning the title's furniture as it goes.
+const GHOST_TIME: float = 0.42
+const GHOST_CURVE: Vector2i = LeadlightMotion.SETTLE_OUT
+## Return comes in once the lantern is nearly seated, never under it in flight.
+const SEAT_FROM: float = 0.36
+const SEAT_IN: float = 0.16
+## On leaving, the lantern sets off home this long after the tap (BREATH).
+const LANTERN_BACK_FROM: float = 0.04
+## How fast the furniture the word lifts through as it sets off goes (three
+## frames), and how soon after the tap the word must reach it to count.
+const CROSSED_GONE: float = 0.05
+const CROSSED_BEFORE: float = 0.1
 const GUARD_TIME: float = 0.3
 const GUARD_RADIUS: Vector2 = Vector2(64.0, 44.0)
 const POOL_SEATED: float = 0.15
@@ -39,6 +58,11 @@ class Arrival:
 	var ghost: LeadlightGhostWord = null
 	## Reduce Motion with nothing copied: the room fades up.
 	var fade: bool = false
+	## The title's furniture the word lifts through as it sets off (its
+	## neighbours): gone in a few frames, before it is there. Found once the
+	## room is laid out.
+	var crossed: Dictionary = {}
+	var crossed_found: bool = false
 
 
 ## Something on its way out: a room (depart, or sinking under a question, or
@@ -54,7 +78,13 @@ class Leaving:
 	var ghost: LeadlightGhostWord = null
 	var fade: bool = false
 	var order: Array[CanvasItem] = []
+	## When each piece of furniture may come back: once the word riding home
+	## has passed it (seconds from the tap; 0 when the word never crosses it).
+	var holds: Array[float] = []
 	var glowed: bool = false
+	## A sheet's exit curve (a yes-or-stay sheet's EXIT; the run menu folding
+	## as a room opens over it answers at once).
+	var curve: Vector2i = LeadlightMotion.EXIT
 
 
 var sfx: SfxBus = null
@@ -76,6 +106,10 @@ var _leaving: Array[Leaving] = []
 var _guard_at: Vector2 = Vector2.INF
 var _guard_left: float = 0.0
 var _press_at: Vector2 = Vector2.INF
+## Under Reduce Motion, the lantern landed beneath the cross-fade and how far
+## into it: it comes in over the fade's second half.
+var _faded_lantern: LeadlightLantern = null
+var _faded_t: float = -1.0
 
 
 func _init(bus: SfxBus = null) -> void:
@@ -96,10 +130,12 @@ func _init(bus: SfxBus = null) -> void:
 func arrive(host: LeadlightRoomHost, title: TitleScreen = null, word_id: String = "",
 		faded: bool = false, landed: bool = false) -> void:
 	land_arrival()
-	_land_leaving()
+	# A sheet folding away (the run menu the room opens over) keeps its exit.
+	_land_leaving(false)
+	_lantern_whole()
 	_open = host
 	var lend: bool = title != null and is_instance_valid(title)
-	host.seat().set_lantern(lend)
+	host.lend_seat(lend)
 	host.title = title if lend else null
 	var word: Control = title.word(word_id) if lend else null
 	if lend:
@@ -119,6 +155,8 @@ func arrive(host: LeadlightRoomHost, title: TitleScreen = null, word_id: String 
 	_give_focus.call_deferred(host)
 	if instant or landed or (LeadlightMotion.reduced() and faded) or not is_inside_tree():
 		_finish_arrival()
+		if lend and faded and LeadlightMotion.reduced() and not (instant or landed) and is_inside_tree():
+			_lantern_after_fade(title.lantern)
 		return
 	if LeadlightMotion.reduced():
 		# Nothing was copied to cross-fade from: the room fades up over the
@@ -130,6 +168,8 @@ func arrive(host: LeadlightRoomHost, title: TitleScreen = null, word_id: String 
 	if word != null:
 		a.ghost = _ghost(word, host.crown())
 		word.modulate.a = 0.0
+		if a.ghost != null:
+			host.ghost_clear = _ghost_clear.bind(a)
 	_apply_arrival(a, 0.0)
 
 
@@ -143,13 +183,17 @@ func depart(host: LeadlightRoomHost, faded: bool = false) -> void:
 		_open = null
 	if sfx != null:
 		sfx.play_owed(&"roomClose", &"click")
+	_lantern_whole()
 	var entry: Leaving = _entry(DEPART, host)
 	entry.title = lent_title() != null
 	entry.word = _word if entry.title else null
+	var lantern: LeadlightLantern = _title.lantern if entry.title else null
 	if entry.title:
 		_title.begin_return()
 	if instant or (LeadlightMotion.reduced() and faded) or not is_inside_tree():
 		_finish_leaving(entry, false)
+		if lantern != null and faded and LeadlightMotion.reduced() and not instant and is_inside_tree():
+			_lantern_after_fade(lantern)
 		return
 	if LeadlightMotion.reduced():
 		entry.fade = true
@@ -217,11 +261,14 @@ func linger(host: LeadlightRoomHost) -> void:
 	_leaving.append(entry)
 
 
-## A yes-or-stay sheet leaves with its own exit (180 ms) instead of vanishing.
-func dismiss(sheet: Control, faded: bool = false) -> void:
+## A yes-or-stay sheet leaves with its own exit (180 ms) instead of vanishing;
+## the run menu folds the same way, answering at once (`curve`), when a room
+## opens over it.
+func dismiss(sheet: Control, faded: bool = false, curve: Vector2i = LeadlightMotion.EXIT) -> void:
 	LeadlightRoomHost._ignore(sheet)
 	var entry: Leaving = _entry(DISMISS, sheet)
 	entry.fade = LeadlightMotion.reduced()
+	entry.curve = curve
 	if instant or (entry.fade and faded) or not is_inside_tree():
 		_finish_leaving(entry, false)
 		return
@@ -239,6 +286,7 @@ func release_title() -> void:
 func clear() -> void:
 	land_arrival()
 	_land_leaving()
+	_lantern_whole()
 	_title = null
 	_word = null
 	_open = null
@@ -276,6 +324,14 @@ func _process(delta: float) -> void:
 ## Move every passage on by `delta` seconds (a suite steps it by hand).
 func advance(delta: float) -> void:
 	_guard_left = maxf(_guard_left - delta, 0.0)
+	if _faded_t >= 0.0:
+		_faded_t += minf(delta, TransitionLayer.FADE_STEP_MAX)
+		var half: float = LeadlightMotion.REDUCED_FADE * 0.5
+		var shown: float = clampf((_faded_t - half) / half, 0.0, 1.0)
+		if _faded_lantern != null and is_instance_valid(_faded_lantern):
+			_faded_lantern.presence = shown
+		if shown >= 1.0:
+			_lantern_whole()
 	if _arrival != null:
 		var a: Arrival = _arrival
 		if not is_instance_valid(a.host):
@@ -305,9 +361,11 @@ func land_arrival() -> void:
 		_finish_arrival()
 
 
-func _land_leaving() -> void:
+## Land everything leaving but a language reopen's lingering room; with
+## `sheets` false, a sheet's exit runs on too (it is inert already).
+func _land_leaving(sheets: bool = true) -> void:
 	for entry: Leaving in _leaving.duplicate():
-		if entry.kind != LINGER:
+		if entry.kind != LINGER and (sheets or entry.kind != DISMISS):
 			_leaving.erase(entry)
 			_finish_leaving(entry, false)
 
@@ -317,12 +375,18 @@ func _land_leaving() -> void:
 func _apply_arrival(a: Arrival, t: float) -> void:
 	var host: LeadlightRoomHost = a.host
 	host.veil().modulate.a = LeadlightMotion.ease_on(t / 0.32, LeadlightMotion.SETTLE_OUT)
-	host.seat().modulate.a = LeadlightMotion.ease_on((t - 0.24) / 0.28, LeadlightMotion.REVEAL)
+	host.seat().modulate.a = LeadlightMotion.ease_on((t - SEAT_FROM) / SEAT_IN, LeadlightMotion.REVEAL)
 	var title: TitleScreen = lent_title()
 	if title != null:
-		var gone: float = 1.0 - LeadlightMotion.ease_on(t / 0.18, LeadlightMotion.EXIT)
+		# Gone from the first frame, so the word in flight crosses none of it;
+		# what it lifts through on its way goes in a few frames.
+		if not a.crossed_found and t > 0.0 and a.ghost != null:
+			a.crossed_found = true
+			_find_crossed(a, title)
+		var gone: float = 1.0 - LeadlightMotion.ease_on(t / 0.18, LeadlightMotion.SETTLE_OUT)
+		var quick: float = 1.0 - LeadlightMotion.ease_on(t / CROSSED_GONE, LeadlightMotion.SETTLE_OUT)
 		for item: CanvasItem in title.furniture(a.word, host.covers_wordmark()):
-			item.modulate.a = gone
+			item.modulate.a = quick if a.crossed.has(item) else gone
 		# The word is the room's crown now, however it got there.
 		if a.word != null and is_instance_valid(a.word):
 			a.word.modulate.a = 0.0
@@ -336,7 +400,7 @@ func _apply_arrival(a: Arrival, t: float) -> void:
 			title.lantern.swing()
 	var crown: Control = host.crown()
 	if a.ghost != null:
-		a.ghost.fly(LeadlightMotion.ease_on(t / 0.42, LeadlightMotion.REVEAL), a.word, crown)
+		a.ghost.fly(LeadlightMotion.ease_on(t / GHOST_TIME, GHOST_CURVE), a.word, crown)
 		if crown != null:
 			crown.modulate.a = 0.0
 	elif crown != null:
@@ -353,6 +417,7 @@ func _finish_arrival() -> void:
 	var host: LeadlightRoomHost = a.host
 	var natural: bool = a.t >= host.arrival_time()
 	host.arriving = false
+	host.ghost_clear = Callable()
 	_free(a.ghost)
 	a.ghost = null
 	_apply_arrival(a, host.arrival_time())
@@ -363,6 +428,53 @@ func _finish_arrival() -> void:
 	var title: TitleScreen = lent_title()
 	if title != null and not natural:
 		title.lantern.settle()
+
+
+## The furniture the word's flight to the crown reaches as it sets off
+## (inside CROSSED_BEFORE): its neighbours. What it reaches later has dimmed
+## by then on its own.
+func _find_crossed(a: Arrival, title: TitleScreen) -> void:
+	var crown: Control = a.host.crown()
+	if crown == null or a.word == null or not is_instance_valid(a.word):
+		return
+	var from: Vector2 = a.word.get_global_rect().get_center()
+	var to: Vector2 = crown.get_global_rect().get_center()
+	for item: CanvasItem in title.furniture(a.word, a.host.covers_wordmark()):
+		if not (item is Control):
+			continue
+		# Where it enters the item: where it leaves it on the flight reversed.
+		var back: float = LeadlightGhostWord.leaves_at(to, from, a.ghost.half_extent(),
+			(item as Control).get_global_rect())
+		if back >= 0.0 and GHOST_TIME * LeadlightMotion.inverse_on(1.0 - back, GHOST_CURVE) < CROSSED_BEFORE:
+			a.crossed[item] = true
+
+
+## When the word in flight has passed `rect` (stage px), in seconds from the
+## tap: the room's content there waits for it. 0 when it never crosses it.
+func _ghost_clear(rect: Rect2, a: Arrival) -> float:
+	var crown: Control = a.host.crown() if is_instance_valid(a.host) else null
+	if a.ghost == null or crown == null or a.word == null or not is_instance_valid(a.word):
+		return 0.0
+	var g: float = LeadlightGhostWord.leaves_at(a.word.get_global_rect().get_center(),
+		crown.get_global_rect().get_center(), a.ghost.half_extent(), rect)
+	return GHOST_TIME * LeadlightMotion.inverse_on(g, GHOST_CURVE) if g > 0.0 else 0.0
+
+
+## Under Reduce Motion `lantern` stands in its new place beneath the cross-fade
+## of the frame before, which still shows it where it was: it comes in over the
+## fade's second half, as the old one has half gone (§2.7, as built).
+func _lantern_after_fade(lantern: LeadlightLantern) -> void:
+	_lantern_whole()
+	_faded_lantern = lantern
+	_faded_t = 0.0
+	lantern.presence = 0.0
+
+
+func _lantern_whole() -> void:
+	if _faded_lantern != null and is_instance_valid(_faded_lantern):
+		_faded_lantern.presence = 1.0
+	_faded_lantern = null
+	_faded_t = -1.0
 
 
 func _give_focus(host: LeadlightRoomHost) -> void:
@@ -397,7 +509,7 @@ func _apply_leaving(entry: Leaving, t: float) -> bool:
 	if entry.kind == DISMISS:
 		var span: float = LeadlightMotion.REDUCED_FADE if entry.fade else DISMISS_TIME
 		var q: float = clampf(t / span, 0.0, 1.0) if entry.fade \
-			else LeadlightMotion.ease_on(t / span, LeadlightMotion.EXIT)
+			else LeadlightMotion.ease_on(t / span, entry.curve)
 		if node != null:
 			node.modulate.a = 1.0 - q
 		return t >= span
@@ -405,34 +517,40 @@ func _apply_leaving(entry: Leaving, t: float) -> bool:
 	var host: LeadlightRoomHost = node as LeadlightRoomHost
 	var span_out: float = host.departure_time() if host != null else 0.40
 	if host != null:
+		# Every lane answers on the frame Return is tapped.
 		host.leave_at(t, _wick(), _colour())
-		host.veil().modulate.a = 1.0 - LeadlightMotion.ease_on((t - 0.08) / 0.32, LeadlightMotion.SETTLE_OUT)
-		host.seat().modulate.a = 1.0 - LeadlightMotion.ease_on(t / 0.2, LeadlightMotion.EXIT)
+		host.veil().modulate.a = 1.0 - LeadlightMotion.ease_on(t / span_out, LeadlightMotion.SETTLE_OUT)
+		host.seat().modulate.a = 1.0 - LeadlightMotion.ease_on(t / 0.16, LeadlightMotion.SETTLE_OUT)
 	if entry.title:
 		_return_lanes(entry, host, t, span_out)
 	return t >= span_out
 
 
 ## The title's half of G2: the lantern home with a flare, the furniture back
-## nearest the lantern first, the crown riding back to its word, which glows.
+## nearest the lantern first once the room's content has gone, the crown riding
+## back to its word once what lies behind its path is dark, and the word glows.
+## The lantern rises on a sine, never the cubic's lag then whip.
 func _return_lanes(entry: Leaving, host: LeadlightRoomHost, t: float, span: float) -> void:
 	var title: TitleScreen = lent_title()
 	if title == null:
 		return
-	var p: float = LeadlightMotion.ease_on((t - 0.12) / (span - 0.12), LeadlightMotion.IN_OUT)
+	var p: float = LeadlightMotion.ease_on((t - LANTERN_BACK_FROM) / (span - LANTERN_BACK_FROM),
+		LeadlightMotion.BREATH)
 	title.place_lantern(LeadlightSeat.path(title.home_rect(), _seat_art(), 1.0 - p))
 	title.lantern.reach = lerpf(POOL_SEATED, 1.0, p)
 	title.lantern.flare = 0.35 * sin(PI * clampf((t - (span - 0.2)) / 0.2, 0.0, 1.0))
 	var stagger: float = minf(0.03, 0.12 / maxf(float(entry.order.size() - 1), 1.0))
+	var back: float = host.furniture_returns_at() if host != null else 0.16
 	for i: int in entry.order.size():
 		var item: CanvasItem = entry.order[i]
 		if is_instance_valid(item):
-			var from: float = 0.16 + stagger * float(i)
+			var from: float = maxf(back + stagger * float(i), entry.holds[i] if i < entry.holds.size() else 0.0)
 			item.modulate.a = LeadlightMotion.ease_on((t - from) / maxf(span - from, 0.1),
 				LeadlightMotion.REVEAL)
 	var word: Control = entry.word if is_instance_valid(entry.word) else null
 	if entry.ghost != null:
-		entry.ghost.fly(LeadlightMotion.ease_on(t / AFTERGLOW_FROM, LeadlightMotion.REVEAL),
+		var leaves: float = host.crown_leaves_at() if host != null else 0.0
+		entry.ghost.fly(LeadlightMotion.ease_on((t - leaves) / (AFTERGLOW_FROM - leaves), LeadlightMotion.REVEAL),
 			host.crown() if host != null else null, word)
 	if t >= AFTERGLOW_FROM and not entry.glowed:
 		entry.glowed = true
@@ -495,6 +613,24 @@ func _furniture_order(entry: Leaving) -> void:
 	items.sort_custom(func(a: CanvasItem, b: CanvasItem) -> bool:
 		return _centre_of(a).distance_to(home) < _centre_of(b).distance_to(home))
 	entry.order = items
+	entry.holds.clear()
+	for item: CanvasItem in items:
+		entry.holds.append(_passed_on_return(entry, host, item))
+
+
+## When the word riding home from `host`'s crown has passed `item` (seconds
+## from the tap), so the furniture it crosses comes back behind it; 0 when it
+## never crosses it.
+func _passed_on_return(entry: Leaving, host: LeadlightRoomHost, item: CanvasItem) -> float:
+	var crown: Control = host.crown() if host != null else null
+	if entry.ghost == null or crown == null or not (item is Control) or not is_instance_valid(entry.word):
+		return 0.0
+	var g: float = LeadlightGhostWord.leaves_at(crown.get_global_rect().get_center(),
+		entry.word.get_global_rect().get_center(), entry.ghost.half_extent(), (item as Control).get_global_rect())
+	if g <= 0.0:
+		return 0.0
+	var leaves: float = host.crown_leaves_at()
+	return leaves + (AFTERGLOW_FROM - leaves) * LeadlightMotion.inverse_on(g, LeadlightMotion.REVEAL)
 
 
 static func _centre_of(item: CanvasItem) -> Vector2:

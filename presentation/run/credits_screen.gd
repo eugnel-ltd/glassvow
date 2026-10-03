@@ -10,8 +10,9 @@ extends LeadlightRoomHost
 ## pass; any touch, drag, wheel or key takes over and the drift resumes three
 ## seconds later. Under Reduce Motion it is a plain scroll.
 ##
-## The licences are their own glasses (CreditsLicences.Glass) over the paused,
-## dimmed roll; the seat's Return and Escape close an open glass first.
+## The licences are their own glasses (CreditsLicences.Glass) over the paused
+## roll, faded nearly away; the seat's Return and Escape close an open glass
+## first.
 
 ## The bundled fonts' licences (CreditsLicences owns the texts).
 const FONT_LICENCES: Array[Dictionary] = CreditsLicences.FONT_LICENCES
@@ -23,6 +24,9 @@ const ROLL_FOOT: Vector2 = Vector2(90.0, 60.0)
 ## The lamp line, as a share of the stage's height, and how far its warmth reaches.
 const LAMP_LINE: float = 0.56
 const LAMP_REACH: float = 0.16
+## How far in from the roll's top and foot a line fades out (pad, phone), so
+## no line is ever cut through by the view's edge.
+const EDGE_FADE: Vector2 = Vector2(40.0, 24.0)
 ## The drift, px/s (pad, phone); after DRIFT_AFTER s still, DRIFT_RESUME s after a touch.
 const DRIFT: Vector2 = Vector2(22.0, 16.0)
 const DRIFT_AFTER: float = 1.2
@@ -114,6 +118,16 @@ func departure_time() -> float:
 	return 0.48
 
 
+## The roll is gone by 0.18 s: "Credits" rides back from 0.14, the furniture
+## from 0.20, never over a line still lit.
+func crown_leaves_at() -> float:
+	return 0.14
+
+
+func furniture_returns_at() -> float:
+	return 0.20
+
+
 func _fit() -> void:
 	if _scroll == null or size.x <= 0.0 or size.y <= 0.0:
 		return
@@ -136,17 +150,19 @@ func _fit() -> void:
 
 # ---------------------------------------------------------------- the passage
 
-## C1: the band rises, the roll comes up line by line from the wordmark down,
-## and the eye takes its first step on down the road.
+## C1: the band rises, the roll comes up line by line from the wordmark down
+## (a line the word in flight crosses waits for it to pass), each at the warmth
+## the lamp line gives it, and the eye takes its first step on down the road.
 func arrive_at(t: float, _wick: Vector2, _colour: Color) -> void:
 	_band.modulate.a = LeadlightMotion.ease_on(t / 0.32, LeadlightMotion.SETTLE_OUT)
 	var i: int = 0
 	# The heading is the crown: the word in flight lands there (the passage's).
 	for item: Node in _roll.get_children():
 		if item is Control and item != _roll.head_gap and item != _roll.heading_node:
-			var from: float = minf(0.12 + 0.04 * float(i), 0.40)
+			var from: float = minf(maxf(0.12 + 0.04 * float(i), _clear_of_ghost(item as Control)), 0.40)
 			_reveal(item as Control, LeadlightMotion.ease_on((t - from) / 0.2, LeadlightMotion.REVEAL))
 			i += 1
+	_warm()
 	if title != null:
 		title.lend_wordmark(true)
 		if not LeadlightMotion.reduced():
@@ -159,14 +175,16 @@ func rest(_wick: Vector2, _colour: Color) -> void:
 	for item: Node in _roll.get_children():
 		if item is Control:
 			_reveal(item as Control, 1.0)
+	_warm()
 	if title != null:
 		title.lend_wordmark(true)
 		title.set_walk(0.0 if LeadlightMotion.reduced() else FIRST_STEP)
 	_landed = true
 
 
-## C2: the roll fades farthest from the lamp line first, the band goes, the eye
-## walks back and the wordmark glides home to its seat.
+## C2: the roll fades from the frame Return is tapped, farthest from the lamp
+## line first, and is gone by 0.18 s; the band goes, the eye walks back and the
+## wordmark glides home to its seat.
 func leave_at(t: float, _wick: Vector2, _colour: Color) -> void:
 	_landed = false
 	if _leave_from == Vector2.INF:
@@ -176,9 +194,10 @@ func leave_at(t: float, _wick: Vector2, _colour: Color) -> void:
 		if item is Control and item != _roll.heading_node:
 			var far: float = clampf(absf((item as Control).get_global_rect().get_center().y - lamp)
 				/ (size.y * 0.5), 0.0, 1.0)
-			_reveal(item as Control, 1.0 - LeadlightMotion.ease_on(t / (0.24 * (1.25 - 0.5 * far)),
-				LeadlightMotion.EXIT), false)
-	_band.modulate.a = 1.0 - LeadlightMotion.ease_on((t - 0.08) / 0.32, LeadlightMotion.SETTLE_OUT)
+			var from: float = 0.06 * (1.0 - far)
+			_reveal(item as Control, 1.0 - LeadlightMotion.ease_on((t - from) / 0.12,
+				LeadlightMotion.SETTLE_OUT), false)
+	_band.modulate.a = 1.0 - LeadlightMotion.ease_on(t / 0.40, LeadlightMotion.SETTLE_OUT)
 	if _licences.opened != null:
 		_licences.opened.modulate.a = _band.modulate.a
 	if title != null:
@@ -213,7 +232,14 @@ func _process(delta: float) -> void:
 			var span: float = maxf(_roll.size.y - _scroll.size.y, 1.0)
 			var progress: float = clampf(float(_scroll.scroll_vertical) / span, 0.0, 1.0)
 			title.set_walk(lerpf(FIRST_STEP, TitleWorld.WALK_MAX, progress))
-	_roll.warm(size.y * LAMP_LINE, size.y * LAMP_REACH)
+	_warm()
+
+
+## Each line's warmth from the lamp line, and its fade at the view's edges.
+func _warm() -> void:
+	var edge: float = EDGE_FADE.y if LeadlightTokens.is_phone(shape) else EDGE_FADE.x
+	var view: Rect2 = _scroll.get_global_rect()
+	_roll.warm(size.y * LAMP_LINE, size.y * LAMP_REACH, view.position.y, view.end.y, edge)
 
 
 ## The roll drifts on its own after a still moment, until the footer reaches
@@ -239,19 +265,30 @@ func _input(event: InputEvent) -> void:
 		_took_over()
 
 
-func _took_over(_focus: Control = null) -> void:
+func _took_over() -> void:
 	_quiet = 0.0
 	_wait = DRIFT_RESUME
 	_drift_y = float(_scroll.scroll_vertical)
 
 
+## A focus change is the player's once the room has landed: the passage's own
+## focus on arrival is not a touch, so the first drift keeps its still moment.
+func _on_focus_changed(_focus: Control) -> void:
+	if _landed:
+		_took_over()
+
+
 func _ready() -> void:
-	get_viewport().gui_focus_changed.connect(_took_over)
+	get_viewport().gui_focus_changed.connect(_on_focus_changed)
 
 
 # ---------------------------------------------------------------- the licences
 
+## C3: the licence glass rises over the roll and takes the focus (its own
+## scroll, which a key or pad scrolls). One glass at a time, opened once.
 func _open_licence(which: StringName) -> void:
+	if _licences.opened != null:
+		return
 	if _sfx != null:
 		_sfx.play_owed(&"paneRise", &"click")
 	LeadlightFocus.give(_licences.open(which, shape, _scroll).scroll)

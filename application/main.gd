@@ -1007,8 +1007,9 @@ func _passage_node() -> LeadlightPassage:
 
 ## A modal leaves: a room through the passage (its departure, its sinking
 ## under the Erase question, or its lingering over a language reopen), a
-## yes-or-stay sheet by its own exit, anything else at once.
-func _release_modal(node: Control, faded: bool) -> void:
+## yes-or-stay sheet by its own exit, the run menu folding as a room opens over
+## it (`fold`, X1: it answers at once), anything else at once.
+func _release_modal(node: Control, faded: bool, fold: bool = false) -> void:
 	if node is LeadlightRoomHost:
 		var room: LeadlightRoomHost = node
 		if _relanguage:
@@ -1019,6 +1020,8 @@ func _release_modal(node: Control, faded: bool) -> void:
 			_passage_node().depart(room, faded)
 	elif node is LeadlightConfirm:
 		_passage_node().dismiss(node, faded)
+	elif fold:
+		_passage_node().dismiss(node, faded, LeadlightMotion.SETTLE_OUT)
 	else:
 		node.queue_free()
 
@@ -1155,7 +1158,9 @@ func _show_overlay(screen: Control, freeze: bool = true) -> void:
 	_room_word = ""
 
 
-func _close_overlay() -> void:
+## `fold`: a room opens over the modal next (the run menu's How to Play and
+## Settings), so it folds away under the room's arrival instead of vanishing.
+func _close_overlay(fold: bool = false) -> void:
 	if _modal == null:
 		return
 	var faded: bool = _cross_fade()
@@ -1166,7 +1171,7 @@ func _close_overlay() -> void:
 	_modal_froze = false
 	if _run_hud != null:
 		_run_hud.set_process_unhandled_key_input(true)
-	_release_modal(leaving, faded)
+	_release_modal(leaving, faded, fold)
 
 
 ## Every yes-or-stay question — Begin Anew, Leave the Road, Abandon Run, Erase
@@ -2067,11 +2072,11 @@ func _show_run_menu() -> void:
 	var menu: RunMenuPanel = RunMenuPanel.new(_shape, _run_over, _sfx_bus)
 	menu.closed.connect(_close_overlay)
 	menu.help_requested.connect(func() -> void:
-		_close_overlay()
+		_close_overlay(true)
 		_show_help()
 	)
 	menu.settings_requested.connect(func() -> void:
-		_close_overlay()
+		_close_overlay(true)
 		_show_settings()
 	)
 	menu.dev_requested.connect(func() -> void:

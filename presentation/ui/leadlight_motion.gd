@@ -39,6 +39,21 @@ static func ease_on(t: float, curve: Vector2i) -> float:
 	return eased
 
 
+## The `t` (0..1) at which `curve` has eased to `eased` (0..1): `ease_on`'s
+## inverse, for a curve that only rises. Pure.
+static func inverse_on(eased: float, curve: Vector2i) -> float:
+	var target: float = clampf(eased, 0.0, 1.0)
+	var lo: float = 0.0
+	var hi: float = 1.0
+	for _i: int in range(24):
+		var mid: float = (lo + hi) * 0.5
+		if ease_on(mid, curve) < target:
+			lo = mid
+		else:
+			hi = mid
+	return hi
+
+
 ## Fade an element in, rising RISE px into its seat. Returns the tween, or null
 ## when nothing needs to move (already shown, or Reduce Motion with `instant`).
 static func enter(node: CanvasItem, delay: float = 0.0, time: float = SETTLE) -> Tween:

@@ -23,8 +23,16 @@ var arriving: bool = false
 var title: TitleScreen = null
 ## A tap on the veil closes the room (glass rooms); a place has no veil to tap.
 var veil_closes: bool = true
+## While the word that opened the room rides to its crown: given a rect (stage
+## px), the seconds from the tap after which the word has passed it. Content
+## there waits for it, so the word never runs through lit text (§2.3).
+var ghost_clear: Callable = Callable()
 var _veil: ColorRect
 var _seat: LeadlightSeat
+## Whether the seat holds a lent lantern (its body takes a tap); kept across a
+## rebuild of the seat on a change of shape, so a room in a run never gets an
+## invisible lantern's hit back.
+var _seat_lantern: bool = true
 var _veil_down: bool = false
 var _veil_from: Vector2 = Vector2.ZERO
 ## The frame a press landed an arrival on: that press is not the veil's.
@@ -51,9 +59,17 @@ func _host(stage_shape: StringName) -> void:
 
 ## Called last by every room's constructor: the seat, over everything.
 func _seat_last() -> void:
-	_seat = LeadlightSeat.new(shape)
+	_seat = LeadlightSeat.new(shape, _seat_lantern)
 	_seat.pressed.connect(leave)
 	add_child(_seat)
+
+
+## Whether a lantern was lent to the seat (the title's), for this seat and any
+## the room rebuilds.
+func lend_seat(lantern: bool) -> void:
+	_seat_lantern = lantern
+	if _seat != null:
+		_seat.set_lantern(lantern)
 
 
 func veil() -> ColorRect:
@@ -127,6 +143,17 @@ func departure_time() -> float:
 	return 0.40
 
 
+## On leaving: when the crown sets off back to its word (the room's content
+## behind its path dark by then), and when the title's furniture starts back
+## (the room's content gone by then), in seconds from the tap.
+func crown_leaves_at() -> float:
+	return 0.08
+
+
+func furniture_returns_at() -> float:
+	return 0.16
+
+
 func set_shape(stage_shape: StringName) -> void:
 	if not StageShape.REFERENCES.has(stage_shape):
 		return
@@ -163,19 +190,29 @@ func arrive_at(t: float, wick: Vector2, colour: Color) -> void:
 		var d: float = clampf(glass.reach_from.distance_to(_centre_in(glass, group)) / maxf(far, 1.0), 0.0, 1.0)
 		# When the front (REVEAL over 80–440 ms) reaches the group's centre.
 		var reached: float = 0.08 + 0.36 * (1.0 - pow(1.0 - d, 0.2))
-		var from: float = clampf(reached, 0.12, arrival_time() - 0.2)
+		var from: float = clampf(maxf(reached, _clear_of_ghost(group)), 0.12, arrival_time() - 0.2)
 		_reveal(group, LeadlightMotion.ease_on((t - from) / 0.2, LeadlightMotion.REVEAL))
 
 
+## When the word in flight has passed `group` (0 when no word flies).
+func _clear_of_ghost(group: Control) -> float:
+	if not ghost_clear.is_valid():
+		return 0.0
+	var at: float = ghost_clear.call(group.get_global_rect())
+	return at
+
+
 ## The room at `t` seconds into its departure: the glass goes dark far to near
-## from the seat (the light drawn back into the flame) and its lead retracts.
+## from the seat (the light drawn back into the flame) and its lead retracts,
+## both from the frame Return is tapped and slowing as they finish, so leaving
+## answers at once (on EXIT's slow start the room stood whole for eight frames).
 func leave_at(t: float, wick: Vector2, colour: Color) -> void:
 	_light(wick, colour)
 	var glass: LeadlightSheet = sheet()
 	if glass == null:
 		return
-	glass.reach = 1.0 - LeadlightMotion.ease_on(t / 0.22, LeadlightMotion.EXIT)
-	glass.trace = 1.0 - LeadlightMotion.ease_on((t - 0.04) / 0.20, LeadlightMotion.EXIT)
+	glass.reach = 1.0 - LeadlightMotion.ease_on(t / 0.22, LeadlightMotion.SETTLE_OUT)
+	glass.trace = 1.0 - LeadlightMotion.ease_on((t - 0.02) / 0.22, LeadlightMotion.SETTLE_OUT)
 	var radius: float = LeadlightSheet.reach_radius(glass.outline(), glass.reach_from, glass.reach)
 	for group: Control in reveal_groups():
 		var d: float = glass.reach_from.distance_to(_centre_in(glass, group))

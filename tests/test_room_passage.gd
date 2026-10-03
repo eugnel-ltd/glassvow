@@ -17,11 +17,21 @@ extends RefCounted
 ##   and the headless renderer land it whole;
 ## - one `roomOpen` and one `roomClose` a round trip, and no `click`;
 ## - the language reopen keeps the modal a SettingsPanel with no second sound,
-##   and Erase's Cancel and Erase Everything land on the title.
+##   and Erase's Cancel and Erase Everything land on the title;
+## - the word in flight never runs through the room's lit content, nor on its
+##   way back through the title's returning furniture; leaving answers on the
+##   frame Return is tapped;
+## - Enter lands an arrival and is spent on it; the title's idle ember is held
+##   while it is lent and re-armed on its return; a lent title takes no key of
+##   its own; the word a room was left back to glows (the afterglow);
+## - under Reduce Motion's cross-fade the lantern comes in over its second half;
+## - the run menu folds away under a room it opens, and a room in a run keeps
+##   its seat without a lantern's hit through a change of shape.
 ##
 ## Mutation proof (PR): with the passage's guard removed from `_input`, the
 ## +120 and +280 ms cases fail; with `depart` freeing the room at once, the
 ## leaving-room case fails; with the veil closing on press, the veil cases fail.
+## The later cases' proofs: docs/design/2026-10-03-title-rooms/evidence/.
 
 const SUITE: String = "res://tests/test_room_passage.gd"
 const RUN_PATH: String = "user://test_room_passage_run_v2.json"
@@ -58,6 +68,7 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 
 static func run(fails: Array[String]) -> void:
 	_arc_is_lowered(fails)
+	_flight_geometry(fails)
 	TreeSuite.spawn(fails, SUITE)
 	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
 
@@ -75,6 +86,21 @@ static func _arc_is_lowered(fails: Array[String]) -> void:
 		"the lantern is slid along the chord, not lowered to the hand")
 
 
+## Where a word in flight leaves a box it crosses, and the curve's inverse that
+## turns it into a time.
+static func _flight_geometry(fails: Array[String]) -> void:
+	# Straight up through a box 40 tall, grown by the word's half height 5.
+	var g: float = LeadlightGhostWord.leaves_at(Vector2(0.0, 100.0), Vector2.ZERO, Vector2(10.0, 5.0),
+		Rect2(-20.0, 40.0, 40.0, 20.0))
+	_check(fails, is_equal_approx(g, 0.65), "a word leaving a box it crosses is placed at %.3f, not 0.65" % g)
+	_check(fails, LeadlightGhostWord.leaves_at(Vector2(0.0, 100.0), Vector2.ZERO, Vector2(10.0, 5.0),
+			Rect2(50.0, 0.0, 10.0, 10.0)) < 0.0, "a word is held for a box it never crosses")
+	for x: float in [0.1, 0.5, 0.9]:
+		var back: float = LeadlightMotion.inverse_on(LeadlightMotion.ease_on(x, LeadlightMotion.REVEAL),
+			LeadlightMotion.REVEAL)
+		_check(fails, absf(back - x) < 0.001, "the curve's inverse misses %.2f (%.4f)" % [x, back])
+
+
 static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]) -> void:
 	var kept: Preferences = Preferences.active
 	Preferences.active = Preferences.new()
@@ -88,8 +114,12 @@ static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]
 			await _double_tap(fails, tree, host, content, room, at)
 		await _leaving(fails, tree, host, content, room)
 		await _reduced(fails, tree, host, content, room)
+		await _reduced_lantern(fails, tree, host, content, room)
 		await _instant(fails, tree, host, content, room)
 		await _sound(fails, tree, host, content, room)
+		await _word_crosses_nothing_lit(fails, tree, host, content, room)
+		await _enter_lands(fails, tree, host, content, room)
+	await _lent_title(fails, tree, host, content)
 	await _settings_paths(fails, tree, host, content)
 	await _in_a_run(fails, tree, host, content)
 	Preferences.active = kept
@@ -364,7 +394,17 @@ static func _in_a_run(fails: Array[String], tree: SceneTree, host: SubViewport,
 		_check(fails, opened != null and main._passage.lent_title() == null
 				and not opened.seat().lantern_hit().visible,
 			"X1 %s: the room in a run is not the room with the word alone" % room)
+		_check(fails, is_instance_valid(menu) and menu.is_inside_tree() and menu.modulate.a > 0.5,
+			"X1 %s: the run menu vanished on the tap instead of folding under the room" % room)
+		if opened != null:
+			# A change of shape rebuilds the room and its seat: still no lantern.
+			opened.set_shape(&"phone-landscape")
+			opened.set_shape(main._shape)
+			_check(fails, not opened.seat().lantern_hit().visible,
+				"X1 %s: a rebuilt seat in a run took an invisible lantern's tap back" % room)
 		await _step(tree, main, 40)
+		await tree.process_frame
+		_check(fails, not is_instance_valid(menu), "X1 %s: the run menu outlived its fold" % room)
 		if opened != null:
 			opened.leave()
 		await _step(tree, main, 40)
@@ -376,9 +416,165 @@ static func _in_a_run(fails: Array[String], tree: SceneTree, host: SubViewport,
 		_dispose(main)
 
 
+## The word in flight never runs through what is lit: on arrival the room's
+## content it crosses waits for it, and on leaving it sets off once the content
+## behind it is dark and lands before the title's furniture is back. Leaving
+## answers on the frame Return is tapped (EXIT's slow start held the room whole
+## for eight frames).
+static func _word_crosses_nothing_lit(fails: Array[String], tree: SceneTree, host: SubViewport,
+		content: ContentDB, room: String) -> void:
+	var main: Main = await _boot(tree, host, content)
+	var word: Control = _word(main, room)
+	await _tap(tree, host, word)
+	var modal: LeadlightRoomHost = main._modal as LeadlightRoomHost
+	var settle: float = ROOMS[room]
+	var furniture: Array = _title(main).furniture(word, true)
+	for i: int in range(ceili(settle / STEP)):
+		# The word lifts off through its neighbours as they go: from its fourth
+		# frame nothing it crosses is lit.
+		_crossing(fails, main, modal, room, "arriving", furniture if i >= 3 else [])
+		await _step(tree, main, 1)
+	await _step(tree, main, 6)
+	await _tap(tree, host, modal.seat().word())
+	await _step(tree, main, 2)
+	var answered: float = modal.sheet().reach if modal.sheet() != null else 1.0
+	if modal is CreditsScreen:
+		for item: Node in (modal as CreditsScreen).roll().get_children():
+			if item is Control:
+				answered = minf(answered, (item as Control).modulate.a)
+	_check(fails, answered < 0.8, "%s: two frames after Return the room stands whole (%.2f)" % [room, answered])
+	for _i: int in range(30):
+		_crossing(fails, main, modal, room, "leaving", furniture)
+		await _step(tree, main, 1)
+	_dispose(main)
+
+
+## A lit thing (alpha over 0.2) the word in flight stands on, if any.
+static func _crossing(fails: Array[String], main: Main, modal: LeadlightRoomHost, room: String,
+		phase: String, furniture: Array) -> void:
+	if not is_instance_valid(modal):
+		return
+	var flight: Rect2 = Rect2()
+	for node: Node in main._passage.find_children("GhostWord", "", false, false):
+		for label: Node in node.get_children():
+			if label is Label and (label as Label).modulate.a > 0.05:
+				var drawn: Rect2 = (label as Label).get_global_rect()
+				flight = drawn if not flight.has_area() else flight.merge(drawn)
+	if not flight.has_area():
+		return
+	var lit: Array[Control] = []
+	var view: Rect2 = Rect2(Vector2(-1.0e6, -1.0e6), Vector2(2.0e6, 2.0e6))
+	if modal is CreditsScreen:
+		var credits: CreditsScreen = modal
+		view = credits.scroll().get_global_rect()
+		for item: Node in credits.roll().get_children():
+			if item is Control and item != credits.roll().head_gap and item != credits.roll().heading_node:
+				lit.append(item as Control)
+	else:
+		lit.assign(modal.reveal_groups())
+	for item: Control in lit:
+		var rect: Rect2 = item.get_global_rect().intersection(view)
+		if item.modulate.a > 0.2 and rect.grow(-2.0).intersects(flight):
+			fails.append("room_passage: %s %s: the word in flight runs through %s, lit at %.2f" % [
+				room, phase, item.name, item.modulate.a])
+			return
+	for item_v: Variant in furniture:
+		if not is_instance_valid(item_v) or not (item_v is Control):
+			continue
+		var item: Control = item_v
+		if item.visible and item.modulate.a > 0.2 \
+				and item.get_global_rect().grow(-2.0).intersects(flight):
+			fails.append("room_passage: %s %s: the word in flight runs through the title's %s, lit at %.2f" % [
+				room, phase, item.get("text") if "text" in item else item.name, item.modulate.a])
+			return
+
+
+## Enter (or Space) lands an arrival and is spent on it: the room's focused
+## first control is not pressed by it.
+static func _enter_lands(fails: Array[String], tree: SceneTree, host: SubViewport,
+		content: ContentDB, room: String) -> void:
+	var main: Main = await _boot(tree, host, content)
+	await _tap(tree, host, _word(main, room))
+	await _step(tree, main, 2)
+	var first: BaseButton = (main._modal as LeadlightRoomHost).first_focus() as BaseButton
+	var pressed: Array[int] = [0]
+	if first != null:
+		first.grab_focus(true)
+		first.pressed.connect(func() -> void: pressed[0] += 1)
+	var enter: InputEventAction = InputEventAction.new()
+	enter.action = &"ui_accept"
+	enter.pressed = true
+	host.push_input(enter, true)
+	await tree.process_frame
+	_check(fails, not main._passage.arriving(), "%s: Enter did not land the arrival" % room)
+	_check(fails, pressed[0] == 0, "%s: the Enter that landed the arrival also pressed %s" % [room, first])
+	_dispose(main)
+
+
+## A title lent to a room: its idle ember is held (no ember flies to the plaque
+## a second after the room closes) and re-armed on its return, it takes no key
+## of its own (a key would skip a rite still running), and the word the room
+## was left back to glows a moment.
+static func _lent_title(fails: Array[String], tree: SceneTree, host: SubViewport,
+		content: ContentDB) -> void:
+	var main: Main = await _boot(tree, host, content)
+	var title: TitleScreen = _title(main)
+	await _tap(tree, host, _word(main, "settings"))
+	_check(fails, not title._beckon._armed, "the idle ember still counts while a room is open")
+	await _step(tree, main, 40)
+	await _tap(tree, host, (main._modal as LeadlightRoomHost).seat().word())
+	await _step(tree, main, ceili((LeadlightPassage.AFTERGLOW_FROM + 0.02) / STEP))
+	var word: LeadlightWord = _word(main, "settings") as LeadlightWord
+	_check(fails, word.glow > 0.5, "the word the room was left back to does not glow (%.2f)" % word.glow)
+	await _step(tree, main, 10)
+	_check(fails, title._beckon._armed and not title.lent(), "the idle ember is not re-armed on the title's return")
+	_dispose(main)
+	main = await _boot(tree, host, content, false)
+	title = _title(main)
+	var key: InputEventKey = InputEventKey.new()
+	key.keycode = KEY_A
+	key.pressed = true
+	title.lend()
+	title._unhandled_input(key)
+	_check(fails, title.rite != null and title.rite.is_running(), "a lent title took a key of its own")
+	title.reclaim()
+	title._unhandled_input(key)
+	_check(fails, title.rite == null or not title.rite.is_running(),
+		"the rite under the title ignores a key even when it is not lent (the case proves nothing)")
+	_dispose(main)
+
+
+## Under Reduce Motion a room lands whole beneath the cross-fade of the frame
+## before, which still shows the lantern where it was: the lantern in its new
+## place comes in over the fade's second half, each way.
+static func _reduced_lantern(fails: Array[String], tree: SceneTree, host: SubViewport,
+		content: ContentDB, room: String) -> void:
+	Preferences.active.reduce_motion = true
+	var main: Main = await _boot(tree, host, content)
+	var lantern: LeadlightLantern = _title(main).lantern
+	# A frame to copy, as a renderer gives one.
+	main._transitions.snapshot_source = func() -> Texture2D:
+		return ImageTexture.create_from_image(Image.create(4, 4, false, Image.FORMAT_RGBA8))
+	await _tap(tree, host, _word(main, room))
+	_check(fails, not main._passage.arriving() and lantern.presence < 0.05,
+		"%s: under the cross-fade the seated lantern shows at once (%.2f)" % [room, lantern.presence])
+	await _step(tree, main, 5)
+	_check(fails, lantern.presence < 0.5, "%s: the seated lantern came in before the fade's second half" % room)
+	await _step(tree, main, 6)
+	_check(fails, is_equal_approx(lantern.presence, 1.0), "%s: the seated lantern is not whole by 180 ms" % room)
+	await _tap(tree, host, (main._modal as LeadlightRoomHost).seat().word())
+	_check(fails, lantern.presence < 0.05 and lantern.position.is_equal_approx(_title(main).home_rect().position),
+		"%s: under the cross-fade the lantern shows home at once (%.2f)" % [room, lantern.presence])
+	await _step(tree, main, 11)
+	_check(fails, is_equal_approx(lantern.presence, 1.0), "%s: the lantern is not whole at home by 180 ms" % room)
+	_dispose(main)
+	Preferences.active.reduce_motion = false
+
+
 # ---------------------------------------------------------------- the stage
 
-static func _boot(tree: SceneTree, host: SubViewport, content: ContentDB) -> Main:
+## `kindled` false: the title's launch rite is running.
+static func _boot(tree: SceneTree, host: SubViewport, content: ContentDB, kindled: bool = true) -> Main:
 	LeadlightFocus.keyed = false
 	SaveService.clear(RUN_PATH)
 	SaveService.clear_vigil(VIGIL_PATH)
@@ -398,7 +594,7 @@ static func _boot(tree: SceneTree, host: SubViewport, content: ContentDB) -> Mai
 	run.map = WorldMap.benchmark(run).to_dict()
 	SaveService.store(run, RUN_PATH)
 	host.add_child(main)
-	main._title_kindled = true
+	main._title_kindled = kindled
 	# Stepped by hand: the suite owns the passage's clock.
 	main._passage_node().stepped = true
 	main._show_title()

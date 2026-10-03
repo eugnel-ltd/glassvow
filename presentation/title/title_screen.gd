@@ -424,10 +424,10 @@ func _pressed_now(control: Control) -> void:
 
 
 ## The quiet words and the Rekindle pane take a tap 60 px tall at pad and on
-## desktop (the rubric's floor), where they are drawn; a phone keeps the 44 px
-## touch floor its larger glass already gives.
+## desktop (the rubric's floor), and 44 on a phone (the touch floor; the pane's
+## glass is drawn 34 there), where they are drawn.
 func _size_hits() -> void:
-	var tall: float = 0.0 if LeadlightTokens.is_phone(shape) else float(LeadlightTokens.HIT_ROOM.x)
+	var tall: float = LeadlightTokens.room_hit(shape)
 	for word_v: Variant in _words.values():
 		var word: LeadlightWord = word_v
 		word.hit_height = tall
