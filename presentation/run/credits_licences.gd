@@ -272,8 +272,9 @@ class Shelf extends Control:
 ## the pane's own name and its own scroll, so a long text never folds open
 ## inside the roll. The scroll takes the focus (a key or pad scrolls it, and
 ## focus stays in the glass); the text fades into the glass at the scroll's
-## top and foot. A tap off the glass (released without a drag) or Escape closes
-## it; the seat's Return closes it before the credits.
+## top and foot where it runs on past them. A tap off the glass (released
+## without a drag) or Escape closes it; the seat's Return closes it before the
+## credits.
 class Glass extends Control:
 	signal shut
 
@@ -345,6 +346,9 @@ class Glass extends Control:
 		scroll.add_child(wrap)
 		_fade_top = _fade(true)
 		_fade_foot = _fade(false)
+		var bar: VScrollBar = scroll.get_v_scroll_bar()
+		bar.changed.connect(_shade_ends)
+		bar.value_changed.connect(_shade_ends.unbind(1))
 
 	## C3: in, the glass rises RISE px and fades in while `behind` (the roll)
 	## dims to 0.4; out, the reverse. Reduce Motion: 150 ms fades.
@@ -397,6 +401,15 @@ class Glass extends Control:
 		_fade_foot.size = Vector2(width, fade)
 		_fade_top.texture = _ramp(text_top / rect.size.y, true)
 		_fade_foot.texture = _ramp(foot / rect.size.y, false)
+		_shade_ends()
+
+	## Each fade shows only where the text runs on past it: none over the top
+	## of the text at its start, none at the foot of its end.
+	func _shade_ends() -> void:
+		var bar: VScrollBar = scroll.get_v_scroll_bar()
+		var fade: float = maxf(_fade_top.size.y, 1.0)
+		_fade_top.modulate.a = clampf(bar.value / fade, 0.0, 1.0)
+		_fade_foot.modulate.a = clampf((bar.max_value - bar.page - bar.value) / fade, 0.0, 1.0)
 
 	## A band over one end of the text in the glass's own night (LeadlightSheet's
 	## glazing at that height), clear towards the middle.

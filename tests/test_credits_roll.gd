@@ -351,6 +351,9 @@ static func _licence_glass(fails: Array[String], tree: SceneTree, host: SubViewp
 	credits.roll().font_pane.pressed.emit()
 	await tree.process_frame
 	_check(fails, is_equal_approx(glass.modulate.a, 1.0), "the open glass was opened again (it flashed)")
+	_check(fails, is_zero_approx(glass._fade_top.modulate.a) and glass._fade_foot.modulate.a > 0.9,
+		"at the text's start the glass fades its top (%.2f) or not its foot (%.2f)" % [
+			glass._fade_top.modulate.a, glass._fade_foot.modulate.a])
 	var down: InputEventAction = InputEventAction.new()
 	down.action = &"ui_down"
 	down.pressed = true
@@ -358,6 +361,7 @@ static func _licence_glass(fails: Array[String], tree: SceneTree, host: SubViewp
 	await tree.process_frame
 	_check(fails, glass.scroll.scroll_vertical > 0 and glass.scroll.has_focus(),
 		"a key did not scroll the licence text, or took the focus out of the glass")
+	_check(fails, glass._fade_top.modulate.a > 0.9, "the text scrolled under the crown is cut, not faded")
 	var families: String = ""
 	for node: Node in credits._font_licence_wrap.find_children("*", "Label", true, false):
 		families += (node as Label).text + "\n"
