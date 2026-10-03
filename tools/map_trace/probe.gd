@@ -30,6 +30,9 @@ extends Node
 ##   --probe-view=whole|river   frame Whole act, or the ravine, before holding
 ##   --probe-grain=off      take the map's grain off (and the TransitionLayer's)
 ##   --probe-rm             Reduce Motion, in memory only (nothing is saved)
+##   --probe-overlay=deck   open the run's deck over the map (a room) first
+##   --probe-fade=<a>       hold the map screen's modulate alpha at <a>, as
+##                          its entrance fade passes through it
 ##   --probe-shot=<png>     photograph the settled map, print PINS, and quit
 ##   --probe-seq=<n>        with --probe-shot, photograph n frames in a row
 ##                          (<png> becomes <png>-NN.png) with their times
@@ -106,6 +109,11 @@ func _run() -> void:
 		_host.get("_transitions").call("set_grain", false)
 		MapFilmGrainOff.apply(_scene)
 	_kill(_arg("--trace-kill", ""), screen)
+	if _arg("--probe-overlay", "") == "deck":
+		_host.call("_show_run_deck")
+	var fade: String = _arg("--probe-fade", "")
+	if not fade.is_empty():
+		screen.modulate.a = float(fade)
 	var shot: String = _arg("--probe-shot", "")
 	if not shot.is_empty():
 		await _frames(30)
@@ -119,7 +127,8 @@ func _run() -> void:
 		for i: int in range(images.size()):
 			images[i].save_png(shot if count == 0 else "%s-%02d.png" % [shot.trim_suffix(".png"), i])
 		_row({"probe": "shot", "path": shot, "pins": _pins(screen), "times_us": times,
-			"band": [_scene.focus_band.x, _scene.focus_band.y]})
+			"band": [_scene.focus_band.x, _scene.focus_band.y],
+			"layer_grain": _layer_grain(), "map_grain": _map_grain()})
 		print("PINS ", JSON.stringify(_pins(screen)))
 		_finish(0)
 		return
