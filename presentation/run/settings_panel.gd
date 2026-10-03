@@ -175,6 +175,12 @@ func content_rects() -> Array[Rect2]:
 	return [Rect2(_room.position, _room.size)]
 
 
+## On a phone the glass fills the stage up to the wordmark, whose tip would
+## show past the arch's shoulder: it goes with the furniture there.
+func covers_wordmark() -> bool:
+	return LeadlightTokens.is_phone(shape)
+
+
 ## The room stands right of the seat (§3.2), as tall as its tallest section
 ## needs and no taller, its foot clear of the seat's word; on a phone it fills
 ## the stage beside the seat.

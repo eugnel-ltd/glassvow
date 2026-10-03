@@ -338,7 +338,7 @@ func first_focus() -> Control:
 
 ## The glass stands over the title's wordmark: it goes with the furniture.
 func covers_wordmark() -> bool:
-	return not LeadlightTokens.is_phone(shape)
+	return true
 
 
 func content_rects() -> Array[Rect2]:
