@@ -323,6 +323,9 @@ func _apply_arrival(a: Arrival, t: float) -> void:
 		var gone: float = 1.0 - LeadlightMotion.ease_on(t / 0.18, LeadlightMotion.EXIT)
 		for item: CanvasItem in title.furniture(a.word, host.covers_wordmark()):
 			item.modulate.a = gone
+		# The word is the room's crown now, however it got there.
+		if a.word != null and is_instance_valid(a.word):
+			a.word.modulate.a = 0.0
 		var p: float = LeadlightMotion.ease_on(t / 0.48, LeadlightMotion.IN_OUT)
 		title.place_lantern(LeadlightSeat.path(title.home_rect(), _seat_art(), p))
 		title.lantern.reach = lerpf(1.0, POOL_SEATED,

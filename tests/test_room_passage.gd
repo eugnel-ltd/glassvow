@@ -265,6 +265,8 @@ static func _instant(fails: Array[String], tree: SceneTree, host: SubViewport,
 		_check(fails, modal != null and not main._passage.arriving() and is_equal_approx(modal.modulate.a, 1.0)
 				and is_equal_approx(modal.veil().modulate.a, 1.0),
 			"%s: %s did not land the room whole" % [room, how])
+		_check(fails, is_zero_approx(_word(main, room).modulate.a),
+			"%s: %s left the opening word on the road beside its room" % [room, how])
 		_dispose(main)
 
 
