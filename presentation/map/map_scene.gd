@@ -543,6 +543,10 @@ static func _painted_light(key: DirectionalLight3D, environment: Environment) ->
 	environment.fog_light_color = Color("304852")
 	environment.fog_light_energy = 0.45
 	environment.fog_density = 0.0015
+	# Act I's journey light grades and blooms (`MapJourneyLandscape.light`); the
+	# painted acts do neither.
+	environment.adjustment_enabled = false
+	environment.glow_enabled = false
 
 
 func _placement_footprint(candidate: Dictionary) -> PackedVector2Array:

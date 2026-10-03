@@ -27,6 +27,7 @@ static func run(fails: Array[String]) -> void:
 		return
 	_same_layout(fails, content, run, screen)
 	_seats(fails, screen, land)
+	_lamps(fails, screen, land)
 	_framing(fails, screen)
 	_whole_act(fails, screen)
 	_walk(fails, screen, land, content, run)
@@ -83,6 +84,41 @@ static func _seats(fails: Array[String], screen: WorldMapScreen,
 	for i: int in screen.map.reachable():
 		_check(fails, screen.pick_node_at(seats[i]) == i,
 			"a tap on reachable waystone %d picks it" % i)
+
+
+## R2 light: lanterns along the roads, each off the walking lane and clear of
+## every waystone; one flame per lamp; at most four real lamp lights, without
+## shadows, given to the lamps nearest the pilgrim.
+static func _lamps(fails: Array[String], screen: WorldMapScreen,
+		land: MapJourneyLandscape) -> void:
+	var posts: Array[Vector3] = []
+	for item: Dictionary in land.kit.placed:
+		if str(item["kind"]) == "lantern-post":
+			posts.append(item["position"])
+	_check(fails, posts.size() >= 10, "lanterns stand along the roads (%d)" % posts.size())
+	var anchors: PackedVector3Array = screen._ordered_layout_anchors()
+	var clear: bool = true
+	for p: Vector3 in posts:
+		clear = clear and land.terrain.distance_to_roads(p) >= 1.2
+		for i: int in range(anchors.size()):
+			var seat: Vector3 = land.seat(screen.map.nodes[i].id, anchors[i])
+			clear = clear and Vector2(p.x - seat.x, p.z - seat.z).length() >= 1.5
+	_check(fails, clear, "every lantern stands off the walking lane and clear of every waystone")
+	var lamps: MapJourneyLandscape.Lamps = land.lamps
+	_check(fails, lamps.anchors.size() == posts.size() + 2
+			and lamps.flames.multimesh.instance_count == lamps.anchors.size(),
+		"one flame for each lantern and each of the gateway's two lamps")
+	land.focus_lamps(lamps.anchors[0])
+	var lit: PackedVector3Array = lamps.lit()
+	var nearest: bool = lit.size() == mini(MapJourneyLandscape.Lamps.REAL_LIGHTS, lamps.anchors.size())
+	for p: Vector3 in lamps.anchors:
+		if not lit.has(p) and not lit.is_empty():
+			nearest = nearest and p.distance_to(lamps.anchors[0]) >= lit[-1].distance_to(lamps.anchors[0]) - 0.001
+	var shadowless: bool = true
+	for light: OmniLight3D in lamps.lights:
+		shadowless = shadowless and not light.shadow_enabled
+	_check(fails, nearest and shadowless,
+		"the four shadowless lamp lights go to the lamps nearest the focus")
 
 
 ## Journey frames the pilgrim's stone and its next stones on the 55° camera,
@@ -189,10 +225,16 @@ static func _rest_cadence(fails: Array[String], scene: MapScene) -> void:
 	Preferences.active.reduce_motion = reduced
 
 
-## Leaving Act I gives the painted acts back their governed camera.
+## Leaving Act I gives the painted acts back their governed camera, and their
+## own light: Act I's grade and bloom stay in Act I.
 static func _act_switch(fails: Array[String], screen: WorldMapScreen, run: RunState) -> void:
+	var environment: Environment = (screen._map_scene._world.get_node("MapEnvironment") as WorldEnvironment).environment
+	_check(fails, environment.glow_enabled and environment.adjustment_enabled,
+		"Act I's journey light grades and blooms")
 	run.act = 1
 	screen.refresh(run)
+	_check(fails, not environment.glow_enabled and not environment.adjustment_enabled,
+		"Act II's painted light neither grades nor blooms")
 	var rig: MapCameraRig = screen._map_scene.get_rig()
 	_check(fails, not rig.journey_mode and screen._map_scene.journey_landscape() == null
 			and is_equal_approx(rig.get_camera().rotation_degrees.x, MapCameraRig.TILT_DEGREES),

@@ -19,6 +19,10 @@ uniform vec4 gravel_colour : source_color = vec4(.345,.321,.310,1.0);
 uniform vec4 rock_colour : source_color = vec4(.30,.285,.30,1.0);
 uniform vec4 paving_colour : source_color = vec4(.325,.314,.31,1.0);
 uniform vec4 damp_colour : source_color = vec4(.235,.217,.224,1.0);
+// The lamps' pools (habitat alpha, painted by `bind_habitat`): warm light added
+// to the lit surface, flickering with the lanterns.
+uniform vec4 pool_colour : source_color = vec4(1.0,.60,.28,1.0);
+uniform float pool_strength = 1.1;
 varying vec3 world_at;
 varying float deck_blend;
 varying vec3 terrain_normal;
@@ -38,7 +42,8 @@ void fragment() {
  vec2 p=world_at.xz;
  vec2 uv=(p-world_bounds.xy)/world_bounds.zw;
  float d=texture(route_distance,uv).r;
- vec3 setting=texture(habitat,uv).rgb;
+ vec4 habitat_texel=texture(habitat,uv);
+ vec3 setting=habitat_texel.rgb;
  float broad=noise(p*.48);
  float patches=noise(p*1.8+8.0);
  float grain=lite ? .5 : noise(p*12.0);
@@ -108,6 +113,10 @@ void fragment() {
  float wetted=(1.0-smoothstep(river_level-.08,river_level+.30,world_at.y))*bank;
  if(!bridge_surface) { trail=mix(trail,trail*vec3(.65,.72,.75),wetted); }
  ALBEDO=trail;
+ if(habitat_texel.a>.003) {
+  float flicker=.86+.14*noise(p*.45+vec2(TIME*2.7,TIME*1.9));
+  EMISSION=trail*pool_colour.rgb*habitat_texel.a*pool_strength*flicker;
+ }
  // Fine relief belongs to the worn surface; the surrounding soil remains calm.
  ROUGHNESS=.97;
  SPECULAR=.10;

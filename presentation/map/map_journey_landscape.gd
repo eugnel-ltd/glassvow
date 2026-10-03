@@ -16,6 +16,7 @@ const Journey = preload("res://presentation/map/landscape/journey.gd")
 const Details = preload("res://presentation/map/landscape/road_details.gd")
 const Source = preload("res://presentation/map/landscape/layout_source.gd")
 const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
+const Lamps = preload("res://presentation/map/landscape/lamps.gd")
 const MAP_BOUNDS: Rect2 = Rect2(-48, -30, 96, 60)
 const LIT_GLASS: Color = Color("b38d57")
 const LIT_EMISSION: Color = Color("aa7841")
@@ -26,6 +27,7 @@ const STOPPED: String = "Stopped: no map waits for this land"
 var terrain: Terrain
 var kit: Kit
 var journey: Journey
+var lamps: Lamps
 var failure: String = ""
 var timings_ms: Dictionary = {}
 ## The record's node id to its waystone's seat on the rendered surface.
@@ -41,23 +43,38 @@ var _source: Dictionary = {}
 var _was_moving: bool = false
 
 
-## Act I's light: the native workshop's, which Review 10 was approved under.
+## Act I's light (R2): the golden hour of the owner's target
+## (`docs/design/2026-10-02-map-living-land/target/`): a warm low key, cool sky
+## fill in the shadows, a little more saturation, and a two-level bloom that
+## only the flames and their brightest pools reach. Review 10's workshop light
+## (key `ddd7d2` at 0.95, ambient `a19caa` at 0.5, no grade) is the R1 base.
 static func light(key: DirectionalLight3D, environment: Environment) -> void:
 	key.rotation_degrees = Vector3(-52, -32, 0)
-	key.light_color = Color("ddd7d2")
-	key.light_energy = 0.95
+	key.light_color = Color("ffd1a0")
+	key.light_energy = 1.6
 	key.light_specular = 1.0
 	key.shadow_enabled = true
-	key.shadow_opacity = 0.68
+	key.shadow_opacity = 0.72
 	key.directional_shadow_max_distance = 70
 	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color("252530")
+	environment.background_color = Color("2a2427")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("a19caa")
-	environment.ambient_light_energy = 0.50
+	environment.ambient_light_color = Color("7d86a8")
+	environment.ambient_light_energy = 0.30
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.tonemap_exposure = 1.0
 	environment.fog_enabled = false
+	environment.adjustment_enabled = true
+	environment.adjustment_brightness = 1.0
+	environment.adjustment_contrast = 1.2
+	environment.adjustment_saturation = 1.18
+	environment.glow_enabled = true
+	for level: int in range(7):
+		# The half- and quarter-resolution levels only: measured free on the A12.
+		environment.set_glow_level(level, 1.0 if level < 2 else 0.0)
+	environment.glow_intensity = 0.8
+	environment.glow_bloom = 0.0
+	environment.glow_hdr_threshold = 0.95
 
 
 ## The whole build on the calling thread (tests, tools, captures).
@@ -186,6 +203,9 @@ func _finish() -> void:
 	if not kit.build_complete or not kit.failure.is_empty():
 		failure = kit.failure if not kit.failure.is_empty() else "Woodland assembly incomplete"
 		return
+	lamps = Lamps.new()
+	add_child(lamps)
+	lamps.build(kit.lamp_anchors())
 	timings_ms["scenery"] = Time.get_ticks_msec() - started
 	if _halted():
 		return
@@ -216,6 +236,12 @@ func set_node_states(states: Dictionary) -> void:
 		var lit: bool = state in ["current", "open"]
 		journey.glasses[i].albedo_color = LIT_GLASS if lit else COLD_GLASS
 		journey.glasses[i].emission = LIT_EMISSION if lit else Color.BLACK
+
+
+## Gives the land's real lamp lights to the lanterns nearest `at`.
+func focus_lamps(at: Vector3) -> void:
+	if lamps != null and at.is_finite():
+		lamps.focus(at)
 
 
 ## The walkable route from waystone `from_id` to `to_id`: the road graded onto

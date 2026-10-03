@@ -69,9 +69,12 @@ func _ready() -> void:
 	for x: float in [-1,1]:
 		for z: float in [-1,1]:
 			Meshes.box(lamp,Vector3(x*.073,.05,z*.073),Vector3(.022,.24,.022),iron,"Lantern corner")
+	# The Flame is one of the land's real lights (R2): it carries a small pool of
+	# the run's colour along the road.
 	_light = OmniLight3D.new()
-	_light.light_energy = .32
-	_light.omni_range = 1.4
+	_light.light_energy = .9
+	_light.omni_range = 2.6
+	_light.shadow_enabled = false
 	lamp.add_child(_light)
 	set_flame(flame)
 	Meshes.box(lamp,Vector3(0,.21,0),Vector3(.025,.12,.025),iron,"Lantern handle")

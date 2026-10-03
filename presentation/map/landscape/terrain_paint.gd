@@ -58,8 +58,8 @@ static func create(lines: Array[PackedVector3Array], _elevated: Callable, bounds
 	material.set_shader_parameter("world_bounds",Vector4(bounds.position.x,bounds.position.y,bounds.size.x,bounds.size.y))
 	material.set_shader_parameter("route_distance", ImageTexture.create_from_image(image))
 	material.set_meta("distance_image", image)
-	var empty: Image = Image.create(ceili(bounds.size.x*4),ceili(bounds.size.y*4),false,Image.FORMAT_RGB8)
-	empty.fill(Color.BLACK)
+	var empty: Image = Image.create(ceili(bounds.size.x*4),ceili(bounds.size.y*4),false,Image.FORMAT_RGBA8)
+	empty.fill(Color(0, 0, 0, 0))
 	material.set_shader_parameter("habitat",ImageTexture.create_from_image(empty))
 	return material
 
@@ -77,10 +77,13 @@ static func _stamp(values: PackedFloat32Array, a: Vector2, b: Vector2, bounds: R
 			var index: int = y * width + x
 			values[index] = minf(values[index], distance)
 
-static func bind_habitat(parent: Node3D, placements: Array[Dictionary], lines: Array[PackedVector3Array], elevated: Callable) -> void:
+## The habitat map the ground and decks read: red the woodland's reach, green the
+## rock's, blue the dirt carried onto deck ends, alpha the pool of light under
+## every lamp in `lamps` (R2 light; the shader flickers it).
+static func bind_habitat(parent: Node3D, placements: Array[Dictionary], lines: Array[PackedVector3Array], elevated: Callable, lamps: PackedVector3Array = PackedVector3Array()) -> void:
 	var bounds: Rect2 = parent.get_meta("world_bounds",Rect2(-48,-30,96,60))
-	var map: Image = Image.create(ceili(bounds.size.x*4),ceili(bounds.size.y*4),false,Image.FORMAT_RGB8)
-	map.fill(Color.BLACK)
+	var map: Image = Image.create(ceili(bounds.size.x*4),ceili(bounds.size.y*4),false,Image.FORMAT_RGBA8)
+	map.fill(Color(0, 0, 0, 0))
 	for item: Dictionary in placements:
 		var kind: String = str(item["kind"])
 		var rock: bool = kind.begins_with("slate")
@@ -113,9 +116,29 @@ static func bind_habitat(parent: Node3D, placements: Array[Dictionary], lines: A
 						var colour: Color = map.get_pixel(x,y)
 						colour.b = maxf(colour.b,1.0-smoothstep(.45,2.2,Vector2(x+.5,y+.5).distance_to(centre)/4))
 						map.set_pixel(x,y,colour)
+	_paint_pools(map, bounds, lamps)
 	var texture: ImageTexture = ImageTexture.create_from_image(map)
 	for name: String in ["Quiet sculpted ground","Continuous bridge decks"]:
 		var node: MeshInstance3D = parent.get_node_or_null(name) as MeshInstance3D
 		if node != null:
 			(node.material_override as ShaderMaterial).set_shader_parameter("habitat",texture)
 			node.material_override.set_meta("habitat_image",map)
+
+
+## Each lamp's pool: full under the lantern, gone by `POOL_RADIUS`, overlapping
+## pools adding up to full.
+const POOL_RADIUS: float = 3.4
+
+
+static func _paint_pools(map: Image, bounds: Rect2, lamps: PackedVector3Array) -> void:
+	for lamp: Vector3 in lamps:
+		var centre: Vector2 = Vector2((lamp.x - bounds.position.x) * 4, (lamp.z - bounds.position.y) * 4)
+		var reach: float = POOL_RADIUS * 4
+		for y: int in range(maxi(0, floori(centre.y - reach)), mini(map.get_height(), ceili(centre.y + reach))):
+			for x: int in range(maxi(0, floori(centre.x - reach)), mini(map.get_width(), ceili(centre.x + reach))):
+				var near: float = 1.0 - Vector2(x + .5, y + .5).distance_to(centre) / reach
+				if near <= 0.0:
+					continue
+				var colour: Color = map.get_pixel(x, y)
+				colour.a = minf(1.0, colour.a + near * near)
+				map.set_pixel(x, y, colour)

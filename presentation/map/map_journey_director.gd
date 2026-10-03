@@ -66,14 +66,19 @@ func frame(focus: int) -> void:
 
 func park() -> void:
 	var at: int = screen.map.at
+	var anchors: PackedVector3Array = screen._ordered_layout_anchors()
 	if at < 0 or at >= screen.map.nodes.size():
 		land().set_traveller(Vector3.INF, Vector3.INF, false)
+		# Before the first step the lamps light the road out of the start.
+		var next: Array[int] = screen.map.reachable()
+		if not next.is_empty() and next[0] < anchors.size():
+			land().focus_lamps(land().seat(screen.map.nodes[next[0]].id, anchors[next[0]]))
 		return
 	var id: String = screen.map.nodes[at].id
-	var anchors: PackedVector3Array = screen._ordered_layout_anchors()
 	var spot: Vector3 = land().parked(id, anchors[at]) if at < anchors.size() else Vector3.INF
 	land().set_traveller(spot, spot, false)
 	land().set_flame(flame)
+	land().focus_lamps(spot)
 
 
 ## Wheel or pinch: one level outward (Close, Journey, Whole act) or inward.
