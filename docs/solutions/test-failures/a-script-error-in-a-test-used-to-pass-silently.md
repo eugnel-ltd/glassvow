@@ -102,6 +102,14 @@ What it deliberately does not do:
   runner's `_finalize` lists it under `run_all: script errors while the tree
   was torn down at exit, charged to no test (the result stands):`, still naming
   its file and line, and leaves the exit status alone.
+- **A suite's in-tree half, run in a child Godot, is guarded too.** A suite
+  that needs real frames runs `run_in_tree` in a child process through
+  `tests/support/tree_suite.gd`, and the runner's logger does not reach that
+  process. The child adds its own guard, settles two frames after the suite
+  returns, and reports each script error as a failure line the runner reads
+  back. Without it, a null access in `run_in_tree` passed: the coroutine
+  ended early, the child still printed its done mark, and the suite printed
+  `ok`.
 - **A test that errors inside a loop does not flood the log.** The guard keeps
   the first five messages between two takes and counts the rest
   (`and N more script error(s)`).
