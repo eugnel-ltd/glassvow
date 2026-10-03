@@ -17,6 +17,8 @@ const Details = preload("res://presentation/map/landscape/road_details.gd")
 const Source = preload("res://presentation/map/landscape/layout_source.gd")
 const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 const Lamps = preload("res://presentation/map/landscape/lamps.gd")
+const LandMotion = preload("res://presentation/map/landscape/land_motion.gd")
+const Air = preload("res://presentation/map/landscape/air.gd")
 const MAP_BOUNDS: Rect2 = Rect2(-48, -30, 96, 60)
 const LIT_GLASS: Color = Color("b38d57")
 const LIT_EMISSION: Color = Color("aa7841")
@@ -28,6 +30,7 @@ var terrain: Terrain
 var kit: Kit
 var journey: Journey
 var lamps: Lamps
+var air: Air
 var failure: String = ""
 var timings_ms: Dictionary = {}
 ## The record's node id to its waystone's seat on the rendered surface.
@@ -206,6 +209,9 @@ func _finish() -> void:
 	lamps = Lamps.new()
 	add_child(lamps)
 	lamps.build(kit.lamp_anchors())
+	air = Air.new()
+	add_child(air)
+	air.build()
 	timings_ms["scenery"] = Time.get_ticks_msec() - started
 	if _halted():
 		return
@@ -238,10 +244,12 @@ func set_node_states(states: Dictionary) -> void:
 		journey.glasses[i].emission = LIT_EMISSION if lit else Color.BLACK
 
 
-## Gives the land's real lamp lights to the lanterns nearest `at`.
+## Gives the land's real lamp lights to the lanterns nearest `at`, and centres
+## the drifting air there.
 func focus_lamps(at: Vector3) -> void:
 	if lamps != null and at.is_finite():
 		lamps.focus(at)
+		air.focus(at)
 
 
 ## The walkable route from waystone `from_id` to `to_id`: the road graded onto

@@ -33,6 +33,7 @@ static func run(fails: Array[String]) -> void:
 	_whole_act(fails, screen)
 	_walk(fails, screen, land, content, run)
 	_rest_cadence(fails, scene)
+	_living_motion(fails, scene, land)
 	_act_switch(fails, screen, run)
 	_free(screen)
 
@@ -267,6 +268,60 @@ static func _rest_cadence(fails: Array[String], scene: MapScene) -> void:
 		_check(fails, not scene.is_live() and renders == 8 / every,
 			"at rest the land renders every %d frames (%s)" % [every, "reduced" if mode else "full"])
 	Preferences.active.reduce_motion = reduced
+
+
+## R2 step 3: banners hang on the bridges, facing the camera and off the walking
+## lane; the kit's foliage and the banners' cloth move under `LandMotion`; and
+## Reduce Motion stills them and takes the embers and ash away (lantern flicker
+## and the water keep their own cadence).
+static func _living_motion(fails: Array[String], scene: MapScene,
+		land: MapJourneyLandscape) -> void:
+	var banners: Array[Dictionary] = []
+	for item: Dictionary in land.kit.placed:
+		if str(item["kind"]) == "bridge-banner":
+			banners.append(item)
+	var hung: bool = banners.size() >= 4
+	for item: Dictionary in banners:
+		var yaw: float = float(str(item["yaw"]))
+		var at: Vector3 = item["position"]
+		hung = hung and cos(yaw) >= 0.5 and land.terrain.distance_to_roads(at) >= 0.9
+	_check(fails, hung, "banners hang outside the bridges, facing the camera (%d)" % banners.size())
+	var swaying: int = 0
+	var rippling: int = 0
+	for node: Node in land.kit.find_children("*", "MultiMeshInstance3D", true, false):
+		var mesh: Mesh = (node as MultiMeshInstance3D).multimesh.mesh
+		for i: int in range(mesh.get_surface_count()):
+			var material: ShaderMaterial = mesh.surface_get_material(i) as ShaderMaterial
+			if material == null:
+				continue
+			if material.shader == preload("res://presentation/map/landscape/foliage.gdshader"):
+				swaying += 1
+			elif material.shader == preload("res://presentation/map/landscape/banner.gdshader"):
+				rippling += 1
+	_check(fails, swaying > 0 and rippling > 0, "the foliage sways and the banners ripple")
+	var reduced: bool = Preferences.active.reduce_motion
+	Preferences.active.reduce_motion = false
+	scene.set_live(false)
+	_tick(scene, land)
+	var moving: bool = MapJourneyLandscape.LandMotion.enabled and land.air.visible
+	Preferences.active.reduce_motion = true
+	_tick(scene, land)
+	var still: bool = not MapJourneyLandscape.LandMotion.enabled and not land.air.visible \
+		and not land.air.embers.emitting and not land.air.ash.emitting
+	_check(fails, still, "Reduce Motion stills the foliage and banners and clears the air")
+	Preferences.active.reduce_motion = false
+	_tick(scene, land)
+	_check(fails, moving and MapJourneyLandscape.LandMotion.enabled and land.air.visible,
+		"the land moves without Reduce Motion, and again once it is off")
+	Preferences.active.reduce_motion = reduced
+	_tick(scene, land)
+
+
+## Runs the scene past its settle frames into the rest cadence.
+static func _tick(scene: MapScene, land: MapJourneyLandscape) -> void:
+	for frame: int in range(10):
+		scene._process(0.0)
+	land.air._process(0.0)
 
 
 ## Leaving Act I gives the painted acts back their governed camera, and their

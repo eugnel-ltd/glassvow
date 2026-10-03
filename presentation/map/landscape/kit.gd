@@ -43,6 +43,7 @@ const PROFILES: Dictionary = {
 	"memorial": Vector2(0.55, 1.95),
 	"amber-arch": Vector2(2.65, 5.50),
 	"lantern-post": Vector2(0.35, 1.70),
+	"bridge-banner": Vector2(0.40, 1.60),
 }
 
 ## Where each lamp-carrying kind holds its flame (the lantern glass's centre),
@@ -60,6 +61,13 @@ const LANTERN_SPACING: float = 9.0
 const LANTERN_SHORTEST: float = 4.0
 const LANTERN_OFFSET: float = 1.3
 const LANTERN_GAP: float = 6.0
+## Banners on the bridges: one every `BANNER_SPACING` metres of deck raised
+## over the river, hung clear of the parapet stones and the masonry below them
+## (`BANNER_OFFSET` off the deck's centreline), on the side facing the journey
+## camera (whose yaw never turns): the far side's would hang behind the deck.
+const BANNER_SPACING: float = 3.5
+const BANNER_OFFSET: float = 1.0
+const BANNER_HEIGHT: float = 0.30
 
 ## The kit scene the worker places as a scene (the arch), held for the process
 ## so a build on a worker only ever reads the resource cache (an uncached
@@ -239,6 +247,7 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 	_undergrowth(grey)
 	_verges(grey)
 	_accents(grey)
+	_banners(grey)
 	contacts.finish()
 	if static_scenery!=null: static_scenery.call("finish")
 	if not grey:
@@ -289,6 +298,45 @@ func _lanterns(grey: bool) -> void:
 				_place("lantern-post", p, 1.0, atan2(run.x, run.y), grey)
 				posts.append(Vector2(p.x, p.z))
 			travelled += length
+
+
+## Banners hung from the bridge parapets over the river (R2 motion). They are
+## part of the bridge, not the ground, so they skip the ground clearance, and
+## go in last: the undergrowth and verges draw from every placement before
+## them, so placing banners earlier would move the woodland. They keep clear of
+## the roads' ends, where waystones and junctions stand.
+func _banners(grey: bool) -> void:
+	var chains: Array = terrain.get_meta("bridge_chains", [])
+	for chain: Dictionary in chains:
+		var points: PackedVector3Array = chain["points"]
+		var lengths: PackedFloat32Array = chain["lengths"]
+		var weights: PackedFloat32Array = chain["weights"]
+		var next: float = 0.0
+		for i: int in range(points.size() - 1):
+			if lengths[i + 1] < next:
+				continue
+			var p: Vector3 = points[i]
+			var q: Vector3 = points[i + 1]
+			var middle: Vector3 = (p + q) * 0.5
+			if minf(weights[i], weights[i + 1]) < 0.95 \
+					or terrain.stream_distance(middle.x, middle.z) > 5.0 \
+					or terrain.lines.any(func(line: PackedVector3Array) -> bool:
+						return _flat(middle).distance_to(_flat(line[0])) < 2.0 \
+							or _flat(middle).distance_to(_flat(line[-1])) < 2.0):
+				continue
+			var forward: Vector3 = (q - p).normalized()
+			var across: Vector3 = forward.cross(Vector3.UP).normalized()
+			if across.z < 0.0:
+				across = -across
+			if across.z < 0.5:
+				continue
+			var at: Vector3 = middle + across * BANNER_OFFSET + Vector3.UP * BANNER_HEIGHT
+			_place("bridge-banner", at, 1.0, atan2(across.x, across.z), grey)
+			next = lengths[i + 1] + BANNER_SPACING
+
+
+static func _flat(p: Vector3) -> Vector2:
+	return Vector2(p.x, p.z)
 
 
 ## Every lamp's flame centre on the land: the gateway's two and each post's.

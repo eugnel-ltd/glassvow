@@ -974,6 +974,7 @@ func _rest_cadence() -> void:
 		return
 	_rest_tick += 1
 	var every: int = REST_EVERY_REDUCED if Preferences.active.reduce_motion else REST_EVERY
+	MapJourneyLandscape.LandMotion.apply(not Preferences.active.reduce_motion)
 	if _rest_tick % every == 0:
 		_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
 

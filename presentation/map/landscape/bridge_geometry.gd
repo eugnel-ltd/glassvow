@@ -56,6 +56,9 @@ static func build(parent: Node3D, lines: Array[PackedVector3Array], elevated: Ca
 			var half_b: float = .8+.5*weights[i+1]*(1-smoothstep(.5,1.7,minf(lengths[i+1],lengths[-1]-lengths[i+1])))
 			spans.append({"a":points[i],"b":points[i+1],"wa":weights[i],"wb":weights[i+1],"raise_a":rises[i],"raise_b":rises[i+1],"half_a":half_a,"half_b":half_b,"s":lengths[i],"bottom_a":soffit[i],"bottom_b":soffit[i+1]})
 		chains.append({"points":points,"lengths":lengths,"weights":weights})
+	# The decks' sampled centrelines and how raised each point is, for what hangs
+	# from the parapets (the kit's banners).
+	parent.set_meta("bridge_chains", chains)
 	if spans.is_empty():
 		return 0
 	parent.build_timings_ms["roads_chains"] = Time.get_ticks_msec() - _t0
