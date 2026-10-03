@@ -330,6 +330,27 @@ choosing; never commit it), plant stand-in `glassvow_run_v2.json`,
 `glassvow_vigil_v2.json` and `settings.cfg` in that directory, run the suite, and
 check that their hashes and modification times are unchanged afterwards.
 
+## Test runner
+
+`godot --headless -s res://tests/run_all.gd` loads every `tests/test_*.gd` and
+calls its static `run(fails)`. Add `-- --tests=res://tests/test_a.gd,...` to run
+a subset; a malformed or unknown path fails the run. Judge a run by its exit
+status and its `PASS (N tests)` line.
+
+A GDScript error raised while a test loads or runs (a null access, a failed
+`assert`, a parse error) fails that test. The failure names the test, plus the
+file, line, function and message of the error. Until 2026-10-03 such an error
+stopped only the function it was raised in, so the test still printed `ok` and
+its later checks never ran. The runner now registers
+`tests/support/script_error_guard.gd`, a `Logger` that records these errors
+(`docs/solutions/test-failures/a-script-error-in-a-test-used-to-pass-silently.md`).
+Plain engine errors and warnings on stderr still fail nothing. These include
+the headless renderer's null materials, the leak report at exit, and
+`push_error`. Script errors raised after the last test are listed after the
+result and do not change it. A test that does not parse, or has no static
+`run(fails)`, is recorded as a failure and never called. Calling one used to
+abort the runner itself and leave it waiting forever.
+
 ## Creation and maintenance contract
 
 1. First reuse a shipping screen, existing lab mode or existing probe. Do not
