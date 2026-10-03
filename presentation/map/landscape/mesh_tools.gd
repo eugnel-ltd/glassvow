@@ -32,7 +32,53 @@ static func triangle(surface: SurfaceTool, a: Vector3, b: Vector3, c: Vector3,
 
 static func finish(surface: SurfaceTool) -> ArrayMesh:
 	surface.generate_normals()
-	return surface.commit()
+	return committed(surface.commit())
+
+
+## A build behind a lit screen (the journey prefetch under the title) hands the
+## renderer its meshes a little at a time. A worker's meshes reach the GPU when
+## the main thread next flushes the renderer's queue, every one of them in that
+## frame: the ground's chunks together cost the title a 43 ms frame on the
+## iPad 8. A thread `pace`d pauses for a frame once it has committed
+## `PACE_VERTICES` vertices or `PACE_MESHES` meshes since its last pause, until
+## its `Pacing` is turned off (the map is opening now).
+const PACE_VERTICES: int = 6000
+const PACE_MESHES: int = 4
+const PACE_PAUSE_MS: int = 17
+static var _paced: Dictionary = {}
+static var _paced_lock: Mutex = Mutex.new()
+
+
+class Pacing extends RefCounted:
+	var on: bool = true
+	var vertices: int = 0
+	var meshes: int = 0
+
+
+## Paces the calling thread's commits by `pacing`; null ends it.
+static func pace(pacing: Pacing) -> void:
+	_paced_lock.lock()
+	if pacing == null:
+		_paced.erase(OS.get_thread_caller_id())
+	else:
+		_paced[OS.get_thread_caller_id()] = pacing
+	_paced_lock.unlock()
+
+
+## Every mesh the land commits passes here (`pace`).
+static func committed(mesh: ArrayMesh) -> ArrayMesh:
+	_paced_lock.lock()
+	var pacing: Pacing = _paced.get(OS.get_thread_caller_id(), null)
+	_paced_lock.unlock()
+	if pacing == null or not pacing.on or mesh == null or mesh.get_surface_count() == 0:
+		return mesh
+	pacing.vertices += mesh.surface_get_array_len(0)
+	pacing.meshes += 1
+	if pacing.vertices >= PACE_VERTICES or pacing.meshes >= PACE_MESHES:
+		pacing.vertices = 0
+		pacing.meshes = 0
+		OS.delay_msec(PACE_PAUSE_MS)
+	return mesh
 
 static func v3(value: Array) -> Vector3:
 	return Vector3(float(str(value[0])), float(str(value[1])), float(str(value[2])))

@@ -21,6 +21,7 @@ extends RefCounted
 ## map is not the journey act's.
 
 enum Step { WAITING_PICTURES, CATALOGUE, KIT, BUILDING, DONE, FAILED }
+const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 
 static var _current: MapJourneyPrefetch = null
 
@@ -39,6 +40,9 @@ var _quality: Dictionary = {}
 var _task: int = -1
 var _out: Array = []
 var _land: MapJourneyLandscape = null
+## How the worker hands the renderer its meshes: a frame's worth at a time
+## while the title is up, all at once when a map is waiting for the land.
+var _pacing: Meshes.Pacing = null
 ## The generator's packet for the layout input digested as `_input_digest`,
 ## once built: Main's compile hands it to the screen (`layout_packet`).
 var _packet: Dictionary = {}
@@ -78,10 +82,13 @@ static func step_current() -> void:
 
 
 ## A map is opening now: whatever main-thread setup the current prefetch has
-## left runs at once, and its worker starts.
+## left runs at once, and its worker starts, or stops pacing its meshes.
 static func hurry() -> void:
-	if _current != null:
-		_current._advance(true)
+	if _current == null:
+		return
+	if _current._pacing != null:
+		_current._pacing.on = false
+	_current._advance(true)
 
 
 ## Whether a prefetch is still waiting or building; its land's key is known
@@ -179,7 +186,7 @@ func _advance(hurry: bool) -> void:
 			MapJourneyLandscape.Kit.preload_scenes()
 		elif not MapJourneyLandscape.Kit.preload_step():
 			return
-		_launch()
+		_launch(not hurry)
 	elif step == Step.BUILDING and WorkerThreadPool.is_task_completed(_task):
 		WorkerThreadPool.wait_for_task_completion(_task)
 		_task = -1
@@ -196,13 +203,25 @@ func _take(assets: MapLandscapeAssets) -> bool:
 	return not (_bundle.is_empty() or _heroes.is_empty() or _quality.is_empty())
 
 
-func _launch() -> void:
+func _launch(paced: bool) -> void:
 	var land: MapJourneyLandscape = MapJourneyLandscape.new()
 	_land = land
-	_task = WorkerThreadPool.add_task(_build.bind(_out, land, _assets, _bundle, _heroes,
-		_quality.duplicate(true), _nodes.duplicate(true), _edges.duplicate(true),
+	_pacing = Meshes.Pacing.new()
+	_pacing.on = paced
+	_task = WorkerThreadPool.add_task(_paced_build.bind(_pacing, _out, land, _assets, _bundle,
+		_heroes, _quality.duplicate(true), _nodes.duplicate(true), _edges.duplicate(true),
 		_act, _seed, _salt), false, "journey land prefetch")
 	step = Step.BUILDING
+
+
+## On the worker: `_build`, its meshes handed over as `pacing` says.
+static func _paced_build(pacing: Meshes.Pacing, out: Array, land: MapJourneyLandscape,
+		assets: MapLandscapeAssets, bundle: Dictionary, heroes: Dictionary,
+		quality: Dictionary, nodes: Array, edges: Array, act: int, run_seed: int,
+		salt: int) -> void:
+	Meshes.pace(pacing)
+	_build(out, land, assets, bundle, heroes, quality, nodes, edges, act, run_seed, salt)
+	Meshes.pace(null)
 
 
 ## On the worker: input, layout, the screen's scenery binding and the land,

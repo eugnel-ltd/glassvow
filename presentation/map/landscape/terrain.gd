@@ -294,7 +294,7 @@ func _land_chunk(x0: int, z0: int, x1: int, z1: int, rows: int) -> ArrayMesh:
 			var first: int = ix*span+iz
 			for index: int in [first,first+span+1,first+1,first,first+span,first+span+1]:
 				surface.add_index(index)
-	return surface.commit()
+	return Meshes.committed(surface.commit())
 
 
 func _roads() -> void:

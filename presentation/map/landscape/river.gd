@@ -55,7 +55,7 @@ func build(land: Node3D) -> void:
 				top.set_uv(uv)
 				top.set_normal(Vector3.UP)
 				top.add_vertex(Vector3(x,LEVEL,z))
-	mesh = top.commit()
+	mesh = preload("res://presentation/map/landscape/mesh_tools.gd").committed(top.commit())
 	field_image = Image.create(field_size.x,field_size.y,false,Image.FORMAT_RF)
 	for iz: int in range(field_size.y):
 		var z: float = lerpf(-half_length,half_length,(iz+.5)/field_size.y)

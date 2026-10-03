@@ -50,8 +50,8 @@ const PROFILES: Dictionary = {
 static var _held: Array[PackedScene] = []
 ## How many of `PROFILES`' scenes are ready so far, in its order.
 static var _held_kinds: int = 0
-## Whether the kit's scenes have been asked of the loader's threads.
-static var _requested: bool = false
+## The kit's scenes asked of the loader's threads, by path.
+static var _requested: Dictionary = {}
 ## The scene the build places as itself; every other kind is drawn from its
 ## static template (`static_scenery.gd`).
 const ARCH: String = "amber-arch"
@@ -72,25 +72,25 @@ static func preload_scenes() -> void:
 ## takes the meshes without reading them back from the renderer; the arch is
 ## loaded through the cache and held, as the worker loads it there. Stepped
 ## (the journey prefetch under the title, one scene per frame), the scenes load
-## on the loader's threads, all asked for at the first step, and a step takes
-## the next one once it has loaded. `wait`ing (a map opening now), a scene not
-## asked for loads here, and one being loaded is waited for while the renderer
-## is kept in step, as the engine's own wait does, but without running the
-## deferred calls that wait would run in the middle of a frame.
+## on the loader's threads, the next one asked for as this one is taken, so
+## their meshes reach the GPU a scene per frame rather than together; a step
+## takes its scene once it has loaded. `wait`ing (a map opening now), a scene
+## not asked for loads here, and one being loaded is waited for while the
+## renderer is kept in step, as the engine's own wait does, but without running
+## the deferred calls that wait would run in the middle of a frame.
 static func preload_step(wait: bool = false) -> bool:
 	var kinds: Array = PROFILES.keys()
 	if _held_kinds >= kinds.size():
 		return true
 	var started: int = Time.get_ticks_usec()
 	Meshes.prepare_unit_box()
-	if not wait and not _requested:
-		_requested = true
-		for each: String in kinds:
-			ResourceLoader.load_threaded_request(_path(each), "PackedScene", false, _cache_mode(each))
 	var kind: String = kinds[_held_kinds]
 	var path: String = _path(kind)
+	if not wait:
+		for ahead: int in range(_held_kinds, mini(_held_kinds + 2, kinds.size())):
+			_request(str(kinds[ahead]))
 	var scene: PackedScene = null
-	if _requested:
+	if _requested.has(path):
 		while ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 			if not wait:
 				preload_ms += (Time.get_ticks_usec() - started) / 1000.0
@@ -111,6 +111,13 @@ static func preload_step(wait: bool = false) -> bool:
 		push_error("Journey kit: " + failure)
 	preload_ms += (Time.get_ticks_usec() - started) / 1000.0
 	return _held_kinds >= kinds.size()
+
+
+static func _request(kind: String) -> void:
+	var path: String = _path(kind)
+	if not _requested.has(path):
+		_requested[path] = true
+		ResourceLoader.load_threaded_request(path, "PackedScene", false, _cache_mode(kind))
 
 
 static func _cache_mode(kind: String) -> ResourceLoader.CacheMode:

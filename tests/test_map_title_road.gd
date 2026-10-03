@@ -167,6 +167,8 @@ static func _title_warms_and_continue_adopts(fails: Array[String], content: Cont
 			== MapJourneyPrefetch.Step.DONE and MapScene._journey_kept != null,
 		"the title's warm-up builds the land")
 	var warm: MapJourneyLandscape = MapScene._journey_kept
+	_check(fails, MapJourneyPrefetch._current._pacing != null and MapJourneyPrefetch._current._pacing.on,
+		"the title's build hands the renderer its meshes a frame's worth at a time")
 	_check(fails, MapScene._bound_key == MapScene._journey_kept_key
 			and not MapJourneyPrefetch.layout_packet(WorldMapScreen._input_digest_kept).is_empty(),
 		"the warm-up leaves the open its layout input, layout and scenery binding")
@@ -213,6 +215,9 @@ static func _title_warms_and_continue_adopts(fails: Array[String], content: Cont
 	var stranger_screen: WorldMapScreen = main._map_screen
 	_check(fails, not is_instance_valid(other) and stranger_screen != null,
 		"a restore of another run lets the land warmed for another save go")
+	_check(fails, MapJourneyPrefetch._current != null and MapJourneyPrefetch._current._pacing != null
+			and not MapJourneyPrefetch._current._pacing.on,
+		"a land a map is waiting for is built unpaced")
 	_settle(main)
 	_pump_screen(main)
 	_check(fails, stranger_screen != null and not stranger_screen.landscape_pending()
