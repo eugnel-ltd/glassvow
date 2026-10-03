@@ -7,7 +7,9 @@ see the oval.. so make some detail and polish please." Clarified at 09:52: "it's
 means no good. need to make them better." Standing bar: AAA commercial, immersive, no static screens
 (every state alive at rest), surprise me.
 
-**Status.** This is the one build spec for #655. Nothing in it is built yet. It was written on the
+**Status.** This is the one build spec for #655. PR A (the oval, the ground, Reduce Motion, the type
+floor) and PR B (the passage, Settings, How to Play, Credits) are built; where the build differs from the
+text, an *as built* note says how and why. The Vigil (PR C) is not built yet. It was written on the
 lane branch `ui/title-rooms-2026-10-03` at `124c528d` (the pre-squash head of PR #654, whose tree is
 identical to `2228f94f` on `main`). It continues the opening's design record,
 `docs/design/2026-10-02-opening-start/README.md` (Concept A "Held Light", §7 motion spec, §8 Leadlight
@@ -237,6 +239,12 @@ layer blends on its own, which bunches the change into the fade's last frames (t
 3.6 times its first), and it keeps a screen alive and able to route after the change. The screen that
 leaves is freed at once, as under full motion. With nothing copied (the headless renderer), `screen_in`
 fades up from the night.
+
+*As built in PR B:* a room's passage takes the same form: Main copies the frame before the room opens or
+leaves (`TransitionLayer.cross_fade`), and the room lands whole beneath it, the lantern already at the
+seat or home, so the lantern's 75 + 75 ms is the one cross-fade. With nothing copied (the headless
+renderer) the room fades over 150 ms, linear, from its first frame; a leaving room fades out the same way
+while the title is back whole at once.
 Idle motion follows opening §7: the flame's flicker (and the Vigil's firelight, which is the fire's
 flicker) stays; everything else at rest stops.
 
@@ -307,6 +315,12 @@ The lantern's home is the shipped `TitleScreen.Layout` (pad 420 px at (380, 423)
 (309, 181)). The seat path is a lowered arc (control point 0.25 of the way, 40 px below the chord), so
 the lantern reads as lowered to the hand, not slid. The lantern's hit covers its visible body (pad
 (44, 596)–(164, 806), phone (24, 272)–(100, 390)); the word's hit is the column above.
+
+*As built in PR B* (`presentation/ui/components/leadlight_seat.gd`): the two hits as the table gives them
+overlapped by 12 px at pad (the body to x 164, the word from 152), so the lantern's hit stops where the
+word's begins (pad (47, 597)–(152, 804)): two separate rects. The art square at (−6, 588) is partly off
+the stage by design (its margins are clear); what the seat's test holds on the stage is the lantern's body
+and both hits. The lowered arc is `LeadlightSeat.path`.
 
 ### 3.2 Room rects
 
@@ -511,6 +525,20 @@ A glass room, crown "HOW TO PLAY" / 「玩法說明」, lit from the seat.
 
 Reference: `mocks/lantern-rooms-family-1180x820.jpg` (middle panel; the build's seat and exit differ).
 
+*As built in PR B* (`presentation/run/help_screen.gd`): the panes name their sections in Cinzel's small
+capitals, as written (the title's own words are set that way): in capitals, "I  THE PILGRIMAGE" broke
+after "THE" at any width the column can give. The column is 264 wide (not 240), so all but two names
+stand on one line, and the page about 470. A page's heading is the title up to its dash, after its
+numeral, and what follows the dash stands under it as a quieter line in the reading face (gold at 0.72):
+the heading's tracked capitals split zh-Hant's "——" into two dashes. The `[b]` runs keep the body's
+colour: `test_stagecraft` pins the Lantern's body as authored markup, and a colour tag would change it.
+The energy glyph is set at 0.78 of the body size. The glass stands over the title's wordmark, so the
+wordmark goes with the title's furniture while How to Play is open (`LeadlightRoomHost.covers_wordmark`);
+otherwise its tip showed past the arch's shoulder. On desktop the glass stands at x 455, the same 142 px
+right of the stage's centre as at pad (the table's 471 has no rule behind it). A change of shape class
+(pad to phone) rebuilds the room on the lit section. Fight On goes: the way back is the seat's Return,
+the veil or Escape.
+
 ### 4.3 Credits: the road onward
 
 Credits is a place: the road you stand on, walked a little further. The title's furniture goes, the
@@ -557,6 +585,22 @@ the roll.
 
 Reference: `mocks/road-credits-1180x820.jpg` (the start of the roll).
 
+*As built in PR B* (`presentation/run/credits_screen.gd`, `credits_roll.gd`, `credits_licences.gd`): the
+wordmark is not reparented; it stays the title's, drawn over the room while it is lent (z 201) and carried
+by the roll's scroll (`TitleScreen.offset_wordmark`), and goes home on leaving. `ui.credits.headingBrand`
+("GLASSVOW") is no longer read: the wordmark is the brand's heading. The manifest has grown to 28
+tracks since this spec was written, so the count line reads 28 and the columns are fourteen each. The
+held list is Act IV's six stems as the music ledger lists them (`act4Combat`, `act4Boss`, and the held
+alternates `act4CombatA`, `act4CombatB`, `act4CombatD`, `act4BossB`): the ledger names no music cue of
+the unsealing's own. The band is the kit's soft light in VOID at 0.7. A place has no veil to tap: a tap
+on the bare road never closes Credits (`LeadlightRoomHost.veil_closes`); the seat's Return and Escape do,
+and close an open licence glass first. The licence texts are set at the rooms' 18 px floor and their
+headings at 20, inside their glasses (`CreditsLicences.Shelf` and `Glass`; the glass has its own night at
+0.5 over the dimmed roll, so the roll never reads round it). The Sentry SDK's MIT notice shows where
+`addons/sentry/LICENSE.md` is in the pack and the SDK is loaded; the iOS export's include filter carries no
+`.md` file, so on the device it is not there (§14). The door's nimbus breathing once the roll stops was
+not built: the road's own motes, weather and lamps, the lamp line and the now-playing flame keep it alive.
+
 ### 4.4 Settings: the lantern-maker's window
 
 Controls and behaviour unchanged: the five sections, every row, the language transaction, ERASE and its
@@ -575,6 +619,15 @@ two steps, the diagnostics notice, the privacy link; `closed`, `reset_requested`
 - **Alive at rest:** the shipped light drift and glints, now breathing with the seated flame; the
   slider grabbers (lantern discs) breathe ±6% in step; the lit pane breathes.
 
+*As built in PR B* (`presentation/run/settings_panel.gd`): the room stands 124 px right of the stage's
+centre at pad and desktop (318 and 457, as the table has them), its foot 50 px over the stage's foot
+(770 at 820, 834 on the iPad 8's 884), as tall as its tallest section needs and no taller than 470; on a
+phone it fills the stage beside the seat (108 to 6 from the right, 6 to 60 from the foot). Its rows,
+toggles, notes and panes are at the rooms' sizes (18 px, 60 px hits at pad and desktop): the shipped
+15 px row panes and 12 px notes are gone. The build line in its footer is the title's build identifier
+and keeps its 10 px under the same waiver (§14). A change of shape rebuilds the room on the lit section,
+since its rows are cut for their shape. The slider discs breathe as a brightness of ±6%.
+
 ### 4.5 Rooms opened in a run
 
 How to Play and Settings also open from the run menu over the map or combat. There is no title lantern
@@ -582,6 +635,10 @@ there: the seat shows the word alone, the room is lit from the `RunHud` lantern'
 one (else the bottom-left corner), the veil sits over the frozen route (combat is never frozen, as
 shipped), and the passage runs without the lantern and ghost lanes (X1). Settings opened at boot with
 `--settings` lands whole, with no passage.
+
+*As built in PR B:* the run's HUD carries no lantern in this build, so a room in a run is lit from the
+stage's bottom-left corner. The run menu's How to Play and Settings no longer play their own click: the
+room's `roomOpen` is the tap's one cue.
 
 ---
 
@@ -744,6 +801,21 @@ the old room fades out over 150 ms (linear). No re-arrival, no second `roomOpen`
 frozen; the title is built beneath it, landed and not lent (for X2 it inherits the departure's world,
 which stands on the same road, so the road is identical); the outgoing screen fades out (0–300, EXIT);
 the title's furniture rises (60–380, REVEAL).
+
+*As built in PR B* (`presentation/ui/leadlight_passage.gd`, `components/leadlight_room_host.gd`): one
+`LeadlightPassage` (Main's, made with the first title so it sees the tap that opens a room) runs G1, G2,
+C1, C2, S5 to S8 and X1 on its own clock (a suite steps it by hand); the room's own lanes (trace, the light
+front, its content rising) are the room host's `arrive_at` and `leave_at`. The lantern's swing and the
+word's afterglow are the lantern's and the word's own (`LeadlightLantern.swing`, `LeadlightWord.afterglow`);
+the word in flight is `LeadlightGhostWord`, two labels scaled between the word's size and the crown's
+rather than re-shaped each frame. The double-tap guard holds its 300 ms from the tap even once it has
+landed the arrival; Enter and Space land an arrival and are consumed. A press lands every room leaving,
+and passes through. Every yes-or-stay sheet leaves through the passage with a 180 ms fade (EXIT), so the
+Erase confirm's own exit (S5 to S7) is the same for Begin Anew, Abandon and Leave the Road. The language
+reopen's old room lingers 2 above the new one and survives Main's route reset (`LeadlightPassage.clear`
+keeps a lingering room); everything else the passage holds is landed and freed by it. The S7 flood is the
+night (VOID) from the seated wick, the title asked to `leave()` first so no invisible word can take a tap
+under the dark. The opening word is hidden on every path, the crown being the word now.
 
 Reference storyboards: `mocks/free-storyboard-title-settings.jpg` and
 `mocks/free-storyboard-title-vigil.jpg` (the lanes and the ghost word; the build's times are this
@@ -958,6 +1030,14 @@ every entry with `_route_screen is VigilScreen`, `_remember_route(_show_vigil.bi
 8. **`_show_title` clears `_setting_out`** (§8).
 9. **`_input` notes the input modality** (§6).
 
+*As built in PR B:* `_show_overlay` hands a `LeadlightRoomHost` to the passage (`arrive`, with the title
+when the title is what the room opens over, the tapped word from `_on_title_pick`); `_close_overlay` nulls
+`_modal`, thaws on the same frame and hands the node to `_release_modal` (a room departs, sinks under the
+Erase question, or lingers over a language reopen; a confirm is dismissed; anything else is freed at once).
+`_show_title` continues the road it replaces, the title's or the departure's (`TitleWorld.inherit`), and
+does not fade a title in under a language reopen. `TransitionLayer.lift`, the held title and
+`TitleWorld.pan_px` are PR C's: nothing in PR B uses them.
+
 ---
 
 ## 10. Implementation plan
@@ -1142,6 +1222,31 @@ the settled destination's (its last two frames), since a flame flickers under Re
 | Every other frame of a passage | P95 ≤ 16.7 ms; none over 33 ms |
 | At rest in a room | P95 ≤ the title's at-rest P95 + 0.5 ms |
 
+*As built in PR B* (evidence in `stills/pr-b/`, taken with `tools/capture_rooms.gd` and
+`tools/bench_rooms.gd` on the PR B head):
+
+- **Stills** (§11.3): Settings (AUDIO, PRIVACY), How to Play (I, IV) and Credits (its head, the music,
+  the end of the roll, both licence glasses) at rest at 844×390, 1180×820 and 1458×820 in en and zh-Hant,
+  and Settings at the flex stages 845×390 and 1180×885 (the iPad 8's), as `<room>-<part>-<shape>-<locale>.jpg`.
+- **Idle bursts** (§11.4, `idle-gates.txt`): at full motion every room passes, the least change between
+  frames 1 s apart being 7.1% to 24.2% of the room's own pixels; under Reduce Motion the rooms rest still
+  (0.00%), recorded as §2.7 asks.
+- **Sequences** (§11.5, `sequence-gates.txt`, contact sheets `seq-*.jpg`): G1, G2 and G3 (Settings and How
+  to Play), C1, C2 and C3 (Credits and its font glass) and X1 (How to Play from the run menu) at pad en;
+  G1, G2 and C1 at phone zh-Hant; G1, G2 and C1 under Reduce Motion. Every frame of every sequence passes
+  the grey gate (worst 0.12%); the three Reduce Motion sequences pass the cut gate (largest step 0.0093 to
+  0.0109 of a 0.081 to 0.092 whole, frame 5 each, as a 150 ms fade moves). Under full motion no room's
+  passage puts more than 32% of its change on one frame (PR A's Settings opened in one: 100%); a section
+  change (G3), a small change overall, puts 57% on its first frame, the pane lighting at once under the finger.
+- **Frame times, Mac** (§11.6, `mac-frame-times.txt`, M1 Max on the A12's Metal path, 20 laps a room at
+  pad and phone in both languages): the tap frame (the room built) 8 to 15 ms after the first opening and
+  up to 28 ms on it; tap to first moved frame 13 to 21 ms after the first opening, 17 to 48 ms on it
+  (Credits' first opening the longest); every other frame of a passage P95 3.1 to 4.2 ms of work; each room
+  at rest within 0.1 to 0.6 ms of work of the title at rest (P95). Rare 30 to 270 ms frames fall anywhere,
+  the title at rest included, while other lanes' suites ran on the shared Mac.
+- **Mutation proof** (`evidence/pr-b-mutations.txt`): eleven rules broken one at a time in the shipped code,
+  each caught by the suite that guards it.
+
 ### 11.7 What closes each PR
 
 PR A: the core gate, `test_focus_modality` with its mutation proof, the oval stills, the grey and cut
@@ -1264,6 +1369,35 @@ cross-fades; one cue per tap.
 Everything else is decided here: Erase → Cancel lands on the title (behaviour unchanged); the Sentry
 notice ships when the addon is in the export; the Act IV track titles are held until the unsealing; the
 title music resumes after the Vigil; no art is commissioned.
+
+**Decided while building PR B** (the passage, Settings, How to Play, Credits). Each is recorded where it
+applies, as built; together:
+
+- **The waiver** of the build identifier covers Settings' footer line too (`BrandLine`, 10 px): it is the
+  same build string as the title's corner, read by no choice. `tests/test_rooms_rubric.gd` exempts it by
+  name and nothing else.
+- **Reduce Motion** for a room is PR A's snapshot cross-fade of the frame before (§2.7, as built), the
+  lantern landing at the seat or home beneath it; with nothing copied the room fades over 150 ms.
+- **The seat's two hits** are disjoint: the lantern's stops where the word's begins (§3.1, as built).
+- **How to Play's panes** are in small capitals at 264 wide, its headings split at the dash, its `[b]`
+  in the body's colour (§4.2, as built); it fades the wordmark with the furniture.
+- **Credits** keeps the wordmark the title's, drawn over the room; reads 28 tracks; holds Act IV's six
+  stems; has no veil to tap; sets its licence texts at 18 px in their own glasses (§4.3, as built).
+- **`TitleWorld.pan_px`, `TransitionLayer.lift`, the held title, the music resume and the Vigil's warm
+  loads** are PR C's and are not in PR B: nothing PR B builds needs them (YAGNI).
+- **The run's HUD** carries no lantern, so a room in a run is lit from the bottom-left (§4.5, as built).
+
+**Open, for the owner** (PR B builds around each; none blocks it):
+
+1. **The Sentry SDK's MIT notice on the device.** It is read from `addons/sentry/LICENSE.md`, and the iOS
+   export preset's include filter carries no `.md` file, so the notice is not in the iPad's pack and the
+   engine glass shows the engine's licences without it. Shipping it needs `addons/sentry/LICENSE.md` in the
+   export's include filter: a release-config change (`export_presets.cfg`), left to the owner. The bundled
+   fonts' OFL `.txt` files are in the same position and were before this lane (the font glass says
+   "licence file not found" where a file is not in the pack); the same filter change would carry them.
+2. **Copy** (§13's debts stand; PR B wrote none): no new locale key was needed. `ui.credits.headingBrand`,
+   `ui.credits.close`, `ui.credits.themeLine` and `ui.menu.fightOn` are no longer read; they stay in both
+   bundles for a separate clean-up, as §2.13 says.
 
 ---
 

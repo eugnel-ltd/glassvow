@@ -1,0 +1,74 @@
+# Mutation proof for #655 PR B's suites. Each line breaks one rule in the shipped code (one exact
+# replacement), runs the one suite that guards it headless, records whether the suite failed, and
+# restores the file byte for byte from a backup copy. Run on the PR B code at 262d7d31 (B5) and
+# again, for the one miss, after it was fixed: "room hits at 48 px" first passed because
+# test_rooms_rubric read its floor from the very token it guards; the floors are now the rubric's own
+# numbers (commit 20ca9ee2), and the rerun at the end of this file is caught. The driver is
+# pr-b-mutate.py.txt beside this file (python3, run from the worktree; never part of the game).
+
+== room_passage: the double-tap guard removed (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (6)
+     - room_passage: settings: a second tap at +120 ms acted (1 presses on @HSlider@365:<HSlider#249158436984>) or did not land the arrival
+     - room_passage: settings: a second tap at +280 ms acted (1 presses on @HSlider@460:<HSlider#260466280870>) or did not land the arrival
+     - room_passage: help: a second tap at +120 ms acted (1 presses on Veil:<ColorRect#400539257466>) or did not land the arrival
+     - room_passage: help: a second tap at +280 ms acted (1 presses on Veil:<ColorRect#411796769076>) or did not land the arrival
+== room_passage: a leaving room freed at once (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (3)
+     - room_passage: settings: the room vanished instead of leaving
+     - room_passage: help: the room vanished instead of leaving
+     - room_passage: credits: the room vanished instead of leaving
+== room_passage: the veil closes on press (tests/test_room_passage.gd) -> CAUGHT
+   FAIL res://tests/test_room_passage.gd
+   FAIL (6)
+     - room_passage: settings: a drag across the veil closed the room
+     - room_passage: settings: the veil closed on press, not release
+     - room_passage: settings: a tap on the veil did not close the room
+     - room_passage: help: a drag across the veil closed the room
+== rooms_rubric: room reading text at 16 px (tests/test_rooms_rubric.gd) -> CAUGHT
+   FAIL res://tests/test_rooms_rubric.gd
+   FAIL (2491)
+     - rooms_rubric: en settings 1180x820 settings: 'Master' is set at 16 px, under the 18 px floor
+     - rooms_rubric: en settings 1180x820 settings: 'Music' is set at 16 px, under the 18 px floor
+     - rooms_rubric: en settings 1180x820 settings: 'SFX' is set at 16 px, under the 18 px floor
+     - rooms_rubric: en settings 1180x820 settings: 'Language' is set at 16 px, under the 18 px floor
+== rooms_rubric: room hits at 48 px (tests/test_rooms_rubric.gd) -> MISSED
+   PASS (1 tests)
+== credits_roll: the drift resumes at once after a touch (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (1)
+     - credits_roll: the roll drifted under a touch
+== credits_roll: the drift ignores Reduce Motion (tests/test_credits_roll.gd) -> CAUGHT
+   FAIL res://tests/test_credits_roll.gd
+   FAIL (1)
+     - credits_roll: the roll drifts under Reduce Motion
+== help_room: focus on arrival is the seat (tests/test_help_room.gd) -> CAUGHT
+   FAIL res://tests/test_help_room.gd
+   FAIL (2)
+     - help_room: en: focus is not on the first page's pane
+     - help_room: zh-Hant: focus is not on the first page's pane
+== title_world: the walk goes back up the road (tests/test_title_world.gd) -> CAUGHT
+   FAIL res://tests/test_title_world.gd
+   FAIL (2)
+     - title_world: the walk does not carry the eye on down the road
+     - title_world: walking on does not bring the lamps nearer
+== leadlight_sheet_reach: the glazing always whole (tests/test_leadlight_sheet_reach.gd) -> CAUGHT
+   FAIL res://tests/test_leadlight_sheet_reach.gd
+   FAIL (2)
+     - leadlight_sheet_reach: reach 0 lights glazing
+     - leadlight_sheet_reach: reach 0.9 is not part of the way across
+== leadlight_seat: the seat anchored to the top (tests/test_leadlight_seat.gd) -> CAUGHT
+   FAIL res://tests/test_leadlight_seat.gd
+   FAIL (24)
+     - leadlight_seat: pad-landscape 1180x820: the seat is not anchored to the stage's bottom-left corner
+     - leadlight_seat: desktop-landscape 1458x820: the seat is not anchored to the stage's bottom-left corner
+     - leadlight_seat: phone-landscape 844x390: the lantern's body's hit is under 44 px ((0.0, 0.0))
+     - leadlight_seat: phone-landscape 844x390: the Return word runs off the stage ([P: (100.0, 770.0), S: (116.0, 44.0)])
+== rooms_rubric: room hits at 48 px (tests/test_rooms_rubric.gd) -> CAUGHT
+   FAIL res://tests/test_rooms_rubric.gd
+   FAIL (99)
+     - rooms_rubric: en settings 1180x820 settings: 'AUDIO' takes a 194x48 tap, under 60 px
+     - rooms_rubric: en settings 1180x820 settings: 'LANGUAGE' takes a 194x48 tap, under 60 px
+     - rooms_rubric: en settings 1180x820 settings: 'MOTION' takes a 194x48 tap, under 60 px
+     - rooms_rubric: en settings 1180x820 settings: 'PRIVACY' takes a 194x48 tap, under 60 px

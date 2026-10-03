@@ -1,0 +1,71 @@
+"""Mutation proof for #655 PR B's suites: each mutation breaks one rule in the
+shipped code, runs the suite that guards it, records whether it failed, and
+restores the file byte for byte from a backup copy."""
+import shutil, subprocess, sys
+W = sys.argv[1]
+OUT = sys.argv[2]
+M = [
+  ("room_passage: the double-tap guard removed", "presentation/ui/leadlight_passage.gd",
+   "	if press and _guard_left > 0.0 and _press_at.distance_to(_guard_at) <= _guard_radius():",
+   "	if false and press and _guard_left > 0.0 and _press_at.distance_to(_guard_at) <= _guard_radius():",
+   "tests/test_room_passage.gd"),
+  ("room_passage: a leaving room freed at once", "presentation/ui/leadlight_passage.gd",
+   "	if instant or (LeadlightMotion.reduced() and faded) or not is_inside_tree():\n		_finish_leaving(entry, false)\n		return\n	if LeadlightMotion.reduced():\n		entry.fade = true\n		_return_title_now(entry)",
+   "	if true:\n		_finish_leaving(entry, false)\n		return\n	if LeadlightMotion.reduced():\n		entry.fade = true\n		_return_title_now(entry)",
+   "tests/test_room_passage.gd"),
+  ("room_passage: the veil closes on press", "presentation/ui/components/leadlight_room_host.gd",
+   "		_veil_down = Engine.get_process_frames() != _swallow_frame and not arriving\n		_veil_from = button.position if button != null else touch.position\n		accept_event()",
+   "		_veil_down = Engine.get_process_frames() != _swallow_frame and not arriving\n		_veil_from = button.position if button != null else touch.position\n		accept_event()\n		if _veil_down and veil_closes:\n			leave()",
+   "tests/test_room_passage.gd"),
+  ("rooms_rubric: room reading text at 16 px", "presentation/ui/leadlight_tokens.gd",
+   "const SIZE_ROOM_READ: Vector2i = Vector2i(18, 14)", "const SIZE_ROOM_READ: Vector2i = Vector2i(16, 14)",
+   "tests/test_rooms_rubric.gd"),
+  ("rooms_rubric: room hits at 48 px", "presentation/ui/leadlight_tokens.gd",
+   "const HIT_ROOM: Vector2i = Vector2i(60, 44)", "const HIT_ROOM: Vector2i = Vector2i(48, 44)",
+   "tests/test_rooms_rubric.gd"),
+  ("credits_roll: the drift resumes at once after a touch", "presentation/run/credits_screen.gd",
+   "const DRIFT_RESUME: float = 3.0", "const DRIFT_RESUME: float = 0.2",
+   "tests/test_credits_roll.gd"),
+  ("credits_roll: the drift ignores Reduce Motion", "presentation/run/credits_screen.gd",
+   "	if LeadlightMotion.reduced() or _licences.opened != null or _quiet < _wait:",
+   "	if _licences.opened != null or _quiet < _wait:",
+   "tests/test_credits_roll.gd"),
+  ("help_room: focus on arrival is the seat", "presentation/run/help_screen.gd",
+   "func first_focus() -> Control:\n	return _room.tab(_room.selected())",
+   "func first_focus() -> Control:\n	return _seat.word()",
+   "tests/test_help_room.gd"),
+  ("title_world: the walk goes back up the road", "presentation/stage/title_world.gd",
+   "		10.0 - walk + sin(_time * BREATH_Z_RATE) * BREATH_Z)",
+   "		10.0 + walk + sin(_time * BREATH_Z_RATE) * BREATH_Z)",
+   "tests/test_title_world.gd"),
+  ("leadlight_sheet_reach: the glazing always whole", "presentation/ui/components/leadlight_sheet.gd",
+   "	if radius <= 0.0 or body.size() < 3:\n		return out",
+   "	if body.size() < 3:\n		return out\n	out.append(body)\n	return out",
+   "tests/test_leadlight_sheet_reach.gd"),
+  ("leadlight_seat: the seat anchored to the top", "presentation/ui/components/leadlight_seat.gd",
+   "		out[key] = Rect2(rect.position + Vector2(0.0, stage.y), rect.size)",
+   "		out[key] = Rect2(rect.position + Vector2(0.0, 820.0), rect.size)",
+   "tests/test_leadlight_seat.gd"),
+]
+ONLY = sys.argv[3] if len(sys.argv) > 3 else ""
+with open(OUT, "a" if ONLY else "w") as log:
+    for name, path, a, b, test in M:
+        if ONLY and ONLY not in name:
+            continue
+        full = W + "/" + path
+        src = open(full).read()
+        assert src.count(a) == 1, (name, a[:60])
+        shutil.copyfile(full, full + ".mutation-backup")
+        open(full, "w").write(src.replace(a, b))
+        try:
+            r = subprocess.run(["timeout", "900", "godot", "--headless", "--path", W, "-s", "res://tests/run_all.gd",
+                                "--", "--tests=res://" + test], capture_output=True, text=True)
+            lines = [l for l in r.stdout.splitlines() if l.startswith("  - ") or l.startswith("FAIL") or l.startswith("PASS") or "SCRIPT ERROR" in l]
+        finally:
+            shutil.copyfile(full + ".mutation-backup", full)
+            import os; os.remove(full + ".mutation-backup")
+        caught = any(l.startswith("FAIL (") for l in lines)
+        log.write("== %s (%s) -> %s\n" % (name, test, "CAUGHT" if caught else "MISSED"))
+        for l in lines[:6]:
+            log.write("   " + l + "\n")
+        log.flush()
