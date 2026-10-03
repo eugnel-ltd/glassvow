@@ -94,6 +94,10 @@ class Probe:
 	var _vram: Array[float] = []
 	var _lives: Array[int] = []
 	var _cards: Array[Node] = []
+	## Which of `_cards` stood live at the last frame, and the live cards
+	## built since `_begin`.
+	var _was: Dictionary = {}
+	var _built: int = 0
 	var _t0: int = 0
 
 	func _init(main: Node, out: String) -> void:
@@ -109,7 +113,10 @@ class Probe:
 		_vram.append(_vram_mib())
 		var lives: int = 0
 		for card: Node in _cards:
-			lives += 1 if card.call("live") != null else 0
+			var on: bool = card.call("live") != null
+			lives += 1 if on else 0
+			_built += 1 if on and not _was.get(card, false) else 0
+			_was[card] = on
 		_lives.append(lives)
 
 	func _run() -> void:
@@ -173,6 +180,7 @@ class Probe:
 			await _wait(WATCH_SECONDS)
 			_point_row(deck_n, "sweep", base)
 		_cards = []
+		_was.clear()
 		_main.call("_close_overlay")
 		await _frames(CLOSE_FRAMES)
 
@@ -180,16 +188,13 @@ class Probe:
 		var got: Dictionary = _end(_t0)
 		var peak: float = got["peak"]
 		var live_max: int = 0
-		var stood: int = 0
-		for i: int in range(_lives.size()):
-			live_max = maxi(live_max, _lives[i])
-			if i > 0 and _lives[i] > _lives[i - 1]:
-				stood += _lives[i] - _lives[i - 1]
+		for lives: int in _lives:
+			live_max = maxi(live_max, lives)
 		_row("POINT " + JSON.stringify({
 			"deck": deck_n, "kind": kind,
 			"worst_ms": got["worst"], "p50_ms": got["p50"], "over_33": got["over_33"],
 			"vram_peak_mib": snappedf(peak - base, 0.1),
-			"live_max": live_max, "stood": stood,
+			"live_max": live_max, "stood": _built,
 		}))
 
 	## A card's centre in the window's pixels, where Input takes a pointer.
@@ -290,6 +295,7 @@ class Probe:
 		_stamps.clear()
 		_vram.clear()
 		_lives.clear()
+		_built = 0
 		_t0 = Time.get_ticks_usec()
 		set_process(true)
 
