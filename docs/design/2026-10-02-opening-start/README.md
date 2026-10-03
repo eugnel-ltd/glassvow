@@ -756,7 +756,7 @@ departure staging.
   a Lamplighter met mid-run still returns to the map, and resume routing is
   unchanged (a run killed mid-gift resumes staging first, as before).
 - "Set out as before" (`ui.departure.same`: "Set out as before" /
-  「照舊上路」, **PROPOSED**, a UI label, not story copy) carries this
+  「如前上路」 (the bundled CJK subset has no 舊), **PROPOSED**, a UI label, not story copy) carries this
   session's class, vow and art in one tap; the gift stays a real choice. It
   is session memory only: remembering across launches needs a new save or
   preference key, which this lane may not add (§17.5).
@@ -769,8 +769,8 @@ departure staging.
   measured with the fonts, failing on the earlier phone layout).
   `tests/choice_scroll_reachability.gd` (CI) now holds the departure at
   844×390.
-- Stills: `stills/departure-pad.png`, `stills/departure-desktop.png`,
-  `stills/departure-phone.png`, `stills/departure-idle.png` (the gift at rest
+- Stills: `stills/departure-1180x820.png`, `stills/departure-1458x820.png`,
+  `stills/departure-844x390.png`, `stills/departure-idle.png` (the gift at rest
   changes 3.4 % of its pixels per second),
   `tools/capture_title.gd --state=saved --departure=embark|same|gift|art`.
 
