@@ -1,0 +1,483 @@
+extends Node
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH PROOF (#657) — attaches to the live CombatScreen once a fight has
+## settled and replays the opening deal under one of four treatments:
+##   base  today: HandView.deal_in, face-up flight, the HUD's fanned paintings
+##   a     one shared 3D table (table3d.gd)
+##   b     2.5D canvas turn on each card's own display (warp.gdshader)
+##   c     the card's own slab turns over in its own stage (back plate)
+## B and C draw the pile as a canvas stack of baked backs (pile_stack.gd).
+##
+## Config: env CARDS_PROOF="opt=c,back=rose,deals=8,out=/abs/prefix,
+##   shots=0.05;0.15,shot_deal=1,slow=0.25,pile=10,quit=1"
+## Rows: <out>.json (summary) and <out>.frames.tsv (one row per frame).
+
+const Backs: GDScript = preload("res://qa_cards/backs.gd")
+const PileStack: GDScript = preload("res://qa_cards/pile_stack.gd")
+const Table: GDScript = preload("res://qa_cards/table3d.gd")
+const WARP: Shader = preload("res://qa_cards/warp.gdshader")
+
+## Motion for the turned deal (options A/B/C). Today's base keeps HandView's.
+const FLIGHT: float = 0.42
+const STAGGER: float = 0.09
+const ARC: float = 70.0
+
+var cfg: Dictionary = {}
+var combat: CombatScreen = null
+var hand: HandView = null
+var hud: HudBar = null
+var back: Dictionary = {}
+var pile: Control = null
+var table: Control = null
+var _vps: Array[SubViewport] = []
+var _frames: PackedStringArray = PackedStringArray()
+var _phase: String = "boot"
+var _deal_index: int = -1
+var _deal_t: float = 0.0
+var _last_us: int = 0
+var _shots_left: Array[float] = []
+var _flying: int = 0
+var _deal_wall: Array[float] = []
+var _deal_gpu: Array[float] = []
+var _deal_cpu: Array[float] = []
+var _rest_wall: Array[float] = []
+var _rest_gpu: Array[float] = []
+var _rest_cpu: Array[float] = []
+var _vram_rest: float = 0.0
+var _vram_peak: float = 0.0
+var _vram_per_card: float = 0.0
+var _probe_rows: FileAccess = null
+
+
+func _ready() -> void:
+	name = "CardsProof"
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	cfg = _parse(OS.get_environment("CARDS_PROOF"))
+	get_tree().node_added.connect(_on_node_added)
+	_row("PROOF_START %s" % str(cfg))
+	_run()
+
+
+static func _parse(s: String) -> Dictionary:
+	var out: Dictionary = {"opt": "c", "back": "vault", "deals": "8", "out": "",
+		"shots": "", "shot_deal": "1", "slow": "1", "pile": "10", "quit": "1",
+		"settle": "4.5"}
+	for part: String in s.split(",", false):
+		var kv: PackedStringArray = part.split("=", true, 1)
+		if kv.size() == 2:
+			out[kv[0]] = kv[1]
+	return out
+
+
+func _row(line: String) -> void:
+	print(line)
+	var path: String = str(cfg.get("rows", "user://cards_proof_rows.txt"))
+	if _probe_rows == null:
+		_probe_rows = FileAccess.open(path, FileAccess.WRITE)
+	if _probe_rows != null:
+		_probe_rows.store_line("%d %s" % [Time.get_ticks_msec(), line])
+		_probe_rows.flush()
+
+
+func _on_node_added(n: Node) -> void:
+	var sv: SubViewport = n as SubViewport
+	if sv != null:
+		_vps.append(sv)
+		sv.ready.connect(func() -> void:
+			RenderingServer.viewport_set_measure_render_time(sv.get_viewport_rid(), true),
+			CONNECT_ONE_SHOT)
+
+
+func _run() -> void:
+	# Wait for the fight, then for its opening deal to land.
+	var waited: float = 0.0
+	while combat == null and waited < 30.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+		for n: Node in get_tree().root.find_children("", "Control", true, false):
+			if n is CombatScreen:
+				combat = n as CombatScreen
+				break
+	if combat == null:
+		_row("PROOF_FAIL no CombatScreen")
+		get_tree().quit(2)
+		return
+	await get_tree().create_timer(float(cfg["settle"])).timeout
+	hand = combat._hand
+	hud = combat._hud
+	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
+	for n: Node in get_tree().root.find_children("", "SubViewport", true, false):
+		var sv: SubViewport = n as SubViewport
+		if not _vps.has(sv):
+			_vps.append(sv)
+		RenderingServer.viewport_set_measure_render_time(sv.get_viewport_rid(), true)
+	if str(cfg["opt"]) == "deckview":
+		await _deck_view_probe()
+		return
+	back = await Backs.bake(self, str(cfg["back"]))
+	_setup_option()
+	_row("PROOF_READY opt=%s back=%s window=%s stage=%s renderer=%s" % [
+		cfg["opt"], cfg["back"], str(get_window().size),
+		str(get_viewport().get_visible_rect().size), RenderingServer.get_video_adapter_name()])
+	_last_us = Time.get_ticks_usec()
+	var deals: int = int(cfg["deals"])
+	for i: int in range(deals):
+		_deal_index = i
+		var slow: float = float(cfg["slow"])
+		if i == int(cfg["shot_deal"]) and str(cfg["shots"]) != "":
+			_shots_left.clear()
+			for t: String in str(cfg["shots"]).split(";", false):
+				_shots_left.append(float(t))
+			Engine.time_scale = slow
+		await _deal()
+		Engine.time_scale = 1.0
+		_phase = "rest"
+		await get_tree().create_timer(1.2).timeout
+		if i == int(cfg["shot_deal"]) and str(cfg["shots"]) != "":
+			_shoot("%s_rest.png" % str(cfg["out"]))
+	_report()
+	if cfg["quit"] == "1":
+		get_tree().quit()
+
+
+# ---------------------------------------------------------------- options
+
+func _draw_fan() -> HudBar.Fan:
+	return hud._draw_pile.stack
+
+
+func _setup_option() -> void:
+	var fan: HudBar.Fan = _draw_fan()
+	var opt: String = str(cfg["opt"])
+	if opt == "base":
+		return
+	# The HUD keeps its button, count and name; only the painted fan goes.
+	fan.tex = null
+	fan.queue_redraw()
+	if opt == "b" or opt == "c" or opt == "c2":
+		var ps: Control = PileStack.new()
+		ps.set("tex", Backs.card_region(back))
+		ps.position = fan.position
+		ps.size = fan.size
+		var w: float = fan.size.x * 0.86
+		ps.set("card_px", Vector2(w, w * CardView.CARD_H / CardView.CARD_W))
+		ps.set("count", int(cfg["pile"]))
+		fan.get_parent().add_child(ps)
+		fan.get_parent().move_child(ps, fan.get_index() + 1)
+		pile = ps
+	elif opt == "a":
+		var t: Control = Table.new()
+		var px_scale: float = float(get_window().size.y) / get_viewport().get_visible_rect().size.y
+		# A direct child of the screen, just above the branch that holds the hand.
+		var branch: Node = hand
+		while branch.get_parent() != combat:
+			branch = branch.get_parent()
+		combat.add_child(t)
+		combat.move_child(t, branch.get_index() + 1)
+		t.call("setup", get_viewport().get_visible_rect().size, px_scale, back)
+		t.position = Vector2.ZERO
+		t.size = combat.size
+		table = t
+		_row("TABLE parent=%s rect=%s vp=%s z=%d hand_z=%d" % [t.get_parent().name, str(t.get_global_rect()), str(t.get("vp").size), t.z_index, hand.z_index])
+		var r: Rect2 = hud.pile_rect(&"draw")
+		var w: float = r.size.x * 0.86
+		table.call("build_pile", r.get_center() + Vector2(0.0, 8.0), int(cfg["pile"]),
+			w / CardView.CARD_W)
+
+
+## The pile's top card in global px: where a draw leaves from.
+func _launch_rect() -> Rect2:
+	var opt: String = str(cfg["opt"])
+	if pile != null:
+		var tr: Rect2 = pile.call("top_rect")
+		var xf: Transform2D = pile.get_global_transform()
+		return Rect2(xf * tr.position, tr.size * xf.get_scale())
+	var r: Rect2 = hud.pile_rect(&"draw")
+	if opt == "a":
+		var w: float = r.size.x * 0.86
+		var h: float = w * CardView.CARD_H / CardView.CARD_W
+		return Rect2(r.get_center() + Vector2(0.0, 8.0) - Vector2(w, h) * 0.5, Vector2(w, h))
+	return r
+
+
+# ---------------------------------------------------------------- the deal
+
+func _deal() -> void:
+	_phase = "deal"
+	_deal_t = 0.0
+	var opt: String = str(cfg["opt"])
+	if table != null:
+		table.call("untrack_all")
+	var vram_before: float = Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0
+	var held: int = hand.uids().size()
+	hand.clear()
+	if _deal_index == 0:
+		for _i: int in range(4):
+			await get_tree().process_frame
+		var vram_after: float = Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0
+		_vram_per_card = (vram_before - vram_after) / float(maxi(held, 1))
+		_row("VRAM %d cards freed: %.2f MB -> %.2f MB = %.2f MB/card" % [held, vram_before, vram_after, _vram_per_card])
+	var cards: Array[CardInst] = combat.game.cb.hand
+	var n: int = mini(cards.size(), 5)
+	var start_count: int = int(cfg["pile"]) + n
+	_set_pile(start_count)
+	if opt == "base":
+		var flight: float = HandView.deal_flight(n)
+		var stagger: float = HandView.deal_stagger(n)
+		var from: Rect2 = hud.pile_rect(&"draw")
+		for i: int in range(n):
+			var c: CardInst = cards[i]
+			hand.add_card(c, combat._rules.card_data(c), combat._rules.eff_cost(combat.game.run, combat.game.cb, c))
+		for i: int in range(n):
+			hand.deal_in(cards[i].uid, from, float(i) * stagger, flight)
+		_flying = 1
+		await get_tree().create_timer(float(n - 1) * stagger + flight + 0.05).timeout
+		_flying = 0
+		_set_pile(int(cfg["pile"]))
+		return
+	var views: Array[CardView] = []
+	for i: int in range(n):
+		var c: CardInst = cards[i]
+		var v: CardView = hand.add_card(c, combat._rules.card_data(c), combat._rules.eff_cost(combat.game.run, combat.game.cb, c))
+		views.append(v)
+		v.visible = false
+		if opt == "c" or opt == "c2":
+			_add_back_plate(v)
+		if opt == "c2":
+			# Mitigation probe: no MSAA while the card is in the air (set before
+			# the stage's first render, so nothing reallocates mid-flight).
+			v._stage.msaa_3d = Viewport.MSAA_DISABLED
+	for i: int in range(n):
+		_flying += 1
+		_launch(views[i], start_count - i - 1)
+		await get_tree().create_timer(STAGGER).timeout
+	while _flying > 0:
+		await get_tree().process_frame
+
+
+func _set_pile(count: int) -> void:
+	if pile != null:
+		pile.call("set_count", count)
+	elif table != null:
+		table.call("set_pile_count", count)
+	hud._sync_pile(hud._draw_pile, count)
+
+
+## Option C: a back plate on the card's own slab, lit by the card's own lamp.
+func _add_back_plate(view: CardView) -> void:
+	var plate: MeshInstance3D = MeshInstance3D.new()
+	plate.mesh = Table.face_mesh()
+	var m: ShaderMaterial = Table.back_material(back)
+	plate.material_override = m
+	var thick: float = CardSurface.params(view.surface)["thick"]
+	plate.position = Vector3(0.0, 0.0, -thick * 0.5 - 0.05)
+	plate.rotation_degrees = Vector3(0.0, 180.0, 0.0)
+	view._slab.add_child(plate)
+	view._lit.append(m)
+	view._push_lamp()
+
+
+func _launch(view: CardView, left_in_pile: int) -> void:
+	var from: Rect2 = _launch_rect()
+	_set_pile(left_in_pile)
+	hand._flight_from[view.uid] = from
+	view.pivot_offset = view.size * 0.5
+	view.visible = true
+	if table != null:
+		table.call("track", view)
+	var warp: ShaderMaterial = null
+	if str(cfg["opt"]) == "b":
+		warp = ShaderMaterial.new()
+		warp.shader = WARP
+		warp.set_shader_parameter("back_tex", back["stage"])
+		_display_of(view).material = warp
+	var born: float = from.size.x / hand.card_w
+	var rot0: float = deg_to_rad(-4.0)
+	_step(0.0, view, from, born, rot0, warp)
+	var tw: Tween = create_tween()
+	tw.tween_method(_step.bind(view, from, born, rot0, warp), 0.0, 1.0, FLIGHT)
+	tw.tween_callback(_land.bind(view, warp))
+
+
+func _display_of(view: CardView) -> TextureRect:
+	var want: Texture2D = view._stage.get_texture()
+	for c: Node in view.get_children():
+		var tr: TextureRect = c as TextureRect
+		if tr != null and tr.texture == want:
+			return tr
+	return null
+
+
+## One flight step, the seat read live (each further card re-fans the hand).
+func _step(t: float, view: CardView, from: Rect2, born: float, rot0: float,
+		warp: ShaderMaterial) -> void:
+	if not is_instance_valid(view):
+		return
+	var e: float = 1.0 - pow(1.0 - t, 3.0)
+	var seat: Vector2 = hand.global_position + view.home_position + view.size * 0.5
+	var c: Vector2 = from.get_center().lerp(seat, e) + Vector2(0.0, -ARC * sin(PI * e))
+	view.global_position = c - view.size * 0.5
+	view.rotation = lerpf(rot0, view.home_rotation, e)
+	view.scale = view.rest_scale(lerpf(born, 1.0, e))
+	var turn: float = smoothstep(0.12, 0.78, t)
+	var yaw: float = 180.0 * (1.0 - turn)
+	var pitch: float = -14.0 * sin(PI * t)
+	view._shadow.pivot_offset = view.size * 0.5
+	view._shadow.scale.x = maxf(absf(cos(deg_to_rad(yaw))), 0.03)
+	match str(cfg["opt"]):
+		"c", "c2":
+			view._slab.rotation_degrees = Vector3(pitch, yaw, 0.0)
+			view._stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+		"b":
+			warp.set_shader_parameter("yaw", yaw)
+			warp.set_shader_parameter("pitch", -pitch)
+		"a":
+			var flips: Dictionary = table.get("flips")
+			flips[view.uid] = Vector2(pitch, yaw)
+
+
+func _land(view: CardView, warp: ShaderMaterial) -> void:
+	_flying -= 1
+	if not is_instance_valid(view):
+		return
+	hand._flight_from.erase(view.uid)
+	view._shadow.scale.x = 1.0
+	match str(cfg["opt"]):
+		"c", "c2":
+			view._slab.rotation_degrees = Vector3.ZERO
+			view._stage.msaa_3d = Viewport.MSAA_4X
+			view._stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+		"b":
+			var d: TextureRect = _display_of(view)
+			if d != null and d.material == warp:
+				d.material = null
+		"a":
+			var flips: Dictionary = table.get("flips")
+			flips.erase(view.uid)
+	view.snap_home()
+
+
+# ---------------------------------------------------------------- measure
+
+func _process(delta: float) -> void:
+	if _deal_index < 0:
+		return
+	var now: int = Time.get_ticks_usec()
+	var wall: float = float(now - _last_us) / 1000.0
+	_last_us = now
+	var live: Array[SubViewport] = []
+	for sv: SubViewport in _vps:
+		if is_instance_valid(sv) and sv.is_inside_tree():
+			live.append(sv)
+	_vps = live
+	# Draw calls across every viewport rendered this frame: the render work.
+	var gpu: float = float(RenderingServer.get_rendering_info(
+		RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME))
+	var cpu: float = RenderingServer.get_frame_setup_time_cpu()
+	var proc: float = Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+	var vram: float = Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0
+	_vram_peak = maxf(_vram_peak, vram)
+	var measured: bool = _deal_index >= 1 and Engine.time_scale == 1.0
+	if measured:
+		if _phase == "deal":
+			_deal_wall.append(wall)
+			_deal_gpu.append(gpu)
+			_deal_cpu.append(cpu + proc)
+		elif _phase == "rest" and _flying == 0:
+			_rest_wall.append(wall)
+			_rest_gpu.append(gpu)
+			_rest_cpu.append(cpu + proc)
+			_vram_rest = vram
+	_frames.append("%d\t%s\t%.2f\t%.3f\t%.3f\t%.3f\t%d\t%.1f" % [
+		_deal_index, _phase, _deal_t, wall, gpu, cpu + proc, live.size(), vram])
+	if _phase == "deal":
+		_deal_t += delta
+		if not _shots_left.is_empty() and _deal_t >= _shots_left[0]:
+			var t: float = _shots_left.pop_front()
+			_shoot("%s_t%03d.png" % [str(cfg["out"]), roundi(t * 100.0)])
+			if table != null:
+				var tv: SubViewport = table.get("vp")
+				tv.get_texture().get_image().save_png("%s_table_t%03d.png" % [str(cfg["out"]), roundi(t * 100.0)])
+
+
+func _shoot(path: String) -> void:
+	if str(cfg["out"]) == "":
+		return
+	var img: Image = get_viewport().get_texture().get_image()
+	img.save_png(path)
+	_row("SHOT %s" % path)
+
+
+static func pct(a: Array[float], q: float) -> float:
+	if a.is_empty():
+		return 0.0
+	var s: Array[float] = a.duplicate()
+	s.sort()
+	return s[clampi(int(roundf(q * float(s.size() - 1))), 0, s.size() - 1)]
+
+
+static func over(a: Array[float], ms: float) -> int:
+	var k: int = 0
+	for v: float in a:
+		if v > ms:
+			k += 1
+	return k
+
+
+func _report() -> void:
+	var summary: Dictionary = {
+		"opt": cfg["opt"], "back": cfg["back"], "deals_measured": int(cfg["deals"]) - 1,
+		"window": [get_window().size.x, get_window().size.y],
+		"renderer": RenderingServer.get_video_adapter_name(),
+		"deal": {"frames": _deal_wall.size(),
+			"wall_p50": pct(_deal_wall, 0.5), "wall_p95": pct(_deal_wall, 0.95),
+			"wall_max": pct(_deal_wall, 1.0), "over_20ms": over(_deal_wall, 20.0),
+			"draws_p50": pct(_deal_gpu, 0.5), "draws_p95": pct(_deal_gpu, 0.95),
+			"draws_max": pct(_deal_gpu, 1.0),
+			"cpu_p50": pct(_deal_cpu, 0.5), "cpu_p95": pct(_deal_cpu, 0.95),
+			"cpu_max": pct(_deal_cpu, 1.0)},
+		"rest": {"frames": _rest_wall.size(),
+			"wall_p50": pct(_rest_wall, 0.5), "wall_p95": pct(_rest_wall, 0.95),
+			"draws_p50": pct(_rest_gpu, 0.5), "draws_p95": pct(_rest_gpu, 0.95),
+			"cpu_p50": pct(_rest_cpu, 0.5), "cpu_p95": pct(_rest_cpu, 0.95)},
+		"vram_rest_mb": _vram_rest, "vram_peak_mb": _vram_peak, "vram_per_card_mb": _vram_per_card,
+	}
+	_row("PROOF_SUMMARY " + JSON.stringify(summary))
+	var out: String = str(cfg["out"])
+	if out != "":
+		var f: FileAccess = FileAccess.open(out + ".json", FileAccess.WRITE)
+		if f != null:
+			f.store_string(JSON.stringify(summary, "  "))
+			f.close()
+		var g: FileAccess = FileAccess.open(out + ".frames.tsv", FileAccess.WRITE)
+		if g != null:
+			g.store_string("deal\tphase\tt\twall_ms\tdraw_calls\tcpu_ms\tviewports\tvram_mb\n")
+			g.store_string("\n".join(_frames))
+			g.close()
+
+
+## The top-menu deck overlay as it ships: one live CardView per deck card.
+func _deck_view_probe() -> void:
+	var main: Node = get_tree().current_scene
+	for _i: int in range(10):
+		await get_tree().process_frame
+	var v0: float = Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0
+	var n_vp0: int = get_tree().root.find_children("", "SubViewport", true, false).size()
+	var deck_n: int = main.game.run.player.deck.size()
+	main._show_run_deck()
+	var worst: float = 0.0
+	var t0: int = Time.get_ticks_usec()
+	var last: int = t0
+	for _i: int in range(40):
+		await get_tree().process_frame
+		var now: int = Time.get_ticks_usec()
+		worst = maxf(worst, float(now - last) / 1000.0)
+		last = now
+	var v1: float = Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0
+	var n_vp1: int = get_tree().root.find_children("", "SubViewport", true, false).size()
+	_row("DECKVIEW deck=%d vram %.1f -> %.1f MB (+%.1f, %.2f MB/card) subviewports %d -> %d worst_frame %.1f ms" % [
+		deck_n, v0, v1, v1 - v0, (v1 - v0) / float(maxi(deck_n, 1)), n_vp0, n_vp1, worst])
+	if str(cfg["out"]) != "":
+		_shoot(str(cfg["out"]) + "_deckview.png")
+	if cfg["quit"] == "1":
+		get_tree().quit()

@@ -1,0 +1,214 @@
+extends Control
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH PROOF (#657) — option A: one shared 3D table for every card.
+##
+## A single transparent SubViewport the size of the stage (at the window's
+## pixel density), one perspective camera, and every card as a mesh in it:
+## the hand mirrors the (now invisible) CardViews HandView still lays out and
+## hit-tests, flights turn the meshes, and the pile is real stacked slabs.
+## Faces still come from each CardView's 2D face viewport (frozen once); the
+## per-card 3D stage is disabled, so the table is the only 3D pass.
+
+const FOV: float = 30.0
+const PILE_STEP: float = 2.2    # world px between stacked slabs
+
+var vp: SubViewport = null
+var cam: Camera3D = null
+var stage: Vector2 = Vector2(1180.0, 820.0)
+var cards: Dictionary = {}       # uid -> {view, mi, mats}
+var flips: Dictionary = {}       # uid -> Vector2(pitch, yaw) degrees
+var pile_mis: Array[MeshInstance3D] = []
+var _back_mat: ShaderMaterial = null
+var _idle_frames: int = 0
+
+
+func setup(stage_size: Vector2, px_scale: float, back: Dictionary) -> void:
+	stage = stage_size
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vp = SubViewport.new()
+	vp.size = Vector2i(int(stage.x * px_scale), int(stage.y * px_scale))
+	vp.transparent_bg = true
+	vp.own_world_3d = true
+	vp.msaa_3d = Viewport.MSAA_4X
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(vp)
+	cam = Camera3D.new()
+	cam.fov = FOV
+	var dist: float = stage.y * 0.5 / tan(deg_to_rad(FOV * 0.5))
+	cam.position = Vector3(0.0, 0.0, dist)
+	cam.near = dist * 0.3
+	cam.far = dist * 2.0
+	vp.add_child(cam)
+	var show: TextureRect = TextureRect.new()
+	show.texture = vp.get_texture()
+	show.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	show.stretch_mode = TextureRect.STRETCH_SCALE
+	show.set_anchors_preset(Control.PRESET_FULL_RECT)
+	show.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(show)
+	_back_mat = back_material(back)
+
+
+static func back_material(back: Dictionary) -> ShaderMaterial:
+	var m: ShaderMaterial = ShaderMaterial.new()
+	m.shader = CardView.SURFACE_SHADER
+	m.set_shader_parameter("face_tex", back["inner"])
+	m.set_shader_parameter("face_size",
+		Vector2(CardView.CARD_W, CardView.CARD_H) + Vector2(CardView.PAD_IN, CardView.PAD_IN) * 2.0)
+	m.set_shader_parameter("face_pad", Vector2(CardView.PAD_IN, CardView.PAD_IN))
+	m.set_shader_parameter("card_size", Vector2(CardView.CARD_W, CardView.CARD_H))
+	m.set_shader_parameter("radius", float(CardView.RADIUS))
+	m.set_shader_parameter("art_rect", Vector4(0.0, 0.0, 0.0, 0.0))
+	CardSurface.apply(m, back["params"], back["tint"])
+	m.set_shader_parameter("lamp", CardView.ROOM_LAMP)
+	m.set_shader_parameter("lamp_gain", 0.0)
+	m.set_shader_parameter("lamp_ref", CardView.ROOM_LAMP.length_squared())
+	return m
+
+
+## A face-only plate: the slab's front fan at z = 0, for backs.
+static func face_mesh() -> ArrayMesh:
+	var pts: PackedVector2Array = CardView._outline()
+	var st: SurfaceTool = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var n: int = pts.size()
+	for i: int in range(n):
+		var a: Vector2 = pts[i]
+		var b: Vector2 = pts[(i + 1) % n]
+		st.set_uv(CardView._uv(0.0, 0.0))
+		st.add_vertex(Vector3(0.0, 0.0, 0.0))
+		st.set_uv(CardView._uv(b.x, b.y))
+		st.add_vertex(Vector3(b.x, b.y, 0.0))
+		st.set_uv(CardView._uv(a.x, a.y))
+		st.add_vertex(Vector3(a.x, a.y, 0.0))
+	var mesh: ArrayMesh = ArrayMesh.new()
+	st.commit(mesh)
+	return mesh
+
+
+func track(view: CardView) -> void:
+	var mi: MeshInstance3D = MeshInstance3D.new()
+	mi.mesh = view._slab.mesh
+	for s: int in range(3):
+		mi.set_surface_override_material(s, view._slab.get_surface_override_material(s))
+	var plate: MeshInstance3D = MeshInstance3D.new()
+	plate.mesh = face_mesh()
+	var bm: ShaderMaterial = _back_mat.duplicate() as ShaderMaterial
+	plate.material_override = bm
+	var thick: float = CardSurface.params(view.surface)["thick"]
+	plate.position = Vector3(0.0, 0.0, -thick * 0.5 - 0.05)
+	plate.rotation_degrees = Vector3(0.0, 180.0, 0.0)
+	mi.add_child(plate)
+	vp.add_child(mi)
+	# The CardView keeps its layout, its input and its 2D face; its own stage
+	# and its display go dark — the table draws the card now.
+	view._stage.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	view.modulate.a = 0.0
+	cards[view.uid] = {"view": view, "mi": mi, "back": bm}
+
+
+func untrack_all() -> void:
+	for uid_v: Variant in cards.keys():
+		var e: Dictionary = cards[uid_v]
+		var mi: MeshInstance3D = e["mi"]
+		mi.queue_free()
+	cards.clear()
+	flips.clear()
+
+
+func build_pile(at: Vector2, n: int, card_scale: float) -> void:
+	for mi: MeshInstance3D in pile_mis:
+		mi.queue_free()
+	pile_mis.clear()
+	var mesh: ArrayMesh = face_mesh()
+	var side: ArrayMesh = _side_mesh()
+	for i: int in range(n):
+		var mi: MeshInstance3D = MeshInstance3D.new()
+		mi.mesh = mesh
+		mi.material_override = _back_mat
+		var edge: MeshInstance3D = MeshInstance3D.new()
+		edge.mesh = side
+		var em: StandardMaterial3D = StandardMaterial3D.new()
+		em.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		em.albedo_color = Color(0.62, 0.58, 0.48).darkened(0.3 * float(i % 2))
+		em.cull_mode = BaseMaterial3D.CULL_DISABLED
+		edge.material_override = em
+		edge.position = Vector3(0.0, 0.0, -PILE_STEP * 0.5)
+		mi.add_child(edge)
+		var p: Vector3 = _to_world(at)
+		var jit: float = fposmod(sin(float(i) * 12.9898) * 43758.5453, 1.0) - 0.5
+		mi.position = p + Vector3(jit * 1.5, 0.0, float(i) * PILE_STEP)
+		mi.rotation = Vector3(0.0, 0.0, deg_to_rad(jit * 1.4))
+		mi.scale = Vector3.ONE * card_scale
+		vp.add_child(mi)
+		pile_mis.append(mi)
+
+
+## The rim of a slab PILE_STEP deep — what shows between stacked cards.
+static func _side_mesh() -> ArrayMesh:
+	var pts: PackedVector2Array = CardView._outline()
+	var st: SurfaceTool = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var n: int = pts.size()
+	var hz: float = PILE_STEP * 0.5
+	for i: int in range(n):
+		var a: Vector2 = pts[i]
+		var b: Vector2 = pts[(i + 1) % n]
+		st.add_vertex(Vector3(a.x, a.y, hz))
+		st.add_vertex(Vector3(b.x, b.y, hz))
+		st.add_vertex(Vector3(b.x, b.y, -hz))
+		st.add_vertex(Vector3(a.x, a.y, hz))
+		st.add_vertex(Vector3(b.x, b.y, -hz))
+		st.add_vertex(Vector3(a.x, a.y, -hz))
+	var mesh: ArrayMesh = ArrayMesh.new()
+	st.commit(mesh)
+	return mesh
+
+
+func set_pile_count(n: int) -> void:
+	for i: int in range(pile_mis.size()):
+		pile_mis[i].visible = i < n
+
+
+func _to_world(p: Vector2) -> Vector3:
+	return Vector3(p.x - stage.x * 0.5, stage.y * 0.5 - p.y, 0.0)
+
+
+func _process(_delta: float) -> void:
+	if vp == null:
+		return
+	var moving: bool = not flips.is_empty()
+	for uid_v: Variant in cards.keys():
+		var e: Dictionary = cards[uid_v]
+		var view: CardView = e["view"]
+		var mi: MeshInstance3D = e["mi"]
+		if not is_instance_valid(view):
+			continue
+		var xf: Transform2D = view.get_global_transform()
+		var c: Vector2 = xf * (view.size * 0.5)
+		var s: float = xf.get_scale().x
+		var fl: Vector2 = flips.get(uid_v, Vector2.ZERO)
+		var w: Vector3 = _to_world(c)
+		# Draw order must become DEPTH in a shared world: a card's sibling index
+		# (HandView raises the hovered one) sets its layer, and a card in the air
+		# rides above the whole fan. Without this, the gems of the cards under a
+		# flying card poke through it.
+		w.z = float(view.get_index()) * 6.0 + (90.0 if flips.has(uid_v) else 0.0)
+		var basis: Basis = Basis(Vector3(0, 0, 1), -xf.get_rotation()) \
+			* Basis(Vector3(0, 1, 0), deg_to_rad(fl.y)) * Basis(Vector3(1, 0, 0), deg_to_rad(fl.x))
+		var t: Transform3D = Transform3D(basis.scaled_local(Vector3.ONE * s), w)
+		if not t.is_equal_approx(mi.transform):
+			moving = true
+			# The room lamp keeps its place RELATIVE to each card, as it does in
+			# a card's own stage; one shared lamp would relight every finish.
+			var lamp: Vector3 = w + CardView.ROOM_LAMP
+			var lit: Array[ShaderMaterial] = view._lit.duplicate()
+			lit.append(e["back"])
+			for m: ShaderMaterial in lit:
+				m.set_shader_parameter("lamp", lamp)
+				m.set_shader_parameter("lamp_ref", CardView.ROOM_LAMP.length_squared())
+		mi.transform = t
+	# Freeze the whole table when nothing on it moved for a few frames.
+	_idle_frames = 0 if moving else _idle_frames + 1
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS if _idle_frames < 3 \
+		else SubViewport.UPDATE_DISABLED

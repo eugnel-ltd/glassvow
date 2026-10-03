@@ -1,0 +1,47 @@
+#!/bin/zsh
+# Cards lane device runner (#657). Named with "devicectl" so other lanes'
+# busy-guards see this lane holding the shared iPad. Never committed.
+# usage: devicectl_cards_lane.sh install | measure <opt...> | burst <opt...>
+set -uo pipefail
+L=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/cards-lane
+D=$L/device; R=$D/runs; mkdir -p $R
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+if [[ -z "${IOS_DEVICE_UDID:-}" ]]; then
+  xcrun devicectl list devices --json-output $D/devices.json >/dev/null 2>&1
+  IOS_DEVICE_UDID=$(python3 -c "
+import json; d=json.load(open('$D/devices.json'))
+for x in d['result']['devices']:
+    if x.get('hardwareProperties',{}).get('productType')=='iPad11,6': print(x['hardwareProperties']['udid']); break")
+  rm -f $D/devices.json
+fi
+U=$IOS_DEVICE_UDID
+[[ -n "$U" ]] || { echo "no iPad 8 found"; exit 1; }
+pull() { xcrun devicectl device copy from --device $U --domain-type appDataContainer --domain-identifier io.fol2.glassvow --source Documents/$1 --destination $2 >/dev/null 2>&1; }
+launch() { # $1 = CARDS_PROOF config
+  timeout 60 xcrun devicectl device process launch --terminate-existing --device $U \
+    --environment-variables "{\"CARDS_PROOF\":\"$1\"}" io.fol2.glassvow -- --fight=duskfang --kind=elite --seed=1 >/dev/null 2>&1
+}
+mode=$1; shift
+case $mode in
+  install)
+    for i in 1 2 3; do xcrun devicectl device install app --device $U $L/buildwt/build/ios-qa/export-dev/glassvow.ipa > $D/install.log 2>&1 && { echo "iPad install OK"; break; }; echo "install retry $i"; sleep 5; done ;;
+  measure)
+    for opt in "$@"; do
+      launch "opt=$opt,back=rose,deals=9,out=user://cards_$opt,rows=user://cards_rows_$opt.txt"
+      sleep 40
+      T=${ROUND:-r1}
+      for i in $(seq 1 30); do pull cards_$opt.json $R/${opt}_$T.json && break; sleep 5; done
+      pull cards_$opt.frames.tsv $R/${opt}_$T.frames.tsv; pull cards_rows_$opt.txt $R/${opt}_$T.rows.txt
+      echo "$opt $T: $(grep -c . $R/${opt}_$T.frames.tsv 2>/dev/null) frames; $(grep -o 'VRAM.*' $R/${opt}_$T.rows.txt 2>/dev/null)"
+    done ;;
+  burst)
+    for opt in "$@"; do
+      launch "opt=$opt,back=rose,deals=2,out=user://burst_$opt,shots=0.16;0.26;0.36,shot_deal=1,slow=0.25,rows=user://burst_rows_$opt.txt"
+      sleep 35
+      for i in $(seq 1 30); do pull burst_${opt}_rest.png $R/burst_${opt}_rest.png && break; sleep 5; done
+      for t in 016 026 036; do pull burst_${opt}_t$t.png $R/burst_${opt}_t$t.png; done
+      pull burst_rows_$opt.txt $R/burst_$opt.rows.txt
+      xcrun devicectl device capture screenshot --device $U --destination $R/screen_$opt.png >/dev/null 2>&1
+      echo "$opt burst: $(ls $R/burst_${opt}_* 2>/dev/null | wc -l) files"
+    done ;;
+esac
