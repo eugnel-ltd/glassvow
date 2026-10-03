@@ -25,6 +25,8 @@ const BANNER_ALPHA: float = 0.35
 ## rose is set into the door the player can see.
 const ROSE_ART: Vector3 = Vector3(775.0, 375.0, 47.0)
 const LEFT_IDS: Array[String] = ["begin", "vigil", "help"]
+## How far the lantern's reach runs past the plaque's words (x each side, y above).
+const REACH_PAD: Vector2 = Vector2(18.0, 10.0)
 const RIGHT_IDS: Array[String] = ["settings", "credits", "quit"]
 
 
@@ -91,6 +93,10 @@ var _preferences: Preferences
 var _banner: TextureRect
 var _wordmark: Control
 var _plaque: LeadlightPlaque
+## The plaque, its sub-line and the gap down to the lantern: one press with the
+## lantern (build 18: the owner tapped the words, and nothing happened).
+var _reach: Button
+var _beckon: TitleBeckon
 var _secondary: LeadlightPane = null
 var _words: Dictionary = {}
 var _slabs: Array[LeadlightInscription] = []
@@ -231,6 +237,32 @@ func _build_lantern() -> void:
 	var sub: String = str(_context.get("sub", "")) if _primary_id == "continue" else ""
 	_plaque.set_text(label_of(_primary_id), sub, lantern.light())
 	add_child(_plaque)
+	_reach = Button.new()
+	_reach.name = "PrimaryReach"
+	_reach.flat = true
+	_reach.focus_mode = Control.FOCUS_NONE
+	_reach.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_reach.tooltip_text = lantern.tooltip_text
+	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
+	for state: String in ["normal", "hover", "pressed", "disabled", "focus"]:
+		_reach.add_theme_stylebox_override(state, empty)
+	_reach.pressed.connect(_on_lantern)
+	add_child(_reach)
+	# The plaque lights with the lantern under the hand, the key and the press.
+	for part: BaseButton in [lantern, _reach]:
+		part.mouse_entered.connect(_light_plaque.bind(0.35))
+		part.mouse_exited.connect(_light_plaque.bind(0.0))
+		part.button_down.connect(_light_plaque.bind(1.0))
+		part.button_up.connect(_light_plaque.bind(0.0))
+	lantern.focus_entered.connect(func() -> void: _plaque.focused = true)
+	lantern.focus_exited.connect(func() -> void: _plaque.focused = false)
+	_beckon = TitleBeckon.new(lantern, _plaque)
+	add_child(_beckon)
+
+
+func _light_plaque(amount: float) -> void:
+	if not _leaving:
+		_plaque.glow = amount
 
 
 func _build_words() -> void:
@@ -382,6 +414,15 @@ func _land() -> void:
 	for language: LeadlightPane in _language:
 		language.queue_free()
 	_language.clear()
+	_wake_beckon()
+
+
+## The title is lit and taking input: the first of a session shows which thing
+## is the button; every one counts idleness for the rising ember.
+func _wake_beckon() -> void:
+	_beckon.arm()
+	if _context.get("beckon", false) == true:
+		_beckon.pulse()
 
 
 ## The consent notice is recorded only once its line is lit on screen — the
@@ -396,6 +437,7 @@ func _record_consent_shown() -> void:
 func _on_rite_done() -> void:
 	_record_consent_shown()
 	_catcher.visible = false
+	_wake_beckon()
 	for language: LeadlightPane in _language:
 		LeadlightMotion.exit(language)
 	_focus_first()
@@ -412,6 +454,12 @@ func _on_catcher_input(event: InputEvent) -> void:
 	if press and rite != null and not rite.is_done() and not rite.held():
 		rite.skip()
 		accept_event()
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouse or event is InputEventScreenTouch or event is InputEventKey \
+			or event is InputEventJoypadButton or event is InputEventScreenDrag:
+		_beckon.touched()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -442,6 +490,8 @@ func _on_lantern() -> void:
 		rite.skip()
 		return
 	LeadlightMotion.press(lantern)
+	LeadlightMotion.press(_plaque)
+	_plaque.glow = 1.0
 	_sfx.play_owed(&"paneChoose", &"click")
 	_choose(_primary_id, false)
 
@@ -508,6 +558,10 @@ func _layout() -> void:
 		rose.radiance = 1.0
 	_plaque.size = _plaque.get_combined_minimum_size()
 	_plaque.position = Vector2(cx - _plaque.size.x * 0.5, spec.plaque_y * k)
+	_reach.position = _plaque.position - Vector2(REACH_PAD.x, REACH_PAD.y)
+	var reach_bottom: float = maxf(_plaque.position.y + _plaque.size.y + REACH_PAD.y, lantern.position.y)
+	_reach.size = Vector2(_plaque.size.x + REACH_PAD.x * 2.0,
+		maxf(reach_bottom - _reach.position.y, 44.0))
 	_veil.centre = lantern.position + lantern.wick()
 	var rose_at: Vector2 = TitleLampChain.to_stage(Vector2(ROSE_ART.x, ROSE_ART.y), size)
 	# The rose is drawn larger than the painted one it covers, so the shards

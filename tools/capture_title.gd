@@ -8,6 +8,7 @@ extends SceneTree
 ##   godot --path . --position 40,40 -s res://tools/capture_title.gd -- \
 ##       --shape=pad-landscape --locale=en --state=saved --out=/tmp/t.png \
 ##       [--rite=1.6] [--settings] [--embark] [--flood=0.3] [--burst=3] [--reduce-motion] [--scale=2]
+##       [--pose=pressed|focused|beckon|ember]
 ##
 ## The boot splash is this harness at --state=fresh --rite=0 --scale=2 on the
 ## identity shape: frame 0 of the launch rite (assets/art/title/splash.png).
@@ -16,7 +17,10 @@ extends SceneTree
 ## consent), saved (a run with a Steady Frostlight flame), vigil (saved run,
 ## deeds and three shards), consent (the first title after the language: the
 ## consent line). --rite=T photographs the launch rite T seconds in;
-## --burst=N takes N frames one second apart (idle motion).
+## --burst=N takes N frames one second apart (idle motion). --pose holds the
+## lantern's button in a state: pressed (a finger down on the plaque),
+## focused (keyboard focus on the lantern), beckon (the first title's breath at
+## its height), ember (the idle ember halfway to the plaque).
 ## Never --headless: a headless run has no viewport texture.
 
 const SETTLE_FRAMES: int = 45
@@ -69,6 +73,9 @@ func _initialize() -> void:
 		root.add_child(panel)
 	for _i: int in range(SETTLE_FRAMES):
 		await process_frame
+	_pose(screen, str(_args.get("pose", "")))
+	await process_frame
+	await process_frame
 	if _args.has("flood"):
 		# The lantern's exit (§7 T6) photographed T seconds into the flood.
 		var layer: TransitionLayer = TransitionLayer.new()
@@ -90,6 +97,27 @@ func _initialize() -> void:
 		if k + 1 < burst:
 			await create_timer(1.0).timeout
 	quit(0)
+
+
+func _pose(screen: TitleScreen, pose: String) -> void:
+	var beckon: TitleBeckon = screen._beckon
+	match pose:
+		"pressed":
+			screen._reach.button_down.emit()
+			screen._plaque.pivot_offset = screen._plaque.size * 0.5
+			screen._plaque.scale = Vector2.ONE * LeadlightMotion.PRESS_SCALE
+			screen.lantern.flare = 0.5
+		"focused":
+			screen.lantern.grab_focus()
+		"beckon":
+			beckon.pulse()
+			beckon._process(TitleBeckon.PULSE * 0.5)
+			beckon.process_mode = Node.PROCESS_MODE_DISABLED
+		"ember":
+			beckon.arm()
+			beckon._process(TitleBeckon.IDLE + 0.01)
+			beckon._process(TitleBeckon.RISE * 0.55)
+			beckon.process_mode = Node.PROCESS_MODE_DISABLED
 
 
 static func context(shape: StringName, state: String, rite: bool) -> Dictionary:

@@ -1099,6 +1099,8 @@ func _title_context(saved: RunState, choices: Array[Dictionary], rite: bool,
 		"shards": _vigil.shards,
 		"deeds": _carved_deeds(),
 		"rite": rite,
+		# The first title of a session shows which thing is the button.
+		"beckon": rite,
 		"resume": _title_rite_resume,
 		"ask_language": ask_language,
 		"language_default": String(Preferences.active.effective_language()),
