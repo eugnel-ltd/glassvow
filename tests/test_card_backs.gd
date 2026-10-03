@@ -2,9 +2,15 @@ extends RefCounted
 ## Card backs (issue #657, PR 1): the catalogue is valid content, the choice
 ## round-trips through settings.cfg and falls back to the default when unknown
 ## or locked, the unlocks read real Vigil state (through the save's own load
-## path) and never write it, the grant list is read when the Vigil carries one,
-## and the bake cache is dropped exactly when the catalogue or the choice
-## changes. Paths are test-owned; nothing here can touch real settings or saves.
+## path) and never write it, the grant list is read when the Vigil carries one
+## and a grant-only back is refused while it does not, the bake cache is
+## dropped exactly when the catalogue or the choice changes, and concurrent
+## bakes share one job whose stale or interrupted result reaches no cache.
+## Paths are test-owned; nothing here can touch real settings or saves.
+##
+## The bake jobs run on a fake render step (CardBacks.use_renderer): the suite
+## is headless, where no frame is ever drawn. What the live step renders is
+## proved windowed by tools/check_card_back_bake.gd.
 
 const TEST_SETTINGS: String = "user://test_card_backs_settings.cfg"
 const TEST_LEGACY: String = "user://test_card_backs_audio.cfg"
@@ -25,7 +31,10 @@ static func run(fails: Array[String]) -> void:
 	_unlocks_read_the_saved_vigil(fails)
 	_grant_list_is_read(fails)
 	_bake_cache_invalidation(fails)
+	_bake_jobs(fails)
+	_live_render_headless(fails)
 	_lab_wears_the_catalogue(fails)
+	CardBacks.use_renderer(Callable())
 	CardBacks.use_catalogue(null)
 	_cleanup()
 
@@ -76,7 +85,7 @@ static func _malformed_catalogues_refused(fails: Array[String]) -> void:
 		"wrong version": _with(good, ["v"], 2),
 		"no backs": _with(good, ["backs"], {}),
 		"default not a back": _with(good, ["default"], "missing"),
-		"default locked": _with(good, ["backs", "vault", "unlock"], {"kind": "grant"}),
+		"default locked": _with(good, ["backs", "vault", "unlock"], {"kind": "shards", "at": 1}),
 		"second default kind": _with(good, ["backs", "rose", "unlock"], {"kind": "default"}),
 		"art and shader": _with(good, ["backs", "rose", "art"], VAULT_ART),
 		"neither picture": _with(good, ["backs", "rose", "shader"], ""),
@@ -156,7 +165,7 @@ static func _preference_round_trip(fails: Array[String]) -> void:
 
 static func _chosen_falls_back(fails: Array[String]) -> void:
 	var blank: VigilState = VigilState.blank()
-	var earned: VigilState = _vigil({"shards": ["paleOnes"], "wins": 1})
+	var earned: VigilState = _vigil({"shards": ["paleOnes"], "wins": 1}, fails)
 	var prefs: Preferences = Preferences.new()
 	var vigils: Dictionary = {"blank": blank, "earned": earned, "none": null}
 	var expect: Array = [
@@ -182,13 +191,11 @@ static func _unlocks_read_the_saved_vigil(fails: Array[String]) -> void:
 		[{"shards": ["paleOnes"]}, ["vault", "rose"]],
 		[{"wins": 1}, ["vault", "eclipse"]],
 		[{"shards": ["ownShade", "usurper"], "wins": 3}, ["vault", "rose", "eclipse"]],
-		# The load path drops a shard from no known quest, so it earns nothing.
-		[{"shards": ["notAQuest"]}, ["vault"]],
 		[{"slain": 40, "runs": 9}, ["vault"]],
 	]
 	for row: Array in expect:
 		var planted: Dictionary = row[0]
-		var vigil: VigilState = _vigil(planted)
+		var vigil: VigilState = _vigil(planted, fails)
 		var before: Dictionary = vigil.to_dict()
 		var got: String = _names(cat.unlocked(vigil))
 		var wanted: Array = row[1]
@@ -197,32 +204,47 @@ static func _unlocks_read_the_saved_vigil(fails: Array[String]) -> void:
 			fails.append("card backs: Vigil %s unlocked %s, want %s" % [planted, got, want])
 		if vigil.to_dict() != before:
 			fails.append("card backs: reading unlocks wrote to the Vigil (%s)" % planted)
+	# A shard from no known quest is not dropped: VigilState.from_dict refuses
+	# the whole file and SaveService.load_vigil hands back a blank Vigil, so the
+	# win planted beside it is lost too and only the default unlocks.
+	var refused: VigilState = _load_planted({"shards": ["notAQuest"], "wins": 1})
+	if refused.to_dict() != VigilState.blank().to_dict():
+		fails.append("card backs: a Vigil holding an unknown shard was not refused whole")
+	if _names(cat.unlocked(refused)) != "vault":
+		fails.append("card backs: a refused Vigil unlocked %s" % _names(cat.unlocked(refused)))
 
 
 static func _grant_list_is_read(fails: Array[String]) -> void:
+	# Today's VigilState has no grant list, so a back only a grant can earn
+	# could never unlock, and the catalogue refuses it. The day the domain adds
+	# the list this row trips on purpose: teach it the grant-only back then.
 	var with_grant: Dictionary = {"v": 1, "default": "vault", "backs": {
 		"vault": {"art": VAULT_ART, "surface": "aurora", "unlock": {"kind": "default"}},
-		"rose": {"shader": ROSE, "surface": "prism", "unlock": {"kind": "shards", "at": 1}},
 		"sigil": {"shader": ECLIPSE, "surface": "gilt", "unlock": {"kind": "grant"}},
 	}}
-	var cat: CardBackCatalogue = CardBackCatalogue.parse(with_grant)
+	if CardBackCatalogue.grant_list_exists():
+		fails.append("card backs: VigilState now declares %s; teach this test the grant-only back"
+			% CardBackCatalogue.GRANT_FIELD)
+	elif not CardBackCatalogue.parse(with_grant) is String:
+		fails.append("card backs: a grant-only back parsed though nothing can grant it")
 	if not CardBackCatalogue.granted(VigilState.blank()).is_empty():
 		fails.append("card backs: today's VigilState read a grant list it does not have")
 	# Tomorrow's VigilState: the additive list, as the domain will declare it.
+	# A grant opens a back whatever its own rule says.
 	var future: GDScript = GDScript.new()
 	future.source_code = "extends VigilState\nvar card_backs: Array[String] = []\n"
 	if future.reload() != OK:
 		fails.append("card backs: could not stand up a Vigil with a grant list")
 		return
+	var cat: CardBackCatalogue = CardBacks.catalogue()
 	var vigil: VigilState = future.new()
-	if cat.is_unlocked("sigil", vigil):
-		fails.append("card backs: a grant-only back unlocked with no grant")
-	var grants: Array[String] = ["sigil", "rose"]
+	if _names(cat.unlocked(vigil)) != "vault":
+		fails.append("card backs: an empty grant list unlocked %s" % _names(cat.unlocked(vigil)))
+	var grants: Array[String] = ["eclipse", "notABack"]
 	vigil.set(CardBackCatalogue.GRANT_FIELD, grants)
-	if not cat.is_unlocked("sigil", vigil) or not cat.is_unlocked("rose", vigil):
-		fails.append("card backs: a granted back stayed locked")
-	if _names(cat.unlocked(vigil)) != "vault,rose,sigil":
-		fails.append("card backs: granted unlocks read %s" % _names(cat.unlocked(vigil)))
+	if _names(cat.unlocked(vigil)) != "vault,eclipse":
+		fails.append("card backs: granted unlocks read %s, want vault,eclipse"
+			% _names(cat.unlocked(vigil)))
 
 
 static func _bake_cache_invalidation(fails: Array[String]) -> void:
@@ -256,6 +278,127 @@ static func _bake_cache_invalidation(fails: Array[String]) -> void:
 	CardBacks.use_catalogue(null)
 
 
+## The bake's job rules, on the fake render step: one job per back however
+## many callers, a stale or interrupted bake reaching no cache and no caller,
+## one retry by each caller whose own host is still here, and a choice
+## dropping a bake still in flight.
+static func _bake_jobs(fails: Array[String]) -> void:
+	CardBacks.use_catalogue(null)
+	var render: _FakeRender = _FakeRender.new()
+	CardBacks.use_renderer(render.render)
+	var at: float = CardView.oversample
+	var host_a: Node = Node.new()
+	var host_b: Node = Node.new()
+	# A bake that hands a freed host to a typed parameter fails no assertion
+	# below (the call just returns null); the engine reports it, so listen.
+	var errors: _ScriptErrors = _ScriptErrors.new()
+	OS.add_logger(errors)
+
+	# Two callers, one job; both get its bake, and a third gets it from the cache.
+	var a: _Caller = _Caller.start(host_a, "rose")
+	var b: _Caller = _Caller.start(host_b, "rose")
+	render.open.emit()
+	if render.calls.size() != 1 or a.got == null or a.got != b.got:
+		fails.append("card backs: two callers of one back rendered %d times and got %s, %s"
+			% [render.calls.size(), str(a.got), str(b.got)])
+	var c: _Caller = _Caller.start(host_b, "rose")
+	if not c.done or c.got != a.got or render.calls.size() != 1:
+		fails.append("card backs: a cached bake was rendered again")
+
+	# The catalogue changes mid-bake: nobody takes the stale bake, both callers
+	# retry together, and the cache holds the new catalogue's.
+	render.calls.clear()
+	a = _Caller.start(host_a, "eclipse")
+	b = _Caller.start(host_b, "eclipse")
+	CardBacks.use_catalogue(CardBackCatalogue.shipped())
+	render.open.emit()
+	if a.done or b.done or render.calls.size() != 2:
+		fails.append("card backs: a bake made under the old catalogue was handed out")
+	render.open.emit()
+	if a.got == null or a.got != b.got or CardBacks.cached("eclipse") != a.got:
+		fails.append("card backs: after a catalogue change the callers did not share one new bake")
+
+	# The oversample changes mid-bake: the bake is labelled with what it was
+	# built at, so it is stale, and the retry builds at the new value.
+	CardBacks.use_catalogue(null)
+	a = _Caller.start(host_a, "vault")
+	CardView.oversample = at + 1.0
+	render.open.emit()
+	render.open.emit()
+	var rescaled: CardBacks.Baked = CardBacks.cached("vault")
+	CardView.oversample = at
+	if a.got == null or not is_equal_approx(a.got.oversample, at + 1.0) or rescaled != a.got:
+		fails.append("card backs: a bake built before an oversample change was kept or mislabelled")
+
+	# The owner's host leaves mid-bake (its render gives nothing): the owner
+	# gives up, and the waiter retries with its own host.
+	CardBacks.use_catalogue(null)
+	render.calls.clear()
+	var gone: Node = Node.new()
+	a = _Caller.start(gone, "rose")
+	b = _Caller.start(host_b, "rose")
+	gone.free()
+	render.fail = true
+	render.open.emit()
+	render.fail = false
+	render.open.emit()
+	if not a.done or a.got != null or b.got == null or render.calls.size() != 2:
+		fails.append("card backs: when the owner's host left, owner %s waiter %s after %d renders"
+			% [str(a.got), str(b.got), render.calls.size()])
+
+	# A waiter whose own host was freed gets null, without a retry or an error.
+	CardBacks.use_catalogue(null)
+	render.calls.clear()
+	gone = Node.new()
+	a = _Caller.start(host_a, "rose")
+	b = _Caller.start(gone, "rose")
+	gone.free()
+	render.fail = true
+	render.open.emit()
+	render.fail = false
+	if not b.done or b.got != null or render.calls.size() != 2:
+		fails.append("card backs: a waiter with a freed host retried or did not finish")
+	render.open.emit()
+	if a.got == null:
+		fails.append("card backs: the owner did not retry after an interrupted bake")
+
+	# Choosing another back while one bakes: its callers still get it, the
+	# cache does not keep it; the chosen back's own bake is kept.
+	CardBacks.use_catalogue(null)
+	var prefs: Preferences = Preferences.new()
+	a = _Caller.start(host_a, "vault")
+	var a2: _Caller = _Caller.start(host_b, "vault")
+	b = _Caller.start(host_b, "eclipse")
+	CardBacks.choose(prefs, "eclipse")
+	render.open.emit()
+	if a.got == null or a2.got != a.got or CardBacks.cached("vault") != null:
+		fails.append("card backs: a bake that landed after another back was chosen was kept or lost")
+	if b.got == null or CardBacks.cached("eclipse") != b.got:
+		fails.append("card backs: the chosen back's bake in flight was not kept")
+
+	OS.remove_logger(errors)
+	if not errors.seen.is_empty():
+		fails.append("card backs: the bake jobs raised script errors: %s" % "; ".join(errors.seen))
+	CardBacks.use_renderer(Callable())
+	CardBacks.use_catalogue(null)
+	host_a.free()
+	host_b.free()
+
+
+## The live render step in a headless run: it can never be drawn, so it gives
+## nothing at once instead of waiting forever, and leaves nothing behind.
+static func _live_render_headless(fails: Array[String]) -> void:
+	if DisplayServer.get_name() != "headless":
+		return
+	CardBacks.use_renderer(Callable())
+	CardBacks.use_catalogue(null)
+	var host: Node = Node.new()
+	var a: _Caller = _Caller.start(host, "rose")
+	if not a.done or a.got != null or host.get_child_count() != 0 or not CardBacks._jobs.is_empty():
+		fails.append("card backs: a headless bake waited, built a card or left a job behind")
+	host.free()
+
+
 static func _lab_wears_the_catalogue(fails: Array[String]) -> void:
 	var entries: Dictionary = CardLab.back_entries()
 	var keys: Array = entries.keys()
@@ -271,8 +414,22 @@ static func _lab_wears_the_catalogue(fails: Array[String]) -> void:
 
 ## A Vigil as the game would load it: planted into the saved form on disk and
 ## read back through SaveService.load_vigil, so the unlocks see only what
-## survives the real load path.
-static func _vigil(planted: Dictionary) -> VigilState:
+## survives the real load path. Everything planted must survive it: a refused
+## file loads blank, which would pass every Vault-only row for nothing.
+static func _vigil(planted: Dictionary, fails: Array[String]) -> VigilState:
+	var vigil: VigilState = _load_planted(planted)
+	for key: String in planted:
+		var kept: bool = vigil.deeds.get(key) == planted[key]
+		if key == "shards":
+			var shards: Array = planted[key]
+			kept = _names(vigil.shards) == ",".join(PackedStringArray(shards))
+		if not kept:
+			fails.append("card backs: the load path did not keep the planted %s %s"
+				% [key, str(planted[key])])
+	return vigil
+
+
+static func _load_planted(planted: Dictionary) -> VigilState:
 	var saved: Dictionary = VigilState.blank().to_dict()
 	var deeds: Dictionary = saved["deeds"]
 	for key: String in planted:
@@ -315,6 +472,57 @@ static func _renamed(doc: Dictionary, from: String, to: String) -> Dictionary:
 	backs[to] = backs[from]
 	backs.erase(from)
 	return out
+
+
+## A render step the test opens by hand: each call is counted, waits for
+## `open`, then gives a bake at the scale it was asked for, or nothing while
+## `fail` is set (a host that left mid-bake).
+class _FakeRender:
+	extends RefCounted
+	signal open
+	var calls: Array[String] = []
+	var fail: bool = false
+
+	func render(_host: Node, id: String, scale: float) -> CardBacks.Baked:
+		calls.append(id)
+		await open
+		if fail:
+			return null
+		var out: CardBacks.Baked = CardBacks.Baked.new()
+		out.oversample = scale
+		return out
+
+
+## The script errors the engine reports while this is registered.
+class _ScriptErrors:
+	extends Logger
+	var seen: PackedStringArray = PackedStringArray()
+
+	func _log_error(_function: String, _file: String, _line: int, code: String,
+			rationale: String, _editor_notify: bool, error_type: int,
+			_script_backtraces: Array[ScriptBacktrace]) -> void:
+		if error_type == Logger.ERROR_TYPE_SCRIPT:
+			seen.append(code if rationale.is_empty() else rationale)
+
+	func _log_message(_message: String, _error: bool) -> void:
+		pass
+
+
+## One caller of CardBacks.bake, started without waiting, so a test can hold
+## several in flight and read what each got once the render opens.
+class _Caller:
+	extends RefCounted
+	var done: bool = false
+	var got: CardBacks.Baked = null
+
+	static func start(host: Node, id: String) -> _Caller:
+		var caller: _Caller = _Caller.new()
+		caller._run(host, id)
+		return caller
+
+	func _run(host: Node, id: String) -> void:
+		got = await CardBacks.bake(host, id)
+		done = true
 
 
 static func _cleanup() -> void:

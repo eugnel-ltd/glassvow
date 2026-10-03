@@ -19,7 +19,10 @@ extends RefCounted
 ## gains the additive `cardBacks` list (the `dawnLeaves` precedent — never
 ## `unlocks`, which feeds the title's secrets count and the Dawn reveal), its
 ## field `card_backs` is read here with no change to this file. A granted back
-## is unlocked whatever its own rule says.
+## is unlocked whatever its own rule says. Until VigilState declares that
+## field, nothing can be granted, so a catalogue naming a `grant` back is
+## refused rather than shipping a back no player could ever earn; the same
+## check refuses one if the domain names the list anything else.
 
 const PATH: String = "res://content/card-backs.json"
 const VERSION: int = 1
@@ -116,7 +119,11 @@ static func _parse_unlock(value: Variant) -> Variant:
 	var rule: Dictionary = value
 	var kind: String = str(rule.get("kind", ""))
 	match kind:
-		"default", "grant":
+		"default":
+			return {"kind": kind}
+		"grant":
+			if not grant_list_exists():
+				return "grant: VigilState has no %s list, so nothing can grant it" % GRANT_FIELD
 			return {"kind": kind}
 		"deed":
 			var deed: String = str(rule.get("deed", ""))
@@ -199,6 +206,11 @@ func unlocked(vigil: VigilState) -> Array[String]:
 func _rule(id: String) -> Dictionary:
 	var row: Dictionary = _backs[id]
 	return row["unlock"]
+
+
+## Whether VigilState declares the grant list (see the header).
+static func grant_list_exists() -> bool:
+	return GRANT_FIELD in VigilState.new()
 
 
 ## The Vigil's grant list, read and never written. Empty until VigilState

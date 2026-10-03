@@ -164,6 +164,19 @@ four title glyphs, captures, and exits:
 tools/shot.sh --font-probe --shot=/tmp/glassvow-runtime-font.png
 ```
 
+The card back baker (`presentation/cards/card_backs.gd`, #657) has its job
+rules in the suite (`tests/test_card_backs.gd`, on a fake render step, since a
+headless run never draws a frame) and its live render step in a windowed
+proof. The proof bakes every back in the catalogue, times each bake and its
+longest frame, compares the bake's whole stage, alpha included, with a settled
+live card's, measures how much a small straight-alpha draw darkens the rim,
+and checks that two bakes asked for at once build one card. It exits 0 on a
+pass, 1 on a failure and 2 under `--headless`:
+
+```bash
+godot --path . -s res://tools/check_card_back_bake.gd -- --out=/tmp/card-backs
+```
+
 Whole-run balance calibration is a CLI-only, domain simulation. The default
 replays both aspects over the same 200 contiguous seeds; `--out` retains the
 manifest, every run row, derived metrics and calibration verdict as JSON:

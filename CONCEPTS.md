@@ -225,12 +225,14 @@ The other side of a card: a picture — a painting on disk or a procedural
 shader — worn on a Recipe, so a back has the same stock, edge, shadow and
 finish as a face. Backs are content, never domain. The player's choice is a
 preference, and a back is earned by a rule that only reads the Vigil — a deed
-count, the shards held, or a grant list — so earning or choosing one writes no
-save. A choice the catalogue does not know, or one not yet earned, shows the
-default back.
+count, the shards held, or (once the Vigil carries one) a grant list — so
+earning or choosing one writes no save. A choice the catalogue does not know,
+or one not yet earned, resolves to the default back.
 
-Wherever many backs show at once, they are one baked texture of the chosen
-back, not live cards.
+Where many backs show at once, they are to be one baked texture of the chosen
+back, not live cards. That is the rule for the piles, the reshuffle and the
+top-menu deck as #657 builds them; until then the game wears no back outside
+the card lab, and the piles keep their own paintings.
 
 ---
 
