@@ -1,0 +1,12 @@
+{
+  "inputs": {
+    "at": "2026-10-04T11:07:35+00:00",
+    "by": "orchestrator",
+    "cases_sha256": "2116452a8c1167d216c031aeaa0cfc21c346e6e1e9c7d18dc21309c7d8b9ffc0",
+    "delegated_by": "James (owner), 4 Oct 2026 11:31 BST: delegated the repo_traps inputs and grader approval to the orchestrator with a council of three",
+    "evidence": {
+      "path": "tools/agent_evals/evals/repo_traps/council-2026-10-04.md",
+      "sha256": "f737f77bbaa380ba9e312441d68dc7793dd408e994a0b37b3f51c0009abdad49"
+    }
+  }
+}
