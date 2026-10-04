@@ -269,11 +269,14 @@ class DelegatedApprovalTests(unittest.TestCase):
 
     def test_the_real_cli_still_refuses_a_pipe_and_a_half_given_delegation(self) -> None:
         script = str(ROOT / "tools/agent_evals/cli.py")
+        recorded = ROOT / "tools/agent_evals/evals/repo_traps/approvals.json"
+        before = recorded.read_bytes() if recorded.exists() else None
         for extra in ([], ["--delegated", "someone"]):
             done = subprocess.run([sys.executable, script, "approve-inputs", "repo_traps", *extra],
                                   stdin=subprocess.DEVNULL, capture_output=True, text=True, check=False)
             self.assertEqual(1, done.returncode, extra)
-        self.assertFalse((ROOT / "tools/agent_evals/evals/repo_traps/approvals.json").exists())
+        # A refusal writes nothing: the recorded approvals are byte for byte what they were.
+        self.assertEqual(before, recorded.read_bytes() if recorded.exists() else None)
 
 
 if __name__ == "__main__":
