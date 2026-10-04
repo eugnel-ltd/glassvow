@@ -141,11 +141,13 @@ static func plate(back_bake: CardBacks.Baked, thick: float) -> MeshInstance3D:
 ## Main calls it in the frame that builds the fight. The bake builds its back
 ## card hidden in that frame, so the back's picture shader and the slab's
 ## compile in that frame's draw, and it reads back straight after it
-## (CardBacks.BAKE_FRAMES), before the next frame starts the entrance. The
-## warmer, one transparent pixel wearing the picture turn's material, is drawn
-## in the same frame and dropped on the next. The live turn needs no warmer of
-## its own: its plate wears the card surface the fight's own cards compile in
-## that same draw, on the same mesh layout.
+## (CardBacks.BAKE_FRAMES), before the next frame starts the entrance. Its
+## card then stays with the fight, retired, and leaves with it, so its video
+## memory is not released inside the entrance. The warmer, one transparent
+## pixel wearing the picture turn's material, is drawn in the same frame and
+## dropped on the next. The live turn needs no warmer of its own: its plate
+## wears the card surface the fight's own cards compile in that same draw, on
+## the same mesh layout.
 ##
 ## A later fight whose back is already baked pays a cached lookup and one
 ## transparent pixel. `host` is the fight; whatever is still in flight when it
@@ -165,8 +167,7 @@ static func prewarm(host: Node, id: String) -> void:
 		if is_instance_valid(warmer):
 			warmer.queue_free()
 		return
-	# Drawn in the bake's frame, the warmer goes straight after it, as the
-	# bake's card does.
+	# Drawn in the bake's frame, the warmer goes straight after it.
 	warmer.free()
 
 

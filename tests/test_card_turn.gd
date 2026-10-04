@@ -2,9 +2,9 @@ extends RefCounted
 ## Turning a card over (issue #657, PR 3): one pose maths for both renderers,
 ## CardView.turn's two renderers and its rest, a held card's tilt and lift
 ## under either, the back plate a bake dresses a card in and the table's back
-## followed as it changes, a back cut without a stone, the pre-warm's bake and
-## warmer, and every fight's load paying for them with the back the player
-## wears.
+## followed as it changes, a back cut without a stone, a bake's card retired
+## rather than freed, the pre-warm's bake and warmer, and every fight's load
+## paying for them with the back the player wears.
 ##
 ## The bakes run on a fake render step (CardBacks.use_renderer): the suite is
 ## headless, where no frame is ever drawn. That the two renderers put the card
@@ -24,6 +24,7 @@ static func run(fails: Array[String]) -> void:
 	_picture_shader(fails)
 	_plate_of_a_bake(fails)
 	_back_has_no_stone(fails, content)
+	await _retired_card(fails)
 	var render: _FakeRender = _FakeRender.new()
 	CardBacks.use_renderer(render.render)
 	await _prewarm(fails, render)
@@ -116,6 +117,25 @@ static func _back_has_no_stone(fails: Array[String], content: ContentDB) -> void
 			% [back._slab.mesh.get_surface_count(), front._slab.mesh.get_surface_count()])
 	back.free()
 	front.free()
+
+
+## A bake's card, once read back, is retired (CardBacks): both passes stay
+## frozen for good, past its own first-frames freeze and whatever would wake
+## them, and it renders nothing until its host takes it away.
+static func _retired_card(fails: Array[String]) -> void:
+	var host: Control = _host()
+	var card: CardView = CardBacks.build("vault")
+	card.visible = false
+	host.add_child(card)
+	card.retire()
+	await _frames(host, 4)
+	card.hold_pose(Vector2(0.5, -0.5))
+	card._set_live(true)
+	if card._inner.render_target_update_mode != SubViewport.UPDATE_DISABLED \
+			or card._stage.render_target_update_mode != SubViewport.UPDATE_DISABLED:
+		fails.append("card turn: a retired card's passes woke again")
+	host.queue_free()
+	await _frames(host, 1)
 
 
 static func _prewarm(fails: Array[String], render: _FakeRender) -> void:

@@ -291,6 +291,8 @@ var _hovered: bool = false
 var _body: RulesText = null
 ## Built as a card back — a painting on the slab, no face furniture, no stone.
 var _is_back: bool = false
+## Kept for what it holds and never drawn again (`retire`).
+var _retired: bool = false
 ## The stage render as the canvas shows it, the rare's shine over it, and what
 ## a turn needs of the slab: its thickness and its side band's colour.
 var _display: Control = null
@@ -1151,6 +1153,8 @@ func _push_lamp() -> void:
 ## Freeze both offscreen passes when nothing moves; UPDATE_ONCE paints one
 ## last frame and sleeps. A 61-card lab must idle at zero render cost.
 func _set_live(on: bool) -> void:
+	if _retired:
+		return
 	var mode: SubViewport.UpdateMode = SubViewport.UPDATE_ALWAYS if on \
 		else SubViewport.UPDATE_ONCE
 	_inner.render_target_update_mode = mode
@@ -1189,6 +1193,17 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_freeze_if_idle()
+
+
+## Stop drawing the card for good: both passes frozen as they are and never
+## woken again. A bake's card is retired once it is read
+## back (CardBacks), so it stays, hidden and costing no render, until its host
+## leaves and takes it along; freeing it on the spot would release its video
+## memory two frames later, in whatever plays then.
+func retire() -> void:
+	_retired = true
+	_inner.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	_stage.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
 
 ## Freeze the passes unless something moves the card. One pointed at and let

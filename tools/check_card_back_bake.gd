@@ -13,8 +13,10 @@ extends SceneTree
 ##
 ##   BAKE      the first bake's wall time, its longest frame (the first-use
 ##             shader compile stalls the draw it lands in), the frames it
-##             spanned, the video memory it holds once the hidden card is
-##             released, and a cached repeat;
+##             spanned, the video memory it holds once its host has taken the
+##             hidden card away, and a cached repeat;
+##   KEPT      the bake's card stays under its host, hidden, both passes
+##             frozen, and leaves with it (CardView.retire);
 ##   SAME      the bake's stage against a live card's, settled for 12 frames:
 ##             every RGBA channel of every texel, rim, corners and alpha too;
 ##   EDGE      what the stage's alpha edge is: the share of partly covered
@@ -25,7 +27,8 @@ extends SceneTree
 ##   SHARED    two bakes asked for at once build one card and get one bake.
 ##
 ## Exit 0 when every back bakes, matches its live card within MAX_DELTA on
-## every channel, and the shared bake builds once; 1 otherwise. --out= also
+## every channel, its card is kept as KEPT says, and the shared bake builds
+## once; 1 otherwise. --out= also
 ## writes the rows and a still: live cards over their bakes, then each bake at
 ## 1/4 and 1/8 with mipmaps, straight blend left of premultiplied.
 
@@ -112,10 +115,13 @@ class Probe:
 
 	func _timed_bake(id: String) -> CardBacks.Baked:
 		var vram_before: float = _vram_mib()
+		# A host of its own, so the bake's card leaves before the reading.
+		var host: Control = Control.new()
+		add_child(host)
 		var drawn: int = Engine.get_frames_drawn()
 		var from: int = _stamps.size()
 		var t0: int = Time.get_ticks_usec()
-		var baked: CardBacks.Baked = await CardBacks.bake(self, id)
+		var baked: CardBacks.Baked = await CardBacks.bake(host, id)
 		var t1: int = Time.get_ticks_usec()
 		var spanned: int = Engine.get_frames_drawn() - drawn
 		await _frames(2)
@@ -125,9 +131,11 @@ class Probe:
 		for i: int in range(from + 1, _stamps.size()):
 			longest = maxf(longest, (_stamps[i] - _stamps[i - 1]) / 1000.0)
 		var t2: int = Time.get_ticks_usec()
-		var again: CardBacks.Baked = await CardBacks.bake(self, id)
+		var again: CardBacks.Baked = await CardBacks.bake(host, id)
 		var t3: int = Time.get_ticks_usec()
-		# What the bake holds, once the hidden card's video memory is released.
+		var kept: bool = _kept(id, host)
+		# What the bake holds, once its host has taken the hidden card away.
+		host.queue_free()
 		await _frames(SETTLE_FRAMES)
 		var vram_after: float = _vram_mib()
 		if baked != null:
@@ -137,7 +145,18 @@ class Probe:
 					baked.stage.get_width(), baked.stage.get_height(),
 					baked.inner.get_width(), baked.inner.get_height(),
 					vram_after - vram_before])
-		return baked
+		return baked if kept else null
+
+	## The bake's card under its host: one, hidden, both passes frozen.
+	func _kept(id: String, host: Control) -> bool:
+		var cards: Array[Node] = host.find_children("*", "CardView", false, false)
+		var card: CardView = cards[0] as CardView if cards.size() == 1 else null
+		var ok: bool = card != null and not card.visible \
+			and card._inner.render_target_update_mode == SubViewport.UPDATE_DISABLED \
+			and card._stage.render_target_update_mode == SubViewport.UPDATE_DISABLED
+		_row("KEPT %s cards_under_host=%d hidden=%s passes_frozen=%s %s" % [id, cards.size(),
+			str(card != null and not card.visible), str(ok), "ok" if ok else "FAIL"])
+		return ok
 
 	## A live card of the same back, settled, read back the same way.
 	func _same_as_live(id: String, baked: CardBacks.Baked) -> bool:

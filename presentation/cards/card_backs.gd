@@ -15,8 +15,13 @@ extends RefCounted
 ## reshuffle stream, the picture turn, the slab's back plate — is meant to draw
 ## one baked texture rather than a live card: a live card holds about 16 MB of
 ## video memory, a bake about 2 MB at the 2x oversample. `bake()` builds the
-## back through the CardView back path, lets it render, reads both passes back
-## once and frees the card.
+## back through the CardView back path under a host, lets it render and reads
+## both passes back once. Then it retires the card (CardView.retire): hidden,
+## frozen and drawn no more, it leaves with its host. Freed on the spot, its
+## video memory would be released two frames later, inside whatever plays
+## then: on the iPad 8 that frame of a fight's entrance ran 50 ms in 3 of 7
+## runs, against 16-26 ms in every run that released nothing there. Kept, it
+## goes with the fight's own teardown.
 ##
 ## WHAT A BAKE COSTS (tools/check_card_back_bake.gd, on the Mac and, through a
 ## QA build, on the iPad 8). The first bake of a back compiles its shaders on
@@ -156,7 +161,7 @@ static func cached(id: String) -> Baked:
 
 
 ## Bake `id` under `host` (any node in the tree; the card is built hidden and
-## freed after), or hand back the cached bake. A coroutine: `await` it.
+## leaves with it), or hand back the cached bake. A coroutine: `await` it.
 ##
 ## Every caller of one back shares the bake in flight and gets its result. A
 ## bake that is stale when it lands (the catalogue or the oversample changed
@@ -201,8 +206,9 @@ static func _try(host: Node, id: String) -> Baked:
 
 
 ## The live render step: the back built hidden under `host`, rendered, read
-## back once and freed. Null when it cannot render: a headless run never draws
-## a frame (the wait would never end), and a host out of the tree draws nothing.
+## back once and retired there. Null when it cannot render: a headless run
+## never draws a frame (the wait would never end), and a host out of the tree
+## draws nothing.
 static func _render_live(host: Node, id: String, scale: float) -> Baked:
 	if DisplayServer.get_name() == "headless" or not host.is_inside_tree():
 		return null
@@ -216,10 +222,10 @@ static func _render_live(host: Node, id: String, scale: float) -> Baked:
 	if not is_instance_valid(view):
 		return null    # its host was freed, and the card with it
 	var out: Baked = _read_back(view, scale) if view.is_inside_tree() else null
-	# Freed now, not queued: the readback lands straight after the draw, and a
-	# queued free would land the card's teardown in the next frame, the first
-	# frame a fight's entrance plays (CardTurn.prewarm).
-	view.free()
+	if out == null:
+		view.free()
+	else:
+		view.retire()
 	return out
 
 
