@@ -296,6 +296,12 @@ readout 5; G3 and G6 against A_lit, readout 10; G5 over survivors and the commit
   threshold, on point or on interval, stands in the verdict record: the reading's complete §11
   table and the verdict. A miss the verdict judges to need further work is carried as a named
   reservation. A G7 miss is never weighed against intent: it is NOT ACCEPTED.
+- **Short of its threshold** means FAIL on point or FAIL on interval. A figure that passes on
+  point and is UNDECIDED on interval is not short; it stays in the reading's table.
+- **Whose judgement.** Whether a graded gate's intent holds is the orchestrator's judgement,
+  recorded with the verdict: for every graded-gate figure short of its threshold, the verdict
+  record states either why the gate's intent still holds or the reservation that carries it. A
+  release reviewer checks that every short figure has one and does not re-derive the judgement.
 - **A reading** is reported in every graded cell with its interval. Its threshold never decides
   the verdict; the verdict still reads the intent behind it (each way wins; scattering loses)
   from its figures.
@@ -329,26 +335,36 @@ the readout whose complete §11 table it was given on.
      reading's cell table is played again with the instrument of record (pilot `p8-d0-v3`,
      search player `s1`) on the bands of record, and every report's manifest names the RC
      commit, the content SHA-256, the pilot and the search player. It agrees with the reading of
-     record on every graded gate's verdict, on point and on interval, in every graded cell; the
+     record on every graded gate's verdict in every graded cell (on point and on interval where
+     the gate has both, and on its single verdict for G7 and row B); the
      numbers need not match (owner ruling, 2026-09-27). A run under another instrument, such as
      1.1's `s2`, is a new reading, not this re-run. The Flame is code as well as content, so the
      re-run binds the commit and the verdict binds the content it was given on.
   3. **The exam's own items.** The items the lock's §11 *Exam* and *Seeds* keep for the final
      candidate, which no readout runs: the CEM stress, with its ceiling read on the historical
-     holdout, used once, and the save-lineage and internal-ID check. G7 passes on them.
+     holdout, used once; the save-lineage and internal-ID check; and the lock's §12 invariants
+     (no save-schema change, new ids only added, `port_fixtures/` moved only in an explicit
+     commit that says why). G7 passes on them.
 
 **The 1.0 Duskblade verdict of record: ACCEPT, with one reservation.** The orchestrator's
 verdict on readouts 11–13, given on 2 October 2026 at 22:12 BST on readout 13's complete §11
-table. The reservation is the fresh-pool Lantern lead, 12.8 pp at V0 (G2 at V0 fresh, the
+table (recorded in [#544's plan of record](https://github.com/fol2/glassvow/issues/544),
+decision 12; #544's step P4 enters it in the lock's §11). The reservation is the fresh-pool Lantern lead, 12.8 pp at V0 (G2 at V0 fresh, the
 Lantern over Shatter, +8.9 to +16.6 pp: FAIL on point, UNDECIDED on interval), carried as a
-1.0.x readout, not a reason to withhold the ACCEPT (readout 13, *What the next readout should ask*, item 1). It
-replaced that morning's verdict, NOT ACCEPTED on two product grounds in the full pool (Edge
-monoculture, G6; True unreachable, G5), which readouts 11–13 resolved. It carries no other
-reservation. The other graded-gate figures short of their thresholds in readout 13, all
-listed in its *Decision*, are G3 at V5 full (A_lit 3.5 pp behind committed Shatter on 4,000
-common seeds, −5.0 to −2.0 pp: FAIL on point, UNDECIDED on interval) and A_lit's feel at V0
-fresh (row B's second part, 59.2% against 60%: a decided FAIL). G1 and G4 fail in readout 13 as
-readings. On 4 October 2026 the owner confirmed that the Duskblade balance is complete. The
+1.0.x readout, not a reason to withhold the ACCEPT (readout 13, *What the next readout should
+ask*, item 1). It carries no other reservation. The other graded-gate figures short of their
+thresholds in readout 13, and why each gate's intent holds:
+
+- **G3 at V5 full:** A_lit is 3.5 pp behind committed Shatter on 4,000 common seeds (−5.0 to
+  −2.0 pp: FAIL on point, UNDECIDED on interval), 0.5 pp past the −3 pp line. Reading the offers
+  is still not a trap: A_lit passes G3 on point in the other three cells, and at V5 full it leads arm A,
+  arm R and the committed Lantern and Edge (13.8% against 11.8%, 3.9%, 12.2% and 12.2%; readout
+  13 calls it the gate's edge).
+- **A_lit's feel at V0 fresh** (59.2% against row B's 60%: a decided FAIL): row B's feel test is
+  the committed ways' (lock §11, row B, part 2), and A_lit's own expression is read beside them
+  (lock §11, arm A_lit). No committed way fails it, so every way still has a feel.
+
+G1 and G4 fail in readout 13 as readings. On 4 October 2026 the owner confirmed that the Duskblade balance is complete. The
 verdict binds the RC once the RC commit is the exact candidate defined above.
 
 - [ ] **Verdict.** For every class the build ships, the verdict of record is ACCEPT, with its
