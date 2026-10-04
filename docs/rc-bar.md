@@ -40,14 +40,19 @@ The bar binds one exact RC commit. If the RC commit changes:
 | Diff since evidenced commit | Consequence |
 |---|---|
 | Docs-only | All evidence carries |
-| Any code, asset, or export-preset change | P1 re-runs; P2, P3, P4 re-run; P5 re-verifies only the surfaces the change touches; P7 re-checks build-config items only (SDK, Info.plist keys, signing); **P9's gates G1–G7 re-run on the new candidate SHA** |
-| Player-facing-major change (James's judgment) | Additionally, P6 beta round repeats, and P9's human round H with it |
+| Any code, asset, or export-preset change | P1 re-runs; P2, P3, P4 re-run; P5 re-verifies only the surfaces the change touches; P7 re-checks build-config items only (SDK, Info.plist keys, signing); **P9's independent re-run and the exam's own items repeat on the new candidate commit, and if the content SHA-256 moved, the verdict of record no longer describes the candidate (P9)** |
+| Player-facing-major change (James's judgment) | Additionally, P6 beta round repeats |
 
 "Player-facing-major" means a change that would read differently between the beta round's build
 and this RC: gameplay balance, card/relic behaviour, encounter design, visible UI, or story
 flow. An invisible fix (crash, soft-lock, data corruption) is not player-facing-major unless it
 alters a gameplay rule. All evidence is captured on the final RC commit; evidence from an
 earlier commit survives only through this table.
+
+*Superseded in this table on 2026-10-04:* the P9 entries of 2026-09-29 read "P9's gates G1–G7
+re-run on the new candidate SHA" and "and P9's human round H with it". G1 and G4 became readings
+on 2026-09-30; the bot round (the lock's row B) replaced H on 2026-10-01 and re-runs with the
+rest of P9's evidence.
 
 ## P0 — Build identity
 
@@ -231,54 +236,163 @@ state, the policy URL, the Info.plist diff).
       records the crash-free-sessions rate; a rate below **99.0%** fails closed unless every
       contributing crash signature is itself in the ledger, fixed or waived.
 
-## P9 — Duskblade's three ways (the Flame gates)
+## P9 — The ways of each shipped class (the Flame verdict)
 
-Rewritten on 2026-09-29 under [#549](https://github.com/fol2/glassvow/issues/549). The
+Rewritten on 2026-09-29 under [#549](https://github.com/fol2/glassvow/issues/549), and brought
+in line with the owner's rulings of 30 September to 2 October on 2026-10-04 under
+[#544](https://github.com/fol2/glassvow/issues/544) (its plan of record, step P5). The
 measurement contract is §11 of the
-[Duskblade Flame design lock](design/2026-09-29-dusk-flame/README.md); this pillar binds it by
-reference and restates none of its numbers, because a copy here could only drift from it.
-**Not optional and not waivable.** A pass measured on different code or content says nothing
-about the shipped game.
+[Duskblade Flame design lock](design/2026-09-29-dusk-flame/README.md): its arms, cells, gates,
+thresholds and seeds are bound here by reference. **Not optional and not waivable.** A verdict
+given on different content says nothing about the shipped game. The wording this replaces is
+kept, with the date each part stopped being in force, under *History* at the end of this pillar.
 
-Duskblade ships with three ways (碎 Shatter, 燼 Lantern, 蝕 Edge) proven by the instrument of
-the Flame lock §11: gates G1–G7 on the exact candidate SHA, thresholds as frozen after
-readout 1 and recorded in the exam packet, plus the human round H; an independent re-run from
-a clean checkout must agree on every gate's verdict (owner ruling 2026-09-27).
+**Scope per shipped class.**
 
-- [ ] **Gates G1–G7.** Viability, parity, skill, random loses, reachability, diversity of
-      adaptive play and guards all pass on the candidate SHA, over the cells, arms and paired
-      seeds the lock fixes (Duskblade at Vow 0 and Vow 5, in the fresh and the full pool
-      state). The thresholds are those signed after readout 1 and frozen for the exam, which
-      start from the lock's initial values; the exam packet records the frozen values, and the
-      bar accepts no others.
-- [ ] **Candidate identity.** The candidate SHA is the RC commit the receipt binds, and the
-      scoped-reset table decides when the gates re-run. The Flame is code as well as content,
-      so the identity is the commit, not a content hash.
-- [ ] **Independent re-run.** A re-run of the exam from a clean checkout of the candidate SHA,
-      on any host, agrees with the exam packet on every gate's verdict. The numbers need not
-      match; the verdicts must.
-- [ ] **Human round H.** The round the lock's H row defines is played on a named build and
-      recorded against that exact build: its wins, its easy / fun / hard labels and James's
-      verdict for [#205](https://github.com/fol2/glassvow/issues/205). The labels are never a
-      win-rate target and never calibration data for a gate.
-- [ ] **Guards.** G7's guards stay gates: the Vow-5 ceiling is read on holdout numbers only
-      (training fitness never enters the receipt as a ceiling), stalls and errors are zero,
-      replay is deterministic, and the save lineage and internal IDs are unchanged. The lock's
-      §12 invariants bind the candidate: no save-schema change, IDs only added, and
-      `port_fixtures/` moved only in an explicit commit that says why.
-- [ ] **Ashwarden.** Ashwarden claims, and any claim that compares the two classes, are
-      deferred to 1.1 ([release roadmap](release-roadmap.md)) and are not PASS. No Ashwarden
-      evidence is a precondition for this pillar; comparator evidence kept from the earlier
-      programme is history, not a demand.
-- [ ] All of G1–G7 and H must pass, and the independent re-run must agree. A miss returns to
-      the map as a wayfinder decision; it is not argued past this pillar.
+- **1.0, this RC: the Duskblade only.** The Ashwarden is hidden: its content row carries
+  `"deferred": true`, and `domain/rules/class_scope.gd` stops a new run starting as it.
+  Ashwarden claims, and any claim that compares the two classes, are deferred to 1.1
+  ([release roadmap](release-roadmap.md)) and are never PASS. No Ashwarden evidence is a
+  precondition for this pillar; comparator evidence kept from the earlier programme is history,
+  not a demand.
+- **1.1: both classes, on the combined product.** Each class gets its own verdict: the
+  Ashwarden on its own lock and readings, built from the
+  [class template](design/2026-09-29-dusk-flame/ways-template.md), and the Duskblade
+  requalified under the 1.1 instrument (search player `s2`) on the combined product. The 1.0
+  verdict does not carry into 1.1: the requalification replaces it there, and readout 13 stays
+  1.0's reading of record. The gap between the classes is reported, not gated (#544's plan of
+  record, decisions 4 and 5).
 
-Evidence: the exam packet on the candidate SHA (the readout, the frozen thresholds, each
-gate's verdict and the independent re-run's verdicts) and the human-round record. The earlier
-P9 method is kept as history in
-[`docs/balance/p9-strategy-diversity-system.md`](balance/p9-strategy-diversity-system.md), and
-[`docs/reviews/549/obligation-map.md`](reviews/549/obligation-map.md) records where each of
-its obligations went.
+**The verdict.** For each shipped class P9 records one verdict, **ACCEPT** or **NOT ACCEPTED**,
+on whether the design's intent holds: the three ways are viable and comparable; commitment is
+rewarded and reading the offers is not a trap; scattering loses; the tiers are reachable;
+adaptive play is diverse; every way can be won and has a feel; nothing is degenerate (owner
+ruling, 2026-10-02: "just give me the acceptance result"). The gate figures are its evidence;
+the verdict is not a count of gate passes. The orchestrator gives it under the owner's
+delegation of design calls (2026-09-30). An ACCEPT may carry named reservations: each states its
+figures and the readout that will answer it. A reservation is part of the verdict, not a
+waiver. P9 passes only on ACCEPT.
+
+**Which gates block and which are readings.** The arms, gates and thresholds are the lock's §11
+as it stood at the reading of record, with its recorded amendments (G5's fresh-pool figure,
+readout 5; G3 and G6 against A_lit, readout 10; G5 over survivors and the committed bot
+`p8-d0-v3`, readout 13). The bar accepts no other thresholds.
+
+| Gate | Role | How it is read |
+|---|---|---|
+| G1 viability | reading | Reported in every graded cell, point and 95% interval (owner ruling, 2026-09-30: "it is okay to be hard, this is roguelike") |
+| G2 parity | blocks | Best committed way minus worst, at each vow |
+| G3 skill | blocks | Against arm A_lit, the adaptive player that reads its own flame (from readout 10), and paired on common seeds (from readout 13). Arm A's row is the commit-blind floor, reported |
+| G4 random loses | reading | Reported in every graded cell, point and 95% interval (owner ruling, 2026-09-30) |
+| G5 reachability | blocks | Over the runs alive at the act's end, with the all-runs figure beside it (from readout 13) |
+| G6 diversity of adaptive play | blocks | Among A_lit's wins (from readout 10). Arm A's row is the floor, reported |
+| G7 guards | blocks; never weighed against intent | Zero stalls and errors; deterministic replay; the CEM stress's Vow-5 ceiling read on holdout numbers only (training fitness never enters the receipt as a ceiling); save lineage and internal IDs unchanged. The lock's §12 invariants bind the candidate: no save-schema change, IDs only added, and `port_fixtures/` moved only in an explicit commit that says why |
+| B bot round | blocks | Both parts of the lock's row B, played by the search player: every committed way wins at V0, and every way has a feel. Row B replaced the human round H (owner ruling, 2026-10-01) |
+
+- **A blocking gate** is one the verdict must answer. ACCEPT needs the intent each blocking
+  gate measures to hold in every graded cell, so a blocking gate whose intent fails makes the
+  verdict NOT ACCEPTED, whatever the other gates show. Every blocking-gate figure short of its
+  threshold, on point or on interval, stands in the verdict record: the reading's complete §11
+  table and the verdict. A miss the verdict judges to need further work is carried as a named
+  reservation. A G7 miss is never weighed against intent: it is NOT ACCEPTED.
+- **A reading** is reported in every graded cell with its interval. Its threshold never decides
+  the verdict; the verdict still reads the intent behind it (each way wins; scattering loses)
+  from its figures.
+- **Naming.** Readouts 8–13 call row B's two parts B1 and B2. That B1 is the lock's row-B part,
+  not the retired certificate-programme name of the same spelling.
+- **Play reports.** James's play reports, including those for
+  [#205](https://github.com/fol2/glassvow/issues/205), are input to the verdict and never a
+  gate (owner ruling, 2026-10-01).
+
+**The instrument of record and the exact candidate.** A verdict rests on one reading of record:
+the readout whose complete §11 table it was given on.
+
+- **1.0's reading of record is
+  [readout 13](design/2026-09-29-dusk-flame/readouts/readout-13.md)** (#648):
+  `content/full-content.json` at SHA-256
+  `e9c4d48fbe38542e65a9c73f73b4c50f72116026d4be51a81b7a9b04ec33ca7b`; the committed arms built
+  by pilot `p8-d0-v3`; every fight played by search player `s1` (`--play search`); arms
+  C_shatter, C_lantern, C_edge, A, A_lit and R; graded by `tools/balance_ways.py`.
+- **The seed bands of record.** The V0 cells on 13000–13999 (1,000 paired seeds a cell); the V5
+  cells on 13000–14999 (2,000); G3 at V5 full also on 15000–16999, so on 4,000 common seeds in
+  all. The lock's floor is 200 paired seeds a cell. Development seeds (12000–12999) never enter
+  a verdict. The acceptance band 3000–5199 is kept for the exam: the CEM stress trains on
+  4200–4999 and reads its ceiling on the historical holdout 5000–5199 only. 17000–18999 is
+  reserved as 1.1's holdout (#544's plan of record, decision 7).
+- **"On the exact candidate"** means all three of the following, on the RC commit the receipt
+  binds:
+  1. **Same content.** The RC commit's `content/full-content.json` has the reading of record's
+     SHA-256. If it does not, the verdict of record does not describe the candidate: a new
+     reading on the candidate and a new verdict are needed.
+  2. **The independent re-run.** From a clean checkout of the RC commit, on any host, the
+     reading's cell table is played again with the instrument of record (pilot `p8-d0-v3`,
+     search player `s1`) on the bands of record, and every report's manifest names the RC
+     commit, the content SHA-256, the pilot and the search player. It agrees with the reading of
+     record on every blocking gate's verdict, on point and on interval, in every graded cell; the
+     numbers need not match (owner ruling, 2026-09-27). A run under another instrument, such as
+     1.1's `s2`, is a new reading, not this re-run. The Flame is code as well as content, so the
+     re-run binds the commit and the verdict binds the content it was given on.
+  3. **The exam's own items.** The items the lock's §11 *Exam* and *Seeds* keep for the final
+     candidate, which no readout runs: the CEM stress, with its ceiling read on the historical
+     holdout, used once, and the save-lineage and internal-ID check. G7 passes on them.
+
+**The 1.0 Duskblade verdict of record: ACCEPT, with one reservation.** The orchestrator's
+verdict on readouts 11–13, given on 2 October 2026 at 22:12 BST on readout 13's complete §11
+table. The reservation is the fresh-pool Lantern lead, 12.8 pp at V0 (G2 at V0 fresh, the
+Lantern over Shatter, +8.9 to +16.6 pp: FAIL on point, UNDECIDED on interval), carried as a
+1.0.x readout and not a blocker (readout 13, *What the next readout should ask*, item 1). It
+replaced that morning's verdict, NOT ACCEPTED on two product grounds in the full pool (Edge
+monoculture, G6; True unreachable, G5), which readouts 11–13 resolved. It carries no other
+reservation. The other blocking-gate figures short of their thresholds in readout 13, all
+listed in its *Decision*, are G3 at V5 full (A_lit 3.5 pp behind committed Shatter on 4,000
+common seeds, −5.0 to −2.0 pp: FAIL on point, UNDECIDED on interval) and A_lit's feel at V0
+fresh (row B's second part, 59.2% against 60%: a decided FAIL). G1 and G4 fail in readout 13 as
+readings. On 4 October 2026 the owner confirmed that the Duskblade balance is complete. The
+verdict binds the RC once the RC commit is the exact candidate defined above.
+
+- [ ] **Verdict.** For every class the build ships, the verdict of record is ACCEPT, with its
+      reservations named (1.0: the Duskblade verdict above).
+- [ ] **Exact candidate.** Same content, an agreeing independent re-run and the exam's own
+      items, as defined above, on the RC commit the receipt binds. The scoped-reset table decides
+      when they run again.
+- [ ] **Deferred claims.** No Ashwarden claim, and no claim that compares the classes, is
+      reported as PASS.
+- [ ] A NOT ACCEPTED, a verdict that does not describe the candidate, a re-run that disagrees or
+      a G7 miss is a miss. It returns to the map as a wayfinder decision; it is not argued past
+      this pillar.
+
+Evidence: the verdict of record for each shipped class with its reading and reservations, and
+the exam packet on the RC commit (the content check, the independent re-run's verdicts and the
+exam's own items).
+
+**History.** The full text of 29 September is `git show db90a4f5:docs/rc-bar.md`.
+
+- *In force from 2026-09-29 to 2026-10-04* (#549, PR #572, `db90a4f5`): "Duskblade ships with
+  three ways (碎 Shatter, 燼 Lantern, 蝕 Edge) proven by the instrument of the Flame lock §11:
+  gates G1–G7 on the exact candidate SHA, thresholds as frozen after readout 1 and recorded in
+  the exam packet, plus the human round H", closing with "All of G1–G7 and H must pass, and the
+  independent re-run must agree." It was superseded in these parts:
+  - *G1 and G4 as pass conditions:* superseded on 2026-09-30, when the owner ruled that the game
+    may be hard and that the G1 and G4 figures are the orchestrator's decision. They are
+    readings.
+  - *The human round H*, "played on a named build and recorded against that exact build: its
+    wins, its easy / fun / hard labels and James's verdict for #205": superseded on 2026-10-01
+    by the lock's row B, the bot round. Play reports are input, never a gate.
+  - *G3 and G6 read against arm A:* superseded on 2026-10-01 by arm A_lit (readout 10). G3 is
+    also paired on common seeds from readout 13 (2026-10-02).
+  - *G5 over every run:* superseded on 2026-10-02 by G5 over the runs alive at the act's end
+    (readout 13). Readouts 1–12 stay as recorded.
+  - *"All of G1–G7 and H must pass":* superseded on 2026-10-02 by the verdict on the design's
+    intent, with the gates as its evidence.
+  - *"thresholds as frozen after readout 1":* replaced on 2026-10-04 by the lock's table with
+    its recorded amendments, as above.
+  - *"The Flame is code as well as content, so the identity is the commit, not a content hash":*
+    kept for the re-run, and extended on 2026-10-04: the verdict also binds the reading's
+    content SHA-256 and instrument.
+- *Before 2026-09-29:* the strategy-diversity method, kept as history in
+  [`docs/balance/p9-strategy-diversity-system.md`](balance/p9-strategy-diversity-system.md);
+  [`docs/reviews/549/obligation-map.md`](reviews/549/obligation-map.md) records where each of
+  its obligations went.
 
 ## The RC signature receipt
 
@@ -288,8 +402,10 @@ release-gate ticket ([#108](https://github.com/fol2/glassvow/issues/108)) bindin
 - the exact product head (the RC commit),
 - the `.ipa` artifact hash,
 - each pillar's evidence address (packet commits for P2/P3/P4; comment permalinks for
-  P5/P7/P8; for P6, whatever evidence #166 prescribes; for P9, the exam packet with the
-  independent re-run's verdicts, and the human-round record),
+  P5/P7/P8; for P6, whatever evidence #166 prescribes; for P9, the verdict of record for each
+  shipped class and the exam packet on the RC commit, with the independent re-run's verdicts;
+  the human-round record named here until 2026-10-04 was superseded by the bot round on
+  2026-10-01),
 - P0/P1 evidence inline (gate log, CI run link),
 - and the sentence "this build is the release candidate."
 
