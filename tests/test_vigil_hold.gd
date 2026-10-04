@@ -232,6 +232,10 @@ static func _warm_requeued(fails: Array[String], tree: SceneTree, host: SubViewp
 	var main: Main = await _boot(tree, host, content, false)
 	var first: RoomWarm = main._room_warm
 	_check(fails, first != null and main._rooms_warmed.has("en|pad-landscape"), "the title did not warm its rooms")
+	# Every builder up front (#675's follow-up): the three rooms, the hall and
+	# its window, and the hall's pipelines, from the warm's first frame.
+	_check(fails, first != null and first._builders.size() == 5 and first._pipelines.size() == 1,
+		"the title's warm was not given every room's builder up front")
 	main._shape = &"phone-landscape"
 	main._warm_rooms()
 	_check(fails, main._room_warm == first and not main._rooms_warmed.has("en|phone-landscape"),

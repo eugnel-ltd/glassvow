@@ -56,7 +56,9 @@ var _sample: Control = null
 ## `builders`: each makes one room, whole (every page, the roll's end), off
 ## the tree, or null when what it needs is not ready yet (the Vigil's art,
 ## still loading on a worker): it is asked again on a later frame, so no
-## frame of the warm waits on a load.
+## frame of the warm waits on a load, and the builders after it wait their
+## turn. Every builder is given here, up front: the rooms' text is shaped once
+## the last of them has built (`_queue_jobs`), so a builder cannot join later.
 func _init(builders: Array[Callable], title_rests: Callable,
 		pipelines: Array[Callable] = []) -> void:
 	name = "RoomWarm"
