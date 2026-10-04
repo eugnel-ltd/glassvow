@@ -3,9 +3,11 @@
 A readout cell table is cells x arms x a seed band. Each (cell, arm) is split into seed
 chunks that run in parallel, each chunk being one `balance_ways.sim_command`. Next to every
 chunk's report (`parts/<report>-<first seed>.json`) the runner writes a sidecar manifest
-(`.chunk.json`) with the cell, arm, seeds, command and the digests of the content file and
-simulator sources. A chunk with a valid sidecar is never run again, so an interrupted run
-resumes; a chunk whose sidecar names different content or tools is refused, never reused.
+(`.chunk.json`) with the cell, arm, seeds, command and the digests of the content file, the
+simulator sources and the game rules under `domain/`. A chunk with a valid sidecar is never run
+again, so an interrupted run resumes; a chunk whose sidecar names different content, tools or
+rules, or a different command (play, weights, chunking; the report path aside), is refused,
+never reused.
 
 `merge_parts` joins chunks into one report per cell and arm, in seed order, and refuses
 unless every chunk carries the same simulator manifest (content, tools, pilot, search
@@ -30,6 +32,8 @@ CONTENT = Path("content/full-content.json")
 # The simulator and its bots: any change to these makes a chunk a different instrument.
 TOOL_SOURCES = tuple(Path("tools") / name for name in (
     "balance_sim.gd", "balance_search.gd", "balance_pilot.gd", "balance_policy.gd", "balance_metrics.gd"))
+# The game rules the simulator runs: an edit here is a different instrument too.
+DOMAIN = Path("domain")
 SIDECAR = ".chunk.json"
 Runner = Callable[[list[str], Path], int]
 
@@ -96,11 +100,27 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def tree_digest(root: Path, sub: Path) -> str:
+    """One digest over every GDScript file under `sub`, by relative path and content."""
+    combined = hashlib.sha256()
+    for path in sorted((root / sub).rglob("*.gd")):
+        combined.update(str(path.relative_to(root)).encode("utf-8"))
+        combined.update(digest(path).encode("ascii"))
+    return combined.hexdigest()
+
+
 def identity(root: Path, content: Path | None) -> dict[str, Any]:
-    """What a chunk's sidecar must agree on to be reused: the content file and the simulator sources."""
+    """What a chunk's sidecar must agree on to be reused: the content file, the simulator sources and the
+    game rules under `domain/` (committed or not)."""
     content_path = content if content is not None else root / CONTENT
     return {"content": digest(content_path),
-            "tools": {str(p): digest(root / p) for p in TOOL_SOURCES if (root / p).is_file()}}
+            "tools": {str(p): digest(root / p) for p in TOOL_SOURCES if (root / p).is_file()},
+            "domain": tree_digest(root, DOMAIN)}
+
+
+def _without_out(command: list[str]) -> list[str]:
+    """A chunk's command without its report path, so a moved output directory still resumes."""
+    return [arg for arg in command if not arg.startswith("--out=")]
 
 
 def sidecar_of(chunk: Chunk, who: dict[str, Any], seconds: float) -> dict[str, Any]:
@@ -116,6 +136,9 @@ def is_done(chunk: Chunk, who: dict[str, Any]) -> bool:
     if done.get("identity") != who:
         raise RuntimeError(f"{chunk.part.name} was produced from different content or simulator sources; "
                            "use a new output directory rather than mixing instruments")
+    if _without_out(done.get("command", [])) != _without_out(chunk.command):
+        raise RuntimeError(f"{chunk.part.name} was run with other parameters than this plan "
+                           "(play, weights, chunking or arm); use a new output directory")
     return True
 
 

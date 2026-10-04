@@ -447,6 +447,22 @@ class ChunkAndMergeTests(unittest.TestCase):
                 self.run_all(work, who=who)
             self.assertIn("different content or simulator sources", str(ctx.exception))
 
+    def test_resuming_with_other_parameters_is_refused(self) -> None:
+        self.run_all(self.plan())
+        for kwargs in ({"play": "greedy"}, {"weights": (2.0, 1.0)}, {"chunk": 5}):
+            with self.subTest(kwargs=kwargs), self.assertRaises(RuntimeError) as ctx:
+                self.run_all(self.plan(**kwargs))
+            self.assertIn("other parameters", str(ctx.exception))
+
+    def test_a_moved_output_directory_still_resumes(self) -> None:
+        work = self.plan()
+        self.run_all(work)
+        moved = self.out.parent / "moved"
+        self.out.rename(moved)
+        self.out = moved
+        ran, _ = self.run_all(self.plan())
+        self.assertEqual(0, ran)
+
     def test_a_failing_or_silent_simulator_stops_the_run(self) -> None:
         work = self.plan()
 
@@ -566,6 +582,11 @@ class ChunkAndMergeTests(unittest.TestCase):
         scratch = self.root / "scratch.json"
         scratch.write_text('{"x": 1}')
         self.assertNotEqual(first["content"], runner.identity(self.root, scratch)["content"])
+        (self.root / "domain/rules").mkdir(parents=True)
+        (self.root / "domain/rules/combat.gd").write_text("a")
+        ruled = runner.identity(self.root, None)
+        (self.root / "domain/rules/combat.gd").write_text("b")
+        self.assertNotEqual(ruled["domain"], runner.identity(self.root, None)["domain"])
 
 
 class CompareTests(unittest.TestCase):
