@@ -7,14 +7,14 @@ const Policy: GDScript = preload("res://tools/balance_policy.gd")
 const Metrics: GDScript = preload("res://tools/balance_metrics.gd")
 const Incentives: GDScript = preload("res://tools/vow_incentives.gd")
 const PROFILE: String = "mature-three-act-no-side-state-v1"
-## Pool states (flame lock §11): `mature` is every reveal with no deed unlocks
-## (the historical profile); `fresh` a new Vigil (no reveals, so no pool waves,
-## and no deeds); `full` every reveal and every deed's unlocks.
+## Pool states (flame lock §11): `mature` every reveal, no deed unlocks (the
+## historical profile); `fresh` a new Vigil; `entry` the Vigil at which a later
+## class unlocks (`_apply_entry`); `full` every reveal and every deed's unlocks.
 const PROFILES: Dictionary = {
 	"mature": PROFILE, "fresh": "fresh-three-act-no-side-state-v1",
-	"full": "full-three-act-no-side-state-v1",
+	"entry": "entry-three-act-no-side-state-v1", "full": "full-three-act-no-side-state-v1",
 }
-## Per-fight rates recorded with each run (flame lock §11 descriptor).
+## Per-fight rates recorded with each run (flame lock §11 descriptor); `_flame_row` adds the aspect's own.
 const RATE_STATS: Array[String] = ["shatters", "kindles", "embersSpent", "cracked", "embersGained"]
 ## A fight still running at this turn is cut off and counted a stall (flame
 ## readout 5: 30 cut off a won 32-turn fight with the 650-HP final boss).
@@ -61,9 +61,19 @@ func _initialize() -> void:
 			quit(2)
 			return
 	var rows: Array[Dictionary] = []
-	var aspects: Array[String] = [str(opts["aspect"])]
-	if aspects[0] == "all":
-		aspects = ["duskblade", "ashwarden"]
+	var aspects: Array[String] = _aspect_ids(content)
+	if str(opts["aspect"]) != "all":
+		if not aspects.has(str(opts["aspect"])):
+			push_error("balance_sim: --aspect must be all or one of %s" % ", ".join(aspects))
+			quit(2)
+			return
+		aspects = [str(opts["aspect"])]
+	for aspect: String in aspects:
+		var ways: Array[String] = Pilot.way_ids(content, _aspect_index(content, aspect))
+		if not ways.has(str(opts["way"])):
+			push_error("balance_sim: --way must be one of %s for %s" % [", ".join(ways), aspect])
+			quit(2)
+			return
 	var ban: PackedStringArray = PackedStringArray()
 	for id: String in str(opts["ban"]).split(",", false):
 		if not id.is_empty():
@@ -101,7 +111,10 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 	Pilot.set_ban(ban)
 	Pilot.apply_policy(policy)
 	Pilot.set_modes(random_build, random_play)
-	var aspect_index: int = 1 if aspect == "ashwarden" else 0
+	var aspect_index: int = _aspect_index(content, aspect)
+	if aspect_index < 0:
+		return {"seed": seed, "aspect": aspect, "vow": vow, "outcome": "error",
+			"error": "unknown aspect %s" % aspect}
 	var profile: Dictionary = {
 		"aspect": aspect_index, "vow": vow, "reveals": content.reveal_ids.duplicate(),
 		"unlocks": ["aspect2"], "quests": {}, "shards": [], "lamplighter": false,
@@ -570,16 +583,37 @@ static func _finish(run: RunState, aspect: String, seed: int, outcome: String,
 ## ways produce. Derived from the run, so the outcome digest leaves it out.
 static func _flame_row(run: RunState, content: ContentDB, fights: int) -> Dictionary:
 	var rates: Dictionary = {}
-	for key: String in RATE_STATS:
+	# The aspect's way stats not already listed follow RATE_STATS, which holds all
+	# the Duskblade's, so its rows keep this exact key order.
+	var keys: Array[String] = RATE_STATS.duplicate()
+	for key: String in BalanceClasses.expression_stats(content, run.aspect):
+		if not keys.has(key):
+			keys.append(key)
+	for key: String in keys:
 		rates[key] = float(_ji(run.stats.get(key, 0))) / float(fights) if fights > 0 else 0.0
 	return {"way": Pilot.way, "end": Flame.read(content, run), "acts": _flame_acts.duplicate(),
 		"rates": rates, "play": _play, "fights": _flame_fights.duplicate()}
+
+
+## The aspect ids in content order (the canonical indices).
+static func _aspect_ids(content: ContentDB) -> Array[String]:
+	var out: Array[String] = []
+	for row: Dictionary in content.aspects:
+		out.append(str(row.get("id", "")))
+	return out
+
+
+## The canonical index of an aspect id, or -1 when content has no such aspect.
+static func _aspect_index(content: ContentDB, aspect: String) -> int:
+	return _aspect_ids(content).find(aspect)
 
 
 static func _apply_pool(profile: Dictionary, content: ContentDB, pool: String) -> void:
 	if pool == "fresh":
 		profile["reveals"] = []
 		profile["unlocks"] = []
+	elif pool == "entry":
+		_apply_entry(profile, content)
 	elif pool == "full":
 		var unlocks: Array = profile["unlocks"]
 		for deed_v: Variant in content.deeds.values():
@@ -587,6 +621,28 @@ static func _apply_pool(profile: Dictionary, content: ContentDB, pool: String) -
 			for unlock_v: Variant in deed.get("unlocks", []):
 				if not unlocks.has(unlock_v):
 					unlocks.append(unlock_v)
+
+
+## The `entry` profile: the Vigil of a player who has just unlocked a later
+## class, read from the domain's own unlock rules rather than listed here. One
+## run is played and won (`VigilState.commit_run` counts both, vigil_state.gd:
+## 192-194 and :242), and `_refresh_unlocks` (vigil_state.gd:306-324) then
+## applies the reveal thresholds (content `progression.revealThresholds`, lines
+## 5176-5202: `lamplighter` at one run played, `emberglass` at one win; the
+## rest need two runs or more, or shards) and the deeds. The one deed a single
+## win meets is `firstDawn` (content `deeds`, line 5165: wins 1), which grants
+## `aspect2`, the Ashwarden's unlock (content `aspects[1].unlock`,
+## `ClassScope.admits`). The profile takes the floor: no other deed progress, so
+## no deed cards, which a winning run may or may not have earned.
+static func _apply_entry(profile: Dictionary, content: ContentDB) -> void:
+	var vigil: VigilState = VigilState.blank()
+	vigil.runs_played = 1
+	vigil.deeds["runs"] = 1
+	vigil.deeds["wins"] = 1
+	vigil._refresh_unlocks(content, "win")
+	profile["unlocks"] = vigil.unlocks.duplicate()
+	profile["reveals"] = vigil.unlocks.filter(
+		func(id: String) -> bool: return content.reveal_ids.has(id))
 
 
 static func _strip_hex(run: RunState) -> void:
@@ -625,16 +681,12 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		if not str(out[key]).is_valid_float():
 			return {"error": "--%s must be a number" % key}
 		out[key] = float(str(out[key]))
-	if str(out["aspect"]) not in ["all", "duskblade", "ashwarden"]:
-		return {"error": "--aspect must be all, duskblade or ashwarden"}
 	if int(float(str(out["runs"]))) < 1 or int(float(str(out["vow"]))) < 0 or int(float(str(out["vow"]))) > 5:
 		return {"error": "--runs must be positive and --vow must be 0..5"}
 	if not str(out["mix"]).is_empty() and not Incentives.has_id(str(out["mix"])):
 		return {"error": "unknown --mix %s" % out["mix"]}
-	if not Pilot.WAYS.has(str(out["way"])):
-		return {"error": "--way must be one of %s" % ", ".join(Pilot.WAYS)}
 	if not PROFILES.has(str(out["pool"])):
-		return {"error": "--pool must be mature, fresh or full"}
+		return {"error": "--pool must be mature, fresh, entry or full"}
 	if str(out["build"]) not in BUILDS:
 		return {"error": "--build must be adaptive, random or lit"}
 	if str(out["build"]) == "lit" and str(out["way"]) != "none":

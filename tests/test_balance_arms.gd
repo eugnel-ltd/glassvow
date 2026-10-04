@@ -176,6 +176,15 @@ static func _pool_states(content: ContentDB, fails: Array[String]) -> void:
 	for unlock: String in ["aspect2", "card:quakeblow", "card:novaflare", "relic:prismCharm"]:
 		if not full_unlocks.has(unlock):
 			fails.append("balance arms: full must hold every deed's unlocks, missing %s" % unlock)
+	var entry: Dictionary = {"reveals": content.reveal_ids.duplicate(), "unlocks": ["aspect2"]}
+	Sim._apply_pool(entry, content, "entry")
+	# One run played and won: lamplighter (one run) and emberglass (one win), the
+	# Ashwarden's aspect2 from the firstDawn deed, and no deed's cards.
+	if entry["reveals"] != ["lamplighter", "emberglass"]:
+		fails.append("balance arms: entry reveals only what one run won unlocks, got %s" % [entry["reveals"]])
+	var entry_unlocks: Array = entry["unlocks"]
+	if entry_unlocks != ["lamplighter", "emberglass", "aspect2"]:
+		fails.append("balance arms: entry unlocks lamplighter, emberglass and aspect2 alone, got %s" % [entry_unlocks])
 	var mature: Dictionary = {"reveals": content.reveal_ids.duplicate(), "unlocks": ["aspect2"]}
 	Sim._apply_pool(mature, content, "mature")
 	var mature_unlocks: Array = mature["unlocks"]

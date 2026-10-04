@@ -25,11 +25,15 @@ const DEATH: float = -1.0e6
 ## these four are the search's, the same for every arm.
 const KILL: float = 20.0
 const STAGGER: float = 15.0
-## Each Shatter, Kindle and stack of Cracked this turn: the ways' verbs (lock §6).
+## Each unit of a way's own stat this turn (for the Duskblade a Shatter, a Kindle
+## or a stack of Cracked): the ways' verbs (lock §6). The stats come from the
+## aspect's ways through `BalanceClasses`.
 const EXPRESSION: float = 2.0
 ## The share of a status's catalogue worth that one turn's setup counts.
 const SETUP_SHARE: float = 0.5
-const EXPRESSION_STATS: Array[String] = ["shatters", "kindles", "cracked"]
+## Stats the position key always reads, whatever the class, then the aspect's
+## way stats not already among them (the key only tells positions apart).
+const KEY_STATS: Array[String] = ["shatters", "kindles", "cracked", "embersSpent", "embersGained"]
 ## Foe statuses that weaken the foe (setup on the board), and hero statuses that
 ## harm the hero (never counted as setup).
 const FOE_SETUP: Array[String] = ["vulnerable", "weak", "poison"]
@@ -59,6 +63,8 @@ class Position:
 class Turn:
 	var rules: CombatRules
 	var content: ContentDB
+	var expression: Array[String] = []
+	var key_stats: Array[String] = KEY_STATS.duplicate()
 	var start: Position
 	var start_stats: Dictionary = {}
 	var start_blow: int = 0
@@ -112,6 +118,10 @@ static func plan_turn(game: GlassvowGame) -> Plan:
 	var turn: Turn = Turn.new()
 	turn.rules = game.rules
 	turn.content = game.content
+	turn.expression = BalanceClasses.expression_stats(game.content, game.run.aspect)
+	for key: String in turn.expression:
+		if not turn.key_stats.has(key):
+			turn.key_stats.append(key)
 	turn.start = Position.new(game.run, game.cb)
 	turn.start_stats = game.run.stats.duplicate()
 	turn.start_blow = _blow(game.rules, game.run, game.cb)
@@ -171,7 +181,7 @@ static func _search(turn: Turn, at: Position, path: Array[Dictionary]) -> void:
 		var child: Position = _copy(at)
 		if not _apply(turn.rules, child, action):
 			continue
-		var key: String = _key(child)
+		var key: String = _key(turn, child)
 		if turn.seen.has(key):
 			continue
 		turn.seen[key] = true
@@ -257,7 +267,7 @@ static func evaluate(turn: Turn, at: Position) -> float:
 		if not HERO_HARM.has(id):
 			value += _gain(id, start.player.statuses, cb.player.statuses, dusk)
 	value += float(cb.embers - start.embers) * Pilot._w("card", "ember")
-	for key: String in EXPRESSION_STATS:
+	for key: String in turn.expression:
 		value += EXPRESSION * float(_int(at.run.stats.get(key, 0)) - _int(turn.start_stats.get(key, 0)))
 	return value
 
@@ -295,7 +305,7 @@ static func _signature(card: CardInst) -> String:
 
 ## Everything a later action or the evaluation reads, so two orders that reach
 ## the same position are searched once.
-static func _key(at: Position) -> String:
+static func _key(turn: Turn, at: Position) -> String:
 	var cb: CombatState = at.cb
 	var hand: Array[String] = []
 	for card: CardInst in cb.hand:
@@ -305,7 +315,7 @@ static func _key(at: Position) -> String:
 	for e: EnemyCombatant in cb.enemies:
 		foes.append([e.hp, e.block, e.chips, e.facet_max, e.staggered, e.move_key, e.statuses, e.flags])
 	var stats: Array[int] = []
-	for key: String in ["shatters", "kindles", "cracked", "embersSpent", "embersGained"]:
+	for key: String in turn.key_stats:
 		stats.append(_int(at.run.stats.get(key, 0)))
 	return str([hand, foes, stats, cb.player.hp, cb.player.block, cb.player.energy,
 		cb.player.statuses, cb.embers, cb.kindles_this_turn, cb.kindled_turn, cb.art_used_turn,

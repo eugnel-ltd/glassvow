@@ -31,7 +31,8 @@ from balance_readout_guard import require_isolated_user_dir
 CONTENT = Path("content/full-content.json")
 # The simulator and its bots: any change to these makes a chunk a different instrument.
 TOOL_SOURCES = tuple(Path("tools") / name for name in (
-    "balance_sim.gd", "balance_search.gd", "balance_pilot.gd", "balance_policy.gd", "balance_metrics.gd"))
+    "balance_sim.gd", "balance_search.gd", "balance_pilot.gd", "balance_policy.gd", "balance_metrics.gd",
+    "balance_classes.gd", "balance_classes.json"))
 # The game rules the simulator runs: an edit here is a different instrument too.
 DOMAIN = Path("domain")
 SIDECAR = ".chunk.json"
@@ -58,23 +59,21 @@ class Chunk:
 
 
 def parse_cell(cell: str) -> tuple[int, str]:
-    """`v0-fresh` -> (0, "fresh"); anything outside the grader's vows and pools is an error."""
+    """`v0-fresh` -> (0, "fresh"); anything outside the grader's vows and the simulator's pools is an error."""
     head, sep, pool = cell.partition("-")
     if not sep or not head.startswith("v") or not head[1:].isdigit() or int(head[1:]) not in bw.VOWS \
-            or pool not in bw.POOLS:
-        raise ValueError(f"cell must be v<vow>-<pool> with vow in {bw.VOWS} and pool in {bw.POOLS}, got {cell!r}")
+            or pool not in bw.RUN_POOLS:
+        raise ValueError(f"cell must be v<vow>-<pool> with vow in {bw.VOWS} and pool in {bw.RUN_POOLS}, got {cell!r}")
     return int(head[1:]), pool
 
 
-def plan(out: Path, seeds: tuple[int, int], cells: list[str], arms: list[str], play: str = "greedy",
+def plan(out: Path, who: bw.Roster, seeds: tuple[int, int], cells: list[str], arms: list[str], play: str = "greedy",
          chunk: int = 50, replay: bool = False, content: Path | None = None,
          weights: tuple[float, float] | None = None, godot: str = "godot") -> list[Chunk]:
     """Every chunk of the table, in cell, arm, seed order (replays after their cell's arms)."""
     if chunk < 1:
         raise ValueError("--chunk must be at least 1")
-    unknown = [arm for arm in arms if arm not in bw.ARMS]
-    if unknown:
-        raise ValueError(f"unknown arms {unknown}; known arms are {list(bw.ARMS)}")
+    who.check_arms(arms)
     first, last = seeds
     parts = out / "parts"
     work: list[Chunk] = []
@@ -86,13 +85,13 @@ def plan(out: Path, seeds: tuple[int, int], cells: list[str], arms: list[str], p
                 count = min(chunk, last + 1 - start)
                 part = parts / f"{name}-{start}.json"
                 work.append(Chunk(name, cell, arm, start, count, part,
-                                  bw.sim_command(godot, vow, pool, arm, start, count, part, content, weights, play)))
+                                  bw.sim_command(godot, who, vow, pool, arm, start, count, part, content, weights, play)))
         if replay:
             name = bw.replay_name(vow, pool)[:-5]
             count = min(bw.REPLAY, last - first + 1)
             part = parts / f"{name}-{first}.json"
             work.append(Chunk(name, cell, "A", first, count, part,
-                              bw.sim_command(godot, vow, pool, "A", first, count, part, content, None, play)))
+                              bw.sim_command(godot, who, vow, pool, "A", first, count, part, content, None, play)))
     return work
 
 
@@ -177,7 +176,7 @@ def manifest_core(manifest: dict[str, Any]) -> dict[str, Any]:
 
 def _check_cell_and_arm(name: str, manifest: dict[str, Any]) -> None:
     vow, pool, arm = name.split("-", 2)
-    way, build = bw.ARMS[arm] if arm in bw.ARMS else ("none", "adaptive")  # the replay is arm A
+    way, build = bw.arm_policy(arm)
     if (manifest.get("vow"), manifest.get("pool"), manifest.get("way"), manifest.get("build")) != \
             (int(vow[1:]), pool, way, build):
         raise ValueError(f"{name}: the manifest is not this cell and arm")
@@ -272,6 +271,8 @@ def join_bands(out: Path, cell: str, arms: list[str], directories: list[Path]) -
     for arm in arms:
         reports = sorted((_read(d / f"{cell}-{arm}.json") for d in directories),
                          key=lambda r: r["runs"][0]["seed"])
+        for report in reports:
+            _check_cell_and_arm(f"{cell}-{arm}", report["manifest"])
         joined = _join(f"{cell}-{arm}", reports, "the bands")
         (out / f"{cell}-{arm}.json").write_text(json.dumps(joined), encoding="utf-8")
         seeds = joined["manifest"]["seeds"]

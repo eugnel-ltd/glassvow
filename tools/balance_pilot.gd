@@ -19,7 +19,7 @@ const REMOVAL_MIN_COPIES_DEFAULT: int = 2
 ## Flame lock §11 committed arms: the policy's `way` scales the build-side score
 ## of its own glass by WAY_COMMIT and of other coloured glass by WAY_OFF.
 ## Combat play (plays, targets, kindles, potions) never reads it.
-const WAYS: Array[String] = ["none", "shatter", "lantern", "edge"]
+const NO_WAY: String = "none"
 const WAY_COMMIT: float = 3.0
 const WAY_OFF: float = 0.5
 ## Flame readout 13's instrument fixes for the committed arms, so that they build
@@ -878,3 +878,13 @@ static func _random_shop(stock: Dictionary, run: RunState) -> Array[Dictionary]:
 		bought.append(chosen)
 		gold -= int(float(str(chosen["price"])))
 	return bought
+
+
+## The ways a policy may commit to under an aspect: `none` and the ids of the
+## aspect's own ways, read from content (an aspect with no ways offers only
+## `none`).
+static func way_ids(content: ContentDB, aspect: int) -> Array[String]:
+	var out: Array[String] = [NO_WAY]
+	for row: Dictionary in Flame.ways(content, aspect):
+		out.append(str(row["id"]))
+	return out

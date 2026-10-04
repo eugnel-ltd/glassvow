@@ -7,6 +7,7 @@ section 11). `balance_ways.py` stays the grader of one table (G1-G7 on point and
 this adds what readouts 9-13 kept in scratch:
 
   run         chunked, resumable, parallel runs of cells x arms x a seed band, merged with a manifest check
+              (--aspect names the class; pools fresh, entry and full; an aspect with no ways has only A, A_lit, R)
   merge       merge a run directory's chunk reports (for a directory whose merged files were not kept)
   join        join one cell's arms across directories of disjoint seed bands (the longer G3 band)
   paired      paired change of every arm between two runs on the same seeds (exact binomial / McNemar)
@@ -50,6 +51,7 @@ def _csv(text: str) -> list[str]:
 
 def cmd_run(opts: argparse.Namespace) -> int:
     require_isolated_user_dir(REPO)  # before anything is planned or written
+    who = bw.roster(opts.aspect, opts.content)
     seeds = bw.parse_seeds(opts.seeds)
     weights = bw.parse_weights(opts.way_weights) if opts.way_weights else None
     content = opts.content.resolve() if opts.content else None
@@ -60,9 +62,9 @@ def cmd_run(opts: argparse.Namespace) -> int:
     if not 1 <= opts.jobs <= 16:
         raise ValueError("--jobs must be 1..16")
     out = opts.out.resolve()
-    out.mkdir(parents=True, exist_ok=True)
-    work = runner.plan(out, seeds, _csv(opts.cells), _csv(opts.arms), opts.play, opts.chunk, opts.replay,
+    work = runner.plan(out, who, seeds, _csv(opts.cells), _csv(opts.arms) or list(who.arms), opts.play, opts.chunk, opts.replay,
                        content, weights, opts.godot)
+    out.mkdir(parents=True, exist_ok=True)  # only once the plan is accepted
     who = runner.identity(REPO, content)
     start = time.monotonic()
     ran = runner.run_chunks(work, who, opts.jobs)
@@ -85,17 +87,21 @@ def cmd_join(opts: argparse.Namespace) -> int:
 
 
 def cmd_paired(opts: argparse.Namespace) -> int:
-    print(tables.paired_table(opts.new, opts.base, _csv(opts.cells), _csv(opts.arms) or None))
+    print(tables.paired_table(bw.roster(opts.aspect), opts.new, opts.base, _csv(opts.cells), _csv(opts.arms) or None))
     return 0
 
 
 def cmd_g3(opts: argparse.Namespace) -> int:
-    print(tables.g3_table(opts.dir, _csv(opts.cells), opts.adaptive))
+    who = bw.roster(opts.aspect)
+    who.require_ways()  # G3 reads the best committed arm
+    print(tables.g3_table(who, opts.dir, _csv(opts.cells), opts.adaptive))
     return 0
 
 
 def cmd_rowb(opts: argparse.Namespace) -> int:
-    print(tables.row_b_table(opts.dir, opts.vow, opts.ref))
+    who = bw.roster(opts.aspect)
+    who.require_ways()  # row B reads each committed arm
+    print(tables.row_b_table(who, opts.dir, opts.vow, opts.ref))
     return 0
 
 
@@ -103,7 +109,9 @@ def cmd_table(opts: argparse.Namespace) -> int:
     refs = list(zip(opts.refs[::2], opts.refs[1::2]))
     if len(opts.refs) % 2:
         raise ValueError("--ref takes a V0 and a V5 directory, in pairs")
-    text = tables.full_table(opts.v0, opts.v5, bw.parse_seeds(opts.v0_seeds), bw.parse_seeds(opts.v5_seeds), refs)
+    who = bw.roster(opts.aspect)
+    who.require_ways()
+    text = tables.full_table(who, opts.v0, opts.v5, bw.parse_seeds(opts.v0_seeds), bw.parse_seeds(opts.v5_seeds), refs)
     print(tables.tidy_gates(text) if opts.tidy else text)
     return 0
 
@@ -120,6 +128,11 @@ def cmd_candidates(opts: argparse.Namespace) -> int:
     return 0
 
 
+def aspect_option(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--aspect", default="duskblade",
+                        help="the class: its ways, and so its arms C_<way>, come from content (default duskblade)")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -131,9 +144,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = add("run", cmd_run, "run, resume and merge a cell table")
     p.add_argument("out", type=Path, help="run directory (parts/ holds the chunks); reruns resume in it")
+    aspect_option(p)
     p.add_argument("--seeds", required=True, help="FIRST-LAST inclusive")
     p.add_argument("--cells", default="v0-fresh,v0-full", help="comma list of v<vow>-<pool>")
-    p.add_argument("--arms", default=",".join(bw.ARMS))
+    p.add_argument("--arms", default="", help="comma list; default every arm of the aspect")
     p.add_argument("--play", default="greedy", choices=bw.PLAYS)
     p.add_argument("--replay", action="store_true", help=f"also run the grader's arm A replay ({bw.REPLAY} seeds) per cell")
     p.add_argument("--chunk", type=int, default=50, help="seeds per chunk")
@@ -153,22 +167,26 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("dirs", nargs="+", type=Path)
 
     p = add("paired", cmd_paired, "paired change between two runs on the same seeds")
+    aspect_option(p)
     p.add_argument("new", type=Path)
     p.add_argument("base", type=Path)
     p.add_argument("cells", help="comma list, e.g. v0-fresh,v0-full")
     p.add_argument("--arms", default="")
 
     p = add("g3", cmd_g3, "paired G3 on common seeds")
+    aspect_option(p)
     p.add_argument("dir", type=Path)
     p.add_argument("cells")
     p.add_argument("--adaptive", default=bw.SKILLED)
 
     p = add("rowb", cmd_rowb, "row B on intervals")
+    aspect_option(p)
     p.add_argument("dir", type=Path)
     p.add_argument("--vow", type=int, default=tables.B_VOW)
     p.add_argument("--ref", type=Path, help="a reference directory for the Before column")
 
     p = add("table", cmd_table, "the complete section 11 table")
+    aspect_option(p)
     p.add_argument("v0", type=Path)
     p.add_argument("v5", type=Path)
     p.add_argument("--v0-seeds", required=True)

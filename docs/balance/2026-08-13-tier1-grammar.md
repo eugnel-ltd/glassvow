@@ -33,7 +33,7 @@ T1a is decline. `_claim_rewards` used to append `Pilot.choose_card`'s pick
 unconditionally. It now scores that pick and keeps it only when
 `accepts_card_reward` says so:
 
-- Gate: `tools/balance_sim.gd:223-224` (in `_claim_rewards`)
+- Gate: `tools/balance_sim.gd:236-237` (in `_claim_rewards`)
 - Predicate: `tools/balance_pilot.gd:111` (`accepts_card_reward`) —
   `score >= card_decline_threshold`
 - Default: `CARD_DECLINE_DEFAULT = -1e9` at `tools/balance_pilot.gd:10`
@@ -70,7 +70,7 @@ what lets a policy cut a singleton — the way a player builds a thin deck.
 One dict. `apply_policy` / `policy_snapshot` at
 `tools/balance_pilot.gd:70` (`apply_policy`) and
 `tools/balance_pilot.gd:92` (`policy_snapshot`). CLI keys in
-`tools/balance_sim.gd:650-652` (`_policy`). `simulate(..., policy)` applies the
+`tools/balance_sim.gd:702-704` (`_policy`). `simulate(..., policy)` applies the
 dict at the start of every run. Slice B records the resolved vector on every
 run row (`policy`) as the replay key; the seed-1000 digest moves with that
 field. See `docs/balance/2026-08-14-policy-vector.md`.

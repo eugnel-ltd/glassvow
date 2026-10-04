@@ -163,6 +163,21 @@ class ScopeFixtureTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertTrue(CI.classify_paths([path]).checks["run_balance_readout"])
 
+    def test_the_class_tables_are_balance_tools_and_the_json_also_runs_the_godot_tests(self) -> None:
+        for path in ("tools/balance_classes.py", "tools/balance_classes.gd"):
+            with self.subTest(path=path):
+                selection = CI.classify_paths([path])
+                self.assertTrue(selection.scopes["balance_ml"])
+                self.assertTrue(selection.checks["run_balance_ways"])
+                self.assertTrue(selection.checks["run_balance_readout"])
+        # A data edit (a later class) reaches the simulator, so the Duskblade invariance test must run.
+        data = CI.classify_paths(["tools/balance_classes.json"])
+        self.assertTrue(data.scopes["balance_ml"] and data.scopes["godot_code"])
+        self.assertTrue(data.checks["run_godot_tests"])
+        self.assertTrue(data.checks["run_balance_ways"])
+        self.assertTrue(CI.classify_paths(["tests/test_balance_invariance.gd"]).checks["run_godot_tests"])
+        self.assertFalse(CI.classify_paths(["tools/balance_ways.py"]).checks["run_godot_tests"])
+
     def test_agent_eval_harness_selects_only_its_own_check(self) -> None:
         selection = CI.classify_paths([
             "tools/agent_evals/hillclimb.py",
