@@ -1,7 +1,7 @@
 class_name MapFilmGrain
 extends RefCounted
 ## The film grain on the map (R3.1), drawn by the map's own display
-## (`map_display.gdshader`) rather than by `TransitionLayer`, whose grain copies
+## (`map_display.gdshaderinc`) rather than by `TransitionLayer`, whose grain copies
 ## the whole screen to overlay it: on the A12 that copy and overlay cost 3.25 ms
 ## a frame at the Journey rest (`docs/design/2026-10-02-map-living-land/r3/`).
 ## It keeps that grain's identity: one grain per display pixel, the same overlay
@@ -9,17 +9,22 @@ extends RefCounted
 ## Motion. The noise is fixed, so every capture of the same frame grains it the
 ## same way: one white-noise cell, laid CELLS x CELLS times into one texture,
 ## each copy read from its own place, so neighbouring cells never repeat each
-## other and the whole repeats only every SIDE pixels. The placing is done once
-## here, not per pixel in the shader: the A12 is bound by shader arithmetic at
-## the map's rest. Main decides which
-## grain a frame shows (`Main._sync_map_grain`): this one while only the map,
-## its HUD and its pins are on screen, the TransitionLayer's under a room, a
-## sheet or a transition leaf, so the land is grained once.
+## other and the whole repeats only every SIDE pixels. Whatever is the same for
+## every pixel is worked out here, not in the shader: the cells' places (once)
+## and the jump (`jump`, every GRAIN_STEP), because the A12 is bound by shader
+## arithmetic at the map's rest. For the same reason the display covers the
+## screen without blending (SHADER) and blends only while its screen fades
+## (FADE_SHADER, `blend`). Main decides which grain a frame shows
+## (`Main._sync_map_grain`): this one while only the map, its HUD and its pins
+## are on screen, the TransitionLayer's under a room, a sheet or a transition
+## leaf, so the land is grained once.
 
 const SHADER: Shader = preload("res://presentation/map/map_display.gdshader")
+const FADE_SHADER: Shader = preload("res://presentation/map/map_display_fade.gdshader")
 ## One white-noise cell's side, and the cells a side in the noise the display
 ## reads: SIDE display pixels a side (4 MiB, one byte a pixel), so the grain
-## repeats at most once across a phone's or the iPad's width.
+## repeats at most once across a phone's or the iPad's width. SIDE is a power
+## of two: the shader wraps with a mask.
 const TILE: int = 256
 const CELLS: int = 8
 const SIDE: int = TILE * CELLS
@@ -39,10 +44,27 @@ static func material(shown: bool) -> ShaderMaterial:
 	var out: ShaderMaterial = ShaderMaterial.new()
 	out.shader = SHADER
 	out.set_shader_parameter("noise", noise())
-	out.set_shader_parameter("step_s", TransitionLayer.GRAIN_STEP)
-	out.set_shader_parameter("jumps", PackedVector2Array(TransitionLayer.GRAIN_JUMPS))
+	out.set_shader_parameter("wrap", SIDE - 1)
+	set_jump(out, 0)
 	show(out, shown)
 	return out
+
+
+## Which of TransitionLayer.GRAIN_JUMPS the grain stands at after `seconds` of
+## grain time: the next one every GRAIN_STEP, as that grain moves.
+static func jump(seconds: float) -> int:
+	return int(seconds / TransitionLayer.GRAIN_STEP) % TransitionLayer.GRAIN_JUMPS.size()
+
+
+## Moves the grain to jump `index` (whole display pixels).
+static func set_jump(display: ShaderMaterial, index: int) -> void:
+	display.set_shader_parameter("jitter", Vector2i(TransitionLayer.GRAIN_JUMPS[index]))
+
+
+## Blends the display with its screen while the screen fades (`faded`), and
+## writes it over the screen opaque otherwise. The material keeps its values.
+static func blend(display: ShaderMaterial, faded: bool) -> void:
+	display.shader = FADE_SHADER if faded else SHADER
 
 
 ## Shows the grain, or takes it off as Reduce Motion asks.

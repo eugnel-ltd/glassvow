@@ -45,9 +45,14 @@ var _shift_rect: TextureRect
 ## (`MapFilmGrain`) and nothing else.
 var _display: TextureRect
 ## Whether the screen wants this map's own grain (`set_grain`), and whether it
-## shows: never under Reduce Motion.
+## shows: never under Reduce Motion. The grain's own clock and the jump it
+## stands at (`MapFilmGrain.jump`): it moves only while the map runs.
 var _grain_wanted: bool = true
 var _grain_shown: bool = true
+var _grain_t: float = 0.0
+var _grain_jump: int = 0
+## Whether the display blends with a fading screen (`_sync_blend`).
+var _blending: bool = false
 ## The journey land's tilt-shift band (`MapTiltShift`) in this Control's px,
 ## (top, bottom); `Vector2.INF` while there is none.
 var focus_band: Vector2 = Vector2.INF
@@ -178,8 +183,11 @@ func _notification(what: int) -> void:
 	elif what == NOTIFICATION_EXIT_TREE:
 		_stage.size = PARKED_STAGE
 		_shift.size = PARKED_STAGE
-	elif what == NOTIFICATION_ENTER_TREE and is_node_ready():
-		_fit()
+		RenderingServer.frame_pre_draw.disconnect(_sync_blend)
+	elif what == NOTIFICATION_ENTER_TREE:
+		RenderingServer.frame_pre_draw.connect(_sync_blend)
+		if is_node_ready():
+			_fit()
 
 
 func get_rig() -> MapCameraRig:
@@ -376,6 +384,32 @@ func _sync_grain() -> void:
 		MapFilmGrain.show(_display.material as ShaderMaterial, shown)
 
 
+## Moves the grain on by `delta` seconds while it shows.
+func _move_grain(delta: float) -> void:
+	if not _grain_shown:
+		return
+	_grain_t += delta
+	var jump: int = MapFilmGrain.jump(_grain_t)
+	if jump != _grain_jump:
+		_grain_jump = jump
+		MapFilmGrain.set_jump(_display.material as ShaderMaterial, jump)
+
+
+## Just before each frame is drawn: the display blends while anything from it
+## up to the window fades it (a screen's entrance), and covers the screen
+## opaque otherwise (`MapFilmGrain.blend`).
+func _sync_blend() -> void:
+	var alpha: float = _display.self_modulate.a
+	var item: Node = _display
+	while item is CanvasItem:
+		alpha *= (item as CanvasItem).modulate.a
+		item = item.get_parent()
+	var fading: bool = alpha < 1.0
+	if fading != _blending:
+		_blending = fading
+		MapFilmGrain.blend(_display.material as ShaderMaterial, fading)
+
+
 ## Points the display at the tilt-shift's view while there is a band, at the
 ## stage itself while there is none, and redraws the view for a moved band.
 func _sync_shift() -> void:
@@ -558,6 +592,7 @@ func _process(delta: float) -> void:
 	if _journey_pending:
 		_poll_journey()
 	_sync_grain()
+	_move_grain(delta)
 	if not _live and _settle_frames > 0:
 		_settle_frames -= 1
 		if _settle_frames == 0:

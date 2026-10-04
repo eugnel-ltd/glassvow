@@ -1,30 +1,6 @@
 shader_type canvas_item;
-render_mode unshaded;
-// The map's display (`MapScene`): the stage's picture, or the tilt-shift's
-// view of it, upscaled to the screen, with the film grain (`MapFilmGrain`)
-// folded in. The grain is one fetch of a tiled white-noise texture per display
-// pixel, moved by the whole-pixel `jumps`, one every `step_s` seconds, and
-// overlaid at `amount`; the texture repeats only every 2048 pixels
-// (`MapFilmGrain.SIDE`).
-// COLOR arrives as the picture times the screen's modulate and is blended
-// like any canvas item's, so the land fades with its screen. `amount` 0
-// (Reduce Motion, or the TransitionLayer's grain on screen) leaves the
-// picture untouched.
-uniform sampler2D noise : filter_nearest, repeat_enable;
-uniform float amount = 0.0;
-uniform float step_s = 0.1125;
-uniform vec2 jumps[8];
-
-void fragment() {
-	vec4 picture = COLOR;
-	if (amount > 0.0) {
-		vec2 jitter = jumps[int(mod(floor(TIME / step_s), 8.0))];
-		vec2 tile = vec2(textureSize(noise, 0));
-		float g = texture(noise, (floor(FRAGCOORD.xy) + jitter + 0.5) / tile).r;
-		vec3 base = picture.rgb;
-		vec3 over = mix(2.0 * base * g, 1.0 - 2.0 * (1.0 - base) * (1.0 - g),
-			step(vec3(0.5), base));
-		picture.rgb = mix(base, over, amount);
-	}
-	COLOR = picture;
-}
+// The map's display at rest (`MapFilmGrain.SHADER`): it covers the screen
+// opaque, so it writes over what is beneath without blending, which saves the
+// A12 about 0.4 ms a frame at the iPad's resolution.
+render_mode unshaded, blend_disabled;
+#include "res://presentation/map/map_display.gdshaderinc"

@@ -67,7 +67,7 @@ static func _correlation(image: Image, lag: Vector2i, mean: float) -> float:
 
 
 ## The display carries the grain at the TransitionLayer grain's strength, jumps
-## and rate, and drops it under Reduce Motion.
+## and rate, drops it under Reduce Motion, and blends only while it fades.
 static func _display(fails: Array[String]) -> void:
 	var reduced: bool = Preferences.active.reduce_motion
 	Preferences.active.reduce_motion = false
@@ -81,12 +81,25 @@ static func _display(fails: Array[String]) -> void:
 	var noise: Texture2D = grain.get_shader_parameter("noise")
 	_check(fails, grain.shader == MapFilmGrain.SHADER and noise == MapFilmGrain.noise(),
 		"the map's display draws the film grain")
-	var step_s: float = grain.get_shader_parameter("step_s")
-	var jumps: PackedVector2Array = grain.get_shader_parameter("jumps")
+	var wrap: int = grain.get_shader_parameter("wrap")
 	_check(fails, is_equal_approx(_amount(grain), TransitionLayer.GRAIN_AMOUNT)
-			and is_equal_approx(step_s, TransitionLayer.GRAIN_STEP)
-			and jumps == PackedVector2Array(TransitionLayer.GRAIN_JUMPS),
-		"the grain has the TransitionLayer grain's strength, jumps and rate")
+			and wrap == MapFilmGrain.SIDE - 1,
+		"the grain has the TransitionLayer grain's strength over the whole noise")
+	# The grain jumps as the TransitionLayer grain does: to the next of its
+	# jumps every GRAIN_STEP, through all of them, in whole pixels.
+	var seen: Array[Vector2i] = [_jitter(grain)]
+	for i: int in range(TransitionLayer.GRAIN_JUMPS.size()):
+		scene._process(TransitionLayer.GRAIN_STEP * 0.5)
+		_check(fails, _jitter(grain) == seen[-1] or i == 0,
+			"the grain holds still between jumps")
+		scene._process(TransitionLayer.GRAIN_STEP * 0.5)
+		seen.append(_jitter(grain))
+	var expected: Array[Vector2i] = []
+	for i: int in range(TransitionLayer.GRAIN_JUMPS.size() + 1):
+		var jump: Vector2 = TransitionLayer.GRAIN_JUMPS[i % TransitionLayer.GRAIN_JUMPS.size()]
+		expected.append(Vector2i(jump))
+	_check(fails, seen == expected,
+		"the grain jumps through the TransitionLayer grain's jumps at its rate")
 	Preferences.active.reduce_motion = true
 	scene._process(0.0)
 	_check(fails, _amount(grain) == 0.0, "Reduce Motion takes the grain away")
@@ -96,6 +109,9 @@ static func _display(fails: Array[String]) -> void:
 		"the grain comes back when motion does")
 	scene.set_grain(false)
 	_check(fails, _amount(grain) == 0.0, "the screen can take the map's grain off")
+	var held: Vector2i = _jitter(grain)
+	scene._process(TransitionLayer.GRAIN_STEP * 3.0)
+	_check(fails, _jitter(grain) == held, "a grain that is off does not move")
 	scene.set_grain(true)
 	_check(fails, is_equal_approx(_amount(grain), TransitionLayer.GRAIN_AMOUNT),
 		"and give it back")
@@ -103,11 +119,8 @@ static func _display(fails: Array[String]) -> void:
 	scene.set_grain(true)
 	_check(fails, _amount(grain) == 0.0, "giving it back under Reduce Motion shows none")
 	Preferences.active.reduce_motion = false
-	# The land fades with its screen (TransitionLayer.screen_in): the display
-	# blends like any canvas item rather than writing over what is beneath.
-	var modes: String = grain.shader.code.get_slice("render_mode", 1).get_slice(";", 0)
-	_check(fails, not modes.contains("blend_disabled") and not modes.contains("blend_add"),
-		"the display blends with its screen's modulate")
+	scene.set_grain(true)
+	_blend(fails, scene, grain)
 	scene.free()
 	Preferences.active.reduce_motion = true
 	var still: MapScene = MapScene.new()
@@ -144,6 +157,45 @@ static func _cells(fails: Array[String]) -> void:
 			Vector2i(MapFilmGrain.TILE, MapFilmGrain.TILE)]:
 		worst = maxf(worst, absf(_correlation(image, lag, 0.5)))
 	_check(fails, worst < 0.02, "the noise does not repeat a cell on (r %.3f)" % worst)
+
+
+## The display covers the screen opaque at rest, without blending (the A12's
+## saving), and blends while anything up the tree fades it, as a screen's
+## entrance does (TransitionLayer.screen_in), so the land fades with its screen.
+## The material keeps its values across the switch.
+static func _blend(fails: Array[String], scene: MapScene, grain: ShaderMaterial) -> void:
+	_check(fails, _modes(MapFilmGrain.SHADER).contains("blend_disabled")
+			and not _modes(MapFilmGrain.FADE_SHADER).contains("blend_"),
+		"the display has an opaque shader and a blending one")
+	var screen: Control = Control.new()
+	screen.add_child(scene)
+	scene._sync_blend()
+	_check(fails, grain.shader == MapFilmGrain.SHADER, "at rest the display writes opaque")
+	screen.modulate.a = 0.5
+	scene._sync_blend()
+	var noise: Texture2D = grain.get_shader_parameter("noise")
+	_check(fails, grain.shader == MapFilmGrain.FADE_SHADER
+			and is_equal_approx(_amount(grain), TransitionLayer.GRAIN_AMOUNT)
+			and noise == MapFilmGrain.noise(),
+		"a fading screen makes the display blend, its grain kept")
+	screen.modulate.a = 1.0
+	scene._display.self_modulate.a = 0.0
+	scene._sync_blend()
+	_check(fails, grain.shader == MapFilmGrain.FADE_SHADER, "the display's own fade blends too")
+	scene._display.self_modulate.a = 1.0
+	scene._sync_blend()
+	_check(fails, grain.shader == MapFilmGrain.SHADER, "the faded screen back at full is opaque again")
+	screen.remove_child(scene)
+	screen.free()
+
+
+static func _modes(shader: Shader) -> String:
+	return shader.code.get_slice("render_mode", 1).get_slice(";", 0)
+
+
+static func _jitter(grain: ShaderMaterial) -> Vector2i:
+	var jitter: Vector2i = grain.get_shader_parameter("jitter")
+	return jitter
 
 
 static func _amount(grain: ShaderMaterial) -> float:
