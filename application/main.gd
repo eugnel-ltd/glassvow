@@ -1276,7 +1276,7 @@ func _show_title() -> void:
 		MapJourneyPrefetch.prime()
 	# The road persists across a rebuild (§7 item 12): the new title continues
 	# the world it replaces, the title's or the departure's.
-	var road: TitleWorld = _standing_road()
+	var standing: TitleWorld = _standing_road()
 	if game != null and game.run != null:
 		_transitions.wipe()
 	_clear_route()
@@ -1295,7 +1295,7 @@ func _show_title() -> void:
 	screen.hurry.connect(_transitions.skip)
 	_choice_screen = screen
 	add_child(screen)
-	screen.world.inherit(road)
+	screen.world.inherit(standing)
 	# Made with the title, before any tap: it reads the tap that opens a room.
 	_passage_node()
 	_transitions.set_grain(true)
