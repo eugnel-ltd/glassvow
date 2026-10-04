@@ -149,6 +149,27 @@ class ScopeFixtureTests(unittest.TestCase):
         # imported global class cache (BalanceCatalogue, ContentDB).
         self.assertTrue(selection.checks["run_import_assets"])
 
+    def test_agent_eval_harness_selects_only_its_own_check(self) -> None:
+        selection = CI.classify_paths([
+            "tools/agent_evals/hillclimb.py",
+            "tools/agent_evals/evals/repo_traps/cases.jsonl",
+            "tests/test_agent_evals.py",
+        ])
+        self.assert_scopes(selection, "agent_evals")
+        self.assertTrue(selection.checks["run_agent_evals"])
+        for check in ("setup_godot", "run_import_assets", "run_godot_tests",
+                      "run_agent_contracts", "run_balance_f0", "run_dev_tools"):
+            self.assertFalse(selection.checks[check], check)
+
+    def test_agent_eval_readme_is_docs_and_harness(self) -> None:
+        selection = CI.classify_paths(["tools/agent_evals/README.md"])
+        self.assert_scopes(selection, "agent_evals", "docs")
+        self.assertTrue(selection.checks["run_agent_evals"])
+
+    def test_unrelated_changes_do_not_run_the_agent_eval_check(self) -> None:
+        for path in ("docs/ci-governance.md", "tools/balance_f0.py", "application/main.gd"):
+            self.assertFalse(CI.classify_paths([path]).checks["run_agent_evals"], path)
+
     def test_execution_provenance_isolated_scope(self) -> None:
         selection = CI.classify_paths([
             "tools/execution_provenance/verify.py",
@@ -336,6 +357,7 @@ class WorkflowContractTests(unittest.TestCase):
             "tests/test_godot_runtime_provenance.py",
             "tests/test_godot_runtime_trace_binding.py",
             "tests/test_godot_runtime_workflow.py",
+            "tests/test_agent_evals.py",
             "tools/check_anchors.py",
             "tools/check_benchmark_freeze.py",
             "tools/build_site.py --self-test",

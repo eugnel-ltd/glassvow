@@ -217,6 +217,10 @@ jobs:
           python3 -B tests/test_godot_runtime_trace_binding.py
           python3 -B tests/test_godot_runtime_workflow.py
 
+      - name: Test the agent eval and hill-climb harness
+        if: steps.scope.outputs.run_agent_evals == 'true'
+        run: python3 -B tests/test_agent_evals.py
+
       # The web-reference twin used to be excluded from CI on purpose: it
       # resolved citations against the roguecardv2-benchmark checkout and
       # returned 2 — "benchmark tree not found" — wherever that was absent,
