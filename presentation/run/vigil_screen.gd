@@ -43,6 +43,15 @@ const BODY_TOP: Vector2 = Vector2(168.0, 62.0)
 const BODY_FOOT: Vector2 = Vector2(90.0, 60.0)
 const COLUMN_MAX: float = 640.0
 const KEEPER_GAP: float = 40.0
+## A look change (V4): the old look goes, the new rises in, staggered.
+const LOOK_OUT: float = 0.18
+const LOOK_IN_FROM: float = 0.14
+const LOOK_IN: float = 0.34
+const STAGGER: float = 0.04
+## A group rising in the firelight: how long it takes. On a cubic's ease, not
+## the quint's: the rose and its glass are large, and a quint's first frame
+## brought a third of either in at once.
+const RISE: float = 0.26
 
 var _vigil: VigilState
 var _content: ContentDB
@@ -63,11 +72,13 @@ var _epitaph_list: VigilEpitaphs = null
 var _rose: RoseWindowView = null
 var _look: StringName = VigilHall.DEEDS
 var _landed: bool = false
+var _answered: bool = false
 var _time: float = 0.0
 ## The look change under way: its clock, the nodes going and coming.
 var _change: float = -1.0
 var _going: Array[Control] = []
 var _coming: Array[Control] = []
+var _plate_at: Vector2 = Vector2.ZERO
 
 
 func _init(vigil: VigilState, content: ContentDB,
@@ -202,16 +213,30 @@ func rose_view() -> RoseWindowView:
 	return _rose
 
 
-## A look change: the plate's framing, the look on view, at once.
+## V4: the plate moves to the new framing, the old look drifts with it and
+## goes, the new one rises in. At once off the tree, before landing, and under
+## Reduce Motion (a cross-fade covers it there).
 func _look_to(to: StringName) -> void:
 	if to == _look and _change < 0.0:
 		_style_tabs()
 		return
+	var animate: bool = _landed and is_inside_tree() and not LeadlightMotion.reduced()
 	_finish_change()
+	var going: Array[Control] = _look_nodes(_look)
 	_look = to
-	_hall.look_to(to, false)
+	_hall.look_to(to, animate)
 	_fit()
-	_settle_look()
+	if not animate:
+		_settle_look()
+		return
+	_going = going
+	_coming = _look_nodes(to)
+	_plate_at = _hall.plate().position
+	for node: Control in _coming:
+		node.visible = true
+		_reveal(node, 0.0)
+	_change = 0.0
+	_style_tabs()
 
 
 func _look_nodes(which: StringName) -> Array[Control]:
@@ -241,6 +266,22 @@ func _finish_change() -> void:
 	_going.clear()
 	_coming.clear()
 	_settle_look()
+
+
+func _step_change(delta: float) -> void:
+	_change += delta
+	var drift: Vector2 = (_hall.plate().position - _plate_at) * 0.6
+	# The old look answers at once: on EXIT's slow start it stood whole while
+	# the plate had already moved.
+	var out: float = 1.0 - LeadlightMotion.ease_on(_change / LOOK_OUT, LeadlightMotion.SETTLE_OUT)
+	for node: Control in _going:
+		node.modulate.a = out
+		RenderingServer.canvas_item_set_transform(node.get_canvas_item(), node.get_transform().translated(drift))
+	for i: int in _coming.size():
+		var from: float = LOOK_IN_FROM + STAGGER * float(i)
+		_reveal(_coming[i], LeadlightMotion.ease_on((_change - from) / LOOK_IN, LeadlightMotion.SETTLE_OUT))
+	if _change >= VigilHall.MOVE_TIME:
+		_finish_change()
 
 
 func _style_tabs() -> void:
@@ -382,6 +423,28 @@ func _fit() -> void:
 
 # ---------------------------------------------------------------- the passage
 
+## V1, the turn west: the road turns away (the title's own lane), the hall
+## comes in from the west over it, the fire catches and answers the lantern as
+## it is set down, and the header and the look rise as the firelight reaches
+## them, from the hearth's side.
+func arrive_at(t: float, _wick: Vector2, _colour: Color) -> void:
+	_landed = false
+	var came: float = LeadlightMotion.ease_on(t / 0.42, LeadlightMotion.SETTLE_OUT)
+	_hall.modulate.a = came
+	_hall.slide = -VigilHall.TURN * size.x * (1.0 - came)
+	_hall.fire = LeadlightMotion.ease_on((t - 0.2) / 0.4, LeadlightMotion.SETTLE_OUT)
+	if t >= 0.48 and not _answered:
+		_answered = true
+		_hall.answer()
+	if title != null:
+		title.turn(LeadlightMotion.ease_on(t / 0.40, LeadlightMotion.SETTLE_OUT))
+	var groups: Array[Control] = _by_the_light(reveal_groups(), _look == VigilHall.ROSE)
+	for i: int in groups.size():
+		var from: float = minf(maxf(0.16 + STAGGER * float(i), _clear_of_ghost(groups[i])), arrival_time() - RISE)
+		_reveal(groups[i], LeadlightMotion.ease_on((t - from) / RISE, LeadlightMotion.SETTLE_OUT))
+	_deed_list.rail = _looks.modulate.a
+
+
 ## The hall whole and the title's road held under it (hidden and paused).
 func rest(_wick: Vector2, _colour: Color) -> void:
 	_hall.modulate.a = 1.0
@@ -396,15 +459,46 @@ func rest(_wick: Vector2, _colour: Color) -> void:
 	_landed = true
 
 
+## V3, the turn east: the look and the header go at once, the hall slides
+## back west and fades, and the road turns back into view under it.
+func leave_at(t: float, _wick: Vector2, _colour: Color) -> void:
+	_landed = false
+	_finish_change()
+	var gone: float = LeadlightMotion.ease_on(t / 0.20, LeadlightMotion.SETTLE_OUT)
+	for group: Control in reveal_groups():
+		_reveal(group, 1.0 - gone, false)
+	_deed_list.rail = 1.0 - gone
+	var away: float = LeadlightMotion.ease_on(t / 0.36, LeadlightMotion.SETTLE_OUT)
+	_hall.slide = -VigilHall.TURN * size.x * away
+	_hall.modulate.a = 1.0 - away
+	if title != null:
+		title.turn(1.0 - LeadlightMotion.ease_on((t - 0.04) / 0.40, LeadlightMotion.SETTLE_OUT))
+
+
 func title_returns() -> void:
 	if title != null:
 		title.turn(0.0)
+
+
+## The groups nearest the light first: the hearth (the stage's right), or on
+## the Rose look the window (its left), where the rose you came for stands.
+static func _by_the_light(groups: Array[Control], window: bool) -> Array[Control]:
+	var sorted: Array[Control] = groups.duplicate()
+	sorted.sort_custom(func(a: Control, b: Control) -> bool:
+		var ar: Rect2 = a.get_global_rect()
+		var br: Rect2 = b.get_global_rect()
+		if window:
+			return ar.position.x + ar.position.y * 0.5 < br.position.x + br.position.y * 0.5
+		return ar.end.x + ar.position.y * 0.5 > br.end.x + br.position.y * 0.5)
+	return sorted
 
 
 # ---------------------------------------------------------------- at rest
 
 func _process(delta: float) -> void:
 	_time += delta
+	if _change >= 0.0:
+		_step_change(delta)
 	var held: bool = LeadlightMotion.reduced()
 	_deed_list.glow = 1.0 if held else _hall.flicker()
 	if _epitaph_list != null:
