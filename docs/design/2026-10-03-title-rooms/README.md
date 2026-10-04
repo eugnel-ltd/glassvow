@@ -1528,7 +1528,7 @@ commit):
   | V3, the turn east: P95 against the title | ≤ +0.5 | **+3.45, +3.70** | |
   | Passage frames over 33 ms | none | none | none |
   | The hall at rest: P95 against the title | ≤ +0.5 | +0.41, +0.32 | |
-  | Settings' first opening in zh-Hant, tap frame (#675's margin) | ≤ 33 | 27.5 | 32.1 |
+  | Settings' first opening in zh-Hant, tap frame (#675's margin) | ≤ 33 | 36.2 on the final batch (27.5 in one earlier launch) | 37.0 on the same batch (32.1 earlier) |
   | The title from the landing to the warms' end: frames over 33 ms; an Act I title, frames with both warms at once | | 0, 1 (33.4, after the warm); 0 | 4 (33.0 to 33.7), 0; 0 |
   | Video memory after the warms, over the landing | | +85.9, +84.0 MiB | +48.4, +44.7 MiB |
   | Back to the Road after the tour (Act II); tapped as the rite lands (Act I, R1.1) | ; < 1 s | 1193, 1193 ms; 701, 706 ms | 1136, 1186 ms; 714, 721 ms |
@@ -1568,7 +1568,13 @@ commit):
   launches did show was a process frame, the deeds' "→" (§4.1), now at boot.
   (2) Every builder up front (§7, as built after the iPad 8 rows). (3) Settings' first opening in
   zh-Hant: 27.5 ms on the final head's second launch (30.2 on `398e1a23`, 30.0 on `011cd483`; main's
-  32.1), against 33.
+  32.1), against 33. **Corrected after review (4 Oct 2026):** those are single launches. On the final
+  batch against `ec48be21` (`evidence/pr-c-final2-ipad8-frame-times.txt`), the zh-Hant first opening's
+  tap frame is 36.2 ms on this branch and 37.0 ms on main, both over 33. This PR does not touch
+  Settings' first-open path and is not slower than main there, so it is not this PR's regression, but
+  #675's margin is not shown on this batch. Whether main has drifted past 33 since #675 (≤ 32.4 then) or
+  this batch's launches ran slow is open and is carried to #655 as a follow-up, to be read on the median
+  of a batch of its own.
 
   *After the orchestrator's decisions of 4 Oct 2026* (§14, items 4 and 5; the branch rebased onto main
   `ec48be21`, which brings R3.1 b's wood to Act I). Evidence: `evidence/pr-c-final-v3-trace.txt` (the
