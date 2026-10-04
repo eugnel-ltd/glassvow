@@ -754,9 +754,12 @@ func set_grain(on: bool) -> void:
 
 
 ## Whether one of this layer's leaves is on screen: the wipe, a transit leaf,
-## the iris, the flood, the flare or a Reduce Motion cross-fade. Main gives
-## this layer the grain while one crosses the map (`Main._sync_map_grain`).
+## the iris, the flood, the flare, a Reduce Motion cross-fade or a screen
+## being lifted off the route beneath it. Main gives this layer the grain
+## while one crosses the map (`Main._sync_map_grain`).
 func leaves_showing() -> bool:
+	if lifting():
+		return true
 	for leaf: CanvasItem in [_wipe, _snapshot, _iris, _bloom, _crack, _plate, _flood, _flare]:
 		if leaf.visible:
 			return true

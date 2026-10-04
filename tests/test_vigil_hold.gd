@@ -16,7 +16,9 @@ extends RefCounted
 ##   title beneath the hall lifted off it (V9);
 ## - every other route change frees the held title; `_reshape` reaches it; it
 ##   takes no key while held;
-## - the departure's Back lifts the departure off a title built beneath it (X2);
+## - the departure's Back lifts the departure off a title built beneath it (X2),
+##   and a screen being lifted counts as one of the transitions' leaves, so
+##   over the map their grain covers it (#674);
 ## - a language or shape change while the rooms' warm runs is warmed after it
 ##   (#670 review follow-up 1: before, the new key was dropped for the launch),
 ##   and the warm waits while the map's prefetch is still working (follow-up 3);
@@ -79,8 +81,11 @@ static func _lift_fades(fails: Array[String]) -> void:
 	layer.advance_lifts(STEP)
 	_check(fails, screen.modulate.a < 0.95 and screen.modulate.a > 0.0,
 		"a lifted screen does not answer on its first frame (%.3f)" % screen.modulate.a)
+	# A lifted screen is a leaf crossing whatever is under it: over the map,
+	# the layer's grain covers the screen while it goes (#674's rule).
+	_check(fails, layer.leaves_showing(), "a screen being lifted is not one of the layer's leaves")
 	layer.advance_lifts(TransitionLayer.LIFT_TIME)
-	_check(fails, screen.is_queued_for_deletion() and not layer.lifting(),
+	_check(fails, screen.is_queued_for_deletion() and not layer.lifting() and not layer.leaves_showing(),
 		"a lifted screen is not freed at its end")
 	layer.free()
 
