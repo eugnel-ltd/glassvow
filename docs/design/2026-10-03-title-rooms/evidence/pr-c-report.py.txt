@@ -1,0 +1,44 @@
+"""§11.6 rows from a launch's bench_rooms.jsonl (PR C): the title at rest, each room's
+first opening in the launch apart from laps 2 on, opening and leaving apart, the
+passage frames inside each passage's own span, and the warm overlap."""
+import json, sys, statistics
+def q(v, p):
+    v = sorted(v)
+    if not v: return float('nan')
+    import math
+    return v[max(0, min(len(v) - 1, math.ceil(p * len(v)) - 1))]
+def mmm(v):
+    return '%.1f/%.1f/%.1f' % (min(v), statistics.median(v), max(v)) if v else 'n/a'
+for path in sys.argv[1:]:
+    rows = [json.loads(l) for l in open(path) if l.strip()]
+    head = rows[0]
+    label = next((r['label'] for r in rows if 'label' in r), '?')
+    print('== %s  nonce %s  label %s' % (path.split('/')[-1], head.get('nonce'), label))
+    title = [r['wall_ms'] for r in rows if r.get('phase') == 'title']
+    tp95 = q(title, 0.95)
+    print('   title at rest: %d frames; wall P95 %.2f ms; max %.1f' % (len(title), tp95, max(title) if title else 0))
+    warm = next((r for r in rows if r.get('probe') == 'warm'), None)
+    for room in ['settings', 'help', 'credits', 'vigil']:
+        for first in (True, False):
+            sel = [r for r in rows if r.get('room') == room and (r.get('lap') == 0) == first]
+            if not sel: continue
+            name = '%-8s %s' % (room, 'first opening' if first else 'laps 2-%d   ' % (max(r.get('lap', 0) for r in sel) + 1))
+            for phase, word in (('open', 'open '), ('close', 'leave')):
+                taps = [r['since_tap_ms'] for r in sel if r.get('phase') == phase and r.get('i') == 0 and 'since_tap_ms' in r]
+                frames = [r['wall_ms'] for r in sel if r.get('phase') == phase and r.get('i') == 0]
+                inside = [r['wall_ms'] for r in sel if r.get('phase') == phase and r.get('i', 0) >= 1 and r.get('after_ms', 1e9) <= r.get('span_ms', 0)]
+                over = [x for x in inside if x > 33.0]
+                print('   %s %s tap->first moved %s ms; tap frame %s ms (min/median/max)' % (name, word, mmm(taps), mmm(frames)))
+                print('   %s       passage (inside its span) wall P95 %.2f max %.2f (n %d), over 33 ms: %d; P95 - title P95 = %+.2f' % (
+                    ' ' * len(name), q(inside, 0.95), max(inside) if inside else 0, len(inside), len(over), q(inside, 0.95) - tp95))
+            if first:
+                rest = [r['wall_ms'] for r in sel if r.get('phase') == 'room']
+                print('   %s       at rest wall P95 %.2f (n %d), against the title %.2f: %+.2f' % (' ' * len(name), q(rest, 0.95), len(rest), tp95, q(rest, 0.95) - tp95))
+    w = [r for r in rows if r.get('phase') == 'warm']
+    if w:
+        print('   the title while the rooms\' warm and the map\'s prefetch run (from the rite\'s end):')
+        for key, a, b in (('both', True, True), ('rooms only', True, False), ('map only', False, True), ('neither', False, False)):
+            v = [r['wall_ms'] for r in w if bool(r.get('room_warm')) == a and bool(r.get('map')) == b]
+            if v:
+                print('     %-10s n %4d  P50 %.2f  P95 %.2f  max %.2f  over 33 ms: %d' % (key, len(v), q(v, .5), q(v, .95), max(v), sum(1 for x in v if x > 33)))
+    if warm: print('   the rooms\' warm done before the title at rest:', warm.get('done'))

@@ -1,0 +1,27 @@
+# #655 PR C mutation proof (evidence/pr-c-mutate.py.txt): each rule broken one at a time in the shipped
+# code (on 1e1395f2), the suite that guards it run, the file copied back from its backup; the tree clean after.
+# Every rule was caught. The first run missed two (the hood's head room, the first cue): their tests were
+# tightened and the run repeated whole; the zh-Hant glyph rule (C8) was proved by hand on 9c5b6f70.
+the title is held under the Vigil                          CAUGHT  - vigil_hold: the rose did not open the hall on the Rose look over the held title
+the held title comes back, not a new one                   CAUGHT  - vigil_hold: Return did not bring the same title back on its frame
+a route change frees the held title                        CAUGHT  - vigil_hold: a route change left the held title alive
+_reshape reaches the held title                            CAUGHT  - vigil_hold: _reshape does not reach the held title
+a warm changed mid-warm is re-queued (#670 follow-up 1)    CAUGHT  - vigil_hold: the shape changed during the warm was never warmed
+the held road is hidden and still                          CAUGHT  - vigil_hold: the landed hall does not hold the title's road (hidden, still)
+the title track resumes                                    CAUGHT  - vigil_hold: the title's track does not resume where it stopped
+a fight never resumes                                      CAUGHT  - vigil_hold: a fight's track resumed instead of starting from its top
+a lift answers on its first frame                          CAUGHT  - vigil_hold: a lifted screen does not answer on its first frame (1.000)
+the turn pans the road                                     CAUGHT  - title_world: the turn does not pan the road by its pan in screen space
+every framing covers the stage                             CAUGHT  - vigil_hall: desktop-landscape 1458x820: the deeds look leaves the stage uncovered
+the painted window lies inside the rose                    CAUGHT  - vigil_hall: pad-landscape 1180x820: the painted window reaches 195.8 px from the rose's centre, past its 174.8
+the column stops short of the Keeper                       CAUGHT  - vigil_hall: pad-landscape 1180x820: the epitaphs column ([P: (260.0, 168.0), S: (640.0, 562.0)]) stands on the Keeper ([P: (871.2734, 229.3047), S: 
+the Keeper keeps his hood looking down                     CAUGHT  - vigil_hall: phone-landscape 844x390: the Keeper's hood is under the look panes or off the stage on the epitaphs look (11.2)
+zh-Hant joins rewards with 、                               CAUGHT  - vigil_screen: zh-Hant 1180x820: a deed's rewards are not joined with 、
+counts are whole figures                                   CAUGHT  - vigil_screen: en 1180x820 fresh deeds: a count reads '0/15.0', not whole numbers
+Replay only when all six are whole                         CAUGHT  - vigil_screen: a rose with dark panes offers Replay
+Main asks for the hall's first cue                         CAUGHT  - vigil_hold: the hall's first cue is [], not vigil
+the first cue is the look's                                CAUGHT  - vigil_screen: opened on the rose, the Vigil's first cue is [&"vigil"], not roseWindow
+nothing stands under the seat (the rose by its glass)      CAUGHT  - rooms_rubric: en 844x390 mid rose: content stands under the seat ([P: (78.0, 28.0), S: (284.0, 284.0)])
+every memory in full in the glass                          CAUGHT  - vigil_screen: en 1180x820 full rose: the reading glass does not hold the memory story.dawn.hollowLamplighter.p2 in full
+tree after: clean
+the hall's zh-Hant counts are drawn in the shipped faces           CAUGHT  - vigil_screen: zh-Hant fresh: '零' in '零 次朝聖 · 零 次破曉 · 最深誓言：—' is not in the shipped faces

@@ -34,8 +34,8 @@ tags: [godot, macos, window-focus, screenshot-capture, hot-reload, gdscript-relo
 ## Context
 
 The visual-iteration loop in this project is a screenshot hook in the game's own
-entry point. `application/main.gd:228-256` (in `_ready`) documents it and
-`application/main.gd:292-293` (in `_ready`) parses `--shot=` out of
+entry point. `application/main.gd:244-272` (in `_ready`) documents it and
+`application/main.gd:308-309` (in `_ready`) parses `--shot=` out of
 `OS.get_cmdline_user_args()`:
 
 ```gdscript

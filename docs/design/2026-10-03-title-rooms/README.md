@@ -8,8 +8,9 @@ means no good. need to make them better." Standing bar: AAA commercial, immersiv
 (every state alive at rest), surprise me.
 
 **Status.** This is the one build spec for #655. PR A (the oval, the ground, Reduce Motion, the type
-floor) and PR B (the passage, Settings, How to Play, Credits) are built; where the build differs from the
-text, an *as built* note says how and why. The Vigil (PR C) is not built yet. It was written on the
+floor), PR B (the passage, Settings, How to Play, Credits) and PR C (the Vigil as the hearth hall) are
+built; where the build differs from the text, an *as built* note says how and why. V2′, the rose's
+flight into the window after the unsealing, was cut (§13's first cut). It was written on the
 lane branch `ui/title-rooms-2026-10-03` at `124c528d` (the pre-squash head of PR #654, whose tree is
 identical to `2228f94f` on `main`). It continues the opening's design record,
 `docs/design/2026-10-02-opening-start/README.md` (Concept A "Held Light", §7 motion spec, §8 Leadlight
@@ -504,6 +505,58 @@ descriptions stay `Label`s, never `_draw` text); `_epitaph_tab`, `_epitaph_list`
 `vigil` scenario. The route-form Vigil (every entry but the title's) draws the same hall and a seat word
 without a lantern, and no private `TitleWorld` any more (`RunStyle.add_backdrop` is no longer used here).
 
+*As built in PR C* (`presentation/run/vigil_screen.gd`, `vigil_hall.gd`, `vigil_deeds.gd`,
+`vigil_epitaphs.gd`, `rose_window_view.gd`, `presentation/ui/components/leadlight_rose.gd`; stills in
+`stills/pr-c/`):
+
+- **The window, measured.** The plate's painted rose is centred at plate (215, 184), radius 100 with its
+  moulding (the glass alone is about 75). Looking up, the window is centred under the Emberglass rose and
+  the plate is no smaller than it must be for its corner to stay on or past the stage's: the scale is the
+  largest of the Deeds scale and the rose's centre over the window's on each axis (`VigilHall.frame`), so
+  the rose stands exactly where the window is painted. At pad that is 1.696 stage px a plate px, not ×1.6
+  of the Deeds scale (1.38), which left the window's moulding outside a 190 px rose and the plate's corner
+  inside the stage. The rose's visible radius is the frame art's tracery ring, 0.84 of its half side
+  (`LeadlightRose.RIM`). Phone: the rose at (220, 182), radius 112 (the plate at 1.02); the painted window
+  lies inside it at every shape and flex stage, by `WINDOW_IN_ROSE` (0.92) of its radius
+  (`tests/test_vigil_hall.gd`).
+- **Looking up** dims the hall to 0.86, not 0.72: at 0.72 under the rose's own dark the hall read as a
+  blank wall. The moonlight falls from the window down to the floor where you stand, by the doorway: a
+  shaft towards the fire ran under the reading glass and was never seen. The rose carries a little of the
+  door's warm halo (`radiance` 0.35).
+- **Looking down** keeps the Keeper's hood under the look panes (`VigilHall.HEAD_ROOM`, 154 px at pad, 46
+  on a phone): bottom-aligned at ×1.15, the phone's floor look cut his hood off at the stage's top.
+- **The header and the column** are as written. Every row of the body box ends 40 px short of the Keeper
+  on each look (`VigilScreen.body_for`); its foot is 90 px above the stage's (60 on a phone). On a phone in
+  English the carved ledger does not fit beside the three look panes, so it stands under their row; the
+  rose (at y 182) and the reading glass (from y 64) clear it, and the full rose's Replay pane stands under
+  the glass at its right, clear of the seat (no part of the header stands on another, nor the rose, the
+  glass or Replay on any of them: `tests/test_vigil_screen.gd`).
+- **Carved counts the faces can draw.** The zh-Hant faces ship subset to the locale's own text
+  (`tools/subset_noto_serif_tc.py`), which never writes 零, 千 or 萬: a fresh Vigil's ledger drew
+  "▯ 次朝聖". Where its numerals would need one of them, a count is written in figures
+  (`LeadlightNumerals.carved_drawn`), as English writes its zero; every CJK character the hall sets is held
+  to the shipped faces by the screen's test. The subset's corpus is the real fix (§14, open).
+- **Deeds.** A row is about 88 px at pad (its name, its line and its came at the rooms' 18 px), so six
+  stand whole at pad and the seventh fades at the foot; a row fades by how much of it the view still shows,
+  never cut through by the edge (the spec's 24 px fade cut the roundel of a row half in view). An unlit
+  roundel is the art under cold glass (a fill over it at 0.55), not 25% saturation: a desaturation needs a
+  shader or a CPU copy of every icon, and the cold glass is the kit's own word for an unlit pane.
+- **Epitaphs** are set in the reading face at 20 px (16 on a phone), their numerals carved: tracked Cinzel
+  broke a one-line epitaph into two at 18 px. Each is still a `Label` with the line-table text.
+- **The rose.** Each pane's centre is its mask's (`LeadlightRose.PANE_AT`); a pane's tap is a fifth of the
+  rose's side (90 px at pad, 53 on a phone). The selected pane's rim is its mask grown ×1.05 about its
+  centre in gold, over the mask in the backing's dark, under the pane: a rim of the pane's own shape. A
+  revealed pane's count is whole figures in the carved face ("2 / 5"). The six lozenges hide under the
+  Replay pane. In the reading glass a dormant or armed pane is named by its accessible name ("Dormant
+  Emberglass pane 6", "Unknown Emberglass pane 2"), already in both bundles: no new copy.
+- **Alive at rest**, all drawing and one clock (`VigilHall`): the firelight, embers, the Keeper's breath,
+  the roundels' backlight, the came tips, the shaft and its dust, the complete panes' breath and the armed
+  panes' pulse, as the table says. The epitaphs' firelight is the fire's flicker, so it stays under Reduce
+  Motion with the fire.
+- **The back shelf** (#657, the cards lane's PR 7) has a seat and nothing in it: `VigilHall.shelf()`, a
+  named, empty, input-blind layer on the plate (plate px, moving with every look), between the plate and
+  the fire's light, under the Keeper.
+
 **Canon guard.** The Emberglass rose stands in the hall's own window: that is canon (the Rose Window,
 爐邊彩窗, faces in at the fire). The title door's rose never travels into the Vigil before six shards
 and `scenes_seen` holding `unsealing`; after that, V2′ (§5) is the sanctioned payoff, checked under the
@@ -869,6 +922,20 @@ seat's Return comes in from 360 to 520 ms, once the lantern is nearly seated, ne
 A section change (G3) lets the leaving page go first (SETTLE_OUT over 80 ms) and brings the new one in
 from 60 to 220, so the two pages' text never prints over each other. The word in flight is §2.3's.
 
+*As built in PR C* (the Vigil's lanes are its own: `VigilScreen.arrive_at`, `leave_at`, `_look_to`; the
+title's half is `TitleScreen.turn` and `hold_world`): V1, V3 and V4 keep their windows. Three curves moved,
+each because the frames showed it. The header and each look's parts rise over 260 ms on SETTLE_OUT, not
+200 on REVEAL: the rose and its reading glass are large, and a quint's first frame brought a third of
+either in at once (`stills/pr-c/seq-v2-pad-en.jpg` before the change put 40% of V2's change on one frame).
+They rise in order of their distance from the light: the hearth's side on the Deeds and Epitaphs looks,
+the window's on the Rose look, where the rose you came for stands. The plate's framing in V4 moves on
+IN_OUT, not REVEAL (whose first two frames took a third of the climb to the window), and the old look
+leaves on SETTLE_OUT from its first frame, not EXIT (it stood whole while the plate had already moved).
+The legibility band follows the move. The Keeper is the one part of the hall that comes in slower than
+the plate: his ember haze is clipped to his glass by a clip pass, which composites him with the hall's
+alpha applied twice. `TransitionLayer.lift` (V9, X2) fades the lifted screen on SETTLE_OUT from its first
+frame, not EXIT. V2 has no word in flight: the crown fades up as a room's does without one.
+
 Reference storyboards: `mocks/free-storyboard-title-settings.jpg` and
 `mocks/free-storyboard-title-vigil.jpg` (the lanes and the ghost word; the build's times are this
 section's, not the mocks'), `mocks/lantern-storyboard-reach-and-fold.jpg` (the light front, the trace
@@ -1026,6 +1093,17 @@ tap is delivered to the button as the viewport delivers a tap (the run says so).
     plate, the Keeper, the mural, frame and six masks and the eight deed icons with
     `ResourceLoader.load_threaded_request`; the reference is dropped when a run starts.
 
+*As built in PR C:* item 14 resumes the road's and the hall's cues only (`MusicBus.RESUMES`: `title`,
+`vigil`, `roseWindow`), each stem where it stopped this session; a fight's, a stinger's and the map's cues
+still start from their top (a victory fanfare resumed mid-phrase would be wrong; "each cue" read as the
+owner's intent, the title's track after the Vigil). Item 15 is RoomWarm's last step: once its rooms are
+done it draws `VigilHall.pipeline_sample` (the plate, the fire's and the moonlight's additive light, the
+Keeper's clip pass, the rose's pane shader at its size in every state, a came) for one frame under the
+road at 0.004. Item 16 loads the hall's art and also its two tracks and the title's own on a worker
+(`Main._warm_vigil_art`): a 3.7 MB track read on the tap frame cost 5.5 ms on the M1. The art is let go
+once a run starts and nothing is still loading (`Main._take_vigil_art`); RoomWarm also builds the hall
+off the tree once, both its looks, for its glyphs at their sizes.
+
 Out of scope, recorded: a "news" glint on The Vigil word from `vigil.news` (clearing it needs a domain
 command); the door's rose showing six dark panes on a fresh install against the art ledger's L0 ruling
 (an art and story decision).
@@ -1091,6 +1169,21 @@ Erase question, or lingers over a language reopen; a confirm is dismissed; anyth
 does not fade a title in under a language reopen. `TransitionLayer.lift`, the held title and
 `TitleWorld.pan_px` are PR C's: nothing in PR B uses them.
 
+*As built in PR C:* `application/main.gd` (`_show_vigil`) holds the title only when the title's own Vigil
+word or rose opened it (`from_title`, passed by `_on_title_choice`): a dev scenario, the unsealing's end
+or a run's sealed door would otherwise hold a title built for another profile or a moment ago and bring
+it back stale. The title moves to `_held_title` before `_show_route`, the passage carries the lantern in
+(V1, V2) and the hall's `rest` holds the title's world (`TitleScreen.hold_world`: the road, the painting,
+its lamps, the vignette, the rose, the wordmark and the furniture hidden and still, nothing of the title
+focusable). `application/main.gd` (`_leave_vigil`) runs V3 on the same frame (the title back in
+`_choice_screen`, released, `_remember_route(_show_title)`, the hall to the passage, `title` asked for,
+the word that opened the hall given the focus, hidden for a touch); without a held title it builds the
+title beneath the lifted hall (`_lift_to_title`, V9), as departure Back and Begin Anew's Stay now do (X2).
+`_clear_route` frees a held title; `_reshape` reaches it. The Vigil's first cue comes from `announce`,
+after Main connects. A room names its opening sound (`LeadlightRoomHost.opening_cue`): the Vigil opened
+on the rose plays none over the rose's own `relic`. The route form plays `roomOpen` and, leaving,
+`roomClose`.
+
 ---
 
 ## 10. Implementation plan
@@ -1142,6 +1235,17 @@ Line counts are additions plus deletions, estimated. No code file passes 600 in 
 | C4 the rose | `presentation/ui/components/leadlight_rose.gd` (+130/−20); `presentation/run/rose_window_view.gd` (+210/−230); `tests/test_vigil_screen.gd` (new, ~200) |
 | C5 the turn and the looks | `presentation/ui/leadlight_passage.gd` (+130: place passages V1, V3, V4); `presentation/run/vigil_screen.gd` (+60) |
 | C6 the rose flight after the unsealing (first to cut) | `presentation/title/title_screen.gd` (+30); `presentation/ui/leadlight_passage.gd` (+45); `tests/test_vigil_hold.gd` (+50) |
+
+*As built in PR C* (each commit's code files under 600 lines changed; the Vigil's screen took three steps
+to stay under it): C1 the kit (`TitleWorld.pan_px`, `TransitionLayer.lift`, the music's resume,
+`HearthFigure.breathe`, `LeadlightCame`, `LeadlightRose.vigil`, the room's opening cue); C2 the hall
+(`VigilHall`); C3a the deeds and the epitaphs as their own parts (`VigilDeeds`, `VigilEpitaphs`, the old
+screen using them for one commit); C4 the Rose look (`RoseWindowView` rebuilt); C5 the Vigil as the
+hearth hall with the title held under it, the lift, the warm loads and the warm's re-queue
+(`test_vigil_hall`, `test_vigil_screen`, `test_vigil_hold`); C6 the turn west and east and the looks
+(the lanes); C7 the capture and bench tools; then three found in the stills and the spec's rows: C8 the
+hall's zh-Hant counts in figures where the faces lack the numerals, C9 the phone's header and Replay clear
+of each other, C10 the Replay's sound (V6). The spec's C6, the rose flight, was cut.
 
 ### 10.3 Gates and review
 
@@ -1338,6 +1442,35 @@ that shows it, each file's header naming the commit):
   code, each caught by the suite that guards it; and after the review, the 23 rules it asked for, each
   caught (three were not, at first: their tests were tightened).
 
+*As built in PR C* (evidence in `stills/pr-c/`, taken with `tools/capture_rooms.gd` and
+`tools/bench_rooms.gd` on `1e1395f2`, the hall's code; the zh-Hant fresh stills retaken on C8, whose only
+change on screen is a zero count, and every phone still on C9, which moved the phone's header, rose and
+Replay; the gate files' headers name their commit):
+
+- **Stills** (§11.3): the hall at rest at 844×390, 1180×820 and 1458×820 in en and zh-Hant, as
+  `vigil-<look>-<state>-<shape>-<locale>.jpg`: Deeds mid-way and fresh, the Rose Window mid-way (the pane
+  holding the longest memory selected) and full (all six whole, the Replay pane, thirty whispers), and the
+  Epitaphs; Deeds and the Rose Window also at 1180×885 (the iPad 8) and 845×390.
+- **Idle bursts** (§11.4, `idle-gates.txt`): the hall's own pixels change by 12.2% (Deeds, pad en), 25.3%
+  (the Rose Window) and 5.3% (Deeds, phone zh-Hant) between frames 1 s apart; under Reduce Motion only the
+  fire's flicker moves, under the gate's step (0.00%, recorded as §2.7 asks).
+- **Sequences** (§11.5, `sequence-gates.txt`, contact sheets `seq-*.jpg`): V1, V2, V3, V4 (to the window
+  and to the floor), V5, V8 and V9 at pad en; V1 and V3 at phone zh-Hant; V1, V3 and V4 under Reduce
+  Motion. Every frame of every sequence passes the grey gate (worst 0.21%); the three Reduce Motion
+  sequences pass the cut gate (largest step 0.0112 to 0.0132 of a 0.099 to 0.116 whole). Under full motion
+  no V1, V2 or V3 frame carries more than 23% of its change; V4 to the window puts 37% on the frame the
+  rose and its glass begin to rise, a large glass on a cubic's ease; V8, the route form's shipped
+  `screen_in` from the night, puts 88% on its first frame (the screen it replaces goes at once, as shipped).
+- **Mutation proof** (`evidence/pr-c-mutations.txt`): twenty-one rules broken one at a time in the
+  shipped code, each caught by the suite that guards it (two were not, at first: their tests were
+  tightened and the whole run repeated).
+- **Frame times, Mac** (`mac-frame-times.txt`): recorded, noisy (the shared Mac's load average ran 45 to
+  120); the iPad 8 rows below are the acceptance.
+- **The A12's Metal path** (`GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1`, Metal, the mobile renderer, on the
+  Mac): the hall and the rose, whose panes are the shipped `rose_pane.gdshader`, draw whole
+  (`a12-metal-deeds-1180x885-en.jpg`, `a12-metal-rose-1180x885-en.jpg`). PR C adds no shader and no
+  `hint_screen_texture` reader; the fire and the moonlight are `CanvasItemMaterial` additive blends.
+
 ### 11.7 What closes each PR
 
 PR A: the core gate, `test_focus_modality` with its mutation proof, the oval stills, the grey and cut
@@ -1389,6 +1522,10 @@ turned before they exist.
    Run the full suite and the Reduce Motion stills once.
 8. **Story canon.** The Emberglass rose in the hall's window, the held Act IV credits and V2′ go past the
    story skill (`.claude/skills/glassvow-story/SKILL.md`, foreshadow-ledger rule 2) in their commits.
+
+*As built:* V2′ was cut in PR C: the hall, the held title and every V* passage were the work, and the
+flight is a payoff for a handful of players that would want its own story check (rule 2) and device
+rows. The door's rose never travels into the Vigil.
 
 **Cut order** (first cut first): V2′, the rose flight; Help's living diagrams; the Credits walk (keep
 the roll and the lamp line); the ghost word (keep the crown fading in); the lantern's swing; the
@@ -1514,17 +1651,45 @@ applies, as built; together:
 - **The title's taps are 44 px on a phone** too (§7 item 8, as built).
 - **Reduce Motion's lantern** comes in from the cross-fade's middle (§2.7, as built).
 
-**Open, for the owner** (PR B builds around it; it does not block it):
+**Decided while building PR C** (the Vigil as the hearth hall; each recorded where it applies):
+
+- **Only the title's own pick holds the title** under the Vigil (§9, as built); every other entry is the
+  route alone with the seat's word and no lantern, and leaves by the lift (V9).
+- **The road's and the hall's music resumes**; a fight's and a stinger's never do (§7, as built).
+- **The Vigil's warm loads include its two tracks and the title's** (§7, as built).
+- **The window, the dim and the moonlight** as measured and as seen (§4.1, as built).
+- **The rise and the look change's curves** (§5.2, as built).
+- **V2′ is cut** (§13, as built).
+- **A count the zh-Hant faces cannot carve is written in figures** in the hall (§4.1, as built); the
+  subset's corpus is left to its own fix (open item 3 below).
+- **The passage bar on the iPad 8 (open item 2 below), ruled by the orchestrator on 4 Oct 2026:** on
+  iOS a frame's present wait sits inside its draw, so vsync jitter lifts every P95 over 16.7 ms, the title
+  at rest included (18.0 ms). The bar is read against the title's own at-rest P95 in the same launch: a
+  passage's P95 is at most the title's at-rest P95 + 0.5 ms, and no passage frame passes 33 ms but a single
+  display stall. It applies to the V* passages (§11.6, as built in PR C) and closes item 2.
+- **#670 review, follow-up 1:** a language or shape changed while the rooms' warm runs was dropped for
+  the launch (`_warm_rooms` returned while a warm was alive). It is now warmed when that warm ends
+  (`Main._on_room_warm_done`), pinned in `tests/test_vigil_hold.gd`. Follow-ups 2 and 3 are measured in
+  §11.6 (as built in PR C).
+
+**Open, for the owner** (PR B builds around it; it does not block it; item 3 from PR C):
 
 1. **Copy** (§13's debts stand; PR B wrote none): no new locale key was needed. `ui.credits.headingBrand`,
    `ui.credits.close`, `ui.credits.themeLine` and `ui.menu.fightOn` are no longer read; they stay in both
    bundles for a separate clean-up, as §2.13 says.
-2. **§11.6's 16.7 ms passage P95 on the iPad 8.** No passage meets it as written (17.4 to 18.4 ms inside
+2. *Closed by the orchestrator's ruling in PR C (above).* **§11.6's 16.7 ms passage P95 on the iPad 8.** No passage meets it as written (17.4 to 18.4 ms inside
    their own spans), and neither does the title at rest (18.0 ms): on iOS a frame's present wait is inside
    its draw, so vsync jitter lifts every P95 over 16.7. The passages stand within 0.4 ms of the title's own
    P95 and no frame of one passes 33 ms but a single display stall. The choice: read the bar against the
    title at rest (the passages pass), or measure the passages another way (the frame's own work, which
    the device cannot separate from its present wait). PR B does not decide it.
+3. **The zh-Hant subset's corpus** (found in PR C). `tools/subset_noto_serif_tc.py` subsets the three
+   Noto Serif TC faces to the characters `locale/*.json` and the line table write, and
+   `LeadlightNumerals.hanzi` writes three the locale never does: 零 (zero, and the zero inside 一百零五),
+   千 and 萬. The Vigil writes such counts in figures (§4.1, as built); the title's carved deeds still
+   carve them, so a zh-Hant player whose deeds reach 105 or 1,000 sees a missing glyph there. The fix is to
+   add the numerals' characters to the corpus and rebuild the faces (pinned sources, deterministic output),
+   which needs the font sources this lane does not hold; a font change for its own PR.
 
 ---
 

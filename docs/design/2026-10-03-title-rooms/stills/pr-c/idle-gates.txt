@@ -1,0 +1,6 @@
+# PR C idle bursts (§11.4): three frames 1 s apart, the hall's own pixels (the stage less the seat), on 1e1395f2.
+# Under Reduce Motion only the fire's flicker moves (§2.7): recorded, not graded.
+burst-deeds-pad-en idle gate PASS: the least change between frames 1 s apart is 12.16% of the room's pixels (floor 0.5%) 
+burst-rose-pad-en idle gate PASS: the least change between frames 1 s apart is 25.26% of the room's pixels (floor 0.5%) 
+burst-deeds-phone-zh idle gate PASS: the least change between frames 1 s apart is 5.33% of the room's pixels (floor 0.5%) 
+burst-rm-deeds-pad-en idle gate FAIL: the least change between frames 1 s apart is 0.00% of the room's pixels (floor 0.5%) (reported under --rm) 

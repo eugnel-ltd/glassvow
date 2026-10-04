@@ -1,0 +1,99 @@
+
+
+## QA only: the §11.6 report drawn over the screen once the bench is done, so a
+## screenshot carries it when file copies from the container hang.
+func _qa_bench_report(bench: Node) -> void:
+	var rows: Array = bench.get("_rows")
+	var lines: PackedStringArray = PackedStringArray()
+	lines.append("%s  nonce %s" % [str(bench.get("label")), str(bench.get("nonce"))])
+	var title: Array[float] = []
+	for r_v: Variant in rows:
+		var r: Dictionary = r_v
+		if str(r.get("phase", "")) == "title":
+			var w: float = r.get("wall_ms", 0.0)
+			title.append(w)
+	var tp95: float = _qa_q(title, 0.95)
+	lines.append("title at rest n %d  P95 %.2f  max %.1f" % [title.size(), tp95, _qa_q(title, 1.0)])
+	for room: String in ["settings", "help", "credits", "vigil"]:
+		for first: bool in [true, false]:
+			for phase: String in ["open", "close"]:
+				var taps: Array[float] = []
+				var frames: Array[float] = []
+				var inside: Array[float] = []
+				var over: int = 0
+				for r_v: Variant in rows:
+					var r: Dictionary = r_v
+					var lap: int = r.get("lap", 0)
+					if str(r.get("room", "")) != room or (lap == 0) != first or str(r.get("phase", "")) != phase:
+						continue
+					var i: int = r.get("i", 0)
+					var wall: float = r.get("wall_ms", 0.0)
+					var after: float = r.get("after_ms", 1e9)
+					var span: float = r.get("span_ms", 0.0)
+					if i == 0:
+						frames.append(wall)
+						if r.has("since_tap_ms"):
+							var tap: float = r["since_tap_ms"]
+							taps.append(tap)
+					elif after <= span:
+						inside.append(wall)
+						if wall > 33.0:
+							over += 1
+				lines.append("%-8s %s %s tap>moved %s  frame %s  pass P95 %.1f max %.1f n %d >33 %d  (P95-title %+.2f)" % [
+					room, "1st " if first else "rest", phase, _qa_mmm(taps), _qa_mmm(frames),
+					_qa_q(inside, 0.95), _qa_q(inside, 1.0), inside.size(), over, _qa_q(inside, 0.95) - tp95])
+			if first:
+				var rest: Array[float] = []
+				for r_v: Variant in rows:
+					var r: Dictionary = r_v
+					var lap: int = r.get("lap", 0)
+					if str(r.get("room", "")) == room and lap == 0 and str(r.get("phase", "")) == "room":
+						var w: float = r.get("wall_ms", 0.0)
+						rest.append(w)
+				lines.append("%-8s at rest P95 %.2f max %.1f n %d  (minus title %+.2f)" % [room, _qa_q(rest, 0.95),
+					_qa_q(rest, 1.0), rest.size(), _qa_q(rest, 0.95) - tp95])
+	for pair: Array in [["both", true, true], ["rooms only", true, false], ["map only", false, true],
+			["neither", false, false]]:
+		var walls: Array[float] = []
+		var over: int = 0
+		var want_rooms: bool = pair[1]
+		var want_map: bool = pair[2]
+		for r_v: Variant in rows:
+			var r: Dictionary = r_v
+			var rooms: bool = r.get("room_warm", false)
+			var map: bool = r.get("map", false)
+			if str(r.get("phase", "")) == "warm" and rooms == want_rooms and map == want_map:
+				var wall: float = r.get("wall_ms", 0.0)
+				walls.append(wall)
+				if wall > 33.0:
+					over += 1
+		lines.append("warm %-10s n %d  P50 %.2f  P95 %.2f  max %.1f  >33 %d" % [str(pair[0]), walls.size(),
+			_qa_q(walls, 0.5), _qa_q(walls, 0.95), _qa_q(walls, 1.0), over])
+	var sheet: ColorRect = ColorRect.new()
+	sheet.color = Color(0.0, 0.0, 0.0, 0.94)
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.z_index = 4000
+	sheet.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(sheet)
+	var text: Label = Label.new()
+	text.text = "\n".join(lines)
+	text.position = Vector2(10.0, 8.0)
+	text.add_theme_font_size_override("font_size", 15)
+	text.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
+	sheet.add_child(text)
+
+
+func _qa_q(values: Array[float], share: float) -> float:
+	if values.is_empty():
+		return 0.0
+	var sorted: Array[float] = values.duplicate()
+	sorted.sort()
+	return sorted[clampi(ceili(share * float(sorted.size())) - 1, 0, sorted.size() - 1)]
+
+
+func _qa_mmm(values: Array[float]) -> String:
+	if values.is_empty():
+		return "-"
+	var sorted: Array[float] = values.duplicate()
+	sorted.sort()
+	return "%.1f/%.1f/%.1f" % [sorted[0], sorted[sorted.size() / 2], sorted[sorted.size() - 1]]

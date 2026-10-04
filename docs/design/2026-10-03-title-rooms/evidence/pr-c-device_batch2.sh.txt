@@ -1,0 +1,90 @@
+#!/bin/zsh
+# The #655 PR C iPad 8 batch (docs/design/2026-10-03-title-rooms §11.6). Holds the
+# shared iPad's batch lock from the QA install to the last launch (released on any
+# exit), builds the QA app (io.fol2.glassvow.qa, never the production bundle) from
+# the worktree with the QA-only bench patch applied and reverted at once, and
+# launches it once per label with `--rooms-bench` and a per-launch nonce. Before
+# every launch the installed QA app must still be the one this batch installed;
+# after it, the rows must carry that launch's nonce and the build label; a stale or
+# foreign row set is discarded. When file copies from the QA container hang (they did
+# from 02:06 on 4 Oct), the report the QA patch draws over the screen once the bench
+# is done is read off a screenshot instead (the nonce and the build label are on it).
+# usage: device_batch.sh <worktree> <out-dir> <build-label>
+set -uo pipefail
+WT=$1; OUT=$2; BUILD=$3
+FLOW=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/device13/flow
+HERE=${0:A:h}
+OWNER=rooms-c
+B=io.fol2.glassvow.qa
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+mkdir -p $OUT
+log() { echo "$(date +%T) $*" | tee -a $OUT/batch.log; }
+cleanup() {
+  python3 $HERE/qa_rooms_patch.py $WT --revert 2>/dev/null
+  $FLOW/ipad_lock.sh release $OWNER
+  log "lock released"
+}
+trap cleanup EXIT
+udid() { xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for d in json.load(sys.stdin)["result"]["devices"]:
+    h=d.get("hardwareProperties") or {}
+    if h.get("productType")=="iPad11,6": print(h.get("udid")); break'; }
+app_url() { xcrun devicectl device info apps --device $1 --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for a in json.load(sys.stdin)["result"]["apps"]:
+    if a.get("bundleIdentifier")=="io.fol2.glassvow.qa": print(a.get("url"))'; }
+
+START=$(date +%s)
+log "acquiring the iPad batch lock as $OWNER"
+$FLOW/ipad_lock.sh acquire $OWNER || exit 1
+log "lock held; building $BUILD"
+python3 $HERE/qa_rooms_patch.py $WT $BUILD || exit 1
+IPAD_LOCK_OWNER=$OWNER $FLOW/qa_export.sh $WT > $OUT/qa_export.out 2>&1
+RC=$?
+python3 $HERE/qa_rooms_patch.py $WT --revert
+[[ $RC -eq 0 ]] || { log "QA export failed"; tail -5 $OUT/qa_export.out | tee -a $OUT/batch.log; exit 1; }
+MINE=$(grep -o 'installationURL: [^ ]*' $OUT/qa_export.out | awk '{print $2}' | head -1)
+log "installed $MINE"
+shot() {  # label U -> png; true when the report is on screen (a near-black frame)
+  local out=$OUT/report-$1.png
+  timeout 60 xcrun devicectl device capture screenshot --device $2 --destination $out > /dev/null 2>&1 || return 1
+  python3 -c "
+from PIL import Image, ImageStat
+im=Image.open('$out').convert('L'); m=ImageStat.Stat(im).mean[0]
+raise SystemExit(0 if m < 22 else 1)"
+}
+launch() {  # label locale extra-args...
+  local label=$1 locale=$2; shift 2
+  local U=$(udid); [[ -n "$U" ]] || { log "no iPad"; return 1; }
+  if [[ -n "$MINE" && "$(app_url $U)" != "$MINE" ]]; then log "$label: the QA app is not this batch's build; stopping"; return 1; fi
+  local nonce="$label-$(date +%s)"
+  $FLOW/ipad_lock.sh acquire $OWNER
+  xcrun devicectl device process launch --terminate-existing --device $U $B -- --rooms-bench --qa-nonce=$nonce --locale=$locale "$@" > $OUT/launch-$label.log 2>&1
+  log "$label: launched ($nonce)"
+  sleep 200
+  for k in $(seq 1 40); do
+    if shot $label $U; then
+      log "$label: the report is on screen ($(( ($(date +%s) - START) / 60 )) min into the batch)"
+      python3 -c "
+from PIL import Image
+im=Image.open('$OUT/report-$label.png').rotate(-90, expand=True)
+im.save('$OUT/report-$label.png')"
+      if timeout 90 xcrun devicectl device copy from --device $U --domain-type appDataContainer --domain-identifier $B \
+          --source Documents/bench_rooms.jsonl --destination $OUT/$label.jsonl > /dev/null 2>&1 \
+          && grep -q "\"nonce\":\"$nonce\"" $OUT/$label.jsonl; then
+        log "$label: the rows copied too ($(grep -c . $OUT/$label.jsonl))"
+      else
+        rm -f $OUT/$label.jsonl; log "$label: the file copy still hangs; the report on screen is the record"
+      fi
+      return 0
+    fi
+    sleep 20
+  done
+  log "$label: no report on screen after the tour"
+  return 1
+}
+launch en-1 en
+launch zh-2 zh-Hant
+launch a0-3 en --bench-act=0 --bench-laps=3
+log "batch done"

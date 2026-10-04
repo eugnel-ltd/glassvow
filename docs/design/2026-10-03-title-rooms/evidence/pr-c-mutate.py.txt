@@ -1,0 +1,76 @@
+"""PR C mutation proof: each rule broken one at a time in the shipped code, the
+suite that guards it run, the file copied back from its backup."""
+import shutil, subprocess, sys
+WT = '/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/rooms-lane/wt-c'
+M = [
+ ('the title is held under the Vigil', 'application/main.gd',
+  '	var hold: bool = from_title and title != null', '	var hold: bool = false and title != null', ['test_vigil_hold']),
+ ('the held title comes back, not a new one', 'application/main.gd',
+  '	if title == null or vigil == null:\n		_sfx_bus.play_owed(&"roomClose", &"click")', '	if true:\n		_sfx_bus.play_owed(&"roomClose", &"click")', ['test_vigil_hold']),
+ ('a route change frees the held title', 'application/main.gd',
+  '		_held_title,\n	]:\n		if screen != null:\n			screen.queue_free()\n	_held_title = null', '	]:\n		if screen != null:\n			screen.queue_free()\n	_held_title = null', ['test_vigil_hold']),
+ ('_reshape reaches the held title', 'application/main.gd',
+  '_route_screen, _run_hud, _modal, _held_title,', '_route_screen, _run_hud, _modal,', ['test_vigil_hold']),
+ ('a warm changed mid-warm is re-queued (#670 follow-up 1)', 'application/main.gd',
+  '		if not _room_warm.tree_exited.is_connected(_on_room_warm_done):\n			_room_warm.tree_exited.connect(_on_room_warm_done, CONNECT_DEFERRED | CONNECT_ONE_SHOT)\n		return',
+  '		return', ['test_vigil_hold']),
+ ('the held road is hidden and still', 'presentation/title/title_screen.gd',
+  '	if on == _held:\n		return\n	_held = on', '	if true:\n		_held = on\n		return\n	_held = on', ['test_vigil_hold']),
+ ('the title track resumes', 'presentation/audio/music_bus.gd',
+  '	if not RESUMES.has(cue) or not positions.has(stem):', '	if true:', ['test_vigil_hold']),
+ ('a fight never resumes', 'presentation/audio/music_bus.gd',
+  '	if not RESUMES.has(cue) or not positions.has(stem):', '	if not positions.has(stem):', ['test_vigil_hold']),
+ ('a lift answers on its first frame', 'presentation/stage/transition_layer.gd',
+  'LeadlightMotion.ease_on(t / span, LeadlightMotion.SETTLE_OUT)', 'LeadlightMotion.ease_on(t / span, LeadlightMotion.EXIT)', ['test_vigil_hold']),
+ ('the turn pans the road', 'presentation/stage/title_world.gd',
+  'size.x * 0.5 + pan_px + xr / zv * _focal', 'size.x * 0.5 + xr / zv * _focal', ['test_title_world']),
+ ('every framing covers the stage', 'presentation/run/vigil_hall.gd',
+  '	var held: Vector2 = Vector2(clampf(at.x, stage.x - PLATE_SIZE.x * s, 0.0),\n		clampf(at.y, stage.y - PLATE_SIZE.y * s, 0.0))',
+  '	var held: Vector2 = at', ['test_vigil_hall']),
+ ('the painted window lies inside the rose', 'presentation/run/vigil_hall.gd',
+  '		s = maxf(base, maxf(rose.x / WINDOW.x, rose.y / WINDOW.y))', '		s = base * 1.6', ['test_vigil_hall']),
+ ('the column stops short of the Keeper', 'presentation/run/vigil_screen.gd',
+  '	var right: float = minf(left + COLUMN_MAX, keeper.position.x - KEEPER_GAP)', '	var right: float = left + COLUMN_MAX', ['test_vigil_hall']),
+ ('the Keeper keeps his hood looking down', 'presentation/run/vigil_hall.gd',
+  'maxf(stage.y - PLATE_SIZE.y * s, room - hood * s)', 'stage.y - PLATE_SIZE.y * s', ['test_vigil_hall']),
+ ('zh-Hant joins rewards with 、', 'presentation/run/vigil_deeds.gd',
+  '	return ("、" if LeadlightTokens.is_zh() else ", ").join(names)', '	return ", ".join(names)', ['test_vigil_screen']),
+ ('counts are whole figures', 'presentation/run/vigil_deeds.gd',
+  '	head.add_child(_label("%d / %d" % [mini(current, target), target]', '	head.add_child(_label("%s/%s.0" % [mini(current, target), target]', ['test_vigil_screen']),
+ ('Replay only when all six are whole', 'presentation/run/rose_window_view.gd',
+  '	if _all_complete():\n		_add_replay()', '	if true:\n		_add_replay()', ['test_vigil_screen']),
+ ('Main asks for the hall\'s first cue', 'application/main.gd',
+  '	_room_word = ""\n	screen.announce()', '	_room_word = ""', ['test_vigil_hold']),
+ ('the first cue is the look\'s', 'presentation/run/vigil_screen.gd',
+  '	cue_requested.emit(&"roseWindow" if _look == VigilHall.ROSE else &"vigil")', '	cue_requested.emit(&"vigil")', ['test_vigil_screen']),
+ ('nothing stands under the seat (the rose by its glass)', 'presentation/run/rose_window_view.gd',
+  '	var rects: Array[Rect2] = [disc, _glass.get_rect()]', '	var rects: Array[Rect2] = [disc.grow(30.0), _glass.get_rect()]', ['test_vigil_screen']),
+ ('every memory in full in the glass', 'presentation/run/rose_window_view.gd',
+  '	for memory: String in _memories(record):', '	for memory: String in _memories(record).slice(0, 1):', ['test_vigil_screen']),
+]
+only = sys.argv[1:] or None
+out = []
+for i, (what, path, old, new, tests) in enumerate(M):
+    if only and str(i) not in only:
+        continue
+    f = WT + '/' + path
+    backup = f + '.mutation-backup'
+    shutil.copyfile(f, backup)
+    try:
+        s = open(f).read()
+        assert s.count(old) == 1, (what, s.count(old))
+        open(f, 'w').write(s.replace(old, new))
+        arg = ','.join('res://tests/%s.gd' % t for t in tests)
+        r = subprocess.run(['godot', '--headless', '-s', 'res://tests/run_all.gd', '--', '--tests=' + arg],
+                           cwd=WT, capture_output=True, text=True)
+        text = r.stdout + r.stderr
+        caught = r.returncode != 0
+        first = next((l.strip() for l in text.splitlines() if l.startswith('  - ')), '')
+        out.append('%-58s %s  %s' % (what, 'CAUGHT' if caught else 'MISSED', first[:150]))
+        print(out[-1], flush=True)
+    finally:
+        shutil.copyfile(backup, f)
+        import os
+        os.remove(backup)
+r = subprocess.run(['git', 'status', '--porcelain', '--', 'application', 'presentation'], cwd=WT, capture_output=True, text=True)
+print('tree after:', r.stdout.strip() or 'clean')
