@@ -1,0 +1,6 @@
+{"adapter":"Apple A12 GPU (Apple5)","args":["--map","--map-trace-probe","--seed=1","--shape=pad-landscape","--map-steps=2","--holds=cadence","--hold-frames=120","--probe-nonce=r1-warm-1523917707"],"build":"0f5aeda6","method":"mobile","nonce":"r1-warm-1523917707","probe":"start","screen":[2160,1620],"t_ms":3206}
+{"nonce":"r1-warm-1523917707","probe":"view","t_ms":9039,"view":"default"}
+{"band":null,"display":[1180.0,885.0],"layer_grain":true,"map_grain":-1.0,"mode":"cadence","nonce":"r1-warm-1523917707","probe":"hold_start","render":{"shadow_draw_calls":59,"shadow_primitives":49705,"stage_draw_calls":56,"stage_primitives":74359},"stage":[885,663],"t_ms":13387,"video_mib":245.3}
+{"frames":120,"max_ms":40.81,"mean_ms":16.969,"missed":2,"mode":"cadence","nonce":"r1-warm-1523917707","p50_ms":16.68,"p95_ms":21.57,"probe":"hold_end","process_ms":15.8,"t_ms":15424}
+{"nonce":"r1-warm-1523917707","probe":"holds_done","t_ms":15425}
+{"code":0,"nonce":"r1-warm-1523917707","probe":"done","t_ms":15427}

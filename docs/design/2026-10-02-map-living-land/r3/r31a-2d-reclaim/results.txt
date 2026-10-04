@@ -1,7 +1,84 @@
-R3.1a "2D reclaim" (#660): results, 3 Oct 2026
-Branch map/r3-1a-2d-reclaim-2026-10-03 from main 8815da34 (R2).
-Code under test: 2d86d1c7 (the device and Mac builds). The later commits on the
-branch add tools and evidence only; they change no shipped file.
+R3.1a "2D reclaim" (#660): results, 3-4 Oct 2026
+Branch map/r3-1a-2d-reclaim-2026-10-03 from main 8815da34 (R2), rebased onto
+main be96dc83 (R1.1) on 4 Oct.
+First round: code under test 2d86d1c7 (every section after REVIEW ROUND). The
+review round changed shipped files; its final head is 0d7a9969 (code
+c89d392a), measured on the iPad 8 in review/device/batch6-0d7a9969/. The
+rebase changed no file this step touches except application/main.gd, where it
+applied cleanly.
+
+REVIEW ROUND (4 Oct; two adversarial lenses, 12 findings, 2 major)
+What changed (59abff88, 0ce69f05, c89d392a, tools d3f3a22a, 16c7f913, 0d7a9969):
+- The display fades with its screen again (major). At rest it writes opaque
+  with blending off (map_display.gdshader); while anything from the display
+  up the tree fades it, it blends (map_display_fade.gdshader), switched just
+  before each frame is drawn so an entrance fades from its first frame.
+  Blending at display resolution costs the A12 about 0.4 ms a frame (batch 5:
+  2D composite 2.34 ms with it, 1.94 without), so it is paid only while a
+  fade runs.
+- One grain a frame on the map route (major). Main._sync_map_grain hands the
+  grain between the map and the TransitionLayer every frame: the map grains
+  its own land at rest; under a room or sheet, or while a wipe, plate, iris,
+  flood, flare or cross-fade crosses the map, the TransitionLayer's screen
+  grain covers everything, as on every other route. Under Reduce Motion
+  neither shows. At rest the map's HUD, pins and labels, drawn above the
+  land, carry no grain: folding the grain into the display, the step's
+  approved design, cannot reach what is drawn after it.
+- The grain has no 256 px period: one 256 px white-noise cell laid 8 x 8
+  times into a 2048 px texture (4 MiB), each copy read from its own place,
+  built once on the CPU. Placing the cells per pixel in the shader cost the
+  A12 about 0.7 ms a frame (batch 4: display and HUD 2.14 against 1.47 ms).
+- The grain's jump is worked out by MapScene every TransitionLayer.GRAIN_STEP
+  and handed to the shader as whole pixels; it stands still while the map is
+  frozen, so Reduce Motion holds it (the shader no longer runs on TIME).
+- Tools: the probe's start row carries its build's commit; a walk hold;
+  mt_trace keeps a recording only if it ran its whole time limit; roles.py
+  reports fragment sums and, beside them, each group's occupied time with
+  overlapping work counted once.
+
+DEVICE GATE ON THE FINAL HEAD (review/device/batch6-0d7a9969/summary.txt):
+iPad 8, QA app, interleaved reinstalls of R1 0f5aeda6, R2 8815da34 (control)
+and the head 0d7a9969, 3 launches each, 600-frame holds, every row echoing its
+launch's nonce and its build's commit; none rejected.
+
+  view / mode            mean ms R2 | head        p95 R2 | head   missed (>25 ms) R2 | head
+  Journey cadence        16.873 | 16.660         20.77 | 19.05   21 | 0
+  Journey live           16.671 | 16.661         17.53 | 17.61    1 | 0
+  Journey walk           16.716 | 16.676         18.35 | 18.24    1 | 0
+  Fresh-run cadence      16.798 | 16.663         17.31 | 22.44   14 | 0
+  Fresh-run live         16.662 | 16.663         17.04 | 19.19    0 | 0
+
+  Stated plainly, the gate as written ("p95 <= R2's" on every required view)
+  fails at Journey live (+0.08 ms), fresh-run cadence (+5.13 ms) and fresh-run
+  live (+2.15 ms), and "walk p95 <= R1's" fails by 0.02 ms (18.24 against
+  18.22). The first round's table also hid one such failure: fresh-run live
+  read 19.22 against R2's 19.20.
+  What the misses are: a launch's p95 at the fresh view sits in one of two
+  modes in both builds (live about 17.1 or 19.2 ms; cadence about 17.3 or
+  22.4 ms), and the head lands in the higher mode more often (live: 8 of 9
+  launches over batches 1, 5 and 6, R2 6 of 9). The traces show why: with
+  its 2D work cut to a third, the head's GPU ran 87-97% of each trace in its
+  Minimum performance state, R2's 92-93% in Medium (review/device/batch6-
+  0d7a9969/*.display.txt, clock factors 0.70-0.75 against 1.00). Every mean
+  sits on the 16.67 ms vsync and the head misses no frame in 9000 at the
+  required views, where R2 misses 37. Orchestrator ruling (4 Oct): the step
+  passes on missed frames and means; the higher p95 is the GPU governor
+  saving power on a lighter frame, not added work, and is accepted.
+
+GPU BUDGET LINE ON THE FINAL HEAD (batch 6 traces, every one ran its whole 7 s):
+                              R2 8815da34          R3.1a 0d7a9969
+  Journey: 2D composite F     6.28 ms              1.89 ms (tilt-shift view 0.44, display+HUD 1.45)
+           occupied, 2D       6.54                 2.17
+  Fresh:   2D composite F     5.15                 1.83 (tilt-shift view 0.25, display+HUD 1.59)
+           occupied, 2D       5.53                 2.16
+  The 2.0 ms gate holds on the fragment sums (1.89, 1.83). Raw, in the few
+  frames within 10% of the reference clock: 2.43 (10 frames) and 2.32 ms (26).
+
+VIDEO MEMORY: at the cadence hold's start the head reads 260.5-262.5 MiB
+against R2's 254.1 (batch 6; batch 5 read the head 246.6-260.5, R2
+240.2-254.1). Readings step by about 14 MiB between launches of one build,
+so the first round's -16.4 MiB is not claimed; the noise texture adds 4 MiB.
+Well inside the act budget (+80 MiB).
 
 WHAT SHIPPED
 - Film grain on the map: drawn by the map's display shader
@@ -126,17 +203,16 @@ R3.0 DEVICE CONDITIONS (is a GPU performance-state Device Condition on?)
 - devicectl has no device-condition command or field (device info details,
   ddiServices; device/batch1-ctl-vs-head/device-details.txt).
 - The Metal System Trace records the state in tables the CLI can export
-  (tools/map_trace/display.py prints them): in all four traces today and in
-  the trace spike's j-live trace, gpu-performance-state-info reads
+  (tools/map_trace/display.py prints them): in every trace of batches 3-6 and
+  in the trace spike's j-live trace, gpu-performance-state-info reads
   "consistent state available Yes, enabled No, sustained No, state 0", the
   driver's desired state is 0 throughout (gpu-performance-device-state-
-  intervals), and the thermal state is Nominal with is-induced No. A GPU
-  performance-state condition works by enabling that consistent state, so by
-  this evidence none was on. The states themselves move (Minimum 12-95%,
-  Medium 5-88%) as DVFS does. Instruments still labels every interval
-  "induced ... due to active device conditions", which these fields
-  contradict. Xcode's Devices window remains the authority if the owner
-  wants to confirm.
+  intervals), and the thermal state is Nominal with is-induced No. The states
+  themselves move (Minimum 7-97%, Medium 3-93%) as DVFS does. These fields
+  are consistent with no condition being on, but Instruments labels every
+  interval "induced ... due to active device conditions", so the traces do
+  not settle it. Xcode's Devices window (Device Conditions) is the authority;
+  the owner can confirm it there.
 
 CORE GATE (final head): see the report. One SCRIPT ERROR line in run_all's log
 comes from tests/test_map_open_cache.gd:69 ("Bridge masonry" is null in Act

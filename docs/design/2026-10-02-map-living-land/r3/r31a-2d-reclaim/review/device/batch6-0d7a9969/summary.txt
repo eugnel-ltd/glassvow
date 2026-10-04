@@ -1,0 +1,34 @@
+launches rejected: none
+builds: ctl=8815da34, head=0d7a9969, r1=0f5aeda6
+
+view               mode     build | mean ms per launch         | p95 ms per launch      | missed     | max    | grain (layer, map)
+Journey mid-route  cadence  r1    | 17.556 16.995 16.940       | 24.08 22.95 22.37      | 18 7 6     |   46.4 | [(True, -1.0)]
+Journey mid-route  cadence  ctl   | 16.938 16.856 16.826       | 21.96 20.63 20.77      | 9 6 6      |   29.9 | [(True, -1.0)]
+Journey mid-route  cadence  head  | 16.660 16.659 16.662       | 19.15 19.02 19.05      | 0 0 0      |   19.8 | [(False, 0.05)]
+Journey mid-route  live     r1    | 16.663 16.663 16.663       | 17.99 17.98 17.74      | 0 0 0      |   23.2 | [(True, -1.0)]
+Journey mid-route  live     ctl   | 16.689 16.663 16.661       | 17.59 17.53 17.52      | 1 0 0      |   28.9 | [(True, -1.0)]
+Journey mid-route  live     head  | 16.660 16.662 16.661       | 17.66 17.61 17.48      | 0 0 0      |   20.6 | [(False, 0.05)]
+Journey mid-route  walk     r1    | 16.660 16.784 16.681       | 18.30 17.05 18.22      | 0 1 0      |   25.7 | [(True, -1.0)]
+Journey mid-route  walk     ctl   | 16.813 16.687 16.647       | 18.59 18.35 18.05      | 1 0 0      |   28.9 | [(True, -1.0)]
+Journey mid-route  walk     head  | 16.698 16.685 16.645       | 18.45 17.99 18.24      | 0 0 0      |   23.0 | [(False, 0.05)]
+fresh-run opening  cadence  r1    | 16.884 19.413 18.491       | 22.06 32.71 28.77      | 13 93 68   |   48.0 | [(True, -1.0)]
+fresh-run opening  cadence  ctl   | 17.073 16.661 16.661       | 23.41 17.27 17.31      | 14 0 0     |   31.2 | [(True, -1.0)]
+fresh-run opening  cadence  head  | 16.659 16.666 16.665       | 22.39 22.44 22.44      | 0 0 0      |   22.9 | [(False, 0.05)]
+fresh-run opening  live     r1    | 16.662 16.662 16.657       | 16.97 19.56 19.60      | 0 0 0      |   22.3 | [(True, -1.0)]
+fresh-run opening  live     ctl   | 16.662 16.662 16.661       | 19.14 17.04 17.01      | 0 0 0      |   22.6 | [(True, -1.0)]
+fresh-run opening  live     head  | 16.662 16.666 16.662       | 19.15 19.24 19.19      | 0 0 0      |   22.1 | [(False, 0.05)]
+
+GATE (each build against ctl and r1 in the same batch; p95 = median of the launches' p95):
+Journey mid-route  cadence  head  mean 16.660 ok | p95 19.05 vs ctl 20.77 ok | missed 0 vs ctl 21 ok | p95 19.05 vs r1 22.95 ok | missed 0 vs r1 31 ok
+Journey mid-route  live     head  mean 16.661 ok | p95 17.61 vs ctl 17.53 OVER | missed 0 vs ctl 1 ok | p95 17.61 vs r1 17.98 ok | missed 0 vs r1 0 ok
+Journey mid-route  walk     head  p95 18.24 vs ctl 18.35 ok | missed 0 vs ctl 1 ok | p95 18.24 vs r1 18.22 OVER | missed 0 vs r1 1 ok
+fresh-run opening  cadence  head  mean 16.663 ok | p95 22.44 vs ctl 17.31 OVER | missed 0 vs ctl 14 ok | p95 22.44 vs r1 28.77 ok | missed 0 vs r1 174 ok
+fresh-run opening  live     head  mean 16.663 ok | p95 19.19 vs ctl 17.04 OVER | missed 0 vs ctl 0 ok | p95 19.19 vs r1 19.56 ok | missed 0 vs r1 0 ok
+
+video_mib at the cadence hold start:
+  fresh-run opening  ctl   [254.1, 254.1, 254.1]
+  fresh-run opening  head  [260.5, 260.5, 260.5]
+  fresh-run opening  r1    [230.8, 244.7, 244.7]
+  Journey mid-route  ctl   [254.1, 254.1, 254.1]
+  Journey mid-route  head  [261.5, 260.5, 262.5]
+  Journey mid-route  r1    [245.6, 245.6, 245.6]
