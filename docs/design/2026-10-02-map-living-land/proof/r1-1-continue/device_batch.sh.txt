@@ -5,7 +5,8 @@
 # Arms: early (the candidate), late (this build, its warm-up held until
 # the rite lands: PR #664's timing, not PR #664's code), nowarm, and the
 # rebased round's arms: cone (R2's read-back shadow cones), noprime (only the
-# rite's title primes).
+# rite's title primes); the review round's: earlyall (Acts II-IV warm from
+# before the title too).
 # Every launch carries a nonce its rows must echo; a launch whose rows are
 # stale or incomplete is retried, and a mismatch is never kept.
 # usage: batch.sh <name> <plan file>
@@ -51,6 +52,7 @@ launch() {  # label arm act [args]
     kf) envs='{"QA_KIT_FIRST_FRAME":"1"}' ;;
     cone) envs='{"QA_RENDERER_CONE":"1"}' ;;
     noprime) envs='{"QA_NO_LATER_PRIME":"1"}' ;;
+    earlyall) envs='{"QA_EARLY_ALL":"1"}' ;;
   esac
   local f=$OUT/$label.jsonl
   for attempt in 1 2 3; do

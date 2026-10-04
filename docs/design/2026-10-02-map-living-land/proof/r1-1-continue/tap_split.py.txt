@@ -1,7 +1,11 @@
 """Splits the Continue tap's time to a drawn interactive map by QA marks:
 tap -> continue_run (flare and flood until covered), -> bind_journey (restore
-and compile), -> built (the land's build ends), -> ready (drawn and
-interactive); per launch label prefix. usage: tap_split.py <rows.jsonl> <prefix>..."""
+and compile), -> built (the land's build ends), -> map built (the screen no
+longer pending), -> ready (drawn and interactive); then, from the tap's frames
+(the continue row's `frames`, each frame's length from the tap on), the
+restore's frame (the first over 100 ms: the flood's restore builds the map in
+it) and the frame after it (where the land enters the tree and is first
+drawn); per launch label prefix. usage: tap_split.py <rows.jsonl> <prefix>..."""
 import json, sys, statistics as st
 launches = {}
 for l in open(sys.argv[1]):
@@ -18,9 +22,13 @@ for prefix in sys.argv[2:]:
             return (h[-1] if last else h[0]) if h else None
         cr, bj, built = t("continue_run"), t("bind_journey"), t("built", last=True)
         f = lambda a, b: round((a - b) / 1000, 1) if a and b else None
-        rows.append((name, f(cr, tap), f(bj, cr), f(built, tap), c["built_ms"], c["ready_ms"]))
-    print("== %s  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready)" % prefix)
+        frames = c["frames"]
+        k = next((i for i, v in enumerate(frames) if v > 100.0), None)
+        restore = frames[k] if k is not None else None
+        after = frames[k + 1] if k is not None and k + 1 < len(frames) else None
+        rows.append((name, f(cr, tap), f(bj, cr), f(built, tap), c["built_ms"], c["ready_ms"], restore, after))
+    print("== %s  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready, restore frame, next frame)" % prefix)
     for r in rows:
         print("  %-16s %s" % (r[0], r[1:]))
     cols = list(zip(*[r[1:] for r in rows]))
-    print("  medians %s" % [round(st.median([v for v in c if v is not None]), 1) if any(v is not None for v in c) else None for c in cols])
+    print("  medians %s" % [round(st.median([v for v in c if v is not None]), 2) if any(v is not None for v in c) else None for c in cols])

@@ -33,7 +33,159 @@ Arms (environment variables of one QA build; see qa_patch.py.txt):
   cone          (rebased round) the kit's conifer shadow cones read back
                 from the renderer, as R2 made them;
   noprime       (rebased round) only the rite's title primes, as before
-                note 3 below.
+                note 3 below;
+  earlyall      (review round on the rebased head) every saved run's title
+                warm-up starts before the title, Acts II-IV too, as before
+                9a1f1eff (qa_patch-review-a6f09fde.py.txt).
+In the rebased and review rounds' QA patches arms late and nowarm still prime
+(as the build does for a saved Act I run): QA_LATE moves only the warm's
+start, QA_NO_TITLE_WARM only skips the warm.
+
+Review round on the rebased head: a6f09fde (2026-10-04)
+=======================================================
+
+The rebased head (4541c42b; its rows are the rebased round's, below) was
+reviewed adversarially: six minor findings, no blocker. This branch was not
+rebased again (main has since moved to d402820b, #669); the tree is main
+1b00ac3c plus R1.1.
+
+Code commit a6f09fde (after it, only this folder changes):
+  1 An Act I run at or past its boss (in the fight, or stored waiting on its
+    crown relic, act 0 with the marker on the cleared boss) primed and warmed
+    from before the title, and that warm decoded Act II's pictures under the
+    rite, the one thing R1.1 keeps out of it. The title now asks the question
+    `_warm_landscape_for` asks (`Main._past_boss`, shared) of the saved map,
+    read once and handed to `_warm_title_road`: only a run whose next map is
+    Act I's primes and warms early. Pinned in tests/test_map_title_road.gd
+    (`_other_act_warms_once_lit`, with an Act I save on its cleared boss).
+  2 `MapJourneyPrefetch.prime` and `MapLandscapeAssets.prime` described R1's
+    boot-only call; they now say Main calls them before any title that warms
+    Act I's land, and what a read-back costs there (about 10 ms before the
+    first frame, 21-23 ms before a later title).
+  3-6 are evidence: this round's rows below, and corrections to the rebased
+    round's text (its rite comparison now covers every rested arm and the
+    first frame; its restore-frame figures cite the table that holds them).
+Mutations: mutations-a6f09fde.txt, every mutation of the rebased round re-run
+on a6f09fde plus three new ones (M6, M6b, M6c); all caught.
+
+Batch rc1: one QA install of a6f09fde (bench label r11-a6f09fde; the QA patch
+qa_patch-review-a6f09fde.py.txt, on top of qa_marks_patch.py.txt; the bench
+title_bench.gd.txt now records early_all), 55 launches under the iPad batch
+lock in 22 minutes (installed 01:03, last launch 01:24), all nonce-matched,
+none dropped. A rested block (12 s between launches, 10 s after the
+after-warm launches), then one back-to-back block. Plan in plans.txt
+(plan-rc1). Rows: device-rows-review-a6f09fde.jsonl;
+summary-review-a6f09fde.txt (summary3.py.txt); tables-review-a6f09fde.txt
+(rite_split.py.txt and tap_split.py.txt, both extended this round; they still
+print every line they printed before).
+
+Back to the Road, tap as the rite lands (Act I), tap to a drawn interactive
+map, rested:
+  cand  703.5-762.4 ms (median 711.6, n=6): 705.7, 714.0, 762.4, 703.5,
+        709.2, 723.4. The 1.0 s goal holds, median and worst.
+  late  2994.8-3195.8 ms (median 3076.0, n=6), interleaved.
+  The paced build had 35.7-59.0 ms left when the map hurried it; the
+  restore's frame 148.4-183.5 ms (median 166.8), the next 16.7-50.1 (median
+  23.25); the flare and flood 469.3-470.9 ms (tables-review-a6f09fde.txt).
+
+After the warm (360 title frames after the rite, then the tap), rested:
+  cand 717.5-749.6 ms (median 726.2, n=4); late 716.2-1134.5 (median 720.5,
+  n=4: its first launch's restore frame took 564.2 ms against 164.4-181.0 in
+  the other three, on the same kept land; one control launch, cause not
+  found); nowarm 3297.9-3352.4 (median 3322.6, n=4). The warm ends 699-1002
+  ms after the rite lands (late: 3348-3499).
+
+A tap that lands the rite 500 ms in, then Continue, rested, interleaved:
+  cand 2180.5-2328.1 ms (median 2283.2, n=5); late 2995.4-3118.6 (median
+  3118.0, n=5): about 0.83 s faster.
+
+Acts II-IV (review finding 4). R1.1's 1.0 s goal and its early warm are Act
+I's: Act II's map has no land to build. Act II, tap as the rite lands,
+rested, interleaved:
+  once lit (cand, the build)  1106.4-1147.8 ms over four launches (median
+        1123.1); the first Act II launch of the batch took 4225.7 ms, its
+        restore frame 3680.2 ms against 548.8-582.6 in the other nine Act II
+        launches of either arm (the first open of Act II's map on this
+        install; median 1135.9 with it).
+  before the title (earlyall)  1085.9-1136.6 ms (median 1111.9, n=5).
+  Over 1.0 s either way, as at the R1 base (1078-1112): the restore builds
+  the painted map in one frame of 549-583 ms, which no warm touches. The
+  early warm opened the map no sooner (11 ms at the median, inside the
+  spread) and cost the rite: p95 median 22.75 (worst 46.64) against 19.47
+  (38.5), frames over 20 ms median 9 (worst 33) against 3 (12), its pictures
+  held under the rite (video memory at lit 229.2-237.2 MiB against 187.8).
+  So Acts II-IV keep waiting for the rite (`Main._warm_title_road_once_lit`).
+  Acts III and IV run the same code as Act II and were not measured
+  separately.
+
+The launch rite's frames (ms; p50 / p95 / max per launch, median and worst),
+rested, every arm (rite_split.py.txt; review finding 3):
+  cand e0+aw  16.66 / 16.77 (19.77) / 77.15 (85.46), n=10
+  late e0+aw  16.66 / 19.27 (47.72) / 73.97 (77.74), n=10
+  nowarm aw   16.66 / 19.32 (19.61) / 70.12 (74.6), n=4
+  cand skip   16.69 / 22.39 (24.03) / 79.67 (83.7), n=5
+  late skip   16.67 / 23.15 (27.44) / 63.13 (77.35), n=5
+  Every launch's max is the title's first frame. First frame, cand against
+  late (difference of medians, permutation test): e0 and aw +3.2 ms (77.15
+  against 73.95, p = 0.21); skip +16.6 (79.7 against 63.1, p = 0.05); every
+  rested arm +4.5 (78.3 against 73.8, n = 15 each, p = 0.09). Pooled with
+  the rebased round's rows (the same Act I code under the rite, n = 31
+  each): +5.0 ms (78.3 against 73.3), p = 0.005; skip +13.15 (p = 0.001),
+  e0 and aw +3.9 (p = 0.10). The early warm does lengthen the title's first
+  frame, by about 5 ms at the median. (The skip arms differ more because the
+  late skip launches' first frames, 62.2-77.4, ran lower than late's other
+  arms in both rounds, though the skip comes 500 ms after that frame.)
+  That frame is the one `TitleScreen._warm_pipelines` builds the rite's
+  pipelines in, under a cover of the night and the ember alone, as the boot
+  splash shows; the rite starts from 0 after it, without its delta. So the
+  cost is a still frame about 5 ms longer before the rite moves, beside the
+  boot's +49 to +57 ms (below), not a stutter in the rite. The likely cause
+  is the two high-priority picture threads beside the main thread on the
+  A12's two performance cores: the price of starting the pictures before the
+  title, which is what brings the tap as the rite lands from 3.08 s to 0.71
+  s. Not changed.
+  The other frames: max cand median 20.2 (worst 24.9), late 26.55 (48.4),
+  nowarm 22.6 (24.1); frames over 20 ms cand median 0.5 (worst 4), late 3
+  (19), nowarm 3 (4). Cand against late: other frames' max p = 0.002 (lower
+  in cand), frames over 20 ms p = 0.07.
+
+Title frames after the rite (aw, 360 frames), p50 / p95 / max, median (worst):
+  cand    16.66 / 18.91 (18.99) / 47.62 (48.47)
+  late    16.64 / 18.58 (19.0) / 32.29 (48.37)
+  nowarm  16.66 / 19.01 (19.25) / 22.46 (46.06)
+  Cand's frames of about 48 ms (3 of 4 launches) came 0.5-1.1 s after its
+  warm had ended (frames 75-110 of the 360, phase done), as at the R1 base
+  (the bursts noted there; still not identified).
+
+Video memory: on the title after the warm cand 251.8-259.3 MiB against
+nowarm 187.0, so +64.8 to +72.3 MiB, under the 80 MiB per-act kept budget. At
+lit cand 249.1-258.9 against late and nowarm 186.8.
+
+Boot, Main._ready to the first frame (median): cand e0 298.7 ms (one launch
+443.2), aw 277.6, skip 288.9; late e0 241.4, aw 220.9, skip 239.6; nowarm
+223.4. Prime 9.5-12.4 ms in every Act I arm (late and nowarm prime too), the
+warm's start 1.7-2.4 ms; the rest of cand's +49 to +57 ms over late is the
+title built while the pictures decode.
+
+Back to back (no rest between launches, after the 20-minute rested block),
+stated as such:
+  cand  719.3, 752.3, 727.7, 736.8, 1449.4 (median 736.8)
+  late  2928.2, 3150.4, 3183.1, 4703.5, 3630.9 (median 3183.1)
+  In the fourth and fifth rounds the device slowed in both arms (Main._ready
+  to first frame: late 350.8 ms, cand 300.8, against 210-264 before); the
+  candidate's fifth build was 818.6 ms short when the map opened. The goal
+  is a rested iPad 8 (orchestrator's ruling).
+
+The measured head (review finding 6): every row of this round is from
+a6f09fde, and no production file changes after it on this branch. Main has
+moved to d402820b (#669, card faces). Rebasing onto it adds to the measured
+path only `CardFaces.forget()` in `Main._apply_content_hydration` (run at
+boot) and at the top of `_show_title`: on a cold boot both clear three empty
+containers and bump a counter. card_faces.gd, baked_card.gd, card_grid.gd,
+card_view.gd and choice_screen.gd's card grid draw cards, which nothing on
+the title-to-map path shows. A PR merged after that rebase names a6f09fde as
+the measured head and #669's diff as the production change after it, or
+re-confirms on the device.
 
 Rebased round: 7091fc1e, on main 1b00ac3c (2026-10-03)
 ======================================================
@@ -84,11 +236,13 @@ map, rested:
   heavier land does not reach the tap: the paced build under the rite ends
   565-601 ms after the tap (558-577 at the R1 base), 39-62 ms after the map
   hurried it. The +40 ms is the map's own frames: tap to the screen's land
-  in place 667.3-711.7 ms against 653.8-698.0; the restore's frame
-  150.0-183.1 ms (median 158.0) against 148.2-150.1 (149.9), and the next,
-  where the land enters the tree and is first drawn, 26.1-50.1 (median 41.3)
-  against 21.3-50.4 (25.1) (tables-rebased-7091fc1e.txt). The flare and
-  flood (tap to restore 467-486 ms) are unchanged.
+  in place 667.3-711.7 ms against 653.8-698.0; the restore's frame (the
+  first of the tap's frames over 100 ms) 150.0-183.1 ms (median 157.95)
+  against 148.2-150.1 (149.95), and the next, where the land enters the tree
+  and is first drawn, 26.1-50.1 (median 41.3) against 21.3-50.4 (25.05)
+  (tables-rebased-7091fc1e.txt, regenerated in the review round with
+  tap_split.py.txt's two frame columns; the earlier table did not hold
+  them). The flare and flood (tap to restore 467-486 ms) are unchanged.
 
 After the warm (360 title frames after the rite, then the tap), rested:
   ready  cand 713.3-745.8 (median 722.0, n=5); late 712.1-765.0 (median
@@ -101,17 +255,26 @@ A tap that lands the rite 500 ms in, then Continue, rested, interleaved:
   the map hurries it (R1 base: cand median 2234.1).
 
 The launch rite's frames (ms; p50 / p95 / max per launch, median and worst),
-rested, e0 and aw launches (rite_split.py.txt):
-  cand    16.66 / 16.79 (18.97) / 77.97 (81.92), n=11
-  late    16.66 / 19.22 (47.52) / 76.03 (83.95), n=11
-  nowarm  16.65 / 19.18 (42.99) / 73.15 (76.92), n=5
+rested (rite_split.py.txt):
+  cand e0+aw  16.66 / 16.79 (18.97) / 77.97 (81.92), n=11
+  late e0+aw  16.66 / 19.22 (47.52) / 76.03 (83.95), n=11
+  nowarm aw   16.65 / 19.18 (42.99) / 73.15 (76.92), n=5
+  cand skip   16.66 / 18.96 (46.15) / 82.06 (85.08), n=5
+  late skip   16.66 / 22.63 (24.25) / 67.95 (76.41), n=5
   Every launch's max is the title's first frame, which builds the rite's
-  pipelines: cand median 78.0 (worst 81.9), late 76.0 (84.0), nowarm 73.2
-  (76.9). It rose from 46-61 ms at the R1 base in every arm alike, with
-  main's changes (not attributed further). The other frames: max cand median 22.1 (worst 26.9), late
-  25.3 (48.7), nowarm 23.9 (48.3); frames over 20 ms cand median 1 (worst 3),
-  late 2 (19), nowarm 3 (12). Permutation tests, cand against late: other
-  frames' max p = 0.19, frames over 20 ms p = 0.39; no difference shown.
+  pipelines. It rose from 46-61 ms at the R1 base in every arm alike, with
+  main's changes (not attributed further). First frame, cand against late:
+  e0 and aw 78.0 against 76.0 (+2.0, p = 0.55); skip 82.1 against 67.9
+  (+14.2, p = 0.12; cand 75.0, 85.1, 66.6, 82.1, 84.5 against 76.4, 67.9,
+  63.4, 66.5, 73.3); every rested arm 78.8 against 73.15 (+5.65, n = 16
+  each, p = 0.065). This round alone shows a trend against the candidate
+  (the R1 base had +2.3 ms, p = 0.60); with the review round's rows it is
+  +5.0 ms, p = 0.005 (above). (Corrected in the review round: this paragraph
+  first compared the e0 and aw launches only and said no difference was
+  shown.) The other frames: max cand median 22.1 (worst 26.9), late 25.3
+  (48.7), nowarm 23.9 (48.3); frames over 20 ms cand median 1 (worst 3),
+  late 2 (19), nowarm 3 (12). Permutation tests, cand against late (e0 and
+  aw): other frames' max p = 0.19, frames over 20 ms p = 0.39.
   cone (R2's read-back cones, e0, n=4): 16.66 / 18.61 (21.07) / 75.02
   (86.68); frames over 20 ms median 3.5 (worst 6) against cand's 1 (3),
   p = 0.03: the cones' read-backs cost the rite frames, as expected.

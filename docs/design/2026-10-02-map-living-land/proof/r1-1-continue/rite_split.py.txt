@@ -1,19 +1,36 @@
-"""Rebased round: the launch rite's frames split into the title's first frame
-(which builds the rite's pipelines) and the rest, per arm, from committed rows;
-plus a permutation test of the other frames' max and of frames over 20 ms,
-candidate against each other arm.
-usage: rite_split.py <device-rows-*.jsonl>"""
+"""The launch rite's frames split into the title's first frame (which builds
+the rite's pipelines) and the rest, per arm, from committed rows; and
+permutation tests (difference of medians, two-sided, 20000 shuffles, seed 660),
+candidate against the late control: the other frames' max and frames over
+20 ms (e0 and aw launches), and the first frame over every rested arm that has
+both (e0, aw, skip), each alone and pooled. With several row files, every group
+and test is also pooled over them (the same Act I code under the rite).
+Review round (a6f09fde): the skip arm's first frames, the pooled first-frame
+test, and Act II with its warm once lit against from before the title.
+usage: rite_split.py <device-rows-*.jsonl> [<device-rows-*.jsonl> ...]"""
 import json, sys, random, statistics as st
-launches = {}
-for l in open(sys.argv[1]):
-    if l.strip():
-        r = json.loads(l); launches.setdefault(r["launch"], {})[r["probe"]] = r
+
+
+def load(path):
+    launches = {}
+    for l in open(path):
+        if l.strip():
+            r = json.loads(l); launches.setdefault(r["launch"], {})[r["probe"]] = r
+    return launches
+
+
 def ok(name, by):
     return any(a.startswith("--qa-nonce=" + name + "-") for a in by.get("start", {}).get("args", "").split()) and "done" in by
+
+
 def pct(v, q):
     t = sorted(v); return t[int(len(t) * q)]
+
+
 def med(v):
     return round(st.median(v), 2) if v else None
+
+
 def perm(a, b, n=20000):
     obs = abs(st.median(a) - st.median(b)); pool = a + b; k = len(a); hits = 0
     rng = random.Random(660)
@@ -21,28 +38,73 @@ def perm(a, b, n=20000):
         rng.shuffle(pool)
         if abs(st.median(pool[:k]) - st.median(pool[k:])) >= obs - 1e-9: hits += 1
     return round(hits / n, 3)
-groups = {}
-for label, prefixes in [("cand (e0+aw, rested)", ["r-cand-e0-", "r-cand-aw-"]),
-                        ("late (e0+aw, rested)", ["r-late-e0-", "r-late-aw-"]),
-                        ("nowarm (aw, rested)", ["r-nowarm-aw-"]),
-                        ("cone (e0, rested)", ["r-cone-e0-"]),
-                        ("cand e0 only", ["r-cand-e0-"]),
-                        ("late e0 only", ["r-late-e0-"]),
-                        ("cand back to back", ["b-cand-e0-"]),
-                        ("late back to back", ["b-late-e0-"])]:
+
+
+GROUPS = [("cand (e0+aw, rested)", ["r-cand-e0-", "r-cand-aw-"]),
+          ("late (e0+aw, rested)", ["r-late-e0-", "r-late-aw-"]),
+          ("nowarm (aw, rested)", ["r-nowarm-aw-"]),
+          ("cone (e0, rested)", ["r-cone-e0-"]),
+          ("cand e0 only", ["r-cand-e0-"]),
+          ("late e0 only", ["r-late-e0-"]),
+          ("cand skip (rested)", ["r-cand-skip-"]),
+          ("late skip (rested)", ["r-late-skip-"]),
+          ("cand all rested (e0+aw+skip)", ["r-cand-e0-", "r-cand-aw-", "r-cand-skip-"]),
+          ("late all rested (e0+aw+skip)", ["r-late-e0-", "r-late-aw-", "r-late-skip-"]),
+          ("Act II once lit (e0)", ["r-cand2-e0-"]),
+          ("Act II before the title (e0)", ["r-early2-e0-"]),
+          ("cand back to back", ["b-cand-e0-"]),
+          ("late back to back", ["b-late-e0-"])]
+
+
+def split(sets, label, prefixes):
     f1, rmax, rp95, over, p50, p95, mx = [], [], [], [], [], [], []
-    for name, by in sorted(launches.items()):
-        if not ok(name, by) or not any(name.startswith(p) and name[len(p):].isdigit() for p in prefixes):
-            continue
-        frames = by["lit"]["rite_frames"]; s = by["lit"]["rite"]
-        p50.append(s["p50_ms"]); p95.append(s["p95_ms"]); mx.append(s["max_ms"])
-        f1.append(frames[1]); rest = frames[2:]
-        rmax.append(max(rest)); rp95.append(pct(rest, 0.95)); over.append(len([v for v in rest if v > 20.0]))
-    groups[label] = (rmax, over)
-    print("%-28s n=%d  p50 med %s worst %s | p95 med %s worst %s | max med %s worst %s" % (label, len(p50), med(p50), max(p50), med(p95), max(p95), med(mx), max(mx)))
-    print("%-28s       first frame med %s worst %s | other frames: max med %s worst %s, p95 med %s worst %s, >20 ms med %s worst %s"
+    for launches in sets:
+        for name, by in sorted(launches.items()):
+            if not ok(name, by) or not any(name.startswith(p) and name[len(p):].isdigit() for p in prefixes):
+                continue
+            frames = by["lit"]["rite_frames"]; s = by["lit"]["rite"]
+            p50.append(s["p50_ms"]); p95.append(s["p95_ms"]); mx.append(s["max_ms"])
+            f1.append(frames[1]); rest = frames[2:]
+            rmax.append(max(rest)); rp95.append(pct(rest, 0.95)); over.append(len([v for v in rest if v > 20.0]))
+    if not p50:
+        return None
+    print("%-30s n=%d  p50 med %s worst %s | p95 med %s worst %s | max med %s worst %s" % (label, len(p50), med(p50), max(p50), med(p95), max(p95), med(mx), max(mx)))
+    print("%-30s       first frame med %s worst %s | other frames: max med %s worst %s, p95 med %s worst %s, >20 ms med %s worst %s"
           % ("", med(f1), max(f1), med(rmax), max(rmax), med(rp95), max(rp95), med(over), max(over)))
-c = groups["cand (e0+aw, rested)"]
-for other in ["late (e0+aw, rested)", "nowarm (aw, rested)", "cone (e0, rested)"]:
-    o = groups[other]
-    print("cand vs %-22s other frames' max: p=%s; frames > 20 ms: p=%s" % (other, perm(c[0], o[0]), perm(c[1], o[1])))
+    return {"first": f1, "max": rmax, "over": over}
+
+
+def report(sets, title):
+    print("== " + title)
+    g = {}
+    for label, prefixes in GROUPS:
+        r = split(sets, label, prefixes)
+        if r is not None:
+            g[label] = r
+    def test(a, b, key, what):
+        if a in g and b in g:
+            x, y = g[a][key], g[b][key]
+            print("%-58s %s: %+.2f ms (medians %s against %s), p=%s"
+                  % (a.split(" (")[0] + " vs " + b, what, st.median(x) - st.median(y), med(x), med(y), perm(x, y)))
+    c, l = "cand (e0+aw, rested)", "late (e0+aw, rested)"
+    if c in g and l in g:
+        print("%-58s other frames' max: p=%s; frames > 20 ms: p=%s" % ("cand vs late (e0+aw, rested)", perm(g[c]["max"], g[l]["max"]), perm(g[c]["over"], g[l]["over"])))
+    for other in ["nowarm (aw, rested)", "cone (e0, rested)"]:
+        if c in g and other in g:
+            print("%-58s other frames' max: p=%s; frames > 20 ms: p=%s" % ("cand vs " + other, perm(g[c]["max"], g[other]["max"]), perm(g[c]["over"], g[other]["over"])))
+    test(c, l, "first", "first frame")
+    test("cand skip (rested)", "late skip (rested)", "first", "first frame")
+    test("cand all rested (e0+aw+skip)", "late all rested (e0+aw+skip)", "first", "first frame")
+    test("Act II before the title (e0)", "Act II once lit (e0)", "first", "first frame")
+    test("Act II before the title (e0)", "Act II once lit (e0)", "max", "other frames' max")
+    test("Act II before the title (e0)", "Act II once lit (e0)", "over", "frames > 20 ms")
+    for label in ["cand skip (rested)", "late skip (rested)"]:
+        if label in g:
+            print("  %s first frames: %s" % (label, g[label]["first"]))
+
+
+sets = [load(p) for p in sys.argv[1:]]
+for path, launches in zip(sys.argv[1:], sets):
+    report([launches], path.rsplit("/", 1)[-1])
+if len(sets) > 1:
+    report(sets, "pooled: " + " + ".join(p.rsplit("/", 1)[-1] for p in sys.argv[1:]))

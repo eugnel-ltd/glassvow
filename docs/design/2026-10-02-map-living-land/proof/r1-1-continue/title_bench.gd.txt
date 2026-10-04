@@ -44,6 +44,7 @@ func _ready() -> void:
 		"late": not OS.get_environment("QA_LATE").is_empty(),
 		"renderer_cone": not OS.get_environment("QA_RENDERER_CONE").is_empty(),
 		"no_later_prime": not OS.get_environment("QA_NO_LATER_PRIME").is_empty(),
+		"early_all": not OS.get_environment("QA_EARLY_ALL").is_empty(),
 		"no_rush": not OS.get_environment("QA_NO_RUSH").is_empty(),
 		"warm_start_ms": Engine.get_meta("qa_warm_start_ms", -1.0),
 		"prime_ms": Engine.get_meta("qa_prime_ms", -1.0), "boot_readback_ms": boot_readback_ms,

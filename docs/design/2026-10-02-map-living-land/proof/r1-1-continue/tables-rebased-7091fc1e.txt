@@ -1,85 +1,100 @@
-Rebased round at 7091fc1e: the launch rite's frames split (rite_split.py.txt)
+Rebased round at 7091fc1e: the launch rite's frames split (rite_split.py.txt; the review
+round at a6f09fde added the skip arm, the first-frame tests and the restore's frames)
 
-cand (e0+aw, rested)         n=11  p50 med 16.66 worst 16.67 | p95 med 16.79 worst 18.97 | max med 77.97 worst 81.92
-                                   first frame med 78.0 worst 81.9 | other frames: max med 22.1 worst 26.9, p95 med 16.8 worst 18.6, >20 ms med 1 worst 3
-late (e0+aw, rested)         n=11  p50 med 16.66 worst 16.69 | p95 med 19.22 worst 47.52 | max med 76.03 worst 83.95
-                                   first frame med 76.0 worst 84.0 | other frames: max med 25.3 worst 48.7, p95 med 19.1 worst 46.2, >20 ms med 2 worst 19
-nowarm (aw, rested)          n=5  p50 med 16.65 worst 16.66 | p95 med 19.18 worst 42.99 | max med 73.15 worst 76.92
-                                   first frame med 73.2 worst 76.9 | other frames: max med 23.9 worst 48.3, p95 med 19.1 worst 28.0, >20 ms med 3 worst 12
-cone (e0, rested)            n=4  p50 med 16.66 worst 16.66 | p95 med 18.61 worst 21.07 | max med 75.02 worst 86.68
-                                   first frame med 75.05 worst 86.7 | other frames: max med 22.4 worst 24.5, p95 med 18.3 worst 19.6, >20 ms med 3.5 worst 6
-cand e0 only                 n=6  p50 med 16.66 worst 16.67 | p95 med 16.78 worst 18.97 | max med 74.56 worst 81.78
-                                   first frame med 74.55 worst 81.8 | other frames: max med 21.05 worst 23.8, p95 med 16.8 worst 18.6, >20 ms med 1.0 worst 3
-late e0 only                 n=6  p50 med 16.66 worst 16.67 | p95 med 18.16 worst 21.47 | max med 74.52 worst 83.95
-                                   first frame med 74.5 worst 84.0 | other frames: max med 24.25 worst 48.0, p95 med 18.05 worst 20.8, >20 ms med 1.0 worst 7
-cand back to back            n=6  p50 med 16.66 worst 16.66 | p95 med 19.01 worst 20.25 | max med 77.85 worst 97.41
-                                   first frame med 77.85 worst 97.4 | other frames: max med 22.6 worst 50.2, p95 med 18.75 worst 20.2, >20 ms med 3.0 worst 8
-late back to back            n=6  p50 med 16.66 worst 16.69 | p95 med 21.37 worst 43.4 | max med 75.0 worst 90.2
-                                   first frame med 75.0 worst 90.2 | other frames: max med 48.45 worst 48.5, p95 med 20.65 worst 43.4, >20 ms med 7.5 worst 20
-cand vs late (e0+aw, rested)   other frames' max: p=0.185; frames > 20 ms: p=0.388
-cand vs nowarm (aw, rested)    other frames' max: p=0.598; frames > 20 ms: p=0.154
-cand vs cone (e0, rested)      other frames' max: p=0.895; frames > 20 ms: p=0.032
+== device-rows-rebased-7091fc1e.jsonl
+cand (e0+aw, rested)           n=11  p50 med 16.66 worst 16.67 | p95 med 16.79 worst 18.97 | max med 77.97 worst 81.92
+                                     first frame med 78.0 worst 81.9 | other frames: max med 22.1 worst 26.9, p95 med 16.8 worst 18.6, >20 ms med 1 worst 3
+late (e0+aw, rested)           n=11  p50 med 16.66 worst 16.69 | p95 med 19.22 worst 47.52 | max med 76.03 worst 83.95
+                                     first frame med 76.0 worst 84.0 | other frames: max med 25.3 worst 48.7, p95 med 19.1 worst 46.2, >20 ms med 2 worst 19
+nowarm (aw, rested)            n=5  p50 med 16.65 worst 16.66 | p95 med 19.18 worst 42.99 | max med 73.15 worst 76.92
+                                     first frame med 73.2 worst 76.9 | other frames: max med 23.9 worst 48.3, p95 med 19.1 worst 28.0, >20 ms med 3 worst 12
+cone (e0, rested)              n=4  p50 med 16.66 worst 16.66 | p95 med 18.61 worst 21.07 | max med 75.02 worst 86.68
+                                     first frame med 75.05 worst 86.7 | other frames: max med 22.4 worst 24.5, p95 med 18.3 worst 19.6, >20 ms med 3.5 worst 6
+cand e0 only                   n=6  p50 med 16.66 worst 16.67 | p95 med 16.78 worst 18.97 | max med 74.56 worst 81.78
+                                     first frame med 74.55 worst 81.8 | other frames: max med 21.05 worst 23.8, p95 med 16.8 worst 18.6, >20 ms med 1.0 worst 3
+late e0 only                   n=6  p50 med 16.66 worst 16.67 | p95 med 18.16 worst 21.47 | max med 74.52 worst 83.95
+                                     first frame med 74.5 worst 84.0 | other frames: max med 24.25 worst 48.0, p95 med 18.05 worst 20.8, >20 ms med 1.0 worst 7
+cand skip (rested)             n=5  p50 med 16.66 worst 16.76 | p95 med 18.96 worst 46.15 | max med 82.06 worst 85.08
+                                     first frame med 82.1 worst 85.1 | other frames: max med 19.0 worst 46.2, p95 med 18.7 worst 20.7, >20 ms med 0 worst 2
+late skip (rested)             n=5  p50 med 16.66 worst 16.67 | p95 med 22.63 worst 24.25 | max med 67.95 worst 76.41
+                                     first frame med 67.9 worst 76.4 | other frames: max med 22.6 worst 24.2, p95 med 17.1 worst 20.5, >20 ms med 1 worst 2
+cand all rested (e0+aw+skip)   n=16  p50 med 16.66 worst 16.76 | p95 med 17.4 worst 46.15 | max med 78.79 worst 85.08
+                                     first frame med 78.8 worst 85.1 | other frames: max med 21.9 worst 46.2, p95 med 17.3 worst 20.7, >20 ms med 1.0 worst 3
+late all rested (e0+aw+skip)   n=16  p50 med 16.66 worst 16.69 | p95 med 19.64 worst 47.52 | max med 73.16 worst 83.95
+                                     first frame med 73.15 worst 84.0 | other frames: max med 24.1 worst 48.7, p95 med 18.1 worst 46.2, >20 ms med 1.0 worst 19
+cand back to back              n=6  p50 med 16.66 worst 16.66 | p95 med 19.01 worst 20.25 | max med 77.85 worst 97.41
+                                     first frame med 77.85 worst 97.4 | other frames: max med 22.6 worst 50.2, p95 med 18.75 worst 20.2, >20 ms med 3.0 worst 8
+late back to back              n=6  p50 med 16.66 worst 16.69 | p95 med 21.37 worst 43.4 | max med 75.0 worst 90.2
+                                     first frame med 75.0 worst 90.2 | other frames: max med 48.45 worst 48.5, p95 med 20.65 worst 43.4, >20 ms med 7.5 worst 20
+cand vs late (e0+aw, rested)                               other frames' max: p=0.185; frames > 20 ms: p=0.388
+cand vs nowarm (aw, rested)                                other frames' max: p=0.598; frames > 20 ms: p=0.154
+cand vs cone (e0, rested)                                  other frames' max: p=0.895; frames > 20 ms: p=0.032
+cand vs late (e0+aw, rested)                               first frame: +2.00 ms (medians 78.0 against 76.0), p=0.551
+cand skip vs late skip (rested)                            first frame: +14.20 ms (medians 82.1 against 67.9), p=0.116
+cand all rested vs late all rested (e0+aw+skip)            first frame: +5.65 ms (medians 78.8 against 73.15), p=0.065
+  cand skip (rested) first frames: [75.0, 85.1, 66.6, 82.1, 84.5]
+  late skip (rested) first frames: [76.4, 67.9, 63.4, 66.5, 73.3]
 
-The Continue tap split by QA marks (tap_split.py.txt): tap -> continue_run (flare and flood), -> bind, tap -> land built (worker), -> map built (screen not pending), -> ready (drawn); rebased round:
-== r-cand-e0-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready)
-  r-cand-e0-1      (470.0, 61.2, 593.6, 699.5, 744.3)
-  r-cand-e0-2      (467.4, 74.2, 600.8, 711.7, 750.6)
-  r-cand-e0-3      (469.7, 54.2, 568.1, 667.3, 704.2)
-  r-cand-e0-4      (468.5, 56.2, 571.6, 675.6, 718.1)
-  r-cand-e0-5      (486.2, 53.8, 584.8, 699.5, 748.7)
-  r-cand-e0-6      (469.8, 55.8, 565.2, 682.9, 722.5)
-  medians [469.8, 56.0, 578.2, 691.2, 733.4]
-== r-cand-aw-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready)
-  r-cand-aw-1      (472.9, 66.6, -6283.5, 664.0, 745.8)
-  r-cand-aw-2      (472.6, 61.7, -5956.6, 630.8, 713.3)
-  r-cand-aw-3      (473.8, 69.5, -5953.0, 647.5, 725.8)
-  r-cand-aw-4      (472.2, 70.5, -6078.4, 633.2, 722.0)
-  r-cand-aw-5      (471.9, 70.0, -5958.8, 630.6, 713.3)
-  medians [472.6, 69.5, -5958.8, 633.2, 722.0]
-== r-late-aw-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready)
-  r-late-aw-1      (474.2, 68.9, -3655.9, 633.1, 712.1)
-  r-late-aw-2      (473.9, 69.5, -3754.9, 649.4, 765.0)
-  r-late-aw-3      (477.4, 70.8, -3440.4, 632.9, 719.3)
-  r-late-aw-4      (472.2, 73.4, -3417.2, 631.3, 727.1)
-  r-late-aw-5      (472.6, 70.5, -3525.9, 630.9, 723.7)
-  medians [473.9, 70.5, -3525.9, 632.9, 723.7]
-== r-late-e0-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready)
-  r-late-e0-1      (477.4, 468.6, 3223.2, 3266.7, 3319.2)
-  r-late-e0-2      (469.2, 446.7, 3177.4, 3218.5, 3280.9)
-  r-late-e0-3      (481.0, 418.1, 3128.2, 3168.5, 3219.6)
-  r-late-e0-4      (482.7, 398.2, 3017.3, 3064.2, 3109.5)
-  r-late-e0-5      (469.3, 429.6, 3079.8, 3120.2, 3173.5)
-  r-late-e0-6      (471.3, 449.0, 3129.5, 3168.9, 3211.3)
-  medians [474.4, 438.1, 3128.8, 3168.7, 3215.4]
+The Continue tap split by QA marks (tap_split.py.txt): tap -> continue_run (flare and flood), -> bind, tap -> land built (worker), -> map built (screen not pending), -> ready (drawn), then the restore's frame (the first of the tap's frames over 100 ms) and the frame after it; rebased round:
+== r-cand-e0-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready, restore frame, next frame)
+  r-cand-e0-1      (470.0, 61.2, 593.6, 699.5, 744.3, 183.1, 28.7)
+  r-cand-e0-2      (467.4, 74.2, 600.8, 711.7, 750.6, 181.8, 50.0)
+  r-cand-e0-3      (469.7, 54.2, 568.1, 667.3, 704.2, 150.1, 33.3)
+  r-cand-e0-4      (468.5, 56.2, 571.6, 675.6, 718.1, 165.2, 26.1)
+  r-cand-e0-5      (486.2, 53.8, 584.8, 699.5, 748.7, 150.0, 50.1)
+  r-cand-e0-6      (469.8, 55.8, 565.2, 682.9, 722.5, 150.7, 49.3)
+  medians [469.75, 56.0, 578.2, 691.2, 733.4, 157.95, 41.3]
+== r-cand-aw-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready, restore frame, next frame)
+  r-cand-aw-1      (472.9, 66.6, -6283.5, 664.0, 745.8, 197.2, None)
+  r-cand-aw-2      (472.6, 61.7, -5956.6, 630.8, 713.3, 164.1, None)
+  r-cand-aw-3      (473.8, 69.5, -5953.0, 647.5, 725.8, 180.5, None)
+  r-cand-aw-4      (472.2, 70.5, -6078.4, 633.2, 722.0, 166.7, None)
+  r-cand-aw-5      (471.9, 70.0, -5958.8, 630.6, 713.3, 164.4, None)
+  medians [472.6, 69.5, -5958.8, 633.2, 722.0, 166.7, None]
+== r-late-aw-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready, restore frame, next frame)
+  r-late-aw-1      (474.2, 68.9, -3655.9, 633.1, 712.1, 164.6, None)
+  r-late-aw-2      (473.9, 69.5, -3754.9, 649.4, 765.0, 181.3, None)
+  r-late-aw-3      (477.4, 70.8, -3440.4, 632.9, 719.3, 162.5, None)
+  r-late-aw-4      (472.2, 73.4, -3417.2, 631.3, 727.1, 164.9, None)
+  r-late-aw-5      (472.6, 70.5, -3525.9, 630.9, 723.7, 164.2, None)
+  medians [473.9, 70.5, -3525.9, 632.9, 723.7, 164.6, None]
+== r-late-e0-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready, restore frame, next frame)
+  r-late-e0-1      (477.4, 468.6, 3223.2, 3266.7, 3319.2, 571.0, 27.8)
+  r-late-e0-2      (469.2, 446.7, 3177.4, 3218.5, 3280.9, 548.3, 26.6)
+  r-late-e0-3      (481.0, 418.1, 3128.2, 3168.5, 3219.6, 521.2, 17.9)
+  r-late-e0-4      (482.7, 398.2, 3017.3, 3064.2, 3109.5, 499.9, 20.9)
+  r-late-e0-5      (469.3, 429.6, 3079.8, 3120.2, 3173.5, 516.8, 34.1)
+  r-late-e0-6      (471.3, 449.0, 3129.5, 3168.9, 3211.3, 547.9, 29.1)
+  medians [474.35, 438.15, 3128.85, 3168.7, 3215.45, 534.55, 27.2]
 
 The same split of the R1 base's rows (device-rows-review-9a1f1eff.jsonl):
-== r-cand-e0-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready)
-  r-cand-e0-1      (469.6, 53.4, 557.8, 657.2, 693.9)
-  r-cand-e0-2      (469.4, 53.1, 576.9, 655.2, 692.0)
-  r-cand-e0-3      (469.5, 54.7, 562.0, 653.8, 690.9)
-  r-cand-e0-4      (469.1, 55.4, 572.1, 698.0, 748.4)
-  r-cand-e0-5      (469.5, 53.7, 575.2, 653.8, 690.6)
-  r-cand-e0-6      (470.4, 56.9, 568.2, 682.8, 723.9)
-  medians [469.5, 54.2, 570.2, 656.2, 693.0]
-== r-cand-aw-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready)
-  r-cand-aw-1      (489.2, 65.5, -6092.0, 647.6, 722.8)
-  r-cand-aw-2      (473.1, 65.1, -6205.1, 630.8, 720.4)
-  r-cand-aw-3      (474.8, 69.1, -6053.1, 649.7, 724.9)
-  r-cand-aw-4      (472.3, 64.6, -5781.3, 615.2, 713.9)
-  r-cand-aw-5      (474.9, 65.1, -6088.2, 633.1, 706.0)
-  medians [474.8, 65.1, -6088.2, 633.1, 720.4]
-== r-late-aw-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready)
-  r-late-aw-1      (472.5, 68.8, -3474.5, 647.9, 723.8)
-  r-late-aw-2      (472.2, 66.7, -3271.8, 630.4, 710.3)
-  r-late-aw-3      (470.1, 68.9, -3489.3, 629.0, 703.5)
-  r-late-aw-4      (472.5, 64.2, -3430.2, 614.9, 697.9)
-  r-late-aw-5      (488.9, 61.4, -3452.8, 647.4, 723.7)
-  medians [472.5, 66.7, -3452.8, 630.4, 710.3]
-== r-late-e0-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready)
-  r-late-e0-1      (483.1, 409.4, 3076.1, 3114.1, 3168.2)
-  r-late-e0-2      (468.5, 376.7, 2969.3, 3025.9, 3079.2)
-  r-late-e0-3      (468.3, 397.0, 3078.6, 3116.8, 3167.2)
-  r-late-e0-4      (467.0, 390.8, 2994.1, 3032.3, 3080.6)
-  r-late-e0-5      (469.0, 380.7, 2977.7, 3015.3, 3067.9)
-  r-late-e0-6      (473.1, 373.3, 2954.2, 3008.8, 3061.2)
-  medians [468.8, 385.8, 2985.9, 3029.1, 3079.9]
+== r-cand-e0-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready, restore frame, next frame)
+  r-cand-e0-1      (469.6, 53.4, 557.8, 657.2, 693.9, 150.1, 25.5)
+  r-cand-e0-2      (469.4, 53.1, 576.9, 655.2, 692.0, 148.2, 24.6)
+  r-cand-e0-3      (469.5, 54.7, 562.0, 653.8, 690.9, 150.0, 21.3)
+  r-cand-e0-4      (469.1, 55.4, 572.1, 698.0, 748.4, 148.5, 50.4)
+  r-cand-e0-5      (469.5, 53.7, 575.2, 653.8, 690.6, 149.9, 21.7)
+  r-cand-e0-6      (470.4, 56.9, 568.2, 682.8, 723.9, 150.0, 28.4)
+  medians [469.5, 54.2, 570.15, 656.2, 692.95, 149.95, 25.05]
+== r-cand-aw-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready, restore frame, next frame)
+  r-cand-aw-1      (489.2, 65.5, -6092.0, 647.6, 722.8, 164.4, None)
+  r-cand-aw-2      (473.1, 65.1, -6205.1, 630.8, 720.4, 163.9, None)
+  r-cand-aw-3      (474.8, 69.1, -6053.1, 649.7, 724.9, 180.8, None)
+  r-cand-aw-4      (472.3, 64.6, -5781.3, 615.2, 713.9, 148.8, None)
+  r-cand-aw-5      (474.9, 65.1, -6088.2, 633.1, 706.0, 163.9, None)
+  medians [474.8, 65.1, -6088.2, 633.1, 720.4, 163.9, None]
+== r-late-aw-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready, restore frame, next frame)
+  r-late-aw-1      (472.5, 68.8, -3474.5, 647.9, 723.8, 181.2, None)
+  r-late-aw-2      (472.2, 66.7, -3271.8, 630.4, 710.3, 164.2, None)
+  r-late-aw-3      (470.1, 68.9, -3489.3, 629.0, 703.5, 164.7, None)
+  r-late-aw-4      (472.5, 64.2, -3430.2, 614.9, 697.9, 148.3, None)
+  r-late-aw-5      (488.9, 61.4, -3452.8, 647.4, 723.7, 164.4, None)
+  medians [472.5, 66.7, -3452.8, 630.4, 710.3, 164.4, None]
+== r-late-e0-  (tap->continue_run, continue_run->bind, tap->land built, tap->map built, tap->ready, restore frame, next frame)
+  r-late-e0-1      (483.1, 409.4, 3076.1, 3114.1, 3168.2, 497.6, 29.3)
+  r-late-e0-2      (468.5, 376.7, 2969.3, 3025.9, 3079.2, 464.9, 25.3)
+  r-late-e0-3      (468.3, 397.0, 3078.6, 3116.8, 3167.2, 481.7, 25.1)
+  r-late-e0-4      (467.0, 390.8, 2994.1, 3032.3, 3080.6, 481.6, 16.6)
+  r-late-e0-5      (469.0, 380.7, 2977.7, 3015.3, 3067.9, 463.1, 26.5)
+  r-late-e0-6      (473.1, 373.3, 2954.2, 3008.8, 3061.2, 463.7, 28.3)
+  medians [468.75, 385.75, 2985.9, 3029.1, 3079.9, 473.25, 25.9]
