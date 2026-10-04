@@ -1,0 +1,36 @@
+"""QA-only (never committed): the re-check of R1.1 at 759b051d, on top of
+qa_patch.py and qa_marks_patch.py.
+  QA_NO_ROOM_WARM=1  the title's RoomWarm (#670) is never made, so the title
+                     warms only Act I's land.
+Marks (QaMarks): RoomWarm made, each room built, the glyph jobs queued, the
+pages drawn, RoomWarm freed; the prefetch reaching DONE."""
+import sys
+
+W = sys.argv[1]
+
+
+def edit(path, pairs):
+    s = open(path).read()
+    for a, b in pairs:
+        assert s.count(a) == 1, (path, a[:60])
+        s = s.replace(a, b)
+    open(path, "w").write(s)
+
+
+edit(W + "/application/main.gd", [
+    ("func _warm_rooms() -> void:\n", "func _warm_rooms() -> void:\n"
+        "\tif not OS.get_environment(\"QA_NO_ROOM_WARM\").is_empty():\n\t\treturn\n"),
+    ("\tadd_child(_room_warm)\n", "\tadd_child(_room_warm)\n\tQaMarks.mark(\"room_warm_added\")\n"),
+])
+edit(W + "/presentation/ui/room_warm.gd", [
+    ("\t\tvar room: Control = _builders.pop_front().call()\n\t\t_collect(room)\n",
+     "\t\tQaMarks.mark(\"room_build\")\n\t\tvar room: Control = _builders.pop_front().call()\n"
+     "\t\t_collect(room)\n\t\tQaMarks.mark(\"room_built\")\n"),
+    ("\t\t\t_queue_jobs()\n", "\t\t\t_queue_jobs()\n\t\t\tQaMarks.mark(\"room_jobs %d\" % _jobs.size())\n"),
+    ("\tif not _drawn:\n\t\t_drawn = true\n", "\tif not _drawn:\n\t\tQaMarks.mark(\"room_draw\")\n\t\t_drawn = true\n"),
+    ("\tqueue_free()\n\n\n## Every face", "\tQaMarks.mark(\"room_warm_end\")\n\tqueue_free()\n\n\n## Every face"),
+])
+edit(W + "/presentation/map/map_journey_prefetch.gd", [
+    ("\tstep = Step.DONE\n", "\tstep = Step.DONE\n\tQaMarks.mark(\"prefetch_done\")\n"),
+])
+print("recheck patched")

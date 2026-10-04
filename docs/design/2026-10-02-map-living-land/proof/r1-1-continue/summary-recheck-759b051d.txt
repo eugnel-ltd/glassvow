@@ -1,0 +1,86 @@
+launches kept 25, dropped []
+
+== r-cand-aw (n=5)
+  Continue tap -> drawn interactive map ms: median 716.3, worst 720.8, best 700.9  [700.9, 720.8, 712.1, 718.6, 716.3]
+  phase at tap ['done', 'done', 'done', 'done', 'done']
+  boot main_ready -> first frame ms [268.8, 283.6, 273.5, 283.4, 276.3] (median 276.3)
+  rite p95 [16.75, 17.36, 16.74, 16.76, 18.57] max [83.24, 79.69, 78.08, 76.26, 81.32]
+  video MiB at lit [280.1, 284.1, 284.2, 284.2, 284.1]
+  title frames after the rite (per launch): p50 / p95 / max / >20 / >33
+    r-cand-aw-1      n=360  16.65 / 19.36 / 66.91 / 13 / 7
+    r-cand-aw-2      n=360  16.65 / 19.17 / 67.14 / 8 / 3
+    r-cand-aw-3      n=360  16.65 / 19.32 / 66.54 / 10 / 6
+    r-cand-aw-4      n=360  16.67 / 19.24 / 83.52 / 8 / 4
+    r-cand-aw-5      n=360  16.65 / 18.91 / 83.37 / 6 / 2
+  medians p50 16.6 p95 19.2 max 67.1 >20 8 >33 4; worst p95 19.36 max 83.52 >20 13 >33 7
+  timeline ms after the rite lands: map warm DONE | RoomWarm start (first room) / pages drawn / end | overlap
+    r-cand-aw-1      DONE 733.5 | room 783.8 / 883.9 / 950.9 ['room_jobs 15'] | overlap None (0 frames, max None); RoomWarm frames 8, max 66.91
+      frames > 33 ms (index, ms, start after lit, in): [(53, 66.9, 883.2, 'roomwarm'), (54, 66.4, 950.1, 'roomwarm'), (64, 47.4, 1169.0, 'neither'), (78, 47.8, 1435.6, 'neither'), (81, 39.6, 1527.0, 'neither'), (87, 48.0, 1652.2, 'neither'), (99, 48.3, 1885.3, 'neither')]
+    r-cand-aw-2      DONE 683.8 | room 767.9 / 867.6 / 932.5 ['room_jobs 15'] | overlap None (0 frames, max None); RoomWarm frames 8, max 67.14
+      frames > 33 ms (index, ms, start after lit, in): [(52, 64.8, 866.9, 'roomwarm'), (53, 67.1, 931.7, 'roomwarm'), (100, 47.0, 1768.0, 'neither')]
+    r-cand-aw-3      DONE 633.4 | room 784.1 / 886.2 / 950.6 ['room_jobs 15'] | overlap None (0 frames, max None); RoomWarm frames 8, max 66.54
+      frames > 33 ms (index, ms, start after lit, in): [(53, 64.4, 885.5, 'roomwarm'), (54, 66.5, 949.9, 'roomwarm'), (61, 47.2, 1119.1, 'neither'), (74, 48.0, 1368.7, 'neither'), (84, 47.7, 1569.0, 'neither'), (89, 40.8, 1692.6, 'neither')]
+    r-cand-aw-4      DONE 633.4 | room 767.5 / 900.6 / 967.5 ['room_jobs 15'] | overlap None (0 frames, max None); RoomWarm frames 8, max 83.52
+      frames > 33 ms (index, ms, start after lit, in): [(51, 40.5, 859.4, 'roomwarm'), (52, 66.6, 899.9, 'roomwarm'), (53, 83.5, 966.5, 'roomwarm'), (63, 47.7, 1202.4, 'neither')]
+    r-cand-aw-5      DONE 750.1 | room 767.5 / 867.3 / 915.3 ['room_jobs 15'] | overlap None (0 frames, max None); RoomWarm frames 8, max 83.37
+      frames > 33 ms (index, ms, start after lit, in): [(52, 48.1, 866.7, 'roomwarm'), (53, 83.4, 914.8, 'roomwarm')]
+  video MiB on the title after both warms [333.8, 337.8, 337.8, 338.3, 337.8] (median 337.8); at 360 frames [333.8, 337.8, 337.8, 338.3, 337.8]; RoomWarm still live [False, False, False, False, False], waited [0, 0, 0, 0, 0] frames
+
+== r-cand-e0 (n=7)
+  Continue tap -> drawn interactive map ms: median 702.5, worst 726.3, best 688.9  [711.7, 688.9, 700.1, 702.5, 690.2, 725.7, 726.3]
+  phase at tap ['building', 'building', 'building', 'building', 'building', 'building', 'building']
+  boot main_ready -> first frame ms [306.2, 274.7, 261.1, 276.1, 258.0, 266.2, 273.6] (median 273.6)
+  rite p95 [16.75, 18.71, 18.21, 18.02, 16.77, 16.75, 20.2] max [88.8, 82.32, 79.16, 70.94, 89.05, 75.81, 70.99]
+  video MiB at lit [284.1, 284.1, 284.3, 284.1, 280.1, 276.2, 284.1]
+
+== r-late-e0 (n=5)
+  Continue tap -> drawn interactive map ms: median 3010.4, worst 3028.9, best 2903.1  [3013.6, 2994.2, 3010.4, 2903.1, 3028.9]
+  phase at tap ['none', 'none', 'none', 'none', 'none']
+  boot main_ready -> first frame ms [259.6, 241.1, 248.2, 273.4, 250.6] (median 250.6)
+  rite p95 [19.42, 19.56, 19.63, 21.49, 19.45] max [76.29, 83.01, 85.89, 76.7, 75.14]
+  video MiB at lit [212.0, 212.0, 212.0, 212.0, 212.0]
+
+== r-noroom-aw (n=5)
+  Continue tap -> drawn interactive map ms: median 706.8, worst 710.1, best 700.7  [702.7, 710.1, 706.8, 707.5, 700.7]
+  phase at tap ['done', 'done', 'done', 'done', 'done']
+  boot main_ready -> first frame ms [276.6, 275.0, 271.5, 278.5, 286.1] (median 276.6)
+  rite p95 [16.76, 16.76, 16.76, 16.77, 16.76] max [77.83, 86.03, 84.97, 76.44, 77.02]
+  video MiB at lit [283.8, 284.1, 284.1, 284.1, 284.1]
+  title frames after the rite (per launch): p50 / p95 / max / >20 / >33
+    r-noroom-aw-1    n=360  16.68 / 19.38 / 48.49 / 15 / 7
+    r-noroom-aw-2    n=360  16.66 / 20.61 / 48.27 / 19 / 10
+    r-noroom-aw-3    n=360  16.67 / 17.06 / 19.25 / 0 / 0
+    r-noroom-aw-4    n=360  16.66 / 18.82 / 46.60 / 4 / 1
+    r-noroom-aw-5    n=360  16.66 / 18.85 / 48.15 / 8 / 3
+  medians p50 16.7 p95 18.9 max 48.1 >20 8 >33 3; worst p95 20.61 max 48.49 >20 19 >33 10
+  timeline ms after the rite lands: map warm DONE | RoomWarm start (first room) / pages drawn / end | overlap
+    r-noroom-aw-1    DONE 666.8 | room None / None / None [] | overlap None (0 frames, max None); RoomWarm frames 0, max None
+      frames > 33 ms (index, ms, start after lit, in): [(75, 46.0, 1254.4, 'neither'), (99, 48.0, 1685.4, 'neither'), (107, 48.5, 1852.0, 'neither'), (110, 42.5, 1940.9, 'neither'), (121, 48.3, 2151.7, 'neither'), (127, 48.0, 2285.3, 'neither'), (144, 48.0, 2602.0, 'neither')]
+    r-noroom-aw-2    DONE 683.3 | room None / None / None [] | overlap None (0 frames, max None); RoomWarm frames 0, max None
+      frames > 33 ms (index, ms, start after lit, in): [(82, 48.0, 1368.6, 'neither'), (85, 45.1, 1454.8, 'neither'), (91, 48.2, 1585.0, 'neither'), (94, 41.8, 1674.9, 'neither'), (102, 47.3, 1835.7, 'neither'), (115, 47.9, 2085.5, 'neither'), (121, 45.9, 2220.5, 'neither'), (126, 42.6, 2340.4, 'neither'), (130, 44.7, 2438.2, 'neither'), (145, 48.3, 2718.1, 'neither')]
+    r-noroom-aw-3    DONE 616.7 | room None / None / None [] | overlap None (0 frames, max None); RoomWarm frames 0, max None
+    r-noroom-aw-4    DONE 616.8 | room None / None / None [] | overlap None (0 frames, max None); RoomWarm frames 0, max None
+      frames > 33 ms (index, ms, start after lit, in): [(86, 46.6, 1437.0, 'neither')]
+    r-noroom-aw-5    DONE 650.1 | room None / None / None [] | overlap None (0 frames, max None); RoomWarm frames 0, max None
+      frames > 33 ms (index, ms, start after lit, in): [(145, 48.1, 2418.3, 'neither'), (148, 41.6, 2508.1, 'neither'), (161, 47.7, 2752.1, 'neither')]
+  video MiB on the title after both warms [284.3, 284.6, 284.6, 284.6, 284.6] (median 284.6); at 360 frames [284.3, 284.6, 284.6, 284.6, 284.6]; RoomWarm still live [False, False, False, False, False], waited [0, 0, 0, 0, 0] frames
+
+== r-nowarm-aw (n=3)
+  Continue tap -> drawn interactive map ms: median 3236.7, worst 3250.4, best 3232.4  [3232.4, 3236.7, 3250.4]
+  phase at tap ['none', 'none', 'none']
+  boot main_ready -> first frame ms [253.8, 262.8, 252.3] (median 253.8)
+  rite p95 [19.39, 19.2, 25.24] max [82.0, 69.82, 76.76]
+  video MiB at lit [212.0, 212.0, 212.0]
+  title frames after the rite (per launch): p50 / p95 / max / >20 / >33
+    r-nowarm-aw-1    n=360  16.64 / 19.46 / 66.55 / 14 / 6
+    r-nowarm-aw-2    n=360  16.64 / 19.71 / 100.07 / 15 / 6
+    r-nowarm-aw-3    n=360  16.63 / 19.21 / 83.39 / 8 / 2
+  medians p50 16.6 p95 19.5 max 83.4 >20 14 >33 6; worst p95 19.71 max 100.07 >20 15 >33 6
+  timeline ms after the rite lands: map warm DONE | RoomWarm start (first room) / pages drawn / end | overlap
+    r-nowarm-aw-1    DONE None | room 771.7 / 866.8 / 914.6 ['room_jobs 15'] | overlap None (0 frames, max None); RoomWarm frames 8, max 66.55
+      frames > 33 ms (index, ms, start after lit, in): [(52, 47.9, 866.1, 'roomwarm'), (53, 66.5, 914.0, 'roomwarm'), (59, 47.2, 1066.6, 'neither'), (69, 47.8, 1266.5, 'neither'), (79, 48.1, 1466.5, 'neither'), (85, 47.7, 1616.5, 'neither')]
+    r-nowarm-aw-2    DONE None | room 767.6 / 866.9 / 914.9 ['room_jobs 15'] | overlap None (0 frames, max None); RoomWarm frames 8, max 100.07
+      frames > 33 ms (index, ms, start after lit, in): [(52, 48.0, 866.2, 'roomwarm'), (53, 100.1, 914.3, 'roomwarm'), (69, 37.8, 1276.7, 'neither'), (74, 46.6, 1384.6, 'neither'), (80, 45.7, 1518.8, 'neither'), (107, 48.1, 1999.6, 'neither')]
+    r-nowarm-aw-3    DONE None | room 787.6 / 883.5 / 931.3 ['room_jobs 15'] | overlap None (0 frames, max None); RoomWarm frames 8, max 83.39
+      frames > 33 ms (index, ms, start after lit, in): [(53, 47.9, 882.9, 'roomwarm'), (54, 83.4, 930.8, 'roomwarm')]
+  video MiB on the title after both warms [265.6, 265.6, 265.6] (median 265.6); at 360 frames [265.6, 265.6, 265.6]; RoomWarm still live [False, False, False], waited [0, 0, 0] frames
