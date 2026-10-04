@@ -223,7 +223,7 @@ func _layer_grain() -> bool:
 func _map_grain() -> float:
 	var grain: ShaderMaterial = _scene._display.material as ShaderMaterial
 	if grain == null or grain.shader == null \
-			or not grain.shader.resource_path.ends_with("map_display.gdshader"):
+			or not grain.shader.resource_path.contains("map_display"):
 		return -1.0
 	var amount: float = grain.get_shader_parameter("amount")
 	return amount
@@ -308,5 +308,5 @@ class MapFilmGrainOff:
 	static func apply(scene: MapScene) -> void:
 		var grain: ShaderMaterial = scene._display.material as ShaderMaterial
 		if grain != null and grain.shader != null \
-				and grain.shader.resource_path.ends_with("map_display.gdshader"):
+				and grain.shader.resource_path.contains("map_display"):
 			grain.set_shader_parameter("amount", 0.0)
