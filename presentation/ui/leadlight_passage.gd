@@ -306,6 +306,12 @@ func leaving() -> bool:
 	return false
 
 
+## Whether anything it carries is still on screen: a room arriving, or a room
+## or sheet leaving or lingering. Main grains the map's whole screen while so.
+func carrying() -> bool:
+	return _arrival != null or not _leaving.is_empty()
+
+
 func lent_title() -> TitleScreen:
 	return _title if _title != null and is_instance_valid(_title) else null
 

@@ -1,0 +1,34 @@
+Mac captures, M1 Max, A12 Metal condition: GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 godot --path <wt> --rendering-driver metal --rendering-method mobile -- --map --map-trace-probe --seed=1 --map-steps=2 [--map-lean] --shape=<shape> [--locale=zh-Hant] --probe-shot=<png>
+control = main 8815da34 (R2) armed with tools/map_trace/qa_patch.py; head = 2d86d1c7 armed the same way. Shader and script errors counted in each run's full log (grep -ciE 'shader.*error|error.*shader|SHADER_ERROR|Failed to compile|SCRIPT ERROR').
+
+ctl-desktop-landscape-off: errors 0
+ctl-desktop-landscape-on: errors 0
+ctl-desktop-landscape-rm: errors 0
+ctl-pad-landscape-off: errors 0
+ctl-pad-landscape-on: errors 0
+ctl-pad-landscape-rm: errors 0
+ctl-phone-landscape-off: errors 0
+ctl-phone-landscape-on: errors 0
+ctl-phone-landscape-rm: errors 0
+head-desktop-landscape-full-en: errors 0
+head-desktop-landscape-full-zh-Hant: errors 0
+head-desktop-landscape-lean-en: errors 0
+head-desktop-landscape-lean-zh-Hant: errors 0
+head-desktop-landscape-off: errors 0
+head-desktop-landscape-rm: errors 0
+head-pad-landscape-full-en: errors 0
+head-pad-landscape-full-zh-Hant: errors 0
+head-pad-landscape-lean-en: errors 0
+head-pad-landscape-lean-zh-Hant: errors 0
+head-pad-landscape-off: errors 0
+head-pad-landscape-rm: errors 0
+head-phone-landscape-full-en: errors 0
+head-phone-landscape-full-zh-Hant: errors 0
+head-phone-landscape-lean-en: errors 0
+head-phone-landscape-lean-zh-Hant: errors 0
+head-phone-landscape-off: errors 0
+head-phone-landscape-rm: errors 0
+seq-ctl: errors 0
+seq-head: errors 0
+seq2-ctl: errors 0
+seq2-head: errors 0

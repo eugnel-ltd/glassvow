@@ -1,0 +1,5 @@
+Grain over time: 40 consecutive frames (pad, lean, Journey mid-route), mean |frame-to-frame difference| in the middle rows, 0-255 levels.
+A step of ~1.7 is a grain jump; 0.05 is the stage's own 30 Hz rest render; 0.00 is a repeated frame.
+R2 (TransitionLayer grain): 40 frames over 0.325 s; jumps at frames [7, 21, 34]; 116.9 107.6 ms apart; jump size 1.65 1.67 1.69 levels
+R3.1a (display grain): 40 frames over 0.326 s; jumps at frames [8, 22, 35]; 115.9 108.8 ms apart; jump size 1.66 1.66 1.67 levels
+Both: one jump every 0.9/8 = 112.5 ms (TransitionLayer.GRAIN_STEP), the same size.

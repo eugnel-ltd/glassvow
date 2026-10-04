@@ -1,0 +1,5 @@
+    • XCResultKitBNI-25115
+    • XCTest-25228
+• isUsable: true
+• variant: external
+• isCryptexDDI: true

@@ -1,0 +1,44 @@
+"""Mutation checks for the R3.1a tests: each mutation must fail the named check.
+Backs each file up, mutates, runs the filtered suite, and copies the backup back."""
+import shutil, subprocess, sys, os
+W = "<scratch>/map-lane/wt-r31a"
+BK = "<r31a-scratch>/mutation-backup"
+os.makedirs(BK, exist_ok=True)
+J = "res://tests/test_map_journey.gd"
+G = "res://tests/test_map_film_grain.gd"
+M = [
+ ("M1 unchanged band re-applied", "presentation/map/map_scene.gd", "	if band == focus_band:\n		return\n	focus_band = band", "	focus_band = band", J, "is not applied again"),
+ ("M2 stage not under the band view", "presentation/map/map_scene.gd", "	_shift.add_child(_stage)", "	add_child(_stage)", J, "after the stage"),
+ ("M3 band view not mirrored", "presentation/map/map_scene.gd", "	if focus_band.is_finite():\n		_shift.render_target_update_mode = mode", "	pass", J, "renders with the stage"),
+ ("M4 display reads the stage", "presentation/map/map_scene.gd", "	_display.texture = _shift.get_texture()", "	_display.texture = _stage.get_texture()", J, "drawn at the stage's size"),
+ ("M5 wrong radius", "presentation/map/map_scene.gd", "MapTiltShift.STRENGTH_PX * float(_stage.size.y)", "2.0 * MapTiltShift.STRENGTH_PX * float(_stage.size.y)", J, "stage-texel radius"),
+ ("M6 Whole act keeps the view", "presentation/map/map_scene.gd", "		_display.texture = _stage.get_texture()\n		_shift.render_target_update_mode = SubViewport.UPDATE_DISABLED\n		return", "		return", J, "Whole act has no tilt-shift"),
+ ("M7 grain strength", "presentation/map/map_film_grain.gd", "TransitionLayer.GRAIN_AMOUNT if shown", "TransitionLayer.GRAIN_AMOUNT * 2.0 if shown", G, "strength, jumps and rate"),
+ ("M8 Reduce Motion ignored", "presentation/map/map_scene.gd", "	if grain != _grain_shown:", "	if false:", G, "Reduce Motion takes the grain away"),
+ ("M9 made under RM with grain", "presentation/map/map_scene.gd", "	_display.material = MapFilmGrain.material(_grain_shown)", "	_display.material = MapFilmGrain.material(true)", G, "starts without grain"),
+ ("M10 noise not flat", "presentation/map/map_film_grain.gd", "bytes.encode_u32(at, random.randi())", "bytes.encode_u32(at, random.randi() & 0x7f7f7f7f)", G, "flat across its range"),
+ ("M11 noise correlated", "presentation/map/map_film_grain.gd", "bytes.encode_u32(at, random.randi())", "bytes.encode_u32(at, (random.randi() & 0xff00ff) * 257)", G, "uncorrelated"),
+ ("M12 map keeps the layer grain", "application/main.gd", "	_transitions.set_grain(false)\n	_transitions.screen_in(_map_screen)", "	_transitions.set_grain(true)\n	_transitions.screen_in(_map_screen)", G, "off while the map shows"),
+ ("M13 no grain on the display", "presentation/map/map_scene.gd", "	_display.material = MapFilmGrain.material(_grain_shown)", "	_display.material = null", G, "draws the film grain"),
+ ("M14 jumps differ", "presentation/map/map_film_grain.gd", "PackedVector2Array(TransitionLayer.GRAIN_JUMPS)", "PackedVector2Array(TransitionLayer.GRAIN_JUMPS.slice(1))", G, "strength, jumps and rate"),
+]
+only = sys.argv[1:]
+for name, f, a, b, test, expect in M:
+    if only and name.split()[0] not in only:
+        continue
+    path = os.path.join(W, f); bk = os.path.join(BK, f.replace("/", "_"))
+    shutil.copyfile(path, bk)
+    try:
+        s = open(path).read()
+        assert s.count(a) == 1, (name, s.count(a))
+        open(path, "w").write(s.replace(a, b))
+        r = subprocess.run(["timeout", "900", "godot", "--headless", "--path", W, "-s", "res://tests/run_all.gd", "--", "--tests=" + test], capture_output=True, text=True)
+        out = r.stdout + r.stderr
+        caught = r.returncode != 0 and any(expect in l for l in out.splitlines() if l.startswith("  - "))
+        print("%-34s %s (rc %d)" % (name, "CAUGHT" if caught else "MISSED", r.returncode), flush=True)
+        if not caught:
+            print("\n".join(l for l in out.splitlines() if l.startswith("  - ") or "SCRIPT ERROR" in l)[:2000])
+    finally:
+        shutil.copyfile(bk, path)
+r = subprocess.run(["git", "-C", W, "diff", "--stat", "HEAD", "--", "presentation", "application"], capture_output=True, text=True)
+print("restored; diff vs HEAD:", r.stdout.strip() or "none")

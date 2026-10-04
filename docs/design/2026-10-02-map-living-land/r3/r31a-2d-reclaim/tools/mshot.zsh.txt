@@ -1,0 +1,10 @@
+#!/bin/zsh
+# mshot.zsh <ctl|head> <out.png> [game args...]: one Mac capture under the A12
+# Metal condition through the trace probe; prints shader-error count.
+R=<r31a-scratch>
+W=$R/wt-$1; OUT=$2; shift 2
+LOG=${OUT%.png}.log
+GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 150 godot --path $W --rendering-driver metal --rendering-method mobile --position 1400,900 -- --map --map-trace-probe --seed=1 "$@" --probe-shot=$OUT > $LOG 2>&1
+rc=$?
+errs=$(grep -ciE "shader.*error|error.*shader|SHADER_ERROR|Failed to compile|SCRIPT ERROR" $LOG)
+echo "$(basename $OUT) rc=$rc shader/script errors=$errs"

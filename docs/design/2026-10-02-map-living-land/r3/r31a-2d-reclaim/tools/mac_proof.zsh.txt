@@ -1,0 +1,29 @@
+#!/bin/zsh
+# Mac proof captures for R3.1a under the A12 Metal condition.
+R=<r31a-scratch>
+M=$R/mac/proof; mkdir -p $M
+shot() { $R/bin/mshot.zsh "$@"; }
+J=(--map-steps=2)
+# Head: three shapes x lean/full x en/zh-Hant.
+for shape in phone-landscape pad-landscape desktop-landscape; do
+  for prof in lean full; do
+    pa=(); [[ $prof == lean ]] && pa=(--map-lean)
+    for loc in en zh-Hant; do
+      shot head $M/head-$shape-$prof-$loc.png $pa $J --shape=$shape --locale=$loc
+    done
+  done
+done
+# A/B at each shape's production profile: grain on and off, both builds.
+for shape in phone-landscape pad-landscape desktop-landscape; do
+  pa=(--map-lean); [[ $shape == desktop-landscape ]] && pa=()
+  for b in ctl head; do
+    [[ $b == head ]] || shot ctl $M/ctl-$shape-on.png $pa $J --shape=$shape
+    shot $b $M/$b-$shape-off.png $pa $J --shape=$shape --probe-grain=off
+    shot $b $M/$b-$shape-rm.png $pa $J --shape=$shape --probe-rm
+  done
+done
+# Grain over time: 24 frames in a row, pad lean.
+for b in ctl head; do
+  shot $b $M/seq-$b.png --map-lean $J --shape=pad-landscape --probe-seq=24
+done
+echo "mac proof done"

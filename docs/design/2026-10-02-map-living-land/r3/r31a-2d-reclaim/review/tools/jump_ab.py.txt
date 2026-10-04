@@ -1,0 +1,44 @@
+"""Grain identity from one launch: the difference between the frames either
+side of a grain jump is the grain's own change (two draws of the grain over the
+same picture), free of the motion that separates two launches. Per shape and
+build: its strength against the overlay's expectation by light, its neighbour
+correlation (one grain per display pixel) and its correlation 255-257 px on
+(the period). Usage: jump_ab.py <dir> (seq-<b>, seqp-<b>, seqd-<b> captures)."""
+import glob
+import sys
+import numpy as np
+from PIL import Image
+
+AMOUNT = 0.05
+d = sys.argv[1]
+for prefix, shape in (("seqp", "phone-landscape lean"), ("seq", "pad-landscape lean"), ("seqd", "desktop-landscape full")):
+    for b, name in (("ctl", "R2"), ("head", "R3.1a")):
+        files = sorted(glob.glob("%s/%s-%s-*.png" % (d, prefix, b)))
+        ims = [np.asarray(Image.open(f).convert("RGB")).astype(float) / 255 for f in files]
+        h, w = ims[0].shape[:2]
+        rows = slice(int(h * 0.12), int(h * 0.88))
+        jumps = []
+        for i in range(len(ims) - 1):
+            diff = (ims[i + 1] - ims[i])[rows]
+            if np.abs(diff).mean() * 255 > 0.8:
+                jumps.append((i, diff))
+        i, diff = jumps[0]
+        base = ims[i][rows]
+        ok = np.abs(diff).max(axis=2) < 0.06
+        # The difference of two independent overlays: std sqrt(2) x the overlay's.
+        expect = np.sqrt(2.0) * AMOUNT * np.minimum(base, 1 - base) / np.sqrt(3.0)
+        by = []
+        for lo, hi in ((0.0, 0.15), (0.15, 0.3), (0.3, 0.5), (0.5, 0.8)):
+            sel = ok[..., None] & (base >= lo) & (base < hi)
+            if sel.sum() > 2000:
+                by.append("%.2f" % (diff[sel].std() / expect[sel].mean()))
+        lum = diff.mean(axis=2)
+        def corr(dx, dy):
+            a = lum[: lum.shape[0] - dy, : lum.shape[1] - dx]
+            c = lum[dy:, dx:]
+            m = ok[: lum.shape[0] - dy, : lum.shape[1] - dx] & ok[dy:, dx:]
+            return np.corrcoef(a[m], c[m])[0, 1]
+        print("%-24s %-6s jumps %d; jump std %.2f levels; against the overlay by light (0-.15, .15-.3, .3-.5, .5-.8) %s;"
+              " neighbour r %.3f / %.3f; r at 255/256/257 px %.3f %.3f %.3f; r at 256 down %.3f" % (
+                  shape, name, len(jumps), diff[ok].std() * 255, " ".join(by), corr(1, 0), corr(0, 1),
+                  corr(255, 0), corr(256, 0), corr(257, 0), corr(0, 256)))

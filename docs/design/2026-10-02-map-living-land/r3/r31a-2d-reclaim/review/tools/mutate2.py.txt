@@ -1,0 +1,57 @@
+"""Mutation checks for the R3.1a review fixes: each mutation must fail the named
+check. Backs each file up, mutates, runs the filtered suite, copies the backup
+back, and confirms every touched file is byte-identical afterwards."""
+import hashlib, os, shutil, subprocess, sys
+W = "<scratch>/map-lane/wt-r31a"
+BK = "<scratch>/map-lane/r31a/fix/mutation-backup"
+os.makedirs(BK, exist_ok=True)
+G = "res://tests/test_map_film_grain.gd"
+S = "presentation/map/map_scene.gd"
+F = "presentation/map/map_film_grain.gd"
+D = "presentation/map/map_display.gdshader"
+A = "application/main.gd"
+T = "presentation/stage/transition_layer.gd"
+M = [
+ ("M8 Reduce Motion ignored", S, "	var shown: bool = _grain_wanted and not Preferences.active.reduce_motion", "	var shown: bool = _grain_wanted", G, "Reduce Motion takes the grain away"),
+ ("M12 map keeps the layer grain", A, "	_transitions.set_grain(covered and not Preferences.active.reduce_motion)", "	_transitions.set_grain(true)", G, "off while the map shows"),
+ ("M15 screen cannot take the grain", S, "	_grain_wanted = on\n	_sync_grain()", "	_sync_grain()", G, "can take the map's grain off"),
+ ("M27 the jump is never set", S, "		MapFilmGrain.set_jump(_display.material as ShaderMaterial, jump)", "		pass", G, "jumps through"),
+ ("M28 grain moves while off", S, "	if not _grain_shown:\n		return\n	_grain_t += delta", "	_grain_t += delta", G, "a grain that is off does not move"),
+ ("M29 never blends", S, "	var fading: bool = alpha < 1.0", "	var fading: bool = false", G, "a fading screen makes the display blend"),
+ ("M30 ancestors ignored", S, "		item = item.get_parent()", "		item = null", G, "a fading screen makes the display blend"),
+ ("M31 opaque shader blends", D, "render_mode unshaded, blend_disabled;", "render_mode unshaded;", G, "an opaque shader and a blending one"),
+ ("M32 wrong rate", F, "	return int(seconds / TransitionLayer.GRAIN_STEP) % TransitionLayer.GRAIN_JUMPS.size()", "	return int(seconds / (TransitionLayer.GRAIN_STEP * 2.0)) % TransitionLayer.GRAIN_JUMPS.size()", G, "jumps through"),
+ ("M33 wrap off by one", F, "	out.set_shader_parameter(\"wrap\", SIDE - 1)", "	out.set_shader_parameter(\"wrap\", SIDE)", G, "over the whole noise"),
+ ("M17 cells share one place", F, "	return Vector2i(((turn - turn.floor()) * TILE).floor())", "	return Vector2i.ZERO", G, "its own place"),
+ ("M18 touching cells too close", F, "const CELL_Y: Vector2 = Vector2(0.4142135624, 0.7320508076)", "const CELL_Y: Vector2 = Vector2(0.7648776662, 0.5698402910)", G, "at least 16 texels apart"),
+ ("M24 noise lays cells unplaced", F, "_lay(out, cell, Vector2i(cx, cy) * TILE, place(Vector2i(cx, cy)))", "_lay(out, cell, Vector2i(cx, cy) * TILE, Vector2i.ZERO)", G, "does not repeat a cell on"),
+ ("M25 a wrapped part dropped", F, "			Rect2i(Vector2i(0, from.y), Vector2i(from.x, TILE - from.y)),", "			Rect2i(),", G, "flat across its range"),
+ ("M26 noise one cell", F, "const CELLS: int = 8", "const CELLS: int = 1", G, "does not repeat a cell on"),
+ ("M19 a room does not cover", A, "	var covered: bool = _modal != null or _choice_screen != null \\", "	var covered: bool = _choice_screen != null \\", G, "a room over the map takes"),
+ ("M20 leaves do not cover", A, "		or _transitions.leaves_showing()", "		or false", G, "transition leaf over the map"),
+ ("M21 layer grain under RM", A, "	_transitions.set_grain(covered and not Preferences.active.reduce_motion)", "	_transitions.set_grain(covered)", G, "under Reduce Motion a room"),
+ ("M22 land keeps its grain", A, "	_map_screen.set_grain(not covered)", "	_map_screen.set_grain(true)", G, "and the land's goes"),
+ ("M23 plate is not a leaf", T, "_iris, _bloom, _crack, _plate, _flood", "_iris, _bloom, _crack, _flood", G, "transition leaf over the map"),
+]
+only = sys.argv[1:]
+digest = lambda p: hashlib.sha256(open(p, "rb").read()).hexdigest()
+before = {f: digest(os.path.join(W, f)) for f in {m[1] for m in M}}
+for name, f, a, b, test, expect in M:
+    if only and name.split()[0] not in only:
+        continue
+    path = os.path.join(W, f); bk = os.path.join(BK, f.replace("/", "_"))
+    shutil.copyfile(path, bk)
+    try:
+        s = open(path).read()
+        assert s.count(a) == 1, (name, s.count(a))
+        open(path, "w").write(s.replace(a, b))
+        r = subprocess.run(["timeout", "900", "godot", "--headless", "--path", W, "-s", "res://tests/run_all.gd", "--", "--tests=" + test], capture_output=True, text=True)
+        out = r.stdout + r.stderr
+        caught = r.returncode != 0 and any(expect in l for l in out.splitlines() if l.startswith("  - "))
+        print("%-36s %s (rc %d)" % (name, "CAUGHT" if caught else "MISSED", r.returncode), flush=True)
+        if not caught:
+            print("\n".join(l for l in out.splitlines() if l.startswith("  - ") or "SCRIPT ERROR" in l)[:2000])
+    finally:
+        shutil.copyfile(bk, path)
+after = {f: digest(os.path.join(W, f)) for f in before}
+print("restored byte for byte:", "yes" if after == before else "NO: %s" % [f for f in before if before[f] != after[f]])

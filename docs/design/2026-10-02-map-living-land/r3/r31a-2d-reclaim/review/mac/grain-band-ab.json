@@ -1,0 +1,209 @@
+{
+ "shapes": [
+  {
+   "shape": "phone-landscape",
+   "profile": "lean",
+   "size": [
+    1180,
+    619
+   ],
+   "band_px": [
+    123,
+    353
+   ],
+   "ctl": {
+    "pixels": 293646,
+    "std_levels": 1.5946381319092746,
+    "ratio_to_overlay": 1.2810859035784594,
+    "by_light": [
+     "0.00-0.15: 1.28",
+     "0.15-0.30: 1.11",
+     "0.30-0.50: 1.05",
+     "0.50-0.80: 1.01"
+    ],
+    "corr_x": 0.053718175798285,
+    "corr_y": 0.012177171220212507,
+    "lag": {
+     "x255": 0.012,
+     "x256": 0.016,
+     "x257": 0.045,
+     "y256": 0.001,
+     "xy256": -0.017
+    }
+   },
+   "head": {
+    "pixels": 293523,
+    "std_levels": 1.6173085088251082,
+    "ratio_to_overlay": 1.2985016293614742,
+    "by_light": [
+     "0.00-0.15: 1.45",
+     "0.15-0.30: 1.08",
+     "0.30-0.50: 1.05",
+     "0.50-0.80: 1.02"
+    ],
+    "corr_x": 0.04330543073078434,
+    "corr_y": 0.04486486907119389,
+    "lag": {
+     "x255": 0.002,
+     "x256": -0.009,
+     "x257": -0.002,
+     "y256": 0.001,
+     "xy256": -0.007
+    }
+   },
+   "head_rm_vs_off_mean_levels": 0.324786196069841,
+   "hud_and_pins": {
+    "hud_ctl_std_levels": 0.94,
+    "hud_head_std_levels": 0.47,
+    "pins_ctl_std_levels": 1.53,
+    "pins_head_std_levels": 1.29
+   },
+   "ctl_rm_grain_std_levels": 1.7447077132655577,
+   "band_inside_mean_abs_levels": 0.0,
+   "band_outside_mean_abs_levels": 0.0,
+   "band_inside_p95": 0.9999999999999976,
+   "band_outside_p95": 0.6666666666666714
+  },
+  {
+   "shape": "pad-landscape",
+   "profile": "lean",
+   "size": [
+    1180,
+    820
+   ],
+   "band_px": [
+    211,
+    638
+   ],
+   "ctl": {
+    "pixels": 551868,
+    "std_levels": 1.6315713253948665,
+    "ratio_to_overlay": 1.2182867920196094,
+    "by_light": [
+     "0.00-0.15: 1.21",
+     "0.15-0.30: 1.05",
+     "0.30-0.50: 1.03",
+     "0.50-0.80: 1.01"
+    ],
+    "corr_x": -0.02293063216293054,
+    "corr_y": -0.04863141939441671,
+    "lag": {
+     "x255": 0.011,
+     "x256": 0.013,
+     "x257": 0.046,
+     "y256": 0.006,
+     "xy256": -0.025
+    }
+   },
+   "head": {
+    "pixels": 551171,
+    "std_levels": 1.845629971268886,
+    "ratio_to_overlay": 1.3770609863882024,
+    "by_light": [
+     "0.00-0.15: 1.58",
+     "0.15-0.30: 1.20",
+     "0.30-0.50: 1.10",
+     "0.50-0.80: 1.04"
+    ],
+    "corr_x": 0.1279420441689828,
+    "corr_y": 0.07461924375808458,
+    "lag": {
+     "x255": -0.001,
+     "x256": 0.001,
+     "x257": 0.003,
+     "y256": 0.003,
+     "xy256": -0.004
+    }
+   },
+   "head_rm_vs_off_mean_levels": 0.4702621606724539,
+   "hud_and_pins": {
+    "hud_ctl_std_levels": 1.18,
+    "hud_head_std_levels": 1.04,
+    "pins_ctl_std_levels": 1.14,
+    "pins_head_std_levels": 0.37
+   },
+   "ctl_rm_grain_std_levels": 1.7231815336033736,
+   "band_inside_mean_abs_levels": 0.0,
+   "band_outside_mean_abs_levels": 0.0,
+   "band_inside_p95": 2.9999999999999987,
+   "band_outside_p95": 1.6666666666666667
+  },
+  {
+   "shape": "desktop-landscape",
+   "profile": "full",
+   "size": [
+    1180,
+    754
+   ],
+   "band_px": [
+    240,
+    725
+   ],
+   "ctl": {
+    "pixels": 502856,
+    "std_levels": 1.6219206096897176,
+    "ratio_to_overlay": 1.1847761864861024,
+    "by_light": [
+     "0.00-0.15: 1.16",
+     "0.15-0.30: 1.04",
+     "0.30-0.50: 1.03",
+     "0.50-0.80: 1.02"
+    ],
+    "corr_x": -0.03870022278758312,
+    "corr_y": -0.056113389754582264,
+    "lag": {
+     "x255": 0.009,
+     "x256": 0.015,
+     "x257": 0.049,
+     "y256": 0.005,
+     "xy256": -0.027
+    }
+   },
+   "head": {
+    "pixels": 501972,
+    "std_levels": 1.7668752264760779,
+    "ratio_to_overlay": 1.290009937010548,
+    "by_light": [
+     "0.00-0.15: 1.45",
+     "0.15-0.30: 1.13",
+     "0.30-0.50: 1.06",
+     "0.50-0.80: 1.04"
+    ],
+    "corr_x": 0.023585635247856715,
+    "corr_y": 0.022015157419889186,
+    "lag": {
+     "x255": -0.001,
+     "x256": 0.0,
+     "x257": -0.001,
+     "y256": 0.001,
+     "xy256": 0.001
+    }
+   },
+   "head_rm_vs_off_mean_levels": 0.4884090875031848,
+   "hud_and_pins": {
+    "hud_ctl_std_levels": 1.24,
+    "hud_head_std_levels": 1.19,
+    "pins_ctl_std_levels": 1.11,
+    "pins_head_std_levels": 0.38
+   },
+   "ctl_rm_grain_std_levels": 1.8642264631474033,
+   "band_inside_mean_abs_levels": 0.0,
+   "band_outside_mean_abs_levels": 0.0,
+   "band_inside_p95": 1.333333333333331,
+   "band_outside_p95": 1.000000000000001
+  }
+ ],
+ "deck_and_fade": {
+  "deck_ctl": {
+   "layer_grain": true,
+   "map_grain": -1.0
+  },
+  "deck_head": {
+   "layer_grain": true,
+   "map_grain": 0.0
+  },
+  "fade_ctl_act1": 1.007,
+  "fade_head_act1": 0.597
+ },
+ "notes": "Cross-launch residuals (grain on minus off, two launches) carry the motion between launches; grain-jump-ab.txt measures the grain inside one launch. fade_* = mean land brightness at screen modulate 0.5 over modulate 1 (Act I, pad lean); top row of fade-act1-r2-vs-r31a.jpg is R2, bottom the head, left modulate 1, right 0.5."
+}

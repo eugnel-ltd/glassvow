@@ -1,0 +1,7 @@
+2D composite (fragment) per stage frame, scaled to the reference clock by that frame's own main 3D pass
+(reference: main 3D fragment 4.091 ms at Journey, 5.24 ms at the fresh-run opening view, R2's j-live and f-live).
+The 2D passes are the renders after the main pass's three glow passes and tonemap (roles.py --post3d 4).
+head-tj   26 frames: at the reference clock median 1.92 ms (p10 1.60, p90 2.47); raw median 2.61 ms; frames within 10% of the reference clock: 0, raw median -
+ctl-tj    29 frames: at the reference clock median 6.17 ms (p10 5.49, p90 7.43); raw median 6.31 ms; frames within 10% of the reference clock: 19, raw median 6.31 ms
+head-tf   29 frames: at the reference clock median 1.70 ms (p10 1.50, p90 2.18); raw median 1.89 ms; frames within 10% of the reference clock: 5, raw median 1.87 ms
+ctl-tf   257 frames: at the reference clock median 5.20 ms (p10 4.56, p90 6.03); raw median 4.96 ms; frames within 10% of the reference clock: 138, raw median 5.07 ms

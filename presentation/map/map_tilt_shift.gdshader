@@ -1,8 +1,11 @@
 shader_type canvas_item;
+render_mode unshaded, blend_disabled;
 // The journey land's tilt-shift (`MapTiltShift`): the stage's picture, sharp
 // inside `band` (top and bottom as a share of the height) and blurred beyond
 // it, reaching the full `radius_texels` (stage texels) `feather` further out.
-// Thirteen taps on a disc; rows inside the band read one.
+// Thirteen taps on a disc; rows inside the band read one. Drawn texel for
+// texel at the stage's own size (`MapScene`), so it pays per stage texel, not
+// per display pixel.
 uniform vec2 band = vec2(0.0, 1.0);
 uniform float feather = 0.16;
 uniform float radius_texels = 0.0;

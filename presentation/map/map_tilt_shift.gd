@@ -1,11 +1,13 @@
 class_name MapTiltShift
 extends RefCounted
 ## The journey land's tilt-shift (R2 step 2): a sharp band across the frame
-## through the framed group of waystones, soft above and below, drawn on the
-## stage's display. A screen band rather than depth of field: it never blurs a
-## tall object standing mid-frame, and it measured free on the A12 where depth
-## of field lost frames (`docs/design/2026-10-02-map-living-land/r2-plan.md`
-## §3.1). Off in Whole act, and never on the painted acts.
+## through the framed group of waystones, soft above and below. A screen band
+## rather than depth of field: it never blurs a tall object standing mid-frame,
+## and it measured free on the A12 where depth of field lost frames
+## (`docs/design/2026-10-02-map-living-land/r2-plan.md` §3.1). Since R3.1 it is
+## drawn at the stage's resolution, in a view of its own that renders only when
+## the stage does, and the display upscales the result (`MapScene`). Off in
+## Whole act, and never on the painted acts.
 
 const SHADER: Shader = preload("res://presentation/map/map_tilt_shift.gdshader")
 ## The band never narrows below this share of the frame's height. Once the

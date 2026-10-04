@@ -1,0 +1,23 @@
+Modulate probe (Godot 4.7.2, Metal mobile, A12 condition): a TextureRect (colour 0.6, 0.3, 0.9) under a Control whose modulate.a is 1, 0.5 and 0, over a (0.1, 0.2, 0.1) ground; the default material against the display shader with amount 0.05 and a flat 0.5 noise (an overlay that leaves the colour as it is). x=50/250/450: default material at alpha 1/0.5/0; x=150/350/550: the shader at the same alphas.
+map_display_2d86 is 2d86d1c7's shader (writes over its screen); presentation/map/map_display is the final head's opaque shader, used at rest; presentation/map/map_display_fade is its fading shader, which MapScene switches to while anything up the tree fades the display.
+== map_display_2d86.gdshader
+PROBE x=50 colour=(0.6, 0.298, 0.898, 1.0)
+PROBE x=150 colour=(0.6, 0.298, 0.898, 1.0)
+PROBE x=250 colour=(0.3529, 0.251, 0.502, 1.0)
+PROBE x=350 colour=(0.6, 0.298, 0.898, 1.0)
+PROBE x=450 colour=(0.102, 0.2, 0.102, 1.0)
+PROBE x=550 colour=(0.102, 0.2, 0.102, 1.0)
+== presentation/map/map_display.gdshader
+PROBE x=50 colour=(0.6, 0.298, 0.898, 1.0)
+PROBE x=150 colour=(0.6, 0.298, 0.898, 1.0)
+PROBE x=250 colour=(0.3529, 0.251, 0.502, 1.0)
+PROBE x=350 colour=(0.6, 0.298, 0.898, 1.0)
+PROBE x=450 colour=(0.102, 0.2, 0.102, 1.0)
+PROBE x=550 colour=(0.102, 0.2, 0.102, 1.0)
+== presentation/map/map_display_fade.gdshader
+PROBE x=50 colour=(0.6, 0.298, 0.898, 1.0)
+PROBE x=150 colour=(0.6, 0.298, 0.898, 1.0)
+PROBE x=250 colour=(0.3529, 0.251, 0.502, 1.0)
+PROBE x=350 colour=(0.349, 0.2471, 0.498, 1.0)
+PROBE x=450 colour=(0.102, 0.2, 0.102, 1.0)
+PROBE x=550 colour=(0.102, 0.2, 0.102, 1.0)

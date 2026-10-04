@@ -34,7 +34,25 @@ signal journey_zoom_requested(outward: bool)
 signal landscape_ready
 
 var _stage: SubViewport
+## The tilt-shift's own view (R3.1): the stage's picture through the band
+## (`MapTiltShift`), texel for texel at the stage's size, drawn only when the
+## stage draws or the band moves. The stage is its child, because the engine
+## draws a child view before its parent: the band always reads this frame's
+## stage, never the last one.
+var _shift: SubViewport
+var _shift_rect: TextureRect
+## The stage, or its tilt-shift, upscaled to the screen with the film grain
+## (`MapFilmGrain`) and nothing else.
 var _display: TextureRect
+## Whether the screen wants this map's own grain (`set_grain`), and whether it
+## shows: never under Reduce Motion. The grain's own clock and the jump it
+## stands at (`MapFilmGrain.jump`): it moves only while the map runs.
+var _grain_wanted: bool = true
+var _grain_shown: bool = true
+var _grain_t: float = 0.0
+var _grain_jump: int = 0
+## Whether the display blends with a fading screen (`_sync_blend`).
+var _blending: bool = false
 ## The journey land's tilt-shift band (`MapTiltShift`) in this Control's px,
 ## (top, bottom); `Vector2.INF` while there is none.
 var focus_band: Vector2 = Vector2.INF
@@ -109,7 +127,20 @@ func _init(act_index: int = 0) -> void:
 	# half the triangles in view, and the A12's stage is bound by them.
 	_stage.mesh_lod_threshold = LEAN_LOD_THRESHOLD if lean_profile() else 1.0
 	_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
-	add_child(_stage)
+	_shift = SubViewport.new()
+	_shift.name = "MapTiltShiftView"
+	_shift.disable_3d = true
+	_shift.transparent_bg = false
+	_shift.size = _stage.size
+	_shift.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	add_child(_shift)
+	_shift_rect = TextureRect.new()
+	_shift_rect.texture = _stage.get_texture()
+	_shift_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_shift_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	_shift_rect.material = MapTiltShift.material()
+	_shift.add_child(_shift_rect)
+	_shift.add_child(_stage)
 	_world = Node3D.new()
 	_world.name = "MapWorld"
 	_stage.add_child(_world)
@@ -127,6 +158,8 @@ func _init(act_index: int = 0) -> void:
 	# from the resolved rect in `_fit` instead.
 	_display.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_display.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_grain_shown = _grain_wanted and not Preferences.active.reduce_motion
+	_display.material = MapFilmGrain.material(_grain_shown)
 	add_child(_display)
 	process_priority = -1
 	set_process(true)
@@ -149,8 +182,12 @@ func _notification(what: int) -> void:
 		_release_landscape()
 	elif what == NOTIFICATION_EXIT_TREE:
 		_stage.size = PARKED_STAGE
-	elif what == NOTIFICATION_ENTER_TREE and is_node_ready():
-		_fit()
+		_shift.size = PARKED_STAGE
+		RenderingServer.frame_pre_draw.disconnect(_sync_blend)
+	elif what == NOTIFICATION_ENTER_TREE:
+		RenderingServer.frame_pre_draw.connect(_sync_blend)
+		if is_node_ready():
+			_fit()
 
 
 func get_rig() -> MapCameraRig:
@@ -323,18 +360,78 @@ func _deal_act(_region: MapRegions) -> void:
 
 ## Sharpens the band `band` (top, bottom in this Control's px) of the journey
 ## land and softens the rest; `Vector2.INF`, or any painted act, takes it off.
+## The screen asks every frame; only a moved band touches the view.
 func set_focus_band(band: Vector2) -> void:
 	if not is_journey_act() or not band.is_finite() or size.y <= 1.0:
-		focus_band = Vector2.INF
-		_display.material = null
+		band = Vector2.INF
+	if band == focus_band:
 		return
-	if _display.material == null:
-		_display.material = MapTiltShift.material()
-	var shift: ShaderMaterial = _display.material as ShaderMaterial
 	focus_band = band
-	shift.set_shader_parameter("band", band / size.y)
-	shift.set_shader_parameter("radius_texels", MapTiltShift.STRENGTH_PX
-		* size.y / MapTiltShift.IDENTITY_HEIGHT * float(_stage.size.y) / size.y)
+	_sync_shift()
+
+
+## This map's own film grain on the land, or off while another grain covers
+## the screen (`Main._sync_map_grain`). Reduce Motion keeps it off either way.
+func set_grain(on: bool) -> void:
+	_grain_wanted = on
+	_sync_grain()
+
+
+func _sync_grain() -> void:
+	var shown: bool = _grain_wanted and not Preferences.active.reduce_motion
+	if shown != _grain_shown:
+		_grain_shown = shown
+		MapFilmGrain.show(_display.material as ShaderMaterial, shown)
+
+
+## Moves the grain on by `delta` seconds while it shows.
+func _move_grain(delta: float) -> void:
+	if not _grain_shown:
+		return
+	_grain_t += delta
+	var jump: int = MapFilmGrain.jump(_grain_t)
+	if jump != _grain_jump:
+		_grain_jump = jump
+		MapFilmGrain.set_jump(_display.material as ShaderMaterial, jump)
+
+
+## Just before each frame is drawn: the display blends while anything from it
+## up to the window fades it (a screen's entrance), and covers the screen
+## opaque otherwise (`MapFilmGrain.blend`).
+func _sync_blend() -> void:
+	var alpha: float = _display.self_modulate.a
+	var item: Node = _display
+	while item is CanvasItem:
+		alpha *= (item as CanvasItem).modulate.a
+		item = item.get_parent()
+	var fading: bool = alpha < 1.0
+	if fading != _blending:
+		_blending = fading
+		MapFilmGrain.blend(_display.material as ShaderMaterial, fading)
+
+
+## Points the display at the tilt-shift's view while there is a band, at the
+## stage itself while there is none, and redraws the view for a moved band.
+func _sync_shift() -> void:
+	if not focus_band.is_finite():
+		_display.texture = _stage.get_texture()
+		_shift.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		return
+	var shift: ShaderMaterial = _shift_rect.material as ShaderMaterial
+	shift.set_shader_parameter("band", focus_band / size.y)
+	shift.set_shader_parameter("radius_texels",
+		MapTiltShift.STRENGTH_PX * float(_stage.size.y) / MapTiltShift.IDENTITY_HEIGHT)
+	_display.texture = _shift.get_texture()
+	_shift.render_target_update_mode = (SubViewport.UPDATE_ALWAYS
+		if _stage.render_target_update_mode == SubViewport.UPDATE_ALWAYS
+		else SubViewport.UPDATE_ONCE)
+
+
+## Renders the stage (`mode`), and its tilt-shift with it while there is one.
+func _render(mode: SubViewport.UpdateMode) -> void:
+	_stage.render_target_update_mode = mode
+	if focus_band.is_finite():
+		_shift.render_target_update_mode = mode
 
 
 func project_pins(nodes: Array[MapNode]) -> PackedVector2Array:
@@ -408,7 +505,7 @@ func is_live() -> bool:
 func set_live(on: bool) -> void:
 	_live = on
 	_settle_frames = 0 if on else 3
-	_stage.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_render(SubViewport.UPDATE_ALWAYS)
 
 
 func _repaint() -> void:
@@ -494,10 +591,12 @@ func _process(delta: float) -> void:
 		reap()
 	if _journey_pending:
 		_poll_journey()
+	_sync_grain()
+	_move_grain(delta)
 	if not _live and _settle_frames > 0:
 		_settle_frames -= 1
 		if _settle_frames == 0:
-			_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+			_render(SubViewport.UPDATE_ONCE)
 	elif not _live and _settle_frames == 0:
 		_rest_cadence()
 	if _dragging or _lock_input:
@@ -526,6 +625,9 @@ func _fit() -> void:
 	if _stage.size == next:
 		return
 	_stage.size = next
+	_shift.size = next
+	_shift_rect.size = Vector2(next)
+	_sync_shift()
 	if not is_live():
 		set_live(false)
 
@@ -984,7 +1086,7 @@ func _rest_cadence() -> void:
 	var every: int = REST_EVERY_REDUCED if Preferences.active.reduce_motion else REST_EVERY
 	MapJourneyLandscape.LandMotion.apply(not Preferences.active.reduce_motion)
 	if _rest_tick % every == 0:
-		_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+		_render(SubViewport.UPDATE_ONCE)
 
 
 ## The lean profile for phones and tablets (A12 floor): the stage draws without

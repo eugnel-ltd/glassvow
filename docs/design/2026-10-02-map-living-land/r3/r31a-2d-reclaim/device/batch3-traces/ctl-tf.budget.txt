@@ -1,0 +1,14 @@
+stage frames 255, 15 encoders, GPU busy median 12.93 ms (p95 16.55); clock factor 1.027 (reference pass 5.102 ms)
+  shadow 1               V  0.020 F  0.360 C  0.000 | at the reference clock V  0.021 F  0.370 C  0.000
+  shadow 2               V  0.182 F  0.195 C  0.000 | at the reference clock V  0.187 F  0.200 C  0.000
+  particles              V  0.000 F  0.000 C  0.198 | at the reference clock V  0.000 F  0.000 C  0.203
+  main 3D                V  2.257 F  5.102 C  0.000 | at the reference clock V  2.318 F  5.240 C  0.000
+  glow 1                 V  0.006 F  0.254 C  0.000 | at the reference clock V  0.006 F  0.261 C  0.000
+  glow 2                 V  0.029 F  0.020 C  0.000 | at the reference clock V  0.030 F  0.021 C  0.000
+  glow 3                 V  0.013 F  0.025 C  0.000 | at the reference clock V  0.013 F  0.026 C  0.000
+  tonemap                V  0.015 F  0.265 C  0.000 | at the reference clock V  0.015 F  0.272 C  0.000
+  2D 1                   V  0.333 F  1.892 C  0.000 | at the reference clock V  0.342 F  1.943 C  0.000
+  2D 2                   V  0.022 F  0.012 C  0.000 | at the reference clock V  0.023 F  0.012 C  0.000
+  2D 3                   V  0.052 F  1.287 C  0.000 | at the reference clock V  0.053 F  1.322 C  0.000
+  2D 4                   V  0.146 F  1.891 C  0.000 | at the reference clock V  0.150 F  1.942 C  0.000
+BUDGET LINE at the reference clock: 2D composite 5.79 ms (fragment 5.22); 3D chain 9.18 ms; GPU busy 13.28 ms

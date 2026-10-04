@@ -1,0 +1,45 @@
+Mac proof of the final head 0d7a9969 (code c89d392a) (M1 Max, Godot 4.7.2, A12 Metal condition: GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 godot --path <wt> --rendering-driver metal --rendering-method mobile -- --map --map-trace-probe --seed=1 ...). Each line: capture, exit status, shader/script error lines in its log.
+
+R2 (8815da34), tools/mac_proof2.zsh.txt, same arguments:
+ctl-phone-landscape-on.png rc=0 shader/script errors=0
+ctl-phone-landscape-off.png rc=0 shader/script errors=0
+ctl-phone-landscape-rm.png rc=0 shader/script errors=0
+ctl-pad-landscape-on.png rc=0 shader/script errors=0
+ctl-pad-landscape-off.png rc=0 shader/script errors=0
+ctl-pad-landscape-rm.png rc=0 shader/script errors=0
+ctl-desktop-landscape-on.png rc=0 shader/script errors=0
+ctl-desktop-landscape-off.png rc=0 shader/script errors=0
+ctl-desktop-landscape-rm.png rc=0 shader/script errors=0
+seq-ctl.png rc=0 shader/script errors=0
+ctl-pad-deck.png rc=0 shader/script errors=0
+ctl-pad-act1-fade1.png rc=0 shader/script errors=0
+ctl-pad-act1-fade0.5.png rc=0 shader/script errors=0
+seqp-ctl.png, seqd-ctl.png rc=0 shader/script errors=0
+
+Head (tools/mac_proof4.zsh.txt):
+head-phone-landscape-lean-en.png rc=0 shader/script errors=0
+head-phone-landscape-lean-zh-Hant.png rc=0 shader/script errors=0
+head-phone-landscape-full-en.png rc=0 shader/script errors=0
+head-phone-landscape-full-zh-Hant.png rc=0 shader/script errors=0
+head-pad-landscape-lean-en.png rc=0 shader/script errors=0
+head-pad-landscape-lean-zh-Hant.png rc=0 shader/script errors=0
+head-pad-landscape-full-en.png rc=0 shader/script errors=0
+head-pad-landscape-full-zh-Hant.png rc=0 shader/script errors=0
+head-desktop-landscape-lean-en.png rc=0 shader/script errors=0
+head-desktop-landscape-lean-zh-Hant.png rc=0 shader/script errors=0
+head-desktop-landscape-full-en.png rc=0 shader/script errors=0
+head-desktop-landscape-full-zh-Hant.png rc=0 shader/script errors=0
+head-phone-landscape-off.png rc=0 shader/script errors=0
+head-phone-landscape-rm.png rc=0 shader/script errors=0
+head-pad-landscape-off.png rc=0 shader/script errors=0
+head-pad-landscape-rm.png rc=0 shader/script errors=0
+head-desktop-landscape-off.png rc=0 shader/script errors=0
+head-desktop-landscape-rm.png rc=0 shader/script errors=0
+seq-head.png rc=0 shader/script errors=0
+seqp-head.png rc=0 shader/script errors=0
+seqd-head.png rc=0 shader/script errors=0
+head-pad-deck.png rc=0 shader/script errors=0
+head-pad-act1-fade1.png rc=0 shader/script errors=0
+head-pad-act1-fade0.5.png rc=0 shader/script errors=0
+
+Act II (--act=2, pad lean), tried at 59abff88 for the entrance fade: 10 'Error compiling shader SceneForwardMobileShaderRD' lines in both R2 and the head, line for line the same (the painted acts' mineral ground material binds sampler 17, above the A12 limit of 15). This is a limit of the painted acts that predates this step, which does not touch it. Those captures also show the map's charting veil in both builds (the forced-scenery path), so the fade is measured on Act I and by the modulate probe.

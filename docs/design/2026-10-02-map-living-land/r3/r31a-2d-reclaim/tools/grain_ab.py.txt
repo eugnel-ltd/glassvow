@@ -1,0 +1,147 @@
+"""R3.1a grain and band identity: control (R2, TransitionLayer grain over the
+screen, band at display resolution) against head (grain in the map's display,
+band at stage resolution), per reference shape, from Mac captures under the A12
+Metal condition. Prints a table and writes crop sheets.
+
+Usage: grain_ab.py <proof-dir> <out-dir>
+"""
+import json
+import re
+import sys
+from pathlib import Path
+
+import numpy as np
+from PIL import Image, ImageDraw
+
+AMOUNT = 0.05
+SHAPES = {"phone-landscape": "lean", "pad-landscape": "lean", "desktop-landscape": "full"}
+
+
+def load(p):
+    return np.asarray(Image.open(p).convert("RGB")).astype(np.float64) / 255.0
+
+
+def band_of(log):
+    for line in open(log):
+        if '"probe":"shot"' in line:
+            return json.loads(line.split("TRACE_PROBE ", 1)[1])["band"]
+    return None
+
+
+def flat_mask(off, margin_top, margin_bottom):
+    g = off.mean(axis=2)
+    gx = np.abs(np.diff(g, axis=1, prepend=g[:, :1]))
+    gy = np.abs(np.diff(g, axis=0, prepend=g[:1, :]))
+    m = (gx + gy) < 0.02
+    m[:margin_top] = False
+    m[-margin_bottom:] = False
+    return m
+
+
+def residual_stats(on, off, mask):
+    r = on - off
+    ok = mask & (np.abs(r).max(axis=2) < 0.06)  # motion between launches is not grain
+    b = off[ok]
+    rr = r[ok]
+    expect = AMOUNT * np.minimum(b, 1.0 - b) / np.sqrt(3.0)  # std of a*(2g-1)*min(b,1-b)
+    bins = [(0.0, 0.15), (0.15, 0.3), (0.3, 0.5), (0.5, 0.8)]
+    by = []
+    for lo, hi in bins:
+        sel = (b >= lo) & (b < hi)
+        if sel.sum() > 500:
+            by.append("%.2f-%.2f: %.2f" % (lo, hi, rr[sel].std() / expect[sel].mean()))
+    # Grain size: correlation of the residual with its right and lower neighbour.
+    lum = r.mean(axis=2)
+    okl = ok & np.roll(ok, -1, axis=1)
+    rx = np.corrcoef(lum[okl], np.roll(lum, -1, axis=1)[okl])[0, 1]
+    oky = ok & np.roll(ok, -1, axis=0)
+    ry = np.corrcoef(lum[oky], np.roll(lum, -1, axis=0)[oky])[0, 1]
+    return {"pixels": int(ok.sum()), "std_levels": rr.std() * 255.0,
+            "ratio_to_overlay": rr.std() / expect.mean(), "by_light": by, "corr_x": rx, "corr_y": ry}
+
+
+def best_window(off, rows, size):
+    g = off.mean(axis=2)
+    e = np.abs(np.diff(g, axis=1, prepend=g[:, :1])) + np.abs(np.diff(g, axis=0, prepend=g[:1, :]))
+    best, at = None, (0, 0)
+    y0, y1 = rows
+    w = off.shape[1]
+    for y in range(max(0, y0), max(0, min(y1, off.shape[0]) - size), size // 2):
+        for x in range(size, w - 2 * size, size // 2):
+            s = e[y:y + size, x:x + size].mean() - 0.3 * g[y:y + size, x:x + size].mean()
+            if best is None or s < best:
+                best, at = s, (x, y)
+    return at
+
+
+def crop(img, at, size, scale):
+    x, y = at
+    c = (np.clip(img[y:y + size, x:x + size], 0, 1) * 255).astype(np.uint8)
+    return Image.fromarray(c).resize((size * scale, size * scale), Image.NEAREST)
+
+
+def main(proof, out):
+    proof, out = Path(proof), Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    rows = []
+    for shape, prof in SHAPES.items():
+        p = {
+            "ctl_on": proof / ("ctl-%s-on.png" % shape),
+            "ctl_off": proof / ("ctl-%s-off.png" % shape),
+            "head_on": proof / ("head-%s-%s-en.png" % (shape, prof)),
+            "head_off": proof / ("head-%s-off.png" % shape),
+            "head_rm": proof / ("head-%s-rm.png" % shape),
+            "ctl_rm": proof / ("ctl-%s-rm.png" % shape),
+        }
+        im = {k: load(v) for k, v in p.items()}
+        h, w = im["ctl_off"].shape[:2]
+        band = band_of(str(p["head_off"]).replace(".png", ".log"))
+        mask = flat_mask(im["ctl_off"], int(h * 0.09), int(h * 0.08))
+        # The pins and their labels are not the land: R2 grained them, R3.1a does not.
+        yy, xx = np.mgrid[0:h, 0:w]
+        for line in open(str(p["head_off"]).replace(".png", ".log")):
+            if line.startswith("PINS "):
+                for cx, cy, rad in json.loads(line[5:]):
+                    mask &= ~((np.abs(xx - cx) < rad * 2.6) & (np.abs(yy - cy) < rad * 1.4))
+        sc = residual_stats(im["ctl_on"], im["ctl_off"], mask)
+        sh = residual_stats(im["head_on"], im["head_off"], mask)
+        rm_h = np.abs(im["head_rm"] - im["head_off"]).mean() * 255
+        rm_c = residual_stats(im["ctl_rm"], im["ctl_off"], mask)["std_levels"]
+        # The band: the two grain-free frames, inside the band and outside it.
+        d = np.abs(im["ctl_off"] - im["head_off"]).mean(axis=2) * 255
+        top, bottom = (int(band[0]), int(band[1])) if band and band[0] == band[0] else (0, h)
+        inside = d[top:bottom]
+        outside = np.concatenate([d[int(h * 0.09):max(top, int(h * 0.09))], d[bottom:int(h * 0.92)]])
+        rows.append({"shape": shape, "profile": prof, "size": [w, h], "band_px": [top, bottom],
+                     "ctl": sc, "head": sh, "head_rm_vs_off_mean_levels": rm_h,
+                     "ctl_rm_grain_std_levels": rm_c,
+                     "band_inside_mean_abs_levels": float(np.median(inside)),
+                     "band_outside_mean_abs_levels": float(np.median(outside)) if outside.size else None,
+                     "band_inside_p95": float(np.percentile(inside, 95)),
+                     "band_outside_p95": float(np.percentile(outside, 95)) if outside.size else None})
+        # Crop sheet: grain on (in the band), grain-free blur region, grain alone x8.
+        size = 64 if shape == "phone-landscape" else 96
+        scale = 4 if shape == "phone-landscape" else 3
+        a = best_window(im["ctl_off"], (top + 10, bottom - 10), size)
+        blur_rows = (int(h * 0.1), max(int(h * 0.1) + size + 2, top - 4))
+        b = best_window(im["ctl_off"], blur_rows, size)
+        tiles = [("R2 grain on", crop(im["ctl_on"], a, size, scale)),
+                 ("R3.1a grain on", crop(im["head_on"], a, size, scale)),
+                 ("R2 grain x8", crop(0.5 + 8 * (im["ctl_on"] - im["ctl_off"]), a, size, scale)),
+                 ("R3.1a grain x8", crop(0.5 + 8 * (im["head_on"] - im["head_off"]), a, size, scale)),
+                 ("R2 blur (no grain)", crop(im["ctl_off"], b, size, scale)),
+                 ("R3.1a blur (no grain)", crop(im["head_off"], b, size, scale))]
+        tw = size * scale
+        sheet = Image.new("RGB", (tw * 2 + 30, (tw + 26) * 3 + 10), (16, 16, 20))
+        dr = ImageDraw.Draw(sheet)
+        for i, (label, t) in enumerate(tiles):
+            x = 10 + (i % 2) * (tw + 10)
+            y = 10 + (i // 2) * (tw + 26)
+            dr.text((x, y), label, fill=(230, 230, 230))
+            sheet.paste(t, (x, y + 14))
+        sheet.save(out / ("grain-band-ab-%s.jpg" % shape), quality=88)
+    print(json.dumps(rows, indent=1))
+
+
+if __name__ == "__main__":
+    main(sys.argv[1], sys.argv[2])

@@ -1,0 +1,7 @@
+Grain over time: 24 consecutive frames in one launch, mean |frame-to-frame difference| in the middle rows, 0-255 levels; a step of ~1.6 is a grain jump.
+phone lean   R2     24 frames over 0.193 s; jumps at frames [9, 23]; 117.6 ms apart; jump size 1.61 1.57 levels
+phone lean   R3.1a  24 frames over 0.193 s; jumps at frames [4, 17]; 108.7 ms apart; jump size 1.57 1.59 levels
+pad lean     R2     24 frames over 0.191 s; jumps at frames [8, 22]; 115.4 ms apart; jump size 1.58 1.57 levels
+pad lean     R3.1a  24 frames over 0.192 s; jumps at frames [10, 23]; 108.8 ms apart; jump size 1.60 1.63 levels
+desktop full R2     24 frames over 0.199 s; jumps at frames [2, 14]; 106.2 ms apart; jump size 1.63 1.68 levels
+desktop full R3.1a  24 frames over 0.205 s; jumps at frames [7, 20]; 116.1 ms apart; jump size 1.70 1.66 levels

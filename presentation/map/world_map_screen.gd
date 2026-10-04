@@ -493,6 +493,13 @@ func landscape_pending() -> bool:
 	return _map_scene != null and _map_scene.landscape_pending()
 
 
+## The land's own film grain on or off (`MapScene.set_grain`); Main hands the
+## grain to the TransitionLayer while something covers the map.
+func set_grain(on: bool) -> void:
+	if _map_scene != null:
+		_map_scene.set_grain(on)
+
+
 func _sync_landscape_veil() -> void:
 	if landscape_pending() and _landscape_veil == null:
 		_landscape_veil = MapChartingVeil.new()

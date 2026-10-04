@@ -1,0 +1,225 @@
+R3.1a "2D reclaim" (#660): results, 3-4 Oct 2026
+Branch map/r3-1a-2d-reclaim-2026-10-03 from main 8815da34 (R2), rebased onto
+main be96dc83 (R1.1) on 4 Oct.
+First round: code under test 2d86d1c7 (every section after REVIEW ROUND). The
+review round changed shipped files; its final head is 0d7a9969 (code
+c89d392a), measured on the iPad 8 in review/device/batch6-0d7a9969/. The
+rebase changed no file this step touches except application/main.gd, where it
+applied cleanly.
+
+REVIEW ROUND (4 Oct; two adversarial lenses, 12 findings, 2 major)
+What changed (59abff88, 0ce69f05, c89d392a, tools d3f3a22a, 16c7f913, 0d7a9969):
+- The display fades with its screen again (major). At rest it writes opaque
+  with blending off (map_display.gdshader); while anything from the display
+  up the tree fades it, it blends (map_display_fade.gdshader), switched just
+  before each frame is drawn so an entrance fades from its first frame.
+  Blending at display resolution costs the A12 about 0.4 ms a frame (batch 5:
+  2D composite 2.34 ms with it, 1.94 without), so it is paid only while a
+  fade runs.
+- One grain a frame on the map route (major). Main._sync_map_grain hands the
+  grain between the map and the TransitionLayer every frame: the map grains
+  its own land at rest; under a room or sheet, or while a wipe, plate, iris,
+  flood, flare or cross-fade crosses the map, the TransitionLayer's screen
+  grain covers everything, as on every other route. Under Reduce Motion
+  neither shows. At rest the map's HUD, pins and labels, drawn above the
+  land, carry no grain: folding the grain into the display, the step's
+  approved design, cannot reach what is drawn after it.
+- The grain has no 256 px period: one 256 px white-noise cell laid 8 x 8
+  times into a 2048 px texture (4 MiB), each copy read from its own place,
+  built once on the CPU. Placing the cells per pixel in the shader cost the
+  A12 about 0.7 ms a frame (batch 4: display and HUD 2.14 against 1.47 ms).
+- The grain's jump is worked out by MapScene every TransitionLayer.GRAIN_STEP
+  and handed to the shader as whole pixels; it stands still while the map is
+  frozen, so Reduce Motion holds it (the shader no longer runs on TIME).
+- Tools: the probe's start row carries its build's commit; a walk hold;
+  mt_trace keeps a recording only if it ran its whole time limit; roles.py
+  reports fragment sums and, beside them, each group's occupied time with
+  overlapping work counted once.
+
+DEVICE GATE ON THE FINAL HEAD (review/device/batch6-0d7a9969/summary.txt):
+iPad 8, QA app, interleaved reinstalls of R1 0f5aeda6, R2 8815da34 (control)
+and the head 0d7a9969, 3 launches each, 600-frame holds, every row echoing its
+launch's nonce and its build's commit; none rejected.
+
+  view / mode            mean ms R2 | head        p95 R2 | head   missed (>25 ms) R2 | head
+  Journey cadence        16.873 | 16.660         20.77 | 19.05   21 | 0
+  Journey live           16.671 | 16.661         17.53 | 17.61    1 | 0
+  Journey walk           16.716 | 16.676         18.35 | 18.24    1 | 0
+  Fresh-run cadence      16.798 | 16.663         17.31 | 22.44   14 | 0
+  Fresh-run live         16.662 | 16.663         17.04 | 19.19    0 | 0
+
+  Stated plainly, the gate as written ("p95 <= R2's" on every required view)
+  fails at Journey live (+0.08 ms), fresh-run cadence (+5.13 ms) and fresh-run
+  live (+2.15 ms), and "walk p95 <= R1's" fails by 0.02 ms (18.24 against
+  18.22). The first round's table also hid one such failure: fresh-run live
+  read 19.22 against R2's 19.20.
+  What the misses are: a launch's p95 at the fresh view sits in one of two
+  modes in both builds (live about 17.1 or 19.2 ms; cadence about 17.3 or
+  22.4 ms), and the head lands in the higher mode more often (live: 8 of 9
+  launches over batches 1, 5 and 6, R2 6 of 9). The traces show why: with
+  its 2D work cut to a third, the head's GPU ran 87-97% of each trace in its
+  Minimum performance state, R2's 92-93% in Medium (review/device/batch6-
+  0d7a9969/*.display.txt, clock factors 0.70-0.75 against 1.00). Every mean
+  sits on the 16.67 ms vsync and the head misses no frame in 9000 at the
+  required views, where R2 misses 37. Orchestrator ruling (4 Oct): the step
+  passes on missed frames and means; the higher p95 is the GPU governor
+  saving power on a lighter frame, not added work, and is accepted.
+
+GPU BUDGET LINE ON THE FINAL HEAD (batch 6 traces, every one ran its whole 7 s):
+                              R2 8815da34          R3.1a 0d7a9969
+  Journey: 2D composite F     6.28 ms              1.89 ms (tilt-shift view 0.44, display+HUD 1.45)
+           occupied, 2D       6.54                 2.17
+  Fresh:   2D composite F     5.15                 1.83 (tilt-shift view 0.25, display+HUD 1.59)
+           occupied, 2D       5.53                 2.16
+  The 2.0 ms gate holds on the fragment sums (1.89, 1.83). Raw, in the few
+  frames within 10% of the reference clock: 2.43 (10 frames) and 2.32 ms (26).
+
+VIDEO MEMORY: at the cadence hold's start the head reads 260.5-262.5 MiB
+against R2's 254.1 (batch 6; batch 5 read the head 246.6-260.5, R2
+240.2-254.1). Readings step by about 14 MiB between launches of one build,
+so the first round's -16.4 MiB is not claimed; the noise texture adds 4 MiB.
+Well inside the act budget (+80 MiB).
+
+WHAT SHIPPED
+- Film grain on the map: drawn by the map's display shader
+  (presentation/map/map_display.gdshader, MapFilmGrain) as one fetch of a fixed
+  256 px white-noise tile per display pixel, with the TransitionLayer grain's
+  strength (0.05 overlay), whole-pixel jumps and rate (read from its
+  constants), and none under Reduce Motion. Main keeps TransitionLayer's
+  screen-reading grain off while the map shows; every other route turns it
+  back on (unchanged). The map now has no screen-texture reader at all.
+- Tilt-shift band at the stage's resolution: a view of its own
+  (MapTiltShiftView, 2D only, the stage's size) runs the same 13-tap band
+  shader texel for texel; the stage is its child, so the engine draws the
+  stage first; the view renders only when the stage renders or the band
+  moves. The display is a plain upscale plus the grain.
+- set_focus_band no longer re-applies the band every frame (trace open
+  issue 4): an unchanged band touches nothing.
+- Shipped the stage-resolution band, not the static-haze-mask fallback: it
+  reads identically in A/B crops (below) and it is cheaper (budget line).
+
+DEVICE GATE: iPad 8 (A12, iPadOS 26.1), QA app only, lean profile, pad, seed 1
+(device/batch1-ctl-vs-head/, summary.txt there). Interleaved reinstalls in one
+batch under the lock (21:31-21:53): control (main 8815da34 + probe), head
+(2d86d1c7 + probe), control, head, control, head; a warm-up launch after each
+build's first install. 600-frame holds at the production cadence and live in
+every launch (live forced after every other script's _process, the trace
+spike's fix), 3 launches per build per view. Every row echoes its launch's
+nonce; none was rejected. The round-1 screenshots (device/ipad8-*.jpg) were
+taken 39 s after each launch, at least 5.7 s after its holds ended (holds done
+30.1-33.3 s into the app); no recording ran in these launches.
+
+  view / mode                 mean ms (3 launches)     p95 ms median    missed (>25 ms), sum
+  Journey mid-route cadence   R2 16.948 | R3.1a 16.661   21.52 | 18.63     32 | 0
+  Journey mid-route live      R2 16.661 | R3.1a 16.660   17.75 | 17.72      0 | 0
+  Fresh-run opening cadence   R2 16.911 | R3.1a 16.660   23.02 | 21.67     46 | 0
+  Fresh-run opening live      R2 16.672 | R3.1a 16.660   19.20 | 19.22      1 | 0
+  Whole act cadence           R2 19.065 | R3.1a 16.724   27.48 | 22.33    261 | 4
+  Whole act live              R2 16.666 | R3.1a 16.681   19.41 | 19.38      0 | 1
+  River-framed cadence        R2 17.226 | R3.1a 16.680   23.05 | 21.25     60 | 1
+  River-framed live           R2 16.662 | R3.1a 16.661   17.89 | 17.92      0 | 0
+
+  Required views (Journey, fresh opening): every mean <= 16.70 and no missed
+  frame in 3600 head frames; p95 at the cadence 2.9 and 1.4 ms under R2.
+  Live, where both builds sit on the vsync, p95 is within the launches' own
+  spread (fresh live: R3.1a 19.22/19.21/19.29 against R2 19.32/19.07/19.20,
+  median +0.02 ms). Extra views: Whole act cadence mean 16.72 (R2 19.07, 261
+  missed); river live p95 +0.03 ms within spread.
+
+video_mib (cadence hold start): R2 254.1, R3.1a 237.7 (-16.4 MiB: the grain's
+screen copy is gone; the band view adds one 885x663 target).
+
+R1 IN THE SAME KIND OF BATCH (device/batch2-r1-vs-head/, 22:44-23:05): R1
+0f5aeda6 + probe against the head, interleaved reinstalls, 3 launches each.
+  Journey cadence  R1 16.902 | R3.1a 16.660; p95 22.31 | 18.59; missed 15 | 0
+  Journey live     R1 16.662 | R3.1a 16.663; p95 17.92 | 17.54; missed  0 | 0
+  Fresh cadence    R1 19.639 | R3.1a 16.658; p95 33.66 | 21.37; missed 299 | 0
+  Fresh live       R1 16.661 | R3.1a 16.679; p95 19.68 | 19.27; missed  0 | 1
+  (the one missed frame is in one launch, mean 16.717; the other two read
+  16.663 and 16.658). Across both batches the head's Journey and fresh holds
+  read 16.656-16.717 ms in 24 holds, 1 frame over 25 ms in 14,400.
+
+GPU BUDGET LINE (device/batch3-traces/; Metal System Trace, live, all
+processes filtered to the launch's pid; tools/map_trace/roles.py, the 2D
+passes being the renders after the main pass's three glow passes and tonemap;
+scaled to the reference clock by the main 3D pass, which this step does not
+touch: 4.091 ms at Journey, 5.24 ms at the fresh view, R2's j-live and f-live).
+                              R2 8815da34          R3.1a
+  Journey: 2D composite F     6.31 ms              1.92 ms (tilt-shift view 0.46, display+HUD 1.47)
+           2D composite V+F   6.74                 2.17
+           3D chain           7.44                 7.40
+           GPU busy           13.44                9.31
+  Fresh:   2D composite F     5.22                 1.65
+           2D composite V+F   5.79                 2.10
+  The gate (2D composite <= 2.0 ms; R2's 6.3 ms is its fragment sum) holds on
+  the same measure: 1.92 and 1.65 ms. With vertex time it is 2.17 and 2.10.
+  Clock caveat: the head's Journey trace ran 95% of the time at the GPU's
+  Minimum state (lighter frames let the governor drop), so its figure rests
+  on the scaling (per frame: median 1.92, p10 1.60, p90 2.47; raw, unscaled
+  2.61). Its fresh trace had 5 frames within 10% of the reference clock:
+  raw 1.87 ms there. A present pass in a command buffer of its own (about
+  1 ms at display resolution) runs every frame in both builds and is not in
+  either figure. Traces are short (26-29 stage frames each; xctrace reported
+  "Device got disconnected" as each 4 s window ended).
+
+MAC (M1 Max, A12 Metal condition; mac/, mac-captures.txt there)
+- 0 shader and 0 script errors in all 31 captures: pad, phone and desktop,
+  lean and full, en and zh-Hant (head), plus the A/B and Reduce Motion runs.
+- Grain identity, R2 against R3.1a, residual = grain on minus grain off
+  (mac/grain-band-ab.json, crops grain-band-ab-<shape>.jpg):
+    std of the residual, 0-255 levels: phone 1.68 / 1.65, pad 1.79 / 1.79,
+    desktop 1.77 / 1.85.
+    Against the overlay's own expectation by base light (0-0.15, 0.15-0.3,
+    0.3-0.5, 0.5-0.8): phone R2 1.36 1.13 1.06 1.01, R3.1a 1.37 1.10 1.05
+    1.03; pad R2 1.55 1.15 1.07 1.02, R3.1a 1.50 1.15 1.08 1.04; desktop R2
+    1.40 1.14 1.07 1.04, R3.1a 1.51 1.22 1.08 1.04: the same response to
+    light and dark (the darkest bin reads high in both from 8-bit rounding).
+    Neighbour correlation -0.03 to 0.10 in both: one grain per display
+    pixel. Rate (mac/grain-rate.txt): a jump every 108-117 ms in both, the
+    same size (1.65-1.69 levels a jump).
+- Band identity: the grain-free frames of R2 (band per display pixel) and
+  R3.1a (band per stage texel, upscaled): median absolute difference 0
+  levels inside and outside the band at all three shapes; p95 1.3-4.3 levels,
+  which is the frames' own motion (flames, embers, sway).
+- iPad 8 crops of the same view (device/ipad8-grain-band-crops.jpg) show the
+  same grain and the same blur at display pixels.
+- Reduce Motion: R3.1a draws no grain (frame against grain off: 0.3-0.6
+  levels, motion only; mac/r31a-pad-lean-reduce-motion.jpg). R2's
+  TransitionLayer grain does NOT go under Reduce Motion (residual std
+  1.77-1.87 levels): its self_modulate fade is lost because its shader writes
+  COLOR outright. Other screens keep that grain, unchanged by this step.
+- Pin-ring contrast (mac/pin-contrast.txt), R2's measure, same land and
+  framing: R3.1a equals R2 pin for pin (every pin within +-0.04) at all three
+  shapes. Minimum rim against land, R2 / R3.1a: phone 1.03 / 1.03, pad 1.01 /
+  1.01, desktop 1.02 / 1.02. These minima are below the figures quoted from
+  r2-plan.md §8 (phone 1.41, pad 2.17, desktop 1.18) for R2's merge head too:
+  those were measured before R2's camera change. This step changes no pin
+  contrast.
+
+PAYLOAD: tools/payload_report.py (iOS) 272.3 MiB before and after (unchanged
+to 0.1 MiB; the change is a few kB of code; the noise tile is made at run time).
+
+R3.0 DEVICE CONDITIONS (is a GPU performance-state Device Condition on?)
+- devicectl has no device-condition command or field (device info details,
+  ddiServices; device/batch1-ctl-vs-head/device-details.txt).
+- The Metal System Trace records the state in tables the CLI can export
+  (tools/map_trace/display.py prints them): in every trace of batches 3-6 and
+  in the trace spike's j-live trace, gpu-performance-state-info reads
+  "consistent state available Yes, enabled No, sustained No, state 0", the
+  driver's desired state is 0 throughout (gpu-performance-device-state-
+  intervals), and the thermal state is Nominal with is-induced No. The states
+  themselves move (Minimum 7-97%, Medium 3-93%) as DVFS does. These fields
+  are consistent with no condition being on, but Instruments labels every
+  interval "induced ... due to active device conditions", so the traces do
+  not settle it. Xcode's Devices window (Device Conditions) is the authority;
+  the owner can confirm it there.
+
+CORE GATE (final head): see the report. One SCRIPT ERROR line in run_all's log
+comes from tests/test_map_open_cache.gd:69 ("Bridge masonry" is null in Act
+I's journey land) and is on main 8815da34 too (same test, same line, run on
+the control worktree); the suite passes.
+
+TESTS: tests/test_map_film_grain.gd (new) and tests/test_map_journey.gd pin the
+grain's identity and noise, Reduce Motion, the route's grain switch, the band's
+view, its draw order, cadence and live, and the unchanged band; 14 mutations,
+all caught (mutation-checks.txt).

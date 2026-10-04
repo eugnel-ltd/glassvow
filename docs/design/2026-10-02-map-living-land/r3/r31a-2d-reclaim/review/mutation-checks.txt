@@ -1,0 +1,27 @@
+Mutation checks for the review fixes (tools/mutate2.py.txt), all on the final code (c89d392a). Each mutation backs the file up, mutates it, runs the filtered suite (res://tests/test_map_film_grain.gd) and copies the backup back; every touched file was byte-identical afterwards. A mutation counts as caught only when the run fails AND the named check is among the failures.
+
+The hand-over, Reduce Motion, the screen's switch and the composed noise:
+M8 Reduce Motion ignored             CAUGHT (rc 1)
+M12 map keeps the layer grain        CAUGHT (rc 1)
+M15 screen cannot take the grain     CAUGHT (rc 1)
+M17 cells share one place            CAUGHT (rc 1)
+M18 touching cells too close         CAUGHT (rc 1)
+M24 noise lays cells unplaced        CAUGHT (rc 1)
+M25 a wrapped part dropped           CAUGHT (rc 1)
+M26 noise one cell                   CAUGHT (rc 1)
+M19 a room does not cover            CAUGHT (rc 1)
+M20 leaves do not cover              CAUGHT (rc 1)
+M21 layer grain under RM             CAUGHT (rc 1)
+M22 land keeps its grain             CAUGHT (rc 1)
+M23 plate is not a leaf              CAUGHT (rc 1)
+
+Opaque at rest, blending while fading, the jump set by the script:
+M27 the jump is never set            CAUGHT (rc 1)
+M28 grain moves while off            CAUGHT (rc 1)
+M29 never blends                     CAUGHT (rc 1)
+M30 ancestors ignored                CAUGHT (rc 1)
+M31 opaque shader blends             CAUGHT (rc 1)
+M32 wrong rate                       CAUGHT (rc 1)
+M33 wrap off by one                  CAUGHT (rc 1)
+
+Restored byte for byte after each run: yes. (Earlier runs on 59abff88 and 0ce69f05, whose shader placement and blending were replaced, are not repeated here.)
