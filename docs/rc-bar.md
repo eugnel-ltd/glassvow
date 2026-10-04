@@ -349,7 +349,7 @@ the readout whose complete §11 table it was given on.
 **The 1.0 Duskblade verdict of record: ACCEPT, with one reservation.** The orchestrator's
 verdict on readouts 11–13, given on 2 October 2026 at 22:12 BST on readout 13's complete §11
 table (recorded in [#544's plan of record](https://github.com/fol2/glassvow/issues/544),
-decision 12; #544's step P4 enters it in the lock's §11). The reservation is the fresh-pool Lantern lead, 12.8 pp at V0 (G2 at V0 fresh, the
+decision 12, and entered with its history in the lock's §11 *Verdict* by #544's step P4a, #686). The reservation is the fresh-pool Lantern lead, 12.8 pp at V0 (G2 at V0 fresh, the
 Lantern over Shatter, +8.9 to +16.6 pp: FAIL on point, UNDECIDED on interval), carried as a
 1.0.x readout, not a reason to withhold the ACCEPT (readout 13, *What the next readout should
 ask*, item 1). It carries no other reservation. The other graded-gate figures short of their
