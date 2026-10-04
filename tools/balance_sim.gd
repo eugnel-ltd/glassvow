@@ -7,18 +7,14 @@ const Policy: GDScript = preload("res://tools/balance_policy.gd")
 const Metrics: GDScript = preload("res://tools/balance_metrics.gd")
 const Incentives: GDScript = preload("res://tools/vow_incentives.gd")
 const PROFILE: String = "mature-three-act-no-side-state-v1"
-## Pool states (flame lock §11): `mature` is every reveal with no deed unlocks
-## (the historical profile); `fresh` a new Vigil (no reveals, so no pool waves,
-## and no deeds); `entry` the Vigil at which a later class unlocks (see
-## `_apply_entry`); `full` every reveal and every deed's unlocks.
+## Pool states (flame lock §11): `mature` every reveal, no deed unlocks (the
+## historical profile); `fresh` a new Vigil; `entry` the Vigil at which a later
+## class unlocks (`_apply_entry`); `full` every reveal and every deed's unlocks.
 const PROFILES: Dictionary = {
 	"mature": PROFILE, "fresh": "fresh-three-act-no-side-state-v1",
 	"entry": "entry-three-act-no-side-state-v1", "full": "full-three-act-no-side-state-v1",
 }
-## Per-fight rates recorded with each run (flame lock §11 descriptor), then the
-## stats of the aspect's own ways that are not already among them
-## (`BalanceClasses`). The Duskblade's stats are all here, so its rows keep this
-## exact key order.
+## Per-fight rates recorded with each run (flame lock §11 descriptor); `_flame_row` adds the aspect's own.
 const RATE_STATS: Array[String] = ["shatters", "kindles", "embersSpent", "cracked", "embersGained"]
 ## A fight still running at this turn is cut off and counted a stall (flame
 ## readout 5: 30 cut off a won 32-turn fight with the 650-HP final boss).
@@ -587,6 +583,8 @@ static func _finish(run: RunState, aspect: String, seed: int, outcome: String,
 ## ways produce. Derived from the run, so the outcome digest leaves it out.
 static func _flame_row(run: RunState, content: ContentDB, fights: int) -> Dictionary:
 	var rates: Dictionary = {}
+	# The aspect's way stats not already listed follow RATE_STATS, which holds all
+	# the Duskblade's, so its rows keep this exact key order.
 	var keys: Array[String] = RATE_STATS.duplicate()
 	for key: String in BalanceClasses.expression_stats(content, run.aspect):
 		if not keys.has(key):

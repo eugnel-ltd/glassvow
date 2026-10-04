@@ -64,16 +64,6 @@ static var lit: String = ""
 ## Copies of each card id in the committed bot's deck when it last looked
 ## (`see_flame`), read by `offer_card_score`; empty for every other arm.
 static var held: Dictionary = {}
-## The ways a policy may commit to under an aspect: `none` and the ids of the
-## aspect's own ways, read from content (an aspect with no ways offers only
-## `none`).
-static func way_ids(content: ContentDB, aspect: int) -> Array[String]:
-	var out: Array[String] = [NO_WAY]
-	for row: Dictionary in Flame.ways(content, aspect):
-		out.append(str(row["id"]))
-	return out
-
-
 static func set_modes(build: bool, play: bool) -> void:
 	random_build = build
 	random_play = play
@@ -888,3 +878,13 @@ static func _random_shop(stock: Dictionary, run: RunState) -> Array[Dictionary]:
 		bought.append(chosen)
 		gold -= int(float(str(chosen["price"])))
 	return bought
+
+
+## The ways a policy may commit to under an aspect: `none` and the ids of the
+## aspect's own ways, read from content (an aspect with no ways offers only
+## `none`).
+static func way_ids(content: ContentDB, aspect: int) -> Array[String]:
+	var out: Array[String] = [NO_WAY]
+	for row: Dictionary in Flame.ways(content, aspect):
+		out.append(str(row["id"]))
+	return out

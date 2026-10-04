@@ -792,6 +792,7 @@ class OtherClassTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "no committed arms"):
                 readout.main(["run", str(self.root / "out"), "--aspect", "ashwarden", "--seeds", "13000-13003",
                               "--arms", "C_smolder"])
+            self.assertFalse((self.root / "out").exists())  # refused before anything was written
             for argv in (["g3", str(self.root), "v0-full"], ["rowb", str(self.root)],
                          ["table", str(self.root), str(self.root), "--v0-seeds", "13000-13003",
                           "--v5-seeds", "13000-13003"]):

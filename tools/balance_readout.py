@@ -62,9 +62,9 @@ def cmd_run(opts: argparse.Namespace) -> int:
     if not 1 <= opts.jobs <= 16:
         raise ValueError("--jobs must be 1..16")
     out = opts.out.resolve()
-    out.mkdir(parents=True, exist_ok=True)
     work = runner.plan(out, who, seeds, _csv(opts.cells), _csv(opts.arms) or list(who.arms), opts.play, opts.chunk, opts.replay,
                        content, weights, opts.godot)
+    out.mkdir(parents=True, exist_ok=True)  # only once the plan is accepted
     who = runner.identity(REPO, content)
     start = time.monotonic()
     ran = runner.run_chunks(work, who, opts.jobs)
