@@ -1390,15 +1390,23 @@ func _warm_rooms() -> void:
 			credits.roll().finish()
 			return credits,
 		func() -> Control:
-			# The hall with both its looks, for its glyphs at their sizes.
-			var vigil: VigilScreen = VigilScreen.new(_vigil, content, shape, true, _sfx_bus)
+			# The hall and its floor, for their glyphs at their sizes, once its
+			# art is in hand (a load the build waited on stalled a warm frame
+			# for 386 ms on the iPad 8); its window apart, a frame later.
+			if not _vigil_art_ready():
+				return null
+			var vigil: VigilScreen = VigilScreen.new(_vigil, content, shape, false, _sfx_bus)
 			vigil._show_epitaphs()
 			return vigil,
+		func() -> Control:
+			return RoseWindowView.new(_vigil.quests, content.quests, _vigil.whispers,
+				VigilScreen._whisper_lines(), shape),
 	]
 	# The hall's first-use pipelines (its additive fire, the Keeper's clip pass,
 	# the rose's pane shader at its size) drawn once under the road.
-	var pipelines: Array[Callable] = [func() -> Control: return VigilHall.pipeline_sample(shape)]
-	_room_warm = RoomWarm.new(builders, _title_rests, pipelines)
+	var pipelines: Array[Callable] = [func() -> Control:
+		return VigilHall.pipeline_sample(shape) if _vigil_art_ready() else null]
+	_room_warm = RoomWarm.new(builders, _warm_may_run, pipelines)
 	add_child(_room_warm)
 
 
@@ -1419,6 +1427,11 @@ func _warm_vigil_art() -> void:
 	for path: String in VigilHall.art_paths() + MusicBus.paths([&"vigil", &"roseWindow", &"title"]):
 		if ResourceLoader.exists(path) and ResourceLoader.load_threaded_request(path) == OK:
 			_vigil_art[path] = null
+
+
+## Whether every piece of the Vigil's art asked for is in hand (or could not be).
+func _vigil_art_ready() -> bool:
+	return not _vigil_art.values().has(null)
 
 
 ## Holds each piece of the Vigil's art once its worker is done with it; lets
@@ -1447,6 +1460,13 @@ func _title_rests() -> bool:
 	return title != null and _modal == null and _route_screen == null \
 		and (title.rite == null or title.rite.is_done()) \
 		and (_passage == null or not (_passage.arriving() or _passage.leaving()))
+
+
+## The rooms' warm runs while the title rests and the map's prefetch is done
+## (#670 review, follow-up 3: on the iPad 8 a warm build that met the prefetch's
+## work in one frame ran 149.5 ms against 137.6 alone).
+func _warm_may_run() -> bool:
+	return _title_rests() and not MapJourneyPrefetch.busy()
 
 
 ## The road on screen now, if the screen stands on the title's road.

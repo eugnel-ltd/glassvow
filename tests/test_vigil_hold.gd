@@ -18,7 +18,8 @@ extends RefCounted
 ##   takes no key while held;
 ## - the departure's Back lifts the departure off a title built beneath it (X2);
 ## - a language or shape change while the rooms' warm runs is warmed after it
-##   (#670 review follow-up 1: before, the new key was dropped for the launch);
+##   (#670 review follow-up 1: before, the new key was dropped for the launch),
+##   and the warm waits while the map's prefetch is still working (follow-up 3);
 ## - the title's track resumes where it stopped; a fight's never does.
 ##
 ## V2′ (the door's rose flying into the window after the unsealing) is cut
@@ -96,6 +97,7 @@ static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]
 	await _other_routes_free_it(fails, tree, host, content)
 	await _departure_lifts(fails, tree, host, content)
 	await _warm_requeued(fails, tree, host, content)
+	await _warm_waits_for_the_map(fails, tree, host, content)
 	Preferences.active = kept
 
 
@@ -242,6 +244,22 @@ static func _warm_requeued(fails: Array[String], tree: SceneTree, host: SubViewp
 	if main._room_warm != null and is_instance_valid(main._room_warm):
 		main._room_warm.queue_free()
 	main._shape = &"pad-landscape"
+	_dispose(main)
+
+
+## #670 follow-up 3: the rooms' warm never works in the same frames as the
+## map's prefetch.
+static func _warm_waits_for_the_map(fails: Array[String], tree: SceneTree, host: SubViewport,
+		content: ContentDB) -> void:
+	var main: Main = await _boot(tree, host, content)
+	_check(fails, main._warm_may_run(), "the warm may not run on a title at rest")
+	var run: RunState = RunState.new_run(content, 65703, "hold-prefetch")
+	run.map = WorldMap.benchmark(run).to_dict()
+	MapJourneyPrefetch.start(WorldMap.from_dict(run.map), run)
+	_check(fails, MapJourneyPrefetch.busy() and not main._warm_may_run(),
+		"the rooms' warm may run while the map's prefetch works")
+	MapJourneyPrefetch.release()
+	_check(fails, main._warm_may_run(), "the warm stays held once the map's prefetch is let go")
 	_dispose(main)
 
 

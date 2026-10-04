@@ -17,9 +17,14 @@ var shape: StringName = StageShape.IDENTITY
 var glow: float = 1.0:
 	set(value):
 		glow = value
+		# Redrawn only for a change the eye can see.
+		if absf(glow - _drawn_glow) < 0.01:
+			return
+		_drawn_glow = glow
 		for roundel: _Roundel in _roundels:
 			if roundel.done:
 				roundel.queue_redraw()
+var _drawn_glow: float = 1.0
 
 ## The rail's own light, 0..1: it comes and goes with the rows (the passage).
 var rail: float = 1.0:

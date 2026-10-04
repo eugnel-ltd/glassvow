@@ -60,6 +60,12 @@ var _context: StringName = &""
 var _players: Array[AudioStreamPlayer] = []
 ## Where each resuming stem stopped this session, in seconds.
 var _positions: Dictionary = {}
+## The stem each player holds paused: a resuming cue that gives way keeps its
+## player paused, so coming back is an unpause, never a seek. An MP3 seek scans
+## the track from its top: on the iPad 8 the title's return cost its tap frame
+## about 100 ms (#655 PR C's device rows). The position above is the fallback
+## when the paused player has been taken by a third cue.
+var _held: Array[String] = ["", ""]
 var _active: int = 0
 var _fade: Tween = null
 
@@ -173,33 +179,49 @@ func play(cue: StringName, context: StringName = &"") -> void:
 		return
 	var stem: String = resolve(cue, context)
 	var path: String = DIR % stem
-	if not ResourceLoader.exists(path):
-		push_warning("music: no track for '%s'" % cue)
-		return
-	var stream: AudioStream = load(path) as AudioStream
-	if stream == null:
-		return
-	stream = stream.duplicate() as AudioStream
-	if stream is AudioStreamMP3:
-		(stream as AudioStreamMP3).loop = true
-
 	var outgoing: AudioStreamPlayer = _players[_active]
+	var outgoing_index: int = _active
 	var incoming_index: int = 1 - _active
 	var incoming: AudioStreamPlayer = _players[incoming_index]
+	var resumes: bool = RESUMES.has(cue) and _held[incoming_index] == stem and incoming.stream != null
+	var stream: AudioStream = null
+	if not resumes:
+		if not ResourceLoader.exists(path):
+			push_warning("music: no track for '%s'" % cue)
+			return
+		stream = load(path) as AudioStream
+		if stream == null:
+			return
+		stream = stream.duplicate() as AudioStream
+		if stream is AudioStreamMP3:
+			(stream as AudioStreamMP3).loop = true
 	if _fade != null and _fade.is_valid():
 		_fade.kill()
 	_remember(outgoing)
-	incoming.stop()
-	incoming.stream = stream
-	incoming.volume_db = SILENT_DB
-	incoming.play(resume_at(_positions, cue, stem, stream.get_length()))
+	_held[incoming_index] = ""
+	if resumes:
+		# Where it paused: no seek.
+		incoming.volume_db = SILENT_DB
+		incoming.stream_paused = false
+	else:
+		incoming.stop()
+		incoming.stream_paused = false
+		incoming.stream = stream
+		incoming.volume_db = SILENT_DB
+		incoming.play(resume_at(_positions, cue, stem, stream.get_length()))
 	_fade = create_tween().set_parallel(true)
 	_fade.tween_property(incoming, "volume_db", 0.0, CROSSFADE)
-	if outgoing.playing:
+	if outgoing.playing and not outgoing.stream_paused:
+		var keep: bool = RESUMES.has(current_cue) and not current_stem.is_empty()
+		var kept_stem: String = current_stem
 		_fade.tween_property(outgoing, "volume_db", SILENT_DB, CROSSFADE)
 		_fade.chain().tween_callback(func() -> void:
-			outgoing.stop()
-			outgoing.stream = null
+			if keep:
+				outgoing.stream_paused = true
+				_held[outgoing_index] = kept_stem
+			else:
+				outgoing.stop()
+				outgoing.stream = null
 		)
 	_active = incoming_index
 	current_cue = cue

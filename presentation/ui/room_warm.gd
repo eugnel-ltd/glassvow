@@ -54,7 +54,9 @@ var _sample: Control = null
 
 
 ## `builders`: each makes one room, whole (every page, the roll's end), off
-## the tree.
+## the tree, or null when what it needs is not ready yet (the Vigil's art,
+## still loading on a worker): it is asked again on a later frame, so no
+## frame of the warm waits on a load.
 func _init(builders: Array[Callable], title_rests: Callable,
 		pipelines: Array[Callable] = []) -> void:
 	name = "RoomWarm"
@@ -83,7 +85,10 @@ func _process(delta: float) -> void:
 	if _rested < REST:
 		return
 	if not _builders.is_empty():
-		var room: Control = _builders.pop_front().call()
+		var room: Control = _builders.front().call()
+		if room == null:
+			return
+		_builders.pop_front()
 		_collect(room)
 		if _builders.is_empty():
 			_queue_jobs()
@@ -107,8 +112,9 @@ func _process(delta: float) -> void:
 		_sample.queue_free()
 		_sample = null
 	if not _pipelines.is_empty():
-		_sample = _pipelines.pop_front().call()
+		_sample = _pipelines.front().call()
 		if _sample != null:
+			_pipelines.pop_front()
 			_sample.modulate.a = 0.004
 			add_child(_sample)
 		return

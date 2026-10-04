@@ -48,6 +48,8 @@ const LOOK_OUT: float = 0.18
 const LOOK_IN_FROM: float = 0.14
 const LOOK_IN: float = 0.34
 const STAGGER: float = 0.04
+## The passage's first frames, while the room is still being laid out.
+const STEP_ONE: float = 0.034
 ## A group rising in the firelight: how long it takes. On a cubic's ease, not
 ## the quint's: the rose and its glass are large, and a quint's first frame
 ## brought a third of either in at once.
@@ -79,6 +81,7 @@ var _change: float = -1.0
 var _going: Array[Control] = []
 var _coming: Array[Control] = []
 var _plate_at: Vector2 = Vector2.ZERO
+var _rise_order: Array[Control] = []
 
 
 func _init(vigil: VigilState, content: ContentDB,
@@ -446,7 +449,14 @@ func arrive_at(t: float, _wick: Vector2, _colour: Color) -> void:
 		_hall.answer()
 	if title != null:
 		title.turn(LeadlightMotion.ease_on(t / 0.40, LeadlightMotion.SETTLE_OUT))
-	var groups: Array[Control] = _by_the_light(reveal_groups(), _look == VigilHall.ROSE)
+		# The hall stands whole over the road from here: the road is held now,
+		# not at the landing, so the two are never drawn together for nothing.
+		if came >= 1.0 and not left():
+			title.hold_world(true)
+	# The order the light reaches them in, found once the room is laid out.
+	if _rise_order.size() != reveal_groups().size() or t <= STEP_ONE:
+		_rise_order = _by_the_light(reveal_groups(), _look == VigilHall.ROSE)
+	var groups: Array[Control] = _rise_order
 	for i: int in groups.size():
 		var from: float = minf(maxf(0.16 + STAGGER * float(i), _clear_of_ghost(groups[i])), arrival_time() - RISE)
 		_reveal(groups[i], LeadlightMotion.ease_on((t - from) / RISE, LeadlightMotion.SETTLE_OUT))
@@ -479,6 +489,8 @@ func leave_at(t: float, _wick: Vector2, _colour: Color) -> void:
 	var away: float = LeadlightMotion.ease_on(t / 0.36, LeadlightMotion.SETTLE_OUT)
 	_hall.slide = -VigilHall.TURN * size.x * away
 	_hall.modulate.a = 1.0 - away
+	# Gone from sight: no longer drawn over the road for the frames left.
+	_hall.visible = away < 1.0
 	if title != null:
 		title.turn(1.0 - LeadlightMotion.ease_on((t - 0.04) / 0.40, LeadlightMotion.SETTLE_OUT))
 
