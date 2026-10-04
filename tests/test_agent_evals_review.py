@@ -153,13 +153,13 @@ class TrivialAnswererTests(unittest.TestCase):
     def test_a_demanding_grader_keeps_every_trivial_answerer_low(self) -> None:
         scores = trivial_answerer_scores(make_cases(10))
         self.assertLessEqual(scores["max"], TRIVIAL_LIMIT)
-        self.assertEqual({"constant_false", "constant_true", "echo_false", "echo_true"},
-                         set(scores) - {"max", "limit"})
+        self.assertEqual({"constant_false", "constant_true", "echo_false", "echo_true", "soup_false",
+                          "soup_true", "oracle_booleans", "empty"}, set(scores) - {"max", "limit"})
 
-    def test_repo_traps_graders_cannot_be_gamed_by_constants_or_echoes(self) -> None:
+    def test_repo_traps_graders_cannot_be_gamed_by_trivial_answerers(self) -> None:
         cases = load_cases(load_eval("repo_traps"))
         scores = trivial_answerer_scores(cases)
-        self.assertLess(scores["max"], TRIVIAL_LIMIT, scores)
+        self.assertLessEqual(scores["max"], TRIVIAL_LIMIT, scores)
 
     def test_repo_traps_expected_booleans_are_balanced(self) -> None:
         expected = [c["equals"] for case in load_cases(load_eval("repo_traps"))

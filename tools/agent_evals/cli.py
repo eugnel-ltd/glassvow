@@ -13,6 +13,7 @@ from agent_evals import approvals, split as splitting  # noqa: E402
 from agent_evals.backends import (AnthropicApiBackend, Backend, ClaudeCliBackend,  # noqa: E402
                                   IsolationUnavailable)
 from agent_evals.baseline import run_baseline  # noqa: E402
+from agent_evals.diagnostics import trivial_answerer_scores  # noqa: E402
 from agent_evals.evalspec import EvalSpec, load_cases, load_eval, require_valid  # noqa: E402
 from agent_evals.hillclimb import Climb, HillclimbConfig  # noqa: E402
 from agent_evals.models import EvalError, MODEL_ALIASES, read_json, write_json  # noqa: E402
@@ -55,10 +56,20 @@ def cmd_review(args: argparse.Namespace) -> int:
     return 0
 
 
+def _delegation(args: argparse.Namespace) -> dict | None:
+    """The delegated-approval record, or None after the default interactive-terminal check."""
+    if not args.delegated and not args.evidence:
+        approvals.require_tty(sys.stdin)
+        return None
+    if not (args.delegated and args.evidence):
+        raise approvals.ApprovalError("--delegated and --evidence must be given together")
+    return approvals.delegation_record(args.delegated, Path(args.evidence))
+
+
 def cmd_approve_inputs(args: argparse.Namespace) -> int:
-    approvals.require_tty(sys.stdin)
+    delegation = _delegation(args)
     spec, _ = _load(args)
-    entry = approvals.approve_inputs(spec.directory, spec.cases_sha256)
+    entry = approvals.approve_inputs(spec.directory, spec.cases_sha256, delegation)
     print(f"inputs approved by {entry['by']} at {entry['at']}")
     return 0
 
@@ -68,7 +79,7 @@ def _run_transcripts(run_dir: Path) -> list[str]:
 
 
 def cmd_approve_grader(args: argparse.Namespace) -> int:
-    approvals.require_tty(sys.stdin)
+    delegation = _delegation(args)
     spec, cases = _load(args)
     run_dir = spec.build_dir / args.run
     results = read_json(run_dir / "results.json")
@@ -77,7 +88,8 @@ def cmd_approve_grader(args: argparse.Namespace) -> int:
     try:
         entry = approvals.approve_grader(spec.directory, spec.cases_sha256, ids, args.run,
                                          args.read.split(",") if args.read else [],
-                                         results, [c.id for c in cases])
+                                         results, [c.id for c in cases], delegation,
+                                         trivial_answerer_scores(cases))
     except approvals.ApprovalError as error:
         print(f"not approved: {error}", file=sys.stderr)
         print("Open these scored transcripts and check each verdict is right:", file=sys.stderr)
@@ -176,15 +188,24 @@ def build_parser() -> argparse.ArgumentParser:
         sub.add_argument("--infra-threshold", type=float, default=DEFAULT_INFRA_THRESHOLD)
         sub.add_argument("--run-id")
 
+    def delegation_flags(sub: argparse.ArgumentParser) -> None:
+        sub.add_argument("--delegated", metavar="TEXT",
+                         help="non-interactive approval on an owner's explicit delegation: who "
+                              "delegated, when and why (recorded in approvals.json)")
+        sub.add_argument("--evidence", metavar="PATH",
+                         help="with --delegated: the report that backs it (path and sha256 recorded)")
+
     init = command("init", cmd_init, "validate cases and write split.json")
     init.add_argument("--seed", default=splitting.DEFAULT_SEED)
     init.add_argument("--train-fraction", type=float, default=splitting.DEFAULT_TRAIN_FRACTION)
     command("review", cmd_review, "write review.html: every input with source and why_hard")
-    command("approve-inputs", cmd_approve_inputs, "record the human approval of the inputs")
+    inputs = command("approve-inputs", cmd_approve_inputs, "record the human approval of the inputs")
+    delegation_flags(inputs)
     grader = command("approve-grader", cmd_approve_grader,
                      "record grader approval after reading sampled scored transcripts")
     grader.add_argument("--run", required=True, help="baseline run id to sample transcripts from")
     grader.add_argument("--read", help="comma-separated sampled transcripts you have opened")
+    delegation_flags(grader)
     base = command("baseline", cmd_baseline, "run every case for each model")
     backend_flags(base)
     base.add_argument("--models", help=f"comma-separated aliases, e.g. {','.join(MODEL_ALIASES)}")

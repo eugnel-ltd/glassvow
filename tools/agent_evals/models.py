@@ -59,10 +59,11 @@ class Verdict:
 class Grade:
     verdicts: tuple[Verdict, ...]
     parse_error: str | None = None
+    decision_failed: bool = False  # a wrong boolean decision caps the case score at 0
 
     @property
     def score(self) -> float:
-        if not self.verdicts:
+        if not self.verdicts or self.decision_failed:
             return 0.0
         return sum(v.passed for v in self.verdicts) / len(self.verdicts)
 
@@ -74,6 +75,7 @@ class Grade:
         return {
             "score": self.score,
             "passed": self.passed,
+            "decision_failed": self.decision_failed,
             "parse_error": self.parse_error,
             "verdicts": [
                 {"claim": v.claim_id, "passed": v.passed, "detail": v.detail}
