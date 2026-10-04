@@ -256,7 +256,8 @@ class Bench extends Node:
 	## The departure's span: the leaving room's, which the passage holds.
 	func _leaving_span() -> float:
 		for node: Node in main.get_children():
-			if node is LeadlightRoomHost and node != main._modal and node != main._route_screen:
+			if node is LeadlightRoomHost and node != main._modal and node != main._route_screen \
+					and (node as LeadlightRoomHost).visible:
 				return (node as LeadlightRoomHost).departure_time()
 		return 0.40
 

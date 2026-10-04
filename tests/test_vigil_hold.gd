@@ -22,6 +22,10 @@ extends RefCounted
 ## - a language or shape change while the rooms' warm runs is warmed after it
 ##   (#670 review follow-up 1: before, the new key was dropped for the launch),
 ##   and the warm waits while the map's prefetch is still working (follow-up 3);
+## - once the title has rested with the hall's art in hand and its rooms
+##   warmed, the hall its Vigil word opens is built ahead on the tree, hidden
+##   and still, and the word shows that same hall; a shape change or a route
+##   change lets it go, and the rose's entry builds its own;
 ## - the title's track resumes where it stopped; a fight's never does.
 ##
 ## V2′ (the door's rose flying into the window after the unsealing) is cut
@@ -103,6 +107,7 @@ static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]
 	await _departure_lifts(fails, tree, host, content)
 	await _warm_requeued(fails, tree, host, content)
 	await _warm_waits_for_the_map(fails, tree, host, content)
+	await _hall_built_ahead(fails, tree, host, content)
 	Preferences.active = kept
 
 
@@ -269,6 +274,56 @@ static func _warm_waits_for_the_map(fails: Array[String], tree: SceneTree, host:
 		"the rooms' warm may run while the map's prefetch works")
 	MapJourneyPrefetch.release()
 	_check(fails, main._warm_may_run(), "the warm stays held once the map's prefetch is let go")
+	_dispose(main)
+
+
+## The hall built ahead: only on a title at rest with the art in hand and the
+## rooms' warm done; hidden and still on the tree; shown by the Vigil word as
+## the route itself; let go by a shape change and by a route change.
+static func _hall_built_ahead(fails: Array[String], tree: SceneTree, host: SubViewport,
+		content: ContentDB) -> void:
+	var main: Main = await _boot(tree, host, content)
+	main._warm_headless = false
+	main._vigil_art = {"res://stand-in": true}
+	main._room_warm = RoomWarm.new([], func() -> bool: return false)
+	main.add_child(main._room_warm)
+	main._build_vigil_ahead(RoomWarm.REST)
+	_check(fails, main._vigil_ahead == null, "the hall was built ahead while the rooms' warm still ran")
+	main._room_warm.free()
+	main._room_warm = null
+	main._build_vigil_ahead(RoomWarm.REST * 0.5)
+	_check(fails, main._vigil_ahead == null, "the hall was built ahead before the title had rested")
+	main._build_vigil_ahead(RoomWarm.REST * 0.5)
+	var ahead: VigilScreen = main._vigil_ahead
+	_check(fails, ahead != null and ahead.get_parent() == main and not ahead.visible
+			and ahead.process_mode == Node.PROCESS_MODE_DISABLED and main._route_screen == null,
+		"the rested title did not build its hall ahead, hidden and still, on the tree")
+	var title: TitleScreen = _title(main)
+	await _tap(tree, host, title.word("vigil"))
+	_check(fails, main._route_screen == ahead and ahead.visible
+			and ahead.process_mode == Node.PROCESS_MODE_INHERIT and main._vigil_ahead == null
+			and main._held_title == title and main._passage.arriving(),
+		"the Vigil word did not show the hall built ahead as its route")
+	await _step(tree, main, ceili(0.6 / STEP) + 2)
+	await _tap(tree, host, ahead.seat().word())
+	await _step(tree, main, ceili(0.48 / STEP) + 2)
+	main._build_vigil_ahead(RoomWarm.REST)
+	var again: VigilScreen = main._vigil_ahead
+	_check(fails, again != null and again != ahead, "no hall was built ahead again once the title rested")
+	main._shape = &"phone-landscape"
+	main._build_vigil_ahead(0.0)
+	_check(fails, main._vigil_ahead == null and again.is_queued_for_deletion(),
+		"a hall built for another shape was kept")
+	main._shape = &"pad-landscape"
+	main._build_vigil_ahead(RoomWarm.REST)
+	var held: VigilScreen = main._vigil_ahead
+	main._on_title_pick("rose", title, null)
+	_check(fails, main._route_screen != held and (main._route_screen as VigilScreen).look() == VigilHall.ROSE,
+		"the rose's entry took the hall built for the Deeds look")
+	main._clear_route()
+	_check(fails, main._vigil_ahead == null and held.is_queued_for_deletion(),
+		"a route change did not let the hall built ahead go")
+	main._vigil_art = {}
 	_dispose(main)
 
 
