@@ -2,7 +2,7 @@
 
 > **What this is.** An independent re-run of the Duskblade Flame's reading of record (readout 13) with `tools/balance_readout.py`, the readout runner that #544 P2 puts in the repository. Every run row matches the archived rows of readout 13, so the runner reproduces the reading and the reading stands. It ships no content or simulator change.
 >
-> **Runner head.** `ed902396` (the commit that adds `tools/balance_readout*.py`, on `e0d313e2`, #544 P1). Content file SHA-256 `e9c4d48fbe38542e65a9c73f73b4c50f72116026d4be51a81b7a9b04ec33ca7b`, driver SHA-256 `455911721ffadcf17582e92467ed765eb087c4480bd81e6d55abf1d2d2c5a910`, pilot `p8-d0-v3`, search `s1`, Godot 4.7.2-stable: all identical to readout 13's manifests (`1190be25`).
+> **Runner head.** `ed902396` (the commit that adds `tools/balance_readout*.py`, on `e0d313e2`, #544 P1). Content file SHA-256 `e9c4d48fbe38542e65a9c73f73b4c50f72116026d4be51a81b7a9b04ec33ca7b`, driver SHA-256 `455911721ffadcf17582e92467ed765eb087c4480bd81e6d55abf1d2d2c5a910`, pilot `p8-d0-v3`, search `s1`, Godot 4.7.2-stable: all identical to readout 13's manifests (`1190be25`). `ed902396` is the runner's commit before this branch was rebased onto main for merging; the runner's files (`tools/balance_readout*.py`) and `tools/balance_ways.py` are byte-identical at the merged head, so the run is the merged code's.
 
 ## What was re-run
 
