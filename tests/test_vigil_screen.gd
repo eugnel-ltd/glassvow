@@ -66,6 +66,7 @@ static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]
 					Rubric._rubric(fails, screen, shape, where)
 					Rubric._clear_of_the_seat(fails, screen, shape, Vector2(stage), where)
 					_figures(fails, screen, where)
+					_nothing_overlaps(fails, screen, where)
 					if look == VigilHall.ROSE and state == "full":
 						_reading(fails, screen, where)
 				if code == Locale.CODE_ZH_HANT and state == "mid":
@@ -131,6 +132,32 @@ static func _show(screen: VigilScreen, look: StringName) -> bool:
 	else:
 		screen._show_deeds()
 	return screen.look() == look
+
+
+## The header's parts never stand on each other, nor the Replay pane on the
+## reading glass.
+static func _nothing_overlaps(fails: Array[String], screen: VigilScreen, where: String) -> void:
+	# A label's box carries its line's spacing above and below its ink.
+	var header: Array[Rect2] = [screen._crown.get_rect().grow_individual(0.0, -4.0, 0.0, -4.0),
+		screen._ledger.get_rect().grow_individual(0.0, -4.0, 0.0, -4.0), screen._looks.get_rect()]
+	var names: Array[String] = ["crown", "ledger", "look panes"]
+	for i: int in header.size():
+		for j: int in range(i + 1, header.size()):
+			_check(fails, not header[i].intersects(header[j]),
+				"%s: the %s stands on the %s (%s, %s)" % [where, names[i], names[j], header[i], header[j]])
+	var view: RoseWindowView = screen.rose_view()
+	if view != null and view.visible:
+		var spot: Vector3 = VigilHall.rose_spot(screen.shape)
+		var ledger: Rect2 = header[1]
+		_check(fails, ledger.end.y <= spot.y - spot.z - 2.0 or ledger.position.x > spot.x + spot.z,
+			"%s: the rose stands on the ledger (%s)" % [where, ledger])
+		_check(fails, not ledger.intersects(view.glass().get_rect().grow_individual(0.0, -8.0, 0.0, 0.0)),
+			"%s: the reading glass stands on the ledger (%s)" % [where, ledger])
+	if view != null and view.visible and view.replay() != null:
+		_check(fails, not view.replay().get_rect().intersects(view.glass().get_rect()),
+			"%s: the Replay pane stands on the reading glass" % where)
+	for rect: Rect2 in screen.content_rects():
+		_check(fails, rect.end.y <= screen.size.y + 0.5, "%s: content runs off the stage's foot" % where)
 
 
 ## Every count on view is whole numbers either side of " / ".

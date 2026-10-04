@@ -24,7 +24,7 @@ const MASK: String = "res://assets/art/meta/emberglass-mask-%s.png"
 const PANE_SHADER: Shader = preload("res://presentation/run/rose_pane.gdshader")
 ## The reading glass on the stage (pad and desktop, phone).
 const GLASS_PAD: Rect2 = Rect2(530.0, 168.0, 610.0, 562.0)
-const GLASS_PHONE: Rect2 = Rect2(336.0, 56.0, 500.0, 274.0)
+const GLASS_PHONE: Rect2 = Rect2(336.0, 64.0, 500.0, 266.0)
 ## A pane's tap, a share of the rose's side, and the least it may be.
 const PANE_HIT: float = 0.2
 ## How far in from the glass's top and foot a line fades out (pad, phone).
@@ -157,6 +157,8 @@ func _add_replay() -> void:
 	_replay.set_px(LeadlightTokens.size_for(LeadlightTokens.SIZE_ROOM_LABEL, shape))
 	_replay.hit_height = LeadlightTokens.room_hit(shape)
 	_replay.pressed.connect(_on_replay)
+	# Seated by its own size, which its theme settles once it is in the tree.
+	_replay.minimum_size_changed.connect(_fit)
 	add_child(_replay)
 
 
@@ -336,11 +338,15 @@ func _fit() -> void:
 	var foot: float = spot.y + spot.z + (10.0 if phone else 16.0)
 	_lozenges.size = Vector2(spot.z * 1.3, 14.0 if phone else 20.0)
 	_lozenges.position = Vector2(spot.x - _lozenges.size.x * 0.5, foot)
-	if _replay != null:
-		var wide: float = _replay.get_combined_minimum_size().x + 24.0
-		_replay.size = Vector2(wide, _replay.get_combined_minimum_size().y)
-		_replay.position = Vector2(spot.x - wide * 0.5, foot - 4.0)
 	var rect: Rect2 = GLASS_PHONE if phone else GLASS_PAD
+	if _replay != null:
+		_replay.size = _replay.get_combined_minimum_size() + Vector2(24.0, 0.0)
+		var wide: float = _replay.size.x
+		_replay.position = Vector2(spot.x - wide * 0.5, foot - 4.0)
+		# A phone's rose has no room under it for the pane's words: it stands
+		# under the reading glass, at its right, clear of the seat.
+		if phone:
+			_replay.position = Vector2(rect.end.x - wide, rect.end.y + 4.0)
 	_glass.position = rect.position
 	_glass.size = rect.size
 	_scroll.custom_minimum_size = Vector2.ZERO

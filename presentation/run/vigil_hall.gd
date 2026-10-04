@@ -51,7 +51,7 @@ const MOVE_TIME: float = 0.48
 ## Where the Emberglass rose stands on the Rose look (centre, visible radius),
 ## pad and desktop, and phone: at left, the reading glass beside it.
 const ROSE_PAD: Vector3 = Vector3(300.0, 312.0, 190.0)
-const ROSE_PHONE: Vector3 = Vector3(220.0, 170.0, 112.0)
+const ROSE_PHONE: Vector3 = Vector3(220.0, 182.0, 112.0)
 const EMBERS: int = 20
 const MOTES: int = 30
 

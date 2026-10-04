@@ -403,11 +403,16 @@ func _fit() -> void:
 	var left: float = LEFT.y if phone else LEFT.x
 	_crown.size = _crown.get_combined_minimum_size()
 	_crown.position = Vector2(left, CROWN_Y.y if phone else CROWN_Y.x)
-	_ledger.size = _ledger.get_combined_minimum_size()
-	_ledger.position = Vector2(left, LEDGER_Y.y if phone else LEDGER_Y.x)
 	_looks.size = _looks.get_combined_minimum_size()
 	_looks.position = Vector2(size.x - (PANES_RIGHT.y if phone else PANES_RIGHT.x) - _looks.size.x,
 		PANES_Y.y if phone else PANES_Y.x)
+	_ledger.size = _ledger.get_combined_minimum_size()
+	_ledger.position = Vector2(left, LEDGER_Y.y if phone else LEDGER_Y.x)
+	# On a phone the ledger shares its row with the look panes: where it would
+	# run under them, it stands under their row instead, above the body.
+	if phone and Rect2(_ledger.position, _ledger.size).intersects(
+			Rect2(_looks.position, _looks.size).grow_individual(6.0, 0.0, 6.0, 0.0)):
+		_ledger.position.y = _looks.position.y + _looks.size.y + 2.0
 	var body: Rect2 = body_rect(VigilHall.DEEDS)
 	_deed_list.position = body.position
 	_deed_list.size = body.size
