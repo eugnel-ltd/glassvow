@@ -106,7 +106,9 @@ The Duskblade programme ran thirteen readouts between 29 September and 2 October
 
 **Seeds** (#544 decision 7). A class reads on the Duskblade's bands, so its figures pair with the Duskblade's: development 12000–12999, never in a verdict; V0 cells on 13000–13999; V5 cells on 13000–14999, with G3 at V5 full also on 15000–16999; the acceptance band 3000–5199 for the exam. **17000–18999 is reserved as the 1.1 holdout.**
 
-## 4. Ashwarden sketch (not decided; for 1.1)
+## 4. Ashwarden sketch (the first draft; superseded by the Ashwarden's lock)
+
+*Locked on 2026-10-05:* the Ashwarden's ways are defined by its own lock, [`../2026-10-05-ash-flame/README.md`](../2026-10-05-ash-flame/README.md) (#544 step A1): ids, names, affinity table, crowns, deeds, lines and the measurement contract. Where this sketch and the lock differ, the lock is current. The main differences: the proposed zh way names are 焚 Smolder, 握 Hand and 立 Endure (燼 is the Duskblade's Lantern and 燃 the Kindling tier); Smother is a ½ Smolder, ½ Endure duo and Ash Bite is clear; plain draw is Hand glass; Thirsting Shard and Eat the Flame are Endure; Pyreheart is clear.
 
 *Decided on 2026-10-04 by #544's plan of record; the sketch below is kept as the first draft.* The ways are Smolder (the fire does the killing), Hand (draw and hold; the hand-size payoff is this way's identity, and Preparation and Surge are producers within it, not ways of their own) and Endure (outlast, with a kill condition of its own) (decision 1). The starter deck is unchanged: Ash Bite is clear glass, the class's Strike; Smother is a Smolder/Endure duo; First Spark is Hand (decision 2). The Ashwarden's exclusions are the Shatter-only cards and relics and Beacon; Cracked and Dimmed cards stay as clear glass without their riders (decision 9). The names, en and zh-Hant, come through the story skill in the Ash lock (#544 step A1).
 
