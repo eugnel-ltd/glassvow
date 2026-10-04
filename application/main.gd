@@ -98,9 +98,9 @@ var _vigil_art_drop: bool = false
 var _vigil_art_due: bool = false
 var _vigil_art_rested: float = 0.0
 var _vigil_art_asked: bool = false
-## The title held under the Vigil it opened (§2.1, §9 item 2): hidden and
-## paused, never rebuilt, until the turn east brings it back; and the word
-## that opened it, which takes the focus back.
+## The title held under the Vigil it opened (§2.1, §9 item 2): paused under
+## the hall's plate, never rebuilt, until the turn east brings it back; and the
+## word that opened it, which takes the focus back.
 var _held_title: TitleScreen = null
 var _held_word: String = ""
 ## The title's own Vigil, built ahead on the tree, hidden and still: entering

@@ -127,9 +127,11 @@ static func _round_trip(fails: Array[String], tree: SceneTree, host: SubViewport
 		"the Vigil word did not turn west into the hall over the held title")
 	_check(fails, music.heard == [&"vigil"], "the hall's first cue is %s, not vigil" % [music.heard])
 	await _step(tree, main, ceili(0.6 / STEP) + 2)
-	_check(fails, not main._passage.arriving() and title.held() and not title.world.visible
-			and title.world.process_mode == Node.PROCESS_MODE_DISABLED,
-		"the landed hall does not hold the title's road (hidden, still)")
+	_check(fails, not main._passage.arriving() and title.held() and title.world.visible
+			and title.world.process_mode == Node.PROCESS_MODE_DISABLED
+			and title._painting.visible and not title._vignette.visible and not title.rose.visible
+			and not title.word("vigil").visible,
+		"the landed hall does not hold the title's road (the road and painting drawn under the plate, still; the rest hidden)")
 	var stopped: float = title.world._time
 	await _frames(tree, 6)
 	_check(fails, is_equal_approx(title.world._time, stopped), "the held road's clock runs on under the hall")

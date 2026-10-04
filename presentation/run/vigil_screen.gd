@@ -450,8 +450,8 @@ func arrive_at(t: float, _wick: Vector2, _colour: Color) -> void:
 		_hall.answer()
 	if title != null:
 		title.turn(LeadlightMotion.ease_on(t / 0.40, LeadlightMotion.SETTLE_OUT))
-		# The hall stands whole over the road from here: the road is held now,
-		# not at the landing, so the two are never drawn together for nothing.
+		# The hall stands whole over the road from here: the road is held (still,
+		# drawn on under the plate) now, not at the landing.
 		if came >= 1.0 and not left():
 			title.hold_world(true)
 	# The order the light reaches them in, found once the room is laid out.
@@ -464,7 +464,7 @@ func arrive_at(t: float, _wick: Vector2, _colour: Color) -> void:
 	_deed_list.rail = _looks.modulate.a
 
 
-## The hall whole and the title's road held under it (hidden and paused).
+## The hall whole and the title's road held under it (drawn, paused).
 func rest(_wick: Vector2, _colour: Color) -> void:
 	_hall.modulate.a = 1.0
 	_hall.slide = 0.0

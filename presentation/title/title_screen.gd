@@ -294,15 +294,26 @@ func turned() -> float:
 
 
 ## Held under the Vigil (docs/design/2026-10-03-title-rooms §2.1, §9 item 2):
-## the road, the painting and its lamps, the vignette, the door's rose, the
-## wordmark and the furniture are hidden and do no work, and nothing of the
-## title takes focus; the lantern, lent to the seat, burns on. Released, it is
-## all where it was, the road's clocks going on from where they stopped.
+## the road and the painting do no work but stay drawn under the hall's opaque
+## plate; the painting's lamps, the vignette, the door's rose, the wordmark and
+## the furniture are hidden and still; nothing of the title takes focus; the
+## lantern, lent to the seat, burns on. Released, it is all where it was, the
+## road's clocks going on from where they stopped.
+##
+## The road and the painting stay drawn so that the GPU's work does not step
+## up at the turn east. Hidden, their return under the fading hall took the
+## iPad 8's GPU from about 13.5 to 22-25 ms a frame at its lowest clock, and
+## the first frames of V3 missed the display while the clock rose (#655 PR C,
+## open item 4). The lighter layers stay hidden: drawn too, they cost the hall
+## at rest more than they saved the turn.
 func hold_world(on: bool) -> void:
 	if on == _held:
 		return
 	_held = on
-	for layer: Control in [world, _painting, _vignette, _chain, rose, _wordmark]:
+	for layer: Control in [world, _painting]:
+		if layer != null:
+			layer.process_mode = Node.PROCESS_MODE_DISABLED if on else Node.PROCESS_MODE_INHERIT
+	for layer: Control in [_vignette, _chain, rose, _wordmark]:
 		if layer != null:
 			layer.visible = not on
 			layer.process_mode = Node.PROCESS_MODE_DISABLED if on else Node.PROCESS_MODE_INHERIT
