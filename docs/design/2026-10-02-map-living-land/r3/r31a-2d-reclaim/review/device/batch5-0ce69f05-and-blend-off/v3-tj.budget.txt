@@ -1,0 +1,14 @@
+stage frames 295, 13 encoders, GPU busy median 13.50 ms (p95 15.43); clock factor 0.711 (main 3D 5.753 ms); by tonemap 0.740
+  shadow 1               V  0.028 F  0.482 C  0.000 | at the reference clock V  0.020 F  0.343 C  0.000
+  shadow 2               V  0.174 F  0.203 C  0.000 | at the reference clock V  0.124 F  0.144 C  0.000
+  particles              V  0.000 F  0.000 C  0.216 | at the reference clock V  0.000 F  0.000 C  0.154
+  main 3D                V  2.863 F  5.753 C  0.000 | at the reference clock V  2.036 F  4.091 C  0.000
+  glow 1                 V  0.008 F  0.271 C  0.000 | at the reference clock V  0.006 F  0.193 C  0.000
+  glow 2                 V  0.025 F  0.030 C  0.000 | at the reference clock V  0.018 F  0.021 C  0.000
+  glow 3                 V  0.019 F  0.036 C  0.000 | at the reference clock V  0.014 F  0.026 C  0.000
+  tonemap                V  0.024 F  0.365 C  0.000 | at the reference clock V  0.017 F  0.260 C  0.000
+  tilt-shift view        V  0.029 F  0.625 C  0.000 | at the reference clock V  0.021 F  0.444 C  0.000
+  display+HUD            V  0.343 F  2.107 C  0.000 | at the reference clock V  0.244 F  1.498 C  0.000
+BUDGET LINE at the reference clock: 2D composite 1.94 ms fragment; 3D chain 5.08 ms fragment; GPU busy 9.60 ms; occupied with overlap counted once: 2D 2.23 ms, 3D 7.59 ms
+CROSS-CHECK: scaled by tonemap the 2D composite fragment reads 2.02 ms
+NEAR THE REFERENCE CLOCK (main 3D within 10%): 11 frames, raw 2D composite fragment median 2.07 ms

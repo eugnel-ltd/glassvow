@@ -1,0 +1,6 @@
+ctl-phone-landscape-on min rim 1.03 min disc 1.01 pins 11
+head-phone-landscape-lean-en min rim 1.03 min disc 1.01 pins 11
+ctl-pad-landscape-on min rim 1.01 min disc 1.19 pins 10
+head-pad-landscape-lean-en min rim 1.01 min disc 1.19 pins 10
+ctl-desktop-landscape-on min rim 1.02 min disc 1.2 pins 10
+head-desktop-landscape-full-en min rim 1.02 min disc 1.2 pins 10

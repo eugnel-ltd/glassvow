@@ -1,0 +1,34 @@
+#!/bin/zsh
+# R3.1a review re-measure, device batch 4: R1 (0f5aeda6), R2 (8815da34, the
+# control) and the head (code 59abff88, built at d3f3a22a), each + the trace
+# probe, QA app only, interleaved reinstalls under the shared batch lock; then
+# one Metal System Trace per view for the head and the control.
+set -u
+S=<scratch>
+R=$S/map-lane/r31a; FLOW=$S/device13/flow; LOCK=$FLOW/ipad_lock.sh; OWNER=map-r31a
+OUT=$R/device/batch4; mkdir -p $OUT
+source $S/map-lane/wt-r31a/tools/map_trace/device.zsh
+$LOCK acquire $OWNER
+trap "$LOCK release $OWNER; echo released \$(date +%T)" EXIT
+echo "lock $(date +%T)"
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+BASE=(--map --map-trace-probe --seed=1 --shape=pad-landscape)
+round() {  # round <build> <n>
+  local b=$1 n=$2
+  MT_WAIT=52 mt_launch $b-j$n "${BASE[@]}" --map-steps=2 --holds=cadence,live,walk --hold-frames=600
+  MT_WAIT=36 mt_launch $b-f$n "${BASE[@]}" --holds=cadence,live --hold-frames=600
+}
+install() { mt_install $R/ipa/$1.ipa && echo "installed $1 $(date +%T)"; }
+for b in r1 ctl head; do
+  install $b || exit 1
+  MT_WAIT=25 mt_launch $b-warm "${BASE[@]}" --map-steps=2 --holds=cadence --hold-frames=120
+  round $b 1
+done
+for b in head ctl r1; do install $b || exit 1; round $b 2; done
+for b in ctl r1 head; do install $b || exit 1; round $b 3; done
+mt_trace head-tj 6 24 "${BASE[@]}" --map-steps=2 --holds=live --hold-frames=2400 && mt_export head-tj
+mt_trace head-tf 6 24 "${BASE[@]}" --holds=live --hold-frames=2400 && mt_export head-tf
+install ctl || exit 1
+mt_trace ctl-tj 6 24 "${BASE[@]}" --map-steps=2 --holds=live --hold-frames=2400 && mt_export ctl-tj
+mt_trace ctl-tf 6 24 "${BASE[@]}" --holds=live --hold-frames=2400 && mt_export ctl-tf
+echo "done $(date +%T)"

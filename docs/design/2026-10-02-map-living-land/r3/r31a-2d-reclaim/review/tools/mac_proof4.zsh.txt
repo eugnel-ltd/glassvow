@@ -1,0 +1,29 @@
+#!/bin/zsh
+# Mac proof for the head at 0d7a9969 (code c89d392a: opaque at rest, blending
+# while fading, the jump set by the script) under the A12 Metal condition; the control (R2) captures are reused
+# from mac_proof2.zsh (same build, same arguments).
+R=<scratch>/map-lane/r31a
+M=$R/fix/mac/proof4; mkdir -p $M
+shot() { $R/bin/mshot.zsh "$@"; }
+J=(--map-steps=2)
+for shape in phone-landscape pad-landscape desktop-landscape; do
+  for prof in lean full; do
+    pa=(); [[ $prof == lean ]] && pa=(--map-lean)
+    for loc in en zh-Hant; do
+      shot head $M/head-$shape-$prof-$loc.png $pa $J --shape=$shape --locale=$loc
+    done
+  done
+done
+for shape in phone-landscape pad-landscape desktop-landscape; do
+  pa=(--map-lean); [[ $shape == desktop-landscape ]] && pa=()
+  shot head $M/head-$shape-off.png $pa $J --shape=$shape --probe-grain=off
+  shot head $M/head-$shape-rm.png $pa $J --shape=$shape --probe-rm
+done
+shot head $M/seq-head.png --map-lean $J --shape=pad-landscape --probe-seq=24
+shot head $M/seqp-head.png --map-lean $J --shape=phone-landscape --probe-seq=24
+shot head $M/seqd-head.png $J --shape=desktop-landscape --probe-seq=24
+shot head $M/head-pad-deck.png --map-lean $J --shape=pad-landscape --probe-overlay=deck
+for a in 1 0.5; do
+  shot head $M/head-pad-act1-fade$a.png --map-lean $J --shape=pad-landscape --probe-fade=$a
+done
+echo "mac proof done"

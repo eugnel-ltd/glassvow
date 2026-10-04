@@ -1,0 +1,110 @@
+"""Device gate table from a batch's probe rows (<build>-<view><round>.jsonl).
+
+Keeps a launch's rows only when every row echoes that launch's nonce (which
+begins with its label), the run finished, and the start row's BUILD is the
+commit expected for its build label. Compares every other build with the
+control (R2) and with R1 in the same batch.
+
+Usage: summarise2.py <batch-dir> <label>=<commit> ... [--control ctl] [--r1 r1]
+"""
+import collections
+import glob
+import json
+import os
+import re
+import statistics
+import sys
+
+VIEWS = {"j": "Journey mid-route", "f": "fresh-run opening", "w": "Whole act", "r": "river-framed"}
+MODES = ("cadence", "live", "walk")
+
+
+def rows(path):
+    return [json.loads(line) for line in open(path) if line.strip()]
+
+
+def stats(got):
+    means = [r["mean_ms"] for _, r in got]
+    p95s = [r["p95_ms"] for _, r in got]
+    missed = [r["missed"] for _, r in got]
+    frames = [r["frames"] for _, r in got]
+    return {"means": means, "p95s": p95s, "missed": missed, "frames": frames,
+            "mean": statistics.mean(means), "p95": statistics.median(p95s), "missed_sum": sum(missed),
+            "max": max(r["max_ms"] for _, r in got)}
+
+
+def main(argv):
+    d = argv[0]
+    expect = dict(a.split("=", 1) for a in argv[1:] if "=" in a and not a.startswith("--"))
+    control = "ctl"
+    r1 = "r1"
+    table = collections.defaultdict(list)
+    grains = collections.defaultdict(set)
+    vram = collections.defaultdict(list)
+    bad = []
+    for path in sorted(glob.glob(os.path.join(d, "*.jsonl"))):
+        label = os.path.basename(path)[:-6]
+        m = re.match(r"(\w+)-([jfwr])(\d)$", label)
+        if not m:
+            continue
+        build, view, rnd = m.group(1), m.group(2), int(m.group(3))
+        rs = rows(path)
+        nonces = {r.get("nonce") for r in rs}
+        start = next((r for r in rs if r.get("probe") == "start"), {})
+        why = []
+        if len(nonces) != 1 or not str(next(iter(nonces))).startswith(label + "-"):
+            why.append("nonce")
+        if not any(r.get("probe") == "done" for r in rs):
+            why.append("unfinished")
+        if start.get("build") != expect.get(build):
+            why.append("build %s, expected %s" % (start.get("build"), expect.get(build)))
+        if why:
+            bad.append("%s (%s)" % (label, ", ".join(why)))
+            continue
+        for r in rs:
+            if r.get("probe") == "hold_end":
+                table[(view, r["mode"], build)].append((rnd, r))
+            if r.get("probe") == "hold_start":
+                grains[(view, r["mode"], build)].add((r.get("layer_grain"), r.get("map_grain")))
+                if r["mode"] == "cadence":
+                    vram[(view, build)].append(r["video_mib"])
+    print("launches rejected: %s" % (bad or "none"))
+    print("builds: %s" % ", ".join("%s=%s" % kv for kv in sorted(expect.items())))
+    print()
+    print("%-18s %-8s %-5s | %-26s | %-22s | %-10s | %-6s | grain (layer, map)" % (
+        "view", "mode", "build", "mean ms per launch", "p95 ms per launch", "missed", "max"))
+    verdicts = []
+    for view in "jfwr":
+        for mode in MODES:
+            ref = {b: table.get((view, mode, b)) for b in (control, r1)}
+            for build in expect:
+                got = sorted(table.get((view, mode, build), []), key=lambda x: x[0])
+                if not got:
+                    continue
+                s = stats(got)
+                print("%-18s %-8s %-5s | %-26s | %-22s | %-10s | %6.1f | %s" % (
+                    VIEWS[view], mode, build, " ".join("%.3f" % x for x in s["means"]),
+                    " ".join("%.2f" % x for x in s["p95s"]), " ".join(str(x) for x in s["missed"]),
+                    s["max"], sorted(grains[(view, mode, build)], key=str)))
+                if build in (control, r1):
+                    continue
+                parts = []
+                if mode != "walk":
+                    parts.append("mean %.3f %s" % (s["mean"], "ok" if s["mean"] <= 16.70 else "OVER 16.70"))
+                for name, rows_ in ref.items():
+                    if not rows_:
+                        continue
+                    c = stats(sorted(rows_, key=lambda x: x[0]))
+                    parts.append("p95 %.2f vs %s %.2f %s" % (s["p95"], name, c["p95"], "ok" if s["p95"] <= c["p95"] else "OVER"))
+                    parts.append("missed %d vs %s %d %s" % (s["missed_sum"], name, c["missed_sum"],
+                                                          "ok" if s["missed_sum"] <= c["missed_sum"] else "OVER"))
+                verdicts.append("%-18s %-8s %-5s %s" % (VIEWS[view], mode, build, " | ".join(parts)))
+    print("\nGATE (each build against %s and %s in the same batch; p95 = median of the launches' p95):" % (control, r1))
+    print("\n".join(verdicts))
+    print("\nvideo_mib at the cadence hold start:")
+    for (view, build), v in sorted(vram.items()):
+        print("  %-18s %-5s %s" % (VIEWS[view], build, v))
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

@@ -1,0 +1,23 @@
+Starting recording with the Metal System Trace template. Targeting All Processes. Time limit: 6.0 s
+Ctrl-C to stop the recording
+Reached specified time limit, ending recording...
+Timeline modification failed -- dylibs overlap by 0x3ad2c:
+    0x22fa75000-0x22faafd2c [0x3ad2c] (35325627645526-9223372036854775807) /usr/lib/system/libsystem_kernel.dylib
+    0x22fa75000-0x22faafd2c [0x3ad2c] (0-9223372036854775807) /usr/lib/system/libsystem_kernel.dylib
+Timeline modification failed -- dylibs overlap by 0x1ca0:
+    0x299ac3000-0x299ac4ca0 [0x1ca0] (35325627637578-9223372036854775807) /usr/lib/libSystem.B.dylib
+    0x299ac3000-0x299ac4ca0 [0x1ca0] (0-9223372036854775807) /usr/lib/libSystem.B.dylib
+Timeline modification failed -- dylibs overlap by 0x51b30:
+    0x183378000-0x1833c9b30 [0x51b30] (35325627637414-9223372036854775807) /usr/lib/libobjc.A.dylib
+    0x183378000-0x1833c9b30 [0x51b30] (0-9223372036854775807) /usr/lib/libobjc.A.dylib
+Timeline modification failed -- dylibs overlap by 0x2f04c:
+    0x1833ca000-0x1833f904c [0x2f04c] (35325627643740-9223372036854775807) /usr/lib/system/libdyld.dylib
+    0x1833ca000-0x1833f904c [0x2f04c] (0-9223372036854775807) /usr/lib/system/libdyld.dylib
+Timeline modification failed -- dylibs overlap by 0x58b300:
+    0x1834b4000-0x183a3f300 [0x58b300] (35325627640198-9223372036854775807) /usr/lib/swift/libswiftCore.dylib
+    0x1834b4000-0x183a3f300 [0x58b300] (0-9223372036854775807) /usr/lib/swift/libswiftCore.dylib
+Run issues were detected (trace is still ready to be viewed):
+* [Warning] Data stream: Signpost intervals with backdated timestamps were emitted that are not visualized on the timeline until immediate mode recording is stopped.
+
+Recording completed. Saving output file...
+Output file saved as: head-tj.trace
