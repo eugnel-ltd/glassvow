@@ -25,3 +25,17 @@ alone in the shipped code, the suite that guards it run, the code restored from 
    -> test_vigil_hold: "the Vigil's art was asked for while the map's prefetch works" (and a second check).
 10. RoomWarm.SAMPLE_ALPHA back at 0.004 (presentation/ui/room_warm.gd)
    -> test_room_warm: "the pipeline sample is drawn at an alpha the renderer skips (0.004)".
+
+After the rebase onto ec48be21 and the orchestrator's decisions of 4 Oct 2026 (the rules added on
+2988d4e0 and 9c0a35c4), the same way:
+
+11. The rose's masks wanted on the arriving hall's frames too (`_rose_art_wanted` without its
+    `not _passage.arriving()`, application/main.gd)
+   -> test_vigil_hold: "the arriving hall asked for the rose's masks on its passage's frames".
+12. The rose's masks never let go (`_tend_rose_art`'s erase disabled, application/main.gd)
+   -> test_vigil_hold: "the title kept the rose's masks once the warm was done", "the title kept the
+      rose's masks once the hall had gone".
+13. The held road hidden again (`hold_world` sets the road's and the painting's visibility,
+    presentation/title/title_screen.gd)
+   -> test_vigil_hold: "the landed hall does not hold the title's road (the road and painting drawn
+      under the plate, still; the rest hidden)".

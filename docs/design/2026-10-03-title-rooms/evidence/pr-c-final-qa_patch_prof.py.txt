@@ -1,0 +1,175 @@
+"""QA-only attribution patch for V3 (never committed): qa_patch_diag.py, then a
+per-frame CPU profile of the callbacks a turn runs. Each named function is
+wrapped (renamed to _qa_<name>_inner and timed by a wrapper with the same
+signature); the time is summed per frame into QaProf (tools/qa_prof.gd) and
+written into every Vigil and title row as "prof", beside the frame's process
+segment (pre_ms) and its draw. The report adds, for V3 and V1, each of the
+first five and last four frames' medians.
+usage: qa_patch_prof.py <worktree> <build-label> | <worktree> --revert"""
+import os
+import re
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+W = sys.argv[1]
+WRAPPED = [
+    ("application/main.gd", "_process", "main.process"),
+    ("application/main.gd", "_leave_vigil", "main.leave_vigil"),
+    ("presentation/title/title_screen.gd", "_process", "title.process"),
+    ("presentation/title/title_screen.gd", "hold_world", "title.hold_world"),
+    ("presentation/title/title_screen.gd", "turn", "title.turn"),
+    ("presentation/stage/title_world.gd", "_process", "world.process"),
+    ("presentation/stage/title_world.gd", "_draw", "world.draw"),
+    ("presentation/ui/leadlight_passage.gd", "_process", "passage.process"),
+    ("presentation/ui/leadlight_passage.gd", "depart", "passage.depart"),
+    ("presentation/run/vigil_screen.gd", "_process", "vigil.process"),
+    ("presentation/run/vigil_screen.gd", "leave_at", "vigil.leave_at"),
+    ("presentation/run/vigil_screen.gd", "arrive_at", "vigil.arrive_at"),
+    ("presentation/run/vigil_hall.gd", "_process", "hall.process"),
+    ("presentation/ui/components/leadlight_lantern.gd", "_process", "lantern.process"),
+    ("presentation/stage/transition_layer.gd", "_process", "transitions.process"),
+    ("presentation/run/vigil_deeds.gd", "_process", "deeds.process"),
+    ("presentation/run/vigil_deeds.gd", "_draw", "deeds.draw"),
+]
+FILES = sorted(set(w[0] for w in WRAPPED))
+
+if sys.argv[2] == "--revert":
+    for rel in FILES:
+        b = os.path.join(W, rel) + ".prof-backup"
+        if os.path.exists(b):
+            os.replace(b, os.path.join(W, rel))
+    for p in ("tools/qa_prof.gd", "tools/qa_prof.gd.uid"):
+        if os.path.exists(os.path.join(W, p)):
+            os.remove(os.path.join(W, p))
+    subprocess.run([sys.executable, os.path.join(HERE, "qa_patch_diag.py"), W, "--revert"], check=True)
+    sys.exit(0)
+
+subprocess.run([sys.executable, os.path.join(HERE, "qa_patch_diag.py")] + sys.argv[1:], check=True)
+for rel in FILES:
+    p = os.path.join(W, rel)
+    s = open(p).read()
+    open(p + ".prof-backup", "w").write(s)
+    for f, name, key in WRAPPED:
+        if f != rel:
+            continue
+        m = re.search(r"^(\t?)func %s\(([^)]*)\)( -> [A-Za-z]+)?:\n" % re.escape(name), s, re.M)
+        assert m, (rel, name)
+        indent, params, ret = m.group(1), m.group(2), m.group(3) or ""
+        args = ", ".join(a.split(":")[0].strip() for a in params.split(",") if a.strip())
+        inner = "_qa_%s_inner" % name.lstrip("_")
+        returns = ret.strip() not in ("", "-> void")
+        call = "%s(%s)" % (inner, args)
+        body = (indent + "\tvar qa_t0: int = Time.get_ticks_usec()\n")
+        if returns:
+            body += indent + "\tvar qa_r: Variant = %s\n" % call
+            body += indent + "\tMain.qa_prof_add(\"%s\", qa_t0)\n" % key
+            body += indent + "\treturn qa_r\n"
+        else:
+            body += indent + "\t%s\n" % call
+            body += indent + "\tMain.qa_prof_add(\"%s\", qa_t0)\n" % key
+        wrapper = "%sfunc %s(%s)%s:\n%s\n\n%sfunc %s(%s)%s:\n" % (
+            indent, name, params, ret, body, indent, inner, params, ret)
+        s = s[:m.start()] + wrapper + s[m.end():]
+    open(p, "w").write(s)
+
+bench = os.path.join(W, "tools/qa_rooms_bench.gd")
+b = open(bench).read()
+a = '''			row["pre_ms"] = float(_qa_pre_us - _start_us) / 1000.0
+'''
+assert b.count(a) == 1
+b = b.replace(a, a + '''			if _room == "vigil" or _phase == "title":
+				row["prof"] = qa_frame_prof
+''')
+a2 = '''	func _on_drawn() -> void:
+		var now: int = Time.get_ticks_usec()
+'''
+assert b.count(a2) == 1
+b = b.replace(a2, a2 + '''		var qa_frame_prof: Dictionary = Main.qa_prof_take()
+''')
+open(bench, "w").write(b)
+
+main = os.path.join(W, "application/main.gd")
+m = open(main).read()
+a = '''	lines.append_array(_qa_diag_lines(rows))
+'''
+assert m.count(a) == 1
+m = m.replace(a, a + '''	lines.append_array(_qa_prof_lines(rows))
+''')
+m += '''
+
+
+## QA only: CPU time per named callback, summed over one frame.
+static var qa_prof: Dictionary = {}
+
+
+static func qa_prof_add(key: String, since: int) -> void:
+	var was: float = qa_prof.get(key, 0.0)
+	qa_prof[key] = was + float(Time.get_ticks_usec() - since) / 1000.0
+
+
+static func qa_prof_take() -> Dictionary:
+	var out: Dictionary = qa_prof.duplicate()
+	qa_prof.clear()
+	return out
+
+
+func _qa_prof_lines(rows: Array) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for phase: String in ["close", "open"]:
+		var by: Dictionary = {}
+		var last: int = 0
+		for r_v: Variant in rows:
+			var r: Dictionary = r_v
+			var lap: int = r.get("lap", 0)
+			if str(r.get("room", "")) != "vigil" or str(r.get("phase", "")) != phase or lap < 1:
+				continue
+			var i: int = r.get("i", 0)
+			var after: float = r.get("after_ms", 1e9)
+			var span: float = r.get("span_ms", 0.0)
+			if after > span:
+				continue
+			last = maxi(last, i)
+			if not by.has(i):
+				by[i] = []
+			var list: Array = by[i]
+			list.append(r)
+		var picks: Array[int] = [0, 1, 2, 3, 4, last - 3, last - 2, last - 1, last]
+		for i: int in picks:
+			if not by.has(i):
+				continue
+			var list: Array = by[i]
+			var keys: Dictionary = {}
+			for r_v: Variant in list:
+				var r: Dictionary = r_v
+				var prof: Dictionary = r.get("prof", {})
+				for k: Variant in prof.keys():
+					keys[k] = true
+			var parts: PackedStringArray = PackedStringArray()
+			for k: Variant in keys.keys():
+				var vals: Array[float] = []
+				for r_v: Variant in list:
+					var r: Dictionary = r_v
+					var prof: Dictionary = r.get("prof", {})
+					var v: float = prof.get(k, 0.0)
+					vals.append(v)
+				var med: float = _qa_q(vals, 0.5)
+				if med >= 0.3:
+					parts.append("%s %.1f" % [str(k), med])
+			var walls: Array[float] = []
+			var pres: Array[float] = []
+			var draws: Array[float] = []
+			for r_v: Variant in list:
+				var r: Dictionary = r_v
+				var wall: float = r.get("wall_ms", 0.0)
+				var busy: float = r.get("busy_ms", 0.0)
+				var pre: float = r.get("pre_ms", 0.0)
+				walls.append(wall)
+				pres.append(pre)
+				draws.append(busy - pre)
+			out.append("%s i%d: wall %.1f process %.1f draw %.1f | %s" % [phase, i, _qa_q(walls, 0.5),
+				_qa_q(pres, 0.5), _qa_q(draws, 0.5), ", ".join(parts)])
+	return out
+'''
+open(main, "w").write(m)
+print("prof patched", W)

@@ -1,0 +1,26 @@
+"""One line per launch: the Vigil's bars from bench_rooms.jsonl rows (as the
+on-screen report computes them). usage: arms_table.py rows-*.jsonl"""
+import json, math, sys, os
+def q(v, p):
+    v = sorted(v)
+    return v[max(0, min(len(v) - 1, math.ceil(p * len(v)) - 1))] if v else float('nan')
+print('%-10s %6s | %6s %6s | %6s %6s | %6s %6s %6s | %s' % ('launch', 'title', '1st t>m', 'frame', 'V1', 'V3', 'hall', 'later', 'v3 max', 'vram warm-land'))
+for path in sys.argv[1:]:
+    rows = [json.loads(l) for l in open(path) if l.strip()]
+    fr = [r for r in rows if 'wall_ms' in r]
+    tp = q([r['wall_ms'] for r in fr if r.get('phase') == 'title'], .95)
+    def sel(phase, first):
+        return [r for r in fr if r.get('room') == 'vigil' and (r.get('lap') == 0) == first and r.get('phase') == phase]
+    f1 = sel('open', True)
+    t1 = [r['since_tap_ms'] for r in f1 if r.get('i') == 0]
+    w1 = [r['wall_ms'] for r in f1 if r.get('i') == 0]
+    def inside(rs): return [r['wall_ms'] for r in rs if r.get('i', 0) >= 1 and r.get('after_ms', 1e9) <= r.get('span_ms', 0)]
+    v1 = q(inside(sel('open', False)), .95); v3 = inside(sel('close', False))
+    hall = q([r['wall_ms'] for r in fr if r.get('room') == 'vigil' and r.get('phase') == 'room' and r.get('lap') == 0], .95)
+    later = sorted(r['since_tap_ms'] for r in sel('open', False) if r.get('i') == 0)
+    warm = [r['vram'] for r in fr if r.get('phase') == 'warm' and 'vram' in r]
+    tit = [r['vram'] for r in fr if r.get('phase') == 'title' and 'vram' in r]
+    vram = '%.1f / %.1f (land %.1f)' % (warm[-1] - warm[0], tit[-1] - warm[0], warm[0]) if warm and tit else ''
+    print('%-10s %6.2f | %6.1f %6.1f | %+6.2f %+6.2f | %+6.2f %6.1f %6.1f | %s' % (
+        os.path.basename(path)[5:-6], tp, t1[0] if t1 else float('nan'), w1[0] if w1 else float('nan'),
+        v1 - tp, q(v3, .95) - tp, hall - tp, later[len(later) // 2] if later else float('nan'), max(v3) if v3 else 0, vram))

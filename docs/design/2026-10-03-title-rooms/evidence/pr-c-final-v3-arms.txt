@@ -1,0 +1,53 @@
+# V3 arms on the iPad 8 (QA app, the shared batch lock, every launch's nonce
+# checked on its report or, where the display had gone black, in its rows).
+# One build per round, the arms switched at launch (pr-c-final-qa_patch_arms.py.txt,
+# pr-c-final-qa_patch_arms2.py.txt), the Vigil alone, ten laps a launch, laps
+# 2 to 10. Columns: the title at rest's P95; the Vigil's first opening (tap to
+# first moved, its tap frame); V1, V3 and the hall at rest, each P95 minus the
+# title's in the same launch (the ruling: <= +0.5); the later openings' median
+# tap to first moved; V3's worst frame; video memory after the warms and after
+# the title's rest, over the landing (MiB).
+#
+# Arms: C the hold as it was (every layer hidden under the hall); R all six of
+# the held title's layers drawn on under the hall, paused; Rl the road and
+# the painting drawn, the vignette, lamp chain, rose and wordmark hidden; Rw
+# the road alone drawn; D the leaving hall hidden at the landing and freed
+# 0.3 s later. CD is C with D (--qa-hide=all).
+
+## Round 1: 2988d4e0 (ad-2988d4e0), --qa-road-drawn / --qa-defer-free
+launch      title | 1st t>m  frame |     V1     V3 |   hall  later v3 max | vram warm-land
+C-en        18.37 |   51.8   37.4 |  -0.28  +2.75 |  -0.04   36.2   25.7 | 61.8 / 61.8 (land 207.0)
+C-zh        17.93 |   45.5   29.6 |  +0.05  +4.50 |  +0.41   35.2   26.8 | 71.6 / 65.5 (land 189.5)
+D-en        18.06 |   45.6   30.8 |  -0.27  +3.35 |  +0.15   36.4   25.4 | 63.3 / 63.3 (land 207.0)
+D-zh        18.07 |   45.2   29.4 |  -0.47  +2.21 |  +0.26   33.0   25.8 | 71.5 / 65.5 (land 189.5)
+R-en        17.81 |   48.6   32.9 |  +1.21  -0.40 |  +0.78   37.1   28.6 | 63.3 / 63.3 (land 207.0)
+R-zh        17.93 |   44.5   28.9 |  +1.26  -0.28 |  +0.87   35.0   23.9 | 71.4 / 65.3 (land 189.7)
+RD-en       17.85 |   45.6   31.9 |  -0.56  -0.39 |  +0.71   36.5   24.6 | 69.3 / 69.3 (land 207.0)
+RD-zh       17.96 |   45.7   29.9 |  -0.71  -0.69 |  +0.71   31.9   24.9 | 73.0 / 67.0 (land 189.5)
+
+## Round 2: 2b89bb61 (r-2b89bb61, all six drawn), --qa-hide / --qa-defer-free
+launch      title | 1st t>m  frame |     V1     V3 |   hall  later v3 max | vram warm-land
+CD-en       17.93 |   46.2   30.1 |  -0.27  +2.76 |  +0.32   36.1   25.9 | 69.3 / 69.3 (land 207.0)
+CD-zh       17.91 |   46.6   30.9 |  -0.73  +3.66 |  +0.59   33.5   25.5 | 73.1 / 67.0 (land 189.5)
+RD-en       18.00 |   46.5   30.7 |  +0.15  -0.36 |  +0.64   36.7   23.3 | 63.3 / 63.3 (land 207.0)
+RD-zh       17.65 |   45.7   30.1 |  +0.31  +1.25 |  +0.95   33.1   25.8 | 73.1 / 67.0 (land 189.5)
+RlD-en      18.54 |   46.7   35.7 |  -0.17  -0.95 |  +0.18   37.9   22.4 | 61.8 / 61.8 (land 207.0)
+RlD-zh      17.95 |   44.4   28.7 |  -0.73  -0.53 |  +0.72   34.6   23.9 | 73.1 / 67.0 (land 189.5)
+RwD-en      18.04 |   48.4   32.3 |  -0.35  -0.12 |  +0.60   36.8   24.8 | 61.8 / 61.8 (land 207.0)
+RwD-zh      18.00 |   48.4   32.5 |  -0.40  +0.53 |  +0.69   34.6   28.3 | 73.1 / 67.0 (land 189.5)
+
+## Round 3: 2b89bb61, Rl with and without D
+launch      title | 1st t>m  frame |     V1     V3 |   hall  later v3 max | vram warm-land
+Rl-en       18.42 |   49.0   37.1 |  -0.15  -0.58 |  +0.25   37.0   21.5 | 69.3 / 69.3 (land 207.0)
+Rl-en2      17.92 |   45.5   30.9 |  +0.38  +0.07 |  +0.54   37.2   22.9 | 69.3 / 69.3 (land 207.0)
+Rl-zh       17.79 |   46.5   30.8 |  -0.46  +0.54 |  +0.91   32.2   22.3 | 71.5 / 65.5 (land 189.5)
+Rl-zh2      17.90 |   45.6   29.3 |  +0.81  +0.43 |  +0.70   32.4   26.3 | 71.6 / 65.5 (land 189.5)
+RlD-en      20.11 |   48.2   41.0 |  -1.73  -0.78 |  +0.23   36.7   24.9 | 69.2 / 69.2 (land 193.2)
+RlD-zh      17.94 |   46.8   30.5 |  -0.69  +0.44 |  +0.73   35.8   22.7 | 71.6 / 65.5 (land 189.5)
+(RlD-en: the display went black during the launch and the title at rest ran
+20.11 ms at P95; discarded, as e-zh was before.)
+
+## The full bench before the arms build (a-6676f0a8, every room, en)
+launch      title | 1st t>m  frame |     V1     V3 |   hall  later v3 max | vram warm-land
+C-en        18.37 |   52.1   35.4 |  -0.23  +3.49 |  -0.16   36.5   25.2 | 67.8 / 67.8 (land 207.0)
+R-en        17.98 |   49.7   32.8 |  -0.01  -0.55 |  +0.59   36.4   19.0 | 67.8 / 67.8 (land 207.0)
