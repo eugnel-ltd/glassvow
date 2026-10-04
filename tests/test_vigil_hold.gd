@@ -22,6 +22,8 @@ extends RefCounted
 ## - a language or shape change while the rooms' warm runs is warmed after it
 ##   (#670 review follow-up 1: before, the new key was dropped for the launch),
 ##   and the warm waits while the map's prefetch is still working (follow-up 3);
+##   the Vigil's art is asked for only once the title has rested with the
+##   map's prefetch done, never under the rite or beside Back to the Road's warm;
 ## - once the title has rested with the hall's art in hand and its rooms
 ##   warmed, the hall its Vigil word opens is built ahead on the tree, hidden
 ##   and still, and the word shows that same hall; a shape change or a route
@@ -272,8 +274,15 @@ static func _warm_waits_for_the_map(fails: Array[String], tree: SceneTree, host:
 	MapJourneyPrefetch.start(WorldMap.from_dict(run.map), run)
 	_check(fails, MapJourneyPrefetch.busy() and not main._warm_may_run(),
 		"the rooms' warm may run while the map's prefetch works")
+	_check(fails, main._vigil_art_due, "the title does not owe its Vigil's art a warm")
+	main._warm_vigil_art_once_rested(RoomWarm.REST * 2.0)
+	_check(fails, main._vigil_art_due, "the Vigil's art was asked for while the map's prefetch works")
 	MapJourneyPrefetch.release()
 	_check(fails, main._warm_may_run(), "the warm stays held once the map's prefetch is let go")
+	main._warm_vigil_art_once_rested(RoomWarm.REST * 0.5)
+	_check(fails, main._vigil_art_due, "the Vigil's art was asked for before the title had rested")
+	main._warm_vigil_art_once_rested(RoomWarm.REST * 0.5)
+	_check(fails, not main._vigil_art_due, "the rested title did not ask for its Vigil's art")
 	_dispose(main)
 
 
@@ -285,6 +294,7 @@ static func _hall_built_ahead(fails: Array[String], tree: SceneTree, host: SubVi
 	var main: Main = await _boot(tree, host, content)
 	main._warm_headless = false
 	main._vigil_art = {"res://stand-in": true}
+	main._vigil_art_asked = true
 	main._room_warm = RoomWarm.new([], func() -> bool: return false)
 	main.add_child(main._room_warm)
 	main._build_vigil_ahead(RoomWarm.REST)
@@ -324,6 +334,7 @@ static func _hall_built_ahead(fails: Array[String], tree: SceneTree, host: SubVi
 	_check(fails, main._vigil_ahead == null and held.is_queued_for_deletion(),
 		"a route change did not let the hall built ahead go")
 	main._vigil_art = {}
+	main._vigil_art_asked = false
 	_dispose(main)
 
 

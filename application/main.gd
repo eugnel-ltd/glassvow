@@ -92,6 +92,11 @@ var _warm_headless: bool = DisplayServer.get_name() == "headless"
 ## it all go once the loads in flight are done (a run has started).
 var _vigil_art: Dictionary = {}
 var _vigil_art_drop: bool = false
+## Whether the title still owes the Vigil's art its warm, and how long the
+## title has rested towards it; and whether it has been asked for.
+var _vigil_art_due: bool = false
+var _vigil_art_rested: float = 0.0
+var _vigil_art_asked: bool = false
 ## The title held under the Vigil it opened (§2.1, §9 item 2): hidden and
 ## paused, never rebuilt, until the turn east brings it back; and the word
 ## that opened it, which takes the focus back.
@@ -1357,7 +1362,8 @@ func _show_title() -> void:
 	_music.play(&"title")
 	_title_kindled = true
 	_title_rite_resume = false
-	_warm_vigil_art()
+	_vigil_art_drop = false
+	_vigil_art_due = true
 	_warm_rooms()
 
 
@@ -1432,19 +1438,34 @@ func _on_room_warm_done() -> void:
 
 ## The Vigil's art on a worker while the title rests, once a session, with
 ## the hall's two tracks and the title's own to come back to (a 3.7 MB track
-## read on the tap frame cost it 5.5 ms on the M1).
+## read on the tap frame cost it 5.5 ms on the M1). Asked for once the title
+## has rested RoomWarm.REST with the map's prefetch done (§7 item 16: about
+## 1 s after the title lands), never under the launch rite, whose frames its
+## 50 MiB of uploads would share, nor beside the warm of the land Back to the
+## Road opens (R1.1), whose pictures decode on the same worker pool.
+func _warm_vigil_art_once_rested(delta: float) -> void:
+	_vigil_art_rested = _vigil_art_rested + delta if _warm_may_run() else 0.0
+	if _vigil_art_rested < RoomWarm.REST:
+		return
+	_vigil_art_due = false
+	_vigil_art_rested = 0.0
+	_warm_vigil_art()
+
+
 func _warm_vigil_art() -> void:
 	_vigil_art_drop = false
-	if _warm_headless or not _vigil_art.is_empty():
+	if _warm_headless or _vigil_art_asked:
 		return
+	_vigil_art_asked = true
 	for path: String in VigilHall.art_paths() + MusicBus.paths([&"vigil", &"roseWindow", &"title"]):
 		if ResourceLoader.exists(path) and ResourceLoader.load_threaded_request(path) == OK:
 			_vigil_art[path] = null
 
 
-## Whether every piece of the Vigil's art asked for is in hand (or could not be).
+## Whether the Vigil's art has been asked for and every piece is in hand (or
+## could not be): until then the hall is built by nobody ahead of a tap.
 func _vigil_art_ready() -> bool:
-	return not _vigil_art.values().has(null)
+	return _vigil_art_asked and not _vigil_art.values().has(null)
 
 
 ## Holds each piece of the Vigil's art once its worker is done with it; lets
@@ -1464,6 +1485,7 @@ func _take_vigil_art() -> void:
 	if _vigil_art_drop and not waiting:
 		_vigil_art.clear()
 		_vigil_art_drop = false
+		_vigil_art_asked = false
 
 
 ## The title on screen with nothing over it or moving: no room, no passage,
@@ -1510,7 +1532,7 @@ func _find_os_glyphs() -> void:
 func _build_vigil_ahead(delta: float) -> void:
 	if _vigil_ahead != null and (not is_instance_valid(_vigil_ahead) or _vigil_ahead_key != _ahead_key()):
 		_drop_vigil_ahead()
-	var due: bool = not _warm_headless and _vigil_ahead == null and not _vigil_art.is_empty() \
+	var due: bool = not _warm_headless and _vigil_ahead == null \
 		and _vigil_art_ready() and _warm_may_run() \
 		and (_room_warm == null or not is_instance_valid(_room_warm))
 	_vigil_ahead_rested = _vigil_ahead_rested + delta if due else 0.0
@@ -2118,6 +2140,8 @@ func _route_run() -> void:
 	_apply_pending_content_hydration()
 	# The Vigil's art is let go once a run is under way (§7 item 16).
 	_vigil_art_drop = not _vigil_art.is_empty()
+	_vigil_art_due = false
+	_vigil_art_asked = _vigil_art_asked and _vigil_art_drop
 	# An ended run never shows its map again: free the kept screen now.
 	if game == null or game.run.pending_run_end != null:
 		_map_keep.release()
@@ -2345,6 +2369,8 @@ func _process(delta: float) -> void:
 	_sync_map_grain()
 	if _title_road_due:
 		_warm_title_road_once_lit()
+	if _vigil_art_due:
+		_warm_vigil_art_once_rested(delta)
 	if not _vigil_art.is_empty():
 		_take_vigil_art()
 	_build_vigil_ahead(delta)
