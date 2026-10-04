@@ -858,6 +858,93 @@ and the whole row is relit when the next turn begins.
 
 ---
 
+## The Flame
+
+### Way
+One of a class's three strategic languages, discovered by playing and never
+chosen from a menu. The Duskblade's are Shatter (碎), Lantern (燼) and Edge
+(蝕). A way is content: an id, the cards and relics that carry affinity to it, a
+crown and its capstones. Its flame's colour and shape belong to presentation,
+keyed by the id.
+
+A way id is unique across classes. It names one way of one class and is never
+reused by another, because the flame's colours, the lit riders and the act
+boss's recognition all key off it. Affinity is per class, so one card can be a
+way's glass for one class and clear glass for another.
+
+### Purity
+The share of a deck's coloured glass held by its leading way: each way's
+affinity summed over the coloured cards in the deck, divided by the sum over all
+ways. It is read from the deck alone, never from recent play, by one
+deterministic function that the game, the HUD and the simulator share, and
+nothing about it is saved. The second share, once it is large enough to matter,
+is the flame's fringe.
+
+Clear glass, a card with no affinity, does not enter purity at all. It is fuel,
+not noise: adding a Strike never dims the flame, while removing off-colour glass
+steadies it.
+
+### Flame tier
+What the lantern's flame says about the deck, from its coloured mass and its
+purity: Soot (塵, genuinely scattered), Kindling (燃, nothing declared yet),
+Steady (定) and True (真). It is read at every deck change and at combat start,
+and a fight keeps the tier it began with. A lantern burning a way's colour at
+Steady or True is *lit*.
+
+The tier changes only the lantern's quality, how much fire it holds and what
+the Art costs, and it changes it identically for every way. So the tier can
+never decide which way wins.
+
+### Lit glass
+A rider printed on some of a way's own glass that names the way's flame colour
+and resolves only while the lantern burns that colour, Steady or True, as the
+fight began. The rest of the card always resolves. It is the payoff only a
+committed deck collects, paid per card played rather than as a set bonus, and
+the rider names the colour and nothing else.
+
+### Arm
+One simulated player in a balance reading. Every arm plays the same seeds, so
+arms compare run for run, and every arm plays its fights alike; arms differ
+only in how they build the deck. A committed arm,
+`C_<way>` (C_shatter, C_lantern and C_edge for the Duskblade), insists on one
+way: it weighs that way's glass up and the rest down, and removes its
+off-colour starter seeds first. A, the adaptive arm, reads the offers but not
+its lantern, and stays in every table as the commit-blind floor. A_lit reads
+the offers and its own flame, and leans into a way once the lantern is lit in
+that way's colour; skill and diversity are read against it. R, the random arm,
+scatters, and is how the table shows that scattering loses.
+
+### Graded gate and reading
+The two roles a figure in a class's Flame table can have. A graded gate is one
+the verdict must answer: every graded figure short of its threshold, on point
+or on interval, is recorded with the verdict, together with why the gate's
+intent still holds or the reservation that carries it. A reading is reported in
+every graded cell with its interval, but its threshold never decides the
+verdict; the verdict still reads the intent behind it from the figures. For the
+Duskblade, G1 (each committed way wins) and G4 (scattering loses) are readings,
+and G2, G3, G5, G6, G7 and the bot round B are graded.
+
+Neither is a switch. A graded gate's threshold is evidence for the verdict, not
+a pass or fail on its own, with one exception: a miss on the guards, G7, is
+always NOT ACCEPTED.
+
+### Reading of record
+The one readout a class's verdict was given on: its complete table, the content
+SHA-256 it ran on and its instrument, the bots that built and played the runs.
+A later run under another instrument is a new reading, not a re-run of this
+one. The Duskblade's for 1.0 is readout 13.
+
+### Verdict of record
+The one judgement recorded for each shipped class on whether its ways' design
+intent holds: ACCEPT or NOT ACCEPTED, given on its reading of record. The gate
+figures are its evidence; it is not a count of gates passed. An ACCEPT may
+carry named reservations, each stating its figures and the readout that will
+answer it, and a reservation is part of the verdict, not a waiver. The verdict
+describes only the content it was given on: once that content moves, it no
+longer describes the build.
+
+---
+
 ## The reward
 
 ### 燼 (The Embers)
@@ -1076,6 +1163,23 @@ discloses above its rung no matter how early chance surfaces it.
   program. That second floor is per-channel and tiny, it is a property of
   editing the shader rather than of photographing the screen, and a comparison
   that clears one says nothing about the other.
+- **"Tier" names two unrelated things — check which cluster you are in.**
+  Under **The actor**, a Tier is an actor's size class. Under **The Flame**, a
+  Flame tier is what the lantern says about the deck: Soot, Kindling, Steady or
+  True. Write "flame tier" wherever the two could be read in the same breath.
+- **"Verdict" names two unrelated judgements.** Under **The port**, a Verdict is
+  what a Census records against one declaration of the Benchmark. Under **The
+  Flame**, the Verdict of record is one class's ACCEPT or NOT ACCEPTED on its
+  ways' design intent. Nothing connects them.
+- **"Reading" has three senses in the Flame's documents.** The flame's reading
+  is the tier, leading way and fringe the purity function returns at a deck
+  change or at combat start. A reading, as a gate's role, is a figure reported
+  but never deciding the verdict. The reading of record is the readout a
+  verdict was given on. Qualify the word wherever two of them meet.
+- **A graded gate is not a Gate.** A Gate, under **Developer tooling**, is a
+  check built to fail when a defect is present. A graded gate's figure short of
+  its threshold fails nothing by itself: it is evidence the class's verdict must
+  answer, and only the verdict decides.
 - **"Lamplighter" had been used for two distinct figures — the run-start boon
   giver and the Hollow Lamplighter quest character.** They are not the same:
   the boon giver at the hearth is the Keeper of the Story Bible's canon, while

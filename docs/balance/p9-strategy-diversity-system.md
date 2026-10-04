@@ -1,6 +1,8 @@
 > **Historical record. Superseded on 2026-09-29 by the [Duskblade Flame design lock](../design/2026-09-29-dusk-flame/README.md).**
 >
 > This document is kept as the record of the P9 strategy-diversity programme (#421). Nothing below this header is current instruction, including its Status line, definitions, layers, thresholds, receipts and completion rule. The release bar's P9 pillar is now the Flame gates G1–G7 plus the human round H (lock §11), bound by [`docs/rc-bar.md`](../rc-bar.md). [`docs/reviews/549/obligation-map.md`](../reviews/549/obligation-map.md) records where each obligation below went. The body is preserved unedited as evidence.
+>
+> *Updated on 2026-10-04:* the sentence above on the release bar describes P9 as #549 wrote it on 2026-09-29, the wording `docs/rc-bar.md` kept until 2026-10-04. Since [#685](https://github.com/fol2/glassvow/pull/685), [`docs/rc-bar.md`](../rc-bar.md) P9 records one verdict per shipped class, ACCEPT or NOT ACCEPTED, on the design's intent, with the gates as its evidence: G2, G3, G5, G6, G7 and the bot round B are graded, G1 and G4 are readings, and row B replaced the human round H on 2026-10-01. The measurement contract is §11 of the [Duskblade Flame design lock](../design/2026-09-29-dusk-flame/README.md), which also records the Duskblade's verdict.
 
 ---
 
