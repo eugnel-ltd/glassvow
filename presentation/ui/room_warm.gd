@@ -10,16 +10,26 @@ extends Control
 ##
 ## Once the title has rested a moment (`rests`), this does that work a slice a
 ## frame, never as a room opens: each room is built once off the tree, never
-## shown, and freed; the glyphs its text uses are rasterised at the sizes it
-## sets them, a few at a time within a budget a frame; and each font page is
-## drawn once, near-invisibly under everything, so the GPU has it before the
-## tap. Then it frees itself. While a room is open or a passage runs, it waits.
+## shown, and freed; its text is shaped at the sizes it sets it, a few strings
+## at a time within a budget a frame; and its glyphs are drawn, near-invisibly
+## under everything, a few a frame within the same budget, so the screen's
+## oversampled glyphs and their font pages are on the GPU before the tap. Then
+## it frees itself. While a room is open or a passage runs, it waits.
+##
+## The drawing is paced because every new glyph sends its whole font page to
+## the GPU again. Drawing every page in one frame cost 30 ms (en) to 270 ms
+## (zh-Hant) of that frame and 50 to 80 ms of the next on the iPad 8, and grew
+## the upload staging buffer, which is never given back, by 53 to 92 MiB.
 
-## How long the title rests before the work starts, and the glyph work a frame.
+## How long the title rests before the work starts, and the work a frame.
 const REST: float = 0.8
 const BUDGET_US: int = 1500
 ## Glyphs shaped a call.
 const CHUNK: int = 24
+
+## The work a frame. At least one string is shaped, or one glyph drawn, a frame
+## however small it is (a test sets 0 to see one a frame).
+var budget_us: int = BUDGET_US
 
 ## True once the title rests (no room, no passage, no rite).
 var rests: Callable = Callable()
@@ -29,7 +39,12 @@ var _rested: float = 0.0
 var _sets: Dictionary = {}
 ## [font, px, text] still to shape.
 var _jobs: Array[Array] = []
-var _drawn: bool = false
+## [font, px, codepoint] in the rooms' order, and the next to draw.
+var _glyphs: Array[Array] = []
+var _next_glyph: int = 0
+## Set by a resting frame that wants glyphs drawn, so nothing else's redraw
+## (entering the tree, a visibility change) draws them mid-passage.
+var _draw_due: bool = false
 
 
 ## `builders`: each makes one room, whole (every page, the roll's end), off
@@ -39,12 +54,12 @@ func _init(builders: Array[Callable], title_rests: Callable) -> void:
 	_builders = builders
 	rests = title_rests
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Under everything: the one frame that draws the pages is hidden by the road.
+	# Under everything: the frames that draw the glyphs are hidden by the road.
 	z_index = -100
 
 
 func done() -> bool:
-	return _builders.is_empty() and _jobs.is_empty() and _drawn
+	return _builders.is_empty() and _jobs.is_empty() and _next_glyph >= _glyphs.size()
 
 
 func _process(delta: float) -> void:
@@ -62,16 +77,18 @@ func _process(delta: float) -> void:
 			_queue_jobs()
 		return
 	if not _jobs.is_empty():
-		var until: int = Time.get_ticks_usec() + BUDGET_US
-		while not _jobs.is_empty() and Time.get_ticks_usec() < until:
+		var until: int = Time.get_ticks_usec() + budget_us
+		while not _jobs.is_empty():
 			var job: Array = _jobs.pop_back()
 			var font: Font = job[0]
 			var px: int = job[1]
 			var text: String = job[2]
 			font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px)
+			if Time.get_ticks_usec() >= until:
+				break
 		return
-	if not _drawn:
-		_drawn = true
+	if _next_glyph < _glyphs.size():
+		_draw_due = true
 		queue_redraw()
 		return
 	queue_free()
@@ -116,6 +133,8 @@ func _queue_jobs() -> void:
 		var all: PackedStringArray = PackedStringArray(chars.keys())
 		for at: int in range(0, all.size(), CHUNK):
 			_jobs.append([entry[0], entry[1], "".join(all.slice(at, at + CHUNK))])
+		for c: String in all:
+			_glyphs.append([entry[0], entry[1], c.unicode_at(0)])
 
 
 ## BBCode tags out, so only the text's own characters are shaped.
@@ -124,15 +143,22 @@ static func _plain(markup: String) -> String:
 	return tags.sub(markup, "", true)
 
 
-## Each page drawn once, at a level no screen shows, so the GPU has it.
+## The next glyphs within the budget, at a level no screen shows, side by side
+## so they never stack. Drawn here, the viewport's oversampling applies, so
+## each glyph is rasterised at the size the screen draws it.
 func _draw() -> void:
-	if not _drawn:
+	if not _draw_due:
 		return
-	for key: String in _sets:
-		var entry: Array = _sets[key]
-		var font: Font = entry[0]
-		var px: int = entry[1]
-		var chars: Dictionary = entry[2]
-		font.draw_string(get_canvas_item(), Vector2(2.0, float(px) + 2.0),
-			"".join(PackedStringArray(chars.keys())), HORIZONTAL_ALIGNMENT_LEFT, -1, px,
+	_draw_due = false
+	var until: int = Time.get_ticks_usec() + budget_us
+	var x: float = 2.0
+	while _next_glyph < _glyphs.size():
+		var glyph: Array = _glyphs[_next_glyph]
+		_next_glyph += 1
+		var font: Font = glyph[0]
+		var px: int = glyph[1]
+		var code: int = glyph[2]
+		x += font.draw_char(get_canvas_item(), Vector2(x, float(px) + 2.0), code, px,
 			Color(1.0, 1.0, 1.0, 0.004))
+		if Time.get_ticks_usec() >= until:
+			break

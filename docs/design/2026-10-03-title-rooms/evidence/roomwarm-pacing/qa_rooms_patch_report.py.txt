@@ -1,0 +1,18 @@
+"""QA only (never committed): PR B's rooms-bench patch plus an on-screen report of
+the first openings, for when file copies from the QA container hang.
+usage: qa_rooms_patch_report.py <worktree> <build-label> | <worktree> --revert"""
+import os
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+W = sys.argv[1]
+subprocess.run([sys.executable, os.path.join(HERE, "qa_rooms_patch.py")] + sys.argv[1:], check=True)
+if sys.argv[2] != "--revert":
+    main = os.path.join(W, "application/main.gd")
+    s = open(main).read()
+    a = "\tbench.set(\"out_path\", \"user://bench_rooms.jsonl\")\n\tadd_child(bench)\n"
+    assert s.count(a) == 1, s.count(a)
+    s = s.replace(a, a.replace("\tadd_child(bench)\n", "\tbench.connect(\"done\", _qa_bench_report.bind(bench))\n\tadd_child(bench)\n"))
+    s += open(os.path.join(HERE, "qa_report_tail.gd.txt")).read()
+    open(main, "w").write(s)

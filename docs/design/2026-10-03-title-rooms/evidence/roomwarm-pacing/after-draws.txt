@@ -1,0 +1,48 @@
+== f-main-en-1.jsonl
+   video MiB: landing 283.72, after the warms 287.56, difference +3.84
+   warm 791 .. 1289 ms after the landing
+   frames that drew glyphs 16, glyphs 279, most in one frame 39, longest _draw 1.97 ms
+   per draw (frame:glyphs/_draw/frame ms) 53:39g/1.5ms_draw/17.8 54:14g/1.6ms_draw/19.8 55:12g/1.5ms_draw/44.0 56:13g/1.5ms_draw/16.6 57:11g/1.6ms_draw/19.5 58:14g/1.5ms_draw/20.3 59:20g/1.6ms_draw/43.6 60:12g/1.7ms_draw/16.6 61:28g/2.0ms_draw/20.2 62:14g/1.5ms_draw/19.3 63:20g/1.5ms_draw/43.8 64:17g/1.5ms_draw/16.7 65:16g/1.5ms_draw/21.6 66:20g/1.5ms_draw/16.9 67:26g/1.5ms_draw/44.8 68:3g/0.4ms_draw/16.6
+   frames over 33 ms (index@after landing:ms seg[process,draw,wait] warm step): 55@922ms:44.0 seg[5.82, 24.25, 13.9] draw_glyphs; 59@1023ms:43.6 seg[6.05, 24.16, 13.38] draw_glyphs; 63@1123ms:43.8 seg[7.68, 23.6, 12.52] draw_glyphs; 67@1222ms:44.8 seg[7.37, 25.74, 11.7] draw_glyphs; 89@1618ms:48.3 seg[5.97, 29.51, 12.78] -; 95@1754ms:46.1 seg[6.05, 27.21, 12.83] -; 101@1888ms:45.4 seg[5.83, 26.35, 13.21] -; 110@2068ms:48.2 seg[4.51, 29.9, 13.8] -; 114@2175ms:41.8 seg[6.85, 21.61, 13.37] -; 118@2274ms:42.3 seg[5.47, 23.65, 13.18] -; 122@2372ms:44.4 seg[4.65, 26.32, 13.45] -; 137@2652ms:47.5 seg[5.85, 28.42, 13.26] -; 143@2790ms:43.4 seg[5.85, 23.04, 14.53] -
+== f-main-en-2.jsonl
+   video MiB: landing 278.77, after the warms 283.56, difference +4.79
+   warm 792 .. 1221 ms after the landing
+   frames that drew glyphs 18, glyphs 279, most in one frame 41, longest _draw 1.72 ms
+   per draw (frame:glyphs/_draw/frame ms) 53:41g/1.7ms_draw/17.5 54:15g/1.6ms_draw/19.2 55:16g/1.5ms_draw/44.7 56:11g/1.6ms_draw/16.6 57:9g/1.6ms_draw/16.7 58:9g/1.5ms_draw/16.7 59:17g/1.7ms_draw/16.6 60:10g/1.6ms_draw/16.7 61:12g/1.7ms_draw/16.6 62:24g/1.5ms_draw/16.6 63:12g/1.6ms_draw/16.7 64:13g/1.5ms_draw/16.7 65:20g/1.6ms_draw/16.7 66:18g/1.6ms_draw/16.6 67:15g/1.5ms_draw/16.8 68:22g/1.6ms_draw/16.6 69:14g/1.6ms_draw/16.6 70:1g/0.1ms_draw/16.8
+   frames over 33 ms (index@after landing:ms seg[process,draw,wait] warm step): 55@922ms:44.7 seg[4.99, 26.21, 13.49] draw_glyphs
+== f-main-en-3.jsonl
+   video MiB: landing 284.14, after the warms 287.56, difference +3.42
+   warm 777 .. 1107 ms after the landing
+   frames that drew glyphs 14, glyphs 279, most in one frame 40, longest _draw 1.64 ms
+   per draw (frame:glyphs/_draw/frame ms) 52:40g/1.6ms_draw/18.0 53:12g/1.5ms_draw/16.1 54:15g/1.6ms_draw/17.0 55:12g/1.6ms_draw/16.4 56:11g/1.5ms_draw/16.5 57:13g/1.6ms_draw/16.8 58:17g/1.5ms_draw/16.2 59:13g/1.5ms_draw/16.6 60:30g/1.6ms_draw/16.9 61:15g/1.6ms_draw/16.5 62:30g/1.5ms_draw/17.9 63:28g/1.6ms_draw/19.7 64:29g/1.5ms_draw/15.4 65:14g/1.1ms_draw/14.3
+   frames over 33 ms (index@after landing:ms seg[process,draw,wait] warm step): none
+== f-main-zh-1.jsonl
+   video MiB: landing 258.19, after the warms 265.97, difference +7.78
+   warm 780 .. 1921 ms after the landing
+   frames that drew glyphs 53, glyphs 788, most in one frame 29, longest _draw 1.68 ms
+   per draw (frame:glyphs/_draw/frame ms) 60:9g/1.5ms_draw/16.7 61:11g/1.6ms_draw/16.7 62:11g/1.5ms_draw/16.6 63:10g/1.5ms_draw/16.6 64:10g/1.5ms_draw/16.7 65:12g/1.6ms_draw/16.7 66:10g/1.5ms_draw/16.7 67:10g/1.6ms_draw/16.7 68:10g/1.5ms_draw/16.7 69:14g/1.5ms_draw/16.6 70:14g/1.6ms_draw/16.7 71:12g/1.6ms_draw/16.7 72:19g/1.6ms_draw/16.6 73:11g/1.5ms_draw/16.7 74:19g/1.5ms_draw/16.7 75:11g/1.5ms_draw/16.6 76:19g/1.5ms_draw/16.6 77:15g/1.5ms_draw/16.7 78:16g/1.6ms_draw/16.7 79:15g/1.6ms_draw/16.7 80:15g/1.6ms_draw/16.6 81:14g/1.6ms_draw/16.8 82:15g/1.5ms_draw/16.6 83:13g/1.5ms_draw/16.6 84:15g/1.5ms_draw/16.7 85:13g/1.6ms_draw/16.6 86:11g/1.6ms_draw/16.7 87:13g/1.5ms_draw/16.6 88:14g/1.6ms_draw/16.6 89:15g/1.5ms_draw/16.8 90:18g/1.5ms_draw/16.6 91:12g/1.5ms_draw/16.7 92:19g/1.5ms_draw/16.6 93:12g/1.6ms_draw/16.7 94:20g/1.6ms_draw/16.6 95:21g/1.5ms_draw/16.7 96:15g/1.6ms_draw/16.8 97:23g/1.5ms_draw/16.5 98:15g/1.6ms_draw/16.8 99:24g/1.5ms_draw/16.6 100:10g/1.6ms_draw/16.7 101:19g/1.5ms_draw/16.7 102:16g/1.6ms_draw/16.6 103:15g/1.5ms_draw/16.6 104:14g/1.6ms_draw/16.7 105:29g/1.6ms_draw/16.7 106:14g/1.6ms_draw/16.6 107:14g/1.5ms_draw/16.7 108:21g/1.7ms_draw/16.7 109:22g/1.5ms_draw/16.6 110:15g/1.6ms_draw/16.8 111:23g/1.5ms_draw/16.6 112:1g/0.3ms_draw/16.9
+   frames over 33 ms (index@after landing:ms seg[process,draw,wait] warm step): 55@919ms:47.9 seg[5.49, 27.61, 14.75] jobs
+== f-main-zh-2.jsonl
+   video MiB: landing 266.55, after the warms 273.72, difference +7.17
+   warm 797 .. 1722 ms after the landing
+   frames that drew glyphs 41, glyphs 788, most in one frame 28, longest _draw 1.74 ms
+   per draw (frame:glyphs/_draw/frame ms) 62:11g/1.6ms_draw/17.0 63:11g/1.6ms_draw/16.6 64:11g/1.6ms_draw/16.7 65:12g/1.6ms_draw/16.6 66:15g/1.6ms_draw/16.7 67:10g/1.6ms_draw/16.4 68:12g/1.6ms_draw/17.1 69:12g/1.6ms_draw/16.7 70:17g/1.5ms_draw/17.2 71:19g/1.6ms_draw/17.9 72:17g/1.6ms_draw/15.4 73:17g/1.6ms_draw/16.6 74:18g/1.5ms_draw/16.6 75:20g/1.5ms_draw/16.8 76:20g/1.6ms_draw/16.4 77:16g/1.5ms_draw/16.4 78:19g/1.6ms_draw/16.7 79:20g/1.5ms_draw/16.8 80:21g/1.6ms_draw/16.8 81:21g/1.5ms_draw/16.7 82:21g/1.5ms_draw/16.7 83:21g/1.5ms_draw/16.5 84:25g/1.7ms_draw/17.1 85:23g/1.7ms_draw/17.1 86:15g/1.5ms_draw/15.2 87:18g/1.5ms_draw/17.4 88:15g/1.5ms_draw/16.2 89:24g/1.5ms_draw/16.8 90:22g/1.5ms_draw/16.5 91:23g/1.5ms_draw/16.9 92:28g/1.6ms_draw/16.9 93:22g/1.5ms_draw/16.6 94:22g/1.6ms_draw/16.6 95:23g/1.5ms_draw/16.8 96:22g/1.5ms_draw/16.8 97:26g/1.5ms_draw/16.6 98:27g/1.5ms_draw/17.6 99:21g/1.6ms_draw/15.5 100:20g/1.5ms_draw/16.8 101:24g/1.5ms_draw/16.6 102:27g/1.6ms_draw/17.0
+   frames over 33 ms (index@after landing:ms seg[process,draw,wait] warm step): none
+== f-main-zh-3.jsonl
+   video MiB: landing 259.50, after the warms 266.72, difference +7.22
+   warm 780 .. 1809 ms after the landing
+   frames that drew glyphs 45, glyphs 788, most in one frame 30, longest _draw 10.37 ms
+   per draw (frame:glyphs/_draw/frame ms) 61:9g/1.7ms_draw/20.2 62:8g/1.6ms_draw/20.4 63:9g/1.5ms_draw/15.3 64:9g/1.5ms_draw/14.1 65:13g/1.6ms_draw/16.9 66:15g/1.5ms_draw/16.6 67:11g/1.5ms_draw/16.0 68:12g/1.5ms_draw/17.0 69:13g/1.5ms_draw/16.5 70:17g/1.5ms_draw/17.1 71:18g/1.5ms_draw/16.7 72:19g/1.5ms_draw/16.9 73:16g/1.5ms_draw/16.8 74:17g/1.6ms_draw/16.3 75:18g/1.5ms_draw/16.7 76:18g/1.5ms_draw/16.7 77:16g/1.6ms_draw/16.4 78:15g/1.6ms_draw/16.8 79:17g/1.5ms_draw/16.9 80:17g/1.6ms_draw/16.5 81:17g/1.5ms_draw/16.8 82:17g/1.6ms_draw/16.8 83:17g/1.6ms_draw/16.4 84:16g/1.5ms_draw/16.7 85:17g/1.6ms_draw/16.8 86:17g/1.5ms_draw/16.5 87:17g/1.6ms_draw/16.4 88:10g/10.4ms_draw/16.3 89:21g/1.5ms_draw/17.7 90:21g/1.6ms_draw/16.9 91:30g/1.5ms_draw/18.2 92:19g/1.5ms_draw/15.8 93:23g/1.5ms_draw/15.7 94:21g/1.5ms_draw/16.5 95:23g/1.6ms_draw/16.6 96:20g/1.6ms_draw/17.0 97:23g/1.6ms_draw/16.7 98:23g/1.6ms_draw/16.7 99:23g/1.5ms_draw/16.7 100:26g/1.5ms_draw/16.2 101:20g/1.5ms_draw/17.1 102:19g/10.1ms_draw/17.0 103:19g/1.5ms_draw/16.1 104:28g/1.5ms_draw/17.5 105:14g/0.8ms_draw/17.2
+   frames over 33 ms (index@after landing:ms seg[process,draw,wait] warm step): 58@969ms:47.6 seg[6.01, 27.02, 14.62] jobs
+== f-noroom-en-1.jsonl
+   video MiB: landing 284.14, after the warms 284.59, difference +0.45
+   frames over 33 ms (index@after landing:ms seg[process,draw,wait] warm step): none
+== f-noroom-en-2.jsonl
+   video MiB: landing 284.14, after the warms 284.59, difference +0.45
+   frames over 33 ms (index@after landing:ms seg[process,draw,wait] warm step): 150@2503ms:47.4 seg[5.83, 29.75, 11.82] -; 153@2591ms:41.8 seg[5.8, 23.87, 12.09] -
+== f-noroom-zh-1.jsonl
+   video MiB: landing 266.13, after the warms 267.00, difference +0.87
+   frames over 33 ms (index@after landing:ms seg[process,draw,wait] warm step): none
+== f-noroom-zh-2.jsonl
+   video MiB: landing 266.55, after the warms 267.00, difference +0.45
+   frames over 33 ms (index@after landing:ms seg[process,draw,wait] warm step): 163@2719ms:47.9 seg[5.83, 29.9, 12.22] -
