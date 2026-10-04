@@ -94,7 +94,7 @@ static func _vigil_return(fails: Array[String], tree: SceneTree, host: SubViewpo
 	var main: Main = await _boot(tree, host, content, false)
 	await _tap(tree, host, _word(main, "vigil"))
 	_check(fails, main._route_screen is VigilScreen, "(a) a tap on The Vigil did not open it")
-	await _tap(tree, host, _button(main._route_screen, Locale.active.t("ui.vigil.return")))
+	await _tap(tree, host, _button(main._route_screen, Locale.active.t("ui.menu.return")))
 	_check(fails, main._route_screen == null, "(a) the Vigil's Return did not return")
 	_no_ring(fails, main, "(a) the Vigil's Return by tap")
 	_dispose(main)
@@ -107,7 +107,7 @@ static func _vigil_route_form(fails: Array[String], tree: SceneTree, host: SubVi
 	var main: Main = await _boot(tree, host, content, false)
 	main._show_vigil()
 	await _frames(tree, 2)
-	await _tap(tree, host, _button(main._route_screen, Locale.active.t("ui.vigil.return")))
+	await _tap(tree, host, _button(main._route_screen, Locale.active.t("ui.menu.return")))
 	_no_ring(fails, main, "(b) the route-form Vigil's Return by tap")
 	_dispose(main)
 
@@ -229,12 +229,14 @@ static func _keyboard_keeps_its_ring(fails: Array[String], tree: SceneTree, host
 	_dispose(main)
 	main = await _boot(tree, host, content, true)
 	await _tap(tree, host, _word(main, "vigil"))
-	await _tap(tree, host, _button(main._route_screen, Locale.active.t("ui.vigil.return")))
+	await _tap(tree, host, _button(main._route_screen, Locale.active.t("ui.menu.return")))
 	title = _title(main)
 	await _key_tap(tree, host, KEY_ENTER)
-	_check(fails, main._choice_screen == title and title.lantern.has_focus(true)
-			and title._plaque.focused,
-		"(j) the first key after a tapped return did not just show the lantern's held focus")
+	# The held title comes back with the word that opened the Vigil holding the
+	# focus, hidden (§5.1 V3, as a room's word does): the first key shows it there.
+	_check(fails, main._choice_screen == title and main._route_screen == null
+			and _word(main, "vigil").has_focus(true),
+		"(j) the first key after a tapped return did not just show the Vigil word's held focus")
 	var settings: Control = _word(main, "settings")
 	settings.grab_focus()
 	await _key_tap(tree, host, KEY_ENTER)
@@ -257,7 +259,7 @@ static func _key_then_touch(fails: Array[String], tree: SceneTree, host: SubView
 		"(k) Tab did not read as a keyboard and show the lantern's focus")
 	await _tap(tree, host, _word(main, "vigil"))
 	_check(fails, not LeadlightFocus.keyed, "(k) a tap after a key was still read as a keyboard")
-	await _tap(tree, host, _button(main._route_screen, Locale.active.t("ui.vigil.return")))
+	await _tap(tree, host, _button(main._route_screen, Locale.active.t("ui.menu.return")))
 	_no_ring(fails, main, "(k) a key, then the Vigil and its Return by tap")
 	_dispose(main)
 

@@ -358,7 +358,10 @@ static func _remaining_run_screen_call_sites(fails: Array[String]) -> void:
 		},
 		"res://presentation/run/vigil_screen.gd": {
 			"_build": ["ui.vigil.title", "ui.vigil.stats", "ui.vigil.deedsTab",
-				"ui.vigil.roseTab", "ui.vigil.epitaphTab", "ui.vigil.return"],
+				"ui.vigil.roseTab", "ui.vigil.epitaphTab"],
+		},
+		"res://presentation/run/vigil_deeds.gd": {
+			"_reward_names": ["ui.vigil.ashwarden"],
 		},
 		"res://presentation/run/departure_screen.gd": {
 			"_build_embark": ["ui.embark.title", "ui.embark.subChoose", "ui.embark.subWait",

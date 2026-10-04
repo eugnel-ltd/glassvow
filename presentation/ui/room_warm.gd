@@ -20,6 +20,9 @@ extends Control
 ## the GPU again. Drawing every page in one frame cost 30 ms (en) to 270 ms
 ## (zh-Hant) of that frame and 50 to 80 ms of the next on the iPad 8, and grew
 ## the upload staging buffer, which is never given back, by 53 to 92 MiB.
+##
+## Last, any first-use pipelines a room's drawing needs (the Vigil's hall) are
+## drawn once the same way: a sample of it under everything for one frame.
 
 ## How long the title rests before the work starts, and the work a frame.
 const REST: float = 0.8
@@ -45,13 +48,18 @@ var _next_glyph: int = 0
 ## Set by a resting frame that wants glyphs drawn, so nothing else's redraw
 ## (entering the tree, a visibility change) draws them mid-passage.
 var _draw_due: bool = false
+## Each makes a sample to draw once, near-invisibly, for its pipelines.
+var _pipelines: Array[Callable] = []
+var _sample: Control = null
 
 
 ## `builders`: each makes one room, whole (every page, the roll's end), off
 ## the tree.
-func _init(builders: Array[Callable], title_rests: Callable) -> void:
+func _init(builders: Array[Callable], title_rests: Callable,
+		pipelines: Array[Callable] = []) -> void:
 	name = "RoomWarm"
 	_builders = builders
+	_pipelines = pipelines
 	rests = title_rests
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Under everything: the frames that draw the glyphs are hidden by the road.
@@ -59,13 +67,17 @@ func _init(builders: Array[Callable], title_rests: Callable) -> void:
 
 
 func done() -> bool:
-	return _builders.is_empty() and _jobs.is_empty() and _next_glyph >= _glyphs.size()
+	return _builders.is_empty() and _jobs.is_empty() and _next_glyph >= _glyphs.size() \
+		and _pipelines.is_empty() and _sample == null
 
 
 func _process(delta: float) -> void:
 	var resting: bool = rests.call() if rests.is_valid() else true
 	if not resting:
 		_rested = 0.0
+		if _sample != null:
+			_sample.queue_free()
+			_sample = null
 		return
 	_rested += delta
 	if _rested < REST:
@@ -90,6 +102,15 @@ func _process(delta: float) -> void:
 	if _next_glyph < _glyphs.size():
 		_draw_due = true
 		queue_redraw()
+		return
+	if _sample != null:
+		_sample.queue_free()
+		_sample = null
+	if not _pipelines.is_empty():
+		_sample = _pipelines.pop_front().call()
+		if _sample != null:
+			_sample.modulate.a = 0.004
+			add_child(_sample)
 		return
 	queue_free()
 
