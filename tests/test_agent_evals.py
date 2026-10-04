@@ -51,6 +51,16 @@ def make_cases(count: int = 10) -> list[Case]:
     return cases
 
 
+def healthy_results(case_ids: tuple[str, ...] = ("c1", "c2"), **changes: object) -> dict:
+    """A results.json that can back a grader approval: current, complete, healthy and isolated."""
+    base = {"cases_sha256": "h1", "surface_sha256": "s1", "status": "ok", "case_ids": list(case_ids),
+            "backend": {"backend": "claude-cli", "isolation": "safe-mode", "allow_ambient": False},
+            "models": {"haiku": {}, "sonnet": {}, "opus": {}},
+            "diagnostics": {"infra": {"rate": 0.0}, "infra_threshold": 0.05,
+                            "trivial_answerers": {"max": 0.1, "limit": 0.25}, "headroom_flagged": []}}
+    return {**base, **changes}
+
+
 def model_script(markers: tuple[str, ...] = ("GENERAL",)):
     """Answers well when the surface carries a marker or a per-case ONLY token."""
     def script(system: str, prompt: str, model: str) -> str:
@@ -441,28 +451,31 @@ class ApprovalTests(unittest.TestCase):
         self.dir = Path(tempfile.mkdtemp(prefix="agent-evals-approvals-"))
         self.addCleanup(lambda: __import__("shutil").rmtree(self.dir, ignore_errors=True))
 
+    def approve(self, ids: list[str], read: list[str]) -> dict:
+        return approvals.approve_grader(self.dir, "h1", "s1", ids, "run-1", read, healthy_results(),
+                                        ["c1", "c2"])
+
     def test_hillclimb_refuses_without_both_approvals_or_with_a_stale_hash(self) -> None:
         with self.assertRaises(approvals.ApprovalError):
-            approvals.require_approvals(self.dir, "h1")
+            approvals.require_approvals(self.dir, "h1", "s1", "sonnet")
         approvals.approve_inputs(self.dir, "h1")
         with self.assertRaisesRegex(approvals.ApprovalError, "grader"):
-            approvals.require_approvals(self.dir, "h1")
+            approvals.require_approvals(self.dir, "h1", "s1", "sonnet")
         ids = [f"transcripts/haiku/c{i}__r1.json" for i in range(9)]
-        sample = approvals.sample_transcript_ids(ids, "run-1")
-        approvals.approve_grader(self.dir, "h1", ids, "run-1", sample)
-        approvals.require_approvals(self.dir, "h1")
+        self.approve(ids, approvals.sample_transcript_ids(ids, "run-1"))
+        approvals.require_approvals(self.dir, "h1", "s1", "sonnet")
         with self.assertRaisesRegex(approvals.ApprovalError, "stale"):
-            approvals.require_approvals(self.dir, "h2")
+            approvals.require_approvals(self.dir, "h2", "s1", "sonnet")
 
     def test_grader_approval_requires_the_sampled_transcripts_to_be_read(self) -> None:
         ids = [f"transcripts/haiku/c{i}__r1.json" for i in range(9)]
         sample = approvals.sample_transcript_ids(ids, "run-1")
         self.assertEqual(approvals.SAMPLE_SIZE, len(sample))
         with self.assertRaises(approvals.ApprovalError):
-            approvals.approve_grader(self.dir, "h1", ids, "run-1", sample[:-1])
+            self.approve(ids, sample[:-1])
         with self.assertRaises(approvals.ApprovalError):
-            approvals.approve_grader(self.dir, "h1", [], "run-1", [])
-        record = approvals.approve_grader(self.dir, "h1", ids, "run-1", sample)
+            self.approve([], [])
+        record = self.approve(ids, sample)
         self.assertEqual("h1", record["cases_sha256"])
         self.assertTrue(record["by"] and record["at"])
 

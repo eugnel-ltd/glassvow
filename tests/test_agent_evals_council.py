@@ -17,7 +17,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from test_agent_evals import ROOT, make_cases  # noqa: E402
+from test_agent_evals import ROOT, healthy_results, make_cases  # noqa: E402
 
 from agent_evals import approvals, cli  # noqa: E402
 from agent_evals.diagnostics import (TRIVIAL_LIMIT, case_soup, compact_soup,  # noqa: E402
@@ -125,14 +125,11 @@ class TrivialAnswererTests(unittest.TestCase):
         self.assertGreater(scores["max"], TRIVIAL_LIMIT)
 
     def test_approve_grader_refuses_when_the_current_cases_fail_the_soup_check(self) -> None:
-        healthy = {"cases_sha256": "h1", "status": "ok", "case_ids": ["c1"],
-                   "diagnostics": {"infra": {"rate": 0.0}, "infra_threshold": 0.05,
-                                   "trivial_answerers": {"max": 0.1, "limit": 0.25},
-                                   "headroom_flagged": []}}
+        healthy = healthy_results(("c1",))
         live = trivial_answerer_scores(self.lenient())
         with self.assertRaisesRegex(approvals.ApprovalError, "too lenient"):
-            approvals.check_run_eligible(healthy, "h1", ["c1"], live)
-        approvals.check_run_eligible(healthy, "h1", ["c1"], self.scores)
+            approvals.check_run_eligible(healthy, "h1", "s1", ["c1"], live)
+        approvals.check_run_eligible(healthy, "h1", "s1", ["c1"], self.scores)
 
 
 class NegationSafetyTests(unittest.TestCase):
@@ -481,9 +478,12 @@ class DelegatedApprovalTests(unittest.TestCase):
     def test_the_grader_approval_keeps_the_sampled_transcript_rule_when_delegated(self) -> None:
         ids = [f"transcripts/haiku/c{i}__r1.json" for i in range(9)]
         sample = approvals.sample_transcript_ids(ids, "run-1")
+        def approve(read: list[str]) -> dict:
+            return approvals.approve_grader(self.dir, "h1", "s1", ids, "run-1", read, healthy_results(),
+                                            ["c1", "c2"], delegation=self.delegation())
         with self.assertRaises(approvals.ApprovalError):
-            approvals.approve_grader(self.dir, "h1", ids, "run-1", sample[:-1], delegation=self.delegation())
-        record = approvals.approve_grader(self.dir, "h1", ids, "run-1", sample, delegation=self.delegation())
+            approve(sample[:-1])
+        record = approve(sample)
         self.assertEqual("orchestrator", record["by"])
         self.assertEqual(self.text, record["delegated_by"])
 

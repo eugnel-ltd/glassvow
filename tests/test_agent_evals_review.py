@@ -2,6 +2,8 @@
 """Review-driven tests for the agent eval harness: parity, confirmation, graders, approvals."""
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import os
 import subprocess
@@ -9,12 +11,14 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_agent_evals import (ROOT, SURFACE, FakeBackend, Workspace, diff_adding,  # noqa: E402
-                              make_cases, model_script, proposer_script)
+                              healthy_results, make_cases, model_script, proposer_script)
 
-from agent_evals import approvals  # noqa: E402
+from agent_evals import approvals, cli  # noqa: E402
 from agent_evals.backends import ClaudeCliBackend  # noqa: E402
 from agent_evals.baseline import run_baseline  # noqa: E402
 from agent_evals.decision import Deltas, Noise, decide  # noqa: E402
@@ -115,6 +119,21 @@ class FinishTests(unittest.TestCase):
         self.assertIn("Confirmatory rerun", report)
         self.assertIn("original 0.0%, best 100.0%", report)
 
+    def test_the_rerun_gain_must_clear_min_gain_as_well_as_the_noise(self) -> None:
+        for min_gain, verdict in ((0.3, "do not merge (within noise)"), (0.2, "merge recommended")):
+            workspace = Workspace(self)
+            one = sorted(workspace.split["test"])[0]
+            climb = workspace.climb(FakeBackend(model_script()), FakeBackend(proposer_script([])),
+                                    min_gain=min_gain)
+            climb.noise = NOISE
+            climb.work.parent.mkdir(parents=True)
+            versions = [Version(0, "v0", card(0.0, 100, workspace)),
+                        Version(1, f"v1 ONLY-{one}", card(0.9, 100, workspace))]
+            climb.baseline = versions[0].card
+            summary = climb._finish(versions, "completed")
+            self.assertAlmostEqual(0.25, summary["confirmation"]["test_gain"])  # 1 of 4 test cases
+            self.assertEqual(verdict, summary["verdict"], min_gain)
+
     def test_a_gain_the_rerun_does_not_reproduce_is_not_recommended(self) -> None:
         workspace, climb, versions = finishing_climb(
             self, "accuracy", ["v0", "v1 with no real effect"], [(0.5, 100), (0.9, 100)])
@@ -174,11 +193,7 @@ class ApprovalProvenanceTests(unittest.TestCase):
     CASES = ["c1", "c2"]
 
     def results(self, **changes) -> dict:
-        base = {"cases_sha256": "h1", "status": "ok", "case_ids": self.CASES,
-                "diagnostics": {"infra": {"rate": 0.0}, "infra_threshold": 0.05,
-                                "trivial_answerers": {"max": 0.1, "limit": 0.25},
-                                "headroom_flagged": []}}
-        return {**base, **changes}
+        return healthy_results(**{"case_ids": tuple(self.CASES), **changes})
 
     def test_approvals_refuse_without_a_tty(self) -> None:
         class Pipe:
@@ -199,9 +214,15 @@ class ApprovalProvenanceTests(unittest.TestCase):
             self.assertIn("interactive terminal", done.stderr)
 
     def test_the_backing_run_must_be_current_complete_healthy_and_strict(self) -> None:
-        approvals.check_run_eligible(self.results(), "h1", self.CASES)
+        approvals.check_run_eligible(self.results(), "h1", "s1", self.CASES)
+        ambient = {"backend": "claude-cli", "isolation": "ambient", "allow_ambient": True}
+        allowed_but_isolated = {"backend": "claude-cli", "isolation": "safe-mode", "allow_ambient": True}
         bad = {
-            "stale cases": (self.results(cases_sha256="old"), "stale"),
+            "stale cases": (self.results(cases_sha256="old"), "stale cases_sha256"),
+            "stale surface": (self.results(surface_sha256="old"), "stale surface_sha256"),
+            "ambient run": (self.results(backend=ambient), "allow-ambient-context"),
+            "ambient flag": (self.results(backend=allowed_but_isolated), "allow-ambient-context"),
+            "no backend": (self.results(backend=None), "no backend"),
             "failed status": (self.results(status="failed"), "status"),
             "smoke run": (self.results(case_ids=["c1"]), "every case"),
             "infra": (self.results(diagnostics={**self.results()["diagnostics"],
@@ -212,29 +233,80 @@ class ApprovalProvenanceTests(unittest.TestCase):
         }
         for label, (results, needle) in bad.items():
             with self.subTest(label), self.assertRaisesRegex(approvals.ApprovalError, needle):
-                approvals.check_run_eligible(results, "h1", self.CASES)
+                approvals.check_run_eligible(results, "h1", "s1", self.CASES)
 
-    def test_grader_approval_is_withheld_for_an_ineligible_run(self) -> None:
+    def directory(self) -> Path:
         directory = Path(tempfile.mkdtemp(prefix="agent-evals-approvals-"))
         self.addCleanup(lambda: __import__("shutil").rmtree(directory, ignore_errors=True))
+        return directory
+
+    def test_grader_approval_is_withheld_for_an_ineligible_or_missing_run(self) -> None:
+        directory = self.directory()
         ids = [f"transcripts/haiku/c{i}__r1.json" for i in range(6)]
         sample = approvals.sample_transcript_ids(ids, "run")
-        with self.assertRaises(approvals.ApprovalError):
-            approvals.approve_grader(directory, "h1", ids, "run", sample,
-                                     self.results(status="failed"), self.CASES)
+        for results, needle in ((self.results(status="failed"), "status"), (None, "no baseline results")):
+            with self.subTest(needle), self.assertRaisesRegex(approvals.ApprovalError, needle):
+                approvals.approve_grader(directory, "h1", "s1", ids, "run", sample, results, self.CASES)
         self.assertFalse((directory / "approvals.json").exists())
 
-    def test_hillclimb_refuses_a_baseline_with_no_headroom_unless_allowed(self) -> None:
-        directory = Path(tempfile.mkdtemp(prefix="agent-evals-approvals-"))
-        self.addCleanup(lambda: __import__("shutil").rmtree(directory, ignore_errors=True))
+    def test_headroom_is_checked_for_the_model_being_climbed_only(self) -> None:
+        directory = self.directory()
         ids = [f"transcripts/haiku/c{i}__r1.json" for i in range(6)]
-        flagged = self.results(diagnostics={**self.results()["diagnostics"], "headroom_flagged": ["opus"]})
+        flagged = self.results(models={"haiku": {}, "opus": {}},
+                               diagnostics={**self.results()["diagnostics"], "headroom_flagged": ["opus"]})
         approvals.approve_inputs(directory, "h1")
-        approvals.approve_grader(directory, "h1", ids, "run",
+        approvals.approve_grader(directory, "h1", "s1", ids, "run",
                                  approvals.sample_transcript_ids(ids, "run"), flagged, self.CASES)
-        with self.assertRaisesRegex(approvals.ApprovalError, "headroom"):
-            approvals.require_approvals(directory, "h1")
-        approvals.require_approvals(directory, "h1", allow_no_headroom=True)
+        approvals.require_approvals(directory, "h1", "s1", "haiku")  # opus's ceiling does not block haiku
+        with self.assertRaisesRegex(approvals.ApprovalError, "no headroom for opus"):
+            approvals.require_approvals(directory, "h1", "s1", "opus")
+        approvals.require_approvals(directory, "h1", "s1", "opus", allow_no_headroom=True)
+        with self.assertRaisesRegex(approvals.ApprovalError, "did not run 'sonnet'"):
+            approvals.require_approvals(directory, "h1", "s1", "sonnet", allow_no_headroom=True)
+        record = json.loads((directory / "approvals.json").read_text())["grader"]
+        self.assertEqual((["haiku", "opus"], ["opus"]), (record["models"], record["headroom_flagged"]))
+
+    def test_the_grader_approval_is_bound_to_the_surface(self) -> None:
+        directory = self.directory()
+        ids = [f"transcripts/haiku/c{i}__r1.json" for i in range(6)]
+        approvals.approve_inputs(directory, "h1")
+        record = approvals.approve_grader(directory, "h1", "s1", ids, "run",
+                                          approvals.sample_transcript_ids(ids, "run"), self.results(),
+                                          self.CASES)
+        self.assertEqual("s1", record["surface_sha256"])
+        approvals.require_approvals(directory, "h1", "s1", "sonnet")
+        with self.assertRaisesRegex(approvals.ApprovalError, "surface changed"):
+            approvals.require_approvals(directory, "h1", "s2", "sonnet")
+
+    def test_hillclimb_and_the_backend_record_refuse_ambient_context(self) -> None:
+        done = subprocess.run([sys.executable, str(ROOT / "tools/agent_evals/cli.py"), "hillclimb",
+                               "repo_traps", "--allow-ambient-context"],
+                              capture_output=True, text=True, check=False)
+        self.assertEqual(1, done.returncode)
+        self.assertIn("refuses --allow-ambient-context", done.stderr)
+        self.assertNotIn("Traceback", done.stderr)
+
+        def run(command, **kwargs):
+            return subprocess.CompletedProcess(command, 0, "--safe-mode --setting-sources --tools "
+                                               "--strict-mcp-config --system-prompt "
+                                               "--disable-slash-commands --no-session-persistence", "")
+        self.assertTrue(ClaudeCliBackend(allow_ambient=True, runner=run).describe()["allow_ambient"])
+        self.assertFalse(ClaudeCliBackend(runner=run).describe()["allow_ambient"])
+
+    def test_approve_grader_reports_a_missing_results_file_without_a_traceback(self) -> None:
+        directory = self.directory()
+        evidence = directory / "council.md"
+        evidence.write_text("# report\n", encoding="utf-8")
+        spec = SimpleNamespace(directory=directory, build_dir=directory / "build", cases_sha256="h1",
+                               surface_sha256="s1")
+        stderr = io.StringIO()
+        with mock.patch.object(cli, "_load", return_value=(spec, [])), contextlib.redirect_stderr(stderr):
+            code = cli.main(["approve-grader", "synthetic", "--run", "never-ran",
+                             "--delegated", "test", "--evidence", str(evidence)])
+        self.assertEqual(1, code)
+        self.assertIn("results.json", stderr.getvalue())
+        self.assertIn("run `baseline", stderr.getvalue())
+        self.assertFalse((directory / "approvals.json").exists())
 
 
 class IsolationCanaryTests(unittest.TestCase):

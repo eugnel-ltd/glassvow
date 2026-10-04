@@ -9,7 +9,7 @@ from pathlib import Path
 from .graders import validate_grader_spec
 from .patching import DEFAULT_MIN_SPAN, find_shared_span
 from .models import (BUILD_ROOT, EVALS_DIR, REPO_ROOT, Case, EvalError, case_from_json,
-                     read_json, sha256_file)
+                     read_json, sha256_file, sha256_text)
 
 REFERENCE_PATTERN = re.compile(r"^(?:#\d+|PR #\d+|issue #\d+)$")
 
@@ -31,6 +31,11 @@ class EvalSpec:
     @property
     def cases_sha256(self) -> str:
         return sha256_file(self.cases_path)
+
+    @property
+    def surface_sha256(self) -> str:
+        """The surface's hash as a baseline records it: sha256 of its UTF-8 text."""
+        return sha256_text(self.surface.read_text(encoding="utf-8"))
 
     @property
     def build_dir(self) -> Path:

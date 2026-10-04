@@ -57,13 +57,22 @@ def require_tty(stream: TextIO) -> None:
         raise ApprovalError("approvals need an interactive terminal (stdin is not a TTY)")
 
 
-def check_run_eligible(results: Mapping[str, Any], cases_sha256: str,
+def check_run_eligible(results: Mapping[str, Any], cases_sha256: str, surface_sha256: str,
                        case_ids: Sequence[str], live_trivial: Mapping[str, Any] | None = None) -> None:
-    """The baseline run behind a grader approval must be a complete, healthy, current run."""
+    """The run behind a grader approval must be a complete, healthy, isolated run of the current
+    cases and surface."""
     diagnostics = results.get("diagnostics", {})
+    backend = results.get("backend") or {}
     problems = []
     if results.get("cases_sha256") != cases_sha256:
         problems.append("the run was made on different cases (stale cases_sha256)")
+    if results.get("surface_sha256") != surface_sha256:
+        problems.append("the run was made on a different surface (stale surface_sha256)")
+    if not backend:
+        problems.append("the run records no backend, so its isolation is unknown")
+    elif backend.get("isolation") == "ambient" or backend.get("allow_ambient"):
+        problems.append("the run was made with --allow-ambient-context, so CLAUDE.md, memory and "
+                        "settings may have reached the model")
     if results.get("status") != "ok":
         problems.append(f"the run status is {results.get('status')!r}, not 'ok'")
     if set(results.get("case_ids", [])) != set(case_ids):
@@ -81,28 +90,37 @@ def check_run_eligible(results: Mapping[str, Any], cases_sha256: str,
         raise ApprovalError("this run cannot back a grader approval: " + "; ".join(problems))
 
 
-def approve_grader(eval_dir: Path, cases_sha256: str, transcript_ids: Sequence[str],
-                   seed: str, read: Sequence[str], results: Mapping[str, Any] | None = None,
-                   case_ids: Sequence[str] = (), delegation: Mapping[str, Any] | None = None,
+def approve_grader(eval_dir: Path, cases_sha256: str, surface_sha256: str,
+                   transcript_ids: Sequence[str], seed: str, read: Sequence[str],
+                   results: Mapping[str, Any] | None, case_ids: Sequence[str],
+                   delegation: Mapping[str, Any] | None = None,
                    live_trivial: Mapping[str, Any] | None = None) -> dict:
-    """Record grader approval only for a healthy full run and if every sampled transcript was read."""
-    if results is not None:
-        check_run_eligible(results, cases_sha256, case_ids, live_trivial)
+    """Record grader approval only for a healthy full run and if every sampled transcript was read.
+
+    The record is bound to the cases and the surface the run used, and names the models it ran.
+    """
+    if results is None:
+        raise ApprovalError("no baseline results to check; run `baseline` first")
+    check_run_eligible(results, cases_sha256, surface_sha256, case_ids, live_trivial)
     if not transcript_ids:
         raise ApprovalError("no scored transcripts to sample; run `baseline` first")
     required = sample_transcript_ids(transcript_ids, seed)
     unread = sorted(set(required) - set(read))
     if unread:
         raise ApprovalError(f"open these transcripts, then pass them via --read: {unread}")
-    flagged = (results or {}).get("diagnostics", {}).get("headroom_flagged", [])
-    return _record(eval_dir, "grader", cases_sha256, read=sorted(required), run=seed,
+    flagged = results.get("diagnostics", {}).get("headroom_flagged", [])
+    return _record(eval_dir, "grader", cases_sha256, surface_sha256=surface_sha256,
+                   read=sorted(required), run=seed, models=sorted(results.get("models", {})),
                    headroom_flagged=flagged, **(delegation or {}))
 
 
 COMMANDS = {"inputs": "approve-inputs", "grader": "approve-grader"}
 
 
-def require_approvals(eval_dir: Path, cases_sha256: str, allow_no_headroom: bool = False) -> None:
+def require_approvals(eval_dir: Path, cases_sha256: str, surface_sha256: str, model: str,
+                      allow_no_headroom: bool = False) -> None:
+    """Both approvals must match the current cases; the grader's must match the surface too, and
+    its baseline must have run the model being climbed with headroom left."""
     approvals = _load(eval_dir)
     for kind, command in COMMANDS.items():
         entry = approvals.get(kind)
@@ -110,7 +128,13 @@ def require_approvals(eval_dir: Path, cases_sha256: str, allow_no_headroom: bool
             raise ApprovalError(f"the {kind} are not approved; run `{command}`")
         if entry["cases_sha256"] != cases_sha256:
             raise ApprovalError(f"the {kind} approval is stale: cases.jsonl changed since it was given")
-    flagged = approvals["grader"].get("headroom_flagged", [])
-    if flagged and not allow_no_headroom:
-        raise ApprovalError(f"the approved baseline had no headroom for {flagged} (above 95%); "
-                            "pass --allow-no-headroom to climb anyway")
+    grader = approvals["grader"]
+    if grader.get("surface_sha256") != surface_sha256:
+        raise ApprovalError("the grader approval is stale: the surface changed since its baseline "
+                            "ran; run `baseline` and `approve-grader` again")
+    if model not in grader.get("models", []):
+        raise ApprovalError(f"the approved baseline did not run {model!r}, so its headroom is "
+                            "unknown; run `baseline` with that model")
+    if model in grader.get("headroom_flagged", []) and not allow_no_headroom:
+        raise ApprovalError(f"the approved baseline had no headroom for {model} (above 95%); "
+                            "pass --allow-no-headroom to climb it anyway")

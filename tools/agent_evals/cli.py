@@ -78,16 +78,26 @@ def _run_transcripts(run_dir: Path) -> list[str]:
     return sorted(str(p.relative_to(run_dir)) for p in (run_dir / "transcripts").glob("*/*.json"))
 
 
+def _read_results(run_dir: Path) -> dict:
+    """A run's results.json; a missing or unreadable file is a refusal, not a traceback."""
+    path = run_dir / "results.json"
+    try:
+        return read_json(path)
+    except (OSError, ValueError) as error:
+        raise approvals.ApprovalError(f"cannot read {path} ({type(error).__name__}); run "
+                                      f"`baseline --run-id {run_dir.name}` first") from error
+
+
 def cmd_approve_grader(args: argparse.Namespace) -> int:
     delegation = _delegation(args)
     spec, cases = _load(args)
     run_dir = spec.build_dir / args.run
-    results = read_json(run_dir / "results.json")
+    results = _read_results(run_dir)
     ids = _run_transcripts(run_dir)
     sample = approvals.sample_transcript_ids(ids, args.run)
     try:
-        entry = approvals.approve_grader(spec.directory, spec.cases_sha256, ids, args.run,
-                                         args.read.split(",") if args.read else [],
+        entry = approvals.approve_grader(spec.directory, spec.cases_sha256, spec.surface_sha256, ids,
+                                         args.run, args.read.split(",") if args.read else [],
                                          results, [c.id for c in cases], delegation,
                                          trivial_answerer_scores(cases))
     except approvals.ApprovalError as error:
@@ -124,12 +134,17 @@ def cmd_baseline(args: argparse.Namespace) -> int:
 
 
 def cmd_hillclimb(args: argparse.Namespace) -> int:
+    if args.allow_ambient_context:
+        raise approvals.ApprovalError("hillclimb refuses --allow-ambient-context: a climb scored on "
+                                      "runs that CLAUDE.md, memory or settings can reach proves nothing")
     spec, cases = _load(args)
-    approvals.require_approvals(spec.directory, spec.cases_sha256, args.allow_no_headroom)
+    model = args.model or spec.hillclimb_model
+    approvals.require_approvals(spec.directory, spec.cases_sha256, spec.surface_sha256, model,
+                                args.allow_no_headroom)
     split = splitting.load_split(spec.directory / "split.json", [c.id for c in cases],
                                  spec.cases_sha256)
     config = HillclimbConfig(
-        goal=args.goal, model=args.model or spec.hillclimb_model,
+        goal=args.goal, model=model,
         proposer_model=args.proposer_model, reps=args.reps, round_reps=args.round_reps,
         rounds=args.rounds, stall=args.stall, min_gain=args.min_gain, timeout_s=args.timeout,
         infra_threshold=args.infra_threshold, workers=args.workers)
@@ -222,7 +237,7 @@ def build_parser() -> argparse.ArgumentParser:
     climb.add_argument("--stall", type=int, default=3)
     climb.add_argument("--min-gain", type=float, default=0.05)
     climb.add_argument("--allow-no-headroom", action="store_true",
-                       help="climb even though the approved baseline scored above 95%%")
+                       help="climb even though the approved baseline scored this model above 95%%")
     smoke = commands.add_parser("smoke-isolation", help="opt-in negative control for the claude -p isolation")
     smoke.add_argument("--model", default="haiku")
     smoke.add_argument("--timeout", type=float, default=120.0)

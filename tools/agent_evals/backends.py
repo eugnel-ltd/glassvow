@@ -108,6 +108,7 @@ class ClaudeCliBackend:
 
     def describe(self) -> dict[str, Any]:
         return {"backend": "claude-cli", "isolation": "safe-mode" if self._isolated() else "ambient",
+                "allow_ambient": self.allow_ambient,
                 "flags": [flag for flag in self.build_command("<surface>", "<model>")[1:]]}
 
     def _isolated(self) -> bool:

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Callable, Sequence
 
 from .backends import Backend
-from .decision import Deltas, Noise, decide
+from .decision import Deltas, Noise, decide, improved
 from .evalspec import EvalSpec
 from .models import Case, EvalError, write_json
 from .patching import DEFAULT_MIN_SPAN, PatchError, apply_unified_diff, find_injection
@@ -237,7 +237,7 @@ class Climb:
         cost = {n: mean([t["cost_tokens"] for t in r.transcripts]) for n, r in runs.items()}
         gain, drop = score["best"] - score["baseline"], cost["baseline"] - cost["best"]
         if self.cfg.goal == "accuracy":
-            ok = gain > self.noise.test
+            ok = improved(gain, self.noise.test, self.cfg.min_gain)
         else:
             ok = (drop > self.noise.cost and gain >= -self.noise.test
                   and best.card.train - self.baseline.train >= -self.noise.train)

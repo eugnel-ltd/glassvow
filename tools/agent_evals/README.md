@@ -97,12 +97,19 @@ because a list of their words can fall into that order by chance.
 **Human checkpoints.** `review` writes every case input with its source and why_hard.
 `approve-inputs` and `approve-grader` record who, when and the sha256 of `cases.jsonl` in
 `approvals.json` in the eval directory, and refuse unless stdin is an interactive terminal, so an
-agent shell cannot approve. `approve-grader` also checks that the run's `results.json` carries the
-current cases hash, status `ok`, every case (not an `--only` smoke run), an infrastructure rate within
-its threshold and no trivial answerer above 25%; it then prints a deterministic sample of five scored
-transcripts and only records approval when `--read` lists them all. `hillclimb` refuses to run unless
-both approvals exist and match the current cases hash, and refuses when the approved baseline scored
-above 95% for any model (no headroom) unless `--allow-no-headroom` is passed.
+agent shell cannot approve. `approve-grader` needs the run's `results.json` (a missing or unreadable
+file is an error, never a traceback, and `approve_grader` refuses when given no results) and checks
+that it carries the current cases hash and the current surface hash, status `ok`, every case (not an
+`--only` smoke run), an infrastructure rate within its threshold, no trivial answerer above 25%, and an
+isolated backend: a run made with `--allow-ambient-context` (`"isolation": "ambient"`, or
+`"allow_ambient": true` in its backend record) cannot back an approval. It then prints a deterministic
+sample of five scored transcripts and only records approval when `--read` lists them all; the grader
+approval also records the surface hash, the models the run used and the models it flagged for
+headroom. `hillclimb` refuses `--allow-ambient-context` outright, and refuses to run unless both
+approvals exist and match the current cases hash, the grader approval matches the current surface
+hash, and its baseline ran the model being climbed. Headroom is judged for that model alone: the climb
+is refused when the approved baseline scored that model above 95% unless `--allow-no-headroom` is
+passed, and another model's ceiling does not block it.
 
 **Delegated approval.** The interactive-terminal guard is the default. The only non-interactive
 path is for an owner's explicit delegation, and it is recorded in the approval file:
@@ -151,7 +158,8 @@ healthy full run and the sampled transcripts in `--read`.
   parity against the baseline. The result is written as `best_surface.md` with `best.diff`.
 - **Confirmatory rerun.** Before any `merge recommended`, the original surface and the chosen best are
   both re-run on the test set at `--reps` repetitions, and the verdict rests on those paired runs:
-  `accuracy` needs the test gain to exceed the test noise; `cost-at-parity` needs the cost drop to
+  `accuracy` needs the test gain to exceed both the test noise and `--min-gain` (the `improved` rule
+  each round uses); `cost-at-parity` needs the cost drop to
   exceed the cost noise with parity held. Both are recorded in `report.md`, with train and test
   scores (mean and 95% CI) for baseline and best and every round's decision and reason. Otherwise the
   verdict is `do not merge (within noise)`. This rerun also removes most of the selection effect of
@@ -206,7 +214,9 @@ truncated, usage)`.
   passed; with both, the reply was English and the input was just the surface plus the case
   (about 2,350 tokens). The backend checks `claude --help` for every flag and refuses to run
   if one is missing unless `--allow-ambient-context` is given, in which case CLAUDE.md,
-  memory, hooks and settings may leak and the transcripts say `"isolation": "ambient"`.
+  memory, hooks and settings may leak and the transcripts say `"isolation": "ambient"`. The flag is
+  also recorded (`"allow_ambient": true`); such a run is for smoke tests only and can never back a
+  grader approval.
   `python3 tools/agent_evals/cli.py smoke-isolation` is an opt-in negative control: it plants a canary
   instruction ("end every reply with PINEAPPLE-7731") in CLAUDE.md files in the backend's temporary
   working directory and in a throwaway HOME (never the real one), asks for one word, and fails if the
