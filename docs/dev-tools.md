@@ -284,6 +284,23 @@ tests cover the main application separately. `--measure` reports 120 warmed pan
 frames on the current host, including an explicit GPU-timer availability flag;
 it does not qualify release-device performance.
 
+**`tools/map_token_gate.gd` measures the waystone tokens' contrast in the
+rendered picture (#679).** It mounts the production map screen in the lean
+profile, walks `--steps` nodes in (two by default) so every token state stands
+on the land, and at each of the act's zoom stops (Act I's Close, Journey and
+Whole act; the painted acts' four camera stops) captures the window, then again
+with every glyph hidden. For each token it reads the glyph against the pane
+(4.5:1 open and current, 3:1 walked and cold) and, sector by sector, the better
+of rim and pane against the land 2–6 px out (3:1). It prints a `TOKEN` row per
+token and a `TOKEN_GATE` summary, saves each stop's capture, and exits 1 when a
+token fails. `tests/test_map_tokens.gd` holds the same gate in the headless
+suite from the token's own colours, against every land.
+
+```bash
+godot -s res://tools/map_token_gate.gd -- --act-index=0 --seed=1 \
+  --shape=phone-landscape --output=/tmp/tokens
+```
+
 **`tools/probe_layout.gd` reads the composition back rather than photographing
 it.** A capture shows where something LOOKS like it is; on a 390px phone that is
 how a twelve-pixel error survives. The probe builds the real `CombatScreen` at a

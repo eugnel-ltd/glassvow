@@ -1,11 +1,18 @@
 class_name GlassWaystone
 extends Control
 ## A waystone on the path band (concept brief §2): a faceted emblem seated on
-## a leaded glass pane, its rim kindled (ember) when reachable and dim glass
-## when not.
+## an opaque dark pane, its thin rim kindled gold where the player can go or
+## stands and silver where they have been or cannot go yet.
 ##
 ## Every benchmark node type has a compact emblem. An unlit node deliberately
 ## hides its true face until the player steps onto it.
+##
+## The token holds its own contrast on any land (#679): the pane is opaque in
+## every state, and its rim is light enough against it that whatever stands
+## behind, the rim or the pane separates the stone from it. A state is quieted
+## by its glyph's tone and its rim's, never by letting the land show through.
+## `tests/test_map_tokens.gd` holds the colours to that; `tools/map_token_gate.gd`
+## measures the rendered picture.
 
 signal chosen(index: int)
 
@@ -27,6 +34,38 @@ const CHIP_ICON: float = 13.0
 const CHIP_FONT_SIZE: int = 27
 const DRAG_SLOP: float = 12.0
 const GLYPH_KINDS: Array[String] = ["monster", "elite", "rest", "shop", "treasure", "event", "unlit", "monument", "boss"]
+
+## The token's states, as `token_state` decides them.
+const CURRENT: StringName = &"current"
+const OPEN: StringName = &"open"
+const WALKED: StringName = &"walked"
+const COLD: StringName = &"cold"
+## The pane in every state: the run screens' ink, opaque.
+const PANE: Color = LeadlightTokens.INK
+## The rim's width, in LOCAL px, inside the pane's radius so the token covers
+## no more ground than it did: 2 px on the phone (scale 0.58) and 3.2 on the pad
+## (0.92), wide enough that the rim's middle pixel shows the rim's own colour.
+const RIM_W: float = 3.5
+## Rim by state: gold where the player can go or stands, silver elsewhere. The
+## open rim throbs from gold towards `RIM_PEAK` and is held there under Reduce
+## Motion (`_process`).
+##
+## Every rim is at least 9:1 against `PANE`, and that is what makes the token
+## independent of the land: a land as dark as the pane meets the rim at 9:1, one
+## as light as the rim meets the pane at 9:1, and the land between, where the
+## two ratios cross, still meets one of them at the square root, 3:1.
+const RIM: Dictionary[StringName, Color] = {
+	CURRENT: LeadlightTokens.GOLD, OPEN: LeadlightTokens.GOLD,
+	WALKED: LeadlightTokens.TEXT, COLD: LeadlightTokens.TEXT,
+}
+const RIM_PEAK: Color = LeadlightTokens.PARCHMENT
+## Glyph by state: the rim's gold where the stone can be chosen or is stood on,
+## the cool glass grey where it cannot be reached yet, and the faintest tone on
+## the road already walked (4.6:1, where the old walked stone faded to half).
+const GLYPH: Dictionary[StringName, Color] = {
+	CURRENT: LeadlightTokens.GOLD, OPEN: LeadlightTokens.GOLD,
+	WALKED: LeadlightTokens.TEXT_FAINT, COLD: LeadlightTokens.GLASS_TEXT_DIM,
+}
 
 var index: int = 0
 var kind: String = "monster"
@@ -97,9 +136,7 @@ func set_state(is_reachable: bool, is_cleared: bool, is_current: bool = false) -
 	current = is_current
 	focus_mode = Control.FOCUS_ALL if reachable else Control.FOCUS_NONE
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if reachable else Control.CURSOR_ARROW
-	var art_tint: Color = Color("edce91") if reachable or current else Color("9caeae")
-	if cleared:
-		art_tint.a = 0.5
+	var art_tint: Color = GLYPH[token_state()]
 	_frame_art.modulate = art_tint
 	_glyph_art.modulate = art_tint
 	var text_col: Color = GlassStyle.TEXT if reachable else GlassStyle.TEXT_DIM
@@ -202,17 +239,15 @@ func set_depth_alpha(a: float) -> void:
 func _draw() -> void:
 	var cx: float = _pad.x + WIDTH * 0.5
 	var cy: float = _pad.y + EMBLEM_H * 0.5
-	var glow: float = (0.5 + 0.5 * sin(_pulse * 2.2)) if reachable else 0.0
+	var glow: float = _glow()
 	var radius: float = pane_radius()
 	if reachable or current:
 		draw_circle(Vector2(cx, cy), radius + 12.0,
 			Color(GlassStyle.EMBER.r, GlassStyle.EMBER.g, GlassStyle.EMBER.b, 0.08 + glow * 0.05))
-	draw_circle(Vector2(cx, cy), radius, Color(0.025, 0.044, 0.047, 0.75 if cleared else 0.96))
-	draw_arc(Vector2(cx, cy), radius - 1.0, 0.0, TAU, 48,
-		Color(0.57, 0.60, 0.51, 0.65 if reachable or current else 0.36), 1.2, true)
-	if reachable or current:
-		draw_arc(Vector2(cx, cy), radius + 5.0, 0.0, TAU, 32,
-			Color(0.94, 0.78, 0.48, 0.72 + glow * 0.22), 2.0, true)
+	# The rim is the pane's own outer band: one opaque disc in the rim's colour,
+	# then the pane over all of it but the band.
+	draw_circle(Vector2(cx, cy), radius, rim_colour(), true, -1.0, true)
+	draw_circle(Vector2(cx, cy), radius - RIM_W, PANE, true, -1.0, true)
 	# Keyboard focus speaks the game's own focus language: GOLD corner
 	# brackets (GlassStyle.focus_ring's hue), boxed rather than ringed, so it
 	# cannot be confused with the warm reachable ring, the glass edge dashes,
@@ -266,9 +301,30 @@ func _seat_art() -> void:
 	_glyph_art.size = Vector2.ONE * glyph_side
 
 
+## Which of the token's looks this stone wears: the one the player stands on,
+## one they can go to, one they have walked, or one they cannot reach yet.
+func token_state() -> StringName:
+	if current:
+		return CURRENT
+	if reachable:
+		return OPEN
+	return WALKED if cleared else COLD
+
+
+## The beckoning throb of an open stone, 0 to 1; still elsewhere.
+func _glow() -> float:
+	return (0.5 + 0.5 * sin(_pulse * 2.2)) if reachable else 0.0
+
+
+## The rim's colour this frame: the state's tone, an open stone's lifted by its
+## throb towards `RIM_PEAK`.
+func rim_colour() -> Color:
+	return RIM[token_state()].lerp(RIM_PEAK, _glow() * 0.5)
+
+
 ## Radius of this stone's pane, in LOCAL px — the visible edge everything else
-## measures against: the reachable ring at `+5`, the pulse halo at `+12`, the
-## focus bracket at `+8`, and the bounty chip's seat.
+## measures against: the rim inside it, the pulse halo at `+12`, the focus
+## bracket at `+8`, and the bounty chip's seat.
 ##
 ## A function because it was three-way branching arithmetic inside `_draw`, and
 ## `UNLIT_RADIUS`'s own docstring already promised nothing could disagree with

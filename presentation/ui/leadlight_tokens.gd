@@ -35,6 +35,9 @@ const PARCHMENT: Color = Color("#e8dfc8")
 ## Run-screen text (RunStyle.TEXT / TEXT_DIM).
 const TEXT: Color = Color("#d7dcea")
 const TEXT_DIM: Color = Color("#8b93ad")
+## The third, quietest step of the run text: 4.6:1 on `INK`, so it still reads
+## as text. A walked waystone's glyph (#679).
+const TEXT_FAINT: Color = Color("#757c92")
 ## Combat-glass text (GlassStyle.TEXT / TEXT_DIM): a cooler, brighter pair.
 const GLASS_TEXT: Color = Color(0.86, 0.90, 1.0)
 const GLASS_TEXT_DIM: Color = Color(0.58, 0.64, 0.80)

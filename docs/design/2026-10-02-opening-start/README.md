@@ -234,7 +234,7 @@ LeadlightTokens.GOLD`), so no screen changes when the kit lands.
 | Group | Tokens |
 |---|---|
 | Night | `VOID #05070e`, `INK #0b0e1a`, `FOG #141a2e`, `LEAD #04050b`, `PANEL rgba(14,18,34,.86)` |
-| Light | `GOLD #f2c14e`, `GOLD_DIM #9c7c34`, `EMBER #ff9a4d`, `PARCHMENT #e8dfc8`, `TEXT #d7dcea`, `TEXT_DIM #8b93ad`, `GLASS #8fd0ff`, `DANGER #ff8d8d` |
+| Light | `GOLD #f2c14e`, `GOLD_DIM #9c7c34`, `EMBER #ff9a4d`, `PARCHMENT #e8dfc8`, `TEXT #d7dcea`, `TEXT_DIM #8b93ad`, `TEXT_FAINT #757c92` (added for the walked waystone, #679), `GLASS #8fd0ff`, `DANGER #ff8d8d` |
 | Flame | read from `LanternFlame.COLOUR` (Frostlight `#8fd0ff`, Hearthfire `#f2c14e`, Eclipse `#9c2fa6`, Kindling `#e8702a`, Soot `#8a6e52`), never copied |
 | Type roles | `primary` Cinzel 700, 0.16 em (zh: Noto Serif TC Black, 0.42 em); `label` Cinzel 500, 0.14 em (zh SemiBold, 0.30 em); `carved` Cinzel 700, 0.32 em, gold at 55%; `read` Alegreya 400 (zh Regular). Faces always via `GlassStyle.face()`, so the CJK and symbol fallback chain is untouched. |
 | Type scale (pad / phone) | plaque 24 / 17, pane 15 / 12, quiet word 15 / 12, carved 14 / 11, read 16 / 14, caption 12 / 10. The floor is 10 px on phone and nothing interactive drops below 11 px. |
