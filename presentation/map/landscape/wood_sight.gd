@@ -93,17 +93,23 @@ func fits(tile: int, base: Vector3, scale_value: float) -> bool:
 	return true
 
 
-## The fine cells of one coarse cell, under the card's silhouette.
+## The fine cells of one coarse cell, under the card's silhouette: a cell is
+## under it where any of the silhouette's rows across the cell's height
+## covers the cell (a small card's rows are finer than the grid).
 func _fits_cell(tile: int, rect: Rect2, limit: float, coarse_column: int, coarse_row: int) -> bool:
 	var rows: PackedVector2Array = Atlas.spans[tile]
 	var row_height: float = rect.size.y / rows.size()
 	var pad: float = FINE * 0.5 / rect.size.x
 	for fy: int in range(coarse_row * COARSE, mini((coarse_row + 1) * COARSE, _fine_rows)):
-		var y: float = _origin.y + (fy + 0.5) * FINE
-		var band: int = floori((y - rect.position.y) / row_height)
-		if band < 0 or band >= rows.size():
+		var y: float = _origin.y + fy * FINE - rect.position.y
+		var first: int = maxi(0, floori(y / row_height))
+		var last: int = mini(rows.size() - 1, floori((y + FINE) / row_height))
+		if first > last:
 			continue
-		var span: Vector2 = rows[band]
+		var span: Vector2 = Vector2(INF, -INF)
+		for band: int in range(first, last + 1):
+			if rows[band].x <= rows[band].y:
+				span = Vector2(minf(span.x, rows[band].x), maxf(span.y, rows[band].y))
 		if span.x > span.y:
 			continue
 		for fx: int in range(coarse_column * COARSE, mini((coarse_column + 1) * COARSE, _fine_columns)):

@@ -116,18 +116,38 @@ static func _write(buffer: PackedFloat32Array, at: int, pose: Transform3D, colou
 	buffer[at + 19] = custom.w
 
 
-## A plant's tint: each kind's own range, varied by where it stands.
+## Each kind's tint on its baked colours (linear, against the golden-hour key
+## light and the stage's grade): a plant takes a colour between the pair, by
+## where it stands and weighted toward the first, at `BRIGHTNESS` of it. The
+## spruce near black-green, the crimson crowns toward the target's crimson
+## (blue lifted, green cut), rust and amber deep and dull so they stay a
+## minority, the olive and dark undergrowth green, the red undergrowth crimson.
+const TINTS: Dictionary = {
+	"conifer": [Color(0.78, 1.0, 0.84), Color(0.7, 0.92, 0.8)],
+	"conifer-spire": [Color(0.78, 1.0, 0.84), Color(0.7, 0.92, 0.8)],
+	"conifer-wind": [Color(0.78, 1.0, 0.84), Color(0.7, 0.92, 0.8)],
+	"ember-oak": [Color(0.95, 0.5, 1.5), Color(1.05, 0.66, 1.1)],
+	"ember-round": [Color(0.95, 0.5, 1.5), Color(1.05, 0.66, 1.1)],
+	"rust-oak": [Color(0.72, 0.4, 0.5), Color(0.78, 0.5, 0.5)],
+	"amber-round": [Color(0.62, 0.38, 0.42), Color(0.7, 0.46, 0.44)],
+	"olive-heath": [Color(0.42, 0.74, 0.52), Color(0.5, 0.78, 0.54)],
+	"dark-copse": [Color(0.78, 0.98, 0.82), Color(0.86, 1.0, 0.84)],
+	"ash-heath": [Color(0.98, 0.62, 1.4), Color(1.02, 0.74, 1.1)],
+	"ash-copse": [Color(0.98, 0.62, 1.4), Color(1.02, 0.74, 1.1)],
+	"ash-bramble": [Color(1.0, 0.78, 0.96), Color(1.0, 0.86, 0.9)],
+	"ash-fern": [Color(0.9, 0.92, 0.86), Color(0.96, 0.9, 0.86)],
+}
+const BRIGHTNESS: Vector2 = Vector2(0.85, 1.13)
+
+
+## A plant's tint: its kind's pair, varied by where it stands.
 static func tint_for(kind: String, base: Vector3) -> Color:
 	var h: float = Planting._hash(base)
 	var g: float = fposmod(h * 7.13, 1.0)
-	if kind.begins_with("conifer"):
-		return Color(0.82, 1.04, 0.84) * (0.85 + 0.3 * g)
-	if kind == "ember-oak" or kind == "ember-round":
-		# Crimson to ember orange, as the target's crowns run.
-		return Color(1.04, 0.74, 0.88).lerp(Color(1.22, 0.98, 0.82), h * h * h) * (0.85 + 0.28 * g)
-	if kind == "rust-oak" or kind == "amber-round":
-		return Color(1, 1, 1) * (0.85 + 0.3 * g)
-	return Color(1.0, 0.9, 0.95) * (0.88 + 0.24 * g)
+	var pair: Array = TINTS[kind]
+	var low: Color = pair[0]
+	var high: Color = pair[1]
+	return low.lerp(high, h * h) * lerpf(BRIGHTNESS.x, BRIGHTNESS.y, g)
 
 
 ## The trees' shadow casters, one draw per cell and shape.

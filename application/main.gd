@@ -694,6 +694,7 @@ func _apply_shape() -> void:
 		return
 	var device: StringName = StageShape.class_for(OS.get_name(), _screen_diagonal())
 	var shape: StringName = StageShape.pick(px, device, _forced_shape)
+	MapJourneyLandscape.ImpostorWood.Planting.stage_shape = shape
 	var size: Vector2i = StageShape.stage_size(shape, px)
 	if shape == _shape and window.content_scale_size == size:
 		return

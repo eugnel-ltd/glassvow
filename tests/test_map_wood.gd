@@ -1,13 +1,16 @@
 extends RefCounted
 ## Act I's woodland as impostor cards (R3.1, issue #660) on the production
-## path: the baked atlas and how it loads, where the wood stands (off the roads, the river, the
-## bridges and the stones, and never hiding a road's centreline or covering a
-## waystone's touch square), its mix of kinds and crown sizes, its draws and
-## their sway, and the clip slab it must fit.
+## path: the baked atlas and how it loads, where the wood stands (off the
+## roads, the river, the bridges and the stones), what every card leaves in
+## sight (a road's centreline, a bridge deck, a lamp's flame, the river's water,
+## a rock's body, a waystone's touch square), its mix of kinds by plants and by
+## the canopy each shows, its crown sizes, its draws and their sway, and the
+## clip slab it must fit.
 
 const Atlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
 const Planting = preload("res://presentation/map/landscape/wood_planting.gd")
 const Landform = preload("res://presentation/map/landscape/landform.gd")
+const River = preload("res://presentation/map/landscape/river.gd")
 const SEED: int = 717
 
 
@@ -20,6 +23,7 @@ static func run(fails: Array[String]) -> void:
 	MapJourneyLandscape.Kit.preload_scenes()
 	_atlas(fails)
 	_loading(fails)
+	_squares(fails)
 	_slab(fails)
 	var content: ContentDB = ContentDB.load_full()
 	var run_state: RunState = RunState.new_run(content, SEED, "run-map-wood")
@@ -103,6 +107,21 @@ static func _loading(fails: Array[String]) -> void:
 	_check(fails, missing.failed and missing.step(true), "a missing atlas ends the wait at once")
 
 
+## A waystone's touch square on the picture plane is the shape's own: the
+## pad's and the desktop's 60 px of 820 (1.4 m at the Journey zoom), the
+## phone's 60 px of 390 (about 3 m), and until Main sets a shape, the widest.
+static func _squares(fails: Array[String]) -> void:
+	var kept: StringName = Planting.stage_shape
+	var squares: PackedFloat64Array = []
+	for shape: StringName in [&"pad-landscape", &"desktop-landscape", &"phone-landscape", &""]:
+		Planting.stage_shape = shape
+		squares.append(Planting.seat_square())
+	Planting.stage_shape = kept
+	_check(fails, is_equal_approx(squares[0], 60.0 / 820.0 * 19.2) and is_equal_approx(squares[1], squares[0])
+			and is_equal_approx(squares[2], 60.0 / 390.0 * 19.2) and is_equal_approx(squares[3], squares[2]),
+		"each shape keeps its own touch square clear, the widest until a shape is set (%s)" % [squares])
+
+
 ## The land's slab (`MapJourneyCameraContract.LAND_HIGH`) holds the tallest
 ## crown the woodland can plant on the highest upland of any Act I land, not
 ## only of one fixture land.
@@ -124,8 +143,9 @@ static func _slab(fails: Array[String]) -> void:
 		"the clip slab holds the tallest crown on the highest upland (%.2f + %.2f m)" % [highest, tallest * Planting.TREE_SCALE.y])
 
 
-## Where the wood stands on the ground: dry; trunks off the roads and their
-## verges, undergrowth off the roads; nothing on a bridge or a waystone.
+## Where the fill stands on the ground (the kit's own foliage stands where the
+## kit placed it): dry; trunks off the roads and their verges, undergrowth off
+## the roads; nothing on a bridge or a waystone.
 static func _ground(fails: Array[String], land: MapJourneyLandscape, seats: PackedVector3Array) -> void:
 	var planting: Planting = land.wood.planting
 	var decks: PackedVector3Array = planting._decks(0.5)
@@ -152,40 +172,65 @@ static func _ground(fails: Array[String], land: MapJourneyLandscape, seats: Pack
 	_check(fails, bad.is_empty(), "the wood stands dry, off the roads, bridges and waystones: %s" % [bad.slice(0, 3)])
 
 
-## On the picture plane: no planted card hides a road's centreline behind it,
-## and none standing in front of a waystone covers its touch square or its
-## stone. Checked against the roads and seats themselves, not the planting's
-## own grids.
+## On the picture plane, every card, the kit's adopted foliage included: none
+## hides a road's centreline, a bridge deck, a lamp's flame or the river's
+## water behind it, nor covers a rock's body or a waystone's touch square and
+## stone from in front. Checked against the land's own roads, bridges, lamps,
+## rivers, rocks and seats, not the planting's grids.
 static func _picture(fails: Array[String], land: MapJourneyLandscape, seats: PackedVector3Array) -> void:
 	var planting: Planting = land.wood.planting
 	var pitch: float = deg_to_rad(MapJourneyCameraContract.PITCH)
 	var toward: Vector3 = Vector3(0, sin(pitch), cos(pitch))
-	# Centreline samples every 0.25 m, bucketed by metre of picture x.
-	var columns: Dictionary = {}
+	# What must stay in sight, as picture-plane points with their depth, by
+	# what they are, and bucketed by metre of picture x.
+	var sights: Dictionary = {}
 	for line: PackedVector3Array in land.terrain.lines:
 		for i: int in range(line.size() - 1):
 			var steps: int = maxi(1, ceili(line[i].distance_to(line[i + 1]) / 0.25))
 			for step: int in range(steps + 1):
-				var q: Vector3 = line[i].lerp(line[i + 1], float(step) / steps)
-				var at: Vector2 = MapJourneyCameraContract.projected_plane(q)
-				var key: int = floori(at.x)
-				var bucket: PackedVector3Array = columns.get(key, PackedVector3Array())
-				bucket.append(Vector3(at.x, at.y, q.dot(toward)))
-				columns[key] = bucket
+				_sight_point(sights, "a road's centreline", line[i].lerp(line[i + 1], float(step) / steps), toward)
+	for deck: Vector3 in planting._decks(0.5):
+		_sight_point(sights, "a bridge deck", deck, toward)
+	for flame: Vector3 in land.kit.lamp_anchors():
+		_sight_point(sights, "a lamp's flame", flame, toward)
+	for cut: float in MapRavine.CUTS:
+		var z: float = -land.terrain.river_half_length
+		while z <= land.terrain.river_half_length:
+			for across: float in [-0.75, 0.0, 0.75]:
+				_sight_point(sights, "the river's water", Vector3(River.centre(z, cut) + across, River.LEVEL, z), toward)
+			z += 0.25
+	var rocks: int = 0
+	for item: Dictionary in land.kit.placed:
+		if not str(item["kind"]).begins_with("slate"):
+			continue
+		rocks += 1
+		var base: Vector3 = item["position"]
+		var across: float = float(str(item["radius"])) * 0.5
+		var height: float = float(str(item["height"]))
+		for gx: float in [-across, 0.0, across]:
+			for share: float in [0.35, 0.55, 0.75]:
+				var point: Vector3 = base + Vector3(gx, height * share, 0.0)
+				# A rock's body counts from its base's depth: what stands in
+				# front of the rock covers it.
+				var at: Vector2 = MapJourneyCameraContract.projected_plane(point)
+				var bucket: Array = sights.get(floori(at.x), [])
+				bucket.append(["a rock's body", at, base.dot(toward)])
+				sights[floori(at.x)] = bucket
 	var square: float = Planting.seat_square()
-	var hidden: Array[String] = []
+	var hidden: Dictionary = {}
 	var covered: Array[String] = []
 	for i: int in range(planting.kinds.size()):
-		if planting.from_kit[i] == 1:
-			continue
 		var tile: int = planting.tiles[i]
 		var rect: Rect2 = Atlas.rect(tile, planting.bases[i], planting.scales[i])
 		var depth: float = planting.depth(i)
 		for key: int in range(floori(rect.position.x), floori(rect.end.x) + 1):
-			for point: Vector3 in columns.get(key, PackedVector3Array()):
-				if point.z < depth - 0.1 and _inside(tile, rect, Vector2(point.x, point.y)):
-					hidden.append("%s at %s" % [planting.kinds[i], planting.bases[i]])
-					break
+			for point: Array in sights.get(key, []):
+				var what: String = point[0]
+				var at: Vector2 = point[1]
+				var behind: float = point[2]
+				if behind < depth - 0.1 and _inside(tile, rect, at) and not hidden.has(what):
+					hidden[what] = "%s%s at %s" % [planting.kinds[i], " (kit)" if planting.from_kit[i] == 1 else "",
+						planting.bases[i]]
 		for seat: Vector3 in seats:
 			if seat.dot(toward) >= depth - 0.05:
 				continue
@@ -203,8 +248,16 @@ static func _picture(fails: Array[String], land: MapJourneyLandscape, seats: Pac
 						break
 					x += 0.2
 				y += 0.2
-	_check(fails, hidden.is_empty(), "no crown hides a road's centreline: %s" % [hidden.slice(0, 3)])
+	_check(fails, hidden.is_empty() and rocks > 0,
+		"no card hides a centreline, a deck, a flame, the water or a rock: %s" % [hidden])
 	_check(fails, covered.is_empty(), "no crown covers a waystone's touch square or stone: %s" % [covered])
+
+
+static func _sight_point(sights: Dictionary, what: String, point: Vector3, toward: Vector3) -> void:
+	var at: Vector2 = MapJourneyCameraContract.projected_plane(point)
+	var bucket: Array = sights.get(floori(at.x), [])
+	bucket.append([what, at, point.dot(toward)])
+	sights[floori(at.x)] = bucket
 
 
 ## Whether picture-plane point `at` lies under the silhouette of `tile` drawn
@@ -218,43 +271,91 @@ static func _inside(tile: int, rect: Rect2, at: Vector2) -> bool:
 	return x >= rows[band].x and x <= rows[band].y
 
 
-## The art direction's mix: dark conifers about two trees in five, crimson
-## broadleaf at most two in five, rust and amber the rest; olive and dark
-## undergrowth among the red; fill crowns at 0.7 to 1.4 of their kind; the
-## kit's own foliage kept where it stood; several times R2's woodland.
+## The art direction's mix by plants: dark conifers 35 to 40% of the trees,
+## crimson broadleaf at most 40%, rust and amber about 20%; most undergrowth
+## olive and dark. By the canopy each shows (the front-most card over the
+## whole land's picture): crimson leads the broadleaf, rust and amber stay a
+## minority, the dark conifers carry a real share. Fill crowns at 0.7 to 1.4
+## of their kind; the kit's own foliage kept where it fits, in a wood several
+## times its size.
 static func _mix(fails: Array[String], land: MapJourneyLandscape) -> void:
 	var planting: Planting = land.wood.planting
 	var counts: Dictionary = {}
 	var kit_foliage: int = 0
 	var scaled: bool = true
 	for i: int in range(planting.kinds.size()):
-		var kind: String = planting.kinds[i]
-		counts[kind] = int(str(counts.get(kind, 0))) + 1
+		var family: String = _family(planting.kinds[i])
+		counts[family] = int(str(counts.get(family, 0))) + 1
 		kit_foliage += planting.from_kit[i]
-		if planting.from_kit[i] == 0 and Planting.TREES.has(kind):
+		if planting.from_kit[i] == 0 and Planting.TREES.has(planting.kinds[i]):
 			scaled = scaled and planting.scales[i] >= Planting.TREE_SCALE.x - 0.001 \
 				and planting.scales[i] <= Planting.TREE_SCALE.y + 0.001
-	var trees: float = 0.0
-	for kind: String in Planting.TREES:
-		trees += int(str(counts.get(kind, 0)))
-	var conifers: float = int(str(counts.get("conifer", 0))) + int(str(counts.get("conifer-spire", 0))) \
-		+ int(str(counts.get("conifer-wind", 0)))
-	var crimson: float = int(str(counts.get("ember-oak", 0))) + int(str(counts.get("ember-round", 0)))
-	var warm: float = int(str(counts.get("rust-oak", 0))) + int(str(counts.get("amber-round", 0)))
+	var trees: float = int(str(counts.get("conifer", 0))) + int(str(counts.get("crimson", 0))) \
+		+ int(str(counts.get("rust and amber", 0)))
 	var undergrowth: float = planting.kinds.size() - trees
-	var muted: float = int(str(counts.get("olive-heath", 0))) + int(str(counts.get("dark-copse", 0)))
-	var share: String = "conifers %.2f, crimson %.2f, rust and amber %.2f, olive and dark %.2f" % [
-		conifers / trees, crimson / trees, warm / trees, muted / undergrowth]
-	_check(fails, conifers / trees >= 0.33 and conifers / trees <= 0.46 and crimson / trees <= 0.4
-			and warm / trees >= 0.15 and muted / undergrowth >= 0.35,
-		"the woodland's mix follows the art direction (%s)" % share)
+	var conifers: float = int(str(counts.get("conifer", 0))) / trees
+	var crimson: float = int(str(counts.get("crimson", 0))) / trees
+	var warm: float = int(str(counts.get("rust and amber", 0))) / trees
+	var muted: float = int(str(counts.get("olive and dark", 0))) / undergrowth
+	_check(fails, conifers >= 0.35 and conifers <= 0.40 and crimson <= 0.40 and warm >= 0.15 and warm <= 0.27
+			and muted >= 0.5,
+		"the woodland's mix by plants follows the art direction (conifers %.3f, crimson %.3f, rust and amber %.3f, olive and dark undergrowth %.3f)" % [
+			conifers, crimson, warm, muted])
+	var shown: Dictionary = _canopy(planting)
+	var tree_area: float = float(str(shown.get("conifer", 0))) + float(str(shown.get("crimson", 0))) \
+		+ float(str(shown.get("rust and amber", 0)))
+	var conifer_shown: float = float(str(shown.get("conifer", 0))) / maxf(tree_area, 1.0)
+	var crimson_shown: float = float(str(shown.get("crimson", 0))) / maxf(tree_area, 1.0)
+	var warm_shown: float = float(str(shown.get("rust and amber", 0))) / maxf(tree_area, 1.0)
+	_check(fails, crimson_shown >= 1.5 * warm_shown and warm_shown <= 0.25 and conifer_shown >= 0.2,
+		"by the canopy it shows, crimson leads, rust and amber stay a minority and the conifers show (conifers %.3f, crimson %.3f, rust and amber %.3f)" % [
+			conifer_shown, crimson_shown, warm_shown])
 	var kit_placed: int = 0
 	for item: Dictionary in land.kit.placed:
 		kit_placed += 1 if Atlas.KIT_KINDS.has(str(item["kind"])) else 0
-	_check(fails, kit_foliage == kit_placed and planting.kinds.size() >= kit_placed * 4,
-		"the kit's foliage stays where it stood, in a wood four times its size (%d of %d)" % [
-			planting.kinds.size(), kit_placed])
+	var left_out: int = planting.rejected.get("kit sight", 0)
+	_check(fails, kit_foliage + left_out == kit_placed and left_out * 10 < kit_placed
+			and planting.kinds.size() >= kit_placed * 4,
+		"the kit's foliage stays where it fits (%d of %d, %d left out), in a wood four times its size (%d)" % [
+			kit_foliage, kit_placed, left_out, planting.kinds.size()])
 	_check(fails, scaled, "every planted crown is 0.7 to 1.4 of its kind")
+
+
+static func _family(kind: String) -> String:
+	if kind.begins_with("conifer"):
+		return "conifer"
+	if kind.begins_with("ember"):
+		return "crimson"
+	if kind == "rust-oak" or kind == "amber-round":
+		return "rust and amber"
+	if kind == "olive-heath" or kind == "dark-copse":
+		return "olive and dark"
+	return "red undergrowth"
+
+
+## Picture-plane cells (half a metre) over the whole land each family shows
+## in front: the canopy as the journey camera sees it.
+static func _canopy(planting: Planting) -> Dictionary:
+	const RES: float = 0.5
+	var order: Array = range(planting.kinds.size())
+	order.sort_custom(func(a: int, b: int) -> bool: return planting.depth(a) < planting.depth(b))
+	var owner: Dictionary = {}
+	for i: int in order:
+		var tile: int = planting.tiles[i]
+		var rect: Rect2 = Atlas.rect(tile, planting.bases[i], planting.scales[i])
+		var y: float = (floorf(rect.position.y / RES) + 0.5) * RES
+		while y < rect.end.y:
+			var x: float = (floorf(rect.position.x / RES) + 0.5) * RES
+			while x < rect.end.x:
+				if _inside(tile, rect, Vector2(x, y)):
+					owner[Vector2i(roundi(x / RES), roundi(y / RES))] = i
+				x += RES
+			y += RES
+	var shown: Dictionary = {}
+	for cell: Vector2i in owner:
+		var family: String = _family(planting.kinds[owner[cell]])
+		shown[family] = int(str(shown.get(family, 0))) + 1
+	return shown
 
 
 ## One card per plant, nearest first in each draw, cut out by the atlas's one
