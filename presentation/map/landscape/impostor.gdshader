@@ -3,17 +3,18 @@ shader_type spatial;
 // the journey camera, painted with the plant as baked from that direction
 // (`tools/map_atelier/journey/impostors/`). The camera never turns and is orthographic at one
 // pitch, so the card is the model's own picture at every zoom stop and pan.
-// Lit by the land's key light through the baked world normal, with the
-// plant's own crown shadow (and the dark of a leaf seen through a gap) as
-// ambient occlusion. Cut out at the baked coverage; drawn nearest first, so
-// depth rejects what the cards hide. Cards receive no shadows: opaque cones
-// and eggs cast the woodland's shadows on the land.
+// Lit by the land's key light through the baked world normal (Lambert, no
+// direct specular: matte leaves, and the A12's shader ALU spent where it
+// shows), with the plant's own crown shadow (and the dark of a leaf seen
+// through a gap) as ambient occlusion. Cut out at the baked coverage; drawn
+// nearest first, so depth rejects what the cards hide. Cards receive no
+// shadows: opaque cones and eggs cast the woodland's shadows on the land.
 //
 // Per instance: INSTANCE_CUSTOM is the tile's atlas rect; COLOR.rgb a tint
 // and COLOR.a where the model's base sits down the card (0 top, 1 bottom).
 // The crowns sway with a slow gust that grows with height above the base; the
 // global `land_motion` 0 holds them still (Reduce Motion; `LandMotion`).
-render_mode cull_back, depth_draw_opaque, diffuse_burley, specular_schlick_ggx, shadows_disabled;
+render_mode cull_back, depth_draw_opaque, diffuse_lambert, specular_disabled, shadows_disabled;
 uniform sampler2D atlas_albedo : source_color, filter_linear_mipmap, repeat_disable;
 uniform sampler2D atlas_normal : filter_linear_mipmap, repeat_disable;
 uniform float scissor = 0.5;
