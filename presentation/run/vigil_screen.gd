@@ -109,11 +109,12 @@ func _build() -> void:
 		LeadlightTokens.SIZE_ROOM_CROWN, LeadlightTokens.GOLD)
 	_crown.name = "Crown"
 	add_child(_crown)
-	_ledger = _text(Locale.active.t("ui.vigil.stats", {
+	# Its numerals set against their counter word, as the title carves them.
+	_ledger = _text(LeadlightNumerals.set_against(Locale.active.t("ui.vigil.stats", {
 		"runs": LeadlightNumerals.carved_drawn(_deed("runs")),
 		"wins": LeadlightNumerals.carved_drawn(_deed("wins")),
 		"vow": LeadlightNumerals.carved_drawn(_deed("bestVow")) if _deed("bestVow") > 0 else "—",
-	}), LeadlightTokens.ROLE_CARVED, LeadlightTokens.SIZE_ROOM_CARVED, Color(LeadlightTokens.GOLD, 0.7))
+	})), LeadlightTokens.ROLE_CARVED, LeadlightTokens.SIZE_ROOM_CARVED, Color(LeadlightTokens.GOLD, 0.7))
 	_ledger.name = "Ledger"
 	add_child(_ledger)
 	_looks = HBoxContainer.new()

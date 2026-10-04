@@ -190,7 +190,8 @@ static func _reading(fails: Array[String], screen: VigilScreen, where: String) -
 		"%s: the whispers are not numbered in carved numerals" % where)
 
 
-## zh-Hant: rewards joined with "、" and the ledger carved in Chinese numerals.
+## zh-Hant: rewards joined with "、" and the ledger carved in Chinese numerals,
+## set against their counter words as the title carves them ("十二次朝聖").
 static func _carved_in_chinese(fails: Array[String], screen: VigilScreen, where: String) -> void:
 	var texts: PackedStringArray = PackedStringArray()
 	for node: Node in screen.find_children("", "Label", true, false):
@@ -201,6 +202,10 @@ static func _carved_in_chinese(fails: Array[String], screen: VigilScreen, where:
 	_check(fails, screen._ledger.text.contains("十二") and screen._ledger.text.contains("三")
 			and screen._ledger.text.contains("二"),
 		"zh-Hant %s: the ledger is not carved in Chinese numerals (%s)" % [where, screen._ledger.text])
+	_check(fails, screen._ledger.text.contains("十二次朝聖") and screen._ledger.text.contains(" · ")
+			and not screen._ledger.text.contains(" 次"),
+		"zh-Hant %s: the ledger's numerals do not stand against their counter words (%s)" % [
+			where, screen._ledger.text])
 
 
 ## Every CJK character the hall sets in zh-Hant is in the shipped faces.

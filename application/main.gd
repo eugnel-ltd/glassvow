@@ -1552,8 +1552,7 @@ func _deed(key: String) -> int:
 
 ## Chinese numerals sit against their counter word: no space is carved.
 static func _carve(line: String) -> String:
-	var text: String = line.strip_edges()
-	return text.replace(" ", "") if LeadlightTokens.is_zh() else text
+	return LeadlightNumerals.set_against(line)
 
 
 ## First launch: the language pane the player lit. Main's one language
