@@ -31,21 +31,29 @@ extends RefCounted
 ## a back mid-fight. `prewarm` pays both in the frame that builds the fight
 ## (see there), so none of it reaches the fight's frames.
 ##
-## WHAT IT COSTS, on the iPad 8 (a QA build of #657 PR 3, a probe opening the
-## bench fight from the settled map, then one picture turn and one live turn,
-## each over and back; Vault worn). From a cold shader cache, the state of a
-## fresh install, without the pre-warm the session's first picture turn held
-## one frame for 0.70-0.76 s (its shader compiling) after a 43-62 ms bake
-## frame; with it, no frame of either turn ran longer than the same run's own
-## rest (38-43 ms against 38-40: a cold launch idles at about 23 ms a frame).
-## The live turn never hitched: its plate compiles nothing the cards have not.
-## The pre-warm adds about 1.7 s to that first fight's load (0.4 s to the
-## frame that builds it, 1.35 s to that frame's draw, and 0.1 s back off the
-## entrance's first frame, which follows a drained GPU) — a load that already
-## takes about 12.6 s cold, compiling the fight itself. Warm, the load grows
-## by 0.15-0.22 s, and the first picture turn's one 41 ms frame goes. The
-## bake holds 14 MB of video memory for the session, 11 MB more than one made
-## later in the fight. A later fight pays nothing more (on the Mac, measured).
+## WHAT IT COSTS, on the iPad 8 (QA builds of #657 PR 3; a probe opens a
+## fight from the settled map, by the bench or by the players' route, then
+## turns hand cards over and back: a picture turn and a live turn). The engine
+## counts the pipelines it compiles, frame by frame.
+##
+## From a cold shader cache, as on the first launch after an install, without
+## the pre-warm the session's first picture turn held one frame for 722-748 ms
+## (its shader compiling), for Vault, Rose and Eclipse alike; with it, that
+## turn's worst frame was about 40 ms, the session's own rest. The live turn
+## compiles nothing either way: its plate wears the card surface the fight's
+## own cards compile.
+##
+## The pre-warm lengthens the load. Cold, by 0.6 to 1.2 s (the load already
+## takes 11.5-12.1 s, compiling the fight itself). Warm, the load frame grows
+## by 0.15 to 0.25 s. The entrance's first long frame, which without the
+## pre-warm runs about 110-165 ms (N+1, the frame after the load), runs about
+## 50 ms (N+2) with it, on the bench and on the players' route alike.
+##
+## An earned back costs more the first time. Rose and Eclipse take about 1.8 s
+## in a warm load frame on the first load after the shader cache is cut, and
+## 0.63-0.70 s on later loads. The bake holds 14 MB of video memory for the
+## session, 11 MB more than one made later in the fight. A later fight pays
+## nothing more (on the Mac, measured).
 
 const PICTURE_SHADER: Shader = preload("res://presentation/cards/card_turn.gdshader")
 ## The narrowest the table shadow gets, edge-on, as a share of the card.
