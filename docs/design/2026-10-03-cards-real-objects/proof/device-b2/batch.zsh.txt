@@ -1,5 +1,5 @@
 #!/bin/zsh
-# cards-pr3 device batch v2 (#657 PR 3 review fixes). Scratch, never committed.
+# cards-pr3 device batch v2 (#657 PR 3 review fixes).
 # usage: batch.zsh <batch-name> <step> [<step> ...]
 #   export                     apply the QA patch, qa_export (build + install), revert it
 #   <nonce>:<probe options>    one launch: -- --map --seed=1 --turn-probe=nonce=<nonce>,<options>
