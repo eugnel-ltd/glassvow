@@ -1,0 +1,9 @@
+{
+  "name": "repo_traps",
+  "description": "Does an agent working in this repository make the right call on its documented traps?",
+  "surface": ".claude/skills/glassvow-godot/SKILL.md",
+  "grader_type": "claims",
+  "default_models": ["haiku", "sonnet", "opus"],
+  "hillclimb_model": "sonnet",
+  "judge_model": "haiku"
+}

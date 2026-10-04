@@ -20,6 +20,7 @@ SCOPE_NAMES = (
     "map_assets",
     "balance_ml",
     "provenance_evidence",
+    "agent_evals",
     "locale_content",
     "agent_config",
     "docs",
@@ -70,6 +71,7 @@ CHECKS = (
     Check("run_balance_f1_f2", "Test F1/F2 racing and model adequacy rules", ("balance_ml",)),
     Check("run_provenance_evidence", "Test execution-provenance capability", (
         "provenance_evidence",)),
+    Check("run_agent_evals", "Test the agent eval and hill-climb harness", ("agent_evals",)),
     Check("run_doc_anchors", "Check doc file:line anchors", (
         "docs", "godot_code", "map_code", "presentation", "release_platform")),
     Check("run_benchmark_freeze", "Check no new web-reference citations", ("docs",)),
@@ -189,6 +191,9 @@ def _scope_matches(path: str) -> set[str]:
                 "tests/test_godot_runtime_workflow.py",
             }):
         matches.add("provenance_evidence")
+
+    if _starts(lower, "tools/agent_evals/", "tests/test_agent_evals"):
+        matches.add("agent_evals")
 
     locale_named_test = _starts(lower, "tests/") and any(token in name for token in (
         "locale", "content", "line_table", "narrative"))
