@@ -108,16 +108,10 @@ const ARMED_SCALE: float = 1.24
 const ARMED_PULL: float = 0.4   # of the seat's own offset from the zone centre
 const ARMED_ROT: float = 0.5
 const DRAG_SCALE: float = 1.12
-## `drawBatchSchedule` (pile-chrome.js:58) — how a wave of draws is paced. One
-## card gets the full flight; a wave splits a 500ms budget into a stagger and
-## what is left over, so five cards leave the pile 100ms apart and the whole
-## deal is done in 680ms however big the hand is.
-const DEAL_BUDGET: float = 0.5
-const DEAL_FLIGHT_MAX: float = 0.28
-const DEAL_FLIGHT_MIN: float = 0.16
-const DEAL_STAGGER_MIN: float = 0.04
-## `schedule: { flightDur: 200 }` at drain.js:866 — a spent card goes home
-## faster than a drawn one arrives.
+## How long the screen waits for a pile copy to arrive when the card itself
+## never flew there (`schedule: { flightDur: 200 }` at drain.js:866): a
+## targeted card went at its foe, and the `toDiscard` that follows moves the
+## pile copy. Every flight's own timing is CardFlight's.
 const SPEND_FLIGHT: float = 0.2
 ## `flyCardBacks([...], {x, y}, 270, ...)` with the anchor at `r.width * 0.22` —
 ## how long a targeted card takes to reach its foe, and how small it gets there.
@@ -148,14 +142,62 @@ var _dragging: bool = false
 ## seat and the screen draws an arc from it. See `is_aiming()`.
 var _aiming: bool = false
 var _press_pos: Vector2 = Vector2.ZERO
-## uid -> the pile face it launched from, in global px. A card in here is
-## mid-flight and `_relayout` leaves its transform alone.
-var _flight_from: Dictionary = {}
+## The cards in the air. A card being dealt is still in the fan, and while it
+## flies its transform is its flight's, not its seat's (`_dealing`, by uid). A
+## card leaving is out of the fan already, and only its flight holds it
+## (`_leaving`) until it lands.
+var _dealing: Dictionary = {}   # uid -> _Flight
+var _leaving: Array[_Flight] = []
+## uid -> the CardView that left the fan for a pile by a flight, until that
+## node has gone: the pile event that follows a play finds its card already on
+## the way there.
+var _sent: Dictionary = {}
+## A tap landed the deal: the rest of its wave lands at once too.
+var _deal_skipped: bool = false
+## The stage height the deal's arc is measured against, told by the screen
+## for the same reason `stage_w` is.
+var stage_h: float = float(StageShape.REFERENCES[StageShape.IDENTITY].y)
+
+## How a card leaves the hand for a pile (CardFlight): a played card's
+## discard, the end of a turn's sweep, or the burn to the ash.
+enum Leave { DISCARD, SWEEP, BURN }
+
+
+## One card in the air: how far through its flight it is (`t`, linear time),
+## the tween that carries it, how to place it at any `t`, and what to do when
+## it lands. A deal can be fast-forwarded (`skip`); a leaving card lands at once.
+class _Flight:
+	extends RefCounted
+	var view: CardView
+	var uid: int
+	var t: float = 0.0
+	var tween: Tween = null
+	var step: Callable
+	var land: Callable
+	var skipped: bool = false
+	## A deal: the pile it left, and the pile card's size in resting units.
+	var from: Rect2 = Rect2()
+	var born: float = 1.0
+	## Leaving: how, the pose it set off in and the one it lands in, and what
+	## the screen runs as it arrives.
+	var how: Leave = Leave.DISCARD
+	var start_centre: Vector2 = Vector2.ZERO
+	var start_rot: float = 0.0
+	var start_scale: float = 1.0
+	var end_centre: Vector2 = Vector2.ZERO
+	var end_rot: float = 0.0
+	var end_scale: float = 1.0
+	var on_land: Callable = Callable()
+
+	func _init(card: CardView, id: int) -> void:
+		view = card
+		uid = id
 
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE  # cards take the pointer, not the strip
 	resized.connect(_relayout)
+	set_process_input(false)   # heard only while a card is in the air
 
 
 func has_card(uid: int) -> bool:
@@ -213,16 +255,21 @@ func remove_card(uid: int) -> void:
 	if hovered_uid == uid:
 		hovered_uid = -1
 		card_hover_changed.emit(-1)
+	_end_deal(uid)
+	_let_go(uid)
+	remove_child(view)  # detach now — queue_free alone leaves a zombie until frame end
+	view.queue_free()
+	_relayout()
+
+
+## Out of the fan, and out of any gesture that held it.
+func _let_go(uid: int) -> void:
+	_views.erase(uid)
+	_order.erase(uid)
 	if _drag_uid == uid:
 		_drag_uid = -1
 		_dragging = false
 		_aiming = false
-	_views.erase(uid)
-	_order.erase(uid)
-	_flight_from.erase(uid)
-	remove_child(view)  # detach now — queue_free alone leaves a zombie until frame end
-	view.queue_free()
-	_relayout()
 
 
 ## Bring the fan in line with the engine's hand without rebuilding it.
@@ -255,13 +302,23 @@ func sync_hand(order: Array[int]) -> Array[CardView]:
 
 
 func clear() -> void:
+	for f: _Flight in _dealing.values():
+		f.tween.kill()
+	for f: _Flight in _leaving:
+		f.tween.kill()
+		if is_instance_valid(f.view):
+			f.view.queue_free()
+	_dealing.clear()
+	_leaving.clear()
+	_sent.clear()
+	_deal_skipped = false
+	set_process_input(false)
 	for uid_v: Variant in _views.keys():
 		var view: CardView = _views[uid_v]
 		remove_child(view)
 		view.queue_free()
 	_views.clear()
 	_order.clear()
-	_flight_from.clear()
 	_drag_uid = -1
 	_dragging = false
 	_aiming = false
@@ -318,118 +375,310 @@ static func zone_width(count: int, stage_w: float,
 
 # ---------------------------------------------------------------- dealing
 
-## `drawBatchSchedule` — the gap between one card leaving the pile and the next.
-static func deal_stagger(count: int) -> float:
-	if count <= 1:
+## The gap the screen leaves between one draw of a wave of `count` and the
+## next: the deal's stagger (CardFlight.stagger), Reduce Motion's, or none
+## once a tap has landed the deal.
+func deal_gap(count: int) -> float:
+	if _deal_skipped or count <= 1:
 		return 0.0
-	return maxf(DEAL_STAGGER_MIN, floorf(DEAL_BUDGET * 1000.0 / float(count)) * 0.001)
+	if Preferences.active.reduce_motion:
+		return CardFlight.RM_STAGGER
+	return CardFlight.stagger(count)
 
 
-## `drawBatchSchedule` — how long one card spends in the air.
-static func deal_flight(count: int) -> float:
-	if count <= 1:
-		return DEAL_FLIGHT_MAX
-	return maxf(DEAL_FLIGHT_MIN, minf(DEAL_FLIGHT_MAX, DEAL_BUDGET - deal_stagger(count)))
-
-
-## Fly a card that is already in the fan in from the draw pile: it waits on the
-## pile for its turn, then travels to its seat, growing from the pile's face to
-## a hand card's and taking on its seat's tilt as it lands.
-func deal_in(uid: int, from: Rect2, delay: float, flight: float) -> void:
+## Fly a card that is already in the fan in from the draw pile, `delay`
+## seconds from now: CardFlight's deal, turning face up on the way, or under
+## Reduce Motion a fade at its seat. Once a tap has landed this wave's deal,
+## it lands within SKIP_LAND.
+func deal_in(uid: int, from: Rect2, delay: float = 0.0) -> void:
 	var view: CardView = _views.get(uid)
 	if view == null or not is_inside_tree():
 		return
-	_flight_from[uid] = from
-	view.pivot_offset = view.size * 0.5
-	_fly_step(0.0, uid)
-	var tw: Tween = create_tween()
-	if delay > 0.0:
-		tw.tween_interval(delay)
-	tw.tween_method(_fly_step.bind(uid), 0.0, 1.0, flight) \
-		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.tween_callback(_land.bind(uid))
-
-
-## The flight itself, as a function of progress rather than a tween aimed at a
-## fixed point. The seat is read LIVE on every step, because each further card
-## in the same wave re-fans the hand and moves the seat this one is heading for.
-## A tween that had been given the old target would land beside its seat and be
-## snapped into place a frame later.
-func _fly_step(t: float, uid: int) -> void:
-	var view: CardView = _views.get(uid)
-	if view == null:
-		return
-	var from: Rect2 = _flight_from.get(uid, Rect2())
+	_end_deal(uid)
+	var f: _Flight = _Flight.new(view, uid)
+	f.from = from
 	# In RESTING units, so the card leaves the pile at the pile's width whatever
 	# a card is worth on this shape.
-	var born: float = from.size.x / card_w if from.size.x > 0.0 else 1.0
-	var home: Vector2 = global_position + view.home_position
-	# Both ends are measured by the card's CENTRE, so a shrunken card leaves the
-	# pile's face rather than hanging off its corner.
-	#
-	# The half-size is UNSCALED, and that is the whole of it: a Control scaled
-	# about its own `pivot_offset` does not move the point at that pivot, so a
-	# centre-pivoted card's centre is `position + size * 0.5` at every scale.
-	# Measured on 4.7.1 at 0.776 and 1.38 — the reported centre did not move.
-	# The `* born` this line used to carry was therefore correcting for a
-	# displacement that never happens, and pushed the start half a shrunken card
-	# down and to the right of the pile it was meant to leave.
-	var start: Vector2 = from.get_center() - view.size * 0.5
-	view.global_position = start.lerp(home, t)
-	view.rotation = view.home_rotation * t
-	view.scale = view.rest_scale(lerpf(born, 1.0, t))
+	f.born = from.size.x / card_w if from.size.x > 0.0 else 1.0
+	view.release_pose()
+	view.pivot_offset = view.size * 0.5
+	var still: bool = Preferences.active.reduce_motion
+	f.step = (_appear_step if still else _deal_step).bind(f)
+	f.land = (_appear_land if still else _deal_land).bind(f)
+	_dealing[uid] = f
+	if _deal_skipped:
+		f.skipped = true
+		_launch(f, 0.0, CardFlight.SKIP_LAND)
+	else:
+		_launch(f, delay, CardFlight.RM_FADE if still else CardFlight.DEAL_TIME)
 
 
-func _land(uid: int) -> void:
-	_flight_from.erase(uid)
-	var view: CardView = _views.get(uid)
-	if view != null:
-		view.scale = view.rest_scale()
-		view.snap_home()
+## The deal at progress `t`. The seat is read LIVE on every step, because
+## each further card in the same wave re-fans the hand and moves the seat this
+## one is heading for; a flight given the old seat would land beside it. Both
+## ends are measured by the card's centre (`_centre_at`).
+func _deal_step(t: float, f: _Flight) -> void:
+	f.t = t
+	var view: CardView = f.view
+	if not is_instance_valid(view):
+		return
+	var e: float = CardFlight.travel(t)
+	var seat: Vector2 = global_position + view.home_position + view.size * 0.5
+	var start: Vector2 = f.from.get_center() - Vector2(0.0, CardFlight.lift(t))
+	var bow: float = CardFlight.arc(e)
+	_centre_at(view, start.lerp(seat, e) - Vector2(0.0, stage_h * CardFlight.DEAL_ARC * bow))
+	view.rotation = lerpf(deg_to_rad(CardFlight.PILE_TILT), view.home_rotation, e)
+	view.scale = view.rest_scale(lerpf(f.born, 1.0, CardFlight.grow(t)))
+	view.turn(CardFlight.yaw(t), CardFlight.pitch(t), false)
+	view.set_air(bow)
 
 
-## A card leaves the hand for a pile. It is out of the fan the moment this is
-## called — the others close the gap immediately, as they do in the benchmark —
-## and the node lives only long enough to fly.
-func spend_to(uid: int, to: Rect2, burn: bool = false) -> void:
+func _deal_land(f: _Flight) -> void:
+	if not _finish_deal(f):
+		return
+	var view: CardView = f.view
+	view.turn(0.0, 0.0, false)
+	view.set_air(0.0)
+	view.scale = view.rest_scale()
+	view.snap_home()
+	CardFlight.glint(view)
+
+
+## Reduce Motion's deal: the card fades in at its seat, rising RM_RISE px.
+func _appear_step(t: float, f: _Flight) -> void:
+	f.t = t
+	var view: CardView = f.view
+	if not is_instance_valid(view):
+		return
+	var k: float = 1.0 - (1.0 - t) * (1.0 - t)
+	view.position = view.home_position + Vector2(0.0, CardFlight.RM_RISE * (1.0 - k))
+	view.rotation = view.home_rotation
+	view.scale = view.rest_scale()
+	view.set_presence(k)
+
+
+func _appear_land(f: _Flight) -> void:
+	if not _finish_deal(f):
+		return
+	f.view.set_presence(1.0)
+	f.view.snap_home()
+
+
+## The deal `f` is over: out of the air, and true when its card is still
+## there to be put down.
+func _finish_deal(f: _Flight) -> bool:
+	if _dealing.get(f.uid) == f:
+		_dealing.erase(f.uid)
+	_settle()
+	return is_instance_valid(f.view)
+
+
+## Put a card still being dealt down where it is, face up, and end its flight:
+## it is about to be removed, spent, struck or dealt again.
+func _end_deal(uid: int) -> void:
+	var f: _Flight = _dealing.get(uid)
+	if f == null:
+		return
+	f.tween.kill()
+	_dealing.erase(uid)
+	if is_instance_valid(f.view):
+		f.view.turn(0.0, 0.0, false)
+		f.view.set_air(0.0)
+		f.view.set_presence(1.0)
+	_settle()
+
+
+## Start a flight: placed at its start now, then carried over `seconds`
+## after `delay`, and landed.
+func _launch(f: _Flight, delay: float, seconds: float) -> void:
+	f.step.call(0.0)
+	f.tween = create_tween()
+	if delay > 0.0:
+		f.tween.tween_interval(delay)
+	f.tween.tween_method(f.step, 0.0, 1.0, seconds)
+	f.tween.tween_callback(f.land)
+	_settle()
+
+
+## Taps are heard only while something is in the air; a deal that has
+## finished stops landing the rest of its wave.
+func _settle() -> void:
+	if _dealing.is_empty():
+		_deal_skipped = false
+	set_process_input(not _dealing.is_empty() or not _leaving.is_empty())
+
+
+## A tap anywhere while cards are in the air lands them. It is not consumed:
+## whatever the tap was for still gets it.
+func _input(event: InputEvent) -> void:
+	var mb: InputEventMouseButton = event as InputEventMouseButton
+	var st: InputEventScreenTouch = event as InputEventScreenTouch
+	if (mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT) \
+			or (st != null and st.pressed):
+		skip()
+
+
+## Every card still in the deal lands face up within SKIP_LAND, the rest of
+## its wave with it (`deal_gap`, `deal_in`); every card leaving lands on its
+## pile at once.
+func skip() -> void:
+	if not _dealing.is_empty():
+		_deal_skipped = true
+	for f: _Flight in _dealing.values():
+		if f.skipped:
+			continue
+		f.skipped = true
+		f.tween.kill()
+		f.tween = create_tween()
+		f.tween.tween_method(f.step, f.t, 1.0, CardFlight.SKIP_LAND)
+		f.tween.tween_callback(f.land)
+	for f: _Flight in _leaving.duplicate():
+		f.tween.kill()
+		f.step.call(1.0)
+		f.land.call()
+
+
+## Whether a card left the fan for a pile by a flight and is still on its way
+## there or lying on it.
+func sent(uid: int) -> bool:
+	return is_instance_valid(_sent.get(uid))
+
+
+## A card leaves the hand for a pile (CardFlight). It is out of the fan the
+## moment this is called — the others close the gap at once, as they do in the
+## benchmark — and the node lives until it has landed and handed over to the
+## pile. `delay` holds it where it is first (the end of a turn's sweep).
+## `on_land` runs as it reaches the pile: the pile answers the card that
+## arrives. Under Reduce Motion it fades where it is and never arrives.
+## Returns the seconds until it has landed or faded, 0 for no such card.
+func spend_to(uid: int, to: Rect2, how: Leave = Leave.DISCARD, delay: float = 0.0,
+		on_land: Callable = Callable()) -> float:
 	var view: CardView = _views.get(uid)
 	if view == null:
-		return
-	_views.erase(uid)
-	_order.erase(uid)
-	_flight_from.erase(uid)
-	if _drag_uid == uid:
-		_drag_uid = -1
-		_dragging = false
-		_aiming = false
+		return 0.0
+	_end_deal(uid)
+	_let_go(uid)
 	if not is_inside_tree():
 		remove_child(view)
 		view.queue_free()
 		_relayout()
-		return
+		return 0.0
 	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	view.release_pose()
 	view.pivot_offset = view.size * 0.5
-	var shrink: float = to.size.x / card_w if to.size.x > 0.0 else 1.0
-	var tw: Tween = create_tween().set_parallel(true)
-	# Centre-preserving, for the reason spelled out in `_fly_step`.
-	tw.tween_property(view, "global_position",
-		to.get_center() - view.size * 0.5, SPEND_FLIGHT) \
-		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	if burn:
-		# `.card.exhausting` (styles.css:650) — brightness 2.4, saturate .2,
-		# rotate 8deg, scale .6: a card bound for the ash blazes white-hot on
-		# the way. Modulate cannot desaturate, so the wash is the lift alone,
-		# pushed unevenly warm so it reads as fire rather than fog; the alpha
-		# rides the same tween out.
-		tw.tween_property(view, "modulate", Color(2.4, 2.15, 1.8, 0.0), SPEND_FLIGHT)
-		tw.tween_property(view, "rotation", deg_to_rad(8.0), SPEND_FLIGHT)
-		tw.tween_property(view, "scale", view.rest_scale(shrink * 0.6), SPEND_FLIGHT)
+	view.move_to_front()
+	var f: _Flight = _Flight.new(view, uid)
+	f.how = how
+	f.on_land = on_land
+	var seconds: float = CardFlight.RM_FADE
+	if Preferences.active.reduce_motion:
+		delay = 0.0
+		if how == Leave.BURN:
+			CardFlight.ember(view, CardFlight.EMBER_COOL)
+		f.step = _fade_step.bind(f)
+		f.land = _fade_land.bind(f)
 	else:
-		tw.tween_property(view, "scale", view.rest_scale(shrink), SPEND_FLIGHT)
-		tw.tween_property(view, "rotation", 0.0, SPEND_FLIGHT)
-		tw.tween_property(view, "modulate:a", 0.0, SPEND_FLIGHT)
-	tw.chain().tween_callback(view.queue_free)
+		_aim_leave(f, to)
+		seconds = CardFlight.BURN_TIME if how == Leave.BURN else CardFlight.DISCARD_TIME
+		f.step = _leave_step.bind(f)
+		f.land = _leave_land.bind(f)
+	_sent[uid] = view
+	_leaving.append(f)
+	_launch(f, delay, seconds)
 	_relayout()
+	return delay + seconds
+
+
+## Where a leaving card sets off from and lands: the pile's top card, at its
+## size, a little loose (a burning card smaller and turned, as
+## `.card.exhausting` throws it).
+func _aim_leave(f: _Flight, to: Rect2) -> void:
+	var view: CardView = f.view
+	var shrink: float = to.size.x / card_w if to.size.x > 0.0 else 1.0
+	f.start_centre = view.global_centre()
+	f.start_rot = view.rotation
+	f.start_scale = view.scale.x
+	f.end_centre = to.get_center()
+	f.end_scale = view.rest_scale(shrink).x
+	match f.how:
+		Leave.DISCARD:
+			f.end_rot = deg_to_rad(CardFlight.DISCARD_TILT * CardFlight.jitter(f.uid, 0))
+		Leave.SWEEP:
+			f.end_rot = deg_to_rad(CardFlight.SWEEP_TILT * CardFlight.jitter(f.uid, 0))
+			f.end_centre += Vector2(CardFlight.jitter(f.uid, 1),
+				CardFlight.jitter(f.uid, 2)) * CardFlight.SWEEP_SLIP
+		Leave.BURN:
+			f.end_rot = deg_to_rad(CardFlight.BURN_TILT)
+			f.end_scale = view.rest_scale(shrink * CardFlight.BURN_SHRINK).x
+
+
+func _leave_step(t: float, f: _Flight) -> void:
+	f.t = t
+	var view: CardView = f.view
+	if not is_instance_valid(view):
+		return
+	var e: float = CardFlight.ease_in_out(t) if f.how == Leave.SWEEP \
+		else CardFlight.ease_in(t)
+	_centre_at(view, f.start_centre.lerp(f.end_centre, e))
+	view.rotation = lerpf(f.start_rot, f.end_rot, e)
+	view.scale = Vector2.ONE * lerpf(f.start_scale, f.end_scale, e)
+	if f.how == Leave.BURN:
+		view.turn(180.0 * smoothstep(0.0, 1.0, t), 0.0, false)
+		view.tint_picture(CardFlight.burn_tint(t))
+
+
+## On the pile: the pile answers, the card lies there a moment (a burnt one
+## while its ember rim cools) and then fades into the pile. It is held on its
+## pile meanwhile: the hand's own box moves as the fan re-edges.
+func _leave_land(f: _Flight) -> void:
+	_leaving.erase(f)
+	_settle()
+	if not is_instance_valid(f.view):
+		return
+	var hold: float = CardFlight.HANDOFF_HOLD
+	if f.how == Leave.BURN:
+		hold = CardFlight.EMBER_COOL
+		CardFlight.ember(f.view, hold)
+	if f.on_land.is_valid():
+		f.on_land.call()
+	var tw: Tween = f.view.create_tween()
+	tw.tween_method(_pin.bind(f), 0.0, 1.0, hold)
+	tw.tween_property(f.view, "modulate:a", 0.0, CardFlight.HANDOFF_FADE)
+	tw.tween_callback(_gone.bind(f))
+
+
+func _pin(_t: float, f: _Flight) -> void:
+	if is_instance_valid(f.view):
+		_centre_at(f.view, f.end_centre)
+
+
+## Put a card's centre on a global point. A card turns and scales about its
+## centre (`pivot_offset`), so its centre is `position + size / 2` in this
+## box whatever its scale and angle. Not through `global_position`: in 4.7 that
+## places the card's transformed origin, which a scaled or turned card has
+## moved away from its corner.
+func _centre_at(view: CardView, centre: Vector2) -> void:
+	view.position = get_global_transform().affine_inverse() * centre - view.size * 0.5
+
+
+## Reduce Motion's leaving: the card fades where it is.
+func _fade_step(t: float, f: _Flight) -> void:
+	f.t = t
+	if is_instance_valid(f.view):
+		f.view.set_presence(1.0 - t)
+
+
+func _fade_land(f: _Flight) -> void:
+	_leaving.erase(f)
+	_settle()
+	_gone(f)
+
+
+func _gone(f: _Flight) -> void:
+	if _sent.get(f.uid) == f.view:
+		_sent.erase(f.uid)
+	if is_instance_valid(f.view):
+		f.view.queue_free()
 
 
 ## A targeted card does not leave the hand for a pile — it goes at the foe.
@@ -440,13 +689,8 @@ func strike_to(uid: int, target: Vector2) -> void:
 	var view: CardView = _views.get(uid)
 	if view == null:
 		return
-	_views.erase(uid)
-	_order.erase(uid)
-	_flight_from.erase(uid)
-	if _drag_uid == uid:
-		_drag_uid = -1
-		_dragging = false
-		_aiming = false
+	_end_deal(uid)
+	_let_go(uid)
 	if not is_inside_tree():
 		remove_child(view)
 		view.queue_free()
@@ -454,11 +698,16 @@ func strike_to(uid: int, target: Vector2) -> void:
 		return
 	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	view.move_to_front()
+	view.release_pose()
 	view.pivot_offset = view.size * 0.5
+	# By its centre (`_centre_at`): through `global_position` the shrinking
+	# card landed up and to the left of the foe it was thrown at.
+	var from: Vector2 = view.global_centre()
 	var tw: Tween = create_tween().set_parallel(true)
-	tw.tween_property(view, "global_position",
-		target - view.size * 0.5, STRIKE_FLIGHT) \
-		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tw.tween_method(func(t: float) -> void:
+		if is_instance_valid(view):
+			_centre_at(view, from.lerp(target, CardFlight.ease_in(t))),
+		0.0, 1.0, STRIKE_FLIGHT)
 	tw.tween_property(view, "scale", view.rest_scale(STRIKE_SCALE), STRIKE_FLIGHT)
 	tw.tween_property(view, "rotation", 0.0, STRIKE_FLIGHT)
 	# Held opaque for the first half: a card that fades as it launches never
@@ -551,7 +800,9 @@ func _relayout() -> void:
 # ---------------------------------------------------------------- gestures
 
 func _on_card_pressed_at(uid: int, global_pos: Vector2) -> void:
-	if locked:
+	# A card still in the air is not in the hand yet: the tap that lands it
+	# (`skip`) takes nothing else.
+	if locked or _dealing.has(uid):
 		return
 	_drag_uid = uid
 	_dragging = false
@@ -662,7 +913,7 @@ func _pose(uid: int) -> void:
 	var view: CardView = _views.get(uid)
 	# A card in flight is on its own clock; posing it would teleport it back to
 	# the fan mid-arc.
-	if view == null or _flight_from.has(uid):
+	if view == null or _dealing.has(uid):
 		return
 	# A CARRIED card is written by the pointer on every move, so it is not posed
 	# from here at all. An AIMING one keeps its seat — the drag only goes
@@ -710,7 +961,7 @@ func is_free_drag() -> bool:
 
 func card_at(global_pos: Vector2) -> int:
 	for i: int in range(get_child_count() - 1, -1, -1):
-		var view: CardView = get_child(i) as CardView
+		var view: CardView = _held(get_child(i))
 		if view == null:
 			continue
 		var local: Vector2 = view.get_global_transform().affine_inverse() * global_pos
@@ -722,10 +973,19 @@ func card_at(global_pos: Vector2) -> int:
 ## Which dotted keyword the pointer is over, or "". Same front-to-back walk.
 func keyword_at(global_pos: Vector2) -> String:
 	for i: int in range(get_child_count() - 1, -1, -1):
-		var view: CardView = get_child(i) as CardView
+		var view: CardView = _held(get_child(i))
 		if view == null:
 			continue
 		var word: String = view.keyword_at(global_pos)
 		if word != "":
 			return word
 	return ""
+
+
+## `child` when it is a card the hand still holds, else null: a card on its
+## way to a pile, or lying on one, is not under the player's finger any more.
+func _held(child: Node) -> CardView:
+	var view: CardView = child as CardView
+	if view == null or _views.get(view.uid) != view:
+		return null
+	return view

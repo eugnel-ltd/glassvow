@@ -36,6 +36,18 @@ func run_length(t: StringName) -> int:
 	return n
 
 
+## The type of the first event still queued that is one of `types` and
+## carries this card's `uid`, or &"" for none. A played card's own events
+## follow it in the same batch, so its handler can see where the card is going
+## (its discard, its exhaust or the power it becomes) before it gets there.
+func next_for(uid: int, types: Array[StringName]) -> StringName:
+	for ev: Dictionary in _queue:
+		var t: StringName = ev["t"]
+		if types.has(t) and ev.get("uid", -1) == uid:
+			return t
+	return &""
+
+
 func enqueue(events: Array[Dictionary]) -> void:
 	_queue.append_array(events)
 	if not _busy:

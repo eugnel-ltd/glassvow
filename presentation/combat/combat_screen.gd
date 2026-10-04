@@ -221,6 +221,9 @@ const WARD_BLUE: Color = Color(0.62352943, 0.83137256, 1.0)     # #9fd4ff
 const POISON_TAN: Color = Color(0.827451, 0.6313726, 0.3529412) # #d3a15a
 const WARM_GOLD: Color = Color(1.0, 0.84705883, 0.627451)       # #ffd8a0
 const EMBER_ORANGE: Color = Color(1.0, 0.7019608, 0.3529412)    # #ffb35a
+## The ash a burnt card stirs as it lands on its pile, rising for ~0.6 s.
+const ASH_GREY: Color = Color(0.56, 0.51, 0.47)
+const ASH_MOTE_LIFE: float = 0.45
 const SPARK_WHITE: Color = Color(1.0, 0.9529412, 0.8392157)     # #fff3d6
 const SOUL_VIOLET: Color = Color(0.7882353, 0.6901961, 1.0)     # #c9b0ff
 const REVIVE_LILAC: Color = Color(0.9098039, 0.8627451, 1.0)    # #e8dcff
@@ -598,6 +601,12 @@ func _stage_w() -> float:
 	return maxf(float(ref.x), size.x)
 
 
+## The stage height the same way: the deal's arc is a share of it.
+func _stage_h() -> float:
+	var ref: Vector2i = StageShape.REFERENCES.get(shape, StageShape.REFERENCES[StageShape.IDENTITY])
+	return maxf(float(ref.y), size.y)
+
+
 func _apply_stage_layout() -> void:
 	if _shake_host == null:
 		return
@@ -618,6 +627,7 @@ func _layout_hand() -> void:
 	var card: Vector2 = _card_metrics()
 	var stage_width: float = _stage_w()
 	_hand.stage_w = stage_width
+	_hand.stage_h = _stage_h()
 	_hand.offset_left = -HandView.zone_width(5, stage_width, card.x) * 0.5
 	_hand.offset_right = HandView.zone_width(5, stage_width, card.x) * 0.5
 	_hand.offset_top = -_hand_height()
@@ -692,6 +702,7 @@ func _build_ui() -> void:
 	_hand.card_w = card.x
 	_hand.card_inset = card.y
 	_hand.stage_w = _stage_w()
+	_hand.stage_h = _stage_h()
 	_hand.offset_left = -HandView.zone_width(5, _stage_w(), card.x) * 0.5
 	_hand.offset_right = HandView.zone_width(5, _stage_w(), card.x) * 0.5
 	_hand.offset_top = -_hand_height()
@@ -1560,11 +1571,10 @@ func _deal_opening_hand() -> void:
 	var opening: Array[int] = _hand.uids()
 	if opening.is_empty():
 		return
-	var flight: float = HandView.deal_flight(opening.size())
-	var stagger: float = HandView.deal_stagger(opening.size())
-	var pile: Rect2 = _hud.pile_rect(&"draw")
+	var gap: float = _hand.deal_gap(opening.size())
+	var pile: Rect2 = _hud.pile_card(&"draw")
 	for i: int in range(opening.size()):
-		_hand.deal_in(opening[i], pile, float(i) * stagger, flight)
+		_hand.deal_in(opening[i], pile, float(i) * gap)
 
 
 ## The authored formation for this many foes, as (x centre, lift off the ground
@@ -2378,6 +2388,44 @@ func _land_in_pile(which: StringName) -> void:
 	_hud.bump_pile(which)
 
 
+## The gap between two draws of a wave, cut short the moment a tap lands the
+## deal (`HandView.skip`), so the cards still to come land with the rest.
+func _deal_gap(wave: int) -> void:
+	var gap: float = _hand.deal_gap(wave)
+	if seq.instant or gap <= 0.0:
+		return
+	var timer: SceneTreeTimer = get_tree().create_timer(gap)
+	while timer.time_left > 0.0 and _hand.deal_gap(wave) > 0.0:
+		await get_tree().process_frame
+
+
+## A played card that is not thrown at a foe goes where its own next event
+## says (the batch already holds it): to the discard, or burning to the ash,
+## from wherever the player let it go. A power settles into the glass instead
+## (`powerConsumed`), so it leaves the hand here as it always has.
+func _play_away(uid: int) -> void:
+	var to: StringName = seq.next_for(uid,
+		[EventTypes.TO_DISCARD, EventTypes.EXHAUST, EventTypes.POWER_CONSUMED])
+	var pile: StringName = &"ashes" if to == EventTypes.EXHAUST else &"discard"
+	if to == EventTypes.TO_DISCARD or to == EventTypes.EXHAUST:
+		_hand.spend_to(uid, _hud.pile_card(pile), _leave_for(pile), 0.0,
+			_card_arrived.bind(pile))
+	else:
+		_hand.remove_card(uid)
+
+
+static func _leave_for(pile: StringName) -> HandView.Leave:
+	return HandView.Leave.BURN if pile == &"ashes" else HandView.Leave.DISCARD
+
+
+## A card has landed on `pile`: the pile answers it, and ash stirs where a
+## burnt one lands.
+func _card_arrived(pile: StringName) -> void:
+	_land_in_pile(pile)
+	if pile == &"ashes":
+		_vfx.motes(_hud.pile_card(&"ashes").get_center(), ASH_GREY, 7, ASH_MOTE_LIFE)
+
+
 ## The Flame's reading, kept for a rebuilt HUD and drawn in the lantern
 ## (lock §9). The screen only forwards it; the domain did the reading.
 func _show_flame(ev: Dictionary, instant: bool = false) -> void:
@@ -2424,11 +2472,11 @@ func _handle_event(ev: Dictionary) -> void:
 				# count walks down with the deal instead of arriving already spent.
 				_pile_override[&"draw"] = maxi(0, int(_pile_override[&"draw"]) - 1)
 				_push_hud()
-				_hand.deal_in(uid, _hud.pile_rect(&"draw"), 0.0,
-					HandView.deal_flight(wave))
+				_hand.deal_in(uid, _hud.pile_card(&"draw"))
 				# Only the stagger is waited on: the flights overlap, which is
 				# what makes a five-card draw read as one deal rather than five.
-				await _wait(HandView.deal_stagger(wave))
+				# A tap that landed the deal takes the stagger away too.
+				await _deal_gap(wave)
 				if seq.run_length(EventTypes.DRAW) == 1:
 					# `clearPileVisualOverride` + `bumpPile` (drain.js:235, :216) —
 					# the wave is over, so the pile goes back to telling the truth
@@ -2474,7 +2522,7 @@ func _handle_event(ev: Dictionary) -> void:
 			if aimed >= 0 and aimed < game.cb.enemies.size():
 				_hand.strike_to(uid, _enemy_centre(aimed))
 			else:
-				_hand.remove_card(uid)
+				_play_away(uid)
 			_sync_actors()
 			await _wait(0.2)
 		EventTypes.HIT_ENEMY:
@@ -2613,14 +2661,20 @@ func _handle_event(ev: Dictionary) -> void:
 			# that burns out has to be seen going somewhere else, or the two
 			# piles are the same pile wearing different labels.
 			var pile: StringName = &"ashes" if t == EventTypes.EXHAUST else &"discard"
-			# A card bound for the ash burns on the way (`.card.exhausting`).
-			_hand.spend_to(uid, _hud.pile_rect(pile), t == EventTypes.EXHAUST)
 			# `await presentation.flyCardBacks(..., 200, ...)` (drain.js:864) — the
 			# pile is bumped by the card ARRIVING, not by it setting off. Without
 			# the wait the count ticked while the card was still in the air and the
 			# next event opened over the top of the flight.
-			await _wait(HandView.SPEND_FLIGHT)
-			_land_in_pile(pile)
+			if _hand.has_card(uid):
+				# Still in the hand (a discard or an exhaust from it): it flies,
+				# a card bound for the ash burning on the way (`.card.exhausting`).
+				await _wait(_hand.spend_to(uid, _hud.pile_card(pile), _leave_for(pile),
+					0.0, _card_arrived.bind(pile)))
+			elif not _hand.sent(uid):
+				# It went at a foe, or is gone: the pile copy arrives.
+				await _wait(HandView.SPEND_FLIGHT)
+				_land_in_pile(pile)
+			# Otherwise it left at its play and its own arrival answers.
 			_sync_actors()
 		EventTypes.POWER_CONSUMED:
 			# `powerConsumed` (drain.js:935): a power is not discarded — it
@@ -2653,9 +2707,8 @@ func _handle_event(ev: Dictionary) -> void:
 				_has_ember_from = true
 				_vfx.burst(_ember_from, EMBER_ORANGE, 22, 190.0, TAU, 0.0,
 					2.4, -150.0, "spark", true, 0.85)
-			_hand.spend_to(uid, _hud.pile_rect(&"ashes"), true)
-			await _wait(HandView.SPEND_FLIGHT)
-			_land_in_pile(&"ashes")
+			await _wait(_hand.spend_to(uid, _hud.pile_card(&"ashes"),
+				HandView.Leave.BURN, 0.0, _card_arrived.bind(&"ashes")))
 			_sync_actors()
 		EventTypes.ART:
 			var id: String = str(ev.get("id", ""))
@@ -2695,16 +2748,24 @@ func _handle_event(ev: Dictionary) -> void:
 			var uids: Array = ev["uids"]
 			if not uids.is_empty():
 				_sfx.play(&"card")
-			var discard_rect: Rect2 = _hud.pile_rect(&"discard")
+			# Same rule as `toDiscard`: the pile is bumped on arrival, once, by the
+			# last card of the sweep. An end of turn that swept five cards used to
+			# tick the count before any of them reached it, so the enemy's banner
+			# opened over a hand still in flight.
+			var discard_rect: Rect2 = _hud.pile_card(&"discard")
+			var swept: Array[int] = []
 			for uid_v: Variant in uids:
 				var uid_i: int = uid_v
-				_hand.spend_to(uid_i, discard_rect)
-			# Same rule as `toDiscard`: the pile is bumped on arrival. An end of turn
-			# that swept five cards used to tick the count before any of them
-			# reached it, so the enemy's banner opened over a hand still in flight.
-			if not uids.is_empty():
-				await _wait(HandView.SPEND_FLIGHT)
-				_land_in_pile(&"discard")
+				if _hand.has_card(uid_i):
+					swept.append(uid_i)
+			var lands: float = 0.0
+			for i: int in range(swept.size()):
+				var last: bool = i == swept.size() - 1
+				lands = maxf(lands, _hand.spend_to(swept[i], discard_rect,
+					HandView.Leave.SWEEP, float(i) * CardFlight.SWEEP_STAGGER,
+					_card_arrived.bind(&"discard") if last else Callable()))
+			if lands > 0.0:
+				await _wait(lands)
 			_sync_actors()
 		EventTypes.BOSS_INTRO:
 			# drain.js:253-268 — the plate names the boss while the world dims,

@@ -315,6 +315,10 @@ var _tilt_target: Vector2 = Vector2.ZERO
 var _rest_tilt: Vector2 = Vector2.ZERO
 var _lift: float = 0.0
 var _lift_v: float = 0.0
+## How high a flight carries the card off the table, 0 to 1 (`set_air`), and
+## how much of it is there over its tint (`set_presence`).
+var _air: float = 0.0
+var _presence: float = 1.0
 ## The lamp: where it is now, how far in it has been brought, and the card-space
 ## point it is standing over. `_rest_*` is where it goes home to — the studio's
 ## sliders, and zero everywhere else.
@@ -1279,10 +1283,23 @@ func _apply_transform() -> void:
 	else:
 		_slab.basis = CardTurn.pose(_tilt.y, _tilt.x) * _slab_turn
 	_slab.position.z = lift
-	var h: float = _lift / MAX_LIFT
+	_place_shadow()
+
+
+## The table shadow under the slab's tilt and lift, and under a flight's air:
+## a card carried higher casts its shadow further down, wider and fainter.
+func _place_shadow() -> void:
+	var h: float = _lift / MAX_LIFT + _air * CardFlight.AIR
 	_shadow.position = Vector2(_tilt.y, _tilt.x) * 0.28 + Vector2(0.0, 4.0 * h)
-	_shadow.modulate.a = 1.0 - 0.22 * h
+	_shadow.modulate.a = maxf(0.0, 1.0 - 0.22 * h)
 	_shadow_sb.shadow_size = _shadow_size + roundi(4.0 * h)
+
+
+## A flight carries the card `h` (0 to 1) off the table: only its shadow
+## answers, on the canvas, so nothing renders.
+func set_air(h: float) -> void:
+	_air = h
+	_place_shadow()
 
 
 ## ── TURNING OVER ─────────────────────────────────────────────────────────
@@ -1295,6 +1312,8 @@ func _apply_transform() -> void:
 ## (CardTurn). The table shadow narrows with the card and a rare's shine,
 ## which is painted on the canvas over the card at rest, waits for rest.
 ##
+## A retired card (`retire`) ignores it.
+##
 ## turn(0, 0, either) is rest: no material on the picture, the plate hidden,
 ## the slab where it was built, the stage rendered once more if it had moved.
 ## The plate and the material are built at the card's first turn, and each
@@ -1304,6 +1323,8 @@ func _apply_transform() -> void:
 ## (`_apply_transform`); for the picture turn its slab lies flat meanwhile,
 ## so the picture warped is the flat card's.
 func turn(yaw: float, pitch: float, live: bool) -> void:
+	if _retired:
+		return    # a retired card is never drawn again, turned or not
 	_pose = CardTurn.pose(yaw, pitch)
 	var turned: bool = not CardTurn.is_rest(_pose)
 	_slab_turn = _pose if live and turned else Basis.IDENTITY
@@ -1492,6 +1513,7 @@ func _apply_tint(glide: bool) -> void:
 		tint = Color(1, 1, 1, 1)
 	else:
 		tint = Color(0.6, 0.6, 0.6, 0.8)
+	tint.a *= _presence
 	if _tint_tween != null and _tint_tween.is_valid():
 		_tint_tween.kill()
 	if not glide or not is_inside_tree():
@@ -1508,6 +1530,20 @@ func _apply_tint(glide: bool) -> void:
 			_shadow_sb.shadow_color = from_glow.lerp(glow, s)
 			_shadow_sb.shadow_size = int(roundf(lerpf(from_px, float(glow_px), s))),
 		0.2, Motion.CSS_EASE)
+
+
+## How much of the card is there, 0 to 1, over whatever tint it wears: the
+## Reduce Motion deal fades a card in with it, and a playability change
+## mid-fade keeps both.
+func set_presence(k: float) -> void:
+	_presence = clampf(k, 0.0, 1.0)
+	_apply_tint(false)
+
+
+## Tint the card's picture alone, not what is laid over it: an exhausted card
+## blazes and chars while its ember rim (CardFlight.ember) keeps its own light.
+func tint_picture(c: Color) -> void:
+	_display.modulate = c
 
 
 ## `.card.nope` — the refusal shake the lantern also does, 0.32s ease
@@ -1614,6 +1650,12 @@ func _pose_step(t: float) -> void:
 	position = _pose_from_pos.lerp(_pose_to_pos, e)
 	rotation = lerpf(_pose_from_rot, _pose_to_rot, e)
 	scale = Vector2.ONE * lerpf(_pose_from_scale, _pose_to_scale, e)
+
+
+## Stop travelling to a pose: a flight owns the card's transform from here,
+## and a glide still running would write over it.
+func release_pose() -> void:
+	_kill_pose()
 
 
 ## A carried card is written by the pointer and must not lag it —

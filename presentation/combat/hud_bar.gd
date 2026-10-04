@@ -108,6 +108,8 @@ const PLATE_WIDE_LEAD: float = 76.0
 ## A pile's box where the book authors none. Every shape at 6e06911 does author
 ## one, so this is a floor rather than a default in practice.
 const PILE_BOX: Vector2 = Vector2(96.0, 148.0)
+## How tall the card painted in a pile face stands in its square.
+const PILE_CARD_H: float = 0.867
 
 const PLATE_CX: float = 245.0       # both widths hang off this centre
 ## The hero plate is NOT a `UIC` widget — the benchmark rides it on the actor,
@@ -1006,11 +1008,7 @@ func _build_pile(which: StringName, name_text: String, fade: float) -> Pile:
 ## not a constant and a second copy of these numbers would be wrong the first
 ## time the window is not 1180 wide.
 func pile_rect(which: StringName) -> Rect2:
-	var p: Pile = _draw_pile
-	if which == &"discard":
-		p = _discard_pile
-	elif which == &"ashes":
-		p = _ashes_pile
+	var p: Pile = _pile(which)
 	if p == null or p.stack == null:
 		return Rect2(global_position + size * 0.5, Vector2.ZERO)
 	# Spelled out from the transform rather than taken from `get_global_rect()`,
@@ -1020,6 +1018,30 @@ func pile_rect(which: StringName) -> Rect2:
 	# asking at the call site, not because the accessor is wrong.
 	var xf: Transform2D = p.stack.get_global_transform()
 	return Rect2(xf.origin, p.stack.size * xf.get_scale())
+
+
+## The top card of a pile as it is painted, in global coordinates: where a
+## card dealt from the pile leaves and where a card sent to it lands. The
+## painting's card stands PILE_CARD_H of its face square tall, centred in it
+## (the used rect of assets/art/piles/*.png), and a card's own shape is laid
+## over that height. The face square sits at the foot of the stack's box.
+func pile_card(which: StringName) -> Rect2:
+	var p: Pile = _pile(which)
+	if p == null or p.stack == null:
+		return Rect2(global_position + size * 0.5, Vector2.ZERO)
+	var face: float = p.stack.face
+	var card: Vector2 = Vector2(CardView.CARD_W / CardView.CARD_H, 1.0) * face * PILE_CARD_H
+	var centre: Vector2 = Vector2(face * 0.5, p.stack.size.y - face * 0.5)
+	var xf: Transform2D = p.stack.get_global_transform()
+	return Rect2(xf * (centre - card * 0.5), card * xf.get_scale())
+
+
+func _pile(which: StringName) -> Pile:
+	if which == &"discard":
+		return _discard_pile
+	if which == &"ashes":
+		return _ashes_pile
+	return _draw_pile
 
 
 ## `.end-turn.enemy-phase` (styles.css:1397) — while the queue drains, the END
@@ -1252,11 +1274,7 @@ func lantern_rect() -> Rect2:
 ## The pile answers the card that just landed in it; without it a flight ends in
 ## silence and the deck reads as scenery.
 func bump_pile(which: StringName) -> void:
-	var p: Pile = _draw_pile
-	if which == &"discard":
-		p = _discard_pile
-	elif which == &"ashes":
-		p = _ashes_pile
+	var p: Pile = _pile(which)
 	if p == null or p.stack == null:
 		return
 	_keyframe_pop(p.stack, 1.05, -4.0, 0.28)
