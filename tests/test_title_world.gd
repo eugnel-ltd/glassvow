@@ -4,6 +4,8 @@ extends RefCounted
 ## so the door, the road and the lamps project as shipped; a walk carries the
 ## eye on down the road (the lamps pass); and a world that inherits another
 ## continues it, projecting every point and every mote where the other does.
+## The turn west to the Vigil (`pan_px`, PR C) shifts every projected point
+## by exactly its pan in screen space, and 0 is the road as shipped.
 
 static func _check(fails: Array[String], ok: bool, what: String) -> void:
 	if not ok:
@@ -14,6 +16,7 @@ static func run(fails: Array[String]) -> void:
 	_still_where_it_was(fails)
 	_the_lamps_pass(fails)
 	_inherit(fails)
+	_the_turn_pans(fails)
 
 
 static func _world() -> TitleWorld:
@@ -85,3 +88,24 @@ static func _inherit(fails: Array[String]) -> void:
 	source.free()
 	heir.free()
 	Preferences.active = kept
+
+
+## The turn: every projected point moves by exactly the pan, and none at 0.
+static func _the_turn_pans(fails: Array[String]) -> void:
+	var still: TitleWorld = _world()
+	var turned: TitleWorld = _world()
+	for world: TitleWorld in [still, turned]:
+		world._time = 2.1
+		world._step_camera(1.0)
+	turned.pan_px = 94.4
+	for points: Array[Vector3] in [still._door_world, still._road_world, still._lanterns]:
+		for p: Vector3 in points:
+			var a: Vector3 = still._project(p)
+			var b: Vector3 = turned._project(p)
+			_check(fails, is_equal_approx(b.x - a.x, 94.4) and is_equal_approx(b.y, a.y) and is_equal_approx(b.z, a.z),
+				"the turn does not pan the road by its pan in screen space")
+	turned.pan_px = 0.0
+	for p: Vector3 in still._door_world:
+		_check(fails, turned._project(p).is_equal_approx(still._project(p)), "a pan of 0 does not project as shipped")
+	still.free()
+	turned.free()

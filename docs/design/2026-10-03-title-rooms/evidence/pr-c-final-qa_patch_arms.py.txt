@@ -1,0 +1,91 @@
+"""QA-only arms for V3 (never committed): qa_patch_diag.py (with --bench-room), then two launch-time
+switches, so one build runs every arm interleaved.
+  --qa-road-drawn  the held title keeps its road, painting, vignette, chain,
+                   rose and wordmark drawn under the hall (still paused), so
+                   the GPU's work never steps at the turn east
+  --qa-defer-free  the leaving room is hidden as the passage lands and taken
+                   off the tree and freed 0.3 s later
+usage: qa_patch_arms.py <worktree> <build-label> | <worktree> --revert"""
+import os
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+W = sys.argv[1]
+FILES = ["presentation/title/title_screen.gd", "presentation/ui/leadlight_passage.gd"]
+
+if sys.argv[2] == "--revert":
+    for rel in FILES:
+        b = os.path.join(W, rel) + ".arms-backup"
+        if os.path.exists(b):
+            os.replace(b, os.path.join(W, rel))
+    subprocess.run([sys.executable, os.path.join(HERE, "qa_patch_diag.py"), W, "--revert"], check=True)
+    sys.exit(0)
+
+subprocess.run([sys.executable, os.path.join(HERE, "qa_patch_diag.py")] + sys.argv[1:], check=True)
+
+
+def edit(rel, pairs, tail=""):
+    p = os.path.join(W, rel)
+    s = open(p).read()
+    if not os.path.exists(p + ".arms-backup"):
+        open(p + ".arms-backup", "w").write(s)
+    for a, b in pairs:
+        assert s.count(a) == 1, (rel, a[:80], s.count(a))
+        s = s.replace(a, b)
+    open(p, "w").write(s + tail)
+
+
+edit("presentation/title/title_screen.gd", [
+    ('''	for layer: Control in [world, _painting, _vignette, _chain, rose, _wordmark]:
+		if layer != null:
+			layer.visible = not on
+''', '''	for layer: Control in [world, _painting, _vignette, _chain, rose, _wordmark]:
+		if layer != null:
+			layer.visible = not on or qa_road_drawn
+'''),
+], '''
+
+static var qa_road_drawn: bool = false
+''')
+
+edit("presentation/ui/leadlight_passage.gd", [
+    ('''	var node: Control = entry.node if is_instance_valid(entry.node) else null
+	if node != null:
+		if node.get_parent() != null:
+			node.get_parent().remove_child(node)
+		node.queue_free()
+	entry.node = null
+''', '''	var node: Control = entry.node if is_instance_valid(entry.node) else null
+	if node != null and qa_defer_free and is_inside_tree():
+		node.visible = false
+		node.process_mode = Node.PROCESS_MODE_DISABLED
+		get_tree().create_timer(0.3).timeout.connect(func() -> void:
+			if is_instance_valid(node):
+				if node.get_parent() != null:
+					node.get_parent().remove_child(node)
+				node.queue_free())
+	elif node != null:
+		if node.get_parent() != null:
+			node.get_parent().remove_child(node)
+		node.queue_free()
+	entry.node = null
+'''),
+], '''
+
+static var qa_defer_free: bool = false
+''')
+
+main = os.path.join(W, "application/main.gd")
+m = open(main).read()
+a = '''		elif arg == "--continue-now":
+			continue_now = true
+'''
+assert m.count(a) == 1
+m = m.replace(a, a + '''		elif arg == "--qa-road-drawn":
+			TitleScreen.qa_road_drawn = true
+		elif arg == "--qa-defer-free":
+			LeadlightPassage.qa_defer_free = true
+''')
+open(main, "w").write(m)
+print("arms patched", W)

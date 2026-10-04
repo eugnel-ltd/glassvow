@@ -134,6 +134,11 @@ func title_returns() -> void:
 	pass
 
 
+## The sound of the tap that opens the room, which the passage plays (§2.9).
+func opening_cue() -> StringName:
+	return &"roomOpen"
+
+
 ## How long the room's arrival and departure run (glass: 520 / 400 ms).
 func arrival_time() -> float:
 	return 0.52

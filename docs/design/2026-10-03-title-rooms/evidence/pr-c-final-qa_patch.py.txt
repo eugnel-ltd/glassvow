@@ -1,0 +1,314 @@
+"""QA-only patch for the #655 PR C final batch (never committed, never in the game).
+
+Applied to a worktree for its QA build and reverted at once after the export.
+`--rooms-bench` seeds a saved run (Act II, or Act I with `--bench-act=0`) and a
+Vigil part-way in the Development profile, shows the title and attaches
+tools/bench_rooms.gd's Bench (copied to tools/qa_rooms_bench.gd, a name the
+export keeps), which taps each room's word and its Return through the engine's
+own input path and writes one row per drawn frame to user://bench_rooms.jsonl.
+The control build (main) has no hearth hall: its copy tours Settings, How to
+Play and Credits only.
+
+Arguments: --qa-nonce= (echoed in every row and the report), --bench-laps=,
+--bench-title-rest=, --warm-arm=full|build|keep|none:
+  full   RoomWarm as built;
+  build  RoomWarm builds and frees each room but neither shapes, draws nor
+         samples pipelines (#675's next measure for the 0.92 s frame);
+  keep   as build, but the rooms built are never freed (is it the free?);
+  none   no RoomWarm at all.
+Every warm-phase row also carries RoomWarm's stage, the frame's process and
+draw segments, pipeline compilations and video memory, and the report drawn
+over the screen once the bench is done lists every warm frame over 33 ms with
+them, so a long frame says what it was made of. Video memory is reported at the
+landing, after the warms, after the title's rest and at the end.
+
+usage: qa_patch.py <worktree> <build-label> [--control] | <worktree> --revert"""
+import os
+import shutil
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+W = sys.argv[1]
+FILES = ["application/main.gd", "presentation/ui/room_warm.gd"]
+BENCH = os.path.join(W, "tools/qa_rooms_bench.gd")
+
+
+def backup(rel):
+    return os.path.join(W, rel) + ".qa-backup"
+
+
+if sys.argv[2] == "--revert":
+    for rel in FILES:
+        if os.path.exists(backup(rel)):
+            shutil.copyfile(backup(rel), os.path.join(W, rel))
+            os.remove(backup(rel))
+    for path in (BENCH, BENCH + ".uid"):
+        if os.path.exists(path):
+            os.remove(path)
+    sys.exit(0)
+
+LABEL = sys.argv[2]
+CONTROL = "--control" in sys.argv[3:]
+for rel in FILES:
+    assert not os.path.exists(backup(rel)), "a QA patch is already applied"
+for rel in FILES:
+    shutil.copyfile(os.path.join(W, rel), backup(rel))
+
+
+def edit(rel, pairs, text=None):
+    path = os.path.join(W, rel) if text is None else None
+    s = open(path).read() if text is None else text
+    for a, b in pairs:
+        assert s.count(a) == 1, (rel, a[:90], s.count(a))
+        s = s.replace(a, b)
+    if text is None:
+        open(path, "w").write(s)
+    return s
+
+
+# ---- the bench copy ---------------------------------------------------------
+bench = open(os.path.join(W, "tools/bench_rooms.gd")).read() if not CONTROL else \
+    open(os.path.join(HERE, "bench_rooms_candidate.gd")).read()
+bench = edit("tools/qa_rooms_bench.gd", [
+    ('''	var _tap_drawn_us: int = 0
+''', '''	var _tap_drawn_us: int = 0
+	var _qa_pre_us: int = 0
+	var _qa_pc: int = 0
+'''),
+    ('''		RenderingServer.frame_post_draw.connect(_on_drawn)
+''', '''		RenderingServer.frame_post_draw.connect(_on_drawn)
+		RenderingServer.frame_pre_draw.connect(func() -> void: _qa_pre_us = Time.get_ticks_usec())
+'''),
+    ('''			if _phase == "warm":
+				var warm: RoomWarm''', '''			row["vram"] = snappedf(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, 0.1)
+			if _phase == "warm":
+				row["stage"] = str(main.call("_qa_warm_stage"))
+				row["pre_ms"] = float(_qa_pre_us - _start_us) / 1000.0
+				var pc: int = int(Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_CANVAS)) \\
+					+ int(Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_SURFACE)) \\
+					+ int(Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_DRAW)) \\
+					+ int(Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_SPECIALIZATION))
+				row["pc"] = pc - _qa_pc
+				_qa_pc = pc
+				var warm: RoomWarm'''),
+], text=bench)
+if CONTROL:
+    bench = edit("tools/qa_rooms_bench.gd", [
+        ('const ROOMS: Array[String] = ["settings", "help", "credits", "vigil"]',
+         'const ROOMS: Array[String] = ["settings", "help", "credits"]'),
+    ], text=bench)
+open(BENCH, "w").write(bench)
+
+# ---- RoomWarm: the arms and its stage -----------------------------------------
+edit("presentation/ui/room_warm.gd", [
+    ('''func _queue_jobs() -> void:
+''', '''func _queue_jobs() -> void:
+	if qa_arm == "build" or qa_arm == "keep":
+		_qa_drop_rest()
+		return
+'''),
+    ('''	room.free()
+''', '''	if qa_arm == "keep":
+		qa_kept.append(room)
+	else:
+		room.free()
+'''),
+])
+warm_tail = '''
+
+
+## QA only: the arm this launch runs (`--warm-arm=`), rooms kept unfreed in
+## the keep arm, and the warm's stage now for the bench's rows.
+static var qa_arm: String = "full"
+static var qa_kept: Array[Control] = []
+
+
+func _qa_drop_rest() -> void:
+	if get("_pipelines") != null:
+		var none: Array[Callable] = []
+		set("_pipelines", none)
+
+
+func qa_stage() -> String:
+	if _rested < REST:
+		return "rest"
+	if not _builders.is_empty():
+		return "build%d" % _builders.size()
+	if not _jobs.is_empty():
+		return "shape"
+	if _next_glyph < _glyphs.size():
+		return "draw"
+	return "pipe"
+'''
+open(os.path.join(W, "presentation/ui/room_warm.gd"), "a").write(warm_tail)
+
+# ---- Main: the bench, the arms, the Vigil's steps and the report -------------
+pairs = [
+    ('''	var show_settings: bool = false
+''', '''	var show_settings: bool = false
+	var rooms_bench: bool = false
+	var qa_nonce: String = ""
+	var bench_act: int = 1
+	var bench_laps: int = 10
+	var bench_title_rest: float = 30.0
+	var continue_now: bool = false
+'''),
+    ('''		elif arg == "--settings":
+''', '''		elif arg == "--rooms-bench":
+			rooms_bench = true
+		elif arg.begins_with("--qa-nonce="):
+			qa_nonce = arg.trim_prefix("--qa-nonce=")
+		elif arg.begins_with("--bench-act="):
+			bench_act = int(arg.trim_prefix("--bench-act="))
+		elif arg.begins_with("--bench-laps="):
+			bench_laps = int(arg.trim_prefix("--bench-laps="))
+		elif arg.begins_with("--bench-title-rest="):
+			bench_title_rest = float(arg.trim_prefix("--bench-title-rest="))
+		elif arg.begins_with("--warm-arm="):
+			RoomWarm.qa_arm = arg.trim_prefix("--warm-arm=")
+		elif arg == "--continue-now":
+			continue_now = true
+		elif arg == "--settings":
+'''),
+    ('''	elif not _onboard.is_empty():
+		_boot_onboard(_onboard)
+	else:
+		_route_idle()
+''', '''	elif not _onboard.is_empty():
+		_boot_onboard(_onboard)
+	elif rooms_bench:
+		_qa_rooms_bench(qa_nonce, bench_act, bench_laps, bench_title_rest, continue_now)
+	else:
+		_route_idle()
+'''),
+    ('''func _warm_rooms() -> void:
+''', '''func _warm_rooms() -> void:
+	if RoomWarm.qa_arm == "none":
+		return
+'''),
+]
+if not CONTROL:
+    pairs += [
+        ('''	var screen: VigilScreen = _take_vigil_ahead() if from_title and not open_rose else null
+	if screen == null:
+		screen = VigilScreen.new(_vigil, content, _shape, open_rose, _sfx_bus)
+''', '''	var qa_t: int = Time.get_ticks_usec()
+	var screen: VigilScreen = _take_vigil_ahead() if from_title and not open_rose else null
+	if screen == null:
+		screen = VigilScreen.new(_vigil, content, _shape, open_rose, _sfx_bus)
+		_qa_marks["vigil fresh"] = _qa_marks.get("vigil fresh", []) + [1.0]
+	qa_t = _qa_mark("vigil new", qa_t)
+'''),
+        ('''	_show_route(screen, false, &"", not hold)
+''', '''	qa_t = Time.get_ticks_usec()
+	_show_route(screen, false, &"", not hold)
+	qa_t = _qa_mark("vigil route", qa_t)
+'''),
+        ('''		_passage_node().arrive(screen, title, _room_word, _cross_fade())
+''', '''		_passage_node().arrive(screen, title, _room_word, _cross_fade())
+		qa_t = _qa_mark("vigil arrive", qa_t)
+'''),
+        ('''	_room_word = ""
+	screen.announce()
+''', '''	_room_word = ""
+	qa_t = Time.get_ticks_usec()
+	screen.announce()
+	qa_t = _qa_mark("vigil music", qa_t)
+'''),
+        ('''	title.hold_world(false)
+	_passage.depart(vigil, faded)
+	_music.play(&"title")
+''', '''	var qa_t: int = Time.get_ticks_usec()
+	title.hold_world(false)
+	qa_t = _qa_mark("leave unhold", qa_t)
+	_passage.depart(vigil, faded)
+	qa_t = _qa_mark("leave depart", qa_t)
+	_music.play(&"title")
+	qa_t = _qa_mark("leave music", qa_t)
+'''),
+    ]
+edit("application/main.gd", pairs)
+tail = '''
+
+
+func _qa_rooms_bench(nonce: String, act: int, laps: int, title_rest: float, now: bool) -> void:
+	var script: GDScript = load("res://tools/qa_rooms_bench.gd") as GDScript
+	script.get("Bench").call("seed_saved_run", act)
+	_vigil = _load_vigil()
+	Preferences.active.diagnostics_notice_seen = true
+	_route_idle()
+	var bench: Node = script.get("Bench").new()
+	bench.set("main", self)
+	bench.set("nonce", nonce)
+	bench.set("label", "ipad8-%s-%s%s-%s" % ["''' + LABEL + '''", Locale.active.code, "-a0" if act == 0 else "",
+		RoomWarm.qa_arm])
+	bench.set("laps", laps)
+	bench.set("room_rest", 30.0)
+	bench.set("hold", 3.0)
+	bench.set("title_rest", title_rest)
+	bench.set("out_path", "user://bench_rooms.jsonl")
+	if now:
+		_qa_continue_at_landing.call_deferred(bench)
+		return
+	bench.connect("done", _qa_after_tour.bind(bench))
+	add_child(bench)
+
+
+func _qa_warm_stage() -> String:
+	if _room_warm == null or not is_instance_valid(_room_warm):
+		return "gone"
+	return _room_warm.qa_stage()
+'''
+tail += '''
+
+
+## QA only: Back to the Road timed as R1.1 times it (#671): from the tap to a
+## drawn, interactive map. After the rooms' tour (the title rested, the hall
+## built ahead), or with `--continue-now` the moment the launch rite lands.
+var _qa_continue: Array[String] = []
+
+
+func _qa_continue_timed(when: String) -> void:
+	var title: TitleScreen = _choice_screen as TitleScreen
+	if title == null:
+		_qa_continue.append("continue %s: no title" % when)
+		return
+	var ahead: bool = get("_vigil_ahead") != null
+	var tap: int = Time.get_ticks_usec()
+	title._on_lantern()
+	var worst: float = 0.0
+	var last: int = tap
+	for i: int in range(1200):
+		await get_tree().process_frame
+		var now: int = Time.get_ticks_usec()
+		worst = maxf(worst, float(now - last) / 1000.0)
+		last = now
+		var screen: WorldMapScreen = _map_screen
+		if screen != null and is_instance_valid(screen) and screen.is_inside_tree() \\
+				and not screen.landscape_pending() and not screen.layout_pending():
+			break
+	await RenderingServer.frame_post_draw
+	_qa_continue.append("continue %s: ready %.1f ms, worst frame %.1f ms, hall built ahead %s" % [
+		when, float(Time.get_ticks_usec() - tap) / 1000.0, worst, str(ahead)])
+
+
+func _qa_after_tour(bench: Node) -> void:
+	await get_tree().create_timer(2.0).timeout
+	await _qa_continue_timed("after the tour")
+	await get_tree().create_timer(1.0).timeout
+	_qa_bench_report(bench)
+
+
+func _qa_continue_at_landing(bench: Node) -> void:
+	while true:
+		await get_tree().process_frame
+		var title: TitleScreen = _choice_screen as TitleScreen
+		if title != null and (title.rite == null or title.rite.is_done()):
+			break
+	await _qa_continue_timed("as the rite lands")
+	await get_tree().create_timer(1.0).timeout
+	_qa_bench_report(bench)
+'''
+tail += open(os.path.join(HERE, "qa_report.gd.txt")).read()
+open(os.path.join(W, "application/main.gd"), "a").write(tail)
+print("qa patched", W, LABEL, "control" if CONTROL else "candidate")

@@ -68,3 +68,33 @@ static func _below_ten_thousand(n: int, leading: bool) -> String:
 ## A count in the active script's carved numerals.
 static func carved(n: int) -> String:
 	return hanzi(n) if LeadlightTokens.is_zh() else roman(n)
+
+
+## The Chinese numerals the shipped zh-Hant faces do not carry: they are
+## subset to the locale's own text (tools/subset_noto_serif_tc.py), which
+## never writes these (found in #655 PR C).
+const UNDRAWN: String = "零千萬"
+
+
+## A carved line as zh-Hant sets it: its numerals against their counter word,
+## no space carved ("十二次朝聖"), each part of a " · " ledger apart. English
+## keeps its spaces.
+static func set_against(line: String) -> String:
+	var text: String = line.strip_edges()
+	if not LeadlightTokens.is_zh():
+		return text
+	var parts: PackedStringArray = text.split(" · ")
+	for i: int in parts.size():
+		parts[i] = parts[i].replace(" ", "")
+	return " · ".join(parts)
+
+
+## A count in carved numerals the shipped faces can draw: in figures where the
+## numerals would need a character they do not carry (zh-Hant's zero, its
+## thousands; English has no Roman zero and already writes it so).
+static func carved_drawn(n: int) -> String:
+	var text: String = carved(n)
+	for c: String in UNDRAWN:
+		if text.contains(c):
+			return str(n)
+	return text

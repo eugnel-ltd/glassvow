@@ -1,0 +1,16 @@
+# PR C sequences (docs/design/2026-10-03-title-rooms §11.5): tools/capture_rooms.gd --seq at --fixed-fps 60,
+# frames 0 to settled + 4, on 1e1395f2 (the hall's code; C8 after it changes only zh-Hant's zero counts).
+# The cut gate is graded under Reduce Motion (--rm) and reported otherwise. Sheets: seq-<name>.jpg.
+seq-v1-pad-en grey gate PASS: worst frame 27 has 0.04% grey (limit 0.5%) cut gate FAIL: largest step 0.0243 at frame 1, whole change 0.1194, idle 0.0007, limit 0.0156 (reported)
+seq-v3-pad-en grey gate PASS: worst frame 4 has 0.06% grey (limit 0.5%) cut gate FAIL: largest step 0.0221 at frame 1, whole change 0.1158, idle 0.0004, limit 0.0149 (reported)
+seq-v2-pad-en grey gate PASS: worst frame 19 has 0.10% grey (limit 0.5%) cut gate FAIL: largest step 0.0298 at frame 10, whole change 0.1317, idle 0.0006, limit 0.0170 (reported)
+seq-v4-rose-pad-en grey gate PASS: worst frame 15 has 0.11% grey (limit 0.5%) cut gate FAIL: largest step 0.0379 at frame 9, whole change 0.1034, idle 0.0001, limit 0.0131 (reported)
+seq-v4-epitaphs-pad-en grey gate PASS: worst frame 3 has 0.06% grey (limit 0.5%) cut gate FAIL: largest step 0.0176 at frame 15, whole change 0.0572, idle 0.0001, limit 0.0072 (reported)
+seq-v5-pad-en grey gate PASS: worst frame 8 has 0.10% grey (limit 0.5%) cut gate FAIL: largest step 0.0072 at frame 8, whole change 0.0232, idle 0.0002, limit 0.0031 (reported)
+seq-v8-pad-en grey gate PASS: worst frame 5 has 0.05% grey (limit 0.5%) cut gate FAIL: largest step 0.1064 at frame 1, whole change 0.1215, idle 0.0016, limit 0.0168 (reported)
+seq-v9-pad-en grey gate PASS: worst frame 5 has 0.07% grey (limit 0.5%) cut gate PASS: largest step 0.0153 at frame 1, whole change 0.1206, idle 0.0003, limit 0.0154 (reported)
+seq-v1-phone-zh grey gate PASS: worst frame 32 has 0.07% grey (limit 0.5%) cut gate FAIL: largest step 0.0235 at frame 1, whole change 0.1105, idle 0.0007, limit 0.0145 (reported)
+seq-v3-phone-zh grey gate PASS: worst frame 1 has 0.08% grey (limit 0.5%) cut gate FAIL: largest step 0.0252 at frame 1, whole change 0.1088, idle 0.0003, limit 0.0139 (reported)
+seq-v1-pad-en-rm grey gate PASS: worst frame 3 has 0.04% grey (limit 0.5%) cut gate PASS: largest step 0.0131 at frame 5, whole change 0.1159, idle 0.0000, limit 0.0145 
+seq-v3-pad-en-rm grey gate PASS: worst frame 6 has 0.05% grey (limit 0.5%) cut gate PASS: largest step 0.0132 at frame 5, whole change 0.1157, idle 0.0000, limit 0.0145 
+seq-v4-pad-en-rm grey gate PASS: worst frame 7 has 0.21% grey (limit 0.5%) cut gate PASS: largest step 0.0112 at frame 5, whole change 0.0989, idle 0.0001, limit 0.0124 

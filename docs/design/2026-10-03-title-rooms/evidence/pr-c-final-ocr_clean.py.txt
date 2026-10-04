@@ -1,0 +1,16 @@
+"""The on-screen reports as text: tesseract's reading, with its few habitual
+misreadings put right (each still checked by eye against its image)."""
+import re, sys
+for path in sys.argv[1:]:
+    lines = [l for l in open(path).read().splitlines() if l.strip()]
+    out = []
+    for l in lines:
+        l = l.replace('ipads-', 'ipad8-').replace(' Ist ', ' 1st ').replace('help _ ', 'help ')
+        l = re.sub(r'\bnO\b', 'n 0', l)
+        l = re.sub(r'\bn(\d)', r'n \1', l)
+        l = l.replace('P500.00', 'P50 0.00')
+        l = re.sub(r'>33(\d)$', r'>33 \1', l)
+        l = re.sub(r'nonce cl-', 'nonce c1-', l)
+        l = l.replace(' pe 0 ', ' pc 0 ').replace('vigilnew', 'vigil new')
+        out.append(l)
+    print('\n'.join(out))

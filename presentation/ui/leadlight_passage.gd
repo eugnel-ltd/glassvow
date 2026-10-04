@@ -145,8 +145,8 @@ func arrive(host: LeadlightRoomHost, title: TitleScreen = null, word_id: String 
 		_title.lend()
 		if word != null:
 			_word = word
-	if not landed and sfx != null:
-		sfx.play_owed(&"roomOpen", &"click")
+	if not landed and sfx != null and not host.opening_cue().is_empty():
+		sfx.play_owed(host.opening_cue(), &"click")
 	_guard_at = _press_at
 	_guard_left = GUARD_TIME if _guard_at != Vector2.INF else 0.0
 	var a: Arrival = Arrival.new()

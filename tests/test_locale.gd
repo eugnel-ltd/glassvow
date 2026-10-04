@@ -339,10 +339,12 @@ static func _remaining_run_screen_call_sites(fails: Array[String]) -> void:
 			"_init": ["ui.credits.fontLicences", "ui.credits.engineLicences"],
 		},
 		"res://presentation/run/rose_window_view.gd": {
-			"_pane_copy": ["ui.rose.shardRecoveredStack"],
+			"_fill_glass": ["ui.rose.unknownPane", "ui.rose.dormantPane",
+				"ui.rose.shardRecoveredShort", "ui.rose.paneDark"],
 			"_detail_copy": ["ui.rose.shardRecoveredStack", "ui.rose.paneDark"],
 			"_pane_accessible_name": ["ui.rose.dormantPane", "ui.rose.unknownPane"],
 			"_add_replay": ["ui.rose.replayUnsealing"],
+			"_build_log": ["ui.rose.whisperLogTitleUpper", "ui.rose.finalWhisperMark"],
 		},
 		"res://presentation/ui/components/leadlight_rose.gd": {
 			"_init": ["ui.rose.openLabel"],
@@ -356,7 +358,10 @@ static func _remaining_run_screen_call_sites(fails: Array[String]) -> void:
 		},
 		"res://presentation/run/vigil_screen.gd": {
 			"_build": ["ui.vigil.title", "ui.vigil.stats", "ui.vigil.deedsTab",
-				"ui.vigil.roseTab", "ui.vigil.epitaphTab", "ui.vigil.return"],
+				"ui.vigil.roseTab", "ui.vigil.epitaphTab"],
+		},
+		"res://presentation/run/vigil_deeds.gd": {
+			"_reward_names": ["ui.vigil.ashwarden"],
 		},
 		"res://presentation/run/departure_screen.gd": {
 			"_build_embark": ["ui.embark.title", "ui.embark.subChoose", "ui.embark.subWait",

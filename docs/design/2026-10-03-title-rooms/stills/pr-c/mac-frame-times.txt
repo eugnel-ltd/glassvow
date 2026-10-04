@@ -1,0 +1,48 @@
+# PR C, Mac (M1 Max) on the A12's Metal path (GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 --rendering-driver metal
+# --rendering-method mobile), tools/bench_rooms.gd on 1e1395f2, pad en, 10 laps a room. The shared Mac was
+# loaded (load average 45 to 120 while other lanes ran suites): its wall interval is display-bound (~9.4 ms)
+# and its rare 80 to 230 ms frames fall where the machine stalled (Credits' laps 2-10 too, a room PR C does not
+# touch; the Vigil's first opening at 231 ms did not reproduce in a quiet scripted run of the same path: 7.4 ms
+# for its tap path on the M1, 13 ms its next frame). The iPad 8 rows are the acceptance.
+== mac-pad-en.jsonl  nonce mac-1e1395f2-en  label mac-pad-landscape-en
+   title at rest: 573 frames; wall P95 9.38 ms; max 147.1
+   settings first opening open  tap->first moved 19.4/19.4/19.4 ms; tap frame 10.5/10.5/10.5 ms (min/median/max)
+                                passage (inside its span) wall P95 9.46 max 9.90 (n 62), over 33 ms: 0; P95 - title P95 = +0.09
+   settings first opening leave tap->first moved 15.7/15.7/15.7 ms; tap frame 9.1/9.1/9.1 ms (min/median/max)
+                                passage (inside its span) wall P95 9.60 max 9.65 (n 48), over 33 ms: 0; P95 - title P95 = +0.22
+                                at rest wall P95 9.66 (n 333), against the title 9.38: +0.28
+   settings laps 2-10    open  tap->first moved 13.1/16.8/18.2 ms; tap frame 8.2/9.1/11.0 ms (min/median/max)
+                               passage (inside its span) wall P95 9.59 max 14.29 (n 556), over 33 ms: 0; P95 - title P95 = +0.21
+   settings laps 2-10    leave tap->first moved 15.4/16.7/17.8 ms; tap frame 7.5/8.0/9.8 ms (min/median/max)
+                               passage (inside its span) wall P95 9.58 max 19.29 (n 422), over 33 ms: 0; P95 - title P95 = +0.20
+   help     first opening open  tap->first moved 19.1/19.1/19.1 ms; tap frame 9.8/9.8/9.8 ms (min/median/max)
+                                passage (inside its span) wall P95 11.53 max 13.78 (n 60), over 33 ms: 0; P95 - title P95 = +2.15
+   help     first opening leave tap->first moved 15.0/15.0/15.0 ms; tap frame 8.0/8.0/8.0 ms (min/median/max)
+                                passage (inside its span) wall P95 9.57 max 9.61 (n 47), over 33 ms: 0; P95 - title P95 = +0.19
+                                at rest wall P95 9.64 (n 332), against the title 9.38: +0.26
+   help     laps 2-10    open  tap->first moved 15.6/16.6/17.5 ms; tap frame 7.7/8.3/9.3 ms (min/median/max)
+                               passage (inside its span) wall P95 9.51 max 16.19 (n 556), over 33 ms: 0; P95 - title P95 = +0.13
+   help     laps 2-10    leave tap->first moved 14.3/16.2/17.5 ms; tap frame 7.7/8.0/9.5 ms (min/median/max)
+                               passage (inside its span) wall P95 9.48 max 15.57 (n 424), over 33 ms: 0; P95 - title P95 = +0.10
+   credits  first opening open  tap->first moved 19.9/19.9/19.9 ms; tap frame 10.9/10.9/10.9 ms (min/median/max)
+                                passage (inside its span) wall P95 9.53 max 13.63 (n 71), over 33 ms: 0; P95 - title P95 = +0.15
+   credits  first opening leave tap->first moved 16.0/16.0/16.0 ms; tap frame 8.5/8.5/8.5 ms (min/median/max)
+                                passage (inside its span) wall P95 9.35 max 9.80 (n 57), over 33 ms: 0; P95 - title P95 = -0.02
+                                at rest wall P95 9.57 (n 335), against the title 9.38: +0.19
+   credits  laps 2-10    open  tap->first moved 15.0/17.1/183.6 ms; tap frame 7.6/9.1/150.4 ms (min/median/max)
+                               passage (inside its span) wall P95 22.38 max 78.19 (n 489), over 33 ms: 13; P95 - title P95 = +13.00
+   credits  laps 2-10    leave tap->first moved 14.1/16.1/149.4 ms; tap frame 7.3/8.7/38.6 ms (min/median/max)
+                               passage (inside its span) wall P95 22.41 max 214.53 (n 387), over 33 ms: 11; P95 - title P95 = +13.03
+   vigil    first opening open  tap->first moved 289.0/289.0/289.0 ms; tap frame 231.1/231.1/231.1 ms (min/median/max)
+                                passage (inside its span) wall P95 114.60 max 114.60 (n 10), over 33 ms: 9; P95 - title P95 = +105.22
+   vigil    first opening leave tap->first moved 20.5/20.5/20.5 ms; tap frame 11.5/11.5/11.5 ms (min/median/max)
+                                passage (inside its span) wall P95 147.25 max 147.25 (n 19), over 33 ms: 2; P95 - title P95 = +137.88
+                                at rest wall P95 45.86 (n 218), against the title 9.38: +36.48
+   vigil    laps 2-10    open  tap->first moved 24.4/26.8/51.6 ms; tap frame 17.0/18.9/33.2 ms (min/median/max)
+                               passage (inside its span) wall P95 10.53 max 88.51 (n 591), over 33 ms: 2; P95 - title P95 = +1.15
+   vigil    laps 2-10    leave tap->first moved 16.6/18.2/20.8 ms; tap frame 9.8/10.2/11.5 ms (min/median/max)
+                               passage (inside its span) wall P95 9.67 max 23.80 (n 494), over 33 ms: 0; P95 - title P95 = +0.29
+   the title while the rooms' warm and the map's prefetch run (from the rite's end):
+     rooms only n    9  P50 9.22  P95 13.87  max 13.87  over 33 ms: 0
+     neither    n  201  P50 8.20  P95 9.55  max 185.02  over 33 ms: 2
+   the rooms' warm done before the title at rest: True

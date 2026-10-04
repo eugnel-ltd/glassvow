@@ -83,6 +83,35 @@ var _room_word: String = ""
 ## (RoomWarm), and the languages and shapes already paid for.
 var _room_warm: RoomWarm = null
 var _rooms_warmed: Dictionary = {}
+## The warm needs frames to draw in: never in the headless suite (a suite that
+## drives it says so).
+var _warm_headless: bool = DisplayServer.get_name() == "headless"
+## The Vigil's art, loaded on a worker while the title rests and held until a
+## run starts (docs/design/2026-10-03-title-rooms §7 item 16), the rose's masks
+## only while they are wanted (`_tend_rose_art`): path -> the resource, null
+## while it loads, false when it could not; and whether to let it all go once
+## the loads in flight are done (a run has started).
+var _vigil_art: Dictionary = {}
+var _vigil_art_drop: bool = false
+## Whether the title still owes the Vigil's art its warm, and how long the
+## title has rested towards it; and whether it has been asked for.
+var _vigil_art_due: bool = false
+var _vigil_art_rested: float = 0.0
+var _vigil_art_asked: bool = false
+## The title held under the Vigil it opened (§2.1, §9 item 2): paused under
+## the hall's plate, never rebuilt, until the turn east brings it back; and the
+## word that opened it, which takes the focus back.
+var _held_title: TitleScreen = null
+var _held_word: String = ""
+## The title's own Vigil, built ahead on the tree, hidden and still: entering
+## the tree was most of the hall's tap frame on the iPad 8 (9 to 16 ms, its
+## construction 4 more). Its language and shape are its key; how long the
+## title has rested towards building it.
+var _vigil_ahead: VigilScreen = null
+var _vigil_ahead_key: String = ""
+var _vigil_ahead_rested: float = 0.0
+## Set while the title is built beneath a route-form screen lifted off it (X2, V9).
+var _lift_route: bool = false
 ## Set while Settings' language toggle rebuilds the route under the room: the
 ## old room lingers, the title is not faded in, the new room lands built.
 var _relanguage: bool = false
@@ -237,6 +266,7 @@ func _ready() -> void:
 	# every draw (docs/p7-locale-design.md §3) — presentation keeps reading
 	# `name` / `text` / move names straight off ContentDB.
 	_apply_content_hydration()
+	_find_os_glyphs()
 	_music = MusicBus.new()
 	add_child(_music)
 	_sfx_bus = SfxBus.new()
@@ -727,7 +757,7 @@ func _apply_shape() -> void:
 func _reshape() -> void:
 	for screen: Control in [
 		_screen, _map_screen, _choice_screen, _reward_screen,
-		_route_screen, _run_hud, _modal,
+		_route_screen, _run_hud, _modal, _held_title,
 	]:
 		if screen != null and screen.has_method(&"set_shape"):
 			screen.call(&"set_shape", _shape)
@@ -975,9 +1005,11 @@ func _clear_route() -> void:
 		_passage.clear()
 	for screen: Control in [
 		_screen, _choice_screen, _reward_screen, _route_screen, _run_hud, _modal,
+		_held_title,
 	]:
 		if screen != null:
 			screen.queue_free()
+	_held_title = null
 	var run_over: bool = game == null or game.run == null or game.run.pending_run_end != null
 	if run_over:
 		# Wherever the run ends (a fight, the run menu over any screen), the map
@@ -990,6 +1022,7 @@ func _clear_route() -> void:
 			# Keyed by the shape the screen now has: `_reshape` may have moved it.
 			_map_screen_key["shape"] = _map_screen.shape
 			_map_keep.keep(_map_screen, _map_screen_key)
+	_drop_vigil_ahead()
 	_screen = null
 	_map_screen = null
 	_choice_screen = null
@@ -1129,7 +1162,11 @@ func _show_route(screen: Control, with_hud: bool = false,
 		_transitions.wipe()
 	_clear_route()
 	_route_screen = screen
-	add_child(screen)
+	# The hall built ahead is already on the tree: it comes to the top in place.
+	if screen.get_parent() == self:
+		move_child(screen, -1)
+	else:
+		add_child(screen)
 	_transitions.set_grain(true)
 	# Death owns its own graveReveal + monumentRise; skip the generic screen_in
 	# so the two entrances do not stack (issue #18).
@@ -1290,6 +1327,10 @@ func _show_title() -> void:
 	# The road persists across a rebuild (§7 item 12): the new title continues
 	# the world it replaces, the title's or the departure's.
 	var standing: TitleWorld = _standing_road()
+	# X2, V9: the route on screen is lifted off the title built beneath it.
+	var lifted: Control = _route_screen if _lift_route else null
+	if lifted != null:
+		_route_screen = null
 	if game != null and game.run != null:
 		_transitions.wipe()
 	_clear_route()
@@ -1309,25 +1350,43 @@ func _show_title() -> void:
 	_choice_screen = screen
 	add_child(screen)
 	screen.world.inherit(standing)
+	if lifted != null:
+		_transitions.lift(lifted)
 	# Made with the title, before any tap: it reads the tap that opens a room.
 	_passage_node()
 	_transitions.set_grain(true)
 	# Under a language reopen the old room stands over the rebuilt title.
-	if not rite and not _relanguage:
+	if lifted != null:
+		screen.rise_after_lift()
+	elif not rite and not _relanguage:
 		_transitions.screen_in(screen)
 	_music.play(&"title")
 	_title_kindled = true
 	_title_rite_resume = false
+	_vigil_art_drop = false
+	_vigil_art_due = true
 	_warm_rooms()
+
+
+## X2 and V9: the title built beneath the route on screen, which is lifted off
+## it, the road going on under it.
+func _lift_to_title() -> void:
+	_lift_route = true
+	_show_title()
+	_lift_route = false
 
 
 ## While the title rests, its rooms' first-opening work is done ahead (once a
 ## launch for each language and shape), so the first tap on a room word costs
-## no more than the next (§11.6). Never in the headless suite.
+## no more than the next (§11.6). Never in the headless suite. A language or a
+## shape that changes while a warm runs is warmed once that warm is done.
 func _warm_rooms() -> void:
 	var key: String = "%s|%s" % [Locale.active.code, _shape]
-	if DisplayServer.get_name() == "headless" or _rooms_warmed.has(key) \
-			or (_room_warm != null and is_instance_valid(_room_warm)):
+	if _warm_headless or _rooms_warmed.has(key):
+		return
+	if _room_warm != null and is_instance_valid(_room_warm):
+		if not _room_warm.tree_exited.is_connected(_on_room_warm_done):
+			_room_warm.tree_exited.connect(_on_room_warm_done, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
 		return
 	_rooms_warmed[key] = true
 	var shape: StringName = _shape
@@ -1350,9 +1409,109 @@ func _warm_rooms() -> void:
 			var credits: CreditsScreen = CreditsScreen.new(shape, _sfx_bus, _vigil.scenes_seen.has("unsealing"))
 			credits.roll().finish()
 			return credits,
+		func() -> Control:
+			# The hall and its floor, for their glyphs at their sizes, once its
+			# art is in hand (a load the build waited on stalled a warm frame
+			# for 386 ms on the iPad 8); its window apart, a frame later.
+			if not _vigil_art_ready():
+				return null
+			var vigil: VigilScreen = VigilScreen.new(_vigil, content, shape, false, _sfx_bus)
+			vigil._show_epitaphs()
+			return vigil,
+		func() -> Control:
+			return RoseWindowView.new(_vigil.quests, content.quests, _vigil.whispers,
+				VigilScreen._whisper_lines(), shape),
 	]
-	_room_warm = RoomWarm.new(builders, _title_rests)
+	# The hall's first-use pipelines (its additive fire, the Keeper's clip pass,
+	# the rose's pane shader at its size) drawn once under the road.
+	var pipelines: Array[Callable] = [func() -> Control:
+		return VigilHall.pipeline_sample(shape) if _vigil_art_ready() else null]
+	_room_warm = RoomWarm.new(builders, _warm_may_run, pipelines)
 	add_child(_room_warm)
+
+
+## A warm ended: warm again if the language or shape changed meanwhile.
+func _on_room_warm_done() -> void:
+	_room_warm = null
+	if _choice_screen is TitleScreen:
+		_warm_rooms()
+
+
+## The Vigil's art on a worker while the title rests, once a session, with
+## the hall's two tracks and the title's own to come back to (a 3.7 MB track
+## read on the tap frame cost it 5.5 ms on the M1). Asked for once the title
+## has rested RoomWarm.REST with the map's prefetch done (§7 item 16: about
+## 1 s after the title lands), never under the launch rite, whose frames its
+## uploads would share, nor beside the warm of the land Back to the Road opens
+## (R1.1), whose pictures decode on the same worker pool.
+func _warm_vigil_art_once_rested(delta: float) -> void:
+	_vigil_art_rested = _vigil_art_rested + delta if _warm_may_run() else 0.0
+	if _vigil_art_rested < RoomWarm.REST:
+		return
+	_vigil_art_due = false
+	_vigil_art_rested = 0.0
+	_warm_vigil_art()
+
+
+func _warm_vigil_art() -> void:
+	_vigil_art_drop = false
+	if _warm_headless or _vigil_art_asked:
+		return
+	_vigil_art_asked = true
+	for path: String in VigilHall.art_paths() + MusicBus.paths([&"vigil", &"roseWindow", &"title"]):
+		if ResourceLoader.exists(path) and ResourceLoader.load_threaded_request(path) == OK:
+			_vigil_art[path] = null
+
+
+## Whether the Vigil's art has been asked for and every piece is in hand (or
+## could not be): until then the hall is built by nobody ahead of a tap.
+func _vigil_art_ready() -> bool:
+	return _vigil_art_asked and not _vigil_art.values().has(null)
+
+
+## The rose's six masks (12 MiB) are drawn by the Rose look alone: the title
+## shows nothing of them and the hall built ahead opens on the Deeds look. They
+## join the Vigil's art while the rooms' warm still owes the Rose Window its
+## build (once the rest of the art is asked for), and while the hall rests,
+## for its Rose look; otherwise they are let go once in hand (§12, open item 5:
+## the title held 37.5 to 39.3 MiB over main's on the iPad 8). A Rose look
+## opened before they land waits on their worker.
+func _rose_art_wanted() -> bool:
+	if _warm_headless or _vigil_art_drop:
+		return false
+	if _room_warm != null and is_instance_valid(_room_warm):
+		return _vigil_art_asked
+	return _route_screen is VigilScreen and (_passage == null or not _passage.arriving())
+
+
+func _tend_rose_art() -> void:
+	var want: bool = _rose_art_wanted()
+	for path: String in LeadlightRose.mask_paths():
+		if want and not _vigil_art.has(path):
+			if ResourceLoader.exists(path) and ResourceLoader.load_threaded_request(path) == OK:
+				_vigil_art[path] = null
+		elif not want and _vigil_art.get(path) != null:
+			_vigil_art.erase(path)
+
+
+## Holds each piece of the Vigil's art once its worker is done with it; lets
+## it all go, once nothing is in flight, when a run has started.
+func _take_vigil_art() -> void:
+	var waiting: bool = false
+	for path: String in _vigil_art:
+		if _vigil_art[path] != null:
+			continue
+		var status: ResourceLoader.ThreadLoadStatus = ResourceLoader.load_threaded_get_status(path)
+		if status == ResourceLoader.THREAD_LOAD_LOADED:
+			_vigil_art[path] = ResourceLoader.load_threaded_get(path)
+		elif status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			waiting = true
+		else:
+			_vigil_art[path] = false
+	if _vigil_art_drop and not waiting:
+		_vigil_art.clear()
+		_vigil_art_drop = false
+		_vigil_art_asked = false
 
 
 ## The title on screen with nothing over it or moving: no room, no passage,
@@ -1362,6 +1521,80 @@ func _title_rests() -> bool:
 	return title != null and _modal == null and _route_screen == null \
 		and (title.rite == null or title.rite.is_done()) \
 		and (_passage == null or not (_passage.arriving() or _passage.leaving()))
+
+
+## The rooms' warm runs while the title rests and the map's prefetch is done
+## (#670 review, follow-up 3: on the iPad 8 a warm build that met the prefetch's
+## work in one frame ran 149.5 ms against 137.6 alone).
+func _warm_may_run() -> bool:
+	return _title_rests() and not MapJourneyPrefetch.busy()
+
+
+## The glyphs a screen sets that no shipped face carries, which TextServer
+## finds in the OS's own fonts: the Vigil's "→" between a deed and its rewards.
+## The first search for one, with its font, cost a frame of the title at rest
+## 150 to 155 ms on the iPad 8 (the rooms' warm shaping the hall's deeds). It is
+## made once here, while the app boots and before its first frame is drawn, at
+## the sizes the rooms set it, so no frame waits on it. English and zh-Hant
+## share the reading face that falls through, so one search serves both.
+const OS_GLYPHS: String = VigilDeeds.TO_REWARDS
+
+
+func _find_os_glyphs() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	for px: int in [LeadlightTokens.SIZE_ROOM_READ.x, LeadlightTokens.SIZE_ROOM_READ.y]:
+		LeadlightTokens.font(LeadlightTokens.ROLE_READ, px).get_string_size(
+			OS_GLYPHS, HORIZONTAL_ALIGNMENT_LEFT, -1, px)
+
+
+## Once the title has rested RoomWarm.REST with the Vigil's art in hand and its
+## rooms' warm done, the hall its Vigil word opens (the Deeds look) is built
+## and added to the tree hidden, its processing off, so the tap only shows it
+## (`_take_vigil_ahead`). One frame at rest, once a launch and again after
+## each visit (the hall shown is the one that leaves). A hall whose language
+## or shape has changed is let go and built again; any route change lets it go
+## (`_clear_route`). Never in the headless suite.
+func _build_vigil_ahead(delta: float) -> void:
+	if _vigil_ahead != null and (not is_instance_valid(_vigil_ahead) or _vigil_ahead_key != _ahead_key()):
+		_drop_vigil_ahead()
+	var due: bool = not _warm_headless and _vigil_ahead == null \
+		and _vigil_art_ready() and _warm_may_run() \
+		and (_room_warm == null or not is_instance_valid(_room_warm))
+	_vigil_ahead_rested = _vigil_ahead_rested + delta if due else 0.0
+	if _vigil_ahead_rested < RoomWarm.REST:
+		return
+	_vigil_ahead_rested = 0.0
+	var screen: VigilScreen = VigilScreen.new(_vigil, content, _shape, false, _sfx_bus)
+	screen.visible = false
+	screen.process_mode = Node.PROCESS_MODE_DISABLED
+	add_child(screen)
+	_vigil_ahead = screen
+	_vigil_ahead_key = _ahead_key()
+
+
+func _ahead_key() -> String:
+	return "%s|%s" % [Locale.active.code, _shape]
+
+
+func _drop_vigil_ahead() -> void:
+	if _vigil_ahead != null and is_instance_valid(_vigil_ahead):
+		_vigil_ahead.queue_free()
+	_vigil_ahead = null
+	_vigil_ahead_rested = 0.0
+
+
+## The hall built ahead, shown and processing, or null when none fits.
+func _take_vigil_ahead() -> VigilScreen:
+	var screen: VigilScreen = _vigil_ahead if _vigil_ahead != null and is_instance_valid(_vigil_ahead) \
+		and _vigil_ahead_key == _ahead_key() else null
+	if screen == null:
+		_drop_vigil_ahead()
+		return null
+	_vigil_ahead = null
+	screen.process_mode = Node.PROCESS_MODE_INHERIT
+	screen.visible = true
+	return screen
 
 
 ## The road on screen now, if the screen stands on the title's road.
@@ -1447,8 +1680,7 @@ func _deed(key: String) -> int:
 
 ## Chinese numerals sit against their counter word: no space is carved.
 static func _carve(line: String) -> String:
-	var text: String = line.strip_edges()
-	return text.replace(" ", "") if LeadlightTokens.is_zh() else text
+	return LeadlightNumerals.set_against(line)
 
 
 ## First launch: the language pane the player lit. Main's one language
@@ -1463,8 +1695,8 @@ func _on_title_choice(id: String, saved: RunState) -> void:
 	match id:
 		"continue": _continue_run(saved)
 		"begin": _begin_rekindle()
-		"vigil": _show_vigil()
-		"rose": _show_vigil(true)
+		"vigil": _show_vigil(false, true)
+		"rose": _show_vigil(true, true)
 		"help": _show_help()
 		"settings": _show_settings()
 		"credits": _show_credits()
@@ -1500,7 +1732,7 @@ func _show_embark() -> void:
 		saved, _embark_aspect, _embark_vow,
 		_last_setup if _last_setup.size() == 3 else {}, _vigil.unlocks.has("lamplighter"))
 	screen.embark_chosen.connect(_on_embark_begin)
-	screen.back_requested.connect(_show_title)
+	screen.back_requested.connect(_lift_to_title)
 	_show_route(screen, false, &"embark")
 
 
@@ -1523,7 +1755,7 @@ func _on_embark_begin(aspect: int, vow: int) -> void:
 
 func _on_begin_anew(id: String) -> void:
 	if id == "back":
-		_show_title()
+		_lift_to_title()
 		return
 	# Admission before abandonment: a refused class must leave the saved run,
 	# its receipt and the Vigil exactly as they were.
@@ -1544,13 +1776,76 @@ func _on_begin_anew(id: String) -> void:
 	_new_run({"aspect": _embark_aspect, "vow": _embark_vow})
 
 
-func _show_vigil(open_rose: bool = false) -> void:
+## `from_title`: the title's own Vigil word or rose opened it, and the title
+## is held under the hall. Every other entry (a run's sealed door, the
+## unsealing's end, the dev scenario, a rebuild) is the route alone.
+func _show_vigil(open_rose: bool = false, from_title: bool = false) -> void:
 	_remember_route(_show_vigil.bind(open_rose))
-	var screen: VigilScreen = VigilScreen.new(_vigil, content, _shape, open_rose, _sfx_bus)
-	screen.back_requested.connect(_show_title)
+	# The title's Vigil word shows the hall built ahead, when one fits.
+	var screen: VigilScreen = _take_vigil_ahead() if from_title and not open_rose else null
+	if screen == null:
+		screen = VigilScreen.new(_vigil, content, _shape, open_rose, _sfx_bus)
+	screen.back_requested.connect(_leave_vigil)
 	screen.cue_requested.connect(func(cue: StringName) -> void: _music.play(cue))
-	screen.replay_requested.connect(_on_unsealing_replay)
-	_show_route(screen, false, &"vigil")
+	screen.replay_requested.connect(_replay_from_vigil.bind(screen))
+	screen.cross_fade = _cross_fade
+	# From the title the title is held under the hall, never torn down (§2.1):
+	# the lantern carries you in (V1, V2).
+	var title: TitleScreen = _choice_screen as TitleScreen
+	var hold: bool = from_title and title != null and not title.is_queued_for_deletion() \
+		and (game == null or game.run == null)
+	if hold:
+		_choice_screen = null
+	_show_route(screen, false, &"", not hold)
+	if hold:
+		_held_title = title
+		_held_word = _room_word if not _room_word.is_empty() else ("rose" if open_rose else "vigil")
+		_passage_node().arrive(screen, title, _room_word, _cross_fade())
+	else:
+		# Every other entry is the route alone, its seat's word with no lantern.
+		screen.lend_seat(false)
+		screen.rest(Vector2.ZERO, LeadlightTokens.EMBER)
+		_sfx_bus.play_owed(&"roomOpen", &"click")
+		_give_focus.call_deferred(screen)
+	_room_word = ""
+	screen.announce()
+
+
+## The Vigil's way back: with the title held under it, the turn east (V3) to
+## that same title, released on this frame and taking input from the next;
+## otherwise the title is built beneath the hall, which is lifted off it (V9).
+func _leave_vigil() -> void:
+	var title: TitleScreen = _held_title if _held_title != null and is_instance_valid(_held_title) else null
+	var vigil: VigilScreen = _route_screen as VigilScreen
+	if title == null or vigil == null:
+		_sfx_bus.play_owed(&"roomClose", &"click")
+		_lift_to_title()
+		return
+	var faded: bool = _cross_fade()
+	_passage_node().land_arrival()
+	_route_screen = null
+	_held_title = null
+	_choice_screen = title
+	_remember_route(_show_title)
+	title.hold_world(false)
+	_passage.depart(vigil, faded)
+	_music.play(&"title")
+	var word: Control = title.rose if _held_word == "rose" else title.word(_held_word)
+	if word != null and word.focus_mode != Control.FOCUS_NONE:
+		LeadlightFocus.give(word)
+
+
+## V6: the six panes brighten (the view's), then the light floods from the
+## rose and the unsealing is built under it.
+func _replay_from_vigil(screen: VigilScreen) -> void:
+	var view: RoseWindowView = screen.rose_view() if is_instance_valid(screen) else null
+	var at: Vector2 = view.rose_centre() if view != null else size * 0.5
+	_transitions.flood(at, LeadlightTokens.GOLD, _on_unsealing_replay)
+
+
+func _give_focus(screen: LeadlightRoomHost) -> void:
+	if is_instance_valid(screen) and screen.is_inside_tree() and not screen.left():
+		LeadlightFocus.give(screen.first_focus())
 
 
 func _show_help() -> void:
@@ -1869,6 +2164,10 @@ func _continue_run(saved: RunState) -> void:
 
 func _route_run() -> void:
 	_apply_pending_content_hydration()
+	# The Vigil's art is let go once a run is under way (§7 item 16).
+	_vigil_art_drop = not _vigil_art.is_empty()
+	_vigil_art_due = false
+	_vigil_art_asked = _vigil_art_asked and _vigil_art_drop
 	# An ended run never shows its map again: free the kept screen now.
 	if game == null or game.run.pending_run_end != null:
 		_map_keep.release()
@@ -2092,10 +2391,16 @@ func _compile_map_layout(input: MapLayoutInput, quality: Dictionary,
 	return null
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	_sync_map_grain()
 	if _title_road_due:
 		_warm_title_road_once_lit()
+	if _vigil_art_due:
+		_warm_vigil_art_once_rested(delta)
+	_tend_rose_art()
+	if not _vigil_art.is_empty():
+		_take_vigil_art()
+	_build_vigil_ahead(delta)
 	MapJourneyPrefetch.step_current()
 	for retired: MapLayoutJob in _map_layout_retired.duplicate():
 		if retired.is_done():

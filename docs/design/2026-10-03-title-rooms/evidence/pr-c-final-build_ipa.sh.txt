@@ -1,0 +1,25 @@
+#!/bin/zsh
+# Builds a QA .ipa (io.fol2.glassvow.qa only) from a worktree with the QA-only
+# bench patch (qa_patch.py) applied for the export and reverted at once, keeps
+# the .ipa in this folder's ipa/ and the logs in logs/, and deletes the
+# worktree's build output. No device is touched (qa_export.sh --no-install).
+# usage: build_ipa.sh <worktree> <label> [--control]
+set -uo pipefail
+WT=$1; LABEL=$2; shift 2
+HERE=${0:A:h}
+FLOW=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/device13/flow
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+python3 $HERE/qa_patch.py $WT $LABEL "$@" || exit 1
+$FLOW/qa_export.sh $WT --no-install > $HERE/logs/qa_export-$LABEL.out 2>&1
+RC=$?
+python3 $HERE/qa_patch.py $WT --revert
+mkdir -p $HERE/logs/build-$LABEL && cp -R $WT/build/ios-qa/logs/. $HERE/logs/build-$LABEL/ 2>/dev/null
+if [[ $RC -eq 0 ]]; then
+  cp $WT/build/ios-qa/export-dev/glassvow.ipa $HERE/ipa/$LABEL.ipa
+  echo "built $LABEL from $(git -C $WT rev-parse --short HEAD): $HERE/ipa/$LABEL.ipa"
+else
+  echo "QA export failed for $LABEL"; tail -5 $HERE/logs/qa_export-$LABEL.out
+fi
+rm -rf $WT/build/ios-qa; rmdir $WT/build 2>/dev/null
+git -C $WT status --short
+exit $RC

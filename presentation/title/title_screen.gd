@@ -28,8 +28,15 @@ const LEFT_IDS: Array[String] = ["begin", "vigil", "help"]
 ## How far the lantern's reach runs past the plaque's words (x each side, y above).
 const REACH_PAD: Vector2 = Vector2(18.0, 10.0)
 const RIGHT_IDS: Array[String] = ["settings", "credits", "quit"]
-## The rooms a word opens over the title: the passage plays their sound.
-const ROOM_IDS: Array[String] = ["help", "settings", "credits"]
+## The rooms a word opens from the title (the Vigil as a route over the held
+## title): the passage carries the lantern in and plays their sound.
+const ROOM_IDS: Array[String] = ["help", "settings", "credits", "vigil"]
+## The turn west to the Vigil (docs/design/2026-10-03-title-rooms §5.2, V1 and
+## V3), as shares of the stage's width: the road's pan, and the slide and the
+## growth of the painting, its lamps, the door's rose and the wordmark.
+const TURN_PAN: float = 0.08
+const TURN_SLIDE: float = 0.03
+const TURN_GROW: float = 0.03
 
 
 ## Layout in reference units for a shape class: x is an offset from the stage
@@ -136,6 +143,12 @@ var _lantern_at: Rect2 = Rect2()
 var _painting: Control = null
 var _wordmark_home: Vector2 = Vector2.ZERO
 var _wordmark_dy: float = 0.0
+var _vignette: Control = null
+var _rose_home: Vector2 = Vector2.ZERO
+## How far the road has turned away to the Vigil (0..1), and whether it is held.
+var _turn: float = 0.0
+var _held: bool = false
+var _held_focus: int = Control.FOCUS_ALL
 
 
 ## `context`: shape, choices (id/label rows, Main's route ids), sub (where a
@@ -252,6 +265,89 @@ func set_walk(metres: float) -> void:
 			layer.scale = Vector2(grow, grow)
 
 
+## The turn west (V1) and back east (V3), 0..1: the road's world pans in
+## screen space (its sky fills the stage, so no edge shows), and the painting
+## with its lamps, the door's rose and the wordmark slide on and go, the
+## painting growing about its centre. 0 is the road as it rests.
+func turn(amount: float) -> void:
+	_turn = clampf(amount, 0.0, 1.0)
+	world.pan_px = _turn * TURN_PAN * size.x
+	var slide: float = _turn * TURN_SLIDE * size.x
+	var fade: float = 1.0 - _turn
+	for layer: Control in [_painting, _chain]:
+		if layer == null:
+			continue
+		layer.position.x = slide
+		layer.pivot_offset = layer.size * 0.5
+		layer.scale = Vector2.ONE * (1.0 + TURN_GROW * _turn)
+		layer.modulate.a = fade * (BANNER_ALPHA if layer == _painting else 1.0)
+	rose.position = _rose_home + Vector2(slide, 0.0)
+	rose.modulate.a = fade
+	_wordmark.position = _wordmark_home + Vector2(slide, _wordmark_dy)
+	_wordmark.modulate.a = fade
+	if _turn <= 0.0:
+		set_walk(world.walk)
+
+
+func turned() -> float:
+	return _turn
+
+
+## Held under the Vigil (docs/design/2026-10-03-title-rooms §2.1, §9 item 2):
+## the road and the painting do no work but stay drawn under the hall's opaque
+## plate; the painting's lamps, the vignette, the door's rose, the wordmark and
+## the furniture are hidden and still; nothing of the title takes focus; the
+## lantern, lent to the seat, burns on. Released, it is all where it was, the
+## road's clocks going on from where they stopped.
+##
+## The road and the painting stay drawn so that the GPU's work does not step
+## up at the turn east. Hidden, their return under the fading hall took the
+## iPad 8's GPU from about 13.5 to 22-25 ms a frame at its lowest clock, and
+## the first frames of V3 missed the display while the clock rose (#655 PR C,
+## open item 4). The lighter layers stay hidden: drawn too, they cost the hall
+## at rest more than they saved the turn.
+func hold_world(on: bool) -> void:
+	if on == _held:
+		return
+	_held = on
+	for layer: Control in [world, _painting]:
+		if layer != null:
+			layer.process_mode = Node.PROCESS_MODE_DISABLED if on else Node.PROCESS_MODE_INHERIT
+	for layer: Control in [_vignette, _chain, rose, _wordmark]:
+		if layer != null:
+			layer.visible = not on
+			layer.process_mode = Node.PROCESS_MODE_DISABLED if on else Node.PROCESS_MODE_INHERIT
+	for item_v: Variant in _light_words():
+		if item_v is CanvasItem:
+			var item: CanvasItem = item_v
+			item.visible = not on
+	if on:
+		_held_focus = lantern.focus_mode
+		lantern.focus_mode = Control.FOCUS_NONE
+	else:
+		lantern.focus_mode = _held_focus as Control.FocusMode
+
+
+func held() -> bool:
+	return _held
+
+
+## A route lifted off the title (docs/design/2026-10-03-title-rooms §5.2, X2
+## and V9): the title stands landed beneath it and its furniture rises from
+## 60 to 380 ms. At once under Reduce Motion (a cross-fade covers it).
+func rise_after_lift() -> void:
+	if LeadlightMotion.reduced() or not is_inside_tree():
+		return
+	var items: Array = furniture(null, false)
+	var rise: Callable = func(t: float) -> void:
+		for item_v: Variant in items:
+			if is_instance_valid(item_v):
+				var item: CanvasItem = item_v
+				item.modulate.a = LeadlightMotion.ease_on((t - 0.06) / 0.32, LeadlightMotion.REVEAL)
+	rise.call(0.0)
+	create_tween().tween_method(rise, 0.0, 0.38, 0.38)
+
+
 ## The wordmark lent to a room's roll: drawn over the room, `dy` from its seat.
 func lend_wordmark(lent_to_room: bool) -> void:
 	_wordmark.z_index = 201 if lent_to_room else 0
@@ -315,6 +411,7 @@ static func add_road(host: Control) -> TitleWorld:
 		PackedColorArray([Color(LeadlightTokens.VOID, 0.0), Color(LeadlightTokens.VOID, 0.0),
 			Color(LeadlightTokens.VOID, 0.62)]),
 		PackedFloat32Array([0.0, 0.5, 1.0]), true, Vector2(0.5, 0.62), Vector2(1.05, 0.62))
+	vignette.name = "Vignette"
 	vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vignette.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	vignette.stretch_mode = TextureRect.STRETCH_SCALE
@@ -326,6 +423,7 @@ static func add_road(host: Control) -> TitleWorld:
 func _build() -> void:
 	world = add_road(self)
 	_painting = find_child("Painting", false, false) as Control
+	_vignette = find_child("Vignette", false, false) as Control
 	_chain = TitleLampChain.new()
 	add_child(_chain)
 	rose = LeadlightRose.new(context_array("shards"))
@@ -787,7 +885,7 @@ func _layout() -> void:
 	var word_w: float = spec.word_w * k
 	var mark_h: float = word_w * 399.0 / 1536.0 if _wordmark is TextureRect else 60.0 * k
 	_wordmark_home = Vector2(cx - word_w * 0.5, spec.word_y * k)
-	_wordmark.position = _wordmark_home + Vector2(0.0, _wordmark_dy)
+	_wordmark.position = _wordmark_home + Vector2(_turn * TURN_SLIDE * size.x, _wordmark_dy)
 	_wordmark.size = Vector2(word_w, mark_h)
 	var side: float = spec.lantern * k
 	var home: Rect2 = home_rect()
@@ -815,7 +913,8 @@ func _layout() -> void:
 	# The rose is drawn larger than the painted one it covers, so the shards
 	# read as the end game's mirror.
 	var rose_r: float = ROSE_ART.z * spec.rose_grow * TitleLampChain.scale_for(size)
-	rose.position = rose_at - Vector2(rose_r, rose_r)
+	_rose_home = rose_at - Vector2(rose_r, rose_r)
+	rose.position = _rose_home + Vector2(_turn * TURN_SLIDE * size.x, 0.0)
 	rose.size = Vector2(rose_r, rose_r) * 2.0
 	# The consent line takes the foot of the left side when it is free, so the
 	# words there stand from the top of their arc instead of centred on it.

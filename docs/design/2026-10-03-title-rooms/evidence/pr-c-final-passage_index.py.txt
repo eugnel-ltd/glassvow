@@ -1,0 +1,24 @@
+"""Which frames of the Vigil's passages run over the title's at-rest P95 + 0.5 ms
+(laps 2 on, inside each passage's own span), by their index from the tap frame."""
+import json, math, sys
+for path in sys.argv[1:]:
+    rows = [json.loads(l) for l in open(path) if l.strip()]
+    fr = [r for r in rows if 'wall_ms' in r]
+    title = sorted(r['wall_ms'] for r in fr if r.get('phase') == 'title')
+    tp = title[math.ceil(.95 * len(title)) - 1]
+    print('%s  nonce %s  title at rest P95 %.2f' % (path.split('/')[-1], rows[0].get('nonce'), tp))
+    for phase, name in (('open', 'V1, the turn west'), ('close', 'V3, the turn east')):
+        by = {}
+        for r in fr:
+            if r.get('room') == 'vigil' and r.get('phase') == phase and r.get('lap', 0) >= 1 \
+                    and r.get('i', 0) >= 1 and r.get('after_ms', 1e9) <= r.get('span_ms', 0):
+                by.setdefault(r['i'], []).append(r['wall_ms'])
+        slow = {i: sum(w > tp + 0.5 for w in v) for i, v in by.items()}
+        n = sum(len(v) for v in by.values())
+        print('  %s: %d of %d frames over (%.1f%%); by index from the tap: %s' % (
+            name, sum(slow.values()), n, 100 * sum(slow.values()) / n,
+            ', '.join('%d: %d' % (i, c) for i, c in sorted(slow.items()) if c)))
+        med = lambda v: sorted(v)[len(v) // 2]
+        print('    median wall by index 1-4: %s; last three: %s' % (
+            ', '.join('%.1f' % med(by[i]) for i in range(1, 5) if i in by),
+            ', '.join('%.1f' % med(by[i]) for i in sorted(by)[-3:])))

@@ -1,0 +1,38 @@
+"""Per-frame-index medians of a turn's rows from the profiling patch: wall,
+process segment (pre), draw segment (busy - pre), the named callbacks and the
+process time no named callback holds. usage: prof_index.py rows.jsonl [phase]"""
+import json, statistics, sys, collections
+rows = [json.loads(l) for l in open(sys.argv[1]) if l.strip()]
+phase = sys.argv[2] if len(sys.argv) > 2 else "close"
+def med(v): return statistics.median(v) if v else float("nan")
+def p95(v):
+    v = sorted(v); return v[min(len(v) - 1, int(round(0.95 * (len(v) - 1))))] if v else float("nan")
+title = [r for r in rows if r.get("phase") == "title" and r.get("room") == ""]
+hall = [r for r in rows if r.get("phase") == "room" and r.get("lap") == 0]
+def summary(rs, tag):
+    keys = collections.Counter(k for r in rs for k in r.get("prof", {}))
+    pre = [r.get("pre_ms", 0) for r in rs]; busy = [r["busy_ms"] for r in rs]
+    draw = [b - p for b, p in zip(busy, pre)]
+    named = [sum(r.get("prof", {}).values()) - r.get("prof", {}).get("world.draw", 0) for r in rs]
+    wdraw = [r.get("prof", {}).get("world.draw", 0) for r in rs]
+    other = [p - n - w for p, n, w in zip(pre, named, wdraw)]
+    parts = []
+    for k, _ in keys.most_common():
+        m = med([r.get("prof", {}).get(k, 0) for r in rs])
+        if m >= 0.25: parts.append("%s %.2f" % (k, m))
+    print("%-7s n%-3d wall %5.1f (p95 %5.1f)  pre %4.1f  draw %5.1f  unnamed %4.1f | %s" % (
+        tag, len(rs), med([r["wall_ms"] for r in rs]), p95([r["wall_ms"] for r in rs]), med(pre), med(draw),
+        med(other), ", ".join(parts)))
+summary(title, "title"); summary(hall, "hall")
+by = collections.defaultdict(list)
+for r in rows:
+    if r.get("room") == "vigil" and r.get("phase") == phase and r.get("lap", 0) >= 1 \
+            and r.get("after_ms", 1e9) <= r.get("span_ms", 0):
+        by[r["i"]].append(r)
+last = max(by) if by else 0
+for i in sorted(by):
+    if i <= 6 or i >= last - 6:
+        summary(by[i], "%s i%d" % (phase[0], i))
+allv = [r for v in by.values() for r in v]
+w = [r["wall_ms"] for r in allv]; t = [r["wall_ms"] for r in title]
+print("phase p95 %.2f  title p95 %.2f  gap %+.2f  (n %d, %d)" % (p95(w), p95(t), p95(w) - p95(t), len(w), len(t)))

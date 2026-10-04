@@ -8,8 +8,9 @@ means no good. need to make them better." Standing bar: AAA commercial, immersiv
 (every state alive at rest), surprise me.
 
 **Status.** This is the one build spec for #655. PR A (the oval, the ground, Reduce Motion, the type
-floor) and PR B (the passage, Settings, How to Play, Credits) are built; where the build differs from the
-text, an *as built* note says how and why. The Vigil (PR C) is not built yet. It was written on the
+floor), PR B (the passage, Settings, How to Play, Credits) and PR C (the Vigil as the hearth hall) are
+built; where the build differs from the text, an *as built* note says how and why. V2′, the rose's
+flight into the window after the unsealing, was cut (§13's first cut). It was written on the
 lane branch `ui/title-rooms-2026-10-03` at `124c528d` (the pre-squash head of PR #654, whose tree is
 identical to `2228f94f` on `main`). It continues the opening's design record,
 `docs/design/2026-10-02-opening-start/README.md` (Concept A "Held Light", §7 motion spec, §8 Leadlight
@@ -140,8 +141,9 @@ Return in the same place, sound the same, focus the same and fall back to the sa
 
 The title (`TitleScreen`) is never freed to visit a room. Settings, How to Play and Credits are
 overlays over the living title, as today. The Vigil opened from the title is still a route, but Main
-**holds** the title under it instead of freeing it (§9): its world is hidden and paused once the turn
-has landed, and resumes from the same phase when you turn back. No 61–74 ms (M1 Max) title rebuild, no
+**holds** the title under it instead of freeing it (§9): its world is paused once the turn has landed
+(as built, its road and painting stay drawn under the hall's opaque plate and the rest of it is hidden,
+§9), and resumes from the same phase when you turn back. No 61–74 ms (M1 Max) title rebuild, no
 grey frame, no motes restarting, no oval path. Title rebuilds that remain (a language change, a
 route-form return, departure Back) inherit the old world's clocks (`TitleWorld.inherit`, §9) so the
 road continues rather than resets.
@@ -503,6 +505,69 @@ descriptions stay `Label`s, never `_draw` text); `_epitaph_tab`, `_epitaph_list`
 `_show_epitaphs()`; `RoseWindowView`'s constructor, `IDS`, `_detail_copy` and the `Replay` node; the dev
 `vigil` scenario. The route-form Vigil (every entry but the title's) draws the same hall and a seat word
 without a lantern, and no private `TitleWorld` any more (`RunStyle.add_backdrop` is no longer used here).
+
+*As built in PR C* (`presentation/run/vigil_screen.gd`, `vigil_hall.gd`, `vigil_deeds.gd`,
+`vigil_epitaphs.gd`, `rose_window_view.gd`, `presentation/ui/components/leadlight_rose.gd`; stills in
+`stills/pr-c/`):
+
+- **The window, measured.** The plate's painted rose is centred at plate (215, 184), radius 100 with its
+  moulding (the glass alone is about 75). Looking up, the window is centred under the Emberglass rose and
+  the plate is no smaller than it must be for its corner to stay on or past the stage's: the scale is the
+  largest of the Deeds scale and the rose's centre over the window's on each axis (`VigilHall.frame`), so
+  the rose stands exactly where the window is painted. At pad that is 1.696 stage px a plate px, not ×1.6
+  of the Deeds scale (1.38), which left the window's moulding outside a 190 px rose and the plate's corner
+  inside the stage. The rose's visible radius is the frame art's tracery ring, 0.84 of its half side
+  (`LeadlightRose.RIM`). Phone: the rose at (220, 182), radius 112 (the plate at 1.02); the painted window
+  lies inside it at every shape and flex stage, by `WINDOW_IN_ROSE` (0.92) of its radius
+  (`tests/test_vigil_hall.gd`).
+- **Looking up** dims the hall to 0.86, not 0.72: at 0.72 under the rose's own dark the hall read as a
+  blank wall. The moonlight falls from the window down to the floor where you stand, by the doorway: a
+  shaft towards the fire ran under the reading glass and was never seen. The rose carries a little of the
+  door's warm halo (`radiance` 0.35).
+- **Looking down** keeps the Keeper's hood under the look panes (`VigilHall.HEAD_ROOM`, 154 px at pad, 46
+  on a phone): bottom-aligned at ×1.15, the phone's floor look cut his hood off at the stage's top.
+- **The header and the column** are as written. Every row of the body box ends 40 px short of the Keeper
+  on each look (`VigilScreen.body_for`); its foot is 90 px above the stage's (60 on a phone). On a phone in
+  English the carved ledger does not fit beside the three look panes, so it stands under their row; the
+  rose (at y 182) and the reading glass (from y 64) clear it, and the full rose's Replay pane stands under
+  the glass at its right, clear of the seat (no part of the header stands on another, nor the rose, the
+  glass or Replay on any of them: `tests/test_vigil_screen.gd`).
+- **Carved counts the faces can draw.** The zh-Hant faces ship subset to the locale's own text
+  (`tools/subset_noto_serif_tc.py`), which never writes 零, 千 or 萬: a fresh Vigil's ledger drew
+  "▯ 次朝聖". Where its numerals would need one of them, a count is written in figures
+  (`LeadlightNumerals.carved_drawn`), as English writes its zero; every CJK character the hall sets is held
+  to the shipped faces by the screen's test. The subset's corpus is the real fix (§14, open).
+- **Deeds.** A row is about 88 px at pad (its name, its line and its came at the rooms' 18 px), so six
+  stand whole at pad and the seventh fades at the foot; a row fades by how much of it the view still shows,
+  never cut through by the edge (the spec's 24 px fade cut the roundel of a row half in view). An unlit
+  roundel is the art under cold glass (a fill over it at 0.55), not 25% saturation: a desaturation needs a
+  shader or a CPU copy of every icon, and the cold glass is the kit's own word for an unlit pane.
+- **Epitaphs** are set in the reading face at 20 px (16 on a phone), their numerals carved: tracked Cinzel
+  broke a one-line epitaph into two at 18 px. Each is still a `Label` with the line-table text.
+- **The rose.** Each pane's centre is its mask's (`LeadlightRose.PANE_AT`); a pane's tap is a fifth of the
+  rose's side (90 px at pad, 53 on a phone). The selected pane's rim is its mask grown ×1.05 about its
+  centre in gold, over the mask in the backing's dark, under the pane: a rim of the pane's own shape. A
+  revealed pane's count is whole figures in the carved face ("2 / 5"). The six lozenges hide under the
+  Replay pane. In the reading glass a dormant or armed pane is named by its accessible name ("Dormant
+  Emberglass pane 6", "Unknown Emberglass pane 2"), already in both bundles: no new copy.
+- **Alive at rest**, all drawing and one clock (`VigilHall`): the firelight, embers, the Keeper's breath,
+  the roundels' backlight, the came tips, the shaft and its dust, the complete panes' breath and the armed
+  panes' pulse, as the table says. The epitaphs' firelight is the fire's flicker, so it stays under Reduce
+  Motion with the fire.
+- **The back shelf** (#657, the cards lane's PR 7) has a seat and nothing in it: `VigilHall.shelf()`, a
+  named, empty, input-blind layer on the plate (plate px, moving with every look), between the plate and
+  the fire's light, under the Keeper.
+- **The ledger's zh-Hant numerals** stand against their counter words ("十二次朝聖 · 三次破曉"), as the
+  title's carved deeds already set them; the rule lives once, in `LeadlightNumerals.set_against`, and both
+  use it. `ui.vigil.stats` keeps the space a figure takes, as shipped (the final visual review found
+  "十二 次朝聖").
+- **The rewards' "→"** (the shipped composition) is in no face the game ships: Alegreya, Cinzel, the Noto
+  Serif TC subsets and the Noto Sans Symbols 2 subset all lack U+2192, so TextServer finds it in the OS's
+  fonts. On the iPad 8 that first search (with, in English, the reading face's CJK fallback brought up on
+  the way) took one frame of the rooms' warm 143 to 172 ms, at rest about 1 s after the rite lands. Main
+  makes the search at boot, before the first frame is drawn (`Main._find_os_glyphs`, `Main.OS_GLYPHS`;
+  12 to 156 ms of the launch, the first launches on an install the most), and
+  `tests/test_vigil_screen.gd` fails on any other character the hall sets that its label's faces lack.
 
 **Canon guard.** The Emberglass rose stands in the hall's own window: that is canon (the Rose Window,
 爐邊彩窗, faces in at the fire). The title door's rose never travels into the Vigil before six shards
@@ -869,6 +934,20 @@ seat's Return comes in from 360 to 520 ms, once the lantern is nearly seated, ne
 A section change (G3) lets the leaving page go first (SETTLE_OUT over 80 ms) and brings the new one in
 from 60 to 220, so the two pages' text never prints over each other. The word in flight is §2.3's.
 
+*As built in PR C* (the Vigil's lanes are its own: `VigilScreen.arrive_at`, `leave_at`, `_look_to`; the
+title's half is `TitleScreen.turn` and `hold_world`): V1, V3 and V4 keep their windows. Three curves moved,
+each because the frames showed it. The header and each look's parts rise over 260 ms on SETTLE_OUT, not
+200 on REVEAL: the rose and its reading glass are large, and a quint's first frame brought a third of
+either in at once (`stills/pr-c/seq-v2-pad-en.jpg` before the change put 40% of V2's change on one frame).
+They rise in order of their distance from the light: the hearth's side on the Deeds and Epitaphs looks,
+the window's on the Rose look, where the rose you came for stands. The plate's framing in V4 moves on
+IN_OUT, not REVEAL (whose first two frames took a third of the climb to the window), and the old look
+leaves on SETTLE_OUT from its first frame, not EXIT (it stood whole while the plate had already moved).
+The legibility band follows the move. The Keeper is the one part of the hall that comes in slower than
+the plate: his ember haze is clipped to his glass by a clip pass, which composites him with the hall's
+alpha applied twice. `TransitionLayer.lift` (V9, X2) fades the lifted screen on SETTLE_OUT from its first
+frame, not EXIT. V2 has no word in flight: the crown fades up as a room's does without one.
+
 Reference storyboards: `mocks/free-storyboard-title-settings.jpg` and
 `mocks/free-storyboard-title-vigil.jpg` (the lanes and the ghost word; the build's times are this
 section's, not the mocks'), `mocks/lantern-storyboard-reach-and-fold.jpg` (the light front, the trace
@@ -1026,6 +1105,31 @@ tap is delivered to the button as the viewport delivers a tap (the run says so).
     plate, the Keeper, the mural, frame and six masks and the eight deed icons with
     `ResourceLoader.load_threaded_request`; the reference is dropped when a run starts.
 
+*As built in PR C:* item 14 resumes the road's and the hall's cues only (`MusicBus.RESUMES`: `title`,
+`vigil`, `roseWindow`), each stem where it stopped this session; a fight's, a stinger's and the map's cues
+still start from their top (a victory fanfare resumed mid-phrase would be wrong; "each cue" read as the
+owner's intent, the title's track after the Vigil). Item 15 is RoomWarm's last step: once its rooms are
+done it draws `VigilHall.pipeline_sample` (the plate, the fire's and the moonlight's additive light, the
+Keeper's clip pass, the rose's pane shader at its size in every state, a came) for one frame under the
+road at 0.004. Item 16 loads the hall's art and also its two tracks and the title's own on a worker
+(`Main._warm_vigil_art`): a 3.7 MB track read on the tap frame cost 5.5 ms on the M1. The art is let go
+once a run starts and nothing is still loading (`Main._take_vigil_art`); RoomWarm also builds the hall
+off the tree once, both its looks, for its glyphs at their sizes.
+
+*As built after the iPad 8 rows* (§11.6): item 15's sample was drawn at alpha 0.004, and Godot skips a
+canvas item, with everything under it, whose modulate alpha is under 0.007
+(`RendererCanvasCull::_cull_canvas_item`), so it built no pipeline; it is drawn at
+`RoomWarm.SAMPLE_ALPHA` (0.01), under the road's opaque sky. Item 16 asks for the art once the title has
+rested `RoomWarm.REST` with the map's prefetch done (`Main._warm_vigil_art_once_rested`), as written, not
+as the title is built, which put its uploads under the launch rite and its loads beside the warm of the
+land Back to the Road opens (#671). Once the art is in hand and the rooms' warm is done, the hall the
+Vigil word opens is built ahead on the tree, hidden and still (`Main._build_vigil_ahead`: one frame at
+rest, and again after each visit), and the word shows it (`_take_vigil_ahead`): building the hall and
+adding it to the tree were 13.5 to 26.5 ms of its tap frame. A track plays as the loaded stream, looped
+in place (`MusicBus.looped`): duplicating an MP3 to loop it re-read the whole file on the tap frame (8 to
+11 ms). RoomWarm is given every builder up front (#675's follow-up 2): a builder whose room is not ready
+is asked again a frame later and the builders after it wait (`tests/test_room_warm.gd`).
+
 Out of scope, recorded: a "news" glint on The Vigil word from `vigil.news` (clearing it needs a domain
 command); the door's rose showing six dark panes on a fresh install against the art ledger's L0 ruling
 (an art and story decision).
@@ -1091,6 +1195,24 @@ Erase question, or lingers over a language reopen; a confirm is dismissed; anyth
 does not fade a title in under a language reopen. `TransitionLayer.lift`, the held title and
 `TitleWorld.pan_px` are PR C's: nothing in PR B uses them.
 
+*As built in PR C:* `application/main.gd` (`_show_vigil`) holds the title only when the title's own Vigil
+word or rose opened it (`from_title`, passed by `_on_title_choice`): a dev scenario, the unsealing's end
+or a run's sealed door would otherwise hold a title built for another profile or a moment ago and bring
+it back stale. The title moves to `_held_title` before `_show_route`, the passage carries the lantern in
+(V1, V2) and the hall's `rest` holds the title's world (`TitleScreen.hold_world`: the road and the
+painting still, drawn on under the hall's opaque plate; the painting's lamps, the vignette, the rose, the
+wordmark and the furniture hidden and still; nothing of the title focusable). The road and the painting
+were hidden too until the iPad 8's trace of V3 (§11.6): their return under the fading hall stepped the
+GPU's work up by about 8 ms a frame at its lowest clock and V3's first frames missed the display. `application/main.gd` (`_leave_vigil`) runs V3 on the same frame (the title back in
+`_choice_screen`, released, `_remember_route(_show_title)`, the hall to the passage, `title` asked for,
+the word that opened the hall given the focus, hidden for a touch); without a held title it builds the
+title beneath the lifted hall (`_lift_to_title`, V9), as departure Back and Begin Anew's Stay now do (X2).
+`_clear_route` frees a held title; `_reshape` reaches it. The Vigil's first cue comes from `announce`,
+after Main connects. A room names its opening sound (`LeadlightRoomHost.opening_cue`): the Vigil opened
+on the rose plays none over the rose's own `relic`. The route form plays `roomOpen` and, leaving,
+`roomClose`. A screen being lifted is one of `TransitionLayer`'s leaves (`leaves_showing`), so over the
+map (#674, `Main._sync_map_grain`) the layer's grain covers it, not the map's own.
+
 ---
 
 ## 10. Implementation plan
@@ -1142,6 +1264,27 @@ Line counts are additions plus deletions, estimated. No code file passes 600 in 
 | C4 the rose | `presentation/ui/components/leadlight_rose.gd` (+130/−20); `presentation/run/rose_window_view.gd` (+210/−230); `tests/test_vigil_screen.gd` (new, ~200) |
 | C5 the turn and the looks | `presentation/ui/leadlight_passage.gd` (+130: place passages V1, V3, V4); `presentation/run/vigil_screen.gd` (+60) |
 | C6 the rose flight after the unsealing (first to cut) | `presentation/title/title_screen.gd` (+30); `presentation/ui/leadlight_passage.gd` (+45); `tests/test_vigil_hold.gd` (+50) |
+
+*As built in PR C* (each commit's code files under 600 lines changed; the Vigil's screen took three steps
+to stay under it): C1 the kit (`TitleWorld.pan_px`, `TransitionLayer.lift`, the music's resume,
+`HearthFigure.breathe`, `LeadlightCame`, `LeadlightRose.vigil`, the room's opening cue); C2 the hall
+(`VigilHall`); C3a the deeds and the epitaphs as their own parts (`VigilDeeds`, `VigilEpitaphs`, the old
+screen using them for one commit); C4 the Rose look (`RoseWindowView` rebuilt); C5 the Vigil as the
+hearth hall with the title held under it, the lift, the warm loads and the warm's re-queue
+(`test_vigil_hall`, `test_vigil_screen`, `test_vigil_hold`); C6 the turn west and east and the looks
+(the lanes); C7 the capture and bench tools; then three found in the stills and the spec's rows: C8 the
+hall's zh-Hant counts in figures where the faces lack the numerals, C9 the phone's header and Replay clear
+of each other, C10 the Replay's sound (V6). The spec's C6, the rose flight, was cut. C11 took the first
+iPad 8 rows' plain causes (the title's track seeked on its return, the warm's builds waiting on loads).
+After the rebase onto `ac314bf7` (#671, #674, #675, #677 on main): RoomWarm given every builder up front;
+a lift counted among the transitions' leaves for #674's map grain; the ledger's zh-Hant numerals against
+their counter words; then the final iPad 8 rows' fixes (§11.6): the deeds' "→" found at boot, the cue's
+stream never copied, the hall built ahead, the hall's art asked for once the title rests, and the
+pipeline sample drawn above the renderer's cull. After the rebase onto `ec48be21` (R3.1 b's wood, #544's
+P2 to P5) and the orchestrator's decisions of 4 Oct 2026 (§11.6, §14 items 4 and 5): the rose's masks
+stored grey with alpha and the deed icons imported at 256; the masks held only while the warm or the
+resting hall wants them; the held road and painting drawn on under the hall; the presentation group's
+payload budget and two citations re-anchored.
 
 ### 10.3 Gates and review
 
@@ -1338,6 +1481,162 @@ that shows it, each file's header naming the commit):
   code, each caught by the suite that guards it; and after the review, the 23 rules it asked for, each
   caught (three were not, at first: their tests were tightened).
 
+*As built in PR C* (evidence in `stills/pr-c/`, taken with `tools/capture_rooms.gd` and
+`tools/bench_rooms.gd` on `1e1395f2`, the hall's code; the zh-Hant fresh stills retaken on C8, whose only
+change on screen is a zero count, and every phone still on C9, which moved the phone's header, rose and
+Replay; every zh-Hant hall still retaken again on the final head's code, `780fc171`, whose one change on
+screen there is the ledger's numerals against their counter words; the gate files' headers name their
+commit):
+
+- **Stills** (§11.3): the hall at rest at 844×390, 1180×820 and 1458×820 in en and zh-Hant, as
+  `vigil-<look>-<state>-<shape>-<locale>.jpg`: Deeds mid-way and fresh, the Rose Window mid-way (the pane
+  holding the longest memory selected) and full (all six whole, the Replay pane, thirty whispers), and the
+  Epitaphs; Deeds and the Rose Window also at 1180×885 (the iPad 8) and 845×390.
+- **Idle bursts** (§11.4, `idle-gates.txt`): the hall's own pixels change by 12.2% (Deeds, pad en), 25.3%
+  (the Rose Window) and 5.3% (Deeds, phone zh-Hant) between frames 1 s apart; under Reduce Motion only the
+  fire's flicker moves, under the gate's step (0.00%, recorded as §2.7 asks).
+- **Sequences** (§11.5, `sequence-gates.txt`, contact sheets `seq-*.jpg`): V1, V2, V3, V4 (to the window
+  and to the floor), V5, V8 and V9 at pad en; V1 and V3 at phone zh-Hant; V1, V3 and V4 under Reduce
+  Motion. Every frame of every sequence passes the grey gate (worst 0.21%); the three Reduce Motion
+  sequences pass the cut gate (largest step 0.0112 to 0.0132 of a 0.099 to 0.116 whole). Under full motion
+  no V1, V2 or V3 frame carries more than 23% of its change; V4 to the window puts 37% on the frame the
+  rose and its glass begin to rise, a large glass on a cubic's ease; V8, the route form's shipped
+  `screen_in` from the night, puts 88% on its first frame (the screen it replaces goes at once, as shipped).
+- **Mutation proof** (`evidence/pr-c-mutations.txt`): twenty-one rules broken one at a time in the
+  shipped code, each caught by the suite that guards it (two were not, at first: their tests were
+  tightened and the whole run repeated); and the ten rules added after the rebase onto `ac314bf7`
+  (`evidence/pr-c-final-mutations.txt`), each caught.
+- **Frame times, Mac** (`mac-frame-times.txt`): recorded, noisy (the shared Mac's load average ran 45 to
+  120); the iPad 8 rows below are the acceptance.
+- **The A12's Metal path** (`GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1`, Metal, the mobile renderer, on the
+  Mac): the hall and the rose, whose panes are the shipped `rose_pane.gdshader`, draw whole
+  (`a12-metal-deeds-1180x885-en.jpg`, `a12-metal-rose-1180x885-en.jpg`). PR C adds no shader and no
+  `hint_screen_texture` reader; the fire and the moonlight are `CanvasItemMaterial` additive blends.
+- **Frame times, iPad 8** (§11.6; `evidence/pr-c-ipad8-frame-times.txt`, the reports as images in
+  `evidence/pr-c-ipad8/`, the final head's Vigil rows beside them). The QA app under the shared batch
+  lock, every launch's nonce and build checked on its report; the final head's code (`780fc171`) against
+  main `ac314bf7` as the control, installs interleaved; ten laps a room, each room's first opening in the
+  launch apart; the first launch after each install apart (it builds pipelines). The final head's
+  zh-Hant and en launches, then the control's (two launches each, laps 2 to 10 unless named):
+
+  | Measure | Pass | Final head (zh-Hant, en) | Control |
+  |---|---|---|---|
+  | Title at rest, P95 | | 17.89, 17.93 | 17.99, 17.97 |
+  | The Vigil's first opening: tap → first moved; tap frame | ≤ 50; ≤ 50 | 46.1, 46.2; 30.4, 30.2 | (main's Vigil is no room) |
+  | The Vigil's later openings: tap → first moved; tap frame, median (max) | ≤ 50; ≤ 50 | 33.8 (36.9), 36.6 (39.6); 20.2 (21.3), 20.4 (23.4) | |
+  | V1, the turn west: P95 against the title | ≤ +0.5 | −0.25, −0.12 | |
+  | V3, the turn east: P95 against the title | ≤ +0.5 | **+3.45, +3.70** | |
+  | Passage frames over 33 ms | none | none | none |
+  | The hall at rest: P95 against the title | ≤ +0.5 | +0.41, +0.32 | |
+  | Settings' first opening in zh-Hant, tap frame (#675's margin) | ≤ 33 | 36.2 on the final batch (27.5 in one earlier launch) | 37.0 on the same batch (32.1 earlier) |
+  | The title from the landing to the warms' end: frames over 33 ms; an Act I title, frames with both warms at once | | 0, 1 (33.4, after the warm); 0 | 4 (33.0 to 33.7), 0; 0 |
+  | Video memory after the warms, over the landing | | +85.9, +84.0 MiB | +48.4, +44.7 MiB |
+  | Back to the Road after the tour (Act II); tapped as the rite lands (Act I, R1.1) | ; < 1 s | 1193, 1193 ms; 701, 706 ms | 1136, 1186 ms; 714, 721 ms |
+
+  Every Vigil tap meets §11.6; V1 and the hall at rest meet the ruling; V3 does not (§14, open item 4).
+  The first launch after the final head's install: the Vigil's first opening 64.9 ms tap to first moved
+  (48.7 the frame), Settings' 36.8 ms (main's first launches after an install: Settings 55.2 in zh-Hant).
+  The first openings' passages, one passage each, run −0.69 to +1.62 ms against the title. PR B's rooms'
+  later passages run −0.89 to +1.50 ms against the title in these four launches (their first openings up
+  to +4.00): the bar sits at the launch-to-launch noise even for the rooms PR B shipped.
+  Back to the Road after the tour opens an Act II map, whose restore frame (as #671 recorded for Acts II to
+  IV; here 581 and 614 ms on main, 647 and 631 on the final head, which also frees the hall built ahead on
+  that tap) holds it over 1 s in both builds, 7 to 58 ms apart. Tapped as the rite lands (Act I, R1.1's
+  gate) it is 701 and 706 ms against main's 714 and 721.
+
+  *What the rows changed* (the earlier builds' reports in `evidence/pr-c-ipad8/`): on the rebased
+  candidate (before the fixes below) every launch with the rooms' warm had one frame of 143 to 172 ms
+  at rest about 1 s after the rite landed (the deeds' "→", §4.1), the Vigil's first opening's tap frame
+  was 49.9 to 365 ms and its later ones' 32.7 to 39.6 ms, their tap to first moved 48.5 to 55.9 ms
+  (medians 50.5 to 55.3; §7, as built after the iPad 8 rows); V1 ran +1.1 to +2.8 ms over the title. The fixes, in order: the arrow
+  found at boot; the cue's stream never copied; the hall built ahead; the art asked for once the title
+  rests; the pipeline sample drawn above the renderer's cull. The hall's layers varied by lap (a
+  diagnostic build, `d-*` reports) put the passages' cost in the two scenes drawn together (only one of
+  them drawn: −0.8 to −3.7 ms at P95 on V1) and singled out the Keeper's clip pass (−0.8 to −2.2 ms
+  without it). A shader for his haze, which kept his pixels inside his silhouette exactly, was tried and
+  withdrawn: on a launch with no pipeline cache for it the hall's first opening took 1089.6 and 1052.2 ms
+  (`011cd483`, and `398e1a23` with the shader's code rewritten by a no-op), and neither RoomWarm's sample
+  nor a speck drawn under the rite's frame-0 cover kept that compile off the tap.
+
+  *#675's follow-ups.* (1) The unattributed frame about 0.92 s after the landing: on the rebased
+  candidate, the arm #675 named (the rooms built and freed, neither shaped nor drawn), an arm that builds
+  the rooms and never frees them, one with no warm and one as built, two launches each (Act II, `c1-*`
+  reports): no 44 to 48 ms frame near 0.92 s in any of the eight. Frames of 33 to 37 ms with most of
+  their time in the render segment come before the warm's work starts (0.49 to 0.56 s) and after it ends
+  (1.9 to 2.0 s), in main's launches too (0.07 to 0.62 s, and once inside main's warm), and in neither
+  launch without a warm; what #675 saw is not reproduced and stays unattributed. The large frame these
+  launches did show was a process frame, the deeds' "→" (§4.1), now at boot.
+  (2) Every builder up front (§7, as built after the iPad 8 rows). (3) Settings' first opening in
+  zh-Hant: 27.5 ms on the final head's second launch (30.2 on `398e1a23`, 30.0 on `011cd483`; main's
+  32.1), against 33. **Corrected after review (4 Oct 2026):** those are single launches. On the final
+  batch against `ec48be21` (`evidence/pr-c-final2-ipad8-frame-times.txt`), the zh-Hant first opening's
+  tap frame is 36.2 ms on this branch and 37.0 ms on main, both over 33. This PR changes RoomWarm,
+  which pays Settings' first-open cost (its builders now wait on the Vigil's art, and shaping starts
+  after the last builder), yet it is not slower than main in the same batch, so it is not this PR's
+  regression; but
+  #675's margin is not shown on this batch. Whether main has drifted past 33 since #675 (≤ 32.4 then) or
+  this batch's launches ran slow is open and is carried to #655 as a follow-up, to be read on the median
+  of a batch of its own.
+
+  *After the orchestrator's decisions of 4 Oct 2026* (§14, items 4 and 5; the branch rebased onto main
+  `ec48be21`, which brings R3.1 b's wood to Act I). Evidence: `evidence/pr-c-final-v3-trace.txt` (the
+  trace and its reading), `evidence/pr-c-final-v3-arms.txt` (every arm's launch), and
+  `evidence/pr-c-final2-ipad8-frame-times.txt` with the reports as images in `evidence/pr-c-ipad8-2/`.
+  The commits named here are the measured builds on `ec48be21`; the branch was then rebased onto
+  `94303de9` (#544 P3, the balance tools and their tests only), so its code is theirs unchanged.
+
+  - **V3 attributed.** A profiling build timed every callback of the turn (`qa_patch_prof.py`): on V3's
+    first three frames the process segment grows only 1.5 to 2 ms over the title's; the draw segment, which
+    holds the present wait, takes the frames to 19 to 24 ms. A Metal System Trace of six turns read the rest on the GPU:
+    the hall at rest runs the A12 at its lowest clock at about 13.5 ms a frame; on the tap the held road,
+    painting and vignette come back under a hall still almost opaque, the first render pass's fragment
+    time goes from 3.6 to 10.9 to 13.0 ms and the frame's GPU time to 21.6 to 24.5 ms, and frames 0 to 3
+    reach the display 22 to 35 ms apart until the governor raises the clock to Medium (three to four
+    frames), where the turn runs 13 to 15 ms a frame. The turn's last frames carried the leaving hall's
+    removal (2.1 ms of process) and a few frames of noise.
+  - **What was tried, against the attribution** (interleaved arms in one build each, switched at launch;
+    each figure is P95 minus the title's in the same launch). The road drawn on, paused, under the hall's
+    opaque plate, so the GPU's work never steps up at the tap: all six of the held title's layers, V3
+    −0.69 to +1.25 and the hall at rest +0.64 to +0.95 (six launches); the road and the painting only,
+    V3 −0.95 to +0.54 and the hall at rest +0.18 to +0.91 (seven); the road alone, V3 −0.12 and +0.53 and
+    the hall +0.60 and +0.69; the hold as it was, V3
+    +2.21 to +4.50 and the hall at rest −0.04 to +0.59 (six). The leaving hall freed 0.3 s after the landing
+    instead of on it moved V1 in one round (all six drawn: +1.21 and +1.26 without it, −0.56 and −0.71
+    with it) but not in the next two (+0.15 and +0.31 with it; the road and painting drawn, −0.46 to +0.81
+    without and −0.17 to −0.69 with); no mechanism was found and it was not taken. The title's un-hold
+    (0.1 to 0.3 ms), the music's resume (0.1 ms) and the hall's pipelines (warmed since the earlier
+    rows) are not where the time goes. Taken: the road and the painting drawn under the hall
+    (`TitleScreen.hold_world`); the lighter layers stay hidden, since drawn they cost the hall at rest
+    more than they saved the turn.
+  - **The final head (`9c0a35c4`) against main `ec48be21`**, installs interleaved, a short throwaway
+    launch after each install, ten laps a room (laps 2 to 10):
+
+  | Measure | Pass | Final head (zh-Hant, en, en) | Control (zh-Hant, en) |
+  |---|---|---|---|
+  | Title at rest, P95 | | 18.37, 18.58, 18.02 | 18.32, 18.07 |
+  | The Vigil's first opening: tap → first moved; tap frame | ≤ 50; ≤ 50 | 45.6, 65.7, 47.3; 30.9, 46.2, 31.3 | |
+  | The Vigil's later openings: tap → first moved; tap frame, median (max) | ≤ 50; ≤ 50 | 32.2 (41.5), 36.7 (38.1), 37.6 (39.2); 20.4 (22.8), 21.1 (22.0), 21.9 (23.0) | |
+  | V1, the turn west: P95 against the title | ≤ +0.5 | −1.27, −0.62, +0.33 | |
+  | V3, the turn east: P95 against the title | ≤ +0.5 | +5.86 (−0.88 without lap 5), −1.19, −0.50 | |
+  | Passage frames over 33 ms | none | 2 (34.0, 34.1; laps 5 and 6), 0, 0 | |
+  | The hall at rest: P95 against the title | ≤ +0.5 | +0.28, +0.06, +0.85 | |
+  | Video memory after the warms: over the landing; absolute | | +73.0, +61.5, +69.3; 262.5, 268.5, 276.3 MiB | +48.4, +45.2; 243.8, 258.2 MiB |
+  | An Act I title, video memory after its rest (absolute) | | 296.9, 310.9, 302.9 MiB | 300.3, 284.5, 300.8 MiB |
+  | Back to the Road tapped as the Act I rite lands (R1.1, with the wood) | < 1 s | 749.8, 716.0, 710.3 ms | 707.0, 691.8, 739.6 ms |
+  | Continue after an Act I title's 5 s rest | | 1373.8, 728.2, 722.6 ms | 727.0, 730.5, 695.3 ms |
+
+  Every Vigil tap meets §11.6 but one: the first opening on the first English launch, 65.7 ms to first
+  moved (its tap frame 46.2), a launch noisy throughout (How to Play at rest +2.78, Settings' later
+  openings +3.75); on the other two, 45.6 and 47.3. V3 meets the ruling on both English launches (−1.19,
+  −0.50) and in zh-Hant on every lap but laps 5 and 6, which ran in a 30 Hz episode of the device (every
+  frame of lap 5 at 33 to 34 ms; without lap 5, −0.88). V1 meets it on all three (−1.27, −0.62, +0.33).
+  The hall at rest meets it on two launches (+0.28, +0.06) and not the third (+0.85): the road drawn
+  under it (§14, item 4). Back to the Road tapped as the Act I rite lands, with the wood, is 749.8, 716.0
+  and 710.3 ms against main's 707.0, 691.8 and 739.6. After an Act I title's 5 s rest, one launch's
+  Continue took 1373.8 ms with one frame of 848.7 ms; it did not recur in two repeats (728.2, 722.6; main
+  727.0, 730.5, 695.3) and is not attributed. Video memory spreads by launch: main's own Act I titles
+  hold 284.5 to 300.8 MiB after their rest, the final head's 296.9 to 310.9.
+
 ### 11.7 What closes each PR
 
 PR A: the core gate, `test_focus_modality` with its mutation proof, the oval stills, the grey and cut
@@ -1366,6 +1665,32 @@ turned before they exist.
 | Memory | +9.1 MB VRAM while the Vigil's art is warm (plate 6.3 MB, Keeper 2.8 MB, both already shipped and used by the opening) | released when a run starts |
 | Plate scaling | phone looks stay at or above 0.55 stage px per plate px | the plates have no mipmaps; below about 0.5 they shimmer |
 
+*As built in PR C:* on the iPad 8 (§11.6) the title first held 37.5 to 39.3 MiB more video memory than
+main's after the warms (each over its own landing): the hall's art uncompressed (the plate 6.0, the
+Keeper 2.75, the six rose masks 24.0 and the nine deed icons 9.0 MiB; the mural and the frame, 8.0, the
+title's door already holds), with the hall built ahead, until a run starts. After the orchestrator's
+decision of 4 Oct 2026 (§14, item 5) three candidates were measured and all three taken:
+
+- **The masks stored grey with alpha.** They are white with the pane in alpha; as grey-and-alpha PNGs
+  Godot keeps them as LA8, two bytes a pixel, bit for bit the same pixels once expanded (the pane shader
+  reads alpha alone): 24 to 12 MiB, and the door's rose holds its held panes' masks at half the size too.
+- **The deed icons imported at 256** (`process/size_limit`), still above twice the 56 px roundel (112 px
+  on the iPad): 9 to 2.25 MiB, and the roundel samples less aliasing.
+- **The masks held only while wanted** (`Main._tend_rose_art`): while the rooms' warm builds the Rose
+  Window and while the hall rests, for its Rose look; let go on the title. On the bench's profile (three
+  panes held at the door) that is 6 MiB more off the title.
+
+The first two took the title from +84.0 to +67.8 MiB over its landing (en, `6676f0a8`), the third to
++61.5 to +69.3 (en) and +65.3 to +73.0 (zh-Hant) on the later builds, against main's +45.2 and +48.4 on
+`ec48be21`: 16 to 25 MiB more than main's, or 10.3 and 18.1 (en) and 18.7 (zh-Hant) in absolute terms, the title's
+own landing now 6 MiB lighter for the door's masks. None of the three touches the Vigil's first tap (the
+hall it shows is built ahead): its first opening ran 44.4 to 49.7 ms to first moved across the arms but
+for the first launch after two installs (51.8, 52.1), and 45.6 and 47.3 on the final head (§11.6). The
+rest is the plate and the Keeper (8.75 MiB, the estimate), the icons (2.25) and, unattributed, the zh-Hant
+launches' further 8 MiB and a launch-to-launch spread of about 7 MiB. VRAM compression for the masks was
+not taken: LA8 keeps them exact at 2 MiB each where ETC2 or ASTC would be 1 MiB each, lossy, and 6 MiB
+more in the package for files that are 4 kB PNGs.
+
 ---
 
 ## 13. Risks, and what to cut first
@@ -1389,6 +1714,10 @@ turned before they exist.
    Run the full suite and the Reduce Motion stills once.
 8. **Story canon.** The Emberglass rose in the hall's window, the held Act IV credits and V2′ go past the
    story skill (`.claude/skills/glassvow-story/SKILL.md`, foreshadow-ledger rule 2) in their commits.
+
+*As built:* V2′ was cut in PR C: the hall, the held title and every V* passage were the work, and the
+flight is a payoff for a handful of players that would want its own story check (rule 2) and device
+rows. The door's rose never travels into the Vigil.
 
 **Cut order** (first cut first): V2′, the rose flight; Help's living diagrams; the Credits walk (keep
 the roll and the lamp line); the ghost word (keep the crown fading in); the lantern's swing; the
@@ -1514,18 +1843,92 @@ applies, as built; together:
 - **The title's taps are 44 px on a phone** too (§7 item 8, as built).
 - **Reduce Motion's lantern** comes in from the cross-fade's middle (§2.7, as built).
 
-**Open, for the owner** (PR B builds around it; it does not block it):
+**Decided while building PR C** (the Vigil as the hearth hall; each recorded where it applies):
+
+- **Only the title's own pick holds the title** under the Vigil (§9, as built); every other entry is the
+  route alone with the seat's word and no lantern, and leaves by the lift (V9).
+- **The road's and the hall's music resumes**; a fight's and a stinger's never do (§7, as built).
+- **The Vigil's warm loads include its two tracks and the title's** (§7, as built).
+- **The window, the dim and the moonlight** as measured and as seen (§4.1, as built).
+- **The rise and the look change's curves** (§5.2, as built).
+- **V2′ is cut** (§13, as built).
+- **A count the zh-Hant faces cannot carve is written in figures** in the hall (§4.1, as built); the
+  subset's corpus is left to its own fix (open item 3 below).
+- **The passage bar on the iPad 8 (open item 2 below), ruled by the orchestrator on 4 Oct 2026:** on
+  iOS a frame's present wait sits inside its draw, so vsync jitter lifts every P95 over 16.7 ms, the title
+  at rest included (18.0 ms). The bar is read against the title's own at-rest P95 in the same launch: a
+  passage's P95 is at most the title's at-rest P95 + 0.5 ms, and no passage frame passes 33 ms but a single
+  display stall. It applies to the V* passages (§11.6, as built in PR C) and closes item 2.
+- **#670 review, follow-up 1:** a language or shape changed while the rooms' warm runs was dropped for
+  the launch (`_warm_rooms` returned while a warm was alive). It is now warmed when that warm ends
+  (`Main._on_room_warm_done`), pinned in `tests/test_vigil_hold.gd`. Follow-ups 2 and 3 are measured in
+  §11.6 (as built in PR C).
+- **The iPad 8 rows and #675's follow-ups** (§11.6, as built in PR C): the deeds' "→" found at boot; the
+  cue's stream never copied; the hall built ahead on the tree; the hall's art asked for once the title
+  rests; RoomWarm's pipeline sample drawn above the renderer's cull, its builders all given up front;
+  the Keeper keeps his clip pass (a shader for his haze was withdrawn); the 0.92 s frame not reproduced.
+
+**Open, for the owner** (PR B builds around it; it does not block it; items 3 to 5 from PR C):
 
 1. **Copy** (§13's debts stand; PR B wrote none): no new locale key was needed. `ui.credits.headingBrand`,
    `ui.credits.close`, `ui.credits.themeLine` and `ui.menu.fightOn` are no longer read; they stay in both
    bundles for a separate clean-up, as §2.13 says.
-2. **§11.6's 16.7 ms passage P95 on the iPad 8.** No passage meets it as written (17.4 to 18.4 ms inside
+2. *Closed by the orchestrator's ruling in PR C (above).* **§11.6's 16.7 ms passage P95 on the iPad 8.** No passage meets it as written (17.4 to 18.4 ms inside
    their own spans), and neither does the title at rest (18.0 ms): on iOS a frame's present wait is inside
    its draw, so vsync jitter lifts every P95 over 16.7. The passages stand within 0.4 ms of the title's own
    P95 and no frame of one passes 33 ms but a single display stall. The choice: read the bar against the
    title at rest (the passages pass), or measure the passages another way (the frame's own work, which
    the device cannot separate from its present wait). PR B does not decide it.
+3. **The zh-Hant subset's corpus** (found in PR C). `tools/subset_noto_serif_tc.py` subsets the three
+   Noto Serif TC faces to the characters `locale/*.json` and the line table write, and
+   `LeadlightNumerals.hanzi` writes three the locale never does: 零 (zero, and the zero inside 一百零五),
+   千 and 萬. The Vigil writes such counts in figures (§4.1, as built); the title's carved deeds still
+   carve them, so a zh-Hant player whose deeds reach 105 or 1,000 sees a missing glyph there. The fix is to
+   add the numerals' characters to the corpus and rebuild the faces (pinned sources, deterministic output),
+   which needs the font sources this lane does not hold; a font change for its own PR.
+4. **V3, the turn east, against the passage bar** (found in PR C's iPad 8 rows, §11.6). On `780fc171` the
+   hall's later turns east ran +3.45 and +3.70 ms over the title's at-rest P95 (the ruling allows +0.5).
+   The orchestrator did not accept that as an exception (4 Oct 2026) and asked for one time-boxed attempt.
+   Attributed (§11.6): a step in the GPU's work at the tap, the held road coming back under a hall the
+   A12 was drawing at its lowest clock, over three to four frames until the clock rose. Taken: the road
+   and the painting drawn on under the hall's opaque plate, paused. Best figures: on the final head V3
+   runs −1.19, −0.50 and, but for one lap in a 30 Hz episode, −0.88 against the title; across seven
+   arm launches of the road and the painting drawn, −0.95 to +0.54. Its cost lands on the hall at rest,
+   which now carries the road on the GPU: +0.06, +0.28 and +0.85 on the final head, +0.18 to +0.91 in
+   the arms (+0.58 on average, against +0.28 with the road hidden), and on V1 in one of the arms'
+   launches (+0.81). The bars all sit at the launch-to-launch spread (the title's own P95 ranged
+   17.65 to 18.58 ms across these launches). For the orchestrator's ruling: whether the road drawn under
+   the hall is the right trade, its V3 inside the bar against the hall at rest at or a little over it.
 
+   **Ruled by the orchestrator (4 Oct 2026): the trade is taken, and the bars are read on the batch's
+   median.** V3's step is a visible hitch at the turn; the hall at rest carrying the road costs about
+   0.3 ms of P95 at vsync, with no missed frame, which no player sees. The same build's V3 reads −1.19
+   in one launch and +5.86 in another (a 30 Hz episode), and the title's own P95 spans 17.65 to 18.58 ms
+   across launches, so a ±0.5 ms bar judged one launch at a time grades the A12's governor, not the
+   build. From this PR on, the passage and rest bars of §14 item 2 are graded on the median of the
+   batch's launches, each launch still listed and every outlier named with its cause. This is not what
+   lets V3 pass: on `780fc171` both launches were over (+3.45, +3.70), so its median failed too; the fix
+   does. On the final head the medians are V3 −0.50, the hall at rest +0.28 and V1 −0.62, all inside;
+   the Vigil's first opening 47.3 ms (tap to first moved) and 31.3 ms (tap frame), inside ≤ 50. The
+   noisy launch (65.7 ms; How to Play at rest +2.78 in the same launch) and the 30 Hz laps (two frames
+   of 34.0 and 34.1 ms) are named above. Not measured, and carried: the hall at rest now keeps the GPU at
+   its Medium clock, so its power cost is open; one Continue of 1373.8 ms (an 848.7 ms frame, the
+   control arm `F-a0`, retried at 728.2 and 722.6) is unattributed and goes to #682's first-use watch.
+5. **The hall's video memory** (§12, as built): on `780fc171` the title held 37.5 to 39.3 MiB more than
+   main's once its warms were done. The orchestrator asked to bring it toward the estimate without
+   regressing the Vigil's first opening (4 Oct 2026). Taken: the masks stored grey with alpha (12 MiB
+   off), the deed icons at 256 (6.75 MiB off) and the masks held only while wanted (6 MiB more off the
+   title on the bench's profile). On the final head the title holds 16 to 25 MiB more than main's over
+   its landing, 10.3 and 18.1 (en) and 18.7 MiB (zh-Hant) in absolute terms. The Vigil's first
+   opening: 44.4 to 49.7 ms tap to first moved across the arms but for the first launch after two
+   installs (51.8, 52.1); 45.6 and 47.3 on the final head, and 65.7 on one noisy launch.
+   Not taken: VRAM compression of the masks (lossy, 6 MiB more in the package, 6 MiB less than LA8 in
+   memory). Open: the zh-Hant launches' further 8 MiB, not attributed.
+
+   **Ruled by the orchestrator (4 Oct 2026): accepted.** The hall's cost on the title fell from 37.5 to
+   39.3 MiB to 10 to 19 MiB over main, with no change to a pixel and no cost to the Vigil's first opening.
+   The remainder is the hall built ahead so that the first tap answers in under 50 ms; the zh-Hant 8 MiB
+   stays open, to be attributed when the title's memory is next profiled.
 ---
 
 ## 15. Mocks and before-stills

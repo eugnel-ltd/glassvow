@@ -137,6 +137,15 @@ const WALK_MAX: float = 2.0
 var walk: float = 0.0:
 	set(value):
 		walk = clampf(value, 0.0, WALK_MAX)
+## The turn west to the Vigil (docs/design/2026-10-03-title-rooms §5.2, V1): a
+## screen-space shift of every projected point, in stage px. The sky fills the
+## rect whatever it is, so no edge can show; 0 projects as shipped.
+var pan_px: float = 0.0:
+	set(value):
+		pan_px = value
+		queue_redraw()
+		if _field != null:
+			_field.queue_redraw()
 
 
 class Field:
@@ -343,7 +352,7 @@ func _project(world: Vector3) -> Vector3:
 	var s: float = sin(_roll)
 	var xr: float = xv * c - yv * s
 	var yr: float = xv * s + yv * c
-	return Vector3(size.x * 0.5 + xr / zv * _focal,
+	return Vector3(size.x * 0.5 + pan_px + xr / zv * _focal,
 		size.y * 0.5 - yr / zv * _focal, zv)
 
 

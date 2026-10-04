@@ -25,8 +25,21 @@ const HEARTH_GRADE: Color = Color(0.66, 0.56, 0.48)
 ## panes toward one hearth-lit hue. Kept under a third so the glass survives —
 ## the style bible's whole point is that the Keeper is stained glass.
 const HEARTH_HAZE: Color = Color(0.40, 0.25, 0.13, 0.28)
+## The Keeper breathes in the Vigil's hall (docs/design/2026-10-03-title-rooms
+## §4.1): this share of his height, about the hem, on this period (s).
+const BREATH_DEPTH: float = 0.012
+const BREATH_PERIOD: float = 5.6
 
+## Opt-in, off by default, so the opening's beats and the departure's linger
+## are exactly as shipped. Still under Reduce Motion.
+var breathe: bool = false:
+	set(value):
+		breathe = value
+		set_process(value)
+		if not value and _sprite != null:
+			_sprite.scale = Vector2.ONE
 var _sprite: TextureRect
+var _breath_t: float = 0.0
 
 
 static func present() -> bool:
@@ -67,7 +80,16 @@ func _init() -> void:
 
 
 func _ready() -> void:
+	set_process(breathe)
 	_layout()
+
+
+func _process(delta: float) -> void:
+	if LeadlightMotion.reduced():
+		return
+	_breath_t += delta
+	_sprite.pivot_offset = Vector2(_sprite.size.x * 0.5, _sprite.size.y)
+	_sprite.scale = Vector2(1.0, 1.0 + BREATH_DEPTH * (0.5 + 0.5 * sin(TAU * _breath_t / BREATH_PERIOD)))
 
 
 func _apply_seat() -> void:

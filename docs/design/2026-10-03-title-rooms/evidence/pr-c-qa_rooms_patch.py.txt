@@ -1,0 +1,90 @@
+"""QA-only patch for #655 PR C (never in the game): `--rooms-bench` seeds a saved
+run (Act II, or Act I with `--bench-act=0`, whose title warms its map) and a Vigil
+part-way in the Development profile, shows the title and attaches
+tools/bench_rooms.gd's Bench (copied to tools/qa_rooms_bench.gd, a name the export
+keeps), which taps each room's word (Settings, How to Play, Credits and the Vigil)
+and its Return through the engine's own input path and writes one row per drawn
+frame to user://bench_rooms.jsonl. `--qa-nonce=` is echoed in its rows;
+`--bench-laps=` sets the laps a room.
+usage: qa_rooms_patch.py <worktree> <build-label>   |   qa_rooms_patch.py <worktree> --revert"""
+import os
+import shutil
+import sys
+
+W = sys.argv[1]
+MAIN = os.path.join(W, "application/main.gd")
+BENCH = os.path.join(W, "tools/qa_rooms_bench.gd")
+BACKUP = MAIN + ".qa-backup"
+if sys.argv[2] == "--revert":
+    if os.path.exists(BACKUP):
+        shutil.copyfile(BACKUP, MAIN)
+        os.remove(BACKUP)
+    for path in (BENCH, BENCH + ".uid"):
+        if os.path.exists(path):
+            os.remove(path)
+    sys.exit(0)
+LABEL = sys.argv[2]
+assert not os.path.exists(BACKUP), "a QA patch is already applied"
+shutil.copyfile(MAIN, BACKUP)
+shutil.copyfile(os.path.join(W, "tools/bench_rooms.gd"), BENCH)
+s = open(MAIN).read()
+
+
+def rep(a, b):
+    global s
+    assert s.count(a) == 1, a[:80]
+    s = s.replace(a, b)
+
+
+rep('''	var show_settings: bool = false
+''', '''	var show_settings: bool = false
+	var rooms_bench: bool = false
+	var qa_nonce: String = ""
+	var bench_act: int = 1
+	var bench_laps: int = 10
+''')
+rep('''		elif arg == "--settings":
+''', '''		elif arg == "--rooms-bench":
+			rooms_bench = true
+		elif arg.begins_with("--qa-nonce="):
+			qa_nonce = arg.trim_prefix("--qa-nonce=")
+		elif arg.begins_with("--bench-act="):
+			bench_act = int(arg.trim_prefix("--bench-act="))
+		elif arg.begins_with("--bench-laps="):
+			bench_laps = int(arg.trim_prefix("--bench-laps="))
+		elif arg == "--settings":
+''')
+rep('''	elif not _onboard.is_empty():
+		_boot_onboard(_onboard)
+	else:
+		_route_idle()
+''', '''	elif not _onboard.is_empty():
+		_boot_onboard(_onboard)
+	elif rooms_bench:
+		_qa_rooms_bench(qa_nonce, bench_act, bench_laps)
+	else:
+		_route_idle()
+''')
+s += '''
+
+func _qa_rooms_bench(nonce: String, act: int, laps: int) -> void:
+	var script: GDScript = load("res://tools/qa_rooms_bench.gd") as GDScript
+	script.get("Bench").call("seed_saved_run", act)
+	_vigil = _load_vigil()
+	Preferences.active.diagnostics_notice_seen = true
+	_route_idle()
+	var bench: Node = script.get("Bench").new()
+	bench.set("main", self)
+	bench.set("nonce", nonce)
+	bench.set("label", "ipad8-%s-%s%s" % ["''' + LABEL + '''", Locale.active.code, "-a0" if act == 0 else ""])
+	bench.set("laps", laps)
+	bench.set("room_rest", 30.0)
+	bench.set("hold", 3.0)
+	bench.set("title_rest", 30.0)
+	bench.set("out_path", "user://bench_rooms.jsonl")
+	bench.connect("done", _qa_bench_report.bind(bench))
+	add_child(bench)
+
+'''
+s += open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "qa_report.gd.txt")).read()
+open(MAIN, "w").write(s)
