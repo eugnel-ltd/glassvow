@@ -143,11 +143,16 @@ class ScopeFixtureTests(unittest.TestCase):
         self.assertTrue(selection.checks["setup_godot"])
         for check in ("run_balance_doe", "run_balance_seed", "run_balance_s009",
                       "run_balance_registry", "run_balance_host", "run_balance_f0",
-                      "run_balance_tier1_f0", "run_balance_f1_f2"):
+                      "run_balance_tier1_f0", "run_balance_f1_f2", "run_balance_ways"):
             self.assertTrue(selection.checks[check], check)
         # The host-qualify self-test runs balance_sim.gd, which needs the
         # imported global class cache (BalanceCatalogue, ContentDB).
         self.assertTrue(selection.checks["run_import_assets"])
+
+    def test_the_flame_grader_and_its_self_test_select_the_grader_check(self) -> None:
+        for path in ("tools/balance_ways.py", "tests/test_balance_ways.py"):
+            with self.subTest(path=path):
+                self.assertTrue(CI.classify_paths([path]).checks["run_balance_ways"])
 
     def test_agent_eval_harness_selects_only_its_own_check(self) -> None:
         selection = CI.classify_paths([
