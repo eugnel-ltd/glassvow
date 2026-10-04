@@ -2,6 +2,8 @@
 
 **Status:** LOCKED for implementation, 2026-09-29. Owner: James. Author: Claude (Fable 5.1), from the owner conversation of 2026-09-29 (session `game-balance-pickup`). Companion files: [`ways-template.md`](ways-template.md) (the reusable class template) and [`../../release-roadmap.md`](../../release-roadmap.md) (sequencing and dates).
 
+**Verdict:** ACCEPT, with one reservation (2 October 2026), confirmed by the owner on 4 October 2026. The record is §11, *Verdict*.
+
 **Authority.** This lock is the product definition of "three strategies" for Duskblade and the measurement contract that replaces the #421 landscape gates (C1–C4) for plurality. It does not edit `docs/rc-bar.md`; #549 carries the P9 wording change. It reopens no closed research. `docs/balance/p9-strategy-diversity-system.md` becomes a historical record when #549 lands; it is not rewritten.
 
 **Owner decisions recorded, 2026-09-29 (London time):**
@@ -137,6 +139,8 @@ Shape carries the way as well as colour, so a colour-blind player still reads th
 | cleave (Fan of Glass) | 1.0 | base pool (common; [readout 12](readouts/readout-12.md)) |
 
 Relics: shatterersCrown (crown), bellOfEndings 1.0, prismCharm 0.5 (+0.5 Lantern). Art: Beacon is the Ashwarden's; Flare is Duskblade's and belongs to no way.
+
+*Correction (2026-10-04, #544):* "Beacon is the Ashwarden's" was a slip. A class's starting Art is content (`aspects[].art`): the Duskblade's is Flare and the Ashwarden's is Ashfall (6 Smolder on every enemy, 5 Ward). Beacon ("Your attacks chip 1 extra facet this turn") speaks the Duskblade's language of Chip. It is one of the Arts the Lamplighter's gift offers at the setting-out (`offer_arts` in `domain/rules/rewards.gd`), to any class whose `excludes.arts` does not name it; today only the Duskblade's names one, Ashfall. No Art carries affinity, so Flare and Beacon belong to no way. #544's plan of record excludes Beacon from the Ashwarden (decision 9); that is planned, not built.
 
 Quarry Maul and Fan of Glass were clear glass until [readout 12](readouts/readout-12.md) made them Shatter: Spall was Shatter's only common, so a committed Shatter deck ended Act 1 one pick short of Steady. Both are attacks whose chip is the point (Quarry Maul chips when upgraded; Fan of Glass chips every enemy it bloods), and a commit-blind deck keeps them rarely (13% and 5% of offers).
 
@@ -302,6 +306,17 @@ Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds 
 | G7 guards | nothing degenerate, nothing broken | CEM stress: V5 best holdout < 90%; zero stalls and errors; deterministic replay; save lineage and internal IDs unchanged |
 | B bot round | every way can be won and has a feel | Replaces the human row (owner ruling, 2026-10-01). The headless simulator's search player ([readout 8](readouts/readout-8.md)) plays the cell table above, at least 200 paired seeds per cell, every figure graded on its 95% interval. (1) Every committed way wins at V0 with the search player: win rate ≥ 20% in the full pool and ≥ 10% in the fresh pool. (2) No way has no feel: at V0 in both pools each committed way's coloured plays favour its own glass in ≥ 60% of its fights (expression), and 1–10% of its won fights end under 20% HP (close calls). James's play reports are input, never a gate. |
 
+*Row H, as locked on 2026-09-29, read:* "H human | it is fun | James plus two or three players each win at V0 with every way at least once across the group; easy / fun / hard labels; #205 verdict". *Superseded on 2026-10-01* by row B (owner ruling; #631, [readout 8](readouts/readout-8.md)). Play reports, #205's included, are input to the verdict, never a gate.
+
+**How the table is read since the owner's rulings** (recorded 2026-10-04). The thresholds above stand; what they decide changed:
+
+- *30 Sep 2026:* G1 and G4 are readings, not GO blockers. They are reported in every graded cell with their intervals, and their thresholds never decide the verdict. Global calibration is closed (see *Calibration order* below).
+- *1 Oct 2026:* the bots replace the human round: row B replaces H, and play reports are input.
+- *2 Oct 2026:* the result is one verdict, ACCEPT or NOT ACCEPTED, on the design's intent, with the gates as its evidence (*Verdict*, below).
+- *The lock's own amendments:* G5's fresh-pool figure ([readout 5](readouts/readout-5.md)); G3 and G6 read against A_lit ([readout 10](readouts/readout-10.md)); G5 over survivors, G3 paired on common seeds, and the committed bot `p8-d0-v3` ([readout 13](readouts/readout-13.md)).
+
+[`docs/rc-bar.md`](../../rc-bar.md) P9 binds which gates are graded and which are readings (#685). "Signed after the first readout, then frozen for the exam" is replaced there by this table with its recorded amendments.
+
 **G5 over survivors (orchestrator ruling, 2026-10-02, applied from [readout 13](readouts/readout-13.md)).** Reachability is a question about the flame, not survival. A run that dies before an act's end has no flame reading there, so it leaves that act's denominator: Steady by the end of Act 1 is graded among runs alive at the end of Act 1, True by the end of Act 2 among runs alive at the end of Act 2. The all-runs figure stays in every table beside it. Readouts 1–12 graded G5 over every run and stay as recorded; at V5 that reading was bounded by survival (only 44–60% of committed runs lived to the end of Act 1 in readout 12).
 
 **The committed bot from readout 13.** The committed arms' build (pilot `p8-d0-v3`) removes its two off-colour starter seeds first whenever a removal is offered, as §4's worked example does, and its ×`commit` covers two copies of a card; a further copy offered is weighed as clear glass. Readouts 1–12 used the earlier bot (two copies of the worst card before a shop removal, the shrine taking a Strike or a Defend, and ×3 on every copy) and stay as recorded; from readout 13 on, the improved bot is the reading of record. Arm A, A_lit and R build as before (an A_lit that removed the seeds off its lit colour lost 2.7 pp at V0 full, p = 0.01, in readout 13's check).
@@ -313,9 +328,25 @@ Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds 
 3. Steady and True lantern quality;
 4. recognition at the boss and like-calls-to-like.
 
-**Seeds:** development 12000–12999; calibration 13000–13399, paired across arms; the historical holdout 5000–5199 is used once on the final candidate; the CEM stress keeps 4200–4999 for training and 5000–5199 for its ceiling. Acceptance seeds 3000–5199 stay otherwise untouched.
+*Closed on 2026-09-30.* Readouts 1–3 ran these steps, and readouts 5 and 6 tried further global levers. They found that no global lever reaches G1 or G4 and that enemy scalars lift every arm alike, and the owner ruled that the game may be hard and that G1 and G4 are readings. Calibration by global knobs ended there. From [readout 7](readouts/readout-7.md) on, the only balance lever is each way's own wall: diagnose, try at most three candidates per way, ship the measured ones or drop them.
 
-**Exam:** the final candidate SHA runs the full cell table above plus the CEM stress. An independent re-run from a clean checkout on any host must agree on every gate's verdict (owner ruling of 2026-09-27; numbers need not match). Then the bot round (B).
+**Seeds:** development 12000–12999; calibration 13000–13399, paired across arms; the historical holdout 5000–5199 is used once on the final candidate; the CEM stress keeps 4200–4999 for training and 5000–5199 for its ceiling. Acceptance seeds 3000–5199 stay otherwise untouched. *Added 2026-10-04:* 17000–18999 is reserved as 1.1's holdout (#544's plan of record, decision 7). The bands of record for 1.0 are in `docs/rc-bar.md` P9.
+
+**Exam:** the final candidate SHA runs the full cell table above plus the CEM stress. An independent re-run from a clean checkout on any host must agree on every gate's verdict (owner ruling of 2026-09-27; numbers need not match). Then the bot round (B). *From 2026-10-04,* `docs/rc-bar.md` P9 defines the exact candidate, the independent re-run and the exam's own items.
+
+**Verdict** (recorded on 2026-10-04 under [#544](https://github.com/fol2/glassvow/issues/544)'s plan of record, decision 12). The orchestrator gives the Duskblade's verdict under the owner's delegation of design calls (30 Sep 2026). As it happened:
+
+1. **2 Oct 2026, morning.** After the owner's ruling of 09:04 BST ("i want the result. i don't even mind the gate… just give me the acceptance result"), the orchestrator's verdict was **NOT ACCEPTED**, on two product grounds in the full pool: an Edge monoculture (G6) and the True tier unreachable (G5).
+2. Readouts [11](readouts/readout-11.md), [12](readouts/readout-12.md) and [13](readouts/readout-13.md) (#644, #646, #648) answered both grounds.
+3. **2 Oct 2026, 22:12 BST.** **ACCEPT**, on readouts 11–13 and on readout 13's complete §11 table, with one reservation: the fresh-pool Lantern lead, 12.8 pp at V0 (G2 at V0 fresh: FAIL on point, UNDECIDED on interval), carried as a 1.0.x readout. Readout 13 is 1.0's reading of record.
+4. The other graded figures short of their thresholds, and why each gate's intent holds, are recorded in [`docs/rc-bar.md`](../../rc-bar.md) P9 (#685). They are not restated here.
+5. **4 Oct 2026, 12:25 BST.** The owner confirmed: "we have completed game balance for dusk", and activated the Ashwarden programme (#544).
+6. Readout 13 has been reproduced run for run by the repository's readout runner (#684, #544's step P2): 44,012 rows identical to the archive. Its record, `readouts/readout-13-reproduction.md`, lands with #684.
+
+**The 1.0.x readout asks** ([readout 13](readouts/readout-13.md), *What the next readout should ask*, items 1 and 5):
+
+- the fresh-pool Lantern lead (12.8 pp at V0): the reservation;
+- A_lit's feel at V0 fresh (59.2% against row B's 60%). It is an ask, not a reservation; `docs/rc-bar.md` P9 records why row B's intent holds without it.
 
 ## 12. Implementation map
 
@@ -330,7 +361,7 @@ One outcome per PR, in this order. Each PR carries its own tests and the narrow 
 | 5 | The flame on screen | `hud_bar.gd`, reward and shop screens, a flame shader | visual inspection on the reference shapes, then James on device |
 | 6 | Edge way content, crown, deed, art | content, locale, art ledger | readout 4 on the exam candidate |
 | 7 | Lines and the codex reveal | `scenes.json`, line table, locale | `test_stagecraft`, locale coverage |
-| 8 | #549: `rc-bar.md` P9 becomes G1–G7 plus H; the old P9 method doc gets a historical header | docs | `check_agent_contracts` if agent docs move |
+| 8 | #549: `rc-bar.md` P9 becomes G1–G7 plus H; the old P9 method doc gets a historical header. *Done in #549 (PR #572, 2026-09-29). Amended on 2026-10-04 by #685: one verdict per class on the design's intent, G1 and G4 readings, row B for H.* | docs | `check_agent_contracts` if agent docs move |
 
 Invariants: no save schema change (the flame is derived); new card and relic ids are additions; `port_fixtures/` change only where boss offers and reward weights deliberately moved, in an explicit commit that says so; `domain/` stays pure and presentation consumes events.
 
