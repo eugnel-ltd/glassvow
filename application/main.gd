@@ -2145,8 +2145,6 @@ func _show_map() -> void:
 			_hints.consider_map(_map_screen)
 
 
-## Holds the map's place while its layout compiles off the main thread. The
-## unbound map screen is dropped rather than shown half-built.
 ## One grain a frame while the map is the route (R3.1, #660). The map grains
 ## its own land (`MapFilmGrain`, no copy of the screen) while only the map, its
 ## HUD and its pins are on screen. Under a room or a sheet, or while a
@@ -2162,6 +2160,8 @@ func _sync_map_grain() -> void:
 	_map_screen.set_grain(not covered)
 
 
+## Holds the map's place while its layout compiles off the main thread. The
+## unbound map screen is dropped rather than shown half-built.
 func _show_map_charting() -> void:
 	remove_child(_map_screen)
 	_map_screen.queue_free()
