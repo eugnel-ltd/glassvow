@@ -3,9 +3,9 @@ extends RefCounted
 ##
 ## Probes: fixed Ashwarden fights whose best line is known and checked by hand
 ## below. The 1.1 instrument (`s2` with `p9`) must find each one; 1.0's (`s1` with
-## `p8-d0-v3`) misses the two that turn on the hand-size payoff, the blind spot
-## being fixed. s2 must stay honest: it never credits a payoff the draw itself
-## dealt. Then the parts each finding rests on, one by one:
+## `p8-d0-v3`) misses the three that turn on the hand-size payoff or on the draw's
+## worth, the blind spot being fixed. s2 must stay honest: it never credits a
+## payoff the draw itself dealt. Then the parts each finding rests on, one by one:
 ## the draw credit reads the multiset the cards came from, and the pilot values a
 ## hand-size payoff by its deck's hand and a rider its class cannot light at nothing.
 
@@ -90,7 +90,24 @@ static func _probe_table() -> Array[Dictionary]:
 			"hand": ["catalyst", "ashBite", "defend", "defend", "defend"], "s1": true,
 			"found": func(game: GlassvowGame) -> bool:
 				return int(float(str(game.cb.enemies[0].statuses.get("poison", 0)))) == 10},
+		# The draw's worth, with no payoff. Energy 2, the foe at 500 HP and no blow; the
+		# draw pile all Emberbites (1 Energy: 4 damage, 4 Smolder). Tinder first deals two
+		# Emberbites and the Energy pays for both: 8 damage, 8 Smolder. Ashbite first
+		# spends the Energy (6 damage, 2 Smolder) and the Emberbites Tinder then deals go
+		# unpaid. The greedy turn plays Ashbite first: it scores it above Tinder.
+		{"name": "Tinder before Ashbite", "energy": 2, "foe": 500, "str": 0, "move": "grow",
+			"hand": ["ashBite", "preparation", "defend", "defend", "defend"], "s1": false,
+			"pile": ["venomStrike", "venomStrike", "venomStrike", "venomStrike", "venomStrike", "venomStrike"],
+			"found": func(game: GlassvowGame) -> bool: return _first_play(game) == "preparation"},
 	]
+
+
+## The id of the first card the turn played.
+static func _first_play(game: GlassvowGame) -> String:
+	for event: Dictionary in game.cb.queue:
+		if event.get("t") == EventTypes.PLAY:
+			return str(event.get("id", ""))
+	return ""
 
 
 ## Honest play: a line that ends at a draw never counts a payoff the draw itself
@@ -153,8 +170,11 @@ static func _cards(run_state: RunState, ids: Array) -> Array[CardInst]:
 
 ## s2's draw credit is the expected worth of the cards drawn, from the multiset each
 ## came from: two of three from a draw pile of two Strikes (all of it), the third
-## from the discard pile shuffled in (a Defend and an Ashbite). With 1 Energy left,
-## the Ashbite (cost 2) is worth nothing, and a card never counts below 0.
+## from the discard pile shuffled in (a Defend and an Ashbite). The Ashbite (cost
+## 2) is worth nothing with less than 2 Energy, and a card never counts below 0.
+## The Energy is shared: with 1 Energy left the three are expected to cost 2.5 (the
+## Ashbite costs nothing it cannot be paid for), so they count at two fifths; with
+## 4 they cost 3.5 and count in full.
 static func _draw_worth(content: ContentDB, fails: Array[String]) -> void:
 	Pilot.select(Pilot.HAND_VERSION)
 	var game: GlassvowGame = _position(content, _probe_table()[0])
@@ -169,9 +189,15 @@ static func _draw_worth(content: ContentDB, fails: Array[String]) -> void:
 	var strike: float = Pilot.catalogue_card_score(content, ASH, "strike")
 	var defend: float = Pilot.catalogue_card_score(content, ASH, "defend")
 	var expected: float = 2.0 * strike + 1.0 * (defend + 0.0) / 2.0
-	var got: float = Search._draw_worth(turn, at, at)
-	if absf(got - expected) > 1.0e-6 or strike <= 0.0 or defend <= 0.0:
-		fails.append("balance bots: draw worth %f, expected %f" % [got, expected])
+	var shared: float = Search._draw_worth(turn, at, at)
+	game.cb.player.energy = 4
+	var ashbite: float = Pilot.catalogue_card_score(content, ASH, "ashBite")
+	var full: float = Search._draw_worth(turn, at, at)
+	var paid: float = 2.0 * strike + (defend + ashbite) / 2.0
+	if absf(shared - expected * 1.0 / 2.5) > 1.0e-6 or absf(full - paid) > 1.0e-6 \
+			or strike <= 0.0 or defend <= 0.0:
+		fails.append("balance bots: draw worth %f and %f, expected %f and %f"
+			% [shared, full, expected / 2.5, paid])
 	at.drawn = 0
 	if Search._draw_worth(turn, at, at) != 0.0:
 		fails.append("balance bots: a line that drew nothing earns draw credit")

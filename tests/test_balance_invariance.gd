@@ -124,7 +124,7 @@ const PINS_1_1: Dictionary = {
 	"v0-fresh/R/greedy/12000/p9-s2": "a581181bd043ef61ab3ba990fafdb13db33c4dcf2ea539277f07a160c17053f5",
 	"v0-fresh/R/search/12000/p9-s2": "e2f05476cd46c80dd92f28634d5806c7590ace69da09aeeb662802e0e7e6a352",
 	"v0-full/C_shatter/greedy/12000/p9-s2": "8d2ddeba66f4e065499451f33f3bb1b06d9638f8c30844259739b4eacd795271",
-	"v0-full/C_shatter/search/12000/p9-s2": "0a271c1411fedbdf1141ffef8a0afe2e5a6244bede8f817a5f556160946ce7f8",
+	"v0-full/C_shatter/search/12000/p9-s2": "c4dc90a6f15bbdf83366785f61a888ac07ee4505e697c59fd687a0943ceca473",
 	"v0-full/C_lantern/greedy/12000/p9-s2": "83b5544f052cbb297352f9847cf2e12ed3269dc06b2ec343ce5df50956e6487a",
 	"v0-full/C_lantern/search/12000/p9-s2": "3700b2bbc2b6ee5b60f35bf05291e79b313c7e75a3234778e427cb07179676d2",
 	"v0-full/C_edge/greedy/12000/p9-s2": "9bc1dbda1b5ebc5547ddca99fc0d47b0a9c84f1c56af658d4ecf5fdb3e0ac2ae",

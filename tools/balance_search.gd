@@ -306,27 +306,32 @@ static func _note_draws(before: Position, after: Position) -> void:
 ## The expected worth of the cards the line's last action drew, from the multiset
 ## each came from: the draw pile's cards, all of them once it ran out, then the
 ## discard pile's. A card is worth its catalogue score (never below 0: it need
-## not be played) where `rest` can pay for it, and nothing where it cannot.
+## not be played) where `rest` can pay for it, and nothing where it cannot. The
+## Energy left is shared: when the drawn cards' expected Energy cost exceeds it,
+## their worth is scaled down to the share it pays for.
 static func _draw_worth(turn: Turn, at: Position, rest: Position) -> float:
 	if at.drawn <= 0:
 		return 0.0
 	var from_pile: int = mini(at.drawn, at.pile.size())
-	var worth: float = float(from_pile) * _mean_worth(turn, at.pile, rest)
+	var expected: Vector2 = float(from_pile) * _mean_card(turn, at.pile, rest)
 	if at.drawn > from_pile:
-		worth += float(at.drawn - from_pile) * _mean_worth(turn, at.spare, rest)
-	return worth
+		expected += float(at.drawn - from_pile) * _mean_card(turn, at.spare, rest)
+	var energy: float = float(rest.cb.player.energy)
+	return expected.x if expected.y <= energy else expected.x * energy / expected.y
 
 
-static func _mean_worth(turn: Turn, cards: Array[CardInst], rest: Position) -> float:
+## The mean worth (x) and Energy cost (y) of a card of the multiset `cards` to
+## `rest`: an unpayable card is worth nothing and costs nothing.
+static func _mean_card(turn: Turn, cards: Array[CardInst], rest: Position) -> Vector2:
 	if cards.is_empty():
-		return 0.0
+		return Vector2.ZERO
 	var living: Array[EnemyCombatant] = rest.cb.living_enemies()
 	var target: Variant = living[0].idx if not living.is_empty() else null
-	var total: float = 0.0
+	var total: Vector2 = Vector2.ZERO
 	for card: CardInst in cards:
 		if turn.rules.can_play(rest.run, rest.cb, card, target):
 			var score: float = Pilot.catalogue_card_score(turn.content, rest.run.aspect, String(card.id), card.up)
-			total += maxf(0.0, score)
+			total += Vector2(maxf(0.0, score), float(turn.rules.eff_cost(rest.run, rest.cb, card)))
 	return total / float(cards.size())
 
 
