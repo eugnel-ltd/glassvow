@@ -24,6 +24,7 @@ extends RefCounted
 
 const Atlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
 const River = preload("res://presentation/map/landscape/river.gd")
+const Sight = preload("res://presentation/map/landscape/wood_sight.gd")
 const Terrain = preload("res://presentation/map/landscape/terrain.gd")
 
 ## The ground grid (metres per cell) and its flags.
@@ -36,9 +37,6 @@ const NO_SHRUB: int = 4
 const BANK: int = 8
 ## No plant within this of a river's line (channel units, `River.distance`).
 const RIVER_BANK: float = 2.6
-## The picture-plane grid: fine cells (metres), and fine cells per coarse cell.
-const FINE: float = 0.25
-const COARSE: int = 4
 ## Road clearance from the centreline: the worn core is about 0.6 m either
 ## side, its verge about 1 m.
 const TREE_ROAD: float = 1.15
@@ -60,8 +58,6 @@ const ABUTMENT_CLEAR: float = 2.6
 ## its seat on the picture plane.
 const SEAT_CLEAR: float = 1.2
 const STONE_RISE: float = 1.0
-## How far behind protected content a card must stand (metres of depth).
-const DEPTH_MARGIN: float = 0.15
 ## Fill lattices (metres) and seeds.
 const TREE_SPACING: float = 2.0
 const SHRUB_SPACING: float = 1.1
@@ -117,17 +113,8 @@ var _ground: PackedByteArray = []
 var _route: PackedFloat32Array = []
 var _route_size: Vector2i = Vector2i.ZERO
 var _route_scale: Vector2 = Vector2.ONE
-var _toward: Vector3
-var _pitch_sin: float
-var _pitch_cos: float
-## The picture-plane grid: per fine and coarse cell, the least depth of what
-## it protects (INF where nothing).
-var _plane_origin: Vector2
-var _fine_columns: int = 0
-var _fine_rows: int = 0
-var _fine: PackedFloat32Array = []
-var _coarse_columns: int = 0
-var _coarse: PackedFloat32Array = []
+## What the wood must leave in sight on the picture plane.
+var _sight: Sight = Sight.new()
 
 
 ## Plants the land: the kit's foliage where it stands, then the fill.
@@ -149,10 +136,7 @@ func _begin(terrain: Terrain) -> void:
 	_columns = ceili(bounds.size.x / CELL)
 	_rows = ceili(bounds.size.y / CELL)
 	_ground.resize(_columns * _rows)
-	var pitch: float = deg_to_rad(MapJourneyCameraContract.PITCH)
-	_pitch_sin = sin(pitch)
-	_pitch_cos = cos(pitch)
-	_toward = Vector3(0, _pitch_sin, _pitch_cos)
+	_sight.begin(bounds)
 	# The roads' distance field the ground paints with (8 texels a metre,
 	# exact within about a metre of every road on the ground).
 	var ground: MeshInstance3D = terrain.get_node_or_null("Quiet sculpted ground") as MeshInstance3D
@@ -162,16 +146,6 @@ func _begin(terrain: Terrain) -> void:
 		_route = image.get_data().to_float32_array()
 		_route_size = image.get_size()
 		_route_scale = Vector2(_route_size) / bounds.size
-	# The picture plane over the land, from the tallest thing protected above
-	# the far edge to the near edge.
-	_plane_origin = Vector2(bounds.position.x, bounds.position.y * _pitch_sin - 8.0)
-	_fine_columns = ceili(bounds.size.x / FINE) + 1
-	_fine_rows = ceili((bounds.size.y * _pitch_sin + 10.0) / FINE) + 1
-	_fine.resize(_fine_columns * _fine_rows)
-	_fine.fill(INF)
-	_coarse_columns = ceili(float(_fine_columns) / COARSE)
-	_coarse.resize(_coarse_columns * ceili(float(_fine_rows) / COARSE))
-	_coarse.fill(INF)
 
 
 ## The river and its wet banks: a row's cells within a few metres of each
@@ -229,36 +203,36 @@ func _mask_structures(kit: Node3D, seats: PackedVector3Array) -> void:
 func _protect(kit: Node3D, seats: PackedVector3Array) -> void:
 	var lines: Array[PackedVector3Array] = _terrain.lines
 	# A lane sample every `LANE_STEP`, each wide enough to meet the next.
-	var half: Vector2 = Vector2(LANE + LANE_STEP * 0.5, (LANE + LANE_STEP * 0.5) * _pitch_sin)
+	var half: Vector2 = Vector2(LANE + LANE_STEP * 0.5, (LANE + LANE_STEP * 0.5) * _sight.toward.y)
 	for line: PackedVector3Array in lines:
 		for i: int in range(line.size() - 1):
 			var steps: int = maxi(1, ceili(line[i].distance_to(line[i + 1]) / LANE_STEP))
 			for step: int in range(steps + 1):
 				var q: Vector3 = line[i].lerp(line[i + 1], float(step) / steps)
-				var at: Vector2 = MapJourneyCameraContract.projected_plane(q)
-				_protect_rect(Rect2(at - half, half * 2.0), q.dot(_toward))
+				var at: Vector2 = _sight.plane(q)
+				_sight.protect_rect(Rect2(at - half, half * 2.0), _sight.depth(q))
 	for deck: Vector3 in _decks(0.75):
-		var at: Vector2 = MapJourneyCameraContract.projected_plane(deck)
-		_protect_rect(Rect2(at.x - DECK_SIGHT, at.y - 0.9, DECK_SIGHT * 2.0, 1.6), deck.dot(_toward))
+		var at: Vector2 = _sight.plane(deck)
+		_sight.protect_rect(Rect2(at.x - DECK_SIGHT, at.y - 0.9, DECK_SIGHT * 2.0, 1.6), _sight.depth(deck))
 	# A seat's touch square, and the stone's body above it, are never covered
 	# by a crown standing in front of the stone.
 	var square: float = seat_square()
 	for seat: Vector3 in seats:
-		var at: Vector2 = MapJourneyCameraContract.projected_plane(seat)
-		_protect_rect(Rect2(at.x - square * 0.5, at.y - square * 0.5 - STONE_RISE, square,
-			square + STONE_RISE), seat.dot(_toward))
+		var at: Vector2 = _sight.plane(seat)
+		_sight.protect_rect(Rect2(at.x - square * 0.5, at.y - square * 0.5 - STONE_RISE, square,
+			square + STONE_RISE), _sight.depth(seat))
 	for flame: Vector3 in kit.call("lamp_anchors"):
-		var at: Vector2 = MapJourneyCameraContract.projected_plane(flame)
-		_protect_rect(Rect2(at - Vector2(0.6, 0.6), Vector2(1.2, 1.2)), flame.dot(_toward) - 0.2)
+		var at: Vector2 = _sight.plane(flame)
+		_sight.protect_rect(Rect2(at - Vector2(0.6, 0.6), Vector2(1.2, 1.2)), _sight.depth(flame) - 0.2)
 	var placed: Array = kit.get("placed")
 	for item: Dictionary in placed:
 		var kind: String = item["kind"]
 		var base: Vector3 = item["position"]
-		var at: Vector2 = MapJourneyCameraContract.projected_plane(base)
+		var at: Vector2 = _sight.plane(base)
 		if kind == "amber-arch":
-			_protect_rect(Rect2(at + Vector2(-2.9, -4.6), Vector2(5.8, 5.4)), base.dot(_toward) - 0.8)
+			_sight.protect_rect(Rect2(at + Vector2(-2.9, -4.6), Vector2(5.8, 5.4)), _sight.depth(base) - 0.8)
 		elif kind == "memorial":
-			_protect_rect(Rect2(at + Vector2(-0.6, -1.8), Vector2(1.2, 2.2)), base.dot(_toward) - 0.5)
+			_sight.protect_rect(Rect2(at + Vector2(-0.6, -1.8), Vector2(1.2, 2.2)), _sight.depth(base) - 0.5)
 
 
 ## The raised points of every bridge chain, `step` metres apart along it (a
@@ -338,9 +312,9 @@ func _fill_trees() -> void:
 			var scale_value: float = _first_scale(TREE_SCALE, sqrt(size_pick) if near else size_pick, from)
 			var base: Vector3 = Vector3(px, _terrain.surface_height(px, pz), pz)
 			var tile: int = Atlas.tile_for(kind, yaw)
-			if not _fits(tile, base, scale_value):
+			if not _sight.fits(tile, base, scale_value):
 				scale_value = maxf(TREE_SCALE.x, scale_value * SHRINK)
-				if not _fits(tile, base, scale_value):
+				if not _sight.fits(tile, base, scale_value):
 					_reject("sight")
 					continue
 			_add(kind, tile, base, scale_value, false)
@@ -358,7 +332,7 @@ func _fill_trees() -> void:
 				continue
 			var base: Vector3 = Vector3(px, _terrain.surface_height(px, pz), pz)
 			var tile: int = Atlas.tile_for(kind, yaw)
-			if not _fits(tile, base, scale_value):
+			if not _sight.fits(tile, base, scale_value):
 				_reject("sight")
 				continue
 			_add(kind, tile, base, scale_value, false)
@@ -397,12 +371,12 @@ func _fill_shrubs() -> void:
 			var kind: String = _undergrowth(pick)
 			var base: Vector3 = Vector3(px, _terrain.surface_height(px, pz), pz)
 			var tile: int = Atlas.tile_for(kind, yaw)
-			if not _fits(tile, base, scale_value):
+			if not _sight.fits(tile, base, scale_value):
 				scale_value = maxf(SHRUB_SCALE.x, scale_value * SHRINK * SHRINK)
-				if not _fits(tile, base, scale_value):
+				if not _sight.fits(tile, base, scale_value):
 					kind = LOW_SHRUB
 					tile = Atlas.tile_for(kind, yaw)
-					if not _fits(tile, base, scale_value):
+					if not _sight.fits(tile, base, scale_value):
 						_reject("sight")
 						continue
 			_add(kind, tile, base, scale_value, false)
@@ -476,65 +450,6 @@ func road_distance(x: float, z: float) -> float:
 	return _route[row * _route_size.x + column]
 
 
-## Whether a card of `tile` for a plant at `base`, at `scale`, hides nothing
-## the picture plane protects: every protected cell under its silhouette lies
-## in front of it.
-func _fits(tile: int, base: Vector3, scale_value: float) -> bool:
-	# `Atlas.rect`, with the camera's pitch worked out once.
-	var rect: Rect2 = Rect2(Vector2(base.x, base.z * _pitch_sin - base.y * _pitch_cos)
-		+ Atlas.low[tile] * scale_value, Atlas.size[tile] * scale_value)
-	var limit: float = base.dot(_toward) + Atlas.shifts[tile] * scale_value + DEPTH_MARGIN
-	var coarse_size: float = FINE * COARSE
-	var c0: int = maxi(0, floori((rect.position.x - _plane_origin.x) / coarse_size))
-	var c1: int = mini(_coarse_columns - 1, floori((rect.end.x - _plane_origin.x) / coarse_size))
-	var r0: int = maxi(0, floori((rect.position.y - _plane_origin.y) / coarse_size))
-	var r1: int = mini(_coarse.size() / _coarse_columns - 1, floori((rect.end.y - _plane_origin.y) / coarse_size))
-	for row: int in range(r0, r1 + 1):
-		for column: int in range(c0, c1 + 1):
-			if _coarse[row * _coarse_columns + column] >= limit:
-				continue
-			if not _fits_cell(tile, rect, limit, column, row):
-				return false
-	return true
-
-
-## The fine cells of one coarse cell, under the card's silhouette.
-func _fits_cell(tile: int, rect: Rect2, limit: float, coarse_column: int, coarse_row: int) -> bool:
-	var rows: PackedVector2Array = Atlas.spans[tile]
-	var row_height: float = rect.size.y / rows.size()
-	var pad: float = FINE * 0.5 / rect.size.x
-	for fy: int in range(coarse_row * COARSE, mini((coarse_row + 1) * COARSE, _fine_rows)):
-		var y: float = _plane_origin.y + (fy + 0.5) * FINE
-		var band: int = floori((y - rect.position.y) / row_height)
-		if band < 0 or band >= rows.size():
-			continue
-		var span: Vector2 = rows[band]
-		if span.x > span.y:
-			continue
-		for fx: int in range(coarse_column * COARSE, mini((coarse_column + 1) * COARSE, _fine_columns)):
-			if _fine[fy * _fine_columns + fx] >= limit:
-				continue
-			var x: float = (_plane_origin.x + (fx + 0.5) * FINE - rect.position.x) / rect.size.x
-			if x >= span.x - pad and x <= span.y + pad:
-				return false
-	return true
-
-
-## Protects the picture plane's cells under `rect` down to `depth`.
-func _protect_rect(rect: Rect2, depth: float) -> void:
-	var c0: int = maxi(0, floori((rect.position.x - _plane_origin.x) / FINE))
-	var c1: int = mini(_fine_columns - 1, floori((rect.end.x - _plane_origin.x) / FINE))
-	var r0: int = maxi(0, floori((rect.position.y - _plane_origin.y) / FINE))
-	var r1: int = mini(_fine_rows - 1, floori((rect.end.y - _plane_origin.y) / FINE))
-	for row: int in range(r0, r1 + 1):
-		for column: int in range(c0, c1 + 1):
-			var index: int = row * _fine_columns + column
-			if depth < _fine[index]:
-				_fine[index] = depth
-				var coarse: int = (row / COARSE) * _coarse_columns + column / COARSE
-				_coarse[coarse] = minf(_coarse[coarse], depth)
-
-
 ## Keeps trees off the ground cells within `tree` of (x, z), and undergrowth
 ## off those within `shrub`.
 func _stamp(x: float, z: float, tree: float, shrub: float) -> void:
@@ -581,4 +496,4 @@ static func _hash(at: Vector3) -> float:
 
 ## How deep plant `index`'s card stands toward the camera.
 func depth(index: int) -> float:
-	return bases[index].dot(_toward) + Atlas.shift(tiles[index]) * scales[index]
+	return _sight.depth(bases[index]) + Atlas.shift(tiles[index]) * scales[index]
