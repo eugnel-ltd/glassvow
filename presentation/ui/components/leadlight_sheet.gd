@@ -20,6 +20,7 @@ var content_top: float = -1.0
 var sharpness: float = 1.25
 var light_at: Vector2 = Vector2(0.12, 1.0)
 var light_colour: Color = LeadlightTokens.EMBER
+## The quarry glazing's pitch (px); 0 glazes the window plain.
 var quarry_pitch: float = 34.0
 ## How far the light has reached across the glass, 0..1.
 var reach: float = 1.0:
@@ -247,7 +248,9 @@ func _draw() -> void:
 				* (1.0 + 0.18 * LeadlightMotion.breath(_time, 3.3))))
 		# Quarry glazing, clipped to the box below the arch's crown and the light.
 		var glazed: Rect2 = Rect2(Vector2(0.0, size.y * spring), Vector2(size.x, size.y * (1.0 - spring)))
-		var lines: PackedVector2Array = LeadlightShapes.quarry(glazed, quarry_pitch)
+		# A reading glass has no quarry (quarry_pitch 0): its text reads clear.
+		var lines: PackedVector2Array = LeadlightShapes.quarry(glazed, quarry_pitch) \
+			if quarry_pitch > 0.0 else PackedVector2Array()
 		if not whole:
 			lines = clip_lines(lines, reach_from, radius)
 		if not lines.is_empty():

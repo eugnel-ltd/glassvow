@@ -12,6 +12,11 @@ const ACT4_INDEX: int = 3
 ## `VigilState.commit_run` records the best waystone as act * 15 + lit.
 const WAYSTONES_PER_ACT: int = 15
 const CROSSFADE: float = 0.8
+## The cues of the road and the hall resume where they stopped when they come
+## back in a session (docs/design/2026-10-03-title-rooms §7 item 14): the
+## title's track no longer starts over after the Vigil. A fight's, a stinger's
+## and the map's cues still start from their top.
+const RESUMES: Array[StringName] = [&"title", &"vigil", &"roseWindow"]
 const SILENT_DB: float = -60.0
 const FILES: Dictionary[StringName, String] = {
 	&"title": "title",
@@ -53,6 +58,8 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _context: StringName = &""
 
 var _players: Array[AudioStreamPlayer] = []
+## Where each resuming stem stopped this session, in seconds.
+var _positions: Dictionary = {}
 var _active: int = 0
 var _fade: Tween = null
 
@@ -181,10 +188,11 @@ func play(cue: StringName, context: StringName = &"") -> void:
 	var incoming: AudioStreamPlayer = _players[incoming_index]
 	if _fade != null and _fade.is_valid():
 		_fade.kill()
+	_remember(outgoing)
 	incoming.stop()
 	incoming.stream = stream
 	incoming.volume_db = SILENT_DB
-	incoming.play()
+	incoming.play(resume_at(_positions, cue, stem, stream.get_length()))
 	_fade = create_tween().set_parallel(true)
 	_fade.tween_property(incoming, "volume_db", 0.0, CROSSFADE)
 	if outgoing.playing:
@@ -201,7 +209,33 @@ func play(cue: StringName, context: StringName = &"") -> void:
 		print("music: cue=%s context=%s stream=%s" % [cue, context, path])
 
 
+## The files `cues` play by default, for a warm that loads them ahead.
+static func paths(cues: Array[StringName]) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for cue: StringName in cues:
+		if FILES.has(cue):
+			out.append(DIR % FILES[cue])
+	return out
+
+
+## Where a play of `stem` for `cue` starts: where it stopped this session if
+## the cue resumes, else its top. Pure.
+static func resume_at(positions: Dictionary, cue: StringName, stem: String, length: float) -> float:
+	if not RESUMES.has(cue) or not positions.has(stem):
+		return 0.0
+	var at: float = positions[stem]
+	return fposmod(at, length) if length > 0.0 else 0.0
+
+
+## The stem `player` is playing, remembered where it is, when its cue resumes.
+func _remember(player: AudioStreamPlayer) -> void:
+	if player.playing and RESUMES.has(current_cue) and not current_stem.is_empty():
+		_positions[current_stem] = player.get_playback_position()
+
+
 func stop() -> void:
+	if not _players.is_empty():
+		_remember(_players[_active])
 	current_cue = &""
 	_context = &""
 	if _players.is_empty():

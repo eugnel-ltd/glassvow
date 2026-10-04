@@ -118,6 +118,8 @@ void fragment() {
 ## frame (a long frame) cannot spend the fade before it is seen, so a fade of
 ## REDUCED_FADE always takes at least nine drawn frames at 60 fps.
 const FADE_STEP_MAX: float = 1.0 / 60.0
+## A route-form screen lifted off the title rebuilt beneath it (X2, V9).
+const LIFT_TIME: float = 0.30
 ## A frame's colour formats and their sRGB views (`_capture`).
 const SRGB_OF: Dictionary = {
 	RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM: RenderingDevice.DATA_FORMAT_R8G8B8A8_SRGB,
@@ -166,6 +168,8 @@ var _snapshot: TextureRect
 var _snapshot_frame: int = -1
 ## The GPU texture `_snapshot` shows, when the renderer made one; freed with it.
 var _snapshot_rid: RID = RID()
+## Screens being lifted off the route beneath them: screen -> {t, time}.
+var _lifts: Dictionary = {}
 
 
 func _init() -> void:
@@ -284,6 +288,8 @@ func _init() -> void:
 func _process(delta: float) -> void:
 	if not _fades.is_empty():
 		advance_fades(delta)
+	if not _lifts.is_empty():
+		advance_lifts(delta)
 	# `#grain { display: none; }` under prefers-reduced-motion
 	# (styles.css:2037): the film disappears entirely — a noise plate held
 	# still would read as dirt on the glass. Faded rather than hidden so
@@ -414,6 +420,60 @@ func cross_fade() -> bool:
 	_snapshot.visible = true
 	_fades[_snapshot] = {"from": 1.0, "to": 0.0, "t": 0.0, "entry": -1}
 	return true
+
+
+## A route-form screen leaves over the title built beneath it (docs/design/
+## 2026-10-03-title-rooms §5.2, X2 and V9): `screen` moves onto this layer,
+## frozen and taking no input, fades out over `time` and is freed, answering
+## on its first frame (SETTLE_OUT: EXIT's slow start held a leaving screen
+## whole for its first frames, the PR B review's finding for the rooms). It
+## goes at once for a capture, in the headless renderer and under Reduce
+## Motion, where the cross-fade of the frame before covers the change.
+func lift(screen: Control, time: float = LIFT_TIME) -> void:
+	if screen == null or not is_instance_valid(screen):
+		return
+	if screen.get_parent() != null:
+		screen.get_parent().remove_child(screen)
+	if instant or Preferences.active.reduce_motion or get_tree() == null \
+			or DisplayServer.get_name() == "headless":
+		screen.queue_free()
+		return
+	_inert(screen)
+	screen.process_mode = Node.PROCESS_MODE_DISABLED
+	add_child(screen)
+	# Over the cross-fade's copy, under every leaf.
+	move_child(screen, _snapshot.get_index() + 1)
+	_lifts[screen] = {"t": 0.0, "time": maxf(time, 0.01)}
+
+
+func lifting() -> bool:
+	return not _lifts.is_empty()
+
+
+## Moves every lift on by `delta` seconds; a suite calls it to step them.
+func advance_lifts(delta: float) -> void:
+	for key: Variant in _lifts.keys():
+		var lift_entry: Dictionary = _lifts[key]
+		if not is_instance_valid(key):
+			_lifts.erase(key)
+			continue
+		var screen: Control = key
+		var was: float = lift_entry["t"]
+		var span: float = lift_entry["time"]
+		var t: float = minf(was + delta, span)
+		lift_entry["t"] = t
+		screen.modulate.a = 1.0 - LeadlightMotion.ease_on(t / span, LeadlightMotion.SETTLE_OUT)
+		if t >= span:
+			_lifts.erase(screen)
+			screen.queue_free()
+
+
+static func _inert(node: Node) -> void:
+	if node is Control:
+		(node as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+		(node as Control).focus_mode = Control.FOCUS_NONE
+	for child: Node in node.get_children():
+		_inert(child)
 
 
 ## Whether a cross-fade is on screen now.
