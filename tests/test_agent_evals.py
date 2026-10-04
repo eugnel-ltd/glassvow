@@ -24,7 +24,7 @@ from agent_evals.decision import Deltas, Noise, decide  # noqa: E402
 from agent_evals.diagnostics import grader_consistency  # noqa: E402
 from agent_evals.evalspec import EvalSpec, load_cases, load_eval, validate_cases  # noqa: E402
 from agent_evals.graders import grade_claims, parse_json_answer  # noqa: E402
-from agent_evals.hillclimb import Climb, HillclimbConfig, ScoreCard, Version  # noqa: E402
+from agent_evals.hillclimb import Climb, HillclimbConfig  # noqa: E402
 from agent_evals.models import Case, Completion, EvalError  # noqa: E402
 from agent_evals.patching import PatchError, apply_unified_diff, find_injection  # noqa: E402
 from agent_evals.proposer import (LeakError, assert_no_test_leak,  # noqa: E402
@@ -306,27 +306,6 @@ class HillclimbLoopTests(unittest.TestCase):
         _, summary = self.run_climb(bulky, [patch], goal="cost-at-parity")
         self.assertEqual((True, "cheaper"), (summary["rounds"][0]["kept"], summary["rounds"][0]["reason"]))
         self.assertEqual("merge recommended", summary["verdict"])
-
-    def test_finish_restores_the_best_version_by_test_score(self) -> None:
-        workspace = Workspace(self)
-        climb = workspace.climb(FakeBackend(model_script()), FakeBackend(proposer_script([])))
-        climb.noise = Noise(0.05, 0.05, 1.0)
-        climb.work.parent.mkdir(parents=True)
-
-        def card(test: float) -> ScoreCard:
-            table = {c.id: [test] for c in workspace.cases}
-            return ScoreCard(train=test, test=test, cost=100.0, train_table=table,
-                             test_table=table, train_transcripts=[])
-        versions = [Version(0, "v0", card(0.5)), Version(1, "v1", card(0.9)), Version(2, "v2", card(0.7))]
-        baseline = versions[0].card
-        summary = climb._finish(versions, baseline, None, None, "completed")  # type: ignore[arg-type]
-        self.assertEqual(1, summary["best_round"])
-        self.assertEqual("v1", climb.work.read_text())
-        self.assertEqual("v1", (workspace.root / "run" / "best_surface.md").read_text())
-        self.assertEqual("merge recommended", summary["verdict"])
-        climb.noise = Noise(0.05, 0.5, 1.0)
-        self.assertEqual("do not merge (within noise)",
-                         climb._finish(versions, baseline, None, None, "completed")["verdict"])  # type: ignore[arg-type]
 
     def test_infrastructure_failure_inside_a_round_stops_the_climb(self) -> None:
         workspace = Workspace(self)

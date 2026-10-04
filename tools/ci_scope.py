@@ -192,7 +192,7 @@ def _scope_matches(path: str) -> set[str]:
             }):
         matches.add("provenance_evidence")
 
-    if _starts(lower, "tools/agent_evals/") or lower == "tests/test_agent_evals.py":
+    if _starts(lower, "tools/agent_evals/", "tests/test_agent_evals"):
         matches.add("agent_evals")
 
     locale_named_test = _starts(lower, "tests/") and any(token in name for token in (

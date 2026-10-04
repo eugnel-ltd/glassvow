@@ -154,6 +154,7 @@ class ScopeFixtureTests(unittest.TestCase):
             "tools/agent_evals/hillclimb.py",
             "tools/agent_evals/evals/repo_traps/cases.jsonl",
             "tests/test_agent_evals.py",
+            "tests/test_agent_evals_review.py",
         ])
         self.assert_scopes(selection, "agent_evals")
         self.assertTrue(selection.checks["run_agent_evals"])
@@ -358,6 +359,7 @@ class WorkflowContractTests(unittest.TestCase):
             "tests/test_godot_runtime_trace_binding.py",
             "tests/test_godot_runtime_workflow.py",
             "tests/test_agent_evals.py",
+            "tests/test_agent_evals_review.py",
             "tools/check_anchors.py",
             "tools/check_benchmark_freeze.py",
             "tools/build_site.py --self-test",

@@ -54,8 +54,14 @@ def apply_unified_diff(text: str, diff: str) -> str:
 
 
 def added_text(diff: str) -> str:
-    return "\n".join(line[1:] for line in diff.splitlines()
-                     if line.startswith("+") and not line.startswith("+++"))
+    """Every added line. `+++` is skipped only in the file header before the first hunk."""
+    added, in_hunk = [], False
+    for line in diff.splitlines():
+        if HUNK_HEADER.match(line):
+            in_hunk = True
+        elif line.startswith("+") and (in_hunk or not line.startswith("+++")):
+            added.append(line[1:])
+    return "\n".join(added)
 
 
 def find_shared_span(candidate: str, sources: Sequence[str],

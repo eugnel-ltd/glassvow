@@ -219,7 +219,9 @@ jobs:
 
       - name: Test the agent eval and hill-climb harness
         if: steps.scope.outputs.run_agent_evals == 'true'
-        run: python3 -B tests/test_agent_evals.py
+        run: |
+          python3 -B tests/test_agent_evals.py
+          python3 -B tests/test_agent_evals_review.py
 
       # The web-reference twin used to be excluded from CI on purpose: it
       # resolved citations against the roguecardv2-benchmark checkout and

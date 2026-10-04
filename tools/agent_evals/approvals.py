@@ -4,7 +4,7 @@ from __future__ import annotations
 import getpass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Mapping, Sequence, TextIO
 
 from .models import EvalError, read_json, sha256_text, write_json
 
@@ -41,22 +41,54 @@ def sample_transcript_ids(transcript_ids: Sequence[str], seed: str,
     return sorted(ranked[:size])
 
 
+def require_tty(stream: TextIO) -> None:
+    """Approvals are human acts: refuse unless the input is an interactive terminal."""
+    if not stream.isatty():
+        raise ApprovalError("approvals need an interactive terminal (stdin is not a TTY)")
+
+
+def check_run_eligible(results: Mapping[str, Any], cases_sha256: str,
+                       case_ids: Sequence[str]) -> None:
+    """The baseline run behind a grader approval must be a complete, healthy, current run."""
+    diagnostics = results.get("diagnostics", {})
+    problems = []
+    if results.get("cases_sha256") != cases_sha256:
+        problems.append("the run was made on different cases (stale cases_sha256)")
+    if results.get("status") != "ok":
+        problems.append(f"the run status is {results.get('status')!r}, not 'ok'")
+    if set(results.get("case_ids", [])) != set(case_ids):
+        problems.append("the run does not cover every case (an --only smoke run?)")
+    if diagnostics.get("infra", {}).get("rate", 1.0) > diagnostics.get("infra_threshold", 0.05):
+        problems.append("the infrastructure failure rate is above its threshold")
+    trivial = diagnostics.get("trivial_answerers", {})
+    if trivial.get("max", 1.0) > trivial.get("limit", 0.25):
+        problems.append(f"a trivial answerer scores {trivial.get('max', 1.0):.1%}, above "
+                        f"{trivial.get('limit', 0.25):.0%}: the grader is too lenient")
+    if problems:
+        raise ApprovalError("this run cannot back a grader approval: " + "; ".join(problems))
+
+
 def approve_grader(eval_dir: Path, cases_sha256: str, transcript_ids: Sequence[str],
-                   seed: str, read: Sequence[str]) -> dict:
-    """Record grader approval only if every sampled transcript was reported as read."""
+                   seed: str, read: Sequence[str], results: Mapping[str, Any] | None = None,
+                   case_ids: Sequence[str] = ()) -> dict:
+    """Record grader approval only for a healthy full run and if every sampled transcript was read."""
+    if results is not None:
+        check_run_eligible(results, cases_sha256, case_ids)
     if not transcript_ids:
         raise ApprovalError("no scored transcripts to sample; run `baseline` first")
     required = sample_transcript_ids(transcript_ids, seed)
     unread = sorted(set(required) - set(read))
     if unread:
         raise ApprovalError(f"open these transcripts, then pass them via --read: {unread}")
-    return _record(eval_dir, "grader", cases_sha256, read=sorted(required))
+    flagged = (results or {}).get("diagnostics", {}).get("headroom_flagged", [])
+    return _record(eval_dir, "grader", cases_sha256, read=sorted(required), run=seed,
+                   headroom_flagged=flagged)
 
 
 COMMANDS = {"inputs": "approve-inputs", "grader": "approve-grader"}
 
 
-def require_approvals(eval_dir: Path, cases_sha256: str) -> None:
+def require_approvals(eval_dir: Path, cases_sha256: str, allow_no_headroom: bool = False) -> None:
     approvals = _load(eval_dir)
     for kind, command in COMMANDS.items():
         entry = approvals.get(kind)
@@ -64,3 +96,7 @@ def require_approvals(eval_dir: Path, cases_sha256: str) -> None:
             raise ApprovalError(f"the {kind} are not approved; run `{command}`")
         if entry["cases_sha256"] != cases_sha256:
             raise ApprovalError(f"the {kind} approval is stale: cases.jsonl changed since it was given")
+    flagged = approvals["grader"].get("headroom_flagged", [])
+    if flagged and not allow_no_headroom:
+        raise ApprovalError(f"the approved baseline had no headroom for {flagged} (above 95%); "
+                            "pass --allow-no-headroom to climb anyway")

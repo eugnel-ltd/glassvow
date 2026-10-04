@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from .backends import Backend
-from .diagnostics import grader_consistency, headroom_warnings, ordering_warnings
+from .diagnostics import (HEADROOM_LIMIT, TRIVIAL_LIMIT, grader_consistency,
+                          headroom_warnings, ordering_warnings, trivial_answerer_scores)
 from .evalspec import EvalSpec
 from .models import Case, sha256_text, write_json
 from .report import results_html
@@ -50,6 +51,10 @@ def run_baseline(spec: EvalSpec, cases: Sequence[Case], backend: Backend,
         model_blocks[model] = _model_block(model, result.transcripts, tables[model])
     infra = infra_summary(all_transcripts)
     warnings = headroom_warnings({m: b["summary"]["mean"] for m, b in model_blocks.items()})
+    trivial = trivial_answerer_scores(cases)
+    if trivial["max"] > TRIVIAL_LIMIT:
+        warnings.append(f"a trivial answerer scores {trivial['max']:.1%}, above "
+                        f"{TRIVIAL_LIMIT:.0%}: the grader is too lenient")
     warnings += ordering_warnings({m: per_case_means(t) for m, t in tables.items()})
     if infra["rate"] > infra_threshold:
         warnings.append(f"infrastructure failure rate {infra['rate']:.1%} exceeds "
@@ -57,8 +62,10 @@ def run_baseline(spec: EvalSpec, cases: Sequence[Case], backend: Backend,
     results = {
         "eval": spec.name, "run_id": run_id, "status": "failed" if infra["rate"] > infra_threshold else "ok",
         "surface_sha256": sha256_text(surface_text), "cases_sha256": spec.cases_sha256,
-        "reps": reps, "backend": backend.describe(), "models": model_blocks,
-        "diagnostics": {"infra": infra, "infra_threshold": infra_threshold,
+        "case_ids": [c.id for c in cases], "reps": reps, "backend": backend.describe(), "models": model_blocks,
+        "diagnostics": {"trivial_answerers": trivial, "infra": infra,
+                        "headroom_flagged": [m for m, b in model_blocks.items()
+                                             if b["summary"]["mean"] > HEADROOM_LIMIT], "infra_threshold": infra_threshold,
                         "grader_consistency": grader_consistency(
                             cases, all_transcripts, judge, spec.judge_model)},
         "warnings": warnings,

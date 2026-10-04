@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import tempfile
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Any, Callable, Protocol
 
@@ -56,7 +57,15 @@ class ClaudeCliBackend:
     """`claude -p` in an empty temporary directory with every customisation disabled."""
 
     def __init__(self, allow_ambient: bool = False,
-                 runner: Callable[..., Any] = subprocess.run, executable: str = "claude"):
+                 runner: Callable[..., Any] = subprocess.run, executable: str = "claude",
+                 workdir_files: dict[str, str] | None = None,
+                 home_files: dict[str, str] | None = None):
+        """`workdir_files` and `home_files` plant canary files for the isolation check only.
+
+        Home files go into a throwaway HOME, so the real home is never touched.
+        """
+        self.workdir_files = workdir_files or {}
+        self.home_files = home_files or {}
         self.allow_ambient = allow_ambient
         self._run = runner
         self.executable = executable
@@ -106,15 +115,26 @@ class ClaudeCliBackend:
 
     def complete(self, system: str, prompt: str, model: str, timeout_s: float) -> Completion:
         command = self.build_command(system, model)
-        with tempfile.TemporaryDirectory(prefix="agent-evals-") as workdir:
+        with tempfile.TemporaryDirectory(prefix="agent-evals-") as workdir, \
+                tempfile.TemporaryDirectory(prefix="agent-evals-home-") as fake_home:
+            _plant(Path(workdir), self.workdir_files)
+            _plant(Path(fake_home), self.home_files)
+            env = {**os.environ, "HOME": fake_home} if self.home_files else None
             try:
                 result = self._run(command, input=prompt, capture_output=True, text=True,
-                                   timeout=timeout_s, cwd=workdir, check=False)
+                                   timeout=timeout_s, cwd=workdir, env=env, check=False)
             except subprocess.TimeoutExpired:
                 return Completion(error="claude -p timed out", timed_out=True)
             except OSError as error:
                 return Completion(error=f"cannot start claude: {error}")
         return parse_cli_output(result.returncode, result.stdout or "", result.stderr or "")
+
+
+def _plant(root: Path, files: dict[str, str]) -> None:
+    for name, content in files.items():
+        target = root / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
 
 
 def parse_cli_output(returncode: int, stdout: str, stderr: str) -> Completion:

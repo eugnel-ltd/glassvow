@@ -93,6 +93,7 @@ class Climb:
         self.rounds: list[dict[str, Any]] = []
         self.notes: list[str] = []
         self.noise = Noise(0.0, 0.0, 0.0)
+        self.baseline: ScoreCard | None = None
 
     def _evaluate(self, text: str, label: str, reps: int) -> tuple[SetResult, SetResult]:
         results = []
@@ -149,9 +150,11 @@ class Climb:
         (self.run_dir / label / "candidate.md").write_text(candidate, encoding="utf-8")
         train, test = self._evaluate(candidate, label, self.cfg.round_reps)
         card = scorecard(train, test)
+        base = self.baseline
         deltas = Deltas(card.train - incumbent.card.train, card.test - incumbent.card.test,
-                        card.cost - incumbent.card.cost)
-        decision = decide(self.cfg.goal, deltas, self.noise)
+                        card.cost - incumbent.card.cost, card.train - base.train,
+                        card.test - base.test)
+        decision = decide(self.cfg.goal, deltas, self.noise, self.cfg.min_gain)
         record.update(kept=decision.keep, reason=decision.reason, train=card.train,
                       test=card.test, cost=card.cost, delta_train=deltas.train,
                       delta_test=deltas.test, delta_cost=deltas.cost)
@@ -162,7 +165,7 @@ class Climb:
         self.work.parent.mkdir(parents=True, exist_ok=True)
         self.work.write_text(self.original, encoding="utf-8")
         base_train, base_test = self._evaluate(self.original, "noise", self.cfg.reps)
-        baseline = scorecard(base_train, base_test)
+        baseline = self.baseline = scorecard(base_train, base_test)
         self.noise = Noise(noise_floor(base_train.table()), noise_floor(base_test.table()),
                            cost_noise(base_train, base_test))
         versions = [Version(0, self.original, baseline)]
@@ -204,16 +207,61 @@ class Climb:
                 self._reflect(incumbent, self.noise, baseline, why)
                 status = "stalled"
                 break
-        return self._finish(versions, baseline, base_train, base_test, status)
+        return self._finish(versions, status)
 
-    def _finish(self, versions: list[Version], baseline: ScoreCard, base_train: SetResult,
-                base_test: SetResult, status: str) -> dict[str, Any]:
-        # Highest test score wins; ties go to the cheaper surface, then the earlier round.
-        best = max(versions, key=lambda v: (v.card.test, -v.card.cost, -v.round))
+    def _holds_parity(self, card: ScoreCard) -> bool:
+        base = self.baseline
+        return (card.train - base.train >= -self.noise.train
+                and card.test - base.test >= -self.noise.test)
+
+    def _select_best(self, versions: list[Version]) -> Version:
+        """Accuracy: best test score. Cost-at-parity: cheapest version holding parity."""
+        if self.cfg.goal == "accuracy":
+            # Ties go to the cheaper surface, then the earlier round.
+            return max(versions, key=lambda v: (v.card.test, -v.card.cost, -v.round))
+        eligible = [v for v in versions if v.round == 0 or self._holds_parity(v.card)]
+        return min(eligible, key=lambda v: (v.card.cost, -v.card.test, v.round))
+
+    def _confirm(self, best: Version) -> dict[str, Any]:
+        """Re-run the original and the best version on test, then judge the paired runs."""
+        if best.round == 0:
+            return {"ran": False, "ok": False, "why": "the best version is the original"}
+        runs = {}
+        for name, text in (("baseline", self.original), ("best", best.text)):
+            result = run_set(self.backend, self.test_cases, self.cfg.model, text, self.cfg.reps,
+                             self.run_dir / "confirm" / name, self.spec.name, self.judge,
+                             self.spec.judge_model, self.cfg.timeout_s, self.cfg.workers)
+            check_infra(result.infra(), self.cfg.infra_threshold)
+            runs[name] = result
+        score = {n: mean(list(per_case_means(r.table()).values())) for n, r in runs.items()}
+        cost = {n: mean([t["cost_tokens"] for t in r.transcripts]) for n, r in runs.items()}
+        gain, drop = score["best"] - score["baseline"], cost["baseline"] - cost["best"]
+        if self.cfg.goal == "accuracy":
+            ok = gain > self.noise.test
+        else:
+            ok = (drop > self.noise.cost and gain >= -self.noise.test
+                  and best.card.train - self.baseline.train >= -self.noise.train)
+        return {"ran": True, "ok": ok, "reps": self.cfg.reps, "test_baseline": score["baseline"],
+                "test_best": score["best"], "test_gain": gain, "cost_baseline": cost["baseline"],
+                "cost_best": cost["best"], "cost_drop": drop}
+
+    def _finish(self, versions: list[Version], status: str) -> dict[str, Any]:
+        baseline = versions[0].card
+        best = self._select_best(versions)
         self.work.write_text(best.text, encoding="utf-8")  # restore the best version
         (self.run_dir / "best_surface.md").write_text(best.text, encoding="utf-8")
         (self.run_dir / "best.diff").write_text(_unified(self.original, best.text), encoding="utf-8")
-        verdict = self._verdict(baseline, best.card, status)
+        confirmation: dict[str, Any] = {"ran": False, "ok": False, "why": "not reached"}
+        if status == "infrastructure-failure":
+            verdict = "do not merge (run invalid: infrastructure failures)"
+        else:
+            try:
+                confirmation = self._confirm(best)
+                verdict = ("merge recommended" if confirmation["ok"]
+                           else "do not merge (within noise)")
+            except InfraFailure as error:
+                self.notes.append(f"confirmatory rerun aborted: {error}")
+                verdict = "do not merge (run invalid: infrastructure failures)"
         summary = {
             "status": status, "verdict": verdict, "best_round": best.round,
             "noise": {"train": self.noise.train, "test": self.noise.test, "cost": self.noise.cost},
@@ -221,22 +269,12 @@ class Climb:
                          "test": score_summary(baseline.test_table), "cost": baseline.cost},
             "best": {"train": score_summary(best.card.train_table),
                      "test": score_summary(best.card.test_table), "cost": best.card.cost},
-            "rounds": self.rounds, "notes": self.notes,
+            "confirmation": confirmation, "rounds": self.rounds, "notes": self.notes,
         }
         write_json(self.run_dir / "summary.json", summary)
         (self.run_dir / "report.md").write_text(render_report(self.spec, self.cfg, summary),
                                                 encoding="utf-8")
         return summary
-
-    def _verdict(self, baseline: ScoreCard, best: ScoreCard, status: str) -> str:
-        if status == "infrastructure-failure":
-            return "do not merge (run invalid: infrastructure failures)"
-        if self.cfg.goal == "accuracy":
-            win = best.test - baseline.test > self.noise.test
-        else:
-            win = (baseline.cost - best.cost > self.noise.cost
-                   and best.test - baseline.test >= -self.noise.test)
-        return "merge recommended" if win else "do not merge (within noise)"
 
 
 def _score_cell(block: dict[str, float]) -> str:
@@ -266,5 +304,17 @@ def render_report(spec: EvalSpec, cfg: HillclimbConfig, summary: dict[str, Any])
     if not summary["rounds"]:
         lines.append("| - | no rounds ran | - | - | - | - |")
     lines += ["", "## Notes", ""] + [f"- {note}" for note in summary["notes"]] if summary["notes"] else []
+    lines += ["", "## Confirmatory rerun (test set, original against best)", ""]
+    check = summary["confirmation"]
+    if check["ran"]:
+        lines += [f"- {check['reps']} repetitions each: original {check['test_baseline']:.1%}, "
+                  f"best {check['test_best']:.1%}, gain {check['test_gain']:+.3f} "
+                  f"(test noise {noise['test']:.3f})",
+                  f"- tokens per call: original {check['cost_baseline']:.0f}, best "
+                  f"{check['cost_best']:.0f}, drop {check['cost_drop']:+.0f} "
+                  f"(cost noise {noise['cost']:.1f})",
+                  f"- confirmed: {'yes' if check['ok'] else 'no'}"]
+    else:
+        lines.append(f"- not run: {check['why']}")
     lines += ["", "## Verdict", "", f"**{summary['verdict']}**", ""]
     return "\n".join(lines)

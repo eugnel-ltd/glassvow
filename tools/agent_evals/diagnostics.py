@@ -1,10 +1,11 @@
 """Diagnostics every baseline reports: headroom, model ordering and grader consistency."""
 from __future__ import annotations
 
+import json
 from typing import Any, Mapping, Sequence
 
 from .backends import Backend
-from .graders import grade
+from .graders import grade, grade_claims
 from .models import MODEL_ALIASES, Case
 from .stats import paired_difference_ci
 
@@ -50,3 +51,34 @@ def grader_consistency(cases: Sequence[Case], transcripts: Sequence[Mapping[str,
         "programmatic_mismatches": programmatic_mismatches,
         "judge_disagreement_rate": judge_flips / judge_verdicts if judge_verdicts else None,
     }
+
+
+TRIVIAL_LIMIT = 0.25
+
+
+def _boolean_fields(case: Case) -> set[str]:
+    return {c["field"] for c in case.grader["claims"] if isinstance(c.get("equals"), bool)}
+
+
+def trivial_answers(case: Case) -> dict[str, dict[str, Any]]:
+    """Answers that need no understanding: a constant, and an echo of the prompt."""
+    booleans = _boolean_fields(case)
+    fields = {c["field"] for c in case.grader["claims"]}
+    answers = {}
+    for flag in (False, True):
+        constant = {f: (flag if f in booleans else "") for f in fields}
+        echo = {f: (flag if f in booleans else case.prompt) for f in fields}
+        answers[f"constant_{str(flag).lower()}"] = constant
+        answers[f"echo_{str(flag).lower()}"] = echo
+    return answers
+
+
+def trivial_answerer_scores(cases: Sequence[Case]) -> dict[str, Any]:
+    """Mean score of each trivial answerer through the real grader; no model is called."""
+    graded = [c for c in cases if c.grader["type"] == "claims"]
+    totals: dict[str, list[float]] = {}
+    for case in graded:
+        for name, answer in trivial_answers(case).items():
+            totals.setdefault(name, []).append(grade_claims(case, json.dumps(answer)).score)
+    scores = {name: sum(v) / len(v) for name, v in totals.items()} if graded else {}
+    return {**scores, "max": max(scores.values(), default=0.0), "limit": TRIVIAL_LIMIT}
