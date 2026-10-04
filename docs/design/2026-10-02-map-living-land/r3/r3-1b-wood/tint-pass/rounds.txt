@@ -1,0 +1,87 @@
+R3.1 b tint pass: every candidate tried, in order (lane scratch, 4 October 2026).
+
+Each candidate re-tints the head's (55182330) cards in place through ImpostorWood's own
+formula and card order (tools/look5.gd.txt, LOOK_TINTS), so the source is edited once,
+for the pick. The pad's Journey view, Mac, A12 Metal condition, lean, Reduce Motion
+stills, seed 1, the safe frame (tools/bands.py.txt). Only the changes from the head's
+table are listed; a pair is (shadow or first) / (lit or second), linear.
+  red       hue 340-14, s >= .72, v >= .12 (the gate's mask; the target 11.3%)
+  bands     the saturated reds (s >= .65, v >= .25) at 345-355 / 355-5 / 5-15 (the target 5/56/39)
+  orange    hue 14-45, s >= .72, v >= .12 (the target 4.1%)
+  sat reds  the saturated reds as a share of the frame (the target 11.8%)
+  v         the frame's median value (the target 0.286)
+
+A0  red 22.6%  bands  7/83/10  orange 4.9%  sat reds 15.6%  v 0.263  | the head's table
+A1  red 22.6%  bands  3/85/13  orange 5.0%  sat reds 15.8%  v 0.263  | ember-oak+ember-round (1,0.75,0.7)/(1.05,0.85,0.65)
+A2  red 22.5%  bands  3/80/17  orange 5.1%  sat reds 15.8%  v 0.263  | ember-oak+ember-round (1,0.9,0.6)/(1.05,1,0.55)
+A3  red 22.4%  bands  3/67/30  orange 5.2%  sat reds 15.7%  v 0.263  | ember-oak+ember-round (1,1.1,0.5)/(1.05,1.2,0.45)
+S1  red 21.3%  bands  3/73/23  orange 5.1%  sat reds 12.4%  v 0.255  | ember-oak+ember-round (0.5,0.55,0.3)/(1.05,1.2,0.45)
+S2  red 21.0%  bands  4/71/26  orange 5.1%  sat reds 12.0%  v 0.255  | ember-oak+ember-round (0.45,0.6,0.4)/(1.05,1.2,0.45)
+S3  red 20.4%  bands  4/74/23  orange 5.0%  sat reds 11.4%  v 0.255  | ember-oak+ember-round (0.35,0.4,0.25)/(1.05,1.2,0.45)
+S4  red 21.2%  bands  3/67/29  orange 5.1%  sat reds 12.3%  v 0.255  | ember-oak+ember-round (0.5,0.75,0.55)/(1.05,1.2,0.45)
+U1  red 21.3%  bands  3/59/37  orange 5.1%  sat reds 12.3%  v 0.255  | ember-oak+ember-round (0.55,0.75,0.55)/(1,1.4,0.85)
+U2  red 21.1%  bands  3/46/50  orange 5.4%  sat reds 12.2%  v 0.255  | ember-oak+ember-round (0.55,0.9,0.65)/(1,1.7,1)
+U3  red 20.2%  bands  4/45/51  orange 5.9%  sat reds 11.5%  v 0.255  | ember-oak+ember-round (0.5,1,0.75)/(1,2,1.2)
+U4  red 18.9%  bands  4/46/50  orange 7.6%  sat reds 11.1%  v 0.255  | ember-oak+ember-round (0.6,1.2,0.9)/(1,2.4,1.5)
+V1  red 20.6%  bands  4/44/53  orange 5.7%  sat reds 11.9%  v 0.255  | ember-oak+ember-round (0.55,1.2,1)/(1,2.2,1.8)
+V2  red 21.1%  bands  3/45/51  orange 5.3%  sat reds 12.2%  v 0.255  | ember-oak+ember-round (0.55,1,0.8)/(1,1.8,1.45)
+V3  red 19.0%  bands  4/46/50  orange 7.2%  sat reds 11.1%  v 0.255  | ember-oak+ember-round (0.55,1.4,1.15)/(1,2.6,2.1)
+W1  red 19.9%  bands  4/72/24  orange 5.0%  sat reds 11.1%  v 0.255  | ember-oak+ember-round (0.3,0.36,0.2)/(1.05,1.25,0.55)
+W2  red 19.1%  bands  3/78/19  orange 4.8%  sat reds  9.2%  v 0.251  | ember-oak+ember-round (0.3,0.36,0.2)/(1.05,1.25,0.55); BRIGHTNESS 0.6,1.15
+W3  red 18.9%  bands  3/76/21  orange 4.9%  sat reds  9.9%  v 0.255  | ember-oak+ember-round (0.22,0.27,0.15)/(1.1,1.3,0.6); BRIGHTNESS 0.7,1.15
+W4  red 18.4%  bands  3/72/25  orange 4.9%  sat reds  9.7%  v 0.255  | ember-oak+ember-round (0.18,0.24,0.14)/(1.1,1.4,0.7); BRIGHTNESS 0.7,1.15
+X1  red 18.5%  bands  0/57/43  orange 10.6%  sat reds  8.1%  v 0.247  | ember-oak+ember-round (0.18,0.24,0.14)/(1.1,1.4,0.7); rust-oak (0.62,0.42,1.6)/(0.7,0.5,1.8); amber-round (0.6,0.42,1.6)/(0.68,0.5,1.8); olive-heath (0.55,0.5,0.8)/(0.62,0.56,0.85); dark-copse (1,0.62,0.75)/(1.08,0.68,0.8); ash-heath+ash-copse (0.35,0.45,0.25)/(1.05,1.3,0.6); BRIGHTNESS 0.7,1.15
+Y1  red 12.3%  bands  5/56/39  orange 12.3%  sat reds  9.1%  v 0.263  | ember-oak+ember-round (1,3.5,3)/(1,3.5,3)
+Y2  red 10.1%  bands  6/70/24  orange 5.3%  sat reds  7.2%  v 0.259  | ember-oak+ember-round (1,5,4.5)/(1,5,4.5)
+Y3  red 22.9%  bands  2/29/68  orange 5.6%  sat reds 19.0%  v 0.275  | ember-oak+ember-round (2,3.5,3)/(2,3.5,3)
+Z1  red 19.8%  bands  3/38/59  orange 6.0%  sat reds 14.2%  v 0.263  | ember-oak+ember-round (0.6,2.6,2.7)/(1.7,3,2.6)
+Z2  red 20.1%  bands  3/41/56  orange 5.9%  sat reds 13.3%  v 0.255  | ember-oak+ember-round (0.5,2.2,2.3)/(1.5,2.6,2.2)
+Z3  red 19.5%  bands  3/37/60  orange 5.7%  sat reds 14.8%  v 0.263  | ember-oak+ember-round (0.7,3,3.2)/(1.8,3,2.5)
+Q1  red 18.5%  bands  3/39/58  orange 6.1%  sat reds 14.1%  v 0.263  | ember-oak+ember-round (1,3,3)/(1,3,3)
+Q2  red 14.9%  bands  3/42/54  orange 5.8%  sat reds 12.7%  v 0.263  | ember-oak+ember-round (1,3.3,3.4)/(1,3.3,3.4)
+Q3  red 17.6%  bands  4/51/45  orange 5.8%  sat reds 10.4%  v 0.255  | ember-oak+ember-round (0.25,0.8,0.8)/(1.1,3.3,3.3)
+T1  red 21.0%  bands  2/43/55  orange 5.2%  sat reds 13.0%  v 0.255  | ember-oak+ember-round (0.25,0.4,0.31)/(2,3.2,2.5); BRIGHTNESS 0.7,1.15
+T2  red 20.3%  bands  2/48/50  orange 5.1%  sat reds 12.4%  v 0.255  | ember-oak+ember-round (0.2,0.3,0.22)/(1.8,2.7,2); BRIGHTNESS 0.7,1.15
+T3  red 21.2%  bands  2/46/52  orange 5.2%  sat reds 13.0%  v 0.255  | ember-oak+ember-round (0.3,0.45,0.3)/(1.9,2.8,1.9); BRIGHTNESS 0.7,1.15
+R1  red 17.0%  bands  0/50/50  orange 5.5%  sat reds  6.0%  v 0.243  | ember-oak+ember-round (0.2,0.26,0.15)/(1.1,1.4,0.7); rust-oak (0.32,0.22,0.25)/(0.42,0.3,0.28); amber-round (0.3,0.2,0.24)/(0.38,0.27,0.26); olive-heath (0.4,0.5,0.9)/(0.46,0.56,1); dark-copse (0.8,0.58,1.5)/(0.88,0.62,1.6); ash-heath+ash-copse (0.3,0.38,0.22)/(1.05,1.35,0.65); BRIGHTNESS 0.7,1.15
+R2  red 17.0%  bands  0/17/83  orange 7.0%  sat reds  8.1%  v 0.247  | ember-oak+ember-round (0.12,0.18,0.13)/(1.8,2.7,2); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.5,0.6,1)/(0.56,0.66,1.1); dark-copse (0.95,0.68,1.7)/(1,0.72,1.8); ash-heath+ash-copse (0.15,0.22,0.15)/(1.6,2.4,1.8); BRIGHTNESS 0.6,1.15
+O1  red 17.1%  bands  0/36/64  orange 4.7%  sat reds  8.1%  v 0.247  | ember-oak+ember-round (0.12,0.18,0.13)/(1.8,2.4,1.8); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.42,0.6,1)/(0.46,0.66,1.1); dark-copse (0.9,0.72,1.7)/(0.95,0.76,1.8); ash-heath+ash-copse (0.15,0.2,0.15)/(1.5,1.8,1.45); BRIGHTNESS 0.6,1.15
+O2  red 17.2%  bands  0/37/63  orange 4.3%  sat reds  8.1%  v 0.247  | ember-oak+ember-round (0.12,0.18,0.13)/(1.8,2.4,1.8); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.38,0.52,1.3)/(0.42,0.58,1.4); dark-copse (0.85,0.66,2)/(0.9,0.7,2.1); ash-heath+ash-copse (0.15,0.2,0.15)/(1.5,1.8,1.45); BRIGHTNESS 0.6,1.15
+O3  red 17.2%  bands  0/37/63  orange 4.5%  sat reds  8.1%  v 0.247  | ember-oak+ember-round (0.12,0.18,0.13)/(1.8,2.4,1.8); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.36,0.5,0.9)/(0.4,0.55,1); dark-copse (0.8,0.62,1.5)/(0.85,0.66,1.6); ash-heath+ash-copse (0.15,0.2,0.15)/(1.5,1.8,1.45); BRIGHTNESS 0.6,1.15
+O4  red 15.4%  bands  0/64/36  orange 6.0%  sat reds  7.9%  v 0.243  | ember-oak+ember-round (0.12,0.18,0.13)/(1.8,2.1,1.7); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.58,0.82,1.35)/(0.64,0.9,1.5); dark-copse (1.25,1,2.3)/(1.35,1.05,2.5); ash-heath+ash-copse (0.15,0.17,0.16)/(1.5,1.5,1.55); ash-fern (0.42,0.92,0.2)/(0.46,0.98,0.22); BRIGHTNESS 0.6,1.15
+O5  red 15.5%  bands  0/64/36  orange 7.0%  sat reds  7.9%  v 0.247  | ember-oak+ember-round (0.12,0.18,0.13)/(1.8,2.1,1.7); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.62,0.8,1.6)/(0.68,0.88,1.75); dark-copse (1.3,0.95,2.6)/(1.4,1,2.8); ash-heath+ash-copse (0.15,0.17,0.16)/(1.5,1.5,1.55); ash-fern (0.45,0.95,0.3)/(0.5,1,0.32); BRIGHTNESS 0.6,1.15
+O6  red 15.4%  bands  0/66/34  orange 5.7%  sat reds  7.9%  v 0.243  | ember-oak+ember-round (0.12,0.14,0.15)/(1.8,2.1,1.7); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.58,0.88,1.35)/(0.64,0.96,1.5); dark-copse (1.25,1,2.3)/(1.35,1.05,2.5); ash-heath+ash-copse (0.16,0.14,0.2)/(1.5,1.5,1.5); ash-fern (0.42,1,0.22)/(0.46,1.06,0.24); BRIGHTNESS 0.6,1.15
+O7  red 16.4%  bands  0/65/35  orange 5.9%  sat reds  8.5%  v 0.247  | ember-oak+ember-round (0.2,0.22,0.22)/(1.8,2.1,1.7); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.58,0.88,1.35)/(0.64,0.96,1.5); dark-copse (1.25,1,2.3)/(1.35,1.05,2.5); ash-heath+ash-copse (0.22,0.2,0.26)/(1.5,1.5,1.5); ash-fern (0.4,0.92,0.32)/(0.44,0.98,0.34); BRIGHTNESS 0.65,1.15
+O8  red 17.3%  bands  0/64/36  orange 6.0%  sat reds  8.8%  v 0.251  | ember-oak+ember-round (0.28,0.3,0.3)/(1.7,2,1.6); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.58,0.88,1.35)/(0.64,0.96,1.5); dark-copse (1.25,1,2.3)/(1.35,1.05,2.5); ash-heath+ash-copse (0.26,0.24,0.3)/(1.5,1.5,1.5); ash-fern (0.4,0.92,0.32)/(0.44,0.98,0.34); BRIGHTNESS 0.7,1.15
+P1  red 16.5%  bands  0/68/32  orange 5.5%  sat reds  8.5%  v 0.247  | ember-oak+ember-round (0.2,0.22,0.22)/(1.8,2.1,1.7); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.58,0.88,1.35)/(0.64,0.96,1.5); dark-copse (1.25,1,2.3)/(1.35,1.05,2.5); ash-heath+ash-copse (0.22,0.2,0.26)/(1.5,1.4,1.7); ash-fern (0.34,0.9,0.24)/(0.37,0.95,0.26); BRIGHTNESS 0.65,1.15
+P2  red 16.5%  bands  1/68/31  orange 5.3%  sat reds  8.5%  v 0.247  | ember-oak+ember-round (0.2,0.22,0.22)/(1.8,2.1,1.7); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.58,0.88,1.35)/(0.64,0.96,1.5); dark-copse (1.25,1,2.3)/(1.35,1.05,2.5); ash-heath+ash-copse (0.22,0.2,0.28)/(1.5,1.3,1.9); ash-fern (0.3,0.82,0.2)/(0.33,0.88,0.22); BRIGHTNESS 0.65,1.15
+P3  red 16.6%  bands  4/66/30  orange 5.3%  sat reds  8.6%  v 0.247  | ember-oak+ember-round (0.2,0.22,0.22)/(1.8,2.1,1.7); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.58,0.88,1.35)/(0.64,0.96,1.5); dark-copse (1.25,1,2.3)/(1.35,1.05,2.5); ash-heath+ash-copse (0.24,0.2,0.3)/(1.5,1.2,2.1); ash-fern (0.3,0.82,0.2)/(0.33,0.88,0.22); BRIGHTNESS 0.65,1.15
+F1  red 16.4%  bands  0/59/41  orange 5.7%  sat reds  8.5%  v 0.247  | ember-oak+ember-round (0.2,0.22,0.22)/(1.8,2.15,1.7); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.58,0.88,1.35)/(0.64,0.96,1.5); dark-copse (1.25,1,2.3)/(1.35,1.05,2.5); ash-heath+ash-copse (0.22,0.2,0.24)/(1.5,1.55,1.45); ash-fern (0.38,0.92,0.27)/(0.41,0.98,0.29); BRIGHTNESS 0.65,1.15
+F2  red 16.4%  bands  0/60/40  orange 5.3%  sat reds  8.5%  v 0.247  | ember-oak+ember-round (0.2,0.22,0.22)/(1.8,2.15,1.7); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.54,0.84,1.3)/(0.6,0.92,1.45); dark-copse (1.25,1,2.3)/(1.35,1.05,2.5); ash-heath+ash-copse (0.22,0.2,0.24)/(1.5,1.55,1.45); ash-fern (0.3,0.75,0.22)/(0.33,0.8,0.24); BRIGHTNESS 0.65,1.15
+G1  red 16.7%  bands  0/49/51  orange 5.3%  sat reds  9.8%  v 0.255  | ember-oak+ember-round (0.12,0.13,0.13)/(2.3,2.75,2.15); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.54,0.84,1.3)/(0.6,0.92,1.45); dark-copse (1.25,1,2.3)/(1.35,1.05,2.5); ash-heath+ash-copse (0.14,0.13,0.15)/(1.9,1.95,1.8); ash-fern (0.3,0.75,0.22)/(0.33,0.8,0.24); BRIGHTNESS 0.65,1.15
+G2  red 17.0%  bands  0/45/55  orange 5.4%  sat reds 10.3%  v 0.255  | ember-oak+ember-round (0.1,0.11,0.11)/(2.6,3.1,2.45); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.54,0.84,1.3)/(0.6,0.92,1.45); dark-copse (1.25,1,2.3)/(1.35,1.05,2.5); ash-heath+ash-copse (0.12,0.11,0.13)/(2,2.05,1.9); ash-fern (0.3,0.75,0.22)/(0.33,0.8,0.24); BRIGHTNESS 0.65,1.15
+G3  red 16.7%  bands  0/59/41  orange 5.3%  sat reds  9.8%  v 0.255  | ember-oak+ember-round (0.12,0.13,0.13)/(2.3,2.6,2.1); rust-oak (0.25,0.3,0.25)/(0.55,0.62,0.5); amber-round (0.22,0.2,0.22)/(0.48,0.42,0.44); olive-heath (0.54,0.84,1.3)/(0.6,0.92,1.45); dark-copse (1.25,1,2.3)/(1.35,1.05,2.5); ash-heath+ash-copse (0.14,0.13,0.15)/(1.9,1.85,1.8); ash-fern (0.3,0.75,0.22)/(0.33,0.8,0.24); BRIGHTNESS 0.65,1.15
+
+What the rounds showed:
+- A: lifting green under blue moves the crowns' hue toward scarlet but leaves the red
+  share where it was: the share is a saturation and value mask, not a hue one.
+- S, U, V, Y, Z, Q: no tint near today's brightness lowers the crowns' saturation. The
+  journey grade's contrast of 1.2 about mid-grey (MapJourneyLandscape.light) sends a
+  display channel below about 0.08 to zero: at the head the median crown pixel reads
+  red 0.28, green 0.00, blue 0.01. A dark crown's green and blue vanish and it reads at
+  full saturation whatever its albedo. Calibrated: green and blue must be lifted
+  about 3.3x over red before the median crown falls below s 0.72 (Q2), and the crowns
+  then read dusty pink (seen; rejected). The target's red-hued pixels sit mostly at
+  s 0.5-0.72; the head's at s >= 0.85.
+- W, R, T: the red share falls only where a crown is dark enough to leave the mask
+  (v < 0.12): a share of crowns in shadow. Scarlet needs green above the clip, which a
+  brighter lit crown reaches with less lift (T, Y3).
+- X, R2, O: the undergrowth went orange-brown (X1, orange 10.6%) or grey-black (O1, O3)
+  before O4: a dark olive-khaki whose lit tips stay olive.
+- P: a crimson-leaning red undergrowth puts back the target's few crimson pixels
+  (P3, bands 4/66/30) but keeps the undergrowth crimson, which the must-fix moves
+  toward scarlet; not taken.
+- F2 -> G1-G3: darker shadow crowns and brighter lit ones (G3) keep the red share and
+  bring the bright saturated reds (8.5 -> 9.8%, target 11.8%) and the frame's value
+  (0.247 -> 0.255, target 0.286) toward the target; the lit crowns stand out of the
+  wood more. G3 is the pick, committed as b9ea3fcc.

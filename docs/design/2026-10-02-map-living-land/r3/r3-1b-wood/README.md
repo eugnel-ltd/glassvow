@@ -13,8 +13,13 @@ from `spike/map-impostor-2026-10-03` (`59e363ee`), give it art direction
 against the owner's target, carry R2's review notes, and hold the device gate.
 
 The branch was reviewed adversarially at `fbf0fc65`; the fix round below
-answers every finding. Production code is final at `21b4cdab`; the commit
-after it is this record. Evidence for the current head is under
+answers every finding (its production code is final at `21b4cdab`). The art
+decision then asked for a tint pass on an independent designer's must-fixes
+([below](#art-decision)): `b9ea3fcc` re-tints the wood, data only. The
+pass changes only the colour each card already carries, so it leaves the
+shader, the draws and the fix round's device rows as they were. Evidence for
+the colour is
+under [`tint-pass/`](tint-pass/), for everything else under
 [`fix-round/`](fix-round/); the first round's files (`device/`, `mac/`,
 `frames/`, `tools/`) are kept as the record of `af34d97a`, and their numbers
 are superseded where this page gives new ones.
@@ -34,21 +39,22 @@ are superseded where this page gives new ones.
 | `e5bbee23` | Fix round: rocks, rivers and each shape's touch squares kept in sight, the kit's own foliage under the same rules, an exact fit test, the mix steered by plants and by canopy, per-kind tints, denser undergrowth. |
 | `08b32b3f` | Fix round: 0.35 m of a road's worn core kept in sight either side of the centreline (was 0.5 m). |
 | `21b4cdab` | Fix round: matte cards (Lambert, no direct specular): cheaper on the A12, and the crowns' lit sides no longer turn orange. Re-anchors one doc citation Main's added line moved. |
+| `b9ea3fcc` | Tint pass: the crimson crowns and the red undergrowth scarlet to vermilion, each pair running from a crown in shadow to a lit one; the olive and dark undergrowth and the fern a dark, low-chroma olive-brown; `BRIGHTNESS` 0.65–1.15. Data only (`ImpostorWood.TINTS`). |
 
 ## The look
 
-![The owner's target, R2, and the wood at the Journey view on the pad](fix-round/frames/vs-target-journey-pad.jpg)
+![Before and after the tint pass at four views, and the owner's target](tint-pass/frames/before-after-target.jpg)
 
-![Whole act, R2 and the wood](fix-round/frames/whole-act-r2-vs-wood.jpg)
+The tint pass's frames on their own are under `tint-pass/frames/`; the fix
+round's sheets beside R2 (`fix-round/frames/`) show the wood before it.
 
-![The fresh-run opening view, R2 and the wood](fix-round/frames/fresh-opening-pad.jpg)
-
-Packed wood to the frame's edges in the target's autumn: crimson broadleaf
-crowns, dark spruce, dark-green and olive undergrowth with red sprigs among
-it, rust and amber crowns as a minority, and large crowns along the bottom
-of the frame that enter the tilt-shift's blur. The roads, every waystone and
-its touch square, the bridges, the lanterns, the arch, the shrines, the
-rock outcrops and both rivers stay in sight.
+Packed wood to the frame's edges in the target's autumn: scarlet to
+vermilion broadleaf crowns, some lit and some in shadow, dark spruce, dark
+olive-brown undergrowth with scarlet sprigs among it, rust and amber crowns
+as a deep minority, and large crowns along the bottom of the frame that
+enter the tilt-shift's blur. The roads, every waystone and its touch square,
+the bridges, the lanterns, the arch, the shrines, the rock outcrops and both
+rivers stay in sight.
 
 What is still far from the target, and belongs to later steps: the floor
 (flat warm brown, R3.2), rock and cliff materials (R3.3: the outcrops show
@@ -123,10 +129,10 @@ order so the steering favours no part of the land.
 | Direction | Built | Measured |
 |---|---|---|
 | Dark conifers 35–40% of trees | the kit's three conifers, the spruce and spire baked from stacked turned copies; groves by a slow field; tall (0.75 to 1 of the scale range) | 37.7–39.2% across seeds 1, 717, 2, 3, 42, 1234 (`fix-round/probe/`) |
-| Crimson broadleaf ≤ 40% | `ember-oak`, `ember-round`, tinted toward the target's crimson | 35.9–38.9% |
+| Crimson broadleaf ≤ 40% | `ember-oak`, `ember-round`, tinted scarlet to vermilion, from a crown in shadow to a lit one (tint pass) | 35.9–38.9% |
 | Rust and amber about 20% | `rust-oak`, `amber-round`, the lower half of the scale range, tinted deep and dull | 21.9–26.3% (with conifers and crimson each at most 40%, the rest is at least 20%) |
 | By the canopy each family shows (front-most card over the whole land) | | crimson 51–57%, conifers 22–30%, rust and amber 17–21% of the tree canopy across the six seeds (in the first round rust and amber showed the most canopy, conifers 15% of the land's cover) |
-| Olive and dark undergrowth | `olive-heath`, `dark-copse`, 70% of the kit's red heath and copse repainted | 57.7–59.2% of the undergrowth |
+| Olive and dark undergrowth | `olive-heath`, `dark-copse`, 70% of the kit's red heath and copse repainted; a dark, low-chroma olive-brown (tint pass) | 57.7–59.2% of the undergrowth |
 | Crown scale 0.7–1.4 | | every fill crown in range (test) |
 | Clearance from the road's edge | above | no card hides a centreline (the wood probe at six seeds; `test_map_wood` at seed 717) |
 | Bridge ramps, arch, shrines in the footprints | above | no card hides a deck or a flame (the same) |
@@ -134,20 +140,54 @@ order so the steering favours no part of the land.
 | Flutter ≤ 4% of woodland pixels in 0.6 s | the gust sway at half the kit foliage's | 1.7% on the Mac, 3.6% on the iPad 8 (stage images, `fix-round/device/batch7/`) |
 | Planting off the GDScript hot path | the candidate masks above | 86 ms planting on the M1 Max build worker; 105–111 ms planting and 17–19 ms of draws on the iPad 8's worker |
 
-Colour against the target, by the same masks on the pad's safe frame (Mac,
-A12 Metal condition, lean, seed 1; `fix-round/tools/metrics.py.txt`):
+Colour against the target, by the same masks on the safe frame (Mac, A12
+Metal condition, lean, Reduce Motion stills, seed 1;
+`tint-pass/tools/bands.py.txt`, figures in `tint-pass/measure.txt`).
+Before is the head before the tint pass (`55182330`), after is `b9ea3fcc`:
 
-| | Target | Wood, first round (`fbf0fc65`), Journey | Wood, Journey | Fresh-run opening | Whole act |
+| | Target | Pad, Journey | Pad, fresh-run opening | Pad, Whole act | Phone, Journey |
 |---|---|---|---|---|---|
-| Red (hue 340–14°, s ≥ 0.72, v ≥ 0.12) | 11.3% | 22.6% | 22.5% | 17.4% | 20.8% |
-| Saturated orange (hue 14–45°, s ≥ 0.72) | 4.1% | 22.5% | 4.8% | 5.0% | 3.1% |
-| Crimson band (hue 340–360°, s ≥ 0.5) | 5.5% | 0.0% | 10.8% | 8.2% | 10.8% |
+| Red share (hue 340–14°, s ≥ 0.72, v ≥ 0.12) | 11.3% | 22.6 → 16.7% | 17.4 → 12.4% | 20.8 → 11.6% | 19.9 → 12.6% |
+| Saturated reds (s ≥ 0.65, v ≥ 0.25) by hue: 345–355° / 355–5° / 5–15° | 5 / 56 / 39 | 7 / 83 / 10 → 0 / 59 / 41 | 13 / 78 / 9 → 0 / 57 / 42 | 19 / 72 / 9 → 0 / 55 / 45 | 12 / 76 / 12 → 0 / 59 / 41 |
+| Saturated reds, share of the frame | 11.8% | 15.6 → 9.8% | 12.6 → 8.4% | 15.0 → 6.2% | 14.3 → 7.2% |
+| Saturated orange (hue 14–45°, s ≥ 0.72) | 4.1% | 4.9 → 5.3% | 5.1 → 5.3% | 3.1 → 3.2% | 5.1 → 5.1% |
+| The frame's median value | 0.286 | 0.263 → 0.255 | 0.243 → 0.235 | 0.165 → 0.141 | 0.255 → 0.243 |
 
-Of the woodland's own pixels at Journey, 54% read red, 8% orange and 38%
-green, dark or brown (red and orange were 94% in the first round). The red
-share stays inside the 15–30% band; the crimson now runs above the
-target's, and the wood as a whole is darker than the target's lit crowns,
-whose golden rims belong to the light and lens step (R3.6).
+The reds moved from crimson to the target's scarlet and vermilion. Of the
+saturated reds, the crimson band (345–355°) fell from 7–19% to none (the
+target keeps 5%), and the scarlet-to-vermilion band (5–15°) rose from 9–12%
+to 41–45% (the target's 39%). The designer measured 20 / 67 / 13 on the
+iPad 8's screenshot of the fix round's head; the device was not measured
+again (this pass is Mac only). Saturated orange rose by up to 0.4 points,
+mostly from the fern's lit olive tips (+0.26 at the pad's Journey); the
+crowns add 0.06. By family at the pad's Journey, the red pixels fell from
+12.4 to 10.1 points in the crimson crowns, 4.4 to 2.6 in rust and amber, 3.9
+to 3.6 in the red undergrowth and 1.1 to none in the fern.
+
+The red share fell by 5 to 9 points in every view, to within 1.3 points of
+the target everywhere but the pad's Journey, where the dense near band of
+large crowns fills the frame's foot. What is left there is a mask effect a
+tint cannot reach. The journey grade's contrast of 1.2 about mid-grey
+(`MapJourneyLandscape.light`) sends a display channel below about 0.08 to
+zero: before the pass the median crown pixel read red 0.28, green 0.00,
+blue 0.01, so a dark crown reads at full saturation whatever its albedo.
+The target's red-hued pixels lie mostly at s 0.5–0.72, the wood's at
+s ≥ 0.85. A tint takes a crown out of the mask only by darkening it below
+v 0.12 (the crowns in shadow) or by lifting green and blue about 3.3 times
+over red, which turns the crowns dusty pink (tried and rejected; every
+candidate is in `tint-pass/rounds.txt`). The wood's bright saturated reds
+now sit below the target's (9.8% against 11.8%) and its dark ones above:
+lifting the dark reds' floor in the grade belongs to the light and lens step
+(R3.6), with the golden rims.
+
+**The red-share gate, re-anchored on the target.** The old band, 15–30%,
+lay wholly above the target's 11.3%. The gate is now the target's 11.3%
+± 5 points in each view (6.3–16.3%). Five points is the spread that framing
+alone gives one tint across the pad's three views (5.2 points before the
+pass, 5.1 after), so a view inside the band cannot be told from the target
+by framing; a wider band would pass the head's own fresh-run opening
+(17.4%), which the designer judged too red. At `b9ea3fcc` three views meet
+it and the pad's Journey misses it by 0.4 points (16.7%).
 
 ### What the v1 sources cannot reach, and what Blender must craft
 
@@ -175,6 +215,51 @@ baked at 3–4 yaws in the four passes and packed: a data-only re-bake. The
 runtime does not change. The rust and amber recipes brighten their leaves
 ×1.3 and ×1.55 (`LEAVES`), which the runtime tints now pull back; a re-bake
 should fold the tint into the recipe.
+
+## Art decision
+
+On 4 October 2026 at 11:31 BST the owner delegated R3.1 b's design
+decisions, the wood's art and the pins' contrast, to the orchestrator, who
+might consult an Opus designer. The orchestrator's call:
+
+- **The wood ships as the lane's pick, which the owner may re-pick.** The
+  choice was delegated, not made by the owner; nothing here closes it.
+- **An independent Opus designer** reviewed the wood against the owner's
+  target, from crops and colour counts of the fix round's frames (among
+  them the iPad 8's screenshot), and set three must-fixes. The orchestrator adopted them as
+  the tint pass, `b9ea3fcc`, data only on the same shader:
+  1. *Re-tint the reds from crimson toward scarlet and vermilion*: blue
+     below 1.0 and green cut less hard; the pairs' low ends and
+     `BRIGHTNESS` put a share of crowns in shadow, so the mat breaks up and
+     the red share falls toward the target; no push into orange; the kind
+     mix kept. Done for `ember-oak`, `ember-round`, `ash-heath` and
+     `ash-copse`. Against red, blue now sits at 0.91 (lit) and green is
+     lifted to 1.13 rather than cut less hard: a cut green is clipped to
+     nothing by the grade and the crown stays pure red (round A in
+     `tint-pass/rounds.txt`: green at 0.75–1.0 of red moved the 5–15° band
+     only to 13–17%). Each pair runs from a crown in shadow (0.12–0.15) to a
+     lit one, and `BRIGHTNESS` widens to 0.65–1.15. Rust and amber, which
+     the old green cut also turned red, are darker and keep their place as
+     the deep minority. The hue bands now match the target's within 5
+     points (0 / 59 / 41 against 5 / 56 / 39 at the pad's Journey); the red
+     share fell 5–9 points in every view (above); saturated orange rose by
+     up to 0.4 points, from the fern, not the crowns. The mix itself is
+     untouched: `test_map_wood` passes unchanged (it pins the mix and the
+     canopy shares, never the tints).
+  2. *Undergrowth to a dark, low-chroma olive-brown, its share kept.* Done
+     for `olive-heath` and `dark-copse` (blue lifted so the lit tips read
+     olive, not yellow-green: their median hue went from 67° to 52°, their
+     upper tenth from 89° to 62°) and for `ash-fern`, the kit's fern and
+     the fill's fallback, which read as red-brown tufts along the roads.
+  3. *Records*: this section, the [re-anchored red-share
+     gate](#art-direction-on-the-v1-sources), and the pins' contrast as a
+     tripwire ([open issue 2](#open-issues)).
+- **Follow-ups the designer named, outside this pass**: the golden rims on
+  the crowns' lit sides (the light and lens step, R3.6), and the pins'
+  background-independent token design (issue #679, before R3.2).
+- **What the pass found** (for the orchestrator): the grade's contrast,
+  not the tint, holds the pad's Journey 0.4 points above the red-share
+  band ([open issue 11](#open-issues)).
 
 ## R2's review notes, carried
 
@@ -276,10 +361,10 @@ either.
 | Payload | ≤ +7 MB | +4.7 MiB: the iOS pck estimate 272.3 → 277.0 MiB (`tools/payload_report.py`; the atlases did not change in the fix round) |
 | VRAM | ≤ +8 MiB | every reading reported: the control's 27 hold starts 254.1–254.7 MiB, the candidate's 27 258.6–260.7 MiB; +4.5 MiB median (+3.9 to +6.6 across the extremes) |
 | Canopy cover in the safe frame | ≥ 45% | flat-magenta count: 45.4% Journey, 45.8% fresh-run opening, 43.9% Whole act (18% of whose safe frame is off the land); phone Journey 44.3% |
-| Red share by colour mask | 15–30% | 22.5% Journey, 17.4% fresh-run opening, 20.8% Whole act |
+| Red share by colour mask | the target's 11.3% ± 5 points in each view (6.3–16.3%; [re-anchored](#art-direction-on-the-v1-sources)) | after the tint pass: 16.7% pad Journey (missed by 0.4), 12.4% fresh-run opening, 11.6% Whole act, 12.6% phone Journey (before: 22.6, 17.4, 20.8, 19.9%) |
 | Woodland motion | ≤ 4% of woodland pixels in 0.6 s | 3.6% on the iPad 8 (stage images), 1.7% on the Mac |
 | Reduce Motion | verified on the device | 0.53% of woodland pixels change in 0.6 s with Reduce Motion on (3.6% off); 0.14% on the Mac |
-| Pins | legible, contrast floor | rim minimum against main like for like: pad 1.02 → 1.09, desktop 1.03 → 1.09, phone 1.10 → 1.06 (one pin; open issue 2) |
+| Pins | a tripwire, not a legibility gate: no rim minimum below its re-baseline, pad 1.10, phone 1.05, desktop 1.10 (R2's method and mount at `55182330`; open issue 2) | after the tint pass: pad 1.11, phone 1.05, desktop 1.11 (`tint-pass/pin-contrast.txt`). The fix round, against main like for like: pad 1.02 → 1.09, desktop 1.03 → 1.09, phone 1.10 → 1.06 |
 | No crown on a centreline, seat or touch square | | none at six seeds, against the roads, decks, flames, rivers, rocks and seats themselves, at the pad's and the phone's touch squares; pinned by `test_map_wood` |
 
 
@@ -289,7 +374,10 @@ At `21b4cdab`, the A12 Metal condition (`GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1`
 with `--rendering-driver metal --rendering-method mobile` passed to godot
 directly): 0 shader errors and 0 script errors in every capture, at pad,
 phone and desktop, lean and full, Journey and Whole act, in en and zh-Hant,
-and under Reduce Motion (`fix-round/mac/proof-run.txt`).
+and under Reduce Motion (`fix-round/mac/proof-run.txt`). The tint pass
+changes only data; its captures at `b9ea3fcc` (the four views above and R2's
+pin mount at the three shapes) and every candidate it tried read 0 shader
+errors and 0 script errors.
 
 ![Three shapes, en, lean](fix-round/frames/shapes-en-lean.jpg)
 ![Three shapes, zh-Hant, lean](fix-round/frames/shapes-zh-hant-lean.jpg)
@@ -340,15 +428,20 @@ touch square). Every finding was real; none is rejected.
    opens, by drawing them once behind the title or the opening, which sits
    with lane R1.1's title warm and prefetch; any later change to these
    shaders will cost the same once. Not fixed here.
-2. **Pin contrast on the phone.** R2's recorded floors (pad 2.17, phone
-   1.41, desktop 1.18) were measured before R2's own camera change; main
-   measures 1.02, 1.10 and 1.03 today by R2's method and mount. Like for
-   like the wood raises the pad's and the desktop's minimum (1.09, 1.09)
-   and lowers the phone's (1.06): one pin whose sampled ring, 16–28 px out,
-   holds crowns standing behind its stone. Clearing that ring of every card
-   costs more than half the phone's cover. The floor needs re-baselining on
-   main before it can gate; a backing or halo behind each pin (the pins'
-   own design) is the robust fix. Owner decision.
+2. **Pin contrast on the phone: re-baselined as a tripwire.** R2's
+   recorded floors (pad 2.17, phone 1.41, desktop 1.18) were measured
+   before R2's own camera change; main measured 1.02, 1.10 and 1.03 by R2's
+   method and mount at the fix round. Like for like the wood raised the
+   pad's and the desktop's minimum (1.09, 1.09) and lowered the phone's
+   (1.06): one pin whose sampled ring, 16–28 px out, holds crowns standing
+   behind its stone. Clearing that ring of every card costs more than half
+   the phone's cover. Decided under the [art decision](#art-decision): the
+   floor is re-baselined at `55182330` (rim minimum pad 1.10, phone 1.05,
+   desktop 1.10) as a tripwire, so a later change that lowers a minimum must
+   explain it, but the figure certifies no legibility. Its cause is the
+   pin's translucent dimmed state, through which the land shows; the fix is
+   the tokens' own design, one background-independent design for every
+   state (issue #679, before R3.2). The tint pass reads 1.11, 1.05 and 1.11.
 3. **Whole act cover** is 43.9% by the flat-magenta count against the 45%
    gate; 18% of its safe frame lies off the land, whose own cover is about
    53%. Journey (45.4%) and the fresh-run opening (45.8%) meet it. The
@@ -385,6 +478,14 @@ touch square). Every finding was real; none is rejected.
     hook applied uncommitted; this branch never carries it. The QA app on
     the iPad is left with this lane's control build (main `8815da34` plus
     the probe).
+11. **The red share at the pad's Journey** is 16.7%, 0.4 points above the
+    re-anchored band (6.3–16.3%); the other three views meet it. The tint
+    has done what it can: the journey grade's contrast clips a dark crown's
+    green and blue, so every crown not dark enough to leave the mask counts
+    at full saturation, where the target's dark reds are muted. Lifting
+    that floor is a grade change for the light and lens step (R3.6), which
+    owns the crowns' golden rims too; more tint would only darken the wood
+    further or turn it pink (`tint-pass/rounds.txt`).
 
 ### First round (`af34d97a`, superseded)
 

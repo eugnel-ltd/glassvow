@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+"""The tint pass's comparison sheet (lane R3.1b, scratch): before | after |
+the target (row 1) or a 1:1 detail of after (rows 2-4), with each frame's red
+share and red hue bands. sheet.py <before dir> <after dir> <target png> <out.jpg>"""
+import json, subprocess, sys
+from PIL import Image, ImageDraw, ImageFont
+BANDS = '/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/tint/bands.py'
+before, after, target, out = sys.argv[1:5]
+def m(p, *a): return json.loads(subprocess.check_output(['python3', BANDS, *a, p]))
+def nums(d): return f"red {d['red']*100:.1f}%  ·  bands {d['b345_355']*100:.0f} / {d['b355_5']*100:.0f} / {d['b5_15']*100:.0f}"
+H, GAP, CAP, PAD = 330, 10, 50, 14
+font = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf', 17)
+bold = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Bold.ttf', 17)
+head = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Bold.ttf', 22)
+tgt = Image.open(target).convert('RGB').crop((0, 70, 1672, 830))
+TW = round(tgt.width * H / tgt.height)
+# Rows: label, view, detail box (in the after frame's own pixels) and its scale.
+rows = [('Pad, Journey', 'pad-journey', None, 1),
+        ('Pad, fresh-run opening', 'pad-fresh', (0, 120, TW, 120 + H), 1),
+        ('Pad, Whole act', 'pad-whole', (1180 - TW, 820 - H - 110, 1180, 820 - 110), 1),
+        ('Phone, Journey', 'phone-journey', (40, 175, 40 + TW // 2, 175 + round(H * 0.62) // 2), 2)]
+cells = []
+for label, v, box, scale in rows:
+    b = Image.open(f'{before}/{v}.png').convert('RGB'); a = Image.open(f'{after}/{v}.png').convert('RGB')
+    h = H if not v.startswith('phone') else round(H * 0.62)
+    w = round(b.width * h / b.height)
+    third = tgt.resize((TW, H), Image.LANCZOS) if box is None else a.crop(box).resize(((box[2] - box[0]) * scale, (box[3] - box[1]) * scale), Image.LANCZOS)
+    third_cap = (f"The owner's target (Act I)", nums(m(target, '--target'))) if box is None else ('After, detail at %d:1' % scale, 'crowns lit and in shadow; olive-brown undergrowth')
+    cells.append((label, b.resize((w, h), Image.LANCZOS), a.resize((w, h), Image.LANCZOS), third,
+                  (f'{label}, before', nums(m(f'{before}/{v}.png'))), ('After', nums(m(f'{after}/{v}.png'))), third_cap))
+W = PAD * 2 + max(c[1].width * 2 + c[3].width + 2 * GAP for c in cells)
+Htot = 84 + sum(max(c[1].height, c[3].height) + CAP + GAP for c in cells) + PAD
+sheet = Image.new('RGB', (W, Htot), (246, 244, 240))
+d = ImageDraw.Draw(sheet)
+d.text((PAD, 12), "R3.1 b tint pass: before (55182330), after (b9ea3fcc), the owner's target", fill=(20, 20, 20), font=head)
+d.text((PAD, 44), 'Mac, A12 Metal condition, lean, Reduce Motion stills, seed 1; measured in the safe frame. red: hue 340-14°, s ≥ .72, v ≥ .12 (the gate\'s mask).', fill=(70, 70, 70), font=font)
+d.text((PAD, 64), 'bands: the saturated reds (s ≥ .65, v ≥ .25) at 345-355° (crimson) / 355-5° / 5-15° (scarlet to vermilion), as shares of those reds.', fill=(70, 70, 70), font=font)
+y = 96
+for label, b, a, third, cb, ca, ct in cells:
+    xs = [PAD, PAD + b.width + GAP, PAD + 2 * (b.width + GAP)]
+    for x, (t1, t2) in zip(xs, [cb, ca, ct]):
+        d.text((x, y), t1, fill=(20, 20, 20), font=bold)
+        d.text((x, y + 21), t2, fill=(60, 60, 60), font=font)
+    for x, im in zip(xs, [b, a, third]):
+        sheet.paste(im, (x, y + CAP))
+    y += max(b.height, third.height) + CAP + GAP
+sheet = sheet.crop((0, 0, W, y + PAD - GAP))
+sheet.save(out, quality=74, optimize=True)
+print(out, sheet.size)

@@ -1,0 +1,22 @@
+#!/bin/zsh
+# Tint pass (lane R3.1b, scratch): the four views the lane measured, at the
+# A12 Metal condition, lean, still, no drifting air, with the flat-magenta
+# woodland mask; then the red share and hue bands of each.
+#   run.zsh <outdir> [views...]   views: pad-journey pad-fresh pad-whole phone-journey
+set -u
+S=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad
+WT=$S/map-lane/wt-r31b
+LOOK=$S/tint/look5.gd
+OUT=$1; shift; mkdir -p $OUT
+views=(${@:-${=:-pad-journey pad-fresh pad-whole phone-journey}})
+for v in $views; do
+  case $v in
+    pad-journey) args=(--shape=pad-landscape --map-steps=2 --look-view=journey);;
+    pad-fresh) args=(--shape=pad-landscape);;
+    pad-whole) args=(--shape=pad-landscape --map-steps=2 --look-view=whole);;
+    phone-journey) args=(--shape=phone-landscape --vp=844x390 --map-steps=2 --look-view=journey);;
+  esac
+  LOOK_TINTS=${TINTS:-} LOOK_KEY=${KEY:-0} GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 240 godot --path $WT --rendering-driver metal --rendering-method mobile --position 1400,900 \
+    -s $LOOK -- --map --seed=1 --look-out=$OUT/$v.png $args --look-lean --look-still --look-noair --look-magenta > $OUT/$v.log 2>&1
+  echo "$v exit $? shader $(grep -c 'SHADER ERROR' $OUT/$v.log) script $(grep -c 'SCRIPT ERROR' $OUT/$v.log) $(python3 $S/tint/bands.py $OUT/$v.png)"
+done
