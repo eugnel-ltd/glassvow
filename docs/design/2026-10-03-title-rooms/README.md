@@ -1570,8 +1570,10 @@ commit):
   zh-Hant: 27.5 ms on the final head's second launch (30.2 on `398e1a23`, 30.0 on `011cd483`; main's
   32.1), against 33. **Corrected after review (4 Oct 2026):** those are single launches. On the final
   batch against `ec48be21` (`evidence/pr-c-final2-ipad8-frame-times.txt`), the zh-Hant first opening's
-  tap frame is 36.2 ms on this branch and 37.0 ms on main, both over 33. This PR does not touch
-  Settings' first-open path and is not slower than main there, so it is not this PR's regression, but
+  tap frame is 36.2 ms on this branch and 37.0 ms on main, both over 33. This PR changes RoomWarm,
+  which pays Settings' first-open cost (its builders now wait on the Vigil's art, and shaping starts
+  after the last builder), yet it is not slower than main in the same batch, so it is not this PR's
+  regression; but
   #675's margin is not shown on this batch. Whether main has drifted past 33 since #675 (≤ 32.4 then) or
   this batch's launches ran slow is open and is carried to #655 as a follow-up, to be read on the median
   of a batch of its own.
