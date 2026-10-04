@@ -71,8 +71,17 @@ names as whole words, ignoring case (`keyword_hits`). The claim fails, even when
 matches, if the hit count is above `max(5, ¾ × the number of keywords)` (`hit_limit`). A statement
 names one alternative per slot, so even a thorough one names few of a claim's synonyms; a list
 names nearly all of them, and the one alternative it happens to contain does not complete the
-claim. Patterns of the form `X ... Y` should keep their alternatives few and their gaps short,
-because a list of their words can fall into that order by chance.
+claim.
+
+**Statement shape.** The hit-count limit stops long lists; a short list must be stopped by the claim
+itself. A keyword list is made of a claim's keywords, which are runs of three characters or more, so it
+holds no short function words and no punctuation. Each scored claim therefore asks for the glue that a
+statement has and a list lacks: a short function word in its place (`is not running`, `on stderr`,
+`a ... throwaway script`, `in the test`), code syntax (`size() > 0`, `y=0`, `{}`, an object before
+`.get(`, a path before `check_scripts.sh`), or a word order that neither sorted nor reverse-sorted
+order produces. Single words never complete a claim, gaps between the parts stay short, and a
+widened alternative must keep the glue. The offline tests prove that no keyword run, and no capped
+list, satisfies any claim that can earn a score (every claim in a case with a boolean, and every gate).
 
 **Baseline diagnostics** (in `results.json` and printed as warnings):
 
@@ -86,9 +95,14 @@ because a list of their words can fall into that order by chance.
   prompt (echo), the full keyword soup (one fixed list of every domain word in every reference and
   keyword claim, about 5,300 characters, so the field cap rejects it), the compact generic soup
   (the claim keywords most claims use, most widely used first, cut to fit under the 1,000-character
-  cap) and the compact case-aware soup (every keyword of that case's own claims, sorted, under the
-  cap). The boolean modes are all false, all true and the correct values (oracle); constant text
-  with oracle booleans is named `oracle_booleans`. Any of them scoring above 25% warns, and
+  cap), the compact case-aware soup (every keyword of that case's own claims, sorted, under the
+  cap), the capped soup (each field holds, for every claim on it, that claim's first keywords in
+  sorted order, as many as its hit limit allows, so the list stays under the limit by construction)
+  and the keyword run (`diagnostics.keyword_run`: for every claim, the shortest run of consecutive
+  keywords, in sorted or reverse-sorted order and within the hit limit, that the grader accepts, found
+  by trying them all; if none passes, no keyword list in either order can satisfy that claim). The
+  boolean modes are all false, all true and the correct values (oracle); constant text with oracle
+  booleans is named `oracle_booleans`. Any of them scoring above 25% warns, and
   `approve-grader` refuses such a run; it also rescores the current cases itself, so a run
   recorded before a new answerer existed cannot back an approval;
 - infrastructure reliability: timeouts, API or CLI errors and truncated outputs are counted;

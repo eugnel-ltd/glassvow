@@ -4,6 +4,7 @@ and the grader-readiness items (compact soups, structural gates, the hit-count l
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import io
 import json
 import subprocess
@@ -20,18 +21,39 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_agent_evals import ROOT, healthy_results, make_cases  # noqa: E402
 
 from agent_evals import approvals, cli  # noqa: E402
-from agent_evals.diagnostics import (TRIVIAL_LIMIT, case_soup, compact_soup,  # noqa: E402
-                                     keyword_soup, trivial_answerer_scores, trivial_answers)
+from agent_evals.diagnostics import (TRIVIAL_LIMIT, capped_keywords, case_soup,  # noqa: E402
+                                     compact_soup, keyword_run, keyword_soup,
+                                     trivial_answerer_scores, trivial_answers)
 from agent_evals.evalspec import load_cases, load_eval  # noqa: E402
-from agent_evals.graders import (MAX_FIELD_CHARS, claim_keywords, grade_claims,  # noqa: E402
-                                 hit_limit, is_decision_claim, keyword_hits, parse_json_answer,
-                                 validate_grader_spec)
+from agent_evals.graders import (MAX_FIELD_CHARS, check_claim, claim_keywords,  # noqa: E402
+                                 grade_claims, hit_limit, is_decision_claim, keyword_hits,
+                                 parse_json_answer, validate_grader_spec)
 from agent_evals.models import Case, EvalError, sha256_text  # noqa: E402
 
+FILLERS = ("echo", "soup", "compact_soup", "case_soup", "capped_soup", "keyword_run")
 ANSWERERS = {"empty", "constant_false", "constant_true", "oracle_booleans"} | {
-    f"{filler}_{mode}" for filler in ("echo", "soup", "compact_soup", "case_soup")
-    for mode in ("false", "true", "oracle")}
-ANSWERS_FILE = ROOT / "tools/agent_evals/evals/repo_traps/answers.jsonl"
+    f"{filler}_{mode}" for filler in FILLERS for mode in ("false", "true", "oracle")}
+EVAL_DIR = ROOT / "tools/agent_evals/evals/repo_traps"
+ANSWERS_FILE = EVAL_DIR / "answers.jsonl"
+# Wordings the re-review of PR #691 found zeroed or short of full marks; each, with the case's
+# other fields taken from its reference answer, must score 100%.
+REVIEW_WORDINGS = [
+    ("language-switch-owner", "panel_does",
+     "The panel does nothing but emit a language_changed signal asking Main to switch."),
+    ("language-switch-owner", "panel_does", "It emits a language_changed request; Main does the work."),
+    ("language-switch-owner", "panel_does", "The panel emits language_changed so Main can perform the change."),
+    ("language-switch-owner", "panel_does", "The panel emits a language_changed signal and nothing else."),
+    ("language-switch-owner", "panel_does", "It requests the change from Main by emitting a signal."),
+    ("funplay-32000", "likely_cause", "The Godot editor or plugin has not been started."),
+    ("funplay-32000", "likely_cause", "The plugin never loaded in the editor."),
+    ("test-loop-over-suspect-container", "action_one", "Make sure FORMS[form] is not empty before the loop."),
+    ("test-loop-over-suspect-container", "action_one", "Add a precondition that the container has at least one entry."),
+    ("shared-helper-blast-radius", "default", "Defaults to an algebraic identity."),
+    ("canary-pins-the-rule", "assertion", "The raw subscript result and LayoutBook.fields(built_key) disagree."),
+    ("canary-pins-the-rule", "assertion", "raw never equals LayoutBook.fields(built_key)"),
+    ("canary-pins-the-rule", "assertion", "The raw subscript output is not what fields() returns."),
+    ("shared-doc-landed-already", "first_step", "Check origin/main for the entry."),
+]
 
 
 def real_case(case_id: str) -> Case:
@@ -295,12 +317,46 @@ class HitCountLimitTests(unittest.TestCase):
         self.assertIn("10 of its 10", grade.verdicts[0].detail)
 
     def test_a_real_claim_rejects_its_own_vocabulary_but_not_a_statement(self) -> None:
-        case = real_case("renderer-noise-is-not-a-failure")
-        listed = grade_claims(case, soup_answer(case, case_soup(case)))
-        self.assertEqual({"do-not-block": True, "cites-noise": False}, {v.claim_id: v.passed for v in listed.verdicts})
-        self.assertIn("keyword list", listed.verdicts[1].detail)
-        right = passed(case.id, block_pr=False, reason="Those lines are harmless dummy-renderer noise at exit.")
-        self.assertTrue(all(right.values()), right)
+        case = real_case("funplay-32000")
+        claim = next(c for c in case.grader["claims"] if c["id"] == "curl-or-listener")
+        listed = check_claim(claim, {"first_check": case_soup(case)})
+        self.assertFalse(listed.passed)
+        self.assertIn("keyword list", listed.detail)
+        self.assertTrue(check_claim(claim, {"first_check": "Curl the editor URL the relay points at."}).passed)
+
+
+class KeywordListTests(unittest.TestCase):
+    """Re-review blocking 1: keyword lists kept under the hit limit, and the strongest of them."""
+
+    def claim(self, pattern: str) -> dict:
+        return {"id": "c", "field": "answer", "must_match": pattern}
+
+    def test_the_capped_list_is_the_first_keywords_up_to_the_hit_limit(self) -> None:
+        words = [f"w{n}xx" for n in range(12)]  # 12 keywords, so the hit limit is 9
+        self.assertEqual(" ".join(sorted(words)[:9]), capped_keywords(self.claim("|".join(words))))
+
+    def test_the_keyword_run_searches_both_orders_shortest_first(self) -> None:
+        self.assertEqual("exit code", keyword_run(self.claim(r"stderr|exit code")))
+        self.assertEqual("zebra apple", keyword_run(self.claim(r"zebra\s+apple")))  # reverse order
+        glued = self.claim(r"apple\s+is\s+zebra")  # "is" is glue no keyword list holds
+        self.assertEqual(capped_keywords(glued), keyword_run(glued))
+        self.assertFalse(check_claim(glued, {"answer": keyword_run(glued)}).passed)
+
+    def test_no_keyword_list_satisfies_a_scored_claim(self) -> None:
+        for case in load_cases(load_eval("repo_traps")):
+            boolean = any(isinstance(c.get("equals"), bool) for c in case.grader["claims"])
+            for claim in case.grader["claims"]:
+                if "must_match" not in claim or not (boolean or claim.get("gate")):
+                    continue
+                for text in (keyword_run(claim), capped_keywords(claim)):
+                    self.assertFalse(check_claim(claim, {claim["field"]: text}).passed,
+                                     f"{case.id}/{claim['id']} accepts {text!r}")
+
+    def test_one_word_no_longer_completes_a_claim(self) -> None:
+        self.assertEqual(0.5, score("reviewer-hypothetical", measure_before_changing=True, first_step="rate"))
+        self.assertEqual(0.5, score("dom-pile-keep-nodes", collapse_to_one_draw=False, reason="interactive"))
+        self.assertEqual(1.0, score("dom-pile-keep-nodes", collapse_to_one_draw=False,
+                                    reason="The chips are interactive: each needs its own input."))
 
 
 class StructuralGateTests(unittest.TestCase):
@@ -445,6 +501,25 @@ class ReferenceAnswerTests(unittest.TestCase):
         for case_id, row in self.answers.items():
             grade = grade_claims(self.cases[case_id], json.dumps(row["reference"]))
             self.assertEqual(1.0, grade.score, (case_id, [v for v in grade.verdicts if not v.passed]))
+
+    def test_independent_answers_written_blind_to_the_grader_score_full_marks(self) -> None:
+        header, body = (EVAL_DIR / "answers_independent.jsonl").read_text(encoding="utf-8").split("\n", 1)
+        note = json.loads(header)
+        self.assertIn("without sight of any grader", note["note"])
+        # The writer's file, byte for byte: an edited answer changes the hash.
+        self.assertEqual(note["sha256"], hashlib.sha256(body.encode("utf-8")).hexdigest())
+        rows = [json.loads(line) for line in body.splitlines() if line.strip()]
+        self.assertEqual({case_id: 2 for case_id in self.cases},
+                         {case_id: sum(r["id"] == case_id for r in rows) for case_id in self.cases})
+        for row in rows:
+            grade = grade_claims(self.cases[row["id"]], json.dumps(row["answer"]))
+            self.assertEqual(1.0, grade.score, (row["id"], [v for v in grade.verdicts if not v.passed]))
+
+    def test_the_wordings_the_re_review_found_zeroed_score_full_marks(self) -> None:
+        for case_id, field, text in REVIEW_WORDINGS:
+            answer = {**self.answers[case_id]["reference"], field: text}
+            grade = grade_claims(self.cases[case_id], json.dumps(answer))
+            self.assertEqual(1.0, grade.score, (case_id, text, [v for v in grade.verdicts if not v.passed]))
 
     def test_correct_answers_in_other_words_score_full_marks(self) -> None:
         for case_id, row in self.answers.items():

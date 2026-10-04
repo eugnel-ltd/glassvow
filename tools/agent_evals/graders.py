@@ -136,7 +136,8 @@ def _equals(value: Any, expected: Any) -> bool:
     return value == expected
 
 
-def _check_claim(claim: dict[str, Any], answer: dict[str, Any]) -> Verdict:
+def check_claim(claim: dict[str, Any], answer: dict[str, Any]) -> Verdict:
+    """One claim's verdict on one parsed answer."""
     claim_id = claim["id"]
     if claim["field"] not in answer:
         return Verdict(claim_id, False, f"field {claim['field']!r} missing")
@@ -172,7 +173,7 @@ def grade_claims(case: Case, output: str) -> Grade:
     except ValueError as error:
         return Grade(tuple(Verdict(c["id"], False, "unparseable reply") for c in claims),
                      parse_error=str(error))
-    verdicts = tuple(_check_claim(claim, answer) for claim in claims)
+    verdicts = tuple(check_claim(claim, answer) for claim in claims)
     decision_failed = any(is_decision_claim(claim) and not verdict.passed
                           for claim, verdict in zip(claims, verdicts))
     return Grade(verdicts, decision_failed=decision_failed)

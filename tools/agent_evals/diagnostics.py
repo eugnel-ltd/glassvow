@@ -7,7 +7,8 @@ from collections import Counter
 from typing import Any, Mapping, Sequence
 
 from .backends import Backend
-from .graders import MAX_FIELD_CHARS, claim_keywords, grade, grade_claims
+from .graders import (MAX_FIELD_CHARS, check_claim, claim_keywords, grade, grade_claims,
+                      hit_limit)
 from .models import MODEL_ALIASES, Case
 from .stats import paired_difference_ci
 
@@ -99,6 +100,39 @@ def case_soup(case: Case) -> str:
     return _fit(sorted(keywords))
 
 
+def capped_keywords(claim: Mapping[str, Any]) -> str:
+    """A claim's first keywords, in sorted order, as many as its hit limit allows."""
+    pattern = claim.get("must_match", "")
+    return " ".join(claim_keywords(pattern)[:hit_limit(pattern)])
+
+
+def keyword_run(claim: Mapping[str, Any]) -> str:
+    """The strongest keyword list for one claim, found by asking the grader.
+
+    Every run of consecutive keywords, in sorted or reverse-sorted order and no longer than the
+    hit limit, is tried, shortest first; the first run the claim accepts is returned, else the
+    capped keywords. No run passing means no keyword list in either order can satisfy the claim.
+    """
+    pattern = claim.get("must_match", "")
+    words, limit = claim_keywords(pattern), hit_limit(pattern)
+    for size in range(1, min(limit, len(words)) + 1):
+        for order in (words, words[::-1]):
+            for start in range(len(order) - size + 1):
+                text = " ".join(order[start:start + size])
+                if check_claim(dict(claim), {claim["field"]: text}).passed:
+                    return text
+    return capped_keywords(claim)
+
+
+def _per_field(case: Case, fill: Any) -> dict[str, str]:
+    """Each text field filled with `fill(claim)` for every keyword claim on it, joined."""
+    texts: dict[str, list[str]] = {}
+    for claim in case.grader["claims"]:
+        if "must_match" in claim:
+            texts.setdefault(claim["field"], []).append(fill(claim))
+    return {field: " ".join(dict.fromkeys(parts)) for field, parts in texts.items()}
+
+
 def _flag(correct: bool, mode: str) -> bool:
     return correct if mode == "oracle" else mode == "true"
 
@@ -107,18 +141,24 @@ def trivial_answers(case: Case, soup: str = "", compact: str = "") -> dict[str, 
     """Answers that need no understanding: every text filler with every boolean mode.
 
     Text fillers: empty text (constant), the case prompt (echo), the full soup, the compact
-    generic soup and this case's soup. Boolean modes: all false, all true and the correct
-    values (oracle). Constant text with oracle booleans keeps its old name, oracle_booleans.
+    generic soup, this case's soup, each field's capped keywords (`capped_keywords` of every
+    claim on it) and each field's strongest keyword run (`keyword_run`). Boolean modes: all
+    false, all true and the correct values (oracle). Constant text with oracle booleans keeps
+    its old name, oracle_booleans.
     """
     booleans = _boolean_fields(case)
     fields = {c["field"] for c in case.grader["claims"]}
-    fillers = {"constant": "", "echo": case.prompt, "soup": soup, "compact_soup": compact,
-               "case_soup": case_soup(case)}
+    same = {"constant": "", "echo": case.prompt, "soup": soup, "compact_soup": compact,
+            "case_soup": case_soup(case)}
+    fillers = {name: dict.fromkeys(fields, text) for name, text in same.items()}
+    fillers["capped_soup"] = _per_field(case, capped_keywords)
+    fillers["keyword_run"] = _per_field(case, keyword_run)
     answers: dict[str, dict[str, Any]] = {"empty": {}}
-    for filler, text in fillers.items():
+    for filler, texts in fillers.items():
         for mode in BOOLEAN_MODES:
             name = "oracle_booleans" if (filler, mode) == ("constant", "oracle") else f"{filler}_{mode}"
-            answers[name] = {f: (_flag(booleans[f], mode) if f in booleans else text) for f in fields}
+            answers[name] = {f: (_flag(booleans[f], mode) if f in booleans else texts.get(f, ""))
+                             for f in fields}
     return answers
 
 

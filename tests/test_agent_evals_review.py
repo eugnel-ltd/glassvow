@@ -172,7 +172,7 @@ class TrivialAnswererTests(unittest.TestCase):
     def test_a_demanding_grader_keeps_every_trivial_answerer_low(self) -> None:
         scores = trivial_answerer_scores(make_cases(10))
         self.assertLessEqual(scores["max"], TRIVIAL_LIMIT)
-        fillers = ("echo", "soup", "compact_soup", "case_soup")
+        fillers = ("echo", "soup", "compact_soup", "case_soup", "capped_soup", "keyword_run")
         self.assertEqual({"constant_false", "constant_true", "oracle_booleans", "empty"}
                          | {f"{filler}_{mode}" for filler in fillers for mode in ("false", "true", "oracle")},
                          set(scores) - {"max", "limit"})
