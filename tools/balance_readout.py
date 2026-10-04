@@ -28,6 +28,11 @@ Usage (repo root), readout 13's finals:
   python3 -B tools/balance_readout.py table s/final-v0 s/final-v5 --v0-seeds 13000-13999 --v5-seeds 13000-14999
   python3 -B tools/balance_readout.py join s/g3-4000 v5-full C_shatter,C_lantern,C_edge,A_lit s/final-v5 s/ext-v5
   python3 -B tools/balance_readout.py g3 s/g3-4000 v5-full
+
+The bots are 1.0's instrument of record unless named: pilot p8-d0-v3 and search s1. 1.1's are
+named with `--pilot p9 --search s2` (#544 P6, readout 14). Every chunk's command and every
+report's manifest name them, and the grader refuses a table that mixes them. The 1.0 RC's
+independent re-run names `--pilot p8-d0-v3 --search s1` explicitly (docs/rc-bar.md P9).
 """
 from __future__ import annotations
 
@@ -59,11 +64,12 @@ def cmd_run(opts: argparse.Namespace) -> int:
         raise ValueError(f"--content {content} is not a file")
     if opts.play not in bw.PLAYS:
         raise ValueError(f"--play must be one of {bw.PLAYS}")
+    bw.check_bots(opts.play, opts.pilot, opts.search)
     if not 1 <= opts.jobs <= 16:
         raise ValueError("--jobs must be 1..16")
     out = opts.out.resolve()
     work = runner.plan(out, who, seeds, _csv(opts.cells), _csv(opts.arms) or list(who.arms), opts.play, opts.chunk, opts.replay,
-                       content, weights, opts.godot)
+                       content, weights, opts.godot, opts.pilot, opts.search)
     out.mkdir(parents=True, exist_ok=True)  # only once the plan is accepted
     who = runner.identity(REPO, content)
     start = time.monotonic()
@@ -149,6 +155,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--cells", default="v0-fresh,v0-full", help="comma list of v<vow>-<pool>")
     p.add_argument("--arms", default="", help="comma list; default every arm of the aspect")
     p.add_argument("--play", default="greedy", choices=bw.PLAYS)
+    bw.bots_options(p)
     p.add_argument("--replay", action="store_true", help=f"also run the grader's arm A replay ({bw.REPLAY} seeds) per cell")
     p.add_argument("--chunk", type=int, default=50, help="seeds per chunk")
     p.add_argument("--jobs", type=int, default=4)

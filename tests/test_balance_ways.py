@@ -100,7 +100,8 @@ class BalanceWaysTest(unittest.TestCase):
         flags = dict(arg[2:].split("=", 1) for arg in
                      ways.sim_command("godot", DUSK, 5, "fresh", "C_lantern", 13000, 200, Path("/o.json"))[5:])
         self.assertEqual({"aspect": "duskblade", "vow": "5", "runs": "200", "seed0": "13000",
-                          "pool": "fresh", "way": "lantern", "build": "adaptive", "out": "/o.json"}, flags)
+                          "pool": "fresh", "way": "lantern", "build": "adaptive", "pilot": "p8-d0-v3",
+                          "out": "/o.json"}, flags)
         random_arm = ways.sim_command("godot", DUSK, 0, "full", "R", 13000, 3, Path("/r.json"))
         self.assertIn("--way=none", random_arm)
         self.assertIn("--build=random", random_arm)
@@ -261,6 +262,39 @@ class BalanceWaysTest(unittest.TestCase):
             other.write_text(json.dumps(report))
             with self.assertRaisesRegex(ValueError, "more than one player"):
                 ways.grade(DUSK, Path(temp), SEEDS)
+
+    def test_every_command_names_its_bots_and_a_table_has_one_pair(self) -> None:
+        self.assertEqual(("p8-d0-v3", "s1"), (ways.PILOTS[0], ways.SEARCHES[0]))  # 1.0's, rc-bar P9
+        for play, pilot, search in (("greedy", "p8-d0-v3", "s1"), ("search", "p8-d0-v3", "s1"),
+                                    ("search", "p9", "s2"), ("greedy", "p9", "s1")):
+            work = ways.jobs("godot", DUSK, (13000, 13199), Path("/out"), play=play, pilot=pilot, search=search)
+            for _, command in work:
+                self.assertIn(f"--pilot={pilot}", command)
+                self.assertEqual([f"--search={search}", "--play=search"] if play == "search" else [],
+                                 [arg for arg in command if arg.startswith(("--search", "--play"))])
+        for play, pilot, search in (("greedy", "p8-d0-v3", "s2"), ("search", "p10", "s1"), ("search", "p9", "s3")):
+            with self.subTest(play=play, pilot=pilot, search=search), self.assertRaises(ValueError):
+                ways.sim_command("godot", DUSK, 0, "full", "A", 13000, 3, Path("/o.json"), play=play,
+                                 pilot=pilot, search=search)
+        with tempfile.TemporaryDirectory() as temp:
+            write_table(Path(temp))
+            for path in Path(temp).glob("v*-*-*.json"):
+                report = json.loads(path.read_text())
+                report["manifest"].update({"play": "search", "pilot": "p9", "search": {"version": "s2"}})
+                path.write_text(json.dumps(report))
+            result = ways.grade(DUSK, Path(temp), SEEDS)
+            self.assertEqual(("p9", "s2"), (result["pilot"], result["search"]))
+            self.assertIn("search player s2, pilot p9.", ways.render(result))
+            for key, value in (("pilot", "p8-d0-v3"), ("search", {"version": "s1"})):
+                other = Path(temp) / ways.report_name(5, "fresh", "C_edge")
+                report = json.loads(other.read_text())
+                kept = report["manifest"][key]
+                report["manifest"][key] = value
+                other.write_text(json.dumps(report))
+                with self.subTest(key=key), self.assertRaisesRegex(ValueError, "more than one pilot or search"):
+                    ways.grade(DUSK, Path(temp), SEEDS)
+                report["manifest"][key] = kept
+                other.write_text(json.dumps(report))
 
     def test_a_split_table_runs_and_grades_one_vow(self) -> None:
         self.assertEqual((0,), ways.parse_vows("0"))
