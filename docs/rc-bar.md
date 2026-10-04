@@ -333,8 +333,10 @@ the readout whose complete §11 table it was given on.
      reading on the candidate and a new verdict are needed.
   2. **The independent re-run.** From a clean checkout of the RC commit, on any host, the
      reading's cell table is played again with the instrument of record (pilot `p8-d0-v3`,
-     search player `s1`) on the bands of record, and every report's manifest names the RC
-     commit, the content SHA-256, the pilot and the search player. It agrees with the reading of
+     search player `s1`), named explicitly whatever the tools' default
+     (`tools/balance_readout.py run … --play search --pilot p8-d0-v3 --search s1`), on the bands
+     of record, and every report's manifest names the RC commit, the content SHA-256, the pilot
+     and the search player. It agrees with the reading of
      record on every graded gate's verdict in every graded cell (on point and on interval where
      the gate has both, and on its single verdict for G7 and row B); the
      numbers need not match (owner ruling, 2026-09-27). A run under another instrument, such as
