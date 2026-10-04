@@ -1,0 +1,43 @@
+"""The QA report's §11.6 lines from a launch's bench_rooms.jsonl (as the
+on-screen report computes them)."""
+import json, math, sys
+def q(v, p):
+    v = sorted(v)
+    return v[max(0, min(len(v) - 1, math.ceil(p * len(v)) - 1))] if v else 0.0
+def mmm(v):
+    v = sorted(v)
+    return '%.1f/%.1f/%.1f' % (v[0], v[len(v) // 2], v[-1]) if v else '-'
+for path in sys.argv[1:]:
+    rows = [json.loads(l) for l in open(path) if l.strip()]
+    head = rows[0]
+    print('%s  nonce %s  (%d rows)' % (head.get('label'), head.get('nonce'), len(rows)))
+    frames = [r for r in rows if 'wall_ms' in r]
+    title = [r['wall_ms'] for r in frames if r.get('phase') == 'title']
+    tp = q(title, .95)
+    print('title at rest n %d P95 %.2f max %.1f >33 %d' % (len(title), tp, max(title), sum(x > 33 for x in title)))
+    for room in ['settings', 'help', 'credits', 'vigil']:
+        for first in (True, False):
+            for phase in ('open', 'close'):
+                sel = [r for r in frames if r.get('room') == room and (r.get('lap') == 0) == first and r.get('phase') == phase]
+                if not sel:
+                    continue
+                taps = [r['since_tap_ms'] for r in sel if r.get('i') == 0 and 'since_tap_ms' in r]
+                tapf = [r['wall_ms'] for r in sel if r.get('i') == 0]
+                inside = [r['wall_ms'] for r in sel if r.get('i', 0) >= 1 and r.get('after_ms', 1e9) <= r.get('span_ms', 0)]
+                print('%-8s %s %-5s tap>moved %s  frame %s  pass P95 %.1f max %.1f n %d >33 %d (P95-title %+.2f)' % (
+                    room, '1st ' if first else 'rest', phase, mmm(taps), mmm(tapf), q(inside, .95),
+                    max(inside) if inside else 0, len(inside), sum(x > 33 for x in inside), q(inside, .95) - tp))
+            if first:
+                rest = [r['wall_ms'] for r in frames if r.get('room') == room and r.get('lap') == 0 and r.get('phase') == 'room']
+                if rest:
+                    print('%-8s at rest P95 %.2f max %.1f n %d (minus title %+.2f)' % (room, q(rest, .95), max(rest), len(rest), q(rest, .95) - tp))
+    warm = [r for r in frames if r.get('phase') == 'warm']
+    for key, a, b in (('both', True, True), ('rooms only', True, False), ('map only', False, True), ('neither', False, False)):
+        v = [r['wall_ms'] for r in warm if bool(r.get('room_warm')) == a and bool(r.get('map')) == b]
+        if v:
+            print('warm %-10s n %d P50 %.2f P95 %.2f max %.1f >33 %d' % (key, len(v), q(v, .5), q(v, .95), max(v), sum(x > 33 for x in v)))
+    vr = [r.get('vram') for r in frames if 'vram' in r]
+    wv = [r.get('vram') for r in warm if 'vram' in r]
+    tv = [r.get('vram') for r in frames if r.get('phase') == 'title' and 'vram' in r]
+    if vr:
+        print('vram MiB: landing %.1f after warms %.1f after title rest %.1f max %.1f end %.1f' % (wv[0], wv[-1], tv[-1], max(vr), vr[-1]))

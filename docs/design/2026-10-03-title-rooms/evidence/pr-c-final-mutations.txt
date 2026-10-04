@@ -1,0 +1,27 @@
+#655 PR C, the rules added after the rebase onto ac314bf7 (the final head's code, 780fc171): each broken
+alone in the shipped code, the suite that guards it run, the code restored from a copy.
+
+1. RoomWarm pops a builder that returned null (presentation/ui/room_warm.gd)
+   -> test_room_warm: "a builder that was not ready was asked 1 times in four frames", "a room was built
+      or shaped past a builder that was not ready", "the text of a room built late was never warmed".
+2. TransitionLayer.leaves_showing leaves out a lift (presentation/stage/transition_layer.gd)
+   -> test_vigil_hold: "a screen being lifted is not one of the layer's leaves".
+3. The hall's ledger without LeadlightNumerals.set_against (presentation/run/vigil_screen.gd)
+   -> test_vigil_screen: "zh-Hant 1180x820 / 1458x820 / ...: the ledger's numerals do not stand against
+      their counter words (十二 次朝聖 · 三 次破曉 · 最深誓言：二)" at every shape.
+4. Main.OS_GLYPHS empty (application/main.gd)
+   -> test_vigil_screen: 42 checks, every deed row in both languages ("'→' (U+2192) ... falls through to
+      the OS's fonts unfound at boot").
+5. MusicBus.looped duplicates the stream again (presentation/audio/music_bus.gd)
+   -> test_music_variants: "a track is not played as the loaded stream itself, looping".
+6. The Vigil word builds a fresh hall (application/main.gd, _show_vigil)
+   -> test_vigil_hold: "the Vigil word did not show the hall built ahead as its route" (and a second check).
+7. _clear_route keeps the hall built ahead (application/main.gd)
+   -> test_vigil_hold: "a route change did not let the hall built ahead go".
+8. The hall built ahead is kept across a shape change (no key check, application/main.gd)
+   -> test_vigil_hold: "a hall built for another shape was kept".
+9. The Vigil's art asked for whether or not the warm may run (application/main.gd,
+   _warm_vigil_art_once_rested)
+   -> test_vigil_hold: "the Vigil's art was asked for while the map's prefetch works" (and a second check).
+10. RoomWarm.SAMPLE_ALPHA back at 0.004 (presentation/ui/room_warm.gd)
+   -> test_room_warm: "the pipeline sample is drawn at an alpha the renderer skips (0.004)".

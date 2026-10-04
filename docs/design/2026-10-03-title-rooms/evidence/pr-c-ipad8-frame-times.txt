@@ -1,0 +1,889 @@
+#655 PR C: the iPad 8 rows (docs/design/2026-10-03-title-rooms §11.6, as built in PR C).
+
+The QA app (io.fol2.glassvow.qa) only, under the shared iPad batch lock, every
+.ipa checked for that bundle id before its install, the QA app checked to be the
+session's own install before every launch, and every report checked for its
+launch's nonce and build (by OCR, then by eye). Each launch: --rooms-bench seeds
+a saved run (Act II, or Act I with --bench-act=0) and a Vigil part-way in the
+Development profile; tools/bench_rooms.gd's Bench taps each room's word and its
+Return through the engine's input path, 10 laps a room (the first opening in
+the launch, lap 1, apart), holds 30 s in each room's first lap and at the title.
+Each report was drawn over the screen by the QA patch once its bench was done
+(file copies from the container hung for some launches) and read off a
+screenshot: the images are the record (pr-c-ipad8/report-<build>-<launch>.jpg);
+the text below is tesseract's reading of them with its habitual misreadings put
+right (pr-c-final-ocr_clean.py.txt). For the final head's zh-Hant and en
+launches the rows themselves were copied too (pr-c-ipad8/rows-780fc171-*.jsonl,
+the Vigil's, the title's and the warm's frames), and the report's numbers were
+recomputed from them (pr-c-final-rows_report.py.txt) to the same values.
+Tools: pr-c-final-qa_patch.py.txt (+ pr-c-final-qa_report.gd.txt),
+pr-c-final-qa_patch_diag.py.txt, pr-c-final-build_ipa.sh.txt,
+pr-c-final-session.sh.txt, pr-c-final-passage_index.py.txt.
+
+Columns: tap>moved and frame are min/median/max ms; "pass" is the passage's
+frames inside its own span (P95, max, count, frames over 33 ms) and their P95
+against the title's at-rest P95 in the same launch (the orchestrator's ruling:
+at most +0.5 ms). "1st" is the room's first opening in the launch, "rest" laps
+2 to 10.
+
+==============================================================================
+The final head's code (780fc171; this PR's docs commit after it changes no code). Session 4, 4 Oct 2026 18:30-18:50: one install, then en (the first launch after it, reported apart: it builds pipelines), zh-Hant, en, an Act I title at rest (both warms), and Back to the Road tapped as the rite lands, twice.
+
+-- F-en0
+ipad8-c-780fc171-en-full nonce F-en0-1791135020
+title at rest n 1798 P95 18.66 max 33.1 >33 1
+settings 1st open tap>moved 43.2/43.2/43.2 frame 36.8/36.8/36.8 pass P95 21.5 max 24.1 n 30 >33 0 (P95-title +2.87)
+settings 1st close tap>moved 30.4/30.4/30.4 frame 16.9/16.9/16.9 pass P95 22.3 max 51.6 n 21 >33 1 (P95-title +3.62)
+settings at rest P95 18.56 max 22.7 n 1803 >33 0 (minus title -0.10)
+settings rest open tap>moved 33.6/38.5/42.9 frame 15.5/22.3/29.3 pass P95 18.9 max 23.0 n 278 >33 0 (P95-title +0.20)
+settings rest close tap>moved 31.9/32.5/33.0 frame 16.4/16.7/17.0 pass P95 17.3 max 20.9 n 214 >33 0 (P95-title -1.36)
+help 1st open tap>moved 44.8/44.8/44.8 frame 30.1/30.1/30.1 pass P95 18.7 max 20.3 n 31 >33 0 (P95-title +0.06)
+help 1st close tap>moved 33.0/33.0/33.0 frame 17.2/17.2/17.2 pass P95 17.2 max 18.2 n 24 >33 0 (P95-title -1.43)
+help at rest P95 17.84 max 21.1 n 1803 >33 0 (minus title -0.82)
+help rest open tap>moved 34.9/38.1/39.8 frame 21.5/21.9/23.5 pass P95 17.6 max 24.4 n 279 >33 0 (P95-title -1.08)
+help rest close tap>moved 32.1/32.5/33.9 frame 16.4/16.7/18.3 pass P95 17.6 max 21.4 n 213 >33 0 (P95-title -1.10)
+credits 1st open tap>moved 43.1/43.1/43.1 frame 27.1/27.1/27.1 pass P95 19.3 max 20.6 n 35 >33 0 (P95-title +0.62)
+credits 1st close tap>moved 32.7/32.7/32.7 frame 16.6/16.6/16.6 pass P95 17.7 max 18.8 n 28 >33 0 (P95-title -0.96)
+credits at rest P95 17.93 max 21.6 n 1803 >33 0 (minus title -0.73)
+credits rest open tap>moved 36.1/36.6/37.3 frame 19.8/20.6/21.1 pass P95 17.4 max 23.5 n 324 >33 0 (P95-title -1.24)
+credits rest close tap>moved 32.7/33.1/35.0 frame 16.2/16.6/19.6 pass P95 17.4 max 20.3 n 253 >33 0 (P95-title -1.28)
+vigil 1st open tap>moved 64.9/64.9/64.9 frame 48.7/48.7/48.7 pass P95 23.3 max 27.6 n 34 >33 0 (P95-title +4.61)
+vigil 1st close tap>moved 35.6/35.6/35.6 frame 20.8/20.8/20.8 pass P95 20.7 max 24.3 n 27 >33 0 (P95-title +2.08)
+vigil at rest P95 18.35 max 28.3 n 1803 >33 0 (minus title -0.31)
+vigil rest open tap>moved 31.6/36.1/36.8 frame 18.7/19.9/22.2 pass P95 18.0 max 19.8 n 324 >33 0 (P95-title -0.68)
+vigil rest close tap>moved 30.2/33.2/40.5 frame 17.4/19.5/23.7 pass P95 20.8 max 24.9 n 251 >33 0 (P95-title +2.12)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 40 P50 16.65 P95 18.24 max 26.3 >33 0
+warm map only n 0 P50 0,00 P95 0.00 max 0.0 >33 0
+warm neither n 80 P50 16.65 P95 18.44 max 24.2 >33 0
+continue after the tour: ready 1223.5 ms, worst frame 647.4 ms, hall built ahead true
+vram MiB: landing 213.0 after warms 301.0 after title rest 301.0 max 302.9 end 302.5
+warm stages (stage@frame/ms): rest@0/17 build4@46/800 build3@47/817 build2@48/835 build1@64/1100 shape@65/1116 draw@69/1183 pipe@84/1434 gone@86/1466
+warm frames over 33 ms: 0
+step vigil new 10 first 0.5 median 0.3 max 0.5 ms
+step vigil route n 10 first 0.1 median 0.0 max 0.1 ms
+step vigil arrive n 10 first 1.2 median 1.1 max 1.2 ms
+step vigil music n 10 first 1.7 median 0.1 max 1.7 ms
+step leave unhold n 10 first 0.3 median 0.2 max 0.4 ms
+step leave depart n 10 first 2.6 median 2.4 max 3.7 ms
+step leave music n 10 first 1.2 median 0.1 max 1.2 ms
+
+-- F-zh
+ipad8-c-780fc171-zh-Hant-full nonce F-zh-1791135394
+title at rest n 1803 P95 17.89 max 24.4 >33 0
+settings 1st open tap>moved 40.6/40.6/40.6 frame 27.5/27.5/27.5 pass P95 19.7 max 20.0 n 30 >33 0 (P95-title +1.80)
+settings 1st close tap>moved 32.5/32.5/32.5 frame 16.5/16.5/16.5 pass P95 17.5 max 18.3 n 24 >33 0 (P95-title -0.35)
+settings at rest P95 17.34 max 22.3 n 1803 >33 0 (minus title -0.56)
+settings rest open tap>moved 40.0/43.0/44.7 frame 25.9/26.8/28.3 pass P95 18.7 max 22.1 n 274 >33 0 (P95-title +0.79)
+settings rest close tap>moved 26.3/32.3/33.0 frame 15.9/16.5/18.8 pass P95 17.3 max 21.3 n 213 >33 0 (P95-title -0.56)
+help 1st open tap>moved 44.1/44.1/44.1 frame 33.0/33.0/33.0 pass P95 17.3 max 22.2 n 31 >33 0 (P95-title -0.61)
+help 1st close tap>moved 31.7/31.7/31.7 frame 16.9/16.9/16.9 pass P95 17.1 max 18.3 n 23 >33 0 (P95-title -0.76)
+help at rest P95 17.39 max 21.5 n 1803 >33 0 (minus title -0.50)
+help rest open tap>moved 40.6/42.5/47.2 frame 24.8/26.2/30.3 pass P95 19.1 max 24.2 n 274 >33 0 (P95-title +1.18)
+help rest close tap>moved 25.9/32.3/33.5 frame 14.5/16.7/18.5 pass P95 17.7 max 20.5 n 212 >33 0 (P95-title -0.18)
+credits 1st open tap>moved 44.3/44.3/44.3 frame 37.2/37.2/37.2 pass P95 18.3 max 22.2 n 35 >33 0 (P95-title +0.44)
+credits 1st close tap>moved 33.0/33.0/33.0 frame 17.1/17.1/17.1 pass P95 17.0 max 17.0 n 28 >33 0 (P95-title -0.90)
+credits at rest P95 17.70 max 21.8 n 1803 >33 0 (minus title -0.20)
+credits rest open tap>moved 35.2/38.9/40.3 frame 18.4/23.6/23.9 pass P95 18.0 max 23.0 n 324 >33 0 (P95-title +0.07)
+credits rest close tap>moved 30.4/32.6/32.8 frame 14.3/16.5/16.9 pass P95 17.2 max 19.0 n 252 >33 0 (P95-title -0.70)
+vigil 1st open tap>moved 46.1/46.1/46.1 frame 30.4/30.4/30.4 pass P95 19.5 max 24.8 n 35 >33 0 (P95-title +1.62)
+vigil 1st close tap>moved 31.4/31.4/31.4 frame 18.2/18.2/18.2 pass P95 17.2 max 22.1 n 28 >33 0 (P95-title -0.69)
+vigil at rest P95 18.31 max 19.4 n 1803 >33 0 (minus title +0.41)
+vigil rest open tap>moved 30.8/33.8/36.9 frame 16.7/20.2/21.3 pass P95 17.6 max 22.3 n 323 >33 0 (P95-title -0.25)
+vigil rest close tap>moved 33.1/34.8/37.7 frame 19.1/21.0/29.4 pass P95 21.3 max 25.5 n 253 >33 0 (P95-title +3.45)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 76 P50 16.69 P95 21.20 max 23.5 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 47 P50 16.68 P95 19.32 max 21.5 >33 0
+continue after the tour: ready 1193.2 ms, worst frame 647.2 ms, hall built ahead true
+vram MiB: landing 195.4 after warms 281.3 after title rest 281.2 max 283.1 end 282.8
+warm stages (stage@frame/ms): rest@0/17 build4@46/795 build3@47/817 build2@48/838 build1@58/1000 shape@59/1017 draw@72/1233 pipe@120/2033 gone@122/2066
+warm frames over 33 ms: 0
+step vigil new n 10 first 0.4 median 0.3 max 0.5 ms
+step vigil route n 10 first 0.1 median 0.0 max 0.1 ms
+step vigil arrive n 10 first 1.8 median 1.7 max 2.8 ms
+step vigil music n 10 first 0.4 median 0.1 max 0.4 ms
+step leave unhold n 10 first 0.1 median 0.2 max 0.3 ms
+step leave depart n 10 first 1.8 median 2.9 max 4.4 ms
+step leave music n 10 first 0.1 median 0.1 max 0.2 ms
+
+-- F-en
+ipad8-c-780fc171-en-full nonce F-en-1791135769
+title at rest n 1803 P95 17.93 max 26.1 >33 0
+settings 1st open tap>moved 40.1/40.1/40.1 frame 24.9/24.9/24.9 pass P95 18.3 max 21.4 n 31 >33 0 (P95-title +0.36)
+settings 1st close tap>moved 32.5/32.5/32.5 frame 16.0/16.0/16.0 pass P95 17.0 max 17.2 n 24 >33 0 (P95-title -0.94)
+settings at rest P95 18.01 max 33.3 n 1801 >33 1 (minus title +0.08)
+settings rest open tap>moved 36.5/38.7/40.4 frame 22.3/22.7/23.8 pass P95 18.0 max 22.6 n 278 >33 0 (P95-title +0.05)
+settings rest close tap>moved 30.7/32.6/36.0 frame 14.7/16.8/20.3 pass P95 17.2 max 20.2 n 211 >33 0 (P95-title -0.76)
+help 1st open tap>moved 41.7/41.7/41.7 frame 25.7/25.7/25.7 pass P95 21.9 max 25.0 n 30 >33 0 (P95-title +4.00)
+help 1st close tap>moved 32.4/32.4/32.4 frame 16.5/16.5/16.5 pass P95 17.6 max 19.4 n 24 >33 0 (P95-title -0.32)
+help at rest P95 17.82 max 22.6 n 1803 >33 0 (minus title -0.11)
+help rest open tap>moved 37.0/38.2/42.9 frame 21.4/21.9/24.1 pass P95 18.0 max 24.3 n 278 >33 0 (P95-title +0.04)
+help rest close tap>moved 28.0/32.2/32.9 frame 14.6/16.4/16.8 pass P95 17.2 max 20.2 n 212 >33 0 (P95-title -0.74)
+credits 1st open tap>moved 38.9/38.9/38.9 frame 22.4/22.4/22.4 pass P95 19.5 max 20.0 n 36 >33 0 (P95-title +1.56)
+credits 1st close tap>moved 31.9/31.9/31.9 frame 17.0/17.0/17.0 pass P95 18.2 max 19.1 n 28 >33 0 (P95-title +0.23)
+credits at rest P95 17.91 max 22.6 n 1803 >33 0 (minus title -0.02)
+credits rest open tap>moved 35.3/36.6/37.1 frame 19.2/20.5/20.8 pass P95 17.4 max 21.6 n 324 >33 0 (P95-title -0.50)
+credits rest close tap>moved 32.5/33.0/36.8 frame 14.9/16.8/20.2 pass P95 17.7 max 20.7 n 253 >33 0 (P95-title -0.23)
+vigil 1st open tap>moved 46.2/46.2/46.2 frame 30.2/30.2/30.2 pass P95 17.9 max 23.5 n 35 >33 0 (P95-title +0.00)
+vigil 1st close tap>moved 34.7/34.7/34.7 frame 20.0/20.0/20.0 pass P95 19.1 max 22.0 n 28 >33 0 (P95-title +1.21)
+vigil at rest P95 18.25 max 19.1 n 1803 >33 0 (minus title +0.32)
+vigil rest open tap>moved 34.4/36.6/39.6 frame 19.6/20.4/23.4 pass P95 17.8 max 20.1 n 324 >33 0 (P95-title -0.12)
+vigil rest close tap>moved 29.0/34.3/37.7 frame 17.7/19.4/21.5 pass P95 21.6 max 25.2 n 251 >33 0 (P95-title +3.70)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 39 P50 16.62 P95 17.96 max 22.0 >33 0
+warm map only n 0 P50 0,00 P95 0.00 max 0.0 >33 0
+warm neither n 77 P50 16.66 P95 26.98 max 33.4 >33 1
+continue after the tour: ready 1193.0 ms, worst frame 631.4 ms, hall built ahead true
+vram MiB: landing 213.0 after warms 297.0 after title rest 297.0 max 298.9 end 298.7
+warm stages (stage@frame/ms): rest@0/16 build4@46/784 build3@47/802 build2@48/818 build1@62/1050 shape@63/1066 draw@66/1122 pipe@83/1401 gone@85/1433
+warm frames over 33 ms: 1
+long i 100 t 1700 ms: wall 33.4 busy 33.0 (process 6.0, draw 27.0) cpu 0.2 gpu 0.0 pc 0 gone map false
+step vigil new n 10 first 0.3 median 0.3 max 0.3 ms
+step vigil route n 10 first 0.0 median 0.0 max 0.0 ms
+step vigil arrive n 10 first 1.1 median 1.1 max 1.2 ms
+step vigil music n 10 first 0.3 median 0.1 max 0.3 ms
+step leave unhold n 10 first 0.3 median 0.2 max 0.3 ms
+step leave depart n 10 first 2.7 median 2.1 max 3.0 ms
+step leave music n 10 first 0.1 median 0.1 max 0.2 ms
+
+-- F-a0
+ipad8-c-780fc171-en-a0-full nonce F-a0-1791136142
+title at rest n 290 P95 22.24 max 34.4 >33 3
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 39 P50 25.17 P95 31.81 max 32.4 >33 0
+warm map only n 38 P50 16.64 P95 19.31 max 20.7 >33 0
+warm neither n 48 P50 16.59 P95 20.53 max 22.5 >33 0
+continue after the tour: ready 748.9 ms, worst frame 197.7 ms, hall built ahead true
+vram MiB: landing 284.1 after warms 323.0 after title rest 323.0 max 323.0 end 323.0
+warm stages (stage@frame/ms): rest@0/19 build4@85/1446 build3@86/1464 build2@87/1485 build1@96/1699 shape@97/1731 draw@101/1831 pipe@122/2349 gone@124/2398
+warm frames over 33 ms: 0
+
+-- F-land1
+ipad8-c-780fc171-en-a0-full nonce F-land1-1791136173
+title at rest n 0 P95 0.00 max 0.0 >33 0
+warm both 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+continue as the rite lands: ready 701.0 ms, worst frame 164.4 ms, hall built ahead false
+vram MiB: landing -1.0 after warms -1.0 after title rest -1.0 max-1.0 end -1.0
+warm stages (stage@frame/ms):
+warm frames over 33 ms: 0
+
+-- F-land2
+ipad8-c-780fc171-en-a0-full nonce F-land2-1791136202
+title at rest n 0 P95 0.00 max 0.0 >33 0
+warm both 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+continue as the rite lands: ready 706.4 ms, worst frame 164.6 ms, hall built ahead false
+vram MiB: landing -1.0 after warms -1.0 after title rest -1.0 max-1.0 end -1.0
+warm stages (stage@frame/ms):
+warm frames over 33 ms: 0
+
+==============================================================================
+The control: main ac314bf7 with the same QA patch (its bench tours Settings, How to Play and Credits; main's Vigil is not a room host). Session 1 (17:36-17:46): en (first after its install) and zh-Hant; session 3 (18:18-18:30): zh-Hant (first after its reinstall), en, an Act I title, Back to the Road as the rite lands, twice. M1-en0's report had an iOS notification banner over part of its first three lines; the banner is blanked in its image and left out here.
+
+-- M1-en0
+ipad8-m-ac314bf7-en-full nonce M1-en0-1791131761
+title at rest n 1803 P95 18.02 max 21.8 >330 * [an iOS notification banner covered this part of the report]
+2h
+settings 1st open tap>moved 41.4/41.4/41.4 frame 2 [an iOS notification banner covered this part of the report]
+settings 1st close tap>moved 33.4/33.4/33.4 frame 18.3/18.3/18.3 pass P95 17.2 max 18.3 n 24 >33 0 (P95-title -0.87)
+settings at rest P95 17.48 max 22.3 n 1803 >33 0 (minus title -0.54)
+settings rest open tap>moved 37.2/38.5/45.1 frame 21.1/22.6/28.7 pass P95 18.0 max 23.7 n 278 >33 0 (P95-title -0.06)
+settings rest close tap>moved 31.1/32.5/33.6 frame 14.3/16.7/17.0 pass P95 17.4 max 19.5 n 214 >33 0 (P95-title -0.63)
+help 1st open tap>moved 41.3/41.3/41.3 frame 25.3/25.3/25.3 pass P95 18.1 max 21.7 n 31 >33 0 (P95-title +0.04)
+help 1st close tap>moved 29.5/29.5/29.5 frame 16.8/16.8/16.8 pass P95 17.0 max 17.1 n 24 >33 0 (P95-title -1.01)
+help at rest P95 17.37 max 22.2 n 1803 >33 0 (minus title -0.65)
+help rest open tap>moved 36.1/37.5/38.2 frame 20.2/21.4/22.1 pass P95 17.6 max 24.7 n 279 >33 0 (P95-title -0.45)
+help rest close tap>moved 28.4/32.3/33.6 frame 16.1/16.6/18.0 pass P95 17.3 max 21.1 n 214 >33 0 (P95-title -0.71)
+credits 1st open tap>moved 36.7/36.7/36.7 frame 22.8/22.8/22.8 pass P95 19.9 max 21.1 n 35 >33 0 (P95-title +1.87)
+credits 1st close tap>moved 27.9/27.9/27.9 frame 13.9/13.9/13.9 pass P95 18.4 max 18.5 n 28 >33 0 (P95-title +0.37)
+credits at rest P95 17.82 max 35.0 n 1801 >33 1 (minus title -0.20)
+credits rest open tap>moved 34.5/36.6/37.4 frame 20.4/20.6/21.1 pass P95 17.5 max 23.4 n 324 >33 0 (P95-title -0.48)
+credits rest close tap>moved 32.5/32.7/33.4 frame 16.4/16.8/17.7 pass P95 17.4 max 20.3 n 252 >33 0 (P95-title -0.64)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 22 P50 17.55 P95 23.85 max 32.3 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 96 P50 16.63 P95 18.49 max 18.9 >33 0
+continue after the tour: ready 1138.6 ms, worst frame 582.1 ms, hall built ahead false
+vram MiB: landing 213.0 after warms 258.2 after title rest 258.2 max 258.9 end 258.8
+warm stages (stage@frame/ms): rest@0/19 build2@46/786 build1@47/803 shape@48/823 draw@51/878 pipe@67/1184 gone@68/1200
+warm frames over 33 ms: 0
+
+-- M1-zh
+ipad8-m-ac314bf7-zh-Hant-full nonce M1-zh-1791132057
+title at rest n 1803 P95 17.99 max 23.0 >33 0
+settings 1st open tap>moved 46.3/46.3/46.3 frame 32.1/32.1/32.1 pass P95 17.8 max 18.9 n 31 >33 0 (P95-title -0.16)
+settings 1st close tap>moved 32.2/32.2/32.2 frame 16.5/16.5/16.5 pass P95 19.4 max 20.1 n 24 >33 0 (P95-title +1.42)
+settings at rest P95 17.61 max 21.4 n 1803 >33 0 (minus title -0.39)
+settings rest open tap>moved 40.3/43.9/50.2 frame 25.9/27.7/32.6 pass P95 19.5 max 22.3 n 271 >33 0 (P95-title +1.50)
+settings rest close tap>moved 27.2/32.0/32.8 frame 14.8/16.5/19.5 pass P95 18.0 max 22.3 n 212 >33 0 (P95-title +0.01)
+help 1st open tap>moved 48.6/48.6/48.6 frame 28.8/28.8/28.8 pass P95 19.3 max 20.7 n 31 >33 0 (P95-title +1.34)
+help 1st close tap>moved 32.2/32.2/32.2 frame 16.0/16.0/16.0 pass P95 17.5 max 19.4 n 24 >33 0 (P95-title -0.51)
+help at rest P95 17.29 max 22.8 n 1803 >33 0 (minus title -0.71)
+help rest open tap>moved 38.0/41.3/45.1 frame 24.6/25.1/27.5 pass P95 18.9 max 23.8 n 276 >33 0 (P95-title +0.87)
+help rest close tap>moved 32.2/32.4/33.0 frame 16.3/16.7/17.0 pass P95 17.1 max 21.2 n 214 >33 0 (P95-title -0.88)
+credits 1st open tap>moved 44.0/44.0/44.0 frame 27.4/27.4/27.4 pass P95 18.3 max 19.6 n 35 >33 0 (P95-title +0.32)
+credits 1st close tap>moved 32.8/32.8/32.8 frame 16.5/16.5/16.5 pass P95 17.6 max 19.5 n 28 >33 0 (P95-title -0.36)
+credits at rest P95 17.98 max 34.5 n 1801 >33 1 (minus title -0.01)
+credits rest open tap>moved 36.2/39.1/42.4 frame 19.5/23.5/31.0 pass P95 18.2 max 22.2 n 322 >33 0 (P95-title +0.20)
+credits rest close tap>moved 26.6/32.8/36.6 frame 15.4/16.9/20.8 pass P95 17.1 max 22.0 n 253 >33 0 (P95-title -0.89)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 63 P50 16.73 P95 26.38 max 33.3 >33 1
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 38 P50 20.66 P95 33.62 max 33.7 >33 3
+continue after the tour: ready 1135.6 ms, worst frame 581.1 ms, hall built ahead false
+vram MiB: landing 195.4 after warms 243.8 after title rest 243.8 max 244.6 end 244.5
+warm stages (stage@frame/ms): rest@0/18 build2@32/795 build1@33/818 shape@34/834 draw@50/1167 pipe@94/1900 gone@95/1916
+warm frames over 33 ms: 4
+long i 2 t 66 ms: wall 33.6 busy 33.4 (process 4.1, draw 29.2) cpu 0.3 gpu 0.0 pc 0 rest map false
+long i 19 t 483 ms: wall 33.7 busy 33.5 (process 4.1, draw 29.4) cpu 0.2 gpu 0.0 pc 0 rest map false
+long i 25 t 619 ms: wall 33.0 busy 32.8 (process 5.8, draw 27.0) cpu 0.2 gpu 0.0 pc 0 rest map false
+long i 36 t 883 ms: wall 33.3 busy 33.1 (process 5.3, draw 27.8) cpu 0.2 gpu 0.0 pc 0 shape map false
+
+-- M3-zh
+ipad8-m-ac314bf7-zh-Hant-full nonce M3-zh-1791134301
+title at rest n 1787 P95 18.53 max 215.1 >33 3
+settings 1st open tap>moved 59.9/59.9/59.9 frame 55.2/55.2/55.2 pass P95 26.0 max 31.9 n 29 >33 0 (P95-title +7.42)
+settings 1st close tap>moved 33.4/33.4/33.4 frame 17.6/17.6/17.6 pass P95 21.6 max 69.6 n 20 >33 1 (P95-title +3.03)
+settings at rest P95 17.48 max 21.5 n 1803 >33 0 (minus title -1.05)
+settings rest open tap>moved 42.0/44.9/50.1 frame 26.6/28.8/39.3 pass P95 20.4 max 23.1 n 275 >33 0 (P95-title +1.87)
+settings rest close tap>moved 24.4/32.4/32.5 frame 15.1/16.7/18.6 pass P95 17.4 max 20.1 n 214 >33 0 (P95-title -1.18)
+help 1st open tap>moved 47.3/47.3/47.3 frame 31.2/31.2/31.2 pass P95 20.1 max 22.9 n 31 >33 0 (P95-title +1.58)
+help 1st close tap>moved 32.7/32.7/32.7 frame 17.1/17.1/17.1 pass P95 17.0 max 17.8 n 24 >33 0 (P95-title -1.53)
+help at rest P95 17.31 max 21.0 n 1803 >33 0 (minus title -1.22)
+help rest open tap>moved 39.3/41.5/46.9 frame 24.4/25.2/27.1 pass P95 18.9 max 22.1 n 277 >33 0 (P95-title +0.40)
+help rest close tap>moved 25.9/32.5/33.0 frame 16.2/16.7/18.2 pass P95 17.6 max 21.6 n 211 >33 0 (P95-title -0.98)
+credits 1st open tap>moved 45.4/45.4/45.4 frame 29.4/29.4/29.4 pass P95 20.5 max 21.0 n 35 >33 0 (P95-title +1.96)
+credits 1st close tap>moved 32.1/32.1/32.1 frame 17.1/17.1/17.1 pass P95 17.6 max 17.9 n 28 >33 0 (P95-title -0.94)
+credits at rest P95 17.98 max 51.3 n 1800 >33 2 (minus title -0.56)
+credits rest open tap>moved 37.6/39.5/45.0 frame 22.6/23.5/27.6 pass P95 17.9 max 22.4 n 322 >33 0 (P95-title -0.64)
+credits rest close tap>moved 30.4/32.8/33.4 frame 16.5/16.6/17.1 pass P95 17.3 max 22.3 n 252 >33 0 (P95-title -1.27)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 71 P50 16.66 P95 21.40 max 29.5 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 48 P50 16.45 P95 18.89 max 22.6 >33 0
+continue after the tour: ready 1231.3 ms, worst frame 664.6 ms, hall built ahead false
+vram MiB: landing 195.4 after warms 244.3 after title rest 244.3 max 245.1 end 245.0
+warm stages (stage@frame/ms): rest@0/23 build2@47/817 build1@48/834 shape@49/861 draw@62/1082 pipe@117/1999 gone@118/2014
+warm frames over 33 ms: 0
+
+-- M3-en
+ipad8-m-ac314bf7-en-full nonce M3-en-1791134600
+title at rest n 1803 P95 17.97 max 23.7 >33 0
+settings 1st open tap>moved 44.0/44.0/44.0 frame 28.3/28.3/28.3 pass P95 20.8 max 23.6 n 30 >33 0 (P95-title +2.85)
+settings 1st close tap>moved 32.4/32.4/32.4 frame 16.5/16.5/16.5 pass P95 17.2 max 17.6 n 23 >33 0 (P95-title -0.77)
+settings at rest P95 17.41 max 21.7 n 1803 >33 0 (minus title -0.56)
+settings rest open tap>moved 37.8/39.1/44.2 frame 21.9/22.8/26.1 pass P95 17.7 max 23.1 n 277 >33 0 (P95-title -0.28)
+settings rest close tap>moved 32.0/32.3/33.5 frame 16.3/16.6/17.7 pass P95 17.2 max 21.3 n 215 >33 0 (P95-title -0.78)
+help 1st open tap>moved 43.3/43.3/43.3 frame 27.7/27.7/27.7 pass P95 18.6 max 19.9 n 30 >33 0 (P95-title +0.64)
+help 1st close tap>moved 32.5/32.5/32.5 frame 16.9/16.9/16.9 pass P95 16.9 max 22.5 n 24 >33 0 (P95-title -1.04)
+help at rest P95 17.69 max 22.8 n 1803 >33 0 (minus title -0.28)
+help rest open tap>moved 37.3/37.8/38.8 frame 21.3/21.7/22.6 pass P95 18.1 max 25.6 n 278 >33 0 (P95-title +0.14)
+help rest close tap>moved 31.7/32.5/33.1 frame 16.0/16.9/17.2 pass P95 17.4 max 22.2 n 214 >33 0 (P95-title -0.60)
+credits 1st open tap>moved 37.1/37.1/37.1 frame 23.6/23.6/23.6 pass P95 17.2 max 18.7 n 36 >33 0 (P95-title -0.73)
+credits 1st close tap>moved 32.7/32.7/32.7 frame 16.9/16.9/16.9 pass P95 17.0 max 17.1 n 28 >33 0 (P95-title -0.95)
+credits at rest P95 17.99 max 68.7 n 1799 >33 1 (minus title +0.02)
+credits rest open tap>moved 34.2/36.4/37.3 frame 18.1/20.2/21.2 pass P95 17.8 max 23.3 n 324 >33 0 (P95-title -0.15)
+credits rest close tap>moved 32.7/32.9/33.2 frame 15.9/16.7/17.1 pass P95 17.4 max 20.5 n 252 >33 0 (P95-title -0.53)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 21 P50 16.59 P95 18.61 max 18.7 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 99 P50 16.67 P95 19.21 max 21.6 >33 0
+continue after the tour: ready 1186.2 ms, worst frame 614.4 ms, hall built ahead false
+vram MiB: landing 213.0 after warms 257.7 after title rest 257.7 max 258.4 end 258.3
+warm stages (stage@frame/ms): rest@0/17 build2@46/785 build1@47/804 shape@48/820 draw@51/866 pipe@66/1117 gone@67/1133
+warm frames over 33 ms: 0
+
+-- M3-a0
+ipad8-m-ac314bf7-en-a0-full nonce M3-a0-1791134905
+title at rest n 300 P95 18.57 max 27.8 >33 0
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 25 P50 24.42 P95 31.41 max 31.6 >33 0
+warm map only n 38 P50 16.65 P95 18.96 max 19.3 >33 0
+warm neither n 34 P50 20.29 P95 33.77 max 35.2 >33 3
+continue after the tour: ready 772.5 ms, worst frame 197.5 ms, hall built ahead false
+vram MiB: landing 277.1 after warms 280.6 after title rest 280.6 max 280.6 end 280.6
+warm stages (stage@frame/ms): rest@0/19 build2@46/794 build1@47/812 shape@48/831 draw@51/902 pipe@70/1382 gone@71/1404
+warm frames over 33 ms: 3
+long i 74 t 1485 ms: wall 33.4 busy 32.5 (process 8.0, draw 24.5) cpu 0.2 gpu 0.0 pc 0 gone map false
+long i 82 t 1684 ms: wall 33.8 busy 32.9 (process 9.6, draw 23.3) cpu 0.2 gpu 0.0 pc 0 gone map false
+long i 96 t 2018 ms: wall 35.2 busy 35.0 (process 5.9, draw 29.0) cpu 0.2 gpu 0.0 pc 0 gone map false
+
+-- M3-land1
+ipad8-m-ac314bf7-en-a0-full nonce M3-land1-1791134937
+title at rest n 0 P95 0.00 max 0.0 >33 0
+warm both 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+continue as the rite lands: ready 713.5 ms, worst frame 166.6 ms, hall built ahead false
+vram MiB: landing -1.0 after warms -1.0 after title rest -1.0 max-1.0 end -1.0
+warm stages (stage@frame/ms):
+warm frames over 33 ms: 0
+
+-- M3-land2
+ipad8-m-ac314bf7-en-a0-full nonce M3-land2-1791134961
+title at rest n 0 P95 0.00 max 0.0 >33 0
+warm both 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+continue as the rite lands: ready 720.5 ms, worst frame 166.6 ms, hall built ahead false
+vram MiB: landing -1.0 after warms -1.0 after title rest -1.0 max -1.0 end -1.0
+warm stages (stage@frame/ms):
+warm frames over 33 ms: 0
+
+==============================================================================
+History: the rows that drove the fixes, on this branch's commits before its last rewrite (kept locally as backup/pr-c-398e1a23). a3ca30b4: the rebased candidate before them (session 1, 15:47-16:10: en first after install, zh-Hant, then RoomWarm's arms for #675's 0.92 s frame, laps 0: build = builds and frees the rooms, neither shapes nor draws; keep = builds and never frees; none = no warm; full = as built; and en).
+
+-- c1-en0
+ipad8-c-a3ca30b4-en-full nonce c1-en0-1791125257
+title at rest n 1803 P95 18.14 max 24.0 >33 0 Glassvow QA 703 ms
+settings 1st open tap>moved 43.6/43.6/43.6 frame 32.9/32.9/32.9 pass P95 22.0 max 23.41.
+settings 1st close tap>moved 31.8/31.8/31.8 frame 16.3/16.3/16.3 pass P95 19.1 max 47.8 n 21 >33 1 (P95-title +1.00)
+settings at rest P95 17.60 max 21.4 n 1803 >33 0 (minus title -0.54)
+settings rest open tap>moved 36.7/39.0/41.0 frame 20.6/22.7/24.8 pass P95 18.0 max 22.4 n 279 >33 0 (P95-title -0.17)
+settings rest close tap>moved 32.0/32.2/33.6 frame 16.3/16.4/17.8 pass P95 17.2 max 20.7 n 216 >33 0 (P95-title -0.92)
+help 1st open tap>moved 43.6/43.6/43.6 frame 27.7/27.7/27.7 pass P95 20.1 max 20.8 n 30 >33 0 (P95-title +1.95)
+help 1st close tap>moved 32.4/32.4/32.4 frame 15.7/15.7/15.7 pass P95 17.1 max 20.5 n 23 >33 0 (P95-title -1.09)
+help at rest P95 17.32 max 20.8 n 1803 >33 0 (minus title -0.81)
+help rest open tap>moved 36.9/37.9/43.2 frame 20.8/21.6/23.7 pass P95 17.5 max 22.2 n 278 >33 0 (P95-title -0.59)
+help rest close tap>moved 31.2/32.5/32.8 frame 16.1/16.8/17.1 pass P95 17.6 max 19.9 n 214 >33 0 (P95-title -0.53)
+credits 1st open tap>moved 41.6/41.6/41.6 frame 25.1/25.1/25.1 pass P95 19.7 max 22.4 n 35 >33 0 (P95-title +1.56)
+credits 1st close tap>moved 32.5/32.5/32.5 frame 16.5/16.5/16.5 pass P95 18.4 max 19.7 n 28 >33 0 (P95-title +0.28)
+credits at rest P95 17.90 max 21.9 n 1803 >33 0 (minus title -0.24)
+credits rest open tap>moved 31.5/35.7/37.2 frame 16.7/20.5/20.8 pass P95 18.2 max 22.3 n 323 >33 0 (P95-title +0.06)
+credits rest close tap>moved 31.2/32.9/35.5 frame 14.5/16.6/18.3 pass P95 17.4 max 20.9 n 252 >33 0 (P95-title -0.78)
+vigil 1st open tap>moved 382.4/382.4/382.4 frame 365.3/365.3/365.3 pass P95 18.4 max 31.9 n 34 >33 0 (P95-title +0.24)
+vigil 1st close tap>moved 32.4/32.4/32.4 frame 18.9/18.9/18.9 pass P95 19.6 max 23.0 n 29 >33 0 (P95-title +1.45)
+vigil at rest P95 18.23 max 19.3 n 1803 >33 0 (minus title +0.09)
+vigil rest open tap>moved 49.3/50.5/51.7 frame 33.6/34.5/35.4 pass P95 20.4 max 27.3 n 313 >33 0 (P95-title +2.22)
+vigil rest close tap>moved 30.5/32.3/36.6 frame 17.5/20.7/29.6 pass P95 21.6 max 25.5 n 251 >33 0 (P95-title +3.46)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 28 P50 17.52 P95 32.84 max 172.1 >33 1
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 80 P50 16.66 P95 17.91 max 20.3 >33 0
+vram MiB: landing 243.8 after warms 301.0 after title rest 301.0 max 302.9 end 302.7
+warm stages (stage@frame/ms): rest@0/17 build4@47/805 build3@48/823 build2@49/841 build1@50/857 shape@51/889 draw@55/1134 pipe@73/1427 gone@75/1460
+warm frames over 33 ms: 1
+long i 54t 1112 ms: wall 172.1 busy 171.8 (process 171.1, draw 0.7) cpu 0.2 gpu 0.0 pc 0 shape map false
+step vigil new 10 first 5.8 median 4.1 max 5.8 ms
+step vigil route n 10 first 15.5 median 9.6 max 15.5 ms
+step vigil arrive n 10 first 1.0 median 1.0 max 1.1 ms
+step vigil music n 10 first 12.9 median 0.1 max 12.9 ms
+step leave unhold n 10 first 0.3 median 0.2 max 0.4 ms
+step leave depart n 10 first 1.5 median 1.8 max 3.1 ms
+step leave music n 10 first 0.1 median 0.1 max 0.2 ms
+
+-- c1-zh
+ipad8-c-a3ca30b4-zh-Hant-full nonce c1-zh-1791125617
+title at rest n 1803 P95 17.95 max 24.6 >33 0
+settings 1st open tap>moved 43.7/43.7/43.7 frame 30.3/30.3/30.3 pass P95 19.8 max 20.6 n 31 >33 0 (P95-title +1.89)
+settings 1st close tap>moved 32.2/32.2/32.2 frame 16.8/16.8/16.8 pass P95 17.0 max 18.3 n 24 >33 0 (P95-title -0.90)
+settings at rest P95 17.49 max 22.8 n 1803 >33 0 (minus title -0.46)
+settings rest open tap>moved 42.3/43.9/46.5 frame 26.0/27.3/37.5 pass P95 19.4 max 23.0 n 274 >33 0 (P95-title +1.45)
+settings rest close tap>moved 26.1/32.4/32.9 frame 15.8/16.4/18.0 pass P95 17.6 max 36.3 n 213 >33 1 (P95-title -0.30)
+help 1st open tap>moved 46.1/46.1/46.1 frame 29.7/29.7/29.7 pass P95 18.8 max 22.8 n 31 >33 0 (P95-title +0.81)
+help 1st close tap>moved 32.1/32.1/32.1 frame 16.5/16.5/16.5 pass P95 16.9 max 17.0 n 24 >33 0 (P95-title -1.02)
+help at rest P95 17.33 max 21.7 n 1803 >33 0 (minus title -0.62)
+help rest open tap>moved 40.3/41.3/45.3 frame 24.7/26.1/34.5 pass P95 18.5 max 22.2 n 277 >33 0 (P95-title +0.59)
+help rest close tap>moved 26.8/32.2/35.4 frame 16.3/16.7/19.1 pass P95 18.0 max 21.1 n 214 >33 0 (P95-title +0.02)
+credits 1st open tap>moved 42.7/42.7/42.7 frame 26.5/26.5/26.5 pass P95 20.2 max 20.3 n 35 >33 0 (P95-title +2.25)
+credits 1st close tap>moved 32.9/32.9/32.9 frame 16.6/16.6/16.6 pass P95 17.6 max 18.7 n 28 >33 0 (P95-title -0.36)
+credits at rest P95 17.98 max 22.2 n 1803 >33 0 (minus title +0.03)
+credits rest open tap>moved 37.6/39.7/42.5 frame 22.9/23.6/33.2 pass P95 18.2 max 28.2 n 321 >33 0 (P95-title +0.29)
+credits rest close tap>moved 26.4/32.6/33.1 frame 16.3/16.9/18.9 pass P95 17.2 max 22.2 n 252 >33 0 (P95-title -0.71)
+vigil 1st open tap>moved 78.2/78.2/78.2 frame 60.2/60.2/60.2 pass P95 20.4 max 34.7 n 34 >33 1 (P95-title +2.50)
+vigil 1st close tap>moved 37.5/37.5/37.5 frame 20.4/20.4/20.4 pass P95 20.8 max 24.8 n 28 >33 0 (P95-title +2.90)
+vigil at rest P95 18.30 max 19.1 n 1803 >33 0 (minus title +0.35)
+vigil rest open tap>moved 48.8/55.3/55.9 frame 32.7/39.1/39.6 pass P95 19.1 max 29.9 n 317 >33 0 (P95-title +1.11)
+vigil rest close tap>moved 30.1/34.4/36.4 frame 18.1/21.2/30.6 pass P95 22.2 max 25.7 n 250 >33 0 (P95-title +4.24)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 84 P50 17.04 P95 31.90 max 158.9 >33 3
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 32 P50 23.54 P95 32.23 max 33.4 >33 1
+vram MiB: landing 229.2 after warms 287.3 after title rest 287.2 max 289.1 end 288.8
+warm stages (stage@frame/ms): rest@0/19 build4@31/800 build3@32/838 build2@33/856 build1@34/884 shape@35/906 draw@50/1387 pipe@113/2538 gone@115/2571
+warm frames over 33 ms: 4
+long i 19 t 500 ms: wall 33.4 busy 33.2 (process 4.1, draw 29.1) cpu 0.2 gpu 0.0 pc 0 rest map false
+long i 32 t 838 ms: wall 37.9 busy 23.7 (process 22.9, draw 0.8) cpu 0.2 gpu 0.0 pc 0 build3 map false
+long i 45 t 1276 ms: wall 158.9 busy 145.1 (process 144.3, draw 0.8) cpu 0.2 gpu 0.0 pc 0 shape map false
+long i 49 t 1366 ms: wall 33.4 busy 33.2 (process 4.7, draw 28.5) cpu 0.1 gpu 0.0 pc 0 shape map false
+step vigil new 10 first 7.1 median 4.0 max 7.1 ms
+step vigil route n 10 first 21.3 median 16.5 max 21.3 ms
+step vigil arrive n 10 first 1.1 median 1.1 max 1.5 ms
+step vigil music n 10 first 10.9 median 0.0 max 10.9 ms
+step leave unhold n 10 first 0.3 median 0.2 max 0.3 ms
+step leave depart n 10 first 3.4 median 2.6 max 4.0 ms
+step leave music n 10 first 0.1 median 0.1 max 0.3 ms
+
+-- c1-build-1
+ipad8-c-a3ca30b4-en-build nonce c1-build-1-1791125994
+title at rest n 178 P95 18.87 max 30.5 >33 0
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 5 P50 16.64 P95 17.30 max 17.3 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 113 P50 16.66 P95 20.27 max 35.6 >33 2
+vram MiB: landing 243.8 after warms 292.7 after title rest 292.7 max 292.7 end 292.7
+warm stages (stage@frame/ms): rest@0/16 build4@47/800 build3@48/816 build2@49/832 build1@50/849 pipe@51/866 gone@52/882
+warm frames over 33 ms: 2
+long i 111 t 1886 ms: wall 34.3 busy 33.5 (process 7.4, draw 26.1) cpu 0.2 gpu 0.0 pc 0 gone map false
+long i 117 t 2019 ms: wall 35.6 busy 35.4 (process 5.8, draw 29.6) cpu 0.2 gpu 0.0 pc 0 gone map false
+
+-- c1-none-1
+ipad8-c-a3ca30b4-en-none nonce c1-none-1-1791126026
+title at rest n 181 P95 18.44 max 21.2 >33 0
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 121 P50 16.66 P95 18.23 max 23.1 >33 0
+vram MiB: landing 243.3 after warms 292.5 after title rest 292.5 max 292.5 end 292.5
+warm stages (stage@frame/ms): gone@0/15
+warm frames over 33 ms: 0
+
+-- c1-full-1
+ipad8-c-a3ca30b4-en-full nonce c1-full-1-1791126055
+title at rest n 181 P95 18.45 max 20.3 >33 0
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 28 P50 20.98 P95 33.51 max 155.1 >33 2
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 66 P50 16.73 P95 30.91 max 34.0 >33 1
+vram MiB: landing 246.8 after warms 301.0 after title rest 301.0 max 301.1 end 301.0
+warm stages (stage@frame/ms): rest@0/27 build4@34/760 build3@35/779 build2@36/796 build1@37/810 shape@38/826 draw@41/1023 pipe@60/1461 gone@62/1493
+warm frames over 33 ms: 3
+long i 20 t 494 ms: wall 34.0 busy 33.8 (process 4.0, draw 29.8) cpu 0.2 gpu 0.0 pc 0 rest map false
+long i 40 t 998 ms: wall 155.1 busy 154.9 (process 154.2, draw 0.7) cpu 0.1 gpu 0.0 pc 0 shape map false
+long i 48 t 1194 ms: wall 33.5 busy 33.2 (process 5.8, draw 27.4) cpu 0.2 gpu 0.0 pc 0 draw map false
+
+-- c1-keep-1
+ipad8-c-a3ca30b4-en-keep nonce c1-keep-1-1791126087
+title at rest n 181 P95 18.24 max 20.0 >33 0
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 5 P50 16.29 P95 17.99 max 18.0 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 116 P50 16.64 P95 18.59 max 24.7 >33 0
+vram MiB: landing 243.3 after warms 285.2 after title rest 285.2 max 285.2 end 285.2
+warm stages (stage@frame/ms): rest@0/14 build4@47/794 build3@48/812 build2@49/828 build1@50/844 pipe@51/860 gone@52/877
+warm frames over 33 ms: 0
+
+-- c1-build-2
+ipad8-c-a3ca30b4-en-build nonce c1-build-2-1791126118
+title at rest n 181 P95 18.24 max 20.8 >33 0
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 5 P50 16.80 P95 25.17 max 25.2 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 115 P50 16.64 P95 18.42 max 22.8 >33 0
+vram MiB: landing 246.8 after warms 292.7 after title rest 292.7 max 292.7 end 292.7
+warm stages (stage@frame/ms): rest@0/23 build4@46/791 build3@47/811 build2@48/828 build1@49/844 pipe@50/861 gone@51/878
+warm frames over 33 ms: 0
+
+-- c1-none-2
+ipad8-c-a3ca30b4-en-none nonce c1-none-2-1791126147
+title at rest n 181 P95 18.54 max 23.2 >33 0
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 121 P50 16.63 P95 18.32 max 20.1 >33 0
+vram MiB: landing 246.8 after warms 292.5 after title rest 292.5 max 292.5 end 292.5
+warm stages (stage@frame/ms): gone@0/16
+warm frames over 33 ms: 0
+
+-- c1-full-2
+ipad8-c-a3ca30b4-en-full nonce c1-full-2-1791126179
+title at rest n 165 P95 29.68 max 35.8 >33 3
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 28 P50 16.73 P95 23.67 max 151.6 >33 1
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 72 P50 16.99 P95 31.28 max 35.6 >33 1
+vram MiB: landing 244.0 after warms 301.0 after title rest 301.0 max 301.1 end 301.0
+warm stages (stage@frame/ms): rest@0/20 build4@35/762 build3@36/779 build2@37/794 build1@38/811 shape@39/828 draw@42/1020 pipe@61/1333 gone@63/1365
+warm frames over 33 ms: 2
+long i 41 t 996 ms: wall 151.6 busy 151.5 (process 150.6, draw 0.9) cpu 0.1 gpu 0.0 pc 0 shape map false
+long i 95 t 1931 ms: wall 35.6 busy 35.2 (process 7.8, draw 27.4) cpu 0.2 gpu 0.0 pc 0 gone map false
+
+-- c1-keep-2
+ipad8-c-a3ca30b4-en-keep nonce c1-keep-2-1791126211
+title at rest n 162 P95 30.46 max 34.0 >33 3
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 5 P50 22.83 P95 36.97 max 37.0 >33 1
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 75 P50 24.64 P95 31.86 max 33.1 >33 1
+vram MiB: landing 243.3 after warms 292.7 after title rest 292.7 max 292.7 end 292.7
+warm stages (stage@frame/ms): rest@0/28 build4@31/800 build3@32/823 build2@33/844 build1@34/862 pipe@35/894 gone@36/916
+warm frames over 33 ms: 2
+long i 22 t 561 ms: wall 33.1 busy 32.9 (process 5.9, draw 27.0) cpu 0.2 gpu 0.0 pc 0 rest map false
+long i 31 t 800 ms: wall 37.0 busy 23.7 (process 22.5, draw 1.2) cpu 0.2 gpu 0.0 pc 0 build4 map false
+
+-- c1-en
+ipad8-c-a3ca30b4-en-full nonce c1-en-1791126242
+title at rest n 1803 P95 17.88 max 24.5 >33 0 Glassvow QA 681ms
+settings 1st open tap>moved 42.7/42.7/42.7 frame 27.2/27.2/27.2 pass P95 20.2 max 20.8 1.
+settings 1st close tap>moved 31.4/31.4/31.4 frame 16.4/16.4/16.4 pass P95 17.1 max 17.1 n 24 >33 0 (P95-title -0.82)
+settings at rest P95 17.54 max 22.6 n 1803 >33 0 (minus title -0.34)
+settings rest open tap>moved 38.0/39.4/44.7 frame 22.0/23.1/26.3 pass P95 17.9 max 23.4 n 278 >33 0 (P95-title -0.00)
+settings rest close tap>moved 28.8/32.3/32.6 frame 13.3/16.4/16.9 pass P95 17.3 max 21.3 n 213 >33 0 (P95-title -0.55)
+help 1st open tap>moved 40.1/40.1/40.1 frame 24.0/24.0/24.0 pass P95 18.3 max 21.8 n 31 >33 0 (P95-title +0.46)
+help 1st close tap>moved 31.5/31.5/31.5 frame 16.8/16.8/16.8 pass P95 16.9 max 21.0 n 24 >33 0 (P95-title -1.00)
+help at rest P95 17.32 max 22.0 n 1803 >33 0 (minus title -0.56)
+help rest open tap>moved 35.5/37.4/41.8 frame 20.4/21.7/22.5 pass P95 17.8 max 23.4 n 279 >33 0 (P95-title -0.12)
+help rest close tap>moved 31.3/32.5/34.7 frame 14.4/16.6/16.9 pass P95 17.4 max 20.2 n 214 >33 0 (P95-title -0.47)
+credits 1st open tap>moved 39.3/39.3/39.3 frame 23.2/23.2/23.2 pass P95 19.2 max 20.2 n 36 >33 0 (P95-title +1.35)
+credits 1st close tap>moved 32.8/32.8/32.8 frame 16.8/16.8/16.8 pass P95 18.0 max 18.0 n 28 >33 0 (P95-title +0.13)
+credits at rest P95 17.93 max 21.8 n 1803 >33 0 (minus title +0.05)
+credits rest open tap>moved 35.0/36.5/42.9 frame 20.0/20.3/24.9 pass P95 17.8 max 23.8 n 323 >33 0 (P95-title -0.10)
+credits rest close tap>moved 32.4/32.9/33.1 frame 16.5/16.8/17.1 pass P95 17.3 max 20.3 n 252 >33 0 (P95-title -0.59)
+vigil 1st open tap>moved 66.1/66.1/66.1 frame 49.9/49.9/49.9 pass P95 22.8 max 28.7 n 34 >33 0 (P95-title +4.92)
+vigil 1st close tap>moved 33.2/33.2/33.2 frame 19.1/19.1/19.1 pass P95 19.4 max 23.8 n 28 >33 0 (P95-title +1.54)
+vigil at rest P95 18.28 max 19.0 n 1803 >33 0 (minus title +0.40)
+vigil rest open tap>moved 48.5/50.5/52.4 frame 34.0/34.7/35.8 pass P95 20.7 max 26.2 n 312 >33 0 (P95-title +2.79)
+vigil rest close tap>moved 27.5/33.4/39.2 frame 17.5/21.8/31.3 pass P95 21.5 max 25.7 n 250 >33 0 (P95-title +3.57)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 29 P50 17.22 P95 33.44 max 143.0 >33 2
+warm map only n 0 P50 0,00 P95 0.00 max 0.0 >33 0
+warm neither n 80 P50 16.61 P95 17.65 max 20.7 >33 0
+vram MiB: landing 243.8 after warms 295.0 after title rest 295.0 max 296.9 end 296.7
+warm stages (stage@frame/ms): rest@0/16 build4@46/783 build3@47/799 build2@48/821 build1@49/839 shape@50/851 draw@54/1051 pipe@73/1421 gone@75/1454
+warm frames over 33 ms: 2
+long i 53 t 1026 ms: wall 143.0 busy 142.7 (process 141.9, draw 0.8) cpu 0.1 gpu 0.0 pc 0 shape map false
+long i 57 t 1117 ms: wall 33.4 busy 33.2 (process 5.0, draw 28.2) cpu 0.1 gpu 0.0 pc 0 draw map false
+step vigil new 10 first 4.1 median 4.0 max 4.2 ms
+step vigil route n 10 first 15.2 median 9.7 max 15.2 ms
+step vigil arrive n 10 first 1.0 median 1.1 max 1.3 ms
+step vigil music n 10 first 7.9 median 0.1 max 7.9 ms
+step leave unhold n 10 first 0.3 median 0.2 max 0.4 ms
+step leave depart n 10 first 1.5 median 1.8 max 2.9 ms
+step leave music n 10 first 0.1 median 0.1 max 0.2 ms
+
+==============================================================================
+ba26a91f (the deeds' arrow found at boot), a diagnostic build (qa_patch_diag.py): the Vigil toured alone, 16 laps, the hall's layers varied by lap (A as built; B the Keeper without his clip pass; C no firelight; D no band; E only one of the two scenes drawn in the passage), the tap frame split into process and draw. Session 2, 16:15-16:30.
+
+-- d-en0
+ipad8-d-ba26a91f-en-full nonce d-en0-1791126949
+title at rest n 1797 P95 18.57 max 35.8 >33 3
+vigil 1st open tap>moved 68.3/68.3/68.3 frame 59.3/59.3/59.3 pass P95 17.9 max 24.3 n 35 >33 0 (P95-title -0.64)
+vigil 1st close tap>moved 38.9/38.9/38.9 frame 26.5/26.5/26.5 pass P95 24.3 max 25.5 n 27 >33 0 (P95-title +5.77)
+vigil at rest P95 18.37 max 19.1 n 1803 >33 0 (minus title -0.20)
+vigil rest open tap>moved 40.4/51.3/59.3 frame 24.8/34.9/44.6 pass P95 19.2 max 24.8 n 529 >33 0 (P95-title +0.67)
+vigil rest close tap>moved 30.4/34.7/40.1 frame 17.4/20.0/32.0 pass P95 19.8 max 24.6 n 421 >33 0 (P95-title +1.26)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 26 P50 16.54 P95 17.72 max 19.5 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 93 P50 16.66 P95 18.78 max 33.6 >33 1
+vram MiB: landing 246.8 after warms 301.0 after title rest 301.0 max 302.4 end 302.0
+warm stages (stage@frame/ms): rest@0/17 build4@46/783 build3@47/800 build2@48/816 build1@49/833 shape@50/850 draw@53/899 pipe@70/1184 gone@72/1216
+warm frames over 33 ms: 1
+long i 77 t 1316 ms: wall 33.6 busy 33.3 (process 5.8, draw 27.5) cpu 0.2 gpu 0.0 pc 0 gone map false
+step vigil new n 16 first 5.9 median 4.0 max 5.9 ms
+step vigil route n 16 first 14.8 median 9.5 max 14.8 ms
+step vigil arrive n 16 first 7.1 median 1.1 max 8.2 ms
+step vigil music n 16 first 10.7 median 0.1 max 10.7 ms
+step leave unhold n 16 first 0.1 median 0.3 max 0.4 ms
+step leave depart n 16 first 9.3 median 2.6 max 9.3 ms
+step leave music n 16 first 0.1 median 0.1 max 0.3 ms
+boot: OS glyphs found in 156.2 ms; warm slow steps:
+vigil 1st open tap frame: wall 59.3 busy 7.9 process 4.7 draw 3.2 render cpu 0.2
+vigil 1st close tap frame: wall 26.5 busy 10.2 process 8.6 draw 1.6 render cpu 0.3
+title at rest: process P95 8.3 draw P95 12.4
+variant A: open n 105 P50 16.7 P95 20.2 max 24.6 (process 6.9 draw 14.4) | close n 84 P50 16.6 P95 22.2 max 24.6 (process 8.2 draw 12.3)
+variant B: open n 106 P50 16.7 P95 19.4 max 23.7 (process 7.0 draw 14.3) | close n 84 P50 16.6 P95 20.6 max 23.4 (process 8.2 draw 12.9)
+variant C: open n 105 P50 16.7 P95 20.0 max 24.8 (process 6.9 draw 14.4) | close n 84 P50 16.6 P95 19.6 max 24.6 (process 8.5 draw 11.2)
+variant D: open n 105 P50 16.6 P95 21.5 max 24.8 (process 7.0 draw 13.6) | close n 85 P50 16.6 P95 19.6 max 23.6 (process 8.2 draw 13.4)
+variant E: open n 108 P50 16.6 P95 18.2 max 18.4 (process 7.3 draw 15.0) | close n 84 P50 16.6 P95 18.9 max 23.8 (process 7.8 draw 12.0)
+
+-- d-zh
+ipad8-d-ba26a91f-zh-Hant-full nonce d-zh-1791127114
+title at rest n 1803 P95 17.83 max 24.8 >33 0
+vigil 1st open tap>moved 68.8/68.8/68.8 frame 53.2/53.2/53.2 pass P95 23.2 max 27.4 n 35 >33 0 (P95-title +5.39)
+vigil 1st close tap>moved 35.0/35.0/35.0 frame 21.8/21.8/21.8 pass P95 22.2 max 23.0 n 27 >33 0 (P95-title +4.39)
+vigil at rest P95 18.31 max 18.9 n 1803 >33 0 (minus title +0.47)
+vigil rest open tap>moved 46.5/54.7/57.5 frame 30.4/38.9/41.4 pass P95 20.0 max 33.9 n 528 >33 1 (P95-title +2.12)
+vigil rest close tap>moved 32.6/35.3/41.0 frame 19.0/23.2/31.5 pass P95 21.9 max 25.5 n 422 >33 0 (P95-title +4.06)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 65 P50 16.71 P95 18.85 max 33.4 >33 1
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 47 P50 16.73 P95 31.12 max 33.1 >33 1
+vram MiB: landing 233.2 after warms 287.2 after title rest 287.2 max 288.6 end 288.3
+warm stages (stage@frame/ms): rest@0/17 build4@38/788 build3@39/805 build2@40/824 build1@41/843 shape@42/857 draw@56/1083 pipe@101/1833 gone@103/1866
+warm frames over 33 ms: 2
+long i 14 t 367 ms: wall 33.1 busy 32.9 (process 3.1, draw 29.9) cpu 0.1 gpu 0.0 pc 0 rest map false
+long i 38 t 788 ms: wall 33.4 busy 23.7 (process 22.4, draw 1.3) cpu 0.2 gpu 0.0 pc 0 build4 map false
+step vigil new n 16 first 4.0 median 4.0 max 4.6 ms
+step vigil route n 16 first 20.6 median 16.3 max 20.6 ms
+step vigil arrive n 16 first 1.7 median 1.4 max 3.3 ms
+step vigil music n 16 first 9.7 median 0.0 max 9.7 ms
+step leave unhold n 16 first 0.1 median 0.2 max 0.3 ms
+step leave depart n 16 first 4.5 median 3.7 max 5.7 ms
+step leave music n 16 first 0.1 median 0.1 max 0.3 ms
+boot: OS glyphs found in 144.3 ms; warm slow steps: build 5 15.0 ms | build 4 10.3 ms
+vigil 1st open tap frame: wall 53.2 busy 6.9 process 5.2 draw 1.7 render cpu 0.2
+vigil 1st close tap frame: wall 21.8 busy 10.7 process 9.2 draw 1.5 render cpu 0.3
+title at rest: process P95 6.9 draw P95 11.8
+variant A: open n 106 P50 16.7 P95 20.0 max 27.3 (process 6.6 draw 14.6) | close n 83 P50 16.6 P95 22.4 max 25.5 (process 8.3 draw 14.5)
+variant B: open n 105 P50 16.7 P95 18.8 max 24.0 (process 6.6 draw 14.0) | close n 85 P50 16.6 P95 20.7 max 23.4 (process 8.2 draw 12.4)
+variant C: open n 104 P50 16.6 P95 22.4 max 33.9 (process 6.6 draw 14.7) | close n 86 P50 16.6 P95 22.4 max 24.4 (process 8.2 draw 14.1)
+variant D: open n 106 P50 16.6 P95 18.9 max 24.1 (process 7.0 draw 14.0) | close n 84 P50 16.7 P95 21.4 max 24.0 (process 8.4 draw 13.1)
+variant E: open n 107 P50 16.7 P95 19.2 max 22.0 (process 7.8 draw 14.4) | close n 84 P50 16.6 P95 21.8 max 25.1 (process 8.7 draw 12.5)
+
+-- d-en
+ipad8-d-ba26a91f-en-full nonce d-en-1791127279
+title at rest n 1803 P95 17.94 max 21.4 >33 0
+vigil 1st open tap>moved 67.2/67.2/67.2 frame 51.5/51.5/51.5 pass P95 19.9 max 31.0 n 35 >33 0 (P95-title +2.01)
+vigil 1st close tap>moved 33.1/33.1/33.1 frame 20.1/20.1/20.1 pass P95 23.7 max 25.1 n 27 >33 0 (P95-title +5.71)
+vigil at rest P95 18.26 max 19.6 n 1803 >33 0 (minus title +0.32)
+vigil rest open tap>moved 38.4/50.4/52.2 frame 22.6/34.7/43.9 pass P95 18.4 max 27.7 n 525 >33 0 (P95-title +0.51)
+vigil rest close tap>moved 30.0/34.5/39.3 frame 17.4/20.1/30.5 pass P95 21.0 max 24.8 n 420 >33 0 (P95-title +3.07)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 24 P50 16.64 P95 18.39 max 22.2 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 97 P50 16.69 P95 17.82 max 20.3 >33 0
+vram MiB: landing 243.3 after warms 301.0 after title rest 301.0 max 302.4 end 302.2
+warm stages (stage@frame/ms): rest@0/17 build4@47/800 build3@48/817 build2@49/833 build1@50/850 shape@51/866 draw@54/916 pipe@69/1168 gone@71/1200
+warm frames over 33 ms: 0
+step vigil new n 16 first 4.0 median 4.0 max 4.4 ms
+step vigil route n 16 first 16.2 median 9.6 max 16.2 ms
+step vigil arrive n 16 first 3.1 median 1.1 max 3.3 ms
+step vigil music n 16 first 8.1 median 0.1 max 8.1 ms
+step leave unhold n 16 first 0.1 median 0.2 max 0.3 ms
+step leave depart n 16 first 3.4 median 2.6 max 4.4 ms
+step leave music n 16 first 0.1 median 0.1 max 0.2 ms
+boot: OS glyphs found in 136.4 ms; warm slow steps:
+vigil 1st open tap frame: wall 51.5 busy 7.7 process 5.3 draw 2.4 render cpu 0.2
+vigil 1st close tap frame: wall 20.1 busy 10.1 process 8.5 draw 1.6 render cpu 0.3
+title at rest: process P95 7.3 draw P95 11.9
+variant A: open n 103 P50 16.7 P95 21.6 max 25.0 (process 6.6 draw 13.8) | close n 83 P50 16.7 P95 22.6 max 24.4 (process 8.8 draw 14.1)
+variant B: open n 104 P50 16.7 P95 19.7 max 26.7 (process 6.6 draw 14.2) | close n 84 P50 16.6 P95 20.4 max 23.5 (process 8.1 draw 12.4)
+variant C: open n 104 P50 16.7 P95 23.2 max 27.7 (process 6.5 draw 14.6) | close n 84 P50 16.6 P95 20.0 max 24.8 (process 8.3 draw 12.8)
+variant D: open n 106 P50 16.7 P95 18.2 max 24.7 (process 6.9 draw 14.0) | close n 85 P50 16.6 P95 22.0 max 24.1 (process 8.3 draw 13.2)
+variant E: open n 108 P50 16.6 P95 17.9 max 18.4 (process 7.5 draw 14.7) | close n 84 P50 16.7 P95 21.0 max 24.6 (process 7.9 draw 12.4)
+
+-- d-en-all
+ipad8-d-ba26a91f-en-full nonce d-en-all-1791127444
+title at rest n 1803 P95 17.95 max 21.7 >33 0
+settings 1st open tap>moved 44.7/44.7/44.7 frame 28.9/28.9/28.9 pass P95 20.2 max 23.8 n 30 >33 0 (P95-title +2.27)
+settings 1st close tap>moved 32.3/32.3/32.3 frame 16.4/16.4/16.4 pass P95 17.0 max 17.9 n 24 >33 0 (P95-title -0.93)
+settings at rest P95 17.62 max 23.4 n 1803 >33 0 (minus title -0.33)
+settings rest open tap>moved 37.9/39.1/42.0 frame 21.9/23.0/24.4 pass P95 17.7 max 23.3 n 279 >33 0 (P95-title -0.26)
+settings rest close tap>moved 29.0/32.6/34.1 frame 16.6/16.9/18.7 pass P95 17.1 max 20.1 n 215 >33 0 (P95-title -0.83)
+help 1st open tap>moved 42.3/42.3/42.3 frame 26.2/26.2/26.2 pass P95 19.4 max 20.9 n 30 >33 0 (P95-title +1.43)
+help 1st close tap>moved 32.2/32.2/32.2 frame 16.5/16.5/16.5 pass P95 17.1 max 19.1 n 23 >33 0 (P95-title -0.87)
+help at rest P95 17.34 max 21.4 n 1803 >33 0 (minus title -0.62)
+help rest open tap>moved 37.7/38.1/39.0 frame 21.8/21.9/22.0 pass P95 17.8 max 24.3 n 279 >33 0 (P95-title -0.12)
+help rest close tap>moved 30.7/32.4/33.0 frame 16.1/16.5/16.9 pass P95 17.2 max 18.8 n 211 >33 0 (P95-title -0.75)
+credits 1st open tap>moved 38.7/38.7/38.7 frame 22.4/22.4/22.4 pass P95 19.0 max 20.0 n 36 >33 0 (P95-title +1.03)
+credits 1st close tap>moved 31.7/31.7/31.7 frame 16.5/16.5/16.5 pass P95 17.0 max 17.1 n 28 >33 0 (P95-title -0.96)
+credits at rest P95 17.83 max 22.5 n 1803 >33 0 (minus title -0.12)
+credits rest open tap>moved 34.6/36.8/37.1 frame 20.4/20.6/20.9 pass P95 17.3 max 23.1 n 324 >33 0 (P95-title -0.65)
+credits rest close tap>moved 32.5/32.9/37.0 frame 16.7/16.9/20.9 pass P95 17.2 max 20.7 n 253 >33 0 (P95-title -0.80)
+vigil 1st open tap>moved 67.5/67.5/67.5 frame 51.3/51.3/51.3 pass P95 23.6 max 26.8 n 35 >33 0 (P95-title +5.62)
+vigil 1st close tap>moved 34.5/34.5/34.5 frame 19.7/19.7/19.7 pass P95 20.7 max 23.2 n 28 >33 0 (P95-title +2.78)
+vigil at rest P95 18.29 max 19.0 n 1803 >33 0 (minus title +0.34)
+vigil rest open tap>moved 44.4/50.6/51.9 frame 31.2/34.9/43.6 pass P95 19.8 max 26.3 n 315 >33 0 (P95-title +1.86)
+vigil rest close tap>moved 30.0/34.5/39.3 frame 17.5/22.2/30.4 pass P95 20.3 max 25.5 n 252 >33 0 (P95-title +2.34)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 26 P50 16.44 P95 18.22 max 18.3 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 94 P50 16.67 P95 18.33 max 20.1 >33 0
+vram MiB: landing 243.8 after warms 294.0 after title rest 294.0 max 295.9 end 295.7
+warm stages (stage@frame/ms): rest@0/17 build4@47/804 build3@48/820 build2@49/835 build1@50/850 shape@51/867 draw@54/916 pipe@71/1200 gone@73/1233
+warm frames over 33 ms: 0
+step vigil new 110 first 4.1 median 4.1 max 4.5 ms
+step vigil route n 10 first 15.8 median 9.7 max 15.8 ms
+step vigil arrive n 10 first 1.1 median 1.0 max 1.4 ms
+step vigil music n 10 first 9.5 median 0.1 max 9.5 ms
+step leave unhold n 10 first 0.3 median 0.2 max 0.3 ms
+step leave depart n 10 first 1.9 median 2.0 max 3.3 ms
+step leave music n 10 first 0.1 median 0.1 max 0.2 ms
+boot: OS glyphs found in 12.2 ms; warm slow steps:
+vigil 1st open tap frame: wall 51.3 busy 7.6 process 5.3 draw 2.3 render cpu 0.2
+vigil 1st close tap frame: wall 19.7 busy 10.6 process 9.1 draw 1.5 render cpu 0.3
+title at rest: process P95 7.3 draw P95 11.9
+
+==============================================================================
+acc24e8f (the cue never copied, the hall built ahead), diagnostic build, first launch after its install. Session 3, 16:45. (Its zh-Hant launch ran with the device capped at 30 Hz from 65 to 195 s and is not used.)
+
+-- e-en0
+ipad8-d-acc24e8f-en-full nonce e-en0-1791128716
+title at rest n 1790 P95 17.99 max 35.6 >335 Glassvow QA 909 ms
+settings 1st open tap>moved 44.3/44.3/44.3 frame 29.5/29.5/29.5 pass P95 17.9 max 21.61.
+settings 1st close tap>moved 32.6/32.6/32.6 frame 16.6/16.6/16.6 pass P95 17.1 max 17.8 n 24 >33 0 (P95-title -0.89)
+settings at rest P95 17.52 max 21.9 n 1803 >33 0 (minus title -0.47)
+settings rest open tap>moved 36.6/39.0/44.0 frame 22.2/22.8/26.3 pass P95 17.6 max 23.3 n 278 >33 0 (P95-title -0.43)
+settings rest close tap>moved 31.9/32.6/34.0 frame 15.9/16.8/18.2 pass P95 17.3 max 19.0 n 214 >33 0 (P95-title -0.70)
+help 1st open tap>moved 42.4/42.4/42.4 frame 26.0/26.0/26.0 pass P95 19.0 max 22.0 n 30 >33 0 (P95-title +1.02)
+help 1st close tap>moved 32.4/32.4/32.4 frame 16.2/16.2/16.2 pass P95 17.0 max 17.1 n 24 >33 0 (P95-title -0.97)
+help at rest P95 17.44 max 22.3 n 1803 >33 0 (minus title -0.55)
+help rest open tap>moved 37.2/38.0/44.1 frame 20.9/22.0/28.9 pass P95 17.7 max 24.5 n 278 >33 0 (P95-title -0.32)
+help rest close tap>moved 32.0/32.2/32.7 frame 14.7/16.7/17.1 pass P95 17.3 max 20.6 n 210 >33 0 (P95-title -0.71)
+credits 1st open tap>moved 39.6/39.6/39.6 frame 23.6/23.6/23.6 pass P95 18.5 max 20.7 n 36 >33 0 (P95-title +0.47)
+credits 1st close tap>moved 32.9/32.9/32.9 frame 16.8/16.8/16.8 pass P95 17.5 max 18.6 n 28 >33 0 (P95-title -0.50)
+credits at rest P95 17.89 max 21.7 n 1803 >33 0 (minus title -0.10)
+credits rest open tap>moved 36.3/36.9/37.7 frame 20.1/20.7/21.0 pass P95 17.2 max 23.3 n 324 >33 0 (P95-title -0.74)
+credits rest close tap>moved 32.6/32.8/33.3 frame 16.2/16.6/16.9 pass P95 17.1 max 21.3 n 252 >33 0 (P95-title -0.86)
+vigil 1st open tap>moved 46.7/46.7/46.7 frame 30.4/30.4/30.4 pass P95 22.3 max 28.1 n 34 >33 0 (P95-title +4.34)
+vigil 1st close tap>moved 33.2/33.2/33.2 frame 19.0/19.0/19.0 pass P95 22.2 max 25.2 n 27 >33 0 (P95-title +4.24)
+vigil at rest P95 18.26 max 18.8 n 1803 >33 0 (minus title +0.27)
+vigil rest open tap>moved 31.8/35.6/38.5 frame 19.0/20.6/22.1 pass P95 18.0 max 25.1 n 324 >33 0 (P95-title +0.05)
+vigil rest close tap>moved 30.2/30.7/40.6 frame 15.6/17.9/23.1 pass P95 19.2 max 24.2 n 251 >33 0 (P95-title +1.19)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 26 P50 16.66 P95 18.70 max 28.8 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 94 P50 16.66 P95 18.88 max 22.5 >33 0
+vram MiB: landing 243.8 after warms 301.0 after title rest 301.0 max 302.9 end 302.5
+warm stages (stage@frame/ms): rest@0/23 build4@46/795 build3@47/814 build2@48/830 build1@49/845 shape@50/861 draw@53/911 pipe@70/1195 gone@72/1228
+warm frames over 33 ms: 0
+step vigil new n 10 first 0.3 median 0.3 max 0.3 ms
+step vigil route n 10 first 0.1 median 0.0 max 0.1 ms
+step vigil arrive n 10 first 1.2 median 1.1 max 1.2 ms
+step vigil music n 10 first 0.3 median 0.1 max 0.3 ms
+step leave unhold n 10 first 0.3 median 0.2 max 0.3 ms
+step leave depart n 10 first 2.0 median 2.0 max 3.4 ms
+step leave music n 10 first 0.1 median 0.1 max 0.2 ms
+boot: OS glyphs found in 149.9 ms; warm slow steps: build 5 10.1 ms
+vigil 1st open tap frame: wall 30.4 busy 10.7 process 6.6 draw 4.1 render cpu 0.2
+vigil 1st close tap frame: wall 19.0 busy 9.6 process 8.1 draw 1.4 render cpu 0.3
+title at rest: process P95 7.7 draw P95 11.9
+
+==============================================================================
+011cd483 (the Keeper's haze from a shader, later withdrawn): the hall's first opening on the first launch after install took 1089.6 ms. Final batch session 1, 17:23-17:36.
+
+-- C1-en0
+ipad8-c-011cd483-en-full nonce Cl-en0-1791130993
+title at rest n 1803 P95 18.03 max 25.4 >33 0
+settings 1st open tap>moved 46.8/46.8/46.8 frame 31.3/31.3/31.3 pass P95 19.1 max 20.8 n 31 >33 0 (P95-title +1.09)
+settings 1st close tap>moved 32.4/32.4/32.4 frame 16.9/16.9/16.9 pass P95 17.2 max 18.3 n 24 >33 0 (P95-title -0.87)
+settings at rest P95 17.47 max 21.4 n 1803 >33 0 (minus title -0.56)
+settings rest open tap>moved 36.8/39.8/45.8 frame 20.7/23.4/26.8 pass P95 18.1 max 22.9 n 277 >33 0 (P95-title +0.08)
+settings rest close tap>moved 25.2/32.5/34.0 frame 16.4/16.8/18.6 pass P95 18.0 max 25.0 n 215 >33 0 (P95-title -0.04)
+help 1st open tap>moved 42.2/42.2/42.2 frame 26.1/26.1/26.1 pass P95 20.2 max 20.2 n 30 >33 0 (P95-title +2.17)
+help 1st close tap>moved 32.6/32.6/32.6 frame 17.0/17.0/17.0 pass P95 18.0 max 20.1 n 24 >33 0 (P95-title -0.04)
+help at rest P95 17.56 max 31.5 n 1801 >33 0 (minus title -0.48)
+help rest open tap>moved 35.7/38.1/43.1 frame 21.4/21.9/25.4 pass P95 17.6 max 24.8 n 279 >33 0 (P95-title -0.42)
+help rest close tap>moved 32.0/32.4/32.9 frame 16.2/16.9/17.2 pass P95 17.3 max 22.6 n 211 >33 0 (P95-title -0.76)
+credits 1st open tap>moved 41.1/41.1/41.1 frame 25.2/25.2/25.2 pass P95 19.8 max 22.0 n 35 >33 0 (P95-title +1.72)
+credits 1st close tap>moved 32.6/32.6/32.6 frame 16.8/16.8/16.8 pass P95 17.6 max 19.6 n 28 >33 0 (P95-title -0.45)
+credits at rest P95 17.95 max 21.3 n 1803 >33 0 (minus title -0.09)
+credits rest open tap>moved 35.9/36.6/37.1 frame 19.8/20.6/20.8 pass P95 17.7 max 22.8 n 324 >33 0 (P95-title -0.35)
+credits rest close tap>moved 32.6/32.8/33.0 frame 16.4/16.7/16.9 pass P95 17.4 max 21.2 n 252 >33 0 (P95-title -0.59)
+vigil 1st open tap>moved 1105.6/1105.6/1105.6 frame 1089.6/1089.6/1089.6 pass P95 20.1 max 32.0 n 35 >33 0 (P95-title +2.06)
+vigil 1st close tap>moved 30.0/30.0/30.0 frame 18.2/18.2/18.2 pass P95 20.9 max 22.9 n 28 >33 0 (P95-title +2.83)
+vigil at rest P95 18.38 max 20.1 n 1803 >33 0 (minus title +0.35)
+vigil rest open tap>moved 31.1/34.6/38.3 frame 19.0/20.3/22.3 pass P95 17.7 max 23.7 n 324 >33 0 (P95-title -0.29)
+vigil rest close tap>moved 32.4/33.6/38.9 frame 18.5/19.5/22.1 pass P95 20.7 max 23.3 n 255 >33 0 (P95-title +2.65)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 34 P50 19.40 P95 31.75 max 134.6 >33 1
+warm map only n 0 P50 0,00 P95 0.00 max 0.0 >33 0
+warm neither n 71 P50 16.63 P95 19.78 max 22.6 >33 0
+continue after the tour: ready 1174.4 ms, worst frame 630.2 ms, hall built ahead true
+vram MiB: landing 213.0 after warms 293.5 after title rest 293.5 max 295.4 end 295.2
+warm stages (stage@frame/ms): rest@0/23 build4@47/812 build3@48/832 build2@49/862 build1@57/1163 shape@58/1189 draw@61/1261 pipe@79/1595 gone@81/1628
+warm frames over 33 ms: 1
+long i 57 t 1163 ms: wall 134.6 busy 134.2 (process 133.5, draw 0.7) cpu 0.1 gpu 0.0 pc 0 build1 map false
+step vigil new 10 first 0.7 median 0.3 max 0.7 ms
+step vigil route n 10 first 0.2 median 0.0 max 0.2 ms
+step vigil arrive n 10 first 1.2 median 1.1 max 1.2 ms
+step vigil music n 10 first 1.6 median 0.1 max 1.6 ms
+step leave unhold n 10 first 0.1 median 0.3 max 0.3 ms
+step leave depart n 10 first 1.3 median 2.3 max 3.2 ms
+step leave music n 10 first 0.1 median 0.1 max 0.2 ms
+
+-- C1-zh
+ipad8-c-011¢d483-zh-Hant-full nonce Cl-zh-1791131369
+title at rest n 1802 P95 17.77 max 30.1 >33 0
+settings 1st open tap>moved 44.8/44.8/44.8 frame 30.0/30.0/30.0 pass P95 20.4 max 21.9 n 31 >33 0 (P95-title +2.64)
+settings 1st close tap>moved 32.0/32.0/32.0 frame 16.5/16.5/16.5 pass P95 17.4 max 17.4 n 24 >33 0 (P95-title -0.40)
+settings at rest P95 17.46 max 21.8 n 1803 >33 0 (minus title -0.31)
+settings rest open tap>moved 40.2/43.3/52.4 frame 25.7/27.4/33.2 pass P95 19.4 max 22.3 n 273 >33 0 (P95-title +1.64)
+settings rest close tap>moved 26.1/32.4/32.9 frame 13.2/16.5/17.1 pass P95 17.3 max 21.6 n 214 >33 0 (P95-title -0.50)
+help 1st open tap>moved 44.9/44.9/44.9 frame 28.4/28.4/28.4 pass P95 20.3 max 20.6 n 30 >33 0 (P95-title +2.58)
+help 1st close tap>moved 32.5/32.5/32.5 frame 16.4/16.4/16.4 pass P95 17.1 max 18.1 n 24 >33 0 (P95-title -0.71)
+help at rest P95 17.28 max 21.7 n 1803 >33 0 (minus title -0.48)
+help rest open tap>moved 39.7/41.0/45.7 frame 24.2/25.5/33.4 pass P95 19.0 max 22.7 n 274 >33 0 (P95-title +1.21)
+help rest close tap>moved 26.3/32.3/36.4 frame 16.3/16.6/20.8 pass P95 17.4 max 22.2 n 213 >33 0 (P95-title -0.39)
+credits 1st open tap>moved 43.3/43.3/43.3 frame 27.9/27.9/27.9 pass P95 19.9 max 22.5 n 35 >33 0 (P95-title +2.15)
+credits 1st close tap>moved 35.0/35.0/35.0 frame 19.1/19.1/19.1 pass P95 17.2 max 17.3 n 28 >33 0 (P95-title -0.57)
+credits at rest P95 17.95 max 21.4 n 1803 >33 0 (minus title +0.18)
+credits rest open tap>moved 37.6/39.1/42.3 frame 22.8/23.0/29.9 pass P95 18.4 max 23.7 n 324 >33 0 (P95-title +0.61)
+credits rest close tap>moved 26.6/32.6/32.9 frame 15.3/16.8/18.7 pass P95 17.2 max 20.7 n 252 >33 0 (P95-title -0.57)
+vigil 1st open tap>moved 41.9/41.9/41.9 frame 25.5/25.5/25.5 pass P95 23.0 max 24.1 n 35 >33 0 (P95-title +5.27)
+vigil 1st close tap>moved 32.6/32.6/32.6 frame 26.0/26.0/26.0 pass P95 17.1 max 23.2 n 28 >33 0 (P95-title -0.71)
+vigil at rest P95 20.75 max 24.8 n 1803 >33 0 (minus title +2.98)
+vigil rest open tap>moved 29.9/33.3/41.0 frame 16.2/19.8/22.3 pass P95 17.9 max 22.7 n 323 >33 0 (P95-title +0.14)
+vigil rest close tap>moved 30.7/33.7/41.4 frame 18.0/19.2/24.7 pass P95 21.5 max 23.4 n 252 >33 0 (P95-title +3.74)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 94 P50 23.09 P95 31.27 max 33.9 >33 1
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 31 P50 23.14 P95 31.69 max 33.5 >33 1
+continue after the tour: ready 1133.6 ms, worst frame 577.7 ms, hall built ahead true
+vram MiB: landing 195.7 after warms 283.3 after title rest 283.2 max 285.1 end 284.7
+warm stages (stage@frame/ms): rest@0/21 build4@30/770 build3@31/789 build2@32/816 build1@40/1016 shape@41/1037 draw@57/1433 pipe@122/2932 gone@124/2966
+warm frames over 33 ms: 2
+long i 5 t 150 ms: wall 33.5 busy 33.3 (process 3.1, draw 30.2) cpu 0.1 gpu 0.0 pc 0 rest map false
+long i 49 t 1233 ms: wall 33.9 busy 33.7 (process 6.8, draw 26.9) cpu 0.2 gpu 0.0 pc 0 shape map false
+step vigil new 10 first 0.3 median 0.3 max 0.3 ms
+step vigil route n 10 first 0.0 median 0.0 max 0.0 ms
+step vigil arrive n 10 first 1.7 median 1.6 max 1.7 ms
+step vigil music n 10 first 0.2 median 0.1 max 0.2 ms
+step leave unhold n 10 first 0.1 median 0.2 max 0.3 ms
+step leave depart n 10 first 2.1 median 2.3 max 4.7 ms
+step leave music n 10 first 0.1 median 0.1 max 0.2 ms
+
+==============================================================================
+398e1a23 with its haze shader's code rewritten by a no-op (no pipeline cache could hold it), first launch after install: 1052.2 ms though the rite's frame 0 drew a speck with the haze's material under its cover and RoomWarm's sample was drawn. The shader was withdrawn. Session 3, 18:11.
+
+-- K-en0
+ipad8-k-398e1a23-en-full nonce K-en0-1791133902
+title at rest n 1802 P95 18.02 max 36.9 >33 1
+settings 1st open tap>moved 44.9/44.9/44.9 frame 29.7/29.7/29.7 pass P95 21.3 max 23.7 n 30 >33 0 (P95-title +3.32)
+settings 1st close tap>moved 32.3/32.3/32.3 frame 16.2/16.2/16.2 pass P95 17.9 max 19.2 n 23 >33 0 (P95-title -0.16)
+settings at rest P95 17.43 max 21.5 n 1803 >33 0 (minus title -0.58)
+settings rest open tap>moved 35.6/38.6/40.4 frame 21.6/23.2/28.8 pass P95 18.0 max 23.4 n 279 >33 0 (P95-title +0.02)
+settings rest close tap>moved 26.4/32.4/32.8 frame 15.9/16.5/18.3 pass P95 18.0 max 21.0 n 213 >33 0 (P95-title +0.02)
+help 1st open tap>moved 40.7/40.7/40.7 frame 26.2/26.2/26.2 pass P95 20.1 max 21.7 n 30 >33 0 (P95-title +2.13)
+help 1st close tap>moved 32.0/32.0/32.0 frame 16.5/16.5/16.5 pass P95 17.5 max 19.5 n 23 >33 0 (P95-title -0.52)
+help at rest P95 17.37 max 22.6 n 1803 >33 0 (minus title -0.65)
+help rest open tap>moved 36.1/38.0/39.2 frame 21.4/21.8/22.6 pass P95 17.5 max 24.6 n 279 >33 0 (P95-title -0.48)
+help rest close tap>moved 31.8/32.2/32.9 frame 16.1/16.4/16.9 pass P95 17.6 max 21.0 n 211 >33 0 (P95-title -0.45)
+credits 1st open tap>moved 41.6/41.6/41.6 frame 25.3/25.3/25.3 pass P95 19.4 max 22.4 n 35 >33 0 (P95-title +1.34)
+credits 1st close tap>moved 34.3/34.3/34.3 frame 18.3/18.3/18.3 pass P95 17.0 max 17.0 n 28 >33 0 (P95-title -1.06)
+credits at rest P95 17.96 max 22.2 n 1803 >33 0 (minus title -0.06)
+credits rest open tap>moved 36.0/36.5/37.0 frame 20.1/20.6/21.0 pass P95 17.4 max 21.9 n 324 >33 0 (P95-title -0.67)
+credits rest close tap>moved 32.1/32.8/33.2 frame 15.5/16.7/16.9 pass P95 17.2 max 19.1 n 252 >33 0 (P95-title -0.79)
+vigil 1st open tap>moved 1068.2/1068.2/1068.2 frame 1052.2/1052.2/1052.2 pass P95 19.5 max 28.1 n 35 >33 0 (P95-title +1.47)
+vigil 1st close tap>moved 41.3/41.3/41.3 frame 23.9/23.9/23.9 pass P95 20.4 max 21.6 n 28 >33 0 (P95-title +2.38)
+vigil at rest P95 18.34 max 19.5 n 1803 >33 0 (minus title +0.33)
+vigil rest open tap>moved 32.6/36.6/38.4 frame 19.1/21.0/23.2 pass P95 17.8 max 23.2 n 324 >33 0 (P95-title -0.20)
+vigil rest close tap>moved 31.2/34.8/37.2 frame 15.9/20.5/30.3 pass P95 21.8 max 23.9 n 253 >33 0 (P95-title +3.74)
+warm both n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm rooms only n 35 P50 16.64 P95 22.86 max 26.0 >33 0
+warm map only n 0 P50 0.00 P95 0.00 max 0.0 >33 0
+warm neither n 84 P50 16.67 P95 19.18 max 22.1 >33 0
+continue after the tour: ready 1178.9 ms, worst frame 613.6 ms, hall built ahead true
+vram MiB: landing 213.0 after warms 293.5 after title rest 293.5 max 295.4 end 295.0
+warm stages (stage@frame/ms): rest@0/17 build4@46/787 build3@47/806 build2@48/821 build1@57/966 shape@58/983 draw@61/1034 pipe@79/1354 gone@81/1386
+warm frames over 33 ms: 0
+step vigil new n 10 first 0.3 median 0.3 max 0.3 ms
+step vigil route n 10 first 0.1 median 0.0 max 0.1 ms
+step vigil arrive n 10 first 1.2 median 1.1 max 1.2 ms
+step vigil music n 10 first 0.3 median 0.1 max 0.3 ms
+step leave unhold n 10 first 0.3 median 0.2 max 0.3 ms
+step leave depart n 10 first 3.4 median 2.7 max 3.4 ms
+step leave music n 10 first 0.1 median 0.1 max 0.2 ms
+
+==============================================================================
+The final head's passages frame by frame (pr-c-final-passage_index.py.txt on the rows):
+
+rows-780fc171-F-zh.jsonl  nonce F-zh-1791135394  title at rest P95 17.89
+  V1, the turn west: 4 of 323 frames over (1.2%); by index from the tap: 1: 3, 34: 1
+    median wall by index 1-4: 16.1, 14.4, 16.5, 16.6; last three: 16.8, 16.4, 16.8
+  V3, the turn east: 25 of 253 frames over (9.9%); by index from the tap: 1: 9, 2: 5, 3: 3, 26: 2, 27: 3, 28: 3
+    median wall by index 1-4: 24.3, 19.2, 16.3, 13.5; last three: 17.7, 16.3, 13.5
+rows-780fc171-F-en.jsonl  nonce F-en-1791135769  title at rest P95 17.93
+  V1, the turn west: 6 of 324 frames over (1.9%); by index from the tap: 1: 4, 25: 1, 33: 1
+    median wall by index 1-4: 18.3, 14.7, 13.9, 15.8; last three: 16.6, 16.9, 16.3
+  V3, the turn east: 21 of 251 frames over (8.4%); by index from the tap: 1: 9, 2: 4, 3: 4, 25: 1, 27: 1, 28: 2
+    median wall by index 1-4: 23.9, 18.0, 17.9, 14.8; last three: 16.6, 16.6, 17.2

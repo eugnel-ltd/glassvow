@@ -1,0 +1,225 @@
+"""QA-only diagnostic patch for the #655 PR C batch (never committed, never in
+the game): qa_patch.py, then what the hall's frames pay for on the device.
+
+- Every row carries its process segment (pre_ms: the frame's process step,
+  before its draw), so a frame splits into process and draw.
+- `--bench-room=vigil` tours the Vigil alone.
+- `--vigil-variants`: laps 1-3 as built (A); 4-6 the Keeper without his clip
+  pass and haze (B); 7-9 no firelight (C); 10-12 no legibility band (D); 13-15
+  the road held at the tap on the way in, and the hall hidden at the tap on the
+  way out (E: the passage with only one of the two scenes drawn). The variant
+  is set on the hall as it is built and on every 0.1 s tick.
+- The report adds the first opening's tap frame split, and per variant the
+  passage frames' P50, P95 and max, and the process and draw segments' P95.
+usage: qa_patch_diag.py <worktree> <build-label> | <worktree> --revert"""
+import os
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+W = sys.argv[1]
+subprocess.run([sys.executable, os.path.join(HERE, "qa_patch.py")] + sys.argv[1:], check=True)
+if sys.argv[2] == "--revert":
+    sys.exit(0)
+
+
+def edit(rel, pairs):
+    p = os.path.join(W, rel)
+    s = open(p).read()
+    for a, b in pairs:
+        assert s.count(a) == 1, (rel, a[:80], s.count(a))
+        s = s.replace(a, b)
+    open(p, "w").write(s)
+
+
+edit("tools/qa_rooms_bench.gd", [
+    ('''			row["vram"] = snappedf(''', '''			row["pre_ms"] = float(_qa_pre_us - _start_us) / 1000.0
+			row["vram"] = snappedf('''),
+    ('''				row["pre_ms"] = float(_qa_pre_us - _start_us) / 1000.0
+				var pc: int''', '''				var pc: int'''),
+    ('''	var _qa_pre_us: int = 0
+''', '''	var _qa_pre_us: int = 0
+	var rooms_only: String = ""
+'''),
+    ('''		await _seconds(title_rest)
+		for room: String in ROOMS:
+''', '''		await _seconds(title_rest)
+		for room: String in ROOMS:
+			if not rooms_only.is_empty() and room != rooms_only:
+				continue
+'''),
+])
+
+edit("application/main.gd", [
+    ('''	var bench_title_rest: float = 30.0
+''', '''	var bench_title_rest: float = 30.0
+	var bench_room: String = ""
+'''),
+    ('''		elif arg.begins_with("--warm-arm="):
+''', '''		elif arg.begins_with("--bench-room="):
+			bench_room = arg.trim_prefix("--bench-room=")
+		elif arg == "--vigil-variants":
+			_qa_variants = true
+		elif arg.begins_with("--warm-arm="):
+'''),
+    ('''		_qa_rooms_bench(qa_nonce, bench_act, bench_laps, bench_title_rest)
+''', '''		_qa_rooms_bench(qa_nonce, bench_act, bench_laps, bench_title_rest)
+		_qa_bench_node.set("rooms_only", bench_room)
+'''),
+    ('''	bench.connect("done", _qa_after_tour.bind(bench))
+	add_child(bench)
+''', '''	bench.connect("done", _qa_after_tour.bind(bench))
+	add_child(bench)
+	_qa_bench_node = bench
+	var tick: Timer = Timer.new()
+	tick.wait_time = 0.1
+	tick.autostart = true
+	tick.timeout.connect(_qa_variant_tick)
+	add_child(tick)
+'''),
+    ('''	qa_t = _qa_mark("vigil new", qa_t)
+''', '''	qa_t = _qa_mark("vigil new", qa_t)
+	_qa_apply_variant(screen)
+	qa_t = Time.get_ticks_usec()
+'''),
+    ('''		qa_t = _qa_mark("vigil arrive", qa_t)
+''', '''		qa_t = _qa_mark("vigil arrive", qa_t)
+		if _qa_variant() == "E":
+			title.hold_world(true)
+'''),
+    ('''	qa_t = _qa_mark("leave depart", qa_t)
+''', '''	qa_t = _qa_mark("leave depart", qa_t)
+	if _qa_variant() == "E":
+		vigil.hall().visible = false
+'''),
+    # The report: the first opening's tap frame split and the variants.
+    ('''	var sheet: ColorRect = ColorRect.new()
+''', '''	lines.append_array(_qa_diag_lines(rows))
+	var sheet: ColorRect = ColorRect.new()
+'''),
+])
+
+edit("presentation/ui/room_warm.gd", [
+    ('''			font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px)
+''', '''			var qa_s: int = Time.get_ticks_usec()
+			font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px)
+			var qa_ms: float = float(Time.get_ticks_usec() - qa_s) / 1000.0
+			if qa_ms > 10.0:
+				qa_slow.append("job %.1f ms px %d '%s'" % [qa_ms, px, text.c_escape().left(28)])
+'''),
+    ('''		var room: Control = _builders.front().call()
+''', '''		var qa_b: int = Time.get_ticks_usec()
+		var room: Control = _builders.front().call()
+		var qa_bms: float = float(Time.get_ticks_usec() - qa_b) / 1000.0
+		if qa_bms > 10.0:
+			qa_slow.append("build %d %.1f ms" % [_builders.size(), qa_bms])
+'''),
+])
+open(os.path.join(W, "presentation/ui/room_warm.gd"), "a").write('''
+static var qa_slow: PackedStringArray = PackedStringArray()
+''')
+if "_find_os_glyphs()\n\t_music = MusicBus.new()" in open(os.path.join(W, "application/main.gd")).read():
+    edit("application/main.gd", [
+        ('''	_find_os_glyphs()
+	_music = MusicBus.new()
+''', '''	var qa_g: int = Time.get_ticks_usec()
+	_find_os_glyphs()
+	_qa_glyph_us = Time.get_ticks_usec() - qa_g
+	_music = MusicBus.new()
+'''),
+    ])
+tail = '''
+var _qa_glyph_us: int = -1
+
+
+## QA only: the hall's variants by lap (--vigil-variants), and the lines that
+## say what its frames pay for.
+var _qa_variants: bool = false
+var _qa_bench_node: Node = null
+
+
+func _qa_variant() -> String:
+	if not _qa_variants or _qa_bench_node == null:
+		return "A"
+	var lap: int = _qa_bench_node.get("_lap")
+	return _qa_group(lap)
+
+
+static func _qa_group(lap: int) -> String:
+	if lap <= 3:
+		return "A"
+	var names: Array[String] = ["B", "C", "D", "E"]
+	return names[mini((lap - 4) / 3, 3)]
+
+
+func _qa_apply_variant(screen: VigilScreen) -> void:
+	if screen == null or not _qa_variants:
+		return
+	var v: String = _qa_variant()
+	var hall: VigilHall = screen.hall()
+	var keeper: HearthFigure = hall.keeper()
+	if keeper != null:
+		var sprite: TextureRect = keeper.get_node("Sprite") as TextureRect
+		sprite.clip_children = CanvasItem.CLIP_CHILDREN_DISABLED if v == "B" else CanvasItem.CLIP_CHILDREN_AND_DRAW
+		(sprite.get_node("Haze") as CanvasItem).visible = v != "B"
+	hall.band().visible = v != "D"
+	hall._fire.visible = v != "C"
+
+
+func _qa_variant_tick() -> void:
+	_qa_apply_variant(_route_screen as VigilScreen)
+
+
+func _qa_diag_lines(rows: Array) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	out.append("boot: OS glyphs found in %.1f ms; warm slow steps: %s" % [float(_qa_glyph_us) / 1000.0,
+		" | ".join(RoomWarm.qa_slow)])
+	for r_v: Variant in rows:
+		var r: Dictionary = r_v
+		var lap: int = r.get("lap", 0)
+		var i: int = r.get("i", 0)
+		if str(r.get("room", "")) == "vigil" and lap == 0 and i == 0 and str(r.get("phase", "")) in ["open", "close"]:
+			var wall: float = r.get("wall_ms", 0.0)
+			var busy: float = r.get("busy_ms", 0.0)
+			var pre: float = r.get("pre_ms", 0.0)
+			var cpu: float = r.get("cpu_ms", 0.0)
+			out.append("vigil 1st %s tap frame: wall %.1f busy %.1f process %.1f draw %.1f render cpu %.1f" % [
+				str(r.get("phase", "")), wall, busy, pre, busy - pre, cpu])
+	var title_pre: Array[float] = []
+	var title_draw: Array[float] = []
+	for r_v: Variant in rows:
+		var r: Dictionary = r_v
+		if str(r.get("phase", "")) == "title":
+			var busy: float = r.get("busy_ms", 0.0)
+			var pre: float = r.get("pre_ms", 0.0)
+			title_pre.append(pre)
+			title_draw.append(busy - pre)
+	out.append("title at rest: process P95 %.1f  draw P95 %.1f" % [_qa_q(title_pre, 0.95), _qa_q(title_draw, 0.95)])
+	for g: String in ["A", "B", "C", "D", "E"]:
+		var parts: PackedStringArray = PackedStringArray()
+		for phase: String in ["open", "close"]:
+			var walls: Array[float] = []
+			var pres: Array[float] = []
+			var draws: Array[float] = []
+			for r_v: Variant in rows:
+				var r: Dictionary = r_v
+				var lap: int = r.get("lap", 0)
+				var i: int = r.get("i", 0)
+				var after: float = r.get("after_ms", 1e9)
+				var span: float = r.get("span_ms", 0.0)
+				if str(r.get("room", "")) != "vigil" or lap == 0 or str(r.get("phase", "")) != phase \\
+						or i < 1 or after > span or _qa_group(lap) != g:
+					continue
+				var wall: float = r.get("wall_ms", 0.0)
+				var busy: float = r.get("busy_ms", 0.0)
+				var pre: float = r.get("pre_ms", 0.0)
+				walls.append(wall)
+				pres.append(pre)
+				draws.append(busy - pre)
+			parts.append("%s n %d P50 %.1f P95 %.1f max %.1f (process %.1f draw %.1f)" % [phase, walls.size(),
+				_qa_q(walls, 0.5), _qa_q(walls, 0.95), _qa_q(walls, 1.0), _qa_q(pres, 0.95), _qa_q(draws, 0.95)])
+		out.append("variant %s: %s" % [g, "  |  ".join(parts)])
+	return out
+'''
+open(os.path.join(W, "application/main.gd"), "a").write(tail)
+print("diag patched", W)

@@ -1,0 +1,172 @@
+
+
+
+## QA only: the §11.6 report drawn over the screen once the bench is done, so a
+## screenshot carries it when file copies from the container hang.
+func _qa_bench_report(bench: Node) -> void:
+	var rows: Array = bench.get("_rows")
+	var lines: PackedStringArray = PackedStringArray()
+	lines.append("%s  nonce %s" % [str(bench.get("label")), str(bench.get("nonce"))])
+	var title: Array[float] = []
+	for r_v: Variant in rows:
+		var r: Dictionary = r_v
+		if str(r.get("phase", "")) == "title":
+			var w: float = r.get("wall_ms", 0.0)
+			title.append(w)
+	var tp95: float = _qa_q(title, 0.95)
+	lines.append("title at rest n %d  P95 %.2f  max %.1f  >33 %d" % [title.size(), tp95, _qa_q(title, 1.0),
+		_qa_over(title)])
+	for room: String in ["settings", "help", "credits", "vigil"]:
+		for first: bool in [true, false]:
+			for phase: String in ["open", "close"]:
+				var taps: Array[float] = []
+				var frames: Array[float] = []
+				var inside: Array[float] = []
+				for r_v: Variant in rows:
+					var r: Dictionary = r_v
+					var lap: int = r.get("lap", 0)
+					if str(r.get("room", "")) != room or (lap == 0) != first or str(r.get("phase", "")) != phase:
+						continue
+					var i: int = r.get("i", 0)
+					var wall: float = r.get("wall_ms", 0.0)
+					var after: float = r.get("after_ms", 1e9)
+					var span: float = r.get("span_ms", 0.0)
+					if i == 0:
+						frames.append(wall)
+						if r.has("since_tap_ms"):
+							var tap: float = r["since_tap_ms"]
+							taps.append(tap)
+					elif after <= span:
+						inside.append(wall)
+				if frames.is_empty():
+					continue
+				lines.append("%-8s %s %s tap>moved %s  frame %s  pass P95 %.1f max %.1f n %d >33 %d (P95-title %+.2f)" % [
+					room, "1st " if first else "rest", phase, _qa_mmm(taps), _qa_mmm(frames),
+					_qa_q(inside, 0.95), _qa_q(inside, 1.0), inside.size(), _qa_over(inside),
+					_qa_q(inside, 0.95) - tp95])
+			if first:
+				var rest: Array[float] = []
+				for r_v: Variant in rows:
+					var r: Dictionary = r_v
+					var lap: int = r.get("lap", 0)
+					if str(r.get("room", "")) == room and lap == 0 and str(r.get("phase", "")) == "room":
+						var w: float = r.get("wall_ms", 0.0)
+						rest.append(w)
+				if not rest.is_empty():
+					lines.append("%-8s at rest P95 %.2f max %.1f n %d >33 %d (minus title %+.2f)" % [room,
+						_qa_q(rest, 0.95), _qa_q(rest, 1.0), rest.size(), _qa_over(rest), _qa_q(rest, 0.95) - tp95])
+	for pair: Array in [["both", true, true], ["rooms only", true, false], ["map only", false, true],
+			["neither", false, false]]:
+		var walls: Array[float] = []
+		var want_rooms: bool = pair[1]
+		var want_map: bool = pair[2]
+		for r_v: Variant in rows:
+			var r: Dictionary = r_v
+			var rooms: bool = r.get("room_warm", false)
+			var map: bool = r.get("map", false)
+			if str(r.get("phase", "")) == "warm" and rooms == want_rooms and map == want_map:
+				var wall: float = r.get("wall_ms", 0.0)
+				walls.append(wall)
+		lines.append("warm %-10s n %d  P50 %.2f  P95 %.2f  max %.1f  >33 %d" % [str(pair[0]), walls.size(),
+			_qa_q(walls, 0.5), _qa_q(walls, 0.95), _qa_q(walls, 1.0), _qa_over(walls)])
+	# Video memory (MiB): at the landing, after the warms, after the title's
+	# rest, the most in the run, and at the end.
+	var v_land: float = -1.0
+	var v_warm: float = -1.0
+	var v_title: float = -1.0
+	var v_max: float = -1.0
+	var v_end: float = -1.0
+	var stages: PackedStringArray = PackedStringArray()
+	var last_stage: String = ""
+	var t_ms: float = 0.0
+	var long: PackedStringArray = PackedStringArray()
+	for r_v: Variant in rows:
+		var r: Dictionary = r_v
+		var v: float = r.get("vram", -1.0)
+		var phase: String = str(r.get("phase", ""))
+		if phase == "warm":
+			var wall: float = r.get("wall_ms", 0.0)
+			t_ms += wall
+			if v_land < 0.0:
+				v_land = v
+			v_warm = v
+			var stage: String = str(r.get("stage", ""))
+			var at: int = r.get("i", 0)
+			if stage != last_stage:
+				stages.append("%s@%d/%.0f" % [stage, at, t_ms])
+				last_stage = stage
+			if wall > 33.0 and long.size() < 10:
+				var busy: float = r.get("busy_ms", 0.0)
+				var pre: float = r.get("pre_ms", 0.0)
+				var cpu: float = r.get("cpu_ms", 0.0)
+				var gpu: float = r.get("gpu_ms", 0.0)
+				var pc: int = r.get("pc", 0)
+				long.append("  long i %d t %.0f ms: wall %.1f busy %.1f (process %.1f, draw %.1f) cpu %.1f gpu %.1f pc %d %s map %s" % [
+					at, t_ms, wall, busy, pre, busy - pre, cpu, gpu, pc, stage,
+					str(r.get("map", false))])
+		elif phase == "title":
+			v_title = v
+		v_max = maxf(v_max, v)
+		v_end = v
+	lines.append_array(_qa_continue)
+	lines.append("vram MiB: landing %.1f  after warms %.1f  after title rest %.1f  max %.1f  end %.1f" % [
+		v_land, v_warm, v_title, v_max, v_end])
+	lines.append("warm stages (stage@frame/ms): " + " ".join(stages))
+	lines.append("warm frames over 33 ms: %d" % long.size())
+	lines.append_array(long)
+	for key: Variant in _qa_marks.keys():
+		var values: Array[float] = []
+		for v_v: Variant in _qa_marks[key]:
+			var f: float = v_v
+			values.append(f)
+		lines.append("step %-14s n %d  first %.1f  median %.1f  max %.1f ms" % [str(key), values.size(),
+			values[0] if not values.is_empty() else 0.0, _qa_q(values, 0.5), _qa_q(values, 1.0)])
+	var sheet: ColorRect = ColorRect.new()
+	sheet.color = Color(0.0, 0.0, 0.0, 0.94)
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.z_index = 4000
+	sheet.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(sheet)
+	var text: Label = Label.new()
+	text.text = "\n".join(lines)
+	text.position = Vector2(10.0, 8.0)
+	text.add_theme_font_size_override("font_size", 11)
+	text.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
+	sheet.add_child(text)
+	print("QA_REPORT_BEGIN\n" + "\n".join(lines) + "\nQA_REPORT_END")
+
+
+func _qa_over(values: Array[float]) -> int:
+	var n: int = 0
+	for v: float in values:
+		if v > 33.0:
+			n += 1
+	return n
+
+
+func _qa_q(values: Array[float], share: float) -> float:
+	if values.is_empty():
+		return 0.0
+	var sorted: Array[float] = values.duplicate()
+	sorted.sort()
+	return sorted[clampi(ceili(share * float(sorted.size())) - 1, 0, sorted.size() - 1)]
+
+
+func _qa_mmm(values: Array[float]) -> String:
+	if values.is_empty():
+		return "-"
+	var sorted: Array[float] = values.duplicate()
+	sorted.sort()
+	return "%.1f/%.1f/%.1f" % [sorted[0], sorted[sorted.size() / 2], sorted[sorted.size() - 1]]
+
+
+var _qa_marks: Dictionary = {}
+
+
+func _qa_mark(step: String, since: int) -> int:
+	var now: int = Time.get_ticks_usec()
+	if not _qa_marks.has(step):
+		_qa_marks[step] = []
+	var list: Array = _qa_marks[step]
+	list.append(float(now - since) / 1000.0)
+	return now

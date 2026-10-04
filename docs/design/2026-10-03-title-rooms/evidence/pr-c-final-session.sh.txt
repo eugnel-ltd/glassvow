@@ -1,0 +1,115 @@
+#!/bin/zsh
+# One iPad 8 session of the #655 PR C batch, under the shared batch lock (held
+# from the first install to the last launch, released on any exit). The QA app
+# only (io.fol2.glassvow.qa): every .ipa is checked for that bundle id before it
+# is installed, and nothing is ever uninstalled. Before every launch the QA app
+# installed must still be the one this session installed. Each launch carries a
+# fresh nonce; its report (drawn over the screen by the QA patch once the bench
+# is done) is read off a screenshot, and the nonce and build label are checked
+# on it by OCR: a report without this launch's nonce is discarded. The UDID is
+# read at run time, never written down.
+# usage: session.sh <name> <plan>
+#   plan lines: "install <label>" | "launch <name> <min-wait-s> <args...>" | "rest <s>"
+set -uo pipefail
+NAME=$1; PLAN=$2
+HERE=${0:A:h}
+FLOW=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/device13/flow
+OWNER=rooms-c
+B=io.fol2.glassvow.qa
+OUT=$HERE/sessions/$NAME
+mkdir -p $OUT
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+log() { echo "$(date +%T) $*" | tee -a $OUT/session.log; }
+cleanup() { $FLOW/ipad_lock.sh release $OWNER; log "lock released"; }
+log "acquiring the iPad batch lock as $OWNER ($($FLOW/ipad_lock.sh status))"
+$FLOW/ipad_lock.sh acquire $OWNER 2>>$OUT/lock-wait.log || exit 1
+trap cleanup EXIT
+trap "exit 143" TERM INT HUP
+T0=$(date +%s)
+log "lock held"
+udid() { xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for d in json.load(sys.stdin)["result"]["devices"]:
+    h=d.get("hardwareProperties") or {}
+    if h.get("productType")=="iPad11,6": print(h.get("udid")); break'; }
+app_url() { timeout 120 xcrun devicectl device info apps --device $U --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for a in json.load(sys.stdin)["result"]["apps"]:
+    if a.get("bundleIdentifier")=="io.fol2.glassvow.qa": print(a.get("url"))'; }
+U=$(udid); [[ -n "$U" ]] || { log "no iPad"; exit 1; }
+MINE=""; BUILD=""
+install() {  # label
+  local ipa=$HERE/ipa/$1.ipa
+  [[ -f $ipa ]] || { log "no $ipa"; exit 1; }
+  local id=$(unzip -p $ipa Payload/glassvow.app/Info.plist | plutil -extract CFBundleIdentifier raw -o - -)
+  [[ "$id" == "$B" ]] || { log "$ipa is $id, not $B: not installing"; exit 1; }
+  for attempt in 1 2 3; do
+    if timeout 300 xcrun devicectl device install app --device $U $ipa 2>&1 | sed "s/$U/<device>/g" > $OUT/install-$1.log; then
+      MINE=$(grep -o 'installationURL: [^ ]*' $OUT/install-$1.log | awk '{print $2}' | head -1)
+      [[ -n "$MINE" ]] && break
+    fi
+    log "install $1 attempt $attempt failed"; sleep 5
+  done
+  [[ -n "$MINE" ]] || { log "install $1 failed"; exit 1; }
+  BUILD=$1
+  log "installed $1 (${MINE:h:t})"
+}
+report_up() {  # png -> 0 when the report is on screen
+  python3 - "$1" <<'PY'
+import sys
+from PIL import Image
+im = Image.open(sys.argv[1]).convert("L")
+h = im.histogram(); n = sum(h)
+im = im.rotate(-90, expand=True) if im.width < im.height else im
+top = im.crop((0, 0, 1300, 900)).histogram()
+raise SystemExit(0 if sum(h[:14]) / n >= 0.88 and sum(top[180:]) >= 3000 else 1)
+PY
+}
+launch() {  # name min-wait args...  (min-wait "S+W": a still of the screen at S s, then wait W more)
+  local name=$1 wait=$2; shift 2
+  local shot_at=""
+  if [[ "$wait" == *+* ]]; then shot_at=${wait%%+*}; wait=${wait##*+}; fi
+  local nonce="$name-$(date +%s)"
+  local now_url=$(app_url)
+  [[ "$now_url" == "$MINE" ]] || { log "$name: the QA app is not this session's build ($now_url); stopping"; exit 1; }
+  timeout 120 xcrun devicectl device process launch --terminate-existing --device $U $B -- --rooms-bench --qa-nonce=$nonce "$@" 2>&1 | sed "s/$U/<device>/g" > $OUT/launch-$name.log
+  log "$name: launched $BUILD ($nonce) $*"
+  if [[ -n "$shot_at" ]]; then
+    sleep $shot_at
+    timeout 60 xcrun devicectl device capture screenshot --device $U --destination $OUT/still-$name.png > /dev/null 2>&1
+    log "$name: still taken at $shot_at s"
+  fi
+  sleep $wait
+  local png=$OUT/report-$name.png
+  for k in $(seq 1 40); do
+    if timeout 60 xcrun devicectl device capture screenshot --device $U --destination $png > /dev/null 2>&1 && report_up $png; then
+      python3 -c "
+from PIL import Image
+im=Image.open('$png')
+(im.rotate(-90, expand=True) if im.width < im.height else im).save('$png')"
+      tesseract $png $OUT/report-$name > /dev/null 2>&1
+      if grep -q -- "$nonce" $OUT/report-$name.txt && grep -q -- "$BUILD" $OUT/report-$name.txt; then
+        log "$name: the report is on screen; nonce and build checked"
+      else
+        log "$name: the report is on screen; OCR did not find nonce $nonce and build $BUILD (check by eye)"
+      fi
+      return 0
+    fi
+    sleep 15
+  done
+  log "$name: no report on screen"
+}
+for line in "${(@f)$(grep -v '^#' $PLAN | grep -v '^[[:space:]]*$')}"; do
+  if (( $(date +%s) - T0 > 2280 )); then log "38-minute guard: stopping before '$line'"; break; fi
+  set -- ${=line}
+  case $1 in
+    install) install $2 ;;
+    rest) sleep $2 ;;
+    launch) shift; launch "$@" < /dev/null ;;
+    copy)
+      timeout 300 xcrun devicectl device copy from --device $U --domain-type appDataContainer \
+        --domain-identifier $B --source Documents/bench_rooms.jsonl --destination $OUT/rows-$2.jsonl > /dev/null 2>&1
+      log "copy $2: rc $? ($(grep -c . $OUT/rows-$2.jsonl 2>/dev/null) rows, nonce $(head -c 200 $OUT/rows-$2.jsonl 2>/dev/null | grep -o '"nonce":"[^"]*"'))" ;;
+  esac
+done
+log "session $NAME done in $(( $(date +%s) - T0 )) s"
