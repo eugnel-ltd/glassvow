@@ -118,26 +118,32 @@ static func _write(buffer: PackedFloat32Array, at: int, pose: Transform3D, colou
 
 ## Each kind's tint on its baked colours (linear, against the golden-hour key
 ## light and the stage's grade): a plant takes a colour between the pair, by
-## where it stands and weighted toward the first, at `BRIGHTNESS` of it. The
-## spruce near black-green, the crimson crowns toward the target's crimson
-## (blue lifted, green cut), rust and amber deep and dull so they stay a
-## minority, the olive and dark undergrowth green, the red undergrowth crimson.
+## where it stands and weighted toward the first (half the plants lie within a
+## quarter of the way from it), at `BRIGHTNESS` of it. The spruce near
+## black-green. The crimson crowns and the red undergrowth go scarlet to
+## vermilion: green lifted above blue, because the key light is warm and the
+## grade's contrast clips a dark channel to nothing, so a crown reads crimson
+## unless its green clears the clip. Their first colour is a crown in shadow,
+## their second a lit one, so the lit crowns stand out of a darker wood rather
+## than merging into one mat. Rust and amber deep and dull so they stay a
+## minority. The olive and dark undergrowth and the fern a dark, low-chroma
+## olive-brown (blue lifted, so their lit tips stay olive, not yellow-green).
 const TINTS: Dictionary = {
 	"conifer": [Color(0.78, 1.0, 0.84), Color(0.7, 0.92, 0.8)],
 	"conifer-spire": [Color(0.78, 1.0, 0.84), Color(0.7, 0.92, 0.8)],
 	"conifer-wind": [Color(0.78, 1.0, 0.84), Color(0.7, 0.92, 0.8)],
-	"ember-oak": [Color(0.95, 0.5, 1.5), Color(1.05, 0.66, 1.1)],
-	"ember-round": [Color(0.95, 0.5, 1.5), Color(1.05, 0.66, 1.1)],
-	"rust-oak": [Color(0.72, 0.4, 0.5), Color(0.78, 0.5, 0.5)],
-	"amber-round": [Color(0.62, 0.38, 0.42), Color(0.7, 0.46, 0.44)],
-	"olive-heath": [Color(0.42, 0.74, 0.52), Color(0.5, 0.78, 0.54)],
-	"dark-copse": [Color(0.78, 0.98, 0.82), Color(0.86, 1.0, 0.84)],
-	"ash-heath": [Color(0.98, 0.62, 1.4), Color(1.02, 0.74, 1.1)],
-	"ash-copse": [Color(0.98, 0.62, 1.4), Color(1.02, 0.74, 1.1)],
+	"ember-oak": [Color(0.12, 0.13, 0.13), Color(2.3, 2.6, 2.1)],
+	"ember-round": [Color(0.12, 0.13, 0.13), Color(2.3, 2.6, 2.1)],
+	"rust-oak": [Color(0.25, 0.3, 0.25), Color(0.55, 0.62, 0.5)],
+	"amber-round": [Color(0.22, 0.2, 0.22), Color(0.48, 0.42, 0.44)],
+	"olive-heath": [Color(0.54, 0.84, 1.3), Color(0.6, 0.92, 1.45)],
+	"dark-copse": [Color(1.25, 1.0, 2.3), Color(1.35, 1.05, 2.5)],
+	"ash-heath": [Color(0.14, 0.13, 0.15), Color(1.9, 1.85, 1.8)],
+	"ash-copse": [Color(0.14, 0.13, 0.15), Color(1.9, 1.85, 1.8)],
 	"ash-bramble": [Color(1.0, 0.78, 0.96), Color(1.0, 0.86, 0.9)],
-	"ash-fern": [Color(0.9, 0.92, 0.86), Color(0.96, 0.9, 0.86)],
+	"ash-fern": [Color(0.3, 0.75, 0.22), Color(0.33, 0.8, 0.24)],
 }
-const BRIGHTNESS: Vector2 = Vector2(0.85, 1.13)
+const BRIGHTNESS: Vector2 = Vector2(0.65, 1.15)
 
 
 ## A plant's tint: its kind's pair, varied by where it stands.
