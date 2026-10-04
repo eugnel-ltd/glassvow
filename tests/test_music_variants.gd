@@ -1,7 +1,9 @@
 extends RefCounted
 ## The same-scene alternates (#659): the default holds everywhere but the two
 ## named scenarios, the elite draw stays inside its allowed set, the boss
-## switches on a return, and every named stem ships and imports.
+## switches on a return, and every named stem ships and imports. A track is
+## played as the loaded stream itself, looped in place, never a copy (a copy
+## re-reads the whole MP3 on the frame that asks for it).
 
 const ELITE_SET: Array[String] = ["act4-combat-a", "act4-combat-b", "act4-combat-d"]
 
@@ -14,6 +16,10 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 static func run(fails: Array[String]) -> void:
 	var bus: MusicBus = MusicBus.new()
 	bus._rng.seed = 659
+	var vigil_path: String = MusicBus.paths([&"vigil"])[0]
+	var track: AudioStream = MusicBus.looped(vigil_path)
+	_check(fails, track != null and track == load(vigil_path) and (track as AudioStreamMP3).loop,
+		"a track is not played as the loaded stream itself, looping")
 
 	# Defaults: no context, and unrelated cues, answer with the FILES stem.
 	_check(fails, bus.resolve(&"act4Combat") == "act4-combat", "act4Combat default is C")

@@ -189,12 +189,9 @@ func play(cue: StringName, context: StringName = &"") -> void:
 		if not ResourceLoader.exists(path):
 			push_warning("music: no track for '%s'" % cue)
 			return
-		stream = load(path) as AudioStream
+		stream = looped(path)
 		if stream == null:
 			return
-		stream = stream.duplicate() as AudioStream
-		if stream is AudioStreamMP3:
-			(stream as AudioStreamMP3).loop = true
 	if _fade != null and _fade.is_valid():
 		_fade.kill()
 	_remember(outgoing)
@@ -229,6 +226,18 @@ func play(cue: StringName, context: StringName = &"") -> void:
 	_context = context
 	if not OS.get_environment("GLASSVOW_MUSIC_LOG").is_empty():
 		print("music: cue=%s context=%s stream=%s" % [cue, context, path])
+
+
+## The track at `path`, looping: the loaded (cached) stream itself, looped in
+## place. Only this bus plays these files and it loops every one, so nothing
+## needs an unlooped copy, and a copy is costly: duplicating an MP3 re-reads
+## the whole file (2 to 3 ms on the M1; about 10 ms of the Vigil's first tap
+## frame on the iPad 8, #655 PR C), even when the warm has loaded it ahead.
+static func looped(path: String) -> AudioStream:
+	var stream: AudioStream = load(path) as AudioStream
+	if stream is AudioStreamMP3:
+		(stream as AudioStreamMP3).loop = true
+	return stream
 
 
 ## The files `cues` play by default, for a warm that loads them ahead.
