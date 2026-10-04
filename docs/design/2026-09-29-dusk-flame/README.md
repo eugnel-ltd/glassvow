@@ -341,7 +341,7 @@ Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds 
 3. **2 Oct 2026, 22:12 BST.** **ACCEPT**, on readouts 11–13 and on readout 13's complete §11 table, with one reservation: the fresh-pool Lantern lead, 12.8 pp at V0 (G2 at V0 fresh: FAIL on point, UNDECIDED on interval), carried as a 1.0.x readout. Readout 13 is 1.0's reading of record.
 4. The other graded figures short of their thresholds, and why each gate's intent holds, are recorded in [`docs/rc-bar.md`](../../rc-bar.md) P9 (#685). They are not restated here.
 5. **4 Oct 2026, 12:25 BST.** The owner confirmed: "we have completed game balance for dusk", and activated the Ashwarden programme (#544).
-6. Readout 13 has been reproduced run for run by the repository's readout runner (#684, #544's step P2): 44,012 rows identical to the archive. Its record, `readouts/readout-13-reproduction.md`, lands with #684.
+6. Readout 13 has been reproduced run for run by the repository's readout runner (#684, #544's step P2): 44,012 rows identical to the archive. Its record is [`readouts/readout-13-reproduction.md`](readouts/readout-13-reproduction.md).
 
 **The 1.0.x readout asks** ([readout 13](readouts/readout-13.md), *What the next readout should ask*, items 1 and 5):
 
