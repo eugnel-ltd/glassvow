@@ -107,31 +107,10 @@ func _run() -> void:
 		_set_stop(screen, stop)
 		for frame: int in range(20):
 			await process_frame
-		screen._layout_waystones()
-		screen._push_bands(true)
-		for stone: GlassWaystone in screen._waystones:
-			stone.set_process(false)
-			stone._pulse = GlassWaystone.PULSE_HELD
-			stone.queue_redraw()
-		screen._map_scene.set_live(true)
-		for frame: int in range(12):
-			await process_frame
-		await RenderingServer.frame_post_draw
-		# The land holds still from here: the glyph-less capture differs only
-		# where a glyph was drawn.
-		screen._map_scene.set_live(false)
-		await process_frame
-		await RenderingServer.frame_post_draw
-		var picture: Image = root.get_texture().get_image()
-		var name: String = "a%d-s%d-%s-%s" % [_act, _seed, _shape, stop]
-		picture.save_png(_output.path_join(name + ".png"))
-		for stone: GlassWaystone in screen._waystones:
-			stone._glyph_art.visible = false
-		await process_frame
-		await RenderingServer.frame_post_draw
-		var bare: Image = root.get_texture().get_image()
-		for stone: GlassWaystone in screen._waystones:
-			stone._glyph_art.visible = true
+		var pictures: Array[Image] = await _capture(screen)
+		var picture: Image = pictures[0]
+		var bare: Image = pictures[1]
+		picture.save_png(_output.path_join("a%d-s%d-%s-%s.png" % [_act, _seed, _shape, stop]))
 		var tokens: Array[Dictionary] = _tokens(screen)
 		for token: Dictionary in tokens:
 			var row: Dictionary = _measure(token, tokens, picture, bare)
@@ -149,6 +128,34 @@ func _run() -> void:
 	print("TOKEN_GATE ", JSON.stringify({"act": _act + 1, "seed": _seed, "shape": _shape,
 		"measured": measured, "failed": failed, "skipped": skipped, "worst": worst}))
 	quit(1 if failed > 0 or measured == 0 else 0)
+
+
+## The settled frame, every throb held at its peak, then the same frame with
+## every glyph hidden. The land is held still between the two, so they differ
+## only where a glyph was drawn.
+func _capture(screen: WorldMapScreen) -> Array[Image]:
+	screen._layout_waystones()
+	screen._push_bands(true)
+	for stone: GlassWaystone in screen._waystones:
+		stone.set_process(false)
+		stone._pulse = GlassWaystone.PULSE_HELD
+		stone.queue_redraw()
+	screen._map_scene.set_live(true)
+	for frame: int in range(12):
+		await process_frame
+	await RenderingServer.frame_post_draw
+	screen._map_scene.set_live(false)
+	await process_frame
+	await RenderingServer.frame_post_draw
+	var picture: Image = root.get_texture().get_image()
+	for stone: GlassWaystone in screen._waystones:
+		stone._glyph_art.visible = false
+	await process_frame
+	await RenderingServer.frame_post_draw
+	var bare: Image = root.get_texture().get_image()
+	for stone: GlassWaystone in screen._waystones:
+		stone._glyph_art.visible = true
+	return [picture, bare]
 
 
 ## Act I's journey levels, or the painted acts' camera stops.
