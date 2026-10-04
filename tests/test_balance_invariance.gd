@@ -17,6 +17,8 @@ extends RefCounted
 ## of #544 P6 beside them, pilot `p9` and search `s2`, on one seed a cell and arm
 ## for each player: its own rows move only with a deliberate change to it.
 const Sim: GDScript = preload("res://tools/balance_sim.gd")
+const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
+const Search: GDScript = preload("res://tools/balance_search.gd")
 const ASPECT: String = "duskblade"
 const ARMS: Dictionary = {
 	"C_shatter": ["--way=shatter", "--build=adaptive"],
@@ -165,6 +167,9 @@ static func run(fails: Array[String]) -> void:
 	_check(fails, "", PINS, digests(content, BOTS_1_0, GREEDY_SEEDS, ""))
 	var one_seed: Array[int] = [SEARCH_SEED]
 	_check(fails, "1.1 ", PINS_1_1, digests(content, BOTS_1_1, one_seed, "/p9-s2"))
+	# The bots are static: leave 1.0's selected for the tests that follow.
+	Pilot.select(Pilot.VERSION)
+	Search.select(Search.VERSION)
 
 
 static func _check(fails: Array[String], label: String, pins: Dictionary, now: Dictionary) -> void:
