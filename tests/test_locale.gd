@@ -339,10 +339,12 @@ static func _remaining_run_screen_call_sites(fails: Array[String]) -> void:
 			"_init": ["ui.credits.fontLicences", "ui.credits.engineLicences"],
 		},
 		"res://presentation/run/rose_window_view.gd": {
-			"_pane_copy": ["ui.rose.shardRecoveredStack"],
+			"_fill_glass": ["ui.rose.unknownPane", "ui.rose.dormantPane",
+				"ui.rose.shardRecoveredShort", "ui.rose.paneDark"],
 			"_detail_copy": ["ui.rose.shardRecoveredStack", "ui.rose.paneDark"],
 			"_pane_accessible_name": ["ui.rose.dormantPane", "ui.rose.unknownPane"],
 			"_add_replay": ["ui.rose.replayUnsealing"],
+			"_build_log": ["ui.rose.whisperLogTitleUpper", "ui.rose.finalWhisperMark"],
 		},
 		"res://presentation/ui/components/leadlight_rose.gd": {
 			"_init": ["ui.rose.openLabel"],
