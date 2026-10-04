@@ -258,10 +258,12 @@ kept, with the date each part stopped being in force, under *History* at the end
 - **1.1: both classes, on the combined product.** Each class gets its own verdict: the
   Ashwarden on its own lock and readings, built from the
   [class template](design/2026-09-29-dusk-flame/ways-template.md), and the Duskblade
-  requalified under the 1.1 instrument (search player `s2`) on the combined product. The 1.0
-  verdict does not carry into 1.1: the requalification replaces it there, and readout 13 stays
-  1.0's reading of record. The gap between the classes is reported, not gated (#544's plan of
-  record, decisions 4 and 5).
+  requalified under the 1.1 instrument (pilot `p9`, search player `s2`, accepted on
+  [readout 14](design/2026-09-29-dusk-flame/readouts/readout-14.md)) on the combined product.
+  The 1.0 verdict does not carry into 1.1: the requalification replaces it there, and readout
+  13 stays 1.0's reading of record. On 1.0's content the Duskblade does not yet requalify; its
+  one open item is the fresh-pool Lantern lead (the lock's §11, *Verdict*, item 7). The gap
+  between the classes is reported, not gated (#544's plan of record, decisions 4 and 5).
 
 **The verdict.** For each shipped class P9 records one verdict, **ACCEPT** or **NOT ACCEPTED**,
 on whether the design's intent holds: the three ways are viable and comparable; commitment is
