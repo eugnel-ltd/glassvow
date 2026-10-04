@@ -32,7 +32,7 @@ are superseded where this page gives new ones.
 | `f11570e9` | The impostor bake and pack (`tools/map_atelier/journey/impostors/`) and the v1 atlases (`assets/art/map-journey/impostors/`), lane picks. |
 | `76de88ce` | The impostor runtime: `impostor_atlas.gd`, `wood_planting.gd`, `impostor_wood.gd`, `impostor.gdshader`; the kit hands its seven foliage kinds to the wood. Tests: `tests/test_map_wood.gd`. |
 | `993f9cd3` | The wood checks a river bank exactly instead of widening the water. |
-| `b1561b62` | `test_map_open_cache`'s binding check runs on the painted landscape again (on main it died on a null node since R1, a SCRIPT ERROR in every full run). |
+| `b1561b62` | `test_map_open_cache`'s binding check ran on the painted landscape again (on main it died on a null node since R1, a SCRIPT ERROR in every full run). Superseded on the rebase: main carries the same fix from R3.1 a (#674), and `55182330` keeps main's. |
 | `5771e0dd`, `af34d97a` | Planting cost: deck samples spaced along each bridge, the fit test's pitch and tile shifts worked out once. |
 | `abed6306` | Fix round: the picture-plane grid in its own file (`wood_sight.gd`), no behaviour change. |
 | `d9939e61` | Fix round: the atlas takes each texture from the loader once, and a texture that cannot load ends the wait (the land opens without its woodland); `Kit.preload_ms` counts the atlas. |
@@ -260,6 +260,15 @@ might consult an Opus designer. The orchestrator's call:
 - **What the pass found** (for the orchestrator): the grade's contrast,
   not the tint, holds the pad's Journey 0.4 points above the red-share
   band ([open issue 11](#open-issues)).
+- **The orchestrator's ruling on that miss** (4 October 2026): the band
+  stays as set before the measurement; it is not widened to admit 16.7%.
+  The miss is recorded as a known residual of one view, owned by the light
+  and lens step (R3.6), which must bring the pad's Journey inside 6.3–16.3%
+  by lifting the grade's floor. The wood ships as the lane's pick with it,
+  because every other view meets the band, the hue bands match the
+  target's, and the remaining tint moves would make the wood darker or
+  pink. The device re-check of this head also reads the hue bands on the
+  iPad 8, which showed more crimson than the Mac before the pass.
 
 ## R2's review notes, carried
 
@@ -471,8 +480,8 @@ touch square). Every finding was real; none is rejected.
    (`bind_habitat`) still follows the kit's own foliage only; the floor
    (R3.2) should take the wood's plants.
 9. **`test_map_open_cache`** died on a null node on main since R1 (a SCRIPT
-   ERROR in every full run): fixed here in its own commit (`b1561b62`).
-   Branch A meets the same line; keep one fix.
+   ERROR in every full run). Closed: R3.1 a (#674) fixed it on main, and on
+   the rebase this branch dropped its own fix for main's (`55182330`).
 10. **Measurement worktrees.** The device builds came from scratch worktrees
     (`r31b/ctl-wt` at `8815da34`, `r31b/dev-wt` at the head) with the probe
     hook applied uncommitted; this branch never carries it. The QA app on
