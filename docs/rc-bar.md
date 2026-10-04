@@ -273,7 +273,7 @@ delegation of design calls (2026-09-30). An ACCEPT may carry named reservations:
 figures and the readout that will answer it. A reservation is part of the verdict, not a
 waiver. P9 passes only on ACCEPT.
 
-**Which gates block and which are readings.** The arms, gates and thresholds are the lock's §11
+**Which gates are graded and which are readings.** The arms, gates and thresholds are the lock's §11
 as it stood at the reading of record, with its recorded amendments (G5's fresh-pool figure,
 readout 5; G3 and G6 against A_lit, readout 10; G5 over survivors and the committed bot
 `p8-d0-v3`, readout 13). The bar accepts no other thresholds.
@@ -281,17 +281,18 @@ readout 5; G3 and G6 against A_lit, readout 10; G5 over survivors and the commit
 | Gate | Role | How it is read |
 |---|---|---|
 | G1 viability | reading | Reported in every graded cell, point and 95% interval (owner ruling, 2026-09-30: "it is okay to be hard, this is roguelike") |
-| G2 parity | blocks | Best committed way minus worst, at each vow |
-| G3 skill | blocks | Against arm A_lit, the adaptive player that reads its own flame (from readout 10), and paired on common seeds (from readout 13). Arm A's row is the commit-blind floor, reported |
+| G2 parity | graded | Best committed way minus worst, at each vow |
+| G3 skill | graded | Against arm A_lit, the adaptive player that reads its own flame (from readout 10), and paired on common seeds (from readout 13). Arm A's row is the commit-blind floor, reported |
 | G4 random loses | reading | Reported in every graded cell, point and 95% interval (owner ruling, 2026-09-30) |
-| G5 reachability | blocks | Over the runs alive at the act's end, with the all-runs figure beside it (from readout 13) |
-| G6 diversity of adaptive play | blocks | Among A_lit's wins (from readout 10). Arm A's row is the floor, reported |
-| G7 guards | blocks; never weighed against intent | Zero stalls and errors; deterministic replay; the CEM stress's Vow-5 ceiling read on holdout numbers only (training fitness never enters the receipt as a ceiling); save lineage and internal IDs unchanged. The lock's §12 invariants bind the candidate: no save-schema change, IDs only added, and `port_fixtures/` moved only in an explicit commit that says why |
-| B bot round | blocks | Both parts of the lock's row B, played by the search player: every committed way wins at V0, and every way has a feel. Row B replaced the human round H (owner ruling, 2026-10-01) |
+| G5 reachability | graded | Over the runs alive at the act's end, with the all-runs figure beside it (from readout 13) |
+| G6 diversity of adaptive play | graded | Among A_lit's wins (from readout 10). Arm A's row is the floor, reported |
+| G7 guards | graded; a miss is always NOT ACCEPTED | Zero stalls and errors; deterministic replay; the CEM stress's Vow-5 ceiling read on holdout numbers only (training fitness never enters the receipt as a ceiling); save lineage and internal IDs unchanged. The lock's §12 invariants bind the candidate: no save-schema change, IDs only added, and `port_fixtures/` moved only in an explicit commit that says why |
+| B bot round | graded | Both parts of the lock's row B, played by the search player: every committed way wins at V0, and every way has a feel. Row B replaced the human round H (owner ruling, 2026-10-01) |
 
-- **A blocking gate** is one the verdict must answer. ACCEPT needs the intent each blocking
-  gate measures to hold in every graded cell, so a blocking gate whose intent fails makes the
-  verdict NOT ACCEPTED, whatever the other gates show. Every blocking-gate figure short of its
+- **A graded gate** is one the verdict must answer; under the owner's ruling of 2026-10-02 its
+  threshold is evidence, not a switch. ACCEPT needs the intent each graded gate measures to hold
+  in every graded cell, so a graded gate whose intent fails makes the verdict NOT ACCEPTED,
+  whatever the other gates show. Every graded-gate figure short of its
   threshold, on point or on interval, stands in the verdict record: the reading's complete §11
   table and the verdict. A miss the verdict judges to need further work is carried as a named
   reservation. A G7 miss is never weighed against intent: it is NOT ACCEPTED.
@@ -328,7 +329,7 @@ the readout whose complete §11 table it was given on.
      reading's cell table is played again with the instrument of record (pilot `p8-d0-v3`,
      search player `s1`) on the bands of record, and every report's manifest names the RC
      commit, the content SHA-256, the pilot and the search player. It agrees with the reading of
-     record on every blocking gate's verdict, on point and on interval, in every graded cell; the
+     record on every graded gate's verdict, on point and on interval, in every graded cell; the
      numbers need not match (owner ruling, 2026-09-27). A run under another instrument, such as
      1.1's `s2`, is a new reading, not this re-run. The Flame is code as well as content, so the
      re-run binds the commit and the verdict binds the content it was given on.
@@ -340,10 +341,10 @@ the readout whose complete §11 table it was given on.
 verdict on readouts 11–13, given on 2 October 2026 at 22:12 BST on readout 13's complete §11
 table. The reservation is the fresh-pool Lantern lead, 12.8 pp at V0 (G2 at V0 fresh, the
 Lantern over Shatter, +8.9 to +16.6 pp: FAIL on point, UNDECIDED on interval), carried as a
-1.0.x readout and not a blocker (readout 13, *What the next readout should ask*, item 1). It
+1.0.x readout, not a reason to withhold the ACCEPT (readout 13, *What the next readout should ask*, item 1). It
 replaced that morning's verdict, NOT ACCEPTED on two product grounds in the full pool (Edge
 monoculture, G6; True unreachable, G5), which readouts 11–13 resolved. It carries no other
-reservation. The other blocking-gate figures short of their thresholds in readout 13, all
+reservation. The other graded-gate figures short of their thresholds in readout 13, all
 listed in its *Decision*, are G3 at V5 full (A_lit 3.5 pp behind committed Shatter on 4,000
 common seeds, −5.0 to −2.0 pp: FAIL on point, UNDECIDED on interval) and A_lit's feel at V0
 fresh (row B's second part, 59.2% against 60%: a decided FAIL). G1 and G4 fail in readout 13 as
