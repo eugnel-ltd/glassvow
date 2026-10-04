@@ -345,6 +345,380 @@ class TableTests(unittest.TestCase):
             tables.tidy_gates(tables.full_table(self.dir / "v0", self.dir / "v5", seeds, seeds))
 
 
+# ---------------------------------------------------------------- runner, chunks and merge
+
+def fake_simulator(drop: set[str] | None = None, tweak=None):
+    """A runner that writes the report `balance_sim.gd` would, from the command's own arguments."""
+    calls: list[list[str]] = []
+
+    def run(command: list[str], log: Path) -> int:
+        args = dict(a[2:].split("=", 1) for a in command if a.startswith("--") and "=" in a)
+        calls.append(command)
+        first, count = int(args["seed0"]), int(args["runs"])
+        arm = next(k for k, (way, build) in bw.ARMS.items() if (way, build) == (args["way"], args["build"]))
+        report = {"manifest": manifest(int(args["vow"]), args["pool"], arm,
+                                       seeds={"first": first, "last": first + count - 1, "count": count}),
+                  "runs": [run_row(first + i, i % 2 == 0, args["way"]) for i in range(count)]}
+        if tweak:
+            tweak(args, report)
+        Path(args["out"]).write_text(json.dumps(report))
+        log.write_text("ok")
+        return 0
+    run.calls = calls
+    return run
+
+
+IDENTITY = {"content": "c0ffee", "tools": {"tools/balance_sim.gd": "aa"}}
+
+
+class ChunkAndMergeTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / "override.cfg").write_text(OVERRIDE)
+        self.out = self.root / "out"
+        self.addCleanup(self.tmp.cleanup)
+
+    def plan(self, **kwargs):
+        defaults = dict(seeds=(13000, 13009), cells=["v0-fresh"], arms=["C_edge", "A"], chunk=4, play="search")
+        defaults.update(kwargs)
+        return runner.plan(self.out, **defaults)
+
+    def run_all(self, work, simulator=None, who=IDENTITY, jobs=2):
+        simulator = simulator or fake_simulator()
+        return runner.run_chunks(work, who, jobs, runner=simulator, root=self.root, progress=lambda text: None), simulator
+
+    def test_plan_splits_each_arm_into_chunks_and_adds_the_replay(self) -> None:
+        work = self.plan(replay=True)
+        sizes = [(c.report, c.first, c.count) for c in work]
+        self.assertEqual([("v0-fresh-C_edge", 13000, 4), ("v0-fresh-C_edge", 13004, 4), ("v0-fresh-C_edge", 13008, 2),
+                          ("v0-fresh-A", 13000, 4), ("v0-fresh-A", 13004, 4), ("v0-fresh-A", 13008, 2),
+                          ("v0-fresh-replay", 13000, bw.REPLAY)], sizes)
+        command = work[0].command
+        self.assertEqual(["godot", "--headless", "-s", "res://tools/balance_sim.gd", "--"], command[:5])
+        for flag in ("--aspect=duskblade", "--vow=0", "--runs=4", "--seed0=13000", "--pool=fresh", "--way=edge",
+                     "--build=adaptive", "--play=search"):
+            self.assertIn(flag, command)
+        self.assertIn("--way=none", work[-1].command)  # the replay is arm A
+        self.assertNotIn("--play=search", self.plan(play="greedy")[0].command)
+
+    def test_plan_passes_weights_and_content_through_to_committed_arms_only(self) -> None:
+        work = self.plan(weights=(2.0, 1.0), content=Path("/x/c.json"))
+        self.assertIn("--wayCommit=2.0", work[0].command)
+        self.assertIn("--content=/x/c.json", work[0].command)
+        self.assertFalse(any(a.startswith("--wayCommit") for a in work[-1].command))
+
+    def test_plan_refuses_bad_input(self) -> None:
+        for kwargs in ({"arms": ["C_nope"]}, {"cells": ["v3-full"]}, {"cells": ["v0-mature"]}, {"cells": ["fresh"]},
+                       {"chunk": 0}):
+            with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
+                self.plan(**kwargs)
+
+    def test_run_merge_and_resume(self) -> None:
+        work = self.plan(replay=True)
+        ran, simulator = self.run_all(work)
+        self.assertEqual(len(work), ran)
+        names = runner.merge_parts(self.out, work)
+        self.assertEqual(["v0-fresh-A", "v0-fresh-C_edge", "v0-fresh-replay"], names)
+        merged = json.loads((self.out / "v0-fresh-C_edge.json").read_text())
+        self.assertEqual(list(range(13000, 13010)), [row["seed"] for row in merged["runs"]])
+        self.assertEqual({"first": 13000, "last": 13009, "count": 10}, merged["manifest"]["seeds"])
+        self.assertEqual(3, merged["manifest"]["chunks"])
+        sidecar = json.loads(work[0].sidecar.read_text())
+        self.assertEqual(IDENTITY, sidecar["identity"])
+        self.assertEqual(([13000, 13003], "v0-fresh", "C_edge"), (sidecar["seeds"], sidecar["cell"], sidecar["arm"]))
+        before = len(simulator.calls)
+        ran, _ = self.run_all(work, simulator)  # resumable: everything is done
+        self.assertEqual((0, before), (ran, len(simulator.calls)))
+
+    def test_an_interrupted_run_resumes_only_the_missing_chunks(self) -> None:
+        work = self.plan()
+        self.run_all(work)
+        work[2].sidecar.unlink()  # that chunk did not finish
+        ran, simulator = self.run_all(work)
+        self.assertEqual(1, ran)
+        self.assertIn("--seed0=13008", simulator.calls[0])
+
+    def test_resuming_with_other_content_or_tools_is_refused(self) -> None:
+        work = self.plan()
+        self.run_all(work)
+        for who in ({"content": "other", "tools": IDENTITY["tools"]}, {"content": "c0ffee", "tools": {"tools/balance_sim.gd": "bb"}}):
+            with self.subTest(who=who), self.assertRaises(RuntimeError) as ctx:
+                self.run_all(work, who=who)
+            self.assertIn("different content or simulator sources", str(ctx.exception))
+
+    def test_a_failing_or_silent_simulator_stops_the_run(self) -> None:
+        work = self.plan()
+
+        def fail(command, log):
+            raise RuntimeError("exit 1")
+        with self.assertRaises(RuntimeError):
+            self.run_all(work, fail)
+        with self.assertRaises(RuntimeError) as ctx:
+            self.run_all(work, lambda command, log: 0)
+        self.assertIn("wrote no report", str(ctx.exception))
+        self.assertFalse(any(c.sidecar.exists() for c in work))
+
+    def merge_after(self, tweak, **kwargs):
+        work = self.plan(**kwargs)
+        self.run_all(work, fake_simulator(tweak=tweak))
+        return work
+
+    def test_merge_refuses_chunks_from_different_content(self) -> None:
+        def tweak(args, report):
+            if args["seed0"] == "13004" and args["way"] == "edge":
+                report["manifest"]["contentFileSha256"] = "other"
+        with self.assertRaises(ValueError) as ctx:
+            runner.merge_parts(self.out, self.merge_after(tweak))
+        self.assertIn("contentFileSha256", str(ctx.exception))
+        self.assertIn("refusing to merge", str(ctx.exception))
+
+    def test_merge_refuses_chunks_from_different_tools_or_instruments(self) -> None:
+        for key, value in (("driverSha256", "x"), ("pilot", "p9"), ("commit", "def"), ("godot", "4.8"),
+                           ("play", "greedy"), ("policy", {"wayCommit": 2.0, "wayOff": 1.0})):
+            with self.subTest(key=key), tempfile.TemporaryDirectory() as tmp:
+                self.out = Path(tmp) / "out"
+                def tweak(args, report, key=key, value=value):
+                    if args["seed0"] == "13004" and args["way"] == "edge":
+                        report["manifest"][key] = value
+                with self.assertRaises(ValueError) as ctx:
+                    runner.merge_parts(self.out, self.merge_after(tweak))
+                self.assertIn(key, str(ctx.exception))
+
+    def test_merge_refuses_chunk_sidecars_from_different_tools(self) -> None:
+        work = self.plan()
+        self.run_all(work)
+        side = json.loads(work[1].sidecar.read_text())
+        side["identity"]["tools"]["tools/balance_sim.gd"] = "zz"
+        work[1].sidecar.write_text(json.dumps(side))
+        with self.assertRaises(ValueError) as ctx:
+            runner.merge_parts(self.out, work)
+        self.assertIn("different content or tools", str(ctx.exception))
+
+    def test_merge_refuses_a_gap_a_wrong_band_and_a_mislabelled_cell(self) -> None:
+        work = self.plan()
+        self.run_all(work)
+        edge = [c for c in work if c.arm == "C_edge"]
+        with self.assertRaises(ValueError):
+            runner.merge_parts(self.out, [c for c in work if c is not edge[1]])  # a gap in the seeds
+        with self.assertRaises(ValueError) as ctx:
+            runner.merge_report("v0-fresh-C_edge", [c.part for c in edge[:2]], (13000, 13009))
+        self.assertIn("not the planned", str(ctx.exception))
+        self.out = self.root / "mislabelled"
+        mislabelled = self.merge_after(lambda args, report: report["manifest"].update(pool="full"), arms=["A"])
+        with self.assertRaises(ValueError) as ctx:
+            runner.merge_parts(self.out, mislabelled)
+        self.assertIn("not this cell and arm", str(ctx.exception))
+
+    def test_merge_refuses_overlapping_chunks(self) -> None:
+        work = self.plan(arms=["A"])
+        self.run_all(work)
+        copy_part = work[0].part.with_name("v0-fresh-A-13002.json")
+        copy_part.write_text(work[0].part.read_text())
+        with self.assertRaises(ValueError) as ctx:
+            runner.merge_report("v0-fresh-A", [c.part for c in work] + [copy_part])
+        self.assertIn("overlap", str(ctx.exception))
+
+    def test_merge_directory_merges_an_archive_of_chunks_without_a_plan(self) -> None:
+        work = self.plan()
+        self.run_all(work)
+        for c in work:
+            c.sidecar.unlink()
+        names = runner.merge_directory(self.out, self.root / "merged")
+        self.assertEqual(["v0-fresh-A", "v0-fresh-C_edge"], names)
+        self.assertEqual(10, len(json.loads((self.root / "merged/v0-fresh-A.json").read_text())["runs"]))
+        with self.assertRaises(ValueError):
+            runner.merge_directory(self.root / "merged")
+
+    def band(self, name: str, first: int, last: int, **manifest_extra) -> Path:
+        d = self.root / name
+        d.mkdir()
+        runs = [run_row(seed, seed % 2 == 0, "edge") for seed in range(first, last + 1)]
+        m = manifest(0, "full", "C_edge", **manifest_extra)
+        m["seeds"] = {"first": first, "last": last, "count": len(runs)}
+        (d / "v0-full-C_edge.json").write_text(json.dumps({"manifest": m, "runs": runs}))
+        return d
+
+    def test_join_bands_concatenates_in_seed_order_and_refuses_mixed_instruments(self) -> None:
+        lower, upper = self.band("lo", 13000, 13003), self.band("hi", 13004, 13007)
+        summary = runner.join_bands(self.root / "joined", "v0-full", ["C_edge"], [upper, lower])
+        self.assertEqual({"C_edge": (8, 13000, 13007)}, summary)
+        joined = json.loads((self.root / "joined/v0-full-C_edge.json").read_text())
+        self.assertEqual({"first": 13000, "last": 13007, "count": 8}, joined["manifest"]["seeds"])
+        other = self.band("other", 13008, 13009, contentFileSha256="different")
+        with self.assertRaises(ValueError) as ctx:
+            runner.join_bands(self.root / "bad", "v0-full", ["C_edge"], [lower, other])
+        self.assertIn("contentFileSha256", str(ctx.exception))
+        again = self.band("again", 13002, 13005)
+        with self.assertRaises(ValueError) as ctx:
+            runner.join_bands(self.root / "bad2", "v0-full", ["C_edge"], [lower, again])
+        self.assertIn("overlap", str(ctx.exception))
+
+    def test_the_identity_digests_content_and_the_simulator_sources(self) -> None:
+        (self.root / "content").mkdir()
+        (self.root / "tools").mkdir()
+        (self.root / "content/full-content.json").write_text("{}")
+        (self.root / "tools/balance_sim.gd").write_text("a")
+        first = runner.identity(self.root, None)
+        self.assertEqual(["tools/balance_sim.gd"], list(first["tools"]))
+        (self.root / "tools/balance_sim.gd").write_text("b")
+        self.assertNotEqual(first, runner.identity(self.root, None))
+        scratch = self.root / "scratch.json"
+        scratch.write_text('{"x": 1}')
+        self.assertNotEqual(first["content"], runner.identity(self.root, scratch)["content"])
+
+
+class CompareTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.addCleanup(self.tmp.cleanup)
+
+    def write(self, name: str, mutate=None) -> Path:
+        d = self.root / name
+        d.mkdir()
+        runs = [run_row(13000 + i, i % 2 == 0, "edge") for i in range(6)]
+        report = {"manifest": manifest(0, "full", "C_edge"), "runs": runs}
+        if mutate:
+            mutate(report)
+        (d / "v0-full-C_edge.json").write_text(json.dumps(report))
+        return d
+
+    def test_identical_rows_match_even_when_the_commit_differs(self) -> None:
+        a, b = self.write("a"), self.write("b", lambda r: r["manifest"].update(commit="later"))
+        results = compare.compare_directories(a, b)
+        self.assertTrue(compare.identical(results))
+        self.assertEqual((6, 6, ["commit"]), (results[0].rows, results[0].identical, results[0].manifest_differences))
+        self.assertEqual(compare.digest_rows(json.loads((a / "v0-full-C_edge.json").read_text())["runs"]),
+                         compare.digest_rows(json.loads((b / "v0-full-C_edge.json").read_text())["runs"]))
+
+    def test_a_differing_field_and_a_missing_seed_are_reported(self) -> None:
+        def mutate(report):
+            report["runs"][2]["gold"] = 99
+            del report["runs"][5]
+        a, b = self.write("a"), self.write("b", mutate)
+        result = compare.compare_directories(a, b)[0]
+        self.assertFalse(compare.identical([result]))
+        self.assertEqual([(13002, ["gold"])], result.differing)
+        self.assertEqual([13005], result.missing)
+        self.assertEqual(4, result.identical)
+        self.assertIn("seed 13002 differs in: gold", compare.render([result]))
+
+    def test_the_cli_exits_two_on_a_difference(self) -> None:
+        a = self.write("a")
+        b = self.write("b", lambda r: r["runs"][0].update(outcome="loss"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, readout.main(["compare", str(a), str(a)]))
+            self.assertEqual(2, readout.main(["compare", str(a), str(b)]))
+
+    def test_chunks_are_merged_on_the_fly_when_no_merged_report_was_kept(self) -> None:
+        d = self.root / "archive"
+        (d / "parts").mkdir(parents=True)
+        for first in (13000, 13003):
+            runs = [run_row(seed, seed % 2 == 0, "edge") for seed in range(first, first + 3)]
+            m = manifest(0, "full", "C_edge", seeds={"first": first, "last": first + 2, "count": 3})
+            (d / "parts" / f"v0-full-C_edge-{first}.json").write_text(json.dumps({"manifest": m, "runs": runs}))
+        result = compare.compare_directories(d, self.write("b"))[0]
+        self.assertEqual((6, 6), (result.rows, result.identical))
+
+
+# ---------------------------------------------------------------- candidate catalogues
+
+CONTENT = json.dumps({
+    "ways": [
+        {"id": "shatter", "affinity": {"heavyBlow": 1.0, "cleave": 1.0}},
+        {"id": "lantern", "affinity": {"aegis": 2.0, "preparation": 3.0}},
+    ],
+    "flame": {"trueMin": 0.8, "steadyFirstGain": 2},
+    "cards": {
+        "hearthfall": {
+            "text": "Gain 4 block. Amber flame: gain 1 Ember.",
+            "effects": [{"kind": "block", "n": 4}, {"kind": "ember", "n": 1, "lit": "lantern"}],
+            "up": {"effects": [{"kind": "block", "n": 6}, {"kind": "ember", "n": 1, "lit": "lantern"}]},
+        },
+        "spall": {"text": "Deal 6.", "effects": [{"kind": "damage", "n": 6}]},
+    },
+}, indent=2)
+
+SPEC = {
+    "k1": [{"lever": "affinity", "way": "shatter", "card": "heavyBlow", "weight": 3.0},
+           {"lever": "affinity", "way": "shatter", "card": "spall", "weight": 0.5}],
+    "k2": [{"lever": "knob", "key": "trueMin", "old": "0.8", "new": "0.75"}],
+    "k3": [{"lever": "affinity", "way": "lantern", "card": "aegis", "weight": None}],
+    "k4": [{"lever": "strip_rider", "card": "hearthfall", "effect": {"kind": "ember", "n": 1, "lit": "lantern"},
+            "text": " Amber flame: gain 1 Ember."}],
+}
+
+
+class CatalogueTests(unittest.TestCase):
+    def test_each_lever_changes_only_what_it_names(self) -> None:
+        base = json.loads(CONTENT)
+        k1 = json.loads(catalogue.build(CONTENT, SPEC, "k1"))
+        self.assertEqual({"heavyBlow": 3.0, "cleave": 1.0, "spall": 0.5}, k1["ways"][0]["affinity"])
+        self.assertEqual(base["ways"][1], k1["ways"][1])
+        k2 = json.loads(catalogue.build(CONTENT, SPEC, "k2"))
+        self.assertEqual(0.75, k2["flame"]["trueMin"])
+        self.assertEqual(base["cards"], k2["cards"])
+        k3 = json.loads(catalogue.build(CONTENT, SPEC, "k3"))
+        self.assertEqual({"preparation": 3.0}, k3["ways"][1]["affinity"])
+        k4 = json.loads(catalogue.build(CONTENT, SPEC, "k4"))
+        card = k4["cards"]["hearthfall"]
+        self.assertEqual([{"kind": "block", "n": 4}], card["effects"])
+        self.assertEqual([{"kind": "block", "n": 6}], card["up"]["effects"])
+        self.assertEqual("Gain 4 block.", card["text"])
+        self.assertEqual(base["cards"]["spall"], k4["cards"]["spall"])
+
+    def test_levers_join_with_a_plus(self) -> None:
+        both = json.loads(catalogue.build(CONTENT, SPEC, "k2+k3"))
+        self.assertEqual(0.75, both["flame"]["trueMin"])
+        self.assertEqual({"preparation": 3.0}, both["ways"][1]["affinity"])
+
+    def test_levers_that_cannot_apply_exactly_are_refused(self) -> None:
+        bad = {"nowhere": [{"lever": "affinity", "way": "edge", "card": "x", "weight": 1.0}],
+               "missing": [{"lever": "affinity", "way": "shatter", "card": "absent", "weight": None}],
+               "twice": [{"lever": "knob", "key": "n", "old": "1", "new": "2"}],
+               "never": [{"lever": "knob", "key": "trueMin", "old": "0.9", "new": "1"}],
+               "once": [{"lever": "strip_rider", "card": "spall", "effect": {"kind": "damage", "n": 6}}],
+               "kind": [{"lever": "mystery"}]}
+        for name in bad:
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                catalogue.build(CONTENT, bad, name)
+        with self.assertRaises(ValueError):
+            catalogue.build(CONTENT, SPEC, "k9")
+
+    def test_the_writer_writes_json_files_and_the_cli_lists_them(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "content.json").write_text(CONTENT)
+            (root / "spec.json").write_text(json.dumps(SPEC))
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(0, readout.main(["candidates", str(root / "content.json"), str(root / "spec.json"),
+                                                  str(root / "cat"), "--names", "k1,k2+k3"]))
+            self.assertEqual(sorted(str(root / "cat" / n) for n in ("k1.json", "k2+k3.json")),
+                             sorted(out.getvalue().split()))
+            self.assertEqual(0.75, json.loads((root / "cat/k2+k3.json").read_text())["flame"]["trueMin"])
+
+
+class CommandLineTests(unittest.TestCase):
+    def test_paired_g3_and_rowb_commands_print_their_tables(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_table(root / "new", wins={"C_shatter": 8})
+            write_table(root / "base")
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                readout.main(["paired", str(root / "new"), str(root / "base"), "v0-full"])
+                readout.main(["g3", str(root / "base"), "v0-full"])
+            self.assertIn("+20.0 pp: 2 / 0", out.getvalue())
+            self.assertIn("| v0-full | C_shatter |", out.getvalue())
+
+    def test_the_parser_knows_every_documented_command(self) -> None:
+        names = set(readout.build_parser()._subparsers._group_actions[0].choices)
+        self.assertEqual({"run", "merge", "join", "paired", "g3", "rowb", "table", "compare", "candidates"}, names)
+
+    def test_table_command_with_an_odd_reference_is_refused(self) -> None:
+        with self.assertRaises(ValueError):
+            readout.cmd_table(mock.Mock(refs=[Path("a")], v0=Path("x"), v5=Path("y"), v0_seeds="13000-13009",
+                                        v5_seeds="13000-13009", tidy=False))
 
 
 if __name__ == "__main__":
