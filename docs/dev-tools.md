@@ -409,6 +409,15 @@ called. Calling one used to abort the runner itself and leave it waiting
 forever. `tests/test_run_all.gd` runs the runner in a child Godot against the
 fixtures in `tests/support/run_all_fixtures/` to hold all of this.
 
+## Agent evals
+
+`tools/agent_evals/` measures and hill-climbs files that steer agents, starting with
+`.claude/skills/glassvow-godot/SKILL.md` through the `repo_traps` eval (known repository traps,
+each case sourced from a `docs/solutions/` note). It is pure Python, calls no model in CI and
+costs quota only when you run `baseline` or `hillclimb` yourself. Usage, the method rules,
+the noise estimator and the `claude -p` isolation flags are in `tools/agent_evals/README.md`;
+`python3 -B tests/test_agent_evals.py` is its one runnable check.
+
 ## Creation and maintenance contract
 
 1. First reuse a shipping screen, existing lab mode or existing probe. Do not
