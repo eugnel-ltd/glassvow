@@ -11,6 +11,10 @@ extends ScrollContainer
 
 ## The roundel's side (pad, phone).
 const ROUNDEL: Vector2 = Vector2(56.0, 44.0)
+## What joins a deed to its rewards (as shipped). No shipped face carries it:
+## it is drawn from the OS's own fonts, which Main finds at boot
+## (`Main.OS_GLYPHS`).
+const TO_REWARDS: String = "→"
 
 var shape: StringName = StageShape.IDENTITY
 ## The firelight's breath on the done roundels (the hall's flicker).
@@ -114,7 +118,7 @@ func _add_deed(id: String) -> void:
 		LeadlightTokens.SIZE_ROOM_LABEL, Color(LeadlightTokens.PARCHMENT, 0.78)))
 	var rewards: String = _reward_names(deed.get("unlocks", []))
 	var desc: Label = _label(str(deed.get("desc", "")) if rewards.is_empty()
-		else "%s → %s" % [deed.get("desc", ""), rewards], LeadlightTokens.ROLE_READ,
+		else "%s %s %s" % [deed.get("desc", ""), TO_REWARDS, rewards], LeadlightTokens.ROLE_READ,
 		LeadlightTokens.SIZE_ROOM_READ, LeadlightTokens.TEXT)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.add_child(desc)

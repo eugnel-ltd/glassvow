@@ -18,7 +18,9 @@ extends RefCounted
 ## - the reading glass holds every archived memory in full, under the
 ##   inscription, and a dormant or armed pane's name gives nothing away;
 ## - in zh-Hant every Chinese character the hall sets is one the shipped
-##   (subset) faces carry: a fresh Vigil's zero counts never draw as tofu.
+##   (subset) faces carry: a fresh Vigil's zero counts never draw as tofu;
+## - every character the hall sets that no face in its chain carries (the
+##   rewards' "→", drawn from the OS's fonts) is one Main finds at boot.
 
 const SUITE: String = "res://tests/test_vigil_screen.gd"
 const Rubric: GDScript = preload("res://tests/test_rooms_rubric.gd")
@@ -73,6 +75,8 @@ static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]
 					_carved_in_chinese(fails, screen, "%dx%d" % [stage.x, stage.y])
 				if code == Locale.CODE_ZH_HANT and stage == Vector2i(1180, 820):
 					_every_glyph_drawn(fails, screen, state)
+				if stage == Vector2i(1180, 820):
+					_os_glyphs_found_at_boot(fails, screen, "%s %s" % [code, state])
 				screen.queue_free()
 				await tree.process_frame
 	host.size = TreeSuite.STAGE
@@ -217,6 +221,34 @@ static func _every_glyph_drawn(fails: Array[String], screen: VigilScreen, state:
 			if code >= 0x3000 and code <= 0x9FFF and not face.has_char(code):
 				_check(fails, false, "zh-Hant %s: '%s' in '%s' is not in the shipped faces" % [
 					state, c, (node as Label).text.left(24)])
+
+
+## A character no face in its label's chain carries falls through to the OS's
+## fonts, whose first search costs a frame about 150 ms on the iPad 8: every
+## such character the hall sets is one Main finds at boot (`Main.OS_GLYPHS`).
+static func _os_glyphs_found_at_boot(fails: Array[String], screen: VigilScreen, where: String) -> void:
+	for node: Node in screen.find_children("", "Label", true, false):
+		var label: Label = node
+		var font: Font = label.get_theme_font("font")
+		for c: String in label.text:
+			var code: int = c.unicode_at(0)
+			if code <= 0x20 or Main.OS_GLYPHS.contains(c) or _carried(font, code):
+				continue
+			_check(fails, false, "%s: '%s' (U+%04X) in '%s' falls through to the OS's fonts unfound at boot" % [
+				where, c, code, label.text.left(24)])
+
+
+## Whether `font` or a font in its fallback chain carries `code`.
+static func _carried(font: Font, code: int) -> bool:
+	if font == null:
+		return false
+	var base: Font = (font as FontVariation).base_font if font is FontVariation else font
+	if base is FontFile and (base as FontFile).has_char(code):
+		return true
+	for fallback: Font in base.fallbacks if base != null else []:
+		if _carried(fallback, code):
+			return true
+	return false
 
 
 ## The first cue is the look's, and only once Main asks for it.

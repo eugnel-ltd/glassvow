@@ -253,6 +253,7 @@ func _ready() -> void:
 	# every draw (docs/p7-locale-design.md §3) — presentation keeps reading
 	# `name` / `text` / move names straight off ContentDB.
 	_apply_content_hydration()
+	_find_os_glyphs()
 	_music = MusicBus.new()
 	add_child(_music)
 	_sfx_bus = SfxBus.new()
@@ -1467,6 +1468,24 @@ func _title_rests() -> bool:
 ## work in one frame ran 149.5 ms against 137.6 alone).
 func _warm_may_run() -> bool:
 	return _title_rests() and not MapJourneyPrefetch.busy()
+
+
+## The glyphs a screen sets that no shipped face carries, which TextServer
+## finds in the OS's own fonts: the Vigil's "→" between a deed and its rewards.
+## The first search for one, with its font, cost a frame of the title at rest
+## 150 to 155 ms on the iPad 8 (the rooms' warm shaping the hall's deeds). It is
+## made once here, while the app boots and before its first frame is drawn, at
+## the sizes the rooms set it, so no frame waits on it. English and zh-Hant
+## share the reading face that falls through, so one search serves both.
+const OS_GLYPHS: String = VigilDeeds.TO_REWARDS
+
+
+func _find_os_glyphs() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	for px: int in [LeadlightTokens.SIZE_ROOM_READ.x, LeadlightTokens.SIZE_ROOM_READ.y]:
+		LeadlightTokens.font(LeadlightTokens.ROLE_READ, px).get_string_size(
+			OS_GLYPHS, HORIZONTAL_ALIGNMENT_LEFT, -1, px)
 
 
 ## The road on screen now, if the screen stands on the title's road.
