@@ -10,6 +10,10 @@ before-plan.txt                its launch order (A, C and B interleaved, rested 
 after-ipad8.txt                the fix e97b4dba on main be96dc83: RoomWarm on (main) and off (noroom),
                                the map warm on in both, en and zh-Hant, 720 frames after the landing.
 after-plan.txt                 its launch order.
+after-rows/                    the after batch's raw probe rows, one file a launch (nonce in each).
+after-draws.txt                per launch, from after-rows/ by draw_summary.py.txt: video memory at the
+                               landing and after the warms, the warm's span, every frame that drew
+                               glyphs (glyphs, _draw ms, frame ms) and every frame over 33 ms.
 first-openings.txt             the rooms bench on e97b4dba: each room's first opening after the warm,
                                apart from laps 2-10, the first launch after the install and the next four.
 qa_attr_patch.py.txt,          the QA-only patches (never committed to the game): the probe's hooks in

@@ -1,0 +1,48 @@
+"""The paced RoomWarm per launch, from the probe's rows (after-rows/*.jsonl): the frames
+that drew glyphs, the glyphs and the _draw time in each, every title frame over 33 ms
+with its time after the landing, its process/draw/wait segments and the warm's step in
+it, and video memory at the landing and after the warms (the same launch, so the warm's
+own cost is the difference, against the arms without it).
+usage: python3 draw_summary.py.txt after-rows/f-*.jsonl"""
+import json, os, sys
+
+for path in sorted(sys.argv[1:]):
+    rows = [json.loads(l) for l in open(path)]
+    tf = next(r for r in rows if r.get("probe") == "title_frames")
+    warm = next(r for r in rows if r.get("probe") == "warm")
+    lit = next(r for r in rows if r.get("probe") == "lit")
+    fr, lit_us = tf["frames"], tf["lit_us"]
+    spans, at = [], fr["pf0"]
+    for dt in fr["dt"]:
+        spans.append((at, at + dt * 1000.0))
+        at += dt * 1000.0
+    def frame_of(t):
+        return next((i for i, (a, b) in enumerate(spans) if a <= t < b), None)
+    rw = [x for x in warm["recs"] if "rw" in x]
+    draws = [x for x in rw if x["rw"] == "draw_glyphs"]
+    print("== %s" % os.path.basename(path))
+    print("   video MiB: landing %.2f, after the warms %.2f, difference %+.2f" % (
+        lit["mem"][0], warm["mem"][0], warm["mem"][0] - lit["mem"][0]))
+    if draws:
+        first = next(x for x in rw if x["rw"] == "build")
+        end = next((x for x in rw if x["rw"] == "predelete"), rw[-1])
+        print("   warm %.0f .. %.0f ms after the landing" % ((first["t_us"] - lit_us) / 1000.0,
+                                                          (end["t_us"] - lit_us) / 1000.0))
+        print("   frames that drew glyphs %d, glyphs %d, most in one frame %d, longest _draw %.2f ms" % (
+            len(draws), sum(x["n"] for x in draws), max(x["n"] for x in draws),
+            max(x["us"] for x in draws) / 1000.0))
+        cells = []
+        for x in draws:
+            i = frame_of(x["t_us"])
+            cells.append("%s:%dg/%.1fms_draw/%s" % (i, x["n"], x["us"] / 1000.0,
+                                                    "%.1f" % fr["dt"][i] if i is not None else "-"))
+        print("   per draw (frame:glyphs/_draw/frame ms) " + " ".join(cells))
+    slow = []
+    for i, dt in enumerate(fr["dt"]):
+        if dt > 33.0:
+            a, b = spans[i]
+            steps = sorted({x["rw"] for x in rw if a <= x["t_us"] < b})
+            slow.append("%d@%.0fms:%.1f seg%s %s" % (i, (a - lit_us) / 1000.0, dt, fr["seg"][i],
+                                                    "/".join(steps) or "-"))
+    print("   frames over 33 ms (index@after landing:ms seg[process,draw,wait] warm step): " +
+          ("; ".join(slow) or "none"))

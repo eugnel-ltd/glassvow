@@ -1503,7 +1503,7 @@ applies, as built; together:
   same budget a frame, and frees itself; one a launch for each language and shape, never in the headless
   suite. *As fixed before build 20:* it first drew every glyph in one frame, and since every new glyph
   re-sends its whole font page to the GPU, that frame cost the iPad 8 30 to 270 ms (en to zh-Hant), the
-  next 50 to 80 ms, and 53 to 92 MiB of upload staging the engine never gives back
+  next 66 to 83 ms, and 53 to 92 MiB of upload staging the engine never gives back
   (`evidence/roomwarm-pacing/`). The warm was chosen over building the rooms in the tree ahead (§12's
   contingency), which would have put a 20 to 25 ms frame at rest into the title three times. Settings
   keeps its fitted height for the launch.
