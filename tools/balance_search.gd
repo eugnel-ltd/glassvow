@@ -68,10 +68,12 @@ class Position:
 	var cb: CombatState
 	var revealed: bool = false
 	## s2: the cards the line's last action drew, and the draw and discard piles
-	## they were drawn from (the parent position's, read and never written).
+	## they were drawn from (the parent position's, read and never written); and
+	## the uids of the cards in hand before it, the only ones the player has seen.
 	var drawn: int = 0
 	var pile: Array[CardInst] = []
 	var spare: Array[CardInst] = []
+	var held: Dictionary = {}
 
 	func _init(run_state: RunState, combat: CombatState) -> void:
 		run = run_state
@@ -252,15 +254,18 @@ static func _plays(turn: Turn, at: Position, card: CardInst) -> Array[Dictionary
 
 ## s2: the worth of a line that ends at a draw (or a roll of the RNG), which is not
 ## the turn's end, for the player re-plans once it resolves. It is the turn's end
-## here, or, when a hand-size payoff in hand pays more from the hand the draw left
-## (its size is known, its new cards are not), that payoff played; plus
-## SETUP_SHARE of the expected worth of the cards drawn (`_draw_worth`).
+## here, or, when a hand-size payoff the player held before the draw pays more
+## from the hand the draw left (its size is known, its new cards are not), that
+## payoff played; plus SETUP_SHARE of the expected worth of the cards drawn
+## (`_draw_worth`). A payoff the draw itself dealt is never played here: the copy's
+## RNG deals what the live draw will, and the player has not seen it.
 static func _continued(turn: Turn, at: Position) -> float:
 	var value: float = evaluate(turn, at)
 	var rest: Position = at
 	var tried: Dictionary = {}
 	for card: CardInst in at.cb.hand:
-		if tried.has(_signature(card)) or not _reads_hand(turn.rules.card_data(card)):
+		if not at.held.has(card.uid) or tried.has(_signature(card)) \
+				or not _reads_hand(turn.rules.card_data(card)):
 			continue
 		tried[_signature(card)] = true
 		for action: Dictionary in _plays(turn, at, card):
@@ -285,13 +290,17 @@ static func _reads_hand(d: Dictionary) -> bool:
 
 ## s2: what the player knows of the cards an action drew: how many (the action's
 ## draw events) and the piles they came from, its parent's draw pile and, once
-## that ran out and the discard pile was shuffled in, its parent's discard pile.
+## that ran out and the discard pile was shuffled in, its parent's discard pile;
+## and which cards it held before (by instance, so a drawn copy of a held card is
+## still unseen).
 static func _note_draws(before: Position, after: Position) -> void:
 	for event: Dictionary in after.cb.queue:
 		if event.get("t") == EventTypes.DRAW:
 			after.drawn += 1
 	after.pile = before.cb.draw
 	after.spare = before.cb.discard
+	for card: CardInst in before.cb.hand:
+		after.held[card.uid] = true
 
 
 ## The expected worth of the cards the line's last action drew, from the multiset

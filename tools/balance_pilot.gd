@@ -590,6 +590,7 @@ static func expected_hand(content: ContentDB, deck: Array[CardInst]) -> float:
 		var draws: int = 0
 		for fx_v: Variant in _definition(content, String(card.id), card.up).get("effects", []):
 			var fx: Dictionary = fx_v
+			# Only `draw` effects: Pyre Tithe's draw follows burning the whole hand, which cuts against the payoff.
 			if str(fx.get("kind", "")) == "draw":
 				draws += int(float(str(fx.get("n", 0))))
 		if draws > 0:

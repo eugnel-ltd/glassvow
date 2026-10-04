@@ -4,9 +4,10 @@ extends RefCounted
 ## Probes: fixed Ashwarden fights whose best line is known and checked by hand
 ## below. The 1.1 instrument (`s2` with `p9`) must find each one; 1.0's (`s1` with
 ## `p8-d0-v3`) misses the two that turn on the hand-size payoff, the blind spot
-## being fixed. Then the parts each finding rests on, one by one: the draw credit
-## reads the multiset the cards came from, and the pilot values a hand-size payoff
-## by its deck's hand and a rider its class cannot light at nothing.
+## being fixed. s2 must stay honest: it never credits a payoff the draw itself
+## dealt. Then the parts each finding rests on, one by one:
+## the draw credit reads the multiset the cards came from, and the pilot values a
+## hand-size payoff by its deck's hand and a rider its class cannot light at nothing.
 
 const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
 const Search: GDScript = preload("res://tools/balance_search.gd")
@@ -20,6 +21,7 @@ static func run(fails: Array[String]) -> void:
 	Pilot.apply_policy({})
 	_flags(fails)
 	_probes(content, fails)
+	_unseen_payoff(content, fails)
 	_draw_worth(content, fails)
 	_payoff_worth(content, fails)
 	_riders(content, fails)
@@ -45,8 +47,8 @@ static func _flags(fails: Array[String]) -> void:
 
 
 ## Each probe is one turn from a fixed position, played as the simulator plays it.
+## s2/p9 finds every one; s1/p8-d0-v3 finds exactly those marked `s1`.
 static func _probes(content: ContentDB, fails: Array[String]) -> void:
-	var missed: int = 0
 	for probe: Dictionary in _probe_table():
 		var found: Dictionary = {}
 		for bots: Array in [[Search.HAND_VERSION, Pilot.HAND_VERSION], [Search.VERSION, Pilot.VERSION]]:
@@ -57,16 +59,15 @@ static func _probes(content: ContentDB, fails: Array[String]) -> void:
 			found[bots[0]] = probe["found"].call(game)
 		if not found[Search.HAND_VERSION]:
 			fails.append("balance bots: s2/p9 misses the probe %s" % probe["name"])
-		if not found[Search.VERSION]:
-			missed += 1
-	if missed == 0:
-		fails.append("balance bots: s1/p8-d0-v3 finds every probe, so none tests the blind spot")
+		if found[Search.VERSION] != probe["s1"]:
+			fails.append("balance bots: s1/p8-d0-v3 %s the probe %s"
+				% ["finds" if found[Search.VERSION] else "misses", probe["name"]])
 
 
 ## The probes. The hero is an Ashwarden at 30 HP; one Sporeling stands opposite,
 ## its Spore Spit (4) raised by 36 Fervor to a 40-damage blow unless stated; the
-## draw pile is all Defends, so what a draw brings is known. Phantom Blades deals 3
-## for each card left in hand once it is played.
+## draw pile is all Defends unless stated, so what a draw brings is known. Phantom
+## Blades deals 3 for each card left in hand once it is played.
 static func _probe_table() -> Array[Dictionary]:
 	return [
 		# Draw, then Phantom Blades with the bigger hand. Energy 3. Tinder first leaves
@@ -74,22 +75,39 @@ static func _probe_table() -> Array[Dictionary]:
 		# fight is won. Phantom Blades first deals 12 (four beside it) and no kill. The
 		# greedy turn blocks first (the blow is lethal) and never kills.
 		{"name": "Tinder then Phantom Blades", "energy": 3, "foe": 15, "str": 36,
-			"hand": ["preparation", "phantomBlades", "defend", "defend", "defend"],
+			"hand": ["preparation", "phantomBlades", "defend", "defend", "defend"], "s1": false,
 			"found": func(game: GlassvowGame) -> bool: return game.cb.over and game.cb.result == "win"},
 		# A Struck Match line into the payoff. Energy 0: only Struck Match can be played.
 		# It gives 1 Energy and draws 1, and Phantom Blades then deals 3 x 4 = 12, the
 		# Sporeling's 12 HP. The greedy turn spends the Energy on a Defend.
 		{"name": "Struck Match then Phantom Blades", "energy": 0, "foe": 12, "str": 36,
-			"hand": ["surge", "phantomBlades", "defend", "defend", "defend"],
+			"hand": ["surge", "phantomBlades", "defend", "defend", "defend"], "s1": false,
 			"found": func(game: GlassvowGame) -> bool: return game.cb.over and game.cb.result == "win"},
 		# Stack Smolder, then Bellows (Catalyst, doubling a foe's Smolder). Energy 3, the
 		# foe at 500 HP with 3 Smolder and no blow (it grows). Ashbite (2 Smolder) then
 		# Bellows: 10 Smolder. Bellows first: 3 -> 6, then 8.
 		{"name": "Ashbite then Bellows", "energy": 3, "foe": 500, "str": 0, "smolder": 3, "move": "grow",
-			"hand": ["catalyst", "ashBite", "defend", "defend", "defend"],
+			"hand": ["catalyst", "ashBite", "defend", "defend", "defend"], "s1": true,
 			"found": func(game: GlassvowGame) -> bool:
 				return int(float(str(game.cb.enemies[0].statuses.get("poison", 0)))) == 10},
 	]
+
+
+## Honest play: a line that ends at a draw never counts a payoff the draw itself
+## dealt. Tinder (Energy 3, hand Tinder and four Defends) would deal Phantom Blades
+## from the top of the pile, and with the hand it leaves Phantom Blades deals
+## 3 x 5 = 15, the Sporeling's 15 HP. The player has not seen it, so no line is
+## credited the win: s2's best line scores under WIN.
+static func _unseen_payoff(content: ContentDB, fails: Array[String]) -> void:
+	Search.select(Search.HAND_VERSION)
+	Pilot.select(Pilot.HAND_VERSION)
+	var game: GlassvowGame = _position(content, {"energy": 3, "foe": 15, "str": 36,
+		"hand": ["preparation", "defend", "defend", "defend", "defend"],
+		"pile": ["defend", "defend", "defend", "defend", "defend", "phantomBlades"]})
+	var plan: Search.Plan = Search.plan_turn(game)
+	if plan.value >= Search.WIN:
+		fails.append("balance bots: s2 credits Phantom Blades before drawing it (plan %s, %f)"
+			% [plan.actions, plan.value])
 
 
 ## An Ashwarden's fight on its first turn, rebuilt to the probe's position.
@@ -101,7 +119,8 @@ static func _position(content: ContentDB, probe: Dictionary) -> GlassvowGame:
 	var cb: CombatState = game.cb
 	var hand: Array = probe["hand"]
 	cb.hand = _cards(run_state, hand)
-	cb.draw = _cards(run_state, ["defend", "defend", "defend", "defend", "defend", "defend"])
+	var pile: Array = probe.get("pile", ["defend", "defend", "defend", "defend", "defend", "defend"])
+	cb.draw = _cards(run_state, pile)
 	cb.discard = _cards(run_state, [])
 	cb.exhaust = _cards(run_state, [])
 	cb.embers = 0
