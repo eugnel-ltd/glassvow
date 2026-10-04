@@ -230,11 +230,14 @@ func _finish() -> void:
 	if not kit.build_complete or not kit.failure.is_empty():
 		failure = kit.failure if not kit.failure.is_empty() else "Woodland assembly incomplete"
 		return
-	var planted: int = Time.get_ticks_msec()
-	wood = ImpostorWood.new()
-	add_child(wood)
-	wood.build(kit, terrain, resolved)
-	timings_ms["wood"] = Time.get_ticks_msec() - planted
+	# Without its atlas (`ImpostorWood.Atlas.failed`, reported once) the land
+	# opens without its woodland rather than not at all.
+	if ImpostorWood.Atlas.ready():
+		var planted: int = Time.get_ticks_msec()
+		wood = ImpostorWood.new()
+		add_child(wood)
+		wood.build(kit, terrain, resolved)
+		timings_ms["wood"] = Time.get_ticks_msec() - planted
 	lamps = Lamps.new()
 	add_child(lamps)
 	lamps.build(kit.lamp_anchors())

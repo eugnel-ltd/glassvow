@@ -1,6 +1,6 @@
 extends RefCounted
 ## Act I's woodland as impostor cards (R3.1, issue #660) on the production
-## path: the baked atlas, where the wood stands (off the roads, the river, the
+## path: the baked atlas and how it loads, where the wood stands (off the roads, the river, the
 ## bridges and the stones, and never hiding a road's centreline or covering a
 ## waystone's touch square), its mix of kinds and crown sizes, its draws and
 ## their sway, and the clip slab it must fit.
@@ -19,6 +19,7 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 static func run(fails: Array[String]) -> void:
 	MapJourneyLandscape.Kit.preload_scenes()
 	_atlas(fails)
+	_loading(fails)
 	_slab(fails)
 	var content: ContentDB = ContentDB.load_full()
 	var run_state: RunState = RunState.new_run(content, SEED, "run-map-wood")
@@ -69,6 +70,37 @@ static func _atlas(fails: Array[String]) -> void:
 		cards_only = cards_only and not scenes.has(kind)
 	_check(fails, cards_only and scenes.has("amber-arch") and scenes.has("conifer-snag"),
 		"the kit loads no scene for the foliage drawn as cards")
+
+
+## The atlas's textures are taken from the loader once each, whatever order
+## they finish in (a second `load_threaded_get` of a path returns null), and a
+## texture that cannot load ends the wait instead of holding the map's opening.
+static func _loading(fails: Array[String]) -> void:
+	var states: Dictionary = {"albedo": ResourceLoader.THREAD_LOAD_LOADED,
+		"normal": ResourceLoader.THREAD_LOAD_IN_PROGRESS}
+	var handed: Dictionary = {}
+	var take: Atlas.Take = Atlas.Take.new(PackedStringArray(["albedo", "normal"]))
+	take.status = func(path: String) -> int:
+		return states[path]
+	take.get_texture = func(path: String) -> Variant:
+		if handed.has(path):
+			return null
+		handed[path] = true
+		return ImageTexture.new()
+	var first: bool = take.step(false)
+	states["normal"] = ResourceLoader.THREAD_LOAD_LOADED
+	var second: bool = take.step(false)
+	_check(fails, not first and second and not take.failed and take.textures.size() == 2,
+		"a texture taken while another still loads is kept for the next step")
+	var broken: Atlas.Take = Atlas.Take.new(PackedStringArray(["albedo"]))
+	broken.status = func(_path: String) -> int:
+		return ResourceLoader.THREAD_LOAD_FAILED
+	broken.get_texture = func(_path: String) -> Variant:
+		return null
+	_check(fails, broken.step(false) and broken.failed, "a texture that fails to load settles the take")
+	var missing: Atlas.Take = Atlas.Take.new(PackedStringArray(["res://assets/art/map-journey/impostors/missing.png"]))
+	missing.request()
+	_check(fails, missing.failed and missing.step(true), "a missing atlas ends the wait at once")
 
 
 ## The land's slab (`MapJourneyCameraContract.LAND_HIGH`) holds the tallest

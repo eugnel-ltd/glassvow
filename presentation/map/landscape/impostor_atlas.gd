@@ -13,6 +13,8 @@ extends RefCounted
 ## Readied on the main thread before any land is built on a worker
 ## (`prepare_step`, through `Kit.preload_step`): the atlases load on the
 ## loader's threads; the tiles, meshes and material are made once per process.
+## Atlases that cannot load leave the woodland out of every land (`failed`)
+## rather than holding the map's opening.
 
 const SHADER: Shader = preload("res://presentation/map/landscape/impostor.gdshader")
 const ALBEDO_PATH: String = "res://assets/art/map-journey/impostors/wood-albedo.png"
@@ -49,7 +51,58 @@ static var card: ArrayMesh = null
 static var cone: ArrayMesh = null
 static var egg: ArrayMesh = null
 static var material: ShaderMaterial = null
-static var _requested: bool = false
+## Whether the atlases cannot be loaded: no land draws a woodland then.
+static var failed: bool = false
+## How long readying the atlas has taken on the main thread, waits included
+## (benches and probes).
+static var prepare_ms: float = 0.0
+static var _take: Take = null
+
+
+## Textures taken from the loader's threads, each exactly once and in whatever
+## order they finish: a second `load_threaded_get` of a path returns null, so a
+## step keeps what it took for the next. A path the loader cannot load settles
+## the take as failed, so a wait for it always ends.
+class Take:
+	extends RefCounted
+	var paths: PackedStringArray
+	var textures: Dictionary = {}
+	var failed: bool = false
+	## The loader's two calls (tests stand in for them).
+	var status: Callable = ResourceLoader.load_threaded_get_status
+	var get_texture: Callable = ResourceLoader.load_threaded_get
+
+	func _init(from: PackedStringArray) -> void:
+		paths = from
+
+	## Asks the loader's threads for every path.
+	func request() -> void:
+		for path: String in paths:
+			if not ResourceLoader.exists(path) or ResourceLoader.load_threaded_request(path, "Texture2D") != OK:
+				failed = true
+
+	## Takes every texture that has loaded and answers whether the take is
+	## settled: all taken, or failed. `wait`ing, it waits for each one while
+	## keeping the renderer in step, as `Kit.preload_step` does.
+	func step(wait: bool) -> bool:
+		for path: String in paths:
+			if failed:
+				break
+			if textures.has(path):
+				continue
+			var state: int = status.call(path)
+			while state == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+				if not wait:
+					return false
+				RenderingServer.force_sync()
+				OS.delay_usec(500)
+				state = status.call(path)
+			var texture: Variant = get_texture.call(path) if state == ResourceLoader.THREAD_LOAD_LOADED else null
+			if texture is Texture2D:
+				textures[path] = texture
+			else:
+				failed = true
+		return true
 
 
 ## Whether the atlas is ready for a build.
@@ -59,41 +112,44 @@ static func ready() -> bool:
 
 ## Asks the loader's threads for the atlases (cheap; once).
 static func request() -> void:
-	if _requested or ready():
+	if _take != null or ready() or failed:
 		return
-	_requested = true
-	for path: String in [ALBEDO_PATH, NORMAL_PATH]:
-		ResourceLoader.load_threaded_request(path, "Texture2D")
+	_take = Take.new(PackedStringArray([ALBEDO_PATH, NORMAL_PATH]))
+	_take.request()
 
 
-## Readies the atlas a step at a time and answers whether it is ready. Not
-## `wait`ing (the journey prefetch under the title), a step returns while the
-## atlases are still loading; `wait`ing (a map opening now), it waits for
-## them while keeping the renderer in step, as `Kit.preload_step` does.
+## Readies the atlas a step at a time and answers whether nothing is left to
+## wait for: the atlas is ready, or it cannot load (`failed`). Not `wait`ing
+## (the journey prefetch under the title), a step returns while the atlases
+## are still loading; `wait`ing (a map opening now), it waits for them.
 static func prepare_step(wait: bool = false) -> bool:
-	if ready():
+	if ready() or failed:
 		return true
+	var started: int = Time.get_ticks_usec()
 	request()
-	var textures: Array[Texture2D] = []
-	for path: String in [ALBEDO_PATH, NORMAL_PATH]:
-		while ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-			if not wait:
-				return false
-			RenderingServer.force_sync()
-			OS.delay_usec(500)
-		textures.append(ResourceLoader.load_threaded_get(path) as Texture2D)
-	if textures.has(null):
-		push_error("Journey wood: cannot load the impostor atlases")
-		return false
+	var settled: bool = _take.step(wait)
+	if settled and _take.failed:
+		failed = true
+		push_error("Journey wood: cannot load the impostor atlases; the woodland is left out")
+	elif settled:
+		var albedo: Texture2D = _take.textures[ALBEDO_PATH]
+		var normal: Texture2D = _take.textures[NORMAL_PATH]
+		_make(albedo, normal)
+	if settled:
+		_take = null
+	prepare_ms += (Time.get_ticks_usec() - started) / 1000.0
+	return settled
+
+
+static func _make(albedo: Texture2D, normal: Texture2D) -> void:
 	_read_tiles()
 	card = _quad()
 	cone = _cone()
 	egg = _egg()
 	material = ShaderMaterial.new()
 	material.shader = SHADER
-	material.set_shader_parameter("atlas_albedo", textures[0])
-	material.set_shader_parameter("atlas_normal", textures[1])
-	return true
+	material.set_shader_parameter("atlas_albedo", albedo)
+	material.set_shader_parameter("atlas_normal", normal)
 
 
 static func _read_tiles() -> void:
