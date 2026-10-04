@@ -16,7 +16,9 @@ extends RefCounted
 ##   and comes only once Main has connected (`announce`);
 ## - `Replay` exists, shows and has a size only when all six panes are whole;
 ## - the reading glass holds every archived memory in full, under the
-##   inscription, and a dormant or armed pane's name gives nothing away.
+##   inscription, and a dormant or armed pane's name gives nothing away;
+## - in zh-Hant every Chinese character the hall sets is one the shipped
+##   (subset) faces carry: a fresh Vigil's zero counts never draw as tofu.
 
 const SUITE: String = "res://tests/test_vigil_screen.gd"
 const Rubric: GDScript = preload("res://tests/test_rooms_rubric.gd")
@@ -68,6 +70,8 @@ static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]
 						_reading(fails, screen, where)
 				if code == Locale.CODE_ZH_HANT and state == "mid":
 					_carved_in_chinese(fails, screen, "%dx%d" % [stage.x, stage.y])
+				if code == Locale.CODE_ZH_HANT and stage == Vector2i(1180, 820):
+					_every_glyph_drawn(fails, screen, state)
 				screen.queue_free()
 				await tree.process_frame
 	host.size = TreeSuite.STAGE
@@ -170,6 +174,17 @@ static func _carved_in_chinese(fails: Array[String], screen: VigilScreen, where:
 	_check(fails, screen._ledger.text.contains("十二") and screen._ledger.text.contains("三")
 			and screen._ledger.text.contains("二"),
 		"zh-Hant %s: the ledger is not carved in Chinese numerals (%s)" % [where, screen._ledger.text])
+
+
+## Every CJK character the hall sets in zh-Hant is in the shipped faces.
+static func _every_glyph_drawn(fails: Array[String], screen: VigilScreen, state: String) -> void:
+	var face: FontFile = load("res://assets/fonts/NotoSerifTC-SemiBold.woff2") as FontFile
+	for node: Node in screen.find_children("", "Label", true, false):
+		for c: String in (node as Label).text:
+			var code: int = c.unicode_at(0)
+			if code >= 0x3000 and code <= 0x9FFF and not face.has_char(code):
+				_check(fails, false, "zh-Hant %s: '%s' in '%s' is not in the shipped faces" % [
+					state, c, (node as Label).text.left(24)])
 
 
 ## The first cue is the look's, and only once Main asks for it.

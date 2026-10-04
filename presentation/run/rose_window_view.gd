@@ -295,7 +295,7 @@ func _build_log() -> void:
 		_log.add_child(row)
 		var number: Label = _text(LeadlightTokens.ROLE_CARVED, LeadlightTokens.SIZE_ROOM_CARVED,
 			Color(LeadlightTokens.GOLD_DIM, 0.9))
-		number.text = LeadlightNumerals.carved(index + 1)
+		number.text = LeadlightNumerals.carved_drawn(index + 1)
 		number.custom_minimum_size.x = 64.0 if not LeadlightTokens.is_phone(shape) else 44.0
 		row.add_child(number)
 		var line: Label = _prose(str(_whisper_lines[index]), LeadlightTokens.TEXT)

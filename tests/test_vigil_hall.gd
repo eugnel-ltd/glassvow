@@ -81,7 +81,9 @@ static func _keeper_clear(fails: Array[String], shape: StringName, stage: Vector
 		_check(fails, column.size.x > 0.0 and not column.intersects(keeper),
 			"%s: the %s column (%s) stands on the Keeper (%s)" % [where, look, column, keeper])
 		var hood: float = keeper.position.y + keeper.size.y * VigilHall.KEEPER_HOOD
-		_check(fails, hood >= 0.0, "%s: the Keeper's hood is off the stage on the %s look" % [where, look])
+		var room: float = VigilHall.HEAD_ROOM.y if LeadlightTokens.is_phone(shape) else VigilHall.HEAD_ROOM.x
+		_check(fails, hood >= room - 0.5,
+			"%s: the Keeper's hood is under the look panes or off the stage on the %s look (%.1f)" % [where, look, hood])
 
 
 ## On the Rose look the painted window lies inside the Emberglass rose.
