@@ -12,7 +12,8 @@ extends SceneTree
 ##       [--path=rest|settings|help|credits|vigil|rite|shift|tab|pressed|departure|confirm|
 ##               back|runmenu|abandon|leave|ledger|erase]
 ##       [--hold] [--section=<id>] [--at=<ms>] [--burst=3]
-##       [--seq=open|close|section|glass|run --room=settings|help|credits|vigil --frames=40]
+##       [--seq=open|close|section|glass|run|look|pane|rose|route --room=settings|help|credits|vigil --frames=40]
+##       [--look=deeds|rose|epitaphs] [--memory]
 ##       [--sheet=/abs/sheet.jpg] [--rm] [--window=1180x885]
 ##       [--measure=/abs/image]   (the oval measures of an existing still, at this shape)
 ##       [--control=/abs/image]   (a cold-boot still of the same state: the oval beyond it)
@@ -34,9 +35,15 @@ extends SceneTree
 ## and §6.3's oval measures (`_oval_measures`): the spec's 64 gold samples and
 ## gold band, and the ring line that catches the shipped ring where the spec's
 ## gold does not; --measure gives a before still's at the same geometry.
-## The phone Vigil's RETURN stands below the stage until #655 PR C seats it:
-## there the tap is delivered to the button as the viewport delivers a tap
-## (a touch noted, focus held hidden, pressed), and the run says so.
+## The Vigil (#655 PR C) is the hearth hall: --state=mid or full seeds its
+## deeds, shards, whispers and epitaphs (mid: some deeds done, three panes
+## whole, one revealed and one armed, three epitaphs; full: every deed done,
+## all six whole, the unsealing seen, thirty whispers, twelve epitaphs). With
+## --hold, --look taps that look's pane and --memory selects the pane holding
+## the longest dawn memory. --seq=look taps --look in the settled hall (V4),
+## --seq=pane a rose pane (V5), --seq=rose taps the title's rose (V2), and
+## --seq=routein opens the Vigil as a route from the title (the dev scenario's
+## call, V8) and --seq=route opens it so and taps its Return (V9).
 ## The rooms (#655 PR B): with --hold a room path stays in the room, at
 ## --section (a section's pane tapped: Settings' audio..ledger, How to Play's
 ## road..vigil) or, in Credits, at a part of its roll (music, end) or a licence
@@ -74,7 +81,7 @@ const ROOM_WORDS: Dictionary = {
 ## the Vigil's RETURN until PR C seats it.
 const ROOM_EXITS: Dictionary = {
 	"settings": "ui.menu.return", "help": "ui.menu.return",
-	"credits": "ui.menu.return", "vigil": "ui.vigil.return",
+	"credits": "ui.menu.return", "vigil": "ui.menu.return",
 }
 ## The idle gate (§11.4): the least share of a room's pixels that changes
 ## between frames 1 s apart, and what counts as a change.
@@ -152,7 +159,7 @@ func _seed(state: String) -> void:
 		run.waystones_lit = 4
 		_carry_glass(content, run, "shatter")
 		SaveService.store(run, ScenarioKernel.RUN_PATH)
-	if state == "vigil":
+	if state == "vigil" or state == "mid":
 		for deed: Array in [["runs", 12], ["wins", 3], ["slain", 214], ["shatters", 15],
 				["kindles", 11], ["perfects", 1], ["bestVow", 2], ["bestWaystone", 9]]:
 			vigil.deeds[deed[0]] = deed[1]
@@ -161,7 +168,40 @@ func _seed(state: String) -> void:
 		vigil.shards.assign(["hollowLamplighter", "paleOnes", "usurper"])
 		for id: String in ["hollowLamplighter", "paleOnes", "usurper"]:
 			vigil.quests[id] = {"state": "complete", "progress": 3, "memory": {}}
+	if state == "mid":
+		vigil.quests["hollowLamplighter"]["memory"] = {"dawn": _memories("hollowLamplighter", 5)}
+		vigil.quests["unreadablePage"] = {"state": "revealed", "progress": 2,
+			"memory": {"dawn": _memories("unreadablePage", 2)}}
+		vigil.quests["ownShade"] = {"state": "armed", "progress": 0, "memory": {}}
+		vigil.whispers = 5
+		vigil.defeat_epitaphs.assign(["pool.loss.e01", "pool.loss.e02", "pool.loss.e03"])
+	if state == "full":
+		var content_full: ContentDB = ContentDB.load_full()
+		for deed_v: Variant in content_full.deeds.values():
+			var deed: Dictionary = deed_v
+			vigil.deeds[str(deed.get("stat"))] = int(float(str(deed.get("n", 1))))
+		for deed: Array in [["runs", 41], ["wins", 9], ["bestVow", 5], ["bestWaystone", 50]]:
+			vigil.deeds[deed[0]] = deed[1]
+		vigil.runs_played = 41
+		vigil.unlocks.assign(["emberglass", "aspect2", "lamplighter"])
+		vigil.shards.assign(LeadlightRose.SHARDS)
+		for id: String in LeadlightRose.SHARDS:
+			vigil.quests[id] = {"state": "complete", "progress": 9, "memory": {"dawn": _memories(id, 5)}}
+		vigil.scenes_seen.append("unsealing")
+		vigil.whispers = 30
+		for i: int in range(12):
+			vigil.defeat_epitaphs.append("pool.loss.e%02d" % (i + 1))
 	SaveService.store_vigil(vigil, ScenarioKernel.VIGIL_PATH)
+
+
+## A pane's dawn memories as the Vigil archives them: up to `count` keys.
+static func _memories(id: String, count: int) -> Array:
+	var keys: Array = []
+	for part: String in ["p1", "p2", "p3", "p4", "done"]:
+		var key: String = "story.dawn.%s.%s" % [id, part]
+		if keys.size() < count and Locale.active.t(key) != key:
+			keys.append(key)
+	return keys
 
 
 ## A tooling boot offers the Developer Console in the corner; no player sees it.
@@ -265,6 +305,9 @@ func _hold_at(title: TitleScreen, room: String, seconds: float) -> void:
 
 ## --section: a tap on that section's pane in the open room, then its page at rest.
 func _section(id: String) -> void:
+	if _main._route_screen is VigilScreen:
+		await _vigil_at(_main._route_screen as VigilScreen)
+		return
 	if id.is_empty() or not (_main._modal is LeadlightRoomHost):
 		return
 	if _main._modal is CreditsScreen:
@@ -277,6 +320,36 @@ func _section(id: String) -> void:
 		return
 	await _tap_control(room.tab(StringName(id)))
 	await _wait(0.6)
+
+
+## The hall at --look (its pane tapped), and with --memory the rose pane that
+## holds the longest dawn memory selected.
+func _vigil_at(vigil: VigilScreen) -> void:
+	var look: String = str(_args.get("look", "deeds"))
+	if look != "deeds":
+		await _tap_control(_look_pane(vigil, look))
+		await _wait(0.9)
+	if _args.has("memory") and vigil.rose_view() != null:
+		await _tap_control(_longest_memory(vigil.rose_view()))
+		await _wait(0.6)
+
+
+func _look_pane(vigil: VigilScreen, look: String) -> Control:
+	var key: String = {"deeds": "ui.vigil.deedsTab", "rose": "ui.vigil.roseTab",
+		"epitaphs": "ui.vigil.epitaphTab"}.get(look, "ui.vigil.deedsTab")
+	return _labelled(vigil, Locale.active.t(key))
+
+
+func _longest_memory(view: RoseWindowView) -> Control:
+	var best: int = 0
+	var most: int = -1
+	for i: int in range(RoseWindowView.IDS.size()):
+		var record: Dictionary = view._record(RoseWindowView.IDS[i])
+		var held: int = view._archived_dawn(record).length()
+		if held > most:
+			most = held
+			best = i
+	return view.pane_buttons()[best]
 
 
 ## Credits at a part of its roll: head (as it lands), music, end, or a licence
@@ -366,6 +439,9 @@ func _still(out: String) -> void:
 			await _wait(1.0)
 	if burst > 1 and _main._modal is LeadlightRoomHost:
 		_idle_gate(shots, (_main._modal as LeadlightRoomHost).content_rects()[0])
+	elif burst > 1 and _main._route_screen is VigilScreen:
+		# The hall's own pixels: the whole stage but the seat.
+		_idle_gate(shots, Rect2(Vector2(220.0, 0.0), Vector2(root.size) - Vector2(220.0, 0.0)))
 
 
 ## A still as PNG, or JPEG where the name asks for one.
@@ -540,6 +616,24 @@ func _sequence(kind: String, room: String) -> void:
 		await _open_run_menu(title)
 		trigger = _labelled(_main._modal, Locale.active.t(
 			"ui.menu.howToPlay" if room == "help" else "ui.menu.settings"))
+	elif kind == "look" or kind == "pane":
+		await _tap(_word(title, "vigil").get_global_rect().get_center())
+		await _settle()
+		await _wait(1.0)
+		var vigil: VigilScreen = _main._route_screen as VigilScreen
+		if kind == "pane" and vigil != null:
+			await _tap_control(_look_pane(vigil, "rose"))
+			await _wait(1.0)
+			trigger = _longest_memory(vigil.rose_view())
+		elif vigil != null:
+			trigger = _look_pane(vigil, str(_args.get("look", "rose")))
+		await _frames(2)
+	elif kind == "rose":
+		trigger = title.rose
+	elif kind == "route":
+		_main._show_vigil()
+		await _settle()
+		await _wait(0.8)
 	if kind == "close":
 		await _tap(_word(title, room).get_global_rect().get_center())
 		await _settle()
@@ -562,6 +656,10 @@ func _sequence(kind: String, room: String) -> void:
 		_tap_control_now(trigger)
 	elif kind == "open":
 		_tap_now(_word(title, room).get_global_rect().get_center())
+	elif kind == "route":
+		_tap_control_now(_labelled(_main, Locale.active.t("ui.menu.return")))
+	elif kind == "routein":
+		_main._show_vigil()
 	elif str(ROOM_EXITS[room]).is_empty():
 		_tap_now(VEIL_TAP)
 	else:

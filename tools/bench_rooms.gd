@@ -1,6 +1,7 @@
 extends SceneTree
-## Frame times for the title's rooms (#655 PR B, docs/design/2026-10-03-title-
-## rooms §11.6). Boots the real Main on the Development profile of the
+## Frame times for the title's rooms (#655 PR B and PR C, docs/design/2026-10-03-
+## title-rooms §11.6): Settings, How to Play, Credits and the Vigil (whose turn
+## west and east are its passages). Boots the real Main on the Development profile of the
 ## checkout's isolated user dir (a saved run, as a returning player has),
 ## waits for the title to rest, measures it at rest, then for each room taps
 ## its word, holds in it and taps its Return, LAPS times, as a player does,
@@ -27,7 +28,13 @@ extends SceneTree
 ##
 ##   GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 godot --path . --position 40,40 \
 ##       --rendering-driver metal -s res://tools/bench_rooms.gd -- \
-##       --shape=pad-landscape --locale=en --laps=20 --rest=5 --out=/abs/rows.jsonl
+##       --shape=pad-landscape --locale=en --laps=20 --rest=5 --out=/abs/rows.jsonl \
+##       [--act=0]   (a saved Act I run: the title's map warm runs beside the rooms' warm)
+##
+## From the rite's end until the rooms' warm is done, every frame is a "warm"
+## row flagged with what is working under the title: the rooms' warm
+## (`room_warm`, while it does its work) and the map's prefetch (`map`, #660):
+## the title's frames while both run (#670 review, follow-up 3).
 ##
 ## On the iPad the `Bench` node below runs inside the QA app, attached to Main
 ## by a QA-only patch that never ships (kept beside the rows as evidence).
@@ -44,7 +51,7 @@ func _initialize() -> void:
 	var shape: StringName = StringName(str(_args.get("shape", "pad-landscape")))
 	var stage: Vector2i = StageShape.REFERENCES.get(shape, Vector2i(1180, 820))
 	DisplayServer.window_set_size(stage)
-	Bench.seed_saved_run()
+	Bench.seed_saved_run(int(str(_args.get("act", "1"))))
 	_main = (load("res://application/main.tscn") as PackedScene).instantiate() as Main
 	_main._boot_args = PackedStringArray(["--shape=%s" % shape, "--locale=%s" % str(_args.get("locale", "en"))])
 	root.add_child(_main)
@@ -77,7 +84,7 @@ func _start() -> void:
 class Bench extends Node:
 	signal done
 
-	const ROOMS: Array[String] = ["settings", "help", "credits"]
+	const ROOMS: Array[String] = ["settings", "help", "credits", "vigil"]
 	const TAP_WAIT: float = 3.0
 
 	var main: Main
@@ -105,19 +112,29 @@ class Bench extends Node:
 	var _span_ms: float = 0.0
 	var _tap_drawn_us: int = 0
 
-	## A run in Act II in the Development profile: the title a returning player
-	## sees (Back to the Road), before Main reads it.
-	static func seed_saved_run() -> void:
+	## A run in Act II (or `act`) in the Development profile: the title a
+	## returning player sees (Back to the Road), before Main reads it; and a
+	## Vigil part-way (deeds, three panes whole, one revealed, three epitaphs),
+	## so its hall has every look to draw.
+	static func seed_saved_run(act: int = 1) -> void:
 		var content: ContentDB = ContentDB.load_full()
 		var run: RunState = RunState.new_run(content, 65503, "bench-rooms")
 		run.map = WorldMap.benchmark(run).to_dict()
-		run.act = 1
-		run.waystones_lit = 4
+		run.act = act
+		run.waystones_lit = 4 if act > 0 else 1
 		SaveService.store(run, ScenarioKernel.RUN_PATH)
 		var vigil: VigilState = VigilState.blank()
 		vigil.scenes_seen.append("opening")
-		vigil.runs_played = 3
-		vigil.deeds["runs"] = 3
+		vigil.runs_played = 12
+		for deed: Array in [["runs", 12], ["wins", 3], ["slain", 214], ["shatters", 15],
+				["kindles", 11], ["perfects", 1], ["bestVow", 2]]:
+			vigil.deeds[deed[0]] = deed[1]
+		vigil.unlocks.assign(["emberglass"])
+		vigil.shards.assign(["hollowLamplighter", "paleOnes", "usurper"])
+		for id: String in ["hollowLamplighter", "paleOnes", "usurper"]:
+			vigil.quests[id] = {"state": "complete", "progress": 3, "memory": {}}
+		vigil.quests["unreadablePage"] = {"state": "revealed", "progress": 2, "memory": {}}
+		vigil.defeat_epitaphs.assign(["pool.loss.e01", "pool.loss.e02", "pool.loss.e03"])
 		SaveService.store_vigil(vigil, ScenarioKernel.VIGIL_PATH)
 
 	func _ready() -> void:
@@ -156,13 +173,16 @@ class Bench extends Node:
 		var title: TitleScreen = main._choice_screen
 		while title.rite != null and not title.rite.is_done():
 			await get_tree().process_frame
+		# The rooms' first-opening work (RoomWarm) and the map's prefetch run
+		# while the title rests: their frames are recorded apart, flagged.
+		_phase = "warm"
+		_index = 0
 		await _seconds(2.0)
-		# The rooms' first-opening work (RoomWarm) is done while the title
-		# rests, before the title at rest is measured.
 		var until: int = Time.get_ticks_msec() + 10000
-		while main._room_warm != null and is_instance_valid(main._room_warm) \
-				and Time.get_ticks_msec() < until:
+		while ((main._room_warm != null and is_instance_valid(main._room_warm))
+				or MapJourneyPrefetch.busy()) and Time.get_ticks_msec() < until:
 			await get_tree().process_frame
+		_phase = ""
 		_write({"nonce": nonce, "label": label, "probe": "warm",
 			"done": main._room_warm == null or not is_instance_valid(main._room_warm)})
 
@@ -173,12 +193,12 @@ class Bench extends Node:
 		if word == null:
 			return
 		await _tap(word.get_global_rect().get_center(), "open")
-		var host: LeadlightRoomHost = main._modal as LeadlightRoomHost
+		var host: LeadlightRoomHost = _host()
 		await _seconds((host.arrival_time() if host != null else 0.6) + 0.2)
 		_phase = "room"
 		_index = 0
 		await _seconds(room_rest if lap == 0 else hold)
-		host = main._modal as LeadlightRoomHost
+		host = _host()
 		if host != null:
 			await _tap(host.seat().word().get_global_rect().get_center(), "close")
 			await _seconds(host.departure_time() + 0.2)
@@ -215,13 +235,19 @@ class Bench extends Node:
 				"phase": _armed, "at": [at.x, at.y], "screen": [screen.x, screen.y]})
 			_armed = ""
 
+	## The room open now: a modal, or the Vigil (a route over the held title).
+	func _host() -> LeadlightRoomHost:
+		if main._modal is LeadlightRoomHost:
+			return main._modal as LeadlightRoomHost
+		return main._route_screen as LeadlightRoomHost
+
 	func _process(_delta: float) -> void:
-		var acted: bool = (_armed == "open" and main._modal is LeadlightRoomHost) \
-			or (_armed == "close" and main._modal == null)
+		var acted: bool = (_armed == "open" and _host() != null) \
+			or (_armed == "close" and _host() == null)
 		if acted:
 			_phase = _armed
 			_index = 0
-			var host: LeadlightRoomHost = main._modal as LeadlightRoomHost if _armed == "open" else null
+			var host: LeadlightRoomHost = _host() if _armed == "open" else null
 			_span_ms = 1000.0 * (host.arrival_time() if host != null else 0.0)
 			if _armed == "close":
 				_span_ms = 1000.0 * _leaving_span()
@@ -230,7 +256,7 @@ class Bench extends Node:
 	## The departure's span: the leaving room's, which the passage holds.
 	func _leaving_span() -> float:
 		for node: Node in main.get_children():
-			if node is LeadlightRoomHost and node != main._modal:
+			if node is LeadlightRoomHost and node != main._modal and node != main._route_screen:
 				return (node as LeadlightRoomHost).departure_time()
 		return 0.40
 
@@ -241,12 +267,17 @@ class Bench extends Node:
 
 	func _on_drawn() -> void:
 		var now: int = Time.get_ticks_usec()
-		if _last_us > 0 and _phase in ["title", "open", "room", "close"]:
+		if _last_us > 0 and _phase in ["warm", "title", "open", "room", "close"]:
 			var row: Dictionary = {"nonce": nonce, "label": label, "room": _room, "lap": _lap,
 				"phase": _phase, "i": _index, "wall_ms": float(now - _last_us) / 1000.0,
 				"busy_ms": float(now - _start_us) / 1000.0,
 				"cpu_ms": RenderingServer.viewport_get_measured_render_time_cpu(_viewport_rid),
 				"gpu_ms": RenderingServer.viewport_get_measured_render_time_gpu(_viewport_rid)}
+			if _phase == "warm":
+				var warm: RoomWarm = main._room_warm if main._room_warm != null \
+					and is_instance_valid(main._room_warm) else null
+				row["room_warm"] = warm != null and warm._rested >= RoomWarm.REST
+				row["map"] = MapJourneyPrefetch.busy()
 			if _index <= 1 and (_phase == "open" or _phase == "close"):
 				row["since_tap_ms"] = float(now - _tap_us) / 1000.0
 			if _phase == "open" or _phase == "close":
@@ -267,6 +298,19 @@ class Bench extends Node:
 	func _summarise() -> void:
 		var title_wall: Array[float] = _pick("", "title", "wall_ms", false)
 		var title_cpu: Array[float] = _pick("", "title", "cpu", false)
+		# The title's frames while the rooms' warm and the map's prefetch work.
+		var warm_out: Dictionary = {"nonce": nonce, "label": label, "summary": "warm"}
+		for pair: Array in [["both", true, true], ["rooms_only", true, false], ["map_only", false, true],
+				["neither", false, false]]:
+			var walls: Array[float] = []
+			for row: Dictionary in _rows:
+				var rooms: bool = row.get("room_warm", false)
+				var map: bool = row.get("map", false)
+				if row["phase"] == "warm" and rooms == pair[1] and map == pair[2]:
+					walls.append(_f(row, "wall_ms"))
+			warm_out[pair[0]] = _stats(walls)
+		_write(warm_out)
+		print(JSON.stringify(warm_out))
 		for room: String in ROOMS:
 			for first: bool in [true, false]:
 				var out: Dictionary = {"nonce": nonce, "label": label, "summary": room,
