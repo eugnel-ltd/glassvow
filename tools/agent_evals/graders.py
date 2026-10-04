@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import re
+from functools import lru_cache
 from typing import Any
 
 from .backends import Backend
@@ -10,6 +11,12 @@ from .models import Case, EvalError, Grade, Verdict
 
 CLAIM_KEYS = ("must_match", "must_not_match", "equals")
 MAX_FIELD_CHARS = 1000  # answer fields are a sentence or a code line; more is a keyword dump
+MIN_HIT_LIMIT = 5  # a field may always name this many of a claim's keywords (see hit_limit)
+HIT_SHARE = 3 / 4  # or this share of them, when that is more
+REGEX_FLAGS = re.IGNORECASE | re.DOTALL
+# One token of a pattern: a literal character (or escaped punctuation), else regex syntax.
+REGEX_TOKEN = re.compile(r"(?P<literal>\\[^A-Za-z0-9]|[^\\\[{(|)?*+.^$])|\\.|\[(?:\\.|[^\]\\])*\]"
+                         r"|\{\d*,?\d*\}|\(\?(?:P<\w+>|<[=!]|[:=!]|[a-zA-Z]+\))|.", re.DOTALL)
 JUDGE_SYSTEM = (
     "You grade one answer against a list of checkable yes/no claims. Judge each claim "
     "independently from the answer text alone. Reply with only a JSON object of the "
@@ -38,6 +45,8 @@ def validate_grader_spec(spec: dict[str, Any]) -> None:
             raise EvalError(f"claim {claim_id!r} needs a field")
         if not any(key in claim for key in CLAIM_KEYS):
             raise EvalError(f"claim {claim_id!r} needs one of {CLAIM_KEYS}")
+        if "gate" in claim and (claim["gate"] is not True or isinstance(claim.get("equals"), bool)):
+            raise EvalError(f"claim {claim_id!r}: gate must be true, on a claim that is not a boolean")
         for key in ("must_match", "must_not_match"):
             if key in claim:
                 try:
@@ -47,8 +56,52 @@ def validate_grader_spec(spec: dict[str, Any]) -> None:
 
 
 def is_decision_claim(claim: dict[str, Any]) -> bool:
-    """A claim that pins a boolean decision; getting it wrong caps the whole case at 0."""
-    return isinstance(claim.get("equals"), bool)
+    """A claim that carries the case's call; failing it caps the whole case at 0.
+
+    That is a boolean decision (`equals` true or false) or, in a case with no boolean, the
+    structural claim marked `"gate": true`, which a keyword list cannot satisfy.
+    """
+    return isinstance(claim.get("equals"), bool) or claim.get("gate") is True
+
+
+@lru_cache(maxsize=None)
+def claim_keywords(pattern: str) -> tuple[str, ...]:
+    """The keywords of a pattern: its runs of plain text between regex syntax.
+
+    Escaped punctuation is plain text (`check_scripts\\.sh` gives `check_scripts.sh`); runs are
+    case-folded, and runs shorter than three characters are dropped.
+    """
+    runs, run = [], ""
+    for token in REGEX_TOKEN.finditer(pattern):
+        if token.group("literal") is None:
+            runs.append(run)
+            run = ""
+        else:
+            run += token.group("literal")[-1]
+    runs.append(run)
+    return tuple(sorted({text.strip().casefold() for text in runs if len(text.strip()) >= 3}))
+
+
+def _whole(keyword: str) -> str:
+    """A regex for the keyword as whole words: no word character may extend it at either end."""
+    head = r"(?<!\w)" if re.match(r"\w", keyword) else ""
+    tail = r"(?!\w)" if re.search(r"\w$", keyword) else ""
+    return head + re.escape(keyword) + tail
+
+
+def keyword_hits(pattern: str, text: str) -> set[str]:
+    """The pattern's keywords that the text names, each as whole words, ignoring case."""
+    return {word for word in claim_keywords(pattern) if re.search(_whole(word), text, re.IGNORECASE)}
+
+
+def hit_limit(pattern: str) -> int:
+    """How many of its keywords one field may name: five, or three quarters of them if more.
+
+    A statement names one alternative per slot, so even a thorough one names few of a claim's
+    synonyms; a field that names nearly all of them is listing the claim's vocabulary, and the
+    one alternative it happens to contain does not complete the claim.
+    """
+    return max(MIN_HIT_LIMIT, int(len(claim_keywords(pattern)) * HIT_SHARE))
 
 
 def _unwrap(value: dict[str, Any]) -> dict[str, Any]:
@@ -91,10 +144,15 @@ def _check_claim(claim: dict[str, Any], answer: dict[str, Any]) -> Verdict:
     text = _field_text(value)
     if len(text) > MAX_FIELD_CHARS:
         return Verdict(claim_id, False, f"field {claim['field']!r} is over {MAX_FIELD_CHARS} characters")
-    flags = re.IGNORECASE | re.DOTALL
-    if "must_match" in claim and not re.search(claim["must_match"], text, flags):
-        return Verdict(claim_id, False, f"does not match /{claim['must_match']}/")
-    if "must_not_match" in claim and re.search(claim["must_not_match"], text, flags):
+    if "must_match" in claim:
+        pattern = claim["must_match"]
+        if not re.search(pattern, text, REGEX_FLAGS):
+            return Verdict(claim_id, False, f"does not match /{pattern}/")
+        hits, limit = keyword_hits(pattern, text), hit_limit(pattern)
+        if len(hits) > limit:
+            return Verdict(claim_id, False, f"names {len(hits)} of its {len(claim_keywords(pattern))} "
+                           f"keywords, over {limit}: a keyword list, not a statement")
+    if "must_not_match" in claim and re.search(claim["must_not_match"], text, REGEX_FLAGS):
         return Verdict(claim_id, False, f"matches forbidden /{claim['must_not_match']}/")
     if "equals" in claim and not _equals(value, claim["equals"]):
         return Verdict(claim_id, False, f"is not {claim['equals']!r}")
@@ -104,8 +162,9 @@ def _check_claim(claim: dict[str, Any], answer: dict[str, Any]) -> Verdict:
 def grade_claims(case: Case, output: str) -> Grade:
     """Deterministic grader: the same output always yields the same grade.
 
-    Decision gate: a wrong boolean decision scores the case 0, so a coin-flip boolean
-    cannot carry partial credit; a right decision with weak reasoning keeps partial credit.
+    Decision gate: a wrong boolean decision, or a failed gate claim, scores the case 0, so a
+    coin-flip boolean or a keyword list cannot carry partial credit; a right call with weak
+    reasoning keeps partial credit.
     """
     claims = case.grader["claims"]
     try:

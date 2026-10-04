@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import json
 import re
+from collections import Counter
 from typing import Any, Mapping, Sequence
 
 from .backends import Backend
-from .graders import grade, grade_claims
+from .graders import MAX_FIELD_CHARS, claim_keywords, grade, grade_claims
 from .models import MODEL_ALIASES, Case
 from .stats import paired_difference_ci
 
@@ -57,10 +58,21 @@ def grader_consistency(cases: Sequence[Case], transcripts: Sequence[Mapping[str,
 TRIVIAL_LIMIT = 0.25
 REFERENCE_TOKEN = re.compile(r"[\w./()\[\]=-]+")
 PATTERN_WORD = re.compile(r"[A-Za-z_]\w{2,}")
+BOOLEAN_MODES = ("false", "true", "oracle")
 
 
 def _boolean_fields(case: Case) -> dict[str, bool]:
     return {c["field"]: c["equals"] for c in case.grader["claims"] if isinstance(c.get("equals"), bool)}
+
+
+def _fit(words: Sequence[str], limit: int = MAX_FIELD_CHARS) -> str:
+    """Join words with spaces, stopping before the text would pass the field cap."""
+    kept: list[str] = []
+    for word in words:
+        if len(" ".join(kept + [word])) > limit:
+            break
+        kept.append(word)
+    return " ".join(kept)
 
 
 def keyword_soup(cases: Sequence[Case]) -> str:
@@ -73,28 +85,50 @@ def keyword_soup(cases: Sequence[Case]) -> str:
     return " ".join(sorted(words, key=str.casefold))
 
 
-def trivial_answers(case: Case, soup: str = "") -> dict[str, dict[str, Any]]:
-    """Answers that need no understanding: constants, echoes, soups and oracle booleans."""
+def compact_soup(cases: Sequence[Case]) -> str:
+    """A generic soup under the cap: the claim keywords most claims use, most widely used first."""
+    uses = Counter(word for case in cases for claim in case.grader["claims"]
+                   for word in claim_keywords(claim.get("must_match", "")))
+    return _fit(sorted(uses, key=lambda word: (-uses[word], word)))
+
+
+def case_soup(case: Case) -> str:
+    """A case-aware soup under the cap: every keyword of this case's claims, sorted."""
+    keywords = {word for claim in case.grader["claims"]
+                for word in claim_keywords(claim.get("must_match", ""))}
+    return _fit(sorted(keywords))
+
+
+def _flag(correct: bool, mode: str) -> bool:
+    return correct if mode == "oracle" else mode == "true"
+
+
+def trivial_answers(case: Case, soup: str = "", compact: str = "") -> dict[str, dict[str, Any]]:
+    """Answers that need no understanding: every text filler with every boolean mode.
+
+    Text fillers: empty text (constant), the case prompt (echo), the full soup, the compact
+    generic soup and this case's soup. Boolean modes: all false, all true and the correct
+    values (oracle). Constant text with oracle booleans keeps its old name, oracle_booleans.
+    """
     booleans = _boolean_fields(case)
     fields = {c["field"] for c in case.grader["claims"]}
-    answers: dict[str, dict[str, Any]] = {}
-    for flag in (False, True):
-        name = str(flag).lower()
-        answers[f"constant_{name}"] = {f: (flag if f in booleans else "") for f in fields}
-        answers[f"echo_{name}"] = {f: (flag if f in booleans else case.prompt) for f in fields}
-        answers[f"soup_{name}"] = {f: (flag if f in booleans else soup) for f in fields}
-    answers["empty"] = {}
-    answers["oracle_booleans"] = {f: booleans.get(f, "") for f in fields}
+    fillers = {"constant": "", "echo": case.prompt, "soup": soup, "compact_soup": compact,
+               "case_soup": case_soup(case)}
+    answers: dict[str, dict[str, Any]] = {"empty": {}}
+    for filler, text in fillers.items():
+        for mode in BOOLEAN_MODES:
+            name = "oracle_booleans" if (filler, mode) == ("constant", "oracle") else f"{filler}_{mode}"
+            answers[name] = {f: (_flag(booleans[f], mode) if f in booleans else text) for f in fields}
     return answers
 
 
 def trivial_answerer_scores(cases: Sequence[Case]) -> dict[str, Any]:
     """Mean score of each trivial answerer through the real grader; no model is called."""
     graded = [c for c in cases if c.grader["type"] == "claims"]
-    soup = keyword_soup(graded)
+    soup, compact = keyword_soup(graded), compact_soup(graded)
     totals: dict[str, list[float]] = {}
     for case in graded:
-        for name, answer in trivial_answers(case, soup).items():
+        for name, answer in trivial_answers(case, soup, compact).items():
             totals.setdefault(name, []).append(grade_claims(case, json.dumps(answer)).score)
     scores = {name: sum(v) / len(v) for name, v in totals.items()} if graded else {}
     return {**scores, "max": max(scores.values(), default=0.0), "limit": TRIVIAL_LIMIT}

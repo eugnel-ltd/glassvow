@@ -37,8 +37,9 @@ Some cases test the opposite error (treating harmless renderer noise as a failur
 need their own input; adding a helper on a belief that was never measured), so the eval does not reward an agent that is merely suspicious.
 Some cases are answered by the surface already; that is intended (it measures whether the surface
 carries the trap) and the headroom diagnostic will say if the eval saturates. Half of the boolean claims
-expect `true` and half `false`. A wrong boolean decision scores its case 0 (the decision gate), and the
-trivial-answerer diagnostic scores 24.0% at most; see Grader diagnostics below.
+expect `true` and half `false`. A wrong boolean decision scores its case 0 (the decision gate); each of
+the 13 cases with no boolean marks one structural claim as its gate instead, so a keyword list scores 0
+there too. The trivial-answerer diagnostic scores 24.0% at most; see Grader diagnostics below.
 
 ## Files
 
@@ -47,38 +48,54 @@ trivial-answerer diagnostic scores 24.0% at most; see Grader diagnostics below.
 - `cases.jsonl`: `id`, `source`, `why_hard`, `prompt`, `answer_format`, `reference` (the intended
   answer, for reviewers and for the failure-injection check) and `grader`.
 - `split.json`: the seeded 60/40 train/test split, written by `init`. Re-run `init` if cases change.
+- `answers.jsonl`: per case, the reference answer field by field (each text value is a verbatim span of
+  the case's `reference`; the one exception is the typed-array-ternary fix, which the reference states in
+  prose) and two correct answers in other words. The offline tests require all three to score 100%, so a
+  claim edit that rejects a correct answer fails. The harness itself never reads this file.
 
 ## Adding a case
 
 Take it from a real transcript, bug report or note first, then a hand-written case, then a synthetic
 one anchored to a real one. Write `why_hard` before running anything. Keep the prompt
-self-contained, avoid sharing a 40-character span with another case, run `init`, then `review`
-and the approvals again (a changed `cases.jsonl` invalidates both).
+self-contained, avoid sharing a 40-character span with another case, give a case with no boolean one
+`"gate": true` claim, add its line to `answers.jsonl`, run `init`, then `review` and the approvals again
+(a changed `cases.jsonl` invalidates both).
 
 ## Grader diagnostics
 
 Trivial answerers graded by the real grader on the 35 cases (`trivial_answerer_scores`; no model is
-called; limit 25%). "Old" is the previous 35 cases under the previous grader (no decision gate, no field
-cap); the soup and oracle rows did not exist then and were measured on that state for comparison.
+called; limit 25%). The council round (`council-2026-10-04.md`) added the decision gate and the
+1,000-character field cap, which took the full keyword soup from 68.6% to 11.9%. "Before" below is that
+state (origin/main at cbfac106), rescored with today's answerers; "After" adds the structural gates, the
+hit-count limit and the tightened claims.
 
-| Answerer | Old | Now |
+| Answerer (text filler; booleans) | Before | After |
 |---|---|---|
-| constant false (booleans false, empty text) | 11.0% | 11.9% |
-| constant true (booleans true, empty text) | 11.2% | 12.1% |
-| echo false (booleans false, text = prompt) | 12.4% | 19.0% |
-| echo true (booleans true, text = prompt) | 12.6% | 15.5% |
-| keyword soup false (every text field = one list of all domain words) | 68.3% | 11.9% |
-| keyword soup true | 68.6% | 12.1% |
-| oracle booleans (correct booleans, empty text) | 22.1% | 24.0% |
 | empty answer `{}` | 0.0% | 0.0% |
-| maximum | 68.6% | 24.0% |
+| constant (empty text); false / true | 11.9% / 12.1% | 11.9% / 12.1% |
+| constant; oracle (`oracle_booleans`) | 24.0% | 24.0% |
+| echo (text = prompt); false / true | 19.0% / 15.5% | 11.9% / 12.1% |
+| echo; oracle | 32.1% | 24.0% |
+| full keyword soup; false / true / oracle | 11.9% / 12.1% / 24.0% | 11.9% / 12.1% / 24.0% |
+| compact generic soup; false / true | 41.9% / 47.1% | 11.9% / 12.1% |
+| compact generic soup; oracle | 70.0% | 24.0% |
+| compact case-aware soup; false / true | 57.6% / 60.5% | 11.9% / 12.1% |
+| compact case-aware soup; oracle | 89.0% | 24.0% |
+| maximum | 89.0% | 24.0% |
 
-The decision gate alone brought the full soup from 68.6% to 59.0% (with the replacement cases), not
-under the limit; the 1,000-character field cap does the rest, because the soup is about 5,300
-characters. The oracle row is the least slack: it is the share of the score a model earns from the
-booleans alone, so a new case with a boolean and little else raises it.
+The council's own constructions, rescored the same way:
 
-Known residual: a compact soup that fits under the cap (the most frequent claim words, 300 to 950
-characters) still scores 27% to 41%, because a few common words satisfy many keyword regexes and the
-booleans are right in half the cases. It is not part of the gate; tightening the keyword claims is the
-fix, and `approve-grader` does not yet measure it.
+| Construction | Before | After |
+|---|---|---|
+| hand-made generic soup (263 characters); false / true / oracle | 33.8% / 32.4% / 55.7% | 11.9% / 12.1% / 24.0% |
+| each text field filled with the regex fragments of its own claims, in pattern order; false / true / oracle | 54.5% / 56.2% / 84.0% | 12.6% / 12.1% / 24.8% |
+
+The second construction reads the grader (it knows which field each claim checks and the order of
+its words), so it is an upper bound rather than a trivial answerer, and the diagnostic does not run it.
+
+After the change no text filler earns anything beyond the booleans it is handed: every oracle row
+equals `oracle_booleans`, which stays the least slack (it is the share of the score the booleans alone
+carry, so a new case with a boolean and little else raises it). Each mechanism is needed: without the
+hit-count limit the case-aware soup with oracle booleans scores 46.0%; without the structural gates the
+compact soups with oracle booleans score 32.1% and 32.6% and the echo 26.2%; the tightened claims close
+the rest (claims that one topic word, or a word inside another word, used to satisfy).

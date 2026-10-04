@@ -53,12 +53,26 @@ baseline or candidate label. Scoring is per output, so there is no pair to rando
 
 **Decision gate.** In a case with a boolean decision claim (`equals` true or false), a wrong or
 missing decision caps the case score at 0, so a coin-flip boolean cannot earn partial credit; a
-right decision with weak reasoning still earns partial credit. A text field over 1,000 characters
-fails every claim on it (a keyword dump, not an answer). A reply that wraps its fields in a single
-key, such as `{"answer": {...}}`, is unwrapped. Write `must_not_match` only for text a wrong answer
-alone would contain, because a correct refusal can name the forbidden word ("do not ignore it"),
-and anchor a keyword `must_match` to an affirmative statement or pair it with a forbid of a
-nearby `not|no|never`.
+right decision with weak reasoning still earns partial credit. A case with no boolean marks one
+structural claim `"gate": true` instead, and a failed gate caps the case at 0 in the same way. The
+gate is the claim a keyword list cannot satisfy: a statement in a fixed shape, a code shape or an
+anchored value (`validate_grader_spec` accepts `gate` only as `true`, and never on a boolean). A
+text field over 1,000 characters fails every claim on it (a keyword dump, not an answer). A reply
+that wraps its fields in a single key, such as `{"answer": {...}}`, is unwrapped. Write
+`must_not_match` only for text a wrong answer alone would contain, because a correct refusal can
+name the forbidden word ("do not ignore it"), and anchor a keyword `must_match` to an affirmative
+statement or pair it with a forbid of a nearby `not|no|never`.
+
+**Hit-count limit.** A claim's keywords are the runs of plain text in its `must_match` pattern,
+between the regex syntax: escaped punctuation counts as text (`check_scripts\.sh` gives
+`check_scripts.sh`), the runs are case-folded and runs shorter than three characters are dropped
+(`graders.claim_keywords`). A field's hit count for the claim is the number of those keywords it
+names as whole words, ignoring case (`keyword_hits`). The claim fails, even when its pattern
+matches, if the hit count is above `max(5, ¾ × the number of keywords)` (`hit_limit`). A statement
+names one alternative per slot, so even a thorough one names few of a claim's synonyms; a list
+names nearly all of them, and the one alternative it happens to contain does not complete the
+claim. Patterns of the form `X ... Y` should keep their alternatives few and their gaps short,
+because a list of their words can fall into that order by chance.
 
 **Baseline diagnostics** (in `results.json` and printed as warnings):
 
@@ -67,13 +81,16 @@ nearby `not|no|never`.
   paired per-case difference;
 - grader consistency: every output is graded twice; programmatic grades must be identical and
   the judge disagreement rate is reported;
-- trivial answerers (no model call), graded by the real grader: constants (booleans false, then
-  true, empty text), echoes (each text field set to the case prompt), keyword soups (every text
-  field set to one fixed list of domain words drawn from every reference and keyword claim,
-  booleans false, then true), oracle booleans (the correct booleans, empty text) and the empty
-  answer `{}`. Any of them scoring above 25% warns, and `approve-grader` refuses such a run; it
-  also rescores the current cases itself, so a run recorded before a new answerer existed cannot
-  back an approval;
+- trivial answerers (no model call), graded by the real grader: the empty answer `{}`, and every
+  text filler paired with every boolean mode. The text fillers are empty text (constant), the case
+  prompt (echo), the full keyword soup (one fixed list of every domain word in every reference and
+  keyword claim, about 5,300 characters, so the field cap rejects it), the compact generic soup
+  (the claim keywords most claims use, most widely used first, cut to fit under the 1,000-character
+  cap) and the compact case-aware soup (every keyword of that case's own claims, sorted, under the
+  cap). The boolean modes are all false, all true and the correct values (oracle); constant text
+  with oracle booleans is named `oracle_booleans`. Any of them scoring above 25% warns, and
+  `approve-grader` refuses such a run; it also rescores the current cases itself, so a run
+  recorded before a new answerer existed cannot back an approval;
 - infrastructure reliability: timeouts, API or CLI errors and truncated outputs are counted;
   above `--infra-threshold` (default 5%) the run is marked `failed` and the command exits 2.
 

@@ -473,7 +473,7 @@ class ApprovalTests(unittest.TestCase):
         done = subprocess.run([sys.executable, str(ROOT / "tools/agent_evals/cli.py"),
                                "hillclimb", "repo_traps"], capture_output=True, text=True, check=False)
         self.assertEqual(1, done.returncode)
-        self.assertIn("not approved", done.stderr)
+        self.assertRegex(done.stderr, "not approved|approval is stale")
 
 
 class BackendTests(unittest.TestCase):

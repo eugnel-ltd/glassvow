@@ -59,7 +59,7 @@ class Verdict:
 class Grade:
     verdicts: tuple[Verdict, ...]
     parse_error: str | None = None
-    decision_failed: bool = False  # a wrong boolean decision caps the case score at 0
+    decision_failed: bool = False  # a wrong decision or a failed gate claim caps the score at 0
 
     @property
     def score(self) -> float:
