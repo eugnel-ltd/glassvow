@@ -38,7 +38,7 @@ static func _warm_matches_cold(fails: Array[String]) -> void:
 	if warm == null:
 		return
 	_settle(warm)
-	_check(fails, warm.decoded == warm.files, "the worker decodes every picture of the act")
+	_check(fails, _once(warm), "the workers decode every picture of the act, each once")
 	var assets: MapLandscapeAssets = MapLandscapeAssets.for_act(0)
 	_check(fails, MapLandscapeAssets.warming() == null, "the map takes the warm-up")
 	_check(fails, assets.failure.is_empty() and assets.digest == cold.digest
@@ -89,10 +89,10 @@ static func _stale_warm_up_is_never_waited_for(fails: Array[String]) -> void:
 	MapLandscapeAssets.release()
 	var gate: Semaphore = Semaphore.new()
 	var stale: MapLandscapeAssets.Pictures = MapLandscapeAssets.Pictures.new(3)
-	stale.task = WorkerThreadPool.add_task(gate.wait)
+	stale.task = WorkerThreadPool.add_group_task(func(_index: int) -> void: gate.wait(), 1)
 	MapLandscapeAssets._warming = stale
 	var assets: MapLandscapeAssets = MapLandscapeAssets.for_act(0)
-	_check(fails, not WorkerThreadPool.is_task_completed(stale.task),
+	_check(fails, not WorkerThreadPool.is_group_task_completed(stale.task),
 		"the map opened while the stale warm-up was still running")
 	_check(fails, assets.act == 0 and assets.failure.is_empty(), "the asked-for act is whole")
 	_check(fails, stale.decoded.is_empty() and not stale.step(),

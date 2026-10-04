@@ -1,0 +1,55 @@
+Mutation proof of tests/test_map_title_road.gd at 9a1f1eff (Mac, headless,
+filtered runner). Each mutation backed the file up, applied one edit, ran
+`godot --headless -s res://tests/run_all.gd -- --tests=res://tests/test_map_title_road.gd`
+and copied the file back; `git diff` was byte-identical before and after.
+Unmutated: PASS (1 tests).
+
+Review round:
+R1 presentation/map/map_journey_prefetch.gd, layout_packet: drop
+   `_current._take_layout()` (the compile no longer takes a layout handed over
+   within the restore's frame).
+   FAIL: a map opened mid-build takes the worker's layout and scenery binding
+   (handed over within the frame)
+R2 presentation/map/map_journey_landscape.gd, build_detached:
+   `var spread: bool = pacing != null` (no pool-size guard).
+   FAIL: a build on a pool with no threads to spare works its heights out on
+   its own thread
+R3 application/main.gd, _show_title: `_title_road_due = false` (every act
+   warms under the rite).
+   FAIL: nothing of another act's map warms while the launch rite plays
+R4 presentation/map/map_journey_prefetch.gd, _advance:
+   `kit_held = step == Step.KIT and MapJourneyLandscape.Kit.preload_step()`
+   (the kit waits for the catalogue, as at PR #664).
+   FAIL: the warm-up asks for the kit's scenes in its first working frame,
+   pictures or not; the warm-up holds the kit's scenes while the pictures
+   decode
+
+Earlier R1.1 mutations, rerun on 9a1f1eff:
+M1 application/main.gd, _warm_title_road returns while `_title_kindled` is
+   false (the warm waits for the rite to land).
+   FAIL (9): the saved run's land warms from the launch rite's first frame;
+   the warm-up asks for the kit's scenes in its first working frame, pictures
+   or not; ... holds the kit's scenes while the pictures decode; ... goes on
+   once the rite has landed; the title's warm-up builds the land; and the
+   heights checks that follow from it
+M2 presentation/map/map_journey_prefetch.gd, _advance: no kit while the
+   pictures decode.
+   FAIL (2): the two kit checks above
+M3 presentation/map/map_journey_prefetch.gd, _advance: BUILDING no longer
+   takes the layout each frame.
+   FAIL (4): the worker hands the layout over before the land is built; the
+   flare and flood of a tap on Back to the Road play over a paced build; a
+   map opened mid-build takes the worker's layout and scenery binding
+   (polled); the map opened mid-build draws the build's land (polled)
+M4 application/main.gd, _on_title_pick: the tap unpaces the build.
+   FAIL (2): the flare and flood of a tap on Back to the Road play over a
+   paced build (both mid-build cases)
+M5 presentation/map/map_journey_prefetch.gd, _advance: the first frame
+   steps the kit.
+   FAIL: the title's first frame, which builds the rite's pipelines, loads
+   none of the kit
+
+Pool-size facts behind R2 (Godot 4.7.2, a scratch project, headless): a
+low-priority pool task that adds a high-priority group and waits for it never
+finished with threading/worker_pool/max_threads=1 and finished with 2 and 3;
+two such tasks at once never finished with 2 threads and finished with 3.

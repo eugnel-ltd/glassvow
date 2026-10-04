@@ -1,0 +1,88 @@
+"""R1.1 review-round tables from committed device rows: the launch rite's frames
+split into its first frame (the title's first frame, which builds the rite's
+pipelines) and the rest, per arm and pooled over batches of the same Act I
+code under the rite; and the back-to-back rounds side by side.
+usage: review_tables.py <device-rows-*.jsonl>... (launch label prefixes say
+the batch: g- 9803bd95, r- rested and b- back to back at 9a1f1eff)"""
+import json, sys, statistics as st
+
+launches = {}
+for path in sys.argv[1:]:
+    for l in open(path):
+        if l.strip():
+            r = json.loads(l)
+            launches.setdefault(r["launch"], {})[r["probe"]] = r
+
+
+def ok(name, by):
+    args = by.get("start", {}).get("args", "").split()
+    return any(a.startswith("--qa-nonce=" + name + "-") for a in args) and "done" in by
+
+
+def pct(v, q):
+    t = sorted(v)
+    return t[int(len(t) * q)] if q < 1 else t[-1]
+
+
+def med(v):
+    return round(st.median(v), 2) if v else None
+
+
+def rite_split(arms):
+    for label, prefixes in arms:
+        f1, rest_max, rest_p95, p50, p95, mx = [], [], [], [], [], []
+        n = 0
+        for name, by in launches.items():
+            if not ok(name, by) or not any(name.startswith(p) and name[len(p):].isdigit() for p in prefixes):
+                continue
+            n += 1
+            frames = by["lit"]["rite_frames"]
+            stats = by["lit"]["rite"]
+            p50.append(stats["p50_ms"]); p95.append(stats["p95_ms"]); mx.append(stats["max_ms"])
+            # rite_frames[0] is the gap to the first rite frame; [1] the first frame
+            f1.append(frames[1])
+            rest = frames[2:]
+            rest_max.append(max(rest)); rest_p95.append(pct(rest, 0.95))
+        print("%-28s n=%d  p50 med %s worst %s | p95 med %s worst %s | max med %s worst %s"
+              % (label, n, med(p50), max(p50), med(p95), max(p95), med(mx), max(mx)))
+        print("%-28s       first frame med %s worst %s | other frames: max med %s worst %s, p95 med %s worst %s"
+              % ("", med(f1), max(f1), med(rest_max), max(rest_max), med(rest_p95), max(rest_p95)))
+
+
+print("Rite frames (ms):")
+rite_split([
+    ("Act I cand 9a1f1eff rested", ["r-cand-e0-"]),
+    ("Act I late 9a1f1eff rested", ["r-late-e0-"]),
+    ("Act I cand 9803bd95", ["g-cand-e0-"]),
+    ("Act I late 9803bd95", ["g-late-e0-"]),
+    ("Act I cand pooled", ["r-cand-e0-", "g-cand-e0-"]),
+    ("Act I late pooled", ["r-late-e0-", "g-late-e0-"]),
+    ("Act I cand back to back", ["b-cand-e0-"]),
+    ("Act I late back to back", ["b-late-e0-"]),
+    ("Act II cand 9a1f1eff", ["r-cand-a2e0-", "r-cand-a2aw-"]),
+    ("Act II nowarm 9a1f1eff", ["r-nowarm-a2e0-", "r-nowarm-a2aw-"]),
+])
+
+print("\nBack to back, round by round (ready ms; boot main_ready->first frame ms; candidate's build left when the map opened ms):")
+
+
+def marks_at(by, label, last=False):
+    hits = [t for t, l in by["continue"]["marks"] if l == label or l.startswith(label + " ")]
+    return (hits[-1] if last else hits[0]) if hits else None
+
+
+for i in range(1, 30):
+    c, l = launches.get("b-cand-e0-%d" % i), launches.get("b-late-e0-%d" % i)
+    if c is None and l is None:
+        break
+    row = []
+    for by, name in ((c, "b-cand-e0-%d" % i), (l, "b-late-e0-%d" % i)):
+        if by is None or not ok(name, by):
+            row.append("dropped")
+            continue
+        boot = (marks_at(by, "first_frame") - marks_at(by, "main_ready")) / 1000
+        h, b = marks_at(by, "hurry"), marks_at(by, "built", last=True)
+        left = max(0.0, (b - h) / 1000) if h and b else None
+        row.append("%7.1f  boot %5.1f  left %s" % (by["continue"]["ready_ms"], boot,
+                                                  "%.1f" % left if left is not None else "-"))
+    print("  round %d  cand %s | late %s" % (i, row[0], row[1]))

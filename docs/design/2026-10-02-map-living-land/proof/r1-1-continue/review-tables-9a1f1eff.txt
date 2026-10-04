@@ -1,0 +1,31 @@
+Rite frames (ms):
+Act I cand 9a1f1eff rested   n=6  p50 med 16.66 worst 16.66 | p95 med 16.79 worst 17.64 | max med 57.35 worst 60.72
+                                   first frame med 57.35 worst 60.7 | other frames: max med 20.35 worst 24.2, p95 med 16.8 worst 17.6
+Act I late 9a1f1eff rested   n=6  p50 med 16.66 worst 16.7 | p95 med 19.35 worst 47.88 | max med 51.25 worst 57.96
+                                   first frame med 51.25 worst 58.0 | other frames: max med 25.7 worst 48.6, p95 med 19.2 worst 47.8
+Act I cand 9803bd95          n=7  p50 med 16.66 worst 16.68 | p95 med 16.78 worst 18.31 | max med 52.86 worst 58.8
+                                   first frame med 52.9 worst 58.8 | other frames: max med 20.9 worst 26.5, p95 med 16.8 worst 18.3
+Act I late 9803bd95          n=6  p50 med 16.66 worst 16.67 | p95 med 19.16 worst 21.76 | max med 55.86 worst 59.35
+                                   first frame med 55.9 worst 59.3 | other frames: max med 25.45 worst 48.6, p95 med 19.15 worst 21.7
+Act I cand pooled            n=13  p50 med 16.66 worst 16.68 | p95 med 16.78 worst 18.31 | max med 56.23 worst 60.72
+                                   first frame med 56.2 worst 60.7 | other frames: max med 20.9 worst 26.5, p95 med 16.8 worst 18.3
+Act I late pooled            n=12  p50 med 16.66 worst 16.7 | p95 med 19.26 worst 47.88 | max med 53.89 worst 59.35
+                                   first frame med 53.9 worst 59.3 | other frames: max med 25.45 worst 48.6, p95 med 19.15 worst 47.8
+Act I cand back to back      n=8  p50 med 16.66 worst 16.72 | p95 med 19.23 worst 30.59 | max med 66.02 worst 74.6
+                                   first frame med 66.05 worst 74.6 | other frames: max med 23.5 worst 49.1, p95 med 18.9 worst 27.8
+Act I late back to back      n=8  p50 med 16.66 worst 16.66 | p95 med 19.26 worst 40.85 | max med 59.94 worst 65.6
+                                   first frame med 59.95 worst 65.6 | other frames: max med 22.2 worst 49.0, p95 med 19.25 worst 23.4
+Act II cand 9a1f1eff         n=10  p50 med 16.66 worst 16.68 | p95 med 19.24 worst 21.9 | max med 56.86 worst 61.01
+                                   first frame med 56.85 worst 61.0 | other frames: max med 24.55 worst 47.8, p95 med 19.25 worst 20.9
+Act II nowarm 9a1f1eff       n=10  p50 med 16.66 worst 16.67 | p95 med 19.17 worst 41.59 | max med 56.9 worst 60.89
+                                   first frame med 56.9 worst 60.9 | other frames: max med 37.25 worst 48.7, p95 med 19.1 worst 23.2
+
+Back to back, round by round (ready ms; boot main_ready->first frame ms; candidate's build left when the map opened ms):
+  round 1  cand   706.3  boot 212.9  left 40.3 | late  3170.0  boot 205.9  left 2182.9
+  round 2  cand   862.8  boot 223.4  left 217.5 | late  3314.8  boot 196.4  left 2321.0
+  round 3  cand   837.2  boot 221.6  left 166.0 | late  3372.1  boot 201.1  left 2345.4
+  round 4  cand  4816.8  boot 393.7  left 4045.9 | late  5123.1  boot 288.8  left 4038.8
+  round 5  cand  2664.2  boot 400.5  left 1982.2 | late  4640.6  boot 275.9  left 3537.9
+  round 6  cand  1964.1  boot 280.8  left 1274.1 | late  4527.8  boot 273.0  left 3451.9
+  round 7  cand  1965.7  boot 331.5  left 1303.4 | late  4976.3  boot 267.7  left 3826.8
+  round 8  cand  2119.3  boot 280.8  left 1442.6 | late  4389.5  boot 264.9  left 3208.8

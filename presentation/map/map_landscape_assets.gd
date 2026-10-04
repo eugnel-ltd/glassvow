@@ -49,6 +49,14 @@ static var _retired: Array[Pictures] = []
 static var _upload: Mutex = Mutex.new()
 ## The slate cluster, held once `prime` has read its faces back.
 static var _slate: PackedScene = null
+## How many pool threads decode a warm-up's pictures side by side, as a
+## high-priority group. The pool runs few low-priority tasks at once
+## (`threading/worker_pool/low_priority_thread_ratio`): on the iPad 8 a
+## low-priority warm-up decoded its pictures one at a time and held the kit's
+## loads back until it ended, and the journey prefetch waits for both before it
+## builds Act I's land under the launch rite (#660). The uploads stay one at a
+## time (`_upload`).
+const PICTURE_THREADS: int = 2
 
 
 ## `pictures` is the act's decoded artwork, from `prefetch`; without it (or for
@@ -68,8 +76,8 @@ func _init(act_index: int = 0, pictures: Pictures = null, stepped: bool = false)
 ## one's profile, then the digest. No piece reads a mesh back from the renderer,
 ## a stall until the GPU has drained that the title's frames cannot pay: a card
 ## is laid out on the CPU and profiled from its own arrays, and the slate
-## cluster's faces were read before the first frame (`prime`). `prepare_step`
-## spreads the pieces over frames.
+## cluster's faces were read before the title was built (`prime`).
+## `prepare_step` spreads the pieces over frames.
 func step() -> bool:
 	if _complete:
 		return true
@@ -199,11 +207,12 @@ static func _begin(wanted: int) -> MapLandscapeAssets:
 	return MapLandscapeAssets.new(wanted, warm, true)
 
 
-## Starts decoding an act's pictures on a WorkerThreadPool task, so the first
-## map of that act (a new or resumed run, or the act after a boss) does not
-## decode them on the main thread. Does nothing when the act is kept, already
-## warming or being built. Warming another act releases the kept one, so one
-## act's artwork is held at a time, as `for_act` promises.
+## Starts decoding an act's pictures on the worker pool (`PICTURE_THREADS` side
+## by side, high-priority), so the first map of that act (a new or resumed run,
+## or the act after a boss) does not decode them on the main thread. Does
+## nothing when the act is kept, already warming or being built. Warming
+## another act releases the kept one, so one act's artwork is held at a time,
+## as `for_act` promises.
 static func prefetch(act_index: int) -> void:
 	var wanted: int = clampi(act_index, 0, 3)
 	if (_kept != null and _kept.act == wanted) or (_warming != null and _warming.act == wanted) \
@@ -215,7 +224,8 @@ static func prefetch(act_index: int) -> void:
 		_retire(_warming)
 	_reap()
 	_warming = Pictures.new(wanted)
-	_warming.task = WorkerThreadPool.add_task(_warming.drain, false, "Map landscape pictures")
+	_warming.task = WorkerThreadPool.add_group_task(_warming._claim, _warming.files.size(),
+		PICTURE_THREADS, true, "Map landscape pictures")
 
 
 ## Forgets the kept act and stops any warm-up or build, so the next `for_act`
@@ -238,9 +248,7 @@ static func join() -> void:
 		_retire(_warming)
 		_warming = null
 	for pictures: Pictures in _retired:
-		if pictures.task >= 0:
-			WorkerThreadPool.wait_for_task_completion(pictures.task)
-			pictures.task = -1
+		pictures.wait()
 	_retired.clear()
 
 
@@ -397,10 +405,11 @@ func _profile_mesh(id: String) -> Mesh:
 	return meshes[id]
 
 
-## Reads the slate cluster's faces back from the renderer once, before the
-## first frame, when nothing is in flight and a read-back costs next to
-## nothing, and holds the cluster for the process: the mesh keeps its faces,
-## so no catalogue reads them back under a frame (Main's boot).
+## Reads the slate cluster's faces back from the renderer once and holds the
+## cluster for the process: the mesh keeps its faces, so no catalogue reads
+## them back under a frame. `MapJourneyPrefetch.prime` calls it before a title
+## that warms Act I's land is built; the read-back waits for the frames in
+## flight, none before the session's first frame.
 static func prime() -> void:
 	if _slate != null:
 		return
@@ -506,8 +515,8 @@ static func _first_mesh(node: Node) -> Mesh:
 
 
 ## An act's pictures, each decoded once by whichever thread claims it first:
-## the worker `prefetch` starts, or the threads `finish` adds when the map
-## opens before that worker is done.
+## the workers `prefetch` starts, or the threads `finish` adds when the map
+## opens before those workers are done.
 class Pictures extends RefCounted:
 	var act: int
 	var files: PackedStringArray
@@ -515,7 +524,8 @@ class Pictures extends RefCounted:
 	var textures: Dictionary[String, ImageTexture] = {}
 	## Every file decoded so far, in the order each finished.
 	var decoded: PackedStringArray = []
-	## The worker task decoding these pictures, or -1 when none is owed a wait.
+	## The pool's group task decoding these pictures, or -1 when none is owed a
+	## wait.
 	var task: int = -1
 	var _next: int = 0
 	var _stopped: bool = false
@@ -547,14 +557,10 @@ class Pictures extends RefCounted:
 	func texture(file: String) -> ImageTexture:
 		return textures[file] if textures.has(file) else null
 
-	func drain() -> void:
-		while step():
-			pass
-
-	## Decodes whatever is still unclaimed, then waits for the warm-up's worker
-	## to end the picture it is on. The calling thread waits for the pictures
-	## in any case, so they are decoded side by side on high-priority pool
-	## threads rather than one after another.
+	## Decodes whatever is still unclaimed, then waits for the warm-up's
+	## workers to end the pictures they are on. The calling thread waits for
+	## the pictures in any case, so they are decoded side by side on
+	## high-priority pool threads rather than one after another.
 	func finish() -> void:
 		_lock.lock()
 		var left: int = 0 if _stopped else files.size() - _next
@@ -562,8 +568,12 @@ class Pictures extends RefCounted:
 		if left > 0:
 			WorkerThreadPool.wait_for_group_task_completion(WorkerThreadPool.add_group_task(
 				_claim, left, -1, true, "Map landscape pictures"))
+		wait()
+
+	## Waits for the warm-up's workers, once.
+	func wait() -> void:
 		if task >= 0:
-			WorkerThreadPool.wait_for_task_completion(task)
+			WorkerThreadPool.wait_for_group_task_completion(task)
 			task = -1
 
 	func _claim(_index: int) -> void:
@@ -576,4 +586,4 @@ class Pictures extends RefCounted:
 		_lock.unlock()
 
 	func is_done() -> bool:
-		return task < 0 or WorkerThreadPool.is_task_completed(task)
+		return task < 0 or WorkerThreadPool.is_group_task_completed(task)

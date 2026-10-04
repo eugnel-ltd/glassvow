@@ -145,6 +145,7 @@ func _ready() -> void:
 ## as the scene returns.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
+		_give_up_own_build()
 		_release_landscape()
 	elif what == NOTIFICATION_EXIT_TREE:
 		_stage.size = PARKED_STAGE
@@ -1165,6 +1166,16 @@ func _release_landscape() -> void:
 	else:
 		_landscape.free()
 	_landscape = null
+
+
+## A screen going while it builds its own land (a prefetch missed) gives the
+## build up and waits for it, its current stage at most, instead of leaving it
+## to `reap`: a quit inside the charting veil frees the screen after Main's
+## exit join (`MapJourneyPrefetch.join`), and nothing would wait for it then.
+func _give_up_own_build() -> void:
+	var land: MapJourneyLandscape = _landscape as MapJourneyLandscape
+	if land != null and land != _journey_kept and land.busy():
+		land.give_up()
 
 
 ## Lands given up while a worker still builds them, freed once it ends.

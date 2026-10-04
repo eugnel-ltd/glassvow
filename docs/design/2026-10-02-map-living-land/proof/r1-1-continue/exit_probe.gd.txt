@@ -1,0 +1,38 @@
+extends SceneTree
+## Scratch (never committed): a map screen building its own land is freed by
+## the tree at quit, on the real renderer. Mode "own": quit while its `_finish`
+## runs on the pool; "prefetch": the title-style prefetch mid-build, joined.
+var _screen: WorldMapScreen
+var _frames: int = 0
+var _t0: int = 0
+
+func _initialize() -> void:
+	MapScene.journey_async = true
+	var content: ContentDB = ContentDB.load_full()
+	var run: RunState = RunState.new_run(content, 6603, "run-exit-probe")
+	_screen = WorldMapScreen.new(WorldMap.for_run(run, content), content)
+	root.add_child(_screen)
+	_screen.size = Vector2(1180, 820)
+	_screen.set_shape(StageShape.IDENTITY)
+	_screen.refresh(run)
+	_t0 = Time.get_ticks_msec()
+
+func _process(_delta: float) -> bool:
+	_frames += 1
+	var land: MapJourneyLandscape = _screen._map_scene.journey_landscape()
+	if land != null and land._stage == MapJourneyLandscape.Stage.REST and land.busy():
+		print("EXIT_PROBE quitting mid-build at frame %d, %d ms, renderer %s" % [_frames,
+			Time.get_ticks_msec() - _t0, RenderingServer.get_video_adapter_name()])
+		var t: int = Time.get_ticks_usec()
+		root.remove_child(_screen)
+		_screen.free()
+		print("EXIT_PROBE screen freed in %.1f ms, land freed: %s, abandoned: %d" % [
+			(Time.get_ticks_usec() - t) / 1000.0, not is_instance_valid(land), MapScene._abandoned.size()])
+		MapScene.release_kept_journey()
+		quit(0)
+		return true
+	if not _screen._map_scene.landscape_pending():
+		print("EXIT_PROBE land finished before the probe caught it mid-build")
+		quit(3)
+		return true
+	return false

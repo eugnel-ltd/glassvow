@@ -1,0 +1,348 @@
+extends Node
+## QA-only probe for #660 R1.1 (never in the game). Hosted by Main behind
+## `--title-probe`: Main has stored a fresh saved run (dev profile) and shown
+## the title. The probe waits for the launch rite to land, samples 360 title
+## frames (the title-time prefetch runs under them unless QA_NO_TITLE_WARM),
+## waits for the warm-up to finish, then taps the lantern (Back to the Road)
+## and times the tap to a drawn, interactive map. With `--qa-tap-after=MS` it
+## instead taps MS after the rite lands, whatever the warm-up has reached (an
+## early tap), and records the phase it found. With `--qa-skip-at=MS` a tap
+## lands the rite MS into it (a tap during the rite completes it), and the
+## Continue tap follows `--qa-tap-after` after that. With `--qa-later-title`
+## the first title (a saved run of another act, `--qa-act=2`) lands its rite
+## and warms; then a fresh Act I run is saved and a later title shown, as the
+## run menu's door shows one, and its frames are sampled before the Continue
+## tap. Rows: user://title_probe.jsonl.
+
+const ROW_PATH: String = "user://title_probe.jsonl"
+var _host: Node = null
+var _rows: FileAccess = null
+var _quit_at: String = ""
+var _tap_after_ms: int = -1
+var _skip_at_ms: int = -1
+var _later: bool = false
+
+
+func _ready() -> void:
+	_host = get_parent()
+	_rows = FileAccess.open(ROW_PATH, FileAccess.WRITE)
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--qa-quit-at="):
+			_quit_at = arg.trim_prefix("--qa-quit-at=")
+		elif arg.begins_with("--qa-tap-after="):
+			_tap_after_ms = int(arg.trim_prefix("--qa-tap-after="))
+		elif arg.begins_with("--qa-skip-at="):
+			_skip_at_ms = int(arg.trim_prefix("--qa-skip-at="))
+		elif arg == "--qa-later-title":
+			_later = true
+	var t0: int = Time.get_ticks_usec()
+	BoxMesh.new().get_mesh_arrays()
+	var boot_readback_ms: float = (Time.get_ticks_usec() - t0) / 1000.0
+	_row({"probe": "start", "build": "r11-BUILD_LABEL", "tap_after_ms": _tap_after_ms,
+		"skip_at_ms": _skip_at_ms,
+		"args": " ".join(OS.get_cmdline_user_args()), "busy": OS.get_environment("QA_BUSY"), "warm": OS.get_environment("QA_NO_TITLE_WARM").is_empty(),
+		"late": not OS.get_environment("QA_LATE").is_empty(),
+		"renderer_cone": not OS.get_environment("QA_RENDERER_CONE").is_empty(),
+		"no_later_prime": not OS.get_environment("QA_NO_LATER_PRIME").is_empty(),
+		"early_all": not OS.get_environment("QA_EARLY_ALL").is_empty(),
+		"no_rush": not OS.get_environment("QA_NO_RUSH").is_empty(),
+		"warm_start_ms": Engine.get_meta("qa_warm_start_ms", -1.0),
+		"prime_ms": Engine.get_meta("qa_prime_ms", -1.0), "boot_readback_ms": boot_readback_ms,
+		"adapter": RenderingServer.get_video_adapter_name(), "quit_at": _quit_at,
+		"video_mib": _vmib()})
+	_run.call_deferred()
+
+
+func _row(data: Dictionary) -> void:
+	data["t_ms"] = Time.get_ticks_msec()
+	var line: String = JSON.stringify(data)
+	print("TITLE_PROBE " + line)
+	if _rows != null:
+		_rows.store_line(line)
+		_rows.flush()
+
+
+func _vmib() -> float:
+	return snappedf(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, 0.1)
+
+
+func _phase() -> String:
+	var step: int = MapJourneyPrefetch.current_step()
+	var warming: MapLandscapeAssets.Pictures = MapLandscapeAssets.warming()
+	if warming != null and not warming.is_done():
+		return "pictures"
+	match step:
+		-1: return "none"
+		0: return "waiting"
+		1: return "catalogue"
+		2: return "kit"
+		3: return "building"
+		4: return "done"
+	return "failed"
+
+
+func _run() -> void:
+	var rite: Array[float] = []
+	var title: TitleScreen = null
+	var last: int = Time.get_ticks_usec()
+	var boot_frames: int = 0
+	var first_frame_us: int = -1
+	var skipped: bool = false
+	while true:
+		await get_tree().process_frame
+		var now: int = Time.get_ticks_usec()
+		if first_frame_us < 0:
+			first_frame_us = now
+			QaMarks.mark("first_frame")
+		title = _title()
+		if title != null and title.rite != null and title.rite.is_running():
+			rite.append((now - last) / 1000.0)
+			if _skip_at_ms >= 0 and not skipped and title.rite.time() * 1000.0 >= _skip_at_ms:
+				skipped = true
+				QaMarks.mark("skip")
+				title.rite.skip()
+		last = now
+		boot_frames += 1
+		if title != null and (title.rite == null or title.rite.is_done()):
+			break
+	QaMarks.mark("lit")
+	_row({"probe": "lit", "rite": _stats(rite), "video_mib": _vmib(), "boot_frames": boot_frames,
+		"first_frame_ms": first_frame_us / 1000.0, "phase": _phase(), "skipped": skipped,
+		"rite_frames": rite.map(func(v: float) -> float: return snappedf(v, 0.1))})
+	var busy: String = OS.get_environment("QA_BUSY")
+	if not busy.is_empty():
+		WorkerThreadPool.add_task(_busy.bind(busy), false, "qa busy")
+	if _tap_after_ms >= 0:
+		await _early_tap(Time.get_ticks_usec())
+		return
+	if _later:
+		await _later_title()
+		return
+	var all: Array[float] = []
+	var by_phase: Dictionary = {}
+	var slow: Array = []
+	last = Time.get_ticks_usec()
+	var lit_at: int = last
+	var done_at: int = -1
+	for i: int in range(360):
+		var phase: String = _phase()
+		await get_tree().process_frame
+		var now: int = Time.get_ticks_usec()
+		var dt: float = (now - last) / 1000.0
+		last = now
+		all.append(dt)
+		if not by_phase.has(phase):
+			by_phase[phase] = []
+		var bucket: Array = by_phase[phase]
+		bucket.append(dt)
+		if dt > 20.0:
+			slow.append([i, phase, snappedf(dt, 0.1), now])
+		if done_at < 0 and _phase() in ["done", "failed"]:
+			done_at = now
+		if not _quit_at.is_empty() and _phase() == _quit_at:
+			_row({"probe": "quit", "phase": _quit_at})
+			_host._quit_game()
+			return
+	var phases: Dictionary = {}
+	for key: String in by_phase:
+		var raw: Array = by_phase[key]
+		var bucket: Array[float] = []
+		bucket.assign(raw)
+		phases[key] = _stats(bucket)
+	_row({"probe": "title_frames", "all": _stats(all), "phases": phases, "slow": slow,
+		"warm_done_ms": -1.0 if done_at < 0 else (done_at - lit_at) / 1000.0,
+		"kit_preload_ms": MapJourneyLandscape.Kit.preload_ms, "phase_end": _phase(),
+		"marks": QaMarks.marks.duplicate(), "lit_us": lit_at,
+		"video_mib": _vmib()})
+	for i: int in range(600):
+		if not MapJourneyPrefetch.busy() and (MapLandscapeAssets.warming() == null \
+				or MapLandscapeAssets.warming().is_done()):
+			break
+		await get_tree().process_frame
+	await _frames(30)
+	_row({"probe": "warm", "phase": _phase(), "video_mib": _vmib(),
+		"since_lit_ms": (Time.get_ticks_usec() - lit_at) / 1000.0})
+	var rb: Array = []
+	for k: int in range(3):
+		await get_tree().process_frame
+		var before: int = Time.get_ticks_usec()
+		BoxMesh.new().get_mesh_arrays()
+		var cost: float = (Time.get_ticks_usec() - before) / 1000.0
+		await get_tree().process_frame
+		rb.append([snappedf(cost, 0.01), snappedf((Time.get_ticks_usec() - before) / 1000.0, 0.1)])
+	_row({"probe": "title_readback", "cost_and_frame_ms": rb})
+	await _frames(10)
+	await _tap_and_time(lit_at, "after_warm")
+
+
+## The later title: once the first title's warm has ended, a fresh Act I run
+## is saved and a title shown in a frame, as the run menu's door shows one.
+## Rows: how long the title took to build, its first frame, whether what the
+## warm-up reads back was read before it, and 360 of its frames by phase.
+func _later_title() -> void:
+	for i: int in range(600):
+		if MapLandscapeAssets.warming() == null or MapLandscapeAssets.warming().is_done():
+			break
+		await get_tree().process_frame
+	await _frames(60)
+	_host._qa_seed_saved_run(1)
+	Engine.set_meta("qa_prime_ms", -1.0)
+	var unit_before: bool = not MapJourneyLandscape.Kit.Meshes._unit_arrays.is_empty()
+	var slate_before: bool = MapLandscapeAssets._slate != null
+	await get_tree().process_frame
+	var frame_start: int = Time.get_ticks_usec()
+	QaMarks.mark("later_title")
+	_host._show_title()
+	var show_ms: float = (Time.get_ticks_usec() - frame_start) / 1000.0
+	var unit_after: bool = not MapJourneyLandscape.Kit.Meshes._unit_arrays.is_empty()
+	var slate_after: bool = MapLandscapeAssets._slate != null
+	await get_tree().process_frame
+	var first: float = (Time.get_ticks_usec() - frame_start) / 1000.0
+	var all: Array[float] = []
+	var by_phase: Dictionary = {}
+	var slow: Array = []
+	var last: int = Time.get_ticks_usec()
+	var lit_at: int = last
+	var done_at: int = -1
+	for i: int in range(360):
+		var phase: String = _phase()
+		await get_tree().process_frame
+		var now: int = Time.get_ticks_usec()
+		var dt: float = (now - last) / 1000.0
+		last = now
+		all.append(dt)
+		if not by_phase.has(phase):
+			by_phase[phase] = []
+		var bucket: Array = by_phase[phase]
+		bucket.append(dt)
+		if dt > 20.0:
+			slow.append([i, phase, snappedf(dt, 0.1), now])
+		if done_at < 0 and _phase() in ["done", "failed"]:
+			done_at = now
+	var phases: Dictionary = {}
+	for key: String in by_phase:
+		var raw: Array = by_phase[key]
+		var bucket: Array[float] = []
+		bucket.assign(raw)
+		phases[key] = _stats(bucket)
+	_row({"probe": "later_title", "show_ms": snappedf(show_ms, 0.01),
+		"first_frame_ms": snappedf(first, 0.01), "prime_ms": Engine.get_meta("qa_prime_ms", -1.0),
+		"read_before": [unit_before, slate_before], "read_by_title": [unit_after, slate_after],
+		"all": _stats(all), "phases": phases, "slow": slow,
+		"warm_done_ms": -1.0 if done_at < 0 else (done_at - lit_at) / 1000.0,
+		"kit_preload_ms": MapJourneyLandscape.Kit.preload_ms, "phase_end": _phase(),
+		"video_mib": _vmib()})
+	for i: int in range(600):
+		if not MapJourneyPrefetch.busy():
+			break
+		await get_tree().process_frame
+	await _frames(30)
+	await _tap_and_time(lit_at, "later")
+
+
+## Taps `_tap_after_ms` after the rite landed (`lit_at`), sampling the title's
+## frames until then, then times the tap like the after-warm tap.
+func _early_tap(lit_at: int) -> void:
+	var before: Array[float] = []
+	var last: int = Time.get_ticks_usec()
+	while (Time.get_ticks_usec() - lit_at) / 1000.0 < _tap_after_ms:
+		await get_tree().process_frame
+		var now: int = Time.get_ticks_usec()
+		before.append((now - last) / 1000.0)
+		last = now
+	_row({"probe": "title_frames_before_tap", "all": _stats(before), "lit_us": lit_at})
+	await _tap_and_time(lit_at, "early")
+
+
+func _tap_and_time(lit_at: int, mode: String) -> void:
+	var kept: Object = MapScene._journey_kept
+	var phase_at_tap: String = _phase()
+	var title: TitleScreen = _title()
+	var tap: int = Time.get_ticks_usec()
+	QaMarks.mark("tap")
+	title._on_lantern()
+	var worst: float = 0.0
+	var frames: Array[float] = []
+	var last: int = tap
+	var built_at: int = -1
+	for i: int in range(1200):
+		await get_tree().process_frame
+		var now: int = Time.get_ticks_usec()
+		frames.append((now - last) / 1000.0)
+		worst = maxf(worst, (now - last) / 1000.0)
+		last = now
+		var screen: WorldMapScreen = _host._map_screen
+		if built_at < 0 and screen != null and is_instance_valid(screen) and screen.is_inside_tree() \
+				and not screen.landscape_pending() and not screen.layout_pending():
+			built_at = now
+			break
+	await RenderingServer.frame_post_draw
+	var ready: float = (Time.get_ticks_usec() - tap) / 1000.0
+	var cleared: float = -1.0
+	for i: int in range(120):
+		if not _host._transitions._flood.visible:
+			cleared = (Time.get_ticks_usec() - tap) / 1000.0
+			break
+		await get_tree().process_frame
+	var screen_now: WorldMapScreen = _host._map_screen
+	var land: Object = screen_now._map_scene.journey_landscape() if screen_now != null else null
+	_row({"probe": "continue", "mode": mode, "phase_at_tap": phase_at_tap,
+		"since_lit_ms": snappedf((tap - lit_at) / 1000.0, 0.1), "tap_us": tap,
+		"marks": QaMarks.marks.duplicate(), "ready_ms": snappedf(ready, 0.1),
+		"built_ms": snappedf((built_at - tap) / 1000.0, 0.1) if built_at >= 0 else -1.0,
+		"cleared_ms": snappedf(cleared, 0.1), "worst_frame_ms": snappedf(worst, 0.1),
+		"frames": frames.map(func(v: float) -> float: return snappedf(v, 0.1)),
+		"adopted": land != null and land == kept, "journey": land != null,
+		"act": _host.game.run.act if _host.game != null else -1, "video_mib": _vmib()})
+	await _frames(60)
+	_row({"probe": "done", "video_mib": _vmib()})
+	get_tree().quit(0)
+
+
+func _title() -> TitleScreen:
+	var node: Variant = _host.get("_choice_screen")
+	return node if node is TitleScreen else null
+
+
+## QA contention experiment: a worker busy for 3 s with pure arithmetic
+## (`cpu`) or with object churn (`objects`), nothing handed to the renderer.
+static func _busy(mode: String) -> void:
+	QaMarks.mark("busy_start")
+	var until: int = Time.get_ticks_msec() + 3000
+	var acc: float = 0.0
+	var holder: Node3D = Node3D.new()
+	var n: int = 0
+	while Time.get_ticks_msec() < until:
+		if mode == "cpu":
+			for i: int in range(2000):
+				acc += sin(float(i) * 0.37) * cos(acc)
+		else:
+			for i: int in range(200):
+				var item: Node3D = Node3D.new()
+				item.name = "Busy %d" % n
+				holder.add_child(item)
+				item.set_meta("k", {"a": [i, n]})
+				n += 1
+			for child: Node in holder.get_children():
+				child.free()
+	holder.free()
+	QaMarks.mark("busy_end %f" % acc)
+
+
+func _stats(values: Array[float]) -> Dictionary:
+	if values.is_empty():
+		return {}
+	var t: Array[float] = values.duplicate()
+	t.sort()
+	var over: int = 0
+	for v: float in t:
+		if v > 20.0:
+			over += 1
+	return {"frames": t.size(), "p50_ms": snappedf(t[t.size() / 2], 0.01),
+		"p95_ms": snappedf(t[int(t.size() * 0.95)], 0.01), "max_ms": snappedf(t[-1], 0.01),
+		"over_20": over}
+
+
+func _frames(count: int) -> void:
+	for i: int in range(count):
+		await get_tree().process_frame

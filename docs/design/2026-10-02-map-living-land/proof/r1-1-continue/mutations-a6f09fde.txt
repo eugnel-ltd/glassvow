@@ -1,0 +1,44 @@
+Mutation proof for the review round on the rebased head (tests/test_map_title_road.gd),
+run at a6f09fde by the lane's mutation runner (the rebased round's, with M4c's anchor
+moved to `_warm_title_road(saved, _title_road_map(saved))` and three new mutations):
+each mutation applied to a backed-up file, the suite run, the file copied back from
+its backup (never git checkout); application/, presentation/ and tests/ were checked
+unchanged after the runs. Every mutation was caught.
+
+New this round (review finding 1):
+  M6  the old rule: every saved Act I run, at its boss too, primes and warms from
+      before the title (`saved != null and saved.act == 0 and journey_async`);
+  M6b the warm that waits for the rite is handed no map (it lets everything go);
+  M6c the title hands its warm no map (an Act I run's warm never starts).
+The first M6 run (before the failure message was reworded, same condition) also
+failed on that assertion. M1b's first run on this head did not exit within 900 s
+(killed; the device batch was running beside it); its second, below, exited 1.
+
+M1 predelete gives nothing up | exit -6 | CAUGHT | expected: a screen going mid-build gives its own build up and waits for it
+    failing: a screen going mid-build gives its own build up and waits for it
+M1b give_up does not stop the build | exit 1 | CAUGHT | expected: a screen going mid-build gives its own build up and waits for it
+    failing: a screen going mid-build gives its own build up and waits for it
+M2 a freed land still counts as warm | exit 1 | CAUGHT | expected: a finished warm-up whose land was freed warms again
+    failing: a finished warm-up whose land was freed warms again; the warm-up started again builds the land
+M3 only the rite title primes | exit 1 | CAUGHT | expected: a later title warming an Act I run reads back before its first frame what the warm-up would
+    failing: a later title warming an Act I run reads back before its first frame what the warm-up would
+M3b every saved run primes | exit 1 | CAUGHT | expected: a title warming no Act I run reads nothing back
+    failing: a title warming no Act I run reads nothing back; nothing of the next map warms or is read back under the launch rite (an Act I run past its boss); nothing of the next map warms or is read back under the launch rite (an Act II run)
+M2c a finished warm-up always counts as lost | exit 1 | CAUGHT | expected: the title after that screen keeps the land its warm-up built
+    failing: Continue opens the map on the warm land, without building another; a language change keeps the warm land and builds nothing again; heights worked out across the whole pool are the warm-up's; the title after that screen keeps the land its warm-up built
+M4 Act I waits for the rite (R1) | exit 1 | CAUGHT | expected: Act I's warm-up goes on under a screen shown in the title's place
+    failing: Act I's warm-up goes on under a screen shown in the title's place; the saved run's land warms from the launch rite's first frame; the title after that screen keeps the land its warm-up built; the warm-up asks for the kit's scenes in its first working frame, pictures or not; the warm-up holds the kit's scenes while the pictures decode
+M4b a later title waits too | exit 1 | CAUGHT | expected: the next title warms another act's map at once
+    failing: the next title warms another act's map at once
+M4c the once-lit warm runs with the title gone | exit 1 | CAUGHT | expected: another act's warm-up lets go when the title is gone before its rite landed
+    failing: another act's warm-up lets go when the title is gone before its rite landed
+M5 cone cap wound the other way | exit 1 | CAUGHT | expected: a shadow cone laid out on the CPU is the renderer's cone, array for array
+    failing: a shadow cone laid out on the CPU is the renderer's cone, array for array
+M5b cone read back again | exit 1 | CAUGHT | expected: the kit's templates read no mesh back from the renderer
+    failing: the kit's templates read no mesh back from the renderer: static_scenery.gd get_mesh_arrays(
+M6 an Act I run past its boss warms from before the title | exit 1 | CAUGHT | expected: nothing of the next map warms or is read back under the launch rite (an Act I run past its boss)
+    failing: nothing of the next map warms or is read back under the launch rite (an Act I run past its boss)
+M6b the once-lit warm reads no map | exit 1 | CAUGHT | expected: once the rite has landed the title warms Act II's pictures for an Act I run past its boss, and no land
+    failing: once the rite has landed the title warms Act II's pictures for an Act I run past its boss, and no land; once the rite has landed the title warms Act II's pictures for an Act II run, and no land
+M6c the title hands its warm no map | exit 1 | CAUGHT | expected: the saved run's land warms from the launch rite's first frame
+    failing: Act I's warm-up goes on under a screen shown in the title's place; Begin Anew stops the title's build in flight, unpaced; a Continue during the warm-up's setup builds that land unpaced; a Continue during the warm-up's setup draws the warm-up's land, without building another; a Continue mid-build builds that land unpaced; a Continue mid-build draws the warm-up's land, without building another; a build given up ends early, as a failure nothing adopts; a build on a pool with no threads to spare works its heights out on its own thread; a finished warm-up whose land was freed warms again; a later title warming an Act I run reads back before its first frame what the warm-up would; a map opened mid-build takes the worker's layout and scenery binding (handed over within the frame); a map opened mid-build takes the worker's layout and scenery binding (polled); a paced build works its heights out 

@@ -7,6 +7,10 @@ const CELL: float = 32.0
 ## lit but stay out of the shadow pass, which keeps that pass inside the A12
 ## budget (trees, banks, ridges and the gateway still cast).
 const NO_SHADOW: PackedStringArray = ["ash-heath", "ash-copse", "ash-fern", "ash-bramble", "slate-scree"]
+## A conifer's shadow proxy (`_proxy_shadows`): a cone this many sides round,
+## this wide at its top.
+const CONE_SIDES: int = 6
+const CONE_TOP: float = 0.05
 var failure: String = ""
 var templates: Dictionary = {}
 var groups: Dictionary = {}
@@ -123,16 +127,61 @@ static func _proxy_shadows(parts: Array[Dictionary]) -> void:
 		# back from the renderer (`prepare_template`).
 		var crown: AABB = mesh.get_aabb()
 		part["shadow"] = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var cone: CylinderMesh = CylinderMesh.new()
-		cone.top_radius = 0.05
-		cone.bottom_radius = maxf(crown.size.x, crown.size.z) * 0.42
-		cone.height = crown.size.y
-		cone.radial_segments = 6
-		cone.rings = 0
-		cone.cap_top = false
 		var proxy: ArrayMesh = ArrayMesh.new()
-		proxy.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, cone.get_mesh_arrays())
+		proxy.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, cone_arrays(CONE_TOP,
+			maxf(crown.size.x, crown.size.z) * 0.42, crown.size.y))
 		var relative: Transform3D = part["transform"]
 		parts.append({"mesh": proxy, "layers": part["layers"],
 			"transform": relative * Transform3D(Basis(), crown.get_center()),
 			"shadow": GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY})
+
+
+## The shadow proxy's cone, `CONE_SIDES` sides, open at the top: the arrays a
+## `CylinderMesh` of these radii and `height` with no rings and no top cap
+## uploads, laid out on the CPU. Its own arrays (`get_mesh_arrays`) are read
+## back from the renderer, a stall until the GPU has drained, and the kit's
+## templates are prepared under the launch rite's frames (#660).
+static func cone_arrays(top: float, bottom: float, height: float) -> Array:
+	var points: PackedVector3Array = PackedVector3Array()
+	var normals: PackedVector3Array = PackedVector3Array()
+	var tangents: PackedFloat32Array = PackedFloat32Array()
+	var uvs: PackedVector2Array = PackedVector2Array()
+	var indices: PackedInt32Array = PackedInt32Array()
+	var slope: float = (bottom - top) / height
+	for row: int in range(2):
+		var radius: float = top if row == 0 else bottom
+		for i: int in range(CONE_SIDES + 1):
+			var u: float = float(i) / CONE_SIDES
+			var x: float = sin(u * TAU)
+			var z: float = cos(u * TAU)
+			points.append(Vector3(x * radius, height * (0.5 - row), z * radius))
+			normals.append(Vector3(x, slope, z).normalized())
+			tangents.append_array([z, 0.0, -x, 1.0])
+			uvs.append(Vector2(u, row * 0.5))
+			if row == 1 and i > 0:
+				var below: int = CONE_SIDES + i
+				indices.append_array([i - 1, i, below, i, below + 1, below])
+	var centre: int = points.size()
+	points.append(Vector3(0.0, -height * 0.5, 0.0))
+	normals.append(Vector3.DOWN)
+	tangents.append_array([1.0, 0.0, 0.0, 1.0])
+	uvs.append(Vector2(0.75, 0.75))
+	for i: int in range(CONE_SIDES + 1):
+		var u: float = float(i) / CONE_SIDES
+		var x: float = sin(u * TAU)
+		var z: float = cos(u * TAU)
+		points.append(Vector3(x * bottom, -height * 0.5, z * bottom))
+		normals.append(Vector3.DOWN)
+		tangents.append_array([1.0, 0.0, 0.0, 1.0])
+		uvs.append(Vector2((x + 1.0) * 0.25 + 0.5, 1.0 - (z + 1.0) * 0.25))
+		if i > 0:
+			indices.append_array([centre, centre + i, centre + i + 1])
+	var arrays: Array = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = points
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_TANGENT] = tangents
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	arrays[Mesh.ARRAY_INDEX] = indices
+	return arrays
+
