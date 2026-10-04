@@ -160,12 +160,11 @@ static func window_on_stage(xf: Transform2D) -> Vector3:
 	return Vector3(at.x, at.y, WINDOW.z * xf.get_scale().x)
 
 
-## Every piece of art the hall and its looks draw: what Main loads on a worker
-## while the title rests (§7 item 16).
+## The art the hall draws on its Deeds look, the look it opens on: what Main
+## loads on a worker while the title rests (§7 item 16). The rose's masks are
+## the Rose look's alone (LeadlightRose.mask_paths()), held apart.
 static func art_paths() -> PackedStringArray:
 	var paths: PackedStringArray = [PLATE, HearthFigure.ART, LeadlightRose.MURAL, LeadlightRose.FRAME]
-	for id: String in LeadlightRose.SHARDS:
-		paths.append(LeadlightRose.MASK % id)
 	for id: String in VigilScreen.DEED_IDS:
 		paths.append("res://assets/art/deeds/%s.png" % id)
 	return paths

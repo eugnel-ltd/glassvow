@@ -110,6 +110,7 @@ static func run_in_tree(tree: SceneTree, host: SubViewport, fails: Array[String]
 	await _warm_requeued(fails, tree, host, content)
 	await _warm_waits_for_the_map(fails, tree, host, content)
 	await _hall_built_ahead(fails, tree, host, content)
+	await _rose_art_tended(fails, tree, host, content)
 	Preferences.active = kept
 
 
@@ -336,6 +337,57 @@ static func _hall_built_ahead(fails: Array[String], tree: SceneTree, host: SubVi
 	main._vigil_art = {}
 	main._vigil_art_asked = false
 	_dispose(main)
+
+
+## The rose's masks: asked for with the rest of the Vigil's art while the
+## rooms' warm owes the Rose Window its build, let go on the title once in
+## hand, asked again while the hall rests (never on its passage's frames), and
+## let go again once the hall has gone.
+static func _rose_art_tended(fails: Array[String], tree: SceneTree, host: SubViewport,
+		content: ContentDB) -> void:
+	var main: Main = await _boot(tree, host, content)
+	main._warm_headless = false
+	var masks: PackedStringArray = LeadlightRose.mask_paths()
+	_check(fails, masks.size() == LeadlightRose.SHARDS.size() and not VigilHall.art_paths().has(masks[0]),
+		"the rose's masks are counted with the art the hall opens on")
+	_check(fails, not main._rose_art_wanted(), "the title wanted the rose's masks with no warm owed")
+	main._room_warm = RoomWarm.new([], func() -> bool: return false)
+	main.add_child(main._room_warm)
+	_check(fails, not main._rose_art_wanted(),
+		"the warm wanted the rose's masks before the rest of the Vigil's art was asked for")
+	main._vigil_art_asked = true
+	main._tend_rose_art()
+	_check(fails, main._vigil_art.has(masks[0]) and not main._vigil_art_ready(),
+		"the warm did not ask for the rose's masks with the Vigil's art")
+	await _art_in_hand(tree, main)
+	_check(fails, main._vigil_art_ready() and main._vigil_art.get(masks[0]) is Texture2D,
+		"the rose's masks never came in for the warm")
+	main._room_warm.free()
+	main._room_warm = null
+	main._tend_rose_art()
+	_check(fails, not main._vigil_art.has(masks[0]) and main._vigil_art_ready(),
+		"the title kept the rose's masks once the warm was done")
+	await _tap(tree, host, _title(main).word("vigil"))
+	_check(fails, main._passage.arriving() and not main._rose_art_wanted(),
+		"the arriving hall asked for the rose's masks on its passage's frames")
+	await _step(tree, main, ceili(0.6 / STEP) + 2)
+	_check(fails, main._rose_art_wanted() and main._vigil_art.has(masks[0]),
+		"the resting hall did not ask for the rose's masks")
+	await _art_in_hand(tree, main)
+	var vigil: VigilScreen = main._route_screen as VigilScreen
+	await _tap(tree, host, vigil.seat().word())
+	await _step(tree, main, ceili(0.48 / STEP) + 2)
+	_check(fails, not main._vigil_art.has(masks[0]), "the title kept the rose's masks once the hall had gone")
+	main._vigil_art = {}
+	main._vigil_art_asked = false
+	_dispose(main)
+
+
+static func _art_in_hand(tree: SceneTree, main: Main) -> void:
+	for _i: int in 240:
+		if main._vigil_art_ready() or not main._vigil_art_asked:
+			return
+		await tree.process_frame
 
 
 # ---------------------------------------------------------------- the stage

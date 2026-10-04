@@ -124,6 +124,15 @@ func held_count() -> int:
 	return _held
 
 
+## Every pane's mask: the Vigil's rose loads all six (LeadlightRose.vigil), the
+## door's only the held ones.
+static func mask_paths() -> PackedStringArray:
+	var paths: PackedStringArray = []
+	for id: String in SHARDS:
+		paths.append(MASK % id)
+	return paths
+
+
 ## The Vigil's rose: `states` maps each shard id to its state, `counts` a
 ## revealed pane's id to (progress, target). Input-blind: the Rose Window
 ## lays its own pane hits over it.

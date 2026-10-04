@@ -87,9 +87,10 @@ var _rooms_warmed: Dictionary = {}
 ## drives it says so).
 var _warm_headless: bool = DisplayServer.get_name() == "headless"
 ## The Vigil's art, loaded on a worker while the title rests and held until a
-## run starts (docs/design/2026-10-03-title-rooms §7 item 16): path -> the
-## resource, null while it loads, false when it could not; and whether to let
-## it all go once the loads in flight are done (a run has started).
+## run starts (docs/design/2026-10-03-title-rooms §7 item 16), the rose's masks
+## only while they are wanted (`_tend_rose_art`): path -> the resource, null
+## while it loads, false when it could not; and whether to let it all go once
+## the loads in flight are done (a run has started).
 var _vigil_art: Dictionary = {}
 var _vigil_art_drop: bool = false
 ## Whether the title still owes the Vigil's art its warm, and how long the
@@ -1441,8 +1442,8 @@ func _on_room_warm_done() -> void:
 ## read on the tap frame cost it 5.5 ms on the M1). Asked for once the title
 ## has rested RoomWarm.REST with the map's prefetch done (§7 item 16: about
 ## 1 s after the title lands), never under the launch rite, whose frames its
-## 50 MiB of uploads would share, nor beside the warm of the land Back to the
-## Road opens (R1.1), whose pictures decode on the same worker pool.
+## uploads would share, nor beside the warm of the land Back to the Road opens
+## (R1.1), whose pictures decode on the same worker pool.
 func _warm_vigil_art_once_rested(delta: float) -> void:
 	_vigil_art_rested = _vigil_art_rested + delta if _warm_may_run() else 0.0
 	if _vigil_art_rested < RoomWarm.REST:
@@ -1466,6 +1467,31 @@ func _warm_vigil_art() -> void:
 ## could not be): until then the hall is built by nobody ahead of a tap.
 func _vigil_art_ready() -> bool:
 	return _vigil_art_asked and not _vigil_art.values().has(null)
+
+
+## The rose's six masks (12 MiB) are drawn by the Rose look alone: the title
+## shows nothing of them and the hall built ahead opens on the Deeds look. They
+## join the Vigil's art while the rooms' warm still owes the Rose Window its
+## build (once the rest of the art is asked for), and while the hall rests,
+## for its Rose look; otherwise they are let go once in hand (§12, open item 5:
+## the title held 37.5 to 39.3 MiB over main's on the iPad 8). A Rose look
+## opened before they land waits on their worker.
+func _rose_art_wanted() -> bool:
+	if _warm_headless or _vigil_art_drop:
+		return false
+	if _room_warm != null and is_instance_valid(_room_warm):
+		return _vigil_art_asked
+	return _route_screen is VigilScreen and (_passage == null or not _passage.arriving())
+
+
+func _tend_rose_art() -> void:
+	var want: bool = _rose_art_wanted()
+	for path: String in LeadlightRose.mask_paths():
+		if want and not _vigil_art.has(path):
+			if ResourceLoader.exists(path) and ResourceLoader.load_threaded_request(path) == OK:
+				_vigil_art[path] = null
+		elif not want and _vigil_art.get(path) != null:
+			_vigil_art.erase(path)
 
 
 ## Holds each piece of the Vigil's art once its worker is done with it; lets
@@ -2371,6 +2397,7 @@ func _process(delta: float) -> void:
 		_warm_title_road_once_lit()
 	if _vigil_art_due:
 		_warm_vigil_art_once_rested(delta)
+	_tend_rose_art()
 	if not _vigil_art.is_empty():
 		_take_vigil_art()
 	_build_vigil_ahead(delta)
