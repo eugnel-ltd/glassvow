@@ -51,6 +51,15 @@ claims that hold. An LLM judge (`"type": "judge"`) exists for open-ended outputs
 given yes/no claims (never a scale) and sees the task, the answer and the claims, with no
 baseline or candidate label. Scoring is per output, so there is no pair to randomise.
 
+**Decision gate.** In a case with a boolean decision claim (`equals` true or false), a wrong or
+missing decision caps the case score at 0, so a coin-flip boolean cannot earn partial credit; a
+right decision with weak reasoning still earns partial credit. A text field over 1,000 characters
+fails every claim on it (a keyword dump, not an answer). A reply that wraps its fields in a single
+key, such as `{"answer": {...}}`, is unwrapped. Write `must_not_match` only for text a wrong answer
+alone would contain, because a correct refusal can name the forbidden word ("do not ignore it"),
+and anchor a keyword `must_match` to an affirmative statement or pair it with a forbid of a
+nearby `not|no|never`.
+
 **Baseline diagnostics** (in `results.json` and printed as warnings):
 
 - headroom: warn when any model scores above 95%;
@@ -58,9 +67,13 @@ baseline or candidate label. Scoring is per output, so there is no pair to rando
   paired per-case difference;
 - grader consistency: every output is graded twice; programmatic grades must be identical and
   the judge disagreement rate is reported;
-- trivial answerers (no model call): a constant answer (every boolean field false, then true) and
-  an echo answer (each text field set to the case prompt) are graded by the real grader; any of
-  them scoring above 25% warns, and `approve-grader` refuses such a run;
+- trivial answerers (no model call), graded by the real grader: constants (booleans false, then
+  true, empty text), echoes (each text field set to the case prompt), keyword soups (every text
+  field set to one fixed list of domain words drawn from every reference and keyword claim,
+  booleans false, then true), oracle booleans (the correct booleans, empty text) and the empty
+  answer `{}`. Any of them scoring above 25% warns, and `approve-grader` refuses such a run; it
+  also rescores the current cases itself, so a run recorded before a new answerer existed cannot
+  back an approval;
 - infrastructure reliability: timeouts, API or CLI errors and truncated outputs are counted;
   above `--infra-threshold` (default 5%) the run is marked `failed` and the command exits 2.
 
@@ -73,6 +86,21 @@ its threshold and no trivial answerer above 25%; it then prints a deterministic 
 transcripts and only records approval when `--read` lists them all. `hillclimb` refuses to run unless
 both approvals exist and match the current cases hash, and refuses when the approved baseline scored
 above 95% for any model (no headroom) unless `--allow-no-headroom` is passed.
+
+**Delegated approval.** The interactive-terminal guard is the default. The only non-interactive
+path is for an owner's explicit delegation, and it is recorded in the approval file:
+
+```bash
+python3 tools/agent_evals/cli.py approve-inputs repo_traps \
+  --delegated "<who delegated, when, why>" --evidence <path to the council report>
+python3 tools/agent_evals/cli.py approve-grader repo_traps --run b1 --read <list> \
+  --delegated "<who delegated, when, why>" --evidence <path to the council report>
+```
+
+With both flags the terminal check is skipped and the approval records `by: "orchestrator"`,
+`delegated_by` (the text), `evidence` (the path and its sha256), the cases hash and the time.
+Giving only one flag is an error. Every other check stands: `approve-grader` still needs a
+healthy full run and the sampled transcripts in `--read`.
 
 ## Hill-climbing
 

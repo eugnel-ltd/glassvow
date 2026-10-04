@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any, Mapping, Sequence
 
 from .backends import Backend
@@ -54,31 +55,46 @@ def grader_consistency(cases: Sequence[Case], transcripts: Sequence[Mapping[str,
 
 
 TRIVIAL_LIMIT = 0.25
+REFERENCE_TOKEN = re.compile(r"[\w./()\[\]=-]+")
+PATTERN_WORD = re.compile(r"[A-Za-z_]\w{2,}")
 
 
-def _boolean_fields(case: Case) -> set[str]:
-    return {c["field"] for c in case.grader["claims"] if isinstance(c.get("equals"), bool)}
+def _boolean_fields(case: Case) -> dict[str, bool]:
+    return {c["field"]: c["equals"] for c in case.grader["claims"] if isinstance(c.get("equals"), bool)}
 
 
-def trivial_answers(case: Case) -> dict[str, dict[str, Any]]:
-    """Answers that need no understanding: a constant, and an echo of the prompt."""
+def keyword_soup(cases: Sequence[Case]) -> str:
+    """One fixed list of domain words from every case's reference and keyword claims."""
+    words: set[str] = set()
+    for case in cases:
+        words.update(REFERENCE_TOKEN.findall(case.reference))
+        for claim in case.grader["claims"]:
+            words.update(PATTERN_WORD.findall(claim.get("must_match", "")))
+    return " ".join(sorted(words, key=str.casefold))
+
+
+def trivial_answers(case: Case, soup: str = "") -> dict[str, dict[str, Any]]:
+    """Answers that need no understanding: constants, echoes, soups and oracle booleans."""
     booleans = _boolean_fields(case)
     fields = {c["field"] for c in case.grader["claims"]}
-    answers = {}
+    answers: dict[str, dict[str, Any]] = {}
     for flag in (False, True):
-        constant = {f: (flag if f in booleans else "") for f in fields}
-        echo = {f: (flag if f in booleans else case.prompt) for f in fields}
-        answers[f"constant_{str(flag).lower()}"] = constant
-        answers[f"echo_{str(flag).lower()}"] = echo
+        name = str(flag).lower()
+        answers[f"constant_{name}"] = {f: (flag if f in booleans else "") for f in fields}
+        answers[f"echo_{name}"] = {f: (flag if f in booleans else case.prompt) for f in fields}
+        answers[f"soup_{name}"] = {f: (flag if f in booleans else soup) for f in fields}
+    answers["empty"] = {}
+    answers["oracle_booleans"] = {f: booleans.get(f, "") for f in fields}
     return answers
 
 
 def trivial_answerer_scores(cases: Sequence[Case]) -> dict[str, Any]:
     """Mean score of each trivial answerer through the real grader; no model is called."""
     graded = [c for c in cases if c.grader["type"] == "claims"]
+    soup = keyword_soup(graded)
     totals: dict[str, list[float]] = {}
     for case in graded:
-        for name, answer in trivial_answers(case).items():
+        for name, answer in trivial_answers(case, soup).items():
             totals.setdefault(name, []).append(grade_claims(case, json.dumps(answer)).score)
     scores = {name: sum(v) / len(v) for name, v in totals.items()} if graded else {}
     return {**scores, "max": max(scores.values(), default=0.0), "limit": TRIVIAL_LIMIT}

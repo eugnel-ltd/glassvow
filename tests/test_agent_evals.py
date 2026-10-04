@@ -467,8 +467,9 @@ class ApprovalTests(unittest.TestCase):
         self.assertTrue(record["by"] and record["at"])
 
     def test_cli_hillclimb_refuses_the_real_eval_without_approvals(self) -> None:
-        if (ROOT / "tools/agent_evals/evals/repo_traps/approvals.json").exists():
-            self.skipTest("the repo_traps eval has recorded approvals")
+        recorded = ROOT / "tools/agent_evals/evals/repo_traps/approvals.json"
+        if recorded.exists() and {"inputs", "grader"} <= set(json.loads(recorded.read_text())):
+            self.skipTest("the repo_traps eval has both approvals recorded")
         done = subprocess.run([sys.executable, str(ROOT / "tools/agent_evals/cli.py"),
                                "hillclimb", "repo_traps"], capture_output=True, text=True, check=False)
         self.assertEqual(1, done.returncode)

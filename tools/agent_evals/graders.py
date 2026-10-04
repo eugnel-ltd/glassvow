@@ -9,6 +9,7 @@ from .backends import Backend
 from .models import Case, EvalError, Grade, Verdict
 
 CLAIM_KEYS = ("must_match", "must_not_match", "equals")
+MAX_FIELD_CHARS = 1000  # answer fields are a sentence or a code line; more is a keyword dump
 JUDGE_SYSTEM = (
     "You grade one answer against a list of checkable yes/no claims. Judge each claim "
     "independently from the answer text alone. Reply with only a JSON object of the "
@@ -45,6 +46,18 @@ def validate_grader_spec(spec: dict[str, Any]) -> None:
                     raise EvalError(f"claim {claim_id!r} has a bad regex: {error}") from error
 
 
+def is_decision_claim(claim: dict[str, Any]) -> bool:
+    """A claim that pins a boolean decision; getting it wrong caps the whole case at 0."""
+    return isinstance(claim.get("equals"), bool)
+
+
+def _unwrap(value: dict[str, Any]) -> dict[str, Any]:
+    """Unwrap a single-key nested object such as {"answer": {...}}."""
+    while len(value) == 1 and isinstance(next(iter(value.values())), dict):
+        value = next(iter(value.values()))
+    return value
+
+
 def parse_json_answer(text: str) -> dict[str, Any]:
     """Extract the first JSON object from a reply (bare, fenced or embedded)."""
     decoder = json.JSONDecoder()
@@ -76,6 +89,8 @@ def _check_claim(claim: dict[str, Any], answer: dict[str, Any]) -> Verdict:
         return Verdict(claim_id, False, f"field {claim['field']!r} missing")
     value = answer[claim["field"]]
     text = _field_text(value)
+    if len(text) > MAX_FIELD_CHARS:
+        return Verdict(claim_id, False, f"field {claim['field']!r} is over {MAX_FIELD_CHARS} characters")
     flags = re.IGNORECASE | re.DOTALL
     if "must_match" in claim and not re.search(claim["must_match"], text, flags):
         return Verdict(claim_id, False, f"does not match /{claim['must_match']}/")
@@ -87,14 +102,21 @@ def _check_claim(claim: dict[str, Any], answer: dict[str, Any]) -> Verdict:
 
 
 def grade_claims(case: Case, output: str) -> Grade:
-    """Deterministic grader: the same output always yields the same grade."""
+    """Deterministic grader: the same output always yields the same grade.
+
+    Decision gate: a wrong boolean decision scores the case 0, so a coin-flip boolean
+    cannot carry partial credit; a right decision with weak reasoning keeps partial credit.
+    """
     claims = case.grader["claims"]
     try:
-        answer = parse_json_answer(output)
+        answer = _unwrap(parse_json_answer(output))
     except ValueError as error:
         return Grade(tuple(Verdict(c["id"], False, "unparseable reply") for c in claims),
                      parse_error=str(error))
-    return Grade(tuple(_check_claim(claim, answer) for claim in claims))
+    verdicts = tuple(_check_claim(claim, answer) for claim in claims)
+    decision_failed = any(is_decision_claim(claim) and not verdict.passed
+                          for claim, verdict in zip(claims, verdicts))
+    return Grade(verdicts, decision_failed=decision_failed)
 
 
 def judge_prompt(case: Case, output: str) -> str:
