@@ -1,0 +1,194 @@
+"""Title attribution round (main at 1b00ac3c, d402820b, 2d2c462d): one batch's
+rows, nonce-checked (a launch whose rows do not echo its own nonce, or never
+finished, is dropped; warm-ups are never counted).
+Per arm: video memory (total; textures and buffers as RD counts them) at the
+rite landing, about 6 s later (after 360 title frames) and after the warms;
+the 360 title frames' p50 / p95 / max / over 20 / over 33 ms; every frame over
+33 ms with its segments (process = process_frame -> frame_pre_draw, draw =
+frame_pre_draw -> frame_post_draw, wait = frame_post_draw -> next
+process_frame), the video memory it added, its pipeline compilations and what
+ran in it (RoomWarm, the map warm, neither). RoomWarm's own steps (2d2c462d):
+each room build, each glyph-jobs frame, the pages drawn (per glyph set) and
+its free, with the frames they fall in.
+usage: attr_summary.py <rows-dir> [--detail]"""
+import glob
+import json
+import os
+import statistics as st
+import sys
+
+src = sys.argv[1]
+detail = "--detail" in sys.argv
+WRAP = 2 ** 44  # the RD texture counter is a uint64 in bytes; in MiB it wraps here
+
+
+def tdelta(b, a):
+    d = (b - a) % WRAP
+    return d - WRAP if d > WRAP / 2 else d
+
+
+launches = {}
+for f in sorted(glob.glob(os.path.join(src, "*.jsonl"))):
+    launches[os.path.basename(f)[:-6]] = [json.loads(l) for l in open(f) if l.strip()]
+
+
+def order(name):
+    head, _, n = name.rpartition("-")
+    return (head, int(n) if n.isdigit() else 0)
+
+
+arms, dropped = {}, []
+for name in sorted(launches, key=order):
+    if "warmup" in name:
+        continue
+    by = {r["probe"]: r for r in launches[name]}
+    args = by.get("start", {}).get("args", "").split()
+    nonce = [a for a in args if a.startswith("--qa-nonce=")]
+    if not nonce or not nonce[0].startswith("--qa-nonce=" + name + "-") or "done" not in by:
+        dropped.append(name)
+        continue
+    arms.setdefault(name.rpartition("-")[0], []).append((name, by))
+
+
+def med(v):
+    v = [x for x in v if x is not None]
+    return round(st.median(v), 2) if v else None
+
+
+def stats(frames):
+    t = sorted(frames)
+    return {"p50": t[len(t) // 2], "p95": t[int(len(t) * 0.95)], "max": t[-1],
+            "o20": sum(1 for v in t if v > 20.0), "o33": sum(1 for v in t if v > 33.0)}
+
+
+def first(marks, label):
+    hits = [t for t, l in marks if l == label or l.startswith(label + " ")]
+    return hits[0] if hits else None
+
+
+def analyse(name, by):
+    tf, warm, lit = by["title_frames"], by["warm"], by["lit"]
+    fr = tf["frames"]
+    lit_us = tf["lit_us"]
+    marks, recs = warm["marks"], warm["recs"]
+    spans, at = [], fr["pf0"]
+    for i, dt in enumerate(fr["dt"]):
+        spans.append((at, at + dt * 1000.0))
+        at += dt * 1000.0
+    rw = [r for r in recs if "rw" in r]
+    rw_from = rw[0]["t_us"] if rw else None
+    if rw:
+        builds = [r for r in rw if r["rw"] == "build"]
+        if builds:
+            rw_from = builds[0]["t_us"] - builds[0]["build_us"] - builds[0]["collect_free_us"] - 100
+    rw_to = next((r["t_us"] for r in rw if r["rw"] == "predelete"), None)
+    map_from = first(marks, "title_road_warm")
+    map_to = first(marks, "prefetch_done")
+    out = []
+    for i, (a, b) in enumerate(spans):
+        dt = fr["dt"][i]
+        if dt <= 33.0:
+            continue
+        where = []
+        if rw_from and rw_to and a < rw_to + 1 and b > rw_from:
+            where.append("roomwarm")
+        if map_from and a < (map_to or 1e30) and b > map_from:
+            where.append("mapwarm")
+        seg = fr["seg"][i]
+        mon = fr["mon"][i]
+        prev = fr["mon"][i - 1] if i > 0 else None
+        dv = round(mon[0] - prev[0], 2) if (mon and prev) else None
+        dtx = round(tdelta(mon[1], prev[1]), 2) if (mon and prev) else None
+        steps = [r["rw"] for r in rw if a <= r["t_us"] < b]
+        out.append({"i": i, "ms": dt, "at": round((a - lit_us) / 1000.0, 1), "seg": seg,
+                    "dvideo": dv, "dtex": dtx, "pc": mon[7] if mon else None,
+                    "dc": mon[3] if mon else None, "in": "/".join(where) or "neither", "rw_steps": steps})
+    room = {}
+    if rw:
+        sets = [r for r in rw if r["rw"] == "draw_set"]
+        tot = next((r for r in rw if r["rw"] == "draw_total"), None)
+        jobs = [r for r in rw if r["rw"] == "jobs"]
+        builds = [r for r in rw if r["rw"] == "build"]
+        freeq = next((r for r in rw if r["rw"] == "free_queued"), None)
+        dq = next((r for r in rw if r["rw"] == "draw_queued"), None)
+
+        def frame_of(t):
+            for i, (a, b) in enumerate(spans):
+                if a <= t < b:
+                    return i
+            return None
+        fd = frame_of(tot["t_us"]) if tot else None
+        ff = frame_of(freeq["t_us"]) if freeq else None
+        room = {
+            "start_ms": round((rw_from - lit_us) / 1000.0, 1) if rw_from else None,
+            "end_ms": round((rw_to - lit_us) / 1000.0, 1) if rw_to else None,
+            "builds": [(r["build_us"] / 1000.0, r["collect_free_us"] / 1000.0, r["nodes"]) for r in builds],
+            "build_frames": [fr["dt"][frame_of(r["t_us"])] if frame_of(r["t_us"]) is not None else None for r in builds],
+            "jobs_frames": [(r["n"], r["chars"], r["us"] / 1000.0, r["worst_us"] / 1000.0,
+                             fr["dt"][frame_of(r["t_us"])] if frame_of(r["t_us"]) is not None else None) for r in jobs],
+            "sets": [(r["font"].replace("FontVariation ", "V:").replace("FontFile ", "F:"), r["px"], r["chars"], round(r["us"] / 1000.0, 2)) for r in sets],
+            "draw_ms": tot["us"] / 1000.0 if tot else None,
+            "chars": sum(r["chars"] for r in sets),
+            "oversampling": tot.get("oversampling") if tot else None,
+            "draw_frame": None if fd is None else {"dt": fr["dt"][fd], "seg": fr["seg"][fd], "pc": fr["mon"][fd][7] if fr["mon"][fd] else None},
+            "next_frame": None if (fd is None or fd + 1 >= len(fr["dt"])) else {"dt": fr["dt"][fd + 1], "seg": fr["seg"][fd + 1], "pc": fr["mon"][fd + 1][7] if fr["mon"][fd + 1] else None},
+            "free_frame_is_next": ff == (fd + 1 if fd is not None else None),
+            "mem_before_draw": dq["mem"] if dq else None,
+            "mem_after": freeq["mem"] if freeq else None,
+        }
+        if dq and freeq:
+            room["d_video"] = round(freeq["mem"][0] - dq["mem"][0], 2)
+            room["d_tex"] = round(tdelta(freeq["mem"][1], dq["mem"][1]), 2)
+            room["d_buf"] = round(freeq["mem"][2] - dq["mem"][2], 2)
+    return {"name": name, "s": stats(fr["dt"]), "n": len(fr["dt"]), "slow": out, "room": room,
+            "lit": lit["mem"], "six": by["after6s"]["mem"], "warm": warm["mem"],
+            "locale": by["start"]["locale"], "over": by["start"].get("oversampling"),
+            "map": (round((map_from - lit_us) / 1000.0, 1) if map_from else None,
+                    round((map_to - lit_us) / 1000.0, 1) if map_to else None),
+            "rite": lit["rite"], "lit_frame": lit["frame"]}
+
+
+print("launches kept %d, dropped %s" % (sum(len(v) for v in arms.values()), dropped))
+for arm, items in arms.items():
+    per = [analyse(n, by) for n, by in items]
+    print("\n== %s (n=%d, locale %s, oversampling %s)" % (arm, len(per), per[0]["locale"], per[0]["over"]))
+    print("  video MiB at the rite landing %s (median %s)" % ([p["lit"][0] for p in per], med([p["lit"][0] for p in per])))
+    print("  video MiB 6 s later           %s (median %s)" % ([p["six"][0] for p in per], med([p["six"][0] for p in per])))
+    print("  video MiB after the warms     %s (median %s)" % ([p["warm"][0] for p in per], med([p["warm"][0] for p in per])))
+    print("  RD buffers MiB lit/6s %s / %s" % ([p["lit"][2] for p in per], [p["six"][2] for p in per]))
+    print("  rite frames p95 %s max %s; frames to lit %s" % ([p["rite"].get("p95") for p in per], [p["rite"].get("max") for p in per], [p["lit_frame"] for p in per]))
+    print("  title frames, 360 after the rite: p50 / p95 / max / >20 / >33")
+    for p in per:
+        s = p["s"]
+        print("    %-14s n=%d  %.2f / %.2f / %.2f / %d / %d   map warm %s" % (p["name"], p["n"], s["p50"], s["p95"], s["max"], s["o20"], s["o33"], p["map"]))
+    print("  medians p50 %s p95 %s max %s >20 %s >33 %s; worst p95 %s max %s >20 %s >33 %s" % (
+        med([p["s"]["p50"] for p in per]), med([p["s"]["p95"] for p in per]), med([p["s"]["max"] for p in per]),
+        med([p["s"]["o20"] for p in per]), med([p["s"]["o33"] for p in per]),
+        max(p["s"]["p95"] for p in per), max(p["s"]["max"] for p in per),
+        max(p["s"]["o20"] for p in per), max(p["s"]["o33"] for p in per)))
+    cls = {}
+    for p in per:
+        for s in p["slow"]:
+            cls.setdefault(s["in"], []).append(s)
+    for k, v in cls.items():
+        segs = [s["seg"] for s in v if s["seg"]]
+        dom = {"process": 0, "draw": 0, "wait": 0}
+        for g in segs:
+            dom[["process", "draw", "wait"][g.index(max(g))]] += 1
+        print("  frames > 33 ms in %s: %d, ms %s; largest segment %s" % (k, len(v), sorted(s["ms"] for s in v), dom))
+        if detail:
+            for s in v:
+                print("      %s" % s)
+    for p in per:
+        r = p["room"]
+        if not r:
+            continue
+        print("  RoomWarm %s: %s .. %s ms after lit; builds (ms build, ms collect+free, nodes) %s in frames %s" % (
+            p["name"], r["start_ms"], r["end_ms"], [(round(a, 1), round(b, 1), c) for a, b, c in r["builds"]], r["build_frames"]))
+        print("     jobs frames (n, chars, ms, worst job ms, frame ms) %s" % [(a, b, round(c, 1), round(d, 1), e) for a, b, c, d, e in r["jobs_frames"]])
+        print("     pages drawn: %d sets, %d chars, _draw %.1f ms at oversampling %s; draw frame %s; next frame %s; free in next frame %s" % (
+            len(r["sets"]), r["chars"], r["draw_ms"] or -1, r["oversampling"], r["draw_frame"], r["next_frame"], r["free_frame_is_next"]))
+        print("     memory across the draw (video, textures, buffers): %s -> %s; d video %s, d textures %s, d buffers %s" % (
+            r["mem_before_draw"], r["mem_after"], r.get("d_video"), r.get("d_tex"), r.get("d_buf")))
+        if detail:
+            print("     sets %s" % r["sets"])

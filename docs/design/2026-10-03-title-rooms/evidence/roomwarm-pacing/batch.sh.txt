@@ -1,0 +1,91 @@
+#!/bin/zsh
+# Title attribution on the shared iPad 8 (QA app only): main at 1b00ac3c (before
+# #669), d402820b (#669) and 2d2c462d (#670), each its own scratch worktree with
+# the QA-only attribution patch (qa/qa_attr_patch.py). One batch, three installs,
+# each followed by a discarded warm-up launch and its arms interleaved, rested
+# 12 s between launches. Holds the batch lock from the first install to the last
+# launch; stops on a copy from the QA container hung over 15 minutes, and before
+# any launch past 38 minutes.
+# usage: batch.sh <name> <plan file>
+#   plan lines: "install <worktree-suffix>" | "sleep N" | "<label> <arm> [locale]"
+set -uo pipefail
+A=<scratch>/title-perf/attr
+F=<scratch>/device13/flow
+TP=$A/..
+NAME=$1; PLAN=$2
+OUT=$A/rows-$NAME; mkdir -p $OUT
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+B=io.fol2.glassvow.qa
+OWNER=title-perf
+echo "$(date +%T) waiting for the lock ($($F/ipad_lock.sh status))"
+until [[ "$($F/ipad_lock.sh status)" == free* ]]; do sleep 3; done
+$F/ipad_lock.sh acquire $OWNER
+trap "$F/ipad_lock.sh release $OWNER; echo \"\$(date +%T) lock released\"" EXIT
+T0=$(date +%s)
+echo "$(date +%T) lock acquired"
+udid() { xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for d in json.load(sys.stdin)["result"]["devices"]:
+    h=d.get("hardwareProperties") or {}
+    if h.get("productType")=="iPad11,6": print(h.get("udid")); break'; }
+app_url() { xcrun devicectl device info apps --device $1 --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for a in json.load(sys.stdin)["result"]["apps"]:
+    if a.get("bundleIdentifier")=="io.fol2.glassvow.qa": print(a.get("url"))'; }
+MINE=""
+BUILD=""
+clean_build() {  # keep the build's logs, drop its 1.3 GB of build output
+  [ -n "$BUILD" ] || return 0
+  mkdir -p $A/logs/build-$BUILD && cp -R $TP/wt-$BUILD/build/ios-qa/logs/. $A/logs/build-$BUILD/ 2>/dev/null
+  rm -rf $TP/wt-$BUILD/build/ios-qa
+}
+do_install() {  # worktree suffix (commit)
+  local wt=$TP/wt-$1
+  clean_build
+  BUILD=$1
+  IPAD_LOCK_OWNER=$OWNER $F/qa_export.sh $wt > $OUT/qa_export-$1.out 2>&1 || { echo "QA EXPORT FAILED ($1)"; tail -5 $OUT/qa_export-$1.out; exit 1; }
+  MINE=$(grep -o 'installationURL: [^ ]*' $OUT/qa_export-$1.out | awk '{print $2}')
+  echo "$(date +%T) installed $1 ($(git -C $wt rev-parse --short HEAD) + QA attribution patch) url ${MINE:t}"
+}
+launch() {  # label arm [locale]
+  local label=$1 arm=$2 loc=${3:-en}
+  local envs='{"QA_ARM":"main"}'
+  case $arm in
+    nomap) envs='{"QA_NO_TITLE_WARM":"1"}' ;;
+    noroom) envs='{"QA_NO_ROOM_WARM":"1"}' ;;
+    bare) envs='{"QA_NO_TITLE_WARM":"1","QA_NO_ROOM_WARM":"1"}' ;;
+  esac
+  local f=$OUT/$label.jsonl
+  for attempt in 1 2 3; do
+    local U=$(udid); [ -n "$U" ] || { echo "no iPad"; exit 1; }
+    if [ "$(app_url $U)" != "$MINE" ]; then echo "$(date +%T) QA app is not this batch's build; stopping"; exit 1; fi
+    local nonce="$label-$(date +%s)"
+    rm -f $f
+    echo "$(date +%T) $label: launch $BUILD ($arm, $loc) nonce $nonce" >> $OUT/launches.log
+    xcrun devicectl device process launch --terminate-existing --device $U --environment-variables "$envs" $B -- --title-probe --seed=1 --locale=$loc --qa-nonce=$nonce 2>&1 | sed "s/$U/<device>/g" > $OUT/launch.log
+    sleep 12
+    for k in $(seq 1 16); do
+      timeout 900 xcrun devicectl device copy from --device $U --domain-type appDataContainer --domain-identifier $B --source Documents/title_attr.jsonl --destination $f > /dev/null 2>&1
+      if [ $? -eq 124 ]; then echo "$(date +%T) $label: COPY FROM THE QA CONTAINER HUNG OVER 15 MIN; stopping"; exit 3; fi
+      if [ -f $f ] && ! grep -q -- "--qa-nonce=$nonce" $f; then sleep 3; continue; fi
+      if [ -f $f ] && grep -q '"probe":"done"' $f; then break; fi
+      sleep 3
+    done
+    if [ -f $f ] && grep -q -- "--qa-nonce=$nonce" $f && grep -q '"probe":"done"' $f; then
+      echo "$(date +%T) $label: $BUILD $arm $loc $(grep -c . $f) rows"
+      return 0
+    fi
+    echo "$(date +%T) $label: attempt $attempt incomplete or stale ($(grep -c . $f 2>/dev/null) rows)"
+    rm -f $f
+  done
+  echo "$(date +%T) $label: GAVE UP"
+}
+PLAN_LINES=("${(@f)$(grep -v '^#' $PLAN | grep -v '^[[:space:]]*$')}")
+for line in $PLAN_LINES; do
+  if (( $(date +%s) - T0 > 2280 )); then echo "$(date +%T) 38-minute guard: stopping before '$line'"; break; fi
+  if [[ "$line" == sleep* ]]; then ${=line}; continue; fi
+  if [[ "$line" == install* ]]; then do_install ${${=line}[2]}; continue; fi
+  launch ${=line} < /dev/null
+done
+clean_build
+echo "$(date +%T) batch $NAME done"

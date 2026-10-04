@@ -1,0 +1,24 @@
+# The RoomWarm fix (e97b4dba on be96dc83): RoomWarm on (main) and off (noroom),
+# the map warm on in both, en and zh-Hant, interleaved, rested 12 s.
+install fix
+w-warmup main en
+sleep 12
+f-main-en-1 main en
+sleep 12
+f-noroom-en-1 noroom en
+sleep 12
+f-main-zh-1 main zh-Hant
+sleep 12
+f-noroom-zh-1 noroom zh-Hant
+sleep 12
+f-main-en-2 main en
+sleep 12
+f-main-zh-2 main zh-Hant
+sleep 12
+f-noroom-en-2 noroom en
+sleep 12
+f-noroom-zh-2 noroom zh-Hant
+sleep 12
+f-main-en-3 main en
+sleep 12
+f-main-zh-3 main zh-Hant

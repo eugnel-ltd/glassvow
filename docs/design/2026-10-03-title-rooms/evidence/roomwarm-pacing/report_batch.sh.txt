@@ -1,0 +1,61 @@
+#!/bin/zsh
+# Rooms bench on the RoomWarm fix, read off the QA app's screen while copies from
+# its container hang. Holds the iPad lock (title-perf) throughout; builds and
+# installs the QA app from wt-fixb with qa_rooms_patch_report.py applied and
+# reverted at once; then one launch per label, each read off the screen once the
+# report (a black sheet with white text) is up.
+# usage: report_batch.sh <out-dir>
+set -uo pipefail
+OUT=$1
+S=<scratch>
+FLOW=$S/device13/flow; HERE=$S/title-perf/fixdev; WT=$S/title-perf/wt-fixb
+OWNER=title-perf; B=io.fol2.glassvow.qa
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+mkdir -p $OUT
+log() { echo "$(date +%T) $*" | tee -a $OUT/batch.log; }
+cleanup() { python3 $HERE/qa_rooms_patch_report.py $WT --revert 2>/dev/null; $FLOW/ipad_lock.sh release $OWNER; log "lock released"; }
+trap cleanup EXIT
+$FLOW/ipad_lock.sh acquire $OWNER || exit 1
+udid() { xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c '
+import json,sys
+for d in json.load(sys.stdin)["result"]["devices"]:
+    h=d.get("hardwareProperties") or {}
+    if h.get("productType")=="iPad11,6": print(h.get("udid")); break'; }
+U=$(udid); [[ -n "$U" ]] || { log "no iPad"; exit 1; }
+python3 $HERE/qa_rooms_patch_report.py $WT fix-e97b4dba || exit 1
+IPAD_LOCK_OWNER=$OWNER $FLOW/qa_export.sh $WT > $OUT/qa_export.out 2>&1; RC=$?
+python3 $HERE/qa_rooms_patch_report.py $WT --revert
+[[ $RC -eq 0 ]] || { log "QA export failed"; tail -5 $OUT/qa_export.out | tee -a $OUT/batch.log; exit 1; }
+log "installed $(grep -o 'installationURL: [^ ]*' $OUT/qa_export.out | awk '{print $2}' | head -1 | sed 's#.*/Application/##')"
+report_up() {  # png -> 0 when the report is on screen
+  python3 - "$1" <<'PY'
+import sys
+from PIL import Image
+im = Image.open(sys.argv[1]).convert("L")
+h = im.histogram(); n = sum(h)
+dark = sum(h[:14]) / n
+bright = sum(h[200:])
+raise SystemExit(0 if dark >= 0.93 and bright >= 2000 else 1)
+PY
+}
+launch() {  # label locale
+  local label=$1 locale=$2 nonce="$1-$(date +%s)"
+  xcrun devicectl device process launch --terminate-existing --device $U $B -- --rooms-bench --qa-nonce=$nonce --locale=$locale > $OUT/launch-$label.log 2>&1
+  log "$label: launched ($nonce)"
+  sleep 200
+  for k in $(seq 1 40); do
+    if timeout 60 xcrun devicectl device capture screenshot --device $U --destination $OUT/report-$label.png > /dev/null 2>&1 \
+        && report_up $OUT/report-$label.png; then
+      log "$label: the report is on screen"
+      return 0
+    fi
+    sleep 15
+  done
+  log "$label: no report on screen"
+}
+launch warm-en en
+launch en-1 en
+launch zh-1 zh-Hant
+launch en-2 en
+launch zh-2 zh-Hant
+log "batch done"

@@ -1498,11 +1498,15 @@ applies, as built; together:
   from the frame Return is tapped** (§5.2, as built): EXIT's slow start no longer opens any leaving lane.
 - **The first opening in a launch is paid while the title rests.** `RoomWarm`
   (`presentation/ui/room_warm.gd`): once the title has rested 0.8 s with nothing over it or moving, it
-  builds each room once off the tree (a frame each), fits Settings to its tallest section, rasterises the
-  glyphs the rooms set at their sizes within 1.5 ms a frame, draws each font page once under the road at
-  0.004, and frees itself; one a launch for each language and shape, never in the headless suite. The
-  warm was chosen over building the rooms in the tree ahead (§12's contingency), which would have put a
-  20 to 25 ms frame at rest into the title three times. Settings keeps its fitted height for the launch.
+  builds each room once off the tree (a frame each), fits Settings to its tallest section, shapes the
+  rooms' text at their sizes within 1.5 ms a frame, draws their glyphs under the road at 0.004 within the
+  same budget a frame, and frees itself; one a launch for each language and shape, never in the headless
+  suite. *As fixed before build 20:* it first drew every glyph in one frame, and since every new glyph
+  re-sends its whole font page to the GPU, that frame cost the iPad 8 30 to 270 ms (en to zh-Hant), the
+  next 50 to 80 ms, and 53 to 92 MiB of upload staging the engine never gives back
+  (`evidence/roomwarm-pacing/`). The warm was chosen over building the rooms in the tree ahead (§12's
+  contingency), which would have put a 20 to 25 ms frame at rest into the title three times. Settings
+  keeps its fitted height for the launch.
 - **Credits' roll fades at its edges and warms from its arrival; a licence glass reads as a glass**
   (focus, keys, its text under its crown, fades where it runs on, its texts set to its column, the roll
   behind at 0.1) (§4.3, as built).

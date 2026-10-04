@@ -1,0 +1,199 @@
+extends Node
+## QA-only probe (never committed): the title's attribution round on main
+## commits (1b00ac3c, d402820b, 2d2c462d). Hosted by Main behind
+## `--title-probe`: Main has stored a fresh saved run in this container and
+## shown the title. The probe waits for the launch rite to land, records video
+## memory (total, textures, buffers), samples 360 title frames, records memory
+## again (about 6 s after the rite), waits for the title's warm-ups to end,
+## records memory a third time and quits. Every frame from the probe's start
+## carries its process, draw and wait segments (process_frame ->
+## frame_pre_draw -> frame_post_draw -> next process_frame), the renderer's
+## CPU time for the root viewport, Performance's process time, memory, draw
+## calls and pipeline compilations, so a long frame says what it was made of.
+## Rows: user://title_attr.jsonl.
+
+const ROW_PATH: String = "user://title_attr.jsonl"
+const SAMPLE: int = 360
+var _host: Node = null
+var _rows: FileAccess = null
+var _vp: RID
+# Per frame (index = process_frame count since the probe started).
+var _pf: PackedInt64Array = PackedInt64Array()
+var _pre: PackedInt64Array = PackedInt64Array()
+var _post: PackedInt64Array = PackedInt64Array()
+var _mon: Array = []
+var _pc_last: Array = [0, 0, 0, 0, 0]
+
+
+func _ready() -> void:
+	_host = get_parent()
+	_rows = FileAccess.open(ROW_PATH, FileAccess.WRITE)
+	_vp = get_viewport().get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(_vp, true)
+	get_tree().process_frame.connect(_on_process_frame)
+	RenderingServer.frame_pre_draw.connect(_on_pre_draw)
+	RenderingServer.frame_post_draw.connect(_on_post_draw)
+	_pc_last = _pc()
+	var over: float = -1.0
+	if get_viewport().has_method("get_oversampling"):
+		over = get_viewport().call("get_oversampling")
+	_row({"probe": "start", "build": "attr-BUILD_LABEL",
+		"args": " ".join(OS.get_cmdline_user_args()),
+		"no_title_warm": not OS.get_environment("QA_NO_TITLE_WARM").is_empty(),
+		"no_room_warm": not OS.get_environment("QA_NO_ROOM_WARM").is_empty(),
+		"locale": str(Locale.active.code), "pref_language": Preferences.active.language,
+		"adapter": RenderingServer.get_video_adapter_name(),
+		"window": [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y],
+		"visible_rect": [get_viewport().get_visible_rect().size.x, get_viewport().get_visible_rect().size.y],
+		"oversampling": over, "mem": QaMarks.mem(), "counts": _counts(), "pc": _pc()})
+	_run.call_deferred()
+
+
+func _on_process_frame() -> void:
+	_pf.append(Time.get_ticks_usec())
+
+
+## Pre and post stamps sit at the index of the process_frame they follow.
+func _on_pre_draw() -> void:
+	var i: int = _pf.size() - 1
+	if i < 0:
+		return
+	while _pre.size() < i:
+		_pre.append(-1)
+	if _pre.size() == i:
+		_pre.append(Time.get_ticks_usec())
+
+
+func _on_post_draw() -> void:
+	var i: int = _pf.size() - 1
+	if i < 0:
+		return
+	while _post.size() < i:
+		_post.append(-1)
+		_mon.append([])
+	if _post.size() != i:
+		return
+	_post.append(Time.get_ticks_usec())
+	var pc: Array = _pc()
+	var d: Array = []
+	for k: int in range(5):
+		var now_k: int = pc[k]
+		var was_k: int = _pc_last[k]
+		d.append(now_k - was_k)
+	_pc_last = pc
+	var m: Array = QaMarks.mem()
+	_mon.append([m[0], m[1], m[2],
+		int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+		snappedf(Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, 0.01),
+		snappedf(RenderingServer.viewport_get_measured_render_time_cpu(_vp), 0.01),
+		snappedf(RenderingServer.get_frame_setup_time_cpu(), 0.01), d])
+
+
+func _pc() -> Array:
+	return [int(Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_CANVAS)),
+		int(Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_MESH)),
+		int(Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_SURFACE)),
+		int(Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_DRAW)),
+		int(Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_SPECIALIZATION))]
+
+
+func _counts() -> Array:
+	return [int(Performance.get_monitor(Performance.OBJECT_COUNT)),
+		int(Performance.get_monitor(Performance.OBJECT_RESOURCE_COUNT)),
+		int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)),
+		snappedf(Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0, 0.1)]
+
+
+func _row(data: Dictionary) -> void:
+	data["t_us"] = Time.get_ticks_usec()
+	var line: String = JSON.stringify(data)
+	print("TITLE_ATTR " + line.left(400))
+	if _rows != null:
+		_rows.store_line(line)
+		_rows.flush()
+
+
+func _title() -> TitleScreen:
+	var node: Variant = _host.get("_choice_screen")
+	return node if node is TitleScreen else null
+
+
+func _room_warm_live() -> bool:
+	return is_instance_valid(_host.get("_room_warm"))
+
+
+## Frames [from, to) by their process_frame stamps: dt and the three segments.
+func _frames(from: int, to: int) -> Dictionary:
+	var dt: Array = []
+	var seg: Array = []
+	var mon: Array = []
+	for i: int in range(from, mini(to, _pf.size() - 1)):
+		dt.append(snappedf((_pf[i + 1] - _pf[i]) / 1000.0, 0.01))
+		var pre: int = _pre[i] if i < _pre.size() else -1
+		var post: int = _post[i] if i < _post.size() else -1
+		if pre < 0 or post < 0:
+			seg.append([])
+		else:
+			seg.append([snappedf((pre - _pf[i]) / 1000.0, 0.01), snappedf((post - pre) / 1000.0, 0.01),
+				snappedf((_pf[i + 1] - post) / 1000.0, 0.01)])
+		mon.append(_mon[i] if i < _mon.size() else [])
+	return {"from": from, "pf0": _pf[from] if from < _pf.size() else -1, "dt": dt, "seg": seg, "mon": mon}
+
+
+func _stats(values: Array) -> Dictionary:
+	if values.is_empty():
+		return {}
+	var t: Array = values.duplicate()
+	t.sort()
+	var o20: int = 0
+	var o33: int = 0
+	for v: float in t:
+		if v > 20.0:
+			o20 += 1
+		if v > 33.0:
+			o33 += 1
+	return {"n": t.size(), "p50": t[t.size() / 2], "p95": t[int(t.size() * 0.95)], "max": t[-1],
+		"o20": o20, "o33": o33}
+
+
+func _run() -> void:
+	var rite_from: int = -1
+	while true:
+		await get_tree().process_frame
+		var title: TitleScreen = _title()
+		if rite_from < 0 and title != null and title.rite != null and title.rite.is_running():
+			rite_from = _pf.size() - 1
+		if title != null and (title.rite == null or title.rite.is_done()):
+			break
+	QaMarks.mark("lit")
+	var lit: int = _pf.size() - 1
+	var boot: Dictionary = _frames(0, lit)
+	var boot_dt: Array = boot["dt"]
+	_row({"probe": "lit", "frame": lit, "lit_us": _pf[lit], "rite_from": rite_from,
+		"mem": QaMarks.mem(), "counts": _counts(), "pc": _pc(),
+		"boot_dt": boot["dt"], "boot_seg": boot["seg"], "boot_mon": boot["mon"],
+		"rite": _stats(boot_dt.slice(maxi(rite_from, 0)))})
+	for i: int in range(SAMPLE + 1):
+		await get_tree().process_frame
+	var window: Dictionary = _frames(lit, lit + SAMPLE)
+	var window_dt: Array = window["dt"]
+	_row({"probe": "after6s", "mem": QaMarks.mem(), "counts": _counts(), "pc": _pc(),
+		"since_lit_ms": (Time.get_ticks_usec() - _pf[lit]) / 1000.0,
+		"room_warm_live": _room_warm_live(), "prefetch_busy": MapJourneyPrefetch.busy(),
+		"stats": _stats(window_dt)})
+	_row({"probe": "title_frames", "lit_us": _pf[lit], "frames": window,
+		"marks": QaMarks.marks.duplicate(), "recs": QaMarks.recs.duplicate()})
+	var waited: int = 0
+	while (MapJourneyPrefetch.busy() or _room_warm_live()) and waited < 900:
+		waited += 1
+		await get_tree().process_frame
+	for i: int in range(30):
+		await get_tree().process_frame
+	var tail_to: int = _pf.size() - 1
+	var tail: Dictionary = _frames(lit + SAMPLE, tail_to)
+	_row({"probe": "warm", "mem": QaMarks.mem(), "counts": _counts(), "pc": _pc(),
+		"since_lit_ms": (Time.get_ticks_usec() - _pf[lit]) / 1000.0, "waited": waited,
+		"room_warm_live": _room_warm_live(), "prefetch_busy": MapJourneyPrefetch.busy(),
+		"tail": tail, "marks": QaMarks.marks.duplicate(), "recs": QaMarks.recs.duplicate()})
+	_row({"probe": "done"})
+	get_tree().quit(0)

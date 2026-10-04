@@ -1,0 +1,35 @@
+class_name QaMarks
+extends RefCounted
+## QA-only (never committed): timestamps and small records from any thread.
+static var marks: Array = []
+static var recs: Array = []
+static var _lock: Mutex = Mutex.new()
+
+
+static func mark(label: String) -> void:
+	_lock.lock()
+	marks.append([Time.get_ticks_usec(), label])
+	_lock.unlock()
+
+
+static func rec(data: Dictionary) -> void:
+	data["t_us"] = Time.get_ticks_usec()
+	_lock.lock()
+	recs.append(data)
+	_lock.unlock()
+
+
+static func mem() -> Array:
+	return [snappedf(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, 0.01),
+		snappedf(Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED) / 1048576.0, 0.01),
+		snappedf(Performance.get_monitor(Performance.RENDER_BUFFER_MEM_USED) / 1048576.0, 0.01)]
+
+
+## b - a, element by element (memory rows).
+static func diff(b: Array, a: Array) -> Array:
+	var out: Array = []
+	for k: int in range(mini(a.size(), b.size())):
+		var x: float = b[k]
+		var y: float = a[k]
+		out.append(snappedf(x - y, 0.01))
+	return out

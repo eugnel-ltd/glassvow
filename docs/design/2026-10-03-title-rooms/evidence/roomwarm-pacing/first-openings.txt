@@ -1,0 +1,60 @@
+Rooms bench on the RoomWarm fix (e97b4dba, QA app), iPad 8, 4 Oct 2026. The bench taps each room's
+word and its Return through the engine's input path, 10 laps a room, after the title has rested and
+RoomWarm has finished. Lap 1 is the room's first opening in that launch ("FIRST"); laps 2-10 are the
+rest. Tap frame and tap>moved are min/median/max in ms; the passage is its frames inside its own span.
+The device's file service hung (copies from the QA container timed out from 10:05), so each launch's
+report was drawn on the screen by a QA-only patch (qa_rooms_patch_report.py) and read off a
+screenshot; each report names its build and its launch's nonce.
+
+warm-en: the first launch after the install (pipelines may compile; §11.6 reports it apart)
+  ipad8-fix-e97b4dba-en  nonce warm-en-1791105851
+  title at rest n 1803  P95 18.03  max 21.4
+  settings FIRST   tap frame 31.3  tap>moved 45.8  passage P95 20.9 max 24.5
+  settings laps2+  tap frame 22.2/23.0/24.5  tap>moved 36.4/38.8/40.8  passage P95 17.4 max 22.5
+  help FIRST       tap frame 24.6  tap>moved 39.9  passage P95 18.1 max 18.8
+  help laps2+      tap frame 21.0/21.8/28.2  tap>moved 37.1/38.1/44.4  passage P95 17.9 max 23.6
+  credits FIRST    tap frame 22.6  tap>moved 38.2  passage P95 17.0 max 18.7
+  credits laps2+   tap frame 16.5/20.3/20.7  tap>moved 29.2/36.6/37.8  passage P95 17.3 max 22.6
+
+en-1: the second launch on the install
+  ipad8-fix-e97b4dba-en  nonce en-1-1791106126
+  title at rest n 1803  P95 18.05  max 25.0
+  settings FIRST   tap frame 27.8  tap>moved 40.7  passage P95 17.7 max 21.0
+  settings laps2+  tap frame 18.2/22.7/24.6  tap>moved 35.3/38.6/40.9  passage P95 17.3 max 22.4
+  help FIRST       tap frame 24.6  tap>moved 40.7  passage P95 20.7 max 22.3
+  help laps2+      tap frame 21.0/21.9/23.0  tap>moved 36.8/38.0/39.2  passage P95 17.6 max 23.1
+  credits FIRST    tap frame 22.9  tap>moved 38.9  passage P95 19.8 max 21.9
+  credits laps2+   tap frame 18.3/20.3/21.7  tap>moved 33.3/36.7/39.4  passage P95 17.9 max 22.7
+
+zh-1: the third launch on the install
+  ipad8-fix-e97b4dba-zh-Hant  nonce zh-1-1791106415
+  title at rest n 1803  P95 18.06  max 22.2
+  settings FIRST   tap frame 32.4  tap>moved 48.1  passage P95 17.8 max 22.2
+  settings laps2+  tap frame 26.1/27.1/28.8  tap>moved 41.4/43.2/44.7  passage P95 18.1 max 22.0
+  help FIRST       tap frame 31.7  tap>moved 49.0  passage P95 21.5 max 23.3
+  help laps2+      tap frame 24.1/25.3/29.6  tap>moved 40.2/41.5/46.6  passage P95 18.1 max 21.9
+  credits FIRST    tap frame 27.1  tap>moved 45.5  passage P95 17.7 max 23.1
+  credits laps2+   tap frame 22.9/23.4/23.8  tap>moved 39.0/39.6/42.0  passage P95 18.0 max 22.9
+
+en-2: the fourth launch on the install
+  ipad8-fix-e97b4dba-en  nonce en-2-1791106705
+  title at rest n 1803  P95 17.95  max 21.5
+  settings FIRST   tap frame 29.8  tap>moved 46.0  passage P95 18.1 max 24.1
+  settings laps2+  tap frame 21.8/24.3/27.5  tap>moved 37.2/40.2/45.0  passage P95 17.3 max 24.0
+  help FIRST       tap frame 25.0  tap>moved 41.7  passage P95 17.5 max 21.6
+  help laps2+      tap frame 21.5/21.6/21.9  tap>moved 37.0/37.8/38.2  passage P95 17.5 max 24.0
+  credits FIRST    tap frame 23.0  tap>moved 39.3  passage P95 17.2 max 22.1
+  credits laps2+   tap frame 20.0/20.2/21.3  tap>moved 35.6/36.3/39.0  passage P95 17.7 max 22.5
+
+zh-2: the fifth launch on the install
+  ipad8-fix-e97b4dba-zh-Hant  nonce zh-2-1791106995
+  title at rest n 1803  P95 18.04  max 21.4
+  settings FIRST   tap frame 30.8  tap>moved 46.4  passage P95 18.7 max 21.2
+  settings laps2+  tap frame 26.4/27.8/29.9  tap>moved 42.7/43.7/45.1  passage P95 18.1 max 20.9
+  help FIRST       tap frame 27.3  tap>moved 43.4  passage P95 18.8 max 20.7
+  help laps2+      tap frame 24.1/26.2/27.3  tap>moved 40.1/42.4/44.2  passage P95 18.4 max 23.6
+  credits FIRST    tap frame 26.8  tap>moved 42.9  passage P95 17.4 max 22.0
+  credits laps2+   tap frame 17.8/23.3/26.0  tap>moved 33.8/39.2/43.3  passage P95 17.9 max 21.0
+
+Every room's first opening in every launch: tap frame <= 32.4 ms (Settings zh-1), against the 33 ms of
+§11.6; before the fix PR B measured Settings at 33.5 ms on a second launch in zh-Hant.

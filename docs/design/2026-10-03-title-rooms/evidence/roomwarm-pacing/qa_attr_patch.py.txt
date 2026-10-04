@@ -1,0 +1,144 @@
+"""QA-only (never committed): the title attribution round on main commits.
+Applied to a scratch worktree at 1b00ac3c, d402820b or 2d2c462d.
+  --title-probe       Main stores a fresh saved run (Act I, seed 1) in this
+                      container, shows the title and attaches
+                      tools/qa_title_attr.gd.
+  QA_NO_TITLE_WARM=1  the title never warms the saved run's map (#664).
+  QA_NO_ROOM_WARM=1   (2d2c462d) the title's RoomWarm (#670) is never made.
+Marks (QaMarks): boot, title, the map warm's start and DONE; on 2d2c462d,
+RoomWarm's every step with its own timings and memory: each room's build and
+its collect-and-free, each frame of glyph jobs (count, time, worst job), the
+frame its pages are queued, every glyph set drawn in _draw (time, memory
+before and after) and the frame it frees itself.
+usage: qa_attr_patch.py <worktree> <label>"""
+import os
+import shutil
+import sys
+
+W, LABEL = sys.argv[1], sys.argv[2]
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def edit(path, pairs):
+    p = os.path.join(W, path)
+    s = open(p).read()
+    for a, b in pairs:
+        assert s.count(a) == 1, (path, a[:70], s.count(a))
+        s = s.replace(a, b)
+    open(p, "w").write(s)
+
+
+shutil.copy(os.path.join(HERE, "qa_marks.gd"), os.path.join(W, "tools/qa_marks.gd"))
+probe = open(os.path.join(HERE, "qa_title_attr.gd")).read().replace("BUILD_LABEL", LABEL)
+open(os.path.join(W, "tools/qa_title_attr.gd"), "w").write(probe)
+
+SEED = '''
+
+func _qa_seed_saved_run(act_number: int) -> void:
+	var run_seed: int = _forced_seed if _forced_seed >= 0 else 1
+	var rs: RunState = RunState.new_run(content, run_seed, "run-qa-title-%d" % run_seed,
+		{"aspect": 0, "vow": 0, "unlocks": _vigil.unlocks})
+	var g: GlassvowGame = GlassvowGame.new(content, rs)
+	g.quests.prepare_run(rs)
+	var m: WorldMap = WorldMap.benchmark(rs)
+	g.quests.decorate_map(rs, m)
+	for i: int in range(maxi(0, act_number - 1)):
+		rs.start_next_act(content)
+		m = WorldMap.for_run(rs, content)
+		g.quests.decorate_map(rs, m)
+	rs.map = m.to_dict()
+	rs.pending_lamplighter = false
+	print("QA saved run act=%d seed=%d ok=%s" % [rs.act, run_seed, str(SaveService.store(rs, _run_save_path))])
+'''
+
+edit("application/main.gd", [
+    ("\tvar map_rest: bool = false\n", "\tvar map_rest: bool = false\n\tvar title_probe: bool = false\n"),
+    ('\t\telif arg == "--map-rest":\n\t\t\tmap_rest = true\n',
+     '\t\telif arg == "--map-rest":\n\t\t\tmap_rest = true\n\t\telif arg == "--title-probe":\n\t\t\ttitle_probe = true\n'),
+    ("\telif not _onboard.is_empty():\n\t\t_boot_onboard(_onboard)\n\telse:\n\t\t_route_idle()\n",
+     "\telif not _onboard.is_empty():\n\t\t_boot_onboard(_onboard)\n\telif title_probe:\n"
+     "\t\t_qa_seed_saved_run(1)\n\t\t_route_idle()\n"
+     "\t\tvar probe_v: Variant = (load(\"res://tools/qa_title_attr.gd\") as GDScript).new()\n"
+     "\t\tif probe_v is Node:\n\t\t\tvar probe_node: Node = probe_v\n\t\t\tadd_child(probe_node)\n"
+     "\telse:\n\t\t_route_idle()\n"),
+    ("func _ready() -> void:\n", "func _ready() -> void:\n\tQaMarks.mark(\"main_ready\")\n"),
+    ("func _show_title() -> void:\n", "func _show_title() -> void:\n\tQaMarks.mark(\"show_title\")\n"),
+    ("func _warm_title_road() -> void:\n",
+     "func _warm_title_road() -> void:\n\tif not OS.get_environment(\"QA_NO_TITLE_WARM\").is_empty():\n"
+     "\t\t_title_road_due = false\n\t\tQaMarks.mark(\"title_road_skipped\")\n\t\treturn\n"),
+    ("\t\tMapLandscapeAssets.release()\n\t\treturn\n\t_warm_landscape_for(restored, saved)\n",
+     "\t\tMapLandscapeAssets.release()\n\t\treturn\n\tQaMarks.mark(\"title_road_warm\")\n"
+     "\t_warm_landscape_for(restored, saved)\n"),
+])
+open(os.path.join(W, "application/main.gd"), "a").write(SEED)
+
+edit("presentation/map/map_journey_prefetch.gd", [
+    ("\t_drop()\n\t_current = job\n", "\t_drop()\n\t_current = job\n\tQaMarks.mark(\"prefetch_start\")\n"),
+    ("\tstep = Step.DONE\n", "\tstep = Step.DONE\n\tQaMarks.mark(\"prefetch_done\")\n"),
+])
+
+if os.path.exists(os.path.join(W, "presentation/ui/room_warm.gd")):
+    edit("application/main.gd", [
+        ("func _warm_rooms() -> void:\n",
+         "func _warm_rooms() -> void:\n\tif not OS.get_environment(\"QA_NO_ROOM_WARM\").is_empty():\n"
+         "\t\tQaMarks.mark(\"room_warm_skipped\")\n\t\treturn\n"),
+        ("\tadd_child(_room_warm)\n", "\tadd_child(_room_warm)\n\tQaMarks.mark(\"room_warm_added\")\n"),
+    ])
+    edit("presentation/ui/room_warm.gd", [
+        ("\tif not _builders.is_empty():\n\t\tvar room: Control = _builders.pop_front().call()\n"
+         "\t\t_collect(room)\n\t\tif _builders.is_empty():\n\t\t\t_queue_jobs()\n\t\treturn\n",
+         "\tif not _builders.is_empty():\n\t\tvar qa_t0: int = Time.get_ticks_usec()\n"
+         "\t\tvar room: Control = _builders.pop_front().call()\n\t\tvar qa_t1: int = Time.get_ticks_usec()\n"
+         "\t\tvar qa_nodes: int = room.find_children(\"*\", \"\", true, false).size() if room != null else -1\n"
+         "\t\tvar qa_t2: int = Time.get_ticks_usec()\n"
+         "\t\t_collect(room)\n\t\tvar qa_t3: int = Time.get_ticks_usec()\n"
+         "\t\tif _builders.is_empty():\n\t\t\t_queue_jobs()\n"
+         "\t\tQaMarks.rec({\"rw\": \"build\", \"build_us\": qa_t1 - qa_t0, \"nodes\": qa_nodes,\n"
+         "\t\t\t\"collect_free_us\": qa_t3 - qa_t2, \"queue_us\": Time.get_ticks_usec() - qa_t3,\n"
+         "\t\t\t\"jobs\": _jobs.size(), \"sets\": _sets.size(), \"mem\": QaMarks.mem()})\n\t\treturn\n"),
+        ("\t\tvar until: int = Time.get_ticks_usec() + BUDGET_US\n"
+         "\t\twhile not _jobs.is_empty() and Time.get_ticks_usec() < until:\n",
+         "\t\tvar until: int = Time.get_ticks_usec() + BUDGET_US\n"
+         "\t\tvar qa_j0: int = Time.get_ticks_usec()\n\t\tvar qa_n: int = 0\n\t\tvar qa_worst: int = 0\n"
+         "\t\tvar qa_chars: int = 0\n"
+         "\t\twhile not _jobs.is_empty() and Time.get_ticks_usec() < until:\n"
+         "\t\t\tvar qa_s: int = Time.get_ticks_usec()\n"),
+        ("\t\t\tfont.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px)\n\t\treturn\n",
+         "\t\t\tfont.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px)\n"
+         "\t\t\tqa_n += 1\n\t\t\tqa_chars += text.length()\n"
+         "\t\t\tqa_worst = maxi(qa_worst, Time.get_ticks_usec() - qa_s)\n"
+         "\t\tQaMarks.rec({\"rw\": \"jobs\", \"n\": qa_n, \"chars\": qa_chars, \"us\": Time.get_ticks_usec() - qa_j0,\n"
+         "\t\t\t\"worst_us\": qa_worst, \"left\": _jobs.size(), \"mem\": QaMarks.mem()})\n\t\treturn\n"),
+        ("\tif not _drawn:\n\t\t_drawn = true\n\t\tqueue_redraw()\n\t\treturn\n\tqueue_free()\n",
+         "\tif not _drawn:\n\t\t_drawn = true\n\t\tqueue_redraw()\n"
+         "\t\tQaMarks.rec({\"rw\": \"draw_queued\", \"mem\": QaMarks.mem()})\n\t\treturn\n"
+         "\tQaMarks.rec({\"rw\": \"free_queued\", \"mem\": QaMarks.mem()})\n\tqueue_free()\n"),
+        ("\tfor key: String in _sets:\n\t\tvar entry: Array = _sets[key]\n\t\tvar font: Font = entry[0]\n"
+         "\t\tvar px: int = entry[1]\n\t\tvar chars: Dictionary = entry[2]\n"
+         "\t\tfont.draw_string(get_canvas_item(), Vector2(2.0, float(px) + 2.0),\n"
+         "\t\t\t\"\".join(PackedStringArray(chars.keys())), HORIZONTAL_ALIGNMENT_LEFT, -1, px,\n"
+         "\t\t\tColor(1.0, 1.0, 1.0, 0.004))\n",
+         "\tvar qa_d0: int = Time.get_ticks_usec()\n\tvar qa_m0: Array = QaMarks.mem()\n"
+         "\tvar qa_over: float = get_viewport().call(\"get_oversampling\") if get_viewport().has_method(\"get_oversampling\") else -1.0\n"
+         "\tfor key: String in _sets:\n\t\tvar entry: Array = _sets[key]\n\t\tvar font: Font = entry[0]\n"
+         "\t\tvar px: int = entry[1]\n\t\tvar chars: Dictionary = entry[2]\n"
+         "\t\tvar qa_s: int = Time.get_ticks_usec()\n\t\tvar qa_ma: Array = QaMarks.mem()\n"
+         "\t\tfont.draw_string(get_canvas_item(), Vector2(2.0, float(px) + 2.0),\n"
+         "\t\t\t\"\".join(PackedStringArray(chars.keys())), HORIZONTAL_ALIGNMENT_LEFT, -1, px,\n"
+         "\t\t\tColor(1.0, 1.0, 1.0, 0.004))\n"
+         "\t\tvar qa_mb: Array = QaMarks.mem()\n"
+         "\t\tQaMarks.rec({\"rw\": \"draw_set\", \"font\": \"%s %s\" % [font.get_class(), font.get_font_name()],\n"
+         "\t\t\t\"px\": px, \"chars\": chars.size(), \"us\": Time.get_ticks_usec() - qa_s,\n"
+         "\t\t\t\"d_mem\": QaMarks.diff(qa_mb, qa_ma)})\n"
+         "\tQaMarks.rec({\"rw\": \"draw_total\", \"us\": Time.get_ticks_usec() - qa_d0, \"sets\": _sets.size(),\n"
+         "\t\t\"oversampling\": qa_over, \"mem0\": qa_m0, \"mem1\": QaMarks.mem()})\n"),
+    ])
+    s = open(os.path.join(W, "presentation/ui/room_warm.gd")).read()
+    s += '''
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		QaMarks.rec({"rw": "predelete", "mem": QaMarks.mem()})
+'''
+    open(os.path.join(W, "presentation/ui/room_warm.gd"), "w").write(s)
+print("attr patched", W, LABEL)

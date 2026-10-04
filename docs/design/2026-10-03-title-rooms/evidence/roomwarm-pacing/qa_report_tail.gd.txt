@@ -1,0 +1,66 @@
+
+
+## QA only: the bench's first openings drawn over the screen once it is done,
+## so a screenshot carries them while file copies from the container hang.
+func _qa_bench_report(bench: Node) -> void:
+	var rows: Array = bench.get("_rows")
+	var lines: PackedStringArray = PackedStringArray()
+	lines.append("%s  nonce %s" % [str(bench.get("label")), str(bench.get("nonce"))])
+	var title: Array[float] = []
+	for r_v: Variant in rows:
+		var r: Dictionary = r_v
+		if str(r.get("phase", "")) == "title":
+			var tw: float = r.get("wall_ms", 0.0)
+			title.append(tw)
+	lines.append("title at rest n %d  P95 %.2f  max %.1f" % [title.size(), _qa_q(title, 0.95), _qa_q(title, 1.0)])
+	for room: String in ["settings", "help", "credits"]:
+		for first: bool in [true, false]:
+			var frames: Array[float] = []
+			var taps: Array[float] = []
+			var inside: Array[float] = []
+			for r_v: Variant in rows:
+				var r: Dictionary = r_v
+				var lap: int = r.get("lap", 0)
+				if str(r.get("room", "")) != room or (lap == 0) != first:
+					continue
+				var phase: String = str(r.get("phase", ""))
+				var i: int = r.get("i", -1)
+				var wall: float = r.get("wall_ms", 0.0)
+				var tap: float = r.get("since_tap_ms", 0.0)
+				var after: float = r.get("after_ms", 1e9)
+				var span: float = r.get("span_ms", 0.0)
+				if phase == "open" and i == 0:
+					frames.append(wall)
+					taps.append(tap)
+				elif (phase == "open" or phase == "close") and i >= 1 and after <= span:
+					inside.append(wall)
+			lines.append("%s %s  tap frame %s  tap>moved %s  passage P95 %.1f max %.1f" % [room,
+				"FIRST" if first else "laps2+", _qa_mmm(frames), _qa_mmm(taps), _qa_q(inside, 0.95),
+				_qa_q(inside, 1.0)])
+	var layer: CanvasLayer = CanvasLayer.new()
+	layer.layer = 128
+	var back: ColorRect = ColorRect.new()
+	back.color = Color.BLACK
+	back.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(back)
+	var text: Label = Label.new()
+	text.text = "\n".join(lines)
+	text.position = Vector2(24.0, 24.0)
+	text.add_theme_font_size_override("font_size", 22)
+	text.add_theme_color_override("font_color", Color.WHITE)
+	layer.add_child(text)
+	add_child(layer)
+
+
+static func _qa_q(values: Array[float], q: float) -> float:
+	if values.is_empty():
+		return -1.0
+	var s: Array[float] = values.duplicate()
+	s.sort()
+	return s[clampi(ceili(q * s.size()) - 1, 0, s.size() - 1)]
+
+
+static func _qa_mmm(values: Array[float]) -> String:
+	if values.is_empty():
+		return "n/a"
+	return "%.1f/%.1f/%.1f" % [_qa_q(values, 0.0001), _qa_q(values, 0.5), _qa_q(values, 1.0)]

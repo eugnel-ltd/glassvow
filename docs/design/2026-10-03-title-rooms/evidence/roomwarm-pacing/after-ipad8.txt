@@ -1,0 +1,101 @@
+launches kept 10, dropped []
+
+== f-main-en (n=3, locale en, oversampling 1.83050847053528)
+  video MiB at the rite landing [283.72, 278.77, 284.14] (median 283.72)
+  video MiB 6 s later           [287.56, 283.56, 287.56] (median 287.56)
+  video MiB after the warms     [287.56, 283.56, 287.56] (median 287.56)
+  RD buffers MiB lit/6s [9.2, 8.28, 9.51] / [9.74, 9.74, 9.74]
+  rite frames p95 [16.74, 16.88, 16.77] max [156.99, 140.24, 76.68]; frames to lit [131, 135, 139]
+  title frames, 360 after the rite: p50 / p95 / max / >20 / >33
+    f-main-en-1    n=720  16.66 / 19.16 / 48.26 / 27 / 13   map warm (-2665.7, 816.5)
+    f-main-en-2    n=720  16.65 / 18.30 / 44.69 / 3 / 1   map warm (-2669.5, 902.8)
+    f-main-en-3    n=720  16.65 / 18.29 / 24.06 / 8 / 0   map warm (-2628.1, 699.9)
+  medians p50 16.65 p95 18.3 max 44.69 >20 8 >33 1; worst p95 19.16 max 48.26 >20 27 >33 13
+  frames > 33 ms in roomwarm: 5, ms [43.59, 43.8, 43.98, 44.69, 44.81]; largest segment {'process': 0, 'draw': 5, 'wait': 0}
+      {'i': 55, 'ms': 43.98, 'at': 922.5, 'seg': [5.82, 24.25, 13.9], 'dvideo': 0.52, 'dtex': 0.52, 'pc': [0, 0, 0, 0, 0], 'dc': 128, 'in': 'roomwarm', 'rw_steps': ['draw_glyphs']}
+      {'i': 59, 'ms': 43.59, 'at': 1022.9, 'seg': [6.05, 24.16, 13.38], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 130, 'in': 'roomwarm', 'rw_steps': ['draw_glyphs']}
+      {'i': 63, 'ms': 43.8, 'at': 1122.6, 'seg': [7.68, 23.6, 12.52], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 130, 'in': 'roomwarm', 'rw_steps': ['draw_glyphs']}
+      {'i': 67, 'ms': 44.81, 'at': 1221.6, 'seg': [7.37, 25.74, 11.7], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 128, 'in': 'roomwarm', 'rw_steps': ['draw_glyphs']}
+      {'i': 55, 'ms': 44.69, 'at': 921.8, 'seg': [4.99, 26.21, 13.49], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 128, 'in': 'roomwarm', 'rw_steps': ['draw_glyphs']}
+  frames > 33 ms in neither: 9, ms [41.83, 42.3, 43.41, 44.42, 45.39, 46.09, 47.53, 48.21, 48.26]; largest segment {'process': 0, 'draw': 9, 'wait': 0}
+      {'i': 89, 'ms': 48.26, 'at': 1618.3, 'seg': [5.97, 29.51, 12.78], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 127, 'in': 'neither', 'rw_steps': []}
+      {'i': 95, 'ms': 46.09, 'at': 1753.7, 'seg': [6.05, 27.21, 12.83], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 126, 'in': 'neither', 'rw_steps': []}
+      {'i': 101, 'ms': 45.39, 'at': 1887.8, 'seg': [5.83, 26.35, 13.21], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 126, 'in': 'neither', 'rw_steps': []}
+      {'i': 110, 'ms': 48.21, 'at': 2068.4, 'seg': [4.51, 29.9, 13.8], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 126, 'in': 'neither', 'rw_steps': []}
+      {'i': 114, 'ms': 41.83, 'at': 2174.7, 'seg': [6.85, 21.61, 13.37], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 126, 'in': 'neither', 'rw_steps': []}
+      {'i': 118, 'ms': 42.3, 'at': 2273.9, 'seg': [5.47, 23.65, 13.18], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 126, 'in': 'neither', 'rw_steps': []}
+      {'i': 122, 'ms': 44.42, 'at': 2372.0, 'seg': [4.65, 26.32, 13.45], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 126, 'in': 'neither', 'rw_steps': []}
+      {'i': 137, 'ms': 47.53, 'at': 2652.2, 'seg': [5.85, 28.42, 13.26], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 126, 'in': 'neither', 'rw_steps': []}
+      {'i': 143, 'ms': 43.41, 'at': 2789.5, 'seg': [5.85, 23.04, 14.53], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 126, 'in': 'neither', 'rw_steps': []}
+  RoomWarm f-main-en-1: 784.3 .. 1289.2 ms after lit; builds (ms build, ms collect+free, nodes) [(5.7, 1.1, 67), (9.3, 1.7, 63), (4.3, 1.0, 125)] in frames [16.58, 16.64, 16.71]
+     jobs frames (n, chars, ms, worst job ms, frame ms) [(5, 93, 1.6, 0.4, 18.48), (8, 146, 1.6, 0.3, 16.52), (2, 40, 0.2, 0.1, 16.9)]
+     pages drawn: 0 sets, 0 chars, _draw -1.0 ms at oversampling None; draw frame None; next frame None; free in next frame False
+     memory across the draw (video, textures, buffers): None -> [287.56, 76.66, 9.74]; d video None, d textures None, d buffers None
+     sets []
+  RoomWarm f-main-en-2: 783.9 .. 1220.7 ms after lit; builds (ms build, ms collect+free, nodes) [(7.2, 1.1, 67), (8.7, 1.8, 63), (4.4, 1.0, 125)] in frames [16.62, 16.66, 16.59]
+     jobs frames (n, chars, ms, worst job ms, frame ms) [(5, 93, 1.8, 0.7, 18.67), (8, 146, 1.6, 0.3, 17.69), (2, 40, 0.2, 0.1, 15.7)]
+     pages drawn: 0 sets, 0 chars, _draw -1.0 ms at oversampling None; draw frame None; next frame None; free in next frame False
+     memory across the draw (video, textures, buffers): None -> [283.56, 76.66, 9.74]; d video None, d textures None, d buffers None
+     sets []
+  RoomWarm f-main-en-3: 767.4 .. 1107.3 ms after lit; builds (ms build, ms collect+free, nodes) [(7.9, 1.0, 67), (9.1, 1.5, 63), (3.7, 1.1, 125)] in frames [16.65, 16.81, 22.9]
+     jobs frames (n, chars, ms, worst job ms, frame ms) [(5, 93, 1.8, 0.6, 14.71), (8, 146, 1.6, 0.3, 14.32), (2, 40, 0.2, 0.1, 16.81)]
+     pages drawn: 0 sets, 0 chars, _draw -1.0 ms at oversampling None; draw frame None; next frame None; free in next frame False
+     memory across the draw (video, textures, buffers): None -> [287.56, 76.66, 9.74]; d video None, d textures None, d buffers None
+     sets []
+
+== f-main-zh (n=3, locale zh-Hant, oversampling 1.83050847053528)
+  video MiB at the rite landing [258.19, 266.55, 259.5] (median 259.5)
+  video MiB 6 s later           [265.97, 273.72, 266.72] (median 266.72)
+  video MiB after the warms     [265.97, 273.72, 266.72] (median 266.72)
+  RD buffers MiB lit/6s [9.2, 9.51, 9.51] / [9.74, 9.74, 9.74]
+  rite frames p95 [19.1, 19.12, 16.75] max [229.1, 66.05, 68.06]; frames to lit [138, 140, 140]
+  title frames, 360 after the rite: p50 / p95 / max / >20 / >33
+    f-main-zh-1    n=720  16.66 / 17.81 / 47.85 / 9 / 1   map warm (-3271.9, 835.3)
+    f-main-zh-2    n=720  16.65 / 18.51 / 24.12 / 5 / 0   map warm (-3062.1, 717.1)
+    f-main-zh-3    n=720  16.65 / 18.34 / 47.64 / 9 / 1   map warm (-3072.4, 766.7)
+  medians p50 16.65 p95 18.34 max 47.64 >20 9 >33 1; worst p95 18.51 max 47.85 >20 9 >33 1
+  frames > 33 ms in roomwarm: 2, ms [47.64, 47.85]; largest segment {'process': 0, 'draw': 2, 'wait': 0}
+      {'i': 55, 'ms': 47.85, 'at': 918.6, 'seg': [5.49, 27.61, 14.75], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 139, 'in': 'roomwarm', 'rw_steps': ['jobs']}
+      {'i': 58, 'ms': 47.64, 'at': 968.9, 'seg': [6.01, 27.02, 14.62], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 139, 'in': 'roomwarm', 'rw_steps': ['jobs']}
+  RoomWarm f-main-zh-1: 767.1 .. 1921.2 ms after lit; builds (ms build, ms collect+free, nodes) [(11.3, 1.1, 67), (8.3, 1.0, 63), (3.3, 2.1, 125)] in frames [17.13, 16.66, 18.09]
+     jobs frames (n, chars, ms, worst job ms, frame ms) [(3, 71, 1.6, 0.9, 16.84), (3, 69, 1.5, 0.6, 16.8), (3, 72, 1.8, 0.8, 17.62), (4, 96, 1.9, 0.6, 15.78), (3, 66, 1.8, 0.7, 16.63), (4, 57, 1.8, 0.7, 16.61), (3, 72, 1.9, 0.9, 47.85), (2, 48, 1.6, 0.8, 16.66), (3, 72, 1.9, 0.7, 16.65), (3, 72, 2.0, 0.7, 16.65), (4, 93, 1.7, 0.7, 16.65)]
+     pages drawn: 0 sets, 0 chars, _draw -1.0 ms at oversampling None; draw frame None; next frame None; free in next frame False
+     memory across the draw (video, textures, buffers): None -> [265.97, 81.82, 9.74]; d video None, d textures None, d buffers None
+     sets []
+  RoomWarm f-main-zh-2: 784.4 .. 1721.8 ms after lit; builds (ms build, ms collect+free, nodes) [(11.6, 1.0, 67), (8.4, 0.8, 63), (3.6, 1.0, 125)] in frames [18.67, 16.16, 14.92]
+     jobs frames (n, chars, ms, worst job ms, frame ms) [(3, 71, 2.0, 1.1, 16.6), (3, 69, 1.8, 0.8, 16.59), (3, 72, 1.9, 0.9, 17.04), (3, 72, 2.0, 0.8, 16.54), (3, 66, 2.7, 1.4, 16.65), (2, 45, 1.6, 0.8, 16.9), (4, 60, 2.1, 0.9, 16.45), (3, 72, 2.1, 0.8, 16.58), (3, 72, 2.0, 0.8, 16.74), (3, 72, 1.9, 0.6, 16.57), (3, 69, 1.7, 0.7, 17.27), (2, 48, 0.8, 0.6, 16.89)]
+     pages drawn: 0 sets, 0 chars, _draw -1.0 ms at oversampling None; draw frame None; next frame None; free in next frame False
+     memory across the draw (video, textures, buffers): None -> [273.72, 81.82, 9.74]; d video None, d textures None, d buffers None
+     sets []
+  RoomWarm f-main-zh-3: 767.8 .. 1808.8 ms after lit; builds (ms build, ms collect+free, nodes) [(10.9, 1.0, 67), (8.9, 0.9, 63), (3.6, 1.3, 125)] in frames [18.34, 16.04, 18.88]
+     jobs frames (n, chars, ms, worst job ms, frame ms) [(3, 71, 1.9, 1.1, 15.71), (1, 21, 1.6, 1.6, 16.41), (3, 72, 2.5, 1.1, 16.81), (3, 72, 1.6, 0.6, 16.69), (3, 72, 1.5, 0.6, 16.67), (3, 66, 1.8, 0.7, 16.43), (4, 57, 1.6, 0.6, 16.95), (3, 72, 1.7, 0.7, 16.74), (3, 72, 1.7, 0.6, 16.69), (3, 72, 1.8, 0.6, 47.64), (2, 48, 2.0, 1.1, 16.56), (4, 93, 1.8, 0.7, 16.68)]
+     pages drawn: 0 sets, 0 chars, _draw -1.0 ms at oversampling None; draw frame None; next frame None; free in next frame False
+     memory across the draw (video, textures, buffers): None -> [266.72, 81.82, 9.74]; d video None, d textures None, d buffers None
+     sets []
+
+== f-noroom-en (n=2, locale en, oversampling 1.83050847053528)
+  video MiB at the rite landing [284.14, 284.14] (median 284.14)
+  video MiB 6 s later           [284.59, 284.59] (median 284.59)
+  video MiB after the warms     [284.59, 284.59] (median 284.59)
+  RD buffers MiB lit/6s [9.51, 9.51] / [9.74, 9.74]
+  rite frames p95 [16.76, 16.77] max [79.66, 77.6]; frames to lit [139, 140]
+  title frames, 360 after the rite: p50 / p95 / max / >20 / >33
+    f-noroom-en-1  n=720  16.66 / 18.11 / 22.73 / 8 / 0   map warm (-2670.1, 716.8)
+    f-noroom-en-2  n=720  16.66 / 18.21 / 47.40 / 11 / 2   map warm (-2685.4, 700.0)
+  medians p50 16.66 p95 18.16 max 35.06 >20 9.5 >33 1.0; worst p95 18.21 max 47.4 >20 11 >33 2
+  frames > 33 ms in neither: 2, ms [41.76, 47.4]; largest segment {'process': 0, 'draw': 2, 'wait': 0}
+      {'i': 150, 'ms': 47.4, 'at': 2502.5, 'seg': [5.83, 29.75, 11.82], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 126, 'in': 'neither', 'rw_steps': []}
+      {'i': 153, 'ms': 41.76, 'at': 2591.4, 'seg': [5.8, 23.87, 12.09], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 126, 'in': 'neither', 'rw_steps': []}
+
+== f-noroom-zh (n=2, locale zh-Hant, oversampling 1.83050847053528)
+  video MiB at the rite landing [266.13, 266.55] (median 266.34)
+  video MiB 6 s later           [267.0, 267.0] (median 267.0)
+  video MiB after the warms     [267.0, 267.0] (median 267.0)
+  RD buffers MiB lit/6s [9.2, 9.51] / [9.74, 9.74]
+  rite frames p95 [16.75, 16.75] max [188.17, 77.52]; frames to lit [131, 139]
+  title frames, 360 after the rite: p50 / p95 / max / >20 / >33
+    f-noroom-zh-1  n=720  16.65 / 18.04 / 21.04 / 3 / 0   map warm (-3151.1, 833.3)
+    f-noroom-zh-2  n=720  16.66 / 18.31 / 47.94 / 5 / 1   map warm (-3046.5, 700.2)
+  medians p50 16.66 p95 18.17 max 34.49 >20 4.0 >33 0.5; worst p95 18.31 max 47.94 >20 5 >33 1
+  frames > 33 ms in neither: 1, ms [47.94]; largest segment {'process': 0, 'draw': 1, 'wait': 0}
+      {'i': 163, 'ms': 47.94, 'at': 2718.6, 'seg': [5.83, 29.9, 12.22], 'dvideo': 0.0, 'dtex': 0.0, 'pc': [0, 0, 0, 0, 0], 'dc': 138, 'in': 'neither', 'rw_steps': []}
