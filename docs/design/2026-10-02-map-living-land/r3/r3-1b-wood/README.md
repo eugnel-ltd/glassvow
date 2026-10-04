@@ -334,6 +334,20 @@ fits there; main's heavier frame keeps it at Medium. Matte cards take
 shader ALU off every woodland fragment; at `21b4cdab` none of four launches
 (three measuring launches and the trace launch's 45 s hold) repeated it.
 
+### The device re-check of the final head (`cac9cb69`, after the tint pass)
+
+On 4 October 2026, 13:57–14:06, the QA app was measured under the shared batch lock, with the lean profile, the pad, seed 1, and the wood probe applied uncommitted. Control: main `220f2f59`. Three control-then-wood installs were made, each from its own signed ipa.
+
+| Measure | This head | Before | Promise |
+|---|---|---|---|
+| Back to the Road, tapped as the rite lands (`--title-probe`, a seeded Act I run, tap to a drawn interactive map; 3 launches) | 729.5 / 847.3 / 704.1 ms, median 729.5 | R1.1: median 693–695; `759b051d`: 702.5 / 726.3 | under 1 s: **pass** |
+| Back to the Road, rested after the warm (3 launches) | 735.4 / 752.1 / 736.1 ms, median 736.1 | R1.1: worst 725–748; `759b051d`: 716.3 / 720.8 | under 1 s: **pass** |
+| Journey cadence, 600 frames at the production rest (2 holds) | mean 16.660 / 16.662 ms, p95 18.95 / 18.93, 0 missed | 16.661–16.662, p95 18.54–18.61, 0 missed | unchanged: **pass** |
+| First open after an install (3 installs) | one 3482.5 ms frame on install 1; installs 2 and 3: worst 250.1 and 233.2 ms; every first rested hold p95 under 20 ms | 3.8 / 0.4 / 2.0 / 1.6 s on four of five installs; control install 1: 1003 ms | known residual ([open issue 1](#open-issues)), needs a warm |
+| Red share and bands (345–355° / 355–5° / 5–15°), pad Journey screenshot, the tint pass's `bands.py` | 15.4%, 0 / 62 / 38 | iPad before the pass: 20 / 67 / 13; Mac after: 16.7%, 0 / 59 / 41 | target 11.3%, 5 / 56 / 39; the band's ceiling is 16.3%, which the iPad meets |
+
+The tint costs nothing measurable: the cadence is unchanged, and Back to the Road gains about 30 ms at the median. By eye on the device, the reds read scarlet to vermilion, the conifers break the mass, and the roads, both rivers, the rocks, the bridge, the lanterns and every waystone stay clear. The device file service did not hang, and every copy ran under a 300 s timeout.
+
 ### The GPU budget line (Metal System Trace)
 
 One trace per build, plus the candidate with the wood hidden for its hold
