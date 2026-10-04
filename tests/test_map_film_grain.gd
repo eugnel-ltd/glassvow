@@ -1,10 +1,10 @@
 extends RefCounted
 ## The map's film grain (R3.1, `MapFilmGrain`): the map's display draws the
 ## grain itself from a tiled white-noise texture, with the TransitionLayer
-## grain's strength, jumps and rate, each cell of the screen reading the tile
-## from its own place; Reduce Motion takes it away; the display fades with its
-## screen; and Main shows one grain a frame on the map route: the map's own at
-## rest, the TransitionLayer's under a room, a sheet or a transition leaf.
+## grain's strength, jumps and rate, repeating only every 2048 pixels; Reduce
+## Motion takes it away; the display fades with its screen; and Main shows one
+## grain a frame on the map route: the map's own at rest, the TransitionLayer's
+## under a room, a sheet or a transition leaf.
 
 const RUN_PATH: String = "user://test_map_film_grain_run_v2.json"
 const VIGIL_PATH: String = "user://test_map_film_grain_vigil_v2.json"
@@ -24,15 +24,16 @@ static func run(fails: Array[String]) -> void:
 	TestProfile.wipe(RUN_PATH, VIGIL_PATH)
 
 
-## One byte of white noise a display pixel: flat across its range, its
-## neighbours uncorrelated, and the same tile on every call.
+## One byte of white noise a display pixel, SIDE pixels a side: flat across its
+## range, its neighbours uncorrelated, and the same noise on every call.
 static func _noise(fails: Array[String]) -> void:
 	var image: Image = MapFilmGrain.noise().get_image()
-	var side: int = MapFilmGrain.TILE
+	var side: int = MapFilmGrain.SIDE
 	_check(fails, image.get_width() == side and image.get_height() == side
 			and image.get_format() == Image.FORMAT_R8,
-		"the noise is a %d px one-channel tile" % side)
-	var bytes: PackedByteArray = image.get_data()
+		"the noise is a %d px one-channel texture" % side)
+	# A window across four cells' borders.
+	var bytes: PackedByteArray = image.get_region(Rect2i(128, 128, 512, 512)).get_data()
 	var bins: PackedInt32Array = PackedInt32Array()
 	bins.resize(16)
 	var total: float = 0.0
@@ -45,17 +46,24 @@ static func _noise(fails: Array[String]) -> void:
 		flat = flat and absf(float(count) / bytes.size() - 1.0 / 16.0) < 0.006
 	_check(fails, absf(mean - 0.5) < 0.01 and flat,
 		"the noise is flat across its range (mean %.3f)" % mean)
+	var r: float = _correlation(image, Vector2i(1, 0), mean)
+	_check(fails, absf(r) < 0.02, "neighbouring grains are uncorrelated (r %.3f)" % r)
+	_check(fails, MapFilmGrain.noise() == MapFilmGrain.noise(), "the noise is made once")
+
+
+## Correlation of the noise with itself `lag` pixels on, over a sample of rows.
+static func _correlation(image: Image, lag: Vector2i, mean: float) -> float:
+	var data: PackedByteArray = image.get_data()
+	var side: int = image.get_width()
 	var products: float = 0.0
 	var squares: float = 0.0
-	for y: int in range(side):
-		for x: int in range(side - 1):
-			var a: float = bytes[y * side + x] / 255.0 - mean
-			var b: float = bytes[y * side + x + 1] / 255.0 - mean
+	for y: int in range(0, side - lag.y, 7):
+		for x: int in range(0, side - lag.x, 5):
+			var a: float = data[y * side + x] / 255.0 - mean
+			var b: float = data[(y + lag.y) * side + x + lag.x] / 255.0 - mean
 			products += a * b
 			squares += a * a
-	_check(fails, absf(products / squares) < 0.02,
-		"neighbouring grains are uncorrelated (r %.3f)" % (products / squares))
-	_check(fails, MapFilmGrain.noise() == MapFilmGrain.noise(), "the tile is made once")
+	return products / squares
 
 
 ## The display carries the grain at the TransitionLayer grain's strength, jumps
@@ -109,32 +117,33 @@ static func _display(fails: Array[String]) -> void:
 	Preferences.active.reduce_motion = reduced
 
 
-## Each tile-sized cell of the screen reads the tile from its own place, the
-## shader's floor(fract(cell.x * cell_x + cell.y * cell_y) * TILE): on a 4K
-## screen (and a jump past its edge) no two cells share a place, and cells that
-## touch sit far apart on the tile, so the grain has no period.
+## Each cell of the noise reads the white-noise cell from its own place, so
+## the grain has no period short of SIDE: no two cells share a place, cells
+## that touch (across the texture's wrap too) sit far apart on it, and the
+## noise one cell on, across or down, is uncorrelated with itself.
 static func _cells(fails: Array[String]) -> void:
-	var grain: ShaderMaterial = MapFilmGrain.material(true)
-	var cell_x: Vector2 = grain.get_shader_parameter("cell_x")
-	var cell_y: Vector2 = grain.get_shader_parameter("cell_y")
+	var cells: int = MapFilmGrain.CELLS
 	var side: float = float(MapFilmGrain.TILE)
 	var places: Dictionary = {}
 	var nearest: float = side
-	var span: int = ceili(3840.0 / side) + 1
-	for cy: int in range(-1, span):
-		for cx: int in range(-1, span):
-			var at: Vector2 = cell_x * cx + cell_y * cy
-			var place: Vector2 = (at - at.floor()) * side
-			places[Vector2i(place.floor())] = true
+	for cy: int in range(cells):
+		for cx: int in range(cells):
+			var place: Vector2i = MapFilmGrain.place(Vector2i(cx, cy))
+			places[place] = true
 			for other: Vector2i in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(1, -1)]:
-				var there: Vector2 = cell_x * (cx + other.x) + cell_y * (cy + other.y)
-				var apart: Vector2 = ((there - there.floor()) * side - place).abs()
+				var next: Vector2i = Vector2i(posmod(cx + other.x, cells), posmod(cy + other.y, cells))
+				var apart: Vector2 = Vector2(MapFilmGrain.place(next) - place).abs()
 				apart = Vector2(minf(apart.x, side - apart.x), minf(apart.y, side - apart.y))
 				nearest = minf(nearest, apart.length())
-	_check(fails, places.size() == (span + 1) * (span + 1),
-		"every cell of a 4K screen reads the tile from its own place")
+	_check(fails, places.size() == cells * cells, "every cell reads the noise from its own place")
 	_check(fails, nearest >= 16.0,
-		"touching cells read the tile at least 16 texels apart (%.1f)" % nearest)
+		"touching cells read the noise at least 16 texels apart (%.1f)" % nearest)
+	var image: Image = MapFilmGrain.noise().get_image()
+	var worst: float = 0.0
+	for lag: Vector2i in [Vector2i(MapFilmGrain.TILE, 0), Vector2i(0, MapFilmGrain.TILE),
+			Vector2i(MapFilmGrain.TILE, MapFilmGrain.TILE)]:
+		worst = maxf(worst, absf(_correlation(image, lag, 0.5)))
+	_check(fails, worst < 0.02, "the noise does not repeat a cell on (r %.3f)" % worst)
 
 
 static func _amount(grain: ShaderMaterial) -> float:
