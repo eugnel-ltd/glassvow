@@ -9,7 +9,9 @@ extends RefCounted
 ## Every builder is given up front (#675's follow-up for #655 PR C): a builder
 ## whose room is not ready yet (the Vigil's art still loading) is asked again
 ## on a later frame, the builders after it wait, nothing is shaped until the
-## last has built, and every room's text is then warmed.
+## last has built, and every room's text is then warmed. A pipeline sample is
+## drawn at an alpha the renderer draws: Godot skips a canvas item whose
+## modulate's alpha is under 0.007, so at 0.004 the sample built nothing.
 
 const FRAMES_CAP: int = 400
 
@@ -80,6 +82,7 @@ static func run(fails: Array[String]) -> void:
 	_check(fails, held.get_ref() == null, "the warm did not free itself after its last glyph")
 	_check(fails, most <= 1, "with no budget, %d glyphs were drawn in one frame" % most)
 	await _late_builder(fails, tree)
+	await _sample_drawn(fails, tree)
 
 
 ## A builder not ready yet holds the queue and is asked again; once it builds,
@@ -116,3 +119,30 @@ static func _late_builder(fails: Array[String], tree: SceneTree) -> void:
 			"late" if c == "V" else "after the late one"))
 	if held.get_ref() != null:
 		warm.queue_free()
+
+
+## The hall's pipeline sample goes under everything at an alpha the renderer
+## still draws, for one frame, and then the warm frees itself.
+static func _sample_drawn(fails: Array[String], tree: SceneTree) -> void:
+	var made: Array[Control] = []
+	var pipelines: Array[Callable] = [func() -> Control:
+		var sample: Control = Control.new()
+		made.append(sample)
+		return sample]
+	var none: Array[Callable] = []
+	var warm: RoomWarm = RoomWarm.new(none, func() -> bool: return true, pipelines)
+	warm._rested = RoomWarm.REST
+	var held: WeakRef = weakref(warm)
+	tree.root.add_child(warm)
+	var frames: int = 0
+	while made.is_empty() and frames <= FRAMES_CAP:
+		await tree.process_frame
+		frames += 1
+	_check(fails, not made.is_empty() and made[0].get_parent() == warm
+			and made[0].modulate.a >= 0.007 and RoomWarm.SAMPLE_ALPHA >= 0.007,
+		"the pipeline sample is drawn at an alpha the renderer skips (%.3f)" % RoomWarm.SAMPLE_ALPHA)
+	frames = 0
+	while held.get_ref() != null and frames <= FRAMES_CAP:
+		await tree.process_frame
+		frames += 1
+	_check(fails, held.get_ref() == null, "the warm did not free itself after its pipeline sample")

@@ -26,6 +26,11 @@ extends Control
 
 ## How long the title rests before the work starts, and the work a frame.
 const REST: float = 0.8
+## A pipeline sample's alpha, under everything: the least the renderer draws.
+## Godot skips a canvas item, and all under it, whose modulate's alpha is
+## below 0.007 (`RendererCanvasCull::_cull_canvas_item`): at 0.004 the sample
+## was never drawn and built no pipeline (#655 PR C, found on the iPad 8).
+const SAMPLE_ALPHA: float = 0.01
 const BUDGET_US: int = 1500
 ## Glyphs shaped a call.
 const CHUNK: int = 24
@@ -117,7 +122,7 @@ func _process(delta: float) -> void:
 		_sample = _pipelines.front().call()
 		if _sample != null:
 			_pipelines.pop_front()
-			_sample.modulate.a = 0.004
+			_sample.modulate.a = SAMPLE_ALPHA
 			add_child(_sample)
 		return
 	queue_free()
