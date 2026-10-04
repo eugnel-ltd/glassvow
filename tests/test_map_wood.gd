@@ -25,6 +25,17 @@ static func run(fails: Array[String]) -> void:
 	_loading(fails)
 	_squares(fails)
 	_slab(fails)
+	# Unset, the planting keeps the widest touch square clear (the phone's);
+	# the pad's narrower square is planted and checked on a land of its own.
+	_land(fails, &"", true)
+	_land(fails, &"pad-landscape", false)
+
+
+## Builds Act I's land with the woodland planted for `shape`'s touch square and
+## checks it; `everything` adds the mix and the draws, which no shape changes.
+static func _land(fails: Array[String], shape: StringName, everything: bool) -> void:
+	var kept: StringName = Planting.stage_shape
+	Planting.stage_shape = shape
 	var content: ContentDB = ContentDB.load_full()
 	var run_state: RunState = RunState.new_run(content, SEED, "run-map-wood")
 	var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run_state, content), content)
@@ -35,18 +46,20 @@ static func run(fails: Array[String]) -> void:
 	screen.refresh(run_state)
 	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
 	_check(fails, land != null and land.is_built() and land.wood != null,
-		"Act I's land is built with its woodland")
+		"Act I's land is built with its woodland (shape '%s')" % shape)
 	if land != null and land.is_built() and land.wood != null:
 		var seats: PackedVector3Array = []
 		for base: Node3D in land.journey.bases:
 			seats.append(base.position)
 		_ground(fails, land, seats)
 		_picture(fails, land, seats)
-		_mix(fails, land)
-		_draws(fails, land)
+		if everything:
+			_mix(fails, land)
+			_draws(fails, land)
 	screen.get_parent().remove_child(screen)
 	screen.free()
 	MapScene.release_kept_journey()
+	Planting.stage_shape = kept
 
 
 ## Every kind the woodland plants has baked tiles inside the atlas, with a
