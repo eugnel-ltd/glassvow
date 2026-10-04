@@ -19,6 +19,7 @@ const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 const Lamps = preload("res://presentation/map/landscape/lamps.gd")
 const LandMotion = preload("res://presentation/map/landscape/land_motion.gd")
 const Air = preload("res://presentation/map/landscape/air.gd")
+const ImpostorWood = preload("res://presentation/map/landscape/impostor_wood.gd")
 const MAP_BOUNDS: Rect2 = Rect2(-48, -30, 96, 60)
 const LIT_GLASS: Color = Color("b38d57")
 const LIT_EMISSION: Color = Color("aa7841")
@@ -36,6 +37,7 @@ var kit: Kit
 var journey: Journey
 var lamps: Lamps
 var air: Air
+var wood: ImpostorWood
 var failure: String = ""
 var timings_ms: Dictionary = {}
 ## The record's node id to its waystone's seat on the rendered surface.
@@ -228,6 +230,14 @@ func _finish() -> void:
 	if not kit.build_complete or not kit.failure.is_empty():
 		failure = kit.failure if not kit.failure.is_empty() else "Woodland assembly incomplete"
 		return
+	# Without its atlas (`ImpostorWood.Atlas.failed`, reported once) the land
+	# opens without its woodland rather than not at all.
+	if ImpostorWood.Atlas.ready():
+		var planted: int = Time.get_ticks_msec()
+		wood = ImpostorWood.new()
+		add_child(wood)
+		wood.build(kit, terrain, resolved)
+		timings_ms["wood"] = Time.get_ticks_msec() - planted
 	lamps = Lamps.new()
 	add_child(lamps)
 	lamps.build(kit.lamp_anchors())

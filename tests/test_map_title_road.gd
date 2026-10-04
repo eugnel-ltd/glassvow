@@ -97,12 +97,13 @@ static func _cards_are_the_renderers(fails: Array[String]) -> void:
 
 
 ## The kit's templates take their own copies' meshes instead of duplicating the
-## cached ones: the same arrays, given the prepared materials.
+## cached ones: the same arrays, given the prepared materials. Every kind but
+## the arch (placed as a scene) and the foliage drawn as impostor cards.
 static func _kit_templates_are_the_scenes(fails: Array[String]) -> void:
 	MapJourneyLandscape.Kit.preload_scenes()
 	var statics: GDScript = load("res://presentation/map/landscape/static_scenery.gd")
 	var shared: Dictionary = statics.get("_shared")
-	var same: bool = shared.size() == MapJourneyLandscape.Kit.PROFILES.size() - 1
+	var same: bool = shared.size() == MapJourneyLandscape.Kit._scene_kinds().size() - 1
 	for path: String in shared:
 		var parts: Array = shared[path]["parts"]
 		var cached: Node3D = (load(path) as PackedScene).instantiate() as Node3D

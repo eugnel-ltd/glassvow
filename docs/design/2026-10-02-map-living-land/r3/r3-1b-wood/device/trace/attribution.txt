@@ -1,0 +1,15 @@
+Metal System Trace, iPad 8, QA app, lean, pad, seed 1, Journey view two steps in, the stage forced live,
+4 s mid-hold, all processes (analysis keeps the launch's pid). Stage frames: the 15-encoder command buffers.
+Reference clock: the control's film-grain passes (the frame's last two renders, untouched by this branch;
+3.22 ms, the trace spike's normalised 3.25). Each run's times are scaled by ref / its own grain time.
+
+ctl-tj2         (control, main 8815da34): 265 stage frames, grain 3.39 ms -> clock factor 1.000
+   main 3D pass V 1.91 + F 4.09 = 6.00 ms | shadow and pre-main renders 0.70 ms | GPU busy per frame 13.54 ms (raw 13.54, p95 raw 14.69)
+dev-tj2         (the wood): 267 stage frames, grain 4.47 ms -> clock factor 0.758
+   main 3D pass V 0.53 + F 2.59 = 3.13 ms | shadow and pre-main renders 0.78 ms | GPU busy per frame 10.03 ms (raw 13.23, p95 raw 15.58)
+dev-tj2-kwood   (the wood, hidden for the hold): 268 stage frames, grain 3.49 ms -> clock factor 0.972
+   main 3D pass V 0.65 + F 4.11 = 4.76 ms | shadow and pre-main renders 0.79 ms | GPU busy per frame 12.56 ms (raw 12.92, p95 raw 15.19)
+
+The wood's GPU budget line at the reference clock (the wood shown minus the same build with it hidden):
+   main 3D pass -1.64 ms, shadow passes -0.01 ms, whole frame -2.52 ms
+Against main 8815da34 (R2's kit foliage meshes): main 3D pass -2.87 ms (vertex -1.37), shadow +0.08 ms, whole frame -3.51 ms

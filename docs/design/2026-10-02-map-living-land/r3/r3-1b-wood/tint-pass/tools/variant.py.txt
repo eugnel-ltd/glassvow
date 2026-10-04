@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""variant.py <out.json> key=r,g,b/r,g,b ... [brightness=lo,hi]: t0 with overrides.
+A key may name several kinds joined by '+'."""
+import json, sys
+base = json.load(open(sys.argv[0].replace('variant.py', 't0.json')))
+for arg in sys.argv[2:]:
+    k, v = arg.split('=')
+    if k == 'brightness':
+        base['brightness'] = [float(x) for x in v.split(',')]
+        continue
+    lo, hi = v.split('/')
+    pair = [[float(x) for x in lo.split(',')], [float(x) for x in hi.split(',')]]
+    for kind in k.split('+'):
+        base['tints'][kind] = pair
+json.dump(base, open(sys.argv[1], 'w'))

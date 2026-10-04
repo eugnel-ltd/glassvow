@@ -1,0 +1,44 @@
+Pin contrast, R2's method (proof/r2/pin_contrast.py.txt: the WCAG ratio of each visible pin's
+rim band against the land 16-28 px beyond the rim) on R2's mount (fix-round/tools/look4.gd.txt:
+the screen and HUD mounted directly, lean, seed 1, two steps in), Mac, A12 Metal condition.
+Before: the head 55182330 (the fix round's tints, on main 4367cee5); after: b9ea3fcc. Both
+measured here, like for like (tools/pins.zsh.txt). The fix round's own record (fix-round/mac/
+pin-contrast.txt, at 21b4cdab on main 8815da34) read pad 1.09, phone 1.06, desktop 1.09.
+
+pad-landscape - rim minimum: before 1.1 after 1.11 | disc minimum: before 1.19 after 1.19
+   pin [319, 222] rim 1.1 -> 1.11  disc 1.28 -> 1.27
+   pin [474, 439] rim 1.66 -> 1.66  disc 1.19 -> 1.19
+   pin [706, 411] rim 1.52 -> 1.52  disc 1.36 -> 1.36
+   pin [1019, 574] rim 1.48 -> 1.48  disc 2.65 -> 2.65
+   pin [1130, 384] rim 1.19 -> 1.18  disc 1.47 -> 1.49
+   pin [502, 235] rim 1.12 -> 1.12  disc 1.4 -> 1.4
+   pin [1117, 79] rim 1.12 -> 1.12  disc 1.39 -> 1.39
+   pin [261, 603] rim 1.15 -> 1.16  disc 1.32 -> 1.31
+   pin [450, 605] rim 1.12 -> 1.13  disc 1.41 -> 1.4
+   pin [719, 582] rim 1.14 -> 1.14  disc 1.33 -> 1.34
+phone-landscape - rim minimum: before 1.05 after 1.05 | disc minimum: before 1.0 after 1.0
+   pin [266, 113] rim 1.05 -> 1.05  disc 1.01 -> 1.01
+   pin [339, 217] rim 1.25 -> 1.25  disc 1.59 -> 1.58
+   pin [450, 203] rim 1.42 -> 1.43  disc 1.97 -> 1.99
+   pin [598, 281] rim 1.43 -> 1.44  disc 1.79 -> 1.81
+   pin [651, 191] rim 1.24 -> 1.22  disc 1.16 -> 1.15
+   pin [747, 108] rim 1.25 -> 1.24  disc 1.12 -> 1.11
+   pin [352, 120] rim 1.19 -> 1.19  disc 1.0 -> 1.0
+   pin [238, 295] rim 1.13 -> 1.18  disc 1.07 -> 1.12
+   pin [328, 295] rim 1.13 -> 1.13  disc 1.03 -> 1.03
+   pin [455, 285] rim 1.12 -> 1.12  disc 1.01 -> 1.01
+desktop-landscape - rim minimum: before 1.1 after 1.11 | disc minimum: before 1.19 after 1.19
+   pin [458, 222] rim 1.1 -> 1.11  disc 1.28 -> 1.27
+   pin [613, 439] rim 1.65 -> 1.65  disc 1.19 -> 1.19
+   pin [845, 411] rim 1.53 -> 1.53  disc 1.36 -> 1.36
+   pin [1158, 574] rim 1.45 -> 1.45  disc 2.66 -> 2.66
+   pin [1269, 384] rim 1.11 -> 1.11  disc 1.58 -> 1.59
+   pin [641, 235] rim 1.12 -> 1.12  disc 1.4 -> 1.4
+   pin [1256, 79] rim 1.14 -> 1.14  disc 1.36 -> 1.36
+   pin [400, 603] rim 1.15 -> 1.15  disc 1.32 -> 1.31
+   pin [589, 605] rim 1.12 -> 1.12  disc 1.4 -> 1.4
+   pin [858, 582] rim 1.15 -> 1.14  disc 1.33 -> 1.33
+
+The phone's lowest pin (266, 113) is a dimmed, translucent token over crowns standing behind
+its stone: its rim reads 1.05 before and after. Recorded as the tripwire baseline in the
+README, not as a legibility gate; the tokens' background-independent redesign is issue #679.

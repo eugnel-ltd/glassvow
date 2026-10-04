@@ -1,0 +1,162 @@
+lock 23:14:36
+worktree:        /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/ctl-wt (8815da34)
+bundle id:       io.fol2.glassvow.qa
+ctl installed 23:15:35
+== ctl-warm nonce 2947822181 23:15:55: rows fresh
+   ready 5675 ms | land total 1816 scenery 343 wood None | plants None plant None draws None | kit preload 52 ms
+   opening  cadence stage [885, 663] draws 111 prims 91472 shadow 78/30993 video 254.2 MiB
+   opening  cadence mean 18.562 p50 18.76 p95 29.77 missed 22 max 44.2 (120)
+== ctl-j1 nonce 248323389 23:17:19: rows fresh
+   ready 4832 ms | land total 1712 scenery 322 wood None | plants None plant None draws None | kit preload 52 ms
+   journey  cadence stage [885, 663] draws 87 prims 72424 shadow 63/28817 video 254.1 MiB
+   journey  cadence mean 16.746 p50 16.73 p95 20.50 missed 6 max 29.8 (600)
+   journey  live    stage [885, 663] draws 87 prims 72424 shadow 63/28817 video 254.1 MiB
+   journey  live    mean 16.661 p50 16.69 p95 17.64 missed 0 max 21.4 (600)
+   whole    cadence stage [885, 663] draws 236 prims 128696 shadow 182/43726 video 254.2 MiB
+   whole    cadence mean 18.862 p50 18.84 p95 27.48 missed 78 max 37.6 (600)
+   whole    live    stage [885, 663] draws 236 prims 128696 shadow 182/43726 video 254.2 MiB
+   whole    live    mean 16.689 p50 16.66 p95 19.26 missed 0 max 23.3 (600)
+   river    cadence stage [885, 663] draws 73 prims 61626 shadow 68/29231 video 254.1 MiB
+   river    cadence mean 16.745 p50 16.68 p95 20.13 missed 6 max 37.1 (600)
+   river    live    stage [885, 663] draws 73 prims 61626 shadow 68/29231 video 254.1 MiB
+   river    live    mean 16.666 p50 16.69 p95 17.64 missed 0 max 20.3 (600)
+== ctl-f13 nonce 304611072 23:17:58: rows fresh
+   ready 4906 ms | land total 1685 scenery 321 wood None | plants None plant None draws None | kit preload 53 ms
+   opening  cadence stage [885, 663] draws 111 prims 91472 shadow 78/30993 video 254.2 MiB
+   opening  cadence mean 17.969 p50 17.56 p95 24.70 missed 27 max 39.5 (600)
+   opening  live    stage [885, 663] draws 111 prims 91472 shadow 78/30993 video 254.2 MiB
+   opening  live    mean 17.783 p50 16.87 p95 22.80 missed 13 max 38.8 (600)
+== ctl-j2 nonce 99581060 23:19:21: rows fresh
+   ready 4873 ms | land total 1740 scenery 327 wood None | plants None plant None draws None | kit preload 52 ms
+   journey  cadence stage [885, 663] draws 87 prims 72424 shadow 63/28817 video 254.1 MiB
+   journey  cadence mean 16.858 p50 16.76 p95 20.86 missed 7 max 29.6 (600)
+   journey  live    stage [885, 663] draws 87 prims 72424 shadow 63/28817 video 254.1 MiB
+   journey  live    mean 16.662 p50 16.68 p95 17.78 missed 0 max 20.7 (600)
+   whole    cadence stage [885, 663] draws 236 prims 128696 shadow 182/43726 video 254.2 MiB
+   whole    cadence mean 20.048 p50 20.83 p95 27.48 missed 120 max 43.2 (600)
+   whole    live    stage [885, 663] draws 236 prims 128696 shadow 182/43726 video 254.2 MiB
+   whole    live    mean 16.691 p50 16.62 p95 19.56 missed 1 max 27.3 (600)
+   river    cadence stage [885, 663] draws 73 prims 61626 shadow 68/29231 video 254.1 MiB
+   river    cadence mean 16.995 p50 16.69 p95 21.11 missed 16 max 37.6 (600)
+   river    live    stage [885, 663] draws 73 prims 61626 shadow 68/29231 video 254.1 MiB
+   river    live    mean 16.662 p50 16.69 p95 17.46 missed 0 max 20.7 (600)
+== ctl-f13 nonce 16657650 23:20:00: rows fresh
+   ready 4753 ms | land total 1681 scenery 324 wood None | plants None plant None draws None | kit preload 52 ms
+   opening  cadence stage [885, 663] draws 111 prims 91472 shadow 78/30993 video 254.2 MiB
+   opening  cadence mean 17.826 p50 17.44 p95 24.44 missed 24 max 38.8 (600)
+   opening  live    stage [885, 663] draws 111 prims 91472 shadow 78/30993 video 254.2 MiB
+   opening  live    mean 18.170 p50 16.83 p95 24.48 missed 26 max 42.8 (600)
+== ctl-j3 nonce 71128454 23:21:23: rows fresh
+   ready 4905 ms | land total 1829 scenery 361 wood None | plants None plant None draws None | kit preload 53 ms
+   journey  cadence stage [885, 663] draws 87 prims 72424 shadow 63/28817 video 254.1 MiB
+   journey  cadence mean 16.802 p50 16.74 p95 20.67 missed 5 max 29.8 (600)
+   journey  live    stage [885, 663] draws 87 prims 72424 shadow 63/28817 video 254.1 MiB
+   journey  live    mean 16.660 p50 16.69 p95 17.55 missed 0 max 23.7 (600)
+   whole    cadence stage [885, 663] draws 236 prims 128696 shadow 182/43726 video 254.2 MiB
+   whole    cadence mean 21.626 p50 22.83 p95 27.61 missed 174 max 42.6 (600)
+   whole    live    stage [885, 663] draws 236 prims 128696 shadow 182/43726 video 254.2 MiB
+   whole    live    mean 16.717 p50 16.68 p95 19.22 missed 0 max 23.9 (600)
+   river    cadence stage [885, 663] draws 73 prims 61626 shadow 68/29231 video 254.1 MiB
+   river    cadence mean 16.941 p50 16.65 p95 21.71 missed 12 max 37.7 (600)
+   river    live    stage [885, 663] draws 73 prims 61626 shadow 68/29231 video 254.1 MiB
+   river    live    mean 16.690 p50 16.69 p95 17.85 missed 1 max 26.3 (600)
+== ctl-f13 nonce 235899686 23:22:01: rows fresh
+   ready 4739 ms | land total 1664 scenery 318 wood None | plants None plant None draws None | kit preload 53 ms
+   opening  cadence stage [885, 663] draws 111 prims 91472 shadow 78/30993 video 254.1 MiB
+   opening  cadence mean 17.692 p50 17.52 p95 25.69 missed 34 max 37.5 (600)
+   opening  live    stage [885, 663] draws 111 prims 91472 shadow 78/30993 video 254.1 MiB
+   opening  live    mean 16.659 p50 16.66 p95 19.11 missed 0 max 22.5 (600)
+== ctl-tj nonce 349010546 pid 38940 23:23:04: rows fresh
+   ready 4916 ms | land total 1830 scenery 343 wood None | plants None plant None draws None | kit preload 50 ms
+   journey  live    stage [885, 663] draws 87 prims 72424 shadow 63/28817 video 254.1 MiB
+   journey  live    mean 16.661 p50 16.69 p95 17.61 missed 0 max 24.2 (2701)
+worktree:        /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/dev-wt (af34d97a)
+bundle id:       io.fol2.glassvow.qa
+dev installed 23:23:51
+== dev-warm nonce 73008559 23:24:11: rows fresh
+   ready 9754 ms | land total 2034 scenery 408 wood 83 | plants 2806 plant 70.24 draws 12.115 | kit preload 318 ms
+   opening  cadence stage [885, 663] draws 101 prims 68118 shadow 90/37879 video 258.6 MiB
+   opening  cadence mean 16.684 p50 16.66 p95 19.22 missed 0 max 21.2 (120)
+== dev-j1 nonce 16381232 23:25:35: rows fresh
+   ready 5175 ms | land total 1836 scenery 409 wood 83 | plants 2806 plant 70.121 draws 13.215 | kit preload 30 ms
+   journey  cadence stage [885, 663] draws 80 prims 56946 shadow 71/33193 video 258.6 MiB
+   journey  cadence mean 16.660 p50 16.69 p95 18.78 missed 0 max 22.8 (600)
+   journey  live    stage [885, 663] draws 80 prims 56946 shadow 71/33193 video 258.6 MiB
+   journey  live    mean 16.661 p50 16.68 p95 18.52 missed 0 max 22.5 (600)
+   whole    cadence stage [885, 663] draws 219 prims 107056 shadow 207/58470 video 258.8 MiB
+   whole    cadence mean 16.662 p50 17.34 p95 20.12 missed 0 max 21.3 (600)
+   whole    live    stage [885, 663] draws 219 prims 107056 shadow 207/58470 video 258.8 MiB
+   whole    live    mean 16.661 p50 16.66 p95 19.49 missed 0 max 21.3 (600)
+   river    cadence stage [885, 663] draws 74 prims 55476 shadow 76/33607 video 258.6 MiB
+   river    cadence mean 16.656 p50 16.69 p95 18.65 missed 0 max 21.9 (600)
+   river    live    stage [885, 663] draws 74 prims 55476 shadow 76/33607 video 258.6 MiB
+   river    live    mean 16.662 p50 16.68 p95 17.60 missed 0 max 22.3 (600)
+== dev-f13 nonce 1538821344 23:26:07: rows fresh
+   ready 4940 ms | land total 1787 scenery 405 wood 83 | plants 2806 plant 69.882 draws 13.717 | kit preload 26 ms
+   opening  cadence stage [885, 663] draws 101 prims 68118 shadow 90/37879 video 258.6 MiB
+   opening  cadence mean 16.664 p50 16.98 p95 19.36 missed 0 max 20.8 (600)
+   opening  live    stage [885, 663] draws 101 prims 68118 shadow 90/37879 video 258.6 MiB
+   opening  live    mean 16.662 p50 16.70 p95 19.35 missed 0 max 20.9 (600)
+== dev-j2 nonce 2619327863 23:27:30: rows fresh
+   ready 4988 ms | land total 1793 scenery 409 wood 85 | plants 2806 plant 70.868 draws 14.674 | kit preload 26 ms
+   journey  cadence stage [885, 663] draws 80 prims 56946 shadow 71/33193 video 258.6 MiB
+   journey  cadence mean 16.660 p50 16.74 p95 18.85 missed 0 max 21.8 (600)
+   journey  live    stage [885, 663] draws 80 prims 56946 shadow 71/33193 video 258.6 MiB
+   journey  live    mean 16.660 p50 16.68 p95 17.68 missed 0 max 22.5 (600)
+   whole    cadence stage [885, 663] draws 219 prims 107056 shadow 207/58470 video 258.8 MiB
+   whole    cadence mean 16.661 p50 17.20 p95 19.93 missed 0 max 21.5 (600)
+   whole    live    stage [885, 663] draws 219 prims 107056 shadow 207/58470 video 258.8 MiB
+   whole    live    mean 16.661 p50 16.71 p95 19.27 missed 0 max 21.3 (600)
+   river    cadence stage [885, 663] draws 74 prims 55476 shadow 76/33607 video 258.6 MiB
+   river    cadence mean 16.659 p50 16.71 p95 18.56 missed 0 max 22.0 (600)
+   river    live    stage [885, 663] draws 74 prims 55476 shadow 76/33607 video 258.6 MiB
+   river    live    mean 16.663 p50 16.69 p95 17.68 missed 0 max 23.1 (600)
+== dev-f13 nonce 67755534 23:28:09: rows fresh
+   ready 4800 ms | land total 1738 scenery 395 wood 81 | plants 2806 plant 68.055 draws 13.088 | kit preload 28 ms
+   opening  cadence stage [885, 663] draws 101 prims 68118 shadow 90/37879 video 258.6 MiB
+   opening  cadence mean 16.666 p50 16.96 p95 19.64 missed 0 max 21.1 (600)
+   opening  live    stage [885, 663] draws 101 prims 68118 shadow 90/37879 video 258.6 MiB
+   opening  live    mean 16.662 p50 16.67 p95 19.14 missed 0 max 20.9 (600)
+== dev-j3 nonce 1759522663 23:29:31: rows fresh
+   ready 4813 ms | land total 1737 scenery 393 wood 81 | plants 2806 plant 68.368 draws 12.948 | kit preload 27 ms
+   journey  cadence stage [885, 663] draws 80 prims 56946 shadow 71/33193 video 258.8 MiB
+   journey  cadence mean 16.660 p50 16.74 p95 18.77 missed 0 max 22.0 (600)
+   journey  live    stage [885, 663] draws 80 prims 56946 shadow 71/33193 video 258.8 MiB
+   journey  live    mean 16.663 p50 16.69 p95 17.68 missed 0 max 22.4 (600)
+   whole    cadence stage [885, 663] draws 219 prims 107056 shadow 207/58470 video 258.9 MiB
+   whole    cadence mean 16.667 p50 17.12 p95 19.83 missed 0 max 21.1 (600)
+   whole    live    stage [885, 663] draws 219 prims 107056 shadow 207/58470 video 258.9 MiB
+   whole    live    mean 16.658 p50 16.69 p95 19.44 missed 0 max 21.3 (600)
+   river    cadence stage [885, 663] draws 74 prims 55476 shadow 76/33607 video 258.8 MiB
+   river    cadence mean 16.662 p50 16.74 p95 18.67 missed 0 max 21.9 (600)
+   river    live    stage [885, 663] draws 74 prims 55476 shadow 76/33607 video 258.8 MiB
+   river    live    mean 16.661 p50 16.70 p95 17.77 missed 0 max 22.4 (600)
+== dev-f13 nonce 1402613220 23:30:10: rows fresh
+   ready 4919 ms | land total 1835 scenery 428 wood 78 | plants 2806 plant 64.651 draws 12.889 | kit preload 27 ms
+   opening  cadence stage [885, 663] draws 101 prims 68118 shadow 90/37879 video 260.6 MiB
+   opening  cadence mean 16.661 p50 17.04 p95 19.72 missed 0 max 21.5 (600)
+   opening  live    stage [885, 663] draws 101 prims 68118 shadow 90/37879 video 260.6 MiB
+   opening  live    mean 16.658 p50 16.66 p95 19.41 missed 0 max 21.3 (600)
+== dev-tj nonce 15693728 pid 38973 23:31:12: rows fresh
+   ready 5253 ms | land total 1850 scenery 428 wood 77 | plants 2806 plant 65.199 draws 12.15 | kit preload 28 ms
+   journey  live    stage [885, 663] draws 80 prims 56946 shadow 71/33193 video 260.6 MiB
+   journey  live    mean 16.662 p50 16.70 p95 17.72 missed 0 max 22.8 (2701)
+== dev-tj-kwood nonce 1042220084 pid 38976 23:32:15: rows fresh
+   ready 4812 ms | land total 1740 scenery 395 wood 80 | plants 2806 plant 67.797 draws 12.032 | kit preload 27 ms
+   kill {'nonce': '1042220084', 'probe': 'kill', 'what': 'wood'}
+   journey  live    stage [885, 663] draws 71 prims 54920 shadow 60/28673 video 258.8 MiB
+   journey  live    mean 16.662 p50 16.69 p95 17.49 missed 0 max 23.7 (2701)
+== dev-burst-motion nonce 1289624519 23:32:35: rows fresh
+   ready 4805 ms | land total 1745 scenery 394 wood 80 | plants 2806 plant 67.577 draws 12.6 | kit preload 28 ms
+   journey  cadence stage [885, 663] draws 80 prims 56946 shadow 71/33193 video 258.6 MiB
+   journey  cadence mean 16.665 p50 16.61 p95 18.77 missed 0 max 21.9 (120)
+   burst {'motion': True, 'nonce': '1289624519', 'probe': 'burst', 'reduce_motion': False}
+{'woodland_share': 0.4642, 'changed_in_wood': 0.0371, 'changed_all': 0.0202}
+== dev-burst-rm nonce 194729146 23:32:56: rows fresh
+   ready 4795 ms | land total 1743 scenery 399 wood 83 | plants 2806 plant 70.189 draws 12.277 | kit preload 27 ms
+   journey  cadence stage [885, 663] draws 78 prims 56486 shadow 71/33193 video 258.7 MiB
+   journey  cadence mean 16.660 p50 17.47 p95 20.25 missed 0 max 21.8 (120)
+   burst {'motion': False, 'nonce': '194729146', 'probe': 'burst', 'reduce_motion': True}
+{'woodland_share': 0.4633, 'changed_in_wood': 0.0021, 'changed_all': 0.0026}
+shot 23:33:25
+done 23:33:25

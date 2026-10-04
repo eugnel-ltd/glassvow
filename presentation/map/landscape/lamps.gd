@@ -8,6 +8,7 @@ extends Node3D
 ## set-up here, nothing that reads back from the renderer.
 
 const FLAME_SHADER: Shader = preload("res://presentation/map/landscape/flame.gdshader")
+const LandMotion = preload("res://presentation/map/landscape/land_motion.gd")
 const FLIPBOOK: Texture2D = preload("res://assets/art/map-journey/textures/flame-flipbook.png")
 ## The Mobile renderer lights a mesh with at most eight omni lights; four lamps
 ## and the Flame leave room under that on every terrain chunk. The lean profile
@@ -84,11 +85,12 @@ func lit() -> PackedVector3Array:
 
 
 func _process(_delta: float) -> void:
-	# The real lights breathe with their flames; under Reduce Motion too, since
-	# lantern flicker is the one motion it keeps.
+	# The real lights breathe with their flames, and hold steady with them
+	# under Reduce Motion (`LandMotion`).
 	var t: float = Time.get_ticks_msec() / 1000.0
+	var breath: float = 0.1 if LandMotion.enabled else 0.0
 	for k: int in range(lights.size()):
 		var light: OmniLight3D = lights[k]
 		if light.visible:
 			var p: Vector3 = light.position
-			light.light_energy = LIGHT_ENERGY * (0.9 + 0.1 * sin(t * 9.0 + p.x * 3.1 + p.z * 1.7))
+			light.light_energy = LIGHT_ENERGY * (0.9 + breath * sin(t * 9.0 + p.x * 3.1 + p.z * 1.7))

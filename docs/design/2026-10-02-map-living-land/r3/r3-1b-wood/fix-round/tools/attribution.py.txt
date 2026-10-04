@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+"""The wood's GPU budget line from frames.py's passes (lane R3.1b scratch).
+attribution.py <ref passes> <passes>...: in each run's 15-encoder stage frames,
+the main 3D pass (encoder 5), the shadow and pre-main renders (1 to 4), the
+film grain (the last two renders, 13 and 14: untouched by the wood), and the
+GPU busy median; each run scaled by ref grain / its own grain."""
+import re, sys
+def read(path):
+    txt = open(path).read()
+    block = txt.split("== 15 encoders:")[1].split("\n== ")[0]
+    head = block.splitlines()[0]
+    frames = int(re.search(r"(\d+) command buffers", head).group(1))
+    busy = float(re.search(r"median ([\d.]+) ms", head).group(1))
+    p95 = float(re.search(r"p95 ([\d.]+) ms", head).group(1))
+    enc = {}
+    for line in block.splitlines()[1:]:
+        m = re.match(r"\s*\[(\d+)\].*V\s+([\d.]+)\s+F\s+([\d.]+)", line)
+        if m:
+            enc[int(m.group(1))] = (float(m.group(2)), float(m.group(3)))
+    return frames, busy, p95, enc
+ref = read(sys.argv[1])
+ref_grain = sum(sum(ref[3][i]) for i in (13, 14))
+for path in sys.argv[1:]:
+    frames, busy, p95, enc = read(path)
+    grain = sum(sum(enc[i]) for i in (13, 14))
+    k = ref_grain / grain
+    v, f = enc[5]
+    # Every render before the main pass (the shadow and depth renders; the
+    # compute and blit encoders among them carry no V or F time).
+    pre = sum(sum(enc[i]) for i in (1, 2, 3, 4) if i in enc)
+    print("%-28s %d stage frames, grain %.2f ms -> clock factor %.3f | main 3D pass V %.2f + F %.2f = %.2f ms | shadow and pre-main %.2f ms | GPU busy %.2f ms (raw %.2f, p95 raw %.2f)" % (
+        path.split("/")[-1].replace(".passes.txt", ""), frames, grain, k, v * k, f * k, (v + f) * k, pre * k, busy * k, busy, p95))

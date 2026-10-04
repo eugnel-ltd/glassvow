@@ -73,3 +73,10 @@ godot_logger/include_variables=false
 godot_logger/logs=0
 godot_logger/breadcrumbs=15
 experimental/attach_screenshot=false
+
+[shader_globals]
+
+land_motion={
+"type": "float",
+"value": 1.0
+}

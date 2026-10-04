@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""Batch 4 summary (lane R3.1b fix round, scratch): per build, view and mode,
+each launch's mean, p95 and missed frames; the opens; every VRAM reading."""
+import glob, json, os, re, statistics, sys
+d = sys.argv[1]
+rows = {}
+for path in sorted(glob.glob(os.path.join(d, "*.jsonl"))):
+    label = os.path.basename(path)[:-6]
+    rows[label] = [json.loads(l) for l in open(path)]
+def nonce_ok(label):
+    rs = rows[label]
+    n = {r.get("nonce") for r in rs}
+    return len(n) == 1 and any(r["probe"] == "done" for r in rs)
+holds = {}
+opens = {}
+vram = {}
+boots = {}
+for label, rs in rows.items():
+    if not nonce_ok(label):
+        print("DISCARD", label); continue
+    m = re.match(r"(ctl|dev)-(first|j|f)(\d)", label)
+    if not m: continue
+    build, kind, rnd = m.groups()
+    for r in rs:
+        if r["probe"] == "ready":
+            w = r.get("wood") or {}
+            opens.setdefault((build, kind), []).append((int(rnd), r["ready_ms"], r["land_ms"].get("total"), r["land_ms"].get("wood"),
+                (w.get("timings_ms") or {}).get("plant"), round(r.get("kit_preload_ms", 0), 1), r["nonce"]))
+        if r["probe"] == "boot":
+            boots[label] = (r.get("long_frames"), r.get("atlas_prepare_ms"))
+        if r["probe"] == "hold_start":
+            vram.setdefault(build, []).append((label, r["view"], r["mode"], r["render"]["video_mib"]))
+        if r["probe"] == "hold_end" and kind != "first":
+            holds.setdefault((r["view"], r["mode"]), {}).setdefault(build, []).append((int(rnd), r["mean_ms"], r["p95_ms"], r["missed"]))
+print("HOLDS (600 frames, lean, pad, seed 1; per launch, round order)")
+for key in sorted(holds):
+    line = "%-8s %-8s" % key
+    for build in ("ctl", "dev"):
+        hs = sorted(holds[key].get(build, []))
+        line += " | %s mean %s p95 %s missed %s" % (build, "/".join("%.3f" % h[1] for h in hs), "/".join("%.2f" % h[2] for h in hs), "/".join(str(h[3]) for h in hs))
+    print(line)
+print("\nOPENS (ready_ms from process start; land build total, wood, planting; kit main-thread preload incl. the atlas)")
+for key in sorted(opens):
+    for o in sorted(opens[key]):
+        print("%s %-5s round %d: ready %d ms, land %s ms, wood %s ms, plant %s ms, kit preload %s ms (nonce %s)" % (key[0], key[1], *o))
+for build in ("ctl", "dev"):
+    rs = [o[1] for k, v in opens.items() if k[0] == build and k[1] != "first" for o in v]
+    fs = [o[1] for k, v in opens.items() if k[0] == build and k[1] == "first" for o in v]
+    print("%s: later launches mean %.0f ms (n=%d, %d-%d); first after install %s" % (build, statistics.mean(rs), len(rs), min(rs), max(rs), sorted(fs)))
+print("\nBOOT long frames (> 50 ms between the probe's start and the land's readiness: t_ms, ms, kit preload ms, atlas ms)")
+for label in sorted(boots):
+    print(label, boots[label])
+print("\nVRAM (video_mib at every hold start)")
+for build in ("ctl", "dev"):
+    vs = [v[3] for v in vram.get(build, [])]
+    print("%s: n=%d min %.1f median %.1f max %.1f" % (build, len(vs), min(vs), statistics.median(vs), max(vs)))
+    for v in vram.get(build, []):
+        print("   ", v)

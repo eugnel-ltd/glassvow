@@ -1,0 +1,42 @@
+Pin contrast, R2's method (proof/r2/pin_contrast.py.txt: WCAG ratio of each visible pin's rim band against the land just outside it, 16-28 px beyond the rim) on R2's mount (the screen and HUD mounted directly, lean, seed 1, two steps in; fix-round/tools/look4.gd.txt, which sets the shown shape as Main does).
+Main 8815da34 and the wood 21b4cdab on the Mac, A12 Metal condition (main captured beside the first 08b32b3f run; its captures do not depend on this branch).
+R2's recorded floors (phone 1.41, pad 2.17, desktop 1.18; r2-plan.md section 8) were measured at R2 step 3, before R2's 40-degree camera; main itself measures below them today.
+
+pad-landscape - rim minimum: main 1.02 wood 1.09 | disc minimum: main 1.18 wood 1.18
+   pin [319, 222] rim 1.13 -> 1.09  disc 1.3 -> 1.3
+   pin [474, 439] rim 1.67 -> 1.67  disc 1.18 -> 1.18
+   pin [706, 411] rim 1.53 -> 1.54  disc 1.35 -> 1.34
+   pin [1019, 574] rim 1.47 -> 1.47  disc 2.63 -> 2.63
+   pin [1130, 384] rim 1.02 -> 1.19  disc 1.79 -> 1.47
+   pin [502, 235] rim 1.12 -> 1.12  disc 1.41 -> 1.41
+   pin [1117, 79] rim 1.13 -> 1.13  disc 1.38 -> 1.37
+   pin [261, 603] rim 1.14 -> 1.13  disc 1.36 -> 1.34
+   pin [450, 605] rim 1.12 -> 1.12  disc 1.41 -> 1.41
+   pin [719, 582] rim 1.15 -> 1.13  disc 1.33 -> 1.34
+phone-landscape - rim minimum: main 1.1 wood 1.06 | disc minimum: main 1.0 wood 1.0
+   pin [266, 113] rim 1.1 -> 1.06  disc 1.0 -> 1.01
+   pin [339, 217] rim 1.23 -> 1.26  disc 1.58 -> 1.57
+   pin [450, 203] rim 1.3 -> 1.42  disc 1.83 -> 2.01
+   pin [598, 281] rim 1.39 -> 1.42  disc 1.74 -> 1.78
+   pin [651, 191] rim 1.24 -> 1.23  disc 1.13 -> 1.16
+   pin [747, 108] rim 1.25 -> 1.26  disc 1.07 -> 1.14
+   pin [352, 120] rim 1.18 -> 1.18  disc 1.0 -> 1.0
+   pin [238, 295] rim 1.14 -> 1.13  disc 1.05 -> 1.07
+   pin [328, 295] rim 1.12 -> 1.13  disc 1.02 -> 1.02
+   pin [455, 285] rim 1.1 -> 1.11  disc 1.0 -> 1.0
+desktop-landscape - rim minimum: main 1.03 wood 1.09 | disc minimum: main 1.18 wood 1.18
+   pin [458, 222] rim 1.13 -> 1.09  disc 1.3 -> 1.3
+   pin [613, 439] rim 1.67 -> 1.67  disc 1.18 -> 1.18
+   pin [845, 411] rim 1.54 -> 1.55  disc 1.35 -> 1.34
+   pin [1158, 574] rim 1.44 -> 1.44  disc 2.63 -> 2.63
+   pin [1269, 384] rim 1.03 -> 1.11  disc 1.8 -> 1.59
+   pin [641, 235] rim 1.12 -> 1.12  disc 1.41 -> 1.41
+   pin [1256, 79] rim 1.14 -> 1.14  disc 1.35 -> 1.35
+   pin [400, 603] rim 1.14 -> 1.13  disc 1.36 -> 1.34
+   pin [589, 605] rim 1.12 -> 1.12  disc 1.41 -> 1.41
+   pin [858, 582] rim 1.15 -> 1.13  disc 1.33 -> 1.35
+
+At 08b32b3f (before the cards turned matte) the rim minima were pad 1.04, phone 1.06, desktop 1.04, and the pad's pin at 319,222 read 1.13 -> 1.04.
+Diagnosis then (pad, the pin at 319,222): hiding only the wood's shadow casters leaves it at 1.05; hiding the whole wood returns it to 1.13.
+The darker land is a crown standing behind the stone (a conifer, blurred by the tilt-shift's top band), not a shadow; behind a stone it covers neither the stone nor its touch square.
+A clearing round every seat against every card (one touch square's radius) costs about 8 points of the pad's Journey cover and more than half the phone's (wood_probe raster: 54.2% -> 46.1% pad, 46.9% -> 20.9% phone): not taken.

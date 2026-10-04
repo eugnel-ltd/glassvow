@@ -1,0 +1,29 @@
+R3.1 b tint pass: the red share and red hue bands, before (55182330) and after (b9ea3fcc),
+against the owner's target. Mac, A12 Metal condition (GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1,
+--rendering-driver metal --rendering-method mobile), lean, Reduce Motion stills, no drifting
+air, seed 1, the safe frame (the chrome's insets: 42 / 76 / 42 / 46 stage px); the target
+cropped to its land (0, 70, 1672, 830). tools/bands.py.txt; frames tools/run.zsh.txt.
+  red        hue 340-14, s >= .72, v >= .12: the gate's mask (the first round's)
+  bands      of the saturated reds (s >= .65, v >= .25, hue 345-15), the share at 345-355
+             (crimson), 355-5 and 5-15 (scarlet to vermilion): the designer's bands
+  sat reds   those saturated reds as a share of the frame
+  orange     hue 14-45, s >= .72, v >= .12
+  woodland   of the cards' own pixels (the flat-magenta mask): red (s >= .5, v >= .08),
+             orange (hue 14-45, s >= .5, v >= .08; it counts the olive-brown undergrowth's
+             darker hues), the median value
+
+Target (owner, Act I)          red  11.3%  bands   5 / 56 / 39  sat reds 11.8%  orange  4.1%  v median 0.286
+iPad 8 screenshot, 21b4cdab    red  22.1%  bands  19 / 67 / 14  sat reds 16.8%  orange  8.4%  v median 0.267  (device JPEG, the designer's source)
+
+pad Journey, before            red  22.6%  bands   7 / 83 / 10  sat reds 15.6%  orange  4.9%  v median 0.263  | woodland red 54% orange  8% v median 0.200
+pad Journey, after             red  16.7%  bands   0 / 59 / 41  sat reds  9.8%  orange  5.3%  v median 0.255  | woodland red 42% orange 14% v median 0.137
+pad fresh-run opening, before  red  17.4%  bands  13 / 78 /  9  sat reds 12.6%  orange  5.1%  v median 0.243  | woodland red 42% orange  6% v median 0.153
+pad fresh-run opening, after   red  12.4%  bands   0 / 57 / 42  sat reds  8.4%  orange  5.3%  v median 0.235  | woodland red 30% orange 10% v median 0.114
+pad Whole act, before          red  20.8%  bands  19 / 72 /  9  sat reds 15.0%  orange  3.1%  v median 0.165  | woodland red 50% orange  5% v median 0.173
+pad Whole act, after           red  11.6%  bands   0 / 55 / 45  sat reds  6.2%  orange  3.2%  v median 0.141  | woodland red 32% orange  9% v median 0.102
+phone Journey, before          red  19.9%  bands  12 / 76 / 12  sat reds 14.3%  orange  5.1%  v median 0.255  | woodland red 48% orange  6% v median 0.176
+phone Journey, after           red  12.6%  bands   0 / 59 / 41  sat reds  7.2%  orange  5.1%  v median 0.243  | woodland red 34% orange 11% v median 0.114
+
+Where the red pixels come from, pad Journey (keyed by family: tools/look5.gd.txt, LOOK_KEY), % of the safe frame:
+  before crimson 12.4, rust amber 4.4, conifer 0.1, olive dark 0.2, red under 3.9, fern 1.1, not wood 0.3
+  after  crimson 10.1, rust amber 2.6, conifer 0.1, olive dark 0.1, red under 3.6, fern 0.0, not wood 0.3

@@ -1,0 +1,15 @@
+#!/bin/zsh
+# try.zsh <name> <variant args...>: one keyed pad-journey capture of a candidate.
+T=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/tint
+name=$1; shift
+python3 $T/variant.py $T/c-$name.json "$@"
+TINTS=$T/c-$name.json KEY=1 $T/run.zsh $T/c/$name ${=VIEWS:-pad-journey} > /dev/null
+for v in ${=VIEWS:-pad-journey}; do
+python3 - $T/c/$name/$v.png $name $v <<'PY'
+import json, subprocess, sys
+d = json.loads(subprocess.check_output(['python3', sys.argv[0].replace('-', '') if False else '/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/tint/bands.py', sys.argv[1]]))
+f = d.get('families', {})
+fam = ' '.join(f"{k}:{v.get('red_px',0)*100:.1f}" + (f"(v{v['v_med']:.2f},5-15 {v['b5_15_of_sat']*100:.0f}%,345 {v['b345_of_sat']*100:.0f}%)" if 'v_med' in v else '') for k, v in f.items())
+print(f"{sys.argv[2]:10s} {sys.argv[3]:13s} red {d['red']*100:.1f} bands {d['b345_355']*100:.0f}/{d['b355_5']*100:.0f}/{d['b5_15']*100:.0f} orange {d['orange']*100:.1f} crimson {d['crimson']*100:.1f} vmed {d['v_median']:.3f} | {fam}")
+PY
+done

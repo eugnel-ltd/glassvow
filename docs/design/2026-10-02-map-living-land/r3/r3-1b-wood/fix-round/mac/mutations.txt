@@ -1,0 +1,24 @@
+Fix-round mutation checks (fix-round/tools/mutate2.py.txt), run at 08b32b3f.
+Each mutation breaks one behaviour in production code; the named assertion in tests/test_map_wood.gd must fail.
+Each file was backed up and copied back after its run; cmp confirmed every file restored.
+
+take keeps caught
+take failed caught
+take missing caught
+square per shape caught
+square widest caught
+picture rocks caught
+picture river caught
+picture kit adopted caught
+picture lanes caught
+picture seats caught
+fit rows caught
+mix conifers caught
+mix crimson caught
+mix steer caught
+mix undergrowth caught
+canopy rust large caught
+canopy conifers small caught
+kit kept caught
+scales caught
+SUMMARY 19 of 19 caught

@@ -1,0 +1,36 @@
+extends SceneTree
+const Planting = preload("res://presentation/map/landscape/wood_planting.gd")
+func _initialize() -> void:
+	_run.call_deferred()
+func _run() -> void:
+	Planting.stage_shape = &"pad-landscape"
+	MapJourneyLandscape.Kit.preload_scenes()
+	var content: ContentDB = ContentDB.load_full()
+	var run_state: RunState = RunState.new_run(content, 1)
+	var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run_state, content), content)
+	root.add_child(screen)
+	screen.size = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
+	screen.set_shape(StageShape.IDENTITY)
+	screen.refresh(run_state)
+	while screen.landscape_pending():
+		await process_frame
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	var seats: PackedVector3Array = []
+	for base: Node3D in land.journey.bases:
+		seats.append(base.position)
+	for rep: int in range(8):
+		var p: Planting = Planting.new()
+		var t: Array = [Time.get_ticks_usec()]
+		p._begin(land.terrain); t.append(Time.get_ticks_usec())
+		p._mask_water(); t.append(Time.get_ticks_usec())
+		p._mask_structures(land.kit, seats); t.append(Time.get_ticks_usec())
+		p._protect(land.kit, seats); t.append(Time.get_ticks_usec())
+		p._adopt(land.kit); t.append(Time.get_ticks_usec())
+		p._fill_trees(); t.append(Time.get_ticks_usec())
+		p._fill_shrubs(); t.append(Time.get_ticks_usec())
+		var names: Array = ["begin", "water", "structures", "protect", "adopt", "trees", "shrubs"]
+		var out: Dictionary = {}
+		for i: int in range(names.size()):
+			out[names[i]] = (t[i + 1] - t[i]) / 1000.0
+		print("PROF ", out, " total ", (t[-1] - t[0]) / 1000.0)
+	quit(0)

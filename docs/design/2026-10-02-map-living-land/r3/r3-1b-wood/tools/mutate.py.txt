@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""Mutation checks for lane R3.1b's new assertions: each mutation breaks one
+behaviour in production code; the named assertion must fail. Every file is
+backed up and copied back (never git checkout over unstaged work)."""
+import shutil, subprocess, sys, os
+W = sys.argv[1]
+OUT = sys.argv[2]
+L = "presentation/map/landscape/"
+WOOD = "res://tests/test_map_wood.gd"
+JOURNEY = "res://tests/test_map_journey.gd"
+TITLE = "res://tests/test_map_title_road.gd"
+M = [
+ ("atlas baked", L+"impostor_atlas.gd", '		var kind: String = tile["kind"]\n', '		var kind: String = tile["kind"]\n		if kind == "dark-copse":\n			continue\n', WOOD, "every kind the woodland plants is baked"),
+ ("atlas spans", L+"impostor_atlas.gd", '			rows.append(_v2(row))\n', '			rows.append(_v2(row))\n			rows.append(_v2(row))\n', WOOD, "silhouette row per span"),
+ ("kit holds no card scenes", L+"kit.gd", '		return not ImpostorAtlas.KIT_KINDS.has(kind))', '		return true)', WOOD, "the kit loads no scene for the foliage drawn as cards"),
+ ("slab", "presentation/map/map_journey_camera_contract.gd", 'const LAND_HIGH: float = 12.0', 'const LAND_HIGH: float = 11.0', WOOD, "the clip slab holds the tallest crown"),
+ ("ground road", L+"wood_planting.gd", 'const TREE_ROAD: float = 1.15', 'const TREE_ROAD: float = 0.2', WOOD, "off the roads, bridges and waystones"),
+ ("ground water", L+"wood_planting.gd", '	_mask_water()\n	_mask_structures', '	_mask_structures', WOOD, "the wood stands dry"),
+ ("ground decks", L+"wood_planting.gd", '		_stamp(deck.x, deck.z, DECK_CLEAR, DECK_SHRUB)', '		pass', WOOD, "the wood stands dry, off the roads, bridges"),
+ ("ground seats", L+"wood_planting.gd", '		_stamp(seat.x, seat.z, SEAT_CLEAR, SEAT_CLEAR)', '		pass', WOOD, "the wood stands dry, off the roads, bridges and waystones"),
+ ("picture lanes", L+"wood_planting.gd", '				_protect_rect(Rect2(at - half, half * 2.0), q.dot(_toward))', '				pass', WOOD, "no crown hides a road's centreline"),
+ ("picture seats", L+"wood_planting.gd", '			square + STONE_RISE), seat.dot(_toward))', '			square + STONE_RISE), INF)', WOOD, "no crown covers a waystone's touch square"),
+ ("mix conifers", L+"wood_planting.gd", 'const CONIFER_SHARE: float = 0.2', 'const CONIFER_SHARE: float = 0.6', WOOD, "the woodland's mix follows the art direction"),
+ ("kit kept", L+"wood_planting.gd", '	_adopt(kit)\n', '', WOOD, "the kit's foliage stays where it stood"),
+ ("scales", L+"wood_planting.gd", 'const TREE_SCALE: Vector2 = Vector2(0.7, 1.4)', 'const TREE_SCALE: Vector2 = Vector2(0.7, 1.4)\nconst UNUSED_SCALE: float = 0.0', WOOD, "SKIP"),
+ ("scales", L+"wood_planting.gd", '				scale_value = maxf(TREE_SCALE.x, scale_value * SHRINK)', '				scale_value = scale_value * SHRINK * 0.6', WOOD, "every planted crown is 0.7 to 1.4"),
+ ("draws posed", L+"impostor_wood.gd", '	buffer[at + 16] = custom.x\n	buffer[at + 17] = custom.y', '	buffer[at + 16] = custom.y\n	buffer[at + 17] = custom.x', WOOD, "each painted with its tile"),
+ ("draws ordered", L+"impostor_wood.gd", '		keys.append((int((200.0 - planting.depth(i)) * 1000.0) << 20) | i)', '		keys.append((int((200.0 + planting.depth(i)) * 1000.0) << 20) | i)', WOOD, "the cards draw nearest first"),
+ ("casters", L+"impostor_wood.gd", '		draw.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY', '		draw.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON', WOOD, "the trees cast through shadow-only casters"),
+ ("buffer rows", L+"impostor_wood.gd", '		buffer[at + row * 4] = b.x[row]\n		buffer[at + row * 4 + 1] = b.y[row]', '		buffer[at + row * 4] = b.y[row]\n		buffer[at + row * 4 + 1] = b.x[row]', WOOD, "a card's buffer rows are its card transform's"),
+ ("cards sway", L+"impostor.gdshader", 'sway * land_motion', 'sway', WOOD, "the cards sway with the land's motion"),
+ ("journey swaying", L+"impostor_wood.gd", '		draw.material_override = Atlas.material', '		draw.material_override = null', JOURNEY, "the woodland sways and the banners ripple"),
+ ("title kit scenes", L+"kit.gd", '		return not ImpostorAtlas.KIT_KINDS.has(kind))', '		return kind != "ash-fern")', TITLE, "each kit template draws its scene's meshes"),
+ ("settle frames", "presentation/map/map_scene.gd", '		MapJourneyLandscape.LandMotion.apply(not Preferences.active.reduce_motion)\n	if _journey_pending:', '	if _journey_pending:', JOURNEY, "Reduce Motion stills the land on its settle frames"),
+ ("global declared", "project.godot", 'land_motion={\n"type": "float",', 'land_motion={\n"type": "int",', JOURNEY, "the land's motion is one global shader uniform"),
+ ("flame frames", L+"flame.gdshader", 'TIME * land_motion * frames_per_second', 'TIME * frames_per_second', JOURNEY, "the flames' flipbook hold still"),
+ ("flame flicker", L+"flame.gdshader", 'phase * 40.0) * land_motion;', 'phase * 40.0);', JOURNEY, "the flames' flicker hold still"),
+ ("pools", L+"terrain_paint.gdshader", 'TIME*1.9)*land_motion);', 'TIME*1.9));', JOURNEY, "the pools' flicker hold still"),
+ ("lamps steady", L+"lamps.gd", '	var breath: float = 0.1 if LandMotion.enabled else 0.0', '	var breath: float = 0.1', JOURNEY, "the real lamp lights hold steady"),
+]
+results = []
+for name, path, old, new, test, expect in M:
+    if expect == "SKIP":
+        continue
+    full = os.path.join(W, path)
+    src = open(full).read()
+    if src.count(old) != 1:
+        results.append((name, "NOT APPLIED (pattern count %d)" % src.count(old)))
+        continue
+    backup = full + ".mutbak"
+    shutil.copy(full, backup)
+    try:
+        open(full, "w").write(src.replace(old, new))
+        log = subprocess.run(["timeout", "600", "godot", "--headless", "--path", W, "-s", "res://tests/run_all.gd", "--", "--tests=" + test],
+                             capture_output=True, text=True).stdout
+        caught = expect in log and "FAIL" in log
+        results.append((name, "caught" if caught else "MISSED"))
+        open(os.path.join(OUT, "mut-%s.log" % name.replace(" ", "_")), "w").write(log)
+    finally:
+        shutil.copy(backup, full)
+        os.remove(backup)
+    print(name, results[-1][1], flush=True)
+print("SUMMARY", sum(1 for r in results if r[1] == "caught"), "of", len(results))

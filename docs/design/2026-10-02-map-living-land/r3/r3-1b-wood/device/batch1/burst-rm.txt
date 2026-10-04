@@ -1,0 +1,1 @@
+{'woodland_share': 0.4633, 'changed_in_wood': 0.0021, 'changed_all': 0.0026}

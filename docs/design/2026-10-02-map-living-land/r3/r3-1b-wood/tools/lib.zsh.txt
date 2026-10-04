@@ -1,0 +1,52 @@
+# Lane R3.1b device helpers (sourced). The iPad's UDID lives only in $UDID,
+# looked up at run time; logs are redacted.
+S=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad
+R=$S/map-lane/r31b; D=$R/device; FLOW=$S/device13/flow; LOCK=$FLOW/ipad_lock.sh
+OWNER=map-r31b; QA=io.fol2.glassvow.qa
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+udid() { xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c 'import json,sys; print(next(d["hardwareProperties"]["udid"] for d in json.load(sys.stdin)["result"]["devices"] if d["hardwareProperties"].get("productType")=="iPad11,6"))'; }
+redact() { sed "s/$UDID/<device>/g"; }
+pull() { xcrun devicectl device copy from --device $UDID --domain-type appDataContainer --domain-identifier $QA --source Documents/$1 --destination $2 >/dev/null 2>&1; }
+fresh() { grep -q "\"nonce\":\"$2\"" $1 2>/dev/null && grep -q '"probe":"done"' $1; }
+
+## probe_run <label> [probe args...]: launches the QA app on the map with the
+## wood probe and waits for its rows (kept only if they echo this launch's nonce).
+probe_run() {
+  local label=$1; shift
+  local nonce=$RANDOM$RANDOM
+  xcrun devicectl device process launch --terminate-existing --device $UDID $QA -- \
+    --map --map-wood-probe --seed=1 --shape=pad-landscape --probe-nonce=$nonce "$@" 2>&1 | redact > $OUT/launch-$label.txt
+  local ok=0
+  local i; for i in $(seq 1 40); do
+    sleep 6
+    rm -f $OUT/$label.jsonl; pull wood_probe.jsonl $OUT/$label.jsonl
+    if fresh $OUT/$label.jsonl $nonce; then ok=1; break; fi
+  done
+  echo "== $label nonce $nonce $(date +%T): rows $([ $ok = 1 ] && echo fresh || echo MISSING)"
+  [ $ok = 1 ] && python3 $D/rows.py $OUT/$label.jsonl
+}
+
+## trace_run <label> <trace-seconds> [probe args...]: a Metal System Trace
+## mid-hold (all processes; the analysis keeps this launch's pid).
+trace_run() {
+  local label=$1 tlen=$2; shift 2
+  local nonce=$RANDOM$RANDOM
+  xcrun devicectl device process launch --terminate-existing --device $UDID --json-output $OUT/.launch-$label.json \
+    $QA -- --map --map-wood-probe --seed=1 --shape=pad-landscape --probe-nonce=$nonce --trace-hold=45 "$@" 2>&1 | redact > $OUT/launch-$label.txt
+  local pid=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["result"]["process"]["processIdentifier"])' $OUT/.launch-$label.json 2>/dev/null)
+  rm -f $OUT/.launch-$label.json
+  [[ -n "$pid" ]] || { echo "== $label: launch failed"; return 1; }
+  echo $pid > $OUT/$label.pid
+  sleep 17
+  # As the trace spike did: a devicectl call (a screenshot) just before the
+  # recording, which keeps the device's developer services awake for xctrace.
+  xcrun devicectl device capture screenshot --device $UDID --destination $OUT/$label.png >/dev/null 2>&1
+  sleep 3
+  rm -rf $OUT/$label.trace
+  xcrun xctrace record --device $UDID --template 'Metal System Trace' --all-processes \
+    --time-limit ${tlen}s --output $OUT/$label.trace --no-prompt 2>&1 | redact > $OUT/xctrace-$label.log
+  local ok=0
+  local i; for i in $(seq 1 30); do sleep 5; rm -f $OUT/$label.jsonl; pull wood_probe.jsonl $OUT/$label.jsonl; if fresh $OUT/$label.jsonl $nonce; then ok=1; break; fi; done
+  echo "== $label nonce $nonce pid $pid $(date +%T): rows $([ $ok = 1 ] && echo fresh || echo MISSING)"
+  [ $ok = 1 ] && python3 $D/rows.py $OUT/$label.jsonl
+}

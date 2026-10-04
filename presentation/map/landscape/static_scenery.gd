@@ -2,6 +2,7 @@ extends Node3D
 ## Static imported meshes share spatially bounded draw batches. Placement anchors
 ## retain identity; each actual GPU instance is linked back to its source part.
 const Surfaces = preload("res://presentation/map/landscape/asset_surfaces.gd")
+const ImpostorAtlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
 const CELL: float = 32.0
 ## Ground-hugging kinds whose shadows the 55° camera barely sees: they render
 ## lit but stay out of the shadow pass, which keeps that pass inside the A12
@@ -46,6 +47,11 @@ static func prepare_template(path: String, kind: String, packed: PackedScene) ->
 
 
 func prepare(path: String, kind: String) -> Node3D:
+	if ImpostorAtlas.KIT_KINDS.has(kind):
+		# Drawn as an impostor card (`impostor_wood.gd`): the anchor only.
+		var plant: Node3D = Node3D.new()
+		plant.name = kind
+		return plant
 	if not templates.has(path):
 		if not _shared.has(path):
 			failure = "Static scenery template was not prepared: " + path
@@ -58,6 +64,8 @@ func prepare(path: String, kind: String) -> Node3D:
 	anchor.set_meta("static_draws",[])
 	return anchor
 func register(anchor: Node3D) -> void:
+	if not anchor.has_meta("static_template"):
+		return
 	var path: String = anchor.get_meta("static_template")
 	var parts: Array = templates[path]["parts"]
 	var cell: Vector2i = Vector2i(floori(anchor.position.x/CELL),floori(anchor.position.z/CELL))

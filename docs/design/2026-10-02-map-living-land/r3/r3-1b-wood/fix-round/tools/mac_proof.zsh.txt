@@ -1,0 +1,35 @@
+#!/bin/zsh
+# Lane R3.1b fix round, Mac proof at one head (scratch; committed as .txt):
+# the A12 Metal condition (GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1,
+# --rendering-driver metal --rendering-method mobile, passed to godot
+# directly) at the three reference shapes, both locales, lean and full;
+# Reduce Motion; R2's pin-contrast mount; the pad's three views with the
+# flat-magenta cover count; the woodland's motion in 0.6 s.
+set -u
+S=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b
+F=$S/fix
+WT=$1; OUT=$2; mkdir -p $OUT
+typeset -A VP; VP=(pad-landscape 1180x820 phone-landscape 844x390 desktop-landscape 1458x820)
+for shape in pad-landscape phone-landscape desktop-landscape; do
+  for loc in en zh-Hant; do
+    $F/cap.sh $WT $OUT/$shape-$loc-lean.png --map-steps=2 --shape=$shape --vp=$VP[$shape] --locale=$loc --look-lean --look-view=journey | sed "s/^/$shape $loc lean: /"
+  done
+  $F/cap.sh $WT $OUT/$shape-en-full.png --map-steps=2 --shape=$shape --vp=$VP[$shape] --locale=en --look-view=journey | sed "s/^/$shape en full: /"
+  $F/cap.sh $WT $OUT/$shape-en-full-whole.png --map-steps=2 --shape=$shape --vp=$VP[$shape] --locale=en --look-view=whole | sed "s/^/$shape en full whole: /"
+  $F/cap.sh $WT $OUT/$shape-en-lean-rm.png --map-steps=2 --shape=$shape --vp=$VP[$shape] --locale=en --look-lean --look-still --look-view=journey | sed "s/^/$shape en lean reduce-motion: /"
+  LEAN=1 GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 240 godot --path $WT --rendering-driver metal --rendering-method mobile --position 1400,900 \
+    -s $F/look4.gd -- --shape=$shape --output=$OUT/contrast-$shape.png > $OUT/contrast-$shape.log 2>&1
+  echo "$shape contrast $(python3 $S/tools/pin_contrast.py $OUT/contrast-$shape.png $OUT/contrast-$shape.log | python3 -c 'import json,sys; d=json.load(sys.stdin); print("rim min", d["min_rim_vs_land"], "disc min", d["min_disc_vs_land"], "pins", len(d["pins"]))') shader errors $(grep -c 'SHADER ERROR' $OUT/contrast-$shape.log)"
+done
+for view in journey whole fresh; do
+  args=(--map-steps=2 --look-view=$view); [[ $view == fresh ]] && args=()
+  $F/cap.sh $WT $OUT/pad-$view.png --shape=pad-landscape $args --look-lean --look-still --look-noair --look-cover --look-magenta | sed "s/^/pad $view lean: /"
+  echo "pad $view metrics $(python3 $F/metrics.py $OUT/pad-$view.png)"
+done
+$F/cap.sh $WT $OUT/phone-journey.png --shape=phone-landscape --vp=844x390 --map-steps=2 --look-view=journey --look-lean --look-still --look-noair --look-cover --look-magenta | sed "s/^/phone journey lean: /"
+echo "phone journey metrics $(python3 $F/metrics.py $OUT/phone-journey.png)"
+$F/cap.sh $WT $OUT/pad-motion.png --map-steps=2 --shape=pad-landscape --look-lean --look-view=journey --look-cover --look-burst=0.6 --look-noair | sed "s/^/pad motion: /"
+echo "pad motion burst $(python3 $S/tools/flutter.py $OUT/pad-motion.png)"
+$F/cap.sh $WT $OUT/pad-still.png --map-steps=2 --shape=pad-landscape --look-lean --look-still --look-view=journey --look-cover --look-burst=0.6 --look-noair | sed "s/^/pad still: /"
+echo "pad reduce-motion burst $(python3 $S/tools/flutter.py $OUT/pad-still.png)"
+echo "shader errors in all logs: $(cat $OUT/*.log | grep -c 'SHADER ERROR'), script errors: $(cat $OUT/*.log | grep -c 'SCRIPT ERROR')"

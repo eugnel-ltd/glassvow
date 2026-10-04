@@ -20,9 +20,11 @@ uniform vec4 rock_colour : source_color = vec4(.30,.285,.30,1.0);
 uniform vec4 paving_colour : source_color = vec4(.325,.314,.31,1.0);
 uniform vec4 damp_colour : source_color = vec4(.235,.217,.224,1.0);
 // The lamps' pools (habitat alpha, painted by `bind_habitat`): warm light added
-// to the lit surface, flickering with the lanterns.
+// to the lit surface, flickering with the lanterns; held steady while the
+// global `land_motion` is 0 (Reduce Motion; `LandMotion`).
 uniform vec4 pool_colour : source_color = vec4(1.0,.60,.28,1.0);
 uniform float pool_strength = 1.1;
+global uniform float land_motion;
 varying vec3 world_at;
 varying float deck_blend;
 varying vec3 terrain_normal;
@@ -114,7 +116,7 @@ void fragment() {
  if(!bridge_surface) { trail=mix(trail,trail*vec3(.65,.72,.75),wetted); }
  ALBEDO=trail;
  if(habitat_texel.a>.003) {
-  float flicker=.86+.14*noise(p*.45+vec2(TIME*2.7,TIME*1.9));
+  float flicker=.86+.14*noise(p*.45+vec2(TIME*2.7,TIME*1.9)*land_motion);
   EMISSION=trail*pool_colour.rgb*habitat_texel.a*pool_strength*flicker;
  }
  // Fine relief belongs to the worn surface; the surrounding soil remains calm.

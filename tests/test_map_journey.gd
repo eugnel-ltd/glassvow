@@ -35,6 +35,7 @@ static func run(fails: Array[String]) -> void:
 	_walk(fails, screen, land, content, run)
 	_rest_cadence(fails, scene)
 	_living_motion(fails, scene, land)
+	_reduce_motion(fails, scene, land)
 	_shadow_proxies(fails)
 	_act_switch(fails, screen, run)
 	_free(screen)
@@ -322,9 +323,9 @@ static func _rest_cadence(fails: Array[String], scene: MapScene) -> void:
 
 
 ## R2 step 3: banners hang on the bridges, facing the camera and off the walking
-## lane; the kit's foliage and the banners' cloth move under `LandMotion`; and
-## Reduce Motion stills them and takes the embers and ash away (lantern flicker
-## and the water keep their own cadence).
+## lane; the woodland's cards (R3.1) and the banners' cloth move under
+## `LandMotion`; and Reduce Motion stills them and takes the embers and ash
+## away (the water keeps its own cadence).
 static func _living_motion(fails: Array[String], scene: MapScene,
 		land: MapJourneyLandscape) -> void:
 	var banners: Array[Dictionary] = []
@@ -343,13 +344,14 @@ static func _living_motion(fails: Array[String], scene: MapScene,
 		var mesh: Mesh = (node as MultiMeshInstance3D).multimesh.mesh
 		for i: int in range(mesh.get_surface_count()):
 			var material: ShaderMaterial = mesh.surface_get_material(i) as ShaderMaterial
-			if material == null:
-				continue
-			if material.shader == preload("res://presentation/map/landscape/foliage.gdshader"):
-				swaying += 1
-			elif material.shader == preload("res://presentation/map/landscape/banner.gdshader"):
+			if material != null and material.shader == preload("res://presentation/map/landscape/banner.gdshader"):
 				rippling += 1
-	_check(fails, swaying > 0 and rippling > 0, "the foliage sways and the banners ripple")
+	for card: MultiMeshInstance3D in land.wood.cards:
+		var material: ShaderMaterial = card.material_override as ShaderMaterial
+		if material != null and material.shader == preload("res://presentation/map/landscape/impostor.gdshader"):
+			swaying += 1
+	_check(fails, swaying > 0 and swaying == land.wood.cards.size() and rippling > 0,
+		"the woodland sways and the banners ripple")
 	_check(fails, land.air.embers.preprocess == 0.0 and land.air.ash.preprocess == 0.0,
 		"the air fills in rather than pre-simulating in the land's first frame")
 	var reduced: bool = Preferences.active.reduce_motion
@@ -368,6 +370,57 @@ static func _living_motion(fails: Array[String], scene: MapScene,
 		"the land moves without Reduce Motion, and again once it is off")
 	Preferences.active.reduce_motion = reduced
 	_tick(scene, land)
+
+
+## Reduce Motion holds the whole land still from its first frame (R2's review
+## notes): `LandMotion` follows the preference on a settle frame, not only at
+## the first rest tick; the shaders that move under it (the flames' flipbook
+## and flicker, the pools' flicker) read the one global switch; and the real
+## lamp lights stop breathing with them. Only the water keeps its cadence.
+static func _reduce_motion(fails: Array[String], scene: MapScene, land: MapJourneyLandscape) -> void:
+	var reduced: bool = Preferences.active.reduce_motion
+	Preferences.active.reduce_motion = false
+	MapJourneyLandscape.LandMotion.apply(true)
+	scene.set_live(false)
+	Preferences.active.reduce_motion = true
+	scene._process(0.0)
+	_check(fails, scene._settle_frames > 0 and not MapJourneyLandscape.LandMotion.enabled,
+		"Reduce Motion stills the land on its settle frames")
+	Preferences.active.reduce_motion = false
+	scene._process(0.0)
+	_check(fails, MapJourneyLandscape.LandMotion.enabled, "the land moves again once Reduce Motion is off")
+	var declared: Variant = ProjectSettings.get_setting("shader_globals/" + str(MapJourneyLandscape.LandMotion.UNIFORM))
+	var global: Dictionary = declared if declared is Dictionary else {}
+	_check(fails, str(global.get("type", "")) == "float",
+		"the land's motion is one global shader uniform")
+	var sources: Dictionary = {
+		"flames' flipbook": [preload("res://presentation/map/landscape/flame.gdshader"), "TIME * land_motion"],
+		"flames' flicker": [preload("res://presentation/map/landscape/flame.gdshader"), "phase * 40.0) * land_motion"],
+		"pools' flicker": [preload("res://presentation/map/landscape/terrain_paint.gdshader"), "TIME*1.9)*land_motion"],
+		"foliage": [preload("res://presentation/map/landscape/foliage.gdshader"), "sway * land_motion"],
+		"banners": [preload("res://presentation/map/landscape/banner.gdshader"), "wave * land_motion"],
+	}
+	for what: String in sources:
+		var entry: Array = sources[what]
+		var shader: Shader = entry[0]
+		_check(fails, shader.code.contains("global uniform float land_motion;")
+				and shader.code.contains(str(entry[1])),
+			"the %s hold still with the land's motion" % what)
+	var lean_was: int = MapScene.lean_override
+	MapScene.lean_override = 0
+	var lamps: MapJourneyLandscape.Lamps = MapJourneyLandscape.Lamps.new()
+	lamps.build(land.lamps.anchors)
+	lamps.focus(land.lamps.anchors[0])
+	MapJourneyLandscape.LandMotion.apply(false)
+	lamps._process(0.0)
+	var steady: bool = not lamps.lights.is_empty()
+	for light: OmniLight3D in lamps.lights:
+		steady = steady and is_equal_approx(light.light_energy, MapJourneyLandscape.Lamps.LIGHT_ENERGY * 0.9)
+	_check(fails, steady, "under Reduce Motion the real lamp lights hold steady")
+	lamps.free()
+	MapScene.lean_override = lean_was
+	Preferences.active.reduce_motion = reduced
+	MapJourneyLandscape.LandMotion.apply(not reduced)
 
 
 ## Runs the scene past its settle frames into the rest cadence.

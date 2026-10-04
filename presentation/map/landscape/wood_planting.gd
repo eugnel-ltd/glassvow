@@ -1,0 +1,599 @@
+extends RefCounted
+## Where Act I's woodland stands (R3.1, issue #660): the kit's own foliage,
+## and a packed fill of trees and undergrowth everywhere the land has room,
+## drawn as impostor cards (`impostor_wood.gd`).
+##
+## Presentation only, deterministic from fixed seeds and the land itself, as
+## the kit's own planting is. The rules, all measured on the ground or on the
+## journey camera's picture plane (`MapJourneyCameraContract.projected_plane`):
+## - a trunk stands off the road and its verge, a shrub may stand on the verge
+##   (distances from the road's centreline, past the edge of its worn core);
+## - nothing stands in the river, on a bridge, its ramps or abutments, on a
+##   waystone or the kit's stones, lamps, arch and shrines;
+## - a crown may overhang a verge or a river's edge, but never hides a road's
+##   centreline, a bridge deck, a lamp's flame, the gateway arch, a memorial
+##   shrine, a rock's body or the river's water that stands behind it, nor a
+##   waystone's seat, its stone or its touch square (`seat_square`);
+## - a crown that does not fit is tried smaller once (undergrowth twice, then
+##   as the low fern), so the big crowns stand where there is room: between
+##   the road loops and toward the frame's edge. The kit's own foliage passes
+##   the same rules where it stands, or is left out.
+## Every rule reads grids made once per land (the candidate masks: the ground's
+## water and clearances, the roads' distance field the ground paints with, and
+## the picture plane's protected depths) rather than the land's geometry, so
+## a candidate costs a few array reads.
+
+const Atlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
+const River = preload("res://presentation/map/landscape/river.gd")
+const Sight = preload("res://presentation/map/landscape/wood_sight.gd")
+const Terrain = preload("res://presentation/map/landscape/terrain.gd")
+
+## The ground grid (metres per cell) and its flags.
+const CELL: float = 0.5
+const WET: int = 1
+const NO_TREE: int = 2
+const NO_SHRUB: int = 4
+## Beside a wet cell: the banks fall steeply within a cell, so a candidate
+## here is checked against the river exactly.
+const BANK: int = 8
+## No plant within this of a river's line (channel units, `River.distance`).
+const RIVER_BANK: float = 2.6
+## Road clearance from the centreline: the worn core is about 0.6 m either
+## side, its verge about 1 m.
+const TREE_ROAD: float = 1.15
+const SHRUB_ROAD: float = 0.6
+## The half-width of a road's lane kept in sight on the picture plane (with
+## half a sample's step, 0.35 m of the worn core either side of the
+## centreline: a crown may overhang the core's edge), and how far apart along
+## the road it is sampled.
+const LANE: float = 0.15
+const LANE_STEP: float = 0.4
+## Bridges (`Terrain` meta `bridge_chains`, raised where a chain's weight is
+## past `DECK_WEIGHT`): no tree within `DECK_CLEAR` of a deck's centreline, no
+## shrub within `DECK_SHRUB`, and the deck and parapets kept in sight
+## `DECK_SIGHT` either side.
+const DECK_WEIGHT: float = 0.3
+const DECK_CLEAR: float = 1.9
+const DECK_SHRUB: float = 1.5
+const DECK_SIGHT: float = 1.0
+const ABUTMENT_CLEAR: float = 2.6
+## The water kept in sight either side of a river's line (metres; the water
+## reaches 2.4 m, `River.HALF_WIDTH` channel units): a crown may overhang its
+## edge, never roof it over.
+const RIVER_SIGHT: float = 1.0
+## A rock's body kept in sight (the kit's slate): across, a share of its
+## footprint's radius either side; up, from its foot (where undergrowth may
+## grow) to near its top, as shares of its height.
+const ROCK_ACROSS: float = 0.6
+const ROCK_FOOT: float = 0.25
+const ROCK_TOP: float = 0.85
+## A waystone: no plant on its stone, and the stone's body kept in sight above
+## its seat on the picture plane.
+const SEAT_CLEAR: float = 1.2
+const STONE_RISE: float = 1.0
+## Fill lattices (metres) and seeds.
+const TREE_SPACING: float = 2.0
+const SHRUB_SPACING: float = 0.9
+const TREE_SEED: int = 7741
+const SHRUB_SEED: int = 7743
+## Crown scale (the art direction's 0.7 to 1.4 for trees). A candidate is
+## first tried within its kind's band of the range (`SCALE_BAND`, shares of
+## it: the dark spruce tall, the crimson crowns across the whole range, rust
+## and amber in its lower half so they stay a minority of the canopy, and the
+## undergrowth from `SHRUB_BAND`), then at `SHRINK` of that, never below the
+## range: the big crowns stand where there is room.
+const TREE_SCALE: Vector2 = Vector2(0.7, 1.4)
+const SHRUB_SCALE: Vector2 = Vector2(0.55, 1.25)
+const SCALE_BAND: Dictionary = {"conifer": Vector2(0.75, 1.0), "conifer-spire": Vector2(0.75, 1.0),
+	"conifer-wind": Vector2(0.6, 1.0), "ember-oak": Vector2(0.0, 1.0), "ember-round": Vector2(0.0, 1.0),
+	"rust-oak": Vector2(0.0, 0.5), "amber-round": Vector2(0.0, 0.5)}
+const SHRUB_BAND: Vector2 = Vector2(0.3, 1.0)
+const SHRINK: float = 0.72
+## The near band along the land's south edge (metres): denser, larger crowns,
+## so foreground crowns frame the bottom of the view.
+const NEAR_BAND: float = 9.0
+## How much of a planted crown keeps other trunks and shrubs off its own.
+const TRUNK_GAP: float = 0.85
+const SHRUB_UNDER_TREE: float = 0.35
+## The trees' mix (the art direction: dark conifers 35 to 40% of the trees,
+## crimson broadleaf at most 40%, rust and amber about 20%), which each fill
+## tree's kind is steered toward (`_tree_kind`): the groves' swing in a
+## conifer's chance, and how hard the shares so far pull it back.
+const CONIFER_SHARE: float = 0.375
+const CRIMSON_SHARE: float = 0.37
+const GROVES: float = 0.25
+const STEER: float = 3.0
+## Undergrowth that fits nowhere else on a verge: the low fern, at the least
+## a tuft (`LOW_SCALE`).
+const LOW_SHRUB: String = "ash-fern"
+const LOW_SCALE: float = 0.4
+## The undergrowth the fill plants, by share.
+const UNDERGROWTH: Dictionary = {"olive-heath": 0.36, "dark-copse": 0.32, "ash-heath": 0.1,
+	"ash-copse": 0.06, "ash-bramble": 0.06, "ash-fern": 0.1}
+## The kit's own undergrowth, repainted in part (same model, same footprint):
+## a share of its red heath drawn olive, of its red copse dark.
+const KIT_REPAINT: Dictionary = {"ash-heath": ["olive-heath", 0.7], "ash-copse": ["dark-copse", 0.7]}
+## Which kinds are trees (casting, standing trunk-first).
+const TREES: PackedStringArray = ["conifer", "conifer-spire", "conifer-wind", "ember-oak",
+	"ember-round", "rust-oak", "amber-round"]
+
+## The stage shape whose touch squares the woodland keeps clear: Main sets the
+## shape the game shows. A device's class fixes which shapes it can show (a
+## phone only the phone's; a pad or a desktop never the phone's, and theirs
+## share one touch square), so a land never outlives its shape's squares.
+static var stage_shape: StringName = &""
+
+## What was planted, one entry per plant.
+var kinds: PackedStringArray = []
+var tiles: PackedInt32Array = []
+var bases: PackedVector3Array = []
+var scales: PackedFloat32Array = []
+var from_kit: PackedByteArray = []
+## Why candidates were turned away, by rule (probes and tests).
+var rejected: Dictionary = {}
+## Trees planted so far: all, conifers and crimson crowns (the mix's steering).
+var _trees: float = 0.0
+var _conifers: float = 0.0
+var _crimson: float = 0.0
+
+var _terrain: Terrain
+var _origin: Vector2
+var _columns: int = 0
+var _rows: int = 0
+var _ground: PackedByteArray = []
+var _route: PackedFloat32Array = []
+var _route_size: Vector2i = Vector2i.ZERO
+var _route_scale: Vector2 = Vector2.ONE
+## What the wood must leave in sight on the picture plane.
+var _sight: Sight = Sight.new()
+
+
+## Plants the land: the kit's foliage where it stands, then the fill.
+## `seats` are the waystones' seats on the rendered surface.
+func plant(kit: Node3D, terrain: Terrain, seats: PackedVector3Array) -> void:
+	_begin(terrain)
+	_mask_water()
+	_mask_structures(kit, seats)
+	_protect(kit, seats)
+	_adopt(kit)
+	_fill_trees()
+	_fill_shrubs()
+
+
+func _begin(terrain: Terrain) -> void:
+	_terrain = terrain
+	var bounds: Rect2 = terrain.bounds
+	_origin = bounds.position
+	_columns = ceili(bounds.size.x / CELL)
+	_rows = ceili(bounds.size.y / CELL)
+	_ground.resize(_columns * _rows)
+	_sight.begin(bounds)
+	# The roads' distance field the ground paints with (8 texels a metre,
+	# exact within about a metre of every road on the ground).
+	var ground: MeshInstance3D = terrain.get_node_or_null("Quiet sculpted ground") as MeshInstance3D
+	var paint: Material = ground.material_override if ground != null else null
+	if paint != null and paint.has_meta("distance_image"):
+		var image: Image = paint.get_meta("distance_image")
+		_route = image.get_data().to_float32_array()
+		_route_size = image.get_size()
+		_route_scale = Vector2(_route_size) / bounds.size
+
+
+## The river and its wet banks: a row's cells within a few metres of each
+## ravine's line are checked (everything else is dry), and every wet cell's
+## neighbours are marked as its bank.
+func _mask_water() -> void:
+	var half_length: float = _terrain.river_half_length
+	var reach: float = River.HALF_WIDTH * River.CHANNEL + CELL
+	var bank: float = RIVER_BANK * River.CHANNEL
+	var wet: PackedInt32Array = []
+	for row: int in range(_rows):
+		var z: float = _origin.y + (row + 0.5) * CELL
+		for cut: float in MapRavine.CUTS:
+			var centre: float = River.centre(z, cut)
+			var first: int = maxi(0, floori((centre - reach - _origin.x) / CELL))
+			var last: int = mini(_columns - 1, floori((centre + reach - _origin.x) / CELL))
+			for column: int in range(first, last + 1):
+				var x: float = _origin.x + (column + 0.5) * CELL
+				if absf(x - centre) < bank or (absf(z) < half_length
+						and _terrain.surface_height(x, z) <= River.LEVEL + 0.2):
+					wet.append(row * _columns + column)
+	for index: int in wet:
+		var row: int = index / _columns
+		var column: int = index % _columns
+		for r: int in range(maxi(0, row - 1), mini(_rows, row + 2)):
+			for c: int in range(maxi(0, column - 1), mini(_columns, column + 2)):
+				_ground[r * _columns + c] |= BANK
+	for index: int in wet:
+		_ground[index] |= WET
+
+
+## Raised roads (bridges and their ramps), abutments, waystones and every
+## kit placement that is not foliage keep plants off their ground.
+func _mask_structures(kit: Node3D, seats: PackedVector3Array) -> void:
+	for deck: Vector3 in _decks(1.5):
+		_stamp(deck.x, deck.z, DECK_CLEAR, DECK_SHRUB)
+	var abutments: PackedVector2Array = _terrain.landform.get("abutments")
+	for pad: Vector2 in abutments:
+		_stamp(pad.x, pad.y, ABUTMENT_CLEAR, ABUTMENT_CLEAR)
+	for seat: Vector3 in seats:
+		_stamp(seat.x, seat.z, SEAT_CLEAR, SEAT_CLEAR)
+	var placed: Array = kit.get("placed")
+	for item: Dictionary in placed:
+		var kind: String = item["kind"]
+		if Atlas.KIT_KINDS.has(kind):
+			continue
+		var at: Vector3 = item["position"]
+		var reach: float = float(str(item["radius"]))
+		# A rock's or a post's circle encloses it at every turn: undergrowth
+		# may grow at its foot, trunks stand a little off.
+		_stamp(at.x, at.z, reach * 0.75 + 0.9, reach * 0.45 + 0.25)
+
+
+## What the woodland may never hide on the picture plane.
+func _protect(kit: Node3D, seats: PackedVector3Array) -> void:
+	var lines: Array[PackedVector3Array] = _terrain.lines
+	# A lane sample every `LANE_STEP`, each wide enough to meet the next.
+	var half: Vector2 = Vector2(LANE + LANE_STEP * 0.5, (LANE + LANE_STEP * 0.5) * _sight.toward.y)
+	for line: PackedVector3Array in lines:
+		for i: int in range(line.size() - 1):
+			var steps: int = maxi(1, ceili(line[i].distance_to(line[i + 1]) / LANE_STEP))
+			for step: int in range(steps + 1):
+				var q: Vector3 = line[i].lerp(line[i + 1], float(step) / steps)
+				var at: Vector2 = _sight.plane(q)
+				_sight.protect_rect(Rect2(at - half, half * 2.0), _sight.depth(q))
+	for deck: Vector3 in _decks(0.75):
+		var at: Vector2 = _sight.plane(deck)
+		_sight.protect_rect(Rect2(at.x - DECK_SIGHT, at.y - 0.9, DECK_SIGHT * 2.0, 1.6), _sight.depth(deck))
+	# A seat's touch square and the stone's body are never covered by a crown
+	# standing in front of the stone.
+	for seat: Vector3 in seats:
+		_sight.protect_rect(seat_guard(_sight.plane(seat)), _sight.depth(seat))
+	for flame: Vector3 in kit.call("lamp_anchors"):
+		var at: Vector2 = _sight.plane(flame)
+		_sight.protect_rect(Rect2(at - Vector2(0.6, 0.6), Vector2(1.2, 1.2)), _sight.depth(flame) - 0.2)
+	# The rivers' water at its level, sampled along each line.
+	var water: Vector2 = Vector2(RIVER_SIGHT, LANE_STEP * _sight.toward.y * 0.5 + 0.1)
+	for cut: float in MapRavine.CUTS:
+		var z: float = -_terrain.river_half_length
+		while z <= _terrain.river_half_length:
+			var q: Vector3 = Vector3(River.centre(z, cut), River.LEVEL, z)
+			_sight.protect_rect(Rect2(_sight.plane(q) - water, water * 2.0), _sight.depth(q))
+			z += LANE_STEP
+	var placed: Array = kit.get("placed")
+	for item: Dictionary in placed:
+		var kind: String = item["kind"]
+		var base: Vector3 = item["position"]
+		var at: Vector2 = _sight.plane(base)
+		if kind == "amber-arch":
+			_sight.protect_rect(Rect2(at + Vector2(-2.9, -4.6), Vector2(5.8, 5.4)), _sight.depth(base) - 0.8)
+		elif kind == "memorial":
+			_sight.protect_rect(Rect2(at + Vector2(-0.6, -1.8), Vector2(1.2, 2.2)), _sight.depth(base) - 0.5)
+		elif kind.begins_with("slate"):
+			var across: float = float(str(item["radius"])) * ROCK_ACROSS
+			var rise: float = float(str(item["height"])) * _sight.toward.z
+			# A low scree's body is at least two of the grid's cells tall.
+			var top: float = maxf(rise * ROCK_TOP, rise * ROCK_FOOT + Sight.FINE * 2.0)
+			_sight.protect_rect(Rect2(at.x - across, at.y - top, across * 2.0, top - rise * ROCK_FOOT),
+				_sight.depth(base))
+
+
+## The raised points of every bridge chain, `step` metres apart along it (a
+## chain's own points are much closer than a stamp needs), and each raised
+## run's last point.
+func _decks(step: float) -> PackedVector3Array:
+	var out: PackedVector3Array = []
+	for chain: Dictionary in _terrain.get_meta("bridge_chains", []):
+		var points: PackedVector3Array = chain["points"]
+		var weights: PackedFloat32Array = chain["weights"]
+		var since: float = INF
+		for i: int in range(points.size() - 1):
+			if maxf(weights[i], weights[i + 1]) < DECK_WEIGHT:
+				if since < INF:
+					out.append(points[i])
+				since = INF
+				continue
+			var length: float = points[i].distance_to(points[i + 1])
+			var at: float = 0.0 if since >= step else step - since
+			while at < length:
+				out.append(points[i].lerp(points[i + 1], at / length))
+				at += step
+			since = length - (at - step)
+	return out
+
+
+## The picture-plane square (metres) a waystone's touch square covers at the
+## Journey view on `stage_shape` (the pad's and the desktop's 60 px of 820,
+## 1.4 m; the phone's touch floor, 60 px of a 390 px stage, about 3 m), or
+## until a shape is set, on the shape where it is largest.
+static func seat_square() -> float:
+	var shapes: Array = [stage_shape] if StageShape.REFERENCES.has(stage_shape) \
+		else StageShape.REFERENCES.keys()
+	var widest: float = 0.0
+	for shape: StringName in shapes:
+		var stage: Vector2 = Vector2(StageShape.REFERENCES[shape])
+		widest = maxf(widest, MapJourneyCameraContract.touch_size(stage) / stage.y)
+	return widest * MapJourneyCameraContract.PREFERRED_ZOOM
+
+
+## What a seat at `at` on the picture plane keeps in sight: its touch square
+## (`seat_square`, centred on the seat as its pin is) and above it the
+## stone's body.
+static func seat_guard(at: Vector2) -> Rect2:
+	var square: float = seat_square()
+	return Rect2(at.x - square * 0.5, at.y - square * 0.5 - STONE_RISE, square, square + STONE_RISE)
+
+
+## The kit's foliage becomes the woodland's where it stands, under the same
+## sight rules as the fill (tried smaller, undergrowth then as the low fern,
+## or left out: the kit's placements themselves never move); its trunks and
+## shrubs keep the fill off them.
+func _adopt(kit: Node3D) -> void:
+	var placed: Array = kit.get("placed")
+	for item: Dictionary in placed:
+		var kind: String = item["kind"]
+		if not Atlas.KIT_KINDS.has(kind):
+			continue
+		var at: Vector3 = item["position"]
+		var radius: float = float(str(item["radius"]))
+		if KIT_REPAINT.has(kind):
+			var repaint: Array = KIT_REPAINT[kind]
+			var share: float = repaint[1]
+			if _hash(at) < share:
+				kind = repaint[0]
+		var tree: bool = TREES.has(kind)
+		var fitted: Array = _fit_tree(kind, float(str(item["yaw"])), at, float(str(item["scale"])), false) \
+			if tree else _fit_shrub(kind, float(str(item["yaw"])), at, float(str(item["scale"])))
+		if fitted.is_empty():
+			_reject("kit sight")
+			continue
+		_add_fitted(fitted, at, true)
+		if tree:
+			_stamp(at.x, at.z, radius * 0.4, radius * SHRUB_UNDER_TREE * 0.5)
+		else:
+			_stamp(at.x, at.z, 0.0, radius * 0.3)
+
+
+## The fill's trees: the lattice, and in the near band a second, offset
+## lattice of large crowns. Planted in a seeded random order, so the mix's
+## steering (`_tree_kind`) favours no part of the land.
+func _fill_trees() -> void:
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = TREE_SEED
+	var area: Rect2 = _area()
+	var near_edge: float = area.end.y - NEAR_BAND
+	# Per candidate: x, z, kind pick, size pick, yaw, and 1 in the near band's lattice.
+	var candidates: Array[PackedFloat32Array] = []
+	for z: float in _lattice(area.position.y, area.end.y, TREE_SPACING):
+		for x: float in _lattice(area.position.x, area.end.x, TREE_SPACING):
+			candidates.append(PackedFloat32Array([x + rng.randf_range(-0.45, 0.45) * TREE_SPACING,
+				z + rng.randf_range(-0.45, 0.45) * TREE_SPACING, rng.randf(), rng.randf(),
+				rng.randf_range(-PI, PI), 0.0]))
+	for z: float in _lattice(near_edge, area.end.y, TREE_SPACING):
+		for x: float in _lattice(area.position.x + TREE_SPACING * 0.5, area.end.x, TREE_SPACING):
+			candidates.append(PackedFloat32Array([x + rng.randf_range(-0.3, 0.3) * TREE_SPACING,
+				z + rng.randf_range(-0.3, 0.3) * TREE_SPACING, rng.randf(), rng.randf(),
+				rng.randf_range(-PI, PI), 1.0]))
+	for i: int in range(candidates.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var swap: PackedFloat32Array = candidates[i]
+		candidates[i] = candidates[j]
+		candidates[j] = swap
+	for candidate: PackedFloat32Array in candidates:
+		var px: float = candidate[0]
+		var pz: float = candidate[1]
+		if not _ground_ok(px, pz, NO_TREE, TREE_ROAD):
+			continue
+		var kind: String = _tree_kind(px, pz, candidate[2])
+		var base: Vector3 = Vector3(px, _terrain.surface_height(px, pz), pz)
+		var lattice: bool = candidate[5] == 0.0
+		var fitted: Array = []
+		if lattice:
+			var band: Vector2 = SCALE_BAND[kind]
+			var pick: float = sqrt(candidate[3]) if pz > near_edge else candidate[3]
+			fitted = _fit_tree(kind, candidate[4], base, _first_scale(TREE_SCALE, pick, band), false)
+		else:
+			fitted = _fit_tree(kind, candidate[4], base, lerpf(1.0, TREE_SCALE.y, candidate[3]), true)
+		if fitted.is_empty():
+			_reject("sight")
+			continue
+		_add_fitted(fitted, base, false)
+		var reach: float = Atlas.size[tiles[-1]].x * 0.5 * scales[-1]
+		_stamp(px, pz, reach * TRUNK_GAP, reach * SHRUB_UNDER_TREE if lattice else 0.0)
+
+
+## Dark conifers in groves, broadleaf crowns between them, steered toward the
+## art direction's shares of every tree planted so far, the kit's own conifers
+## included: `CONIFER_SHARE` conifers, `CRIMSON_SHARE` crimson, and rust and
+## amber the rest.
+func _tree_kind(x: float, z: float, pick: float) -> String:
+	var mass: float = sin(x * 0.21 + z * 0.07) * 0.5 + cos(z * 0.17 - x * 0.11) * 0.5
+	var trees: float = maxf(1.0, _trees)
+	var conifer: float = clampf(CONIFER_SHARE + GROVES * mass + STEER * (CONIFER_SHARE - _conifers / trees),
+		0.02, 0.9)
+	if pick < conifer:
+		var which: float = pick / conifer
+		return "conifer" if which < 0.45 else ("conifer-spire" if which < 0.85 else "conifer-wind")
+	var broad: float = (pick - conifer) / (1.0 - conifer)
+	var crimson: float = clampf(CRIMSON_SHARE / (1.0 - CONIFER_SHARE) + STEER * (CRIMSON_SHARE - _crimson / trees),
+		0.05, 0.95)
+	if broad < crimson:
+		return "ember-oak" if broad < crimson * 0.5 else "ember-round"
+	return "rust-oak" if broad < (1.0 + crimson) * 0.5 else "amber-round"
+
+
+func _fill_shrubs() -> void:
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = SHRUB_SEED
+	var area: Rect2 = _area()
+	for z: float in _lattice(area.position.y, area.end.y, SHRUB_SPACING):
+		for x: float in _lattice(area.position.x, area.end.x, SHRUB_SPACING):
+			var px: float = x + rng.randf_range(-0.45, 0.45) * SHRUB_SPACING
+			var pz: float = z + rng.randf_range(-0.45, 0.45) * SHRUB_SPACING
+			var pick: float = rng.randf()
+			var scale_value: float = _first_scale(SHRUB_SCALE, rng.randf(), SHRUB_BAND)
+			var yaw: float = rng.randf_range(-PI, PI)
+			if not _ground_ok(px, pz, NO_SHRUB, SHRUB_ROAD):
+				continue
+			var base: Vector3 = Vector3(px, _terrain.surface_height(px, pz), pz)
+			var fitted: Array = _fit_shrub(_undergrowth(pick), yaw, base, scale_value)
+			if fitted.is_empty():
+				_reject("sight")
+				continue
+			_add_fitted(fitted, base, false)
+
+
+## A tree of `kind` at `base` as it fits the picture plane: [kind, tile, scale]
+## at `scale_value`, else (unless `whole`) at `SHRINK` of it but never below
+## the range; empty when it fits at neither.
+func _fit_tree(kind: String, yaw: float, base: Vector3, scale_value: float, whole: bool) -> Array:
+	var tile: int = Atlas.tile_for(kind, yaw)
+	if _sight.fits(tile, base, scale_value):
+		return [kind, tile, scale_value]
+	var smaller: float = maxf(TREE_SCALE.x, scale_value * SHRINK)
+	if not whole and smaller < scale_value and _sight.fits(tile, base, smaller):
+		return [kind, tile, smaller]
+	return []
+
+
+## Undergrowth of `kind` at `base` as it fits: [kind, tile, scale] at
+## `scale_value`, else twice `SHRINK` smaller (never below the range), else the
+## low fern at that; empty when none fits.
+func _fit_shrub(kind: String, yaw: float, base: Vector3, scale_value: float) -> Array:
+	var tile: int = Atlas.tile_for(kind, yaw)
+	if _sight.fits(tile, base, scale_value):
+		return [kind, tile, scale_value]
+	var smaller: float = maxf(SHRUB_SCALE.x, scale_value * SHRINK * SHRINK)
+	if _sight.fits(tile, base, smaller):
+		return [kind, tile, smaller]
+	tile = Atlas.tile_for(LOW_SHRUB, yaw)
+	for low: float in [smaller, LOW_SCALE]:
+		if _sight.fits(tile, base, low):
+			return [LOW_SHRUB, tile, low]
+	return []
+
+
+## The first scale a candidate tries: `pick` (0 to 1) across `band` (shares
+## of `range`).
+static func _first_scale(range: Vector2, pick: float, band: Vector2) -> float:
+	return lerpf(lerpf(range.x, range.y, band.x), lerpf(range.x, range.y, band.y), pick)
+
+
+## The undergrowth kind `pick` (0 to 1) falls on, by `UNDERGROWTH`'s shares.
+static func _undergrowth(pick: float) -> String:
+	for name: String in UNDERGROWTH:
+		var share: float = UNDERGROWTH[name]
+		if pick < share:
+			return name
+		pick -= share
+	return LOW_SHRUB
+
+
+## Where the fill may stand: the land less a metre's margin.
+func _area() -> Rect2:
+	return _terrain.bounds.grow(-1.0)
+
+
+static func _lattice(from: float, to: float, spacing: float) -> PackedFloat32Array:
+	var out: PackedFloat32Array = []
+	var at: float = from + spacing * 0.5
+	while at < to:
+		out.append(at)
+		at += spacing
+	return out
+
+
+## Whether a plant may stand at (x, z): dry, off `flag`'s masks, and at least
+## `road` from a road's centreline.
+func _ground_ok(x: float, z: float, flag: int, road: float) -> bool:
+	var column: int = floori((x - _origin.x) / CELL)
+	var row: int = floori((z - _origin.y) / CELL)
+	if column < 0 or row < 0 or column >= _columns or row >= _rows:
+		_reject("edge")
+		return false
+	var flags: int = _ground[row * _columns + column]
+	if flags & WET or (flags & BANK and _wet(x, z)):
+		_reject("water")
+		return false
+	if flags & flag:
+		_reject("clear")
+		return false
+	if road_distance(x, z) < road:
+		_reject("road")
+		return false
+	return true
+
+
+## Whether (x, z) is in the river or on its wet bank, exactly.
+func _wet(x: float, z: float) -> bool:
+	if River.distance(x, z) < RIVER_BANK:
+		return true
+	return River.contains(x, z, _terrain.river_half_length) \
+		and _terrain.surface_height(x, z) <= River.LEVEL + 0.2
+
+
+## Distance from (x, z) to the nearest road on the ground (from the ground
+## paint's field; 4 m where no road is near).
+func road_distance(x: float, z: float) -> float:
+	if _route.is_empty():
+		return INF
+	var column: int = clampi(floori((x - _origin.x) * _route_scale.x), 0, _route_size.x - 1)
+	var row: int = clampi(floori((z - _origin.y) * _route_scale.y), 0, _route_size.y - 1)
+	return _route[row * _route_size.x + column]
+
+
+## Keeps trees off the ground cells within `tree` of (x, z), and undergrowth
+## off those within `shrub`.
+func _stamp(x: float, z: float, tree: float, shrub: float) -> void:
+	var radius: float = maxf(tree, shrub)
+	var r0: int = maxi(0, floori((z - radius - _origin.y) / CELL))
+	var r1: int = mini(_rows - 1, floori((z + radius - _origin.y) / CELL))
+	for row: int in range(r0, r1 + 1):
+		var dz: float = _origin.y + (row + 0.5) * CELL - z
+		_stamp_row(row, x, tree * tree - dz * dz, NO_TREE)
+		_stamp_row(row, x, shrub * shrub - dz * dz, NO_SHRUB)
+
+
+## Sets `flag` on the row's cells whose centres lie within the chord of half
+## width sqrt(`reach`) round `x` (nothing when `reach` is negative).
+func _stamp_row(row: int, x: float, reach: float, flag: int) -> void:
+	if reach < 0.0:
+		return
+	var half: float = sqrt(reach)
+	var c0: int = maxi(0, ceili((x - half - _origin.x) / CELL - 0.5))
+	var c1: int = mini(_columns - 1, floori((x + half - _origin.x) / CELL - 0.5))
+	var at: int = row * _columns
+	for column: int in range(c0, c1 + 1):
+		_ground[at + column] |= flag
+
+
+## Plants what `_fit_tree` or `_fit_shrub` found ([kind, tile, scale]).
+func _add_fitted(fitted: Array, base: Vector3, kit: bool) -> void:
+	var kind: String = fitted[0]
+	var tile: int = fitted[1]
+	var scale_value: float = fitted[2]
+	if TREES.has(kind):
+		_trees += 1.0
+		_conifers += 1.0 if kind.begins_with("conifer") else 0.0
+		_crimson += 1.0 if kind.begins_with("ember") else 0.0
+	kinds.append(kind)
+	tiles.append(tile)
+	bases.append(base)
+	scales.append(scale_value)
+	from_kit.append(1 if kit else 0)
+
+
+func _reject(reason: String) -> void:
+	var seen: int = rejected.get(reason, 0)
+	rejected[reason] = seen + 1
+
+
+## A stable value in [0, 1) for a place on the land.
+static func _hash(at: Vector3) -> float:
+	var h: float = absf(sin(at.x * 12.9898 + at.z * 78.233)) * 43758.5453
+	return h - floorf(h)
+
+
+## How deep plant `index`'s card stands toward the camera.
+func depth(index: int) -> float:
+	return _sight.depth(bases[index]) + Atlas.shift(tiles[index]) * scales[index]

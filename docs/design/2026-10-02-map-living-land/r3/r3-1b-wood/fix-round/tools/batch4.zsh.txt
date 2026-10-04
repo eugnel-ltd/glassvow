@@ -1,0 +1,58 @@
+#!/bin/zsh
+# Lane R3.1b fix round, device batch 4: control (main 8815da34) and the wood
+# (08b32b3f), each with the QA-only probe hook, reinstalled INTERLEAVED
+# (control, wood; wood, control; control, wood), QA app only, under the
+# shared batch lock. After each install: the first launch (the boot's long
+# frames), then the Journey/Whole act/river holds and the opening holds.
+# Every row is nonce-checked. The ipas were built by qa_export.sh --no-install
+# from the two measurement worktrees; each install checks the ipa's bundle id.
+set -u
+source /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/device/lib.zsh
+F=$R/fix; OUT=$F/batch4; mkdir -p $OUT
+fast_acquire() {
+  local L=$FLOW/ipad.lock
+  while ! mkdir $L 2>/dev/null; do
+    local age=$(( $(date +%s) - $(stat -f %m $L/owner 2>/dev/null || date +%s) ))
+    (( age > 3600 )) && { $LOCK acquire $OWNER; return; }
+    sleep 3
+  done
+  echo $OWNER > $L/owner
+}
+install_ipa() {
+  local build=$1 ipa=$F/ipa/$1.ipa id
+  id=$(unzip -p $ipa Payload/glassvow.app/Info.plist | plutil -extract CFBundleIdentifier raw -o - -)
+  [[ $id == $QA ]] || { echo "refusing to install $id"; return 1; }
+  local a; for a in 1 2 3; do
+    if xcrun devicectl device install app --device $UDID $ipa 2>&1 | redact > $OUT/install-$build-$2.log; then
+      echo "$build installed (round $2) $(date +%T)"; return 0
+    fi
+    sleep 5
+  done
+  echo "$build install failed"; return 1
+}
+turn() {
+  local build=$1 round=$2
+  install_ipa $build $round || exit 1
+  probe_run $build-first$round --probe-views=opening --probe-frames=120 --probe-modes=cadence
+  probe_run $build-j$round --map-steps=2 --probe-views=journey,whole,river
+  probe_run $build-f$round --probe-views=opening
+}
+fast_acquire
+trap "$LOCK release $OWNER" EXIT
+echo "lock $(date +%T)"
+UDID=$(udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+turn ctl 1; turn dev 1
+turn dev 2; turn ctl 2
+turn ctl 3; turn dev 3
+for mode in motion rm; do
+  extra=(); [[ $mode == rm ]] && extra=(--probe-reduce-motion)
+  probe_run dev-burst-$mode --map-steps=2 --probe-views=journey --probe-modes=cadence --probe-frames=120 --probe-burst $extra
+  mkdir -p $OUT/burst-$mode
+  for f in burst-a.png burst-b.png burst-bare.png; do pull $f $OUT/burst-$mode/$f; done
+  python3 $D/burst.py $OUT/burst-$mode
+done
+xcrun devicectl device process launch --terminate-existing --device $UDID $QA -- --map --seed=1 --shape=pad-landscape --map-steps=2 2>&1 | redact > $OUT/launch-shot.txt
+sleep 25
+xcrun devicectl device capture screenshot --device $UDID --destination $OUT/dev-journey.png >/dev/null 2>&1
+echo "shot $(date +%T)"
+echo "done $(date +%T)"

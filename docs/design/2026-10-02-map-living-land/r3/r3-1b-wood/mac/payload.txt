@@ -1,0 +1,9 @@
+tools/payload_report.py (iOS preset), before: main 8815da34; after: this branch
+--- before
+assets/art/map-journey                  5.8        6  ok
+presentation                            2.7        3  ok
+TOTAL (pck estimate)                  272.3      400  ok
+--- after
+assets/art/map-journey                 10.4       11  ok
+presentation                            2.7        3  ok
+TOTAL (pck estimate)                  277.0      400  ok

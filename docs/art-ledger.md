@@ -658,6 +658,25 @@ gives each kit material the shared source its authored name calls for.
 `chain` switch on `lantern()` that defaults to the R1 lamp; rebuilding the R1
 kit gives byte-identical GLBs.
 
+**R3.1 additions (the wood, 3 Oct 2026), lane picks, owner re-pick open:**
+
+| Asset | Recipe | Notes |
+|---|---|---|
+| `impostors/wood-albedo.png` | `tools/map_atelier/journey/impostors/bake_impostors.gd` (Godot, windowed: renders each kind from the journey camera's one direction), then `pack_impostors.py` (numpy, OpenCV, Pillow) | 2048×1408 RGBA: 13 kinds at 3–4 yaws (42 tiles) at 56 texels a metre, alpha the coverage, transparent texels filled from their nearest covered neighbour so mips never darken a cut edge. Imports VRAM-compressed with mipmaps (3.8 MB ETC2). |
+| `impostors/wood-normal.png` | the same bake and pack | 1024×704 RGBA, half the albedo's resolution: world normal in RGB (raw), and in alpha how much of the key light reaches each texel through its own crown, darkened where a leaf shows through a gap. Imports VRAM-compressed, not as a normal map (0.9 MB ETC2). |
+| `impostors/wood-tiles.json` | `pack_impostors.py` | Per tile: kind, atlas rect, picture-plane rect, reach toward the camera, height, and the silhouette as row spans (the planting's occlusion mask). 20 KB. |
+
+**Sources, kept:** the kit's own models (`assets/art/map-journey/*.glb`, the
+R1 kit above) and the bake recipe. The recipe stacks turned copies of the
+kit conifers into fuller spruce, composes four broadleaf kinds from the kit's
+bare snag crowned with heath and copse leaf clumps in sprays (crimson
+`ember-oak` and `ember-round`, `rust-oak`, `amber-round`), and repaints two
+undergrowth kinds (`olive-heath`, `dark-copse`) at their own luminance in a
+new hue. The bake is deterministic: re-running it reproduces the atlas byte
+for byte. A crafted Blender source per kind replaces a recipe as a data-only
+re-bake (`docs/design/2026-10-02-map-living-land/r3/r3-1b-wood/README.md`
+lists what each kind needs).
+
 ## Rejection note — what "technically shippable" means
 
 Judging generated character art by eye is not enough; two of the five

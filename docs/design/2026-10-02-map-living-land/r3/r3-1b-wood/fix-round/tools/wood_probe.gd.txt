@@ -1,0 +1,281 @@
+extends SceneTree
+## Lane R3.1b fix-round probe (scratch, never committed as code). Builds Act I's
+## land at a seed (pad) and checks every planted card, kit-adopted ones
+## included, against road centrelines, bridge decks, lamp flames, the rivers'
+## lines, the kit's rocks and the waystones' touch squares (pad and phone), on
+## the picture plane; counts the mix by plants and by front-most area.
+##   godot --headless --path <wt> -s wood_probe.gd -- --seed=1
+
+const Atlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
+const Planting = preload("res://presentation/map/landscape/wood_planting.gd")
+const River = preload("res://presentation/map/landscape/river.gd")
+const RES: float = 0.125
+const PHONE_SQUARE: float = 60.0 / 390.0 * 19.2
+
+var planting: Planting
+var index: Dictionary = {}
+var rects: Array[Rect2] = []
+var toward: Vector3
+
+
+func _initialize() -> void:
+	_run.call_deferred()
+
+
+func _family(kind: String) -> String:
+	if kind.begins_with("conifer"):
+		return "conifer"
+	if kind.begins_with("ember"):
+		return "crimson"
+	if kind == "rust-oak" or kind == "amber-round":
+		return "rust-amber"
+	if kind == "olive-heath" or kind == "dark-copse":
+		return "muted-under"
+	return "red-under"
+
+
+func _run() -> void:
+	var seed_value: int = 1
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--seed="):
+			seed_value = int(arg.get_slice("=", 1))
+		if arg.begins_with("--shape="):
+			Planting.stage_shape = StringName(arg.get_slice("=", 1))
+	MapJourneyLandscape.Kit.preload_scenes()
+	var content: ContentDB = ContentDB.load_full()
+	var run_state: RunState = RunState.new_run(content, seed_value)
+	var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run_state, content), content)
+	root.add_child(screen)
+	screen.size = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
+	screen.set_shape(StageShape.IDENTITY)
+	screen.refresh(run_state)
+	var waited: int = 0
+	while screen.landscape_pending() and waited < 4000:
+		await process_frame
+		waited += 1
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	if land == null or land.wood == null:
+		print("PROBE no land")
+		quit(2)
+		return
+	planting = land.wood.planting
+	print("SEED ", seed_value, " shape ", Planting.stage_shape, " square ", Planting.seat_square(), " TIMINGS ", JSON.stringify(land.wood.timings_ms), " REJECTED ", JSON.stringify(planting.rejected))
+	var seats: PackedVector3Array = []
+	for base: Node3D in land.journey.bases:
+		seats.append(base.position)
+	var pitch: float = deg_to_rad(MapJourneyCameraContract.PITCH)
+	toward = Vector3(0, sin(pitch), cos(pitch))
+	for i: int in range(planting.kinds.size()):
+		var rect: Rect2 = Atlas.rect(planting.tiles[i], planting.bases[i], planting.scales[i])
+		rects.append(rect)
+		for key: int in range(floori(rect.position.x), floori(rect.end.x) + 1):
+			var list: PackedInt32Array = index.get(key, PackedInt32Array())
+			list.append(i)
+			index[key] = list
+	_counts(land)
+	_raster()
+	_hidden(land, seats)
+	quit(0)
+
+
+func _counts(land: MapJourneyLandscape) -> void:
+	var by: Dictionary = {}
+	var kit: int = 0
+	var trees: int = 0
+	var under: int = 0
+	for i: int in range(planting.kinds.size()):
+		var fam: String = _family(planting.kinds[i])
+		by[fam] = int(str(by.get(fam, 0))) + 1
+		kit += planting.from_kit[i]
+		if Planting.TREES.has(planting.kinds[i]):
+			trees += 1
+		else:
+			under += 1
+	var kit_placed: int = 0
+	for item: Dictionary in land.kit.placed:
+		kit_placed += 1 if Atlas.KIT_KINDS.has(str(item["kind"])) else 0
+	print("COUNTS plants %d (kit adopted %d of %d placed) trees %d: conifer %.3f crimson %.3f rust-amber %.3f; undergrowth %d: muted %.3f" % [
+		planting.kinds.size(), kit, kit_placed, trees, float(str(by.get("conifer", 0))) / trees,
+		float(str(by.get("crimson", 0))) / trees, float(str(by.get("rust-amber", 0))) / trees, under,
+		float(str(by.get("muted-under", 0))) / under])
+
+
+## Front-most card per RES cell over each view's safe frame (pad, 1180x820,
+## safe 42,76 to 1138,774) and over the whole land.
+func _raster() -> void:
+	var aspect: float = 1180.0 / 820.0
+	var views: Dictionary = {
+		"journey": [Vector2(-28.5872, 54.5598 * sin(deg_to_rad(40.0)) - 36.0 * cos(deg_to_rad(40.0))), 19.2],
+		"fresh": [Vector2(-26.4823, 40.9499 * sin(deg_to_rad(40.0)) - 36.0 * cos(deg_to_rad(40.0))), 29.9059],
+		"whole": [Vector2(-0.2316, 40.6386 * sin(deg_to_rad(40.0)) - 36.0 * cos(deg_to_rad(40.0))), 54.9112],
+	}
+	for name: String in views:
+		var centre: Vector2 = views[name][0]
+		var zoom: float = views[name][1]
+		var size: Vector2 = Vector2(zoom * aspect, zoom)
+		var frame: Rect2 = Rect2(centre - size * 0.5, size)
+		# The safe frame: pixels 42..1138 by 76..774 of 1180x820.
+		var safe: Rect2 = Rect2(frame.position + Vector2(42.0 / 1180.0, 76.0 / 820.0) * size,
+			Vector2(1096.0 / 1180.0, 698.0 / 820.0) * size)
+		_raster_frame(name, safe)
+
+
+func _raster_frame(name: String, f: Rect2) -> void:
+	var cols: int = ceili(f.size.x / RES)
+	var rows: int = ceili(f.size.y / RES)
+	var owner: PackedInt32Array = []
+	owner.resize(cols * rows)
+	owner.fill(-1)
+	var order: Array = []
+	for i: int in range(planting.kinds.size()):
+		if rects[i].intersects(f):
+			order.append(i)
+	order.sort_custom(func(a: int, b: int) -> bool: return planting.depth(a) < planting.depth(b))
+	for i: int in order:
+		var r: Rect2 = rects[i]
+		var spans: PackedVector2Array = Atlas.spans[planting.tiles[i]]
+		var r0: int = maxi(0, floori((r.position.y - f.position.y) / RES))
+		var r1: int = mini(rows - 1, floori((r.end.y - f.position.y) / RES))
+		for row: int in range(r0, r1 + 1):
+			var y: float = f.position.y + (row + 0.5) * RES
+			var band: int = floori((y - r.position.y) / r.size.y * spans.size())
+			if band < 0 or band >= spans.size():
+				continue
+			var span: Vector2 = spans[band]
+			if span.x > span.y:
+				continue
+			var c0: int = maxi(0, floori((r.position.x + span.x * r.size.x - f.position.x) / RES))
+			var c1: int = mini(cols - 1, floori((r.position.x + span.y * r.size.x - f.position.x) / RES))
+			for c: int in range(c0, c1 + 1):
+				owner[row * cols + c] = i
+	var counts: Dictionary = {}
+	var covered: int = 0
+	for who: int in owner:
+		if who < 0:
+			continue
+		covered += 1
+		var fam: String = _family(planting.kinds[who])
+		counts[fam] = int(str(counts.get(fam, 0))) + 1
+	var shares: Dictionary = {}
+	for fam: String in counts:
+		shares[fam] = snappedf(100.0 * float(str(counts[fam])) / maxi(covered, 1), 0.1)
+	print("RASTER %s cover %.1f%% of the safe frame; front-most shares %s" % [name, 100.0 * covered / owner.size(), JSON.stringify(shares)])
+
+
+func _hidden(land: MapJourneyLandscape, seats: PackedVector3Array) -> void:
+	var road: Dictionary = {"fill": 0, "kit": 0, "samples": 0}
+	var examples: Array = []
+	for line: PackedVector3Array in land.terrain.lines:
+		for s: int in range(line.size() - 1):
+			var steps: int = maxi(1, ceili(line[s].distance_to(line[s + 1]) / 0.25))
+			for step: int in range(steps + 1):
+				var q: Vector3 = line[s].lerp(line[s + 1], float(step) / steps)
+				road["samples"] += 1
+				var who: int = _hider(q, 0.1)
+				if who >= 0:
+					road[_tag(who)] += 1
+					if examples.size() < 4:
+						examples.append([_tag(who), planting.kinds[who], snappedf(planting.bases[who].x, 0.01), snappedf(planting.bases[who].z, 0.01)])
+	print("ROADS ", JSON.stringify(road), " ", JSON.stringify(examples))
+	var decks: Dictionary = {"fill": 0, "kit": 0, "samples": 0}
+	for deck: Vector3 in planting._decks(0.5):
+		decks["samples"] += 1
+		var who: int = _hider(deck, 0.1)
+		if who >= 0:
+			decks[_tag(who)] += 1
+	print("DECKS ", JSON.stringify(decks))
+	var flames: Dictionary = {"fill": 0, "kit": 0, "samples": 0}
+	for flame: Vector3 in land.kit.lamp_anchors():
+		flames["samples"] += 1
+		var who: int = _hider(flame, 0.0)
+		if who >= 0:
+			flames[_tag(who)] += 1
+	print("FLAMES ", JSON.stringify(flames))
+	var half: float = land.terrain.river_half_length
+	for cut: float in MapRavine.CUTS:
+		var river: Dictionary = {"fill": 0, "kit": 0, "samples": 0}
+		var z: float = -half
+		while z <= half:
+			var p: Vector3 = Vector3(River.centre(z, cut), River.LEVEL, z)
+			river["samples"] += 1
+			var who: int = _hider(p, 0.1)
+			if who >= 0:
+				river[_tag(who)] += 1
+			z += 0.25
+		print("RIVER cut %.1f %s hidden %.0f%%" % [cut, JSON.stringify(river), 100.0 * (int(str(river["fill"])) + int(str(river["kit"]))) / float(str(river["samples"]))])
+	var rocks: Dictionary = {"total": 0, "half_hidden": 0, "by_kit_alone": 0}
+	var rock_rows: Array = []
+	for item: Dictionary in land.kit.placed:
+		var kind: String = str(item["kind"])
+		if not kind.begins_with("slate"):
+			continue
+		var base: Vector3 = item["position"]
+		var radius: float = float(str(item["radius"])) * 0.6
+		var height: float = float(str(item["height"]))
+		var n: int = 0
+		var h: int = 0
+		var hk: int = 0
+		for gx: int in range(-3, 4):
+			for gy: int in range(0, 5):
+				var p: Vector3 = base + Vector3(gx / 3.0 * radius, gy / 4.0 * height * 0.8, 0)
+				n += 1
+				var who: int = _hider(p, 0.1)
+				if who >= 0:
+					h += 1
+					if planting.from_kit[who] == 1:
+						hk += 1
+		rocks["total"] += 1
+		if h * 2 >= n:
+			rocks["half_hidden"] += 1
+			if rock_rows.size() < 5:
+				rock_rows.append([kind, snappedf(base.x, 0.1), snappedf(base.z, 0.1), "%d/%d" % [h, n]])
+		if hk * 2 >= n:
+			rocks["by_kit_alone"] += 1
+	print("ROCKS ", JSON.stringify(rocks), " ", JSON.stringify(rock_rows))
+	for square: float in [60.0 / 820.0 * 19.2, PHONE_SQUARE]:
+		var hit_seats: int = 0
+		var cards: int = 0
+		for seat: Vector3 in seats:
+			var at: Vector2 = MapJourneyCameraContract.projected_plane(seat)
+			var guard: Rect2 = Rect2(at.x - square * 0.5, at.y - square * 0.5 - Planting.STONE_RISE,
+				square, square + Planting.STONE_RISE).grow(-0.15)
+			var hit: Dictionary = {}
+			var y: float = guard.position.y
+			while y <= guard.end.y:
+				var x: float = guard.position.x
+				while x <= guard.end.x:
+					for i: int in index.get(floori(x), PackedInt32Array()):
+						if seat.dot(toward) >= planting.depth(i) - 0.05:
+							continue
+						if _inside(planting.tiles[i], rects[i], Vector2(x, y)):
+							hit[i] = true
+					x += 0.2
+				y += 0.2
+			if not hit.is_empty():
+				hit_seats += 1
+			cards += hit.size()
+		print("SEATS square %.2f m: %d of %d seats have a crown in front over the square (%d cards)" % [square, hit_seats, seats.size(), cards])
+
+
+func _tag(who: int) -> String:
+	return "kit" if planting.from_kit[who] == 1 else "fill"
+
+
+func _hider(point: Vector3, margin: float) -> int:
+	var at: Vector2 = MapJourneyCameraContract.projected_plane(point)
+	var d: float = point.dot(toward)
+	for i: int in index.get(floori(at.x), PackedInt32Array()):
+		if d >= planting.depth(i) - margin:
+			continue
+		if _inside(planting.tiles[i], rects[i], at):
+			return i
+	return -1
+
+
+func _inside(tile: int, rect: Rect2, at: Vector2) -> bool:
+	if not rect.has_point(at):
+		return false
+	var rows: PackedVector2Array = Atlas.spans[tile]
+	var band: int = clampi(floori((at.y - rect.position.y) / rect.size.y * rows.size()), 0, rows.size() - 1)
+	var x: float = (at.x - rect.position.x) / rect.size.x
+	return x >= rows[band].x and x <= rows[band].y

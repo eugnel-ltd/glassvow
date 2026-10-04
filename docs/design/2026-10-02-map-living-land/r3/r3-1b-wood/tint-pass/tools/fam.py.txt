@@ -1,0 +1,15 @@
+import numpy as np, sys
+sys.path.insert(0, '/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/tint')
+from bands import hsv, load
+keys = {'crimson': (1,0,0), 'rust': (1,1,0), 'olive': (0,1,0), 'redund': (1,0,1), 'fern': (0,1,1), 'conifer': (0,0,1)}
+fams = sys.argv[1].split(',')
+for name in sys.argv[2:]:
+    d = '/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/tint/c/%s/pad-journey' % name
+    img = load(d + '.png'); key = load(d + '-key.png'); mag = load(d + '-magenta.png')
+    wood = ((mag[..., 0] - mag[..., 1]) > 0.25) & ((mag[..., 2] - mag[..., 1]) > 0.25)
+    for f in fams:
+        r, g, b = keys[f]
+        m = wood & ((key[..., 0] > 0.5) == bool(r)) & ((key[..., 1] > 0.5) == bool(g)) & ((key[..., 2] > 0.5) == bool(b))
+        p = img[m]; h, s, v = [x[0] for x in hsv(p[None])]
+        hh = np.where(h > 180, h - 360, h)
+        print(f"{name:6s} {f:8s} s {np.percentile(s,[10,50,90]).round(2)} v {np.percentile(v,[10,50,90]).round(2)} hue {np.percentile(hh,[10,50,90]).round(1)} s<.72 {(s<0.72).mean():.2f} v<.12 {(v<0.12).mean():.2f} area {m.mean()*100:.1f} orange {(((h>14)&(h<=45)&(s>=0.72)&(v>=0.12)).sum()/m.size*100):.2f}")

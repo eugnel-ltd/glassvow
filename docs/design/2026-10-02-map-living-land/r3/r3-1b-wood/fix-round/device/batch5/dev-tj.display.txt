@@ -1,0 +1,17 @@
+frames shown: 205; on-screen time in vsyncs: {1: 145, 2: 60}
+cpu-to-display latency ms: median 30.9 p95 46.4
+GPU busy per app frame ms: median 16.12 p95 19.99 max 21.94 (n=210)
+GPU first-to-last span per frame ms: median 24.55 p95 36.01 max 39.42
+  frame 3 shown 33.3 ms; GPU busy of frames f-2..f: ['0.1', '11.4', '1.1']
+  frame 7 shown 33.3 ms; GPU busy of frames f-2..f: ['14.1', '13.2', '15.1']
+  frame 9 shown 33.3 ms; GPU busy of frames f-2..f: ['15.1', '16.9', '18.0']
+  frame 13 shown 33.3 ms; GPU busy of frames f-2..f: ['19.7', '18.7', '17.7']
+  frame 15 shown 33.3 ms; GPU busy of frames f-2..f: ['17.7', '16.2', '16.6']
+  frame 17 shown 33.3 ms; GPU busy of frames f-2..f: ['16.6', '20.4', '18.8']
+  frame 23 shown 33.3 ms; GPU busy of frames f-2..f: ['15.5', '14.5', '12.3']
+  frame 27 shown 33.3 ms; GPU busy of frames f-2..f: ['13.9', '14.7', '16.7']
+  frame 29 shown 33.3 ms; GPU busy of frames f-2..f: ['16.7', '17.2', '17.4']
+  frame 33 shown 33.3 ms; GPU busy of frames f-2..f: ['18.1', '18.5', '16.0']
+  frame 35 shown 33.3 ms; GPU busy of frames f-2..f: ['16.0', '18.1', '17.3']
+  frame 39 shown 33.3 ms; GPU busy of frames f-2..f: ['13.7', '13.5', '14.5']
+GPU performance state share: {'Medium': '12%', 'Minimum': '88%'} induced: ['Yes']

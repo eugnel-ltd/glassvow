@@ -7,6 +7,7 @@ const Envelope = preload("res://presentation/map/landscape/foliage_envelope.gd")
 const GroundContacts = preload("res://presentation/map/landscape/ground_contacts.gd")
 const GatewaySites = preload("res://presentation/map/landscape/gateway_sites.gd")
 const Terrain = preload("res://presentation/map/landscape/terrain.gd")
+const ImpostorAtlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
 var tree_envelopes: Dictionary = {}
 var material_pool: Dictionary = {}
 var asset_scenes: Dictionary = {}
@@ -82,7 +83,8 @@ static var _requested: Dictionary = {}
 const ARCH: String = "amber-arch"
 
 
-## How long holding the kit has taken on the main thread (benches and probes).
+## How long holding the kit and readying the woodland's atlas has taken on the
+## main thread, waits included (benches and probes).
 static var preload_ms: float = 0.0
 
 
@@ -93,9 +95,12 @@ static func preload_scenes() -> void:
 
 
 ## Readies the next kit scene on the main thread and answers whether every one
-## is ready. A batched kind is loaded as its own copy, so its static template
-## takes the meshes without reading them back from the renderer; the arch is
-## loaded through the cache and held, as the worker loads it there. Stepped
+## is ready, and the woodland's impostor atlas with them (`ImpostorAtlas`:
+## ready, or unable to load; the foliage kinds it draws load no scene). Every
+## step's main-thread time counts in `preload_ms`. A batched kind is loaded as its own
+## copy, so its static template takes the meshes without reading them back
+## from the renderer; the arch is loaded through the cache and held, as the
+## worker loads it there. Stepped
 ## (the journey prefetch under the title, one scene per frame), the scenes load
 ## on the loader's threads, the next one asked for as this one is taken, so
 ## their meshes reach the GPU a scene per frame rather than together; a step
@@ -104,10 +109,18 @@ static func preload_scenes() -> void:
 ## renderer is kept in step, as the engine's own wait does, but without running
 ## the deferred calls that wait would run in the middle of a frame.
 static func preload_step(wait: bool = false) -> bool:
-	var kinds: Array = PROFILES.keys()
+	var started: int = Time.get_ticks_usec()
+	ImpostorAtlas.request()
+	var done: bool = _hold_next(wait) and ImpostorAtlas.prepare_step(wait)
+	preload_ms += (Time.get_ticks_usec() - started) / 1000.0
+	return done
+
+
+## Holds the next kit scene; true once every one is held.
+static func _hold_next(wait: bool) -> bool:
+	var kinds: Array = _scene_kinds()
 	if _held_kinds >= kinds.size():
 		return true
-	var started: int = Time.get_ticks_usec()
 	Meshes.prepare_unit_box()
 	var kind: String = kinds[_held_kinds]
 	var path: String = _path(kind)
@@ -118,7 +131,6 @@ static func preload_step(wait: bool = false) -> bool:
 	if _requested.has(path):
 		while ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 			if not wait:
-				preload_ms += (Time.get_ticks_usec() - started) / 1000.0
 				return false
 			RenderingServer.force_sync()
 			OS.delay_usec(500)
@@ -134,8 +146,14 @@ static func preload_step(wait: bool = false) -> bool:
 			.prepare_template(path, kind, scene)
 	if not failure.is_empty():
 		push_error("Journey kit: " + failure)
-	preload_ms += (Time.get_ticks_usec() - started) / 1000.0
 	return _held_kinds >= kinds.size()
+
+
+## The kinds whose scenes the kit holds: all but the foliage the woodland
+## draws as impostors.
+static func _scene_kinds() -> Array:
+	return PROFILES.keys().filter(func(kind: String) -> bool:
+		return not ImpostorAtlas.KIT_KINDS.has(kind))
 
 
 static func _request(kind: String) -> void:

@@ -1,0 +1,47 @@
+#!/bin/zsh
+# Lane R3.1b device batch 1: main 8815da34 (control) then the wood (candidate),
+# QA app only, under the shared batch lock. Every row is nonce-checked.
+set -u
+source /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/device/lib.zsh
+OUT=$D/batch1; mkdir -p $OUT
+# The shared lock (ipad_lock.sh's mkdir protocol), polled every 3 s rather
+# than 30, falling back to ipad_lock.sh for its stale-lock takeover.
+fast_acquire() {
+  local L=$FLOW/ipad.lock
+  while ! mkdir $L 2>/dev/null; do
+    local age=$(( $(date +%s) - $(stat -f %m $L/owner 2>/dev/null || date +%s) ))
+    (( age > 3600 )) && { $LOCK acquire $OWNER; return; }
+    sleep 3
+  done
+  echo $OWNER > $L/owner
+}
+fast_acquire
+trap "$LOCK release $OWNER" EXIT
+echo "lock $(date +%T)"
+UDID=$(udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+for build in ctl dev; do
+  IPAD_LOCK_OWNER=$OWNER $FLOW/qa_export.sh $R/$build-wt > $OUT/flow-$build.out 2>&1 || { echo "$build build failed"; tail -5 $OUT/flow-$build.out; exit 1; }
+  grep -E 'worktree|bundle id|Installed|installed' $OUT/flow-$build.out | redact | tail -3
+  echo "$build installed $(date +%T)"
+  probe_run $build-warm --probe-views=opening --probe-frames=120 --probe-modes=cadence
+  for i in 1 2 3; do
+    probe_run $build-j$i --map-steps=2 --probe-views=journey,whole,river
+    probe_run $build-f$i --probe-views=opening
+  done
+  trace_run $build-tj 4 --map-steps=2 --probe-views=journey --probe-modes=live
+  if [[ $build == dev ]]; then
+    trace_run dev-tj-kwood 4 --map-steps=2 --probe-views=journey --probe-modes=live --trace-kill=wood
+    for mode in motion rm; do
+      extra=(); [[ $mode == rm ]] && extra=(--probe-reduce-motion)
+      probe_run dev-burst-$mode --map-steps=2 --probe-views=journey --probe-modes=cadence --probe-frames=120 --probe-burst $extra
+      mkdir -p $OUT/burst-$mode
+      for f in burst-a.png burst-b.png burst-bare.png; do pull $f $OUT/burst-$mode/$f; done
+      python3 $D/burst.py $OUT/burst-$mode
+    done
+    xcrun devicectl device process launch --terminate-existing --device $UDID $QA -- --map --seed=1 --shape=pad-landscape --map-steps=2 2>&1 | redact > $OUT/launch-shot.txt
+    sleep 25
+    xcrun devicectl device capture screenshot --device $UDID --destination $OUT/dev-journey.png >/dev/null 2>&1
+    echo "shot $(date +%T)"
+  fi
+done
+echo "done $(date +%T)"

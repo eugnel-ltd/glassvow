@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+"""Woodland metrics on a capture (lane R3.1b fix round, scratch).
+
+cover_magenta: share of the safe frame where the wood's cards drawn flat
+               magenta show (`-magenta.png`: the R3 research's flat-magenta count).
+cover_d06 / cover_d01: share whose pixels the cards change, against `-bare.png`,
+               by more than 0.06 (the first round's metric) or 0.01.
+red:      hue 340-14, s >= 0.72, v >= 0.12 (the first round's mask).
+orange:   hue 14-45, s >= 0.72, v >= 0.12 (saturated orange and amber).
+crimson:  hue 340-360, s >= 0.5, v >= 0.12.
+wood_*:   of the magenta-covered pixels: red (340-14, s >= .5), orange (14-45,
+          s >= .5), other (greens, darks, browns).
+Usage: metrics.py <capture.png> | --target <png>
+"""
+import json, sys
+import numpy as np
+from PIL import Image
+
+def hsv(rgb):
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    mx = rgb.max(-1); mn = rgb.min(-1); d = mx - mn
+    h = np.zeros_like(mx); m = d > 1e-6
+    rr = m & (mx == r); gg = m & (mx == g) & ~rr; bb = m & ~rr & ~gg
+    h[rr] = ((g - b)[rr] / d[rr]) % 6
+    h[gg] = (b - r)[gg] / d[gg] + 2
+    h[bb] = (r - g)[bb] / d[bb] + 4
+    return h * 60.0, np.where(mx > 1e-6, d / np.maximum(mx, 1e-6), 0), mx
+
+def load(p, box=None):
+    im = Image.open(p).convert('RGB')
+    if box: im = im.crop(box)
+    return np.asarray(im).astype(float) / 255.0
+
+def colours(img, mask=None):
+    h, s, v = hsv(img)
+    sel = np.ones(h.shape, bool) if mask is None else mask
+    n = max(sel.sum(), 1)
+    out = {
+        'red': ((h <= 14) | (h >= 340)) & (s >= 0.72) & (v >= 0.12),
+        'orange': (h > 14) & (h <= 45) & (s >= 0.72) & (v >= 0.12),
+        'crimson': (h >= 340) & (s >= 0.5) & (v >= 0.12),
+    }
+    return {k: round(float((m & sel).sum()) / n, 4) for k, m in out.items()}
+
+def main():
+    if sys.argv[1] == '--target':
+        img = load(sys.argv[2], (0, 70, 1672, 830))
+        print(json.dumps({'target': colours(img)}))
+        return
+    path = sys.argv[1]
+    img = load(path)
+    H, W, _ = img.shape
+    l, t, r, b = 42, 76, 42, 46
+    # The chrome's insets are in the shape's own stage px: the phone's stage
+    # is 390 tall, the pad's and the desktop's 820.
+    ref_h = 390.0 if W / H > 2.0 else 820.0
+    sx = sy = H / ref_h
+    crop = lambda a: a[int(t * sy):H - int(b * sy), int(l * sx):W - int(r * sx)]
+    c = crop(img)
+    out = colours(c)
+    try:
+        bare = crop(load(path.replace('.png', '-bare.png')))
+        d = np.abs(c - bare).max(-1)
+        out['cover_d06'] = round(float((d > 0.06).mean()), 4)
+        out['cover_d01'] = round(float((d > 0.01).mean()), 4)
+    except FileNotFoundError:
+        pass
+    try:
+        mag = crop(load(path.replace('.png', '-magenta.png')))
+        m = ((mag[..., 0] - mag[..., 1]) > 0.25) & ((mag[..., 2] - mag[..., 1]) > 0.25)
+        out['cover_magenta'] = round(float(m.mean()), 4)
+        h, s, v = hsv(c)
+        n = max(m.sum(), 1)
+        red = ((h <= 14) | (h >= 340)) & (s >= 0.5) & (v >= 0.08)
+        orange = (h > 14) & (h <= 45) & (s >= 0.5) & (v >= 0.08)
+        out['wood_red'] = round(float((red & m).sum()) / n, 3)
+        out['wood_orange'] = round(float((orange & m).sum()) / n, 3)
+        out['wood_other'] = round(1 - out['wood_red'] - out['wood_orange'], 3)
+    except FileNotFoundError:
+        pass
+    print(json.dumps(out))
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,36 @@
+Lane R3.1b device batch 1, iPad 8 (A12), QA app io.fol2.glassvow.qa, 3 Oct 2026 23:14-23:33 under the batch lock (owner map-r31b).
+Control: main 8815da34. Candidate: af34d97a. Lean, pad, seed 1. 600-frame holds; missed = intervals over 25 ms.
+Rows: batch1/*.jsonl (one file per nonce). The control's opening-view launches 1 and 2 reused a label (a polling loop clobbered the label's counter), so their rows survive only in batch1/batch.log.txt:
+     ready 4906 ms | land total 1685 scenery 321 wood None | plants None plant None draws None | kit preload 53 ms
+     opening  cadence mean 17.969 p50 17.56 p95 24.70 missed 27 max 39.5 (600)
+     opening  live    mean 17.783 p50 16.87 p95 22.80 missed 13 max 38.8 (600)
+     ready 4753 ms | land total 1681 scenery 324 wood None | plants None plant None draws None | kit preload 52 ms
+     opening  cadence mean 17.826 p50 17.44 p95 24.44 missed 24 max 38.8 (600)
+     opening  live    mean 18.170 p50 16.83 p95 24.48 missed 26 max 42.8 (600)
+
+== control: main 8815da34
+  journey  cadence n=3  mean 16.746 / 16.858 / 16.802  p95 20.50 / 20.86 / 20.67  missed 6 / 7 / 5  video 254.1 / 254.1 / 254.1 MiB
+  journey  live    n=3  mean 16.661 / 16.662 / 16.660  p95 17.64 / 17.78 / 17.55  missed 0 / 0 / 0  video 254.1 / 254.1 / 254.1 MiB
+  opening  cadence n=1  mean 17.692  p95 25.69  missed 34  video 254.1 MiB
+  opening  live    n=1  mean 16.659  p95 19.11  missed 0  video 254.1 MiB
+  river    cadence n=3  mean 16.745 / 16.995 / 16.941  p95 20.13 / 21.11 / 21.71  missed 6 / 16 / 12  video 254.1 / 254.1 / 254.1 MiB
+  river    live    n=3  mean 16.666 / 16.662 / 16.690  p95 17.64 / 17.46 / 17.85  missed 0 / 0 / 1  video 254.1 / 254.1 / 254.1 MiB
+  whole    cadence n=3  mean 18.862 / 20.048 / 21.626  p95 27.48 / 27.48 / 27.61  missed 78 / 120 / 174  video 254.2 / 254.2 / 254.2 MiB
+  whole    live    n=3  mean 16.689 / 16.691 / 16.717  p95 19.26 / 19.56 / 19.22  missed 0 / 1 / 0  video 254.2 / 254.2 / 254.2 MiB
+  cold opens (ms to land ready), n=5, mean 4853: ctl-f13 4739, ctl-j1 4832, ctl-j2 4873, ctl-j3 4905, ctl-tj 4916
+  land build (ms): total 1664 scenery 318 wood None , total 1712 scenery 322 wood None , total 1740 scenery 327 wood None , total 1829 scenery 361 wood None 
+== candidate: the wood
+  journey  cadence n=3  mean 16.660 / 16.660 / 16.660  p95 18.78 / 18.85 / 18.77  missed 0 / 0 / 0  video 258.6 / 258.6 / 258.8 MiB
+  journey  live    n=3  mean 16.661 / 16.660 / 16.663  p95 18.52 / 17.68 / 17.68  missed 0 / 0 / 0  video 258.6 / 258.6 / 258.8 MiB
+  opening  cadence n=3  mean 16.661 / 16.664 / 16.666  p95 19.72 / 19.36 / 19.64  missed 0 / 0 / 0  video 260.6 / 258.6 / 258.6 MiB
+  opening  live    n=3  mean 16.658 / 16.662 / 16.662  p95 19.41 / 19.35 / 19.14  missed 0 / 0 / 0  video 260.6 / 258.6 / 258.6 MiB
+  river    cadence n=3  mean 16.656 / 16.659 / 16.662  p95 18.65 / 18.56 / 18.67  missed 0 / 0 / 0  video 258.6 / 258.6 / 258.8 MiB
+  river    live    n=3  mean 16.662 / 16.663 / 16.661  p95 17.60 / 17.68 / 17.77  missed 0 / 0 / 0  video 258.6 / 258.6 / 258.8 MiB
+  whole    cadence n=3  mean 16.662 / 16.661 / 16.667  p95 20.12 / 19.93 / 19.83  missed 0 / 0 / 0  video 258.8 / 258.8 / 258.9 MiB
+  whole    live    n=3  mean 16.661 / 16.661 / 16.658  p95 19.49 / 19.27 / 19.44  missed 0 / 0 / 0  video 258.8 / 258.8 / 258.9 MiB
+  cold opens (ms to land ready), n=10, mean 4930: dev-burst-motion 4805, dev-burst-rm 4795, dev-f13 4919, dev-f13 4940, dev-f13 4800, dev-j1 5175, dev-j2 4988, dev-j3 4813, dev-tj 5253, dev-tj-kwood 4812
+  land build (ms): total 1745 scenery 394 wood 80 {'draws': 12.6, 'plant': 67.577}, total 1743 scenery 399 wood 83 {'draws': 12.277, 'plant': 70.189}, total 1835 scenery 428 wood 78 {'draws': 12.889, 'plant': 64.651}, total 1787 scenery 405 wood 83 {'draws': 13.717, 'plant': 69.882}
+
+Woodland motion on the device (stage images 0.6 s apart, the air hidden; burst-*.txt):
+  motion on: {'woodland_share': 0.4642, 'changed_in_wood': 0.0371, 'changed_all': 0.0202}
+  Reduce Motion on: {'woodland_share': 0.4633, 'changed_in_wood': 0.0021, 'changed_all': 0.0026}

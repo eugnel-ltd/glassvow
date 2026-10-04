@@ -1,0 +1,71 @@
+extends SceneTree
+## Scratch (lane R3.1b, never committed): R2's pin-contrast mount
+## (docs/.../proof/r2/concept_look.gd.txt with concept "none"): the production
+## WorldMapScreen and RunHud mounted directly, seed 1, two steps in, Act I,
+## pins held still, the stage live. LEAN=1 for the lean profile, STILL=1 for
+## Reduce Motion. Prints PINS and saves the window.
+##   godot --path <wt> -s look2.gd -- --shape=pad-landscape --output=x.png [--locale=zh-Hant]
+
+func _initialize() -> void:
+	_run.call_deferred()
+
+
+func _run() -> void:
+	var shape: StringName = &"pad-landscape"
+	var output: String = ""
+	var locale: StringName = &"en"
+	var steps: int = 2
+	for arg: String in OS.get_cmdline_user_args():
+		var value: String = arg.get_slice("=", 1)
+		if arg.begins_with("--shape="): shape = StringName(value)
+		elif arg.begins_with("--output="): output = value
+		elif arg.begins_with("--locale="): locale = StringName(value)
+		elif arg.begins_with("--steps="): steps = int(value)
+	if OS.get_environment("STILL") == "1":
+		Preferences.active.reduce_motion = true
+	if OS.get_environment("LEAN") == "1":
+		MapScene.lean_override = 1
+	var dimensions: Vector2i = StageShape.REFERENCES[shape]
+	DisplayServer.window_set_size(dimensions)
+	root.size = dimensions
+	root.content_scale_size = dimensions
+	Locale.active = Locale.new(locale)
+	var content: ContentDB = ContentDB.load_full()
+	Locale.active.hydrate_content(content)
+	var run: RunState = RunState.new_run(content, 1)
+	var world_map: WorldMap = WorldMap.for_run(run, content)
+	for step: int in range(steps):
+		var next: Array[int] = world_map.reachable()
+		if not next.is_empty():
+			world_map.enter(next[0])
+			world_map.clear_current()
+	var screen: WorldMapScreen = WorldMapScreen.new(world_map, content, shape)
+	root.add_child(screen)
+	screen.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	screen.size = Vector2(dimensions)
+	screen.refresh(run)
+	screen.set_survey_retired(steps > 0)
+	root.add_child(RunHud.new(run, content, shape))
+	var waited: int = 0
+	while screen.landscape_pending() and waited < 3000:
+		await process_frame
+		waited += 1
+	for frame: int in range(60):
+		await process_frame
+	screen._layout_waystones()
+	var pins: Array = []
+	for stone: GlassWaystone in screen._waystones:
+		if stone.visible:
+			var centre: Vector2 = stone.get_global_rect().get_center()
+			pins.append([centre.x, centre.y, stone.pane_radius()])
+	print("PINS ", JSON.stringify(pins))
+	for stone: GlassWaystone in screen._waystones:
+		stone.set_process(false)
+	screen._map_scene.set_live(true)
+	for frame: int in range(24):
+		await process_frame
+	print("LOOK2 ", JSON.stringify({"layout_digest": screen.layout_digest(), "lean": MapScene.lean_profile(),
+		"still": Preferences.active.reduce_motion}))
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(output)
+	quit(0)

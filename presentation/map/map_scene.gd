@@ -589,6 +589,10 @@ func _screen_to_world(delta_px: Vector2) -> Vector2:
 func _process(delta: float) -> void:
 	if not _abandoned.is_empty():
 		reap()
+	# Before the land's first frame and on every frame after (settle frames
+	# and live ones too), so Reduce Motion never lets the land move.
+	if is_journey_act():
+		MapJourneyLandscape.LandMotion.apply(not Preferences.active.reduce_motion)
 	if _journey_pending:
 		_poll_journey()
 	_sync_grain()
@@ -1084,7 +1088,6 @@ func _rest_cadence() -> void:
 		return
 	_rest_tick += 1
 	var every: int = REST_EVERY_REDUCED if Preferences.active.reduce_motion else REST_EVERY
-	MapJourneyLandscape.LandMotion.apply(not Preferences.active.reduce_motion)
 	if _rest_tick % every == 0:
 		_render(SubViewport.UPDATE_ONCE)
 

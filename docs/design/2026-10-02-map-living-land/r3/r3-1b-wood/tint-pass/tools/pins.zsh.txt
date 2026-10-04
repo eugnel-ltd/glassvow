@@ -1,0 +1,9 @@
+#!/bin/zsh
+# pins.zsh <outdir>: R2's pin-contrast mount (look4.gd) at the three shapes, lean, A12 Metal condition.
+OUT=$1; mkdir -p $OUT
+for shape in pad-landscape phone-landscape desktop-landscape; do
+  LEAN=1 GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 240 godot --path /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/wt-r31b --rendering-driver metal --rendering-method mobile --position 1400,900 \
+    -s /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/fix/look4.gd -- --shape=$shape --output=$OUT/contrast-$shape.png > $OUT/contrast-$shape.log 2>&1
+  python3 /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/tools/pin_contrast.py $OUT/contrast-$shape.png $OUT/contrast-$shape.log > $OUT/contrast-$shape.json
+  echo "$shape $(python3 -c "import json; d=json.load(open('$OUT/contrast-$shape.json')); print('rim min', d['min_rim_vs_land'], 'disc min', d['min_disc_vs_land'], 'pins', len(d['pins']))") shader $(grep -c 'SHADER ERROR' $OUT/contrast-$shape.log) script $(grep -c 'SCRIPT ERROR' $OUT/contrast-$shape.log)"
+done

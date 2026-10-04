@@ -1,0 +1,33 @@
+Mac proof at 21b4cdab (fix-round/tools/mac_proof.zsh.txt; captures in the lane's scratch, fix/proof3/).
+
+pad-landscape en lean: exit 0 0 shader errors, 0 script errors
+pad-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+pad-landscape en full: exit 0 0 shader errors, 0 script errors
+pad-landscape en full whole: exit 0 0 shader errors, 0 script errors
+pad-landscape en lean reduce-motion: exit 0 0 shader errors, 0 script errors
+pad-landscape contrast rim min 1.09 disc min 1.18 pins 10 shader errors 0
+phone-landscape en lean: exit 0 0 shader errors, 0 script errors
+phone-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+phone-landscape en full: exit 0 0 shader errors, 0 script errors
+phone-landscape en full whole: exit 0 0 shader errors, 0 script errors
+phone-landscape en lean reduce-motion: exit 0 0 shader errors, 0 script errors
+phone-landscape contrast rim min 1.06 disc min 1.0 pins 10 shader errors 0
+desktop-landscape en lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape en full: exit 0 0 shader errors, 0 script errors
+desktop-landscape en full whole: exit 0 0 shader errors, 0 script errors
+desktop-landscape en lean reduce-motion: exit 0 0 shader errors, 0 script errors
+desktop-landscape contrast rim min 1.09 disc min 1.18 pins 10 shader errors 0
+pad journey lean: exit 0 0 shader errors, 0 script errors
+pad journey metrics {"red": 0.2253, "orange": 0.0478, "crimson": 0.1077, "cover_d06": 0.3992, "cover_d01": 0.5086, "cover_magenta": 0.4544, "wood_red": 0.542, "wood_orange": 0.077, "wood_other": 0.381}
+pad whole lean: exit 0 0 shader errors, 0 script errors
+pad whole metrics {"red": 0.2082, "orange": 0.031, "crimson": 0.1078, "cover_d06": 0.372, "cover_d01": 0.4721, "cover_magenta": 0.439, "wood_red": 0.497, "wood_orange": 0.054, "wood_other": 0.449}
+pad fresh lean: exit 0 0 shader errors, 0 script errors
+pad fresh metrics {"red": 0.1739, "orange": 0.0504, "crimson": 0.082, "cover_d06": 0.3922, "cover_d01": 0.4943, "cover_magenta": 0.4581, "wood_red": 0.415, "wood_orange": 0.057, "wood_other": 0.528}
+phone journey lean: exit 0 0 shader errors, 0 script errors
+phone journey metrics {"red": 0.1984, "orange": 0.0488, "crimson": 0.087, "cover_d06": 0.3888, "cover_d01": 0.4824, "cover_magenta": 0.4427, "wood_red": 0.484, "wood_orange": 0.06, "wood_other": 0.456}
+pad motion: exit 0 0 shader errors, 0 script errors
+pad motion burst {'woodland_px': 306801, 'changed_in_wood': 0.0169, 'changed_outside': 0.0024}
+pad still: exit 0 0 shader errors, 0 script errors
+pad reduce-motion burst {'woodland_px': 305542, 'changed_in_wood': 0.0014, 'changed_outside': 0.0007}
+shader errors in all logs: 0, script errors: 0

@@ -1,0 +1,19 @@
+#!/bin/zsh
+# Lane R3.1b device batch 2, continued: the traces, with a screenshot before
+# each recording (as the trace spike recorded). Takes over its own lock
+# (ipad_lock.sh acquire returns at once for the holder).
+set -u
+source /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/device/lib.zsh
+OUT=$D/batch2; mkdir -p $OUT
+$LOCK acquire $OWNER
+trap "$LOCK release $OWNER" EXIT
+echo "lock held $(date +%T)"
+UDID=$(udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+trace_run dev-tj2 4 --map-steps=2 --probe-views=journey --probe-modes=live
+trace_run dev-tj2-kwood 4 --map-steps=2 --probe-views=journey --probe-modes=live --trace-kill=wood
+IPAD_LOCK_OWNER=$OWNER $FLOW/qa_export.sh $R/ctl-wt > $OUT/flow-ctl.out 2>&1 || { echo "ctl build failed"; tail -5 $OUT/flow-ctl.out; exit 1; }
+grep -E 'worktree|bundle id' $OUT/flow-ctl.out | redact | tail -2
+echo "ctl installed $(date +%T)"
+probe_run ctl-warm --probe-views=opening --probe-frames=120 --probe-modes=cadence
+trace_run ctl-tj2 4 --map-steps=2 --probe-views=journey --probe-modes=live
+echo "done $(date +%T)"

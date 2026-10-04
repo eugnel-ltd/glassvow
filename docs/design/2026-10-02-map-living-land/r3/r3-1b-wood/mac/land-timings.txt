@@ -1,0 +1,7 @@
+Mac (M1 Max), A12 Metal condition, pad, lean, seed 1, two steps in: the land's build on the worker (MapJourneyLandscape.timings_ms) and video memory, three launches each, main 8815da34 against the branch at 76de88ce.
+ctl-1 {'total': 1340, 'terrain': 696, 'scenery': 304, 'wood': None} "vram_mib":191.0
+ctl-2 {'total': 1214, 'terrain': 699, 'scenery': 238, 'wood': None} "vram_mib":191.0
+ctl-3 {'total': 1262, 'terrain': 694, 'scenery': 243, 'wood': None} "vram_mib":191.1
+new-1 {'total': 1362, 'terrain': 713, 'scenery': 321, 'wood': 73} "vram_mib":213.2
+new-2 {'total': 1341, 'terrain': 702, 'scenery': 311, 'wood': 71} "vram_mib":195.2
+new-3 {'total': 1345, 'terrain': 706, 'scenery': 310, 'wood': 70} "vram_mib":195.2

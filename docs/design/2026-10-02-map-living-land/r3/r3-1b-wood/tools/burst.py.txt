@@ -1,0 +1,14 @@
+"""Woodland motion on the device's stage images (burst-a/b/bare): the share of
+woodland pixels (a against bare) changing by more than 0.06 between a and b
+(0.6 s apart, air hidden), and the share of all pixels that change."""
+import sys
+import numpy as np
+from PIL import Image
+d = sys.argv[1]
+load = lambda n: np.asarray(Image.open(f"{d}/{n}").convert("RGB")).astype(float) / 255.0
+a, b, bare = load("burst-a.png"), load("burst-b.png"), load("burst-bare.png")
+wood = np.abs(a - bare).max(-1) > 0.06
+moved = np.abs(a - b).max(-1) > 0.06
+print({"woodland_share": round(float(wood.mean()), 4),
+       "changed_in_wood": round(float((moved & wood).sum() / max(wood.sum(), 1)), 4),
+       "changed_all": round(float(moved.mean()), 4)})

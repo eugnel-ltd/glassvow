@@ -1,0 +1,17 @@
+#!/bin/zsh
+# analyse_run.zsh <out-dir> <label>: export the trace's Metal tables and write
+# <label>.passes.txt (per-encoder GPU time by frame shape) and, for a counters
+# run, <label>.counters.txt. Exports go to <out-dir>/x-<label>/ (scratch only).
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+T=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/tracetools
+OUT=$1; L=$2; X=$OUT/x-$L; mkdir -p $X
+tables=(metal-gpu-intervals metal-application-encoders-list displayed-surfaces-interval gpu-performance-state-intervals)
+[[ $L == *ctr* ]] && tables+=(gpu-counter-info gpu-counter-value)
+for s in $tables; do
+  [[ -s $X/$s.xml ]] || xcrun xctrace export --input $OUT/$L.trace --xpath "/trace-toc/run[@number=\"1\"]/data/table[@schema=\"$s\"]" > $X/$s.xml 2>/dev/null
+done
+P="glassvow ($(cat $OUT/$L.pid))"
+python3 $T/frames.py $X "$P" > $OUT/$L.passes.txt 2>&1
+python3 $T/display.py $X "$P" > $OUT/$L.display.txt 2>&1
+[[ $L == *ctr* ]] && python3 $T/counters.py $X "$P" > $OUT/$L.counters.txt 2>&1
+head -3 $OUT/$L.passes.txt

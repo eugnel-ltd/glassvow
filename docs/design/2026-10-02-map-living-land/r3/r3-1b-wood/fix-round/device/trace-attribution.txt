@@ -1,0 +1,14 @@
+Metal System Trace, iPad 8, QA app, lean, pad, seed 1, Journey view two steps in, the stage forced live, 4 s mid-hold (fix-round/tools/attribution.py.txt over frames.py's passes).
+Reference clock: the first round's control film-grain passes (3.39 ms, device/batch2/ctl-tj2); each run scaled by ref / its own grain time.
+
+Batch 7, the final head 21b4cdab (dev-tj: the device disconnected after 29 stage frames; its probe row over the whole 45 s hold: 2,699 frames, mean 16.675 ms, 1 missed):
+ctl-tj                       267 stage frames, grain 3.37 ms -> clock factor 1.007 | main 3D pass V 1.92 + F 4.12 = 6.03 ms | shadow and pre-main 0.71 ms | GPU busy 13.38 ms (raw 13.29, p95 raw 15.45)
+dev-tj                       29 stage frames, grain 4.47 ms -> clock factor 0.758 | main 3D pass V 0.54 + F 2.60 = 3.15 ms | shadow and pre-main 0.73 ms | GPU busy 10.39 ms (raw 13.70, p95 raw 15.66)
+dev-tj-kwood                 270 stage frames, grain 3.84 ms -> clock factor 0.884 | main 3D pass V 0.59 + F 3.86 = 4.45 ms | shadow and pre-main 0.73 ms | GPU busy 11.91 ms (raw 13.47, p95 raw 15.38)
+
+Batch 5, 08b32b3f (before the cards turned matte; ctl-tj: the device disconnected after 26 stage frames):
+ctl-tj                       26 stage frames, grain 3.44 ms -> clock factor 0.985 | main 3D pass V 1.87 + F 4.02 = 5.90 ms | shadow and pre-main 0.74 ms | GPU busy 12.38 ms (raw 12.56, p95 raw 15.16)
+dev-tj                       206 stage frames, grain 4.54 ms -> clock factor 0.747 | main 3D pass V 0.56 + F 2.75 = 3.32 ms | shadow and pre-main 0.88 ms | GPU busy 11.17 ms (raw 14.96, p95 raw 18.73)
+dev-tj-kwood                 269 stage frames, grain 4.04 ms -> clock factor 0.840 | main 3D pass V 0.57 + F 3.73 = 4.30 ms | shadow and pre-main 0.71 ms | GPU busy 11.35 ms (raw 13.52, p95 raw 15.17)
+
+GPU performance state share in each hold (display.txt): batch 7 ctl Medium 88%, dev Minimum 85%, dev-kwood Minimum 64%; batch 5 ctl Medium 91%, dev Minimum 88% (frames over the vsync: 60 of 205 shown for two vsyncs), dev-kwood Minimum 68%.

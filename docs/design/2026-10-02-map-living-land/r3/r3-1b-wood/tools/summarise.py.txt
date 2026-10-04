@@ -1,0 +1,37 @@
+"""Summarises lane R3.1b's device batch: per build, view and mode, the 600-frame
+holds of every nonce-checked launch (mean, p95, missed > 25 ms), and the cold
+opens (`ready_ms`, ms from engine start to Act I's land ready), video memory and
+the wood's build on the A12. The first launch after each install (pipeline
+compiles) is reported apart."""
+import glob, json, os, re, sys
+d = sys.argv[1]
+rows = {}
+for path in sorted(glob.glob(os.path.join(d, "archive", "*.jsonl"))):
+    label = re.sub(r"-\d+\.jsonl$", "", os.path.basename(path))
+    nonce = re.search(r"-(\d+)\.jsonl$", path).group(1)
+    recs = [json.loads(l) for l in open(path)]
+    assert all(r.get("nonce") == nonce for r in recs), path
+    rows.setdefault(label.split("-")[0], []).append((label, recs))
+out = []
+for build in ("ctl", "dev"):
+    out.append("== %s" % {"ctl": "control: main 8815da34", "dev": "candidate: the wood"}[build])
+    holds = {}
+    opens = []
+    for label, recs in rows.get(build, []):
+        for r in recs:
+            if r["probe"] == "ready" and "warm" not in label:
+                opens.append((label, r["ready_ms"], r["land_ms"].get("total"), r["land_ms"].get("scenery"),
+                              r["land_ms"].get("wood"), (r.get("wood") or {}).get("timings_ms", {})))
+            if r["probe"] == "hold_start":
+                vm = r["render"]["video_mib"]
+            if r["probe"] == "hold_end" and r["frames"] == 600 and "warm" not in label and "burst" not in label:
+                holds.setdefault((r["view"], r["mode"]), []).append((r["mean_ms"], r["p95_ms"], r["missed"], vm))
+    for (view, mode), hs in sorted(holds.items()):
+        out.append("  %-8s %-7s n=%d  mean %s  p95 %s  missed %s  video %s MiB" % (view, mode, len(hs),
+            " / ".join("%.3f" % h[0] for h in hs), " / ".join("%.2f" % h[1] for h in hs),
+            " / ".join(str(h[2]) for h in hs), " / ".join(str(h[3]) for h in hs)))
+    if opens:
+        mean = sum(o[1] for o in opens) / len(opens)
+        out.append("  cold opens (ms to land ready), n=%d, mean %.0f: %s" % (len(opens), mean, ", ".join("%s %d" % (o[0], o[1]) for o in opens)))
+        out.append("  land build (ms): " + ", ".join("total %s scenery %s wood %s %s" % (o[2], o[3], o[4], o[5] or "") for o in opens[:4]))
+print("\n".join(out))

@@ -1,0 +1,22 @@
+lock held 00:13:47
+== dev-tj2 nonce 15453995 pid 39322 00:14:51: rows fresh
+   ready 4841 ms | land total 1763 scenery 401 wood 82 | plants 2806 plant 69.146 draws 13.255 | kit preload 27 ms
+   journey  live    stage [885, 663] draws 80 prims 56946 shadow 71/33193 video 258.6 MiB
+   journey  live    mean 16.681 p50 16.68 p95 18.16 missed 2 max 44.9 (2698)
+== dev-tj2-kwood nonce 1448214992 pid 39327 00:16:45: rows fresh
+   ready 5162 ms | land total 1777 scenery 404 wood 83 | plants 2806 plant 69.224 draws 13.626 | kit preload 27 ms
+   kill {'nonce': '1448214992', 'probe': 'kill', 'what': 'wood'}
+   journey  live    stage [885, 663] draws 71 prims 54920 shadow 60/28673 video 244.8 MiB
+   journey  live    mean 16.668 p50 16.67 p95 17.03 missed 1 max 33.0 (2700)
+worktree:        /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/ctl-wt (8815da34)
+bundle id:       io.fol2.glassvow.qa
+ctl installed 00:17:42
+== ctl-warm nonce 136830724 00:18:05: rows fresh
+   ready 5988 ms | land total 1640 scenery 314 wood None | plants None plant None draws None | kit preload 52 ms
+   opening  cadence stage [885, 663] draws 111 prims 91472 shadow 78/30993 video 254.1 MiB
+   opening  cadence mean 16.823 p50 17.26 p95 22.19 missed 2 max 28.5 (120)
+== ctl-tj2 nonce 36093606 pid 39353 00:19:05: rows fresh
+   ready 4813 ms | land total 1715 scenery 326 wood None | plants None plant None draws None | kit preload 51 ms
+   journey  live    stage [885, 663] draws 87 prims 72424 shadow 63/28817 video 254.1 MiB
+   journey  live    mean 16.699 p50 16.68 p95 18.05 missed 3 max 79.4 (2695)
+done 00:19:05
