@@ -380,7 +380,7 @@ either.
 | p95 | ≤ control | cadence: lower at every view; live: within 0.05 ms at Journey and the opening, +0.13 ms at the river, +0.42 ms at Whole act (all vsync-bound) |
 | Missed (> 25 ms) | ≤ control | 0 in every candidate hold (main 0–150) |
 | Cards for the wood | ≤ 1.3 ms at the reference clock | −1.30 ms in the main pass, ±0.00 ms in the shadow renders (a saving) |
-| Cold open | ≤ +0.15 s | +45 ms on later launches: 4,683 ms mean to the land ready over six launches against 4,638 over six (the wood on the A12 worker: planting 105–111 ms, draws 17–19 ms; the kit's main-thread preload, the atlas included, 27–40 ms against main's 46–53). The first open after an install is separate: open issue 1. |
+| Cold open | ≤ +0.15 s | +45 ms on later launches: 4,683 ms mean to the land ready over six launches against 4,638 over six (the wood on the A12 worker: planting 105–111 ms, draws 17–19 ms; the kit's main-thread preload, the atlas included, 27–40 ms against main's 46–53). **Not met by the first open after an install:** one frame of 3.5 s at install 1 of the final re-check (main's control 1.0 s; 0.4–3.8 s in the fix round). It is a recorded exception, not a pass. The orchestrator accepts it for this lane because the stall is a one-time shader compile that main already has, and its fix belongs to #682 for every first-use path ([open issue 1](#open-issues)). |
 | Payload | ≤ +7 MB | +4.7 MiB: the iOS pck estimate 272.3 → 277.0 MiB (`tools/payload_report.py`; the atlases did not change in the fix round) |
 | VRAM | ≤ +8 MiB | every reading reported: the control's 27 hold starts 254.1–254.7 MiB, the candidate's 27 258.6–260.7 MiB; +4.5 MiB median (+3.9 to +6.6 across the extremes) |
 | Canopy cover in the safe frame | ≥ 45% | flat-magenta count: 45.4% Journey, 45.8% fresh-run opening, 43.9% Whole act (18% of whose safe frame is off the land); phone Journey 44.3% |
@@ -388,7 +388,7 @@ either.
 | Woodland motion | ≤ 4% of woodland pixels in 0.6 s | 3.6% on the iPad 8 (stage images), 1.7% on the Mac |
 | Reduce Motion | verified on the device | 0.53% of woodland pixels change in 0.6 s with Reduce Motion on (3.6% off); 0.14% on the Mac |
 | Pins | a tripwire, not a legibility gate: no rim minimum below its re-baseline, pad 1.10, phone 1.05, desktop 1.10 (R2's method and mount at `55182330`; open issue 2) | after the tint pass: pad 1.11, phone 1.05, desktop 1.11 (`tint-pass/pin-contrast.txt`). The fix round, against main like for like: pad 1.02 → 1.09, desktop 1.03 → 1.09, phone 1.10 → 1.06 |
-| No crown on a centreline, seat or touch square | | none at six seeds, against the roads, decks, flames, rivers, rocks and seats themselves, at the pad's and the phone's touch squares; pinned by `test_map_wood` |
+| No crown on a centreline, seat or touch square | | none at six seeds, against the roads, decks, flames, rivers, rocks and seats themselves, at the pad's and the phone's touch squares; `test_map_wood` plants and checks a land at each (the pad's 1.4 m square added after the final review: a pad-only break of the seat guard fails it, and the old test passed it) |
 
 
 ## Mac proof
