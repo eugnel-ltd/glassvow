@@ -298,12 +298,14 @@ var _shine: Control = null
 var _thick: float = 0.0
 var _side: Color = Color.BLACK
 ## TURNING OVER (`turn`): the pose the card is laid at, the share of it the
-## slab itself wears (a live turn's), the picture turn's material and the live
-## turn's back plate. Rest, and nothing built, until the card is first turned.
+## slab itself wears (a live turn's), the picture turn's material, and the live
+## turn's back plate with the bake it wears. Rest, and nothing built, until the
+## card is first turned.
 var _pose: Basis = Basis.IDENTITY
 var _slab_turn: Basis = Basis.IDENTITY
 var _warp: ShaderMaterial = null
 var _back_plate: MeshInstance3D = null
+var _plate_back: CardBacks.Baked = null
 var _tilt: Vector2 = Vector2.ZERO         # (rot_x, rot_y) degrees
 var _tilt_v: Vector2 = Vector2.ZERO
 var _tilt_target: Vector2 = Vector2.ZERO
@@ -1246,14 +1248,22 @@ func _process(delta: float) -> void:
 ## spreads and thins, and it slips out from under whichever side has lifted —
 ## the reading that ties the two together. It never rotates, because a shadow
 ## on a flat table cannot.
+##
+## The pointer's tilt is the table's, so it leans a turned card: either
+## renderer wears the tilt over the turn's pose, and the lift. The live turn
+## puts both on the slab; the picture turn re-projects a picture of the flat
+## card, so its slab stays flat and both ride in the warp instead.
 func _apply_transform() -> void:
-	if CardTurn.is_rest(_slab_turn):
+	var lift: float = _lift
+	if _picturing():
+		_slab.basis = Basis.IDENTITY
+		lift = 0.0
+		CardTurn.set_pose(_warp, CardTurn.pose(_tilt.y, _tilt.x) * _pose, _lift)
+	elif CardTurn.is_rest(_slab_turn):
 		_slab.rotation_degrees = Vector3(_tilt.x, _tilt.y, 0.0)
 	else:
-		# The pointer's tilt is the table's, so it leans the turned card.
-		_slab.basis = Basis.from_euler(Vector3(deg_to_rad(_tilt.x),
-			deg_to_rad(_tilt.y), 0.0)) * _slab_turn
-	_slab.position.z = _lift
+		_slab.basis = CardTurn.pose(_tilt.y, _tilt.x) * _slab_turn
+	_slab.position.z = lift
 	var h: float = _lift / MAX_LIFT
 	_shadow.position = Vector2(_tilt.y, _tilt.x) * 0.28 + Vector2(0.0, 4.0 * h)
 	_shadow.modulate.a = 1.0 - 0.22 * h
@@ -1271,25 +1281,26 @@ func _apply_transform() -> void:
 ## which is painted on the canvas over the card at rest, waits for rest.
 ##
 ## turn(0, 0, either) is rest: no material on the picture, the plate hidden,
-## the slab where it was built, the stage rendered once more if it had turned.
-## The plate and the material are built at the card's first turn.
+## the slab where it was built, the stage rendered once more if it had moved.
+## The plate and the material are built at the card's first turn, and each
+## turn dresses them in the table's back as it is then (CardTurn.back).
+##
+## A card under the pointer turns too, its tilt and lift over the pose
+## (`_apply_transform`); for the picture turn its slab lies flat meanwhile,
+## so the picture warped is the flat card's.
 func turn(yaw: float, pitch: float, live: bool) -> void:
 	_pose = CardTurn.pose(yaw, pitch)
 	var turned: bool = not CardTurn.is_rest(_pose)
-	var slab_moves: bool = live and turned or not CardTurn.is_rest(_slab_turn)
 	_slab_turn = _pose if live and turned else Basis.IDENTITY
-	if live and turned and _back_plate == null:
-		_back_plate = CardTurn.plate(CardTurn.back(), _thick)
-		if _back_plate != null:
-			_slab.add_child(_back_plate)
-			_lit.append(_back_plate.material_override as ShaderMaterial)
-			_push_lamp()
+	var back: CardBacks.Baked = CardTurn.back()
+	if live and turned:
+		_dress_plate(back)
 	if _back_plate != null:
 		_back_plate.visible = live and turned
 	if turned and not live:
 		if _warp == null:
-			_warp = CardTurn.picture(CardTurn.back(), _thick, _side)
-		CardTurn.set_pose(_warp, _pose)
+			_warp = CardTurn.picture(_thick, _side)
+		CardTurn.set_back(_warp, back)
 		_display.material = _warp
 	else:
 		_display.material = null
@@ -1297,10 +1308,34 @@ func turn(yaw: float, pitch: float, live: bool) -> void:
 		_shine.visible = not turned
 	_shadow.pivot_offset = size * 0.5
 	_shadow.scale = CardTurn.footprint(_pose)
+	var was: Transform3D = _slab.transform
 	_apply_transform()
-	# A hovered card's stage already renders every frame.
-	if slab_moves and not _hovered and not is_processing():
+	# A held or settling card's stage already renders every frame.
+	if not _slab.transform.is_equal_approx(was) and not _hovered and not is_processing():
 		_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+
+## Whether the picture turn is on: the card's picture wears the warp.
+func _picturing() -> bool:
+	return _warp != null and _display.material == _warp
+
+
+## The live turn's back plate, wearing `back`: built at the card's first live
+## turn, and again whenever the table's back has changed since (a bake that
+## landed after it, another back chosen, or the bake dropped: then none).
+func _dress_plate(back: CardBacks.Baked) -> void:
+	if back == _plate_back and (_back_plate != null or back == null):
+		return
+	if _back_plate != null:
+		_lit.erase(_back_plate.material_override as ShaderMaterial)
+		_back_plate.free()
+		_back_plate = null
+	_plate_back = back
+	_back_plate = CardTurn.plate(back, _thick)
+	if _back_plate != null:
+		_slab.add_child(_back_plate)
+		_lit.append(_back_plate.material_override as ShaderMaterial)
+		_push_lamp()
 
 
 static func _font(path: String, tracking: int) -> Font:

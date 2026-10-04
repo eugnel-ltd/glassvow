@@ -88,13 +88,11 @@ static func wearing() -> String:
 	return _wearing
 
 
-## The picture turn's material for a card of this thickness and side colour,
-## showing `back` on its far face (null shows none). The pose is set with
-## `set_pose`.
-static func picture(back_bake: CardBacks.Baked, thick: float, side: Color) -> ShaderMaterial:
+## The picture turn's material for a card of this thickness and side colour.
+## Its back is set with `set_back` and its pose with `set_pose`.
+static func picture(thick: float, side: Color) -> ShaderMaterial:
 	var m: ShaderMaterial = ShaderMaterial.new()
 	m.shader = PICTURE_SHADER
-	m.set_shader_parameter("back_tex", back_bake.stage if back_bake != null else null)
 	m.set_shader_parameter("lens", CardView.lens())
 	m.set_shader_parameter("rect", Vector2(CardView.CARD_W, CardView.CARD_H)
 		+ Vector2(CardView.PAD_3D, CardView.PAD_3D) * 2.0)
@@ -106,8 +104,17 @@ static func picture(back_bake: CardBacks.Baked, thick: float, side: Color) -> Sh
 	return m
 
 
-static func set_pose(m: ShaderMaterial, p: Basis) -> void:
+## Show `back_bake` on the picture turn's far face; null shows it clear, as
+## the live turn's slab is without its plate.
+static func set_back(m: ShaderMaterial, back_bake: CardBacks.Baked) -> void:
+	m.set_shader_parameter("back_tex", back_bake.stage if back_bake != null else null)
+
+
+## Lay the picture turn's slab at `p`, `lift` card px toward the lens: what
+## the live turn puts on the slab itself.
+static func set_pose(m: ShaderMaterial, p: Basis, lift: float = 0.0) -> void:
 	m.set_shader_parameter("pose", p)
+	m.set_shader_parameter("lift", lift)
 
 
 ## The live turn's back plate for a slab of this thickness: the face's

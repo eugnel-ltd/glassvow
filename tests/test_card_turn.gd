@@ -1,8 +1,10 @@
 extends RefCounted
 ## Turning a card over (issue #657, PR 3): one pose maths for both renderers,
-## CardView.turn's two renderers and its rest, the back plate a bake dresses a
-## card in, a back cut without a stone, the pre-warm's bake and warmer, and
-## every fight's load paying for them with the back the player wears.
+## CardView.turn's two renderers and its rest, a held card's tilt and lift
+## under either, the back plate a bake dresses a card in and the table's back
+## followed as it changes, a back cut without a stone, the pre-warm's bake and
+## warmer, and every fight's load paying for them with the back the player
+## wears.
 ##
 ## The bakes run on a fake render step (CardBacks.use_renderer): the suite is
 ## headless, where no frame is ever drawn. That the two renderers put the card
@@ -11,7 +13,7 @@ extends RefCounted
 
 const MapCompose: GDScript = preload("res://tests/test_map_compose.gd")
 const PICTURE_UNIFORMS: Array[String] = [
-	"back_tex", "pose", "lens", "rect", "half_card", "radius", "thick", "side"]
+	"back_tex", "pose", "lift", "lens", "rect", "half_card", "radius", "thick", "side"]
 
 
 static func run(fails: Array[String]) -> void:
@@ -26,7 +28,8 @@ static func run(fails: Array[String]) -> void:
 	CardBacks.use_renderer(render.render)
 	await _prewarm(fails, render)
 	await _turns(fails, content)
-	await _turn_without_a_back(fails, content)
+	await _held_card_turns(fails, content)
+	await _turn_follows_the_back(fails, content)
 	await _each_fight_prewarms(fails, content, render)
 	CardBacks.use_renderer(Callable())
 	CardBacks.use_catalogue(null)
@@ -75,11 +78,17 @@ static func _picture_shader(fails: Array[String]) -> void:
 	for line: String in CardTurn.PICTURE_SHADER.code.split("\n"):
 		if token.search(line.get_slice("//", 0)) != null:
 			fails.append("card turn: the picture turn reads the time or the screen: %s" % line.strip_edges())
-	var m: ShaderMaterial = CardTurn.picture(null, 9.0, Color.RED)
+	var m: ShaderMaterial = CardTurn.picture(9.0, Color.RED)
 	if m.get_shader_parameter("lens") != CardView.lens() or m.get_shader_parameter("thick") != 9.0 \
 			or m.get_shader_parameter("rect") != Vector2(CardView.CARD_W, CardView.CARD_H) \
 				+ Vector2.ONE * CardView.PAD_3D * 2.0:
 		fails.append("card turn: the picture turn is not framed as the card's stage is")
+	# With no back baked, the far face is clear: a sampler without a default
+	# hint reads opaque white, a card-sized slab of it.
+	var clear: RegEx = RegEx.create_from_string(
+		"uniform\\s+sampler2D\\s+back_tex\\s*:[^;]*\\bhint_default_transparent\\b")
+	if clear.search(CardTurn.PICTURE_SHADER.code) == null:
+		fails.append("card turn: the picture turn's back does not default to clear")
 
 
 static func _plate_of_a_bake(fails: Array[String]) -> void:
@@ -223,23 +232,98 @@ static func _check_rest(fails: Array[String], card: CardView, shine: Control, af
 		fails.append("card turn: after %s, rest did not bring back the shine and the whole shadow" % after)
 
 
-static func _turn_without_a_back(fails: Array[String], content: ContentDB) -> void:
-	# No back baked (a lab that never pre-warmed): the card still turns, and
-	# shows no back rather than failing.
+## A card under the pointer, tilted and lifted, turns with both renderers
+## wearing its tilt over the pose, and its lift: the live turn on the slab, the
+## picture turn in the warp, its slab laid flat and rendered flat once.
+static func _held_card_turns(fails: Array[String], content: ContentDB) -> void:
+	var host: Control = _host()
+	var card: CardView = _card(content, &"strike")
+	host.add_child(card)
+	await _frames(host, 3)
+	# Held where a pointer left it; no spring runs, so it stays there.
+	card._tilt = Vector2(4.0, -3.0)
+	card._lift = 6.0
+	card._apply_transform()
+	var leaned: Basis = CardTurn.pose(-3.0, 4.0) * CardTurn.pose(70.0, -10.0)
+	card._stage.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	card.turn(70.0, -10.0, false)
+	var warp: ShaderMaterial = card._display.material as ShaderMaterial
+	if not card._slab.transform.is_equal_approx(Transform3D.IDENTITY):
+		fails.append("card turn: a held card's picture turn warps a tilted or lifted stage")
+	if warp == null or not _basis(warp.get_shader_parameter("pose")).is_equal_approx(leaned) \
+			or warp.get_shader_parameter("lift") != 6.0:
+		fails.append("card turn: a held card's picture turn does not wear its tilt over the pose, and its lift")
+	if card._stage.render_target_update_mode != SubViewport.UPDATE_ONCE:
+		fails.append("card turn: a held card's picture turn did not render its slab flat")
+	card.turn(70.0, -10.0, true)
+	if not card._slab.basis.is_equal_approx(leaned) or not is_equal_approx(card._slab.position.z, 6.0):
+		fails.append("card turn: a held card's live turn does not wear its tilt over the pose, and its lift")
+	card._tilt = Vector2.ZERO
+	card._lift = 0.0
+	card.turn(0.0, 0.0, true)
+	if not card._slab.transform.is_equal_approx(Transform3D.IDENTITY):
+		fails.append("card turn: a held card let go and turned to rest is not flat")
+	host.queue_free()
+	await _frames(host, 1)
+
+
+## Each turn wears the table's back as it is then: none before any is baked
+## (the picture's far face clear, no plate), the bake once it lands, another
+## back's once that is worn, and none again once the bake is dropped.
+static func _turn_follows_the_back(fails: Array[String], content: ContentDB) -> void:
 	CardBacks.use_catalogue(null)
 	var host: Control = _host()
 	var card: CardView = _card(content, &"strike")
 	host.add_child(card)
 	await _frames(host, 3)
+	var lit_bare: int = card._lit.size()
 	card.turn(150.0, 0.0, true)
 	card.turn(150.0, 0.0, false)
+	var warp: ShaderMaterial = card._display.material as ShaderMaterial
 	if card._back_plate != null:
 		fails.append("card turn: a live turn with no bake built a plate")
-	var warp: ShaderMaterial = card._display.material as ShaderMaterial
 	if warp == null or warp.get_shader_parameter("back_tex") != null:
 		fails.append("card turn: a picture turn with no bake did not turn, or invented a back")
+		host.queue_free()
+		await _frames(host, 1)
+		return
+
+	await _Prewarm.start(host, "vault").finished()
+	var vault: CardBacks.Baked = CardTurn.back()
+	card.turn(150.0, 0.0, false)
+	if vault == null or warp.get_shader_parameter("back_tex") != vault.stage:
+		fails.append("card turn: a picture turn after the bake landed does not wear it")
+	card.turn(150.0, 0.0, true)
+	var first: MeshInstance3D = card._back_plate
+	if vault == null or first == null or _face_tex(first) != vault.inner \
+			or card._lit.size() != lit_bare + 1:
+		fails.append("card turn: a live turn after the bake landed does not wear it, lit")
+
+	await _Prewarm.start(host, "rose").finished()
+	var rose: CardBacks.Baked = CardTurn.back()
+	card.turn(140.0, 0.0, true)
+	var second: MeshInstance3D = card._back_plate
+	if rose == null or second == null or is_instance_valid(first) or _face_tex(second) != rose.inner \
+			or card._lit.size() != lit_bare + 1 \
+			or not card._lit.has(second.material_override as ShaderMaterial):
+		fails.append("card turn: a live turn after another back was worn kept the old plate, or its light")
+	card.turn(140.0, 0.0, false)
+	if rose == null or warp.get_shader_parameter("back_tex") != rose.stage:
+		fails.append("card turn: a picture turn after another back was worn shows the old one")
+
+	CardBacks.use_catalogue(null)
+	card.turn(130.0, 0.0, true)
+	if card._back_plate != null or is_instance_valid(second) or card._lit.size() != lit_bare:
+		fails.append("card turn: a live turn kept a plate whose bake was dropped")
+	card.turn(130.0, 0.0, false)
+	if warp.get_shader_parameter("back_tex") != null:
+		fails.append("card turn: a picture turn kept a back whose bake was dropped")
 	host.queue_free()
 	await _frames(host, 1)
+
+
+static func _face_tex(plate: MeshInstance3D) -> Variant:
+	return (plate.material_override as ShaderMaterial).get_shader_parameter("face_tex")
 
 
 static func _each_fight_prewarms(fails: Array[String], content: ContentDB,

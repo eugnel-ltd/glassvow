@@ -174,7 +174,7 @@ for key: String in ["ink", "ink_tint", ..., "sparkle", "flake_px",
 
 ### Proving the others did not move
 
-`presentation/combat/card_view.gd:1158-1184` (in `_ready`) exposes three
+`presentation/combat/card_view.gd:1160-1186` (in `_ready`) exposes three
 environment hooks for held-pose renders:
 `GLASSVOW_TILT="nx,ny"` holds a pose, `GLASSVOW_LAMP="x,y[,gain]"` stands the
 lamp somewhere fixed, and `GLASSVOW_DUMP=<prefix>` writes
@@ -198,7 +198,7 @@ two runs takes the desktop for about a second. Here that is unavoidable rather
 than merely tolerated, because the recipe genuinely needs two processes (below).
 
 Do **not** reach for `tools/live.sh` here. The hooks are read once from the
-process environment (`presentation/combat/card_view.gd:1158-1184` (in `_ready`)),
+process environment (`presentation/combat/card_view.gd:1160-1186` (in `_ready`)),
 so a single host cannot change its
 dump prefix between the before and after builds — this recipe genuinely needs
 two processes. See
