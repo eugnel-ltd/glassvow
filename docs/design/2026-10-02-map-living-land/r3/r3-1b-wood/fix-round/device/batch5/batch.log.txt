@@ -1,0 +1,45 @@
+lock 03:07:57
+ctl installed (a) 03:08:16
+== ctl-before-nowood nonce 31296769 03:08:35: rows fresh
+   ready 4999 ms | land total 1656 scenery 315 wood None | plants None plant None draws None | kit preload 55 ms
+   opening  cadence stage [885, 663] draws 111 prims 91472 shadow 78/30993 video 254.1 MiB
+   opening  cadence mean 16.644 p50 17.26 p95 22.72 missed 1 max 25.5 (120)
+dev-diag installed (a) 03:08:55
+== diag-nowood-first nonce 308921424 03:09:15: rows fresh
+   ready 8893 ms | land total 1857 scenery 320 wood None | plants None plant None draws None | kit preload 317 ms
+   opening  cadence stage [885, 663] draws 89 prims 65340 shadow 71/30669 video 253.6 MiB
+   opening  cadence mean 17.165 p50 16.85 p95 25.54 missed 7 max 28.7 (120)
+ctl installed (b) 03:09:34
+== ctl-before-wood nonce 2063026425 03:09:53: rows fresh
+   ready 5031 ms | land total 1627 scenery 317 wood None | plants None plant None draws None | kit preload 61 ms
+   opening  cadence stage [885, 663] draws 111 prims 91472 shadow 78/30993 video 254.1 MiB
+   opening  cadence mean 17.378 p50 17.58 p95 24.81 missed 5 max 37.0 (120)
+dev-diag installed (b) 03:10:12
+== diag-wood-first nonce 2387816175 03:10:31: rows fresh
+   ready 7172 ms | land total 1710 scenery 435 wood 132 | plants 4051 plant 112.821 draws 18.362 | kit preload 38 ms
+   opening  cadence stage [885, 663] draws 101 prims 69418 shadow 90/37817 video 258.7 MiB
+   opening  cadence mean 16.658 p50 17.31 p95 20.03 missed 0 max 21.7 (120)
+ctl installed (t) 03:10:49
+== ctl-twarm nonce 1776731336 03:11:09: rows fresh
+   ready 5091 ms | land total 1732 scenery 328 wood None | plants None plant None draws None | kit preload 54 ms
+   opening  cadence stage [885, 663] draws 111 prims 91472 shadow 78/30993 video 254.2 MiB
+   opening  cadence mean 20.166 p50 16.91 p95 29.95 missed 26 max 45.3 (120)
+== ctl-tj nonce 2166913763 pid 40657 03:12:07: rows fresh
+   ready 4772 ms | land total 1622 scenery 310 wood None | plants None plant None draws None | kit preload 52 ms
+   journey  live    stage [885, 663] draws 87 prims 72424 shadow 63/28817 video 254.1 MiB
+   journey  live    mean 16.675 p50 16.66 p95 17.69 missed 2 max 40.5 (2699)
+dev installed (t) 03:12:26
+== dev-twarm nonce 62299792 03:12:46: rows fresh
+   ready 5104 ms | land total 1702 scenery 425 wood 128 | plants 4051 plant 109.983 draws 17.653 | kit preload 40 ms
+   opening  cadence stage [885, 663] draws 101 prims 69418 shadow 90/37817 video 258.7 MiB
+   opening  cadence mean 16.623 p50 17.16 p95 20.13 missed 0 max 21.3 (120)
+== dev-tj nonce 16100660 pid 40674 03:13:46: rows fresh
+   ready 4718 ms | land total 1740 scenery 435 wood 131 | plants 4051 plant 112.681 draws 17.868 | kit preload 30 ms
+   journey  live    stage [885, 663] draws 80 prims 57890 shadow 69/32107 video 258.9 MiB
+   journey  live    mean 19.262 p50 17.48 p95 26.21 missed 156 max 50.4 (2337)
+== dev-tj-kwood nonce 2994626037 pid 40677 03:17:45: rows fresh
+   ready 5554 ms | land total 1730 scenery 436 wood 129 | plants 4051 plant 110.629 draws 18.579 | kit preload 39 ms
+   kill {'nonce': '2994626037', 'probe': 'kill', 'what': 'wood'}
+   journey  live    stage [885, 663] draws 71 prims 54920 shadow 60/28673 video 258.9 MiB
+   journey  live    mean 16.675 p50 16.65 p95 18.15 missed 1 max 45.4 (2699)
+done 03:17:45

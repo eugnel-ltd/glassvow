@@ -1,0 +1,84 @@
+SEED 1 shape pad-landscape square 1.40487804878049 TIMINGS {"draws":12.189,"plant":81.606} REJECTED {"clear":2617,"kit sight":18,"road":340,"sight":1056,"water":559}
+COUNTS plants 4051 (kit adopted 420 of 438 placed) trees 283: conifer 0.392 crimson 0.389 rust-amber 0.219; undergrowth 3768: muted 0.592
+RASTER journey cover 55.7% of the safe frame; front-most shares {"conifer":5.3,"crimson":27.2,"muted-under":34.5,"red-under":24.2,"rust-amber":8.8}
+RASTER fresh cover 57.2% of the safe frame; front-most shares {"conifer":11.3,"crimson":17.9,"muted-under":41.4,"red-under":23.0,"rust-amber":6.4}
+RASTER whole cover 55.0% of the safe frame; front-most shares {"conifer":16.6,"crimson":27.5,"muted-under":32.2,"red-under":15.5,"rust-amber":8.1}
+ROADS {"fill":0,"kit":0,"samples":2430} []
+DECKS {"fill":0,"kit":0,"samples":402}
+FLAMES {"fill":0,"kit":0,"samples":24}
+RIVER cut -20.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+RIVER cut 10.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+ROCKS {"by_kit_alone":0,"half_hidden":0,"total":22} []
+SEATS square 1.40 m: 0 of 57 seats have a crown in front over the square (0 cards)
+SEATS square 2.95 m: 36 of 57 seats have a crown in front over the square (220 cards)
+
+SEED 717 shape pad-landscape square 1.40487804878049 TIMINGS {"draws":11.973,"plant":83.607} REJECTED {"clear":2304,"kit sight":19,"road":454,"sight":1279,"water":563}
+COUNTS plants 3965 (kit adopted 362 of 381 placed) trees 251: conifer 0.378 crimson 0.359 rust-amber 0.263; undergrowth 3714: muted 0.577
+RASTER journey cover 57.0% of the safe frame; front-most shares {"conifer":1.0,"crimson":21.9,"muted-under":42.5,"red-under":22.1,"rust-amber":12.5}
+RASTER fresh cover 55.9% of the safe frame; front-most shares {"conifer":8.9,"crimson":15.3,"muted-under":45.6,"red-under":22.6,"rust-amber":7.6}
+RASTER whole cover 52.8% of the safe frame; front-most shares {"conifer":13.7,"crimson":19.4,"muted-under":39.0,"red-under":17.4,"rust-amber":10.6}
+ROADS {"fill":0,"kit":0,"samples":2427} []
+DECKS {"fill":0,"kit":0,"samples":309}
+FLAMES {"fill":0,"kit":0,"samples":28}
+RIVER cut -20.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+RIVER cut 10.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+ROCKS {"by_kit_alone":0,"half_hidden":0,"total":20} []
+SEATS square 1.40 m: 0 of 65 seats have a crown in front over the square (0 cards)
+SEATS square 2.95 m: 46 of 65 seats have a crown in front over the square (228 cards)
+
+SEED 2 shape pad-landscape square 1.40487804878049 TIMINGS {"draws":12.291,"plant":83.795} REJECTED {"clear":2426,"kit sight":27,"road":427,"sight":1158,"water":559}
+COUNTS plants 4039 (kit adopted 406 of 433 placed) trees 273: conifer 0.381 crimson 0.385 rust-amber 0.234; undergrowth 3766: muted 0.578
+RASTER journey cover 55.5% of the safe frame; front-most shares {"conifer":13.8,"crimson":17.5,"muted-under":34.1,"red-under":20.8,"rust-amber":13.8}
+RASTER fresh cover 57.7% of the safe frame; front-most shares {"conifer":9.8,"crimson":22.1,"muted-under":36.5,"red-under":23.7,"rust-amber":7.9}
+RASTER whole cover 53.9% of the safe frame; front-most shares {"conifer":14.2,"crimson":21.6,"muted-under":35.2,"red-under":18.7,"rust-amber":10.4}
+ROADS {"fill":0,"kit":0,"samples":2416} []
+DECKS {"fill":0,"kit":0,"samples":348}
+FLAMES {"fill":0,"kit":0,"samples":26}
+RIVER cut -20.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+RIVER cut 10.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+ROCKS {"by_kit_alone":0,"half_hidden":0,"total":23} []
+SEATS square 1.40 m: 0 of 60 seats have a crown in front over the square (0 cards)
+SEATS square 2.95 m: 43 of 60 seats have a crown in front over the square (207 cards)
+
+SEED 3 shape pad-landscape square 1.40487804878049 TIMINGS {"draws":13.212,"plant":83.788} REJECTED {"clear":2411,"kit sight":30,"road":391,"sight":1077,"water":557}
+COUNTS plants 4210 (kit adopted 443 of 473 placed) trees 281: conifer 0.377 crimson 0.388 rust-amber 0.235; undergrowth 3929: muted 0.585
+RASTER journey cover 61.6% of the safe frame; front-most shares {"conifer":7.9,"crimson":21.2,"muted-under":37.6,"red-under":15.6,"rust-amber":17.7}
+RASTER fresh cover 59.8% of the safe frame; front-most shares {"conifer":9.6,"crimson":25.2,"muted-under":35.1,"red-under":16.9,"rust-amber":13.2}
+RASTER whole cover 56.5% of the safe frame; front-most shares {"conifer":14.1,"crimson":27.8,"muted-under":33.1,"red-under":16.5,"rust-amber":8.6}
+ROADS {"fill":0,"kit":0,"samples":2217} []
+DECKS {"fill":0,"kit":0,"samples":308}
+FLAMES {"fill":0,"kit":0,"samples":28}
+RIVER cut -20.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+RIVER cut 10.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+ROCKS {"by_kit_alone":0,"half_hidden":0,"total":20} []
+SEATS square 1.40 m: 0 of 56 seats have a crown in front over the square (0 cards)
+SEATS square 2.95 m: 46 of 56 seats have a crown in front over the square (266 cards)
+
+SEED 42 shape pad-landscape square 1.40487804878049 TIMINGS {"draws":11.742,"plant":84.368} REJECTED {"clear":2331,"kit sight":36,"road":451,"sight":1269,"water":557}
+COUNTS plants 3950 (kit adopted 355 of 391 placed) trees 249: conifer 0.378 crimson 0.378 rust-amber 0.245; undergrowth 3701: muted 0.583
+RASTER journey cover 59.0% of the safe frame; front-most shares {"conifer":8.9,"crimson":28.0,"muted-under":28.6,"red-under":18.1,"rust-amber":16.4}
+RASTER fresh cover 56.4% of the safe frame; front-most shares {"conifer":8.1,"crimson":16.8,"muted-under":41.0,"red-under":23.2,"rust-amber":10.8}
+RASTER whole cover 52.6% of the safe frame; front-most shares {"conifer":11.5,"crimson":21.9,"muted-under":37.2,"red-under":19.6,"rust-amber":9.8}
+ROADS {"fill":0,"kit":0,"samples":2462} []
+DECKS {"fill":0,"kit":0,"samples":305}
+FLAMES {"fill":0,"kit":0,"samples":28}
+RIVER cut -20.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+RIVER cut 10.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+ROCKS {"by_kit_alone":0,"half_hidden":0,"total":20} []
+SEATS square 1.40 m: 0 of 66 seats have a crown in front over the square (0 cards)
+SEATS square 2.95 m: 44 of 66 seats have a crown in front over the square (235 cards)
+
+SEED 1234 shape pad-landscape square 1.40487804878049 TIMINGS {"draws":16.285,"plant":101.181} REJECTED {"clear":2198,"kit sight":32,"road":509,"sight":1296,"water":557}
+COUNTS plants 4082 (kit adopted 439 of 471 placed) trees 289: conifer 0.384 crimson 0.384 rust-amber 0.232; undergrowth 3793: muted 0.589
+RASTER journey cover 61.8% of the safe frame; front-most shares {"conifer":9.3,"crimson":29.6,"muted-under":27.6,"red-under":21.2,"rust-amber":12.3}
+RASTER fresh cover 59.8% of the safe frame; front-most shares {"conifer":9.4,"crimson":22.0,"muted-under":37.5,"red-under":22.0,"rust-amber":9.0}
+RASTER whole cover 54.1% of the safe frame; front-most shares {"conifer":11.9,"crimson":27.1,"muted-under":33.3,"red-under":18.0,"rust-amber":9.6}
+ROADS {"fill":0,"kit":0,"samples":2367} []
+DECKS {"fill":0,"kit":0,"samples":233}
+FLAMES {"fill":0,"kit":0,"samples":25}
+RIVER cut -20.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+RIVER cut 10.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+ROCKS {"by_kit_alone":0,"half_hidden":0,"total":16} []
+SEATS square 1.40 m: 0 of 57 seats have a crown in front over the square (0 cards)
+SEATS square 2.95 m: 38 of 57 seats have a crown in front over the square (181 cards)
+

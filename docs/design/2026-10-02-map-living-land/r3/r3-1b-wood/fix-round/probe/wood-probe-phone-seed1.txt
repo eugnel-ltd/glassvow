@@ -1,0 +1,13 @@
+SEED 1 shape phone-landscape square 2.95384615384615 TIMINGS {"draws":12.159,"plant":102.968} REJECTED {"clear":2576,"kit sight":18,"road":340,"sight":1244,"water":559}
+COUNTS plants 3904 (kit adopted 420 of 438 placed) trees 270: conifer 0.393 crimson 0.393 rust-amber 0.215; undergrowth 3634: muted 0.583
+RASTER journey cover 48.0% of the safe frame; front-most shares {"conifer":3.9,"crimson":20.7,"muted-under":42.2,"red-under":26.2,"rust-amber":7.0}
+RASTER fresh cover 53.0% of the safe frame; front-most shares {"conifer":10.3,"crimson":20.0,"muted-under":41.2,"red-under":24.1,"rust-amber":4.4}
+RASTER whole cover 52.4% of the safe frame; front-most shares {"conifer":17.1,"crimson":28.1,"muted-under":30.9,"red-under":16.1,"rust-amber":7.9}
+ROADS {"fill":0,"kit":0,"samples":2430} []
+DECKS {"fill":0,"kit":0,"samples":402}
+FLAMES {"fill":0,"kit":0,"samples":24}
+RIVER cut -20.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+RIVER cut 10.5 {"fill":0,"kit":0,"samples":241} hidden 0%
+ROCKS {"by_kit_alone":0,"half_hidden":0,"total":22} []
+SEATS square 1.40 m: 0 of 57 seats have a crown in front over the square (0 cards)
+SEATS square 2.95 m: 0 of 57 seats have a crown in front over the square (0 cards)

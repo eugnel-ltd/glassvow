@@ -1,0 +1,5 @@
+frames shown: 24; on-screen time in vsyncs: {1: 24}
+cpu-to-display latency ms: median 27.8 p95 30.4
+GPU busy per app frame ms: median 13.33 p95 16.14 max 18.89 (n=29)
+GPU first-to-last span per frame ms: median 14.57 p95 20.23 max 21.96
+GPU performance state share: {'Medium': '91%', 'Minimum': '9%'} induced: ['Yes']

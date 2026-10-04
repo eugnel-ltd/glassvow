@@ -1,0 +1,83 @@
+extends SceneTree
+## Scratch: why the Journey frame's ground is bare (seed 1, pad). Each ground
+## point (0.2 m) painted at its picture-plane place: yellow cleared (NO_SHRUB),
+## blue water, grey road, red sight (a 0.55 fern does not fit), dark free;
+## then every planted card's base as white (fill) or cyan (kit).
+const Atlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
+const Planting = preload("res://presentation/map/landscape/wood_planting.gd")
+const RES: float = 0.125
+
+func _initialize() -> void:
+	_run.call_deferred()
+
+func _run() -> void:
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	var out: String = args[0]
+	Planting.stage_shape = StringName(args[1]) if args.size() > 1 else &"pad-landscape"
+	MapJourneyLandscape.Kit.preload_scenes()
+	var content: ContentDB = ContentDB.load_full()
+	var run_state: RunState = RunState.new_run(content, 1)
+	var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run_state, content), content)
+	root.add_child(screen)
+	screen.size = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
+	screen.set_shape(StageShape.IDENTITY)
+	screen.refresh(run_state)
+	while screen.landscape_pending():
+		await process_frame
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	var planting: Planting = land.wood.planting
+	var sight: RefCounted = planting.get("_sight")
+	var aspect: float = 1180.0 / 820.0
+	var centre: Vector2 = Vector2(-28.5872, 54.5598 * sin(deg_to_rad(40.0)) - 36.0 * cos(deg_to_rad(40.0)))
+	var size: Vector2 = Vector2(19.2 * aspect, 19.2)
+	var f: Rect2 = Rect2(centre - size * 0.5, size)
+	var cols: int = ceili(f.size.x / RES)
+	var rows: int = ceili(f.size.y / RES)
+	var img: Image = Image.create(cols, rows, false, Image.FORMAT_RGB8)
+	var ground: PackedByteArray = planting.get("_ground")
+	var origin: Vector2 = planting.get("_origin")
+	var columns: int = planting.get("_columns")
+	var fern: int = Atlas.tile_for("ash-fern", 0.35)
+	var counts: Dictionary = {}
+	var x: float = f.position.x - 2.0
+	while x < f.end.x + 2.0:
+		var z: float = (f.position.y - 6.0) / sin(deg_to_rad(40.0))
+		while z < (f.end.y + 4.0) / sin(deg_to_rad(40.0)):
+			var h: float = land.terrain.surface_height(x, z)
+			var p: Vector3 = Vector3(x, h, z)
+			var at: Vector2 = MapJourneyCameraContract.projected_plane(p)
+			if f.has_point(at):
+				var c: int = floori((at.x - f.position.x) / RES)
+				var r: int = floori((at.y - f.position.y) / RES)
+				var col: int = floori((x - origin.x) / 0.5)
+				var row: int = floori((z - origin.y) / 0.5)
+				var flags: int = ground[row * columns + col]
+				var colour: Color = Color(0.1, 0.1, 0.1)
+				var why: String = "free"
+				if flags & 1:
+					colour = Color(0.1, 0.3, 0.9); why = "water"
+				elif flags & 4:
+					colour = Color(0.8, 0.7, 0.1); why = "clear"
+				elif planting.road_distance(x, z) < Planting.SHRUB_ROAD:
+					colour = Color(0.5, 0.5, 0.5); why = "road"
+				elif not sight.call("fits", fern, p, 0.55):
+					colour = Color(0.8, 0.1, 0.1); why = "sight"
+				img.set_pixel(c, r, colour)
+				counts[why] = int(str(counts.get(why, 0))) + 1
+			z += 0.2
+		x += 0.2
+	for i: int in range(planting.bases.size()):
+		var at: Vector2 = MapJourneyCameraContract.projected_plane(planting.bases[i])
+		if f.has_point(at):
+			var c: int = floori((at.x - f.position.x) / RES)
+			var r: int = floori((at.y - f.position.y) / RES)
+			var kit: bool = planting.from_kit[i] == 1
+			var tree: bool = Planting.TREES.has(planting.kinds[i])
+			for dc: int in range(-1 if tree else 0, 2 if tree else 1):
+				for dr: int in range(-1 if tree else 0, 2 if tree else 1):
+					if c + dc >= 0 and c + dc < cols and r + dr >= 0 and r + dr < rows:
+						img.set_pixel(c + dc, r + dr, Color(0, 1, 1) if kit else Color(1, 1, 1))
+	img.resize(cols * 4, rows * 4, Image.INTERPOLATE_NEAREST)
+	img.save_png(out)
+	print("WHY ", JSON.stringify(counts))
+	quit(0)

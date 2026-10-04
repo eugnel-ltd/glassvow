@@ -1,0 +1,53 @@
+#!/bin/zsh
+# Lane R3.1b fix round, device batch 5, under the shared lock: (1) the first
+# launch after installing the wood over the control, with the land opened
+# without its woodland (--probe-nowood, diagnosis only) and then with it; (2) one Metal System Trace per build at the Journey view, the
+# stage forced live: control (main 8815da34), the wood (08b32b3f), and the
+# wood hidden for its hold. QA app only; every row nonce-checked.
+set -u
+source /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r31b/device/lib.zsh
+F=$R/fix; OUT=$F/batch5; mkdir -p $OUT
+fast_acquire() {
+  local L=$FLOW/ipad.lock
+  while ! mkdir $L 2>/dev/null; do
+    local age=$(( $(date +%s) - $(stat -f %m $L/owner 2>/dev/null || date +%s) ))
+    (( age > 3600 )) && { $LOCK acquire $OWNER; return; }
+    sleep 3
+  done
+  echo $OWNER > $L/owner
+}
+install_ipa() {
+  local build=$1 ipa=$F/ipa/$1.ipa id
+  id=$(unzip -p $ipa Payload/glassvow.app/Info.plist | plutil -extract CFBundleIdentifier raw -o - -)
+  [[ $id == $QA ]] || { echo "refusing to install $id"; return 1; }
+  local a; for a in 1 2 3; do
+    if xcrun devicectl device install app --device $UDID $ipa 2>&1 | redact > $OUT/install-$build-$2.log; then
+      echo "$build installed ($2) $(date +%T)"; return 0
+    fi
+    sleep 5
+  done
+  echo "$build install failed"; return 1
+}
+fast_acquire
+trap "$LOCK release $OWNER" EXIT
+echo "lock $(date +%T)"
+UDID=$(udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+# The first launch after an install costs seconds only when the build before
+# it differed (batch 4: control then wood 9.6 s, wood then wood 4.9 s), so
+# each diagnosis install follows a control install and launch.
+install_ipa ctl a || exit 1
+probe_run ctl-before-nowood --probe-views=opening --probe-frames=120 --probe-modes=cadence
+install_ipa dev-diag a || exit 1
+probe_run diag-nowood-first --probe-views=opening --probe-frames=120 --probe-modes=cadence --probe-nowood
+install_ipa ctl b || exit 1
+probe_run ctl-before-wood --probe-views=opening --probe-frames=120 --probe-modes=cadence
+install_ipa dev-diag b || exit 1
+probe_run diag-wood-first --probe-views=opening --probe-frames=120 --probe-modes=cadence
+install_ipa ctl t || exit 1
+probe_run ctl-twarm --probe-views=opening --probe-frames=120 --probe-modes=cadence
+trace_run ctl-tj 4 --map-steps=2 --probe-views=journey --probe-modes=live
+install_ipa dev t || exit 1
+probe_run dev-twarm --probe-views=opening --probe-frames=120 --probe-modes=cadence
+trace_run dev-tj 4 --map-steps=2 --probe-views=journey --probe-modes=live
+trace_run dev-tj-kwood 4 --map-steps=2 --probe-views=journey --probe-modes=live --trace-kill=wood
+echo "done $(date +%T)"

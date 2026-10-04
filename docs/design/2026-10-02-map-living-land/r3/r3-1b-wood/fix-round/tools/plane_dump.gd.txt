@@ -1,0 +1,63 @@
+extends SceneTree
+## Scratch: the Journey safe frame (seed 1, pad) on the picture plane at 0.125 m:
+## protected cells (blue), card cover (green), roads' worn core (grey).
+const Atlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
+const RES: float = 0.125
+
+func _initialize() -> void:
+	_run.call_deferred()
+
+func _run() -> void:
+	var out: String = OS.get_cmdline_user_args()[0]
+	MapJourneyLandscape.Kit.preload_scenes()
+	var content: ContentDB = ContentDB.load_full()
+	var run_state: RunState = RunState.new_run(content, 1)
+	var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run_state, content), content)
+	root.add_child(screen)
+	screen.size = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
+	screen.set_shape(StageShape.IDENTITY)
+	screen.refresh(run_state)
+	while screen.landscape_pending():
+		await process_frame
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	var planting: RefCounted = land.wood.planting
+	var sight: RefCounted = planting.get("_sight")
+	var aspect: float = 1180.0 / 820.0
+	var centre: Vector2 = Vector2(-28.5872, 54.5598 * sin(deg_to_rad(40.0)) - 36.0 * cos(deg_to_rad(40.0)))
+	var size: Vector2 = Vector2(19.2 * aspect, 19.2)
+	var f: Rect2 = Rect2(centre - size * 0.5, size)
+	var cols: int = ceili(f.size.x / RES)
+	var rows: int = ceili(f.size.y / RES)
+	var img: Image = Image.create(cols, rows, false, Image.FORMAT_RGB8)
+	var fine: PackedFloat32Array = sight.get("_fine")
+	var fc: int = sight.get("_fine_columns")
+	var origin: Vector2 = sight.get("_origin")
+	for r: int in range(rows):
+		for c: int in range(cols):
+			var p: Vector2 = f.position + Vector2(c + 0.5, r + 0.5) * RES
+			var fx: int = floori((p.x - origin.x) / 0.25)
+			var fy: int = floori((p.y - origin.y) / 0.25)
+			var d: float = fine[fy * fc + fx]
+			img.set_pixel(c, r, Color(0.05, 0.05, 0.4) if d < INF else Color(0, 0, 0))
+	var bases: PackedVector3Array = planting.get("bases")
+	var tiles: PackedInt32Array = planting.get("tiles")
+	var scales: PackedFloat32Array = planting.get("scales")
+	var kinds: PackedStringArray = planting.get("kinds")
+	for i: int in range(bases.size()):
+		var rect: Rect2 = Atlas.rect(tiles[i], bases[i], scales[i])
+		if not rect.intersects(f):
+			continue
+		var spans: PackedVector2Array = Atlas.spans[tiles[i]]
+		var tree: bool = planting.get_script().TREES.has(kinds[i])
+		for r: int in range(maxi(0, floori((rect.position.y - f.position.y) / RES)), mini(rows, floori((rect.end.y - f.position.y) / RES) + 1)):
+			var y: float = f.position.y + (r + 0.5) * RES
+			var band: int = floori((y - rect.position.y) / rect.size.y * spans.size())
+			if band < 0 or band >= spans.size():
+				continue
+			var span: Vector2 = spans[band]
+			for c: int in range(maxi(0, floori((rect.position.x + span.x * rect.size.x - f.position.x) / RES)), mini(cols, floori((rect.position.x + span.y * rect.size.x - f.position.x) / RES) + 1)):
+				var old: Color = img.get_pixel(c, r)
+				img.set_pixel(c, r, Color(old.r, 0.8 if tree else 0.45, old.b))
+	img.save_png(out)
+	print("DUMP ", out, " ", cols, "x", rows)
+	quit(0)

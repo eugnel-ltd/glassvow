@@ -1,0 +1,233 @@
+extends Node
+## QA-only device probe for lane R3.1b (never shipped, never committed as
+## code; a copy is kept with the evidence as .txt). Hosted by Main behind
+## `--map --map-wood-probe`: records when Act I's land is ready (the cold
+## open) and its build timings, then holds the map's rest at each view in
+## turn, at the production cadence and then live (the stage forced to render
+## every frame after every other script's _process: WorldMapScreen resets
+## set_live on still frames). Rows go to user://wood_probe.jsonl, flushed per
+## row, each carrying the launch's nonce. Fix round: a "boot" row lists every
+## frame over 50 ms from the probe's start to the land's readiness, with the
+## kit's main-thread preload and the wood atlas's own time at that frame.
+##
+## User arguments:
+##   --probe-nonce=<n>        echoed in every row
+##   --probe-views=a,b        journey | whole | close | river (default journey)
+##   --probe-frames=<n>       frames per hold (default 600)
+##   --probe-modes=a,b        cadence | live (default cadence,live)
+##   --probe-burst            after the holds: three stage images, two 0.6 s
+##                            apart and one with the wood's cards hidden
+##   --trace-hold=<s>         one long hold of the first view and mode (traces)
+##   --trace-kill=wood        hide the wood (cards and casters) for the hold
+##   --probe-reduce-motion    Reduce Motion on for this launch (in memory only)
+##   --probe-nowood           the land opens without its woodland (diagnosis)
+
+const ROW_PATH: String = "user://wood_probe.jsonl"
+var _host: Node = null
+var _rows: FileAccess = null
+var _force_live: SubViewport = null
+
+
+func _ready() -> void:
+	process_priority = 1000
+	_host = get_parent()
+	if _flag("--probe-reduce-motion"):
+		Preferences.active.reduce_motion = true
+	# Diagnosis only: the land opens without its woodland (the atlas's own
+	# failure path), to tell the wood's first-launch cost from the land's.
+	if _flag("--probe-nowood"):
+		# The map opens before this probe is added; its land finishes on a
+		# worker well after, and builds the wood only while the atlas is ready.
+		var atlas: GDScript = load("res://presentation/map/landscape/impostor_atlas.gd")
+		atlas.set("failed", true)
+		atlas.set("material", null)
+	_rows = FileAccess.open(ROW_PATH, FileAccess.WRITE)
+	_row({"probe": "start", "adapter": RenderingServer.get_video_adapter_name(),
+		"method": RenderingServer.get_current_rendering_method(), "args": OS.get_cmdline_user_args()})
+	_run.call_deferred()
+
+
+func _arg(name: String, fallback: String) -> String:
+	for arg: String in OS.get_cmdline_args() + OS.get_cmdline_user_args():
+		if arg.begins_with(name + "="):
+			return arg.get_slice("=", 1)
+	return fallback
+
+
+func _flag(name: String) -> bool:
+	return name in OS.get_cmdline_args() + OS.get_cmdline_user_args()
+
+
+func _row(data: Dictionary) -> void:
+	data["nonce"] = _arg("--probe-nonce", "")
+	data["t_ms"] = Time.get_ticks_msec()
+	var line: String = JSON.stringify(data)
+	print("WOOD_PROBE " + line)
+	if _rows != null:
+		_rows.store_line(line)
+		_rows.flush()
+
+
+func _atlas_ms() -> float:
+	var path: String = "res://presentation/map/landscape/impostor_atlas.gd"
+	if not ResourceLoader.exists(path):
+		return -1.0
+	var atlas: GDScript = load(path)
+	return float(str(atlas.get("prepare_ms"))) if "prepare_ms" in atlas else -1.0
+
+
+func _run() -> void:
+	var n: int = 0
+	var screen: WorldMapScreen = null
+	var long_frames: Array = []
+	var boot_last: int = Time.get_ticks_usec()
+	while n < 12000:
+		await get_tree().process_frame
+		var boot_now: int = Time.get_ticks_usec()
+		if boot_now - boot_last > 50000:
+			long_frames.append([Time.get_ticks_msec(), snappedf((boot_now - boot_last) / 1000.0, 0.1),
+				snappedf(MapJourneyLandscape.Kit.preload_ms, 0.1), snappedf(_atlas_ms(), 0.1)])
+		boot_last = boot_now
+		n += 1
+		var found: Variant = _host.get("_map_screen")
+		if found is WorldMapScreen:
+			screen = found
+			if not screen.landscape_pending():
+				break
+	_row({"probe": "boot", "frames": n, "long_frames": long_frames,
+		"kit_preload_ms": MapJourneyLandscape.Kit.preload_ms, "atlas_prepare_ms": _atlas_ms()})
+	var scene: MapScene = screen._map_scene
+	var land: MapJourneyLandscape = scene.journey_landscape()
+	var wood_stats: Dictionary = {}
+	var wood: Node3D = land.get_node_or_null("Impostor wood") as Node3D if land != null else null
+	if wood != null:
+		wood_stats = wood.call("stats")
+	_row({"probe": "ready", "ready_ms": Time.get_ticks_msec(), "land_ms": land.timings_ms if land != null else {},
+		"wood": wood_stats, "kit_preload_ms": MapJourneyLandscape.Kit.preload_ms,
+		"layout_digest": screen.layout_digest()})
+	var stage: SubViewport = scene.get_stage()
+	await _frames(180)
+	var views: PackedStringArray = _arg("--probe-views", "journey").split(",")
+	var modes: PackedStringArray = _arg("--probe-modes", "cadence,live").split(",")
+	var frames: int = int(_arg("--probe-frames", "600"))
+	var hold_s: float = float(_arg("--trace-hold", "0"))
+	if _arg("--trace-kill", "") == "wood" and wood != null:
+		wood.visible = false
+		_row({"probe": "kill", "what": "wood"})
+	for view: String in views:
+		_frame_view(screen, view)
+		await _frames(90)
+		for mode: String in modes:
+			_force_live = stage if mode == "live" else null
+			if mode != "live":
+				scene.set_live(false)
+			await _frames(60)
+			var info: Dictionary = _render_info(stage)
+			info["video_mib"] = snappedf(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, 0.1)
+			_row({"probe": "hold_start", "view": view, "mode": mode, "stage": [stage.size.x, stage.size.y],
+				"zoom": scene.get_rig().get_camera().size, "render": info,
+				"thermal": OS.get_environment("THERMAL")})
+			var t: Array[float] = []
+			var start: int = Time.get_ticks_usec()
+			var last: int = start
+			while (hold_s > 0.0 and last - start < int(hold_s * 1000000.0)) or (hold_s <= 0.0 and t.size() < frames):
+				await get_tree().process_frame
+				var now: int = Time.get_ticks_usec()
+				t.append(snappedf((now - last) / 1000.0, 0.01))
+				last = now
+			_row(_summary(view, mode, t))
+			if hold_s > 0.0:
+				break
+		if hold_s > 0.0:
+			break
+	_force_live = null
+	if _flag("--probe-burst"):
+		await _burst(scene, land, stage)
+	_row({"probe": "done"})
+	get_tree().quit(0)
+
+
+func _summary(view: String, mode: String, t: Array[float]) -> Dictionary:
+	var total: float = 0.0
+	var missed: int = 0
+	for v: float in t:
+		total += v
+		missed += 1 if v > 25.0 else 0
+	var sorted: Array[float] = t.duplicate()
+	sorted.sort()
+	return {"probe": "hold_end", "view": view, "mode": mode, "frames": t.size(),
+		"mean_ms": snappedf(total / t.size(), 0.001), "missed": missed,
+		"p50_ms": sorted[sorted.size() / 2], "p95_ms": sorted[int(sorted.size() * 0.95)],
+		"max_ms": sorted[-1], "series": t}
+
+
+func _frame_view(screen: WorldMapScreen, view: String) -> void:
+	var levels: Dictionary = {"close": MapJourneyView.Level.CLOSE,
+		"journey": MapJourneyView.Level.JOURNEY, "whole": MapJourneyView.Level.WHOLE}
+	if screen._journey == null or not screen._journey.active():
+		return
+	var map: WorldMap = _host.get("_map")
+	if view == "river":
+		screen._journey.view.level = MapJourneyView.Level.JOURNEY
+		screen._journey.frame(map.at)
+		# Pan toward the nearest ravine: the river framed at Journey.
+		var rig: MapCameraRig = screen._map_scene.get_rig()
+		var x: float = rig.get_camera().position.x
+		var best: float = INF
+		for cut: float in MapRavine.CUTS:
+			if absf(cut - x) < absf(best):
+				best = cut - x
+		rig.pan_world(Vector2(best, 0.0))
+		screen._invalidate_projection()
+		return
+	if levels.has(view):
+		screen._journey.view.level = levels[view]
+		screen._journey.frame(map.at)
+
+
+func _render_info(stage: SubViewport) -> Dictionary:
+	var rid: RID = stage.get_viewport_rid()
+	var out: Dictionary = {}
+	for kind: Array in [["stage", RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE],
+			["shadow", RenderingServer.VIEWPORT_RENDER_INFO_TYPE_SHADOW]]:
+		var type: int = kind[1]
+		out[str(kind[0]) + "_draws"] = RenderingServer.viewport_get_render_info(rid, type, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
+		out[str(kind[0]) + "_prims"] = RenderingServer.viewport_get_render_info(rid, type, RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME)
+	return out
+
+
+## Three stage images: now, 0.6 s later, and with the wood's cards hidden (the
+## woodland's mask); the drifting air hidden throughout.
+func _burst(scene: MapScene, land: MapJourneyLandscape, stage: SubViewport) -> void:
+	if land == null:
+		return
+	if land.air != null:
+		land.air.set_process(false)
+		land.air.visible = false
+	_force_live = stage
+	await _frames(30)
+	await RenderingServer.frame_post_draw
+	stage.get_texture().get_image().save_png("user://burst-a.png")
+	await get_tree().create_timer(0.6).timeout
+	await RenderingServer.frame_post_draw
+	stage.get_texture().get_image().save_png("user://burst-b.png")
+	var wood: Node = land.get_node_or_null("Impostor wood")
+	if wood != null:
+		for card: Node in wood.find_children("Wood cards*", "", true, false):
+			(card as Node3D).visible = false
+	await _frames(6)
+	await RenderingServer.frame_post_draw
+	stage.get_texture().get_image().save_png("user://burst-bare.png")
+	_force_live = null
+	_row({"probe": "burst", "reduce_motion": Preferences.active.reduce_motion,
+		"motion": MapJourneyLandscape.LandMotion.enabled})
+
+
+func _process(_delta: float) -> void:
+	if _force_live != null:
+		_force_live.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+
+
+func _frames(count: int) -> void:
+	for i: int in range(count):
+		await get_tree().process_frame

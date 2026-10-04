@@ -1,0 +1,29 @@
+extends SceneTree
+const Planting = preload("res://presentation/map/landscape/wood_planting.gd")
+func _initialize() -> void:
+	_run.call_deferred()
+func _run() -> void:
+	var seed_value: int = int(OS.get_cmdline_user_args()[0])
+	if OS.get_cmdline_user_args().size() > 1:
+		Planting.stage_shape = StringName(OS.get_cmdline_user_args()[1])
+	MapJourneyLandscape.Kit.preload_scenes()
+	var content: ContentDB = ContentDB.load_full()
+	var run_state: RunState = RunState.new_run(content, seed_value, "run-map-wood")
+	var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run_state, content), content)
+	root.add_child(screen)
+	screen.size = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
+	screen.set_shape(StageShape.IDENTITY)
+	screen.refresh(run_state)
+	while screen.landscape_pending():
+		await process_frame
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	var test: GDScript = load("res://tests/test_map_wood.gd")
+	var shown: Dictionary = test.call("_canopy", land.wood.planting)
+	var total: float = 0.0
+	for k: String in ["conifer", "crimson", "rust and amber"]:
+		total += float(str(shown.get(k, 0)))
+	var out: Dictionary = {}
+	for k: String in shown:
+		out[k] = snappedf(float(str(shown[k])) / total, 0.001)
+	print("CANOPY seed %d shape '%s' (shares of the tree canopy) %s rejected %s timings %s" % [seed_value, Planting.stage_shape, out, land.wood.planting.rejected, land.wood.timings_ms])
+	quit(0)

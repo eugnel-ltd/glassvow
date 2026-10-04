@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""Mutation checks for lane R3.1b's fix round: each mutation breaks one
+behaviour in production code; the named assertion must fail. Every file is
+backed up and copied back (never git checkout over unstaged work)."""
+import shutil, subprocess, sys, os
+W = sys.argv[1]
+OUT = sys.argv[2]
+ONLY = sys.argv[3:] 
+L = "presentation/map/landscape/"
+WOOD = "res://tests/test_map_wood.gd"
+M = [
+ ("take keeps", L+"impostor_atlas.gd", "			if textures.has(path):\n				continue\n", "", WOOD, "a texture taken while another still loads is kept"),
+ ("take failed", L+"impostor_atlas.gd", "			while state == ResourceLoader.THREAD_LOAD_IN_PROGRESS:", "			while state != ResourceLoader.THREAD_LOAD_LOADED:", WOOD, "a texture that fails to load settles the take"),
+ ("take missing", L+"impostor_atlas.gd", '			if not ResourceLoader.exists(path) or ResourceLoader.load_threaded_request(path, "Texture2D") != OK:', "			if false:", WOOD, "a missing atlas ends the wait at once"),
+ ("square per shape", L+"wood_planting.gd", "	var shapes: Array = [stage_shape] if", "	var shapes: Array = [StageShape.IDENTITY] if", WOOD, "each shape keeps its own touch square clear"),
+ ("square widest", L+"wood_planting.gd", "		else StageShape.REFERENCES.keys()", "		else [StageShape.IDENTITY]", WOOD, "each shape keeps its own touch square clear"),
+ ("picture rocks", L+"wood_planting.gd", '		elif kind.begins_with("slate"):', '		elif kind.begins_with("no-rock"):', WOOD, "no card hides a centreline, a deck, a flame, the water or a rock"),
+ ("picture river", L+"wood_planting.gd", "	for cut: float in MapRavine.CUTS:\n		var z: float = -_terrain.river_half_length", "	for cut: float in []:\n		var z: float = -_terrain.river_half_length", WOOD, "no card hides a centreline, a deck, a flame, the water or a rock"),
+ ("picture kit adopted", L+"wood_planting.gd", "	_protect(kit, seats)\n	_adopt(kit)\n", "	_adopt(kit)\n	_protect(kit, seats)\n", WOOD, "no card hides a centreline, a deck, a flame, the water or a rock"),
+ ("picture lanes", L+"wood_planting.gd", "				_sight.protect_rect(Rect2(at - half, half * 2.0), _sight.depth(q))", "				pass", WOOD, "no card hides a centreline, a deck, a flame, the water or a rock"),
+ ("picture seats", L+"wood_planting.gd", "		_sight.protect_rect(seat_guard(_sight.plane(seat)), _sight.depth(seat))", "		_sight.protect_rect(seat_guard(_sight.plane(seat)), INF)", WOOD, "no crown covers a waystone's touch square"),
+ ("fit rows", L+"wood_sight.gd", "		var last: int = mini(rows.size() - 1, floori((y + FINE) / row_height))", "		var last: int = first", WOOD, "no card hides a centreline, a deck, a flame, the water or a rock"),
+ ("mix conifers", L+"wood_planting.gd", "const CONIFER_SHARE: float = 0.375", "const CONIFER_SHARE: float = 0.45", WOOD, "the woodland's mix by plants follows the art direction"),
+ ("mix crimson", L+"wood_planting.gd", "const CRIMSON_SHARE: float = 0.37", "const CRIMSON_SHARE: float = 0.45", WOOD, "the woodland's mix by plants follows the art direction"),
+ ("mix steer", L+"wood_planting.gd", "const STEER: float = 3.0", "const STEER: float = 0.0", WOOD, "the woodland's mix by plants follows the art direction"),
+ ("mix undergrowth", L+"wood_planting.gd", 'const UNDERGROWTH: Dictionary = {"olive-heath": 0.36, "dark-copse": 0.32, "ash-heath": 0.1,', 'const UNDERGROWTH: Dictionary = {"olive-heath": 0.06, "dark-copse": 0.06, "ash-heath": 0.66,', WOOD, "the woodland's mix by plants follows the art direction"),
+ ("canopy rust large", L+"wood_planting.gd", '	"rust-oak": Vector2(0.0, 0.5), "amber-round": Vector2(0.0, 0.5)}', '	"rust-oak": Vector2(0.8, 1.0), "amber-round": Vector2(0.8, 1.0)}', WOOD, "by the canopy it shows"),
+ ("canopy conifers small", L+"wood_planting.gd", 'const SCALE_BAND: Dictionary = {"conifer": Vector2(0.75, 1.0), "conifer-spire": Vector2(0.75, 1.0),\n	"conifer-wind": Vector2(0.6, 1.0),', 'const SCALE_BAND: Dictionary = {"conifer": Vector2(0.0, 0.0), "conifer-spire": Vector2(0.0, 0.0),\n	"conifer-wind": Vector2(0.0, 0.0),', WOOD, "by the canopy it shows"),
+ ("kit kept", L+"wood_planting.gd", '			_reject("kit sight")\n', "", WOOD, "the kit's foliage stays where it fits"),
+ ("scales", L+"wood_planting.gd", "	var smaller: float = maxf(TREE_SCALE.x, scale_value * SHRINK)", "	var smaller: float = scale_value * SHRINK * 0.6", WOOD, "every planted crown is 0.7 to 1.4"),
+]
+results = []
+for name, path, old, new, test, expect in M:
+    if ONLY and name not in ONLY:
+        continue
+    full = os.path.join(W, path)
+    src = open(full).read()
+    if src.count(old) != 1:
+        results.append((name, "NOT APPLIED (pattern count %d)" % src.count(old)))
+        print(name, results[-1][1], flush=True)
+        continue
+    backup = os.path.join(OUT, os.path.basename(path) + ".mutbak")
+    shutil.copy(full, backup)
+    try:
+        open(full, "w").write(src.replace(old, new))
+        log = subprocess.run(["timeout", "900", "godot", "--headless", "--path", W, "-s", "res://tests/run_all.gd", "--", "--tests=" + test],
+                             capture_output=True, text=True).stdout
+        caught = expect in log and "FAIL" in log
+        results.append((name, "caught" if caught else "MISSED"))
+        open(os.path.join(OUT, "mut-%s.log" % name.replace(" ", "_")), "w").write(log)
+    finally:
+        shutil.copy(backup, full)
+    print(name, results[-1][1], flush=True)
+print("SUMMARY %d of %d caught" % (sum(1 for _, r in results if r == "caught"), len(results)))

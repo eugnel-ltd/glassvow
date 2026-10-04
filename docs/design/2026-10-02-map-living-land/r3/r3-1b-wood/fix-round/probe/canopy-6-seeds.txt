@@ -1,0 +1,6 @@
+CANOPY seed 1 shape '' (shares of the tree canopy) { "olive and dark": 0.464, "crimson": 0.533, "conifer": 0.295, "red undergrowth": 0.216, "rust and amber": 0.172 } rejected { "kit sight": 18, "clear
+CANOPY seed 717 shape '' (shares of the tree canopy) { "olive and dark": 0.596, "conifer": 0.258, "crimson": 0.527, "red undergrowth": 0.25, "rust and amber": 0.214 } rejected { "kit sight": 19, "road
+CANOPY seed 2 shape '' (shares of the tree canopy) { "olive and dark": 0.477, "crimson": 0.513, "conifer": 0.286, "rust and amber": 0.202, "red undergrowth": 0.246 } rejected { "kit sight": 27, "sight
+CANOPY seed 3 shape '' (shares of the tree canopy) { "olive and dark": 0.485, "crimson": 0.563, "red undergrowth": 0.228, "conifer": 0.251, "rust and amber": 0.185 } rejected { "kit sight": 30, "road"
+CANOPY seed 42 shape '' (shares of the tree canopy) { "olive and dark": 0.584, "crimson": 0.573, "rust and amber": 0.21, "red undergrowth": 0.267, "conifer": 0.217 } rejected { "kit sight": 37, "sight
+CANOPY seed 1234 shape '' (shares of the tree canopy) { "olive and dark": 0.464, "crimson": 0.542, "rust and amber": 0.186, "red undergrowth": 0.237, "conifer": 0.272 } rejected { "kit sight": 32, "cl
