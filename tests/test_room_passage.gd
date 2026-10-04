@@ -246,9 +246,11 @@ static func _leaving(fails: Array[String], tree: SceneTree, host: SubViewport,
 	await _tap(tree, host, (main._modal as LeadlightRoomHost).seat().word())
 	modal = null
 	var leaving: Node = _leaving_room(main)
+	_check(fails, main._passage.carrying(), "%s: a leaving room is not carried by the passage" % room)
 	await _step(tree, main, ceili(0.45 / STEP))
 	await tree.process_frame
 	_check(fails, leaving == null or not is_instance_valid(leaving), "%s: the room was not freed by 450 ms" % room)
+	_check(fails, not main._passage.carrying(), "%s: the passage still carries a room that has left" % room)
 	_check(fails, title.lantern.position.is_equal_approx(title.home_rect().position),
 		"%s: the lantern is not home once the room has left" % room)
 	await _tap(tree, host, _word(main, room))

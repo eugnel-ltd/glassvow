@@ -2147,15 +2147,17 @@ func _show_map() -> void:
 
 ## One grain a frame while the map is the route (R3.1, #660). The map grains
 ## its own land (`MapFilmGrain`, no copy of the screen) while only the map, its
-## HUD and its pins are on screen. Under a room or a sheet, or while a
-## transition leaf crosses the map, the TransitionLayer's grain covers the
-## screen instead, as on every other route, so a room over the map looks as it
-## does over any route. Under Reduce Motion neither shows on the map.
+## HUD and its pins are on screen. Under a room or a sheet, while one still
+## arrives or leaves, or while a transition leaf crosses the map, the
+## TransitionLayer's grain covers the screen instead, as on every other route,
+## so a room over the map looks as it does over any route. Under Reduce Motion
+## neither shows on the map.
 func _sync_map_grain() -> void:
 	if _map_screen == null or _transitions == null:
 		return
 	var covered: bool = _modal != null or _choice_screen != null \
-		or _transitions.leaves_showing()
+		or _transitions.leaves_showing() \
+		or (_passage != null and is_instance_valid(_passage) and _passage.carrying())
 	_transitions.set_grain(covered and not Preferences.active.reduce_motion)
 	_map_screen.set_grain(not covered)
 

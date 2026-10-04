@@ -247,6 +247,21 @@ static func _map_route(fails: Array[String]) -> void:
 	main._sync_map_grain()
 	_check(fails, not main._transitions._grain.visible and _amount(land) > 0.0,
 		"closing the room gives the grain back to the map")
+	# A room or sheet the passage still carries (leaving after its close, or
+	# lingering) keeps the TransitionLayer's grain until it has gone. Here
+	# every passage is instant, so one is held by hand.
+	var passage: LeadlightPassage = main._passage_node()
+	for kind: StringName in [LeadlightPassage.DISMISS, LeadlightPassage.LINGER]:
+		var sheet: Control = Control.new()
+		passage._leaving.append(LeadlightPassage._entry(kind, sheet))
+		main._sync_map_grain()
+		_check(fails, passage.carrying() and main._transitions._grain.visible and _amount(land) == 0.0,
+			"a %s the passage still carries over the map keeps the TransitionLayer's grain" % kind)
+		passage._leaving.clear()
+		sheet.free()
+		main._sync_map_grain()
+		_check(fails, not passage.carrying() and not main._transitions._grain.visible \
+			and _amount(land) > 0.0, "the grain comes back to the map once the %s has gone" % kind)
 	main._transitions._plate.visible = true
 	main._sync_map_grain()
 	_check(fails, main._transitions._grain.visible and _amount(land) == 0.0,
