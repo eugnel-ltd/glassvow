@@ -29,12 +29,9 @@ var _panel: PanelContainer
 var _deeds_tab: Button
 var _rose_tab: Button
 var _epitaph_tab: Button
-var _deed_list: ScrollContainer
-var _epitaph_list: ScrollContainer
+var _deed_list: VigilDeeds
+var _epitaph_list: VigilEpitaphs
 var _rose: RoseWindowView
-var _rows: Array[PanelContainer] = []
-var _arts: Array[TextureRect] = []
-var _done: Array[bool] = []
 
 
 func _init(vigil: VigilState, content: ContentDB,
@@ -105,33 +102,17 @@ func _build() -> void:
 		_epitaph_tab = _tab(Locale.active.t("ui.vigil.epitaphTab"), _show_epitaphs)
 		tabs.add_child(_epitaph_tab)
 
-	_deed_list = ScrollContainer.new()
+	_deed_list = VigilDeeds.new(_vigil, _content, DEED_IDS, shape)
 	_deed_list.custom_minimum_size = Vector2(500, 459)
-	_deed_list.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	# Without this the view never travels with keyboard focus: Godot moves focus
-	# to a control whether or not it is on screen, so a focused deed below the
-	# fold is reachable and invisible (issue #72, found on the boon screen).
-	_deed_list.follow_focus = true
 	_deed_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_child(_deed_list)
-	var rows: VBoxContainer = VBoxContainer.new()
-	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rows.add_theme_constant_override("separation", 10)
-	_deed_list.add_child(rows)
-	for id: String in DEED_IDS:
-		# A deed no offered class can pursue would sit at 0 for ever (#543).
-		if ClassScope.shows_deed(_content, id):
-			_add_deed(rows, id)
 
 	if not _vigil.defeat_epitaphs.is_empty():
-		_epitaph_list = ScrollContainer.new()
+		_epitaph_list = VigilEpitaphs.new(_vigil, _content, shape)
 		_epitaph_list.custom_minimum_size = Vector2(500, 459)
-		_epitaph_list.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		_epitaph_list.follow_focus = true
 		_epitaph_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_epitaph_list.visible = false
 		column.add_child(_epitaph_list)
-		_fill_epitaphs()
 
 	if _has_rose:
 		_rose = RoseWindowView.new(
@@ -155,87 +136,6 @@ func _build() -> void:
 	else:
 		_show_deeds()
 	set_shape(shape)
-
-
-func _add_deed(parent: VBoxContainer, id: String) -> void:
-	var deed_v: Variant = _content.deeds.get(id, {})
-	if typeof(deed_v) != TYPE_DICTIONARY:
-		return
-	var deed: Dictionary = deed_v
-	var current: int = maxi(0,
-		int(float(str(_vigil.deeds.get(str(deed.get("stat")), 0)))))
-	var target: int = maxi(1, int(float(str(deed.get("n", 1)))))
-	var done: bool = current >= target
-
-	var panel: PanelContainer = PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _deed_style(done))
-	parent.add_child(panel)
-	_rows.append(panel)
-	_done.append(done)
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	panel.add_child(row)
-	var art: TextureRect = TextureRect.new()
-	# A deed whose art is still owed (docs/art-ledger.md) keeps an empty slot.
-	var art_path: String = "res://assets/art/deeds/%s.png" % id
-	art.texture = load(art_path) as Texture2D if ResourceLoader.exists(art_path) else null
-	art.custom_minimum_size = Vector2(48, 48)
-	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	row.add_child(art)
-	_arts.append(art)
-
-	var body: VBoxContainer = VBoxContainer.new()
-	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 2)
-	row.add_child(body)
-	var head: HBoxContainer = HBoxContainer.new()
-	body.add_child(head)
-	var name: Label = _label(
-		("%s " % "✦" if done else "") + str(deed.get("name", id)),
-		14, RunStyle.GOLD if done else RunStyle.PARCHMENT, false)
-	name.add_theme_font_override("font", GlassStyle.face(GlassStyle.CINZEL_500))
-	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(name)
-	head.add_child(_label("%d/%d" % [mini(current, target), target],
-		12, RunStyle.TEXT_DIM, false))
-	var rewards: String = _reward_names(deed.get("unlocks", []))
-	var desc: Label = _label(str(deed.get("desc", "")) if rewards.is_empty()
-		else "%s → %s" % [deed.get("desc", ""), rewards],
-		12, Color("#aab4d2"), false)
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_child(desc)
-	var bar: ProgressBar = ProgressBar.new()
-	bar.custom_minimum_size.y = 5
-	bar.max_value = target
-	bar.value = mini(current, target)
-	bar.show_percentage = false
-	bar.add_theme_stylebox_override("background", _bar_style(Color(0, 0, 0, 0.5)))
-	bar.add_theme_stylebox_override("fill", _bar_style(
-		Color("#fff3d6") if done else RunStyle.GOLD))
-	body.add_child(bar)
-
-
-func _reward_names(unlocks_v: Variant) -> String:
-	var names: PackedStringArray = []
-	var unlocks: Array = unlocks_v if typeof(unlocks_v) == TYPE_ARRAY else []
-	# A deferred class is never promised as a reward; the deed still counts.
-	var withheld: Array[String] = ClassScope.withheld_unlocks(_content)
-	for unlock_v: Variant in unlocks:
-		var unlock: String = str(unlock_v)
-		if withheld.has(unlock):
-			continue
-		if unlock == "aspect2":
-			names.append(Locale.active.t("ui.vigil.ashwarden"))
-			continue
-		var bits: PackedStringArray = unlock.split(":", false, 1)
-		if bits.size() != 2:
-			names.append(unlock)
-			continue
-		var registry: Dictionary = _content.cards if bits[0] == "card" \
-			else _content.relics
-		names.append(str(registry.get(bits[1], {}).get("name", bits[1])))
-	return ", ".join(names)
 
 
 func _show_deeds() -> void:
@@ -289,13 +189,10 @@ func set_shape(stage_shape: StringName) -> void:
 	_sync_panel_width()
 	_deed_list.custom_minimum_size = Vector2(302 if phone else 500,
 		215 if phone else 459)
+	_deed_list.set_shape(shape)
 	if _epitaph_list != null:
 		_epitaph_list.custom_minimum_size = _deed_list.custom_minimum_size
-	for index: int in range(_rows.size()):
-		_rows[index].add_theme_stylebox_override(
-			"panel", _deed_style(_done[index], 7 if phone else 9))
-	for art: TextureRect in _arts:
-		art.custom_minimum_size = Vector2.ONE * (40 if phone else 48)
+		_epitaph_list.set_shape(shape)
 	if _rose != null:
 		_rose.set_shape(shape)
 
@@ -304,21 +201,6 @@ func _sync_panel_width() -> void:
 	var phone: bool = shape == &"phone-landscape"
 	_panel.custom_minimum_size.x = 350 if phone else (
 		720 if _rose != null and _rose.visible else 560)
-
-
-func _fill_epitaphs() -> void:
-	var rows: VBoxContainer = VBoxContainer.new()
-	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rows.add_theme_constant_override("separation", 10)
-	_epitaph_list.add_child(rows)
-	var zh: bool = Locale.active.code == Locale.CODE_ZH_HANT
-	for i: int in range(_vigil.defeat_epitaphs.size()):
-		var id: String = _vigil.defeat_epitaphs[i]
-		var row: Dictionary = LineTable.row_by_id(_content.line_table, id)
-		var body: String = LineTable.text(row, zh) if not row.is_empty() else id
-		var line: Label = _label("%d  %s" % [i + 1, body], 13, RunStyle.TEXT_DIM, false)
-		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		rows.add_child(line)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -354,24 +236,3 @@ static func _label(text: String, font_size: int, colour: Color,
 	label.horizontal_alignment = (
 		HORIZONTAL_ALIGNMENT_CENTER if centred else HORIZONTAL_ALIGNMENT_LEFT)
 	return label
-
-
-static func _deed_style(done: bool, inset: float = 9.0) -> StyleBoxFlat:
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.118, 0.102, 0.055, 0.42) if done \
-		else Color(1, 1, 1, 0.04)
-	style.set_border_width_all(1)
-	style.border_color = RunStyle.PANEL_LINE if done else Color(1, 1, 1, 0.09)
-	style.set_corner_radius_all(10)
-	style.content_margin_left = 13
-	style.content_margin_right = 13
-	style.content_margin_top = inset
-	style.content_margin_bottom = inset
-	return style
-
-
-static func _bar_style(colour: Color) -> StyleBoxFlat:
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = colour
-	style.set_corner_radius_all(3)
-	return style
