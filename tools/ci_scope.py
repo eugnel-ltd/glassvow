@@ -153,7 +153,10 @@ def _scope_matches(path: str) -> set[str]:
     name = PurePosixPath(lower).name
     matches: set[str] = set()
 
-    if (path == "project.godot" or lower.endswith((
+    # The balance tools' per-class data is read by the simulator and the search
+    # player, so a change to it must run the Godot tests (the Duskblade
+    # invariance guard among them), not only the Python ones.
+    if (path == "project.godot" or path == "tools/balance_classes.json" or lower.endswith((
             ".gd", ".gd.uid", ".tscn", ".tres", ".gdshader",
             ".gdshader.uid", ".gdshaderinc"))):
         matches.add("godot_code")

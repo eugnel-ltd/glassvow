@@ -116,6 +116,6 @@ def g3_interval(diff: PairedDifference) -> str:
     return "UNDECIDED"
 
 
-def best_committed(rows_by_arm: dict[str, Rows]) -> str:
+def best_committed(who: bw.Roster, rows_by_arm: dict[str, Rows]) -> str:
     """The committed arm with the most wins; the first of a tie, as the grader picks it."""
-    return max(bw.COMMITTED, key=lambda arm: sum(won(row) for row in rows_by_arm[arm]))
+    return max(who.committed, key=lambda arm: sum(won(row) for row in rows_by_arm[arm]))

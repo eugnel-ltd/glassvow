@@ -19,6 +19,7 @@ SPEC = importlib.util.spec_from_file_location(
 ways = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ways)
 
+DUSK = ways.roster("duskblade")
 SEEDS = (13000, 13009)
 N = SEEDS[1] - SEEDS[0] + 1
 
@@ -67,12 +68,12 @@ for _arms in TABLE.values():
     _arms["A_lit"] = copy.deepcopy(_arms["A"])
 
 
-def write_table(directory: Path, table: dict = TABLE, commit: str = "c0ffee") -> None:
+def write_table(directory: Path, table: dict = TABLE, commit: str = "c0ffee", who: ways.Roster = DUSK) -> None:
     for (vow, pool), arms in table.items():
         for arm, runs in arms.items():
-            way, build = ways.ARMS[arm]
+            way, build = who.arms[arm]
             manifest = {"vow": vow, "pool": pool, "way": way, "build": build,
-                        "aspect": "duskblade", "commit": commit, "contentFileSha256": "ab" * 32}
+                        "aspect": who.aspect, "commit": commit, "contentFileSha256": "ab" * 32}
             (directory / ways.report_name(vow, pool, arm)).write_text(
                 json.dumps({"manifest": manifest, "runs": runs}))
         replay = {"manifest": {"commit": commit}, "runs": arms["A"][:ways.REPLAY]}
@@ -93,18 +94,18 @@ class BalanceWaysTest(unittest.TestCase):
                 ways.parse_seeds(bad)
 
     def test_commands_pair_every_arm_on_one_seed_range(self) -> None:
-        work = ways.jobs("godot", (13000, 13199), Path("/out"))
-        self.assertEqual(4 * (len(ways.ARMS) + 1), len(work))
+        work = ways.jobs("godot", DUSK, (13000, 13199), Path("/out"))
+        self.assertEqual(4 * (len(DUSK.arms) + 1), len(work))
         self.assertEqual(len(work), len({name for name, _ in work}))
         flags = dict(arg[2:].split("=", 1) for arg in
-                     ways.sim_command("godot", 5, "fresh", "C_lantern", 13000, 200, Path("/o.json"))[5:])
+                     ways.sim_command("godot", DUSK, 5, "fresh", "C_lantern", 13000, 200, Path("/o.json"))[5:])
         self.assertEqual({"aspect": "duskblade", "vow": "5", "runs": "200", "seed0": "13000",
                           "pool": "fresh", "way": "lantern", "build": "adaptive", "out": "/o.json"}, flags)
-        random_arm = ways.sim_command("godot", 0, "full", "R", 13000, 3, Path("/r.json"))
+        random_arm = ways.sim_command("godot", DUSK, 0, "full", "R", 13000, 3, Path("/r.json"))
         self.assertIn("--way=none", random_arm)
         self.assertIn("--build=random", random_arm)
         self.assertFalse(any(arg.startswith("--content=") for _, command in work for arg in command))
-        swept = ways.jobs("godot", (13000, 13199), Path("/out"), Path("/sweep/point.json"))
+        swept = ways.jobs("godot", DUSK, (13000, 13199), Path("/out"), Path("/sweep/point.json"))
         self.assertTrue(all(command[-1] == "--content=/sweep/point.json" for _, command in swept))
         self.assertFalse(any(arg.startswith("--way") and "=" in arg and not arg.startswith("--way=")
                              for _, command in work for arg in command))
@@ -114,14 +115,14 @@ class BalanceWaysTest(unittest.TestCase):
         for bad in ("2.0", "2/0", "-1/1", "a/b", "2/1/1"):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 ways.parse_weights(bad)
-        for name, command in ways.jobs("godot", (13000, 13199), Path("/out"), None, (2.0, 1.0)):
+        for name, command in ways.jobs("godot", DUSK, (13000, 13199), Path("/out"), None, (2.0, 1.0)):
             weighted = "--wayCommit=2.0" in command and "--wayOff=1.0" in command
-            self.assertEqual(name.rsplit("-", 1)[-1] in ways.COMMITTED, weighted, name)
+            self.assertEqual(name.rsplit("-", 1)[-1] in DUSK.committed, weighted, name)
 
     def test_gates_pass_on_their_exact_thresholds_and_fail_beyond(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             write_table(Path(temp))
-            result = ways.grade(Path(temp), SEEDS)
+            result = ways.grade(DUSK, Path(temp), SEEDS)
         self.assertEqual(["PASS"] * 9, verdicts(result, (0, "full")))
         self.assertEqual(["FAIL"] * 9, verdicts(result, (0, "fresh")))
         self.assertEqual("n/a", verdicts(result, (5, "fresh"))[0])
@@ -132,8 +133,8 @@ class BalanceWaysTest(unittest.TestCase):
         self.assertNotIn("steady1", stats["A_lit"])
 
     def test_g3_and_g6_read_a_lit_and_keep_a_as_the_floor(self) -> None:
-        self.assertEqual(("none", "lit"), ways.ARMS["A_lit"])
-        lit = ways.sim_command("godot", 0, "full", "A_lit", 13000, 3, Path("/l.json"))
+        self.assertEqual(("none", "lit"), DUSK.arms["A_lit"])
+        lit = ways.sim_command("godot", DUSK, 0, "full", "A_lit", 13000, 3, Path("/l.json"))
         self.assertIn("--way=none", lit)
         self.assertIn("--build=lit", lit)
         table = copy.deepcopy(TABLE)
@@ -142,7 +143,7 @@ class BalanceWaysTest(unittest.TestCase):
         table[0, "full"]["A_lit"] = rows(9, "none", win_ways=("shatter",))
         with tempfile.TemporaryDirectory() as temp:
             write_table(Path(temp), table)
-            result = ways.grade(Path(temp), SEEDS)
+            result = ways.grade(DUSK, Path(temp), SEEDS)
             text = ways.render(result)
         gates = result["cells"][0, "full"]["gates"]
         self.assertEqual(["PASS", "PASS", "FAIL", "PASS", "PASS", "FAIL", "PASS", "PASS", "PASS"],
@@ -163,7 +164,7 @@ class BalanceWaysTest(unittest.TestCase):
                 table[0, "fresh"][arm] = rows(5, way, steady, 0)
             with tempfile.TemporaryDirectory() as temp:
                 write_table(Path(temp), table)
-                gate = ways.grade(Path(temp), SEEDS)["cells"][0, "fresh"]["gates"][4]
+                gate = ways.grade(DUSK, Path(temp), SEEDS)["cells"][0, "fresh"]["gates"][4]
             self.assertIn("True not graded", gate[2])
             return gate[3]
 
@@ -181,7 +182,7 @@ class BalanceWaysTest(unittest.TestCase):
             table[0, "full"][arm] = runs
         with tempfile.TemporaryDirectory() as temp:
             write_table(Path(temp), table)
-            result = ways.grade(Path(temp), SEEDS)
+            result = ways.grade(DUSK, Path(temp), SEEDS)
             text = ways.render(result)
         stats = result["cells"][0, "full"]["stats"]["C_edge"]
         self.assertEqual((5, 5), stats["steady1Alive"])
@@ -197,7 +198,7 @@ class BalanceWaysTest(unittest.TestCase):
     def test_render_prints_every_cell_and_gate(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             write_table(Path(temp))
-            text = ways.render(ways.grade(Path(temp), SEEDS), 12.3)
+            text = ways.render(ways.grade(DUSK, Path(temp), SEEDS), 12.3)
         for vow, pool in TABLE:
             self.assertIn(f"### V{vow}, {pool} pool", text)
         for gate in range(1, 8):
@@ -212,7 +213,7 @@ class BalanceWaysTest(unittest.TestCase):
             with tempfile.TemporaryDirectory() as temp:
                 write_table(Path(temp), table)
                 with self.assertRaises(ValueError) as caught:
-                    ways.grade(Path(temp), SEEDS)
+                    ways.grade(DUSK, Path(temp), SEEDS)
             return str(caught.exception)
 
         self.assertIn("missing flame metrics", broken(lambda t: t[5, "full"]["C_edge"][3].pop("flame")))
@@ -228,12 +229,12 @@ class BalanceWaysTest(unittest.TestCase):
             report["manifest"]["commit"] = "deadbeef"
             other.write_text(json.dumps(report))
             with self.assertRaisesRegex(ValueError, "more than one build"):
-                ways.grade(Path(temp), SEEDS)
+                ways.grade(DUSK, Path(temp), SEEDS)
             report["manifest"]["commit"] = "c0ffee"
             report["manifest"]["way"] = "edge"
             other.write_text(json.dumps(report))
             with self.assertRaisesRegex(ValueError, "not this cell and arm"):
-                ways.grade(Path(temp), SEEDS)
+                ways.grade(DUSK, Path(temp), SEEDS)
 
     def test_a_replay_that_differs_fails_g7(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -242,24 +243,24 @@ class BalanceWaysTest(unittest.TestCase):
             replay = json.loads(path.read_text())
             replay["runs"][1]["outcome"] = "loss"
             path.write_text(json.dumps(replay))
-            gates = ways.grade(Path(temp), SEEDS)["cells"][0, "full"]["gates"]
+            gates = ways.grade(DUSK, Path(temp), SEEDS)["cells"][0, "full"]["gates"]
         self.assertEqual("FAIL", gates[6][-1])
         self.assertIn("replay 2/3 identical", gates[6][1])
 
     def test_play_reaches_every_command_and_must_agree_across_reports(self) -> None:
-        searched = ways.jobs("godot", (13000, 13199), Path("/out"), play="search")
+        searched = ways.jobs("godot", DUSK, (13000, 13199), Path("/out"), play="search")
         self.assertTrue(all(command[-1] == "--play=search" for _, command in searched))
-        self.assertFalse(any("--play" in arg for _, command in ways.jobs("godot", (13000, 13199), Path("/out"))
+        self.assertFalse(any("--play" in arg for _, command in ways.jobs("godot", DUSK, (13000, 13199), Path("/out"))
                              for arg in command))
         with tempfile.TemporaryDirectory() as temp:
             write_table(Path(temp))
-            self.assertEqual("greedy", ways.grade(Path(temp), SEEDS)["play"])
+            self.assertEqual("greedy", ways.grade(DUSK, Path(temp), SEEDS)["play"])
             other = Path(temp) / ways.report_name(0, "full", "R")
             report = json.loads(other.read_text())
             report["manifest"]["play"] = "search"
             other.write_text(json.dumps(report))
             with self.assertRaisesRegex(ValueError, "more than one player"):
-                ways.grade(Path(temp), SEEDS)
+                ways.grade(DUSK, Path(temp), SEEDS)
 
     def test_a_split_table_runs_and_grades_one_vow(self) -> None:
         self.assertEqual((0,), ways.parse_vows("0"))
@@ -267,8 +268,8 @@ class BalanceWaysTest(unittest.TestCase):
         for bad in ("", "1", "0,x", "0,,5"):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 ways.parse_vows(bad)
-        work = ways.jobs("godot", (13000, 13399), Path("/out"), vows=(5,))
-        self.assertEqual(2 * (len(ways.ARMS) + 1), len(work))
+        work = ways.jobs("godot", DUSK, (13000, 13399), Path("/out"), vows=(5,))
+        self.assertEqual(2 * (len(DUSK.arms) + 1), len(work))
         self.assertTrue(all(name.startswith("v5-") for name, _ in work))
         with tempfile.TemporaryDirectory() as temp:
             write_table(Path(temp))
@@ -276,9 +277,9 @@ class BalanceWaysTest(unittest.TestCase):
                 if name.name.startswith("v0-"):
                     name.unlink()
             self.assertEqual([(5, "fresh"), (5, "full")],
-                             list(ways.grade(Path(temp), SEEDS, (5,))["cells"]))
+                             list(ways.grade(DUSK, Path(temp), SEEDS, (5,))["cells"]))
             with self.assertRaises(ValueError):
-                ways.grade(Path(temp), SEEDS)
+                ways.grade(DUSK, Path(temp), SEEDS)
 
     def test_interval_verdicts_leave_a_straddled_threshold_undecided(self) -> None:
         low, high = ways.wilson(50, 100)
@@ -296,16 +297,16 @@ class BalanceWaysTest(unittest.TestCase):
         # V0 full sits exactly on each point threshold with 10 seeds: the intervals cannot decide.
         with tempfile.TemporaryDirectory() as temp:
             write_table(Path(temp))
-            intervals = ways.grade(Path(temp), SEEDS)["cells"][0, "full"]["intervals"]
+            intervals = ways.grade(DUSK, Path(temp), SEEDS)["cells"][0, "full"]["intervals"]
         self.assertEqual("UNDECIDED", intervals[0][1])
         self.assertIn("n=10", intervals[0][0])
         self.assertEqual("PASS", intervals[6][1])
 
     def test_feel_reads_the_per_fight_flame_rows(self) -> None:
-        self.assertEqual("edge", ways.expressed({"edge": 2.0, "shatter": 1.0}))
-        self.assertEqual("", ways.expressed({"edge": 1.0, "shatter": 1.0}))
-        self.assertEqual("", ways.expressed({}))
-        self.assertIsNone(ways.feel(rows(5, "edge"), "edge"))
+        self.assertEqual("edge", ways.expressed({"edge": 2.0, "shatter": 1.0}, DUSK.ways))
+        self.assertEqual("", ways.expressed({"edge": 1.0, "shatter": 1.0}, DUSK.ways))
+        self.assertEqual("", ways.expressed({}, DUSK.ways))
+        self.assertIsNone(ways.feel(rows(5, "edge"), "edge", DUSK.ways))
 
         def fight(result: str, hp: int, plays: dict, act: int = 1) -> tuple[dict, dict]:
             return ({"act": act, "result": result, "turns": 4, "hpLost": 10},
@@ -318,11 +319,11 @@ class BalanceWaysTest(unittest.TestCase):
                  "flame": {"fights": [g for _, g in won]}},
                 {"seed": 2, "outcome": "loss", "fights": [f for f, _ in lost],
                  "flame": {"fights": [g for _, g in lost]}}]
-        edge = ways.feel(runs, "edge")
+        edge = ways.feel(runs, "edge", DUSK.ways)
         self.assertEqual((5, 4, 1, 3), (edge["fights"], edge["won"], edge["close"], edge["shown"]))
         self.assertEqual((0, 1, 0), edge["deaths"])
         self.assertEqual(4.0, edge["turns"])
-        self.assertEqual(1, ways.feel(runs, "none")["shown"])  # A and R read the starting flame
+        self.assertEqual(1, ways.feel(runs, "none", DUSK.ways)["shown"])  # A and R read the starting flame
 
     def test_cli_grades_saved_reports_and_rejects_bad_options(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -339,6 +340,140 @@ class BalanceWaysTest(unittest.TestCase):
                     self.assertRaises(SystemExit) as caught:
                 ways.main(argv)
             self.assertEqual(2, caught.exception.code)
+
+
+# A class whose ways are not the Duskblade's: the arms, the gates and the report follow its content.
+ASH_WAYS = {"shatter": "smolder", "lantern": "hand", "edge": "endure"}  # the Duskblade's way -> this class's
+ASH_STATS = {"smolder": "smolders", "hand": "cardsHeld", "endure": "wardGained"}
+
+
+def ash_files(directory: Path, ways_listed: tuple = tuple(ASH_WAYS.values()), stats: dict | None = None) -> tuple[Path, Path]:
+    """A content file with two aspects (the second's ways ids differ) and a class file for the second."""
+    content, class_file = directory / "content.json", directory / "classes.json"
+    content.write_text(json.dumps({"aspects": [
+        {"id": "duskblade", "nameBare": "Duskblade", "ways": [{"id": "shatter"}, {"id": "lantern"}, {"id": "edge"}]},
+        {"id": "ashwarden", "nameBare": "Ashwarden", "ways": [{"id": way} for way in ways_listed]}]}))
+    class_file.write_text(json.dumps({"ashwarden": {"wayStats": ASH_STATS if stats is None else stats}}))
+    return content, class_file
+
+
+def renamed(table: dict, who: ways.Roster) -> dict:
+    """The Duskblade fixture with its ways renamed to the class's, and its extra per-fight stats added."""
+    text = json.dumps({f"{vow}|{pool}": arms for (vow, pool), arms in table.items()})
+    for old, new in ASH_WAYS.items():
+        text = text.replace(f'"{old}"', f'"{new}"').replace(f'"C_{old}"', f'"C_{new}"')
+    out = {}
+    for key, arms in json.loads(text).items():
+        vow, pool = key.split("|")
+        for runs in arms.values():
+            for row in runs:
+                row["flame"]["rates"].update({stat: 1.0 for stat in who.rates})
+        out[int(vow), pool] = arms
+    return out
+
+
+class OtherClassTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        self.addCleanup(self.tmp.cleanup)
+        self.content, self.class_file = ash_files(self.dir)
+        self.ash = ways.roster("ashwarden", self.content, self.class_file)
+
+    def test_the_arms_follow_the_aspects_ways_in_content_order(self) -> None:
+        self.assertEqual(("smolder", "hand", "endure"), self.ash.ways)
+        self.assertEqual(["C_smolder", "C_hand", "C_endure", "A", "A_lit", "R"], list(self.ash.arms))
+        self.assertEqual(("hand", "adaptive"), self.ash.arms["C_hand"])
+        self.assertEqual(("C_smolder", "C_hand", "C_endure"), self.ash.committed)
+        self.assertEqual(["C_shatter", "C_lantern", "C_edge", "A", "A_lit", "R"], list(DUSK.arms))
+        self.assertEqual(("Ashwarden", "ashwarden"), (self.ash.name, self.ash.aspect))
+
+    def test_the_per_fight_stats_are_the_base_then_the_ways_own(self) -> None:
+        self.assertEqual(ways.RATES + ("smolders", "cardsHeld", "wardGained"), self.ash.rates)
+        self.assertEqual(ways.RATES, DUSK.rates)  # the Duskblade's stats are all in the base
+
+    def test_the_class_file_holds_the_duskblades_verbs(self) -> None:
+        listed = json.loads(ways.CLASS_FILE.read_text())
+        self.assertEqual({"shatter": "shatters", "lantern": "kindles", "edge": "cracked"},
+                         listed["duskblade"]["wayStats"])
+
+    def test_commands_name_the_aspect_and_its_way(self) -> None:
+        command = ways.sim_command("godot", self.ash, 0, "entry", "C_hand", 12000, 5, Path("/o.json"))
+        self.assertIn("--aspect=ashwarden", command)
+        self.assertIn("--way=hand", command)
+        self.assertIn("--pool=entry", command)
+        work = ways.jobs("godot", self.ash, (13000, 13199), Path("/out"))
+        self.assertEqual(4 * (len(self.ash.arms) + 1), len(work))
+
+    def test_the_gates_grade_the_same_table_whatever_the_ways_are_called(self) -> None:
+        with tempfile.TemporaryDirectory() as dusk, tempfile.TemporaryDirectory() as ash:
+            write_table(Path(dusk))
+            write_table(Path(ash), renamed(TABLE, self.ash), who=self.ash)
+            expected = ways.grade(DUSK, Path(dusk), SEEDS)
+            result = ways.grade(self.ash, Path(ash), SEEDS)
+            text = ways.render(result)
+        for cell in TABLE:
+            self.assertEqual(verdicts(expected, cell), verdicts(result, cell), cell)
+            self.assertEqual([i[1] for i in expected["cells"][cell]["intervals"]],
+                             [i[1] for i in result["cells"][cell]["intervals"]], cell)
+        self.assertIn("| C_hand | 6/10 | 60.0% |", text)
+        self.assertIn("Ashwarden, seeds", text)
+        self.assertIn("| Per fight | Shatters | Kindles | Embers spent | Cracked | Embers gained | Smolders | "
+                      "Cards held | Ward gained |", text)
+
+    def test_a_report_of_another_aspect_is_not_this_cell(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            write_table(Path(temp))
+            other = Path(temp) / ways.report_name(0, "full", "C_edge")
+            report = json.loads(other.read_text())
+            report["manifest"]["aspect"] = "ashwarden"
+            other.write_text(json.dumps(report))
+            with self.assertRaisesRegex(ValueError, "not this cell and arm"):
+                ways.grade(DUSK, Path(temp), SEEDS)
+
+    def test_a_way_without_a_stat_or_an_unknown_aspect_is_refused(self) -> None:
+        _, bare = ash_files(self.dir, stats={"smolder": "smolders"})
+        with self.assertRaisesRegex(ValueError, "no wayStats entry for way hand, endure of ashwarden"):
+            ways.roster("ashwarden", self.content, bare)
+        with self.assertRaisesRegex(ValueError, "--aspect must be one of duskblade, ashwarden"):
+            ways.roster("emberwright", self.content, self.class_file)
+
+
+class AspectWithoutWaysTest(unittest.TestCase):
+    """The Ashwarden today: content declares no ways, so only the commit-blind arms exist."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        self.addCleanup(self.tmp.cleanup)
+        self.content, self.class_file = ash_files(self.dir, ways_listed=(), stats={})
+        self.bare = ways.roster("ashwarden", self.content, self.class_file)
+
+    def test_only_the_commit_blind_arms_exist(self) -> None:
+        self.assertEqual(((), ()), (self.bare.ways, self.bare.committed))
+        self.assertEqual(["A", "A_lit", "R"], list(self.bare.arms))
+        self.assertEqual(ways.RATES, self.bare.rates)
+        work = ways.jobs("godot", self.bare, (13000, 13199), Path("/out"))
+        self.assertEqual(4 * 4, len(work))
+        self.assertFalse(any("--way=none" not in command for _, command in work))
+
+    def test_committed_arms_and_the_grader_are_refused_with_a_clear_message(self) -> None:
+        with self.assertRaisesRegex(ValueError, "ashwarden declares no ways in content, so it has no committed arms"):
+            self.bare.check_arms(["A", "C_smolder"])
+        with self.assertRaisesRegex(ValueError, "unknown arms"):
+            self.bare.check_arms(["A", "B"])
+        self.bare.check_arms(["A", "A_lit", "R"])
+        with self.assertRaisesRegex(ValueError, "cannot be graded"):
+            ways.grade(self.bare, self.dir, SEEDS)
+
+    def test_the_cli_refuses_before_it_runs_anything(self) -> None:
+        err = io.StringIO()
+        out_dir = self.dir / "out"
+        with contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as caught:
+            ways.main(["--aspect", "ashwarden", "--content", str(self.content), "--out-dir", str(out_dir)])
+        self.assertEqual(2, caught.exception.code)
+        self.assertIn("declares no ways in content", err.getvalue())
+        self.assertFalse(out_dir.exists())
 
 
 if __name__ == "__main__":

@@ -27,6 +27,7 @@ import balance_readout_stats as stats  # noqa: E402
 import balance_readout_tables as tables  # noqa: E402
 import balance_ways as bw  # noqa: E402
 
+DUSK = bw.roster("duskblade")
 OVERRIDE = '[application]\nconfig/use_custom_user_dir=true\nconfig/custom_user_dir_name="glassvow-test"\n'
 
 
@@ -71,7 +72,7 @@ class IsolationGuardTests(unittest.TestCase):
     def test_the_launching_function_refuses_before_running_anything(self) -> None:
         calls: list = []
         with tempfile.TemporaryDirectory() as tmp:
-            work = runner.plan(Path(tmp) / "out", (13000, 13003), ["v0-fresh"], ["A"], chunk=2)
+            work = runner.plan(Path(tmp) / "out", DUSK, (13000, 13003), ["v0-fresh"], ["A"], chunk=2)
             with self.assertRaises(guard.IsolationError):
                 runner.run_chunks(work, {}, 1, runner=lambda command, log: calls.append(command) or 0, root=Path(tmp))
         self.assertEqual([], calls)
@@ -164,8 +165,8 @@ class StatisticsTests(unittest.TestCase):
         self.assertEqual("UNDECIDED", stats.g3_interval(span(0.0, 0.20)))
 
     def test_best_committed_takes_the_first_of_a_tie(self) -> None:
-        rows = {arm: outcomes(set(range(wins)), 10) for arm, wins in zip(bw.COMMITTED, (4, 6, 6))}
-        self.assertEqual(bw.COMMITTED[1], stats.best_committed(rows))
+        rows = {arm: outcomes(set(range(wins)), 10) for arm, wins in zip(DUSK.committed, (4, 6, 6))}
+        self.assertEqual(DUSK.committed[1], stats.best_committed(DUSK, rows))
 
 
 # ---------------------------------------------------------------- report fixtures
@@ -189,7 +190,7 @@ def run_row(seed: int, win: bool, way: str, expressed: bool = True, close: bool 
 
 
 def manifest(vow: int, pool: str, arm: str, **extra) -> dict:
-    way, build = bw.ARMS[arm]
+    way, build = DUSK.arms[arm]
     return {"aspect": "duskblade", "vow": vow, "pool": pool, "way": way, "build": build, "commit": "abc",
             "contentFileSha256": "c0ffee", "driverSha256": "d00d", "pilot": "p8", "play": "search",
             "policy": {"wayCommit": None, "wayOff": None}, "godot": "4.7.2",
@@ -205,7 +206,7 @@ def write_table(directory: Path, n: int = 10, wins: dict | None = None, vows=bw.
     wins = {**WINS, **(wins or {})}
     for vow in vows:
         for pool in bw.POOLS:
-            for arm, (way, _) in bw.ARMS.items():
+            for arm, (way, _) in DUSK.arms.items():
                 runs = [run_row(13000 + i, i < wins[arm], way, win_way=("lantern", "edge", "shatter")[i % 3])
                         for i in range(n)]
                 report = {"manifest": manifest(vow, pool, arm, **extra), "runs": runs}
@@ -224,10 +225,10 @@ class TableTests(unittest.TestCase):
     def test_paired_table_shape_and_cells(self) -> None:
         write_table(self.dir / "new", wins={"C_shatter": 8})
         write_table(self.dir / "base")
-        text = tables.paired_table(self.dir / "new", self.dir / "base", ["v0-fresh", "v0-full"])
+        text = tables.paired_table(DUSK, self.dir / "new", self.dir / "base", ["v0-fresh", "v0-full"])
         lines = text.splitlines()
         self.assertEqual(4, len(lines))  # header, rule, two cells
-        self.assertEqual(f"| Cell | {' | '.join(bw.ARMS)} |", lines[0])
+        self.assertEqual(f"| Cell | {' | '.join(DUSK.arms)} |", lines[0])
         # C_shatter gains seeds 6 and 7 of ten: +20.0 pp, 2 / 0, p = 2 * 1 / 4 = 0.50; the others are identical.
         self.assertIn("+20.0 pp: 2 / 0, p = 0.50 (same 8)", lines[2])
         self.assertIn("+0.0 pp: 0 / 0, p = 1.00 (same 10)", lines[2])
@@ -238,7 +239,7 @@ class TableTests(unittest.TestCase):
             d.mkdir()
             report = {"manifest": {}, "runs": outcomes(set(range(wins)), 20)}
             (d / "v0-full-A.json").write_text(json.dumps(report))
-        text = tables.paired_table(a, b, ["v0-full"], ["A"])
+        text = tables.paired_table(DUSK, a, b, ["v0-full"], ["A"])
         self.assertIn("+100.0 pp: 20 / 0, p < 0.001", text)
 
     def test_g3_table_names_the_best_committed_arm_and_both_verdicts(self) -> None:
@@ -248,7 +249,7 @@ class TableTests(unittest.TestCase):
                 "A_lit": set(range(10)) - {9}}
         for arm in wins:
             (d / f"v5-full-{arm}.json").write_text(json.dumps({"manifest": {}, "runs": outcomes(wins[arm], 10)}))
-        text = tables.g3_table(d, ["v5-full"])
+        text = tables.g3_table(DUSK, d, ["v5-full"])
         row = text.splitlines()[2]
         self.assertIn("| v5-full | C_shatter | -10.0 pp |", row)  # 9 of 10 against 10 of 10
         self.assertIn("FAIL / UNDECIDED", row)  # the point is below -3 pp; ten seeds cannot say it is
@@ -268,12 +269,12 @@ class TableTests(unittest.TestCase):
             ("fresh", "A_lit"): (120, 1.0, 0.04),
         }
         for (pool, arm), (wins, expressed, close) in plan.items():
-            way = bw.ARMS[arm][0]
+            way = DUSK.arms[arm][0]
             closes = round(close * wins)
             runs = [run_row(13000 + i, i < wins, way, expressed=(i % 10) < round(expressed * 10),
                             close=i < closes) for i in range(400)]
             (d / bw.report_name(0, pool, arm)).write_text(json.dumps({"manifest": {}, "runs": runs}))
-        rows = tables.row_b(d)
+        rows = tables.row_b(DUSK, d)
         verdicts = {key: (value[1], value[4]) for key, value in rows.items()}
         self.assertEqual(("PASS", "PASS"), verdicts["full", "C_shatter"])
         self.assertEqual("FAIL", verdicts["full", "C_lantern"][0])
@@ -282,7 +283,7 @@ class TableTests(unittest.TestCase):
         self.assertEqual("FAIL", verdicts["fresh", "C_shatter"][1])
         self.assertEqual("FAIL", verdicts["fresh", "C_lantern"][1])
         self.assertEqual("PASS", verdicts["fresh", "C_edge"][0])
-        text = tables.row_b_table(d)
+        text = tables.row_b_table(DUSK, d)
         self.assertEqual(2 + 8, len(text.splitlines()))
         self.assertIn("| V0 full | C_lantern |", text)
 
@@ -290,13 +291,13 @@ class TableTests(unittest.TestCase):
         d = self.dir / "old"
         d.mkdir()
         for pool in bw.POOLS:
-            for arm in bw.COMMITTED + (bw.SKILLED,):
-                runs = [run_row(13000 + i, True, bw.ARMS[arm][0]) for i in range(4)]
+            for arm in DUSK.committed + (bw.SKILLED,):
+                runs = [run_row(13000 + i, True, DUSK.arms[arm][0]) for i in range(4)]
                 for row in runs:
                     del row["fights"]
                 (d / bw.report_name(0, pool, arm)).write_text(json.dumps({"manifest": {}, "runs": runs}))
         with self.assertRaises(ValueError):
-            tables.row_b(d)
+            tables.row_b(DUSK, d)
 
     def test_full_table_shape(self) -> None:
         write_table(self.dir / "v0", vows=(0,))
@@ -304,7 +305,7 @@ class TableTests(unittest.TestCase):
         write_table(self.dir / "r0", wins={"C_shatter": 4}, vows=(0,))
         write_table(self.dir / "r5", wins={"C_shatter": 4}, vows=(5,))
         seeds = (13000, 13009)
-        text = tables.full_table(self.dir / "v0", self.dir / "v5", seeds, seeds,
+        text = tables.full_table(DUSK, self.dir / "v0", self.dir / "v5", seeds, seeds,
                                  [(self.dir / "r0", self.dir / "r5")])
         win_rows = [ln for ln in text.splitlines() if ln.startswith("| V") and "%" in ln and "PASS" not in ln
                     and "FAIL" not in ln and "n/a" not in ln and "UNDECIDED" not in ln]
@@ -325,7 +326,7 @@ class TableTests(unittest.TestCase):
         write_table(self.dir / "v0", vows=(0,))
         write_table(self.dir / "v5", vows=(5,))
         seeds = (13000, 13009)
-        text = tables.full_table(self.dir / "v0", self.dir / "v5", seeds, seeds)
+        text = tables.full_table(DUSK, self.dir / "v0", self.dir / "v5", seeds, seeds)
         self.assertNotIn("Ref 1", text)
         self.assertNotIn("Before B1", text)
 
@@ -335,14 +336,14 @@ class TableTests(unittest.TestCase):
         write_table(self.dir / "r0", wins={"R": 5}, vows=(0,))
         write_table(self.dir / "r5", wins={"R": 5}, vows=(5,))
         seeds = (13000, 13009)
-        full = tables.full_table(self.dir / "v0", self.dir / "v5", seeds, seeds, [(self.dir / "r0", self.dir / "r5")])
+        full = tables.full_table(DUSK, self.dir / "v0", self.dir / "v5", seeds, seeds, [(self.dir / "r0", self.dir / "r5")])
         tidy = tables.tidy_gates(full).splitlines()
         self.assertEqual(2 + 4 * len(tables.GATE_LABELS), len(tidy))
         g4 = [ln for ln in tidy if "| G4 |" in ln and "V0 full" in ln][0]
         self.assertIn("**PASS**", g4)  # random now loses; with five wins in ten it did not
         self.assertNotIn("**", [ln for ln in tidy if "| G2 |" in ln][0])
         with self.assertRaises(ValueError):
-            tables.tidy_gates(tables.full_table(self.dir / "v0", self.dir / "v5", seeds, seeds))
+            tables.tidy_gates(tables.full_table(DUSK, self.dir / "v0", self.dir / "v5", seeds, seeds))
 
 
 # ---------------------------------------------------------------- runner, chunks and merge
@@ -355,7 +356,7 @@ def fake_simulator(drop: set[str] | None = None, tweak=None):
         args = dict(a[2:].split("=", 1) for a in command if a.startswith("--") and "=" in a)
         calls.append(command)
         first, count = int(args["seed0"]), int(args["runs"])
-        arm = next(k for k, (way, build) in bw.ARMS.items() if (way, build) == (args["way"], args["build"]))
+        arm = next(k for k, (way, build) in DUSK.arms.items() if (way, build) == (args["way"], args["build"]))
         report = {"manifest": manifest(int(args["vow"]), args["pool"], arm,
                                        seeds={"first": first, "last": first + count - 1, "count": count}),
                   "runs": [run_row(first + i, i % 2 == 0, args["way"]) for i in range(count)]}
@@ -382,7 +383,7 @@ class ChunkAndMergeTests(unittest.TestCase):
     def plan(self, **kwargs):
         defaults = dict(seeds=(13000, 13009), cells=["v0-fresh"], arms=["C_edge", "A"], chunk=4, play="search")
         defaults.update(kwargs)
-        return runner.plan(self.out, **defaults)
+        return runner.plan(self.out, DUSK, **defaults)
 
     def run_all(self, work, simulator=None, who=IDENTITY, jobs=2):
         simulator = simulator or fake_simulator()
@@ -570,6 +571,20 @@ class ChunkAndMergeTests(unittest.TestCase):
             runner.join_bands(self.root / "bad2", "v0-full", ["C_edge"], [lower, again])
         self.assertIn("overlap", str(ctx.exception))
 
+    def test_join_bands_refuses_bands_that_are_not_the_named_cell_and_arm(self) -> None:
+        """Bands that agree with each other can still be the wrong report: C_shatter's, filed as C_edge."""
+        for field, value in (("way", "shatter"), ("pool", "fresh"), ("vow", 5), ("build", "random")):
+            with self.subTest(field=field):
+                lower, upper = self.band(f"lo-{field}", 13000, 13003), self.band(f"hi-{field}", 13004, 13007)
+                for band in (lower, upper):
+                    path = band / "v0-full-C_edge.json"
+                    report = json.loads(path.read_text())
+                    report["manifest"][field] = value
+                    path.write_text(json.dumps(report))
+                with self.assertRaises(ValueError) as ctx:
+                    runner.join_bands(self.root / f"bad-{field}", "v0-full", ["C_edge"], [lower, upper])
+                self.assertIn("not this cell and arm", str(ctx.exception))
+
     def test_the_identity_digests_content_and_the_simulator_sources(self) -> None:
         (self.root / "content").mkdir()
         (self.root / "tools").mkdir()
@@ -718,6 +733,81 @@ class CatalogueTests(unittest.TestCase):
             self.assertEqual(sorted(str(root / "cat" / n) for n in ("k1.json", "k2+k3.json")),
                              sorted(out.getvalue().split()))
             self.assertEqual(0.75, json.loads((root / "cat/k2+k3.json").read_text())["flame"]["trueMin"])
+
+
+def other_class(directory: Path, ways_listed: tuple[str, ...]) -> bw.Roster:
+    """A class whose way ids are not the Duskblade's (or, with none listed, one that declares no ways)."""
+    content, class_file = directory / "content.json", directory / "classes.json"
+    content.write_text(json.dumps({"aspects": [
+        {"id": "duskblade", "ways": [{"id": "shatter"}, {"id": "lantern"}, {"id": "edge"}]},
+        {"id": "ashwarden", "nameBare": "Ashwarden", "ways": [{"id": way} for way in ways_listed]}]}))
+    class_file.write_text(json.dumps({"ashwarden": {"wayStats": {"smolder": "smolders", "hand": "cardsHeld"}}}))
+    return bw.roster("ashwarden", content, class_file)
+
+
+class OtherClassTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / "override.cfg").write_text(OVERRIDE)
+        self.addCleanup(self.tmp.cleanup)
+
+    def test_the_plan_names_the_aspect_the_arms_and_the_entry_pool(self) -> None:
+        ash = other_class(self.root, ("smolder", "hand"))
+        work = runner.plan(self.root / "out", ash, (12000, 12003), ["v0-entry", "v0-full"], list(ash.arms), chunk=4)
+        self.assertEqual(2 * len(ash.arms), len(work))
+        self.assertEqual(["v0-entry-C_smolder", "v0-entry-C_hand"], [c.report for c in work[:2]])
+        self.assertIn("--aspect=ashwarden", work[0].command)
+        self.assertIn("--pool=entry", work[0].command)
+        self.assertIn("--way=hand", work[1].command)
+        self.assertEqual((0, "entry"), runner.parse_cell("v0-entry"))
+
+    def test_chunks_of_another_class_run_merge_and_check_their_cell_and_arm(self) -> None:
+        ash = other_class(self.root, ("smolder", "hand"))
+        work = runner.plan(self.root / "out", ash, (12000, 12005), ["v0-entry"], ["C_hand", "A"], chunk=3)
+
+        def simulate(command: list[str], log: Path) -> int:
+            args = dict(a[2:].split("=", 1) for a in command if a.startswith("--") and "=" in a)
+            first, count = int(args["seed0"]), int(args["runs"])
+            manifest_ = {"aspect": args["aspect"], "vow": int(args["vow"]), "pool": args["pool"], "way": args["way"],
+                         "build": args["build"], "commit": "abc", "seeds": {"first": first, "count": count}}
+            Path(args["out"]).write_text(json.dumps(
+                {"manifest": manifest_, "runs": [run_row(first + i, True, args["way"]) for i in range(count)]}))
+            return 0
+        runner.run_chunks(work, IDENTITY, 2, runner=simulate, root=self.root, progress=lambda text: None)
+        self.assertEqual(["v0-entry-A", "v0-entry-C_hand"], runner.merge_parts(self.root / "out", work))
+        merged = json.loads((self.root / "out/v0-entry-C_hand.json").read_text())
+        self.assertEqual(("ashwarden", "hand"), (merged["manifest"]["aspect"], merged["manifest"]["way"]))
+
+    def test_an_aspect_with_no_ways_has_no_committed_arms_and_says_so(self) -> None:
+        bare = other_class(self.root, ())
+        runner.plan(self.root / "out", bare, (12000, 12003), ["v0-entry"], list(bare.arms))  # A, A_lit and R run
+        with self.assertRaisesRegex(ValueError, "ashwarden declares no ways in content, so it has no committed arms"):
+            runner.plan(self.root / "out", bare, (12000, 12003), ["v0-entry"], ["C_smolder"])
+
+    def test_the_commands_that_read_committed_arms_refuse_an_aspect_with_no_ways(self) -> None:
+        bare = other_class(self.root, ())
+        with mock.patch.object(readout, "REPO", self.root), mock.patch.object(bw, "roster", return_value=bare), \
+                mock.patch.object(runner, "plan", wraps=runner.plan) as planned:
+            with self.assertRaisesRegex(ValueError, "no committed arms"):
+                readout.main(["run", str(self.root / "out"), "--aspect", "ashwarden", "--seeds", "13000-13003",
+                              "--arms", "C_smolder"])
+            for argv in (["g3", str(self.root), "v0-full"], ["rowb", str(self.root)],
+                         ["table", str(self.root), str(self.root), "--v0-seeds", "13000-13003",
+                          "--v5-seeds", "13000-13003"]):
+                with self.subTest(argv=argv), self.assertRaisesRegex(ValueError, "cannot be graded"):
+                    readout.main([*argv, "--aspect", "ashwarden"])
+            self.assertEqual(1, planned.call_count)
+
+    def test_the_default_arms_of_a_class_are_its_own(self) -> None:
+        bare = other_class(self.root, ())
+        with mock.patch.object(readout, "REPO", self.root), mock.patch.object(bw, "roster", return_value=bare), \
+                mock.patch.object(runner, "run_chunks", return_value=0), \
+                mock.patch.object(runner, "merge_parts", return_value=[]), \
+                mock.patch.object(runner, "identity", return_value={}), contextlib.redirect_stdout(io.StringIO()):
+            readout.main(["run", str(self.root / "out"), "--aspect", "ashwarden", "--seeds", "13000-13003"])
+        self.assertEqual({"A", "A_lit", "R"}, {c.arm for c in runner.plan(
+            self.root / "x", bare, (13000, 13003), ["v0-entry"], list(bare.arms))})
 
 
 class CommandLineTests(unittest.TestCase):
