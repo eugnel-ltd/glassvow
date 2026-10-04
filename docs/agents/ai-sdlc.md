@@ -122,6 +122,7 @@ Promote only the selected decision, required data, and reproducible acceptance i
 | `docs` | Markdown, instructions, docs, anchor/freeze tooling | document anchors and detached-reference freeze; no Godot by default |
 | `balance_ml` | `tools/balance_*`, balance tests/protocols and governed balance docs | balance/ML self-tests, plus Godot setup and asset import (the host-qualify self-test launches `tools/balance_sim.gd`, which needs the imported class cache) |
 | `provenance_evidence` | bounded execution-provenance tools, protocol and focused tests | deterministic policy/capsule fixtures; no Godot or live evidence campaign |
+| `agent_evals` | the agent eval and hill-climb harness (`tools/agent_evals/`, its evals) and its test | the harness self-test on a scripted backend; no model call, no Godot |
 | `godot_code` | `.gd`, `.tscn`, `.tres`, project resources | import, changed-file parse, complete discovered Godot regression suite |
 | `map_code` | map compiler, layout, routing, waylight, map tests/tools | map quality contract and shared profile probe; not the expensive asset gate |
 | `map_assets` | map GLBs, textures, shaders, manifest, landing/checker tools | complete map asset/module validation and import |
