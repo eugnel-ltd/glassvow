@@ -1574,6 +1574,8 @@ commit):
   `ec48be21`, which brings R3.1 b's wood to Act I). Evidence: `evidence/pr-c-final-v3-trace.txt` (the
   trace and its reading), `evidence/pr-c-final-v3-arms.txt` (every arm's launch), and
   `evidence/pr-c-final2-ipad8-frame-times.txt` with the reports as images in `evidence/pr-c-ipad8-2/`.
+  The commits named here are the measured builds on `ec48be21`; the branch was then rebased onto
+  `94303de9` (#544 P3, the balance tools and their tests only), so its code is theirs unchanged.
 
   - **V3 attributed.** A profiling build timed every callback of the turn (`qa_patch_prof.py`): on V3's
     first three frames the process segment grows only 1.5 to 2 ms over the title's; the draw segment, which
