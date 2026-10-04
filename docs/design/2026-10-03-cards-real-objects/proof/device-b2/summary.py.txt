@@ -1,0 +1,49 @@
+import sys, re, glob, os
+# usage: summary.py <batch dir> : one line per run (scratch, #657 PR 3 review fixes)
+def runs(d):
+    order = []
+    for l in open(os.path.join(d, "batch.log")):
+        m = re.search(r"launch (\S+) args", l)
+        if m: order.append(m.group(1))
+    return order
+def load(path):
+    rows = [l.rstrip("\n").split(" ") for l in open(path) if l.strip()]
+    probe = next(r for r in rows if len(r) > 2 and r[2] == "PROBE")
+    nonce = probe[0]
+    frames = [r for r in rows if r[0] == nonce and r[2] == "F"]
+    info = {r[2]: " ".join(r[3:]) for r in rows if r[0] == nonce and r[2] != "F"}
+    args = re.search(r"args=\[([^\]]*)\]", " ".join(probe)).group(1)
+    return nonce, frames, info, args, sum(1 for r in rows if r[0] != nonce)
+d = sys.argv[1]
+hdr = f"{'run':9s} {'opts':38s} {'cache':10s} {'load':>7s} {'build':>8s} {'N+1':>6s} {'N+2':>6s} {'ent10':>6s} {'rest':>5s} | {'pic1':>5s} {'c':>3s} {'liv1':>5s} {'c':>3s} {'pic2':>5s} {'liv2':>5s} | {'bake':>6s} {'free':>6s}"
+print(hdr)
+for nonce in runs(d):
+    path = os.path.join(d, f"rows_{nonce}.txt")
+    if not os.path.exists(path):
+        print(f"{nonce:9s} (no rows)"); continue
+    n, frames, info, args, bad = load(path)
+    assert n == nonce and bad == 0, (n, nonce, bad)
+    assert f"nonce={nonce}," in args
+    opts = args.split("--turn-probe=")[1].replace(f"nonce={nonce},", "")
+    cache = info.get("CACHE_BEFORE", "").replace("shader_cache:", "sc").replace(" vulkan:0 Caches:", "/")
+    seq = []; prev = None
+    for r in frames:
+        c = [int(x) for x in r[8].split(",")]
+        dlt = [0]*5 if prev is None else [a-b for a, b in zip(c, prev)]
+        prev = c
+        seq.append((r[4], float(r[5]), sum(dlt), float(r[6])))
+    if "wipeonly=1" in opts:
+        print(f"{nonce:9s} {opts:38s} {cache:10s} (wipe only) {info.get('WIPED','')}"); continue
+    i = next(k for k, s in enumerate(seq) if s[0] == "load")
+    load_ms, build = seq[i][1], seq[i+1][1]
+    n1, n2 = seq[i+2][1], seq[i+3][1]
+    ent = max(s[1] for s in seq[i+4:i+14])
+    def ph(name):
+        v = [s for s in seq if s[0] == name]
+        return (max(s[1] for s in v), sum(s[2] for s in v)) if v else (0.0, 0)
+    rest = ph("rest")[0]
+    p1, l1, p2, l2 = ph("turn_picture"), ph("turn_live"), ph("turn_picture2"), ph("turn_live2")
+    bake = ph("bake")[0]
+    lf = [s for s in seq if s[0] in ("late_free", "after_free")][:3]
+    free = max((s[1] for s in lf), default=0.0)
+    print(f"{nonce:9s} {opts:38s} {cache:10s} {load_ms:7.1f} {build:8.1f} {n1:6.1f} {n2:6.1f} {ent:6.1f} {rest:5.1f} | {p1[0]:5.1f} {p1[1]:3d} {l1[0]:5.1f} {l1[1]:3d} {p2[0]:5.1f} {l2[0]:5.1f} | {bake:6.1f} {free:6.1f}")

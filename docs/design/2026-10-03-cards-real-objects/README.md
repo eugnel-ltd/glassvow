@@ -604,6 +604,8 @@ nothing.
   to `Documents/` and they were pulled with `devicectl`. The device was
   discovered at run time; its identifier is not recorded here. Development
   profile only; no real save was read or written.
+- Device batch 2 (after the review round): `proof/device-b2/` keeps the batch log,
+  the per-run summary and the batch script, as text.
 - Fidelity diffs: the resting hand captured 1.2 s after the second deal,
   compared pixel by pixel with today's over the hand region (800 × 220 stage
   px).

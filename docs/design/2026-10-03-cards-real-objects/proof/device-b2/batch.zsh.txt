@@ -1,0 +1,62 @@
+#!/bin/zsh
+# cards-pr3 device batch v2 (#657 PR 3 review fixes). Scratch, never committed.
+# usage: batch.zsh <batch-name> <step> [<step> ...]
+#   export                     apply the QA patch, qa_export (build + install), revert it
+#   <nonce>:<probe options>    one launch: -- --map --seed=1 --turn-probe=nonce=<nonce>,<options>
+# The nonce rides in the launch arguments; the probe echoes them in its PROBE row.
+set -uo pipefail
+S=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad
+FLOW=$S/device13/flow
+WT=$S/cards-lane/wt3
+NAME=$1; shift
+OUT=$S/cards-lane/wt3-dev2/$NAME
+mkdir -p $OUT
+LOCK=cards-pr3
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a $OUT/batch.log; }
+$FLOW/ipad_lock.sh acquire $LOCK >> $OUT/batch.log 2>&1 || { log "lock failed"; exit 1; }
+cleanup() {
+  python3 $WT/qa_cards/patch.py revert $WT >> $OUT/batch.log 2>&1
+  $FLOW/ipad_lock.sh release $LOCK >> $OUT/batch.log 2>&1
+  log "lock released"
+}
+trap cleanup EXIT
+log "lock held; HEAD=$(git -C $WT rev-parse HEAD) status=[$(git -C $WT status --short | tr '\n' ' ')]"
+log "override.cfg: $(tr '\n' ' ' < $WT/override.cfg)"
+udid() {
+  xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c 'import json,sys; print(next(d["hardwareProperties"]["udid"] for d in json.load(sys.stdin)["result"]["devices"] if d["hardwareProperties"].get("productType")=="iPad11,6"))'
+}
+pull() { timeout 300 xcrun devicectl device copy from --device "$(udid)" --domain-type appDataContainer --domain-identifier io.fol2.glassvow.qa --source Documents/$1 --destination $2 >/dev/null 2>&1; }
+n_export=0
+for step in "$@"; do
+  if [[ "$step" == "export" ]]; then
+    n_export=$((n_export + 1))
+    python3 $WT/qa_cards/patch.py apply $WT >> $OUT/batch.log 2>&1 || { log "patch failed"; exit 1; }
+    IPAD_LOCK_OWNER=$LOCK $FLOW/qa_export.sh $WT > $OUT/export$n_export.log 2>&1
+    rc=$?
+    python3 $WT/qa_cards/patch.py revert $WT >> $OUT/batch.log 2>&1
+    [[ -z "$(git -C $WT status --short -- application presentation)" ]] || { log "patch did not revert cleanly"; exit 1; }
+    [[ $rc == 0 ]] || { log "export failed rc=$rc"; tail -20 $OUT/export$n_export.log; exit 1; }
+    log "export+install $n_export done (QA patch applied for the export only, reverted)"
+    continue
+  fi
+  nonce=${step%%:*}; opts=${step#*:}
+  args="--map --seed=1 --turn-probe=nonce=$nonce,$opts"
+  log "launch $nonce args=[$args]"
+  U=$(udid)
+  timeout 90 xcrun devicectl device process launch --terminate-existing --device "$U" \
+    io.fol2.glassvow.qa -- ${(z)args} 2>&1 | sed "s/$U/<device>/g" >> $OUT/launch.log || log "launch rc=$?"
+  U=
+  got=0
+  for i in $(seq 1 40); do
+    sleep 4
+    if pull turn_probe_$nonce.txt $OUT/rows_$nonce.txt && grep -q " DONE" $OUT/rows_$nonce.txt; then got=1; break; fi
+  done
+  if [[ $got == 1 ]]; then
+    log "rows $nonce: $(grep -c ' F ' $OUT/rows_$nonce.txt) frames; $(grep -h 'CACHE_BEFORE\|AFTER_LOAD\|BAKE_AT\|WIPED' $OUT/rows_$nonce.txt | cut -d' ' -f3- | tr '\n' ';')"
+  else
+    log "no DONE rows for $nonce"
+  fi
+  sleep 3
+done
+log "batch done"
