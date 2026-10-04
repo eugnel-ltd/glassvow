@@ -260,6 +260,7 @@ func _ready() -> void:
 	# tools/shot.sh --enemies|--chips|--hud|--reward --shot=...  (labs)
 	# godot --path . -- --cards=bastion --surfaces[=gilt,holofoil]  (materials)
 	# godot --path . -- --studio[=bastion] [--zoom=3]   (material bench)
+	# tools/shot.sh --turns[=bastion] --vp=2916x1640 --settle=1 --shot=...  (turn sheet)
 	# godot --path . -- --fight=id[,id] [--kind=normal|elite|boss]   (battlefield)
 	# godot --path . -- --vp=1280x720            (watch the shape re-pick live)
 	# godot --path . -- --shape=phone-landscape   (force one; ?shape= ported)
@@ -284,6 +285,7 @@ func _ready() -> void:
 	var cards_zoom: float = 1.0
 	var surfaces: PackedStringArray = PackedStringArray()
 	var studio: bool = false
+	var turns: bool = false
 	var resume_run: bool = false
 	# --map: start a run and STOP on the world map, instead of walking on to a
 	# fight the way `--enter=` does. The map was the one production screen with
@@ -333,6 +335,9 @@ func _ready() -> void:
 		elif arg.begins_with("--studio="):
 			studio = true
 			cards_only = arg.trim_prefix("--studio=").split(",", false)
+		elif arg == "--turns" or arg.begins_with("--turns="):
+			turns = true
+			cards_only = arg.trim_prefix("--turns").trim_prefix("=").split(",", false)
 		elif arg.begins_with("--fight="):
 			fight = arg.trim_prefix("--fight=").split(",", false)
 		elif arg.begins_with("--kind="):
@@ -410,7 +415,7 @@ func _ready() -> void:
 				"--stagecraft", "--flame"]:
 			lab_flag = arg
 	if performance_probe and (fight.is_empty() or not shot_path.is_empty()
-			or cards_lab or studio or not lab_flag.is_empty()):
+			or cards_lab or studio or turns or not lab_flag.is_empty()):
 		push_error("--perf-out requires one --fight route and no capture or lab")
 		get_tree().quit(2)
 		return
@@ -495,6 +500,13 @@ func _ready() -> void:
 		# takes --zoom for the PANEL's scale only; the card has its own size
 		# picker, because scaling the window there costs stage room.
 		add_child(CardStudio.new(content, cards_only, cards_zoom))
+		if shot_path != "":
+			_capture_and_quit(shot_path)
+		return
+	if turns:
+		# The turn sheet: one card turned by both renderers, back by back.
+		add_child(CardTurnSheet.new(content,
+			cards_only[0] if not cards_only.is_empty() else ""))
 		if shot_path != "":
 			_capture_and_quit(shot_path)
 		return
@@ -2960,11 +2972,19 @@ func _resume_pending_combat() -> void:
 	_screen.potion_requested.connect(_show_combat_potion_menu)
 	_screen.hint_guide = _hints
 	add_child(_screen)
+	_prewarm_card_turns()
 	var route_kind: String = str(game.run.pending_combat)
 	var combat_kind: String = "normal" if route_kind == "monster" else route_kind
 	_screen.start_encounter(enemies, combat_kind,
 		_combat_encounter_header(route_kind, game.run.act + 1))
 	_play_combat_music(route_kind)
+
+
+## Pay for the fight's card turns in the frame that builds it (CardTurn.prewarm):
+## the back the table wears is baked and the turn's shaders compile here, inside
+## the load, never in a frame the fight plays in.
+func _prewarm_card_turns() -> void:
+	CardTurn.prewarm(_screen, CardBacks.chosen(Preferences.active, _vigil))
 
 
 ## The battlefield bench: a REAL fight, not a mock — the same GlassvowGame, the
@@ -3002,6 +3022,7 @@ func _start_fight(ids: PackedStringArray, kind: String) -> void:
 	_screen.potion_requested.connect(_show_combat_potion_menu)
 	_screen.hint_guide = _hints
 	add_child(_screen)
+	_prewarm_card_turns()
 	_screen.start_encounter(known, kind, "Bench  ·  %s" % kind.capitalize())
 	_play_combat_music(kind)
 

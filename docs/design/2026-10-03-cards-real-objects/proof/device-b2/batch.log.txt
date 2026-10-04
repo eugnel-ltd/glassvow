@@ -1,0 +1,53 @@
+[10:49:31] lock held; HEAD=e6007549138af4f18cb995a3c141238b24eafd33 status=[?? override.cfg ?? qa_cards/ ]
+[10:49:31] override.cfg: [application] config/use_custom_user_dir=true config/custom_user_dir_name="glassvow-cards-lane" 
+apply application/main.gd 10
+revert application/main.gd 0
+[10:50:23] export+install 1 done (QA patch applied for the export only, reverted)
+[10:50:23] launch W1049a args=[--map --seed=1 --turn-probe=nonce=W1049a,wipeonly=1]
+[10:50:29] rows W1049a: 0 frames; CACHE_BEFORE shader_cache:78 vulkan:0 Caches:25;WIPED shader_cache:-1 vulkan:-1 Caches:0;
+apply application/main.gd 10
+revert application/main.gd 0
+[10:51:13] export+install 2 done (QA patch applied for the export only, reverted)
+[10:51:13] launch F1049b args=[--map --seed=1 --turn-probe=nonce=F1049b,prewarm=1,route=bench,wipe=1]
+[10:52:21] rows F1049b: 810 frames; CACHE_BEFORE shader_cache:43 vulkan:0 Caches:18;AFTER_LOAD back=vault baked=true reduce_motion=false;WIPED shader_cache:-1 vulkan:-1 Caches:0;
+[10:52:24] launch C1049c args=[--map --seed=1 --turn-probe=nonce=C1049c,prewarm=1,route=bench,back=vault,wipe=1]
+[10:53:36] rows C1049c: 704 frames; CACHE_BEFORE shader_cache:43 vulkan:0 Caches:18;AFTER_LOAD back=vault baked=true reduce_motion=false;WIPED shader_cache:-1 vulkan:-1 Caches:0;
+[10:53:39] launch C1049d args=[--map --seed=1 --turn-probe=nonce=C1049d,prewarm=0,route=bench,back=vault,wipe=1]
+[10:54:47] rows C1049d: 694 frames; CACHE_BEFORE shader_cache:43 vulkan:0 Caches:18;AFTER_LOAD back= baked=false reduce_motion=false;BAKE_AT_TURN vault wall_ms=54.1;WIPED shader_cache:-1 vulkan:-1 Caches:0;
+[10:54:50] launch C1049e args=[--map --seed=1 --turn-probe=nonce=C1049e,prewarm=1,route=bench,back=rose,wipe=1]
+[10:55:58] rows C1049e: 656 frames; CACHE_BEFORE shader_cache:43 vulkan:0 Caches:18;AFTER_LOAD back=rose baked=true reduce_motion=false;WIPED shader_cache:-1 vulkan:-1 Caches:0;
+[10:56:01] launch C1049f args=[--map --seed=1 --turn-probe=nonce=C1049f,prewarm=0,route=bench,back=rose,wipe=1]
+[10:57:10] rows C1049f: 767 frames; CACHE_BEFORE shader_cache:43 vulkan:0 Caches:18;AFTER_LOAD back= baked=false reduce_motion=false;BAKE_AT_TURN rose wall_ms=797.1;WIPED shader_cache:-1 vulkan:-1 Caches:0;
+[10:57:13] launch C1049g args=[--map --seed=1 --turn-probe=nonce=C1049g,prewarm=1,route=bench,back=eclipse,wipe=1]
+[10:58:22] rows C1049g: 675 frames; CACHE_BEFORE shader_cache:43 vulkan:0 Caches:18;AFTER_LOAD back=eclipse baked=true reduce_motion=false;WIPED shader_cache:-1 vulkan:-1 Caches:0;
+[10:58:25] launch C1049h args=[--map --seed=1 --turn-probe=nonce=C1049h,prewarm=0,route=bench,back=eclipse,wipe=1]
+[10:59:34] rows C1049h: 717 frames; CACHE_BEFORE shader_cache:43 vulkan:0 Caches:18;AFTER_LOAD back= baked=false reduce_motion=false;BAKE_AT_TURN eclipse wall_ms=723.1;WIPED shader_cache:-1 vulkan:-1 Caches:0;
+[10:59:37] launch C1049i args=[--map --seed=1 --turn-probe=nonce=C1049i,prewarm=1,route=route,back=vault,wipe=0]
+[11:00:46] rows C1049i: 718 frames; CACHE_BEFORE shader_cache:43 vulkan:0 Caches:18;AFTER_LOAD back=vault baked=true reduce_motion=false;
+[11:00:49] launch H1049j args=[--map --seed=1 --turn-probe=nonce=H1049j,prewarm=1,route=bench,back=vault,wipe=0]
+[11:01:10] rows H1049j: 908 frames; CACHE_BEFORE shader_cache:67 vulkan:0 Caches:25;AFTER_LOAD back=vault baked=true reduce_motion=false;
+[11:01:13] launch H1049k args=[--map --seed=1 --turn-probe=nonce=H1049k,prewarm=0,route=bench,back=vault,wipe=0]
+[11:01:37] rows H1049k: 959 frames; CACHE_BEFORE shader_cache:67 vulkan:0 Caches:25;AFTER_LOAD back= baked=false reduce_motion=false;BAKE_AT_TURN vault wall_ms=56.9;
+[11:01:40] launch H1049l args=[--map --seed=1 --turn-probe=nonce=H1049l,prewarm=1,route=bench,back=vault,wipe=0]
+[11:02:04] rows H1049l: 893 frames; CACHE_BEFORE shader_cache:67 vulkan:0 Caches:25;AFTER_LOAD back=vault baked=true reduce_motion=false;
+[11:02:07] launch H1049m args=[--map --seed=1 --turn-probe=nonce=H1049m,prewarm=1,route=route,back=vault,wipe=0]
+[11:02:30] rows H1049m: 900 frames; CACHE_BEFORE shader_cache:67 vulkan:0 Caches:25;AFTER_LOAD back=vault baked=true reduce_motion=false;
+[11:02:33] launch H1049n args=[--map --seed=1 --turn-probe=nonce=H1049n,prewarm=0,route=route,back=vault,wipe=0]
+[11:02:56] rows H1049n: 876 frames; CACHE_BEFORE shader_cache:67 vulkan:0 Caches:25;AFTER_LOAD back= baked=false reduce_motion=false;BAKE_AT_TURN vault wall_ms=75.2;
+[11:02:59] launch H1049o args=[--map --seed=1 --turn-probe=nonce=H1049o,prewarm=1,route=route,back=vault,wipe=0]
+[11:03:22] rows H1049o: 863 frames; CACHE_BEFORE shader_cache:67 vulkan:0 Caches:25;AFTER_LOAD back=vault baked=true reduce_motion=false;
+[11:03:25] launch H1049p args=[--map --seed=1 --turn-probe=nonce=H1049p,prewarm=1,route=bench,back=rose,wipe=0]
+[11:03:48] rows H1049p: 900 frames; CACHE_BEFORE shader_cache:67 vulkan:0 Caches:25;AFTER_LOAD back=rose baked=true reduce_motion=false;
+[11:03:51] launch H1049q args=[--map --seed=1 --turn-probe=nonce=H1049q,prewarm=1,route=bench,back=rose,wipe=0]
+[11:04:15] rows H1049q: 890 frames; CACHE_BEFORE shader_cache:68 vulkan:0 Caches:25;AFTER_LOAD back=rose baked=true reduce_motion=false;
+[11:04:18] launch H1049r args=[--map --seed=1 --turn-probe=nonce=H1049r,prewarm=0,route=bench,back=rose,wipe=0]
+[11:04:41] rows H1049r: 950 frames; CACHE_BEFORE shader_cache:68 vulkan:0 Caches:25;AFTER_LOAD back= baked=false reduce_motion=false;BAKE_AT_TURN rose wall_ms=37.4;
+[11:04:44] launch H1049s args=[--map --seed=1 --turn-probe=nonce=H1049s,prewarm=1,route=bench,back=eclipse,wipe=0]
+[11:05:07] rows H1049s: 909 frames; CACHE_BEFORE shader_cache:68 vulkan:0 Caches:25;AFTER_LOAD back=eclipse baked=true reduce_motion=false;
+[11:05:10] launch H1049t args=[--map --seed=1 --turn-probe=nonce=H1049t,prewarm=1,route=bench,back=eclipse,wipe=0]
+[11:05:33] rows H1049t: 903 frames; CACHE_BEFORE shader_cache:69 vulkan:0 Caches:25;AFTER_LOAD back=eclipse baked=true reduce_motion=false;
+[11:05:36] launch H1049u args=[--map --seed=1 --turn-probe=nonce=H1049u,prewarm=0,route=bench,back=eclipse,wipe=0]
+[11:05:59] rows H1049u: 967 frames; CACHE_BEFORE shader_cache:69 vulkan:0 Caches:25;AFTER_LOAD back= baked=false reduce_motion=false;BAKE_AT_TURN eclipse wall_ms=43.4;
+[11:06:02] batch done
+revert application/main.gd 0
+[11:06:02] lock released

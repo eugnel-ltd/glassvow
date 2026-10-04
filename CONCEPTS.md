@@ -231,8 +231,21 @@ or one not yet earned, resolves to the default back.
 
 Where many backs show at once, they are to be one baked texture of the chosen
 back, not live cards. That is the rule for the piles, the reshuffle and the
-top-menu deck as #657 builds them; until then the game wears no back outside
-the card lab, and the piles keep their own paintings.
+top-menu deck as #657 builds them; until then the piles keep their own
+paintings. Each fight bakes the chosen back as it loads, for the card turn.
+
+### Card turn
+A card laid at a pose — yaw about its vertical axis (0 face up, 180 face
+down) and pitch about its horizontal one — by one of two renderers that share
+the pose and the slab. The live turn turns the card's own glass slab in its 3D
+stage, a back plate wearing the chosen back on its far side, so the finish
+answers the angle; it renders the card's stage once per pose. The picture turn
+warps the card's frozen picture on the canvas and draws the baked back, so
+nothing renders and the material is a still. Fast, many-card flights take the
+picture turn and slow single-card reveals the live one. Both put every point
+of the card in the same place, and a card turned back to rest is the card as
+it was built. Everything a turn would first compile or bake is paid in the
+frame that loads a fight, never in a frame the fight plays in.
 
 ### Baked face
 A card's face at rest, kept as one picture: the card's lit stage copied once,

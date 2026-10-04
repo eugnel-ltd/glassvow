@@ -70,6 +70,7 @@ failing halfway through one.
 | Real combat bench | `--fight=… --kind=… --seed=…` | `Combat bench` |
 | Card catalogue / materials | `--cards`, `--surfaces` | `Card catalogue` |
 | Card material editor | `--studio` | `Card studio` |
+| Card turn sheet | `--turns[=card]` | CLI only |
 | Enemy roster / states / fracture sheet | `--enemies` | `Enemy roster` |
 | Enemy and fracture editor | `--enemies --bench` | `Enemy bench` |
 | Status and intent chips | `--chips` | `Status & intent chips` |
@@ -205,6 +206,28 @@ godot --path . -s res://tools/check_card_faces.gd -- --map --seed=1 \
   --out=/tmp/card-faces
 godot --path . -s res://tools/bench_deck_view.gd -- --map --seed=1 \
   --shape=pad-landscape [--sizes=30,10] --out=/tmp/deck-view
+```
+
+The card turn (`CardView.turn`, `presentation/cards/card_turn.gd`, #657) has
+its pose maths, both renderers' state, rest, a held card's tilt and lift, the
+back plate a bake dresses a card in and the table's back followed as it
+changes, the pre-warm and every fight's load paying for it in the suite
+(`tests/test_card_turn.gd`, on a fake bake). The turn sheet is its regression
+still: one card at six poses, the live turn over the picture turn, for every
+back in the catalogue. The windowed proof draws one card alone into a
+transparent target at the 2x oversample. For every back it compares the two
+renderers' silhouettes and colour at each turned pose (`AGREE`) and each
+against the bake face down (`DOWN`); for the default back, how smooth the
+rim's outer edge is in each (`EDGE`). Then a back marked in one corner must
+show unmirrored face down (`MIRROR`), a tilted, lifted card must agree as
+`AGREE` does (`HELD`), a card turned by either renderer and back to rest must
+be the card as built, every canvas pixel and stage texel (`REST`), and with no
+back baked the picture turn must cover no more than the live one (`NOBACK`).
+It exits 0 on a pass, 1 on a failure and 2 under `--headless`:
+
+```bash
+tools/shot.sh --turns[=bastion] --vp=2916x1640 --settle=1 --shot=/tmp/turns.png
+godot --path . -s res://tools/check_card_turn.gd -- --out=/tmp/card-turn [--card=bastion]
 ```
 
 Whole-run balance calibration is a CLI-only, domain simulation. The default

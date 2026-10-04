@@ -291,6 +291,23 @@ var _hovered: bool = false
 var _body: RulesText = null
 ## Built as a card back — a painting on the slab, no face furniture, no stone.
 var _is_back: bool = false
+## Kept for what it holds and never drawn again (`retire`).
+var _retired: bool = false
+## The stage render as the canvas shows it, the rare's shine over it, and what
+## a turn needs of the slab: its thickness and its side band's colour.
+var _display: Control = null
+var _shine: Control = null
+var _thick: float = 0.0
+var _side: Color = Color.BLACK
+## TURNING OVER (`turn`): the pose the card is laid at, the share of it the
+## slab itself wears (a live turn's), the picture turn's material, and the live
+## turn's back plate with the bake it wears. Rest, and nothing built, until the
+## card is first turned.
+var _pose: Basis = Basis.IDENTITY
+var _slab_turn: Basis = Basis.IDENTITY
+var _warp: ShaderMaterial = null
+var _back_plate: MeshInstance3D = null
+var _plate_back: CardBacks.Baked = null
 var _tilt: Vector2 = Vector2.ZERO         # (rot_x, rot_y) degrees
 var _tilt_v: Vector2 = Vector2.ZERO
 var _tilt_target: Vector2 = Vector2.ZERO
@@ -313,9 +330,10 @@ var surface: Array = []
 var _spr_free: Vector2 = Vector2(11.0, 0.55)
 var _shadow_size: int = SHADOW_SIZE
 
-## Geometry depends only on the card constants and the stock's thickness, so
-## one prism serves every card of a given stock — six meshes for the catalogue.
-## Materials differ per card and live on the MeshInstance3D as overrides.
+## Geometry depends only on the card constants, the stock's thickness and
+## whether the card carries a stone, so one prism serves every card of a given
+## stock and kind. Materials differ per card and live on the MeshInstance3D as
+## overrides.
 static var _prism_cache: Dictionary = {}
 
 
@@ -602,6 +620,12 @@ func has_shine() -> bool:
 	return _is_rare
 
 
+## The material the slab's face wears: a back's bake dresses the live turn's
+## back plate in a copy of it (CardBacks, CardTurn.plate).
+func face_material() -> ShaderMaterial:
+	return _slab.get_surface_override_material(1) as ShaderMaterial
+
+
 ## Place a node as a horizontal band on the face, inset from both sides.
 ##
 ## Under TOP_WIDE the right anchor sits at 1.0, so offset_right insets from the
@@ -719,6 +743,7 @@ func _build_cost_gem(parent: Control, cost: int, free: bool) -> void:
 func _build_stage(content: Control, mat: Dictionary, tint: Color,
 		free: bool) -> void:
 	var thick: float = mat["thick"]
+	_thick = thick
 	_inner = SubViewport.new()
 	_inner.size = Vector2i(
 		int((CARD_W + 2.0 * PAD_IN) * oversample),
@@ -743,16 +768,18 @@ func _build_stage(content: Control, mat: Dictionary, tint: Color,
 	_stage.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(_stage)
 
-	if not _prism_cache.has(thick):
-		_prism_cache[thick] = _prism_mesh(thick)
+	var cut: Vector2 = Vector2(thick, 0.0 if _is_back else 1.0)
+	if not _prism_cache.has(cut):
+		_prism_cache[cut] = _prism_mesh(thick, not _is_back)
 	_slab = MeshInstance3D.new()
-	_slab.mesh = _prism_cache[thick]
+	_slab.mesh = _prism_cache[cut]
 
 	# The side band is a cross-section of the material, not a lit surface —
 	# unshaded, one flat colour, the only place you see the stock itself.
 	var side_mat: StandardMaterial3D = StandardMaterial3D.new()
 	side_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	side_mat.albedo_color = CardSurface.body_color(mat, tint)
+	_side = side_mat.albedo_color
 	side_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_slab.set_surface_override_material(0, side_mat)
 
@@ -764,15 +791,11 @@ func _build_stage(content: Control, mat: Dictionary, tint: Color,
 	# property of a sheet and there is no sheet here. It is set over the leaf,
 	# cut, and lit by the same lamp — see card_gem.gdshader.
 	#
-	# A back has no cost, so no stone: the gem surface stays in the mesh (one
-	# cached prism per thickness, shared with the fronts) and is silenced with a
-	# fully transparent override instead.
-	if _is_back:
-		var no_gem: StandardMaterial3D = StandardMaterial3D.new()
-		no_gem.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		no_gem.albedo_color = Color(0, 0, 0, 0)
-		_slab.set_surface_override_material(2, no_gem)
-	else:
+	# A back has no cost, so no stone: its prism is cut without one. It used to
+	# carry the stone silenced by a transparent, lit material, which drew
+	# nothing and cost the A12 seconds to compile the first time a back was
+	# built (#657: 8-10 s on the iPad 8 from a cold shader cache).
+	if not _is_back:
 		_slab.set_surface_override_material(2, _gem_plate(free))
 	_push_lamp()   # the room's lamp, before the card has ever been touched
 	_stage.add_child(_slab)
@@ -784,16 +807,23 @@ func _build_stage(content: Control, mat: Dictionary, tint: Color,
 	# ...measured to the FRONT face, not the slab's mid-plane. Frame the mid-
 	# plane instead and the face — nearer the lens by half the thickness —
 	# comes out half a percent oversize, overhanging its own shadow.
-	var dist: float = (CARD_H + 2.0 * PAD_3D) * 0.5 \
-		/ tan(deg_to_rad(FOV_DEG * 0.5))
+	var dist: float = lens()
 	cam.position = Vector3(0.0, 0.0, dist + thick * 0.5)
 	cam.near = dist * 0.5
 	cam.far = dist * 1.5
 	_stage.add_child(cam)
 
-	add_child(picture(_stage.get_texture()))
+	_display = picture(_stage.get_texture())
+	add_child(_display)
 	if _is_rare:
-		add_child(shine())
+		_shine = shine()
+		add_child(_shine)
+
+
+## The stage camera's distance to the slab's front face, in card px: where the
+## stage's rect maps 1:1 onto logical pixels.
+static func lens() -> float:
+	return (CARD_H + 2.0 * PAD_3D) * 0.5 / tan(deg_to_rad(FOV_DEG * 0.5))
 
 
 ## The card's table shadow, a flat panel under the slab. A baked card
@@ -970,6 +1000,34 @@ static func _facet(st: SurfaceTool, base_z: float,
 		st.add_vertex(Vector3(p.x, p.y, p.z + base_z))
 
 
+## The face alone, a fan over the outline at height `z` with the face
+## texture's UVs: the live turn's back plate (CardTurn.plate) is this, built by
+## the same code as the slab's front, so the two share one vertex layout.
+static func face_fan(z: float) -> ArrayMesh:
+	var mesh: ArrayMesh = ArrayMesh.new()
+	_add_fan(mesh, z)
+	return mesh
+
+
+## Godot's front faces wind CLOCKWISE seen from outside — the outline is
+## counterclockwise from the camera, so each fan triangle goes centre → b → a.
+static func _add_fan(mesh: ArrayMesh, z: float) -> void:
+	var pts: PackedVector2Array = _outline()
+	var n: int = pts.size()
+	var face: SurfaceTool = SurfaceTool.new()
+	face.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i: int in range(n):
+		var a: Vector2 = pts[i]
+		var b: Vector2 = pts[(i + 1) % n]
+		face.set_uv(_uv(0.0, 0.0))
+		face.add_vertex(Vector3(0.0, 0.0, z))
+		face.set_uv(_uv(b.x, b.y))
+		face.add_vertex(Vector3(b.x, b.y, z))
+		face.set_uv(_uv(a.x, a.y))
+		face.add_vertex(Vector3(a.x, a.y, z))
+	face.commit(mesh)
+
+
 ## Surface 0: the side band — the glass's cross-section, visible only when
 ## the pane leans. Surface 1: the front face, a fan over the outline; its
 ## rounded silhouette is geometry, so the tilted card's edge stays clean
@@ -980,8 +1038,8 @@ static func _facet(st: SurfaceTool, base_z: float,
 ## Its base sits ON the face rather than over it, which is what keeps the
 ## painted footprint from peeking out from under the crown when the card leans:
 ## a raised table shifts about half a pixel at full tilt, a base at the same
-## plane shifts none.
-static func _prism_mesh(thick: float) -> ArrayMesh:
+## plane shifts none. A back's prism (`gem_cut` false) stops at surface 1.
+static func _prism_mesh(thick: float, gem_cut: bool = true) -> ArrayMesh:
 	var pts: PackedVector2Array = _outline()
 	var n: int = pts.size()
 	var hz: float = thick * 0.5
@@ -1004,20 +1062,9 @@ static func _prism_mesh(thick: float) -> ArrayMesh:
 		side.add_vertex(ba)
 	side.commit(mesh)
 
-	# Godot's front faces wind CLOCKWISE seen from outside — the outline is
-	# counterclockwise from the camera, so each fan triangle goes centre → b → a.
-	var face: SurfaceTool = SurfaceTool.new()
-	face.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for i: int in range(n):
-		var a: Vector2 = pts[i]
-		var b: Vector2 = pts[(i + 1) % n]
-		face.set_uv(_uv(0.0, 0.0))
-		face.add_vertex(Vector3(0.0, 0.0, hz))
-		face.set_uv(_uv(b.x, b.y))
-		face.add_vertex(Vector3(b.x, b.y, hz))
-		face.set_uv(_uv(a.x, a.y))
-		face.add_vertex(Vector3(a.x, a.y, hz))
-	face.commit(mesh)
+	_add_fan(mesh, hz)
+	if not gem_cut:
+		return mesh
 
 	var gem: SurfaceTool = SurfaceTool.new()
 	gem.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -1106,6 +1153,8 @@ func _push_lamp() -> void:
 ## Freeze both offscreen passes when nothing moves; UPDATE_ONCE paints one
 ## last frame and sleeps. A 61-card lab must idle at zero render cost.
 func _set_live(on: bool) -> void:
+	if _retired:
+		return
 	var mode: SubViewport.UpdateMode = SubViewport.UPDATE_ALWAYS if on \
 		else SubViewport.UPDATE_ONCE
 	_inner.render_target_update_mode = mode
@@ -1144,6 +1193,17 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_freeze_if_idle()
+
+
+## Stop drawing the card for good: both passes frozen as they are and never
+## woken again. A bake's card is retired once it is read
+## back (CardBacks), so it stays, hidden and costing no render, until its host
+## leaves and takes it along; freeing it on the spot would release its video
+## memory two frames later, in whatever plays then.
+func retire() -> void:
+	_retired = true
+	_inner.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	_stage.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
 
 ## Freeze the passes unless something moves the card. One pointed at and let
@@ -1203,13 +1263,94 @@ func _process(delta: float) -> void:
 ## spreads and thins, and it slips out from under whichever side has lifted —
 ## the reading that ties the two together. It never rotates, because a shadow
 ## on a flat table cannot.
+##
+## The pointer's tilt is the table's, so it leans a turned card: either
+## renderer wears the tilt over the turn's pose, and the lift. The live turn
+## puts both on the slab; the picture turn re-projects a picture of the flat
+## card, so its slab stays flat and both ride in the warp instead.
 func _apply_transform() -> void:
-	_slab.rotation_degrees = Vector3(_tilt.x, _tilt.y, 0.0)
-	_slab.position.z = _lift
+	var lift: float = _lift
+	if _picturing():
+		_slab.basis = Basis.IDENTITY
+		lift = 0.0
+		CardTurn.set_pose(_warp, CardTurn.pose(_tilt.y, _tilt.x) * _pose, _lift)
+	elif CardTurn.is_rest(_slab_turn):
+		_slab.rotation_degrees = Vector3(_tilt.x, _tilt.y, 0.0)
+	else:
+		_slab.basis = CardTurn.pose(_tilt.y, _tilt.x) * _slab_turn
+	_slab.position.z = lift
 	var h: float = _lift / MAX_LIFT
 	_shadow.position = Vector2(_tilt.y, _tilt.x) * 0.28 + Vector2(0.0, 4.0 * h)
 	_shadow.modulate.a = 1.0 - 0.22 * h
 	_shadow_sb.shadow_size = _shadow_size + roundi(4.0 * h)
+
+
+## ── TURNING OVER ─────────────────────────────────────────────────────────
+## Lay the card at a pose: `yaw` degrees about its vertical axis (0 face up,
+## 180 face down) and `pitch` about its horizontal one (CardTurn.pose). A
+## `live` turn turns the slab in its own stage, its back plate wearing the
+## table's back and lit by the card's own lamp, and renders the stage once for
+## the pose; otherwise the picture turn warps the frozen stage on the canvas
+## and nothing renders. Both put every point of the card in the same place
+## (CardTurn). The table shadow narrows with the card and a rare's shine,
+## which is painted on the canvas over the card at rest, waits for rest.
+##
+## turn(0, 0, either) is rest: no material on the picture, the plate hidden,
+## the slab where it was built, the stage rendered once more if it had moved.
+## The plate and the material are built at the card's first turn, and each
+## turn dresses them in the table's back as it is then (CardTurn.back).
+##
+## A card under the pointer turns too, its tilt and lift over the pose
+## (`_apply_transform`); for the picture turn its slab lies flat meanwhile,
+## so the picture warped is the flat card's.
+func turn(yaw: float, pitch: float, live: bool) -> void:
+	_pose = CardTurn.pose(yaw, pitch)
+	var turned: bool = not CardTurn.is_rest(_pose)
+	_slab_turn = _pose if live and turned else Basis.IDENTITY
+	var back: CardBacks.Baked = CardTurn.back()
+	if live and turned:
+		_dress_plate(back)
+	if _back_plate != null:
+		_back_plate.visible = live and turned
+	if turned and not live:
+		if _warp == null:
+			_warp = CardTurn.picture(_thick, _side)
+		CardTurn.set_back(_warp, back)
+		_display.material = _warp
+	else:
+		_display.material = null
+	if _shine != null:
+		_shine.visible = not turned
+	_shadow.pivot_offset = size * 0.5
+	_shadow.scale = CardTurn.footprint(_pose)
+	var was: Transform3D = _slab.transform
+	_apply_transform()
+	# A held or settling card's stage already renders every frame.
+	if not _slab.transform.is_equal_approx(was) and not _hovered and not is_processing():
+		_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+
+## Whether the picture turn is on: the card's picture wears the warp.
+func _picturing() -> bool:
+	return _warp != null and _display.material == _warp
+
+
+## The live turn's back plate, wearing `back`: built at the card's first live
+## turn, and again whenever the table's back has changed since (a bake that
+## landed after it, another back chosen, or the bake dropped: then none).
+func _dress_plate(back: CardBacks.Baked) -> void:
+	if back == _plate_back and (_back_plate != null or back == null):
+		return
+	if _back_plate != null:
+		_lit.erase(_back_plate.material_override as ShaderMaterial)
+		_back_plate.free()
+		_back_plate = null
+	_plate_back = back
+	_back_plate = CardTurn.plate(back, _thick)
+	if _back_plate != null:
+		_slab.add_child(_back_plate)
+		_lit.append(_back_plate.material_override as ShaderMaterial)
+		_push_lamp()
 
 
 static func _font(path: String, tracking: int) -> Font:
@@ -1259,7 +1400,7 @@ func point_away() -> void:
 ## faded: it looks exactly as it did when it was built, so a bake of it can
 ## take its place unseen.
 func at_rest() -> bool:
-	return not _hovered and not is_processing() \
+	return not _hovered and not is_processing() and CardTurn.is_rest(_pose) \
 		and (_light_tw == null or not _light_tw.is_valid() or not _light_tw.is_running())
 
 

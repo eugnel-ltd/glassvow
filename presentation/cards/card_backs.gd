@@ -15,8 +15,13 @@ extends RefCounted
 ## reshuffle stream, the picture turn, the slab's back plate — is meant to draw
 ## one baked texture rather than a live card: a live card holds about 16 MB of
 ## video memory, a bake about 2 MB at the 2x oversample. `bake()` builds the
-## back through the CardView back path, lets it render, reads both passes back
-## once and frees the card.
+## back through the CardView back path under a host, lets it render and reads
+## both passes back once. Then it retires the card (CardView.retire): hidden,
+## frozen and drawn no more, it leaves with its host. Freed on the spot, its
+## video memory would be released two frames later, inside whatever plays
+## then: on the iPad 8 that frame of a fight's entrance ran 50 ms in 3 of 7
+## runs, against 16-26 ms in every run that released nothing there. Kept, it
+## goes with the fight's own teardown.
 ##
 ## WHAT A BAKE COSTS (tools/check_card_back_bake.gd, on the Mac and, through a
 ## QA build, on the iPad 8). The first bake of a back compiles its shaders on
@@ -28,7 +33,10 @@ extends RefCounted
 ## compiles across launches, but even warm an iPad 8 bake holds a frame for
 ## 33-58 ms (wall 77-118 ms; the Mac 3-7 ms and 11-39 ms). A cached repeat
 ## costs 0.03 ms. The session's first bake also holds about 10 MiB more video
-## memory than later ones on both. So the game bakes the chosen back once, at
+## memory than later ones on both. Since #657 PR 3 a back's slab carries no
+## stone (CardView), so its lit, invisible material no longer compiles: on the
+## iPad 8 from a cold cache, Vault's first bake in a fight then held a 43-62 ms
+## frame where it had held 8.3-9.6 s. So the game bakes the chosen back once, at
 ## a still moment where a long frame shows nothing moving (a load, a held
 ## title), never behind an animated transition and never mid-fight; every
 ## later screen reads the cache, which lasts the session.
@@ -40,11 +48,13 @@ extends RefCounted
 ## asked for it and never kept. So straight after a choice the cache holds the
 ## chosen back at most, and afterwards whatever is baked from then on.
 
-## Frames drawn before the readback. One draw renders both passes (the face
-## viewport is drawn before the stage that samples it); the others are margin.
-## A first-use shader compile does not need a frame of its own: it stalls the
-## draw it happens in.
-const BAKE_FRAMES: int = 3
+## Frames drawn before the readback: one. That draw renders both passes (the
+## face viewport is drawn before the stage that samples it), and a first-use
+## shader compile does not need a frame of its own: it stalls the draw it
+## happens in. One frame is what lets a fight's load bake its back inside the
+## frame that builds it (CardTurn.prewarm): the readback lands straight after
+## that frame's draw, before the next frame begins.
+const BAKE_FRAMES: int = 1
 
 static var _catalogue: CardBackCatalogue = null
 static var _bakes: Dictionary = {}     # back id -> Baked
@@ -68,6 +78,10 @@ class Baked:
 	## The back's 2D face — (card + 2 * PAD_IN) at the oversample — the texture
 	## a slab's back plate samples through card_surface.gdshader.
 	var inner: Texture2D
+	## The back card's own face material over `inner`: what the live turn's
+	## back plate wears (CardTurn.plate), so the plate is that card's face,
+	## finish and all.
+	var plate: ShaderMaterial
 	## The oversample the card was BUILT at, which is what its pixels are.
 	var oversample: float = 0.0
 
@@ -147,7 +161,7 @@ static func cached(id: String) -> Baked:
 
 
 ## Bake `id` under `host` (any node in the tree; the card is built hidden and
-## freed after), or hand back the cached bake. A coroutine: `await` it.
+## leaves with it), or hand back the cached bake. A coroutine: `await` it.
 ##
 ## Every caller of one back shares the bake in flight and gets its result. A
 ## bake that is stale when it lands (the catalogue or the oversample changed
@@ -192,8 +206,9 @@ static func _try(host: Node, id: String) -> Baked:
 
 
 ## The live render step: the back built hidden under `host`, rendered, read
-## back once and freed. Null when it cannot render: a headless run never draws
-## a frame (the wait would never end), and a host out of the tree draws nothing.
+## back once and retired there. Null when it cannot render: a headless run
+## never draws a frame (the wait would never end), and a host out of the tree
+## draws nothing.
 static func _render_live(host: Node, id: String, scale: float) -> Baked:
 	if DisplayServer.get_name() == "headless" or not host.is_inside_tree():
 		return null
@@ -207,7 +222,10 @@ static func _render_live(host: Node, id: String, scale: float) -> Baked:
 	if not is_instance_valid(view):
 		return null    # its host was freed, and the card with it
 	var out: Baked = _read_back(view, scale) if view.is_inside_tree() else null
-	view.queue_free()
+	if out == null:
+		view.free()
+	else:
+		view.retire()
 	return out
 
 
@@ -217,8 +235,17 @@ static func _read_back(view: CardView, scale: float) -> Baked:
 	stage_img.generate_mipmaps()
 	out.stage = ImageTexture.create_from_image(stage_img)
 	out.inner = ImageTexture.create_from_image(view.face_image())
+	out.plate = plate_of(view, out.inner)
 	out.oversample = scale
 	return out
+
+
+## `view`'s face material over `inner` in place of its live face: the back
+## plate a bake of `view` dresses a turning card in.
+static func plate_of(view: CardView, inner: Texture2D) -> ShaderMaterial:
+	var plate: ShaderMaterial = view.face_material().duplicate() as ShaderMaterial
+	plate.set_shader_parameter("face_tex", inner)
+	return plate
 
 
 ## `id` when the catalogue knows it, else the default (said loudly: callers
