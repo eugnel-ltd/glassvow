@@ -42,9 +42,11 @@ const RIVER_BANK: float = 2.6
 ## side, its verge about 1 m.
 const TREE_ROAD: float = 1.15
 const SHRUB_ROAD: float = 0.6
-## The half-width of a road's lane kept in sight on the picture plane, and
-## how far apart along the road it is sampled.
-const LANE: float = 0.3
+## The half-width of a road's lane kept in sight on the picture plane (with
+## half a sample's step, 0.35 m of the worn core either side of the
+## centreline: a crown may overhang the core's edge), and how far apart along
+## the road it is sampled.
+const LANE: float = 0.15
 const LANE_STEP: float = 0.4
 ## Bridges (`Terrain` meta `bridge_chains`, raised where a chain's weight is
 ## past `DECK_WEIGHT`): no tree within `DECK_CLEAR` of a deck's centreline, no
