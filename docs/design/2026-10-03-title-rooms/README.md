@@ -1891,6 +1891,21 @@ applies, as built; together:
    launches (+0.81). The bars all sit at the launch-to-launch spread (the title's own P95 ranged
    17.65 to 18.58 ms across these launches). For the orchestrator's ruling: whether the road drawn under
    the hall is the right trade, its V3 inside the bar against the hall at rest at or a little over it.
+
+   **Ruled by the orchestrator (4 Oct 2026): the trade is taken, and the bars are read on the batch's
+   median.** V3's step is a visible hitch at the turn; the hall at rest carrying the road costs about
+   0.3 ms of P95 at vsync, with no missed frame, which no player sees. The same build's V3 reads −1.19
+   in one launch and +5.86 in another (a 30 Hz episode), and the title's own P95 spans 17.65 to 18.58 ms
+   across launches, so a ±0.5 ms bar judged one launch at a time grades the A12's governor, not the
+   build. From this PR on, the passage and rest bars of §14 item 2 are graded on the median of the
+   batch's launches, each launch still listed and every outlier named with its cause. This is not what
+   lets V3 pass: on `780fc171` both launches were over (+3.45, +3.70), so its median failed too; the fix
+   does. On the final head the medians are V3 −0.50, the hall at rest +0.28 and V1 −0.62, all inside;
+   the Vigil's first opening 47.3 ms (tap to first moved) and 31.3 ms (tap frame), inside ≤ 50. The
+   noisy launch (65.7 ms; How to Play at rest +2.78 in the same launch) and the 30 Hz laps (two frames
+   of 34.0 and 34.1 ms) are named above. Not measured, and carried: the hall at rest now keeps the GPU at
+   its Medium clock, so its power cost is open; one Continue of 1373.8 ms (an 848.7 ms frame, the
+   control arm `F-a0`, retried at 728.2 and 722.6) is unattributed and goes to #682's first-use watch.
 5. **The hall's video memory** (§12, as built): on `780fc171` the title held 37.5 to 39.3 MiB more than
    main's once its warms were done. The orchestrator asked to bring it toward the estimate without
    regressing the Vigil's first opening (4 Oct 2026). Taken: the masks stored grey with alpha (12 MiB
@@ -1901,6 +1916,11 @@ applies, as built; together:
    installs (51.8, 52.1); 45.6 and 47.3 on the final head, and 65.7 on one noisy launch.
    Not taken: VRAM compression of the masks (lossy, 6 MiB more in the package, 6 MiB less than LA8 in
    memory). Open: the zh-Hant launches' further 8 MiB, not attributed.
+
+   **Ruled by the orchestrator (4 Oct 2026): accepted.** The hall's cost on the title fell from 37.5 to
+   39.3 MiB to 10 to 19 MiB over main, with no change to a pixel and no cost to the Vigil's first opening.
+   The remainder is the hall built ahead so that the first tap answers in under 50 ms; the zh-Hant 8 MiB
+   stays open, to be attributed when the title's memory is next profiled.
 ---
 
 ## 15. Mocks and before-stills
