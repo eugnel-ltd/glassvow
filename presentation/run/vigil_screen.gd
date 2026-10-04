@@ -159,6 +159,9 @@ func _build_rose() -> void:
 	_rose.replay_requested.connect(func() -> void: replay_requested.emit())
 	_rose.pane_chosen.connect(func(complete: bool) -> void:
 		_sfx.play_owed(&"glassTakesLight" if complete else &"paneChoose", &"click"))
+	if _rose.replay() != null:
+		# V6: the whole rose takes the light as the unsealing is called back.
+		_rose.replay().pressed.connect(func() -> void: _sfx.play_owed(&"glassTakesLight", &"click"))
 	_rose.visible = false
 	add_child(_rose)
 	move_child(_rose, _deed_list.get_index())
