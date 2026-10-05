@@ -1,0 +1,3 @@
+I  t2-title1-settle5        ?         frame0   890.2  force_draws -                next    nan  over100 after0 [[448, 2718.8], [453, 1883.4]] open ready 1123.2 worst  672.2  bake worst 2728.9
+I  t2-title2-settle5        ?         frame0   381.6  force_draws -                next    nan  over100 after0 []                     open ready  663.6 worst  177.1  bake worst 64.5
+I  t2-title3-settle0        ?         frame0   523.8  force_draws -                next    nan  over100 after0 []                     open ready  646.9 worst  178.6  bake worst 50.9

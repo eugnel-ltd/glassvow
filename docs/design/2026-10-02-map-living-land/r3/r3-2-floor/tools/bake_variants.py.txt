@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+"""Lane R3.2 round 3 scratch (never part of the game): let a measuring worktree's
+floor bake take its unpaced pacing from the command line, for one QA build
+that tries several on the iPad:
+  --bake-merge             no set-up frame: the first draw in the set-up's frame
+  --bake-per-frame=<n>     lit views (tiles a frame)
+  --bake-tile=<w>x<h>      the largest tile
+Edits one file inside the given worktree; deletes nothing."""
+import sys
+from pathlib import Path
+wt = Path(sys.argv[1]).resolve()
+p = wt / "presentation/map/landscape/floor_bake.gd"
+s = p.read_text()
+def rep(a, b):
+    global s
+    assert s.count(a) == 1, a
+    s = s.replace(a, b)
+rep('''	_tiles = tiles(lit_size, TILE_LIMIT)''', '''	_tiles = tiles(lit_size, _qa_tile())''')
+rep('''	for k: int in range(mini(1 if _paced else TILES_A_FRAME, _tiles.size())):''',
+    '''	for k: int in range(mini(1 if _paced else _qa_per_frame(), _tiles.size())):''')
+rep('''	_tile = 0
+	step = Step.WARM''', '''	_tile = 0
+	timings["qa_variant"] = [_qa_tile(), _qa_per_frame(), "--bake-merge" in OS.get_cmdline_user_args()]
+	if not _paced and "--bake-merge" in OS.get_cmdline_user_args():
+		_warm()
+	else:
+		step = Step.WARM''')
+s += '''
+
+static func _qa_per_frame() -> int:
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--bake-per-frame="):
+			return int(arg.get_slice("=", 1))
+	return TILES_A_FRAME
+
+
+static func _qa_tile() -> Vector2i:
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--bake-tile="):
+			var wh: PackedStringArray = arg.get_slice("=", 1).split("x")
+			return Vector2i(int(wh[0]), int(wh[1]))
+	return TILE_LIMIT
+'''
+p.write_text(s)
+print("bake variants armed:", p)

@@ -1,14 +1,11 @@
 #!/bin/zsh
-# Lane R3.2 revision, batch T: the title path on the iPad 8 (QA app only,
-# under the device lock). A seed launch stores an Act I run; then each title
-# launch boots to the title (whose prime() draws the floor's warm-up on frame
-# 0), waits for the land's prefetch and paced bake, presses Back to the Road
-# and times the open. Order: main, the branch's first launch after its
-# install (its changed floor shaders not yet compiled), the branch again
-# (compiled), main again.
+# Lane R3.2 round 3, batch K (QA app only, under the device lock; deletes nothing):
+# the title path with a scratch warm-up that draws one floor pipeline a frame
+# (lit, lit with shadows, mask, live floor, 2D), so each frame times one; the
+# branch floor shaders carry the nonce r3c (never compiled on this iPad).
 set -u
 source ${0:A:h}/common.zsh
-OUT=$R/device/batchT
+OUT=$R/device/batchK
 $FLOW/ipad_lock.sh acquire map-r32
 trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
 UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
@@ -29,14 +26,11 @@ tt_launch() {  # label wait args...
   done
   echo "== $label nonce $MT_NONCE: rows MISSING"; return 1
 }
-echo "== batch T start $(date +%T)"
+QUICK=(--map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --opens --reopens=0 --holds=cadence --hold-frames=60)
+echo "== batch K start $(date +%T)"
 install_build ctl $CTL_IPA || exit 1
-tt_launch ctl-seed 40 --map --seed=1 --map-steps=2 --title-trace-probe=seed
 tt_launch ctl-title1 50 --title-trace-probe=title
-install_build dev $DEV_IPA || exit 1
-tt_launch dev-title1 60 --title-trace-probe=title
-tt_launch dev-title2 50 --title-trace-probe=title
-tt_launch dev-title3 50 --title-trace-probe=title
-install_build ctl2 $CTL_IPA || exit 1
-tt_launch ctl-title2 50 --title-trace-probe=title
-echo "== batch T done $(date +%T)"
+install_build t3 $R/ipa/t3-r3c-staged.ipa || exit 1
+tt_launch t3-title1 60 --title-trace-probe=title
+tt_launch t3-title2 50 --title-trace-probe=title
+echo "== batch K done $(date +%T)"

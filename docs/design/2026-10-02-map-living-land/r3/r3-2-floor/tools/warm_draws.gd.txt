@@ -1,0 +1,28 @@
+extends SceneTree
+## Scratch (lane R3.2 round 3): canvas pipelines and each 2D view's canvas draw
+## calls after the warm-up's forced draws.
+const Warm = preload("res://presentation/map/landscape/floor_warm.gd")
+
+func _counts() -> Array:
+	return [RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_CANVAS),
+		RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SURFACE),
+		RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SPECIALIZATION)]
+
+func _initialize() -> void:
+	_run.call_deferred()
+
+func _run() -> void:
+	for i: int in range(5):
+		await process_frame
+	print("WARMCOUNT before ", _counts())
+	var warm: Node = Warm.new()
+	root.add_child(warm)
+	var flats: Array = []
+	for v: Node in warm.find_children("*", "SubViewport", true, false):
+		if (v as SubViewport).disable_3d:
+			flats.append(v)
+	warm.call("draw_now")
+	print("WARMCOUNT drawn ", _counts())
+	for v: SubViewport in flats:
+		print("WARMCOUNT view ", v.name, " canvas draw calls ", RenderingServer.viewport_get_render_info(v.get_viewport_rid(), RenderingServer.VIEWPORT_RENDER_INFO_TYPE_CANVAS, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME))
+	quit(0)

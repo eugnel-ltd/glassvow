@@ -1,0 +1,177 @@
+# The core gate at 0fb33aed, the round 3 code-final head (the evidence commit adds only this folder), Mac, 10:02-10:30.
+# Trimmed to the gate's own lines; the engine's warnings, stack frames and exit-time leak lines, which main prints too, are left out.
+== head 0fb33aede0d071e3574792aae0d37d5c98ce850c 10:02:46
+== godot --version
+4.7.2.stable.official.ed1daf0bf
+== tools/check_imports.sh
+asset import OK
+exit 0
+== tools/check_scripts.sh
+scripts OK (479 checked)
+exit 0
+== godot --headless -s res://tests/run_all.gd
+ok   res://tests/test_act4_catalogue.gd
+ok   res://tests/test_act4_map.gd
+ok   res://tests/test_act4_region_visuals.gd
+ok   res://tests/test_act4_scene_wiring.gd
+ok   res://tests/test_act_flag.gd
+ok   res://tests/test_arch.gd
+ok   res://tests/test_aspect_shatter.gd
+ok   res://tests/test_balance_adaptive_lit.gd
+ok   res://tests/test_balance_arms.gd
+ok   res://tests/test_balance_catalogue.gd
+ok   res://tests/test_balance_invariance.gd
+ok   res://tests/test_balance_pilot_cache.gd
+ok   res://tests/test_balance_pilot_play.gd
+ok   res://tests/test_balance_search.gd
+ok   res://tests/test_balance_sim.gd
+ok   res://tests/test_baseline_hardship.gd
+ok   res://tests/test_batch4_landing.gd
+ok   res://tests/test_bespoke_staging.gd
+ok   res://tests/test_card_backs.gd
+ok   res://tests/test_card_faces.gd
+ok   res://tests/test_card_turn.gd
+ok   res://tests/test_checkpoint_validation.gd
+ok   res://tests/test_class_scope.gd
+ok   res://tests/test_coarse_pointer.gd
+ok   res://tests/test_combat_probes.gd
+ok   res://tests/test_combat_traces.gd
+ok   res://tests/test_confirm_sheets.gd
+ok   res://tests/test_content.gd
+ok   res://tests/test_counterfactual_self.gd
+ok   res://tests/test_credits_roll.gd
+ok   res://tests/test_dawn_screen.gd
+ok   res://tests/test_departure.gd
+ok   res://tests/test_dev_boot_profile.gd
+ok   res://tests/test_dev_tools.gd
+ok   res://tests/test_diagnostics_consent.gd
+ok   res://tests/test_edge_way.gd
+ok   res://tests/test_enemy_ai.gd
+ok   res://tests/test_enemy_death_shards.gd
+ok   res://tests/test_enemy_death_warm.gd
+ok   res://tests/test_eternal_keeper.gd
+ok   res://tests/test_event_rolls.gd
+ok   res://tests/test_first_launch_flow.gd
+ok   res://tests/test_flame.gd
+ok   res://tests/test_flame_kindling.gd
+ok   res://tests/test_flame_lantern.gd
+ok   res://tests/test_flame_like.gd
+ok   res://tests/test_flame_recognition.gd
+ok   res://tests/test_focus_modality.gd
+ok   res://tests/test_fracture.gd
+ok   res://tests/test_help_room.gd
+ok   res://tests/test_hint_system.gd
+ok   res://tests/test_i2_combat_chrome_locale.gd
+ok   res://tests/test_ios_plist_privacy.gd
+ok   res://tests/test_lantern_flame.gd
+ok   res://tests/test_lantern_hud.gd
+ok   res://tests/test_layout_book.gd
+ok   res://tests/test_leadlight.gd
+ok   res://tests/test_leadlight_seat.gd
+ok   res://tests/test_leadlight_sheet_reach.gd
+ok   res://tests/test_line_table.gd
+ok   res://tests/test_lit_riders.gd
+ok   res://tests/test_live_locale_switch.gd
+ok   res://tests/test_locale.gd
+ok   res://tests/test_locale_hydration.gd
+ok   res://tests/test_locale_hydration_catalogue.gd
+ok   res://tests/test_locale_hydration_main.gd
+ok   res://tests/test_map.gd
+ok   res://tests/test_map_act_title.gd
+ok   res://tests/test_map_asset_profiles.gd
+ok   res://tests/test_map_asset_shortfall.gd
+ok   res://tests/test_map_compatibility_selection_iterator.gd
+ok   res://tests/test_map_compose.gd
+ok   res://tests/test_map_film_grain.gd
+ok   res://tests/test_map_floor.gd
+ok   res://tests/test_map_journey.gd
+ok   res://tests/test_map_keep_screen.gd
+ok   res://tests/test_map_landscape.gd
+ok   res://tests/test_map_landscape_prefetch.gd
+ok   res://tests/test_map_layout_compiler.gd
+ok   res://tests/test_map_layout_contract.gd
+ok   res://tests/test_map_layout_fast.gd
+ok   res://tests/test_map_layout_input_binding.gd
+ok   res://tests/test_map_layout_job.gd
+ok   res://tests/test_map_layout_single_node.gd
+ok   res://tests/test_map_node_candidate_generator.gd
+ok   res://tests/test_map_open_cache.gd
+ok   res://tests/test_map_pins.gd
+ok   res://tests/test_map_quality_evaluator.gd
+ok   res://tests/test_map_scene.gd
+ok   res://tests/test_map_single_edge_router.gd
+ok   res://tests/test_map_title_road.gd
+ok   res://tests/test_map_tokens.gd
+ok   res://tests/test_map_waylight_tracer.gd
+ok   res://tests/test_map_wood.gd
+ok   res://tests/test_music_variants.gd
+ok   res://tests/test_narrative_planting.gd
+ok   res://tests/test_opening_flow.gd
+ok   res://tests/test_performance_probe.gd
+ok   res://tests/test_pool_callers.gd
+ok   res://tests/test_pool_hygiene.gd
+ok   res://tests/test_preferences.gd
+ok   res://tests/test_presentation.gd
+ok   res://tests/test_privacy_policy_link.gd
+ok   res://tests/test_profile_isolation.gd
+ok   res://tests/test_quest_closers.gd
+ok   res://tests/test_quests.gd
+ok   res://tests/test_release_identity.gd
+ok   res://tests/test_reloadable_abandon.gd
+ok   res://tests/test_resume_routes.gd
+ok   res://tests/test_reward_embers.gd
+ok   res://tests/test_rng.gd
+ok   res://tests/test_room_passage.gd
+ok   res://tests/test_room_warm.gd
+ok   res://tests/test_rooms_rubric.gd
+ok   res://tests/test_rules_text_wrap.gd
+ok   res://tests/test_run_all.gd
+ok   res://tests/test_run_hud.gd
+ok   res://tests/test_run_stats.gd
+ok   res://tests/test_save.gd
+ok   res://tests/test_scenario.gd
+ok   res://tests/test_scenario_catalogue.gd
+ok   res://tests/test_scene_plate_fallback.gd
+ok   res://tests/test_scene_player.gd
+ok   res://tests/test_scene_script.gd
+ok   res://tests/test_scene_wiring.gd
+ok   res://tests/test_script_error_guard.gd
+ok   res://tests/test_sealed_door.gd
+ok   res://tests/test_sentry_release.gd
+ok   res://tests/test_sfx_rotation.gd
+ok   res://tests/test_stage_plates.gd
+ok   res://tests/test_stage_shape.gd
+ok   res://tests/test_stagecraft.gd
+ok   res://tests/test_stagecraft_screens.gd
+ok   res://tests/test_stall_layout.gd
+ok   res://tests/test_story_acceptance.gd
+ok   res://tests/test_suite_isolation.gd
+ok   res://tests/test_title_reach.gd
+ok   res://tests/test_title_rubric.gd
+ok   res://tests/test_title_screen.gd
+ok   res://tests/test_title_world.gd
+ok   res://tests/test_transition_rm.gd
+ok   res://tests/test_tree_ready.gd
+ok   res://tests/test_vigil_hall.gd
+ok   res://tests/test_vigil_hold.gd
+ok   res://tests/test_vigil_screen.gd
+ok   res://tests/test_vow_ladder_bakeoff.gd
+ok   res://tests/test_ware_tag.gd
+ok   res://tests/test_way_walls.gd
+PASS (148 tests)
+exit 0
+== done 10:30:26
+
+# CI-selected specialist checks, run locally at 0fb33aed:
+python3 tools/check_store_dev_exclusion.py -> exit 0: store-dev-exclusion OK 
+tools/test_check_store_dev_exclusion.sh -> exit 0: ok - pck sentry extension check_store_dev_exclusion regression tests OK (12 cases) 
+python3 -B tools/check_export_paths.py --self-test -> exit 0: ok - missing presets fail closed export-paths self-test OK (10 cases) 
+python3 -B tools/check_export_paths.py -> exit 0: export-paths OK 
+python3 -B tools/dev.py --check -> exit 0: dev tools: PASS (10 browser surfaces) 
+python3 -B tools/check_benchmark_freeze.py -> exit 0: benchmark citations frozen (597 in 52 file(s)) 
+python3 -B tools/check_map_assets.py --self-test -> exit 0: self-test value-gap: correctly failed value-gap self-test OK (all injected gates failed; GPU silhouette uses _silhouette_noise) 
+python3 -B tools/check_map_assets.py -> exit 0: value-gap OK  linear 0.320 ≥ 0.272; act0=0.235 act1=0.280 act2=0.261 act3=0.282 map assets OK (48 payload files; runtime landscape and retained asset library) 
+python3 -B tools/check_map_quality_v2.py --self-test -> exit 0: self-test baseline defect coverage: correctly failed self-test OK (12 fail-closed mutation fixtures) 
+python3 -B tools/check_map_quality_v2.py -> exit 0: map quality v2 OK schema=1 contract=2.0.0 hard=18 soft=12 provisional=25 digest=4b54927afa7459be4b8b1bedc88fd8d653b8d9ba4ef8b79a53dce1282ecb0b5f 
+python3 tools/payload_report.py --preset iOS -> exit 0: (12 smaller groups)                     3.2 TOTAL (pck estimate)                  277.5      400  ok 
+python3 -B tools/check_anchors.py -> exit 1: docs/design/2026-10-02-map-living-land/r3/r3-2-floor/README.md:102  DRIFT      presentation/map/landscape/floor_bake.gd:104 (advance) — `advance` is at :106 1 anchor(s) no longer point where they clai

@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+"""Lane R3.2 round 3 scratch (never part of the game): a paced bake waits
+--qa-settle=<s> seconds after composing its world before its first draw, for
+one QA build that tries it on the iPad. Edits one file inside the given
+worktree; deletes nothing."""
+import sys
+from pathlib import Path
+wt = Path(sys.argv[1]).resolve()
+p = wt / "presentation/map/landscape/floor_bake.gd"
+s = p.read_text()
+def rep(a, b):
+    global s
+    assert s.count(a) == 1, a
+    s = s.replace(a, b)
+rep('''enum Step { START, WARM, FIELDS, TILES, MIPS, DONE, FAILED }''', '''enum Step { START, SETTLE, WARM, FIELDS, TILES, MIPS, DONE, FAILED }''')
+rep('''		Step.START:
+			_start()''', '''		Step.START:
+			_start()
+		Step.SETTLE:
+			if Time.get_ticks_msec() - _qa_settled_from >= int(_qa_settle_s() * 1000.0):
+				step = Step.WARM''')
+rep('''	else:
+		step = Step.WARM''', '''	elif _paced and _qa_settle_s() > 0.0:
+		_qa_settled_from = Time.get_ticks_msec()
+		step = Step.SETTLE
+	else:
+		step = Step.WARM''')
+rep('''var _paced: bool = false''', '''var _paced: bool = false
+var _qa_settled_from: int = 0''')
+s += '''
+
+static func _qa_settle_s() -> float:
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--qa-settle="):
+			return float(arg.get_slice("=", 1))
+	return 0.0
+'''
+p.write_text(s)
+print("settle variant armed:", p)

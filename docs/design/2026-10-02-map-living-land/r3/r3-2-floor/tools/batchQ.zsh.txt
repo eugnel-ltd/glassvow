@@ -1,14 +1,11 @@
 #!/bin/zsh
-# Lane R3.2 revision, batch T: the title path on the iPad 8 (QA app only,
-# under the device lock). A seed launch stores an Act I run; then each title
-# launch boots to the title (whose prime() draws the floor's warm-up on frame
-# 0), waits for the land's prefetch and paced bake, presses Back to the Road
-# and times the open. Order: main, the branch's first launch after its
-# install (its changed floor shaders not yet compiled), the branch again
-# (compiled), main again.
+# Lane R3.2 round 3, batch Q (QA app only, under the device lock; deletes
+# nothing): a scratch diagnostic build (f1f074ac, nonce r3k) whose bake logs
+# the renderer's pipeline compilations at each step, launched fresh and cached
+# on the title path, to find what the bake's last step still compiles.
 set -u
 source ${0:A:h}/common.zsh
-OUT=$R/device/batchT
+OUT=$R/device/batchQ
 $FLOW/ipad_lock.sh acquire map-r32
 trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
 UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
@@ -29,14 +26,8 @@ tt_launch() {  # label wait args...
   done
   echo "== $label nonce $MT_NONCE: rows MISSING"; return 1
 }
-echo "== batch T start $(date +%T)"
-install_build ctl $CTL_IPA || exit 1
-tt_launch ctl-seed 40 --map --seed=1 --map-steps=2 --title-trace-probe=seed
-tt_launch ctl-title1 50 --title-trace-probe=title
-install_build dev $DEV_IPA || exit 1
-tt_launch dev-title1 60 --title-trace-probe=title
-tt_launch dev-title2 50 --title-trace-probe=title
-tt_launch dev-title3 50 --title-trace-probe=title
-install_build ctl2 $CTL_IPA || exit 1
-tt_launch ctl-title2 50 --title-trace-probe=title
-echo "== batch T done $(date +%T)"
+echo "== batch Q start $(date +%T)"
+install_build q $R/ipa/h3-r3k-diag.ipa || exit 1
+tt_launch q-title1-fresh 70 --title-trace-probe=title
+tt_launch q-title2-cached 50 --title-trace-probe=title
+echo "== batch Q done $(date +%T)"

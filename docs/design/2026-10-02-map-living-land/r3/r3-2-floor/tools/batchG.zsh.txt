@@ -1,14 +1,12 @@
 #!/bin/zsh
-# Lane R3.2 revision, batch T: the title path on the iPad 8 (QA app only,
-# under the device lock). A seed launch stores an Act I run; then each title
-# launch boots to the title (whose prime() draws the floor's warm-up on frame
-# 0), waits for the land's prefetch and paced bake, presses Back to the Road
-# and times the open. Order: main, the branch's first launch after its
-# install (its changed floor shaders not yet compiled), the branch again
-# (compiled), main again.
+# Lane R3.2 round 3, batch G (QA app only, under the device lock; deletes
+# nothing): the title path with the warm-up that draws no 3D, on a branch
+# build whose floor shaders carry the nonce r3a (never compiled on this iPad,
+# as on a fresh install), against main; and one cold open each with the
+# probe's build mark, to split the cold open.
 set -u
 source ${0:A:h}/common.zsh
-OUT=$R/device/batchT
+OUT=$R/device/batchG
 $FLOW/ipad_lock.sh acquire map-r32
 trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
 UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
@@ -29,14 +27,21 @@ tt_launch() {  # label wait args...
   done
   echo "== $label nonce $MT_NONCE: rows MISSING"; return 1
 }
-echo "== batch T start $(date +%T)"
+QUICK=(--map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --opens --reopens=0 --holds=cadence --hold-frames=60)
+echo "== batch G start $(date +%T)"
 install_build ctl $CTL_IPA || exit 1
 tt_launch ctl-seed 40 --map --seed=1 --map-steps=2 --title-trace-probe=seed
 tt_launch ctl-title1 50 --title-trace-probe=title
+MT_WAIT=60 mt_launch ctl-cold1 $QUICK
+grep -o '"build":"[^"]*"' $OUT/ctl-cold1.jsonl | head -1
 install_build dev $DEV_IPA || exit 1
 tt_launch dev-title1 60 --title-trace-probe=title
 tt_launch dev-title2 50 --title-trace-probe=title
-tt_launch dev-title3 50 --title-trace-probe=title
+MT_WAIT=60 mt_launch dev-cold1 $QUICK
+grep -o '"build":"[^"]*"' $OUT/dev-cold1.jsonl | head -1
 install_build ctl2 $CTL_IPA || exit 1
 tt_launch ctl-title2 50 --title-trace-probe=title
-echo "== batch T done $(date +%T)"
+MT_WAIT=60 mt_launch ctl-cold2 $QUICK
+install_build dev2 $DEV_IPA || exit 1
+MT_WAIT=60 mt_launch dev-cold2 $QUICK
+echo "== batch G done $(date +%T)"

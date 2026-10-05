@@ -1,0 +1,22 @@
+#!/bin/zsh
+# Lane R3.2 round 3, batch J (QA app only, under the device lock; deletes
+# nothing): the scratch variant build's cold opens with the set-up frame
+# merged (v1), plus the platform's soft shadow kept (v5), plus the mask drawn
+# in the throwaway frame (v6), and both (v7); two launches each.
+set -u
+source ${0:A:h}/common.zsh
+OUT=$R/device/batchJ
+$FLOW/ipad_lock.sh acquire map-r32
+trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+QUICK=(--map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --opens --reopens=0 --holds=cadence --hold-frames=60)
+echo "== batch J start $(date +%T)"
+install_build h3 $R/ipa/h3-variants.ipa || exit 1
+MT_WAIT=60 mt_launch h3-warmup $QUICK
+for n in 1 2; do
+  MT_WAIT=60 mt_launch v1-$n $QUICK --bake-merge
+  MT_WAIT=60 mt_launch v5-$n $QUICK --bake-merge --bake-keep-soft
+  MT_WAIT=60 mt_launch v6-$n $QUICK --bake-merge --bake-mask-early
+  MT_WAIT=60 mt_launch v7-$n $QUICK --bake-merge --bake-keep-soft --bake-mask-early
+done
+echo "== batch J done $(date +%T)"

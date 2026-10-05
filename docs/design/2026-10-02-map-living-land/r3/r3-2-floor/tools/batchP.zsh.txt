@@ -1,14 +1,13 @@
 #!/bin/zsh
-# Lane R3.2 revision, batch T: the title path on the iPad 8 (QA app only,
-# under the device lock). A seed launch stores an Act I run; then each title
-# launch boots to the title (whose prime() draws the floor's warm-up on frame
-# 0), waits for the land's prefetch and paced bake, presses Back to the Road
-# and times the open. Order: main, the branch's first launch after its
-# install (its changed floor shaders not yet compiled), the branch again
-# (compiled), main again.
+# Lane R3.2 round 3, batch P (QA app only, under the device lock; deletes
+# nothing): the title path at f1f074ac, whose warm-up draws behind the launch
+# screen. Two fresh installs: builds whose floor shaders carry the nonces r3i
+# and r3j (shader_nonce.py: one uniform at 1.0 multiplied into each floor
+# shader's output, so the pipeline hash is one this iPad has never compiled),
+# each launched once fresh and once cached; main twice between them.
 set -u
 source ${0:A:h}/common.zsh
-OUT=$R/device/batchT
+OUT=$R/device/batchP
 $FLOW/ipad_lock.sh acquire map-r32
 trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
 UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
@@ -29,14 +28,16 @@ tt_launch() {  # label wait args...
   done
   echo "== $label nonce $MT_NONCE: rows MISSING"; return 1
 }
-echo "== batch T start $(date +%T)"
-install_build ctl $CTL_IPA || exit 1
+echo "== batch P start $(date +%T)"
+install_build ctl $R/ipa/ctl.ipa || exit 1
 tt_launch ctl-seed 40 --map --seed=1 --map-steps=2 --title-trace-probe=seed
 tt_launch ctl-title1 50 --title-trace-probe=title
-install_build dev $DEV_IPA || exit 1
-tt_launch dev-title1 60 --title-trace-probe=title
-tt_launch dev-title2 50 --title-trace-probe=title
-tt_launch dev-title3 50 --title-trace-probe=title
-install_build ctl2 $CTL_IPA || exit 1
+install_build devi $R/ipa/h2-r3i.ipa || exit 1
+tt_launch dev-i-title1-fresh 70 --title-trace-probe=title
+tt_launch dev-i-title2-cached 50 --title-trace-probe=title
+install_build ctl2 $R/ipa/ctl.ipa || exit 1
 tt_launch ctl-title2 50 --title-trace-probe=title
-echo "== batch T done $(date +%T)"
+install_build devj $R/ipa/h2-r3j.ipa || exit 1
+tt_launch dev-j-title1-fresh 70 --title-trace-probe=title
+tt_launch dev-j-title2-cached 50 --title-trace-probe=title
+echo "== batch P done $(date +%T)"

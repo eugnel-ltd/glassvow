@@ -1,0 +1,13 @@
+== batch J start 08:10:17
+== install h3 08:10:17
+== h3-warmup nonce h3-warmup-292318315: rows fresh
+== v1-1 nonce v1-1-409631607: rows fresh
+== v5-1 nonce v5-1-3231012752: rows fresh
+== v6-1 nonce v6-1-3060614284: rows fresh
+== v7-1 nonce v7-1-2202418764: rows fresh
+== v1-2 nonce v1-2-156671480: rows fresh
+== v5-2 nonce v5-2-347612442: rows fresh
+== v6-2 nonce v6-2-3173716225: rows fresh
+== v7-2 nonce v7-2-117413450: rows fresh
+== batch J done 08:20:00
+== lock released 08:20:00

@@ -1,0 +1,6 @@
+== batch Q start 09:54:56
+== install q 09:54:56
+== q-title1-fresh nonce q-title1-fresh-56235668: rows fresh ("build":"f1f074ac")
+== q-title2-cached nonce q-title2-cached-1397713044: rows fresh ("build":"f1f074ac")
+== batch Q done 09:57:26
+== lock released 09:57:26

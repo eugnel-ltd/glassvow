@@ -37,3 +37,18 @@ seats not drained (drained = 1)      caught: no water stands at any of the 57 wa
 -- the art revision (tests/test_map_floor.gd, headless)
 Close grain reaches Journey (close_heights.y 20)   caught: the Close grain is full at Close (13.06 m) and gone at Journey (19.2 m)
 water laid as a colour again                       caught: standing water darkens the ground it lies on and lays no colour over it
+
+# Round 3 (5 Oct). Each check's subject broken by hand, the one test or the windowed proof run, the file copied back.
+# The first two groups proved checks that later commits replaced; they are kept as the record.
+-- round 3, the undrawn warm-up (bbcd7684, tests/test_map_floor.gd, headless; replaced by 8998bc2b)
+the warm-up's 3D drawn (UPDATE_ONCE)    caught: the warm-up stands the bake's and the floor's materials where no view draws them
+-- round 3, the launch-screen warm-up (8998bc2b and afeaf175, tests/test_map_floor.gd, headless)
+the ground sample without the chunks' colour   caught: the warm-up stands the bake's and the floor's materials on meshes of the bake's own kinds
+the warm-up never lets its samples go          caught: the warm-up draws its samples at once and lets them go
+the mip sample in a clear view           caught: the warm-up draws the stamps in a clear view and the mip shader in an opaque one (replaced in f1f074ac by the check below)
+-- round 3, the warm-up's mip chain (f1f074ac, tools/check_floor_bake.gd, windowed, A12 condition)
+the warm-up builds no mip chain           caught: the warm-up builds the bake's own mip chain (0 levels)
+the warm-up keeps its picture             caught: the warm-up draws and lets go, its picture freed
+-- round 3, the warm-up's 2D draw commands (0fb33aed, tools/check_floor_bake.gd, windowed, A12 condition)
+no stamps command                         caught: every 2D view of the warm-up draws in its forced draws (3 of 4)
+no mip commands                           caught: every 2D view of the warm-up draws in its forced draws (1 of 4)

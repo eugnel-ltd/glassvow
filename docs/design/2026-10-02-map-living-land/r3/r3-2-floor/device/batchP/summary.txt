@@ -1,0 +1,6 @@
+P  ctl-title1               ?         frame0   341.6  force_draws -                next    nan  over100 after0 []                     open ready  664.2 worst  188.3  
+P  ctl-title2               ?         frame0   363.5  force_draws -                next    nan  over100 after0 []                     open ready  713.7 worst  239.6  
+P  dev-i-title1-fresh       ?         frame0  5874.5  force_draws 3332,3343        next    nan  over100 after0 [[181, 424.6]]         open ready  646.7 worst  174.8  bake worst 416.8
+P  dev-i-title2-cached      ?         frame0   398.1  force_draws 38,43            next    nan  over100 after0 []                     open ready  646.4 worst  174.3  bake worst 47.7
+P  dev-j-title1-fresh       ?         frame0  5779.4  force_draws 3146,3162        next    nan  over100 after0 [[196, 436.9]]         open ready  647.0 worst  175.7  bake worst 433.1
+P  dev-j-title2-cached      ?         frame0   393.1  force_draws 44,58            next    nan  over100 after0 []                     open ready  645.9 worst  173.2  bake worst 50.0

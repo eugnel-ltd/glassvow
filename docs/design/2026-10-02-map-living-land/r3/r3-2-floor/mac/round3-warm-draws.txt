@@ -1,0 +1,16 @@
+# The warm-up's forced draws on the Mac (A12 condition), a fresh process: canvas, surface and specialisation
+# pipeline compilations, and each 2D view's canvas draw calls in its forced draw (exp warm_count2.gd).
+# f1f074ac, the 2D samples as nodes (their commands wait for the next frame's redraw):
+WARMCOUNT before [0, 0, 0]
+WARMCOUNT drawn [0, 6, 5]
+WARMCOUNT view @SubViewport@16 canvas draw calls 0
+WARMCOUNT view Floor mip 3 canvas draw calls 0
+WARMCOUNT view Floor mip 2 canvas draw calls 0
+WARMCOUNT view Floor mip 1 canvas draw calls 0
+# 0fb33aed, each sample's command sent as it is built:
+WARMCOUNT before [0, 0, 0]
+WARMCOUNT drawn [2, 6, 5]
+WARMCOUNT view @SubViewport@16 canvas draw calls 1
+WARMCOUNT view Floor mip 3 canvas draw calls 1
+WARMCOUNT view Floor mip 2 canvas draw calls 1
+WARMCOUNT view Floor mip 1 canvas draw calls 1
