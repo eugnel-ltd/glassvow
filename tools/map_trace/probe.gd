@@ -27,7 +27,15 @@ extends Node
 ##   --hold-frames=<n>      frames per rest hold (default 600)
 ##   --linger=<s>           seconds to stay at the cadence rest after the holds,
 ##                          for a device screenshot (default 0)
-##   --probe-view=whole|river   frame Whole act, or the ravine, before holding
+##   --probe-view=whole|river|close   frame Whole act, the ravine, or the
+##                          Close level before holding
+##   --opens                after the boot, open the map again as a player
+##                          would: cold (every cache dropped), reopened twice
+##                          (the kept screen), and warmed (the land built and
+##                          its floor baked ahead, as the title does); an
+##                          `open` row each with the time to the land drawn
+##                          and the worst frame, the floor's bake (R3.2) and
+##                          the video memory before, at its peak and after
 ##   --probe-grain=off      take the map's grain off (and the TransitionLayer's)
 ##   --probe-rm             Reduce Motion, in memory only (nothing is saved)
 ##   --probe-overlay=deck   open the run's deck over the map (a room) first
@@ -91,8 +99,10 @@ func _row(data: Dictionary) -> void:
 
 func _run() -> void:
 	var screen: WorldMapScreen = null
+	var watch: FrameWatch = FrameWatch.new()
 	for _i: int in range(6000):
 		await get_tree().process_frame
+		watch.tick()
 		var found: Variant = _host.get("_map_screen")
 		if found is WorldMapScreen:
 			screen = found
@@ -103,6 +113,12 @@ func _run() -> void:
 		_finish(3)
 		return
 	_scene = screen._map_scene
+	await _settle_memory(watch)
+	_row(watch.row("boot", _floor_timings(_scene.journey_landscape())))
+	if _flag("--opens"):
+		await _opens()
+		screen = _host.get("_map_screen")
+		_scene = screen._map_scene
 	_view(screen, _arg("--probe-view", ""))
 	await _frames(SETTLE_FRAMES)
 	if _arg("--probe-grain", "") == "off":
@@ -145,6 +161,9 @@ func _view(screen: WorldMapScreen, view: String) -> void:
 	var journey: MapJourneyDirector = screen._journey
 	if view == "whole" and journey != null and journey.active():
 		journey.view.level = MapJourneyView.Level.WHOLE
+		journey.frame(screen.map.at)
+	elif view == "close" and journey != null and journey.active():
+		journey.view.level = MapJourneyView.Level.CLOSE
 		journey.frame(screen.map.at)
 	elif view == "river":
 		var z: float = 4.0
@@ -288,6 +307,122 @@ func _kill(what: String, screen: WorldMapScreen) -> void:
 				var item: CanvasItem = hud
 				item.visible = false
 	_row({"probe": "kill", "what": what})
+
+
+## The opens a player meets (`--opens`): cold, reopened, and warmed ahead.
+func _opens() -> void:
+	_drop()
+	await _frames(30)
+	await _open("cold")
+	await _open("reopen")
+	await _open("reopen")
+	_drop()
+	await _frames(30)
+	var game: GlassvowGame = _host.get("game")
+	var map: WorldMap = _host.get("_map")
+	MapLandscapeAssets.prefetch(game.run.act)
+	MapJourneyPrefetch.start(map, game.run)
+	var warm: FrameWatch = FrameWatch.new()
+	while MapJourneyPrefetch.busy():
+		await get_tree().process_frame
+		warm.tick()
+	_row(warm.row("warm", {}))
+	await _open("warmed")
+
+
+## Drops every cache a map open could take: the kept screen, the act's
+## pictures, the prefetch, the kept land and binding, and the layout input.
+func _drop() -> void:
+	_host.call("_clear_route")
+	_host.get("_map_keep").call("release")
+	MapLandscapeAssets.release()
+	MapJourneyPrefetch.release()
+	MapScene.release_kept_journey()
+	MapScene._bound = {}
+	MapScene._bound_key = ""
+	WorldMapScreen._input_kept = null
+	WorldMapScreen._input_sources = []
+
+
+## One open, as R2's map probe read it: the call's own time, its first frame
+## drawn, and the land ready (nothing pending, the first frame drawn at least).
+func _open(kind: String) -> void:
+	var watch: FrameWatch = FrameWatch.new()
+	_host.call("_show_map")
+	var call_ms: float = (Time.get_ticks_usec() - watch.started) / 1000.0
+	await RenderingServer.frame_post_draw
+	watch.tick()
+	var first_ms: float = watch.elapsed_ms()
+	var screen: WorldMapScreen = _host.get("_map_screen")
+	while is_instance_valid(screen) and screen.landscape_pending():
+		await get_tree().process_frame
+		watch.tick()
+	var ready: float = watch.elapsed_ms()
+	await _settle_memory(watch)
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape() if is_instance_valid(screen) else null
+	var extra: Dictionary = _floor_timings(land)
+	extra["kind"] = kind
+	extra["call_ms"] = snappedf(call_ms, 0.1)
+	extra["first_frame_ms"] = snappedf(first_ms, 0.1)
+	extra["ready_ms"] = snappedf(ready, 0.1)
+	_row(watch.row("open", extra))
+	await _frames(30)
+
+
+## Ten more frames of video memory once the land is drawn: the bake's
+## transients go within them.
+func _settle_memory(watch: FrameWatch) -> void:
+	watch.after.clear()
+	for _i: int in range(10):
+		await get_tree().process_frame
+		watch.after.append(FrameWatch.mib())
+
+
+## The floor's bake (R3.2) on a build that has one.
+static func _floor_timings(land: MapJourneyLandscape) -> Dictionary:
+	if land == null:
+		return {}
+	var floor_node: Variant = land.get("forest_floor")
+	if not floor_node is Node:
+		return {"floor": "none"}
+	var node: Node = floor_node
+	return {"floor": node.get("state"), "floor_failure": node.get("failure"),
+		"floor_ms": node.get("timings_ms"), "land_ms": land.timings_ms}
+
+
+## Frame intervals and video memory, a frame at a time, from its making.
+class FrameWatch:
+	extends RefCounted
+	var started: int = Time.get_ticks_usec()
+	var last: int = started
+	var slow: Array = []
+	var worst: float = 0.0
+	var frames: int = 0
+	var vram: Array = [mib()]
+	var after: Array = []
+
+	static func mib() -> float:
+		return snappedf(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, 0.1)
+
+	func tick() -> void:
+		var now: int = Time.get_ticks_usec()
+		var interval: float = (now - last) / 1000.0
+		last = now
+		frames += 1
+		worst = maxf(worst, interval)
+		if interval > 50.0:
+			slow.append([snappedf((now - started) / 1000.0, 1.0), snappedf(interval, 0.1)])
+		vram.append(mib())
+
+	func elapsed_ms() -> float:
+		return (last - started) / 1000.0
+
+	func row(probe: String, extra: Dictionary) -> Dictionary:
+		var out: Dictionary = {"probe": probe, "frames": frames, "elapsed_ms": snappedf(elapsed_ms(), 0.1),
+			"worst_frame_ms": snappedf(worst, 0.1), "slow_frames": slow,
+			"vram_start": vram[0], "vram_peak": vram.max(), "vram_end": vram[-1], "vram_after": after}
+		out.merge(extra)
+		return out
 
 
 func _finish(code: int) -> void:
