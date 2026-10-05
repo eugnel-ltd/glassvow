@@ -27,11 +27,12 @@ uniform vec2 gateway_position = vec2(-1000.0);
 // Mobile renderer lights a mesh with at most eight.
 uniform int lamp_count = 0;
 uniform vec4 lamps[48];
-// The lamps' lights: brighter and wider than the desktop's few real ones
-// (`lamps.gd`: 1.6, 4.2 m, 1.4), since here every lamp has one and it is the
-// pool of light round each lantern that the target holds.
+// The lamps' lights: brighter than the desktop's few real ones (`lamps.gd`:
+// 1.6, 4.2 m, 1.4), since here every lamp has one and it is the pool of light
+// round each lantern that the target holds; no wider, so the road between the
+// lamps keeps its own grey.
 uniform float pool_energy = 4.2;
-uniform float pool_range = 5.2;
+uniform float pool_range = 4.2;
 uniform float pool_decay = 1.2;
 
 float floor_hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -114,13 +115,18 @@ Floor floor_at(vec2 p, float height, vec3 normal) {
 	// Water stands in the ruts' low stretches, spilling over their edges, and
 	// in the road's hollows, each pool ragged at its rim. The hollows are
 	// layered noise, turned off the noise's grid: one value noise cut at a
-	// level takes the grid's square corners, and its pools read as slabs.
+	// level takes the grid's square corners, and its pools read as slabs. The
+	// ground rises to every base (the contact field), so no standing water, wet
+	// rut or wet bank darkens the ground round a waystone, a stone or a trunk.
 	vec2 q = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8)) * p;
 	float rim = (floor_noise(q * 5.3 + 8.0) - 0.5) * 0.14;
 	float low = floor_fbm(q * 0.9 + 3.0) + rim;
-	f.puddle = (1.0 - smoothstep(0.1, 0.34, track)) * f.core * smoothstep(0.56, 0.7, low);
-	f.puddle = max(f.puddle, f.core * smoothstep(0.7, 0.8, floor_fbm(q * 0.45 + 61.0) + rim));
-	f.wet = max(max(f.puddle, f.rut * 0.55), waterline);
+	float drained = 1.0 - smoothstep(0.05, 0.2, f.contact);
+	f.puddle = (1.0 - smoothstep(0.1, 0.3, track)) * f.core * smoothstep(0.62, 0.74, low);
+	f.puddle = max(f.puddle, f.core * smoothstep(0.74, 0.84, floor_fbm(q * 0.45 + 61.0) + rim));
+	f.puddle *= drained;
+	f.rut *= 0.35 + 0.65 * drained;
+	f.wet = max(max(f.puddle, f.rut * 0.55), waterline) * drained;
 	f.paving = (1.0 - smoothstep(1.3, 3.8, distance(p, gateway_position))) * f.core;
 	f.scarp = smoothstep(0.1, 0.5, 1.0 - abs(normal.y));
 	return f;

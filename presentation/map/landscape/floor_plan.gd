@@ -26,6 +26,10 @@ const SHRUB_SHADE: Vector4 = Vector4(0.0, 0.0, 0.32, 0.55)
 const ROCK_REACH: Vector4 = Vector4(0.0, 0.6, 0.0, 1.0)
 const ROCK_FOOT: Vector4 = Vector4(0.0, 0.0, 0.6, 0.85)
 const STONE_FOOT: Vector4 = Vector4(0.0, 0.0, 0.5, 0.55)
+## A waystone's seat: the ground rises round it wider and softer than round a
+## stone, so no water stands or rut lies wet under its token
+## (`floor_ground.gdshaderinc`, `drained`).
+const SEAT_FOOT: Vector4 = Vector4(0.0, 0.0, 0.42, 1.2)
 ## The kit's kinds that stand on the land as stones, posts and shrines, by
 ## the radius (metres at scale 1) their foot darkens.
 const FOOTS: Dictionary = {"memorial": 0.8, "lantern-post": 0.45, "conifer-snag": 0.7,
@@ -68,7 +72,7 @@ func build(land: MapJourneyLandscape, key_rotation: Vector3) -> void:
 		_kit_stamps(land.kit.placed)
 	if land.journey != null:
 		for base: Node3D in land.journey.bases:
-			_stamp(base.position, STONE_FOOT)
+			_stamp(base.position, SEAT_FOOT)
 	timings_ms["plan"] = (Time.get_ticks_usec() - started) / 1000.0
 
 

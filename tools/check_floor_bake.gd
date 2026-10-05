@@ -7,7 +7,8 @@ extends SceneTree
 ## - the lit picture is the land's size at its texels a metre with its full mip
 ##   chain, each level the mean (as light) of the one below; it has a picture
 ##   in it, and no seam where its tiles meet;
-## - the mask's pools, phases and wet are in range, a phase per lamp;
+## - the mask's pools, phases and wet are in range, a phase per lamp, and no
+##   water stands (nor a rut lies wet) at a waystone's seat;
 ## - the bake took a frame a pair of tiles and four more, and no step of it
 ##   held the main thread long; paced (the prefetch's, under a lit title), a
 ##   frame a tile and four more;
@@ -107,6 +108,7 @@ func _run() -> void:
 	var mask: Image = Image.create_from_data(mask_size.x, mask_size.y, false, Image.FORMAT_RGBA8,
 		rd.texture_get_data(rids[1], 0).slice(0, mask_size.x * mask_size.y * 4))
 	_mask(mask, floor_node.plan.lamps.size())
+	_seats_dry(mask, bounds, land)
 	current_scene.call("_clear_route")
 	var keep: Variant = current_scene.get("_map_keep")
 	if keep is MapScreenKeep:
@@ -180,6 +182,22 @@ static func _step(image: Image, at: int, column: bool) -> float:
 		var b: Color = image.get_pixel(at, i) if column else image.get_pixel(i, at)
 		sum += absf(a.get_luminance() - b.get_luminance())
 	return sum / count
+
+
+## The wettest texel within 0.4 m of any waystone's seat: the ground rises to
+## a base, so the water and the wet ruts drain from it.
+func _seats_dry(mask: Image, bounds: Rect2, land: MapJourneyLandscape) -> void:
+	var wettest: float = 0.0
+	var seats: int = 0
+	for base: Node3D in land.journey.bases:
+		seats += 1
+		var centre: Vector2 = (Vector2(base.position.x, base.position.z) - bounds.position) * Bake.MASK_TEXELS_PER_M
+		for dy: int in range(-3, 4):
+			for dx: int in range(-3, 4):
+				var at: Vector2i = Vector2i(roundi(centre.x) + dx, roundi(centre.y) + dy)
+				if at.x >= 0 and at.y >= 0 and at.x < mask.get_width() and at.y < mask.get_height():
+					wettest = maxf(wettest, mask.get_pixel(at.x, at.y).b)
+	_check(seats > 0 and wettest < 0.1, "no water stands at any of the %d waystones' seats (wettest %.2f)" % [seats, wettest])
 
 
 func _mask(mask: Image, lamps: int) -> void:
