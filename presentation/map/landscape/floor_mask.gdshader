@@ -1,6 +1,6 @@
 shader_type spatial;
 // The floor bake's mask (R3.2, `floor_bake.gd`): what the runtime floor
-// (`floor.gdshader`) keeps alive in the baked picture, at 10 texels a metre.
+// (`floor.gdshader`) keeps alive in the baked picture, at 8 texels a metre.
 // r: how much of a texel's light is a lamp's pool, which flickers with it;
 // g: the flicker phase of the lamp that lights it most (its flame's own);
 // b: the wet, where puddles glint. Unshaded, through a linear tonemap at

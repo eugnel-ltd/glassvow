@@ -32,8 +32,12 @@ const COVERS: Dictionary = {
 	"road": "res://assets/art/map-journey/floor/floor-road.png",
 	"splats": "res://assets/art/map-journey/floor/floor-splats.png",
 }
-const LIT_TEXELS_PER_M: float = 20.0
-const MASK_TEXELS_PER_M: float = 10.0
+## The picture's and the mask's texels a metre. The plan's 20 and 10 held the
+## two textures to 13.9 MiB, but on the A12 the floor's whole cost to video
+## memory (its pipelines and buffers beside them) came to 21.8 MiB at the
+## median against R3.2's 20: 18 and 8 bring the textures to 10.9 MiB.
+const LIT_TEXELS_PER_M: float = 18.0
+const MASK_TEXELS_PER_M: float = 8.0
 ## The largest tile of the lit pass, each with the key's shadow map to itself,
 ## and how many tiles a frame draws (one view each).
 const TILE_LIMIT: Vector2i = Vector2i(960, 600)

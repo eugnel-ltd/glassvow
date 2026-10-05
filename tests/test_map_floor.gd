@@ -22,6 +22,9 @@ const Planting = preload("res://presentation/map/landscape/wood_planting.gd")
 const Details = preload("res://presentation/map/landscape/road_details.gd")
 const Pilgrim = preload("res://presentation/map/landscape/pilgrim.gd")
 const SEED: int = 717
+## What R3.2 keeps casting live once the floor is baked: the gateway and the
+## rock outcrops (the bridges' parapets aside), named here apart from the code.
+const HEROES: PackedStringArray = ["amber-arch", "slate-bank", "slate-ridge", "slate-shard"]
 
 
 static func _check(fails: Array[String], ok: bool, what: String) -> void:
@@ -72,8 +75,10 @@ static func _tiles(fails: Array[String]) -> void:
 				apart = apart and not tile.intersects(tiles[j])
 		_check(fails, area == size.x * size.y and inside and apart,
 			"the bake's tiles cover a %dx%d picture exactly, each within the limit" % [size.x, size.y])
-	_check(fails, Bake.tiles(Vector2i(1920, 1200), Bake.TILE_LIMIT).size() == 4,
-		"Act I's picture bakes in four tiles, one a frame")
+	var bounds: Rect2 = MapJourneyLandscape.MAP_BOUNDS
+	var act: Vector2i = Vector2i(ceili(bounds.size.x * Bake.LIT_TEXELS_PER_M), ceili(bounds.size.y * Bake.LIT_TEXELS_PER_M))
+	_check(fails, Bake.tiles(act, Bake.TILE_LIMIT).size() == 4 and Bake.TILES_A_FRAME == 2,
+		"Act I's picture bakes in four tiles, two a frame")
 
 
 ## The mip chain runs from the picture's size down to a texel, halving.
@@ -287,7 +292,7 @@ static func _baked(fails: Array[String], land: MapJourneyLandscape) -> void:
 	for node: Node in land.kit.find_children("*", "GeometryInstance3D", true, false):
 		var part: GeometryInstance3D = node
 		var casts: bool = part.visible and part.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var hero: bool = LandFloor.hero_part(part, land.kit)
+		var hero: bool = _hero_kind(part, land.kit)
 		heroes += 1 if hero and casts else 0
 		quiet = quiet and casts == hero
 	var terrain: bool = true
@@ -298,6 +303,21 @@ static func _baked(fails: Array[String], land: MapJourneyLandscape) -> void:
 	_check(fails, woods and journey, "the woodland's and the waystones' live shadows are in the floor now")
 	_check(fails, heroes > 0 and quiet and terrain,
 		"only the gateway, the outcrops and the bridges' parapets cast live")
+
+
+## Whether a kit part is of one of `HEROES`: its batch's kind, else the
+## placement it stands under.
+static func _hero_kind(part: Node, kit: Node) -> bool:
+	var kind: String = str(part.get_meta("kind", ""))
+	var node: Node = part
+	while kind.is_empty() and node != null and node.get_parent() != kit:
+		node = node.get_parent()
+	if kind.is_empty() and node != null:
+		kind = str(node.name)
+	for hero: String in HEROES:
+		if kind.begins_with(hero):
+			return true
+	return false
 
 
 ## The pilgrim's soft blob stands in for its shadow, asked before or after the

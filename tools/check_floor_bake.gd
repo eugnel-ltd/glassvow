@@ -4,7 +4,7 @@ extends SceneTree
 ## headless suite cannot (`tests/test_map_floor.gd` holds the rest):
 ## - the floor baked and drew every ground chunk, and the bake's views and
 ##   world are gone;
-## - the lit picture is the land's size at 20 texels a metre with its full mip
+## - the lit picture is the land's size at its texels a metre with its full mip
 ##   chain, each level the mean (as light) of the one below; it has a picture
 ##   in it, and no seam where its tiles meet;
 ## - the mask's pools, phases and wet are in range, a phase per lamp;
