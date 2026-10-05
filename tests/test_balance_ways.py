@@ -298,7 +298,7 @@ class BalanceWaysTest(unittest.TestCase):
                 self.assertIn(f"--pilot={pilot}", command)
                 self.assertEqual([f"--search={search}", "--play=search"] if play == "search" else [],
                                  [arg for arg in command if arg.startswith(("--search", "--play"))])
-        for play, pilot, search in (("greedy", "p8-d0-v3", "s2"), ("search", "p10", "s1"), ("search", "p9", "s3")):
+        for play, pilot, search in (("greedy", "p8-d0-v3", "s2"), ("search", "p10", "s1"), ("search", "p9", "s4")):
             with self.subTest(play=play, pilot=pilot, search=search), self.assertRaises(ValueError):
                 ways.sim_command("godot", DUSK, 0, "full", "A", 13000, 3, Path("/o.json"), play=play,
                                  pilot=pilot, search=search)

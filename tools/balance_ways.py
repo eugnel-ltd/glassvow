@@ -121,7 +121,7 @@ PLAYS = ("greedy", "search")
 # under --play search. The first of each is 1.0's instrument of record (docs/rc-bar.md P9) and the
 # default; the second is the 1.1 instrument. Every simulator command names them.
 PILOTS = ("p8-d0-v3", "p9")
-SEARCHES = ("s1", "s2")
+SEARCHES = ("s1", "s2", "s3")
 # Readout 8's feel proxies: a won fight the hero leaves under this share of max HP
 # is a close call.
 CLOSE_CALL = Fraction(20, 100)
@@ -769,7 +769,7 @@ def bots_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--pilot", choices=PILOTS, default=PILOTS[0],
                         help="the pilot that builds every run (default p8-d0-v3, 1.0's; p9 is 1.1's)")
     parser.add_argument("--search", choices=SEARCHES, default=SEARCHES[0],
-                        help="the search player under --play search (default s1, 1.0's; s2 is 1.1's)")
+                        help="the search player under --play search (default s1, 1.0's; s2 and s3 are 1.1's)")
 
 
 def main(argv: list[str] | None = None) -> int:
