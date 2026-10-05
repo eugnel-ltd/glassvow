@@ -902,6 +902,13 @@ fight began. The rest of the card always resolves. It is the payoff only a
 committed deck collects, paid per card played rather than as a set bonus, and
 the rider names the colour and nothing else.
 
+### Entry pool
+The pool state a class that unlocks later is read in: the profile of a player who
+has just unlocked it, one run played and won, so the first reveals and the class
+itself, and no pool wave or deed card. It takes the fresh pool's place in that
+class's Flame table, because no player of that class ever has a fresh Vigil; its
+cards are the fresh pool's. The Ashwarden's cells are `entry` and `full`.
+
 ### Arm
 One simulated player in a balance reading. Every arm plays the same seeds, so
 arms compare run for run, and every arm plays its fights alike; arms differ
