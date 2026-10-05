@@ -59,6 +59,18 @@ static func _policy(content: ContentDB, fails: Array[String]) -> void:
 	var ash: Dictionary = content.aspects[ASH] if content.aspects.size() == 2 else {}
 	_check(fails, str(ash.get("id", "")) == "ashwarden",
 		"the Ashwarden row moved or left content")
+	# #544 A2: the Ashwarden's ways are in content, and no class this build
+	# admits reads them, whatever the profile has earned.
+	var ash_ways: Array = []
+	for way: Dictionary in Flame.ways(content, ASH):
+		ash_ways.append(str(way.get("id", "")))
+	for aspect: int in ClassScope.admitted(content, ["aspect2"]):
+		for way: Dictionary in Flame.ways(content, aspect):
+			_check(fails, not ash_ways.has(str(way.get("id", ""))),
+				"admitted class %d reads the Ashwarden's way %s" % [aspect, way.get("id")])
+	var deferred: bool = ash.get("deferred", false) == true
+	_check(fails, ash_ways == ["smolder", "hand", "endure"] and deferred,
+		"the Ashwarden's ways are not in content behind the deferred gate")
 
 
 ## 1.1 flips one field: the same policy then admits the Ashwarden to a profile
