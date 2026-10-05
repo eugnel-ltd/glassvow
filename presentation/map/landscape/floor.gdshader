@@ -1,6 +1,6 @@
 shader_type spatial;
 // Act I's floor (R3.2, issue #660), drawn from its bake (`floor_bake.gd`): the
-// lit forest floor as a world-space picture taken from straight above, 18
+// lit forest floor as a world-space picture taken from straight above, 16
 // texels a metre, its key shadows, contact occlusion and lamp pools already in
 // it. Unshaded and receiving no live shadow: one sample of the picture, one of
 // its mask (`floor_mask.gdshader`), one of a tiled micro detail. What stays

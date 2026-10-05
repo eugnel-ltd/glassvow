@@ -11,9 +11,9 @@ extends RefCounted
 ##    (`floor_mask.gdshader`);
 ## 3. the lit picture's mip chain, every level in one frame through nested 2D
 ##    views (`floor_mip.gdshader`).
-## Paced (the journey prefetch's bake, under a lit title), it draws one tile a
-## frame and sets up a frame before its first draw, so no frame of the title
-## carries more than a tile.
+## It sets up a frame before its first draw. Paced (the journey prefetch's
+## bake, under a lit title), it draws one tile a frame, so no frame of the
+## title carries more than a tile.
 ## Each view's picture is copied on the GPU into the floor's own textures
 ## (`RenderingDevice.texture_copy`), so nothing is read back and no frame waits
 ## for the GPU. The views and the world are freed as the bake ends; the two
@@ -37,9 +37,11 @@ const COVERS: Dictionary = {
 }
 ## The picture's and the mask's texels a metre. The plan's 20 and 10 held the
 ## two textures to 13.9 MiB, but on the A12 the floor's whole cost to video
-## memory (its pipelines and buffers beside them) came to 21.8 MiB at the
-## median against R3.2's 20: 18 and 8 bring the textures to 10.9 MiB.
-const LIT_TEXELS_PER_M: float = 18.0
+## memory (its pipelines and buffers beside them, which Metal counts too) came
+## to +21.8 MiB at the median against R3.2's +20; at 18 and 8, +18.7 at the
+## hold starts and +20.6 at the first open. 16 and 8 hold the textures to
+## 8.9 MiB; side by side at Close and Journey the picture is not told apart.
+const LIT_TEXELS_PER_M: float = 16.0
 const MASK_TEXELS_PER_M: float = 8.0
 ## The largest tile of the lit pass, each with the key's shadow map to itself,
 ## and how many tiles a frame draws (one view each).
@@ -191,10 +193,7 @@ func _start() -> void:
 	timings["tiles"] = _tiles.size()
 	timings["paced"] = _paced
 	_tile = 0
-	if _paced:
-		step = Step.WARM
-	else:
-		_warm()
+	step = Step.WARM
 
 
 ## A first draw, kept by no one: a light new to its world casts nothing in its

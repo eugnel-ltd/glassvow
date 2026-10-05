@@ -8,9 +8,9 @@ extends SceneTree
 ##   chain, each level the mean (as light) of the one below; it has a picture
 ##   in it, and no seam where its tiles meet;
 ## - the mask's pools, phases and wet are in range, a phase per lamp;
-## - the bake took a frame a pair of tiles and three more, and no step of it held the
-##   main thread long; paced (the prefetch's, under a lit title), a frame a
-##   tile and four more;
+## - the bake took a frame a pair of tiles and four more, and no step of it
+##   held the main thread long; paced (the prefetch's, under a lit title), a
+##   frame a tile and four more;
 ## - letting the land go frees the floor's textures.
 ## Exits 0 on a pass, 1 on a failure, 2 under `--headless` (no RenderingDevice).
 ## Pass the game's map flags after `--`, as the capture tools do:
@@ -74,7 +74,7 @@ func _run() -> void:
 		longest = maxf(longest, ms)
 	var frames: int = int(str(bake.get("frames", 0)))
 	var tiles: int = int(str(bake.get("tiles", 0)))
-	_check(frames == ceili(tiles / float(Bake.TILES_A_FRAME)) + 3 and longest < STEP_LIMIT_MS,
+	_check(frames == ceili(tiles / float(Bake.TILES_A_FRAME)) + 4 and longest < STEP_LIMIT_MS,
 		"the bake spans its frames (%d) and no step holds the main thread past %d ms (%.1f)" % [
 			frames, STEP_LIMIT_MS, longest])
 	var rids: Array[RID] = floor_node._rids.duplicate()
