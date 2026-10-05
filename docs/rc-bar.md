@@ -259,17 +259,25 @@ kept, with the date each part stopped being in force, under *History* at the end
   ([release roadmap](release-roadmap.md)) and are never PASS. No Ashwarden evidence is a
   precondition for this pillar; comparator evidence kept from the earlier programme is history,
   not a demand.
-- **1.1: both classes, on the combined product.** Each class gets its own verdict: the
-  Ashwarden on its own lock and readings, built from the
-  [class template](design/2026-09-29-dusk-flame/ways-template.md), and the Duskblade
-  requalified under the 1.1 instrument (pilot `p9`, search player `s2`, accepted on
-  [readout 14](design/2026-09-29-dusk-flame/readouts/readout-14.md)) on the combined product.
-  The 1.0 verdict does not carry into 1.1: the requalification replaces it there, and readout
-  13 stays 1.0's reading of record. Read on 1.0's content under the 1.1 instrument, the
-  Duskblade's intent holds with the same one reservation, the fresh-pool Lantern lead. This is
-  an interim reading, not a verdict; the 1.1 verdict is given at step A9 on the combined
-  product (the lock's §11, *Verdict*, item 7). The gap between the classes is reported, not
-  gated (#544's plan of record, decisions 4 and 5).
+- **1.1: both classes, on the combined product.** Each class gets its own verdict: the Ashwarden
+  on its own lock and readings, built from the
+  [class template](design/2026-09-29-dusk-flame/ways-template.md), and the Duskblade requalified
+  under the 1.1 instrument (pilot `p9`, search player `s3`) on the combined product. By the
+  orchestrator's ruling of 5 October 2026, the 1.1 search player is `s3` (#544 P6b): `s2`'s
+  honest play plus the credit for a Smolder tick that kills before the enemy acts. Readout 14's
+  interim reading was made under `s2`. `s3` differs from it for the Duskblade only in `full`
+  cells, through the Ashfall omen's starting Smolder (sample: 200 seeds a cell, 13000–13199: 485
+  of 2,400 V0 and V5 `full` rows changed and 55 outcomes flipped, no arm's paired change
+  significant, every p ≥ 0.45; one graded point verdict crossed its line, G6 at V0 full, edge
+  60.6% → 59.8% of A_lit's wins, UNDECIDED on interval under both). The Duskblade is re-read
+  under `s3` on the combined product at A9, and the cross-class reading uses `s3` for both
+  classes. The 1.0 verdict does not carry into 1.1: the requalification replaces it there, and
+  readout 13 stays 1.0's reading of record. Read on 1.0's content under `s2`
+  ([readout 14](design/2026-09-29-dusk-flame/readouts/readout-14.md)), the Duskblade's intent
+  holds with the same one reservation, the fresh-pool Lantern lead. This is an interim reading,
+  not a verdict; the 1.1 verdict is given at step A9 on the combined product (the lock's §11,
+  *Verdict*, item 7). The gap between the classes is reported, not gated (#544's plan of record,
+  decisions 4 and 5).
 
 **The verdict.** For each shipped class P9 records one verdict, **ACCEPT** or **NOT ACCEPTED**,
 on whether the design's intent holds: the three ways are viable and comparable; commitment is
@@ -375,7 +383,7 @@ the readout whose complete §11 table it was given on.
      record on every graded gate's verdict in every graded cell (on point and on interval where
      the gate has both, and on its single verdict for G7 and row B); the
      numbers need not match (owner ruling, 2026-09-27). A run under another instrument, such as
-     1.1's `s2`, is a new reading, not this re-run. The Flame is code as well as content, so the
+     1.1's `s3`, is a new reading, not this re-run. The Flame is code as well as content, so the
      re-run binds the commit and the verdict binds the content it was given on. A route (b) run
      made from a clean checkout of the RC commit, with the instrument of record and on the bands
      of record, also serves as this item's independent re-run: identical graded fields give
@@ -470,6 +478,12 @@ commands and the comparer's output; the independent re-run's verdicts; and the e
   Replaced the same day (#544 P7): the command names `--commit <RC commit SHA>`, and the
   comparer also requires every candidate manifest to name the RC commit, because a route (b)
   run serves as item 2's independent re-run, which binds the RC commit.
+- *In force from 2026-10-04 to 2026-10-05* (#544 steps P5 and P6, PRs #685 and #690,
+  `271ce1b1`): the 1.1 bullet named the Duskblade's 1.1 instrument "pilot `p9`, search player
+  `s2`, accepted on readout 14", and read "Read on 1.0's content under the 1.1 instrument, the
+  Duskblade's intent holds with the same one reservation". Superseded on 2026-10-05 by the
+  orchestrator's ruling on #544 P6b: the 1.1 search player is `s3`, and readout 14 is an
+  interim reading made under `s2`.
 - *Before 2026-09-29:* the strategy-diversity method, kept as history in
   [`docs/balance/p9-strategy-diversity-system.md`](balance/p9-strategy-diversity-system.md);
   [`docs/reviews/549/obligation-map.md`](reviews/549/obligation-map.md) records where each of
