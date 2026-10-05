@@ -9,8 +9,8 @@ extends RefCounted
 ## that fell only on the ground, the road's small details, the pilgrim's own
 ## shadow for a blob), the prefetch holding its land until the floor settles,
 ## and the floor's shaders: the pools flicker with their own flame's phase and
-## hold still, with the glints, under Reduce Motion; and the warm-up, whose 3D
-## surfaces stand where nothing draws them.
+## hold still, with the glints, under Reduce Motion; and the warm-up, which
+## draws a sample of every pipeline they use before the title shows.
 ## The GPU half (the bake's pictures, copies and mips) is the windowed proof's:
 ## `tools/check_floor_bake.gd`.
 
@@ -364,35 +364,43 @@ static func _blob(fails: Array[String]) -> void:
 	pilgrim.free()
 
 
-## The warm-up compiles the floor's 3D pipelines without drawing them (a draw
-## waits on the compile, on a frame the player sees): the bake's and the
-## floor's materials stand in a view that never updates. Only its 2D samples
-## draw, once. It frees itself.
+## The warm-up draws a sample of every pipeline the bake and the floor use
+## before the title's first frame shows (on the iPad 8 this engine builds them
+## only as a draw needs them): the bake's and the floor's materials on meshes
+## of the bake's own kinds (the ground's vertex, normal and colour; the cards'
+## MultiMesh), every view drawn then let go.
 static func _warm(fails: Array[String]) -> void:
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	var warm: Node = Warm.new()
 	tree.root.add_child(warm)
 	var shaders: Array[Shader] = []
-	var unseen: bool = true
-	var drawn_2d: bool = false
-	for view: Node in warm.find_children("*", "SubViewport", false, false):
-		var sub: SubViewport = view as SubViewport
-		var quads: Array[Node] = sub.find_children("*", "MeshInstance3D", false, false)
-		if not quads.is_empty():
-			unseen = unseen and sub.render_target_update_mode == SubViewport.UPDATE_DISABLED
-			for quad: Node in quads:
-				var material: ShaderMaterial = (quad as MeshInstance3D).material_override as ShaderMaterial
-				shaders.append(material.shader)
-		elif sub.disable_3d:
-			drawn_2d = sub.render_target_update_mode == SubViewport.UPDATE_ONCE
+	var ground_kind: bool = true
+	for item: Node in warm.find_children("*", "GeometryInstance3D", true, false):
+		var drawn: GeometryInstance3D = item as GeometryInstance3D
+		var material: ShaderMaterial = drawn.material_override as ShaderMaterial
+		if material == null:
+			continue
+		shaders.append(material.shader)
+		if drawn is MeshInstance3D:
+			var mesh: Mesh = (drawn as MeshInstance3D).mesh
+			var format: int = mesh.surface_get_format(0)
+			ground_kind = ground_kind and (format & Mesh.ARRAY_FORMAT_NORMAL) != 0 \
+				and (format & Mesh.ARRAY_FORMAT_COLOR) != 0
+		elif drawn is MultiMeshInstance3D:
+			var multi: MultiMesh = (drawn as MultiMeshInstance3D).multimesh
+			ground_kind = ground_kind and multi.use_colors and multi.use_custom_data \
+				and drawn.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 	var wanted: Array[Shader] = [Bake.PAINT, Bake.MASK, Warm.CASTER, Warm.FLOOR]
 	var all: bool = true
 	for shader: Shader in wanted:
 		all = all and shaders.has(shader)
-	_check(fails, all and unseen and drawn_2d,
-		"the warm-up stands the bake's and the floor's materials where no view draws them, and draws its 2D samples once")
-	warm._process(Warm.HOLD_S)
-	_check(fails, warm.is_queued_for_deletion(), "the warm-up frees itself after %.0f s" % Warm.HOLD_S)
+	var waiting: bool = true
+	for view: Node in warm.find_children("*", "SubViewport", false, false):
+		waiting = waiting and (view as SubViewport).render_target_update_mode == SubViewport.UPDATE_DISABLED
+	_check(fails, all and ground_kind and waiting,
+		"the warm-up stands the bake's and the floor's materials on meshes of the bake's own kinds, undrawn until it draws them")
+	warm.call("draw_now")
+	_check(fails, warm.is_queued_for_deletion(), "the warm-up draws its samples at once and lets them go")
 	if is_instance_valid(warm) and warm.is_inside_tree():
 		tree.root.remove_child(warm)
 	warm.free()
