@@ -152,7 +152,7 @@ G3 fails on point and interval in every cell of every candidate (A_lit 19–51 p
 
 Its cost: A_lit is lowest under `duos` (36.8% and 41.0% at V0). Under the greedy pilot that is inside the G3 failure every candidate shares; the search screen will say whether it holds.
 
-**What the screens say the content lane must do** (the lock's §6.7): Smolder needs three or four base-pool cards of its own (step A5a); the Hand needs a payoff below rare (A5b); Endure needs a payoff of its own colour (A5c), and, if the search screen confirms its lead, Endure's power is the first wall lane (A8).
+**What the screens say the content lane must do** (the lock's §6.7): Smolder needs three or four base-pool cards of its own (step A5a); the Hand needs a payoff below rare (A5b); Endure needs a payoff of its own colour (A5c), since today it wins through the starter's Smolder rather than a kill condition of its own. Greedy figures are no basis for reordering the steps: if a reading of record shows Endure leading G2 by a decided margin, its wall lane comes before any content that strengthens it, and the A5c payoff becomes a trade (the lock's §14).
 
 ## Pending
 
