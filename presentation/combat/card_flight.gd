@@ -56,8 +56,9 @@ const SWEEP_STAGGER: float = 0.05
 const DISCARD_TILT: float = 3.0      # degrees either way, a played card
 const SWEEP_TILT: float = 5.0        # degrees either way, the end of a turn
 const SWEEP_SLIP: float = 3.0        # px either way, the end of a turn
-## The exhaust: the existing blaze (`.card.exhausting`, styles.css:650) over
-## the existing 0.2 s, turning face down as it burns.
+## The exhaust: the blaze a card bound for the ash has always worn
+## (HandView.spend_to before #657), over the same 0.2 s, turning face down as
+## it burns.
 const BURN_TIME: float = 0.2
 const BURN_TILT: float = 8.0
 const BURN_SHRINK: float = 0.6
