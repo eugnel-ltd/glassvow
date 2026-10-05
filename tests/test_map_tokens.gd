@@ -12,6 +12,9 @@ extends RefCounted
 ##   the pane. Checked at both ends of an open stone's throb.
 ## - The rim at least 2 px wide on screen at every shipping shape, so a whole
 ##   pixel lies inside it and shows its own colour.
+## - The hierarchy: the gold of a lit rim (open, current) at least 1.2 times the
+##   luminance of a quiet one (walked, cold), and a quiet rim no wider on screen
+##   than a lit one.
 ## - The map screen gives each stone the state its node is in, and the glyph is
 ##   drawn in that state's tone.
 ##
@@ -22,6 +25,16 @@ const EDGE_MIN: float = 3.0
 const ACTIONABLE_MIN: float = 4.5
 const QUIET_MIN: float = 3.0
 const RIM_PX_MIN: float = 2.0
+## How much brighter the dimmest lit rim must be than the brightest quiet one.
+const LIT_OVER_QUIET: float = 1.2
+## [reachable, cleared, current] -> the state the stone must wear.
+const CASES: Array = [
+	[true, false, false, &"open"],
+	[false, true, true, &"current"],
+	[false, false, true, &"current"],
+	[false, true, false, &"walked"],
+	[false, false, false, &"cold"],
+]
 ## The throb's trough and its held peak (`GlassWaystone.PULSE_HELD`).
 const PULSE_TROUGH: float = 3.0 * PI / 4.4
 
@@ -39,26 +52,16 @@ static func run(fails: Array[String]) -> void:
 
 ## Every state of every kind, through `set_state` as the screen calls it.
 static func _looks(fails: Array[String]) -> void:
-	# [reachable, cleared, current] -> the state the stone must wear.
-	var cases: Array = [
-		[true, false, false, GlassWaystone.OPEN],
-		[false, true, true, GlassWaystone.CURRENT],
-		[false, false, true, GlassWaystone.CURRENT],
-		[false, true, false, GlassWaystone.WALKED],
-		[false, false, false, GlassWaystone.COLD],
-	]
 	var kinds: Array[String] = GlassWaystone.GLYPH_KINDS.duplicate()
 	kinds.append("act4")
 	var bad: Array[String] = []
 	var worst_edge: float = INF
 	var worst_glyph: Dictionary = {}
+	var dimmest_lit: float = INF
+	var brightest_quiet: float = 0.0
 	for kind: String in kinds:
-		for case: Array in cases:
-			var stone: GlassWaystone = GlassWaystone.new(0, kind, 30.0, "")
-			var reachable: bool = case[0]
-			var cleared: bool = case[1]
-			var current: bool = case[2]
-			stone.set_state(reachable, cleared, current)
+		for case: Array in CASES:
+			var stone: GlassWaystone = _stone(kind, case)
 			var state: StringName = stone.token_state()
 			var name: String = "%s %s" % [kind, state]
 			if state != case[3]:
@@ -79,6 +82,10 @@ static func _looks(fails: Array[String]) -> void:
 				if pane.a < 1.0 or rim.a < 1.0 or glyph.a < 1.0 or stone.modulate.a < 1.0:
 					bad.append("%s lets the land through (pane %.2f, rim %.2f, glyph %.2f, stone %.2f)" % [
 						name, pane.a, rim.a, glyph.a, stone.modulate.a])
+				if state in [GlassWaystone.OPEN, GlassWaystone.CURRENT]:
+					dimmest_lit = minf(dimmest_lit, _lum(rim))
+				else:
+					brightest_quiet = maxf(brightest_quiet, _lum(rim))
 				var edge: float = _worst_land(rim, pane)
 				worst_edge = minf(worst_edge, edge)
 				if edge < EDGE_MIN:
@@ -88,20 +95,51 @@ static func _looks(fails: Array[String]) -> void:
 	_check(fails, bad.is_empty(), "every token holds its own contrast on any land: %s" % [bad.slice(0, 4)])
 	_check(fails, worst_edge >= EDGE_MIN and worst_glyph.size() == 4,
 		"the edge's worst land is %.2f:1; glyphs on their panes %s" % [worst_edge, worst_glyph])
+	_check(fails, dimmest_lit >= LIT_OVER_QUIET * brightest_quiet,
+		"a lit rim is the brightest on the map: its luminance %.3f against a quiet rim's %.3f (%.2f times, at least %.1f)" % [
+			dimmest_lit, brightest_quiet, dimmest_lit / maxf(brightest_quiet, 0.0001), LIT_OVER_QUIET])
 
 
-## The rim's width in stage px at each shipping shape's waystone scale.
+## Each state's rim width in stage px at each shipping shape, the stone drawn
+## at the shape's waystone scale as `WorldMapScreen` lays it out: every rim at
+## least `RIM_PX_MIN`, and no quiet rim wider than a lit one.
 static func _rim_on_screen(fails: Array[String]) -> void:
 	var widths: Dictionary = {}
+	var bad: Array[String] = []
 	for shape: StringName in StageShape.SHIPPING:
-		var scale: float = LayoutBook.num(LayoutBook.resolve(&"map", shape).get("scale"), 0.36)
-		widths[shape] = snappedf(GlassWaystone.RIM_W * scale, 0.01)
-	var narrowest: float = INF
-	for shape: StringName in widths:
-		var width: float = widths[shape]
-		narrowest = minf(narrowest, width)
-	_check(fails, narrowest >= RIM_PX_MIN, "the rim is at least %.0f px on screen at every shape: %s" % [
-		RIM_PX_MIN, widths])
+		var layout: Dictionary = LayoutBook.resolve(&"map", shape)
+		var scale: float = LayoutBook.num(layout.get("scale"), 0.36)
+		var narrowest_lit: float = INF
+		var widest_quiet: float = 0.0
+		var row: Dictionary = {}
+		for case: Array in CASES:
+			var stone: GlassWaystone = _stone("monster", case)
+			stone.set_touch_min(LayoutBook.num(layout.get("touch"), 0.0), scale)
+			var state: StringName = stone.token_state()
+			var px: float = stone.rim_width() * scale
+			row[state] = snappedf(px, 0.01)
+			if px < RIM_PX_MIN - 0.001:
+				bad.append("%s %s rim %.2f px" % [shape, state, px])
+			if state in [GlassWaystone.OPEN, GlassWaystone.CURRENT]:
+				narrowest_lit = minf(narrowest_lit, px)
+			else:
+				widest_quiet = maxf(widest_quiet, px)
+			stone.free()
+		if widest_quiet > narrowest_lit + 0.001:
+			bad.append("%s quiet rim %.2f px wider than the lit %.2f" % [shape, widest_quiet, narrowest_lit])
+		widths[shape] = row
+	_check(fails, bad.is_empty(), "every rim is at least %.0f px on screen, a quiet one no wider than a lit one: %s %s" % [
+		RIM_PX_MIN, bad, widths])
+
+
+## A stone of `kind` in the state `case` names, through `set_state`.
+static func _stone(kind: String, case: Array) -> GlassWaystone:
+	var stone: GlassWaystone = GlassWaystone.new(0, kind, 30.0, "")
+	var reachable: bool = case[0]
+	var cleared: bool = case[1]
+	var current: bool = case[2]
+	stone.set_state(reachable, cleared, current)
+	return stone
 
 
 ## A run two steps in: the screen gives the stood-on stone, the open ones, the

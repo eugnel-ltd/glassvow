@@ -206,8 +206,8 @@ func _tokens(screen: WorldMapScreen) -> Array[Dictionary]:
 				var rect: Rect2 = stone.chip_rect(flip)
 				pills.append(to_window * rect)
 		out.append({"index": stone.index, "kind": stone.kind, "state": stone.token_state(),
-			"centre": centre, "radius": radius * unit, "rim": GlassWaystone.RIM_W * unit,
-			"disc": (radius - GlassWaystone.RIM_W) * unit,
+			"centre": centre, "radius": radius * unit, "rim": stone.rim_width() * unit,
+			"disc": (radius - stone.rim_width()) * unit,
 			"lenses": lenses, "pills": pills})
 	return out
 
