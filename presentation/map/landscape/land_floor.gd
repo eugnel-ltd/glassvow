@@ -60,14 +60,15 @@ func settled() -> bool:
 
 
 ## One frame of the bake (main thread); true once the floor has settled.
-func step(land: MapJourneyLandscape) -> bool:
+## `paced` (a bake begun under a lit title) bakes a tile a frame.
+func step(land: MapJourneyLandscape, paced: bool = false) -> bool:
 	if settled():
 		return true
 	if state == State.PLANNED:
 		if plan == null or not Bake.supported():
 			state = State.PAINTED
 			return true
-		_bake = Bake.new(land, plan)
+		_bake = Bake.new(land, plan, paced)
 		state = State.BAKING
 	if _bake == null:
 		state = State.PAINTED

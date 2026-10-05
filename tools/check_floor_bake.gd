@@ -9,7 +9,8 @@ extends SceneTree
 ##   in it, and no seam where its tiles meet;
 ## - the mask's pools, phases and wet are in range, a phase per lamp;
 ## - the bake took a frame a pair of tiles and three more, and no step of it held the
-##   main thread long;
+##   main thread long; paced (the prefetch's, under a lit title), a frame a
+##   tile and four more;
 ## - letting the land go frees the floor's textures.
 ## Exits 0 on a pass, 1 on a failure, 2 under `--headless` (no RenderingDevice).
 ## Pass the game's map flags after `--`, as the capture tools do:
@@ -89,6 +90,19 @@ func _run() -> void:
 	_check(_spread(level0) > 0.02, "the lit picture has a picture in it")
 	_check(_means(level0, level1) < 0.02, "a mip level is the mean, as light, of the one below")
 	_check(_seams(level0, Bake.tiles(size, Bake.TILE_LIMIT)) < 2.5, "no seam where the tiles meet")
+	var paced: Bake = Bake.new(land, floor_node.plan, true)
+	var paced_steps: int = 0
+	while not paced.advance():
+		paced_steps += 1
+		await process_frame
+	var paced_longest: float = 0.0
+	for ms: float in paced.timings.get("steps_ms", PackedFloat32Array()):
+		paced_longest = maxf(paced_longest, ms)
+	_check(paced.step == Bake.Step.DONE and int(str(paced.timings.get("frames", 0))) == tiles + 4
+		and paced_longest < STEP_LIMIT_MS,
+		"paced, the bake takes a frame a tile and four more (%d), no step past %d ms (%.1f)" % [
+			int(str(paced.timings.get("frames", 0))), STEP_LIMIT_MS, paced_longest])
+	paced.cancel()
 	var mask_size: Vector2i = Vector2i(ceili(bounds.size.x * Bake.MASK_TEXELS_PER_M), ceili(bounds.size.y * Bake.MASK_TEXELS_PER_M))
 	var mask: Image = Image.create_from_data(mask_size.x, mask_size.y, false, Image.FORMAT_RGBA8,
 		rd.texture_get_data(rids[1], 0).slice(0, mask_size.x * mask_size.y * 4))

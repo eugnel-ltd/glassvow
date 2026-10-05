@@ -271,10 +271,11 @@ func _finish() -> void:
 	timings_ms["floor_plan"] = Time.get_ticks_msec() - started
 
 
-## Carries the floor's bake on by a frame (main thread, behind the veil); true
-## once the floor has settled, baked or left painted (`LandFloor`).
-func floor_step() -> bool:
-	return forest_floor == null or forest_floor.step(self)
+## Carries the floor's bake on by a frame (main thread, behind the veil or
+## under the title, `paced`); true once the floor has settled, baked or left
+## painted (`LandFloor`).
+func floor_step(paced: bool = false) -> bool:
+	return forest_floor == null or forest_floor.step(self, paced)
 
 
 ## Where node `id`'s waystone actually stands, or `fallback` before a build.

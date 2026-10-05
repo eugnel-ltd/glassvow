@@ -11,6 +11,9 @@ extends RefCounted
 ##    (`floor_mask.gdshader`);
 ## 3. the lit picture's mip chain, every level in one frame through nested 2D
 ##    views (`floor_mip.gdshader`).
+## Paced (the journey prefetch's bake, under a lit title), it draws one tile a
+## frame and sets up a frame before its first draw, so no frame of the title
+## carries more than a tile.
 ## Each view's picture is copied on the GPU into the floor's own textures
 ## (`RenderingDevice.texture_copy`), so nothing is read back and no frame waits
 ## for the GPU. The views and the world are freed as the bake ends; the two
@@ -47,7 +50,7 @@ const TILES_A_FRAME: int = 2
 const SOFT: RenderingServer.ShadowQuality = RenderingServer.SHADOW_QUALITY_SOFT_HIGH
 const SOFT_SETTING: String = "rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality"
 
-enum Step { START, FIELDS, TILES, MIPS, DONE, FAILED }
+enum Step { START, WARM, FIELDS, TILES, MIPS, DONE, FAILED }
 
 var step: Step = Step.START
 var failure: String = ""
@@ -78,6 +81,7 @@ var _steps_ms: PackedFloat32Array = PackedFloat32Array()
 var _frames_ms: PackedFloat32Array = PackedFloat32Array()
 var _last_us: int = 0
 var _soft_set: bool = false
+var _paced: bool = false
 static var _radial: GradientTexture2D = null
 
 
@@ -86,9 +90,11 @@ static func supported() -> bool:
 	return RenderingServer.get_rendering_device() != null and DisplayServer.get_name() != "headless"
 
 
-func _init(land: MapJourneyLandscape, plan: Plan) -> void:
+## `paced`: one tile a frame (`TILES_A_FRAME` otherwise).
+func _init(land: MapJourneyLandscape, plan: Plan, paced: bool = false) -> void:
 	_land = land
 	_plan = plan
+	_paced = paced
 
 
 ## Carries the bake on by one frame's work; true once it has ended (`DONE`, or
@@ -101,6 +107,8 @@ func advance() -> bool:
 	match step:
 		Step.START:
 			_start()
+		Step.WARM:
+			_warm()
 		Step.FIELDS:
 			_first_tile()
 		Step.TILES:
@@ -162,7 +170,7 @@ func _start() -> void:
 	(Engine.get_main_loop() as SceneTree).root.add_child(_host)
 	_fields = _fields_pass()
 	var world: World3D = World3D.new()
-	for k: int in range(mini(TILES_A_FRAME, _tiles.size())):
+	for k: int in range(mini(1 if _paced else TILES_A_FRAME, _tiles.size())):
 		_lit_views.append(_view("Floor bake lit %d" % k, _tiles[0].size, world))
 	_mask_view = _view("Floor bake mask", mask_size, world)
 	var paint: ShaderMaterial = _material(PAINT, true)
@@ -181,11 +189,19 @@ func _start() -> void:
 	timings["receivers"] = _stage.receivers
 	timings["casters"] = _stage.casters
 	timings["tiles"] = _tiles.size()
-	# A first draw, kept by no one: a light new to its world casts nothing in
-	# its first frame.
+	timings["paced"] = _paced
+	_tile = 0
+	if _paced:
+		step = Step.WARM
+	else:
+		_warm()
+
+
+## A first draw, kept by no one: a light new to its world casts nothing in its
+## first frame.
+func _warm() -> void:
 	RenderingServer.directional_soft_shadow_filter_set_quality(SOFT)
 	_soft_set = true
-	_tile = 0
 	_draw_tiles()
 	step = Step.FIELDS
 
@@ -196,7 +212,7 @@ func _first_tile() -> void:
 	step = Step.TILES
 
 
-## Each lit view aimed at its tile of the next `TILES_A_FRAME`, and drawn.
+## Each lit view aimed at its tile of the next few, and drawn.
 func _draw_tiles() -> void:
 	for k: int in range(_lit_views.size()):
 		if _tile + k < _tiles.size():

@@ -20,7 +20,7 @@ extends RefCounted
 ## `MapScene` as its kept land under the binding key the screen will ask for,
 ## so the first open re-parents it instead of building. Before it is handed
 ## over, its floor is baked a step a frame (`MapJourneyLandscape.floor_step`),
-## so the map that opens on it draws it at once.
+## a tile a frame while paced, so the map that opens on it draws it at once.
 ##
 ## One journey land at a time: a prefetch for another layout drops the older
 ## one and frees the land it built, and `release` lets go of both when the next
@@ -229,7 +229,7 @@ func _advance(hurry: bool) -> void:
 			_built()
 		return
 	if step == Step.BAKING:
-		if _land.floor_step():
+		if _land.floor_step(_pacing.on):
 			_finish()
 		return
 	if step == Step.DONE or step == Step.FAILED:
@@ -398,7 +398,7 @@ func _built() -> void:
 		step = Step.FAILED
 		return
 	step = Step.BAKING
-	if _land.floor_step():
+	if _land.floor_step(_pacing.on):
 		_finish()
 
 
