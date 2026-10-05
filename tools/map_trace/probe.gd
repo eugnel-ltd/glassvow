@@ -31,8 +31,9 @@ extends Node
 ##                          the Close or the Journey level before holding;
 ##                          several, comma-separated, hold each in turn
 ##   --opens                after the boot, open the map again as a player
-##                          would: cold (every cache dropped), reopened twice
-##                          (the kept screen), and warmed (the land built and
+##                          would: cold (every cache dropped), reopened
+##                          (the kept screen; `--reopens=<n>` times, default
+##                          2), and warmed (the land built and
 ##                          its floor baked ahead, as the title does); an
 ##                          `open` row each with the time to the land drawn
 ##                          and the worst frame, the floor's bake (R3.2) and
@@ -212,7 +213,8 @@ func _hold(mode: String, count: int, screen: WorldMapScreen) -> void:
 		"display": [get_viewport().get_visible_rect().size.x, get_viewport().get_visible_rect().size.y],
 		"band": _scene.focus_band.is_finite(), "render": info,
 		"layer_grain": _layer_grain(), "map_grain": _map_grain(),
-		"video_mib": snappedf(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, 0.1)})
+		"video_mib": snappedf(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, 0.1),
+		"memory": FrameWatch.memory()})
 	var intervals: Array[float] = []
 	var process_ms: float = 0.0
 	var last: int = Time.get_ticks_usec()
@@ -326,8 +328,8 @@ func _opens() -> void:
 	_drop()
 	await _frames(30)
 	await _open("cold")
-	await _open("reopen")
-	await _open("reopen")
+	for _i: int in range(int(_arg("--reopens", "2"))):
+		await _open("reopen")
 	_drop()
 	await _frames(30)
 	var game: GlassvowGame = _host.get("game")
@@ -432,9 +434,20 @@ class FrameWatch:
 	func row(probe: String, extra: Dictionary) -> Dictionary:
 		var out: Dictionary = {"probe": probe, "frames": frames, "elapsed_ms": snappedf(elapsed_ms(), 0.1),
 			"worst_frame_ms": snappedf(worst, 0.1), "slow_frames": slow,
-			"vram_start": vram[0], "vram_peak": vram.max(), "vram_end": vram[-1], "vram_after": after}
+			"vram_start": vram[0], "vram_peak": vram.max(), "vram_end": vram[-1], "vram_after": after,
+			"vram_series": vram, "memory": FrameWatch.memory()}
 		out.merge(extra)
 		return out
+
+	## The RenderingDevice's own count of texture and buffer memory, and the
+	## driver's total (on Metal everything the device holds, pipelines too).
+	static func memory() -> Dictionary:
+		var rd: RenderingDevice = RenderingServer.get_rendering_device()
+		if rd == null:
+			return {}
+		return {"textures_mib": snappedf(rd.get_memory_usage(RenderingDevice.MEMORY_TEXTURES) / 1048576.0, 0.1),
+			"buffers_mib": snappedf(rd.get_memory_usage(RenderingDevice.MEMORY_BUFFERS) / 1048576.0, 0.1),
+			"total_mib": snappedf(rd.get_memory_usage(RenderingDevice.MEMORY_TOTAL) / 1048576.0, 0.1)}
 
 
 func _finish(code: int) -> void:
