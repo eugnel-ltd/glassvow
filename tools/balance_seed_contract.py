@@ -16,6 +16,8 @@ LIVE_REL = "content/full-content.json"
 # The #421 programme's catalogue (H39). Live content moved on with the flame
 # lock (PR 2, 2026-09-29), so replays of that programme read this frozen copy.
 H39_REL = "docs/balance/data/421-h39/full-content.json"
+# `BalanceCatalogue.DRIVER` (tools/balance_catalogue.gd), in its order: the manifest's `driverSha256`.
+# tests/test_balance_readout.py fails when the two lists differ.
 DRIVER_RELS = (
     "tools/balance_sim.gd",
     "tools/balance_sweep.gd",
@@ -23,6 +25,13 @@ DRIVER_RELS = (
     "tools/balance_pilot.gd",
     "tools/balance_policy.gd",
     "tools/balance_catalogue.gd",
+    "tools/balance_search.gd",
+    "tools/balance_metrics.gd",
+    "tools/balance_classes.gd",
+    "tools/balance_classes.json",
+    "tools/vow_incentives.gd",
+    "content/content_db.gd",
+    "content/line-table.json",
 )
 
 

@@ -4,10 +4,22 @@ extends RefCounted
 
 const SEEDS_PATH: String = "res://docs/balance/421-content-search-seeds-v1.json"
 const DEFAULT_SPACE: String = "res://docs/balance/421-content-search-space-v1.json"
+## The manifest's `driverSha256`: the sweep, the CEM and every file the simulator loads outside
+## `domain/` and the catalogue. `tools/balance_seed_contract.py` DRIVER_RELS mirrors this list, and
+## `tools/balance_readout_run.py` TOOL_SOURCES holds the simulator's part of it.
 const DRIVER: PackedStringArray = [
 	"tools/balance_sim.gd", "tools/balance_sweep.gd", "tools/balance_cem.gd",
 	"tools/balance_pilot.gd", "tools/balance_policy.gd", "tools/balance_catalogue.gd",
+	"tools/balance_search.gd", "tools/balance_metrics.gd", "tools/balance_classes.gd",
+	"tools/balance_classes.json", "tools/vow_incentives.gd", "content/content_db.gd",
+	"content/line-table.json",
 ]
+## The 1.1 holdout (#544 decision 7), read once, by the A9 exam: a run whose seeds touch it is
+## refused unless it names `--holdout=1.1`, and then its identity, and so its manifest, records it.
+const HOLDOUT_OPTION: String = "holdout"
+const HOLDOUT_ID: String = "1.1"
+const HOLDOUT_FIRST: int = 17000
+const HOLDOUT_LAST: int = 18999
 
 
 static func resolve_path(path: String) -> String:
@@ -25,6 +37,9 @@ static func open(opts: Dictionary) -> Dictionary:
 	var stage_fault: String = stage_error(opts)
 	if not stage_fault.is_empty():
 		return {"error": stage_fault}
+	var holdout_fault: String = holdout_error(opts)
+	if not holdout_fault.is_empty():
+		return {"error": holdout_fault}
 	var content_path: String = resolve_path(str(opts.get("content", "")))
 	var space_path: String = resolve_path(str(opts.get("space", DEFAULT_SPACE)))
 	if not FileAccess.file_exists(content_path):
@@ -46,20 +61,53 @@ static func open(opts: Dictionary) -> Dictionary:
 		return {"error": "cannot compute semantic content SHA for %s" % content_path}
 	var git_out: Array = []
 	OS.execute("git", ["rev-parse", "HEAD"], git_out)
-	return {
-		"path": content_path,
-		"identity": {
-			"contentPath": content_path,
-			"contentFileSha256": FileAccess.get_sha256(content_path),
-			"contentSemanticSha256": semantic,
-			"searchSpacePath": space_path,
-			"searchSpaceSha256": FileAccess.get_sha256(space_path),
-			"driverSha256": _driver_sha(),
-			"commit": str(git_out[0]).strip_edges() if not git_out.is_empty() else "unknown",
-			"godot": Engine.get_version_info().get("string", "unknown"),
-			"stage": str(opts.get("stage", "")),
-		},
+	var identity: Dictionary = {
+		"contentPath": content_path,
+		"contentFileSha256": FileAccess.get_sha256(content_path),
+		"contentSemanticSha256": semantic,
+		"searchSpacePath": space_path,
+		"searchSpaceSha256": FileAccess.get_sha256(space_path),
+		"driverSha256": _driver_sha(),
+		"commit": str(git_out[0]).strip_edges() if not git_out.is_empty() else "unknown",
+		"godot": Engine.get_version_info().get("string", "unknown"),
+		"stage": str(opts.get("stage", "")),
 	}
+	if not str(opts.get(HOLDOUT_OPTION, "")).is_empty():
+		identity[HOLDOUT_OPTION] = HOLDOUT_ID
+	return {"path": content_path, "identity": identity}
+
+
+## Whether a tool's `_options` takes `key`: one of its defaults, or `--holdout`, which has no
+## default so that only a run that reads the holdout carries it into its manifest.
+static func known_option(defaults: Dictionary, key: String) -> bool:
+	return defaults.has(key) or key == HOLDOUT_OPTION
+
+
+## Why the seeds `opts` names may not run, or "": every seed span (a run's or a sweep's seeds, a
+## CEM's training seeds, and its holdout) that touches the 1.1 holdout needs `--holdout=1.1` and must
+## lie inside it, and `--holdout=1.1` needs a span inside it.
+static func holdout_error(opts: Dictionary) -> String:
+	var holdout: String = str(opts.get(HOLDOUT_OPTION, ""))
+	if not holdout.is_empty() and holdout != HOLDOUT_ID:
+		return "--holdout must be %s, got %s" % [HOLDOUT_ID, holdout]
+	var spans: Array[Vector2i] = [Vector2i(_seed_first(opts), _seed_first(opts) + _seed_count(opts) - 1)]
+	if opts.has("holdoutSeed0"):
+		var hold_first: int = int(float(str(opts["holdoutSeed0"])))
+		spans.append(Vector2i(hold_first, hold_first + _holdout_count(opts) - 1))
+	var reads: bool = false
+	for span: Vector2i in spans:
+		if span.x > HOLDOUT_LAST or span.y < HOLDOUT_FIRST:
+			continue
+		if holdout.is_empty():
+			return "seeds %d..%d touch the 1.1 holdout %d..%d; only the A9 exam reads it, with --holdout=%s" \
+				% [span.x, span.y, HOLDOUT_FIRST, HOLDOUT_LAST, HOLDOUT_ID]
+		if span.x < HOLDOUT_FIRST or span.y > HOLDOUT_LAST:
+			return "--holdout=%s reads the holdout only: seeds %d..%d are not inside %d..%d" \
+				% [HOLDOUT_ID, span.x, span.y, HOLDOUT_FIRST, HOLDOUT_LAST]
+		reads = true
+	if not holdout.is_empty() and not reads:
+		return "--holdout=%s names no seeds inside %d..%d" % [HOLDOUT_ID, HOLDOUT_FIRST, HOLDOUT_LAST]
+	return ""
 
 
 static func load_prepared(prepared: Dictionary) -> ContentDB:

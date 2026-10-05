@@ -29,10 +29,15 @@ from balance_exam import REPO, run_command
 from balance_readout_guard import require_isolated_user_dir
 
 CONTENT = Path("content/full-content.json")
-# The simulator and its bots: any change to these makes a chunk a different instrument.
-TOOL_SOURCES = tuple(Path("tools") / name for name in (
-    "balance_sim.gd", "balance_search.gd", "balance_pilot.gd", "balance_policy.gd", "balance_metrics.gd",
-    "balance_classes.gd", "balance_classes.json"))
+# Every file the simulator loads outside `domain/` and the catalogue: the simulator, its bots and the scripts and
+# data they load (the content loader and its line table among them). Any change to these makes a chunk a different
+# instrument. The same list, with the sweep and the CEM, is `BalanceCatalogue.DRIVER`, the manifest's
+# `driverSha256` (and `balance_seed_contract.DRIVER_RELS`); tests/test_balance_readout.py derives the simulator's
+# load graph and fails on a file either list lacks.
+TOOL_SOURCES = tuple(Path(name) for name in (
+    "tools/balance_sim.gd", "tools/balance_search.gd", "tools/balance_pilot.gd", "tools/balance_policy.gd",
+    "tools/balance_metrics.gd", "tools/balance_classes.gd", "tools/balance_classes.json", "tools/balance_catalogue.gd",
+    "tools/vow_incentives.gd", "content/content_db.gd", "content/line-table.json"))
 # The game rules the simulator runs: an edit here is a different instrument too.
 DOMAIN = Path("domain")
 SIDECAR = ".chunk.json"
@@ -70,9 +75,10 @@ def parse_cell(cell: str) -> tuple[int, str]:
 def plan(out: Path, who: bw.Roster, seeds: tuple[int, int], cells: list[str], arms: list[str], play: str = "greedy",
          chunk: int = 50, replay: bool = False, content: Path | None = None,
          weights: tuple[float, float] | None = None, godot: str = "godot", pilot: str = bw.PILOTS[0],
-         search: str = bw.SEARCHES[0]) -> list[Chunk]:
+         search: str = bw.SEARCHES[0], holdout: bool = False) -> list[Chunk]:
     """Every chunk of the table, in cell, arm, seed order (replays after their cell's arms); every
-    chunk's command names the pilot and, under --play search, the search player."""
+    chunk's command names the pilot and, under --play search, the search player, and under `holdout`
+    (--holdout-1-1) tells the simulator it reads the 1.1 holdout."""
     if chunk < 1:
         raise ValueError("--chunk must be at least 1")
     who.check_arms(arms)
@@ -88,14 +94,14 @@ def plan(out: Path, who: bw.Roster, seeds: tuple[int, int], cells: list[str], ar
                 part = parts / f"{name}-{start}.json"
                 work.append(Chunk(name, cell, arm, start, count, part,
                                   bw.sim_command(godot, who, vow, pool, arm, start, count, part, content, weights, play,
-                                                 pilot, search)))
+                                                 pilot, search, holdout)))
         if replay:
             name = bw.replay_name(vow, pool)[:-5]
             count = min(bw.REPLAY, last - first + 1)
             part = parts / f"{name}-{first}.json"
             work.append(Chunk(name, cell, "A", first, count, part,
                               bw.sim_command(godot, who, vow, pool, "A", first, count, part, content, None, play,
-                                             pilot, search)))
+                                             pilot, search, holdout)))
     return work
 
 

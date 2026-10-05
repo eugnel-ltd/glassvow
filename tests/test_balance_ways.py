@@ -7,17 +7,21 @@ from __future__ import annotations
 
 import contextlib
 import copy
+import hashlib
 import importlib.util
 import io
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SPEC = importlib.util.spec_from_file_location(
     "balance_ways", Path(__file__).resolve().parents[1] / "tools/balance_ways.py")
 ways = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ways)
+import balance_readout_guard as guard  # noqa: E402 - balance_ways put tools/ on the path
 
 DUSK = ways.roster("duskblade")
 SEEDS = (13000, 13009)
@@ -92,6 +96,28 @@ class BalanceWaysTest(unittest.TestCase):
         for bad in ("5000-5010", "4000-6000", "13199-13000", "13000", "a-b"):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 ways.parse_seeds(bad)
+
+    def test_the_1_1_holdout_is_refused_unless_the_exam_names_it(self) -> None:
+        for band in ("17000-17999", "16000-17000", "18999-19500", "16000-20000"):
+            with self.subTest(band=band), self.assertRaisesRegex(ValueError, "1.1 holdout 17000-18999"):
+                ways.parse_seeds(band)
+        self.assertEqual((17000, 18999), ways.parse_seeds("17000-18999", holdout=True))
+        for band in ("13000-13999", "16999-17000", "18999-19000", "5000-5010"):  # outside, astride, acceptance
+            with self.subTest(band=band), self.assertRaises(ValueError):
+                ways.parse_seeds(band, holdout=True)
+        self.assertNotIn("--holdout=1.1", ways.sim_command("godot", DUSK, 0, "full", "A", 13000, 5, Path("/o")))
+        self.assertEqual("--holdout=1.1", ways.sim_command("godot", DUSK, 0, "full", "A", 17000, 5, Path("/o"),
+                                                           holdout=True)[-1])
+        with self.assertRaisesRegex(ValueError, "1.1 holdout"):
+            ways.sim_command("godot", DUSK, 0, "full", "A", 16998, 5, Path("/o"))
+        work = ways.jobs("godot", DUSK, (17000, 17009), Path("/out"), holdout=True)
+        self.assertTrue(all(command[-1] == "--holdout=1.1" for _, command in work))
+
+    def test_the_holdout_constants_are_the_simulators(self) -> None:
+        source = (Path(ways.__file__).parent / "balance_catalogue.gd").read_text(encoding="utf-8")
+        consts = dict(re.findall(r"^const (HOLDOUT_\w+): \w+ = \"?([^\"\n]+)\"?$", source, re.M))
+        self.assertEqual({"HOLDOUT_OPTION": "holdout", "HOLDOUT_ID": ways.HOLDOUT_ID,
+                          "HOLDOUT_FIRST": str(ways.HOLDOUT_1_1[0]), "HOLDOUT_LAST": str(ways.HOLDOUT_1_1[1])}, consts)
 
     def test_commands_pair_every_arm_on_one_seed_range(self) -> None:
         work = ways.jobs("godot", DUSK, (13000, 13199), Path("/out"))
@@ -368,8 +394,8 @@ class BalanceWaysTest(unittest.TestCase):
         self.assertEqual(0, code)
         self.assertIn("### V0, full pool", out.getvalue())
         for argv in (["--quick", "--seeds", "13000-13009"], ["--seeds", "4000-4100"], ["--jobs", "0"],
-                     ["--content", "/no/such/catalogue.json"],
-                     ["--from-dir", "/tmp", "--content", __file__]):
+                     ["--content", "/no/such/catalogue.json"], ["--seeds", "17000-17009"],
+                     ["--holdout-1-1"], ["--holdout-1-1", "--seeds", "13000-13009"]):
             with self.subTest(argv=argv), contextlib.redirect_stderr(io.StringIO()), \
                     self.assertRaises(SystemExit) as caught:
                 ways.main(argv)
@@ -381,12 +407,15 @@ ASH_WAYS = {"shatter": "smolder", "lantern": "hand", "edge": "endure"}  # the Du
 ASH_STATS = {"smolder": "smolders", "hand": "cardsHeld", "endure": "wardGained"}
 
 
-def ash_files(directory: Path, ways_listed: tuple = tuple(ASH_WAYS.values()), stats: dict | None = None) -> tuple[Path, Path]:
-    """A content file with two aspects (the second's ways ids differ) and a class file for the second."""
+def ash_files(directory: Path, ways_listed: tuple = tuple(ASH_WAYS.values()), stats: dict | None = None,
+              unlock: str = "") -> tuple[Path, Path]:
+    """A content file with two aspects (the second's ways ids differ, and with `unlock` it unlocks later) and a
+    class file for the second."""
     content, class_file = directory / "content.json", directory / "classes.json"
+    ash = {"id": "ashwarden", "nameBare": "Ashwarden", "ways": [{"id": way} for way in ways_listed]}
     content.write_text(json.dumps({"aspects": [
         {"id": "duskblade", "nameBare": "Duskblade", "ways": [{"id": "shatter"}, {"id": "lantern"}, {"id": "edge"}]},
-        {"id": "ashwarden", "nameBare": "Ashwarden", "ways": [{"id": way} for way in ways_listed]}]}))
+        {**ash, **({"unlock": unlock} if unlock else {})}]}))
     class_file.write_text(json.dumps({"ashwarden": {"wayStats": ASH_STATS if stats is None else stats}}))
     return content, class_file
 
@@ -508,6 +537,148 @@ class AspectWithoutWaysTest(unittest.TestCase):
         self.assertEqual(2, caught.exception.code)
         self.assertIn("declares no ways in content", err.getvalue())
         self.assertFalse(out_dir.exists())
+
+
+def as_entry(table: dict) -> dict:
+    """The fixture with `fresh` read as `entry`: a class that unlocks later reads it in fresh's place."""
+    return {(vow, "entry" if pool == "fresh" else pool): arms for (vow, pool), arms in table.items()}
+
+
+def name_content(directory: Path, sha: str, *names: str) -> None:
+    """Every report of a written table (or only those named) now names content `sha` in its manifest."""
+    for path in directory.glob("v*.json"):
+        if not names or path.name in names:
+            report = json.loads(path.read_text())
+            report["manifest"]["contentFileSha256"] = sha
+            path.write_text(json.dumps(report))
+
+
+class EntryPoolTest(unittest.TestCase):
+    """A class that unlocks later reads `entry` in `fresh`'s place, at fresh's thresholds (the Ashwarden lock 10)."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        self.addCleanup(self.tmp.cleanup)
+        self.content, self.class_file = ash_files(self.dir, unlock="aspect2")
+        self.ash = ways.roster("ashwarden", self.content, self.class_file)
+
+    def test_entry_takes_freshs_thresholds_and_v5_entry_stays_ungraded(self) -> None:
+        for floors in (ways.G1_FLOOR, ways.G5_FLOOR):
+            self.assertEqual(floors[0, "fresh"], floors[0, "entry"])
+            self.assertNotIn((5, "fresh"), floors)
+            self.assertNotIn((5, "entry"), floors)
+
+    def test_the_pools_and_cells_follow_the_unlock(self) -> None:
+        self.assertEqual(("entry", "full"), self.ash.pools)
+        self.assertEqual(("fresh", "full"), DUSK.pools)
+        (self.dir / "plain").mkdir()
+        content, class_file = ash_files(self.dir / "plain")
+        self.assertEqual(("fresh", "full"), ways.roster("ashwarden", content, class_file).pools)
+        work = ways.jobs("godot", self.ash, (13000, 13009), Path("/out"))
+        self.assertEqual({"entry", "full"}, {arg[7:] for _, command in work for arg in command
+                                             if arg.startswith("--pool=")})
+        self.assertEqual((0, "entry"), self.ash.cell("v0-entry"))
+        for bad in ("v0-fresh", "v1-entry", "x0-full", "v0"):
+            with self.subTest(bad=bad), self.assertRaisesRegex(ValueError, "not a cell of ashwarden"):
+                self.ash.cell(bad)
+        with self.assertRaisesRegex(ValueError, "not a cell of duskblade"):
+            DUSK.cell("v0-entry")
+
+    def test_entry_is_graded_as_fresh_is(self) -> None:
+        with tempfile.TemporaryDirectory() as dusk, tempfile.TemporaryDirectory() as ash:
+            write_table(Path(dusk))
+            write_table(Path(ash), renamed(as_entry(TABLE), self.ash), who=self.ash)
+            expected = ways.grade(DUSK, Path(dusk), SEEDS)
+            result = ways.grade(self.ash, Path(ash), SEEDS)
+            text = ways.render(result)
+        for vow, pool in TABLE:
+            cell = (vow, "entry" if pool == "fresh" else pool)
+            self.assertEqual(verdicts(expected, (vow, pool)), verdicts(result, cell), cell)
+            self.assertEqual([g[2] for g in expected["cells"][vow, pool]["gates"]],
+                             [g[2] for g in result["cells"][cell]["gates"]], cell)  # the same thresholds
+            self.assertEqual([i[1] for i in expected["cells"][vow, pool]["intervals"]],
+                             [i[1] for i in result["cells"][cell]["intervals"]], cell)
+        self.assertEqual([(0, "entry"), (0, "full"), (5, "entry"), (5, "full")], list(result["cells"]))
+        self.assertIn("### V0, entry pool", text)
+        self.assertNotIn("fresh pool", text)
+        self.assertEqual((">= 40.0%", "FAIL"), result["cells"][0, "entry"]["gates"][0][2:])  # G1, graded
+        self.assertEqual("n/a", result["cells"][5, "entry"]["gates"][0][3])  # G1 ungraded at V5 entry
+        self.assertEqual("n/a", result["cells"][5, "entry"]["gates"][4][3])  # and G5
+
+
+class CatalogueTest(unittest.TestCase):
+    """--content names the catalogue the reports ran on: its ways grade them, and each must name its SHA-256."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        self.addCleanup(self.tmp.cleanup)
+        self.content, self.class_file = ash_files(self.dir, unlock="aspect2")
+        self.sha = hashlib.sha256(self.content.read_bytes()).hexdigest()
+        self.reports = self.dir / "reports"
+        self.reports.mkdir()
+        self.ash = ways.roster("ashwarden", self.content, self.class_file)
+        write_table(self.reports, renamed(as_entry(TABLE), self.ash), who=self.ash)
+        name_content(self.reports, self.sha)
+        patcher = mock.patch.object(ways, "CLASS_FILE", self.class_file)  # the Ashwarden's way stats
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_a_given_catalogue_binds_every_report_to_its_sha(self) -> None:
+        bound = ways.grading_roster("ashwarden", self.content)
+        self.assertEqual((self.sha, self.ash.ways, ("entry", "full")), (bound.content, bound.ways, bound.pools))
+        self.assertIsNone(ways.grading_roster("ashwarden").content)  # the repository's content: unbound
+        self.assertIsNone(bound.unbound().content)
+        ways.grade(bound, self.reports, SEEDS)
+        ways.grade(self.ash, self.reports, SEEDS)  # an unbound roster reads them too
+        for name in (ways.report_name(5, "full", "C_hand"), ways.replay_name(0, "entry")):
+            name_content(self.reports, "0" * 64, name)
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, f"{name}: .* not --content's"):
+                ways.grade(bound, self.reports, SEEDS)
+            name_content(self.reports, self.sha, name)
+
+    def test_without_its_catalogue_a_directory_with_other_ways_is_refused(self) -> None:
+        dusk = self.dir / "dusk"
+        dusk.mkdir()
+        write_table(dusk)
+        ways.grade(DUSK, dusk, SEEDS)
+        (dusk / "v5-fresh-C_glint.json").write_text((dusk / "v5-fresh-C_edge.json").read_text())
+        with self.assertRaisesRegex(ValueError, "v5-fresh-C_glint are not arms of duskblade"):
+            ways.grade(DUSK, dusk, SEEDS)
+
+    def test_the_cli_grades_saved_reports_by_their_catalogue(self) -> None:
+        argv = ["--aspect", "ashwarden", "--from-dir", str(self.reports), "--seeds", f"{SEEDS[0]}-{SEEDS[1]}"]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(0, ways.main(argv + ["--content", str(self.content)]))
+        self.assertIn("### V0, entry pool", out.getvalue())
+        self.assertIn("| C_hand | 6/10 | 60.0% |", out.getvalue())
+        with contextlib.redirect_stderr(io.StringIO()) as err, self.assertRaises(SystemExit) as caught:
+            ways.main(argv)  # the repository's content declares no Ashwarden ways yet
+        self.assertEqual(2, caught.exception.code)
+        self.assertIn("declares no ways", err.getvalue())
+        name_content(self.reports, "0" * 64, ways.report_name(0, "full", "R"))
+        with self.assertRaisesRegex(ValueError, "not --content's"):
+            ways.main(argv + ["--content", str(self.content)])
+
+
+class RunIsolationTest(unittest.TestCase):
+    """A run launches Godot: it refuses, before writing anything, unless override.cfg isolates the user directory."""
+
+    def test_a_run_refuses_without_the_override_before_writing_or_launching(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(ways, "REPO", Path(tmp)), \
+                mock.patch.object(ways, "run_command") as launched:
+            root, out = Path(tmp), Path(tmp) / "out"
+            with self.assertRaises(guard.IsolationError):
+                ways.main(["--quick", "--out-dir", str(out)])
+            self.assertFalse(out.exists())
+            with self.assertRaises(guard.IsolationError):
+                ways.run_jobs([("one", ["godot"])], root, 1)
+            launched.assert_not_called()
+            (root / "override.cfg").write_text(
+                '[application]\nconfig/use_custom_user_dir=true\nconfig/custom_user_dir_name="glassvow-test"\n')
+            ways.run_jobs([("one", ["godot"])], root, 1)
+            launched.assert_called_once()
 
 
 if __name__ == "__main__":

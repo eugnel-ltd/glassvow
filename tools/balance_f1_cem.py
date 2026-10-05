@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from balance_f0 import REPO, git_head, host_identity, qualified_packet, require_godot
+from balance_readout_guard import require_isolated_user_dir
 from balance_seed_contract import (
     CONTRACT_REL,
     check_invocation,
@@ -136,6 +137,7 @@ def _command(godot: str, content: Path, seeds: Path, out: Path,
 
 def run(godot: str, jobs: int, bundle_dir: Path, seeds_dir: Path, out: Path,
         candidate_ids: list[str], protocol_path: Path, fresh: bool) -> dict[str, Any]:
+    require_isolated_user_dir(REPO)  # every task is a Godot run: refuse before anything is read or written
     protocol = _read_json(protocol_path)
     contract = load_contract()
     spec = cem_spec(protocol, contract)

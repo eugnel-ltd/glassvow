@@ -1,9 +1,12 @@
 """Readout tables as Markdown: paired changes, paired G3, row B and the complete section 11 table.
 
 Reads merged report directories (`balance_ways.report_name` layout) and returns text; the
-statistics live in `balance_readout_stats`, the graders in `balance_ways`. Ways, arms, gate
-order and gate thresholds come from `balance_ways`; row B's thresholds (lock section 11) are
-named here once.
+statistics live in `balance_readout_stats`, the graders in `balance_ways`. Ways, arms, pools,
+gate order and gate thresholds come from `balance_ways`; row B's thresholds (lock section 11) are
+named here once. Every table reads the class's own cells (`Roster.pools`: `entry` in `fresh`'s
+place for a class that unlocks later), and a roster bound to a catalogue (`--content`) refuses a
+report that names other content; a reference table and the base of a paired change are read
+unbound, since they may stand on other content.
 """
 from __future__ import annotations
 
@@ -17,30 +20,46 @@ import balance_readout_stats as stats
 
 # Lock section 11, row B (it replaced the old row H on 1 October).
 B1_FLOOR = {"full": 0.20, "fresh": 0.10}  # win rate of each committed way, V0, search player
+B1_FLOOR["entry"] = B1_FLOOR["fresh"]  # a later class's entry pool, at fresh's floor (the Ashwarden lock section 10)
 B2_EXPRESSION = 0.60  # share of a way's fights that express it, lower bound
 B2_CLOSE = (0.01, 0.10)  # close calls as a share of won fights, band
 B_VOW = 0
 # Short labels for the nine gate rows `balance_ways.cell_gates` returns, in its order.
 GATE_LABELS = ("G1", "G2", "G3", "G4", "G5", "G6", "G7", "G3 floor (A)", "G6 floor (A)")
-CELL_ORDER = ((0, "fresh"), (0, "full"), (5, "fresh"), (5, "full"))
 
 
-def load_rows(directory: Path, cell: str, arm: str) -> list[dict[str, Any]]:
+def cell_order(who: bw.Roster) -> tuple[tuple[int, str], ...]:
+    """The class's graded cells, vow by vow: V0 fresh, V0 full, V5 fresh, V5 full for the Duskblade."""
+    return tuple((vow, pool) for vow in bw.VOWS for pool in who.pools)
+
+
+def load_rows(who: bw.Roster, directory: Path, cell: str, arm: str) -> list[dict[str, Any]]:
     path = directory / f"{cell}-{arm}.json"
     try:
-        return json.loads(path.read_text(encoding="utf-8"))["runs"]
-    except (OSError, KeyError, json.JSONDecodeError) as exc:
+        report = json.loads(path.read_text(encoding="utf-8"))
+        rows = report["runs"]
+    except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
         raise ValueError(f"cannot read {path}: {exc}") from exc
+    who.check_content(path.name, report.get("manifest") or {})
+    return rows
 
 
 def paired_table(who: bw.Roster, new: Path, base: Path, cells: list[str], arms: list[str] | None = None) -> str:
-    """Paired change of every arm between two directories on the same seeds."""
+    """Paired change of every arm between two directories on the same seeds, in cells of the class. A roster
+    bound to a catalogue binds `new`; `base` may stand on other content, which is what a paired change compares.
+    With the arms left to the class, neither directory may hold a committed arm the class does not have."""
+    for cell in cells:
+        vow, pool = who.cell(cell)
+        if not arms:
+            for directory in (new, base):
+                who.check_cell_arms(directory, vow, pool)
     arms = arms or list(who.arms)
     lines = ["| Cell | " + " | ".join(arms) + " |", "|---|" + "---|" * len(arms)]
     for cell in cells:
         out = []
         for arm in arms:
-            c = stats.paired_change(load_rows(new, cell, arm), load_rows(base, cell, arm), f"{cell} {arm}")
+            c = stats.paired_change(load_rows(who, new, cell, arm), load_rows(who.unbound(), base, cell, arm),
+                                    f"{cell} {arm}")
             p = "< 0.001" if c.p < 0.001 else f"= {c.p:.2f}"
             out.append(f"{100 * c.points:+.1f} pp: {c.gained} / {c.lost}, p {p} (same {c.identical})")
         lines.append(f"| {cell} | " + " | ".join(out) + " |")
@@ -52,7 +71,8 @@ def g3_table(who: bw.Roster, directory: Path, cells: list[str], adaptive: str = 
     lines = ["| Cell | Best committed | Point | Paired 95% interval | Verdict (point / paired) | "
              "Both / only A_lit / only best / neither | phi |", "|---|---|---|---|---|---|---:|"]
     for cell in cells:
-        rows = {arm: load_rows(directory, cell, arm) for arm in who.committed + (adaptive,)}
+        who.check_cell_arms(directory, *who.cell(cell))
+        rows = {arm: load_rows(who, directory, cell, arm) for arm in who.committed + (adaptive,)}
         best = stats.best_committed(who, rows)
         d = stats.paired_difference(rows[adaptive], rows[best], cell)
         counts = " / ".join(str(x) for x in (d.both, d.only_a, d.only_c, d.neither))
@@ -64,9 +84,11 @@ def g3_table(who: bw.Roster, directory: Path, cells: list[str], adaptive: str = 
 def row_b(who: bw.Roster, directory: Path, vow: int = B_VOW) -> dict[tuple[str, str], tuple]:
     """B1 and B2 per pool and arm (each committed arm and the skilled arm), on 95% intervals."""
     out = {}
-    for pool in bw.POOLS:
+    for pool in who.pools:
+        who.check_cell_arms(directory, vow, pool)
         for arm in who.committed + (bw.SKILLED,):
-            _, runs = bw.load_report(directory / bw.report_name(vow, pool, arm), None, who.rates)
+            manifest, runs = bw.load_report(directory / bw.report_name(vow, pool, arm), None, who.rates)
+            who.check_content(bw.report_name(vow, pool, arm), manifest)
             way = who.arms[arm][0]
             rate = bw.interval(sum(stats.won(r) for r in runs), len(runs))
             f = bw.feel(runs, way, who.ways)
@@ -86,10 +108,10 @@ def _span(span: tuple[float, float, float]) -> str:
 
 
 def row_b_table(who: bw.Roster, directory: Path, vow: int = B_VOW, reference: Path | None = None) -> str:
-    rows, before = row_b(who, directory, vow), row_b(who, reference, vow) if reference else None
+    rows, before = row_b(who, directory, vow), row_b(who.unbound(), reference, vow) if reference else None
     head = "| Cell | Arm | Win rate (95%) | B1 | Expression (95%) | Close calls (95%) | B2 |"
     lines = [head + (" Before B1 / B2 |" if before else ""), "|---|---|---|---|---|---|---|" + ("---|" if before else "")]
-    for pool in bw.POOLS:
+    for pool in who.pools:
         for arm in who.committed + (bw.SKILLED,):
             rate, b1, expression, close, b2, _, _ = rows[pool, arm]
             extra = f" {before[pool, arm][1]} / {before[pool, arm][4]} |" if before else ""
@@ -112,9 +134,10 @@ def full_table(who: bw.Roster, v0: Path, v5: Path, v0_seeds: tuple[int, int], v5
     row B, and the verdicts of each reference table (a previous readout's or a baseline's) beside it."""
     references = references or []
     cells = graded(who, v0, v5, v0_seeds, v5_seeds)
-    refs = [graded(who, a, b, v0_seeds, v5_seeds) for a, b in references]
+    refs = [graded(who.unbound(), a, b, v0_seeds, v5_seeds) for a, b in references]
+    order = cell_order(who)
     lines = ["### Win rates", "", "| Cell | " + " | ".join(who.arms) + " |", "|---|" + "---|" * len(who.arms)]
-    for cell in CELL_ORDER:
+    for cell in order:
         st = cells[cell]["stats"]
         lines.append(f"| V{cell[0]} {cell[1]} | " + " | ".join(
             f"{bw.pct(st[a]['rate'])} ({100 * st[a]['wilson'][0]:.1f}–{100 * st[a]['wilson'][1]:.1f})"
@@ -122,7 +145,7 @@ def full_table(who: bw.Roster, v0: Path, v5: Path, v0_seeds: tuple[int, int], v5
     lines += ["", "### Gates", "", "| Cell | Gate | Measured | Point | 95% interval | Interval verdict |"
               + "".join(f" Ref {k + 1} (point / interval) |" for k in range(len(refs))),
               "|---|---|---|---|---|---|" + "---|" * len(refs)]
-    for cell in CELL_ORDER:
+    for cell in order:
         c = cells[cell]
         if not len(GATE_LABELS) == len(c["gates"]) == len(c["intervals"]):
             raise ValueError("balance_ways returns a different set of gates than GATE_LABELS names")

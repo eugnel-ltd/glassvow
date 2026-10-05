@@ -26,6 +26,7 @@ if str(_TOOLS) not in sys.path:
 
 from balance_content_doe import generate_bundle as generate_doe_bundle  # noqa: E402
 from balance_host_qualify import host_identity, require_godot  # noqa: E402
+from balance_readout_guard import require_isolated_user_dir  # noqa: E402
 from balance_tier1_design import generate_bundle as generate_tier1_bundle  # noqa: E402
 from balance_f0_tier1 import (  # noqa: E402
     RACING_SET,
@@ -641,6 +642,7 @@ def ensure_candidates(path: Path, count: int, seed: int,
 
 
 def godot_sweep(godot: str, flags: list[str], dest: Path, log: Path) -> None:
+    require_isolated_user_dir(REPO)
     cmd = [godot, "--headless", "-s", "res://tools/balance_sweep.gd", "--", *flags]
     log.parent.mkdir(parents=True, exist_ok=True)
     with log.open("w", encoding="utf-8") as handle:

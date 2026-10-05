@@ -677,7 +677,7 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		if not arg.begins_with("--") or not arg.contains("="):
 			return {"error": "expected --name=value, got %s" % arg}
 		var key: String = arg.get_slice("=", 0).trim_prefix("--")
-		if not out.has(key):
+		if not BalanceCatalogue.known_option(out, key):
 			return {"error": "unknown option --%s" % key}
 		out[key] = arg.substr(arg.find("=") + 1)
 	for key: String in ["runs", "seed0", "vow", "removalMinCopies"]:

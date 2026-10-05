@@ -359,7 +359,9 @@ the readout whose complete §11 table it was given on.
        [reproduction](design/2026-09-29-dusk-flame/readouts/readout-13-reproduction.md) names
        its archive and the digest of its rows). The comparer pairs the runs by cell, arm and
        seed, and exits 0 only when every graded field matches, both sides hold the same runs and
-       every manifest names the same instrument.
+       every manifest names the same instrument. The packet also runs the graders on the
+       candidate's run directories (`tools/balance_readout.py table`, `g3` and `rowb`, as the
+       reading of record was graded) and records their output beside the comparer's.
 
      If neither (a) nor (b) holds, the verdict of record does not describe the candidate: a new
      reading on the candidate and a new verdict are needed.

@@ -1,7 +1,9 @@
-"""What the balance tools know about a class: its ways, from content, and their stats.
+"""What the balance tools know about a class: its ways and its unlock, from content, and their stats.
 
 The Python half of `balance_classes.gd`. An aspect's way ids come from content
-(`aspects[i].ways`, in content order); the run stat each way's play produces comes
+(`aspects[i].ways`, in content order), and so does its `unlock`, which marks a class
+that unlocks later (the template's section 3: it reads the `entry` pool in `fresh`'s
+place); the run stat each way's play produces comes
 from `tools/balance_classes.json`, the one file that holds what content does not
 (`content/full-content.json` is bound to the 1.0 verdict by SHA-256, docs/rc-bar.md
 P9, and stays untouched). A class that declares no ways needs no entry; a later
@@ -25,6 +27,7 @@ class ClassRow:
     name: str  # the class's bare name, for headings
     ways: tuple[str, ...]  # way ids in content order
     stats: tuple[str, ...]  # each way's run stat, in the same order
+    unlock: str = ""  # the content unlock id of a class that unlocks later; empty for one playable at once
 
 
 def _read_json(path: Path) -> dict:
@@ -42,7 +45,7 @@ def aspect_ids(content: Path | None = None) -> tuple[str, ...]:
 
 
 def read_class(aspect: str, content: Path | None = None, class_file: Path = CLASS_FILE) -> ClassRow:
-    """The class of aspect id `aspect`: way ids from `content`, way stats from the class file."""
+    """The class of aspect id `aspect`: way ids and unlock from `content`, way stats from the class file."""
     rows = {str(row.get("id")): row for row in _read_json(content or CONTENT).get("aspects", [])}
     if aspect not in rows:
         raise ValueError(f"--aspect must be one of {', '.join(rows)}, got {aspect!r}")
@@ -51,4 +54,5 @@ def read_class(aspect: str, content: Path | None = None, class_file: Path = CLAS
     missing = [way for way in ways if way not in listed]
     if missing:
         raise ValueError(f"{class_file.name} has no wayStats entry for way {', '.join(missing)} of {aspect}")
-    return ClassRow(aspect, str(rows[aspect].get("nameBare", aspect)), ways, tuple(str(listed[w]) for w in ways))
+    return ClassRow(aspect, str(rows[aspect].get("nameBare", aspect)), ways, tuple(str(listed[w]) for w in ways),
+                    str(rows[aspect].get("unlock", "")))
