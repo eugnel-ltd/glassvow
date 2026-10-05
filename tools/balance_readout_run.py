@@ -69,8 +69,10 @@ def parse_cell(cell: str) -> tuple[int, str]:
 
 def plan(out: Path, who: bw.Roster, seeds: tuple[int, int], cells: list[str], arms: list[str], play: str = "greedy",
          chunk: int = 50, replay: bool = False, content: Path | None = None,
-         weights: tuple[float, float] | None = None, godot: str = "godot") -> list[Chunk]:
-    """Every chunk of the table, in cell, arm, seed order (replays after their cell's arms)."""
+         weights: tuple[float, float] | None = None, godot: str = "godot", pilot: str = bw.PILOTS[0],
+         search: str = bw.SEARCHES[0]) -> list[Chunk]:
+    """Every chunk of the table, in cell, arm, seed order (replays after their cell's arms); every
+    chunk's command names the pilot and, under --play search, the search player."""
     if chunk < 1:
         raise ValueError("--chunk must be at least 1")
     who.check_arms(arms)
@@ -85,13 +87,15 @@ def plan(out: Path, who: bw.Roster, seeds: tuple[int, int], cells: list[str], ar
                 count = min(chunk, last + 1 - start)
                 part = parts / f"{name}-{start}.json"
                 work.append(Chunk(name, cell, arm, start, count, part,
-                                  bw.sim_command(godot, who, vow, pool, arm, start, count, part, content, weights, play)))
+                                  bw.sim_command(godot, who, vow, pool, arm, start, count, part, content, weights, play,
+                                                 pilot, search)))
         if replay:
             name = bw.replay_name(vow, pool)[:-5]
             count = min(bw.REPLAY, last - first + 1)
             part = parts / f"{name}-{first}.json"
             work.append(Chunk(name, cell, "A", first, count, part,
-                              bw.sim_command(godot, who, vow, pool, "A", first, count, part, content, None, play)))
+                              bw.sim_command(godot, who, vow, pool, "A", first, count, part, content, None, play,
+                                             pilot, search)))
     return work
 
 

@@ -2,7 +2,7 @@
 
 **Status:** LOCKED for implementation, 2026-09-29. Owner: James. Author: Claude (Fable 5.1), from the owner conversation of 2026-09-29 (session `game-balance-pickup`). Companion files: [`ways-template.md`](ways-template.md) (the reusable class template) and [`../../release-roadmap.md`](../../release-roadmap.md) (sequencing and dates).
 
-**Verdict:** ACCEPT, with one reservation (2 October 2026), confirmed by the owner on 4 October 2026. The record is §11, *Verdict*.
+**Verdict:** ACCEPT, with one reservation (2 October 2026), confirmed by the owner on 4 October 2026. For 1.1, read on 1.0's content under the 1.1 instrument, the Duskblade's intent holds with the same one reservation (readout 14, ruling restated 5 October 2026). This is an interim reading, not a verdict; the 1.1 verdict is given at step A9 on the combined product. The record is §11, *Verdict*.
 
 **Authority.** This lock is the product definition of "three strategies" for Duskblade and the measurement contract that replaces the #421 landscape gates (C1–C4) for plurality. It does not edit `docs/rc-bar.md`; #549 carries the P9 wording change. It reopens no closed research. `docs/balance/p9-strategy-diversity-system.md` becomes a historical record when #549 lands; it is not rewritten.
 
@@ -342,10 +342,11 @@ Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds 
 4. The other graded figures short of their thresholds, and why each gate's intent holds, are recorded in [`docs/rc-bar.md`](../../rc-bar.md) P9 (#685). They are not restated here.
 5. **4 Oct 2026, 12:25 BST.** The owner confirmed: "we have completed game balance for dusk", and activated the Ashwarden programme (#544).
 6. Readout 13 has been reproduced run for run by the repository's readout runner (#684, #544's step P2): 44,012 rows identical to the archive. Its record is [`readouts/readout-13-reproduction.md`](readouts/readout-13-reproduction.md).
+7. **4–5 Oct 2026, readout 14** (#544's step P6). The orchestrator accepted pilot `p9` and search player `s2` as the 1.1 instrument, at `3dcbe37b`, after review fixes to `s2`: the payoff credit now uses only cards held before a draw, and the draw credit is priced against the Energy left. The first ruling (4 Oct) found G2 at V0 fresh a decided FAIL. That figure came from the instrument before the fixes, and on the fixed instrument it no longer holds: the Lantern leads Shatter and Edge by 13.5 pp (+9.6 to +17.3), FAIL on point and UNDECIDED on interval, the class readout 13's reservation had. The restated ruling (5 Oct) has three parts. The 1.0 verdict above stands. Read on 1.0's content under the 1.1 instrument, the Duskblade's intent holds with the same one reservation; this is an interim reading, not a verdict, and the 1.1 verdict is given at step A9 on the combined product. The fresh-pool Lantern lead stays the reservation, carried into 1.1. A Duskblade fresh-pool wall lane is optional research; its changes would land only after the 1.0 release candidate is cut. The ruling and its grounds are readout 14's last section.
 
 **The 1.0.x readout asks** ([readout 13](readouts/readout-13.md), *What the next readout should ask*, items 1 and 5):
 
-- the fresh-pool Lantern lead (12.8 pp at V0): the reservation;
+- the fresh-pool Lantern lead (12.8 pp at V0): the reservation. Readout 14 answered whether it is real: it is, at the same size under the better player (13.5 pp, UNDECIDED). It stays the reservation, carried into 1.1 (item 7 above);
 - A_lit's feel at V0 fresh (59.2% against row B's 60%). It is an ask, not a reservation; `docs/rc-bar.md` P9 records why row B's intent holds without it.
 
 ## 12. Implementation map

@@ -8,7 +8,21 @@ extends RefCounted
 ## buy by value/gold.
 ## Potions heal at 20 missing HP, block lethal intent, and spend offensive stock in elite/boss fights.
 const Policy: GDScript = preload("res://tools/balance_policy.gd")
+## The pilot a run is played by when none is named: `p8-d0-v3`, the 1.0 reading of
+## record's (flame readout 13; docs/rc-bar.md P9).
 const VERSION: String = "p8-d0-v3"
+## #544 P6, the 1.1 instrument: pilot `p9` is `p8-d0-v3` except that it values a
+## hand-size payoff by the hand its deck is expected to deal (`expected_hand`), not at
+## a flat weight, and scores 0 for a lit rider of a way the run's class does not have
+## (the rider can never resolve there). Chosen per run with `select`.
+const HAND_VERSION: String = "p9"
+const VERSIONS: Array[String] = [VERSION, HAND_VERSION]
+## The cards each turn deals and the hand's cap (`CombatRules.start_turn`, `draw_cards`).
+const TURN_DRAW: int = 5
+const HAND_CAP: int = 10
+## The specials whose worth reads the size of the hand they are played from
+## (`CombatRules._apply_special`: Phantom Blades deals `n` for each card left in hand).
+const HAND_PAYOFFS: Array[String] = ["phantom"]
 const SHOP_MIN_RATIO: float = 0.06475653649074956
 ## T1a: keep a reward iff card_score >= this. #215 four-grid top-decile median.
 const CARD_DECLINE_DEFAULT: float = 14.0958831273019
@@ -64,9 +78,19 @@ static var lit: String = ""
 ## Copies of each card id in the committed bot's deck when it last looked
 ## (`see_flame`), read by `offer_card_score`; empty for every other arm.
 static var held: Dictionary = {}
+## The pilot this run is played by (`select`), and, under p9, the hand a hand-size
+## payoff expects when the bot last looked at its deck (`see_flame`).
+static var version: String = VERSION
+static var hand: float = float(TURN_DRAW)
 static func set_modes(build: bool, play: bool) -> void:
 	random_build = build
 	random_play = play
+## Plays the run with pilot `id` (one of VERSIONS); every cached score is dropped.
+static func select(id: String) -> void:
+	version = id
+	hand = float(TURN_DRAW)
+	for scores: Dictionary in _card_scores:
+		scores.clear()
 static func apply_policy(policy: Dictionary) -> void:
 	vector = Policy.resolve(policy)
 	_weights.clear()
@@ -89,6 +113,7 @@ static func apply_policy(policy: Dictionary) -> void:
 	lit_off = float(str(vector.get("litOff", 1.0)))
 	lit = ""
 	held.clear()
+	hand = float(TURN_DRAW)
 static func policy_snapshot() -> Dictionary:
 	if vector.is_empty():
 		apply_policy({})
@@ -498,7 +523,7 @@ static func catalogue_card_score(content: ContentDB, aspect: int, card_id: Strin
 	# card_score distinguishes Dusk (0) from all other aspects, and base/up.
 	var scores: Dictionary = _card_scores[(2 if aspect == 0 else 0) + int(upgraded)]
 	if not scores.has(card_id):
-		scores[card_id] = card_score(_definition(content, card_id, upgraded), aspect, card_id)
+		scores[card_id] = card_score(_definition(content, card_id, upgraded), aspect, card_id, "", content)
 	return scores[card_id]
 static func _definition(content: ContentDB, card_id: String, upgraded: bool) -> Dictionary:
 	var definition: Dictionary = content.cards.get(card_id, {})
@@ -533,10 +558,17 @@ static func offer_card_score(content: ContentDB, aspect: int, card_id: String) -
 ## What the bot sees before a build decision. The A_lit arm sees the colour its
 ## lantern burns, as the HUD shows it and as the next fight will light its riders
 ## (`CombatRules._set_lantern_quality`); a committed bot counts the copies its
-## deck holds (`held`). Every other arm leaves `lit` and `held` empty.
+## deck holds (`held`). Every other arm leaves `lit` and `held` empty. Under p9
+## every arm also reads the hand its deck deals (`hand`).
 static func see_flame(content: ContentDB, run: RunState) -> void:
 	lit = ""
 	held.clear()
+	if version == HAND_VERSION:
+		var expected: float = expected_hand(content, run.player.deck)
+		if expected != hand:
+			hand = expected
+			for scores: Dictionary in _card_scores:
+				scores.clear()
 	if way != "none":
 		for card: CardInst in run.player.deck:
 			held[String(card.id)] = int(float(str(held.get(String(card.id), 0)))) + 1
@@ -547,12 +579,32 @@ static func see_flame(content: ContentDB, run: RunState) -> void:
 		lit = str(reading["dominant"])
 
 
+## p9: the hand a hand-size payoff is expected to be played from: the turn's draw,
+## plus what each draw card in the deck adds (its draws, less itself), each dealt at
+## the rate the turn's draw deals a card of the deck, within the hand's cap.
+static func expected_hand(content: ContentDB, deck: Array[CardInst]) -> float:
+	if deck.is_empty():
+		return float(TURN_DRAW)
+	var extra: float = 0.0
+	for card: CardInst in deck:
+		var draws: int = 0
+		for fx_v: Variant in _definition(content, String(card.id), card.up).get("effects", []):
+			var fx: Dictionary = fx_v
+			# Only `draw` effects: Pyre Tithe's draw follows burning the whole hand, which cuts against the payoff.
+			if str(fx.get("kind", "")) == "draw":
+				draws += int(float(str(fx.get("n", 0))))
+		if draws > 0:
+			extra += float(draws - 1)
+	var dealt: float = minf(1.0, float(TURN_DRAW) / float(deck.size()))
+	return clampf(float(TURN_DRAW) + extra * dealt, 1.0, float(HAND_CAP))
+
+
 ## The A_lit build score under a lantern lit in `lit`: the card's score with
 ## that way's riders in full, times `litLean` for that way's glass and `litOff`
 ## for other coloured glass; clear glass keeps its score.
 static func _lit_card_score(content: ContentDB, aspect: int, card_id: String,
 		upgraded: bool) -> float:
-	var score: float = card_score(_definition(content, card_id, upgraded), aspect, card_id, lit)
+	var score: float = card_score(_definition(content, card_id, upgraded), aspect, card_id, lit, content)
 	var affinity: Dictionary = Flame.card_affinity(content, aspect, card_id)
 	if affinity.is_empty():
 		return score
@@ -571,8 +623,10 @@ static func _way_factor(affinity: Dictionary) -> float:
 
 ## `lit_way` names the way whose lantern the score assumes lit (the A_lit arm's
 ## lean): a rider lit by it counts in full. Empty, every rider counts at
-## `crackedShare`.
-static func card_score(d: Dictionary, aspect: int, card_id: String = "", lit_way: String = "") -> float:
+## `crackedShare`, except under p9 a rider of a way the aspect does not have
+## (`content` names the aspect's ways), which counts 0.
+static func card_score(d: Dictionary, aspect: int, card_id: String = "", lit_way: String = "",
+		content: ContentDB = null) -> float:
 	var dusk: bool = aspect == 0
 	var card_w: Dictionary = _group("card")
 	var rarity_v: Variant = card_w["rarity"]
@@ -595,8 +649,7 @@ static func card_score(d: Dictionary, aspect: int, card_id: String = "", lit_way
 		# readout 9): like a rider that needs a Cracked target, it counts at the
 		# policy's `crackedShare` of what it gives, unless the score assumes its
 		# colour lit.
-		score += worth * (_w("special", "crackedShare")
-			if fx.has("lit") and str(fx["lit"]) != lit_way else 1.0)
+		score += worth * _rider_share(fx, aspect, lit_way, content)
 	if str(d.get("type", "")) == "power":
 		score += _w("card", "power")
 	score += float(str(d.get("chip", 0))) * (_w("card", "chipDusk") if dusk else _w("card", "chipAsh"))
@@ -606,6 +659,15 @@ static func card_score(d: Dictionary, aspect: int, card_id: String = "", lit_way
 			"catalyst", "virulence", "annihilate"]:
 		score += _w("card", "aspectBonus")
 	return score
+## The share of an effect's worth a card's score counts: all of it with no `lit`
+## rider or under the lantern the score assumes; else `crackedShare`, or under p9
+## nothing for a way the aspect does not have (#544 decision 3: it never resolves).
+static func _rider_share(fx: Dictionary, aspect: int, lit_way: String, content: ContentDB) -> float:
+	if not fx.has("lit") or str(fx["lit"]) == lit_way:
+		return 1.0
+	if version == HAND_VERSION and content != null and not way_ids(content, aspect).has(str(fx["lit"])):
+		return 0.0
+	return _w("special", "crackedShare")
 static func _status_value(id: String, n: int, dusk: bool) -> float:
 	match id:
 		"poison":
@@ -635,10 +697,14 @@ static func _status_value(id: String, n: int, dusk: bool) -> float:
 ## counted, and a rider that needs a Cracked target (Faultline's and Tremor's
 ## bonus, Cleft's Cracked and Fervor, Totality's doubling, one stack at least)
 ## counts at the policy's `crackedShare` of what it gives. The other specials
-## keep their fitted weights; `execute` is now Honing Edge's alone.
+## keep their fitted weights; `execute` is now Honing Edge's alone. Under p9 a
+## hand-size payoff is worth its damage from the hand the deck deals (`hand`, less
+## the payoff itself), not the flat `leech` weight.
 static func _special_value(fx: Dictionary, dusk: bool) -> float:
 	var n: float = float(str(fx.get("n", 0)))
 	var share: float = _w("special", "crackedShare")
+	if version == HAND_VERSION and HAND_PAYOFFS.has(str(fx.get("id", ""))):
+		return n * (hand - 1.0)
 	match str(fx.get("id", "")):
 		"execute":
 			return (n + share * float(str(fx.get("bonus", 0)))) * float(str(fx.get("times", 1)))

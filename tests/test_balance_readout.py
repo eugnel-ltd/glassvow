@@ -402,6 +402,12 @@ class ChunkAndMergeTests(unittest.TestCase):
             self.assertIn(flag, command)
         self.assertIn("--way=none", work[-1].command)  # the replay is arm A
         self.assertNotIn("--play=search", self.plan(play="greedy")[0].command)
+        for chunk in work:  # 1.0's bots unless named, and named in every command
+            self.assertIn("--pilot=p8-d0-v3", chunk.command)
+            self.assertIn("--search=s1", chunk.command)
+        for chunk in self.plan(replay=True, pilot="p9", search="s2"):
+            self.assertIn("--pilot=p9", chunk.command)
+            self.assertIn("--search=s2", chunk.command)
 
     def test_plan_passes_weights_and_content_through_to_committed_arms_only(self) -> None:
         work = self.plan(weights=(2.0, 1.0), content=Path("/x/c.json"))

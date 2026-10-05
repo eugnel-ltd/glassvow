@@ -20,7 +20,10 @@ const RATE_STATS: Array[String] = ["shatters", "kindles", "embersSpent", "cracke
 ## readout 5: 30 cut off a won 32-turn fight with the 650-HP final boss).
 const TURN_GUARD: int = 40
 ## Who plays the fights (flame readout 8): the greedy pilot, or the search
-## player built on it. Everything off the board is the pilot's either way.
+## player built on it. Everything off the board is the pilot's either way. Which
+## pilot and which search are named per run (`--pilot`, `--search`, #544 P6) and in
+## every manifest; unnamed, they are 1.0's instrument of record (`Pilot.VERSION`,
+## `Search.VERSION`).
 const PLAYERS: Dictionary = {"greedy": Pilot, "search": Search}
 ## How the build is chosen: by the pilot's scores, at random, or by the pilot's
 ## scores leaning on the lantern's lit colour (flame readout 10's A_lit arm).
@@ -82,7 +85,8 @@ func _initialize() -> void:
 		for offset: int in range(int(float(str(opts["runs"])))):
 			rows.append(simulate(content, aspect, int(float(str(opts["seed0"]))) + offset,
 				int(float(str(opts["vow"]))), ban, _policy(opts), str(opts["build"]) == "random",
-				false, _mix(opts), null, false, str(opts["pool"]), str(opts["play"])))
+				false, _mix(opts), null, false, str(opts["pool"]), str(opts["play"]),
+				str(opts["pilot"]), str(opts["search"])))
 	var report: Dictionary = Metrics.report(rows, _manifest(opts, overlay, identity))
 	if rows.size() == 1:
 		report["outcomeDigest"] = outcome_digest(rows[0])
@@ -102,12 +106,15 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 		ban: PackedStringArray = PackedStringArray(), policy: Dictionary = {},
 		random_build: bool = false, random_play: bool = false, mix: Dictionary = {},
 		vigil: VigilState = null, strip_start_hex: bool = false, pool: String = "",
-		play: String = "greedy") -> Dictionary:
+		play: String = "greedy", pilot: String = Pilot.VERSION,
+		search: String = Search.VERSION) -> Dictionary:
 	_probe = {}
 	_flame_acts = []
 	_flame_fights = []
 	_play = play
 	_player = PLAYERS[play]
+	Pilot.select(pilot)
+	Search.select(search)
 	Pilot.set_ban(ban)
 	Pilot.apply_policy(policy)
 	Pilot.set_modes(random_build, random_play)
@@ -665,7 +672,7 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		"removalAppetite": Pilot.REMOVAL_APPETITE_DEFAULT,
 		"removalMinCopies": Pilot.REMOVAL_MIN_COPIES_DEFAULT,
 		"way": "none", "pool": "mature", "build": "adaptive", "wayCommit": "", "wayOff": "",
-		"play": "greedy"}
+		"play": "greedy", "pilot": Pilot.VERSION, "search": Search.VERSION}
 	for arg: String in args:
 		if not arg.begins_with("--") or not arg.contains("="):
 			return {"error": "expected --name=value, got %s" % arg}
@@ -693,6 +700,12 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		return {"error": "--build=lit is an adaptive arm: it takes no --way"}
 	if not PLAYERS.has(str(out["play"])):
 		return {"error": "--play must be greedy or search"}
+	if not Pilot.VERSIONS.has(str(out["pilot"])):
+		return {"error": "--pilot must be one of %s" % ", ".join(Pilot.VERSIONS)}
+	if not Search.VERSIONS.has(str(out["search"])):
+		return {"error": "--search must be one of %s" % ", ".join(Search.VERSIONS)}
+	if str(out["search"]) != Search.VERSION and str(out["play"]) != "search":
+		return {"error": "--search=%s needs --play=search" % out["search"]}
 	return _way_weights(out)
 static func _mix(opts: Dictionary) -> Dictionary:
 	var id: String = str(opts.get("mix", ""))
@@ -717,10 +730,10 @@ static func _manifest(opts: Dictionary, overlay: String, identity: Dictionary) -
 	row["contentSha256"] = str(identity.get("contentFileSha256", ""))
 	row["overlay"] = null if overlay.is_empty() else {"path": overlay,
 		"sha256": FileAccess.get_sha256(overlay)}
-	row["pilot"] = Pilot.VERSION
+	row["pilot"] = opts["pilot"]
 	row["play"] = opts["play"]
 	if str(opts["play"]) == "search":
-		row["search"] = {"version": Search.VERSION, "lineCap": Search.LINE_CAP}
+		row["search"] = {"version": opts["search"], "lineCap": Search.LINE_CAP}
 	row["profile"] = PROFILES[str(opts["pool"])]
 	row["pool"] = opts["pool"]
 	row["build"] = opts["build"]

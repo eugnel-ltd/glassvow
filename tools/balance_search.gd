@@ -12,8 +12,20 @@ extends RefCounted
 ## play has resolved. Intents and the blow forecast are the ones the greedy pilot
 ## already reads. The baseline's own turn is always a candidate: the search plays
 ## it whenever no searched line beats it, so a turn never scores below greedy's.
+##
+## Search `s2` (#544 P6, the 1.1 instrument) is chosen per run with `select`; `s1`
+## stays the default and 1.0's player of record. In `s2` a line that ends at a draw
+## is not scored as the turn's end, for the player re-plans once the draw resolves:
+## the line is credited the hand-size payoff the bigger hand pays (the hand's size
+## is known, its new cards are not) and SETUP_SHARE of the expected worth of the
+## cards drawn, read from the multiset they came from (`_continued`). Everything else
+## is `s1`'s, the one kindle it tries included.
 const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
+## The player a run's fights are searched by when none is named: `s1`, the 1.0
+## reading of record's (flame readout 8; docs/rc-bar.md P9).
 const VERSION: String = "s1"
+const HAND_VERSION: String = "s2"
+const VERSIONS: Array[String] = [VERSION, HAND_VERSION]
 ## Lines evaluated per plan (a line is any prefix of plays: the turn may end there).
 const LINE_CAP: int = 2000
 ## Re-plans per turn after a draw; a guard, never reached in practice.
@@ -45,6 +57,8 @@ static var lines: int = 0
 static var plans: int = 0
 static var greedy_plans: int = 0
 static var refused: int = 0
+## The search this run's fights are played by (`select`).
+static var version: String = VERSION
 
 
 ## A fight as some line of the turn leaves it: a detached run and combat, and
@@ -53,6 +67,13 @@ class Position:
 	var run: RunState
 	var cb: CombatState
 	var revealed: bool = false
+	## s2: the cards the line's last action drew, and the draw and discard piles
+	## they were drawn from (the parent position's, read and never written); and
+	## the uids of the cards in hand before it, the only ones the player has seen.
+	var drawn: int = 0
+	var pile: Array[CardInst] = []
+	var spare: Array[CardInst] = []
+	var held: Dictionary = {}
 
 	func _init(run_state: RunState, combat: CombatState) -> void:
 		run = run_state
@@ -90,6 +111,11 @@ static func reset_counters() -> void:
 	plans = 0
 	greedy_plans = 0
 	refused = 0
+
+
+## Searches the run's fights with player `id` (one of VERSIONS).
+static func select(id: String) -> void:
+	version = id
 
 
 ## One combat turn, potions first as the greedy pilot drinks them.
@@ -170,7 +196,8 @@ static func _search(turn: Turn, at: Position, path: Array[Dictionary]) -> void:
 	if turn.lines >= LINE_CAP:
 		return
 	turn.lines += 1
-	var value: float = evaluate(turn, at)
+	var value: float = _continued(turn, at) if at.revealed and version == HAND_VERSION \
+		else evaluate(turn, at)
 	if value > turn.value:
 		turn.value = value
 		turn.best = path.duplicate()
@@ -185,6 +212,8 @@ static func _search(turn: Turn, at: Position, path: Array[Dictionary]) -> void:
 		if turn.seen.has(key):
 			continue
 		turn.seen[key] = true
+		if child.revealed and version == HAND_VERSION:
+			_note_draws(at, child)
 		var next: Array[Dictionary] = path.duplicate()
 		next.append(action)
 		_search(turn, child, next)
@@ -200,20 +229,110 @@ static func _actions(turn: Turn, at: Position) -> Array[Dictionary]:
 		if tried.has(signature):
 			continue
 		tried[signature] = true
-		var targets: Array[Variant] = [null]
-		if str(turn.rules.card_data(card).get("target", "")) == "enemy":
-			targets.clear()
-			for e: EnemyCombatant in at.cb.living_enemies():
-				targets.append(e.idx)
-		for target: Variant in targets:
-			if turn.rules.can_play(at.run, at.cb, card, target):
-				out.append({"t": "playCard", "uid": card.uid, "target": target})
+		out.append_array(_plays(turn, at, card))
 	var kindle: CardInst = Pilot.worst_card(at.run, turn.content, at.cb.hand, true)
 	if kindle != null and turn.rules.can_kindle(at.run, at.cb, kindle):
 		out.append({"t": "kindleFromHand", "uid": kindle.uid})
 	if turn.rules.can_use_art(at.run, at.cb):
 		out.append({"t": "useArt"})
 	return out
+
+
+## The card played at each target it may legally take there.
+static func _plays(turn: Turn, at: Position, card: CardInst) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var targets: Array[Variant] = [null]
+	if str(turn.rules.card_data(card).get("target", "")) == "enemy":
+		targets.clear()
+		for e: EnemyCombatant in at.cb.living_enemies():
+			targets.append(e.idx)
+	for target: Variant in targets:
+		if turn.rules.can_play(at.run, at.cb, card, target):
+			out.append({"t": "playCard", "uid": card.uid, "target": target})
+	return out
+
+
+## s2: the worth of a line that ends at a draw (or a roll of the RNG), which is not
+## the turn's end, for the player re-plans once it resolves. It is the turn's end
+## here, or, when a hand-size payoff the player held before the draw pays more
+## from the hand the draw left (its size is known, its new cards are not), that
+## payoff played; plus SETUP_SHARE of the expected worth of the cards drawn
+## (`_draw_worth`). A payoff the draw itself dealt is never played here: the copy's
+## RNG deals what the live draw will, and the player has not seen it.
+static func _continued(turn: Turn, at: Position) -> float:
+	var value: float = evaluate(turn, at)
+	var rest: Position = at
+	var tried: Dictionary = {}
+	for card: CardInst in at.cb.hand:
+		if not at.held.has(card.uid) or tried.has(_signature(card)) \
+				or not _reads_hand(turn.rules.card_data(card)):
+			continue
+		tried[_signature(card)] = true
+		for action: Dictionary in _plays(turn, at, card):
+			var then: Position = _copy(at)
+			if not _apply(turn.rules, then, action):
+				continue
+			var paid: float = evaluate(turn, then)
+			if paid > value:
+				value = paid
+				rest = then
+	return value + SETUP_SHARE * _draw_worth(turn, at, rest)
+
+
+## Whether a card's worth reads the size of the hand it is played from.
+static func _reads_hand(d: Dictionary) -> bool:
+	for fx_v: Variant in d.get("effects", []):
+		var fx: Dictionary = fx_v
+		if str(fx.get("kind", "")) == "special" and Pilot.HAND_PAYOFFS.has(str(fx.get("id", ""))):
+			return true
+	return false
+
+
+## s2: what the player knows of the cards an action drew: how many (the action's
+## draw events) and the piles they came from, its parent's draw pile and, once
+## that ran out and the discard pile was shuffled in, its parent's discard pile;
+## and which cards it held before (by instance, so a drawn copy of a held card is
+## still unseen).
+static func _note_draws(before: Position, after: Position) -> void:
+	for event: Dictionary in after.cb.queue:
+		if event.get("t") == EventTypes.DRAW:
+			after.drawn += 1
+	after.pile = before.cb.draw
+	after.spare = before.cb.discard
+	for card: CardInst in before.cb.hand:
+		after.held[card.uid] = true
+
+
+## The expected worth of the cards the line's last action drew, from the multiset
+## each came from: the draw pile's cards, all of them once it ran out, then the
+## discard pile's. A card is worth its catalogue score (never below 0: it need
+## not be played) where `rest` can pay for it, and nothing where it cannot. The
+## Energy left is shared: when the drawn cards' expected Energy cost exceeds it,
+## their worth is scaled down to the share it pays for.
+static func _draw_worth(turn: Turn, at: Position, rest: Position) -> float:
+	if at.drawn <= 0:
+		return 0.0
+	var from_pile: int = mini(at.drawn, at.pile.size())
+	var expected: Vector2 = float(from_pile) * _mean_card(turn, at.pile, rest)
+	if at.drawn > from_pile:
+		expected += float(at.drawn - from_pile) * _mean_card(turn, at.spare, rest)
+	var energy: float = float(rest.cb.player.energy)
+	return expected.x if expected.y <= energy else expected.x * energy / expected.y
+
+
+## The mean worth (x) and Energy cost (y) of a card of the multiset `cards` to
+## `rest`: an unpayable card is worth nothing and costs nothing.
+static func _mean_card(turn: Turn, cards: Array[CardInst], rest: Position) -> Vector2:
+	if cards.is_empty():
+		return Vector2.ZERO
+	var living: Array[EnemyCombatant] = rest.cb.living_enemies()
+	var target: Variant = living[0].idx if not living.is_empty() else null
+	var total: Vector2 = Vector2.ZERO
+	for card: CardInst in cards:
+		if turn.rules.can_play(rest.run, rest.cb, card, target):
+			var score: float = Pilot.catalogue_card_score(turn.content, rest.run.aspect, String(card.id), card.up)
+			total += Vector2(maxf(0.0, score), float(turn.rules.eff_cost(rest.run, rest.cb, card)))
+	return total / float(cards.size())
 
 
 ## The same dispatch as GlassvowGame.apply for the three commands a turn plays.

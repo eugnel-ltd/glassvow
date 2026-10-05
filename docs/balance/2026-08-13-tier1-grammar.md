@@ -14,7 +14,7 @@ vector through the same dict.
 
 ## Flags go after `--`
 
-`tools/balance_sim.gd:34` (in `_initialize`) reads `OS.get_cmdline_user_args()`,
+`tools/balance_sim.gd:37` (in `_initialize`) reads `OS.get_cmdline_user_args()`,
 so every sim flag must come **after a bare `--`**:
 
 ```
@@ -34,7 +34,7 @@ unconditionally. It now scores that pick and keeps it only when
 `accepts_card_reward` says so:
 
 - Gate: `tools/balance_sim.gd:236-237` (in `_claim_rewards`)
-- Predicate: `tools/balance_pilot.gd:111` (`accepts_card_reward`) —
+- Predicate: `tools/balance_pilot.gd:136` (`accepts_card_reward`) —
   `score >= card_decline_threshold`
 - Default: `CARD_DECLINE_DEFAULT = -1e9` at `tools/balance_pilot.gd:10`
   (`CARD_DECLINE_DEFAULT`). Finite so CLI/JSON round-trip; no catalogue score is
@@ -50,12 +50,12 @@ T1b is removal. The old shop gate was the conjunction
 `8.5 - wscore`. Those are now one policy with three numbers; `remove_value`
 stays the unified intercept.
 
-- Shop eligibility: `tools/balance_pilot.gd:115-116` (`wants_shop_remove`) —
+- Shop eligibility: `tools/balance_pilot.gd:140-141` (`wants_shop_remove`) —
   `copies >= removal_min_copies and wscore <= removal_appetite - REMOVAL_SHOP_MARGIN`
-- Shop numerator and event score: `tools/balance_pilot.gd:113-114` (`remove_value`)
+- Shop numerator and event score: `tools/balance_pilot.gd:138-139` (`remove_value`)
   — `removal_appetite - wscore`. Event path:
   `tools/balance_sim.gd:346` (in `_event_op_score`). Shop call:
-  `tools/balance_pilot.gd:824` (in `choose_shop`).
+  `tools/balance_pilot.gd:889` (in `choose_shop`).
 - Defaults: `removalAppetite = 8.5`, `removalMinCopies = 3`,
   `REMOVAL_SHOP_MARGIN = 2.0` (not sampled). So the default shop gate is still
   `copies >= 3 and wscore <= 6.5`, and default `pickRemove` is still `8.5 - wscore`.
@@ -68,9 +68,9 @@ what lets a policy cut a singleton — the way a player builds a thin deck.
 ## Knob table
 
 One dict. `apply_policy` / `policy_snapshot` at
-`tools/balance_pilot.gd:70` (`apply_policy`) and
-`tools/balance_pilot.gd:92` (`policy_snapshot`). CLI keys in
-`tools/balance_sim.gd:702-704` (`_policy`). `simulate(..., policy)` applies the
+`tools/balance_pilot.gd:94` (`apply_policy`) and
+`tools/balance_pilot.gd:117` (`policy_snapshot`). CLI keys in
+`tools/balance_sim.gd:715-717` (`_policy`). `simulate(..., policy)` applies the
 dict at the start of every run. Slice B records the resolved vector on every
 run row (`policy`) as the replay key; the seed-1000 digest moves with that
 field. See `docs/balance/2026-08-14-policy-vector.md`.

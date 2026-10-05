@@ -258,10 +258,14 @@ kept, with the date each part stopped being in force, under *History* at the end
 - **1.1: both classes, on the combined product.** Each class gets its own verdict: the
   Ashwarden on its own lock and readings, built from the
   [class template](design/2026-09-29-dusk-flame/ways-template.md), and the Duskblade
-  requalified under the 1.1 instrument (search player `s2`) on the combined product. The 1.0
-  verdict does not carry into 1.1: the requalification replaces it there, and readout 13 stays
-  1.0's reading of record. The gap between the classes is reported, not gated (#544's plan of
-  record, decisions 4 and 5).
+  requalified under the 1.1 instrument (pilot `p9`, search player `s2`, accepted on
+  [readout 14](design/2026-09-29-dusk-flame/readouts/readout-14.md)) on the combined product.
+  The 1.0 verdict does not carry into 1.1: the requalification replaces it there, and readout
+  13 stays 1.0's reading of record. Read on 1.0's content under the 1.1 instrument, the
+  Duskblade's intent holds with the same one reservation, the fresh-pool Lantern lead. This is
+  an interim reading, not a verdict; the 1.1 verdict is given at step A9 on the combined
+  product (the lock's §11, *Verdict*, item 7). The gap between the classes is reported, not
+  gated (#544's plan of record, decisions 4 and 5).
 
 **The verdict.** For each shipped class P9 records one verdict, **ACCEPT** or **NOT ACCEPTED**,
 on whether the design's intent holds: the three ways are viable and comparable; commitment is
@@ -333,8 +337,10 @@ the readout whose complete §11 table it was given on.
      reading on the candidate and a new verdict are needed.
   2. **The independent re-run.** From a clean checkout of the RC commit, on any host, the
      reading's cell table is played again with the instrument of record (pilot `p8-d0-v3`,
-     search player `s1`) on the bands of record, and every report's manifest names the RC
-     commit, the content SHA-256, the pilot and the search player. It agrees with the reading of
+     search player `s1`), named explicitly whatever the tools' default
+     (`tools/balance_readout.py run … --play search --pilot p8-d0-v3 --search s1`), on the bands
+     of record, and every report's manifest names the RC commit, the content SHA-256, the pilot
+     and the search player. It agrees with the reading of
      record on every graded gate's verdict in every graded cell (on point and on interval where
      the gate has both, and on its single verdict for G7 and row B); the
      numbers need not match (owner ruling, 2026-09-27). A run under another instrument, such as

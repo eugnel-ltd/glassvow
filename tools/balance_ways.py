@@ -23,6 +23,7 @@ Usage (repo root):
                                 [--content FILE]   # a scratch catalogue, e.g. one sweep point
                                 [--way-weights 2.0/1.0]   # committed arms' own/other glass weights
                                 [--play search]   # readout 8's search player on the board
+                                [--pilot p9 --search s2]   # the 1.1 bots (default: 1.0's p8-d0-v3 and s1)
                                 [--vows 0]   # one vow's cells only (a split table: V0 and V5 on their own seeds)
   python3 tools/balance_ways.py --from-dir DIR [--quick | --seeds A-B]   # re-grade saved reports
 
@@ -88,6 +89,11 @@ G5_FLOOR = {(0, "full"): (Fraction(70, 100), Fraction(40, 100)),
             (0, "fresh"): (Fraction(40, 100), None)}
 G6_MAX, G6_HELD, G6_WAYS = Fraction(60, 100), Fraction(20, 100), 2
 PLAYS = ("greedy", "search")
+# The bots (#544 P6): the pilot that builds every run, and the search player that plays its fights
+# under --play search. The first of each is 1.0's instrument of record (docs/rc-bar.md P9) and the
+# default; the second is the 1.1 instrument. Every simulator command names them.
+PILOTS = ("p8-d0-v3", "p9")
+SEARCHES = ("s1", "s2")
 # Readout 8's feel proxies: a won fight the hero leaves under this share of max HP
 # is a close call.
 CLOSE_CALL = Fraction(20, 100)
@@ -170,22 +176,33 @@ def parse_weights(text: str) -> tuple[float, float]:
     return weights
 
 
+def check_bots(play: str, pilot: str, search: str) -> None:
+    """Refuses an unknown pilot or search player, and a search player named for greedy play."""
+    if pilot not in PILOTS or search not in SEARCHES:
+        raise ValueError(f"--pilot must be one of {PILOTS} and --search one of {SEARCHES}")
+    if play != "search" and search != SEARCHES[0]:
+        raise ValueError(f"--search {search} needs --play search")
+
+
 def sim_command(godot: str, who: Roster, vow: int, pool: str, arm: str, first: int, count: int,
                 out: Path, content: Path | None = None,
-                weights: tuple[float, float] | None = None, play: str = "greedy") -> list[str]:
+                weights: tuple[float, float] | None = None, play: str = "greedy",
+                pilot: str = PILOTS[0], search: str = SEARCHES[0]) -> list[str]:
+    check_bots(play, pilot, search)
     way, build = who.arms[arm]
     return [godot, "--headless", "-s", "res://tools/balance_sim.gd", "--", f"--aspect={who.aspect}",
             f"--vow={vow}", f"--runs={count}", f"--seed0={first}", f"--pool={pool}",
-            f"--way={way}", f"--build={build}", f"--out={out}"] \
+            f"--way={way}", f"--build={build}", f"--pilot={pilot}", f"--out={out}"] \
         + ([f"--wayCommit={weights[0]}", f"--wayOff={weights[1]}"]
            if weights is not None and way != "none" else []) \
         + ([f"--content={content}"] if content is not None else []) \
-        + ([f"--play={play}"] if play != "greedy" else [])
+        + ([f"--search={search}", f"--play={play}"] if play != "greedy" else [])
 
 
 def jobs(godot: str, who: Roster, seeds: tuple[int, int], directory: Path, content: Path | None = None,
          weights: tuple[float, float] | None = None,
-         play: str = "greedy", vows: tuple[int, ...] = VOWS) -> list[tuple[str, list[str]]]:
+         play: str = "greedy", vows: tuple[int, ...] = VOWS, pilot: str = PILOTS[0],
+         search: str = SEARCHES[0]) -> list[tuple[str, list[str]]]:
     first, count = seeds[0], seeds[1] - seeds[0] + 1
     out: list[tuple[str, list[str]]] = []
     for vow in vows:
@@ -193,10 +210,10 @@ def jobs(godot: str, who: Roster, seeds: tuple[int, int], directory: Path, conte
             for arm in who.arms:
                 out.append((report_name(vow, pool, arm)[:-5], sim_command(
                     godot, who, vow, pool, arm, first, count, directory / report_name(vow, pool, arm),
-                    content, weights, play)))
+                    content, weights, play, pilot, search)))
             out.append((replay_name(vow, pool)[:-5], sim_command(
                 godot, who, vow, pool, "A", first, min(REPLAY, count), directory / replay_name(vow, pool),
-                content, None, play)))
+                content, None, play, pilot, search)))
     return out
 
 
@@ -524,6 +541,7 @@ def grade(who: Roster, directory: Path, seeds: tuple[int, int], vows: tuple[int,
     identity: set[tuple[str, str]] = set()
     weights: set[tuple[Any, Any]] = set()
     plays: set[str] = set()
+    bots: set[tuple[str, str]] = set()
     for vow in vows:
         for pool in POOLS:
             stats: dict[str, dict[str, Any]] = {}
@@ -536,6 +554,8 @@ def grade(who: Roster, directory: Path, seeds: tuple[int, int], vows: tuple[int,
                          f"{report_name(vow, pool, arm)}: manifest is not this cell and arm")
                 identity.add((str(manifest.get("commit")), str(manifest.get("contentFileSha256"))))
                 plays.add(str(manifest.get("play", "greedy")))
+                search = manifest.get("search") if isinstance(manifest.get("search"), dict) else {}
+                bots.add((str(manifest.get("pilot")), str(search.get("version", "-"))))
                 if arm in who.committed:
                     policy = manifest.get("policy") if isinstance(manifest.get("policy"), dict) else {}
                     weights.add((policy.get("wayCommit"), policy.get("wayOff")))
@@ -552,17 +572,28 @@ def grade(who: Roster, directory: Path, seeds: tuple[int, int], vows: tuple[int,
     _require(len(identity) == 1, f"reports come from more than one build: {sorted(identity)}")
     _require(len(weights) == 1, f"committed arms weigh their glass differently: {sorted(map(str, weights))}")
     _require(len(plays) == 1, f"reports come from more than one player: {sorted(plays)}")
+    _require(len(bots) == 1, f"reports come from more than one pilot or search player: {sorted(bots)}")
     commit, content = identity.pop()
     commit_weight, off_weight = weights.pop()
+    pilot, search = bots.pop()
     return {"roster": who, "seeds": seeds, "commit": commit, "content": content, "cells": cells, "play": plays.pop(),
+            "pilot": pilot, "search": search,
             "weights": None if commit_weight is None and off_weight is None else (commit_weight, off_weight)}
+
+
+def bots_label(result: dict[str, Any]) -> str:
+    """`search player s2, pilot p9`: who played the table's fights and who built its runs."""
+    play = result.get("play", "greedy")
+    search = f" {result['search']}" if play == "search" and result.get("search") not in (None, "-") else ""
+    pilot = f", pilot {result['pilot']}" if result.get("pilot") not in (None, "None") else ""
+    return f"{play} player{search}{pilot}"
 
 
 def render(result: dict[str, Any], wall: float | None = None) -> str:
     first, last = result["seeds"]
     lines = [f"Head `{result['commit']}`, content SHA-256 `{result['content'][:12]}...`; "
              f"{result['roster'].name}, seeds {first}-{last} ({last - first + 1} paired per arm), shipping incentives, "
-             f"{result.get('play', 'greedy')} player."
+             f"{bots_label(result)}."
              + (" Committed arms weigh their own glass x{} and other coloured glass x{} (--way-weights)."
                 .format(*result["weights"]) if result.get("weights") is not None else "")
              + (f" Wall time {wall:.0f} s." if wall is not None else "")]
@@ -605,6 +636,13 @@ def render(result: dict[str, Any], wall: float | None = None) -> str:
     return "\n".join(lines)
 
 
+def bots_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--pilot", choices=PILOTS, default=PILOTS[0],
+                        help="the pilot that builds every run (default p8-d0-v3, 1.0's; p9 is 1.1's)")
+    parser.add_argument("--search", choices=SEARCHES, default=SEARCHES[0],
+                        help="the search player under --play search (default s1, 1.0's; s2 is 1.1's)")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--aspect", default="duskblade",
@@ -620,6 +658,7 @@ def main(argv: list[str] | None = None) -> int:
                         help="run on this catalogue instead of content/full-content.json")
     parser.add_argument("--play", choices=PLAYS, default="greedy",
                         help="who plays the fights: the greedy pilot or readout 8's search player")
+    bots_options(parser)
     parser.add_argument("--vows", default="0,5",
                         help="the vows whose cells to run or grade (default 0,5): a split table runs "
                              "each vow on its own seed range")
@@ -637,6 +676,7 @@ def main(argv: list[str] | None = None) -> int:
         seeds = QUICK_SEEDS if opts.quick else parse_seeds(opts.seeds) if opts.seeds else DEFAULT_SEEDS
         weights = parse_weights(opts.way_weights) if opts.way_weights is not None else None
         vows = parse_vows(opts.vows)
+        check_bots(opts.play, opts.pilot, opts.search)
         who = roster(opts.aspect, opts.content)
         who.require_ways()
     except ValueError as exc:
@@ -653,7 +693,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"reports: {directory}", file=sys.stderr)
         start = time.monotonic()
         content = opts.content.resolve() if opts.content is not None else None
-        run_jobs(jobs(opts.godot, who, seeds, directory.resolve(), content, weights, opts.play, vows), directory,
+        run_jobs(jobs(opts.godot, who, seeds, directory.resolve(), content, weights, opts.play, vows, opts.pilot,
+                      opts.search), directory,
                  opts.jobs)
         wall = time.monotonic() - start
     print(render(grade(who, directory, seeds, vows), wall))
