@@ -1,0 +1,1117 @@
+{
+ "claims_sha256": "0235c5bc81daa4e8ae1ce08109ce95a363631605b54ed8b7f87d85db81e374e8",
+ "judge_model_ids": [
+  "claude-sonnet-5-5"
+ ],
+ "runs": {
+  "plain/adversarial/run1": {
+   "oracle_booleans": 0.2380952380952381,
+   "judge_errors": 0,
+   "mean_by_transform": {
+    "echo-soup": 0.2571428571428571,
+    "kitchen-sink": 0.3547619047619047,
+    "padded-wrong": 0.2571428571428571,
+    "soft-hedge": 0.2714285714285714
+   },
+   "max_mean": 0.3547619047619047
+  },
+  "plain/adversarial/run2": {
+   "oracle_booleans": 0.2380952380952381,
+   "judge_errors": 0,
+   "mean_by_transform": {
+    "echo-soup": 0.2571428571428571,
+    "kitchen-sink": 0.34047619047619043,
+    "padded-wrong": 0.2571428571428571,
+    "soft-hedge": 0.2714285714285714
+   },
+   "max_mean": 0.34047619047619043
+  },
+  "plain/correct/run1": {
+   "all": {
+    "answers": 140,
+    "claim_failure": {
+     "k": 7,
+     "n": 368,
+     "rate": 0.019021739130434784,
+     "wilson": [
+      0.009244013894534275,
+      0.03873734589594962
+     ],
+     "clustered": [
+      0.007575757575757576,
+      0.03225806451612903
+     ]
+    },
+    "judge_claim_failure": {
+     "k": 6,
+     "n": 224,
+     "rate": 0.026785714285714284,
+     "wilson": [
+      0.012332698500849157,
+      0.05719573106016845
+     ],
+     "clustered": [
+      0.008928571428571428,
+      0.047619047619047616
+     ]
+    },
+    "programmatic_claim_failure": {
+     "k": 1,
+     "n": 144,
+     "rate": 0.006944444444444444,
+     "wilson": [
+      0.001226918607059712,
+      0.038284723575657084
+     ],
+     "clustered": [
+      0.0,
+      0.0234375
+     ]
+    },
+    "decision_or_gate_failures": 1,
+    "under_100": [
+     {
+      "set": "d",
+      "index": 10,
+      "id": "canary-pins-the-rule",
+      "failed": [
+       "invariant-rationale"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 39,
+      "id": "hand-written-vigil-json",
+      "failed": [
+       "silent-blank"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 71,
+      "id": "check-only-exit-zero",
+      "failed": [
+       "explains-stderr"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 73,
+      "id": "typed-array-ternary",
+      "failed": [
+       "untyped-branch-fails"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 75,
+      "id": "typed-array-new-literal",
+      "failed": [
+       "names-missing-conversion"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 107,
+      "id": "cite-the-symbol",
+      "failed": [
+       "symbol-form-no-line"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 133,
+      "id": "flat-shadow-four-paws",
+      "failed": [
+       "single-line"
+      ]
+     }
+    ]
+   },
+   "hedged": {
+    "answers": 32,
+    "claim_failure": {
+     "k": 1,
+     "n": 87,
+     "rate": 0.011494252873563218,
+     "wilson": [
+      0.0020319077375923027,
+      0.06227197835723791
+     ],
+     "clustered": [
+      0.0,
+      0.03296703296703297
+     ]
+    },
+    "judge_claim_failure": {
+     "k": 1,
+     "n": 53,
+     "rate": 0.018867924528301886,
+     "wilson": [
+      0.0033384533882637665,
+      0.09942912052501235
+     ],
+     "clustered": [
+      0.0,
+      0.05357142857142857
+     ]
+    },
+    "programmatic_claim_failure": {
+     "k": 0,
+     "n": 34,
+     "rate": 0.0,
+     "wilson": [
+      0.0,
+      0.10151455415332376
+     ],
+     "clustered": [
+      0.0,
+      0.0
+     ]
+    },
+    "decision_or_gate_failures": 0,
+    "under_100": [
+     {
+      "set": "d",
+      "index": 39,
+      "id": "hand-written-vigil-json",
+      "failed": [
+       "silent-blank"
+      ]
+     }
+    ]
+   },
+   "not_hedged": {
+    "answers": 108,
+    "claim_failure": {
+     "k": 6,
+     "n": 281,
+     "rate": 0.021352313167259787,
+     "wilson": [
+      0.009821824876703137,
+      0.0457931789443039
+     ],
+     "clustered": [
+      0.007042253521126761,
+      0.038461538461538464
+     ]
+    },
+    "judge_claim_failure": {
+     "k": 5,
+     "n": 171,
+     "rate": 0.029239766081871343,
+     "wilson": [
+      0.012552802350976933,
+      0.06661296825088595
+     ],
+     "clustered": [
+      0.00625,
+      0.05625
+     ]
+    },
+    "programmatic_claim_failure": {
+     "k": 1,
+     "n": 110,
+     "rate": 0.00909090909090909,
+     "wilson": [
+      0.0016065753043216016,
+      0.0497056520793305
+     ],
+     "clustered": [
+      0.0,
+      0.029411764705882353
+     ]
+    },
+    "decision_or_gate_failures": 1,
+    "under_100": [
+     {
+      "set": "d",
+      "index": 10,
+      "id": "canary-pins-the-rule",
+      "failed": [
+       "invariant-rationale"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 71,
+      "id": "check-only-exit-zero",
+      "failed": [
+       "explains-stderr"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 73,
+      "id": "typed-array-ternary",
+      "failed": [
+       "untyped-branch-fails"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 75,
+      "id": "typed-array-new-literal",
+      "failed": [
+       "names-missing-conversion"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 107,
+      "id": "cite-the-symbol",
+      "failed": [
+       "symbol-form-no-line"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 133,
+      "id": "flat-shadow-four-paws",
+      "failed": [
+       "single-line"
+      ]
+     }
+    ]
+   },
+   "judge_errors": 0
+  },
+  "plain/correct/run2": {
+   "all": {
+    "answers": 140,
+    "claim_failure": {
+     "k": 9,
+     "n": 368,
+     "rate": 0.024456521739130436,
+     "wilson": [
+      0.012918953998719063,
+      0.04581967856249384
+     ],
+     "clustered": [
+      0.010752688172043012,
+      0.04076086956521739
+     ]
+    },
+    "judge_claim_failure": {
+     "k": 8,
+     "n": 224,
+     "rate": 0.03571428571428571,
+     "wilson": [
+      0.01820605716805878,
+      0.06887843975973207
+     ],
+     "clustered": [
+      0.013157894736842105,
+      0.06363636363636363
+     ]
+    },
+    "programmatic_claim_failure": {
+     "k": 1,
+     "n": 144,
+     "rate": 0.006944444444444444,
+     "wilson": [
+      0.001226918607059712,
+      0.038284723575657084
+     ],
+     "clustered": [
+      0.0,
+      0.0234375
+     ]
+    },
+    "decision_or_gate_failures": 1,
+    "under_100": [
+     {
+      "set": "d",
+      "index": 10,
+      "id": "canary-pins-the-rule",
+      "failed": [
+       "invariant-rationale"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 11,
+      "id": "canary-pins-the-rule",
+      "failed": [
+       "invariant-rationale"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 71,
+      "id": "check-only-exit-zero",
+      "failed": [
+       "explains-stderr"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 73,
+      "id": "typed-array-ternary",
+      "failed": [
+       "untyped-branch-fails"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 75,
+      "id": "typed-array-new-literal",
+      "failed": [
+       "names-missing-conversion"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 91,
+      "id": "borrowed-shader-const-markers",
+      "failed": [
+       "names-splice"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 107,
+      "id": "cite-the-symbol",
+      "failed": [
+       "symbol-form-no-line"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 125,
+      "id": "rebuild-before-verifying-the-shell",
+      "failed": [
+       "verify-geometry"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 133,
+      "id": "flat-shadow-four-paws",
+      "failed": [
+       "single-line"
+      ]
+     }
+    ]
+   },
+   "hedged": {
+    "answers": 32,
+    "claim_failure": {
+     "k": 1,
+     "n": 87,
+     "rate": 0.011494252873563218,
+     "wilson": [
+      0.0020319077375923027,
+      0.06227197835723791
+     ],
+     "clustered": [
+      0.0,
+      0.038461538461538464
+     ]
+    },
+    "judge_claim_failure": {
+     "k": 1,
+     "n": 53,
+     "rate": 0.018867924528301886,
+     "wilson": [
+      0.0033384533882637665,
+      0.09942912052501235
+     ],
+     "clustered": [
+      0.0,
+      0.06
+     ]
+    },
+    "programmatic_claim_failure": {
+     "k": 0,
+     "n": 34,
+     "rate": 0.0,
+     "wilson": [
+      0.0,
+      0.10151455415332376
+     ],
+     "clustered": [
+      0.0,
+      0.0
+     ]
+    },
+    "decision_or_gate_failures": 0,
+    "under_100": [
+     {
+      "set": "d",
+      "index": 11,
+      "id": "canary-pins-the-rule",
+      "failed": [
+       "invariant-rationale"
+      ]
+     }
+    ]
+   },
+   "not_hedged": {
+    "answers": 108,
+    "claim_failure": {
+     "k": 8,
+     "n": 281,
+     "rate": 0.028469750889679714,
+     "wilson": [
+      0.014495231644970803,
+      0.055162671747471075
+     ],
+     "clustered": [
+      0.012578616352201259,
+      0.046875
+     ]
+    },
+    "judge_claim_failure": {
+     "k": 7,
+     "n": 171,
+     "rate": 0.04093567251461988,
+     "wilson": [
+      0.01996840734895612,
+      0.08207523230627661
+     ],
+     "clustered": [
+      0.015706806282722512,
+      0.07272727272727272
+     ]
+    },
+    "programmatic_claim_failure": {
+     "k": 1,
+     "n": 110,
+     "rate": 0.00909090909090909,
+     "wilson": [
+      0.0016065753043216016,
+      0.0497056520793305
+     ],
+     "clustered": [
+      0.0,
+      0.029411764705882353
+     ]
+    },
+    "decision_or_gate_failures": 1,
+    "under_100": [
+     {
+      "set": "d",
+      "index": 10,
+      "id": "canary-pins-the-rule",
+      "failed": [
+       "invariant-rationale"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 71,
+      "id": "check-only-exit-zero",
+      "failed": [
+       "explains-stderr"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 73,
+      "id": "typed-array-ternary",
+      "failed": [
+       "untyped-branch-fails"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 75,
+      "id": "typed-array-new-literal",
+      "failed": [
+       "names-missing-conversion"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 91,
+      "id": "borrowed-shader-const-markers",
+      "failed": [
+       "names-splice"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 107,
+      "id": "cite-the-symbol",
+      "failed": [
+       "symbol-form-no-line"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 125,
+      "id": "rebuild-before-verifying-the-shell",
+      "failed": [
+       "verify-geometry"
+      ]
+     },
+     {
+      "set": "d",
+      "index": 133,
+      "id": "flat-shadow-four-paws",
+      "failed": [
+       "single-line"
+      ]
+     }
+    ]
+   },
+   "judge_errors": 0
+  },
+  "plain/wrong/run1": {
+   "answers": 140,
+   "judge_errors": 0,
+   "fp_covered_judge": {
+    "k": 16,
+    "n": 112,
+    "rate": 0.14285714285714285,
+    "wilson": [
+     0.08988661089101818,
+     0.21951435129965602
+    ],
+    "clustered": [
+     0.09166666666666666,
+     0.19642857142857142
+    ]
+   },
+   "fp_covered_judge_by_kind": {
+    "mechanism": {
+     "k": 0,
+     "n": 16,
+     "rate": 0.0,
+     "wilson": [
+      0.0,
+      0.1936076805344365
+     ],
+     "clustered": [
+      0.0,
+      0.0
+     ]
+    },
+    "negation": {
+     "k": 0,
+     "n": 18,
+     "rate": 0.0,
+     "wilson": [
+      0.0,
+      0.17587922364665765
+     ],
+     "clustered": [
+      0.0,
+      0.0
+     ]
+    },
+    "retraction": {
+     "k": 0,
+     "n": 30,
+     "rate": 0.0,
+     "wilson": [
+      0.0,
+      0.11351339317396876
+     ],
+     "clustered": [
+      0.0,
+      0.0
+     ]
+    },
+    "soft-hedge": {
+     "k": 13,
+     "n": 30,
+     "rate": 0.43333333333333335,
+     "wilson": [
+      0.2737748557646652,
+      0.6080269299918639
+     ],
+     "clustered": [
+      0.26666666666666666,
+      0.6
+     ]
+    },
+    "wrong-target": {
+     "k": 3,
+     "n": 18,
+     "rate": 0.16666666666666666,
+     "wilson": [
+      0.05836576805861446,
+      0.39222038103915724
+     ],
+     "clustered": [
+      0.0,
+      0.3333333333333333
+     ]
+    }
+   },
+   "covered_judge_not_judged": 0,
+   "covered_programmatic_passes": [
+    {
+     "set": "wrong-heldout",
+     "index": 0,
+     "claim": "names-the-repo-gate"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 1,
+     "claim": "names-the-repo-gate"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 3,
+     "claim": "names-the-repo-gate"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 44,
+     "claim": "keeps-half-size"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 60,
+     "claim": "right-heading-call"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 61,
+     "claim": "right-heading-call"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 72,
+     "claim": "symbol-form-no-line"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 73,
+     "claim": "symbol-form-no-line"
+    }
+   ],
+   "wrong_at_100": {
+    "k": 29,
+    "n": 140,
+    "rate": 0.20714285714285716,
+    "wilson": [
+     0.14827622163935025,
+     0.28165169571987736
+    ],
+    "clustered": [
+     0.15714285714285714,
+     0.2571428571428571
+    ]
+   },
+   "wrong_at_100_by_kind": {
+    "mechanism": {
+     "k": 2,
+     "n": 19,
+     "rate": 0.10526315789473684,
+     "wilson": [
+      0.02935856029887013,
+      0.31394082711109006
+     ],
+     "clustered": [
+      0.0,
+      0.2631578947368421
+     ]
+    },
+    "negation": {
+     "k": 2,
+     "n": 25,
+     "rate": 0.08,
+     "wilson": [
+      0.022220401284847563,
+      0.24966108950395313
+     ],
+     "clustered": [
+      0.0,
+      0.2
+     ]
+    },
+    "retraction": {
+     "k": 2,
+     "n": 35,
+     "rate": 0.05714285714285714,
+     "wilson": [
+      0.015813161857108654,
+      0.1860705742016492
+     ],
+     "clustered": [
+      0.0,
+      0.14285714285714285
+     ]
+    },
+    "soft-hedge": {
+     "k": 16,
+     "n": 35,
+     "rate": 0.45714285714285713,
+     "wilson": [
+      0.3046601928840721,
+      0.6181027493151624
+     ],
+     "clustered": [
+      0.2857142857142857,
+      0.6285714285714286
+     ]
+    },
+    "wrong-target": {
+     "k": 7,
+     "n": 26,
+     "rate": 0.2692307692307692,
+     "wilson": [
+      0.13704448322018375,
+      0.4608304037917617
+     ],
+     "clustered": [
+      0.11538461538461539,
+      0.46153846153846156
+     ]
+    }
+   },
+   "coverage": {
+    "k": 125,
+    "n": 140,
+    "rate": 0.8928571428571429,
+    "wilson": [
+     0.8307429595750218,
+     0.9339878829918682
+    ],
+    "clustered": [
+     0.8285714285714286,
+     0.95
+    ]
+   },
+   "ambiguous_labels": 10
+  },
+  "plain/wrong/run2": {
+   "answers": 140,
+   "judge_errors": 0,
+   "fp_covered_judge": {
+    "k": 18,
+    "n": 112,
+    "rate": 0.16071428571428573,
+    "wilson": [
+     0.10414537208810225,
+     0.2397855419930383
+    ],
+    "clustered": [
+     0.1111111111111111,
+     0.21100917431192662
+    ]
+   },
+   "fp_covered_judge_by_kind": {
+    "mechanism": {
+     "k": 1,
+     "n": 16,
+     "rate": 0.0625,
+     "wilson": [
+      0.01111934476464252,
+      0.28328737570298945
+     ],
+     "clustered": [
+      0.0,
+      0.2
+     ]
+    },
+    "negation": {
+     "k": 0,
+     "n": 18,
+     "rate": 0.0,
+     "wilson": [
+      0.0,
+      0.17587922364665765
+     ],
+     "clustered": [
+      0.0,
+      0.0
+     ]
+    },
+    "retraction": {
+     "k": 0,
+     "n": 30,
+     "rate": 0.0,
+     "wilson": [
+      0.0,
+      0.11351339317396876
+     ],
+     "clustered": [
+      0.0,
+      0.0
+     ]
+    },
+    "soft-hedge": {
+     "k": 14,
+     "n": 30,
+     "rate": 0.4666666666666667,
+     "wilson": [
+      0.30232388907699753,
+      0.638577003801267
+     ],
+     "clustered": [
+      0.3,
+      0.6451612903225806
+     ]
+    },
+    "wrong-target": {
+     "k": 3,
+     "n": 18,
+     "rate": 0.16666666666666666,
+     "wilson": [
+      0.05836576805861446,
+      0.39222038103915724
+     ],
+     "clustered": [
+      0.0,
+      0.3333333333333333
+     ]
+    }
+   },
+   "covered_judge_not_judged": 0,
+   "covered_programmatic_passes": [
+    {
+     "set": "wrong-heldout",
+     "index": 0,
+     "claim": "names-the-repo-gate"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 1,
+     "claim": "names-the-repo-gate"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 3,
+     "claim": "names-the-repo-gate"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 44,
+     "claim": "keeps-half-size"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 60,
+     "claim": "right-heading-call"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 61,
+     "claim": "right-heading-call"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 72,
+     "claim": "symbol-form-no-line"
+    },
+    {
+     "set": "wrong-heldout",
+     "index": 73,
+     "claim": "symbol-form-no-line"
+    }
+   ],
+   "wrong_at_100": {
+    "k": 31,
+    "n": 140,
+    "rate": 0.22142857142857142,
+    "wilson": [
+     0.16060805138486434,
+     0.2971282602495229
+    ],
+    "clustered": [
+     0.17142857142857143,
+     0.2714285714285714
+    ]
+   },
+   "wrong_at_100_by_kind": {
+    "mechanism": {
+     "k": 4,
+     "n": 19,
+     "rate": 0.21052631578947367,
+     "wilson": [
+      0.08507676632916253,
+      0.43334278443814167
+     ],
+     "clustered": [
+      0.05263157894736842,
+      0.42105263157894735
+     ]
+    },
+    "negation": {
+     "k": 2,
+     "n": 25,
+     "rate": 0.08,
+     "wilson": [
+      0.022220401284847563,
+      0.24966108950395313
+     ],
+     "clustered": [
+      0.0,
+      0.2
+     ]
+    },
+    "retraction": {
+     "k": 1,
+     "n": 35,
+     "rate": 0.02857142857142857,
+     "wilson": [
+      0.005061491855444203,
+      0.14533087233613673
+     ],
+     "clustered": [
+      0.0,
+      0.08571428571428572
+     ]
+    },
+    "soft-hedge": {
+     "k": 17,
+     "n": 35,
+     "rate": 0.4857142857142857,
+     "wilson": [
+      0.32994236002509725,
+      0.6443119540413141
+     ],
+     "clustered": [
+      0.3142857142857143,
+      0.6571428571428571
+     ]
+    },
+    "wrong-target": {
+     "k": 7,
+     "n": 26,
+     "rate": 0.2692307692307692,
+     "wilson": [
+      0.13704448322018375,
+      0.4608304037917617
+     ],
+     "clustered": [
+      0.11538461538461539,
+      0.46153846153846156
+     ]
+    }
+   },
+   "coverage": {
+    "k": 125,
+    "n": 140,
+    "rate": 0.8928571428571429,
+    "wilson": [
+     0.8307429595750218,
+     0.9339878829918682
+    ],
+    "clustered": [
+     0.8285714285714286,
+     0.95
+    ]
+   },
+   "ambiguous_labels": 10
+  }
+ },
+ "stability": {
+  "plain/adversarial": {
+   "answers": 140,
+   "majority_disagreement": {
+    "k": 3,
+    "n": 207,
+    "rate": 0.014492753623188406,
+    "wilson": [
+     0.0049408693966299655,
+     0.041736187742609406
+    ],
+    "clustered": [
+     0.0,
+     0.037037037037037035
+    ]
+   },
+   "raw_split_share": {
+    "k": 10,
+    "n": 414,
+    "rate": 0.024154589371980676,
+    "wilson": [
+     0.013172183352239327,
+     0.04388644095944027
+    ],
+    "clustered": [
+     0.0026041666666666665,
+     0.051630434782608696
+    ]
+   },
+   "gate_splits": [
+    {
+     "index": 21,
+     "id": "canary-pins-the-rule",
+     "claim": "compares-to-truth"
+    }
+   ],
+   "score_change": 0.0035714285714285587,
+   "score_change_limit": 0.025,
+   "score_change_within_limit": true
+  },
+  "plain/d": {
+   "answers": 140,
+   "majority_disagreement": {
+    "k": 4,
+    "n": 224,
+    "rate": 0.017857142857142856,
+    "wilson": [
+     0.006965655209693718,
+     0.04500670698455063
+    ],
+    "clustered": [
+     0.004166666666666667,
+     0.03431372549019608
+    ]
+   },
+   "raw_split_share": {
+    "k": 19,
+    "n": 448,
+    "rate": 0.04241071428571429,
+    "wilson": [
+     0.02731658564843681,
+     0.06528549413835456
+    ],
+    "clustered": [
+     0.019230769230769232,
+     0.06862745098039216
+    ]
+   },
+   "gate_splits": [],
+   "score_change": 0.00595238095238082,
+   "score_change_limit": 0.025,
+   "score_change_within_limit": true
+  },
+  "plain/wrong-heldout": {
+   "answers": 140,
+   "majority_disagreement": {
+    "k": 6,
+    "n": 219,
+    "rate": 0.0273972602739726,
+    "wilson": [
+     0.01261560209541606,
+     0.05847286997135812
+    ],
+    "clustered": [
+     0.008928571428571428,
+     0.04926108374384237
+    ]
+   },
+   "raw_split_share": {
+    "k": 21,
+    "n": 438,
+    "rate": 0.04794520547945205,
+    "wilson": [
+     0.03157013004522221,
+     0.07218079215897338
+    ],
+    "clustered": [
+     0.018691588785046728,
+     0.08383233532934131
+    ]
+   },
+   "gate_splits": [
+    {
+     "index": 20,
+     "id": "canary-pins-the-rule",
+     "claim": "compares-to-truth"
+    }
+   ],
+   "score_change": 0.007738095238095322,
+   "score_change_limit": 0.025,
+   "score_change_within_limit": true
+  }
+ }
+}

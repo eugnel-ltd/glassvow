@@ -1,0 +1,42 @@
+{
+ "label": "UNAPPROVED NOISE BASELINE - not an approval run; never pass to approve-grader",
+ "answering_model": "sonnet",
+ "reps": 3,
+ "judge": "sonnet",
+ "arm": "plain",
+ "claims_sha256": "3d805fadb9d088f687fc2b5cd4ce7279739d6d8aa0dbfdfaec0ed55c98cfe719",
+ "cases_sha256": "a9f923f9e6bc1b1ae4a14ddc3b7a5afbb64ca4bb779d90d7c4ea388df46ac619",
+ "wall_s": 255,
+ "infra": {
+  "total": 105,
+  "errors": 0,
+  "timeouts": 0,
+  "truncated": 0,
+  "judge_errors": 0,
+  "failed": 0,
+  "rate": 0.0
+ },
+ "judge_ids": [
+  "claude-sonnet-5-5"
+ ],
+ "all": {
+  "mean": 0.6468253968253969,
+  "ci_low": 0.5269841269841269,
+  "ci_high": 0.7555555555555555
+ },
+ "train": {
+  "mean": 0.6388888888888888,
+  "ci_low": 0.4669312169312169,
+  "ci_high": 0.7923280423280423
+ },
+ "test": {
+  "mean": 0.6587301587301587,
+  "ci_low": 0.5158730158730159,
+  "ci_high": 0.7896825396825397
+ },
+ "noise_train": 0.08134920634920635,
+ "noise_test": 0.059523809523809514,
+ "min_gain": 0.05,
+ "test_cases": 14,
+ "train_cases": 21
+}

@@ -4,6 +4,22 @@ Measures whether an agent working in Glassvow makes the right call on the reposi
 documented traps. Surface under test: `.claude/skills/glassvow-godot/SKILL.md`, given to the model
 as its system prompt (nothing else from the repository is visible to it).
 
+## Status (5 Oct 2026)
+
+- **The grader is not approved.** Round 3 failed its pre-registered bars in both judge arms
+  (`calibration-2026-10-05-round3.md`). `approvals.json` holds no grader approval, and its inputs
+  approval records an older `cases.jsonl` hash, so it is stale. `hillclimb` refuses to run.
+- **The stop rule applies** (`council-2026-10-05.md`, "Round 3 outcome"). There is no further judge
+  calibration. Any climb is to be graded on programmatic claims only, with the judge claims reported
+  and not scored. The harness has no such mode yet.
+- **The next investment is cases, not judges.** With 14 test cases, the test split's noise floor
+  (0.060) is above `min_gain` (0.05). The plan is to grow the eval towards 80–100 cases, each with
+  its decisive point in a structured, single-valued field (a boolean, an enumerated choice or an
+  exact identifier) that a program checks. This is tracked as a follow-up to #672.
+- **Known defect:** `cite-the-symbol` / `symbol-form-no-line`, a programmatic gate, rejects a correct
+  citation written in double backticks (round 3, `answers-d` line 107). Fix it in that work, together
+  with the sibling patterns that miss a hedge or a retraction written in prose.
+
 ## Cases
 
 `cases.jsonl` holds 35 cases. Every case is a concrete situation (a code excerpt, a command and
@@ -56,11 +72,14 @@ the 13 cases with no boolean has one gate claim instead. See Grader below.
   case's prompt, answer format and reference without sight of any grader (its first line says so and
   records the sha256 of the rest). The answers are copied byte for byte and never edited to suit a claim.
 - `council-2026-10-04.md` and `council-2026-10-05.md`: the two councils' records. The second decided
-  the hybrid grader and the evidence its approval needs; its round 3 decided the two judge arms, the
-  claims rewrite and the fresh calibration.
+  the hybrid grader and the evidence its approval needs. Its round 3 decided the two judge arms, the
+  claims rewrite and the fresh calibration, and records the outcome.
 - `calibration-2026-10-05.md` and `calibration/`: the round-2 calibration record, with its spent sets
   (`answers-a`, `-b`, `-c` and the wrong answers) and verdicts. Round 3 uses them as development
   material only.
+- `calibration-2026-10-05-round3.md` and `calibration/round3/`: the round-3 calibration record. It
+  holds the spent fresh sets as written, the blind adjudication, the twelve gradings, the metrics and
+  the climb-noise summary. The sets are spent, so they must not calibrate a later grader.
 
 ## Adding a case
 
@@ -130,8 +149,9 @@ references and sets a, b and c) and the 70 wrong answers:
 | Coverage (labelled by the claim writer) | 70/70 | 70/70 |
 
 These figures are in-sample: the claims were rewritten on this material, so they prove nothing about
-held-out answers. The fresh sets and the blind adjudication decide (`calibration.py` computes the
-bars; see `tools/agent_evals/README.md`).
+held-out answers. The fresh sets and the blind adjudication decided, and both arms failed
+(`calibration-2026-10-05-round3.md`; `calibration.py` computes the bars, see
+`tools/agent_evals/README.md`).
 
 **Frozen claims.** The sha256 over every claim, programmatic and judge, in file order
 (`graders.claims_sha256`) is
