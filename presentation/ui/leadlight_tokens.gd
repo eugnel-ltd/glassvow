@@ -35,9 +35,19 @@ const PARCHMENT: Color = Color("#e8dfc8")
 ## Run-screen text (RunStyle.TEXT / TEXT_DIM).
 const TEXT: Color = Color("#d7dcea")
 const TEXT_DIM: Color = Color("#8b93ad")
+## The run text's quietest step: 3.3:1 on `INK`, a mark meant to recede, never
+## running text. A walked waystone's glyph (#679).
+const TEXT_FAINT: Color = Color("#626570")
 ## Combat-glass text (GlassStyle.TEXT / TEXT_DIM): a cooler, brighter pair.
 const GLASS_TEXT: Color = Color(0.86, 0.90, 1.0)
 const GLASS_TEXT_DIM: Color = Color(0.58, 0.64, 0.80)
+## The glass text's quietest step: 4.0:1 on `INK`, a mark meant to recede. A
+## waystone's glyph the player cannot reach yet (#679).
+const GLASS_TEXT_FAINT: Color = Color("#64729a")
+## A quiet silver rim: 9.4:1 on `INK`, no brighter. A rim at 9:1 or more on an
+## `INK` disc separates the disc from any land at 3:1, so this is the quietest
+## rim that keeps that promise; the gold of a lit rim stays clearly brighter.
+const RIM_QUIET: Color = Color("#b1b5c0")
 const DANGER: Color = Color("#ff8d8d")
 const HP_RED: Color = Color(0.85, 0.33, 0.32)
 
