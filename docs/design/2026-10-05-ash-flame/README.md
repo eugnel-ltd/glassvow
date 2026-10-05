@@ -321,6 +321,8 @@ The Duskblade's lock §11 is the measurement contract, with the rulings and amen
 
 **Way stats** (`tools/balance_classes.json`): `smolder` → `smolderKills`, `hand` → `drawn`, `endure` → `perfects`. They are part of the instrument: the search player credits a turn's way stats as it credits Shatter, Kindle and Cracked for the Duskblade. So they are written before the first reading of record (step A3 lands before step A2's reading; §12).
 
+**The hand's size** (orchestrator, 5 Oct 2026). The game deals each class its content `handSize` since step A2, but the pilot still assumes a hand of 5 (`TURN_DRAW`, `tools/balance_pilot.gd:21 (TURN_DRAW)`). So a change to a class's `handSize` is an instrument change: the pilot must first read `handSize`, and the Duskblade must then be re-read (§11, rule 3).
+
 **Cells.** Aspect 1 (the Ashwarden) × vows {0, 5} × pools {`entry`, `full`}. The `entry` pool takes `fresh`'s place wherever the Duskblade's lock grades `fresh`: G1 at V0 ≥ 40% (a reading); G5 at V0, Steady by the end of Act 1 ≥ 40% of runs alive then, True not graded; B1 at V0 ≥ 10%; V5 `entry` ungraded for G1 and G5, as V5 `fresh` is. The simulator's `entry` profile is `balance_sim.gd`'s `_apply_entry` (#544 P3).
 
 **Seeds** (#544 decision 7). The Duskblade's bands, so every figure pairs with the Duskblade's on its seed: development 12000–12999, never in a verdict (screens on 12000–12399, 400 seeds an arm and cell); V0 cells on 13000–13999 (1,000 paired seeds); V5 cells on 13000–14999 (2,000); G3 at V5 full also on 15000–16999. **17000–18999 is the 1.1 holdout**: the CEM stress reads its Vow-5 ceiling there, once, on the final candidate. The acceptance band 3000–5199 keeps its 1.0 uses only; 1.0's holdout 5000–5199 is never read for 1.1.
@@ -388,6 +390,7 @@ Per-way boons; a path chooser or any explicit path UI; card or map sigils; tutor
 - Flame hexes and shapes, approved on device (step A6).
 - The colour words and every name in §6 and §9, for the owner's ear.
 - Whether the Smolder way keeps Crown of Cinders as an alternate once its own crown lands.
+- **A legacy Ashwarden save** (orchestrator, 5 Oct 2026: accepted). An Ashwarden run saved before #543 resumes as itself, because deferral stops new runs and promises, not a saved run (`ClassScope`). In 1.0 it therefore plays the Ashwarden as the build has it: the live flame from step A2, and whatever steps A4–A7 land after it. The exposure is bounded: at most one TestFlight-era run in progress per profile, closed by Begin Anew or by its end. Until step A7, such a run hears the Duskblade's flame lines and uses up their once-per-Vigil whispers. A7's `aspect` condition on the flame lines is what prevents that, so A7 must cover the case with a test.
 - The pilot's blow forecast places a multi-target Smolder leap using a copy of the run's RNG (`tools/balance_pilot.gd:469`, `tools/balance_pilot.gd:483`), which reads ahead. Decide before A9 whether 1.1's pilot fixes it.
 
 ## 15. History: #421's Ashwarden findings, as priors
