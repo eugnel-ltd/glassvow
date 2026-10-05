@@ -40,9 +40,12 @@ config/custom_user_dir_name="glassvow-<purpose>"
 | Instrument | Pilot | Search player | Where it is used |
 |---|---|---|---|
 | 1.0's, of record | `p8-d0-v3` | `s1` | The tools' default. Readout 13, 1.0's reading of record. The 1.0 release candidate's independent re-run, which names it explicitly (P9) |
-| 1.1's | `p9` | `s2` | Every Ashwarden run and the Duskblade's 1.1 requalification ([readout 14](readouts/readout-14.md)), named on every run |
+| 1.1's | `p9` | `s3` | Every Ashwarden run and the Duskblade's 1.1 requalification, named on every run |
+| 1.1's first | `p9` | `s2` | [Readout 14](readouts/readout-14.md), the Duskblade's interim reading; kept selectable |
 
-- Name the bots on every run, whichever they are: `--play search --pilot p9 --search s2`. Greedy play names `--pilot` alone; the runner, the grader and the simulator refuse a search player without `--play search`. Every chunk's command and every report's manifest record the pair, and the grader refuses a table that mixes pairs.
+By the orchestrator's ruling of 5 October 2026, the 1.1 search player is `s3` (#544 P6b): `s2`'s honest play plus the credit for a Smolder tick that kills before the enemy acts. Readout 14's interim reading was made under `s2`. `s3` differs from it for the Duskblade only in `full` cells, through the Ashfall omen's starting Smolder (sample: 200 seeds a cell, 13000–13199: 485 of 2,400 V0 and V5 `full` rows changed and 55 outcomes flipped, no arm's paired change significant, every p ≥ 0.45; one graded point verdict crossed its line, G6 at V0 full, edge 60.6% → 59.8% of A_lit's wins, UNDECIDED on interval under both). The Duskblade is re-read under `s3` on the combined product at A9, and the cross-class reading uses `s3` for both classes.
+
+- Name the bots on every run, whichever they are: `--play search --pilot p9 --search s3`. Greedy play names `--pilot` alone; the runner, the grader and the simulator refuse a search player without `--play search`. Every chunk's command and every report's manifest record the pair, and the grader refuses a table that mixes pairs.
 - The default stays 1.0's until 1.0 ships. Moving it is a change of two constants, `Pilot.VERSION` and `Search.VERSION`, once the 1.0 re-run is done (readout 14, *What the orchestrator must decide*, item 8).
 - **Selection is static.** `Pilot.select` and `Search.select` set state that outlives the call. A test that selects the 1.1 bots ends by restoring 1.0's, `Pilot.select(Pilot.VERSION)` and `Search.select(Search.VERSION)`, as `tests/test_balance_invariance.gd` and `tests/test_balance_bots_hand.gd` do (§12).
 
@@ -95,13 +98,13 @@ git worktree add --detach <scratch>/wt-<lane> <commit>
 godot --headless --import      # once per worktree, and again after moving its head
 ```
 
-**The commands.** The table runs are readout 14's, under the 1.1 instrument.
+**The commands.** The table runs are readout 14's commands with the 1.1 search player as ruled on 5 October 2026, `s3`; readout 14 itself ran `s2`.
 
 | Command | What it does and writes |
 |---|---|
-| `run s/v0 --seeds 13000-13999 --cells v0-fresh,v0-full --play search --pilot p9 --search s2 --replay --jobs 6` | Plans every chunk (cell × arm × seed band), runs those not done, `--jobs` at a time, and merges them. Writes `s/v0/parts/<cell>-<arm>-<first seed>.json` (one simulator report a chunk), its `.chunk.json` sidecar and its `.log`; then one merged `s/v0/<cell>-<arm>.json` per cell and arm, and `<cell>-replay.json` under `--replay`. Options: `--cells` (default `v0-fresh,v0-full`), `--aspect` (default `duskblade`), `--arms` (default every arm of the class), `--chunk` (50 seeds), `--jobs` (4; 1 to 16), `--content` (a scratch catalogue), `--way-weights COMMIT/OFF`, `--godot` |
-| `run s/v5 --seeds 13000-14999 --cells v5-fresh,v5-full --play search --pilot p9 --search s2 --replay --jobs 6` | The V5 table, likewise |
-| `run s/ext-v5 --seeds 15000-16999 --cells v5-full --arms C_shatter,C_lantern,C_edge,A_lit --play search --pilot p9 --search s2 --jobs 6` | G3's second V5 full band: the four arms G3 reads, no replay |
+| `run s/v0 --seeds 13000-13999 --cells v0-fresh,v0-full --play search --pilot p9 --search s3 --replay --jobs 6` | Plans every chunk (cell × arm × seed band), runs those not done, `--jobs` at a time, and merges them. Writes `s/v0/parts/<cell>-<arm>-<first seed>.json` (one simulator report a chunk), its `.chunk.json` sidecar and its `.log`; then one merged `s/v0/<cell>-<arm>.json` per cell and arm, and `<cell>-replay.json` under `--replay`. Options: `--cells` (default `v0-fresh,v0-full`), `--aspect` (default `duskblade`), `--arms` (default every arm of the class), `--chunk` (50 seeds), `--jobs` (4; 1 to 16), `--content` (a scratch catalogue), `--way-weights COMMIT/OFF`, `--godot` |
+| `run s/v5 --seeds 13000-14999 --cells v5-fresh,v5-full --play search --pilot p9 --search s3 --replay --jobs 6` | The V5 table, likewise |
+| `run s/ext-v5 --seeds 15000-16999 --cells v5-full --arms C_shatter,C_lantern,C_edge,A_lit --play search --pilot p9 --search s3 --jobs 6` | G3's second V5 full band: the four arms G3 reads, no replay |
 | `join s/g3-4000 v5-full C_shatter,C_lantern,C_edge,A_lit s/v5 s/ext-v5` | Joins one cell's arms across directories of disjoint bands into `s/g3-4000/<cell>-<arm>.json`, and prints each arm's count, first and last seed. The bands must share their manifests apart from the seeds: the same commit, content and bots |
 | `merge <dir> [--out <dir>]` | Merges a directory's `parts/` into one report per cell and arm, with the same checks, for an archive that kept only its chunks |
 | `table s/v0 s/v5 --v0-seeds 13000-13999 --v5-seeds 13000-14999 [--ref <v0 dir> <v5 dir>]… [--tidy]` | Prints the complete §11 table: win rates, every gate in every cell on point and interval, and row B. Each `--ref` pair adds a column of that table's verdicts. `--tidy` prints the readout's gate table, bold where a verdict moved from the last reference; it needs one `--ref`. It reads the replay reports, so the two tables must run with `--replay` |
@@ -179,7 +182,8 @@ The G3 and G6 floors (arm A) are reported, never graded.
 **The panel.** `tests/test_balance_invariance.gd` pins the Duskblade's play, each pin the SHA-256 of one whole run row:
 
 - 72 pins (`PINS`) under 1.0's bots, named explicitly: six arms × four cells (V0 and V5, `fresh` and `full`) × three runs, the greedy pilot on seeds 12000 and 12001 and the search player on 12000;
-- 48 pins (`PINS_1_1`) under `p9` and `s2`: the same arms and cells on seed 12000, greedy and search.
+- 48 pins (`PINS_1_1`) under `p9` and `s2`: the same arms and cells on seed 12000, greedy and search;
+- 48 pins (`PINS_S3`) under `p9` and `s3` (#544 P6b), on `PINS_1_1`'s keys: 45 equal `PINS_1_1`'s, and three `full` search rows differ through the Ashfall omen's starting Smolder.
 
 It runs in the Godot suite and leaves 1.0's bots selected. A pin moves only with a deliberate change to the Duskblade's play (its instrument, its content or the rules it runs), re-pinned in an explicit commit that says why.
 

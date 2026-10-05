@@ -20,12 +20,21 @@ extends RefCounted
 ## is known, its new cards are not) and SETUP_SHARE of the expected worth of the
 ## cards drawn, read from the multiset they came from (`_continued`). Everything else
 ## is `s1`'s, the one kindle it tries included.
+##
+## Search `s3` (#544 P6b) is `s2` that also scores the enemy phase's Smolder ticks
+## (`_tick`). A foe its tick will kill before it acts is credited as killed, and a
+## tick that ends the fight scores the line as won. Its blow is already gone from
+## the forecast, which ticks Smolder before it reads a blow
+## (`Pilot.incoming_on`). `s1` and `s2` never read `_tick`.
 const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
 ## The player a run's fights are searched by when none is named: `s1`, the 1.0
 ## reading of record's (flame readout 8; docs/rc-bar.md P9).
 const VERSION: String = "s1"
 const HAND_VERSION: String = "s2"
-const VERSIONS: Array[String] = [VERSION, HAND_VERSION]
+const SMOLDER_VERSION: String = "s3"
+const VERSIONS: Array[String] = [VERSION, HAND_VERSION, SMOLDER_VERSION]
+## The run stat a Smolder kill adds to (#544 A3: the Ashwarden's Smolder way's).
+const SMOLDER_KILLS: String = "smolderKills"
 ## Lines evaluated per plan (a line is any prefix of plays: the turn may end there).
 const LINE_CAP: int = 2000
 ## Re-plans per turn after a draw; a guard, never reached in practice.
@@ -94,6 +103,13 @@ class Turn:
 	var best: Array[Dictionary] = []
 	var value: float = -INF
 	var reopen: bool = false
+
+
+## s3: what the enemy phase's Smolder ticks will do (`_tick`): the foes they kill,
+## by `idx`, and whether a tick ends the fight.
+class Tick:
+	var killed: Array[int] = []
+	var ends: bool = false
 
 
 ## What a turn's search decided: the line, its value, whether it ended at a draw
@@ -196,7 +212,7 @@ static func _search(turn: Turn, at: Position, path: Array[Dictionary]) -> void:
 	if turn.lines >= LINE_CAP:
 		return
 	turn.lines += 1
-	var value: float = _continued(turn, at) if at.revealed and version == HAND_VERSION \
+	var value: float = _continued(turn, at) if at.revealed and _reads_draws() \
 		else evaluate(turn, at)
 	if value > turn.value:
 		turn.value = value
@@ -212,11 +228,16 @@ static func _search(turn: Turn, at: Position, path: Array[Dictionary]) -> void:
 		if turn.seen.has(key):
 			continue
 		turn.seen[key] = true
-		if child.revealed and version == HAND_VERSION:
+		if child.revealed and _reads_draws():
 			_note_draws(at, child)
 		var next: Array[Dictionary] = path.duplicate()
 		next.append(action)
 		_search(turn, child, next)
+
+
+## Whether a line that ends at a draw is played on (`_continued`): `s2` and `s3`.
+static func _reads_draws() -> bool:
+	return version == HAND_VERSION or version == SMOLDER_VERSION
 
 
 ## The position's legal actions: each distinct card at each legal target, the
@@ -363,6 +384,9 @@ static func evaluate(turn: Turn, at: Position) -> float:
 	var left: int = cb.player.hp - _blow(turn.rules, at.run, cb)
 	if left <= 0:
 		return DEATH * 0.5 + float(left)
+	var tick: Tick = _tick(turn.rules, cb) if version == SMOLDER_VERSION else Tick.new()
+	if tick.ends:
+		return WIN + float(left)
 	var urgent: bool = turn.start_blow * 2 >= start.player.hp
 	var value: float = -float(start.player.hp - left) \
 		* Pilot._w("combat", "blockUrgent" if urgent else "blockNormal")
@@ -371,8 +395,9 @@ static func evaluate(turn: Turn, at: Position) -> float:
 		var before: EnemyCombatant = start.enemies[e.idx]
 		if before.hp <= 0:
 			continue
-		value += float(before.hp - maxi(0, e.hp)) * Pilot._w("combat", "loss")
-		if e.hp <= 0:
+		var hp: int = 0 if tick.killed.has(e.idx) else maxi(0, e.hp)
+		value += float(before.hp - hp) * Pilot._w("combat", "loss")
+		if hp <= 0:
 			value += KILL
 			continue
 		if e.staggered and not before.staggered:
@@ -388,7 +413,44 @@ static func evaluate(turn: Turn, at: Position) -> float:
 	value += float(cb.embers - start.embers) * Pilot._w("card", "ember")
 	for key: String in turn.expression:
 		value += EXPRESSION * float(_int(at.run.stats.get(key, 0)) - _int(turn.start_stats.get(key, 0)))
+	if turn.expression.has(SMOLDER_KILLS):
+		value += EXPRESSION * float(tick.killed.size())
 	return value
+
+
+## s3: the enemy phase's Smolder ticks, read from the fight as the line leaves it
+## (`CombatRules.end_turn`). Each living foe in turn loses its Smolder in HP before
+## it acts, whatever its block. At 0 HP it dies and never acts, and the Smolder it
+## keeps (one less: the tick spends one) leaps to another living foe; the fight is
+## won when none lives. A finale boss brought to 0 HP is not killed: its tick is
+## the handoff, and the fight is won there. Honest play: with one living foe to
+## land on, the leap is followed; with more, the run RNG chooses, the line has not
+## seen it, and it is not. The Ember a kill spills is not credited.
+static func _tick(rules: CombatRules, cb: CombatState) -> Tick:
+	var out: Tick = Tick.new()
+	var hp: Array[int] = []
+	var smolder: Array[int] = []
+	for e: EnemyCombatant in cb.enemies:
+		hp.append(e.hp)
+		smolder.append(_int(e.statuses.get("poison", 0)))
+	for i: int in range(cb.enemies.size()):
+		if hp[i] <= 0 or smolder[i] <= 0 or smolder[i] < hp[i]:
+			continue
+		if rules._is_finale_handoff(cb.enemies[i]):
+			out.ends = true
+			return out
+		hp[i] = 0
+		out.killed.append(cb.enemies[i].idx)
+		var living: Array[int] = []
+		for j: int in range(hp.size()):
+			if hp[j] > 0:
+				living.append(j)
+		if living.is_empty():
+			out.ends = true
+			return out
+		if living.size() == 1:
+			smolder[living[0]] += smolder[i] - 1
+	return out
 
 
 ## SETUP_SHARE of the catalogue worth of the stacks a status gained this turn.
