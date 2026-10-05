@@ -278,6 +278,21 @@ func floor_step(paced: bool = false) -> bool:
 	return forest_floor == null or forest_floor.step(self, paced)
 
 
+## Gives up the floor's bake where it stands, the land let go before its floor
+## settled (`LandFloor.halt`); nothing when there is no bake under way.
+func floor_halt() -> void:
+	if forest_floor != null:
+		forest_floor.halt()
+
+
+## The floor's pools flicker with their own flame only while the land stands
+## at the world's origin: the bake works a pool's phase out from its lamp's
+## anchor in land space (`floor_plan.gd`), the flame from where it stands in
+## the world (`flame.gdshader`).
+func _enter_tree() -> void:
+	assert(global_transform.is_equal_approx(Transform3D.IDENTITY), "the journey land must stand at the world's origin")
+
+
 ## Where node `id`'s waystone actually stands, or `fallback` before a build.
 func seat(id: String, fallback: Vector3) -> Vector3:
 	return _seats.get(id, fallback)

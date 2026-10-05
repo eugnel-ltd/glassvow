@@ -8,9 +8,10 @@ extends RefCounted
 ## every live shadow kept), what the floor gives up once baked (the shadows
 ## that fell only on the ground, the road's small details, the pilgrim's own
 ## shadow for a blob), the prefetch holding its land until the floor settles,
-## and the floor's shaders: the pools flicker with their own flame's phase and
-## hold still, with the glints, under Reduce Motion; and the warm-up, which
-## draws a sample of every pipeline they use before the title shows.
+## a bake given up when its screen lets the land go, and the floor's shaders:
+## the pools flicker with their own flame's phase and hold still, with the
+## glints, under Reduce Motion; and the warm-up, which draws a sample of every
+## pipeline they use before the title shows.
 ## The GPU half (the bake's pictures, copies and mips) is the windowed proof's:
 ## `tools/check_floor_bake.gd`.
 
@@ -55,6 +56,7 @@ static func run(fails: Array[String]) -> void:
 		_stage(fails, land)
 		_painted(fails, screen, land)
 		_baked(fails, land)
+		_let_go(fails, screen, land)
 	screen.get_parent().remove_child(screen)
 	screen.free()
 	MapScene.release_kept_journey()
@@ -324,6 +326,26 @@ static func _baked(fails: Array[String], land: MapJourneyLandscape) -> void:
 	_check(fails, woods and journey, "the woodland's and the waystones' live shadows are in the floor now")
 	_check(fails, heroes > 0 and quiet and terrain,
 		"only the gateway, the outcrops and the bridges' parapets cast live")
+
+
+## A screen that lets its land go part-way through an inline bake (the land
+## kept for the next screen of its layout, not freed) gives the bake up then:
+## the key's soft shadow filter, which the bake sets for the whole renderer,
+## goes back at once, and the next screen to draw the land bakes it afresh.
+static func _let_go(fails: Array[String], screen: WorldMapScreen, land: MapJourneyLandscape) -> void:
+	var scene: MapScene = screen._map_scene
+	var floor_node: LandFloor = land.forest_floor
+	var bake: Bake = Bake.new(land, floor_node.plan)
+	bake._soft_set = true
+	floor_node._bake = bake
+	floor_node.state = LandFloor.State.BAKING
+	scene._floor_baking = true
+	scene._release_landscape()
+	_check(fails, land == MapScene._journey_kept and land.get_parent() == null and not scene.landscape_pending(),
+		"a screen lets its kept land go without freeing it")
+	_check(fails, bake.step == Bake.Step.FAILED and bake.failure == "cancelled" and not bake._soft_set
+		and floor_node._bake == null and floor_node.state == LandFloor.State.PLANNED,
+		"a land let go mid-bake gives its bake up, the soft shadow filter put back, to bake afresh when drawn again")
 
 
 ## Whether a kit part is of one of `HEROES`: its batch's kind, else the

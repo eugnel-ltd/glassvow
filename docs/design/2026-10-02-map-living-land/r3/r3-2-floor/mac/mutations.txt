@@ -52,3 +52,15 @@ the warm-up keeps its picture             caught: the warm-up draws and lets go,
 -- round 3, the warm-up's 2D draw commands (0fb33aed, tools/check_floor_bake.gd, windowed, A12 condition)
 no stamps command                         caught: every 2D view of the warm-up draws in its forced draws (3 of 4)
 no mip commands                           caught: every 2D view of the warm-up draws in its forced draws (1 of 4)
+
+# Follow-ups from the #695 review record (PR A of R3.3's lane, 5 Oct; tools/mutate_followups.py.txt).
+-- item 1, a bake given up when its land is let go (tests/test_map_floor.gd, headless)
+a kept land let go keeps its bake        caught: a land let go mid-bake gives its bake up, the soft shadow filter put back, to bake afresh when drawn again
+halt leaves the floor baking             caught: a land let go mid-bake gives its bake up, the soft shadow filter put back, to bake afresh when drawn again
+-- item 5, the land at the world's origin (tests/test_map_floor.gd, headless; the world moved a metre)
+the land drawn off the world's origin    caught: script error at map_journey_landscape.gd _enter_tree(): Assertion failed: the journey land must stand at the world's origin
+-- item 4, tools/check_floor_bake.gd's later checks (windowed, A12 condition, --shape=pad-landscape); each failed its own check only
+one tile's camera a metre off            caught: FAIL  no seam where the tiles meet
+mip levels averaged as stored, not as light   caught: FAIL  a mip level is the mean, as light, of the one below
+the floor's textures never freed         caught: FAIL  letting the land go frees the floor's textures
+caught 6 of 6

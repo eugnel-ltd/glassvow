@@ -190,12 +190,22 @@ static func hero_part(part: Node, kit: Node) -> bool:
 	return false
 
 
+## Gives up a bake under way (its land let go before it settled,
+## `MapScene._release_landscape`): what it holds is freed and the key's soft
+## shadow filter, which the bake sets for the whole renderer, put back; the
+## floor is planned again, so the next screen to draw the land bakes it afresh.
+func halt() -> void:
+	if _bake == null:
+		return
+	_bake.cancel()
+	_bake = null
+	state = State.PLANNED
+
+
 func _notification(what: int) -> void:
 	if what != NOTIFICATION_PREDELETE:
 		return
-	if _bake != null:
-		_bake.cancel()
-		_bake = null
+	halt()
 	for texture: Texture2DRD in _textures:
 		texture.texture_rd_rid = RID()
 	_textures.clear()

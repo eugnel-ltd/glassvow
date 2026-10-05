@@ -1,0 +1,58 @@
+"""PR A (R3.2 follow-ups) mutation proof: each mutation breaks one behaviour;
+headless ones run tests/test_map_floor.gd, windowed ones tools/check_floor_bake.gd
+under the A12 condition. Each file is backed up before it is touched and copied
+back after, whatever happens."""
+import os, shutil, subprocess, sys
+from pathlib import Path
+WT = Path(sys.argv[1])
+OUT = Path(sys.argv[2])
+OUT.mkdir(parents=True, exist_ok=True)
+HEADLESS = ["godot", "--headless", "-s", "res://tests/run_all.gd", "--", "--tests=res://tests/test_map_floor.gd"]
+WINDOWED = ["godot", "--path", ".", "--rendering-driver", "metal", "--rendering-method", "mobile",
+            "-s", "res://tools/check_floor_bake.gd", "--", "--map", "--seed=1", "--map-steps=2", "--shape=pad-landscape"]
+M = [
+ ("h", "a kept land let go keeps its bake", "presentation/map/map_scene.gd",
+  "\t\tland.floor_halt()\n", ""),
+ ("h", "halt leaves the floor baking", "presentation/map/landscape/land_floor.gd",
+  "\t_bake = null\n\tstate = State.PLANNED\n", "\t_bake = null\n"),
+ ("h", "the land drawn off the world's origin", "presentation/map/map_scene.gd",
+  '\t_world.name = "MapWorld"\n', '\t_world.name = "MapWorld"\n\t_world.position = Vector3(1, 0, 0)\n'),
+ ("w", "one tile's camera a metre off", "presentation/map/landscape/floor_bake.gd",
+  "\tvar centre: Vector2 = corner + view_size / per_metre * 0.5\n",
+  "\tvar centre: Vector2 = corner + view_size / per_metre * 0.5 + (Vector2(1, 0) if texels.position.x > 0 else Vector2.ZERO)\n"),
+ ("w", "mip levels averaged as stored, not as light", "presentation/map/landscape/floor_mip.gdshader",
+  "\tCOLOR = vec4(as_stored(sum * 0.25), 1.0);", "\tCOLOR = vec4(sum * 0.25, 1.0);"),
+ ("w", "the floor's textures never freed", "presentation/map/landscape/land_floor.gd",
+  "\t\t\trd.free_rid(rid)\n", "\t\t\tpass\n"),
+]
+only = sys.argv[3].split(",") if len(sys.argv) > 3 else None
+env = dict(os.environ, GODOT_MTL_DISABLE_ARGUMENT_BUFFERS="1")
+results = []
+for i, (kind, name, rel, before, after) in enumerate(M):
+    if only and str(i) not in only:
+        continue
+    path = WT / rel
+    backup = OUT / ("backup-%d" % i)
+    shutil.copy2(path, backup)
+    try:
+        text = path.read_text()
+        if text.count(before) != 1:
+            results.append((name, "ANCHOR NOT FOUND"))
+            print("%-46s %s" % results[-1], flush=True)
+            continue
+        path.write_text(text.replace(before, after))
+        run = subprocess.run(HEADLESS if kind == "h" else WINDOWED, cwd=WT, env=env,
+                             capture_output=True, text=True, timeout=1500)
+        out = run.stdout + run.stderr
+        (OUT / ("run-%d.log" % i)).write_text(out)
+        if kind == "h":
+            failed = "FAIL res://tests/test_map_floor.gd" in out or "PASS (1 tests)" not in out
+            lines = [l.strip() for l in out.splitlines() if l.strip().startswith("- test_map_floor") or "Assertion failed" in l]
+        else:
+            failed = "FLOOR_BAKE_CHECK PASS" not in out
+            lines = [l.strip() for l in out.splitlines() if l.startswith("FAIL")]
+        results.append((name, ("caught: " + "; ".join(lines[:3])) if failed and lines else ("caught (no line)" if failed else "SURVIVED")))
+    finally:
+        shutil.copy2(backup, path)
+    print("%-46s %s" % results[-1], flush=True)
+print("caught %d of %d" % (sum(1 for r in results if r[1].startswith("caught")), len(results)))

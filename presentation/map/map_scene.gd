@@ -1277,9 +1277,10 @@ static func _keep_journey(key: String, land: MapJourneyLandscape) -> void:
 	_journey_kept_key = key
 
 
-## Lets go of the drawn land: the kept journey land is only detached, a land
-## mid-build is joined first (a worker may still be writing into it), and any
-## other land is freed.
+## Lets go of the drawn land: the kept journey land is only detached, its
+## floor's bake given up if it had not settled (a freed land's gives itself up),
+## a land mid-build is joined first (a worker may still be writing into it), and
+## any other land is freed.
 func _release_landscape() -> void:
 	if _landscape == null:
 		return
@@ -1287,6 +1288,7 @@ func _release_landscape() -> void:
 	_journey_pending = false
 	_floor_baking = false
 	if land != null and land == _journey_kept:
+		land.floor_halt()
 		if land.get_parent() != null:
 			land.get_parent().remove_child(land)
 	elif land != null and land.busy():
