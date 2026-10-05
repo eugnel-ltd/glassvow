@@ -1,0 +1,100 @@
+batch run   build    | load | rest0 n   p50   p95   max >33 | deals2-6 n p50   p95   max >33 | resh1-3 n  p50   p95   max >33 | late p50
+b1    a1    a86b2f07 |  833 |  590 16.67 17.68  46.3  5 |  325 16.67 18.09  21.0  0 |  303 16.66 18.00  29.8  0 | 16.67
+b1    a2    a86b2f07 |  799 |  601 16.69 17.25  18.9  0 |  325 16.65 18.11  20.5  0 |  306 16.68 18.01  25.2  0 | 16.68
+b1    a3    a86b2f07 | 1084 |  601 16.65 17.22  22.4  0 |  325 16.60 18.19  19.4  0 |  306 16.66 18.05  30.1  0 | 16.66
+b1    a4    a86b2f07 |  967 |  601 16.66 17.26  18.9  0 |  325 16.65 18.01  21.3  0 |  306 16.68 18.10  29.9  0 | 16.67
+b1    a5    a86b2f07 | 1300 |  576 16.91 20.05  22.7  0 |  284 19.06 21.45  22.7  0 |  264 19.52 21.83  36.3  1 | 18.66 THROTTLED
+b1    a6    a86b2f07 | 1331 |  553 17.92 20.68  22.8  0 |  280 19.92 22.31  36.9  1 |  264 19.55 22.09  40.2  1 | 19.43 THROTTLED
+b1    b1    acf3a6d3 |  817 |  601 16.66 17.31  20.1  0 |  320 16.62 18.30  19.7  0 |  330 16.68 17.93  23.7  0 | 16.67
+b1    b2    acf3a6d3 | 1201 |  601 16.68 17.25  20.9  0 |  320 16.64 18.12  19.8  0 |  328 16.68 18.21  37.2  1 | 16.66
+b1    b3    acf3a6d3 | 1133 |  568 16.98 20.56  45.7  2 |  276 19.82 22.32  25.0  0 |  285 19.66 22.10  36.8  1 | 19.37 THROTTLED
+b1    b4    acf3a6d3 | 1598 |  550 18.02 20.74  23.7  0 |  276 19.90 22.31  24.3  0 |  284 19.55 21.82  39.9  1 | 19.44 THROTTLED
+b1    b5    acf3a6d3 | 1049 |  600 16.66 17.16  19.0  0 |  320 16.62 18.41  19.6  0 |  326 16.68 18.00  37.2  1 | 16.66
+b1    b6    acf3a6d3 | 1085 |  601 16.68 16.90  17.2  0 |  301 17.34 20.09  21.8  0 |  297 17.93 21.28  38.1  1 | 17.28 THROTTLED
+b1    wa1   a86b2f07 |  818 |   61 16.65 17.04  18.8  0 |    - |  100 16.66 18.74  25.0  0 | 16.66 warm-up
+b1    wa2   a86b2f07 | 1250 |   61 16.68 16.86  17.1  0 |    - |  100 16.62 19.19  31.0  0 | 16.66 warm-up
+b1    wa3   a86b2f07 | 1300 |   61 16.72 17.14  17.6  0 |    - |   90 18.34 21.40  38.0  1 | 17.14 warm-up
+b1    wb1   acf3a6d3 | 1767 |   60 16.69 17.53  19.4  0 |    - |  108 16.66 18.14  30.1  0 | 16.67 warm-up
+b1    wb2   acf3a6d3 | 1265 |   61 16.56 18.78  21.3  0 |    - |  109 16.64 18.21  29.7  0 | 16.67 warm-up
+b1    wb3   acf3a6d3 | 1198 |   61 16.56 17.97  20.0  0 |    - |  108 16.63 18.10  37.4  1 | 16.66 warm-up
+b4    da1   a86b2f07 | 1267 |  592 16.71 18.16  22.0  0 |  291 18.41 21.24  23.0  0 |  269 18.73 21.32  37.7  1 | 18.21 THROTTLED
+b4    da2   a86b2f07 | 1332 |  600 16.66 17.07  19.7  0 |  325 16.70 17.60  18.8  0 |  302 16.66 17.75  29.7  0 | 16.67
+b4    da3   a86b2f07 | 1234 |  575 16.84 19.34  22.1  0 |  280 19.44 22.42  37.1  1 |  264 19.40 22.32  33.0  0 | 19.10 THROTTLED
+b4    da4   a86b2f07 | 1200 |  596 16.73 17.49  20.7  0 |  298 17.54 21.01  23.5  0 |  287 17.31 20.42  36.6  1 | 17.18 THROTTLED
+b4    da5   a86b2f07 | 1167 |  595 16.71 17.42  22.4  0 |  281 19.64 21.93  25.1  0 |  261 19.69 22.05  42.5  1 | 19.08 THROTTLED
+b4    da6   a86b2f07 | 1267 |  548 18.32 21.26  23.5  0 |  281 19.49 22.15  24.8  0 |  270 18.59 21.77  37.6  1 | 18.80 THROTTLED
+b4    db1   acf3a6d3 | 1184 |  582 16.73 19.57  22.7  0 |  276 19.72 22.09  25.5  0 |  283 19.59 22.54  39.7  1 | 19.22 THROTTLED
+b4    db2   acf3a6d3 | 1483 |  542 18.64 21.17  22.9  0 |  275 19.92 22.31  24.7  0 |  286 19.38 21.76  39.2  1 | 19.32 THROTTLED
+b4    db3   acf3a6d3 | 1200 |  563 17.43 20.29  22.0  0 |  275 19.60 22.32  24.4  0 |  286 19.18 22.19  37.9  1 | 19.11 THROTTLED
+b4    db4   acf3a6d3 | 1135 |  601 16.67 16.94  22.8  0 |  320 16.68 17.11  17.9  0 |  330 16.69 16.99  26.1  0 | 16.67
+b4    db5   acf3a6d3 | 1184 |  601 16.67 16.95  19.8  0 |  283 18.49 21.55  23.5  0 |  284 19.34 22.01  38.7  1 | 18.43 THROTTLED
+b4    db6   acf3a6d3 | 1200 |  575 17.01 20.14  23.8  0 |  283 18.43 21.30  22.9  0 |  297 18.06 20.83  26.3  0 | 17.85 THROTTLED
+b4    dwa1  a86b2f07 | 1267 |   60 16.66 17.46  18.5  0 |    - |  100 16.68 18.11  25.8  0 | 16.67 warm-up
+b4    dwa2  a86b2f07 | 1234 |   61 16.66 17.05  17.1  0 |    - |  101 16.64 17.96  25.3  0 | 16.65 warm-up
+b4    dwa3  a86b2f07 | 1151 |   61 16.60 18.34  20.0  0 |    - |  101 16.74 18.21  25.7  0 | 16.67 warm-up
+b4    dwb1  acf3a6d3 | 1199 |   61 16.67 16.93  17.1  0 |    - |  108 16.69 17.65  26.6  0 | 16.68 warm-up
+b4    dwb2  acf3a6d3 | 1283 |   61 16.68 16.88  17.0  0 |    - |  106 16.83 18.78  23.9  0 | 16.77 warm-up
+b4    dwb3  acf3a6d3 | 1116 |   61 16.66 17.98  19.0  0 |    - |  108 16.66 18.45  25.0  0 | 16.68 warm-up
+b5    ea1   a86b2f07 | 1298 |  546 17.19 21.04  44.3  8 |  169 19.74 22.20  23.2  0 |  179 19.07 21.43  40.4  1 | 19.15 THROTTLED
+b5    ea2   a86b2f07 | 1200 |  601 16.66 17.38  19.1  0 |  181 17.54 20.61  22.5  0 |  186 17.67 20.77  26.5  0 | 17.33 THROTTLED
+b5    ea3   a86b2f07 | 1300 |  550 18.21 20.91  22.3  0 |  170 19.52 21.80  22.9  0 |  178 19.31 21.57  33.0  0 | 18.91 THROTTLED
+b5    ea4   a86b2f07 | 1198 |  598 16.73 17.44  20.2  0 |  176 18.05 20.70  21.9  0 |  182 18.03 20.95  27.4  0 | 17.69 THROTTLED
+b5    eb1   acf3a6d3 | 1200 |  586 16.75 18.31  21.3  0 |  169 18.16 20.79  22.7  0 |  198 17.84 20.08  39.5  1 | 17.82 THROTTLED
+b5    eb2   acf3a6d3 |  933 |  601 16.66 17.49  23.4  0 |  192 16.59 18.15  19.1  0 |  218 16.68 18.26  24.0  0 | 16.66
+b5    eb3   acf3a6d3 | 1167 |  580 16.88 19.85  23.1  0 |  168 19.07 21.56  22.9  0 |  193 18.54 21.18  38.5  1 | 18.28 THROTTLED
+b5    eb4   acf3a6d3 | 1383 |  594 16.76 18.03  22.3  0 |  171 18.27 20.73  22.2  0 |  196 18.09 20.82  26.4  0 | 17.70 THROTTLED
+b5    ewa1  a86b2f07 |  853 |   60 16.68 17.97  19.0  0 |    - |  101 16.68 17.92  25.7  0 | 16.66 warm-up
+b5    ewa2  a86b2f07 | 1417 |   61 16.64 18.16  19.5  0 |    - |   99 16.63 17.94  37.0  1 | 16.67 warm-up
+b5    ewb1  acf3a6d3 | 1399 |   60 16.64 18.12  19.8  0 |    - |  107 16.65 18.07  38.8  1 | 16.67 warm-up
+b5    ewb2  acf3a6d3 | 1267 |   60 16.70 17.59  17.9  0 |    - |  108 16.65 18.24  29.3  0 | 16.68 warm-up
+
+every measured launch:
+  a86b2f07: 16 launches (a1 a2 a3 a4 a5 a6 da1 da2 da3 da4 da5 da6 ea1 ea2 ea3 ea4) | rest0 p50 16.72 p95 17.59 | deal p50 18.23 p95 21.13 | reshuffle p50 18.31 p95 21.14
+  acf3a6d3: 16 launches (b1 b2 b3 b4 b5 b6 db1 db2 db3 db4 db5 db6 eb1 eb2 eb3 eb4) | rest0 p50 16.74 p95 18.17 | deal p50 18.35 p95 21.04 | reshuffle p50 18.08 p95 21.00
+
+the launches the iPad did not throttle:
+  a86b2f07: 5 launches (a1 a2 a3 a4 da2) | rest0 p50 16.66 p95 17.25 | deal p50 16.65 p95 18.09 | reshuffle p50 16.66 p95 18.01
+  acf3a6d3: 5 launches (b1 b2 b5 db4 eb2) | rest0 p50 16.66 p95 17.25 | deal p50 16.62 p95 18.15 | reshuffle p50 16.68 p95 18.00
+
+frames over 33.4 ms in rest0, the deals and the reshuffles (run, phase, frame in phase, wall, to-draw, draw, process, compiles):
+  b1 a1 a86b2f07 rest0 #16 wall 46.3 to_draw 4.7 draw 28.3 proc 20.4 comp 19,10,68,7,7
+  b1 a1 a86b2f07 rest0 #20 wall 42.9 to_draw 4.6 draw 24.9 proc 20.4 comp 19,10,68,7,7
+  b1 a1 a86b2f07 rest0 #24 wall 42.6 to_draw 4.4 draw 25.0 proc 20.4 comp 19,10,68,7,7
+  b1 a1 a86b2f07 rest0 #28 wall 41.2 to_draw 4.5 draw 23.8 proc 20.4 comp 19,10,68,7,7
+  b1 a1 a86b2f07 rest0 #32 wall 42.3 to_draw 4.4 draw 23.5 proc 20.4 comp 19,10,68,7,7
+  b1 a1 a86b2f07 deal1 #0 wall 47.5 to_draw 28.4 draw 5.5 proc 19.4 comp 19,10,68,7,7
+  b1 a5 a86b2f07 resh1 #31 wall 36.3 to_draw 25.1 draw 4.4 proc 19.1 comp 21,10,68,7,7 (throttled)
+  b1 a6 a86b2f07 deal4 #0 wall 36.9 to_draw 13.0 draw 8.8 proc 19.6 comp 19,10,68,7,7 (throttled)
+  b1 a6 a86b2f07 resh1 #31 wall 40.2 to_draw 26.0 draw 4.5 proc 19.8 comp 19,10,68,7,7 (throttled)
+  b1 b2 acf3a6d3 resh1 #46 wall 37.2 to_draw 2.3 draw 21.1 proc 17.3 comp 21,10,68,7,7
+  b1 b3 acf3a6d3 rest0 #31 wall 45.7 to_draw 1.6 draw 32.0 proc 19.9 comp 19,10,68,7,7 (throttled)
+  b1 b3 acf3a6d3 rest0 #35 wall 41.5 to_draw 4.9 draw 23.6 proc 19.9 comp 19,10,68,7,7 (throttled)
+  b1 b3 acf3a6d3 resh1 #40 wall 36.8 to_draw 2.2 draw 23.9 proc 20.2 comp 21,10,68,7,7 (throttled)
+  b1 b4 acf3a6d3 resh1 #40 wall 39.9 to_draw 1.9 draw 24.2 proc 19.6 comp 21,10,68,7,7 (throttled)
+  b1 b5 acf3a6d3 resh1 #45 wall 37.2 to_draw 1.7 draw 23.3 proc 17.6 comp 21,10,68,7,7
+  b1 b6 acf3a6d3 resh1 #42 wall 38.1 to_draw 2.0 draw 23.0 proc 17.9 comp 19,10,68,7,7 (throttled)
+  b1 wa3 a86b2f07 resh1 #33 wall 38.0 to_draw 23.4 draw 4.3 proc 19.3 comp 19,10,68,7,7 (warm-up)
+  b1 wb3 acf3a6d3 resh1 #45 wall 37.4 to_draw 2.2 draw 20.3 proc 17.4 comp 19,10,68,7,7 (warm-up)
+  b4 da1 a86b2f07 resh1 #33 wall 37.7 to_draw 2.3 draw 24.1 proc 18.1 comp 21,10,68,7,7 (throttled)
+  b4 da3 a86b2f07 deal4 #21 wall 37.1 to_draw 2.5 draw 19.3 proc 21.7 comp 21,10,68,7,7 (throttled)
+  b4 da4 a86b2f07 resh1 #35 wall 36.6 to_draw 25.4 draw 4.4 proc 19.1 comp 21,10,68,7,7 (throttled)
+  b4 da5 a86b2f07 resh1 #30 wall 42.5 to_draw 26.1 draw 4.4 proc 22.3 comp 19,10,68,7,7 (throttled)
+  b4 da6 a86b2f07 resh1 #32 wall 37.6 to_draw 22.9 draw 4.4 proc 19.7 comp 21,10,68,7,7 (throttled)
+  b4 db1 acf3a6d3 deal1 #0 wall 43.9 to_draw 30.0 draw 5.6 proc 19.1 comp 19,10,68,7,7 (throttled)
+  b4 db1 acf3a6d3 resh1 #40 wall 39.7 to_draw 2.2 draw 23.5 proc 19.5 comp 21,10,68,7,7 (throttled)
+  b4 db2 acf3a6d3 resh1 #39 wall 39.2 to_draw 20.8 draw 4.4 proc 20.3 comp 21,10,68,7,7 (throttled)
+  b4 db3 acf3a6d3 resh1 #40 wall 37.9 to_draw 2.3 draw 24.4 proc 19.6 comp 21,10,68,7,7 (throttled)
+  b4 db5 acf3a6d3 resh1 #39 wall 38.7 to_draw 25.8 draw 4.4 proc 20.1 comp 21,10,68,7,7 (throttled)
+  b5 ea1 a86b2f07 rest0 #1 wall 40.8 to_draw 5.1 draw 23.1 proc 32.7 comp 19,10,68,7,7 (throttled)
+  b5 ea1 a86b2f07 rest0 #5 wall 43.5 to_draw 4.8 draw 25.6 proc 32.7 comp 19,10,68,7,7 (throttled)
+  b5 ea1 a86b2f07 rest0 #9 wall 42.8 to_draw 4.6 draw 25.5 proc 32.7 comp 19,10,68,7,7 (throttled)
+  b5 ea1 a86b2f07 rest0 #13 wall 39.5 to_draw 5.8 draw 20.4 proc 32.7 comp 19,10,68,7,7 (throttled)
+  b5 ea1 a86b2f07 rest0 #17 wall 40.6 to_draw 5.8 draw 22.1 proc 32.7 comp 19,10,68,7,7 (throttled)
+  b5 ea1 a86b2f07 rest0 #21 wall 44.3 to_draw 4.8 draw 26.7 proc 32.7 comp 19,10,68,7,7 (throttled)
+  b5 ea1 a86b2f07 rest0 #25 wall 43.3 to_draw 4.7 draw 25.4 proc 32.7 comp 19,10,68,7,7 (throttled)
+  b5 ea1 a86b2f07 rest0 #29 wall 38.2 to_draw 5.1 draw 19.2 proc 32.7 comp 19,10,68,7,7 (throttled)
+  b5 ea1 a86b2f07 resh1 #31 wall 40.4 to_draw 22.7 draw 4.5 proc 22.8 comp 21,10,68,7,7 (throttled)
+  b5 eb1 acf3a6d3 resh1 #41 wall 39.5 to_draw 21.6 draw 4.5 proc 17.7 comp 19,10,68,7,7 (throttled)
+  b5 eb3 acf3a6d3 resh1 #41 wall 38.5 to_draw 2.2 draw 23.1 proc 22.3 comp 21,10,68,7,7 (throttled)
+  b5 ewa2 a86b2f07 resh1 #36 wall 37.0 to_draw 2.0 draw 21.0 proc 17.5 comp 21,10,68,7,7 (warm-up)
+  b5 ewb1 acf3a6d3 resh1 #46 wall 38.8 to_draw 1.7 draw 22.0 proc 17.3 comp 21,10,68,7,7 (warm-up)

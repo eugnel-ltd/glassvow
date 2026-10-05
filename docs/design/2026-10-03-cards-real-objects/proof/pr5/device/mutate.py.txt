@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+"""SCRATCH (#657 PR 5): mutation proofs. Each mutation backs its file up,
+breaks it, runs the one test, records whether it failed and how, and copies
+the backup back (never git checkout)."""
+import json, shutil, subprocess, sys, hashlib
+from pathlib import Path
+WT = Path("/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/cards-lane/wt5")
+BK = Path("/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/cards-lane/pr5/mut")
+BK.mkdir(parents=True, exist_ok=True)
+muts = json.load(open(sys.argv[1]))
+only = set(sys.argv[2:])
+results = []
+for m in muts:
+    if only and m["id"] not in only:
+        continue
+    f = WT / m["file"]
+    src = f.read_text()
+    digest = hashlib.sha1(src.encode()).hexdigest()
+    want = src.count(m["old"]) if m.get("all") else 1
+    assert src.count(m["old"]) == want and want >= 1, (m["id"], src.count(m["old"]))
+    backup = BK / (m["id"] + ".bak")
+    shutil.copyfile(f, backup)
+    try:
+        f.write_text(src.replace(m["old"], m["new"]))
+        r = subprocess.run(["timeout", "900", "godot", "--headless", "-s", "res://tests/run_all.gd", "--",
+            "--tests=res://" + m["test"]], cwd=WT, capture_output=True, text=True)
+        out = r.stdout + r.stderr
+        lines = [l for l in out.splitlines() if l.startswith("  - ")]
+        failed = r.returncode != 0
+        results.append({"id": m["id"], "test": m["test"], "caught": failed, "first": lines[0] if lines else out[-300:], "all": lines})
+        print(("CAUGHT " if failed else "MISSED ") + m["id"] + " :: " + (lines[0] if lines else ""), flush=True)
+    finally:
+        shutil.copyfile(backup, f)
+        assert hashlib.sha1(f.read_text().encode()).hexdigest() == digest
+json.dump(results, open(BK / ("results-%s.json" % Path(sys.argv[1]).stem), "w"), indent=1)
