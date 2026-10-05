@@ -112,11 +112,14 @@ Floor floor_at(vec2 p, float height, vec3 normal) {
 	f.bank = 1.0 - smoothstep(2.5, 5.0, from_water);
 	float waterline = (1.0 - smoothstep(river_level - 0.08, river_level + 0.3, height)) * f.bank;
 	// Water stands in the ruts' low stretches, spilling over their edges, and
-	// in the road's hollows, each pool ragged at its rim.
-	float rim = (floor_noise(p * 5.3 + 8.0) - 0.5) * 0.12;
-	float low = floor_noise(p * 0.9 + 3.0) + rim;
-	f.puddle = (1.0 - smoothstep(0.1, 0.34, track)) * f.core * smoothstep(0.62, 0.7, low);
-	f.puddle = max(f.puddle, f.core * smoothstep(0.8, 0.86, floor_noise(p * 0.45 + 61.0) + rim));
+	// in the road's hollows, each pool ragged at its rim. The hollows are
+	// layered noise, turned off the noise's grid: one value noise cut at a
+	// level takes the grid's square corners, and its pools read as slabs.
+	vec2 q = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8)) * p;
+	float rim = (floor_noise(q * 5.3 + 8.0) - 0.5) * 0.14;
+	float low = floor_fbm(q * 0.9 + 3.0) + rim;
+	f.puddle = (1.0 - smoothstep(0.1, 0.34, track)) * f.core * smoothstep(0.56, 0.7, low);
+	f.puddle = max(f.puddle, f.core * smoothstep(0.7, 0.8, floor_fbm(q * 0.45 + 61.0) + rim));
 	f.wet = max(max(f.puddle, f.rut * 0.55), waterline);
 	f.paving = (1.0 - smoothstep(1.3, 3.8, distance(p, gateway_position))) * f.core;
 	f.scarp = smoothstep(0.1, 0.5, 1.0 - abs(normal.y));

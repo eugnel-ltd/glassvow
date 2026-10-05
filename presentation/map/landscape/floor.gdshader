@@ -23,10 +23,11 @@ uniform float flicker_depth = 0.11;
 uniform vec3 glint_colour : source_color = vec3(1.0, 0.86, 0.66);
 uniform float glint_strength = 0.9;
 // Standing water seen at the journey camera's slant: the sky's cool grey, and
-// the lamps' warmth where a pool lies in their light.
+// the lamps' warmth where a pool lies in their light, broken by the micro
+// detail's grain so a puddle never reads as a flat slab.
 uniform vec3 sky_colour : source_color = vec3(0.36, 0.4, 0.47);
 uniform vec3 lamp_colour : source_color = vec3(1.0, 0.63, 0.29);
-uniform float water_sheen = 0.55;
+uniform float water_sheen = 0.42;
 // The pilgrim's carried light: xz where it stands, its reach (0: none), and
 // its colour times its strength.
 uniform vec3 walker = vec3(0.0, 0.0, 0.0);
@@ -44,8 +45,9 @@ void fragment() {
 	vec3 kept = texture(mask, uv).rgb;
 	vec3 fine = texture(detail, at / detail_metres).rgb;
 	colour *= 1.0 + (fine.r - 0.5) * 2.0 * detail_depth * (1.0 - kept.b * 0.6);
-	float water = smoothstep(0.72, 0.95, kept.b);
-	colour = mix(colour, (sky_colour + lamp_colour * kept.r * 1.6) * 0.32, water * water_sheen);
+	float water = smoothstep(0.6, 0.95, kept.b);
+	vec3 sheen = (sky_colour + lamp_colour * kept.r * 1.2) * 0.3 * (0.65 + 0.7 * fine.r);
+	colour = mix(colour, sheen, water * water_sheen);
 	colour *= 1.0 + kept.r * flicker_depth * sin(TIME * 9.0 + kept.g * 40.0) * land_motion;
 	float twinkle = max(sin(TIME * 2.3 + fine.b * 6.2832), 0.0);
 	colour += glint_colour * (glint_strength * smoothstep(0.72, 0.95, fine.g) * kept.b
