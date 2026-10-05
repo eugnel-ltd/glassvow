@@ -13,8 +13,9 @@ from agent_evals import approvals, split as splitting  # noqa: E402
 from agent_evals.backends import (AnthropicApiBackend, Backend, ClaudeCliBackend,  # noqa: E402
                                   IsolationUnavailable)
 from agent_evals.baseline import run_baseline  # noqa: E402
-from agent_evals.diagnostics import trivial_answerer_scores  # noqa: E402
+from agent_evals.diagnostics import trivial_fingerprint  # noqa: E402
 from agent_evals.evalspec import EvalSpec, load_cases, load_eval, require_valid  # noqa: E402
+from agent_evals.graders import JUDGE_ARMS, needs_judge  # noqa: E402
 from agent_evals.hillclimb import Climb, HillclimbConfig  # noqa: E402
 from agent_evals.models import EvalError, MODEL_ALIASES, read_json, write_json  # noqa: E402
 from agent_evals.report import review_html  # noqa: E402
@@ -78,18 +79,28 @@ def _run_transcripts(run_dir: Path) -> list[str]:
     return sorted(str(p.relative_to(run_dir)) for p in (run_dir / "transcripts").glob("*/*.json"))
 
 
+def _read_results(run_dir: Path) -> dict:
+    """A run's results.json; a missing or unreadable file is a refusal, not a traceback."""
+    path = run_dir / "results.json"
+    try:
+        return read_json(path)
+    except (OSError, ValueError) as error:
+        raise approvals.ApprovalError(f"cannot read {path} ({type(error).__name__}); run "
+                                      f"`baseline --run-id {run_dir.name}` first") from error
+
+
 def cmd_approve_grader(args: argparse.Namespace) -> int:
     delegation = _delegation(args)
     spec, cases = _load(args)
     run_dir = spec.build_dir / args.run
-    results = read_json(run_dir / "results.json")
+    results = _read_results(run_dir)
     ids = _run_transcripts(run_dir)
     sample = approvals.sample_transcript_ids(ids, args.run)
     try:
-        entry = approvals.approve_grader(spec.directory, spec.cases_sha256, ids, args.run,
-                                         args.read.split(",") if args.read else [],
+        entry = approvals.approve_grader(spec.directory, spec.cases_sha256, spec.surface_sha256, ids,
+                                         args.run, args.read.split(",") if args.read else [],
                                          results, [c.id for c in cases], delegation,
-                                         trivial_answerer_scores(cases))
+                                         trivial_fingerprint(cases), needs_judge(cases))
     except approvals.ApprovalError as error:
         print(f"not approved: {error}", file=sys.stderr)
         print("Open these scored transcripts and check each verdict is right:", file=sys.stderr)
@@ -111,10 +122,11 @@ def cmd_baseline(args: argparse.Namespace) -> int:
     run_id = args.run_id or _run_id()
     run_dir = spec.build_dir / run_id
     backend = _backend(args)
-    judge = backend if spec.grader_type == "judge" else None
+    judge = backend if needs_judge(cases) else None
     models = args.models.split(",") if args.models else list(spec.default_models)
     results = run_baseline(spec, cases, backend, models, args.reps, run_dir, judge, args.timeout,
-                           args.infra_threshold, args.workers, run_id)
+                           args.infra_threshold, args.workers, run_id,
+                           args.judge_model or spec.judge_model, args.judge_arm or spec.judge_arm)
     for model, block in results["models"].items():
         print(f"{model}: {block['summary']['mean']:.1%} over {len(block['per_case'])} cases")
     for warning in results["warnings"]:
@@ -124,20 +136,30 @@ def cmd_baseline(args: argparse.Namespace) -> int:
 
 
 def cmd_hillclimb(args: argparse.Namespace) -> int:
+    if args.allow_ambient_context:
+        raise approvals.ApprovalError("hillclimb refuses --allow-ambient-context: a climb scored on "
+                                      "runs that CLAUDE.md, memory or settings can reach proves nothing")
     spec, cases = _load(args)
-    approvals.require_approvals(spec.directory, spec.cases_sha256, args.allow_no_headroom)
+    model = args.model or spec.hillclimb_model
+    judged = needs_judge(cases)
+    judge_model = (args.judge_model or spec.judge_model) if judged else ""
+    judge_arm = (args.judge_arm or spec.judge_arm) if judged else ""
+    approved = approvals.require_approvals(spec.directory, spec.cases_sha256, spec.surface_sha256,
+                                           model, args.allow_no_headroom, judge_model, judge_arm)
     split = splitting.load_split(spec.directory / "split.json", [c.id for c in cases],
                                  spec.cases_sha256)
     config = HillclimbConfig(
-        goal=args.goal, model=args.model or spec.hillclimb_model,
+        goal=args.goal, model=model,
         proposer_model=args.proposer_model, reps=args.reps, round_reps=args.round_reps,
         rounds=args.rounds, stall=args.stall, min_gain=args.min_gain, timeout_s=args.timeout,
-        infra_threshold=args.infra_threshold, workers=args.workers)
+        infra_threshold=args.infra_threshold, workers=args.workers,
+        judge_model=judge_model or spec.judge_model, judge_arm=judge_arm or spec.judge_arm)
     run_dir = spec.build_dir / (args.run_id or _run_id("hc-"))
     backend = _backend(args)
-    judge = backend if spec.grader_type == "judge" else None
+    judge = backend if judged else None
     write_json(run_dir / "config.json", config.__dict__)
-    summary = Climb(spec, cases, split, backend, backend, config, run_dir, judge).run()
+    summary = Climb(spec, cases, split, backend, backend, config, run_dir, judge,
+                    approved.get("judge_model_id") if judged else None).run()
     print(f"{summary['status']}: {summary['verdict']}\nreport: {run_dir / 'report.md'}")
     return 0
 
@@ -187,6 +209,10 @@ def build_parser() -> argparse.ArgumentParser:
         sub.add_argument("--workers", type=int, default=2)
         sub.add_argument("--infra-threshold", type=float, default=DEFAULT_INFRA_THRESHOLD)
         sub.add_argument("--run-id")
+        sub.add_argument("--judge-model", help="judge alias for free-text claims "
+                         "(default: eval.json judge_model, chosen by calibration)")
+        sub.add_argument("--judge-arm", choices=JUDGE_ARMS, help="plain (claims and fields) or "
+                         "reference (also the case's reference); default: eval.json judge_arm")
 
     def delegation_flags(sub: argparse.ArgumentParser) -> None:
         sub.add_argument("--delegated", metavar="TEXT",
@@ -222,7 +248,7 @@ def build_parser() -> argparse.ArgumentParser:
     climb.add_argument("--stall", type=int, default=3)
     climb.add_argument("--min-gain", type=float, default=0.05)
     climb.add_argument("--allow-no-headroom", action="store_true",
-                       help="climb even though the approved baseline scored above 95%%")
+                       help="climb even though the approved baseline scored this model above 95%%")
     smoke = commands.add_parser("smoke-isolation", help="opt-in negative control for the claude -p isolation")
     smoke.add_argument("--model", default="haiku")
     smoke.add_argument("--timeout", type=float, default=120.0)

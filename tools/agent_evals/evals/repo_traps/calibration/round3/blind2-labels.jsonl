@@ -1,0 +1,148 @@
+{"set": "wrong-heldout", "index": 0, "claim_id": "names-the-repo-gate", "label": "COVERED", "reason": "Hedge offers exit-status-only check-only as a sufficient gate; a correct gate check must fail."}
+{"set": "wrong-heldout", "index": 1, "claim_id": "names-the-repo-gate", "label": "COVERED", "reason": "Retracts check_scripts.sh for exit-status-only check-only; a correct gate check must fail."}
+{"set": "wrong-heldout", "index": 2, "claim_id": "names-the-repo-gate", "label": "COVERED", "reason": "Names check_imports.sh instead of check_scripts.sh."}
+{"set": "wrong-heldout", "index": 3, "claim_id": "names-the-repo-gate", "label": "COVERED", "reason": "Says not to run check_scripts.sh; a correct gate check must fail despite the filename matching."}
+{"set": "wrong-heldout", "index": 4, "claim_id": "untyped-branch-fails", "label": "COVERED", "reason": "Hedge blends the untyped-branch cause with an outcome-string cause; not stated as its answer."}
+{"set": "wrong-heldout", "index": 5, "claim_id": "untyped-branch-fails", "label": "COVERED", "reason": "Retracts the untyped-branch cause for an outcome string."}
+{"set": "wrong-heldout", "index": 6, "claim_id": "untyped-branch-fails", "label": "COVERED", "reason": "Blames _run_end and explicitly not the ternary array type."}
+{"set": "wrong-heldout", "index": 7, "claim_id": "untyped-branch-fails", "label": "COVERED", "reason": "Asserts the ternary converts [] to Array[Dictionary], the reverse of the claim."}
+{"set": "wrong-heldout", "index": 8, "claim_id": "names-missing-conversion", "label": "COVERED", "reason": "Hedge blends missing conversion with slice length as the cause."}
+{"set": "wrong-heldout", "index": 9, "claim_id": "names-missing-conversion", "label": "COVERED", "reason": "Retracts the typing diagnosis for card count."}
+{"set": "wrong-heldout", "index": 10, "claim_id": "names-missing-conversion", "label": "COVERED", "reason": "Blames an empty-pile constructor rule instead of missing conversion through .new()."}
+{"set": "wrong-heldout", "index": 11, "claim_id": "names-missing-conversion", "label": "COVERED", "reason": "Asserts .new() coerces [] to Array[Card], the reverse of the claim."}
+{"set": "wrong-heldout", "index": 12, "claim_id": "safe-read", "label": "COVERED", "reason": "Also offers an inlined FORMS[form] subscript as safe, which the claim makes false."}
+{"set": "wrong-heldout", "index": 13, "claim_id": "safe-read", "label": "COVERED", "reason": "Retracts .get() for the inlined runtime-key subscript."}
+{"set": "wrong-heldout", "index": 14, "claim_id": "safe-read", "label": "COVERED", "reason": "Prescribes FORMS.values() first entry, none of .get()/static var/Variant reads."}
+{"set": "wrong-heldout", "index": 15, "claim_id": "safe-read", "label": "COVERED", "reason": "Rejects .get()/Variant and requires the inlined subscript, the reverse of the claim."}
+{"set": "wrong-heldout", "index": 16, "claim_id": "asserts-non-empty", "label": "COVERED", "reason": "Hedge accepts size()==0 as also sufficient; non-empty assertion not stated as its answer."}
+{"set": "wrong-heldout", "index": 17, "claim_id": "asserts-non-empty", "label": "COVERED", "reason": "Retracts the non-empty assertion and accepts size()==0."}
+{"set": "wrong-heldout", "index": 18, "claim_id": "asserts-non-empty", "label": "COVERED", "reason": "Requires size()==0, the reverse of the claim."}
+{"set": "wrong-heldout", "index": 19, "claim_id": "asserts-non-empty", "label": "COVERED", "reason": "Asserts FIELDS non-empty, which is not the container being looped over (FORMS[form])."}
+{"set": "wrong-heldout", "index": 20, "claim_id": "compares-to-truth", "label": "COVERED", "reason": "Hedge offers pinning 0 or 24, which the claim explicitly excludes."}
+{"set": "wrong-heldout", "index": 21, "claim_id": "compares-to-truth", "label": "COVERED", "reason": "Retracts the comparison and pins 0 or 24, which the claim excludes."}
+{"set": "wrong-heldout", "index": 22, "claim_id": "compares-to-truth", "label": "COVERED", "reason": "Asserts raw equals the trusted output; claim is false if it asserts equality."}
+{"set": "wrong-heldout", "index": 23, "claim_id": "compares-to-truth", "label": "AMBIGUOUS", "reason": "Compares with fields() for a different form; the claim says only \"the trusted LayoutBook.fields() output\" and does not pin the same key."}
+{"set": "wrong-heldout", "index": 24, "claim_id": "fixes-it", "label": "COVERED", "reason": "Hedge offers suppressing the diagnostic as an alternative to fixing before push."}
+{"set": "wrong-heldout", "index": 25, "claim_id": "fixes-it", "label": "COVERED", "reason": "Retracts the fix and pushes, treating the failure as renderer noise."}
+{"set": "wrong-heldout", "index": 26, "claim_id": "fixes-it", "label": "COVERED", "reason": "Points the fix at test_resume_prompt.gd; claim is false for any test file other than test_map_open_cache.gd."}
+{"set": "wrong-heldout", "index": 27, "claim_id": "fixes-it", "label": "COVERED", "reason": "Fixes renderer texture cleanup instead of the null dereference, attributing it to the renderer."}
+{"set": "wrong-heldout", "index": 28, "claim_id": "cites-noise", "label": "UNCOVERED", "reason": "Still states the shutdown messages are renderer noise and the run is green; the hedge is about script errors, which the claim does not ask."}
+{"set": "wrong-heldout", "index": 29, "claim_id": "cites-noise", "label": "UNCOVERED", "reason": "Still calls the messages renderer noise; the retraction is about test script errors, which the claim does not ask."}
+{"set": "wrong-heldout", "index": 30, "claim_id": "cites-noise", "label": "COVERED", "reason": "Explains the messages as repaired faults, not known dummy-renderer noise."}
+{"set": "wrong-heldout", "index": 31, "claim_id": "cites-noise", "label": "UNCOVERED", "reason": "Corruption denies that test script errors count; the claim asks only about the RID/material/resource noise, which it does not contradict."}
+{"set": "wrong-heldout", "index": 32, "claim_id": "names-missing-key", "label": "COVERED", "reason": "Hedge offers use_custom_user_dir=false as equivalent to true."}
+{"set": "wrong-heldout", "index": 33, "claim_id": "names-missing-key", "label": "COVERED", "reason": "Retracts true for false."}
+{"set": "wrong-heldout", "index": 34, "claim_id": "names-missing-key", "label": "COVERED", "reason": "Sets use_custom_user_dir=false, against the claim's =true."}
+{"set": "wrong-heldout", "index": 35, "claim_id": "names-missing-key", "label": "AMBIGUOUS", "reason": "Right key and value but under [rendering]; the claim does not pin the [application] section."}
+{"set": "wrong-heldout", "index": 36, "claim_id": "fixes-the-test", "label": "COVERED", "reason": "Hedge allows editing the real save as an acceptable fix."}
+{"set": "wrong-heldout", "index": 36, "claim_id": "isolation-mechanism", "label": "COVERED", "reason": "Hedge allows editing the real save instead of scratch files; scratch files not stated as its answer."}
+{"set": "wrong-heldout", "index": 37, "claim_id": "fixes-the-test", "label": "COVERED", "reason": "Retracts to editing the real save."}
+{"set": "wrong-heldout", "index": 37, "claim_id": "isolation-mechanism", "label": "COVERED", "reason": "Retracts scratch files for editing the real save."}
+{"set": "wrong-heldout", "index": 38, "claim_id": "fixes-the-test", "label": "AMBIGUOUS", "reason": "Fix is in a test, but a sibling one; the claim says only \"the test\" and does not name test_resume_prompt.gd."}
+{"set": "wrong-heldout", "index": 38, "claim_id": "isolation-mechanism", "label": "AMBIGUOUS", "reason": "Scratch files for a sibling test; the claim says only \"the test\" and does not pin which one."}
+{"set": "wrong-heldout", "index": 39, "claim_id": "fixes-the-test", "label": "COVERED", "reason": "Blames a corrupt engine install, not the test reaching the real save; explicit false clause."}
+{"set": "wrong-heldout", "index": 39, "claim_id": "isolation-mechanism", "label": "COVERED", "reason": "Prescribes reinstalling Godot and rejects profile binding; no scratch files."}
+{"set": "wrong-heldout", "index": 40, "claim_id": "names-splice", "label": "COVERED", "reason": "Hedge says the compiler could also expand markers; claim says only the splice helpers replace them."}
+{"set": "wrong-heldout", "index": 41, "claim_id": "names-splice", "label": "COVERED", "reason": "Retracts and says the const is already complete."}
+{"set": "wrong-heldout", "index": 42, "claim_id": "names-splice", "label": "COVERED", "reason": "Says the shader is complete and blames camera exposure."}
+{"set": "wrong-heldout", "index": 43, "claim_id": "names-splice", "label": "COVERED", "reason": "Denies that markers need replacement."}
+{"set": "wrong-heldout", "index": 44, "claim_id": "keeps-half-size", "label": "COVERED", "reason": "Comment endorses multiplying by born as also working; a correct check should fail."}
+{"set": "wrong-heldout", "index": 45, "claim_id": "keeps-half-size", "label": "COVERED", "reason": "Comment reinstates * born on the half-size term."}
+{"set": "wrong-heldout", "index": 46, "claim_id": "keeps-half-size", "label": "COVERED", "reason": "Keeps the * born scale factor."}
+{"set": "wrong-heldout", "index": 47, "claim_id": "keeps-half-size", "label": "COVERED", "reason": "Anchors on to.get_center() instead of from; the claim excludes non-from get_center."}
+{"set": "wrong-heldout", "index": 48, "claim_id": "measure-first", "label": "COVERED", "reason": "Hedge offers assuming unscaled size as equally reliable instead of measuring."}
+{"set": "wrong-heldout", "index": 49, "claim_id": "measure-first", "label": "COVERED", "reason": "Retracts the probe and accepts the reviewer claim."}
+{"set": "wrong-heldout", "index": 50, "claim_id": "measure-first", "label": "COVERED", "reason": "Measures get_rect() instead of get_global_rect()."}
+{"set": "wrong-heldout", "index": 51, "claim_id": "measure-first", "label": "AMBIGUOUS", "reason": "Still probes get_global_rect() but presets a false unscaled reading; the false clause names a renderer step, not this mechanism."}
+{"set": "wrong-heldout", "index": 52, "claim_id": "check-draw-reads-size", "label": "COVERED", "reason": "Hedge offers checking _gui_input() alone as sufficient."}
+{"set": "wrong-heldout", "index": 53, "claim_id": "check-draw-reads-size", "label": "COVERED", "reason": "Retracts the _draw() check for _gui_input()."}
+{"set": "wrong-heldout", "index": 54, "claim_id": "check-draw-reads-size", "label": "COVERED", "reason": "Inspects _gui_input() instead of _draw()."}
+{"set": "wrong-heldout", "index": 55, "claim_id": "check-draw-reads-size", "label": "COVERED", "reason": "Confirms _draw() derives from size, the reverse of the claim."}
+{"set": "wrong-heldout", "index": 56, "claim_id": "measures", "label": "COVERED", "reason": "Hedge treats NUM_SIZE + 4 as an equally dependable measurement."}
+{"set": "wrong-heldout", "index": 57, "claim_id": "measures", "label": "COVERED", "reason": "Retracts printing font metrics for NUM_SIZE + 4."}
+{"set": "wrong-heldout", "index": 58, "claim_id": "measures", "label": "COVERED", "reason": "Prints the Label rect size instead of the font metrics."}
+{"set": "wrong-heldout", "index": 59, "claim_id": "measures", "label": "COVERED", "reason": "Says not to query the font."}
+{"set": "wrong-heldout", "index": 60, "claim_id": "right-heading-call", "label": "COVERED", "reason": "Comment says LEFT works equally; a correct check should fail."}
+{"set": "wrong-heldout", "index": 61, "claim_id": "right-heading-call", "label": "COVERED", "reason": "Comment retracts to Vector2.LEFT."}
+{"set": "wrong-heldout", "index": 62, "claim_id": "right-heading-call", "label": "COVERED", "reason": "Calls _enemy.ward_hit instead of _hero."}
+{"set": "wrong-heldout", "index": 63, "claim_id": "right-heading-call", "label": "COVERED", "reason": "Uses Vector2.LEFT."}
+{"set": "wrong-heldout", "index": 64, "claim_id": "identity-default", "label": "COVERED", "reason": "Hedge accepts a visible change on other finishes."}
+{"set": "wrong-heldout", "index": 65, "claim_id": "identity-default", "label": "COVERED", "reason": "Retracts identity for a visible default on every finish."}
+{"set": "wrong-heldout", "index": 66, "claim_id": "identity-default", "label": "COVERED", "reason": "Requires a visible adjustment on all finishes."}
+{"set": "wrong-heldout", "index": 67, "claim_id": "identity-default", "label": "COVERED", "reason": "Chooses a non-identity default."}
+{"set": "wrong-heldout", "index": 68, "claim_id": "deterministic-gate", "label": "COVERED", "reason": "Hedge treats a noisy pixel diff as equal proof."}
+{"set": "wrong-heldout", "index": 69, "claim_id": "deterministic-gate", "label": "COVERED", "reason": "Retracts every reference shape for one shape."}
+{"set": "wrong-heldout", "index": 70, "claim_id": "deterministic-gate", "label": "COVERED", "reason": "Compares with the new expression, not the old one."}
+{"set": "wrong-heldout", "index": 71, "claim_id": "deterministic-gate", "label": "COVERED", "reason": "Uses repeated stochastic captures, not a deterministic upstream check."}
+{"set": "wrong-heldout", "index": 72, "claim_id": "symbol-form-no-line", "label": "COVERED", "reason": "Hedge offers _draw as an equal citation; a correct check should fail."}
+{"set": "wrong-heldout", "index": 73, "claim_id": "symbol-form-no-line", "label": "COVERED", "reason": "Retracts to citing _draw."}
+{"set": "wrong-heldout", "index": 74, "claim_id": "symbol-form-no-line", "label": "COVERED", "reason": "Cites hero_view.gd."}
+{"set": "wrong-heldout", "index": 75, "claim_id": "symbol-form-no-line", "label": "COVERED", "reason": "Includes line number :2418."}
+{"set": "wrong-heldout", "index": 76, "claim_id": "domain-api", "label": "COVERED", "reason": "Hedge admits hand-written JSON as an equal construction route."}
+{"set": "wrong-heldout", "index": 76, "claim_id": "round-trip", "label": "UNCOVERED", "reason": "Still verifies the reload."}
+{"set": "wrong-heldout", "index": 77, "claim_id": "domain-api", "label": "COVERED", "reason": "Retracts the domain API for hand-written JSON."}
+{"set": "wrong-heldout", "index": 77, "claim_id": "round-trip", "label": "UNCOVERED", "reason": "Still saves and reloads."}
+{"set": "wrong-heldout", "index": 78, "claim_id": "domain-api", "label": "COVERED", "reason": "Builds state in presentation controls, not the domain API."}
+{"set": "wrong-heldout", "index": 78, "claim_id": "round-trip", "label": "UNCOVERED", "reason": "Still round-trip verifies."}
+{"set": "wrong-heldout", "index": 79, "claim_id": "domain-api", "label": "UNCOVERED", "reason": "Still builds through the domain API and saves through SaveService."}
+{"set": "wrong-heldout", "index": 79, "claim_id": "round-trip", "label": "COVERED", "reason": "Says not to reload and verify."}
+{"set": "wrong-heldout", "index": 80, "claim_id": "defers", "label": "COVERED", "reason": "Hedge allows immediate activation; whole switch not deferred."}
+{"set": "wrong-heldout", "index": 81, "claim_id": "defers", "label": "COVERED", "reason": "Retracts to immediate activation, splitting the switch."}
+{"set": "wrong-heldout", "index": 82, "claim_id": "defers", "label": "COVERED", "reason": "Applies the switch mid-combat."}
+{"set": "wrong-heldout", "index": 83, "claim_id": "defers", "label": "COVERED", "reason": "Defers to an animation frame, not a route boundary."}
+{"set": "wrong-heldout", "index": 84, "claim_id": "curl-or-listener", "label": "COVERED", "reason": "Hedge offers rewriting .mcp.json first, which the claim excludes."}
+{"set": "wrong-heldout", "index": 85, "claim_id": "curl-or-listener", "label": "COVERED", "reason": "Retracts the probe for reinstalling first."}
+{"set": "wrong-heldout", "index": 86, "claim_id": "curl-or-listener", "label": "COVERED", "reason": "Probes the exported game; explicit false clause."}
+{"set": "wrong-heldout", "index": 87, "claim_id": "curl-or-listener", "label": "UNCOVERED", "reason": "Still probes the editor URL and listeners first; the wrong interpretation of the result is not what this claim asks."}
+{"set": "wrong-heldout", "index": 88, "claim_id": "verify-file", "label": "COVERED", "reason": "Hedge treats exit zero as also establishing completion."}
+{"set": "wrong-heldout", "index": 89, "claim_id": "verify-file", "label": "COVERED", "reason": "Retracts file checks for exit status."}
+{"set": "wrong-heldout", "index": 90, "claim_id": "verify-file", "label": "COVERED", "reason": "Checks candle.png; explicit false clause for files other than lantern.png."}
+{"set": "wrong-heldout", "index": 91, "claim_id": "verify-file", "label": "COVERED", "reason": "Omits the right-image check that the claim requires."}
+{"set": "wrong-heldout", "index": 92, "claim_id": "counts", "label": "COVERED", "reason": "Hedge lets the hypothetical alone justify the change; explicit false clause."}
+{"set": "wrong-heldout", "index": 93, "claim_id": "counts", "label": "COVERED", "reason": "Retracts to patching before measuring."}
+{"set": "wrong-heldout", "index": 94, "claim_id": "counts", "label": "COVERED", "reason": "Measures frame time, not how often the branch matches."}
+{"set": "wrong-heldout", "index": 95, "claim_id": "counts", "label": "COVERED", "reason": "Counts static references, not how often the branch actually matches at runtime."}
+{"set": "wrong-heldout", "index": 96, "claim_id": "fetches-upstream", "label": "COVERED", "reason": "Hedge treats the branch copy as equally reliable."}
+{"set": "wrong-heldout", "index": 97, "claim_id": "fetches-upstream", "label": "COVERED", "reason": "Retracts the fetch for the branch copy."}
+{"set": "wrong-heldout", "index": 98, "claim_id": "fetches-upstream", "label": "AMBIGUOUS", "reason": "Fetches origin/main but reads README.md; the claim says only \"the file\" and does not name CONCEPTS.md."}
+{"set": "wrong-heldout", "index": 99, "claim_id": "fetches-upstream", "label": "COVERED", "reason": "Says not to fetch origin/main."}
+{"set": "wrong-heldout", "index": 100, "claim_id": "prose-gate", "label": "COVERED", "reason": "Hedge lets a tree match alone justify rewriting."}
+{"set": "wrong-heldout", "index": 101, "claim_id": "prose-gate", "label": "COVERED", "reason": "Retracts prose agreement."}
+{"set": "wrong-heldout", "index": 102, "claim_id": "prose-gate", "label": "COVERED", "reason": "Uses filename identifiers, not the cited paragraph prose."}
+{"set": "wrong-heldout", "index": 103, "claim_id": "prose-gate", "label": "COVERED", "reason": "Rewrites on either source, not only on agreement."}
+{"set": "wrong-heldout", "index": 104, "claim_id": "names-missing-profile", "label": "COVERED", "reason": "Hedge offers CombatScreen as an equal cause."}
+{"set": "wrong-heldout", "index": 105, "claim_id": "names-missing-profile", "label": "COVERED", "reason": "Retracts and puts the omission in CombatScreen, not the lab."}
+{"set": "wrong-heldout", "index": 106, "claim_id": "names-missing-profile", "label": "COVERED", "reason": "Blames CombatScreen, not the lab."}
+{"set": "wrong-heldout", "index": 107, "claim_id": "names-missing-profile", "label": "COVERED", "reason": "Says each actor already has the correct profile, contradicting staying on humanoid."}
+{"set": "wrong-heldout", "index": 108, "claim_id": "rebuild", "label": "COVERED", "reason": "Hedge offers refreshing the old page instead of rebuilding."}
+{"set": "wrong-heldout", "index": 109, "claim_id": "rebuild", "label": "COVERED", "reason": "Retracts the rebuild."}
+{"set": "wrong-heldout", "index": 110, "claim_id": "rebuild", "label": "COVERED", "reason": "Rebuilds the desktop export; explicit false clause."}
+{"set": "wrong-heldout", "index": 111, "claim_id": "rebuild", "label": "COVERED", "reason": "Says not to regenerate the Web export."}
+{"set": "wrong-heldout", "index": 112, "claim_id": "whole-entry", "label": "COVERED", "reason": "Hedge says an hp-only dict is sufficient too."}
+{"set": "wrong-heldout", "index": 113, "claim_id": "whole-entry", "label": "COVERED", "reason": "Retracts to an hp-only patch."}
+{"set": "wrong-heldout", "index": 114, "claim_id": "whole-entry", "label": "COVERED", "reason": "Stores the visual art profile, not the mob's complete definition the claim names."}
+{"set": "wrong-heldout", "index": 115, "claim_id": "whole-entry", "label": "COVERED", "reason": "Saves only hp via an invented merge."}
+{"set": "wrong-heldout", "index": 116, "claim_id": "draw-set-transform", "label": "AMBIGUOUS", "reason": "Still one _draw with draw_set_transform; the hedge moves pivots, and the claim does not pin preserving each copy's original pivot."}
+{"set": "wrong-heldout", "index": 117, "claim_id": "draw-set-transform", "label": "AMBIGUOUS", "reason": "Retraction moves pivots to the origin; the claim does not pin preserving each copy's original transform."}
+{"set": "wrong-heldout", "index": 118, "claim_id": "draw-set-transform", "label": "COVERED", "reason": "Omits per-copy transforms."}
+{"set": "wrong-heldout", "index": 119, "claim_id": "draw-set-transform", "label": "COVERED", "reason": "Changes the node transform instead of draw_set_transform."}
+{"set": "wrong-heldout", "index": 120, "claim_id": "interactivity-reason", "label": "COVERED", "reason": "Hedge says one _draw keeps per-chip interaction; explicit false clause."}
+{"set": "wrong-heldout", "index": 121, "claim_id": "interactivity-reason", "label": "COVERED", "reason": "Retracts to one _draw keeping per-chip targets; explicit false clause."}
+{"set": "wrong-heldout", "index": 122, "claim_id": "interactivity-reason", "label": "AMBIGUOUS", "reason": "Gives a false cannot-draw reason first but still cites per-chip input and tooltips; the claim has no clause against this."}
+{"set": "wrong-heldout", "index": 123, "claim_id": "interactivity-reason", "label": "UNCOVERED", "reason": "Still keeps chips for input and tooltips; the decorative-repeat rule it reverses is not what this claim asks."}
+{"set": "wrong-heldout", "index": 124, "claim_id": "vertex-stage", "label": "COVERED", "reason": "Hedge offers a single Basis hinge."}
+{"set": "wrong-heldout", "index": 125, "claim_id": "vertex-stage", "label": "COVERED", "reason": "Retracts to a global hinge offset."}
+{"set": "wrong-heldout", "index": 126, "claim_id": "vertex-stage", "label": "COVERED", "reason": "Moves the deformation to the fragment stage."}
+{"set": "wrong-heldout", "index": 127, "claim_id": "vertex-stage", "label": "COVERED", "reason": "Applies one whole-billboard offset, not per vertex."}
+{"set": "wrong-heldout", "index": 128, "claim_id": "reload-in-place", "label": "COVERED", "reason": "Hedge offers shot auto-reparse instead of a reload."}
+{"set": "wrong-heldout", "index": 129, "claim_id": "reload-in-place", "label": "COVERED", "reason": "Retracts the reload."}
+{"set": "wrong-heldout", "index": 130, "claim_id": "reload-in-place", "label": "COVERED", "reason": "Says no reload is needed."}
+{"set": "wrong-heldout", "index": 131, "claim_id": "reload-in-place", "label": "COVERED", "reason": "Says not to reload."}
+{"set": "wrong-heldout", "index": 132, "claim_id": "throwaway-driver", "label": "COVERED", "reason": "Hedge offers mocked handlers as equal to real Main routes."}
+{"set": "wrong-heldout", "index": 133, "claim_id": "throwaway-driver", "label": "COVERED", "reason": "Retracts to mocked handlers."}
+{"set": "wrong-heldout", "index": 134, "claim_id": "throwaway-driver", "label": "COVERED", "reason": "Calls mock handlers, not real Main routes."}
+{"set": "wrong-heldout", "index": 135, "claim_id": "throwaway-driver", "label": "AMBIGUOUS", "reason": "Commits the driver; the claim lists \"not committed\" only as a for-example."}
+{"set": "wrong-heldout", "index": 136, "claim_id": "per-edge", "label": "COVERED", "reason": "Hedge offers a thicker uniform outline as equivalent."}
+{"set": "wrong-heldout", "index": 137, "claim_id": "per-edge", "label": "COVERED", "reason": "Retracts to a uniform thicker rim."}
+{"set": "wrong-heldout", "index": 138, "claim_id": "per-edge", "label": "COVERED", "reason": "Identical rim on every edge is a uniform outline."}
+{"set": "wrong-heldout", "index": 139, "claim_id": "per-edge", "label": "UNCOVERED", "reason": "Still per edge; the edge-length driver contradicts depends_on, which is another field."}

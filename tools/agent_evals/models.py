@@ -27,6 +27,7 @@ class Completion:
     timed_out: bool = False
     truncated: bool = False
     usage: dict[str, Any] = field(default_factory=dict)
+    model_id: str = ""  # the resolved model the backend reports, if it reports one
 
     @property
     def infra_failed(self) -> bool:
@@ -53,17 +54,20 @@ class Verdict:
     claim_id: str
     passed: bool
     detail: str = ""
+    votes: tuple[bool, ...] = ()  # a judge claim's ballots, one per judge call
 
 
 @dataclass(frozen=True)
 class Grade:
     verdicts: tuple[Verdict, ...]
     parse_error: str | None = None
-    decision_failed: bool = False  # a wrong boolean decision caps the case score at 0
+    decision_failed: bool = False  # a wrong decision or a failed gate claim caps the score at 0
+    judge_error: str | None = None  # an infrastructure failure: the transcript is not scored
+    judge_model_id: str = ""
 
     @property
     def score(self) -> float:
-        if not self.verdicts or self.decision_failed:
+        if not self.verdicts or self.decision_failed or self.judge_error:
             return 0.0
         return sum(v.passed for v in self.verdicts) / len(self.verdicts)
 
@@ -77,8 +81,10 @@ class Grade:
             "passed": self.passed,
             "decision_failed": self.decision_failed,
             "parse_error": self.parse_error,
+            "judge_error": self.judge_error,
+            "judge_model_id": self.judge_model_id,
             "verdicts": [
-                {"claim": v.claim_id, "passed": v.passed, "detail": v.detail}
+                {"claim": v.claim_id, "passed": v.passed, "detail": v.detail, "votes": list(v.votes)}
                 for v in self.verdicts],
         }
 

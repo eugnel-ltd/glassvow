@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from .backends import Backend
-from .graders import grade
+from .graders import DEFAULT_JUDGE_ARM, DEFAULT_JUDGE_MODEL, grade
 from .models import Case, Completion, EvalError, sha256_text, write_json
 
 DEFAULT_TIMEOUT_S = 180.0
@@ -26,9 +26,15 @@ class SetResult:
     transcripts: list[dict[str, Any]]
 
     def table(self, key: str = "score") -> dict[str, list[float]]:
-        """case id -> value of `key` per repetition, in repetition order."""
+        """case id -> value of `key` per repetition, in repetition order.
+
+        A transcript the judge failed on is an infrastructure failure, not a score: it is
+        left out of the score table (and counted by `infra`).
+        """
         rows: dict[str, list[tuple[int, float]]] = {}
         for item in self.transcripts:
+            if key == "score" and item.get("judge_error"):
+                continue
             value = item["grade"]["score"] if key == "score" else item[key]
             rows.setdefault(item["case_id"], []).append((item["rep"], value))
         return {case_id: [value for _, value in sorted(pairs)] for case_id, pairs in rows.items()}
@@ -55,13 +61,14 @@ def call_cost_tokens(system: str, prompt: str, completion: Completion) -> int:
 
 
 def run_case(backend: Backend, case: Case, rep: int, model: str, surface_text: str,
-             eval_name: str = "", judge: Backend | None = None, judge_model: str = "haiku",
-             timeout_s: float = DEFAULT_TIMEOUT_S) -> dict[str, Any]:
+             eval_name: str = "", judge: Backend | None = None,
+             judge_model: str = DEFAULT_JUDGE_MODEL, timeout_s: float = DEFAULT_TIMEOUT_S,
+             expected_judge_id: str | None = None, judge_arm: str = DEFAULT_JUDGE_ARM) -> dict[str, Any]:
     prompt = case.user_prompt()
     started = time.monotonic()
     completion = backend.complete(surface_text, prompt, model, timeout_s)
     elapsed = time.monotonic() - started
-    result = grade(case, completion.text, judge, judge_model)
+    result = grade(case, completion.text, judge, judge_model, expected_judge_id, judge_arm=judge_arm)
     return {
         "id": transcript_id(case.id, rep), "eval": eval_name, "case_id": case.id, "rep": rep,
         "model": model, "surface_sha256": sha256_text(surface_text), "prompt": prompt,
@@ -69,22 +76,25 @@ def run_case(backend: Backend, case: Case, rep: int, model: str, surface_text: s
         "error": completion.error, "timed_out": completion.timed_out,
         "truncated": completion.truncated, "elapsed_s": round(elapsed, 3),
         "usage": completion.usage, "cost_tokens": call_cost_tokens(surface_text, prompt, completion),
-        "backend": backend.describe(),
+        "backend": backend.describe(), "judge_model": judge_model if judge is not None else "",
+        "judge_arm": judge_arm if judge is not None else "",
+        "judge_model_id": result.judge_model_id, "judge_error": result.judge_error,
     }
 
 
 def run_set(backend: Backend, cases: Sequence[Case], model: str, surface_text: str,
             reps: int, out_dir: Path | None = None, eval_name: str = "",
-            judge: Backend | None = None, judge_model: str = "haiku",
+            judge: Backend | None = None, judge_model: str = DEFAULT_JUDGE_MODEL,
             timeout_s: float = DEFAULT_TIMEOUT_S, workers: int = 1,
-            first_rep: int = 1) -> SetResult:
+            first_rep: int = 1, expected_judge_id: str | None = None,
+            judge_arm: str = DEFAULT_JUDGE_ARM) -> SetResult:
     """Run every case `reps` times; write each transcript to `out_dir` when given."""
     jobs = [(case, rep) for rep in range(first_rep, first_rep + reps) for case in cases]
 
     def execute(job: tuple[Case, int]) -> dict[str, Any]:
         case, rep = job
         item = run_case(backend, case, rep, model, surface_text, eval_name, judge,
-                        judge_model, timeout_s)
+                        judge_model, timeout_s, expected_judge_id, judge_arm)
         if out_dir is not None:
             write_json(out_dir / f"{item['id']}.json", item)
         return item
@@ -98,9 +108,11 @@ def infra_summary(transcripts: Sequence[dict[str, Any]]) -> dict[str, Any]:
     errors = sum(1 for t in transcripts if t["error"] and not t["timed_out"])
     timeouts = sum(1 for t in transcripts if t["timed_out"])
     truncated = sum(1 for t in transcripts if t["truncated"] and not t["error"])
-    failed = sum(1 for t in transcripts if t["error"] or t["timed_out"] or t["truncated"])
+    judge_errors = sum(1 for t in transcripts if t.get("judge_error"))
+    failed = sum(1 for t in transcripts
+                 if t["error"] or t["timed_out"] or t["truncated"] or t.get("judge_error"))
     return {"total": total, "errors": errors, "timeouts": timeouts, "truncated": truncated,
-            "failed": failed, "rate": failed / total if total else 0.0}
+            "judge_errors": judge_errors, "failed": failed, "rate": failed / total if total else 0.0}
 
 
 def check_infra(summary: dict[str, Any], threshold: float = DEFAULT_INFRA_THRESHOLD) -> None:
@@ -108,4 +120,5 @@ def check_infra(summary: dict[str, Any], threshold: float = DEFAULT_INFRA_THRESH
         raise InfraFailure(
             f"infrastructure failure rate {summary['rate']:.1%} exceeds {threshold:.1%} "
             f"({summary['errors']} errors, {summary['timeouts']} timeouts, "
-            f"{summary['truncated']} truncated of {summary['total']})")
+            f"{summary['truncated']} truncated, {summary.get('judge_errors', 0)} judge failures "
+            f"of {summary['total']})")

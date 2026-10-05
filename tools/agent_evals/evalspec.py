@@ -6,10 +6,10 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .graders import validate_grader_spec
+from .graders import DEFAULT_JUDGE_ARM, DEFAULT_JUDGE_MODEL, validate_grader_spec
 from .patching import DEFAULT_MIN_SPAN, find_shared_span
 from .models import (BUILD_ROOT, EVALS_DIR, REPO_ROOT, Case, EvalError, case_from_json,
-                     read_json, sha256_file)
+                     read_json, sha256_file, sha256_text)
 
 REFERENCE_PATTERN = re.compile(r"^(?:#\d+|PR #\d+|issue #\d+)$")
 
@@ -23,6 +23,7 @@ class EvalSpec:
     default_models: tuple[str, ...]
     hillclimb_model: str
     judge_model: str
+    judge_arm: str = DEFAULT_JUDGE_ARM
 
     @property
     def cases_path(self) -> Path:
@@ -31,6 +32,11 @@ class EvalSpec:
     @property
     def cases_sha256(self) -> str:
         return sha256_file(self.cases_path)
+
+    @property
+    def surface_sha256(self) -> str:
+        """The surface's hash as a baseline records it: sha256 of its UTF-8 text."""
+        return sha256_text(self.surface.read_text(encoding="utf-8"))
 
     @property
     def build_dir(self) -> Path:
@@ -47,7 +53,8 @@ def load_eval(name: str, evals_dir: Path = EVALS_DIR, repo_root: Path = REPO_ROO
         name=name, directory=directory, surface=repo_root / raw["surface"],
         grader_type=raw["grader_type"], default_models=tuple(raw["default_models"]),
         hillclimb_model=raw.get("hillclimb_model", raw["default_models"][0]),
-        judge_model=raw.get("judge_model", "haiku"))
+        judge_model=raw.get("judge_model", DEFAULT_JUDGE_MODEL),
+        judge_arm=raw.get("judge_arm", DEFAULT_JUDGE_ARM))
 
 
 def load_cases(spec: EvalSpec) -> list[Case]:

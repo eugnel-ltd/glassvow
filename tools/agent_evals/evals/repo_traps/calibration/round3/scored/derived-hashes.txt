@@ -1,0 +1,3 @@
+bc663764fe05e5dc7dd8069197299b47a4316cdb2a210d2551bb8cfe4ef0c1b2  /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/evals-lane/r3score/adversarial.jsonl
+7f025ad5a032815ea683122d82f70e4becca56e93ef834c7eff2feb280a22770  /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/evals-lane/r3score/answers-d.jsonl
+80cefafd8a68d17dd1e369b819d161730320ce3cccaac1bb87967bd27b03ca73  /private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/evals-lane/blind2-labels.jsonl

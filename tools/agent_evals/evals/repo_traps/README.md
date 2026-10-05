@@ -4,6 +4,22 @@ Measures whether an agent working in Glassvow makes the right call on the reposi
 documented traps. Surface under test: `.claude/skills/glassvow-godot/SKILL.md`, given to the model
 as its system prompt (nothing else from the repository is visible to it).
 
+## Status (5 Oct 2026)
+
+- **The grader is not approved.** Round 3 failed its pre-registered bars in both judge arms
+  (`calibration-2026-10-05-round3.md`). `approvals.json` holds no grader approval, and its inputs
+  approval records an older `cases.jsonl` hash, so it is stale. `hillclimb` refuses to run.
+- **The stop rule applies** (`council-2026-10-05.md`, "Round 3 outcome"). There is no further judge
+  calibration. Any climb is to be graded on programmatic claims only, with the judge claims reported
+  and not scored. The harness has no such mode yet.
+- **The next investment is cases, not judges.** With 14 test cases, the test split's noise floor
+  (0.060) is above `min_gain` (0.05). The plan is to grow the eval towards 80–100 cases, each with
+  its decisive point in a structured, single-valued field (a boolean, an enumerated choice or an
+  exact identifier) that a program checks. This is tracked as a follow-up to #672.
+- **Known defect:** `cite-the-symbol` / `symbol-form-no-line`, a programmatic gate, rejects a correct
+  citation written in double backticks (round 3, `answers-d` line 107). Fix it in that work, together
+  with the sibling patterns that miss a hedge or a retraction written in prose.
+
 ## Cases
 
 `cases.jsonl` holds 35 cases. Every case is a concrete situation (a code excerpt, a command and
@@ -37,48 +53,122 @@ Some cases test the opposite error (treating harmless renderer noise as a failur
 need their own input; adding a helper on a belief that was never measured), so the eval does not reward an agent that is merely suspicious.
 Some cases are answered by the surface already; that is intended (it measures whether the surface
 carries the trap) and the headroom diagnostic will say if the eval saturates. Half of the boolean claims
-expect `true` and half `false`. A wrong boolean decision scores its case 0 (the decision gate), and the
-trivial-answerer diagnostic scores 24.0% at most; see Grader diagnostics below.
+expect `true` and half `false`. A wrong boolean decision scores its case 0 (the decision gate); each of
+the 13 cases with no boolean has one gate claim instead. See Grader below.
 
 ## Files
 
 - `eval.json`: surface path, grader type (`claims`), default models (`haiku`, `sonnet`, `opus`),
-  the hill-climb model (`sonnet`) and the judge model (unused by this eval).
+  the hill-climb model (`sonnet`), the judge model (`sonnet`) and the judge arm (`plain`; `reference`
+  is the pre-registered alternative, see Grader below).
 - `cases.jsonl`: `id`, `source`, `why_hard`, `prompt`, `answer_format`, `reference` (the intended
   answer, for reviewers and for the failure-injection check) and `grader`.
 - `split.json`: the seeded 60/40 train/test split, written by `init`. Re-run `init` if cases change.
+- `answers.jsonl`: per case, the reference answer field by field (each text value is a verbatim span of
+  the case's `reference`; the one exception is the typed-array-ternary fix, which the reference states in
+  prose) and two correct answers in other words. The offline tests require all three to score 100%, so a
+  claim edit that rejects a correct answer fails. The harness itself never reads this file.
+- `answers_independent.jsonl`: two correct answers per case from a separate writer, who worked from each
+  case's prompt, answer format and reference without sight of any grader (its first line says so and
+  records the sha256 of the rest). The answers are copied byte for byte and never edited to suit a claim.
+- `council-2026-10-04.md` and `council-2026-10-05.md`: the two councils' records. The second decided
+  the hybrid grader and the evidence its approval needs. Its round 3 decided the two judge arms, the
+  claims rewrite and the fresh calibration, and records the outcome.
+- `calibration-2026-10-05.md` and `calibration/`: the round-2 calibration record, with its spent sets
+  (`answers-a`, `-b`, `-c` and the wrong answers) and verdicts. Round 3 uses them as development
+  material only.
+- `calibration-2026-10-05-round3.md` and `calibration/round3/`: the round-3 calibration record. It
+  holds the spent fresh sets as written, the blind adjudication, the twelve gradings, the metrics and
+  the climb-noise summary. The sets are spent, so they must not calibrate a later grader.
 
 ## Adding a case
 
 Take it from a real transcript, bug report or note first, then a hand-written case, then a synthetic
 one anchored to a real one. Write `why_hard` before running anything. Keep the prompt
-self-contained, avoid sharing a 40-character span with another case, run `init`, then `review`
-and the approvals again (a changed `cases.jsonl` invalidates both).
+self-contained, avoid sharing a 40-character span with another case, check booleans, commands, paths,
+numbers and code by program and write every free-text claim as a judge question from the reference
+alone ("The answer states ..."), give a case with no boolean one `"gate": true` claim, add its line to
+`answers.jsonl`, run `init`, then `review` and the approvals again (a changed `cases.jsonl` invalidates
+both, and a changed claim also needs the calibration again).
 
-## Grader diagnostics
+## Grader
 
-Trivial answerers graded by the real grader on the 35 cases (`trivial_answerer_scores`; no model is
-called; limit 25%). "Old" is the previous 35 cases under the previous grader (no decision gate, no field
-cap); the soup and oracle rows did not exist then and were measured on that state for comparison.
+The grader is a hybrid (`council-2026-10-05.md`). Two rounds of tighter regular expressions on free
+text took the worst trivial answerer from 92.9% to 24.0%, but held-out correct answers fell from 88.5%
+on main to 68.2%, with seven scored 0: a regex trades resistance to keyword lists for false negatives,
+and overfits the answers it is tuned on. Free text is now judged; the regexes that remain check
+structure.
 
-| Answerer | Old | Now |
+| Case type | Programmatic claims | Judge claims | Gate |
+|---|---|---|---|
+| 22 cases with a boolean | 22 booleans; 4 structured (a command path and three code checks) | 36 | the boolean |
+| 13 cases with no boolean | 10 structured (code, a citation, a number, the owner phrase) | 20 | 7 by program, 6 by judge (majority of three) |
+| all 35 | 36 (22 booleans, 14 structured) | 56 | |
+
+Every judge question begins "The answer states". The judge runs in one of two pre-registered arms,
+both on `sonnet` with three votes and a majority: P (`plain`, the default) sees the claims and the
+fields; R (`reference`) also sees the case's reference, labelled as the expert's reference.
+
+**Round 3: claims rewritten for coverage, then frozen.** Round 2's calibration failed for both judges,
+and the adjudication that followed found that 21 of the 70 development wrong answers had no claim
+their corruption falsifies. Round 3 (`council-2026-10-05.md`) rewrote the claims from the
+development material alone: the references, `calibration/answers-a`, `-b` and `-c`, the round-2
+wrong set and its adjudication labels. The fresh held-out sets were never opened.
+
+- Every reference point that a development wrong answer corrupted now has a claim. One judge claim is
+  new (`typed-array-ternary` / `untyped-branch-fails`, on a field no claim read).
+- Each structured target has a `must_not_match` for its siblings: another `check_*` script, another
+  `_*_choices` or `_*_pile`, another `*_SHADER` or `*View`, another `get_center()` receiver or a scale
+  factor, a subtracted descent, another `ward_hit` receiver or heading, another `.gd` file or a line
+  number, another owner, and the locale or the definition in place of the art. A test swaps each
+  target for each sibling in all 315 committed correct answers, and also offers the sibling beside the
+  target; every mutant fails.
+- Judge questions keep round 2's wording unless a development wrong answer showed a gap. Where one
+  did (20 questions), a trailing "False if it says ..." names the concrete wrong alternative. Two
+  trial versions that wrote a contrast into every question made the judge fail correct answers that
+  never mention the alternative (10.9% of judge claims on 150 correct answers in the first), so
+  contrasts are kept to the questions with evidence.
+- No claim looks for hedge wording; the judge's brief already counts a set of alternatives as false.
+- Six questions were then reworded because they failed correct development answers on a literal
+  detail (`single-line`, `identity-default`, `states-rule`, `explains-stderr`, `checks-reach`,
+  `throwaway-driver`). The `per-recipe-uniform` gate now says that `confetti()` lives in
+  `card_surface.gdshader`, which the judge cannot otherwise know; three wordings were tried on that
+  case's development answers alone. In all, 27 of the 56 judge questions and 11 of the 14 structured
+  claims differ from round 2.
+
+Development check on the frozen claims, `sonnet`, majority of three (the third ballot is cast only
+when the first two disagree, which gives the same majority), on 245 correct answers (the 35
+references and sets a, b and c) and the 70 wrong answers:
+
+| | P (plain) | R (reference) |
 |---|---|---|
-| constant false (booleans false, empty text) | 11.0% | 11.9% |
-| constant true (booleans true, empty text) | 11.2% | 12.1% |
-| echo false (booleans false, text = prompt) | 12.4% | 19.0% |
-| echo true (booleans true, text = prompt) | 12.6% | 15.5% |
-| keyword soup false (every text field = one list of all domain words) | 68.3% | 11.9% |
-| keyword soup true | 68.6% | 12.1% |
-| oracle booleans (correct booleans, empty text) | 22.1% | 24.0% |
-| empty answer `{}` | 0.0% | 0.0% |
-| maximum | 68.6% | 24.0% |
+| Judge claims failed on correct answers | 7/392 (1.8%) | 2/392 (0.5%) |
+| Decision or gate failures on correct answers | 0 | 0 |
+| COVERED judge claims passed on wrong answers | 0/58 | 0/58 |
+| Wrong answers at 100% | 0/70 | 0/70 |
+| Coverage (labelled by the claim writer) | 70/70 | 70/70 |
 
-The decision gate alone brought the full soup from 68.6% to 59.0% (with the replacement cases), not
-under the limit; the 1,000-character field cap does the rest, because the soup is about 5,300
-characters. The oracle row is the least slack: it is the share of the score a model earns from the
-booleans alone, so a new case with a boolean and little else raises it.
+These figures are in-sample: the claims were rewritten on this material, so they prove nothing about
+held-out answers. The fresh sets and the blind adjudication decided, and both arms failed
+(`calibration-2026-10-05-round3.md`; `calibration.py` computes the bars, see
+`tools/agent_evals/README.md`).
 
-Known residual: a compact soup that fits under the cap (the most frequent claim words, 300 to 950
-characters) still scores 27% to 41%, because a few common words satisfy many keyword regexes and the
-booleans are right in half the cases. It is not part of the gate; tightening the keyword claims is the
-fix, and `approve-grader` does not yet measure it.
+**Frozen claims.** The sha256 over every claim, programmatic and judge, in file order
+(`graders.claims_sha256`) is
+
+`0235c5bc81daa4e8ae1ce08109ce95a363631605b54ed8b7f87d85db81e374e8`
+
+and a test pins it. Changing any claim changes the hash, and then the calibration and the grader
+approval must be done again.
+
+**Offline results (no model call).** With a fake judge that credits nothing, the programmatic claims
+give every trivial answerer nothing beyond the correct booleans: all 28 answerers score at most 23.8%,
+the `oracle_booleans` share. With a fake judge that credits everything, all 315 committed correct
+answers score 100% (the references, `answers.jsonl`, `answers_independent.jsonl` and calibration sets
+b and c), so no programmatic claim rejects a known correct answer.
+
+**Climb noise (unapproved).** One baseline of `sonnet` x 3 repetitions on the round-2 claims (judge
+`sonnet`, arm P), run only to see whether a climb can measure anything; it is not an approval run and
+was never offered to `approve-grader`. Its mean was 64.7%. The test split's noise floor was 0.060
+(14 cases) and the train split's 0.081 (21 cases): both above `min_gain` 0.05, so a climb's gain on
+the test split must exceed 0.060 to count, and the number of cases, not `min_gain`, sets the limit.
