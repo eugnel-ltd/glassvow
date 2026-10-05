@@ -1,0 +1,4 @@
+ctl1-l1  prefetch elapsed  3465.0 worst   17.5 slow []
+ctl2-l1  prefetch elapsed  3682.1 worst   18.2 slow []
+dev1-l1  prefetch elapsed  3270.7 worst   29.6 slow []
+dev2-l1  prefetch elapsed  3306.5 worst   29.9 slow []

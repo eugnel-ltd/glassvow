@@ -1,0 +1,21 @@
+#!/bin/zsh
+# Lane R3.2 batch C, after the floor moved to 18 and 8 texels a metre: main and
+# the branch interleaved, three installs each, one launch each: its boot (the
+# first open after the install), the opens with six reopens, and the Journey
+# rest at the cadence; every row with the RenderingDevice's memory split.
+set -u
+source ${0:A:h}/common.zsh
+OUT=$R/device/batchC
+$FLOW/ipad_lock.sh acquire map-r32
+trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+echo "== batch C start $(date +%T)"
+for n in 1 2 3; do
+  for b in dev ctl; do
+    if [[ $b == ctl ]]; then ipa=$CTL_IPA; build=26dc6dc7; else ipa=$DEV_IPA; build=$DEV_BUILD; fi
+    install_build $b$n $ipa || exit 1
+    MT_WAIT=70 mt_launch $b$n-l1 --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --opens --reopens=6 --holds=cadence --probe-view=journey
+    check_build $b$n-l1 $build
+  done
+done
+echo "== batch C done $(date +%T)"

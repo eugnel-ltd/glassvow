@@ -89,6 +89,7 @@ func finish() -> void:
 		# draws without casting.
 		var proxy: bool = part["shadow"] == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 		draw.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if str(groups[key]["kind"]) in NO_SHADOW and not proxy else part["shadow"]
+		draw.set_meta("kind",str(groups[key]["kind"]))
 		add_child(draw)
 		for i: int in range(anchors.size()):
 			var anchor: Node3D = anchors[i]

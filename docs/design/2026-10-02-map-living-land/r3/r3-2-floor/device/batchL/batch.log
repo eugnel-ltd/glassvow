@@ -1,0 +1,9 @@
+== batch L start 08:26:17
+== install ctl 08:26:17
+== ctl-title1 nonce ctl-title1-1098919630: rows fresh ("build":"26dc6dc7")
+== install t4 08:27:30
+== t4-title1 nonce t4-title1-1397820193: rows fresh ("build":"9acf1356")
+== t4-title2 nonce t4-title2-1068316975: rows fresh ("build":"9acf1356")
+== t4-title3 nonce t4-title3-2230121360: rows fresh ("build":"9acf1356")
+== batch L done 08:30:41
+== lock released 08:30:42

@@ -1,0 +1,2 @@
+Q  q-title1-fresh           ?         frame0  6216.1  force_draws 3586,3597        next    nan  over100 after0 [[194, 523.3]]         open ready  647.3 worst  175.5  bake worst 516.5
+Q  q-title2-cached          ?         frame0   378.6  force_draws 40,46            next    nan  over100 after0 []                     open ready  647.1 worst  173.3  bake worst 46.8

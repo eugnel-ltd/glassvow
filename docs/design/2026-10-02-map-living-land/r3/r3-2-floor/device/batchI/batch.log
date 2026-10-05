@@ -1,0 +1,7 @@
+== batch I start 08:07:04
+== install t2 08:07:04
+== t2-title1-settle5 nonce t2-title1-settle5-202329771: rows fresh ("build":"9acf1356")
+== t2-title2-settle5 nonce t2-title2-settle5-734324983: rows fresh ("build":"9acf1356")
+== t2-title3-settle0 nonce t2-title3-settle0-282310914: rows fresh ("build":"9acf1356")
+== batch I done 08:10:14
+== lock released 08:10:14

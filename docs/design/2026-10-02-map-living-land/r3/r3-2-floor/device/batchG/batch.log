@@ -1,0 +1,18 @@
+== batch G start 07:44:56
+== install ctl 07:44:56
+== ctl-seed nonce ctl-seed-2015211804: rows fresh ("build":"26dc6dc7")
+== ctl-title1 nonce ctl-title1-2204425714: rows fresh ("build":"26dc6dc7")
+== ctl-cold1 nonce ctl-cold1-1064426363: rows fresh
+"build":"26dc6dc7"
+== install dev 07:48:01
+== dev-title1 nonce dev-title1-3059521378: rows fresh ("build":"9acf1356")
+== dev-title2 nonce dev-title2-460428274: rows fresh ("build":"9acf1356")
+== dev-cold1 nonce dev-cold1-396325480: rows fresh
+"build":"9acf1356+dirty"
+== install ctl2 07:51:21
+== ctl-title2 nonce ctl-title2-276914526: rows fresh ("build":"26dc6dc7")
+== ctl-cold2 nonce ctl-cold2-2876412968: rows fresh
+== install dev2 07:53:36
+== dev-cold2 nonce dev-cold2-1798926616: rows fresh
+== batch G done 07:54:59
+== lock released 07:54:59

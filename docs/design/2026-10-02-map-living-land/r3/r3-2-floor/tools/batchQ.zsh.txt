@@ -1,0 +1,33 @@
+#!/bin/zsh
+# Lane R3.2 round 3, batch Q (QA app only, under the device lock; deletes
+# nothing): a scratch diagnostic build (f1f074ac, nonce r3k) whose bake logs
+# the renderer's pipeline compilations at each step, launched fresh and cached
+# on the title path, to find what the bake's last step still compiles.
+set -u
+source ${0:A:h}/common.zsh
+OUT=$R/device/batchQ
+$FLOW/ipad_lock.sh acquire map-r32
+trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+tt_launch() {  # label wait args...
+  local label=$1 wait=$2 i; shift 2
+  _mt_start $label "$@"
+  [[ -n "$MT_PID" ]] || { echo "== $label: launch failed"; return 1; }
+  sleep $wait
+  # (As run, the line here removed this launch's own stale row file from the batch's
+  # scratch output folder. This copy leaves it out: no committed tool deletes anything.)
+  for i in $(seq 1 20); do
+    timeout 300 xcrun devicectl device copy from --device $UDID --domain-type appDataContainer \
+      --domain-identifier $MT_QA --source Documents/title_probe.jsonl --destination $OUT/$label.jsonl >/dev/null 2>&1
+    if grep -q "$MT_NONCE" $OUT/$label.jsonl 2>/dev/null && grep -q '"probe":"\(open\|seed\)"' $OUT/$label.jsonl; then
+      echo "== $label nonce $MT_NONCE: rows fresh ($(grep -o '"build":"[^"]*"' $OUT/$label.jsonl | head -1))"; return 0
+    fi
+    sleep 5
+  done
+  echo "== $label nonce $MT_NONCE: rows MISSING"; return 1
+}
+echo "== batch Q start $(date +%T)"
+install_build q $R/ipa/h3-r3k-diag.ipa || exit 1
+tt_launch q-title1-fresh 70 --title-trace-probe=title
+tt_launch q-title2-cached 50 --title-trace-probe=title
+echo "== batch Q done $(date +%T)"

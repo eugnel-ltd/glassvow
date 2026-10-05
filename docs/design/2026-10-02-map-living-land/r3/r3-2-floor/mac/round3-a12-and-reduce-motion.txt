@@ -1,0 +1,16 @@
+# Round 3 at 0fb33aed, Mac, the A12 condition (GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 --rendering-driver metal --rendering-method mobile).
+# Captures at Journey, Act I seed 1, with tools/cap.sh (lean and full), then Reduce Motion at Close: two frames 1.5 s apart,
+# pixels changed by more than 6 levels, and those left of x=960 (the floor; the river and its water lie right of it).
+# Last, the title path with the title probe (a QA-armed copy of 0fb33aed in a scratch worktree).
+pad-landscape-lean: exit 0 0 shader errors, 0 script errors | other errors: 0
+pad-landscape-full: exit 0 0 shader errors, 0 script errors | other errors: 0
+phone-landscape-lean: exit 0 0 shader errors, 0 script errors | other errors: 0
+phone-landscape-full: exit 0 0 shader errors, 0 script errors | other errors: 0
+desktop-landscape-lean: exit 0 0 shader errors, 0 script errors | other errors: 0
+desktop-landscape-full: exit 0 0 shader errors, 0 script errors | other errors: 0
+pad-landscape-lean-zh: exit 0 0 shader errors, 0 script errors | other errors: 0
+rm still: exit 0 0 shader errors, 0 script errors
+rm motion: exit 0 0 shader errors, 0 script errors
+still changed 10208 left of x=960 0
+motion changed 103219 left of x=960 74459
+title path (A12 condition, 0fb33aed): shader errors 0, script errors 0, other ERROR lines 0

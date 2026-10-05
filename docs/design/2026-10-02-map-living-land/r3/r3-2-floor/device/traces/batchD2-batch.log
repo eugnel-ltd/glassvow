@@ -1,0 +1,41 @@
+== batch D2 start 05:40:59
+== install ctl1 05:40:59
+== ctl1-l1 nonce ctl1-l1-2428111121: rows fresh
+   ctl1-l1: build 26dc6dc7
+== ctl1-l2 nonce ctl1-l2-240121482: rows fresh
+   ctl1-l2: build 26dc6dc7
+== install dev1 05:44:06
+== dev1-l1 nonce dev1-l1-184489179: rows fresh
+   dev1-l1: build 2b411b4f
+== dev1-l2 nonce dev1-l2-1031610315: rows fresh
+   dev1-l2: build 2b411b4f
+== install ctl2 05:47:19
+== ctl2-l1 nonce ctl2-l1-2853621394: rows fresh
+   ctl2-l1: build 26dc6dc7
+== ctl2-l2 nonce ctl2-l2-1481814443: rows fresh
+   ctl2-l2: build 26dc6dc7
+== install dev2 05:50:28
+== dev2-l1 nonce dev2-l1-93318613: rows fresh
+   dev2-l1: build 2b411b4f
+== dev2-l2 nonce dev2-l2-2461116637: rows fresh
+   dev2-l2: build 2b411b4f
+== install ctl3 05:53:38
+== ctl3-l1 nonce ctl3-l1-254846310: rows fresh
+   ctl3-l1: build 26dc6dc7
+== ctl3-l2 nonce ctl3-l2-2635331109: rows fresh
+   ctl3-l2: build 26dc6dc7
+== install dev3 05:56:42
+== dev3-l1 nonce dev3-l1-33432235: rows fresh
+   dev3-l1: build 2b411b4f
+== dev3-l2 nonce dev3-l2-1847712446: rows fresh
+   dev3-l2: build 2b411b4f
+== dev-shot nonce dev-shot-253393574: rows fresh
+   dev-shot: build 2b411b4f
+== dev-tnone nonce dev-tnone-204194289: rows fresh
+== dev-tnone: trace 6.930503 s
+   dev-tnone: build 2b411b4f
+== dev-tground nonce dev-tground-24238696: rows fresh
+== dev-tground: trace 7.031618 s
+   dev-tground: build 2b411b4f
+== batch D2 done 06:03:52
+== lock released 06:03:52

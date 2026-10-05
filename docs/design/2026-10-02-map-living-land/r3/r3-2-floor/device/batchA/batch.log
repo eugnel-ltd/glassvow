@@ -1,0 +1,33 @@
+== batch A start 04:15:26
+== install ctl1 04:15:26
+== ctl1-l1 nonce ctl1-l1-304223133: rows fresh
+   ctl1-l1: build 26dc6dc7
+== ctl1-l2 nonce ctl1-l2-41883999: rows fresh
+   ctl1-l2: build 26dc6dc7
+== install dev1 04:18:36
+== dev1-l1 nonce dev1-l1-1323517125: rows fresh
+   dev1-l1: build ad956d8c
+== dev1-l2 nonce dev1-l2-13311596: rows fresh
+   dev1-l2: build ad956d8c
+== install ctl2 04:21:44
+== ctl2-l1 nonce ctl2-l1-173830532: rows fresh
+   ctl2-l1: build 26dc6dc7
+== ctl2-l2 nonce ctl2-l2-10397264: rows fresh
+   ctl2-l2: build 26dc6dc7
+== install dev2 04:24:46
+== dev2-l1 nonce dev2-l1-292781328: rows fresh
+   dev2-l1: build ad956d8c
+== dev2-l2 nonce dev2-l2-164819424: rows fresh
+   dev2-l2: build ad956d8c
+== install ctl3 04:27:55
+== ctl3-l1 nonce ctl3-l1-273878095: rows fresh
+   ctl3-l1: build 26dc6dc7
+== ctl3-l2 nonce ctl3-l2-709623020: rows fresh
+   ctl3-l2: build 26dc6dc7
+== install dev3 04:30:58
+== dev3-l1 nonce dev3-l1-115509517: rows fresh
+   dev3-l1: build ad956d8c
+== dev3-l2 nonce dev3-l2-2664316754: rows fresh
+   dev3-l2: build ad956d8c
+== batch A done 04:34:06
+== lock released 04:34:06

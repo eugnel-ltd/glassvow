@@ -1,0 +1,3 @@
+K  ctl-title1               ?         frame0   499.2  force_draws -                next    nan  over100 after0 []                     open ready  663.5 worst  193.5  
+K  t3-title1                ?         frame0  3630.3  force_draws -                next    nan  over100 after0 [[1, 1052.5], [3, 803.7]] open ready  646.5 worst  176.6  bake worst 46.7
+K  t3-title2                ?         frame0   387.8  force_draws -                next    nan  over100 after0 []                     open ready  646.5 worst  180.7  bake worst 48.9

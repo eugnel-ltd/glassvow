@@ -1,0 +1,90 @@
+"""Lane R3.2 mutation proof of tests/test_map_floor.gd: each mutation breaks one
+behaviour in the production code; the test must fail on it. Each file is backed
+up before it is touched and copied back after, whatever happens."""
+import shutil, subprocess, sys
+from pathlib import Path
+WT = Path(sys.argv[1])
+OUT = Path(sys.argv[2])
+M = [
+ ("tiles leave a gap", "presentation/map/landscape/floor_bake.gd",
+  "			out.append(Rect2i(at, (size - at).min(cell)))", "			out.append(Rect2i(at, (size - at).min(cell) - Vector2i(1, 0)))"),
+ ("mip chain one level short", "presentation/map/landscape/floor_bake.gd",
+  "	return 1 + floori(log(float(maxi(size.x, size.y))) / log(2.0))", "	return floori(log(float(maxi(size.x, size.y))) / log(2.0))"),
+ ("pool phase not the flame's", "presentation/map/landscape/floor_ground.gdshaderinc",
+  "	return fract(sin(dot(at, vec2(12.9898, 78.233))) * 43758.5453);", "	return fract(sin(dot(at, vec2(12.9898, 78.0))) * 43758.5453);"),
+ ("pools flicker under Reduce Motion", "presentation/map/landscape/floor.gdshader",
+  "sin(TIME * 9.0 + kept.g * 40.0) * land_motion;", "sin(TIME * 9.0 + kept.g * 40.0);"),
+ ("glints under Reduce Motion", "presentation/map/landscape/floor.gdshader",
+  "twinkle * twinkle * land_motion", "twinkle * twinkle"),
+ ("floor shaded", "presentation/map/landscape/floor.gdshader",
+  "render_mode unshaded, cull_back, shadows_disabled, fog_disabled;", "render_mode cull_back, fog_disabled;"),
+ ("an anisotropic sampler", "presentation/map/landscape/floor_paint.gdshader",
+  "uniform sampler2D moss : source_color, filter_linear_mipmap, repeat_enable;", "uniform sampler2D moss : source_color, filter_linear_mipmap_anisotropic, repeat_enable;"),
+ ("a lamp dropped", "presentation/map/landscape/floor_plan.gd",
+  "		for i: int in range(mini(anchors.size(), MOST_LAMPS)):", "		for i: int in range(mini(anchors.size(), MOST_LAMPS) - 1):"),
+ ("cards face sideways", "presentation/map/landscape/floor_plan.gd",
+  "	var across: Vector3 = Vector3(normal.z, 0.0, -normal.x)\n	var bases: PackedVector3Array = planting.bases\n	var tiles",
+  "	var across: Vector3 = Vector3(normal.x, 0.0, normal.z)\n	var bases: PackedVector3Array = planting.bases\n	var tiles"),
+ ("cards float", "presentation/map/landscape/floor_plan.gd",
+  "		var corner: Vector3 = bases[i] + Vector3.UP * height + across * Atlas.low[tile].x * s",
+  "		var corner: Vector3 = bases[i] + Vector3.UP * (height + 0.3) + across * Atlas.low[tile].x * s"),
+ ("shrubs cast cards", "presentation/map/landscape/floor_plan.gd",
+  "		if Planting.TREES.has(planting.kinds[i]):\n			trees.append(i)", "		trees.append(i)"),
+ ("no shrub shade", "presentation/map/landscape/floor_plan.gd",
+  "			_stamp(bases[i] + away * Atlas.top[tile] * s * SHRUB_SHADE.w,\n				Vector4(0.0, 0.0, SHRUB_SHADE.z, crown))", "			pass"),
+ ("seats unstamped", "presentation/map/landscape/floor_plan.gd",
+  "			_stamp(base.position, STONE_FOOT)", "			pass"),
+ ("ground heights miss the highest", "presentation/map/landscape/terrain.gd",
+  "		_ground_heights = Vector2(minf(_ground_heights.x, span.x), maxf(_ground_heights.y, span.y))",
+  "		_ground_heights = Vector2(minf(_ground_heights.x, span.x), maxf(_ground_heights.y, span.y) - 0.5)"),
+ ("mask receivers cast", "presentation/map/landscape/floor_stage.gd",
+  "		_receiver(chunk, mask, MASK_LAYER, false)", "		_receiver(chunk, mask, MASK_LAYER, true)"),
+ ("details left out of the bake", "presentation/map/landscape/floor_stage.gd",
+  "		if detail != null:\n			_receiver(detail, null, LIT_LAYER, false)", "		if detail != null:\n			pass"),
+ ("pilgrim baked", "presentation/map/landscape/floor_stage.gd",
+  "			if child != land.journey.walker:\n				_casts_from(child)", "			_casts_from(child)"),
+ ("casters drawn", "presentation/map/landscape/floor_stage.gd",
+  "		copy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY", "		copy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON"),
+ ("bake tonemap not linear", "presentation/map/landscape/floor_stage.gd",
+  "	environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR", "	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC"),
+ ("bakes headless", "presentation/map/landscape/floor_bake.gd",
+  '	return RenderingServer.get_rendering_device() != null and DisplayServer.get_name() != "headless"', "	return true"),
+ ("details stay drawn", "presentation/map/landscape/land_floor.gd",
+  "		if detail != null:\n			detail.visible = false", "		if detail != null:\n			pass"),
+ ("wood keeps casting live", "presentation/map/landscape/land_floor.gd",
+  "		for caster: GeometryInstance3D in land.wood.casters:\n			_no_shadow(caster)", "		for caster: GeometryInstance3D in land.wood.casters:\n			pass"),
+ ("a hero put out", "presentation/map/landscape/land_floor.gd",
+  'const LIVE_CASTERS: PackedStringArray = ["amber-arch", "slate-bank", "slate-ridge", "slate-shard"]', 'const LIVE_CASTERS: PackedStringArray = ["amber-arch", "slate-ridge", "slate-shard"]'),
+ ("parapets put out", "presentation/map/landscape/land_floor.gd",
+  "		if str(node.name) != LIVE_BRIDGE:", "		if true:"),
+ ("blob never made", "presentation/map/landscape/pilgrim.gd",
+  "	_blob_wanted = on\n	if cloak == null:", "	_blob_wanted = false\n	if cloak == null:"),
+ ("blob keeps the pilgrim's shadow", "presentation/map/landscape/pilgrim.gd",
+  "			(node as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF \\\n				if on else", "			(node as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON \\\n				if on else"),
+ ("decode wrong", "presentation/map/landscape/land_floor.gd",
+  '	floor_paint.set_shader_parameter("decode", 1.0 / Bake.Stage.EXPOSURE)', '	floor_paint.set_shader_parameter("decode", 1.0)'),
+]
+only = sys.argv[3].split(",") if len(sys.argv) > 3 else None
+results = []
+for i, (name, rel, before, after) in enumerate(M):
+    if only and str(i) not in only:
+        continue
+    path = WT / rel
+    backup = OUT / ("backup-%d" % i)
+    shutil.copy2(path, backup)
+    try:
+        text = path.read_text()
+        if text.count(before) != 1:
+            results.append((name, "ANCHOR NOT FOUND"))
+            continue
+        path.write_text(text.replace(before, after))
+        run = subprocess.run(["godot", "--headless", "-s", "res://tests/run_all.gd", "--", "--tests=res://tests/test_map_floor.gd"],
+                             cwd=WT, capture_output=True, text=True, timeout=1500)
+        out = run.stdout + run.stderr
+        failed = "FAIL res://tests/test_map_floor.gd" in out or "PASS (1 tests)" not in out
+        lines = [l for l in out.splitlines() if l.startswith("  - test_map_floor")]
+        results.append((name, ("caught: " + "; ".join(l.strip()[18:] for l in lines[:2])) if failed and lines else ("caught (no assertion line; parse or run error)" if failed else "SURVIVED")))
+    finally:
+        shutil.copy2(backup, path)
+    print("%-36s %s" % results[-1], flush=True)
+print("caught %d of %d" % (sum(1 for r in results if r[1].startswith("caught")), len(results)))

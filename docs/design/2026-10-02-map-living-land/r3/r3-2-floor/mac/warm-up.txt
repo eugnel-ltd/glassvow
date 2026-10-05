@@ -1,0 +1,24 @@
+# The floor's pipelines in the shader warm-up (floor_warm.gd; MapJourneyPrefetch.prime draws it on the title's
+# frame 0, beside the title's own frame-0 warm-up).
+#
+# iPad 8, the title path (device/batchT; tools/title_probe.gd.txt, batchT.zsh.txt). A seed launch stored an Act I
+# run; each title launch then booted to the title, waited for the land's prefetch and its paced bake, pressed
+# Back to the Road and timed the open. Frame 0 = from main's route (the title built, prime() run) to the first
+# frame drawn. dev-title1 is the branch's first launch after its install: its floor shaders changed with the
+# revision, so the warm-up compiled them cold. Main's builds compile nothing new.
+#
+#                frame 0    next frame   title, worst after   open: to the map drawn   open: worst frame
+# main  title1    569.8 ms    22.8 ms       34.9 ms              776.9 ms                 302.9 ms
+# R3.2  title1   3140.0 ms  1368.6 ms     1368.6 ms (frame 1)    646.7 ms                 173.4 ms   (cold: compiled)
+# R3.2  title2    410.6 ms    11.4 ms       50.0 ms              646.5 ms                 169.8 ms
+# R3.2  title3    622.9 ms    28.9 ms       54.0 ms              729.7 ms                 249.7 ms
+# main  title2    542.1 ms    24.2 ms       26.4 ms              680.1 ms                 210.0 ms
+#
+# The warm-up's cold compile: frame 0 +2.6 s over main's (behind the launch screen), and one more frame of
+# 1.37 s, once per change to the floor's shaders (an app update). With the pipelines cached, frame 0 is
+# main's (410.6 and 622.9 ms against 569.8 and 542.1). Under the title the paced bake took 8 frames, its worst
+# 45.4, 50.0 and 50.1 ms (wall 197.8, 185.4, 216.5 ms); the first open then drew the baked floor (state 2) and
+# its worst frame was lower than main's in every launch.
+#
+# Mac (M1 Max), the A12 condition, each run in a fresh user dir, Act I map booted by tools/warm_then_map.gd.txt
+# at 441bff8d: the bake's first frame 131.8 and 119.1 ms booted cold, 48.6 and 69.8 ms after FloorWarm.

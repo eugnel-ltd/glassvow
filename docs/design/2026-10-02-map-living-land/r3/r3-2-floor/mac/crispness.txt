@@ -1,0 +1,17 @@
+# Close crispness (tools/crisp.py.txt): the variance of the luminance's 4-neighbour Laplacian, and its mean
+# absolute value, on the review's road-verge crop at Close (box 140,90-520,330 of the 1180x820 pad capture,
+# lean, Reduce Motion, drifting air hidden, the A12 condition), and on the floor alone inside it
+# (box 230,150-335,245: road and verge, no token, lamp or plant). Crops: frames/crisp-road-verge-*.png.
+main 26dc6dc7                  crop: variance 0.005320  mean |L| 0.02230 | floor alone: variance 0.000237  mean |L| 0.00556
+R3.2 at the review, fbc9a41f   crop: variance 0.005445  mean |L| 0.02562 | floor alone: variance 0.000318  mean |L| 0.01028
+R3.2 revision, 2c759d39        crop: variance 0.005469  mean |L| 0.02700 | floor alone: variance 0.000450  mean |L| 0.01295
+revision, close_gain 0 [1]   crop: variance 0.005491  mean |L| 0.02552 | floor alone: variance 0.000322  mean |L| 0.01019
+
+# The Close gain changes Close only. Pixels differing (any channel > 2 levels) between captures of the
+# revision with close_gain 0.9 and 0, against two captures of one build (the run-to-run noise):
+journey  gain on/off:   1120 px (max  49, mean 0.017) | one build twice:   807 px (max 11, mean 0.013)
+whole    gain on/off:    213 px (max   7, mean 0.003) | one build twice:   172 px (max  5, mean 0.002)
+close    gain on/off:  87606 px (max  20, mean 0.422) | one build twice:   518 px (max  6, mean 0.004)
+# (v4/v4b and v5/v5n differ only in how the view height is read; the gain applies below 16.5 m: Close is
+#  13.06 m at seed 1, a Journey 19.2 m, Whole act 54.9 m.)
+# [1] captured one commit's worth of editing before the head, before the grain was clamped at zero; the clamp never binds (the detail's grain never falls below 52/255, so the factor stays above 0.09).

@@ -1,0 +1,24 @@
+#!/bin/zsh
+# Lane R3.2 batch A: main and the branch interleaved, three installs each.
+# Per install: L1 = the first launch after the install (its boot is the first
+# open after an install), then the opens (cold, reopen x2, warmed) and 600-frame
+# rests at the cadence and live at Journey, river, Close and Whole act; L2 = the
+# fresh-run opening view's rests (and a warm-cache boot).
+set -u
+source ${0:A:h}/common.zsh
+OUT=$R/device/batchA
+$FLOW/ipad_lock.sh acquire map-r32
+trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+echo "== batch A start $(date +%T)"
+for n in 1 2 3; do
+  for b in ctl dev; do
+    if [[ $b == ctl ]]; then ipa=$CTL_IPA; build=26dc6dc7; else ipa=$DEV_IPA; build=$DEV_BUILD; fi
+    install_build $b$n $ipa || exit 1
+    MT_WAIT=110 mt_launch $b$n-l1 --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --opens --holds=cadence,live --probe-view=journey,river,close,whole
+    check_build $b$n-l1 $build
+    MT_WAIT=40 mt_launch $b$n-l2 --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --holds=cadence,live
+    check_build $b$n-l2 $build
+  done
+done
+echo "== batch A done $(date +%T)"

@@ -1,0 +1,90 @@
+==================== ctl
+-- boots (l1 = first launch after its install; l2 = later launch)
+  ctl1-l1  ready  1998.0 worst   230.8 slow [[515.0, 230.8], [1998.0, 66.9]] vram 0.0->265.3 peak 265.3 after10 265.3 | bake - frames_ms -
+  ctl1-l2  ready  1898.0 worst   150.1 slow [[73.0, 72.5], [430.0, 150.1], [1898.0, 51.5]] vram 0.0->269.3 peak 269.3 after10 269.3 | bake - frames_ms -
+  ctl2-l1  ready  2058.2 worst   183.4 slow [[55.0, 54.0], [459.0, 183.4]] vram 0.0->267.2 peak 267.2 after10 267.2 | bake - frames_ms -
+  ctl2-l2  ready  1911.9 worst   150.0 slow [[54.0, 54.1], [429.0, 150.0]] vram 0.0->265.3 peak 265.3 after10 265.3 | bake - frames_ms -
+  ctl3-l1  ready  1871.7 worst   133.5 slow [[66.0, 64.9], [422.0, 133.5], [1872.0, 50.1]] vram 0.0->265.2 peak 265.2 after10 265.2 | bake - frames_ms -
+  ctl3-l2  ready  1955.8 worst   201.6 slow [[474.0, 201.6], [1956.0, 50.1]] vram 0.0->265.3 peak 265.3 after10 265.3 | bake - frames_ms -
+-- opens
+  cold   ctl1-l1  ready  2297.3 first   649.7 call   634.7 worst  649.7 vram 181.3->273.4 peak 290.5 after10 273.4
+  cold   ctl2-l1  ready  2281.0 first   656.3 call   640.1 worst  656.3 vram 183.0->267.4 peak 284.5 after10 267.4
+  cold   ctl3-l1  ready  2296.8 first   652.9 call   637.0 worst  652.9 vram 181.2->273.4 peak 290.5 after10 273.4
+  cold   MEDIAN ready 2296.8 over 3
+  reopen ctl1-l1  ready    25.6 first    25.6 call    13.8 worst   25.6 vram 273.4->273.4 peak 273.4 after10 273.9
+  reopen ctl1-l1  ready    36.0 first    36.0 call    19.8 worst   36.0 vram 273.9->273.9 peak 273.9 after10 273.8
+  reopen ctl2-l1  ready    40.3 first    40.3 call    22.9 worst   40.3 vram 267.4->267.4 peak 267.4 after10 267.8
+  reopen ctl2-l1  ready    40.1 first    40.1 call    24.0 worst   40.1 vram 267.8->267.8 peak 267.8 after10 267.8
+  reopen ctl3-l1  ready    37.4 first    37.4 call    20.6 worst   37.4 vram 273.4->273.4 peak 273.4 after10 273.9
+  reopen ctl3-l1  ready    43.5 first    43.5 call    27.1 worst   43.5 vram 273.9->273.9 peak 273.9 after10 273.7
+  reopen MEDIAN ready 38.8 over 6
+  warmed ctl1-l1  ready   101.6 first   101.6 call    83.1 worst  101.6 vram 252.3->252.3 peak 252.3 after10 273.3
+  warmed ctl2-l1  ready   102.7 first   102.7 call    84.6 worst  102.7 vram 246.3->246.3 peak 246.3 after10 267.3
+  warmed ctl3-l1  ready   104.2 first   104.2 call    86.3 worst  104.2 vram 252.3->252.3 peak 252.3 after10 273.3
+  warmed MEDIAN ready 102.7 over 3
+-- holds (mean ms / p95 / missed / max), render at start
+  close    cadence means 16.661 / 16.662 / 16.661 | p95 19.34 / 17.05 / 17.02 | missed 0 / 0 / 0 | max 22.4 / 17.5 / 17.6
+  close    cadence MEDIAN mean 16.661 p95 17.05 missed 0 | render {'shadow_draw_calls': 55, 'shadow_primitives': 28130, 'stage_draw_calls': 59, 'stage_primitives': 45470} | video_mib 273.3 / 267.3 / 273.3
+  close    live    means 16.662 / 16.661 / 16.661 | p95 17.40 / 17.06 / 17.06 | missed 0 / 0 / 0 | max 19.5 / 17.8 / 17.7
+  close    live    MEDIAN mean 16.661 p95 17.06 missed 0 | render {'shadow_draw_calls': 55, 'shadow_primitives': 28130, 'stage_draw_calls': 59, 'stage_primitives': 45470} | video_mib 273.3 / 267.3 / 273.3
+  journey  cadence means 16.660 / 16.661 / 16.662 | p95 19.28 / 17.01 / 17.11 | missed 0 / 0 / 0 | max 20.3 / 17.5 / 17.5
+  journey  cadence MEDIAN mean 16.661 p95 17.11 missed 0 | render {'shadow_draw_calls': 69, 'shadow_primitives': 32107, 'stage_draw_calls': 80, 'stage_primitives': 57890} | video_mib 273.3 / 267.3 / 273.3
+  journey  live    means 16.666 / 16.662 / 16.663 | p95 17.36 / 17.07 / 17.15 | missed 0 / 0 / 0 | max 18.8 / 17.4 / 17.7
+  journey  live    MEDIAN mean 16.663 p95 17.15 missed 0 | render {'shadow_draw_calls': 69, 'shadow_primitives': 32107, 'stage_draw_calls': 80, 'stage_primitives': 57890} | video_mib 273.3 / 267.3 / 273.3
+  opening  cadence means 16.660 / 16.665 / 16.663 | p95 17.18 / 19.18 / 17.11 | missed 0 / 0 / 0 | max 17.8 / 20.5 / 17.5
+  opening  cadence MEDIAN mean 16.663 p95 17.18 missed 0 | render {'shadow_draw_calls': 90, 'shadow_primitives': 37817, 'stage_draw_calls': 101, 'stage_primitives': 69418} | video_mib 269.3 / 265.3 / 265.3
+  opening  live    means 16.662 / 16.662 / 16.662 | p95 17.22 / 19.28 / 17.23 | missed 0 / 0 / 0 | max 17.5 / 19.8 / 17.7
+  opening  live    MEDIAN mean 16.662 p95 17.23 missed 0 | render {'shadow_draw_calls': 90, 'shadow_primitives': 37817, 'stage_draw_calls': 101, 'stage_primitives': 69418} | video_mib 269.3 / 265.3 / 265.3
+  river    cadence means 16.661 / 16.661 / 16.661 | p95 19.62 / 17.02 / 16.98 | missed 0 / 0 / 0 | max 21.8 / 17.6 / 17.5
+  river    cadence MEDIAN mean 16.661 p95 17.02 missed 0 | render {'shadow_draw_calls': 65, 'shadow_primitives': 32356, 'stage_draw_calls': 62, 'stage_primitives': 53140} | video_mib 273.3 / 267.3 / 273.3
+  river    live    means 16.659 / 16.663 / 16.662 | p95 17.48 / 17.03 / 17.03 | missed 0 / 0 / 0 | max 18.6 / 17.4 / 17.5
+  river    live    MEDIAN mean 16.662 p95 17.03 missed 0 | render {'shadow_draw_calls': 65, 'shadow_primitives': 32356, 'stage_draw_calls': 62, 'stage_primitives': 53140} | video_mib 273.3 / 267.3 / 273.3
+  whole    cadence means 16.661 / 16.662 / 16.660 | p95 19.09 / 17.14 / 18.98 | missed 0 / 0 / 0 | max 21.3 / 17.4 / 20.5
+  whole    cadence MEDIAN mean 16.661 p95 18.98 missed 0 | render {'shadow_draw_calls': 204, 'shadow_primitives': 58014, 'stage_draw_calls': 219, 'stage_primitives': 109546} | video_mib 273.5 / 267.5 / 273.5
+  whole    live    means 16.666 / 16.663 / 16.665 | p95 19.73 / 17.17 / 19.45 | missed 0 / 0 / 0 | max 20.6 / 18.0 / 20.5
+  whole    live    MEDIAN mean 16.665 p95 19.45 missed 0 | render {'shadow_draw_calls': 204, 'shadow_primitives': 58014, 'stage_draw_calls': 219, 'stage_primitives': 109546} | video_mib 273.5 / 267.5 / 273.5
+==================== dev
+-- boots (l1 = first launch after its install; l2 = later launch)
+  dev1-l1  ready  4801.3 worst  2399.9 slow [[64.0, 62.5], [413.0, 148.7], [4213.0, 2399.9], [4296.0, 82.8], [4762.0, 416.6]] vram 0.0->285.4 peak 297.1 after10 285.6 | bake 2948.9 frames_ms [2400.4, 82.0, 49.9, 416.6]
+  dev1-l2  ready  2125.9 worst   150.1 slow [[51.0, 50.5], [426.0, 150.1], [1926.0, 99.9], [1993.0, 66.7], [2043.0, 50.0]] vram 0.0->287.1 peak 298.7 after10 287.1 | bake 244.2 frames_ms [99.8, 66.7, 50.0, 27.6]
+  dev2-l1  ready  2147.4 worst   216.7 slow [[53.0, 50.5], [491.0, 216.7], [1957.0, 83.4], [2025.0, 68.0]] vram 0.0->287.0 peak 298.7 after10 287.0 | bake 233.6 frames_ms [83.4, 67.9, 48.8, 33.5]
+  dev2-l2  ready  2244.8 worst   265.2 slow [[53.0, 52.7], [544.0, 265.2], [2027.0, 83.4], [2111.0, 83.2]] vram 0.0->287.1 peak 298.7 after10 287.1 | bake 250.7 frames_ms [83.0, 83.2, 50.0, 34.5]
+  dev3-l1  ready  2035.9 worst    98.7 slow [[55.0, 54.1], [379.0, 98.7], [1862.0, 83.5], [1929.0, 66.6]] vram 0.0->287.1 peak 298.8 after10 287.4 | bake 219.6 frames_ms [83.4, 66.6, 49.8, 19.8]
+  dev3-l2  ready  2214.6 worst   266.6 slow [[56.0, 56.3], [544.0, 266.6], [2027.0, 83.3], [2111.0, 83.5]] vram 0.0->289.1 peak 300.7 after10 289.1 | bake 233.3 frames_ms [83.3, 83.5, 28.3, 38.2]
+-- opens
+  cold   dev1-l1  ready  2685.5 first   728.6 call   710.7 worst  728.6 vram 186.8->324.7 peak 334.7 after10 295.2 | bake 153.4 frames_ms [16.8, 66.5, 49.9, 20.1]
+  cold   dev2-l1  ready  2487.9 first   662.9 call   646.8 worst  662.9 vram 188.5->324.7 peak 334.7 after10 295.2 | bake 166.8 frames_ms [18.2, 81.8, 50.1, 16.7]
+  cold   dev3-l1  ready  2533.5 first   647.1 call   629.6 worst  647.1 vram 188.6->318.7 peak 328.7 after10 289.2 | bake 165.1 frames_ms [17.0, 81.5, 29.9, 36.7]
+  cold   MEDIAN ready 2533.5 over 3
+  reopen dev1-l1  ready    61.3 first    61.3 call    41.1 worst   61.3 vram 295.2->295.2 peak 295.2 after10 295.7
+  reopen dev1-l1  ready    61.6 first    61.6 call    41.1 worst   61.6 vram 295.7->295.7 peak 295.7 after10 295.5
+  reopen dev2-l1  ready    61.8 first    61.8 call    41.4 worst   61.8 vram 295.2->295.2 peak 295.2 after10 295.7
+  reopen dev2-l1  ready    49.3 first    49.3 call    31.9 worst   49.3 vram 295.7->295.7 peak 295.7 after10 295.6
+  reopen dev3-l1  ready    57.5 first    57.5 call    37.1 worst   57.5 vram 289.2->289.2 peak 289.2 after10 289.7
+  reopen dev3-l1  ready    38.8 first    38.8 call    21.4 worst   38.8 vram 289.7->289.7 peak 289.7 after10 289.6
+  reopen MEDIAN ready 59.4 over 6
+  warmed dev1-l1  ready   103.5 first   103.5 call    82.3 worst  103.5 vram 303.7->303.7 peak 303.7 after10 295.1
+  warmed dev2-l1  ready   104.8 first   104.8 call    84.2 worst  104.8 vram 303.7->303.7 peak 303.7 after10 295.1
+  warmed dev3-l1  ready   102.9 first   102.9 call    79.0 worst  102.9 vram 297.7->297.7 peak 297.7 after10 289.1
+  warmed MEDIAN ready 103.5 over 3
+-- holds (mean ms / p95 / missed / max), render at start
+  close    cadence means 16.662 / 16.662 / 16.661 | p95 18.60 / 16.98 / 16.97 | missed 0 / 0 / 0 | max 21.6 / 17.5 / 17.3
+  close    cadence MEDIAN mean 16.662 p95 16.98 missed 0 | render {'shadow_draw_calls': 6, 'shadow_primitives': 4706, 'stage_draw_calls': 58, 'stage_primitives': 44010} | video_mib 295.1 / 295.1 / 289.1
+  close    live    means 16.661 / 16.662 / 16.662 | p95 17.40 / 17.03 / 17.10 | missed 0 / 0 / 0 | max 18.4 / 17.4 / 17.6
+  close    live    MEDIAN mean 16.662 p95 17.10 missed 0 | render {'shadow_draw_calls': 6, 'shadow_primitives': 4706, 'stage_draw_calls': 58, 'stage_primitives': 44010} | video_mib 295.1 / 295.1 / 289.1
+  journey  cadence means 16.664 / 16.661 / 16.661 | p95 17.67 / 17.09 / 17.05 | missed 0 / 0 / 0 | max 21.1 / 17.4 / 21.0
+  journey  cadence MEDIAN mean 16.661 p95 17.09 missed 0 | render {'shadow_draw_calls': 8, 'shadow_primitives': 5031, 'stage_draw_calls': 79, 'stage_primitives': 56430} | video_mib 295.1 / 295.1 / 289.1
+  journey  live    means 16.662 / 16.661 / 16.661 | p95 17.42 / 17.08 / 17.05 | missed 0 / 0 / 0 | max 21.3 / 17.7 / 17.3
+  journey  live    MEDIAN mean 16.661 p95 17.08 missed 0 | render {'shadow_draw_calls': 8, 'shadow_primitives': 5031, 'stage_draw_calls': 79, 'stage_primitives': 56430} | video_mib 295.1 / 295.1 / 289.1
+  opening  cadence means 16.660 / 16.660 / 16.661 | p95 19.20 / 19.27 / 17.18 | missed 0 / 0 / 0 | max 20.6 / 19.8 / 17.6
+  opening  cadence MEDIAN mean 16.660 p95 19.20 missed 0 | render {'shadow_draw_calls': 9, 'shadow_primitives': 5143, 'stage_draw_calls': 99, 'stage_primitives': 67956} | video_mib 287.1 / 287.1 / 289.1
+  opening  live    means 16.659 / 16.658 / 16.661 | p95 19.06 / 19.08 / 17.20 | missed 0 / 0 / 0 | max 19.6 / 19.5 / 18.1
+  opening  live    MEDIAN mean 16.659 p95 19.06 missed 0 | render {'shadow_draw_calls': 9, 'shadow_primitives': 5143, 'stage_draw_calls': 99, 'stage_primitives': 67956} | video_mib 287.1 / 287.1 / 289.1
+  river    cadence means 16.658 / 16.660 / 16.661 | p95 18.43 / 16.97 / 16.99 | missed 0 / 0 / 0 | max 22.1 / 17.8 / 17.7
+  river    cadence MEDIAN mean 16.660 p95 16.99 missed 0 | render {'shadow_draw_calls': 5, 'shadow_primitives': 3758, 'stage_draw_calls': 60, 'stage_primitives': 51678} | video_mib 295.1 / 295.1 / 289.1
+  river    live    means 16.661 / 16.662 / 16.662 | p95 17.67 / 16.96 / 16.97 | missed 0 / 0 / 0 | max 20.7 / 17.3 / 17.4
+  river    live    MEDIAN mean 16.662 p95 16.97 missed 0 | render {'shadow_draw_calls': 5, 'shadow_primitives': 3758, 'stage_draw_calls': 60, 'stage_primitives': 51678} | video_mib 295.1 / 295.1 / 289.1
+  whole    cadence means 16.660 / 16.662 / 16.662 | p95 18.73 / 17.17 / 19.21 | missed 0 / 0 / 0 | max 20.9 / 17.6 / 20.5
+  whole    cadence MEDIAN mean 16.662 p95 18.73 missed 0 | render {'shadow_draw_calls': 13, 'shadow_primitives': 5754, 'stage_draw_calls': 218, 'stage_primitives': 108086} | video_mib 295.4 / 295.4 / 289.4
+  whole    live    means 16.662 / 16.661 / 16.662 | p95 19.47 / 17.11 / 19.53 | missed 0 / 0 / 0 | max 20.4 / 22.3 / 20.2
+  whole    live    MEDIAN mean 16.662 p95 19.47 missed 0 | render {'shadow_draw_calls': 13, 'shadow_primitives': 5754, 'stage_draw_calls': 218, 'stage_primitives': 108086} | video_mib 295.4 / 295.4 / 289.4

@@ -23,6 +23,8 @@ var _grid: PackedFloat32Array = PackedFloat32Array()
 var _columns: int = 0
 var _rows: int = 0
 var _baked: Array = []
+## Each height column's least and greatest height.
+var _spans: PackedVector2Array = PackedVector2Array()
 var _bake_lock: Mutex = Mutex.new()
 var _heights_task: int = -1
 ## How many pool threads worked the heights out (`start_heights`): 0 on the
@@ -33,6 +35,12 @@ var heights_threads: int = 0
 static var pool_threads: int = _configured_pool_threads()
 ## The A12 profile's ground (`terrain_paint.gdshader` `lite`): set by the host.
 var lite_surfaces: bool = false
+## The ground's painted material (`terrain_paint.gd`), which the bridge decks,
+## the woodland and the floor's bake (`floor_bake.gd`) read; the ground's
+## chunks, which the floor (`land_floor.gd`) draws from its bake once in.
+var paint: ShaderMaterial = null
+var chunks: Array[MeshInstance3D] = []
+var _ground_heights: Vector2 = Vector2.ZERO
 ## The build's pacing when a worker builds the land ahead of its map: a build
 ## given up (`stopped`) ends after its current part.
 var pacing: Meshes.Pacing = null
@@ -174,6 +182,7 @@ func start_heights(parallel: bool = true, threads: int = -1) -> void:
 	_rows = int(bounds.size.y / CELL) + 1
 	_baked.clear()
 	_baked.resize(_columns)
+	_spans.resize(_columns)
 	if not parallel:
 		for ix: int in range(_columns):
 			_bake_column(ix)
@@ -196,6 +205,11 @@ static func _configured_pool_threads() -> int:
 	return configured if configured > 0 else OS.get_processor_count()
 
 
+## The least and the greatest height of the ground's vertices.
+func ground_heights() -> Vector2:
+	return _ground_heights
+
+
 func heights_ready() -> bool:
 	return _heights_task < 0 or WorkerThreadPool.is_group_task_completed(_heights_task)
 
@@ -207,10 +221,13 @@ func finish_heights() -> void:
 		_heights_task = -1
 	var grid: PackedFloat32Array = PackedFloat32Array()
 	grid.resize(_columns * _rows)
+	_ground_heights = Vector2(INF, -INF)
 	for ix: int in range(_columns):
 		var column: PackedFloat32Array = _baked[ix]
 		for iz: int in range(_rows):
 			grid[ix * _rows + iz] = column[iz]
+		var span: Vector2 = _spans[ix]
+		_ground_heights = Vector2(minf(_ground_heights.x, span.x), maxf(_ground_heights.y, span.y))
 	_baked.clear()
 	_grid = grid
 	build_timings_ms["heights"] = Time.get_ticks_msec() - _heights_started
@@ -220,10 +237,13 @@ func _bake_column(ix: int) -> void:
 	var column: PackedFloat32Array = PackedFloat32Array()
 	column.resize(_rows)
 	var x: float = bounds.position.x + ix * CELL
+	var span: Vector2 = Vector2(INF, -INF)
 	for iz: int in range(_rows):
 		column[iz] = landform.height(x, bounds.position.y + iz * CELL)
+		span = Vector2(minf(span.x, column[iz]), maxf(span.y, column[iz]))
 	_bake_lock.lock()
 	_baked[ix] = column
+	_spans[ix] = span
 	_bake_lock.unlock()
 
 func surface_height(x: float, z: float) -> float:
@@ -300,12 +320,14 @@ func _land() -> void:
 	var ground_mat: Material = mat if greybox else Paint.create(lines, is_elevated, bounds)
 	build_timings_ms["ground_paint"] = Time.get_ticks_msec() - paint_started
 	if ground_mat is ShaderMaterial:
+		paint = ground_mat
 		ground_mat.set_shader_parameter("river_cuts",Vector2(MapRavine.CUTS[0],MapRavine.CUTS[1]))
 		ground_mat.set_shader_parameter("channel",River.CHANNEL)
 		ground_mat.set_shader_parameter("lite", lite_surfaces)
 	for i: int in range(meshes.size()):
 		var chunk: MeshInstance3D = Meshes.node(self, meshes[i], ground_mat,
 			"Quiet sculpted ground" if i == 0 else "Ground chunk %d" % i)
+		chunks.append(chunk)
 		# The lean profile's ground casts no shadow onto itself: on the A12 it
 		# was 40% of the shadow pass at the 40° camera, for a mostly flat
 		# ground whose slopes the key light still shades.

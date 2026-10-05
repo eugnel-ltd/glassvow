@@ -1,0 +1,25 @@
+#!/bin/zsh
+# Lane R3.2 batch B: Metal System Traces at the Journey view, the stage
+# rendered every frame (live), for the floor's own line: each build traced as
+# it is and with its ground hidden (--trace-kill=ground), installs interleaved.
+set -u
+source ${0:A:h}/common.zsh
+OUT=$R/device/batchB2
+$FLOW/ipad_lock.sh acquire map-r32
+trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+echo "== batch B start $(date +%T)"
+for b in dev ctl; do
+  if [[ $b == ctl ]]; then ipa=$CTL_IPA; build=26dc6dc7; else ipa=$DEV_IPA; build=$DEV_BUILD; fi
+  install_build $b $ipa || exit 1
+  # A first launch to compile its pipelines, kept out of the traces.
+  MT_WAIT=40 mt_launch $b-warm --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --holds=cadence --hold-frames=120
+  for kill in none ground; do
+    args=(--map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --holds=live --hold-frames=2400)
+    [[ $kill == ground ]] && args+=(--trace-kill=ground)
+    MT_WAIT=60 mt_trace $b-t$kill 6 24 $args
+    check_build $b-t$kill $build
+    mt_export $b-t$kill
+  done
+done
+echo "== batch B done $(date +%T)"

@@ -1,0 +1,40 @@
+#!/bin/zsh
+# Lane R3.2 batch N3 (round 3 final head, f1f074ac): main and the branch interleaved, two installs each.
+# Per install: L1 = the first launch after the install (its boot is the first
+# open after an install), then the opens (cold, reopen x2, warmed) and 600-frame
+# rests at the cadence and live at Journey, river, Close and Whole act; L2 = the
+# fresh-run opening view's rests (and a warm-cache boot).
+set -u
+source ${0:A:h}/common.zsh
+OUT=$R/device/batchN3
+# The round 3 head: the final build, and main, from the kept ipas.
+DEV_IPA=$R/ipa/h2-final.ipa
+CTL_IPA=$R/ipa/ctl.ipa
+DEV_BUILD=f1f074ac
+$FLOW/ipad_lock.sh acquire map-r32
+trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+echo "== batch N3 start $(date +%T)"
+for n in 1 2; do
+  for b in ctl dev; do
+    if [[ $b == ctl ]]; then ipa=$CTL_IPA; build=26dc6dc7; else ipa=$DEV_IPA; build=$DEV_BUILD; fi
+    install_build $b$n $ipa || exit 1
+    MT_WAIT=110 mt_launch $b$n-l1 --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --opens --reopens=6 --holds=cadence,live --probe-view=journey,river,close,whole
+    check_build $b$n-l1 $build
+    MT_WAIT=40 mt_launch $b$n-l2 --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --holds=cadence,live
+    check_build $b$n-l2 $build
+  done
+done
+# The installed build is the last dev: a screenshot of its Journey view at rest.
+MT_SHOT=40 MT_WAIT=60 mt_launch dev-shot --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --holds=cadence --hold-frames=120 --linger=25
+check_build dev-shot $DEV_BUILD
+# The final head's floor line: Metal System Traces at Journey, live, as it is
+# and with its ground hidden.
+for kill in none ground; do
+  args=(--map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --holds=live --hold-frames=2400)
+  [[ $kill == ground ]] && args+=(--trace-kill=ground)
+  MT_WAIT=60 mt_trace dev-t$kill 6 24 $args
+  check_build dev-t$kill $DEV_BUILD
+  mt_export dev-t$kill
+done
+echo "== batch N3 done $(date +%T)"
