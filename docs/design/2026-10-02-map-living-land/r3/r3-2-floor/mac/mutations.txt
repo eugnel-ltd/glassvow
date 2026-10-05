@@ -1,5 +1,5 @@
-# Mutation proof of tests/test_map_floor.gd (tools/mutate.py.txt: back up, break, run the one test, copy back)
-# and of tools/check_floor_bake.gd's two later checks (run windowed under the A12 condition).
+# Mutation proof of tests/test_map_floor.gd (tools/mutate.py.txt: back up, break, run the one test, copy back),
+# and of tools/check_floor_bake.gd's later checks (run windowed under the A12 condition).
 tiles leave a gap                    caught: the bake's tiles cover a 1920x1200 picture exactly, each within the limit; the bake's tiles cover a 1931x1207 picture exactly, each within the limit
 mip chain one level short            caught: the lit picture's mip chain halves to one texel in 11 levels
 pool phase not the flame's           caught: a pool's flicker phase is its own flame's
@@ -32,3 +32,8 @@ re-run after the test named the heroes apart (mutation 22): caught
 -- later checks (check_floor_bake.gd, windowed, A12 condition)
 prefetch bake not paced              caught: paced, the bake takes a frame a tile and four more (6), no step past 40 ms
 no set-up frame before the draws     caught: the bake spans its frames (5); paced, the bake takes a frame a tile and four more (7)
+-- the art revision (check_floor_bake.gd, windowed, A12 condition)
+seats not drained (drained = 1)      caught: no water stands at any of the 57 waystones' seats (wettest 1.00)
+-- the art revision (tests/test_map_floor.gd, headless)
+Close grain reaches Journey (close_heights.y 20)   caught: the Close grain is full at Close (13.06 m) and gone at Journey (19.2 m)
+water laid as a colour again                       caught: standing water darkens the ground it lies on and lays no colour over it

@@ -1,18 +1,24 @@
-# The floor's pipelines in the shader warm-up (floor_warm.gd; MapJourneyPrefetch.prime calls it before the
-# title's first frame, beside the title's own frame-0 warm-up).
+# The floor's pipelines in the shader warm-up (floor_warm.gd; MapJourneyPrefetch.prime draws it on the title's
+# frame 0, beside the title's own frame-0 warm-up).
 #
-# Mac (M1 Max), the A12 condition, each run in a fresh user dir (Godot's shader cache empty), Act I map booted
-# by tools/warm_then_map.gd.txt at 441bff8d (the bake's shaders as at the head but for the puddles):
-#   cold  = the map booted at once (the --map path: nothing warms the floor)
-#   warm  = FloorWarm drawn first, 8 frames, then the map booted
-# The bake's frame intervals (ms; the first is the frame that draws its first pipelines):
-cold  run 1: [131.8, 14.4, 3.7, 14.3]   wall 164.3 ms
-cold  run 2: [119.1, 11.3, 7.2, 18.5]   wall 156.1 ms
-warm  run 1: [ 48.6, 11.5, 5.5,  9.0]   wall  74.6 ms
-warm  run 2: [ 69.8, 14.1, 4.6,  6.5]   wall  95.0 ms
+# iPad 8, the title path (device/batchT; tools/title_probe.gd.txt, batchT.zsh.txt). A seed launch stored an Act I
+# run; each title launch then booted to the title, waited for the land's prefetch and its paced bake, pressed
+# Back to the Road and timed the open. Frame 0 = from main's route (the title built, prime() run) to the first
+# frame drawn. dev-title1 is the branch's first launch after its install: its floor shaders changed with the
+# revision, so the warm-up compiled them cold. Main's builds compile nothing new.
 #
-# iPad 8: the QA probe boots with --map, which skips the title and so the warm-up. The first launch of a build
-# whose floor shaders changed (batch D2 dev1-l1, 2b411b4f after fbc9a41f changed two of them) compiled on the
-# bake's frames: [500.4, 2166.0, 66.4, 20.4, 496.4] ms, bake 3249.6 ms, boot ready 5674.5 ms. Every later
-# launch (warm pipeline cache) baked in 183.5-216.6 ms with no frame over 70.1 ms. The title path, where the
-# warm-up runs on frame 0 behind the launch screen, was not measured on the device (see the README's risks).
+#                frame 0    next frame   title, worst after   open: to the map drawn   open: worst frame
+# main  title1    569.8 ms    22.8 ms       34.9 ms              776.9 ms                 302.9 ms
+# R3.2  title1   3140.0 ms  1368.6 ms     1368.6 ms (frame 1)    646.7 ms                 173.4 ms   (cold: compiled)
+# R3.2  title2    410.6 ms    11.4 ms       50.0 ms              646.5 ms                 169.8 ms
+# R3.2  title3    622.9 ms    28.9 ms       54.0 ms              729.7 ms                 249.7 ms
+# main  title2    542.1 ms    24.2 ms       26.4 ms              680.1 ms                 210.0 ms
+#
+# The warm-up's cold compile: frame 0 +2.6 s over main's (behind the launch screen), and one more frame of
+# 1.37 s, once per change to the floor's shaders (an app update). With the pipelines cached, frame 0 is
+# main's (410.6 and 622.9 ms against 569.8 and 542.1). Under the title the paced bake took 8 frames, its worst
+# 45.4, 50.0 and 50.1 ms (wall 197.8, 185.4, 216.5 ms); the first open then drew the baked floor (state 2) and
+# its worst frame was lower than main's in every launch.
+#
+# Mac (M1 Max), the A12 condition, each run in a fresh user dir, Act I map booted by tools/warm_then_map.gd.txt
+# at 441bff8d: the bake's first frame 131.8 and 119.1 ms booted cold, 48.6 and 69.8 ms after FloorWarm.

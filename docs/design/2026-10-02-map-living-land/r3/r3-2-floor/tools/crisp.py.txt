@@ -1,0 +1,15 @@
+"""Lane R3.2 revision: high-frequency energy of a crop, the variance of its
+luminance's 4-neighbour Laplacian (and the mean absolute Laplacian), on the
+road-verge crop at Close (box 140,90-520,330 of the 1180x820 pad capture)."""
+import sys
+from PIL import Image
+import numpy as np
+BOX = (140, 90, 520, 330)
+def energy(path, box=BOX):
+    a = np.asarray(Image.open(path).convert('RGB').crop(box)).astype(float) / 255.0
+    y = a @ np.array([0.2126, 0.7152, 0.0722])
+    lap = -4 * y[1:-1, 1:-1] + y[:-2, 1:-1] + y[2:, 1:-1] + y[1:-1, :-2] + y[1:-1, 2:]
+    return lap.var(), np.abs(lap).mean()
+for p in sys.argv[1:]:
+    v, m = energy(p)
+    print('%-60s Laplacian variance %.6f  mean |L| %.5f' % (p.split('/')[-1], v, m))

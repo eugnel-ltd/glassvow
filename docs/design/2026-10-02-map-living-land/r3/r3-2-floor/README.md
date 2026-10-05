@@ -10,6 +10,12 @@ Nothing here touches `domain/`, the save schema, the layout or its digests
 (`a3ecf0fb…af83c` for seed 1 in every capture), route ids, tokens, pins or
 other screens.
 
+The orchestrator's review of #695 accepted the architecture and the gates and
+asked for one bounded art revision on the branch: data and shader parameters,
+no change to the passes. It is in [The review revision](#the-review-revision),
+with its own device batches (E, and T for the title path), and every frame
+and condition below is re-made at its head, `2c759d39`.
+
 ## What changed
 
 | Commit | What |
@@ -22,8 +28,11 @@ other screens.
 | `ad956d8c` | Tuning against the target: the moss reaches further and the pools burn lower. |
 | `8b3b0240`, `441bff8d` | Density goes from the plan's 20/10 texels a metre to 18/8, then 16/8 ([video memory](#video-memory)). The bake now sets up a frame before its first draw, after one 100.1 ms frame on the iPad 8. |
 | `45cb1380` | The prefetch's bake, under the lit title, is paced to one tile a frame. Its worst frames were 81–83 ms; they are now 24.7–48.0 ms. |
-| `fbc9a41f` | Puddles at Close read as flat slate-blue or pale slabs with square corners. They now use layered noise turned off the grid, with soft rims, and a sheen broken by the micro detail ([frame](frames/puddles-before-after.jpg)). |
+| `fbc9a41f` | Puddles at Close read as flat slate-blue or pale slabs with square corners. They now use layered noise turned off the grid, with soft rims. |
 | `2b411b4f` | The `map-journey` payload budget goes from 11 to 12 MiB: the floor's art packs to 1.17 MiB. |
+| `f25212c6` | Review revision: the road lies as grey-brown gravel, the pools reach 4.2 m, fewer puddles, and no water stands at a waystone, a stone or a trunk (a waystone's seat stamps a wider foot). The GPU proof checks every seat is dry. |
+| `36bdd1b6` | Review revision: standing water is darker ground that glints, never a colour of its own; the micro detail's grain is the gravel, deepest on grey grit; the Close stop gains grain, Journey and Whole act do not. |
+| `2c759d39` | Review revision: the warm-up draws its floor sample without glow. Measuring the title path showed its 8 px view failing the glow's mip chain (a run of RenderingDevice errors on frame 0). |
 
 ## The look
 
@@ -33,7 +42,8 @@ The flat warm-brown ground is gone. It is replaced by:
 
 - moss and ash soil in drifts, with red litter under the crowns;
 - ragged road edges with grown-in verges, wheel ruts and a grown-over crown;
-- puddles lying in the ruts;
+- standing water in the ruts' low stretches: darker ground that glints, drained
+  from every base;
 - soft, dappled key shadows from every tree, rock, stone, post and building;
 - contact shade at every base;
 - a warm pool round every lamp, which flickers with that lamp's own flame.
@@ -54,38 +64,37 @@ Each covers seeds 1–3. The other frames are:
 
 - Close, against main: [`close-main-r32.jpg`](frames/close-main-r32.jpg);
 - Whole act, against main: [`whole-main-r32.jpg`](frames/whole-main-r32.jpg);
-- close crops at 2×: [road and verge](frames/crop-road-verge.jpg), [a lamp's pool](frames/crop-lamp-pool.jpg), [rock shadows](frames/crop-rock-shadows.jpg), [the pilgrim and a bridge](frames/crop-pilgrim-bridge.jpg) and [a shrine and its pools](frames/crop-shrine-pools.jpg);
-- the iPad 8 itself: [`ipad8-journey-441bff8d.jpg`](frames/ipad8-journey-441bff8d.jpg).
-
-The iPad 8 screenshot is from the build before the puddle fix. It matches
-the Mac's A12-condition capture, smooth road edges included.
+- close crops at 2×, each main, then R3.2 at the review, then the revision: [road and verge](frames/crop-road-verge.jpg), [a lamp's pool](frames/crop-lamp-pool.jpg), [rock shadows](frames/crop-rock-shadows.jpg), [the pilgrim and a bridge](frames/crop-pilgrim-bridge.jpg) and [a shrine and its pools](frames/crop-shrine-pools.jpg);
+- the Journey road against the target's: [`journey-road-review-revision-target.jpg`](frames/journey-road-review-revision-target.jpg);
+- a waystone at Close, the review's blue-grey ring and the revision: [`waystone-ring-review-revision.jpg`](frames/waystone-ring-review-revision.jpg);
+- the crispness crops at their own pixels: [main](frames/crisp-road-verge-main.png) and [the revision](frames/crisp-road-verge-revision.png);
+- the iPad 8 itself, batch E at `2c759d39`: [`ipad8-journey-2c759d39.jpg`](frames/ipad8-journey-2c759d39.jpg). It matches the Mac's A12-condition capture.
 
 Acts II–IV are unchanged. Against main, 0–1.2% of pixels differ at any stop
 ([`mac/stops-pixel-diff.txt`](mac/stops-pixel-diff.txt)). That is main's own
 run-to-run noise: a second run of main at Act II, seed 1, differs from its
 first by 719–1,491 pixels a stop and matches the branch exactly at two stops.
 
-The floor is still far from the target in two ways:
+Where the floor still differs from the target:
 
-- **The road is too orange.** It reads warmer and more saturated along its
-  whole length than the target's pale grey-beige gravel, where only the
-  lamps' pools are warm. The road cover and its tint (`road_tint`,
-  `cover_saturation.w` in `floor_paint.gdshader`) are the knobs. This is an
-  art call for the owner or R3.6's grade.
-- **Lamp posts throw no visible key shadow.** Main's live lamp posts throw a
-  hard one. In the bake, the lamp's own pool, which is emission, fills the
-  post's key shadow.
+- **The road** is now grey-brown gravel with warm pools round the lamps, but
+  a little darker and greyer than the target's pale beige, whose pebbles are
+  larger and lighter. `road_tint` and `cover_saturation.w`
+  (`floor_paint.gdshader`) remain the knobs, for the owner or R3.6's grade.
+- **Lamp posts** throw a soft key shadow now that the pools reach 4.2 m, not
+  main's hard one.
 
 ## How the floor is drawn
 
-**The plan (worker thread)**: `FloorPlan.build`, `presentation/map/landscape/floor_plan.gd:55 (build)`, is built
+**The plan (worker thread)**: `FloorPlan.build`, `presentation/map/landscape/floor_plan.gd:59 (build)`, is built
 with the land and reads what the land already holds:
 
 - every tree's light-facing shadow card (undergrowth casts none: wide, low
   cards facing one way streaked);
 - radial stamps for the 2D fields pass: litter reach and foot for trees;
   reach, foot and an offset shade for shrubs; grit and foot for rocks; a foot
-  for stones and seats. This is how the floor takes the wood's plants;
+  for stones and a wider one for waystones' seats (`SEAT_FOOT`). This is how
+  the floor takes the wood's plants;
 - every lamp's flame (at most 48);
 - the ground's height span.
 
@@ -111,7 +120,9 @@ and the land's ambient, through a linear tonemap at exposure 0.5.
    - the terrain's stonework, the kit and the waystones, as shadow-only copies;
    - the woodland's cards.
 3. The mask pass, at 8 px/m, keeps the pool's share of the light, the phase of
-   the lamp that lights it most (the flame's own hash) and the wet.
+   the lamp that lights it most (the flame's own hash) and the wet. The ground
+   rises to every base (the contact field): no standing water, wet rut or wet
+   bank lies round a waystone, a stone or a trunk.
 
 Each view is copied on the GPU (`RenderingDevice.texture_copy`) into the
 floor's own RGBA8 textures, which carry an sRGB view. A mip chain of nested
@@ -126,8 +137,13 @@ Its fragment cost is:
 
 On top of those it adds:
 
+- the gravel: the micro detail's grain, deeper where the floor's colour is
+  grey grit (road, ash soil, rock grit) and deeper again at the Close stop,
+  where a texel of the picture spans several pixels (full at view heights to
+  13.6 m, gone from 16.5 m; the view height is the ground's metres a pixel
+  across times the view's pixels down);
 - the pools' flicker, from the flame's wave;
-- the puddles' sheen and glints;
+- standing water, which darkens the ground it lies on (to 0.7) and glints;
 - the pilgrim's carried light.
 
 The global `land_motion` (Reduce Motion) holds the pools steady and puts the
@@ -167,10 +183,129 @@ the painted landscapes, which have no terrain chunks, kit, woodland or lamps
 for the bake to read. The same bake would need their own 3D lands, which no
 R3 step builds, so it does not apply cheaply.
 
-## Gates (iPad 8, QA app, interleaved with main)
+## The review revision
 
-Each figure below is graded on the batch median of batch D2, the final head
-`2b411b4f`. Batch D2 ran three interleaved installs each of main (`26dc6dc7`)
+The review of #695 (orchestrator, 5 Oct) asked for seven things on the same
+branch, data and shader parameters only. What was done, and what it measured:
+
+**1. Road colour.** The road was orange; the target's is grey-brown gravel.
+
+| Parameter | Before | After |
+|---|---|---|
+| `road_tint` (`floor_paint.gdshader`, linear) | (0.66, 0.58, 0.5) | (0.6, 0.6, 0.74) |
+| `cover_saturation.w` (the road cover) | 0.45 | 0.2 |
+| `wet_tint` | (0.62, 0.66, 0.72) | (0.62, 0.62, 0.64) |
+| `pool_range` (`floor_ground.gdshaderinc`) | 5.2 m | 4.2 m (the desktop's real lamps') |
+| live water (`floor.gdshader`) | a sheen of `sky_colour` (0.36, 0.4, 0.47) and `lamp_colour` at 0.42 | none: `water_dark` 0.7 |
+| gravel grain | `detail_depth` 0.42 everywhere | + `grit_depth` 0.38 where the floor is grey grit |
+
+In the final frame (Journey, pad, two road samples inside lamps' pools), the
+road went from rgb (150, 71, 19) and (139, 65, 19), saturation 0.77 and 0.75,
+to (128, 74, 43) and (120, 69, 43), saturation 0.49 and 0.47, hue 20–22.
+Main's flat road reads 0.51–0.53 there; the target's road 0.29–0.42 at
+hue 19–22. Between the lamps the road is greyer still
+([frame](frames/journey-road-review-revision-target.jpg)).
+
+**2. Close crispness.** The micro detail's grain deepens at the Close stop
+(`close_gain` 0.9) and only there. On the review's road-verge crop at Close,
+the variance of the luminance Laplacian ([`mac/crispness.txt`](mac/crispness.txt)):
+
+| | Crop (140,90–520,330) | Floor alone (230,150–335,245) |
+|---|---|---|
+| main `26dc6dc7` | 0.005320 | 0.000237 |
+| R3.2 at the review | 0.005445 | 0.000318 |
+| **R3.2 revision** | **0.005469** | **0.000450** |
+
+The branch is no lower than main on the crop and 1.9× main on the floor
+alone. With the gain on and off, Journey and Whole act differ by 1,120 and
+213 pixels; two captures of one build differ by 807 and 172. Close differs
+by 87,606.
+
+**3. The blue-grey haze round a waystone** was standing water in the ruts
+round the token, laid over with the sky's colour. Water now lays no colour of
+its own: it darkens the ground and glints. And the ground rises to every base:
+no standing water, wet rut or wet bank lies round a waystone's seat, a stone
+or a trunk ([frame](frames/waystone-ring-review-revision.jpg)). The GPU proof
+checks that every one of Act I seed 1's 57 seats is dry within 0.4 m. Its
+wettest texel is 0.00, and a mutation that leaves the seats undrained reads
+1.00.
+
+**4. The pale slabs on the road** were the same rut water inside a lamp's
+pool, laid over with the lamp's colour. They are gone
+([crop](frames/crop-lamp-pool.jpg)). The puddles are fewer and smaller, carry
+no colour, and the pools are tighter. The soft dark shape beside the post is
+the post's own key shadow.
+
+**5. The title path's warm-up on the iPad** (batch T,
+[`device/batchT/summary.txt`](device/batchT/summary.txt),
+[`mac/warm-up.txt`](mac/warm-up.txt)). A seed launch stored an Act I run.
+Each title launch then booted to the title, waited for the land's prefetch
+and its paced bake, pressed Back to the Road, and timed the open.
+
+| Launch | Frame 0 | Next frame | Title, worst after | Open to map drawn | Open, worst frame |
+|---|---|---|---|---|---|
+| main 1 | 569.8 | 22.8 | 34.9 | 776.9 | 302.9 |
+| **R3.2 1** (cold: compiled) | **3140.0** | **1368.6** | 1368.6 | 646.7 | **173.4** |
+| R3.2 2 | 410.6 | 11.4 | 50.0 | 646.5 | 169.8 |
+| R3.2 3 | 622.9 | 28.9 | 54.0 | 729.7 | 249.7 |
+| main 2 | 542.1 | 24.2 | 26.4 | 680.1 | 210.0 |
+
+All figures are ms. "R3.2 1" is the first launch after installing the
+revision, whose floor shaders changed, so the warm-up compiled them cold.
+
+- **Frame 0** cost +2.6 s over main's, behind the launch screen.
+- **The next frame** took another 1.37 s, on the title's first visible frame.
+- **Cached**: frame 0 is main's (410.6 and 622.9 against 569.8 and 542.1).
+- **The paced bake** under the title took 8 frames, its worst 45.4–50.1 ms.
+- **The first open** drew the baked floor. Its worst frame was below main's
+  in every launch.
+
+**6. A short device batch at the final code**: batch E, below. Two installs
+each of main and the branch, interleaved.
+
+**7. Re-captured at `2c759d39`**:
+
+- the Act I–IV sheets;
+- the close crops;
+- the main / branch / target sheet;
+- the token gate (both builds, every act, seed and shape);
+- the A12 condition and Reduce Motion (below).
+
+## Gates at the revision (batch E)
+
+Batch E: `2c759d39` against main `26dc6dc7`, two QA installs each,
+interleaved. Install 1 runs the boot, the opens with six reopens, and
+600-frame rests at the cadence and live at Journey, river, Close and Whole.
+Install 2 runs the opening view. After them come the floor's two traces.
+Every launch is in [`device/batchE/summary.txt`](device/batchE/summary.txt)
+and its rows.
+
+| Gate | Branch (median; every launch) | Main | Verdict |
+|---|---|---|---|
+| Floor fragment ≤ 0.9 ms (ref clock) | **0.149 ms** (main pass F 1.520 with the ground, 1.371 without; 302 and 300 stage frames) | Main's ground 1.131 ms (B2) | Pass |
+| Bake ≤ 0.4 s (warm cache), no frame > 100 ms | Boots: **201.1 ms** (194.5, 185.0, 207.6, 216.6); worst frame 66.7. Cold opens: 142.6, 138.2; worst frame 64.7. Prefetch under the title: worst frame 50.1, 29.9 (main 17.3, 17.5) | — | Pass |
+| Live shadow pass ≤ 15k primitives | **3,758–5,754** across the five views (5–13 draws) | 28,130–58,014 | Pass |
+| VRAM ≤ +20 MiB | Journey hold: 288.0, 282.0 → **+18.7**. Boot: 279.9, 266.2, 281.9, 280.1 → +14.7 | Hold 265.3, 267.3; boot 265.2, 265.3, 267.2, 265.3 | Pass, within one step ([below](#video-memory)) |
+| Transient ≤ +40 MiB, freed in 10 frames | Cold-open peaks 318.1, 312.1 → **+31.6**. Ten frames later: 288.2, 282.2, the steady figure | Peaks 282.5, 284.5 | Pass |
+| Cold open ≤ 2.6 s | **2622.8 ms** (2632.4, 2613.2) | 2322.8 (2280.0, 2365.7) | **Over, by 22.8 ms** (see risk 2) |
+| Warmed open ≤ 200 ms | **101.2 ms** (97.4, 104.9) | 103.2 | Pass |
+| Reopen ≤ 60 ms | **37.2 ms** over 12. Branch: 39.0, 25.0, 29.8, 31.5, 39.2, 29.7, 54.0, 31.3, 51.3, 50.5, 39.5, 35.4 | 32.7 over 12. Main: 23.9, 36.8, 25.3, 38.9, 40.5, 34.7, 48.3, 23.9, 24.7, 23.9, 30.6, 36.4 | Pass, no outlier |
+| Rest at vsync, 0 missed, every view | Every view, cadence and live, every launch: means 16.660–16.663 ms, **0 missed**; p95 16.91–17.18 | 0 missed; p95 16.97–19.70 | Pass |
+
+The revision changed neither the cold open's work nor the bake's. The land
+build and the bake read the same as in D2: bake wall 138–143 ms, against
+126–148 ms. The cold open sits on the line:
+
+| | Batches | Launches | Branch median | Main median | Delta |
+|---|---|---|---|---|---|
+| D2 | 1 | 3 | 2535.7 ms | — | — |
+| E | 1 | 2 | 2622.8 ms | — | — |
+| Pooled | D, D2, E | 8 | **2606.0 ms** | 2341.3 ms | **+265 ms** |
+
+## Gates at the review (batch D2)
+
+Each figure below is graded on the batch median of batch D2, the head at the
+review, `2b411b4f`. Batch D2 ran three interleaved installs each of main (`26dc6dc7`)
 and the branch, one QA build each. Install 1 runs the boot, the opens with
 six reopens, and 600-frame rests at the cadence and live at Journey, river,
 Close and Whole. Install 2 runs the opening view.
@@ -190,7 +325,7 @@ drove:
 |---|---|---|---|
 | Floor fragment ≤ 0.9 ms at the reference clock | **0.051 ms** (main pass F 1.476 ms with the ground, 1.425 without; D2, one trace each, 298 and 307 stage frames). Earlier builds: 0.093 (D), 0.111 (B2) | Main's ground: 1.131 ms (2.551 − 1.420, B2) | Pass |
 | Bake ≤ 0.4 s with a warm pipeline cache, no frame > 100 ms | Boots: **199.8 ms** (216.4, 183.5, 198.5, 199.8, 200.0); worst frame 70.1 ms. Cold opens: 125.7, 143.8, 148.2; worst frame 64.9 ms. Prefetch, paced, under the title: worst frame 26.7, 48.0, 33.3 ms (main 17.8–18.1) | — | Pass. **Outlier**: dev1-l1's boot, the first launch after the floor's shaders changed, on the `--map` path that skips the warm-up: 3249.6 ms, with frames 500.4, 2166.0 and 496.4 ms (the compile; cold cache) |
-| The bake's pipelines inside the shader warm-up | `FloorWarm` runs in `prime()`. On the Mac, with a fresh shader cache, the first bake frame is 48.6 and 69.8 ms after it, against 131.8 and 119.1 ms without ([`mac/warm-up.txt`](mac/warm-up.txt)) | — | Wired and proven on the Mac. **Not measured on the device's title path** (risk 3) |
+| The bake's pipelines inside the shader warm-up | `FloorWarm` runs in `prime()`. On the Mac, with a fresh shader cache, the first bake frame is 48.6 and 69.8 ms after it, against 131.8 and 119.1 ms without ([`mac/warm-up.txt`](mac/warm-up.txt)) | — | Wired and proven on the Mac. At the review the device's title path was unmeasured; batch T measured it at the revision ([above](#the-review-revision), item 5) |
 | Live shadow pass ≤ 15k primitives | **3,758–5,754** across the five views (5–13 draws). Journey: 5,031 | 28,130–58,014 (55–204 draws) | Pass |
 | VRAM ≤ +20 MiB | Journey hold: 282.2, 296.0, 288.2 → **288.2**, **+14.9**. Boot: 282.2, 280.1, 295.9, 282.0, 279.9, 280.1 → 281.1 (+15.8) | Hold 273.3 ×3; boot median 265.3 | Pass on D2. **Batch D: +22.4** (see [below](#video-memory)) |
 | Transient peak ≤ +40 MiB, freed within 10 frames | Cold-open peaks: 312.1, 326.1, 318.1 → **+27.6**. Ten frames later: 282.2, 296.2, 288.2, the steady figure | Peaks 290.5 ×3 | Pass |
@@ -221,6 +356,7 @@ textures returned on the Mac.
 |---|---|---|---|---|
 | D | `441bff8d` | 289.8, 289.7, 283.8 | 273.3, 267.3, 267.3 | **+22.4** |
 | D2 | `2b411b4f` | 282.2, 296.0, 288.2 | 273.3 ×3 | **+14.9** |
+| E | `2c759d39` | 288.0, 282.0 | 265.3, 267.3 | **+18.7** |
 
 `441bff8d` has the same footprint as D2's build. Pooled over every launch at
 16/8 against every launch of main in C, D and D2 (6 against 9), the delta is
@@ -228,16 +364,20 @@ textures returned on the Mac.
 D2's pairs read +8.9, +22.7 and +14.9, because main held on one step while
 the branch took three.
 
-The gate passes on the final batch and on the pooled median. It sits within
-one step of the line, so a single batch can read over it (risk 1).
+With E, the pooled medians are 288.1 MiB for the branch (8 launches at 16/8)
+and 273.3 for main (11 launches, C to E): **+14.8**. The gate passes on D2,
+on E and pooled. It sits within one step of the line, so a single batch can
+read over it (risk 1).
 
 ## Visual proof and conditions
 
 - **The A12 condition**
   (`GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 --rendering-driver metal --rendering-method mobile`)
-  at the head:
-  - pad, phone and desktop, lean and full, and zh-Hant: **no "Error compiling shader"** and no script error;
-  - the token gate's stop captures for every act, seed and shape: Act I none either.
+  at the revision head `2c759d39`:
+  - pad, phone and desktop, lean and full, and zh-Hant: **no "Error compiling shader"**, no script error and no other error;
+  - the token gate's stop captures for every act, seed and shape: Act I none either;
+  - the title path: no error. Before the warm-up's glow fix it logged a run
+    of RenderingDevice errors on frame 0.
 
   Acts II–IV show 10 lines a run on both builds. They are main's own: the
   `map_mineral` shader's `SAMPLER_LINEAR_WITH_MIPMAPS_ANISOTROPIC_REPEAT` at
@@ -249,30 +389,35 @@ one step of the line, so a single batch can read over it (risk 1).
   slots (a test asserts it). Because the A12 cannot filter R32F, it reads the
   roads' R32F distance field with a hand-written bilinear filter: its first
   device run showed stair-stepped road edges.
-- **Reduce Motion** at Close, two frames 1.5 s apart: with Reduce Motion on,
-  10,191 pixels change, all of them water, and **0 change on the floor**.
-  With it off, 108,752 change, the pools and the grain among them
+- **Reduce Motion** at Close, two frames 1.5 s apart, at the revision: with
+  Reduce Motion on, 10,197 pixels change, all of them water, and **0 change
+  on the floor**. With it off, 104,978 change, the pools and the glints among
+  them
   ([`mac/reduce-motion.txt`](mac/reduce-motion.txt),
   [frame](frames/reduce-motion-close.jpg)).
 - **The token gate** (`tools/map_token_gate.gd`), re-run for both builds,
-  every act, seed and shape: **0 failed** in all 48 runs. Act I's worst
-  margin is 1.020–1.023 (main 1.015–1.026), with the same counts measured
+  every act, seed and shape, at the revision: **0 failed** in all 48 runs.
+  Act I's worst margin is 1.021–1.025 (main 1.015–1.026), with the same
+  counts measured
   ([`mac/token-gate.txt`](mac/token-gate.txt)).
 - **The GPU proof** (`tools/check_floor_bake.gd`) passes under the A12
   condition at the head ([`mac/floor-bake-check.txt`](mac/floor-bake-check.txt)):
   - the picture is 1536×960 with 11 mip levels, each the mean (as light) of the one below;
   - there is no seam between tiles;
   - the mask holds 21 lamp phases and standing water;
+  - no water within 0.4 m of any of the 57 waystones' seats;
   - the bake takes six frames inline and eight paced;
   - its textures are freed with the land.
 - **Mutation proof**: 26 of 27 mutations of `test_map_floor.gd`'s subject
   were caught. The survivor led to a stricter test, which a re-run caught.
-  Both later checks of the GPU proof (pacing, the set-up frame) were caught
-  too ([`mac/mutations.txt`](mac/mutations.txt)).
+  The later checks were caught too
+  ([`mac/mutations.txt`](mac/mutations.txt)):
+  - the GPU proof's pacing, set-up frame and dry seats;
+  - the floor test's water and Close-height checks.
 
 ## Core gate
 
-At `2b411b4f`, the code-final head, all of these pass
+At `2c759d39`, the revision's code-final head, all of these pass
 ([`mac/core-gate.txt`](mac/core-gate.txt)):
 
 - `godot --version` (4.7.2.stable);
@@ -301,10 +446,25 @@ At `2b411b4f`, the code-final head, all of these pass
 5. **The prefetch bakes paced, the cold open does not.** Under the lit title
    the prefetch bakes a tile a frame. Behind the veil, two a frame keeps the
    cold open inside 2.6 s.
-6. **The puddles were reworked**, because at Close they read as slabs.
-7. **The payload budget was raised.** Raising the group's budget by 1 MiB is
+6. **The puddles were reworked**, because at Close they read as slabs, and
+   again in the review revision. They now darken the ground they lie on and
+   glint, and are drained from every base.
+7. **The road's colour leans cool** against the key's warmth (review
+   revision). The final frame's grade and warm key lift it back to a
+   grey-brown. Tighter pools (4.2 m, the desktop lamps' range) keep the
+   lamps' warmth round the lamps.
+8. **Close's grain comes from the view height**, read from screen-space
+   derivatives, not from the projection matrix. The projection read wrongly in
+   the stage's view, and its gain reached Journey and Whole act. The
+   derivatives give the same answer at every shape.
+9. **A waystone's seat stamps a wider foot.** It is softer than a stone's
+   and drains the ground under its token; the contact shade round it widens
+   a little.
+10. **The warm-up draws its floor sample without glow**, since the glow is a
+    later pass.
+11. **The payload budget was raised.** Raising the group's budget by 1 MiB is
    the honest record of 1.17 MiB of new art; it does not hide it.
-8. **Acts II–IV keep their floors** (above).
+12. **Acts II–IV keep their floors** (above).
 
 ## Open risks
 
@@ -312,22 +472,34 @@ At `2b411b4f`, the code-final head, all of these pass
    +14.9 on the final batch and +15.7 pooled, but +22.4 in batch D. A further
    2–3 MiB of margin would cost picture density: 14/6 texels a metre would
    save about 2.4 MiB.
-2. **The cold open costs +200 to +250 ms over main.** The bake is 126–148 ms
-   of that; the rest is the plan and height span on the worker. The median
-   was 2535.7 ms in D2 and 2598.8 ms in D: inside 2.6 s, with little margin.
-3. **The title path's warm-up is not measured on the iPad.** The QA probe
-   boots with `--map`, which skips the warm-up. On that path, the first launch
-   after the floor's shaders change compiled for 3.2 s in the bake's frames.
-   On the title path, `FloorWarm` moves that compile to the title's frame 0,
-   behind the launch screen, once per shader change.
+2. **The cold open sits on the 2.6 s line.** It costs about +265 ms over
+   main (pooled, 8 launches against 8).
+   - **Batch medians**: 2535.7 ms in D2 (pass), 2598.8 in D, and 2622.8 in
+     E, over by 22.8 ms on two launches.
+   - **Pooled median**: 2606.0, over by 6 ms.
+   - **Where it goes**: the bake is 126–148 ms of the cost. The rest falls in
+     the open round it: the land build on the Mac is main's to within 10 ms
+     (the plan).
+   - **Not in the revision**: the revision did not change this work, and its
+     bounds (no change to passes or pacing) leave the cut out.
+   - **The cheapest cuts**:
+     - drop the set-up frame behind the veil, about 17 ms;
+     - bake three tiles a frame behind the veil, saving one or two frames,
+       but its biggest frame (64.7 ms at two tiles) would near 100 ms.
+3. **The warm-up's cold compile is long on the iPad** (batch T). It happens
+   on the first launch after the floor's shaders change, that is, an app
+   update: frame 0 +2.6 s behind the launch screen, then a 1.37 s frame on
+   the title's first visible frame. Cached, it costs nothing.
    - `enemy_view.gd` records a cheaper pattern on this engine: making the
      materials compiles on worker threads, where drawing them waits.
-   - That pattern could move this compile off frame 0 if the device shows it
-     long.
-4. **Reopen outliers**: 3 of 18 reopens were over 60 ms (65.6, 61.5, 61.9),
-   against a median of 45.5. Main showed one in batch D (64.0).
-5. **The art is a set of lane picks.** The road reads too orange against the
-   target, and the lamp posts' key shadows are filled by their pools (above).
+   - That pattern could take the compile off frames 0 and 1. The paced bake,
+     some seconds into the title, would then meet whatever is left of it.
+     This is a design call for the next step.
+4. **Reopen outliers**: in D2, 3 of 18 reopens were over 60 ms (65.6, 61.5,
+   61.9), against a median of 45.5. Main showed one in batch D (64.0). In E,
+   none of 12 was.
+5. **The art is a set of lane picks.** The road is now grey-brown, a little
+   darker and greyer than the target's pale beige (above).
 6. **Pre-existing, not this branch's**:
    - the exit-time "1 resources still in use" and an occasional "Texture RID
      leaked at exit" line, which main shows in the same runs;
@@ -338,11 +510,13 @@ At `2b411b4f`, the code-final head, all of these pass
 
 The evidence folders:
 
-- `device/` holds batch summaries A, C, D and D2, with every launch. D2's
-  probe rows are under `device/batchD2/rows/`. The Metal System Trace pass
-  tables and their read at the reference clock are in `device/traces/`.
+- `device/` holds batch summaries A, C, D, D2 and E, and T for the title
+  path, with every launch. The probe rows for D2, E and T are under each
+  batch's `rows/`. The Metal System Trace pass tables and their read at the
+  reference clock are in `device/traces/`.
 - `mac/` holds the A12 condition, the token gate, Reduce Motion, the GPU
-  proof, the warm-up, the payload, the mutations and the stops' pixel diff.
+  proof, the warm-up, the crispness, the payload, the mutations and the
+  stops' pixel diff.
 - `frames/` holds the sheets, the crops, the conditions and the iPad 8
   screenshot.
 - `tools/` holds the lane's scratch harnesses (never part of the game):
@@ -353,7 +527,10 @@ The evidence folders:
   - `sheets.py`;
   - `mutate.py`;
   - `warm_then_map.gd`;
-  - `paced.gd`.
+  - `paced.gd`;
+  - `crisp.py`;
+  - the title probe: `title_probe.gd`, `title_patch.py`, `batchT.zsh` and
+    `summarise_title.py`.
 
 The measurements took these paths:
 

@@ -1,8 +1,9 @@
-# The core gate at 2b411b4f (code-final head; the evidence commit adds only this folder), Mac, 05:53-06:19.
-== head 2b411b4f7a73987ec2aac4ddcecd0abe62be0ef4 05:53:28
+# The core gate at 2c759d39 (the revision's code-final head; the evidence commit adds only this folder), Mac, 06:51-07:18.
+== head 2c759d39be41b29ab1ed58ded41411a51a2b71a9 06:51:54
 == godot --version
 4.7.2.stable.official.ed1daf0bf
 == tools/check_imports.sh
+asset import OK
 exit 0
 == tools/check_scripts.sh
 scripts OK (479 checked)
@@ -158,9 +159,9 @@ ok   res://tests/test_ware_tag.gd
 ok   res://tests/test_way_walls.gd
 PASS (148 tests)
 exit 0
-== done 06:19:54
+== done 07:18:41
 
-# CI-selected specialist checks, run locally at 2b411b4f:
+# CI-selected specialist checks, run locally at 2c759d39:
 python3 tools/check_store_dev_exclusion.py         -> store-dev-exclusion OK
 tools/test_check_store_dev_exclusion.sh           -> regression tests OK (12 cases)
 python3 -B tools/check_export_paths.py --self-test -> OK (10 cases); check -> export-paths OK
@@ -168,4 +169,5 @@ python3 -B tools/dev.py --check                   -> dev tools: PASS (10 browser
 python3 -B tools/check_benchmark_freeze.py        -> benchmark citations frozen (597 in 52 file(s))
 python3 -B tools/check_map_assets.py (--self-test) -> self-test OK; map assets OK (48 payload files)
 python3 -B tools/check_map_quality_v2.py (--self-test) -> self-test OK (12 fixtures); map quality v2 OK
-python3 -B tools/check_anchors.py                 -> anchors OK (re-run at the evidence commit)
+python3 tools/payload_report.py --preset iOS       -> map-journey 11.6 of 12 MiB; pck estimate 277.5 of 400 MiB
+python3 -B tools/check_anchors.py                 -> anchors OK (at the evidence commit)
