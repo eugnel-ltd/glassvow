@@ -30,7 +30,7 @@ uniform vec4 lamps[48];
 // The lamps' lights: brighter and wider than the desktop's few real ones
 // (`lamps.gd`: 1.6, 4.2 m, 1.4), since here every lamp has one and it is the
 // pool of light round each lantern that the target holds.
-uniform float pool_energy = 5.5;
+uniform float pool_energy = 4.2;
 uniform float pool_range = 5.2;
 uniform float pool_decay = 1.2;
 

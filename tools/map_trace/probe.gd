@@ -27,8 +27,9 @@ extends Node
 ##   --hold-frames=<n>      frames per rest hold (default 600)
 ##   --linger=<s>           seconds to stay at the cadence rest after the holds,
 ##                          for a device screenshot (default 0)
-##   --probe-view=whole|river|close   frame Whole act, the ravine, or the
-##                          Close level before holding
+##   --probe-view=whole|river|close|journey   frame Whole act, the ravine,
+##                          the Close or the Journey level before holding;
+##                          several, comma-separated, hold each in turn
 ##   --opens                after the boot, open the map again as a player
 ##                          would: cold (every cache dropped), reopened twice
 ##                          (the kept screen), and warmed (the land built and
@@ -61,6 +62,7 @@ var _host: Node = null
 var _rows: FileAccess = null
 var _scene: MapScene = null
 var _force_live: bool = false
+var _view_now: String = "default"
 
 
 func _ready() -> void:
@@ -119,7 +121,8 @@ func _run() -> void:
 		await _opens()
 		screen = _host.get("_map_screen")
 		_scene = screen._map_scene
-	_view(screen, _arg("--probe-view", ""))
+	var views: PackedStringArray = _arg("--probe-view", "").split(",")
+	_view(screen, views[0])
 	await _frames(SETTLE_FRAMES)
 	if _arg("--probe-grain", "") == "off":
 		_host.get("_transitions").call("set_grain", false)
@@ -149,8 +152,13 @@ func _run() -> void:
 		_finish(0)
 		return
 	var frames: int = int(_arg("--hold-frames", "600"))
-	for mode: String in _arg("--holds", "cadence").split(",", false):
-		await _hold(mode, frames, screen)
+	for i: int in range(views.size()):
+		if i > 0:
+			_force_live = false
+			_view(screen, views[i])
+			await _frames(SETTLE_FRAMES)
+		for mode: String in _arg("--holds", "cadence").split(",", false):
+			await _hold(mode, frames, screen)
 	_force_live = false
 	_row({"probe": "holds_done"})
 	await get_tree().create_timer(float(_arg("--linger", "0"))).timeout
@@ -165,6 +173,9 @@ func _view(screen: WorldMapScreen, view: String) -> void:
 	elif view == "close" and journey != null and journey.active():
 		journey.view.level = MapJourneyView.Level.CLOSE
 		journey.frame(screen.map.at)
+	elif view == "journey" and journey != null and journey.active():
+		journey.view.level = MapJourneyView.Level.JOURNEY
+		journey.frame(screen.map.at)
 	elif view == "river":
 		var z: float = 4.0
 		var cam: Camera3D = _scene.get_rig().get_camera()
@@ -172,7 +183,8 @@ func _view(screen: WorldMapScreen, view: String) -> void:
 		var h: float = MapJourneyCameraContract.HEIGHT
 		cam.position = Vector3(MapRavine.centre(MapRavine.CUTS[1], z), h, z + h / tan(pitch))
 		screen._invalidate_projection()
-	_row({"probe": "view", "view": view if not view.is_empty() else "default"})
+	_view_now = view if not view.is_empty() else "default"
+	_row({"probe": "view", "view": _view_now})
 
 
 func _hold(mode: String, count: int, screen: WorldMapScreen) -> void:
@@ -196,7 +208,7 @@ func _hold(mode: String, count: int, screen: WorldMapScreen) -> void:
 			RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
 		info[str(kind[0]) + "_primitives"] = RenderingServer.viewport_get_render_info(rid, type,
 			RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME)
-	_row({"probe": "hold_start", "mode": mode, "stage": [stage.size.x, stage.size.y],
+	_row({"probe": "hold_start", "view": _view_now, "mode": mode, "stage": [stage.size.x, stage.size.y],
 		"display": [get_viewport().get_visible_rect().size.x, get_viewport().get_visible_rect().size.y],
 		"band": _scene.focus_band.is_finite(), "render": info,
 		"layer_grain": _layer_grain(), "map_grain": _map_grain(),
@@ -223,7 +235,7 @@ func _hold(mode: String, count: int, screen: WorldMapScreen) -> void:
 		missed += 1 if v > MISSED_MS else 0
 	var sorted: Array[float] = intervals.duplicate()
 	sorted.sort()
-	_row({"probe": "hold_end", "mode": mode, "frames": count,
+	_row({"probe": "hold_end", "view": _view_now, "mode": mode, "frames": count,
 		"mean_ms": snappedf(total / count, 0.001), "missed": missed,
 		"p50_ms": snappedf(sorted[count / 2], 0.01), "p95_ms": snappedf(sorted[int(count * 0.95)], 0.01),
 		"max_ms": snappedf(sorted[-1], 0.01), "process_ms": snappedf(process_ms / count, 0.01)})

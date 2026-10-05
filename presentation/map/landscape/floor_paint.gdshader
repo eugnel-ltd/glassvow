@@ -21,7 +21,7 @@ uniform sampler2D splats : source_color, filter_linear_mipmap, repeat_disable;
 uniform vec4 cover_metres = vec4(2.6, 3.2, 2.4, 2.2);
 // Each cover's picture scaled to the land's albedo (linear multipliers): the
 // photographs are lit brighter than a dusk woodland's ground.
-uniform vec3 moss_tint = vec3(0.5, 0.5, 0.4);
+uniform vec3 moss_tint = vec3(0.55, 0.56, 0.42);
 uniform vec3 litter_tint = vec3(0.44, 0.38, 0.38);
 uniform vec3 soil_tint = vec3(0.42, 0.4, 0.4);
 uniform vec3 road_tint = vec3(0.66, 0.58, 0.5);
@@ -96,14 +96,14 @@ void fragment() {
 	// Open ground: olive moss over most of it, ash soil showing through in
 	// patches, the woodland's red litter beneath and round its crowns, grey
 	// grit where the rocks reach.
-	float drifts = smoothstep(0.3, 0.58, floor_fbm(p * 0.33 + 5.0));
+	float drifts = smoothstep(0.24, 0.52, floor_fbm(p * 0.33 + 5.0));
 	float fallen = f.forest * smoothstep(0.25, 0.6, floor_fbm(p * 0.47 + 19.0) + f.forest * 0.25);
-	vec3 ground = mix(soil_c, moss_c, drifts * (0.6 + 0.4 * (1.0 - f.forest)));
+	vec3 ground = mix(soil_c, moss_c, drifts * (0.7 + 0.3 * (1.0 - f.forest)));
 	ground = mix(ground, litter_c, fallen);
 	ground = mix(ground, mix(soil_c, rock_colour, 0.45), f.rock * 0.55);
 	// The verge: moss and grass grown thick over the road's shoulders.
 	vec3 verge_c = mix(moss_c, litter_c, f.forest * 0.35 + 0.1);
-	ground = mix(ground, verge_c, f.verge * 0.8);
+	ground = mix(ground, verge_c, f.verge * 0.9);
 	// The road: packed earth, the ruts darker and damp, the crown grown over.
 	vec3 track = mix(road_c, road_c * rut_tint, f.rut);
 	track = mix(track, moss_c * 0.9, f.crown * 0.75);
