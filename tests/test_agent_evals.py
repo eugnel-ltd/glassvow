@@ -56,7 +56,7 @@ def healthy_results(case_ids: tuple[str, ...] = ("c1", "c2"), **changes: object)
     base = {"cases_sha256": "h1", "surface_sha256": "s1", "status": "ok", "case_ids": list(case_ids),
             "backend": {"backend": "claude-cli", "isolation": "safe-mode", "allow_ambient": False},
             "models": {"haiku": {}, "sonnet": {}, "opus": {}},
-            "judge": {"model": "haiku", "model_id": "fake-haiku", "model_ids": ["fake-haiku"]},
+            "judge": {"model": "haiku", "arm": "plain", "model_id": "fake-haiku", "model_ids": ["fake-haiku"]},
             "diagnostics": {"infra": {"rate": 0.0}, "infra_threshold": 0.05,
                             "trivial_answerers": {"max": 0.1, "limit": 0.25, "oracle_margin": 0.0,
                                                   "oracle_margin_limit": 0.02, "judge_errors": 0,
@@ -447,7 +447,7 @@ class GraderTests(unittest.TestCase):
         case = self.judge_case()
         seen = FakeBackend(lambda s, p, m: '{"verdicts": {"mentions-fix": true}}')
         run_set(FakeBackend(lambda s, p, m: '{"answer": "an answer"}'), [case], "haiku",
-                "BASELINE-SURFACE", 1, judge=seen, judge_model="haiku")
+                "BASELINE-SURFACE", 1, judge=seen, judge_model="haiku", judge_arm="plain")
         text = seen.calls[0]["system"] + seen.calls[0]["prompt"]
         for label in ("baseline", "candidate", "BASELINE-SURFACE", "haiku", "opus"):
             self.assertNotIn(label.lower(), text.lower().replace("answerer", ""))
@@ -476,15 +476,15 @@ class ApprovalTests(unittest.TestCase):
 
     def test_hillclimb_refuses_without_both_approvals_or_with_a_stale_hash(self) -> None:
         with self.assertRaises(approvals.ApprovalError):
-            approvals.require_approvals(self.dir, "h1", "s1", "sonnet", judge_model="haiku")
+            approvals.require_approvals(self.dir, "h1", "s1", "sonnet", judge_model="haiku", judge_arm="plain")
         approvals.approve_inputs(self.dir, "h1")
         with self.assertRaisesRegex(approvals.ApprovalError, "grader"):
-            approvals.require_approvals(self.dir, "h1", "s1", "sonnet", judge_model="haiku")
+            approvals.require_approvals(self.dir, "h1", "s1", "sonnet", judge_model="haiku", judge_arm="plain")
         ids = [f"transcripts/haiku/c{i}__r1.json" for i in range(9)]
         self.approve(ids, approvals.sample_transcript_ids(ids, "run-1"))
-        approvals.require_approvals(self.dir, "h1", "s1", "sonnet", judge_model="haiku")
+        approvals.require_approvals(self.dir, "h1", "s1", "sonnet", judge_model="haiku", judge_arm="plain")
         with self.assertRaisesRegex(approvals.ApprovalError, "stale"):
-            approvals.require_approvals(self.dir, "h2", "s1", "sonnet", judge_model="haiku")
+            approvals.require_approvals(self.dir, "h2", "s1", "sonnet", judge_model="haiku", judge_arm="plain")
 
     def test_grader_approval_requires_the_sampled_transcripts_to_be_read(self) -> None:
         ids = [f"transcripts/haiku/c{i}__r1.json" for i in range(9)]

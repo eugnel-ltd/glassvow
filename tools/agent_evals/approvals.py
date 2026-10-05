@@ -96,8 +96,8 @@ def check_run_eligible(results: Mapping[str, Any], cases_sha256: str, surface_sh
     if trivial_fingerprint is not None and stored.get("fingerprint") != trivial_fingerprint:
         problems.append("the trivial answerers were scored on another answer set; run `baseline` again")
     judge = results.get("judge") or {}
-    if judge_needed and not (judge.get("model") and judge.get("model_id")):
-        problems.append(f"the judge model id is unknown or changed during the run "
+    if judge_needed and not (judge.get("model") and judge.get("model_id") and judge.get("arm")):
+        problems.append(f"the judge model id or arm is unknown, or the id changed during the run "
                         f"({judge.get('model_ids', [])})")
     if problems:
         raise ApprovalError("this run cannot back a grader approval: " + "; ".join(problems))
@@ -128,6 +128,7 @@ def approve_grader(eval_dir: Path, cases_sha256: str, surface_sha256: str,
     return _record(eval_dir, "grader", cases_sha256, surface_sha256=surface_sha256,
                    read=sorted(required), run=seed, models=sorted(results.get("models", {})),
                    headroom_flagged=flagged, judge_model=judge.get("model", ""),
+                   judge_arm=judge.get("arm", ""),
                    judge_model_id=judge.get("model_id", ""), **(delegation or {}))
 
 
@@ -135,9 +136,11 @@ COMMANDS = {"inputs": "approve-inputs", "grader": "approve-grader"}
 
 
 def require_approvals(eval_dir: Path, cases_sha256: str, surface_sha256: str, model: str,
-                      allow_no_headroom: bool = False, judge_model: str = "") -> dict:
-    """Both approvals must match the current cases; the grader's must match the surface and the
-    judge alias too, and its baseline must have run the model being climbed with headroom left.
+                      allow_no_headroom: bool = False, judge_model: str = "",
+                      judge_arm: str = "") -> dict:
+    """Both approvals must match the current cases; the grader's must match the surface, the judge
+    alias and the judge arm too, and its baseline must have run the model being climbed with
+    headroom left.
 
     Returns the grader approval, whose `judge_model_id` the climb then holds every judge call to.
     """
@@ -158,7 +161,8 @@ def require_approvals(eval_dir: Path, cases_sha256: str, surface_sha256: str, mo
     if model in grader.get("headroom_flagged", []) and not allow_no_headroom:
         raise ApprovalError(f"the approved baseline had no headroom for {model} (above 95%); "
                             "pass --allow-no-headroom to climb it anyway")
-    if grader.get("judge_model", "") != judge_model:
-        raise ApprovalError(f"the grader was approved with judge {grader.get('judge_model', '')!r}, "
-                            f"not {judge_model!r}; recalibrate and approve the grader again")
+    if (grader.get("judge_model", ""), grader.get("judge_arm", "")) != (judge_model, judge_arm):
+        raise ApprovalError(f"the grader was approved with judge {grader.get('judge_model', '')!r} "
+                            f"(arm {grader.get('judge_arm', '')!r}), not {judge_model!r} (arm "
+                            f"{judge_arm!r}); recalibrate and approve the grader again")
     return grader

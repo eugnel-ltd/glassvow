@@ -272,12 +272,12 @@ class ApprovalProvenanceTests(unittest.TestCase):
         approvals.approve_inputs(directory, "h1")
         approvals.approve_grader(directory, "h1", "s1", ids, "run",
                                  approvals.sample_transcript_ids(ids, "run"), flagged, self.CASES)
-        approvals.require_approvals(directory, "h1", "s1", "haiku", judge_model="haiku")  # opus's ceiling does not block haiku
+        approvals.require_approvals(directory, "h1", "s1", "haiku", judge_model="haiku", judge_arm="plain")  # opus's ceiling does not block haiku
         with self.assertRaisesRegex(approvals.ApprovalError, "no headroom for opus"):
-            approvals.require_approvals(directory, "h1", "s1", "opus", judge_model="haiku")
-        approvals.require_approvals(directory, "h1", "s1", "opus", allow_no_headroom=True, judge_model="haiku")
+            approvals.require_approvals(directory, "h1", "s1", "opus", judge_model="haiku", judge_arm="plain")
+        approvals.require_approvals(directory, "h1", "s1", "opus", allow_no_headroom=True, judge_model="haiku", judge_arm="plain")
         with self.assertRaisesRegex(approvals.ApprovalError, "did not run 'sonnet'"):
-            approvals.require_approvals(directory, "h1", "s1", "sonnet", allow_no_headroom=True, judge_model="haiku")
+            approvals.require_approvals(directory, "h1", "s1", "sonnet", allow_no_headroom=True, judge_model="haiku", judge_arm="plain")
         record = json.loads((directory / "approvals.json").read_text())["grader"]
         self.assertEqual((["haiku", "opus"], ["opus"]), (record["models"], record["headroom_flagged"]))
 
@@ -289,9 +289,9 @@ class ApprovalProvenanceTests(unittest.TestCase):
                                           approvals.sample_transcript_ids(ids, "run"), self.results(),
                                           self.CASES)
         self.assertEqual("s1", record["surface_sha256"])
-        approvals.require_approvals(directory, "h1", "s1", "sonnet", judge_model="haiku")
+        approvals.require_approvals(directory, "h1", "s1", "sonnet", judge_model="haiku", judge_arm="plain")
         with self.assertRaisesRegex(approvals.ApprovalError, "surface changed"):
-            approvals.require_approvals(directory, "h1", "s2", "sonnet", judge_model="haiku")
+            approvals.require_approvals(directory, "h1", "s2", "sonnet", judge_model="haiku", judge_arm="plain")
 
     def test_hillclimb_and_the_backend_record_refuse_ambient_context(self) -> None:
         done = subprocess.run([sys.executable, str(ROOT / "tools/agent_evals/cli.py"), "hillclimb",
@@ -358,7 +358,7 @@ class HybridGraderTests(unittest.TestCase):
         self.assertEqual(((True, True, False), True), (verdicts["why"].votes, verdicts["why"].passed))
         self.assertEqual(((False, True, False), False), (verdicts["how"].votes, verdicts["how"].passed))
         self.assertEqual(0.75, result.score)
-        self.assertEqual("fake-haiku", result.judge_model_id)
+        self.assertEqual("fake-sonnet", result.judge_model_id)  # sonnet is the default judge
 
     def test_the_judge_sees_only_the_capped_fields_as_quoted_data(self) -> None:
         judge = fake_judge(True)
@@ -428,17 +428,22 @@ class JudgeBindingTests(unittest.TestCase):
         approvals.approve_inputs(directory, "h1")
         record = approvals.approve_grader(directory, "h1", "s1", ids, "run", approvals.sample_transcript_ids(ids, "run"),
                                           healthy_results(), ["c1", "c2"], judge_needed=True)
-        self.assertEqual(("haiku", "fake-haiku"), (record["judge_model"], record["judge_model_id"]))
-        approved = approvals.require_approvals(directory, "h1", "s1", "sonnet", judge_model="haiku")
+        self.assertEqual(("haiku", "plain", "fake-haiku"),
+                         (record["judge_model"], record["judge_arm"], record["judge_model_id"]))
+        approved = approvals.require_approvals(directory, "h1", "s1", "sonnet", judge_model="haiku", judge_arm="plain")
         self.assertEqual("fake-haiku", approved["judge_model_id"])
         with self.assertRaisesRegex(approvals.ApprovalError, "approved with judge 'haiku'"):
-            approvals.require_approvals(directory, "h1", "s1", "sonnet", judge_model="sonnet")
+            approvals.require_approvals(directory, "h1", "s1", "sonnet", judge_model="sonnet", judge_arm="plain")
+        with self.assertRaisesRegex(approvals.ApprovalError, "arm 'plain'"):
+            approvals.require_approvals(directory, "h1", "s1", "sonnet", judge_model="haiku", judge_arm="reference")
 
     def test_a_run_with_an_unknown_judge_id_or_incomplete_trivial_check_cannot_back_approval(self) -> None:
         trivial = healthy_results()["diagnostics"]["trivial_answerers"]
         bad = {
-            "unknown judge id": (healthy_results(judge={"model": "haiku", "model_id": "", "model_ids": ["a", "b"]}),
-                                 "judge model id"),
+            "unknown judge id": (healthy_results(judge={"model": "haiku", "arm": "plain", "model_id": "",
+                                                        "model_ids": ["a", "b"]}), "judge model id"),
+            "unknown judge arm": (healthy_results(judge={"model": "haiku", "arm": "", "model_id": "fake-haiku",
+                                                         "model_ids": ["fake-haiku"]}), "judge model id or arm"),
             "judge failed on trivial answers": (healthy_results(diagnostics={**healthy_results()["diagnostics"],
                                                 "trivial_answerers": {**trivial, "judge_errors": 2}}), "incomplete"),
             "stale answer set": (healthy_results(), "another answer set"),

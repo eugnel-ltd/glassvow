@@ -15,7 +15,7 @@ from agent_evals.backends import (AnthropicApiBackend, Backend, ClaudeCliBackend
 from agent_evals.baseline import run_baseline  # noqa: E402
 from agent_evals.diagnostics import trivial_fingerprint  # noqa: E402
 from agent_evals.evalspec import EvalSpec, load_cases, load_eval, require_valid  # noqa: E402
-from agent_evals.graders import needs_judge  # noqa: E402
+from agent_evals.graders import JUDGE_ARMS, needs_judge  # noqa: E402
 from agent_evals.hillclimb import Climb, HillclimbConfig  # noqa: E402
 from agent_evals.models import EvalError, MODEL_ALIASES, read_json, write_json  # noqa: E402
 from agent_evals.report import review_html  # noqa: E402
@@ -126,7 +126,7 @@ def cmd_baseline(args: argparse.Namespace) -> int:
     models = args.models.split(",") if args.models else list(spec.default_models)
     results = run_baseline(spec, cases, backend, models, args.reps, run_dir, judge, args.timeout,
                            args.infra_threshold, args.workers, run_id,
-                           args.judge_model or spec.judge_model)
+                           args.judge_model or spec.judge_model, args.judge_arm or spec.judge_arm)
     for model, block in results["models"].items():
         print(f"{model}: {block['summary']['mean']:.1%} over {len(block['per_case'])} cases")
     for warning in results["warnings"]:
@@ -143,8 +143,9 @@ def cmd_hillclimb(args: argparse.Namespace) -> int:
     model = args.model or spec.hillclimb_model
     judged = needs_judge(cases)
     judge_model = (args.judge_model or spec.judge_model) if judged else ""
+    judge_arm = (args.judge_arm or spec.judge_arm) if judged else ""
     approved = approvals.require_approvals(spec.directory, spec.cases_sha256, spec.surface_sha256,
-                                           model, args.allow_no_headroom, judge_model)
+                                           model, args.allow_no_headroom, judge_model, judge_arm)
     split = splitting.load_split(spec.directory / "split.json", [c.id for c in cases],
                                  spec.cases_sha256)
     config = HillclimbConfig(
@@ -152,7 +153,7 @@ def cmd_hillclimb(args: argparse.Namespace) -> int:
         proposer_model=args.proposer_model, reps=args.reps, round_reps=args.round_reps,
         rounds=args.rounds, stall=args.stall, min_gain=args.min_gain, timeout_s=args.timeout,
         infra_threshold=args.infra_threshold, workers=args.workers,
-        judge_model=judge_model or spec.judge_model)
+        judge_model=judge_model or spec.judge_model, judge_arm=judge_arm or spec.judge_arm)
     run_dir = spec.build_dir / (args.run_id or _run_id("hc-"))
     backend = _backend(args)
     judge = backend if judged else None
@@ -210,6 +211,8 @@ def build_parser() -> argparse.ArgumentParser:
         sub.add_argument("--run-id")
         sub.add_argument("--judge-model", help="judge alias for free-text claims "
                          "(default: eval.json judge_model, chosen by calibration)")
+        sub.add_argument("--judge-arm", choices=JUDGE_ARMS, help="plain (claims and fields) or "
+                         "reference (also the case's reference); default: eval.json judge_arm")
 
     def delegation_flags(sub: argparse.ArgumentParser) -> None:
         sub.add_argument("--delegated", metavar="TEXT",

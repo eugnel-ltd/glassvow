@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Tests for the repo_traps grader. From the first council: the decision gate, trivial answerers
 and delegated approval. From the second: the hybrid grader, with programmatic claims for
-decisions, commands, paths, numbers and code, and judge claims for free text. No model is called:
-the judge here is a fake that credits every claim, or none."""
+decisions, commands, paths, numbers and code, and judge claims for free text. From the third: the
+reference-guided judge arm, sibling targets, the frozen claims and the offline calibration
+metrics. No model is called: the judge here is a fake that credits every claim, or none."""
 from __future__ import annotations
 
 import contextlib
@@ -23,14 +24,17 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_agent_evals import ROOT, fake_judge, healthy_results, make_cases  # noqa: E402
 
-from agent_evals import approvals, cli  # noqa: E402
+from agent_evals import approvals, calibration, cli  # noqa: E402
 from agent_evals.diagnostics import (TRIVIAL_LIMIT, case_soup, compact_soup,  # noqa: E402
                                      keyword_run, keyword_soup, trivial_answerer_scores,
                                      trivial_answers)
 from agent_evals.evalspec import load_cases, load_eval  # noqa: E402
-from agent_evals.graders import (MAX_FIELD_CHARS, check_claim, claim_keywords, grade,  # noqa: E402
-                                 is_decision_claim, is_judge_claim, judge_questions_sha256,
-                                 parse_json_answer, programmatic_verdicts, validate_grader_spec)
+from agent_evals.graders import (JUDGE_SYSTEM, JUDGE_SYSTEM_REFERENCE, MAX_FIELD_CHARS,  # noqa: E402
+                                 check_claim, claim_keywords, claims_sha256, grade, is_decision_claim,
+                                 is_judge_claim, parse_json_answer, programmatic_verdicts,
+                                 validate_grader_spec)
+from agent_evals.runner import run_case  # noqa: E402
+from agent_evals.backends import FakeBackend  # noqa: E402
 from agent_evals.models import Case, EvalError, sha256_text  # noqa: E402
 
 FILLERS = ("echo", "soup", "compact_soup", "case_soup", "keyword_run", "hedge", "padded", "injected")
@@ -38,12 +42,34 @@ ANSWERERS = {"empty", "constant_false", "constant_true", "oracle_booleans"} | {
     f"{filler}_{mode}" for filler in FILLERS for mode in ("false", "true", "oracle")}
 EVAL_DIR = ROOT / "tools/agent_evals/evals/repo_traps"
 ANSWERS_FILE = EVAL_DIR / "answers.jsonl"
-# The judge questions, frozen before any evaluation set is scored (council-2026-10-05.md). A change
-# to any question changes this hash: the calibration and the grader approval must then be redone.
-JUDGE_QUESTIONS_SHA256 = "3d805fadb9d088f687fc2b5cd4ce7279739d6d8aa0dbfdfaec0ed55c98cfe719"
+# Every claim, programmatic and judge, frozen before the fresh sets are scored (round 3 of
+# council-2026-10-05.md). Any change to a claim changes this hash: the calibration and the grader
+# approval must then be redone.
+CLAIMS_SHA256 = "0235c5bc81daa4e8ae1ce08109ce95a363631605b54ed8b7f87d85db81e374e8"
 # The fields programmatic claims may read besides booleans: a command, code, a citation, a number
 # and a one-phrase owner. Every other field is free text and is judged.
 STRUCTURED_FIELDS = {"gate", "fixed_code", "missing_call", "citation", "min_target_pt", "owner"}
+# Each programmatic target and siblings an answer could name in its place (round 3, item 2).
+SIBLING_SWAPS = {
+    "check-only-exit-zero": [("check_scripts.sh", s) for s in ("check_imports.sh", "check_anchors.py",
+                                                               "check_benchmark_freeze.py")],
+    "typed-array-ternary": [("_bequest_choices", s) for s in ("_reward_choices", "_shop_choices")]
+                           + [("Array[Dictionary]", "Array[String]")],
+    "typed-array-new-literal": [("_draw_pile", s) for s in ("_discard_pile", "_exhaust_pile")]
+                               + [("Array[Card]", "Array[Dictionary]")],
+    "borrowed-shader-const-markers": [("BODY_SHADER", s) for s in ("SHADOW_SHADER", "HUSK_SHADER")]
+                                     + [("EnemyView", "HeroView")],
+    "half-size-times-scale": [("from.get_center", s) for s in ("to.get_center", "view.get_center")]
+                             + [("* 0.5", "* 0.5 * born"), ("* 0.5", "* 0.5 * view.scale")],
+    "label-box-from-font-metrics": [("minus get_ascent", "minus get_descent"),
+                                    ("- font.get_ascent", "- font.get_descent")],
+    "paired-calls-hit-player": [("_hero.", s) for s in ("_enemy.", "_foe.")]
+                               + [("Vector2.RIGHT", s) for s in ("Vector2.LEFT", "Vector2(-1, 0)")],
+    "cite-the-symbol": [("enemy_view.gd", "hero_view.gd"), ("enemy_view.gd`", "enemy_view.gd:2418`")],
+    "language-switch-owner": [("Main", s) for s in ("SettingsPanel", "ContentDB")],
+    "lab-actor-without-profile": [("art.get", s) for s in ("locale.get", "def.get")],
+    "scaled-hit-area": [("44", "24")],
+}
 
 
 def real_case(case_id: str) -> Case:
@@ -71,6 +97,18 @@ def independent_answers() -> list[dict]:
     note = json.loads(header)
     assert note["sha256"] == hashlib.sha256(body.encode("utf-8")).hexdigest(), "an answer was edited"
     return [json.loads(line) for line in body.splitlines() if line.strip()]
+
+
+def known_correct_answers() -> list[tuple[str, dict]]:
+    """Every committed correct answer: the references, answers.jsonl, set A and calibration sets b and c."""
+    rows = answers()
+    correct = [(cid, row["reference"]) for cid, row in rows.items()]
+    correct += [(cid, answer) for cid, row in rows.items() for answer in row["correct"]]
+    correct += [(row["id"], row["answer"]) for row in independent_answers()]
+    for name in ("b", "c"):
+        lines = (EVAL_DIR / f"calibration/answers-{name}.jsonl").read_text(encoding="utf-8").splitlines()
+        correct += [(row["id"], row["answer"]) for row in map(json.loads, filter(None, lines))]
+    return correct
 
 
 class DecisionGateTests(unittest.TestCase):
@@ -127,7 +165,7 @@ class TrivialAnswererTests(unittest.TestCase):
     def test_oracle_booleans_get_the_right_flags_and_empty_text(self) -> None:
         case = real_case("typed-array-ternary")
         answer = trivial_answers(case, "soup")["oracle_booleans"]
-        self.assertEqual({"safe_to_ship": False, "fixed_code": ""}, answer)
+        self.assertEqual({"safe_to_ship": False, "fixed_code": "", "reason": ""}, answer)
 
     def test_the_judge_probes_fill_only_the_fields_the_judge_reads(self) -> None:
         case = real_case("check-only-exit-zero")
@@ -244,10 +282,10 @@ class HybridClaimTests(unittest.TestCase):
                 elif not isinstance(claim.get("equals"), bool):
                     programmatic += 1
                     self.assertIn(claim["field"], STRUCTURED_FIELDS, f"{case.id}/{claim['id']}")
-        self.assertEqual((55, 14), (judged, programmatic))
+        self.assertEqual((56, 14), (judged, programmatic))
 
-    def test_the_judge_questions_are_frozen(self) -> None:
-        self.assertEqual(JUDGE_QUESTIONS_SHA256, judge_questions_sha256(self.cases))
+    def test_every_claim_is_frozen(self) -> None:
+        self.assertEqual(CLAIMS_SHA256, claims_sha256(self.cases))
 
     def test_each_case_without_a_boolean_has_one_gate_by_program_or_by_judge(self) -> None:
         kinds = []
@@ -307,7 +345,7 @@ class HybridClaimTests(unittest.TestCase):
 
 class ReferenceAnswerTests(unittest.TestCase):
     """The programmatic side never rejects a known correct answer: the references, two answers in
-    other words, and the blind writer's independent set."""
+    other words, the blind writer's independent set and calibration sets b and c."""
 
     CODE_RENDERINGS = {("typed-array-ternary", "fixed_code")}  # the reference states this fix in prose
 
@@ -316,9 +354,7 @@ class ReferenceAnswerTests(unittest.TestCase):
         cls.cases = {c.id: c for c in load_cases(load_eval("repo_traps"))}
         rows = answers()
         cls.answers = rows
-        cls.correct = [(cid, row["reference"]) for cid, row in rows.items()]
-        cls.correct += [(cid, answer) for cid, row in rows.items() for answer in row["correct"]]
-        cls.correct += [(row["id"], row["answer"]) for row in independent_answers()]
+        cls.correct = known_correct_answers()
 
     def test_every_case_has_a_reference_answer_taken_from_its_reference(self) -> None:
         self.assertEqual(set(self.cases), set(self.answers))
@@ -334,7 +370,7 @@ class ReferenceAnswerTests(unittest.TestCase):
                          {case_id: sum(r["id"] == case_id for r in rows) for case_id in self.cases})
 
     def test_no_programmatic_claim_rejects_a_known_correct_answer(self) -> None:
-        self.assertEqual(35 * 5, len(self.correct))
+        self.assertEqual(35 * 9, len(self.correct))
         for case_id, answer in self.correct:
             _, settled, failure = programmatic_verdicts(self.cases[case_id], json.dumps(answer))
             self.assertIsNone(failure, (case_id, answer))
@@ -344,6 +380,183 @@ class ReferenceAnswerTests(unittest.TestCase):
         for case_id, answer in self.correct:
             result = grade(self.cases[case_id], json.dumps(answer), fake_judge(True))
             self.assertEqual(1.0, result.score, (case_id, [v for v in result.verdicts if not v.passed]))
+
+
+class SiblingTargetTests(unittest.TestCase):
+    """Round 3: a programmatic target claim rejects a sibling target, whether it replaces the
+    target or is offered beside it."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.cases = {c.id: c for c in load_cases(load_eval("repo_traps"))}
+        cls.correct = known_correct_answers()
+
+    def fails(self, case_id: str, answer: dict) -> bool:
+        _, settled, failure = programmatic_verdicts(self.cases[case_id], json.dumps(answer))
+        return failure is not None or any(not v.passed for v in settled.values())
+
+    def test_every_swapped_or_added_sibling_fails_a_known_correct_answer(self) -> None:
+        self.assertEqual(35 * 9, len(self.correct))
+        applied: dict[tuple[str, str, str], int] = {}
+        for case_id, answer in self.correct:
+            self.assertFalse(self.fails(case_id, answer), (case_id, answer))
+            fields = {c["field"] for c in self.cases[case_id].grader["claims"] if not is_judge_claim(c)}
+            for old, new in SIBLING_SWAPS.get(case_id, []):
+                for field in fields:
+                    text = answer.get(field)
+                    if not isinstance(text, str) or old not in text:
+                        continue
+                    swapped = text.replace(old, new)
+                    for mutant in (swapped, f"{text} or {swapped}"):
+                        self.assertTrue(self.fails(case_id, {**answer, field: mutant}), (case_id, mutant))
+                    applied[(case_id, old, new)] = applied.get((case_id, old, new), 0) + 1
+        missing = [(c, o, n) for c, pairs in SIBLING_SWAPS.items() for o, n in pairs if (c, o, n) not in applied]
+        self.assertEqual([], missing, "a sibling swap that touches no correct answer tests nothing")
+
+    def test_no_programmatic_claim_looks_for_hedge_wording(self) -> None:
+        hedges = re.compile(r"perhaps|maybe|might|possibly|or not|either", re.IGNORECASE)
+        for case in self.cases.values():
+            for claim in case.grader["claims"]:
+                for key in ("must_match", "must_not_match"):
+                    self.assertIsNone(hedges.search(claim.get(key, "")), f"{case.id}/{claim['id']}")
+
+
+class ReferenceArmTests(unittest.TestCase):
+    """Round 3: arm R shows the judge the case's reference, labelled as the expert's; arm P never
+    does. The arm is recorded with every transcript."""
+
+    CASE = "funplay-32000"
+    ANSWER = {"first_check": "Probe the editor URL with curl.", "likely_cause": "The editor is not running."}
+
+    def judged(self, arm: str) -> dict[str, str]:
+        judge = fake_judge(True)
+        result = grade(real_case(self.CASE), json.dumps(self.ANSWER), judge, judge_arm=arm)
+        self.assertEqual(1.0, result.score)
+        return judge.calls[0]
+
+    def test_the_reference_arm_shows_the_labelled_reference_and_the_plain_arm_never_does(self) -> None:
+        reference = real_case(self.CASE).reference
+        plain, guided = self.judged("plain"), self.judged("reference")
+        self.assertEqual((JUDGE_SYSTEM, JUDGE_SYSTEM_REFERENCE), (plain["system"], guided["system"]))
+        self.assertNotIn(reference, plain["prompt"])
+        self.assertNotIn("reference", plain["system"].casefold())
+        self.assertIn(f"<<<REFERENCE\n{reference}\nREFERENCE>>>", guided["prompt"])
+        self.assertIn("expert's reference", guided["prompt"])
+        self.assertIn("never credit the answer for what only the reference says", guided["system"])
+        self.assertLess(guided["prompt"].index("REFERENCE>>>"), guided["prompt"].index("<<<ANSWER"))
+
+    def test_an_unknown_arm_is_refused(self) -> None:
+        with self.assertRaisesRegex(EvalError, "unknown judge arm"):
+            grade(real_case(self.CASE), json.dumps(self.ANSWER), fake_judge(True), judge_arm="lenient")
+
+    def test_the_transcript_records_the_arm_and_the_judge(self) -> None:
+        backend = FakeBackend(lambda system, prompt, model: json.dumps(self.ANSWER))
+        record = run_case(backend, real_case(self.CASE), 1, "sonnet", "surface", "repo_traps",
+                          fake_judge(True), "sonnet", judge_arm="reference")
+        self.assertEqual(("sonnet", "reference", "fake-sonnet"),
+                         (record["judge_model"], record["judge_arm"], record["judge_model_id"]))
+        self.assertEqual("", run_case(backend, real_case("cite-the-symbol"), 1, "sonnet", "s")["judge_arm"])
+
+
+class CalibrationMetricsTests(unittest.TestCase):
+    """Round 3, item 4: the bars computed offline from two gradings of each set and a labels file."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.cases = {c.id: c for c in load_cases(load_eval("repo_traps"))}
+        refs = answers()
+        correct = [{"id": cid, "answer": refs[cid]["reference"]} for cid in ("check-only-exit-zero", "funplay-32000")]
+        correct.append({"id": "never-delete-the-real-save", "answer": refs["never-delete-the-real-save"]["reference"],
+                        "hedged": True})
+        wrong = [
+            {"id": "paired-calls-hit-player", "kind": "wrong-target",
+             "answer": {**refs["paired-calls-hit-player"]["reference"], "missing_call": "_enemy.ward_hit(Vector2.RIGHT)"}},
+            {"id": "funplay-32000", "kind": "mechanism",
+             "answer": {**refs["funplay-32000"]["reference"], "likely_cause": "A corrupted MCP package."}},
+            {"id": "language-switch-owner", "kind": "negation",
+             "answer": {**refs["language-switch-owner"]["reference"], "during_combat": "Switch at once."}},
+            {"id": "dom-pile-keep-nodes", "kind": "hedge",
+             "answer": {**refs["dom-pile-keep-nodes"]["reference"], "reason": "Keep them, or perhaps not."}},
+        ]
+        adversarial = [{"id": cid, "kind": "kitchen-sink", "answer": {"owner": "Main SettingsPanel"}}
+                       for cid in ("language-switch-owner", "cite-the-symbol")]
+        stingy = fake_judge(lambda claim_id: claim_id != "explains-stderr")
+
+        def graded(rows, name, role, run, judge):
+            meta = {"set": name, "role": role, "run": run, "claims_sha256": claims_sha256(cls.cases.values())}
+            return calibration.grade_set(cls.cases, rows, judge, "sonnet", "plain", meta, workers=1)
+
+        cls.gradings = (graded(correct, "d", "correct", 1, fake_judge(True)) + graded(correct, "d", "correct", 2, stingy)
+                        + graded(wrong, "w", "wrong", 1, fake_judge(True))
+                        + graded(adversarial, "x", "adversarial", 1, fake_judge(True)))
+        cls.labels = {("w", 0, "right-heading-call"): "COVERED", ("w", 0, "direction-reason"): "COVERED",
+                      ("w", 1, "editor-not-running"): "COVERED", ("w", 2, "main-owns"): "COVERED",
+                      ("w", 2, "defers"): "AMBIGUOUS"}
+        cls.report = calibration.metrics(cls.cases, cls.gradings, cls.labels)
+
+    def test_wilson_matches_known_values(self) -> None:
+        for (k, n), expected in (((0, 10), (0.0, 0.2775)), ((5, 10), (0.2366, 0.7634)), ((0, 0), (0.0, 1.0)),
+                                 ((3, 140), (0.0073, 0.0611))):
+            self.assertEqual(expected, tuple(round(x, 4) for x in calibration.wilson(k, n)), (k, n))
+
+    def test_the_clustered_interval_resamples_whole_cases(self) -> None:
+        self.assertEqual((0.0, 0.0), calibration.clustered_interval([(0, 4)] * 5))
+        one_bad_case = calibration.rate([("a", True)] * 10 + [(c, False) for c in "bcdefghij" for _ in range(10)])
+        low, high = one_bad_case["clustered"]
+        self.assertEqual((10, 100, 0.1), (one_bad_case["k"], one_bad_case["n"], one_bad_case["rate"]))
+        self.assertTrue(low == 0.0 and high > one_bad_case["wilson"][1], one_bad_case)
+
+    def test_correct_sets_report_claim_failures_and_hedged_answers_apart(self) -> None:
+        first, second = self.report["runs"]["plain/correct/run1"], self.report["runs"]["plain/correct/run2"]
+        self.assertEqual((0, 3), (first["all"]["claim_failure"]["k"], first["all"]["answers"]))
+        self.assertEqual(1, second["all"]["claim_failure"]["k"])
+        self.assertEqual([{"set": "d", "index": 0, "id": "check-only-exit-zero", "failed": ["explains-stderr"]}],
+                         second["all"]["under_100"])
+        self.assertEqual((1, 2), (second["hedged"]["answers"], second["not_hedged"]["answers"]))
+        self.assertEqual((0, 0), (second["all"]["decision_or_gate_failures"], second["judge_errors"]))
+
+    def test_wrong_sets_count_covered_judge_passes_programmatic_passes_and_coverage(self) -> None:
+        wrong = self.report["runs"]["plain/wrong/run1"]
+        self.assertEqual((1, 1), (wrong["fp_covered_judge"]["k"], wrong["fp_covered_judge"]["n"]))
+        self.assertEqual({"mechanism": (1, 1)}, {k: (v["k"], v["n"]) for k, v in
+                                                  wrong["fp_covered_judge_by_kind"].items() if v["n"]})
+        self.assertEqual(1, wrong["covered_judge_not_judged"])
+        self.assertEqual([{"set": "w", "index": 2, "claim": "main-owns"}], wrong["covered_programmatic_passes"])
+        self.assertEqual((3, 4), (wrong["wrong_at_100"]["k"], wrong["wrong_at_100"]["n"]))
+        self.assertEqual((3, 4), (wrong["coverage"]["k"], wrong["coverage"]["n"]))
+        self.assertEqual(1, wrong["ambiguous_labels"])
+
+    def test_two_gradings_give_disagreement_splits_and_the_score_change(self) -> None:
+        stable = self.report["stability"]["plain/d"]
+        self.assertEqual((1, 5), (stable["majority_disagreement"]["k"], stable["majority_disagreement"]["n"]))
+        self.assertAlmostEqual(1 / 3 / 3, stable["score_change"])
+        self.assertFalse(stable["score_change_within_limit"])
+        self.assertEqual([], stable["gate_splits"])
+        self.assertNotIn("plain/w", self.report["stability"])
+
+    def test_adversarial_sets_are_set_beside_the_oracle_booleans(self) -> None:
+        adversarial = self.report["runs"]["plain/adversarial/run1"]
+        self.assertEqual({"kitchen-sink": 0.0}, adversarial["mean_by_transform"])
+        self.assertAlmostEqual(0.2381, adversarial["oracle_booleans"], places=4)
+
+    def test_gradings_made_with_other_claims_are_refused(self) -> None:
+        stale = [{**row, "claims_sha256": "0" * 64} for row in self.gradings[:1]]
+        with self.assertRaisesRegex(ValueError, "other claims"):
+            calibration.metrics(self.cases, stale, {})
+
+    def test_the_command_line_grades_nothing_twice_and_reads_labels(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            gradings, labels, out = Path(tmp, "g.jsonl"), Path(tmp, "l.jsonl"), Path(tmp, "m.json")
+            gradings.write_text("".join(json.dumps(row) + "\n" for row in self.gradings), encoding="utf-8")
+            labels.write_text("".join(json.dumps({"set": s, "index": i, "claim_id": c, "label": label}) + "\n"
+                                      for (s, i, c), label in self.labels.items()), encoding="utf-8")
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(0, calibration.main(["metrics", "--gradings", str(gradings), "--labels",
+                                                      str(labels), "--out", str(out)]))
+            self.assertEqual(json.loads(json.dumps(self.report)), json.loads(out.read_text(encoding="utf-8")))
+            with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+                calibration.main(["grade", "--answers", str(labels), "--set", "d", "--role", "correct",
+                                  "--run", "1", "--arm", "plain", "--out", str(out)])
 
 
 class DelegatedApprovalTests(unittest.TestCase):

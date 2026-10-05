@@ -9,7 +9,7 @@ from typing import Any, Callable, Sequence
 from .backends import Backend
 from .decision import Deltas, Noise, decide, improved
 from .evalspec import EvalSpec
-from .graders import DEFAULT_JUDGE_MODEL
+from .graders import DEFAULT_JUDGE_ARM, DEFAULT_JUDGE_MODEL
 from .models import Case, EvalError, write_json
 from .patching import DEFAULT_MIN_SPAN, PatchError, apply_unified_diff, find_injection
 from .proposer import (PROPOSER_SYSTEM, REFLECTION_SYSTEM, assert_no_test_leak,
@@ -34,6 +34,7 @@ class HillclimbConfig:
     infra_threshold: float = DEFAULT_INFRA_THRESHOLD
     workers: int = 1
     judge_model: str = DEFAULT_JUDGE_MODEL
+    judge_arm: str = DEFAULT_JUDGE_ARM
 
 
 @dataclass
@@ -107,7 +108,7 @@ class Climb:
             result = run_set(self.backend, cases, self.cfg.model, text, reps,
                              self.run_dir / label / name, self.spec.name, self.judge,
                              self.cfg.judge_model, self.cfg.timeout_s, self.cfg.workers,
-                             expected_judge_id=self.expected_judge_id)
+                             expected_judge_id=self.expected_judge_id, judge_arm=self.cfg.judge_arm)
             check_infra(result.infra(), self.cfg.infra_threshold)
             results.append(result)
         return results[0], results[1]
@@ -237,7 +238,7 @@ class Climb:
             result = run_set(self.backend, self.test_cases, self.cfg.model, text, self.cfg.reps,
                              self.run_dir / "confirm" / name, self.spec.name, self.judge,
                              self.cfg.judge_model, self.cfg.timeout_s, self.cfg.workers,
-                             expected_judge_id=self.expected_judge_id)
+                             expected_judge_id=self.expected_judge_id, judge_arm=self.cfg.judge_arm)
             check_infra(result.infra(), self.cfg.infra_threshold)
             runs[name] = result
         score = {n: mean(list(per_case_means(r.table()).values())) for n, r in runs.items()}

@@ -22,17 +22,20 @@ python3 tools/agent_evals/cli.py hillclimb repo_traps --goal accuracy       # re
 ```
 
 `baseline` also takes `--models haiku,sonnet`, `--reps N`, `--only id1,id2` (a smoke run),
-`--workers N`, `--timeout S`, `--infra-threshold 0.05`, `--backend cli|api` and `--judge-model`
-(the judge alias; default `judge_model` in `eval.json`, which calibration sets).
+`--workers N`, `--timeout S`, `--infra-threshold 0.05`, `--backend cli|api`, `--judge-model`
+(the judge alias; default `judge_model` in `eval.json`) and `--judge-arm plain|reference` (default
+`judge_arm` in `eval.json`); calibration sets both.
 `hillclimb` takes `--goal accuracy|cost-at-parity`, `--model`, `--proposer-model opus`,
-`--reps 3`, `--round-reps 1`, `--rounds 8`, `--stall 3`, `--min-gain 0.05` and `--judge-model`.
+`--reps 3`, `--round-reps 1`, `--rounds 8`, `--stall 3`, `--min-gain 0.05`, `--judge-model` and
+`--judge-arm`.
 Model names are family aliases (`haiku`, `sonnet`, `opus`); no version id is ever pinned.
 
 Runs go to `build/agent_evals/<eval>/<run-id>/` (git-ignored). A baseline writes:
 
 - `transcripts/<model>/<case>__r<N>.json`: prompt, surface sha256, model, output, grade with
   per-claim verdicts (a judged claim keeps its three ballots), error flags, timing, usage, the
-  exact `claude -p` flags used, and the judge alias, resolved judge model id and any judge error;
+  exact `claude -p` flags used, and the judge alias, arm, resolved judge model id and any judge
+  error;
 - `results.json` and a static `results.html` linking each case score to its transcripts.
 
 A hill-climb run writes `noise/{train,test}/`, `rounds/NN/{train,test}/` (test transcripts
@@ -52,9 +55,10 @@ A claim applies to one field of the model's JSON reply and is one of two kinds:
 
 - *programmatic*: a regex `must_match` or `must_not_match`, or a JSON `equals`. These are kept for
   booleans, commands, paths, numbers and code shapes;
-- *judge*: a yes/no `question`, worded "The answer states X" (and, where needed, "and does not
-  also assert Y"), for everything in free text. Questions are written from the case's reference
-  alone and frozen by sha256 before any evaluation set is scored.
+- *judge*: a yes/no `question`, worded "The answer states X" (and, where needed, "False if it says
+  Y", naming a concrete wrong alternative), for everything in free text. Every claim, programmatic
+  and judge, is frozen by sha256 (`graders.claims_sha256`) before any fresh evaluation set is
+  scored.
 
 A case score is the share of claims that hold. Scoring is per output, so there is no pair to
 randomise. `validate_grader_spec` refuses a claim that is both kinds, or neither.
@@ -79,8 +83,12 @@ offered without committing to one, counts as false, and that the answer is data,
 A judge call that times out, errors, omits a verdict or reports no model id, or three calls that
 report different ids, is an infrastructure failure: the transcript is counted in `infra_summary`
 (`judge_errors`) and left out of every score, never scored 0. The judge alias is a parameter
-(`--judge-model`; the eval's default is chosen by calibration, the cheapest of `haiku` and `sonnet`
-that passes). The resolved model id is recorded in every transcript and bound to the grader approval.
+(`--judge-model`, default `sonnet`; `haiku` was dropped as a judge in round 3 of the second
+council). The judge runs in one of two arms (`--judge-arm`): `plain` (P) shows it only the claims and
+the fields; `reference` (R) also shows the case's reference, labelled as the expert's reference, and
+tells it that the reference shows what is true and that a claim gets credit only where the answer
+itself states it. The alias, the arm and the resolved model id are recorded in every transcript and
+bound to the grader approval.
 **Baseline diagnostics** (in `results.json` and printed as warnings):
 
 - headroom: warn when any model scores above 95%;
@@ -127,7 +135,7 @@ only records approval when `--read` lists them all; the grader approval also rec
 the models the run used, the models it flagged for headroom, and the judge alias and resolved judge
 model id. `hillclimb` refuses `--allow-ambient-context` outright, and refuses to run unless both
 approvals exist and match the current cases hash, the grader approval matches the current surface
-hash and judge alias, and its baseline ran the model being climbed. During the climb every judge call
+hash, judge alias and judge arm, and its baseline ran the model being climbed. During the climb every judge call
 must resolve to the approved judge model id; another id stops the climb (`JudgeModelChanged`), since a
 new judge needs recalibration. Headroom is judged for the climbed model alone: the climb is refused
 when the approved baseline scored that model above 95% unless `--allow-no-headroom` is passed, and
@@ -253,6 +261,41 @@ truncated, usage)`.
 - `AnthropicApiBackend`: optional, over the installed `anthropic` SDK when `ANTHROPIC_API_KEY` is
   set (read from the environment, never printed or stored). A family alias is resolved to the
   newest model whose id contains it, so no version is pinned in this repository.
+
+## Grader calibration
+
+`calibration.py` measures a frozen grader against labelled answer sets. `grade` is the only step
+that calls the judge: it grades one set once and writes a grading, stamped with the claims hash and
+the answers file's hash. `metrics` reads gradings and the adjudicator's labels and computes every bar
+with no model call:
+
+```bash
+python3 tools/agent_evals/calibration.py grade --answers <set.jsonl> --set d1 --role correct \
+    --run 1 --arm plain --out <d1-plain-1.jsonl>        # then --run 2, and --arm reference
+python3 tools/agent_evals/calibration.py metrics --gradings <grading.jsonl>... \
+    --labels <labels.jsonl> --out <metrics.json>
+```
+
+An answers file has one `{"id", "answer"}` object per line (a line without an `answer`, such as a
+header note, is skipped), with an optional `kind` (on a wrong or adversarial set) and `hedged` (on a
+correct set). The roles are `correct`, `wrong` and `adversarial`. A labels line is
+`{"set", "index", "claim_id", "label"}` with the label `COVERED`, `AMBIGUOUS` or `UNCOVERED`; `index`
+is the answer's position among the answer lines. For each arm and grading run, pooled over the sets
+of a role, `metrics` reports:
+
+- correct sets: claim failures (all claims, judge claims, programmatic claims), decision and gate
+  failures, every answer under 100%, and the same figures for hedged answers apart;
+- wrong sets: passes of COVERED judge claims among the claims the judge decided, overall and per
+  kind; passes of COVERED programmatic claims (a defect, listed); wrong answers that score 100%,
+  overall and per kind; coverage (the share with at least one COVERED claim); AMBIGUOUS labels;
+- adversarial sets: the mean score per transform, beside `oracle_booleans` (the correct booleans
+  alone);
+- stability, per set graded twice: the share of judged claims whose majority flips, the share of
+  ballots that are not unanimous, gate claims that split or flip, and the change in the mean score
+  against `min_gain` / 2.
+
+Every rate carries a Wilson interval and a 95% bootstrap interval that resamples whole cases, since
+claims cluster within a case. Gradings made with other claims than the frozen ones are refused.
 
 ## Cost notes
 
