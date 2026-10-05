@@ -368,9 +368,16 @@ func _open(kind: String) -> void:
 	watch.tick()
 	var first_ms: float = watch.elapsed_ms()
 	var screen: WorldMapScreen = _host.get("_map_screen")
+	var built: float = -1.0
 	while is_instance_valid(screen) and screen.landscape_pending():
 		await get_tree().process_frame
 		watch.tick()
+		if built < 0.0:
+			var held: Variant = screen._map_scene.get("_landscape")
+			if held is MapJourneyLandscape:
+				var land_held: MapJourneyLandscape = held
+				if land_held.is_built():
+					built = watch.elapsed_ms()
 	var ready: float = watch.elapsed_ms()
 	await _settle_memory(watch)
 	var land: MapJourneyLandscape = screen._map_scene.journey_landscape() if is_instance_valid(screen) else null
@@ -379,6 +386,8 @@ func _open(kind: String) -> void:
 	extra["call_ms"] = snappedf(call_ms, 0.1)
 	extra["first_frame_ms"] = snappedf(first_ms, 0.1)
 	extra["ready_ms"] = snappedf(ready, 0.1)
+	# When the land's build was first seen done, before its floor's bake.
+	extra["built_ms"] = snappedf(built, 0.1)
 	_row(watch.row("open", extra))
 	await _frames(30)
 
@@ -398,7 +407,7 @@ static func _floor_timings(land: MapJourneyLandscape) -> Dictionary:
 		return {}
 	var floor_node: Variant = land.get("forest_floor")
 	if not floor_node is Node:
-		return {"floor": "none"}
+		return {"floor": "none", "land_ms": land.timings_ms}
 	var node: Node = floor_node
 	return {"floor": node.get("state"), "floor_failure": node.get("failure"),
 		"floor_ms": node.get("timings_ms"), "land_ms": land.timings_ms}
