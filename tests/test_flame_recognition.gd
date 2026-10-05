@@ -1,10 +1,12 @@
 extends RefCounted
 ## Flame lock §7, recognition at the boss (docs/design/2026-09-29-dusk-flame):
 ## the crown table by tier, dominant way and fringe; held crowns and their
-## alternates; the Ashwarden untouched. The boss relics are drawn as they always
-## were, whatever the flame: the crowns take their slots and the draws that are
-## not a placed crown fill the rest in drawn order, so a flame change moves only
-## the slots the rule names and never the run's cursor.
+## alternates. The boss relics are drawn as they always were, whatever the
+## flame: the crowns take their slots and the draws that are not a placed crown
+## fill the rest in drawn order, so a flame change moves only the slots the rule
+## names and never the run's cursor. The harness (`_case`) takes the aspect: the
+## Ashwarden's own table, on its own ways and crowns, is test_ash_flame.gd's
+## (#544 A2).
 
 const SEEDS: int = 60
 
@@ -72,11 +74,11 @@ static func run(fails: Array[String]) -> void:
 	var rules: RewardRules = RewardRules.new(content)
 	for row_v: Variant in TABLE:
 		_case(content, rules, row_v, fails)
-	_ashwarden_untouched(content, rules, fails)
 
 
-static func _dusk(content: ContentDB, seed: int, row: Array) -> RunState:
-	var run_state: RunState = RunState.new_run(content, 8000 + seed, "crown-%d" % seed, {"aspect": 0})
+static func _dusk(content: ContentDB, seed: int, row: Array, aspect: int = 0) -> RunState:
+	var run_state: RunState = RunState.new_run(content, 8000 + seed, "crown-%d" % seed,
+		{"aspect": aspect})
 	for id_v: Variant in row[1]:
 		for card: CardInst in run_state.player.deck:
 			if String(card.id) == str(id_v):
@@ -104,24 +106,25 @@ static func _drawn(rules: RewardRules, run_state: RunState) -> Array[String]:
 	return out
 
 
-static func _case(content: ContentDB, rules: RewardRules, row_v: Variant, fails: Array[String]) -> void:
+static func _case(content: ContentDB, rules: RewardRules, row_v: Variant, fails: Array[String],
+		aspect: int = 0) -> void:
 	var row: Array = row_v
 	var label: String = str(row[0])
-	var tier: String = str(Flame.read(content, _dusk(content, 0, row))["tier"])
+	var tier: String = str(Flame.read(content, _dusk(content, 0, row, aspect))["tier"])
 	if tier != str(row[4]):
 		fails.append("recognition %s: the deck reads %s, not %s" % [label, tier, row[4]])
 		return
 	var crowns: Array[String] = [str(row[5]), str(row[6])]
 	var held: Array = row[3]
 	for seed: int in range(SEEDS):
-		var twin: RunState = _dusk(content, seed, row)
+		var twin: RunState = _dusk(content, seed, row, aspect)
 		var drawn: Array[String] = _drawn(rules, twin)
-		var run_state: RunState = _dusk(content, seed, row)
+		var run_state: RunState = _dusk(content, seed, row, aspect)
 		var offer: Array[String] = rules.roll_boss_relics(run_state)
 		var problem: String = _judge(offer, drawn, crowns, held)
 		if problem.is_empty() and run_state.rng_state() != twin.rng_state():
 			problem = "the draws moved with the flame"
-		if problem.is_empty() and rules.roll_boss_relics(_dusk(content, seed, row)) != offer:
+		if problem.is_empty() and rules.roll_boss_relics(_dusk(content, seed, row, aspect)) != offer:
 			problem = "a replay of the seed offered differently"
 		if not problem.is_empty():
 			fails.append("recognition %s seed %d: %s (offer %s, drawn %s)"
@@ -158,26 +161,3 @@ static func _judge(offer: Array[String], drawn: Array[String], crowns: Array[Str
 		if held.has(offer[slot]) or offer.find(offer[slot]) != slot:
 			return "%s is held or offered twice" % offer[slot]
 	return ""
-
-
-## The Ashwarden declares no ways: however coloured its deck, the boss offers
-## exactly what the draws gave, on the same cursor.
-static func _ashwarden_untouched(content: ContentDB, rules: RewardRules, fails: Array[String]) -> void:
-	var decks: Array = [
-		[], ["uppercut", "quakeblow", "oblivionStrike", "limitBreak"],
-		["uppercut", "preparation", "warCry", "surge", "cleft"],
-	]
-	for seed: int in range(SEEDS):
-		for added_v: Variant in decks:
-			var added: Array = added_v
-			var twin: RunState = RunState.new_run(content, 8000 + seed, "crown-ash", {"aspect": 1})
-			var run_state: RunState = RunState.new_run(content, 8000 + seed, "crown-ash", {"aspect": 1})
-			for id_v: Variant in added:
-				run_state.player.deck.append(
-					CardInst.new(run_state.next_uid(), StringName(str(id_v)), false))
-			var drawn: Array[String] = _drawn(rules, twin)
-			var offer: Array[String] = rules.roll_boss_relics(run_state)
-			if offer != drawn or run_state.rng_state() != twin.rng_state():
-				fails.append("recognition: the Ashwarden's boss offer moved with its deck (seed %d): %s vs %s"
-					% [seed, offer, drawn])
-				return

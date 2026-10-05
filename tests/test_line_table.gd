@@ -25,6 +25,12 @@ const FLAME_BANNED_ZH: Array[String] = ["餘燼", "點燃", "燃燼", "碎裂", 
 const CODEX_NUMBERS: String = "(?i)[0-9一二三四五六七八九十兩百千]|\\b(one|two|three|four|five|six|seven|eight|nine|ten)\\b"
 const SHATTER_CODEX: String = "codex.lantern.shatter"
 const LANTERN_CODEX: String = "codex.lantern.lantern"
+## The codex sentences a deferred class's ways still owe, by name: the
+## Ashwarden's three are #544 step A7's (docs/design/2026-10-05-ash-flame §9),
+## and the class is not offered before step A10. A7 removes each as it lands.
+const CODEX_OWED: Array[String] = [
+	"codex.lantern.smolder", "codex.lantern.hand", "codex.lantern.endure",
+]
 
 
 static func _check(fails: Array[String], ok: bool, what: String) -> void:
@@ -677,7 +683,8 @@ static func _flame_soot_fall(fails: Array[String]) -> void:
 
 
 ## The codex keeps each colour seen steady: in the run as drawn, across the
-## Vigil once folded, in way order, and one sentence for every way.
+## Vigil once folded, in way order, and one sentence for every way of a class
+## on offer (a deferred class's may still be owed, CODEX_OWED).
 static func _flame_codex(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full(false)
 	var vigil: VigilState = VigilState.blank()
@@ -707,8 +714,13 @@ static func _flame_codex(fails: Array[String]) -> void:
 	for aspect: int in range(content.aspects.size()):
 		for way: Dictionary in Flame.ways(content, aspect):
 			var slot: String = FlameLines.CODEX_PREFIX + str(way.get("id", ""))
-			_check(fails, LineTable.has_slot(content.line_table, slot),
-				"codex: way %s has no sentence" % str(way.get("id", "")))
+			var pending: bool = CODEX_OWED.has(slot) and not ClassScope.is_offered(content, aspect)
+			if pending:
+				_check(fails, not LineTable.has_slot(content.line_table, slot),
+					"codex: %s has its sentence now; take it out of CODEX_OWED" % slot)
+			else:
+				_check(fails, LineTable.has_slot(content.line_table, slot),
+					"codex: way %s has no sentence" % str(way.get("id", "")))
 
 
 ## The six lines ship exactly as locked; none of the nine (the six and the

@@ -1,8 +1,12 @@
 extends RefCounted
 ## Flame lock PR 2 (docs/design/2026-09-29-dusk-flame): the purity mirror of
-## §4, the Duskblade ways data of §6.1, and the FLAME event's read points.
+## §4, the ways data of §6.1 for every class that declares them (the Ashwarden's
+## since #544 A2; its worked examples are test_ash_flame.gd's), and the FLAME
+## event's read points.
 
 const WAYS: Array[String] = ["shatter", "lantern", "edge"]
+## Each aspect's ways in content order, by aspect index.
+const ASPECT_WAYS: Array = [WAYS, ["smolder", "hand", "endure"]]
 const CONSTANTS: Array[String] = [
 	"minMass", "steadyMin", "trueMin", "sootMass", "sootMax", "fringeMin",
 	"likeWeight", "fringeWeight",
@@ -126,12 +130,23 @@ static func _curse_affinity_is_ignored(fails: Array[String]) -> void:
 		fails.append("flame: a curse or status card counted as coloured glass")
 
 
+## `content` with the Ashwarden's ways removed: a full aspect row that declares
+## none, as the Ashwarden's did before #544 A2.
+static func _way_less(content: ContentDB) -> ContentDB:
+	var ash: Dictionary = content.aspects[1]
+	ash.erase("ways")
+	return content
+
+
 static func _way_less_aspects_read_neutral(content: ContentDB, fails: Array[String]) -> void:
 	var neutral: Dictionary = {"aspect": 1, "dominant": "", "fringe": "",
 		"tier": Flame.TIER_KINDLING, "purity": 0.0, "shares": {}, "mass": 0.0}
-	var ash: RunState = RunState.new_run(content, 4242, "flame-ash", {"aspect": 1})
-	if Flame.read(content, ash) != neutral:
-		fails.append("flame: Ashwarden (no ways) must read neutral, got %s" % Flame.read(content, ash))
+	var bare_content: ContentDB = _way_less(ContentDB.load_full(false))
+	var ash: RunState = RunState.new_run(bare_content, 4242, "flame-ash", {"aspect": 1})
+	_add(ash, ["venomStrike", "venomStrike", "preparation", "bulwark"])
+	if Flame.read(bare_content, ash) != neutral:
+		fails.append("flame: an aspect without ways must read neutral, got %s"
+			% Flame.read(bare_content, ash))
 	var slice: ContentDB = ContentDB.load_slice()
 	var bare: RunState = RunState.new_run(slice, 4242, "flame-slice")
 	neutral["aspect"] = 0
@@ -147,17 +162,33 @@ static func _way_less_aspects_read_neutral(content: ContentDB, fails: Array[Stri
 		fails.append("flame: a deck without coloured glass declares nothing, got %s" % reading)
 
 
-## §6.1 as content: every id resolves, weights are 0.5 or 1.0 and total at most
-## 1.0 per card or relic, crowns are boss relics, the §4 constants are present
-## and ordered, the §8 weights lean toward the flame (at least 1), and the
-## Ashwarden declares nothing yet.
+## §6.1 as content, for each class: every id resolves, weights are 0.5 or 1.0
+## and total at most 1.0 per card or relic, crowns are boss relics, the §4
+## constants are present and ordered, and the §8 weights lean toward the flame
+## (at least 1). Way ids are unique across classes (#544 decision 1).
 static func _ways_content_is_valid(content: ContentDB, fails: Array[String]) -> void:
-	var ways: Array[Dictionary] = Flame.ways(content, 0)
+	var seen: Array[String] = []
+	for aspect: int in range(ASPECT_WAYS.size()):
+		_aspect_ways_are_valid(content, aspect, fails)
+		for way: Dictionary in Flame.ways(content, aspect):
+			var id: String = str(way.get("id", ""))
+			if seen.has(id):
+				fails.append("ways content: way id %s is declared twice" % id)
+			seen.append(id)
+	if content.aspects.size() != ASPECT_WAYS.size():
+		fails.append("ways content: %d aspects, %d expected"
+			% [content.aspects.size(), ASPECT_WAYS.size()])
+
+
+static func _aspect_ways_are_valid(content: ContentDB, aspect: int, fails: Array[String]) -> void:
+	var ways: Array[Dictionary] = Flame.ways(content, aspect)
 	var ids: Array[String] = []
 	for way: Dictionary in ways:
 		ids.append(str(way.get("id", "")))
-	if ids != WAYS:
-		fails.append("ways content: Duskblade ways must be %s in content order, got %s" % [WAYS, ids])
+	var expected: Array = ASPECT_WAYS[aspect]
+	if ids != expected:
+		fails.append("ways content: aspect %d ways must be %s in content order, got %s"
+			% [aspect, expected, ids])
 	var card_totals: Dictionary = {}
 	var relic_totals: Dictionary = {}
 	for way: Dictionary in ways:
@@ -177,16 +208,16 @@ static func _ways_content_is_valid(content: ContentDB, fails: Array[String]) -> 
 		for id_v: Variant in totals:
 			if _num(totals[id_v]) > 1.0:
 				fails.append("ways content: %s totals %s affinity" % [id_v, totals[id_v]])
-	var dusk: Dictionary = content.aspects[0]
-	_boss_relic(fails, "sootCrown", str(dusk.get("sootCrown", "")), content)
-	var excludes: Dictionary = dusk.get("excludes", {})
+	var row: Dictionary = content.aspects[aspect]
+	_boss_relic(fails, "sootCrown", str(row.get("sootCrown", "")), content)
+	var excludes: Dictionary = row.get("excludes", {})
 	for id_v: Variant in excludes.get("cards", []):
 		if not content.cards.has(str(id_v)) or card_totals.has(str(id_v)):
 			fails.append("ways content: excluded card %s is unknown or coloured" % id_v)
 	for id_v: Variant in excludes.get("relics", []):
 		if not content.relics.has(str(id_v)) or relic_totals.has(str(id_v)):
 			fails.append("ways content: excluded relic %s is unknown or coloured" % id_v)
-	var constants: Dictionary = dusk.get("flame", {})
+	var constants: Dictionary = row.get("flame", {})
 	for key: String in CONSTANTS:
 		var value: Variant = constants.get(key)
 		if typeof(value) != TYPE_INT and typeof(value) != TYPE_FLOAT:
@@ -199,8 +230,6 @@ static func _ways_content_is_valid(content: ContentDB, fails: Array[String]) -> 
 	if _num(constants["likeWeight"]) < 1.0 or _num(constants["fringeWeight"]) < 1.0:
 		fails.append("ways content: likeWeight and fringeWeight must lean toward the flame %s"
 			% constants)
-	if not Flame.ways(content, 1).is_empty():
-		fails.append("ways content: the Ashwarden declares no ways until 1.1")
 
 
 static func _tally(fails: Array[String], label: String, table_v: Variant, registry: Dictionary,
@@ -280,9 +309,11 @@ static func _flame_read_points(content: ContentDB, fails: Array[String]) -> void
 		fails.append("flame event: every combat start reads, changed deck or not")
 
 
-static func _way_less_aspect_emits_nothing(content: ContentDB, fails: Array[String]) -> void:
-	var run: RunState = RunState.new_run(content, 4242, "flame-ash-events", {"aspect": 1})
-	var game: GlassvowGame = GlassvowGame.new(content, run)
+## An aspect without ways (the Ashwarden's row, its ways removed) emits no FLAME.
+static func _way_less_aspect_emits_nothing(_content: ContentDB, fails: Array[String]) -> void:
+	var bare_content: ContentDB = _way_less(ContentDB.load_full(false))
+	var run: RunState = RunState.new_run(bare_content, 4242, "flame-ash-events", {"aspect": 1})
+	var game: GlassvowGame = GlassvowGame.new(bare_content, run)
 	var events: Array[Dictionary] = game.apply(
 		{"t": "startCombat", "enemies": ["sporeling"], "kind": "normal"})
 	game.cb.over = true

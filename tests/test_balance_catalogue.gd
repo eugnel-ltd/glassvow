@@ -1,8 +1,13 @@
 extends RefCounted
 ## Candidate catalogue isolation and fail-closed #454 seed-contract checks.
+##
+## The live pins move with every content commit. #544 A2 (the Ashwarden's ways,
+## `flame`, `sootCrown` and exclusions in `aspects[1]`) moved them from
+## e9c4d48f… / 5429a44a…, the content the Duskblade's 1.0 verdict binds; the
+## 1.0 release candidate now takes rc-bar P9's route (b), content equivalence.
 
-const LIVE_FILE: String = "e9c4d48fbe38542e65a9c73f73b4c50f72116026d4be51a81b7a9b04ec33ca7b"
-const LIVE_SEMANTIC: String = "5429a44a48b914f4c9d86863acf250b5c7c7527a92b7bb548e85f76a6b4bc818"
+const LIVE_FILE: String = "4376691e1a8efc772c9fd9ef9957f4dd7235adaac1823887707c990fdf71ea4d"
+const LIVE_SEMANTIC: String = "9f72ef7a8cda0df01ba4efbe190dd19103d39114a59fb01b300259df107204f2"
 
 
 static func run(fails: Array[String]) -> void:

@@ -4,11 +4,12 @@ extends RefCounted
 ## sets it for the whole fight: Soot leaks Embers at the end of each of your
 ## turns and makes the Art dearer; Steady raises the Ember cap and adds to each
 ## turn's first Ember gain; True is Steady with a cheaper Art, never below 1;
-## Kindling, and the Ashwarden, who has no ways, keep the plain lantern. Every
-## number is a `flame.lantern` knob of the content, so these checks set their
-## own values, distinct wherever a knob read in the wrong place would hide,
-## instead of the shipped calibration. tests/test_balance_sim.gd holds the
-## whole-run proof that every knob at zero replays the game from before.
+## Kindling keeps the plain lantern; the Ashwarden's lantern reads its own ways
+## and its own knobs (#544 A2). Every number is a `flame.lantern` knob of the
+## content, so these checks set their own values, distinct wherever a knob read
+## in the wrong place would hide, instead of the shipped calibration.
+## tests/test_balance_sim.gd holds the whole-run proof that every knob at zero
+## replays the game from before.
 
 const KNOBS: Array[String] = [
 	"sootLeak", "sootArtCost", "steadyCap", "steadyFirstGain", "trueArtCost",
@@ -25,6 +26,22 @@ const SOOT_DECK: Array = ["two of each way", [], ["uppercut", "preparation", "wa
 const STEADY_DECK: Array = ["three shatter in five", [], ["uppercut", "quakeblow"], "STEADY"]
 const TRUE_DECK: Array = ["lantern alone", ["chisel", "eclipseSlash"],
 	["preparation", "surge", "devour", "offering"], "TRUE"]
+## The Ashwarden's own knobs, each unlike TEST_KNOBS, so a knob read from the
+## Duskblade's row shows.
+const ASH_KNOBS: Dictionary = {
+	"sootLeak": 3, "sootArtCost": 2, "steadyCap": 5, "steadyFirstGain": 1, "trueArtCost": 2,
+}
+## The Ashwarden's decks (its starter: Ash Bite and Defend clear, Smother ×2 at
+## ½ Smolder and ½ Endure, First Spark Hand): the Duskblade's glass is clear to
+## it, so its Shatter deck stays Kindling.
+const ASH_DECKS: Array = [
+	["Ashwarden, the Duskblade's glass", [], ["uppercut", "quakeblow", "oblivionStrike", "limitBreak"],
+		"KINDLING"],
+	["Ashwarden soot", [], ["venomStrike", "preparation", "bulwark"], "SOOT"],
+	["Ashwarden steady smolder", [], ["venomStrike", "venomStrike"], "STEADY"],
+	["Ashwarden true hand", ["smother", "smother"], ["preparation", "surge", "quickSlash", "offering"],
+		"TRUE"],
+]
 const HP: int = 500
 
 
@@ -75,7 +92,7 @@ static func _fight(content: ContentDB, deck: Array, fails: Array[String], aspect
 	for event: Dictionary in game.apply({"t": "startCombat", "enemies": ["sporeling"], "kind": "normal"}):
 		if event.get("t") == EventTypes.FLAME:
 			tiers.append(str(event["tier"]))
-	var expected: Array = [str(deck[3])] if aspect == 0 else []
+	var expected: Array = [str(deck[3])]
 	if tiers != expected:
 		fails.append("lantern %s: combat start read %s, expected %s" % [deck[0], tiers, expected])
 	var foe: EnemyCombatant = game.cb.enemies[0]
@@ -311,14 +328,32 @@ static func _kept_all_fight(content: ContentDB, fails: Array[String]) -> void:
 			% [cb.embers, cb.ember_cap, game.rules.art_cost(game.run, cb)])
 
 
-## The Ashwarden has no ways, so no deck lights or soots the lantern, even with
-## knobs of its own in content.
+## The Ashwarden's lantern reads its own ways and its own knobs (#544 A2): a deck
+## of the Duskblade's glass keeps the plain lantern, and each of its own tiers
+## sets the fight's lantern from the Ashwarden's `flame.lantern`, never the
+## Duskblade's.
 static func _ashwarden(fails: Array[String]) -> void:
 	var content: ContentDB = _content(TEST_KNOBS)
 	var ash: Dictionary = content.aspects[1]
-	ash["flame"] = {"lantern": TEST_KNOBS.duplicate()}
-	for deck: Array in [SOOT_DECK, TRUE_DECK]:
-		_expect_plain(_fight(content, deck, fails, 1), "Ashwarden %s" % deck[0], fails)
+	var flame: Dictionary = ash["flame"]
+	flame["lantern"] = ASH_KNOBS.duplicate()
+	_expect_plain(_fight(content, ASH_DECKS[0], fails, 1), str(ASH_DECKS[0][0]), fails)
+	for deck_v: Variant in ASH_DECKS.slice(1):
+		var deck: Array = deck_v
+		var cb: CombatState = _fight(content, deck, fails, 1).cb
+		var tier: String = str(deck[3])
+		var lit: bool = tier != Flame.TIER_SOOT
+		var want: Array[int] = [
+			ASH_KNOBS["sootLeak"] if not lit else 0,
+			_plain_cap() + (ASH_KNOBS["steadyCap"] if lit else 0),
+			ASH_KNOBS["steadyFirstGain"] if lit else 0,
+			ASH_KNOBS["sootArtCost"] if not lit
+				else (-ASH_KNOBS["trueArtCost"] if tier == Flame.TIER_TRUE else 0),
+		]
+		var got: Array[int] = [cb.ember_leak, cb.ember_cap, cb.first_gain_bonus, cb.art_cost_delta]
+		if got != want:
+			fails.append("lantern %s: leak, cap, first gain and Art delta must be %s, got %s"
+				% [deck[0], want, got])
 
 
 ## Every knob at 0 is the plain lantern at every tier.

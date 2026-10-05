@@ -360,6 +360,17 @@ func _lantern_knob(run: RunState, key: String) -> int:
 	return _ji(lantern.get(key, 0))
 
 
+## The cards the run's class deals itself each turn, before an omen's change:
+## its content row's `handSize` (#544 decision 10; 5 for both classes), read
+## from the row `RunState.new_run` builds the hero from, and 5 where none says.
+func _hand_size(run: RunState) -> int:
+	var row: Dictionary = content.player
+	if run.aspect >= 0 and run.aspect < content.aspects.size() \
+			and typeof(content.aspects[run.aspect]) == TYPE_DICTIONARY:
+		row = content.aspects[run.aspect]
+	return _ji(row.get("handSize", 5))
+
+
 static func _proc(cb: CombatState, relic_id: String) -> void:
 	cb.queue.append({"t": EventTypes.RELIC_PROC, "id": relic_id})
 
@@ -426,8 +437,8 @@ func _start_player_turn(run: RunState, cb: CombatState) -> void:
 	p.energy = (p.energy if run.has_relic("frozenCore") else 0) + energy
 	cb.first_card_played = false
 	cb.queue.append({"t": EventTypes.ENERGY, "n": p.energy})
-	# The turn's own deal: five cards, or what the act's omen makes of it.
-	var deal: int = 5 + _ji(_omen_mods(run).get("drawDelta", 0))
+	# The turn's own deal: the class's hand, or what the act's omen makes of it.
+	var deal: int = _hand_size(run) + _ji(_omen_mods(run).get("drawDelta", 0))
 	var draws: int = deal + _sget(p.statuses, "nightsight")
 	if cb.turn == 1 and run.has_relic("travelersPack"):
 		draws += 2
