@@ -11,9 +11,11 @@ extends RefCounted
 ##    (`floor_mask.gdshader`);
 ## 3. the lit picture's mip chain, every level in one frame through nested 2D
 ##    views (`floor_mip.gdshader`).
-## It sets up a frame before its first draw. Paced (the journey prefetch's
-## bake, under a lit title), it draws one tile a frame, so no frame of the
-## title carries more than a tile.
+## Behind the veil it draws in the frame that sets it up: every frame it saves
+## is a frame of the cold open (R3.2 round 3: about 20 ms on the iPad 8, its
+## frames 50-67 ms at most). Paced (the journey prefetch's bake, under a lit
+## title), it sets up a frame before its first draw and draws one tile a
+## frame, so no frame of the title carries more than a tile.
 ## Each view's picture is copied on the GPU into the floor's own textures
 ## (`RenderingDevice.texture_copy`), so nothing is read back and no frame waits
 ## for the GPU. The views and the world are freed as the bake ends; the two
@@ -193,7 +195,10 @@ func _start() -> void:
 	timings["tiles"] = _tiles.size()
 	timings["paced"] = _paced
 	_tile = 0
-	step = Step.WARM
+	if _paced:
+		step = Step.WARM
+	else:
+		_warm()
 
 
 ## A first draw, kept by no one: a light new to its world casts nothing in its
