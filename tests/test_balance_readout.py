@@ -12,6 +12,7 @@ import json
 import sys
 import tempfile
 import unittest
+from collections import Counter
 from pathlib import Path
 from unittest import mock
 
@@ -664,6 +665,312 @@ class CompareTests(unittest.TestCase):
         self.assertEqual((6, 6), (result.rows, result.identical))
 
 
+# ---------------------------------------------------------------- graded fields and content equivalence
+
+WAYS = DUSK.ways
+EQ_SEEDS = 12  # seeds per arm in the simulator-shaped table
+EQ_WINS = {"C_shatter": 7, "C_lantern": 6, "C_edge": 5, "A": 5, "A_lit": 6, "R": 2}
+
+
+def sim_reading(dominant: str, tier: str) -> dict:
+    return {"aspect": 0, "dominant": dominant, "fringe": "", "tier": tier, "purity": 0.6,
+            "shares": {way: 0.25 for way in WAYS}, "mass": 5.5}
+
+
+def sim_row(vow: int, i: int, arm: str) -> dict:
+    """A run row with every field `balance_sim.gd` writes (as in readout 13's reports), varied by seed and
+    arm so that each graded field reaches some figure: wins and deaths in each act, Steady and True,
+    expression and close calls."""
+    way = DUSK.arms[arm][0]
+    seed, win = 13000 + i, i < EQ_WINS[arm]
+    reached = 3 if win else i % 3  # act readings: one per act end the run lived to
+    count = 3 if win else reached + 1
+
+    def lean(j: int) -> str:
+        return way if way != "none" and (i + j) % 4 else WAYS[(i + j) % 3]
+
+    def played(f: int) -> str:  # most fights play the colour they begin in
+        return WAYS[(i + f) % 3] if (i + f) % 4 else WAYS[(i + f + 1) % 3]
+
+    fights = [{"act": f + 1, "kind": "normal", "enemies": ["ashling"], "turns": 2 + (i + f) % 3,
+               "result": "win" if win or f < count - 1 else "loss", "hpLost": (3 * i + f) % 9,
+               "shatters": 1, "smolderKills": 0} for f in range(count)]
+    flame_fights = [{"dominant": WAYS[(i + f) % 3], "tier": "KINDLING",
+                     "plays": {w: 2.0 if w == played(f) else 0.5 for w in WAYS},
+                     "hp": 10 if (i + f) % 4 == 0 else 60, "maxHp": 72} for f in range(count)]
+    return {"seed": seed, "aspect": "duskblade", "vow": vow, "outcome": "win" if win else "loss", "error": "",
+            "hp": 40 if win else 0, "maxHp": 72, "gold": 100 + i, "deck": 15, "rng": 1000003 * seed % 2 ** 31,
+            "fights": fights, "relics": ["emberLantern"], "deckIds": ["strike", "defend"], "goldEarned": 50 + i,
+            "economy": [{"act": 1, "gold": 99, "hp": 50, "maxHp": 72, "deck": 12}],
+            "policy": {"way": way, "card": {"power": 6.5, "rarity": {"common": 4.5}}, "removalMinCopies": 2},
+            "packageEvents": {"strikeDrawn": 10 + i},
+            "flame": {"way": way, "play": "search", "end": sim_reading(lean(0), ("STEADY", "TRUE")[i % 2]),
+                      "acts": [sim_reading(lean(j), ("STEADY", "TRUE", "KINDLING")[(i + j) % 3])
+                               for j in range(reached)],
+                      "rates": {rate: 0.5 + (i % 4) / 4 + k / 10 for k, rate in enumerate(DUSK.rates)},
+                      "fights": flame_fights}}
+
+
+def sim_table() -> dict[str, dict]:
+    """The complete cell table, every vow, pool and arm and the arm-A replay, keyed by report name."""
+    reports = {}
+    for vow in bw.VOWS:
+        for pool in bw.POOLS:
+            for arm in DUSK.arms:
+                reports[f"v{vow}-{pool}-{arm}"] = {"manifest": manifest(vow, pool, arm),
+                                                   "runs": [sim_row(vow, i, arm) for i in range(EQ_SEEDS)]}
+            arm_a = reports[f"v{vow}-{pool}-A"]
+            reports[f"v{vow}-{pool}-replay"] = copy.deepcopy({**arm_a, "runs": arm_a["runs"][:bw.REPLAY]})
+    return reports
+
+
+def write_reports(directory: Path, reports: dict[str, dict]) -> Path:
+    directory.mkdir(parents=True, exist_ok=True)
+    for name, report in reports.items():
+        (directory / f"{name}.json").write_text(json.dumps(report))
+    return directory
+
+
+def transform(node, path: str, change) -> None:
+    """Apply `change` to every value at `path` (`compare.project`'s notation) of a row, in place."""
+    head, _, rest = path.partition(".")
+    many, key = head.endswith("[]"), head.removesuffix("[]")
+    if not isinstance(node, dict) or key not in node:
+        return
+    if not rest:
+        node[key] = [change(v) for v in node[key]] if many else change(node[key])
+        return
+    for item in node[key] if many else [node[key]]:
+        transform(item, rest, change)
+
+
+def perturbed(reports: dict[str, dict], path: str, change, only=None) -> dict[str, dict]:
+    """A copy of the table with `path` changed in every run (each replay with its arm-A run), or only in
+    the runs `only(name, row)` picks."""
+    out = copy.deepcopy(reports)
+    for name, report in out.items():
+        for row in report["runs"]:
+            if only is None or only(name, row):
+                transform(row, path, change)
+    return out
+
+
+def run_of(report: str, seed: int):
+    """`perturbed`'s `only` for one run of one report."""
+    return lambda name, row: name == report and row["seed"] == seed
+
+
+def grader_outputs(directory: Path) -> list[str]:
+    """Everything the verdict's evidence prints from one cell table: the lock grader's tables and gates
+    for each vow, the complete section 11 table, row B and the paired G3. A refusal is an output too."""
+    seeds = (13000, 13000 + EQ_SEEDS - 1)
+    outputs = []
+    for grader in (lambda: bw.render(bw.grade(DUSK, directory, seeds, (0,))),
+                   lambda: bw.render(bw.grade(DUSK, directory, seeds, (5,))),
+                   lambda: tables.full_table(DUSK, directory, directory, seeds, seeds),
+                   lambda: tables.row_b_table(DUSK, directory),
+                   lambda: tables.g3_table(DUSK, directory, [f"v{v}-{p}" for v in bw.VOWS for p in bw.POOLS])):
+        try:
+            outputs.append(grader())
+        except Exception as exc:  # noqa: BLE001 - a grader that refuses the table has read the field
+            outputs.append(f"refused: {exc!r}")
+    return outputs
+
+
+# How each graded field is changed to show that a figure reads it; one entry per GRADED_FIELDS entry.
+ROTATE = {"shatter": "lantern", "lantern": "edge", "edge": "shatter"}
+GRADED_CHANGES = {
+    "outcome": lambda v: "loss" if v == "win" else "win",
+    "error": lambda v: "boom",
+    "fights[].result": lambda v: "loss" if v == "win" else "win",
+    "fights[].turns": lambda v: v + 1,
+    "fights[].hpLost": lambda v: v + 1,
+    "fights[].act": lambda v: v % 3 + 1,
+    "flame.end.dominant": ROTATE.get,
+    "flame.acts[].dominant": ROTATE.get,
+    "flame.acts[].tier": lambda v: "SOOT",
+    "flame.rates.{rate}": lambda v: v + 1,
+    "flame.fights[].dominant": ROTATE.get,
+    "flame.fights[].plays.{way}": lambda v: 100.0,
+    "flame.fights[].hp": lambda v: 1,
+    "flame.fights[].maxHp": lambda v: 10_000,
+}
+
+
+def nudge(value):
+    """Another value of the same type, so a field that is only type-checked on loading stays readable."""
+    if isinstance(value, bool):
+        return not value
+    if isinstance(value, (int, float)):
+        return value + 7
+    if isinstance(value, str):
+        return value + "~"
+    if isinstance(value, list):
+        return value + ["~"]
+    return {**value, "~": 1} if isinstance(value, dict) else "~"
+
+
+class GradedFieldTests(unittest.TestCase):
+    """GRADED_FIELDS is derived, not guessed: every listed field moves a figure, no other field does."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.table = sim_table()
+        cls.paths = set().union(*(compare.field_paths(row) for r in cls.table.values() for row in r["runs"]))
+
+    def figures_moved_by(self, changes: dict[str, object]) -> list[str]:
+        """The paths whose change, in every run of the table, moves any grader output."""
+        with tempfile.TemporaryDirectory() as tmp:
+            base = grader_outputs(write_reports(Path(tmp) / "base", self.table))
+            self.assertFalse(any(out.startswith("refused") for out in base), base)
+            return [path for path, change in changes.items()
+                    if grader_outputs(write_reports(Path(tmp) / path, perturbed(self.table, path, change))) != base]
+
+    def unlisted(self) -> list[str]:
+        """Every field of the table outside the list, the seed (the pairing key) and the objects and lists
+        that hold graded fields (an empty `flame.acts`: a list's length is read with its elements)."""
+        graded = bw.graded_fields(DUSK)
+        holders = {part for path in graded for i in range(1, path.count(".") + 1)
+                   for part in (path.rsplit(".", i)[0], path.rsplit(".", i)[0].removesuffix("[]"))}
+        return sorted(self.paths - set(graded) - holders - {"seed"})
+
+    def test_every_graded_field_has_a_change_and_is_in_the_table(self) -> None:
+        self.assertEqual(set(bw.GRADED_FIELDS), set(GRADED_CHANGES))
+        self.assertEqual([], sorted(set(bw.graded_fields(DUSK)) - self.paths))
+
+    def test_every_listed_field_moves_a_figure(self) -> None:
+        changes = {}
+        for template, change in GRADED_CHANGES.items():
+            for path in bw.graded_fields(DUSK):
+                if path == template or (("{" in template) and path.startswith(template.split("{")[0])):
+                    changes[path] = change
+        self.assertEqual(set(bw.graded_fields(DUSK)), set(changes))
+        self.assertEqual(sorted(changes), sorted(self.figures_moved_by(changes)))
+
+    def test_no_unlisted_field_moves_a_figure(self) -> None:
+        unlisted = self.unlisted()
+        # The table is the simulator's shape: fields only type-checked on loading are among those changed.
+        for path in ("gold", "rng", "deckIds", "policy.card.rarity.common", "packageEvents.strikeDrawn",
+                     "economy[].gold", "fights[].enemies", "flame.end.tier", "flame.end.purity",
+                     "flame.acts[].purity", "flame.fights[].tier", "flame.way"):
+            self.assertIn(path, unlisted)
+        self.assertEqual([], self.figures_moved_by({path: nudge for path in unlisted}))
+
+    def test_a_grader_that_reads_a_new_field_fails_the_derivation(self) -> None:
+        arm_stats = bw.arm_stats
+
+        def reads_gold(rows, way, who):
+            stats = arm_stats(rows, way, who)
+            stats["stalls"] += sum(row["gold"] > 110 for row in rows)  # a new gate on the gold a run keeps
+            return stats
+        with mock.patch.object(bw, "arm_stats", reads_gold):
+            self.assertEqual(["gold"], self.figures_moved_by({path: nudge for path in self.unlisted()}))
+
+
+class EquivalenceTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.addCleanup(self.tmp.cleanup)
+        self.table = sim_table()
+        self.ref = write_reports(self.root / "ref", self.table)
+
+    def candidate(self, reports: dict[str, dict], name: str = "new") -> Path:
+        """The table on another commit and content, as a candidate with dormant content would be."""
+        reports = copy.deepcopy(reports)
+        for report in reports.values():
+            report["manifest"].update(commit="later", contentFileSha256="5eed")
+        return write_reports(self.root / name, reports)
+
+    def equivalence(self, new: Path) -> compare.Equivalence:
+        return compare.equivalence(new, self.ref, DUSK)
+
+    def test_the_same_runs_on_new_content_are_equivalent(self) -> None:
+        result = self.equivalence(self.candidate(self.table))
+        self.assertTrue(result.equivalent)
+        self.assertEqual(len(self.table), len(result.reports))
+        text = compare.render_equivalence(result)
+        self.assertIn("- Identical on all graded fields: yes (0 of 300 paired runs differ", text)
+        self.assertIn("- Equivalent for the class: yes.", text)
+        self.assertIn("Other manifest differences: commit (28 reports), contentFileSha256 (28 reports).", text)
+
+    def test_other_fields_are_listed_with_counts_and_do_not_break_equivalence(self) -> None:
+        reports = perturbed(self.table, "gold", nudge, only=run_of("v0-full-C_edge", 13005))
+        reports = perturbed(reports, "policy.card.power", nudge, only=lambda name, _: name == "v5-fresh-R")
+        result = self.equivalence(self.candidate(reports))
+        self.assertTrue(result.equivalent)
+        self.assertEqual({"gold": 1, "policy.card.power": EQ_SEEDS},
+                         dict(sum((r.other for r in result.reports), Counter())))
+        self.assertIn("| policy.card.power | 12 |", compare.render_equivalence(result))
+
+    def test_a_graded_difference_is_named_run_by_run(self) -> None:
+        reports = perturbed(self.table, "outcome", GRADED_CHANGES["outcome"],
+                            only=run_of("v0-fresh-C_shatter", 13002))
+        reports = perturbed(reports, "flame.acts[].tier", GRADED_CHANGES["flame.acts[].tier"],
+                            only=run_of("v5-full-C_edge", 13010))
+        result = self.equivalence(self.candidate(reports))
+        self.assertFalse(result.graded_identical or result.equivalent)
+        self.assertTrue(result.same_runs and result.same_instrument)
+        graded = {r.name: r.graded for r in result.reports if r.graded}
+        self.assertEqual({"v0-fresh-C_shatter": [(13002, ["outcome"])],
+                          "v5-full-C_edge": [(13010, ["flame.acts[].tier"])]}, graded)
+        text = compare.render_equivalence(result)
+        self.assertIn("- v0-fresh-C_shatter seed 13002: outcome", text)
+        self.assertIn("- Identical on all graded fields: no (2 of 300", text)
+
+    def test_runs_and_reports_missing_on_either_side(self) -> None:
+        reports = copy.deepcopy(self.table)
+        del reports["v0-full-R"]["runs"][-1]
+        new = self.candidate(reports)
+        (self.ref / "v5-fresh-replay.json").unlink()
+        result = self.equivalence(new)
+        self.assertTrue(result.graded_identical)
+        self.assertFalse(result.same_runs or result.equivalent)
+        missing = {r.name: (r.missing_new, r.missing_reference) for r in result.reports
+                   if r.missing_new or r.missing_reference}
+        self.assertEqual({"v0-full-R": ([13011], []), "v5-fresh-replay": ([], [13000, 13001, 13002])}, missing)
+        self.assertIn("- v5-fresh-replay, missing in the reference: seeds 13000–13002 (3)",
+                      compare.render_equivalence(result))
+
+    def test_a_replay_that_no_longer_equals_its_arm_a_run_is_a_graded_difference(self) -> None:
+        # Only an ungraded field of one arm-A run moves, but G7's replay reads whole rows, so the gate moves.
+        reports = perturbed(self.table, "gold", nudge, only=run_of("v0-full-A", 13001))
+        new = self.candidate(reports)
+        self.assertNotEqual(grader_outputs(self.ref), grader_outputs(new))
+        result = self.equivalence(new)
+        self.assertFalse(result.equivalent)
+        self.assertEqual({"v0-full-replay": [(13001, [compare.REPLAY_FIELD])]},
+                         {r.name: r.graded for r in result.reports if r.graded})
+        self.assertEqual(Counter({"gold": 1}), sum((r.other for r in result.reports), Counter()))
+
+    def test_another_instrument_is_not_equivalent(self) -> None:
+        reports = copy.deepcopy(self.table)
+        reports["v5-full-A_lit"]["manifest"]["pilot"] = "p9"
+        result = self.equivalence(self.candidate(reports))
+        self.assertTrue(result.graded_identical and result.same_runs)
+        self.assertFalse(result.same_instrument or result.equivalent)
+        self.assertIn("- v5-full-A_lit: pilot 'p9' in new against 'p8' in the reference",
+                      compare.render_equivalence(result))
+
+    def test_the_cli_exits_two_unless_equivalent(self) -> None:
+        same = self.candidate(self.table, "same")
+        moved = self.candidate(perturbed(self.table, "error", GRADED_CHANGES["error"],
+                                         only=run_of("v0-fresh-R", 13000)), "moved")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(0, readout.main(["equivalence", str(same), str(self.ref)]))
+            self.assertEqual(2, readout.main(["equivalence", str(moved), str(self.ref)]))
+        self.assertIn("- v0-fresh-R seed 13000: error", out.getvalue())
+        with self.assertRaises(ValueError):
+            readout.main(["equivalence", str(self.root / "absent"), str(self.ref)])
+
+    def test_project_and_field_paths(self) -> None:
+        row = {"a": {"b": [{"c": 1}, {"c": 2, "d": [3]}]}, "e": [], "f": {}}
+        self.assertEqual({"a.b[].c", "a.b[].d", "e", "f"}, compare.field_paths(row))
+        self.assertEqual([1, 2], compare.project(row, "a.b[].c"))
+        self.assertEqual(compare.project({}, "x"), compare.project(row, "a.b[].d")[0])
+        self.assertNotEqual(compare.project(row, "a.b[].d"), compare.project({"a": {"b": [{}, {}]}}, "a.b[].d")[:1])
+
+
 # ---------------------------------------------------------------- candidate catalogues
 
 CONTENT = json.dumps({
@@ -831,7 +1138,8 @@ class CommandLineTests(unittest.TestCase):
 
     def test_the_parser_knows_every_documented_command(self) -> None:
         names = set(readout.build_parser()._subparsers._group_actions[0].choices)
-        self.assertEqual({"run", "merge", "join", "paired", "g3", "rowb", "table", "compare", "candidates"}, names)
+        self.assertEqual({"run", "merge", "join", "paired", "g3", "rowb", "table", "compare", "equivalence",
+                          "candidates"}, names)
 
     def test_table_command_with_an_odd_reference_is_refused(self) -> None:
         with self.assertRaises(ValueError):

@@ -947,8 +947,10 @@ intent holds: ACCEPT or NOT ACCEPTED, given on its reading of record. The gate
 figures are its evidence; it is not a count of gates passed. An ACCEPT may
 carry named reservations, each stating its figures and the readout that will
 answer it, and a reservation is part of the verdict, not a waiver. The verdict
-describes only the content it was given on: once that content moves, it no
-longer describes the build.
+describes only the content it was given on, or content equivalent for the class:
+the reading's cell table, played again on the build, matches it run for run on
+every graded field (`docs/rc-bar.md` P9). Once the content moves otherwise, the
+verdict no longer describes the build.
 
 ---
 

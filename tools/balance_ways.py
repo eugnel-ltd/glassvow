@@ -339,6 +339,40 @@ def arm_stats(rows: list[dict[str, Any]], way: str, who: Roster) -> dict[str, An
     return stats
 
 
+# The fields of a run row that the verdict's evidence reads (docs/rc-bar.md P9, content equivalence):
+# the per-cell tables and gates here (`arm_stats`, `feel`, `cell_gates`, `cell_intervals`, `render`),
+# row B (`balance_readout_tables.row_b`) and the paired G3 (`balance_readout_stats`). A dot descends
+# into an object and `[]` maps over every element of a list, so a list's length is read with its
+# elements; `{rate}` and `{way}` stand for each of the class's per-fight rates and ways. The seed
+# pairs runs and is not a field. `_check_row` checks only the type of a flame reading's tier and
+# purity, and no figure reads their values. G7's replay compares whole rows, which no list of fields
+# can name, so the equivalence comparer grades whether each replay equals its arm-A run instead.
+# tests/test_balance_readout.py perturbs each field in a complete cell table: a listed field must move
+# a figure and an unlisted one must move none, so a grader that reads a new field fails it.
+GRADED_FIELDS = (
+    "outcome", "error",  # every win rate and gate; stalls and errors (G7)
+    "fights[].result", "fights[].turns", "fights[].hpLost", "fights[].act",  # the feel table; deaths by act
+    "flame.end.dominant",  # own way at the end; G6
+    "flame.acts[].dominant", "flame.acts[].tier",  # G5, over the runs alive at each act's end
+    "flame.rates.{rate}",  # the per-fight table
+    "flame.fights[].dominant", "flame.fights[].plays.{way}",  # expression (row B, the feel table)
+    "flame.fights[].hp", "flame.fights[].maxHp",  # close calls (row B, the feel table)
+)
+
+
+def graded_fields(who: Roster) -> tuple[str, ...]:
+    """GRADED_FIELDS for one class, `{rate}` and `{way}` expanded to its own rates and ways."""
+    out: list[str] = []
+    for path in GRADED_FIELDS:
+        if "{rate}" in path:
+            out += [path.format(rate=rate) for rate in who.rates]
+        elif "{way}" in path:
+            out += [path.format(way=way) for way in who.ways]
+        else:
+            out.append(path)
+    return tuple(out)
+
+
 def pct(value: Fraction | float) -> str:
     return f"{float(value) * 100:.1f}%"
 
