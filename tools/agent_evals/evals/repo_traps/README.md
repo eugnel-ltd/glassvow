@@ -38,8 +38,7 @@ need their own input; adding a helper on a belief that was never measured), so t
 Some cases are answered by the surface already; that is intended (it measures whether the surface
 carries the trap) and the headroom diagnostic will say if the eval saturates. Half of the boolean claims
 expect `true` and half `false`. A wrong boolean decision scores its case 0 (the decision gate); each of
-the 13 cases with no boolean marks one structural claim as its gate instead, so a keyword list scores 0
-there too. The trivial-answerer diagnostic scores 24.0% at most; see Grader diagnostics below.
+the 13 cases with no boolean has one gate claim instead. See Grader below.
 
 ## Files
 
@@ -53,51 +52,49 @@ there too. The trivial-answerer diagnostic scores 24.0% at most; see Grader diag
   prose) and two correct answers in other words. The offline tests require all three to score 100%, so a
   claim edit that rejects a correct answer fails. The harness itself never reads this file.
 - `answers_independent.jsonl`: two correct answers per case from a separate writer, who worked from each
-  case's prompt, answer format and reference without sight of any grader (its first line says so). The
-  answers are copied verbatim and are never edited to suit a claim; the offline tests require every one
-  to score 100%. A further held-out set, written the same way, is kept outside the repository for review.
+  case's prompt, answer format and reference without sight of any grader (its first line says so and
+  records the sha256 of the rest). The answers are copied byte for byte and never edited to suit a claim.
+- `council-2026-10-04.md` and `council-2026-10-05.md`: the two councils' records. The second decided
+  the hybrid grader and the evidence its approval needs.
 
 ## Adding a case
 
 Take it from a real transcript, bug report or note first, then a hand-written case, then a synthetic
 one anchored to a real one. Write `why_hard` before running anything. Keep the prompt
-self-contained, avoid sharing a 40-character span with another case, give a case with no boolean one
-`"gate": true` claim, add its line to `answers.jsonl`, run `init`, then `review` and the approvals again
-(a changed `cases.jsonl` invalidates both).
+self-contained, avoid sharing a 40-character span with another case, check booleans, commands, paths,
+numbers and code by program and write every free-text claim as a judge question from the reference
+alone ("The answer states ..."), give a case with no boolean one `"gate": true` claim, add its line to
+`answers.jsonl`, run `init`, then `review` and the approvals again (a changed `cases.jsonl` invalidates
+both, and a changed judge question also needs the calibration again).
 
-## Grader diagnostics
+## Grader
 
-Trivial answerers graded by the real grader on the 35 cases (`trivial_answerer_scores`; no model is
-called; limit 25%). The council round (`council-2026-10-04.md`) added the decision gate and the
-1,000-character field cap, which took the full keyword soup from 68.6% to 11.9%. Each column below is
-scored with today's answerers: origin/main before this work, the first candidate of PR #691 (0975aca4;
-structural gates, hit-count limit, keyword-tightened claims), and now (statement-shaped claims).
+The grader is a hybrid (`council-2026-10-05.md`). Two rounds of tighter regular expressions on free
+text took the worst trivial answerer from 92.9% to 24.0%, but held-out correct answers fell from 88.5%
+on main to 68.2%, with seven scored 0: a regex trades resistance to keyword lists for false negatives,
+and overfits the answers it is tuned on. Free text is now judged; the regexes that remain check
+structure.
 
-| Answerer (text filler; booleans false / true / oracle) | origin/main | 0975aca4 | Now |
+| Case type | Programmatic claims | Judge claims | Gate |
 |---|---|---|---|
-| empty answer `{}` | 0.0% | 0.0% | 0.0% |
-| constant (empty text; oracle is `oracle_booleans`) | 11.9 / 12.1 / 24.0 | 11.9 / 12.1 / 24.0 | 11.9 / 12.1 / 24.0 |
-| echo (text = prompt) | 19.0 / 15.5 / 32.1 | 11.9 / 12.1 / 24.0 | 11.9 / 12.1 / 24.0 |
-| full keyword soup | 11.9 / 12.1 / 24.0 | 11.9 / 12.1 / 24.0 | 11.9 / 12.1 / 24.0 |
-| compact generic soup | 41.9 / 47.1 / 70.0 | 11.9 / 12.1 / 24.0 | 11.9 / 12.1 / 24.0 |
-| compact case-aware soup | 57.6 / 60.5 / 89.0 | 11.9 / 12.1 / 24.0 | 11.9 / 12.1 / 24.0 |
-| capped soup (first keywords up to the hit limit) | 56.2 / 59.0 / 87.6 | 32.9 / 33.8 / 55.2 | 11.9 / 12.1 / 24.0 |
-| keyword run (grader-searched, sorted or reversed) | 61.4 / 63.3 / 92.9 | 43.8 / 46.4 / 73.1 | 11.9 / 12.1 / 24.0 |
-| maximum | 92.9% | 73.1% | 24.0% |
+| 22 cases with a boolean | 22 booleans; 4 structured (a command path and three code checks) | 35 | the boolean |
+| 13 cases with no boolean | 10 structured (code, a citation, a number, the owner phrase) | 20 | 7 by program, 6 by judge (majority of three) |
+| all 35 | 36 (22 booleans, 14 structured) | 55 | |
 
-The council's own constructions, rescored the same way, now: the hand-made generic soup 11.9 / 12.1 /
-24.0 (33.8 / 32.4 / 55.7 on origin/main), and each field filled with the regex fragments of its own
-claims in pattern order 11.9 / 12.1 / 24.0 (54.5 / 56.2 / 84.0).
+Every judge question begins "The answer states", was written from the case's reference alone and is
+frozen: the sha256 over all judge claim texts (`graders.judge_questions_sha256`) is
 
-No text filler earns anything beyond the booleans it is handed: every oracle row equals
-`oracle_booleans`, which stays the least slack (it is the share of the score the booleans alone carry,
-so a new case with a boolean and little else raises it).
+`3d805fadb9d088f687fc2b5cd4ce7279739d6d8aa0dbfdfaec0ed55c98cfe719`
 
-**Where the line is.** The answerers above list keywords in a fixed order; the keyword run may choose
-which run of them to send, but not their order. An answerer that also chooses the order, with the grader
-telling it what passes, is composing statements rather than listing words. Two such searches were run
-by hand and are not part of the diagnostic. 200 random orders of each claim's keywords per claim score
-42.4 / 42.9 / 68.1%, and runs taken in the pattern's own order satisfy 18 claims. What they find is
-mostly a short correct statement in the claim's own words ("never calls set_profile", "doesn't apply",
-"isn't empty", "into the vertex stage"). The grader has to accept those, because a terse correct answer
-must not lose credit, so this is the floor for any grader that credits short answers.
+and a test pins it. Changing a question changes the hash, and then the calibration and the grader
+approval must be done again.
+
+**Offline results (no model call).** With a fake judge that credits nothing, the programmatic claims
+give every trivial answerer nothing beyond the correct booleans: all 31 answerers score at most 24.0%,
+the `oracle_booleans` share. With a fake judge that credits everything, every reference answer, both
+correct answers per case in `answers.jsonl` and all 70 answers in `answers_independent.jsonl` score
+100%, so no programmatic claim rejects a known correct answer. What the real judge accepts is measured
+by the calibration run, which `council-2026-10-05.md` specifies: false negatives on blind correct sets,
+false positives on minimal-pair wrong answers, the trivial and adversarial answerers through the real
+judge (none above 25% or more than 2 points over `oracle_booleans`), the ballot flip rate, and
+agreement with independent labels on real outputs.

@@ -45,11 +45,14 @@ def _failing(train_cases: Sequence[Case], transcripts: Sequence[Mapping[str, Any
 
 
 def _transcript_block(case: Case, item: Mapping[str, Any]) -> str:
-    failed = [v for v in item["grade"]["verdicts"] if not v["passed"]]
-    notes = "; ".join(f"{v['claim']} ({v['detail']})" for v in failed) or "none"
+    """One failing transcript. Claims appear as id and pass or fail only: the proposer never
+    sees a regex pattern, a judge question or a verdict's detail, so it cannot learn the grader's
+    wording."""
+    claims = ", ".join(f"{v['claim']}: {'pass' if v['passed'] else 'fail'}"
+                       for v in item["grade"]["verdicts"]) or "none"
     return (f"### {case.id} (score {item['grade']['score']:.0%})\n"
             f"Situation:\n{item['prompt']}\n\nAgent reply:\n{item['output'][:2000]}\n\n"
-            f"Intended answer: {case.reference}\nFailed claims: {notes}\n")
+            f"Intended answer: {case.reference}\nClaims: {claims}\n")
 
 
 def _history_lines(history: Sequence[Mapping[str, str]]) -> str:

@@ -58,9 +58,11 @@ def require_tty(stream: TextIO) -> None:
 
 
 def check_run_eligible(results: Mapping[str, Any], cases_sha256: str, surface_sha256: str,
-                       case_ids: Sequence[str], live_trivial: Mapping[str, Any] | None = None) -> None:
+                       case_ids: Sequence[str], trivial_fingerprint: str | None = None,
+                       judge_needed: bool = False) -> None:
     """The run behind a grader approval must be a complete, healthy, isolated run of the current
-    cases and surface."""
+    cases and surface, with its trivial answerers scored on the current frozen answer set and,
+    when the eval has judge claims, one known judge model throughout."""
     diagnostics = results.get("diagnostics", {})
     backend = results.get("backend") or {}
     problems = []
@@ -79,13 +81,24 @@ def check_run_eligible(results: Mapping[str, Any], cases_sha256: str, surface_sh
         problems.append("the run does not cover every case (an --only smoke run?)")
     if diagnostics.get("infra", {}).get("rate", 1.0) > diagnostics.get("infra_threshold", 0.05):
         problems.append("the infrastructure failure rate is above its threshold")
-    # The stored scores may predate newer answerers, so the current cases are rescored too.
     stored = diagnostics.get("trivial_answerers", {})
-    for source in (stored, live_trivial) if live_trivial is not None else (stored,):
-        if source.get("max", 1.0) > source.get("limit", 0.25):
-            problems.append(f"a trivial answerer scores {source.get('max', 1.0):.1%}, above "
-                            f"{source.get('limit', 0.25):.0%}: the grader is too lenient")
-            break
+    if stored.get("max", 1.0) > stored.get("limit", 0.25):
+        problems.append(f"a trivial answerer scores {stored.get('max', 1.0):.1%}, above "
+                        f"{stored.get('limit', 0.25):.0%}: the grader is too lenient")
+    if stored.get("oracle_margin", 1.0) > stored.get("oracle_margin_limit", 0.02):
+        problems.append(f"a trivial answerer beats the correct booleans alone by "
+                        f"{stored.get('oracle_margin', 1.0):.1%}, more than "
+                        f"{stored.get('oracle_margin_limit', 0.02):.0%}: the grader is too lenient")
+    if stored.get("judge_errors", 0):
+        problems.append(f"the judge failed on {stored['judge_errors']} trivial answers, so that "
+                        "check is incomplete")
+    # Rescoring through the judge would cost calls, so a stale answer set is refused instead.
+    if trivial_fingerprint is not None and stored.get("fingerprint") != trivial_fingerprint:
+        problems.append("the trivial answerers were scored on another answer set; run `baseline` again")
+    judge = results.get("judge") or {}
+    if judge_needed and not (judge.get("model") and judge.get("model_id")):
+        problems.append(f"the judge model id is unknown or changed during the run "
+                        f"({judge.get('model_ids', [])})")
     if problems:
         raise ApprovalError("this run cannot back a grader approval: " + "; ".join(problems))
 
@@ -94,14 +107,16 @@ def approve_grader(eval_dir: Path, cases_sha256: str, surface_sha256: str,
                    transcript_ids: Sequence[str], seed: str, read: Sequence[str],
                    results: Mapping[str, Any] | None, case_ids: Sequence[str],
                    delegation: Mapping[str, Any] | None = None,
-                   live_trivial: Mapping[str, Any] | None = None) -> dict:
+                   trivial_fingerprint: str | None = None, judge_needed: bool = False) -> dict:
     """Record grader approval only for a healthy full run and if every sampled transcript was read.
 
-    The record is bound to the cases and the surface the run used, and names the models it ran.
+    The record is bound to the cases, the surface and the judge model (alias and resolved id)
+    the run used, and names the models it ran.
     """
     if results is None:
         raise ApprovalError("no baseline results to check; run `baseline` first")
-    check_run_eligible(results, cases_sha256, surface_sha256, case_ids, live_trivial)
+    check_run_eligible(results, cases_sha256, surface_sha256, case_ids, trivial_fingerprint,
+                       judge_needed)
     if not transcript_ids:
         raise ApprovalError("no scored transcripts to sample; run `baseline` first")
     required = sample_transcript_ids(transcript_ids, seed)
@@ -109,18 +124,23 @@ def approve_grader(eval_dir: Path, cases_sha256: str, surface_sha256: str,
     if unread:
         raise ApprovalError(f"open these transcripts, then pass them via --read: {unread}")
     flagged = results.get("diagnostics", {}).get("headroom_flagged", [])
+    judge = results.get("judge") or {}
     return _record(eval_dir, "grader", cases_sha256, surface_sha256=surface_sha256,
                    read=sorted(required), run=seed, models=sorted(results.get("models", {})),
-                   headroom_flagged=flagged, **(delegation or {}))
+                   headroom_flagged=flagged, judge_model=judge.get("model", ""),
+                   judge_model_id=judge.get("model_id", ""), **(delegation or {}))
 
 
 COMMANDS = {"inputs": "approve-inputs", "grader": "approve-grader"}
 
 
 def require_approvals(eval_dir: Path, cases_sha256: str, surface_sha256: str, model: str,
-                      allow_no_headroom: bool = False) -> None:
-    """Both approvals must match the current cases; the grader's must match the surface too, and
-    its baseline must have run the model being climbed with headroom left."""
+                      allow_no_headroom: bool = False, judge_model: str = "") -> dict:
+    """Both approvals must match the current cases; the grader's must match the surface and the
+    judge alias too, and its baseline must have run the model being climbed with headroom left.
+
+    Returns the grader approval, whose `judge_model_id` the climb then holds every judge call to.
+    """
     approvals = _load(eval_dir)
     for kind, command in COMMANDS.items():
         entry = approvals.get(kind)
@@ -138,3 +158,7 @@ def require_approvals(eval_dir: Path, cases_sha256: str, surface_sha256: str, mo
     if model in grader.get("headroom_flagged", []) and not allow_no_headroom:
         raise ApprovalError(f"the approved baseline had no headroom for {model} (above 95%); "
                             "pass --allow-no-headroom to climb it anyway")
+    if grader.get("judge_model", "") != judge_model:
+        raise ApprovalError(f"the grader was approved with judge {grader.get('judge_model', '')!r}, "
+                            f"not {judge_model!r}; recalibrate and approve the grader again")
+    return grader

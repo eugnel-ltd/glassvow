@@ -13,8 +13,9 @@ from agent_evals import approvals, split as splitting  # noqa: E402
 from agent_evals.backends import (AnthropicApiBackend, Backend, ClaudeCliBackend,  # noqa: E402
                                   IsolationUnavailable)
 from agent_evals.baseline import run_baseline  # noqa: E402
-from agent_evals.diagnostics import trivial_answerer_scores  # noqa: E402
+from agent_evals.diagnostics import trivial_fingerprint  # noqa: E402
 from agent_evals.evalspec import EvalSpec, load_cases, load_eval, require_valid  # noqa: E402
+from agent_evals.graders import needs_judge  # noqa: E402
 from agent_evals.hillclimb import Climb, HillclimbConfig  # noqa: E402
 from agent_evals.models import EvalError, MODEL_ALIASES, read_json, write_json  # noqa: E402
 from agent_evals.report import review_html  # noqa: E402
@@ -99,7 +100,7 @@ def cmd_approve_grader(args: argparse.Namespace) -> int:
         entry = approvals.approve_grader(spec.directory, spec.cases_sha256, spec.surface_sha256, ids,
                                          args.run, args.read.split(",") if args.read else [],
                                          results, [c.id for c in cases], delegation,
-                                         trivial_answerer_scores(cases))
+                                         trivial_fingerprint(cases), needs_judge(cases))
     except approvals.ApprovalError as error:
         print(f"not approved: {error}", file=sys.stderr)
         print("Open these scored transcripts and check each verdict is right:", file=sys.stderr)
@@ -121,10 +122,11 @@ def cmd_baseline(args: argparse.Namespace) -> int:
     run_id = args.run_id or _run_id()
     run_dir = spec.build_dir / run_id
     backend = _backend(args)
-    judge = backend if spec.grader_type == "judge" else None
+    judge = backend if needs_judge(cases) else None
     models = args.models.split(",") if args.models else list(spec.default_models)
     results = run_baseline(spec, cases, backend, models, args.reps, run_dir, judge, args.timeout,
-                           args.infra_threshold, args.workers, run_id)
+                           args.infra_threshold, args.workers, run_id,
+                           args.judge_model or spec.judge_model)
     for model, block in results["models"].items():
         print(f"{model}: {block['summary']['mean']:.1%} over {len(block['per_case'])} cases")
     for warning in results["warnings"]:
@@ -139,20 +141,24 @@ def cmd_hillclimb(args: argparse.Namespace) -> int:
                                       "runs that CLAUDE.md, memory or settings can reach proves nothing")
     spec, cases = _load(args)
     model = args.model or spec.hillclimb_model
-    approvals.require_approvals(spec.directory, spec.cases_sha256, spec.surface_sha256, model,
-                                args.allow_no_headroom)
+    judged = needs_judge(cases)
+    judge_model = (args.judge_model or spec.judge_model) if judged else ""
+    approved = approvals.require_approvals(spec.directory, spec.cases_sha256, spec.surface_sha256,
+                                           model, args.allow_no_headroom, judge_model)
     split = splitting.load_split(spec.directory / "split.json", [c.id for c in cases],
                                  spec.cases_sha256)
     config = HillclimbConfig(
         goal=args.goal, model=model,
         proposer_model=args.proposer_model, reps=args.reps, round_reps=args.round_reps,
         rounds=args.rounds, stall=args.stall, min_gain=args.min_gain, timeout_s=args.timeout,
-        infra_threshold=args.infra_threshold, workers=args.workers)
+        infra_threshold=args.infra_threshold, workers=args.workers,
+        judge_model=judge_model or spec.judge_model)
     run_dir = spec.build_dir / (args.run_id or _run_id("hc-"))
     backend = _backend(args)
-    judge = backend if spec.grader_type == "judge" else None
+    judge = backend if judged else None
     write_json(run_dir / "config.json", config.__dict__)
-    summary = Climb(spec, cases, split, backend, backend, config, run_dir, judge).run()
+    summary = Climb(spec, cases, split, backend, backend, config, run_dir, judge,
+                    approved.get("judge_model_id") if judged else None).run()
     print(f"{summary['status']}: {summary['verdict']}\nreport: {run_dir / 'report.md'}")
     return 0
 
@@ -202,6 +208,8 @@ def build_parser() -> argparse.ArgumentParser:
         sub.add_argument("--workers", type=int, default=2)
         sub.add_argument("--infra-threshold", type=float, default=DEFAULT_INFRA_THRESHOLD)
         sub.add_argument("--run-id")
+        sub.add_argument("--judge-model", help="judge alias for free-text claims "
+                         "(default: eval.json judge_model, chosen by calibration)")
 
     def delegation_flags(sub: argparse.ArgumentParser) -> None:
         sub.add_argument("--delegated", metavar="TEXT",

@@ -9,6 +9,7 @@ from typing import Any, Callable, Sequence
 from .backends import Backend
 from .decision import Deltas, Noise, decide, improved
 from .evalspec import EvalSpec
+from .graders import DEFAULT_JUDGE_MODEL
 from .models import Case, EvalError, write_json
 from .patching import DEFAULT_MIN_SPAN, PatchError, apply_unified_diff, find_injection
 from .proposer import (PROPOSER_SYSTEM, REFLECTION_SYSTEM, assert_no_test_leak,
@@ -32,6 +33,7 @@ class HillclimbConfig:
     timeout_s: float = DEFAULT_TIMEOUT_S
     infra_threshold: float = DEFAULT_INFRA_THRESHOLD
     workers: int = 1
+    judge_model: str = DEFAULT_JUDGE_MODEL
 
 
 @dataclass
@@ -81,9 +83,12 @@ class Climb:
 
     def __init__(self, spec: EvalSpec, cases: Sequence[Case], split: dict[str, Any],
                  backend: Backend, proposer: Backend, config: HillclimbConfig,
-                 run_dir: Path, judge: Backend | None = None):
+                 run_dir: Path, judge: Backend | None = None,
+                 expected_judge_id: str | None = None):
+        """`expected_judge_id` is the approved judge model; a judge call that resolves to
+        another id stops the climb (graders.JudgeModelChanged)."""
         self.spec, self.backend, self.proposer, self.cfg = spec, backend, proposer, config
-        self.run_dir, self.judge = run_dir, judge
+        self.run_dir, self.judge, self.expected_judge_id = run_dir, judge, expected_judge_id
         self.all_cases = list(cases)
         self.train_cases = [c for c in cases if c.id in set(split["train"])]
         self.test_cases = [c for c in cases if c.id in set(split["test"])]
@@ -101,7 +106,8 @@ class Climb:
             # Test transcripts go to their own directory, which no prompt builder reads.
             result = run_set(self.backend, cases, self.cfg.model, text, reps,
                              self.run_dir / label / name, self.spec.name, self.judge,
-                             self.spec.judge_model, self.cfg.timeout_s, self.cfg.workers)
+                             self.cfg.judge_model, self.cfg.timeout_s, self.cfg.workers,
+                             expected_judge_id=self.expected_judge_id)
             check_infra(result.infra(), self.cfg.infra_threshold)
             results.append(result)
         return results[0], results[1]
@@ -230,7 +236,8 @@ class Climb:
         for name, text in (("baseline", self.original), ("best", best.text)):
             result = run_set(self.backend, self.test_cases, self.cfg.model, text, self.cfg.reps,
                              self.run_dir / "confirm" / name, self.spec.name, self.judge,
-                             self.spec.judge_model, self.cfg.timeout_s, self.cfg.workers)
+                             self.cfg.judge_model, self.cfg.timeout_s, self.cfg.workers,
+                             expected_judge_id=self.expected_judge_id)
             check_infra(result.infra(), self.cfg.infra_threshold)
             runs[name] = result
         score = {n: mean(list(per_case_means(r.table()).values())) for n, r in runs.items()}

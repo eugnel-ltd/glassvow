@@ -23,7 +23,7 @@ from agent_evals.baseline import run_baseline  # noqa: E402
 from agent_evals.decision import Deltas, Noise, decide  # noqa: E402
 from agent_evals.diagnostics import grader_consistency  # noqa: E402
 from agent_evals.evalspec import EvalSpec, load_cases, load_eval, validate_cases  # noqa: E402
-from agent_evals.graders import grade_claims, parse_json_answer  # noqa: E402
+from agent_evals.graders import grade, grade_claims, parse_json_answer  # noqa: E402
 from agent_evals.hillclimb import Climb, HillclimbConfig  # noqa: E402
 from agent_evals.models import Case, Completion, EvalError  # noqa: E402
 from agent_evals.patching import PatchError, apply_unified_diff, find_injection  # noqa: E402
@@ -56,9 +56,25 @@ def healthy_results(case_ids: tuple[str, ...] = ("c1", "c2"), **changes: object)
     base = {"cases_sha256": "h1", "surface_sha256": "s1", "status": "ok", "case_ids": list(case_ids),
             "backend": {"backend": "claude-cli", "isolation": "safe-mode", "allow_ambient": False},
             "models": {"haiku": {}, "sonnet": {}, "opus": {}},
+            "judge": {"model": "haiku", "model_id": "fake-haiku", "model_ids": ["fake-haiku"]},
             "diagnostics": {"infra": {"rate": 0.0}, "infra_threshold": 0.05,
-                            "trivial_answerers": {"max": 0.1, "limit": 0.25}, "headroom_flagged": []}}
+                            "trivial_answerers": {"max": 0.1, "limit": 0.25, "oracle_margin": 0.0,
+                                                  "oracle_margin_limit": 0.02, "judge_errors": 0,
+                                                  "fingerprint": "f1"},
+                            "headroom_flagged": []}}
     return {**base, **changes}
+
+
+def claim_ids(prompt: str) -> list[str]:
+    """The claim ids a judge prompt lists, one per "- id: question" line."""
+    return [line[2:].split(":", 1)[0] for line in prompt.splitlines() if line.startswith("- ")]
+
+
+def fake_judge(verdict=True) -> FakeBackend:
+    """A judge backend that gives `verdict` (a bool, or a function of claim id) to every claim."""
+    decide = verdict if callable(verdict) else (lambda claim_id: verdict)
+    return FakeBackend(lambda system, prompt, model: json.dumps(
+        {"verdicts": {cid: decide(cid) for cid in claim_ids(prompt)}}))
 
 
 def model_script(markers: tuple[str, ...] = ("GENERAL",)):
@@ -404,7 +420,7 @@ class GraderTests(unittest.TestCase):
     def judge_case(self) -> Case:
         base = make_cases(1)[0]
         return Case(**{**asdict(base), "grader": {"type": "judge", "claims": [
-            {"id": "mentions-fix", "question": "Does the answer propose a fix?"}]}})
+            {"id": "mentions-fix", "question": "The answer states a fix."}]}})
 
     def test_programmatic_grades_are_identical_on_regrading(self) -> None:
         workspace = Workspace(self)
@@ -413,22 +429,25 @@ class GraderTests(unittest.TestCase):
         self.assertTrue(report["programmatic_identical"])
         self.assertIsNone(report["judge_disagreement_rate"])
 
-    def test_judge_disagreement_rate_is_reported(self) -> None:
+    def test_judge_disagreement_rate_is_read_from_the_three_ballots(self) -> None:
         case = self.judge_case()
         flips = {"n": 0}
 
         def judge(system: str, prompt: str, model: str) -> str:
             flips["n"] += 1
             return json.dumps({"verdicts": {"mentions-fix": flips["n"] % 2 == 0}})
-        transcripts = [{"case_id": case.id, "output": "Apply the fix."}]
-        report = grader_consistency([case], transcripts, FakeBackend(judge))
+        output = json.dumps({"answer": "Apply the fix."})
+        transcripts = [{"case_id": case.id, "output": output,
+                        "grade": grade(case, output, FakeBackend(judge)).to_json()}]
+        report = grader_consistency([case], transcripts)
+        self.assertEqual(3, flips["n"])  # graded once, three ballots; the report makes no call
         self.assertEqual(1.0, report["judge_disagreement_rate"])
 
     def test_judge_prompt_is_blind_to_condition(self) -> None:
         case = self.judge_case()
         seen = FakeBackend(lambda s, p, m: '{"verdicts": {"mentions-fix": true}}')
-        run_set(FakeBackend(lambda s, p, m: "answer"), [case], "haiku", "BASELINE-SURFACE", 1,
-                judge=seen, judge_model="haiku")
+        run_set(FakeBackend(lambda s, p, m: '{"answer": "an answer"}'), [case], "haiku",
+                "BASELINE-SURFACE", 1, judge=seen, judge_model="haiku")
         text = seen.calls[0]["system"] + seen.calls[0]["prompt"]
         for label in ("baseline", "candidate", "BASELINE-SURFACE", "haiku", "opus"):
             self.assertNotIn(label.lower(), text.lower().replace("answerer", ""))
@@ -457,15 +476,15 @@ class ApprovalTests(unittest.TestCase):
 
     def test_hillclimb_refuses_without_both_approvals_or_with_a_stale_hash(self) -> None:
         with self.assertRaises(approvals.ApprovalError):
-            approvals.require_approvals(self.dir, "h1", "s1", "sonnet")
+            approvals.require_approvals(self.dir, "h1", "s1", "sonnet", judge_model="haiku")
         approvals.approve_inputs(self.dir, "h1")
         with self.assertRaisesRegex(approvals.ApprovalError, "grader"):
-            approvals.require_approvals(self.dir, "h1", "s1", "sonnet")
+            approvals.require_approvals(self.dir, "h1", "s1", "sonnet", judge_model="haiku")
         ids = [f"transcripts/haiku/c{i}__r1.json" for i in range(9)]
         self.approve(ids, approvals.sample_transcript_ids(ids, "run-1"))
-        approvals.require_approvals(self.dir, "h1", "s1", "sonnet")
+        approvals.require_approvals(self.dir, "h1", "s1", "sonnet", judge_model="haiku")
         with self.assertRaisesRegex(approvals.ApprovalError, "stale"):
-            approvals.require_approvals(self.dir, "h2", "s1", "sonnet")
+            approvals.require_approvals(self.dir, "h2", "s1", "sonnet", judge_model="haiku")
 
     def test_grader_approval_requires_the_sampled_transcripts_to_be_read(self) -> None:
         ids = [f"transcripts/haiku/c{i}__r1.json" for i in range(9)]

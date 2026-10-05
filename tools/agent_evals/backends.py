@@ -39,7 +39,8 @@ class FakeBackend:
         if isinstance(reply, Completion):
             return reply
         return Completion(text=reply, usage={"input_tokens": (len(system) + len(prompt)) // 4,
-                                             "output_tokens": len(reply) // 4})
+                                             "output_tokens": len(reply) // 4},
+                          model_id=f"fake-{model}")
 
     def describe(self) -> dict[str, Any]:
         return {"backend": "fake"}
@@ -152,7 +153,17 @@ def parse_cli_output(returncode: int, stdout: str, stderr: str) -> Completion:
     if payload.get("is_error") or returncode != 0:
         return Completion(text=text, error=text.strip()[:300] or f"claude exited {returncode}",
                           usage=usage)
-    return Completion(text=text, usage=usage, truncated=payload.get("stop_reason") == "max_tokens")
+    return Completion(text=text, usage=usage, truncated=payload.get("stop_reason") == "max_tokens",
+                      model_id=_cli_model_id(payload))
+
+
+def _cli_model_id(payload: dict[str, Any]) -> str:
+    """The model the CLI says it ran (its `modelUsage` keys); empty when it does not say.
+
+    An empty id fails closed: a judge reply without one is an infrastructure failure.
+    """
+    used = sorted((payload.get("modelUsage") or {}).keys())
+    return used[0] if len(used) == 1 else str(payload.get("model") or "")
 
 
 class AnthropicApiBackend:
@@ -193,4 +204,5 @@ class AnthropicApiBackend:
                               timed_out="Timeout" in kind)
         text = "".join(block.text for block in reply.content if getattr(block, "type", "") == "text")
         usage = {"input_tokens": reply.usage.input_tokens, "output_tokens": reply.usage.output_tokens}
-        return Completion(text=text, usage=usage, truncated=reply.stop_reason == "max_tokens")
+        return Completion(text=text, usage=usage, truncated=reply.stop_reason == "max_tokens",
+                          model_id=str(getattr(reply, "model", "") or ""))
