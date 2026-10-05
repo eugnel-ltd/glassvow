@@ -47,7 +47,7 @@ python3 summary.py
 
 ### The scratch catalogues
 
-Each follows #544 decisions 1, 2, 8 and 9 and changes only the Ashwarden's row (`aspects[1]`); a test asserts the Duskblade's row and every other key byte-identical.
+Each follows #544 decisions 1, 2, 8 and 9 and changes only the Ashwarden's row (`aspects[1]`); the writer asserts the Duskblade's row and every other key of the catalogue equal to today's.
 
 | | `verbs` | `draw` | `duos` | Exclusions only |
 |---|---|---|---|---|
