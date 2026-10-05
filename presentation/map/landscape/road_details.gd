@@ -3,6 +3,10 @@ extends RefCounted
 ## These are local surface details, not another large-prop distribution pass.
 const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 const Paths = preload("res://presentation/map/landscape/road_paths.gd")
+const STONES: String = "Embedded road fragments"
+const LEAVES: String = "Fallen verge leaves"
+## Both details' nodes, which the floor's bake draws into its picture.
+const NAMES: PackedStringArray = [STONES, LEAVES]
 
 static func build(terrain: Node3D) -> void:
 	var land: MeshInstance3D = terrain.get_node("Quiet sculpted ground") as MeshInstance3D
@@ -62,9 +66,9 @@ static func build(terrain: Node3D) -> void:
 	material.vertex_color_use_as_albedo = true
 	material.vertex_color_is_srgb = true
 	if fragments+slabs>0:
-		Meshes.node(terrain,Meshes.finish(stone),material,"Embedded road fragments")
+		Meshes.node(terrain,Meshes.finish(stone),material,STONES)
 	if fallen>0:
-		Meshes.node(terrain,Meshes.finish(leaves),material,"Fallen verge leaves").cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		Meshes.node(terrain,Meshes.finish(leaves),material,LEAVES).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 static func _slate(surface: SurfaceTool, at: Vector3, rng: RandomNumberGenerator) -> void:
 	var radius: float = rng.randf_range(.10,.20)
