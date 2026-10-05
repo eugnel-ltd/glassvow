@@ -256,19 +256,24 @@ func _finish_mips() -> void:
 	step = Step.DONE
 
 
-## The mip chain's views nested, the smallest outermost: the engine draws a
-## view's children before it, so each level reads the level below it drawn in
-## the same frame, and the first reads the lit picture's own top level.
 func _mip_chain() -> void:
-	var holder: Node = _host
-	var levels: int = mip_count(lit_size) - 1
+	_mips = mip_views(_host, _lit, lit_size)
+
+
+## The mip chain of a `size` picture `source` as views nested under `holder`,
+## the smallest outermost: the engine draws a view's children before it, so
+## each level reads the level below it drawn in the same frame, and the first
+## reads the picture's own top level. Each view draws once. The warm-up builds
+## one too (`floor_warm.gd`), so the bake's pipelines are its own.
+static func mip_views(holder: Node, source: Texture2D, size: Vector2i) -> Array[SubViewport]:
+	var levels: int = mip_count(size) - 1
 	var views: Array[SubViewport] = []
 	for k: int in range(levels):
 		views.append(null)
 	for k: int in range(levels - 1, -1, -1):
 		var view: SubViewport = SubViewport.new()
 		view.name = "Floor mip %d" % (k + 1)
-		view.size = mip_size(lit_size, k + 1).max(Vector2i(2, 2))
+		view.size = mip_size(size, k + 1).max(Vector2i(2, 2))
 		view.disable_3d = true
 		view.transparent_bg = false
 		view.render_target_update_mode = SubViewport.UPDATE_DISABLED
@@ -280,12 +285,12 @@ func _mip_chain() -> void:
 		rect.size = Vector2(views[k].size)
 		var material: ShaderMaterial = ShaderMaterial.new()
 		material.shader = MIP
-		material.set_shader_parameter("source", _lit if k == 0 else views[k - 1].get_texture())
-		material.set_shader_parameter("source_size", mip_size(lit_size, k))
+		material.set_shader_parameter("source", source if k == 0 else views[k - 1].get_texture())
+		material.set_shader_parameter("source_size", mip_size(size, k))
 		rect.material = material
 		views[k].add_child(rect)
 		views[k].render_target_update_mode = SubViewport.UPDATE_ONCE
-	_mips = views
+	return views
 
 
 ## The lit picture's tiles: as few as fit `limit`, equal but for the last.
@@ -309,6 +314,12 @@ static func mip_size(size: Vector2i, level: int) -> Vector2i:
 
 
 func _texture(size: Vector2i, mipmaps: int) -> RID:
+	return texture_rd(_rd, size, mipmaps)
+
+
+## A picture of the floor's own format on `rd`: RGBA8, with an sRGB view to
+## share, copied to and from, `mipmaps` levels.
+static func texture_rd(rd: RenderingDevice, size: Vector2i, mipmaps: int) -> RID:
 	var format: RDTextureFormat = RDTextureFormat.new()
 	format.format = RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM
 	format.width = size.x
@@ -318,7 +329,7 @@ func _texture(size: Vector2i, mipmaps: int) -> RID:
 		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT | RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
 	format.add_shareable_format(RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM)
 	format.add_shareable_format(RenderingDevice.DATA_FORMAT_R8G8B8A8_SRGB)
-	return _rd.texture_create(format, RDTextureView.new())
+	return rd.texture_create(format, RDTextureView.new())
 
 
 ## Copies `region` of `view`'s picture to `to` in `target`'s level `mip`.

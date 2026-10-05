@@ -30,6 +30,9 @@ const SIDE: int = 8
 static var _done: bool = false
 var _views: Array[SubViewport] = []
 var _lit: SubViewport = null
+## The small picture of the floor's own format the mip chain sample reads.
+var mip_picture: RID = RID()
+var _mip_source: Texture2DRD = null
 
 
 ## Draws the samples once a process, before the next frame shows. `prime`
@@ -94,10 +97,11 @@ func draw_now() -> void:
 
 
 ## The 2D passes as the bake draws them: the plants' stamps (a MultiMesh of
-## quads, added, in a clear view) and a mip level (the mip shader in an opaque
-## view). A canvas pipeline is its view's too: drawn in a view of another kind,
-## the mip shader's left the bake's last step a 0.4 s frame under the title
-## (batch M, after an update).
+## quads, added, in a clear view) and the mip chain, built by the bake's own
+## builder (`FloorBake.mip_views`) from a small picture of the floor's format.
+## A canvas pipeline is its view's too: a mip sample in a view of another
+## kind left the bake's last step a 0.4 s frame under the title (batches M
+## and O, after an update).
 func _canvas() -> void:
 	var stamps: SubViewport = _flat(true)
 	var multi: MultiMesh = MultiMesh.new()
@@ -116,13 +120,19 @@ func _canvas() -> void:
 	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	draw.material = add
 	stamps.add_child(draw)
-	var level: ColorRect = ColorRect.new()
-	level.size = Vector2(SIDE, SIDE)
-	var mip: ShaderMaterial = ShaderMaterial.new()
-	mip.shader = Bake.MIP
-	mip.set_shader_parameter("source", Bake.radial())
-	level.material = mip
-	_flat(false).add_child(level)
+	var rd: RenderingDevice = RenderingServer.get_rendering_device()
+	if rd == null:
+		return
+	var size: Vector2i = Vector2i(SIDE, SIDE)
+	mip_picture = Bake.texture_rd(rd, size, Bake.mip_count(size))
+	_mip_source = Texture2DRD.new()
+	_mip_source.texture_rd_rid = mip_picture
+	var holder: Node = Node.new()
+	holder.name = "Mip chain"
+	add_child(holder)
+	for view: SubViewport in Bake.mip_views(holder, _mip_source, size):
+		view.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		_views.append(view)
 
 
 func _flat(clear: bool) -> SubViewport:
@@ -172,6 +182,17 @@ static func _ground_mesh() -> ArrayMesh:
 	for index: int in [0, 3, 1, 0, 2, 3]:
 		surface.add_index(index)
 	return surface.commit()
+
+
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_PREDELETE:
+		return
+	if _mip_source != null:
+		_mip_source.texture_rd_rid = RID()
+	var rd: RenderingDevice = RenderingServer.get_rendering_device()
+	if mip_picture.is_valid() and rd != null:
+		rd.free_rid(mip_picture)
+	mip_picture = RID()
 
 
 static func _sample(mesh: Mesh, shader: Shader, layer: int) -> MeshInstance3D:

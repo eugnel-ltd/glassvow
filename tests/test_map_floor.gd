@@ -368,7 +368,8 @@ static func _blob(fails: Array[String]) -> void:
 ## before the title's first frame shows (on the iPad 8 this engine builds them
 ## only as a draw needs them): the bake's and the floor's materials on meshes
 ## of the bake's own kinds (the ground's vertex, normal and colour; the cards'
-## MultiMesh), every view drawn then let go.
+## MultiMesh), every view drawn then let go. Its mip chain needs a
+## RenderingDevice; the windowed proof checks it (`tools/check_floor_bake.gd`).
 static func _warm(fails: Array[String]) -> void:
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	var warm: Node = Warm.new()
@@ -400,19 +401,11 @@ static func _warm(fails: Array[String]) -> void:
 	_check(fails, all and ground_kind and waiting,
 		"the warm-up stands the bake's and the floor's materials on meshes of the bake's own kinds, undrawn until it draws them")
 	var stamps_clear: bool = false
-	var mip_opaque: bool = false
 	for view: Node in warm.find_children("*", "SubViewport", false, false):
 		var flat: SubViewport = view as SubViewport
-		if not flat.disable_3d:
-			continue
-		if not flat.find_children("*", "MultiMeshInstance2D", false, false).is_empty():
+		if flat.disable_3d and not flat.find_children("*", "MultiMeshInstance2D", false, false).is_empty():
 			stamps_clear = flat.transparent_bg
-		for rect: Node in flat.find_children("*", "ColorRect", false, false):
-			var material: ShaderMaterial = (rect as ColorRect).material as ShaderMaterial
-			if material != null and material.shader == Bake.MIP:
-				mip_opaque = not flat.transparent_bg
-	_check(fails, stamps_clear and mip_opaque,
-		"the warm-up draws the stamps in a clear view and the mip shader in an opaque one, as the bake does")
+	_check(fails, stamps_clear, "the warm-up draws the plants' stamps in a clear view, as the bake does")
 	warm.call("draw_now")
 	_check(fails, warm.is_queued_for_deletion(), "the warm-up draws its samples at once and lets them go")
 	if is_instance_valid(warm) and warm.is_inside_tree():

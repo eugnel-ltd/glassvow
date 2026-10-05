@@ -12,13 +12,16 @@ extends SceneTree
 ## - the bake took a frame a pair of tiles and three more, and no step of it
 ##   held the main thread long; paced (the prefetch's, under a lit title), a
 ##   frame a tile and four more;
-## - letting the land go frees the floor's textures.
+## - letting the land go frees the floor's textures;
+## - the warm-up builds the bake's own mip chain (`FloorBake.mip_views`) from a
+##   picture of the floor's format, draws it, and frees that picture.
 ## Exits 0 on a pass, 1 on a failure, 2 under `--headless` (no RenderingDevice).
 ## Pass the game's map flags after `--`, as the capture tools do:
 ##   godot --path . -s res://tools/check_floor_bake.gd -- --map --seed=1 --map-steps=2
 
 const LandFloor = preload("res://presentation/map/landscape/land_floor.gd")
 const Bake = preload("res://presentation/map/landscape/floor_bake.gd")
+const Warm = preload("res://presentation/map/landscape/floor_warm.gd")
 ## The most one step of the bake may hold the main thread (ms).
 const STEP_LIMIT_MS: float = 40.0
 
@@ -119,6 +122,19 @@ func _run() -> void:
 		await process_frame
 	_check(not rd.texture_is_valid(rids[0]) and not rd.texture_is_valid(rids[1]),
 		"letting the land go frees the floor's textures")
+	var warm: Node = Warm.new()
+	root.add_child(warm)
+	var chain: Array[Node] = warm.find_children("Floor mip *", "SubViewport", true, false)
+	var picture: RID = warm.get("mip_picture")
+	var picture_format: RDTextureFormat = rd.texture_get_format(picture) if picture.is_valid() else null
+	_check(chain.size() == Bake.mip_count(Vector2i(Warm.SIDE, Warm.SIDE)) - 1 and picture_format != null
+		and picture_format.format == RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM,
+		"the warm-up builds the bake's own mip chain (%d levels) from a picture of the floor's format" % chain.size())
+	warm.call("draw_now")
+	for _i: int in range(2):
+		await process_frame
+	_check(not is_instance_valid(warm) and not rd.texture_is_valid(picture),
+		"the warm-up draws and lets go, its picture freed")
 	_finish()
 
 
