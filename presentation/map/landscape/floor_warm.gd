@@ -93,28 +93,47 @@ func draw_now() -> void:
 	queue_free()
 
 
-## The 2D passes: an additive stamp, a mip level.
+## The 2D passes as the bake draws them: the plants' stamps (a MultiMesh of
+## quads, added, in a clear view) and a mip level (the mip shader in an opaque
+## view). A canvas pipeline is its view's too: drawn in a view of another kind,
+## the mip shader's left the bake's last step a 0.4 s frame under the title
+## (batch M, after an update).
 func _canvas() -> void:
-	var flat: SubViewport = SubViewport.new()
-	flat.size = Vector2i(SIDE, SIDE)
-	flat.disable_3d = true
-	flat.transparent_bg = true
-	flat.render_target_update_mode = SubViewport.UPDATE_DISABLED
-	add_child(flat)
-	_views.append(flat)
-	var stamp: Sprite2D = Sprite2D.new()
-	stamp.texture = Bake.radial()
+	var stamps: SubViewport = _flat(true)
+	var multi: MultiMesh = MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_2D
+	multi.use_colors = true
+	var quad: QuadMesh = QuadMesh.new()
+	quad.size = Vector2.ONE
+	multi.mesh = quad
+	multi.instance_count = 1
+	multi.set_instance_transform_2d(0, Transform2D(0.0, Vector2(SIDE, SIDE), 0.0, Vector2(SIDE, SIDE) * 0.5))
+	multi.set_instance_color(0, Color.WHITE)
+	var draw: MultiMeshInstance2D = MultiMeshInstance2D.new()
+	draw.multimesh = multi
+	draw.texture = Bake.radial()
 	var add: CanvasItemMaterial = CanvasItemMaterial.new()
 	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	stamp.material = add
-	flat.add_child(stamp)
+	draw.material = add
+	stamps.add_child(draw)
 	var level: ColorRect = ColorRect.new()
 	level.size = Vector2(SIDE, SIDE)
 	var mip: ShaderMaterial = ShaderMaterial.new()
 	mip.shader = Bake.MIP
-	mip.set_shader_parameter("source", stamp.texture)
+	mip.set_shader_parameter("source", Bake.radial())
 	level.material = mip
-	flat.add_child(level)
+	_flat(false).add_child(level)
+
+
+func _flat(clear: bool) -> SubViewport:
+	var flat: SubViewport = SubViewport.new()
+	flat.size = Vector2i(SIDE, SIDE)
+	flat.disable_3d = true
+	flat.transparent_bg = clear
+	flat.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	add_child(flat)
+	_views.append(flat)
+	return flat
 
 
 ## The woodland's shadow cards as the bake casts them: one card in a MultiMesh

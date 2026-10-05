@@ -399,6 +399,20 @@ static func _warm(fails: Array[String]) -> void:
 		waiting = waiting and (view as SubViewport).render_target_update_mode == SubViewport.UPDATE_DISABLED
 	_check(fails, all and ground_kind and waiting,
 		"the warm-up stands the bake's and the floor's materials on meshes of the bake's own kinds, undrawn until it draws them")
+	var stamps_clear: bool = false
+	var mip_opaque: bool = false
+	for view: Node in warm.find_children("*", "SubViewport", false, false):
+		var flat: SubViewport = view as SubViewport
+		if not flat.disable_3d:
+			continue
+		if not flat.find_children("*", "MultiMeshInstance2D", false, false).is_empty():
+			stamps_clear = flat.transparent_bg
+		for rect: Node in flat.find_children("*", "ColorRect", false, false):
+			var material: ShaderMaterial = (rect as ColorRect).material as ShaderMaterial
+			if material != null and material.shader == Bake.MIP:
+				mip_opaque = not flat.transparent_bg
+	_check(fails, stamps_clear and mip_opaque,
+		"the warm-up draws the stamps in a clear view and the mip shader in an opaque one, as the bake does")
 	warm.call("draw_now")
 	_check(fails, warm.is_queued_for_deletion(), "the warm-up draws its samples at once and lets them go")
 	if is_instance_valid(warm) and warm.is_inside_tree():
