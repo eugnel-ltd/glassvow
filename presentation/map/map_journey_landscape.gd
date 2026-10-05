@@ -20,7 +20,10 @@ const Lamps = preload("res://presentation/map/landscape/lamps.gd")
 const LandMotion = preload("res://presentation/map/landscape/land_motion.gd")
 const Air = preload("res://presentation/map/landscape/air.gd")
 const ImpostorWood = preload("res://presentation/map/landscape/impostor_wood.gd")
+const LandFloor = preload("res://presentation/map/landscape/land_floor.gd")
 const MAP_BOUNDS: Rect2 = Rect2(-48, -30, 96, 60)
+## Act I's key light (`light`): low from the south-east, as the target's.
+const KEY_ROTATION: Vector3 = Vector3(-52, -32, 0)
 const LIT_GLASS: Color = Color("b38d57")
 const LIT_EMISSION: Color = Color("aa7841")
 const COLD_GLASS: Color = Color("49424f")
@@ -38,6 +41,8 @@ var journey: Journey
 var lamps: Lamps
 var air: Air
 var wood: ImpostorWood
+## The ground drawn from its bake once baked (R3.2; `floor_step`).
+var forest_floor: LandFloor
 var failure: String = ""
 var timings_ms: Dictionary = {}
 ## The record's node id to its waystone's seat on the rendered surface.
@@ -59,7 +64,7 @@ var _was_moving: bool = false
 ## only the flames and their brightest pools reach. Review 10's workshop light
 ## (key `ddd7d2` at 0.95, ambient `a19caa` at 0.5, no grade) is the R1 base.
 static func light(key: DirectionalLight3D, environment: Environment) -> void:
-	key.rotation_degrees = Vector3(-52, -32, 0)
+	key.rotation_degrees = KEY_ROTATION
 	key.light_color = Color("ffd1a0")
 	key.light_energy = 1.6
 	key.light_specular = 1.0
@@ -259,6 +264,17 @@ func _finish() -> void:
 	for i: int in range(node_ids.size()):
 		_seats[node_ids[i]] = journey.bases[i].position
 	timings_ms["waystones"] = Time.get_ticks_msec() - started
+	started = Time.get_ticks_msec()
+	forest_floor = LandFloor.new()
+	add_child(forest_floor)
+	forest_floor.prepare(self)
+	timings_ms["floor_plan"] = Time.get_ticks_msec() - started
+
+
+## Carries the floor's bake on by a frame (main thread, behind the veil); true
+## once the floor has settled, baked or left painted (`LandFloor`).
+func floor_step() -> bool:
+	return forest_floor == null or forest_floor.step(self)
 
 
 ## Where node `id`'s waystone actually stands, or `fallback` before a build.
@@ -309,6 +325,8 @@ func set_traveller(at: Vector3, ahead: Vector3, moving: bool) -> void:
 	if journey == null:
 		return
 	journey.walker.visible = at.is_finite()
+	if forest_floor != null:
+		forest_floor.set_walker(at, at.is_finite())
 	if not at.is_finite():
 		return
 	if moving and _was_moving:
@@ -325,6 +343,8 @@ func set_traveller(at: Vector3, ahead: Vector3, moving: bool) -> void:
 func set_flame(colour: Color) -> void:
 	if journey != null:
 		journey.walker.set_flame(colour)
+	if forest_floor != null:
+		forest_floor.set_flame(colour)
 
 
 ## Where the pilgrim waits beside waystone `id`.

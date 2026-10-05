@@ -73,6 +73,8 @@ static var journey_async: bool = false
 static var _journey_kept: MapJourneyLandscape = null
 static var _journey_kept_key: String = ""
 var _journey_pending: bool = false
+## A land built inline whose floor is still baking (`_step_floor`).
+var _floor_baking: bool = false
 var _journey_key: String = ""
 var _journey_data: Dictionary = {}
 var _rest_tick: int = 0
@@ -595,6 +597,8 @@ func _process(delta: float) -> void:
 		MapJourneyLandscape.LandMotion.apply(not Preferences.active.reduce_motion)
 	if _journey_pending:
 		_poll_journey()
+	elif _floor_baking:
+		_step_floor()
 	_sync_grain()
 	_move_grain(delta)
 	if not _live and _settle_frames > 0:
@@ -1153,6 +1157,10 @@ func _bind_journey(key: String, data: Dictionary) -> bool:
 	_keep_journey(key, land)
 	_world.add_child(land)
 	land.set_node_states(_node_states)
+	# Built here and drawn at once: its floor bakes from this frame on, the
+	# screen's veil up meanwhile (`landscape_pending`); where nothing can bake
+	# it settles at once.
+	_floor_baking = not land.floor_step()
 	return true
 
 
@@ -1176,6 +1184,9 @@ func _poll_journey() -> void:
 			return
 	elif not land.poll():
 		return
+	# Its floor bakes off the tree before the land is drawn (`LandFloor`).
+	if land.failure.is_empty() and not land.floor_step():
+		return
 	_journey_pending = false
 	if not land.failure.is_empty():
 		_fail_layout(land.failure)
@@ -1188,7 +1199,18 @@ func _poll_journey() -> void:
 
 
 func landscape_pending() -> bool:
-	return _journey_pending
+	return _journey_pending or _floor_baking
+
+
+## A land built on this thread and drawn at once: its floor's bake, a step a
+## frame, then the picture and the screen told it is ready.
+func _step_floor() -> void:
+	var land: MapJourneyLandscape = journey_landscape()
+	if land != null and not land.floor_step():
+		return
+	_floor_baking = false
+	_repaint()
+	landscape_ready.emit()
 
 
 ## The kept land when it was kept for `key` and this screen may draw it: drawn
@@ -1263,6 +1285,7 @@ func _release_landscape() -> void:
 		return
 	var land: MapJourneyLandscape = _landscape as MapJourneyLandscape
 	_journey_pending = false
+	_floor_baking = false
 	if land != null and land == _journey_kept:
 		if land.get_parent() != null:
 			land.get_parent().remove_child(land)

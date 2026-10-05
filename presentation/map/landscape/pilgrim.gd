@@ -8,6 +8,14 @@ var boots: Array[Node3D] = []
 var flame: Color = Color("e9ab54")
 var _ember: StandardMaterial3D
 var _light: OmniLight3D
+## The soft shadow under the pilgrim once the land's floor is baked
+## (`ground_blob`): the floor takes no live shadow. Wanted before the pilgrim
+## is built (the land is baked off the tree), it is made as it is.
+var _blob: MeshInstance3D = null
+var _blob_wanted: bool = false
+## The blob's width (metres) and how dark its middle is.
+const BLOB_SIZE: float = 0.95
+const BLOB_DEPTH: float = 0.5
 
 func _ready() -> void:
 	var cloth: StandardMaterial3D = Meshes.material(Color("38333e"))
@@ -86,6 +94,8 @@ func _ready() -> void:
 	lamp.add_child(_light)
 	set_flame(flame)
 	Meshes.box(lamp,Vector3(0,.21,0),Vector3(.025,.12,.025),iron,"Lantern handle")
+	if _blob_wanted:
+		ground_blob(true)
 
 func pose(distance: float, walking: bool) -> void:
 	if cloak == null:
@@ -96,6 +106,44 @@ func pose(distance: float, walking: bool) -> void:
 		var stride: float = sin(distance*5+i*PI) if walking else 0.0
 		boots[i].position.z = .05+stride*.09
 		boots[i].position.y = .06+maxf(0,stride)*.045
+
+
+## The pilgrim's shadow as a soft blob on the ground under it (true), or its
+## own live shadow (false): the floor drawn from its bake takes no live
+## shadow, and the deck's or a stone's would be the pilgrim's only one.
+func ground_blob(on: bool) -> void:
+	_blob_wanted = on
+	if cloak == null:
+		return
+	if on and _blob == null:
+		var quad: QuadMesh = QuadMesh.new()
+		quad.size = Vector2(BLOB_SIZE, BLOB_SIZE)
+		quad.orientation = PlaneMesh.FACE_Y
+		var gradient: Gradient = Gradient.new()
+		gradient.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
+		gradient.colors = PackedColorArray([Color(0, 0, 0, 1), Color(0, 0, 0, 0.55), Color(0, 0, 0, 0)])
+		var fall: GradientTexture2D = GradientTexture2D.new()
+		fall.gradient = gradient
+		fall.fill = GradientTexture2D.FILL_RADIAL
+		fall.fill_from = Vector2(0.5, 0.5)
+		fall.fill_to = Vector2(1.0, 0.5)
+		fall.width = 32
+		fall.height = 32
+		var shade: StandardMaterial3D = StandardMaterial3D.new()
+		shade.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		shade.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		shade.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+		shade.albedo_color = Color(0.02, 0.015, 0.02, BLOB_DEPTH)
+		shade.albedo_texture = fall
+		_blob = Meshes.node(self, quad, shade, "Ground blob")
+		_blob.position = Vector3(0.0, 0.03, 0.0)
+		_blob.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if _blob != null:
+		_blob.visible = on
+	for node: Node in find_children("*", "GeometryInstance3D", true, false):
+		if node != _blob:
+			(node as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF \
+				if on else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 
 
 ## Burns the carried lantern in the run's Flame colour: its glass and its light.

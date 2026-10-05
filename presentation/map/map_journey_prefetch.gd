@@ -18,13 +18,15 @@ extends RefCounted
 ## (`_take_layout`), so a map that opens while the land is still building does
 ## not make them again on the main thread. The finished land is handed to
 ## `MapScene` as its kept land under the binding key the screen will ask for,
-## so the first open re-parents it instead of building.
+## so the first open re-parents it instead of building. Before it is handed
+## over, its floor is baked a step a frame (`MapJourneyLandscape.floor_step`),
+## so the map that opens on it draws it at once.
 ##
 ## One journey land at a time: a prefetch for another layout drops the older
 ## one and frees the land it built, and `release` lets go of both when the next
 ## map is not the journey act's.
 
-enum Step { WAITING_PICTURES, CATALOGUE, KIT, BUILDING, DONE, FAILED }
+enum Step { WAITING_PICTURES, CATALOGUE, KIT, BUILDING, BAKING, DONE, FAILED }
 const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 ## How long a frame of the setup may spend on the act's catalogue. Its pieces
 ## are small (a card laid out on the CPU, one profile, the digest), so a frame
@@ -115,7 +117,7 @@ static func hurry() -> void:
 ## only once it is built, so a screen that opens meanwhile waits to see.
 static func busy() -> bool:
 	return _current != null and _current.step in [
-		Step.WAITING_PICTURES, Step.CATALOGUE, Step.KIT, Step.BUILDING]
+		Step.WAITING_PICTURES, Step.CATALOGUE, Step.KIT, Step.BUILDING, Step.BAKING]
 
 
 ## The generator's packet the current prefetch made for the layout input
@@ -141,10 +143,13 @@ static func layout_packet(input_digest: String) -> Dictionary:
 ## flight: before the session's first frame there are none (about 10 ms on the
 ## iPad 8, behind the launch screen); before a later title (one reached from
 ## the run menu) it stalls the frame that builds that title (about 21-23 ms),
-## which the title's lit frames would otherwise pay in 40-48 ms frames.
+## which the title's lit frames would otherwise pay in 40-48 ms frames. And
+## the floor's bake and the floor draw their pipelines once there, behind the
+## launch screen too (`floor_warm.gd`), so the land's first bake compiles none.
 static func prime() -> void:
 	MapJourneyLandscape.Kit.Meshes.prepare_unit_box()
 	MapLandscapeAssets.prime()
+	MapJourneyLandscape.LandFloor.Warm.warm()
 
 
 ## The current prefetch's step, or -1 when there is none (tests and probes).
@@ -173,6 +178,8 @@ static func join() -> void:
 		_current._pacing.stop()
 		WorkerThreadPool.wait_for_task_completion(_current._task)
 		_current._land.free()
+	elif _current != null and _current.step == Step.BAKING:
+		_current._land.free()
 	_current = null
 	MapScene.join_abandoned()
 
@@ -189,6 +196,8 @@ static func _drop() -> void:
 		_current._pacing.stop()
 		_current._land.adopt_task(_current._task)
 		MapScene.abandon(_current._land)
+	elif _current.step == Step.BAKING and _current._land != null:
+		_current._land.free()
 	elif _current.step == Step.DONE:
 		MapScene.release_journey(_current.key)
 	_current = null
@@ -217,6 +226,10 @@ func _advance(hurry: bool) -> void:
 		if WorkerThreadPool.is_task_completed(_task):
 			WorkerThreadPool.wait_for_task_completion(_task)
 			_task = -1
+			_built()
+		return
+	if step == Step.BAKING:
+		if _land.floor_step():
 			_finish()
 		return
 	if step == Step.DONE or step == Step.FAILED:
@@ -374,14 +387,23 @@ func _take_layout() -> void:
 		input, _input_digest)
 
 
-func _finish() -> void:
-	var land: MapJourneyLandscape = _land
-	_land = null
+## The worker has built the land: a failed build ends the prefetch, a built
+## one has its floor baked before it is handed over (`_finish`).
+func _built() -> void:
 	_take_layout()
 	key = str(_out[1])
 	if key.is_empty() or not str(_out[2]).is_empty():
-		land.free()
+		_land.free()
+		_land = null
 		step = Step.FAILED
 		return
+	step = Step.BAKING
+	if _land.floor_step():
+		_finish()
+
+
+func _finish() -> void:
+	var land: MapJourneyLandscape = _land
+	_land = null
 	MapScene.adopt_journey(key, land)
 	step = Step.DONE
