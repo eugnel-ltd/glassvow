@@ -44,7 +44,7 @@ Dates are targets under the assumptions in §8. A milestone is met by its eviden
 | M5 RC frozen and submitted | Fri 21 Nov | P0–P9 evidence on the exact RC commit; RC signature receipt; #428 submitted |
 | M6 Live | Fri 5 Dec (buffer to Fri 12 Dec) | #429: public storefront verified in both locales |
 | 1.1 Ashwarden lock | by Fri 19 Dec | class template applied; Ash lock reviewed |
-| 1.1 Live | late Jan 2027 | same bar on the combined product; Duskblade claims carried or requalified. *Settled 2026-10-04:* requalified, not carried. The Duskblade is re-read under the 1.1 instrument (pilot `p9`, search player `s2`) on the combined product, and readout 13 stays 1.0's reading of record (#544 decision 4; rc-bar P9). *Readout 14, 4 Oct:* on 1.0's content the Duskblade does not yet requalify (an interim reading, not a verdict; the 1.1 verdict is given at step A9 on the combined product); the fresh-pool Lantern lead is the open item, answered by a Duskblade wall lane that lands after the 1.0 release candidate is cut (lock §11, *Verdict*, item 7) |
+| 1.1 Live | late Jan 2027 | same bar on the combined product; Duskblade claims carried or requalified. *Settled 2026-10-04:* requalified, not carried. The Duskblade is re-read under the 1.1 instrument (pilot `p9`, search player `s2`) on the combined product, and readout 13 stays 1.0's reading of record (#544 decision 4; rc-bar P9). *Readout 14, 4–5 Oct:* read on 1.0's content under the 1.1 instrument, the Duskblade's intent holds with the same one reservation (the fresh-pool Lantern lead, 13.5 pp, UNDECIDED). This is an interim reading, not a verdict; the 1.1 verdict is given at step A9 on the combined product (lock §11, *Verdict*, item 7) |
 
 ## 4. Week by week
 
