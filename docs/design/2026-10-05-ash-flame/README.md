@@ -381,6 +381,7 @@ Per-way boons; a path chooser or any explicit path UI; card or map sigils; tutor
 
 **Open items.**
 
+- **The starter as the class's engine** (orchestrator, 5 Oct 2026). Readout A0 has Smolder making 61–77% of the kills in every arm's won fights, so the starter (Ash Bite ×4, Ashen Core, Ashfall) carries every way. If Ash readout A1, the reading of record, shows the same, the orchestrator reopens #544 decision 2 (starter unchanged) before step A8. A wall lane may then touch the starter's tagging or Smolder output, and must not touch the Duskblade.
 - Final rider sizes, card numbers, crown effects and the Hand deed's threshold, against their readouts.
 - Flame hexes and shapes, approved on device (step A6).
 - The colour words and every name in §6 and §9, for the owner's ear.
