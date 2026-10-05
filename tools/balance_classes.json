@@ -1,5 +1,8 @@
 {
   "duskblade": {
     "wayStats": {"shatter": "shatters", "lantern": "kindles", "edge": "cracked"}
+  },
+  "ashwarden": {
+    "wayStats": {"smolder": "smolderKills", "hand": "drawn", "endure": "perfects"}
   }
 }

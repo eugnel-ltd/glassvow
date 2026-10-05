@@ -10,12 +10,12 @@ const QUEST_IDS: Array[String] = [
 	"hollowLamplighter",
 ]
 const OUTCOMES: Array[String] = ["win", "death", "abandon"]
-## `cracked` (flame lock PR 6, the Edge deed) is additive to v2: a Vigil saved
-## before it loads the counter at zero.
+## `cracked` (flame lock PR 6, the Edge deed) and `drawn` (#544 A3, the Hand
+## way's stat) are additive to v2: a Vigil saved before them loads each at zero.
 const DEFAULT_DEEDS: Dictionary = {
 	"runs": 0, "wins": 0, "slain": 0, "shatters": 0, "kindles": 0,
 	"perfects": 0, "smolderKills": 0, "unlitVisited": 0, "embersSpent": 0,
-	"cracked": 0, "bestVow": 0, "bestWaystone": 0,
+	"cracked": 0, "drawn": 0, "bestVow": 0, "bestWaystone": 0,
 }
 
 var deeds: Dictionary = DEFAULT_DEEDS.duplicate()
@@ -197,7 +197,7 @@ func commit_run(run: RunState, outcome: String, content: ContentDB) -> bool:
 		deeds["bestWaystone"] = maxi(_ji(deeds["bestWaystone"]), run.act * 15 + run.waystones_lit)
 		for key: String in [
 			"slain", "shatters", "kindles", "perfects", "smolderKills",
-			"unlitVisited", "embersSpent", "cracked",
+			"unlitVisited", "embersSpent", "cracked", "drawn",
 		]:
 			deeds[key] = _ji(deeds[key]) + _ji(run.stats.get(key, 0))
 		receipts["deeds"] = {"runId": run.run_id, "won": outcome == "win"}
@@ -314,9 +314,13 @@ func _refresh_unlocks(content: ContentDB, outcome: String) -> void:
 		)
 		if reached and not unlocks.has(id):
 			unlocks.append(id)
-	for deed_v: Variant in content.deeds.values():
-		var deed: Dictionary = deed_v
-		if _ji(deeds.get(str(deed.get("stat")), 0)) < _ji(deed.get("n", 0)):
+	# A deed completes, and grants, only while an offered class can pursue it
+	# (the rule the Vigil's display keeps): its progress still folds above, and
+	# a class the build offers again completes it from what was accrued.
+	for deed_id_v: Variant in content.deeds:
+		var deed: Dictionary = content.deeds[deed_id_v]
+		if _ji(deeds.get(str(deed.get("stat")), 0)) < _ji(deed.get("n", 0)) \
+				or not ClassScope.shows_deed(content, str(deed_id_v)):
 			continue
 		for unlock_v: Variant in deed.get("unlocks", []):
 			var unlock: String = str(unlock_v)

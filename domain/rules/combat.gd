@@ -426,15 +426,29 @@ func _start_player_turn(run: RunState, cb: CombatState) -> void:
 	p.energy = (p.energy if run.has_relic("frozenCore") else 0) + energy
 	cb.first_card_played = false
 	cb.queue.append({"t": EventTypes.ENERGY, "n": p.energy})
-	var draws: int = 5 + _sget(p.statuses, "nightsight") \
-		+ _ji(_omen_mods(run).get("drawDelta", 0))
+	# The turn's own deal: five cards, or what the act's omen makes of it.
+	var deal: int = 5 + _ji(_omen_mods(run).get("drawDelta", 0))
+	var draws: int = deal + _sget(p.statuses, "nightsight")
 	if cb.turn == 1 and run.has_relic("travelersPack"):
 		draws += 2
 		_proc(cb, "travelersPack")
-	draw_cards(run, cb, maxi(1, draws))
+	# Night Sight's and the Traveller's Pack's cards ride on the deal, and are
+	# `drawn` only where the hand actually took more than the deal itself.
+	_tally_drawn(run, _draw_from_pile(run, cb, maxi(1, draws)) - maxi(1, deal))
 
 
+## Draw `n` cards for a card, relic, potion or the Art: everything drawn here is
+## beyond the turn's own deal, so it is tallied in `run.stats.drawn` (#544 A3,
+## the Hand way's stat; never the Lantern's `kindles`).
 func draw_cards(run: RunState, cb: CombatState, n: int) -> void:
+	_tally_drawn(run, _draw_from_pile(run, cb, n))
+
+
+## Moves up to `n` cards from the draw pile into the hand, reshuffling the
+## discard when the pile runs out, and returns how many the hand took: a full
+## hand (10) or two empty piles stop it short.
+func _draw_from_pile(run: RunState, cb: CombatState, n: int) -> int:
+	var taken: int = 0
 	for _i: int in range(n):
 		if cb.hand.size() >= 10:
 			break
@@ -449,6 +463,13 @@ func draw_cards(run: RunState, cb: CombatState, n: int) -> void:
 		var c: CardInst = cb.draw.pop_back()
 		cb.hand.append(c)
 		cb.queue.append({"t": EventTypes.DRAW, "uid": c.uid, "id": String(c.id)})
+		taken += 1
+	return taken
+
+
+func _tally_drawn(run: RunState, n: int) -> void:
+	if n > 0:
+		run.stats["drawn"] = _ji(run.stats.get("drawn", 0)) + n
 
 
 # ---------------------------------------------------------------- shared laws
@@ -1201,6 +1222,12 @@ func end_turn(run: RunState, cb: CombatState) -> void:
 				_begin_finale_handoff(run, cb, e)
 				continue
 			if e.hp <= 0:
+				# A Smolder kill (#544 A3): this tick is the killing blow, the
+				# HIT_ENEMY marked `poison` and `dead`. Each enemy's tick is its
+				# own blow, so two dying in one phase are two kills; a finale
+				# handoff kills no one and is not one. balance_sim.gd `_fight`
+				# re-counts these events from the queue: the two must not drift.
+				run.stats["smolderKills"] = _ji(run.stats.get("smolderKills", 0)) + 1
 				_on_enemy_death(run, cb, e)
 				continue
 		e.block = 0
