@@ -1,0 +1,31 @@
+extends SceneTree
+## Lane R3.2: a second bake of the open land, paced, to check its frames.
+const Bake = preload("res://presentation/map/landscape/floor_bake.gd")
+func _initialize() -> void:
+	MapScene.lean_override = 1
+	change_scene_to_file("res://application/main.tscn")
+	_run.call_deferred()
+
+func _run() -> void:
+	var screen: WorldMapScreen = null
+	for i: int in range(6000):
+		await process_frame
+		var main: Node = current_scene
+		if main == null:
+			continue
+		var found: Variant = main.get("_map_screen")
+		if found is WorldMapScreen and is_instance_valid(found) and not found.landscape_pending():
+			screen = found
+			break
+	for i: int in range(10):
+		await process_frame
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	for paced: bool in [false, true]:
+		var bake: Bake = Bake.new(land, land.forest_floor.plan, paced)
+		while not bake.advance():
+			await process_frame
+		print("PACED ", JSON.stringify({"paced": paced, "step": bake.step, "failure": bake.failure, "frames": bake.timings.get("frames"), "steps_ms": bake.timings.get("steps_ms"), "frames_ms": bake.timings.get("frames_ms"), "wall": bake.timings.get("wall_ms")}))
+		bake.cancel()
+		for i: int in range(5):
+			await process_frame
+	quit(0)

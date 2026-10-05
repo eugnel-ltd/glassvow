@@ -1,0 +1,68 @@
+# The A12 condition at 2b411b4f (Mac, M1 Max): GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1, --rendering-driver metal --rendering-method mobile.
+# Act I land, seed 1, two steps in, Journey view; lean = the iPad profile, full = the desktop's.
+# Counted: 'Error compiling shader' or 'SHADER ERROR' lines, SCRIPT ERROR lines, and any other ERROR line.
+# The one other line (desktop lean) is the exit-time 'RID allocations of type Texture were leaked at exit',
+# which main shows too (6 of main's 24 token-gate runs, the same Act I runs as the branch's 6).
+pad-landscape-lean: exit 0 0 shader errors, 0 script errors | other errors: 0
+pad-landscape-full: exit 0 0 shader errors, 0 script errors | other errors: 0
+phone-landscape-lean: exit 0 0 shader errors, 0 script errors | other errors: 0
+phone-landscape-full: exit 0 0 shader errors, 0 script errors | other errors: 0
+desktop-landscape-lean: exit 0 0 shader errors, 0 script errors | other errors: 1
+desktop-landscape-full: exit 0 0 shader errors, 0 script errors | other errors: 0
+pad-landscape-lean-zh: exit 0 0 shader errors, 0 script errors | other errors: 0
+rm still: exit 0 0 shader errors, 0 script errors
+rm motion: exit 0 0 shader errors, 0 script errors
+
+# Token-gate stop captures (tools/map_token_gate.gd), same condition, every act, seed and shape (sheets/run.zsh):
+# build, act index (a0-a3 = Acts I-IV), seed, shape: exit, shader-error lines, script-error lines
+main a0 s1 pad-landscape exit 0 shader-errors 0 script-errors 0
+main a0 s1 phone-landscape exit 0 shader-errors 0 script-errors 0
+main a0 s2 pad-landscape exit 0 shader-errors 0 script-errors 0
+main a0 s2 phone-landscape exit 0 shader-errors 0 script-errors 0
+main a0 s3 pad-landscape exit 0 shader-errors 0 script-errors 0
+main a0 s3 phone-landscape exit 0 shader-errors 0 script-errors 0
+main a1 s1 pad-landscape exit 0 shader-errors 10 script-errors 0
+main a1 s1 phone-landscape exit 0 shader-errors 10 script-errors 0
+main a1 s2 pad-landscape exit 0 shader-errors 10 script-errors 0
+main a1 s2 phone-landscape exit 0 shader-errors 10 script-errors 0
+main a1 s3 pad-landscape exit 0 shader-errors 10 script-errors 0
+main a1 s3 phone-landscape exit 0 shader-errors 10 script-errors 0
+main a2 s1 pad-landscape exit 0 shader-errors 10 script-errors 0
+main a2 s1 phone-landscape exit 0 shader-errors 10 script-errors 0
+main a2 s2 pad-landscape exit 0 shader-errors 10 script-errors 0
+main a2 s2 phone-landscape exit 0 shader-errors 10 script-errors 0
+main a2 s3 pad-landscape exit 0 shader-errors 10 script-errors 0
+main a2 s3 phone-landscape exit 0 shader-errors 10 script-errors 0
+main a3 s1 pad-landscape exit 0 shader-errors 10 script-errors 0
+main a3 s1 phone-landscape exit 0 shader-errors 10 script-errors 0
+main a3 s2 pad-landscape exit 0 shader-errors 10 script-errors 0
+main a3 s2 phone-landscape exit 0 shader-errors 10 script-errors 0
+main a3 s3 pad-landscape exit 0 shader-errors 10 script-errors 0
+main a3 s3 phone-landscape exit 0 shader-errors 10 script-errors 0
+R3.2 (fbc9a41f) a0 s1 pad-landscape exit 0 shader-errors 0 script-errors 0 
+R3.2 (fbc9a41f) a0 s1 phone-landscape exit 0 shader-errors 0 script-errors 0 
+R3.2 (fbc9a41f) a0 s2 pad-landscape exit 0 shader-errors 0 script-errors 0 
+R3.2 (fbc9a41f) a0 s2 phone-landscape exit 0 shader-errors 0 script-errors 0 
+R3.2 (fbc9a41f) a0 s3 pad-landscape exit 0 shader-errors 0 script-errors 0 
+R3.2 (fbc9a41f) a0 s3 phone-landscape exit 0 shader-errors 0 script-errors 0 
+R3.2 (fbc9a41f) a1 s1 pad-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a1 s1 phone-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a1 s2 pad-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a1 s2 phone-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a1 s3 pad-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a1 s3 phone-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a2 s1 pad-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a2 s1 phone-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a2 s2 pad-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a2 s2 phone-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a2 s3 pad-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a2 s3 phone-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a3 s1 pad-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a3 s1 phone-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a3 s2 pad-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a3 s2 phone-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a3 s3 pad-landscape exit 0 shader-errors 10 script-errors 0 
+R3.2 (fbc9a41f) a3 s3 phone-landscape exit 0 shader-errors 10 script-errors 0 
+
+# Acts II-IV: the 10 lines a run are main's own (map_mineral's SAMPLER_LINEAR_WITH_MIPMAPS_ANISOTROPIC_REPEAT
+# at sampler(17), out of the A12's 0-15), present on main identically. No new 'Error compiling shader' anywhere.

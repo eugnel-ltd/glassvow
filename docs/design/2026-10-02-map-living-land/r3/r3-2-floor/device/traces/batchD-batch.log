@@ -1,0 +1,45 @@
+== batch D start 05:12:47
+== install ctl1 05:12:47
+== ctl1-l1 nonce ctl1-l1-1645914893: rows fresh
+   ctl1-l1: build 26dc6dc7
+== ctl1-l2 nonce ctl1-l2-834924215: rows fresh
+   ctl1-l2: build 26dc6dc7
+== install dev1 05:16:06
+== dev1-l1 nonce dev1-l1-828717896: rows fresh
+   dev1-l1: build 441bff8d
+== dev1-l2 nonce dev1-l2-27147036: rows fresh
+   dev1-l2: build 441bff8d
+== install ctl2 05:19:14
+== ctl2-l1 nonce ctl2-l1-290281643: rows fresh
+   ctl2-l1: build 26dc6dc7
+== ctl2-l2 nonce ctl2-l2-360718763: rows fresh
+   ctl2-l2: build 26dc6dc7
+== install dev2 05:22:21
+== dev2-l1 nonce dev2-l1-666131594: rows fresh
+   dev2-l1: build 441bff8d
+== dev2-l2 nonce dev2-l2-883413817: rows fresh
+   dev2-l2: build 441bff8d
+== install ctl3 05:25:27
+== ctl3-l1 nonce ctl3-l1-1029717182: rows fresh
+   ctl3-l1: build 26dc6dc7
+== ctl3-l2 nonce ctl3-l2-56013011: rows fresh
+   ctl3-l2: build 26dc6dc7
+== install dev3 05:28:33
+== dev3-l1 nonce dev3-l1-2544219703: rows fresh
+   dev3-l1: build 441bff8d
+== dev3-l2 nonce dev3-l2-641718513: rows fresh
+   dev3-l2: build 441bff8d
+== dev-shot nonce dev-shot-176688925: rows fresh
+   dev-shot: build 441bff8d
+== dev-tnone nonce dev-tnone-85411509: rows fresh
+== dev-tnone: trace cut short (0.878618 s, Device_disconnected; attempt 1)
+== dev-tnone nonce dev-tnone-971622768: rows fresh
+== dev-tnone: trace 6.936971 s
+   dev-tnone: build 441bff8d
+== dev-tground nonce dev-tground-3104831737: rows fresh
+== dev-tground: trace cut short (0.970522 s, Device_disconnected; attempt 1)
+== dev-tground nonce dev-tground-1502523005: rows fresh
+== dev-tground: trace 6.902278 s
+   dev-tground: build 441bff8d
+== batch D done 05:40:18
+== lock released 05:40:18

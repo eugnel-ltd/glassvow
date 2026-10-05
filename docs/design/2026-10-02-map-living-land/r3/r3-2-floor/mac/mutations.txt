@@ -1,0 +1,34 @@
+# Mutation proof of tests/test_map_floor.gd (tools/mutate.py.txt: back up, break, run the one test, copy back)
+# and of tools/check_floor_bake.gd's two later checks (run windowed under the A12 condition).
+tiles leave a gap                    caught: the bake's tiles cover a 1920x1200 picture exactly, each within the limit; the bake's tiles cover a 1931x1207 picture exactly, each within the limit
+mip chain one level short            caught: the lit picture's mip chain halves to one texel in 11 levels
+pool phase not the flame's           caught: a pool's flicker phase is its own flame's
+pools flicker under Reduce Motion    caught: a pool flickers with its flame's wave and holds still with the land's motion
+glints under Reduce Motion           caught: the puddles' glints go out with the land's motion
+floor shaded                         caught: the floor is unshaded and takes no live shadow
+an anisotropic sampler               caught: floor_paint.gdshader binds no anisotropic sampler (the A12's sampler slots)
+a lamp dropped                       caught: the plan holds every lamp's flame
+cards face sideways                  caught: each tree's card stands upright on its base, its own silhouette above it
+cards float                          caught: each tree's card stands upright on its base, its own silhouette above it
+shrubs cast cards                    caught: a shadow card for every tree and none for undergrowth; each tree's card stands upright on its base, its own silhouette above it
+no shrub shade                       caught: a stamp for every plant's reach and foot, every shrub's shade, every stone and every seat (7746 of 11301)
+seats unstamped                      caught: a stamp for every plant's reach and foot, every shrub's shade, every stone and every seat (11236 of 11301)
+ground heights miss the highest      caught: the plan's ground heights hold every vertex of the land
+mask receivers cast                  caught: every receiver is on its pass's layer and every other part casts shadows only
+details left out of the bake         caught: the bake draws the ground once lit and once for its mask, and the road's details; every receiver is on its pass's layer and every other part casts shadows only
+pilgrim baked                        caught: the pilgrim stays out of the bake
+casters drawn                        caught: every receiver is on its pass's layer and every other part casts shadows only
+bake tonemap not linear              caught: the bake lights the floor as the live land does, through a linear tonemap at its exposure
+bakes headless                       caught: the headless renderer cannot bake
+details stay drawn                   caught: the baked floor draws every chunk and the details are put out
+wood keeps casting live              caught: the woodland's and the waystones' live shadows are in the floor now
+a hero put out                       SURVIVED
+parapets put out                     caught: only the gateway, the outcrops and the bridges' parapets cast live
+blob never made                      caught: the pilgrim casts no live shadow and stands on its blob
+blob keeps the pilgrim's shadow      caught: the pilgrim casts no live shadow and stands on its blob
+decode wrong                         caught: the baked floor draws every chunk and the details are put out
+caught 26 of 27
+re-run after the test named the heroes apart (mutation 22): caught
+-- later checks (check_floor_bake.gd, windowed, A12 condition)
+prefetch bake not paced              caught: paced, the bake takes a frame a tile and four more (6), no step past 40 ms
+no set-up frame before the draws     caught: the bake spans its frames (5); paced, the bake takes a frame a tile and four more (7)

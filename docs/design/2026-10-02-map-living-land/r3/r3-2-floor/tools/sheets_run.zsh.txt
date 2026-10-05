@@ -1,0 +1,19 @@
+#!/bin/zsh
+# Lane R3.2 visual proof: the token gate's stop captures for main and the
+# branch, Acts I-IV, seeds 1-3, phone and pad, under the A12 Metal condition.
+R=/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/map-lane/r32
+for build in ctl dev; do
+  WT=$R/$build-wt
+  OUT=$R/sheets/$build
+  mkdir -p $OUT
+  for act in 0 1 2 3; do
+    for seed in 1 2 3; do
+      for shape in pad-landscape phone-landscape; do
+        log=$OUT/a$act-s$seed-$shape.log
+        GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 400 godot --path $WT --rendering-driver metal --rendering-method mobile --position 1400,900 \
+          -s res://tools/map_token_gate.gd -- --act-index=$act --seed=$seed --shape=$shape --output=$OUT > $log 2>&1
+        echo "$build a$act s$seed $shape exit $? shader-errors $(grep -c 'Error compiling shader\|SHADER ERROR' $log) script-errors $(grep -c 'SCRIPT ERROR' $log) $(grep -o '"measured":[0-9]*,"failed":[0-9]*' $log)"
+      done
+    done
+  done
+done

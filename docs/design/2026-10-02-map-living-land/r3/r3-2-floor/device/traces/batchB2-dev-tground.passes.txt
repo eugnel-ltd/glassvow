@@ -1,0 +1,27 @@
+window: 4.97 s read after skipping 1.5 s
+command buffers: 895
+== 13 encoders: 298 command buffers, GPU busy median 9.046 ms, p95 9.526 ms
+  [0] Blit Command 0       V  0.000  F  0.000  C  0.008  wall  0.008  cpu  0.057
+  [1] Render Command 1     V  0.037  F  0.695  C  0.000  wall  0.755  cpu  0.065
+  [2] Compute Command 2    V  0.051  F  0.066  C  0.012  wall  0.341  cpu  0.072
+  [3] Blit Command 3       V  0.000  F  0.000  C  0.004  wall  0.004  cpu  0.021
+  [4] Render Command 4     V  0.051  F  0.066  C  0.167  wall  0.688  cpu  0.082
+  [5] Render Command 5     V  0.821  F  2.696  C  0.000  wall  3.553  cpu  0.772
+  [6] Render Command 6     V  0.010  F  0.283  C  0.000  wall  2.831  cpu  0.075
+  [7] Render Command 7     V  0.022  F  0.057  C  0.000  wall  2.816  cpu  0.041
+  [8] Render Command 8     V  0.015  F  0.051  C  0.000  wall  2.841  cpu  0.041
+  [9] Render Command 9     V  0.032  F  0.531  C  0.000  wall  3.324  cpu  0.048
+  [10] Render Command 10   V  0.031  F  0.936  C  0.000  wall  4.190  cpu  0.063
+  [11] Blit Command 11     V  0.000  F  0.000  C  0.008  wall  0.008  cpu  0.029
+  [12] Render Command 12   V  0.263  F  3.116  C  0.000  wall  7.176  cpu  0.563
+== 2 encoders: 298 command buffers, GPU busy median 1.284 ms, p95 1.572 ms
+  [0] Render Command 0     V  0.098  F  1.186  C  0.000  wall  8.127  cpu  0.077
+  [1] Blit Command 1       V  0.000  F  0.000  C  0.019  wall  0.019  cpu  0.030
+== 1 encoders: 298 command buffers, GPU busy median 0.014 ms, p95 0.017 ms
+  [0] Blit Command 0       V  0.000  F  0.000  C  0.014  wall  0.014  cpu 11.146
+== 5 encoders: 1 command buffers, GPU busy median 0.856 ms, p95 0.856 ms
+  [0] Blit Command 0       V  0.000  F  0.000  C  0.007  wall  0.007  cpu  0.032
+  [1] Render Command 1     V  0.037  F  0.695  C  0.000  wall  0.751  cpu  0.045
+  [2] Compute Command 2    V  0.000  F  0.000  C  0.025  wall  0.025  cpu  0.036
+  [3] Blit Command 3       V  0.000  F  0.000  C  0.004  wall  0.004  cpu  0.013
+  [4] Render Command 4     V  0.107  F  0.135  C  0.000  wall  0.673  cpu  0.264

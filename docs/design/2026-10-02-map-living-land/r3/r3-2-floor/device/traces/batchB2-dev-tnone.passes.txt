@@ -1,0 +1,21 @@
+window: 5.01 s read after skipping 1.5 s
+command buffers: 1204
+== 1 encoders: 603 command buffers, GPU busy median 0.013 ms, p95 0.084 ms
+  [0] Blit Command 0       V  0.000  F  0.000  C  0.013  wall  0.013  cpu  1.703
+== 13 encoders: 301 command buffers, GPU busy median 9.275 ms, p95 9.910 ms
+  [0] Blit Command 0       V  0.000  F  0.000  C  0.008  wall  0.008  cpu  0.057
+  [1] Render Command 1     V  0.037  F  0.695  C  0.000  wall  0.754  cpu  0.070
+  [2] Render Command 2     V  0.074  F  0.096  C  0.000  wall  0.584  cpu  0.081
+  [3] Blit Command 3       V  0.000  F  0.000  C  0.004  wall  0.004  cpu  0.022
+  [4] Compute Command 4    V  0.000  F  0.000  C  0.334  wall  0.839  cpu  0.090
+  [5] Render Command 5     V  0.900  F  2.899  C  0.000  wall  3.836  cpu  0.776
+  [6] Render Command 6     V  0.010  F  0.281  C  0.000  wall  3.049  cpu  0.077
+  [7] Render Command 7     V  0.021  F  0.068  C  0.000  wall  3.039  cpu  0.039
+  [8] Render Command 8     V  0.014  F  0.051  C  0.000  wall  3.065  cpu  0.041
+  [9] Render Command 9     V  0.031  F  0.528  C  0.000  wall  3.552  cpu  0.047
+  [10] Render Command 10   V  0.031  F  0.931  C  0.000  wall  4.429  cpu  0.062
+  [11] Blit Command 11     V  0.000  F  0.000  C  0.008  wall  0.008  cpu  0.030
+  [12] Render Command 12   V  0.256  F  3.103  C  0.000  wall  7.413  cpu  0.541
+== 2 encoders: 300 command buffers, GPU busy median 1.256 ms, p95 1.601 ms
+  [0] Render Command 0     V  0.097  F  1.158  C  0.000  wall  8.304  cpu  0.073
+  [1] Blit Command 1       V  0.000  F  0.000  C  0.016  wall  0.016  cpu  0.027
