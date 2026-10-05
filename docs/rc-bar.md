@@ -353,13 +353,16 @@ the readout whose complete §11 table it was given on.
        stress plays its own seeds and reads no run of the table.
      - Any other field that differs is listed, with the commit that caused it.
      - The comparison is recorded in the exam packet, with its commands and the comparer's
-       output: `python3 -B tools/balance_readout.py equivalence <candidate's run directory>
-       <reading of record's run directory>`, once for each of the reading's run directories
-       (readout 13's
+       output: `python3 -B tools/balance_readout.py equivalence --commit <RC commit SHA>
+       <candidate's run directory> <reading of record's run directory>`, once for each of the
+       reading's run directories (readout 13's
        [reproduction](design/2026-09-29-dusk-flame/readouts/readout-13-reproduction.md) names
        its archive and the digest of its rows). The comparer pairs the runs by cell, arm and
-       seed, and exits 0 only when every graded field matches, both sides hold the same runs and
-       every manifest names the same instrument.
+       seed, and exits 0 only when every graded field matches, both sides hold the same runs,
+       every manifest names the same instrument, and every candidate manifest names the RC
+       commit. The packet also runs the graders on the
+       candidate's run directories (`tools/balance_readout.py table`, `g3` and `rowb`, as the
+       reading of record was graded) and records their output beside the comparer's.
 
      If neither (a) nor (b) holds, the verdict of record does not describe the candidate: a new
      reading on the candidate and a new verdict are needed.
@@ -460,7 +463,13 @@ commands and the comparer's output; the independent re-run's verdicts; and the e
   5 October 2026 that step A2 is neither held for the RC cut nor kept on a long-lived branch,
   and that it merges only once this route is in force; the ruling is recorded in the
   [Ashwarden lock's §14](design/2026-10-05-ash-flame/README.md#14-fallback-time-box-and-open-items)
-  (#692).
+  (#692). Route (b)'s recording sentence, as #697 (`8d1fd9f2`) wrote it, named the comparer
+  command as "`python3 -B tools/balance_readout.py equivalence <candidate's run directory>
+  <reading of record's run directory>`" and said it "exits 0 only when every graded field
+  matches, both sides hold the same runs and every manifest names the same instrument".
+  Replaced the same day (#544 P7): the command names `--commit <RC commit SHA>`, and the
+  comparer also requires every candidate manifest to name the RC commit, because a route (b)
+  run serves as item 2's independent re-run, which binds the RC commit.
 - *Before 2026-09-29:* the strategy-diversity method, kept as history in
   [`docs/balance/p9-strategy-diversity-system.md`](balance/p9-strategy-diversity-system.md);
   [`docs/reviews/549/obligation-map.md`](reviews/549/obligation-map.md) records where each of

@@ -15,6 +15,12 @@ import shutil
 import subprocess
 import sys
 
+_TOOLS = Path(__file__).resolve().parent
+if str(_TOOLS) not in sys.path:
+    sys.path.insert(0, str(_TOOLS))
+
+from balance_readout_guard import require_isolated_user_dir  # noqa: E402
+
 REPO = Path(__file__).resolve().parent.parent
 
 
@@ -138,6 +144,8 @@ def run_command(command: list[str], log: Path, allowed=(0,)) -> int:
 
 def run_jobs(jobs: list[tuple[str, list[str]]], directory: Path, workers: int,
              godot: str, niceness: int) -> None:
+    require_isolated_user_dir(REPO)  # every job is a Godot run
+
     def run(job):
         name, args = job
         command = ["nice", "-n", str(niceness), godot, "--headless", "-s", args[0], "--", *args[1:]]
@@ -179,6 +187,7 @@ def main(argv=None) -> int:
             "layer2": [cem_job(layer2 / f"island-{i}.ndjson", seeds, i) for i in range(12)],
             "jobs": opts.jobs, "nice": opts.niceness}, indent=2))
         return 0
+    require_isolated_user_dir(REPO)  # before anything is written
     if out.exists() and any(out.iterdir()):
         parser.error("out-dir must be empty; existing exams are never overwritten")
     for directory in (phase, layer1, layer2):

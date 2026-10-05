@@ -3,7 +3,9 @@
 
 docs/design/2026-09-29-dusk-flame/README.md, section 11. Runs a class (--aspect,
 default the Duskblade) over vows {0, 5} x pool states {fresh, full} x paired
-seeds, with common random numbers across its arms: one committed pilot C_<way>
+seeds (a class that unlocks later, one whose content row names an `unlock`, reads
+`entry` in `fresh`'s place, at fresh's thresholds: the Ashwarden lock's section 10),
+with common random numbers across its arms: one committed pilot C_<way>
 for each way the aspect declares in content (the Duskblade's C_shatter,
 C_lantern and C_edge), A (adaptive, today's arm 1), A_lit (adaptive and reading
 its own flame, readout 10) and R (random build, today's arm 2). An aspect that
@@ -25,7 +27,18 @@ Usage (repo root):
                                 [--play search]   # readout 8's search player on the board
                                 [--pilot p9 --search s2]   # the 1.1 bots (default: 1.0's p8-d0-v3 and s1)
                                 [--vows 0]   # one vow's cells only (a split table: V0 and V5 on their own seeds)
-  python3 tools/balance_ways.py --from-dir DIR [--quick | --seeds A-B]   # re-grade saved reports
+  python3 tools/balance_ways.py --from-dir DIR [--quick | --seeds A-B] [--content FILE]   # re-grade saved reports
+
+A class's ways and pools come from content/full-content.json, or from --content when
+it is given. With --content every report graded must name that file's SHA-256 in its
+manifest, so a candidate catalogue that adds ways is graded by its own ways; without
+it, a directory that holds a committed arm the class does not have is refused.
+
+Seeds never touch the acceptance band 3000-5199, nor the 1.1 holdout 17000-18999
+unless --holdout-1-1 is given (the A9 exam only): the simulator then records
+`"holdout": "1.1"` in every manifest. A run (no --from-dir) launches Godot, so it
+refuses unless the project root's override.cfg isolates the user directory
+(`balance_readout_guard.py`).
 
 Every gate is graded twice: on the point estimate (the verdict readouts 1-7 used)
 and on its 95% interval (Wilson for a rate, Newcombe's hybrid score interval,
@@ -36,6 +49,7 @@ simulator writes from readout 8 on; older reports print "-" there.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -52,7 +66,8 @@ if str(_TOOLS) not in sys.path:
     sys.path.insert(0, str(_TOOLS))
 
 from balance_classes import CLASS_FILE, ClassRow, read_class  # noqa: E402
-from balance_exam import run_command  # noqa: E402
+from balance_exam import REPO, run_command  # noqa: E402
+from balance_readout_guard import require_isolated_user_dir  # noqa: E402
 from balance_score import wilson  # noqa: E402
 
 COMMIT_BLIND = {  # arm -> (policy way, build): the arms every class has
@@ -64,18 +79,31 @@ COMMIT_BLIND = {  # arm -> (policy way, build): the arms every class has
 # the commit-blind A stays in the table as their floor.
 SKILLED, FLOOR = "A_lit", "A"
 VOWS = (0, 5)
-POOLS = ("fresh", "full")  # the cells the gates grade
+POOLS = ("fresh", "full")  # the cells the gates grade for a class playable from a new Vigil
+LATER_POOLS = ("entry", "full")  # a class that unlocks later reads `entry` in `fresh`'s place (template section 3)
 RUN_POOLS = ("fresh", "entry", "full")  # the pools the simulator runs (`entry`: a later class's unlock)
 DEFAULT_SEEDS = (13000, 13199)
 QUICK_SEEDS = (13000, 13039)
 ACCEPTANCE = (3000, 5199)  # lock section 11: acceptance seeds stay otherwise untouched
+# The 1.1 holdout (#544 decision 7): read once, by the A9 exam, and only under --holdout-1-1. The simulator
+# refuses it too unless told `--holdout=1.1` (`BalanceCatalogue.HOLDOUT_FIRST` to `HOLDOUT_LAST`), and
+# records it in the manifest.
+HOLDOUT_1_1 = (17000, 18999)
+HOLDOUT_ID = "1.1"
 REPLAY = 3  # arm A seeds re-run per cell: G7's deterministic replay
 RATES = ("shatters", "kindles", "embersSpent", "cracked", "embersGained")  # as the simulator's RATE_STATS
 STEADY_OR_TRUE = ("STEADY", "TRUE")
 
+
+def _entry_as_fresh(floors: dict[tuple[int, str], Any]) -> dict[tuple[int, str], Any]:
+    """The Ashwarden lock's section 10: the `entry` pool takes `fresh`'s place wherever the Duskblade's lock
+    grades `fresh`, at fresh's thresholds; so V5 `entry` is ungraded wherever V5 `fresh` is."""
+    return floors | {(vow, "entry"): floor for (vow, pool), floor in floors.items() if pool == "fresh"}
+
+
 # Initial thresholds of lock section 11, signed after the first readout.
-G1_FLOOR = {(0, "full"): Fraction(50, 100), (5, "full"): Fraction(25, 100),
-            (0, "fresh"): Fraction(40, 100)}
+G1_FLOOR = _entry_as_fresh({(0, "full"): Fraction(50, 100), (5, "full"): Fraction(25, 100),
+                            (0, "fresh"): Fraction(40, 100)})
 G2_SPREAD = Fraction(10, 100)
 G3_BELOW, G3_ABOVE = Fraction(3, 100), Fraction(15, 100)
 G4_GAP = Fraction(25, 100)
@@ -84,9 +112,9 @@ G4_CEILING = {0: Fraction(35, 100), 5: Fraction(15, 100)}
 # readout 13 each is graded over the runs alive at that act's end (reachability is a
 # question about the flame, not survival). The fresh-pool figure is readout 5's; like
 # G1, fresh is graded at V0 only.
-G5_FLOOR = {(0, "full"): (Fraction(70, 100), Fraction(40, 100)),
-            (5, "full"): (Fraction(70, 100), Fraction(40, 100)),
-            (0, "fresh"): (Fraction(40, 100), None)}
+G5_FLOOR = _entry_as_fresh({(0, "full"): (Fraction(70, 100), Fraction(40, 100)),
+                            (5, "full"): (Fraction(70, 100), Fraction(40, 100)),
+                            (0, "fresh"): (Fraction(40, 100), None)})
 G6_MAX, G6_HELD, G6_WAYS = Fraction(60, 100), Fraction(20, 100), 2
 PLAYS = ("greedy", "search")
 # The bots (#544 P6): the pilot that builds every run, and the search player that plays its fights
@@ -116,6 +144,8 @@ class Roster(NamedTuple):
     name: str
     ways: tuple[str, ...]
     rates: tuple[str, ...]  # the per-fight stats every run row carries
+    pools: tuple[str, ...] = POOLS  # the pools its gates grade: POOLS, or LATER_POOLS for a class that unlocks later
+    content: str | None = None  # the SHA-256 of a given catalogue (--content): every report read must name it
 
     @property
     def arms(self) -> dict[str, tuple[str, str]]:
@@ -140,20 +170,75 @@ class Roster(NamedTuple):
                 self.require_ways()
             raise ValueError(f"unknown arms {unknown}; {self.aspect}'s arms are {list(self.arms)}")
 
+    def cell(self, cell: str) -> tuple[int, str]:
+        """`v0-entry` -> (0, "entry"), refused unless it is one of this class's graded cells."""
+        head, _, pool = cell.partition("-")
+        if not (head.startswith("v") and head[1:].isdigit() and int(head[1:]) in VOWS and pool in self.pools):
+            raise ValueError(f"{cell!r} is not a cell of {self.aspect}: v<vow>-<pool> with vow in {VOWS} and pool "
+                             f"in {self.pools}")
+        return int(head[1:]), pool
 
-def roster(aspect: str = "duskblade", content: Path | None = None, class_file: Path = CLASS_FILE) -> Roster:
-    """The arms of `aspect`: way ids from content (`--content` if given), way stats from the class file."""
-    row: ClassRow = read_class(aspect, content, class_file)
-    return Roster(aspect, row.name, row.ways, RATES + tuple(stat for stat in row.stats if stat not in RATES))
+    def unbound(self) -> "Roster":
+        """The class without its catalogue's SHA-256, for reports read beside it on other content: a reference
+        table, or the base of a paired change."""
+        return self._replace(content=None)
+
+    def check_content(self, name: str, manifest: dict[str, Any]) -> None:
+        """With a given catalogue, a report that names other content was not played on it: refused."""
+        if self.content is not None and manifest.get("contentFileSha256") != self.content:
+            raise ValueError(f"{name}: its manifest names content {manifest.get('contentFileSha256')!r}, not "
+                             f"--content's {self.content}; grade reports with the catalogue they ran on")
+
+    def check_cell_arms(self, directory: Path, vow: int, pool: str) -> None:
+        """Refuses a directory holding a committed arm of the cell that this class does not have: its reports
+        ran on a catalogue with other ways, and grading them by these ways would leave one out."""
+        prefix = f"v{vow}-{pool}-"
+        held = {path.name[len(prefix):-len(".json")] for path in directory.glob(f"{prefix}C_*.json")}
+        extra = sorted(held - set(self.committed))
+        if extra:
+            raise ValueError(f"{directory}: {', '.join(prefix + arm for arm in extra)} are not arms of "
+                             f"{self.aspect} ({', '.join(self.committed) or 'no committed arms'}); grade them with "
+                             "--content <the catalogue they ran on>")
 
 
-def parse_seeds(text: str) -> tuple[int, int]:
+def roster(aspect: str = "duskblade", content: Path | None = None, class_file: Path | None = None) -> Roster:
+    """The arms of `aspect`: way ids and pools from content (`--content` if given), way stats from the class file
+    (`CLASS_FILE` unless named)."""
+    row: ClassRow = read_class(aspect, content, class_file or CLASS_FILE)
+    return Roster(aspect, row.name, row.ways, RATES + tuple(stat for stat in row.stats if stat not in RATES),
+                  LATER_POOLS if row.unlock else POOLS)
+
+
+def grading_roster(aspect: str, content: Path | None = None) -> Roster:
+    """The class as the graders read it. Its ways come from the catalogue the reports ran on, named with --content,
+    and the reports' manifests check it: each must name that file's SHA-256. Without --content, the ways are
+    content/full-content.json's, as `roster` reads them."""
+    who = roster(aspect, content)
+    return who if content is None else who._replace(content=hashlib.sha256(content.read_bytes()).hexdigest())
+
+
+def check_holdout(first: int, last: int, holdout: bool = False) -> None:
+    """Seeds `first`..`last` touch the 1.1 holdout only under `holdout` (--holdout-1-1, the A9 exam's), and then
+    lie wholly inside it."""
+    low, high = HOLDOUT_1_1
+    if not holdout and first <= high and last >= low:
+        raise ValueError(f"seeds {first}-{last} touch the 1.1 holdout {low}-{high} (#544 decision 7); "
+                         "only the A9 exam reads it, with --holdout-1-1")
+    if holdout and not low <= first <= last <= high:
+        raise ValueError(f"--holdout-1-1 reads the 1.1 holdout only, and seeds {first}-{last} are not inside "
+                         f"{low}-{high}")
+
+
+def parse_seeds(text: str, holdout: bool = False) -> tuple[int, int]:
+    """FIRST-LAST, refused where it touches the acceptance band, and where it touches the 1.1 holdout unless
+    `holdout` (`check_holdout`)."""
     first, sep, last = text.partition("-")
     if not sep or not first.isdigit() or not last.isdigit() or int(first) > int(last):
         raise ValueError(f"--seeds must be FIRST-LAST with FIRST <= LAST, got {text!r}")
     seeds = int(first), int(last)
     if seeds[0] <= ACCEPTANCE[1] and seeds[1] >= ACCEPTANCE[0]:
         raise ValueError(f"seeds {text} touch the acceptance band {ACCEPTANCE[0]}-{ACCEPTANCE[1]}")
+    check_holdout(*seeds, holdout)
     return seeds
 
 
@@ -187,8 +272,10 @@ def check_bots(play: str, pilot: str, search: str) -> None:
 def sim_command(godot: str, who: Roster, vow: int, pool: str, arm: str, first: int, count: int,
                 out: Path, content: Path | None = None,
                 weights: tuple[float, float] | None = None, play: str = "greedy",
-                pilot: str = PILOTS[0], search: str = SEARCHES[0]) -> list[str]:
+                pilot: str = PILOTS[0], search: str = SEARCHES[0], holdout: bool = False) -> list[str]:
+    """One simulator run; under `holdout` it reads the 1.1 holdout, and the simulator records it in the manifest."""
     check_bots(play, pilot, search)
+    check_holdout(first, first + count - 1, holdout)
     way, build = who.arms[arm]
     return [godot, "--headless", "-s", "res://tools/balance_sim.gd", "--", f"--aspect={who.aspect}",
             f"--vow={vow}", f"--runs={count}", f"--seed0={first}", f"--pool={pool}",
@@ -196,28 +283,33 @@ def sim_command(godot: str, who: Roster, vow: int, pool: str, arm: str, first: i
         + ([f"--wayCommit={weights[0]}", f"--wayOff={weights[1]}"]
            if weights is not None and way != "none" else []) \
         + ([f"--content={content}"] if content is not None else []) \
-        + ([f"--search={search}", f"--play={play}"] if play != "greedy" else [])
+        + ([f"--search={search}", f"--play={play}"] if play != "greedy" else []) \
+        + ([f"--holdout={HOLDOUT_ID}"] if holdout else [])
 
 
 def jobs(godot: str, who: Roster, seeds: tuple[int, int], directory: Path, content: Path | None = None,
          weights: tuple[float, float] | None = None,
          play: str = "greedy", vows: tuple[int, ...] = VOWS, pilot: str = PILOTS[0],
-         search: str = SEARCHES[0]) -> list[tuple[str, list[str]]]:
+         search: str = SEARCHES[0], holdout: bool = False) -> list[tuple[str, list[str]]]:
     first, count = seeds[0], seeds[1] - seeds[0] + 1
     out: list[tuple[str, list[str]]] = []
     for vow in vows:
-        for pool in POOLS:
+        for pool in who.pools:
             for arm in who.arms:
                 out.append((report_name(vow, pool, arm)[:-5], sim_command(
                     godot, who, vow, pool, arm, first, count, directory / report_name(vow, pool, arm),
-                    content, weights, play, pilot, search)))
+                    content, weights, play, pilot, search, holdout)))
             out.append((replay_name(vow, pool)[:-5], sim_command(
                 godot, who, vow, pool, "A", first, min(REPLAY, count), directory / replay_name(vow, pool),
-                content, None, play, pilot, search)))
+                content, None, play, pilot, search, holdout)))
     return out
 
 
-def run_jobs(work: list[tuple[str, list[str]]], directory: Path, workers: int) -> None:
+def run_jobs(work: list[tuple[str, list[str]]], directory: Path, workers: int, root: Path | None = None) -> None:
+    """Runs every simulator command, `workers` at a time; refuses unless `root` (the repository unless named) is
+    isolated from the owner's profile."""
+    require_isolated_user_dir(root or REPO)
+
     def run(job: tuple[str, list[str]]) -> None:
         name, command = job
         run_command(command, directory / f"{name}.log")
@@ -567,7 +659,7 @@ def parse_vows(text: str) -> tuple[int, ...]:
 
 
 def grade(who: Roster, directory: Path, seeds: tuple[int, int], vows: tuple[int, ...] = VOWS) -> dict[str, Any]:
-    """Load every report of the cell table, check pairing and provenance, grade.
+    """Load every report of the class's cell table, check pairing and provenance, grade.
 
     Refused for an aspect with no ways: the gates read its committed arms."""
     who.require_ways()
@@ -577,11 +669,13 @@ def grade(who: Roster, directory: Path, seeds: tuple[int, int], vows: tuple[int,
     plays: set[str] = set()
     bots: set[tuple[str, str]] = set()
     for vow in vows:
-        for pool in POOLS:
+        for pool in who.pools:
+            who.check_cell_arms(directory, vow, pool)
             stats: dict[str, dict[str, Any]] = {}
             adaptive_rows: dict[str, list[dict[str, Any]]] = {}
             for arm, (way, build) in who.arms.items():
                 manifest, rows = load_report(directory / report_name(vow, pool, arm), seeds, who.rates)
+                who.check_content(report_name(vow, pool, arm), manifest)
                 _require(manifest.get("vow") == vow and manifest.get("pool") == pool
                          and manifest.get("way") == way and manifest.get("build") == build
                          and manifest.get("aspect") == who.aspect,
@@ -596,7 +690,8 @@ def grade(who: Roster, directory: Path, seeds: tuple[int, int], vows: tuple[int,
                 stats[arm] = arm_stats(rows, way, who)
                 if arm in (SKILLED, FLOOR):
                     adaptive_rows[arm] = rows
-            _, replayed = load_report(directory / replay_name(vow, pool), None, who.rates)
+            replay_manifest, replayed = load_report(directory / replay_name(vow, pool), None, who.rates)
+            who.check_content(replay_name(vow, pool), replay_manifest)
             by_seed = {row["seed"]: row for row in adaptive_rows[FLOOR]}
             same = sum(json.dumps(row, sort_keys=True) == json.dumps(by_seed.get(row["seed"]), sort_keys=True)
                        for row in replayed)
@@ -689,7 +784,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out-dir", type=Path, help="new or empty directory for reports and logs")
     parser.add_argument("--from-dir", type=Path, help="grade the reports an earlier run saved")
     parser.add_argument("--content", type=Path,
-                        help="run on this catalogue instead of content/full-content.json")
+                        help="run on this catalogue instead of content/full-content.json, or re-grade reports "
+                             "run on it: the class's ways come from it, and every report must name its SHA-256")
     parser.add_argument("--play", choices=PLAYS, default="greedy",
                         help="who plays the fights: the greedy pilot or readout 8's search player")
     bots_options(parser)
@@ -699,19 +795,25 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--way-weights",
                         help="COMMIT/OFF: the committed arms' weights for their own and other coloured "
                              "glass instead of the pilot's 3.0/0.5, e.g. 2.0/1.0 (a splash arm)")
+    parser.add_argument("--holdout-1-1", action="store_true",
+                        help="the A9 exam only: --seeds lie inside the 1.1 holdout 17000-18999, which is "
+                             "otherwise refused; the simulator records it in every manifest")
     opts = parser.parse_args(argv)
     if opts.quick and opts.seeds:
         parser.error("--quick and --seeds are exclusive")
-    if opts.content is not None and (opts.from_dir is not None or not opts.content.is_file()):
-        parser.error("--content must name an existing file and cannot re-grade saved reports")
+    if opts.content is not None and not opts.content.is_file():
+        parser.error("--content must name an existing file")
     if opts.way_weights is not None and opts.from_dir is not None:
         parser.error("--way-weights cannot re-grade saved reports")
+    if opts.holdout_1_1 and not opts.seeds:
+        parser.error("--holdout-1-1 needs --seeds inside the 1.1 holdout")
     try:
-        seeds = QUICK_SEEDS if opts.quick else parse_seeds(opts.seeds) if opts.seeds else DEFAULT_SEEDS
+        seeds = QUICK_SEEDS if opts.quick else parse_seeds(opts.seeds, opts.holdout_1_1) if opts.seeds \
+            else DEFAULT_SEEDS
         weights = parse_weights(opts.way_weights) if opts.way_weights is not None else None
         vows = parse_vows(opts.vows)
         check_bots(opts.play, opts.pilot, opts.search)
-        who = roster(opts.aspect, opts.content)
+        who = grading_roster(opts.aspect, opts.content)
         who.require_ways()
     except ValueError as exc:
         parser.error(str(exc))
@@ -720,6 +822,7 @@ def main(argv: list[str] | None = None) -> int:
     wall = None
     directory = opts.from_dir
     if directory is None:
+        require_isolated_user_dir(REPO)  # before anything is written
         directory = opts.out_dir or Path(tempfile.mkdtemp(prefix="glassvow-ways-"))
         if directory.exists() and any(directory.iterdir()):
             parser.error("--out-dir must be new or empty; saved readouts are never overwritten")
@@ -728,7 +831,7 @@ def main(argv: list[str] | None = None) -> int:
         start = time.monotonic()
         content = opts.content.resolve() if opts.content is not None else None
         run_jobs(jobs(opts.godot, who, seeds, directory.resolve(), content, weights, opts.play, vows, opts.pilot,
-                      opts.search), directory,
+                      opts.search, opts.holdout_1_1), directory,
                  opts.jobs)
         wall = time.monotonic() - start
     print(render(grade(who, directory, seeds, vows), wall))

@@ -16,6 +16,9 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from balance_readout_guard import require_isolated_user_dir
+from balance_ways import check_holdout
+
 REPO = Path(__file__).resolve().parent.parent
 EXIT_GO, EXIT_ERR, EXIT_NOGO, EXIT_VETO = 0, 1, 2, 3
 V0_BAND, V5_BAND, GAP_CAP, ARM2_GO, DROP_PP = (0.80, 0.97), (0.55, 0.85), 0.20, 0.50, 6.0
@@ -112,6 +115,7 @@ def arm_map(cells: list[dict], arm: int) -> dict[tuple[str, int], dict]:
 
 
 def run_godot(godot: str, script: str, flags: list[str], log_path: Path) -> int:
+    require_isolated_user_dir(REPO)
     cmd = [godot, "--headless", "-s", script, "--", *flags]
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("w") as log:
@@ -197,6 +201,12 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     opts = parse_args()
+    try:
+        for first in (opts.seed0_controls, opts.seed0_holdout):  # the 1.1 holdout is the A9 exam's alone
+            check_holdout(first, first + opts.seeds - 1)
+    except ValueError as exc:
+        print(f"balance_phase_a: {exc}", file=sys.stderr)
+        return EXIT_ERR
     out_dir: Path = opts.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     baseline = load_baseline(opts.baseline) if opts.baseline.exists() else {"controls": [], "holdout": None}

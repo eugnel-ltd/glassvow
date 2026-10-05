@@ -16,11 +16,19 @@ this adds what readouts 9-13 kept in scratch:
   table       the complete section 11 table with reference columns (--tidy for the readout's gate table)
   compare     two run directories, run for run
   equivalence content equivalence for the class (docs/rc-bar.md P9): a candidate's re-run against the
-              reading of record, run for run on the graded fields (balance_ways.GRADED_FIELDS)
+              reading of record, run for run on the graded fields (balance_ways.GRADED_FIELDS);
+              --commit SHA also requires every report of the candidate to name the RC commit
   candidates  scratch content catalogues for --content, from a lever spec
 
+The graders (paired, g3, rowb, table) read the cells the class has: `fresh` and `full` for a class
+playable from a new Vigil, `entry` and `full` for one that unlocks later (its content row names an
+`unlock`). They take the class's ways from content/full-content.json, or from --content, the catalogue
+the reports ran on, and then refuse any report whose manifest names another content SHA-256.
+
 Every command that launches Godot (`run`) refuses unless the project root's override.cfg sets
-`config/use_custom_user_dir=true` and a non-empty `config/custom_user_dir_name`.
+`config/use_custom_user_dir=true` and a non-empty `config/custom_user_dir_name`. Seeds never touch
+3000-5199, nor the 1.1 holdout 17000-18999 unless `run` and `table` are given --holdout-1-1 (the A9
+exam only; the simulator records it in every manifest).
 
 Usage (repo root), readout 13's finals:
   python3 -B tools/balance_readout.py run s/final-v0 --seeds 13000-13999 --cells v0-fresh,v0-full --play search --replay --jobs 8
@@ -60,7 +68,7 @@ def _csv(text: str) -> list[str]:
 def cmd_run(opts: argparse.Namespace) -> int:
     require_isolated_user_dir(REPO)  # before anything is planned or written
     who = bw.roster(opts.aspect, opts.content)
-    seeds = bw.parse_seeds(opts.seeds)
+    seeds = bw.parse_seeds(opts.seeds, opts.holdout_1_1)
     weights = bw.parse_weights(opts.way_weights) if opts.way_weights else None
     content = opts.content.resolve() if opts.content else None
     if content is not None and not content.is_file():
@@ -72,7 +80,7 @@ def cmd_run(opts: argparse.Namespace) -> int:
         raise ValueError("--jobs must be 1..16")
     out = opts.out.resolve()
     work = runner.plan(out, who, seeds, _csv(opts.cells), _csv(opts.arms) or list(who.arms), opts.play, opts.chunk, opts.replay,
-                       content, weights, opts.godot, opts.pilot, opts.search)
+                       content, weights, opts.godot, opts.pilot, opts.search, opts.holdout_1_1)
     out.mkdir(parents=True, exist_ok=True)  # only once the plan is accepted
     who = runner.identity(REPO, content)
     start = time.monotonic()
@@ -95,20 +103,27 @@ def cmd_join(opts: argparse.Namespace) -> int:
     return 0
 
 
+def graded_class(opts: argparse.Namespace) -> bw.Roster:
+    """The class a grader reads, from --content (and bound to its SHA-256) when it is given."""
+    if opts.content is not None and not opts.content.is_file():
+        raise ValueError(f"--content {opts.content} is not a file")
+    return bw.grading_roster(opts.aspect, opts.content)
+
+
 def cmd_paired(opts: argparse.Namespace) -> int:
-    print(tables.paired_table(bw.roster(opts.aspect), opts.new, opts.base, _csv(opts.cells), _csv(opts.arms) or None))
+    print(tables.paired_table(graded_class(opts), opts.new, opts.base, _csv(opts.cells), _csv(opts.arms) or None))
     return 0
 
 
 def cmd_g3(opts: argparse.Namespace) -> int:
-    who = bw.roster(opts.aspect)
+    who = graded_class(opts)
     who.require_ways()  # G3 reads the best committed arm
     print(tables.g3_table(who, opts.dir, _csv(opts.cells), opts.adaptive))
     return 0
 
 
 def cmd_rowb(opts: argparse.Namespace) -> int:
-    who = bw.roster(opts.aspect)
+    who = graded_class(opts)
     who.require_ways()  # row B reads each committed arm
     print(tables.row_b_table(who, opts.dir, opts.vow, opts.ref))
     return 0
@@ -118,9 +133,10 @@ def cmd_table(opts: argparse.Namespace) -> int:
     refs = list(zip(opts.refs[::2], opts.refs[1::2]))
     if len(opts.refs) % 2:
         raise ValueError("--ref takes a V0 and a V5 directory, in pairs")
-    who = bw.roster(opts.aspect)
+    who = graded_class(opts)
     who.require_ways()
-    text = tables.full_table(who, opts.v0, opts.v5, bw.parse_seeds(opts.v0_seeds), bw.parse_seeds(opts.v5_seeds), refs)
+    text = tables.full_table(who, opts.v0, opts.v5, bw.parse_seeds(opts.v0_seeds, opts.holdout_1_1),
+                             bw.parse_seeds(opts.v5_seeds, opts.holdout_1_1), refs)
     print(tables.tidy_gates(text) if opts.tidy else text)
     return 0
 
@@ -132,7 +148,7 @@ def cmd_compare(opts: argparse.Namespace) -> int:
 
 
 def cmd_equivalence(opts: argparse.Namespace) -> int:
-    result = compare.equivalence(opts.new, opts.reference, bw.roster(opts.aspect))
+    result = compare.equivalence(opts.new, opts.reference, bw.roster(opts.aspect), opts.commit)
     print(compare.render_equivalence(result))
     return 0 if result.equivalent else 2
 
@@ -146,6 +162,18 @@ def cmd_candidates(opts: argparse.Namespace) -> int:
 def aspect_option(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--aspect", default="duskblade",
                         help="the class: its ways, and so its arms C_<way>, come from content (default duskblade)")
+
+
+def grader_options(parser: argparse.ArgumentParser) -> None:
+    aspect_option(parser)
+    parser.add_argument("--content", type=Path,
+                        help="the catalogue the reports ran on (run --content): the class's ways and pools come "
+                             "from it, and every report graded must name its SHA-256")
+
+
+def holdout_option(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--holdout-1-1", action="store_true",
+                        help="the A9 exam only: the seeds lie inside the 1.1 holdout 17000-18999, otherwise refused")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -171,6 +199,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--content", type=Path, help="a scratch catalogue instead of content/full-content.json")
     p.add_argument("--way-weights", help="COMMIT/OFF, as balance_ways.py")
     p.add_argument("--godot", default="godot")
+    holdout_option(p)
 
     p = add("merge", cmd_merge, "merge a directory's parts/ into one report per cell and arm")
     p.add_argument("dir", type=Path)
@@ -183,26 +212,26 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("dirs", nargs="+", type=Path)
 
     p = add("paired", cmd_paired, "paired change between two runs on the same seeds")
-    aspect_option(p)
+    grader_options(p)
     p.add_argument("new", type=Path)
     p.add_argument("base", type=Path)
     p.add_argument("cells", help="comma list, e.g. v0-fresh,v0-full")
     p.add_argument("--arms", default="")
 
     p = add("g3", cmd_g3, "paired G3 on common seeds")
-    aspect_option(p)
+    grader_options(p)
     p.add_argument("dir", type=Path)
     p.add_argument("cells")
     p.add_argument("--adaptive", default=bw.SKILLED)
 
     p = add("rowb", cmd_rowb, "row B on intervals")
-    aspect_option(p)
+    grader_options(p)
     p.add_argument("dir", type=Path)
     p.add_argument("--vow", type=int, default=tables.B_VOW)
     p.add_argument("--ref", type=Path, help="a reference directory for the Before column")
 
     p = add("table", cmd_table, "the complete section 11 table")
-    aspect_option(p)
+    grader_options(p)
     p.add_argument("v0", type=Path)
     p.add_argument("v5", type=Path)
     p.add_argument("--v0-seeds", required=True)
@@ -210,6 +239,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--ref", dest="refs", action="append", nargs=2, type=Path, default=[],
                    metavar=("V0_DIR", "V5_DIR"), help="a reference table's directories (repeatable)")
     p.add_argument("--tidy", action="store_true", help="the readout's gate table, bold where the last reference moved")
+    holdout_option(p)
 
     p = add("compare", cmd_compare, "compare two run directories run for run (exit 2 on any difference)")
     p.add_argument("a", type=Path)
@@ -221,6 +251,7 @@ def build_parser() -> argparse.ArgumentParser:
     aspect_option(p)
     p.add_argument("new", type=Path, help="the candidate's run directory")
     p.add_argument("reference", type=Path, help="the reading of record's run directory (merged reports or chunks)")
+    p.add_argument("--commit", help="the RC commit's full SHA: every report of the candidate must name it")
 
     p = add("candidates", cmd_candidates, "write scratch content catalogues from a lever spec")
     p.add_argument("source", type=Path, help="the catalogue to edit, e.g. content/full-content.json")

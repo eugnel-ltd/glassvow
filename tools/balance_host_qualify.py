@@ -28,6 +28,7 @@ from balance_seed_contract import (  # noqa: E402
     file_sha256,
     load_contract,
 )
+from balance_readout_guard import require_isolated_user_dir  # noqa: E402
 
 ASPECTS = ("duskblade", "ashwarden")
 VOWS = (0, 5)
@@ -92,6 +93,7 @@ def fingerprint_shards(jobs: int) -> list[dict[str, Any]]:
 
 
 def godot_sim(godot: str, flags: list[str], out: Path, log: Path) -> None:
+    require_isolated_user_dir(REPO)
     cmd = [godot, "--headless", "-s", "res://tools/balance_sim.gd", "--", *flags, f"--out={out}"]
     log.parent.mkdir(parents=True, exist_ok=True)
     with log.open("w", encoding="utf-8") as handle:
@@ -304,6 +306,7 @@ def prove_concurrent(godot: str, out_dir: Path) -> dict[str, Any]:
 
 
 def fail_closed_cli(godot: str, out_dir: Path) -> None:
+    require_isolated_user_dir(REPO)  # each check below is a Godot run
     missing = out_dir / "missing-out.json"
     proc = run([godot, "--headless", "-s", "res://tools/balance_sim.gd", "--",
                 "--content=/no/such/glassvow-candidate.json", "--aspect=duskblade",

@@ -8,13 +8,17 @@ reported: the commit may legitimately differ, content, tools and instrument shou
 SHA-256 differs from the reading of record's plays the reading's cell table again, and every run
 must match the reading's on the graded fields (`balance_ways.GRADED_FIELDS`), with each replay
 still identical to its arm-A run (G7). Every report of either directory is read, so a run or a
-report one side lacks is missing, and the manifests must name the same instrument. Any other field
-that differs is listed with the number of runs it differs in, for the exam packet to explain.
+report one side lacks is missing, and the manifests must name the same instrument (the bots, the
+player, the Godot version, the cell and arm, and the arm's `policy`, its way weights among them).
+Given `commit`, every report of the candidate's directory must name that commit, the RC commit the
+exam binds. Any other field that differs is listed with the number of runs it differs in, for the
+exam packet to explain.
 """
 from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -23,8 +27,10 @@ from typing import Any
 import balance_readout_run as run
 import balance_ways as bw
 
-# What a manifest names of the instrument and the cell: equivalence needs them all identical.
-INSTRUMENT = ("aspect", "vow", "pool", "way", "build", "play", "pilot", "search", "godot")
+# What a manifest names of the instrument and the cell: equivalence needs them all identical. `policy` is the
+# arm's resolved policy, its way weights (`wayCommit`, `wayOff`) among them.
+INSTRUMENT = ("aspect", "vow", "pool", "way", "build", "play", "pilot", "search", "godot", "policy")
+FULL_SHA = re.compile(r"[0-9a-f]{40}")
 # G7's replay reads whole rows: for a replay run, whether it is identical to arm A's run on its seed.
 REPLAY_FIELD = "replay identical to arm A"
 _ABSENT = object()  # what `project` returns where a row has no such field
@@ -164,6 +170,7 @@ class ReportEquivalence:
     missing_reference: list[int] = field(default_factory=list)  # seeds only the new directory holds
     instrument: list[tuple[str, Any, Any]] = field(default_factory=list)  # (key, new, reference)
     manifest: list[str] = field(default_factory=list)  # other manifest keys that differ
+    commit: Any = None  # the commit the new report's manifest names
 
 
 @dataclass
@@ -173,6 +180,7 @@ class Equivalence:
     fields: tuple[str, ...]
     reports: list[ReportEquivalence]
     named: dict[str, Any]  # the reference's instrument, as its first report names it
+    commit: str | None = None  # the commit every report of the candidate must name (`--commit`), if given
 
     @property
     def graded_identical(self) -> bool:
@@ -187,8 +195,15 @@ class Equivalence:
         return not any(r.instrument for r in self.reports)
 
     @property
+    def other_commits(self) -> list[tuple[str, Any]]:
+        """(report, commit) for every report of the candidate that names another commit than `--commit`."""
+        if self.commit is None:
+            return []
+        return [(r.name, r.commit) for r in self.reports if r.new_runs and r.commit != self.commit]
+
+    @property
     def equivalent(self) -> bool:
-        return self.graded_identical and self.same_runs and self.same_instrument
+        return self.graded_identical and self.same_runs and self.same_instrument and not self.other_commits
 
 
 def report_equivalence(name: str, new: dict | None, reference: dict | None, fields: tuple[str, ...],
@@ -214,6 +229,8 @@ def report_equivalence(name: str, new: dict | None, reference: dict | None, fiel
         if graded:
             result.graded.append((seed, graded))
     result.missing_new = sorted(twins)
+    if new is not None:
+        result.commit = new["manifest"].get("commit")
     if new is not None and reference is not None:
         mine, theirs = run.manifest_core(new["manifest"]), run.manifest_core(reference["manifest"])
         for key in sorted(mine.keys() | theirs.keys()):
@@ -225,8 +242,11 @@ def report_equivalence(name: str, new: dict | None, reference: dict | None, fiel
     return result
 
 
-def equivalence(new: Path, reference: Path, who: bw.Roster) -> Equivalence:
-    """Every report of either directory, run for run, on the class's graded fields."""
+def equivalence(new: Path, reference: Path, who: bw.Roster, commit: str | None = None) -> Equivalence:
+    """Every report of either directory, run for run, on the class's graded fields; given `commit` (a full SHA),
+    every report of `new` must name it."""
+    if commit is not None and not FULL_SHA.fullmatch(commit):
+        raise ValueError(f"--commit must be a full 40-character SHA (git rev-parse <commit>), got {commit!r}")
     for directory in (new, reference):
         if not directory.is_dir():
             raise ValueError(f"{directory} is not a directory")
@@ -240,7 +260,7 @@ def equivalence(new: Path, reference: Path, who: bw.Roster) -> Equivalence:
         if theirs is not None and not named:
             named = {key: theirs["manifest"].get(key) for key in ("pilot", "search", "play", "godot")}
         reports.append(report_equivalence(name, mine, theirs, fields, new, reference))
-    return Equivalence(new, reference, fields, reports, named)
+    return Equivalence(new, reference, fields, reports, named, commit)
 
 
 def _seed_spans(seeds: list[int]) -> str:
@@ -270,8 +290,14 @@ def render_equivalence(result: Equivalence) -> str:
     lines += ["", f"- Identical on all graded fields: {yes(result.graded_identical)} "
                   f"({graded} of {paired} paired runs differ on a graded field).",
               f"- The same runs on both sides: {yes(result.same_runs)}.",
-              f"- The same instrument as the reading of record ({named}): {yes(result.same_instrument)}.",
-              f"- Equivalent for the class: {yes(result.equivalent)}."]
+              f"- The same instrument as the reading of record ({named}): {yes(result.same_instrument)}."]
+    if result.commit is not None:
+        lines.append(f"- Every report of the candidate names commit `{result.commit}`: "
+                     f"{yes(not result.other_commits)}.")
+    lines.append(f"- Equivalent for the class: {yes(result.equivalent)}.")
+    if result.other_commits:
+        lines += ["", "Reports of the candidate that name another commit:"]
+        lines += [f"- {name}: {commit!r}" for name, commit in result.other_commits]
     lines += ["", "Runs that differ on a graded field:" + ("" if graded else " none.")]
     lines += [f"- {r.name} seed {seed}: {', '.join(fields)}" for r in reports for seed, fields in r.graded]
     other = sum((r.other for r in reports), Counter())

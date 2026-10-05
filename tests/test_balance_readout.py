@@ -7,8 +7,10 @@ from __future__ import annotations
 
 import contextlib
 import copy
+import hashlib
 import io
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -19,6 +21,11 @@ from unittest import mock
 TOOLS = Path(__file__).resolve().parents[1] / "tools"
 sys.path.insert(0, str(TOOLS))
 
+import balance_exam as exam  # noqa: E402
+import balance_f0 as f0  # noqa: E402
+import balance_f1_cem as f1_cem  # noqa: E402
+import balance_host_qualify as host_qualify  # noqa: E402
+import balance_phase_a as phase_a  # noqa: E402
 import balance_readout as readout  # noqa: E402
 import balance_readout_catalogue as catalogue  # noqa: E402
 import balance_readout_compare as compare  # noqa: E402
@@ -26,6 +33,7 @@ import balance_readout_guard as guard  # noqa: E402
 import balance_readout_run as runner  # noqa: E402
 import balance_readout_stats as stats  # noqa: E402
 import balance_readout_tables as tables  # noqa: E402
+import balance_seed_contract as seed_contract  # noqa: E402
 import balance_ways as bw  # noqa: E402
 
 DUSK = bw.roster("duskblade")
@@ -177,22 +185,22 @@ def reading(dominant: str, tier: str) -> dict:
 
 
 def run_row(seed: int, win: bool, way: str, expressed: bool = True, close: bool = False,
-            win_way: str | None = None) -> dict:
-    """A run of one fight: `way` names the arm's way ("none" for the adaptive and random arms)."""
-    dominant = win_way or (way if way != "none" else "shatter")
-    play = dominant if expressed else ("edge" if dominant != "edge" else "lantern")
+            win_way: str | None = None, who: bw.Roster = DUSK) -> dict:
+    """A run of one fight of class `who`: `way` names the arm's way ("none" for the adaptive and random arms)."""
+    dominant = win_way or (way if way != "none" else who.ways[0])
+    play = dominant if expressed else (who.ways[-1] if dominant != who.ways[-1] else who.ways[1])
     return {"seed": seed, "outcome": "win" if win else "loss", "error": "",
             "fights": [{"result": "win" if win else "loss", "turns": 3, "hpLost": 5, "act": 1}],
             "flame": {"way": way, "end": reading(dominant, "STEADY"),
                       "acts": [reading(dominant, "STEADY"), reading(dominant, "TRUE")],
-                      "rates": {key: 1.0 for key in bw.RATES},
+                      "rates": {key: 1.0 for key in who.rates},
                       "fights": [{"plays": {play: 1.0}, "hp": 10 if close else 80, "maxHp": 100,
                                   "dominant": dominant}]}}
 
 
-def manifest(vow: int, pool: str, arm: str, **extra) -> dict:
-    way, build = DUSK.arms[arm]
-    return {"aspect": "duskblade", "vow": vow, "pool": pool, "way": way, "build": build, "commit": "abc",
+def manifest(vow: int, pool: str, arm: str, who: bw.Roster = DUSK, **extra) -> dict:
+    way, build = who.arms[arm]
+    return {"aspect": who.aspect, "vow": vow, "pool": pool, "way": way, "build": build, "commit": "abc",
             "contentFileSha256": "c0ffee", "driverSha256": "d00d", "pilot": "p8", "play": "search",
             "policy": {"wayCommit": None, "wayOff": None}, "godot": "4.7.2",
             "seeds": {"first": 13000, "last": 13009, "count": 10}, **extra}
@@ -201,16 +209,19 @@ def manifest(vow: int, pool: str, arm: str, **extra) -> dict:
 WINS = {"C_shatter": 6, "C_lantern": 5, "C_edge": 5, "A": 6, "A_lit": 6, "R": 1}
 
 
-def write_table(directory: Path, n: int = 10, wins: dict | None = None, vows=bw.VOWS, **extra) -> None:
-    """A complete synthetic cell table (every vow, pool, arm and replay) in the grader's layout."""
+def write_table(directory: Path, n: int = 10, wins: dict | None = None, vows=bw.VOWS, who: bw.Roster = DUSK,
+                **extra) -> None:
+    """A complete synthetic cell table of class `who` (every vow, pool, arm and replay) in the grader's layout;
+    its committed arms win as the Duskblade's do, way for way in content order."""
     directory.mkdir(parents=True, exist_ok=True)
-    wins = {**WINS, **(wins or {})}
+    wins = {**dict(zip(who.committed, (WINS[arm] for arm in DUSK.committed))),
+            **{arm: WINS[arm] for arm in bw.COMMIT_BLIND}, **(wins or {})}
     for vow in vows:
-        for pool in bw.POOLS:
-            for arm, (way, _) in DUSK.arms.items():
-                runs = [run_row(13000 + i, i < wins[arm], way, win_way=("lantern", "edge", "shatter")[i % 3])
+        for pool in who.pools:
+            for arm, (way, _) in who.arms.items():
+                runs = [run_row(13000 + i, i < wins[arm], way, win_way=who.ways[(i + 1) % 3], who=who)
                         for i in range(n)]
-                report = {"manifest": manifest(vow, pool, arm, **extra), "runs": runs}
+                report = {"manifest": manifest(vow, pool, arm, who, **extra), "runs": runs}
                 (directory / bw.report_name(vow, pool, arm)).write_text(json.dumps(report))
             replay = json.loads((directory / bw.report_name(vow, pool, "A")).read_text())
             replay["runs"] = replay["runs"][:bw.REPLAY]
@@ -1122,6 +1133,355 @@ class OtherClassTests(unittest.TestCase):
             readout.main(["run", str(self.root / "out"), "--aspect", "ashwarden", "--seeds", "13000-13003"])
         self.assertEqual({"A", "A_lit", "R"}, {c.arm for c in runner.plan(
             self.root / "x", bare, (13000, 13003), ["v0-entry"], list(bare.arms))})
+
+
+# ---------------------------------------------------------------- #544 P7: the graders before the Ashwarden's reading
+
+LATER_WAYS = ("smolder", "hand", "endure")
+
+
+def later_class(directory: Path, unlock: str = "aspect2") -> tuple[bw.Roster, Path, Path]:
+    """A class that unlocks later, with three ways of its own: (its roster, its content file, its class file)."""
+    content, class_file = directory / "later-content.json", directory / "later-classes.json"
+    content.write_text(json.dumps({"aspects": [
+        {"id": "duskblade", "ways": [{"id": way} for way in DUSK.ways]},
+        {"id": "ashwarden", "nameBare": "Ashwarden", "unlock": unlock, "ways": [{"id": way} for way in LATER_WAYS]}]}))
+    class_file.write_text(json.dumps({"ashwarden": {"wayStats": dict(zip(LATER_WAYS, ("smolders", "drawn", "perfects")))}}))
+    return bw.roster("ashwarden", content, class_file), content, class_file
+
+
+class LaterClassTablesTests(unittest.TestCase):
+    """Item 1: every grader reads the cells the class has; the entry pool takes fresh's place and thresholds."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.addCleanup(self.tmp.cleanup)
+        self.ash, self.content, self.class_file = later_class(self.root)
+        write_table(self.root / "v0", vows=(0,), who=self.ash)
+        write_table(self.root / "v5", vows=(5,), who=self.ash)
+
+    def test_the_full_table_reads_entry_and_full(self) -> None:
+        seeds = (13000, 13009)
+        text = tables.full_table(self.ash, self.root / "v0", self.root / "v5", seeds, seeds)
+        win_rows = [line.split(" |")[0] for line in text.split("### Gates")[0].splitlines() if line.startswith("| V")]
+        self.assertEqual(["| V0 entry", "| V0 full", "| V5 entry", "| V5 full"], win_rows)
+        self.assertEqual(((0, "entry"), (0, "full"), (5, "entry"), (5, "full")), tables.cell_order(self.ash))
+        self.assertEqual(((0, "fresh"), (0, "full"), (5, "fresh"), (5, "full")), tables.cell_order(DUSK))
+        g1 = [line for line in text.splitlines() if line.startswith("| V0 entry | G1 |")][0]
+        self.assertNotIn("n/a", g1)  # graded at fresh's 40%, as the Duskblade's V0 fresh is
+        self.assertIn("| V5 entry | G1 | worst", text)
+        self.assertIn("| V0 entry | C_hand |", text.split("### Row B")[1])
+        self.assertNotIn("fresh", text)
+
+    def test_row_b_reads_entry_at_freshs_floor(self) -> None:
+        self.assertEqual(tables.B1_FLOOR["fresh"], tables.B1_FLOOR["entry"])
+        d = self.root / "b"
+        d.mkdir()
+        for pool in ("entry", "full"):  # 80 wins in 400 (16.4-24.1%): above 10% at entry, straddling 20% at full
+            for arm in self.ash.committed + (bw.SKILLED,):
+                runs = [run_row(13000 + i, i < 80, self.ash.arms[arm][0], who=self.ash) for i in range(400)]
+                (d / bw.report_name(0, pool, arm)).write_text(json.dumps({"manifest": {}, "runs": runs}))
+        rows = tables.row_b(self.ash, d)
+        self.assertEqual({"entry", "full"}, {pool for pool, _ in rows})
+        self.assertEqual("PASS", rows["entry", "C_smolder"][1])
+        self.assertEqual("UNDECIDED", rows["full", "C_smolder"][1])
+
+    def test_g3_and_paired_take_only_the_class_cells(self) -> None:
+        self.assertIn("| v0-entry | C_smolder |", tables.g3_table(self.ash, self.root / "v0", ["v0-entry"]))
+        self.assertIn("| v5-entry |", tables.paired_table(self.ash, self.root / "v5", self.root / "v5", ["v5-entry"]))
+        with self.assertRaisesRegex(ValueError, "'v0-fresh' is not a cell of ashwarden"):
+            tables.g3_table(self.ash, self.root / "v0", ["v0-fresh"])
+        with self.assertRaisesRegex(ValueError, "'v0-entry' is not a cell of duskblade"):
+            tables.paired_table(DUSK, self.root / "v0", self.root / "v0", ["v0-entry"])
+
+    def test_the_commands_grade_a_later_class_from_its_catalogue(self) -> None:
+        name_content(self.root, hashlib.sha256(self.content.read_bytes()).hexdigest())
+        cls = ["--aspect", "ashwarden", "--content", str(self.content)]
+        with mock.patch.object(bw, "CLASS_FILE", self.class_file), contextlib.redirect_stdout(io.StringIO()) as out:
+            readout.main(["table", str(self.root / "v0"), str(self.root / "v5"), "--v0-seeds", "13000-13009",
+                          "--v5-seeds", "13000-13009", *cls])
+            readout.main(["rowb", str(self.root / "v0"), *cls])
+            readout.main(["g3", str(self.root / "v5"), "v5-entry,v5-full", *cls])
+            readout.main(["paired", str(self.root / "v0"), str(self.root / "v0"), "v0-entry", *cls])
+        text = out.getvalue()
+        for row in ("| V5 entry | G5 |", "| V0 entry | C_endure |", "| v5-entry | C_smolder |", "| v0-entry | +0.0 pp"):
+            self.assertIn(row, text)
+
+
+def name_content(directory: Path, sha: str, *names: str) -> None:
+    """Every report under `directory` (or only those named) now names content `sha` in its manifest."""
+    for path in directory.rglob("v*.json"):
+        if not names or path.name in names:
+            report = json.loads(path.read_text())
+            report["manifest"]["contentFileSha256"] = sha
+            path.write_text(json.dumps(report))
+
+
+class CatalogueBindingTests(unittest.TestCase):
+    """Item 2: --content names the catalogue the reports ran on, and every report under grading must name it."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.addCleanup(self.tmp.cleanup)
+        self.catalogue = self.root / "candidate.json"
+        self.catalogue.write_text((bw.REPO / "content/full-content.json").read_text(encoding="utf-8") + "\n")
+        self.sha = hashlib.sha256(self.catalogue.read_bytes()).hexdigest()
+        for name in ("v0", "v5", "r0", "r5"):
+            write_table(self.root / name, vows=(int(name[1]),))
+        name_content(self.root / "v0", self.sha)
+        name_content(self.root / "v5", self.sha)
+        self.bound = bw.grading_roster("duskblade", self.catalogue)
+
+    def test_the_graders_bind_the_candidate_and_read_references_on_other_content(self) -> None:
+        self.assertEqual((self.sha, DUSK.ways), (self.bound.content, self.bound.ways))
+        seeds = (13000, 13009)
+        tables.full_table(self.bound, self.root / "v0", self.root / "v5", seeds, seeds,
+                          [(self.root / "r0", self.root / "r5")])  # the reference names "c0ffee"
+        tables.paired_table(self.bound, self.root / "v0", self.root / "r0", ["v0-full"])  # so may the base
+        tables.row_b_table(self.bound, self.root / "v0", reference=self.root / "r0")
+        for args in ((tables.full_table, self.bound, self.root / "r0", self.root / "v5", seeds, seeds),
+                     (tables.row_b, self.bound, self.root / "r0"),
+                     (tables.g3_table, self.bound, self.root / "r5", ["v5-full"]),
+                     (tables.paired_table, self.bound, self.root / "r0", self.root / "v0", ["v0-full"])):
+            with self.subTest(grader=args[0].__name__), self.assertRaisesRegex(ValueError, "not --content's"):
+                args[0](*args[1:])
+
+    def test_the_cli_refuses_reports_of_other_content(self) -> None:
+        argv = ["g3", str(self.root / "v5"), "v5-full", "--content", str(self.catalogue)]
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, readout.main(argv))
+            name_content(self.root / "v5", "0" * 64, "v5-full-A_lit.json")
+            with self.assertRaisesRegex(ValueError, "v5-full-A_lit.json: .* not --content's"):
+                readout.main(argv)
+            with self.assertRaisesRegex(ValueError, "is not a file"):
+                readout.main(["rowb", str(self.root / "v0"), "--content", str(self.root / "absent.json")])
+
+    def test_without_a_catalogue_a_directory_with_other_ways_is_refused(self) -> None:
+        d = self.root / "v0"
+        (d / "v0-full-C_glint.json").write_text((d / "v0-full-C_edge.json").read_text())
+        seeds = (13000, 13009)
+        for call in (lambda: tables.row_b(DUSK, d), lambda: tables.g3_table(DUSK, d, ["v0-full"]),
+                     lambda: tables.paired_table(DUSK, d, self.root / "r0", ["v0-full"]),
+                     lambda: tables.full_table(DUSK, d, self.root / "v5", seeds, seeds)):
+            with self.assertRaisesRegex(ValueError, "v0-full-C_glint are not arms of duskblade"):
+                call()
+        tables.paired_table(DUSK, d, self.root / "r0", ["v0-full"], ["A_lit"])  # named arms: the cross-class reading
+
+
+class SimulatorIdentityTests(unittest.TestCase):
+    """Item 3: the resume identity and the manifest's driver digest cover every file the simulator loads."""
+
+    # Paths the simulator's sources name that are not part of the instrument's identity, and why.
+    NOT_LOADED = {
+        "content/full-content.json": "the catalogue: digested on its own (identity 'content', contentFileSha256)",
+        "content/mob-overrides.json": "BalanceCatalogue.load_prepared loads content without mob overrides",
+        "port_fixtures/content/slice-content.json": "ContentDB.load_slice only",
+        "port_fixtures/content/core-mechanics.json": "ContentDB.load_slice only",
+        "docs/balance/421-content-search-seeds-v1.json": "read only under --stage, which the readout never passes",
+        "docs/balance/421-content-search-space-v1.json": "digested only, as the manifest's searchSpaceSha256",
+    }
+
+    @staticmethod
+    def code(text: str) -> str:
+        """GDScript without its comments (a `#` inside a string literal is kept)."""
+        out = []
+        for line in text.splitlines():
+            quote, kept = "", []
+            for char in line:
+                if quote:
+                    quote = "" if char == quote else quote
+                elif char in "\"'":
+                    quote = char
+                elif char == "#":
+                    break
+                kept.append(char)
+            out.append("".join(kept))
+        return "\n".join(out)
+
+    def load_graph(self) -> set[str]:
+        """Every file reachable from tools/balance_sim.gd through res:// paths and class_name references."""
+        repo = bw.REPO
+        classes = {}
+        for path in sorted(repo.glob("**/*.gd")):
+            if ".godot" in path.parts:
+                continue
+            found = re.search(r"^class_name\s+(\w+)", path.read_text(encoding="utf-8"), re.M)
+            if found:
+                classes[found.group(1)] = str(path.relative_to(repo))
+        seen, todo = set(), ["tools/balance_sim.gd"]
+        while todo:
+            name = todo.pop()
+            if name in seen:
+                continue
+            seen.add(name)
+            if not name.endswith(".gd"):
+                continue
+            text = (repo / name).read_text(encoding="utf-8")
+            todo += [path for path in re.findall(r"res://([\w./-]+\.\w+)", text)]
+            code = self.code(text)
+            todo += [path for cls, path in classes.items() if path != name and re.search(rf"\b{cls}\b", code)]
+        return seen
+
+    def test_every_file_the_simulator_loads_is_in_both_lists(self) -> None:
+        graph = self.load_graph()
+        for listed in (runner.TOOL_SOURCES, seed_contract.DRIVER_RELS):
+            for path in listed:
+                self.assertTrue((bw.REPO / path).is_file(), path)
+        needed = sorted(path for path in graph if not path.startswith("domain/") and path not in self.NOT_LOADED)
+        self.assertIn("tools/vow_incentives.gd", needed)
+        self.assertEqual(needed, sorted(map(str, runner.TOOL_SOURCES)))
+        self.assertEqual([], [path for path in needed if path not in seed_contract.DRIVER_RELS])
+        self.assertEqual([], sorted(set(self.NOT_LOADED) - graph))  # every exemption is still named somewhere
+
+    def test_the_driver_digest_lists_agree(self) -> None:
+        source = (bw.REPO / "tools/balance_catalogue.gd").read_text(encoding="utf-8")
+        block = re.search(r"const DRIVER: PackedStringArray = \[(.*?)\]", source, re.S).group(1)
+        self.assertEqual(seed_contract.DRIVER_RELS, tuple(re.findall(r'"([^"]+)"', block)))
+
+    def test_vow_incentives_moves_the_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for path in ("content/full-content.json", "tools/vow_incentives.gd"):
+                (root / path).parent.mkdir(parents=True, exist_ok=True)
+                (root / path).write_text("a")
+            first = runner.identity(root, None)
+            (root / "tools/vow_incentives.gd").write_text("b")
+            self.assertNotEqual(first, runner.identity(root, None))
+            self.assertEqual(["tools/vow_incentives.gd"], list(first["tools"]))
+
+
+class GodotLaunchGuardTests(unittest.TestCase):
+    """Item 4: every balance tool path that starts Godot refuses unless override.cfg isolates the user directory."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.addCleanup(self.tmp.cleanup)
+
+    def refuses(self, module, call) -> None:
+        """`call` raises IsolationError under an unisolated root, and nothing is launched."""
+        with mock.patch.object(module, "REPO", self.root), mock.patch("subprocess.run") as launched, \
+                self.assertRaises(guard.IsolationError):
+            call()
+        launched.assert_not_called()
+
+    def test_each_launcher_refuses(self) -> None:
+        out = self.root / "out"
+        self.refuses(exam, lambda: exam.run_jobs([("x", ["res://tools/balance_sim.gd"])], self.root, 1, "godot", 10))
+        self.refuses(exam, lambda: exam.main(["--out-dir", str(out)]))
+        self.assertFalse(out.exists())
+        self.refuses(f0, lambda: f0.godot_sweep("godot", [], self.root / "d", self.root / "log"))
+        self.refuses(f1_cem, lambda: f1_cem.run("godot", 1, self.root, self.root, out, ["c000"], self.root / "p",
+                                                True))
+        self.refuses(phase_a, lambda: phase_a.run_godot("godot", "res://tools/balance_sim.gd", [], self.root / "l"))
+        self.refuses(host_qualify, lambda: host_qualify.godot_sim("godot", [], self.root / "o", self.root / "l"))
+        self.refuses(host_qualify, lambda: host_qualify.fail_closed_cli("godot", self.root))
+        with mock.patch.object(exam, "REPO", self.root), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, exam.main(["--out-dir", str(out), "--dry-run"]))  # plans only
+
+    def test_every_balance_tool_that_builds_a_godot_command_checks_isolation(self) -> None:
+        launchers = sorted(path.name for path in TOOLS.glob("balance_*.py")
+                           if '"--headless"' in path.read_text(encoding="utf-8"))
+        self.assertEqual(["balance_exam.py", "balance_f0.py", "balance_f1_cem.py", "balance_host_qualify.py",
+                          "balance_phase_a.py", "balance_ways.py"], launchers)
+        for name in launchers + ["balance_readout_run.py"]:
+            with self.subTest(name=name):
+                self.assertIn("require_isolated_user_dir(", (TOOLS / name).read_text(encoding="utf-8"))
+
+
+class HoldoutTests(unittest.TestCase):
+    """Item 5: the 1.1 holdout is read only under --holdout-1-1, which reaches every simulator command."""
+
+    def test_the_plan_names_the_holdout_to_the_simulator(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            work = runner.plan(Path(tmp), DUSK, (17000, 17009), ["v0-full"], ["A"], chunk=5, replay=True, holdout=True)
+            self.assertTrue(all(chunk.command[-1] == "--holdout=1.1" for chunk in work))
+            self.assertFalse(any("--holdout=1.1" in arg for chunk in runner.plan(
+                Path(tmp), DUSK, (13000, 13009), ["v0-full"], ["A"], chunk=5) for arg in chunk.command))
+            with self.assertRaisesRegex(ValueError, "1.1 holdout"):
+                runner.plan(Path(tmp), DUSK, (17000, 17009), ["v0-full"], ["A"])
+
+    def test_run_and_table_refuse_the_holdout_unless_named(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(readout, "REPO", Path(tmp)), \
+                mock.patch.object(runner, "run_chunks", return_value=0) as ran, \
+                mock.patch.object(runner, "merge_parts", return_value=[]), \
+                mock.patch.object(runner, "identity", return_value={}), contextlib.redirect_stdout(io.StringIO()):
+            (Path(tmp) / "override.cfg").write_text(OVERRIDE)
+            out = Path(tmp) / "out"
+            with self.assertRaisesRegex(ValueError, "1.1 holdout"):
+                readout.main(["run", str(out), "--seeds", "17000-17009"])
+            self.assertFalse(out.exists())
+            readout.main(["run", str(out), "--seeds", "17000-17009", "--holdout-1-1"])
+            self.assertTrue(all(chunk.command[-1] == "--holdout=1.1" for chunk in ran.call_args.args[0]))
+            table = ["table", tmp, tmp, "--v0-seeds", "17000-17009", "--v5-seeds", "17000-17009"]
+            with self.assertRaisesRegex(ValueError, "touch the 1.1 holdout"):
+                readout.main(table)
+            with self.assertRaisesRegex(ValueError, "cannot read"):  # the seeds pass; there are no reports
+                readout.main(table + ["--holdout-1-1"])
+
+    def test_the_seed_contract_and_phase_a_never_reach_the_holdout(self) -> None:
+        contract = seed_contract.load_contract()
+        for stage in contract["stages"]:
+            with self.subTest(stage=stage):
+                self.assertTrue(seed_contract.check_invocation(contract, stage, 17000, 17000))
+        with mock.patch.object(sys, "argv", ["balance_phase_a.py", "--seed0-holdout", "17000"]), \
+                mock.patch.object(phase_a, "run_godot") as launched, contextlib.redirect_stderr(io.StringIO()) as err:
+            self.assertEqual(phase_a.EXIT_ERR, phase_a.main())
+        launched.assert_not_called()
+        self.assertIn("1.1 holdout", err.getvalue())
+
+
+class EquivalenceCommitAndPolicyTests(unittest.TestCase):
+    """Item 6: --commit binds the candidate to the RC commit, and the arm's policy is part of the instrument."""
+
+    SHA = "1" * 40
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.addCleanup(self.tmp.cleanup)
+        self.table = sim_table()
+        self.ref = write_reports(self.root / "ref", self.table)
+
+    def candidate(self, change=None) -> Path:
+        reports = copy.deepcopy(self.table)
+        for report in reports.values():
+            report["manifest"].update(commit=self.SHA, contentFileSha256="5eed")
+        if change:
+            change(reports)
+        return write_reports(self.root / "new", reports)
+
+    def test_every_report_of_the_candidate_must_name_the_commit(self) -> None:
+        new = self.candidate()
+        self.assertTrue(compare.equivalence(new, self.ref, DUSK, self.SHA).equivalent)
+        self.assertIn(f"- Every report of the candidate names commit `{self.SHA}`: yes.",
+                      compare.render_equivalence(compare.equivalence(new, self.ref, DUSK, self.SHA)))
+        report = json.loads((new / "v5-full-R.json").read_text())
+        report["manifest"]["commit"] = "2" * 40
+        (new / "v5-full-R.json").write_text(json.dumps(report))
+        result = compare.equivalence(new, self.ref, DUSK, self.SHA)
+        self.assertTrue(result.graded_identical and result.same_runs and result.same_instrument)
+        self.assertFalse(result.equivalent)
+        self.assertEqual([("v5-full-R", "2" * 40)], result.other_commits)
+        self.assertIn(f"- v5-full-R: '{'2' * 40}'", compare.render_equivalence(result))
+        self.assertTrue(compare.equivalence(new, self.ref, DUSK).equivalent)  # without --commit, as before
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(2, readout.main(["equivalence", str(new), str(self.ref), "--commit", self.SHA]))
+        for bad in ("1111111", "X" * 40):
+            with self.subTest(bad=bad), self.assertRaisesRegex(ValueError, "full 40-character SHA"):
+                compare.equivalence(new, self.ref, DUSK, bad)
+
+    def test_another_policy_is_another_instrument(self) -> None:
+        self.assertIn("policy", compare.INSTRUMENT)
+
+        def splash(reports):
+            reports["v0-full-C_edge"]["manifest"]["policy"] = {"wayCommit": 2.0, "wayOff": 1.0}
+        result = compare.equivalence(self.candidate(splash), self.ref, DUSK, self.SHA)
+        self.assertTrue(result.graded_identical and result.same_runs)
+        self.assertFalse(result.same_instrument or result.equivalent)
+        self.assertIn("- v0-full-C_edge: policy", compare.render_equivalence(result))
 
 
 class CommandLineTests(unittest.TestCase):

@@ -23,7 +23,10 @@ static func run(fails: Array[String]) -> void:
 			% [LIVE_SEMANTIC, identity.get("contentSemanticSha256", "")])
 	if before != LIVE_FILE:
 		fails.append("balance catalogue: live file SHA expected %s got %s" % [LIVE_FILE, before])
+	if identity.has(BalanceCatalogue.HOLDOUT_OPTION):
+		fails.append("balance catalogue: a run off the 1.1 holdout must not record it")
 	_check_stage(fails)
+	_check_holdout(fails)
 	_check_two_catalogues(fails, before)
 	if FileAccess.get_sha256(ContentDB.FULL_PATH) != before:
 		fails.append("balance catalogue: live content file changed")
@@ -93,6 +96,49 @@ static func _check_stage(fails: Array[String]) -> void:
 	var missing: Dictionary = BalanceCatalogue.open({"content": "/no/such/glassvow-candidate.json"})
 	if not missing.has("error"):
 		fails.append("balance catalogue: missing candidate path must fail closed")
+
+
+## #544 P7: the 1.1 holdout 17000–18999 is read only under --holdout=1.1, inside it, and is recorded.
+static func _check_holdout(fails: Array[String]) -> void:
+	var refused: Array[Dictionary] = [
+		{"seed0": 17000, "runs": 1}, {"seed0": 16999, "runs": 2}, {"seed0": 18999, "runs": 5},
+		{"seed0": 17000, "runs": 2000, "holdout": "1.0"},
+		{"seed0": 16999, "runs": 2, "holdout": "1.1"}, {"seed0": 13000, "runs": 1000, "holdout": "1.1"},
+		{"trainSeed0": 4200, "maxGen": 20, "seedCount": 40, "holdoutSeed0": 17000, "holdoutCount": 200},
+		{"trainSeed0": 16900, "maxGen": 1, "seedCount": 200, "holdoutSeed0": 17000, "holdoutCount": 200,
+			"holdout": "1.1"},
+	]
+	for opts: Dictionary in refused:
+		if BalanceCatalogue.holdout_error(opts).is_empty():
+			fails.append("balance catalogue: the holdout guard must refuse %s" % opts)
+	var allowed: Array[Dictionary] = [
+		{}, {"seed0": 13000, "runs": 1000}, {"seed0": 19000, "runs": 10},
+		{"seed0": 17000, "runs": 2000, "holdout": "1.1"},
+		{"trainSeed0": 4200, "maxGen": 20, "seedCount": 40, "holdoutSeed0": 17000, "holdoutCount": 200,
+			"holdout": "1.1"},
+	]
+	for opts: Dictionary in allowed:
+		if not BalanceCatalogue.holdout_error(opts).is_empty():
+			fails.append("balance catalogue: the holdout guard must allow %s: %s"
+				% [opts, BalanceCatalogue.holdout_error(opts)])
+	if not BalanceCatalogue.open({"seed0": 17000, "runs": 1}).has("error"):
+		fails.append("balance catalogue: open must refuse the 1.1 holdout without --holdout")
+	var read: Dictionary = BalanceCatalogue.open({"seed0": 17000, "runs": 1, "holdout": "1.1"})
+	var read_id: Dictionary = read.get("identity", {})
+	if str(read_id.get(BalanceCatalogue.HOLDOUT_OPTION, "")) != BalanceCatalogue.HOLDOUT_ID:
+		fails.append("balance catalogue: a holdout run must record holdout 1.1 in its identity: %s"
+			% read.get("error", read_id))
+	var parsed: Array[Dictionary] = [
+		BalanceSim._options(PackedStringArray(["--holdout=1.1", "--seed0=17000", "--runs=1"])),
+		BalanceSweep._options(PackedStringArray(["--holdout=1.1", "--seed0=17000", "--out=x"])),
+		BalanceCem._options(PackedStringArray(["--holdout=1.1", "--holdoutSeed0=17000", "--out=x",
+			"--seedsJson=y"])),
+	]
+	for opts: Dictionary in parsed:
+		if opts.has("error") or str(opts.get("holdout", "")) != "1.1":
+			fails.append("balance catalogue: a tool's options must take --holdout=1.1: %s" % opts)
+	if BalanceSim._options(PackedStringArray([])).has("holdout"):
+		fails.append("balance catalogue: --holdout has no default, so only a holdout run carries it")
 
 
 static func _check_two_catalogues(fails: Array[String], live_sha: String) -> void:

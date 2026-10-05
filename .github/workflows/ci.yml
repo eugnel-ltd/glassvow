@@ -193,7 +193,12 @@ jobs:
 
       - name: Test candidate loading and host-qualify fail-closed
         if: steps.scope.outputs.run_balance_host == 'true'
-        run: python3 -B tools/balance_host_qualify.py --self-test
+        # The self-test launches Godot, and every balance launcher refuses without the isolation
+        # override (tools/balance_readout_guard.py); it exists for this step only.
+        run: |
+          printf '[application]\nconfig/use_custom_user_dir=true\nconfig/custom_user_dir_name="glassvow-ci"\n' > override.cfg
+          trap 'rm -f override.cfg' EXIT
+          python3 -B tools/balance_host_qualify.py --self-test
 
       - name: Test F0 evaluator protocol
         if: steps.scope.outputs.run_balance_f0 == 'true'
