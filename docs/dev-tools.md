@@ -239,6 +239,13 @@ godot --headless -s res://tools/balance_sim.gd -- --aspect=all --runs=200 \
   --seed0=1000 --vow=0 --out=/tmp/balance.json [--mobs=path.json]
 ```
 
+A class's Flame readouts run on the same simulator through the readout runner,
+`tools/balance_readout.py` (chunked, resumable cell tables, paired tests, paired
+G3, row B and the complete gate table), and the grader, `tools/balance_ways.py`.
+The [Flame balance runbook](design/2026-09-29-dusk-flame/runbook.md) gives their
+commands, the bots and seed bands, the isolation every Godot run needs (the
+runner refuses to start without it), and the pitfalls already hit.
+
 The map profile probe checks all four runtime catalogues against independently
 loaded mesh bounds, then checks repeatable cosmetic placement over the requested
 seeds. It fails on missing geometry, another act's assets or non-determinism.

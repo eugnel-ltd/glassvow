@@ -78,7 +78,7 @@ Work through it in order. Each step has a stop rule.
 
 ## 3. What a class inherits (2026-10-04)
 
-The Duskblade programme ran thirteen readouts between 29 September and 2 October 2026 and ended in an ACCEPT (lock §11, *Verdict*). These rules come from it and from #544's plan of record (4 October 2026). They bind every class from its first readout. A rule decided but not yet built says so.
+The Duskblade programme ran thirteen readouts between 29 September and 2 October 2026 and ended in an ACCEPT (lock §11, *Verdict*). These rules come from it and from #544's plan of record (4 October 2026). They bind every class from its first readout. A rule decided but not yet built says so. How a class's programme is run with the repository's tools, command by command, is the [runbook](runbook.md) (#544 P4b).
 
 **The instrument comes first.**
 
