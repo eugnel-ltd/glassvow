@@ -373,7 +373,10 @@ the readout whose complete §11 table it was given on.
      the gate has both, and on its single verdict for G7 and row B); the
      numbers need not match (owner ruling, 2026-09-27). A run under another instrument, such as
      1.1's `s2`, is a new reading, not this re-run. The Flame is code as well as content, so the
-     re-run binds the commit and the verdict binds the content it was given on.
+     re-run binds the commit and the verdict binds the content it was given on. A route (b) run
+     made from a clean checkout of the RC commit, with the instrument of record and on the bands
+     of record, also serves as this item's independent re-run: identical graded fields give
+     identical verdicts.
   3. **The exam's own items.** The items the
      [Duskblade lock's §11](design/2026-09-29-dusk-flame/README.md#11-science-the-instrument-panel)
      *Exam* and *Seeds* keep for the final candidate, which no readout runs: the CEM stress, with
