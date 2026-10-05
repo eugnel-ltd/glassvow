@@ -57,11 +57,14 @@ func _ready() -> void:
 	plain.background_mode = Environment.BG_COLOR
 	plain.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	_camera(_view(world), plain, Stage.MASK_LAYER)
-	# The floor itself, under the journey's own light and grade.
+	# The floor itself, under the journey's own light and grade. Its glow is a
+	# pass after the floor's own, and an 8 px view has too few mip levels for
+	# it: the glow's chain failed its framebuffers there.
 	var live: SubViewport = _view(World3D.new())
 	var key: DirectionalLight3D = DirectionalLight3D.new()
 	var journey: Environment = Environment.new()
 	MapJourneyLandscape.light(key, journey)
+	journey.glow_enabled = false
 	live.add_child(key)
 	live.add_child(_quad(FLOOR, 1))
 	_camera(live, journey, 1)
