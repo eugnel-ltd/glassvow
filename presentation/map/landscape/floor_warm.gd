@@ -1,26 +1,38 @@
 extends Node
-## The floor's pipelines, built ahead (R3.2, issue #660): one frame of small
-## views drawing every material the floor's bake and the floor itself use, in
-## the bake's own set-up (its soft key shadows, a caster cut out of the
-## woodland's atlas, the mask, the 2D pass's additive stamps, the mip chain's
-## shader, and the floor's own shader under the journey's light), so neither
-## the first bake nor the first floor compiles a pipeline on the frame that
-## needs it. `MapJourneyPrefetch.prime` starts it before the title's first
-## frame; it frees itself once drawn, and gives the key's shadow filter back.
+## The floor's pipelines, built ahead (R3.2, issue #660), so neither the first
+## bake nor the first floor compiles one on a frame the player sees.
+##
+## The 3D ones are never drawn here. The bake's and the floor's materials stand
+## on quads in a world no view draws (the bake's set-up: the lit ground, its
+## shadow casters and a caster cut out of the woodland's atlas, the mask, and
+## the floor's own shader). The renderer compiles a new surface's pipelines on
+## its worker threads as the surface enters the world, and nothing waits on
+## them. Drawn on the title's first frame instead, they cost the iPad 8 3.1 s
+## on that frame and 1.37 s on the next after an update (batch T, R3.2 review).
+##
+## The 2D ones (the bake's additive stamp and its mip shader) are drawn once,
+## in an 8 px view on the first frame, behind the launch screen: a canvas
+## builds its pipelines only as it draws.
+##
+## `MapJourneyPrefetch.prime` starts it before the title's first frame. It
+## frees itself once the worker threads have had `HOLD_S` to finish, well
+## before a land's bake can begin.
 
 const Bake = preload("res://presentation/map/landscape/floor_bake.gd")
 const Stage = preload("res://presentation/map/landscape/floor_stage.gd")
 const Atlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
 const CASTER: Shader = preload("res://presentation/map/landscape/floor_caster.gdshader")
 const FLOOR: Shader = preload("res://presentation/map/landscape/floor.gdshader")
-## A sample's side in pixels: the least the renderer draws.
+## A 2D sample's side in pixels: the least the renderer draws.
 const SIDE: int = 8
+## How long the 3D surfaces stand for their pipelines (seconds).
+const HOLD_S: float = 6.0
 
 static var _done: bool = false
-var _frames: int = 0
+var _held: float = 0.0
 
 
-## Draws the samples once a process, under the scene tree's root.
+## Starts the warm-up once a process, under the scene tree's root.
 static func warm() -> void:
 	if _done or not Bake.supported():
 		return
@@ -34,41 +46,33 @@ static func warm() -> void:
 
 func _ready() -> void:
 	name = "Floor pipelines"
-	RenderingServer.directional_soft_shadow_filter_set_quality(Bake.SOFT)
-	var world: World3D = World3D.new()
-	var stage: Stage = Stage.new()
-	stage.light_up()
-	var lit: SubViewport = _view(world)
-	lit.add_child(stage)
+	_surfaces()
+	_canvas()
+
+
+## The 3D materials in a world that no view draws: their pipelines compile on
+## the worker threads as the surfaces enter it.
+func _surfaces() -> void:
+	var unseen: SubViewport = SubViewport.new()
+	unseen.size = Vector2i(SIDE, SIDE)
+	unseen.world_3d = World3D.new()
+	unseen.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	add_child(unseen)
 	var ground: MeshInstance3D = _quad(Bake.PAINT, Stage.LIT_LAYER)
 	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-	stage.add_child(ground)
+	unseen.add_child(ground)
 	var caster: MeshInstance3D = _quad(CASTER, Stage.CASTER_LAYER)
 	caster.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-	caster.rotation_degrees = Vector3(90.0, 0.0, 0.0)
-	caster.position = Vector3(0.0, 0.5, 0.0)
 	if Atlas.material != null:
 		(caster.material_override as ShaderMaterial).set_shader_parameter("atlas_albedo",
 			Atlas.material.get_shader_parameter("atlas_albedo"))
-	stage.add_child(caster)
-	stage.add_child(_quad(Bake.MASK, Stage.MASK_LAYER))
-	_camera(lit, stage.environment, Stage.LIT_LAYER | Stage.CASTER_LAYER)
-	var plain: Environment = Environment.new()
-	plain.background_mode = Environment.BG_COLOR
-	plain.tonemap_mode = Environment.TONE_MAPPER_LINEAR
-	_camera(_view(world), plain, Stage.MASK_LAYER)
-	# The floor itself, under the journey's own light and grade. Its glow is a
-	# pass after the floor's own, and an 8 px view has too few mip levels for
-	# it: the glow's chain failed its framebuffers there.
-	var live: SubViewport = _view(World3D.new())
-	var key: DirectionalLight3D = DirectionalLight3D.new()
-	var journey: Environment = Environment.new()
-	MapJourneyLandscape.light(key, journey)
-	journey.glow_enabled = false
-	live.add_child(key)
-	live.add_child(_quad(FLOOR, 1))
-	_camera(live, journey, 1)
-	# The 2D passes: an additive stamp, a mip level.
+	unseen.add_child(caster)
+	unseen.add_child(_quad(Bake.MASK, Stage.MASK_LAYER))
+	unseen.add_child(_quad(FLOOR, 1))
+
+
+## The 2D samples, drawn once in an 8 px view.
+func _canvas() -> void:
 	var flat: SubViewport = SubViewport.new()
 	flat.size = Vector2i(SIDE, SIDE)
 	flat.disable_3d = true
@@ -90,24 +94,10 @@ func _ready() -> void:
 	flat.add_child(level)
 
 
-func _process(_delta: float) -> void:
-	_frames += 1
-	if _frames >= 2:
-		var quality: int = int(str(ProjectSettings.get_setting_with_override(Bake.SOFT_SETTING)))
-		RenderingServer.directional_soft_shadow_filter_set_quality(quality as RenderingServer.ShadowQuality)
+func _process(delta: float) -> void:
+	_held += delta
+	if _held >= HOLD_S:
 		queue_free()
-
-
-func _view(world: World3D) -> SubViewport:
-	var view: SubViewport = SubViewport.new()
-	view.size = Vector2i(SIDE, SIDE)
-	view.world_3d = world
-	view.transparent_bg = false
-	view.msaa_3d = Viewport.MSAA_DISABLED
-	view.positional_shadow_atlas_size = 0
-	view.render_target_update_mode = SubViewport.UPDATE_ONCE
-	add_child(view)
-	return view
 
 
 static func _quad(shader: Shader, layer: int) -> MeshInstance3D:
@@ -120,15 +110,3 @@ static func _quad(shader: Shader, layer: int) -> MeshInstance3D:
 	quad.material_override = material
 	quad.layers = layer
 	return quad
-
-
-static func _camera(view: SubViewport, environment: Environment, mask: int) -> void:
-	var camera: Camera3D = Camera3D.new()
-	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 2.0
-	camera.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
-	camera.position = Vector3(0.0, 2.0, 0.0)
-	camera.cull_mask = mask
-	camera.environment = environment
-	camera.current = true
-	view.add_child(camera)
