@@ -17,6 +17,12 @@ signal card_hover_changed(uid: int)
 ## and the second with a rejection.
 signal card_drag_armed(uid: int)
 signal card_drag_refused(uid: int)
+## The face of a card that left for the discard, taken from its own stage
+## once it lay at rest (CardFaces.take), for the pile to wear; null when it
+## went before it could be taken, so the pile bakes one instead. Once per
+## such card: a played or swept card as it lands or lies on the pile, or as it
+## fades under Reduce Motion, and a struck one at the end of its strike.
+signal face_ready(uid: int, face: CardFaces.Face)
 
 ## `DRAG_START_PX` / `LONG_PRESS_CANCEL_PX` (pointer.js:5). Two different
 ## numbers doing two different jobs: 26px of UPWARD travel arms a drag, and a
@@ -188,6 +194,8 @@ class _Flight:
 	var end_rot: float = 0.0
 	var end_scale: float = 1.0
 	var on_land: Callable = Callable()
+	## Its face has been handed on (`face_ready`), or it needs none.
+	var faced: bool = true
 
 	func _init(card: CardView, id: int) -> void:
 		view = card
@@ -226,7 +234,13 @@ func seat_centre(uid: int) -> Vector2:
 	var view: CardView = _views.get(uid)
 	if view == null:
 		return Vector2.ZERO
-	return global_position + view.home_position + view.size * 0.5
+	return _seat_of(view)
+
+
+## The centre of `view`'s resting seat, in global coordinates, through this
+## box's own transform: it holds under a scaled or turned ancestor.
+func _seat_of(view: CardView) -> Vector2:
+	return get_global_transform() * (view.home_position + view.size * 0.5)
 
 
 func add_card(inst: CardInst, data: Dictionary, cost: int) -> CardView:
@@ -423,7 +437,7 @@ func _deal_step(t: float, f: _Flight) -> void:
 	if not is_instance_valid(view):
 		return
 	var e: float = CardFlight.travel(t)
-	var seat: Vector2 = global_position + view.home_position + view.size * 0.5
+	var seat: Vector2 = _seat_of(view)
 	var start: Vector2 = f.from.get_center() - Vector2(0.0, CardFlight.lift(t))
 	var bow: float = CardFlight.arc(e)
 	_centre_at(view, start.lerp(seat, e) - Vector2(0.0, stage_h * CardFlight.DEAL_ARC * bow))
@@ -565,11 +579,15 @@ func spend_to(uid: int, to: Rect2, how: Leave = Leave.DISCARD, delay: float = 0.
 		return 0.0
 	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	view.release_pose()
+	# Off the pointer: it springs back to rest on the way, so the pile can
+	# take its face from it when it lands.
+	view.point_away()
 	view.pivot_offset = view.size * 0.5
 	view.move_to_front()
 	var f: _Flight = _Flight.new(view, uid)
 	f.how = how
 	f.on_land = on_land
+	f.faced = how == Leave.BURN
 	var seconds: float = CardFlight.RM_FADE
 	if Preferences.active.reduce_motion:
 		delay = 0.0
@@ -601,12 +619,10 @@ func _aim_leave(f: _Flight, to: Rect2) -> void:
 	f.end_centre = to.get_center()
 	f.end_scale = view.rest_scale(shrink).x
 	match f.how:
-		Leave.DISCARD:
-			f.end_rot = deg_to_rad(CardFlight.DISCARD_TILT * CardFlight.jitter(f.uid, 0))
-		Leave.SWEEP:
-			f.end_rot = deg_to_rad(CardFlight.SWEEP_TILT * CardFlight.jitter(f.uid, 0))
-			f.end_centre += Vector2(CardFlight.jitter(f.uid, 1),
-				CardFlight.jitter(f.uid, 2)) * CardFlight.SWEEP_SLIP
+		Leave.DISCARD, Leave.SWEEP:
+			var swept: bool = f.how == Leave.SWEEP
+			f.end_rot = CardFlight.landing_rot(f.uid, swept)
+			f.end_centre += CardFlight.landing_slip(f.uid, swept)
 		Leave.BURN:
 			f.end_rot = deg_to_rad(CardFlight.BURN_TILT)
 			f.end_scale = view.rest_scale(shrink * CardFlight.BURN_SHRINK).x
@@ -629,12 +645,15 @@ func _leave_step(t: float, f: _Flight) -> void:
 
 ## On the pile: the pile answers, the card lies there a moment (a burnt one
 ## while its ember rim cools) and then fades into the pile. It is held on its
-## pile meanwhile: the hand's own box moves as the fan re-edges.
+## pile meanwhile: the hand's own box moves as the fan re-edges. A card on the
+## discard hands its face on as soon as it lies at rest (`face_ready`), and
+## once the pile wears it the card goes (`hand_over`).
 func _leave_land(f: _Flight) -> void:
 	_leaving.erase(f)
 	_settle()
 	if not is_instance_valid(f.view):
 		return
+	_try_face(f)
 	var hold: float = CardFlight.HANDOFF_HOLD
 	if f.how == Leave.BURN:
 		hold = CardFlight.EMBER_COOL
@@ -650,6 +669,37 @@ func _leave_land(f: _Flight) -> void:
 func _pin(_t: float, f: _Flight) -> void:
 	if is_instance_valid(f.view):
 		_centre_at(f.view, f.end_centre)
+		_try_face(f)
+
+
+## Hand on the face of a card bound for the discard, once it lies at rest.
+func _try_face(f: _Flight) -> void:
+	if f.faced:
+		return
+	var face: CardFaces.Face = CardFaces.take(f.view)
+	if face == null:
+		return
+	f.faced = true
+	face_ready.emit(f.uid, face)
+
+
+## The pile now wears this card: the card lying on it goes from sight at once
+## (it is still `sent` until its hold is over, so its arrival is not answered
+## twice).
+func hand_over(uid: int) -> void:
+	var view: CardView = _sent.get(uid)
+	if is_instance_valid(view):
+		view.visible = false
+
+
+## The cards in the air to the discard (`burnt` false) or the ash: a pile
+## counts a card when it lands, not when it sets off.
+func in_air(burnt: bool) -> Array[int]:
+	var out: Array[int] = []
+	for f: _Flight in _leaving:
+		if (f.how == Leave.BURN) == burnt:
+			out.append(f.uid)
+	return out
 
 
 ## Put a card's centre on a global point. A card turns and scales about its
@@ -671,6 +721,8 @@ func _fade_step(t: float, f: _Flight) -> void:
 func _fade_land(f: _Flight) -> void:
 	_leaving.erase(f)
 	_settle()
+	if is_instance_valid(f.view):
+		_try_face(f)
 	_gone(f)
 
 
@@ -679,13 +731,18 @@ func _gone(f: _Flight) -> void:
 		_sent.erase(f.uid)
 	if is_instance_valid(f.view):
 		f.view.queue_free()
+	if not f.faced:
+		f.faced = true
+		face_ready.emit(f.uid, null)
 
 
 ## A targeted card does not leave the hand for a pile — it goes at the foe.
 ## `drain.js:501`: the card streaks into the enemy and lands at 22% of its own
 ## size, and only the `toDiscard` that follows moves the pile copy. 270ms, which
-## is the window the blow is waiting inside.
-func strike_to(uid: int, target: Vector2) -> void:
+## is the window the blow is waiting inside. A card bound for the discard
+## (`keep_face`) hands its face on as the strike lands (`face_ready`), for the
+## pile's top as the blow resolves.
+func strike_to(uid: int, target: Vector2, keep_face: bool = false) -> void:
 	var view: CardView = _views.get(uid)
 	if view == null:
 		return
@@ -699,6 +756,7 @@ func strike_to(uid: int, target: Vector2) -> void:
 	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	view.move_to_front()
 	view.release_pose()
+	view.point_away()
 	view.pivot_offset = view.size * 0.5
 	# By its centre (`_centre_at`): through `global_position` the shrinking
 	# card landed up and to the left of the foe it was thrown at.
@@ -714,6 +772,9 @@ func strike_to(uid: int, target: Vector2) -> void:
 	# reads as having been thrown at anything.
 	tw.tween_property(view, "modulate:a", 0.0, STRIKE_FLIGHT * 0.45) \
 		.set_delay(STRIKE_FLIGHT * 0.55)
+	if keep_face:
+		tw.chain().tween_callback(func() -> void:
+			face_ready.emit(uid, CardFaces.take(view)))
 	tw.chain().tween_callback(view.queue_free)
 	_relayout()
 

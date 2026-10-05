@@ -341,13 +341,35 @@ static func _frame_drawn() -> void:
 static func _keep(view: CardView) -> Face:
 	if not view.is_inside_tree():
 		return null
+	var rd: RenderingDevice = RenderingServer.get_rendering_device()
+	if rd != null and RenderingServer.is_on_render_thread():
+		return _face_of(view, rd)
+	return _face_of(view, null)
+
+
+## The face of a card already on screen, taken from its own stage as it last
+## rendered, on the GPU: a card that has landed on a pile becomes the pile's
+## top without a bake (PileStack). Not cached. Null unless the card is at rest
+## (its stage then is exactly what a bake would draw) and a RenderingDevice
+## can copy it on this thread: a readback would stall the frame mid-fight, so
+## the caller bakes instead (`request`).
+static func take(view: CardView) -> Face:
+	if not is_instance_valid(view) or not view.is_inside_tree() or not view.at_rest():
+		return null
+	var rd: RenderingDevice = RenderingServer.get_rendering_device()
+	if rd == null or not RenderingServer.is_on_render_thread():
+		return null
+	return _face_of(view, rd)
+
+
+## `view`'s face: copied on `rd`, or read back without one.
+static func _face_of(view: CardView, rd: RenderingDevice) -> Face:
 	var face: Face = Face.new()
 	face.shadow = view.rest_shadow()
 	face.shine = view.has_shine()
 	var stage: Texture2D = view.stage_texture()
 	var crop: Rect2i = crop_of(Vector2i(stage.get_width(), stage.get_height()))
-	var rd: RenderingDevice = RenderingServer.get_rendering_device()
-	if rd != null and RenderingServer.is_on_render_thread():
+	if rd != null:
 		face.copy_on_gpu(rd, stage, crop)
 	else:
 		face.picture = ImageTexture.create_from_image(view.stage_image().get_region(crop))

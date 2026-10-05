@@ -1194,9 +1194,20 @@ func _ready() -> void:
 		_stage.get_texture().get_image().save_png("%s_stage_%d.png" % [dump, uid])
 	if held:
 		return  # the hold armed the repaint; what it set reaches the shot
-	await get_tree().process_frame
-	await get_tree().process_frame
-	_freeze_if_idle()
+	_freeze_in(2)
+
+
+## Freeze the card `frames` frames from now, if it is idle then. On the main
+## loop's frames by a one-shot connection rather than an await: a card freed
+## first (a bake's, a dealt card whose fight closed) drops the connection with
+## it, where an awaiting `_ready` was resumed on it and logged "resumed after
+## await"; a card taken out of the tree meanwhile is still frozen, as before.
+func _freeze_in(frames: int) -> void:
+	if frames <= 0:
+		_freeze_if_idle()
+		return
+	(Engine.get_main_loop() as SceneTree).process_frame.connect(
+		_freeze_in.bind(frames - 1), CONNECT_ONE_SHOT)
 
 
 ## Stop drawing the card for good: both passes frozen as they are and never
