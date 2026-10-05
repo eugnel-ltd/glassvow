@@ -1225,7 +1225,8 @@ func end_turn(run: RunState, cb: CombatState) -> void:
 				# A Smolder kill (#544 A3): this tick is the killing blow, the
 				# HIT_ENEMY marked `poison` and `dead`. Each enemy's tick is its
 				# own blow, so two dying in one phase are two kills; a finale
-				# handoff kills no one and is not one.
+				# handoff kills no one and is not one. balance_sim.gd `_fight`
+				# re-counts these events from the queue: the two must not drift.
 				run.stats["smolderKills"] = _ji(run.stats.get("smolderKills", 0)) + 1
 				_on_enemy_death(run, cb, e)
 				continue

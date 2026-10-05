@@ -13,8 +13,9 @@ extends RefCounted
 ##   Pack's cards ride on the deal and count where the hand took them; a draw a
 ##   full hand refuses is not a card drawn, and Kindling never counts.
 ##
-## Both fold into the Vigil; the Sermon of Ash progresses on the product path;
-## `drawn` is additive to the v2 run and Vigil saves.
+## Both fold into the Vigil; the Sermon of Ash progresses on the product path,
+## and completes only once the build offers the Ashwarden; `drawn` is additive
+## to the v2 run and Vigil saves.
 
 const ASH_FIXTURE: String = "res://tests/fixtures/ashwarden_v2_run.json"
 const ASHWARDEN: int = 1
@@ -200,9 +201,12 @@ static func _drawn_beside_the_deal(content: ContentDB, fails: Array[String]) -> 
 
 ## The Sermon of Ash on the product path: Ashwarden fights played through
 ## `apply`, each won by the Ashen Core's Smolder ticking the last enemy dead,
-## and every run folded by `VigilState.commit_run` as the game ends a run. Nine
-## kills in one run leave the deed short; the tenth, in the next, unlocks it.
-## Each fight is won without a scratch, so the Endure way's `perfects` counts it.
+## and every run folded by `VigilState.commit_run` as the game ends a run. Each
+## fight is won without a scratch, so the Endure way's `perfects` counts it too.
+## In 1.0 (the Ashwarden deferred) the kills fold into the Vigil, nine in one run
+## and the tenth in the next, but the deed does not complete: no Ashen Choir, no
+## Smoldering Coal, so nothing new for the Dawn to reveal. Once the build offers
+## the Ashwarden, the next run's end completes it from the kills already accrued.
 static func _sermon_of_ash(content: ContentDB, fails: Array[String]) -> void:
 	var deed: Dictionary = content.deeds.get(SERMON, {})
 	if str(deed.get("stat", "")) != "smolderKills" or int(float(str(deed.get("n", 0)))) != 10 \
@@ -231,10 +235,23 @@ static func _sermon_of_ash(content: ContentDB, fails: Array[String]) -> void:
 			fails.append("ash way stats: the Vigil refused run %d" % r)
 			return
 		var total: int = int(float(str(vigil.deeds.get("smolderKills", -1))))
-		var unlocked: bool = vigil.unlocks.has(SERMON_UNLOCKS[0]) and vigil.unlocks.has(SERMON_UNLOCKS[1])
-		if total != 9 + r or unlocked != (r == 1):
-			fails.append("ash way stats: after run %d expected %d Smolder kills, unlocked %s; got %d, %s"
-				% [r, 9 + r, r == 1, total, vigil.unlocks])
+		if total != 9 + r or _sermon_granted(vigil):
+			fails.append("ash way stats: in 1.0 after run %d expected %d Smolder kills and no Sermon unlock; got %d, %s"
+				% [r, 9 + r, total, vigil.unlocks])
+	var offered: ContentDB = ContentDB.load_full(false)
+	var ash: Dictionary = offered.aspects[ASHWARDEN]
+	ash.erase("deferred")
+	var next_run: RunState = RunState.new_run(offered, 54412, "ash-sermon-offered",
+		{"aspect": ASHWARDEN})
+	if not vigil.commit_run(next_run, "death", offered) \
+			or int(float(str(vigil.deeds.get("smolderKills", -1)))) != 10 \
+			or SERMON_UNLOCKS.any(func(unlock: String) -> bool: return not vigil.unlocks.has(unlock)):
+		fails.append("ash way stats: with the Ashwarden offered, the accrued 10 kills should complete the Sermon; got %d, %s"
+			% [int(float(str(vigil.deeds.get("smolderKills", -1)))), vigil.unlocks])
+
+
+static func _sermon_granted(vigil: VigilState) -> bool:
+	return SERMON_UNLOCKS.any(func(unlock: String) -> bool: return vigil.unlocks.has(unlock))
 
 
 ## A real v2 Ashwarden save written before `drawn` loads it at zero and saves

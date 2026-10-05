@@ -23,6 +23,7 @@ static func run(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
 	_policy(content, fails)
 	_policy_follows_the_data(fails)
+	_deeds_complete_for_offered_classes(content, fails)
 	_fresh_title_begins_duskblade(content, fails)
 	_earned_aspect2_is_no_choice(content, fails)
 	_embark_offers_no_ashwarden(content, fails)
@@ -73,6 +74,34 @@ static func _policy_follows_the_data(fails: Array[String]) -> void:
 	_check(fails, ClassScope.withheld_unlocks(open).is_empty()
 			and ClassScope.shows_deed(open, "ashSermon"),
 		"an undeferred Ashwarden still withholds its unlock or its deed")
+
+
+## A deed completes, and grants its unlocks, only while an offered class can
+## pursue it: the rule the Vigil's display keeps. With every deed's count met,
+## the 1.0 profile gains every deed's unlocks but the Sermon of Ash's (the
+## Duskblade excludes it and the Ashwarden is deferred); with the Ashwarden
+## offered, it gains them all.
+static func _deeds_complete_for_offered_classes(content: ContentDB, fails: Array[String]) -> void:
+	var offered: ContentDB = ContentDB.load_full(false)
+	var ash: Dictionary = offered.aspects[ASH]
+	ash.erase("deferred")
+	for db: ContentDB in [content, offered]:
+		var vigil: VigilState = VigilState.blank()
+		for deed_v: Variant in db.deeds.values():
+			var deed: Dictionary = deed_v
+			var stat: String = str(deed.get("stat", ""))
+			vigil.deeds[stat] = maxi(int(float(str(vigil.deeds.get(stat, 0)))),
+				int(float(str(deed.get("n", 0)))))
+		var run_state: RunState = RunState.new_run(db, 54430, "deeds-in-scope", {"aspect": DUSK})
+		_check(fails, vigil.commit_run(run_state, "death", db), "the deed profile's run was refused")
+		for id_v: Variant in db.deeds:
+			var id: String = str(id_v)
+			var deed: Dictionary = db.deeds[id_v]
+			var expected: bool = db == offered or id != "ashSermon"
+			for unlock_v: Variant in deed.get("unlocks", []):
+				_check(fails, vigil.unlocks.has(str(unlock_v)) == expected,
+					"%s's %s granted %s with the Ashwarden %s" % [id, unlock_v, not expected,
+						"offered" if db == offered else "deferred"])
 
 
 static func _fresh_title_begins_duskblade(content: ContentDB, fails: Array[String]) -> void:

@@ -314,9 +314,13 @@ func _refresh_unlocks(content: ContentDB, outcome: String) -> void:
 		)
 		if reached and not unlocks.has(id):
 			unlocks.append(id)
-	for deed_v: Variant in content.deeds.values():
-		var deed: Dictionary = deed_v
-		if _ji(deeds.get(str(deed.get("stat")), 0)) < _ji(deed.get("n", 0)):
+	# A deed completes, and grants, only while an offered class can pursue it
+	# (the rule the Vigil's display keeps): its progress still folds above, and
+	# a class the build offers again completes it from what was accrued.
+	for deed_id_v: Variant in content.deeds:
+		var deed: Dictionary = content.deeds[deed_id_v]
+		if _ji(deeds.get(str(deed.get("stat")), 0)) < _ji(deed.get("n", 0)) \
+				or not ClassScope.shows_deed(content, str(deed_id_v)):
 			continue
 		for unlock_v: Variant in deed.get("unlocks", []):
 			var unlock: String = str(unlock_v)
