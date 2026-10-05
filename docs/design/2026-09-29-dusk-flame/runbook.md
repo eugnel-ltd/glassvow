@@ -67,7 +67,9 @@ The lock's floor is 200 paired seeds a cell. Every arm of a cell plays the same 
 - `entry`: the Vigil just after the class unlocks (§8);
 - `full`: every reveal and every deed's unlocks.
 
-The simulator's own default, `mature`, is historical; the runner always names a pool. Which cells each gate grades is the lock's §11 (G1 and G5 are not graded at V5 `fresh`; row B is read at V0).
+The simulator's own default, `mature`, is historical; the runner always names a pool. **The graders cannot read `entry` yet** (§8): `run` accepts `v0-entry`, but `table`, `rowb` and `balance_ways.py --from-dir` read only `fresh` and `full`, and stop with "cannot read" after the runs. (`g3` takes its cells by name and reads `v0-entry`.) Fix the graders before an `entry` reading of record.
+
+Which cells each gate grades is the lock's §11 (G1 and G5 are not graded at V5 `fresh`; row B is read at V0).
 
 **Arms.** Each is one `balance_sim.gd` policy, and every arm plays its fights alike; arms differ only in how they build.
 
@@ -97,7 +99,7 @@ godot --headless --import      # once per worktree, and again after moving its h
 
 | Command | What it does and writes |
 |---|---|
-| `run s/v0 --seeds 13000-13999 --cells v0-fresh,v0-full --play search --pilot p9 --search s2 --replay --jobs 6` | Plans every chunk (cell × arm × seed band), runs those not done, `--jobs` at a time, and merges them. Writes `s/v0/parts/<cell>-<arm>-<first seed>.json` (one simulator report a chunk), its `.chunk.json` sidecar and its `.log`; then one merged `s/v0/<cell>-<arm>.json` per cell and arm, and `<cell>-replay.json` under `--replay`. Options: `--aspect` (default `duskblade`), `--arms` (default every arm of the class), `--chunk` (50 seeds), `--jobs` (4; 1 to 16), `--content` (a scratch catalogue), `--way-weights COMMIT/OFF`, `--godot` |
+| `run s/v0 --seeds 13000-13999 --cells v0-fresh,v0-full --play search --pilot p9 --search s2 --replay --jobs 6` | Plans every chunk (cell × arm × seed band), runs those not done, `--jobs` at a time, and merges them. Writes `s/v0/parts/<cell>-<arm>-<first seed>.json` (one simulator report a chunk), its `.chunk.json` sidecar and its `.log`; then one merged `s/v0/<cell>-<arm>.json` per cell and arm, and `<cell>-replay.json` under `--replay`. Options: `--cells` (default `v0-fresh,v0-full`), `--aspect` (default `duskblade`), `--arms` (default every arm of the class), `--chunk` (50 seeds), `--jobs` (4; 1 to 16), `--content` (a scratch catalogue), `--way-weights COMMIT/OFF`, `--godot` |
 | `run s/v5 --seeds 13000-14999 --cells v5-fresh,v5-full --play search --pilot p9 --search s2 --replay --jobs 6` | The V5 table, likewise |
 | `run s/ext-v5 --seeds 15000-16999 --cells v5-full --arms C_shatter,C_lantern,C_edge,A_lit --play search --pilot p9 --search s2 --jobs 6` | G3's second V5 full band: the four arms G3 reads, no replay |
 | `join s/g3-4000 v5-full C_shatter,C_lantern,C_edge,A_lit s/v5 s/ext-v5` | Joins one cell's arms across directories of disjoint bands into `s/g3-4000/<cell>-<arm>.json`, and prints each arm's count, first and last seed. The bands must share their manifests apart from the seeds: the same commit, content and bots |
@@ -194,7 +196,7 @@ It runs in the Godot suite and leaves 1.0's bots selected. A pin moves only with
 - **`tools/balance_classes.json`.** One entry, `"<aspect id>": {"wayStats": {"<way id>": "<run stat>", …}}`, naming for every content way the run stat its play produces; the Duskblade's are `shatters`, `kindles` and `cracked`. The search player scores those stats as the way's verbs and the simulator records their per-fight rates. The stat must be one `domain/` increments in `run.stats`: the simulator reads `run.stats.get(<stat>, 0)`, so a stat nothing increments reads 0 in every row, without an error.
 - **The `entry` pool.** `--pool=entry` (`_apply_entry` in `tools/balance_sim.gd`) is the Vigil after one run played and won, read from the domain's own unlock rules; the deed that one win meets, `firstDawn`, grants `aspect2`, the Ashwarden's unlock.
 - **The graders' pools.** The graders read `fresh` and `full`: `POOLS`, `G1_FLOOR` and `G5_FLOOR` in `tools/balance_ways.py`, and `B1_FLOOR` in `tools/balance_readout_tables.py`. A class read on `entry` needs them to take `entry` in `fresh`'s place, with tests, before its first graded table. Readout A0 graded its `entry` screens with a scratch script.
-- **The graders' ways.** `paired`, `g3`, `rowb`, `table` and `balance_ways.py --from-dir` take the class's ways from `content/full-content.json`. A scratch catalogue that keeps the class's way ids is graded like any table; one that adds ways (a new class's tagging screen) can be run (`run --content`) but not graded by them.
+- **The graders' ways.** `paired`, `g3`, `rowb`, `table` and `balance_ways.py --from-dir` take the class's ways from `content/full-content.json`. A scratch catalogue that keeps the class's way ids is graded like any table; one that adds ways (a new class's tagging screen) can be run (`run --content`) but not graded by them. Even to run, every new way needs its `wayStats` entry in `tools/balance_classes.json` first: `run` builds its roster with `read_class`, which refuses a way without one before any chunk starts. The entry is needed to run, not only to grade.
 - **The bots.** The class's verbs are playable before any reading of it counts (#544 decision 4; §10).
 
 **The third-class guards** (the P3 review, PR #687). Each lands in the PR that adds the third class:
