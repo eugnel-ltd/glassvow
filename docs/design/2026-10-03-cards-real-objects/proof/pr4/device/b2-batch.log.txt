@@ -1,0 +1,34 @@
+[01:07:22] lock held
+[01:07:50] installed C (<scratch>/ipa_wt4_nodeal/glassvow.ipa)
+[01:07:50] launch wc1 args=[--map --seed=1 --flight-probe=nonce=wc1,warm=1]
+[01:08:19] rows wc1: 812 frames; build=806e8a30 HAND 5 cards landed_ms=832 
+[01:08:22] launch f1 args=[--map --seed=1 --flight-probe=nonce=f1,deals=1]
+[01:08:48] rows f1: 810 frames; build=806e8a30 HAND 5 cards landed_ms=850 
+[01:08:51] launch z1 args=[--map --seed=1 --flight-probe=nonce=z1,prewarm=0,deals=1]
+[01:09:17] rows z1: 802 frames; build=806e8a30 HAND 5 cards landed_ms=850 
+[01:09:20] launch n1 args=[--map --seed=1 --flight-probe=nonce=n1,nodeal=1,deals=1]
+[01:09:45] rows n1: 801 frames; build=806e8a30 HAND 5 cards landed_ms=833 
+[01:09:48] launch f2 args=[--map --seed=1 --flight-probe=nonce=f2,deals=1]
+[01:10:13] rows f2: 799 frames; build=806e8a30 HAND 5 cards landed_ms=833 
+[01:10:16] launch z2 args=[--map --seed=1 --flight-probe=nonce=z2,prewarm=0,deals=1]
+[01:10:42] rows z2: 706 frames; build=806e8a30 HAND 5 cards landed_ms=817 
+[01:10:45] launch n2 args=[--map --seed=1 --flight-probe=nonce=n2,nodeal=1,deals=1]
+[01:11:10] rows n2: 794 frames; build=806e8a30 HAND 5 cards landed_ms=833 
+[01:11:13] launch f3 args=[--map --seed=1 --flight-probe=nonce=f3,deals=1]
+[01:11:38] rows f3: 794 frames; build=806e8a30 HAND 5 cards landed_ms=836 
+[01:11:41] launch z3 args=[--map --seed=1 --flight-probe=nonce=z3,prewarm=0,deals=1]
+[01:12:02] rows z3: 787 frames; build=806e8a30 HAND 5 cards landed_ms=834 
+[01:12:05] launch n3 args=[--map --seed=1 --flight-probe=nonce=n3,nodeal=1,deals=1]
+[01:12:25] rows n3: 798 frames; build=806e8a30 HAND 5 cards landed_ms=834 
+[01:12:28] launch f4 args=[--map --seed=1 --flight-probe=nonce=f4,deals=1]
+[01:12:51] rows f4: 809 frames; build=806e8a30 HAND 5 cards landed_ms=833 
+[01:12:54] launch z4 args=[--map --seed=1 --flight-probe=nonce=z4,prewarm=0,deals=1]
+[01:13:13] rows z4: 793 frames; build=806e8a30 HAND 5 cards landed_ms=836 
+[01:13:16] launch n4 args=[--map --seed=1 --flight-probe=nonce=n4,nodeal=1,deals=1]
+[01:13:40] rows n4: 796 frames; build=806e8a30 HAND 5 cards landed_ms=834 
+[01:13:43] launch nz1 args=[--map --seed=1 --flight-probe=nonce=nz1,nodeal=1,prewarm=0,deals=1]
+[01:14:07] rows nz1: 796 frames; build=806e8a30 HAND 5 cards landed_ms=848 
+[01:14:11] launch nz2 args=[--map --seed=1 --flight-probe=nonce=nz2,nodeal=1,prewarm=0,deals=1]
+[01:14:34] rows nz2: 793 frames; build=806e8a30 HAND 5 cards landed_ms=850 
+[01:14:37] batch done
+[01:14:37] lock released

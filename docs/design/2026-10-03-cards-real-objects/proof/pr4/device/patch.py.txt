@@ -1,0 +1,43 @@
+import sys
+# QA-only probe attach (#657 PR 4). Never committed: applied for a QA export
+# or a Mac probe run, reverted straight after.   patch.py apply|revert <wt>
+MARK = "# QA-FLIGHT-PROBE"
+wt = sys.argv[2]
+p = wt + "/application/main.gd"
+s = open(p).read()
+a = 'func _ready() -> void:\n\tprint("glassvow boot " + str(Engine.get_version_info()["string"]))\n'
+attach = a + ('\tif " ".join(OS.get_cmdline_user_args()).contains("--flight-probe="):  ' + MARK + '\n'
+              '\t\tvar flight_probe: Node = (load("res://qa_cards/flight_probe.gd") as GDScript).new()  ' + MARK + '\n'
+              '\t\tadd_child.call_deferred(flight_probe)  ' + MARK + '\n')
+b = 'func _prewarm_card_turns() -> void:\n\tCardTurn.prewarm(_screen, CardBacks.chosen(Preferences.active, _vigil))\n'
+skip = ('func _prewarm_card_turns() -> void:\n'
+        '\tvar qa_args: String = " ".join(OS.get_cmdline_user_args())  ' + MARK + '\n'
+        '\tif qa_args.contains("--flight-probe=") and qa_args.contains("prewarm=0"):  ' + MARK + '\n'
+        '\t\treturn  ' + MARK + '\n'
+        '\tif qa_args.contains("--flight-probe=") and qa_args.contains("prewarm=warmer"):  ' + MARK + '\n'
+        '\t\tvar qa_warmer: TextureRect = CardTurn._warmer()  ' + MARK + '\n'
+        '\t\t_screen.add_child(qa_warmer)  ' + MARK + '\n'
+        '\t\tget_tree().create_timer(0.05).timeout.connect(qa_warmer.queue_free)  ' + MARK + '\n'
+        '\t\treturn  ' + MARK + '\n'
+        '\tCardTurn.prewarm(_screen, CardBacks.chosen(Preferences.active, _vigil))\n')
+if sys.argv[1] == "apply":
+    assert MARK not in s
+    assert s.count(a) == 1 and s.count(b) == 1, "anchors"
+    s = s.replace(a, attach).replace(b, skip)
+else:
+    s = "\n".join(l for l in s.split("\n") if MARK not in l)
+open(p, "w").write(s)
+print(sys.argv[1], wt, s.count(MARK))
+# The opening deal can be left out (nodeal=1), to see the entrance without it.
+p2 = wt + "/presentation/combat/combat_screen.gd"
+s2 = open(p2).read()
+c = 'func _deal_opening_hand() -> void:\n'
+nodeal = c + ('\tif " ".join(OS.get_cmdline_user_args()).contains("nodeal=1"):  ' + MARK + '\n'
+              '\t\treturn  ' + MARK + '\n')
+if sys.argv[1] == "apply":
+    assert MARK not in s2 and s2.count(c) == 1
+    s2 = s2.replace(c, nodeal)
+else:
+    s2 = "\n".join(l for l in s2.split("\n") if MARK not in l)
+open(p2, "w").write(s2)
+print(sys.argv[1], "combat_screen", s2.count(MARK))
