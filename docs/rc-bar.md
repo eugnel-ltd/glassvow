@@ -40,7 +40,7 @@ The bar binds one exact RC commit. If the RC commit changes:
 | Diff since evidenced commit | Consequence |
 |---|---|
 | Docs-only | All evidence carries |
-| Any code, asset, or export-preset change | P1 re-runs; P2, P3, P4 re-run; P5 re-verifies only the surfaces the change touches; P7 re-checks build-config items only (SDK, Info.plist keys, signing); **P9's independent re-run and the exam's own items repeat on the new candidate commit, and if the content SHA-256 moved, the verdict of record no longer describes the candidate (P9)** |
+| Any code, asset, or export-preset change | P1 re-runs; P2, P3, P4 re-run; P5 re-verifies only the surfaces the change touches; P7 re-checks build-config items only (SDK, Info.plist keys, signing); **P9's independent re-run and the exam's own items repeat on the new candidate commit. If the candidate's content SHA-256 is not the reading of record's, the content-equivalence comparison repeats on the new commit too, and without it the verdict of record no longer describes the candidate (P9)** |
 | Player-facing-major change (James's judgment) | Additionally, P6 beta round repeats |
 
 "Player-facing-major" means a change that would read differently between the beta round's build
@@ -53,6 +53,10 @@ earlier commit survives only through this table.
 re-run on the new candidate SHA" and "and P9's human round H with it". G1 and G4 became readings
 on 2026-09-30; the bot round (the lock's row B) replaced H on 2026-10-01 and re-runs with the
 rest of P9's evidence.
+
+*Superseded in this table on 2026-10-05:* the P9 entry of 2026-10-04 ended "and if the content
+SHA-256 moved, the verdict of record no longer describes the candidate (P9)". P9 now also accepts
+content equivalence for the class (P9, *History*).
 
 ## P0 — Build identity
 
@@ -290,7 +294,7 @@ readout 5; G3 and G6 against A_lit, readout 10; G5 over survivors and the commit
 | G4 random loses | reading | Reported in every graded cell, point and 95% interval (owner ruling, 2026-09-30) |
 | G5 reachability | graded | Over the runs alive at the act's end, with the all-runs figure beside it (from readout 13) |
 | G6 diversity of adaptive play | graded | Among A_lit's wins (from readout 10). Arm A's row is the floor, reported |
-| G7 guards | graded; a miss is always NOT ACCEPTED | Zero stalls and errors; deterministic replay; the CEM stress's Vow-5 ceiling read on holdout numbers only (training fitness never enters the receipt as a ceiling); save lineage and internal IDs unchanged. The lock's §12 invariants bind the candidate: no save-schema change, IDs only added, and `port_fixtures/` moved only in an explicit commit that says why |
+| G7 guards | graded; a miss is always NOT ACCEPTED | Zero stalls and errors; deterministic replay; the CEM stress's Vow-5 ceiling read on holdout numbers only (training fitness never enters the receipt as a ceiling); save lineage and internal IDs unchanged. The [Duskblade lock's §12](design/2026-09-29-dusk-flame/README.md#12-implementation-map) invariants bind the candidate: no save-schema change, IDs only added, and `port_fixtures/` moved only in an explicit commit that says why |
 | B bot round | graded | Both parts of the lock's row B, played by the search player: every committed way wins at V0, and every way has a feel. Row B replaced the human round H (owner ruling, 2026-10-01) |
 
 - **A graded gate** is one the verdict must answer; under the owner's ruling of 2026-10-02 its
@@ -332,8 +336,32 @@ the readout whose complete §11 table it was given on.
   reserved as 1.1's holdout (#544's plan of record, decision 7).
 - **"On the exact candidate"** means all three of the following, on the RC commit the receipt
   binds:
-  1. **Same content.** The RC commit's `content/full-content.json` has the reading of record's
-     SHA-256. If it does not, the verdict of record does not describe the candidate: a new
+  1. **The same content, or content equivalent for the class.** Either (a) the RC commit's
+     `content/full-content.json` has the reading of record's SHA-256, or (b) its content is
+     **equivalent for the class**:
+     - At the RC commit, from a clean checkout, on the reading of record's host class
+       (Apple-silicon macOS with the pinned Godot 4.7.2), the reading of record's complete cell
+       table is played again with the instrument of record, named explicitly
+       (`tools/balance_readout.py run … --play search --pilot p8-d0-v3 --search s1`), on the
+       bands of record.
+     - Every run's **graded fields** are identical to the reading of record's, run for run. The
+       graded fields are the fields of a run that any part of the verdict's evidence reads: the
+       §11 table, the G1–G7 gates, row B and the paired G3. They are named once, as
+       `GRADED_FIELDS` beside the graders in `tools/balance_ways.py`, and the readout runner's
+       tests fail when a grader reads a field the list does not name. G7's replay compares
+       whole runs, so whether each replay is identical to its arm-A run is graded too. The CEM
+       stress plays its own seeds and reads no run of the table.
+     - Any other field that differs is listed, with the commit that caused it.
+     - The comparison is recorded in the exam packet, with its commands and the comparer's
+       output: `python3 -B tools/balance_readout.py equivalence <candidate's run directory>
+       <reading of record's run directory>`, once for each of the reading's run directories
+       (readout 13's
+       [reproduction](design/2026-09-29-dusk-flame/readouts/readout-13-reproduction.md) names
+       its archive and the digest of its rows). The comparer pairs the runs by cell, arm and
+       seed, and exits 0 only when every graded field matches, both sides hold the same runs and
+       every manifest names the same instrument.
+
+     If neither (a) nor (b) holds, the verdict of record does not describe the candidate: a new
      reading on the candidate and a new verdict are needed.
   2. **The independent re-run.** From a clean checkout of the RC commit, on any host, the
      reading's cell table is played again with the instrument of record (pilot `p8-d0-v3`,
@@ -346,9 +374,12 @@ the readout whose complete §11 table it was given on.
      numbers need not match (owner ruling, 2026-09-27). A run under another instrument, such as
      1.1's `s2`, is a new reading, not this re-run. The Flame is code as well as content, so the
      re-run binds the commit and the verdict binds the content it was given on.
-  3. **The exam's own items.** The items the lock's §11 *Exam* and *Seeds* keep for the final
-     candidate, which no readout runs: the CEM stress, with its ceiling read on the historical
-     holdout, used once; the save-lineage and internal-ID check; and the lock's §12 invariants
+  3. **The exam's own items.** The items the
+     [Duskblade lock's §11](design/2026-09-29-dusk-flame/README.md#11-science-the-instrument-panel)
+     *Exam* and *Seeds* keep for the final candidate, which no readout runs: the CEM stress, with
+     its ceiling read on the historical holdout, used once; the save-lineage and internal-ID
+     check; and the
+     [Duskblade lock's §12](design/2026-09-29-dusk-flame/README.md#12-implementation-map) invariants
      (no save-schema change, new ids only added, `port_fixtures/` moved only in an explicit
      commit that says why). G7 passes on them.
 
@@ -375,9 +406,9 @@ verdict binds the RC once the RC commit is the exact candidate defined above.
 
 - [ ] **Verdict.** For every class the build ships, the verdict of record is ACCEPT, with its
       reservations named (1.0: the Duskblade verdict above).
-- [ ] **Exact candidate.** Same content, an agreeing independent re-run and the exam's own
-      items, as defined above, on the RC commit the receipt binds. The scoped-reset table decides
-      when they run again.
+- [ ] **Exact candidate.** The same content or content equivalent for the class, an agreeing
+      independent re-run and the exam's own items, as defined above, on the RC commit the
+      receipt binds. The scoped-reset table decides when they run again.
 - [ ] **Deferred claims.** No Ashwarden claim, and no claim that compares the classes, is
       reported as PASS.
 - [ ] A NOT ACCEPTED, a verdict that does not describe the candidate, a re-run that disagrees or
@@ -385,8 +416,8 @@ verdict binds the RC once the RC commit is the exact candidate defined above.
       this pillar.
 
 Evidence: the verdict of record for each shipped class with its reading and reservations, and
-the exam packet on the RC commit (the content check, the independent re-run's verdicts and the
-exam's own items).
+the exam packet on the RC commit (the content check, or the equivalence comparison with its
+commands and the comparer's output; the independent re-run's verdicts; and the exam's own items).
 
 **History.** The full text of 29 September is `git show db90a4f5:docs/rc-bar.md`.
 
@@ -412,6 +443,21 @@ exam's own items).
   - *"The Flame is code as well as content, so the identity is the commit, not a content hash":*
     kept for the re-run, and extended on 2026-10-04: the verdict also binds the reading's
     content SHA-256 and instrument.
+- *In force from 2026-10-04 to 2026-10-05* (#544's step P5, PR #685, `6e04a8ea`): item 1 of
+  "On the exact candidate" read "**Same content.** The RC commit's `content/full-content.json`
+  has the reading of record's SHA-256. If it does not, the verdict of record does not describe
+  the candidate: a new reading on the candidate and a new verdict are needed." The checklist
+  line read "Same content, an agreeing independent re-run and the exam's own items", and the
+  evidence line named only "the content check". Superseded on 2026-10-05 by route (b), content
+  equivalence for the class, beside the same SHA-256 (#544). The Ashwarden's content lands
+  dormant on main before the 1.0 RC is cut, behind `"deferred": true`, and every Ash-only id
+  enters the Duskblade's `excludes`, so the RC's content SHA-256 is not the reading of record's
+  while the Duskblade's draws and RNG stream stay byte-identical (the invariance panel,
+  `tests/test_balance_invariance.gd`, pins them on every PR). The orchestrator ruled on
+  5 October 2026 that step A2 is neither held for the RC cut nor kept on a long-lived branch,
+  and that it merges only once this route is in force; the ruling is recorded in the
+  [Ashwarden lock's §14](design/2026-10-05-ash-flame/README.md#14-fallback-time-box-and-open-items)
+  (#692).
 - *Before 2026-09-29:* the strategy-diversity method, kept as history in
   [`docs/balance/p9-strategy-diversity-system.md`](balance/p9-strategy-diversity-system.md);
   [`docs/reviews/549/obligation-map.md`](reviews/549/obligation-map.md) records where each of

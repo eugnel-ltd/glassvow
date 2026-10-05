@@ -15,6 +15,8 @@ this adds what readouts 9-13 kept in scratch:
   rowb        row B (B1 win rate, B2 expression and close calls) on 95% intervals
   table       the complete section 11 table with reference columns (--tidy for the readout's gate table)
   compare     two run directories, run for run
+  equivalence content equivalence for the class (docs/rc-bar.md P9): a candidate's re-run against the
+              reading of record, run for run on the graded fields (balance_ways.GRADED_FIELDS)
   candidates  scratch content catalogues for --content, from a lever spec
 
 Every command that launches Godot (`run`) refuses unless the project root's override.cfg sets
@@ -28,6 +30,7 @@ Usage (repo root), readout 13's finals:
   python3 -B tools/balance_readout.py table s/final-v0 s/final-v5 --v0-seeds 13000-13999 --v5-seeds 13000-14999
   python3 -B tools/balance_readout.py join s/g3-4000 v5-full C_shatter,C_lantern,C_edge,A_lit s/final-v5 s/ext-v5
   python3 -B tools/balance_readout.py g3 s/g3-4000 v5-full
+  python3 -B tools/balance_readout.py equivalence s/final-v0 <reading of record>/final-v0   # and final-v5, ext-v5
 
 The bots are 1.0's instrument of record unless named: pilot p8-d0-v3 and search s1. 1.1's are
 named with `--pilot p9 --search s2` (#544 P6, readout 14). Every chunk's command and every
@@ -128,6 +131,12 @@ def cmd_compare(opts: argparse.Namespace) -> int:
     return 0 if compare.identical(results) else 2
 
 
+def cmd_equivalence(opts: argparse.Namespace) -> int:
+    result = compare.equivalence(opts.new, opts.reference, bw.roster(opts.aspect))
+    print(compare.render_equivalence(result))
+    return 0 if result.equivalent else 2
+
+
 def cmd_candidates(opts: argparse.Namespace) -> int:
     for path in catalogue.write_candidates(opts.source, opts.spec, opts.out_dir, _csv(opts.names) or None):
         print(path)
@@ -206,6 +215,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("a", type=Path)
     p.add_argument("b", type=Path)
     p.add_argument("--reports", default="", help="comma list of report names; default every shared report")
+
+    p = add("equivalence", cmd_equivalence, "content equivalence for the class: every run's graded fields against "
+            "the reading of record's (exit 2 unless equivalent)")
+    aspect_option(p)
+    p.add_argument("new", type=Path, help="the candidate's run directory")
+    p.add_argument("reference", type=Path, help="the reading of record's run directory (merged reports or chunks)")
 
     p = add("candidates", cmd_candidates, "write scratch content catalogues from a lever spec")
     p.add_argument("source", type=Path, help="the catalogue to edit, e.g. content/full-content.json")
