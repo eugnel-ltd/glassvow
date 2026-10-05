@@ -5,7 +5,7 @@
 # port detached from on 2026-08-16 (#317), so `--update` refuses to do it and
 # the number has to be edited by hand, in a diff a reviewer can see.
 #
-# 597 occurrence(s) across 52 file(s).
+# 595 occurrence(s) across 52 file(s).
 
 11	application/main.gd
 94	docs/actor-animation-checklist.md
@@ -37,7 +37,7 @@
 4	presentation/combat/facet_pips.gd
 9	presentation/combat/floaters.gd
 1	presentation/combat/glass_style.gd
-15	presentation/combat/hand_view.gd
+13	presentation/combat/hand_view.gd
 20	presentation/combat/hud_bar.gd
 3	presentation/combat/idle_motes.gd
 2	presentation/combat/intent_chip.gd

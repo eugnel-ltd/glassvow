@@ -1,0 +1,65 @@
+#!/bin/zsh
+# cards-pr4 device batch (#657 PR 4). Scratch, never committed.
+# usage: batch.zsh <batch-name> <step> [<step> ...]
+#   install:<A|B>            install that build's QA .ipa (A = main cbfac106, B = the branch)
+#   <nonce>:<probe options>  one launch: -- --map --seed=1 --flight-probe=nonce=<nonce>,<options>
+# The nonce rides in the launch arguments and the probe echoes it, and the
+# build's commit, in its PROBE row.
+set -uo pipefail
+S=<scratchpad>   # the session scratchpad
+FLOW=$S/device13/flow
+HERE=$S/cards-lane/pr4-device
+NAME=$1; shift
+OUT=$HERE/$NAME
+mkdir -p $OUT
+LOCK=cards-pr4
+QA=io.fol2.glassvow.qa
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a $OUT/batch.log; }
+$FLOW/ipad_lock.sh acquire $LOCK >> $OUT/batch.log 2>&1 || { log "lock failed"; exit 1; }
+cleanup() { $FLOW/ipad_lock.sh release $LOCK >> $OUT/batch.log 2>&1; log "lock released"; }
+trap cleanup EXIT INT TERM
+log "lock held"
+udid() {
+  xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c 'import json,sys; print(next(d["hardwareProperties"]["udid"] for d in json.load(sys.stdin)["result"]["devices"] if d["hardwareProperties"].get("productType")=="iPad11,6"))'
+}
+U=$(udid)
+[[ -n "$U" ]] || { log "no iPad"; exit 1; }
+redact() { sed "s/$U/<device>/g"; }
+pull() { timeout 300 xcrun devicectl device copy from --device "$U" --domain-type appDataContainer --domain-identifier $QA --source Documents/$1 --destination $2 >/dev/null 2>&1; }
+for step in "$@"; do
+  $FLOW/ipad_lock.sh acquire $LOCK >> $OUT/batch.log 2>&1   # ours: refreshes its age
+  if [[ "$step" == install:* ]]; then
+    b=${step#install:}
+    ipa=$HERE/ipa_wt4-base/glassvow.ipa
+    [[ "$b" == "B" ]] && ipa=$HERE/ipa_wt4/glassvow.ipa
+    [[ "$b" == "C" ]] && ipa=$HERE/ipa_wt4_nodeal/glassvow.ipa
+    bid=$(unzip -p "$ipa" Payload/glassvow.app/Info.plist | plutil -extract CFBundleIdentifier raw -o - -)
+    [[ "$bid" == "$QA" ]] || { log "refusing: $ipa is $bid"; exit 1; }
+    ok=0
+    for attempt in 1 2 3; do
+      if timeout 300 xcrun devicectl device install app --device "$U" "$ipa" 2>&1 | redact >> $OUT/install.log; then ok=1; break; fi
+      log "install $b attempt $attempt failed"; sleep 10
+    done
+    [[ $ok == 1 ]] || { log "install $b failed"; exit 1; }
+    log "installed $b ($ipa)"
+    continue
+  fi
+  nonce=${step%%:*}; opts=${step#*:}
+  args="--map --seed=1 --flight-probe=nonce=$nonce,$opts"
+  log "launch $nonce args=[$args]"
+  timeout 90 xcrun devicectl device process launch --terminate-existing --device "$U" \
+    $QA -- ${(z)args} 2>&1 | redact >> $OUT/launch.log || log "launch rc=$?"
+  got=0
+  for i in $(seq 1 45); do
+    sleep 4
+    if pull flight_probe_$nonce.txt $OUT/rows_$nonce.txt && grep -q " DONE" $OUT/rows_$nonce.txt; then got=1; break; fi
+  done
+  if [[ $got == 1 ]]; then
+    log "rows $nonce: $(grep -c ' F ' $OUT/rows_$nonce.txt) frames; $(grep -h ' PROBE \| HAND \| DEAL ' $OUT/rows_$nonce.txt | grep -o 'build=[0-9a-f]*\|HAND [0-9]* cards\|landed_ms=[0-9]*' | tr '\n' ' ')"
+  else
+    log "no DONE rows for $nonce"
+  fi
+  sleep 3
+done
+log "batch done"

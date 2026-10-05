@@ -1,0 +1,53 @@
+[00:47:42] lock held
+[00:48:09] installed A (<scratch>/ipa_wt4-base/glassvow.ipa)
+[00:48:09] launch wa1 args=[--map --seed=1 --flight-probe=nonce=wa1,warm=1]
+[00:48:33] rows wa1: 806 frames; build=cbfac106 HAND 5 cards landed_ms=952 
+[00:48:36] launch a1 args=[--map --seed=1 --flight-probe=nonce=a1,deals=6]
+[00:49:19] rows a1: 1956 frames; build=cbfac106 HAND 5 cards landed_ms=952 landed_ms=949 landed_ms=952 landed_ms=950 landed_ms=950 landed_ms=950 
+[00:49:22] launch a2 args=[--map --seed=1 --flight-probe=nonce=a2,deals=6]
+[00:50:03] rows a2: 1985 frames; build=cbfac106 HAND 5 cards landed_ms=919 landed_ms=950 landed_ms=950 landed_ms=950 landed_ms=950 landed_ms=953 
+[00:50:29] installed B (<scratch>/ipa_wt4/glassvow.ipa)
+[00:50:29] launch wb1 args=[--map --seed=1 --flight-probe=nonce=wb1,warm=1]
+[00:50:53] rows wb1: 707 frames; build=806e8a30 HAND 5 cards landed_ms=834 
+[00:50:56] launch b1 args=[--map --seed=1 --flight-probe=nonce=b1,deals=6]
+[00:51:37] rows b1: 1938 frames; build=806e8a30 HAND 5 cards landed_ms=834 landed_ms=835 landed_ms=833 landed_ms=833 landed_ms=833 landed_ms=833 
+[00:51:40] launch b2 args=[--map --seed=1 --flight-probe=nonce=b2,deals=6]
+[00:52:23] rows b2: 1935 frames; build=806e8a30 HAND 5 cards landed_ms=833 landed_ms=832 landed_ms=833 landed_ms=831 landed_ms=833 landed_ms=834 
+[00:52:45] installed A (<scratch>/ipa_wt4-base/glassvow.ipa)
+[00:52:45] launch wa2 args=[--map --seed=1 --flight-probe=nonce=wa2,warm=1]
+[00:53:08] rows wa2: 807 frames; build=cbfac106 HAND 5 cards landed_ms=950 
+[00:53:11] launch a3 args=[--map --seed=1 --flight-probe=nonce=a3,deals=6]
+[00:53:53] rows a3: 1987 frames; build=cbfac106 HAND 5 cards landed_ms=966 landed_ms=949 landed_ms=951 landed_ms=950 landed_ms=950 landed_ms=955 
+[00:53:56] launch a4 args=[--map --seed=1 --flight-probe=nonce=a4,deals=6]
+[00:54:43] rows a4: 1928 frames; build=cbfac106 HAND 5 cards landed_ms=952 landed_ms=949 landed_ms=949 landed_ms=950 landed_ms=933 landed_ms=950 
+[00:55:07] installed B (<scratch>/ipa_wt4/glassvow.ipa)
+[00:55:07] launch wb2 args=[--map --seed=1 --flight-probe=nonce=wb2,warm=1]
+[00:55:30] rows wb2: 739 frames; build=806e8a30 HAND 5 cards landed_ms=834 
+[00:55:33] launch b3 args=[--map --seed=1 --flight-probe=nonce=b3,deals=6]
+[00:56:15] rows b3: 1941 frames; build=806e8a30 HAND 5 cards landed_ms=832 landed_ms=834 landed_ms=833 landed_ms=833 landed_ms=833 landed_ms=831 
+[00:56:18] launch b4 args=[--map --seed=1 --flight-probe=nonce=b4,deals=6]
+[00:57:00] rows b4: 1949 frames; build=806e8a30 HAND 5 cards landed_ms=836 landed_ms=833 landed_ms=833 landed_ms=834 landed_ms=834 landed_ms=832 
+[00:57:29] installed A (<scratch>/ipa_wt4-base/glassvow.ipa)
+[00:57:30] launch wa3 args=[--map --seed=1 --flight-probe=nonce=wa3,warm=1]
+[00:57:56] rows wa3: 801 frames; build=cbfac106 HAND 5 cards landed_ms=933 
+[00:57:59] launch a5 args=[--map --seed=1 --flight-probe=nonce=a5,deals=6]
+[00:58:42] rows a5: 1987 frames; build=cbfac106 HAND 5 cards landed_ms=950 landed_ms=951 landed_ms=949 landed_ms=950 landed_ms=950 landed_ms=950 
+[00:58:45] launch a6 args=[--map --seed=1 --flight-probe=nonce=a6,deals=6]
+[00:59:28] rows a6: 1904 frames; build=cbfac106 HAND 5 cards landed_ms=949 landed_ms=949 landed_ms=949 landed_ms=950 landed_ms=950 landed_ms=950 
+[00:59:58] installed B (<scratch>/ipa_wt4/glassvow.ipa)
+[00:59:58] launch wb3 args=[--map --seed=1 --flight-probe=nonce=wb3,warm=1]
+[01:00:23] rows wb3: 809 frames; build=806e8a30 HAND 5 cards landed_ms=837 
+[01:00:26] launch b5 args=[--map --seed=1 --flight-probe=nonce=b5,deals=6]
+[01:01:15] rows b5: 1942 frames; build=806e8a30 HAND 5 cards landed_ms=836 landed_ms=833 landed_ms=833 landed_ms=832 landed_ms=833 landed_ms=834 
+[01:01:18] launch b6 args=[--map --seed=1 --flight-probe=nonce=b6,deals=6]
+[01:01:58] rows b6: 1924 frames; build=806e8a30 HAND 5 cards landed_ms=833 landed_ms=832 landed_ms=833 landed_ms=831 landed_ms=833 landed_ms=832 
+[01:02:01] launch v0a args=[--map --seed=1 --flight-probe=nonce=v0a,prewarm=0,deals=1]
+[01:02:22] rows v0a: 798 frames; build=806e8a30 HAND 5 cards landed_ms=833 
+[01:02:25] launch v1a args=[--map --seed=1 --flight-probe=nonce=v1a,prewarm=warmer,deals=1]
+[01:02:45] rows v1a: 796 frames; build=806e8a30 HAND 5 cards landed_ms=835 
+[01:02:48] launch v0b args=[--map --seed=1 --flight-probe=nonce=v0b,prewarm=0,deals=1]
+[01:03:08] rows v0b: 798 frames; build=806e8a30 HAND 5 cards landed_ms=833 
+[01:03:11] launch v1b args=[--map --seed=1 --flight-probe=nonce=v1b,prewarm=warmer,deals=1]
+[01:03:31] rows v1b: 794 frames; build=806e8a30 HAND 5 cards landed_ms=843 
+[01:03:34] batch done
+[01:03:34] lock released

@@ -606,6 +606,11 @@ nothing.
   profile only; no real save was read or written.
 - Device batch 2 (after the review round): `proof/device-b2/` keeps the batch log,
   the per-run summary and the batch script, as text.
+- PR 4, the flights: `proof/pr4/` keeps the frame bursts of the Draw, Play,
+  End-of-turn discard and Exhaust rows at the three shapes and under Reduce
+  Motion, the A12 condition, and the iPad 8 batches against `main`: its
+  `README.md` has the rows as built, the device table and the entrance's long
+  frames; the scripts and summaries are text under `device/`.
 - Fidelity diffs: the resting hand captured 1.2 s after the second deal,
   compared pixel by pixel with today's over the hand region (800 × 220 stage
   px).

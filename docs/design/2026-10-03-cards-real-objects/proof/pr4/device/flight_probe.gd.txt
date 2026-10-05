@@ -1,0 +1,170 @@
+extends Node
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH QA PROBE (#657 PR 4, never committed). Attached by the QA patch in
+## Main._ready when a `--flight-probe=` user argument is given:
+##   -- --map --seed=1 --flight-probe=nonce=N,deals=6,prewarm=1|0|warmer,warm=0|1
+## The same probe runs on a build of main and a build of the branch: it opens
+## the bench fight (duskfang, elite) from the settled map, logs the load and
+## the entrance frame by frame (the opening deal flies in those), rests, then
+## deals a full five-card hand `deals` times through the real DRAW handler
+## (the views are taken away first, outside the deal, so their video memory is
+## released before it), resting between. Each frame row carries the phase, the
+## wall time, the time from the frame's start to its draw, the draw itself
+## (frame_pre_draw to frame_post_draw), the process time the engine counts,
+## the root viewport's GPU time, video memory and the pipeline compiles.
+## warm=1: a short launch (one deal) to warm a fresh install; its rows are not
+## graded.
+
+const MONITORS: Array[int] = [
+	Performance.PIPELINE_COMPILATIONS_CANVAS, Performance.PIPELINE_COMPILATIONS_MESH,
+	Performance.PIPELINE_COMPILATIONS_SURFACE, Performance.PIPELINE_COMPILATIONS_DRAW,
+	Performance.PIPELINE_COMPILATIONS_SPECIALIZATION]
+
+var cfg: Dictionary = {}
+var main: Main = null
+var _rows: FileAccess = null
+var _phase: String = "boot"
+var _frame: int = 0
+var _t_start: int = 0
+var _t_pre: int = 0
+var _t_post: int = 0
+var _frame_rows: PackedStringArray = PackedStringArray()
+var _vp: RID
+
+
+static func config() -> Dictionary:
+	var out: Dictionary = {"nonce": "none", "deals": "6", "prewarm": "1", "warm": "0",
+		"quit": "1", "args": ""}
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--flight-probe="):
+			for part: String in arg.trim_prefix("--flight-probe=").split(",", false):
+				var kv: PackedStringArray = part.split("=", true, 1)
+				if kv.size() == 2:
+					out[kv[0]] = kv[1]
+	out["args"] = " ".join(OS.get_cmdline_user_args())
+	out["rows"] = "user://flight_probe_%s.txt" % out["nonce"]
+	return out
+
+
+func _ready() -> void:
+	name = "FlightProbe"
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	cfg = config()
+	main = get_parent() as Main
+	_vp = get_viewport().get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(_vp, true)
+	_row("PROBE nonce=%s args=[%s] engine=%s adapter=%s window=%s build=%s" % [
+		cfg["nonce"], cfg["args"], Engine.get_version_info()["string"],
+		RenderingServer.get_video_adapter_name(), str(DisplayServer.window_get_size()),
+		str((load("res://qa_cards/build_tag.gd") as GDScript).get_script_constant_map().get("TAG", "?"))])
+	get_tree().process_frame.connect(_on_frame_start)
+	RenderingServer.frame_pre_draw.connect(func() -> void: _t_pre = Time.get_ticks_usec())
+	RenderingServer.frame_post_draw.connect(func() -> void: _t_post = Time.get_ticks_usec())
+	_t_start = Time.get_ticks_usec()
+	_run()
+
+
+func _row(line: String) -> void:
+	var stamped: String = "%s %d %s" % [cfg.get("nonce", "none"), Time.get_ticks_msec(), line]
+	print(stamped)
+	if _rows == null:
+		_rows = FileAccess.open(str(cfg["rows"]), FileAccess.WRITE)
+	if _rows != null:
+		_rows.store_line(stamped)
+		_rows.flush()
+
+
+## The start of a frame closes the row of the one before: its wall time runs
+## from its own start to this one, and its draw is the pre/post pair it saw.
+func _on_frame_start() -> void:
+	var now: int = Time.get_ticks_usec()
+	var wall: float = float(now - _t_start) / 1000.0
+	var to_draw: float = float(_t_pre - _t_start) / 1000.0 if _t_pre >= _t_start else -1.0
+	var draw: float = float(_t_post - _t_pre) / 1000.0 if _t_post >= _t_pre and _t_pre >= _t_start else -1.0
+	var counts: PackedStringArray = PackedStringArray()
+	for m: int in MONITORS:
+		counts.append(str(int(Performance.get_monitor(m))))
+	# Held in memory and written at the end: no file I/O inside a measured frame.
+	_frame_rows.append("%s %d F %d %s %.2f %.2f %.2f %.2f %.2f %.1f %s" % [cfg.get("nonce", "none"),
+		Time.get_ticks_msec(), _frame, _phase, wall, to_draw, draw,
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		RenderingServer.viewport_get_measured_render_time_gpu(_vp),
+		Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, ",".join(counts)])
+	_frame += 1
+	_t_start = now
+
+
+func _wait(seconds: float) -> void:
+	var until: int = Time.get_ticks_msec() + int(seconds * 1000.0)
+	while Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+
+
+func _flying(hand: HandView) -> bool:
+	if "_dealing" in hand:
+		return not (hand.get("_dealing") as Dictionary).is_empty()
+	return not (hand.get("_flight_from") as Dictionary).is_empty()
+
+
+func _run() -> void:
+	var calm: int = 0
+	var waited: int = Time.get_ticks_msec()
+	while calm < 30 and Time.get_ticks_msec() - waited < 20000:
+		var before: int = Time.get_ticks_usec()
+		await get_tree().process_frame
+		calm = calm + 1 if float(Time.get_ticks_usec() - before) / 1000.0 < 40.0 else 0
+	_row("SETTLED after %d ms" % (Time.get_ticks_msec() - waited))
+	_phase = "map"
+	await _wait(1.5)
+	_phase = "load"
+	main._start_fight(PackedStringArray(["duskfang"]), "elite")
+	await get_tree().process_frame
+	_phase = "fight"
+	_row("AFTER_LOAD back=%s baked=%s reduce_motion=%s" % [CardTurn.wearing(),
+		str(CardTurn.back() != null), str(Preferences.active.reduce_motion)])
+	await _wait(3.5)
+	var screen: CombatScreen = main._screen
+	var hand: HandView = screen._hand
+	var cb: CombatState = screen.game.cb
+	# A full five-card hand, whatever the fight opened with (presentation only;
+	# this probe never saves).
+	while cb.hand.size() < 5 and not cb.draw.is_empty():
+		cb.hand.append(cb.draw.pop_back())
+	screen._sync_all()
+	await _wait(1.0)
+	var uids: Array[int] = []
+	for c: CardInst in cb.hand:
+		uids.append(c.uid)
+	_row("HAND %d cards %s" % [uids.size(), str(uids)])
+	_phase = "rest0"
+	await _wait(3.0)
+	var deals: int = 1 if cfg["warm"] == "1" else int(cfg["deals"])
+	for k: int in range(1, deals + 1):
+		_phase = "prep%d" % k
+		for u: int in hand.uids():
+			hand.remove_card(u)
+		await _wait(1.2)
+		_phase = "deal%d" % k
+		var evs: Array[Dictionary] = []
+		for u: int in uids:
+			evs.append({"t": EventTypes.DRAW, "uid": u})
+		var t0: int = Time.get_ticks_msec()
+		screen.seq.enqueue(evs)
+		await get_tree().process_frame
+		while (screen.seq.is_busy() or _flying(hand)) and Time.get_ticks_msec() - t0 < 5000:
+			await get_tree().process_frame
+		var landed: int = Time.get_ticks_msec() - t0
+		for _i: int in range(15):
+			await get_tree().process_frame
+		_row("DEAL %d landed_ms=%d" % [k, landed])
+		_phase = "rest%d" % k
+		await _wait(1.5)
+	_phase = "end"
+	if _rows != null:
+		for line: String in _frame_rows:
+			_rows.store_line(line)
+	_row("DONE")
+	if _rows != null:
+		_rows.close()
+	if cfg["quit"] == "1":
+		get_tree().quit()

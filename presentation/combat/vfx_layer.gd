@@ -504,13 +504,14 @@ func slash_arc(at: Vector2, colour: Color) -> void:
 	p.dur = 0.14
 
 
-func motes(at: Vector2, colour: Color, n: int = 10) -> void:
+## `life` is the shortest a mote lives; each lives up to 55% longer.
+func motes(at: Vector2, colour: Color, n: int = 10, life: float = 0.9) -> void:
 	for i: int in range(n):
 		var from: Vector2 = at + Vector2(
 			(_rng.randf() - 0.5) * 60.0, (_rng.randf() - 0.5) * 40.0)
 		var p: Part = _spawn("dot", from,
 			Vector2((_rng.randf() - 0.5) * 30.0, -40.0 - _rng.randf() * 60.0),
-			2.5 + _rng.randf() * 2.5, colour, 0.9 + _rng.randf() * 0.5, 0.5)
+			2.5 + _rng.randf() * 2.5, colour, life * (1.0 + _rng.randf() * 0.5 / 0.9), 0.5)
 		p.grav = -20.0
 		p.alpha = 0.9
 

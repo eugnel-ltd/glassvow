@@ -145,6 +145,34 @@ a correct placement from three incorrect ones.
   and expect the identity case to keep passing throughout. See
   [Measure the running reference, not the tables it publishes](../conventions/measure-the-running-reference-not-its-tables.md).
 
+## Addendum (5 October 2026): `global_position =` is not `position =`
+
+The fix above was right about `position` and was then written through
+`global_position`, which on 4.7 is a different thing. Its setter places the
+node's **transformed origin** at the point, so a scaled or turned node lands its
+centre at `X − size * 0.5 * (1 − k)` again — the same error, mirrored. Measured
+on `4.7.2.stable.official`, a 152 × 216 Control under an unscaled parent, pivot
+at its centre, after `global_position = (100, 100)`:
+
+| `scale` | `position` (parent at (40, 30)) | centre | wanted |
+|---|---|---|---|
+| 1.000 | `(60, 70)` | `(176, 208)` | `(176, 208)` |
+| 0.500 | `(22, 16)` | `(138, 154)` | `(176, 208)` |
+| 0.231 | `(1.6, −13.0)` | `(117.6, 125.0)` | `(176, 208)` |
+
+So the deal still left 28 × 40 px up and to the left of the pile, a card thrown
+at a foe landed 59 × 84 px short of it, and (#657 PR 4) a card burnt down to
+0.6 of a pile card landed 62 × 81 px off the ash pile. Place a centre-pivoted
+node by its centre through `position`, converted by its parent's transform
+(`HandView._centre_at`):
+
+```gdscript
+view.position = get_global_transform().affine_inverse() * centre - view.size * 0.5
+```
+
+and read its on-screen centre with `get_global_transform() * (size * 0.5)`
+(`CardView.global_centre`), never `global_position + size * 0.5`.
+
 ## Related Issues
 
 - [A scaled Control shrinks its hit area with its
