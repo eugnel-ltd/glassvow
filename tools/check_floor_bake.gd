@@ -14,7 +14,9 @@ extends SceneTree
 ##   frame a tile and four more;
 ## - letting the land go frees the floor's textures;
 ## - the warm-up builds the bake's own mip chain (`FloorBake.mip_views`) from a
-##   picture of the floor's format, draws it, and frees that picture.
+##   picture of the floor's format, draws it, and frees that picture;
+## - every 2D view of the warm-up draws in its forced draws (a node's own
+##   commands would come only in the next frame's redraw).
 ## Exits 0 on a pass, 1 on a failure, 2 under `--headless` (no RenderingDevice).
 ## Pass the game's map flags after `--`, as the capture tools do:
 ##   godot --path . -s res://tools/check_floor_bake.gd -- --map --seed=1 --map-steps=2
@@ -130,7 +132,18 @@ func _run() -> void:
 	_check(chain.size() == Bake.mip_count(Vector2i(Warm.SIDE, Warm.SIDE)) - 1 and picture_format != null
 		and picture_format.format == RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM,
 		"the warm-up builds the bake's own mip chain (%d levels) from a picture of the floor's format" % chain.size())
+	var flats: Array[SubViewport] = []
+	for view: Node in warm.find_children("*", "SubViewport", true, false):
+		if (view as SubViewport).disable_3d:
+			flats.append(view as SubViewport)
 	warm.call("draw_now")
+	var flats_drawn: int = 0
+	for view: SubViewport in flats:
+		if RenderingServer.viewport_get_render_info(view.get_viewport_rid(), RenderingServer.VIEWPORT_RENDER_INFO_TYPE_CANVAS,
+				RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME) > 0:
+			flats_drawn += 1
+	_check(not flats.is_empty() and flats_drawn == flats.size(),
+		"every 2D view of the warm-up draws in its forced draws (%d of %d)" % [flats_drawn, flats.size()])
 	for _i: int in range(2):
 		await process_frame
 	_check(not is_instance_valid(warm) and not rd.texture_is_valid(picture),

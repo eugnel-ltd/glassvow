@@ -99,9 +99,12 @@ func draw_now() -> void:
 ## The 2D passes as the bake draws them: the plants' stamps (a MultiMesh of
 ## quads, added, in a clear view) and the mip chain, built by the bake's own
 ## builder (`FloorBake.mip_views`) from a small picture of the floor's format.
-## A canvas pipeline is its view's too: a mip sample in a view of another
-## kind left the bake's last step a 0.4 s frame under the title (batches M
-## and O, after an update).
+## A canvas pipeline is its view's too, so each sample draws in a view of its
+## pass's kind. A node issues its 2D commands only in the frame's deferred
+## redraw, after `draw_now`'s forced draws, so each sample's command goes to
+## the renderer as it is built: without that the 2D views drew nothing, and
+## after an update the bake's last step held a frame under the title for
+## 0.4-0.5 s, compiling the mip shader's pipeline (batches O to Q).
 func _canvas() -> void:
 	var stamps: SubViewport = _flat(true)
 	var multi: MultiMesh = MultiMesh.new()
@@ -120,6 +123,7 @@ func _canvas() -> void:
 	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	draw.material = add
 	stamps.add_child(draw)
+	RenderingServer.canvas_item_add_multimesh(draw.get_canvas_item(), multi.get_rid(), draw.texture.get_rid())
 	var rd: RenderingDevice = RenderingServer.get_rendering_device()
 	if rd == null:
 		return
@@ -133,6 +137,8 @@ func _canvas() -> void:
 	for view: SubViewport in Bake.mip_views(holder, _mip_source, size):
 		view.render_target_update_mode = SubViewport.UPDATE_DISABLED
 		_views.append(view)
+		var rect: ColorRect = view.find_children("*", "ColorRect", false, false)[0] as ColorRect
+		RenderingServer.canvas_item_add_rect(rect.get_canvas_item(), Rect2(Vector2.ZERO, rect.size), rect.color)
 
 
 func _flat(clear: bool) -> SubViewport:
