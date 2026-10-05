@@ -91,8 +91,9 @@ static func _mips(fails: Array[String]) -> void:
 
 ## The floor's shaders: the pools flicker with the flame (its wave and its
 ## phase, worked out as the flame works it out) and, with the glints, hold
-## still under Reduce Motion; the bake's ground reads the plants' reach; no
-## sampler the A12's Metal cannot bind.
+## still under Reduce Motion; standing water is the ground made darker, never a
+## colour of its own; the Close grain is full at a Journey's Close and gone at
+## the Journey itself; no sampler the A12's Metal cannot bind.
 static func _shaders(fails: Array[String]) -> void:
 	var flame: String = (load("res://presentation/map/landscape/flame.gdshader") as Shader).code
 	var ground: String = FileAccess.get_file_as_string("res://presentation/map/landscape/floor_ground.gdshaderinc")
@@ -108,6 +109,15 @@ static func _shaders(fails: Array[String]) -> void:
 		"the puddles' glints go out with the land's motion")
 	_check(fails, live.contains("render_mode unshaded") and live.contains("shadows_disabled"),
 		"the floor is unshaded and takes no live shadow")
+	_check(fails, live.contains("colour *= mix(1.0, water_dark, water);")
+		and not live.contains("sky_colour") and not live.contains("colour = mix(colour,"),
+		"standing water darkens the ground it lies on and lays no colour over it")
+	var heights: Vector2 = _uniform_vec2(live, "close_heights")
+	var journey: float = MapJourneyCameraContract.PREFERRED_ZOOM
+	_check(fails, heights.x >= journey * MapJourneyView.CLOSE_FACTOR and heights.y < journey
+		and live.contains("length(dFdx(at)) * VIEWPORT_SIZE.y"),
+		"the Close grain is full at Close (%.2f m) and gone at Journey (%.1f m): %s" % [
+			journey * MapJourneyView.CLOSE_FACTOR, journey, heights])
 	for path: String in ["res://presentation/map/landscape/floor.gdshader",
 			"res://presentation/map/landscape/floor_paint.gdshader",
 			"res://presentation/map/landscape/floor_mask.gdshader",
@@ -115,6 +125,14 @@ static func _shaders(fails: Array[String]) -> void:
 		var code: String = (load(path) as Shader).code
 		_check(fails, not code.contains("anisotropic"),
 			"%s binds no anisotropic sampler (the A12's sampler slots)" % path.get_file())
+
+
+## A `uniform vec2 <name> = vec2(x, y);` default in `code`, or NaN.
+static func _uniform_vec2(code: String, name: String) -> Vector2:
+	var found: RegExMatch = RegEx.create_from_string("uniform vec2 %s = vec2\\(([0-9.]+), ([0-9.]+)\\);" % name).search(code)
+	if found == null:
+		return Vector2(NAN, NAN)
+	return Vector2(float(found.get_string(1)), float(found.get_string(2)))
 
 
 ## The plan the bake reads: every lamp, a card for every tree facing the key
