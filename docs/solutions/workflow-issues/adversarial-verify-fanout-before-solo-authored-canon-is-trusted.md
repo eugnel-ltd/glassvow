@@ -21,7 +21,7 @@ tags: [adversarial-verification, subagent-fanout, story-bible, canon, cross-file
 
 ## Context
 
-Wayfinder ticket #175 ("Story design", map fol2/glassvow#156) ended with the
+Wayfinder ticket #175 ("Story design", map eugnel-ltd/glassvow#156) ended with the
 orchestrating agent solo-authoring a story bible in one pass: `docs/story/`,
 written on branch `story/175-bible` and merged to main via PR #264 (2026-08-14) —
 `README.md`, `00-truth.md` (canon root), `01-world.md`, `02-cast.md`,
@@ -88,7 +88,7 @@ Workflow sketch:
 human reviewer.** The bible is [PROPOSED] canon owned by James; an agent
 rewriting it to dodge its own findings would be settling canon questions
 nobody delegated. The findings were instead posted as the opening agenda on
-the review tickets (fol2/glassvow#258 for canon, #262 for delivery/rubric).
+the review tickets (eugnel-ltd/glassvow#258 for canon, #262 for delivery/rubric).
 Auto-fix is right only when the artifact is agent-owned working material with
 no pending human decision embedded in the contradiction — a scratch plan, a
 draft the agent will immediately revise anyway.
@@ -177,8 +177,8 @@ Representative blockers (of 5):
   `04-delivery.md`.
 
 None were fixed in place. All findings, ordered blockers → notable → minor,
-became the opening agendas of review tickets fol2/glassvow#258 (canon) and
-fol2/glassvow#262 (delivery/rubric) for James to adjudicate.
+became the opening agendas of review tickets eugnel-ltd/glassvow#258 (canon) and
+eugnel-ltd/glassvow#262 (delivery/rubric) for James to adjudicate.
 
 ## Related
 
@@ -197,8 +197,8 @@ fol2/glassvow#262 (delivery/rubric) for James to adjudicate.
 - `docs/story/README.md` — the [SETTLED]/[PROPOSED]/[OPEN] ownership rules
   that determine route-vs-fix.
 - `docs/commercial-rubric.md` — the governing spec used as ground truth 3.
-- Tickets: fol2/glassvow#175 (the originating story-design ticket),
-  fol2/glassvow#258 and #262 (the review tickets carrying the findings).
+- Tickets: eugnel-ltd/glassvow#175 (the originating story-design ticket),
+  eugnel-ltd/glassvow#258 and #262 (the review tickets carrying the findings).
 - Session memory notes sharing the trust posture (auto memory [claude]):
   delegate-compute-fabrication, james-evidence-standard,
   hub-orchestration-practices, gate-coverage-trap.

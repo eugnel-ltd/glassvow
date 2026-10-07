@@ -2,13 +2,13 @@
 >
 > This document is kept as the record of the P9 strategy-diversity programme (#421). Nothing below this header is current instruction, including its Status line, definitions, layers, thresholds, receipts and completion rule. The release bar's P9 pillar is now the Flame gates G1–G7 plus the human round H (lock §11), bound by [`docs/rc-bar.md`](../rc-bar.md). [`docs/reviews/549/obligation-map.md`](../reviews/549/obligation-map.md) records where each obligation below went. The body is preserved unedited as evidence.
 >
-> *Updated on 2026-10-04:* the sentence above on the release bar describes P9 as #549 wrote it on 2026-09-29, the wording `docs/rc-bar.md` kept until 2026-10-04. Since [#685](https://github.com/fol2/glassvow/pull/685), [`docs/rc-bar.md`](../rc-bar.md) P9 records one verdict per shipped class, ACCEPT or NOT ACCEPTED, on the design's intent, with the gates as its evidence: G2, G3, G5, G6, G7 and the bot round B are graded, G1 and G4 are readings, and row B replaced the human round H on 2026-10-01. The measurement contract is §11 of the [Duskblade Flame design lock](../design/2026-09-29-dusk-flame/README.md), which also records the Duskblade's verdict.
+> *Updated on 2026-10-04:* the sentence above on the release bar describes P9 as #549 wrote it on 2026-09-29, the wording `docs/rc-bar.md` kept until 2026-10-04. Since [#685](https://github.com/eugnel-ltd/glassvow/pull/685), [`docs/rc-bar.md`](../rc-bar.md) P9 records one verdict per shipped class, ACCEPT or NOT ACCEPTED, on the design's intent, with the gates as its evidence: G2, G3, G5, G6, G7 and the bot round B are graded, G1 and G4 are readings, and row B replaced the human round H on 2026-10-01. The measurement contract is §11 of the [Duskblade Flame design lock](../design/2026-09-29-dusk-flame/README.md), which also records the Duskblade's verdict.
 
 ---
 
 # P9 Strategy-Diversity System
 
-**Status:** active programme method for [#421](https://github.com/fol2/glassvow/issues/421); the iOS release bar remains authoritative until a validated replacement detector is promoted.
+**Status:** active programme method for [#421](https://github.com/eugnel-ltd/glassvow/issues/421); the iOS release bar remains authoritative until a validated replacement detector is promoted.
 
 **Purpose:** establish and continuously certify strategic plurality for the current release candidate and future balance/content changes without replaying the entire historical research programme for every new card, relic, encounter or expansion.
 
@@ -26,10 +26,10 @@ The spirit and numerical strictness of P9 are unchanged. The method changes beca
 
 ## 2. Authorities and records
 
-- [#421](https://github.com/fol2/glassvow/issues/421) is the single active programme and delivery issue for the initial P9 system and current RC outcome.
+- [#421](https://github.com/eugnel-ltd/glassvow/issues/421) is the single active programme and delivery issue for the initial P9 system and current RC outcome.
 - [`docs/rc-bar.md`](../rc-bar.md) is the binding release bar. Its present P9 implementation remains in force until #421 validates and promotes a stronger detector contract; research cannot rewrite the bar by assertion.
-- [#108](https://github.com/fol2/glassvow/issues/108) consumes the final exact-SHA P9 receipt. It does not own research or candidate selection.
-- [#205](https://github.com/fol2/glassvow/issues/205) remains a separate player-facing feel check. Human impressions are not detector training labels.
+- [#108](https://github.com/eugnel-ltd/glassvow/issues/108) consumes the final exact-SHA P9 receipt. It does not own research or candidate selection.
+- [#205](https://github.com/eugnel-ltd/glassvow/issues/205) remains a separate player-facing feel check. Human impressions are not detector training labels.
 - Closed issues and PRs remain immutable evidence. They are not active instructions and are not reopened merely because a new method exists.
 
 The two companion reviews supply the methodological basis:

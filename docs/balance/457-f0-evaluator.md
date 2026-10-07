@@ -1,7 +1,7 @@
 # #457 F0 evaluator — paired controls, mini-landscape, tidy response
 
-Issue: [fol2/glassvow#457](https://github.com/fol2/glassvow/issues/457).
-Part of [#454](https://github.com/fol2/glassvow/issues/454). Hosts from [#456](https://github.com/fol2/glassvow/issues/456).
+Issue: [eugnel-ltd/glassvow#457](https://github.com/eugnel-ltd/glassvow/issues/457).
+Part of [#454](https://github.com/eugnel-ltd/glassvow/issues/454). Hosts from [#456](https://github.com/eugnel-ltd/glassvow/issues/456).
 Engine: **4.7.2.stable.official.ed1daf0bf**. Worker count: **8** (M1 Max QUALIFIED).
 This is a screening experiment. It is not an acceptance exam and does not emit C1–C4 PASS/FAIL.
 

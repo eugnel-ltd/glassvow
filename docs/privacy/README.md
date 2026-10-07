@@ -1,6 +1,6 @@
 # Privacy policy drafts (issue #415, text slice)
 
-**Status: draft for James, written 2026-09-29 against `main` at `9f14e5db`; D1 updated the same day when option B was implemented; the placeholders were filled and hosting decided the same evening (section 3).** Part of [#415](https://github.com/fol2/glassvow/issues/415); it does not close it. Both policies are built into `site/` for `https://glassvow.eugnel.com`, which is live only once the Cloudflare Pages project is deployed. Nothing here is entered in App Store Connect or shipped in the app, and none of it is legal advice or a compliance finding.
+**Status: draft for James, written 2026-09-29 against `main` at `9f14e5db`; D1 updated the same day when option B was implemented; the placeholders were filled and hosting decided the same evening (section 3).** Part of [#415](https://github.com/eugnel-ltd/glassvow/issues/415); it does not close it. Both policies are built into `site/` for `https://glassvow.eugnel.com`, which is live only once the Cloudflare Pages project is deployed. Nothing here is entered in App Store Connect or shipped in the app, and none of it is legal advice or a compliance finding.
 
 Every practice described comes from this repository's configuration and source, and from the pinned Sentry sources (sentry-godot 2.1.1, sentry-cocoa 9.24.0). None of it has been observed in a live payload. The tethered-device check still owed on #420 is what turns "configured" into "observed".
 

@@ -1,7 +1,7 @@
 # Narrative pipeline — how scripts for games and film are actually produced
 
 Research record for wayfinder map #156, story workstream (asked by James on
-[Story design #175](https://github.com/fol2/glassvow/issues/175)'s heels:
+[Story design #175](https://github.com/eugnel-ltd/glassvow/issues/175)'s heels:
 "how do they normally do scripts for games/movies?"). Produced 2026-08-14 by a
 5-sweep research workflow (film/TV rooms · game-studio pipelines · Hades
 specifically · systemic-delivery literature · twist craft), 82 references and

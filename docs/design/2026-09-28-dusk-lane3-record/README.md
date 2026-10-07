@@ -4,24 +4,24 @@
 
 **Owner decision (James, 2026-09-28).** Lane 3 is not merged. This single docs PR on `main` records its full spec and why it failed. PRs #567, #568 and #569 are to be closed unmerged, and their branches are kept as reference.
 
-Sources: the design lock and probe notes (#567), the exam 1 readout and data (#568), the C3 diagnosis revision 2 and probe data (#569), the [#421 readout comment](https://github.com/fol2/glassvow/issues/421#issuecomment-5863378757) and the three PR bodies. Where this record and a source differ, the source wins. VERIFIED and INFERRED tags are copied from the sources. Acceptance was amended P9 ([#108 comment 5850584190](https://github.com/fol2/glassvow/issues/108#issuecomment-5850584190), point 4 as amended in [#421 comment 5855915475](https://github.com/fol2/glassvow/issues/421#issuecomment-5855915475)), for Duskblade only at vows 0 and 5.
+Sources: the design lock and probe notes (#567), the exam 1 readout and data (#568), the C3 diagnosis revision 2 and probe data (#569), the [#421 readout comment](https://github.com/eugnel-ltd/glassvow/issues/421#issuecomment-5863378757) and the three PR bodies. Where this record and a source differ, the source wins. VERIFIED and INFERRED tags are copied from the sources. Acceptance was amended P9 ([#108 comment 5850584190](https://github.com/eugnel-ltd/glassvow/issues/108#issuecomment-5850584190), point 4 as amended in [#421 comment 5855915475](https://github.com/eugnel-ltd/glassvow/issues/421#issuecomment-5855915475)), for Duskblade only at vows 0 and 5.
 
 ## 1. Design intent
 
-Lane 3 tried to give Duskblade a third viable strategy cell. Before it, #557 (the Unbroken Crown) had made smolder:fat a second lane, but no third cell was in band. From the [design lock](https://github.com/fol2/glassvow/blob/e7f42147cf5c2a8e282e2b0767ed35a4adf8799f/docs/reviews/421/dusk-lane3-design-lock.md) §1–§2:
+Lane 3 tried to give Duskblade a third viable strategy cell. Before it, #557 (the Unbroken Crown) had made smolder:fat a second lane, but no third cell was in band. From the [design lock](https://github.com/eugnel-ltd/glassvow/blob/e7f42147cf5c2a8e282e2b0767ed35a4adf8799f/docs/reviews/421/dusk-lane3-design-lock.md) §1–§2:
 
 - A V5 third cell has to be a fat cell, because mid cells mostly hold act-2 deaths (VERIFIED on #557's exam-1 rows; the conclusion is INFERRED).
 - attrition:fat was then "shatter decks that missed their tools", not a strategy (VERIFIED). A popular no-chip fork lowers the relative shatter median and fills the cell with real holders (INFERRED).
 - A second new relic would share the crown's pilot key (`relicRarity.boss`). Crown of Tithes already has a named policy key, shipped art and a zh name (VERIFIED).
 - The crown's per-Attack payoff rewarded thin, attack-heavy random builds (arm 2) (VERIFIED). Max HP is not a C2 lever (VERIFIED, paired probe).
 
-The chosen shape, F1, did two things. Crown of Tithes became a deck-scaled Duskblade fork, and the Unbroken Crown got a fullness threshold. Deck-scaled payoffs punish unfocused decks and spare focused ones. In the F1 probe, random-build Tithes holders won 80/203 (old Tithes 126/202) and crown holders won 86/177 (122/189). Tuned holders stayed neutral: Tithes −1.0 / +0.7 pp and crown −1.2 / −0.2 pp, paired over 600 policies (VERIFIED, probe scale). The [probe notes](https://github.com/fol2/glassvow/blob/e7f42147cf5c2a8e282e2b0767ed35a4adf8799f/docs/reviews/421/dusk-lane3-probe-notes.md) list the rejected alternatives (tC, nB, tP1/tP2, HP 68/64, Rootheart facets 8, Cracked 2 → 1).
+The chosen shape, F1, did two things. Crown of Tithes became a deck-scaled Duskblade fork, and the Unbroken Crown got a fullness threshold. Deck-scaled payoffs punish unfocused decks and spare focused ones. In the F1 probe, random-build Tithes holders won 80/203 (old Tithes 126/202) and crown holders won 86/177 (122/189). Tuned holders stayed neutral: Tithes −1.0 / +0.7 pp and crown −1.2 / −0.2 pp, paired over 600 policies (VERIFIED, probe scale). The [probe notes](https://github.com/eugnel-ltd/glassvow/blob/e7f42147cf5c2a8e282e2b0767ed35a4adf8799f/docs/reviews/421/dusk-lane3-probe-notes.md) list the rejected alternatives (tC, nB, tP1/tP2, HP 68/64, Rootheart facets 8, Cracked 2 → 1).
 
 ## 2. Spec as implemented
 
 Candidate commits on `feat/421-dusk-lane3`:
-- [`85deaec3d75f89169d95b7937b586fef64a3c6fc`](https://github.com/fol2/glassvow/commit/85deaec3d75f89169d95b7937b586fef64a3c6fc): lock §3 content, the first candidate.
-- [`582e2f71a406910ef6c1d949ff9717f343539ffd`](https://github.com/fol2/glassvow/commit/582e2f71a406910ef6c1d949ff9717f343539ffd): retry knob 1, the exam candidate.
+- [`85deaec3d75f89169d95b7937b586fef64a3c6fc`](https://github.com/eugnel-ltd/glassvow/commit/85deaec3d75f89169d95b7937b586fef64a3c6fc): lock §3 content, the first candidate.
+- [`582e2f71a406910ef6c1d949ff9717f343539ffd`](https://github.com/eugnel-ltd/glassvow/commit/582e2f71a406910ef6c1d949ff9717f343539ffd): retry knob 1, the exam candidate.
 
 ### 2.1 Content (`content/full-content.json`)
 
@@ -35,7 +35,7 @@ Candidate commits on `feat/421-dusk-lane3`:
 | `relics.unbrokenCrown.fullPerAttack` | — | **3** | 3 |
 | `enemies.rootheart.hp` | [240, 240] | [240, 240] | **[280, 280]** |
 
-The `text` fields of both relics changed to match (§2.3). Pools, rarities, IDs and saves did not change. The relic count stays 32 and the locale leaf count stays 713. Content file SHA-256 values are in full in §10. Permalinks at `3c5144e`: [Crown of Tithes](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/content/full-content.json#L2056-L2064), [Unbroken Crown](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/content/full-content.json#L2079-L2090), [Rootheart](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/content/full-content.json#L2470-L2475).
+The `text` fields of both relics changed to match (§2.3). Pools, rarities, IDs and saves did not change. The relic count stays 32 and the locale leaf count stays 713. Content file SHA-256 values are in full in §10. Permalinks at `3c5144e`: [Crown of Tithes](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/content/full-content.json#L2056-L2064), [Unbroken Crown](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/content/full-content.json#L2079-L2090), [Rootheart](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/content/full-content.json#L2470-L2475).
 
 Resulting rules:
 - **Crown of Tithes, Duskblade holder (`run.aspect == 0`).** Blows no longer chip Facets. The holder starts each combat with `deck ÷ 10` Fervor, once per combat. At the start of each turn, it gains `deck ÷ 4` Ward. Kindle twice per turn for 3 Ward each is unchanged for both aspects. Ashwarden gets none of the Dusk clause.
@@ -45,11 +45,11 @@ Resulting rules:
 ### 2.2 Rules (`domain/rules/combat.gd`, 29 insertions and 4 deletions)
 
 All links are pinned to `3c5144e`:
-1. **Fervor at combat start.** In `_apply_start_relics`, directly after the Crown of Cinders block, Fervor (status `str`) is added and a `relicProc` is emitted ([L293-L296](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/domain/rules/combat.gd#L293-L296)).
-2. **New helper `_tithes_per_deck(run, field)`.** It returns `deck ÷ per`, where `per` is the relic's `field` value, for a Duskblade Tithes holder. For Ashwarden, non-holders or a missing or zero field, it returns 0 ([L318-L326](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/domain/rules/combat.gd#L318-L326)).
-3. **Turn Ward.** In `_start_player_turn`, right after the Ward reset, `gain_block_player(cb, n, false, run)` runs (no Poise), and a `relicProc` is emitted. It also runs under Barricade ([L368-L371](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/domain/rules/combat.gd#L368-L371)).
-4. **No-chip guard.** `apply_chips` and `preview_play` extend the #557 guard with `or run.has_relic("crownOfTithes")` ([L685-L687](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/domain/rules/combat.gd#L685-L687), [L1422-L1425](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/domain/rules/combat.gd#L1422-L1425)).
-5. **Crown fullness.** In `play_card`, `crown_full` is true when `fullDeck` is present and the deck holds at least `fullDeck` cards. Ward and Smolder then use `fullPerAttack`; otherwise they use `wardPerAttack` and `smolderPerAttack` ([L846-L863](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/domain/rules/combat.gd#L846-L863)).
+1. **Fervor at combat start.** In `_apply_start_relics`, directly after the Crown of Cinders block, Fervor (status `str`) is added and a `relicProc` is emitted ([L293-L296](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/domain/rules/combat.gd#L293-L296)).
+2. **New helper `_tithes_per_deck(run, field)`.** It returns `deck ÷ per`, where `per` is the relic's `field` value, for a Duskblade Tithes holder. For Ashwarden, non-holders or a missing or zero field, it returns 0 ([L318-L326](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/domain/rules/combat.gd#L318-L326)).
+3. **Turn Ward.** In `_start_player_turn`, right after the Ward reset, `gain_block_player(cb, n, false, run)` runs (no Poise), and a `relicProc` is emitted. It also runs under Barricade ([L368-L371](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/domain/rules/combat.gd#L368-L371)).
+4. **No-chip guard.** `apply_chips` and `preview_play` extend the #557 guard with `or run.has_relic("crownOfTithes")` ([L685-L687](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/domain/rules/combat.gd#L685-L687), [L1422-L1425](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/domain/rules/combat.gd#L1422-L1425)).
+5. **Crown fullness.** In `play_card`, `crown_full` is true when `fullDeck` is present and the deck holds at least `fullDeck` cards. Ward and Smolder then use `fullPerAttack`; otherwise they use `wardPerAttack` and `smolderPerAttack` ([L846-L863](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/domain/rules/combat.gd#L846-L863)).
 
 The kindle limit and kindle Ward, `domain/rules/rewards.gd` and every tool were unchanged. The independent review (`ai-sdlc-reviewer`) on exact head `85deaec` returned APPROVE with no blockers. Its one non-blocking note was that the Tithes `relicProc` events are presentation-only.
 
@@ -61,7 +61,7 @@ The kindle limit and kindle Ward, `domain/rules/rewards.gd` and every tool were 
 
 ### 2.4 Tests and pins
 
-- `tests/test_aspect_shatter.gd` ([L152-L325](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/tests/test_aspect_shatter.gd#L152-L325)):
+- `tests/test_aspect_shatter.gd` ([L152-L325](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/tests/test_aspect_shatter.gd#L152-L325)):
   - The existing crown case now reads its numbers from content: Emberbite 4 + 2 = 6 Smolder and 2 Ward on the 10-card deck.
   - New `_unbroken_crown_fullness`: 2 + 2 at 29 cards and 3 + 3 at 30.
   - New `_tithes_dusk_clause`, on a 23-card deck: 0 preview chips; no chip, stagger or explicit chip; 2 Fervor, once; 5 Ward on turns 1–3 (on turns 2–3 after 50 leftover Ward); kindles twice for 3 Ward each, and a third kindle is refused.
@@ -78,7 +78,7 @@ The kindle limit and kindle Ward, `domain/rules/rewards.gd` and every tool were 
 
 ### 2.5 Diff summary
 
-Lane-3-only diff, `git diff 567760f0...3c5144e8` ([compare](https://github.com/fol2/glassvow/compare/567760f0104e46d400f18828978a3cb6271394d2...3c5144e87882dd7290b9f132f810053c8aab36ee)): 19 files, +4412 / −21. The merge base is the #557 head `567760f`.
+Lane-3-only diff, `git diff 567760f0...3c5144e8` ([compare](https://github.com/eugnel-ltd/glassvow/compare/567760f0104e46d400f18828978a3cb6271394d2...3c5144e87882dd7290b9f132f810053c8aab36ee)): 19 files, +4412 / −21. The merge base is the #557 head `567760f`.
 
 | Area | Files | Change |
 |---|---|---|
@@ -124,7 +124,7 @@ Lane 3 itself adds only §2: the Tithes fork, crown fullness (which retunes #557
 
 ## 5. Dev gate and Phase A history
 
-Dev gate: [`dev-gate.json`](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/dev-gate.json). It passed at both vows before and after knob 1, and each run reproduced its lock probe rows (F1, then K2) byte for byte (9 of 9 files). The knob-1 run used `85deaec` code with the knob-1 content, whose SHA-256 equals `582e2f7`'s.
+Dev gate: [`dev-gate.json`](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/dev-gate.json). It passed at both vows before and after knob 1, and each run reproduced its lock probe rows (F1, then K2) byte for byte (9 of 9 files). The knob-1 run used `85deaec` code with the knob-1 content, whose SHA-256 equals `582e2f7`'s.
 
 | Head | Vow | Top three cells | Arm 2 | Gap | Tithes paired (holders) | Crown paired (holders) |
 |---|---|---|---:|---:|---:|---:|
@@ -137,14 +137,14 @@ Phase A arm 2 (200 seeds each):
 
 | Run | Dusk V0 | Dusk V5 | Ash V0 | Ash V5 | Lock ceilings | Result |
 |---|---:|---:|---:|---:|---|---|
-| 1: `85deaec` ([JSON](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/phase-a-85deaec-before-knob1.json)) | **75/200 (37.5%)** | 26/200 (13.0%) | 42/200 (21.0%) | 12/200 (6.0%) | Dusk V0 37.5% > 35.0% | **MISS → knob 1** |
-| 2: `582e2f7` ([JSON](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/phase-a.json)) | 64/200 (32.0%) | 23/200 (11.5%) | 40/200 (20.0%) | 8/200 (4.0%) | all met | PASS |
+| 1: `85deaec` ([JSON](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/phase-a-85deaec-before-knob1.json)) | **75/200 (37.5%)** | 26/200 (13.0%) | 42/200 (21.0%) | 12/200 (6.0%) | Dusk V0 37.5% > 35.0% | **MISS → knob 1** |
+| 2: `582e2f7` ([JSON](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/phase-a.json)) | 64/200 (32.0%) | 23/200 (11.5%) | 40/200 (20.0%) | 8/200 (4.0%) | all met | PASS |
 
 Run 1's miss triggered retry knob 1 (Rootheart 240 → 280). The owner approved call A as knob 1, and that spent the lane's single retry. The legacy #204 bands returned VETO on both runs (run 2 holdout: Dusk 68.0% / 36.0%, Ash 67.5% / 40.0%). They were recorded, but they are not the lock's gate. The fresh exam controls reproduced all 3,200 Phase A control rows exactly.
 
 ## 6. Exam 1 on `582e2f7`: MISS on C3 only
 
-Run on 2026-09-28, 03:22–05:19 BST, on a Linux x86_64 VM (8 vCPU) with Godot `4.7.2.stable.official.ed1daf0bf`, using `tools/balance_exam.py --jobs 6` at `nice -n 10`. [Readout](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/2026-09-28-421-dusk-lane3-exam.md). Layer 1 has 320,000 rows (win 63,713, loss 256,184, stall 103). The exam's own axes are deck cuts 20/29 and Dusk medians of 0.889 shatters and 0.0 Smolder kills per fight. This was the only exam, and no re-run was due after a MISS.
+Run on 2026-09-28, 03:22–05:19 BST, on a Linux x86_64 VM (8 vCPU) with Godot `4.7.2.stable.official.ed1daf0bf`, using `tools/balance_exam.py --jobs 6` at `nice -n 10`. [Readout](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/2026-09-28-421-dusk-lane3-exam.md). Layer 1 has 320,000 rows (win 63,713, loss 256,184, stall 103). The exam's own axes are deck cuts 20/29 and Dusk medians of 0.889 shatters and 0.0 Smolder kills per fight. This was the only exam, and no re-run was due after a MISS.
 
 | Criterion | Threshold | Dusk V0 | Dusk V5 |
 |---|---|---|---|
@@ -157,7 +157,7 @@ Run on 2026-09-28, 03:22–05:19 BST, on a Linux x86_64 VM (8 vCPU) with Godot `
 | C4: end-cell ceiling gap | < 15 pp | 8.50 pp — PASS | 12.50 pp — PASS |
 | V5 best holdout | < 90% | 71.00% (not applicable) | 38.50% — PASS |
 
-Layer-1 Dusk cell rates, as wins/runs and rate ([`layer1-analysis.json`](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/layer1-analysis.json)):
+Layer-1 Dusk cell rates, as wins/runs and rate ([`layer1-analysis.json`](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/layer1-analysis.json)):
 
 | Cell | V0 | V5 |
 |---|---:|---:|
@@ -176,7 +176,7 @@ Against #557's exam 1:
 - Arm 2 fell from 44.0% to 32.0% at V0 and from 15.0% to 11.5% at V5.
 - The V5 best holdout fell from 64.5% to 38.5%.
 
-Fork holders ("holder" = the run ends holding the relic; [manifest](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/raw-rows-manifest.json)):
+Fork holders ("holder" = the run ends holding the relic; [manifest](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/raw-rows-manifest.json)):
 
 | Grid | Relic | Holders (share) | Holder win | Non-holder win | Main cell (runs, win) |
 |---|---|---:|---:|---:|---|
@@ -185,7 +185,7 @@ Fork holders ("holder" = the run ends holding the relic; [manifest](https://gith
 | V5 | Crown of Tithes | 5,909 (7.4%) | 45.0% | 7.6% | attrition:fat (2,957, 61.4%) |
 | V5 | Unbroken Crown | 5,223 (6.5%) | 31.8% | 8.9% | smolder:fat (2,362, 54.2%) |
 
-Layer 2 ([`layer2-analysis.json`](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/layer2-analysis.json)). Holdout is 200 runs per island. `stall` is CEM's plateau stop rule, not a simulation stall.
+Layer 2 ([`layer2-analysis.json`](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/layer2-analysis.json)). Holdout is 200 runs per island. `stall` is CEM's plateau stop rule, not a simulation stall.
 
 | Grid | Island | Start → end cell | Holdout | Generations | Stop |
 |---|---:|---|---:|---:|---|
@@ -206,7 +206,7 @@ Every island that started in a fork cell (smolder:fat or attrition:fat) drifted 
 
 ## 7. Diagnosis and probes (#569, revision 2)
 
-[Diagnosis](https://github.com/fol2/glassvow/blob/04fd5b85c7653736972761f575d5c7db32415fa3/docs/reviews/421/dusk-lane3-c3-diagnosis.md) and [probe data](https://github.com/fol2/glassvow/blob/04fd5b85c7653736972761f575d5c7db32415fa3/docs/reviews/421/data/dusk-lane3-c3-probes.json). All probes used development seeds only (12000–12899, 13000–13199, 14000–14799), with no exam seeds and no `--stage=exam`. Revision 2 answered an independent review that had returned REQUEST CHANGES (four blockers, six nits), and it withdrew revision 1's candidate A.
+[Diagnosis](https://github.com/eugnel-ltd/glassvow/blob/04fd5b85c7653736972761f575d5c7db32415fa3/docs/reviews/421/dusk-lane3-c3-diagnosis.md) and [probe data](https://github.com/eugnel-ltd/glassvow/blob/04fd5b85c7653736972761f575d5c7db32415fa3/docs/reviews/421/data/dusk-lane3-c3-probes.json). All probes used development seeds only (12000–12899, 13000–13199, 14000–14799), with no exam seeds and no `--stage=exam`. Revision 2 answered an independent review that had returned REQUEST CHANGES (four blockers, six nits), and it withdrew revision 1's candidate A.
 
 **Answer: mostly an honest game signal.** Two content causes:
 - **V5: the act-1 wall** (VERIFIED). At 280 HP the Rootheart ends 42–54% of each V5 island's holdout runs, against 13–41% at 240 HP in #557. Pooled, 49.2% of V5 holdout runs beat it (#557: 74.2%).
@@ -284,11 +284,11 @@ One lever, Rootheart HP, pulled Phase A and V5 C3 in opposite directions. Knob 1
   - `85deaec` `b459308717e98d2d14743d3f0a20ef9662cc183b7f1136f630776572d36a3daa`;
   - `582e2f7` `f0ecd890ca3144d8f2d6f3e2f2a934d7dc0ef44880d1902a4655752accc99436`.
 - **Documents:**
-  - [design lock](https://github.com/fol2/glassvow/blob/e7f42147cf5c2a8e282e2b0767ed35a4adf8799f/docs/reviews/421/dusk-lane3-design-lock.md);
-  - [probe notes](https://github.com/fol2/glassvow/blob/e7f42147cf5c2a8e282e2b0767ed35a4adf8799f/docs/reviews/421/dusk-lane3-probe-notes.md);
-  - [exam 1 readout](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/2026-09-28-421-dusk-lane3-exam.md);
-  - [exam data](https://github.com/fol2/glassvow/tree/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3);
-  - [C3 diagnosis](https://github.com/fol2/glassvow/blob/04fd5b85c7653736972761f575d5c7db32415fa3/docs/reviews/421/dusk-lane3-c3-diagnosis.md);
-  - [C3 probe data](https://github.com/fol2/glassvow/blob/04fd5b85c7653736972761f575d5c7db32415fa3/docs/reviews/421/data/dusk-lane3-c3-probes.json).
-- **Issue:** [#421 exam 1 readout comment](https://github.com/fol2/glassvow/issues/421#issuecomment-5863378757) (2026-09-28).
-- **Raw rows:** VM-local raw rows, not in Git: `/home/box/ops/glassvow/d568-exam1-582e2f7` on the Linux x86_64 evaluation VM (`layer1/`, `layer2/`, `phase-a/` and `phase-a.log`, about 4.6 GB (4.3 GiB)). Paths, sizes and SHA-256 are listed in the [raw-rows manifest](https://github.com/fol2/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/raw-rows-manifest.json). The probe runners and probe rows were never committed. The lock's probe notes and #569 §6 are their only record.
+  - [design lock](https://github.com/eugnel-ltd/glassvow/blob/e7f42147cf5c2a8e282e2b0767ed35a4adf8799f/docs/reviews/421/dusk-lane3-design-lock.md);
+  - [probe notes](https://github.com/eugnel-ltd/glassvow/blob/e7f42147cf5c2a8e282e2b0767ed35a4adf8799f/docs/reviews/421/dusk-lane3-probe-notes.md);
+  - [exam 1 readout](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/2026-09-28-421-dusk-lane3-exam.md);
+  - [exam data](https://github.com/eugnel-ltd/glassvow/tree/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3);
+  - [C3 diagnosis](https://github.com/eugnel-ltd/glassvow/blob/04fd5b85c7653736972761f575d5c7db32415fa3/docs/reviews/421/dusk-lane3-c3-diagnosis.md);
+  - [C3 probe data](https://github.com/eugnel-ltd/glassvow/blob/04fd5b85c7653736972761f575d5c7db32415fa3/docs/reviews/421/data/dusk-lane3-c3-probes.json).
+- **Issue:** [#421 exam 1 readout comment](https://github.com/eugnel-ltd/glassvow/issues/421#issuecomment-5863378757) (2026-09-28).
+- **Raw rows:** VM-local raw rows, not in Git: `/home/box/ops/glassvow/d568-exam1-582e2f7` on the Linux x86_64 evaluation VM (`layer1/`, `layer2/`, `phase-a/` and `phase-a.log`, about 4.6 GB (4.3 GiB)). Paths, sizes and SHA-256 are listed in the [raw-rows manifest](https://github.com/eugnel-ltd/glassvow/blob/3c5144e87882dd7290b9f132f810053c8aab36ee/docs/balance/data/421-lane3/raw-rows-manifest.json). The probe runners and probe rows were never committed. The lock's probe notes and #569 §6 are their only record.

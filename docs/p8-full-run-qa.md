@@ -3,7 +3,7 @@
 ## Accepted stage boundary
 
 This record applies to exact gameplay candidate
-[`f7d3ea257ff7465cad06e3be299cb5495886b45d`](https://github.com/fol2/glassvow/commit/f7d3ea257ff7465cad06e3be299cb5495886b45d).
+[`f7d3ea257ff7465cad06e3be299cb5495886b45d`](https://github.com/eugnel-ltd/glassvow/commit/f7d3ea257ff7465cad06e3be299cb5495886b45d).
 
 It covers gameplay journeys, durable save/resume behaviour in the current Godot
 4.7.1 development runtime, and UI/UX composition and reachability at the
@@ -13,7 +13,7 @@ is not native-touch evidence.
 It does not claim Web/browser behaviour, platform compatibility, export or
 packaging, physical-device behaviour, native touch, performance, release
 readiness, or human sign-off. Those later-stage claims remain outside #107;
-[#108](https://github.com/fol2/glassvow/issues/108#issuecomment-5273355875)
+[#108](https://github.com/eugnel-ltd/glassvow/issues/108#issuecomment-5273355875)
 remains explicitly deferred.
 
 ## Full-journey matrix
@@ -28,10 +28,10 @@ remains explicitly deferred.
 The immutable discovery packet records 48 raw PNGs, 244 headed route boundaries
 and 122 headless route boundaries:
 
-- current tip: [`fbb27b641081606ff121c478f6c2708c69ea6557`](https://github.com/fol2/glassvow/tree/fbb27b641081606ff121c478f6c2708c69ea6557);
-- [proof boundary](https://github.com/fol2/glassvow/blob/fbb27b641081606ff121c478f6c2708c69ea6557/proof.md);
-- [manifest](https://github.com/fol2/glassvow/blob/fbb27b641081606ff121c478f6c2708c69ea6557/manifest.json);
-- [offline verifier](https://github.com/fol2/glassvow/blob/fbb27b641081606ff121c478f6c2708c69ea6557/verify.py).
+- current tip: [`fbb27b641081606ff121c478f6c2708c69ea6557`](https://github.com/eugnel-ltd/glassvow/tree/fbb27b641081606ff121c478f6c2708c69ea6557);
+- [proof boundary](https://github.com/eugnel-ltd/glassvow/blob/fbb27b641081606ff121c478f6c2708c69ea6557/proof.md);
+- [manifest](https://github.com/eugnel-ltd/glassvow/blob/fbb27b641081606ff121c478f6c2708c69ea6557/manifest.json);
+- [offline verifier](https://github.com/eugnel-ltd/glassvow/blob/fbb27b641081606ff121c478f6c2708c69ea6557/verify.py).
 
 This packet remains labelled **pre-fix** because it discovered #167 and #168.
 It proves the recorded journey breadth, route projections, representative
@@ -41,30 +41,30 @@ acceptance.
 ## Final-candidate viewport bridge
 
 The final applicability packet is immutable evidence commit
-[`4752e87e62086e91a749791df13f08a88aab4a07`](https://github.com/fol2/glassvow/tree/4752e87e62086e91a749791df13f08a88aab4a07):
+[`4752e87e62086e91a749791df13f08a88aab4a07`](https://github.com/eugnel-ltd/glassvow/tree/4752e87e62086e91a749791df13f08a88aab4a07):
 
-- [proof boundary](https://github.com/fol2/glassvow/blob/4752e87e62086e91a749791df13f08a88aab4a07/proof.md);
-- [manifest](https://github.com/fol2/glassvow/blob/4752e87e62086e91a749791df13f08a88aab4a07/manifest.json);
-- [offline verifier](https://github.com/fol2/glassvow/blob/4752e87e62086e91a749791df13f08a88aab4a07/verify.py);
-- [issue receipt](https://github.com/fol2/glassvow/issues/107#issuecomment-5274250703).
+- [proof boundary](https://github.com/eugnel-ltd/glassvow/blob/4752e87e62086e91a749791df13f08a88aab4a07/proof.md);
+- [manifest](https://github.com/eugnel-ltd/glassvow/blob/4752e87e62086e91a749791df13f08a88aab4a07/manifest.json);
+- [offline verifier](https://github.com/eugnel-ltd/glassvow/blob/4752e87e62086e91a749791df13f08a88aab4a07/verify.py);
+- [issue receipt](https://github.com/eugnel-ltd/glassvow/issues/107#issuecomment-5274250703).
 
 Fresh independent archive verification passed. The packet binds the final
 source tree, #167/#168 merge lineage, the complete local gate set, and eight
 non-uniform headed images: boss-relic and Dawn, both locales, exact 390×844 and
 1180×820. It is an applicability bridge, not a second four-run matrix.
 
-[#167](https://github.com/fol2/glassvow/issues/167) was fixed by
-[PR #169](https://github.com/fol2/glassvow/pull/169), merged as
-[`bd0dba2b5ca61075caaebf75539cd96c98b8045c`](https://github.com/fol2/glassvow/commit/bd0dba2b5ca61075caaebf75539cd96c98b8045c).
+[#167](https://github.com/eugnel-ltd/glassvow/issues/167) was fixed by
+[PR #169](https://github.com/eugnel-ltd/glassvow/pull/169), merged as
+[`bd0dba2b5ca61075caaebf75539cd96c98b8045c`](https://github.com/eugnel-ltd/glassvow/commit/bd0dba2b5ca61075caaebf75539cd96c98b8045c).
 
-[#168](https://github.com/fol2/glassvow/issues/168) was fixed by
-[PR #170](https://github.com/fol2/glassvow/pull/170), merged as the final
+[#168](https://github.com/eugnel-ltd/glassvow/issues/168) was fixed by
+[PR #170](https://github.com/eugnel-ltd/glassvow/pull/170), merged as the final
 candidate `f7d3ea257ff7465cad06e3be299cb5495886b45d`.
 
 ## True process-kill resume matrix
 
 The first immutable fresh-PID packet is
-[`90457cf7662b966531285768fe72a702cce674a1`](https://github.com/fol2/glassvow/tree/90457cf7662b966531285768fe72a702cce674a1).
+[`90457cf7662b966531285768fe72a702cce674a1`](https://github.com/eugnel-ltd/glassvow/tree/90457cf7662b966531285768fe72a702cce674a1).
 Its offline verifier passes five true `SIGKILL` process-A → fresh-process-B rows,
 ten screenshots and an unchanged normal save:
 
@@ -77,12 +77,12 @@ ten screenshots and an unchanged normal save:
 | eventPending | Event choice overlay, exact fingerprint |
 
 The final completion packet at
-[`2e09ea610f46d31a4eb58008497c06f11113dc6c`](https://github.com/fol2/glassvow/tree/2e09ea610f46d31a4eb58008497c06f11113dc6c)
+[`2e09ea610f46d31a4eb58008497c06f11113dc6c`](https://github.com/eugnel-ltd/glassvow/tree/2e09ea610f46d31a4eb58008497c06f11113dc6c)
 adds the five binding rows not supplied by that first packet. Its
-[proof](https://github.com/fol2/glassvow/blob/2e09ea610f46d31a4eb58008497c06f11113dc6c/proof.md),
-[manifest](https://github.com/fol2/glassvow/blob/2e09ea610f46d31a4eb58008497c06f11113dc6c/manifest.json),
-[verifier](https://github.com/fol2/glassvow/blob/2e09ea610f46d31a4eb58008497c06f11113dc6c/verify.py)
-and [issue receipt](https://github.com/fol2/glassvow/issues/107#issuecomment-5274538346)
+[proof](https://github.com/eugnel-ltd/glassvow/blob/2e09ea610f46d31a4eb58008497c06f11113dc6c/proof.md),
+[manifest](https://github.com/eugnel-ltd/glassvow/blob/2e09ea610f46d31a4eb58008497c06f11113dc6c/manifest.json),
+[verifier](https://github.com/eugnel-ltd/glassvow/blob/2e09ea610f46d31a4eb58008497c06f11113dc6c/verify.py)
+and [issue receipt](https://github.com/eugnel-ltd/glassvow/issues/107#issuecomment-5274538346)
 are immutable:
 
 | Checkpoint | Process A → B | Restored route | Real continuation |
@@ -106,8 +106,8 @@ inside one process is not substituted for process-kill evidence.
 Both locales receive exact 1458×820 desktop-landscape headed combat spot checks
 at the final gameplay candidate, retained in `2e09ea6`:
 
-- [en capture](https://raw.githubusercontent.com/fol2/glassvow/2e09ea610f46d31a4eb58008497c06f11113dc6c/desktop/captures/combat-en-desktop-landscape.png);
-- [zh-Hant capture](https://raw.githubusercontent.com/fol2/glassvow/2e09ea610f46d31a4eb58008497c06f11113dc6c/desktop/captures/combat-zh-Hant-desktop-landscape.png).
+- [en capture](https://raw.githubusercontent.com/eugnel-ltd/glassvow/2e09ea610f46d31a4eb58008497c06f11113dc6c/desktop/captures/combat-en-desktop-landscape.png);
+- [zh-Hant capture](https://raw.githubusercontent.com/eugnel-ltd/glassvow/2e09ea610f46d31a4eb58008497c06f11113dc6c/desktop/captures/combat-zh-Hant-desktop-landscape.png).
 
 Both are non-uniform and have process exit 0. These are viewport UI/UX checks
 only; they are not desktop-platform or export compatibility evidence.
@@ -144,13 +144,13 @@ the ledger.
 |---|---|
 | Open `bug` issues | 0 at the closure snapshot (`2026-08-13T00:45:08Z`); refresh immediately before merge |
 | #107 | Resolved by this closure PR on merge |
-| #108 | Downstream and [explicitly deferred](https://github.com/fol2/glassvow/issues/108#issuecomment-5273355875) to the later compatibility/release stage |
-| #85 | Explicit post-1.0 hold: [decision](https://github.com/fol2/glassvow/issues/85#issuecomment-5231805781) |
-| #86 | Explicit hold with retired PR #126: [decision](https://github.com/fol2/glassvow/issues/86#issuecomment-5231806232) |
-| #87 | Existing procedural sky retained: [decision](https://github.com/fol2/glassvow/issues/87#issuecomment-5231806763) |
-| #7 exception | Historical process exception only: [decision](https://github.com/fol2/glassvow/issues/7#issuecomment-5264971463); no functional or future-gate waiver |
-| #7 | Closed with [final P7 receipt](https://github.com/fol2/glassvow/issues/7#issuecomment-5265084026) |
-| #8 | Closed/superseded by #156: [decision](https://github.com/fol2/glassvow/issues/8#issuecomment-5273846456) |
+| #108 | Downstream and [explicitly deferred](https://github.com/eugnel-ltd/glassvow/issues/108#issuecomment-5273355875) to the later compatibility/release stage |
+| #85 | Explicit post-1.0 hold: [decision](https://github.com/eugnel-ltd/glassvow/issues/85#issuecomment-5231805781) |
+| #86 | Explicit hold with retired PR #126: [decision](https://github.com/eugnel-ltd/glassvow/issues/86#issuecomment-5231806232) |
+| #87 | Existing procedural sky retained: [decision](https://github.com/eugnel-ltd/glassvow/issues/87#issuecomment-5231806763) |
+| #7 exception | Historical process exception only: [decision](https://github.com/eugnel-ltd/glassvow/issues/7#issuecomment-5264971463); no functional or future-gate waiver |
+| #7 | Closed with [final P7 receipt](https://github.com/eugnel-ltd/glassvow/issues/7#issuecomment-5265084026) |
+| #8 | Closed/superseded by #156: [decision](https://github.com/eugnel-ltd/glassvow/issues/8#issuecomment-5273846456) |
 | #156, #159, #160, #163–#166 | Open parallel/downstream commercial-roadmap work; not silently absorbed into #107 |
 | #171, #172 | Open later platform-performance device/profiling work; excluded from the present stage |
 | #175–#177 | Open story/onboarding/copy design work under #156; excluded from this gameplay QA closure |

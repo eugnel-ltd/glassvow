@@ -1,12 +1,12 @@
 # Balance diagnosis baseline — 2026-08-13
 
-Issue: [fol2/glassvow#203](https://github.com/fol2/glassvow/issues/203).
-Method: [fol2/glassvow#160](https://github.com/fol2/glassvow/issues/160).
-Status: **SIGNED — James, 2026-08-16** on the **p8-d0-v1** bands (addendum 2026-08-14), as a **pilot-adequacy checkpoint, not a balance guarantee**, with the four adversarial amendments attached. Band 2's second clause was dropped at sign-off (point-only gate — candidate (a)); band 3 signed as mean ∈ [5.5, 10.5]; band 4 as a point-estimate gate at n = 200. Step 2 (device validation) was folded into [#205](https://github.com/fol2/glassvow/issues/205). The p7-d2-v1 bands were never signed and are superseded. See the sign-off record at the end.
+Issue: [eugnel-ltd/glassvow#203](https://github.com/eugnel-ltd/glassvow/issues/203).
+Method: [eugnel-ltd/glassvow#160](https://github.com/eugnel-ltd/glassvow/issues/160).
+Status: **SIGNED — James, 2026-08-16** on the **p8-d0-v1** bands (addendum 2026-08-14), as a **pilot-adequacy checkpoint, not a balance guarantee**, with the four adversarial amendments attached. Band 2's second clause was dropped at sign-off (point-only gate — candidate (a)); band 3 signed as mean ∈ [5.5, 10.5]; band 4 as a point-estimate gate at n = 200. Step 2 (device validation) was folded into [#205](https://github.com/eugnel-ltd/glassvow/issues/205). The p7-d2-v1 bands were never signed and are superseded. See the sign-off record at the end.
 
 **Holdout 2026-08-18:** the four signed bands **PASS** on seeds 5000–5199, n = 200, no content retune. Record: `docs/balance/2026-08-18-holdout-bands.md` (#204).
 
-**The bands also await a re-measure, not only a signature.** #203 is wired blocked-by [Strategy landscape layer 1](https://github.com/fol2/glassvow/issues/215): Tier 1 opens the pilot's grammar so a policy can *decline* a card reward, and the measured winning deck of ~43 cards is not a build any competent human plays. A new grammar is a new instrument, so these four cells will move again and every number below is provisional against that. Signing before then would fence the game to a superseded ruler. *(Re-measured 2026-08-14 — see the addendum at the end: the numbers did not move, and that is not the same as the ruler surviving.)*
+**The bands also await a re-measure, not only a signature.** #203 is wired blocked-by [Strategy landscape layer 1](https://github.com/eugnel-ltd/glassvow/issues/215): Tier 1 opens the pilot's grammar so a policy can *decline* a card reward, and the measured winning deck of ~43 cards is not a build any competent human plays. A new grammar is a new instrument, so these four cells will move again and every number below is provisional against that. Signing before then would fence the game to a superseded ruler. *(Re-measured 2026-08-14 — see the addendum at the end: the numbers did not move, and that is not the same as the ruler surviving.)*
 
 **What the two instrument defects actually cost: nothing this sample can detect.** Repairing them (`deck[0]` duplication and first-affordable event choice) moved every cell by less than its own noise — all four paired cell intervals and both gap-movement intervals contain zero at n = 200, where the half-widths run ±5 to ±6 pp. #213 and #215 both record the defects as depressing the four cells "by an unmeasured amount"; measured here, the depression is **not detectable**, and effects smaller than roughly 5 pp remain un-excluded. The repairs were still correct — a choice decided by array order is not a strategy — but they are not the explanation for anything.
 
@@ -561,9 +561,9 @@ hollowCrown −17.00 / catalyst −11.00 failures do not reproduce under p8.
 ### Amendments — attached verbatim, not weakened
 
 These are the four amendments the adversarial review earned, copied from
-https://github.com/fol2/glassvow/issues/203 (comment "Before you sign"). They
+https://github.com/eugnel-ltd/glassvow/issues/203 (comment "Before you sign"). They
 constrain what a signature on the p8 bands can claim. Full adjudication remains
-on https://github.com/fol2/glassvow/pull/208#issuecomment-5281077468.
+on https://github.com/eugnel-ltd/glassvow/pull/208#issuecomment-5281077468.
 
 1. **State that the four bands do not discharge the unwaivable trio.** A heuristic pilot only explores strategies it was programmed to try, so no win-rate band evidences "no strategy trivializes a gated vow". That leg needs #205 plus something these bands do not contain. This is the finding that most constrains what the baseline can claim.
 2. **Tighten or drop band 2's second clause.** "The paired 95% interval must not lie entirely outside [−15, +15] pp" is satisfied by an interval of [+14.9, +40].
@@ -585,7 +585,7 @@ touched. Ablation bans still live in `choose_card` / `choose_relic` /
 ### Sign-off record — 2026-08-16
 
 Signed by James (wayfinder session on
-[#203](https://github.com/fol2/glassvow/issues/203)), all four bands against
+[#203](https://github.com/eugnel-ltd/glassvow/issues/203)), all four bands against
 `p8-d0-v1`:
 
 - The signature certifies the **instrument's envelope** — a pilot-adequacy

@@ -4,7 +4,7 @@
 
 ## What happened
 
-`AGENTS.md` named [web-reference-v1](https://github.com/fol2/roguecardv2/tree/web-reference-v1)
+`AGENTS.md` named [web-reference-v1](https://github.com/eugnel-ltd/roguecardv2/tree/web-reference-v1)
 — `1343e1d`, 2026-07-24 — as the reference, and on this machine that tag is
 checked out at `~/Coding/roguecardv2`. It is not the benchmark.
 

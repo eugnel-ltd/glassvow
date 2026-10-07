@@ -24,7 +24,7 @@ tags: [css, cascade, specificity, transform, centring, scroll-reveal, intersecti
 ## Where this code lives
 
 `docs/story-candidates/render.py` — the renderer for the fifteen bilingual story
-pages published for [#175](https://github.com/fol2/glassvow/issues/175). It is
+pages published for [#175](https://github.com/eugnel-ltd/glassvow/issues/175). It is
 review tooling that emits self-contained HTML, not game code. It is the largest
 stylesheet in this repository, though not the only one — `tools/web_shell.html`
 and the design mockups under `docs/design/` carry their own. Line numbers below

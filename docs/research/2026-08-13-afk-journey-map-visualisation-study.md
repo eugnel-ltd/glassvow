@@ -1,6 +1,6 @@
 # AFK Journey visualisation study — the map surface
 
-**Scope:** decision input for [#207](https://github.com/fol2/glassvow/issues/207)
+**Scope:** decision input for [#207](https://github.com/eugnel-ltd/glassvow/issues/207)
 ("Map visual direction — the AFK Journey bar applied to the map surface"), not
 the direction decision itself. Commissioned 2026-08-13 from the #85 re-grill.
 
@@ -373,7 +373,7 @@ The device arithmetic behind every "floor cost" cell:
 | 6 | **Day-night / time-of-day arc** | 昼夜系统 with 24 h ramp, artist-tunable ([GameRes 905985](https://www.gameres.com/905985.html)) | Would be a `Tween` or run-clock driving the same palette table + shader uniforms | **NO PATH EXISTS** — the act palette is applied once per act; nothing carries a continuous clock to the bands | Free if it drives existing uniforms | Zero | **Recommend DROP.** A ~20-minute run across three fixed acts has no room for a 24 h arc; the acts already are the arc |
 | 7 | **Region-scripted weather** | Per-region weather shifting light colour, lowering light/shadow contrast, changing vegetation sway frequency and amplitude, 随机频闪+雷声 ([GameRes 905985](https://www.gameres.com/905985.html)) | Already the design. `CPUParticles2D`/`GPUParticles2D` would be the idiomatic upgrade; note `emit_particle()` is Forward+/Mobile only, and `amount_ratio` gives **no** perf benefit ([GPUParticles2D docs](https://github.com/godotengine/godot-docs/blob/master/doc/classes/GPUParticles2D.xml)) | **EXISTS** — `presentation/map/map_band.gd` (`_draw`) VeilBand draws 128 disc quads / storm streaks. Act-2 lightning (`set_flash`, `_step_lightning`, `MapRegions.LIGHTNING_*`) retired with the sky/region bands in #234 slice 7b2 — deliberate, no 3D successor in this slice | Veil is already the most expensive band (parallax 1.35, ungated, 128 quads). *Estimate:* fine on SE 2, needs measuring on iPad 8 | Zero | Low — this ingredient is the one glassvow already matches |
 | 8 | **Shape language (flat wedges, stacked slabs, no small noise)** | Enforced by shared authoring tools ([GameRes 905985](https://www.gameres.com/905985.html)) | `draw_polygon` / `Polygon2D` / `MeshInstance2D` (faster than a `Sprite2D` with large transparent areas) | **RETIRED** — act-0 tree polygons and sunken shafts (`_draw_shafts`, RegionBand `_draw`) deleted with RegionBand in #234 slice 7b2. 3D placeholder modules (wedge / slab / dab) live on `MapScene` | Vertex work, negligible | Zero | Low. This is where the procedural map is already closest to the anchor |
-| 9 | **Singular landmark composition** | Giant stone sword etc. as single high-value silhouettes against a saturated bed | An untiled, world-anchored `draw_texture_rect` — a `MapStrip.draw_single` sibling to `draw_tiled`, plus a placement contract | **NO PATH** — issue [#85](https://github.com/fol2/glassvow/issues/85). `_draw_spire` and `_draw_rose_window` retired in #234 slice 7b2 with SkyBand / the 2D path bed (#207/#232: Spire retired game-wide). `MapStrip` itself retired in 7b2 | 1 small blended quad; not full-screen | ~2.25 MiB/act at 1536×1536 ASTC (*estimate*) | Medium. `FAR_BLEED` overdraw retired with the far bands |
+| 9 | **Singular landmark composition** | Giant stone sword etc. as single high-value silhouettes against a saturated bed | An untiled, world-anchored `draw_texture_rect` — a `MapStrip.draw_single` sibling to `draw_tiled`, plus a placement contract | **NO PATH** — issue [#85](https://github.com/eugnel-ltd/glassvow/issues/85). `_draw_spire` and `_draw_rose_window` retired in #234 slice 7b2 with SkyBand / the 2D path bed (#207/#232: Spire retired game-wide). `MapStrip` itself retired in 7b2 | 1 small blended quad; not full-screen | ~2.25 MiB/act at 1536×1536 ASTC (*estimate*) | Medium. `FAR_BLEED` overdraw retired with the far bands |
 | 10 | **Avatar tiny inside a light hole** | Party ~4% of frame height in a lit clearing inside a dark field | Composition + the existing marker glow | **EXISTS** — waystone rings and glow in `presentation/map/glass_waystone.gd`; raster-on-`Control` is already proven there (a `TextureRect` over procedural `_draw` rings) | Zero | Zero | Low |
 | 11 | **Progressive reveal (Miasma analogue)** | Exploration-% milestone dissolves the Miasma; diegetic ([afk.guide](https://afk.guide/afk-journey-v1-0-11-patch-notes/)) | Cheap version: one `uniform float cleared` into the #4 shader, driving saturation/haze per band. Expensive version: a second painted variant per band per state | **PARTIAL.** Per-node reveal exists (`presentation/map/glass_waystone.gd` (`kindle_reveal`), walked-edge recolour, depth alpha). **Scenery: NO PATH** — bands see progress only at act granularity; `map.at` and the cleared set never reach sky/region/veil | Shader version: free. Painted-variant version: **doubles** the strip payload | 0 MiB or +100% of the strip budget | Medium — the shader version is nearly free and should be the default answer |
 | 12 | **Rim / bounce lighting** | **UNSOURCED as a technique.** Store-screenshot rim is marketing compositing | Would need `PointLight2D` + `CanvasTexture` normal maps, which require a `Light2D` present and raised light Height ([Godot 2D lights](https://docs.godotengine.org/en/stable/tutorials/2d/2d_lights_and_shadows.html)) | **NO PATH EXISTS** — no `PointLight2D`/`CanvasModulate`/`LightOccluder2D` anywhere in the repo; bands are Control-space `_draw` with baked alpha, and real Light2D needs Node2D-space children plus `light_mask` | "Larger lights have a higher performance cost as they affect more pixels"; additive `Sprite2D` fakes render "much faster" than real 2D lights ([same](https://docs.godotengine.org/en/stable/tutorials/2d/2d_lights_and_shadows.html)) | Normal maps would double every texture | **DROP.** Unsourced in the anchor, no path here, and the cheap fake is already what the map does |
@@ -486,10 +486,10 @@ untouched.
 3. One test in `tests/test_map.gd` asserting the per-act palette holds V and S
    inside band and rotates hue — the numbers are measurable, so the gate is real.
 
-**Tickets activated.** None. It **answers** [#87](https://github.com/fol2/glassvow/issues/87)
+**Tickets activated.** None. It **answers** [#87](https://github.com/eugnel-ltd/glassvow/issues/87)
 in the in-band direction (no painted skyband strip, no baked noise — which is
 what both failed generation rounds argue for) and leaves
-[#85](https://github.com/fol2/glassvow/issues/85) on its POST-1.0 hold.
+[#85](https://github.com/eugnel-ltd/glassvow/issues/85) on its POST-1.0 hold.
 
 **What it deliberately gives up.** Painterly texture (ingredient 1) entirely.
 Singular painted landmarks (9). The map stays recognisably drawn-by-code: it will
@@ -542,11 +542,11 @@ veil (2). Sky strip is opaque, terminus is a small quad, path/chips are small.
 **Engine work.**
 1. Package A in full (it is the grade the painted art is authored against — do
    this first or the art will be authored to the wrong target).
-2. **Activates [#85](https://github.com/fol2/glassvow/issues/85)** — the singular
+2. **Activates [#85](https://github.com/eugnel-ltd/glassvow/issues/85)** — the singular
    region-plane draw path. `MapStrip.draw_single` / `draw_tiled` and `FAR_BLEED`
    retired with MapStrip / the far bands in #234 slice 7b2; a successor would
    be a 3D landmark, not a 2D strip sibling.
-3. **Activates [#87](https://github.com/fol2/glassvow/issues/87)** — decides
+3. **Activates [#87](https://github.com/eugnel-ltd/glassvow/issues/87)** — decides
    *painted strip*, and thereby re-opens the art-production question that two
    generation rounds failed. #87's own evidence (numpy sine decomposition, visible
    ~300 px repeat, act-3 strip at 22.9% opaque) is the specification for what must

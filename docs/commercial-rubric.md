@@ -1,7 +1,7 @@
 # Commercial Quality Rubric
 
-Created by the grilling on [#157](https://github.com/fol2/glassvow/issues/157), part of the
-commercial-push map [#156](https://github.com/fol2/glassvow/issues/156). This is the per-surface
+Created by the grilling on [#157](https://github.com/eugnel-ltd/glassvow/issues/157), part of the
+commercial-push map [#156](https://github.com/eugnel-ltd/glassvow/issues/156). This is the per-surface
 bar a mobile release candidate must clear. Sign-off records live on executing tickets, never in
 this file.
 
@@ -33,8 +33,8 @@ card/combat feel sounds calibrate against Balatro/PTCGP, music/ambience/narrativ
 UI sounds against AFK Journey.
 
 **Not in this rubric:** fps and device-performance targets (they belong to the performance floor,
-[#158](https://github.com/fol2/glassvow/issues/158), and are measured at the release gate);
-save-integrity-across-process-death (release gate, [#108](https://github.com/fol2/glassvow/issues/108));
+[#158](https://github.com/eugnel-ltd/glassvow/issues/158), and are measured at the release gate);
+save-integrity-across-process-death (release gate, [#108](https://github.com/eugnel-ltd/glassvow/issues/108));
 a collection/compendium screen (out of scope for v1, recorded on the map).
 
 ## Sign-off protocol

@@ -1,6 +1,6 @@
 # Policy vector — Slice B — 2026-08-14
 
-Issue: [fol2/glassvow#215](https://github.com/fol2/glassvow/issues/215).
+Issue: [eugnel-ltd/glassvow#215](https://github.com/eugnel-ltd/glassvow/issues/215).
 `BalancePolicy.default()` at `tools/balance_policy.gd:6` (`default`) is the
 live `p8-d0-v1` vector (four-grid top-decile median). `sample_origin()` is
 frozen `p7-d2-v1` so `sample_range` / CEM replay stay bit-identical.

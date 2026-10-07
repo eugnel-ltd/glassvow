@@ -4,9 +4,9 @@
 
 The release evidence is the real exported `Main -> CombatScreen` route, not the
 component probe below. The immutable evidence is commit
-[`1ce1ce8915b33ae1914714a6b2c40af89fb6ac22`](https://github.com/fol2/glassvow/blob/1ce1ce8915b33ae1914714a6b2c40af89fb6ac22/manifest.md),
+[`1ce1ce8915b33ae1914714a6b2c40af89fb6ac22`](https://github.com/eugnel-ltd/glassvow/blob/1ce1ce8915b33ae1914714a6b2c40af89fb6ac22/manifest.md),
 with every row in its
-[`binding/summary.json`](https://github.com/fol2/glassvow/blob/1ce1ce8915b33ae1914714a6b2c40af89fb6ac22/binding/summary.json).
+[`binding/summary.json`](https://github.com/eugnel-ltd/glassvow/blob/1ce1ce8915b33ae1914714a6b2c40af89fb6ac22/binding/summary.json).
 It binds measurement source `cf1b3d51af2992e1db8a419a49ff6254d6147581`
 and verifier `5fb7d95a0bfa75953d184e172c3cd4a7d91d7786`.
 
@@ -25,7 +25,7 @@ processes: 50 rows.
 | observed whole-frame p95 | ≤16.00 ms in every row | **9.578 ms** | **9.578 ms** | clears gate — 6.422 ms (40.14%) |
 
 PR #143 is the signed P8.1 decision of record. [James To's signature
-receipt](https://github.com/fol2/glassvow/pull/143#issuecomment-5269434207)
+receipt](https://github.com/eugnel-ltd/glassvow/pull/143#issuecomment-5269434207)
 binds product head `984479dd6c24c366a2b86478301b41021d3b9c24`, evidence
 `712c1b563168d655acdbb3ed7960e9be0792c944`, merge
 `806076b26ecbd1c0e40e2ec28fb9fd688cabfad4` and the gates above. The verifier

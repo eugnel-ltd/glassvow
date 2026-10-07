@@ -365,5 +365,5 @@ act/card/relic copy and an unchanged v2 save dictionary
 - [P7 locale design](../../p7-locale-design.md) — the phase design of record
 - [Verify whole-run routes with headed input and throwaway application drivers](../workflow-issues/verify-whole-run-routes-with-headed-input-and-throwaway-drivers.md) — the complementary end-to-end proof pattern
 - [Edit benchmark mobs as validated sparse overrides](../tooling-decisions/edit-benchmark-mobs-as-validated-sparse-overrides.md) — an adjacent atomic effective-content pattern
-- [PR #140](https://github.com/fol2/glassvow/pull/140) — merged implementation and exact-head evidence
-- [Issue #104](https://github.com/fol2/glassvow/issues/104) — acceptance and closure record
+- [PR #140](https://github.com/eugnel-ltd/glassvow/pull/140) — merged implementation and exact-head evidence
+- [Issue #104](https://github.com/eugnel-ltd/glassvow/issues/104) — acceptance and closure record
