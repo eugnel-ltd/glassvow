@@ -1,6 +1,6 @@
 # The Flame — how the lantern reads the Ashwarden's three ways (design lock)
 
-**Status:** LOCKED for implementation, 2026-10-05. Owner: James. Author: Claude (Opus 5.5), for the orchestrator, as step A1 of [#544](https://github.com/fol2/glassvow/issues/544)'s plan of record. Companion files: the Duskblade's lock [`../2026-09-29-dusk-flame/README.md`](../2026-09-29-dusk-flame/README.md) (the mechanism and the measurement contract this lock inherits), the class template [`../2026-09-29-dusk-flame/ways-template.md`](../2026-09-29-dusk-flame/ways-template.md), and this lock's first reading, [`readouts/readout-a0.md`](readouts/readout-a0.md) (development seeds, not of record).
+**Status:** LOCKED for implementation, 2026-10-05. Owner: James. Author: Claude (Opus 5.5), for the orchestrator, as step A1 of [#544](https://github.com/eugnel-ltd/glassvow/issues/544)'s plan of record. Companion files: the Duskblade's lock [`../2026-09-29-dusk-flame/README.md`](../2026-09-29-dusk-flame/README.md) (the mechanism and the measurement contract this lock inherits), the class template [`../2026-09-29-dusk-flame/ways-template.md`](../2026-09-29-dusk-flame/ways-template.md), and this lock's first reading, [`readouts/readout-a0.md`](readouts/readout-a0.md) (development seeds, not of record).
 
 **Verdict:** none yet. The Ashwarden's verdict is given on its reading of record at step A9 (§12), under [`docs/rc-bar.md`](../../rc-bar.md) P9's 1.1 scope.
 

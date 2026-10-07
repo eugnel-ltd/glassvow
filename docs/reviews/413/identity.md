@@ -53,7 +53,7 @@ Not this slice. Still owed before a TestFlight upload:
 - **#295** — paid map kit / runtime budgets (native blocker on #413).
 - **#426** — App Store Connect app record and iOS 1.0.0 version (HITL).
 - **#434** — Store PCK hardening landed in PR #436; exact-main CI passed at
-  `b9dc8b59354559c588f8de71e4743ebb86f50172` ([run 32446467045](https://github.com/fol2/glassvow/actions/runs/32446467045)).
+  `b9dc8b59354559c588f8de71e4743ebb86f50172` ([run 32446467045](https://github.com/eugnel-ltd/glassvow/actions/runs/32446467045)).
 - **Signing / archive / upload** — Codex owns; this slice does not sign,
   authenticate, or upload.
 - **ASC / TestFlight** — no app record claimed; no build id recorded.

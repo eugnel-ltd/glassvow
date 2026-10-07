@@ -1,7 +1,7 @@
 # Balance holdout — 2026-08-18
 
-Issue: [fol2/glassvow#204](https://github.com/fol2/glassvow/issues/204).
-Ruler: [fol2/glassvow#203](https://github.com/fol2/glassvow/issues/203) signed bands
+Issue: [eugnel-ltd/glassvow#204](https://github.com/eugnel-ltd/glassvow/issues/204).
+Ruler: [eugnel-ltd/glassvow#203](https://github.com/eugnel-ltd/glassvow/issues/203) signed bands
 (`docs/balance/2026-08-13-diagnosis-baseline.md`, James 2026-08-16).
 Status: **PASS** — one joint hypothesis on a fresh holdout. **No content scalar
 was changed.** Current `origin/main` already sits inside the signed envelope.

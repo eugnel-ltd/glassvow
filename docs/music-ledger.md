@@ -49,8 +49,8 @@ Act IV tracks were composed in the same Pro workspace (`fol2hk`) on
 
 | cue | v1 title | now | authority |
 |---|---|---|---|
-| `map` | Lanterns on the Face of the Spire | **Lanterns Along the Road** | [#232](https://github.com/fol2/glassvow/issues/232) Tier A ban, landed by [#303](https://github.com/fol2/glassvow/issues/303) |
-| `sealedDoor` | The Climb Continues | **The Pilgrimage Continues** | foreshadow-ledger row 82 — 「朝聖仍在繼續。」/ "The pilgrimage continues." is one sentence at three sites (whisper 24, `ui.map.sealedDoor.inscription`, this title); signed in story batch 1 ([#301](https://github.com/fol2/glassvow/issues/301)), landed by [#303](https://github.com/fol2/glassvow/issues/303) |
+| `map` | Lanterns on the Face of the Spire | **Lanterns Along the Road** | [#232](https://github.com/eugnel-ltd/glassvow/issues/232) Tier A ban, landed by [#303](https://github.com/eugnel-ltd/glassvow/issues/303) |
+| `sealedDoor` | The Climb Continues | **The Pilgrimage Continues** | foreshadow-ledger row 82 — 「朝聖仍在繼續。」/ "The pilgrimage continues." is one sentence at three sites (whisper 24, `ui.map.sealedDoor.inscription`, this title); signed in story batch 1 ([#301](https://github.com/eugnel-ltd/glassvow/issues/301)), landed by [#303](https://github.com/eugnel-ltd/glassvow/issues/303) |
 
 Both audio files are byte-identical to v1. Those two cues stay on the v1
 renders; the pack_id bump is the Act IV addendum, not a retitle.

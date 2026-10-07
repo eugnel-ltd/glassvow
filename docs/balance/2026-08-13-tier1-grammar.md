@@ -1,6 +1,6 @@
 # Tier 1 grammar — Slice A — 2026-08-13
 
-Issue: [fol2/glassvow#215](https://github.com/fol2/glassvow/issues/215).
+Issue: [eugnel-ltd/glassvow#215](https://github.com/eugnel-ltd/glassvow/issues/215).
 Pilot `p7-d2-v1` on profile `mature-three-act-no-side-state-v1`. Content SHA-256
 `633408231840d4ba47e0680d1969982cdf1ded1a61213a51bfd2bdab00f35155` (unchanged).
 Godot `4.7.1-stable (official)`. Defaults preserve the merged p7-d2-v1 instrument;

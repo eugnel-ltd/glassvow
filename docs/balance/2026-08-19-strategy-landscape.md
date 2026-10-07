@@ -1,8 +1,8 @@
 # Strategy landscape — live SHA re-run — 2026-08-19
 
-Issue: [fol2/glassvow#412](https://github.com/fol2/glassvow/issues/412). This ticket **measures**. It does not retune. Protocol, arm definitions, sampling distributions, and C1–C4 / Vow-5 gates are those of [`2026-08-14-strategy-landscape.md`](2026-08-14-strategy-landscape.md) (#215 / #216). This file is the dated sibling so the 2026-08-14 readout stays intact.
+Issue: [eugnel-ltd/glassvow#412](https://github.com/eugnel-ltd/glassvow/issues/412). This ticket **measures**. It does not retune. Protocol, arm definitions, sampling distributions, and C1–C4 / Vow-5 gates are those of [`2026-08-14-strategy-landscape.md`](2026-08-14-strategy-landscape.md) (#215 / #216). This file is the dated sibling so the 2026-08-14 readout stays intact.
 
-**Hypothesis-1 retune:** [fol2/glassvow#421](https://github.com/fol2/glassvow/issues/421) measured content SHA `c96ed73196eafaec6c68cca27f0dafd784e810278d53d07fd995d3bd20f446aa` on 2026-08-19. Readout: [`2026-08-19-421-hypothesis-1.md`](2026-08-19-421-hypothesis-1.md). This file stays the #412 measurement on SHA `736090f1…` and is not rewritten.
+**Hypothesis-1 retune:** [eugnel-ltd/glassvow#421](https://github.com/eugnel-ltd/glassvow/issues/421) measured content SHA `c96ed73196eafaec6c68cca27f0dafd784e810278d53d07fd995d3bd20f446aa` on 2026-08-19. Readout: [`2026-08-19-421-hypothesis-1.md`](2026-08-19-421-hypothesis-1.md). This file stays the #412 measurement on SHA `736090f1…` and is not rewritten.
 
 Content SHA-256 (`FileAccess.get_sha256` of `res://content/full-content.json`):
 `736090f18546738a2e38b756d81f6ad715a808c4ea321220443f839862cdb102`.
@@ -250,4 +250,4 @@ Cross-turn card holding, target selection and Art timing are not searched by thi
 | C4 (all four grids) | **PASS** |
 | Vow-5 ≤90% fail-closed | **PASS** (Dusk 83.0%, Ash 89.5%) |
 
-A FAIL does not park TestFlight. It parks declaring RC (`docs/rc-bar.md` P9). The retune is [#421](https://github.com/fol2/glassvow/issues/421); [#204](https://github.com/fol2/glassvow/issues/204) stays closed.
+A FAIL does not park TestFlight. It parks declaring RC (`docs/rc-bar.md` P9). The retune is [#421](https://github.com/eugnel-ltd/glassvow/issues/421); [#204](https://github.com/eugnel-ltd/glassvow/issues/204) stays closed.

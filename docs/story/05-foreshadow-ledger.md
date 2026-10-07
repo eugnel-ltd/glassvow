@@ -190,7 +190,7 @@ huntName 等無敘事雙讀的字串不立行)。zh 為源語;「保留」=兩�
 | 130 | 空燈掌燈人踏上路途。 / The Hollow Lamplighter walks the road. | ui.dawn.unlock.lamplighter | L1 | 解鎖通告 | 他一直在路上——解鎖的是你見到他,不是他出現 | 重寫(舊 踏上尖塔 / walks the Spire) |
 | 131 | 朝聖之路上如今可找到藥瓶。/ 新卡牌與遺物加入朝聖之路。 / Phials may now be found on the road. · New cards and relics join the pilgrimage. | ui.dawn.unlock.phials・pool | L0 | 解鎖通告 | — | **zh 兩行皆未動**(原已是 朝聖之路,Tier B);只有 en 對齊(舊 on the climb / enter the climb) |
 | 132 | {runs} pilgrimages · {wins} dawns · … | ui.brand.stats・ui.vigil.stats(en) | L0 | 統計行 | 數的是派出去的次數 | en 對齊 zh 既有「{runs} 次朝聖」(舊 {runs} climbs);`{runs}` 佔位符不動,故不取 "run" |
-| 132b | {action} 以巡視路途 / {action} to survey the road | ui.map.survey | L0 | 地圖提示 | — | 置換(舊 巡視尖塔 / survey the Spire),#232 簽定字面。**此鍵全樹零 reader**——實際渲染的是 ui.pilgrimage.survey(「巡視朝聖之路」)與 .surveyChoose;兩者同一動詞兩個受詞,連同刪鍵一併歸 [#305](https://github.com/fol2/glassvow/issues/305) |
+| 132b | {action} 以巡視路途 / {action} to survey the road | ui.map.survey | L0 | 地圖提示 | — | 置換(舊 巡視尖塔 / survey the Spire),#232 簽定字面。**此鍵全樹零 reader**——實際渲染的是 ui.pilgrimage.survey(「巡視朝聖之路」)與 .surveyChoose;兩者同一動詞兩個受詞,連同刪鍵一併歸 [#305](https://github.com/eugnel-ltd/glassvow/issues/305) |
 | 133 | (功能字串:climb → run) | ui.persistence.reloadClimb・runSaveBody・runSaveRetryFail・ui.embark.warnSaved・ui.end.bequestTitle・ui.settings.resetConfirmBody・resetWarn・resetConfirmPlain | L0 | 存檔/重設提示 | 無揭後讀法:此八行是機器語,不是敘述 | en 置換(#232 簽);zh 八側原已是 朝聖之路(Tier B),不動 |
 
 ## Batch 3(#331)入賬區 [SETTLED — James review 完成 2026-08-16]
@@ -665,7 +665,7 @@ James 2026-10-02:不做新音樂,同一 prompt 的 held candidates 作同場備�
 ## `[REWRITE:climb]` 清單狀態 — 已關閉
 
 全量掃描由 #232 的十四-agent 量度完成,記錄於
-[#301 的掃描 comment](https://github.com/fol2/glassvow/issues/301#issuecomment-5304721761)
+[#301 的掃描 comment](https://github.com/eugnel-ltd/glassvow/issues/301#issuecomment-5304721761)
 (2026-08-15)。content.* 側 Tier A 句已全數入賬:quest/whisper 句在
 Batch 1 區(rows 32–82)重寫或保留;scene/finale 側歸 #263/#309;音軌名同
 batch 檔「一語三址」節。

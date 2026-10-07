@@ -1,10 +1,10 @@
 # Beta Debrief Form 內測問卷
 
 One copy per tester, filled at the end of the 7-day internal beta round
-([#166](https://github.com/fol2/glassvow/issues/166)). James administers it as
+([#166](https://github.com/eugnel-ltd/glassvow/issues/166)). James administers it as
 a conversation and consolidates the answers; the consolidated set is part of
 the P6 receipt (`docs/rc-bar.md`). Section 5 routes to the balance workstream
-([#160](https://github.com/fol2/glassvow/issues/160)) and is not pass criteria.
+([#160](https://github.com/eugnel-ltd/glassvow/issues/160)) and is not pass criteria.
 
 每位 tester 一份,喺 7 日內測完結時填。James 以問答形式進行並整合;整合結果係
 P6 receipt 嘅一部分。第 5 節嘅答案會轉交 balance workstream,唔屬於 pass
@@ -13,7 +13,7 @@ criteria。
 **Cohort 名單/分工** — James + Wing:zh-Hant;Nelson + Eugenia:en。Core 三人
 (James, Nelson, Eugenia)每人 ≥3 full runs 係 validity floor;Wing(lite gamer)
 嘅必做項只係 moderated first run,多玩屬 bonus。Full pass criteria live on
-[#166](https://github.com/fol2/glassvow/issues/166).
+[#166](https://github.com/eugnel-ltd/glassvow/issues/166).
 
 ---
 

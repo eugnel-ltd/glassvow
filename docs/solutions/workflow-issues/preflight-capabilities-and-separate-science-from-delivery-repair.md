@@ -43,7 +43,7 @@ four different claims:
    change satisfies an already stable contract.
 
 The Glassvow P9 programme exposed the cost of allowing those claims to blur.
-Issue [#421](https://github.com/fol2/glassvow/issues/421) asks for durable
+Issue [#421](https://github.com/eugnel-ltd/glassvow/issues/421) asks for durable
 strategy diversity. Several bounded campaigns correctly stopped before product
 mutation or simulation, but the programme repeatedly returned to the owner
 because each next evidence capability was specified only after the prior one
@@ -59,7 +59,7 @@ of responsibilities:
 > separate from delivery implementation repairs.**
 
 This note records the reusable pattern. It is not the live status authority for
-P9, #421, [#535](https://github.com/fol2/glassvow/issues/535), or any later
+P9, #421, [#535](https://github.com/eugnel-ltd/glassvow/issues/535), or any later
 campaign. Active issues and exact receipts own live state. Historical failures
 remain immutable evidence; they are not rewritten here into a cleaner story.
 
@@ -535,10 +535,10 @@ status. Follow the linked issues for live state.
 | Shared projection | Treatment and comparator came from the same semantic projection | Evidence could share an omission | Internal agreement is not independent validation |
 | Mutation/oracle attempts | Mutants or inputs were not proven through the actual bound validator path | Pre-execution inconclusive | Require actual application, RIPR and input-to-execution binding |
 | Local attestation attempt | macOS environment lacked the required OS provenance backend | Local capability unavailable | Preflight the environment before protocol freeze |
-| [#533](https://github.com/fol2/glassvow/issues/533) / [PR #534](https://github.com/fol2/glassvow/pull/534) | A narrow inert Linux profile passed a frozen valid/attack matrix on exact head and exact main | Bounded provenance capability PASS for that workload only | Build one independently mergeable capability and preserve its claim boundary |
+| [#533](https://github.com/eugnel-ltd/glassvow/issues/533) / [PR #534](https://github.com/eugnel-ltd/glassvow/pull/534) | A narrow inert Linux profile passed a frozen valid/attack matrix on exact head and exact main | Bounded provenance capability PASS for that workload only | Build one independently mergeable capability and preserve its claim boundary |
 | #533 N05 delivery defect | Replay construction tried to overwrite sealed evidence | Implementation bug under unchanged acceptance | Do not spend a scientific correction on ordinary delivery repair |
 | A1-v1 preflight | Qualified inert runner could not execute or attest the actual Godot M09 path | Exact profile mismatch; no mutation result | Reuse the architecture through a new narrow workload profile, not a surrogate |
-| [#535](https://github.com/fol2/glassvow/issues/535) | Live delivery applies the pattern to the actual Godot path | Outcome intentionally not recorded here | Active issue owns current state; solution note owns the method |
+| [#535](https://github.com/eugnel-ltd/glassvow/issues/535) | Live delivery applies the pattern to the actual Godot path | Outcome intentionally not recorded here | Active issue owns current state; solution note owns the method |
 
 At the #533 handoff, exact main was
 `5c5f2d325725b0a04e060c1ffe0b40a76f2e0928`. That SHA is a historical evidence
@@ -617,7 +617,7 @@ make an already complete issue safer.
 - [Formal subsystem-synthesis literature review](../../research/2026-09-02-p9-formal-subsystem-synthesis-literature-review.md)
 - [Strategy-diversity literature review](../../research/2026-09-02-p9-strategy-diversity-literature-review.md)
 - [Continuous-certification frontier note](../../research/2026-09-02-p9-continuous-certification-frontier-note.md)
-- [Issue #421](https://github.com/fol2/glassvow/issues/421)
-- [Issue #533](https://github.com/fol2/glassvow/issues/533)
-- [PR #534](https://github.com/fol2/glassvow/pull/534)
-- [Issue #535](https://github.com/fol2/glassvow/issues/535)
+- [Issue #421](https://github.com/eugnel-ltd/glassvow/issues/421)
+- [Issue #533](https://github.com/eugnel-ltd/glassvow/issues/533)
+- [PR #534](https://github.com/eugnel-ltd/glassvow/pull/534)
+- [Issue #535](https://github.com/eugnel-ltd/glassvow/issues/535)

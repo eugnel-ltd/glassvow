@@ -1,6 +1,6 @@
 # #456 host qualification — candidate loading, development seeds, compute hosts
 
-Issue: [fol2/glassvow#456](https://github.com/fol2/glassvow/issues/456).
+Issue: [eugnel-ltd/glassvow#456](https://github.com/eugnel-ltd/glassvow/issues/456).
 Engine pin: **4.7.2.stable**. Game-under-test remains H39
 `content/full-content.json` file SHA
 `a0d608a5142d2e3aab799cdf33d3163922b402c2aaf2a895e46e096399b56cf1`.
