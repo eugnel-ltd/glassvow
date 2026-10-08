@@ -1,6 +1,6 @@
 # Store Compliance Dossier — Glassvow (paid, no-IAP, no-ads, offline, local saves)
 
-Research ticket: fol2/glassvow#162. Checked **2026-08-13** against primary sources
+Research ticket: eugnel-ltd/glassvow#162. Checked **2026-08-13** against primary sources
 (developer.apple.com, support.google.com/googleplay/android-developer,
 developer.android.com, docs.godotengine.org, github.com/godotengine). Every claim
 carries the URL of the source that owns it; items I could not confirm on a primary

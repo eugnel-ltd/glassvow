@@ -677,6 +677,29 @@ for byte. A crafted Blender source per kind replaces a recipe as a data-only
 re-bake (`docs/design/2026-10-02-map-living-land/r3/r3-1b-wood/README.md`
 lists what each kind needs).
 
+**R3.2 additions (the floor, 5 Oct 2026), lane picks, owner re-pick open:**
+
+The floor's bake (`presentation/map/landscape/floor_bake.gd`) paints Act I's
+ground with these at run time; only `floor-detail.png` is drawn live. The four
+covers and the scatter were generated on 5 Oct 2026 with the built-in image
+generator (ChatGPT's image tool through the lane's runner), one candidate each,
+kept as the lane's pick; the prompts are in
+`tools/map_atelier/journey/floor/sources/prompts.txt`, and the pictures as
+generated (the covers as JPEG at quality 95, the scatter as PNG) beside them.
+`tools/map_atelier/journey/floor/prepare_floor.py` (numpy, Pillow; seed 717)
+makes every shipped file from them, byte for byte on a re-run.
+
+| Asset | From | Notes |
+|---|---|---|
+| `floor/floor-moss.png` | `sources/floor-moss.jpg` | Dark forest moss, top-down. Slow light divided out, edges wrapped by a half-tile roll, saturation 0.62 and a bronze-olive grade (never a lawn green), 512×512 RGB. The bake spans it over 2.6 m. |
+| `floor/floor-litter.png` | `sources/floor-litter.jpg` | Fallen ash and maple leaves, scarlet to rust, partly decayed. Same treatment, saturation 0.9, 512×512 RGB, over 3.2 m. |
+| `floor/floor-soil.png` | `sources/floor-soil.jpg` | Ash-grey soil with grit and needles. Saturation 0.8, 512×512 RGB, over 2.4 m. |
+| `floor/floor-road.png` | `sources/floor-road.jpg` | Packed earth with pebbles, the worn road. Saturation 0.85 (the bake takes it to 0.45), 512×512 RGB, over 2.2 m. |
+| `floor/floor-splats.png` | `sources/floor-splats.png` | The scatter: a 4×4 sheet of pebbles, twigs, leaves and clumps (a cone, dry grass, a mossy stone) generated on a flat green key; the key cut to alpha, its spill pulled back, the colour bled under the cut so mips keep each sprite's own edge, 512×512 RGBA. |
+| `floor/floor-detail.png` | `prepare_floor.py` from the soil and road covers | The live floor's micro detail: grain (r) from the two covers' fine structure, sparse glint speckles (g) and their twinkle phases (b), 512×512, wrapping; the floor tiles it every 10 m. |
+
+All import VRAM-compressed with mipmaps.
+
 ## Rejection note — what "technically shippable" means
 
 Judging generated character art by eye is not enough; two of the five

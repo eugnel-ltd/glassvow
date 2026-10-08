@@ -1,0 +1,4 @@
+{"args":["--title-trace-probe=title","--probe-nonce=ctl-title1-2204425714"],"build":"26dc6dc7","engine_ms":2817,"mode":"title","probe":"start"}
+{"has_run":true,"probe":"save"}
+{"first_frames_ms":[9.82499980926514,29.0319995880127,14.0349998474121,15.6750001907349,14.5469999313354,16.4349994659424,16.5200004577637,17.3129997253418,14.6389999389648,17.7290000915527,32.4070014953613,18.3770008087158],"frame0_ms":489.157,"frames":470,"pipelines_frame0":{"canvas":8,"draw":0,"mesh":6,"specialization":0,"surface":0},"pipelines_title":{"canvas":8,"draw":0,"mesh":10,"specialization":0,"surface":0},"prefetch":{},"prefetch_step":4,"probe":"title","slow":[[1,29.0],[10,32.4]],"warm_frame":-1,"warm_gone_frame":-1,"worst_after0_ms":32.4}
+{"floor":null,"frames":119,"pipelines_open":{"canvas":13,"draw":0,"mesh":10,"specialization":42,"surface":48},"probe":"open","ready_ms":647.702,"slow":[[28,180.9],[29,70.8]],"vram_mib":331.0,"worst_ms":180.9}

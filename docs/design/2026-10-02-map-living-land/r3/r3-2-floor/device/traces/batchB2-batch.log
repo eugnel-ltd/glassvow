@@ -1,0 +1,25 @@
+== batch B start 04:53:01
+== install dev 04:53:01
+== dev-warm nonce dev-warm-1588531516: rows fresh
+== dev-tnone nonce dev-tnone-2776621692: rows fresh
+== dev-tnone: trace 6.985853 s
+   dev-tnone: build ddecbc38
+== dev-tground nonce dev-tground-83012937: rows fresh
+== dev-tground: trace cut short (0.916217 s, Device_disconnected; attempt 1)
+== dev-tground nonce dev-tground-2296022733: rows fresh
+== dev-tground: trace 6.919803 s
+   dev-tground: build ddecbc38
+== install ctl 05:01:01
+== ctl-warm nonce ctl-warm-85415771: rows fresh
+== ctl-tnone nonce ctl-tnone-1489528025: rows fresh
+== ctl-tnone: trace cut short (0.932171 s, Device_disconnected; attempt 1)
+== ctl-tnone nonce ctl-tnone-2335418351: rows fresh
+== ctl-tnone: trace 6.952268 s
+   ctl-tnone: build 26dc6dc7
+== ctl-tground nonce ctl-tground-1835719123: rows fresh
+== ctl-tground: trace cut short (0.863389 s, Device_disconnected; attempt 1)
+== ctl-tground nonce ctl-tground-137749501: rows fresh
+== ctl-tground: trace 6.906352 s
+   ctl-tground: build 26dc6dc7
+== batch B done 05:12:42
+== lock released 05:12:42

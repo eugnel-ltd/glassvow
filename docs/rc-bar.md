@@ -1,15 +1,15 @@
 # The RC Bar — iOS Release Candidate
 
-Written by the grilling on [#164](https://github.com/fol2/glassvow/issues/164), part of the
-commercial-push map [#156](https://github.com/fol2/glassvow/issues/156). This document is the
-falsifiable bar the release gate ([#108](https://github.com/fol2/glassvow/issues/108)) checks a
+Written by the grilling on [#164](https://github.com/eugnel-ltd/glassvow/issues/164), part of the
+commercial-push map [#156](https://github.com/eugnel-ltd/glassvow/issues/156). This document is the
+falsifiable bar the release gate ([#108](https://github.com/eugnel-ltd/glassvow/issues/108)) checks a
 build against — `docs/commercial-game-delivery.md` §6 made concrete. It composes decisions made
 elsewhere; where a pillar's detail lives in another document or ticket, this file binds it by
 reference and does not restate it.
 
 **Scope.** This bar instantiates for the **iOS release candidate**: floor devices **iPhone SE
 (2nd generation)** and **iPad (8th generation)** per
-[#158](https://github.com/fol2/glassvow/issues/158). The Android phase re-instantiates this same
+[#158](https://github.com/eugnel-ltd/glassvow/issues/158). The Android phase re-instantiates this same
 bar with the Android floor pair (Galaxy A13 LTE, Galaxy Tab A8); nothing in this document
 forecloses that, Steam/PC/Mac, or expansion-pack IAP.
 
@@ -24,7 +24,7 @@ forecloses that, Steam/PC/Mac, or expansion-pack IAP.
 - **Waivers.** Rubric criteria may be waived only through the rubric's recorded-waiver
   mechanism, on the executing ticket. P1, P2, P4, P7, and P9 are **not waivable**: a miss is not
   argued past the gate — it returns to the map as a new wayfinder decision, per
-  [#158](https://github.com/fol2/glassvow/issues/158)'s rule. P8 waivers (per-defect, by James,
+  [#158](https://github.com/eugnel-ltd/glassvow/issues/158)'s rule. P8 waivers (per-defect, by James,
   with reason) are part of that pillar's mechanism, not an escape from it.
 - **Builds.** The RC artifact is the distribution-signed `glassvow.ipa` (P0). Where
   distribution signing denies evidence access — the app container, byte-level save
@@ -67,7 +67,7 @@ content equivalence for the class (P9, *History*).
       recorded in the receipt, and no player-facing surface carries a foreign or benchmark
       hash.
 - [ ] `dev_tools` is absent: no Developer Console entry point is reachable anywhere in the
-      build ([#159](https://github.com/fol2/glassvow/issues/159): a store or release-candidate
+      build ([#159](https://github.com/eugnel-ltd/glassvow/issues/159): a store or release-candidate
       build never carries that capability).
 - [ ] Fresh-install boot: on each floor device, a clean install (no prior app data) cold-boots
       to the title screen.
@@ -87,7 +87,7 @@ All from the repo root, on the exact RC commit, plus CI green on the same head:
 
 ## P2 — Performance floor
 
-The five gates of [#158](https://github.com/fol2/glassvow/issues/158)'s resolution, bound by
+The five gates of [#158](https://github.com/eugnel-ltd/glassvow/issues/158)'s resolution, bound by
 reference, on **both floor devices**, both locales, release/profileable build, unplugged, fixed
 50% brightness, controlled room temperature, cold run plus 30-minute heat-soaked run over the named route (cold
 launch/save-load, worst visible map transition, act-1 Leviathan workload with 96 sustained VFX
@@ -112,18 +112,18 @@ particles):
 
 Evidence: immutable packet. A miss on one device creates measured optimisation work; if the
 gate cannot be met without a renderer, fidelity, frame-rate, or supported-device change, that
-trade-off returns to the map ([#158](https://github.com/fol2/glassvow/issues/158)).
+trade-off returns to the map ([#158](https://github.com/eugnel-ltd/glassvow/issues/158)).
 
 ## P3 — Full-run QA on device
 
-The [#107](https://github.com/fol2/glassvow/issues/107) protocol (`docs/p8-full-run-qa.md`)
+The [#107](https://github.com/eugnel-ltd/glassvow/issues/107) protocol (`docs/p8-full-run-qa.md`)
 re-instantiated on floor hardware, by touch, on the twin build:
 
 - [ ] **Four full journeys = 2 heroes × 2 locales**, split two per floor device (each device
       runs two journeys — one hero in en, the other hero in zh-Hant — covering both aspect
       classes across the pair). A journey
       runs title → full run to the shipped terminus (the Act IV terminus once
-      [#175](https://github.com/fol2/glassvow/issues/175)'s arc lands) → Dawn → back to the
+      [#175](https://github.com/eugnel-ltd/glassvow/issues/175)'s arc lands) → Dawn → back to the
       Vigil/title. Touch only; no keyboard, no mouse, no editor.
 - [ ] **One spot-check journey on the actual distribution-signed TestFlight build** (either
       device, either locale). Pass criteria: the journey completes without crash, soft-lock, or
@@ -137,7 +137,7 @@ Evidence: immutable packet (route boundaries, screenshots/recordings, run seeds)
 
 ## P4 — Save integrity across process death
 
-The [#107](https://github.com/fol2/glassvow/issues/107) process-kill matrix re-run on the
+The [#107](https://github.com/eugnel-ltd/glassvow/issues/107) process-kill matrix re-run on the
 **iPhone SE 2**, on the twin build (container access requires development signing):
 
 - [ ] All ten checkpoints — rest, event, shop, treasure, eventPending, map, combat, partial
@@ -145,7 +145,7 @@ The [#107](https://github.com/fol2/glassvow/issues/107) process-kill matrix re-r
       not backgrounded; termination verified), fresh process on relaunch, durable-fingerprint
       equality on the restored state, and a real-input continuation by touch.
 - [ ] A save/load comparison inside one process is not substituted for process-kill evidence
-      (the [#107](https://github.com/fol2/glassvow/issues/107) rule, unchanged).
+      (the [#107](https://github.com/eugnel-ltd/glassvow/issues/107) rule, unchanged).
 - [ ] If a prior TestFlight round shipped builds to outsiders, the RC loads and continues a
       save created by the latest prior round without loss (one checkpoint suffices; absence of
       any prior round makes this row vacuously true and says so in the packet).
@@ -167,7 +167,7 @@ Evidence: immutable packet.
       hardware: **iPhone SE 2 in zh-Hant** (smallest screen × riskiest script), **iPad 8 in
       en** (4:3 aspect axis). Both locales are inside the gate across the pair. Recorded as a
       consolidated re-verify table on the release-gate ticket
-      ([#108](https://github.com/fol2/glassvow/issues/108)).
+      ([#108](https://github.com/eugnel-ltd/glassvow/issues/108)).
 - [ ] **Endgame amendment.** These surfaces may be signed on a Dev Review build reached
       through the Scenario kernel, both locales: the Vigil (Story-arc shard and quest-memory
       criteria), the sixth-Shard unsealing / sealed-door ceremony, the Act IV map, and the
@@ -178,7 +178,7 @@ Evidence: immutable packet.
 ## P6 — Internal beta round
 
 - [ ] One internal beta round completed and survived, against the pass criteria defined by
-      [#166](https://github.com/fol2/glassvow/issues/166): TestFlight internal track, 7 days,
+      [#166](https://github.com/eugnel-ltd/glassvow/issues/166): TestFlight internal track, 7 days,
       one RC-shape build, four testers (James + Wing zh-Hant; Nelson + Eugenia en). The
       receipt links whatever evidence #166 prescribes. (External beta consciously skipped —
       design preserved in `docs/external-beta-playbook.md`.)
@@ -186,13 +186,13 @@ Evidence: immutable packet.
 **Waivability.** Running the round is **not waivable** — no RC without one completed internal
 round. Whether the round *passed* is judged solely by #166's criteria; a round that fails them
 returns to the map as a decision (fix and repeat, or a recorded release-policy call by James on
-[#108](https://github.com/fol2/glassvow/issues/108)) — it is never silently waived, and
+[#108](https://github.com/eugnel-ltd/glassvow/issues/108)) — it is never silently waived, and
 beta testers hold no veto beyond what #166's criteria encode.
 
 ## P7 — Compliance checklist (iOS)
 
 From the store-compliance dossier
-(`docs/research/2026-08-13-store-compliance-dossier.md`, [#162](https://github.com/fol2/glassvow/issues/162)):
+(`docs/research/2026-08-13-store-compliance-dossier.md`, [#162](https://github.com/eugnel-ltd/glassvow/issues/162)):
 
 **Accounts and declarations**
 
@@ -213,7 +213,7 @@ From the store-compliance dossier
       the build).
 - [ ] **Privacy nutrition label** matches the shipped binary:
       - Baseline (no SDK): **"Data Not Collected"**.
-      - If the Sentry SDK ([#161](https://github.com/fol2/glassvow/issues/161)) is in the tree
+      - If the Sentry SDK ([#161](https://github.com/eugnel-ltd/glassvow/issues/161)) is in the tree
         at RC: declare Diagnostics → Crash Data (plus Performance/Other Diagnostic Data and
         Identifiers as configured), not-linked/not-tracking posture per the SDK configuration,
         a consent posture per Apple 5.1.1(ii), and the privacy policy updated to match.
@@ -234,7 +234,7 @@ state, the policy URL, the Info.plist diff).
 - [ ] At the RC snapshot, the ledger enumerates **all open `bug` issues** and every held/waived
       item referenced by the map. Zero open bugs, or each remaining one explicitly waived by
       James with a reason, in the ledger comment. Missing, duplicate, or unknown rows fail the
-      ledger ([#107](https://github.com/fol2/glassvow/issues/107) house style). The ledger is
+      ledger ([#107](https://github.com/eugnel-ltd/glassvow/issues/107) house style). The ledger is
       refreshed immediately before the RC is declared.
 - [ ] If the Sentry SDK is in the RC build and the beta round produced sessions, the ledger
       records the crash-free-sessions rate; a rate below **99.0%** fails closed unless every
@@ -242,9 +242,9 @@ state, the policy URL, the Info.plist diff).
 
 ## P9 — The ways of each shipped class (the Flame verdict)
 
-Rewritten on 2026-09-29 under [#549](https://github.com/fol2/glassvow/issues/549), and brought
+Rewritten on 2026-09-29 under [#549](https://github.com/eugnel-ltd/glassvow/issues/549), and brought
 in line with the owner's rulings of 30 September to 2 October on 2026-10-04 under
-[#544](https://github.com/fol2/glassvow/issues/544) (its plan of record, step P5). The
+[#544](https://github.com/eugnel-ltd/glassvow/issues/544) (its plan of record, step P5). The
 measurement contract is §11 of the
 [Duskblade Flame design lock](design/2026-09-29-dusk-flame/README.md): its arms, cells, gates,
 thresholds and seeds are bound here by reference. **Not optional and not waivable.** A verdict
@@ -259,17 +259,25 @@ kept, with the date each part stopped being in force, under *History* at the end
   ([release roadmap](release-roadmap.md)) and are never PASS. No Ashwarden evidence is a
   precondition for this pillar; comparator evidence kept from the earlier programme is history,
   not a demand.
-- **1.1: both classes, on the combined product.** Each class gets its own verdict: the
-  Ashwarden on its own lock and readings, built from the
-  [class template](design/2026-09-29-dusk-flame/ways-template.md), and the Duskblade
-  requalified under the 1.1 instrument (pilot `p9`, search player `s2`, accepted on
-  [readout 14](design/2026-09-29-dusk-flame/readouts/readout-14.md)) on the combined product.
-  The 1.0 verdict does not carry into 1.1: the requalification replaces it there, and readout
-  13 stays 1.0's reading of record. Read on 1.0's content under the 1.1 instrument, the
-  Duskblade's intent holds with the same one reservation, the fresh-pool Lantern lead. This is
-  an interim reading, not a verdict; the 1.1 verdict is given at step A9 on the combined
-  product (the lock's §11, *Verdict*, item 7). The gap between the classes is reported, not
-  gated (#544's plan of record, decisions 4 and 5).
+- **1.1: both classes, on the combined product.** Each class gets its own verdict: the Ashwarden
+  on its own lock and readings, built from the
+  [class template](design/2026-09-29-dusk-flame/ways-template.md), and the Duskblade requalified
+  under the 1.1 instrument (pilot `p9`, search player `s3`) on the combined product. By the
+  orchestrator's ruling of 5 October 2026, the 1.1 search player is `s3` (#544 P6b): `s2`'s
+  honest play plus the credit for a Smolder tick that kills before the enemy acts. Readout 14's
+  interim reading was made under `s2`. `s3` differs from it for the Duskblade only in `full`
+  cells, through the Ashfall omen's starting Smolder (sample: 200 seeds a cell, 13000–13199: 485
+  of 2,400 V0 and V5 `full` rows changed and 55 outcomes flipped, no arm's paired change
+  significant, every p ≥ 0.45; one graded point verdict crossed its line, G6 at V0 full, edge
+  60.6% → 59.8% of A_lit's wins, UNDECIDED on interval under both). The Duskblade is re-read
+  under `s3` on the combined product at A9, and the cross-class reading uses `s3` for both
+  classes. The 1.0 verdict does not carry into 1.1: the requalification replaces it there, and
+  readout 13 stays 1.0's reading of record. Read on 1.0's content under `s2`
+  ([readout 14](design/2026-09-29-dusk-flame/readouts/readout-14.md)), the Duskblade's intent
+  holds with the same one reservation, the fresh-pool Lantern lead. This is an interim reading,
+  not a verdict; the 1.1 verdict is given at step A9 on the combined product (the lock's §11,
+  *Verdict*, item 7). The gap between the classes is reported, not gated (#544's plan of record,
+  decisions 4 and 5).
 
 **The verdict.** For each shipped class P9 records one verdict, **ACCEPT** or **NOT ACCEPTED**,
 on whether the design's intent holds: the three ways are viable and comparable; commitment is
@@ -316,7 +324,7 @@ readout 5; G3 and G6 against A_lit, readout 10; G5 over survivors and the commit
 - **Naming.** Readouts 8–13 call row B's two parts B1 and B2. That B1 is the lock's row-B part,
   not the retired certificate-programme name of the same spelling.
 - **Play reports.** James's play reports, including those for
-  [#205](https://github.com/fol2/glassvow/issues/205), are input to the verdict and never a
+  [#205](https://github.com/eugnel-ltd/glassvow/issues/205), are input to the verdict and never a
   gate (owner ruling, 2026-10-01).
 
 **The instrument of record and the exact candidate.** A verdict rests on one reading of record:
@@ -375,7 +383,7 @@ the readout whose complete §11 table it was given on.
      record on every graded gate's verdict in every graded cell (on point and on interval where
      the gate has both, and on its single verdict for G7 and row B); the
      numbers need not match (owner ruling, 2026-09-27). A run under another instrument, such as
-     1.1's `s2`, is a new reading, not this re-run. The Flame is code as well as content, so the
+     1.1's `s3`, is a new reading, not this re-run. The Flame is code as well as content, so the
      re-run binds the commit and the verdict binds the content it was given on. A route (b) run
      made from a clean checkout of the RC commit, with the instrument of record and on the bands
      of record, also serves as this item's independent re-run: identical graded fields give
@@ -391,7 +399,7 @@ the readout whose complete §11 table it was given on.
 
 **The 1.0 Duskblade verdict of record: ACCEPT, with one reservation.** The orchestrator's
 verdict on readouts 11–13, given on 2 October 2026 at 22:12 BST on readout 13's complete §11
-table (recorded in [#544's plan of record](https://github.com/fol2/glassvow/issues/544),
+table (recorded in [#544's plan of record](https://github.com/eugnel-ltd/glassvow/issues/544),
 decision 12, and entered with its history in the lock's §11 *Verdict* by #544's step P4a, #686). The reservation is the fresh-pool Lantern lead, 12.8 pp at V0 (G2 at V0 fresh, the
 Lantern over Shatter, +8.9 to +16.6 pp: FAIL on point, UNDECIDED on interval), carried as a
 1.0.x readout, not a reason to withhold the ACCEPT (readout 13, *What the next readout should
@@ -470,6 +478,12 @@ commands and the comparer's output; the independent re-run's verdicts; and the e
   Replaced the same day (#544 P7): the command names `--commit <RC commit SHA>`, and the
   comparer also requires every candidate manifest to name the RC commit, because a route (b)
   run serves as item 2's independent re-run, which binds the RC commit.
+- *In force from 2026-10-04 to 2026-10-05* (#544 steps P5 and P6, PRs #685 and #690,
+  `271ce1b1`): the 1.1 bullet named the Duskblade's 1.1 instrument "pilot `p9`, search player
+  `s2`, accepted on readout 14", and read "Read on 1.0's content under the 1.1 instrument, the
+  Duskblade's intent holds with the same one reservation". Superseded on 2026-10-05 by the
+  orchestrator's ruling on #544 P6b: the 1.1 search player is `s3`, and readout 14 is an
+  interim reading made under `s2`.
 - *Before 2026-09-29:* the strategy-diversity method, kept as history in
   [`docs/balance/p9-strategy-diversity-system.md`](balance/p9-strategy-diversity-system.md);
   [`docs/reviews/549/obligation-map.md`](reviews/549/obligation-map.md) records where each of
@@ -478,7 +492,7 @@ commands and the comparer's output; the independent re-run's verdicts; and the e
 ## The RC signature receipt
 
 The bar's final act, and the only place "RC" is pronounced: a signed comment by James on the
-release-gate ticket ([#108](https://github.com/fol2/glassvow/issues/108)) binding:
+release-gate ticket ([#108](https://github.com/eugnel-ltd/glassvow/issues/108)) binding:
 
 - the exact product head (the RC commit),
 - the `.ipa` artifact hash,

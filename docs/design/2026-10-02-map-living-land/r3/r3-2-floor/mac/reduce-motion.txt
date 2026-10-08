@@ -1,0 +1,7 @@
+# Reduce Motion at Close (pad, lean, the A12 condition), 2c759d39: two captures 1.5 s apart, drifting air hidden.
+# Changed pixels (any channel > 6 levels) between the two frames:
+still  Reduce Motion on :   10197 of 967600 changed; left of x=960 (the floor, no water): 0
+motion Reduce Motion off:  104978 of 967600 changed; left of x=960 (the floor, no water): 76642
+# Under Reduce Motion every changed pixel is water (the river at the right edge and the fall under the bridge);
+# the floor's lamp pools hold still and its puddles never glint (land_motion 0). With motion on, the pools
+# flicker, the glints twinkle and the grain moves.

@@ -1,0 +1,15 @@
+ctl1-l1    26dc6dc7        boot  ready  2144.2 built       - call      - frames  110 | land 1856 | bake - frames - steps - variant -
+ctl1-l1    26dc6dc7        cold  ready  2468.3 built  2468.3 call  663.6 frames  109 | land 1823 | bake - frames - steps - variant -
+ctl1-l2    26dc6dc7        boot  ready  1970.7 built       - call      - frames  105 | land 1686 | bake - frames - steps - variant -
+ctl2-l1    26dc6dc7        boot  ready  2071.0 built       - call      - frames  107 | land 1756 | bake - frames - steps - variant -
+ctl2-l1    26dc6dc7        cold  ready  2483.0 built  2483.0 call  631.1 frames  111 | land 1870 | bake - frames - steps - variant -
+ctl2-l2    26dc6dc7        boot  ready  2073.8 built       - call      - frames  106 | land 1732 | bake - frames - steps - variant -
+dev-shot   0fb33aed        boot  ready  2319.2 built       - call      - frames  131 | land 1844 | bake 151.8 frames [48.2, 66.7, 20.0, 16.8] steps [30.6, 0.0, 0.1, 4.5, 0.0] variant None
+dev-tground 0fb33aed        boot  ready  2080.5 built       - call      - frames  106 | land 1665 | bake 175.5 frames [66.5, 66.6, 17.9, 24.5] steps [24.8, 0.0, 0.0, 4.1, 0.0] variant None
+dev-tnone  0fb33aed        boot  ready  2071.8 built       - call      - frames  109 | land 1741 | bake 172.2 frames [83.1, 50.0, 22.2, 16.8] steps [30.3, 0.0, 0.0, 4.2, 0.0] variant None
+dev1-l1    0fb33aed        boot  ready  2343.3 built       - call      - frames  132 | land 1843 | bake 179.0 frames [68.0, 65.3, 28.6, 16.9] steps [25.9, 0.0, 0.0, 4.0, 0.0] variant None
+dev1-l1    0fb33aed        cold  ready  2697.1 built  2548.9 call  657.0 frames  116 | land 1911 | bake 126.7 frames [16.8, 64.9, 28.0, 16.9] steps [5.0, 0.0, 0.0, 1.6, 0.0] variant None
+dev1-l2    0fb33aed        boot  ready  2199.6 built       - call      - frames  108 | land 1712 | bake 190.5 frames [83.1, 66.5, 16.7, 24.2] steps [34.3, 0.0, 0.0, 5.0, 0.0] variant None
+dev2-l1    0fb33aed        boot  ready  2285.2 built       - call      - frames  110 | land 1804 | bake 185.6 frames [83.2, 66.6, 16.5, 19.2] steps [25.5, 0.0, 0.1, 5.7, 0.1] variant None
+dev2-l1    0fb33aed        cold  ready  2552.7 built  2420.8 call  647.9 frames  109 | land 1789 | bake 132.2 frames [19.9, 62.4, 33.2, 16.6] steps [11.5, 0.0, 0.0, 1.4, 0.0] variant None
+dev2-l2    0fb33aed        boot  ready  2245.2 built       - call      - frames  127 | land 1756 | bake 166.5 frames [49.9, 51.0, 27.6, 38.0] steps [24.1, 0.0, 0.1, 4.4, 0.0] variant None

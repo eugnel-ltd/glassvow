@@ -247,13 +247,13 @@ matter, both they and the suite need a home in a real repository — until then 
 below records another instance of it. The two closest relatives, though, were never
 written up here at all; they live only in issues and in `CLAUDE.md`:
 
-- **[#82](https://github.com/fol2/glassvow/issues/82)** (closed 2026-08-09) — "The
+- **[#82](https://github.com/eugnel-ltd/glassvow/issues/82)** (closed 2026-08-09) — "The
   per-file parse gate cannot fail: `--check-only` exits 0 on every parse error". The
   strongest relative. Four seeded error classes all measured `raw exit=0`, so a clean
   file and a broken file were indistinguishable to the gate. Same two-part fix shape:
   stop trusting the one narrow signal, grade the real evidence instead. Surfaced only
   by accident.
-- **[#128](https://github.com/fol2/glassvow/issues/128)** (closed 2026-08-09) — asset
+- **[#128](https://github.com/eugnel-ltd/glassvow/issues/128)** (closed 2026-08-09) — asset
   import emits font ERRORs and exits 0. Its own body names the pattern: "the same
   defect family as #82".
 - `tools/check_scripts.sh` — the fix for #82, and the closest code precedent. Its

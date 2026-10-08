@@ -1,8 +1,8 @@
 # UI/UX direction — fonts, controls, flows
 
 Decision record for wayfinder ticket
-[#163](https://github.com/fol2/glassvow/issues/163) (map
-[#156](https://github.com/fol2/glassvow/issues/156)), resolved with James on
+[#163](https://github.com/eugnel-ltd/glassvow/issues/163) (map
+[#156](https://github.com/eugnel-ltd/glassvow/issues/156)), resolved with James on
 2026-08-14. The mocks here are **direction**, not production: execution
 re-derives geometry and regenerates art at production quality, but the look
 decided here is binding until James re-decides it.
@@ -94,7 +94,7 @@ card-stack-opens-on-tap are worth stealing if execution needs them.
 ## Found along the way
 
 Two dev-console defects filed during the survey:
-[#235](https://github.com/fol2/glassvow/issues/235) (id-only `--scenario=`
+[#235](https://github.com/eugnel-ltd/glassvow/issues/235) (id-only `--scenario=`
 silently constructs defaults instead of the catalogue recipe) and
-[#236](https://github.com/fol2/glassvow/issues/236) (`ScenarioReference.locale`
+[#236](https://github.com/eugnel-ltd/glassvow/issues/236) (`ScenarioReference.locale`
 validated but never applied — no zh-Hant review states).

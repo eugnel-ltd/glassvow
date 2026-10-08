@@ -2,7 +2,7 @@
 
 > **Status: skipped for glassvow** (James, 2026-08-13). Glassvow runs an
 > internal TestFlight round instead — 4 testers, designed in
-> [#166](https://github.com/fol2/glassvow/issues/166) — because the team has no
+> [#166](https://github.com/eugnel-ltd/glassvow/issues/166) — because the team has no
 > recruitment resources for an external cohort. The design below was judged
 > good and is kept so a future project can start from it instead of from zero.
 

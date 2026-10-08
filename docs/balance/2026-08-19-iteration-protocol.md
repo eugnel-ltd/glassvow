@@ -1,6 +1,6 @@
 # #421 iteration protocol — Phase A is the gate, landscape is the exam
 
-Issue: [fol2/glassvow#421](https://github.com/fol2/glassvow/issues/421).
+Issue: [eugnel-ltd/glassvow#421](https://github.com/eugnel-ltd/glassvow/issues/421).
 RC pillar: [`docs/rc-bar.md`](../rc-bar.md) P9 (not waivable).
 Protocol, arm definitions, and C1–C4 / Vow-5 gates remain those of
 [`2026-08-14-strategy-landscape.md`](2026-08-14-strategy-landscape.md) — this

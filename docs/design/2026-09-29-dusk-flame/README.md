@@ -334,7 +334,7 @@ Cells: aspect 0 × vows {0, 5} × pool states {fresh, full} × 200 paired seeds 
 
 **Exam:** the final candidate SHA runs the full cell table above plus the CEM stress. An independent re-run from a clean checkout on any host must agree on every gate's verdict (owner ruling of 2026-09-27; numbers need not match). Then the bot round (B). *From 2026-10-04,* `docs/rc-bar.md` P9 defines the exact candidate, the independent re-run and the exam's own items.
 
-**Verdict** (recorded here on 2026-10-04; items 3 and 5 are also in [#544](https://github.com/fol2/glassvow/issues/544)'s plan of record, decision 12, and this record is the first written record of item 1). The orchestrator gives the Duskblade's verdict under the owner's delegation of design calls (30 Sep 2026). As it happened:
+**Verdict** (recorded here on 2026-10-04; items 3 and 5 are also in [#544](https://github.com/eugnel-ltd/glassvow/issues/544)'s plan of record, decision 12, and this record is the first written record of item 1). The orchestrator gives the Duskblade's verdict under the owner's delegation of design calls (30 Sep 2026). As it happened:
 
 1. **2 Oct 2026, morning.** After the owner's ruling of 09:04 BST ("i want the result. i don't even mind the gate… just give me the acceptance result"), the orchestrator's verdict was **NOT ACCEPTED**, on two product grounds in the full pool: an Edge monoculture (G6) and the True tier unreachable (G5). It was given on [readout 10](readouts/readout-10.md)'s table and reported to the owner in the orchestrator's session that day; it is entered here from that session's record.
 2. Readouts [11](readouts/readout-11.md), [12](readouts/readout-12.md) and [13](readouts/readout-13.md) (#644, #646, #648) answered both grounds.

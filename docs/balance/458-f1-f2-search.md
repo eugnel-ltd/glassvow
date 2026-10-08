@@ -1,8 +1,8 @@
 # #458 F1/F2 search — racing, surrogate validation and finalist hand-off
 
-Issue: [fol2/glassvow#458](https://github.com/fol2/glassvow/issues/458).
-Part of [#454](https://github.com/fol2/glassvow/issues/454) and hands candidates to
-[#421](https://github.com/fol2/glassvow/issues/421). Engine:
+Issue: [eugnel-ltd/glassvow#458](https://github.com/eugnel-ltd/glassvow/issues/458).
+Part of [#454](https://github.com/eugnel-ltd/glassvow/issues/454) and hands candidates to
+[#421](https://github.com/eugnel-ltd/glassvow/issues/421). Engine:
 **4.7.2.stable.official.ed1daf0bf**. Primary worker: qualified **M1 Max, 8
 workers**. Independent replay: qualified **M4, 4 workers**.
 

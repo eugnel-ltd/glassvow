@@ -1324,6 +1324,10 @@ func _show_title() -> void:
 		# first frame (the rite's, or a later title's), and only for a player
 		# it serves. Once a process: a primed process reads nothing again.
 		MapJourneyPrefetch.prime()
+	else:
+		# The floor's pipelines all the same, behind the launch screen: a new
+		# player's first map bakes the floor too (`floor_warm.gd`).
+		MapJourneyLandscape.LandFloor.Warm.warm()
 	# The road persists across a rebuild (§7 item 12): the new title continues
 	# the world it replaces, the title's or the departure's.
 	var standing: TitleWorld = _standing_road()

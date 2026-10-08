@@ -1,0 +1,21 @@
+== batch C start 04:43:23
+== install dev1 04:43:23
+== dev1-l1 nonce dev1-l1-708914890: rows fresh
+   dev1-l1: build ddecbc38
+== install ctl1 04:44:58
+== ctl1-l1 nonce ctl1-l1-906215022: rows fresh
+   ctl1-l1: build 26dc6dc7
+== install dev2 04:46:35
+== dev2-l1 nonce dev2-l1-3008212677: rows fresh
+   dev2-l1: build ddecbc38
+== install ctl2 04:48:12
+== ctl2-l1 nonce ctl2-l1-2094825461: rows fresh
+   ctl2-l1: build 26dc6dc7
+== install dev3 04:49:50
+== dev3-l1 nonce dev3-l1-198714297: rows fresh
+   dev3-l1: build ddecbc38
+== install ctl3 04:51:25
+== ctl3-l1 nonce ctl3-l1-245032377: rows fresh
+   ctl3-l1: build 26dc6dc7
+== batch C done 04:53:00
+== lock released 04:53:00

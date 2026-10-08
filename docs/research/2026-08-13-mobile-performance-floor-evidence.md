@@ -1,6 +1,6 @@
 # RC mobile performance floor: external evidence
 
-**Scope:** research input for [#158](https://github.com/fol2/glassvow/issues/158), not the device or frame-rate decision.
+**Scope:** research input for [#158](https://github.com/eugnel-ltd/glassvow/issues/158), not the device or frame-rate decision.
 
 **Reviewed:** 13 August 2026. **Evidence rule:** cited bullets are source facts; *Inference* bullets are engineering interpretations for the parent’s decision.
 

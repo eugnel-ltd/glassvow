@@ -298,7 +298,7 @@ class BalanceWaysTest(unittest.TestCase):
                 self.assertIn(f"--pilot={pilot}", command)
                 self.assertEqual([f"--search={search}", "--play=search"] if play == "search" else [],
                                  [arg for arg in command if arg.startswith(("--search", "--play"))])
-        for play, pilot, search in (("greedy", "p8-d0-v3", "s2"), ("search", "p10", "s1"), ("search", "p9", "s3")):
+        for play, pilot, search in (("greedy", "p8-d0-v3", "s2"), ("search", "p10", "s1"), ("search", "p9", "s4")):
             with self.subTest(play=play, pilot=pilot, search=search), self.assertRaises(ValueError):
                 ways.sim_command("godot", DUSK, 0, "full", "A", 13000, 3, Path("/o.json"), play=play,
                                  pilot=pilot, search=search)
@@ -503,7 +503,7 @@ class OtherClassTest(unittest.TestCase):
 
 
 class AspectWithoutWaysTest(unittest.TestCase):
-    """The Ashwarden today: content declares no ways, so only the commit-blind arms exist."""
+    """A class whose content declares no ways (the Ashwarden's before #544 A2): only the commit-blind arms exist."""
 
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
@@ -653,10 +653,13 @@ class CatalogueTest(unittest.TestCase):
             self.assertEqual(0, ways.main(argv + ["--content", str(self.content)]))
         self.assertIn("### V0, entry pool", out.getvalue())
         self.assertIn("| C_hand | 6/10 | 60.0% |", out.getvalue())
-        with contextlib.redirect_stderr(io.StringIO()) as err, self.assertRaises(SystemExit) as caught:
-            ways.main(argv)  # the repository's content declares no Ashwarden ways yet
-        self.assertEqual(2, caught.exception.code)
-        self.assertIn("declares no ways", err.getvalue())
+        bound = out.getvalue()
+        # Without --content the repository's ways grade them, unbound: since #544 A2 its content declares
+        # the same three Ashwarden ways, so the tables are the catalogue's.
+        with contextlib.redirect_stdout(io.StringIO()) as unbound:
+            self.assertEqual(0, ways.main(argv))
+        self.assertEqual(("smolder", "hand", "endure"), ways.grading_roster("ashwarden").ways)
+        self.assertEqual(bound, unbound.getvalue())
         name_content(self.reports, "0" * 64, ways.report_name(0, "full", "R"))
         with self.assertRaisesRegex(ValueError, "not --content's"):
             ways.main(argv + ["--content", str(self.content)])

@@ -1,0 +1,8 @@
+== batch N2 start 09:20:14
+== install ctl1 09:20:14
+== ctl1-l1 nonce ctl1-l1-1950715222: rows fresh
+   ctl1-l1: build 26dc6dc7
+== ctl1-l2 nonce ctl1-l2-2585426375: rows fresh
+   ctl1-l2: build 26dc6dc7
+== install dev1 09:23:19
+== batch N2 stopped by me at 09:25:22 (superseded by the head f1f074ac); lock released by its owner

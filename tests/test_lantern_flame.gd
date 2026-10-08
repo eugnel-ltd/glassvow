@@ -19,6 +19,10 @@ const TRUE_LANTERN: Dictionary = {"t": &"flame", "tier": "TRUE", "dominant": "la
 	"fringe": "", "shares": {"shatter": 0.08, "lantern": 0.84, "edge": 0.08}}
 const SOOT: Dictionary = {"t": &"flame", "tier": "SOOT", "dominant": "shatter",
 	"fringe": "lantern", "shares": {"shatter": 0.34, "lantern": 0.33, "edge": 0.33}}
+## The Ashwarden's Steady Smolder with an Endure fringe: way ids presentation
+## has no colour or shape for until step A6.
+const ASH_STEADY: Dictionary = {"t": &"flame", "tier": "STEADY", "dominant": "smolder",
+	"fringe": "endure", "shares": {"smolder": 0.625, "hand": 0.125, "endure": 0.25}}
 const STEADY_EDGE: Dictionary = {"t": &"flame", "tier": "STEADY", "dominant": "edge",
 	"fringe": "", "shares": {"shatter": 0.20, "lantern": 0.20, "edge": 0.60}}
 ## [label, event, seed, cards added to the starters, choice, pick kind ("" when the
@@ -266,7 +270,9 @@ static func _run_lantern_keeps_clear(fails: Array[String]) -> void:
 
 ## The combat screen forwards the start batch's reading at once, keeps it for a
 ## HUD rebuilt on a new shape, and tweens one that arrives through the pump.
-## An aspect without ways never lights the HUD lantern.
+## The Ashwarden lights the HUD lantern on its own ways (#544 A2): as painted at
+## Kindling, and plain at Steady until step A6 gives its ways colours and
+## shapes. An aspect without ways never lights it.
 static func _combat_forwards(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
 	var run: RunState = RunState.new_run(content, 57701)
@@ -295,10 +301,31 @@ static func _combat_forwards(fails: Array[String]) -> void:
 	var ash: CombatScreen = CombatScreen.new(ash_game)
 	ash.seq.instant = true
 	tree.root.add_child(ash)
-	ash.start_encounter(["sporeling"], "normal", "no ways")
-	_check(fails, ash._hud._flame == null and ash._hud._lantern_art.material == null,
-		"an aspect without ways lit the HUD lantern")
+	ash.start_encounter(["sporeling"], "normal", "ash")
+	var ash_flame: LanternFlame = ash._hud._flame
+	_check(fails, ash_flame != null and not ash_flame.tweening()
+			and ash_flame.light_now().is_equal_approx(LanternFlame.PAINTED_LIGHT),
+		"the Ashwarden's starter did not light the HUD lantern, drawn at once as painted")
+	if ash_flame != null:
+		ash._handle_event(ASH_STEADY)
+		ash_flame.advance(LanternFlame.TWEEN_TIME)
+		var shape: Vector4 = ash_flame.material.get_shader_parameter("shape_weights")
+		_check(fails, ash_flame.light_now().is_equal_approx(LanternFlame.COLOUR[Flame.TIER_KINDLING])
+				and shape == LanternFlame.PLAIN_SHAPE,
+			"a Steady Smolder flame took a colour or shape before step A6 gives it one")
 	ash.queue_free()
+
+	var bare_content: ContentDB = ContentDB.load_full()
+	var bare_row: Dictionary = bare_content.aspects[1]
+	bare_row.erase("ways")
+	var bare_run: RunState = RunState.new_run(bare_content, 57702, "", {"aspect": 1})
+	var bare: CombatScreen = CombatScreen.new(GlassvowGame.new(bare_content, bare_run))
+	bare.seq.instant = true
+	tree.root.add_child(bare)
+	bare.start_encounter(["sporeling"], "normal", "no ways")
+	_check(fails, bare._hud._flame == null and bare._hud._lantern_art.material == null,
+		"an aspect without ways lit the HUD lantern")
+	bare.queue_free()
 
 
 # ---------------------------------------------------------------- main
@@ -341,7 +368,13 @@ static func _reward_and_shop(fails: Array[String]) -> void:
 	_check(fails, stall != null and stall.flame.tweening(),
 		"buying a card did not turn the stall's lantern")
 
-	main.game.run.aspect = 1  # the Ashwarden declares no ways
+	main.game.run.aspect = 1  # the Ashwarden's stall reads its own ways (#544 A2)
+	main._show_shop()
+	var ash: ShopScreen = main._route_screen as ShopScreen
+	_check(fails, ash != null and ash._lantern != null,
+		"the Ashwarden's stall grew no lantern")
+	var ash_row: Dictionary = content.aspects[1]
+	ash_row.erase("ways")  # now an aspect without ways
 	main._show_shop()
 	var bare: ShopScreen = main._route_screen as ShopScreen
 	_check(fails, bare != null and bare._lantern == null,
@@ -354,8 +387,9 @@ static func _reward_and_shop(fails: Array[String]) -> void:
 ## reading, drawn at once, and turns after a change that moves the flame. Every
 ## kind of event change is tried, each from a Kindling deck: an immediate add,
 ## and a pick that removes, duplicates or adds a card, cross to Steady; an
-## upgrade keeps the card's id and moves nothing. The Ashwarden declares no ways,
-## so its events read nothing and grow no lantern.
+## upgrade keeps the card's id and moves nothing. An aspect without ways (the
+## Ashwarden's row, its ways removed) reads nothing at its events and grows no
+## lantern.
 static func _event_deck_changes(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
 	var shrine: Dictionary = content.events["forgottenShrine"]
@@ -435,6 +469,8 @@ static func _at_an_event(content: ContentDB, case_v: Variant, fails: Array[Strin
 ## The Shrine's removal for an aspect that declares no ways: nothing is read at
 ## the event, nothing is owed, and neither the choice nor the beat grows a lantern.
 static func _at_an_ashen_event(content: ContentDB, fails: Array[String]) -> void:
+	var ash_row: Dictionary = content.aspects[1]
+	ash_row.erase("ways")
 	var run_state: RunState = _shrine_run(content, 1)
 	var main: Main = _event_main(content, run_state, "forgottenShrine")
 	var opened: EventScreen = main._route_screen as EventScreen

@@ -1,7 +1,7 @@
 # #489 Tier-1 control plane — s009 sealed, current main integrated, hosts re-qualified
 
-Issue: [fol2/glassvow#489](https://github.com/fol2/glassvow/issues/489).
-Child of [#488](https://github.com/fol2/glassvow/issues/488). Engine pin:
+Issue: [eugnel-ltd/glassvow#489](https://github.com/eugnel-ltd/glassvow/issues/489).
+Child of [#488](https://github.com/eugnel-ltd/glassvow/issues/488). Engine pin:
 **4.7.2.stable**. Live catalogue remains **H39**. `s009` is the Tier-1 reference
 candidate, not live content.
 

@@ -1,0 +1,38 @@
+# python3 tools/payload_report.py --preset iOS, main 26dc6dc7 then R3.2 2b411b4f (top groups and total)
+## main 26dc6dc7
+payload report: preset 'iOS', platform iOS
+group                                   MiB   budget  status
+assets/audio/music                     80.8       84  ok
+assets/art/cards                       31.4       33  ok
+assets/art/map-atelier                 30.1       32  ok
+assets/art/map                         29.4       31  ok
+assets/art/enemies                     19.9       21  ok
+assets/art/stage                       13.7       15  ok
+assets/art/scenes                      11.9       13  ok
+assets/art/map-journey                 10.4       11  ok
+assets/art/events                       7.7        8  ok
+assets/art/ui                           4.7        5  ok
+TOTAL (pck estimate)                  276.3      400  ok
+## R3.2 2b411b4f
+payload report: preset 'iOS', platform iOS
+group                                   MiB   budget  status
+assets/audio/music                     80.8       84  ok
+assets/art/cards                       31.4       33  ok
+assets/art/map-atelier                 30.1       32  ok
+assets/art/map                         29.4       31  ok
+assets/art/enemies                     19.9       21  ok
+assets/art/stage                       13.7       15  ok
+assets/art/scenes                      11.9       13  ok
+assets/art/map-journey                 11.6       12  ok
+assets/art/events                       7.7        8  ok
+assets/art/ui                           4.7        5  ok
+TOTAL (pck estimate)                  277.5      400  ok
+
+# The floor's six textures as imported for iOS (ETC2, mipmaps), bytes:
+174828 floor-detail.png
+174828 floor-litter.png
+174828 floor-moss.png
+174828 floor-road.png
+174828 floor-soil.png
+349604 floor-splats.png
+total 1223744 bytes = 1.17 MiB (R3.2 allows 6 MB for the floor tiles and decal atlas)

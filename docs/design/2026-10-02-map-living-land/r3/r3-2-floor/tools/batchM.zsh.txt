@@ -1,0 +1,43 @@
+#!/bin/zsh
+# Lane R3.2 round 3, batch M (QA app only, under the device lock; deletes
+# nothing): the title path at a2a86ad9, whose warm-up draws behind the launch
+# screen. Two fresh installs: builds whose floor shaders carry the nonces r3e
+# and r3f (shader_nonce.py: one uniform at 1.0 multiplied into each floor
+# shader's output, so the pipeline hash is one this iPad has never compiled),
+# each launched once fresh and once cached; main twice between them.
+set -u
+source ${0:A:h}/common.zsh
+OUT=$R/device/batchM
+$FLOW/ipad_lock.sh acquire map-r32
+trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+tt_launch() {  # label wait args...
+  local label=$1 wait=$2 i; shift 2
+  _mt_start $label "$@"
+  [[ -n "$MT_PID" ]] || { echo "== $label: launch failed"; return 1; }
+  sleep $wait
+  # (As run, the line here removed this launch's own stale row file from the batch's
+  # scratch output folder. This copy leaves it out: no committed tool deletes anything.)
+  for i in $(seq 1 20); do
+    timeout 300 xcrun devicectl device copy from --device $UDID --domain-type appDataContainer \
+      --domain-identifier $MT_QA --source Documents/title_probe.jsonl --destination $OUT/$label.jsonl >/dev/null 2>&1
+    if grep -q "$MT_NONCE" $OUT/$label.jsonl 2>/dev/null && grep -q '"probe":"\(open\|seed\)"' $OUT/$label.jsonl; then
+      echo "== $label nonce $MT_NONCE: rows fresh ($(grep -o '"build":"[^"]*"' $OUT/$label.jsonl | head -1))"; return 0
+    fi
+    sleep 5
+  done
+  echo "== $label nonce $MT_NONCE: rows MISSING"; return 1
+}
+echo "== batch M start $(date +%T)"
+install_build ctl $R/ipa/ctl.ipa || exit 1
+tt_launch ctl-seed 40 --map --seed=1 --map-steps=2 --title-trace-probe=seed
+tt_launch ctl-title1 50 --title-trace-probe=title
+install_build deve $R/ipa/dev-r3e.ipa || exit 1
+tt_launch dev-e-title1-fresh 70 --title-trace-probe=title
+tt_launch dev-e-title2-cached 50 --title-trace-probe=title
+install_build ctl2 $R/ipa/ctl.ipa || exit 1
+tt_launch ctl-title2 50 --title-trace-probe=title
+install_build devf $R/ipa/dev-r3f.ipa || exit 1
+tt_launch dev-f-title1-fresh 70 --title-trace-probe=title
+tt_launch dev-f-title2-cached 50 --title-trace-probe=title
+echo "== batch M done $(date +%T)"

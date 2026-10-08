@@ -1,0 +1,15 @@
+ctl1-l1    26dc6dc7        boot  ready  1940.2 built       - call      - frames  102 | land 1670 | bake - frames - steps - variant -
+ctl1-l1    26dc6dc7        cold  ready  2365.8 built  2365.8 call  637.1 frames  104 | land 1746 | bake - frames - steps - variant -
+ctl1-l2    26dc6dc7        boot  ready  2328.6 built       - call      - frames  137 | land 2025 | bake - frames - steps - variant -
+ctl2-l1    26dc6dc7        boot  ready  1902.2 built       - call      - frames  102 | land 1643 | bake - frames - steps - variant -
+ctl2-l1    26dc6dc7        cold  ready  2263.5 built  2263.5 call  640.7 frames   98 | land 1640 | bake - frames - steps - variant -
+ctl2-l2    26dc6dc7        boot  ready  1924.5 built       - call      - frames  115 | land 1632 | bake - frames - steps - variant -
+dev-shot   f1f074ac        boot  ready  2120.3 built       - call      - frames  105 | land 1651 | bake 155.2 frames [49.9, 66.6, 22.0, 16.7] steps [31.7, 0.0, 1.2, 3.8, 0.0] variant None
+dev-tground f1f074ac        boot  ready  2075.6 built       - call      - frames  105 | land 1642 | bake 183.1 frames [83.3, 49.7, 33.4, 16.7] steps [29.4, 0.0, 0.0, 4.1, 0.0] variant None
+dev-tnone  f1f074ac        boot  ready  2104.9 built       - call      - frames  105 | land 1658 | bake 166.7 frames [49.8, 66.7, 22.9, 27.2] steps [23.6, 0.0, 0.0, 4.8, 0.0] variant None
+dev1-l1    f1f074ac        boot  ready  2094.9 built       - call      - frames  108 | land 1714 | bake 177.5 frames [68.1, 65.2, 23.5, 20.7] steps [26.3, 0.0, 0.1, 4.3, 0.0] variant None
+dev1-l1    f1f074ac        cold  ready  2515.7 built  2369.0 call  639.7 frames  108 | land 1744 | bake 125.2 frames [20.0, 63.5, 25.0, 16.6] steps [12.0, 0.0, 0.0, 1.5, 0.0] variant None
+dev1-l2    f1f074ac        boot  ready  2094.1 built       - call      - frames  107 | land 1666 | bake 161.7 frames [49.8, 66.8, 19.0, 26.2] steps [24.8, 0.0, 0.0, 4.3, 0.1] variant None
+dev2-l1    f1f074ac        boot  ready  2171.2 built       - call      - frames  105 | land 1664 | bake 183.2 frames [50.7, 65.7, 27.6, 39.2] steps [27.4, 0.0, 0.0, 11.2, 0.1] variant None
+dev2-l1    f1f074ac        cold  ready  2366.3 built  2246.8 call  617.6 frames  102 | land 1647 | bake 116.6 frames [16.7, 66.6, 16.6, 16.7] steps [4.8, 0.0, 0.0, 1.5, 0.0] variant None
+dev2-l2    f1f074ac        boot  ready  2031.5 built       - call      - frames  104 | land 1656 | bake 178.0 frames [83.1, 50.0, 28.1, 16.8] steps [28.0, 0.0, 0.0, 4.0, 0.0] variant None

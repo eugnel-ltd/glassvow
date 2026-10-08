@@ -1,0 +1,23 @@
+#!/bin/zsh
+# Lane R3.2 round 3, batch H (QA app only, under the device lock; deletes
+# nothing): one scratch branch build whose unpaced bake takes its pacing from
+# the command line, cold opens under each pacing, two launches each.
+set -u
+source ${0:A:h}/common.zsh
+OUT=$R/device/batchH
+H_IPA=$R/h-wt/build/ios-qa/export-dev/glassvow.ipa
+$FLOW/ipad_lock.sh acquire map-r32
+trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+QUICK=(--map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --opens --reopens=0 --holds=cadence --hold-frames=60)
+echo "== batch H start $(date +%T)"
+install_build h $H_IPA || exit 1
+MT_WAIT=60 mt_launch h-warmup $QUICK
+for n in 1 2; do
+  MT_WAIT=60 mt_launch v0-$n $QUICK
+  MT_WAIT=60 mt_launch v1-$n $QUICK --bake-merge
+  MT_WAIT=60 mt_launch v2-$n $QUICK --bake-merge --bake-per-frame=4
+  MT_WAIT=60 mt_launch v3-$n $QUICK --bake-merge --bake-tile=768x960
+  MT_WAIT=60 mt_launch v4-$n $QUICK --bake-merge --bake-tile=1536x960 --bake-per-frame=1
+done
+echo "== batch H done $(date +%T)"

@@ -1,6 +1,6 @@
 # Story candidates — fifteen spines for the lite-Hades arc
 
-Working material for **[#175](https://github.com/fol2/glassvow/issues/175)** —
+Working material for **[#175](https://github.com/eugnel-ltd/glassvow/issues/175)** —
 story design: the arc, the cast, and how dialogue is delivered. Fifteen
 candidate stories, each dramatised as a *diegetic playthrough*: the story in the
 order a player meets it, across runs and deaths, then a second half explaining

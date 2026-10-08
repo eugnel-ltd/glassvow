@@ -1,0 +1,28 @@
+window: 5.01 s read after skipping 1.5 s
+command buffers: 902
+== 2 encoders: 301 command buffers, GPU busy median 1.137 ms, p95 1.486 ms
+  [0] Render Command 0     V  0.099  F  1.041  C  0.000  wall 10.077  cpu  0.029
+  [1] Blit Command 1       V  0.000  F  0.000  C  0.011  wall  0.011  cpu  0.013
+== 1 encoders: 300 command buffers, GPU busy median 0.014 ms, p95 0.024 ms
+  [0] Blit Command 0       V  0.000  F  0.000  C  0.014  wall  0.014  cpu  1.787
+== 13 encoders: 300 command buffers, GPU busy median 11.383 ms, p95 12.159 ms
+  [0] Blit Command 0       V  0.000  F  0.000  C  0.009  wall  0.009  cpu  0.031
+  [1] Render Command 1     V  0.037  F  0.695  C  0.000  wall  0.753  cpu  0.036
+  [2] Render Command 2     V  0.135  F  0.178  C  0.009  wall  0.435  cpu  0.086
+  [3] Blit Command 3       V  0.000  F  0.000  C  0.004  wall  0.004  cpu  0.013
+  [4] Compute Command 4    V  0.134  F  0.181  C  0.120  wall  1.009  cpu  0.095
+  [5] Render Command 5     V  1.018  F  4.961  C  0.000  wall  6.029  cpu  0.347
+  [6] Render Command 6     V  0.011  F  0.301  C  0.000  wall  5.131  cpu  0.024
+  [7] Render Command 7     V  0.021  F  0.076  C  0.000  wall  5.098  cpu  0.022
+  [8] Render Command 8     V  0.017  F  0.051  C  0.000  wall  5.140  cpu  0.022
+  [9] Render Command 9     V  0.030  F  0.525  C  0.000  wall  5.615  cpu  0.024
+  [10] Render Command 10   V  0.038  F  0.933  C  0.000  wall  6.498  cpu  0.030
+  [11] Blit Command 11     V  0.000  F  0.000  C  0.007  wall  0.007  cpu  0.013
+  [12] Render Command 12   V  0.382  F  3.085  C  0.000  wall  9.437  cpu  0.267
+== 6 encoders: 1 command buffers, GPU busy median 3.254 ms, p95 3.254 ms
+  [6] Render Command 6     V  0.000  F  0.210  C  0.000  wall  0.210  cpu  0.013
+  [7] Render Command 7     V  0.000  F  0.041  C  0.000  wall  0.041  cpu  0.011
+  [8] Render Command 8     V  0.000  F  0.036  C  0.000  wall  0.036  cpu  0.011
+  [9] Render Command 9     V  0.000  F  0.358  C  0.000  wall  0.358  cpu  0.013
+  [10] Render Command 10   V  0.000  F  0.617  C  0.000  wall  0.617  cpu  0.017
+  [12] Render Command 12   V  0.000  F  2.066  C  0.000  wall  2.066  cpu  0.137

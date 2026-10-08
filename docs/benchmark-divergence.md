@@ -11,16 +11,16 @@ checked is a **regression**. A value that differs because this engine can do
 better, decided on purpose, is a **progression**. Most of what follows is
 neither: the behaviour matches and only the `file:line` is wrong.
 
-> **Superseded as a standard on 2026-08-16 — kept as measurement.** [#317](https://github.com/fol2/glassvow/issues/317)
+> **Superseded as a standard on 2026-08-16 — kept as measurement.** [#317](https://github.com/eugnel-ltd/glassvow/issues/317)
 > detached the reference: the port is content- and behaviour-owning, and the
 > benchmark is no longer the authority against which any of this is judged.
 > Nothing below is restored merely because the web did it differently; where a row
 > still needs a decision, the standard is the commercial rubric.
-> [#324](https://github.com/fol2/glassvow/issues/324) re-measured all eleven **R**
+> [#324](https://github.com/eugnel-ltd/glassvow/issues/324) re-measured all eleven **R**
 > rows against present-day code and carries the current verdict for each — **nine
 > were already fixed**, row 5 had been mis-measured, row 20 was never a
 > regression, and row 25 still has a residual on
-> [#347](https://github.com/fol2/glassvow/issues/347). The measurements stay valid
+> [#347](https://github.com/eugnel-ltd/glassvow/issues/347). The measurements stay valid
 > as dated observations, and the census above is the reason the remaining
 > citations were frozen rather than re-resolved.
 
@@ -46,7 +46,7 @@ Five boss HP curves, the Emberheart rework and two data-driven mechanisms —
 mechanism decision; **none was a decision to stop being a capture**, and
 re-running `tools/capture_full_content.mjs` would have reverted all of them
 without a word. The reasoning behind the numbers belongs to
-[#203](https://github.com/fol2/glassvow/issues/203).
+[#203](https://github.com/eugnel-ltd/glassvow/issues/203).
 
 Two mechanism causes are worth recording, because both are the same disease this
 document names elsewhere — a guard that exists in belief rather than mechanism.
@@ -57,7 +57,7 @@ protect capture fidelity, `tests/test_original_content.gd:61-64` at `89f71c4`
 left to read it), took the already-edited tree file as its stand-in for a fresh
 capture, so it would have passed at any amount of drift.
 
-[#323](https://github.com/fol2/glassvow/issues/323) resolved it by deleting the
+[#323](https://github.com/eugnel-ltd/glassvow/issues/323) resolved it by deleting the
 capture script, pretty-printing the baseline to 5,485 lines, and replacing the
 `_source` claim with an ancestry note. The file is port-authored now, and says so.
 
@@ -103,7 +103,7 @@ opened and compared against the benchmark's actual behaviour.
 > earlier**, most within hours of the table being written. Undated, a stale
 > measurement looks eternal. The full re-measurement, and the current verdict for
 > every row, live on
-> [#324](https://github.com/fol2/glassvow/issues/324#issuecomment-5308325374).
+> [#324](https://github.com/eugnel-ltd/glassvow/issues/324#issuecomment-5308325374).
 
 **P** progression — deliberate, defensible, keep it.
 **R** regression — behind the benchmark and not on purpose, **as at the measured date**.
@@ -135,8 +135,8 @@ opened and compared against the benchmark's actual behaviour.
 | 22 | hand fan law | gap 112/640/246, tilt 5/42, sag 3.2, base 26 | `layoutHand` — **all seven identical** | 2026-07-26 | **C** |
 | 23 | aim arc geometry | P0 lifted 80, apex 120, quadratic | `M x,y-80 Q cx,cy x1,y1`, apex `min(y0,y1)-120` | 2026-07-26 | **C** |
 | 24 | press the stage with nothing armed | returns early — a lifted card cannot be set down | `else if (S.hoveredCard != null) { … }` (`combat.js:359`) | 2026-07-26 | **R** → **resolved** by `038f390` (2026-07-26) — `drop_seat()` sets the lifted card down |
-| 25 | hover tick on a coarse pointer | fires — twice per tap, with the COARSE branch | `onmouseenter` is wired only `if (FINE)` (`combat.js:960`) | 2026-07-26 | **R** → **partly resolved** by `038f390` (the double hover sound). A residual is open: `emulate_mouse_from_touch` is `true` by default, so a synthesised `mouse_entered` may set `hovered_uid` before the finger lifts and defeat the first-tap lift. Inferred, not measured — [#347](https://github.com/fol2/glassvow/issues/347) settles it |
-| 26 | the three combat piles | stacks of real cards (`PileStack`): thickness follows the count, the draw pile backs up in the chosen back, the discard face up under its last card, the ash charred; the reshuffle a stream of those cards (`PileStream`) | a fan of one painting per card, 5° apart, the span capped at 30° and 16 faces; three paintings (`pile-chrome.js`) | 2026-10-05 | **P**, by design ([#657](https://github.com/fol2/glassvow/issues/657) PR 5): see below |
+| 25 | hover tick on a coarse pointer | fires — twice per tap, with the COARSE branch | `onmouseenter` is wired only `if (FINE)` (`combat.js:960`) | 2026-07-26 | **R** → **partly resolved** by `038f390` (the double hover sound). A residual is open: `emulate_mouse_from_touch` is `true` by default, so a synthesised `mouse_entered` may set `hovered_uid` before the finger lifts and defeat the first-tap lift. Inferred, not measured — [#347](https://github.com/eugnel-ltd/glassvow/issues/347) settles it |
+| 26 | the three combat piles | stacks of real cards (`PileStack`): thickness follows the count, the draw pile backs up in the chosen back, the discard face up under its last card, the ash charred; the reshuffle a stream of those cards (`PileStream`) | a fan of one painting per card, 5° apart, the span capped at 30° and 16 faces; three paintings (`pile-chrome.js`) | 2026-10-05 | **P**, by design ([#657](https://github.com/eugnel-ltd/glassvow/issues/657) PR 5): see below |
 
 Twelve of the twenty-three are citation-only: the code was read correctly and
 written down against the wrong line. Row 12 is the clearest case — the comment
@@ -300,7 +300,7 @@ already fixed, most the same night this table was written; the live verdict for
 each row is the outcome column above, not this heading.
 
 The one residual still open is row 25's first-tap lift under a coarse pointer —
-inferred, not re-measured — on [#347](https://github.com/fol2/glassvow/issues/347).
+inferred, not re-measured — on [#347](https://github.com/eugnel-ltd/glassvow/issues/347).
 
 ## How to keep this from coming back
 

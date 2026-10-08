@@ -1,8 +1,8 @@
 # Landscape only — portrait is not a shipping orientation
 
 Decision record, James, 2026-08-18. Map
-[#156](https://github.com/fol2/glassvow/issues/156). Executing ticket
-[#399](https://github.com/fol2/glassvow/issues/399).
+[#156](https://github.com/eugnel-ltd/glassvow/issues/156). Executing ticket
+[#399](https://github.com/eugnel-ltd/glassvow/issues/399).
 
 **Glassvow does not support portrait.** Phone, pad, and desktop ship in
 landscape. There is no portrait Stage shape, no portrait layout, no portrait
@@ -65,7 +65,7 @@ A phone held upright does not enter a Glassvow portrait mode. It stays in
 the OS landscape lock, or the system UI tells the player to turn the phone.
 That is a platform behaviour, not a second layout.
 
-Floor devices for the RC bar ([#158](https://github.com/fol2/glassvow/issues/158)
+Floor devices for the RC bar ([#158](https://github.com/eugnel-ltd/glassvow/issues/158)
 — iPhone SE 2nd gen, iPad 8th gen; later the Android pair) are evidenced
 **in landscape**. Portrait evidence is not collected and cannot pass a
 surface.

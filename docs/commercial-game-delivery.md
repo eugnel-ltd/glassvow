@@ -70,7 +70,7 @@ are not interchangeable.
 - Observed whole-frame p95 â‰¤16.00 ms in every independent run.
 
 The [James To signature
-receipt](https://github.com/fol2/glassvow/pull/143#issuecomment-5269434207)
+receipt](https://github.com/eugnel-ltd/glassvow/pull/143#issuecomment-5269434207)
 binds product head `984479dd6c24c366a2b86478301b41021d3b9c24`, evidence
 `712c1b563168d655acdbb3ed7960e9be0792c944`, merge
 `806076b26ecbd1c0e40e2ec28fb9fd688cabfad4` and these thresholds as the P8.1
@@ -83,8 +83,8 @@ included portrait. From 2026-08-18 the shipping set is three landscape shapes â€
 `docs/design/2026-08-18-landscape-only.md`. The P8.1 signed numbers below are
 untouched.)* Its maxima were 543.640625 MiB
 renderer allocation, 1056.204544 MiB process physical footprint and 9.578 ms
-observed whole-frame p95. The immutable [manifest](https://github.com/fol2/glassvow/blob/1ce1ce8915b33ae1914714a6b2c40af89fb6ac22/manifest.md)
-and [summary](https://github.com/fol2/glassvow/blob/1ce1ce8915b33ae1914714a6b2c40af89fb6ac22/binding/summary.json)
+observed whole-frame p95. The immutable [manifest](https://github.com/eugnel-ltd/glassvow/blob/1ce1ce8915b33ae1914714a6b2c40af89fb6ac22/manifest.md)
+and [summary](https://github.com/eugnel-ltd/glassvow/blob/1ce1ce8915b33ae1914714a6b2c40af89fb6ac22/binding/summary.json)
 bind measurement source `cf1b3d51af2992e1db8a419a49ff6254d6147581` and
 verifier `5fb7d95a0bfa75953d184e172c3cd4a7d91d7786`.
 

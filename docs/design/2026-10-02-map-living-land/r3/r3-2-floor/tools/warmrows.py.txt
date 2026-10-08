@@ -1,0 +1,11 @@
+"""Lane R3.2: each launch's prefetch (warm) row and boot row: worst frame, slow frames."""
+import json, sys, glob, os
+for path in sorted(glob.glob(os.path.join(sys.argv[1], '*-l1.jsonl'))):
+    label = os.path.basename(path)[:-6]
+    for l in open(path):
+        d = json.loads(l)
+        if d.get('probe') == 'warm':
+            fm = d.get('floor_ms') if isinstance(d.get('floor_ms'), dict) else {}
+            bake = fm.get('bake', {}) if fm else {}
+            print('%-8s prefetch elapsed %7.1f worst %6.1f slow %s%s' % (label, d['elapsed_ms'], d['worst_frame_ms'], d['slow_frames'],
+                  (' | bake %.1f paced %s frames_ms %s' % (bake.get('wall_ms', 0), bake.get('paced'), [round(x, 1) for x in bake.get('frames_ms', [])])) if bake else ''))

@@ -16,6 +16,8 @@ extends RefCounted
 ## simulator's defaults, named here explicitly). PINS_1_1 pin the 1.1 instrument
 ## of #544 P6 beside them, pilot `p9` and search `s2`, on one seed a cell and arm
 ## for each player: its own rows move only with a deliberate change to it.
+## PINS_S3 pin the 1.1 instrument as #544 P6b ruled it, pilot `p9` and search `s3`,
+## on the same seeds and keys.
 const Sim: GDScript = preload("res://tools/balance_sim.gd")
 const Pilot: GDScript = preload("res://tools/balance_pilot.gd")
 const Search: GDScript = preload("res://tools/balance_search.gd")
@@ -34,6 +36,7 @@ const SEARCH_SEED: int = 12000
 ## The bots each panel is played by: --pilot and --search.
 const BOTS_1_0: Array[String] = ["p8-d0-v3", "s1"]
 const BOTS_1_1: Array[String] = ["p9", "s2"]
+const BOTS_S3: Array[String] = ["p9", "s3"]
 ## "<cell>/<arm>/<player>/<seed>" -> the SHA-256 of the run row's JSON.
 const PINS: Dictionary = {
 	"v0-fresh/C_shatter/greedy/12000": "e6884361bad93bef66f7b26e269a8798bf22218aaf202b9d3e8278829a6571f3",
@@ -160,6 +163,61 @@ const PINS_1_1: Dictionary = {
 	"v5-full/R/greedy/12000/p9-s2": "860a8d6f7308be1533c4a45841e4641d17ccc9c66193c75a3af9b7d9db059913",
 	"v5-full/R/search/12000/p9-s2": "4c8aa6b17aa7ef773354dba714c9bd729e30db6e4e817ff8401d0c73f9894d7f",
 }
+## Search `s3`'s panel (#544 P6b): pilot p9, search s3, PINS_1_1's seeds and keys.
+## Greedy play reads no search player, so its 24 rows are PINS_1_1's. 21 of the 24
+## search rows equal `s2`'s; v0-full C_shatter, v0-full C_edge and v5-full C_shatter
+## do not: the Ashfall omen starts every foe on 2 Smolder in the `full` pool, and `s3`
+## credits the ticks that kill.
+const PINS_S3: Dictionary = {
+	"v0-fresh/C_shatter/greedy/12000/p9-s3": "e6884361bad93bef66f7b26e269a8798bf22218aaf202b9d3e8278829a6571f3",
+	"v0-fresh/C_shatter/search/12000/p9-s3": "a6c27a431234b5eb3acd66fc32d89d66d8b6b04624c491ebca93bb78981e12d3",
+	"v0-fresh/C_lantern/greedy/12000/p9-s3": "ff55e432765bf8bb8b3a2e2441adb134a6d86a0011fae796b231be4672eb0cd6",
+	"v0-fresh/C_lantern/search/12000/p9-s3": "deb3cfbe29ccbaa2f97482c2a3ceafcbc296ce3ad02fe7fbe5a674ff8b7a7835",
+	"v0-fresh/C_edge/greedy/12000/p9-s3": "6ed1c4d2edcc6a12f9b769a36c7cc2da71a227faa34aa964f28b0d6e790317e9",
+	"v0-fresh/C_edge/search/12000/p9-s3": "e4d30d0da8bd9390b8d29f2361c989204d8e9378ed85456c7db5792826d4d750",
+	"v0-fresh/A/greedy/12000/p9-s3": "b3f74bab615865753e8a9646891c1778c9ab58802cb89f69ef7179161023bcab",
+	"v0-fresh/A/search/12000/p9-s3": "ac6a92318f6e451e6b09569409ed09f8c533a130663bd2ca2c553c8369e2ad15",
+	"v0-fresh/A_lit/greedy/12000/p9-s3": "6e5be33dbc60209142e96b07ff37f4f83844c40c74d66685a0f65275d8c8283c",
+	"v0-fresh/A_lit/search/12000/p9-s3": "61b7f10432cc23d27e75153dfd1d9c3b3ccdc0dfcae0e6cf2e2ffd8f0d8a511d",
+	"v0-fresh/R/greedy/12000/p9-s3": "a581181bd043ef61ab3ba990fafdb13db33c4dcf2ea539277f07a160c17053f5",
+	"v0-fresh/R/search/12000/p9-s3": "e2f05476cd46c80dd92f28634d5806c7590ace69da09aeeb662802e0e7e6a352",
+	"v0-full/C_shatter/greedy/12000/p9-s3": "8d2ddeba66f4e065499451f33f3bb1b06d9638f8c30844259739b4eacd795271",
+	"v0-full/C_shatter/search/12000/p9-s3": "3644728452b4d83675433ce5b669d6c8fc712b407b98616903be3f855beabcdf",
+	"v0-full/C_lantern/greedy/12000/p9-s3": "83b5544f052cbb297352f9847cf2e12ed3269dc06b2ec343ce5df50956e6487a",
+	"v0-full/C_lantern/search/12000/p9-s3": "3700b2bbc2b6ee5b60f35bf05291e79b313c7e75a3234778e427cb07179676d2",
+	"v0-full/C_edge/greedy/12000/p9-s3": "9bc1dbda1b5ebc5547ddca99fc0d47b0a9c84f1c56af658d4ecf5fdb3e0ac2ae",
+	"v0-full/C_edge/search/12000/p9-s3": "534b71c263cd022436ad87b0c8193e364836223ce8b319a5051902bbff2617b6",
+	"v0-full/A/greedy/12000/p9-s3": "601774be6e04ea826ce245600099374f6d90b6387e25ac37b07fb1f84d21a643",
+	"v0-full/A/search/12000/p9-s3": "87d8d44e723f14ade5e2025650e53cc54fe66dc555324f82dc39bff852a79a2e",
+	"v0-full/A_lit/greedy/12000/p9-s3": "ff31150957b4bd070ed8edb2a9c243028b83b3753df72982e6f1489bc360c15b",
+	"v0-full/A_lit/search/12000/p9-s3": "8c5966fd4608213fd2885941447cbcb35b1a6f302eb0413e3b14040db17f1e2f",
+	"v0-full/R/greedy/12000/p9-s3": "e8f7278efec86b2816a06f9e1450492da02d37f0bd131893462a244320f74fd6",
+	"v0-full/R/search/12000/p9-s3": "094b661da95ee21522f74fa9af8ba91db7be310e9f10c6eed1db9cfeaae0019f",
+	"v5-fresh/C_shatter/greedy/12000/p9-s3": "3e3154e2dec133e54188c9b0e092f9686e765941956780a9988849822a21fb8b",
+	"v5-fresh/C_shatter/search/12000/p9-s3": "1ec5e1e4b8ff5fef201792b40e0a75ce446ba86c9bcb4b01afeec4e47ff6d344",
+	"v5-fresh/C_lantern/greedy/12000/p9-s3": "3591c67f368bc540e308462adfd862a790655bc2330599d4572793a8b4c34839",
+	"v5-fresh/C_lantern/search/12000/p9-s3": "05df2c561d8db3aa2614ecf2686e7e92e170f84fee8bdd993058a8b3d8134b50",
+	"v5-fresh/C_edge/greedy/12000/p9-s3": "6c1ea169ee5770cde94fb73d681808cabaaa4d962e4c3cd2907af4b4b839927c",
+	"v5-fresh/C_edge/search/12000/p9-s3": "8ac94ab275fe307ac4f0f713574f1ae1997de8a8c19cd026fd626e564f75c783",
+	"v5-fresh/A/greedy/12000/p9-s3": "b679d0a03cbd987a9a018572ca1dc1a87b9b0176141e8649d76b23aa4048e93a",
+	"v5-fresh/A/search/12000/p9-s3": "868beddd657b9b15eb6e7e68d6741a4198d015fe8522bb8a2a8fa5b59e82bfa5",
+	"v5-fresh/A_lit/greedy/12000/p9-s3": "54387e5d1855ff9e16afa13c162da5a3ed1157920b24b02a68cae089c8debeb8",
+	"v5-fresh/A_lit/search/12000/p9-s3": "77d0a35a776115b4e065fb11c46700d6e8c48fc11ed684506655c1b52dd024d9",
+	"v5-fresh/R/greedy/12000/p9-s3": "7d2cceba4be9502290a0f0340c11c4addae536f0053f8c1820c05bce1e69f908",
+	"v5-fresh/R/search/12000/p9-s3": "30f4fecf0cfeb4e932e78f97c69fc6628264a34ea6d7134978cfd2a08650926d",
+	"v5-full/C_shatter/greedy/12000/p9-s3": "eb9f165df74108995151667b1e7b3c641f6bb11fe48d83d9b61c5c9a8468ab99",
+	"v5-full/C_shatter/search/12000/p9-s3": "6a2b12ea66f53db7b7af4bdd5f0abe582a0c8b17c3ee775ec78c8557439d60d0",
+	"v5-full/C_lantern/greedy/12000/p9-s3": "612c74e993edd189b85ecafde7aaaa7c92ce67a18df7c9466db14f2f53eaf1a7",
+	"v5-full/C_lantern/search/12000/p9-s3": "07df2407eb41d35d67c844fa80b8a3cd670ec4b4f983e7cae69c16475456edad",
+	"v5-full/C_edge/greedy/12000/p9-s3": "d885093d97e6e3a71ae80b80b723c415cec86b3f3d2ae8fb3c54322303984a72",
+	"v5-full/C_edge/search/12000/p9-s3": "c51aa02f515a6abfb1f382d3c3797a6f982afe82042b3994ba5d4321f8a127d0",
+	"v5-full/A/greedy/12000/p9-s3": "f587b37be4362408909ef9ab816683b2c1bfb796b318f234ee5d070ce101860f",
+	"v5-full/A/search/12000/p9-s3": "f1fba7364b0a32236b6842eeb94075aafdce9f5f73f90bc9d88335be4a323ed5",
+	"v5-full/A_lit/greedy/12000/p9-s3": "6b218de45f27b630a37e6006fbf108a533e68f2dd7fb6c6d05d70dbe03ba6e79",
+	"v5-full/A_lit/search/12000/p9-s3": "fb6f42680d334a06c0355816e14d0f225228886661d3b79ebef8d76414f97cb8",
+	"v5-full/R/greedy/12000/p9-s3": "860a8d6f7308be1533c4a45841e4641d17ccc9c66193c75a3af9b7d9db059913",
+	"v5-full/R/search/12000/p9-s3": "4c8aa6b17aa7ef773354dba714c9bd729e30db6e4e817ff8401d0c73f9894d7f",
+}
 
 
 static func run(fails: Array[String]) -> void:
@@ -167,6 +225,7 @@ static func run(fails: Array[String]) -> void:
 	_check(fails, "", PINS, digests(content, BOTS_1_0, GREEDY_SEEDS, ""))
 	var one_seed: Array[int] = [SEARCH_SEED]
 	_check(fails, "1.1 ", PINS_1_1, digests(content, BOTS_1_1, one_seed, "/p9-s2"))
+	_check(fails, "s3 ", PINS_S3, digests(content, BOTS_S3, one_seed, "/p9-s3"))
 	# The bots are static: leave 1.0's selected for the tests that follow.
 	Pilot.select(Pilot.VERSION)
 	Search.select(Search.VERSION)

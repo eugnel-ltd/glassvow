@@ -1,7 +1,7 @@
 # Vow ladder bake-off — 2026-08-18
 
-Issue: [fol2/glassvow#211](https://github.com/fol2/glassvow/issues/211).
-Frame: [fol2/glassvow#206](https://github.com/fol2/glassvow/issues/206).
+Issue: [eugnel-ltd/glassvow#211](https://github.com/eugnel-ltd/glassvow/issues/211).
+Frame: [eugnel-ltd/glassvow#206](https://github.com/eugnel-ltd/glassvow/issues/206).
 Pilot `p8-d0-v1` on profile `mature-three-act-no-side-state-v1`. Godot
 `4.7.1.stable`. Content SHA-256
 `736090f18546738a2e38b756d81f6ad715a808c4ea321220443f839862cdb102`.

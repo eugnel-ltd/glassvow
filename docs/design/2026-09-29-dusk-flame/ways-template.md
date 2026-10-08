@@ -2,7 +2,7 @@
 
 **Status:** active template, 2026-09-29. Owner: James. Derived from the Duskblade lock in [`README.md`](README.md). Use it for every class: the Ashwarden in 1.1, and any later aspect.
 
-*Brought up to date on 2026-10-04* under [#544](https://github.com/fol2/glassvow/issues/544)'s plan of record (step P4), with what the Duskblade programme learned and what #544 decided: §3. The text of 29 September is kept; where a dated note or §3 differs from it, the note and §3 are current.
+*Brought up to date on 2026-10-04* under [#544](https://github.com/eugnel-ltd/glassvow/issues/544)'s plan of record (step P4), with what the Duskblade programme learned and what #544 decided: §3. The text of 29 September is kept; where a dated note or §3 differs from it, the note and §3 are current.
 
 A class has three **ways**: three strategic languages a player discovers by playing, never chooses from a menu. The only gauge is the lantern's flame. Power comes from the cards' own synergy, one capstone per way and one crown per way. The flame changes only the lantern's quality, identically for every way, so it can never decide which way wins.
 

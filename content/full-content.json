@@ -5982,6 +5982,102 @@
       "name": "The Ashwarden",
       "nameBare": "Ashwarden",
       "blurb": "Smoke given a shape. Lets the Smolder do the killing and kindles its own hand to feed the lantern. Slower, but it endures — and everything it touches burns.",
+      "ways": [
+        {
+          "id": "smolder",
+          "crown": "crownOfCinders",
+          "capstones": [
+            "catalyst",
+            "virulence"
+          ],
+          "affinity": {
+            "smother": 0.5,
+            "venomStrike": 1.0,
+            "toxicMist": 1.0,
+            "annihilate": 1.0,
+            "catalyst": 1.0,
+            "virulence": 1.0,
+            "ashenChoir": 1.0
+          },
+          "relics": {
+            "smolderingCoal": 1.0
+          }
+        },
+        {
+          "id": "hand",
+          "crown": "crownOfTithes",
+          "capstones": [
+            "phantomBlades",
+            "offering"
+          ],
+          "affinity": {
+            "firstSpark": 1.0,
+            "preparation": 1.0,
+            "quickSlash": 1.0,
+            "sidestep": 0.5,
+            "deflect": 0.5,
+            "surge": 1.0,
+            "phantomBlades": 1.0,
+            "offering": 1.0,
+            "tithe": 1.0,
+            "nightSight": 1.0,
+            "emberdance": 0.5
+          },
+          "relics": {
+            "verdantBranch": 1.0,
+            "travelersPack": 0.5
+          }
+        },
+        {
+          "id": "endure",
+          "crown": "crownOfTheHearth",
+          "capstones": [
+            "bastion",
+            "flawlessForm"
+          ],
+          "affinity": {
+            "smother": 0.5,
+            "sidestep": 0.5,
+            "deflect": 0.5,
+            "bulwark": 1.0,
+            "fortify": 1.0,
+            "ironSkin": 1.0,
+            "leechBlade": 1.0,
+            "aegis": 1.0,
+            "bastion": 1.0,
+            "regrowth": 1.0,
+            "devour": 1.0,
+            "flawlessForm": 1.0,
+            "emberdance": 0.5
+          },
+          "relics": {
+            "basaltIdol": 1.0,
+            "wardingCharm": 1.0,
+            "gravebloom": 0.5,
+            "silkFan": 0.5,
+            "sunBlossom": 0.5
+          }
+        }
+      ],
+      "flame": {
+        "minMass": 5,
+        "steadyMin": 0.6,
+        "trueMin": 0.75,
+        "sootMass": 6,
+        "sootMax": 0.45,
+        "fringeMin": 0.25,
+        "likeWeight": 1.5,
+        "fringeWeight": 1.2,
+        "kindlingLift": 1.0,
+        "lantern": {
+          "sootLeak": 1,
+          "sootArtCost": 1,
+          "steadyCap": 4,
+          "steadyFirstGain": 2,
+          "trueArtCost": 2
+        }
+      },
+      "sootCrown": "hollowCrown",
       "excludes": {
         "cards": [
           "splinterCut",
@@ -5992,10 +6088,21 @@
           "totality",
           "emberEye",
           "spall",
-          "hearthfall"
+          "hearthfall",
+          "uppercut",
+          "quakeblow",
+          "oblivionStrike",
+          "limitBreak",
+          "resonantLance"
         ],
         "relics": [
-          "crownOfTheEclipse"
+          "crownOfTheEclipse",
+          "shatterersCrown",
+          "bellOfEndings",
+          "prismCharm"
+        ],
+        "arts": [
+          "beacon"
         ]
       }
     }

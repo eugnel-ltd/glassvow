@@ -369,5 +369,5 @@ effect done:
 - `CONCEPTS.md` › **Ward** — the three distinct terms this doc uses precisely:
   *Ward* is the protection, the *Ward chip* is the numeral beside the health
   vial, the *Ward stone* is the gem shell.
-- No GitHub issues: `gh` is authenticated against `fol2/glassvow` and the
+- No GitHub issues: `gh` is authenticated against `eugnel-ltd/glassvow` and the
   repository carries no issues, open or closed.

@@ -1,0 +1,12 @@
+G  ctl-title1               ?         frame0   489.2  force_draws -                next    nan  over100 after0 []                     open ready  647.7 worst  180.9  
+G  ctl-title2               ?         frame0   537.9  force_draws -                next    nan  over100 after0 []                     open ready  661.9 worst  195.1  
+G  dev-title1               ?         frame0  1904.8  force_draws -                next    nan  over100 after0 [[179, 2177.9], [184, 1709.2]] open ready  664.4 worst  199.1  bake worst 2186.3
+G  dev-title2               ?         frame0   513.9  force_draws -                next    nan  over100 after0 []                     open ready  646.7 worst  181.8  bake worst 51.1
+ctl-cold1  26dc6dc7        boot  ready  1926.7 built       - call      - frames  100 | land 1684 | bake - frames - steps - variant -
+ctl-cold1  26dc6dc7        cold  ready  2363.9 built  2363.9 call  661.8 frames  103 | land 1721 | bake - frames - steps - variant -
+ctl-cold2  26dc6dc7        boot  ready  1852.3 built       - call      - frames  102 | land 1693 | bake - frames - steps - variant -
+ctl-cold2  26dc6dc7        cold  ready  2330.6 built  2330.6 call  626.0 frames  103 | land 1723 | bake - frames - steps - variant -
+dev-cold1  9acf1356+dirty  boot  ready  2192.1 built       - call      - frames  123 | land 1704 | bake 187.6 frames [27.5, 55.6, 66.7, 19.9, 17.9] steps [23.7, 0.1, 0.0, 0.0, 3.4, 0.0] variant None
+dev-cold1  9acf1356+dirty  cold  ready  2467.4 built  2331.2 call  635.3 frames  107 | land 1715 | bake 133.3 frames [16.5, 16.7, 66.8, 16.6, 16.7] steps [5.3, 0.2, 0.0, 0.1, 1.7, 0.0] variant None
+dev-cold2  9acf1356+dirty  boot  ready  2129.0 built       - call      - frames  106 | land 1648 | bake 196.6 frames [28.0, 55.3, 66.7, 27.5, 19.3] steps [23.2, 0.1, 0.0, 0.0, 5.8, 0.0] variant None
+dev-cold2  9acf1356+dirty  cold  ready  2496.9 built  2347.0 call  668.6 frames  105 | land 1680 | bake 137.9 frames [33.3, 16.7, 49.9, 20.8, 17.0] steps [25.4, 0.1, 0.0, 0.1, 1.6, 0.0] variant None

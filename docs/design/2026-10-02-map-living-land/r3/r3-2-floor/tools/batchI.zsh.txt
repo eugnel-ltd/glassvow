@@ -1,0 +1,37 @@
+#!/bin/zsh
+# Lane R3.2 round 3, batch I (QA app only, under the device lock; deletes nothing): the title path with the material-only warm-up and a paced bake that settles before it draws; branch floor shaders carry the nonce r3b (never compiled on this iPad).
+# nothing): the title path with the warm-up that draws no 3D, on a branch
+# build whose floor shaders carry the nonce r3a (never compiled on this iPad,
+# as on a fresh install), against main; and one cold open each with the
+# probe's build mark, to split the cold open.
+set -u
+source ${0:A:h}/common.zsh
+OUT=$R/device/batchI
+$FLOW/ipad_lock.sh acquire map-r32
+trap "$FLOW/ipad_lock.sh release map-r32; echo \"== lock released \$(date +%T)\"" EXIT
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+tt_launch() {  # label wait args...
+  local label=$1 wait=$2 i; shift 2
+  _mt_start $label "$@"
+  [[ -n "$MT_PID" ]] || { echo "== $label: launch failed"; return 1; }
+  sleep $wait
+  # (As run, the line here removed this launch's own stale row file from the batch's
+  # scratch output folder. This copy leaves it out: no committed tool deletes anything.)
+  for i in $(seq 1 20); do
+    timeout 300 xcrun devicectl device copy from --device $UDID --domain-type appDataContainer \
+      --domain-identifier $MT_QA --source Documents/title_probe.jsonl --destination $OUT/$label.jsonl >/dev/null 2>&1
+    if grep -q "$MT_NONCE" $OUT/$label.jsonl 2>/dev/null && grep -q '"probe":"\(open\|seed\)"' $OUT/$label.jsonl; then
+      echo "== $label nonce $MT_NONCE: rows fresh ($(grep -o '"build":"[^"]*"' $OUT/$label.jsonl | head -1))"; return 0
+    fi
+    sleep 5
+  done
+  echo "== $label nonce $MT_NONCE: rows MISSING"; return 1
+}
+QUICK=(--map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --opens --reopens=0 --holds=cadence --hold-frames=60)
+echo "== batch I start $(date +%T)"
+T2_IPA=$R/ipa/t2-r3b.ipa
+install_build t2 $T2_IPA || exit 1
+tt_launch t2-title1-settle5 60 --title-trace-probe=title --qa-settle=5
+tt_launch t2-title2-settle5 50 --title-trace-probe=title --qa-settle=5
+tt_launch t2-title3-settle0 50 --title-trace-probe=title
+echo "== batch I done $(date +%T)"

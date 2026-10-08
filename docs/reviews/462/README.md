@@ -8,7 +8,7 @@ This packet freezes the visual baseline for TestFlight `1.0.0 (4)`. It records t
 - Godot: exact runtime string recorded in every generated `manifest.json`; the workflow installs `4.7.2` and rejects any version not beginning `4.7.2.stable`.
 - Asset manifest: `res://assets/art/map/map-assets.json`; its SHA-256 is computed before capture, passed into the driver, independently recomputed there, and recorded in the manifest.
 - Capture head: the wrapper requires the full checked-out `git rev-parse HEAD`, and the generated manifest records it. Local capture refuses when production inputs differ from the build-4 source commit (`--on-production-drift=fail`, the default). GitHub Actions detects that drift first and skips capture green rather than regenerating a later map or painting the tree red.
-- Frozen capture packet: GitHub Actions run [32790383346](https://github.com/fol2/glassvow/actions/runs/32790383346) at `4fe17d40b51178fe2f9a1e92d848787b3dc337c7`, artifact `build4-map-defect-corpus-4fe17d40b51178fe2f9a1e92d848787b3dc337c7`. Later rebases onto `main` must not recapture; production had already drifted.
+- Frozen capture packet: GitHub Actions run [32790383346](https://github.com/eugnel-ltd/glassvow/actions/runs/32790383346) at `4fe17d40b51178fe2f9a1e92d848787b3dc337c7`, artifact `build4-map-defect-corpus-4fe17d40b51178fe2f9a1e92d848787b3dc337c7`. Later rebases onto `main` must not recapture; production had already drifted.
 - Locale: `en`.
 
 The fixed matrix is 168 frames:
