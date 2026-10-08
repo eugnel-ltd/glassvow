@@ -145,10 +145,12 @@ still find in the tree and should special-case by hand:
   then read:
 
   ```markdown
-  At [hud_bar.gd:134 (`FAN_FACES`)](../../../presentation/combat/hud_bar.gd) the fan is capped at 16
+  At [hud_bar.gd@a86b2f07:134 (`FAN_FACES`)](../../../presentation/combat/hud_bar.gd) the fan is capped at 16
   ```
 
-  and `FAN_FACES` is indeed declared at `presentation/combat/hud_bar.gd` (`FAN_FACES`).
+  and `FAN_FACES` was indeed declared at `presentation/combat/hud_bar.gd@a86b2f07` (`FAN_FACES`).
+  (The fan and `FAN_FACES` were retired by #657 PR 5, so both quotes are pinned
+  to `a86b2f07`, the last tree that held them.)
   (That site has since been rewritten to the annotation-after-link form, which
   the checker's `ANCHOR` regex now also recognises — the hazard is retired for
   that site, but the insertion trap remains for any applier that predates the
@@ -437,8 +439,8 @@ Each of these is a real edit that had to be made by hand, and each is checkable
 in the tree now.
 
 ```markdown
-<!-- link label: the annotation must go INSIDE the brackets -->
-At [hud_bar.gd:134 (`FAN_FACES`)](../../../presentation/combat/hud_bar.gd) the fan is capped at 16
+<!-- link label: the annotation must go INSIDE the brackets (pinned to `a86b2f07`) -->
+At [hud_bar.gd@a86b2f07:134 (`FAN_FACES`)](../../../presentation/combat/hud_bar.gd) the fan is capped at 16
 ```
 
 ```gdscript
@@ -489,7 +491,7 @@ holding only a matching string and a matching call, while `GAME_SCENE_PATH`,
 
 <!-- after: they meet, and the checker can finally grade it -->
 `view.set_profile(_foe_kind(e.idx))` for every foe, and
-`combat_screen.gd:1352` (in `start_encounter`) calls `_hero.set_profile("rogue")` for the player.
+`combat_screen.gd:1405` (in `start_encounter`) calls `_hero.set_profile("rogue")` for the player.
 ```
 
 Four of the ten hand-fixed skips were this shape, and this one is

@@ -611,6 +611,11 @@ nothing.
   Motion, the A12 condition, and the iPad 8 batches against `main`: its
   `README.md` has the rows as built, the device table and the entrance's long
   frames; the scripts and summaries are text under `device/`.
+- PR 5, the piles of real cards: `proof/pr5/` keeps the pile-state stills at
+  the three shapes in both locales, the reshuffle bursts (with Skip and Reduce
+  Motion), the attack's discard-top swap, the inspector, the A12 condition and
+  the iPad 8 batch against `main`; its `README.md` has §4 and the §3 rows as
+  built, and the probe scripts are text under `device/`.
 - Fidelity diffs: the resting hand captured 1.2 s after the second deal,
   compared pixel by pixel with today's over the hand region (800 × 220 stage
   px).

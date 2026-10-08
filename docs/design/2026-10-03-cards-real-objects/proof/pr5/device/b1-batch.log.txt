@@ -1,0 +1,45 @@
+[11:27:33] lock held
+[11:27:56] installed A (/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/cards-lane/pr5/device/ipa_A/glassvow.ipa)
+[11:27:56] launch wa1 args=[--map --seed=1 --pile-probe=nonce=wa1,warm=1]
+[11:28:20] rows wa1: 874 frames; build=a86b2f07 HAND 5 cards landed_ms=850 landed_ms=1431 
+[11:28:23] launch a1 args=[--map --seed=1 --pile-probe=nonce=a1,deals=6,reshuffles=3]
+[11:29:25] rows a1: 3141 frames; build=a86b2f07 HAND 5 cards landed_ms=817 landed_ms=833 landed_ms=834 landed_ms=833 landed_ms=833 landed_ms=833 landed_ms=1449 landed_ms=1433 landed_ms=1430 
+[11:29:28] launch a2 args=[--map --seed=1 --pile-probe=nonce=a2,deals=6,reshuffles=3]
+[11:30:31] rows a2: 3168 frames; build=a86b2f07 HAND 5 cards landed_ms=833 landed_ms=834 landed_ms=833 landed_ms=833 landed_ms=834 landed_ms=832 landed_ms=1465 landed_ms=1450 landed_ms=1448 
+[11:30:53] installed B (/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/cards-lane/pr5/device/ipa_B/glassvow.ipa)
+[11:30:53] launch wb1 args=[--map --seed=1 --pile-probe=nonce=wb1,warm=1]
+[11:31:20] rows wb1: 949 frames; build=acf3a6d3 HAND 5 cards landed_ms=817 landed_ms=1565 
+[11:31:23] launch b1 args=[--map --seed=1 --pile-probe=nonce=b1,deals=6,reshuffles=3]
+[11:32:26] rows b1: 3179 frames; build=acf3a6d3 HAND 5 cards landed_ms=817 landed_ms=816 landed_ms=816 landed_ms=816 landed_ms=815 landed_ms=816 landed_ms=1600 landed_ms=1582 landed_ms=1583 
+[11:32:29] launch b2 args=[--map --seed=1 --pile-probe=nonce=b2,deals=6,reshuffles=3]
+[11:33:32] rows b2: 3116 frames; build=acf3a6d3 HAND 5 cards landed_ms=817 landed_ms=816 landed_ms=817 landed_ms=817 landed_ms=816 landed_ms=817 landed_ms=1616 landed_ms=1565 landed_ms=1565 
+[11:33:55] installed A (/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/cards-lane/pr5/device/ipa_A/glassvow.ipa)
+[11:33:55] launch wa2 args=[--map --seed=1 --pile-probe=nonce=wa2,warm=1]
+[11:34:18] rows wa2: 931 frames; build=a86b2f07 HAND 5 cards landed_ms=836 landed_ms=1432 
+[11:34:21] launch a3 args=[--map --seed=1 --pile-probe=nonce=a3,deals=6,reshuffles=3]
+[11:35:23] rows a3: 3152 frames; build=a86b2f07 HAND 5 cards landed_ms=833 landed_ms=833 landed_ms=832 landed_ms=832 landed_ms=833 landed_ms=834 landed_ms=1466 landed_ms=1453 landed_ms=1450 
+[11:35:26] launch a4 args=[--map --seed=1 --pile-probe=nonce=a4,deals=6,reshuffles=3]
+[11:36:29] rows a4: 3164 frames; build=a86b2f07 HAND 5 cards landed_ms=833 landed_ms=832 landed_ms=832 landed_ms=833 landed_ms=833 landed_ms=833 landed_ms=1466 landed_ms=1450 landed_ms=1449 
+[11:36:50] installed B (/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/cards-lane/pr5/device/ipa_B/glassvow.ipa)
+[11:36:50] launch wb2 args=[--map --seed=1 --pile-probe=nonce=wb2,warm=1]
+[11:37:17] rows wb2: 952 frames; build=acf3a6d3 HAND 5 cards landed_ms=816 landed_ms=1581 
+[11:37:20] launch b3 args=[--map --seed=1 --pile-probe=nonce=b3,deals=6,reshuffles=3]
+[11:38:22] rows b3: 2840 frames; build=acf3a6d3 HAND 5 cards landed_ms=794 landed_ms=809 landed_ms=805 landed_ms=804 landed_ms=805 landed_ms=803 landed_ms=1589 landed_ms=1576 landed_ms=1574 
+[11:38:26] launch b4 args=[--map --seed=1 --pile-probe=nonce=b4,deals=6,reshuffles=3]
+[11:39:32] rows b4: 2803 frames; build=acf3a6d3 HAND 5 cards landed_ms=805 landed_ms=802 landed_ms=826 landed_ms=803 landed_ms=801 landed_ms=804 landed_ms=1562 landed_ms=1569 landed_ms=1566 
+[11:39:56] installed A (/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/cards-lane/pr5/device/ipa_A/glassvow.ipa)
+[11:39:56] launch wa3 args=[--map --seed=1 --pile-probe=nonce=wa3,warm=1]
+[11:40:19] rows wa3: 912 frames; build=a86b2f07 HAND 5 cards landed_ms=833 landed_ms=1419 
+[11:40:22] launch a5 args=[--map --seed=1 --pile-probe=nonce=a5,deals=6,reshuffles=3]
+[11:41:27] rows a5: 2873 frames; build=a86b2f07 HAND 5 cards landed_ms=801 landed_ms=798 landed_ms=814 landed_ms=817 landed_ms=818 landed_ms=809 landed_ms=1430 landed_ms=1430 landed_ms=1426 
+[11:41:31] launch a6 args=[--map --seed=1 --pile-probe=nonce=a6,deals=6,reshuffles=3]
+[11:42:34] rows a6: 2804 frames; build=a86b2f07 HAND 5 cards landed_ms=827 landed_ms=824 landed_ms=821 landed_ms=827 landed_ms=826 landed_ms=830 landed_ms=1447 landed_ms=1439 landed_ms=1440 
+[11:43:06] installed B (/private/tmp/claude-501/-Users-jamesto-Coding-glassvow/b76db86a-b79e-49a2-b973-bc87e903afff/scratchpad/cards-lane/pr5/device/ipa_B/glassvow.ipa)
+[11:43:07] launch wb3 args=[--map --seed=1 --pile-probe=nonce=wb3,warm=1]
+[11:43:29] rows wb3: 951 frames; build=acf3a6d3 HAND 5 cards landed_ms=816 landed_ms=1582 
+[11:43:32] launch b5 args=[--map --seed=1 --pile-probe=nonce=b5,deals=6,reshuffles=3]
+[11:44:32] rows b5: 3155 frames; build=acf3a6d3 HAND 5 cards landed_ms=816 landed_ms=816 landed_ms=817 landed_ms=816 landed_ms=816 landed_ms=817 landed_ms=1583 landed_ms=1567 landed_ms=1565 
+[11:44:35] launch b6 args=[--map --seed=1 --pile-probe=nonce=b6,deals=6,reshuffles=3]
+[11:45:37] rows b6: 3071 frames; build=acf3a6d3 HAND 5 cards landed_ms=816 landed_ms=827 landed_ms=816 landed_ms=802 landed_ms=788 landed_ms=782 landed_ms=1543 landed_ms=1546 landed_ms=1531 
+[11:45:40] batch done
+[11:45:40] lock released

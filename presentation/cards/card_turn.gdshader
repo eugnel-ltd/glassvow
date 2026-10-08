@@ -29,6 +29,10 @@ uniform float lift = 0.0;
 uniform float lens = 748.6;
 // This node's rect in card px: the card plus PAD_3D on every side.
 uniform vec2 rect = vec2(200.0, 264.0);
+// The front picture's span in card px, centred on the card, when it is not
+// the whole stage: a baked face (CardFaces) keeps only REACH round the card,
+// so a pile's turning card (PileStream) lays it here. Zero means `rect`.
+uniform vec2 face_span = vec2(0.0);
 uniform vec2 half_card = vec2(76.0, 108.0);
 uniform float radius = 11.0;
 uniform float thick = 7.0;
@@ -65,8 +69,9 @@ void fragment() {
 	// One screen pixel per unit of ray length, in card px across the ray:
 	// the rim's smoothing measures in it. Taken before any branch.
 	float pixel = max(length(dFdx(s)), length(dFdy(s))) / length(vec3(s, lens));
+	vec2 front = face_span.x > 0.0 ? face_span : rect;
 	// One texel of the face pictures, in card px on their planes.
-	float texel = rect.x / float(textureSize(TEXTURE, 0).x);
+	float texel = front.x / float(textureSize(TEXTURE, 0).x);
 	float hz = thick * 0.5;
 	// The lens and the ray, carried into the slab's own frame.
 	mat3 back_to_slab = transpose(pose);
@@ -76,12 +81,13 @@ void fragment() {
 	// The face the lens is in front of, as a picture on its plane.
 	vec4 face = vec4(0.0);
 	if (abs(o.z) > hz && abs(d.z) > 1e-6) {
-		bool front = o.z > 0.0;
-		float t = ((front ? hz : -hz) - o.z) / d.z;
+		bool lens_side = o.z > 0.0;
+		float t = ((lens_side ? hz : -hz) - o.z) / d.z;
 		vec3 p = o + d * t;
-		vec2 uv = vec2(front ? p.x : -p.x, -p.y) / rect + 0.5;
+		vec2 q = vec2(lens_side ? p.x : -p.x, -p.y);
+		vec2 uv = q / (lens_side ? front : rect) + 0.5;
 		if (t > 0.0 && inside(uv)) {
-			face = front ? textureLod(TEXTURE, uv, 0.0) : textureLod(back_tex, uv, 0.0);
+			face = lens_side ? textureLod(TEXTURE, uv, 0.0) : textureLod(back_tex, uv, 0.0);
 		}
 	}
 

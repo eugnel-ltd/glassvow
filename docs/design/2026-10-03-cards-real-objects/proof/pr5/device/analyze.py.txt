@@ -1,0 +1,94 @@
+import sys, glob, os, statistics as st
+# usage: analyze.py <batch dir> [<batch dir> ...]   (rows_<nonce>.txt from pile_probe.gd)
+# Graded: rest0 (combat at rest, 10 s, longer than the glint's 9 s cycle),
+# deals 2-6 (full five-card deals), the reshuffles (a 10-card discard: an
+# eight-card stream, then the deal). Warm-up launches (warm=1) are listed, not
+# graded. A launch the iPad throttled is named: past rest0 its frames no
+# longer hold 60 Hz (the median frame of its deals, reshuffles and the rests
+# between them is over THROTTLE_MS), whatever is on screen.
+THROTTLE_MS = 16.9
+
+
+def pct(a, q):
+    a = sorted(a)
+    if not a: return float("nan")
+    k = (len(a) - 1) * q
+    f = int(k); c = min(f + 1, len(a) - 1)
+    return a[f] + (a[c] - a[f]) * (k - f)
+
+
+def load(path):
+    nonce = os.path.basename(path)[5:-4]
+    rows = [l.split() for l in open(path) if l.strip()]
+    rows = [r for r in rows if r and r[0] == nonce]
+    head = next((" ".join(r[2:]) for r in rows if r[2] == "PROBE"), "")
+    build = next((w[6:] for w in head.split() if w.startswith("build=")), "?")
+    frames = [dict(i=int(r[3]), ph=r[4], wall=float(r[5]), pre=float(r[6]), draw=float(r[7]),
+        proc=float(r[8]), gpu=float(r[9]), vram=float(r[10]), comp=r[11]) for r in rows if r[2] == "F"]
+    return dict(nonce=nonce, build=build, warm="warm=1" in head, frames=frames,
+        batch=os.path.basename(os.path.dirname(path)))
+
+
+def w(fs): return [f["wall"] for f in fs]
+def ph(r, p): return [f for f in r["frames"] if f["ph"] == p]
+def rest0(r): return w(ph(r, "rest0"))
+def deals(r): return [x for k in range(2, 7) for x in w(ph(r, "deal%d" % k))]
+def reshs(r): return [x for k in range(1, 4) for x in w(ph(r, "resh%d" % k))]
+def late(r):
+    v = [f["wall"] for f in r["frames"] if f["ph"] != "rest0" and f["ph"][:4] in ("prep", "deal", "rest", "rpre", "resh", "rres")]
+    return st.median(v) if v else float("nan")
+def throttled(r): return late(r) > THROTTLE_MS
+
+
+runs = []
+for d in sys.argv[1:]:
+    for path in sorted(glob.glob(os.path.join(d, "rows_*.txt"))):
+        r = load(path)
+        if r["frames"]:
+            runs.append(r)
+
+
+def fmt(a): return "%4d %5.2f %5.2f %5.1f %2d" % (len(a), st.median(a), pct(a, .95), max(a), sum(1 for x in a if x > 33.4)) if a else "   -"
+
+
+print("batch run   build    | load | rest0 n   p50   p95   max >33 | deals2-6 n p50   p95   max >33 | resh1-3 n  p50   p95   max >33 | late p50")
+for r in runs:
+    L = ph(r, "load")[0]["wall"] if ph(r, "load") else float("nan")
+    tag = " warm-up" if r["warm"] else (" THROTTLED" if throttled(r) else "")
+    print("%-5s %-5s %-8s | %4.0f | %s | %s | %s | %5.2f%s" % (r["batch"], r["nonce"], r["build"], L,
+        fmt(rest0(r)), fmt(deals(r)), fmt(reshs(r)), late(r), tag))
+
+
+def grade(title, keep):
+    print()
+    print(title)
+    by = {}
+    for r in runs:
+        if not r["warm"] and keep(r):
+            by.setdefault(r["build"], []).append(r)
+    out = {}
+    for b, rs in sorted(by.items()):
+        m = dict(
+            rest50=st.median([st.median(rest0(r)) for r in rs]),
+            rest95=st.median([pct(rest0(r), .95) for r in rs]),
+            deal50=st.median([st.median(deals(r)) for r in rs]),
+            deal95=st.median([pct(deals(r), .95) for r in rs]),
+            resh50=st.median([st.median(reshs(r)) for r in rs]),
+            resh95=st.median([pct(reshs(r), .95) for r in rs]))
+        out[b] = m
+        print("  %s: %d launches (%s) | rest0 p50 %.2f p95 %.2f | deal p50 %.2f p95 %.2f | reshuffle p50 %.2f p95 %.2f" % (
+            b, len(rs), " ".join(r["nonce"] for r in rs), m["rest50"], m["rest95"], m["deal50"], m["deal95"], m["resh50"], m["resh95"]))
+    return out
+
+
+grade("every measured launch:", lambda r: True)
+grade("the launches the iPad did not throttle:", lambda r: not throttled(r))
+print()
+print("frames over 33.4 ms in rest0, the deals and the reshuffles (run, phase, frame in phase, wall, to-draw, draw, process, compiles):")
+for r in runs:
+    for name in ["rest0"] + ["deal%d" % k for k in range(1, 7)] + ["resh%d" % k for k in range(1, 4)]:
+        for j, f in enumerate(ph(r, name)):
+            if f["wall"] > 33.4:
+                print("  %s %s %s %s #%d wall %.1f to_draw %.1f draw %.1f proc %.1f comp %s%s" % (
+                    r["batch"], r["nonce"], r["build"], name, j, f["wall"], f["pre"], f["draw"], f["proc"], f["comp"],
+                    " (warm-up)" if r["warm"] else (" (throttled)" if throttled(r) else "")))

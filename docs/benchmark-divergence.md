@@ -136,6 +136,7 @@ opened and compared against the benchmark's actual behaviour.
 | 23 | aim arc geometry | P0 lifted 80, apex 120, quadratic | `M x,y-80 Q cx,cy x1,y1`, apex `min(y0,y1)-120` | 2026-07-26 | **C** |
 | 24 | press the stage with nothing armed | returns early — a lifted card cannot be set down | `else if (S.hoveredCard != null) { … }` (`combat.js:359`) | 2026-07-26 | **R** → **resolved** by `038f390` (2026-07-26) — `drop_seat()` sets the lifted card down |
 | 25 | hover tick on a coarse pointer | fires — twice per tap, with the COARSE branch | `onmouseenter` is wired only `if (FINE)` (`combat.js:960`) | 2026-07-26 | **R** → **partly resolved** by `038f390` (the double hover sound). A residual is open: `emulate_mouse_from_touch` is `true` by default, so a synthesised `mouse_entered` may set `hovered_uid` before the finger lifts and defeat the first-tap lift. Inferred, not measured — [#347](https://github.com/eugnel-ltd/glassvow/issues/347) settles it |
+| 26 | the three combat piles | stacks of real cards (`PileStack`): thickness follows the count, the draw pile backs up in the chosen back, the discard face up under its last card, the ash charred; the reshuffle a stream of those cards (`PileStream`) | a fan of one painting per card, 5° apart, the span capped at 30° and 16 faces; three paintings (`pile-chrome.js`) | 2026-10-05 | **P**, by design ([#657](https://github.com/eugnel-ltd/glassvow/issues/657) PR 5): see below |
 
 Twelve of the twenty-three are citation-only: the code was read correctly and
 written down against the wrong line. Row 12 is the clearest case — the comment
@@ -223,6 +224,17 @@ ward is being redesigned**, so this row is recorded and not acted on.
 
 **Row 6.** Suppressing two primitives the reference never draws is parity, not
 licence.
+
+**Row 26, the piles.** The benchmark's fan was a DOM answer to "show how many
+cards are here": one painted face per card, turned 5° apart. The port's cards
+are real objects with a front and a back (#657), so its piles are stacks of
+those cards: a squared draw pile in the back the player chose, a face-up
+discard that shows what just went, a charred ash, each as thick as its count
+says, and the reshuffle a stream of the same cards. The commercial rubric, not
+the frozen reference, is the standard here, and the owner chose the stacks and
+the face-up discard on #657. The discard and ash paintings were retired with
+the fan. The pile boxes in the geometry table below did not move; the fan row
+there is a dated measurement of what was ported then.
 
 **Row 4 was not one of them, and the distinction is the whole point of this
 document.** "A particle system instead of three keyframes" sounds like a

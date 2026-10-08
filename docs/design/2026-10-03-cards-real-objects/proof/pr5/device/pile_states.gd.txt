@@ -1,0 +1,55 @@
+extends SceneTree
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH (#657 PR 5): pile-state stills in a live bench fight. For each
+## count the three piles are set to it, the discard wearing a hand card's own
+## face, and the whole frame is written: <out>_<n>.png.
+##   godot --path <wt> --position 60,60 -s <this> -- --fight=duskfang --kind=elite \
+##     --seed=1 --vp=WxH --out=<dir>/<prefix> [--locale=zh-Hant] [--glint=1]
+
+var cfg: Dictionary = {"out": "/tmp/piles", "counts": "0,1,5,10,40,99", "settle": "6", "glint": "0"}
+var main: Node = null
+var keep: Array = []
+
+
+func _initialize() -> void:
+	for arg: String in OS.get_cmdline_user_args():
+		for k: String in cfg.keys():
+			if arg.begins_with("--%s=" % k):
+				cfg[k] = arg.trim_prefix("--%s=" % k)
+	main = (load("res://application/main.tscn") as PackedScene).instantiate()
+	root.add_child(main)
+	_run.call_deferred()
+
+
+func _wait(seconds: float) -> void:
+	var until: int = Time.get_ticks_msec() + int(seconds * 1000.0)
+	while Time.get_ticks_msec() < until:
+		await process_frame
+
+
+func _run() -> void:
+	await _wait(float(cfg["settle"]))
+	var screen = main._screen
+	var hud = screen._hud
+	var hand = screen._hand
+	var uid: int = hand.uids()[0]
+	var face = CardFaces.take(hand.card_view(uid))
+	print("PILES shape=%s window=%s face=%s back=%s" % [str(screen.shape), str(root.size), str(face != null), str(CardTurn.back() != null)])
+	keep.append(face)
+	var cb = screen.game.cb
+	for n_s: String in str(cfg["counts"]).split(","):
+		var n: int = int(n_s)
+		hud.set_values(cb.player.hp, cb.player.max_hp, cb.player.block, 99, cb.player.energy,
+			cb.player.energy_max, n, n, n, cb.hand.size())
+		if n > 0 and face != null:
+			hud.set_discard_top(uid, face.picture, CardFlight.landing_rot(uid, false), Vector2.ZERO)
+		else:
+			hud.clear_discard_top()
+		for p in [hud._draw_pile, hud._ashes_pile]:
+			p.stack._t = 4.0 if cfg["glint"] == "0" else 0.7
+			p.stack._process(0.0)
+		await _wait(0.4)
+		var img: Image = root.get_texture().get_image()
+		img.save_png("%s_%02d.png" % [cfg["out"], n])
+		print("PILES n=%d draw=%s discard=%s ashes=%s top=%s" % [n, str(hud.pile_card(&"draw")), str(hud.pile_card(&"discard")), str(hud.pile_card(&"ashes")), str(hud.pile_count(&"draw"))])
+	quit(0)

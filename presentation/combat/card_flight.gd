@@ -24,8 +24,10 @@ extends RefCounted
 ## top, a few degrees loose; the end of a turn sweeps the hand there card by
 ## card, landing looser. A card bound for the ash blazes, turns face down as it
 ## burns and lands as a charred back whose ember rim cools. Each lies on its
-## pile a moment and then hands over to the pile (`HANDOFF_*`): the pile itself
-## becomes the cards it holds in a later step of #657.
+## pile a moment and then hands over to the pile (`HANDOFF_*`); a card that
+## lands on the discard becomes the pile's face-up top (PileStack) at the
+## angle it landed at (`landing_rot`, `landing_slip`), and goes the moment the
+## pile wears its face.
 ##
 ## The landings' jitter is a hash of the card's uid, not a random draw: the
 ## same card lands the same way, and nothing here touches the run's RNG.
@@ -40,7 +42,9 @@ const DEAL_ARC: float = 0.09         # of the stage height
 const TURN_FROM: float = 0.12
 const TURN_TO: float = 0.78
 const PITCH: float = -14.0           # degrees, toward the viewer
-const PILE_TILT: float = -4.0        # degrees: the pile's top card
+## The draw pile's top card lies square (PileStack): a dealt card leaves it
+## at this angle. The painted pile it replaced leaned -4 degrees.
+const PILE_TILT: float = 0.0         # degrees
 const LIFT_OFF: float = 6.0          # px
 const LIFT_TIME: float = 0.06
 ## How far the table shadow drops away at the top of the arc, in units of the
@@ -136,6 +140,21 @@ static func grow(t: float) -> float:
 ## always lands the same way.
 static func jitter(uid: int, salt: int) -> float:
 	return float(posmod(hash(Vector2i(uid, salt)), 2001)) / 1000.0 - 1.0
+
+
+## The angle a card bound for the discard lands at, in radians: a played
+## card within DISCARD_TILT, one swept at the end of a turn within SWEEP_TILT.
+## The pile's top lies at the same angle (PileStack.set_face).
+static func landing_rot(uid: int, swept: bool) -> float:
+	return deg_to_rad((SWEEP_TILT if swept else DISCARD_TILT) * jitter(uid, 0))
+
+
+## How far off square a card bound for the discard lands, in px: only a swept
+## one slips.
+static func landing_slip(uid: int, swept: bool) -> Vector2:
+	if not swept:
+		return Vector2.ZERO
+	return Vector2(jitter(uid, 1), jitter(uid, 2)) * SWEEP_SLIP
 
 
 static func ease_in(t: float) -> float:

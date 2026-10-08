@@ -1,0 +1,210 @@
+extends Node
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH QA PROBE (#657 PR 5, never committed). Attached by the QA patch in
+## Main._ready when a `--pile-probe=` user argument is given:
+##   -- --map --seed=1 --pile-probe=nonce=N,deals=6,reshuffles=3,warm=0|1
+## The same probe runs on a build of main and a build of the branch. It opens
+## the bench fight (duskfang, elite) from the settled map and fills the hand
+## to five; then
+##   rest0      combat at rest for REST0 s, longer than the draw pile's 9 s
+##              glint cycle, so the idle life is inside the window;
+##   deal1..N   a full five-card deal through the real DRAW handler (the
+##              views are taken away first, outside the window), as PR 4's
+##              probe did, each followed by a 1.5 s rest;
+##   resh1..M   the hand and the draw pile moved into the discard (outside
+##              the window), then the domain's own draw of five, which
+##              reshuffles the discard (10 cards: an eight-card stream) and
+##              deals: the RESHUFFLE and DRAW events it makes go through the
+##              drain as a fight's do.
+## Each frame row carries the phase, the wall time, the time from the frame's
+## start to its draw, the draw itself, the process time, the root viewport's
+## GPU time, video memory and the pipeline compiles. warm=1: one deal and one
+## reshuffle, to warm a fresh install; not graded.
+
+const MONITORS: Array[int] = [
+	Performance.PIPELINE_COMPILATIONS_CANVAS, Performance.PIPELINE_COMPILATIONS_MESH,
+	Performance.PIPELINE_COMPILATIONS_SURFACE, Performance.PIPELINE_COMPILATIONS_DRAW,
+	Performance.PIPELINE_COMPILATIONS_SPECIALIZATION]
+const REST0: float = 10.0
+
+var cfg: Dictionary = {}
+var main: Main = null
+var _rows: FileAccess = null
+var _phase: String = "boot"
+var _frame: int = 0
+var _t_start: int = 0
+var _t_pre: int = 0
+var _t_post: int = 0
+var _frame_rows: PackedStringArray = PackedStringArray()
+var _vp: RID
+
+
+static func config() -> Dictionary:
+	var out: Dictionary = {"nonce": "none", "deals": "6", "reshuffles": "3", "warm": "0",
+		"quit": "1", "args": ""}
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--pile-probe="):
+			for part: String in arg.trim_prefix("--pile-probe=").split(",", false):
+				var kv: PackedStringArray = part.split("=", true, 1)
+				if kv.size() == 2:
+					out[kv[0]] = kv[1]
+	out["args"] = " ".join(OS.get_cmdline_user_args())
+	out["rows"] = "user://pile_probe_%s.txt" % out["nonce"]
+	return out
+
+
+func _ready() -> void:
+	name = "PileProbe"
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	cfg = config()
+	main = get_parent() as Main
+	_vp = get_viewport().get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(_vp, true)
+	_row("PROBE nonce=%s args=[%s] engine=%s adapter=%s window=%s build=%s" % [
+		cfg["nonce"], cfg["args"], Engine.get_version_info()["string"],
+		RenderingServer.get_video_adapter_name(), str(DisplayServer.window_get_size()),
+		str((load("res://qa_cards/build_tag.gd") as GDScript).get_script_constant_map().get("TAG", "?"))])
+	get_tree().process_frame.connect(_on_frame_start)
+	RenderingServer.frame_pre_draw.connect(func() -> void: _t_pre = Time.get_ticks_usec())
+	RenderingServer.frame_post_draw.connect(func() -> void: _t_post = Time.get_ticks_usec())
+	_t_start = Time.get_ticks_usec()
+	_run()
+
+
+func _row(line: String) -> void:
+	var stamped: String = "%s %d %s" % [cfg.get("nonce", "none"), Time.get_ticks_msec(), line]
+	print(stamped)
+	if _rows == null:
+		_rows = FileAccess.open(str(cfg["rows"]), FileAccess.WRITE)
+	if _rows != null:
+		_rows.store_line(stamped)
+		_rows.flush()
+
+
+func _on_frame_start() -> void:
+	var now: int = Time.get_ticks_usec()
+	var wall: float = float(now - _t_start) / 1000.0
+	var to_draw: float = float(_t_pre - _t_start) / 1000.0 if _t_pre >= _t_start else -1.0
+	var draw: float = float(_t_post - _t_pre) / 1000.0 if _t_post >= _t_pre and _t_pre >= _t_start else -1.0
+	var counts: PackedStringArray = PackedStringArray()
+	for m: int in MONITORS:
+		counts.append(str(int(Performance.get_monitor(m))))
+	# Held in memory and written at the end: no file I/O inside a measured frame.
+	_frame_rows.append("%s %d F %d %s %.2f %.2f %.2f %.2f %.2f %.1f %s" % [cfg.get("nonce", "none"),
+		Time.get_ticks_msec(), _frame, _phase, wall, to_draw, draw,
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		RenderingServer.viewport_get_measured_render_time_gpu(_vp),
+		Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, ",".join(counts)])
+	_frame += 1
+	_t_start = now
+
+
+func _wait(seconds: float) -> void:
+	var until: int = Time.get_ticks_msec() + int(seconds * 1000.0)
+	while Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+
+
+func _busy(screen: CombatScreen) -> bool:
+	var hand: HandView = screen._hand
+	var flying: bool = not (hand.get("_dealing") as Dictionary).is_empty() \
+		or not (hand.get("_leaving") as Array).is_empty()
+	var stream = screen._hud.get("_stream") if "_stream" in screen._hud else null
+	return screen.seq.is_busy() or flying or (stream != null and is_instance_valid(stream))
+
+
+## Run a batch through the drain and wait until it is idle and nothing is in
+## the air, plus 15 frames.
+func _drain(screen: CombatScreen, evs: Array[Dictionary], label: String) -> void:
+	var t0: int = Time.get_ticks_msec()
+	screen.seq.enqueue(evs)
+	await get_tree().process_frame
+	while _busy(screen) and Time.get_ticks_msec() - t0 < 6000:
+		await get_tree().process_frame
+	var landed: int = Time.get_ticks_msec() - t0
+	for _i: int in range(15):
+		await get_tree().process_frame
+	_row("%s landed_ms=%d draw=%d discard=%d hand=%d" % [label, landed, screen.game.cb.draw.size(),
+		screen.game.cb.discard.size(), screen.game.cb.hand.size()])
+
+
+func _run() -> void:
+	var calm: int = 0
+	var waited: int = Time.get_ticks_msec()
+	while calm < 30 and Time.get_ticks_msec() - waited < 20000:
+		var before: int = Time.get_ticks_usec()
+		await get_tree().process_frame
+		calm = calm + 1 if float(Time.get_ticks_usec() - before) / 1000.0 < 40.0 else 0
+	_row("SETTLED after %d ms" % (Time.get_ticks_msec() - waited))
+	_phase = "map"
+	await _wait(1.5)
+	_phase = "load"
+	main._start_fight(PackedStringArray(["duskfang"]), "elite")
+	await get_tree().process_frame
+	_phase = "fight"
+	_row("AFTER_LOAD back=%s baked=%s reduce_motion=%s" % [CardTurn.wearing(),
+		str(CardTurn.back() != null), str(Preferences.active.reduce_motion)])
+	await _wait(3.5)
+	var screen: CombatScreen = main._screen
+	var hand: HandView = screen._hand
+	var cb: CombatState = screen.game.cb
+	# A full five-card hand, whatever the fight opened with (presentation only;
+	# this probe never saves).
+	while cb.hand.size() < 5 and not cb.draw.is_empty():
+		cb.hand.append(cb.draw.pop_back())
+	screen._sync_all()
+	await _wait(1.0)
+	var uids: Array[int] = []
+	for c: CardInst in cb.hand:
+		uids.append(c.uid)
+	_row("HAND %d cards %s deck=%d" % [uids.size(), str(uids), cb.hand.size() + cb.draw.size() + cb.discard.size()])
+	_phase = "rest0"
+	await _wait(1.0 if cfg["warm"] == "1" else REST0)
+	var deals: int = 1 if cfg["warm"] == "1" else int(cfg["deals"])
+	for k: int in range(1, deals + 1):
+		_phase = "prep%d" % k
+		for u: int in hand.uids():
+			hand.remove_card(u)
+		await _wait(1.2)
+		_phase = "deal%d" % k
+		var evs: Array[Dictionary] = []
+		for u: int in uids:
+			evs.append({"t": EventTypes.DRAW, "uid": u})
+		await _drain(screen, evs, "DEAL %d" % k)
+		_phase = "rest%d" % k
+		await _wait(1.5)
+	var reshuffles: int = 1 if cfg["warm"] == "1" else int(cfg["reshuffles"])
+	for k: int in range(1, reshuffles + 1):
+		_phase = "rprep%d" % k
+		# Every card into the discard, the views gone: the next draw reshuffles.
+		for u: int in hand.uids():
+			hand.remove_card(u)
+		cb.discard.append_array(cb.hand)
+		cb.discard.append_array(cb.draw)
+		cb.hand.clear()
+		cb.draw.clear()
+		screen._sync_all()
+		await _wait(1.2)
+		_phase = "resh%d" % k
+		# Only this draw's events: the start batch was hard-synced and left
+		# its own in the queue.
+		cb.queue.clear()
+		screen.game.rules._draw_from_pile(screen.game.run, cb, 5)
+		var evs: Array[Dictionary] = []
+		evs.assign(cb.queue)
+		cb.queue.clear()
+		var kinds: Array[String] = []
+		for ev: Dictionary in evs:
+			kinds.append("%s%s" % [str(ev["t"]), (":" + str(ev["n"])) if ev.has("n") else ""])
+		await _drain(screen, evs, "RESH %d events=%s" % [k, ",".join(kinds)])
+		_phase = "rrest%d" % k
+		await _wait(1.5)
+	_phase = "end"
+	if _rows != null:
+		for line: String in _frame_rows:
+			_rows.store_line(line)
+	_row("DONE")
+	if _rows != null:
+		_rows.close()
+	if cfg["quit"] == "1":
+		get_tree().quit()

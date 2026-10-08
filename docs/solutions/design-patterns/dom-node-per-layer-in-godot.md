@@ -47,13 +47,17 @@ without naming either — the omission is harmless only until someone resolves i
 against the wrong tree, which this project has already done once, for three
 commits.
 
-At [presentation/combat/hud_bar.gd:134](../../../presentation/combat/hud_bar.gd#L130) (`FAN_FACES`) the fan is capped at 16
+At `presentation/combat/hud_bar.gd@a86b2f07:134`, where `FAN_FACES` stood, the fan is capped at 16
 faces, and there are three piles (draw, ashes, discard). So a deep board was up
 to **48 Control nodes** — each with its own transform, style cache and layout
 slot — all drawing the *identical* texture.
 
 Nothing was broken. It rendered correctly. It was simply the browser's only
 option imported into an engine that has better ones.
+
+> **Since 2026-10-05** the piles are stacks of real cards (`PileStack`, #657
+> PR 5): still one `_draw()` each and no node per card. The fan described here
+> is the tree as it stood at `a86b2f07`, and its citations are pinned there.
 
 ## Guidance
 
@@ -124,7 +128,7 @@ Two Godot details this ran into:
   `rect_origin - pivot`. Getting this wrong shifts the fan rather than erroring.
 - **An inner class cannot see the outer class's statics unqualified.**
   `_fan_angle(...)` inside `class Fan` fails to parse; `HudBar._fan_angle(...)`
-  resolves ([presentation/combat/hud_bar.gd:1328](../../../presentation/combat/hud_bar.gd#L973) (`_fan_angle`)).
+  resolves (`presentation/combat/hud_bar.gd@a86b2f07:1328`, where `_fan_angle` stood).
 
 ## Why This Matters
 
@@ -184,11 +188,12 @@ benchmark's `src/pile-chrome.js:4-8` — `PILE_FAN_DEG`, `PILE_FAN_MAX_DEG`,
 
 **Two live `add_child` loops in this file are exemptions, not survivors.**
 
-- `presentation/combat/hud_bar.gd:1234-1262` (in `fly_backs`) builds a
-  `TextureRect` per flyer and gives each its own `Tween` — transient nodes that
+- `presentation/combat/hud_bar.gd@a86b2f07:1234-1262`, `fly_backs`, built a
+  `TextureRect` per flyer and gave each its own `Tween` — transient nodes that
   each need an independent animation, which is exactly the case the rule above
-  carves out.
-- `presentation/combat/hud_bar.gd:446-468` (in `_sync_candles`) builds one
+  carves out. (#657 PR 5 replaced it with `PileStream`, which draws the whole
+  reshuffle in one `_draw()`.)
+- `presentation/combat/hud_bar.gd:417-439` (in `_sync_candles`) builds one
   non-interactive `TextureRect` per point of max energy. Node count scales with
   a gameplay value that stays small, which is the second carve-out.
 

@@ -26,9 +26,8 @@ extends Control
 ## without this widget learning what a RunState is.
 ##
 ## The hero plate comes in both widths, because the reason for preferring one was
-## never checked: see PLATE_PARITY_W. Everything else — including the pile fan's
-## 5°/30° rule and one visible face per card — follows the benchmark's own
-## pile-chrome.js.
+## never checked: see PLATE_PARITY_W. The piles are this port's own: stacks of
+## real cards (PileStack, #657), where the benchmark fanned one painting per card.
 
 signal end_turn_pressed
 signal menu_pressed
@@ -36,6 +35,8 @@ signal deck_pressed
 signal potion_pressed(slot: int)
 signal lantern_pressed
 signal pile_pressed(pile: StringName)
+## A pile answered a card that reached it (`bump_pile`).
+signal pile_bumped(pile: StringName)
 
 const ART: String = "res://assets/art/"
 
@@ -108,7 +109,9 @@ const PLATE_WIDE_LEAD: float = 76.0
 ## A pile's box where the book authors none. Every shape at 6e06911 does author
 ## one, so this is a floor rather than a default in practice.
 const PILE_BOX: Vector2 = Vector2(96.0, 148.0)
-## How tall the card painted in a pile face stands in its square.
+## How tall a pile's card stands in the square at the foot of its box: the
+## card the retired pile paintings showed, so the flights that leave and reach
+## a pile kept their size when the stacks replaced them.
 const PILE_CARD_H: float = 0.867
 
 const PLATE_CX: float = 245.0       # both widths hang off this centre
@@ -126,12 +129,6 @@ const PLATE_LABEL_W: float = 52.0   # .hp-label min-width
 ## the shadow, insets the rail 4px each side, and flattens the radius to 2.
 const RAIL_H: float = 9.0
 const RAIL_FRAMED_INSET: float = 4.0
-## The fan, from the benchmark's pile-chrome.js: one visible face per card up to
-## a cap, 5° between them, and the whole span averaged down once it would pass
-## 30°. The count text stays the true size — the faces are how many you can see.
-const FAN_STEP: float = 5.0    # PILE_FAN_DEG
-const FAN_SPAN: float = 30.0   # PILE_FAN_MAX_DEG
-const FAN_FACES: int = 16      # PILE_FAN_MAX_LAYERS
 ## `.pile-exhaust { opacity: 0.9 }` — the ash pile sits a shade back.
 const ASH_FADE: float = 0.9
 const LANTERN_PIP_SIDE: float = 5.0
@@ -156,6 +153,8 @@ const ART_READY_BRIGHT: float = 1.22
 const KINDLE_TIME: float = 1.1
 const KINDLE_BRIGHT: float = 1.2
 const KINDLE_SCALE: float = 1.07
+## Reduce Motion's reshuffle: one pulse of light on each pile, this long.
+const RM_PULSE: float = 0.2
 ## `.lbp { transition: background .25s, box-shadow .25s }` (styles.css:1112) —
 ## an ember pip fades between its two readings rather than snapping.
 const LBP_BLEND: float = 0.25
@@ -254,6 +253,10 @@ var _hover_tw: Dictionary = {}
 var _draw_pile: Pile
 var _ashes_pile: Pile
 var _discard_pile: Pile
+## The table's back the piles wear (CardTurn.back), followed as it is baked.
+var _worn_back: CardBacks.Baked = null
+## The reshuffle in flight, or null.
+var _stream: PileStream = null
 var _vial_frame: bool = true
 ## The last nine values drawn; empty forces the first pass through.
 var _last: PackedInt32Array = PackedInt32Array()
@@ -265,42 +268,10 @@ var _chrome_in: Array[Control] = []
 
 
 ## One pile's parts. A class rather than three sets of members or a dictionary
-## of dictionaries: the fan is rebuilt whenever the count moves, and the strict
-## gate wants every piece typed at that moment.
+## of dictionaries: the strict gate wants every piece typed.
 class Pile:
 	var count: Label
-	var stack: Fan
-	var shown: int = -1      # last count drawn; -1 forces the first build
-
-
-## The fan of card backs, drawn rather than assembled.
-##
-## A pile shows one face per card up to sixteen, so three piles at depth is up
-## to FORTY-EIGHT nodes — every one a full Control with its own transform,
-## style and layout slot, all of them drawing the identical texture. That is
-## how you would do it in a DOM, where a node is the only thing you can rotate;
-## in Godot the same picture is one `_draw()` per pile and nothing to allocate
-## when the count moves.
-##
-## The geometry is unchanged: each face is a `face`-square laid on the bottom of
-## the box and turned about a point at 50%/92% of it, which is where a real deck
-## pivots — near the bottom edge, not the middle.
-class Fan:
-	extends Control
-	var tex: Texture2D
-	var face: float = 96.0
-	var faces: int = 0
-
-	func _draw() -> void:
-		if tex == null or faces <= 0:
-			return
-		var pivot: Vector2 = Vector2(face * 0.5, size.y - face + face * 0.92)
-		var origin: Vector2 = Vector2(0.0, size.y - face) - pivot
-		for i: int in range(faces):
-			# Qualified: an inner class does not see the outer one's statics.
-			var a: float = HudBar._fan_angle(i, faces)
-			draw_set_transform(pivot, deg_to_rad(a), Vector2.ONE)
-			draw_texture_rect(tex, Rect2(origin, Vector2(face, face)), false)
+	var stack: PileStack
 
 
 ## A mipmapped copy of one UI texture. The art is 512² and lands here between 14
@@ -383,10 +354,10 @@ func _init(vial_frame: bool = true, wide_plate: bool = true,
 		_build_plate()
 	_build_energy()
 	_build_lantern()
-	# Three piles, not two, each wearing its own back — the blue vault, the warm
-	# discard, the charred ash. Their boxes are `UIC.draw` / `.ashes` / `.discard`
-	# and come from the book, which is where the three rects that used to be
-	# written out here were copied from in the first place.
+	# Three piles of real cards: the draw backs up, the discard face up, the
+	# ash charred (PileStack). Their boxes are `UIC.draw` / `.ashes` /
+	# `.discard` and come from the book, which is where the three rects that
+	# used to be written out here were copied from in the first place.
 	_draw_pile = _build_pile(&"draw", Locale.active.t("ui.combat.draw"), 1.0)
 	_ashes_pile = _build_pile(&"ashes", Locale.active.t("ui.combat.ashes"), ASH_FADE)
 	_discard_pile = _build_pile(&"discard", Locale.active.t("ui.combat.discard"), 1.0)
@@ -953,9 +924,9 @@ func _build_lantern() -> void:
 	set_lantern(0, false)
 
 
-## `.pile-btn` — a fan of card backs, the count on its shoulder, the name
-## underneath. `.pile-stack` is inset 18px from the bottom to leave that name
-## room, and the faces are drawn at the box's own width.
+## `.pile-btn` — the stack, the count on its shoulder, the name underneath.
+## The stack's box is inset 18px from the bottom to leave that name room, and
+## its card stands PILE_CARD_H of the square at the foot of that box.
 func _build_pile(which: StringName, name_text: String, fade: float) -> Pile:
 	var root: Control = Control.new()
 	# The pile is drawn against PILE_BOX whatever the shape; the shell is what
@@ -974,12 +945,16 @@ func _build_pile(which: StringName, name_text: String, fade: float) -> Pile:
 	_hover_glide(btn, shell, 3.0)
 
 	var p: Pile = Pile.new()
-	p.stack = Fan.new()
-	p.stack.tex = icon("piles/" + str(which))
-	p.stack.face = box.x
+	var kind: PileStack.Kind = PileStack.Kind.DRAW
+	if which == &"discard":
+		kind = PileStack.Kind.DISCARD
+	elif which == &"ashes":
+		kind = PileStack.Kind.ASHES
+	p.stack = PileStack.new(kind)
 	p.stack.size = Vector2(box.x, box.y - 18.0)
-	p.stack.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	p.stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var face: float = box.x
+	p.stack.card = Vector2(CardView.CARD_W / CardView.CARD_H, 1.0) * face * PILE_CARD_H
+	p.stack.base = Vector2(face * 0.5, p.stack.size.y - face * 0.5)
 	btn.add_child(p.stack)
 
 	p.count = _num_label(16.0, PARCHMENT, GlassStyle.CINZEL_800, 0)
@@ -1020,20 +995,40 @@ func pile_rect(which: StringName) -> Rect2:
 	return Rect2(xf.origin, p.stack.size * xf.get_scale())
 
 
-## The top card of a pile as it is painted, in global coordinates: where a
-## card dealt from the pile leaves and where a card sent to it lands. The
-## painting's card stands PILE_CARD_H of its face square tall, centred in it
-## (the used rect of assets/art/piles/*.png), and a card's own shape is laid
-## over that height. The face square sits at the foot of the stack's box.
+## The top card of a pile as it stands now, in global coordinates: where a
+## card dealt from the pile leaves and where a card sent to it lands. It
+## rises as the pile thickens (PileStack.top_rect).
 func pile_card(which: StringName) -> Rect2:
 	var p: Pile = _pile(which)
 	if p == null or p.stack == null:
 		return Rect2(global_position + size * 0.5, Vector2.ZERO)
-	var face: float = p.stack.face
-	var card: Vector2 = Vector2(CardView.CARD_W / CardView.CARD_H, 1.0) * face * PILE_CARD_H
-	var centre: Vector2 = Vector2(face * 0.5, p.stack.size.y - face * 0.5)
+	var top: Rect2 = p.stack.top_rect()
 	var xf: Transform2D = p.stack.get_global_transform()
-	return Rect2(xf * (centre - card * 0.5), card * xf.get_scale())
+	return Rect2(xf * top.position, top.size * xf.get_scale())
+
+
+## How many cards a pile shows.
+func pile_count(which: StringName) -> int:
+	var p: Pile = _pile(which)
+	return p.stack.count if p != null and p.stack != null else 0
+
+
+## The discard's top: card `uid`, wearing `face` (a baked face's picture),
+## lying `rot` radians round and `slip` global px off square, as it landed.
+## A null face names the card and keeps the picture until its face lands.
+func set_discard_top(uid: int, face: Texture2D, rot: float, slip: Vector2) -> void:
+	var stack: PileStack = _discard_pile.stack
+	var k: Vector2 = stack.get_global_transform().get_scale()
+	stack.set_face(uid, face, rot, slip / Vector2(maxf(k.x, 0.001), maxf(k.y, 0.001)))
+
+
+## The card the discard pile shows on top, -1 for none.
+func discard_top_uid() -> int:
+	return _discard_pile.stack.face_uid()
+
+
+func clear_discard_top() -> void:
+	_discard_pile.stack.clear_face()
 
 
 func _pile(which: StringName) -> Pile:
@@ -1124,6 +1119,7 @@ func _nope_at(u: float) -> void:
 ## two CSS animations started on the same frame do.
 func _process(delta: float) -> void:
 	_beacon_t = fmod(_beacon_t + delta, 17.6)
+	_follow_back()
 	var pstep: float = delta / LBP_BLEND
 	for i: int in range(_lantern_pips.size()):
 		if _pip_u[i] < 1.0:
@@ -1214,52 +1210,59 @@ func play_entrance() -> void:
 			0.0, 1.0, 0.5)
 
 
-## `playReshuffleCeremony` (drain.js:132) — the discard walks back into the draw
-## pile. The faces belong to the piles, so the flight is flown from here rather
-## than from the hand: no CardView exists for a card nobody has drawn, and the
-## art in the air is the same pile back the stack is already drawing.
-##
-## Fire-and-forget: the caller waits `seconds` and then bumps the pile, exactly
-## as the drain awaits `flyCardBacks` and calls `bumpPile` after it.
-func fly_backs(from: StringName, to: StringName, n: int, seconds: float) -> void:
-	var src: Rect2 = pile_rect(from)
-	var dst: Rect2 = pile_rect(to)
-	var tex: Texture2D = icon("piles/" + str(from))
-	if tex == null or n <= 0:
+## `playReshuffleCeremony` (drain.js:132) — the discard walks back into the
+## draw pile, now as real cards (PileStream): the discard's top turning face
+## down as it lifts, the rest the table's back, the block turned over. The
+## discard shows backs while it empties and the deck squares itself as the
+## last lands. The caller walks the counts on `left` and `landed` and waits
+## until the stream is `done()`; a tap completes it early.
+func reshuffle(n: int) -> PileStream:
+	var back: Texture2D = _worn_back.stage if _worn_back != null else null
+	var face: Texture2D = _discard_pile.stack.face_texture()
+	_drop_stream()
+	_stream = PileStream.new(n, pile_card(&"discard"), pile_card.bind(&"draw"),
+		back, face, size.y)
+	_stream.left.connect(func(_k: int) -> void: _discard_pile.stack.set_flipped(true))
+	var last: int = PileStream.shown(n) - 1
+	_stream.landed.connect(func(k: int) -> void:
+		if k == last:
+			_draw_pile.stack.jog())
+	add_child(_stream)
+	return _stream
+
+
+## The reshuffle is over: its stream goes and the emptied discard faces up.
+func end_reshuffle() -> void:
+	_drop_stream()
+	_discard_pile.stack.set_flipped(false)
+
+
+func _drop_stream() -> void:
+	if _stream != null and is_instance_valid(_stream):
+		_stream.queue_free()
+	_stream = null
+
+
+## Reduce Motion's reshuffle: no stream, the counts move, and each pile gives
+## one pulse of light.
+func pulse_piles() -> void:
+	for p: Pile in [_draw_pile, _discard_pile]:
+		var stack: PileStack = p.stack
+		var tw: Tween = stack.create_tween()
+		tw.tween_property(stack, "modulate", Color(1.25, 1.25, 1.25), RM_PULSE * 0.5)
+		tw.tween_property(stack, "modulate", Color.WHITE, RM_PULSE * 0.5)
+
+
+## Wear the table's back on every pile, and follow it: it is baked as the
+## fight loads (CardTurn.prewarm), after the HUD is built.
+func _follow_back() -> void:
+	var back: CardBacks.Baked = CardTurn.back()
+	if back == _worn_back:
 		return
-	# Staggered inside the same window the whole ceremony gets, so a six-card
-	# reshuffle reads as a stream rather than as one thick card.
-	var stagger: float = seconds * 0.35 / float(maxi(1, n))
-	var flight: float = maxf(0.12, seconds - stagger * float(n - 1))
-	for i: int in range(n):
-		var face: TextureRect = TextureRect.new()
-		face.texture = tex
-		face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		face.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-		face.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		face.size = src.size
-		face.pivot_offset = src.size * 0.5
-		face.position = src.position - global_position
-		face.modulate.a = 0.0
-		add_child(face)
-		# A lifted arc, so the stream bows over the stage instead of sliding
-		# along the bottom edge behind the hand.
-		var lift: float = 90.0 + float(i % 3) * 26.0
-		var p0: Vector2 = face.position
-		var p1: Vector2 = dst.position - global_position
-		var ctrl: Vector2 = (p0 + p1) * 0.5 - Vector2(0.0, lift)
-		var tw: Tween = face.create_tween()
-		tw.tween_interval(stagger * float(i))
-		tw.tween_method(func(x: float) -> void:
-			if not is_instance_valid(face):
-				return
-			var e: float = Motion.ease(Motion.OUT_SOFT, x)
-			face.position = Motion.quad(p0, ctrl, p1, e)
-			face.rotation = deg_to_rad(lerpf(0.0, 18.0, sin(e * PI)))
-			face.modulate.a = minf(1.0, e * 6.0),
-			0.0, 1.0, flight)
-		tw.tween_callback(face.queue_free)
+	_worn_back = back
+	var stage: Texture2D = back.stage if back != null else null
+	for p: Pile in [_draw_pile, _discard_pile, _ashes_pile]:
+		p.stack.wear_back(stage)
 
 
 ## Where the lantern hangs, in global px — embers spilled by dying glass fly to
@@ -1277,6 +1280,7 @@ func bump_pile(which: StringName) -> void:
 	var p: Pile = _pile(which)
 	if p == null or p.stack == null:
 		return
+	pile_bumped.emit(which)
 	_keyframe_pop(p.stack, 1.05, -4.0, 0.28)
 
 
@@ -1309,27 +1313,12 @@ func _keyframe_pop(node: Control, peak: float, lift: float, seconds: float) -> v
 	tw.parallel().tween_property(node, "position", home, seconds * 0.6)
 
 
-## One face per card, so the pile is its own gauge — the count text is only
-## there for the tail past the cap. An empty pile hides the plate and keeps the
-## name and the zero (`.pile-btn.is-empty .pile-stack { visibility: hidden }`).
+## The stack is its own gauge, thicker as it holds more; the count says the
+## exact number. An empty pile draws nothing and keeps the name and the zero
+## (`.pile-btn.is-empty .pile-stack { visibility: hidden }`).
 func _sync_pile(p: Pile, n: int) -> void:
 	p.count.text = str(n)
-	if p.shown == n:
-		return  # the benchmark's own guard: redraw only when the count moves
-	p.shown = n
-	var faces: int = mini(maxi(n, 0), FAN_FACES)
-	p.stack.visible = faces > 0
-	p.stack.faces = faces
-	p.stack.queue_redraw()
-
-
-## pileFanAngleDeg: a flat centred fan, 5° a card, the span averaged down once
-## it would exceed 30° — so a 20-card pile is no wider than a 7-card one.
-static func _fan_angle(i: int, faces: int) -> float:
-	if faces <= 1:
-		return 0.0
-	var span: float = minf(float(faces - 1) * FAN_STEP, FAN_SPAN)
-	return -span * 0.5 + float(i) * (span / float(faces - 1))
+	p.stack.set_count(n)
 
 
 ## `.end-turn` — 120px of seal with END struck across it.

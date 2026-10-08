@@ -12,6 +12,12 @@ signal combat_over(result: String)
 signal result_continue
 signal menu_requested
 signal potion_requested(slot: int)
+## Each frame this screen processes, with its delta. The drain's own waits
+## step on it rather than on the tree's frames: a screen freed meanwhile never
+## ticks again, so nothing it awaited resumes on it (the tree's `process_frame`
+## did, and logged "resumed after await"), and a screen held under a modal
+## holds its waits, as it holds its tweens.
+signal _frame_ticked(delta: float)
 
 ## The composition this screen is drawn for, and the act it is showing.
 ##
@@ -181,6 +187,13 @@ const HAND_H: float = 248.0
 
 ## The size the Kindle chip is DRAWN at, whatever the book then scales it to.
 const KINDLE_BOX: Vector2 = Vector2(116.0, 32.0)
+## The pile inspector: its pane at most this big, and its cards on baked faces
+## at this share of a hand card (a little smaller held sideways on a phone).
+const INSPECTOR_W: float = 760.0
+const INSPECTOR_H: float = 600.0
+const INSPECTOR_CARD: float = 0.6
+const INSPECTOR_PHONE_CARD: float = 0.48
+const INSPECTOR_GAP: float = 12.0
 
 ## `clampCombatChrome` (combat.js:516) — the two lines an actor's status may not
 ## cross. Measured on the reference at pad-landscape they come out at 60 and 654,
@@ -399,7 +412,11 @@ var _inspector: Control
 var _inspector_pane: PanelContainer
 var _inspector_title: Label
 var _inspector_subtitle: Label
-var _inspector_rows: VBoxContainer
+var _inspector_scroll: ScrollContainer
+## The open inspector's cards, on baked faces (CardGrid), or null; and what
+## its scroll holds, the grid or the word for an empty pile.
+var _inspector_grid: CardGrid = null
+var _inspector_body: Control = null
 var _vignette: ColorRect
 var _vignette_mat: ShaderMaterial
 var _sky: SkyField
@@ -427,9 +444,11 @@ var _atmos_t: float = 0.0
 ## follows the pointer across empty stage too.
 var _aim_at: Vector2 = Vector2.ZERO
 var _has_aim_at: bool = false
-## `pileVisualOverride` (drain.js:192) — what a pile is SHOWING while a wave is
-## in the air, as against what the engine says it holds. Empty means the engine.
+## What a pile shows while the reshuffle walks its cards across, as against
+## what `_push_hud` would read off the domain. Empty outside the reshuffle.
 var _pile_override: Dictionary[StringName, int] = {}
+## The discard's face-up top (#657).
+var _top: DiscardTop
 var _over_emitted: bool = false
 ## `choreoDone` — whether the card currently resolving has already been swung
 ## for. Starts spent, so nothing lunges before a card is ever played.
@@ -497,6 +516,7 @@ func _init(game_ref: GlassvowGame, stage_shape: StringName = StageShape.IDENTITY
 	act = act_index
 	_authored = LayoutBook.resolve(&"battlefield", shape, act)
 	seq.handler = _handle_event
+	_top = DiscardTop.new(_find_card, _rules.card_data)
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = GlassStyle.theme()
 	_sfx = sfx
@@ -713,6 +733,8 @@ func _build_ui() -> void:
 	_hand.card_hover_changed.connect(_on_card_hover_changed)
 	_hand.card_drag_armed.connect(_on_card_drag_armed)
 	_hand.card_drag_refused.connect(_on_card_drag_refused)
+	_hand.face_ready.connect(_top.face_ready)
+	_top.show_on(_hud, _hand)
 	# The fan is the one part of the composition whose spread is a function of
 	# the LIVE stage width rather than the shape's reference — inside the flex
 	# cap those differ by up to 12%, and that difference is exactly the room the
@@ -856,6 +878,7 @@ func _build_hud() -> void:
 	_shake_host.add_child(_hud)
 	if sibling >= 0:
 		_shake_host.move_child(_hud, sibling)
+	_top.show_on(_hud, _hand)
 	if not _flame_reading.is_empty():
 		_hud.show_flame(_flame_reading, true)
 	_push_hud()
@@ -907,15 +930,11 @@ func _build_inspector() -> void:
 	_inspector_subtitle.add_theme_color_override("font_color", GlassStyle.TEXT_DIM)
 	column.add_child(_inspector_subtitle)
 
-	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	column.add_child(scroll)
-	_inspector_rows = VBoxContainer.new()
-	_inspector_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_inspector_rows.add_theme_constant_override("separation", 8)
-	scroll.add_child(_inspector_rows)
+	_inspector_scroll = ScrollContainer.new()
+	_inspector_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_inspector_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_inspector_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(_inspector_scroll)
 
 	var close: Button = Button.new()
 	close.text = Locale.active.t("ui.menu.close").to_upper()
@@ -933,8 +952,8 @@ func _fit_inspector() -> void:
 	var ref: Vector2i = StageShape.REFERENCES.get(
 		shape, StageShape.REFERENCES[StageShape.IDENTITY])
 	var stage: Vector2 = Vector2(maxf(size.x, float(ref.x)), maxf(size.y, float(ref.y)))
-	var box: Vector2 = Vector2(minf(520.0, stage.x - 32.0),
-		minf(540.0, stage.y - 48.0))
+	var box: Vector2 = Vector2(minf(INSPECTOR_W, stage.x - 32.0),
+		minf(INSPECTOR_H, stage.y - 48.0))
 	_inspector_pane.offset_left = -box.x * 0.5
 	_inspector_pane.offset_right = box.x * 0.5
 	_inspector_pane.offset_top = -box.y * 0.5
@@ -945,52 +964,67 @@ func _show_deck() -> void:
 	_show_inspector(Locale.active.t("ui.combat.deckInspectorTitle"), game.run.player.deck)
 
 
+## A pile's cards, as the inspector shows them. The draw pile is sorted, so
+## looking does not tell the draw order; the discard and the ash are shown
+## from the top down, the last card to reach them first.
 func _show_pile(which: StringName) -> void:
 	match which:
 		&"draw":
-			_show_inspector(Locale.active.t("ui.combat.drawPileTitle"), game.cb.draw)
+			var sorted: Array[CardInst] = game.cb.draw.duplicate()
+			sorted.sort_custom(func(a: CardInst, b: CardInst) -> bool:
+				return [String(a.id), a.up, a.uid] < [String(b.id), b.up, b.uid])
+			_show_inspector(Locale.active.t("ui.combat.drawPileTitle"), sorted)
 		&"discard":
-			_show_inspector(Locale.active.t("ui.combat.discardPileTitle"), game.cb.discard)
+			_show_inspector(Locale.active.t("ui.combat.discardPileTitle"), _top_down(game.cb.discard))
 		&"ashes":
-			_show_inspector(Locale.active.t("ui.combat.ashes"), game.cb.exhaust)
+			_show_inspector(Locale.active.t("ui.combat.ashes"), _top_down(game.cb.exhaust))
 
 
+static func _top_down(pile: Array[CardInst]) -> Array[CardInst]:
+	var out: Array[CardInst] = pile.duplicate()
+	out.reverse()
+	return out
+
+
+## The inspector shows the cards themselves on baked faces (CardGrid, as the
+## deck view does): one face per distinct card and a live card only under the
+## finger, so a 30-card pile costs no more than its faces. Nothing in it can be
+## chosen.
 func _show_inspector(title: String, cards: Array[CardInst]) -> void:
-	for child: Node in _inspector_rows.get_children():
-		_inspector_rows.remove_child(child)
-		child.queue_free()
+	_drop_inspector_grid()
 	_inspector_title.text = title.to_upper()
 	_inspector_subtitle.text = Locale.active.t("ui.combat.inspectorCardCountOne" if cards.size() == 1 else "ui.combat.inspectorCardCountMany", {"count": cards.size()})
-	var counts: Dictionary[String, int] = {}
-	var order: PackedStringArray = []
+	var rows: Array[Dictionary] = []
 	for card: CardInst in cards:
-		var key: String = String(card.id) + ("+" if card.up else "")
-		if not counts.has(key):
-			counts[key] = 0
-			order.append(key)
-		counts[key] += 1
-	for key: String in order:
-		var id: String = key.trim_suffix("+")
-		var definition: Dictionary = game.content.cards.get(id, {})
-		var row: HBoxContainer = HBoxContainer.new()
-		var name: Label = _label(str(definition.get("name", id)) + ("+" if key.ends_with("+") else ""))
-		name.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(name)
-		var count: Label = _label("×%d" % counts[key])
-		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		count.add_theme_color_override("font_color", GlassStyle.TEXT_DIM)
-		row.add_child(count)
-		_inspector_rows.add_child(row)
-	if cards.is_empty():
+		rows.append({"id": "card:%d" % card.uid, "card": card,
+			"definition": _rules.card_data(card), "disabled": true})
+	if rows.is_empty():
 		var empty: Label = _label(Locale.active.t("ui.combat.inspectorEmpty"))
 		empty.add_theme_color_override("font_color", GlassStyle.TEXT_DIM)
-		_inspector_rows.add_child(empty)
+		_inspector_body = empty
+	else:
+		_inspector_grid = CardGrid.new(rows, INSPECTOR_GAP)
+		_inspector_grid.set_card_scale(INSPECTOR_PHONE_CARD if shape == &"phone-landscape" \
+			else INSPECTOR_CARD)
+		_inspector_body = _inspector_grid
+	_inspector_scroll.add_child(_inspector_body)
+	_inspector_scroll.scroll_vertical = 0
 	_inspector.visible = true
 
 
 func _close_inspector() -> void:
 	_inspector.visible = false
+	_drop_inspector_grid()
+
+
+## The grid goes with the inspector, and every live card in it.
+func _drop_inspector_grid() -> void:
+	_inspector_grid = null
+	if _inspector_body == null:
+		return
+	_inspector_scroll.remove_child(_inspector_body)
+	_inspector_body.queue_free()
+	_inspector_body = null
 
 
 ## `radial-gradient(ellipse at 50% 45%, transparent 55%, edge 100%)` and the
@@ -2024,6 +2058,7 @@ func _on_kindle_toggled(on: bool) -> void:
 ## the fight: the grain jumping, and the vignette's heartbeat once the player is
 ## low enough for the screen itself to say so.
 func _process(delta: float) -> void:
+	_frame_ticked.emit(delta)
 	_atmos_t += delta
 	if _grain_mat != null:
 		var step: int = int(_atmos_t / GRAIN_STEP) % GRAIN_JUMPS.size()
@@ -2379,11 +2414,9 @@ func _float(at: Vector2, msg: String, cls: String = "dmg",
 	_floaters.float_text(at, msg, cls, tint, dx, icon, icon_px)
 
 
-## `presentation.holdPendingPileArrivals` in one line: a card in flight has
-## already left the engine's hand, so the pile it is heading for would otherwise
-## show its new count while the card is still mid-air. Nothing is held here yet —
-## the counts are corrected by `_sync_all` when the pump idles — but the bump is
-## the arrival the flight was missing.
+## A card has reached `which`: the pile bumps (`pileBump`). Its count moved
+## already, as the card landed (`_push_hud` counts a card in the air, or whose
+## event is still to come, as not there yet).
 func _land_in_pile(which: StringName) -> void:
 	_hud.bump_pile(which)
 
@@ -2394,9 +2427,10 @@ func _deal_gap(wave: int) -> void:
 	var gap: float = _hand.deal_gap(wave)
 	if seq.instant or gap <= 0.0:
 		return
-	var timer: SceneTreeTimer = get_tree().create_timer(gap)
-	while timer.time_left > 0.0 and _hand.deal_gap(wave) > 0.0:
-		await get_tree().process_frame
+	var left: float = gap
+	while left > 0.0 and _hand.deal_gap(wave) > 0.0:
+		var step: float = await _frame_ticked
+		left -= step
 
 
 ## A played card that is not thrown at a foe goes where its own next event
@@ -2409,7 +2443,7 @@ func _play_away(uid: int) -> void:
 	var pile: StringName = &"ashes" if to == EventTypes.EXHAUST else &"discard"
 	if to == EventTypes.TO_DISCARD or to == EventTypes.EXHAUST:
 		_hand.spend_to(uid, _hud.pile_card(pile), _leave_for(pile), 0.0,
-			_card_arrived.bind(pile))
+			_card_arrived.bind(pile, uid))
 	else:
 		_hand.remove_card(uid)
 
@@ -2418,10 +2452,15 @@ static func _leave_for(pile: StringName) -> HandView.Leave:
 	return HandView.Leave.BURN if pile == &"ashes" else HandView.Leave.DISCARD
 
 
-## A card has landed on `pile`: the pile answers it, and ash stirs where a
-## burnt one lands.
-func _card_arrived(pile: StringName) -> void:
-	_land_in_pile(pile)
+## Card `uid` has landed on `pile`: the pile counts it and answers it (`bump`
+## false for all but the last of an end of turn's sweep), ash stirs where a
+## burnt one lands, and a card on the discard is its face-up top.
+func _card_arrived(pile: StringName, uid: int, swept: bool = false, bump: bool = true) -> void:
+	_push_hud()
+	if pile == &"discard":
+		_top.arrive(uid, swept)
+	if bump:
+		_land_in_pile(pile)
 	if pile == &"ashes":
 		_vfx.motes(_hud.pile_card(&"ashes").get_center(), ASH_GREY, 7, ASH_MOTE_LIFE)
 
@@ -2461,29 +2500,23 @@ func _handle_event(ev: Dictionary) -> void:
 				# The wave is paced by its own size, so the handler asks how many
 				# draws it heads rather than guessing from the hand.
 				var wave: int = seq.run_length(EventTypes.DRAW)
-				# `replacePileVisualOverride` — opened on the FIRST card of the
-				# wave and holding what the pile had before the engine emptied it.
-				if not _pile_override.has(&"draw"):
-					_pile_override[&"draw"] = game.cb.draw.size() + wave
 				_sfx.play(&"draw")
 				_hand.add_card(inst, _rules.card_data(inst),
 					_rules.eff_cost(game.run, game.cb, inst))
-				# This card has now left the pile, so the pile is one lighter. The
-				# count walks down with the deal instead of arriving already spent.
-				_pile_override[&"draw"] = maxi(0, int(_pile_override[&"draw"]) - 1)
+				# The card leaves from the top as it was; then the pile is one
+				# lighter (this draw has left the queue `_push_hud` reads), so
+				# the count walks down with the deal.
+				var top: Rect2 = _hud.pile_card(&"draw")
 				_push_hud()
-				_hand.deal_in(uid, _hud.pile_card(&"draw"))
+				_hand.deal_in(uid, top)
 				# Only the stagger is waited on: the flights overlap, which is
 				# what makes a five-card draw read as one deal rather than five.
 				# A tap that landed the deal takes the stagger away too.
 				await _deal_gap(wave)
 				if seq.run_length(EventTypes.DRAW) == 1:
-					# `clearPileVisualOverride` + `bumpPile` (drain.js:235, :216) —
-					# the wave is over, so the pile goes back to telling the truth
-					# and takes its one bump for the whole deal.
-					_pile_override.erase(&"draw")
+					# `bumpPile` (drain.js:216) — the wave is over, and the pile
+					# takes its one bump for the whole deal.
 					_land_in_pile(&"draw")
-					_push_hud()
 		EventTypes.RESHUFFLE:
 			var shuffled: int = ev.get("n", 0)
 			await _reshuffle_ceremony(shuffled)
@@ -2520,7 +2553,10 @@ func _handle_event(ev: Dictionary) -> void:
 			var aimed: int = _play_target if typeof(_play_target) == TYPE_INT else -1
 			_play_target = null
 			if aimed >= 0 and aimed < game.cb.enemies.size():
-				_hand.strike_to(uid, _enemy_centre(aimed))
+				# A struck card bound for the discard keeps its face for the
+				# pile's top as the blow resolves.
+				_hand.strike_to(uid, _enemy_centre(aimed), seq.next_for(uid,
+					[EventTypes.TO_DISCARD, EventTypes.EXHAUST]) == EventTypes.TO_DISCARD)
 			else:
 				_play_away(uid)
 			_sync_actors()
@@ -2669,11 +2705,12 @@ func _handle_event(ev: Dictionary) -> void:
 				# Still in the hand (a discard or an exhaust from it): it flies,
 				# a card bound for the ash burning on the way (`.card.exhausting`).
 				await _wait(_hand.spend_to(uid, _hud.pile_card(pile), _leave_for(pile),
-					0.0, _card_arrived.bind(pile)))
+					0.0, _card_arrived.bind(pile, uid)))
 			elif not _hand.sent(uid):
-				# It went at a foe, or is gone: the pile copy arrives.
+				# It went at a foe, or is gone: the pile copy arrives, and a
+				# struck card's face is the discard's top as the blow resolves.
 				await _wait(HandView.SPEND_FLIGHT)
-				_land_in_pile(pile)
+				_card_arrived(pile, uid)
 			# Otherwise it left at its play and its own arrival answers.
 			_sync_actors()
 		EventTypes.POWER_CONSUMED:
@@ -2708,7 +2745,7 @@ func _handle_event(ev: Dictionary) -> void:
 				_vfx.burst(_ember_from, EMBER_ORANGE, 22, 190.0, TAU, 0.0,
 					2.4, -150.0, "spark", true, 0.85)
 			await _wait(_hand.spend_to(uid, _hud.pile_card(&"ashes"),
-				HandView.Leave.BURN, 0.0, _card_arrived.bind(&"ashes")))
+				HandView.Leave.BURN, 0.0, _card_arrived.bind(&"ashes", uid)))
 			_sync_actors()
 		EventTypes.ART:
 			var id: String = str(ev.get("id", ""))
@@ -2763,9 +2800,13 @@ func _handle_event(ev: Dictionary) -> void:
 				var last: bool = i == swept.size() - 1
 				lands = maxf(lands, _hand.spend_to(swept[i], discard_rect,
 					HandView.Leave.SWEEP, float(i) * CardFlight.SWEEP_STAGGER,
-					_card_arrived.bind(&"discard") if last else Callable()))
+					_card_arrived.bind(&"discard", swept[i], true, last)))
 			if lands > 0.0:
 				await _wait(lands)
+			# Under Reduce Motion the cards faded where they were and never
+			# landed: the last of them is the top all the same.
+			if not swept.is_empty() and _top.uid != swept[-1]:
+				_top.arrive(swept[-1], true)
 			_sync_actors()
 		EventTypes.BOSS_INTRO:
 			# drain.js:253-268 — the plate names the boss while the world dims,
@@ -2802,6 +2843,8 @@ func _handle_event(ev: Dictionary) -> void:
 				_relic_proc_text(str(ev.get("id", ""))), "notice")
 			await _wait(0.09)
 		&"addCard":
+			if str(ev.get("where", "")) == "discard":
+				_top_added(str(ev.get("id", "")))
 			_sync_all()
 			await _wait(0.09)
 		&"adamantHold":
@@ -3078,29 +3121,63 @@ func _enemy_act(ev: Dictionary) -> void:
 		await _wait(0.32)
 
 
-## `playReshuffleCeremony` (drain.js:132) — the discard walks back into the draw
-## pile as a stream of card backs, and the pile answers when they land.
+## `playReshuffleCeremony` (drain.js:132) — the discard walks back into the
+## draw pile as a stream of real cards (HudBar.reshuffle, PileStream): the
+## counts walk card by card, the discard emptying as each leaves and the draw
+## pile thickening as each lands, and the deck squares itself. A tap completes
+## it within 150 ms. Under Reduce Motion the counts move at once and each pile
+## gives one pulse.
 func _reshuffle_ceremony(n: int) -> void:
 	if seq.instant:
+		_top.clear()
 		return
 	_sfx.play(&"card")
-	# The same freeze the draw wave uses (drain.js:198): the engine has already
-	# moved the discard into the draw pile, so both piles would show the finished
-	# state while the backs are still flying between them. Held at what they were
-	# — an empty draw pile and a full discard — until the flight lands.
-	_pile_override[&"draw"] = 0
-	_pile_override[&"discard"] = n
-	_push_hud()
-	# `Array.from({ length: n })` — one back per card, capped: past eight the
-	# stream stops reading as more cards and starts reading as noise.
-	_hud.fly_backs(&"discard", &"draw", maxi(1, mini(n, 8)), 0.6)
-	await _wait(0.6)
-	_pile_override.erase(&"draw")
-	_pile_override.erase(&"discard")
-	_land_in_pile(&"draw")
-	_push_hud()
+	if Preferences.active.reduce_motion:
+		_top.clear()
+		_push_hud()
+		_hud.pulse_piles()
+		await _wait(HudBar.RM_PULSE)
+	else:
+		# The engine has already moved the discard into the draw pile; the
+		# counts start where the piles stood and walk with the stream.
+		var draw_to: int = _shown_count(&"draw")
+		var discard_from: int = _shown_count(&"discard") + n
+		_pile_override[&"draw"] = maxi(0, draw_to - n)
+		_pile_override[&"discard"] = discard_from
+		_push_hud()
+		var stream: PileStream = _hud.reshuffle(n)
+		stream.left.connect(func(k: int) -> void:
+			_pile_override[&"discard"] = discard_from - PileStream.moved(k + 1, n)
+			_push_hud())
+		stream.landed.connect(func(k: int) -> void:
+			_pile_override[&"draw"] = maxi(0, draw_to - n + PileStream.moved(k + 1, n))
+			_push_hud())
+		await _until(func() -> bool: return not is_instance_valid(stream) or stream.done(),
+			PileStream.SECONDS + PileStack.JOG_TIME + 1.0)
+		_pile_override.clear()
+		_hud.end_reshuffle()
+		_top.clear()
+		_push_hud()
 	_float(_hud.pile_rect(&"draw").get_center() + Vector2(0.0, -46.0),
 		Locale.active.t("ui.combat.reshuffle"), "notice")
+
+
+## Wait until `done` says so, at most `cap` seconds, a frame at a time
+## (`_frame_ticked`).
+func _until(done: Callable, cap: float) -> void:
+	var left: float = cap
+	while not done.call() and left > 0.0:
+		var step: float = await _frame_ticked
+		left -= step
+
+
+## A card a foe added to the discard (`addCard`, which names no card): the last
+## such card in the pile is its top.
+func _top_added(id: String) -> void:
+	for i: int in range(game.cb.discard.size() - 1, -1, -1):
+		if String(game.cb.discard[i].id) == id:
+			_top.arrive(game.cb.discard[i].uid)
+			return
 
 
 # ---------------------------------------------------------------- sync
@@ -3113,16 +3190,10 @@ func _push_hud() -> void:
 	var cb: CombatState = game.cb
 	if cb == null or _hud == null:
 		return
-	# `replacePileVisualOverride` (drain.js:149) — the engine is ALREADY post-draw
-	# by the time the drain runs, so a pile left to read its own state has emptied
-	# before the first card has left it. The override holds the pre-wave count and
-	# is walked down one card at a time as they fly (`setPileVisualOverride`,
-	# drain.js:209), which is the only way the deck can be seen being dealt from.
-	var draw_n: int = _pile_override.get(&"draw", cb.draw.size())
-	var discard_n: int = _pile_override.get(&"discard", cb.discard.size())
 	_hud.set_values(maxi(0, cb.player.hp), cb.player.max_hp, cb.player.block,
 		game.run.player.gold, cb.player.energy, cb.player.energy_max,
-		draw_n, discard_n, cb.exhaust.size(), cb.hand.size())
+		_shown_count(&"draw"), _shown_count(&"discard"), _shown_count(&"ashes"),
+		cb.hand.size())
 	var potion_names: Array[String] = []
 	for id: String in game.run.player.potions:
 		potion_names.append(str(game.content.potions.get(id, {}).get("name", id)))
@@ -3161,12 +3232,38 @@ func _on_busy_changed(busy: bool) -> void:
 		_aim_hover = -1
 		_clear_previews()
 	if not busy:
+		_pile_override.clear()
 		_sync_all()
+		_top.settle(game.cb.discard[-1].uid if game.cb != null and not game.cb.discard.is_empty() \
+			else -1)
 		# The hand the player is now holding is not the one the last preview was
 		# read against — the card may have been spent, or the foe may be dead.
 		_update_previews()
 		if hint_guide != null:
 			hint_guide.consider_combat(self)
+
+
+## How many cards a pile shows: what the domain holds, less what has not
+## happened on screen yet. The engine is ALREADY at the end of the batch when
+## the drain runs (`replacePileVisualOverride`, drain.js:149), so the events
+## still queued are taken back (EventSequencer.pile_change) and so is every
+## card still in the air to the pile, which counts as it lands. A draw pile
+## therefore loses its cards one by one as they are dealt, a discard gains
+## each as it lands, and at rest every pile is the domain's. The reshuffle
+## walks the two it moves between (`_pile_override`).
+func _shown_count(pile: StringName) -> int:
+	if _pile_override.has(pile):
+		return _pile_override[pile]
+	var cb: CombatState = game.cb
+	var held: int = cb.draw.size()
+	var flying: Array[int] = []
+	if pile == &"discard":
+		held = cb.discard.size()
+		flying = _hand.in_air(false) if _hand != null else flying
+	elif pile == &"ashes":
+		held = cb.exhaust.size()
+		flying = _hand.in_air(true) if _hand != null else flying
+	return maxi(0, held - seq.pile_change(pile, flying) - flying.size())
 
 
 ## "7" or "4×2" from the {"dmg", "times"} preview; "" for non-attacks.

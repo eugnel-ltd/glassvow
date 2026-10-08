@@ -1,0 +1,20 @@
+import sys
+# QA-only probe attach (#657 PR 5). Never committed: applied in a detached
+# export worktree for a QA export, reverted straight after.
+#   patch.py apply|revert <wt>
+MARK = "# QA-PILE-PROBE"
+wt = sys.argv[2]
+p = wt + "/application/main.gd"
+s = open(p).read()
+a = 'func _ready() -> void:\n\tprint("glassvow boot " + str(Engine.get_version_info()["string"]))\n'
+attach = a + ('\tif " ".join(OS.get_cmdline_user_args()).contains("--pile-probe="):  ' + MARK + '\n'
+              '\t\tvar pile_probe: Node = (load("res://qa_cards/pile_probe.gd") as GDScript).new()  ' + MARK + '\n'
+              '\t\tadd_child.call_deferred(pile_probe)  ' + MARK + '\n')
+if sys.argv[1] == "apply":
+    assert MARK not in s
+    assert s.count(a) == 1, "anchor"
+    s = s.replace(a, attach)
+else:
+    s = "\n".join(l for l in s.split("\n") if MARK not in l)
+open(p, "w").write(s)
+print(sys.argv[1], wt, s.count(MARK))
