@@ -136,8 +136,9 @@ static func _glints_apart(fails: Array[String]) -> void:
 
 
 ## The run HUD's deck: the stack counts the run's deck, at every refresh and
-## every shape, stands where the painting stood at that shape's size, and a
-## tap still asks for the deck view.
+## every shape, stands where the painting stood at that shape's size, glints
+## once a cycle (never under Reduce Motion), and a tap still asks for the deck
+## view.
 static func _run_hud_deck(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full(false)
 	var run: RunState = RunState.new()
@@ -165,6 +166,17 @@ static func _run_hud_deck(fails: Array[String]) -> void:
 			if hud._deck_stack.stack.count != n or hud._deck_count.text != str(n):
 				fails.append("run hud deck: %s counts %d on the stack and '%s' over it, want %d"
 					% [shape, hud._deck_stack.stack.count, hud._deck_count.text, n])
+		# Its glint crosses once a cycle, and never under Reduce Motion.
+		for still: bool in [false, true]:
+			Preferences.active.reduce_motion = still
+			var lit: bool = false
+			for i: int in range(int(PileStack.GLINT_CYCLE / 0.05)):
+				deck.stack._process(0.05)
+				lit = lit or not is_nan(deck.stack._glow.band)
+			if lit == still:
+				fails.append("run hud deck: %s's stack %s in a cycle%s" % [shape,
+					"glints" if lit else "never glints", " under Reduce Motion" if still else ""])
+		Preferences.active.reduce_motion = false
 		var asked: Array[int] = [0]
 		hud.deck_requested.connect(func() -> void: asked[0] += 1)
 		var button: Button = hud._deck_stack.get_parent() as Button

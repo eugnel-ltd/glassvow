@@ -41,6 +41,9 @@ const LAW_CARD_H: float = HudBar.PILE_BOX.x * HudBar.PILE_CARD_H
 const TOP_PX: float = 2.0
 ## Where in its cycle this stack's glint starts: half a cycle after the draw
 ## pile's, which starts at 0. A sweep is 1.4 s of 9, so the two never overlap.
+## Each stack counts its cycle from its own entry into the tree; HudBar builds
+## the seal and the draw pile in one frame. Built more than about 3 s apart
+## (4.5 - 1.4), their sweeps could overlap.
 const GLINT_PHASE: float = PileStack.GLINT_CYCLE * 0.5
 
 ## The stack of backs, drawn once a back is baked.
