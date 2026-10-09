@@ -214,7 +214,7 @@ static func _picture(fails: Array[String], land: MapJourneyLandscape, seats: Pac
 			z += 0.25
 	var rocks: int = 0
 	for item: Dictionary in land.kit.placed:
-		if not str(item["kind"]).begins_with("slate"):
+		if not MapJourneyLandscape.Kit.is_rock(str(item["kind"])):
 			continue
 		rocks += 1
 		var base: Vector3 = item["position"]
@@ -305,7 +305,10 @@ static func _mix(fails: Array[String], land: MapJourneyLandscape) -> void:
 				and planting.scales[i] <= Planting.TREE_SCALE.y + 0.001
 	var trees: float = int(str(counts.get("conifer", 0))) + int(str(counts.get("crimson", 0))) \
 		+ int(str(counts.get("rust and amber", 0)))
-	var undergrowth: float = planting.kinds.size() - trees
+	var ruins: int = 0
+	for kind: String in planting.kinds:
+		ruins += 1 if Planting.STONES.has(kind) else 0
+	var undergrowth: float = planting.kinds.size() - trees - ruins
 	var conifers: float = int(str(counts.get("conifer", 0))) / trees
 	var crimson: float = int(str(counts.get("crimson", 0))) / trees
 	var warm: float = int(str(counts.get("rust and amber", 0))) / trees

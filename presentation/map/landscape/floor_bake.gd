@@ -426,6 +426,10 @@ static func radial() -> GradientTexture2D:
 	return _radial
 
 
+## The ravine's strata (R3.3) the lit pass lays on the steep banks.
+const STRATA: Texture2D = preload("res://assets/art/map-journey/stone/strata.png")
+
+
 ## The lit pass's or the mask's material: the land's ground as the floor
 ## reads it, and for the lit pass its covers.
 func _material(shader: Shader, covers: bool) -> ShaderMaterial:
@@ -451,6 +455,7 @@ func _material(shader: Shader, covers: bool) -> ShaderMaterial:
 			var path: String = COVERS[cover]
 			if ResourceLoader.exists(path):
 				material.set_shader_parameter(cover, load(path))
+		material.set_shader_parameter("strata", STRATA)
 	return material
 
 

@@ -22,11 +22,19 @@ const NORMAL_PATH: String = "res://assets/art/map-journey/impostors/wood-normal.
 const TILES_PATH: String = "res://assets/art/map-journey/impostors/wood-tiles.json"
 ## The yaw of a kind's first tile; the others turn evenly from it.
 const FIRST_YAW: float = 0.35
-## The kit's foliage kinds, drawn as impostors where the kit plants them: the
-## kit keeps their placements and never loads or batches their meshes (the
-## bare snag stays a mesh).
-const KIT_KINDS: PackedStringArray = ["conifer", "conifer-spire", "conifer-wind",
+## The ruins (R3.3), drawn as impostors where the kit places them: the
+## gravestones, the broken walls and the rubble.
+const GRAVES: PackedStringArray = ["grave-arched", "grave-cross", "grave-broken", "grave-tablet"]
+const WALLS: PackedStringArray = ["wall-run", "wall-corner", "wall-pier"]
+const RUBBLE: PackedStringArray = ["rubble-blocks", "rubble-scree", "rubble-mossy"]
+const RUINS: PackedStringArray = GRAVES + WALLS + RUBBLE
+## The kit's foliage drawn as impostors (the bare snag stays a mesh).
+const FOLIAGE: PackedStringArray = ["conifer", "conifer-spire", "conifer-wind",
 	"ash-copse", "ash-heath", "ash-bramble", "ash-fern"]
+## The kit's kinds drawn as impostors where the kit plants them, its foliage
+## and the ruins: the kit keeps their placements and never loads or batches
+## their meshes.
+const KIT_KINDS: PackedStringArray = FOLIAGE + RUINS
 
 ## Per tile: its kind, atlas rect, picture-plane low corner and size (metres
 ## at scale 1), how far the model reaches toward the camera from its base and
@@ -59,26 +67,29 @@ static var prepare_ms: float = 0.0
 static var _take: Take = null
 
 
-## Textures taken from the loader's threads, each exactly once and in whatever
-## order they finish: a second `load_threaded_get` of a path returns null, so a
-## step keeps what it took for the next. A path the loader cannot load settles
-## the take as failed, so a wait for it always ends.
+## Resources (textures unless `hint` says otherwise) taken from the loader's
+## threads, each exactly once and in whatever order they finish: a second
+## `load_threaded_get` of a path returns null, so a step keeps what it took for
+## the next. A path the loader cannot load settles the take as failed, so a
+## wait for it always ends.
 class Take:
 	extends RefCounted
 	var paths: PackedStringArray
+	var hint: String = "Texture2D"
 	var textures: Dictionary = {}
 	var failed: bool = false
 	## The loader's two calls (tests stand in for them).
 	var status: Callable = ResourceLoader.load_threaded_get_status
 	var get_texture: Callable = ResourceLoader.load_threaded_get
 
-	func _init(from: PackedStringArray) -> void:
+	func _init(from: PackedStringArray, type_hint: String = "Texture2D") -> void:
 		paths = from
+		hint = type_hint
 
 	## Asks the loader's threads for every path.
 	func request() -> void:
 		for path: String in paths:
-			if not ResourceLoader.exists(path) or ResourceLoader.load_threaded_request(path, "Texture2D") != OK:
+			if not ResourceLoader.exists(path) or ResourceLoader.load_threaded_request(path, hint) != OK:
 				failed = true
 
 	## Takes every texture that has loaded and answers whether the take is
@@ -98,8 +109,9 @@ class Take:
 				OS.delay_usec(500)
 				state = status.call(path)
 			var texture: Variant = get_texture.call(path) if state == ResourceLoader.THREAD_LOAD_LOADED else null
-			if texture is Texture2D:
-				textures[path] = texture
+			var taken: Resource = texture if texture is Resource else null
+			if taken != null and (hint.is_empty() or taken.is_class(hint)):
+				textures[path] = taken
 			else:
 				failed = true
 		return true

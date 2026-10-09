@@ -21,11 +21,11 @@ const Warm = preload("res://presentation/map/landscape/floor_warm.gd")
 const Details = preload("res://presentation/map/landscape/road_details.gd")
 const FLOOR: Shader = preload("res://presentation/map/landscape/floor.gdshader")
 const DETAIL: Texture2D = preload("res://assets/art/map-journey/floor/floor-detail.png")
-## What goes on casting live once the floor is baked: the gateway and the
-## rock outcrops, whose faces shade each other, and the bridges' parapets,
-## whose stones mark their decks (the live shadow pass's budget, R3.2: 15k
-## primitives at the Journey view). Everything else's shadow is in the floor.
-const LIVE_CASTERS: PackedStringArray = ["amber-arch", "slate-bank", "slate-ridge", "slate-shard"]
+## What goes on casting live once the floor is baked: the gateway, whose faces
+## shade each other, and the bridges' parapets, whose stones mark their decks
+## (the live shadow pass's budget: 15k primitives at the Journey view). The
+## stone (R3.3) shades itself by its baked normals; its shadow is in the floor.
+const LIVE_CASTERS: PackedStringArray = ["amber-arch"]
 const LIVE_BRIDGE: String = "Bridge parapet stones"
 ## The pilgrim's carried light on the floor: its reach (metres) and strength,
 ## R1's small one on phones and tablets, a wider one on the desktop

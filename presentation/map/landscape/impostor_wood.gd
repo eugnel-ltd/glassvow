@@ -75,10 +75,8 @@ func _build_cards(order: PackedInt32Array) -> void:
 		for i: int in list:
 			var tile: int = planting.tiles[i]
 			var pose: Transform3D = Atlas.card_transform(tile, planting.bases[i], planting.scales[i])
-			var tint: Color = tint_for(planting.kinds[i], planting.bases[i])
 			var rect: Vector4 = Atlas.uv[tile]
-			_write(buffer, at, pose, Color(tint.r, tint.g, tint.b,
-				-Atlas.low[tile].y / Atlas.size[tile].y), rect)
+			_write(buffer, at, pose, card_colour(planting.kinds[i], planting.bases[i], tile), rect)
 			at += 20
 		var multi: MultiMesh = MultiMesh.new()
 		multi.transform_format = MultiMesh.TRANSFORM_3D
@@ -116,6 +114,11 @@ static func _write(buffer: PackedFloat32Array, at: int, pose: Transform3D, colou
 	buffer[at + 19] = custom.w
 
 
+## The ruins' tint (R3.3): their baked granite and moss as they are, a stone
+## lighter or darker by where it stands.
+const STONE_TINT: Array = [Color(0.9, 0.9, 0.92), Color(1.05, 1.04, 1.0)]
+
+
 ## Each kind's tint on its baked colours (linear, against the golden-hour key
 ## light and the stage's grade): a plant takes a colour between the pair, by
 ## where it stands and weighted toward the first (half the plants lie within a
@@ -142,8 +145,21 @@ const TINTS: Dictionary = {
 	"ash-copse": [Color(0.14, 0.13, 0.15), Color(1.9, 1.85, 1.8)],
 	"ash-bramble": [Color(1.0, 0.78, 0.96), Color(1.0, 0.86, 0.9)],
 	"ash-fern": [Color(0.3, 0.75, 0.22), Color(0.33, 0.8, 0.24)],
+	"grave-arched": STONE_TINT, "grave-cross": STONE_TINT, "grave-broken": STONE_TINT,
+	"grave-tablet": STONE_TINT, "wall-run": STONE_TINT, "wall-corner": STONE_TINT,
+	"wall-pier": STONE_TINT, "rubble-blocks": STONE_TINT, "rubble-scree": STONE_TINT,
+	"rubble-mossy": STONE_TINT,
 }
 const BRIGHTNESS: Vector2 = Vector2(0.65, 1.15)
+
+
+## A card's instance colour: its tint, and where its model's base sits down
+## the card (`impostor.gdshader` sways what stands above it). A ruin's sits at
+## the card's top, so no part of a stone ever sways.
+static func card_colour(kind: String, base: Vector3, tile: int) -> Color:
+	var tint: Color = tint_for(kind, base)
+	var foot: float = 0.0 if Planting.STONES.has(kind) else -Atlas.low[tile].y / Atlas.size[tile].y
+	return Color(tint.r, tint.g, tint.b, foot)
 
 
 ## A plant's tint: its kind's pair, varied by where it stands.

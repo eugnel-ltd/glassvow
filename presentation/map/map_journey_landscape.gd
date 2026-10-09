@@ -235,6 +235,7 @@ func _finish() -> void:
 	if not kit.build_complete or not kit.failure.is_empty():
 		failure = kit.failure if not kit.failure.is_empty() else "Woodland assembly incomplete"
 		return
+	timings_ms["stone_parts"] = kit.stone_timings
 	# Without its atlas (`ImpostorWood.Atlas.failed`, reported once) the land
 	# opens without its woodland rather than not at all.
 	if ImpostorWood.Atlas.ready():

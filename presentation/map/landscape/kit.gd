@@ -8,6 +8,13 @@ const GroundContacts = preload("res://presentation/map/landscape/ground_contacts
 const GatewaySites = preload("res://presentation/map/landscape/gateway_sites.gd")
 const Terrain = preload("res://presentation/map/landscape/terrain.gd")
 const ImpostorAtlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
+const LandStone = preload("res://presentation/map/landscape/land_stone.gd")
+const Islands = preload("res://presentation/map/landscape/land_islands.gd")
+const RavineCliffs = preload("res://presentation/map/landscape/ravine_cliffs.gd")
+const StaticScenery = preload("res://presentation/map/landscape/static_scenery.gd")
+const Planting = preload("res://presentation/map/landscape/wood_planting.gd")
+const Sight = preload("res://presentation/map/landscape/wood_sight.gd")
+const River = preload("res://presentation/map/landscape/river.gd")
 var tree_envelopes: Dictionary = {}
 var material_pool: Dictionary = {}
 var asset_scenes: Dictionary = {}
@@ -27,6 +34,19 @@ var failure: String = ""
 var build_complete: bool = false
 var replay_timings: Dictionary = {}
 var hero_override: String = ""
+## The granite outcrops and the ravine's cliffs, drawn in a few merged meshes
+## (R3.3); null in a grey study or where the stone cannot load.
+var stone: LandStone = null
+## How long each of R3.3's stages took on the worker (ms; probes).
+var stone_timings: Dictionary = {}
+## What the woodland must leave in sight (`wood_planting.gd`), built at the
+## first ruin the kit places and kept up with every placement after it, and
+## every ruin's card placed so far: [picture-plane Rect2, the depth it hides
+## from] (`_unhidden`).
+var _sight: Sight = null
+var _cards: Array = []
+## How many gravestones the verges and the shrines hold so far (`GRAVES_MOST`).
+var _graves_placed: int = 0
 # Conservative circles enclosing the exported X/Z bounds at every yaw.
 const PROFILES: Dictionary = {
 	"conifer": Vector2(2.50, 6.40),
@@ -34,13 +54,24 @@ const PROFILES: Dictionary = {
 	"conifer-snag": Vector2(2.40, 5.30),
 	"ash-bramble": Vector2(2.10, .90),
 	"ash-fern": Vector2(1.30, .60),
-	"slate-shard": Vector2(1.20, 2.20),
-	"slate-scree": Vector2(2.20, .50),
+	"granite-shard": Vector2(1.20, 2.20),
+	"rubble-scree": Vector2(1.00, .45),
 	"conifer-spire": Vector2(1.80, 6.40),
 	"ash-heath": Vector2(2.1, 1.05),
-	"slate-ridge": Vector2(2.25, 1.10),
+	"granite-ridge": Vector2(2.25, 1.10),
 	"ash-copse": Vector2(1.65, 1.30),
-	"slate-bank": Vector2(1.90, 1.70),
+	"granite-bank": Vector2(1.90, 1.70),
+	"granite-tor": Vector2(1.90, 2.45),
+	"granite-boulder": Vector2(1.10, 0.95),
+	"grave-arched": Vector2(0.45, 1.05),
+	"grave-cross": Vector2(0.45, 1.30),
+	"grave-broken": Vector2(0.85, 0.75),
+	"grave-tablet": Vector2(1.15, 0.75),
+	"wall-run": Vector2(1.80, 1.75),
+	"wall-corner": Vector2(2.30, 1.75),
+	"wall-pier": Vector2(2.00, 2.25),
+	"rubble-blocks": Vector2(0.90, .50),
+	"rubble-mossy": Vector2(0.85, .45),
 	"memorial": Vector2(0.55, 1.95),
 	"amber-arch": Vector2(2.65, 5.50),
 	"lantern-post": Vector2(0.35, 1.70),
@@ -111,7 +142,7 @@ static func preload_scenes() -> void:
 static func preload_step(wait: bool = false) -> bool:
 	var started: int = Time.get_ticks_usec()
 	ImpostorAtlas.request()
-	var done: bool = _hold_next(wait) and ImpostorAtlas.prepare_step(wait)
+	var done: bool = _hold_next(wait) and ImpostorAtlas.prepare_step(wait) and LandStone.prepare_step(wait)
 	preload_ms += (Time.get_ticks_usec() - started) / 1000.0
 	return done
 
@@ -149,11 +180,21 @@ static func _hold_next(wait: bool) -> bool:
 	return _held_kinds >= kinds.size()
 
 
-## The kinds whose scenes the kit holds: all but the foliage the woodland
-## draws as impostors.
+## The kinds whose scenes the kit holds: all but those drawn elsewhere (the
+## woodland's and the ruins' impostors, the stone).
 static func _scene_kinds() -> Array:
 	return PROFILES.keys().filter(func(kind: String) -> bool:
-		return not ImpostorAtlas.KIT_KINDS.has(kind))
+		return not StaticScenery.drawn_elsewhere(kind))
+
+
+## Whether `kind` is one of the granite outcrops (`land_stone.gd`).
+static func is_rock(kind: String) -> bool:
+	return LandStone.OUTCROPS.has(kind)
+
+
+## A rock, or the rubble that lies round rocks.
+static func _stony(kind: String) -> bool:
+	return is_rock(kind) or kind.begins_with("rubble-")
 
 
 static func _request(kind: String) -> void:
@@ -206,6 +247,7 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 		replay_timings["contacts"]=(Time.get_ticks_usec()-replay_start)/1000.0
 		replay_start=Time.get_ticks_usec()
 		if static_scenery!=null: static_scenery.call("finish")
+		_stone(grey)
 		replay_timings["batches"]=(Time.get_ticks_usec()-replay_start)/1000.0
 		build_complete = true
 		return
@@ -227,23 +269,26 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 		placed_nodes[-1].set_meta("hero_role",role)
 	_lanterns(grey)
 	planting_bounds = Rect2(terrain.bounds.position+Vector2(5,7),terrain.bounds.size-Vector2(10,14))
+	_timed("islands", _islands.bind(grey))
+	_timed("ruins", _ruins.bind(grey))
+	_timed("verge_graves", _verge_graves.bind(grey))
 	var planting: Rect2 = planting_bounds
 	var area_ratio: float = planting.get_area()/(86.0*46.0)
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 7401
-	for family: String in ["conifer", "slate-bank", "ash-copse", "memorial"]:
+	for family: String in ["conifer", "granite-bank", "ash-copse", "memorial"]:
 		for i: int in range(ceili(1000*area_ratio)):
 			# Establish the six substantial forms before any accent can occupy a gap.
 			var kind: String = family
 			if i % 2 == 1:
-				kind = {"conifer":"conifer-spire", "slate-bank":"slate-ridge", "ash-copse":"ash-heath"}.get(family, family)
+				kind = {"conifer":"conifer-spire", "granite-bank":"granite-ridge", "ash-copse":"ash-heath"}.get(family, family)
 			var p: Vector3 = Vector3(rng.randf_range(planting.position.x, planting.end.x), 0, rng.randf_range(planting.position.y, planting.end.y))
 			var scale_value: float = rng.randf_range(0.65, 1.05)
 			if kind.begins_with("conifer"):
 				scale_value = rng.randf_range(0.95, 1.35)
 			elif kind.begins_with("ash-"):
 				scale_value = rng.randf_range(0.85, 1.25)
-			elif kind.begins_with("slate-"):
+			elif is_rock(kind):
 				scale_value = rng.randf_range(1.0, 1.45)
 			elif kind == "memorial" and i > ceili(200*area_ratio):
 				continue
@@ -262,12 +307,15 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 			if not terrain.is_dry(p):
 				continue
 			_place(kind, p, scale_value, rng.randf_range(-PI, PI), grey)
+	# Before the undergrowth and the verges, which grow round them.
+	_timed("shrine_graves", _shrine_graves.bind(grey))
 	_undergrowth(grey)
 	_verges(grey)
 	_accents(grey)
 	_banners(grey)
 	contacts.finish()
 	if static_scenery!=null: static_scenery.call("finish")
+	_timed("stone", _stone.bind(grey))
 	if not grey:
 		preload("res://presentation/map/landscape/terrain_paint.gd").bind_habitat(terrain,placed,terrain.lines,terrain.is_elevated,lamp_anchors())
 	var counts: Dictionary = {}
@@ -361,16 +409,30 @@ static func _flat(p: Vector3) -> Vector2:
 func lamp_anchors() -> PackedVector3Array:
 	var out: PackedVector3Array = PackedVector3Array()
 	for item: Dictionary in placed:
-		var kind: String = item["kind"]
-		if not LAMP_ANCHORS.has(kind):
-			continue
-		var scale_value: float = float(str(item["scale"]))
-		var at: Vector3 = item["position"]
-		var pose: Transform3D = Transform3D(
-			Basis(Vector3.UP, float(str(item["yaw"]))).scaled(Vector3.ONE * scale_value), at)
-		for local: Vector3 in LAMP_ANCHORS[kind]:
-			out.append(pose * local)
+		out.append_array(_lamps_of(item))
 	return out
+
+
+## The lamps one placement carries, in land space.
+static func _lamps_of(item: Dictionary) -> PackedVector3Array:
+	var out: PackedVector3Array = PackedVector3Array()
+	var kind: String = item["kind"]
+	if not LAMP_ANCHORS.has(kind):
+		return out
+	var scale_value: float = float(str(item["scale"]))
+	var at: Vector3 = item["position"]
+	var pose: Transform3D = Transform3D(
+		Basis(Vector3.UP, float(str(item["yaw"]))).scaled(Vector3.ONE * scale_value), at)
+	for local: Vector3 in LAMP_ANCHORS[kind]:
+		out.append(pose * local)
+	return out
+
+
+## The grid of what the woodland must leave in sight, as the kit built it for
+## its ruins over every placement (`_in_sight`); null where it built none. The
+## woodland plants against it (`wood_planting.gd` `_protect`).
+func woodland_sight() -> Sight:
+	return _sight
 
 
 func _landmark(grey: bool) -> void:
@@ -385,12 +447,243 @@ func _landmark(grey: bool) -> void:
 		paint.set_shader_parameter("gateway_position", Vector2(at.x, at.z))
 	_place("amber-arch", at, 1.0, yaw, grey)
 	_companion("memorial", at + Vector3(-4, 0, -1), 1.0, -0.2, grey)
-	_companion("slate-bank", at + Vector3(4, 0, 1), 1.15, 0.5, grey)
-	_companion("slate-bank", at + Vector3(6, 0, -6), 1.20, -0.35, grey)
-	_companion("slate-ridge", at + Vector3(-7, 0, -7), 1.10, 0.4, grey)
+	_companion("granite-bank", at + Vector3(4, 0, 1), 1.15, 0.5, grey)
+	_companion("granite-bank", at + Vector3(6, 0, -6), 1.20, -0.35, grey)
+	_companion("granite-ridge", at + Vector3(-7, 0, -7), 1.10, 0.4, grey)
 	_companion("conifer", at + Vector3(-5, 0, -7), 1.2, 0.7, grey)
 	_companion("conifer-spire", at + Vector3(1, 0, -8), 1.15, -0.4, grey)
 	_companion("conifer", at + Vector3(6, 0, -5), 1.05, 0.3, grey)
+
+## Islands between the road loops anchored by a composed group (R3.3; the
+## islands, `land_islands.gd`, largest first, at most `ISLAND_GROUPS`): an
+## outcrop at the island's pole (the largest that fits of a tor, where there
+## is room, a bank and a boulder), a conifer behind it, shrubs round it and
+## gravestones either side of it (in front, a card would hide the rock), each
+## near its mark where the kit's clearance allows. Before the woodland's
+## families, which grow round them.
+const ISLAND_GROUPS: int = 8
+const TOR_ROOM: float = 2.5
+const BANK_ROOM: float = 1.6
+
+
+func _islands(grey: bool) -> void:
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 7811
+	var started: int = Time.get_ticks_usec()
+	var found: Array[Dictionary] = Islands.find(terrain)
+	stone_timings["island_search"] = (Time.get_ticks_usec() - started) / 1000.0
+	for island: Dictionary in found.slice(0, ISLAND_GROUPS):
+		var at: Vector3 = island["centre"]
+		var room: float = float(str(island["clearance"]))
+		var rock_scale: float = rng.randf_range(0.9, 1.05)
+		var rock_yaw: float = rng.randf_range(-PI, PI)
+		for rock: String in ["granite-tor", "granite-bank", "granite-boulder"]:
+			if (rock == "granite-tor" and room < TOR_ROOM) or (rock == "granite-bank" and room < BANK_ROOM):
+				continue
+			if _near(rock, at, rock_scale, rock_yaw, grey):
+				break
+		_near("conifer" if rng.randf() < 0.6 else "conifer-spire",
+			at + Vector3(rng.randf_range(-1.2, 1.2), 0.0, -2.8), rng.randf_range(0.95, 1.2), rng.randf_range(-PI, PI), grey)
+		for i: int in range(3):
+			var angle: float = rng.randf_range(-PI, PI)
+			_near("ash-copse" if i == 1 else "ash-heath", at + Vector3(cos(angle), 0.0, sin(angle)) * rng.randf_range(1.8, 2.6),
+				rng.randf_range(0.7, 0.95), angle, grey)
+		for i: int in range(2 + rng.randi_range(0, 1)):
+			var side: float = -1.0 if i % 2 == 0 else 1.0
+			_near(_grave(rng), at + Vector3(side * rng.randf_range(2.6, 3.2), 0.0, rng.randf_range(-0.6, 1.2)),
+				rng.randf_range(0.9, 1.05), rng.randf_range(-0.35, 0.35), grey, 1.2)
+
+
+## Gravestones (R3.3): short rows along the roads' verges, one every
+## `GRAVE_SPACING` metres of road on alternating sides, `GRAVE_OFFSET` off the
+## line, placed before the woodland's families (`_verge_graves`), and one
+## beside each of up to `SHRINE_GRAVES` memorial shrines after them, of the
+## first twice as many (`_shrine_graves`); at most `GRAVES_MOST` in all. Each
+## faces the journey camera, a little turned.
+const SHRINE_GRAVES: int = 8
+const GRAVE_SPACING: float = 13.0
+const GRAVE_OFFSET: Vector2 = Vector2(2.3, 3.1)
+const GRAVE_ROW: float = 0.95
+const GRAVES_MOST: int = 30
+
+
+func _shrine_graves(grey: bool) -> void:
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 7853
+	var shrines: int = 0
+	var beside_shrines: int = 0
+	for item: Dictionary in placed.duplicate():
+		if str(item["kind"]) != "memorial" or shrines >= SHRINE_GRAVES * 2 or beside_shrines >= SHRINE_GRAVES \
+				or _graves_placed >= GRAVES_MOST:
+			continue
+		shrines += 1
+		var shrine: Vector3 = item["position"]
+		var beside: float = -1.0 if shrines % 2 == 0 else 1.0
+		if _near(_grave(rng), shrine + Vector3(beside * rng.randf_range(1.5, 2.1), 0.0, rng.randf_range(-0.6, 0.6)),
+				rng.randf_range(0.85, 1.05), rng.randf_range(-0.4, 0.4), grey, 1.0):
+			beside_shrines += 1
+			_graves_placed += 1
+
+
+func _verge_graves(grey: bool) -> void:
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 7859
+	var count: int = _graves_placed
+	var side: float = 1.0
+	for line: PackedVector3Array in terrain.lines:
+		var travelled: float = 0.0
+		var next: float = GRAVE_SPACING * 0.5
+		for i: int in range(line.size() - 1):
+			var a: Vector3 = line[i]
+			var b: Vector3 = line[i + 1]
+			var run: Vector2 = Vector2(b.x - a.x, b.z - a.z)
+			var length: float = run.length()
+			while length > 0.0 and next <= travelled + length and count < GRAVES_MOST:
+				var on: Vector3 = a.lerp(b, (next - travelled) / length)
+				next += GRAVE_SPACING
+				side = -side
+				if terrain.is_elevated(on):
+					continue
+				var across: Vector2 = Vector2(-run.y, run.x) / length * side
+				var row: Vector2 = run / length
+				var offset: float = rng.randf_range(GRAVE_OFFSET.x, GRAVE_OFFSET.y)
+				# Two a row: a third tips the land's tree mix (`test_map_wood`).
+				for k: int in range(mini(2, GRAVES_MOST - count)):
+					var along: float = (k - 0.5) * GRAVE_ROW
+					var at: Vector3 = on + Vector3(across.x * offset + row.x * along, 0.0, across.y * offset + row.y * along)
+					# A row's stone stands where its row puts it, or not at all.
+					count += 1 if _near(_grave(rng), at, rng.randf_range(0.85, 1.05), rng.randf_range(-0.3, 0.3), grey, 0.5, 1) else 0
+			travelled += length
+	_graves_placed = count
+
+
+func _grave(rng: RandomNumberGenerator) -> String:
+	return ImpostorAtlas.GRAVES[rng.randi_range(0, ImpostorAtlas.GRAVES.size() - 1)]
+
+
+## Ruins (R3.3): `RUIN_SITES` broken walls a few metres off the roads, each at
+## least `RUIN_GAP` from the last, turned across the camera's view, with fallen
+## blocks at their foot and a mossy mound beside them.
+const RUIN_SITES: int = 4
+const RUIN_GAP: float = 16.0
+const RUIN_ROAD: Vector2 = Vector2(3.0, 5.5)
+const RUIN_TRIES: int = 200
+
+
+func _ruins(grey: bool) -> void:
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 7867
+	var sites: Array[Vector3] = []
+	for attempt: int in range(RUIN_TRIES):
+		if sites.size() >= RUIN_SITES:
+			break
+		var p: Vector3 = Vector3(rng.randf_range(planting_bounds.position.x, planting_bounds.end.x), 0.0,
+			rng.randf_range(planting_bounds.position.y, planting_bounds.end.y))
+		var yaw: float = rng.randf_range(-0.45, 0.45)
+		if sites.any(func(other: Vector3) -> bool: return _flat(other).distance_to(_flat(p)) < RUIN_GAP):
+			continue
+		var road: float = terrain.distance_to_roads(p)
+		if road < RUIN_ROAD.x or road > RUIN_ROAD.y:
+			continue
+		p.y = terrain.surface_height(p.x, p.z)
+		var wall: String = ImpostorAtlas.WALLS[sites.size() % ImpostorAtlas.WALLS.size()]
+		var profile: Vector2 = PROFILES[wall]
+		if not terrain.is_dry(p) or not clear(p, profile.x, profile.y, wall) or not _in_sight(wall, p, 1.0, yaw):
+			continue
+		_place(wall, p, 1.0, yaw, grey)
+		sites.append(p)
+		_near("rubble-blocks", p + Vector3(rng.randf_range(-0.8, 0.8), 0.0, 1.3).rotated(Vector3.UP, yaw),
+			rng.randf_range(0.85, 1.05), rng.randf_range(-PI, PI), grey, 1.0)
+		_near("rubble-mossy", p + Vector3(2.4 * (1.0 if rng.randf() < 0.5 else -1.0), 0.0, 0.8).rotated(Vector3.UP, yaw),
+			rng.randf_range(0.85, 1.05), rng.randf_range(-PI, PI), grey, 1.5)
+
+
+func _timed(stage: String, run: Callable) -> void:
+	var started: int = Time.get_ticks_usec()
+	run.call()
+	stone_timings[stage] = (Time.get_ticks_usec() - started) / 1000.0
+
+
+## Places `kind` at the first spot that is dry and clear: `target`, else one
+## of `NEAR_TURNS` round it at half `reach`, else at `reach` (`rings` of them,
+## the target the first); whether it was placed. A few tries, not a search:
+## the land is built on a worker the opening map waits for.
+const NEAR_TURNS: int = 6
+
+
+func _near(kind: String, target: Vector3, scale_value: float, yaw: float, grey: bool, reach: float = 2.0,
+		rings: int = 3) -> bool:
+	var profile: Vector2 = PROFILES[kind] * scale_value
+	for ring: int in range(rings):
+		var radius: float = reach * ring * 0.5
+		for k: int in range(1 if ring == 0 else NEAR_TURNS):
+			var angle: float = TAU * (k + ring * 0.5) / NEAR_TURNS
+			var p: Vector3 = target + Vector3(cos(angle), 0.0, sin(angle)) * radius
+			p.y = terrain.surface_height(p.x, p.z)
+			if terrain.is_dry(p) and _in_sight(kind, p, scale_value, yaw) and clear(p, profile.x, profile.y, kind):
+				_place(kind, p, scale_value, yaw, grey)
+				return true
+	return false
+
+
+## Whether a ruin of `kind` at `p` would be drawn: its card hides nothing the
+## woodland keeps in sight (`wood_planting.gd` `protect_ground`,
+## `protect_item`), and no earlier ruin's card hides it (`_unhidden`), so the
+## kit places no ruin the woodland would leave out. Kinds the atlas has no
+## tiles for (a grey study) always pass.
+func _in_sight(kind: String, p: Vector3, scale_value: float, yaw: float) -> bool:
+	if not ImpostorAtlas.RUINS.has(kind) or not ImpostorAtlas.by_kind.has(kind):
+		return true
+	if _sight == null:
+		var started: int = Time.get_ticks_usec()
+		_sight = Sight.new()
+		_sight.begin(terrain.bounds)
+		Planting.protect_ground(_sight, terrain, lamp_anchors(), anchors)
+		for item: Dictionary in placed:
+			Planting.protect_item(_sight, item)
+		stone_timings["sight"] = (Time.get_ticks_usec() - started) / 1000.0
+	return _sight.fits(ImpostorAtlas.tile_for(kind, yaw), p, scale_value) \
+		and _unhidden({"kind": kind, "position": p, "scale": scale_value, "yaw": yaw})
+
+
+## Whether `item` (a placement: kind, position, radius, height, scale, yaw)
+## stands clear of every ruin's card placed so far, where it is something the
+## woodland keeps in sight: a ruin is never placed in front of it, and it is
+## never placed behind a ruin.
+func _unhidden(item: Dictionary) -> bool:
+	if _cards.is_empty():
+		return true
+	var area: Array = Planting.protected_area(_sight, item)
+	if area.is_empty():
+		return true
+	var kept: Rect2 = area[0]
+	var depth: float = area[1]
+	for card: Array in _cards:
+		var cover: Rect2 = card[0]
+		var limit: float = card[1]
+		if limit > depth and cover.intersects(kept):
+			return false
+	return true
+
+
+## The granite outcrops the kit placed and the ravine's cliff pieces
+## (`ravine_cliffs.gd`), merged and drawn (`land_stone.gd`).
+func _stone(grey: bool) -> void:
+	if grey or LandStone.failed:
+		return
+	var poses: Array = []
+	for item: Dictionary in placed:
+		var kind: String = item["kind"]
+		if LandStone.draws_kind(kind):
+			var scale_value: float = float(str(item["scale"]))
+			var at: Vector3 = item["position"]
+			poses.append([kind, Transform3D(Basis(Vector3.UP, float(str(item["yaw"]))).scaled(
+				Vector3.ONE * scale_value), at)])
+	poses.append_array(RavineCliffs.plan(terrain, anchors))
+	stone = LandStone.new()
+	add_child(stone)
+	stone.build(poses)
+
 
 func _companion(kind: String, target: Vector3, scale_value: float, yaw: float, grey: bool) -> void:
 	var profile: Vector2 = PROFILES[kind] * scale_value
@@ -415,7 +708,7 @@ func _undergrowth(grey: bool) -> void:
 	rng.seed = 7523
 	for group: Dictionary in groups:
 		var family: String = str(group["kind"])
-		if not family.begins_with("conifer") and not family.begins_with("slate"):
+		if not family.begins_with("conifer") and not is_rock(family):
 			continue
 		var centre: Vector3 = group["position"]
 		for i: int in range(12):
@@ -462,11 +755,11 @@ func _accents(grey: bool) -> void:
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 7631
 	var hero: Vector3 = groups[0]["position"] if not groups.is_empty() else Vector3.INF
-	var limits: Dictionary = {"ash-fern":22,"ash-bramble":10,"slate-scree":7,"slate-shard":3,"conifer-wind":3,"conifer-snag":2}
+	var limits: Dictionary = {"ash-fern":22,"ash-bramble":10,"rubble-scree":7,"granite-shard":3,"granite-boulder":5,"conifer-wind":3,"conifer-snag":2}
 	var counts: Dictionary = {}
 	for group: Dictionary in groups:
 		var family: String = str(group["kind"])
-		if not family.begins_with("conifer") and not family.begins_with("slate"):
+		if not family.begins_with("conifer") and not is_rock(family):
 			continue
 		var centre: Vector3 = group["position"]
 		for kind: String in limits:
@@ -475,12 +768,12 @@ func _accents(grey: bool) -> void:
 				continue
 			if kind.begins_with("conifer") and centre.distance_to(hero)<11:
 				continue
-			if kind.begins_with("slate") and not family.begins_with("slate"):
+			if _stony(kind) and not is_rock(family):
 				continue
 			for attempt: int in range(24):
 				var angle: float = rng.randf_range(-PI,PI)
 				var radius: float = rng.randf_range(1.4,3.6)
-				if kind.begins_with("slate"):
+				if _stony(kind):
 					radius = rng.randf_range(3.0,5.5)
 				if kind.begins_with("conifer"):
 					radius = rng.randf_range(2.4,4.4)
@@ -490,7 +783,8 @@ func _accents(grey: bool) -> void:
 				if kind.begins_with("conifer"):
 					scale_value = rng.randf_range(.90,1.05)
 				var profile: Vector2 = PROFILES[kind]*scale_value
-				if not planting_bounds.has_point(Vector2(p.x,p.z)) or not terrain.is_dry(p) or not clear(p,profile.x,profile.y,kind):
+				if not planting_bounds.has_point(Vector2(p.x,p.z)) or not terrain.is_dry(p) or not clear(p,profile.x,profile.y,kind) \
+						or not _in_sight(kind, p, scale_value, angle):
 					continue
 				_place(kind,p,scale_value,angle,grey)
 				counts[kind] = count+1
@@ -503,7 +797,18 @@ func clear(p: Vector3, radius: float, height: float, kind: String = "") -> bool:
 	query_count += 1
 	return result
 
+## How much of a rock's footprint circle must stand off the rivers' water
+## (R3.3): the rest may reach over the bank, never the water.
+const ROCK_WATER: float = 0.75
+
+
 func _clear(p: Vector3, radius: float, height: float, kind: String) -> bool:
+	if is_rock(kind) and River.distance(p.x, p.z) * River.CHANNEL < River.HALF_WIDTH * River.CHANNEL + radius * ROCK_WATER:
+		return false
+	if not _cards.is_empty() and (kind == "memorial" or kind == ARCH or is_rock(kind)) \
+			and not _unhidden({"kind": kind, "position": p, "radius": radius, "height": height,
+				"scale": radius / PROFILES[kind].x, "yaw": 0.0}):
+		return false
 	# Canopies may reach the shoulder; woody roots stay off the walking lane.
 	var road_radius: float = radius
 	if kind.begins_with("conifer"):
@@ -543,8 +848,11 @@ func _clear(p: Vector3, radius: float, height: float, kind: String) -> bool:
 			separation *= 0.38
 		elif (kind.begins_with("ash-") and str(placement["kind"]).begins_with("conifer")) or (kind.begins_with("conifer") and str(placement["kind"]).begins_with("ash-")):
 			separation *= 0.30
-		elif (kind.begins_with("ash-") and str(placement["kind"]).begins_with("slate")) or (kind.begins_with("slate") and str(placement["kind"]).begins_with("ash-")):
+		elif (kind.begins_with("ash-") and is_rock(str(placement["kind"]))) or (is_rock(kind) and str(placement["kind"]).begins_with("ash-")):
 			separation *= 0.50
+		elif kind.begins_with("rubble-") and str(placement["kind"]).begins_with("wall-"):
+			# A ruin's fallen blocks lie at its foot.
+			separation *= 0.45
 		if Vector2(other.x - p.x, other.z - p.z).length() < separation:
 			return false
 	return true
@@ -560,6 +868,9 @@ func _place(kind: String, p: Vector3, scale_value: float, yaw: float, grey: bool
 		if item==null:
 			failure=static_scenery.get("failure")
 			return
+	elif not grey and StaticScenery.drawn_elsewhere(kind):
+		item = Node3D.new()
+		item.name = kind
 	elif not grey:
 		if not asset_scenes.has(path):
 			if not ResourceLoader.exists(path):
@@ -603,3 +914,11 @@ func _place(kind: String, p: Vector3, scale_value: float, yaw: float, grey: bool
 	placed_nodes.append(item)
 	placed.append({"kind": kind, "position": p, "radius": footprint.x * scale_value, "height": footprint.y * scale_value, "scale":scale_value, "yaw":yaw})
 	neighbours.add(placed[-1])
+	if _sight != null:
+		Planting.protect_item(_sight, placed[-1])
+		if LAMP_ANCHORS.has(kind):
+			Planting.protect_lamps(_sight, _lamps_of(placed[-1]))
+		if ImpostorAtlas.RUINS.has(kind) and ImpostorAtlas.by_kind.has(kind):
+			var tile: int = ImpostorAtlas.tile_for(kind, yaw)
+			_cards.append([ImpostorAtlas.rect(tile, p, scale_value),
+				_sight.depth(p) + ImpostorAtlas.shift(tile) * scale_value + Sight.DEPTH_MARGIN])

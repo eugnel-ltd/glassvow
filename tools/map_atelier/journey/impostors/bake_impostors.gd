@@ -14,7 +14,9 @@ extends SceneTree
 ## atlases under `assets/art/map-journey/impostors/`.
 ##
 ## The sources are the kit's own models (`assets/art/map-journey/*.glb`, built
-## by `tools/map_atelier/journey/`). A recipe may compose a broadleaf crown
+## by `tools/map_atelier/journey/`), and for the ruins (R3.3) their own sculpts
+## with their baked colour (`tools/map_atelier/journey/stone/`, which writes
+## them to `impostors/stone/`). A recipe may compose a broadleaf crown
 ## from the kit's bare snag and leaf clumps, or repaint a kind's leaves in
 ## another colour of the Ashen Woods (same luminance, new hue). A crafted
 ## Blender source replaces a recipe as a data-only re-bake.
@@ -57,7 +59,19 @@ const RECIPES: Dictionary = {
 	"ash-fern": {"yaws": 3},
 	"olive-heath": {"yaws": 3, "source": "ash-heath", "leaf": "olive"},
 	"dark-copse": {"yaws": 3, "source": "ash-copse", "leaf": "dark"},
+	"grave-arched": {"yaws": 4, "stone": true},
+	"grave-cross": {"yaws": 4, "stone": true},
+	"grave-broken": {"yaws": 4, "stone": true},
+	"grave-tablet": {"yaws": 4, "stone": true},
+	"wall-run": {"yaws": 4, "stone": true},
+	"wall-corner": {"yaws": 4, "stone": true},
+	"wall-pier": {"yaws": 4, "stone": true},
+	"rubble-blocks": {"yaws": 3, "stone": true},
+	"rubble-scree": {"yaws": 3, "stone": true},
+	"rubble-mossy": {"yaws": 3, "stone": true},
 }
+## Where a ruin's sculpt and its baked colour are (`"stone": true`).
+const STONE_SOURCES: String = "res://tools/map_atelier/journey/impostors/stone/"
 ## A composed crown: its centre height, its reach, how many sprays and how
 ## many leaf clumps each, and the trunk's scale. Sprays sit at the ends of
 ## the limbs with gaps between them, so the crown reads as sprays, not a blob.
@@ -87,7 +101,8 @@ func _run() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_raw))
 	_stage()
 	for kind: String in RECIPES:
-		var recipe: Dictionary = RECIPES[kind]
+		var recipe: Dictionary = RECIPES[kind].duplicate()
+		recipe["kind"] = kind
 		var yaws: int = recipe["yaws"]
 		for yaw_index: int in range(yaws):
 			var yaw: float = TAU * yaw_index / yaws + 0.35
@@ -145,6 +160,9 @@ func _stage() -> void:
 ## A kind's model at the origin: a kit model, or a broadleaf composed from
 ## the kit's bare snag crowned with leaf clumps in sprays.
 func _build(kind: String, recipe: Dictionary) -> Node3D:
+	if recipe.get("stone", false):
+		var scene: PackedScene = ResourceLoader.load(STONE_SOURCES + kind + ".glb", "PackedScene") as PackedScene
+		return scene.instantiate() as Node3D
 	if not recipe.has("crown"):
 		var model: Node3D = _kit(str(recipe.get("source", kind)))
 		for layer: Array in recipe.get("stack", []):
@@ -283,6 +301,9 @@ func _dress(surfaces: Array[Dictionary], pass_name: String, recipe: Dictionary) 
 			if texture == null:
 				texture = standard.albedo_texture
 			colour = standard.albedo_color
+		if recipe.get("stone", false):
+			texture = load(STONE_SOURCES + str(recipe["kind"]) + "-albedo.png") as Texture2D
+			colour = Color.WHITE
 		material.set_shader_parameter("albedo",
 			colour if leafy or pass_name == "albedo" else Color(1, 1, 1, colour.a))
 		material.set_shader_parameter("tex", texture)
