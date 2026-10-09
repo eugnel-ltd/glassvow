@@ -1,0 +1,34 @@
+#!/bin/zsh
+# Lane R3.3 (scratch): the serialised take proven on the Mac in the real projects before the device.
+# a. The kit's own take in the game's order (kit_take.gd), five times each, interleaved: main (r33-ctl,
+#    711302a5), the branch before the change (r33-dev, 2fd7b2d7) and after it (r33-dev2, 95e7e339);
+#    waiting as a map opening does, then a step a frame as the prefetch does.
+# b. Short game probes (a Journey hold, as batch S1's V launches), ROUNDS rounds of the three, interleaved.
+# Every launch only under load 50, one Godot run at a time. Writes only $M/final/serial-proof/.
+M=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane
+F=$M/final/serial-proof; mkdir -p $F
+source $M/tools/glock.zsh
+wait_load() { while (( $(uptime | sed 's/.*averages: //' | cut -d' ' -f1 | cut -d. -f1) >= 50 )); do sleep 30; done; }
+ARMS=(r33-ctl r33-dev r33-dev2)
+n=0
+for mode in --wait --stepped; do
+  for rep in 1 2 3 4 5; do
+    for b in $ARMS; do
+      n=$((n+1)); wait_load; glock_acquire
+      GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 300 godot --path $M/$b --rendering-driver metal --rendering-method mobile \
+        --position 1400,900 --resolution 320x240 -s $M/tools/kit_take.gd -- $mode > $F/take-$n-$b.log 2>&1
+      echo "take $n $b $(git -C $M/$b rev-parse --short HEAD) exit $? load $(uptime | sed 's/.*averages: //' | cut -d' ' -f1): $(grep -h 'KITTAKE\|SCRIPT ERROR' $F/take-$n-$b.log | head -2)"
+      glock_release
+    done
+  done
+done
+for rep in $(seq 1 ${ROUNDS:-8}); do
+  for b in $ARMS; do
+    n=$((n+1)); wait_load; glock_acquire
+    GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 300 godot --path $M/$b --rendering-driver metal --rendering-method mobile --position 1400,900 \
+      -- --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --vp=1180x820 --map-steps=2 --holds=cadence --hold-frames=60 --probe-view=journey > $F/probe-$n-$b.log 2>&1
+    echo "probe $n $b exit $? load $(uptime | sed 's/.*averages: //' | cut -d' ' -f1): $(grep -o '"video_mib":[0-9.]*' $F/probe-$n-$b.log | head -1) boot-end $(grep '"probe":"boot"' $F/probe-$n-$b.log | grep -o '"vram_end":[0-9.]*' | head -1)"
+    glock_release
+  done
+done
+echo "== done $(date +%T)"

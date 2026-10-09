@@ -1,0 +1,75 @@
+extends SceneTree
+## Lane R3.3 scratch (never committed): where the stone's land stages spend their time. Builds Act I's land
+## headless for a run seed (as test_map_stone does), then runs each stage's work again on that land
+## `--reps` times and prints its mean: the island search, the cliffs' plan, the merge of the stone's
+## pieces, and the sight the ruins are checked against.
+##   godot --headless --path <wt> -s <this> -- --seed=<n> --reps=<n>
+
+const Islands = preload("res://presentation/map/landscape/land_islands.gd")
+const RavineCliffs = preload("res://presentation/map/landscape/ravine_cliffs.gd")
+const LandStone = preload("res://presentation/map/landscape/land_stone.gd")
+const Planting = preload("res://presentation/map/landscape/wood_planting.gd")
+const Sight = preload("res://presentation/map/landscape/wood_sight.gd")
+const Terrain = preload("res://presentation/map/landscape/terrain.gd")
+
+var seed_value: int = 1
+var reps: int = 20
+
+
+func _initialize() -> void:
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--seed="): seed_value = int(arg.get_slice("=", 1))
+		elif arg.begins_with("--reps="): reps = int(arg.get_slice("=", 1))
+	_run.call_deferred()
+
+
+func _mean(label: String, work: Callable) -> void:
+	var started: int = Time.get_ticks_usec()
+	for i: int in range(reps):
+		work.call()
+	print("STONE_PROF %-14s %.2f ms" % [label, (Time.get_ticks_usec() - started) / 1000.0 / reps])
+
+
+func _run() -> void:
+	MapJourneyLandscape.Kit.preload_scenes()
+	var content: ContentDB = ContentDB.load_full()
+	var run_state: RunState = RunState.new_run(content, seed_value, "run-map-stone")
+	var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run_state, content), content)
+	root.add_child(screen)
+	screen.size = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
+	screen.set_shape(StageShape.IDENTITY)
+	screen.refresh(run_state)
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	var kit: Node = land.kit
+	var terrain: Terrain = land.terrain
+	var bounds: Rect2 = terrain.bounds
+	print("STONE_PROF built: stone_parts ", land.timings_ms.get("stone_parts"))
+	_mean("island_search", func() -> void: Islands.find(terrain))
+	var anchors: PackedVector3Array = kit.get("anchors")
+	_mean("cliffs_plan", func() -> void: RavineCliffs.plan(terrain, anchors))
+	var poses: Array = []
+	for item: Dictionary in kit.get("placed"):
+		var kind: String = item["kind"]
+		if LandStone.draws_kind(kind):
+			var at: Vector3 = item["position"]
+			poses.append([kind, Transform3D(Basis(Vector3.UP, float(str(item["yaw"]))).scaled(
+				Vector3.ONE * float(str(item["scale"]))), at)])
+	poses.append_array(RavineCliffs.plan(terrain, anchors))
+	_mean("merge", func() -> void:
+		var stone: LandStone = LandStone.new()
+		stone.build(poses)
+		stone.free())
+	var lamps: PackedVector3Array = kit.call("lamp_anchors")
+	var placed: Array = kit.get("placed")
+	_mean("sight", func() -> void:
+		var sight: Sight = Sight.new()
+		sight.begin(bounds)
+		Planting.protect_ground(sight, terrain, lamps, anchors)
+		for item: Dictionary in placed:
+			Planting.protect_item(sight, item))
+	_mean("sight_ground", func() -> void:
+		var sight: Sight = Sight.new()
+		sight.begin(bounds)
+		Planting.protect_ground(sight, terrain, lamps, anchors))
+	print("STONE_PROF poses ", poses.size(), " placed ", placed.size())
+	quit(0)

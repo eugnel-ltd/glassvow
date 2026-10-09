@@ -1,0 +1,91 @@
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 21 s); waiting 21:47:39
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 19 s); waiting 21:48:40
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 79 s); waiting 21:49:40
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 49 s); waiting 21:50:40
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 44 s); waiting 21:51:40
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 14 s); waiting 21:52:40
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 23 s); waiting 21:53:40
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 23 s); waiting 21:54:40
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 21 s); waiting 21:55:40
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 81 s); waiting 21:56:40
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 52 s); waiting 21:57:41
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 48 s); waiting 21:58:41
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 18 s); waiting 21:59:41
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 14 s); waiting 22:00:41
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 74 s); waiting 22:01:41
+== lock taken 22:02:41
+== 22:02 battery 100% charging false external true
+== load: 22:02  up 5 days,  6:05, 3 users, load averages: 77.96 107.86 88.22
+== disk: /dev/disk3s1s1  927G  808G  120G  88% /
+== OUT (every cleanup stays inside it): /Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane/device/batchS1c
+== batch batchS1c (gates) start 22:02:41: dev 4364b834, main 711302a5
+== battery 22:02 battery 100% charging false external true 22:02:42; Mac load 79.64 107.71 88.28
+== install ctl1 22:02:42
+== ctl1-l1 nonce ctl1-l1-34358606: rows fresh
+   ctl1-l1: build 711302a5
+== ctl1-l2 nonce ctl1-l2-338115781: rows fresh
+   ctl1-l2: build 711302a5
+== ctl1-v1 nonce ctl1-v1-2050714706: rows fresh
+   ctl1-v1: build 711302a5
+== ctl1-v2 nonce ctl1-v2-3045320798: rows fresh
+   ctl1-v2: build 711302a5
+== ctl1-v3 nonce ctl1-v3-1678828375: rows fresh
+   ctl1-v3: build 711302a5
+== ctl1-c1 nonce ctl1-c1-49324969: rows fresh
+   ctl1-c1: build 711302a5
+== ctl1-c2 nonce ctl1-c2-225443252: rows fresh
+   ctl1-c2: build 711302a5
+== battery 22:09 battery 100% charging false external true 22:09:42; Mac load 121.94 113.95 97.88
+== install dev1 22:09:42
+== dev1-l1 nonce dev1-l1-43834: rows fresh
+   dev1-l1: build 4364b834
+== dev1-l2 nonce dev1-l2-1634930995: rows fresh
+   dev1-l2: build 4364b834
+== dev1-v1 nonce dev1-v1-2205514877: rows fresh
+   dev1-v1: build 4364b834
+== dev1-v2 nonce dev1-v2-218836154: rows fresh
+   dev1-v2: build 4364b834
+== dev1-v3 nonce dev1-v3-3002419131: rows fresh
+   dev1-v3: build 4364b834
+== dev1-c1 nonce dev1-c1-260801374: rows fresh
+   dev1-c1: build 4364b834
+== dev1-c2 nonce dev1-c2-473616648: rows fresh
+   dev1-c2: build 4364b834
+== battery 22:16 battery 100% charging false external true 22:16:36; Mac load 129.95 105.67 97.22
+== install ctl2 22:16:36
+== ctl2-l1 nonce ctl2-l1-3029322223: rows fresh
+   ctl2-l1: build 711302a5
+== ctl2-l2 nonce ctl2-l2-232452397: rows fresh
+   ctl2-l2: build 711302a5
+== ctl2-v1 nonce ctl2-v1-2930811516: rows fresh
+   ctl2-v1: build 711302a5
+== ctl2-v2 nonce ctl2-v2-2959811742: rows fresh
+   ctl2-v2: build 711302a5
+== ctl2-v3 nonce ctl2-v3-209001548: rows fresh
+   ctl2-v3: build 711302a5
+== ctl2-c1 nonce ctl2-c1-35665480: rows fresh
+   ctl2-c1: build 711302a5
+== ctl2-c2 nonce ctl2-c2-39215499: rows fresh
+   ctl2-c2: build 711302a5
+== battery 22:23 battery 100% charging false external true 22:23:27; Mac load 102.64 117.95 107.21
+== install dev2 22:23:27
+== dev2-l1 nonce dev2-l1-76514616: rows fresh
+   dev2-l1: build 4364b834
+== dev2-l2 nonce dev2-l2-2339531016: rows fresh
+   dev2-l2: build 4364b834
+== dev2-v1 nonce dev2-v1-2011710169: rows fresh
+   dev2-v1: build 4364b834
+== dev2-v2 nonce dev2-v2-2821825028: rows fresh
+   dev2-v2: build 4364b834
+== dev2-v3 nonce dev2-v3-909330195: rows fresh
+   dev2-v3: build 4364b834
+== dev2-c1 nonce dev2-c1-2215130680: rows fresh
+   dev2-c1: build 4364b834
+== dev2-c2 nonce dev2-c2-1694720901: rows fresh
+   dev2-c2: build 4364b834
+== battery 22:30 battery 100% charging false external true 22:30:22; Mac load 128.04 108.07 103.33
+== batch batchS1c done 22:30:22
+== lock released 22:30:22
+== battery 22:30 battery 100% charging false external true 22:30:22; Mac load 128.04 108.07 103.33
+== batch exit 0 22:30:22
+wrapper exit=0

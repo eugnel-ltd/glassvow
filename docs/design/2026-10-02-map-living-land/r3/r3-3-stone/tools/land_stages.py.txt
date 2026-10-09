@@ -1,0 +1,66 @@
+"""Lane R3.3 (scratch): the land's build on the device by stage, main against the branch. Reads a
+batch folder's rows; for the boots and the cold opens, each stage's median by build (every launch
+listed) and the branch's delta; then every cold open with its land and bake. Writes nothing.
+    python3 land_stages.py <main build> <batch dir> [<batch dir> ...]"""
+import glob
+import json
+import os
+import statistics
+import sys
+
+rows = {}   # (build, kind) -> [(label, flat stages, open row)]
+MAIN = sys.argv[1]
+for root in sys.argv[2:]:
+    for f in sorted(glob.glob(os.path.join(root, '*.jsonl'))):
+        if f.endswith('.wrong.jsonl'):
+            continue
+        label = os.path.basename(f)[:-6]
+        build = '?'
+        for line in open(f, errors='replace'):
+            try:
+                d = json.loads(line)
+            except ValueError:
+                continue
+            if d.get('probe') == 'start':
+                build = d.get('build', '?')
+            kind = 'boot' if d.get('probe') == 'boot' else ('cold' if d.get('probe') == 'open' and d.get('kind') == 'cold' else None)
+            if kind is None or not isinstance(d.get('land_ms'), dict):
+                continue
+            flat = {}
+            for k, v in d['land_ms'].items():
+                if isinstance(v, dict):
+                    for k2, v2 in v.items():
+                        flat['%s.%s' % (k, k2)] = float(v2)
+                else:
+                    flat[k] = float(v)
+            rows.setdefault((build, kind), []).append((label, flat, d))
+builds = sorted({b for b, _ in rows}, key=lambda b: (b != MAIN, b))
+for kind in ('boot', 'cold'):
+    print('== %s: the land build by stage (ms), medians; every launch in the lists' % kind)
+    keys = sorted({k for (b, kd), lst in rows.items() if kd == kind for _, flat, _ in lst for k in flat})
+    order = ['total', 'terrain', 'scenery', 'wood', 'waystones', 'road_details', 'floor_plan']
+    keys = [k for k in order if k in keys] + [k for k in keys if k not in order]
+    for k in keys:
+        med = {}
+        cells = []
+        for b in builds:
+            vals = [flat[k] for _, flat, _ in rows.get((b, kind), []) if k in flat]
+            if vals:
+                med[b] = statistics.median(vals)
+                cells.append('%s %.1f (n=%d: %s)' % (b, med[b], len(vals), ', '.join('%.0f' % v for v in vals)))
+            else:
+                cells.append('%s -' % b)
+        delta = ''
+        if len(builds) == 2:
+            a, c = builds
+            delta = '  branch delta %+.1f' % (med[c] - med[a]) if a in med and c in med else ''
+        print('  %-26s %s%s' % (k, ' | '.join(cells), delta))
+print('== every cold open: ready, land, bake wall and worst frame')
+for b in builds:
+    for label, flat, d in rows.get((b, 'cold'), []):
+        bake = ''
+        fm = d.get('floor_ms')
+        if isinstance(fm, dict) and isinstance(fm.get('bake'), dict):
+            bake = 'bake %.1f worst %.1f' % (fm['bake'].get('wall_ms', float('nan')), max(fm['bake'].get('frames_ms', [0])))
+        print('  %-10s %-9s ready %7.1f built %7.1f land %5.0f %s' % (label, b, d.get('ready_ms', float('nan')),
+              d.get('built_ms', float('nan')), flat.get('total', float('nan')), bake))

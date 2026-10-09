@@ -1,0 +1,43 @@
+# After the split, the iPad still reads +21.4 MiB (batch S1b): why. Mac M1 Max, the A12 condition, load 13-27, 20:52-20:56, 10 Oct.
+# In the real projects (main's r33-ctl at 711302a5; the split's r33-dev at 2fd7b2d7), tools/tex_cost.gd.txt.
+
+## The map's textures taken together, as one take on the loader's threads (main: the woodland's two; the split: the woodland's two arrays and the stone's three), five times each, alternately:
+1 r33-ctl: total +4.94, tracked +4.94, untracked +0.00 MiB
+1 r33-dev: total +25.92, tracked +9.92, untracked +16.00 MiB
+2 r33-ctl: total +4.94, tracked +4.94, untracked +0.00 MiB
+2 r33-dev: total +25.92, tracked +9.92, untracked +16.00 MiB
+3 r33-ctl: total +4.94, tracked +4.94, untracked +0.00 MiB
+3 r33-dev: total +25.92, tracked +9.92, untracked +16.00 MiB
+4 r33-ctl: total +4.94, tracked +4.94, untracked +0.00 MiB
+4 r33-dev: total +25.92, tracked +9.92, untracked +16.00 MiB
+5 r33-ctl: total +4.94, tracked +4.94, untracked +0.00 MiB
+5 r33-dev: total +25.92, tracked +9.92, untracked +16.00 MiB
+
+## The same textures one at a time (three frames apart), in either order, and the woodland's two together:
+tex3-seq-1: impostors/wood-albedo.png untracked -0.01 | impostors/wood-normal.png untracked +0.01 | stone/stone-albedo.png untracked -0.01 | stone/stone-normal.png untracked +0.01 | stone/strata.png untracked +0.00
+tex3-seqrev-1: stone/stone-albedo.png untracked +0.00 | stone/stone-normal.png untracked -0.00 | stone/strata.png untracked -0.01 | impostors/wood-albedo.png untracked +0.01 | impostors/wood-normal.png untracked +0.00
+tex3-wood-1: impostors/wood-albedo.png,impostors/wood-normal.png untracked +0.00
+tex3-ctl-1: impostors/wood-albedo.png untracked +0.00 | impostors/wood-normal.png untracked +0.00
+tex3-seq-2: impostors/wood-albedo.png untracked -0.01 | impostors/wood-normal.png untracked +0.01 | stone/stone-albedo.png untracked -0.01 | stone/stone-normal.png untracked +0.01 | stone/strata.png untracked +0.00
+tex3-seqrev-2: stone/stone-albedo.png untracked +0.00 | stone/stone-normal.png untracked -0.00 | stone/strata.png untracked -0.01 | impostors/wood-albedo.png untracked +0.01 | impostors/wood-normal.png untracked +0.00
+tex3-wood-2: impostors/wood-albedo.png,impostors/wood-normal.png untracked +0.00
+tex3-ctl-2: impostors/wood-albedo.png untracked +0.00 | impostors/wood-normal.png untracked +0.00
+TEXCOST uploads CompressedTexture2DArray 2048x1024 x2 layers, format 19: 2.67, 2.67 MiB
+TEXCOST uploads CompressedTexture2DArray 1024x512 x2 layers, format 19: 0.67, 0.67 MiB
+TEXCOST uploads CompressedTexture2D 2048x1536, format 17, mipmaps true: 2.00 MiB
+TEXCOST uploads CompressedTexture2D 1024x768, format 21, mipmaps true: 1.00 MiB
+TEXCOST uploads CompressedTexture2D 512x512, format 17, mipmaps true: 0.17 MiB
+
+## Short Mac game probes (a Journey hold, as batch S1's V launches), interleaved:
+== probe 11 r33-ctl 20:52:50 load: 25.22 44.12 67.36	   exit 0 "video_mib":232.6 boot 
+== probe 12 r33-dev 20:52:58 load: 23.29 43.09 66.72	   exit 0 "video_mib":241.8 boot 
+== probe 13 r33-ctl 20:53:07 load: 20.77 41.90 66.02	   exit 0 "video_mib":232.6 boot 
+== probe 14 r33-dev 20:53:15 load: 21.51 41.70 65.81	   exit 0 "video_mib":225.8 boot 
+== probe 15 r33-ctl 20:53:23 load: 19.11 40.53 65.11	   exit 0 "video_mib":232.6 boot 
+== probe 16 r33-dev 20:53:30 load: 17.98 39.94 64.76	   exit 0 "video_mib":231.8 boot 
+
+## Reading: one texture at a time, or the woodland's pair alone, nothing grows; the five taken together grow the untracked memory by 16.00 MiB every time.
+## RenderingDevice's transfer-worker pool (rendering_device.cpp:8437, as many workers as processors) makes a new worker, with its own staging buffer, whenever
+## an upload finds every existing worker busy (_acquire_transfer_worker, lines 7124-7212). Uploads that overlap therefore each hold a buffer of their own, never shrunk.
+## In the game the stone's take starts as the woodland's settles (Kit.preload_step), while the atlas's layer transfers may still be in flight: on the iPad 8 that overlap
+## is set before the first frame (the 12.0 MiB step is already there at the boot's second frame) and happened in 8 of the branch's 14 launches in S1b.

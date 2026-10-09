@@ -1,0 +1,251 @@
+head 497bb692 (code and tests 4364b834) on 64af9302 21:47:38
+  (load 55: waiting)
+  (load 81: waiting)
+  (load 74: waiting)
+  (load 67: waiting)
+  (load 75: waiting)
+  (load 55: waiting)
+$ godot --version   [load 39.72 53.28 36.58]
+4.7.2.stable.official.ed1daf0bf
+exit 0
+
+$ tools/check_imports.sh   [load 39.72 53.28 36.58]
+asset import OK
+
+asset import OK
+exit 0
+
+$ tools/check_scripts.sh   [load 34.87 51.81 36.25]
+scripts OK (498 checked)
+scripts OK (498 checked)
+exit 0
+
+  (load 122: waiting)
+  (load 104: waiting)
+  (load 76: waiting)
+  (load 55: waiting)
+  (load 82: waiting)
+  (load 88: waiting)
+  (load 93: waiting)
+  (load 138: waiting)
+  (load 114: waiting)
+  (load 103: waiting)
+  (load 114: waiting)
+  (load 103: waiting)
+  (load 119: waiting)
+  (load 163: waiting)
+  (load 130: waiting)
+  (load 142: waiting)
+  (load 143: waiting)
+  (load 109: waiting)
+  (load 111: waiting)
+  (load 96: waiting)
+  (load 79: waiting)
+  (load 65: waiting)
+  (load 82: waiting)
+  (load 67: waiting)
+  (load 96: waiting)
+  (load 82: waiting)
+  (load 109: waiting)
+  (load 93: waiting)
+  (load 69: waiting)
+  (load 89: waiting)
+  (load 106: waiting)
+  (load 134: waiting)
+  (load 110: waiting)
+  (load 121: waiting)
+  (load 150: waiting)
+  (load 152: waiting)
+  (load 129: waiting)
+  (load 114: waiting)
+  (load 117: waiting)
+  (load 94: waiting)
+  (load 118: waiting)
+  (load 120: waiting)
+  (load 106: waiting)
+  (load 99: waiting)
+  (load 105: waiting)
+  (load 82: waiting)
+  (load 61: waiting)
+$ godot --headless -s res://tests/run_all.gd   [load 45.88 92.18 91.80]
+PASS (158 tests)
+ERROR: 3 RID allocations of type 'N17RendererSceneCull8InstanceE' were leaked at exit.
+ERROR: 226 RID allocations of type 'PN18TextServerAdvanced22ShapedTextDataAdvancedE' were leaked at exit.
+ERROR: 9 RID allocations of type 'PN18TextServerAdvanced12FontAdvancedE' were leaked at exit.
+ERROR: 15 RID allocations of type 'PN18TextServerAdvanced27FontAdvancedLinkedVariationE' were leaked at exit.
+exit 0
+
+  (load 76: waiting)
+  (load 63: waiting)
+  (load 73: waiting)
+  (load 67: waiting)
+  (load 52: waiting)
+  (load 79: waiting)
+  (load 73: waiting)
+  (load 62: waiting)
+  (load 54: waiting)
+  (load 72: waiting)
+  (load 75: waiting)
+  (load 57: waiting)
+$ python3 -B tests/test_ci_scope.py   [load 48.68 73.64 89.40]
+Ran 37 tests in 0.007s
+
+OK
+exit 0
+
+$ python3 tools/check_store_dev_exclusion.py   [load 48.68 73.64 89.40]
+store-dev-exclusion OK
+exit 0
+
+$ tools/test_check_store_dev_exclusion.sh   [load 48.68 73.64 89.40]
+ok - pck v4
+ok - pck sentry extension
+check_store_dev_exclusion regression tests OK (12 cases)
+exit 0
+
+  (load 64: waiting)
+  (load 97: waiting)
+  (load 111: waiting)
+  (load 89: waiting)
+  (load 90: waiting)
+  (load 69: waiting)
+  (load 95: waiting)
+  (load 85: waiting)
+  (load 111: waiting)
+  (load 93: waiting)
+  (load 120: waiting)
+  (load 105: waiting)
+  (load 97: waiting)
+  (load 107: waiting)
+  (load 97: waiting)
+  (load 142: waiting)
+  (load 175: waiting)
+  (load 180: waiting)
+  (load 144: waiting)
+  (load 182: waiting)
+  (load 177: waiting)
+  (load 159: waiting)
+  (load 128: waiting)
+  (load 125: waiting)
+  (load 116: waiting)
+  (load 108: waiting)
+  (load 78: waiting)
+  (load 57: waiting)
+$ python3 -B tools/check_export_paths.py --self-test   [load 42.06 97.00 99.39]
+ok - allow-list entry
+ok - missing presets fail closed
+export-paths self-test OK (10 cases)
+exit 0
+
+$ python3 -B tools/check_export_paths.py   [load 42.06 97.00 99.39]
+export-paths OK
+exit 0
+
+$ godot --headless -s res://tests/run_all.gd -- --tests=res://tests/test_release_identity.gd,res://tests/test_sentry_release.gd   [load 42.06 97.00 99.39]
+PASS (2 tests)
+ok   res://tests/test_release_identity.gd
+ok   res://tests/test_sentry_release.gd
+PASS (2 tests)
+exit 0
+
+$ python3 -B tools/check_anchors.py   [load 42.06 97.00 99.39]
+docs/design/2026-10-02-map-living-land/r3/r3-3-stone/README.md:253  DRIFT      presentation/map/landscape/kit.gd:805 (_clear) — `_clear` is at :884
+
+11 anchor(s) no longer point where they claim. Run with --fix to re-anchor the drifted ones.
+exit 1
+
+$ python3 -B tools/check_benchmark_freeze.py   [load 42.06 97.00 99.39]
+benchmark citations frozen (592 in 52 file(s))
+exit 0
+
+$ python3 -B tools/build_site.py --self-test   [load 36.28 93.95 98.29]
+self-test display font drift: rejected
+self-test missing display glyph: rejected
+site self-test OK (20 seeded defects rejected; samples rendered exactly)
+exit 0
+
+$ python3 -B tools/build_site.py --check   [load 36.28 93.95 98.29]
+site is current: 7 files; the zh-Hant heading face covers all 54 display characters
+exit 0
+
+$ python3 -B tools/check_map_assets.py --self-test   [load 36.28 93.95 98.29]
+self-test file-size: correctly failed file-size
+self-test value-gap: correctly failed value-gap
+self-test OK (all injected gates failed; GPU silhouette uses _silhouette_noise)
+exit 0
+
+$ python3 -B tools/land_map_glb.py --self-test   [load 36.28 93.95 98.29]
+self-test pending schema: correctly failed
+self-test api not forbidden: correctly failed
+self-test OK (default land writes no provenance; accept is provenance-only)
+exit 0
+
+$ python3 -B tools/check_map_assets.py   [load 36.28 93.95 98.29]
+gpu-silhouette <lane>/wt-r33/assets/art/map-atelier/slate-cluster.glb  yaw 315 noise 0.0004 ≤ 0.04
+value-gap OK  linear 0.320 ≥ 0.272; act0=0.235 act1=0.280 act2=0.261 act3=0.282
+map assets OK (48 payload files; runtime landscape and retained asset library)
+exit 0
+
+$ python3 -B tools/check_map_quality_v2.py --self-test   [load 40.87 72.34 88.81]
+self-test baseline defect coverage: correctly failed
+self-test baseline defect coverage: correctly failed
+self-test OK (12 fail-closed mutation fixtures)
+exit 0
+
+$ python3 -B tools/check_map_quality_v2.py   [load 38.31 71.29 88.35]
+map quality v2 OK schema=1 contract=2.0.0 hard=18 soft=12 provisional=25 digest=4b54927afa7459be4b8b1bedc88fd8d653b8d9ba4ef8b79a53dce1282ecb0b5f
+exit 0
+
+$ python3 -B tests/test_performance_budget.py   [load 38.31 71.29 88.35]
+Ran 16 tests in 2.176s
+
+OK
+exit 0
+
+$ godot --headless -s res://tools/probe_map_seeds.gd -- --seeds=20   [load 38.31 71.29 88.35]
+Act 4 mipmapped texture bytes: 44729072
+Act 4 profiles f3f3e8659193a101439a3eb7b1548a6406e96c67fde6b73285010a18401779d9: 20 cosmetic seeds repeat exactly
+map profiles OK (4 acts, 125978 candidate transforms; complete-layout proof is separate)
+exit 0
+
+$ godot --headless -s res://tests/choice_scroll_reachability.gd   [load 30.71 68.00 86.87]
+EVIDENCE focused final control for 7 plain choices viewport=[P: (0.0, 0.0), S: (844.0, 390.0)] control=[P: (171.0, 343.0), S: (496.0, 47.0)] scroll_y=133
+EVIDENCE focused final control for 8 plain choices viewport=[P: (0.0, 0.0), S: (844.0, 390.0)] control=[P: (171.0, 343.0), S: (496.0, 47.0)] scroll_y=192
+PASS choice scroll reachability (844x390)
+exit 0
+
+$ godot --headless -s res://tests/boss_relic_choice_containment.gd   [load 30.71 68.00 86.87]
+EVIDENCE zh-Hant pad-landscape choice=2 rect=[P: (342.0, 502.0), S: (496.0, 72.0)] minimum=(20.0, 72.0) wrap=3
+EVIDENCE zh-Hant pad-landscape choice=3 rect=[P: (342.0, 588.0), S: (496.0, 48.0)] minimum=(20.0, 48.0) wrap=3
+PASS boss relic choice containment (1180x820 en+zh-Hant)
+exit 0
+
+$ godot --headless -s res://tests/dawn_phone_containment.gd   [load 30.71 68.00 86.87]
+Sentry: DEBUG: Automatic initialization is disabled in the project settings.
+Sentry: INFO: Automatic initialization is disabled! Operations with Sentry SDK will result in no-ops.
+PASS dawn containment (en + zh-Hant, pad-landscape)
+exit 0
+
+$ godot --headless -s res://tests/measure_hud_location.gd   [load 28.49 66.92 86.38]
+zh-Hant  desktop-landscape act2  granted= 910.0  natural= 242.0  fits     黑曜王庭 · 第 14 塊引路石 · 永恆君王
+zh-Hant  desktop-landscape act3  granted= 910.0  natural= 242.0  fits     鏡中歸途 · 第 14 塊引路石 · 永恆留者
+MEASURE OK (0 clipped)
+exit 0
+
+$ godot --headless -s res://tests/event_phone_containment.gd   [load 28.49 66.92 86.38]
+Sentry: DEBUG: Automatic initialization is disabled in the project settings.
+Sentry: INFO: Automatic initialization is disabled! Operations with Sentry SDK will result in no-ops.
+PASS event containment (2024 rects, en + zh-Hant, 11 events, 3 shapes)
+exit 0
+
+$ python3 tools/payload_report.py   [load 25.18 64.94 85.45]
+assets/audio/sfx                        0.6        -  
+(12 smaller groups)                     2.9
+TOTAL (pck estimate)                  283.0      400  ok
+exit 0
+
+$ python3 tools/ci_scope.py --changed-paths-nul <lane>/tmp/changed.nul --changed-gdscript-nul <lane>/tmp/changed-gd.nul --repository-root .   [load 25.18 64.94 85.45]
+</details>
+exit 0
+
+done 22:58:44
