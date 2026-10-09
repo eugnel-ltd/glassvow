@@ -7,13 +7,15 @@ extends RefCounted
 ## of both rivers, faces to the water, feet under it, clear of the bridges and
 ## the waystones), the merged draws, the islands' composed groups, the
 ## gravestones and the ruins, and the ruins drawn as cards that cast into the
-## floor's bake, and never sway.
+## floor's bake, and never sway; no ruin hiding a road, a waystone or what the
+## kit keeps in sight; and a land built twice placed the same both times.
 
 const Stone = preload("res://presentation/map/landscape/land_stone.gd")
 const Cliffs = preload("res://presentation/map/landscape/ravine_cliffs.gd")
 const Islands = preload("res://presentation/map/landscape/land_islands.gd")
 const Atlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
 const Planting = preload("res://presentation/map/landscape/wood_planting.gd")
+const Sight = preload("res://presentation/map/landscape/wood_sight.gd")
 const River = preload("res://presentation/map/landscape/river.gd")
 const SEED: int = 717
 ## Seeds whose lands main placed rocks over the water on (R3.3 found two to
@@ -22,6 +24,10 @@ const MORE_SEEDS: Array[int] = [1, 2, 3]
 ## Each family's triangle budget (`outcrops.py`, `cliffs.py`).
 const OUTCROP_TRIANGLES: Vector2i = Vector2i(800, 1500)
 const CLIFF_TRIANGLES: Vector2i = Vector2i(900, 1200)
+## Road samples (metres apart) and the height of a waystone's top, where its
+## token is drawn, for the ruins' sight.
+const ROAD_STEP: float = 0.5
+const WAYSTONE_TOP: float = 1.0
 
 
 static func _check(fails: Array[String], ok: bool, what: String) -> void:
@@ -34,14 +40,9 @@ static func run(fails: Array[String]) -> void:
 	_shader(fails)
 	_pieces(fails)
 	var content: ContentDB = ContentDB.load_full()
+	var first: String = ""
 	for seed_value: int in [SEED] + MORE_SEEDS:
-		var run_state: RunState = RunState.new_run(content, seed_value, "run-map-stone")
-		var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run_state, content), content)
-		var tree: SceneTree = Engine.get_main_loop() as SceneTree
-		tree.root.add_child(screen)
-		screen.size = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
-		screen.set_shape(StageShape.IDENTITY)
-		screen.refresh(run_state)
+		var screen: WorldMapScreen = _open(content, seed_value)
 		var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
 		var built: bool = land != null and land.is_built() and land.kit.stone != null
 		_check(fails, built, "Act I's land is built with its stone (seed %d)" % seed_value)
@@ -51,13 +52,58 @@ static func run(fails: Array[String]) -> void:
 				seats.append(base.position)
 			_cliffs(fails, land, seats, seed_value)
 			_dry(fails, land, seed_value)
+			_unhidden(fails, land, seats, seed_value)
 		if built and seed_value == SEED:
 			_draws(fails, land)
 			_islands(fails, land)
 			_ruins(fails, land)
-		screen.get_parent().remove_child(screen)
-		screen.free()
-		MapScene.release_kept_journey()
+			first = _digest(land)
+		_close(screen)
+	_determinism(fails, content, first)
+
+
+static func _open(content: ContentDB, seed_value: int) -> WorldMapScreen:
+	var run_state: RunState = RunState.new_run(content, seed_value, "run-map-stone")
+	var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run_state, content), content)
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	tree.root.add_child(screen)
+	screen.size = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
+	screen.set_shape(StageShape.IDENTITY)
+	screen.refresh(run_state)
+	return screen
+
+
+static func _close(screen: WorldMapScreen) -> void:
+	screen.get_parent().remove_child(screen)
+	screen.free()
+	MapScene.release_kept_journey()
+
+
+## The same seed builds the same land: every kit placement, every stone piece
+## and every woodland card, the second time as the first.
+static func _determinism(fails: Array[String], content: ContentDB, first: String) -> void:
+	if first.is_empty():
+		return
+	var screen: WorldMapScreen = _open(content, SEED)
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	var again: String = _digest(land) if land != null and land.is_built() and land.kit.stone != null else ""
+	_check(fails, again == first,
+		"seed %d's land places every stone, ruin and woodland card the same when built again" % SEED)
+	_close(screen)
+
+
+## A digest of a land's placements: the kit's, the stone's pieces and the
+## woodland's cards (the ruins among them).
+static func _digest(land: MapJourneyLandscape) -> String:
+	var parts: PackedStringArray = []
+	for item: Dictionary in land.kit.placed:
+		parts.append("kit %s %s %s %s" % [item["kind"], item["position"], item["scale"], item["yaw"]])
+	for item: Dictionary in land.kit.stone.placed:
+		parts.append("stone %s %s" % [item["kind"], item["transform"]])
+	var planting: Planting = land.wood.planting
+	for i: int in range(planting.kinds.size()):
+		parts.append("card %s %s %d %s" % [planting.kinds[i], planting.bases[i], planting.tiles[i], planting.scales[i]])
+	return "\n".join(parts).sha256_text()
 
 
 ## Three samplers, none anisotropic (the A12's slots); no vertex stage of its
@@ -195,6 +241,69 @@ static func _draws(fails: Array[String], land: MapJourneyLandscape) -> void:
 	_check(fails, stone.draws.size() == cells.size() and shared and drawn == expected and stone.triangles == expected,
 		"the stone draws once a cell on its one material, casting, every piece's triangles (%d draws, %d triangles)" % [
 			stone.draws.size(), drawn])
+
+
+## No ruin's card hides what the woodland keeps in sight, on the land as
+## placed: no road (sampled along its line), waystone or token (the stone's
+## top) stands behind a ruin's silhouette; and, in the kit's own order
+## (`kit.gd` `_unhidden`), no shrine, gateway, rock or standing ruin was
+## placed behind the card of a ruin placed before it.
+static func _unhidden(fails: Array[String], land: MapJourneyLandscape, seats: PackedVector3Array, seed_value: int) -> void:
+	var pitch: float = deg_to_rad(MapJourneyCameraContract.PITCH)
+	var toward: Vector3 = Vector3(0, sin(pitch), cos(pitch))
+	var sight: Sight = Sight.new()
+	sight.begin(land.terrain.bounds)
+	var kept: PackedVector3Array = []
+	for line: PackedVector3Array in land.terrain.lines:
+		for i: int in range(line.size() - 1):
+			var steps: int = maxi(1, ceili(line[i].distance_to(line[i + 1]) / ROAD_STEP))
+			for step: int in range(steps):
+				kept.append(line[i].lerp(line[i + 1], float(step) / steps))
+	for seat: Vector3 in seats:
+		kept.append(seat)
+		kept.append(seat + Vector3.UP * WAYSTONE_TOP)
+	var ruins: int = 0
+	var seen_hidden: int = 0
+	var items_hidden: int = 0
+	var placed: Array = land.kit.placed
+	for h: int in range(placed.size()):
+		var kind: String = placed[h]["kind"]
+		if not Atlas.RUINS.has(kind) or not Atlas.by_kind.has(kind):
+			continue
+		ruins += 1
+		var base: Vector3 = placed[h]["position"]
+		var scale_value: float = float(str(placed[h]["scale"]))
+		var tile: int = Atlas.tile_for(kind, float(str(placed[h]["yaw"])))
+		var cover: Rect2 = Atlas.rect(tile, base, scale_value)
+		var front: float = base.dot(toward) + Atlas.shift(tile) * scale_value
+		for q: Vector3 in kept:
+			if q.dot(toward) < front and _under(tile, cover, MapJourneyCameraContract.projected_plane(q)):
+				seen_hidden += 1
+		for t: int in range(h + 1, placed.size()):
+			var later: Dictionary = placed[t]
+			var area: Array = Planting.protected_area(sight, later)
+			if area.is_empty():
+				continue
+			var kept_rect: Rect2 = area[0]
+			var kept_depth: float = area[1]
+			if front + Sight.DEPTH_MARGIN > kept_depth and cover.intersects(kept_rect):
+				items_hidden += 1
+	_check(fails, ruins > 0 and seen_hidden == 0,
+		"no ruin's card hides a road, a waystone or its token (seed %d: %d points behind %d ruins)" % [
+			seed_value, seen_hidden, ruins])
+	_check(fails, items_hidden == 0,
+		"no shrine, gateway, rock or standing ruin stands behind a ruin's card (seed %d: %d)" % [seed_value, items_hidden])
+
+
+## Whether a picture-plane point lies under a tile's silhouette at `cover`
+## (`ImpostorAtlas.spans`: per row of the card, the span its picture covers).
+static func _under(tile: int, cover: Rect2, at: Vector2) -> bool:
+	if not cover.has_point(at):
+		return false
+	var rows: PackedVector2Array = Atlas.spans[tile]
+	var row: int = mini(rows.size() - 1, floori((at.y - cover.position.y) / (cover.size.y / rows.size())))
+	var x: float = (at.x - cover.position.x) / cover.size.x
+	return rows[row].x <= rows[row].y and x >= rows[row].x and x <= rows[row].y
 
 
 ## Every outcrop's circle kept off the rivers' water but for its reach over
