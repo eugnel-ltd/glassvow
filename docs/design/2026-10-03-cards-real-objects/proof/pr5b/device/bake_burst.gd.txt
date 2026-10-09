@@ -1,0 +1,56 @@
+extends SceneTree
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH (#657 PR 5b): the bake site on the players' route. Boots a run on
+## the map, drops the session's bake (as a fresh session has none), shows the
+## title, waits for it to rest, then taps Back to the Road and writes every
+## frame of the flood and the map's arrival: <out>_<frame>.png, with a log row
+## per frame (the bench, the bake, which of painting and stack shows, wall ms).
+##   godot --path <wt> --position 60,60 -s <this> -- --map --seed=1 --vp=WxH --out=<dir>/<prefix>
+
+var cfg: Dictionary = {"out": "/tmp/bake", "frames": "70", "rm": "0"}
+var main: Node = null
+
+
+func _initialize() -> void:
+	for arg: String in OS.get_cmdline_user_args():
+		for k: String in cfg.keys():
+			if arg.begins_with("--%s=" % k):
+				cfg[k] = arg.trim_prefix("--%s=" % k)
+	main = (load("res://application/main.tscn") as PackedScene).instantiate()
+	root.add_child(main)
+	_run.call_deferred()
+
+
+func _wait(seconds: float) -> void:
+	var until: int = Time.get_ticks_msec() + int(seconds * 1000.0)
+	while Time.get_ticks_msec() < until:
+		await process_frame
+
+
+func _run() -> void:
+	await _wait(6.0)
+	while main._map_screen != null and main._map_screen.landscape_pending():
+		await process_frame
+	await _wait(1.0)
+	Preferences.active.reduce_motion = cfg["rm"] == "1"
+	print("BURST stored=%s" % str(main._store_run()))
+	CardBacks.use_catalogue(null)
+	main._show_title()
+	await _wait(5.0)
+	var title = main._choice_screen
+	var saved = main._load_run()
+	print("BURST title=%s saved=%s baked=%s" % [str(title), str(saved != null), str(CardTurn.back() != null)])
+	main._on_title_pick("continue", title, saved)
+	var t0: int = Time.get_ticks_usec()
+	for f: int in range(int(cfg["frames"])):
+		await process_frame
+		var now: int = Time.get_ticks_usec()
+		var hud = main._run_hud
+		var deck = hud._deck_stack if hud != null and is_instance_valid(hud) else null
+		print("BURST f=%d ms=%.1f bench=%s baked=%s hud=%s painting=%s stack=%s" % [f,
+			float(now - t0) / 1000.0, str(main.get_node_or_null("CardBackBench") != null),
+			str(CardTurn.back() != null), str(deck != null),
+			str(deck.painting.visible if deck else null), str(deck.stack.visible if deck else null)])
+		t0 = Time.get_ticks_usec()
+		root.get_texture().get_image().save_png("%s_%02d.png" % [cfg["out"], f])
+	quit(0)

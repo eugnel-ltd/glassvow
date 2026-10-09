@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+"""SCRATCH (#657 PR 5b): grade deck_probe rows.
+usage: analyze.py <batch dir> [<batch dir> ...]   (rows_<nonce>.txt from deck_probe.gd)
+
+mode=map launches: the cold open to the map (engine ticks when the map's land
+is drawn, MARK land; and when it settled), the frame that built the run HUD
+(MARK hud), the branch's bake bench (MARK bench) and its bake landing (MARK
+baked), every frame over 33.4 ms in the boot phase, and the map at rest
+(maprest, 12 s).
+mode=fight launches: the fight's load frame, the combat rest with a charred
+card on the ash and a face-up discard (ashrest, 10 s), and the reshuffle of
+cards all dealt before (resh: the stream; rdeal: from the stream's end until
+the drain is idle).
+A window the iPad throttled is named: its median frame is over THROTTLE_MS
+(16.9). The throttle onset is the first 1 s window after the boot from which
+the launch's medians stay over THROTTLE_MS (at most one window under it).
+Warm-ups (warm=1) are listed, not graded.
+"""
+import sys, glob, os, statistics as st
+
+THROTTLE_MS = 16.9
+LONG = 33.4
+
+
+def pct(a, q):
+    a = sorted(a)
+    if not a:
+        return float("nan")
+    k = (len(a) - 1) * q
+    f = int(k); c = min(f + 1, len(a) - 1)
+    return a[f] + (a[c] - a[f]) * (k - f)
+
+
+def load(path):
+    nonce = os.path.basename(path)[5:-4]
+    rows = [l.split() for l in open(path) if l.strip()]
+    rows = [r for r in rows if r and r[0] == nonce]
+    head = next((" ".join(r[2:]) for r in rows if r[2] == "PROBE"), "")
+    kv = dict(w.split("=", 1) for w in head.split() if "=" in w and not w.startswith("args="))
+    frames = []
+    for r in rows:
+        if r[2] == "F":
+            frames.append(dict(ms=int(r[1]), i=int(r[3]), ph=r[4], wall=float(r[5]), pre=float(r[6]),
+                draw=float(r[7]), proc=float(r[8]), gpu=float(r[9]), vram=float(r[10]), comp=r[11]))
+    marks = {}
+    for r in rows:
+        if r[2] == "MARK":
+            marks[r[3]] = (int(r[4].split("=")[1]), int(r[5].split("=")[1]))
+    info = {r[2]: " ".join(r[3:]) for r in rows if r[2] not in ("F", "MARK", "PROBE")}
+    events = [" ".join(r[2:]) for r in rows if r[2] not in ("F", "MARK", "PROBE")]
+    return dict(nonce=nonce, build=kv.get("build", "?"), mode=kv.get("mode", "?"),
+        warm="warm=1" in head, frames=frames, marks=marks, info=info, events=events,
+        batch=os.path.basename(os.path.dirname(path)), head=head)
+
+
+def walls(r, phases):
+    return [f["wall"] for f in r["frames"] if f["ph"] in phases]
+
+
+def windows(r):
+    """1 s windows of the launch after the boot: (start s, median ms, phase)."""
+    fs = [f for f in r["frames"] if f["ph"] not in ("boot", "load", "end")]
+    if not fs:
+        return []
+    t0 = r["frames"][0]["ms"]
+    out = {}
+    for f in fs:
+        out.setdefault((f["ms"] - t0) // 1000, []).append(f)
+    return [(k, st.median([f["wall"] for f in v]), v[0]["ph"]) for k, v in sorted(out.items()) if len(v) >= 20]
+
+
+def onset(r):
+    w = windows(r)
+    for j, (k, m, ph) in enumerate(w):
+        if m > THROTTLE_MS:
+            rest = w[j:]
+            if sum(1 for x in rest if x[1] <= THROTTLE_MS) <= 1:
+                return k
+    return None
+
+
+def stat(a):
+    if not a:
+        return "-"
+    return "%d fr, p50 %.2f, p95 %.2f, max %.1f, >33: %d" % (len(a), st.median(a), pct(a, .95), max(a),
+        sum(1 for x in a if x > LONG))
+
+
+def throttled(a):
+    return bool(a) and st.median(a) > THROTTLE_MS
+
+
+runs = []
+for d in sys.argv[1:]:
+    for path in sorted(glob.glob(os.path.join(d, "rows_*.txt"))):
+        r = load(path)
+        if r["frames"]:
+            runs.append(r)
+
+print("== every launch ==")
+for r in runs:
+    tag = " warm-up" if r["warm"] else ""
+    on = onset(r)
+    t0 = r["frames"][0]["ms"]
+    print("%s %s %s %s%s | onset %s" % (r["batch"], r["nonce"], r["build"], r["mode"], tag,
+        "none" if on is None else "%d s" % on))
+    if r["mode"] == "map":
+        m = r["marks"]
+        boot = [f for f in r["frames"] if f["ph"] == "boot"]
+        print("   cold open: hud %s ms, land %s ms, %s | ready_ms %s" % (
+            m.get("hud", (0, "?"))[1], m.get("land", (0, "?"))[1], r["info"].get("SETTLED", "?").split(" marks")[0],
+            r["head"].split("ready_ms=")[-1] if "ready_ms=" in r["head"] else "?"))
+        hf = m.get("hud", (None,))[0]
+        bf = m.get("bench", (None,))[0]
+        kf = m.get("baked", (None,))[0]
+        print("   marks: hud frame %s, bench frame %s, baked frame %s" % (hf, bf, kf))
+        if hf is not None:
+            around = [f for f in r["frames"] if hf - 3 <= f["i"] <= hf + 8]
+            print("   frames hud-3..hud+8: " + " ".join("%d:%.1f" % (f["i"], f["wall"]) for f in around))
+        longs = [f for f in boot if f["wall"] > LONG]
+        print("   boot frames over 33 ms (%d): %s" % (len(longs), " ".join("%d:%.0f" % (f["i"], f["wall"]) for f in longs)))
+        a = walls(r, ("maprest",))
+        print("   maprest: %s%s" % (stat(a), " THROTTLED" if throttled(a) else ""))
+        print("   %s" % r["info"].get("MAP", ""))
+    else:
+        load_f = walls(r, ("load",))
+        fight = [f for f in r["frames"] if f["ph"] == "fight"][:4]
+        print("   load frames: %s; first fight frames: %s | %s" % (" ".join("%.0f" % x for x in load_f),
+            " ".join("%.0f" % f["wall"] for f in fight), r["info"].get("AFTER_LOAD", "")))
+        a = walls(r, ("ashrest",))
+        print("   ashrest: %s%s" % (stat(a), " THROTTLED" if throttled(a) else ""))
+        s = walls(r, ("resh",))
+        d = walls(r, ("rdeal",))
+        print("   resh: %s%s" % (stat(s), " THROTTLED" if throttled(s + d) else ""))
+        print("   rdeal: %s" % stat(d))
+        rf = [f for f in r["frames"] if f["ph"] in ("resh", "rdeal") and f["wall"] > LONG]
+        if rf:
+            print("   reshuffle frames over 33: " + " ".join("%s#%d %.1f (pre %.1f draw %.1f proc %.1f comp %s)" % (
+                f["ph"], f["i"], f["wall"], f["pre"], f["draw"], f["proc"], f["comp"]) for f in rf))
+        for e in r["events"]:
+            if e.startswith(("ENDTURN", "TURN", "KINDLE", "OPEN", "KINDLED")):
+                print("   " + e)
+
+
+def grade(title, mode, keys, keep):
+    print()
+    print(title)
+    by = {}
+    for r in runs:
+        if r["mode"] == mode and not r["warm"] and keep(r):
+            by.setdefault(r["build"], []).append(r)
+    for b, rs in sorted(by.items()):
+        parts = []
+        for name, phases in keys:
+            per = [walls(r, phases) for r in rs]
+            per = [p for p in per if p]
+            if not per:
+                continue
+            parts.append("%s p50 %.2f p95 %.2f" % (name, st.median([st.median(p) for p in per]),
+                st.median([pct(p, .95) for p in per])))
+        print("  %s: %d (%s) | %s" % (b, len(rs), " ".join(r["nonce"] for r in rs), " | ".join(parts)))
+
+
+grade("map, every measured launch:", "map", [("maprest", ("maprest",))], lambda r: True)
+grade("map, unthrottled maprest:", "map", [("maprest", ("maprest",))],
+    lambda r: not throttled(walls(r, ("maprest",))))
+grade("fight, every measured launch:", "fight",
+    [("ashrest", ("ashrest",)), ("resh+rdeal", ("resh", "rdeal"))], lambda r: True)
+grade("fight, unthrottled ashrest:", "fight", [("ashrest", ("ashrest",))],
+    lambda r: not throttled(walls(r, ("ashrest",))))
+grade("fight, unthrottled reshuffle:", "fight", [("resh+rdeal", ("resh", "rdeal"))],
+    lambda r: not throttled(walls(r, ("resh", "rdeal"))))
+print()
+print("cold open (ms since engine start; median per build, measured map launches):")
+by = {}
+for r in runs:
+    if r["mode"] == "map" and not r["warm"] and "land" in r["marks"]:
+        by.setdefault(r["build"], []).append(r)
+for b, rs in sorted(by.items()):
+    print("  %s: land %s | median %.0f" % (b, " ".join(str(r["marks"]["land"][1]) for r in rs),
+        st.median([r["marks"]["land"][1] for r in rs])))
