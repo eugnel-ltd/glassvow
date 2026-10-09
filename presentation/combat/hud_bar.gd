@@ -172,6 +172,8 @@ var _gold_num: Label
 var _title_lead: Label
 var _title_tail: Label
 var _deck_count: Label
+## The deck seal as a stack of real cards, where the painted deck stood (#657).
+var _deck_stack: DeckStack
 var _potion_slots: Array[Button] = []
 var _potion_art: Array[TextureRect] = []
 var _plate_fill: TextureRect
@@ -405,7 +407,9 @@ func set_values(hp: int, max_hp: int, block: int, gold: int,
 	# this port shows the cards still IN the fight instead — draw, hand and
 	# discard. Ash is excluded on purpose: a pile whose meaning is "removed from
 	# the fight" cannot also be in it.
-	_deck_count.text = str(draw_count + hand_count + discard_count)
+	var in_fight: int = draw_count + hand_count + discard_count
+	_deck_count.text = str(in_fight)
+	_deck_stack.set_count(in_fight)
 
 	_energy_num.text = str(energy)
 	_sync_candles(energy, max_energy)
@@ -683,14 +687,20 @@ func _build_top_bar() -> void:
 		_potion_art.append(potion_art)
 
 	# .icon-btn.deck-btn — a 44px hit area under 56px of art, with the count
-	# sitting on the seal in white.
+	# sitting on the seal in white. The seal is a stack of the table's backs
+	# as thick as the cards still in the fight (DeckStack, #657); the painting
+	# until the back is baked.
 	var deck: Button = _bare_button(Vector2(44.0, 44.0) * k)
 	deck.tooltip_text = Locale.active.t("ui.hud.deckAria")
 	deck.pressed.connect(func() -> void: deck_pressed.emit())
 	right.add_child(deck)
-	var seal: TextureRect = _icon_rect("ui/deck", 56.0 * k)
-	seal.position = Vector2(-6.0, -6.0) * k
-	deck.add_child(seal)
+	# Its top card is held 2 px under the button's top, not under the square's
+	# 6 px over it: the phone's bar seats the button 1 px under the screen's
+	# edge, where a card held by the square would lose its top.
+	_deck_stack = DeckStack.new(56.0 * k, icon("ui/deck"), 8.0 * k)
+	_deck_stack.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	_deck_stack.position = Vector2(-6.0, -6.0) * k
+	deck.add_child(_deck_stack)
 	_deck_count = _num_label(22.0 * k, Color.WHITE, GlassStyle.CINZEL_800, 0)
 	_deck_count.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_deck_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1253,8 +1263,9 @@ func pulse_piles() -> void:
 		tw.tween_property(stack, "modulate", Color.WHITE, RM_PULSE * 0.5)
 
 
-## Wear the table's back on every pile, and follow it: it is baked as the
-## fight loads (CardTurn.prewarm), after the HUD is built.
+## Wear the table's back on every pile, and follow it: it is baked before the
+## fight (Main._bake_table_back) or as the fight loads (CardTurn.prewarm),
+## after the HUD is built. The deck seal follows it on its own (DeckStack).
 func _follow_back() -> void:
 	var back: CardBacks.Baked = CardTurn.back()
 	if back == _worn_back:
