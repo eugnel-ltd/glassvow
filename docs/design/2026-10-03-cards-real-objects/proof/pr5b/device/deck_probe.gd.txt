@@ -3,6 +3,7 @@ extends Node
 ## SCRATCH QA PROBE (#657 PR 5b, never committed). Attached by the QA patch in
 ## Main._ready when a `--deck-probe=` user argument is given:
 ##   -- --map --seed=1 --deck-probe=nonce=N,mode=map|fight[,warm=1]
+##   -- --deck-probe=nonce=N,mode=route     (no --map: the boot lands on the title)
 ## The same probe runs on a build of main (A) and of the branch (B).
 ##   mode=map    the cold open to the map: frames from the probe's first frame
 ##               (phase boot) until the map is settled, marking the frame that
@@ -19,6 +20,15 @@ extends Node
 ##               the draw pile reshuffles, every reshuffled card dealt before
 ##               (phases endturn, resh while the stream flies, rdeal from its
 ##               end until the drain is idle).
+##   mode=route  the players' route: the boot's title (the dev profile's run,
+##               saved by an earlier --map launch), rested; then Back to the
+##               Road, as a tap does (`_on_title_pick`): the title's light
+##               floods out, the map is built under it with the run HUD (the
+##               branch bakes there), and the light fades off it. Frames from
+##               the tap until the map settles (phase route), each with the
+##               flood's state (an FL row: its alpha, its radius as a share of
+##               full cover, visible), marking the frames that built the HUD,
+##               that held the bench and that the bake landed in.
 ## Each frame row: phase, wall ms, start-to-draw, draw, process, root GPU,
 ## video memory MiB, pipeline compiles. Rows are held in memory and written at
 ## the end: no file I/O inside a measured frame.
@@ -108,14 +118,22 @@ func _on_frame_start() -> void:
 		Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, ",".join(counts)])
 	_frame += 1
 	_t_start = now
-	if _phase == "boot":
+	if _phase == "boot" or _phase == "route":
+		var k: String = "r" if _phase == "route" else ""
 		var hud = main._run_hud
-		_mark("hud", hud != null and is_instance_valid(hud))
-		_mark("bench", main.get_node_or_null("CardBackBench") != null)
-		_mark("baked", CardTurn.back() != null)
+		_mark(k + "hud", hud != null and is_instance_valid(hud))
+		_mark(k + "bench", main.get_node_or_null("CardBackBench") != null)
+		_mark(k + "baked", CardTurn.back() != null)
 		var map = main._map_screen
-		_mark("land", map != null and is_instance_valid(map) and map.is_inside_tree() \
+		_mark(k + "land", map != null and is_instance_valid(map) and map.is_inside_tree() \
 			and not map.landscape_pending())
+	if _phase == "route":
+		var tl = main._transitions
+		var full: float = tl._stage_size().length() * TransitionLayer.IRIS_SPAN
+		var r = tl._flood_mat.get_shader_parameter("radius")
+		_frame_rows.append("%s %d FL %d %.3f %.3f %s" % [cfg.get("nonce", "none"),
+			Time.get_ticks_msec(), _frame - 1, tl._flood.modulate.a,
+			(float(r) / full) if r != null and full > 0.0 else -1.0, str(tl._flood.visible)])
 
 
 func _wait(seconds: float) -> void:
@@ -172,6 +190,10 @@ func _settle() -> void:
 
 
 func _run() -> void:
+	if cfg["mode"] == "route":
+		await _route()
+		_finish()
+		return
 	await _settle()
 	if cfg["mode"] == "map":
 		var hud = main._run_hud
@@ -183,6 +205,10 @@ func _run() -> void:
 		await _wait(1.0 if cfg["warm"] == "1" else MAP_REST)
 	else:
 		await _fight()
+	_finish()
+
+
+func _finish() -> void:
 	_phase = "end"
 	if _rows != null:
 		for line: String in _frame_rows:
@@ -194,9 +220,46 @@ func _run() -> void:
 		get_tree().quit()
 
 
+func _route() -> void:
+	_phase = "title"
+	var waited: int = Time.get_ticks_msec()
+	while not main._title_rests() and Time.get_ticks_msec() - waited < 30000:
+		await get_tree().process_frame
+	_row("TITLE rests=%s ms=%d" % [str(main._title_rests()), Time.get_ticks_msec()])
+	# The title's rooms and art warm while it rests: tap once they are done.
+	await _wait(1.0 if cfg["warm"] == "1" else 6.0)
+	var title = main._choice_screen
+	var saved: RunState = main._load_run()
+	if not (title is TitleScreen) or saved == null:
+		_row("ROUTE refused title=%s saved=%s" % [str(title), str(saved != null)])
+		return
+	_phase = "route"
+	_row("TAP frame=%d ms=%d baked=%s back=%s" % [_frame, Time.get_ticks_msec(),
+		str(CardTurn.back() != null), CardTurn.wearing()])
+	main._on_title_pick("continue", title, saved)
+	var calm: int = 0
+	var t0: int = Time.get_ticks_msec()
+	while calm < 30 and Time.get_ticks_msec() - t0 < 30000:
+		var before: int = Time.get_ticks_usec()
+		await get_tree().process_frame
+		var landed: bool = _marks.has("rland") or (_marks.has("rhud") and main._map_screen == null)
+		calm = calm + 1 if landed and float(Time.get_ticks_usec() - before) / 1000.0 < 40.0 else 0
+	var hud = main._run_hud
+	var deck = hud.get("_deck_stack") if hud != null and is_instance_valid(hud) else null
+	_row("ROUTE screen=%s hud=%s stack=%s worn=%s back=%s marks=%s" % [
+		str(main._route_screen.get_class() if main._route_screen != null else (
+			"map" if main._map_screen != null else "none")),
+		str(hud != null), str(deck != null), str(deck != null and deck.worn() != null),
+		CardTurn.wearing(), str(_marks)])
+	_phase = "routerest"
+	await _wait(2.0)
+
+
 func _fight() -> void:
 	_phase = "map"
 	await _wait(1.0)
+	# The branch has baked the table's back on the map; main bakes it in the load.
+	_row("BEFORE_LOAD baked=%s back=%s" % [str(CardTurn.back() != null), CardTurn.wearing()])
 	_phase = "load"
 	main._start_fight(PackedStringArray(["duskfang"]), "elite")
 	await get_tree().process_frame

@@ -40,5 +40,11 @@
  {"id": "d14-seal-held-by-square", "file": "presentation/combat/hud_bar.gd", "test": "tests/test_deck_stack.gd",
   "old": "\t_deck_stack = DeckStack.new(56.0 * k, icon(\"ui/deck\"), 8.0 * k)", "new": "\t_deck_stack = DeckStack.new(56.0 * k, icon(\"ui/deck\"))"},
  {"id": "p01-glint-sliver-drawn", "file": "presentation/cards/pile_stack.gd", "test": "tests/test_piles.gd",
-  "old": "\t\t\tif not Geometry2D.triangulate_polygon(piece).is_empty():\n\t\t\t\tout.append(piece)", "new": "\t\t\tout.append(piece)"}
+  "old": "\t\t\tif not Geometry2D.triangulate_polygon(piece).is_empty():\n\t\t\t\tout.append(piece)", "new": "\t\t\tout.append(piece)"},
+ {"id": "j01-no-shared-join", "file": "presentation/cards/card_backs.gd", "test": "tests/test_card_turn.gd",
+  "old": "\tvar running: _Job = _jobs.get(known)\n\tif running != null:\n\t\tawait running.done\n\t\treturn running.result\n", "new": ""},
+ {"id": "j02-bench-freed-in-flight", "file": "presentation/cards/card_turn.gd", "test": "tests/test_card_turn.gd",
+  "old": "\tparent.add_child(bench)\n\tawait prewarm(bench, id)", "new": "\tparent.add_child(bench)\n\tbench.queue_free.call_deferred()\n\tawait prewarm(bench, id)"},
+ {"id": "r01-rm-ignored-by-the-stack", "file": "presentation/cards/pile_stack.gd", "test": "tests/test_deck_stack.gd",
+  "old": "\tvar still: bool = Preferences.active.reduce_motion", "new": "\tvar still: bool = false"}
 ]

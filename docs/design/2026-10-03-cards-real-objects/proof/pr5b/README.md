@@ -1,8 +1,9 @@
 # #657 PR 5b, the top-menu deck as a stack: evidence
 
-Measured and shot on the branch's code (`c48be94b`). §3 and §4 are the
-dossier's (`../../README.md`); PR 5's evidence is `../pr5/README.md`. The
-probe, the batch, the analysis and the mutation list are text under
+Shot on the branch's code at `c48be94b`; `4e38aeb9` adds tests and one
+comment and changes no behaviour. §3 and §4 are the dossier's
+(`../../README.md`); PR 5's evidence is `../pr5/README.md`. The probe, the
+batch, the analysis and the mutation list are text under
 `device/`; the raw rows stay out of the repository.
 
 ## The spec as built
@@ -21,6 +22,26 @@ card's corner clips the band to a sliver of three points all but in a line,
 which `draw_polygon` refuses (2 pieces in 62,564 at a 1/20,000 sweep step).
 The draw pile shares the code. The band's geometry is now one function
 (`PileStack.glint_pieces`) that keeps only the pieces a triangulation takes.
+
+**The orchestrator's design calls (9 Oct 2026), on the review of `08e9411d`.**
+
+- Accepted: the top card held and the deck deepening under it; the seal's
+  top card held 2 px under its button; the bake behind the route's
+  transition rather than the launch screen; a deck of no cards showing only
+  its count (the piles' rule).
+- A loose end for the tracker, not fixed here: a full deck's edge runs about
+  6 px under the run HUD's 56 px bar, and a relic row long enough to reach
+  the deck (past about 23 relics) would meet it.
+
+**Carried: a change of back inside a session.** `CardBacks.choose` has no
+caller in a session yet: the Vigil's Backs shelf that will call it is PR 6.
+"The stack follows a change of back" is proved through the route path: the
+choice drops the old bake, the stack shows the painting, the next route with
+the run HUD bakes the new back and the stack wears it
+(`_run_hud_bakes_outside_a_fight`, `_follows_the_back`). A picker that
+changes the back while a run HUD is on screen must also bake the new back
+there (or refresh the screen's route); until it does, that HUD shows the
+painting until its next route.
 
 ## Item 5: is the *Deck view open* row built?
 
@@ -83,19 +104,39 @@ the branch (`c48be94b`, B), each with the same untracked probe
   which reshuffles the nine cards in the discard, every one of them dealt
   before in this fight (the probe checks), and deals: **resh** while the
   stream flies, **rdeal** from its end until the drain is idle.
+- **mode=route**, the bake on the players' route. No `--map`: the boot lands
+  on the title, over the run an earlier `--map` launch saved in the QA app's
+  development profile. Once the title has rested and its rooms have warmed
+  (6 s), the probe taps Back to the Road (`_on_title_pick`, as a tap does):
+  the title's light floods out over 0.48 s, the map and the run HUD are built
+  under it (the branch bakes there) and the light fades off. Every frame from
+  the tap until the map settles, each with the flood as it was drawn in that
+  frame (its alpha and its radius as a share of full cover), marking the
+  frame that built the HUD and the frame the bake landed in. A new run reaches
+  its first map under the departure's own flood; driving Embark and the
+  departure from a probe is not cheap, so it is not measured.
 
-**Pending.** The batch waits on two things: the iPad's battery reaching 60%
-(it was charging from 14% at 01:06, and PR 5's batches were thermally
-confounded), and the Mac's login keychain, locked for agent shells, which the
-QA export's development signing needs (`errSecInternalComponent`). The probe
-runs on both builds on the Mac. The results, every launch listed, will
+Each install's first launch is a `warm=1` map launch: the first run of a new
+build, so a cold shader cache. Its bake frame is listed by name, not graded.
+On the branch a fight's load finds the table's back already baked (the map
+baked it), while main bakes it inside the load: the fight's load frame differs
+by design, and both are listed with whether the back was baked before the
+load. The video memory column (`vram`, MiB) is kept for every frame: around
+the bake it shows when the baked card, retired on its bench, is released.
+
+**Pending.** The iPad's battery passed 60% at 04:05 (charging from 14% at
+01:06; PR 5's batches were thermally confounded). The batch now waits only on
+the Mac's login keychain, locked for agent shells, which the QA export's
+development signing needs (`errSecInternalComponent`). The probe runs all
+three modes on both builds on the Mac. The results, every launch listed, will
 replace this paragraph.
 
 ## Tests and mutations
 
 `tests/test_deck_stack.gd`: the card and the law scaled to it at the pad's
 and the phone's squares, the top card held at every count, nothing in the
-stack taking the pointer from its button; the painting until a back is
+stack taking the pointer from its button; the run HUD's stack glinting
+once a cycle and never under Reduce Motion; the painting until a back is
 baked, the back once it is, the painting again after a change of back and
 the new back once its bake lands, a stack built after the bake wearing it
 from its first frame; the seal's and the draw pile's glints never crossing
@@ -105,23 +146,26 @@ asking for the deck view; the seal counting draw, hand and discard (never
 the ash) at four mixes, its top card 2 px under its button at the pad and the
 phone, and a tap opening the deck.
 
-`tests/test_card_turn.gd` (`_run_hud_bakes_outside_a_fight`), on a real
-`Main`: the map's first build bakes the chosen back in the frame that builds
+`tests/test_card_turn.gd` (`_run_hud_bakes_outside_a_fight`,
+`_fight_joins_the_route_bake`), on a real `Main`: the map's first build bakes the chosen back in the frame that builds
 it, on a bench under `Main`, with the deck on its painting until it lands;
 the bench is gone once it has; the deck wears the bake; a later route with
 the HUD makes no bench and bakes nothing; the fight's load then bakes
 nothing; after a change of back the next route bakes the new back on a bench
 and the deck follows it; a bake dropped under the table is made again by the
-next route.
+next route. A fight that loads while the route's bake is still in flight
+joins it (CardBacks' shared job): one bake, never read through a host freed
+under it, and the fight's draw pile and seal both end on the baked back.
 
 `tests/test_piles.gd` (`_glint_fills`): at ±0.681 the glint draws only
 pieces a triangulation takes; mid-card it draws both halves.
 
-Twenty-one mutations (`device/mutations.json.txt`, run by `device/mutate.py.txt`:
-back up, break, run the one test, copy back), every one caught, on the tests
-as committed:
+Twenty-four mutations (`device/mutations.json.txt`, run by
+`device/mutate.py.txt`: back up, break, run the one test, copy back), every
+one caught, on the tests as committed (`4e38aeb9`). For `j01` the line is the
+new test's; an older test in the same file fails first.
 
-| Mutation | What it breaks | Caught by (the first failure) |
+| Mutation | What it breaks | Caught by |
 |---|---|---|
 | `d01-law-unscaled` (`deck_stack.gd`) | the law unscaled (the stack drawn at its own card) | deck stack: 1 cards on a 56 px square: top at 2.00 (want 2.00), 1.00 deep (want 0.61) |
 | `d02-top-not-held` (`deck_stack.gd`) | the stack grows up from a fixed bottom card | deck stack: 1 cards on a 56 px square: top at 1.39 (want 2.00), 0.61 deep (want 0.61) |
@@ -137,13 +181,16 @@ as committed:
 | `d12-hud-stale-count` (`run_hud.gd`) | the run HUD's refresh leaves the stack's count | run hud deck: pad-landscape counts 12 on the stack and '13' over it, want 13 |
 | `d13-hud-pad-size-on-phone` (`run_hud.gd`) | the phone's run HUD stands the pad's 56 px stack | run hud deck: phone-landscape does not stand a 42 px stack where the painting stood |
 | `b01-no-bake-site` (`main.gd`) | the run HUD's route bakes nothing | card turn: the map's first build baked [], want vault on a bench |
-| `b02-no-bench` (`main.gd`) | the bake runs on Main itself, not a bench | card turn: the map's first build baked [[<Control#359737070070>, "vault"]], want vault on a bench |
+| `b02-no-bench` (`main.gd`) | the bake runs on Main itself, not a bench | card turn: the map's first build baked [[<Control#359602852346>, "vault"]], want vault on a bench |
 | `b03-bench-kept` (`card_turn.gd`) | the bench is kept after the bake | card turn: the bench outlives its bake |
 | `b04-no-guard` (`main.gd`) | every route with the HUD makes a bench | card turn: a later route with the HUD baked again ([[<Freed Object>, "vault"]], 1 benches) |
 | `b05-guard-on-wearing-only` (`main.gd`) | a dropped bake counts as worn | card turn: a dropped bake is not made again by the next route: [[<Freed Object>, "vault"], [<Freed Object>, "eclipse"]] |
-| `b06-default-not-chosen` (`main.gd`) | the default back is baked, not the chosen one | card turn: the route after a change of back baked [[<Freed Object>, "vault"], [CardBackBench:<Node#426241955711>, "vault"]], want eclipse on a bench |
+| `b06-default-not-chosen` (`main.gd`) | the default back is baked, not the chosen one | card turn: the route after a change of back baked [[<Freed Object>, "vault"], [CardBackBench:<Node#426107737987>, "vault"]], want eclipse on a bench |
 | `d14-seal-held-by-square` (`hud_bar.gd`) | the seal's top card held by the painting's square | combat seal: on pad-landscape its top card stands -4.00 px under the button's top, want 2.00 |
 | `p01-glint-sliver-drawn` (`pile_stack.gd`) | the glint draws slivers no triangulation takes | piles: the glint at -0.681 draws a sliver the canvas cannot fill |
+| `j01-no-shared-join` (`card_backs.gd`) | a second caller of a bake in flight bakes again (no shared job) | card turn: a fight loading under the route's bake baked 2 times, want once |
+| `j02-bench-freed-in-flight` (`card_turn.gd`) | the bench is let go before its bake lands | card turn: a bake in flight was read through a freed host: ["vault"] |
+| `r01-rm-ignored-by-the-stack` (`pile_stack.gd`) | Reduce Motion ignored by the stack's glint (seal and run HUD) | deck stack: under Reduce Motion the seal still glints |
 
 ## Stills and bursts (Mac, M1 Max, Metal, Forward Mobile)
 
@@ -190,12 +237,13 @@ stays, as the stack's fallback.
 
 ## Core gate
 
-On `c48be94b` (`godot --version` 4.7.2.stable; `tools/check_imports.sh`;
-`tools/check_scripts.sh`, 493 scripts; `godot --headless -s
-res://tests/run_all.gd`; plus `check_anchors.py`, `check_benchmark_freeze.py`,
-`payload_report.py`): green, **PASS (157 tests)**, anchors OK, 592 citations
-frozen, payload within budget. A first full run on the same head, under a
-load average of 72 to 79 from other lanes' balance runs, failed one
-real-time assertion (`test_card_flights`: under Reduce Motion a leaving card
-had not left within its 0.16 s fade and 0.05 s of slack); that test passed
-alone twice and in the full re-run.
+On `4e38aeb9`, at a load average of 7 to 18: `godot --version` (4.7.2.stable),
+`tools/check_imports.sh`, `tools/check_scripts.sh` (493 scripts), `godot
+--headless -s res://tests/run_all.gd`, then `check_anchors.py`,
+`check_benchmark_freeze.py` and `payload_report.py`: green, **PASS (157
+tests)**, anchors OK, 592 citations frozen, payload within budget. On
+`c48be94b` it was green too, on a re-run: its first full run, at a load
+average of 72 to 79 from other lanes' balance runs, failed one real-time
+assertion (`test_card_flights`: under Reduce Motion a leaving card had not
+left within its 0.16 s fade and 0.05 s of slack), which then passed alone
+twice and in the full re-run.
