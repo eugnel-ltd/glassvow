@@ -224,17 +224,24 @@ static func hold_for_fight(fight: Node) -> void:
 	hold.name = "CardShaderHold"
 	hold.materials = CardView.generated_materials()
 	fight.add_child(hold)
-	var texel: ImageTexture = ImageTexture.create_from_image(
-		Image.create_empty(1, 1, false, Image.FORMAT_RGBA8))
-	var wait: Callable = func() -> void:
-		var _waited: Image = texel.get_image()
-	RenderingServer.frame_post_draw.connect(wait, CONNECT_ONE_SHOT)
+	hold.wait_for_draw()
 
 
-## Where a fight holds its cards' generated materials; it leaves with the fight.
+## Where a fight holds its cards' generated materials, and the texel it reads
+## back after its load's draw. It leaves with the fight, and a wait still
+## pending then (a fight let go before it was ever drawn) goes with it.
 class _Hold:
 	extends Node
 	var materials: Array[Material] = []
+	var _texel: ImageTexture = null
+
+	func wait_for_draw() -> void:
+		_texel = ImageTexture.create_from_image(Image.create_empty(1, 1, false, Image.FORMAT_RGBA8))
+		RenderingServer.frame_post_draw.connect(_read_texel, CONNECT_ONE_SHOT)
+
+	func _read_texel() -> void:
+		var _waited: Image = _texel.get_image()
+		_texel = null
 
 
 ## One transparent pixel wearing the picture turn's material: a TextureRect,
