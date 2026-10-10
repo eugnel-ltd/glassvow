@@ -25,7 +25,7 @@ Usage (repo root):
                                 [--content FILE]   # a scratch catalogue, e.g. one sweep point
                                 [--way-weights 2.0/1.0]   # committed arms' own/other glass weights
                                 [--play search]   # readout 8's search player on the board
-                                [--pilot p9 --search s2]   # the 1.1 bots (default: 1.0's p8-d0-v3 and s1)
+                                [--pilot p9 --search s3]   # the 1.1 bots (default: 1.0's p8-d0-v3 and s1)
                                 [--vows 0]   # one vow's cells only (a split table: V0 and V5 on their own seeds)
   python3 tools/balance_ways.py --from-dir DIR [--quick | --seeds A-B] [--content FILE]   # re-grade saved reports
 
@@ -711,7 +711,7 @@ def grade(who: Roster, directory: Path, seeds: tuple[int, int], vows: tuple[int,
 
 
 def bots_label(result: dict[str, Any]) -> str:
-    """`search player s2, pilot p9`: who played the table's fights and who built its runs."""
+    """`search player s3, pilot p9`: who played the table's fights and who built its runs."""
     play = result.get("play", "greedy")
     search = f" {result['search']}" if play == "search" and result.get("search") not in (None, "-") else ""
     pilot = f", pilot {result['pilot']}" if result.get("pilot") not in (None, "None") else ""

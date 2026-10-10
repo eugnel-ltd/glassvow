@@ -41,9 +41,10 @@ Usage (repo root), readout 13's finals:
   python3 -B tools/balance_readout.py equivalence s/final-v0 <reading of record>/final-v0   # and final-v5, ext-v5
 
 The bots are 1.0's instrument of record unless named: pilot p8-d0-v3 and search s1. 1.1's are
-named with `--pilot p9 --search s2` (#544 P6, readout 14). Every chunk's command and every
-report's manifest name them, and the grader refuses a table that mixes them. The 1.0 RC's
-independent re-run names `--pilot p8-d0-v3 --search s1` explicitly (docs/rc-bar.md P9).
+named with `--pilot p9 --search s3` (#544 P6b; readout 14 read 1.1's first search player, s2).
+Every chunk's command and every report's manifest name them, and the grader refuses a table that
+mixes them. The 1.0 RC's independent re-run names `--pilot p8-d0-v3 --search s1` explicitly
+(docs/rc-bar.md P9).
 """
 from __future__ import annotations
 
