@@ -1,0 +1,81 @@
+[18:48:37] ipad lock held by 'map-r33' for 255 s; waiting 30 s
+[18:49:07] ipad lock held by 'map-r33' for 285 s; waiting 30 s
+[18:49:37] ipad lock held by 'map-r33' for 315 s; waiting 30 s
+[18:50:07] ipad lock held by 'map-r33' for 23 s; waiting 30 s
+[18:50:37] ipad lock held by 'map-r33' for 53 s; waiting 30 s
+[18:51:07] ipad lock held by 'map-r33' for 83 s; waiting 30 s
+[18:51:38] ipad lock held by 'map-r33' for 114 s; waiting 30 s
+[18:52:08] ipad lock held by 'map-r33' for 144 s; waiting 30 s
+[18:52:38] ipad lock held by 'map-r33' for 174 s; waiting 30 s
+[18:53:08] ipad lock held by 'map-r33' for 204 s; waiting 30 s
+[18:53:38] ipad lock held by 'map-r33' for 234 s; waiting 30 s
+[18:54:08] ipad lock held by 'map-r33' for 264 s; waiting 30 s
+[18:54:38] ipad lock held by 'map-r33' for 294 s; waiting 30 s
+[18:55:08] ipad lock held by 'map-r33' for 9 s; waiting 30 s
+[18:55:38] ipad lock held by 'map-r33' for 39 s; waiting 30 s
+[18:56:08] ipad lock held by 'map-r33' for 69 s; waiting 30 s
+[18:56:39] ipad lock held by 'map-r33' for 100 s; waiting 30 s
+[18:57:09] ipad lock held by 'map-r33' for 130 s; waiting 30 s
+[18:57:39] ipad lock held by 'map-r33' for 160 s; waiting 30 s
+[18:58:09] ipad lock held by 'map-r33' for 190 s; waiting 30 s
+[18:58:39] ipad lock held by 'map-r33' for 220 s; waiting 30 s
+[18:59:09] ipad lock held by 'map-r33' for 250 s; waiting 30 s
+[18:59:39] ipad lock held by 'map-r33' for 280 s; waiting 30 s
+[19:00:09] ipad lock held by 'map-r33' for 310 s; waiting 30 s
+[19:00:39] ipad lock held by 'map-r33' for 25 s; waiting 30 s
+[19:01:09] ipad lock held by 'map-r33' for 55 s; waiting 30 s
+[19:01:39] ipad lock held by 'map-r33' for 85 s; waiting 30 s
+[19:02:10] ipad lock held by 'map-r33' for 116 s; waiting 30 s
+[19:02:40] ipad lock held by 'map-r33' for 146 s; waiting 30 s
+[19:03:10] ipad lock held by 'map-r33' for 176 s; waiting 30 s
+[19:03:40] ipad lock held by 'map-r33' for 206 s; waiting 30 s
+[19:04:10] ipad lock held by 'map-r33' for 236 s; waiting 30 s
+[19:04:40] ipad lock held by 'map-r33' for 266 s; waiting 30 s
+[19:05:10] ipad lock held by 'map-r33' for 296 s; waiting 30 s
+[19:05:40] lock held
+[19:05:59] installed B (/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane/device/ipa_B/glassvow.ipa)
+[19:05:59] launch kbw2 args=[--map --seed=1 --deck-probe=nonce=kbw2,mode=map,warm=1] battery=100% charging=false temp=37.29C
+[19:06:22] rows kbw2: 285 frames; mode=map mode=map  battery=100% charging=false temp=37.29C
+[19:06:25] cool-down 60 s
+[19:07:26] launch kbm3 args=[--map --seed=1 --deck-probe=nonce=kbm3,mode=map] battery=100% charging=false temp=37.39C
+[19:08:01] rows kbm3: 866 frames; mode=map mode=map  battery=100% charging=false temp=37.59C
+[19:08:04] cool-down 90 s
+[19:09:34] launch kbr3 args=[--deck-probe=nonce=kbr3,mode=route] battery=100% charging=false temp=37.9C
+[19:10:09] rows kbr3: 665 frames; mode=route mode=route  battery=100% charging=false temp=37.29C
+[19:10:12] cool-down 90 s
+[19:11:43] launch kbf3 args=[--map --seed=1 --deck-probe=nonce=kbf3,mode=fight] battery=100% charging=false temp=37.19C
+[19:12:42] rows kbf3: 1594 frames; mode=fight mode=fight  battery=100% charging=false temp=38.50C
+[19:12:45] cool-down 90 s
+[19:14:16] launch kbm4 args=[--map --seed=1 --deck-probe=nonce=kbm4,mode=map] battery=100% charging=false temp=39.69C
+[19:14:50] rows kbm4: 1018 frames; mode=map mode=map  battery=100% charging=false temp=39.50C
+[19:14:53] cool-down 90 s
+[19:16:23] launch kbr4 args=[--deck-probe=nonce=kbr4,mode=route] battery=100% charging=false temp=37.89C
+[19:16:57] rows kbr4: 679 frames; mode=route mode=route  battery=100% charging=false temp=38.0C
+[19:17:00] cool-down 90 s
+[19:18:30] launch kbf4 args=[--map --seed=1 --deck-probe=nonce=kbf4,mode=fight] battery=100% charging=false temp=37.0C
+[19:19:31] rows kbf4: 1623 frames; mode=fight mode=fight  battery=100% charging=false temp=38.39C
+[19:19:34] cool-down 90 s
+[19:21:29] installed A (/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane/device/ipa_A/glassvow.ipa)
+[19:21:30] launch kaw2 args=[--map --seed=1 --deck-probe=nonce=kaw2,mode=map,warm=1] battery=100% charging=false temp=39.79C
+[19:21:52] rows kaw2: 281 frames; mode=map mode=map  battery=100% charging=false temp=39.50C
+[19:21:55] cool-down 60 s
+[19:22:55] launch kam3 args=[--map --seed=1 --deck-probe=nonce=kam3,mode=map] battery=100% charging=false temp=38.50C
+[19:23:30] rows kam3: 944 frames; mode=map mode=map  battery=100% charging=false temp=38.50C
+[19:23:33] cool-down 90 s
+[19:25:03] launch kar3 args=[--deck-probe=nonce=kar3,mode=route] battery=100% charging=false temp=37.69C
+[19:25:38] rows kar3: 662 frames; mode=route mode=route  battery=100% charging=false temp=38.0C
+[19:25:41] cool-down 90 s
+[19:27:12] launch kaf3 args=[--map --seed=1 --deck-probe=nonce=kaf3,mode=fight] battery=100% charging=false temp=37.59C
+[19:28:12] rows kaf3: 1590 frames; mode=fight mode=fight  battery=100% charging=false temp=38.89C
+[19:28:15] cool-down 90 s
+[19:29:46] launch kam4 args=[--map --seed=1 --deck-probe=nonce=kam4,mode=map] battery=100% charging=false temp=39.89C
+[19:30:21] rows kam4: 1013 frames; mode=map mode=map  battery=100% charging=false temp=39.89C
+[19:30:24] cool-down 90 s
+[19:31:54] launch kar4 args=[--deck-probe=nonce=kar4,mode=route] battery=100% charging=false temp=37.89C
+[19:32:29] rows kar4: 645 frames; mode=route mode=route  battery=100% charging=false temp=38.9C
+[19:32:32] cool-down 90 s
+[19:34:02] launch kaf4 args=[--map --seed=1 --deck-probe=nonce=kaf4,mode=fight] battery=100% charging=false temp=37.50C
+[19:35:01] rows kaf4: 1613 frames; mode=fight mode=fight  battery=100% charging=false temp=38.50C
+[19:35:04] cool-down 90 s
+[19:36:34] batch done
+[19:36:34] lock released

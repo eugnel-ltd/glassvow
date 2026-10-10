@@ -244,3 +244,61 @@ for r in runs:
             by.setdefault(r["build"], []).append(max(lf))
 for b, ls in sorted(by.items()):
     print("  fight load frame ms, %s: %s | median %.0f" % (b, " ".join("%.0f" % x for x in ls), st.median(ls)))
+print()
+print("per batch, B - A on the batch medians (measured launches; p50 / p95 of each launch, median per build):")
+for title, mode, phases in (("maprest", "map", ("maprest",)), ("ashrest", "fight", ("ashrest",)),
+                            ("resh+rdeal", "fight", ("resh", "rdeal"))):
+    for batch in sorted({r["batch"] for r in runs}):
+        med = {}
+        for r in runs:
+            if r["batch"] == batch and r["mode"] == mode and not r["warm"] and walls(r, phases):
+                med.setdefault(r["build"], []).append(walls(r, phases))
+        if len(med) != 2:
+            continue
+        (a, pa), (b, pb) = sorted(med.items(), key=lambda kv: kv[0] != "711302a5")
+        m = lambda per, q: st.median([st.median(p) if q is None else pct(p, q) for p in per])
+        print("  %-10s %s: A(%s) p50 %.2f p95 %.2f | B(%s) p50 %.2f p95 %.2f | B-A p50 %+.2f p95 %+.2f" % (
+            title, batch, a, m(pa, None), m(pa, .95), b, m(pb, None), m(pb, .95),
+            m(pb, None) - m(pa, None), m(pb, .95) - m(pa, .95)))
+print()
+print("every launch, as a Markdown table (battery, charging and temperature as logged before the launch):")
+import re
+launch_env = {}
+for d in sys.argv[1:]:
+    log_path = os.path.join(d, "batch.log")
+    if os.path.exists(log_path):
+        for line in open(log_path):
+            m = re.search(r"launch (\S+) .*battery=(\S+) charging=(\S+) temp=(\S*)", line)
+            if m:
+                # batch.zsh logs hundredths unpadded ("36.9C" is 36.09 C): pad them back.
+                whole, _, frac = m.group(4).rstrip("C").partition(".")
+                temp = "%.1f C" % float("%s.%s" % (whole, frac.zfill(2))) if whole else "?"
+                launch_env[m.group(1)] = "%s, %s, %s" % (m.group(2), "charging" if m.group(3) == "true" else "not charging", temp)
+print("| Batch | Launch | Build | Mode | Battery, temp. | Throttle onset | Figures (ms) |")
+print("|---|---|---|---|---|---|---|")
+order = list(launch_env)
+for r in sorted(runs, key=lambda r: (r["batch"], order.index(r["nonce"]) if r["nonce"] in order else len(order))):
+    on = onset(r)
+    fig = ""
+    if r["mode"] == "map":
+        a = walls(r, ("maprest",))
+        w, _ = bake_line(r, "")
+        k, what = bake_frame(r, "")
+        fig = "rest p50 %.2f / p95 %.2f%s; %s frame %.1f; land at %s" % (st.median(a), pct(a, .95),
+            " (throttled)" if throttled(a) else "", "bake" if what == "bake" else "HUD", w or float("nan"),
+            r["marks"].get("land", (0, "?"))[1])
+    elif r["mode"] == "route":
+        w, _ = bake_line(r, "r")
+        k, what = bake_frame(r, "r")
+        fl = r["flood"].get(k, (float("nan"),))[0]
+        longs, _ = around(r, k) if k is not None else ("-", "")
+        fig = "%s frame %.1f under flood a%.2f; >33 within 10: %s" % ("bake" if what == "bake" else "HUD",
+            w or float("nan"), fl, longs)
+    else:
+        lf = walls(r, ("load",)); a = walls(r, ("ashrest",)); s = walls(r, ("resh", "rdeal"))
+        fig = "load %.0f (%s); ash rest p50 %.2f / p95 %.2f; reshuffle p50 %.2f / p95 %.2f, max %.1f" % (
+            max(lf) if lf else float("nan"), r["info"].get("BEFORE_LOAD", "?").split(" back")[0],
+            st.median(a), pct(a, .95), st.median(s), pct(s, .95), max(s))
+    print("| %s | %s%s | %s | %s | %s | %s | %s |" % (r["batch"], r["nonce"], " (warm-up)" if r["warm"] else "",
+        "A" if r["build"] == "711302a5" else "B", r["mode"], launch_env.get(r["nonce"], "?"),
+        "none" if on is None else "%d s" % on, fig))

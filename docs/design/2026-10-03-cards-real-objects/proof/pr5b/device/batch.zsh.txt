@@ -22,7 +22,15 @@ LOCK=cards-pr5b
 QA=io.fol2.glassvow.qa
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a $OUT/batch.log; }
-$FLOW/ipad_lock.sh acquire $LOCK >> $OUT/batch.log 2>&1 || { log "lock failed"; exit 1; }
+# Never break another lane's hold: ipad_lock.sh's acquire takes over a lock
+# older than 60 min. Wait here until the lock is free, then take it; a hold
+# another lane takes in between is fresh, and the timeout stops the acquire
+# before its second look, so it can never take a hold over.
+until [[ "$($FLOW/ipad_lock.sh status)" == free ]] \
+    && timeout 20 $FLOW/ipad_lock.sh acquire $LOCK >> $OUT/batch.log 2>&1 \
+    && [[ "$(cat $FLOW/ipad.lock/owner 2>/dev/null)" == $LOCK ]]; do
+  log "ipad lock $($FLOW/ipad_lock.sh status); waiting 30 s"; sleep 30
+done
 cleanup() { $FLOW/ipad_lock.sh release $LOCK >> $OUT/batch.log 2>&1; log "lock released"; }
 trap cleanup EXIT
 trap 'exit 130' INT TERM
@@ -42,7 +50,9 @@ battery() {
   echo "battery=${lvl:-unknown}% charging=${chg:-unknown} temp=${tmp:+$((tmp / 100)).$((tmp % 100))}C"
 }
 for step in "$@"; do
-  $FLOW/ipad_lock.sh acquire $LOCK >> $OUT/batch.log 2>&1   # ours: refreshes its age
+  # Refresh our hold's age; if it is no longer ours, stop rather than wait on another's.
+  [[ "$(cat $FLOW/ipad.lock/owner 2>/dev/null)" == $LOCK ]] || { log "lock lost"; exit 1; }
+  $FLOW/ipad_lock.sh acquire $LOCK >> $OUT/batch.log 2>&1
   if [[ "$step" == sleep:* ]]; then
     log "cool-down ${step#sleep:} s"; sleep ${step#sleep:}; continue
   fi
@@ -68,6 +78,11 @@ for step in "$@"; do
   log "launch $nonce args=[$args] $(battery)"
   timeout 90 xcrun devicectl device process launch --terminate-existing --device "$U" \
     $QA -- ${(z)args} 2>&1 | redact >> $OUT/launch.log || log "launch rc=$?"
+  # No pull (a devicectl copy over the tunnel) while the probe measures: the
+  # first look waits out the launch's measured windows.
+  if [[ "$opts" == *warm=1* ]]; then sleep 15
+  elif [[ "$opts" == *mode=fight* ]]; then sleep 50
+  else sleep 25; fi
   got=0
   for i in $(seq 1 40); do
     sleep 5

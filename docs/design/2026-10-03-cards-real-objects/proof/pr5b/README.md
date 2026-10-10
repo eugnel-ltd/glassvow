@@ -1,10 +1,11 @@
 # #657 PR 5b, the top-menu deck as a stack: evidence
 
 Shot on the branch's code at `c48be94b`; `4e38aeb9` adds tests and one
-comment and changes no behaviour. §3 and §4 are the dossier's
+comment and changes no behaviour. The iPad rows are of `0b985fbd`, whose code
+is `4e38aeb9`'s. §3 and §4 are the dossier's
 (`../../README.md`); PR 5's evidence is `../pr5/README.md`. The probe, the
-batch, the analysis and the mutation list are text under
-`device/`; the raw rows stay out of the repository.
+batch, the analysis, the batch logs, the analysis's output and the mutation
+list are text under `device/`; the raw rows stay out of the repository.
 
 ## The spec as built
 
@@ -85,8 +86,10 @@ What it would take, as its own PR with its own device measurement:
 
 ## iPad 8 (A12, 2160 × 1620), frame times
 
-QA builds (`io.fol2.glassvow.qa`), one of `main` (`711302a5`, A) and one of
-the branch (`c48be94b`, B), each with the same untracked probe
+QA builds (`io.fol2.glassvow.qa`), one of `main` (`711302a5`, A; `main`
+was at `64af9302` by then, which adds docs and balance-tool text only, so the
+same runtime) and one of the branch (`0b985fbd`, B: the code of `4e38aeb9`
+and proof docs), each with the same untracked probe
 (`device/deck_probe.gd.txt`, attached by `device/patch.py.txt`), launched
 `--map --seed=1 --deck-probe=nonce=…,mode=…`:
 
@@ -117,19 +120,182 @@ the branch (`c48be94b`, B), each with the same untracked probe
   departure from a probe is not cheap, so it is not measured.
 
 Each install's first launch is a `warm=1` map launch: the first run of a new
-build, so a cold shader cache. Its bake frame is listed by name, not graded.
+build, which may meet a cold shader cache (only the campaign's first did, as
+it turned out). Its bake frame is listed by name, not graded.
 On the branch a fight's load finds the table's back already baked (the map
 baked it), while main bakes it inside the load: the fight's load frame differs
 by design, and both are listed with whether the back was baked before the
 load. The video memory column (`vram`, MiB) is kept for every frame: around
 the bake it shows when the baked card, retired on its bench, is released.
 
-**Pending.** The iPad's battery passed 60% at 04:05 (charging from 14% at
-01:06; PR 5's batches were thermally confounded). The batch now waits only on
-the Mac's login keychain, locked for agent shells, which the QA export's
-development signing needs (`errSecInternalComponent`). The probe runs all
-three modes on both builds on the Mac. The results, every launch listed, will
-replace this paragraph.
+**Results (10 Oct 2026, 18:12–20:13).** Three sessions of the shared iPad
+lock, interleaved by install: b1 A then B, b2 B then A (it waited 17 min
+for the R3.3 lane's hold to end), b3 A then B. Each install ran a warm-up,
+then map, route and fight twice, with 90 s cool-downs: six measured launches
+of each mode on each build, 42 launches in all, every row carrying its own
+nonce and build tag. Both QA builds run the custom 4.7.3-rc iOS template, as
+each probe's `PROBE` row reports. The iPad was on its charger and full at
+every launch (100%, not charging); it was at 30.5 °C at the first launch and
+33–40.6 °C after that. **No measured launch throttled** (the onset rule is a
+1 s window whose median goes over 16.9 ms and stays there). Only B's first
+warm-up (kbw1) throttled, from 4 s. The analysis's full output is
+`device/summary.txt`; the batch logs are `device/b1-batch.log.txt`,
+`b2-…` and `b3-…`.
+
+Medians over the six measured launches of each build (per-launch p50 and
+p95, then the median of each), with B − A for each batch in brackets:
+
+| Figure (ms) | A, main | B, branch | B − A | Acceptance |
+|---|---|---|---|---|
+| Map at rest, p50 | 16.68 | 16.68 | 0.00 (b1 −0.01, b2 +0.08, b3 +0.07) | within +0.5: **met** |
+| Map at rest, p95 | 17.20 | 17.14 | −0.06 (b1 +0.02, b2 −0.87, b3 −1.07) | within +0.5: **met** |
+| Cold open, engine start to the map's land | 5882 | 5969 | +87 | not slower beyond noise: **met, leaning B's way** (below) |
+| Bake site, `--map` boot: the map's first frame | 45.8 (HUD) | 87.9 (bake) | +42 | named (below) |
+| Bake site, players' route: the frame that builds the map | 181.2 (HUD) | 287.7 (bake) | +107 | named (below) |
+| Fight load frame | 783 | 648 | −135 | by design: B finds the bake made |
+| Fight's first frame after the load | 15.0 | 108.0 | +93 | by design (below) |
+| Combat rest, ash and face-up discard, p50 / p95 | 16.67 / 17.30 | 16.66 / 17.39 | −0.01 / +0.09 (p95 b1 −0.01, b2 +0.46, b3 +0.04) | measured |
+| Reshuffle of cards dealt before, p50 / p95 | 16.68 / 18.29 | 16.67 / 18.39 | −0.01 / +0.10 (p95 b1 −0.06, b2 +0.34, b3 +0.30) | measured |
+| Reshuffle, worst frame | 24.3 | 30.1 | +5.8 | measured (below) |
+| Video memory at the combat rest (MiB) | 669 | 648 | −21 | the bench's card released on the map |
+
+- **The map at rest: met.** Two of main's launches, kam3 and kam6 (at 38.5
+  and 40.0 °C), have uneven pacing (p50 16.51 and 16.54, p95 18.85 and
+  19.24) without meeting the throttle rule. They are the outliers, and they
+  tilt b2's and b3's p95 deltas towards B. Without them main's p95 median is
+  17.18 against B's 17.14, so the line is still met. B's six p95s run from
+  17.11 to 17.23.
+- **The bake on the `--map` boot.** The run HUD is built before the map's
+  first drawn frame, and B's bake lands in that frame (frame 1) in all six
+  launches. It takes 63.5–100.4 ms against main's 40.1–57.6 ms for the same
+  frame: +42 ms on the medians, the A12 bake cost CardBacks measured earlier
+  (33–58 ms). In both builds that frame is over 33 ms in every launch. The
+  other frames over 33 ms within ±10 are frame 0 (the probe's first) in kbm4
+  (45.6) and kbm6 (39.4), kbm6's +6 (48.2) and +10 (298.5), and main's kam3
+  +2 (49.3). kbm6's 298.5 ms frame is the map's one canvas pipeline compile
+  about 0.2 s in. Both builds have that compile when it misses the cache: in
+  main's kam1 (133 ms), kaw2 (250) and kaw3 (283) at frames 15–16, and in the
+  branch's kbm1 (233), kbm3 (133), kbm5 (267), kbm6 (298), kbw2 (117) and
+  kbw3 (383) at frames 11–14. Only in kbm6 does it fall inside the window.
+  Video memory: on B it is 228 MiB in the bake frame and 238–242 in the next,
+  then 225 or 239 once the bench has gone (3–13 MiB less); on main it goes
+  203 → 214/217 → 218/232. With the map in the same state, the branch holds
+  7 MiB more at rest: the baked back the stacks wear.
+- **The bake on the players' route** (Back to the Road from the title). B's
+  bake lands in the frame that builds the map and the run HUD; its `rbaked`
+  and `rhud` marks are the same frame in all six launches. That frame takes
+  263.1–314.1 ms (median 287.7) against main's 179.7–183.4 ms (181.2). The
+  flood drawn in it is at full cover with alpha 0.96–0.99 (main 0.97–0.99),
+  so the frame with the painting is covered. In both builds the flood in the
+  next frame has dropped to 0.52–0.57 alpha, because the fade catches up after
+  the long frame. The bake therefore holds the full flood for about 0.1 s
+  longer, a stall main already has. Frames over 33 ms within ±10: on B only
+  the bake frame (6/6); on main the HUD frame and also a 50–67 ms frame after
+  it in 5 of 6. Over the two frames that comes to about 288 + 17 ms against
+  181 + 50 ms: +57 ms. Video memory: B rises 132 MiB in the bake frame
+  (338 → 470) and is at 364 two frames later; main rises 111 (330 → 441) and
+  settles at 352.
+- **The cold open: met within noise, leaning B's way.** The medians differ
+  by +87 ms (+1.5%), inside the spread between launches (A 5699–7440,
+  B 5819–8076; a Mann–Whitney U of 12 for six against six, p ≈ 0.4). Still,
+  B is later in five of the six pairs (+120, −37, +178, +636, +245, +1353).
+  Split at the probe's first frame, the difference sits before that frame:
+  - engine start to the first frame (building the map, the run HUD and, on
+    B, the bake's bench): A 3644 ms, B 3782 ms (+138; U = 9, p ≈ 0.18);
+  - first frame to the land: A 2317 ms, B 2295 ms.
+
+  The slowest three (kbm4 8076, kbm6 7529, kam4 7440) are each install's
+  second map launch, after a fight launch, at 39.7–40.6 °C.
+- **The fight's load: different by design.** `BEFORE_LOAD` reads
+  `baked=true back=vault` in all six of B's fights and `baked=false` in all
+  six of main's. The branch's fight finds the map's bake made, while main
+  bakes inside its load. Load frame: B 629.9–666.0 ms (median 648); main
+  767.5–833.8 (780 without kaf1; 783 with it). kaf1's 7866 ms load is that
+  install's first fight, since its warm-up warmed only the map. B's first
+  frame after the load takes 84.7–119.0 ms (median 108) against main's
+  8.5–25.1 (15), likely the GPU work that main's bake readback finishes
+  inside the load. Taking the load and its next two frames together: B
+  766 ms, main 822 (−56).
+- **What the branch moves into the fight.** In all six of B's fights, the
+  end of turn 1 (the hand sweeping face up to the discard) compiles 4 surface
+  pipelines, 1 draw and 1 specialisation. The end of the reshuffle (the
+  stream's last frame or the deal's first) compiles the same again. Main
+  compiles nothing after its load in any of its six; its counts stay at
+  135 / 7 / 46 from the load frame on. Main's bake runs on the fight's own
+  tree, so it compiles these pipelines inside the load. The branch's bench
+  on the map compiles its own instead, and the fight's flights then compile
+  theirs at first use. At the end of turn 1 that frame takes about 21 ms. At
+  the reshuffle the compile lands in the frame that also allocates the deal's
+  18.5 MiB. There B's worst frame is 23.8–46.8 ms (median 30.1) against
+  main's 22.0–41.8 ms (24.3). Over 33 ms: kbf3 at 46.8 (the stream's last
+  frame) and kbf5 at 37.0 (the deal's first), and main's kaf4 at 41.8 (the
+  deal's first, with no compile). The reshuffle's p95 stays within +0.5 ms
+  on every batch. Not tuned here.
+- **The combat rest with a charred card on the ash and a face-up discard.**
+  p50 −0.01 and p95 +0.09 on the medians, and no frame over 33 ms in any of
+  the twelve windows. Video memory at rest: B 648 MiB in all six, main 669
+  (656 in kaf4). The bench's card is let go on the map, while main's baking
+  card stays in the fight's tree.
+- **PR 5's reshuffle account, settled.** These were real fights in which the
+  nine reshuffled cards had all been dealt before (`dealt_before=true` in all
+  twelve). On main, the frame from the stream to the deal takes 22.0–24.5 ms
+  in five of six fights. kaf4's 41.8 ms deal frame is the exception, with no
+  pipeline compile in it. PR 5's 37.2 ms frame was the probe's first build of
+  cards never dealt, as that README reasoned.
+- **Warm-ups** (each install's first launch; not graded). Only kaw1 was
+  truly cold: frames of 4202, 10 634, 4899 and 1264 ms among its first
+  eight, and the land at 31.4 s. The other five found the QA container's
+  shader cache warm from earlier launches. Their bake or HUD frames: kbw1
+  88.9 ms (throttled from 4 s), kbw2 83.7, kbw3 79.0, kaw2 46.6, kaw3 44.1.
+
+Every launch below. Battery, charging state and temperature are as logged
+just before the launch. The throttle onset is in seconds from the probe's
+first frame. The figures are in ms:
+
+| Batch | Launch | Build | Mode | Battery, temp. | Throttle onset | Figures (ms) |
+|---|---|---|---|---|---|---|
+| b1 | kaw1 (warm-up) | A | map | 100%, not charging, 30.5 C | none | rest p50 16.63 / p95 17.87; HUD frame 4202.1; land at 31388 |
+| b1 | kam1 | A | map | 100%, not charging, 33.4 C | none | rest p50 16.67 / p95 17.21; HUD frame 40.9; land at 5699 |
+| b1 | kar1 | A | route | 100%, not charging, 33.0 C | none | HUD frame 183.4 under flood a0.97; >33 within 10: +0:183.4 +1:49.9 |
+| b1 | kaf1 | A | fight | 100%, not charging, 33.1 C | none | load 7866 (baked=false); ash rest p50 16.67 / p95 17.54; reshuffle p50 16.68 / p95 18.45, max 24.5 |
+| b1 | kam2 | A | map | 100%, not charging, 36.7 C | none | rest p50 16.70 / p95 17.19; HUD frame 41.4; land at 5988 |
+| b1 | kar2 | A | route | 100%, not charging, 34.8 C | none | HUD frame 181.3 under flood a0.99; >33 within 10: +0:181.3 |
+| b1 | kaf2 | A | fight | 100%, not charging, 34.8 C | none | load 767 (baked=false); ash rest p50 16.67 / p95 17.20; reshuffle p50 16.70 / p95 18.29, max 24.1 |
+| b1 | kbw1 (warm-up) | B | map | 100%, not charging, 37.7 C | 4 s | rest p50 17.69 / p95 20.85 (throttled); bake frame 88.9; land at 6454 |
+| b1 | kbm1 | B | map | 100%, not charging, 36.8 C | none | rest p50 16.67 / p95 17.23; bake frame 87.7; land at 5819 |
+| b1 | kbr1 | B | route | 100%, not charging, 35.8 C | none | bake frame 314.1 under flood a0.98; >33 within 10: +0:314.1 |
+| b1 | kbf1 | B | fight | 100%, not charging, 36.1 C | none | load 646 (baked=true); ash rest p50 16.68 / p95 17.36; reshuffle p50 16.62 / p95 18.39, max 29.9 |
+| b1 | kbm2 | B | map | 100%, not charging, 38.2 C | none | rest p50 16.68 / p95 17.22; bake frame 63.5; land at 5951 |
+| b1 | kbr2 | B | route | 100%, not charging, 36.4 C | none | bake frame 298.4 under flood a0.99; >33 within 10: +0:298.4 |
+| b1 | kbf2 | B | fight | 100%, not charging, 36.1 C | none | load 650 (baked=true); ash rest p50 16.65 / p95 17.36; reshuffle p50 16.74 / p95 18.23, max 23.8 |
+| b2 | kbw2 (warm-up) | B | map | 100%, not charging, 37.3 C | none | rest p50 16.67 / p95 17.12; bake frame 83.7; land at 5690 |
+| b2 | kbm3 | B | map | 100%, not charging, 37.4 C | none | rest p50 16.67 / p95 17.11; bake frame 88.1; land at 5955 |
+| b2 | kbr3 | B | route | 100%, not charging, 37.1 C | none | bake frame 293.4 under flood a0.99; >33 within 10: +0:293.4 |
+| b2 | kbf3 | B | fight | 100%, not charging, 37.2 C | none | load 633 (baked=true); ash rest p50 16.65 / p95 17.66; reshuffle p50 16.66 / p95 18.39, max 46.8 |
+| b2 | kbm4 | B | map | 100%, not charging, 39.7 C | none | rest p50 16.68 / p95 17.15; bake frame 100.4; land at 8076 |
+| b2 | kbr4 | B | route | 100%, not charging, 37.9 C | none | bake frame 267.4 under flood a0.99; >33 within 10: +0:267.4 |
+| b2 | kbf4 | B | fight | 100%, not charging, 37.0 C | none | load 649 (baked=true); ash rest p50 16.66 / p95 17.49; reshuffle p50 16.61 / p95 18.42, max 29.9 |
+| b2 | kaw2 (warm-up) | A | map | 100%, not charging, 39.8 C | none | rest p50 16.45 / p95 19.79; HUD frame 46.6; land at 6853 |
+| b2 | kam3 | A | map | 100%, not charging, 38.5 C | none | rest p50 16.51 / p95 18.85; HUD frame 52.0; land at 5777 |
+| b2 | kar3 | A | route | 100%, not charging, 37.7 C | none | HUD frame 179.7 under flood a0.99; >33 within 10: +0:179.7 +1:50.9 |
+| b2 | kaf3 | A | fight | 100%, not charging, 37.6 C | none | load 786 (baked=false); ash rest p50 16.67 / p95 17.27; reshuffle p50 16.65 / p95 19.03, max 22.0 |
+| b2 | kam4 | A | map | 100%, not charging, 39.9 C | none | rest p50 16.68 / p95 17.14; HUD frame 50.3; land at 7440 |
+| b2 | kar4 | A | route | 100%, not charging, 37.9 C | none | HUD frame 180.9 under flood a0.99; >33 within 10: +0:180.9 +1:66.7 |
+| b2 | kaf4 | A | fight | 100%, not charging, 37.5 C | none | load 768 (baked=false); ash rest p50 16.68 / p95 16.96; reshuffle p50 16.67 / p95 17.10, max 41.8 |
+| b3 | kaw3 (warm-up) | A | map | 100%, not charging, 38.4 C | none | rest p50 16.69 / p95 17.13; HUD frame 44.1; land at 6055 |
+| b3 | kam5 | A | map | 100%, not charging, 38.4 C | none | rest p50 16.68 / p95 17.16; HUD frame 40.1; land at 5738 |
+| b3 | kar5 | A | route | 100%, not charging, 37.8 C | none | HUD frame 183.3 under flood a0.99; >33 within 10: +0:183.3 +1:50.0 |
+| b3 | kaf5 | A | fight | 100%, not charging, 37.3 C | none | load 834 (baked=false); ash rest p50 16.68 / p95 17.36; reshuffle p50 16.64 / p95 18.28, max 24.4 |
+| b3 | kam6 | A | map | 100%, not charging, 40.0 C | none | rest p50 16.54 / p95 19.24; HUD frame 57.6; land at 6176 |
+| b3 | kar6 | A | route | 100%, not charging, 38.2 C | none | HUD frame 181.1 under flood a0.99; >33 within 10: +0:181.1 +1:50.9 |
+| b3 | kaf6 | A | fight | 100%, not charging, 37.8 C | none | load 780 (baked=false); ash rest p50 16.66 / p95 17.32; reshuffle p50 16.70 / p95 18.07, max 23.8 |
+| b3 | kbw3 (warm-up) | B | map | 100%, not charging, 39.9 C | none | rest p50 16.67 / p95 17.14; bake frame 79.0; land at 6921 |
+| b3 | kbm5 | B | map | 100%, not charging, 39.3 C | none | rest p50 16.68 / p95 17.14; bake frame 81.8; land at 5983 |
+| b3 | kbr5 | B | route | 100%, not charging, 38.3 C | none | bake frame 263.1 under flood a0.96; >33 within 10: +0:263.1 |
+| b3 | kbf5 | B | fight | 100%, not charging, 38.2 C | none | load 630 (baked=true); ash rest p50 16.68 / p95 17.42; reshuffle p50 16.71 / p95 18.31, max 37.0 |
+| b3 | kbm6 | B | map | 100%, not charging, 40.6 C | none | rest p50 16.67 / p95 17.13; bake frame 96.1; land at 7529 |
+| b3 | kbr6 | B | route | 100%, not charging, 38.4 C | none | bake frame 282.0 under flood a0.99; >33 within 10: +0:282.0 |
+| b3 | kbf6 | B | fight | 100%, not charging, 37.9 C | none | load 666 (baked=true); ash rest p50 16.66 / p95 17.34; reshuffle p50 16.68 / p95 18.64, max 30.2 |
 
 ## Tests and mutations
 
