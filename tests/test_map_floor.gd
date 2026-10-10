@@ -181,7 +181,7 @@ static func _plan(fails: Array[String], land: MapJourneyLandscape) -> void:
 		var tile: int = planting.tiles[i]
 		var s: float = planting.scales[i]
 		var foot: Vector3 = corner + y_axis
-		var rect: Vector4 = Atlas.uv[tile]
+		var rect: Vector4 = Atlas.custom(tile)
 		cards_ok = cards_ok and normal.is_equal_approx(toward) and absf(x_axis.dot(toward)) < 0.0001 \
 			and is_zero_approx(x_axis.y) and is_equal_approx(-y_axis.y, Atlas.top[tile] * s) \
 			and is_zero_approx(y_axis.x) and is_zero_approx(y_axis.z) \

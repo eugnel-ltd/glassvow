@@ -113,7 +113,7 @@ func _cards(planting: Planting, key_rotation: Vector3) -> void:
 			casters[at + row * 4 + 1] = y_axis[row]
 			casters[at + row * 4 + 2] = normal[row]
 			casters[at + row * 4 + 3] = corner[row]
-		var rect: Vector4 = Atlas.uv[tile]
+		var rect: Vector4 = Atlas.custom(tile)
 		casters[at + 12] = 0.0
 		casters[at + 13] = 0.0
 		casters[at + 14] = 0.0

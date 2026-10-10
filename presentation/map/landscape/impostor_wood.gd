@@ -57,8 +57,8 @@ func _nearest_first() -> PackedInt32Array:
 	return out
 
 
-## The cards, one MultiMesh per cell, each instance's transform, tint and atlas
-## rect written straight into its buffer.
+## The cards, one MultiMesh per cell, each instance's transform, tint and tile
+## (its page and rect, `Atlas.custom`) written straight into its buffer.
 func _build_cards(order: PackedInt32Array) -> void:
 	var buckets: Dictionary = {}
 	for i: int in order:
@@ -75,7 +75,7 @@ func _build_cards(order: PackedInt32Array) -> void:
 		for i: int in list:
 			var tile: int = planting.tiles[i]
 			var pose: Transform3D = Atlas.card_transform(tile, planting.bases[i], planting.scales[i])
-			var rect: Vector4 = Atlas.uv[tile]
+			var rect: Vector4 = Atlas.custom(tile)
 			_write(buffer, at, pose, card_colour(planting.kinds[i], planting.bases[i], tile), rect)
 			at += 20
 		var multi: MultiMesh = MultiMesh.new()

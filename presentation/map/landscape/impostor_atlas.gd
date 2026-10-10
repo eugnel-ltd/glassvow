@@ -1,7 +1,7 @@
 extends RefCounted
 ## Act I's woodland as baked impostors (R3.1, issue #660): the two atlases
-## (`tools/map_atelier/journey/impostors/`), each tile's picture-plane rect and silhouette, and the
-## card, shadow casters and material every land shares.
+## (`tools/map_atelier/journey/impostors/`), each tile's page, picture-plane rect and silhouette,
+## and the card, shadow casters and material every land shares.
 ##
 ## The journey camera never turns and is orthographic at one pitch, so a plant
 ## is only ever seen from one direction: a card facing the camera, painted with
@@ -9,6 +9,12 @@ extends RefCounted
 ## zoom stop and pan. A tile is one kind at one yaw; its picture-plane rect is
 ## in metres relative to the model's base (`MapJourneyCameraContract.
 ## projected_plane`: x across, y down the screen).
+##
+## Each atlas is a two-layer texture array (`CompressedTexture2DArray`), a
+## page a layer, so no upload passes 4 MiB: the engine uploads an array a layer
+## at a time, and a transfer worker's staging buffer grows to the next power of
+## two above its largest upload and is never shrunk (R3.3;
+## `tests/test_texture_uploads.gd`).
 ##
 ## Readied on the main thread before any land is built on a worker
 ## (`prepare_step`, through `Kit.preload_step`): the atlases load on the
@@ -36,11 +42,13 @@ const FOLIAGE: PackedStringArray = ["conifer", "conifer-spire", "conifer-wind",
 ## their meshes.
 const KIT_KINDS: PackedStringArray = FOLIAGE + RUINS
 
-## Per tile: its kind, atlas rect, picture-plane low corner and size (metres
-## at scale 1), how far the model reaches toward the camera from its base and
-## how tall it stands, and its silhouette as covered x spans (tile units) per
-## `span_m` metres down the picture.
+## Per tile: its kind, page (the arrays' layer) and rect on that page,
+## picture-plane low corner and size (metres at scale 1), how far the model
+## reaches toward the camera from its base and how tall it stands, and its
+## silhouette as covered x spans (tile units) per `span_m` metres down the
+## picture.
 static var tile_kinds: PackedStringArray = []
+static var layer: PackedInt32Array = []
 static var uv: PackedVector4Array = []
 static var low: PackedVector2Array = []
 static var size: PackedVector2Array = []
@@ -126,7 +134,7 @@ static func ready() -> bool:
 static func request() -> void:
 	if _take != null or ready() or failed:
 		return
-	_take = Take.new(PackedStringArray([ALBEDO_PATH, NORMAL_PATH]))
+	_take = Take.new(PackedStringArray([ALBEDO_PATH, NORMAL_PATH]), "TextureLayered")
 	_take.request()
 
 
@@ -144,8 +152,8 @@ static func prepare_step(wait: bool = false) -> bool:
 		failed = true
 		push_error("Journey wood: cannot load the impostor atlases; the woodland is left out")
 	elif settled:
-		var albedo: Texture2D = _take.textures[ALBEDO_PATH]
-		var normal: Texture2D = _take.textures[NORMAL_PATH]
+		var albedo: TextureLayered = _take.textures[ALBEDO_PATH]
+		var normal: TextureLayered = _take.textures[NORMAL_PATH]
 		_make(albedo, normal)
 	if settled:
 		_take = null
@@ -153,7 +161,7 @@ static func prepare_step(wait: bool = false) -> bool:
 	return settled
 
 
-static func _make(albedo: Texture2D, normal: Texture2D) -> void:
+static func _make(albedo: TextureLayered, normal: TextureLayered) -> void:
 	_read_tiles()
 	card = _quad()
 	cone = _cone()
@@ -178,6 +186,7 @@ static func _read_tiles() -> void:
 		var rect: Array = tile["uv"]
 		var corner: Array = tile["low"]
 		var extent: Array = tile["size"]
+		layer.append(int(str(tile["layer"])))
 		uv.append(_v4(rect))
 		low.append(_v2(corner))
 		size.append(_v2(extent))
@@ -196,6 +205,15 @@ static func _v2(raw: Array) -> Vector2:
 
 static func _v4(raw: Array) -> Vector4:
 	return Vector4(float(str(raw[0])), float(str(raw[1])), float(str(raw[2])), float(str(raw[3])))
+
+
+## What a card of tile `tile` carries for the shaders (its instance custom
+## data): its rect on its page, with the page added to the rect's top. A rect's
+## top lies under 1 on its page, so `impostor.gdshader` and
+## `floor_caster.gdshader` read the page back as the whole part.
+static func custom(tile: int) -> Vector4:
+	var rect: Vector4 = uv[tile]
+	return Vector4(rect.x, rect.y + layer[tile], rect.z, rect.w)
 
 
 ## The tile kind `kind` shows at `yaw` (the nearest baked turn).
