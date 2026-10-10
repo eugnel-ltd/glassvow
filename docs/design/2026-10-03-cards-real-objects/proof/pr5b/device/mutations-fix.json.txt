@@ -1,0 +1,17 @@
+[
+ {"id": "g01-no-generated-listed", "file": "presentation/combat/card_view.gd", "test": "tests/test_card_turn.gd",
+  "what": "CardView.generated_materials lists nothing",
+  "old": "\tvar out: Array[Material] = [side]\n", "new": "\tvar out: Array[Material] = []\n"},
+ {"id": "g02-side-made-otherwise", "file": "presentation/combat/card_view.gd", "test": "tests/test_card_turn.gd",
+  "what": "the side band's material made otherwise than side_material makes it",
+  "old": "_slab.set_surface_override_material(0, side_material(_side))", "new": "_slab.set_surface_override_material(0, StandardMaterial3D.new())"},
+ {"id": "g03-fight-holds-nothing", "file": "application/main.gd", "test": "tests/test_card_turn.gd",
+  "what": "a fight's load does not hold its cards' generated materials",
+  "old": "\tCardTurn.hold_for_fight(_screen)\n", "new": "\n"},
+ {"id": "g04-held-outside-the-fight", "file": "presentation/cards/card_turn.gd", "test": "tests/test_card_turn.gd",
+  "what": "the hold is put beside the fight, not under it",
+  "old": "\tfight.add_child(hold)\n", "new": "\tfight.get_parent().add_child(hold)\n"},
+ {"id": "g05-hold-empty", "file": "presentation/cards/card_turn.gd", "test": "tests/test_card_turn.gd",
+  "what": "the hold keeps none of the generated materials",
+  "old": "\thold.materials = CardView.generated_materials()\n", "new": "\thold.materials.clear()\n"}
+]

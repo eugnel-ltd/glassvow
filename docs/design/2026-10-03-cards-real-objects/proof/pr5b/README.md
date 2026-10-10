@@ -1,8 +1,8 @@
 # #657 PR 5b, the top-menu deck as a stack: evidence
 
 Shot on the branch's code at `c48be94b`; `4e38aeb9` adds tests and one
-comment and changes no behaviour. The iPad rows are of `0b985fbd`, whose code
-is `4e38aeb9`'s. §3 and §4 are the dossier's
+comment and changes no behaviour. The iPad rows b1–b3 are of `0b985fbd`, whose
+code is `4e38aeb9`'s; the fix's fight batch is of `40b7f302`, the code head. §3 and §4 are the dossier's
 (`../../README.md`); PR 5's evidence is `../pr5/README.md`. The probe, the
 batch, the analysis, the batch logs, the analysis's output and the mutation
 list are text under `device/`; the raw rows stay out of the repository.
@@ -297,6 +297,206 @@ first frame. The figures are in ms:
 | b3 | kbr6 | B | route | 100%, not charging, 38.4 C | none | bake frame 282.0 under flood a0.99; >33 within 10: +0:282.0 |
 | b3 | kbf6 | B | fight | 100%, not charging, 37.9 C | none | load 666 (baked=true); ash rest p50 16.66 / p95 17.34; reshuffle p50 16.68 / p95 18.64, max 30.2 |
 
+**The orchestrator's calls on b1–b3 (10 Oct 2026).** Risk 1, the pipeline
+compiles the branch moved into the fight, is fixed in this PR (`c4b1a418`
+and `40b7f302`, below). The other three are accepted as recorded:
+
+- **Risk 2, the route bake holding the full flood about 0.1 s longer:**
+  accepted. The painting never shows, and main already stalls there.
+- **Risk 3, the cold open:** accepted as within noise. The lean is the
+  split: +138 ms before the first frame (p ≈ 0.18). Not tuned.
+- **Risk 4, the temperature logging:** b1–b3 logged hundredths of a degree
+  unpadded (36.09 °C as "36.9C"). `analyze.py` pads them back, so the table
+  above is right. `batch.zsh` pads them since; the doc copy is the version f1,
+  g1 and g2 ran, and its comment on that line says how b1–b3 differ.
+
+### The fix: the fight holds its cards' generated shader and waits for its load's draw (`c4b1a418`, `40b7f302`)
+
+**What moved, and why.** Two of the costs main's bake used to pay inside
+the fight's load were left to the fight:
+
+- **A generated shader freed mid-fight.** A card's side band wears a
+  `StandardMaterial3D`. The engine generates that shader and frees it, with
+  every pipeline compiled for it, when the last ready material that wears
+  it goes. A hand swept to the discard leaves no card standing, so the next
+  deal made the shader again and compiled its pipelines mid-fight. That was
+  4 surface pipelines, 1 draw and 1 specialisation each time, at turn 1's
+  end and again at the reshuffle. On main the bake's card, retired but kept
+  by the fight, held a side material all fight long. With `--verbose`,
+  b1–b3's branch build re-creates one `SceneForwardMobileShaderRD` shader
+  between the kindle and turn 2, and again between the reshuffle's End Turn
+  and turn 3. The fixed build (`40b7f302`, fxgv) re-creates none after its
+  load.
+- **The load's GPU work.** Main's bake read the back off the GPU after the
+  load's draw, which waited for that draw to finish. On the branch the
+  entrance's first frame did the waiting instead (median 108 ms on the
+  iPad). PR 3's evidence names the same frame: it ran 110–165 ms without
+  the pre-warm.
+
+**The change**, inside the fight's load and the cards' materials (89 lines
+with their comments):
+
+- `CardView.side_material`: the side band's one factory, which
+  `_build_stage` now calls.
+- `CardView.generated_materials`: one of each generated material, made
+  ready with `get_rid()`. A material made lazily never holds its shader: a
+  keeper that had never been used changed nothing (Mac `fxb1`).
+- `CardTurn.hold_for_fight`, which `Main._prewarm_card_turns` calls after
+  `prewarm` in every fight's load. It adds a `CardShaderHold` node under the
+  fight that holds those materials, so it leaves with the fight. It also
+  reads one texel back after the load's draw. In `c4b1a418` the read was a
+  one-shot lambda on `RenderingServer.frame_post_draw`, holding its texel.
+  `40b7f302` made it a method of the hold, so a wait still pending goes with
+  the fight. A run that never draws (the headless suite) had left the lambda
+  connected until exit and crashed in shutdown (Core gate, below). A drawn
+  fight behaves the same under either.
+
+The map's path, the bake, the bench and the stack are unchanged
+(`prewarm` and `prewarm_on_bench` are untouched).
+
+**The map modes need no re-run.** The diff from `c3222ae0` to `40b7f302`:
+
+- `application/main.gd`: one call added in `_prewarm_card_turns`, which only
+  the two fight starts call.
+- `presentation/cards/card_turn.gd`: `hold_for_fight` and its `_Hold` node
+  added, plus comments. Nothing else in the file changes.
+- `presentation/combat/card_view.gd`:
+  - `side_material` holds the side band's four statements, moved as they
+    were. `_build_stage` calls it with the same colour, so the map's cards
+    (the bench's back, the deck view's card under the finger) wear the same
+    material.
+  - `generated_materials` is called only by `hold_for_fight`.
+- `tests/test_card_turn.gd`: tests only.
+- Two docs whose line anchors the new lines moved.
+
+**Mac, the decisive check** (M1 Max, Metal, Forward Mobile, the A12
+condition `GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1`, 1180 × 820, the load
+average 4–7 at each start but fxg1's). The fight probe is the iPad's. The counters are
+surface / draw / specialisation; the canvas count moves at the kindle on
+every build.
+
+| Run | Build | At the load | At turn 1's end | At the reshuffle | Load frame | +1 | +2 |
+|---|---|---|---|---|---|---|---|
+| fxa0, fxa1 | main `711302a5` | 143 / 23 / 65 | 143 / 23 / 65 | 143 / 23 / 65 | 267.7, 244.0 | 3.5, 3.6 | 8.7, 8.3 |
+| fxb0 | branch before, `0b985fbd` | 148 / 25 / 67 | **152 / 26 / 68** | **156 / 27 / 69** | 257.0 | 20.1 | 2.5 |
+| fxf1, fxf2, fxf3 | branch after, `c4b1a418` | 148 / 25 / 67 | 148 / 25 / 67 | 148 / 25 / 67 | 203.5, 202.7, 209.4 | 3.4, 3.5, 3.5 | 8.3, 9.1, 8.1 |
+| fxg1 | branch after, `40b7f302` (load average 96) | 148 / 25 / 67 | 148 / 25 / 67 | 148 / 25 / 67 | 242.0 | 3.6 | 8.6 |
+
+On the Mac, video memory at the combat rest is 489 and 485 MiB for main,
+481 before the fix, 464 on `c4b1a418` and 480 on `40b7f302`. Runs of one build
+repeat these to the tenth. I have not explained `c4b1a418`'s extra
+16 MiB below the rest; both builds are under main. The Mac's other frame times swing
+with the desktop: main's fxa1 ran a 111 ms frame at turn 1's end and
+50–65 ms frames at rest, with no compile in any of them. So the Mac
+grades the counters and the frame after the load. The iPad grades the
+times.
+
+These runs settled the diagnosis:
+- A fight that kept a live back card (fxb2), or the card's own side
+  material (fxb3), or a ready material from the factory (fxb5), compiled
+  nothing after its load.
+- A keeper that had never been used (fxb1) changed nothing.
+- The texel read back after the load's draw alone took the frame after the
+  load from about 20 ms to 4.8 ms (fxb4).
+
+**iPad 8: the fight-only batch on `40b7f302`** (10–11 Oct 2026, 22:59–00:12)
+- **Builds:** A is main's IPA from b1–b3 (sha256 `d75c5c4b…`; `origin/main` is
+  still `64af9302`). B was rebuilt from `40b7f302` (`3c60c8ce…`).
+- **Sessions:** two lock sessions, interleaved by install: g1 A then B, g2 B
+  then A. Before each session the campaign waited for the lock to come free
+  (g2 waited for ks2-main's session), then for the battery to cool to
+  36.0 °C, and only then took the lock.
+- **Launches:** each install ran a warm-up map launch, then three fights
+  150 s apart, so six measured fights on each build.
+- **Conditions:** the iPad was on its charger (99% down to 96%), at
+  36.7–41.6 °C.
+- **Throttle:** three of the twelve fights throttled: B's rbf2 (from 15 s)
+  and rbf5 (from 25 s), and main's raf6 (from 13 s).
+- **Records:** the analysis is `device/summary-fix.txt` and the batch logs
+  are `device/g1-batch.log.txt` and `g2-…`.
+
+Medians over the six fights of each build, with g1 / g2 in brackets:
+
+| Figure (ms) | B, `40b7f302` | Main, this batch | The bar | Verdict |
+|---|---|---|---|---|
+| Pipeline compiles after the load (surface, draw, specialisation) | none in 6 of 6: 138 / 9 / 48 from the load frame to the end | none in 6 of 6: 135 / 7 / 46 | none | **met** |
+| Load frame | 767.3 (749.6 / 768.5) | 791.7 (799.7 / 783.7) | ≤ 783 | **met** |
+| The load and the next two frames | 813.5 (782.5 / 849.2) | 836.1 (839.6 / 832.6) | ≤ 822 | **met over all six and in g1; over the bar in g2, as main is too** (below) |
+| First frame after the load | 16.3 (16.4 / 16.3); 6.3–21.2 | 16.4; 15.3–16.5 | within main's 8.5–25.1 | **met**, so no cover is needed (the probe draws none) |
+| Video memory at the combat rest (MiB) | 648 (634–648) | 662 (656–669) | ≤ 669 | **met** |
+| Turn 1's end, worst frame | 33.3 (29.1–46.6) | 45.8 (30.2–49.8) | reported | b1–b3: the branch 30.6 with its compile, main 27.7 |
+| Reshuffle, worst frame | 23.8 (21.9–27.7) | 25.2 (23.6–27.2) | reported | b1–b3: the branch 30.1 |
+| Reshuffle p50 / p95 | 16.71 / 18.93 | 16.69 / 18.19 | reported | below |
+| Combat rest p50 / p95 | 16.69 / 17.44 | 16.68 / 17.30 | reported | p95 +0.14 (g1 +0.50, g2 +0.08) |
+
+- **The compiles are gone.** None of B's six fights compiles a surface,
+  draw or specialisation pipeline after its load, matching main.
+  `c4b1a418`'s three fights in f1 compiled none either.
+- **The load and the next two frames in g2.** B's g2 median, 849.2, is over
+  the 822 bar for two reasons:
+  - rbf4, the install's first fight in that session, loaded in 933.8 ms;
+  - rbf5, throttled from 25 s, drew a 59.5 ms second frame.
+
+  Main's own g2 median, 832.6, is over the bar too (raf5 loaded in
+  863.2 ms): this batch ran at 36.7–41.6 °C, against 33–40 °C in b1–b3. Within
+  each session B − A is −57.1 ms (g1) and +16.6 (g2). Over all six it is −22.6.
+- **Second frames of about 50 ms:** rbf1 50.1 and rbf5 59.5 on the branch.
+  Main's ran 33.3 in raf4 and raf5 here, and 49.6–50.1 in three of b1–b3's
+  fights.
+- **The reshuffle's p95 leans B's way**: +0.74 over all six (g1 +1.59, g2
+  +0.64). Without the three throttled fights it is +0.80 (B 18.84, from 18.13
+  to 19.31; main 18.04, from 17.06 to 18.83). A Mann–Whitney test over all six
+  gives p ≈ 0.18. In b1–b3 the branch was +0.10, and its worst reshuffle
+  frame has improved since. The fix adds nothing that runs in a frame (one
+  node holding one material). With six fights at these temperatures I can't
+  separate the lean from noise.
+- **Outliers:**
+  - rbf4: load 933.8;
+  - raf5: load 863.2;
+  - rbf1: first frame 6.3, below main's range, so faster;
+  - rbf2, rbf5 and raf6: throttled. raf6's rest p95 is 21.71 and its
+    reshuffle p95 22.42; rbf2's are 18.70 and 20.81.
+- **Warm-ups** (named, not graded), with the bake or HUD frame each drew on
+  the map: raw1 45.4 ms, rbw1 104.3, rbw2 122.3, raw2 167.3. rbw2's
+  battery read charging.
+
+Every fight, with battery, charging state and temperature as logged before
+it. The counters run canvas / mesh / surface / draw / specialisation, and
+"changes after it" lists only surface, draw and specialisation:
+
+| Batch | Launch | Build | Battery, temp. | Throttle onset | Counters at the load | Changes after it | Load | +1 | +2 | Turn 1's end, worst | Reshuffle worst / p50 / p95 | Rest p50 / p95 | VRAM at rest |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| g1 | raf1 | A | 99%, not charging, 36.7 C | none | 22 / 10 / 135 / 7 / 46 | none | 800.8 | 15.3 | 23.5 | 46.3 | 23.6 / 16.67 / 18.83 | 16.68 / 17.92 | 669 |
+| g1 | raf2 | A | 99%, not charging, 39.7 C | none | 22 / 10 / 135 / 7 / 46 | none | 799.7 | 16.4 | 24.3 | 33.3 | 25.7 / 16.70 / 17.06 | 16.67 / 16.94 | 656 |
+| g1 | raf3 | A | 99%, not charging, 40.4 C | none | 22 / 10 / 135 / 7 / 46 | none | 782.9 | 16.5 | 18.9 | 49.7 | 25.4 / 16.68 / 17.20 | 16.67 / 16.92 | 656 |
+| g1 | rbf1 | B (40b7f302) | 98%, not charging, 39.4 C | none | 22 / 10 / 138 / 9 / 48 | none | 771.0 | 6.3 | 50.1 | 29.1 | 22.8 / 16.63 / 18.13 | 16.68 / 17.44 | 648 |
+| g1 | rbf2 | B (40b7f302) | 98%, not charging, 41.3 C | 15 s | 22 / 10 / 138 / 9 / 48 | none | 699.6 | 16.4 | 16.7 | 33.4 | 25.5 / 17.71 / 20.81 | 17.49 / 18.70 | 634 |
+| g1 | rbf3 | B (40b7f302) | 98%, not charging, 41.0 C | none | 22 / 10 / 138 / 9 / 48 | none | 749.6 | 16.4 | 16.6 | 37.7 | 23.4 / 16.71 / 18.79 | 16.68 / 17.26 | 648 |
+| g2 | rbf4 | B (40b7f302) | 97%, not charging, 37.4 C | none | 22 / 10 / 138 / 9 / 48 | none | 933.8 | 15.6 | 24.3 | 46.6 | 27.7 / 16.66 / 19.31 | 16.68 / 17.26 | 648 |
+| g2 | rbf5 | B (40b7f302) | 97%, not charging, 40.3 C | 25 s | 22 / 10 / 138 / 9 / 48 | none | 768.5 | 21.2 | 59.5 | 33.2 | 24.1 / 16.99 / 18.98 | 16.75 / 17.44 | 648 |
+| g2 | rbf6 | B (40b7f302) | 97%, not charging, 40.8 C | none | 22 / 10 / 138 / 9 / 48 | none | 766.1 | 16.3 | 17.2 | 29.5 | 22.0 / 16.71 / 18.88 | 16.70 / 17.47 | 648 |
+| g2 | raf4 | A | 97%, not charging, 39.9 C | none | 22 / 10 / 135 / 7 / 46 | none | 783.7 | 15.6 | 33.3 | 45.4 | 25.0 / 16.70 / 18.04 | 16.68 / 17.36 | 669 |
+| g2 | raf5 | A | 97%, not charging, 41.4 C | none | 22 / 10 / 135 / 7 / 46 | none | 863.2 | 16.4 | 33.3 | 30.2 | 24.1 / 16.66 / 18.34 | 16.69 / 17.24 | 669 |
+| g2 | raf6 | A | 96%, not charging, 41.6 C | 13 s | 22 / 10 / 135 / 7 / 46 | none | 766.1 | 16.5 | 17.3 | 49.8 | 27.2 / 19.34 / 22.42 | 19.42 / 21.71 | 656 |
+
+
+**The record on `c4b1a418`, not graded.** Its session f1 (A then B, 21:42–22:02)
+ran straight after another lane's session, at 34.6–40.6 °C, with 90 s
+cool-downs, and four of its six fights throttled. Its three B fights
+compiled nothing after the load. Their loads were 750.3, 796.5 and
+886.1 ms, and their first frames 15.8, 16.7 and 13.7 ms. I stopped the
+campaign before its second session once `40b7f302` replaced the commit.
+`device/summary-fix-c4b1a418.txt`, `device/f1-batch.log.txt`:
+
+| Batch | Launch | Build | Battery, temp. | Throttle onset | Counters at the load | Changes after it | Load | +1 | +2 | Turn 1's end, worst | Reshuffle worst / p50 / p95 | Rest p50 / p95 | VRAM at rest |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| f1 | qaf1 | A | 100%, not charging, 35.8 C | none | 22 / 10 / 135 / 7 / 46 | none | 864.9 | 29.9 | 29.0 | 46.0 | 22.7 / 16.68 / 18.91 | 16.68 / 18.24 | 669 |
+| f1 | qaf2 | A | 100%, not charging, 38.9 C | 17 s | 22 / 10 / 135 / 7 / 46 | none | 781.0 | 14.7 | 19.2 | 61.1 | 24.0 / 17.71 / 20.92 | 17.69 / 20.29 | 669 |
+| f1 | qaf3 | A | 100%, not charging, 39.4 C | 26 s | 22 / 10 / 135 / 7 / 46 | none | 844.3 | 99.6 | 16.5 | 27.5 | 22.9 / 16.97 / 18.71 | 16.66 / 18.22 | 669 |
+| f1 | qbf1 | B (c4b1a418) | 100%, not charging, 38.8 C | none | 22 / 10 / 138 / 9 / 48 | none | 750.3 | 15.8 | 23.0 | 22.2 | 21.9 / 16.66 / 17.14 | 16.67 / 17.05 | 634 |
+| f1 | qbf2 | B (c4b1a418) | 100%, not charging, 40.4 C | 23 s | 22 / 10 / 138 / 9 / 48 | none | 796.5 | 16.7 | 20.1 | 46.2 | 37.8 / 19.06 / 21.41 | 16.73 / 18.34 | 648 |
+| f1 | qbf3 | B (c4b1a418) | 100%, not charging, 40.6 C | 17 s | 22 / 10 / 138 / 9 / 48 | none | 886.1 | 13.7 | 50.0 | 25.4 | 110.9 / 21.34 / 23.79 | 18.38 / 21.92 | 648 |
+
 ## Tests and mutations
 
 `tests/test_deck_stack.gd`: the card and the law scaled to it at the pad's
@@ -358,6 +558,35 @@ new test's; an older test in the same file fails first.
 | `j02-bench-freed-in-flight` (`card_turn.gd`) | the bench is let go before its bake lands | card turn: a bake in flight was read through a freed host: ["vault"] |
 | `r01-rm-ignored-by-the-stack` (`pile_stack.gd`) | Reduce Motion ignored by the stack's glint (seal and run HUD) | deck stack: under Reduce Motion the seal still glints |
 
+**The fix's tests** (`40b7f302`), in `tests/test_card_turn.gd`:
+
+- `_generated_materials_held`, the structural guard. Every BaseMaterial3D on
+  a front's stage and on a back's must match one material in
+  `CardView.generated_materials`, the list a fight holds. The match is by
+  class and by every stored setting except the values its shader reads as
+  uniforms (colours, numbers, vectors); a texture counts only by whether
+  there is one. The key comes from the material's own property list, not
+  from a hand-kept list. So a generated material a card gains later, or the
+  side band made otherwise than by `side_material`, fails it.
+- `_fight_holds_its_cards_shader`: a real `Main`'s fight load leaves a
+  `CardShaderHold` under the fight, holding those materials.
+
+What the suite cannot see headless is shown on the Mac:
+
+- whether a held material was made ready (`fxb1` against `fxb5`);
+- the texel wait (the frame after the load).
+
+Five mutations (`device/mutations-fix.json.txt`), every one caught on
+`c4b1a418` and again on `40b7f302`:
+
+| Mutation | What it breaks | Caught by |
+|---|---|---|
+| `g01-no-generated-listed` (`card_view.gd`) | `generated_materials` lists nothing | card turn: a front's stage wears a generated material no fight holds |
+| `g02-side-made-otherwise` (`card_view.gd`) | the side band's material made otherwise than `side_material` makes it | card turn: a front's stage wears a generated material no fight holds |
+| `g03-fight-holds-nothing` (`main.gd`) | a fight's load does not hold its cards' generated materials | card turn: the fight holds [] of its cards' generated materials |
+| `g04-held-outside-the-fight` (`card_turn.gd`) | the hold is put beside the fight, not under it | card turn: the fight holds [] of its cards' generated materials |
+| `g05-hold-empty` (`card_turn.gd`) | the hold keeps none of the generated materials | card turn: the fight holds [] of its cards' generated materials |
+
 ## Stills and bursts (Mac, M1 Max, Metal, Forward Mobile)
 
 The game's own boots, `--map --seed=1` for the run HUD and the bench fight
@@ -413,3 +642,22 @@ average of 72 to 79 from other lanes' balance runs, failed one real-time
 assertion (`test_card_flights`: under Reduce Motion a leaving card had not
 left within its 0.16 s fade and 0.05 s of slack), which then passed alone
 twice and in the full re-run.
+
+**On the fix.**
+
+- **`c4b1a418`, load average 7–20:** every step green, and the suite printed
+  **PASS (157 tests)**, but it then crashed in shutdown (signal 11, exit
+  134). The cause was a one-shot lambda on `RenderingServer.frame_post_draw`
+  that held its texel. A headless run never draws, so the lambda stayed
+  connected until exit. `tests/test_card_turn.gd` alone shows it on that
+  commit: 5 textures leaked, then the crash.
+- **`40b7f302`, which moved the wait onto the fight's hold:**
+  - **Run 1 (load 88–101):** failed one real-time assertion,
+    `test_pile_fight`'s "a kindle bumped the ash 0 times under Reduce
+    Motion". That test waits at most 10 s of wall clock for the sequencer
+    and never builds a `Main`, so the fix is not in its path. It passed
+    alone twice at a load of about 70.
+  - **Run 2 (load 73–95):** green, **PASS (157 tests)**, exit 0. Anchors
+    OK (the four the new lines moved were re-anchored by hand), 592
+    citations frozen, and the payload within budget (pack estimate
+    277.2 MiB).

@@ -47,7 +47,8 @@ battery() {
   lvl=$(timeout 30 ideviceinfo -u "$U" -q com.apple.mobile.battery -k BatteryCurrentCapacity 2>/dev/null)
   chg=$(timeout 30 ideviceinfo -u "$U" -q com.apple.mobile.battery -k BatteryIsCharging 2>/dev/null)
   tmp=$(timeout 30 idevicediagnostics -u "$U" ioregentry AppleSmartBattery 2>/dev/null | grep -A1 '<key>Temperature</key>' | grep -o '[0-9]*' | head -1)
-  echo "battery=${lvl:-unknown}% charging=${chg:-unknown} temp=${tmp:+$((tmp / 100)).$((tmp % 100))}C"
+  # Hundredths of a degree, padded: b1-b3 logged 3609 as "36.9C" (analyze.py pads those back).
+  echo "battery=${lvl:-unknown}% charging=${chg:-unknown} temp=${tmp:+$(printf '%d.%02d' $((tmp / 100)) $((tmp % 100)))}C"
 }
 for step in "$@"; do
   # Refresh our hold's age; if it is no longer ours, stop rather than wait on another's.

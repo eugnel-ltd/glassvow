@@ -302,3 +302,60 @@ for r in sorted(runs, key=lambda r: (r["batch"], order.index(r["nonce"]) if r["n
     print("| %s | %s%s | %s | %s | %s | %s | %s |" % (r["batch"], r["nonce"], " (warm-up)" if r["warm"] else "",
         "A" if r["build"] == "711302a5" else "B", r["mode"], launch_env.get(r["nonce"], "?"),
         "none" if on is None else "%d s" % on, fig))
+
+
+def fight_row(r):
+    """One fight launch, for the fix batch (#657 PR 5b, c4b1a418)."""
+    fs = r["frames"]
+    li = next((k for k, f in enumerate(fs) if f["ph"] == "load"), None)
+    if li is None:
+        return None
+    load = fs[li]
+    after = [f for f in fs[li + 1:]]
+    changes = []
+    prev = load["comp"]
+    for f in after:
+        if f["comp"] != prev:
+            # The canvas count (the first) moves at the kindle on both builds;
+            # the three the fix answers for are surface, draw and specialisation.
+            if f["comp"].split(",")[2:] != prev.split(",")[2:]:
+                changes.append("%s #%d %s" % (f["ph"], f["i"], f["comp"]))
+            prev = f["comp"]
+    e1 = [f for f in fs if f["ph"] == "endturn1"]
+    e1w = max(e1, key=lambda f: f["wall"]) if e1 else None
+    s = walls(r, ("resh", "rdeal"))
+    a = walls(r, ("ashrest",))
+    av = [f["vram"] for f in fs if f["ph"] == "ashrest"]
+    return dict(load=load["wall"], comp=load["comp"], changes=changes, p1=after[0]["wall"], p2=after[1]["wall"],
+        e1=e1w["wall"] if e1w else float("nan"), e1i=e1w["i"] if e1w else -1,
+        rw=max(s), rp50=st.median(s), rp95=pct(s, .95), ap50=st.median(a), ap95=pct(a, .95),
+        vram=st.median(av), baked=r["info"].get("BEFORE_LOAD", "?").split(" back")[0])
+
+
+fights = [r for r in runs if r["mode"] == "fight" and not r["warm"]]
+if fights:
+    print()
+    print("fight launches, every one (counters: canvas, mesh, surface, draw, specialisation; changes after the load"
+          " in surface, draw or specialisation; the probe opens the fight directly, so no cover is drawn over it):")
+    print("| Batch | Launch | Build | Battery, temp. | Throttle onset | Counters at the load | Changes after it | Load | +1 | +2 | Turn 1's end, worst | Reshuffle worst / p50 / p95 | Rest p50 / p95 | VRAM at rest |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    per = {}
+    for r in sorted(fights, key=lambda r: (r["batch"], order.index(r["nonce"]) if r["nonce"] in order else len(order))):
+        x = fight_row(r)
+        if x is None:
+            continue
+        on = onset(r)
+        per.setdefault((r["batch"], r["build"]), []).append(x)
+        per.setdefault(("all", r["build"]), []).append(x)
+        print("| %s | %s | %s | %s | %s | %s | %s | %.1f | %.1f | %.1f | %.1f | %.1f / %.2f / %.2f | %.2f / %.2f | %.0f |" % (
+            r["batch"], r["nonce"], "A" if r["build"] == "711302a5" else "B (%s)" % r["build"], launch_env.get(r["nonce"], "?"),
+            "none" if on is None else "%d s" % on, x["comp"].replace(",", " / "), "; ".join(x["changes"]) or "none",
+            x["load"], x["p1"], x["p2"], x["e1"], x["rw"], x["rp50"], x["rp95"], x["ap50"], x["ap95"], x["vram"]))
+    print()
+    print("medians (per build, and per batch):")
+    for key in sorted(per, key=lambda k: (k[0] != "all", k)):
+        xs = per[key]
+        m = lambda f: st.median([x[f] for x in xs])
+        print("  %s %s n=%d: load %.1f | load+2 %.1f | +1 %.1f | +2 %.1f | turn 1's end %.1f | reshuffle worst %.1f p50 %.2f p95 %.2f | rest p50 %.2f p95 %.2f | vram %.0f | launches with a compile after the load: %d" % (
+            key[0], key[1], len(xs), m("load"), st.median([x["load"] + x["p1"] + x["p2"] for x in xs]), m("p1"), m("p2"),
+            m("e1"), m("rw"), m("rp50"), m("rp95"), m("ap50"), m("ap95"), m("vram"), sum(1 for x in xs if x["changes"])))
