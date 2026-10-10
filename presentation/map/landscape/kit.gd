@@ -49,10 +49,12 @@ var _cards: Array = []
 var _graves_placed: int = 0
 ## The islands (`Islands.find`), found on the worker pool while the arch, the
 ## heroes and the lanterns go in (`_seek_islands`), and that search's task (-1
-## when none is under way) and its own time (ms).
+## when none is under way) and its own time (ms); `searched_in_turn` when the
+## pool had no thread to spare and the build searched on its own thread.
 var _islands_found: Array[Dictionary] = []
 var _island_task: int = -1
 var _island_search_ms: float = 0.0
+var searched_in_turn: bool = false
 ## How long gathering the stone took on its worker (ms; `gather_stone`).
 var _stone_gather_ms: float = 0.0
 # Conservative circles enclosing the exported X/Z bounds at every yaw.
@@ -521,9 +523,14 @@ func _islands(grey: bool) -> void:
 ## Starts the island search on the worker pool (R3.3): it reads only the land
 ## (its roads' field and height grid, the rivers), which nothing changes while
 ## the kit's first placements go in, so `_islands` finds it done or nearly. The
-## roads' index is built here first, so the search only reads it.
+## roads' index is built here first, so the search only reads it. On a pool
+## with no thread to spare (`Terrain.pool_spares_threads`) it runs here.
 func _seek_islands() -> void:
 	terrain.distance_to_roads(Vector3.ZERO)
+	if not Terrain.pool_spares_threads():
+		searched_in_turn = true
+		_find_islands()
+		return
 	_island_task = WorkerThreadPool.add_task(_find_islands, false, "Journey islands")
 
 
@@ -734,9 +741,10 @@ func _begin_stone(grey: bool) -> bool:
 ## Gathers the stone's pieces into its cells: the kit's outcrops and the
 ## ravine's cliffs. It reads only the kit's placements and the land, which
 ## nothing changes once the kit is built, so it may run on the worker pool
-## beside the woodland's planting (`MapJourneyLandscape`).
+## beside the woodland's planting (`MapJourneyLandscape`). A stone that already
+## holds its pieces (a replayed build makes it in place) is not gathered again.
 func gather_stone() -> void:
-	if stone == null:
+	if stone == null or not stone.placed.is_empty():
 		return
 	var started: int = Time.get_ticks_usec()
 	var poses: Array = []

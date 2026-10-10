@@ -8,7 +8,8 @@ extends RefCounted
 ## the waystones), the merged draws, the islands' composed groups, the
 ## gravestones and the ruins, and the ruins drawn as cards that cast into the
 ## floor's bake, and never sway; no ruin hiding a road, a waystone or what the
-## kit keeps in sight; and a land built twice placed the same both times.
+## kit keeps in sight; and a land built twice placed the same both times, and
+## again on a pool with no thread to spare, its search and gathering in turn.
 
 const Stone = preload("res://presentation/map/landscape/land_stone.gd")
 const Cliffs = preload("res://presentation/map/landscape/ravine_cliffs.gd")
@@ -58,8 +59,12 @@ static func run(fails: Array[String]) -> void:
 			_islands(fails, land)
 			_ruins(fails, land)
 			first = _digest(land)
+			var spare: bool = MapJourneyLandscape.Terrain.pool_spares_threads()
+			_check(fails, land.kit.searched_in_turn != spare and land.gathered_in_turn != spare,
+				"the island search and the stone's gathering go to the pool only when it has a thread to spare")
 		_close(screen)
 	_determinism(fails, content, first)
+	_in_turn(fails, content, first)
 
 
 static func _open(content: ContentDB, seed_value: int) -> WorldMapScreen:
@@ -89,6 +94,30 @@ static func _determinism(fails: Array[String], content: ContentDB, first: String
 	var again: String = _digest(land) if land != null and land.is_built() and land.kit.stone != null else ""
 	_check(fails, again == first,
 		"seed %d's land places every stone, ruin and woodland card the same when built again" % SEED)
+	_close(screen)
+
+
+## On a pool with no thread to spare (`Terrain.pool_spares_threads`) a land's
+## worker, itself a pool task, would hold its thread waiting for the island
+## search and the stone's gathering and do neither: it runs both in turn, and
+## places everything as the pooled build did. A second gathering adds nothing.
+static func _in_turn(fails: Array[String], content: ContentDB, first: String) -> void:
+	if first.is_empty():
+		return
+	var pool: int = MapJourneyLandscape.Terrain.pool_threads
+	MapJourneyLandscape.Terrain.pool_threads = 2
+	var screen: WorldMapScreen = _open(content, SEED)
+	MapJourneyLandscape.Terrain.pool_threads = pool
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	var built: bool = land != null and land.is_built() and land.kit.stone != null
+	_check(fails, built and land.kit.searched_in_turn and land.gathered_in_turn,
+		"a land on a pool with no thread to spare searches for its islands and gathers its stone in turn")
+	_check(fails, built and _digest(land) == first,
+		"seed %d's land places everything the same built in turn as on the pool" % SEED)
+	if built:
+		var pieces: int = land.kit.stone.placed.size()
+		land.kit.gather_stone()
+		_check(fails, land.kit.stone.placed.size() == pieces, "a stone already gathered is not gathered again")
 	_close(screen)
 
 
