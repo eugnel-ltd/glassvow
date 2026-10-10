@@ -24,7 +24,10 @@ kit's textures load one at a time, so that their uploads never overlap;
 the final code reads +17.3 MiB ([below](#the-woodland-atlas-in-two-layers)).
 Two of the stone's stages now run beside the land's worker, and the cold
 open reads 17 ms under main's in the same batch ([The cold
-open](#the-cold-open)).
+open](#the-cold-open)). Where the worker pool has fewer than three threads,
+the land's worker runs both stages itself. The iPad 8's pool has six, so
+its path, and the device rows, are unchanged ([A pool with no thread to
+spare](#a-pool-with-no-thread-to-spare)).
 
 ## What changed
 
@@ -36,7 +39,9 @@ open](#the-cold-open)).
 | `2fd7b2d7` | **map: the impostor atlas in two layers.** The woodland's albedo and normal atlases as two-layer texture arrays, so no upload passes 4 MiB ([below](#the-woodland-atlas-in-two-layers)): the packer's pages (`pack_impostors.py`), each tile's page (`impostor_atlas.gd`), the cards' instance data (`impostor_wood.gd`, `floor_plan.gd`), the two shaders (`impostor.gdshader`, `floor_caster.gdshader`), the re-packed atlas, the map-journey payload budget, and the tests (`test_map_wood`'s page decision, `test_map_floor`, and `test_texture_uploads`, new). |
 | `95e7e339` | **map: the kit's textures load one at a time.** The kit's take (`ImpostorAtlas.Take`, the atlas's and the stone's) asks for its next texture only once the last is taken, so no two of its uploads overlap ([below](#the-kits-textures-one-at-a-time)); `test_map_wood` checks it. |
 | `4364b834` | **map: the islands' search and the stone's merge beside the land's worker.** The island search runs on the worker pool during the kit's first stages (`kit.gd`), and the stone's pieces gather on it while the woodland is planted, committed after (`kit.gd`, `land_stone.gd`, `map_journey_landscape.gd`). Every placement is unchanged ([below](#the-cold-open)). |
-| this commit | This README and its evidence, the art ledger's R3.3 section, and R3.2's README: re-anchored by a line where two preloads moved, and its prose on the live casters and the bake's cards brought up to date. |
+| `52382651` | This README and its evidence, the art ledger's R3.3 section, and R3.2's README: re-anchored by a line where two preloads moved, and its prose on the live casters and the bake's cards brought up to date. |
+| `848699c6` | **map: the land's worker runs its own search and gather when the pool has no thread to spare.** On a pool of fewer than three threads the island search (`kit.gd`) and the stone's gathering (`map_journey_landscape.gd`) run on the land's own thread, and a stone already gathered is not gathered again (`kit.gd`); `test_map_stone` asserts both sides of the decision ([below](#a-pool-with-no-thread-to-spare)). It closes two of the review's Part 2 notes ([Independent review](#independent-review)). |
+| this commit | This README: the video memory by mode, the cold open's residue, the review's Part 2, and why the device rows stand. |
 
 Where the lane measured:
 
@@ -47,7 +52,12 @@ Where the lane measured:
   placement identical); the take changes only the order the kit's
   textures load in, and the levers change no placement;
 - the iPad's batches at the stone (`60d3c805`, S1), the split (`2fd7b2d7`,
-  S1b) and the final code (`4364b834`: S1c, T1 and S2) ([Gates](#gates));
+  S1b) and the final code (`4364b834`: S1c, T1 and S2) ([Gates](#gates)).
+  `848699c6` changes nothing on a pool of three threads or more, and the
+  iPad 8's has six ([A pool with no thread to
+  spare](#a-pool-with-no-thread-to-spare));
+- the fix round's proofs at `848699c6` on the Mac: the decision's test and
+  its mutations, the placements' digests and the core gate;
 - the token gate's Acts II–IV and their sheets at `99a23e3c`. Those acts
   draw no kit, stone or ravine, and nothing they run changed after it. The
   pin tripwire's history across the lane's heads is in
@@ -230,7 +240,7 @@ banks of both rivers, a piece stands every 0.82 of its own width.
   (`floor_paint.gdshader`), biplanar along the bank.
 
 **The islands** (`presentation/map/landscape/land_islands.gd:30 (find)`,
-`presentation/map/landscape/kit.gd:491 (_islands)`):
+`presentation/map/landscape/kit.gd:493 (_islands)`):
 
 - **Finding them.** The ground no road or river lets out to the land's edge.
   Each island is held at its pole, the cell farthest from a road.
@@ -243,16 +253,16 @@ banks of both rivers, a piece stands every 0.82 of its own width.
 
 - **Gravestones.** Short rows of two along the roads' verges, one row every
   13 m of road on alternating sides, 2.3–3.1 m off the line, placed before
-  the woodland's families (`presentation/map/landscape/kit.gd:575 (_verge_graves)`);
+  the woodland's families (`presentation/map/landscape/kit.gd:582 (_verge_graves)`);
   after them, one beside each of up to eight memorial shrines, of the first
-  sixteen (`presentation/map/landscape/kit.gd:557 (_shrine_graves)`); more on the
+  sixteen (`presentation/map/landscape/kit.gd:564 (_shrine_graves)`); more on the
   islands; at most 30 on the verges and by the shrines (15–26 gravestones a
   land in all at seeds 717 and 1–3).
-- **Broken walls** (`presentation/map/landscape/kit.gd:620 (_ruins)`). Up to four
+- **Broken walls** (`presentation/map/landscape/kit.gd:627 (_ruins)`). Up to four
   stand 3 to 5.5 m off a road, at least 16 m apart, turned across the
   camera's view, each with fallen blocks and a mossy mound beside it.
-- **Only where they will be drawn** (`presentation/map/landscape/kit.gd:681 (_in_sight)`,
-  `presentation/map/landscape/kit.gd:700 (_unhidden)`). A ruin is a card, and the
+- **Only where they will be drawn** (`presentation/map/landscape/kit.gd:688 (_in_sight)`,
+  `presentation/map/landscape/kit.gd:707 (_unhidden)`). A ruin is a card, and the
   woodland draws a card only where it hides nothing it must keep in sight:
   the roads' lanes, the decks, the waystones, the lamps, the water, the
   gateway, the shrines, the rocks and the other ruins. The kit asks the same
@@ -261,7 +271,7 @@ banks of both rivers, a piece stands every 0.82 of its own width.
   `presentation/map/landscape/wood_planting.gd:309 (protected_area)`), and keeps it up
   to date with every placement after; and it places nothing the woodland
   keeps in sight behind a ruin's card. The planting then plants against the
-  kit's grid (`presentation/map/landscape/kit.gd:456 (woodland_sight)`), the same
+  kit's grid (`presentation/map/landscape/kit.gd:458 (woodland_sight)`), the same
   protection over the same placements, so the grid is built once. Without
   this, 34 of 58 ruins at seed 717 were placed and then left out.
 - **Planting.** The woodland plants them as cards where the kit placed them,
@@ -270,7 +280,7 @@ banks of both rivers, a piece stands every 0.82 of its own width.
   through their cards (`presentation/map/landscape/wood_planting.gd:536 (casts)`), and
   their cards never sway (`presentation/map/landscape/impostor_wood.gd:159 (card_colour)`).
 
-**Rocks off the water** (`presentation/map/landscape/kit.gd:884 (_clear)`): an
+**Rocks off the water** (`presentation/map/landscape/kit.gd:892 (_clear)`): an
 outcrop's footprint circle may reach over the bank and at most a quarter of
 its radius over the water. On main, two to five rocks a land reached further
 over the river (2, 3, 5 and 2 at seeds 717, 1, 2 and 3).
@@ -587,9 +597,9 @@ on external power throughout. Every launch is in `device/`.
 | Floor fragment ≤ 0.9 ms at the reference clock | **0.146 ms**: the main 3D pass's fragment 1.694 ms with the ground, 1.548 without (306 stage frames) | Main's ground 1.131 ms (R3.2's B2) | Pass |
 | Bake ≤ 0.4 s, no frame over 100 ms | Boots: **162.2 ms** over 14 launches; worst frame 83.3. Cold opens: 116.6–131.9 ms; worst frame 66.8 | 166.9; worst frame 83.2 | Pass. S1 and S1b each had one outlier, the first launch after an install on the `--map` path, which skips the title's warm-up: 3,048 and 1,935 ms frames (`dev1-l1`). It did not recur in S1c. T1 measures the player's path |
 | Live shadow ≤ 15k primitives | **4,118** at most (river 3,108) | 5,754 at most | Pass |
-| Video memory ≤ +20 MiB, Journey hold | 303.4 MiB over 12 launches | 286.1 over 12 | **+17.3 MiB**, pass ([below](#video-memory-on-the-ipad)) |
+| Video memory ≤ +20 MiB, Journey hold | 303.4 MiB over 12 launches | 286.1 over 12 | **+17.3 MiB**, pass, the verdict of record. By mode, against main's short Journey holds: high +23.1, middle +15.1, low +9.1 ([below](#video-memory-on-the-ipad)) |
 | Transient ≤ +40 MiB, freed in 10 frames | Cold-open peaks 333.1 ×5 and 325.1; 303.4 or 295.4 ten frames later | 318.1 ×6 | +15.0 MiB, pass |
-| Cold open | **2607.3 ms** (2565.5, 2598.7, 2599.2, 2615.3, 2730.5, 2835.6) | 2624.5 (2500.0, 2529.8, 2585.3, 2663.6, 2663.8, 3166.3) | **−17.2 ms against main.** 7.3 ms over the absolute 2.6 s line, which main misses by 24.5 ms: the floor reached ([below](#the-cold-open)) |
+| Cold open | **2607.3 ms** (2565.5, 2598.7, 2599.2, 2615.3, 2730.5, 2835.6) | 2624.5 (2500.0, 2529.8, 2585.3, 2663.6, 2663.8, 3166.3) | **−17.2 ms against main.** 7.3 ms over the absolute 2.6 s line, which main misses by 24.5 ms. Those 7.3 ms are the kit's critical-path residue: the floor reached ([below](#the-cold-open)) |
 | Warmed open ≤ 200 ms | **97.6 ms** (110.9, 84.3) | 95.4 (104.3, 86.4) | Pass |
 | Reopen ≤ 60 ms | **47.4 ms** over 12, at most 60.0: 40.8, 39.8, 46.6, 49.1, 45.8, 35.4, 48.8, 60.0, 50.3, 50.8, 48.2, 29.2 | 45.0: 45.9, 40.8, 43.1, 36.7, 47.8, 44.1, 50.6, 50.5, 46.6, 43.8, 36.1, 47.8 | Pass |
 | Rest at vsync, 0 missed, every view | Every view, at the cadence and live, every launch: means 16.659–16.664 ms, **0 missed** | 0 missed | Pass |
@@ -623,6 +633,26 @@ set before the first frame:
 | S1c | 7 of 14 | 2 of 14 | 5 of 14 |
 
 Main's boots end at 279.9–283.9, once at 268.2.
+
+**Each mode against main** (S1c's Journey holds, in MiB, from
+[`vram.txt`](device/batchS1c/vram.txt)). The short Journey holds (the `v`
+launches, which open nothing) set a mode against main directly. After the
+opens both builds hold more:
+
+| Launches | Branch | Main | Delta |
+|---|---|---|---|
+| Short Journey holds, high mode | 303.4 (2) | 280.3, the median of six | **+23.1** |
+| Short Journey holds, middle mode | 295.4 (1) | 280.3 | +15.1 |
+| Short Journey holds, low mode | 289.4 (287.4, 289.4, 289.5) | 280.3 | **+9.1** |
+| Short Journey holds, all six | 292.45 | 280.3 | **+12.2** |
+| After the opens, high | 303.7 (5) | 288.0, the median of six | +15.7 |
+| After the opens, middle | 295.7 (1) | 288.0 | +7.7 |
+
+Main's six short holds read 280.2, 280.2, 280.3, 280.3, 282.2 and 284.2
+(their mean is 281.2). One of the five branch launches holding 303.7 after
+its opens (`dev1-c2`) had booted low. The pooled +17.3 was pre-registered as S1's
+condition and stays the verdict of record. It pools six launches of each
+kind, with the modes as they fell.
 
 **The high mode survives on the device.** It survived the textures taken
 one at a time:
@@ -709,14 +739,16 @@ at seeds 717 and 1–3):
 
 - **Off the critical path.** The island search reads only the land: its
   roads' field and height grid, and the rivers.
-  - It now runs on the worker pool from the start of the kit's build, and
-    the islands' stage waits for it after the arch, the heroes and the
+  - It now runs on the worker pool from the start of the kit's build,
+    where the pool has a thread to spare ([below](#a-pool-with-no-thread-to-spare)),
+    and the islands' stage waits for it after the arch, the heroes and the
     lanterns (27 ms on the Mac; the search 9 ms)
-    (`presentation/map/landscape/kit.gd:525 (_seek_islands)`).
+    (`presentation/map/landscape/kit.gd:528 (_seek_islands)`).
   - The stone's merge reads only the kit's placements and the land. It now
-    gathers the pieces into their cells on the worker pool while the
-    woodland is planted beside it, and the land's worker commits the meshes
-    after (`presentation/map/landscape/kit.gd:738 (gather_stone)`,
+    gathers the pieces into their cells on the worker pool, again where the
+    pool has a thread to spare, while the woodland is planted beside it,
+    and the land's worker commits the meshes
+    after (`presentation/map/landscape/kit.gd:746 (gather_stone)`,
     `presentation/map/landscape/land_stone.gd:129 (finish)`).
   - Gathering sends nothing to the renderer, so no two uploads overlap.
   - On the Mac, the islands' stage on the land's worker falls from 25.3 to
@@ -763,19 +795,100 @@ In S1b, before the levers, the land's build was +142.5 ms and the kit
 Off the land's worker, the island search takes 11.9 ms and the gathering
 25.0 ms. Both are done before the land waits for them.
 
-**The floor reached, and why.** What is left is the stone's own
-placements, which are the picture: the islands' groups, the gravestones and
-the walls, tried a few spots each, and the meshes committed to the
-renderer. That is 36.9 ms of stages on the worker the cold open waits for;
-8.4 ms of it is the sight, which the woodland no longer builds. The kit's
-other stages read about 21 ms more than main's (the kit's +58.0 less those
-stages). They place round the stone, testing each rock against the water
-and the ruins' cards. None of this can run beside the woodland, which
-plants round all of it.
+**The floor reached, and why.** The 7.3 ms over the absolute 2.6 s line
+is the kit's critical-path residue. Both levers' work is hidden: the land
+waits 0.0 ms for the island search and for the gathering. What stays on
+the worker the cold open waits for is the stone's own placements, which are
+the picture:
+
+- the islands' groups, 22.9 ms, 8.4 of it the ruins' sight, which the
+  woodland no longer builds;
+- the gravestones, 6.7 ms (4.6 by the shrines, 2.1 on the verges);
+- the walls, 1.6 ms;
+- committing the stone's meshes, 5.7 ms.
+
+That is 36.9 ms. Every one of these stages needs the kit's own placements
+before it: each places round what the kit has already placed, tried a few
+spots each, or commits what was gathered from it. So none can leave the
+land's worker or run beside the woodland, which plants round all of it.
+The kit's other stages read about 21 ms more than main's (the kit's +58.0
+less those stages); they place round the stone, testing each rock against
+the water and the ruins' cards. That is the floor.
 
 The branch's cold open is 17.2 ms under main's in S1c. It is over the
 absolute 2.6 s line by 7.3 ms, as main is by 24.5 ms. Main's own readings
 in these batches run from 2498.6 to 3166.3 ms.
+
+### A pool with no thread to spare
+
+The land's worker is itself a pool task, and it waits for the island search
+and for the stone's gathering. Terrain's rule holds for those waits too
+(`presentation/map/landscape/terrain.gd:198 (pool_spares_threads)`): a pool
+task that waits on pool work holds its thread and does none of that work,
+so two such waits on a pool of two threads never end, for example a land
+given up and still finishing while a new one starts. The review's Part 2
+found the two waits outside the rule. `848699c6` brings them under it:
+
+- **The island search.** Where `Terrain.pool_spares_threads()` is false
+  (fewer than three threads), `_seek_islands` runs `_find_islands` at once
+  on the land's own thread and records `searched_in_turn`
+  (`presentation/map/landscape/kit.gd:530 (in _seek_islands)`).
+  `_join_islands` then has no task to wait for.
+- **The stone's gathering.** Where it is false, `_finish` records
+  `gathered_in_turn` and calls `kit.gather_stone()` on its own thread after
+  the woodland, the lamps and the air, where it would otherwise wait for the
+  task (`presentation/map/map_journey_landscape.gd:245 (in _finish)`).
+- **The latent double gather.** `gather_stone` now returns when the stone
+  already holds its pieces
+  (`presentation/map/landscape/kit.gd:747 (in gather_stone)`). So a replayed
+  build with `stone_later`, which makes its stone in place, cannot gather it
+  twice. `_finish` passes no cache, so it could not happen before either.
+
+The same functions give the same results. The placements' digest (every
+kit placement, stone piece and woodland card) is the same built on the
+pool, built in turn and built at `52382651`, at seeds 717 and 1–3
+([`mac/fix-round.txt`](mac/fix-round.txt), with the mutations). On a
+two-thread pool the search and the gathering cost their own time on the
+land's worker: 11.9 and 25.0 ms on the iPad's figures.
+
+**The test** (`test_map_stone`'s `_in_turn`) builds seed 717's land with
+`Terrain.pool_threads = 2`, restored as soon as the build returns. It
+asserts that the search and the gathering ran in turn, that the digest
+equals the pooled build's, and that a second gathering adds no piece. The
+pooled build asserts the other side: on a pool with a thread to spare,
+both go to the pool. Mutations: 5 of 5 caught, each on its own assertion,
+and none hung:
+
+| Mutation | Fails on |
+|---|---|
+| The kit's guard removed: the search always on the pool | "searches for its islands and gathers its stone in turn" |
+| The land's guard removed: the gathering always on the pool | the same |
+| The double gather's guard removed | "a stone already gathered is not gathered again" |
+| The kit always in turn | "go to the pool only when it has a thread to spare" |
+| The land always in turn | the same |
+
+**The device rows stand.** On any pool of three threads or more, the
+runtime path is the one S1c, T1 and S2 measured at `4364b834`. From the
+diff `4364b834..848699c6` (`52382651` added only docs):
+
+- `presentation/map/landscape/kit.gd`: the new branch in `_seek_islands`
+  runs only under `not Terrain.pool_spares_threads()`, that is
+  `pool_threads < 3`. Otherwise the same
+  `WorkerThreadPool.add_task(_find_islands, ...)` runs as before;
+  `searched_in_turn` is only written.
+- `presentation/map/map_journey_landscape.gd`: on such a pool,
+  `gathered_in_turn = not Terrain.pool_spares_threads()` is false, so
+  `_finish` adds the same task and waits for it, as before.
+- `gather_stone`'s new condition, `not stone.placed.is_empty()`, is false
+  at its one call on the land, whose stone is new and empty, so it gathers
+  as before.
+- Outside `docs/`, nothing else changed but `tests/test_map_stone.gd`.
+
+The iPad 8's pool has six threads. The project sets no
+`threading/worker_pool/max_threads`, so Godot's worker pool takes the
+processor count, and `Terrain.pool_threads` reads it the same way
+(`presentation/map/landscape/terrain.gd:202 (_configured_pool_threads)`).
+The A12 has six cores.
 
 ### Mac measurements
 
@@ -902,8 +1015,11 @@ The geometry is the device's: it is the same land and the same lean profile.
   the first page, and the woodland's and the floor's cards without their page
   (`test_map_wood`, `test_map_floor`), and 2 of 2 of the take's: a take that
   asks for its next texture while one is in flight, or only for its first
-  (`test_map_wood`) ([`mac/mutations.txt`](mac/mutations.txt)). Earlier
-  runs' survivors each led to a stricter check:
+  (`test_map_wood`) ([`mac/mutations.txt`](mac/mutations.txt)), and 5 of 5
+  of the fix round's: either guard of the pool decision removed or forced,
+  and the double gather's guard removed (`test_map_stone`; [A pool with no
+  thread to spare](#a-pool-with-no-thread-to-spare)). Earlier runs'
+  survivors each led to a stricter check:
   - all gravestones gone, and rocks over the water: the rocks are now
     checked off the water at four seeds, and gravestones beyond the islands
     and beside the shrines;
@@ -917,16 +1033,59 @@ The geometry is the device's: it is the same land and the same lean profile.
     card. Each mutation now fails on that assertion first.
 - **Determinism**, committed: `test_map_stone` builds seed 717's land twice
   and checks that a digest of every kit placement, stone piece and woodland
-  card is the same. An unseeded `randf_range` in the islands' rock yaw fails
-  it.
+  card is the same, and a third time on a pool of two threads, its search
+  and gathering in turn. An unseeded `randf_range` in the islands' rock yaw
+  fails it.
 - **The kit reproduces**: a re-run of `build_stone.py` gives every shipped
   and source file byte for byte, except the `.blend` masters. The impostor
   re-bake is the same run to run. `prepare_stone.py` and `prepare_floor.py`
   give their files byte for byte.
 
+## Independent review
+
+**Part 1 (code and docs): APPROVE** on `83c18b5d`, 9 Oct, nothing
+blocking. Its notes landed before the device batches (`60d3c805`,
+`4fa0cee8`): the video memory split into ours and the engine's staging,
+R3.2's README brought up to date, a committed build-twice test, a direct
+test of the ruins' sight, and the export presets' line.
+
+**Part 2 (the device rows and the commits after `83c18b5d`): APPROVE** on
+`52382651`, 11 Oct, nothing blocking. The runtime at that head is
+`4364b834`'s, which S1c ran. Its notes, and what the fix round did with
+them:
+
+| Note | What it said | Now |
+|---|---|---|
+| 1 | The land's worker waits on two pool tasks outside terrain's rule (`pool_spares_threads`); unreachable on the iPad 8's six threads | **Closed** by `848699c6` ([A pool with no thread to spare](#a-pool-with-no-thread-to-spare)) |
+| 2 | The shared state is clean: the roads' index primed first, the grid and the rivers only read, no random numbers, a join on every path. Latent: a replayed build with `stone_later` would gather twice | **Closed** by `848699c6` (the double gather) |
+| 2 | Latent: `Terrain.height_at` writes its `height_cache` beside the grid (not hit); byte identity at four seeds cannot rule out a rare race, which a stress probe with a delayed join would | Open ([Open risks](#open-risks)) |
+| 3 | Video memory re-derived (+17.3 pooled; modes 7, 2 and 5 of 14): state the per-mode numbers | **Closed** by this commit ([Video memory on the iPad](#video-memory-on-the-ipad)). The review read the short holds' medians as about +11; `vram.txt` gives +12.2 (292.45 against main's 280.3; 281.2 is main's mean) |
+| 4 | The cold open re-derived (2607.25 against 2624.45; both levers fully hidden): say that the 7.3 ms over 2.6 s is the kit's critical-path residue | **Closed** by this commit ([The cold open](#the-cold-open)) |
+| 5–10 | T1's figures match, with the 399.3 ms frame disclosed (#682's acceptance); the take's guard tests the decision; the 4 MiB guard is sound; the split is consistent; Part 1's notes landed (its export-preset line is in the PR body); the calls and the art ledger's lane picks are recorded | Nothing to do |
+
+The fix round's commits go to the orchestrator's delta review.
+
 ## Core gate
 
-Run once on the final code and tests (`4364b834`), at `497bb692`, which adds only docs, on `711302a5`. Mac, 10 Oct, 21:47–22:52, each step waiting for load under 50 ([`mac/core-gate.txt`](mac/core-gate.txt)). It covers the core gate and every check `tools/ci_scope.py` selects for the PR's diff.
+**The fix round.** Run once on the code and test commit `848699c6`, on
+`711302a5`. Mac, 11 Oct, 00:16–00:45, each step waiting for load under 50
+([`mac/fix-round.txt`](mac/fix-round.txt)):
+
+| Command | Exit | Last verdict line |
+|---|---|---|
+| `godot --version` | 0 | 4.7.2.stable.official.ed1daf0bf |
+| `tools/check_imports.sh` | 0 | asset import OK |
+| `tools/check_scripts.sh` | 0 | scripts OK (498 checked) |
+| `godot --headless -s res://tests/run_all.gd` | 0 | PASS (158 tests) |
+
+Before it, the narrow tests `test_map_stone`, `test_map_wood` and
+`test_map_title_road` passed at the same code. At this commit, which adds
+only docs: `python3 -B tools/check_anchors.py` reads `anchors OK`,
+`python3 -B tools/check_benchmark_freeze.py` reads `benchmark citations
+frozen (592 in 52 file(s))`, and `python3 -B tools/build_site.py --check`
+reads `site is current: 7 files`.
+
+**Before the fix round.** Run once on the final code and tests (`4364b834`), at `497bb692`, which adds only docs, on `711302a5`. Mac, 10 Oct, 21:47–22:52, each step waiting for load under 50 ([`mac/core-gate.txt`](mac/core-gate.txt)). It covers the core gate and every check `tools/ci_scope.py` selects for the PR's diff.
 
 | Command | Exit | Last verdict line |
 |---|---|---|
@@ -1025,17 +1184,20 @@ is to revisit the stone's value against the target.
 
 1. **The cold open sits on the absolute line.** On the iPad (S1c) the
    branch's median is 2607.3 ms: 7.3 ms over R3.2's 2.6 s line, and 17.2 ms
-   under main's 2624.5 in the same batch. After the two levers, the floor is
-   the stone's placements on the land's worker: the islands' groups, the
-   gravestones and walls, and committing the merged meshes, about 45 ms
-   ([The cold open](#the-cold-open)). Main moves between batches on this
-   iPad by more than that.
+   under main's 2624.5 in the same batch. Those 7.3 ms are the kit's
+   critical-path residue. After the two levers, the floor is the stone's
+   placements on the land's worker, which need the kit's own placements:
+   the islands' groups, the gravestones and walls, and committing the
+   merged meshes, 36.9 ms ([The cold open](#the-cold-open)). Main moves
+   between batches on this iPad by more than that.
 2. **Video memory's high mode survives on the iPad.** S1c passes at
    +17.3 MiB, but 7 of 14 of the branch's boots end 14–16 MiB above its low
    mode. That is untracked staging, from uploads that overlap outside the
    kit's own take (inference; [Video memory on the
-   iPad](#video-memory-on-the-ipad)). A batch whose main reads low could put
-   the pooled delta back over +20. The follow-ups:
+   iPad](#video-memory-on-the-ipad)). On the short Journey holds the high
+   mode alone reads +23.1 MiB against main, the middle +15.1 and the low
+   +9.1. A batch whose main reads low could put the pooled delta back over
+   +20. The follow-ups:
    - name the overlapping uploads on the device;
    - bring the 23 shipped textures that already upload more than 4 MiB under
      it (the guard holds them, `tests/test_texture_uploads.gd`).
@@ -1047,11 +1209,18 @@ is to revisit the stone's value against the target.
    re-baseline of 1.05 (main 1.07), accepted by the orchestrator as a named
    move. The cause is land the method samples outside the token. The token
    gate, the legibility authority since #679, passes with the same margins.
-5. **The stone's shadows are in the floor only**: no rock shades the water or
+5. **A race the tests cannot see.** The island search and the gathering
+   share the land with the land's worker. The review found that shared
+   state clean, but byte identity at four seeds cannot rule out a rare
+   race; a stress probe with a delayed join would. One latent write:
+   `Terrain.height_at` fills its `height_cache` for a point off the height
+   grid. The review found no such call while the search or the gathering
+   runs (not hit); one would race.
+6. **The stone's shadows are in the floor only**: no rock shades the water or
    another rock.
-6. **The art is a set of lane picks**: the granite and strata pictures (one
+7. **The art is a set of lane picks**: the granite and strata pictures (one
    candidate each), the kit's sculpts and the stone's grade.
-7. **Pre-existing, not this branch's**:
+8. **Pre-existing, not this branch's**:
    - main's `map_mineral` A12 shader lines in Acts II–IV;
    - the exit-time "resources still in use" and RID-leak lines;
    - water that moves under Reduce Motion;
@@ -1068,7 +1237,8 @@ is to revisit the stone's value against the target.
 - `mac/`: the woodland and its gates, the pin diagnosis, the token gate, the
   A12 condition and Reduce Motion, the floor's GPU proof, the probe's
   geometry and opens, the land's build times, the placements, the payload,
-  the mutations, the atlas split and the core gate.
+  the mutations, the atlas split and the core gate, and the fix round's
+  mutations, digests and gate ([`mac/fix-round.txt`](mac/fix-round.txt)).
 - `device/`: the batches' logs, summaries and rows ([Gates](#gates)).
 - `frames/`: the sheets, the crops, the pieces and cards, the conditions,
   the pin crops, the split's zoomed diff and the iPad 8 screenshot.

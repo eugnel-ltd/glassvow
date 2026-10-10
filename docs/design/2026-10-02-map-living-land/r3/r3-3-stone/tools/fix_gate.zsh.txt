@@ -1,0 +1,20 @@
+#!/bin/zsh
+# Lane R3.3 fix round: the core gate at the worktree's head, each step waiting for load under 50 (scratch).
+M=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane
+cd $M/wt-r33
+L=$M/final/${GATE:-gate6}-logs; mkdir -p $L; N=0
+load() { uptime | sed 's/.*averages: //' | cut -d' ' -f1 | cut -d. -f1; }
+step() {
+  N=$((N+1))
+  while (( $(load) >= 50 )); do echo "  (load $(load): waiting)"; sleep 20; done
+  echo "\$ $*   [load $(uptime | sed 's/.*averages: //') $(date +%T)]"
+  "$@" > $L/step-$N.log 2>&1; local s=$?
+  grep -E "^(PASS|FAIL) \(|scripts OK|asset import OK" $L/step-$N.log | tail -1
+  tail -${TAIL:-3} $L/step-$N.log | sed -e 's/\x1b\[[0-9;]*m//g'; echo "exit $s"; echo
+}
+echo "head $(git rev-parse --short HEAD) on $(git rev-parse --short origin/main); status: $(git status --short | tr '\n' ' ') $(date +%T)"
+step godot --version
+TAIL=2 step tools/check_imports.sh
+TAIL=2 step tools/check_scripts.sh
+TAIL=4 step godot --headless -s res://tests/run_all.gd
+echo "done $(date +%T)"

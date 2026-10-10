@@ -1,0 +1,21 @@
+extends SceneTree
+## Lane R3.3 fix round (scratch): each seed's land on the pool as it is; prints
+## the placements' digest (test_map_stone's `_digest`).
+const T = preload("res://tests/test_map_stone.gd")
+
+
+func _initialize() -> void:
+	_run()
+
+
+func _run() -> void:
+	await process_frame
+	await process_frame
+	MapJourneyLandscape.Kit.preload_scenes()
+	var content: ContentDB = ContentDB.load_full()
+	for seed_value: int in [717, 1, 2, 3]:
+		var screen: WorldMapScreen = T._open(content, seed_value)
+		print("seed %d %s" % [seed_value, T._digest(screen._map_scene.journey_landscape())])
+		T._close(screen)
+		await process_frame
+	quit(0)

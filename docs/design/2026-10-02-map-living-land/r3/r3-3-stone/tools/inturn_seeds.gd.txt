@@ -1,0 +1,37 @@
+extends SceneTree
+## Lane R3.3 fix round (scratch): each seed's land built on the pool as it is
+## and again with `Terrain.pool_threads = 2` (search and gathering in turn);
+## prints the placements' digest (test_map_stone's `_digest`) and the flags.
+const T = preload("res://tests/test_map_stone.gd")
+
+
+func _initialize() -> void:
+	_run()
+
+
+func _run() -> void:
+	await process_frame
+	await process_frame
+	MapJourneyLandscape.Kit.preload_scenes()
+	var content: ContentDB = ContentDB.load_full()
+	var same: int = 0
+	var seeds: Array[int] = [717, 1, 2, 3]
+	for seed_value: int in seeds:
+		var rows: Array[String] = []
+		for threads: int in [MapJourneyLandscape.Terrain.pool_threads, 2]:
+			var pool: int = MapJourneyLandscape.Terrain.pool_threads
+			MapJourneyLandscape.Terrain.pool_threads = threads
+			var screen: WorldMapScreen = T._open(content, seed_value)
+			MapJourneyLandscape.Terrain.pool_threads = pool
+			var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+			rows.append("%s searched_in_turn=%s gathered_in_turn=%s pool_threads=%d" % [T._digest(land),
+				land.kit.searched_in_turn, land.gathered_in_turn, threads])
+			T._close(screen)
+			await process_frame
+		var a: String = rows[0].split(" ")[0]
+		var b: String = rows[1].split(" ")[0]
+		same += 1 if a == b else 0
+		print("seed %d pooled:  %s" % [seed_value, rows[0]])
+		print("seed %d in turn: %s  %s" % [seed_value, rows[1], "IDENTICAL" if a == b else "DIFFERENT"])
+	print("identical %d of %d" % [same, seeds.size()])
+	quit(0 if same == seeds.size() else 1)
