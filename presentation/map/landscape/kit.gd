@@ -47,6 +47,14 @@ var _sight: Sight = null
 var _cards: Array = []
 ## How many gravestones the verges and the shrines hold so far (`GRAVES_MOST`).
 var _graves_placed: int = 0
+## The islands (`Islands.find`), found on the worker pool while the arch, the
+## heroes and the lanterns go in (`_seek_islands`), and that search's task (-1
+## when none is under way) and its own time (ms).
+var _islands_found: Array[Dictionary] = []
+var _island_task: int = -1
+var _island_search_ms: float = 0.0
+## How long gathering the stone took on its worker (ms; `gather_stone`).
+var _stone_gather_ms: float = 0.0
 # Conservative circles enclosing the exported X/Z bounds at every yaw.
 const PROFILES: Dictionary = {
 	"conifer": Vector2(2.50, 6.40),
@@ -215,7 +223,11 @@ static func _path(kind: String) -> String:
 	return "res://assets/art/map-journey/%s.glb" % kind
 
 
-func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dictionary = {}, cache: Resource = null) -> void:
+## `stone_later` leaves the stone's merge to the caller: `gather_stone` on the
+## worker pool, beside the woodland's planting, then `finish_stone`
+## (`MapJourneyLandscape`); otherwise the build merges it in place.
+func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dictionary = {}, cache: Resource = null,
+		stone_later: bool = false) -> void:
 	for kind: String in ["conifer","conifer-spire","conifer-wind","conifer-snag"]:
 		var envelope: PackedVector2Array = Envelope.load_conifer(kind)
 		if envelope.is_empty():
@@ -254,6 +266,7 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 		replay_timings["batches"]=(Time.get_ticks_usec()-replay_start)/1000.0
 		build_complete = true
 		return
+	_seek_islands()
 	# The gateway arch is dressing: a layout with no straight dry leg for it is
 	# drawn without one rather than failing the map.
 	_landmark(grey)
@@ -262,13 +275,16 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 		var kind: String = hero["asset_id"]
 		if not PROFILES.has(kind):
 			failure = "Unknown woodland hero: "+kind
+			_join_islands()
 			return
 		var transform_data: Dictionary = hero["transform"]
 		var origin: Array = transform_data["origin"]
 		var at: Vector3 = Meshes.v3(origin)
 		at.y = terrain.surface_height(at.x,at.z)
 		_place(kind,at,float(str(transform_data["scale"][0])),float(str(transform_data["yaw_radians"])),grey)
-		if not failure.is_empty(): return
+		if not failure.is_empty():
+			_join_islands()
+			return
 		placed_nodes[-1].set_meta("hero_role",role)
 	_lanterns(grey)
 	planting_bounds = Rect2(terrain.bounds.position+Vector2(5,7),terrain.bounds.size-Vector2(10,14))
@@ -318,7 +334,10 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 	_banners(grey)
 	contacts.finish()
 	if static_scenery!=null: static_scenery.call("finish")
-	_timed("stone", _stone.bind(grey))
+	if stone_later:
+		_begin_stone(grey)
+	else:
+		_timed("stone", _stone.bind(grey))
 	if not grey:
 		preload("res://presentation/map/landscape/terrain_paint.gd").bind_habitat(terrain,placed,terrain.lines,terrain.is_elevated,lamp_anchors())
 	var counts: Dictionary = {}
@@ -473,9 +492,11 @@ func _islands(grey: bool) -> void:
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 7811
 	var started: int = Time.get_ticks_usec()
-	var found: Array[Dictionary] = Islands.find(terrain)
+	_join_islands()
+	# The build's wait for the search, and the search's own time on its worker.
 	stone_timings["island_search"] = (Time.get_ticks_usec() - started) / 1000.0
-	for island: Dictionary in found.slice(0, ISLAND_GROUPS):
+	stone_timings["island_search_worker"] = _island_search_ms
+	for island: Dictionary in _islands_found.slice(0, ISLAND_GROUPS):
 		var at: Vector3 = island["centre"]
 		var room: float = float(str(island["clearance"]))
 		var rock_scale: float = rng.randf_range(0.9, 1.05)
@@ -495,6 +516,29 @@ func _islands(grey: bool) -> void:
 			var side: float = -1.0 if i % 2 == 0 else 1.0
 			_near(_grave(rng), at + Vector3(side * rng.randf_range(2.6, 3.2), 0.0, rng.randf_range(-0.6, 1.2)),
 				rng.randf_range(0.9, 1.05), rng.randf_range(-0.35, 0.35), grey, 1.2)
+
+
+## Starts the island search on the worker pool (R3.3): it reads only the land
+## (its roads' field and height grid, the rivers), which nothing changes while
+## the kit's first placements go in, so `_islands` finds it done or nearly. The
+## roads' index is built here first, so the search only reads it.
+func _seek_islands() -> void:
+	terrain.distance_to_roads(Vector3.ZERO)
+	_island_task = WorkerThreadPool.add_task(_find_islands, false, "Journey islands")
+
+
+func _find_islands() -> void:
+	var started: int = Time.get_ticks_usec()
+	_islands_found = Islands.find(terrain)
+	_island_search_ms = (Time.get_ticks_usec() - started) / 1000.0
+
+
+## Waits for the island search, which every build ends (a task the pool ran is
+## always waited for).
+func _join_islands() -> void:
+	if _island_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_island_task)
+		_island_task = -1
 
 
 ## Gravestones (R3.3): short rows along the roads' verges, one every
@@ -672,8 +716,29 @@ func _unhidden(item: Dictionary) -> bool:
 ## The granite outcrops the kit placed and the ravine's cliff pieces
 ## (`ravine_cliffs.gd`), merged and drawn (`land_stone.gd`).
 func _stone(grey: bool) -> void:
+	if _begin_stone(grey):
+		gather_stone()
+		stone.finish()
+
+
+## Makes the land's stone node (R3.3); false in a grey study or where the stone
+## cannot load.
+func _begin_stone(grey: bool) -> bool:
 	if grey or LandStone.failed:
+		return false
+	stone = LandStone.new()
+	add_child(stone)
+	return true
+
+
+## Gathers the stone's pieces into its cells: the kit's outcrops and the
+## ravine's cliffs. It reads only the kit's placements and the land, which
+## nothing changes once the kit is built, so it may run on the worker pool
+## beside the woodland's planting (`MapJourneyLandscape`).
+func gather_stone() -> void:
+	if stone == null:
 		return
+	var started: int = Time.get_ticks_usec()
 	var poses: Array = []
 	for item: Dictionary in placed:
 		var kind: String = item["kind"]
@@ -683,9 +748,20 @@ func _stone(grey: bool) -> void:
 			poses.append([kind, Transform3D(Basis(Vector3.UP, float(str(item["yaw"]))).scaled(
 				Vector3.ONE * scale_value), at)])
 	poses.append_array(RavineCliffs.plan(terrain, anchors))
-	stone = LandStone.new()
-	add_child(stone)
-	stone.build(poses)
+	stone.gather(poses)
+	_stone_gather_ms = (Time.get_ticks_usec() - started) / 1000.0
+
+
+## Commits the gathered stone into its draws, on the land's worker; `waited_ms`
+## is how long the land waited for the gathering.
+func finish_stone(waited_ms: float) -> void:
+	if stone == null:
+		return
+	var started: int = Time.get_ticks_usec()
+	stone.finish()
+	stone_timings["stone"] = _stone_gather_ms
+	stone_timings["stone_wait"] = waited_ms
+	stone_timings["stone_finish"] = (Time.get_ticks_usec() - started) / 1000.0
 
 
 func _companion(kind: String, target: Vector3, scale_value: float, yaw: float, grey: bool) -> void:

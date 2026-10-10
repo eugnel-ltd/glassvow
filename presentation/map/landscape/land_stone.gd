@@ -38,6 +38,8 @@ static var _take: Atlas.Take = null
 ## One entry per piece drawn: its kind and its pose (tests and probes).
 var placed: Array[Dictionary] = []
 var draws: Array[MeshInstance3D] = []
+## Each cell's pieces appended and not yet committed: [cell, SurfaceTool].
+var _gathered: Array = []
 var triangles: int = 0
 
 
@@ -92,9 +94,17 @@ static func extent(kind: String) -> AABB:
 
 
 ## Merges every piece in `poses` ([kind, Transform3D] pairs) into one mesh a
-## cell.
+## cell (`gather`, then `finish`).
 func build(poses: Array) -> void:
-	name = "Stone"
+	gather(poses)
+	finish()
+
+
+## Appends every piece in `poses` into its cell's surface. It reads only the
+## held pieces (plain arrays, appended by the engine) and sends nothing to the
+## renderer, so it may run on the worker pool beside the land's own worker
+## (`MapJourneyLandscape`, beside the woodland's planting).
+func gather(poses: Array) -> void:
 	if _pieces == null:
 		return
 	var cells: Dictionary = {}
@@ -111,19 +121,29 @@ func build(poses: Array) -> void:
 		cells[key] = list
 	for key: Vector2i in cells:
 		var poses_here: Array = cells[key]
-		var mesh: ArrayMesh = _merge(poses_here)
+		_gathered.append([key, _merge(poses_here)])
+
+
+## Commits each gathered cell into its mesh and its draw, on the land's worker
+## (this sends them to the renderer).
+func finish() -> void:
+	name = "Stone"
+	for cell: Array in _gathered:
+		var key: Vector2i = cell[0]
+		var surface: SurfaceTool = cell[1]
 		var draw: MeshInstance3D = MeshInstance3D.new()
 		draw.name = "Stone %d %d" % [key.x, key.y]
-		draw.mesh = Meshes.committed(mesh)
+		draw.mesh = Meshes.committed(surface.commit())
 		draw.material_override = _material
 		add_child(draw)
 		draws.append(draw)
+	_gathered.clear()
 
 
-## One mesh of every piece in `poses`, each piece's arrays turned into land
-## space by the engine (poses scale evenly, so normals and tangents turn with
-## the basis).
-func _merge(poses: Array) -> ArrayMesh:
+## Every piece in `poses` appended into one surface, each piece's arrays turned
+## into land space by the engine (poses scale evenly, so normals and tangents
+## turn with the basis).
+func _merge(poses: Array) -> SurfaceTool:
 	var surface: SurfaceTool = SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for pose: Array in poses:
@@ -131,7 +151,7 @@ func _merge(poses: Array) -> ArrayMesh:
 		var at: Transform3D = pose[1]
 		surface.append_from(held, 0, at)
 		triangles += piece_triangles(str(pose[0]))
-	return surface.commit()
+	return surface
 
 
 ## How many triangles a piece of `kind` has.
