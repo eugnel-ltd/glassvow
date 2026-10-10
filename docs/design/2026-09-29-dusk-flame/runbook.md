@@ -236,7 +236,7 @@ A readout is `readouts/readout-<n>.md` in the class's lock folder. Readouts 13 a
   - *What it is:* a research readout (AI-SDLC discovery); whether it is a reading of record, and that it gives no verdict. What the PR ships (instrument, rule or content commits) and what did not move (ids, numbers, save fields, RNG draws, `port_fixtures/`), with the content SHA-256 before and after.
   - **Head.** The commit every report ran at and every manifest names; how it maps to the merged commits after a rebase; and the proof that nothing the reports depend on moved since: `git diff --stat <run head> HEAD -- domain content 'tools/balance_*'` empty. Superseded candidates are named here, their rows counted under *How it was run*.
     - When the readout's own PR edits a `tools/balance_*.py` file, a docstring or usage text say, that file shows in the diff. Name it there as the PR's own text-only change, as Ash readout A1 did, rather than leave the diff unexplained.
-    - When the run worktree sits on a later commit than the merge it reads (Ash readout A1 ran at `faa98347`, two documentation merges after #702's `eda4f869`), show that nothing in `tools`, `content` or `domain` differs between the two, and record the run's commit.
+    - When the run worktree sits on a later commit than the merge it reads (Ash readout A1 ran at `faa98347`, two merges after #702's `eda4f869` (#703, a map change, and #705, documentation links)), show that nothing in `tools`, `content` or `domain` differs between the two, and record the run's commit.
 - **The opening.** One paragraph: what the last readout left open and what this one does.
 - **The answer in brief.** Each finding with its figures and intervals.
 - **The question.** Stated so that a figure can answer it.
