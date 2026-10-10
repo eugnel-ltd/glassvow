@@ -32,6 +32,8 @@ static func run(fails: Array[String]) -> void:
 	await _held_card_turns(fails, content)
 	await _turn_follows_the_back(fails, content)
 	await _each_fight_prewarms(fails, content, render)
+	await _run_hud_bakes_outside_a_fight(fails, content, render)
+	await _fight_joins_the_route_bake(fails, content, render)
 	CardBacks.use_renderer(Callable())
 	CardBacks.use_catalogue(null)
 
@@ -380,6 +382,121 @@ static func _each_fight_prewarms(fails: Array[String], content: ContentDB,
 	main.free()
 
 
+## Outside a fight the table's back is baked by the run HUD's route (#657 PR
+## 5b), so the top-menu deck wears it on the map before any fight: in the
+## frame that builds the route, under a bench of its own that goes once the
+## bake lands. A later route with the HUD bakes nothing, and a fight's load
+## finds the bake made. A change of back, or a bake that was dropped, is baked
+## by the next route with the HUD, and the deck follows it.
+static func _run_hud_bakes_outside_a_fight(fails: Array[String], content: ContentDB,
+		render: _FakeRender) -> void:
+	var prefs: Preferences = Preferences.active
+	Preferences.active = Preferences.new()
+	CardBacks.use_catalogue(null)
+	render.calls.clear()
+	var main: Main = _opened(content)
+	var deck: DeckStack = main._run_hud._deck_stack
+	if render.calls.size() != 1 or render.calls[0][1] != "vault" \
+			or not _on_bench(main, render.calls[0][0]):
+		fails.append("card turn: the map's first build baked %s, want vault on a bench" \
+			% str(render.calls))
+	if not deck.painting.visible or deck.stack.visible:
+		fails.append("card turn: the run HUD's deck is not its painting until the bake lands")
+	var bench: Variant = render.calls[0][0] if not render.calls.is_empty() else null
+	await _frames(main, 3)
+	deck._process(0.0)
+	if is_instance_valid(bench) and not bench.is_queued_for_deletion():
+		fails.append("card turn: the bench outlives its bake")
+	if CardTurn.back() == null or deck.worn() != CardTurn.back() or deck.painting.visible:
+		fails.append("card turn: the run HUD's deck does not wear the bake once it lands")
+	main._show_map()
+	if render.calls.size() != 1 or _benches(main) != 0:
+		fails.append("card turn: a later route with the HUD baked again (%s, %d benches)"
+			% [str(render.calls), _benches(main)])
+	main._start_fight(PackedStringArray(["sporeling"]), "normal")
+	await _frames(main, 2)
+	if render.calls.size() != 1:
+		fails.append("card turn: the fight's load baked again after the map's bake: %s"
+			% str(render.calls))
+	# A change of back: the next route with the HUD bakes the new one.
+	main._vigil.deeds["wins"] = 1
+	CardBacks.choose(Preferences.active, "eclipse")
+	main._show_map()
+	deck = main._run_hud._deck_stack
+	if render.calls.size() != 2 or render.calls[1][1] != "eclipse" \
+			or not _on_bench(main, render.calls[1][0]) or not deck.painting.visible:
+		fails.append("card turn: the route after a change of back baked %s, want eclipse on a bench"
+			% str(render.calls))
+	await _frames(main, 3)
+	deck._process(0.0)
+	if CardTurn.wearing() != "eclipse" or deck.worn() == null \
+			or deck.worn() != CardBacks.cached("eclipse"):
+		fails.append("card turn: the run HUD's deck does not follow the change of back")
+	# A bake dropped under the table (a catalogue reload) is made again.
+	CardBacks.use_catalogue(null)
+	main._show_map()
+	if render.calls.size() != 3 or render.calls[2][1] != "eclipse":
+		fails.append("card turn: a dropped bake is not made again by the next route: %s"
+			% str(render.calls))
+	await _frames(main, 3)
+	Preferences.active = prefs
+	main._clear_route()
+	for child: Node in main.get_children():
+		child.free()
+	main.free()
+
+
+## A fight that loads while the route's bake is still in flight joins it
+## (CardBacks' shared job): one bake, never read through a host freed under
+## it, and the fight's draw pile and its seal both end on the baked back.
+static func _fight_joins_the_route_bake(fails: Array[String], content: ContentDB,
+		render: _FakeRender) -> void:
+	var prefs: Preferences = Preferences.active
+	Preferences.active = Preferences.new()
+	CardBacks.use_catalogue(null)
+	render.calls.clear()
+	render.freed_hosts.clear()
+	var main: Main = _opened(content)
+	# The map's bake has started and not landed: the fight loads in this frame.
+	main._start_fight(PackedStringArray(["sporeling"]), "normal")
+	await _frames(main, 4)
+	var hud: HudBar = main._screen._hud
+	hud._follow_back()
+	hud._deck_stack._process(0.0)
+	var back: CardBacks.Baked = CardTurn.back()
+	if render.calls.size() != 1:
+		fails.append("card turn: a fight loading under the route's bake baked %d times, want once"
+			% render.calls.size())
+	if not render.freed_hosts.is_empty():
+		fails.append("card turn: a bake in flight was read through a freed host: %s"
+			% str(render.freed_hosts))
+	if back == null or hud._draw_pile.stack.back_texture() != back.stage \
+			or hud._deck_stack.worn() != back or hud._deck_stack.painting.visible:
+		fails.append("card turn: the fight's draw pile and seal do not end on the shared bake")
+	Preferences.active = prefs
+	main._clear_route()
+	for child: Node in main.get_children():
+		child.free()
+	main.free()
+
+
+static func _on_bench(main: Main, host: Variant) -> bool:
+	if not (host is Node) or not is_instance_valid(host):
+		return false
+	var node: Node = host
+	return node.name == "CardBackBench" and node.get_parent() == main
+
+
+## Benches on `main`, those already let go included: a bench that bakes
+## nothing is let go in the frame it is made.
+static func _benches(main: Main) -> int:
+	var n: int = 0
+	for child: Node in main.get_children():
+		if child.name.begins_with("CardBackBench"):
+			n += 1
+	return n
+
+
 ## A Main on a scratch profile with a fresh run on its map, out of the tree
 ## (a fight built there opens without its entrance).
 static func _opened(content: ContentDB) -> Main:
@@ -438,10 +555,15 @@ static func _texture() -> ImageTexture:
 class _FakeRender:
 	extends RefCounted
 	var calls: Array = []
+	## Hosts freed while their bake was in flight: the live render step reads
+	## its card back through the host once the frame is drawn.
+	var freed_hosts: Array = []
 
 	func render(host: Node, id: String, scale: float) -> CardBacks.Baked:
 		calls.append([host, id])
 		await (Engine.get_main_loop() as SceneTree).process_frame
+		if not is_instance_valid(host) or host.is_queued_for_deletion():
+			freed_hosts.append(id)
 		var out: CardBacks.Baked = CardBacks.Baked.new()
 		out.stage = ImageTexture.create_from_image(Image.create_empty(2, 2, false, Image.FORMAT_RGBA8))
 		out.inner = ImageTexture.create_from_image(Image.create_empty(2, 2, false, Image.FORMAT_RGBA8))

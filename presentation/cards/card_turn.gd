@@ -25,7 +25,11 @@ extends RefCounted
 ## back to rest is exactly the card it was built as.
 ##
 ## THE TABLE'S BACK is the player's chosen back (CardBacks.chosen), baked.
-## `prewarm` records it; `back()` hands its bake to whoever turns a card.
+## `prewarm` records it; `back()` hands its bake to whoever turns a card or
+## draws a pile. A fight's load pre-warms it; outside a fight the run HUD's
+## first route of a session, and its first after a change of back, bake it on
+## a bench (`prewarm_on_bench`, Main._bake_table_back), so the top-menu deck
+## wears it on the map before any fight.
 ##
 ## PRE-WARMING. A turn's first use would otherwise compile a shader and bake
 ## a back mid-fight. `prewarm` pays both in the frame that builds the fight
@@ -177,6 +181,21 @@ static func prewarm(host: Node, id: String) -> void:
 		return
 	# Drawn in the bake's frame, the warmer goes straight after it.
 	warmer.free()
+
+
+## Pay for the table's back outside a fight: `prewarm` under a bench of its
+## own, added to `parent` and let go the moment the bake lands. The baked card
+## leaves with the bench, so its video memory is released behind the same
+## transition as the bake and is never carried into a fight, whose own load
+## would otherwise release it in its entrance (CardBacks). A coroutine nobody
+## needs to wait for: a parent freed meanwhile takes the bench with it.
+static func prewarm_on_bench(parent: Node, id: String) -> void:
+	var bench: Node = Node.new()
+	bench.name = "CardBackBench"
+	parent.add_child(bench)
+	await prewarm(bench, id)
+	if is_instance_valid(bench):
+		bench.queue_free()
 
 
 ## One transparent pixel wearing the picture turn's material: a TextureRect,

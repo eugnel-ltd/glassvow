@@ -1184,6 +1184,24 @@ func _attach_run_hud() -> void:
 	_run_hud.menu_requested.connect(_show_run_menu)
 	_run_hud.potion_requested.connect(_show_potion_menu)
 	add_child(_run_hud)
+	_bake_table_back()
+
+
+## The back the table wears, baked outside a fight (#657 PR 5b), so the run
+## HUD's deck (DeckStack) wears it on the map before the session's first
+## fight. In the frame that builds a route with the HUD, behind that route's
+## transition (the light flooding out of the title or the opening, a wipe, a
+## Reduce Motion cross-fade), never in a fight (a fight shows no run HUD) and
+## never while the map is walked (the HUD is built with the route, not on it).
+## It does work only when the table does not yet wear the chosen back baked:
+## the session's first route with the HUD, and the first after a change of
+## back. Until it lands the deck shows its painting. A fight's load then finds
+## the bake made (CardTurn.prewarm).
+func _bake_table_back() -> void:
+	var id: String = CardBacks.chosen(Preferences.active, _vigil)
+	if CardTurn.wearing() == id and CardTurn.back() != null:
+		return
+	CardTurn.prewarm_on_bench(self, id)
 
 
 ## Under Reduce Motion a room never lands or leaves in one frame: it

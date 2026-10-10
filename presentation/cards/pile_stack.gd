@@ -56,6 +56,11 @@ const FACE_TAPS: Array[Vector2] = [Vector2(-0.3, -0.3), Vector2(0.3, 0.3),
 const GLINT_CYCLE: float = 9.0
 const GLINT_SWEEP: float = 1.4
 const GLINT: Color = Color(1.0, 0.96, 0.86, 0.24)
+## The glint's band runs from lower left to upper right (ALONG, the unit
+## vector of (0.5, -1)) and sweeps across the card (ACROSS) from its upper
+## left corner to its lower right one.
+const GLINT_ALONG: Vector2 = Vector2(0.4472136, -0.8944272)
+const GLINT_ACROSS: Vector2 = Vector2(0.8944272, 0.4472136)
 const RIM_LOW: float = 0.45
 const RIM_HIGH: float = 0.65
 const RIM_CYCLE: float = 3.2
@@ -343,26 +348,49 @@ static func glint_at(t: float) -> float:
 ## The glint at `band`: a soft diagonal light, brightest on its centre line,
 ## clipped to the card on `to`, whose origin is the card's centre.
 func draw_glint(to: CanvasItem, band: float) -> void:
-	var half: Vector2 = card * 0.5
-	var width: float = card.x * 0.22
-	# The band runs from lower left to upper right and sweeps across the card
-	# from its upper left corner to its lower right one.
-	var along: Vector2 = Vector2(0.5, -1.0).normalized()
-	var across: Vector2 = Vector2(-along.y, along.x)
-	var reach: float = half.length() + width
-	var mid: Vector2 = across * band * reach
-	var outline: PackedVector2Array = _outline(half, float(_radius()))
+	var width: float = _glint_width()
+	var mid: Vector2 = _glint_mid(band)
+	for piece: PackedVector2Array in glint_pieces(band):
+		var tones: PackedColorArray = PackedColorArray()
+		for p: Vector2 in piece:
+			var d: float = absf((p - mid).dot(GLINT_ACROSS)) / width
+			tones.append(Color(GLINT, GLINT.a * clampf(1.0 - d, 0.0, 1.0)))
+		to.draw_polygon(piece, tones)
+
+
+## The glint's two halves at `band`, either side of its centre line, clipped
+## to the card: the pieces the canvas can fill. A corner can clip a sliver
+## too thin to triangulate (three points all but in a line, at about 0.681
+## of the sweep), which draw_polygon refuses with an error and draws nothing
+## of, so it is left out.
+func glint_pieces(band: float) -> Array[PackedVector2Array]:
+	var width: float = _glint_width()
+	var reach: float = _glint_reach()
+	var mid: Vector2 = _glint_mid(band)
+	var outline: PackedVector2Array = _outline(card * 0.5, float(_radius()))
+	var out: Array[PackedVector2Array] = []
 	for side: float in [-1.0, 1.0]:
 		var a: Vector2 = mid
-		var b: Vector2 = mid + across * width * side
-		var strip: PackedVector2Array = PackedVector2Array([
-			a - along * reach, a + along * reach, b + along * reach, b - along * reach])
+		var b: Vector2 = mid + GLINT_ACROSS * width * side
+		var strip: PackedVector2Array = PackedVector2Array([a - GLINT_ALONG * reach,
+			a + GLINT_ALONG * reach, b + GLINT_ALONG * reach, b - GLINT_ALONG * reach])
 		for piece: PackedVector2Array in Geometry2D.intersect_polygons(strip, outline):
-			var tones: PackedColorArray = PackedColorArray()
-			for p: Vector2 in piece:
-				var d: float = absf((p - mid).dot(across)) / width
-				tones.append(Color(GLINT, GLINT.a * clampf(1.0 - d, 0.0, 1.0)))
-			to.draw_polygon(piece, tones)
+			if not Geometry2D.triangulate_polygon(piece).is_empty():
+				out.append(piece)
+	return out
+
+
+func _glint_width() -> float:
+	return card.x * 0.22
+
+
+func _glint_reach() -> float:
+	return (card * 0.5).length() + _glint_width()
+
+
+## The glint's centre line at `band`, through the card's centre at 0.
+func _glint_mid(band: float) -> Vector2:
+	return GLINT_ACROSS * band * _glint_reach()
 
 
 ## The card's outline as a polygon, its corners rounded by `r`.

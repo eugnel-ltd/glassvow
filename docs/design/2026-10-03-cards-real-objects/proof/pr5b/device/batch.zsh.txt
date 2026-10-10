@@ -1,0 +1,98 @@
+#!/bin/zsh
+# cards-pr5b device batch (#657 PR 5b). Scratch, never committed.
+# usage: batch.zsh <batch-name> <step> [<step> ...]
+#   install:<A|B>            install that build's QA .ipa (A = main, B = the branch)
+#   <nonce>:<probe options>  one launch: -- --map --seed=1 --deck-probe=nonce=<nonce>,<options>
+#                            (mode=route: -- --deck-probe=nonce=<nonce>,<options>, the title)
+#   sleep:<s>                a cool-down between launches
+# The nonce rides in the launch arguments and the probe echoes it, and the
+# build's commit, in its PROBE row. Nonces must be new to the QA container.
+# The iPad lock is held for the whole batch (refreshed at every step) and
+# released in a trap. Only the QA app's container is read. Before each launch
+# the battery's level, charging state and temperature are logged (read-only
+# lockdown queries).
+set -uo pipefail
+C=/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+HERE=$C/device
+NAME=$1; shift
+OUT=$HERE/$NAME
+mkdir -p $OUT
+LOCK=cards-pr5b
+QA=io.fol2.glassvow.qa
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a $OUT/batch.log; }
+# Never break another lane's hold: ipad_lock.sh's acquire takes over a lock
+# older than 60 min. Wait here until the lock is free, then take it; a hold
+# another lane takes in between is fresh, and the timeout stops the acquire
+# before its second look, so it can never take a hold over.
+until [[ "$($FLOW/ipad_lock.sh status)" == free ]] \
+    && timeout 20 $FLOW/ipad_lock.sh acquire $LOCK >> $OUT/batch.log 2>&1 \
+    && [[ "$(cat $FLOW/ipad.lock/owner 2>/dev/null)" == $LOCK ]]; do
+  log "ipad lock $($FLOW/ipad_lock.sh status); waiting 30 s"; sleep 30
+done
+cleanup() { $FLOW/ipad_lock.sh release $LOCK >> $OUT/batch.log 2>&1; log "lock released"; }
+trap cleanup EXIT
+trap 'exit 130' INT TERM
+log "lock held"
+udid() {
+  timeout 60 xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c 'import json,sys; print(next(d["hardwareProperties"]["udid"] for d in json.load(sys.stdin)["result"]["devices"] if d["hardwareProperties"].get("productType")=="iPad11,6"))'
+}
+U=$(udid)
+[[ -n "$U" ]] || { log "no iPad"; exit 1; }
+redact() { sed "s/$U/<device>/g"; }
+pull() { timeout 300 xcrun devicectl device copy from --device "$U" --domain-type appDataContainer --domain-identifier $QA --source Documents/$1 --destination $2 >/dev/null 2>&1; }
+battery() {
+  local lvl chg tmp
+  lvl=$(timeout 30 ideviceinfo -u "$U" -q com.apple.mobile.battery -k BatteryCurrentCapacity 2>/dev/null)
+  chg=$(timeout 30 ideviceinfo -u "$U" -q com.apple.mobile.battery -k BatteryIsCharging 2>/dev/null)
+  tmp=$(timeout 30 idevicediagnostics -u "$U" ioregentry AppleSmartBattery 2>/dev/null | grep -A1 '<key>Temperature</key>' | grep -o '[0-9]*' | head -1)
+  echo "battery=${lvl:-unknown}% charging=${chg:-unknown} temp=${tmp:+$((tmp / 100)).$((tmp % 100))}C"
+}
+for step in "$@"; do
+  # Refresh our hold's age; if it is no longer ours, stop rather than wait on another's.
+  [[ "$(cat $FLOW/ipad.lock/owner 2>/dev/null)" == $LOCK ]] || { log "lock lost"; exit 1; }
+  $FLOW/ipad_lock.sh acquire $LOCK >> $OUT/batch.log 2>&1
+  if [[ "$step" == sleep:* ]]; then
+    log "cool-down ${step#sleep:} s"; sleep ${step#sleep:}; continue
+  fi
+  if [[ "$step" == install:* ]]; then
+    b=${step#install:}
+    ipa=$HERE/ipa_A/glassvow.ipa
+    [[ "$b" == "B" ]] && ipa=$HERE/ipa_B/glassvow.ipa
+    bid=$(unzip -p "$ipa" Payload/glassvow.app/Info.plist | plutil -extract CFBundleIdentifier raw -o - -)
+    [[ "$bid" == "$QA" ]] || { log "refusing: $ipa is $bid"; exit 1; }
+    ok=0
+    for attempt in 1 2 3; do
+      if timeout 300 xcrun devicectl device install app --device "$U" "$ipa" 2>&1 | redact >> $OUT/install.log; then ok=1; break; fi
+      log "install $b attempt $attempt failed"; sleep 10
+    done
+    [[ $ok == 1 ]] || { log "install $b failed"; exit 1; }
+    log "installed $b ($ipa)"
+    continue
+  fi
+  nonce=${step%%:*}; opts=${step#*:}
+  # The players' route boots to the title (no --map); every other mode to the map.
+  if [[ "$opts" == *mode=route* ]]; then args="--deck-probe=nonce=$nonce,$opts"
+  else args="--map --seed=1 --deck-probe=nonce=$nonce,$opts"; fi
+  log "launch $nonce args=[$args] $(battery)"
+  timeout 90 xcrun devicectl device process launch --terminate-existing --device "$U" \
+    $QA -- ${(z)args} 2>&1 | redact >> $OUT/launch.log || log "launch rc=$?"
+  # No pull (a devicectl copy over the tunnel) while the probe measures: the
+  # first look waits out the launch's measured windows.
+  if [[ "$opts" == *warm=1* ]]; then sleep 15
+  elif [[ "$opts" == *mode=fight* ]]; then sleep 50
+  else sleep 25; fi
+  got=0
+  for i in $(seq 1 40); do
+    sleep 5
+    if pull deck_probe_$nonce.txt $OUT/rows_$nonce.txt && grep -q " DONE" $OUT/rows_$nonce.txt; then got=1; break; fi
+  done
+  if [[ $got == 1 ]]; then
+    log "rows $nonce: $(grep -c ' F ' $OUT/rows_$nonce.txt) frames; $(grep -o 'build=[0-9a-f]*\|mode=[a-z]*' $OUT/rows_$nonce.txt | head -2 | tr '\n' ' ') $(battery)"
+  else
+    log "no DONE rows for $nonce"
+  fi
+  sleep 3
+done
+log "batch done"
