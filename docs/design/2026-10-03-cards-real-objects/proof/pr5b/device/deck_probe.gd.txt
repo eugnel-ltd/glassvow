@@ -1,0 +1,305 @@
+extends Node
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH QA PROBE (#657 PR 5b, never committed). Attached by the QA patch in
+## Main._ready when a `--deck-probe=` user argument is given:
+##   -- --map --seed=1 --deck-probe=nonce=N,mode=map|fight[,warm=1]
+##   -- --deck-probe=nonce=N,mode=route     (no --map: the boot lands on the title)
+## The same probe runs on a build of main (A) and of the branch (B).
+##   mode=map    the cold open to the map: frames from the probe's first frame
+##               (phase boot) until the map is settled, marking the frame that
+##               built the run HUD, the frame the branch's bake bench appeared
+##               in and the frame its bake landed; then the map at rest with
+##               the run HUD for MAP_REST s (phase maprest), longer than the
+##               stack's 9 s glint cycle.
+##   mode=fight  PR 5's two carried measurements. The bench fight (duskfang,
+##               elite) from the settled map; a hand card kindled to the ash
+##               through the real path; End Turn (the hand sweeps face up to
+##               the discard, the foe acts, the next deal); then ASH_REST s at
+##               rest with the ash rim breathing over a charred card and the
+##               discard's face-up top (phase ashrest); then End Turns until
+##               the draw pile reshuffles, every reshuffled card dealt before
+##               (phases endturn, resh while the stream flies, rdeal from its
+##               end until the drain is idle).
+##   mode=route  the players' route: the boot's title (the dev profile's run,
+##               saved by an earlier --map launch), rested; then Back to the
+##               Road, as a tap does (`_on_title_pick`): the title's light
+##               floods out, the map is built under it with the run HUD (the
+##               branch bakes there), and the light fades off it. Frames from
+##               the tap until the map settles (phase route), each with the
+##               flood's state (an FL row: its alpha, its radius as a share of
+##               full cover, visible), marking the frames that built the HUD,
+##               that held the bench and that the bake landed in.
+## Each frame row: phase, wall ms, start-to-draw, draw, process, root GPU,
+## video memory MiB, pipeline compiles. Rows are held in memory and written at
+## the end: no file I/O inside a measured frame.
+
+const MONITORS: Array[int] = [
+	Performance.PIPELINE_COMPILATIONS_CANVAS, Performance.PIPELINE_COMPILATIONS_MESH,
+	Performance.PIPELINE_COMPILATIONS_SURFACE, Performance.PIPELINE_COMPILATIONS_DRAW,
+	Performance.PIPELINE_COMPILATIONS_SPECIALIZATION]
+const MAP_REST: float = 12.0
+const ASH_REST: float = 10.0
+
+var cfg: Dictionary = {}
+var main: Main = null
+var _rows: FileAccess = null
+var _phase: String = "boot"
+var _frame: int = 0
+var _t_start: int = 0
+var _t_pre: int = 0
+var _t_post: int = 0
+var _frame_rows: PackedStringArray = PackedStringArray()
+var _vp: RID
+var _marks: Dictionary = {}
+
+
+static func config() -> Dictionary:
+	var out: Dictionary = {"nonce": "none", "mode": "map", "warm": "0", "quit": "1", "args": ""}
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--deck-probe="):
+			for part: String in arg.trim_prefix("--deck-probe=").split(",", false):
+				var kv: PackedStringArray = part.split("=", true, 1)
+				if kv.size() == 2:
+					out[kv[0]] = kv[1]
+	out["args"] = " ".join(OS.get_cmdline_user_args())
+	out["rows"] = "user://deck_probe_%s.txt" % out["nonce"]
+	return out
+
+
+func _ready() -> void:
+	name = "DeckProbe"
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	cfg = config()
+	main = get_parent() as Main
+	_vp = get_viewport().get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(_vp, true)
+	_row("PROBE nonce=%s mode=%s args=[%s] engine=%s adapter=%s window=%s build=%s ready_ms=%d" % [
+		cfg["nonce"], cfg["mode"], cfg["args"], Engine.get_version_info()["string"],
+		RenderingServer.get_video_adapter_name(), str(DisplayServer.window_get_size()),
+		str((load("res://qa_cards/build_tag.gd") as GDScript).get_script_constant_map().get("TAG", "?")),
+		Time.get_ticks_msec()])
+	get_tree().process_frame.connect(_on_frame_start)
+	RenderingServer.frame_pre_draw.connect(func() -> void: _t_pre = Time.get_ticks_usec())
+	RenderingServer.frame_post_draw.connect(func() -> void: _t_post = Time.get_ticks_usec())
+	_t_start = Time.get_ticks_usec()
+	_run()
+
+
+func _row(line: String) -> void:
+	var stamped: String = "%s %d %s" % [cfg.get("nonce", "none"), Time.get_ticks_msec(), line]
+	print(stamped)
+	if _rows == null:
+		_rows = FileAccess.open(str(cfg["rows"]), FileAccess.WRITE)
+	if _rows != null:
+		_rows.store_line(stamped)
+		_rows.flush()
+
+
+## Marks the first frame something was true, once.
+func _mark(key: String, on: bool) -> void:
+	if on and not _marks.has(key):
+		_marks[key] = [_frame, Time.get_ticks_msec()]
+		_frame_rows.append("%s %d MARK %s frame=%d ms=%d" % [cfg.get("nonce", "none"),
+			Time.get_ticks_msec(), key, _frame, Time.get_ticks_msec()])
+
+
+func _on_frame_start() -> void:
+	var now: int = Time.get_ticks_usec()
+	var wall: float = float(now - _t_start) / 1000.0
+	var to_draw: float = float(_t_pre - _t_start) / 1000.0 if _t_pre >= _t_start else -1.0
+	var draw: float = float(_t_post - _t_pre) / 1000.0 if _t_post >= _t_pre and _t_pre >= _t_start else -1.0
+	var counts: PackedStringArray = PackedStringArray()
+	for m: int in MONITORS:
+		counts.append(str(int(Performance.get_monitor(m))))
+	_frame_rows.append("%s %d F %d %s %.2f %.2f %.2f %.2f %.2f %.1f %s" % [cfg.get("nonce", "none"),
+		Time.get_ticks_msec(), _frame, _phase, wall, to_draw, draw,
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		RenderingServer.viewport_get_measured_render_time_gpu(_vp),
+		Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, ",".join(counts)])
+	_frame += 1
+	_t_start = now
+	if _phase == "boot" or _phase == "route":
+		var k: String = "r" if _phase == "route" else ""
+		var hud = main._run_hud
+		_mark(k + "hud", hud != null and is_instance_valid(hud))
+		_mark(k + "bench", main.get_node_or_null("CardBackBench") != null)
+		_mark(k + "baked", CardTurn.back() != null)
+		var map = main._map_screen
+		_mark(k + "land", map != null and is_instance_valid(map) and map.is_inside_tree() \
+			and not map.landscape_pending())
+	if _phase == "route":
+		var tl = main._transitions
+		var full: float = tl._stage_size().length() * TransitionLayer.IRIS_SPAN
+		var r = tl._flood_mat.get_shader_parameter("radius")
+		_frame_rows.append("%s %d FL %d %.3f %.3f %s" % [cfg.get("nonce", "none"),
+			Time.get_ticks_msec(), _frame - 1, tl._flood.modulate.a,
+			(float(r) / full) if r != null and full > 0.0 else -1.0, str(tl._flood.visible)])
+
+
+func _wait(seconds: float) -> void:
+	var until: int = Time.get_ticks_msec() + int(seconds * 1000.0)
+	while Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+
+
+func _busy(screen: CombatScreen) -> bool:
+	var hand: HandView = screen._hand
+	var flying: bool = not (hand.get("_dealing") as Dictionary).is_empty() \
+		or not (hand.get("_leaving") as Array).is_empty()
+	return screen.seq.is_busy() or flying or _streaming(screen)
+
+
+func _streaming(screen: CombatScreen) -> bool:
+	var stream = screen._hud.get("_stream")
+	return stream != null and is_instance_valid(stream)
+
+
+## Waits until the drain is idle and nothing is in the air, plus 15 frames.
+## While `resh` is set, the frames are tagged by the reshuffle's progress.
+func _idle(screen: CombatScreen, label: String, resh: bool = false) -> void:
+	var t0: int = Time.get_ticks_msec()
+	var streamed: bool = false
+	await get_tree().process_frame
+	while (_busy(screen) or (resh and not streamed and Time.get_ticks_msec() - t0 < 1500)) \
+			and Time.get_ticks_msec() - t0 < 12000:
+		if resh:
+			if _streaming(screen):
+				streamed = true
+				_phase = "resh"
+			elif streamed:
+				_phase = "rdeal"
+		await get_tree().process_frame
+	var landed: int = Time.get_ticks_msec() - t0
+	for _i: int in range(15):
+		await get_tree().process_frame
+	var cb: CombatState = screen.game.cb
+	_row("%s landed_ms=%d streamed=%s draw=%d discard=%d hand=%d ash=%d hp=%d top=%d" % [label,
+		landed, str(streamed), cb.draw.size(), cb.discard.size(), cb.hand.size(),
+		cb.exhaust.size(), cb.player.hp, screen._hud.discard_top_uid()])
+
+
+func _settle() -> void:
+	var calm: int = 0
+	var waited: int = Time.get_ticks_msec()
+	while calm < 30 and Time.get_ticks_msec() - waited < 30000:
+		var before: int = Time.get_ticks_usec()
+		await get_tree().process_frame
+		var land_ok: bool = _marks.has("land")
+		calm = calm + 1 if land_ok and float(Time.get_ticks_usec() - before) / 1000.0 < 40.0 else 0
+	_row("SETTLED ms=%d marks=%s" % [Time.get_ticks_msec(), str(_marks)])
+
+
+func _run() -> void:
+	if cfg["mode"] == "route":
+		await _route()
+		_finish()
+		return
+	await _settle()
+	if cfg["mode"] == "map":
+		var hud = main._run_hud
+		var deck = hud.get("_deck_stack") if hud != null else null
+		_row("MAP hud=%s stack=%s worn=%s back=%s baked=%s rm=%s" % [str(hud != null),
+			str(deck != null), str(deck != null and deck.worn() != null), CardTurn.wearing(),
+			str(CardTurn.back() != null), str(Preferences.active.reduce_motion)])
+		_phase = "maprest"
+		await _wait(1.0 if cfg["warm"] == "1" else MAP_REST)
+	else:
+		await _fight()
+	_finish()
+
+
+func _finish() -> void:
+	_phase = "end"
+	if _rows != null:
+		for line: String in _frame_rows:
+			_rows.store_line(line)
+	_row("DONE")
+	if _rows != null:
+		_rows.close()
+	if cfg["quit"] == "1":
+		get_tree().quit()
+
+
+func _route() -> void:
+	_phase = "title"
+	var waited: int = Time.get_ticks_msec()
+	while not main._title_rests() and Time.get_ticks_msec() - waited < 30000:
+		await get_tree().process_frame
+	_row("TITLE rests=%s ms=%d" % [str(main._title_rests()), Time.get_ticks_msec()])
+	# The title's rooms and art warm while it rests: tap once they are done.
+	await _wait(1.0 if cfg["warm"] == "1" else 6.0)
+	var title = main._choice_screen
+	var saved: RunState = main._load_run()
+	if not (title is TitleScreen) or saved == null:
+		_row("ROUTE refused title=%s saved=%s" % [str(title), str(saved != null)])
+		return
+	_phase = "route"
+	_row("TAP frame=%d ms=%d baked=%s back=%s" % [_frame, Time.get_ticks_msec(),
+		str(CardTurn.back() != null), CardTurn.wearing()])
+	main._on_title_pick("continue", title, saved)
+	var calm: int = 0
+	var t0: int = Time.get_ticks_msec()
+	while calm < 30 and Time.get_ticks_msec() - t0 < 30000:
+		var before: int = Time.get_ticks_usec()
+		await get_tree().process_frame
+		var landed: bool = _marks.has("rland") or (_marks.has("rhud") and main._map_screen == null)
+		calm = calm + 1 if landed and float(Time.get_ticks_usec() - before) / 1000.0 < 40.0 else 0
+	var hud = main._run_hud
+	var deck = hud.get("_deck_stack") if hud != null and is_instance_valid(hud) else null
+	_row("ROUTE screen=%s hud=%s stack=%s worn=%s back=%s marks=%s" % [
+		str(main._route_screen.get_class() if main._route_screen != null else (
+			"map" if main._map_screen != null else "none")),
+		str(hud != null), str(deck != null), str(deck != null and deck.worn() != null),
+		CardTurn.wearing(), str(_marks)])
+	_phase = "routerest"
+	await _wait(2.0)
+
+
+func _fight() -> void:
+	_phase = "map"
+	await _wait(1.0)
+	# The branch has baked the table's back on the map; main bakes it in the load.
+	_row("BEFORE_LOAD baked=%s back=%s" % [str(CardTurn.back() != null), CardTurn.wearing()])
+	_phase = "load"
+	main._start_fight(PackedStringArray(["duskfang"]), "elite")
+	await get_tree().process_frame
+	_phase = "fight"
+	_row("AFTER_LOAD back=%s baked=%s rm=%s" % [CardTurn.wearing(),
+		str(CardTurn.back() != null), str(Preferences.active.reduce_motion)])
+	await _wait(3.5)
+	var screen: CombatScreen = main._screen
+	var cb: CombatState = screen.game.cb
+	await _idle(screen, "OPEN")
+	var seen: Dictionary = {}
+	for c: CardInst in cb.hand:
+		seen[c.uid] = true
+	_phase = "kindle"
+	var uid: int = cb.hand[0].uid
+	_row("KINDLE uid=%d ok=%s" % [uid, str(screen.request_kindle(uid))])
+	await _idle(screen, "KINDLED")
+	_phase = "endturn1"
+	screen._on_end_turn_pressed()
+	await _idle(screen, "TURN2")
+	for c: CardInst in cb.hand:
+		seen[c.uid] = true
+	_phase = "ashrest"
+	await _wait(1.0 if cfg["warm"] == "1" else ASH_REST)
+	for k: int in range(2, 6):
+		var discard: Array[int] = []
+		for c: CardInst in cb.discard + cb.hand:
+			discard.append(c.uid)
+		var will: bool = cb.draw.size() < 5
+		var before_all: bool = true
+		for u: int in discard:
+			before_all = before_all and seen.has(u)
+		_row("ENDTURN %d draw=%d reshuffle_due=%s cards=%d dealt_before=%s" % [k, cb.draw.size(),
+			str(will), discard.size(), str(before_all)])
+		_phase = "endturn%d" % k
+		screen._on_end_turn_pressed()
+		await _idle(screen, "TURN%d" % (k + 1), will)
+		for c: CardInst in cb.hand:
+			seen[c.uid] = true
+		if will or cb.over:
+			break
+	_phase = "rrest"
+	await _wait(1.5)

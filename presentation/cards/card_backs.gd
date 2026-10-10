@@ -36,9 +36,11 @@ extends RefCounted
 ## memory than later ones on both. Since #657 PR 3 a back's slab carries no
 ## stone (CardView), so its lit, invisible material no longer compiles: on the
 ## iPad 8 from a cold cache, Vault's first bake in a fight then held a 43-62 ms
-## frame where it had held 8.3-9.6 s. So the game bakes the chosen back once, at
-## a still moment where a long frame shows nothing moving (a load, a held
-## title), never behind an animated transition and never mid-fight; every
+## frame where it had held 8.3-9.6 s. So the game bakes the chosen back once, in
+## a frame that already builds a screen, never mid-fight: a fight's load
+## (CardTurn.prewarm) or, outside a fight, the frame that builds the session's
+## first route with the run HUD, behind that route's transition, so the
+## top-menu deck wears it on the map (#657 PR 5b, Main._bake_table_back). Every
 ## later screen reads the cache, which lasts the session.
 ##
 ## THE CACHE holds one bake per back, at the oversample it was made at (a bake

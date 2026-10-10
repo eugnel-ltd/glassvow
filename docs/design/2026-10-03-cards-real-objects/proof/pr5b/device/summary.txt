@@ -1,0 +1,349 @@
+== every launch ==
+b1 kaf1 711302a5 fight | throttle onset none
+   fight load frames: 7866.0; next: 25.1 50.1 33.1 19.4 | before the load: baked=false back= | vram MiB 688 665 665 665 665 665
+   ashrest: 601 fr, p50 16.67, p95 17.54, max 18.6, >33: 0 | vram 669 MiB
+   resh: 45 fr, p50 16.67, p95 17.38, max 24.5, >33: 0
+   rdeal: 63 fr, p50 16.69, p95 18.64, max 22.9, >33: 0
+   OPEN landed_ms=17 streamed=false draw=5 discard=0 hand=5 ash=0 hp=64 top=-1
+   KINDLE uid=7 ok=true
+   KINDLED landed_ms=514 streamed=false draw=5 discard=0 hand=4 ash=1 hp=64 top=-1
+   TURN2 landed_ms=3075 streamed=false draw=0 discard=4 hand=5 ash=1 hp=64 top=3
+   ENDTURN 2 draw=0 reshuffle_due=true cards=9 dealt_before=true
+   TURN3 landed_ms=3929 streamed=true draw=4 discard=0 hand=5 ash=1 hp=54 top=-1
+b1 kaf2 711302a5 fight | throttle onset none
+   fight load frames: 767.5; next: 15.2 50.0 16.5 18.3 | before the load: baked=false back= | vram MiB 688 665 665 665 665 665
+   ashrest: 601 fr, p50 16.67, p95 17.20, max 18.4, >33: 0 | vram 669 MiB
+   resh: 45 fr, p50 16.74, p95 18.37, max 24.1, >33: 0
+   rdeal: 64 fr, p50 16.68, p95 18.23, max 23.2, >33: 0
+   OPEN landed_ms=16 streamed=false draw=5 discard=0 hand=5 ash=0 hp=64 top=-1
+   KINDLE uid=7 ok=true
+   KINDLED landed_ms=524 streamed=false draw=5 discard=0 hand=4 ash=1 hp=64 top=-1
+   TURN2 landed_ms=3061 streamed=false draw=0 discard=4 hand=5 ash=1 hp=64 top=3
+   ENDTURN 2 draw=0 reshuffle_due=true cards=9 dealt_before=true
+   TURN3 landed_ms=3946 streamed=true draw=4 discard=0 hand=5 ash=1 hp=54 top=-1
+b1 kam1 711302a5 map | throttle onset none
+   cold open: hud 3705 ms, land 5699 ms | ms=6172
+   HUD (no bake) frame 1: wall 40.9 (to draw 2.1, draw 37.0, comp 7,10,3,0,0) | >33 within 10: +0:40.9 | vram MiB -1:0 +0:203 +1:214 +2:214 +3:214 +4:218 +5:218 +6:218 +7:218 +8:218 +9:218 +10:218
+   maprest: 721 fr, p50 16.67, p95 17.21, max 17.6, >33: 0
+   MAP hud=true stack=false worn=false back= baked=false rm=false
+b1 kam2 711302a5 map | throttle onset none
+   cold open: hud 3639 ms, land 5988 ms | ms=6460
+   HUD (no bake) frame 1: wall 41.4 (to draw 2.2, draw 37.7, comp 7,10,3,0,0) | >33 within 10: +0:41.4 | vram MiB -1:0 +0:203 +1:214 +2:214 +3:214 +4:218 +5:218 +6:218 +7:218 +8:218 +9:218 +10:218
+   maprest: 721 fr, p50 16.70, p95 17.19, max 18.7, >33: 0
+   MAP hud=true stack=false worn=false back= baked=false rm=false
+b1 kar1 711302a5 route | throttle onset none
+   frame=497 ms=12610 baked=false back= | screen=map hud=true stack=false worn=false back= marks={ "rhud": [518, 13558], "rland": [518, 13558] }
+   HUD (no bake) frame 517: wall 183.4 (to draw 164.9, draw 9.8, comp 13,14,95,0,44) | >33 within 10: +0:183.4 +1:49.9 | vram MiB -2:312 -1:312 +0:423 +1:420 +2:334 +3:334 +4:334 +5:334 +6:334 +7:334 +8:334 +9:334 +10:334 | flood drawn: -2:a1.00/r0.86 -1:a1.00/r0.96 +0:a0.97/r1.00 +1:a0.52/r1.00 +2:a0.34/r1.00 +3:a0.29/r1.00
+b1 kar2 711302a5 route | throttle onset none
+   frame=493 ms=11140 baked=false back= | screen=map hud=true stack=false worn=false back= marks={ "rhud": [522, 11786], "rland": [522, 11786] }
+   HUD (no bake) frame 521: wall 181.3 (to draw 158.4, draw 10.3, comp 13,14,95,0,44) | >33 within 10: +0:181.3 | vram MiB -2:330 -1:330 +0:441 +1:438 +2:352 +3:352 +4:352 +5:352 +6:352 +7:352 +8:352 +9:352 +10:352 | flood drawn: -2:a1.00/r0.82 -1:a1.00/r0.92 +0:a0.99/r1.00 +1:a0.55/r1.00 +2:a0.42/r1.00 +3:a0.37/r1.00
+b1 kaw1 711302a5 map warm-up | throttle onset none
+   cold open: hud 10255 ms, land 31388 ms | ms=31890
+   HUD (no bake) frame 1: wall 4202.1 (to draw 3.5, draw 4176.1, comp 7,10,3,0,0) | >33 within 10: +0:4202.1 +1:10633.5 +2:82.2 +3:33.5 +4:4898.5 +6:1263.6 | vram MiB -1:0 +0:206 +1:257 +2:270 +3:270 +4:282 +5:272 +6:280 +7:280 +8:280 +9:280 +10:280
+   maprest: 61 fr, p50 16.63, p95 17.87, max 18.2, >33: 0
+   MAP hud=true stack=false worn=false back= baked=false rm=false
+b1 kbf1 0b985fbd fight | throttle onset none
+   fight load frames: 646.1; next: 116.6 24.6 19.2 12.6 | before the load: baked=true back=vault | vram MiB 667 644 644 644 644 644
+   ashrest: 601 fr, p50 16.68, p95 17.36, max 18.5, >33: 0 | vram 648 MiB
+   resh: 45 fr, p50 16.62, p95 18.39, max 29.9, >33: 0
+   rdeal: 63 fr, p50 16.62, p95 18.36, max 24.2, >33: 0
+   OPEN landed_ms=16 streamed=false draw=5 discard=0 hand=5 ash=0 hp=64 top=-1
+   KINDLE uid=7 ok=true
+   KINDLED landed_ms=528 streamed=false draw=5 discard=0 hand=4 ash=1 hp=64 top=-1
+   TURN2 landed_ms=3052 streamed=false draw=0 discard=4 hand=5 ash=1 hp=64 top=3
+   ENDTURN 2 draw=0 reshuffle_due=true cards=9 dealt_before=true
+   TURN3 landed_ms=3929 streamed=true draw=4 discard=0 hand=5 ash=1 hp=54 top=-1
+b1 kbf2 0b985fbd fight | throttle onset none
+   fight load frames: 649.8; next: 84.7 24.7 15.8 11.5 | before the load: baked=true back=vault | vram MiB 667 644 644 644 644 644
+   ashrest: 601 fr, p50 16.65, p95 17.36, max 19.7, >33: 0 | vram 648 MiB
+   resh: 45 fr, p50 16.73, p95 17.18, max 22.4, >33: 0
+   rdeal: 64 fr, p50 16.76, p95 18.39, max 23.8, >33: 0
+   OPEN landed_ms=17 streamed=false draw=5 discard=0 hand=5 ash=0 hp=64 top=-1
+   KINDLE uid=7 ok=true
+   KINDLED landed_ms=527 streamed=false draw=5 discard=0 hand=4 ash=1 hp=64 top=-1
+   TURN2 landed_ms=3047 streamed=false draw=0 discard=4 hand=5 ash=1 hp=64 top=3
+   ENDTURN 2 draw=0 reshuffle_due=true cards=9 dealt_before=true
+   TURN3 landed_ms=3947 streamed=true draw=4 discard=0 hand=5 ash=1 hp=54 top=-1
+b1 kbm1 0b985fbd map | throttle onset none
+   cold open: hud 3675 ms, land 5819 ms | ms=6301
+   bake frame 1: wall 87.7 (to draw 3.3, draw 82.7, comp 11,10,8,2,2) | >33 within 10: +0:87.7 | vram MiB -1:0 +0:228 +1:238 +2:225 +3:225 +4:225 +5:225 +6:225 +7:225 +8:225 +9:225 +10:225
+   maprest: 721 fr, p50 16.67, p95 17.23, max 19.0, >33: 0
+   MAP hud=true stack=true worn=true back=vault baked=true rm=false
+b1 kbm2 0b985fbd map | throttle onset none
+   cold open: hud 3574 ms, land 5951 ms | ms=6917
+   bake frame 1: wall 63.5 (to draw 3.2, draw 57.5, comp 11,10,8,2,2) | >33 within 10: +0:63.5 | vram MiB -1:0 +0:228 +1:242 +2:239 +3:239 +4:239 +5:239 +6:239 +7:239 +8:239 +9:239 +10:239
+   maprest: 721 fr, p50 16.68, p95 17.22, max 18.2, >33: 0
+   MAP hud=true stack=true worn=true back=vault baked=true rm=false
+b1 kbr1 0b985fbd route | throttle onset none
+   frame=486 ms=11366 baked=false back= | screen=map hud=true stack=true worn=true back=vault marks={ "rhud": [515, 12147], "rbaked": [515, 12147], "rland": [515, 12147] }
+   bake frame 514: wall 314.1 (to draw 193.3, draw 21.9, comp 17,14,101,2,46) | >33 within 10: +0:314.1 | vram MiB -2:338 -1:338 +0:470 +1:465 +2:364 +3:364 +4:364 +5:364 +6:364 +7:364 +8:364 +9:364 +10:364 | flood drawn: -2:a1.00/r0.85 -1:a1.00/r0.94 +0:a0.98/r1.00 +1:a0.53/r1.00 +2:a0.47/r1.00 +3:a0.41/r1.00
+b1 kbr2 0b985fbd route | throttle onset none
+   frame=423 ms=11459 baked=false back= | screen=map hud=true stack=true worn=true back=vault marks={ "rhud": [452, 12225], "rbaked": [452, 12225], "rland": [452, 12225] }
+   bake frame 451: wall 298.4 (to draw 187.7, draw 21.9, comp 17,14,101,2,46) | >33 within 10: +0:298.4 | vram MiB -2:338 -1:338 +0:470 +1:465 +2:364 +3:364 +4:364 +5:364 +6:364 +7:364 +8:364 +9:364 +10:364 | flood drawn: -2:a1.00/r0.82 -1:a1.00/r0.92 +0:a0.99/r1.00 +1:a0.55/r1.00 +2:a0.50/r1.00 +3:a0.45/r1.00
+b1 kbw1 0b985fbd map warm-up | throttle onset 4 s
+   cold open: hud 4083 ms, land 6454 ms | ms=8141
+   bake frame 1: wall 88.9 (to draw 3.2, draw 76.8, comp 11,10,8,2,2) | >33 within 10: -1:34.5 +0:88.9 | vram MiB -1:0 +0:228 +1:242 +2:239 +3:239 +4:239 +5:239 +6:239 +7:239 +8:239 +9:239 +10:239
+   maprest: 61 fr, p50 17.69, p95 20.85, max 23.1, >33: 0 THROTTLED
+   MAP hud=true stack=true worn=true back=vault baked=true rm=false
+b2 kaf3 711302a5 fight | throttle onset none
+   fight load frames: 786.4; next: 8.5 27.3 19.0 12.3 | before the load: baked=false back= | vram MiB 688 665 665 665 665 665
+   ashrest: 601 fr, p50 16.67, p95 17.27, max 19.9, >33: 0 | vram 669 MiB
+   resh: 45 fr, p50 16.69, p95 18.26, max 19.1, >33: 0
+   rdeal: 64 fr, p50 16.64, p95 20.24, max 22.0, >33: 0
+   OPEN landed_ms=16 streamed=false draw=5 discard=0 hand=5 ash=0 hp=64 top=-1
+   KINDLE uid=7 ok=true
+   KINDLED landed_ms=527 streamed=false draw=5 discard=0 hand=4 ash=1 hp=64 top=-1
+   TURN2 landed_ms=3046 streamed=false draw=0 discard=4 hand=5 ash=1 hp=64 top=3
+   ENDTURN 2 draw=0 reshuffle_due=true cards=9 dealt_before=true
+   TURN3 landed_ms=3939 streamed=true draw=4 discard=0 hand=5 ash=1 hp=54 top=-1
+b2 kaf4 711302a5 fight | throttle onset none
+   fight load frames: 767.6; next: 14.8 17.6 17.2 15.2 | before the load: baked=false back= | vram MiB 675 652 652 652 652 652
+   ashrest: 601 fr, p50 16.68, p95 16.96, max 17.1, >33: 0 | vram 656 MiB
+   resh: 46 fr, p50 16.67, p95 17.06, max 24.6, >33: 0
+   rdeal: 64 fr, p50 16.67, p95 17.11, max 41.8, >33: 1
+   reshuffle frame over 33: rdeal #1458 41.8 (to draw 2.2, draw 25.9, process 28.2, comp 25,10,135,7,46)
+   OPEN landed_ms=16 streamed=false draw=5 discard=0 hand=5 ash=0 hp=64 top=-1
+   KINDLE uid=7 ok=true
+   KINDLED landed_ms=527 streamed=false draw=5 discard=0 hand=4 ash=1 hp=64 top=-1
+   TURN2 landed_ms=3042 streamed=false draw=0 discard=4 hand=5 ash=1 hp=64 top=3
+   ENDTURN 2 draw=0 reshuffle_due=true cards=9 dealt_before=true
+   TURN3 landed_ms=3980 streamed=true draw=4 discard=0 hand=5 ash=1 hp=54 top=-1
+b2 kam3 711302a5 map | throttle onset none
+   cold open: hud 3493 ms, land 5777 ms | ms=7940
+   HUD (no bake) frame 1: wall 52.0 (to draw 2.0, draw 48.1, comp 7,10,3,0,0) | >33 within 10: +0:52.0 +2:49.3 | vram MiB -1:0 +0:203 +1:217 +2:228 +3:228 +4:232 +5:232 +6:232 +7:232 +8:232 +9:232 +10:232
+   maprest: 721 fr, p50 16.51, p95 18.85, max 19.7, >33: 0
+   MAP hud=true stack=false worn=false back= baked=false rm=false
+b2 kam4 711302a5 map | throttle onset none
+   cold open: hud 4309 ms, land 7440 ms | ms=10039
+   HUD (no bake) frame 1: wall 50.3 (to draw 2.7, draw 44.7, comp 7,10,3,0,0) | >33 within 10: +0:50.3 | vram MiB -1:0 +0:203 +1:217 +2:228 +3:228 +4:232 +5:232 +6:232 +7:232 +8:232 +9:232 +10:232
+   maprest: 721 fr, p50 16.68, p95 17.14, max 17.6, >33: 0
+   MAP hud=true stack=false worn=false back= baked=false rm=false
+b2 kar3 711302a5 route | throttle onset none
+   frame=481 ms=11483 baked=false back= | screen=map hud=true stack=false worn=false back= marks={ "rhud": [510, 12129], "rland": [510, 12129] }
+   HUD (no bake) frame 509: wall 179.7 (to draw 163.7, draw 11.8, comp 13,14,95,0,44) | >33 within 10: +0:179.7 +1:50.9 | vram MiB -2:330 -1:330 +0:441 +1:438 +2:352 +3:352 +4:352 +5:352 +6:352 +7:352 +8:352 +9:352 +10:352 | flood drawn: -2:a1.00/r0.82 -1:a1.00/r0.92 +0:a0.99/r1.00 +1:a0.55/r1.00 +2:a0.38/r1.00 +3:a0.33/r1.00
+b2 kar4 711302a5 route | throttle onset none
+   frame=464 ms=11006 baked=false back= | screen=map hud=true stack=false worn=false back= marks={ "rhud": [493, 11650], "rland": [493, 11650] }
+   HUD (no bake) frame 492: wall 180.9 (to draw 158.8, draw 9.8, comp 13,14,95,0,44) | >33 within 10: +0:180.9 +1:66.7 | vram MiB -2:330 -1:330 +0:441 +1:438 +2:352 +3:352 +4:352 +5:352 +6:352 +7:352 +8:352 +9:352 +10:352 | flood drawn: -2:a1.00/r0.82 -1:a1.00/r0.92 +0:a0.99/r1.00 +1:a0.55/r1.00 +2:a0.32/r1.00 +3:a0.27/r1.00
+b2 kaw2 711302a5 map warm-up | throttle onset none
+   cold open: hud 4565 ms, land 6853 ms | ms=9257
+   HUD (no bake) frame 1: wall 46.6 (to draw 2.4, draw 42.6, comp 7,10,3,0,0) | >33 within 10: +0:46.6 | vram MiB -1:0 +0:203 +1:217 +2:228 +3:228 +4:232 +5:232 +6:232 +7:232 +8:232 +9:232 +10:232
+   maprest: 61 fr, p50 16.45, p95 19.79, max 20.3, >33: 0
+   MAP hud=true stack=false worn=false back= baked=false rm=false
+b2 kbf3 0b985fbd fight | throttle onset none
+   fight load frames: 633.1; next: 119.0 14.5 16.4 16.9 | before the load: baked=true back=vault | vram MiB 667 644 644 644 644 644
+   ashrest: 601 fr, p50 16.65, p95 17.66, max 19.4, >33: 0 | vram 648 MiB
+   resh: 45 fr, p50 16.68, p95 18.09, max 46.8, >33: 1
+   rdeal: 63 fr, p50 16.66, p95 18.49, max 22.0, >33: 0
+   reshuffle frame over 33: resh #1440 46.8 (to draw 29.9, draw 6.0, process 18.3, comp 25,10,146,11,50)
+   OPEN landed_ms=16 streamed=false draw=5 discard=0 hand=5 ash=0 hp=64 top=-1
+   KINDLE uid=7 ok=true
+   KINDLED landed_ms=525 streamed=false draw=5 discard=0 hand=4 ash=1 hp=64 top=-1
+   TURN2 landed_ms=3029 streamed=false draw=0 discard=4 hand=5 ash=1 hp=64 top=3
+   ENDTURN 2 draw=0 reshuffle_due=true cards=9 dealt_before=true
+   TURN3 landed_ms=3946 streamed=true draw=4 discard=0 hand=5 ash=1 hp=54 top=-1
+b2 kbf4 0b985fbd fight | throttle onset none
+   fight load frames: 649.4; next: 101.4 15.3 20.2 31.2 | before the load: baked=true back=vault | vram MiB 667 644 644 644 644 644
+   ashrest: 601 fr, p50 16.66, p95 17.49, max 19.1, >33: 0 | vram 648 MiB
+   resh: 45 fr, p50 16.60, p95 18.30, max 29.9, >33: 0
+   rdeal: 63 fr, p50 16.61, p95 18.44, max 20.1, >33: 0
+   OPEN landed_ms=16 streamed=false draw=5 discard=0 hand=5 ash=0 hp=64 top=-1
+   KINDLE uid=7 ok=true
+   KINDLED landed_ms=526 streamed=false draw=5 discard=0 hand=4 ash=1 hp=64 top=-1
+   TURN2 landed_ms=3046 streamed=false draw=0 discard=4 hand=5 ash=1 hp=64 top=3
+   ENDTURN 2 draw=0 reshuffle_due=true cards=9 dealt_before=true
+   TURN3 landed_ms=3929 streamed=true draw=4 discard=0 hand=5 ash=1 hp=54 top=-1
+b2 kbm3 0b985fbd map | throttle onset none
+   cold open: hud 3860 ms, land 5955 ms | ms=6668
+   bake frame 1: wall 88.1 (to draw 3.1, draw 82.9, comp 11,10,8,2,2) | >33 within 10: +0:88.1 | vram MiB -1:0 +0:228 +1:242 +2:239 +3:239 +4:239 +5:239 +6:239 +7:239 +8:239 +9:239 +10:239
+   maprest: 721 fr, p50 16.67, p95 17.11, max 17.6, >33: 0
+   MAP hud=true stack=true worn=true back=vault baked=true rm=false
+b2 kbm4 0b985fbd map | throttle onset none
+   cold open: hud 4592 ms, land 8076 ms | ms=10341
+   bake frame 1: wall 100.4 (to draw 3.6, draw 94.0, comp 11,10,8,2,2) | >33 within 10: -1:45.6 +0:100.4 | vram MiB -1:0 +0:227 +1:241 +2:238 +3:238 +4:238 +5:238 +6:238 +7:238 +8:238 +9:238 +10:238
+   maprest: 721 fr, p50 16.68, p95 17.15, max 18.9, >33: 0
+   MAP hud=true stack=true worn=true back=vault baked=true rm=false
+b2 kbr3 0b985fbd route | throttle onset none
+   frame=486 ms=12086 baked=false back= | screen=map hud=true stack=true worn=true back=vault marks={ "rhud": [515, 12840], "rbaked": [515, 12840], "rland": [515, 12840] }
+   bake frame 514: wall 293.4 (to draw 195.0, draw 22.7, comp 17,14,101,2,46) | >33 within 10: +0:293.4 | vram MiB -2:338 -1:338 +0:470 +1:465 +2:364 +3:364 +4:364 +5:364 +6:364 +7:364 +8:364 +9:364 +10:364 | flood drawn: -2:a1.00/r0.82 -1:a1.00/r0.92 +0:a0.99/r1.00 +1:a0.55/r1.00 +2:a0.48/r1.00 +3:a0.43/r1.00
+b2 kbr4 0b985fbd route | throttle onset none
+   frame=499 ms=11464 baked=false back= | screen=map hud=true stack=true worn=true back=vault marks={ "rhud": [528, 12196], "rbaked": [528, 12196], "rland": [528, 12196] }
+   bake frame 527: wall 267.4 (to draw 183.4, draw 15.1, comp 17,14,101,2,46) | >33 within 10: +0:267.4 | vram MiB -2:316 -1:316 +0:448 +1:443 +2:342 +3:342 +4:342 +5:342 +6:342 +7:342 +8:342 +9:342 +10:342 | flood drawn: -2:a1.00/r0.82 -1:a1.00/r0.92 +0:a0.99/r1.00 +1:a0.53/r1.00 +2:a0.47/r1.00 +3:a0.42/r1.00
+b2 kbw2 0b985fbd map warm-up | throttle onset none
+   cold open: hud 3652 ms, land 5690 ms | ms=8455
+   bake frame 1: wall 83.7 (to draw 3.0, draw 77.8, comp 11,10,8,2,2) | >33 within 10: +0:83.7 | vram MiB -1:0 +0:228 +1:242 +2:239 +3:239 +4:239 +5:239 +6:239 +7:239 +8:239 +9:239 +10:239
+   maprest: 60 fr, p50 16.67, p95 17.12, max 17.2, >33: 0
+   MAP hud=true stack=true worn=true back=vault baked=true rm=false
+b3 kaf5 711302a5 fight | throttle onset none
+   fight load frames: 833.8; next: 11.5 49.6 16.7 18.4 | before the load: baked=false back= | vram MiB 688 665 665 665 665 665
+   ashrest: 601 fr, p50 16.68, p95 17.36, max 21.4, >33: 0 | vram 669 MiB
+   resh: 45 fr, p50 16.64, p95 17.86, max 24.4, >33: 0
+   rdeal: 64 fr, p50 16.66, p95 18.35, max 23.1, >33: 0
+   OPEN landed_ms=17 streamed=false draw=5 discard=0 hand=5 ash=0 hp=64 top=-1
+   KINDLE uid=7 ok=true
+   KINDLED landed_ms=530 streamed=false draw=5 discard=0 hand=4 ash=1 hp=64 top=-1
+   TURN2 landed_ms=3026 streamed=false draw=0 discard=4 hand=5 ash=1 hp=64 top=3
+   ENDTURN 2 draw=0 reshuffle_due=true cards=9 dealt_before=true
+   TURN3 landed_ms=3945 streamed=true draw=4 discard=0 hand=5 ash=1 hp=54 top=-1
+b3 kaf6 711302a5 fight | throttle onset none
+   fight load frames: 780.2; next: 16.0 26.1 24.0 16.6 | before the load: baked=false back= | vram MiB 688 665 665 665 665 665
+   ashrest: 601 fr, p50 16.66, p95 17.32, max 18.8, >33: 0 | vram 669 MiB
+   resh: 45 fr, p50 16.70, p95 17.95, max 23.0, >33: 0
+   rdeal: 64 fr, p50 16.68, p95 18.07, max 23.8, >33: 0
+   OPEN landed_ms=17 streamed=false draw=5 discard=0 hand=5 ash=0 hp=64 top=-1
+   KINDLE uid=7 ok=true
+   KINDLED landed_ms=530 streamed=false draw=5 discard=0 hand=4 ash=1 hp=64 top=-1
+   TURN2 landed_ms=3061 streamed=false draw=0 discard=4 hand=5 ash=1 hp=64 top=3
+   ENDTURN 2 draw=0 reshuffle_due=true cards=9 dealt_before=true
+   TURN3 landed_ms=3945 streamed=true draw=4 discard=0 hand=5 ash=1 hp=54 top=-1
+b3 kam5 711302a5 map | throttle onset none
+   cold open: hud 3505 ms, land 5738 ms | ms=6211
+   HUD (no bake) frame 1: wall 40.1 (to draw 2.1, draw 35.5, comp 7,10,3,0,0) | >33 within 10: +0:40.1 | vram MiB -1:0 +0:203 +1:214 +2:214 +3:214 +4:218 +5:218 +6:218 +7:218 +8:218 +9:218 +10:218
+   maprest: 721 fr, p50 16.68, p95 17.16, max 17.8, >33: 0
+   MAP hud=true stack=false worn=false back= baked=false rm=false
+b3 kam6 711302a5 map | throttle onset none
+   cold open: hud 3702 ms, land 6176 ms | ms=7745
+   HUD (no bake) frame 1: wall 57.6 (to draw 2.3, draw 53.4, comp 7,10,3,0,0) | >33 within 10: +0:57.6 | vram MiB -1:0 +0:203 +1:217 +2:231 +3:228 +4:232 +5:232 +6:232 +7:232 +8:232 +9:232 +10:232
+   maprest: 721 fr, p50 16.54, p95 19.24, max 20.3, >33: 0
+   MAP hud=true stack=false worn=false back= baked=false rm=false
+b3 kar5 711302a5 route | throttle onset none
+   frame=499 ms=11050 baked=false back= | screen=map hud=true stack=false worn=false back= marks={ "rhud": [528, 11698], "rland": [528, 11698] }
+   HUD (no bake) frame 527: wall 183.3 (to draw 168.0, draw 9.8, comp 13,14,95,0,44) | >33 within 10: +0:183.3 +1:50.0 | vram MiB -2:324 -1:324 +0:435 +1:432 +2:346 +3:346 +4:346 +5:346 +6:346 +7:346 +8:346 +9:346 +10:346 | flood drawn: -2:a1.00/r0.82 -1:a1.00/r0.92 +0:a0.99/r1.00 +1:a0.53/r1.00 +2:a0.36/r1.00 +3:a0.31/r1.00
+b3 kar6 711302a5 route | throttle onset none
+   frame=439 ms=11080 baked=false back= | screen=map hud=true stack=false worn=false back= marks={ "rhud": [468, 11725], "rland": [468, 11725] }
+   HUD (no bake) frame 467: wall 181.1 (to draw 163.8, draw 11.6, comp 13,14,95,0,44) | >33 within 10: +0:181.1 +1:50.9 | vram MiB -2:324 -1:324 +0:437 +1:434 +2:348 +3:348 +4:348 +5:348 +6:348 +7:348 +8:348 +9:348 +10:348 | flood drawn: -2:a1.00/r0.82 -1:a1.00/r0.92 +0:a0.99/r1.00 +1:a0.55/r1.00 +2:a0.37/r1.00 +3:a0.32/r1.00
+b3 kaw3 711302a5 map warm-up | throttle onset none
+   cold open: hud 3797 ms, land 6055 ms | ms=8355
+   HUD (no bake) frame 1: wall 44.1 (to draw 2.1, draw 40.6, comp 7,10,3,0,0) | >33 within 10: +0:44.1 | vram MiB -1:0 +0:203 +1:217 +2:228 +3:228 +4:232 +5:232 +6:232 +7:232 +8:232 +9:232 +10:232
+   maprest: 60 fr, p50 16.69, p95 17.13, max 17.5, >33: 0
+   MAP hud=true stack=false worn=false back= baked=false rm=false
+b3 kbf5 0b985fbd fight | throttle onset none
+   fight load frames: 629.9; next: 114.6 16.4 18.1 16.6 | before the load: baked=true back=vault | vram MiB 667 644 644 644 644 644
+   ashrest: 601 fr, p50 16.68, p95 17.42, max 24.2, >33: 0 | vram 648 MiB
+   resh: 45 fr, p50 16.74, p95 18.28, max 26.6, >33: 0
+   rdeal: 63 fr, p50 16.70, p95 18.18, max 37.0, >33: 1
+   reshuffle frame over 33: rdeal #1472 37.0 (to draw 1.8, draw 21.3, process 17.8, comp 25,10,146,11,50)
+   OPEN landed_ms=17 streamed=false draw=5 discard=0 hand=5 ash=0 hp=64 top=-1
+   KINDLE uid=7 ok=true
+   KINDLED landed_ms=527 streamed=false draw=5 discard=0 hand=4 ash=1 hp=64 top=-1
+   TURN2 landed_ms=3042 streamed=false draw=0 discard=4 hand=5 ash=1 hp=64 top=3
+   ENDTURN 2 draw=0 reshuffle_due=true cards=9 dealt_before=true
+   TURN3 landed_ms=3945 streamed=true draw=4 discard=0 hand=5 ash=1 hp=54 top=-1
+b3 kbf6 0b985fbd fight | throttle onset none
+   fight load frames: 666.0; next: 100.2 16.2 16.7 16.6 | before the load: baked=true back=vault | vram MiB 667 644 644 644 644 644
+   ashrest: 601 fr, p50 16.66, p95 17.34, max 19.4, >33: 0 | vram 648 MiB
+   resh: 45 fr, p50 16.70, p95 19.12, max 30.2, >33: 0
+   rdeal: 64 fr, p50 16.66, p95 18.32, max 20.1, >33: 0
+   OPEN landed_ms=18 streamed=false draw=5 discard=0 hand=5 ash=0 hp=64 top=-1
+   KINDLE uid=7 ok=true
+   KINDLED landed_ms=528 streamed=false draw=5 discard=0 hand=4 ash=1 hp=64 top=-1
+   TURN2 landed_ms=3059 streamed=false draw=0 discard=4 hand=5 ash=1 hp=64 top=3
+   ENDTURN 2 draw=0 reshuffle_due=true cards=9 dealt_before=true
+   TURN3 landed_ms=3945 streamed=true draw=4 discard=0 hand=5 ash=1 hp=54 top=-1
+b3 kbm5 0b985fbd map | throttle onset none
+   cold open: hud 3771 ms, land 5983 ms | ms=6467
+   bake frame 1: wall 81.8 (to draw 3.6, draw 76.6, comp 11,10,8,2,2) | >33 within 10: +0:81.8 | vram MiB -1:0 +0:228 +1:238 +2:225 +3:225 +4:225 +5:225 +6:225 +7:225 +8:225 +9:225 +10:225
+   maprest: 721 fr, p50 16.68, p95 17.14, max 18.2, >33: 0
+   MAP hud=true stack=true worn=true back=vault baked=true rm=false
+b3 kbm6 0b985fbd map | throttle onset none
+   cold open: hud 4441 ms, land 7529 ms | ms=9195
+   bake frame 1: wall 96.1 (to draw 3.8, draw 88.0, comp 11,10,8,2,2) | >33 within 10: -1:39.4 +0:96.1 +6:48.2 +10:298.5 | vram MiB -1:0 +0:228 +1:242 +2:239 +3:239 +4:239 +5:239 +6:239 +7:239 +8:239 +9:239 +10:239
+   maprest: 721 fr, p50 16.67, p95 17.13, max 17.4, >33: 0
+   MAP hud=true stack=true worn=true back=vault baked=true rm=false
+b3 kbr5 0b985fbd route | throttle onset none
+   frame=473 ms=11854 baked=false back= | screen=map hud=true stack=true worn=true back=vault marks={ "rhud": [503, 12598], "rbaked": [503, 12598], "rland": [503, 12598] }
+   bake frame 502: wall 263.1 (to draw 175.0, draw 28.7, comp 17,14,101,2,46) | >33 within 10: +0:263.1 | vram MiB -2:330 -1:330 +0:462 +1:457 +2:356 +3:356 +4:356 +5:356 +6:356 +7:356 +8:356 +9:356 +10:356 | flood drawn: -2:a1.00/r0.87 -1:a1.00/r0.97 +0:a0.96/r1.00 +1:a0.52/r1.00 +2:a0.45/r1.00 +3:a0.40/r1.00
+b3 kbr6 0b985fbd route | throttle onset none
+   frame=489 ms=11172 baked=false back= | screen=map hud=true stack=true worn=true back=vault marks={ "rhud": [518, 11918], "rbaked": [518, 11918], "rland": [518, 11918] }
+   bake frame 517: wall 282.0 (to draw 191.5, draw 20.5, comp 17,14,101,2,46) | >33 within 10: +0:282.0 | vram MiB -2:338 -1:338 +0:470 +1:465 +2:364 +3:364 +4:364 +5:364 +6:364 +7:364 +8:364 +9:364 +10:364 | flood drawn: -2:a1.00/r0.82 -1:a1.00/r0.92 +0:a0.99/r1.00 +1:a0.57/r1.00 +2:a0.50/r1.00 +3:a0.45/r1.00
+b3 kbw3 0b985fbd map warm-up | throttle onset none
+   cold open: hud 4197 ms, land 6921 ms | ms=9686
+   bake frame 1: wall 79.0 (to draw 3.1, draw 73.9, comp 11,10,8,2,2) | >33 within 10: -1:38.2 +0:79.0 | vram MiB -1:0 +0:228 +1:242 +2:239 +3:239 +4:239 +5:239 +6:239 +7:239 +8:239 +9:239 +10:239
+   maprest: 61 fr, p50 16.67, p95 17.14, max 17.3, >33: 0
+   MAP hud=true stack=true worn=true back=vault baked=true rm=false
+
+map at rest, every measured launch:
+  0b985fbd: 6 (kbm1 kbm2 kbm3 kbm4 kbm5 kbm6) | maprest p50 16.68 p95 17.14
+  711302a5: 6 (kam1 kam2 kam3 kam4 kam5 kam6) | maprest p50 16.68 p95 17.20
+
+map at rest, unthrottled:
+  0b985fbd: 6 (kbm1 kbm2 kbm3 kbm4 kbm5 kbm6) | maprest p50 16.68 p95 17.14
+  711302a5: 6 (kam1 kam2 kam3 kam4 kam5 kam6) | maprest p50 16.68 p95 17.20
+
+fight, every measured launch:
+  0b985fbd: 6 (kbf1 kbf2 kbf3 kbf4 kbf5 kbf6) | ashrest p50 16.66 p95 17.39 | resh+rdeal p50 16.67 p95 18.39
+  711302a5: 6 (kaf1 kaf2 kaf3 kaf4 kaf5 kaf6) | ashrest p50 16.67 p95 17.30 | resh+rdeal p50 16.68 p95 18.29
+
+fight ashrest, unthrottled:
+  0b985fbd: 6 (kbf1 kbf2 kbf3 kbf4 kbf5 kbf6) | ashrest p50 16.66 p95 17.39
+  711302a5: 6 (kaf1 kaf2 kaf3 kaf4 kaf5 kaf6) | ashrest p50 16.67 p95 17.30
+
+fight reshuffle, unthrottled:
+  0b985fbd: 6 (kbf1 kbf2 kbf3 kbf4 kbf5 kbf6) | resh+rdeal p50 16.67 p95 18.39
+  711302a5: 6 (kaf1 kaf2 kaf3 kaf4 kaf5 kaf6) | resh+rdeal p50 16.68 p95 18.29
+
+medians per build (measured launches):
+  boot bake/HUD frame ms 0b985fbd: 88 64 88 100 82 96 | median 87.9
+  boot bake/HUD frame ms 711302a5: 41 41 52 50 40 58 | median 45.8
+  route bake/HUD frame ms 0b985fbd: 314 298 293 267 263 282 | median 287.7
+  route bake/HUD frame ms 711302a5: 183 181 180 181 183 181 | median 181.2
+  cold open to the map's land, ms since engine start, 0b985fbd: 5819 5951 5955 8076 5983 7529 | median 5969
+  cold open to the map's land, ms since engine start, 711302a5: 5699 5988 5777 7440 5738 6176 | median 5882
+  fight load frame ms, 0b985fbd: 646 650 633 649 630 666 | median 648
+  fight load frame ms, 711302a5: 7866 767 786 768 834 780 | median 783
+
+per batch, B - A on the batch medians (measured launches; p50 / p95 of each launch, median per build):
+  maprest    b1: A(711302a5) p50 16.69 p95 17.20 | B(0b985fbd) p50 16.68 p95 17.23 | B-A p50 -0.01 p95 +0.02
+  maprest    b2: A(711302a5) p50 16.59 p95 18.00 | B(0b985fbd) p50 16.68 p95 17.13 | B-A p50 +0.08 p95 -0.87
+  maprest    b3: A(711302a5) p50 16.61 p95 18.20 | B(0b985fbd) p50 16.68 p95 17.13 | B-A p50 +0.07 p95 -1.07
+  ashrest    b1: A(711302a5) p50 16.67 p95 17.37 | B(0b985fbd) p50 16.66 p95 17.36 | B-A p50 -0.01 p95 -0.01
+  ashrest    b2: A(711302a5) p50 16.68 p95 17.12 | B(0b985fbd) p50 16.66 p95 17.57 | B-A p50 -0.02 p95 +0.46
+  ashrest    b3: A(711302a5) p50 16.67 p95 17.34 | B(0b985fbd) p50 16.67 p95 17.38 | B-A p50 +0.00 p95 +0.04
+  resh+rdeal b1: A(711302a5) p50 16.69 p95 18.37 | B(0b985fbd) p50 16.68 p95 18.31 | B-A p50 -0.01 p95 -0.06
+  resh+rdeal b2: A(711302a5) p50 16.66 p95 18.07 | B(0b985fbd) p50 16.63 p95 18.40 | B-A p50 -0.03 p95 +0.34
+  resh+rdeal b3: A(711302a5) p50 16.67 p95 18.17 | B(0b985fbd) p50 16.70 p95 18.48 | B-A p50 +0.02 p95 +0.30
+
+every launch, as a Markdown table (battery, charging and temperature as logged before the launch):
+| Batch | Launch | Build | Mode | Battery, temp. | Throttle onset | Figures (ms) |
+|---|---|---|---|---|---|---|
+| b1 | kaw1 (warm-up) | A | map | 100%, not charging, 30.5 C | none | rest p50 16.63 / p95 17.87; HUD frame 4202.1; land at 31388 |
+| b1 | kam1 | A | map | 100%, not charging, 33.4 C | none | rest p50 16.67 / p95 17.21; HUD frame 40.9; land at 5699 |
+| b1 | kar1 | A | route | 100%, not charging, 33.0 C | none | HUD frame 183.4 under flood a0.97; >33 within 10: +0:183.4 +1:49.9 |
+| b1 | kaf1 | A | fight | 100%, not charging, 33.1 C | none | load 7866 (baked=false); ash rest p50 16.67 / p95 17.54; reshuffle p50 16.68 / p95 18.45, max 24.5 |
+| b1 | kam2 | A | map | 100%, not charging, 36.7 C | none | rest p50 16.70 / p95 17.19; HUD frame 41.4; land at 5988 |
+| b1 | kar2 | A | route | 100%, not charging, 34.8 C | none | HUD frame 181.3 under flood a0.99; >33 within 10: +0:181.3 |
+| b1 | kaf2 | A | fight | 100%, not charging, 34.8 C | none | load 767 (baked=false); ash rest p50 16.67 / p95 17.20; reshuffle p50 16.70 / p95 18.29, max 24.1 |
+| b1 | kbw1 (warm-up) | B | map | 100%, not charging, 37.7 C | 4 s | rest p50 17.69 / p95 20.85 (throttled); bake frame 88.9; land at 6454 |
+| b1 | kbm1 | B | map | 100%, not charging, 36.8 C | none | rest p50 16.67 / p95 17.23; bake frame 87.7; land at 5819 |
+| b1 | kbr1 | B | route | 100%, not charging, 35.8 C | none | bake frame 314.1 under flood a0.98; >33 within 10: +0:314.1 |
+| b1 | kbf1 | B | fight | 100%, not charging, 36.1 C | none | load 646 (baked=true); ash rest p50 16.68 / p95 17.36; reshuffle p50 16.62 / p95 18.39, max 29.9 |
+| b1 | kbm2 | B | map | 100%, not charging, 38.2 C | none | rest p50 16.68 / p95 17.22; bake frame 63.5; land at 5951 |
+| b1 | kbr2 | B | route | 100%, not charging, 36.4 C | none | bake frame 298.4 under flood a0.99; >33 within 10: +0:298.4 |
+| b1 | kbf2 | B | fight | 100%, not charging, 36.1 C | none | load 650 (baked=true); ash rest p50 16.65 / p95 17.36; reshuffle p50 16.74 / p95 18.23, max 23.8 |
+| b2 | kbw2 (warm-up) | B | map | 100%, not charging, 37.3 C | none | rest p50 16.67 / p95 17.12; bake frame 83.7; land at 5690 |
+| b2 | kbm3 | B | map | 100%, not charging, 37.4 C | none | rest p50 16.67 / p95 17.11; bake frame 88.1; land at 5955 |
+| b2 | kbr3 | B | route | 100%, not charging, 37.1 C | none | bake frame 293.4 under flood a0.99; >33 within 10: +0:293.4 |
+| b2 | kbf3 | B | fight | 100%, not charging, 37.2 C | none | load 633 (baked=true); ash rest p50 16.65 / p95 17.66; reshuffle p50 16.66 / p95 18.39, max 46.8 |
+| b2 | kbm4 | B | map | 100%, not charging, 39.7 C | none | rest p50 16.68 / p95 17.15; bake frame 100.4; land at 8076 |
+| b2 | kbr4 | B | route | 100%, not charging, 37.9 C | none | bake frame 267.4 under flood a0.99; >33 within 10: +0:267.4 |
+| b2 | kbf4 | B | fight | 100%, not charging, 37.0 C | none | load 649 (baked=true); ash rest p50 16.66 / p95 17.49; reshuffle p50 16.61 / p95 18.42, max 29.9 |
+| b2 | kaw2 (warm-up) | A | map | 100%, not charging, 39.8 C | none | rest p50 16.45 / p95 19.79; HUD frame 46.6; land at 6853 |
+| b2 | kam3 | A | map | 100%, not charging, 38.5 C | none | rest p50 16.51 / p95 18.85; HUD frame 52.0; land at 5777 |
+| b2 | kar3 | A | route | 100%, not charging, 37.7 C | none | HUD frame 179.7 under flood a0.99; >33 within 10: +0:179.7 +1:50.9 |
+| b2 | kaf3 | A | fight | 100%, not charging, 37.6 C | none | load 786 (baked=false); ash rest p50 16.67 / p95 17.27; reshuffle p50 16.65 / p95 19.03, max 22.0 |
+| b2 | kam4 | A | map | 100%, not charging, 39.9 C | none | rest p50 16.68 / p95 17.14; HUD frame 50.3; land at 7440 |
+| b2 | kar4 | A | route | 100%, not charging, 37.9 C | none | HUD frame 180.9 under flood a0.99; >33 within 10: +0:180.9 +1:66.7 |
+| b2 | kaf4 | A | fight | 100%, not charging, 37.5 C | none | load 768 (baked=false); ash rest p50 16.68 / p95 16.96; reshuffle p50 16.67 / p95 17.10, max 41.8 |
+| b3 | kaw3 (warm-up) | A | map | 100%, not charging, 38.4 C | none | rest p50 16.69 / p95 17.13; HUD frame 44.1; land at 6055 |
+| b3 | kam5 | A | map | 100%, not charging, 38.4 C | none | rest p50 16.68 / p95 17.16; HUD frame 40.1; land at 5738 |
+| b3 | kar5 | A | route | 100%, not charging, 37.8 C | none | HUD frame 183.3 under flood a0.99; >33 within 10: +0:183.3 +1:50.0 |
+| b3 | kaf5 | A | fight | 100%, not charging, 37.3 C | none | load 834 (baked=false); ash rest p50 16.68 / p95 17.36; reshuffle p50 16.64 / p95 18.28, max 24.4 |
+| b3 | kam6 | A | map | 100%, not charging, 40.0 C | none | rest p50 16.54 / p95 19.24; HUD frame 57.6; land at 6176 |
+| b3 | kar6 | A | route | 100%, not charging, 38.2 C | none | HUD frame 181.1 under flood a0.99; >33 within 10: +0:181.1 +1:50.9 |
+| b3 | kaf6 | A | fight | 100%, not charging, 37.8 C | none | load 780 (baked=false); ash rest p50 16.66 / p95 17.32; reshuffle p50 16.70 / p95 18.07, max 23.8 |
+| b3 | kbw3 (warm-up) | B | map | 100%, not charging, 39.9 C | none | rest p50 16.67 / p95 17.14; bake frame 79.0; land at 6921 |
+| b3 | kbm5 | B | map | 100%, not charging, 39.3 C | none | rest p50 16.68 / p95 17.14; bake frame 81.8; land at 5983 |
+| b3 | kbr5 | B | route | 100%, not charging, 38.3 C | none | bake frame 263.1 under flood a0.96; >33 within 10: +0:263.1 |
+| b3 | kbf5 | B | fight | 100%, not charging, 38.2 C | none | load 630 (baked=true); ash rest p50 16.68 / p95 17.42; reshuffle p50 16.71 / p95 18.31, max 37.0 |
+| b3 | kbm6 | B | map | 100%, not charging, 40.6 C | none | rest p50 16.67 / p95 17.13; bake frame 96.1; land at 7529 |
+| b3 | kbr6 | B | route | 100%, not charging, 38.4 C | none | bake frame 282.0 under flood a0.99; >33 within 10: +0:282.0 |
+| b3 | kbf6 | B | fight | 100%, not charging, 37.9 C | none | load 666 (baked=true); ash rest p50 16.66 / p95 17.34; reshuffle p50 16.68 / p95 18.64, max 30.2 |

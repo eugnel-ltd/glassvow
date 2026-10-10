@@ -16,6 +16,7 @@ static func run(fails: Array[String]) -> void:
 	_thickness(fails)
 	_stack_follows_count(fails)
 	await _life_at_rest(fails)
+	_glint_fills(fails)
 	_stream_timing(fails)
 	await _stream_skip(fails)
 	_pending_counts(fails)
@@ -119,6 +120,23 @@ static func _life_at_rest(fails: Array[String]) -> void:
 	Preferences.active.reduce_motion = false
 	host.queue_free()
 	await _frames(1)
+
+
+## The glint draws only what the canvas can fill: at 0.681 of its sweep a
+## corner clips a sliver three points all but in a line, which draw_polygon
+## refuses with an error (seen once in the top-menu deck's stills, #657 PR 5b).
+## Mid-card both halves of the band are drawn.
+static func _glint_fills(fails: Array[String]) -> void:
+	var stack: PileStack = PileStack.new(PileStack.Kind.DRAW)
+	stack.card = Vector2(CardView.CARD_W / CardView.CARD_H, 1.0) * DeckStack.LAW_CARD_H
+	for band: float in [-0.681, 0.681]:
+		for piece: PackedVector2Array in stack.glint_pieces(band):
+			if Geometry2D.triangulate_polygon(piece).is_empty():
+				fails.append("piles: the glint at %.3f draws a sliver the canvas cannot fill" % band)
+	if stack.glint_pieces(0.0).size() != 2:
+		fails.append("piles: mid-card the glint draws %d pieces, want its two halves"
+			% stack.glint_pieces(0.0).size())
+	stack.free()
 
 
 ## Eight cards at most, one every 0.6 s * 0.35 / n, the last landing 0.6 s in;

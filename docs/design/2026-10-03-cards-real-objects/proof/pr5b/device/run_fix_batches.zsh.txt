@@ -1,0 +1,39 @@
+#!/bin/zsh
+# SCRATCH (#657 PR 5b, the fix): a fight-only campaign, two short lock
+# sessions interleaved by install (A,B / B,A), three fight launches per build
+# per session. Each batch.zsh call takes the iPad lock (waiting while another
+# lane holds it, never breaking it) and releases it at its end.
+#   run_fix_batches.zsh <batch prefix> <nonce prefix>
+# Run as `f q` on c4b1a418, with 90 s cool-downs and no cooling wait (its f1
+# only: stopped before f2, the code moved on), and as `g r` on 40b7f302.
+C=/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane
+B=$C/device/batch.zsh
+S=150
+# Before each session, and before taking the lock: wait (20 min at most) for
+# the battery to cool to 36.0 C. f1 began at 34.6 C straight after another
+# lane's session and throttled in four of its six fights.
+cool() {
+  local t n=0
+  while (( n < 20 )); do
+    # Another lane's session heats the iPad: cool only while the lock is free.
+    if [[ "$(/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow/ipad_lock.sh status)" != free ]]; then
+      sleep 30; continue
+    fi
+    t=$(timeout 30 idevicediagnostics ioregentry AppleSmartBattery 2>/dev/null | grep -A1 '<key>Temperature</key>' | grep -o '[0-9]*' | head -1)
+    echo "[$(date '+%H:%M:%S')] cool: battery ${t:+$(printf '%d.%02d' $((t / 100)) $((t % 100)))} C"
+    [[ -n "$t" && $t -le 3600 ]] && return 0
+    (( n++ )); sleep 60
+  done
+}
+BP=${1:?batch prefix}; NP=${2:?nonce prefix}
+per() { # per <build letter a|b> <install no> <first measured no>
+  local x=$1 w=$2 n=$3
+  echo "install:${(U)x} ${NP}${x}w$w:mode=map,warm=1 sleep:60 ${NP}${x}f$n:mode=fight sleep:$S ${NP}${x}f$((n + 1)):mode=fight sleep:$S ${NP}${x}f$((n + 2)):mode=fight sleep:$S"
+}
+cool
+$B ${BP}1 ${=$(per a 1 1)} ${=$(per b 1 1)}
+sleep 300
+cool
+$B ${BP}2 ${=$(per b 2 4)} ${=$(per a 2 4)}
+python3 $C/device/analyze.py $C/device/${BP}1 $C/device/${BP}2 > $C/device/summary-fix-${BP}.txt 2>&1
+echo campaign done

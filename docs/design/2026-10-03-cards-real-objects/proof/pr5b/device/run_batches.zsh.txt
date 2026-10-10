@@ -1,0 +1,18 @@
+#!/bin/zsh
+# SCRATCH (#657 PR 5b): the whole device campaign, three short lock sessions,
+# interleaved by install (A,B / B,A / A,B). Each batch.zsh call takes the
+# iPad lock (waiting while another lane holds it) and releases it at its end.
+C=/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane
+B=$C/device/batch.zsh
+S=90
+per() { # per <build letter a|b> <install no> <first measured no>
+  local x=$1 w=$2 n=$3 m=$(( $3 + 1 ))
+  echo "install:${(U)x} k${x}w$w:mode=map,warm=1 sleep:60 k${x}m$n:mode=map sleep:$S k${x}r$n:mode=route sleep:$S k${x}f$n:mode=fight sleep:$S k${x}m$m:mode=map sleep:$S k${x}r$m:mode=route sleep:$S k${x}f$m:mode=fight sleep:$S"
+}
+$B b1 ${=$(per a 1 1)} ${=$(per b 1 1)}
+sleep 300
+$B b2 ${=$(per b 2 3)} ${=$(per a 2 3)}
+sleep 300
+$B b3 ${=$(per a 3 5)} ${=$(per b 3 5)}
+python3 $C/device/analyze.py $C/device/b1 $C/device/b2 $C/device/b3 > $C/device/summary.txt 2>&1
+echo campaign done

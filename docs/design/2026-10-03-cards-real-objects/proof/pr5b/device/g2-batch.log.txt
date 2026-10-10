@@ -1,0 +1,29 @@
+[23:47:14] lock held
+[23:47:42] installed B (/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane/device/ipa_B/glassvow.ipa)
+[23:47:43] launch rbw2 args=[--map --seed=1 --deck-probe=nonce=rbw2,mode=map,warm=1] battery=97% charging=true temp=36.59C
+[23:48:08] rows rbw2: 246 frames; mode=map mode=map  battery=97% charging=false temp=37.00C
+[23:48:11] cool-down 60 s
+[23:49:11] launch rbf4 args=[--map --seed=1 --deck-probe=nonce=rbf4,mode=fight] battery=97% charging=false temp=37.39C
+[23:50:13] rows rbf4: 1748 frames; mode=fight mode=fight  battery=97% charging=false temp=38.50C
+[23:50:16] cool-down 150 s
+[23:52:46] launch rbf5 args=[--map --seed=1 --deck-probe=nonce=rbf5,mode=fight] battery=97% charging=false temp=40.29C
+[23:53:45] rows rbf5: 1683 frames; mode=fight mode=fight  battery=97% charging=false temp=40.59C
+[23:53:48] cool-down 150 s
+[23:56:18] launch rbf6 args=[--map --seed=1 --deck-probe=nonce=rbf6,mode=fight] battery=97% charging=false temp=40.79C
+[23:57:17] rows rbf6: 1670 frames; mode=fight mode=fight  battery=97% charging=false temp=41.00C
+[23:57:20] cool-down 150 s
+[00:00:16] installed A (/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane/device/ipa_A/glassvow.ipa)
+[00:00:16] launch raw2 args=[--map --seed=1 --deck-probe=nonce=raw2,mode=map,warm=1] battery=97% charging=false temp=41.09C
+[00:00:39] rows raw2: 295 frames; mode=map mode=map  battery=97% charging=false temp=40.69C
+[00:00:42] cool-down 60 s
+[00:01:42] launch raf4 args=[--map --seed=1 --deck-probe=nonce=raf4,mode=fight] battery=97% charging=false temp=39.89C
+[00:02:43] rows raf4: 1626 frames; mode=fight mode=fight  battery=97% charging=false temp=40.69C
+[00:02:46] cool-down 150 s
+[00:05:16] launch raf5 args=[--map --seed=1 --deck-probe=nonce=raf5,mode=fight] battery=97% charging=false temp=41.39C
+[00:06:16] rows raf5: 1747 frames; mode=fight mode=fight  battery=97% charging=false temp=41.50C
+[00:06:19] cool-down 150 s
+[00:08:50] launch raf6 args=[--map --seed=1 --deck-probe=nonce=raf6,mode=fight] battery=96% charging=false temp=41.59C
+[00:09:49] rows raf6: 1573 frames; mode=fight mode=fight  battery=96% charging=false temp=41.39C
+[00:09:52] cool-down 150 s
+[00:12:22] batch done
+[00:12:22] lock released

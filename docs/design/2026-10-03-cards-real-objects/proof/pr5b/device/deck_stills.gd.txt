@@ -1,0 +1,112 @@
+extends SceneTree
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH (#657 PR 5b): the top-menu deck as a stack. Boots the game with the
+## given args (--map or --fight=...), waits for it to settle, then for each deck
+## size writes the whole frame and a crop round the deck: <out>_<back>_<n>.png
+## and <out>_<back>_<n>_crop.png. --back=rose bakes Rose and wears it (the
+## stack must follow). --glint=1 writes a burst of the glint crossing instead.
+##   godot --path <wt> --position 60,60 -s <this> -- --map --seed=1 --vp=WxH \
+##     --out=<dir>/<prefix> [--locale=zh-Hant] [--back=rose] [--glint=1] [--rm=1]
+
+var cfg: Dictionary = {"out": "/tmp/deck", "sizes": "10,20,30,40", "settle": "6",
+	"back": "vault", "glint": "0", "rm": "0", "first": "0", "painting": "0"}
+var main: Node = null
+
+
+func _initialize() -> void:
+	for arg: String in OS.get_cmdline_user_args():
+		for k: String in cfg.keys():
+			if arg.begins_with("--%s=" % k):
+				cfg[k] = arg.trim_prefix("--%s=" % k)
+	main = (load("res://application/main.tscn") as PackedScene).instantiate()
+	root.add_child(main)
+	_run.call_deferred()
+
+
+func _wait(seconds: float) -> void:
+	var until: int = Time.get_ticks_msec() + int(seconds * 1000.0)
+	while Time.get_ticks_msec() < until:
+		await process_frame
+
+
+func _deck() -> DeckStack:
+	if main._screen != null and is_instance_valid(main._screen):
+		return main._screen._hud._deck_stack
+	return main._run_hud._deck_stack
+
+
+func _shot(path: String) -> void:
+	var img: Image = root.get_texture().get_image()
+	img.save_png(path + ".png")
+	var deck: DeckStack = _deck()
+	var k: Vector2 = Vector2(img.get_size()) / Vector2(root.get_visible_rect().size)
+	var r: Rect2 = deck.get_global_rect().grow(46.0)
+	var px: Rect2i = Rect2i(Vector2i(r.position * k), Vector2i(r.size * k)).intersection(
+		Rect2i(Vector2i.ZERO, img.get_size()))
+	img.get_region(px).save_png(path + "_crop.png")
+
+
+func _run() -> void:
+	# The first frames: is the painting shown until the bake lands?
+	if cfg["first"] == "1":
+		for f: int in range(4):
+			await process_frame
+			var d = null
+			if main._run_hud != null and is_instance_valid(main._run_hud):
+				d = main._run_hud._deck_stack
+			print("DECK first frame=%d hud=%s painting=%s stack=%s back=%s" % [f, str(d != null),
+				str(d.painting.visible if d else null), str(d.stack.visible if d else null),
+				str(CardTurn.back() != null)])
+	await _wait(float(cfg["settle"]))
+	if main._map_screen != null and is_instance_valid(main._map_screen):
+		var waited: int = 0
+		while main._map_screen.landscape_pending() and waited < 1200:
+			await process_frame
+			waited += 1
+		await _wait(1.0)
+	Preferences.active.reduce_motion = cfg["rm"] == "1"
+	if cfg["back"] != "vault":
+		await CardTurn.prewarm(main, cfg["back"])
+		await _wait(0.2)
+	var deck: DeckStack = _deck()
+	if cfg["painting"] == "1":
+		CardTurn._wearing = "none"
+		await _wait(0.2)
+	print("DECK shape=%s window=%s back=%s worn=%s painting=%s" % [str(main._shape), str(root.size),
+		CardTurn.wearing(), str(deck.worn() != null), str(deck.painting.visible)])
+	for n_s: String in str(cfg["sizes"]).split(","):
+		var n: int = int(n_s)
+		_set_size(n)
+		await _wait(0.3)
+		deck = _deck()
+		if cfg["glint"] == "1":
+			for i: int in range(15):
+				# The stack's glint starts half a cycle in (DeckStack.GLINT_PHASE).
+				deck.stack._t = PileStack.GLINT_CYCLE - DeckStack.GLINT_PHASE + 0.1 * float(i)
+				deck.stack._process(0.0)
+				await _wait(0.08)
+				_shot("%s_%s_%02d_g%02d" % [cfg["out"], cfg["back"], n, i])
+		else:
+			deck.stack._t = 0.0   # 4.5 s into its cycle: no glint
+			deck.stack._process(0.0)
+			await _wait(0.1)
+			_shot("%s_%s_%02d" % [cfg["out"], cfg["back"], n])
+		print("DECK n=%d count=%d stack=%s scale=%s" % [n, deck.stack.count,
+			str(deck.get_global_rect()), str(deck.stack.scale)])
+	quit(0)
+
+
+func _set_size(n: int) -> void:
+	if main._screen != null and is_instance_valid(main._screen):
+		var hud = main._screen._hud
+		var cb = main._screen.game.cb
+		var hand: int = mini(5, n)
+		hud.set_values(cb.player.hp, cb.player.max_hp, cb.player.block, 99, cb.player.energy,
+			cb.player.energy_max, n - hand, 0, 0, hand)
+		return
+	var player = main.game.run.player
+	var cards: Array = player.deck.duplicate()
+	player.deck.clear()
+	for i: int in range(n):
+		player.deck.append(cards[i % cards.size()])
+	main._run_hud.refresh(main.game.run)

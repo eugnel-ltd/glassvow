@@ -1,0 +1,31 @@
+[22:04:08] ipad lock held by 'map-r33' for 86 s; waiting 30 s
+[22:04:38] ipad lock held by 'map-r33' for 116 s; waiting 30 s
+[22:59:38] lock held
+[23:00:02] installed A (/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane/device/ipa_A/glassvow.ipa)
+[23:00:02] launch raw1 args=[--map --seed=1 --deck-probe=nonce=raw1,mode=map,warm=1] battery=99% charging=false temp=36.09C
+[23:00:25] rows raw1: 234 frames; mode=map mode=map  battery=99% charging=false temp=36.19C
+[23:00:28] cool-down 60 s
+[23:01:29] launch raf1 args=[--map --seed=1 --deck-probe=nonce=raf1,mode=fight] battery=99% charging=false temp=36.69C
+[23:02:29] rows raf1: 1631 frames; mode=fight mode=fight  battery=99% charging=false temp=38.09C
+[23:02:32] cool-down 150 s
+[23:05:02] launch raf2 args=[--map --seed=1 --deck-probe=nonce=raf2,mode=fight] battery=99% charging=false temp=39.69C
+[23:06:01] rows raf2: 1638 frames; mode=fight mode=fight  battery=99% charging=false temp=40.00C
+[23:06:04] cool-down 150 s
+[23:08:35] launch raf3 args=[--map --seed=1 --deck-probe=nonce=raf3,mode=fight] battery=99% charging=false temp=40.39C
+[23:09:34] rows raf3: 1668 frames; mode=fight mode=fight  battery=99% charging=false temp=40.59C
+[23:09:37] cool-down 150 s
+[23:12:36] installed B (/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane/device/ipa_B/glassvow.ipa)
+[23:12:37] launch rbw1 args=[--map --seed=1 --deck-probe=nonce=rbw1,mode=map,warm=1] battery=99% charging=false temp=40.79C
+[23:13:00] rows rbw1: 229 frames; mode=map mode=map  battery=98% charging=false temp=40.50C
+[23:13:03] cool-down 60 s
+[23:14:03] launch rbf1 args=[--map --seed=1 --deck-probe=nonce=rbf1,mode=fight] battery=98% charging=false temp=39.39C
+[23:15:03] rows rbf1: 1634 frames; mode=fight mode=fight  battery=98% charging=false temp=40.39C
+[23:15:06] cool-down 150 s
+[23:17:36] launch rbf2 args=[--map --seed=1 --deck-probe=nonce=rbf2,mode=fight] battery=98% charging=false temp=41.29C
+[23:18:35] rows rbf2: 1641 frames; mode=fight mode=fight  battery=98% charging=false temp=41.09C
+[23:18:38] cool-down 150 s
+[23:21:09] launch rbf3 args=[--map --seed=1 --deck-probe=nonce=rbf3,mode=fight] battery=98% charging=false temp=41.00C
+[23:22:08] rows rbf3: 1682 frames; mode=fight mode=fight  battery=98% charging=false temp=41.39C
+[23:22:11] cool-down 150 s
+[23:24:41] batch done
+[23:24:41] lock released

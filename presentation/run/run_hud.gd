@@ -28,6 +28,8 @@ var _title: Label
 var _right: HBoxContainer
 var _collection: HFlowContainer
 var _deck_count: Label
+## The deck as a stack of real cards, where the painted deck stood (#657).
+var _deck_stack: DeckStack
 ## Potion-id signature; rebuild `_right` only when this changes.
 var _right_sig: String = ""
 ## Act + omen + relic-id signature; rebuild `_collection` only when this changes.
@@ -66,6 +68,7 @@ func refresh(run: RunState) -> void:
 		_right_sig = right_sig
 	elif _deck_count != null:
 		_deck_count.text = str(player.deck.size())
+		_deck_stack.set_count(player.deck.size())
 
 	var collection_sig: String = _collection_signature(run)
 	if collection_sig != _collection_sig:
@@ -179,7 +182,11 @@ func _rebuild_right(player: RunState.Player) -> void:
 		_right.add_child(_potion_seat(slot, player.potions[slot]))
 	var icon_side: int = _shape_value(42, 56)
 	var button_side: int = int(RunStyle.hit_floor(_shape_value(38, 44)))
-	var deck: Button = _art_button("ui/deck", icon_side, button_side,
+	# The deck stands where its painting stood, as a stack of the table's
+	# backs as thick as the deck (DeckStack); the painting until one is baked.
+	_deck_stack = DeckStack.new(icon_side, HudBar.icon("ui/deck"))
+	_deck_stack.set_count(player.deck.size())
+	var deck: Button = _seat_button(_deck_stack, icon_side, button_side,
 		Locale.active.t("ui.hud.viewDeck"))
 	for state: String in ["normal", "hover", "pressed"]:
 		deck.add_theme_stylebox_override(state, _flat(Color.TRANSPARENT, 0))
@@ -345,6 +352,20 @@ func _stat_line(icon_name: String) -> HBoxContainer:
 
 func _art_button(asset: String, art_side: int, button_side: int,
 		tip: String) -> Button:
+	var art: Texture2D = HudBar.icon(asset)
+	var image: TextureRect = null
+	if art != null:
+		image = TextureRect.new()
+		image.texture = art
+		image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	return _seat_button(image, art_side, button_side, tip)
+
+
+## A seated button with `art` centred on it at `art_side`; a missing art
+## shows the fallback glyph.
+func _seat_button(art: Control, art_side: int, button_side: int,
+		tip: String) -> Button:
 	var button: Button = Button.new()
 	button.custom_minimum_size = Vector2(button_side, button_side)
 	button.tooltip_text = tip
@@ -355,17 +376,12 @@ func _art_button(asset: String, art_side: int, button_side: int,
 	button.add_theme_stylebox_override("normal", _seat_style(true))
 	button.add_theme_stylebox_override("hover", _seat_style(true, RunStyle.GOLD))
 	button.add_theme_stylebox_override("pressed", _seat_style(true, RunStyle.PARCHMENT))
-	var art: Texture2D = HudBar.icon(asset)
 	if art != null:
-		var image: TextureRect = TextureRect.new()
-		image.texture = art
-		image.custom_minimum_size = Vector2(art_side, art_side)
-		image.set_anchors_preset(Control.PRESET_CENTER)
-		image.position = -Vector2(art_side, art_side) * 0.5
-		image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		image.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		button.add_child(image)
+		art.custom_minimum_size = Vector2(art_side, art_side)
+		art.set_anchors_preset(Control.PRESET_CENTER)
+		art.position = -Vector2(art_side, art_side) * 0.5
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(art)
 	else:
 		_add_fallback(button, "?", RunStyle.DANGER)
 	button.mouse_entered.connect(func() -> void: _sfx.play(&"hover", 0.45))

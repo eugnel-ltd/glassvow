@@ -1,0 +1,47 @@
+[18:12:25] lock held
+[18:12:47] installed A (/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane/device/ipa_A/glassvow.ipa)
+[18:12:47] launch kaw1 args=[--map --seed=1 --deck-probe=nonce=kaw1,mode=map,warm=1] battery=100% charging=false temp=30.50C
+[18:13:27] rows kaw1: 99 frames; mode=map mode=map  battery=100% charging=false temp=32.39C
+[18:13:30] cool-down 60 s
+[18:14:31] launch kam1 args=[--map --seed=1 --deck-probe=nonce=kam1,mode=map] battery=100% charging=false temp=33.39C
+[18:15:04] rows kam1: 856 frames; mode=map mode=map  battery=100% charging=false temp=33.50C
+[18:15:08] cool-down 90 s
+[18:16:38] launch kar1 args=[--deck-probe=nonce=kar1,mode=route] battery=100% charging=false temp=33.0C
+[18:17:16] rows kar1: 670 frames; mode=route mode=route  battery=100% charging=false temp=33.19C
+[18:17:19] cool-down 90 s
+[18:18:49] launch kaf1 args=[--map --seed=1 --deck-probe=nonce=kaf1,mode=fight] battery=100% charging=false temp=33.9C
+[18:19:50] rows kaf1: 1568 frames; mode=fight mode=fight  battery=100% charging=false temp=34.79C
+[18:19:53] cool-down 90 s
+[18:21:23] launch kam2 args=[--map --seed=1 --deck-probe=nonce=kam2,mode=map] battery=100% charging=false temp=36.69C
+[18:21:57] rows kam2: 882 frames; mode=map mode=map  battery=100% charging=false temp=36.79C
+[18:22:00] cool-down 90 s
+[18:23:30] launch kar2 args=[--deck-probe=nonce=kar2,mode=route] battery=100% charging=false temp=34.79C
+[18:24:04] rows kar2: 673 frames; mode=route mode=route  battery=100% charging=false temp=35.9C
+[18:24:07] cool-down 90 s
+[18:25:38] launch kaf2 args=[--map --seed=1 --deck-probe=nonce=kaf2,mode=fight] battery=100% charging=false temp=34.79C
+[18:26:37] rows kaf2: 1683 frames; mode=fight mode=fight  battery=100% charging=false temp=36.39C
+[18:26:40] cool-down 90 s
+[18:28:35] installed B (/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane/device/ipa_B/glassvow.ipa)
+[18:28:36] launch kbw1 args=[--map --seed=1 --deck-probe=nonce=kbw1,mode=map,warm=1] battery=100% charging=false temp=37.69C
+[18:28:58] rows kbw1: 269 frames; mode=map mode=map  battery=100% charging=false temp=37.69C
+[18:29:01] cool-down 60 s
+[18:30:02] launch kbm1 args=[--map --seed=1 --deck-probe=nonce=kbm1,mode=map] battery=100% charging=false temp=36.79C
+[18:30:35] rows kbm1: 856 frames; mode=map mode=map  battery=100% charging=false temp=36.79C
+[18:30:38] cool-down 90 s
+[18:32:09] launch kbr1 args=[--deck-probe=nonce=kbr1,mode=route] battery=100% charging=false temp=35.79C
+[18:32:43] rows kbr1: 666 frames; mode=route mode=route  battery=100% charging=false temp=36.39C
+[18:32:46] cool-down 90 s
+[18:34:16] launch kbf1 args=[--map --seed=1 --deck-probe=nonce=kbf1,mode=fight] battery=100% charging=false temp=36.9C
+[18:35:15] rows kbf1: 1601 frames; mode=fight mode=fight  battery=100% charging=false temp=37.50C
+[18:35:18] cool-down 90 s
+[18:36:48] launch kbm2 args=[--map --seed=1 --deck-probe=nonce=kbm2,mode=map] battery=100% charging=false temp=38.19C
+[18:37:24] rows kbm2: 902 frames; mode=map mode=map  battery=100% charging=false temp=38.19C
+[18:37:27] cool-down 90 s
+[18:38:57] launch kbr2 args=[--deck-probe=nonce=kbr2,mode=route] battery=100% charging=false temp=36.39C
+[18:39:31] rows kbr2: 603 frames; mode=route mode=route  battery=100% charging=false temp=36.69C
+[18:39:34] cool-down 90 s
+[18:41:04] launch kbf2 args=[--map --seed=1 --deck-probe=nonce=kbf2,mode=fight] battery=100% charging=false temp=36.9C
+[18:42:04] rows kbf2: 1704 frames; mode=fight mode=fight  battery=100% charging=false temp=37.39C
+[18:42:07] cool-down 90 s
+[18:43:37] batch done
+[18:43:37] lock released

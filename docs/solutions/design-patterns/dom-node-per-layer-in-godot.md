@@ -89,7 +89,7 @@ class Fan:
 ```
 
 Updating the pile stops allocating anything —
-[presentation/combat/hud_bar.gd:1320-1323](../../../presentation/combat/hud_bar.gd#L1320) (in `_sync_pile`):
+[presentation/combat/hud_bar.gd:1331-1334](../../../presentation/combat/hud_bar.gd#L1331) (in `_sync_pile`):
 
 ```gdscript
 var faces: int = mini(maxi(n, 0), FAN_FACES)
@@ -193,7 +193,7 @@ benchmark's `src/pile-chrome.js:4-8` — `PILE_FAN_DEG`, `PILE_FAN_MAX_DEG`,
   each need an independent animation, which is exactly the case the rule above
   carves out. (#657 PR 5 replaced it with `PileStream`, which draws the whole
   reshuffle in one `_draw()`.)
-- `presentation/combat/hud_bar.gd:417-439` (in `_sync_candles`) builds one
+- `presentation/combat/hud_bar.gd:421-443` (in `_sync_candles`) builds one
   non-interactive `TextureRect` per point of max energy. Node count scales with
   a gameplay value that stays small, which is the second carve-out.
 
