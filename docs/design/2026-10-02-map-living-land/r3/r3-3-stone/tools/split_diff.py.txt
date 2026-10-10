@@ -1,0 +1,41 @@
+"""Lane R3.3 (scratch): the split's pixel diff. For each frame: what moves on its own (pre against
+its control, the same build captured again), and the split against the pre-split build on every
+other pixel: the mean and largest channel difference, how many pixels differ by more than 16 and 32
+(of 255), and the largest 8-connected patch over 32 (a card moved, missing or re-tinted shows as a
+patch; compression noise does not). Writes 8x diff pictures beside the frames; prints one row each.
+    python3 split_diff.py <split-diff dir>"""
+import os
+import sys
+
+import cv2
+import numpy as np
+from PIL import Image
+
+root = sys.argv[1]
+os.makedirs(os.path.join(root, 'diff'), exist_ok=True)
+print('| Frame | Moving on its own (control) | Mean | p99.9 | Max | > 16 | > 32 | Largest patch > 32 (px) |')
+print('|---|---|---|---|---|---|---|---|')
+worst = 0
+for name in sorted(os.listdir(os.path.join(root, 'pre'))):
+    if not name.endswith('.png') or name.endswith('-later.png'):
+        continue
+    load = lambda run: np.asarray(Image.open(os.path.join(root, run, name)).convert('RGB')).astype(np.int16)
+    pre, split, control = load('pre'), load('split'), load('control')
+    moving = np.abs(pre - control).max(-1) > 6
+    d = np.abs(pre - split).max(-1)
+    still = ~moving
+    ds = d[still]
+    over32 = ((d > 32) & still).astype(np.uint8)
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(over32, connectivity=8)
+    patch = int(stats[1:, cv2.CC_STAT_AREA].max()) if n > 1 else 0
+    worst = max(worst, patch)
+    total = d.size
+    print('| %s | %d px (%.2f%%) | %.3f | %d | %d | %d (%.3f%%) | %d (%.4f%%) | %d |' % (
+        name[:-4], int(moving.sum()), 100.0 * moving.sum() / total, ds.mean(), int(np.percentile(ds, 99.9)),
+        int(ds.max()), int((ds > 16).sum()), 100.0 * (ds > 16).sum() / total, int((ds > 32).sum()),
+        100.0 * (ds > 32).sum() / total, patch))
+    amp = np.clip(d * 8, 0, 255).astype(np.uint8)
+    amp[moving] = 0
+    Image.fromarray(amp).save(os.path.join(root, 'diff', name))
+print()
+print('largest patch over 32 in any frame: %d px' % worst)

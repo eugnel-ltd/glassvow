@@ -1,0 +1,65 @@
+extends SceneTree
+## Lane R3.3 scratch (never committed): the kit's own take of its map textures, in the game's order, through
+## the worktree's own `ImpostorAtlas.Take`: the woodland's atlas, then (on a branch with the stone) the
+## stone's pieces and textures once the atlas's take has settled, as `Kit.preload_step` does. Prints the
+## driver's total and Godot's tracked textures before and after, how long the take took and how many paths
+## were asked for at once at most.
+##   godot --path <wt> --rendering-driver metal --rendering-method mobile -s <this> -- [--wait]
+## `--wait` waits as a map opening now does; without it, a step a frame, as the prefetch under the title does.
+
+const Atlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
+const STONE_SCRIPT: String = "res://presentation/map/landscape/land_stone.gd"
+
+var rd: RenderingDevice
+## Everything taken, held to the reading (a take let go frees its textures).
+var held: Array = []
+
+
+func _initialize() -> void:
+	rd = RenderingServer.get_rendering_device()
+	_run.call_deferred()
+
+
+func _mem() -> Array:
+	return [rd.get_memory_usage(RenderingDevice.MEMORY_TOTAL) / 1048576.0, rd.get_memory_usage(RenderingDevice.MEMORY_TEXTURES) / 1048576.0]
+
+
+func _take(paths: PackedStringArray, wait: bool, most: Array[int]) -> void:
+	var take: Atlas.Take = Atlas.Take.new(paths)
+	if "hint" in take:
+		take.set("hint", "")
+	if "ask" in take:
+		var asker: Callable = take.get("ask")
+		take.set("ask", func(path: String, hint: String) -> bool:
+			var asked: int = take.get("asked")
+			most[0] = maxi(most[0], asked - take.textures.size())
+			return asker.call(path, hint))
+	take.request()
+	while not take.step(wait):
+		await process_frame
+	if take.failed:
+		print("KITTAKE failed on ", paths)
+	held.append_array(take.textures.values())
+
+
+func _run() -> void:
+	var wait: bool = "--wait" in OS.get_cmdline_user_args()
+	# Past the boot's own frames (the boot splash's texture goes in them).
+	for i: int in range(60):
+		await process_frame
+	var before: Array = _mem()
+	var started: int = Time.get_ticks_usec()
+	var most: Array[int] = [0]
+	await _take(PackedStringArray([Atlas.ALBEDO_PATH, Atlas.NORMAL_PATH]), wait, most)
+	if ResourceLoader.exists(STONE_SCRIPT):
+		var stone: GDScript = load(STONE_SCRIPT)
+		var consts: Dictionary = stone.get_script_constant_map()
+		await _take(PackedStringArray([consts["PIECES_PATH"], consts["ALBEDO_PATH"], consts["NORMAL_PATH"]]), wait, most)
+	var ms: float = (Time.get_ticks_usec() - started) / 1000.0
+	for i: int in range(3):
+		await process_frame
+	var after: Array = _mem()
+	print("KITTAKE %s ms %.1f, most asked at once %d (0 = the take asks all at once: no 'ask'), total +%.2f, tracked +%.2f, untracked %+.2f" % [
+		"wait" if wait else "stepped", ms, most[0], after[0] - before[0], after[1] - before[1],
+		(after[0] - before[0]) - (after[1] - before[1])])
+	quit(0)

@@ -1,0 +1,264 @@
+{
+  "generator": "tools/map_atelier/journey/stone/build_stone.py",
+  "atlas": [
+    2048,
+    1536
+  ],
+  "kinds": [
+    {
+      "id": "cliff-bend",
+      "family": "cliff",
+      "triangles": 1074,
+      "radius": 1.98,
+      "top": 0.319,
+      "bottom": -4.067,
+      "description": "Strata wall curved outward, for the outside of the river's bends",
+      "cell": [
+        0.003906,
+        0.005208,
+        0.242188,
+        0.322917
+      ]
+    },
+    {
+      "id": "cliff-buttress",
+      "family": "cliff",
+      "triangles": 1074,
+      "radius": 1.969,
+      "top": 0.413,
+      "bottom": -4.045,
+      "description": "Strata wall with a jutting buttress whose facets turn toward the camera",
+      "cell": [
+        0.753906,
+        0.338542,
+        0.242188,
+        0.322917
+      ]
+    },
+    {
+      "id": "cliff-notch",
+      "family": "cliff",
+      "triangles": 1074,
+      "radius": 1.94,
+      "top": 0.354,
+      "bottom": -4.041,
+      "description": "Strata wall cut by a deep weathered band, the layer above it overhanging",
+      "cell": [
+        0.503906,
+        0.338542,
+        0.242188,
+        0.322917
+      ]
+    },
+    {
+      "id": "cliff-step",
+      "family": "cliff",
+      "triangles": 1074,
+      "radius": 1.905,
+      "top": -0.284,
+      "bottom": -4.048,
+      "description": "Low broken strata step where the rim stands low over the water",
+      "cell": [
+        0.253906,
+        0.005208,
+        0.242188,
+        0.322917
+      ]
+    },
+    {
+      "id": "cliff-tall",
+      "family": "cliff",
+      "triangles": 1074,
+      "radius": 2.084,
+      "top": 0.501,
+      "bottom": -4.071,
+      "description": "Tall strata wall with a high lip and an overhanging top ledge",
+      "cell": [
+        0.503906,
+        0.005208,
+        0.242188,
+        0.322917
+      ]
+    },
+    {
+      "id": "cliff-wall",
+      "family": "cliff",
+      "triangles": 1074,
+      "radius": 2.03,
+      "top": 0.303,
+      "bottom": -4.067,
+      "description": "Strata wall: even ledges stepping back from the water",
+      "cell": [
+        0.253906,
+        0.338542,
+        0.242188,
+        0.322917
+      ]
+    },
+    {
+      "id": "granite-bank",
+      "family": "outcrop",
+      "triangles": 1250,
+      "radius": 1.814,
+      "top": 1.545,
+      "bottom": -0.251,
+      "description": "Broad low granite mound: three rounded blocks on a flat joint top, a fallen piece at its foot",
+      "cell": [
+        0.003906,
+        0.671875,
+        0.242188,
+        0.322917
+      ]
+    },
+    {
+      "id": "granite-boulder",
+      "family": "outcrop",
+      "triangles": 874,
+      "radius": 1.074,
+      "top": 0.899,
+      "bottom": -0.212,
+      "description": "A single rounded granite boulder with a split face and a chip beside it",
+      "cell": [
+        0.003906,
+        0.338542,
+        0.242188,
+        0.322917
+      ]
+    },
+    {
+      "id": "granite-ridge",
+      "family": "outcrop",
+      "triangles": 1150,
+      "radius": 2.258,
+      "top": 1.005,
+      "bottom": -0.224,
+      "description": "Long low granite ridge: four jointed blocks falling away to one end",
+      "cell": [
+        0.253906,
+        0.671875,
+        0.242188,
+        0.322917
+      ]
+    },
+    {
+      "id": "granite-shard",
+      "family": "outcrop",
+      "triangles": 900,
+      "radius": 0.989,
+      "top": 2.13,
+      "bottom": -0.233,
+      "description": "Upright granite pillar split from its bed, a leaning slab against it",
+      "cell": [
+        0.503906,
+        0.671875,
+        0.242188,
+        0.322917
+      ]
+    },
+    {
+      "id": "granite-tor",
+      "family": "outcrop",
+      "triangles": 1400,
+      "radius": 1.875,
+      "top": 2.331,
+      "bottom": -0.208,
+      "description": "Stacked granite tor: three blocks on level joints, a boulder shed at its side",
+      "cell": [
+        0.753906,
+        0.671875,
+        0.242188,
+        0.322917
+      ]
+    },
+    {
+      "id": "grave-arched",
+      "family": "ruin",
+      "triangles": 3000,
+      "radius": 0.347,
+      "top": 0.995,
+      "bottom": -0.268,
+      "description": "Round-headed headstone with a sunk panel, leaning, its corner chipped"
+    },
+    {
+      "id": "grave-broken",
+      "family": "ruin",
+      "triangles": 3000,
+      "radius": 0.807,
+      "top": 0.666,
+      "bottom": -0.274,
+      "description": "Pointed headstone snapped across, its head fallen at its foot"
+    },
+    {
+      "id": "grave-cross",
+      "family": "ruin",
+      "triangles": 3500,
+      "radius": 0.392,
+      "top": 1.257,
+      "bottom": -0.209,
+      "description": "Ringed cross on a stepped plinth, one arm broken short"
+    },
+    {
+      "id": "grave-tablet",
+      "family": "ruin",
+      "triangles": 3000,
+      "radius": 1.124,
+      "top": 0.613,
+      "bottom": -0.261,
+      "description": "Squat tablet leaning hard over its sunken ledger slab"
+    },
+    {
+      "id": "rubble-blocks",
+      "family": "ruin",
+      "triangles": 3000,
+      "radius": 0.89,
+      "top": 0.28,
+      "bottom": -0.166,
+      "description": "Heap of fallen ashlar blocks, half sunk"
+    },
+    {
+      "id": "rubble-mossy",
+      "family": "ruin",
+      "triangles": 2500,
+      "radius": 0.742,
+      "top": 0.221,
+      "bottom": -0.112,
+      "description": "Low mound of stones under moss"
+    },
+    {
+      "id": "rubble-scree",
+      "family": "ruin",
+      "triangles": 3000,
+      "radius": 0.972,
+      "top": 0.254,
+      "bottom": -0.104,
+      "description": "Fan of angular granite scree"
+    },
+    {
+      "id": "wall-corner",
+      "family": "ruin",
+      "triangles": 6000,
+      "radius": 2.235,
+      "top": 1.706,
+      "bottom": -0.243,
+      "description": "Corner of a ruined building, its two runs broken off"
+    },
+    {
+      "id": "wall-pier",
+      "family": "ruin",
+      "triangles": 5996,
+      "radius": 1.912,
+      "top": 2.203,
+      "bottom": -0.282,
+      "description": "Wall ending in a tall pier, an arch's springer stone left on it"
+    },
+    {
+      "id": "wall-run",
+      "family": "ruin",
+      "triangles": 6000,
+      "radius": 1.786,
+      "top": 1.701,
+      "bottom": -0.245,
+      "description": "Run of coursed ashlar falling from shoulder height to its footing"
+    }
+  ]
+}

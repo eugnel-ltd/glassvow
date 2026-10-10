@@ -8,10 +8,10 @@ extends RefCounted
 ## every live shadow kept), what the floor gives up once baked (the shadows
 ## that fell only on the ground, the road's small details, the pilgrim's own
 ## shadow for a blob), the prefetch holding its land until the floor settles,
-## a bake given up when its screen lets the land go, and the floor's shaders:
-## the pools flicker with their own flame's phase and hold still, with the
-## glints, under Reduce Motion; and the warm-up, which draws a sample of every
-## pipeline they use before the title shows.
+## a settled floor kept and a bake given up when its screen lets the land go,
+## and the floor's shaders: the pools flicker with their own flame's phase and
+## hold still, with the glints, under Reduce Motion; and the warm-up, which
+## draws a sample of every pipeline they use before the title shows.
 ## The GPU half (the bake's pictures, copies and mips) is the windowed proof's:
 ## `tools/check_floor_bake.gd`.
 
@@ -25,9 +25,10 @@ const Details = preload("res://presentation/map/landscape/road_details.gd")
 const Pilgrim = preload("res://presentation/map/landscape/pilgrim.gd")
 const Warm = preload("res://presentation/map/landscape/floor_warm.gd")
 const SEED: int = 717
-## What R3.2 keeps casting live once the floor is baked: the gateway and the
-## rock outcrops (the bridges' parapets aside), named here apart from the code.
-const HEROES: PackedStringArray = ["amber-arch", "slate-bank", "slate-ridge", "slate-shard"]
+## What keeps casting live once the floor is baked: the gateway (the bridges'
+## parapets aside; R3.3's stone casts into the bake only), named here apart
+## from the code.
+const HEROES: PackedStringArray = ["amber-arch"]
 
 
 static func _check(fails: Array[String], ok: bool, what: String) -> void:
@@ -56,6 +57,7 @@ static func run(fails: Array[String]) -> void:
 		_stage(fails, land)
 		_painted(fails, screen, land)
 		_baked(fails, land)
+		_settled_kept(fails, screen, land)
 		_let_go(fails, screen, land)
 	screen.get_parent().remove_child(screen)
 	screen.free()
@@ -153,13 +155,17 @@ static func _plan(fails: Array[String], land: MapJourneyLandscape) -> void:
 	var planting: Planting = land.wood.planting
 	var trees: PackedInt32Array = PackedInt32Array()
 	var shrubs: int = 0
+	var ruins: int = 0
 	for i: int in range(planting.kinds.size()):
-		if Planting.TREES.has(planting.kinds[i]):
+		if Planting.casts(planting.kinds[i]):
 			trees.append(i)
-		else:
+		if Planting.STONES.has(planting.kinds[i]):
+			ruins += 1
+		elif not Planting.TREES.has(planting.kinds[i]):
 			shrubs += 1
 	_check(fails, plan.caster_count == trees.size() and trees.size() > 0
-		and plan.casters.size() == trees.size() * 20, "a shadow card for every tree and none for undergrowth")
+		and plan.casters.size() == trees.size() * 20,
+		"a shadow card for every tree and standing ruin and none for undergrowth")
 	var toward: Vector3 = Plan.toward_key(MapJourneyLandscape.KEY_ROTATION)
 	var key: Basis = Basis.from_euler(MapJourneyLandscape.KEY_ROTATION * (PI / 180.0))
 	_check(fails, toward.dot(key.z) > 0.5 and is_zero_approx(toward.y) and is_equal_approx(toward.length(), 1.0),
@@ -175,7 +181,7 @@ static func _plan(fails: Array[String], land: MapJourneyLandscape) -> void:
 		var tile: int = planting.tiles[i]
 		var s: float = planting.scales[i]
 		var foot: Vector3 = corner + y_axis
-		var rect: Vector4 = Atlas.uv[tile]
+		var rect: Vector4 = Atlas.custom(tile)
 		cards_ok = cards_ok and normal.is_equal_approx(toward) and absf(x_axis.dot(toward)) < 0.0001 \
 			and is_zero_approx(x_axis.y) and is_equal_approx(-y_axis.y, Atlas.top[tile] * s) \
 			and is_zero_approx(y_axis.x) and is_zero_approx(y_axis.z) \
@@ -188,8 +194,11 @@ static func _plan(fails: Array[String], land: MapJourneyLandscape) -> void:
 	var stones: int = 0
 	for item: Dictionary in land.kit.placed:
 		var kind: String = item["kind"]
-		stones += 2 if kind.begins_with("slate") else (2 if kind == "amber-arch" else (1 if Plan.FOOTS.has(kind) else 0))
-	var expected: int = trees.size() * 2 + shrubs * 3 + stones + land.journey.bases.size()
+		stones += 2 if MapJourneyLandscape.Kit.is_rock(kind) else (2 if kind == "amber-arch" else (1 if Plan.FOOTS.has(kind) else 0))
+	var plants: int = 0
+	for i: int in range(planting.kinds.size()):
+		plants += 2 if Planting.TREES.has(planting.kinds[i]) else 0
+	var expected: int = plants + ruins * 2 + shrubs * 3 + stones + land.journey.bases.size()
 	_check(fails, plan.stamp_count == expected and plan.stamps.size() == expected * 12,
 		"a stamp for every plant's reach and foot, every shrub's shade, every stone and every seat (%d of %d)" % [plan.stamp_count, expected])
 	var inside: bool = true
@@ -288,7 +297,7 @@ static func _painted(fails: Array[String], screen: WorldMapScreen, land: MapJour
 
 ## Once baked, the ground is drawn from the floor's material, the road's
 ## details are in the picture, and the live shadow pass keeps only the
-## gateway, the outcrops and the bridges' parapets.
+## gateway and the bridges' parapets (the stone's shadow is in the floor).
 static func _baked(fails: Array[String], land: MapJourneyLandscape) -> void:
 	var floor_node: LandFloor = land.forest_floor
 	var drawn: ShaderMaterial = LandFloor.floor_material(ImageTexture.create_from_image(
@@ -325,7 +334,38 @@ static func _baked(fails: Array[String], land: MapJourneyLandscape) -> void:
 		terrain = terrain and casts == (str(part.name) == LandFloor.LIVE_BRIDGE)
 	_check(fails, woods and journey, "the woodland's and the waystones' live shadows are in the floor now")
 	_check(fails, heroes > 0 and quiet and terrain,
-		"only the gateway, the outcrops and the bridges' parapets cast live")
+		"only the gateway and the bridges' parapets cast live")
+
+
+## A settled floor, baked or left painted, is left as it is when its screen
+## lets the kept land go: the same state, material, textures and RIDs, and the
+## next screen to bind the land finds it settled (`floor_step` at once), with
+## no bake begun. Only the guard on an empty bake in `LandFloor.halt` keeps a
+## map's every return from baking the land again.
+static func _settled_kept(fails: Array[String], screen: WorldMapScreen, land: MapJourneyLandscape) -> void:
+	var scene: MapScene = screen._map_scene
+	var floor_node: LandFloor = land.forest_floor
+	# Where no renderer bakes, a baked floor's own textures stand in.
+	floor_node._textures.append(Texture2DRD.new())
+	var kept_state: bool = true
+	for settled: LandFloor.State in [LandFloor.State.BAKED, LandFloor.State.PAINTED]:
+		if land.get_parent() == null:
+			scene._world.add_child(land)
+		scene._landscape = land
+		floor_node.state = settled
+		var material: ShaderMaterial = floor_node.material
+		var textures: Array[Texture2DRD] = floor_node._textures.duplicate()
+		var rids: Array[RID] = floor_node._rids.duplicate()
+		scene._release_landscape()
+		var stepped: bool = land.floor_step()
+		kept_state = kept_state and floor_node.state == settled and floor_node.material == material \
+			and floor_node._textures == textures and floor_node._rids == rids and floor_node._bake == null \
+			and stepped and land == MapScene._journey_kept
+	_check(fails, kept_state,
+		"a baked or painted floor is left as it is when its land is let go, and settled when bound again")
+	# Bound again, as the screen had it.
+	scene._world.add_child(land)
+	scene._landscape = land
 
 
 ## A screen that lets its land go part-way through an inline bake (the land
@@ -390,7 +430,8 @@ static func _blob(fails: Array[String]) -> void:
 ## before the title's first frame shows (on the iPad 8 this engine builds them
 ## only as a draw needs them): the bake's and the floor's materials on meshes
 ## of the bake's own kinds (the ground's vertex, normal and colour; the cards'
-## MultiMesh), every view drawn then let go. Its mip chain needs a
+## MultiMesh), and the stone's on one of its own (R3.3: normal, tangent and
+## UV), every view drawn then let go. Its mip chain needs a
 ## RenderingDevice; the windowed proof checks it (`tools/check_floor_bake.gd`).
 static func _warm(fails: Array[String]) -> void:
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
@@ -407,13 +448,16 @@ static func _warm(fails: Array[String]) -> void:
 		if drawn is MeshInstance3D:
 			var mesh: Mesh = (drawn as MeshInstance3D).mesh
 			var format: int = mesh.surface_get_format(0)
-			ground_kind = ground_kind and (format & Mesh.ARRAY_FORMAT_NORMAL) != 0 \
-				and (format & Mesh.ARRAY_FORMAT_COLOR) != 0
+			# The stone's sample in the stone's own format (R3.3), every
+			# other in the ground's.
+			var own: int = Mesh.ARRAY_FORMAT_TANGENT | Mesh.ARRAY_FORMAT_TEX_UV \
+				if material.shader == Warm.Stone.SHADER else Mesh.ARRAY_FORMAT_COLOR
+			ground_kind = ground_kind and (format & Mesh.ARRAY_FORMAT_NORMAL) != 0 and (format & own) == own
 		elif drawn is MultiMeshInstance3D:
 			var multi: MultiMesh = (drawn as MultiMeshInstance3D).multimesh
 			ground_kind = ground_kind and multi.use_colors and multi.use_custom_data \
 				and drawn.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-	var wanted: Array[Shader] = [Bake.PAINT, Bake.MASK, Warm.CASTER, Warm.FLOOR]
+	var wanted: Array[Shader] = [Bake.PAINT, Bake.MASK, Warm.CASTER, Warm.FLOOR, Warm.Stone.SHADER]
 	var all: bool = true
 	for shader: Shader in wanted:
 		all = all and shaders.has(shader)

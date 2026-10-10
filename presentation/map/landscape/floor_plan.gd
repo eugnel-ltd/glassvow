@@ -9,6 +9,7 @@ extends RefCounted
 
 const Atlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
 const Planting = preload("res://presentation/map/landscape/wood_planting.gd")
+const Stone = preload("res://presentation/map/landscape/land_stone.gd")
 
 ## Texels a metre of the floor's 2D pass.
 const FIELD_TEXELS_PER_M: float = 8.0
@@ -32,8 +33,8 @@ const STONE_FOOT: Vector4 = Vector4(0.0, 0.0, 0.5, 0.55)
 const SEAT_FOOT: Vector4 = Vector4(0.0, 0.0, 0.42, 1.2)
 ## The kit's kinds that stand on the land as stones, posts and shrines, by
 ## the radius (metres at scale 1) their foot darkens.
-const FOOTS: Dictionary = {"memorial": 0.8, "lantern-post": 0.45, "conifer-snag": 0.7,
-	"slate-shard": 0.9}
+const FOOTS: Dictionary = {"memorial": 0.8, "lantern-post": 0.45,
+	"conifer-snag": 0.7}
 
 var lamps: PackedVector4Array = PackedVector4Array()
 ## The leafy shadow cards: one MultiMesh instance a tree (transform, colour
@@ -83,8 +84,9 @@ static func toward_key(key_rotation: Vector3) -> Vector3:
 	return Vector3(back.x, 0.0, back.z).normalized()
 
 
-## Each tree's silhouette (its own atlas tile, the picture above its base) on
-## an upright card at its base, turned to face the key light.
+## Each tree's silhouette, and each standing ruin's (R3.3: the gravestones
+## and the walls), its own atlas tile, the picture above its base, on an
+## upright card at its base, turned to face the key light.
 func _cards(planting: Planting, key_rotation: Vector3) -> void:
 	var normal: Vector3 = toward_key(key_rotation)
 	var across: Vector3 = Vector3(normal.z, 0.0, -normal.x)
@@ -93,7 +95,7 @@ func _cards(planting: Planting, key_rotation: Vector3) -> void:
 	var scales: PackedFloat32Array = planting.scales
 	var trees: PackedInt32Array = PackedInt32Array()
 	for i: int in range(bases.size()):
-		if Planting.TREES.has(planting.kinds[i]):
+		if Planting.casts(planting.kinds[i]):
 			trees.append(i)
 	caster_count = trees.size()
 	casters.resize(caster_count * 20)
@@ -111,7 +113,7 @@ func _cards(planting: Planting, key_rotation: Vector3) -> void:
 			casters[at + row * 4 + 1] = y_axis[row]
 			casters[at + row * 4 + 2] = normal[row]
 			casters[at + row * 4 + 3] = corner[row]
-		var rect: Vector4 = Atlas.uv[tile]
+		var rect: Vector4 = Atlas.custom(tile)
 		casters[at + 12] = 0.0
 		casters[at + 13] = 0.0
 		casters[at + 14] = 0.0
@@ -135,6 +137,10 @@ func _plant_stamps(planting: Planting, key_rotation: Vector3) -> void:
 		if Planting.TREES.has(kinds[i]):
 			_stamp(bases[i], Vector4(TREE_REACH.x, 0.0, 0.0, TREE_REACH.w * crown))
 			_stamp(bases[i], Vector4(0.0, 0.0, TREE_FOOT.z, TREE_FOOT.w * s))
+		elif Planting.STONES.has(kinds[i]):
+			# A ruin: grey grit round it and a dark foot, no litter.
+			_stamp(bases[i], Vector4(0.0, ROCK_REACH.y * 0.6, 0.0, crown + ROCK_REACH.w * 0.6))
+			_stamp(bases[i], Vector4(0.0, 0.0, STONE_FOOT.z, crown * 0.8 + STONE_FOOT.w * s))
 		else:
 			_stamp(bases[i], Vector4(SHRUB_REACH.x, 0.0, 0.0, SHRUB_REACH.w * crown))
 			_stamp(bases[i], Vector4(0.0, 0.0, SHRUB_FOOT.z, SHRUB_FOOT.w * s))
@@ -150,7 +156,7 @@ func _kit_stamps(placed: Array[Dictionary]) -> void:
 		var at: Vector3 = item["position"]
 		var radius: float = float(str(item["radius"]))
 		var s: float = float(str(item["scale"]))
-		if kind.begins_with("slate"):
+		if Stone.OUTCROPS.has(kind):
 			_stamp(at, Vector4(0.0, ROCK_REACH.y, 0.0, radius + ROCK_REACH.w))
 			_stamp(at, Vector4(0.0, 0.0, ROCK_FOOT.z, radius * ROCK_FOOT.w))
 		elif kind == "amber-arch":

@@ -1,0 +1,23 @@
+#!/bin/zsh
+# Lane R3.3 (scratch): the lever against main's own atlas. Each in its own process, three times,
+# interleaved: main's atlas (one 2048x1408 page, 3.67 MiB), the branch's pre-split atlas (one
+# 2048x1776 page, 4.63 MiB) and the split (two 2048x1024 layers, 2.67 MiB each); then each of the
+# branch's after main's (a 4 MiB-class upload first, as a game process has made by the map).
+# Only under load 50, one Godot run at a time. Writes only $M/final/split-proof2/.
+M=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane
+E=$M/exp-split
+F=$M/final/split-proof2; mkdir -p $F
+source $M/tools/glock.zsh
+wait_load() { while (( $(uptime | sed 's/.*averages: //' | cut -d' ' -f1 | cut -d. -f1) >= 50 )); do sleep 30; done; }
+n=0
+for rep in 1 2 3; do
+  for what in "main-atlas" "single" "pages" "main-atlas single" "main-atlas pages"; do
+    n=$((n+1)); args=(); for w in ${=what}; do args+=(--then=res://$w.png); done
+    wait_load; glock_acquire
+    echo "== $n [$what] $(date +%T) load: $(uptime | sed 's/.*averages: //')"
+    GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 300 godot --path $E --rendering-driver metal --rendering-method mobile \
+      --position 1400,900 --resolution 320x240 -s $M/tools/tex_cost.gd -- $args > $F/$n.log 2>&1
+    echo "   exit $?"; glock_release; grep TEXCOST $F/$n.log | sed 's/^/   /'
+  done
+done
+echo "== done $(date +%T)"

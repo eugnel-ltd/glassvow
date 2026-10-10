@@ -1,0 +1,87 @@
+# The kit's textures one at a time (95e7e339), proven on the Mac before the device. M1 Max, the A12 condition, load 4-25, 21:08-21:16, 10 Oct.
+# Real projects: main r33-ctl (711302a5); the branch before the change r33-dev (2fd7b2d7, the split); after it r33-dev2 (95e7e339). Scratch tools: tools/kit_take.gd.txt, tools/serial_proof.zsh.txt, tools/serial_probes.zsh.txt.
+
+## a. The kit's own take (each worktree's ImpostorAtlas.Take) in the game's order: the woodland's atlas, then the stone's pieces and textures once it has settled.
+##    'most asked at once' counts the requests in flight (0 where the take has no hook: it asks all its paths at once). Interleaved, five runs a build a mode.
+take 1 r33-ctl 711302a5 exit 0 load 17.12: KITTAKE wait ms 4.3, most asked at once 0, total +20.94, tracked +4.94, untracked +16.00
+take 2 r33-dev 2fd7b2d7 exit 0 load 17.12: KITTAKE wait ms 32.3, most asked at once 0, total +17.92, tracked +9.92, untracked +8.00
+take 3 r33-dev2 95e7e339 exit 0 load 17.12: KITTAKE wait ms 29.0, most asked at once 1, total +9.92, tracked +9.92, untracked +0.00
+take 4 r33-ctl 711302a5 exit 0 load 20.47: KITTAKE wait ms 2.8, most asked at once 0, total +4.94, tracked +4.94, untracked +0.00
+take 5 r33-dev 2fd7b2d7 exit 0 load 20.47: KITTAKE wait ms 15.7, most asked at once 0, total +17.92, tracked +9.92, untracked +8.00
+take 6 r33-dev2 95e7e339 exit 0 load 20.47: KITTAKE wait ms 29.5, most asked at once 1, total +9.92, tracked +9.92, untracked +0.00
+take 7 r33-ctl 711302a5 exit 0 load 22.67: KITTAKE wait ms 6.8, most asked at once 0, total +4.94, tracked +4.94, untracked +0.00
+take 8 r33-dev 2fd7b2d7 exit 0 load 22.67: KITTAKE wait ms 12.7, most asked at once 0, total +17.92, tracked +9.92, untracked +8.00
+take 9 r33-dev2 95e7e339 exit 0 load 22.67: KITTAKE wait ms 35.8, most asked at once 1, total +9.92, tracked +9.92, untracked +0.00
+take 10 r33-ctl 711302a5 exit 0 load 22.67: KITTAKE wait ms 5.0, most asked at once 0, total +20.94, tracked +4.94, untracked +16.00
+take 11 r33-dev 2fd7b2d7 exit 0 load 22.67: KITTAKE wait ms 33.2, most asked at once 0, total +17.92, tracked +9.92, untracked +8.00
+take 12 r33-dev2 95e7e339 exit 0 load 21.26: KITTAKE wait ms 26.4, most asked at once 1, total +9.92, tracked +9.92, untracked +0.00
+take 13 r33-ctl 711302a5 exit 0 load 21.26: KITTAKE wait ms 3.8, most asked at once 0, total +4.94, tracked +4.94, untracked +0.00
+take 14 r33-dev 2fd7b2d7 exit 0 load 21.26: KITTAKE wait ms 49.3, most asked at once 0, total +25.92, tracked +9.92, untracked +16.00
+take 15 r33-dev2 95e7e339 exit 0 load 23.24: KITTAKE wait ms 34.8, most asked at once 1, total +9.92, tracked +9.92, untracked +0.00
+take 16 r33-ctl 711302a5 exit 0 load 23.24: KITTAKE stepped ms 9.3, most asked at once 0, total +4.94, tracked +4.94, untracked +0.00
+take 17 r33-dev 2fd7b2d7 exit 0 load 23.24: KITTAKE stepped ms 45.2, most asked at once 0, total +17.92, tracked +9.92, untracked +8.00
+take 18 r33-dev2 95e7e339 exit 0 load 23.24: KITTAKE stepped ms 55.2, most asked at once 1, total +9.92, tracked +9.92, untracked +0.00
+take 19 r33-ctl 711302a5 exit 0 load 24.98: KITTAKE stepped ms 10.6, most asked at once 0, total +4.94, tracked +4.94, untracked +0.00
+take 20 r33-dev 2fd7b2d7 exit 0 load 24.98: KITTAKE stepped ms 30.2, most asked at once 0, total +17.92, tracked +9.92, untracked +8.00
+take 21 r33-dev2 95e7e339 exit 0 load 24.98: KITTAKE stepped ms 55.6, most asked at once 1, total +9.92, tracked +9.92, untracked +0.00
+take 22 r33-ctl 711302a5 exit 0 load 24.98: KITTAKE stepped ms 19.8, most asked at once 0, total +4.94, tracked +4.94, untracked +0.00
+take 23 r33-dev 2fd7b2d7 exit 0 load 23.54: KITTAKE stepped ms 45.0, most asked at once 0, total +17.92, tracked +9.92, untracked +8.00
+take 24 r33-dev2 95e7e339 exit 0 load 23.54: KITTAKE stepped ms 75.4, most asked at once 1, total +9.92, tracked +9.92, untracked +0.00
+take 25 r33-ctl 711302a5 exit 0 load 23.54: KITTAKE stepped ms 10.9, most asked at once 0, total +20.94, tracked +4.94, untracked +16.00
+take 26 r33-dev 2fd7b2d7 exit 0 load 23.54: KITTAKE stepped ms 30.8, most asked at once 0, total +17.92, tracked +9.92, untracked +8.00
+take 27 r33-dev2 95e7e339 exit 0 load 22.22: KITTAKE stepped ms 78.7, most asked at once 1, total +9.92, tracked +9.92, untracked +0.00
+take 28 r33-ctl 711302a5 exit 0 load 22.22: KITTAKE stepped ms 8.9, most asked at once 0, total +4.94, tracked +4.94, untracked +0.00
+take 29 r33-dev 2fd7b2d7 exit 0 load 22.22: KITTAKE stepped ms 27.9, most asked at once 0, total +17.92, tracked +9.92, untracked +8.00
+take 30 r33-dev2 95e7e339 exit 0 load 22.22: KITTAKE stepped ms 75.9, most asked at once 1, total +9.92, tracked +9.92, untracked +0.00
+
+## b. Short game probes (a Journey hold, as batch S1's V launches), interleaved, 16 rounds (two runs of 8):
+probe 31 r33-ctl exit 0 load 18.95: "video_mib":232.6
+probe 32 r33-dev exit 0 load 18.16: "video_mib":231.8
+probe 33 r33-dev2 exit 0 load 15.83: "video_mib":223.8
+probe 34 r33-ctl exit 0 load 14.73: "video_mib":216.7
+probe 35 r33-dev exit 0 load 12.92: "video_mib":225.8
+probe 36 r33-dev2 exit 0 load 11.96: "video_mib":231.8
+probe 37 r33-ctl exit 0 load 10.59: "video_mib":216.7
+probe 38 r33-dev exit 0 load 9.98: "video_mib":231.8
+probe 39 r33-dev2 exit 0 load 9.20: "video_mib":231.8
+probe 40 r33-ctl exit 0 load 8.55: "video_mib":218.6
+probe 41 r33-dev exit 0 load 8.01: "video_mib":231.8
+probe 42 r33-dev2 exit 0 load 7.69: "video_mib":231.8
+probe 43 r33-ctl exit 0 load 7.38: "video_mib":216.7
+probe 44 r33-dev exit 0 load 6.95: "video_mib":231.8
+probe 45 r33-dev2 exit 0 load 6.91: "video_mib":231.8
+probe 46 r33-ctl exit 0 load 6.44: "video_mib":232.6
+probe 47 r33-dev exit 0 load 5.97: "video_mib":225.8
+probe 48 r33-dev2 exit 0 load 5.65: "video_mib":231.8
+probe 49 r33-ctl exit 0 load 5.24: "video_mib":216.7
+probe 50 r33-dev exit 0 load 4.72: "video_mib":223.8
+probe 51 r33-dev2 exit 0 load 4.51: "video_mib":231.8
+probe 52 r33-ctl exit 0 load 4.71: "video_mib":232.6
+probe 53 r33-dev exit 0 load 4.92: "video_mib":225.8
+probe 54 r33-dev2 exit 0 load 5.26: "video_mib":231.8
+probe 101 r33-ctl exit 0 load 3.41: "video_mib":216.7
+probe 102 r33-dev exit 0 load 4.18: "video_mib":239.8
+probe 103 r33-dev2 exit 0 load 5.19: "video_mib":231.8
+probe 104 r33-ctl exit 0 load 5.34: "video_mib":218.6
+probe 105 r33-dev exit 0 load 5.21: "video_mib":239.8
+probe 106 r33-dev2 exit 0 load 5.84: "video_mib":223.8
+probe 107 r33-ctl exit 0 load 6.08: "video_mib":232.6
+probe 108 r33-dev exit 0 load 6.80: "video_mib":231.8
+probe 109 r33-dev2 exit 0 load 6.36: "video_mib":231.8
+probe 110 r33-ctl exit 0 load 7.05: "video_mib":218.6
+probe 111 r33-dev exit 0 load 6.27: "video_mib":223.8
+probe 112 r33-dev2 exit 0 load 6.01: "video_mib":231.8
+probe 113 r33-ctl exit 0 load 5.47: "video_mib":216.7
+probe 114 r33-dev exit 0 load 5.44: "video_mib":223.9
+probe 115 r33-dev2 exit 0 load 4.90: "video_mib":231.8
+probe 116 r33-ctl exit 0 load 4.99: "video_mib":216.8
+probe 117 r33-dev exit 0 load 4.82: "video_mib":231.8
+probe 118 r33-dev2 exit 0 load 5.39: "video_mib":231.8
+probe 119 r33-ctl exit 0 load 5.02: "video_mib":232.6
+probe 120 r33-dev exit 0 load 5.02: "video_mib":231.8
+probe 121 r33-dev2 exit 0 load 4.85: "video_mib":231.8
+probe 122 r33-ctl exit 0 load 4.70: "video_mib":216.7
+probe 123 r33-dev exit 0 load 4.98: "video_mib":231.8
+probe 124 r33-dev2 exit 0 load 5.06: "video_mib":231.8
+
+## Counts: before 239.8 x2, 231.8 x8, 225.8 x3, 223.8-223.9 x3; after 231.8 x14, 223.8 x2; main 232.6 x5, 216.7-218.6 x11.

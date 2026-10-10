@@ -1,0 +1,27 @@
+#!/bin/zsh
+# Lane R3.3 (scratch): the woodland before and after the atlas split, pixel for pixel. Act I at
+# Journey and Close, pad and phone, seeds 717 and 1-3: the pre-split branch (r33-dev at 60d3c805)
+# twice (the second a control for what moves on its own: the water under Reduce Motion) and the
+# split (wt-r33's working tree), each under the A12 condition, lean, Reduce Motion, no drifting
+# air. One Godot run at a time (glock). Writes only $M/final/split-diff/.
+M=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane
+F=$M/final/split-diff; mkdir -p $F/pre $F/control $F/split
+source $M/tools/glock.zsh
+typeset -A VP; VP=(pad 1180x820 phone 844x390)
+echo "== split diff $(date +%T): pre $(git -C $M/r33-dev rev-parse --short HEAD), split $(git -C $M/wt-r33 rev-parse --short HEAD)+working tree"
+for seed in 717 1 2 3; do
+  for shape in pad phone; do
+    for view in journey close; do
+      name=s$seed-$shape-$view
+      for run in pre split control; do
+        WT=$M/r33-dev; [[ $run == split ]] && WT=$M/wt-r33
+        glock_acquire
+        r=$($M/tools/cap.sh $WT $F/$run/$name.png --seed=$seed --map-steps=2 --shape=$shape-landscape --vp=$VP[$shape] \
+          --look-lean --look-still --look-noair --look-view=$view)
+        glock_release
+        echo "$name $run: $r (load $(uptime | sed 's/.*averages: //' | cut -d' ' -f1))"
+      done
+    done
+  done
+done
+echo "== done $(date +%T)"
