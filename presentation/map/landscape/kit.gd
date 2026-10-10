@@ -126,8 +126,11 @@ static func preload_scenes() -> void:
 
 
 ## Readies the next kit scene on the main thread and answers whether every one
-## is ready, and the woodland's impostor atlas with them (`ImpostorAtlas`:
-## ready, or unable to load; the foliage kinds it draws load no scene). Every
+## is ready, and the woodland's impostor atlas and the stone with them
+## (`ImpostorAtlas`, `LandStone`: ready, or unable to load; the foliage kinds
+## the atlas draws load no scene). Their textures load one at a time, the
+## stone's only once the atlas's are taken, so no two of their uploads overlap
+## (`ImpostorAtlas.Take`). Every
 ## step's main-thread time counts in `preload_ms`. A batched kind is loaded as its own
 ## copy, so its static template takes the meshes without reading them back
 ## from the renderer; the arch is loaded through the cache and held, as the

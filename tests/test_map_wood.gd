@@ -159,14 +159,16 @@ static func _covered(data: PackedByteArray, width: int, x: int, from: int, to: i
 	return false
 
 
-## The atlas's textures are taken from the loader once each, whatever order
-## they finish in (a second `load_threaded_get` of a path returns null), and a
-## texture that cannot load ends the wait instead of holding the map's opening.
+## The atlas's textures are taken from the loader once each (a second
+## `load_threaded_get` of a path returns null), and a texture that cannot load
+## ends the wait instead of holding the map's opening.
 static func _loading(fails: Array[String]) -> void:
 	var states: Dictionary = {"albedo": ResourceLoader.THREAD_LOAD_LOADED,
 		"normal": ResourceLoader.THREAD_LOAD_IN_PROGRESS}
 	var handed: Dictionary = {}
 	var take: Atlas.Take = Atlas.Take.new(PackedStringArray(["albedo", "normal"]))
+	take.ask = func(_path: String, _hint: String) -> bool:
+		return true
 	take.status = func(path: String) -> int:
 		return states[path]
 	take.get_texture = func(path: String) -> Variant:
@@ -188,6 +190,44 @@ static func _loading(fails: Array[String]) -> void:
 	var missing: Atlas.Take = Atlas.Take.new(PackedStringArray(["res://assets/art/map-journey/impostors/missing.png"]))
 	missing.request()
 	_check(fails, missing.failed and missing.step(true), "a missing atlas ends the wait at once")
+	_one_at_a_time(fails)
+
+
+## The kit's textures load one at a time (R3.3): a take asks the loader for a
+## path only once the one before it is taken, so never more than one of its
+## uploads is in flight, and overlapping uploads never take transfer workers of
+## their own. The kit's two takes are this kind: the atlas's, and the stone's
+## (`LandStone.prepare_step`), which `Kit.preload_step` begins only once the
+## atlas's has settled.
+static func _one_at_a_time(fails: Array[String]) -> void:
+	var paths: PackedStringArray = ["a", "b", "c"]
+	var asked: PackedStringArray = []
+	var states: Dictionary = {"a": ResourceLoader.THREAD_LOAD_IN_PROGRESS,
+		"b": ResourceLoader.THREAD_LOAD_IN_PROGRESS, "c": ResourceLoader.THREAD_LOAD_IN_PROGRESS}
+	var take: Atlas.Take = Atlas.Take.new(paths)
+	var most: Array[int] = [0]
+	take.ask = func(path: String, _hint: String) -> bool:
+		asked.append(path)
+		most[0] = maxi(most[0], asked.size() - take.textures.size())
+		return true
+	take.status = func(path: String) -> int:
+		return states[path]
+	take.get_texture = func(_path: String) -> Variant:
+		return ImageTexture.new()
+	take.request()
+	take.request()
+	var waiting: bool = not take.step(false)
+	var first: String = ",".join(asked)
+	states["a"] = ResourceLoader.THREAD_LOAD_LOADED
+	waiting = waiting and not take.step(false)
+	var second: String = ",".join(asked)
+	states["b"] = ResourceLoader.THREAD_LOAD_LOADED
+	states["c"] = ResourceLoader.THREAD_LOAD_LOADED
+	var settled: bool = take.step(false)
+	_check(fails, waiting and settled and first == "a" and second == "a,b" and ",".join(asked) == "a,b,c"
+			and most[0] == 1 and take.textures.size() == 3 and not take.failed,
+		"a take asks for each texture only once the one before it is taken (asked: %s, then %s; most in flight %d)" % [
+			first, second, most[0]])
 
 
 ## A waystone's touch square on the picture plane is the shape's own: the

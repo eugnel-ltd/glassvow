@@ -50,7 +50,8 @@ static func draws_kind(kind: String) -> bool:
 ## before any land is built on a worker (`Kit.preload_step`), and answers
 ## whether nothing is left to wait for: ready, or unable to load (`failed`).
 ## As the woodland's atlas does (`ImpostorAtlas.prepare_step`), the files load
-## on the loader's threads; `wait`ing, a step waits for them.
+## on the loader's threads one at a time (`ImpostorAtlas.Take`), and only once
+## the atlas's are taken (`Kit.preload_step`); `wait`ing, a step waits for them.
 static func prepare_step(wait: bool = false) -> bool:
 	if _material != null or failed:
 		return true

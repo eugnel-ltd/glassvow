@@ -76,17 +76,25 @@ static var _take: Take = null
 
 
 ## Resources (textures unless `hint` says otherwise) taken from the loader's
-## threads, each exactly once and in whatever order they finish: a second
-## `load_threaded_get` of a path returns null, so a step keeps what it took for
-## the next. A path the loader cannot load settles the take as failed, so a
-## wait for it always ends.
+## threads one at a time, in order: the next is asked for only once the last
+## is taken, its texture made and its upload recorded. Uploads that overlap
+## each take a RenderingDevice transfer worker of their own, whose staging
+## buffer is never shrunk: taken together, the woodland's atlas and the
+## stone's textures held 16 MiB more for the life of the process (R3.3). A
+## second `load_threaded_get` of a path returns null, so a step keeps what it
+## took for the next. A path the loader cannot load settles the take as
+## failed, so a wait for it always ends.
 class Take:
 	extends RefCounted
 	var paths: PackedStringArray
 	var hint: String = "Texture2D"
 	var textures: Dictionary = {}
 	var failed: bool = false
-	## The loader's two calls (tests stand in for them).
+	## How many of `paths` have been asked for: the first `asked`.
+	var asked: int = 0
+	## The loader's three calls (tests stand in for them).
+	var ask: Callable = func(path: String, type_hint: String) -> bool:
+		return ResourceLoader.exists(path) and ResourceLoader.load_threaded_request(path, type_hint) == OK
 	var status: Callable = ResourceLoader.load_threaded_get_status
 	var get_texture: Callable = ResourceLoader.load_threaded_get
 
@@ -94,21 +102,28 @@ class Take:
 		paths = from
 		hint = type_hint
 
-	## Asks the loader's threads for every path.
+	## Asks the loader's threads for the next path, unless one is still being
+	## loaded (asked for and not yet taken) or none is left.
 	func request() -> void:
-		for path: String in paths:
-			if not ResourceLoader.exists(path) or ResourceLoader.load_threaded_request(path, hint) != OK:
-				failed = true
+		if failed or asked != textures.size() or asked >= paths.size():
+			return
+		asked += 1
+		if not ask.call(paths[asked - 1], hint):
+			failed = true
 
-	## Takes every texture that has loaded and answers whether the take is
-	## settled: all taken, or failed. `wait`ing, it waits for each one while
-	## keeping the renderer in step, as `Kit.preload_step` does.
+	## Takes, in order, every texture that has loaded, asking for each only once
+	## the one before it is taken, and answers whether the take is settled: all
+	## taken, or failed. `wait`ing, it waits for each one while keeping the
+	## renderer in step, as `Kit.preload_step` does.
 	func step(wait: bool) -> bool:
 		for path: String in paths:
 			if failed:
 				break
 			if textures.has(path):
 				continue
+			request()
+			if failed:
+				break
 			var state: int = status.call(path)
 			while state == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 				if not wait:
@@ -130,7 +145,8 @@ static func ready() -> bool:
 	return material != null
 
 
-## Asks the loader's threads for the atlases (cheap; once).
+## Asks the loader's threads for the atlases, the first of them now (cheap;
+## once).
 static func request() -> void:
 	if _take != null or ready() or failed:
 		return
