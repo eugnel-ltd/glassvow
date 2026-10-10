@@ -595,6 +595,32 @@ static func _shader_plate(sh: Shader) -> ColorRect:
 	return plate
 
 
+## The side band's material. The band is a cross-section of the stock, not a
+## lit surface: unshaded, one flat colour, the only place you see the stock
+## itself. A StandardMaterial3D, so the engine generates its shader
+## (`generated_materials`).
+static func side_material(color: Color) -> StandardMaterial3D:
+	var m: StandardMaterial3D = StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_color = color
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return m
+
+
+## One of each material on a card's stage whose shader the engine generates
+## (a BaseMaterial3D), each made ready to hold it. Such a shader lives only
+## while some ready material wears it, and the pipelines compiled for it go
+## when it goes. The stage's other materials wear the shaders this script
+## preloads, which live as long as the script does. A fight holds these for
+## its whole life (CardTurn.hold_for_fight).
+static func generated_materials() -> Array[Material]:
+	var side: StandardMaterial3D = side_material(Color.WHITE)
+	# A BaseMaterial3D makes its shader at its first use, and only then holds it.
+	var _ready_rid: RID = side.get_rid()
+	var out: Array[Material] = [side]
+	return out
+
+
 ## The two offscreen passes as they last rendered — the lit stage and the 2D
 ## face — read back for a bake (CardBacks). Each call is a GPU readback.
 func stage_image() -> Image:
@@ -778,14 +804,8 @@ func _build_stage(content: Control, mat: Dictionary, tint: Color,
 	_slab = MeshInstance3D.new()
 	_slab.mesh = _prism_cache[cut]
 
-	# The side band is a cross-section of the material, not a lit surface —
-	# unshaded, one flat colour, the only place you see the stock itself.
-	var side_mat: StandardMaterial3D = StandardMaterial3D.new()
-	side_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	side_mat.albedo_color = CardSurface.body_color(mat, tint)
-	_side = side_mat.albedo_color
-	side_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_slab.set_surface_override_material(0, side_mat)
+	_side = CardSurface.body_color(mat, tint)
+	_slab.set_surface_override_material(0, side_material(_side))
 
 	# The face carries the material. Everything the 2D pass painted comes
 	# through untouched; what this adds is the light the surface gives back,

@@ -3310,9 +3310,12 @@ func _resume_pending_combat() -> void:
 
 ## Pay for the fight's card turns in the frame that builds it (CardTurn.prewarm):
 ## the back the table wears is baked and the turn's shaders compile here, inside
-## the load, never in a frame the fight plays in.
+## the load, never in a frame the fight plays in. The fight then holds its
+## cards' generated shader and waits for the load's draw (CardTurn.hold_for_fight),
+## as a bake made in this frame would have done.
 func _prewarm_card_turns() -> void:
 	CardTurn.prewarm(_screen, CardBacks.chosen(Preferences.active, _vigil))
+	CardTurn.hold_for_fight(_screen)
 
 
 ## The battlefield bench: a REAL fight, not a mock — the same GlassvowGame, the

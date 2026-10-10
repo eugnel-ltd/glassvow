@@ -33,7 +33,9 @@ extends RefCounted
 ##
 ## PRE-WARMING. A turn's first use would otherwise compile a shader and bake
 ## a back mid-fight. `prewarm` pays both in the frame that builds the fight
-## (see there), so none of it reaches the fight's frames.
+## (see there), so none of it reaches the fight's frames. A fight whose back
+## was baked before it (on the map, or by an earlier fight) also needs what
+## that bake paid as a side effect, which `hold_for_fight` pays instead.
 ##
 ## WHAT IT COSTS, on the iPad 8 (QA builds of #657 PR 3; a probe opens a
 ## fight from the settled map, by the bench or by the players' route, then
@@ -196,6 +198,43 @@ static func prewarm_on_bench(parent: Node, id: String) -> void:
 	await prewarm(bench, id)
 	if is_instance_valid(bench):
 		bench.queue_free()
+
+
+## What a bake in a fight's load used to pay as a side effect, paid for every
+## fight (#657 PR 5b). Main calls this in the frame that builds the fight,
+## after `prewarm`, which finds the bake already made when the back was baked
+## before the fight.
+##
+## The generated shader. The engine frees a BaseMaterial3D's shader, with
+## every pipeline compiled for it, when the last ready material wearing it is
+## freed. A card's side band wears one (CardView.side_material). So when a
+## swept hand left no card standing, the next deal compiled those pipelines
+## again mid-fight, at turn 1's end and again at a reshuffle (on the iPad 8,
+## 4 surface pipelines, 1 draw and 1 specialisation each time). A bake's card,
+## kept by the fight it was baked in, used to hold that shader. Now `fight`
+## holds one of each generated material (CardView.generated_materials) for its
+## whole life.
+##
+## The load's GPU work. Reading one texel back after the load's draw waits for
+## that draw to finish, so the entrance's first frame no longer waits for it
+## (on the iPad 8 that frame ran about 100 ms without the wait, against
+## 8-25 ms with a bake's readback in the load).
+static func hold_for_fight(fight: Node) -> void:
+	var hold: _Hold = _Hold.new()
+	hold.name = "CardShaderHold"
+	hold.materials = CardView.generated_materials()
+	fight.add_child(hold)
+	var texel: ImageTexture = ImageTexture.create_from_image(
+		Image.create_empty(1, 1, false, Image.FORMAT_RGBA8))
+	var wait: Callable = func() -> void:
+		var _waited: Image = texel.get_image()
+	RenderingServer.frame_post_draw.connect(wait, CONNECT_ONE_SHOT)
+
+
+## Where a fight holds its cards' generated materials; it leaves with the fight.
+class _Hold:
+	extends Node
+	var materials: Array[Material] = []
 
 
 ## One transparent pixel wearing the picture turn's material: a TextureRect,

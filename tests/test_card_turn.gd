@@ -4,7 +4,8 @@ extends RefCounted
 ## under either, the back plate a bake dresses a card in and the table's back
 ## followed as it changes, a back cut without a stone, a bake's card retired
 ## rather than freed, the pre-warm's bake and warmer, and every fight's load
-## paying for them with the back the player wears.
+## paying for them with the back the player wears, and holding its cards'
+## generated shader for its whole life.
 ##
 ## The bakes run on a fake render step (CardBacks.use_renderer): the suite is
 ## headless, where no frame is ever drawn. That the two renderers put the card
@@ -24,6 +25,7 @@ static func run(fails: Array[String]) -> void:
 	_picture_shader(fails)
 	_plate_of_a_bake(fails)
 	_back_has_no_stone(fails, content)
+	_generated_materials_held(fails, content)
 	await _retired_card(fails)
 	var render: _FakeRender = _FakeRender.new()
 	CardBacks.use_renderer(render.render)
@@ -32,6 +34,7 @@ static func run(fails: Array[String]) -> void:
 	await _held_card_turns(fails, content)
 	await _turn_follows_the_back(fails, content)
 	await _each_fight_prewarms(fails, content, render)
+	await _fight_holds_its_cards_shader(fails, content)
 	await _run_hud_bakes_outside_a_fight(fails, content, render)
 	await _fight_joins_the_route_bake(fails, content, render)
 	CardBacks.use_renderer(Callable())
@@ -120,6 +123,81 @@ static func _back_has_no_stone(fails: Array[String], content: ContentDB) -> void
 	back.free()
 	front.free()
 
+
+
+## Every material on a card's stage whose shader the engine generates (a
+## BaseMaterial3D: freed, pipelines and all, with the last material wearing
+## it) has its match in CardView.generated_materials, the list a fight holds
+## (CardTurn.hold_for_fight). A generated material a card gains later, or one
+## made otherwise than the list makes it, fails here. The cards a fight shows
+## are fronts and, at its load's bake, a back.
+static func _generated_materials_held(fails: Array[String], content: ContentDB) -> void:
+	var held: Array[Dictionary] = []
+	for m: Material in CardView.generated_materials():
+		held.append(_shader_key(m))
+	var cards: Dictionary = {"a front": _card(content, &"strike"), "a back": CardBacks.build("vault")}
+	for label: String in cards:
+		var card: CardView = cards[label]
+		for m: Material in _stage_materials(card._stage):
+			if m is BaseMaterial3D and not held.has(_shader_key(m)):
+				fails.append("card turn: %s's stage wears a generated material no fight holds: %s"
+					% [label, str(_shader_key(m))])
+		card.free()
+
+
+## On a real Main, a fight's load leaves the fight holding its cards'
+## generated materials, under the fight itself, so they leave with it.
+static func _fight_holds_its_cards_shader(fails: Array[String], content: ContentDB) -> void:
+	var main: Main = _opened(content)
+	main._start_fight(PackedStringArray(["sporeling"]), "normal")
+	await _frames(main, 1)
+	var hold: Node = main._screen.get_node_or_null("CardShaderHold")
+	var want: Array[Dictionary] = []
+	for m: Material in CardView.generated_materials():
+		want.append(_shader_key(m))
+	var got: Array[Dictionary] = []
+	if hold != null:
+		var held: Array = hold.get("materials")
+		for m: Material in held:
+			got.append(_shader_key(m))
+	if hold == null or got != want:
+		fails.append("card turn: the fight holds %s of its cards' generated materials, want %s"
+			% [str(got), str(want)])
+	main._clear_route()
+	for child: Node in main.get_children():
+		child.free()
+	main.free()
+
+
+## Every material worn under `root`, by surface or as an override.
+static func _stage_materials(root: Node) -> Array[Material]:
+	var out: Array[Material] = []
+	for node: Node in root.find_children("*", "MeshInstance3D", true, false):
+		var mi: MeshInstance3D = node
+		if mi.material_override != null:
+			out.append(mi.material_override)
+		for i: int in range(mi.mesh.get_surface_count() if mi.mesh != null else 0):
+			var m: Material = mi.get_active_material(i)
+			if m != null:
+				out.append(m)
+	return out
+
+
+## What picks a generated material's shader: its class and every stored
+## setting but the values its shader reads as uniforms (colours, numbers,
+## vectors), with a texture standing for whether there is one.
+static func _shader_key(m: Material) -> Dictionary:
+	var key: Dictionary = {"class": m.get_class()}
+	for prop: Dictionary in m.get_property_list():
+		var usage: int = prop["usage"]
+		var type: int = prop["type"]
+		if usage & PROPERTY_USAGE_STORAGE == 0 or type in [TYPE_COLOR, TYPE_FLOAT,
+				TYPE_VECTOR2, TYPE_VECTOR3, TYPE_VECTOR4]:
+			continue
+		var name: StringName = prop["name"]
+		var value: Variant = m.get(name)
+		key[name] = (value != null) if type == TYPE_OBJECT else value
+	return key
 
 ## A bake's card, once read back, is retired (CardBacks): both passes stay
 ## frozen for good, past its own first-frames freeze and whatever would wake
