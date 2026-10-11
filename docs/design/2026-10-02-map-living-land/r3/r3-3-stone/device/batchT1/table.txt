@@ -1,0 +1,9 @@
+T1 ctl-M-title1-fresh       ?         frame0  6276.4  force_draws 3576,3584        next    nan  over100 after0 []                     open ready  646.6 worst  181.0  bake worst 53.9
+T1 ctl-M-title2-cached      ?         frame0   432.9  force_draws 51,59            next    nan  over100 after0 []                     open ready  645.5 worst  172.9  bake worst 49.9
+T1 ctl-N-title1-fresh       ?         frame0  6129.4  force_draws 3502,3516        next    nan  over100 after0 []                     open ready  646.9 worst  175.4  bake worst 56.0
+T1 ctl-N-title2-cached      ?         frame0   404.2  force_draws 43,51            next    nan  over100 after0 []                     open ready  653.9 worst  170.3  bake worst 48.0
+T1 ctl-title1               ?         frame0   445.9  force_draws 54,64            next    nan  over100 after0 []                     open ready  663.5 worst  185.7  bake worst 55.5
+T1 dev-A-title1-fresh       ?         frame0  8067.3  force_draws 4604,4611        next    nan  over100 after0 []                     open ready  663.1 worst  184.4  bake worst 57.0
+T1 dev-A-title2-cached      ?         frame0   557.3  force_draws 44,54            next    nan  over100 after0 []                     open ready  644.9 worst  173.2  bake worst 46.7
+T1 dev-B-title1-fresh       ?         frame0  8395.4  force_draws 4640,4648        next    nan  over100 after0 []                     open ready  878.6 worst  399.3  bake worst 50.0
+T1 dev-B-title2-cached      ?         frame0   395.4  force_draws 42,47            next    nan  over100 after0 []                     open ready  649.2 worst  189.3  bake worst 50.0

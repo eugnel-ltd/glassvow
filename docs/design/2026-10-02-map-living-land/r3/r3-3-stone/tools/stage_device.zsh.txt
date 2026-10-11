@@ -1,0 +1,22 @@
+#!/bin/zsh
+# Lane R3.3 (scratch): stages the device batches' records for the evidence folder (copies only; writes
+# only under $M/evidence/device and $M/evidence/frames).
+M=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane
+E=$M/evidence/device; mkdir -p $E/traces
+for b in batchS1 batchS1b batchS1c batchT1; do
+  mkdir -p $E/$b/rows
+  cp $M/logs/$b.txt $E/$b/batch.log
+  for f in summary.txt opens.txt coldrows.txt vram.txt land-stages.txt table.txt; do [[ -f $M/device/$b/$f ]] && cp $M/device/$b/$f $E/$b/; done
+  for f in $M/device/$b/*.jsonl(N); do [[ $f == *.wrong.jsonl ]] || cp $f $E/$b/rows/; done
+done
+S2=$M/device/batchS2
+cp $M/logs/batchS2.txt $E/traces/batchS2-batch.log
+for t in none stone ground; do
+  for x in passes roles display; do [[ -f $S2/dev-t$t.$x.txt ]] && cp $S2/dev-t$t.$x.txt $E/traces/batchS2-dev-t$t.$x.txt; done
+  [[ -f $S2/dev-t$t.window ]] && cp $S2/dev-t$t.window $E/traces/batchS2-dev-t$t.window.txt
+  [[ -f $S2/dev-t$t.jsonl ]] && cp $S2/dev-t$t.jsonl $E/traces/batchS2-dev-t$t.jsonl
+done
+[[ -f $S2/dev-shot.jsonl ]] && cp $S2/dev-shot.jsonl $E/traces/batchS2-dev-shot.jsonl
+[[ -f $S2/dev-shot.png ]] && python3 -c "
+from PIL import Image; im=Image.open('$S2/dev-shot.png').convert('RGB'); im.save('$M/evidence/frames/ipad8-journey.jpg', quality=88); print('ipad frame', im.size)"
+du -sh $E/*

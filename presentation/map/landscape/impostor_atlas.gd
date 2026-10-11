@@ -1,7 +1,7 @@
 extends RefCounted
 ## Act I's woodland as baked impostors (R3.1, issue #660): the two atlases
-## (`tools/map_atelier/journey/impostors/`), each tile's picture-plane rect and silhouette, and the
-## card, shadow casters and material every land shares.
+## (`tools/map_atelier/journey/impostors/`), each tile's page, picture-plane rect and silhouette,
+## and the card, shadow casters and material every land shares.
 ##
 ## The journey camera never turns and is orthographic at one pitch, so a plant
 ## is only ever seen from one direction: a card facing the camera, painted with
@@ -9,6 +9,12 @@ extends RefCounted
 ## zoom stop and pan. A tile is one kind at one yaw; its picture-plane rect is
 ## in metres relative to the model's base (`MapJourneyCameraContract.
 ## projected_plane`: x across, y down the screen).
+##
+## Each atlas is a two-layer texture array (`CompressedTexture2DArray`), a
+## page a layer, so no upload passes 4 MiB: the engine uploads an array a layer
+## at a time, and a transfer worker's staging buffer grows to the next power of
+## two above its largest upload and is never shrunk (R3.3;
+## `tests/test_texture_uploads.gd`).
 ##
 ## Readied on the main thread before any land is built on a worker
 ## (`prepare_step`, through `Kit.preload_step`): the atlases load on the
@@ -22,17 +28,27 @@ const NORMAL_PATH: String = "res://assets/art/map-journey/impostors/wood-normal.
 const TILES_PATH: String = "res://assets/art/map-journey/impostors/wood-tiles.json"
 ## The yaw of a kind's first tile; the others turn evenly from it.
 const FIRST_YAW: float = 0.35
-## The kit's foliage kinds, drawn as impostors where the kit plants them: the
-## kit keeps their placements and never loads or batches their meshes (the
-## bare snag stays a mesh).
-const KIT_KINDS: PackedStringArray = ["conifer", "conifer-spire", "conifer-wind",
+## The ruins (R3.3), drawn as impostors where the kit places them: the
+## gravestones, the broken walls and the rubble.
+const GRAVES: PackedStringArray = ["grave-arched", "grave-cross", "grave-broken", "grave-tablet"]
+const WALLS: PackedStringArray = ["wall-run", "wall-corner", "wall-pier"]
+const RUBBLE: PackedStringArray = ["rubble-blocks", "rubble-scree", "rubble-mossy"]
+const RUINS: PackedStringArray = GRAVES + WALLS + RUBBLE
+## The kit's foliage drawn as impostors (the bare snag stays a mesh).
+const FOLIAGE: PackedStringArray = ["conifer", "conifer-spire", "conifer-wind",
 	"ash-copse", "ash-heath", "ash-bramble", "ash-fern"]
+## The kit's kinds drawn as impostors where the kit plants them, its foliage
+## and the ruins: the kit keeps their placements and never loads or batches
+## their meshes.
+const KIT_KINDS: PackedStringArray = FOLIAGE + RUINS
 
-## Per tile: its kind, atlas rect, picture-plane low corner and size (metres
-## at scale 1), how far the model reaches toward the camera from its base and
-## how tall it stands, and its silhouette as covered x spans (tile units) per
-## `span_m` metres down the picture.
+## Per tile: its kind, page (the arrays' layer) and rect on that page,
+## picture-plane low corner and size (metres at scale 1), how far the model
+## reaches toward the camera from its base and how tall it stands, and its
+## silhouette as covered x spans (tile units) per `span_m` metres down the
+## picture.
 static var tile_kinds: PackedStringArray = []
+static var layer: PackedInt32Array = []
 static var uv: PackedVector4Array = []
 static var low: PackedVector2Array = []
 static var size: PackedVector2Array = []
@@ -59,37 +75,55 @@ static var prepare_ms: float = 0.0
 static var _take: Take = null
 
 
-## Textures taken from the loader's threads, each exactly once and in whatever
-## order they finish: a second `load_threaded_get` of a path returns null, so a
-## step keeps what it took for the next. A path the loader cannot load settles
-## the take as failed, so a wait for it always ends.
+## Resources (textures unless `hint` says otherwise) taken from the loader's
+## threads one at a time, in order: the next is asked for only once the last
+## is taken, its texture made and its upload recorded. Uploads that overlap
+## each take a RenderingDevice transfer worker of their own, whose staging
+## buffer is never shrunk: taken together, the woodland's atlas and the
+## stone's textures held 16 MiB more for the life of the process (R3.3). A
+## second `load_threaded_get` of a path returns null, so a step keeps what it
+## took for the next. A path the loader cannot load settles the take as
+## failed, so a wait for it always ends.
 class Take:
 	extends RefCounted
 	var paths: PackedStringArray
+	var hint: String = "Texture2D"
 	var textures: Dictionary = {}
 	var failed: bool = false
-	## The loader's two calls (tests stand in for them).
+	## How many of `paths` have been asked for: the first `asked`.
+	var asked: int = 0
+	## The loader's three calls (tests stand in for them).
+	var ask: Callable = func(path: String, type_hint: String) -> bool:
+		return ResourceLoader.exists(path) and ResourceLoader.load_threaded_request(path, type_hint) == OK
 	var status: Callable = ResourceLoader.load_threaded_get_status
 	var get_texture: Callable = ResourceLoader.load_threaded_get
 
-	func _init(from: PackedStringArray) -> void:
+	func _init(from: PackedStringArray, type_hint: String = "Texture2D") -> void:
 		paths = from
+		hint = type_hint
 
-	## Asks the loader's threads for every path.
+	## Asks the loader's threads for the next path, unless one is still being
+	## loaded (asked for and not yet taken) or none is left.
 	func request() -> void:
-		for path: String in paths:
-			if not ResourceLoader.exists(path) or ResourceLoader.load_threaded_request(path, "Texture2D") != OK:
-				failed = true
+		if failed or asked != textures.size() or asked >= paths.size():
+			return
+		asked += 1
+		if not ask.call(paths[asked - 1], hint):
+			failed = true
 
-	## Takes every texture that has loaded and answers whether the take is
-	## settled: all taken, or failed. `wait`ing, it waits for each one while
-	## keeping the renderer in step, as `Kit.preload_step` does.
+	## Takes, in order, every texture that has loaded, asking for each only once
+	## the one before it is taken, and answers whether the take is settled: all
+	## taken, or failed. `wait`ing, it waits for each one while keeping the
+	## renderer in step, as `Kit.preload_step` does.
 	func step(wait: bool) -> bool:
 		for path: String in paths:
 			if failed:
 				break
 			if textures.has(path):
 				continue
+			request()
+			if failed:
+				break
 			var state: int = status.call(path)
 			while state == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 				if not wait:
@@ -98,8 +132,9 @@ class Take:
 				OS.delay_usec(500)
 				state = status.call(path)
 			var texture: Variant = get_texture.call(path) if state == ResourceLoader.THREAD_LOAD_LOADED else null
-			if texture is Texture2D:
-				textures[path] = texture
+			var taken: Resource = texture if texture is Resource else null
+			if taken != null and (hint.is_empty() or taken.is_class(hint)):
+				textures[path] = taken
 			else:
 				failed = true
 		return true
@@ -110,11 +145,12 @@ static func ready() -> bool:
 	return material != null
 
 
-## Asks the loader's threads for the atlases (cheap; once).
+## Asks the loader's threads for the atlases, the first of them now (cheap;
+## once).
 static func request() -> void:
 	if _take != null or ready() or failed:
 		return
-	_take = Take.new(PackedStringArray([ALBEDO_PATH, NORMAL_PATH]))
+	_take = Take.new(PackedStringArray([ALBEDO_PATH, NORMAL_PATH]), "TextureLayered")
 	_take.request()
 
 
@@ -132,8 +168,8 @@ static func prepare_step(wait: bool = false) -> bool:
 		failed = true
 		push_error("Journey wood: cannot load the impostor atlases; the woodland is left out")
 	elif settled:
-		var albedo: Texture2D = _take.textures[ALBEDO_PATH]
-		var normal: Texture2D = _take.textures[NORMAL_PATH]
+		var albedo: TextureLayered = _take.textures[ALBEDO_PATH]
+		var normal: TextureLayered = _take.textures[NORMAL_PATH]
 		_make(albedo, normal)
 	if settled:
 		_take = null
@@ -141,7 +177,7 @@ static func prepare_step(wait: bool = false) -> bool:
 	return settled
 
 
-static func _make(albedo: Texture2D, normal: Texture2D) -> void:
+static func _make(albedo: TextureLayered, normal: TextureLayered) -> void:
 	_read_tiles()
 	card = _quad()
 	cone = _cone()
@@ -166,6 +202,7 @@ static func _read_tiles() -> void:
 		var rect: Array = tile["uv"]
 		var corner: Array = tile["low"]
 		var extent: Array = tile["size"]
+		layer.append(int(str(tile["layer"])))
 		uv.append(_v4(rect))
 		low.append(_v2(corner))
 		size.append(_v2(extent))
@@ -184,6 +221,15 @@ static func _v2(raw: Array) -> Vector2:
 
 static func _v4(raw: Array) -> Vector4:
 	return Vector4(float(str(raw[0])), float(str(raw[1])), float(str(raw[2])), float(str(raw[3])))
+
+
+## What a card of tile `tile` carries for the shaders (its instance custom
+## data): its rect on its page, with the page added to the rect's top. A rect's
+## top lies under 1 on its page, so `impostor.gdshader` and
+## `floor_caster.gdshader` read the page back as the whole part.
+static func custom(tile: int) -> Vector4:
+	var rect: Vector4 = uv[tile]
+	return Vector4(rect.x, rect.y + layer[tile], rect.z, rect.w)
 
 
 ## The tile kind `kind` shows at `yaw` (the nearest baked turn).

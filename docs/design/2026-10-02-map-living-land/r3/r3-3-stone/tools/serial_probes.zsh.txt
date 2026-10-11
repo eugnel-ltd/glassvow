@@ -1,0 +1,18 @@
+#!/bin/zsh
+# Lane R3.3 (scratch): more short Mac game probes of main, the branch before and after the serialised take,
+# interleaved (as serial_proof.zsh's part b). Only under load 50. Writes only $M/final/serial-proof/.
+M=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane
+F=$M/final/serial-proof; mkdir -p $F
+source $M/tools/glock.zsh
+wait_load() { while (( $(uptime | sed 's/.*averages: //' | cut -d' ' -f1 | cut -d. -f1) >= 50 )); do sleep 30; done; }
+n=${START:-100}
+for rep in $(seq 1 ${ROUNDS:-8}); do
+  for b in r33-ctl r33-dev r33-dev2; do
+    n=$((n+1)); wait_load; glock_acquire
+    GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 300 godot --path $M/$b --rendering-driver metal --rendering-method mobile --position 1400,900 \
+      -- --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --vp=1180x820 --map-steps=2 --holds=cadence --hold-frames=60 --probe-view=journey > $F/probe-$n-$b.log 2>&1
+    echo "probe $n $b exit $? load $(uptime | sed 's/.*averages: //' | cut -d' ' -f1): $(grep -o '"video_mib":[0-9.]*' $F/probe-$n-$b.log | head -1)"
+    glock_release
+  done
+done
+echo "== done $(date +%T)"

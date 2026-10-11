@@ -10,13 +10,14 @@ shader_type spatial;
 // nearest first, so depth rejects what the cards hide. Cards receive no
 // shadows: opaque cones and eggs cast the woodland's shadows on the land.
 //
-// Per instance: INSTANCE_CUSTOM is the tile's atlas rect; COLOR.rgb a tint
+// Per instance: INSTANCE_CUSTOM is the tile's rect on its page, the page (the
+// atlases' layer) added to its top (`ImpostorAtlas.custom`); COLOR.rgb a tint
 // and COLOR.a where the model's base sits down the card (0 top, 1 bottom).
 // The crowns sway with a slow gust that grows with height above the base; the
 // global `land_motion` 0 holds them still (Reduce Motion; `LandMotion`).
 render_mode cull_back, depth_draw_opaque, diffuse_lambert, specular_disabled, shadows_disabled;
-uniform sampler2D atlas_albedo : source_color, filter_linear_mipmap, repeat_disable;
-uniform sampler2D atlas_normal : filter_linear_mipmap, repeat_disable;
+uniform sampler2DArray atlas_albedo : source_color, filter_linear_mipmap, repeat_disable;
+uniform sampler2DArray atlas_normal : filter_linear_mipmap, repeat_disable;
 uniform float scissor = 0.5;
 // Metres of sway per metre of height at the gust's peak: half the kit
 // foliage's, so a card's crisp silhouette moves about as much of the wood as
@@ -26,10 +27,12 @@ uniform float sway = 0.006;
 uniform float occlusion_floor = 0.12;
 global uniform float land_motion;
 varying vec4 tile_uv;
+varying flat float tile_layer;
 varying vec3 tint;
 
 void vertex() {
-	tile_uv = INSTANCE_CUSTOM;
+	tile_layer = floor(INSTANCE_CUSTOM.y);
+	tile_uv = vec4(INSTANCE_CUSTOM.x, INSTANCE_CUSTOM.y - tile_layer, INSTANCE_CUSTOM.zw);
 	tint = COLOR.rgb;
 	vec3 origin = MODEL_MATRIX[3].xyz;
 	float phase = origin.x * 0.37 + origin.z * 0.23;
@@ -42,7 +45,7 @@ void vertex() {
 }
 
 void fragment() {
-	vec2 uv = tile_uv.xy + clamp(UV, vec2(0.0), vec2(1.0)) * tile_uv.zw;
+	vec3 uv = vec3(tile_uv.xy + clamp(UV, vec2(0.0), vec2(1.0)) * tile_uv.zw, tile_layer);
 	vec4 a = texture(atlas_albedo, uv);
 	vec4 n = texture(atlas_normal, uv);
 	ALBEDO = a.rgb * tint;

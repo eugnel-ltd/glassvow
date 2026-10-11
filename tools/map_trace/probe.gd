@@ -47,7 +47,7 @@ extends Node
 ##   --probe-seq=<n>        with --probe-shot, photograph n frames in a row
 ##                          (<png> becomes <png>-NN.png) with their times
 ##   --trace-kill=<what>    hide one part for the whole run: shadows, kit,
-##                          ground, land, glow, band, grain, display, hud
+##                          stone, ground, land, glow, band, grain, display, hud
 ## Rows go to user://trace_probe.jsonl (flushed per row) and to stdout with the
 ## prefix TRACE_PROBE. The start row carries BUILD, the commit `qa_patch.py`
 ## stamps in when it arms a measuring worktree ("+dirty" when tracked files
@@ -299,6 +299,9 @@ func _kill(what: String, screen: WorldMapScreen) -> void:
 			_scene.get_key().shadow_enabled = false
 		"kit":
 			land.kit.visible = false
+		"stone":
+			if land.kit.stone != null:
+				land.kit.stone.visible = false
 		"land":
 			land.visible = false
 		"ground":

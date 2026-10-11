@@ -27,6 +27,7 @@ const Atlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
 const River = preload("res://presentation/map/landscape/river.gd")
 const Sight = preload("res://presentation/map/landscape/wood_sight.gd")
 const Terrain = preload("res://presentation/map/landscape/terrain.gd")
+const Stone = preload("res://presentation/map/landscape/land_stone.gd")
 
 ## The ground grid (metres per cell) and its flags.
 const CELL: float = 0.5
@@ -61,7 +62,7 @@ const ABUTMENT_CLEAR: float = 2.6
 ## reaches 2.4 m, `River.HALF_WIDTH` channel units): a crown may overhang its
 ## edge, never roof it over.
 const RIVER_SIGHT: float = 1.0
-## A rock's body kept in sight (the kit's slate): across, a share of its
+## A rock's body kept in sight (the kit's granite): across, a share of its
 ## footprint's radius either side; up, from its foot (where undergrowth may
 ## grow) to near its top, as shares of its height.
 const ROCK_ACROSS: float = 0.6
@@ -116,6 +117,14 @@ const KIT_REPAINT: Dictionary = {"ash-heath": ["olive-heath", 0.7], "ash-copse":
 ## Which kinds are trees (casting, standing trunk-first).
 const TREES: PackedStringArray = ["conifer", "conifer-spire", "conifer-wind", "ember-oak",
 	"ember-round", "rust-oak", "amber-round"]
+## The ruins the kit places (R3.3): drawn where they stand or left out, never
+## shrunk; the gravestones and walls stand and cast, the rubble lies low.
+const STONES: PackedStringArray = Atlas.RUINS
+const STANDING: PackedStringArray = Atlas.GRAVES + Atlas.WALLS
+## A ruin kept in sight: its body above its base on the picture plane (metres
+## across and up, at scale 1), a gravestone's and a wall's.
+const GRAVE_SIGHT: Vector2 = Vector2(0.8, 1.2)
+const WALL_SIGHT: Vector2 = Vector2(3.4, 2.0)
 
 ## The stage shape whose touch squares the woodland keeps clear: Main sets the
 ## shape the game shows. A device's class fixes which shapes it can show (a
@@ -230,60 +239,108 @@ func _mask_structures(kit: Node3D, seats: PackedVector3Array) -> void:
 		_stamp(at.x, at.z, reach * 0.75 + 0.9, reach * 0.45 + 0.25)
 
 
-## What the woodland may never hide on the picture plane.
+## What the woodland may never hide on the picture plane: the kit's own grid
+## when it built one for its ruins (`kit.gd` `woodland_sight`, the same
+## protection over the same placements), else a new one.
 func _protect(kit: Node3D, seats: PackedVector3Array) -> void:
-	var lines: Array[PackedVector3Array] = _terrain.lines
+	var shared: Sight = kit.call("woodland_sight")
+	if shared != null:
+		_sight = shared
+		return
+	var lamps: PackedVector3Array = kit.call("lamp_anchors")
+	protect_ground(_sight, _terrain, lamps, seats)
+	var placed: Array = kit.get("placed")
+	for item: Dictionary in placed:
+		protect_item(_sight, item)
+
+
+## What no card may hide under the land's own structures: the roads' walking
+## lanes, the bridge decks, every waystone's touch square and body, every
+## lamp's flame and the rivers' water (shared with the kit, which places its
+## ruins only where the woodland will draw them, `kit.gd` `_in_sight`).
+static func protect_ground(sight: Sight, terrain: Terrain, lamps: PackedVector3Array,
+		seats: PackedVector3Array) -> void:
 	# A lane sample every `LANE_STEP`, each wide enough to meet the next.
-	var half: Vector2 = Vector2(LANE + LANE_STEP * 0.5, (LANE + LANE_STEP * 0.5) * _sight.toward.y)
-	for line: PackedVector3Array in lines:
+	var half: Vector2 = Vector2(LANE + LANE_STEP * 0.5, (LANE + LANE_STEP * 0.5) * sight.toward.y)
+	for line: PackedVector3Array in terrain.lines:
 		for i: int in range(line.size() - 1):
 			var steps: int = maxi(1, ceili(line[i].distance_to(line[i + 1]) / LANE_STEP))
 			for step: int in range(steps + 1):
 				var q: Vector3 = line[i].lerp(line[i + 1], float(step) / steps)
-				var at: Vector2 = _sight.plane(q)
-				_sight.protect_rect(Rect2(at - half, half * 2.0), _sight.depth(q))
-	for deck: Vector3 in _decks(0.75):
-		var at: Vector2 = _sight.plane(deck)
-		_sight.protect_rect(Rect2(at.x - DECK_SIGHT, at.y - 0.9, DECK_SIGHT * 2.0, 1.6), _sight.depth(deck))
+				var at: Vector2 = sight.plane(q)
+				sight.protect_rect(Rect2(at - half, half * 2.0), sight.depth(q))
+	for deck: Vector3 in decks(terrain, 0.75):
+		var at: Vector2 = sight.plane(deck)
+		sight.protect_rect(Rect2(at.x - DECK_SIGHT, at.y - 0.9, DECK_SIGHT * 2.0, 1.6), sight.depth(deck))
 	# A seat's touch square and the stone's body are never covered by a crown
 	# standing in front of the stone.
 	for seat: Vector3 in seats:
-		_sight.protect_rect(seat_guard(_sight.plane(seat)), _sight.depth(seat))
-	for flame: Vector3 in kit.call("lamp_anchors"):
-		var at: Vector2 = _sight.plane(flame)
-		_sight.protect_rect(Rect2(at - Vector2(0.6, 0.6), Vector2(1.2, 1.2)), _sight.depth(flame) - 0.2)
+		sight.protect_rect(seat_guard(sight.plane(seat)), sight.depth(seat))
+	protect_lamps(sight, lamps)
 	# The rivers' water at its level, sampled along each line.
-	var water: Vector2 = Vector2(RIVER_SIGHT, LANE_STEP * _sight.toward.y * 0.5 + 0.1)
+	var water: Vector2 = Vector2(RIVER_SIGHT, LANE_STEP * sight.toward.y * 0.5 + 0.1)
 	for cut: float in MapRavine.CUTS:
-		var z: float = -_terrain.river_half_length
-		while z <= _terrain.river_half_length:
+		var z: float = -terrain.river_half_length
+		while z <= terrain.river_half_length:
 			var q: Vector3 = Vector3(River.centre(z, cut), River.LEVEL, z)
-			_sight.protect_rect(Rect2(_sight.plane(q) - water, water * 2.0), _sight.depth(q))
+			sight.protect_rect(Rect2(sight.plane(q) - water, water * 2.0), sight.depth(q))
 			z += LANE_STEP
-	var placed: Array = kit.get("placed")
-	for item: Dictionary in placed:
-		var kind: String = item["kind"]
-		var base: Vector3 = item["position"]
-		var at: Vector2 = _sight.plane(base)
-		if kind == "amber-arch":
-			_sight.protect_rect(Rect2(at + Vector2(-2.9, -4.6), Vector2(5.8, 5.4)), _sight.depth(base) - 0.8)
-		elif kind == "memorial":
-			_sight.protect_rect(Rect2(at + Vector2(-0.6, -1.8), Vector2(1.2, 2.2)), _sight.depth(base) - 0.5)
-		elif kind.begins_with("slate"):
-			var across: float = float(str(item["radius"])) * ROCK_ACROSS
-			var rise: float = float(str(item["height"])) * _sight.toward.z
-			# A low scree's body is at least two of the grid's cells tall.
-			var top: float = maxf(rise * ROCK_TOP, rise * ROCK_FOOT + Sight.FINE * 2.0)
-			_sight.protect_rect(Rect2(at.x - across, at.y - top, across * 2.0, top - rise * ROCK_FOOT),
-				_sight.depth(base))
+
+
+## Every lamp's flame in `lamps`.
+static func protect_lamps(sight: Sight, lamps: PackedVector3Array) -> void:
+	for flame: Vector3 in lamps:
+		var at: Vector2 = sight.plane(flame)
+		sight.protect_rect(Rect2(at - Vector2(0.6, 0.6), Vector2(1.2, 1.2)), sight.depth(flame) - 0.2)
+
+
+## What no card may hide of one kit placement: the gateway arch, a memorial
+## shrine, a standing ruin's body (from just before its own card) or a rock's.
+static func protect_item(sight: Sight, item: Dictionary) -> void:
+	var area: Array = protected_area(sight, item)
+	if not area.is_empty():
+		var kept: Rect2 = area[0]
+		var depth: float = area[1]
+		sight.protect_rect(kept, depth)
+
+
+## The picture-plane rectangle one kit placement keeps in sight and the depth
+## from which it keeps it, [Rect2, float]; empty for a kind nothing protects.
+static func protected_area(sight: Sight, item: Dictionary) -> Array:
+	var kind: String = item["kind"]
+	var base: Vector3 = item["position"]
+	var at: Vector2 = sight.plane(base)
+	if kind == "amber-arch":
+		return [Rect2(at + Vector2(-2.9, -4.6), Vector2(5.8, 5.4)), sight.depth(base) - 0.8]
+	if kind == "memorial":
+		return [Rect2(at + Vector2(-0.6, -1.8), Vector2(1.2, 2.2)), sight.depth(base) - 0.5]
+	if STANDING.has(kind) and Atlas.by_kind.has(kind):
+		# Kept in sight from just before its own card (`_fit_stone`), so
+		# only a crown standing in front of it is turned away.
+		var scale_value: float = float(str(item["scale"]))
+		var body: Vector2 = (GRAVE_SIGHT if kind.begins_with("grave") else WALL_SIGHT) * scale_value
+		var own: int = Atlas.tile_for(kind, float(str(item["yaw"])))
+		return [Rect2(at.x - body.x * 0.5, at.y - body.y, body.x, body.y),
+			sight.depth(base) + Atlas.shift(own) * scale_value + Sight.DEPTH_MARGIN + 0.05]
+	if Stone.OUTCROPS.has(kind):
+		var across: float = float(str(item["radius"])) * ROCK_ACROSS
+		var rise: float = float(str(item["height"])) * sight.toward.z
+		# A low scree's body is at least two of the grid's cells tall.
+		var top: float = maxf(rise * ROCK_TOP, rise * ROCK_FOOT + Sight.FINE * 2.0)
+		return [Rect2(at.x - across, at.y - top, across * 2.0, top - rise * ROCK_FOOT), sight.depth(base)]
+	return []
 
 
 ## The raised points of every bridge chain, `step` metres apart along it (a
 ## chain's own points are much closer than a stamp needs), and each raised
 ## run's last point.
 func _decks(step: float) -> PackedVector3Array:
+	return decks(_terrain, step)
+
+
+static func decks(terrain: Terrain, step: float) -> PackedVector3Array:
 	var out: PackedVector3Array = []
-	for chain: Dictionary in _terrain.get_meta("bridge_chains", []):
+	for chain: Dictionary in terrain.get_meta("bridge_chains", []):
 		var points: PackedVector3Array = chain["points"]
 		var weights: PackedFloat32Array = chain["weights"]
 		var since: float = INF
@@ -342,13 +399,21 @@ func _adopt(kit: Node3D) -> void:
 			if _hash(at) < share:
 				kind = repaint[0]
 		var tree: bool = TREES.has(kind)
-		var fitted: Array = _fit_tree(kind, float(str(item["yaw"])), at, float(str(item["scale"])), false) \
-			if tree else _fit_shrub(kind, float(str(item["yaw"])), at, float(str(item["scale"])))
+		var stone: bool = STONES.has(kind)
+		var fitted: Array = []
+		if stone:
+			fitted = _fit_stone(kind, float(str(item["yaw"])), at, float(str(item["scale"])))
+		elif tree:
+			fitted = _fit_tree(kind, float(str(item["yaw"])), at, float(str(item["scale"])), false)
+		else:
+			fitted = _fit_shrub(kind, float(str(item["yaw"])), at, float(str(item["scale"])))
 		if fitted.is_empty():
 			_reject("kit sight")
 			continue
 		_add_fitted(fitted, at, true)
-		if tree:
+		if stone:
+			_stamp(at.x, at.z, radius * 0.75 + 0.4, radius * 0.5)
+		elif tree:
 			_stamp(at.x, at.z, radius * 0.4, radius * SHRUB_UNDER_TREE * 0.5)
 		else:
 			_stamp(at.x, at.z, 0.0, radius * 0.3)
@@ -454,6 +519,22 @@ func _fit_tree(kind: String, yaw: float, base: Vector3, scale_value: float, whol
 	if not whole and smaller < scale_value and _sight.fits(tile, base, smaller):
 		return [kind, tile, smaller]
 	return []
+
+
+## A ruin of `kind` at `base` as it fits: [kind, tile, scale] at
+## `scale_value`, else empty (a ruin is never shrunk or swapped, and one the
+## atlas has no tiles for is left out).
+func _fit_stone(kind: String, yaw: float, base: Vector3, scale_value: float) -> Array:
+	if not Atlas.by_kind.has(kind):
+		return []
+	var tile: int = Atlas.tile_for(kind, yaw)
+	return [kind, tile, scale_value] if _sight.fits(tile, base, scale_value) else []
+
+
+## Whether a planted kind casts into the floor's bake through its own card
+## (`floor_plan.gd`): the trees and the standing ruins.
+static func casts(kind: String) -> bool:
+	return TREES.has(kind) or STANDING.has(kind)
 
 
 ## Undergrowth of `kind` at `base` as it fits: [kind, tile, scale] at

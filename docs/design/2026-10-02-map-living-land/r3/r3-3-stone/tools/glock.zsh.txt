@@ -1,0 +1,4 @@
+# Lane R3.3 (scratch, sourced): one Godot run at a time across the lane's scripts.
+GLOCK=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane/tmp/godot.lock
+glock_acquire() { while ! mkdir $GLOCK 2>/dev/null; do sleep 5; done; }
+glock_release() { rmdir $GLOCK 2>/dev/null; }

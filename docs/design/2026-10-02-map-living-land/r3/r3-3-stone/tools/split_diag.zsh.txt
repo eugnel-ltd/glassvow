@@ -1,0 +1,35 @@
+#!/bin/zsh
+# Lane R3.3 (scratch): why the split moved the iPad's figure so little. In the real projects (main's
+# r33-ctl, the split's r33-dev at 2fd7b2d7), the map's textures taken together on the loader's threads
+# as the kit takes them (tex_cost.gd --together), alternately, five times each; then short Mac game
+# probes (a Journey hold, as batch S1's V launches) of main and the split, interleaved, three each.
+# Only under load 50, one Godot run at a time. Writes only $M/final/split-diag/.
+M=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane
+F=$M/final/split-diag; mkdir -p $F
+source $M/tools/glock.zsh
+wait_load() { while (( $(uptime | sed 's/.*averages: //' | cut -d' ' -f1 | cut -d. -f1) >= 50 )); do sleep 30; done; }
+I=res://assets/art/map-journey/impostors; S=res://assets/art/map-journey/stone
+CTL_SET=$I/wood-albedo.png,$I/wood-normal.png
+DEV_SET=$I/wood-albedo.png,$I/wood-normal.png,$S/stone-albedo.png,$S/stone-normal.png,$S/strata.png
+n=0
+for rep in 1 2 3 4 5; do
+  for b in r33-ctl r33-dev; do
+    n=$((n+1)); set_=$CTL_SET; [[ $b == r33-dev ]] && set_=$DEV_SET
+    wait_load; glock_acquire
+    echo "== tex $n $b $(date +%T) load: $(uptime | sed 's/.*averages: //')"
+    GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 300 godot --path $M/$b --rendering-driver metal --rendering-method mobile \
+      --position 1400,900 --resolution 320x240 -s $M/tools/tex_cost.gd -- --together=$set_ > $F/tex-$n-$b.log 2>&1
+    echo "   exit $?"; glock_release; grep "TEXCOST start\|TEXCOST after" $F/tex-$n-$b.log | sed 's/^/   /'
+  done
+done
+for rep in 1 2 3; do
+  for b in r33-ctl r33-dev; do
+    n=$((n+1)); wait_load; glock_acquire
+    echo "== probe $n $b $(date +%T) load: $(uptime | sed 's/.*averages: //')"
+    GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 300 godot --path $M/$b --rendering-driver metal --rendering-method mobile --position 1400,900 \
+      -- --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --vp=1180x820 --map-steps=2 --holds=cadence --hold-frames=60 --probe-view=journey > $F/probe-$n-$b.log 2>&1
+    echo "   exit $? $(grep -o '"video_mib":[0-9.]*' $F/probe-$n-$b.log | head -1) boot $(grep '"probe":"boot"' $F/probe-$n-$b.log | grep -o '"vram_start":[0-9.]*,"vram_peak":[0-9.]*,"vram_end":[0-9.]*' | head -1)"
+    glock_release
+  done
+done
+echo "== done $(date +%T)"

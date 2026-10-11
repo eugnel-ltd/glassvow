@@ -45,6 +45,9 @@ var wood: ImpostorWood
 var forest_floor: LandFloor
 var failure: String = ""
 var timings_ms: Dictionary = {}
+## Whether the stone was gathered on the land's own thread, the pool having no
+## thread to spare (`_finish`, `Terrain.pool_spares_threads`).
+var gathered_in_turn: bool = false
 ## The record's node id to its waystone's seat on the rendered surface.
 var _seats: Dictionary = {}
 var _walks: Dictionary = {}
@@ -231,10 +234,18 @@ func _finish() -> void:
 	kit.use_static_batches = true
 	add_child(kit)
 	var heroes: Dictionary = _source["heroes"]
-	kit.build(terrain, resolved, false, heroes)
+	kit.build(terrain, resolved, false, heroes, null, true)
 	if not kit.build_complete or not kit.failure.is_empty():
 		failure = kit.failure if not kit.failure.is_empty() else "Woodland assembly incomplete"
 		return
+	timings_ms["stone_parts"] = kit.stone_timings
+	# The stone's merge (R3.3) reads only the kit's placements and the land, so
+	# it gathers on the worker pool while the woodland is planted beside it,
+	# where the pool has a thread to spare; otherwise after it, in turn.
+	gathered_in_turn = not Terrain.pool_spares_threads()
+	var stone_task: int = -1
+	if not gathered_in_turn:
+		stone_task = WorkerThreadPool.add_task(kit.gather_stone, false, "Journey stone")
 	# Without its atlas (`ImpostorWood.Atlas.failed`, reported once) the land
 	# opens without its woodland rather than not at all.
 	if ImpostorWood.Atlas.ready():
@@ -249,6 +260,12 @@ func _finish() -> void:
 	air = Air.new()
 	add_child(air)
 	air.build()
+	var waited: int = Time.get_ticks_usec()
+	if gathered_in_turn:
+		kit.gather_stone()
+	else:
+		WorkerThreadPool.wait_for_task_completion(stone_task)
+	kit.finish_stone((Time.get_ticks_usec() - waited) / 1000.0)
 	timings_ms["scenery"] = Time.get_ticks_msec() - started
 	if _halted():
 		return

@@ -1,0 +1,147 @@
+# The woodland atlas in two layers (R3.3, #660; 10 Oct 2026). Mac M1 Max, the A12 Metal condition (GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1, metal, mobile).
+# Scratch tools: tools/tex_cost.gd.txt, tools/split_proof.zsh.txt, tools/split_proof2.zsh.txt, tools/split_diff.zsh.txt, tools/split_diff.py.txt, tools/mac_proof.zsh.txt, tools/wood_dump.gd.txt.
+
+## 1. The lever, before integrating (19:37-19:43, load 16-33): each texture loaded alone in its own bare process on the loader's threads, VRAM-compressed with mips as the game imports it.
+## The importer makes a VRAM-compressed array's layers powers of two (Godot 4.7 editor/import/resource_importer_layered_texture.cpp, _save_tex(..., p_force_po2 = true)), so two 888-row pages became 2048x1024 layers.
+## 'untracked' = the driver's total less Godot's tracked textures. Three interleaved runs of each read the same to the hundredth.
+
+== 1 single 19:37:45 load: 32.89 76.32 92.06
+   TEXCOST start total 7.25 tex -1.66 buf 1.58
+   TEXCOST after res://single.png total 42.02 tex 3.11 buf 1.58
+   TEXCOST uploads CompressedTexture2D 2048x1776, format 19, mipmaps true: 4.63 MiB
+== 2 pages 19:37:46 load: 32.89 76.32 92.06
+   TEXCOST start total 7.25 tex -1.66 buf 1.58
+   TEXCOST after res://pages.png total 26.59 tex 3.69 buf 1.58
+   TEXCOST uploads CompressedTexture2DArray 2048x1024 x2 layers, format 19: 2.67, 2.67 MiB
+== 3 single-normal 19:37:46 load: 32.89 76.32 92.06
+   TEXCOST start total 7.25 tex -1.66 buf 1.58
+   TEXCOST after res://single-normal.png total 14.52 tex -0.39 buf 1.58
+   TEXCOST uploads CompressedTexture2D 1024x888, format 19, mipmaps true: 1.16 MiB
+== 4 pages-normal 19:37:47 load: 31.06 75.22 91.58
+   TEXCOST start total 7.25 tex -1.66 buf 1.58
+   TEXCOST after res://pages-normal.png total 10.59 tex -0.31 buf 1.58
+   TEXCOST uploads CompressedTexture2DArray 1024x512 x2 layers, format 19: 0.67, 0.67 MiB
+== 5 single 19:37:48 load: 31.06 75.22 91.58
+   TEXCOST start total 7.25 tex -1.66 buf 1.58
+   TEXCOST after res://single.png total 42.02 tex 3.11 buf 1.58
+   TEXCOST uploads CompressedTexture2D 2048x1776, format 19, mipmaps true: 4.63 MiB
+== 6 pages 19:37:48 load: 31.06 75.22 91.58
+   TEXCOST start total 7.25 tex -1.66 buf 1.58
+   TEXCOST after res://pages.png total 26.59 tex 3.69 buf 1.58
+   TEXCOST uploads CompressedTexture2DArray 2048x1024 x2 layers, format 19: 2.67, 2.67 MiB
+== 7 single-normal 19:37:49 load: 31.06 75.22 91.58
+   TEXCOST start total 7.25 tex -1.66 buf 1.58
+   TEXCOST after res://single-normal.png total 14.52 tex -0.39 buf 1.58
+   TEXCOST uploads CompressedTexture2D 1024x888, format 19, mipmaps true: 1.16 MiB
+== 8 pages-normal 19:37:50 load: 31.06 75.22 91.58
+   TEXCOST start total 7.25 tex -1.66 buf 1.58
+   TEXCOST after res://pages-normal.png total 10.59 tex -0.31 buf 1.58
+   TEXCOST uploads CompressedTexture2DArray 1024x512 x2 layers, format 19: 0.67, 0.67 MiB
+== 9 single 19:37:51 load: 31.06 75.22 91.58
+   TEXCOST start total 7.25 tex -1.66 buf 1.58
+   TEXCOST after res://single.png total 42.02 tex 3.11 buf 1.58
+   TEXCOST uploads CompressedTexture2D 2048x1776, format 19, mipmaps true: 4.63 MiB
+== 10 pages 19:37:51 load: 31.06 75.22 91.58
+   TEXCOST start total 7.25 tex -1.66 buf 1.58
+   TEXCOST after res://pages.png total 26.59 tex 3.69 buf 1.58
+   TEXCOST uploads CompressedTexture2DArray 2048x1024 x2 layers, format 19: 2.67, 2.67 MiB
+== 11 single-normal 19:37:52 load: 28.97 74.05 91.07
+   TEXCOST start total 7.25 tex -1.66 buf 1.58
+   TEXCOST after res://single-normal.png total 14.52 tex -0.39 buf 1.58
+   TEXCOST uploads CompressedTexture2D 1024x888, format 19, mipmaps true: 1.16 MiB
+== 12 pages-normal 19:37:53 load: 28.97 74.05 91.07
+   TEXCOST start total 7.25 tex -1.66 buf 1.58
+   TEXCOST after res://pages-normal.png total 10.59 tex -0.31 buf 1.58
+   TEXCOST uploads CompressedTexture2DArray 1024x512 x2 layers, format 19: 0.67, 0.67 MiB
+== done 19:37:53
+
+## 2. Against main's own atlas (the same picture main ships, 2048x1408, 3.67 MiB), and each of the branch's after it (a 4 MiB-class upload made first, as a game process has made by the map):
+run 1 [main-atlas] main-atlas: total +17.89, tracked +3.89, untracked +14.00 | uploads: CompressedTexture2D 2048x1408, format 19, mipmaps true: 3.67 MiB
+run 2 [single] single: total +34.77, tracked +4.77, untracked +30.00 | uploads: CompressedTexture2D 2048x1776, format 19, mipmaps true: 4.63 MiB
+run 3 [pages] pages: total +19.34, tracked +5.35, untracked +13.99 | uploads: CompressedTexture2DArray 2048x1024 x2 layers, format 19: 2.67, 2.67 MiB
+run 4 [main-atlas single] main-atlas: total +17.89, tracked +3.89, untracked +14.00 | single: total +20.77, tracked +4.77, untracked +16.00 | uploads: CompressedTexture2D 2048x1408, format 19, mipmaps true: 3.67 MiB ; CompressedTexture2D 2048x1776, format 19, mipmaps true: 4.63 MiB
+run 5 [main-atlas pages] main-atlas: total +17.89, tracked +3.89, untracked +14.00 | pages: total +5.34, tracked +5.35, untracked -0.01 | uploads: CompressedTexture2D 2048x1408, format 19, mipmaps true: 3.67 MiB ; CompressedTexture2DArray 2048x1024 x2 layers, format 19: 2.67, 2.67 MiB
+run 6 [main-atlas] main-atlas: total +17.89, tracked +3.89, untracked +14.00 | uploads: CompressedTexture2D 2048x1408, format 19, mipmaps true: 3.67 MiB
+run 7 [single] single: total +34.77, tracked +4.77, untracked +30.00 | uploads: CompressedTexture2D 2048x1776, format 19, mipmaps true: 4.63 MiB
+run 8 [pages] pages: total +19.34, tracked +5.35, untracked +13.99 | uploads: CompressedTexture2DArray 2048x1024 x2 layers, format 19: 2.67, 2.67 MiB
+run 9 [main-atlas single] main-atlas: total +17.89, tracked +3.89, untracked +14.00 | single: total +20.77, tracked +4.77, untracked +16.00 | uploads: CompressedTexture2D 2048x1408, format 19, mipmaps true: 3.67 MiB ; CompressedTexture2D 2048x1776, format 19, mipmaps true: 4.63 MiB
+run 10 [main-atlas pages] main-atlas: total +17.89, tracked +3.89, untracked +14.00 | pages: total +5.34, tracked +5.35, untracked -0.01 | uploads: CompressedTexture2D 2048x1408, format 19, mipmaps true: 3.67 MiB ; CompressedTexture2DArray 2048x1024 x2 layers, format 19: 2.67, 2.67 MiB
+run 11 [main-atlas] main-atlas: total +17.89, tracked +3.89, untracked +14.00 | uploads: CompressedTexture2D 2048x1408, format 19, mipmaps true: 3.67 MiB
+run 12 [single] single: total +34.77, tracked +4.77, untracked +30.00 | uploads: CompressedTexture2D 2048x1776, format 19, mipmaps true: 4.63 MiB
+run 13 [pages] pages: total +19.34, tracked +5.35, untracked +13.99 | uploads: CompressedTexture2DArray 2048x1024 x2 layers, format 19: 2.67, 2.67 MiB
+run 14 [main-atlas single] main-atlas: total +17.89, tracked +3.89, untracked +14.00 | single: total +20.77, tracked +4.77, untracked +16.00 | uploads: CompressedTexture2D 2048x1408, format 19, mipmaps true: 3.67 MiB ; CompressedTexture2D 2048x1776, format 19, mipmaps true: 4.63 MiB
+run 15 [main-atlas pages] main-atlas: total +17.89, tracked +3.89, untracked +14.00 | pages: total +5.34, tracked +5.35, untracked -0.01 | uploads: CompressedTexture2D 2048x1408, format 19, mipmaps true: 3.67 MiB ; CompressedTexture2DArray 2048x1024 x2 layers, format 19: 2.67, 2.67 MiB
+
+## 3. The bake: re-baked from the committed recipes (bake_impostors.gd, 79 tiles) into a new raw folder: byte-identical to the 9 Oct raw bake (317 files, diff -rq empty);
+##    the one-page packer (pack_impostors.py at 60d3c805) on it reproduces the committed one-page atlas byte for byte. The two-page packer: 79 tiles, rows used 1009 (page 0) and 754 (page 1) of 1024.
+##    Every tile's kind, yaw, picture-plane rect, front, top and silhouette spans are unchanged; only its page and rect on the page move.
+
+## 4. Payload (tools/payload_report.py, iOS): TOTAL 282.1 -> 283.0 MiB (+0.88); assets/art/map-journey 16.4 -> 17.3 (budget 17 -> 18).
+##    Imported etc2 files: albedo 4,850,468 B (one page) -> 5,592,548 B (two layers); normals 1,213,220 -> 1,398,244 B.
+
+## 5. Samplers: impostor.gdshader two (atlas_albedo, atlas_normal: sampler2D -> sampler2DArray); floor_caster.gdshader one (atlas_albedo). Unchanged.
+
+## 6. The woodland re-proved: the split (2fd7b2d7's tree) against the pre-split branch (60d3c805), Act I, seeds 717 and 1-3, pad (1180x820) and phone (844x390), Journey and Close;
+##    lean, Reduce Motion, no drifting air; the pre-split build captured twice, the second a control for what moves on its own (the water under Reduce Motion, pre-existing).
+##    Channel differences of 0-255 on every pixel that holds still in the control. A card moved, missing or re-tinted shows as a patch; compression noise does not.
+| Frame | Moving on its own (control) | Mean | p99.9 | Max | > 16 | > 32 | Largest patch > 32 (px) |
+|---|---|---|---|---|---|---|---|
+| s1-pad-close | 1170 px (0.12%) | 1.587 | 47 | 155 | 13329 (1.378%) | 2909 (0.3006%) | 25 |
+| s1-pad-journey | 126 px (0.01%) | 1.790 | 50 | 192 | 14469 (1.495%) | 3306 (0.3417%) | 36 |
+| s1-phone-close | 893 px (0.27%) | 1.566 | 49 | 183 | 4509 (1.370%) | 1008 (0.3062%) | 16 |
+| s1-phone-journey | 125 px (0.04%) | 1.492 | 49 | 136 | 3607 (1.096%) | 946 (0.2874%) | 13 |
+| s2-pad-close | 10798 px (1.12%) | 1.448 | 43 | 171 | 9218 (0.953%) | 2087 (0.2157%) | 40 |
+| s2-pad-journey | 142 px (0.01%) | 1.469 | 46 | 205 | 10644 (1.100%) | 2507 (0.2591%) | 21 |
+| s2-phone-close | 0 px (0.00%) | 1.380 | 45 | 163 | 4014 (1.219%) | 856 (0.2601%) | 11 |
+| s2-phone-journey | 1 px (0.00%) | 1.515 | 45 | 169 | 3328 (1.011%) | 771 (0.2342%) | 20 |
+| s3-pad-close | 0 px (0.00%) | 1.767 | 44 | 217 | 11286 (1.166%) | 2387 (0.2467%) | 88 |
+| s3-pad-journey | 7390 px (0.76%) | 2.056 | 51 | 200 | 15314 (1.583%) | 3240 (0.3348%) | 39 |
+| s3-phone-close | 1325 px (0.40%) | 1.904 | 49 | 168 | 5131 (1.559%) | 1063 (0.3229%) | 15 |
+| s3-phone-journey | 28 px (0.01%) | 1.654 | 46 | 161 | 3939 (1.197%) | 811 (0.2464%) | 10 |
+| s717-pad-close | 516 px (0.05%) | 1.447 | 44 | 176 | 8515 (0.880%) | 2100 (0.2170%) | 20 |
+| s717-pad-journey | 696 px (0.07%) | 1.951 | 51 | 194 | 14389 (1.487%) | 3307 (0.3418%) | 25 |
+| s717-phone-close | 0 px (0.00%) | 2.139 | 55 | 169 | 5991 (1.820%) | 1483 (0.4505%) | 19 |
+| s717-phone-journey | 0 px (0.00%) | 1.982 | 50 | 150 | 4668 (1.418%) | 1040 (0.3160%) | 10 |
+
+largest patch over 32 in any frame: 88 px
+
+## Signed mean shift on the changed pixels (a re-tint would bias it):
+s1-pad-close       R -0.00 G -0.02 B +0.02 (of 255)
+s1-pad-journey     R +0.04 G -0.03 B -0.01 (of 255)
+s1-phone-close     R +0.11 G +0.03 B -0.09 (of 255)
+s1-phone-journey   R +0.19 G +0.08 B -0.20 (of 255)
+s2-pad-close       R -0.07 G -0.09 B +0.03 (of 255)
+s2-pad-journey     R -0.00 G -0.10 B -0.01 (of 255)
+s2-phone-close     R +0.10 G +0.00 B -0.09 (of 255)
+s2-phone-journey   R +0.09 G -0.02 B -0.26 (of 255)
+s3-pad-close       R -0.03 G -0.08 B +0.01 (of 255)
+s3-pad-journey     R +0.07 G -0.01 B -0.03 (of 255)
+s3-phone-close     R +0.09 G +0.07 B -0.12 (of 255)
+s3-phone-journey   R +0.08 G +0.04 B -0.21 (of 255)
+s717-pad-close     R -0.03 G -0.03 B +0.02 (of 255)
+s717-pad-journey   R -0.06 G -0.08 B -0.03 (of 255)
+s717-phone-close   R +0.12 G -0.06 B -0.09 (of 255)
+s717-phone-journey R +0.17 G +0.03 B -0.24 (of 255)
+
+## The woodland's placements (wood_dump.gd: every card's kind, tile, base and scale, the kit's and the stone's), pre-split against split:
+seed 717: identical (3804 cards)
+seed 1: identical (3903 cards)
+seed 2: identical (3862 cards)
+seed 3: identical (4022 cards)
+
+## 7. The A12 condition and Reduce Motion on the split (mac_proof.zsh), against the pre-split branch's record (mac/a12-and-reduce-motion.txt):
+pad-landscape en lean: exit 0 0 shader errors, 0 script errors
+pad-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+pad-landscape en full: exit 0 0 shader errors, 0 script errors
+phone-landscape en lean: exit 0 0 shader errors, 0 script errors
+phone-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+phone-landscape en full: exit 0 0 shader errors, 0 script errors
+desktop-landscape en lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape en full: exit 0 0 shader errors, 0 script errors
+reduce motion on: exit 0 0 shader errors, 0 script errors
+reduce motion on changed px 12786
+reduce motion off: exit 0 0 shader errors, 0 script errors
+reduce motion off changed px 116278
+all logs: shader errors 0, script errors 0, other ERROR lines 0
+pre-split branch: reduce motion on 12,801 px, off 115,904 px; main 10,288 / 116,513.

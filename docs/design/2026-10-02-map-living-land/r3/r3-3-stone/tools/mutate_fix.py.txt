@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+"""Lane R3.3 fix round: mutation proof of the in-turn decision test (scratch).
+
+Each mutation backs its file up, applies one exact replacement (exactly one
+occurrence), runs test_map_stone under a timeout (a hang counts as a hang, not
+a catch), restores the file from the backup and checks its digest."""
+import hashlib, pathlib, shutil, subprocess, sys
+
+M = pathlib.Path("/Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane")
+WT = M / "wt-r33"
+BACKUP = M / "tmp" / "mutate-fix"
+LOGS = M / "logs" / "fix"
+KIT = "presentation/map/landscape/kit.gd"
+LAND = "presentation/map/map_journey_landscape.gd"
+GUARD_KIT = ("\tif not Terrain.pool_spares_threads():\n\t\tsearched_in_turn = true\n\t\t_find_islands()\n\t\treturn\n", "")
+MUTATIONS = [
+    ("m1-kit-guard-removed", KIT, *GUARD_KIT),
+    ("m2-land-guard-removed", LAND, "\tgathered_in_turn = not Terrain.pool_spares_threads()\n", "\tgathered_in_turn = false\n"),
+    ("m3-double-gather-guard-removed", KIT, "\tif stone == null or not stone.placed.is_empty():\n", "\tif stone == null:\n"),
+    ("m4-kit-always-in-turn", KIT, "\tif not Terrain.pool_spares_threads():\n\t\tsearched_in_turn", "\tif true:\n\t\tsearched_in_turn"),
+    ("m5-land-always-in-turn", LAND, "\tgathered_in_turn = not Terrain.pool_spares_threads()\n", "\tgathered_in_turn = true\n"),
+]
+
+
+def digest(path: pathlib.Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def main() -> int:
+    BACKUP.mkdir(parents=True, exist_ok=True)
+    LOGS.mkdir(parents=True, exist_ok=True)
+    only = set(sys.argv[1:])
+    caught = 0
+    ran = 0
+    for name, rel, old, new in MUTATIONS:
+        if only and name not in only:
+            continue
+        target = WT / rel
+        backup = BACKUP / (pathlib.Path(rel).name + ".orig")
+        shutil.copyfile(target, backup)
+        before = digest(target)
+        text = target.read_text()
+        assert text.count(old) == 1, f"{name}: expected one occurrence, found {text.count(old)}"
+        target.write_text(text.replace(old, new))
+        log = LOGS / f"{name}.txt"
+        try:
+            with log.open("w") as out:
+                proc = subprocess.run(["godot", "--headless", "--path", str(WT), "-s", "res://tests/run_all.gd", "--",
+                                       "--tests=res://tests/test_map_stone.gd"], stdout=out, stderr=subprocess.STDOUT,
+                                      timeout=600, cwd=WT)
+            status = proc.returncode
+        except subprocess.TimeoutExpired:
+            status = "HANG"
+        finally:
+            shutil.copyfile(backup, target)
+        assert digest(target) == before, f"{name}: restore failed"
+        lines = [l.strip() for l in log.read_text().splitlines() if "test_map_stone:" in l or l.startswith(("PASS", "FAIL"))]
+        failed = status not in (0, "HANG") and any(l.startswith("FAIL") for l in lines)
+        ran += 1
+        caught += 1 if failed else 0
+        print(f"{name}: exit {status}; {'CAUGHT' if failed else 'SURVIVED'}")
+        for l in dict.fromkeys(lines):
+            print("    " + l)
+    print(f"caught {caught} of {ran}")
+    return 0 if caught == ran else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

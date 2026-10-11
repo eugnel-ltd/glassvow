@@ -3,11 +3,12 @@ extends Node3D
 ## retain identity; each actual GPU instance is linked back to its source part.
 const Surfaces = preload("res://presentation/map/landscape/asset_surfaces.gd")
 const ImpostorAtlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
+const LandStone = preload("res://presentation/map/landscape/land_stone.gd")
 const CELL: float = 32.0
 ## Ground-hugging kinds whose shadows the 55° camera barely sees: they render
 ## lit but stay out of the shadow pass, which keeps that pass inside the A12
 ## budget (trees, banks, ridges and the gateway still cast).
-const NO_SHADOW: PackedStringArray = ["ash-heath", "ash-copse", "ash-fern", "ash-bramble", "slate-scree"]
+const NO_SHADOW: PackedStringArray = ["ash-heath", "ash-copse", "ash-fern", "ash-bramble"]
 ## A conifer's shadow proxy (`_proxy_shadows`): a cone this many sides round,
 ## this wide at its top.
 const CONE_SIDES: int = 6
@@ -46,9 +47,15 @@ static func prepare_template(path: String, kind: String, packed: PackedScene) ->
 	return failure
 
 
+## Whether a kind is drawn by something other than its own scene: as an
+## impostor card (`impostor_wood.gd`) or in the merged stone (`land_stone.gd`).
+static func drawn_elsewhere(kind: String) -> bool:
+	return ImpostorAtlas.KIT_KINDS.has(kind) or LandStone.draws_kind(kind)
+
+
 func prepare(path: String, kind: String) -> Node3D:
-	if ImpostorAtlas.KIT_KINDS.has(kind):
-		# Drawn as an impostor card (`impostor_wood.gd`): the anchor only.
+	if drawn_elsewhere(kind):
+		# Drawn elsewhere: the anchor only.
 		var plant: Node3D = Node3D.new()
 		plant.name = kind
 		return plant

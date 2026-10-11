@@ -1,0 +1,26 @@
+== lock taken 22:43:31
+== 22:43 battery 99% charging false external true
+== load: 22:43  up 5 days,  6:46, 3 users, load averages: 103.48 89.64 93.27
+== disk: /dev/disk3s1s1  927G  811G  116G  88% /
+== OUT (every cleanup stays inside it): /Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane/device/batchS2
+== batch batchS2 (traces) start 22:43:32: dev 4364b834, main 711302a5
+== battery 22:43 battery 99% charging false external true 22:43:32; Mac load 103.48 89.64 93.27
+== install devS 22:43:32
+== dev-shot nonce dev-shot-7338164: rows fresh
+   dev-shot: build 4364b834
+== dev-tnone nonce dev-tnone-1895118851: rows fresh
+== dev-tnone: trace cut short (0.944655 s, Device_disconnected; attempt 1)
+== dev-tnone nonce dev-tnone-1060719497: rows fresh
+== dev-tnone: trace 7.004416 s
+   dev-tnone: build 4364b834
+== dev-tstone nonce dev-tstone-2274720096: rows fresh
+== dev-tstone: trace 6.921460 s
+   dev-tstone: build 4364b834
+== dev-tground nonce dev-tground-2417332418: rows fresh
+== dev-tground: trace 7.039176 s
+   dev-tground: build 4364b834
+== batch batchS2 done 22:51:35
+== lock released 22:51:35
+== battery 22:51 battery 99% charging false external true 22:51:35; Mac load 129.77 115.73 106.51
+== batch exit 0 22:51:35
+wrapper exit=0

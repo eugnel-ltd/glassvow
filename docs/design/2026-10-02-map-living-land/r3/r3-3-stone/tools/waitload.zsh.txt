@@ -1,0 +1,5 @@
+#!/bin/zsh
+# Waits until the one-minute load average is under 50 (lane scratch).
+load() { uptime | sed 's/.*averages: //' | cut -d' ' -f1 | cut -d. -f1; }
+while (( $(load) >= 50 )); do sleep 20; done
+echo "[load $(uptime | sed 's/.*averages: //') $(date +%T)]"

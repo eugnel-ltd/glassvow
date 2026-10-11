@@ -1,0 +1,90 @@
+"""Lane R3.3 mutation proof of the atlas split's tests and the one-at-a-time take's (tests/test_texture_uploads.gd, the page
+decision in tests/test_map_wood.gd and the floor's cards in tests/test_map_floor.gd): each mutation
+breaks one behaviour in the production code or assets; the named tests must fail on it. Every file
+is backed up before it is touched and copied back after, whatever happens; the asset mutation
+re-imports before and after.
+    python3 mutate_split.py <worktree> <backup dir> [indices]"""
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+WT = Path(sys.argv[1])
+OUT = Path(sys.argv[2])
+OUT.mkdir(parents=True, exist_ok=True)
+L = "presentation/map/landscape/"
+A = "assets/art/map-journey/impostors/"
+ATLAS = [A + "wood-albedo.png", A + "wood-albedo.png.import", A + "wood-normal.png",
+         A + "wood-normal.png.import", A + "wood-tiles.json"]
+UPLOADS = "res://tests/test_texture_uploads.gd"
+WOOD = "res://tests/test_map_wood.gd"
+FLOOR = "res://tests/test_map_floor.gd"
+# (name, edits [(file, before, after)] or "one page", tests that must fail)
+M = [
+    ("the atlas back on one page (pre-split assets)", "one page", [UPLOADS]),
+    ("cards carry no page", [(L + "impostor_atlas.gd",
+        "	return Vector4(rect.x, rect.y + layer[tile], rect.z, rect.w)",
+        "	return Vector4(rect.x, rect.y, rect.z, rect.w)")], [WOOD]),
+    ("every tile read on the first page", [(L + "impostor_atlas.gd",
+        '		layer.append(int(str(tile["layer"])))', "		layer.append(0)")], [WOOD]),
+    ("the woodland's cards without their page", [(L + "impostor_wood.gd",
+        "			var rect: Vector4 = Atlas.custom(tile)", "			var rect: Vector4 = Atlas.uv[tile]")], [WOOD]),
+    ("the floor's cards without their page", [(L + "floor_plan.gd",
+        "		var rect: Vector4 = Atlas.custom(tile)", "		var rect: Vector4 = Atlas.uv[tile]")], [FLOOR]),
+    # The kit's textures one at a time (95e7e339).
+    ("a take asks for the next while one is in flight", [(L + "impostor_atlas.gd",
+        "		if failed or asked != textures.size() or asked >= paths.size():",
+        "		if failed or asked >= paths.size():")], [WOOD]),
+    ("a take asks only for its first", [(L + "impostor_atlas.gd",
+        "			request()\n			if failed:\n				break\n", "")], [WOOD]),
+]
+
+
+def godot(args, timeout):
+    return subprocess.run(["godot", "--headless"] + args, cwd=WT, capture_output=True, text=True, timeout=timeout)
+
+
+def run_tests(tests):
+    out = godot(["-s", "res://tests/run_all.gd", "--", "--tests=" + ",".join(tests)], 2400)
+    text = out.stdout + out.stderr
+    caught = [t for t in tests if "FAIL " + t in text]
+    lines = [l.strip()[2:] for l in text.splitlines() if l.startswith("  - ")]
+    return caught, lines
+
+
+only = sys.argv[3].split(",") if len(sys.argv) > 3 else None
+results = []
+for i, (name, edits, tests) in enumerate(M):
+    if only and str(i) not in only:
+        continue
+    files = ATLAS if edits == "one page" else sorted({e[0] for e in edits})
+    backups = {}
+    for rel in files:
+        backups[rel] = OUT / ("backup-%d-%s" % (i, rel.replace("/", "_")))
+        shutil.copy2(WT / rel, backups[rel])
+    verdict = ""
+    try:
+        if edits == "one page":
+            for rel in ATLAS:
+                (WT / rel).write_bytes(subprocess.run(["git", "-C", str(WT), "show", "HEAD:" + rel],
+                                                      capture_output=True, check=True).stdout)
+            godot(["--import"], 900)
+        else:
+            for rel, before, after in edits:
+                text = (WT / rel).read_text()
+                if text.count(before) != 1:
+                    verdict = "ANCHOR NOT FOUND"
+                    break
+                (WT / rel).write_text(text.replace(before, after))
+        if not verdict:
+            caught, lines = run_tests(tests)
+            verdict = ("caught: " + "; ".join(lines[:3])) if len(caught) == len(tests) else \
+                "SURVIVED (%s)" % "; ".join(lines[:3])
+    finally:
+        for rel, backup in backups.items():
+            shutil.copy2(backup, WT / rel)
+        if edits == "one page":
+            godot(["--import"], 900)
+    results.append((name, verdict))
+    print("%-48s %s" % results[-1], flush=True)
+print("caught %d of %d" % (sum(1 for r in results if r[1].startswith("caught")), len(results)))

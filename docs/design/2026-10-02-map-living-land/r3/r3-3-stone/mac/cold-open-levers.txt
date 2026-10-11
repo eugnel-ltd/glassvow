@@ -1,0 +1,17 @@
+# The cold open's two levers (4364b834), on the Mac (M1 Max, headless, load 4-25, 21:17-21:40, 10 Oct). Scratch tools: tools/stone_prof.gd.txt, tools/wood_dump.gd.txt.
+
+## Where the stone's stages spend their time (seed 1; the stages' own timers in the build, then each stage's work again on the built land, mean of 20):
+stone_parts as built at 95e7e339 (before the levers): island_search 8.6, sight 7.0, islands 25.4 (the search and the sight in it), ruins 1.1, verge_graves 1.3, shrine_graves 2.8, stone 9.2 ms
+island_search 8.35 ms | cliffs_plan 2.99 ms | merge 5.10 ms | sight 7.94 ms (the ground alone 6.88) — seed 717: 8.75, 2.32, 4.07, 7.58 (6.64)
+Inside the island search (a measuring copy, reverted): reading the grid of 2,560 cells 4.1 ms, depths 2.2, the edge's flood 1.5, the islands' floods, sorts and poles 0.55 (sort 0.14, poles 0.08).
+The kit's build before the islands' stage (the envelopes, contacts, arch, heroes, lanterns): 26.7 ms; before the stone's stage: 182.9 ms.
+
+## Before (95e7e339) and after (4364b834), seed 1, as built:
+before: { island_search 8.656, sight 6.879, islands 25.329, ruins 1.075, verge_graves 1.299, shrine_graves 2.761, stone 9.374 }
+after:  { island_search 0.003 (the wait), island_search_worker 12.402, sight 7.045, islands 17.131, ruins 1.095, verge_graves 1.433, shrine_graves 2.751, stone 7.768 (gathering, on the worker pool), stone_wait 0.002, stone_finish 1.992 }
+
+## Placements unchanged: wood_dump.gd's whole record (every card's kind, base, scale and tile; every kit placement; every stone piece; the layout digest), before against after:
+seed 717: identical, sha256 9b6e73898c6c58f1f64b061d76af9d9a90a6c6b251485a47ff6cc716c1cc7cb7
+seed 1: identical, sha256 aa9e907e2e7e5ed4ef02430848612471e79deaf69708e9b7769d8c1cb0c71ddd
+seed 2: identical, sha256 29841f9dc0ccaffa8b9401a36ca23f832fdfb9f9dff0932235279a2c584a7a62
+seed 3: identical, sha256 3778440dd9c8c2197e41783e6f49d0285896831657e469c67741edb7c9bb82a4

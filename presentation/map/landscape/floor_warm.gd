@@ -22,6 +22,7 @@ extends Node
 const Bake = preload("res://presentation/map/landscape/floor_bake.gd")
 const Stage = preload("res://presentation/map/landscape/floor_stage.gd")
 const Atlas = preload("res://presentation/map/landscape/impostor_atlas.gd")
+const Stone = preload("res://presentation/map/landscape/land_stone.gd")
 const CASTER: Shader = preload("res://presentation/map/landscape/floor_caster.gdshader")
 const FLOOR: Shader = preload("res://presentation/map/landscape/floor.gdshader")
 ## A sample's side in pixels: the least the renderer draws.
@@ -67,9 +68,8 @@ func _ready() -> void:
 	plain.background_mode = Environment.BG_COLOR
 	plain.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	_camera(_view(world), plain, Stage.MASK_LAYER)
-	# The floor itself, under the journey's own light and grade. Its glow is a
-	# pass after the floor's own, and an 8 px view has too few mip levels for
-	# it: the glow's chain failed its framebuffers there.
+	# The floor and the stone (R3.3) under the journey's own light and grade,
+	# without its glow (a later pass, whose chain fails an 8 px view).
 	var live: SubViewport = _view(World3D.new())
 	var key: DirectionalLight3D = DirectionalLight3D.new()
 	var journey: Environment = Environment.new()
@@ -77,6 +77,7 @@ func _ready() -> void:
 	journey.glow_enabled = false
 	live.add_child(key)
 	live.add_child(_sample(_ground_mesh(), FLOOR, 1))
+	live.add_child(_sample(_stone_mesh(), Stone.SHADER, 1))
 	_camera(live, journey, 1)
 	_canvas()
 
@@ -184,6 +185,21 @@ static func _ground_mesh() -> ArrayMesh:
 	for corner: Vector2 in [Vector2(-0.5, -0.5), Vector2(0.5, -0.5), Vector2(-0.5, 0.5), Vector2(0.5, 0.5)]:
 		surface.set_color(Color("302b30"))
 		surface.set_normal(Vector3.UP)
+		surface.add_vertex(Vector3(corner.x, 0.0, corner.y))
+	for index: int in [0, 3, 1, 0, 2, 3]:
+		surface.add_index(index)
+	return surface.commit()
+
+
+## A patch of stone in the merged stone's own vertex format (position,
+## normal, tangent and UV, indexed: `land_stone.gd`).
+static func _stone_mesh() -> ArrayMesh:
+	var surface: SurfaceTool = SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for corner: Vector2 in [Vector2(-0.5, -0.5), Vector2(0.5, -0.5), Vector2(-0.5, 0.5), Vector2(0.5, 0.5)]:
+		surface.set_normal(Vector3.UP)
+		surface.set_tangent(Plane(Vector3.RIGHT, 1.0))
+		surface.set_uv(corner + Vector2(0.5, 0.5))
 		surface.add_vertex(Vector3(corner.x, 0.0, corner.y))
 	for index: int in [0, 3, 1, 0, 2, 3]:
 		surface.add_index(index)

@@ -1,0 +1,32 @@
+#!/bin/zsh
+# Lane R3.3 (scratch): run one device batch once the shared iPad lock is free.
+#   run_batch.zsh <batch script> [env assignments...]
+# Takes the lock only when it is free (the same mkdir protocol as ipad_lock.sh, but never
+# the stale take-over: another lane's lock is never broken, however old). Then checks the
+# battery (>= 60%), the load and the disk, and runs the batch, whose own acquire calls are
+# refreshes of our hold and whose trap releases it.
+set -u
+M=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+LOCK=$FLOW/ipad.lock
+OWNER=map-r33
+script=$1; shift
+while true; do
+  if mkdir $LOCK 2>/dev/null; then echo $OWNER > $LOCK/owner; echo "== lock taken $(date +%T)"; break; fi
+  holder=$(cat $LOCK/owner 2>/dev/null || echo '?')
+  if [[ $holder == $OWNER ]]; then touch $LOCK/owner; echo "== lock already ours $(date +%T)"; break; fi
+  echo "== lock held by '$holder' ($($FLOW/ipad_lock.sh status)); waiting $(date +%T)"
+  sleep 60
+done
+release() { [[ "$(cat $LOCK/owner 2>/dev/null)" == $OWNER ]] && rm -rf $LOCK && echo "== lock released by wrapper $(date +%T)"; }
+batt=$($M/tools/battery.sh)
+echo "== $batt"
+pct=$(echo $batt | sed -n 's/.*battery \([0-9]*\)%.*/\1/p')
+[[ -n "$pct" && $pct -ge 60 ]] || { echo "battery under 60% or unreadable; not starting"; release; exit 3; }
+echo "== load: $(uptime)"
+echo "== disk: $(df -h / | tail -1)"
+env "$@" zsh $script
+rc=$?
+echo "== batch exit $rc $(date +%T)"
+release
+exit $rc

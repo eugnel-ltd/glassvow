@@ -1,0 +1,75 @@
+# R3.3 fix round (review Part 2 notes), 11 Oct 2026, Mac (M1 Max, pool of 10 threads), code 848699c6 on 711302a5.
+# Each run waited for load under 50 (tools/waitload.zsh.txt).
+
+## Mutations of the pool decision and the double gather (tools/mutate_fix.py.txt; each file backed up and copied back, its sha256 checked; 600 s timeout, so a hang shows as HANG)
+m1-kit-guard-removed: exit 1; CAUGHT
+    FAIL res://tests/test_map_stone.gd
+    FAIL (1)
+    - test_map_stone: a land on a pool with no thread to spare searches for its islands and gathers its stone in turn
+m2-land-guard-removed: exit 1; CAUGHT
+    FAIL res://tests/test_map_stone.gd
+    FAIL (1)
+    - test_map_stone: a land on a pool with no thread to spare searches for its islands and gathers its stone in turn
+m3-double-gather-guard-removed: exit 1; CAUGHT
+    FAIL res://tests/test_map_stone.gd
+    FAIL (1)
+    - test_map_stone: a stone already gathered is not gathered again
+m4-kit-always-in-turn: exit 1; CAUGHT
+    FAIL res://tests/test_map_stone.gd
+    FAIL (1)
+    - test_map_stone: the island search and the stone's gathering go to the pool only when it has a thread to spare
+m5-land-always-in-turn: exit 1; CAUGHT
+    FAIL res://tests/test_map_stone.gd
+    FAIL (1)
+    - test_map_stone: the island search and the stone's gathering go to the pool only when it has a thread to spare
+caught 5 of 5
+
+## Placements' digest (test_map_stone's _digest): pooled against in turn (Terrain.pool_threads = 2) at 848699c6 (tools/inturn_seeds.gd.txt)
+seed 717 pooled:  ac087862f11068256570f9145ea067a6b4db4faacc0765aeb787c95f59d1f621 searched_in_turn=false gathered_in_turn=false pool_threads=10
+seed 717 in turn: ac087862f11068256570f9145ea067a6b4db4faacc0765aeb787c95f59d1f621 searched_in_turn=true gathered_in_turn=true pool_threads=2  IDENTICAL
+seed 1 pooled:  045fec081f61b964026807609e7792159b7887de8bf7ec3f0b563c69deb0cad5 searched_in_turn=false gathered_in_turn=false pool_threads=10
+seed 1 in turn: 045fec081f61b964026807609e7792159b7887de8bf7ec3f0b563c69deb0cad5 searched_in_turn=true gathered_in_turn=true pool_threads=2  IDENTICAL
+seed 2 pooled:  38b7351ed9a3bcf329203295daf772112d520a0287a9da77d6b82915eccbff56 searched_in_turn=false gathered_in_turn=false pool_threads=10
+seed 2 in turn: 38b7351ed9a3bcf329203295daf772112d520a0287a9da77d6b82915eccbff56 searched_in_turn=true gathered_in_turn=true pool_threads=2  IDENTICAL
+seed 3 pooled:  a75d09fff52e6c4256398086105c790a4aed030d2eb7489b31a65a55914054ae searched_in_turn=false gathered_in_turn=false pool_threads=10
+seed 3 in turn: a75d09fff52e6c4256398086105c790a4aed030d2eb7489b31a65a55914054ae searched_in_turn=true gathered_in_turn=true pool_threads=2  IDENTICAL
+identical 4 of 4
+
+## The same digest at 52382651's code (kit.gd, map_journey_landscape.gd, test_map_stone.gd swapped in from git, then copied back; tools/digest_seeds.gd.txt)
+seed 717 ac087862f11068256570f9145ea067a6b4db4faacc0765aeb787c95f59d1f621
+seed 1 045fec081f61b964026807609e7792159b7887de8bf7ec3f0b563c69deb0cad5
+seed 2 38b7351ed9a3bcf329203295daf772112d520a0287a9da77d6b82915eccbff56
+seed 3 a75d09fff52e6c4256398086105c790a4aed030d2eb7489b31a65a55914054ae
+
+## Narrow tests at 848699c6
+ok   res://tests/test_map_stone.gd
+ok   res://tests/test_map_title_road.gd
+ok   res://tests/test_map_wood.gd
+PASS (3 tests)
+
+## Core gate at 848699c6 (tools/fix_gate.zsh.txt)
+head 848699c6 on 64af9302; status: ?? override.cfg  00:16:02
+$ godot --version   [load 21.83 44.94 58.63 00:16:02]
+4.7.2.stable.official.ed1daf0bf
+exit 0
+
+$ tools/check_imports.sh   [load 21.83 44.94 58.63 00:16:02]
+asset import OK
+
+asset import OK
+exit 0
+
+$ tools/check_scripts.sh   [load 20.80 44.34 58.34 00:16:07]
+scripts OK (498 checked)
+scripts OK (498 checked)
+exit 0
+
+$ godot --headless -s res://tests/run_all.gd   [load 41.59 35.52 48.95 00:22:09]
+PASS (158 tests)
+ERROR: 3 RID allocations of type 'N17RendererSceneCull8InstanceE' were leaked at exit.
+ERROR: 226 RID allocations of type 'PN18TextServerAdvanced22ShapedTextDataAdvancedE' were leaked at exit.
+ERROR: 9 RID allocations of type 'PN18TextServerAdvanced12FontAdvancedE' were leaked at exit.
+ERROR: 15 RID allocations of type 'PN18TextServerAdvanced27FontAdvancedLinkedVariationE' were leaked at exit.
+exit 0
+
+done 00:45:14

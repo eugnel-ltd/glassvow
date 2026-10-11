@@ -1,0 +1,90 @@
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 49 s); waiting 18:14:19
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 11 s); waiting 18:15:19
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 71 s); waiting 18:16:19
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 0 s); waiting 18:17:19
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 60 s); waiting 18:18:19
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 30 s); waiting 18:19:19
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 27 s); waiting 18:20:20
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 87 s); waiting 18:21:20
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 20 s); waiting 18:22:20
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 80 s); waiting 18:23:20
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 13 s); waiting 18:24:20
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 73 s); waiting 18:25:20
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 42 s); waiting 18:26:20
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 40 s); waiting 18:27:20
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 10 s); waiting 18:28:20
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 19 s); waiting 18:29:20
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 19 s); waiting 18:30:20
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 42 s); waiting 18:31:20
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 12 s); waiting 18:32:21
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 35 s); waiting 18:33:21
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 5 s); waiting 18:34:21
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 3 s); waiting 18:35:21
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 63 s); waiting 18:36:21
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 33 s); waiting 18:37:21
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 54 s); waiting 18:38:21
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 24 s); waiting 18:39:21
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 47 s); waiting 18:40:21
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 17 s); waiting 18:41:21
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 14 s); waiting 18:42:21
+== lock held by 'cards-pr5b' (held by 'cards-pr5b' for 74 s); waiting 18:43:21
+== lock taken 18:44:22
+== 18:44 battery 100% charging false external true
+== load: 18:44  up 5 days,  2:46, 3 users, load averages: 42.09 84.12 93.62
+== disk: /dev/disk3s1s1  927G  800G  128G  87% /
+== OUT (every cleanup stays inside it): /Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane/device/batchS1
+== batch batchS1 (gates) start 18:44:22: dev 60d3c805, main 711302a5
+== battery 18:44 battery 100% charging false external true 18:44:22
+== install ctl1 18:44:22
+== ctl1-l1 nonce ctl1-l1-968014703: rows fresh
+   ctl1-l1: build 711302a5
+== ctl1-l2 nonce ctl1-l2-115365458: rows fresh
+   ctl1-l2: build 711302a5
+== ctl1-v1 nonce ctl1-v1-1945526595: rows fresh
+   ctl1-v1: build 711302a5
+== ctl1-v2 nonce ctl1-v2-296666947: rows fresh
+   ctl1-v2: build 711302a5
+== ctl1-v3 nonce ctl1-v3-180633228: rows fresh
+   ctl1-v3: build 711302a5
+== battery 18:49 battery 100% charging false external true 18:49:44
+== install dev1 18:49:44
+== dev1-l1 nonce dev1-l1-40021897: rows fresh
+   dev1-l1: build 60d3c805
+== dev1-l2 nonce dev1-l2-1336112037: rows fresh
+   dev1-l2: build 60d3c805
+== dev1-v1 nonce dev1-v1-236031579: rows fresh
+   dev1-v1: build 60d3c805
+== dev1-v2 nonce dev1-v2-90831945: rows fresh
+   dev1-v2: build 60d3c805
+== dev1-v3 nonce dev1-v3-270384256: rows fresh
+   dev1-v3: build 60d3c805
+== battery 18:54 battery 100% charging false external true 18:54:59
+== install ctl2 18:54:59
+== ctl2-l1 nonce ctl2-l1-402232493: rows fresh
+   ctl2-l1: build 711302a5
+== ctl2-l2 nonce ctl2-l2-356125214: rows fresh
+   ctl2-l2: build 711302a5
+== ctl2-v1 nonce ctl2-v1-169335218: rows fresh
+   ctl2-v1: build 711302a5
+== ctl2-v2 nonce ctl2-v2-1524115793: rows fresh
+   ctl2-v2: build 711302a5
+== ctl2-v3 nonce ctl2-v3-2458025997: rows fresh
+   ctl2-v3: build 711302a5
+== battery 19:00 battery 100% charging false external true 19:00:14
+== install dev2 19:00:14
+== dev2-l1 nonce dev2-l1-1549529880: rows fresh
+   dev2-l1: build 60d3c805
+== dev2-l2 nonce dev2-l2-423515247: rows fresh
+   dev2-l2: build 60d3c805
+== dev2-v1 nonce dev2-v1-2112713319: rows fresh
+   dev2-v1: build 60d3c805
+== dev2-v2 nonce dev2-v2-2455525829: rows fresh
+   dev2-v2: build 60d3c805
+== dev2-v3 nonce dev2-v3-68678479: rows fresh
+   dev2-v3: build 60d3c805
+== battery 19:05 battery 100% charging false external true 19:05:34
+== batch batchS1 done 19:05:34
+== lock released 19:05:34
+== battery 19:05 battery 100% charging false external true 19:05:34
+== batch exit 0 19:05:34
+wrapper exit=0

@@ -1,5 +1,6 @@
 extends RefCounted
 ## A world-sized distance field integrates earth roads into the actual land.
+const LandStone = preload("res://presentation/map/landscape/land_stone.gd")
 const WIDTH: int = 1536
 const HEIGHT: int = 960
 const ShaderSource: Shader = preload("res://presentation/map/landscape/terrain_paint.gdshader")
@@ -86,7 +87,7 @@ static func bind_habitat(parent: Node3D, placements: Array[Dictionary], lines: A
 	map.fill(Color(0, 0, 0, 0))
 	for item: Dictionary in placements:
 		var kind: String = str(item["kind"])
-		var rock: bool = kind.begins_with("slate")
+		var rock: bool = LandStone.OUTCROPS.has(kind)
 		if not rock and not kind.begins_with("conifer") and not kind.begins_with("ash"):
 			continue
 		var at: Vector3 = item["position"]

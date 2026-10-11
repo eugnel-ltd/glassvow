@@ -17,6 +17,11 @@ uniform sampler2D soil : source_color, filter_linear_mipmap, repeat_enable;
 uniform sampler2D road : source_color, filter_linear_mipmap, repeat_enable;
 // Pebbles, twigs, leaves and clumps, four rows of four, with alpha.
 uniform sampler2D splats : source_color, filter_linear_mipmap, repeat_disable;
+// The ravine's strata (R3.3), laid on the steep banks: on a face turned east
+// or west across z and up, on one turned north or south across x and up.
+uniform sampler2D strata : source_color, filter_linear_mipmap, repeat_enable;
+uniform float strata_metres = 1.6;
+uniform vec3 strata_tint = vec3(0.62, 0.6, 0.58);
 // Metres each cover's picture spans.
 uniform vec4 cover_metres = vec4(2.6, 3.2, 2.4, 2.2);
 // Each cover's picture scaled to the land's albedo (linear multipliers): the
@@ -120,8 +125,11 @@ void fragment() {
 	float joint = smoothstep(0.468, 0.492, stone_edge);
 	vec3 masonry = paving_colour * (0.89 + 0.19 * floor_hash(floor(stone) + 9.0)) * (1.0 - joint * 0.19);
 	albedo = mix(albedo, masonry, f.paving * 0.85);
-	// Slate faces where the land falls steeply.
-	albedo = mix(albedo, rock_colour * (0.88 + 0.1 * floor_noise(vec2(p.x * 0.19 + p.y * 0.11, world_at.y * 1.1))), f.scarp * 0.7);
+	// Strata where the land falls steeply: the ravine's banks.
+	vec2 facing = abs(world_normal.xz) + 1e-3;
+	vec3 band = (texture(strata, vec2(world_at.z, -world_at.y) / strata_metres).rgb * facing.x
+		+ texture(strata, vec2(world_at.x, -world_at.y) / strata_metres).rgb * facing.y) / (facing.x + facing.y);
+	albedo = mix(albedo, band * strata_tint, f.scarp * 0.85);
 	// The scatter: pebbles on the road's edges and the rocks' reach, twigs and
 	// leaves under the woodland and along the verges, clumps here and there.
 	float open_ground = 1.0 - f.core * (1.0 - f.tuft);

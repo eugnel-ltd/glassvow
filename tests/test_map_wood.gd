@@ -22,6 +22,7 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 static func run(fails: Array[String]) -> void:
 	MapJourneyLandscape.Kit.preload_scenes()
 	_atlas(fails)
+	_pages(fails)
 	_loading(fails)
 	_squares(fails)
 	_slab(fails)
@@ -89,14 +90,85 @@ static func _atlas(fails: Array[String]) -> void:
 		"the kit loads no scene for the foliage drawn as cards")
 
 
-## The atlas's textures are taken from the loader once each, whatever order
-## they finish in (a second `load_threaded_get` of a path returns null), and a
-## texture that cannot load ends the wait instead of holding the map's opening.
+## The decision every card's shaders make: a tile's instance data
+## (`Atlas.custom`), read back as `impostor.gdshader` and `floor_caster.gdshader`
+## read it (the page is the whole part of the rect's top), finds that tile's
+## own picture on its page of the atlas, the silhouette the packer recorded for
+## it, row for row. The atlas is two pages, a layer each, and both hold tiles.
+static func _pages(fails: Array[String]) -> void:
+	var albedo: TextureLayered = null
+	if Atlas.ready():
+		albedo = Atlas.material.get_shader_parameter("atlas_albedo")
+	var picture: Image = Image.load_from_file(Atlas.ALBEDO_PATH)
+	var paged: bool = albedo != null and picture != null and albedo.get_layers() == 2 \
+		and picture.get_width() == albedo.get_width() and picture.get_height() == 2 * albedo.get_height()
+	_check(fails, paged, "the woodland's atlas is two pages of its picture, a layer each")
+	if not paged:
+		return
+	picture.convert(Image.FORMAT_RGBA8)
+	var data: PackedByteArray = picture.get_data()
+	var width: int = picture.get_width()
+	var page_h: int = albedo.get_height()
+	var pages_used: Dictionary = {}
+	var wrong: PackedStringArray = []
+	for tile: int in range(Atlas.uv.size()):
+		var custom: Vector4 = Atlas.custom(tile)
+		var page: int = floori(custom.y)
+		pages_used[page] = true
+		var corner: Vector2i = Vector2i(roundi(custom.x * width), page * page_h + roundi((custom.y - page) * page_h))
+		var extent: Vector2i = Vector2i(roundi(custom.z * width), roundi(custom.w * page_h))
+		if page < 0 or page > 1 or not _silhouette_matches(data, width, corner, extent, Atlas.spans[tile]):
+			wrong.append("%s (page %d)" % [Atlas.tile_kinds[tile], page])
+	_check(fails, wrong.is_empty() and pages_used.size() == 2,
+		"every tile's card samples its own picture on its page, and both pages hold tiles (wrong: %s)" % ", ".join(wrong))
+
+
+## Whether the picture's cover in the rect at `corner` of `extent` texels has
+## the silhouette `spans` (`pack_impostors.py` `spans`: per band of rows the
+## first and last covered column, from coverage of at least a half).
+static func _silhouette_matches(data: PackedByteArray, width: int, corner: Vector2i, extent: Vector2i,
+		spans: PackedVector2Array) -> bool:
+	var rows: int = spans.size()
+	for r: int in range(rows):
+		var from: int = corner.y + int(float(r * extent.y) / rows)
+		var to: int = maxi(from + 1, corner.y + int(float((r + 1) * extent.y) / rows))
+		var first: int = -1
+		for x: int in range(extent.x):
+			if _covered(data, width, corner.x + x, from, to):
+				first = x
+				break
+		var expected: Vector2 = spans[r]
+		if first < 0:
+			if expected != Vector2(1.0, 0.0):
+				return false
+			continue
+		var last: int = first
+		for x: int in range(extent.x - 1, first - 1, -1):
+			if _covered(data, width, corner.x + x, from, to):
+				last = x
+				break
+		if absf(float(first) / extent.x - expected.x) > 0.001 or absf(float(last + 1) / extent.x - expected.y) > 0.001:
+			return false
+	return true
+
+
+static func _covered(data: PackedByteArray, width: int, x: int, from: int, to: int) -> bool:
+	for y: int in range(from, to):
+		if data[(y * width + x) * 4 + 3] >= 128:
+			return true
+	return false
+
+
+## The atlas's textures are taken from the loader once each (a second
+## `load_threaded_get` of a path returns null), and a texture that cannot load
+## ends the wait instead of holding the map's opening.
 static func _loading(fails: Array[String]) -> void:
 	var states: Dictionary = {"albedo": ResourceLoader.THREAD_LOAD_LOADED,
 		"normal": ResourceLoader.THREAD_LOAD_IN_PROGRESS}
 	var handed: Dictionary = {}
 	var take: Atlas.Take = Atlas.Take.new(PackedStringArray(["albedo", "normal"]))
+	take.ask = func(_path: String, _hint: String) -> bool:
+		return true
 	take.status = func(path: String) -> int:
 		return states[path]
 	take.get_texture = func(path: String) -> Variant:
@@ -118,6 +190,44 @@ static func _loading(fails: Array[String]) -> void:
 	var missing: Atlas.Take = Atlas.Take.new(PackedStringArray(["res://assets/art/map-journey/impostors/missing.png"]))
 	missing.request()
 	_check(fails, missing.failed and missing.step(true), "a missing atlas ends the wait at once")
+	_one_at_a_time(fails)
+
+
+## The kit's textures load one at a time (R3.3): a take asks the loader for a
+## path only once the one before it is taken, so never more than one of its
+## uploads is in flight, and overlapping uploads never take transfer workers of
+## their own. The kit's two takes are this kind: the atlas's, and the stone's
+## (`LandStone.prepare_step`), which `Kit.preload_step` begins only once the
+## atlas's has settled.
+static func _one_at_a_time(fails: Array[String]) -> void:
+	var paths: PackedStringArray = ["a", "b", "c"]
+	var asked: PackedStringArray = []
+	var states: Dictionary = {"a": ResourceLoader.THREAD_LOAD_IN_PROGRESS,
+		"b": ResourceLoader.THREAD_LOAD_IN_PROGRESS, "c": ResourceLoader.THREAD_LOAD_IN_PROGRESS}
+	var take: Atlas.Take = Atlas.Take.new(paths)
+	var most: Array[int] = [0]
+	take.ask = func(path: String, _hint: String) -> bool:
+		asked.append(path)
+		most[0] = maxi(most[0], asked.size() - take.textures.size())
+		return true
+	take.status = func(path: String) -> int:
+		return states[path]
+	take.get_texture = func(_path: String) -> Variant:
+		return ImageTexture.new()
+	take.request()
+	take.request()
+	var waiting: bool = not take.step(false)
+	var first: String = ",".join(asked)
+	states["a"] = ResourceLoader.THREAD_LOAD_LOADED
+	waiting = waiting and not take.step(false)
+	var second: String = ",".join(asked)
+	states["b"] = ResourceLoader.THREAD_LOAD_LOADED
+	states["c"] = ResourceLoader.THREAD_LOAD_LOADED
+	var settled: bool = take.step(false)
+	_check(fails, waiting and settled and first == "a" and second == "a,b" and ",".join(asked) == "a,b,c"
+			and most[0] == 1 and take.textures.size() == 3 and not take.failed,
+		"a take asks for each texture only once the one before it is taken (asked: %s, then %s; most in flight %d)" % [
+			first, second, most[0]])
 
 
 ## A waystone's touch square on the picture plane is the shape's own: the
@@ -214,7 +324,7 @@ static func _picture(fails: Array[String], land: MapJourneyLandscape, seats: Pac
 			z += 0.25
 	var rocks: int = 0
 	for item: Dictionary in land.kit.placed:
-		if not str(item["kind"]).begins_with("slate"):
+		if not MapJourneyLandscape.Kit.is_rock(str(item["kind"])):
 			continue
 		rocks += 1
 		var base: Vector3 = item["position"]
@@ -305,7 +415,10 @@ static func _mix(fails: Array[String], land: MapJourneyLandscape) -> void:
 				and planting.scales[i] <= Planting.TREE_SCALE.y + 0.001
 	var trees: float = int(str(counts.get("conifer", 0))) + int(str(counts.get("crimson", 0))) \
 		+ int(str(counts.get("rust and amber", 0)))
-	var undergrowth: float = planting.kinds.size() - trees
+	var ruins: int = 0
+	for kind: String in planting.kinds:
+		ruins += 1 if Planting.STONES.has(kind) else 0
+	var undergrowth: float = planting.kinds.size() - trees - ruins
 	var conifers: float = int(str(counts.get("conifer", 0))) / trees
 	var crimson: float = int(str(counts.get("crimson", 0))) / trees
 	var warm: float = int(str(counts.get("rust and amber", 0))) / trees
@@ -378,6 +491,15 @@ static func _draws(fails: Array[String], land: MapJourneyLandscape) -> void:
 	var instances: int = 0
 	var ordered: bool = true
 	var posed: bool = true
+	# What each plant's card should carry (its tile's page and rect), by where
+	# the card stands.
+	var expected: Dictionary = {}
+	for i: int in range(planting.kinds.size()):
+		var at_origin: Vector3 = Atlas.card_transform(planting.tiles[i], planting.bases[i], planting.scales[i]).origin
+		var key: Vector3i = Vector3i((at_origin * 1000.0).round())
+		var customs: Array = expected.get(key, [])
+		customs.append(Atlas.custom(planting.tiles[i]))
+		expected[key] = customs
 	for card: MultiMeshInstance3D in land.wood.cards:
 		var multi: MultiMesh = card.multimesh
 		instances += multi.instance_count
@@ -394,9 +516,11 @@ static func _draws(fails: Array[String], land: MapJourneyLandscape) -> void:
 			ordered = ordered and depth <= last + 0.002
 			last = depth
 			var custom: Vector4 = Vector4(buffer[at + 16], buffer[at + 17], buffer[at + 18], buffer[at + 19])
-			posed = posed and Atlas.uv.has(custom)
+			var customs: Array = expected.get(Vector3i((origin * 1000.0).round()), [])
+			posed = posed and customs.has(custom)
 	_check(fails, instances == planting.kinds.size() and posed,
-		"one card per plant, each painted with its tile (%d cards, %d plants)" % [instances, planting.kinds.size()])
+		"one card per plant, each painted with its own tile at its page (%d cards, %d plants)" % [
+			instances, planting.kinds.size()])
 	_check(fails, ordered, "the cards draw nearest first, with the atlas material, casting nothing")
 	var casting: bool = not land.wood.casters.is_empty()
 	for caster: MultiMeshInstance3D in land.wood.casters:

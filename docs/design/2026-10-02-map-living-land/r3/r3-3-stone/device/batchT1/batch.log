@@ -1,0 +1,28 @@
+== lock taken 22:31:25
+== 22:31 battery 100% charging false external true
+== load: 22:31  up 5 days,  6:34, 3 users, load averages: 139.89 116.26 106.80
+== disk: /dev/disk3s1s1  927G  812G  115G  88% /
+== OUT (every cleanup stays inside it): /Users/jamesto/Coding/glassvow/.claude/worktrees/map-lane/device/batchT1
+== batch batchT1 start 22:31:26
+== battery 22:31 battery 100% charging false external true 22:31:26; Mac load 139.89 116.26 106.80
+== install ctl 22:31:26
+== ctl-seed nonce ctl-seed-1850229650: rows fresh ("build":"711302a5")
+== ctl-title1 nonce ctl-title1-278865037: rows fresh ("build":"711302a5")
+== install ctlM 22:33:26
+== ctl-M-title1-fresh nonce ctl-M-title1-fresh-2836218759: rows fresh ("build":"711302a5")
+== ctl-M-title2-cached nonce ctl-M-title2-cached-115722331: rows fresh ("build":"711302a5")
+== install devA 22:35:54
+== dev-A-title1-fresh nonce dev-A-title1-fresh-128824531: rows fresh ("build":"4364b834")
+== dev-A-title2-cached nonce dev-A-title2-cached-1513220976: rows fresh ("build":"4364b834")
+== install ctlN 22:38:24
+== ctl-N-title1-fresh nonce ctl-N-title1-fresh-61592682: rows fresh ("build":"711302a5")
+== ctl-N-title2-cached nonce ctl-N-title2-cached-2880410557: rows fresh ("build":"711302a5")
+== install devB 22:40:49
+== dev-B-title1-fresh nonce dev-B-title1-fresh-93501171: rows fresh ("build":"4364b834")
+== dev-B-title2-cached nonce dev-B-title2-cached-2715314812: rows fresh ("build":"4364b834")
+== battery 22:43 battery 99% charging false external true 22:43:15; Mac load 100.56 88.65 93.00
+== batch batchT1 done 22:43:15
+== lock released 22:43:15
+== battery 22:43 battery 99% charging false external true 22:43:16; Mac load 100.56 88.65 93.00
+== batch exit 0 22:43:16
+wrapper exit=0
