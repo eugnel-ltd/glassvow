@@ -45,9 +45,9 @@ extends RefCounted
 ## HOW A FACE IS BAKED. The card is built hidden under the view that asked,
 ## drawn once (one draw renders both passes, the face before the stage that
 ## samples it), and its stage is copied on the GPU into a texture the face owns
-## (RenderingDevice.texture_copy). Nothing is read back, so nothing stalls; the
-## card is freed the same frame. PER_FRAME cards are baked per frame, so a view
-## of N distinct cards costs N light frames rather than one long one. Without a
+## (GpuCopy). Nothing is read back, so nothing stalls; the card is freed the
+## same frame. PER_FRAME cards are baked per frame, so a view of N distinct
+## cards costs N light frames rather than one long one. Without a
 ## RenderingDevice on this thread (the Compatibility renderer, the web build)
 ## the stage is read back instead, which stalls the frame it lands in.
 ##
@@ -58,9 +58,9 @@ extends RefCounted
 ## warning, and keeps only the deck's (`keep_only`) as each fight begins, so it
 ## never holds more than the deck's faces and what one stretch of the road
 ## added, and a later open of a view is drawn from it. Two asks for one card
-## share one bake. A face's GPU copy is freed with the face, when the cache and
-## the last card wearing it have let it go; the cache is also dropped as the
-## tree shuts down, before the renderer is.
+## share one bake. A face's GPU copy is freed with its picture, when the cache
+## and the last card drawing it have let it go; the cache is also dropped as
+## the tree shuts down, before the renderer is.
 
 ## Cards baked per frame.
 const PER_FRAME: int = 1
@@ -93,44 +93,12 @@ class Face:
 	extends RefCounted
 	## The lit stage at rest, cropped to REACH past the card on every side (at
 	## the oversample), drawn by CardView.picture as the live stage is, on the
-	## same texel grid.
+	## same texel grid: a GpuCopy, or an image read back without one.
 	var picture: Texture2D
 	## The card's table shadow at rest (CardView.rest_shadow).
 	var shadow: StyleBoxFlat
 	## Whether the card wears the rare's gilt shine.
 	var shine: bool = false
-	## The GPU copy this face owns, when the picture is one.
-	var _gpu: RID = RID()
-
-	## Copy the `crop` of `stage` on `rd` into a texture this face owns, and
-	## wear it.
-	func copy_on_gpu(rd: RenderingDevice, stage: Texture2D, crop: Rect2i) -> void:
-		var source: RID = RenderingServer.texture_get_rd_texture(stage.get_rid())
-		var into: RDTextureFormat = RDTextureFormat.new()
-		into.width = crop.size.x
-		into.height = crop.size.y
-		into.format = rd.texture_get_format(source).format
-		into.usage_bits = RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT \
-			| RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT \
-			| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
-		_gpu = rd.texture_create(into, RDTextureView.new())
-		rd.texture_copy(source, _gpu, Vector3(crop.position.x, crop.position.y, 0),
-			Vector3.ZERO, Vector3(crop.size.x, crop.size.y, 1), 0, 0, 0, 0)
-		var copy: Texture2DRD = Texture2DRD.new()
-		copy.texture_rd_rid = _gpu
-		picture = copy
-
-	func _notification(what: int) -> void:
-		if what != NOTIFICATION_PREDELETE or not _gpu.is_valid():
-			return
-		# The canvas's handle on the copy goes first, then the copy itself:
-		# a Texture2DRD never frees the texture it was handed.
-		var copy: Texture2DRD = picture as Texture2DRD
-		if copy != null:
-			copy.texture_rd_rid = RID()
-		var rd: RenderingDevice = RenderingServer.get_rendering_device()
-		if rd != null and rd.texture_is_valid(_gpu):
-			rd.free_rid(_gpu)
 
 
 ## One card's bake, queued or in flight, and everyone waiting on it.
@@ -341,10 +309,7 @@ static func _frame_drawn() -> void:
 static func _keep(view: CardView) -> Face:
 	if not view.is_inside_tree():
 		return null
-	var rd: RenderingDevice = RenderingServer.get_rendering_device()
-	if rd != null and RenderingServer.is_on_render_thread():
-		return _face_of(view, rd)
-	return _face_of(view, null)
+	return _face_of(view, true)
 
 
 ## The face of a card already on screen, taken from its own stage as it last
@@ -356,21 +321,21 @@ static func _keep(view: CardView) -> Face:
 static func take(view: CardView) -> Face:
 	if not is_instance_valid(view) or not view.is_inside_tree() or not view.at_rest():
 		return null
-	var rd: RenderingDevice = RenderingServer.get_rendering_device()
-	if rd == null or not RenderingServer.is_on_render_thread():
-		return null
-	return _face_of(view, rd)
+	return _face_of(view, false)
 
 
-## `view`'s face: copied on `rd`, or read back without one.
-static func _face_of(view: CardView, rd: RenderingDevice) -> Face:
-	var face: Face = Face.new()
-	face.shadow = view.rest_shadow()
-	face.shine = view.has_shine()
+## `view`'s face: copied on the GPU, else read back when `may_read_back`, else
+## null.
+static func _face_of(view: CardView, may_read_back: bool) -> Face:
 	var stage: Texture2D = view.stage_texture()
 	var crop: Rect2i = crop_of(Vector2i(stage.get_width(), stage.get_height()))
-	if rd != null:
-		face.copy_on_gpu(rd, stage, crop)
-	else:
-		face.picture = ImageTexture.create_from_image(view.stage_image().get_region(crop))
+	var picture: Texture2D = GpuCopy.of(stage, crop)
+	if picture == null:
+		if not may_read_back:
+			return null
+		picture = ImageTexture.create_from_image(view.stage_image().get_region(crop))
+	var face: Face = Face.new()
+	face.picture = picture
+	face.shadow = view.rest_shadow()
+	face.shine = view.has_shine()
 	return face

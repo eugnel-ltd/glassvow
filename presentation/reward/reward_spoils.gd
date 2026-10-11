@@ -101,6 +101,9 @@ static func card(content: ContentDB, id: String, uid: int, scale: float,
 	var cost: int = 0 if cost_v == null else int(float(str(cost_v)))
 	var view: CardView = CardView.new(CardInst.new(uid, StringName(id)), data, cost)
 	view.scale = Vector2(scale, scale)
+	# An offering waits on the player at rest: it holds each card's last frame,
+	# not its live stage, until a pointer or a turn wants the stage (CardView).
+	view.releases_at_rest = true
 	view.released_at.connect(func(_u: int, _p: Vector2) -> void: on_take.call(id))
 	return view
 
