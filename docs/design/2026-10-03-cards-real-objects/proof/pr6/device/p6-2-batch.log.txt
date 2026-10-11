@@ -1,0 +1,38 @@
+[21:15:22] cool: battery 40.69 C
+[21:16:22] cool: battery 40.69 C
+[21:17:29] cool: battery 40.89 C
+[21:18:29] cool: battery 40.69 C
+[21:19:30] cool: battery 40.79 C
+[21:20:30] cool: battery 40.79 C
+[21:21:30] cool: battery 40.79 C
+[21:22:30] cool: battery 40.89 C
+[21:23:30] cool: battery 40.89 C
+[21:24:31] cool: battery 41.00 C
+[21:25:31] cool: battery 40.89 C
+[21:26:32] cool: battery 41.00 C
+[21:27:32] cool: battery 41.00 C
+[21:28:36] cool: battery 41.00 C
+[21:29:37] cool: battery 41.09 C
+[21:30:37] cool: battery 41.00 C
+[21:31:37] cool: battery 41.00 C
+[21:32:38] cool: battery 40.89 C
+[21:33:38] cool: battery 41.00 C
+[21:34:39] cool: battery 41.00 C
+[21:36:03] installed B (/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane/device6/ipa_B/glassvow.ipa, sha256 fdfcb29d398e)
+[21:36:04] launch p6bw2 args=[--map --seed=1 --card-probe=nonce=p6bw2,mode=map,warm=1] battery=100% charging=false temp=40.89C
+[21:36:32] rows p6bw2: 284 frames; mode=map mode=map  battery=100% charging=false temp=40.59C
+[21:37:35] launch p6bf4 args=[--map --seed=1 --card-probe=nonce=p6bf4,mode=fight] battery=100% charging=false temp=39.09C
+[21:39:06] rows p6bf4: 1872 frames; mode=fight mode=fight  battery=100% charging=false temp=40.29C
+[21:41:39] launch p6bf5 args=[--map --seed=1 --card-probe=nonce=p6bf5,mode=fight] battery=100% charging=false temp=40.79C
+[21:43:09] rows p6bf5: 1921 frames; mode=fight mode=fight  battery=100% charging=false temp=41.09C
+[21:45:43] launch p6bf6 args=[--map --seed=1 --card-probe=nonce=p6bf6,mode=fight] battery=100% charging=false temp=41.00C
+[21:47:12] rows p6bf6: 1811 frames; mode=fight mode=fight  battery=100% charging=false temp=41.19C
+[21:50:10] installed A (/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane/device6/ipa_A/glassvow.ipa, sha256 46a22af53484)
+[21:50:10] launch p6aw2 args=[--map --seed=1 --card-probe=nonce=p6aw2,mode=map,warm=1] battery=100% charging=false temp=40.89C
+[21:50:38] rows p6aw2: 349 frames; mode=map mode=map  battery=100% charging=false temp=40.29C
+[21:51:41] launch p6af4 args=[--map --seed=1 --card-probe=nonce=p6af4,mode=fight] battery=100% charging=false temp=39.19C
+[21:53:09] rows p6af4: 1897 frames; mode=fight mode=fight  battery=100% charging=false temp=40.50C
+[21:55:43] launch p6af5 args=[--map --seed=1 --card-probe=nonce=p6af5,mode=fight] battery=100% charging=false temp=41.00C
+[21:57:12] rows p6af5: 1874 frames; mode=fight mode=fight  battery=100% charging=false temp=41.29C
+[21:59:46] launch p6af6 args=[--map --seed=1 --card-probe=nonce=p6af6,mode=fight] battery=100% charging=false temp=41.00C
+[22:01:16] rows p6af6: 1959 frames; mode=fight mode=fight  battery=100% charging=false temp=41.39C

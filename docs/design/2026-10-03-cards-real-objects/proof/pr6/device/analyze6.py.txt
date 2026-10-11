@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+"""SCRATCH (#657 PR 6): grade card_probe rows.
+usage: analyze6.py <main tag> <batch dir or rows file> [...]
+
+Frame rows (F): frame, phase, wall ms (frame start to the next frame's start),
+start-to-draw, draw, process, root GPU, video memory MiB, pipeline compiles
+(canvas, mesh, surface, draw, specialisation), hand cards holding a stage (-1:
+a build whose cards always do). A MARK row's frame is the frame the thing was
+done in (the next F row's frame index).
+
+Per fight: the load frame and the two after it; the counters at the load and
+every change after it in surface, draw or specialisation (with its phase);
+the combat rest (phase rest, 10 s): p50, p95, frames over 33.4 ms, video
+memory (median) and stages held; THE TOUCH: the frame it was made in and the
+two after it, the worst frame of the touch phase; the play's worst frame; the
+reshuffle (resh + rdeal) p50, p95 and worst; the throttle onset (the first
+1 s window from which the medians stay over 16.9 ms, at most one window under).
+"""
+import sys, glob, os, statistics as st
+
+THROTTLE_MS = 16.9
+LONG = 33.4
+
+
+def pct(a, q):
+    a = sorted(a)
+    if not a:
+        return float("nan")
+    k = (len(a) - 1) * q
+    f = int(k); c = min(f + 1, len(a) - 1)
+    return a[f] + (a[c] - a[f]) * (k - f)
+
+
+def load(path):
+    nonce = os.path.basename(path)[5:-4]
+    rows = [l.split() for l in open(path) if l.strip()]
+    rows = [r for r in rows if r and r[0] == nonce]
+    head = next((" ".join(r[2:]) for r in rows if r[2] == "PROBE"), "")
+    kv = dict(w.split("=", 1) for w in head.split() if "=" in w and not w.startswith("args="))
+    frames, marks, info = [], {}, {}
+    for r in rows:
+        if r[2] == "F":
+            frames.append(dict(ms=int(r[1]), i=int(r[3]), ph=r[4], wall=float(r[5]), vram=float(r[10]),
+                comp=r[11], staged=int(r[12])))
+        elif r[2] == "MARK":
+            marks[r[3]] = int(r[4].split("=")[1])
+        elif r[2] not in ("PROBE",):
+            info.setdefault(r[2], " ".join(r[3:]))
+    frames.sort(key=lambda f: f["i"])
+    return dict(nonce=nonce, build=kv.get("build", "?"), mode=kv.get("mode", "?"), warm="warm=1" in head,
+        frames=frames, marks=marks, info=info, batch=os.path.basename(os.path.dirname(path)))
+
+
+def walls(r, phases):
+    return [f["wall"] for f in r["frames"] if f["ph"] in phases]
+
+
+def onset(r):
+    fs = [f for f in r["frames"] if f["ph"] not in ("boot", "load", "end")]
+    if not fs:
+        return None
+    t0 = r["frames"][0]["ms"]
+    out = {}
+    for f in fs:
+        out.setdefault((f["ms"] - t0) // 1000, []).append(f["wall"])
+    w = [(k, st.median(v)) for k, v in sorted(out.items()) if len(v) >= 20]
+    for j, (k, m) in enumerate(w):
+        if m > THROTTLE_MS and sum(1 for x in w[j:] if x[1] <= THROTTLE_MS) <= 1:
+            return k
+    return None
+
+
+def fight(r):
+    fs = r["frames"]
+    li = next((k for k, f in enumerate(fs) if f["ph"] == "load"), None)
+    if li is None or len(fs) < li + 3:
+        return None
+    ld = fs[li]
+    changes, prev = [], ld["comp"]
+    for f in fs[li + 1:]:
+        if f["comp"] != prev:
+            if f["comp"].split(",")[2:] != prev.split(",")[2:]:
+                changes.append("%s #%d %s" % (f["ph"], f["i"], f["comp"].replace(",", "/")))
+            prev = f["comp"]
+    byi = {f["i"]: f for f in fs}
+    t = r["marks"].get("touch")
+    touch = [byi[t + k]["wall"] if t is not None and t + k in byi else float("nan") for k in range(3)]
+    rest = walls(r, ("rest",))
+    resh = walls(r, ("resh", "rdeal"))
+    play = walls(r, ("play",))
+    tph = walls(r, ("touch",))
+    rv = [f["vram"] for f in fs if f["ph"] == "rest"]
+    rs = [f["staged"] for f in fs if f["ph"] == "rest"]
+    tv = [f["vram"] for f in fs if f["ph"] == "touch"]
+    # A release lands after its frame's draw: the row after it holds one stage fewer.
+    rel = [fs[k - 1]["wall"] for k in range(li + 2, len(fs))
+        if fs[k]["staged"] >= 0 and fs[k - 1]["staged"] > fs[k]["staged"]]
+    return dict(load=ld["wall"], p1=fs[li + 1]["wall"], p2=fs[li + 2]["wall"], comp=ld["comp"].replace(",", "/"),
+        changes=changes, rp50=st.median(rest), rp95=pct(rest, .95), rlong=sum(1 for x in rest if x > LONG),
+        vram=st.median(rv), vram_touch=max(tv) if tv else float("nan"), staged=max(rs) if rs else -9,
+        t0=touch[0], t1=touch[1], t2=touch[2], tworst=max(tph) if tph else float("nan"),
+        pworst=max(play) if play else float("nan"),
+        sp50=st.median(resh) if resh else float("nan"), sp95=pct(resh, .95), sworst=max(resh) if resh else float("nan"),
+        onset=onset(r), releases=len(rel), relworst=max(rel) if rel else float("nan"))
+
+
+def main():
+    a_tag = sys.argv[1]
+    paths = []
+    for p in sys.argv[2:]:
+        paths += sorted(glob.glob(os.path.join(p, "rows_*.txt"))) if os.path.isdir(p) else [p]
+    runs = [load(p) for p in paths]
+    env = {}
+    for p in sys.argv[2:]:
+        log = os.path.join(p, "batch.log") if os.path.isdir(p) else ""
+        if log and os.path.exists(log):
+            for l in open(log):
+                if " launch " in l and "battery=" in l:
+                    n = l.split(" launch ")[1].split()[0]
+                    b = l.split("battery=")[1].split()[0]; c = l.split("charging=")[1].split()[0]
+                    t = l.split("temp=")[1].split()[0]
+                    env[n] = "%s, %s, %s" % (b, "charging" if c == "true" else "not charging", t)
+    print("| Batch | Launch | Build | Battery, temp. | Throttle onset | Counters at the load | Changes after it (surface, draw, spec.) | Load / +1 / +2 | Rest p50 / p95 (>33) | VRAM at rest (stages held) | Touch frame / +1 / +2 (touch worst) | Play worst | Reshuffle p50 / p95 / worst | Releases (worst frame) |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    per = {}
+    for r in runs:
+        if r["mode"] != "fight":
+            if r["warm"]:
+                print("| %s | %s (warm-up) | %s | %s | %s | | | | | | | | |" % (r["batch"], r["nonce"],
+                    "A" if r["build"] == a_tag else "B", env.get(r["nonce"], "?"),
+                    "none" if onset(r) is None else "%d s" % onset(r)))
+            continue
+        x = fight(r)
+        if x is None:
+            print("| %s | %s | %s | no rows |" % (r["batch"], r["nonce"], r["build"]))
+            continue
+        b = "A" if r["build"] == a_tag else "B"
+        per.setdefault(b, []).append(x)
+        per.setdefault((r["batch"], b), []).append(x)
+        print("| %s | %s | %s | %s | %s | %s | %s | %.1f / %.1f / %.1f | %.2f / %.2f (%d) | %.0f (%d) | %.1f / %.1f / %.1f (%.1f) | %.1f | %.2f / %.2f / %.1f | %s |" % (
+            r["batch"], r["nonce"], b, env.get(r["nonce"], "?"), "none" if x["onset"] is None else "%d s" % x["onset"],
+            x["comp"], "; ".join(x["changes"]) or "none", x["load"], x["p1"], x["p2"], x["rp50"], x["rp95"], x["rlong"],
+            x["vram"], x["staged"], x["t0"], x["t1"], x["t2"], x["tworst"], x["pworst"], x["sp50"], x["sp95"], x["sworst"],
+            "%d (%.1f)" % (x["releases"], x["relworst"]) if x["releases"] else "-"))
+    print()
+    for key in sorted(per, key=lambda k: (isinstance(k, tuple), str(k))):
+        xs = per[key]
+        m = lambda f: st.median([x[f] for x in xs])
+        print("%s n=%d: rest p50 %.2f p95 %.2f | vram %.1f | touch %.1f / %.1f / %.1f, worst %.1f, over 33.4: %d of %d | reshuffle p50 %.2f p95 %.2f worst %.1f | load %.1f | fights with a compile after the load: %d" % (
+            key, len(xs), m("rp50"), m("rp95"), m("vram"), m("t0"), m("t1"), m("t2"), m("tworst"),
+            sum(1 for x in xs if max(x["t0"], x["t1"], x["t2"]) > LONG), len(xs), m("sp50"), m("sp95"), m("sworst"),
+            m("load"), sum(1 for x in xs if x["changes"])))
+    if "A" in per and "B" in per:
+        A, B = per["A"], per["B"]
+        d = lambda f: st.median([x[f] for x in B]) - st.median([x[f] for x in A])
+        print("B - A on the medians: rest p50 %+.2f p95 %+.2f | vram %+.1f | reshuffle p50 %+.2f p95 %+.2f worst %+.1f" % (
+            d("rp50"), d("rp95"), d("vram"), d("sp50"), d("sp95"), d("sworst")))
+
+
+main()

@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+"""Compare same-named PNG frames of two captures (main against the branch).
+
+usage: diff_frames.py <dir A> <dir B> [--map=<dir>] [--only=<prefix>]
+Per frame: max channel delta, pixels that differ, pixels over 2 levels, and
+the bounding box of the differing pixels. --map writes a picture of where
+they differ (white) over B dimmed.
+"""
+import sys, os
+import numpy as np
+from PIL import Image
+
+def load(p):
+    return np.asarray(Image.open(p).convert('RGB')).astype(np.int16)
+
+def main():
+    a, b = sys.argv[1], sys.argv[2]
+    out = None; only = ''
+    for arg in sys.argv[3:]:
+        if arg.startswith('--map='): out = arg[6:]
+        if arg.startswith('--only='): only = arg[7:]
+    if out: os.makedirs(out, exist_ok=True)
+    names = sorted(n for n in os.listdir(a) if n.endswith('.png') and n.startswith(only))
+    worst_all = 0; differing = 0
+    for n in names:
+        pb = os.path.join(b, n)
+        if not os.path.exists(pb):
+            print(f"{n}: MISSING in B"); differing += 1; continue
+        ia, ib = load(os.path.join(a, n)), load(pb)
+        if ia.shape != ib.shape:
+            print(f"{n}: SIZE {ia.shape} vs {ib.shape}"); differing += 1; continue
+        d = np.abs(ia - ib).max(axis=2)
+        worst = int(d.max()); nz = int((d > 0).sum()); over = int((d > 2).sum())
+        box = ''
+        if nz:
+            ys, xs = np.nonzero(d)
+            box = f" box=({xs.min()},{ys.min()})-({xs.max()},{ys.max()})"
+            differing += 1
+            if out:
+                m = (ib * 0.35).astype(np.uint8)
+                m[d > 0] = [255, 255, 255]
+                Image.fromarray(m).save(os.path.join(out, n))
+        worst_all = max(worst_all, worst)
+        print(f"{n}: max_delta={worst} px_differ={nz} px_over2={over} of {d.size}{box}")
+    print(f"FRAMES {len(names)} differing={differing} worst={worst_all}")
+
+main()

@@ -261,6 +261,11 @@ var home_rotation: float = 0.0
 ## replacement for it: `rest_scale()` is the only way to say "1.0 = resting", so
 ## a lift, a drag and a flight all keep their authored feel at any card size.
 var base_scale: float = 1.0
+## Whether the card lets its two offscreen passes go once its stage has drawn
+## its resting frame, and builds them again when it must draw (LETTING THE
+## STAGE GO). The hand's cards do; a card that is read back (a bake's) does
+## not. Set before the card enters the tree.
+var releases_at_rest: bool = false
 
 var _held: bool = false
 ## Whether this card has ever been put somewhere. The first placement is a jump —
@@ -282,6 +287,15 @@ var _lit: Array[ShaderMaterial] = []   # every plate the lamp has to reach
 var _inner: SubViewport = null    # the 2D face, rendered offscreen
 var _stage: SubViewport = null    # the 3D room the slab sits in
 var _slab: MeshInstance3D = null
+## What the two passes draw, kept while they are let go (`releases_at_rest`):
+## the face's root, the stage's camera, and the plates that read the face.
+var _content: Control = null
+var _cam: Camera3D = null
+var _faced: Array[ShaderMaterial] = []
+## The stage's resting frame, worn by the picture while the passes are gone.
+var _kept: Texture2D = null
+## A dump reads both passes (GLASSVOW_DUMP): neither goes before it has.
+var _pinned: bool = false
 var _shadow: Panel = null         # the table shadow — never tilts
 var _shadow_sb: StyleBoxFlat = null
 var _hovered: bool = false
@@ -339,6 +353,8 @@ var _shadow_size: int = SHADOW_SIZE
 ## stock and kind. Materials differ per card and live on the MeshInstance3D as
 ## overrides.
 static var _prism_cache: Dictionary = {}
+## How a resting stage's frame is kept (`use_keeper`); empty means on the GPU.
+static var _keeper: Callable = Callable()
 
 
 func _init(inst: CardInst, data: Dictionary, cost: int) -> void:
@@ -622,18 +638,26 @@ static func generated_materials() -> Array[Material]:
 
 
 ## The two offscreen passes as they last rendered — the lit stage and the 2D
-## face — read back for a bake (CardBacks). Each call is a GPU readback.
+## face — read back for a bake (CardBacks). Each call is a GPU readback. The
+## face pass is read only from a card that keeps its passes (a bake's).
 func stage_image() -> Image:
-	return _stage.get_texture().get_image()
+	return stage_texture().get_image()
 
 
 func face_image() -> Image:
 	return _inner.get_texture().get_image()
 
 
-## The lit stage itself, live: what a face bake copies on the GPU (CardFaces).
+## The lit stage as the picture shows it: the live stage, or its resting
+## frame while the card has let it go. What a face is copied from on the GPU
+## (CardFaces).
 func stage_texture() -> Texture2D:
-	return _stage.get_texture()
+	return _stage.get_texture() if _stage != null else _kept
+
+
+## Whether the card's offscreen passes stand: false while it has let them go.
+func has_stage() -> bool:
+	return _stage != null
 
 
 ## The table shadow as it is at rest — the stock's own weight and colour, not a
@@ -774,29 +798,7 @@ func _build_stage(content: Control, mat: Dictionary, tint: Color,
 		free: bool) -> void:
 	var thick: float = mat["thick"]
 	_thick = thick
-	_inner = SubViewport.new()
-	_inner.size = Vector2i(
-		int((CARD_W + 2.0 * PAD_IN) * oversample),
-		int((CARD_H + 2.0 * PAD_IN) * oversample))
-	_inner.transparent_bg = true
-	_inner.disable_3d = true
-	# Fonts rasterise per-viewport: without this the 2x canvas scale draws 1x
-	# glyph bitmaps stretched — the exact blur content_scale_factor avoids on
-	# the window. This is the same mechanism, told the same factor.
-	_inner.oversampling_override = oversample
-	_inner.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	_inner.add_child(content)
-	add_child(_inner)
-
-	_stage = SubViewport.new()
-	_stage.size = Vector2i(
-		int((CARD_W + 2.0 * PAD_3D) * oversample),
-		int((CARD_H + 2.0 * PAD_3D) * oversample))
-	_stage.own_world_3d = true
-	_stage.transparent_bg = true
-	_stage.msaa_3d = Viewport.MSAA_4X
-	_stage.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	add_child(_stage)
+	_content = content
 
 	var cut: Vector2 = Vector2(thick, 0.0 if _is_back else 1.0)
 	if not _prism_cache.has(cut):
@@ -822,26 +824,64 @@ func _build_stage(content: Control, mat: Dictionary, tint: Color,
 	if not _is_back:
 		_slab.set_surface_override_material(2, _gem_plate(free))
 	_push_lamp()   # the room's lamp, before the card has ever been touched
-	_stage.add_child(_slab)
 
 	# Head-on long lens, at the distance where the stage rect maps 1:1 onto
 	# logical pixels at z = 0 — so at rest this render IS the flat card.
-	var cam: Camera3D = Camera3D.new()
-	cam.fov = FOV_DEG
+	_cam = Camera3D.new()
+	_cam.fov = FOV_DEG
 	# ...measured to the FRONT face, not the slab's mid-plane. Frame the mid-
 	# plane instead and the face — nearer the lens by half the thickness —
 	# comes out half a percent oversize, overhanging its own shadow.
 	var dist: float = lens()
-	cam.position = Vector3(0.0, 0.0, dist + thick * 0.5)
-	cam.near = dist * 0.5
-	cam.far = dist * 1.5
-	_stage.add_child(cam)
+	_cam.position = Vector3(0.0, 0.0, dist + thick * 0.5)
+	_cam.near = dist * 0.5
+	_cam.far = dist * 1.5
 
+	_mount(SubViewport.UPDATE_ALWAYS)
 	_display = picture(_stage.get_texture())
 	add_child(_display)
 	if _is_rare:
 		_shine = shine()
 		add_child(_shine)
+
+
+## The two offscreen passes, built around the face, the slab and the camera,
+## drawing in `mode`: at the card's build, and again when a card that let them
+## go must draw (`_remount`). The face pass enters the tree first, so it draws
+## before the stage that samples it (sibling passes draw in the order they
+## entered); both sit before the picture, as they were built.
+func _mount(mode: SubViewport.UpdateMode) -> void:
+	_inner = SubViewport.new()
+	_inner.size = Vector2i(
+		int((CARD_W + 2.0 * PAD_IN) * oversample),
+		int((CARD_H + 2.0 * PAD_IN) * oversample))
+	_inner.transparent_bg = true
+	_inner.disable_3d = true
+	# Fonts rasterise per-viewport: without this the 2x canvas scale draws 1x
+	# glyph bitmaps stretched — the exact blur content_scale_factor avoids on
+	# the window. This is the same mechanism, told the same factor.
+	_inner.oversampling_override = oversample
+	_inner.render_target_update_mode = mode
+	_inner.add_child(_content)
+
+	_stage = SubViewport.new()
+	_stage.size = Vector2i(
+		int((CARD_W + 2.0 * PAD_3D) * oversample),
+		int((CARD_H + 2.0 * PAD_3D) * oversample))
+	_stage.own_world_3d = true
+	_stage.transparent_bg = true
+	_stage.msaa_3d = Viewport.MSAA_4X
+	_stage.render_target_update_mode = mode
+	_stage.add_child(_slab)
+	_stage.add_child(_cam)
+
+	for pass_vp: SubViewport in [_inner, _stage]:
+		add_child(pass_vp)
+		if _display != null:
+			move_child(pass_vp, _display.get_index())
+	var face: Texture2D = _inner.get_texture()
+	for m: ShaderMaterial in _faced:
+		m.set_shader_parameter("face_tex", face)
 
 
 ## The stage camera's distance to the slab's front face, in card px: where the
@@ -933,10 +973,10 @@ static func shine() -> ColorRect:
 func _shaded(sh: Shader) -> ShaderMaterial:
 	var m: ShaderMaterial = ShaderMaterial.new()
 	m.shader = sh
-	m.set_shader_parameter("face_tex", _inner.get_texture())
 	m.set_shader_parameter("face_size",
 		Vector2(CARD_W, CARD_H) + Vector2(PAD_IN, PAD_IN) * 2.0)
 	_lit.append(m)
+	_faced.append(m)   # the face pass's texture is bound as the passes are built
 	return m
 
 
@@ -1179,10 +1219,105 @@ func _push_lamp() -> void:
 func _set_live(on: bool) -> void:
 	if _retired:
 		return
+	_remount()
 	var mode: SubViewport.UpdateMode = SubViewport.UPDATE_ALWAYS if on \
 		else SubViewport.UPDATE_ONCE
 	_inner.render_target_update_mode = mode
 	_stage.render_target_update_mode = mode
+	if not on:
+		_let_go_after_draw()
+
+
+## The stage draws one frame of the slab as it now lies, and sleeps.
+func _draw_stage_once() -> void:
+	_remount()
+	_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+	_let_go_after_draw()
+
+
+## ── LETTING THE STAGE GO ─────────────────────────────────────────────────
+## A live card's two passes hold about 15.8 MB of video memory on the iPad 8
+## (the face's render target; the stage's, its 4x MSAA buffers and its world)
+## and draw nothing at rest. A card that `releases_at_rest` keeps the frame
+## instead: once its stage has drawn the slab at rest, the frame is copied on
+## the GPU (GpuCopy), the picture wears the copy, and both passes go. Its face,
+## slab and camera stay, out of the tree, so a rebuild makes the two passes and
+## nothing else: every material is the one the card was built with, and none
+## is made, so a rebuild compiles no pipeline.
+##
+## The moment the stage must draw again — a pointer (`_set_live`), a live turn
+## or anything else that moves the slab (`_draw_stage_once`) — the passes are
+## built again around them (`_remount`), drawn in that same frame before the
+## picture shows them, so the first live frame is the kept frame drawn again,
+## with whatever moved since. The rare's shine, the shadow and the picture turn
+## live on the canvas and never needed the stage.
+##
+## Copied, never read back: a readback stalls the A12 for its frame. Without a
+## RenderingDevice on this thread (Compatibility, the web build) the card
+## keeps its passes.
+
+
+## Swap how a resting stage's frame is kept: `func(stage: Texture2D) ->
+## Texture2D`, the copy, or null to keep the stage. While one is swapped in,
+## the frame is taken a process frame after the stage was armed rather than
+## after a draw. The suite swaps in its own, because a headless run never draws
+## and has no RenderingDevice. An empty Callable returns to the GPU copy.
+static func use_keeper(next: Callable) -> void:
+	_keeper = next
+
+
+## Once the frame in flight has drawn, let the passes go if the slab still lies
+## at rest then.
+func _let_go_after_draw() -> void:
+	if not releases_at_rest or _pinned:
+		return
+	var drawn: Signal = (Engine.get_main_loop() as SceneTree).process_frame \
+		if _keeper.is_valid() else RenderingServer.frame_post_draw
+	if not drawn.is_connected(_on_rest_drawn):
+		drawn.connect(_on_rest_drawn, CONNECT_ONE_SHOT)
+
+
+func _on_rest_drawn() -> void:
+	if _stage == null or _retired or _pinned or not is_inside_tree() \
+			or _hovered or is_processing() or not CardTurn.is_rest(_slab_turn):
+		return
+	var stage: Texture2D = _stage.get_texture()
+	var kept: Texture2D = _keeper.call(stage) if _keeper.is_valid() else GpuCopy.of(
+		stage, Rect2i(Vector2i.ZERO, Vector2i(stage.get_width(), stage.get_height())))
+	if kept == null:
+		return
+	_kept = kept
+	_display.texture = kept
+	for m: ShaderMaterial in _faced:
+		m.set_shader_parameter("face_tex", null)
+	_inner.remove_child(_content)
+	_stage.remove_child(_slab)
+	_stage.remove_child(_cam)
+	for pass_vp: SubViewport in [_inner, _stage]:
+		remove_child(pass_vp)
+		pass_vp.free()
+	_inner = null
+	_stage = null
+
+
+## The two passes again, when the card has let them go: drawn once, in the
+## frame this is called in, before the picture shows them.
+func _remount() -> void:
+	if _stage != null:
+		return
+	_mount(SubViewport.UPDATE_ONCE)
+	_display.texture = _stage.get_texture()
+	_kept = null
+
+
+## A card that has let its passes go still holds what they drew: out of the
+## tree, it goes with the card.
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_PREDELETE or _stage != null:
+		return
+	for node: Node in [_content, _slab, _cam]:
+		if is_instance_valid(node) and node.get_parent() == null:
+			node.free()
 
 
 func _ready() -> void:
@@ -1208,10 +1343,12 @@ func _ready() -> void:
 			held = true
 	var dump: String = OS.get_environment("GLASSVOW_DUMP")
 	if dump != "":
+		_pinned = true
 		for _i: int in range(10):
 			await get_tree().process_frame
 		_inner.get_texture().get_image().save_png("%s_inner_%d.png" % [dump, uid])
 		_stage.get_texture().get_image().save_png("%s_stage_%d.png" % [dump, uid])
+		_pinned = false
 	if held:
 		return  # the hold armed the repaint; what it set reaches the shot
 	_freeze_in(2)
@@ -1237,8 +1374,9 @@ func _freeze_in(frames: int) -> void:
 ## memory two frames later, in whatever plays then.
 func retire() -> void:
 	_retired = true
-	_inner.render_target_update_mode = SubViewport.UPDATE_DISABLED
-	_stage.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	if _stage != null:
+		_inner.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		_stage.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
 
 ## Freeze the passes unless something moves the card. One pointed at and let
@@ -1379,7 +1517,7 @@ func turn(yaw: float, pitch: float, live: bool) -> void:
 	_apply_transform()
 	# A held or settling card's stage already renders every frame.
 	if not _slab.transform.is_equal_approx(was) and not _hovered and not is_processing():
-		_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+		_draw_stage_once()
 
 
 ## Whether the picture turn is on: the card's picture wears the warp.

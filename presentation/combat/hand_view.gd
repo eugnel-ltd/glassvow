@@ -251,6 +251,9 @@ func add_card(inst: CardInst, data: Dictionary, cost: int) -> CardView:
 	# for a frame — a card that pops from 152 to 104 on its first relayout reads
 	# as a bug even though it settles correctly.
 	view.base_scale = card_w / CardView.CARD_W
+	# A resting hand holds each card's last frame, not its live stage: the
+	# stage is built again the moment a card must draw (CardView).
+	view.releases_at_rest = true
 	_views[inst.uid] = view
 	_order.append(inst.uid)
 	add_child(view)
