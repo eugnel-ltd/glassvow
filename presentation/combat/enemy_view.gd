@@ -1921,27 +1921,7 @@ func _build_stage(tex: Texture2D, enemy_idx: int) -> void:
 	_stage.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(_stage)
 
-	# A real sky, used ONLY as light. background_mode stays CLEAR_COLOR so the
-	# viewport keeps its alpha, while ambient and reflections still come off the
-	# sky's radiance map — that is what gives the shards something to mirror.
-	_env = Environment.new()
-	_env.background_mode = Environment.BG_CLEAR_COLOR
-	_env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	_env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
-	_env.ambient_light_energy = 0.22
-	var sky: Sky = Sky.new()
-	var sky_mat: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
-	# The night-lantern key the rest of the screen is lit by: deep indigo dome,
-	# ember bounce off the ground.
-	sky_mat.sky_top_color = Color(0.05, 0.07, 0.16)
-	sky_mat.sky_horizon_color = Color(0.16, 0.18, 0.30)
-	sky_mat.ground_bottom_color = Color(0.16, 0.09, 0.05)
-	sky_mat.ground_horizon_color = Color(0.22, 0.14, 0.08)
-	sky.sky_material = sky_mat
-	_env.sky = sky
-	# LINEAR, not ACES: the filmic curve lifts blacks and desaturates, which on a
-	# painting that is already 80% near-black reads as fog over the whole mob.
-	_env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	_env = stage_environment()
 	var world_env: WorldEnvironment = WorldEnvironment.new()
 	world_env.environment = _env
 	_stage.add_child(world_env)
@@ -2351,6 +2331,33 @@ static func _interp(x: float, xs: PackedFloat32Array,
 	if span <= 0.0:
 		return ys[i]
 	return lerpf(ys[i - 1], ys[i], (x - xs[i - 1]) / span)
+
+
+## The stage's light (also PathWarm's, #682, so its warm draws build the
+## pipelines this stage's draws use): a real sky, used ONLY as light.
+## background_mode stays CLEAR_COLOR so the viewport keeps its alpha, while
+## ambient and reflections still come off the sky's radiance map — that is what
+## gives the shards something to mirror.
+static func stage_environment() -> Environment:
+	var env: Environment = Environment.new()
+	env.background_mode = Environment.BG_CLEAR_COLOR
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
+	env.ambient_light_energy = 0.22
+	var sky: Sky = Sky.new()
+	var sky_mat: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
+	# The night-lantern key the rest of the screen is lit by: deep indigo dome,
+	# ember bounce off the ground.
+	sky_mat.sky_top_color = Color(0.05, 0.07, 0.16)
+	sky_mat.sky_horizon_color = Color(0.16, 0.18, 0.30)
+	sky_mat.ground_bottom_color = Color(0.16, 0.09, 0.05)
+	sky_mat.ground_horizon_color = Color(0.22, 0.14, 0.08)
+	sky.sky_material = sky_mat
+	env.sky = sky
+	# LINEAR, not ACES: the filmic curve lifts blacks and desaturates, which on a
+	# painting that is already 80% near-black reads as fog over the whole mob.
+	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	return env
 
 
 func _build_shadow(tex: Texture2D) -> void:
