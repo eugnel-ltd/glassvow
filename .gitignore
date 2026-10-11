@@ -65,3 +65,6 @@ docs/design/2026-08-16-scene-plates/review.html
 addons/tripo*/
 addons/Tripo*/
 .wrangler/
+
+# The shader bake manifest, written by every baked export (tools/shader_bake_manifest.gd)
+/tools/shader_bake_manifest.tscn
