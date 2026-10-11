@@ -1,0 +1,113 @@
+#!/bin/zsh
+# SCRATCH (#657 PR 6), never committed: the device campaign, main (A) against
+# the branch (B) on the iPad 8, interleaved by install, under ONE hold of the
+# iPad lock for the whole campaign (released in a trap, refreshed at every step
+# and every minute of a wait, so never older than 20 min).
+#   campaign6.zsh <name>      e.g. campaign6.zsh p6
+# Session 1: A then B; session 2: B then A. Each install: a warm-up map launch,
+# then three fights 150 s apart. Before each session the battery cools to 36.0 C
+# (20 min at most). Six measured fights per build. Rows land in
+# $C/device6/<name>-1 and <name>-2; the analysis in $C/device6/summary-<name>.txt.
+# The lock is taken only when free (ipad_lock.sh's acquire would take over a
+# hold older than 60 min: never break another's hold). Only the QA app
+# (io.fol2.glassvow.qa) is installed, launched or read; nothing is uninstalled;
+# every devicectl copy is under timeout 300; the UDID is never printed.
+set -uo pipefail
+C=/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+HERE=$C/device6
+NAME=${1:?name}
+LOCK=cards-pr6
+QA=io.fol2.glassvow.qa
+S=150
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+OUT=$HERE/$NAME-1
+mkdir -p $HERE/$NAME-1 $HERE/$NAME-2
+log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a $OUT/batch.log; }
+until [[ "$($FLOW/ipad_lock.sh status)" == free ]] \
+    && timeout 20 $FLOW/ipad_lock.sh acquire $LOCK >> $OUT/batch.log 2>&1 \
+    && [[ "$(cat $FLOW/ipad.lock/owner 2>/dev/null)" == $LOCK ]]; do
+  log "ipad lock $($FLOW/ipad_lock.sh status); waiting 30 s"; sleep 30
+done
+cleanup() { $FLOW/ipad_lock.sh release $LOCK >> $OUT/batch.log 2>&1; log "lock released"; }
+trap cleanup EXIT
+trap 'exit 130' INT TERM
+log "lock held"
+mine() { [[ "$(cat $FLOW/ipad.lock/owner 2>/dev/null)" == $LOCK ]] || { log "lock lost"; exit 1; }; $FLOW/ipad_lock.sh acquire $LOCK > /dev/null 2>&1; }
+hold() { local n=$1; while (( n > 0 )); do mine; sleep $(( n < 60 ? n : 60 )); n=$(( n - 60 )); done; }
+udid() {
+  timeout 60 xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c 'import json,sys; print(next(d["hardwareProperties"]["udid"] for d in json.load(sys.stdin)["result"]["devices"] if d["hardwareProperties"].get("productType")=="iPad11,6"))'
+}
+U=$(udid)
+[[ -n "$U" ]] || { log "no iPad"; exit 1; }
+redact() { sed "s/$U/<device>/g"; }
+pull() { timeout 300 xcrun devicectl device copy from --device "$U" --domain-type appDataContainer --domain-identifier $QA --source Documents/$1 --destination $2 >/dev/null 2>&1; }
+temp() { local t; t=$(timeout 30 idevicediagnostics -u "$U" ioregentry AppleSmartBattery 2>/dev/null | grep -A1 '<key>Temperature</key>' | grep -o '[0-9]*' | head -1); echo "$t"; }
+battery() {
+  local lvl chg tmp
+  lvl=$(timeout 30 ideviceinfo -u "$U" -q com.apple.mobile.battery -k BatteryCurrentCapacity 2>/dev/null)
+  chg=$(timeout 30 ideviceinfo -u "$U" -q com.apple.mobile.battery -k BatteryIsCharging 2>/dev/null)
+  tmp=$(temp)
+  echo "battery=${lvl:-unknown}% charging=${chg:-unknown} temp=${tmp:+$(printf '%d.%02d' $((tmp / 100)) $((tmp % 100)))}C"
+}
+cool() {
+  local t n=0
+  while (( n < 20 )); do
+    t=$(temp)
+    log "cool: battery ${t:+$(printf '%d.%02d' $((t / 100)) $((t % 100)))} C"
+    [[ -n "$t" && $t -le 3600 ]] && return 0
+    (( n++ )); hold 60
+  done
+}
+install() {
+  local b=$1 ipa=$HERE/ipa_$1/glassvow.ipa bid ok=0
+  bid=$(unzip -p "$ipa" Payload/glassvow.app/Info.plist | plutil -extract CFBundleIdentifier raw -o - -)
+  [[ "$bid" == "$QA" ]] || { log "refusing: $ipa is $bid"; exit 1; }
+  for attempt in 1 2 3; do
+    mine
+    if timeout 300 xcrun devicectl device install app --device "$U" "$ipa" 2>&1 | redact >> $OUT/install.log; then ok=1; break; fi
+    log "install $b attempt $attempt failed"; hold 10
+  done
+  [[ $ok == 1 ]] || { log "install $b failed"; exit 1; }
+  log "installed $b ($ipa, sha256 $(shasum -a 256 $ipa | cut -c1-12))"
+}
+launch() {
+  local nonce=$1 opts=$2 args got=0 first=80
+  args="--map --seed=1 --card-probe=nonce=$nonce,$opts"
+  mine
+  log "launch $nonce args=[$args] $(battery)"
+  timeout 90 xcrun devicectl device process launch --terminate-existing --device "$U" \
+    $QA -- ${(z)args} 2>&1 | redact >> $OUT/launch.log || log "launch rc=$?"
+  # No devicectl copy while the probe measures: the first look waits it out.
+  [[ "$opts" == *warm=1* ]] && first=20
+  hold $first
+  for i in $(seq 1 40); do
+    hold 5
+    if pull card_probe_$nonce.txt $OUT/rows_$nonce.txt && grep -q " DONE" $OUT/rows_$nonce.txt; then got=1; break; fi
+  done
+  if [[ $got == 1 ]]; then
+    log "rows $nonce: $(grep -c ' F ' $OUT/rows_$nonce.txt) frames; $(grep -o 'build=[0-9a-f]*\|mode=[a-z]*' $OUT/rows_$nonce.txt | head -2 | tr '\n' ' ') $(battery)"
+  else
+    log "no DONE rows for $nonce"
+  fi
+  hold 3
+}
+session() { # session <n> <first build> <second build> <first fight no>
+  local n=$1 b x f=$4
+  OUT=$HERE/$NAME-$n
+  cool
+  for b in $2 $3; do
+    x=${(L)b}
+    install $b
+    launch ${NAME}${x}w$n mode=map,warm=1; hold 60
+    launch ${NAME}${x}f$f mode=fight; hold $S
+    launch ${NAME}${x}f$((f + 1)) mode=fight; hold $S
+    launch ${NAME}${x}f$((f + 2)) mode=fight; hold $S
+  done
+}
+session 1 A B 1
+OUT=$HERE/$NAME-1; log "between sessions: 300 s"; hold 300
+session 2 B A 4
+OUT=$HERE/$NAME-1
+log "campaign done"
+python3 -I $HERE/analyze6.py $(cat $HERE/ipa_A/TAG) $HERE/$NAME-1 $HERE/$NAME-2 > $HERE/summary-$NAME.txt 2>&1

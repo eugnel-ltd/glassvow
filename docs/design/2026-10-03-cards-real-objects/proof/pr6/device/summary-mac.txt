@@ -1,0 +1,10 @@
+| Batch | Launch | Build | Battery, temp. | Throttle onset | Counters at the load | Changes after it (surface, draw, spec.) | Load / +1 / +2 | Rest p50 / p95 (>33) | VRAM at rest (stages held) | Touch frame / +1 / +2 (touch worst) | Play worst | Reshuffle p50 / p95 / worst | Releases (worst frame) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| mac | mac2A | A | ? | none | 22/10/152/26/65 | play #2737 25/10/152/27/66 | 282.0 / 3.4 / 8.2 | 8.78 / 9.20 (0) | 470 (-1) | 7.7 / 8.0 / 9.3 (9.7) | 10.9 | 8.26 / 9.39 / 9.9 | - |
+| mac | mac2B | B | ? | none | 22/10/152/26/65 | play #2771 25/10/152/27/66 | 203.3 / 3.4 / 9.0 | 8.82 / 9.07 (0) | 419 (0) | 8.3 / 9.3 / 7.8 (9.4) | 9.3 | 8.19 / 9.51 / 9.7 | 12 (8.7) |
+
+A n=1: rest p50 8.78 p95 9.20 | vram 470.5 | touch 7.7 / 8.0 / 9.3, worst 9.7, over 33.4: 0 of 1 | reshuffle p50 8.26 p95 9.39 worst 9.9 | load 282.0 | fights with a compile after the load: 1
+B n=1: rest p50 8.82 p95 9.07 | vram 419.2 | touch 8.3 / 9.3 / 7.8, worst 9.4, over 33.4: 0 of 1 | reshuffle p50 8.19 p95 9.51 worst 9.7 | load 203.3 | fights with a compile after the load: 1
+('mac', 'A') n=1: rest p50 8.78 p95 9.20 | vram 470.5 | touch 7.7 / 8.0 / 9.3, worst 9.7, over 33.4: 0 of 1 | reshuffle p50 8.26 p95 9.39 worst 9.9 | load 282.0 | fights with a compile after the load: 1
+('mac', 'B') n=1: rest p50 8.82 p95 9.07 | vram 419.2 | touch 8.3 / 9.3 / 7.8, worst 9.4, over 33.4: 0 of 1 | reshuffle p50 8.19 p95 9.51 worst 9.7 | load 203.3 | fights with a compile after the load: 1
+B - A on the medians: rest p50 +0.04 p95 -0.13 | vram -51.3 | reshuffle p50 -0.07 p95 +0.12 worst -0.2

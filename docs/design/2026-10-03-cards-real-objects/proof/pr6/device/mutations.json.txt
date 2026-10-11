@@ -1,0 +1,138 @@
+[
+ {
+  "id": "r01-hand-not-opted-in",
+  "file": "presentation/combat/hand_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "the hand's cards do not release at rest",
+  "old": "\tview.releases_at_rest = true\n",
+  "new": "\n"
+ },
+ {
+  "id": "r02-never-armed",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "a card armed to rest never waits to let go",
+  "old": "\tif not releases_at_rest or _pinned:\n\t\treturn\n",
+  "new": "\tif true:\n\t\treturn\n"
+ },
+ {
+  "id": "r03-releases-while-held",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "the release ignores a pointer on the card",
+  "old": "\t\t\tor _hovered or is_processing() or not CardTurn.is_rest(_slab_turn):",
+  "new": "\t\t\tor not CardTurn.is_rest(_slab_turn):"
+ },
+ {
+  "id": "r04-releases-turned",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "the release ignores a slab turned live",
+  "old": "\t\t\tor _hovered or is_processing() or not CardTurn.is_rest(_slab_turn):",
+  "new": "\t\t\tor _hovered or is_processing():"
+ },
+ {
+  "id": "r05-picture-not-back",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "a rebuild leaves the picture on the kept frame",
+  "old": "\t_display.texture = _stage.get_texture()\n\t_kept = null\n",
+  "new": "\t_kept = _kept\n"
+ },
+ {
+  "id": "r06-face-not-rebound",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "a rebuild leaves the plates reading the old face pass",
+  "old": "\tvar face: Texture2D = _inner.get_texture()\n\tfor m: ShaderMaterial in _faced:\n\t\tm.set_shader_parameter(\"face_tex\", face)\n",
+  "new": "\tvar face: Texture2D = _inner.get_texture()\n\tfor m: ShaderMaterial in _faced:\n\t\tif m.get_shader_parameter(\"face_tex\") == null and _display == null:\n\t\t\tm.set_shader_parameter(\"face_tex\", face)\n"
+ },
+ {
+  "id": "r07-stage-before-face",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "a rebuild seats the stage before the face pass it samples",
+  "old": "\tfor pass_vp: SubViewport in [_inner, _stage]:\n\t\tadd_child(pass_vp)",
+  "new": "\tfor pass_vp: SubViewport in [_stage, _inner]:\n\t\tadd_child(pass_vp)"
+ },
+ {
+  "id": "r08-touch-no-rebuild",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "a pointer on a released card does not build its stage",
+  "old": "\tif _retired:\n\t\treturn\n\t_remount()\n\tvar mode: SubViewport.UpdateMode",
+  "new": "\tif _retired or _stage == null:\n\t\treturn\n\tvar mode: SubViewport.UpdateMode"
+ },
+ {
+  "id": "r09-turn-no-rebuild",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "a live turn on a released card does not build its stage",
+  "old": "func _draw_stage_once() -> void:\n\t_remount()\n",
+  "new": "func _draw_stage_once() -> void:\n\tif _stage == null:\n\t\treturn\n"
+ },
+ {
+  "id": "r10-turn-never-lets-go",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "a card turned back to rest keeps its stage",
+  "old": "\t_stage.render_target_update_mode = SubViewport.UPDATE_ONCE\n\t_let_go_after_draw()\n",
+  "new": "\t_stage.render_target_update_mode = SubViewport.UPDATE_ONCE\n"
+ },
+ {
+  "id": "r11-everyone-releases",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "every card releases, a bake's included",
+  "old": "var releases_at_rest: bool = false\n",
+  "new": "var releases_at_rest: bool = true\n"
+ },
+ {
+  "id": "r12-orphans-kept",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "a card freed while released leaves its face, slab and camera",
+  "old": "\t\t\tnode.free()\n",
+  "new": "\t\t\tpass\n"
+ },
+ {
+  "id": "r13-rebuild-new-side",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "a rebuild dresses the side band in a new material",
+  "old": "\t_stage.add_child(_slab)\n",
+  "new": "\tif _display != null:\n\t\t_slab.set_surface_override_material(0, side_material(_side))\n\t_stage.add_child(_slab)\n"
+ },
+ {
+  "id": "r14-rebuild-side-unheld",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "a rebuild dresses the side band in a generated material the fight does not hold",
+  "old": "\t_stage.add_child(_slab)\n",
+  "new": "\tif _display != null:\n\t\tvar side: StandardMaterial3D = side_material(_side)\n\t\tside.cull_mode = BaseMaterial3D.CULL_BACK\n\t\t_slab.set_surface_override_material(0, side)\n\t_stage.add_child(_slab)\n"
+ },
+ {
+  "id": "r15-fight-holds-nothing",
+  "file": "presentation/cards/card_turn.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "a fight's load holds none of its cards' generated materials",
+  "old": "\thold.materials = CardView.generated_materials()\n",
+  "new": "\thold.materials = []\n"
+ },
+ {
+  "id": "r16-released-without-a-frame",
+  "file": "presentation/combat/card_view.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "the picture does not wear the kept frame",
+  "old": "\t_kept = kept\n\t_display.texture = kept\n",
+  "new": "\t_kept = kept\n"
+ },
+ {
+  "id": "r17-offering-not-opted-in",
+  "file": "presentation/reward/reward_spoils.gd",
+  "test": "tests/test_card_rest.gd",
+  "what": "the reward's offering does not release at rest",
+  "old": "\tview.releases_at_rest = true\n",
+  "new": "\n"
+ }
+]

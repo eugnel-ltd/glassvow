@@ -1,0 +1,23 @@
+#!/bin/zsh
+# SCRATCH (#657 PR 6): the fight check at every shape and locale, both builds.
+C=/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane
+typeset -A VP SH
+VP=(pad 1180x820 phone 844x390 desktop 1458x820)
+SH=(pad "" phone "--shape=phone-landscape" desktop "")
+for shape in pad phone desktop; do for loc in en zh; do
+  lf=""; [[ $loc == zh ]] && lf="--locale=zh-Hant"
+  for mode in hand full; do
+    mf=""; [[ $mode == hand ]] && mf="--hand-only"
+    for b in a b; do
+      [[ $mode == full && $b == a ]] && continue
+      tag=$b-$shape-$loc-$mode
+      [[ -f $C/stills/pr6/$tag/rows.txt ]] && continue
+      wt=$C/wt6; [[ $b == a ]] && wt=$C/wtmain
+      (cd $wt && timeout 300 godot --path . --fixed-fps 60 -s res://tools/check_card_rest.gd -- --map --seed=1 --vp=$VP[$shape] ${=SH[$shape]} $lf $mf --out=$C/stills/pr6/$tag > $C/logs/pr6/check-$tag.log 2>&1)
+      echo "$tag rc=$? $(grep -c '^FAIL' $C/logs/pr6/check-$tag.log) fails; $(grep -E '^LOAD' $C/logs/pr6/check-$tag.log | grep -o 'shape=[a-z-]* window=([0-9, ]*)')"
+    done
+  done
+  if [[ -d $C/stills/pr6/a-$shape-$loc-hand ]]; then
+    echo "DIFF $shape $loc: $(python3 -I $C/tools/diff_frames.py $C/stills/pr6/a-$shape-$loc-hand $C/stills/pr6/b-$shape-$loc-hand | tail -1)"
+  fi
+done; done

@@ -1,0 +1,24 @@
+import sys, os, shutil
+# QA-only probe attach (#657 PR 6). Never committed: applied in a detached
+# export worktree for a QA export.
+#   patch.py apply|revert <wt> <tag>
+MARK = "# QA-CARD-PROBE"
+wt = sys.argv[2]
+here = os.path.dirname(os.path.abspath(__file__))
+p = wt + "/application/main.gd"
+s = open(p).read()
+a = 'func _ready() -> void:\n\tprint("glassvow boot " + str(Engine.get_version_info()["string"]))\n'
+attach = a + ('\tif " ".join(OS.get_cmdline_user_args()).contains("--card-probe="):  ' + MARK + '\n'
+              '\t\tvar card_probe: Node = (load("res://qa_cards/card_probe.gd") as GDScript).new()  ' + MARK + '\n'
+              '\t\tadd_child.call_deferred(card_probe)  ' + MARK + '\n')
+if sys.argv[1] == "apply":
+    assert MARK not in s
+    assert s.count(a) == 1, "anchor"
+    s = s.replace(a, attach)
+    os.makedirs(wt + "/qa_cards", exist_ok=True)
+    shutil.copyfile(here + "/card_probe.gd", wt + "/qa_cards/card_probe.gd")
+    open(wt + "/qa_cards/build_tag.gd", "w").write('extends RefCounted\nconst TAG: String = "%s"\n' % sys.argv[3])
+else:
+    s = "\n".join(l for l in s.split("\n") if MARK not in l)
+open(p, "w").write(s)
+print(sys.argv[1], wt, s.count(MARK))

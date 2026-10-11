@@ -1,0 +1,46 @@
+== fight, hand only, pad-en: main against the branch
+FRAMES 31 differing=0 worst=0
+== fight, hand only, pad-zh: main against the branch
+11-touch-0.png: max_delta=2 px_differ=472 px_over2=0 of 967600 box=(722,631)-(908,819)
+12-touch-1.png: max_delta=3 px_differ=800 px_over2=14 of 967600 box=(717,604)-(912,819)
+13-touch-2.png: max_delta=4 px_differ=1060 px_over2=180 of 967600 box=(713,580)-(915,819)
+14-touch-6.png: max_delta=7 px_differ=1586 px_over2=730 of 967600 box=(709,538)-(919,819)
+15-touch-held.png: max_delta=16 px_differ=2110 px_over2=1171 of 967600 box=(707,529)-(920,819)
+FRAMES 31 differing=5 worst=16
+== fight, hand only, phone-en: main against the branch
+11-touch-0.png: max_delta=2 px_differ=173 px_over2=0 of 329160 box=(589,303)-(710,388)
+12-touch-1.png: max_delta=3 px_differ=296 px_over2=1 of 329160 box=(583,279)-(713,389)
+13-touch-2.png: max_delta=4 px_differ=420 px_over2=50 of 329160 box=(579,257)-(715,389)
+14-touch-6.png: max_delta=6 px_differ=642 px_over2=277 of 329160 box=(574,219)-(718,389)
+15-touch-held.png: max_delta=14 px_differ=890 px_over2=498 of 329160 box=(572,210)-(718,389)
+FRAMES 31 differing=5 worst=14
+== fight, hand only, phone-zh: main against the branch
+11-touch-0.png: max_delta=1 px_differ=116 px_over2=0 of 329160 box=(589,303)-(709,388)
+12-touch-1.png: max_delta=2 px_differ=227 px_over2=0 of 329160 box=(583,279)-(713,389)
+13-touch-2.png: max_delta=3 px_differ=353 px_over2=1 of 329160 box=(579,257)-(715,389)
+14-touch-6.png: max_delta=4 px_differ=571 px_over2=89 of 329160 box=(575,219)-(718,389)
+15-touch-held.png: max_delta=8 px_differ=797 px_over2=360 of 329160 box=(572,210)-(718,389)
+FRAMES 31 differing=5 worst=8
+== fight, hand only, desktop-en: main against the branch
+11-touch-0.png: max_delta=2 px_differ=190 px_over2=0 of 1195560 box=(861,631)-(1047,819)
+12-touch-1.png: max_delta=2 px_differ=453 px_over2=0 of 1195560 box=(856,605)-(1034,819)
+13-touch-2.png: max_delta=2 px_differ=654 px_over2=0 of 1195560 box=(852,581)-(1053,819)
+14-touch-6.png: max_delta=3 px_differ=1143 px_over2=44 of 1195560 box=(848,539)-(1057,819)
+15-touch-held.png: max_delta=6 px_differ=1608 px_over2=645 of 1195560 box=(846,529)-(1059,819)
+FRAMES 31 differing=5 worst=6
+== fight, hand only, desktop-zh: main against the branch
+11-touch-0.png: max_delta=1 px_differ=15 px_over2=0 of 1195560 box=(868,634)-(1019,771)
+12-touch-1.png: max_delta=1 px_differ=25 px_over2=0 of 1195560 box=(857,609)-(1050,812)
+13-touch-2.png: max_delta=2 px_differ=66 px_over2=0 of 1195560 box=(853,583)-(1054,817)
+14-touch-6.png: max_delta=2 px_differ=160 px_over2=0 of 1195560 box=(848,539)-(1057,819)
+15-touch-held.png: max_delta=2 px_differ=318 px_over2=0 of 1195560 box=(846,529)-(1059,819)
+FRAMES 31 differing=5 worst=2
+== fight, hand only, pad-zh: main against a second run of main
+11-touch-0.png: max_delta=2 px_differ=33 px_over2=0 of 967600 box=(725,633)-(893,809)
+12-touch-1.png: max_delta=1 px_differ=58 px_over2=0 of 967600 box=(717,606)-(880,819)
+13-touch-2.png: max_delta=2 px_differ=117 px_over2=0 of 967600 box=(714,581)-(913,818)
+14-touch-6.png: max_delta=2 px_differ=290 px_over2=0 of 967600 box=(710,539)-(919,819)
+15-touch-held.png: max_delta=2 px_differ=615 px_over2=0 of 967600 box=(707,529)-(920,819)
+FRAMES 31 differing=5 worst=2
+== reward offering (--reward), cards only: main against the branch
+FRAMES 11 differing=0 worst=0
