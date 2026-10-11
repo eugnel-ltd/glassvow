@@ -73,6 +73,7 @@ func step(land: MapJourneyLandscape, paced: bool = false) -> bool:
 	if _bake == null:
 		state = State.PAINTED
 		return true
+	_bake.may_wait = paced
 	if not _bake.advance():
 		return false
 	timings_ms["bake"] = _bake.timings
