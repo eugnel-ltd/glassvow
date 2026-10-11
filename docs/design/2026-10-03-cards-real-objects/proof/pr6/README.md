@@ -163,19 +163,82 @@ use (`08-a12-condition.jpg`).
 
 ## iPad 8 (A12, 2160 × 1620)
 
-Pending. The campaign (`device/campaign6.zsh.txt`) runs QA builds of main
-(`5666c336`, A, sha256 `46a22af5…`) and the branch (`2b9c4a41`, B, the code of
-this PR; `fdfcb29d…`) with the same untracked probe
-(`device/card_probe.gd.txt`, attached by `device/patch.py.txt`), under one hold
-of the iPad lock, two sessions interleaved by install (A then B, B then A),
-each install a warm-up map launch and three measured fights 150 s apart, the
-battery cooled to 36.0 °C before each session: six measured fights per build.
-The probe opens the bench fight (Duskfang, elite) from the settled map, as
-PR 5b's did: a kindle, End Turn, 10 s at rest with five cards in hand (frame
-times, video memory, stages held), the touch (the front card entered as a
-finger's emulated mouse enters it, held 1 s, left; its frame and the two after
-it), a play from rest, End Turns to the reshuffle and its deal. The Mac run of
-the same probe is `device/summary-mac.txt`.
+QA builds of main (`5666c336`, A, sha256 `46a22af5…`) and the branch
+(`2b9c4a41`, B, the code of this PR; `fdfcb29d…`), each with the same untracked
+probe (`device/card_probe.gd.txt`, attached by `device/patch.py.txt`). One hold
+of the iPad lock for the whole campaign (`device/campaign6.zsh.txt`: 11 Oct
+2026, 20:41:17 to 22:03:49), two sessions interleaved by install, p6-1 A then
+B and p6-2 B then A. Each install ran a warm-up map launch, then three fights
+150 s apart: six measured fights per build, 16 launches in all, every row with
+its own nonce and build tag. The iPad was on its charger and full (100%, not
+charging) at every launch, at 33.2–41.4 °C. The probe opens the bench fight
+(Duskfang, elite) from the settled map, as PR 5b's did: a kindle, End Turn,
+then **rest**, 10 s with five cards in hand (frame times, video memory, stages
+held); **the touch**, the hand's front card entered as a finger's emulated mouse
+enters it (`CardView.point_at`: the card's `mouse_entered`, then the motion that
+sets the lamp down), held 1 s and left (no tap: on the iPad a tap would also
+lift the card); a play from rest (a defend to the discard); End Turn, which
+reshuffles nine cards all dealt before, and the deal (**resh**, **rdeal**).
+The analysis is `device/summary-p6.txt`, the batch logs `device/p6-1-batch.log.txt`
+and `p6-2-…`.
+
+Medians over the six fights of each build (per-fight p50 and p95, then the
+median of each), with p6-1 / p6-2 in brackets:
+
+| Figure | A, main | B, branch | B − A | The bar | Verdict |
+|---|---|---|---|---|---|
+| Video memory at the combat rest, five cards in hand (MiB) | 659.2 (655–659) | 600.6 (593–601) | **−58.6** | report it against the dossier's ~80 MB → <10 MB | the hand's stages held about 62 MiB (58.6 freed, 5 × 0.81 kept); see below |
+| Stages held at rest | 5 live cards | 0 in 6 of 6 | | | |
+| Combat rest p50 (ms) | 16.66 | 16.67 | +0.01 (−0.00 / +0.01) | within +0.5 | **met** |
+| Combat rest p95 (ms) | 18.01 | 18.29 | +0.28 (−0.07 / +0.12) | within +0.5 | **met** |
+| The touch's frame / +1 / +2 (ms) | 17.2 / 17.0 / 16.8 | 15.3 / 19.0 / 16.3 | | no frame over 33 ms | **met**: 0 of 18 frames on B (worst 19.8) |
+| Pipeline compiles after the load (surface, draw, spec.) | at the play only: +1 draw, +1 spec. (6 of 6) | at the play only, the same (6 of 6) | none | flat after the load | **met for this change**: the touch, the releases, the rebuild, turn end, the reshuffle and the deal compile nothing on either build; the one compile is main's own first play (below) |
+| Reshuffle p50 / p95 (ms) | 16.72 / 18.94 | 16.64 / 19.18 | −0.07 / +0.24 (p95 +0.17 / −0.04) | PR 5b's watch item: +0.74 then | measured: +0.24 |
+| Reshuffle, worst frame (ms) | 24.9 | 23.9 | −1.0 | reported | |
+| Releases per fight / worst release frame (ms) | — | 12 / 21.3–24.2 | | reported | inside the deals, where main's worst reshuffle frames run 23–26 ms |
+| Throttle | p6af1 from 27 s | none | | recorded | |
+
+- **Video memory.** The resting hand holds 58.6 MiB less on the branch in
+  every pairing (A 655–659 MiB, B 593–601). Five kept frames cost 4.0 MiB, so
+  the five live stages held about 62.6 MiB on the iPad 8, 12.5 MiB a card:
+  less than the dossier's 15.8 MB (its figure was a whole live card as built,
+  this one only what the release frees). The dossier's "about 80 MB to under
+  10 MB" becomes 62.6 MiB to 4.0 MiB.
+- **The touch** builds a stage in its own frame: the frame takes 15.3 ms on
+  the median (A 17.2), and the frame after it, the rebuilt stage's first full
+  draw, 19.0 (A 17.0). The worst of the eighteen is 19.8 ms.
+- **The one compile after the load** is the first play's: 1 draw and 1
+  specialisation pipeline (and 3 canvas), in the play phase of all twelve
+  fights, on both builds. It is not a card stage's: no count moves at the
+  touch, at a release or at the rebuild, and the kindle earlier in the same
+  fight, which flies a card to a pile, compiles nothing. In p6af1, main's
+  install's first fight, that play's frame took 611.3 ms; elsewhere 33–51 ms
+  on both builds. A first use for the #682 lane.
+- **The reshuffle.** p95 +0.24 over all six (p6-1 +0.17, p6-2 −0.04), against
+  PR 5b's +0.74; the worst frame is 1.0 ms better.
+- **Outliers:** p6af1 (A) throttled from 27 s: its reshuffle p95 43.79 and its
+  play's 611 ms frame; without it main's rest p95 median is 18.20 (B − A
+  +0.09) and its reshuffle p95 median 18.60 (B − A +0.58, against PR 5b's
+  +0.80 without its throttled fights). The load's second frame ran 48–50 ms in p6af1 and
+  p6bf2, and 30–33 ms in p6af4 and p6bf4, on both builds as in PR 5b.
+- **Warm-ups** (named, not graded): p6aw1, p6bw1, p6aw2, p6bw2, none throttled.
+
+Every fight, with battery, charging state and temperature as logged before it:
+
+| Batch | Launch | Build | Battery, temp. | Throttle onset | Counters at the load | Changes after it | Load / +1 / +2 | Rest p50 / p95 | VRAM at rest (stages held) | Touch / +1 / +2 | Play worst | Reshuffle p50 / p95 / worst | Releases (worst) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| p6-1 | p6af1 | A | 100%, not charging, 34.09C | 27 s | 22/10/142/9/48 | the play, frame 1474 25/10/142/10/49 | 809.3 / 20.4 / 50.1 | 16.66 / 17.39 | 659 (-1) | 17.1 / 16.8 / 16.4 | 611.3 | 20.66 / 43.79 / 46.1 | - |
+| p6-1 | p6af2 | A | 100%, not charging, 37.59C | none | 22/10/142/9/48 | the play, frame 1554 25/10/142/10/49 | 731.7 / 16.0 / 22.8 | 16.67 / 17.81 | 659 (-1) | 17.2 / 17.2 / 16.8 | 49.2 | 16.73 / 18.60 / 24.9 | - |
+| p6-1 | p6af3 | A | 100%, not charging, 38.59C | none | 22/10/142/9/48 | the play, frame 1467 25/10/142/10/49 | 778.7 / 16.2 / 16.8 | 16.67 / 17.39 | 659 (-1) | 17.4 / 16.8 / 16.8 | 50.1 | 16.71 / 18.23 / 24.9 | - |
+| p6-1 | p6bf1 | B | 100%, not charging, 37.39C | none | 22/10/142/9/48 | the play, frame 1442 25/10/142/10/49 | 733.1 / 16.2 / 16.7 | 16.66 / 17.27 | 601 (0) | 15.5 / 18.8 / 15.8 | 49.7 | 16.71 / 19.16 / 23.7 | 12 (23.7) |
+| p6-1 | p6bf2 | B | 100%, not charging, 39.50C | none | 22/10/142/9/48 | the play, frame 1556 25/10/142/10/49 | 749.8 / 15.1 / 48.2 | 16.68 / 17.32 | 593 (0) | 15.4 / 18.5 / 16.7 | 46.4 | 16.64 / 18.40 / 24.2 | 12 (24.2) |
+| p6-1 | p6bf3 | B | 100%, not charging, 39.89C | none | 22/10/142/9/48 | the play, frame 1610 25/10/142/10/49 | 728.5 / 16.2 / 24.6 | 16.67 / 18.30 | 601 (0) | 16.1 / 18.1 / 16.3 | 50.1 | 16.64 / 18.77 / 24.2 | 12 (21.5) |
+| p6-2 | p6af4 | A | 100%, not charging, 39.19C | none | 22/10/142/9/48 | the play, frame 1537 25/10/142/10/49 | 732.8 / 16.1 / 33.2 | 16.66 / 18.45 | 659 (-1) | 17.2 / 17.5 / 16.6 | 49.8 | 16.64 / 19.82 / 25.6 | - |
+| p6-2 | p6af5 | A | 100%, not charging, 41.00C | none | 22/10/142/9/48 | the play, frame 1518 25/10/142/10/49 | 745.9 / 15.3 / 19.0 | 16.65 / 18.95 | 659 (-1) | 17.3 / 17.3 / 17.0 | 45.9 | 16.60 / 19.28 / 23.3 | - |
+| p6-2 | p6af6 | A | 100%, not charging, 41.00C | none | 22/10/142/9/48 | the play, frame 1617 25/10/142/10/49 | 728.9 / 16.5 / 20.3 | 16.66 / 18.20 | 655 (-1) | 15.8 / 16.5 / 17.6 | 45.5 | 16.74 / 17.87 / 23.4 | - |
+| p6-2 | p6bf4 | B | 100%, not charging, 39.09C | none | 22/10/142/9/48 | the play, frame 1509 25/10/142/10/49 | 727.0 / 16.4 / 30.0 | 16.64 / 18.57 | 601 (0) | 14.7 / 19.8 / 16.1 | 33.3 | 16.65 / 19.20 / 22.4 | 12 (21.3) |
+| p6-2 | p6bf5 | B | 100%, not charging, 40.79C | none | 22/10/142/9/48 | the play, frame 1563 25/10/142/10/49 | 744.8 / 16.6 / 16.5 | 16.67 / 18.28 | 601 (0) | 15.2 / 19.1 / 16.8 | 50.1 | 16.66 / 19.24 / 23.5 | 12 (23.5) |
+| p6-2 | p6bf6 | B | 100%, not charging, 41.00C | none | 22/10/142/9/48 | the play, frame 1456 25/10/142/10/49 | 761.9 / 16.6 / 19.5 | 16.68 / 18.78 | 593 (0) | 14.7 / 19.5 / 16.3 | 50.5 | 16.58 / 19.65 / 24.4 | 12 (21.9) |
 
 ## Core gate
 

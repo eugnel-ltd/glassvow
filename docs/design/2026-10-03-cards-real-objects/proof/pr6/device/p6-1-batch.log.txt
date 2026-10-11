@@ -1,0 +1,23 @@
+[20:41:17] lock held
+[20:41:19] cool: battery 33.19 C
+[20:41:53] installed A (/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane/device6/ipa_A/glassvow.ipa, sha256 46a22af53484)
+[20:41:53] launch p6aw1 args=[--map --seed=1 --card-probe=nonce=p6aw1,mode=map,warm=1] battery=100% charging=false temp=33.19C
+[20:42:23] rows p6aw1: 209 frames; mode=map mode=map  battery=100% charging=false temp=33.69C
+[20:43:27] launch p6af1 args=[--map --seed=1 --card-probe=nonce=p6af1,mode=fight] battery=100% charging=false temp=34.09C
+[20:44:57] rows p6af1: 1755 frames; mode=fight mode=fight  battery=100% charging=false temp=36.29C
+[20:47:33] launch p6af2 args=[--map --seed=1 --card-probe=nonce=p6af2,mode=fight] battery=100% charging=false temp=37.59C
+[20:49:07] rows p6af2: 1917 frames; mode=fight mode=fight  battery=100% charging=false temp=38.19C
+[20:51:42] launch p6af3 args=[--map --seed=1 --card-probe=nonce=p6af3,mode=fight] battery=100% charging=false temp=38.59C
+[20:53:14] rows p6af3: 1829 frames; mode=fight mode=fight  battery=100% charging=false temp=39.09C
+[20:56:14] installed B (/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-lane/device6/ipa_B/glassvow.ipa, sha256 fdfcb29d398e)
+[20:56:15] launch p6bw1 args=[--map --seed=1 --card-probe=nonce=p6bw1,mode=map,warm=1] battery=100% charging=false temp=39.39C
+[20:56:44] rows p6bw1: 231 frames; mode=map mode=map  battery=100% charging=false temp=38.59C
+[20:57:47] launch p6bf1 args=[--map --seed=1 --card-probe=nonce=p6bf1,mode=fight] battery=100% charging=false temp=37.39C
+[20:59:17] rows p6bf1: 1806 frames; mode=fight mode=fight  battery=100% charging=false temp=38.59C
+[21:02:01] launch p6bf2 args=[--map --seed=1 --card-probe=nonce=p6bf2,mode=fight] battery=100% charging=false temp=39.50C
+[21:03:31] rows p6bf2: 1906 frames; mode=fight mode=fight  battery=100% charging=false temp=39.59C
+[21:06:10] launch p6bf3 args=[--map --seed=1 --card-probe=nonce=p6bf3,mode=fight] battery=100% charging=false temp=39.89C
+[21:07:45] rows p6bf3: 1958 frames; mode=fight mode=fight  battery=100% charging=false temp=40.19C
+[21:10:21] between sessions: 300 s
+[22:03:49] lock released
+[22:03:49] campaign done

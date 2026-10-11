@@ -109,5 +109,8 @@ session 1 A B 1
 OUT=$HERE/$NAME-1; log "between sessions: 300 s"; hold 300
 session 2 B A 4
 OUT=$HERE/$NAME-1
+# The last device step is over: the iPad goes back at once, before the analysis.
+trap - EXIT
+cleanup
 log "campaign done"
 python3 -I $HERE/analyze6.py $(cat $HERE/ipa_A/TAG) $HERE/$NAME-1 $HERE/$NAME-2 > $HERE/summary-$NAME.txt 2>&1
