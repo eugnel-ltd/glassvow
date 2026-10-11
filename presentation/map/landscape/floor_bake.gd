@@ -94,7 +94,12 @@ var _paced: bool = false
 ## the engine queue every pipeline the land's surfaces need, in the
 ## background; a task queued after them on each queue of the worker pool
 ## finishes once all of them have started, and SETTLE_S more lets the last
-## ones end. `may_wait` false (a map waiting for the land) skips the wait.
+## ones end. The first tile waits the same way after the warm draw: the switch
+## freed the pipelines the quiet view built, and a tile drawn before the soft
+## key's own have compiled is drawn by the engine's ubershader stand-in
+## (RenderForwardMobile's pipeline fallback), whose picture differs from theirs
+## by a level here and there, so the lit picture would depend on the moment.
+## `may_wait` false (a map waiting for the land) skips both waits.
 const SETTLE_S: float = 1.0
 var may_wait: bool = true
 var _canaries: Array[int] = []
@@ -119,7 +124,7 @@ func _init(land: MapJourneyLandscape, plan: Plan, paced: bool = false) -> void:
 ## Carries the bake on by one frame's work; true once it has ended (`DONE`, or
 ## `FAILED` with `failure` said).
 func advance() -> bool:
-	if step == Step.WARM and may_wait and not _compiled():
+	if (step == Step.WARM or step == Step.FIELDS) and may_wait and not _compiled():
 		return false
 	var started: int = Time.get_ticks_usec()
 	if _last_us > 0:
@@ -169,8 +174,10 @@ func cancel() -> void:
 	_canaries.clear()
 
 
-## Whether the land's pipelines have compiled (see `SETTLE_S`). The first call
-## comes the frame after the quiet view drew, once they are all queued.
+## Whether the pipelines the last draw queued have compiled (see `SETTLE_S`).
+## The first call comes the frame after that draw (the quiet view's, then the
+## warm draw's), once they are all queued; a true answer starts the next wait
+## afresh.
 func _compiled() -> bool:
 	_reap(false)
 	if _canaries.is_empty() and _settle_until == 0:
@@ -185,7 +192,10 @@ func _compiled() -> bool:
 	_canaries.clear()
 	if _settle_until == 0:
 		_settle_until = Time.get_ticks_msec() + roundi(SETTLE_S * 1000.0)
-	return Time.get_ticks_msec() >= _settle_until
+	if Time.get_ticks_msec() < _settle_until:
+		return false
+	_settle_until = 0
+	return true
 
 
 ## Waits on the canaries of bakes let go: those ended, or (`all`, at the
