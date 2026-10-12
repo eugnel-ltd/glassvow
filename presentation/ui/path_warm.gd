@@ -12,11 +12,12 @@ extends Control
 ##   pipelines it builds ahead in the background are for the project's MSAA
 ##   (RenderForwardMobile::_update_global_pipeline_data_requirements_from_project).
 ##   So no frame after frame 0 can build them without waiting. Only what the
-##   fight's load frame draws is drawn here (the foe's body and shadow, the
-##   card's side, face and stone), since each costs frame 0 its compile; the
-##   foe's other materials stand behind the camera, which builds their
-##   libraries and their pipelines for the project's MSAA in the background,
-##   and their own draw still waits at its first use in a fight. A pipeline's
+##   fight's load frame and its first card play draw is drawn here (the foe's
+##   body, shadow and ward, the card's side, face and stone), since each costs
+##   frame 0 its compile; the foe's other materials stand behind the camera,
+##   which builds their libraries and their pipelines for the project's MSAA
+##   in the background, and their own draw still waits at its first use in a
+##   fight. A pipeline's
 ##   key also holds the stage's light, so the foe's materials stand as
 ##   EnemyView's stage draws them (its sky as light, a key and two omni
 ##   lights) and the card's on the card's own prism, unlit, as CardView's
@@ -29,8 +30,7 @@ extends Control
 ##   title's floor bake has ended (its soft key switches free every scene
 ##   pipeline built before them): an empty view of the map's stage, lit as
 ##   Act I's journey land, whose glow pass is a target format of its own;
-##   frame 0's targets again, the ward in front too (the first card play
-##   draws it); and Act I's kept land lent to that view, a frame unseen (its
+##   frame 0's targets again; and Act I's kept land lent to that view, a frame unseen (its
 ##   surfaces' pipelines queued in the background), then, once those have
 ##   compiled, a frame drawn whole from above (their specialised pipelines),
 ##   so the map's first open builds none (#682 Part 2).
@@ -59,8 +59,7 @@ const WAYLIGHT_ROAD: Dictionary = {"centerline": [[0.0, 0.0, 0.0], [4.0, 0.0, 0.
 static var _held: Array[Material] = []
 static var _started: bool = false
 static var _primed: bool = false
-## Frame 0's targets as [foe drawn, foe drawn again after the bake (first
-## drawn by the first card play), foe behind the camera, the card's prism].
+## Frame 0's targets as [foe drawn, foe behind the camera, the card's prism].
 static var _targets: Array = []
 
 var rests: Callable = Callable()
@@ -86,9 +85,9 @@ static func prime_targets(host: Node) -> void:
 		return
 	_primed = true
 	var foe_drawn: Array[Material] = []
-	for code: String in [EnemyView.with_tint(EnemyView.with_erode(EnemyView.BODY_SHADER)), EnemyView.SHADOW_SHADER]:
+	for code: String in [EnemyView.with_tint(EnemyView.with_erode(EnemyView.BODY_SHADER)), EnemyView.SHADOW_SHADER,
+			EnemyView.WARD_SHADER]:
 		foe_drawn.append(_keep(_string(code)))
-	var foe_later: Array[Material] = [_keep(_string(EnemyView.WARD_SHADER))]
 	var foe_behind: Array[Material] = []
 	for code: String in [EnemyView.with_tint(EnemyView.GLASS_SHADER),
 			EnemyView.with_tint(EnemyView.with_erode(EnemyView.SHARD_SHADER)), EnemyView.FX_SHADER]:
@@ -98,9 +97,9 @@ static func prime_targets(host: Node) -> void:
 	var card: Array[Material] = [_keep(CardView.generated_materials()[0]),
 		_keep(_file("res://presentation/combat/card_surface.gdshader")),
 		_keep(_file("res://presentation/combat/card_gem.gdshader"))]
-	_targets = [foe_drawn, foe_later, foe_behind, card]
+	_targets = [foe_drawn, foe_behind, card]
 	var holder: Node = _holder()
-	holder.add_child(_foe_stage(false))
+	holder.add_child(_foe_stage())
 	holder.add_child(_card_stage())
 	host.add_child(holder)
 
@@ -117,10 +116,13 @@ static func _holder() -> Node:
 	return holder
 
 
-## The foe's stage: what the load frame draws in front of the camera, and,
-## when `again` (the redraw after the bake), the ward too, which the first
-## card play draws (#709); the rest behind the camera.
-static func _foe_stage(again: bool) -> SubViewport:
+## The foe's stage: what the load frame draws (the body and the shadow) and
+## the ward, which the first card play draws (#709), in front of the camera;
+## the rest behind it. The ward is drawn here at frame 0 too: its first 4x
+## MSAA pipeline, built cold in a title frame, held that frame 250-264 ms on
+## the iPad 8 (#682 Part 2's read); built once, the redraw finds it in the
+## Metal cache.
+static func _foe_stage() -> SubViewport:
 	var foe: SubViewport = _target_stage("PathWarmFoe")
 	var light: WorldEnvironment = WorldEnvironment.new()
 	light.environment = EnemyView.stage_environment()
@@ -133,9 +135,9 @@ static func _foe_stage(again: bool) -> SubViewport:
 		var omni: OmniLight3D = OmniLight3D.new()
 		omni.position = Vector3(0.0, 0.0, -3.0)
 		foe.add_child(omni)
-	for i: int in range(3):
+	for i: int in range(2):
 		var mats: Array[Material] = _targets[i]
-		var front: bool = i == 0 or (i == 1 and again)
+		var front: bool = i == 0
 		for mat: Material in mats:
 			var plane: MeshInstance3D = MeshInstance3D.new()
 			var mesh: PlaneMesh = PlaneMesh.new()
@@ -152,7 +154,7 @@ static func _card_stage() -> SubViewport:
 	var card: SubViewport = _target_stage("PathWarmCard")
 	var slab: MeshInstance3D = MeshInstance3D.new()
 	slab.mesh = CardView._prism_mesh(4.0, true)
-	var prism: Array[Material] = _targets[3]
+	var prism: Array[Material] = _targets[2]
 	for surface: int in range(3):
 		slab.set_surface_override_material(surface, prism[surface])
 	slab.position = Vector3(0.0, 0.0, -400.0)
@@ -285,7 +287,7 @@ func _map_look() -> void:
 ## stage in one frame, the card's in the next.
 func _restand_foe() -> void:
 	var holder: Node = _holder()
-	holder.add_child(_foe_stage(true))
+	holder.add_child(_foe_stage())
 	add_child(holder)
 
 
@@ -326,17 +328,21 @@ func _land_queue() -> void:
 			tracer.queue_free(), CONNECT_ONE_SHOT)
 
 
-## Waits, without holding a frame, until the pipelines the land queued have
+## Waits, without holding a frame, until the pipelines queued so far have
 ## compiled: a task queued after them on each queue of the worker pool ends
 ## once they have all started, and SETTLE more lets the last ones end (as the
-## floor bake waits, `floor_bake.gd`).
-func _land_wait() -> void:
+## floor bake waits, `floor_bake.gd`). Once after the land is queued (its draw
+## then finds them built), and once after it is drawn: the warm is done only
+## when its specialised pipelines are, since on the iPad 8 their compiles,
+## still running when the title's first room opened, slowed that opening by
+## 10-15 ms (#682 Part 2's read).
+func _await_compiles() -> void:
 	if _canaries.is_empty() and _settle_until == 0:
 		for high: bool in [true, false]:
 			_canaries.append(WorkerThreadPool.add_task(func() -> void: pass, high, "PathWarm: land pipelines started"))
 	for task: int in _canaries:
 		if not WorkerThreadPool.is_task_completed(task):
-			_steps.push_front(_land_wait)
+			_steps.push_front(_await_compiles)
 			return
 	for task: int in _canaries:
 		WorkerThreadPool.wait_for_task_completion(task)
@@ -344,7 +350,7 @@ func _land_wait() -> void:
 	if _settle_until == 0:
 		_settle_until = Time.get_ticks_msec() + roundi(SETTLE * 1000.0)
 	if Time.get_ticks_msec() < _settle_until:
-		_steps.push_front(_land_wait)
+		_steps.push_front(_await_compiles)
 
 
 ## The land drawn once, whole, from above, lit and shadowed as the map lights
@@ -399,8 +405,9 @@ func _settle() -> void:
 		_steps.append(_restand_foe)
 		_steps.append(_restand_card)
 	_steps.append(_land_queue)
-	_steps.append(_land_wait)
+	_steps.append(_await_compiles)
 	_steps.append(_land_draw)
+	_steps.append(_await_compiles)
 
 
 ## Drawn once under everything, at the least alpha Godot still draws

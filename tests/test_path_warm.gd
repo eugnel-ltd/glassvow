@@ -95,8 +95,8 @@ static func _frame_zero(fails: Array[String], tree: SceneTree, host: Node) -> vo
 	var refs: Array[WeakRef] = _weak(_worn(holder))
 	_check(fails, refs.size() >= 10, "frame 0's stages wear the fight's materials and the sky (%d)" % refs.size())
 	var foe: Node = holder.find_child("PathWarmFoe", true, false)
-	_check(fails, foe != null and _drawn(foe) == 2 and foe.find_children("*", "OmniLight3D", true, false).size() == 2,
-		"frame 0 draws the foe's body and shadow under two omni lights, as EnemyView lights them")
+	_check(fails, foe != null and _drawn(foe) == 3 and foe.find_children("*", "OmniLight3D", true, false).size() == 2,
+		"frame 0 draws the foe's body, shadow and ward (the first card play's) under two omni lights, as EnemyView lights them")
 	RenderingServer.frame_post_draw.emit()
 	await tree.process_frame
 	_check(fails, not is_instance_valid(holder), "frame 0's stages are let go once drawn")
@@ -126,6 +126,7 @@ static func _title_steps(fails: Array[String], tree: SceneTree, host: Node) -> v
 	var held_at_gate: int = 0
 	var early: int = 0
 	var ward_drawn: bool = false
+	var ends_waiting: int = -1
 	for _call: int in range(STEP_LIMIT):
 		if not is_instance_valid(warm) or warm.is_queued_for_deletion():
 			break
@@ -150,12 +151,18 @@ static func _title_steps(fails: Array[String], tree: SceneTree, host: Node) -> v
 				early += 1 if gated and node.name in AFTER_BAKE else 0
 		if canvas.is_empty() and warm._settled >= 0.0:
 			canvas = _weak(warm._canvas)
+			var n: int = warm._steps.size()
+			ends_waiting = 1 if n >= 4 and warm._steps[n - 4] == warm._land_queue \
+				and warm._steps[n - 3] == warm._await_compiles and warm._steps[n - 2] == warm._land_draw \
+				and warm._steps[n - 1] == warm._await_compiles else 0
 		RenderingServer.frame_post_draw.emit()
 		await tree.process_frame
 	MapJourneyPrefetch._current = kept
 	_check(fails, held_at_gate == GATE_CALLS and early == 0,
 		"nothing is redrawn while the floor bake runs (held %d calls, %d views early)" % [held_at_gate, early])
-	_check(fails, ward_drawn, "the foe's redraw draws the ward too, which the first card play draws")
+	_check(fails, ward_drawn, "the foe's redraw draws the ward again with the body and the shadow")
+	_check(fails, ends_waiting == 1,
+		"the warm queues the land, waits for its compiles, draws it, and ends only once that draw's compiles are done")
 	_check(fails, _count(views, "PathWarmMap") == 1 and _count(views, "PathWarmFoe") == 1 and _count(views, "PathWarmCard") == 1,
 		"after the bake the map's view, the foe's and the card's stages stand once each (%s)" % str(views))
 	_check(fails, _count(kinds, "ColorRect") == canvas.size() and _count(kinds, "NinePatchRect") == 1
