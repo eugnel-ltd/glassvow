@@ -1,0 +1,25 @@
+#!/bin/zsh
+# Lane #682 Part 2 scratch: nonce a worktree afresh, arm the Part 2 probe, export
+# an unbaked macOS pck (headless) to $L/tmp/mac/<name>.pck, then put the
+# worktree's QA edits back (only the files nonce_all/arm touch; a worktree with
+# other unstaged edits to those files is refused, never reverted).
+#   mac_pck.zsh <worktree> <nonce> <name>
+# Every editor run gets a lane HOME (the editor ignores override.cfg).
+set -eu
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/shader-lane
+E=$L/godot-src/bin/godot.macos.editor.arm64
+WT=$1; nonce=$2; name=$3
+[[ ! -e $L/tmp/mac/$name.pck ]] || { echo "exists: $name.pck"; exit 1; }
+cd $WT
+QA=($(git ls-files 'presentation/*.gdshader') presentation/combat/enemy_view.gd presentation/combat/combat_screen.gd
+  presentation/stage/transition_layer.gd presentation/reward/reward_stage.gd application/main.gd
+  presentation/map/map_scene.gd presentation/map/map_journey_landscape.gd)
+dirty=$(git status --porcelain --untracked-files=no -- $QA)
+[[ -z "$dirty" ]] || { echo "refused: unstaged edits in QA-touched files:"; echo "$dirty"; exit 1; }
+revert() { git checkout -q -- $QA; rm -f $WT/tools/qa_shader_probe.gd $WT/tools/qa_shader_probe.gd.uid; }
+trap revert EXIT
+python3 $L/tools/nonce_all.py $WT $nonce | tail -1
+python3 $L/tools/p2/arm.py $WT mac-$name | tail -1
+env HOME=$L/tmp/home timeout 900 $E --headless --path $WT --export-pack "macOS" $L/tmp/mac/$name.pck > $L/tmp/mac/export-$name.log 2>&1
+grep -E "ERROR|SCRIPT ERROR|Parse Error" $L/tmp/mac/export-$name.log | head -5 || true
+ls -la $L/tmp/mac/$name.pck

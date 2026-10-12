@@ -1,0 +1,52 @@
+K IB4-1: res 74, new {} (game shader files 0), rejected 0
+K IB4-2: res 74, new {} (game shader files 0), rejected 0
+tile                                                         within   x IU-2    x IB2  bound     ok
+res://presentation/cards/backs/eclipse.gdshader                   0        0        0      1 PASS
+res://presentation/cards/backs/rose.gdshader                      0        0        0      1 PASS
+res://presentation/cards/card_turn.gdshader                       0        0        0      1 PASS
+res://presentation/combat/card_edge.gdshader                      0        0        0      1 PASS
+res://presentation/combat/card_gem.gdshader                       0        0        0      1 PASS
+res://presentation/combat/card_shine.gdshader                     0        0        0      1 PASS
+res://presentation/combat/card_surface.gdshader                   0        0        0      1 PASS
+res://presentation/combat/lantern_flame.gdshader                  0        0        0      1 PASS
+res://presentation/map/landscape/banner.gdshader                  0        0        0      1 PASS
+res://presentation/map/landscape/bridge_stone.gdshader            0        0        0      1 PASS
+res://presentation/map/landscape/flame.gdshader                   0        0        0      1 PASS
+res://presentation/map/landscape/floor.gdshader                   0        0        0      1 PASS
+res://presentation/map/landscape/floor_caster.gdshader            0        0        0      1 PASS
+res://presentation/map/landscape/floor_mask.gdshader              0        0        0      1 PASS
+res://presentation/map/landscape/floor_mip.gdshader               0        0        0      1 PASS
+res://presentation/map/landscape/floor_paint.gdshader             0        0        0      1 PASS
+res://presentation/map/landscape/foliage.gdshader                 0        0        0      1 PASS
+res://presentation/map/landscape/impostor.gdshader                0        0        0      1 PASS
+res://presentation/map/landscape/river.gdshader                   0        0        0      1 PASS
+res://presentation/map/landscape/river_lite.gdshader              0        0        0      1 PASS
+res://presentation/map/landscape/spark.gdshader                   0        0        0      1 PASS
+res://presentation/map/landscape/stone.gdshader                   0        0        0      1 PASS
+res://presentation/map/landscape/terrain_paint.gdshader           0        0        0      1 PASS
+res://presentation/map/map_display.gdshader                       0        0        0      1 PASS
+res://presentation/map/map_display_fade.gdshader                  0        0        0      1 PASS
+res://presentation/map/map_ground.gdshader                        0        0        0      1 PASS
+res://presentation/map/map_mineral.gdshader                       0        0        0      1 PASS
+res://presentation/map/map_prop.gdshader                          0        0        0      1 PASS
+res://presentation/map/map_tilt_shift.gdshader                    0        0        0      1 PASS
+res://presentation/map/map_vigil.gdshader                         0        0        0      1 PASS
+res://presentation/reward/leaded_glass.gdshader                   0        0        0      1 PASS
+res://presentation/reward/reward_glass.gdshader                   0        0        0      1 PASS
+res://presentation/reward/reward_shard.gdshader                   0        0        0      1 PASS
+res://presentation/run/rose_pane.gdshader                         0        0        0      1 PASS
+res://presentation/story/glass_portrait.gdshader                  0        0        0      1 PASS
+string:specular_schlick_ggx;#df4a8586                             0        0        0      1 PASS
+string:uniform vec2 outline[16];#9c18998b                         0        0        0      1 PASS
+string:specular_schlick_ggx;#f355dba1                             0        0        0      1 PASS
+string:specular_schlick_ggx;#4c56d30a                             0        0        0      1 PASS
+string:uniform float bright : hint_range(0.0, 4#d4177e03          0        0        0      1 PASS
+string:uniform sampler2D body_tex : source_colo#6adea605          0        0        0      1 PASS
+string:uniform sampler2D tex : source_color, fi#2624d5a6          0        0        0      1 PASS
+string:uniform vec4 edge : source_color = vec4(#d98bc95d          0        0        0      1 PASS
+string:uniform vec4 dark : source_color = vec4(#0303e6b2          0        0        0      1 PASS
+string:uniform sampler2D screen_tex : hint_scre#bccd304e          0        0        0      1 PASS
+string:uniform vec2 centre = vec2(0.0, 0.0);#d0302b00             0        0        0      1 PASS
+string:uniform sampler2D screen_tex : hint_scre#14c3546c          0        0        0      1 PASS
+post:enemy_body+shard+card_surface                                0        0        0      1 PASS
+RESULT IB4 against IU-2: PASS (0 tiles failed); against IB2: PASS (0 failed); 48 tiles

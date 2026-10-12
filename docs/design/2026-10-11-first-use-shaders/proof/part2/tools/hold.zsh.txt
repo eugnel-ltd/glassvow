@@ -1,0 +1,30 @@
+#!/bin/zsh
+# Lane #682 Part 2: the registered device read in ONE lock hold (only when the
+# orchestrator gives the lock). Takes `shader-682` (waits for any other holder,
+# never takes one over), runs, with HOLD_OUTER=1 so neither releases:
+#   1. identity_batch.zsh: IB3 (the clean editor's bake of the identity scene,
+#      origin/main 3e734010, nonce I682B3), one install, two launches, tiles
+#      pulled as in device/identity1;
+#   2. p2/batch.zsh: A1 P1 A2 P2 A3 P3, interleaved, one fresh install each with
+#      its own never-compiled nonce (title launch, then fight launch; no captures);
+# and releases the lock the moment the last device step ends (EXIT trap).
+#   [TITLE_MODE=title|route] hold.zsh
+set -u
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/shader-lane
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+OWNER=shader-682
+IB3=/Users/jamesto/Coding/glassvow-bake-editor/ipa/IB3.ipa
+[[ -f $IB3 ]] || { echo "no $IB3; ask the orchestrator"; exit 1; }
+for a in A1 P1 A2 P2 A3 P3; do [[ -f $L/ipa/$a/$a.ipa ]] || { echo "missing $L/ipa/$a/$a.ipa"; exit 1; }; done
+while [[ -d $FLOW/ipad.lock ]] && [[ "$(cat $FLOW/ipad.lock/owner 2>/dev/null)" != "$OWNER" ]]; do
+  echo "lock held by '$(cat $FLOW/ipad.lock/owner 2>/dev/null)'; waiting 30 s"; sleep 30
+done
+$FLOW/ipad_lock.sh acquire $OWNER
+trap "$FLOW/ipad_lock.sh release $OWNER; echo \"== lock released \$(date +%T)\"" EXIT
+echo "== hold taken $(date +%T); TITLE_MODE=${TITLE_MODE:-title}"
+export HOLD_OUTER=1
+zsh $L/tools/identity_batch.zsh $L/device/p2/ib3 IB3=$IB3 || echo "== identity batch rc=$?"
+zsh $L/tools/p2/batch.zsh $L/device/p2/read $L/device/seed_dev_run_v2.json \
+  A1=$L/ipa/A1/A1.ipa:0 P1=$L/ipa/P1/P1.ipa:0 A2=$L/ipa/A2/A2.ipa:0 P2=$L/ipa/P2/P2.ipa:0 \
+  A3=$L/ipa/A3/A3.ipa:0 P3=$L/ipa/P3/P3.ipa:0 || echo "== read batch rc=$?"
+echo "== hold done $(date +%T)"

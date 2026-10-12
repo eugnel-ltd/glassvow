@@ -1,0 +1,752 @@
+extends Node
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## Scratch QA probe, lane #682 (never part of the game; never committed). Copied
+## into a measuring worktree as `tools/qa_shader_probe.gd` by `arm.py`, which
+## adds one uncommitted line block at the top of `Main._ready` that attaches it
+## when a `--shader-probe=<mode>` user argument is given.
+##   title  (no --map; needs a stored run): frame 0 (since the engine started and
+##          since this probe's `_ready`), every frame after it while the title
+##          warms, then Back to the Road as a tap does and the first map open's
+##          frames until the map is drawn and 90 frames more; quit.
+##   fight  (with --map --seed=1): the map settled, then the bench fight
+##          (duskfang, elite) started as the cards lane's probe starts it; the
+##          load frame and the frames after it for FIGHT_HOLD_S; quit.
+## Each row carries the pipeline-compile counters and the Godot shader caches:
+## the files in user://shader_cache (a group written there was compiled on this
+## device) and, for every file new since the probe started, whether the export
+## shipped a baked file at the same relative path under res://.godot/shader_cache
+## (then the device rejected or skipped the baked one). Rows go to
+## user://shader_probe.jsonl, flushed per row, and to stdout as SHADER_PROBE.
+## The probe deletes nothing.
+## Part 2 (B9) additions:
+## - every frame, the five pipeline-compile counters; a `pf` row for each frame
+##   in which one moved (they count submissions, not completions, so read them
+##   with the frame's time);
+## - every frame's time split: `gap` (the previous frame's draw to this frame's
+##   process start: input, physics, pacing), `proc` (process start to the
+##   renderer's pre-draw: scripts and the tree), `draw` (pre-draw to post-draw:
+##   the GPU fence, the scene update, the viewports' draws, the submit) and
+##   `setup` (the renderer's scene and canvas update, inside `draw`);
+## - stage marks: the measuring build's arming adds QA-only calls of the
+##   `qa_stage` callable (an Engine meta) at the fight load's construction
+##   stages and the map land's arrival; each mark lands in the frame it ran in,
+##   in ms since that frame's process start.
+
+const ROW_PATH: String = "user://shader_probe.jsonl"
+const BUILD: String = "unstamped"
+const SLOW_MS: float = 50.0
+const TITLE_HOLD_S: float = 8.0
+const TITLE_LIMIT_S: float = 60.0
+const FIGHT_HOLD_S: float = 6.0
+const PLAY_HOLD_S: float = 4.0
+const USER_CACHE: String = "user://shader_cache"
+const RES_CACHE: String = "res://.godot/shader_cache"
+
+var mode: String = "title"
+var nonce: String = "none"
+var _main: Node = null
+var _rows: FileAccess = null
+var _started_us: int = 0
+var _last_us: int = 0
+var _frames: PackedFloat32Array = PackedFloat32Array()
+## Per entry of `_frames`: 1 when that frame drew a RoomWarm pipeline sample (the
+## frames of Phase B's T row, #682), else 0.
+var _room_sample: PackedByteArray = PackedByteArray()
+## Per entry of `_frames`: 1 when the map prefetch was baking the floor that
+## frame (Phase B's diagnostic S row: the bake's soft-shadow switches), else 0.
+var _floor_baking: PackedByteArray = PackedByteArray()
+var _first_ms: float = -1.0
+var _first_engine_ms: int = -1
+var _pipelines_frame0: Dictionary = {}
+var _force_draws: Array = []
+var _processing: bool = false
+var _user_at_start: Dictionary = {}
+var _res_files: Dictionary = {}
+## The path's phase, printed with every frame when GLASSVOW_PIPELINE_LOG is set
+## (the lane's diagnostic engine prints every pipeline it builds), so each
+## pipeline can be put in the frame and phase that built it.
+var _phase: String = "boot"
+var _frame_no: int = 0
+var _log_frames: bool = OS.has_environment("GLASSVOW_PIPELINE_LOG")
+## Code hash → name, for the shaders the GDScript builds from strings.
+var _known: Dictionary = {}
+## Part 2: the counters at the last frame drawn, the current frame's process
+## start and pre-draw, and per entry of `_frames` its split and its marks.
+var _pipes_last: Dictionary = {}
+var _proc_us: int = 0
+var _pre_us: int = 0
+var _added: int = 0
+var _split: Array = []
+var _marks: Array = []
+## Mac-only diagnostics: `--probe-kinds` (the canvas kinds row) and
+## `--probe-shots=<prefix>` (the root picture at each inventory).
+var _kinds: bool = false
+var _shots: String = ""
+## `--probe-open-at=<ms>`: Back to the Road pressed no earlier than this engine
+## time, so two runs' pictures share the shaders' TIME (Mac picture checks).
+var _open_at: int = 0
+## `--probe-shot-at=<ms>`: one more picture of the settled map at this engine
+## time, so two runs' land shares the shaders' TIME to a frame.
+var _shot_at: int = 0
+## Confirmation read: `--probe-early-tap=<ms>` leaves the title this long after
+## frame 0, the warm done or not, skips the rooms, and goes on with the route.
+var _early_tap: int = 0
+## The title row's own cost (diagnostic): its cache listing, and the probe's
+## whole work from leaving the title loop to the inventory's end.
+var _cache_ms: float = -1.0
+var _title_probe_us: int = 0
+
+
+func _ready() -> void:
+	_started_us = Time.get_ticks_usec()
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	_main = get_parent()
+	_rows = FileAccess.open(ROW_PATH, FileAccess.WRITE)
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--shader-probe="):
+			mode = arg.get_slice("=", 1)
+		elif arg.begins_with("--probe-nonce="):
+			nonce = arg.get_slice("=", 1)
+		elif arg.begins_with("--probe-early-tap="):
+			_early_tap = int(arg.get_slice("=", 1))
+		elif arg.begins_with("--probe-shot-at="):
+			_shot_at = int(arg.get_slice("=", 1))
+		elif arg.begins_with("--probe-open-at="):
+			_open_at = int(arg.get_slice("=", 1))
+		elif arg == "--probe-kinds":
+			_kinds = true
+		elif arg.begins_with("--probe-shots="):
+			_shots = arg.get_slice("=", 1)
+		elif arg == "--probe-lean":
+			# The phones' and tablets' map (no MSAA on its stage) on the Mac.
+			MapScene.lean_override = 1
+	RenderingServer.frame_post_draw.connect(_drawn)
+	get_tree().process_frame.connect(func() -> void: _processing = true, CONNECT_ONE_SHOT)
+	get_tree().process_frame.connect(func() -> void: _proc_us = Time.get_ticks_usec())
+	RenderingServer.frame_pre_draw.connect(func() -> void: _pre_us = Time.get_ticks_usec())
+	get_tree().node_added.connect(func(_n: Node) -> void: _added += 1)
+	Engine.set_meta("qa_stage", _stage)
+	_pipes_last = _pipelines()
+	# The cache listings happen here, before the first frame, so no measured
+	# frame pays for them.
+	_user_at_start = _list(USER_CACHE)
+	_res_files = _list(RES_CACHE)
+	_row({"probe": "start", "mode": mode, "nonce": nonce, "build": BUILD,
+		"engine_ms": Time.get_ticks_msec(), "args": OS.get_cmdline_user_args(),
+		"engine": Engine.get_version_info()["string"],
+		"adapter": RenderingServer.get_video_adapter_name(),
+		"user_cache_files": _user_at_start.size(), "res_cache_files": _res_files.size(),
+		"res_cache_by_shader": _by_shader(_res_files)})
+	_run.call_deferred()
+
+
+func _drawn() -> void:
+	var now: int = Time.get_ticks_usec()
+	if not _processing:
+		_force_draws.append(snappedf((now - _started_us) / 1000.0, 0.1))
+		return
+	if _first_ms < 0.0:
+		_first_ms = (now - _started_us) / 1000.0
+		_first_engine_ms = Time.get_ticks_msec()
+		_pipelines_frame0 = _pipelines()
+	else:
+		_frames.append((now - _last_us) / 1000.0)
+		_room_sample.append(1 if _room_sampling() else 0)
+		_floor_baking.append(1 if MapJourneyPrefetch.current_step() == MapJourneyPrefetch.Step.BAKING else 0)
+		_frame_split(now)
+	_last_us = now
+	_frame_no += 1
+	if _log_frames:
+		var path_warm: Node = _main.get_node_or_null("PathWarm")
+		print("GV_FRAME %d %s %.1f rws=%d rw=%d pw=%s pf=%d" % [_frame_no, _phase,
+			(_frames[_frames.size() - 1] if not _frames.is_empty() else _first_ms),
+			1 if _room_sampling() else 0, 1 if _main.get_node_or_null("RoomWarm") != null else 0,
+			(str(path_warm.get("_steps").size()) + ("s" if path_warm.get("_sample") != null else "")) if path_warm != null else "-",
+			MapJourneyPrefetch.current_step()])
+
+
+## Part 2: the frame just drawn (the last entry of `_frames`), split, and a `pf`
+## row when a pipeline counter moved in it.
+func _frame_split(now: int) -> void:
+	var ms: float = _frames[_frames.size() - 1]
+	var fresh: bool = _proc_us > _last_us and _pre_us >= _proc_us
+	var entry: Array = [snappedf(ms, 0.1),
+		snappedf((_proc_us - _last_us) / 1000.0, 0.1) if fresh else -1.0,
+		snappedf((_pre_us - _proc_us) / 1000.0, 0.1) if fresh else -1.0,
+		snappedf((now - _pre_us) / 1000.0, 0.1) if _pre_us > _last_us else -1.0,
+		snappedf(RenderingServer.get_frame_setup_time_cpu(), 0.1), _added, _marks]
+	_split.append(entry)
+	_added = 0
+	_marks = []
+	var pipes: Dictionary = _pipelines()
+	var moved: Dictionary = {}
+	for k: String in pipes:
+		if int(pipes[k]) != int(_pipes_last.get(k, 0)):
+			moved[k] = int(pipes[k]) - int(_pipes_last.get(k, 0))
+	_pipes_last = pipes
+	if not moved.is_empty():
+		_row({"probe": "pf", "f": _frames.size() - 1, "phase": _phase, "ms": entry[0], "d": moved,
+			"gap": entry[1], "proc": entry[2], "draw": entry[3], "setup": entry[4], "added": entry[5],
+			"marks": entry[6]})
+
+
+## Part 2: a QA-only stage mark (Engine meta `qa_stage`), in ms since this
+## frame's process start.
+func _stage(label: String) -> void:
+	_marks.append([label, snappedf((Time.get_ticks_usec() - _proc_us) / 1000.0, 0.01)])
+
+
+## The title row's cache listing, marked (Part 2: the settings room's first
+## opening is measured from this frame).
+func _title_cache() -> Dictionary:
+	_stage("probe:before_cache_delta")
+	var started: int = Time.get_ticks_usec()
+	var out: Dictionary = _cache_delta()
+	_cache_ms = snappedf((Time.get_ticks_usec() - started) / 1000.0, 0.1)
+	_stage("probe:cache_delta")
+	return out
+
+
+## Video memory by kind (MiB): the renderer's total, its textures and its
+## buffers; the rest is the driver's own (pipelines, libraries, heaps).
+static func _vram_parts() -> Dictionary:
+	var mib: float = 1048576.0
+	var video: float = RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED) / mib
+	var tex: float = RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TEXTURE_MEM_USED) / mib
+	var buf: float = RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_BUFFER_MEM_USED) / mib
+	return {"video": snappedf(video, 0.1), "texture": snappedf(tex, 0.1), "buffer": snappedf(buf, 0.1),
+		"other": snappedf(video - tex - buf, 0.1)}
+
+
+## Every view in the tree with its own render target, as path, size, MSAA and
+## update mode: what a warm would leave allocated (`texture_debug_usage` is not
+## bound to scripts).
+func _textures() -> Array:
+	var out: Array = []
+	for node: Node in get_tree().root.find_children("*", "SubViewport", true, false):
+		var vp: SubViewport = node
+		out.append([str(get_tree().root.get_path_to(vp)).right(60), "%dx%d" % [vp.size.x, vp.size.y], vp.msaa_3d,
+			vp.render_target_update_mode])
+	return out
+
+
+## The split rows of `_frames[from, from + count)`.
+func _split_rows(from: int, count: int) -> Array:
+	return _split.slice(from, mini(from + count, _split.size()))
+
+
+## True while RoomWarm has a pipeline sample in the tree (drawn this frame).
+func _room_sampling() -> bool:
+	var warm: Node = _main.get_node_or_null("RoomWarm")
+	return warm != null and warm.get("_sample") != null
+
+
+static func _pipelines() -> Dictionary:
+	return {"draw": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_DRAW),
+		"surface": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SURFACE),
+		"mesh": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_MESH),
+		"specialization": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SPECIALIZATION),
+		"canvas": RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_CANVAS)}
+
+
+## Every file under `root`, by its path relative to `root`.
+static func _list(root: String) -> Dictionary:
+	var out: Dictionary = {}
+	var stack: Array[String] = [""]
+	while not stack.is_empty():
+		var rel: String = stack.pop_back()
+		var dir: DirAccess = DirAccess.open(root.path_join(rel) if not rel.is_empty() else root)
+		if dir == null:
+			continue
+		for sub: String in dir.get_directories():
+			stack.append(rel.path_join(sub) if not rel.is_empty() else sub)
+		for file: String in dir.get_files():
+			out[rel.path_join(file) if not rel.is_empty() else file] = true
+	return out
+
+
+## File counts by the ShaderRD name (the first path segment).
+static func _by_shader(files: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	for rel: String in files:
+		var key: String = rel.get_slice("/", 0)
+		out[key] = int(out.get(key, 0)) + 1
+	return out
+
+
+## The user-cache files written since the probe started: each is a group this
+## device compiled. `with_baked` names those whose relative path the export also
+## shipped baked (the device rejected or skipped the baked container).
+func _cache_delta() -> Dictionary:
+	var now: Dictionary = _list(USER_CACHE)
+	var fresh: Array = []
+	var with_baked: Array = []
+	# A new file whose ShaderRD group directory (name/group_sha256) the export
+	# never shipped: the device's general defines differ from the editor's, so
+	# no baked file of that shader could ever be found.
+	var res_groups: Dictionary = {}
+	for rel: String in _res_files:
+		res_groups[rel.get_base_dir()] = true
+	var groups_unbaked: Dictionary = {}
+	for rel: String in now:
+		if not _user_at_start.has(rel):
+			fresh.append(rel)
+			if _res_files.has(rel):
+				with_baked.append(rel)
+			elif not res_groups.has(rel.get_base_dir()):
+				groups_unbaked[rel.get_base_dir()] = int(groups_unbaked.get(rel.get_base_dir(), 0)) + 1
+	return {"user_files": now.size(), "new": fresh.size(), "new_by_shader": _by_shader(_as_dict(fresh)),
+		"new_with_baked": with_baked.size(), "new_with_baked_paths": with_baked,
+		"new_in_unbaked_groups": groups_unbaked}
+
+
+static func _as_dict(items: Array) -> Dictionary:
+	var out: Dictionary = {}
+	for item: Variant in items:
+		out[item] = true
+	return out
+
+
+func _row(data: Dictionary) -> void:
+	data["nonce"] = nonce
+	var line: String = JSON.stringify(data)
+	print("SHADER_PROBE ", line)
+	if _rows != null:
+		_rows.store_line(line)
+		_rows.flush()
+
+
+func _wait(frames: int) -> void:
+	for _i: int in range(frames):
+		await get_tree().process_frame
+
+
+func _run() -> void:
+	if mode == "fight":
+		await _fight()
+	elif mode == "route":
+		# The player's first session: the title (and its warm), Back to the
+		# Road, then the bench fight from that map, in one process.
+		await _title()
+		await _fight()
+	else:
+		await _title()
+	_row({"probe": "done", "engine_ms": Time.get_ticks_msec()})
+	await _wait(5)
+	get_tree().quit(0)
+
+
+func _title() -> void:
+	_phase = "title"
+	_known = _known_shaders()
+	var saved: Variant = _main.call("_load_run")
+	_row({"probe": "save", "has_run": saved != null})
+	var started: int = Time.get_ticks_msec()
+	# A build with the path warm (#682 H2) holds the title until the warm is
+	# done, and marks the frames it ran in; a build without one never sees it.
+	var warm_from: int = -1
+	var warm_to: int = -1
+	var warm_end_ms: int = -1
+	while true:
+		await get_tree().process_frame
+		var elapsed: float = (Time.get_ticks_msec() - started) / 1000.0
+		var step: int = MapJourneyPrefetch.current_step()
+		var done: bool = step == MapJourneyPrefetch.Step.DONE or step == MapJourneyPrefetch.Step.FAILED or step == -1
+		var warming: bool = _main.get_node_or_null("PathWarm") != null
+		if warming and warm_from < 0:
+			warm_from = _frames.size()
+		if not warming and warm_from >= 0 and warm_to < 0:
+			warm_to = _frames.size()
+			warm_end_ms = Time.get_ticks_msec()
+		if _early_tap > 0 and _first_engine_ms >= 0 and Time.get_ticks_msec() - _first_engine_ms >= _early_tap:
+			break
+		if (elapsed >= TITLE_HOLD_S and done and not warming) or elapsed >= TITLE_LIMIT_S:
+			break
+	var title_end_ms: int = Time.get_ticks_msec()
+	_title_probe_us = Time.get_ticks_usec()
+	_stage("probe:title_loop_left")
+	var title_frames: PackedFloat32Array = _frames.duplicate()
+	# Phase B rows (#682): T, the frames that drew RoomWarm's pipeline samples; W,
+	# the worst other title frame from frame 1 (index 0 here).
+	var t_rows: Array = []
+	var w_ms: float = 0.0
+	var w_at: int = -1
+	# Diagnostic (not a registered bar): S, the frames over SLOW_MS while the
+	# prefetch bakes the floor, and W2, the worst title frame outside T and S.
+	var s_rows: Array = []
+	var w2_ms: float = 0.0
+	var w2_at: int = -1
+	for i: int in range(title_frames.size()):
+		if _room_sample[i] == 1:
+			t_rows.append([i, snappedf(title_frames[i], 0.1)])
+			continue
+		if title_frames[i] > w_ms:
+			w_ms = title_frames[i]
+			w_at = i
+		if _floor_baking[i] == 1:
+			if title_frames[i] > SLOW_MS:
+				s_rows.append([i, snappedf(title_frames[i], 0.1)])
+		elif title_frames[i] > w2_ms:
+			w2_ms = title_frames[i]
+			w2_at = i
+	var warm_frames: PackedFloat32Array = title_frames.slice(warm_from, warm_to if warm_to >= 0 else title_frames.size()) if warm_from >= 0 else PackedFloat32Array()
+	_row({"probe": "title", "frame0_ms": snappedf(_first_ms, 0.1), "frame0_engine_ms": _first_engine_ms,
+		"frames": title_frames.size(), "worst_after0_ms": _worst(title_frames),
+		"t_frames": t_rows, "w_ms": snappedf(w_ms, 0.1), "w_at": w_at,
+		"s_frames": s_rows, "w2_ms": snappedf(w2_ms, 0.1), "w2_at": w2_at,
+		"warm_from": warm_from, "warm_to": warm_to, "warm_frames": warm_frames.size(),
+		"warm_end_since_frame0_ms": warm_end_ms - _first_engine_ms if warm_end_ms >= 0 else -1,
+		"title_end_since_frame0_ms": title_end_ms - _first_engine_ms, "early_tap_ms": _early_tap,
+		"warm_left_running": _main.get_node_or_null("PathWarm") != null,
+		"vram_parts": _vram_parts(), "textures": _textures(),
+		"warm_worst_ms": _worst(warm_frames), "warm_slow": _slow(warm_frames),
+		"mem_static_mib": snappedf(Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0, 0.1),
+		"vram_mib": snappedf(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, 0.1),
+		"slow": _slow(title_frames), "first_frames_ms": _rounded(title_frames.slice(0, 12)),
+		"force_draws_ms": _force_draws, "prefetch_step": MapJourneyPrefetch.current_step(),
+		"pipelines_frame0": _pipelines_frame0, "pipelines_title": _pipelines(),
+		"cache": _title_cache()})
+	_stage("probe:title_row")
+	var screen: Variant = _main.get("_choice_screen")
+	saved = _main.call("_load_run")
+	_stage("probe:load_run")
+	if saved == null or not (screen is TitleScreen):
+		_row({"probe": "open", "refused": true, "has_run": saved != null})
+		return
+	_inventory("title")
+	_stage("probe:inventory")
+	_row({"probe": "title_cost", "cache_delta_ms": _cache_ms,
+		"probe_work_ms": snappedf((Time.get_ticks_usec() - _title_probe_us) / 1000.0, 0.1)})
+	# The title row's listing and the inventory, out of the first room's frame
+	# (Part 2: they were 90-96 ms of the settings row's 95-100 ms on the Mac).
+	await _wait(2)
+	if _early_tap <= 0:
+		await _rooms()
+	await _wait(2)
+	screen = _main.get("_choice_screen")
+	if not (screen is TitleScreen):
+		_row({"probe": "open", "refused": true, "after_rooms": true})
+		return
+	while Time.get_ticks_msec() < _open_at:
+		await get_tree().process_frame
+	_phase = "open"
+	var pressed_at: int = _frames.size()
+	var press_us: int = Time.get_ticks_usec()
+	_main.call("_on_title_pick", "continue", screen, saved)
+	var ready_ms: float = -1.0
+	for _i: int in range(1800):
+		await get_tree().process_frame
+		var map: Variant = _main.get("_map_screen")
+		if map is Node and is_instance_valid(map):
+			var node: Node = map
+			if node.is_inside_tree() and not node.call("landscape_pending"):
+				ready_ms = (Time.get_ticks_usec() - press_us) / 1000.0
+				break
+	await _wait(90)
+	var open_frames: PackedFloat32Array = _frames.slice(pressed_at)
+	_row({"probe": "open", "ready_ms": snappedf(ready_ms, 0.1), "frames": open_frames.size(),
+		"worst_ms": _worst(open_frames), "slow": _slow(open_frames),
+		"first_frames_ms": _rounded(open_frames.slice(0, 12)),
+		"at": pressed_at, "split": _split_rows(pressed_at, open_frames.size()),
+		"pipelines_open": _pipelines(), "cache": _cache_delta(), "vram_parts": _vram_parts()})
+	_inventory("open")
+
+
+## The title budget's rooms (#655 §11.6): each room's first opening in this
+## launch, after the warms, tapped as a player taps it (the rooms bench's way,
+## tools/bench_rooms.gd), then closed. Each room's row: the frames from the
+## tap's release through its arrival and 0.2 s more, and their worst.
+func _rooms() -> void:
+	_phase = "rooms"
+	var out: Dictionary = {}
+	for room: String in ["settings", "help", "credits"]:
+		var title: Variant = _main.get("_choice_screen")
+		if not (title is TitleScreen):
+			break
+		var word: Control = (title as TitleScreen).word(room)
+		if word == null:
+			out[room] = {"error": "no word"}
+			continue
+		var at: int = _frames.size()
+		_stage("probe:tap_" + room)
+		await _tap(word.get_global_rect().get_center())
+		var waited: int = Time.get_ticks_msec()
+		while _host() == null and Time.get_ticks_msec() - waited < 3000:
+			await get_tree().process_frame
+		var host: Node = _host()
+		if host == null:
+			out[room] = {"error": "did not open"}
+			continue
+		await _seconds(float(host.call("arrival_time")) + 0.2)
+		var opening: PackedFloat32Array = _frames.slice(at)
+		out[room] = {"worst_ms": _worst(opening), "frames": _rounded(opening.slice(0, 10)),
+			"at": at, "split": _split_rows(at, 4)}
+		await _seconds(0.8)
+		host = _host()
+		if host != null:
+			await _tap((host.call("seat").call("word") as Control).get_global_rect().get_center())
+			await _seconds(float(host.call("departure_time")) + 0.4)
+	_row({"probe": "rooms", "rooms": out})
+	_phase = "title"
+
+
+func _host() -> Node:
+	var modal: Variant = _main.get("_modal")
+	return modal if modal is LeadlightRoomHost else null
+
+
+func _tap(at: Vector2) -> void:
+	var screen: Vector2 = get_viewport().get_screen_transform() * at
+	for pressed: bool in [true, false]:
+		var touch: InputEventScreenTouch = InputEventScreenTouch.new()
+		touch.index = 0
+		touch.position = screen
+		touch.pressed = pressed
+		Input.parse_input_event(touch)
+		await get_tree().process_frame
+
+
+func _seconds(s: float) -> void:
+	var until: int = Time.get_ticks_msec() + roundi(s * 1000.0)
+	while Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+
+
+func _fight() -> void:
+	_phase = "map"
+	_known = _known_shaders()
+	# The map settled: drawn, then 30 frames in a row under 40 ms.
+	var calm: int = 0
+	var waited: int = Time.get_ticks_msec()
+	while calm < 30 and Time.get_ticks_msec() - waited < 40000:
+		var before: int = Time.get_ticks_usec()
+		await get_tree().process_frame
+		var map: Variant = _main.get("_map_screen")
+		var drawn: bool = map is Node and is_instance_valid(map) and (map as Node).is_inside_tree() \
+			and not (map as Node).call("landscape_pending")
+		calm = calm + 1 if drawn and float(Time.get_ticks_usec() - before) / 1000.0 < 40.0 else 0
+	await _wait(30)
+	if _shot_at > 0 and not _shots.is_empty():
+		while Time.get_ticks_msec() < _shot_at:
+			await get_tree().process_frame
+		get_viewport().get_texture().get_image().save_png("%s-mapat.png" % _shots)
+		await _wait(2)
+	_row({"probe": "map", "settled_ms": Time.get_ticks_msec() - waited, "calm": calm,
+		"frames": _frames.size(), "worst_ms": _worst(_frames),
+		"pipelines": _pipelines(), "cache": _cache_delta()})
+	_inventory("map")
+	# Part 2: the map row's cache listing and the inventory (tens of ms on the
+	# iPad) ran in the load frame in B7; two frames now separate them from it.
+	_stage("probe:map_row_and_inventory")
+	await _wait(2)
+	_phase = "load"
+	var load_at: int = _frames.size()
+	var load_us: int = Time.get_ticks_usec()
+	_main.call("_start_fight", PackedStringArray(["duskfang"]), "elite")
+	await get_tree().process_frame
+	_phase = "fight"
+	var returned_ms: float = (Time.get_ticks_usec() - load_us) / 1000.0
+	var hold_until: int = Time.get_ticks_msec() + int(FIGHT_HOLD_S * 1000.0)
+	while Time.get_ticks_msec() < hold_until:
+		await get_tree().process_frame
+	# `_frames[load_at]` is the interval that ends with the frame drawn after the
+	# call: the load frame. The two after it follow.
+	var fight_frames: PackedFloat32Array = _frames.slice(load_at)
+	_row({"probe": "fight", "start_call_ms": snappedf(returned_ms, 0.1),
+		"load_frame_ms": snappedf(fight_frames[0], 0.1) if fight_frames.size() > 0 else -1.0,
+		"next_two_ms": _rounded(fight_frames.slice(1, 3)),
+		"frames": fight_frames.size(), "worst_ms": _worst(fight_frames),
+		"worst_after_load_ms": _worst(fight_frames.slice(1)), "slow": _slow(fight_frames),
+		"first_frames_ms": _rounded(fight_frames.slice(0, 16)),
+		"at": load_at, "split": _split_rows(load_at, 16),
+		"pipelines": _pipelines(), "cache": _cache_delta(), "vram_parts": _vram_parts()})
+	_inventory("fight")
+	await _play_first()
+	# The first turns: End Turn twice, as a tap does, each followed by its
+	# draw, the foe's act and the deal.
+	for turn: int in [1, 2]:
+		var screen: Variant = _main.get("_screen")
+		if not (screen is Node) or not is_instance_valid(screen):
+			break
+		_phase = "turn%d" % turn
+		var turn_at: int = _frames.size()
+		screen.call("_on_end_turn_pressed")
+		var until: int = Time.get_ticks_msec() + 5000
+		while Time.get_ticks_msec() < until:
+			await get_tree().process_frame
+		var turn_frames: PackedFloat32Array = _frames.slice(turn_at)
+		_row({"probe": "turn", "turn": turn, "worst_ms": _worst(turn_frames), "slow": _slow(turn_frames),
+			"pipelines": _pipelines()})
+	_inventory("turns")
+
+
+## Part 2: the first card play (#709's +1 draw, +1 specialisation): the first
+## card in hand the rules let play at foe 0, else untargeted, as a release on
+## the foe commits it; its frames for PLAY_HOLD_S.
+func _play_first() -> void:
+	var screen: Variant = _main.get("_screen")
+	if not (screen is Node) or not is_instance_valid(screen):
+		return
+	_phase = "play"
+	var play_at: int = _frames.size()
+	var played: int = -1
+	for inst: Variant in _main.get("game").cb.hand:
+		if screen.call("request_play", inst.uid, 0) or screen.call("request_play", inst.uid, null):
+			played = inst.uid
+			break
+	var until: int = Time.get_ticks_msec() + int(PLAY_HOLD_S * 1000.0)
+	while Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+	var play_frames: PackedFloat32Array = _frames.slice(play_at)
+	_row({"probe": "play", "uid": played, "at": play_at, "worst_ms": _worst(play_frames),
+		"slow": _slow(play_frames), "split": _split_rows(play_at, 40), "pipelines": _pipelines()})
+
+
+## Every material the tree wears now, by what it is, with how many nodes wear
+## it: the target list for a warm. Shaders built from strings are named by
+## their code (`_known`); generated materials by their class and settings.
+func _inventory(label: String) -> void:
+	var items: Dictionary = {}
+	var stack: Array[Node] = [get_tree().root]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		for child: Node in node.get_children(true):
+			stack.append(child)
+		var mats: Array = []
+		if node is CanvasItem:
+			mats.append((node as CanvasItem).material)
+		if node is GeometryInstance3D:
+			mats.append((node as GeometryInstance3D).material_override)
+			mats.append((node as GeometryInstance3D).material_overlay)
+		if node is MeshInstance3D:
+			var mi: MeshInstance3D = node
+			if mi.mesh != null:
+				for i: int in mi.mesh.get_surface_count():
+					mats.append(mi.get_surface_override_material(i))
+					mats.append(mi.mesh.surface_get_material(i))
+		if node is MultiMeshInstance3D:
+			var mm: MultiMeshInstance3D = node
+			if mm.multimesh != null and mm.multimesh.mesh != null:
+				for i: int in mm.multimesh.mesh.get_surface_count():
+					mats.append(mm.multimesh.mesh.surface_get_material(i))
+		if node is GPUParticles3D:
+			var gp: GPUParticles3D = node
+			mats.append(gp.process_material)
+			if gp.draw_pass_1 != null:
+				for i: int in gp.draw_pass_1.get_surface_count():
+					mats.append(gp.draw_pass_1.surface_get_material(i))
+		if node is GPUParticles2D:
+			mats.append((node as GPUParticles2D).process_material)
+		if node is CPUParticles3D:
+			var cp: CPUParticles3D = node
+			if cp.mesh != null:
+				for i: int in cp.mesh.get_surface_count():
+					mats.append(cp.mesh.surface_get_material(i))
+		for m: Variant in mats:
+			if m is Material:
+				var key: String = _material_name(m as Material)
+				items[key] = int(items.get(key, 0)) + 1
+	_row({"probe": "inventory", "phase": label, "kinds": items.size(), "items": items})
+	if _kinds:
+		_row({"probe": "canvas_kinds", "phase": label, "kinds": _canvas_kinds()})
+	if not _shots.is_empty():
+		get_viewport().get_texture().get_image().save_png("%s-%s.png" % [_shots, label])
+
+
+## Part 2: every visible CanvasItem by its class, its viewport (root or a
+## SubViewport's name) and its draw style (clip children, style boxes), for
+## naming the canvas pipelines a stage builds.
+func _canvas_kinds() -> Dictionary:
+	var out: Dictionary = {}
+	var stack: Array[Node] = [get_tree().root]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		for child: Node in node.get_children(true):
+			stack.append(child)
+		if not (node is CanvasItem) or not (node as CanvasItem).is_visible_in_tree():
+			continue
+		var ci: CanvasItem = node
+		var vp: Viewport = ci.get_viewport()
+		var where: String = "root" if vp == get_tree().root else ("%s(t=%s)" % [vp.name, str((vp as SubViewport).transparent_bg) if vp is SubViewport else "?"])
+		var tag: String = "%s@%s" % [ci.get_class(), where]
+		if ci.clip_children != CanvasItem.CLIP_CHILDREN_DISABLED:
+			tag += " clip=%d" % ci.clip_children
+		if ci is Control:
+			for sb_name: String in ["panel", "fill", "background", "normal"]:
+				var sb: StyleBox = (ci as Control).get_theme_stylebox(sb_name) if (ci as Control).has_theme_stylebox(sb_name) else null
+				if sb != null and not (sb is StyleBoxEmpty):
+					tag += " %s=%s" % [sb_name, sb.get_class()]
+		if ci.material != null:
+			tag += " mat=" + _material_name(ci.material)
+		for prop: Dictionary in ci.get_property_list():
+			if int(prop["type"]) == TYPE_OBJECT:
+				var value: Variant = ci.get(prop["name"])
+				if value is Mesh or value is MultiMesh:
+					tag += " %s=%d" % [prop["name"], (value as Resource).get_rid().get_id()]
+		out[tag] = int(out.get(tag, 0)) + 1
+	return out
+
+
+func _material_name(m: Material) -> String:
+	if m is ShaderMaterial:
+		var sh: Shader = (m as ShaderMaterial).shader
+		if sh == null:
+			return "ShaderMaterial(no shader)"
+		if not sh.resource_path.is_empty() and not sh.resource_path.contains("::"):
+			return sh.resource_path.get_file() + "#%d" % RenderingServer.shader_get_code(sh.get_rid()).hash()
+		# Named by its source; keyed by the code the renderer holds (after the
+		# preprocessor), which is what the diagnostic engine's lines hash.
+		return "string:%s#%d" % [_known.get(sh.code.hash(), "?"), RenderingServer.shader_get_code(sh.get_rid()).hash()]
+	if m is BaseMaterial3D:
+		var b: BaseMaterial3D = m
+		return "%s(shading=%d transparency=%d cull=%d blend=%d depth=%d vcol=%s tex=%s billboard=%d nodepth=%s emission=%s filter=%d)" % [
+			b.get_class(), b.shading_mode, b.transparency, b.cull_mode, b.blend_mode, b.depth_draw_mode,
+			str(b.vertex_color_use_as_albedo), str(b.albedo_texture != null), b.billboard_mode,
+			str(b.no_depth_test), str(b.emission_enabled), b.texture_filter]
+	if m is CanvasItemMaterial:
+		var c: CanvasItemMaterial = m
+		return "CanvasItemMaterial(blend=%d light=%d particles=%s)" % [c.blend_mode, c.light_mode, str(c.particles_animation)]
+	return m.get_class()
+
+
+static func _known_shaders() -> Dictionary:
+	var out: Dictionary = {}
+	var named: Dictionary = {
+		"EnemyView.BODY": EnemyView.with_tint(EnemyView.with_erode(EnemyView.BODY_SHADER)),
+		"EnemyView.WARD": EnemyView.WARD_SHADER,
+		"EnemyView.GLASS": EnemyView.with_tint(EnemyView.GLASS_SHADER),
+		"EnemyView.SHARD": EnemyView.with_tint(EnemyView.with_erode(EnemyView.SHARD_SHADER)),
+		"EnemyView.RESEAM": EnemyView.RESEAM_SHADER,
+		"EnemyView.SHADOW": EnemyView.SHADOW_SHADER,
+		"EnemyView.FX": EnemyView.FX_SHADER,
+		"CombatScreen.VIGNETTE": CombatScreen.VIGNETTE_SHADER,
+		"CombatScreen.STAGE_DIM": CombatScreen.STAGE_DIM_SHADER,
+		"CombatScreen.GRAIN": CombatScreen.GRAIN_SHADER,
+		"TransitionLayer.IRIS": TransitionLayer.IRIS_SHADER,
+		"TransitionLayer.GRAIN": TransitionLayer.GRAIN_SHADER,
+	}
+	for k: String in named:
+		out[(named[k] as String).hash()] = k
+	return out
+
+
+static func _worst(frames: PackedFloat32Array) -> float:
+	var worst: float = 0.0
+	for f: float in frames:
+		worst = maxf(worst, f)
+	return snappedf(worst, 0.1)
+
+
+static func _slow(frames: PackedFloat32Array) -> Array:
+	var out: Array = []
+	for i: int in range(frames.size()):
+		if frames[i] > SLOW_MS:
+			out.append([i, snappedf(frames[i], 0.1)])
+	return out
+
+
+static func _rounded(frames: PackedFloat32Array) -> Array:
+	var out: Array = []
+	for f: float in frames:
+		out.append(snappedf(f, 0.1))
+	return out

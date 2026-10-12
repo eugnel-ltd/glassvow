@@ -1,0 +1,147 @@
+#!/bin/zsh
+# Lane #682 Part 2 device batch (copied from Part 1's tools/batch.zsh; changes:
+# the first launch's probe mode is TITLE_MODE (default `title`, as registered;
+# `route` continues that same fresh launch to the bench fight, the player's own
+# path, so its F* follows the title's warm), and the first launch's rows get
+# longer to land; the confirmation read adds EARLY_ARMS, whose first launch leaves the
+# title EARLY_TAP_MS (6000) after frame 0, warm done or not; a capture count of 0 takes
+# none). QA app only, io.fol2.glassvow.qa; never the production
+# bundle or its container; deletes nothing on the iPad and nothing on the Mac
+# outside $OUT). Holds the shared iPad lock for the whole batch and renews it
+# before every launch.
+#
+#   batch.zsh <out-dir> <save.json|-> <label>=<ipa>[:<shot reps>] ...
+#
+# For each build, in order: install it (after checking the iPad has room), put
+# the stored run back, a fresh title launch (frame 0, the title and any warm,
+# Back to the Road, the first map open), a fight launch from the map (the load
+# frame and the frames after it), a second, cached title launch when CACHED=1,
+# then the A12 picture's captures of five states, each <shot reps> times
+# (default 2; 0 for none).
+set -u
+setopt pipefail
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/shader-lane
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+QA=io.fol2.glassvow.qa
+OWNER=shader-682
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+OUT=${1:A}; SAVE=$2; shift 2
+[[ "$OUT" == $L/* ]] || { echo "OUT $OUT is outside $L; refusing"; exit 1; }
+mkdir -p $OUT
+# Waits while another holder has the lock, but never long enough for
+# ipad_lock.sh to treat it as stale and take it over (the brief forbids
+# breaking another holder's lock): gives up at 55 minutes of the holder's age.
+lock() {
+  local holder age
+  while [[ -d $FLOW/ipad.lock ]] && holder=$(cat $FLOW/ipad.lock/owner 2>/dev/null) && [[ "$holder" != "$OWNER" ]]; do
+    age=$(( $(date +%s) - $(stat -f %m $FLOW/ipad.lock/owner 2>/dev/null || date +%s) ))
+    (( age > 3300 )) && { echo "lock held by '$holder' for ${age} s: giving up rather than take it over"; exit 3; }
+    echo "ipad lock held by '$holder' (${age} s); re-checking in 30 s"; sleep 30
+  done
+  $FLOW/ipad_lock.sh acquire $OWNER
+}
+lock
+[[ -n "${HOLD_OUTER:-}" ]] || trap "$FLOW/ipad_lock.sh release $OWNER; echo \"== lock released \$(date +%T)\"" EXIT
+UDID=$(xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c '
+import json, sys
+found = [d["hardwareProperties"]["udid"] for d in json.load(sys.stdin)["result"]["devices"]
+         if (d.get("hardwareProperties") or {}).get("productType") == "iPad11,6"]
+print(found[0] if len(found) == 1 else "")')
+[[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+redact() { sed "s/$UDID/<device>/g"; }
+pull() { timeout 300 xcrun devicectl device copy from --device $UDID --domain-type appDataContainer \
+  --domain-identifier $QA --source Documents/$1 --destination $2 >/dev/null 2>&1; }
+push() { timeout 300 xcrun devicectl device copy to --device $UDID --domain-type appDataContainer \
+  --domain-identifier $QA --source $1 --destination Documents/$2 2>&1 | redact | tail -1; }
+install() {  # label ipa
+  local id i
+  id=$(unzip -p "$2" Payload/glassvow.app/Info.plist | plutil -extract CFBundleIdentifier raw -o - -)
+  [[ "$id" == "$QA" ]] || { echo "install: $2 is $id, not $QA; refusing"; return 1; }
+  for i in 1 2 3; do
+    lock
+    echo "== install $1 $(date +%T)"
+    # Batch 1 lost its arm A to a failed install read as success (the iPad was
+    # full): require devicectl's success line, not only its exit status.
+    timeout 300 xcrun devicectl device install app --device $UDID "$2" 2>&1 | redact > $OUT/install-$1.log \
+      && grep -q "App installed" $OUT/install-$1.log && ! grep -q "^ERROR" $OUT/install-$1.log && return 0
+    grep -m1 -E "Not enough space|ERROR" $OUT/install-$1.log
+    sleep 5
+  done
+  echo "install $1 failed"; return 1
+}
+start() {  # label [engine args] -- game args
+  local label=$1; shift
+  lock
+  NONCE=$label-$RANDOM$RANDOM
+  echo "== launch $label $(date +%T) nonce $NONCE; Mac load $(uptime | sed 's/.*averages: //')"
+  timeout 120 xcrun devicectl device process launch --terminate-existing --device $UDID $QA \
+    --log-file user://682-$label.log "$@" --probe-nonce=$NONCE 2>&1 | redact > $OUT/$label.launch.txt
+}
+rows() {  # label first-wait
+  local label=$1 i
+  sleep $2
+  for i in $(seq 1 45); do
+    pull shader_probe.jsonl $OUT/$label.jsonl
+    if grep -q "\"nonce\":\"$NONCE\"" $OUT/$label.jsonl 2>/dev/null && grep -q '"probe":"done"' $OUT/$label.jsonl; then
+      echo "   $label rows fresh"; pull 682-$label.log $OUT/$label.log; return 0
+    fi
+    sleep 6
+  done
+  echo "   $label rows MISSING"; pull 682-$label.log $OUT/$label.log; return 1
+}
+shot() {  # label state-args...
+  local label=$1 i; shift
+  start $label -- "$@" --shape=pad --shot=user://682-$label.png
+  sleep 30
+  for i in $(seq 1 20); do
+    pull 682-$label.png $OUT/$label.png && [[ -s $OUT/$label.png ]] && { echo "   $label shot"; return 0; }
+    sleep 6
+  done
+  echo "   $label shot MISSING"; return 1
+}
+# The OS's own Metal caches for the QA app (Library/Caches is purgeable, and the
+# iPad was nearly full): recorded before each fresh launch, with the free space.
+oscache() {  # label
+  timeout 120 xcrun devicectl device info files --device $UDID --domain-type appDataContainer \
+    --domain-identifier $QA 2>&1 | redact | grep "com.apple.metal" > $OUT/$1-oscache.txt
+  echo "free $(timeout 30 ideviceinfo -u $UDID -q com.apple.disk_usage 2>/dev/null | awk '/^AmountDataAvailable/ {print $2}')" >> $OUT/$1-oscache.txt
+  echo "   $1 OS Metal cache: $(grep -c . $OUT/$1-oscache.txt) lines; $(tail -1 $OUT/$1-oscache.txt)"
+}
+echo "== batch $OUT start $(date +%T); Mac load $(uptime | sed 's/.*averages: //')"
+room() {  # ipa: refuse to install without the IPA's size plus 150 MB free
+  local need free
+  need=$(( $(stat -f %z "$1") + 150000000 ))
+  local i
+  for i in 1 2 3; do  # ideviceinfo can time out while the Mac is loaded
+    free=$(timeout 90 ideviceinfo -u $UDID -q com.apple.disk_usage 2>/dev/null | awk '/^AmountDataAvailable/ {print $2}')
+    [[ -n "$free" ]] && break
+    sleep 5
+  done
+  echo "   free on the iPad: ${free:-?} B; need $need B"
+  [[ -n "$free" ]] && (( free > need ))
+}
+for pair in "$@"; do
+  arm=${pair%%=*}; spec=${pair#*=}
+  ipa=${spec%%:*}; reps=2
+  [[ "$spec" == *:* ]] && reps=${spec##*:}
+  room $ipa || { echo "== not enough room on the iPad for $arm; stopping"; exit 4; }
+  install $arm $ipa || exit 1
+  [[ "$SAVE" == "-" ]] || push $SAVE glassvow_dev_run_v2.json
+  oscache $arm-before-title1
+  early=(); [[ " ${EARLY_ARMS:-} " == *" $arm "* ]] && early=(--probe-early-tap=${EARLY_TAP_MS:-6000})
+  start $arm-title1 -- --shader-probe=${TITLE_MODE:-title} $early; rows $arm-title1 $([[ "${TITLE_MODE:-title}" == route ]] && echo 120 || echo 60)
+  start $arm-fight1 -- --map --seed=1 --shader-probe=fight; rows $arm-fight1 45
+  if [[ "${CACHED:-0}" == 1 ]]; then
+    [[ "$SAVE" == "-" ]] || push $SAVE glassvow_dev_run_v2.json
+    start $arm-title2 -- --shader-probe=title; rows $arm-title2 50
+  fi
+  # Counted up from 1, so 0 takes none (`seq 1 0` counts down in zsh: Part 2's read took two sets).
+  for (( rep = 1; rep <= reps; rep++ )); do
+    shot $arm-whole-$rep --map --seed=1 --map-view=whole
+    shot $arm-close-$rep --map --seed=1 --map-view=close
+    shot $arm-journey-$rep --map --seed=1 --map-view=journey
+    shot $arm-fight-$rep --fight=duskfang --kind=elite --seed=1
+    shot $arm-scene-$rep --scene=opening --cursor=2
+  done
+done
+echo "== batch done $(date +%T)"

@@ -1,0 +1,14 @@
+Part 2 mutation proofs (tools/p2/mutate.py, 12 Oct 2026): each file backed up, broken, the two tests run
+(test_shared_shaders, test_path_warm), the backup copied back and its md5 checked equal.
+use site makes its own Shader (CombatScreen vignette): FAILS - only SharedShaders makes a Shader from a string (also: combat_screen.gd)
+use site makes its own Shader (EnemyView body): FAILS - a foe's body wears the shared Shader; the source guard
+the warm makes its own Shader (PathWarm._string): FAILS - the warm's material for a string wears the shared Shader
+the factory makes a Shader per request: FAILS - one code string gives one Shader; every use-site check
+no bake gate (_await_bake): FAILS - nothing is redrawn while the floor bake runs (held 1 calls, 3 views early)
+ward not redrawn: FAILS - the foe's redraw draws the ward too
+one omni light: FAILS - frame 0 draws the foe's body and shadow under two omni lights
+lent land not stilled: FAILS - the land stands still on the map's view while lent
+a bind does not take the lent land back (_kept_for): FAILS - a map binding while the land is lent takes it back
+Rerun on the final candidate (after the device read): 10 of 10 caught, the "ward not redrawn" mutation replaced by
+ward not drawn at frame 0: FAILS - frame 0 draws the foe's body, shadow and ward (the first card play's) under two omni lights
+the warm ends before the land draw's compiles: FAILS - the warm queues the land, waits for its compiles, draws it, and ends only once that draw's compiles are done

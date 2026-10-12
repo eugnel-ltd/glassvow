@@ -1,0 +1,22 @@
+== $L/census/p2/route-C12.out
+shaders made (GV_SHADER): 57; pipelines built with an sd: 261; clears: Counter({'GV_CLEARALL': 9})
+
+## open: frames 2245-2392 (GV_FRAME), worst 87.4 ms at frame 2302 (window index 57); 0 submitted; main-thread waits 0 (0.0 ms)
+  source          shader                                 cause           sd     count
+
+## F*: frames 2455-2457 (GV_FRAME), worst 146.8 ms at frame 2455 (window index 0); 0 submitted; main-thread waits 0 (0.0 ms)
+  source          shader                                 cause           sd     count
+
+## fight 4-16: frames 2458-2470 (GV_FRAME), worst 8.8 ms at frame 2461 (window index 3); 0 submitted; main-thread waits 0 (0.0 ms)
+  source          shader                                 cause           sd     count
+
+## play: frames 3177-3216 (GV_FRAME), worst 92.7 ms at frame 3177 (window index 0); 0 submitted; main-thread waits 0 (0.0 ms)
+  source          shader                                 cause           sd     count
+
+## open, the probe's pf rows (window frame, ms, counters moved, gap/proc/draw/setup, added, marks)
+
+## F*, the probe's pf rows (window frame, ms, counters moved, gap/proc/draw/setup, added, marks)
+
+## fight 4-16, the probe's pf rows (window frame, ms, counters moved, gap/proc/draw/setup, added, marks)
+
+## play, the probe's pf rows (window frame, ms, counters moved, gap/proc/draw/setup, added, marks)

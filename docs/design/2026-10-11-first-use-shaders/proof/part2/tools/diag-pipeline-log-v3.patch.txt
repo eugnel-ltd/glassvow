@@ -1,0 +1,285 @@
+diff --git a/drivers/metal/metal_objects_shared.cpp b/drivers/metal/metal_objects_shared.cpp
+index 69a399f..899872b 100644
+--- a/drivers/metal/metal_objects_shared.cpp
++++ b/drivers/metal/metal_objects_shared.cpp
+@@ -32,6 +32,9 @@
+ 
+ #include "drivers/metal/rendering_device_driver_metal.h"
+ 
++#include "core/os/os.h"
++#include "core/os/thread.h"
++
+ #include <os/signpost.h>
+ #include <simd/simd.h>
+ 
+@@ -723,8 +726,12 @@ void MDLazyLibrary::_load() {
+ 			"shader_name=%{public}s stage=%{public}s hash=%X",
+ 			_entry->name.get_data(), SHADER_STAGE_NAMES[_entry->stage], _entry->key.short_sha());
+ 	NS::Error *error = nullptr;
++	const uint64_t gv_t0 = OS::get_singleton()->get_ticks_usec();
+ 	_library = NS::TransferPtr(_device->newLibrary(_source.get(), _options.get(), &error));
+ 	os_signpost_interval_end(LOG_INTERVALS, compile_id, "shader_compile");
++	if (OS::get_singleton()->has_environment("GLASSVOW_PIPELINE_LOG")) {
++		print_line(vformat("GV_MSL us=%d main=%d shader=%s stage=%s", OS::get_singleton()->get_ticks_usec() - gv_t0, Thread::is_main_thread() ? 1 : 0, String(_entry->name.get_data()), String(SHADER_STAGE_NAMES[_entry->stage])));
++	}
+ 	_error = error;
+ 	_device = nullptr;
+ 	_source.reset();
+diff --git a/servers/rendering/renderer_rd/forward_mobile/scene_shader_forward_mobile.cpp b/servers/rendering/renderer_rd/forward_mobile/scene_shader_forward_mobile.cpp
+index 0d598bf..514de9f 100644
+--- a/servers/rendering/renderer_rd/forward_mobile/scene_shader_forward_mobile.cpp
++++ b/servers/rendering/renderer_rd/forward_mobile/scene_shader_forward_mobile.cpp
+@@ -32,6 +32,9 @@
+ 
+ #include "core/config/project_settings.h"
+ #include "core/math/math_defs.h"
++#include "core/os/os.h"
++#include "core/os/thread.h"
++bool gv_pipeline_log();
+ #include "servers/rendering/renderer_rd/forward_mobile/render_forward_mobile.h"
+ #include "servers/rendering/renderer_rd/renderer_compositor_rd.h"
+ #include "servers/rendering/renderer_rd/storage_rd/material_storage.h"
+@@ -170,7 +173,11 @@ void SceneShaderForwardMobile::ShaderData::set_code(const String &p_code) {
+ 	actions.uniforms = &uniforms;
+ 
+ 	MutexLock lock(SceneShaderForwardMobile::singleton_mutex);
++	const uint64_t gv_c0 = OS::get_singleton()->get_ticks_usec();
+ 	Error err = SceneShaderForwardMobile::singleton->compiler.compile(RSE::SHADER_SPATIAL, code, &actions, path, gen_code);
++	if (gv_pipeline_log()) {
++		print_line(vformat("GV_GDSL us=%d main=%d sd=%x path=%s code=%d", OS::get_singleton()->get_ticks_usec() - gv_c0, Thread::is_main_thread() ? 1 : 0, (uint64_t)this, path, code.hash()));
++	}
+ 
+ 	if (err != OK) {
+ 		if (version.is_valid()) {
+@@ -282,7 +289,13 @@ Pair<ShaderRD *, RID> SceneShaderForwardMobile::ShaderData::get_native_shader_an
+ 	}
+ }
+ 
++extern thread_local String gv_pipeline_tag;
++extern bool gv_pipeline_log();
++
+ void SceneShaderForwardMobile::ShaderData::_create_pipeline(PipelineKey p_pipeline_key) {
++	if (gv_pipeline_log()) {
++		gv_pipeline_tag = vformat("%s sd=%x kc=[vf%d,fb%d,cull%d,prim%d,sp%x/%x/%s,ver%d,rp%d,ub%d] path=%s code=%d key=%d first=[%s]", "scene", (uint64_t)this, int64_t(p_pipeline_key.vertex_format_id), int64_t(p_pipeline_key.framebuffer_format_id), int(p_pipeline_key.cull_mode), int(p_pipeline_key.primitive_type), p_pipeline_key.shader_specialization.packed_0, p_pipeline_key.shader_specialization.packed_1, String::num(p_pipeline_key.shader_specialization.packed_2), int(p_pipeline_key.version), p_pipeline_key.render_pass, p_pipeline_key.ubershader, path, code.hash(), p_pipeline_key.hash(), code.strip_edges().get_slicec('\n', 0).left(60) + String(" | ") + (code.contains("\nuniform ") ? code.get_slicec('\n', code.substr(0, code.find("\nuniform ") + 1).count("\n")).left(60) : String()));
++	}
+ #if PRINT_PIPELINE_COMPILATION_KEYS
+ 	print_line(
+ 			"HASH:", p_pipeline_key.hash(),
+@@ -521,6 +534,9 @@ SceneShaderForwardMobile::ShaderData::ShaderData() :
+ }
+ 
+ SceneShaderForwardMobile::ShaderData::~ShaderData() {
++	if (gv_pipeline_log()) {
++		print_line(vformat("GV_SDFREE kind=scene sd=%x path=%s code=%d", (uint64_t)this, path, code.hash()));
++	}
+ 	pipeline_hash_map.clear_pipelines();
+ 
+ 	if (version.is_valid()) {
+@@ -947,6 +963,9 @@ void fragment() {
+ 
+ void SceneShaderForwardMobile::set_default_specialization(const ShaderSpecialization &p_specialization) {
+ 	default_specialization = p_specialization;
++	if (gv_pipeline_log()) {
++		print_line(vformat("GV_CLEARALL kind=scene main=%d", Thread::is_main_thread() ? 1 : 0));
++	}
+ 
+ 	for (SelfList<ShaderData> *E = shader_list.first(); E; E = E->next()) {
+ 		E->self()->pipeline_hash_map.clear_pipelines();
+diff --git a/servers/rendering/renderer_rd/pipeline_hash_map_rd.h b/servers/rendering/renderer_rd/pipeline_hash_map_rd.h
+index 18a5ef6..07f0b1b 100644
+--- a/servers/rendering/renderer_rd/pipeline_hash_map_rd.h
++++ b/servers/rendering/renderer_rd/pipeline_hash_map_rd.h
+@@ -32,6 +32,8 @@
+ 
+ #include "core/object/worker_thread_pool.h"
+ #include "core/os/mutex.h"
++#include "core/os/os.h"
++#include "core/os/thread.h"
+ #include "core/templates/hash_map.h"
+ #include "core/templates/local_vector.h"
+ #include "core/templates/rb_map.h"
+@@ -147,6 +149,12 @@ public:
+ 		print_line("HASH:", p_key_hash, "SOURCE:", source_name);
+ #endif
+ 
++		{
++			static const bool gv_on = OS::get_singleton()->has_environment("GLASSVOW_PIPELINE_LOG");
++			if (gv_on) {
++				print_line(vformat("GV_QUEUE src=%d key=%d path=%s code=%d main=%d", int(p_source), p_key_hash, creation_object->path, creation_object->code.hash(), Thread::is_main_thread() ? 1 : 0));
++			}
++		}
+ 		// Queue a background compilation task.
+ 		WorkerThreadPool::TaskID task_id = WorkerThreadPool::get_singleton()->add_template_task(creation_object, creation_function, p_key, p_high_priority, "PipelineCompilation");
+ 		compilation_tasks.insert(p_key_hash, task_id);
+@@ -171,7 +179,12 @@ public:
+ 		}
+ 
+ 		if (task_id_to_wait != WorkerThreadPool::INVALID_TASK_ID) {
++			const uint64_t gv_t0 = OS::get_singleton()->get_ticks_usec();
+ 			WorkerThreadPool::get_singleton()->wait_for_task_completion(task_id_to_wait);
++			static const bool gv_on = OS::get_singleton()->has_environment("GLASSVOW_PIPELINE_LOG");
++			if (gv_on) {
++				print_line(vformat("GV_WAIT us=%d key=%d path=%s code=%d main=%d", OS::get_singleton()->get_ticks_usec() - gv_t0, p_key_hash, creation_object->path, creation_object->code.hash(), Thread::is_main_thread() ? 1 : 0));
++			}
+ 		}
+ 	}
+ 
+diff --git a/servers/rendering/renderer_rd/renderer_canvas_render_rd.cpp b/servers/rendering/renderer_rd/renderer_canvas_render_rd.cpp
+index fad67ae..9f921da 100644
+--- a/servers/rendering/renderer_rd/renderer_canvas_render_rd.cpp
++++ b/servers/rendering/renderer_rd/renderer_canvas_render_rd.cpp
+@@ -29,6 +29,9 @@
+ /**************************************************************************/
+ 
+ #include "renderer_canvas_render_rd.h"
++#include "core/os/os.h"
++#include "core/os/thread.h"
++bool gv_pipeline_log();
+ 
+ #include "core/config/engine.h"
+ #include "core/config/project_settings.h"
+@@ -1487,7 +1490,13 @@ void RendererCanvasRenderRD::CanvasShaderData::_clear_vertex_input_mask_cache()
+ 	}
+ }
+ 
++extern thread_local String gv_pipeline_tag;
++extern bool gv_pipeline_log();
++
+ void RendererCanvasRenderRD::CanvasShaderData::_create_pipeline(PipelineKey p_pipeline_key) {
++	if (gv_pipeline_log()) {
++		gv_pipeline_tag = vformat("%s sd=%x kc=[var%d,fb%d,vf%d,prim%d,sp%x,lcd%d,ub%d] path=%s code=%d key=%d first=[%s]", "canvas", (uint64_t)this, int(p_pipeline_key.variant), int64_t(p_pipeline_key.framebuffer_format_id), int64_t(p_pipeline_key.vertex_format_id), int(p_pipeline_key.render_primitive), p_pipeline_key.shader_specialization.packed_0, p_pipeline_key.lcd_blend, p_pipeline_key.ubershader, path, code.hash(), p_pipeline_key.hash(), code.strip_edges().get_slicec('\n', 0).left(60) + String(" | ") + (code.contains("\nuniform ") ? code.get_slicec('\n', code.substr(0, code.find("\nuniform ") + 1).count("\n")).left(60) : String()));
++	}
+ #if PRINT_PIPELINE_COMPILATION_KEYS
+ 	print_line(
+ 			"HASH:", p_pipeline_key.hash(),
+@@ -1580,7 +1589,11 @@ void RendererCanvasRenderRD::CanvasShaderData::set_code(const String &p_code) {
+ 	RendererCanvasRenderRD *canvas_singleton = static_cast<RendererCanvasRenderRD *>(RendererCanvasRender::singleton);
+ 	MutexLock lock(canvas_singleton->shader.mutex);
+ 
++	const uint64_t gv_c0 = OS::get_singleton()->get_ticks_usec();
+ 	Error err = canvas_singleton->shader.compiler.compile(RSE::SHADER_CANVAS_ITEM, code, &actions, path, gen_code);
++	if (gv_pipeline_log()) {
++		print_line(vformat("GV_GDSL us=%d main=%d sd=%x path=%s code=%d", OS::get_singleton()->get_ticks_usec() - gv_c0, Thread::is_main_thread() ? 1 : 0, (uint64_t)this, path, code.hash()));
++	}
+ 	if (err != OK) {
+ 		if (version.is_valid()) {
+ 			canvas_singleton->shader.canvas_shader.version_free(version);
+@@ -1684,6 +1697,9 @@ RendererCanvasRenderRD::CanvasShaderData::CanvasShaderData() {
+ }
+ 
+ RendererCanvasRenderRD::CanvasShaderData::~CanvasShaderData() {
++	if (gv_pipeline_log()) {
++		print_line(vformat("GV_SDFREE kind=canvas sd=%x path=%s code=%d", (uint64_t)this, path, code.hash()));
++	}
+ 	pipeline_hash_map.clear_pipelines();
+ 
+ 	if (version.is_valid()) {
+diff --git a/servers/rendering/renderer_rd/shader_rd.cpp b/servers/rendering/renderer_rd/shader_rd.cpp
+index a9739f2..0938286 100644
+--- a/servers/rendering/renderer_rd/shader_rd.cpp
++++ b/servers/rendering/renderer_rd/shader_rd.cpp
+@@ -35,6 +35,7 @@
+ #include "core/io/file_access.h"
+ #include "core/object/worker_thread_pool.h"
+ #include "core/os/os.h"
++#include "core/os/thread.h"
+ #include "core/string/string_builder.h"
+ #include "core/version.h"
+ #include "servers/rendering/shader_include_db.h"
+@@ -722,7 +723,12 @@ void ShaderRD::_compile_version_start(Version *p_version, int p_group) {
+ 
+ #if ENABLE_SHADER_CACHE
+ 	if (shader_cache_user_dir_valid || shader_cache_res_dir_valid) {
+-		if (_load_from_cache(p_version, p_group)) {
++		const uint64_t gv_t0 = OS::get_singleton()->get_ticks_usec();
++		const bool gv_hit = _load_from_cache(p_version, p_group);
++		if (OS::get_singleton()->has_environment("GLASSVOW_PIPELINE_LOG")) {
++			print_line(vformat("GV_VSTART us=%d main=%d hit=%d shader=%s group=%d", OS::get_singleton()->get_ticks_usec() - gv_t0, Thread::is_main_thread() ? 1 : 0, gv_hit ? 1 : 0, name, p_group));
++		}
++		if (gv_hit) {
+ 			return;
+ 		}
+ 	}
+@@ -741,7 +747,11 @@ void ShaderRD::_compile_version_end(Version *p_version, int p_group) {
+ 		return;
+ 	}
+ 	WorkerThreadPool::GroupID group_task = p_version->group_compilation_tasks[p_group];
++	const uint64_t gv_t0 = OS::get_singleton()->get_ticks_usec();
+ 	WorkerThreadPool::get_singleton()->wait_for_group_task_completion(group_task);
++	if (OS::get_singleton()->has_environment("GLASSVOW_PIPELINE_LOG")) {
++		print_line(vformat("GV_SPV us=%d main=%d shader=%s group=%d uniforms=[%s]", OS::get_singleton()->get_ticks_usec() - gv_t0, Thread::is_main_thread() ? 1 : 0, name, p_group, String(p_version->uniforms.get_data()).replace("\n", " ").replace("\t", " ").strip_edges().left(120)));
++	}
+ 	p_version->group_compilation_tasks.write[p_group] = 0;
+ 
+ 	bool all_valid = true;
+diff --git a/servers/rendering/renderer_rd/storage_rd/material_storage.cpp b/servers/rendering/renderer_rd/storage_rd/material_storage.cpp
+index d4906c9..a799c5f 100644
+--- a/servers/rendering/renderer_rd/storage_rd/material_storage.cpp
++++ b/servers/rendering/renderer_rd/storage_rd/material_storage.cpp
+@@ -39,6 +39,8 @@
+ #include "servers/rendering/renderer_rd/forward_mobile/scene_shader_forward_mobile.h"
+ #include "servers/rendering/renderer_rd/storage_rd/texture_storage.h"
+ #include "servers/rendering/storage/variant_converters.h"
++#include "core/os/os.h"
++bool gv_pipeline_log();
+ 
+ using namespace RendererRD;
+ 
+@@ -2277,6 +2279,9 @@ void MaterialStorage::shader_set_code(RID p_shader, const String &p_code) {
+ 	if (shader->data) {
+ 		shader->data->set_path_hint(shader->path_hint);
+ 		shader->data->set_code(p_code);
++		if (gv_pipeline_log()) {
++			print_line(vformat("GV_SHADER rid=%d sd=%x type=%d path=%s code=%d", (int64_t)p_shader.get_id(), (uint64_t)shader->data, int(shader->type), shader->path_hint, p_code.hash()));
++		}
+ 	}
+ 
+ 	for (Material *E : shader->owners) {
+diff --git a/servers/rendering/rendering_device.cpp b/servers/rendering/rendering_device.cpp
+index 7574038..41b6119 100644
+--- a/servers/rendering/rendering_device.cpp
++++ b/servers/rendering/rendering_device.cpp
+@@ -37,6 +37,7 @@
+ #include "core/io/file_access.h"
+ #include "core/object/class_db.h"
+ #include "core/os/os.h"
++#include "core/os/thread.h"
+ #include "core/profiling/profiling.h"
+ #include "core/templates/fixed_vector.h"
+ #include "servers/rendering/rendering_device_binds.h"
+@@ -4819,7 +4820,35 @@ bool RenderingDevice::uniform_sets_have_linear_pools() const {
+ /**** PIPELINES ****/
+ /*******************/
+ 
++// Glassvow #682 diagnostic (lane only, never shipped): GLASSVOW_PIPELINE_LOG=1 prints
++// every render pipeline built, its time, its thread, and the caller's tag.
++thread_local String gv_pipeline_tag;
++bool gv_pipeline_log() {
++	static const bool on = OS::get_singleton()->has_environment("GLASSVOW_PIPELINE_LOG");
++	return on;
++}
++
+ RID RenderingDevice::render_pipeline_create(RID p_shader, FramebufferFormatID p_framebuffer_format, VertexFormatID p_vertex_format, RenderPrimitive p_render_primitive, const PipelineRasterizationState &p_rasterization_state, const PipelineMultisampleState &p_multisample_state, const PipelineDepthStencilState &p_depth_stencil_state, const PipelineColorBlendState &p_blend_state, BitField<PipelineDynamicStateFlags> p_dynamic_state_flags, uint32_t p_for_render_pass, const Vector<PipelineSpecializationConstant> &p_specialization_constants) {
++	const uint64_t gv_t0 = OS::get_singleton()->get_ticks_usec();
++	struct GvLog {
++		RenderingDevice *rd;
++		RID shader;
++		uint64_t t0;
++		VertexFormatID vf;
++		~GvLog() {
++			if (gv_pipeline_log()) {
++				const Shader *sh = rd->shader_owner.get_or_null(shader);
++				String vfd;
++				if (rd->vertex_formats.has(vf)) {
++					for (const VertexAttribute &va : rd->vertex_formats[vf].vertex_formats) {
++						vfd += vformat("%d:%d/%d ", va.location, int(va.format), int(va.frequency));
++					}
++				}
++				print_line(vformat("GV_PIPE us=%d main=%d shader=%s vfd=[%s] tag=%s", OS::get_singleton()->get_ticks_usec() - t0, Thread::is_main_thread() ? 1 : 0, sh ? sh->name : String("?"), vfd.strip_edges(), gv_pipeline_tag));
++			}
++			gv_pipeline_tag = String();
++		}
++	} gv_log{ this, p_shader, gv_t0, p_vertex_format };
+ 	// Needs a shader.
+ 	Shader *shader = shader_owner.get_or_null(p_shader);
+ 	ERR_FAIL_NULL_V(shader, RID());

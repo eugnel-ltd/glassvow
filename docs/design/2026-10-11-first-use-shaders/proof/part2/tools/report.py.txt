@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+"""Lane #682 Part 2 scratch: the registered device read (A: origin/main with
+the probe; P: the Part 2 candidate), from a batch's probe rows. Reads only.
+
+    python3 report.py <batch-dir>
+
+Rows per install, as B7's (Z, T, W, S and W2 as diagnostics, M, F*, K, the
+rooms' first openings, Back to the Road, VRAM) plus the per-frame split: for M's
+worst frame and each of F*'s three frames, the pipelines the counters show
+submitted in that frame (`pf` rows; none = 0) and the frame's time split
+(gap / proc / draw / setup, nodes added) with the stage marks as durations.
+F* is read from the first launch when it ran the route (TITLE_MODE=route),
+else from the fight launch, as registered; the other is shown as diagnostic.
+Statistic: F* and M the worst of the three installs; Z the median against A's.
+Bars: F* <= 100 and M <= 100 in every install; W <= 100; Z <= A's median +
+1 s; the title budgets (rooms <= 32.4 ms, Back to the Road < 1 s); 0 rejected;
+no pipeline in M's worst frame or in F*'s three frames. A frame over 100 ms
+with no pipeline is reported as a non-shader floor, with its stages.
+"""
+import json
+import statistics
+import sys
+from pathlib import Path
+
+d = Path(sys.argv[1])
+
+
+def rows(label):
+    p = d / (label + ".jsonl")
+    out = {"pf": {}}
+    if p.exists():
+        for line in p.read_text().splitlines():
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            if r.get("probe") == "pf":
+                out["pf"][r["f"]] = r["d"]
+            else:
+                out[r.get("probe")] = r
+    return out
+
+
+def marks(m):
+    out, prev = [], None
+    for name, at in m:
+        out.append("%s@%.1f" % (name, at) if prev is None else "%s+%.1f" % (name, at - prev))
+        prev = at
+    return " ".join(out)
+
+
+def split_line(entry, pipes):
+    ms, gap, proc, draw, setup, added, mk = entry
+    return "%.1f ms (gap %.1f proc %.1f draw %.1f setup %.1f, %d nodes) pipelines %s | %s" % (
+        ms, gap, proc, draw, setup, added, pipes or 0, marks(mk))
+
+
+def fight_of(r):
+    f = r.get("fight")
+    if not f:
+        return None
+    frames = [f.get("load_frame_ms")] + list(f.get("next_two_ms") or [])
+    split = f.get("split") or []
+    return {"F*": max(frames), "frames": frames,
+            "split": [(split[k], r["pf"].get(f["at"] + k)) for k in range(min(3, len(split)))],
+            "K": f.get("cache", {})}
+
+
+def k_of(c):
+    groups = {}
+    for g, n in (c.get("new_in_unbaked_groups") or {}).items():
+        groups[g.split("/")[0]] = groups.get(g.split("/")[0], 0) + n
+    return {"new": c.get("new"), "rejected": c.get("new_with_baked"), "unbaked": groups}
+
+
+arms = sorted({p.name.split("-")[0] for p in d.glob("*-title1.jsonl")})
+table = {}
+for arm in arms:
+    t1, f1 = rows(arm + "-title1"), rows(arm + "-fight1")
+    st, t, o, rm = t1.get("start", {}), t1.get("title", {}), t1.get("open", {}), t1.get("rooms", {})
+    route = fight_of(t1)
+    fl = fight_of(f1)
+    reg = route if route else fl
+    split = o.get("split") or []
+    w = max(range(len(split)), key=lambda i: split[i][0]) if split else None
+    table[arm] = {
+        "build": st.get("build"), "mode": (st.get("mode")),
+        "fresh": all(r.get("start", {}).get("nonce", "").startswith(arm + "-") for r in (t1, f1)),
+        "Z": t.get("frame0_engine_ms"), "T": max([x[1] for x in t.get("t_frames", [])] or [0.0]),
+        "W": t.get("w_ms"), "W_at": t.get("w_at"), "S": t.get("s_frames"), "W2": t.get("w2_ms"),
+        "M": o.get("worst_ms"), "M_at": w, "M_split": (split[w], t1["pf"].get(o["at"] + w)) if w is not None else None,
+        "BttR": o.get("ready_ms"), "rooms": {k: v.get("worst_ms", v.get("error")) for k, v in (rm.get("rooms") or {}).items()},
+        "vram": t.get("vram_mib"), "static": t.get("mem_static_mib"), "res": st.get("res_cache_files"),
+        "K": {"title": k_of(t.get("cache", {})), "open": k_of(o.get("cache", {})),
+              "fight": k_of(reg["K"]) if reg else None},
+        "F": reg, "F_route": route, "F_fight_launch": fl,
+        "early": int(t.get("early_tap_ms", 0) or 0),
+        "warm_end": t.get("warm_end_since_frame0_ms"), "title_end": t.get("title_end_since_frame0_ms"),
+        "warm_left_running": t.get("warm_left_running"),
+        "vram_parts": {"title": t.get("vram_parts"), "open": o.get("vram_parts"),
+                       "fight": (t1.get("fight") or {}).get("vram_parts")},
+        "settings_split": ((rm.get("rooms") or {}).get("settings") or {}).get("split"),
+        "play": t1.get("play"), "title_cost": t1.get("title_cost"),
+    }
+    pl = t1.get("play")
+    if pl:
+        table[arm]["play_row"] = (pl.get("split") or [[None]])[0], t1["pf"].get(pl["at"])
+
+print("== installs (%s)" % d)
+for arm, r in table.items():
+    F = r["F"]
+    print("%s %s fresh=%s Z %s ms | T %s | W %s (at %s) | S %s W2 %s | M %s (open frame %s) | F* %s %s [%s] | BttR %s ms" % (
+        arm, r["build"], r["fresh"], r["Z"], r["T"], r["W"], r["W_at"], r["S"], r["W2"], r["M"], r["M_at"],
+        F["F*"] if F else None, F["frames"] if F else None, "route" if r["F_route"] else "fight launch", r["BttR"]))
+    print("    rooms %s; VRAM %s MiB, static %s MiB; res cache files %s" % (r["rooms"], r["vram"], r["static"], r["res"]))
+    print("    K title %s | open %s | fight %s" % (r["K"]["title"], r["K"]["open"], r["K"]["fight"]))
+    if r["M_split"]:
+        print("    M's worst frame: " + split_line(*r["M_split"]))
+    if F:
+        for k, (e, p) in enumerate(F["split"]):
+            print("    F*[%d]: %s" % (k, split_line(e, p)))
+    print("    warm end %s ms after frame 0; title left %s ms after frame 0%s; VRAM parts %s" % (
+        r["warm_end"], r["title_end"], " (EARLY TAP %d ms, warm left running %s)" % (r["early"], r["warm_left_running"])
+        if r["early"] else "", r["vram_parts"]))
+    if r.get("title_cost"):
+        print("    title row's own cost (diagnostic): %s" % {k: v for k, v in r["title_cost"].items() if k != "probe"})
+    if r["settings_split"]:
+        print("    settings' first opening frames (ms, gap, proc, draw, setup, added): %s" % [x[:6] for x in r["settings_split"]])
+    if r.get("play_row"):
+        e, p = r["play_row"]
+        print("    first card play frame: %s" % (split_line(e, p) if e and e[0] is not None else "?"))
+    if r["F_route"] and r["F_fight_launch"]:
+        print("    diagnostic: the fight launch's F* %s %s" % (r["F_fight_launch"]["F*"], r["F_fight_launch"]["frames"]))
+
+
+def group(p):
+    return [r for a, r in table.items() if a.startswith(p) and not r["early"]]
+
+
+A, P = group("A"), group("P")
+for name, G in (("A", A), ("P", P)):
+    if not G:
+        continue
+    print("\n== statistic (%s)" % name)
+    fw = max(r["F"]["F*"] for r in G if r["F"])
+    mw = max(r["M"] for r in G if r["M"] is not None)
+    ww = max(r["W"] for r in G if r["W"] is not None)
+    print("  F* worst %s -> %s; M worst %s -> %s; W worst %s -> %s" % (
+        fw, "PASS" if fw <= 100 else "FAIL", mw, "PASS" if mw <= 100 else "FAIL", ww, "PASS" if ww <= 100 else "FAIL"))
+    if A:
+        za, zg = statistics.median([r["Z"] for r in A]), statistics.median([r["Z"] for r in G])
+        print("  Z median %s vs A's median %s + 1000 -> %s (watchdog margin %.1f s)" % (
+            zg, za, "PASS" if zg <= za + 1000 else "FAIL", (20000 - zg) / 1000.0))
+    rej = [sum((r["K"][s] or {}).get("rejected") or 0 for s in ("title", "open", "fight")) for r in G]
+    print("  rejected baked files per install %s -> %s" % (rej, "PASS" if not any(rej) else "FAIL"))
+    print("  rooms' first openings (<= 32.4 ms) %s; Back to the Road (< 1000 ms) %s" % (
+        [r["rooms"] for r in G], [r["BttR"] for r in G]))
+    mp = [bool(r["M_split"] and r["M_split"][1]) for r in G]
+    fp = [any(p for _, p in r["F"]["split"]) for r in G if r["F"]]
+    pp = [bool(r.get("play_row") and r["play_row"][1]) for r in G]
+    print("  pipelines in M's worst frame %s, in F*'s frames %s, in the first card play's frame %s -> %s" % (
+        mp, fp, pp, "PASS" if not any(mp) and not any(fp) and not any(pp) else "FAIL"))
+    sw = max(r["rooms"].get("settings", 0) or 0 for r in G)
+    print("  settings' first opening worst %s ms; T worst %s; VRAM at the title's rest %s" % (
+        sw, max(r["T"] for r in G), [r["vram"] for r in G]))
+    floors = []
+    for arm in [a for a in table if a.startswith(name) and not table[a]["early"]]:
+        r = table[arm]
+        if r["M"] and r["M"] > 100 and r["M_split"] and not r["M_split"][1]:
+            floors.append("%s M %s ms with no pipeline" % (arm, r["M"]))
+        if r["F"]:
+            for k, (e, p) in enumerate(r["F"]["split"]):
+                if e[0] > 100 and not p:
+                    floors.append("%s F*[%d] %.1f ms with no pipeline" % (arm, k, e[0]))
+    print("  non-shader floor (frames over 100 ms with no pipeline): %s" % (floors or "none"))
+
+early = [a for a, r in table.items() if r["early"]]
+if early:
+    print("\n== early tap (diagnostic): %s" % ", ".join(
+        "%s M %s F* %s warm left running %s" % (a, table[a]["M"], table[a]["F"]["F*"] if table[a]["F"] else None,
+                                               table[a]["warm_left_running"]) for a in early))

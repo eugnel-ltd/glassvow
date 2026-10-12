@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+"""Lane #682 Part 2 scratch: the pipelines the first map open and the fight load
+create, each named and classified, from a route run of the diagnostic engine
+(diag v3: GV_SHADER rid/sd, GV_PIPE sd/key, GV_QUEUE, GV_WAIT, GV_CLEARALL,
+GV_SDFREE) with the Part 2 probe.
+
+    python3 census2.py <route.out> [--all]
+
+Each GV_ line belongs to the frame whose GV_FRAME mark follows it. Windows:
+  open : every frame from the title press to the open row (the probe's `at`);
+  load : the fight's load frame and the two after it (F*), then the rest of the
+         fight's first 16 frames.
+For every pipeline submitted (GV_QUEUE) in a window: its source, its shader
+(file path, string shader name, generated material), its ShaderData (sd) and
+when that sd was made, and the cause it is created there:
+  OTHER-INSTANCE   the same code and pipeline key was built earlier by another
+                   ShaderData (the warm's twin): sharing the Shader would serve it;
+  SAME-SD-FREED    built earlier by this very ShaderData and freed since (a clear);
+  KEY-NOT-WARMED   this code was built earlier, never with this key;
+  NEVER-BUILT      no pipeline of this code was built earlier in the process.
+"""
+import collections
+import json
+import re
+import sys
+
+SRC = {0: "canvas", 1: "mesh", 2: "surface", 3: "draw", 4: "specialisation"}
+
+
+def kv(line):
+    out = {}
+    for m in re.finditer(r"(\w+)=(\[[^\]]*\]|\S*)", line):
+        out[m.group(1)] = m.group(2)
+    return out
+
+
+def main():
+    path = sys.argv[1]
+    lines = open(path, errors="replace").read().splitlines()
+    rows = []
+    pending = []          # GV_ lines waiting for their frame mark
+    frames = {}           # GV_FRAME n -> (phase, ms)
+    events = []           # (frame n, kind, dict)
+    for line in lines:
+        if line.startswith("SHADER_PROBE "):
+            try:
+                rows.append(json.loads(line[len("SHADER_PROBE "):]))
+            except ValueError:
+                pass
+            continue
+        if line.startswith("GV_FRAME "):
+            parts = line.split()
+            n = int(parts[1])
+            frames[n] = (parts[2], float(parts[3]))
+            for kind, d in pending:
+                events.append((n, kind, d))
+            pending = []
+            continue
+        m = re.match(r"(GV_[A-Z]+) (.*)", line)
+        if m:
+            pending.append((m.group(1), kv(m.group(2))))
+    names = {}
+    for r in rows:
+        if r.get("probe") == "inventory":
+            for item in r["items"]:
+                mm = re.match(r"string:([^#]+)#(-?\d+)", item)
+                if mm:
+                    names[int(mm.group(2)) & 0xFFFFFFFF] = mm.group(1)
+    sd_info = {}          # sd -> dict(code, path, made frame, phase)
+    for n, kind, d in events:
+        if kind == "GV_SHADER":
+            sd_info[d["sd"]] = {"code": int(d["code"]) & 0xFFFFFFFF, "path": d.get("path", ""),
+                                "frame": n, "phase": frames[n][0], "rid": d.get("rid")}
+
+    def name_of(path, code, first=""):
+        if path:
+            return path.split("/")[-1]
+        if code in names:
+            return names[code]
+        if "automatically converted" in first:
+            return "BaseMaterial3D (generated) #%d" % code
+        if "Default 3D material" in first:
+            return "default 3D material"
+        if "Default clip children" in first:
+            return "default clip-children canvas"
+        if code == 5381:
+            return "default canvas (empty code)"
+        return "code#%d %s" % (code, first[:40])
+
+    open_row = next((r for r in rows if r.get("probe") == "open" and "at" in r), None)
+    fight_row = next((r for r in rows if r.get("probe") == "fight"), None)
+    windows = []
+    if open_row:
+        a = open_row["at"] + 2
+        windows.append(("open", a, a + open_row["frames"] - 1, open_row))
+    if fight_row:
+        a = fight_row["at"] + 2
+        windows.append(("F*", a, a + 2, fight_row))
+        windows.append(("fight 4-16", a + 3, a + 15, fight_row))
+    play_row = next((r for r in rows if r.get("probe") == "play"), None)
+    if play_row:
+        a = play_row["at"] + 2
+        windows.append(("play", a, a + 39, play_row))
+
+    # Pipelines built (GV_PIPE) in order, with their frame (the mark after the
+    # line, which for a worker build is when it finished).
+    built = []            # (frame, sd, code, key, main, us, kind, first)
+    clears = []           # (frame, kind, d)
+    for n, kind, d in events:
+        if kind == "GV_PIPE" and d.get("sd"):
+            built.append((n, d["sd"], int(d["code"]) & 0xFFFFFFFF, d["key"], d["main"], int(d["us"]),
+                          d.get("tag", ""), d.get("first", ""), d.get("kc", "")))
+        elif kind in ("GV_CLEARALL", "GV_SDFREE"):
+            clears.append((n, kind, d))
+
+    print("== %s" % path)
+    print("shaders made (GV_SHADER): %d; pipelines built with an sd: %d; clears: %s" % (
+        len(sd_info), len(built), collections.Counter(k for _, k, _ in clears)))
+    for wname, f0, f1, row in windows:
+        qs = [(n, d) for n, kind, d in events if kind == "GV_QUEUE" and f0 <= n <= f1]
+        waits = [(n, d) for n, kind, d in events if kind == "GV_WAIT" and f0 <= n <= f1 and d.get("main") == "1"]
+        worst = max(((frames[n][1], n) for n in range(f0, f1 + 1) if n in frames), default=(0, 0))
+        print("\n## %s: frames %d-%d (GV_FRAME), worst %.1f ms at frame %d (window index %d); %d submitted; "
+              "main-thread waits %d (%.1f ms)" % (wname, f0, f1, worst[0], worst[1], worst[1] - f0, len(qs),
+                                                    len(waits), sum(int(d["us"]) for _, d in waits) / 1000.0))
+        table = collections.Counter()
+        detail = []
+        for n, d in qs:
+            code = int(d["code"]) & 0xFFFFFFFF
+            key = d["key"]
+            src = SRC.get(int(d["src"]), d["src"])
+            # The build that answers this submission: the first GV_PIPE of the
+            # same code and key at or after it.
+            ans = next((b for b in built if b[0] >= n and b[2] == code and b[3] == key), None)
+            sd = ans[1] if ans else "?"
+            first = ans[7] if ans else ""
+            nm = name_of(d.get("path", ""), code, first)
+            earlier = [b for b in built if b[0] < n and b[2] == code]
+            same_key = [b for b in earlier if b[3] == key]
+            if same_key:
+                if any(b[1] == sd for b in same_key):
+                    cause = "SAME-SD-FREED"
+                else:
+                    cause = "OTHER-INSTANCE"
+            elif earlier:
+                cause = "KEY-NOT-WARMED"
+            else:
+                cause = "NEVER-BUILT"
+            made = sd_info.get(sd, {})
+            sd_made = "%s@%s" % (made.get("phase", "?"), made.get("frame", "?"))
+            sd_seen = sorted({b[1] for b in earlier})
+            table[(src, nm, cause, "fresh" if made.get("phase") in ("open", "load", "fight") else "older")] += 1
+            detail.append((n - f0, src, nm, cause, sd, sd_made, ans[8] if ans else key, ans[4] if ans else "?",
+                           ans[5] / 1000.0 if ans else -1,
+                           sorted({"%s:%s@%s" % (b[1][-6:], b[8], frames.get(b[0], ("?",))[0]) for b in earlier})))
+        print("  %-15s %-38s %-15s %-6s %s" % ("source", "shader", "cause", "sd", "count"))
+        for (src, nm, cause, fresh), c in sorted(table.items(), key=lambda x: (x[0][2], x[0][1], x[0][0])):
+            print("  %-15s %-38s %-15s %-6s %d" % (src, nm[:38], cause, fresh, c))
+        if "--all" in sys.argv:
+            print("  -- each: window frame, source, shader, cause, sd, sd made (phase@frame), key, built on main, ms, earlier sds of this code")
+            for t in detail:
+                print("   ", t)
+        for n, d in waits:
+            print("  wait %.1f ms at window frame %d: %s key %s" % (int(d["us"]) / 1000.0, n - f0,
+                  name_of(d.get("path", ""), int(d["code"]) & 0xFFFFFFFF), d["key"]))
+    # The probe's per-frame counter rows inside the windows.
+    pf = [r for r in rows if r.get("probe") == "pf"]
+    for wname, f0, f1, row in windows:
+        a = row["at"]
+        inside = [r for r in pf if f0 - 2 <= r["f"] <= f1 - 2]
+        print("\n## %s, the probe's pf rows (window frame, ms, counters moved, gap/proc/draw/setup, added, marks)" % wname)
+        for r in inside:
+            print("   %3d %7.1f %s %s/%s/%s/%s %s %s" % (r["f"] - a, r["ms"], r["d"], r["gap"], r["proc"], r["draw"],
+                                                    r["setup"], r["added"], r["marks"]))
+
+
+main()

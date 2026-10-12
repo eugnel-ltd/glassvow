@@ -1,0 +1,23 @@
+#!/bin/zsh
+# Lane #682 Part 2: the confirmation read (corrected probe) in ONE lock hold (only when the orchestrator
+# gives the lock). Takes `shader-682` (waits for any other holder, never takes one over),
+# runs p2/batch.zsh in route mode: A1 P1 A2 P2 A3 P3, interleaved, one fresh install each
+# with its own nonce; no early tap; no captures; and releases the lock the moment the last device step ends (EXIT trap).
+#   zsh hold3.zsh
+set -u
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/shader-lane
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+OWNER=shader-682
+for a in dA1 dP1 dA2 dP2 dA3 dP3; do [[ -f $L/ipa/$a/$a.ipa ]] || { echo "missing $L/ipa/$a/$a.ipa"; exit 1; }; done
+while [[ -d $FLOW/ipad.lock ]] && [[ "$(cat $FLOW/ipad.lock/owner 2>/dev/null)" != "$OWNER" ]]; do
+  echo "lock held by '$(cat $FLOW/ipad.lock/owner 2>/dev/null)'; waiting 30 s"; sleep 30
+done
+$FLOW/ipad_lock.sh acquire $OWNER
+trap "$FLOW/ipad_lock.sh release $OWNER; echo \"== lock released \$(date +%T)\"" EXIT
+echo "== hold taken $(date +%T); route mode"
+export HOLD_OUTER=1 TITLE_MODE=route
+zsh $L/tools/p2/batch.zsh $L/device/p2/confirm2 $L/device/seed_dev_run_v2.json \
+  A1=$L/ipa/dA1/dA1.ipa:0 P1=$L/ipa/dP1/dP1.ipa:0 A2=$L/ipa/dA2/dA2.ipa:0 P2=$L/ipa/dP2/dP2.ipa:0 \
+  A3=$L/ipa/dA3/dA3.ipa:0 P3=$L/ipa/dP3/dP3.ipa:0 \
+  || echo "== confirmation batch rc=$?"
+echo "== hold done $(date +%T)"

@@ -1,0 +1,91 @@
+== installs (device/p2/confirm2)
+A1 dA1 fresh=True Z 7345 ms | T 20.5 | W 68.1 (at 470) | S [] W2 68.1 | M 196.1 (open frame 28) | F* 326.9 [326.9, 127.3, 41.5] [route] | BttR 731.4 ms
+    rooms {'credits': 29.0, 'help': 25.9, 'settings': 19.8}; VRAM 353.5 MiB, static 0.0 MiB; res cache files 74
+    K title {'new': 0, 'rejected': 0, 'unbaked': {}} | open {'new': 0, 'rejected': 0, 'unbaked': {}} | fight {'new': 0, 'rejected': 0, 'unbaked': {}}
+    M's worst frame: 196.1 ms (gap 0.2 proc 182.1 draw 13.7 setup 0.4, 1225 nodes) pipelines {'canvas': 3, 'specialization': 24, 'surface': 31} | map:show@10.6 map:take+0.1 map:land_added+78.0 map:node_states+0.1 floor_step:start+0.0 floor_step:end+0.0 map:first_floor_step+0.0 map:refreshed+7.4 map:screen_in+0.0 map:hud+53.8 map:music+10.9
+    F*[0]: 326.9 ms (gap 14.5 proc 299.6 draw 12.8 setup 0.3, 339 nodes) pipelines {'canvas': 5, 'draw': 4, 'specialization': 4, 'surface': 13} | fight:start@0.1 fight:clear_route+1.4 fight:screen_new+115.9 fight:screen_added+6.1 fight:prewarm_card_turns+0.2 fight:start_encounter+116.4 fight:music+16.7
+    F*[1]: 127.3 ms (gap 121.3 proc 3.9 draw 2.2 setup 0.1, 0 nodes) pipelines 0 | 
+    F*[2]: 41.5 ms (gap 10.1 proc 1.1 draw 30.3 setup 0.1, 0 nodes) pipelines 0 | 
+    warm end 12088 ms after frame 0; title left 12088 ms after frame 0; VRAM parts {'title': {'buffer': 19.7, 'other': 454.9, 'texture': -121.1, 'video': 353.5}, 'open': {'buffer': 20.8, 'other': 701.7, 'texture': -346.5, 'video': 376.0}, 'fight': {'buffer': 33.2, 'other': 958.6, 'texture': -332.6, 'video': 659.1}}
+    title row's own cost (diagnostic): {'cache_delta_ms': 39.4, 'nonce': 'A1-title1-292435667', 'probe_work_ms': 42.0}
+    settings' first opening frames (ms, gap, proc, draw, setup, added): [[18.7, 0.2, 3.9, 14.6, 0.0, 0], [19.8, 5.3, 3.4, 11.1, 0.0, 0], [16.9, 11.4, 4.2, 1.2, 0.0, 71], [19.3, 0.2, 3.1, 16.0, 0.0, 0]]
+    first card play frame: 358.6 ms (gap 0.9 proc 80.6 draw 277.2 setup 0.1, 0 nodes) pipelines {'draw': 1, 'specialization': 1} | 
+    diagnostic: the fight launch's F* 671.9 [671.9, 119.2, 35.1]
+A2 dA2 fresh=True Z 5169 ms | T 16.6 | W 38.6 (at 380) | S [] W2 32.5 | M 180.4 (open frame 28) | F* 299.0 [299.0, 100.1, 39.8] [route] | BttR 715.0 ms
+    rooms {'credits': 23.1, 'help': 26.2, 'settings': 27.6}; VRAM 353.5 MiB, static 0.0 MiB; res cache files 74
+    K title {'new': 0, 'rejected': 0, 'unbaked': {}} | open {'new': 0, 'rejected': 0, 'unbaked': {}} | fight {'new': 0, 'rejected': 0, 'unbaked': {}}
+    M's worst frame: 180.4 ms (gap 0.2 proc 170.9 draw 9.3 setup 0.4, 1225 nodes) pipelines {'canvas': 3, 'specialization': 24, 'surface': 31} | map:show@10.6 map:take+0.1 map:land_added+69.4 map:node_states+0.2 floor_step:start+0.0 floor_step:end+0.0 map:first_floor_step+0.0 map:refreshed+5.2 map:screen_in+0.0 map:hud+51.9 map:music+10.3
+    F*[0]: 299.0 ms (gap 11.3 proc 278.5 draw 9.2 setup 0.3, 339 nodes) pipelines {'canvas': 5, 'draw': 4, 'specialization': 4, 'surface': 13} | fight:start@0.1 fight:clear_route+1.5 fight:screen_new+115.1 fight:screen_added+6.0 fight:prewarm_card_turns+0.2 fight:start_encounter+96.4 fight:music+16.3
+    F*[1]: 100.1 ms (gap 96.0 proc 2.2 draw 1.8 setup 0.0, 0 nodes) pipelines 0 | 
+    F*[2]: 39.8 ms (gap 12.1 proc 1.1 draw 26.7 setup 0.1, 0 nodes) pipelines 0 | 
+    warm end 11146 ms after frame 0; title left 11146 ms after frame 0; VRAM parts {'title': {'buffer': 19.7, 'other': 454.9, 'texture': -121.1, 'video': 353.5}, 'open': {'buffer': 20.8, 'other': 701.8, 'texture': -346.5, 'video': 376.1}, 'fight': {'buffer': 33.2, 'other': 958.6, 'texture': -332.6, 'video': 659.1}}
+    title row's own cost (diagnostic): {'cache_delta_ms': 35.1, 'nonce': 'A2-title1-787920769', 'probe_work_ms': 37.2}
+    settings' first opening frames (ms, gap, proc, draw, setup, added): [[15.2, 11.2, 3.3, 0.6, 0.0, 0], [18.6, 14.0, 3.8, 0.8, 0.0, 0], [27.6, 22.6, 3.6, 1.4, 0.0, 71], [17.0, 0.2, 3.4, 13.4, 0.0, 0]]
+    first card play frame: 412.6 ms (gap 0.7 proc 74.5 draw 337.4 setup 0.1, 0 nodes) pipelines {'draw': 1, 'specialization': 1} | 
+    diagnostic: the fight launch's F* 352.0 [352.0, 101.7, 31.1]
+A3 dA3 fresh=True Z 6120 ms | T 16.4 | W 39.1 (at 361) | S [] W2 34.7 | M 178.7 (open frame 28) | F* 311.9 [311.9, 107.0, 44.0] [route] | BttR 714.9 ms
+    rooms {'credits': 24.1, 'help': 32.2, 'settings': 27.7}; VRAM 353.5 MiB, static 0.0 MiB; res cache files 74
+    K title {'new': 0, 'rejected': 0, 'unbaked': {}} | open {'new': 0, 'rejected': 0, 'unbaked': {}} | fight {'new': 0, 'rejected': 0, 'unbaked': {}}
+    M's worst frame: 178.7 ms (gap 0.2 proc 168.6 draw 9.8 setup 0.4, 1225 nodes) pipelines {'canvas': 3, 'specialization': 24, 'surface': 31} | map:show@10.5 map:take+0.1 map:land_added+69.0 map:node_states+0.1 floor_step:start+0.0 floor_step:end+0.0 map:first_floor_step+0.0 map:refreshed+5.0 map:screen_in+0.0 map:hud+53.2 map:music+10.2
+    F*[0]: 311.9 ms (gap 14.6 proc 288.4 draw 8.9 setup 0.3, 339 nodes) pipelines {'canvas': 5, 'draw': 4, 'specialization': 4, 'surface': 13} | fight:start@0.1 fight:clear_route+1.6 fight:screen_new+115.0 fight:screen_added+6.1 fight:prewarm_card_turns+0.2 fight:start_encounter+107.4 fight:music+16.4
+    F*[1]: 107.0 ms (gap 102.7 proc 2.3 draw 2.0 setup 0.0, 0 nodes) pipelines 0 | 
+    F*[2]: 44.0 ms (gap 12.1 proc 1.1 draw 30.8 setup 0.1, 0 nodes) pipelines 0 | 
+    warm end 11883 ms after frame 0; title left 11883 ms after frame 0; VRAM parts {'title': {'buffer': 19.7, 'other': 454.9, 'texture': -121.1, 'video': 353.5}, 'open': {'buffer': 20.8, 'other': 701.8, 'texture': -346.5, 'video': 376.1}, 'fight': {'buffer': 33.2, 'other': 958.6, 'texture': -332.6, 'video': 659.1}}
+    title row's own cost (diagnostic): {'cache_delta_ms': 35.6, 'nonce': 'A3-title1-778424802', 'probe_work_ms': 37.6}
+    settings' first opening frames (ms, gap, proc, draw, setup, added): [[12.4, 6.1, 3.2, 3.0, 0.0, 0], [15.8, 11.5, 3.7, 0.7, 0.0, 0], [27.7, 23.2, 3.3, 1.2, 0.0, 71], [15.5, 0.2, 3.3, 12.0, 0.0, 0]]
+    first card play frame: 328.4 ms (gap 0.8 proc 74.3 draw 253.2 setup 0.1, 0 nodes) pipelines {'draw': 1, 'specialization': 1} | 
+    diagnostic: the fight launch's F* 334.6 [334.6, 129.0, 33.4]
+P1 dP1 fresh=True Z 6131 ms | T 16.8 | W 35.9 (at 383) | S [] W2 33.8 | M 164.8 (open frame 28) | F* 272.4 [272.4, 78.1, 35.9] [route] | BttR 681.6 ms
+    rooms {'credits': 22.5, 'help': 25.9, 'settings': 27.2}; VRAM 371.7 MiB, static 0.0 MiB; res cache files 74
+    K title {'new': 0, 'rejected': 0, 'unbaked': {}} | open {'new': 0, 'rejected': 0, 'unbaked': {}} | fight {'new': 0, 'rejected': 0, 'unbaked': {}}
+    M's worst frame: 164.8 ms (gap 0.2 proc 159.9 draw 4.7 setup 0.4, 1225 nodes) pipelines 0 | map:show@10.4 map:take+0.1 map:land_added+64.2 map:node_states+0.2 floor_step:start+0.0 floor_step:end+0.0 map:first_floor_step+0.0 map:refreshed+5.3 map:screen_in+0.0 map:hud+47.5 map:music+12.7
+    F*[0]: 272.4 ms (gap 11.5 proc 254.4 draw 6.6 setup 0.3, 339 nodes) pipelines 0 | fight:start@0.1 fight:clear_route+1.4 fight:screen_new+112.2 fight:screen_added+6.1 fight:prewarm_card_turns+0.2 fight:start_encounter+77.3 fight:music+16.0
+    F*[1]: 78.1 ms (gap 74.4 proc 1.9 draw 1.9 setup 0.0, 0 nodes) pipelines 0 | 
+    F*[2]: 35.9 ms (gap 10.8 proc 1.1 draw 24.0 setup 0.1, 0 nodes) pipelines 0 | 
+    warm end 13402 ms after frame 0; title left 13402 ms after frame 0; VRAM parts {'title': {'buffer': 19.7, 'other': 510.0, 'texture': -158.0, 'video': 371.7}, 'open': {'buffer': 20.8, 'other': 730.8, 'texture': -383.6, 'video': 368.1}, 'fight': {'buffer': 33.2, 'other': 987.6, 'texture': -369.7, 'video': 651.1}}
+    title row's own cost (diagnostic): {'cache_delta_ms': 49.7, 'nonce': 'P1-title1-314757941', 'probe_work_ms': 51.8}
+    settings' first opening frames (ms, gap, proc, draw, setup, added): [[16.8, 11.8, 4.2, 0.9, 0.0, 0], [18.0, 13.9, 3.4, 0.7, 0.0, 0], [27.2, 22.3, 3.5, 1.4, 0.0, 71], [20.7, 0.2, 3.5, 17.0, 0.0, 0]]
+    first card play frame: 83.1 ms (gap 10.3 proc 71.4 draw 1.4 setup 0.0, 0 nodes) pipelines 0 | 
+    diagnostic: the fight launch's F* 355.5 [355.5, 97.1, 27.8]
+P2 dP2 fresh=True Z 6070 ms | T 15.6 | W 37.3 (at 362) | S [] W2 36.1 | M 165.6 (open frame 28) | F* 282.1 [282.1, 103.4, 42.0] [route] | BttR 677.2 ms
+    rooms {'credits': 28.8, 'help': 25.9, 'settings': 27.1}; VRAM 379.7 MiB, static 0.0 MiB; res cache files 74
+    K title {'new': 0, 'rejected': 0, 'unbaked': {}} | open {'new': 0, 'rejected': 0, 'unbaked': {}} | fight {'new': 0, 'rejected': 0, 'unbaked': {}}
+    M's worst frame: 165.6 ms (gap 0.3 proc 160.7 draw 4.6 setup 0.4, 1225 nodes) pipelines 0 | map:show@11.5 map:take+0.1 map:land_added+64.8 map:node_states+0.1 floor_step:start+0.0 floor_step:end+0.0 map:first_floor_step+0.0 map:refreshed+5.2 map:screen_in+0.0 map:hud+50.3 map:music+10.4
+    F*[0]: 282.1 ms (gap 14.5 proc 259.8 draw 7.9 setup 0.5, 339 nodes) pipelines 0 | fight:start@0.1 fight:clear_route+1.4 fight:screen_new+115.1 fight:screen_added+6.0 fight:prewarm_card_turns+0.2 fight:start_encounter+76.5 fight:music+16.7
+    F*[1]: 103.4 ms (gap 99.8 proc 1.7 draw 1.8 setup 0.0, 0 nodes) pipelines 0 | 
+    F*[2]: 42.0 ms (gap 12.1 proc 1.1 draw 28.8 setup 0.1, 0 nodes) pipelines 0 | 
+    warm end 13786 ms after frame 0; title left 13786 ms after frame 0; VRAM parts {'title': {'buffer': 19.7, 'other': 518.0, 'texture': -158.0, 'video': 379.7}, 'open': {'buffer': 20.8, 'other': 738.8, 'texture': -383.6, 'video': 376.1}, 'fight': {'buffer': 33.2, 'other': 995.6, 'texture': -369.7, 'video': 659.1}}
+    title row's own cost (diagnostic): {'cache_delta_ms': 44.3, 'nonce': 'P2-title1-1636930653', 'probe_work_ms': 46.1}
+    settings' first opening frames (ms, gap, proc, draw, setup, added): [[17.0, 12.9, 3.4, 0.7, 0.0, 0], [18.3, 14.1, 3.4, 0.8, 0.0, 0], [27.1, 22.5, 3.4, 1.3, 0.0, 71], [21.8, 0.4, 3.9, 17.5, 0.0, 0]]
+    first card play frame: 76.7 ms (gap 0.8 proc 74.5 draw 1.4 setup 0.0, 0 nodes) pipelines 0 | 
+    diagnostic: the fight launch's F* 349.8 [349.8, 102.2, 30.2]
+P3 dP3 fresh=True Z 6132 ms | T 16.3 | W 38.3 (at 7) | S [] W2 38.3 | M 164.0 (open frame 28) | F* 274.2 [274.2, 94.4, 35.8] [route] | BttR 679.9 ms
+    rooms {'credits': 22.6, 'help': 23.4, 'settings': 29.4}; VRAM 379.8 MiB, static 0.0 MiB; res cache files 74
+    K title {'new': 0, 'rejected': 0, 'unbaked': {}} | open {'new': 0, 'rejected': 0, 'unbaked': {}} | fight {'new': 0, 'rejected': 0, 'unbaked': {}}
+    M's worst frame: 164.0 ms (gap 0.2 proc 159.2 draw 4.5 setup 0.4, 1225 nodes) pipelines 0 | map:show@10.4 map:take+0.1 map:land_added+63.9 map:node_states+0.1 floor_step:start+0.0 floor_step:end+0.0 map:first_floor_step+0.0 map:refreshed+5.2 map:screen_in+0.0 map:hud+50.9 map:music+10.5
+    F*[0]: 274.2 ms (gap 14.4 proc 252.2 draw 7.6 setup 0.3, 339 nodes) pipelines 0 | fight:start@0.1 fight:clear_route+1.4 fight:screen_new+111.2 fight:screen_added+5.9 fight:prewarm_card_turns+0.2 fight:start_encounter+75.9 fight:music+16.3
+    F*[1]: 94.4 ms (gap 90.2 proc 2.3 draw 1.9 setup 0.0, 0 nodes) pipelines 0 | 
+    F*[2]: 35.8 ms (gap 12.3 proc 1.1 draw 22.3 setup 0.1, 0 nodes) pipelines 0 | 
+    warm end 14046 ms after frame 0; title left 14046 ms after frame 0; VRAM parts {'title': {'buffer': 19.7, 'other': 518.1, 'texture': -158.0, 'video': 379.8}, 'open': {'buffer': 20.8, 'other': 738.9, 'texture': -383.6, 'video': 376.2}, 'fight': {'buffer': 33.2, 'other': 995.7, 'texture': -369.7, 'video': 659.2}}
+    title row's own cost (diagnostic): {'cache_delta_ms': 49.2, 'nonce': 'P3-title1-13659668', 'probe_work_ms': 51.2}
+    settings' first opening frames (ms, gap, proc, draw, setup, added): [[15.3, 10.9, 3.7, 0.7, 0.0, 0], [17.3, 13.1, 3.5, 0.7, 0.0, 0], [29.4, 24.6, 3.5, 1.3, 0.0, 71], [18.3, 0.2, 3.3, 14.8, 0.0, 0]]
+    first card play frame: 74.5 ms (gap 0.8 proc 72.4 draw 1.3 setup 0.0, 0 nodes) pipelines 0 | 
+    diagnostic: the fight launch's F* 343.0 [343.0, 98.9, 29.2]
+
+== statistic (A)
+  F* worst 326.9 -> FAIL; M worst 196.1 -> FAIL; W worst 68.1 -> PASS
+  Z median 6120 vs A's median 6120 + 1000 -> PASS (watchdog margin 13.9 s)
+  rejected baked files per install [0, 0, 0] -> PASS
+  rooms' first openings (<= 32.4 ms) [{'credits': 29.0, 'help': 25.9, 'settings': 19.8}, {'credits': 23.1, 'help': 26.2, 'settings': 27.6}, {'credits': 24.1, 'help': 32.2, 'settings': 27.7}]; Back to the Road (< 1000 ms) [731.4, 715.0, 714.9]
+  pipelines in M's worst frame [True, True, True], in F*'s frames [True, True, True], in the first card play's frame [True, True, True] -> FAIL
+  settings' first opening worst 27.7 ms; T worst 20.5; VRAM at the title's rest [353.5, 353.5, 353.5]
+  non-shader floor (frames over 100 ms with no pipeline): ['A1 F*[1] 127.3 ms with no pipeline', 'A2 F*[1] 100.1 ms with no pipeline', 'A3 F*[1] 107.0 ms with no pipeline']
+
+== statistic (P)
+  F* worst 282.1 -> FAIL; M worst 165.6 -> FAIL; W worst 38.3 -> PASS
+  Z median 6131 vs A's median 6120 + 1000 -> PASS (watchdog margin 13.9 s)
+  rejected baked files per install [0, 0, 0] -> PASS
+  rooms' first openings (<= 32.4 ms) [{'credits': 22.5, 'help': 25.9, 'settings': 27.2}, {'credits': 28.8, 'help': 25.9, 'settings': 27.1}, {'credits': 22.6, 'help': 23.4, 'settings': 29.4}]; Back to the Road (< 1000 ms) [681.6, 677.2, 679.9]
+  pipelines in M's worst frame [False, False, False], in F*'s frames [False, False, False], in the first card play's frame [False, False, False] -> PASS
+  settings' first opening worst 29.4 ms; T worst 16.8; VRAM at the title's rest [371.7, 379.7, 379.8]
+  non-shader floor (frames over 100 ms with no pipeline): ['P1 M 164.8 ms with no pipeline', 'P1 F*[0] 272.4 ms with no pipeline', 'P2 M 165.6 ms with no pipeline', 'P2 F*[0] 282.1 ms with no pipeline', 'P2 F*[1] 103.4 ms with no pipeline', 'P3 M 164.0 ms with no pipeline', 'P3 F*[0] 274.2 ms with no pipeline']

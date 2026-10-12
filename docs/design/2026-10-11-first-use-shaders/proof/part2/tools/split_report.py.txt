@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+"""Lane #682 Part 2 scratch: the CPU split of M's worst frame and F*'s three
+frames from probe rows (route runs): per frame its time, gap/proc/draw/setup,
+nodes added, pipelines moved (pf rows) and the stage marks as durations.
+    python3 split_report.py <route.out|rows.jsonl> [...]"""
+import json, sys
+def rows(p):
+    out = []
+    for l in open(p, errors="replace"):
+        i = l.find("{")
+        if i < 0 or ("SHADER_PROBE" not in l and not l.startswith("{")):
+            continue
+        try: out.append(json.loads(l[i:]))
+        except ValueError: pass
+    return out
+def marks(m):
+    out = []; prev = None
+    for name, at in m:
+        out.append("%s@%.1f" % (name, at) if prev is None else "%s+%.1f" % (name, at - prev))
+        prev = at
+    return " ".join(out)
+for p in sys.argv[1:]:
+    r = rows(p)
+    pf = {x["f"]: x["d"] for x in r if x.get("probe") == "pf"}
+    op = next((x for x in r if x.get("probe") == "open" and "split" in x), None)
+    fi = next((x for x in r if x.get("probe") == "fight"), None)
+    print("== %s" % p.split("/")[-1])
+    if op:
+        sp = op["split"]; w = max(range(len(sp)), key=lambda i: sp[i][0])
+        e = sp[w]
+        print("  M worst: open frame %d %.1f ms gap %.1f proc %.1f draw %.1f setup %.1f added %d pipes %s | %s" % (
+            w, e[0], e[1], e[2], e[3], e[4], e[5], pf.get(op["at"] + w, {}), marks(e[6])))
+    if fi:
+        for k in range(3):
+            e = fi["split"][k]
+            print("  F*[%d]: %.1f ms gap %.1f proc %.1f draw %.1f setup %.1f added %d pipes %s | %s" % (
+                k, e[0], e[1], e[2], e[3], e[4], e[5], pf.get(fi["at"] + k, {}), marks(e[6])))
