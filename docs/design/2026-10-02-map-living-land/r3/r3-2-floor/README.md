@@ -113,7 +113,7 @@ with the land and reads what the land already holds:
 - the ground's height span.
 
 **The bake (main thread, a step a frame)**: `FloorBake.advance`,
-`presentation/map/landscape/floor_bake.gd:106 (advance)`, works in a private World3D under the root. It uses
+`presentation/map/landscape/floor_bake.gd:126 (advance)`, works in a private World3D under the root. It uses
 orthographic top-down views, the land's own key light (`presentation/map/landscape/floor_stage.gd:62 (light_up)`)
 and the land's ambient, through a linear tonemap at exposure 0.5.
 
@@ -164,12 +164,12 @@ On top of those it adds:
 The global `land_motion` (Reduce Motion) holds the pools steady and puts the
 glints out.
 
-`LandFloor._apply`, `presentation/map/landscape/land_floor.gd:114 (_apply)`, then does three things:
+`LandFloor._apply`, `presentation/map/landscape/land_floor.gd:115 (_apply)`, then does three things:
 
 - it swaps every chunk's material (`draw_floor`);
 - it puts out the road details the bake drew;
 - it stops every live caster but the gateway arch and the bridges' parapets
-  (`presentation/map/landscape/land_floor.gd:153 (quiet)`). Their live shadows give them form and fall
+  (`presentation/map/landscape/land_floor.gd:154 (quiet)`). Their live shadows give them form and fall
   on the decks and on each other, none of which is floor. Until R3.3 the
   slate outcrops cast live too; R3.3's granite and cliffs cast into the bake
   only.
@@ -294,7 +294,7 @@ The change:
   kinds. The stamps go in a clear view; the mip chain is the bake's own, from a
   small picture of the floor's format. Each sample's command goes to the
   renderer as it is built.
-- `presentation/map/landscape/floor_bake.gd:268 (mip_views)` and `presentation/map/landscape/floor_bake.gd:322 (texture_rd)`: the bake's mip chain
+- `presentation/map/landscape/floor_bake.gd:333 (mip_views)` and `presentation/map/landscape/floor_bake.gd:387 (texture_rd)`: the bake's mip chain
   and picture format, shared with the warm-up.
 - `application/main.gd:1330 (in _show_title)`: a title with no run to resume warms too, for a new
   player's first map.
@@ -341,7 +341,7 @@ Two ways to reconcile them, both design calls:
 
 ### The cold open
 
-The change: `presentation/map/landscape/floor_bake.gd:199 (in _start)`. Behind the veil, the bake's
+The change: `presentation/map/landscape/floor_bake.gd:264 (in _start)`. Behind the veil, the bake's
 throwaway first draw (a light new to its world casts nothing in its first
 frame) goes in the frame that sets the bake up. Paced, under the title, it
 keeps a frame of its own.

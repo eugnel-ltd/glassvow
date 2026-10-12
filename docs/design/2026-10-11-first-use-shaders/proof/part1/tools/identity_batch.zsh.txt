@@ -1,0 +1,100 @@
+#!/bin/zsh
+# Lane #682 Part 1, Gate 1: the identity run on the iPad 8 (QA app only,
+# io.fol2.glassvow.qa; never the production bundle or its container; deletes
+# nothing on the iPad and nothing on the Mac outside $OUT). Takes the shared iPad
+# lock as `shader-682` (waits for any other holder, never takes one over), renews
+# it before every step, and releases it on exit.
+#
+#   identity_batch.zsh <out-dir> <label>=<ipa> ...     (in install order)
+#
+# For each build: room check, install, then two launches with
+# `-- --qa-identity=<label>-<n>`; after each, pull the identity files and the
+# launch log, and take a device screenshot (the picture after the blit).
+set -u
+setopt pipefail
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/shader-lane
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+QA=io.fol2.glassvow.qa
+OWNER=shader-682
+LAUNCHES=2
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+OUT=${1:A}; shift
+[[ "$OUT" == $L/* ]] || { echo "OUT $OUT is outside $L; refusing"; exit 1; }
+mkdir -p $OUT
+lock() {
+  local holder age
+  while [[ -d $FLOW/ipad.lock ]] && holder=$(cat $FLOW/ipad.lock/owner 2>/dev/null) && [[ "$holder" != "$OWNER" ]]; do
+    age=$(( $(date +%s) - $(stat -f %m $FLOW/ipad.lock/owner 2>/dev/null || date +%s) ))
+    (( age > 3300 )) && { echo "lock held by '$holder' for ${age} s: giving up rather than take it over"; exit 3; }
+    echo "ipad lock held by '$holder' (${age} s); re-checking in 30 s"; sleep 30
+  done
+  $FLOW/ipad_lock.sh acquire $OWNER
+}
+lock
+[[ -n "${HOLD_OUTER:-}" ]] || trap "$FLOW/ipad_lock.sh release $OWNER; echo \"== lock released \$(date +%T)\"" EXIT
+UDID=$(xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c '
+import json, sys
+found = [d["hardwareProperties"]["udid"] for d in json.load(sys.stdin)["result"]["devices"]
+         if (d.get("hardwareProperties") or {}).get("productType") == "iPad11,6"]
+print(found[0] if len(found) == 1 else "")')
+[[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+redact() { sed "s/$UDID/<device>/g"; }
+pull() { timeout 300 xcrun devicectl device copy from --device $UDID --domain-type appDataContainer \
+  --domain-identifier $QA --source Documents/$1 --destination $2 >/dev/null 2>&1; }
+room() {
+  local need free i
+  need=$(( $(stat -f %z "$1") + 150000000 ))
+  for i in 1 2 3; do
+    free=$(timeout 90 ideviceinfo -u $UDID -q com.apple.disk_usage 2>/dev/null | awk '/^AmountDataAvailable/ {print $2}')
+    [[ -n "$free" ]] && break
+    sleep 5
+  done
+  echo "   free on the iPad: ${free:-?} B; need $need B"
+  [[ -n "$free" ]] && (( free > need ))
+}
+install() {  # label ipa
+  local id i
+  id=$(unzip -p "$2" Payload/glassvow.app/Info.plist | plutil -extract CFBundleIdentifier raw -o - -)
+  [[ "$id" == "$QA" ]] || { echo "install: $2 is $id, not $QA; refusing"; return 1; }
+  for i in 1 2 3; do
+    lock
+    echo "== install $1 $(date +%T)"
+    timeout 300 xcrun devicectl device install app --device $UDID "$2" 2>&1 | redact > $OUT/install-$1.log \
+      && grep -q "App installed" $OUT/install-$1.log && ! grep -q "^ERROR" $OUT/install-$1.log && return 0
+    grep -m1 -E "Not enough space|ERROR" $OUT/install-$1.log
+    sleep 5
+  done
+  echo "install $1 failed"; return 1
+}
+launch() {  # tag
+  local tag=$1 i
+  lock
+  echo "== launch $tag $(date +%T); Mac load $(uptime | sed 's/.*averages: //')"
+  timeout 120 xcrun devicectl device process launch --terminate-existing --device $UDID $QA \
+    --log-file user://682-identity-$tag.log -- --qa-identity=$tag 2>&1 | redact > $OUT/$tag.launch.txt
+  sleep 40
+  for i in $(seq 1 40); do
+    pull 682-identity-$tag.json $OUT/682-identity-$tag.json
+    if [[ -s $OUT/682-identity-$tag.json ]] && grep -q "\"label\": \"$tag\"" $OUT/682-identity-$tag.json; then
+      pull 682-identity-$tag.bin $OUT/682-identity-$tag.bin
+      pull 682-identity-$tag-root.png $OUT/682-identity-$tag-root.png
+      timeout 120 xcrun devicectl device capture screenshot --device $UDID --destination $OUT/$tag-screen.png 2>&1 | redact | tail -1
+      pull 682-identity-$tag.log $OUT/682-identity-$tag.log
+      echo "   $tag pulled: $(ls -la $OUT/682-identity-$tag.bin | awk '{print $5}') B tiles, screen $([[ -s $OUT/$tag-screen.png ]] && echo yes || echo NO)"
+      return 0
+    fi
+    sleep 6
+  done
+  pull 682-identity-$tag.log $OUT/682-identity-$tag.log
+  echo "   $tag identity files MISSING"; return 1
+}
+echo "== identity batch $OUT start $(date +%T)"
+for pair in "$@"; do
+  arm=${pair%%=*}; ipa=${pair#*=}
+  room $ipa || { echo "== not enough room on the iPad for $arm; stopping"; exit 4; }
+  install $arm $ipa || exit 1
+  for n in $(seq 1 $LAUNCHES); do
+    launch $arm-$n || exit 1
+  done
+done
+echo "== identity batch done $(date +%T)"

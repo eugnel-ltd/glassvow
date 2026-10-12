@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+"""Lane #682 Part 1 scratch: arm a QA worktree with the identity scene. Copies
+qa_identity.gd in as tools/qa_identity.gd (a name the iOS preset packs) and adds
+an attach block at the top of Main._ready, run on a --qa-identity=<label> user
+argument. Uncommitted; deletes nothing. Revert with
+`git checkout -- application/main.gd` and removing tools/qa_identity.gd.
+
+    python3 arm_identity.py <worktree>
+"""
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+wt = Path(sys.argv[1]).resolve()
+MARK = "# QA-IDENTITY"
+main = wt / "application/main.gd"
+text = main.read_text()
+anchor = 'func _ready() -> void:\n\tprint("glassvow boot " + str(Engine.get_version_info()["string"]))\n'
+lines = [
+    'if " ".join(OS.get_cmdline_user_args()).contains("--qa-identity="):',
+    '\tEngine.time_scale = 0.0',
+    '\tprocess_mode = Node.PROCESS_MODE_DISABLED',
+    '\tvisible = false',
+    '\tfor qa_node: Node in find_children("*", "CanvasLayer", true, false):',
+    '\t\t(qa_node as CanvasLayer).visible = false',
+    '\tget_tree().root.add_child.call_deferred((load("res://tools/qa_identity.gd") as GDScript).new())',
+    '\treturn',
+]
+if MARK not in text:
+    assert text.count(anchor) == 1, "anchor"
+    block = "".join("\t%s  %s\n" % (l, MARK) for l in lines)
+    main.write_text(text.replace(anchor, anchor + block))
+(wt / "tools/qa_identity.gd").write_text((HERE / "qa_identity.gd").read_text())
+print("armed identity", wt)

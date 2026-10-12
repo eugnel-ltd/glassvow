@@ -1,0 +1,23 @@
+#!/bin/zsh
+# Lane #682 Part 1, Gate 2.1: check_floor_bake (the untracked LANE_STEPS copy, identical
+# checks) interleaved against origin/main ($L/wt-main) and the candidate ($L/wt-part1),
+# each run started only while the 1-minute load is under 50.
+#   floor_runs.zsh <out-dir> <pairs>
+set -u
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/shader-lane
+OUT=${1:A}; N=$2
+[[ "$OUT" == $L/* ]] || { echo "OUT outside $L"; exit 1; }
+mkdir -p $OUT
+load1() { sysctl -n vm.loadavg | awk '{print int($2)}'; }
+for i in $(seq 1 $N); do
+  if (( i % 2 )); then order=(main cand); else order=(cand main); fi
+  for arm in $order; do
+    W=$L/wt-part1; [[ $arm == main ]] && W=$L/wt-main
+    while (( $(load1) >= 50 )); do echo "   load $(load1); waiting"; sleep 20; done
+    before=$(sysctl -n vm.loadavg)
+    env HOME=$L/tmp/home timeout 300 godot --path $W -s res://tools/lane_check_floor_bake.gd -- --map --seed=1 --map-steps=2 > $OUT/$arm-$i.log 2>&1
+    rc=$?
+    echo "$arm-$i rc=$rc load_before=[$before] load_after=[$(sysctl -n vm.loadavg)] fails=$(grep -c '^FAIL' $OUT/$arm-$i.log) $(grep -o 'paced, the bake.*' $OUT/$arm-$i.log | head -1)"
+  done
+done
+echo done
