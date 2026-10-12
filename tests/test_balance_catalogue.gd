@@ -5,9 +5,11 @@ extends RefCounted
 ## `flame`, `sootCrown` and exclusions in `aspects[1]`) moved them from
 ## e9c4d48f… / 5429a44a…, the content the Duskblade's 1.0 verdict binds; the
 ## 1.0 release candidate now takes rc-bar P9's route (b), content equivalence.
+## #544 A8, Endure's first wall lane (Vitrify, `ironSkin`, in the Ashwarden's
+## `excludes.cards`), moved them from 4376691e… / 9f72ef7a….
 
-const LIVE_FILE: String = "4376691e1a8efc772c9fd9ef9957f4dd7235adaac1823887707c990fdf71ea4d"
-const LIVE_SEMANTIC: String = "9f72ef7a8cda0df01ba4efbe190dd19103d39114a59fb01b300259df107204f2"
+const LIVE_FILE: String = "abb82590d4beafb6c20e76e131e998ade65ca7b3b84d255f2ba61cfecea924fd"
+const LIVE_SEMANTIC: String = "5adbd58a932bcf0d1098266152e08462e3987c1d318267b129aeb2343ba677d4"
 
 
 static func run(fails: Array[String]) -> void:
