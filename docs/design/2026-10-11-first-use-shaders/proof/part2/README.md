@@ -29,15 +29,17 @@ the map's keys.
 - `presentation/stage/shared_shaders.gd`: one Shader per code string for the
   process. The warm, EnemyView, CombatScreen, TransitionLayer and RewardStage
   wear it; materials stay per use; code and parameters are unchanged.
-- `presentation/ui/path_warm.gd`, after the floor bake has ended (the #712 review:
-  tied to its completion): an empty view of the map's stage
-  (`MapScene.stage_view`) lit as Act I's journey, so its glow pass's format is
-  required before anything else is built; frame 0's targets again, a frame each;
-  Act I's kept land lent to that view (`MapScene.lend_journey`), a frame unseen,
-  then, once its pipelines have compiled, a frame drawn whole from above, and a
-  wait for that draw's compiles; a waylight tracer stand-in; a nine-patch, a
-  Polygon2D and the hidden back card drawn once. The foe stage has two omni
-  lights, as EnemyView's, and draws the ward at frame 0 with the body and shadow.
+- `presentation/ui/path_warm.gd`, one step a frame while the title rests
+  (`_settle`): each 2D material drawn once, then a nine-patch, a Polygon2D and
+  the hidden back card drawn once; then, after the floor bake has ended (the
+  #712 review: tied to its completion, `_await_bake`), an empty view of the
+  map's stage (`MapScene.stage_view`) lit as Act I's journey, so its glow pass's
+  format is required before anything else is built; frame 0's targets again, a
+  frame each; Act I's kept land lent to that view (`MapScene.lend_journey`) with
+  a waylight tracer stand-in, a frame unseen, then, once its pipelines have
+  compiled, a frame drawn whole from above, and a wait for that draw's
+  compiles. The foe stage has two omni lights, as EnemyView's, and draws the
+  ward at frame 0 with the body and shadow.
 - The lent land stands still (its scripts and particles paused) and comes back as
   it was kept; a map binding meanwhile takes it back first.
 
