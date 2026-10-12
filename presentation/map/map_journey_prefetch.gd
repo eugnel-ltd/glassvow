@@ -179,9 +179,11 @@ static func join() -> void:
 		WorkerThreadPool.wait_for_task_completion(_current._task)
 		_current._land.free()
 	elif _current != null and _current.step == Step.BAKING:
+		_current._land.floor_halt()
 		_current._land.free()
 	_current = null
 	MapScene.join_abandoned()
+	MapJourneyLandscape.LandFloor.Bake.reap()
 
 
 ## Gives up the current prefetch. Its worker is never waited on here: the

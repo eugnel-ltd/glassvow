@@ -1,0 +1,97 @@
+diff --git a/drivers/metal/rendering_shader_container_metal.cpp b/drivers/metal/rendering_shader_container_metal.cpp
+index ac0bdc4..bca8088 100644
+--- a/drivers/metal/rendering_shader_container_metal.cpp
++++ b/drivers/metal/rendering_shader_container_metal.cpp
+@@ -78,7 +78,7 @@ void RenderingShaderContainerMetal::_initialize_toolchain_properties() {
+ 		}
+ 	}
+ 
+-	parts.append_array({ "-", "|", "grep", "-E", R"(\"__METAL_VERSION__|__ENVIRONMENT_OS\")" });
++	parts.append_array({ "-", "|", "grep", "-E", "'__METAL_VERSION__|__ENVIRONMENT_OS'" });
+ 
+ 	List<String> args = { "-c", String(" ").join(parts) };
+ 
+@@ -150,7 +150,8 @@ Error RenderingShaderContainerMetal::compile_metal_source(const char *p_source,
+ 			"-sdk",
+ 			sdk,
+ 			"metal",
+-			"-O3",
++			// Glassvow #682: no -O3. The runtime sets no optimisation level, so the bake
++			// keeps the compiler's default, as the runtime's compile does.
+ 			"-Wno-unused-variable",
+ 			"-Wno-uninitialized",
+ 			"-Wno-unused-function",
+diff --git a/editor/export/shader_baker_export_plugin.cpp b/editor/export/shader_baker_export_plugin.cpp
+index 0f51b22..9e2beb0 100644
+--- a/editor/export/shader_baker_export_plugin.cpp
++++ b/editor/export/shader_baker_export_plugin.cpp
+@@ -96,6 +96,17 @@ bool ShaderBakerExportPlugin::_begin_customize_resources(const Ref<EditorExportP
+ 		return false;
+ 	}
+ 
++	// Glassvow #682: the renderer resolved these settings with this process's features when
++	// it started, and they shape the scene shaders' cache keys and code. A target that
++	// resolves them otherwise (iOS: `.mobile`) would never load the bake: refuse it. Start
++	// the export with GODOT_EDITOR_CUSTOM_FEATURES naming the target's features ("mobile").
++	for (const char *setting : { "rendering/reflections/sky_reflections/texture_array_reflections", "rendering/shading/overrides/force_lambert_over_burley" }) {
++		if (get_export_preset()->get_project_setting(setting) != GLOBAL_GET(setting)) {
++			ERR_PRINT(vformat("Shader baker: \"%s\" differs for this export target; set GODOT_EDITOR_CUSTOM_FEATURES to its features. Shaders not baked.", setting));
++			return false;
++		}
++	}
++
+ 	if (!_initialize_container_format(p_platform, get_export_preset())) {
+ 		return false;
+ 	}
+@@ -140,6 +151,16 @@ bool ShaderBakerExportPlugin::_begin_customize_resources(const Ref<EditorExportP
+ 
+ 	RendererSceneRenderRD::get_singleton()->enable_features(renderer_features);
+ 
++	// Glassvow #682: the engine's own shaders (its renderers', effects' and embedded materials')
++	// are not baked. Their bake's picture could not be tested on the floor device, whose user
++	// cache, read first, always held their runtime compile; a fresh install compiles them as an
++	// unbaked build does. Set this true to bake them again, once their identity is proven on a
++	// fresh app container.
++	constexpr bool bake_engine_shaders = false;
++	if (!bake_engine_shaders) {
++		return true;
++	}
++
+ 	// Included all shaders created by renderers and effects.
+ 	ShaderRD::shaders_embedded_set_lock();
+ 	const ShaderRD::ShaderVersionPairSet &pair_set = ShaderRD::shaders_embedded_set_get();
+@@ -279,6 +300,12 @@ Ref<Resource> ShaderBakerExportPlugin::_customize_resource(const Ref<Resource> &
+ 	DEV_ASSERT(singleton != nullptr);
+ 
+ 	Ref<Material> material = p_resource;
++	// Glassvow #682: only the game's own shaders (ShaderMaterials) are baked. A material whose
++	// shader the engine generates (a BaseMaterial3D in an imported scene, or the Sprite3D and
++	// Label3D defaults) keeps its runtime compile, as the engine's own shaders do (see below).
++	if (Object::cast_to<ShaderMaterial>(material.ptr()) == nullptr) {
++		return Ref<Resource>();
++	}
+ 	if (material.is_valid()) {
+ 		RID material_rid = material->get_rid();
+ 		if (material_rid.is_valid()) {
+diff --git a/editor/shader/shader_baker/shader_baker_export_plugin_platform_metal.cpp b/editor/shader/shader_baker/shader_baker_export_plugin_platform_metal.cpp
+index 8570b5f..2c319da 100644
+--- a/editor/shader/shader_baker/shader_baker_export_plugin_platform_metal.cpp
++++ b/editor/shader/shader_baker/shader_baker_export_plugin_platform_metal.cpp
+@@ -42,8 +42,15 @@ RenderingShaderContainerFormat *ShaderBakerExportPluginPlatformMetal::create_sha
+ 		// Godot metal doesn't support x86_64 mac so no need to worry about that version
+ 		profile = MetalDeviceProfile::get_profile(MetalDeviceProfile::Platform::macOS, MetalDeviceProfile::GPU::Apple7, min_os_version);
+ 	} else if (os_name == U"iOS") {
+-		min_os_version = (String)p_preset->get("application/min_ios_version");
+-		profile = MetalDeviceProfile::get_profile(MetalDeviceProfile::Platform::iOS, MetalDeviceProfile::GPU::Apple7, min_os_version);
++		// Glassvow: bake for the floor device's GPU family (iPad 8, A12 = Apple5). The
++		// Apple5 profile also disables argument buffers, which the A12 (tier 1) lacks.
++		// Containers baked for a higher family are rejected and recompiled on the A12.
++		// Glassvow #682: and for the floor device's iPadOS (26), not the app's minimum. The
++		// runtime compiles MSL at the device's newest language version (4.0 on iPadOS 26),
++		// and the A12 drew a bake made at the minimum's version (2.4) with a different grain.
++		// A device on an older iOS rejects these binaries and compiles at runtime, as unbaked.
++		min_os_version = os_version::IOS_26_0;
++		profile = MetalDeviceProfile::get_profile(MetalDeviceProfile::Platform::iOS, MetalDeviceProfile::GPU::Apple5, min_os_version);
+ 	} else if (os_name == U"visionOS") {
+ 		min_os_version = (String)p_preset->get("application/min_visionos_version");
+ 		profile = MetalDeviceProfile::get_profile(MetalDeviceProfile::Platform::visionOS, MetalDeviceProfile::GPU::Apple8, min_os_version);

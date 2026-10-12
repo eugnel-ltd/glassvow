@@ -1,0 +1,397 @@
+extends Node
+## Lane #682 Part 1, Gate 1 (QA only, never committed): the deterministic
+## per-shader picture identity scene. Copied into a QA worktree as
+## res://tools/qa_identity.gd by arm_identity.py, which also adds the attach
+## block at the top of Main._ready (run on `--qa-identity=<label>`): it sets
+## Engine.time_scale to 0 before any frame (the renderer's TIME advances by the
+## scaled step, main.cpp:4940 and :5089, renderer_compositor_rd.cpp:126, so
+## TIME stays 0 from frame 0), hides and stops the game, makes this node (which
+## lists the user shader cache as it stands) and adds it to the root.
+##
+## Every material the bake manifest bakes (tools/shader_bake_manifest.gd) is
+## drawn in its own tile, on fixed geometry with fixed inputs: each sampler a
+## fixed noise texture, each scalar its shader default (or, when it has none, a
+## value hashed from its name). 2D materials draw through a canvas (a 2D
+## SubViewport); 3D ones on a stage (own world, a sphere before a textured
+## card, EnemyView's stage light, a key and an omni light) with the MSAA and
+## the background their use has: EnemyView and CardView 4x, transparent; the
+## reward stage 4x, transparent; MapScene's stage and the floor bake no MSAA,
+## opaque (iOS: MapScene.lean_profile()). One more view, "post", runs the
+## fight's post chain: a 4x stage with EnemyView's environment (its sky as
+## light, linear tonemap) holding the foe's body, a shard and the card's face,
+## shown on the root canvas like every tile (the device screenshot catches the
+## blit to the screen).
+##
+## Every tile is read back once the scene has settled (`SETTLE_MS`), and again
+## until two reads in a row match. Writes user://682-identity-<label>.json
+## (index, K) and .bin (the tiles' bytes, RGB8 or RGBA8 as each view reads back, in index order), and
+## user://682-identity-<label>-root.png (the root viewport, before the blit),
+## each flushed; then keeps showing the grid for the screenshot (or quits, on
+## `--qa-identity-quit`, for the Mac's runs).
+
+const Manifest = preload("res://tools/shader_bake_manifest.gd")
+const TILE_2D: Vector2i = Vector2i(64, 64)
+const TILE_3D: Vector2i = Vector2i(96, 96)
+## The first read waits SETTLE_MS of wall clock and QUIET frames with no
+## pipeline compile submitted (background compiles and ubershader stand-ins
+## settle), then every RECHECK frames reads again until two reads in a row
+## match byte for byte (at most TRIES reads; a tile still moving is unstable).
+const SETTLE_MS: int = 20000
+const QUIET: int = 60
+const RECHECK: int = 30
+const TRIES: int = 8
+const USER_CACHE: String = "user://shader_cache"
+const RES_CACHE: String = "res://.godot/shader_cache"
+
+## The user cache as it stood when this node was made, in Main._ready, before
+## any frame drew.
+var cache_before: Dictionary = {}
+
+var label: String = "unlabelled"
+var _tiles: Array[Dictionary] = []
+var _built_ms: int = 0
+var _quiet: int = 0
+var _compiles: int = -1
+var _since_read: int = 0
+var _reads: int = 0
+var _last: Array[PackedByteArray] = []
+var _settled_ms: int = 0
+var _done: bool = false
+var _grid: GridContainer = null
+var _noise: ImageTexture = null
+var _noise_array: Texture2DArray = null
+var _back: ImageTexture = null
+
+
+func _init() -> void:
+	cache_before = list_files(USER_CACHE)
+
+
+func _ready() -> void:
+	name = "QaIdentity"
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--qa-identity="):
+			label = arg.get_slice("=", 1)
+	_noise = ImageTexture.create_from_image(_image(64, 1))
+	_back = ImageTexture.create_from_image(_image(64, 7))
+	var layers: Array[Image] = []
+	for k: int in range(4):
+		layers.append(_image(32, 11 + k))
+	_noise_array = Texture2DArray.new()
+	_noise_array.create_from_images(layers)
+	var bg: ColorRect = ColorRect.new()
+	bg.color = Color(0.1, 0.1, 0.12)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(bg)
+	_grid = GridContainer.new()
+	_grid.columns = 16
+	add_child(_grid)
+	var listed: Array[Shader] = Manifest.shaders()
+	for sh: Shader in listed:
+		var path: String = sh.resource_path if not sh.resource_path.is_empty() else "string:%s" % _first_line(sh.code)
+		var mat: ShaderMaterial = ShaderMaterial.new()
+		mat.shader = sh
+		_inputs(mat)
+		if sh.get_mode() == Shader.MODE_SPATIAL:
+			var use: String = _use(path)
+			_add(path, use, _stage(use, [mat]))
+		else:
+			assert(sh.get_mode() == Shader.MODE_CANVAS_ITEM, path)
+			_add(path, "canvas", _canvas(mat))
+	var post: Array[Material] = []
+	var strings: Array[String] = Manifest.string_shaders()
+	for sh: Shader in listed:
+		var code: String = sh.code
+		if code == strings[0] or code == strings[3] \
+				or sh.resource_path.ends_with("card_surface.gdshader"):
+			var mat: ShaderMaterial = ShaderMaterial.new()
+			mat.shader = sh
+			_inputs(mat)
+			post.append(mat)
+	_add("post:enemy_body+shard+card_surface", "post", _stage("post", post, Vector2i(192, 192)))
+	_built_ms = Time.get_ticks_msec()
+	print("QA_IDENTITY %s tiles=%d" % [label, _tiles.size()])
+
+
+func _process(_delta: float) -> void:
+	if _done:
+		return
+	var compiles: int = _compile_count()
+	_quiet = _quiet + 1 if compiles == _compiles else 0
+	_compiles = compiles
+	if _reads == 0:
+		if Time.get_ticks_msec() - _built_ms < SETTLE_MS or _quiet < QUIET:
+			return
+		_settled_ms = Time.get_ticks_msec() - _built_ms
+		_last = _read_all()
+		_reads = 1
+		return
+	_since_read += 1
+	if _since_read < RECHECK:
+		return
+	_since_read = 0
+	var now: Array[PackedByteArray] = _read_all()
+	_reads += 1
+	var moved: bool = false
+	for i: int in range(now.size()):
+		moved = moved or now[i] != _last[i]
+	var previous: Array[PackedByteArray] = _last
+	_last = now
+	if not moved or _reads >= TRIES:
+		_done = true
+		_write(previous)
+
+
+func _read_all() -> Array[PackedByteArray]:
+	var out: Array[PackedByteArray] = []
+	for tile: Dictionary in _tiles:
+		var view: SubViewport = tile["view"]
+		out.append(view.get_texture().get_image().get_data())
+	return out
+
+
+static func _compile_count() -> int:
+	var total: int = 0
+	for info: int in [RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_CANVAS,
+			RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_MESH,
+			RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SURFACE,
+			RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_DRAW,
+			RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SPECIALIZATION]:
+		total += RenderingServer.get_rendering_info(info)
+	return total
+
+
+func _add(path: String, use: String, view: SubViewport) -> void:
+	add_child(view)
+	var shown: TextureRect = TextureRect.new()
+	shown.texture = view.get_texture()
+	shown.custom_minimum_size = Vector2(view.size) * 0.5
+	shown.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	shown.stretch_mode = TextureRect.STRETCH_SCALE
+	_grid.add_child(shown)
+	_tiles.append({"path": path, "use": use, "view": view})
+
+
+## A 2D view: a fixed background, then the material on a TextureRect of noise.
+func _canvas(mat: Material) -> SubViewport:
+	var view: SubViewport = SubViewport.new()
+	view.size = TILE_2D
+	view.disable_3d = true
+	view.transparent_bg = false
+	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	var back: TextureRect = TextureRect.new()
+	back.texture = _back
+	back.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	back.size = Vector2(TILE_2D)
+	view.add_child(back)
+	var rect: TextureRect = TextureRect.new()
+	rect.texture = _noise
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.position = Vector2(4, 4)
+	rect.size = Vector2(TILE_2D - Vector2i(8, 8))
+	rect.material = mat
+	view.add_child(rect)
+	return view
+
+
+## A 3D stage for `use`: its MSAA and background, EnemyView's light, a card of
+## noise behind, and each material on a sphere.
+func _stage(use: String, mats: Array, size: Vector2i = TILE_3D) -> SubViewport:
+	var view: SubViewport = SubViewport.new()
+	view.size = size
+	view.own_world_3d = true
+	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	var lean: bool = use == "map" or use == "floor"
+	view.msaa_3d = Viewport.MSAA_DISABLED if lean else Viewport.MSAA_4X
+	view.transparent_bg = not lean
+	var env: WorldEnvironment = WorldEnvironment.new()
+	env.environment = EnemyView.stage_environment()
+	view.add_child(env)
+	var key: DirectionalLight3D = DirectionalLight3D.new()
+	key.rotation = Vector3(-0.7, 0.5, 0.0)
+	view.add_child(key)
+	var omni: OmniLight3D = OmniLight3D.new()
+	omni.position = Vector3(1.2, 1.0, 2.0)
+	omni.omni_range = 6.0
+	view.add_child(omni)
+	var cam: Camera3D = Camera3D.new()
+	cam.position = Vector3(0.0, 0.0, 3.0)
+	view.add_child(cam)
+	var card: MeshInstance3D = MeshInstance3D.new()
+	var quad: QuadMesh = QuadMesh.new()
+	quad.size = Vector2(4.0, 4.0)
+	card.mesh = quad
+	var card_mat: StandardMaterial3D = StandardMaterial3D.new()
+	card_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	card_mat.albedo_texture = _back
+	card.material_override = card_mat
+	card.position = Vector3(0.0, 0.0, -1.5)
+	view.add_child(card)
+	for i: int in range(mats.size()):
+		var ball: MeshInstance3D = MeshInstance3D.new()
+		var sphere: SphereMesh = SphereMesh.new()
+		sphere.radius = 0.8 if mats.size() == 1 else 0.5
+		sphere.height = sphere.radius * 2.0
+		ball.mesh = sphere
+		ball.material_override = mats[i]
+		ball.position = Vector3(0.0 if mats.size() == 1 else -1.1 + 1.1 * i, 0.0, 0.0)
+		view.add_child(ball)
+	return view
+
+
+static func _use(path: String) -> String:
+	if path.contains("/map/landscape/floor_"):
+		return "floor"
+	if path.contains("/map/"):
+		return "map"
+	if path.contains("/reward/"):
+		return "reward"
+	return "combat"
+
+
+## Each sampler a fixed noise texture. Each ranged float the middle of its
+## range; any other scalar, vector or colour whose default is missing, zero or
+## transparent (a subject the defaults would hide) a value hashed from its
+## name; every other default kept. Arrays keep their defaults.
+func _inputs(mat: ShaderMaterial) -> void:
+	for u: Dictionary in mat.shader.get_shader_uniform_list():
+		var uname: String = u["name"]
+		var type: int = u["type"]
+		var hint: int = u.get("hint", 0)
+		var hint_string: String = str(u.get("hint_string", ""))
+		if type == TYPE_OBJECT:
+			if hint_string.contains("Texture2DArray"):
+				mat.set_shader_parameter(uname, _noise_array)
+			elif hint_string.contains("Texture2D"):
+				mat.set_shader_parameter(uname, _noise)
+			continue
+		var given: Variant = RenderingServer.shader_get_parameter_default(mat.shader.get_rid(), uname)
+		var h: float = 0.25 + 0.5 * float(hash(uname) & 0xffff) / 65535.0
+		match type:
+			TYPE_FLOAT:
+				var parts: PackedStringArray = hint_string.split(",")
+				if hint == PROPERTY_HINT_RANGE and parts.size() >= 2:
+					mat.set_shader_parameter(uname, (parts[0].to_float() + parts[1].to_float()) * 0.5)
+				elif given == null or is_zero_approx(float(str(given))):
+					mat.set_shader_parameter(uname, h)
+			TYPE_INT:
+				if given == null:
+					mat.set_shader_parameter(uname, 1)
+			TYPE_VECTOR2:
+				if given == null or given == Vector2.ZERO:
+					mat.set_shader_parameter(uname, Vector2(h, 1.0 - h))
+			TYPE_VECTOR3:
+				if given == null or given == Vector3.ZERO:
+					mat.set_shader_parameter(uname, Vector3(h, 1.0 - h, 0.5))
+			TYPE_VECTOR4, TYPE_COLOR:
+				var c: Color = Color(0, 0, 0, 0)
+				if given is Color:
+					c = given
+				elif given is Vector4:
+					var v: Vector4 = given
+					c = Color(v.x, v.y, v.z, v.w)
+				if given == null or is_zero_approx(c.a):
+					mat.set_shader_parameter(uname, Color(h, 1.0 - h, 0.5, 1.0))
+
+
+## A deterministic RGBA picture (integer hash, no random source).
+static func _image(side: int, salt: int) -> Image:
+	var img: Image = Image.create(side, side, false, Image.FORMAT_RGBA8)
+	for y: int in range(side):
+		for x: int in range(side):
+			var h: int = (x * 73856093) ^ (y * 19349663) ^ (salt * 83492791)
+			h = (h ^ (h >> 13)) * 1274126177
+			var c: Color = Color8((h >> 4) & 0xff, (h >> 12) & 0xff, (h >> 20) & 0xff, 160 + ((h >> 26) & 0x3f))
+			c = c.lerp(Color(float(x) / side, float(y) / side, 0.5, 1.0), 0.5)
+			img.set_pixel(x, y, c)
+	return img
+
+
+static func _first_line(code: String) -> String:
+	for line: String in code.split("\n"):
+		var t: String = line.strip_edges()
+		if not t.is_empty() and not t.begins_with("//") and not t.begins_with("shader_type") \
+				and not t.begins_with("render_mode") and not t.begins_with("uniform float qa_nonce"):
+			return "%s#%s" % [t.substr(0, 40), code.sha256_text().substr(0, 8)]
+	return code.sha256_text().substr(0, 8)
+
+
+## The last read's tiles, each marked stable when it matched the read before.
+func _write(previous: Array[PackedByteArray]) -> void:
+	var index: Array = []
+	var bin: FileAccess = FileAccess.open("user://682-identity-%s.bin" % label, FileAccess.WRITE)
+	var offset: int = 0
+	for i: int in range(_tiles.size()):
+		var tile: Dictionary = _tiles[i]
+		var view: SubViewport = tile["view"]
+		var data: PackedByteArray = _last[i]
+		bin.store_buffer(data)
+		index.append({"path": tile["path"], "use": tile["use"], "w": view.size.x, "h": view.size.y,
+			"channels": data.size() / (view.size.x * view.size.y), "offset": offset, "bytes": data.size(),
+			"sha256": _sha(data), "stable": data == previous[i]})
+		offset += data.size()
+	bin.flush()
+	bin.close()
+	var root_img: Image = get_viewport().get_texture().get_image()
+	root_img.save_png("user://682-identity-%s-root.png" % label)
+	var after: Dictionary = list_files(USER_CACHE)
+	var res: Dictionary = list_files(RES_CACHE)
+	var new_files: Array = []
+	var new_with_baked: Array = []
+	for rel: String in after:
+		if not cache_before.has(rel):
+			new_files.append(rel)
+			if res.has(rel):
+				new_with_baked.append(rel)
+	var bypassed: Array = []
+	for rel: String in res:
+		if cache_before.has(rel):
+			bypassed.append(rel)
+	var report: Dictionary = {"label": label, "engine": Engine.get_version_info()["string"],
+		"settled_ms": _settled_ms, "reads": _reads, "compiles": _compiles, "tiles": index,
+		"k": {"res_files": res.size(), "user_before": cache_before.size(), "new": _by_shader(new_files),
+			"new_paths": new_files, "new_with_baked": new_with_baked,
+			"res_bypassed_by_user_cache": _by_shader(bypassed)}}
+	var f: FileAccess = FileAccess.open("user://682-identity-%s.json" % label, FileAccess.WRITE)
+	f.store_string(JSON.stringify(report, " "))
+	f.flush()
+	f.close()
+	var stable: int = 0
+	for row: Dictionary in index:
+		stable += 1 if row["stable"] else 0
+	print("QA_IDENTITY done %s tiles=%d stable=%d new=%d new_with_baked=%d" % [
+		label, index.size(), stable, new_files.size(), new_with_baked.size()])
+	if OS.get_cmdline_user_args().has("--qa-identity-quit"):
+		get_tree().quit(0)
+
+
+static func _sha(data: PackedByteArray) -> String:
+	var ctx: HashingContext = HashingContext.new()
+	ctx.start(HashingContext.HASH_SHA256)
+	ctx.update(data)
+	return ctx.finish().hex_encode()
+
+
+static func _by_shader(paths: Array) -> Dictionary:
+	var out: Dictionary = {}
+	for rel: String in paths:
+		var top: String = rel.get_slice("/", 0)
+		var count: int = out.get(top, 0)
+		out[top] = count + 1
+	return out
+
+
+## Every file under `root`, as paths relative to it.
+static func list_files(root: String) -> Dictionary:
+	var out: Dictionary = {}
+	var stack: Array[String] = [""]
+	while not stack.is_empty():
+		var rel: String = stack.pop_back()
+		var dir: DirAccess = DirAccess.open(root.path_join(rel) if not rel.is_empty() else root)
+		if dir == null:
+			continue
+		for sub: String in dir.get_directories():
+			stack.append(rel.path_join(sub) if not rel.is_empty() else sub)
+		for file: String in dir.get_files():
+			out[rel.path_join(file) if not rel.is_empty() else file] = true
+	return out

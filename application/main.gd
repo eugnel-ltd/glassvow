@@ -1346,6 +1346,10 @@ func _show_title() -> void:
 		# The floor's pipelines all the same, behind the launch screen: a new
 		# player's first map bakes the floor too (`floor_warm.gd`).
 		MapJourneyLandscape.LandFloor.Warm.warm()
+	# The fight's 3D pipelines for its own MSAA targets, behind the launch
+	# screen too: no later frame can build them without waiting (#682).
+	if not _warm_headless:
+		PathWarm.prime_targets(self)
 	# The road persists across a rebuild (§7 item 12): the new title continues
 	# the world it replaces, the title's or the departure's.
 	var standing: TitleWorld = _standing_road()
@@ -1388,6 +1392,17 @@ func _show_title() -> void:
 	_vigil_art_drop = false
 	_vigil_art_due = true
 	_warm_rooms()
+	_warm_paths()
+
+
+## Once a process, while the title rests and after the rooms' warm, the first
+## map open's and the first fight's shaders are paid for ahead (PathWarm, #682).
+## Never in the headless suite.
+func _warm_paths() -> void:
+	if _warm_headless or PathWarm.started():
+		return
+	add_child(PathWarm.new(func() -> bool:
+		return _warm_may_run() and (_room_warm == null or not is_instance_valid(_room_warm))))
 
 
 ## X2 and V9: the title built beneath the route on screen, which is lifted off

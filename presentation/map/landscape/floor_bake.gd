@@ -86,6 +86,26 @@ var _frames_ms: PackedFloat32Array = PackedFloat32Array()
 var _last_us: int = 0
 var _soft_set: bool = false
 var _paced: bool = false
+## A paced bake's first draw waits, without holding a frame, until the land's
+## pipelines have compiled (#682): its soft key switch frees every scene
+## pipeline and waits for every compile under way, and its first draw waits
+## for any of the land's not yet built, so on the iPad 8 that frame held
+## 0.9-5.7 s. Its world is drawn once by a view that sees nothing, which makes
+## the engine queue every pipeline the land's surfaces need, in the
+## background; a task queued after them on each queue of the worker pool
+## finishes once all of them have started, and SETTLE_S more lets the last
+## ones end. The first tile waits the same way after the warm draw: the switch
+## freed the pipelines the quiet view built, and a tile drawn before the soft
+## key's own have compiled is drawn by the engine's ubershader stand-in
+## (RenderForwardMobile's pipeline fallback), whose picture differs from theirs
+## by a level here and there, so the lit picture would depend on the moment.
+## `may_wait` false (a map waiting for the land) skips both waits.
+const SETTLE_S: float = 1.0
+var may_wait: bool = true
+var _canaries: Array[int] = []
+var _settle_until: int = 0
+## Canaries of bakes let go before theirs ended, waited on once they have.
+static var _orphans: Array[int] = []
 static var _radial: GradientTexture2D = null
 
 
@@ -104,6 +124,8 @@ func _init(land: MapJourneyLandscape, plan: Plan, paced: bool = false) -> void:
 ## Carries the bake on by one frame's work; true once it has ended (`DONE`, or
 ## `FAILED` with `failure` said).
 func advance() -> bool:
+	if (step == Step.WARM or step == Step.FIELDS) and may_wait and not _compiled():
+		return false
 	var started: int = Time.get_ticks_usec()
 	if _last_us > 0:
 		_frames_ms.append((started - _last_us) / 1000.0)
@@ -148,6 +170,45 @@ func cancel() -> void:
 	if not finished():
 		_fail("cancelled")
 	_release_rids()
+	_orphans.append_array(_canaries)
+	_canaries.clear()
+
+
+## Whether the pipelines the last draw queued have compiled (see `SETTLE_S`).
+## The first call comes the frame after that draw (the quiet view's, then the
+## warm draw's), once they are all queued; a true answer starts the next wait
+## afresh.
+func _compiled() -> bool:
+	_reap(false)
+	if _canaries.is_empty() and _settle_until == 0:
+		for high: bool in [true, false]:
+			_canaries.append(WorkerThreadPool.add_task(func() -> void: pass, high, "Floor bake: pipelines started"))
+		return false
+	for task: int in _canaries:
+		if not WorkerThreadPool.is_task_completed(task):
+			return false
+	for task: int in _canaries:
+		WorkerThreadPool.wait_for_task_completion(task)
+	_canaries.clear()
+	if _settle_until == 0:
+		_settle_until = Time.get_ticks_msec() + roundi(SETTLE_S * 1000.0)
+	if Time.get_ticks_msec() < _settle_until:
+		return false
+	_settle_until = 0
+	return true
+
+
+## Waits on the canaries of bakes let go: those ended, or (`all`, at the
+## process's exit) every one.
+static func _reap(all: bool) -> void:
+	for task: int in _orphans.duplicate():
+		if all or WorkerThreadPool.is_task_completed(task):
+			WorkerThreadPool.wait_for_task_completion(task)
+			_orphans.erase(task)
+
+
+static func reap() -> void:
+	_reap(true)
 
 
 func _start() -> void:
@@ -196,6 +257,10 @@ func _start() -> void:
 	timings["paced"] = _paced
 	_tile = 0
 	if _paced:
+		# The quiet view: it draws once this frame and sees nothing (`_compiled`).
+		var quiet: SubViewport = _view("Floor bake quiet", Vector2i.ONE, world)
+		_camera(quiet, plain, 0)
+		quiet.render_target_update_mode = SubViewport.UPDATE_ONCE
 		step = Step.WARM
 	else:
 		_warm()

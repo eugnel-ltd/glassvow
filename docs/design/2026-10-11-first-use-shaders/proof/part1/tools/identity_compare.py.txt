@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""Lane #682 Part 1, Gate 1: the registered identity rule on the identity scene's
+readbacks (tools/qa_identity.gd). For each tile, the baked arm against the
+unbaked arm (every launch pair) must not exceed the larger of that tile's
+launch-to-launch difference within either arm and one level per channel.
+
+    identity_compare.py <dir> <unbaked label> <baked label> [launches]
+        reads <dir>/682-identity-<label>-<n>.json/.bin, n = 1..launches (default 2),
+        and, when present, <dir>/<label>-<n>-screen.png and the -root.png pictures.
+    identity_compare.py --same <a.json> <b.json>   (Mac determinism: byte-identical?)
+"""
+import json
+import sys
+from pathlib import Path
+
+import numpy as np
+from PIL import Image
+
+
+def load(json_path):
+    meta = json.loads(Path(json_path).read_text())
+    raw = Path(str(json_path)[:-5] + ".bin").read_bytes()
+    tiles = []
+    for row in meta["tiles"]:
+        a = np.frombuffer(raw[row["offset"]:row["offset"] + row["bytes"]], dtype=np.uint8)
+        tiles.append((row, a.astype(np.int16)))
+    return meta, tiles
+
+
+def maxdiff(a, b):
+    return int(np.abs(a - b).max()) if a.shape == b.shape else 999
+
+
+def same(a_path, b_path):
+    _, a = load(a_path)
+    _, b = load(b_path)
+    assert len(a) == len(b), "tile counts differ"
+    bad = []
+    for (ra, x), (rb, y) in zip(a, b):
+        if ra["path"] != rb["path"] or ra["sha256"] != rb["sha256"]:
+            bad.append((ra["path"], maxdiff(x, y)))
+    unstable = [r["path"] for r, _ in a + b if not r["stable"]]
+    print("tiles %d, differing %d, unstable %d" % (len(a), len(bad), len(unstable)))
+    for p, d in bad:
+        print("  DIFF %s max %d" % (p, d))
+    for p in unstable:
+        print("  UNSTABLE %s" % p)
+    return 0 if not bad and not unstable else 1
+
+
+def picture(path):
+    return np.asarray(Image.open(path).convert("RGBA"), dtype=np.int16) if Path(path).exists() else None
+
+
+def main():
+    if sys.argv[1] == "--same":
+        sys.exit(same(sys.argv[2], sys.argv[3]))
+    d = Path(sys.argv[1])
+    ulab, blab = sys.argv[2], sys.argv[3]
+    n = int(sys.argv[4]) if len(sys.argv) > 4 else 2
+    arms = {}
+    for lab in (ulab, blab):
+        arms[lab] = [load(d / ("682-identity-%s-%d.json" % (lab, i))) for i in range(1, n + 1)]
+    k_ok = True
+    for lab in arms:
+        for i, (meta, _) in enumerate(arms[lab], 1):
+            k = meta["k"]
+            game_new = sum(k["new"].get(name, 0) for name in ("SceneForwardMobileShaderRD", "CanvasShaderRD"))
+            print("K %s: res %d, user before %d, new %s, new with baked %d, res bypassed by user cache %s" % (
+                meta["label"], k["res_files"], k["user_before"], k["new"], len(k["new_with_baked"]),
+                k["res_bypassed_by_user_cache"]))
+            if lab == blab and (k["res_files"] < 100 or len(k["new_with_baked"]) != 0 or game_new != 0):
+                k_ok = False
+                print("   K FAIL: the baked arm compiled %d game shader files on the device (%d rejected)" % (
+                    game_new, len(k["new_with_baked"])))
+            if lab == ulab and (k["res_files"] != 0 or (i == 1 and game_new == 0)):
+                k_ok = False
+                print("   K FAIL: the unbaked arm shipped %d baked files or compiled no game shader at its first launch" % k["res_files"])
+    print("K %s: the baked arm loads its tiles' game shaders from the bake, 0 rejected; the unbaked arm compiles them" % (
+        "PASS" if k_ok else "FAIL"))
+    rows = []
+    fails = []
+    count = len(arms[ulab][0][1])
+    for i in range(count):
+        row = arms[ulab][0][1][i][0]
+        u = [t[1][i][1] for t in arms[ulab]]
+        b = [t[1][i][1] for t in arms[blab]]
+        within = max(max(maxdiff(u[0], x) for x in u[1:]), max(maxdiff(b[0], x) for x in b[1:]))
+        cross = max(maxdiff(x, y) for x in u for y in b)
+        bound = max(within, 1)
+        ok = cross <= bound
+        channels = row.get("channels") or row["bytes"] // (row["w"] * row["h"])
+        colours = len(np.unique(u[0].reshape(-1, channels), axis=0))
+        stable = all(t[1][i][0]["stable"] for t in arms[ulab] + arms[blab])
+        rows.append((row["path"], row["use"], within, cross, bound, ok, colours, stable))
+        if not ok:
+            fails.append(row["path"])
+    extra = []
+    for kind in ("root", "screen"):
+        def pic(lab, i):
+            name = "682-identity-%s-%d-root.png" % (lab, i) if kind == "root" else "%s-%d-screen.png" % (lab, i)
+            return picture(d / name)
+        u = [pic(ulab, i) for i in range(1, n + 1)]
+        b = [pic(blab, i) for i in range(1, n + 1)]
+        if any(x is None for x in u + b):
+            continue
+        within = max(max(maxdiff(u[0], x) for x in u[1:]), max(maxdiff(b[0], x) for x in b[1:]))
+        cross = max(maxdiff(x, y) for x in u for y in b)
+        ok = cross <= max(within, 1)
+        extra.append((kind, kind, within, cross, max(within, 1), ok, -1, True))
+        if not ok:
+            fails.append(kind)
+    print("%-62s %-7s %6s %6s %6s %-4s %7s %s" % ("tile", "use", "within", "cross", "bound", "ok", "colours", "stable"))
+    for r in rows + extra:
+        print("%-62s %-7s %6d %6d %6d %-4s %7d %s" % (r[0][:62], r[1], r[2], r[3], r[4], "PASS" if r[5] else "FAIL", r[6], r[7]))
+    print("RESULT %s: %d tiles + %d pictures, %d failed%s" % (
+        "PASS" if not fails else "FAIL", len(rows), len(extra), len(fails), (": " + ", ".join(fails)) if fails else ""))
+    sys.exit(0 if not fails else 1)
+
+
+main()

@@ -21,6 +21,9 @@
 #   IOS_DEVICE_UDID                                   (the iPad's UDID; from
 #                                                      `xcrun devicectl list devices`)
 # Sentry dSYM upload also needs SENTRY_AUTH_TOKEN (or a sentry-cli login).
+# Required while the "iOS" preset bakes its shaders (shader_baker/enabled=true):
+#   GLASSVOW_BAKE_EDITOR                              (the patched 4.7.3-rc editor;
+#                                                      tools/godot/patches/README.md)
 #
 # Logs: build/ios/logs/<step><build-number>.log (kept between runs).
 
@@ -113,7 +116,21 @@ else
   done
   [[ -f "$ASC_PRIVATE_KEY_PATH" ]] || die "ASC_PRIVATE_KEY_PATH does not point at a file: $ASC_PRIVATE_KEY_PATH"
 fi
-command -v godot >/dev/null 2>&1 || die "godot is not on PATH"
+# A baked preset exports through tools/godot/bake_export.sh with the patched
+# editor (#682); otherwise the stock editor exports headless. Anything but a
+# clear yes (0) or no (1) stops the release: a broken check never falls back
+# to an unbaked build.
+BAKED=0
+BAKE_CHECK=0
+tools/godot/bake_export.sh --enabled iOS || BAKE_CHECK=$?
+case $BAKE_CHECK in
+  0)
+    BAKED=1
+    [[ -n "${GLASSVOW_BAKE_EDITOR:-}" && -x "${GLASSVOW_BAKE_EDITOR}" ]] \
+      || die "the iOS preset bakes its shaders: set GLASSVOW_BAKE_EDITOR to the patched editor (tools/godot/patches/README.md)" ;;
+  1) command -v godot >/dev/null 2>&1 || die "godot is not on PATH" ;;
+  *) die "cannot tell whether the iOS preset bakes its shaders (tools/godot/bake_export.sh --enabled iOS exited $BAKE_CHECK)" ;;
+esac
 
 if [[ $DO_DEVICE -eq 1 ]]; then
   [[ -n "$IOS_DEVICE_UDID" ]] \
@@ -139,7 +156,18 @@ find build/ios -mindepth 1 -maxdepth 1 ! -name logs -exec rm -rf {} +
 engine_version() { grep -a -o -m1 "$ENGINE_PATTERN" "$1" 2>/dev/null || true; }
 
 step "export build $BUILD"
-godot --headless --export-release "iOS" build/ios/glassvow.ipa > "$LOGS/export$BUILD.log" 2>&1
+if [[ $BAKED -eq 1 ]]; then
+  # The editor runs under a fresh scratch HOME inside build/ios, so its settings,
+  # recovery lock and the project's user dir stay out of the owner's profile.
+  # Godot only writes the Xcode project here (export_project_only); the archive
+  # and the signing below run under the real HOME.
+  EXPORT_HOME="$REPO_ROOT/build/ios/export-home"
+  mkdir -p "$EXPORT_HOME"
+  echo "export HOME:     $EXPORT_HOME"
+  HOME="$EXPORT_HOME" tools/godot/bake_export.sh "iOS" build/ios/glassvow.ipa "$LOGS/export$BUILD.log"
+else
+  godot --headless --export-release "iOS" build/ios/glassvow.ipa > "$LOGS/export$BUILD.log" 2>&1
+fi
 engine_version "build/ios/glassvow.xcframework/ios-arm64/libgodot.a"
 
 # Size watch: report only, it does not fail the release (yet).

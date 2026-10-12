@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+"""Lane #682 Part 1, Gate 2.2: the paced floor bake's lit picture against the
+noise band of main against main, per seed; and the mask byte-identical.
+
+Per seed: every main-main pair defines the band (min..max of each metric);
+every cand-main pair is graded against it. Metrics per pair: identical bytes
+(%), mean absolute difference, max absolute difference, bytes differing by more
+than 8. For pairs exchangeable with the band's, a new pair falls outside a
+band of n pairs on one side with chance 1/(n+1), so the count expected outside
+by chance is printed beside the count seen.
+    lit_band.py <dir>   (reads <arm>-s<seed>-<i>-0.bin lit, -1.bin mask; <arm>-s<seed>-<i>.log)
+"""
+import itertools, re, statistics, sys
+from pathlib import Path
+import numpy as np
+
+d = Path(sys.argv[1])
+NAMES = ("identical %", "mean", "max", ">8")
+HIGHER_IS_WORSE = (False, True, True, True)
+strict_ok = True
+central_ok = True
+for seed in (717, 1, 2, 3):
+    runs = {arm: sorted(d.glob("%s-s%d-*-0.bin" % (arm, seed))) for arm in ("main", "cand")}
+    lit = {arm: [np.fromfile(p, dtype=np.uint8).astype(np.int16) for p in runs[arm]] for arm in runs}
+    masks = set()
+    for arm in runs:
+        for p in runs[arm]:
+            log = Path(str(p)[:-6] + ".log").read_text()
+            masks.add(re.search(r"mask=([0-9a-f]+)", log).group(1))
+
+    def metrics(a, b):
+        diff = np.abs(a - b)
+        return (100.0 * float((diff == 0).mean()), float(diff.mean()), int(diff.max()), int((diff > 8).sum()))
+    mm = [metrics(a, b) for a, b in itertools.combinations(lit["main"], 2)]
+    cm = [metrics(a, b) for a in lit["cand"] for b in lit["main"]]
+    cc = [metrics(a, b) for a, b in itertools.combinations(lit["cand"], 2)]
+    print("seed %d: main runs %d (%d pairs), cand runs %d (%d cand-main pairs); mask hashes %d (%s)" % (
+        seed, len(lit["main"]), len(mm), len(lit["cand"]), len(cm), len(masks), "identical" if len(masks) == 1 else "DIFFER"))
+    strict_ok = strict_ok and len(masks) == 1
+    central_ok = central_ok and len(masks) == 1
+    for k, name in enumerate(NAMES):
+        lo = min(m[k] for m in mm)
+        hi = max(m[k] for m in mm)
+        worse = [c for c in cm if (c[k] > hi if HIGHER_IS_WORSE[k] else c[k] < lo)]
+        expected = len(cm) / (len(mm) + 1)
+        fmt = "%.4f" if k < 2 else "%d"
+        print(("  %-12s main-main " + fmt + ".." + fmt + " (median " + fmt + ") | cand-main " + fmt + ".." + fmt
+               + " (median " + fmt + ") | cand-cand " + fmt + ".." + fmt + " | worse than the band: %d (by chance ~%.1f)") % (
+            name, lo, hi, statistics.median(m[k] for m in mm), min(c[k] for c in cm), max(c[k] for c in cm),
+            statistics.median(c[k] for c in cm), min(c[k] for c in cc), max(c[k] for c in cc), len(worse), expected))
+        if worse:
+            strict_ok = False
+            if k < 2:
+                central_ok = False
+print("RESULT strict (every metric of every cand-main pair inside): %s" % ("PASS" if strict_ok else "FAIL"))
+print("RESULT central (identical %% and mean of every cand-main pair inside; masks identical): %s" % ("PASS" if central_ok else "FAIL"))

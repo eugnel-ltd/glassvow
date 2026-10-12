@@ -1,0 +1,52 @@
+extends SceneTree
+## Lane #682 scratch (never committed): the paced floor bake's output, hashed.
+## Boots Main onto Act I's map (`-- --map --seed=N`), waits for its land, runs a
+## paced bake of that land a step a frame, and prints the SHA-256 of the lit
+## picture (every level) and of the mask. Main against the candidate proves the
+## bake byte-identical.
+const LandFloor = preload("res://presentation/map/landscape/land_floor.gd")
+const Bake = preload("res://presentation/map/landscape/floor_bake.gd")
+
+
+func _initialize() -> void:
+	MapScene.lean_override = 1
+	change_scene_to_file("res://application/main.tscn")
+	_run.call_deferred()
+
+
+func _run() -> void:
+	var screen: WorldMapScreen = null
+	for _i: int in range(6000):
+		await process_frame
+		var found: Variant = current_scene.get("_map_screen") if current_scene != null else null
+		if found is WorldMapScreen and is_instance_valid(found):
+			var candidate: WorldMapScreen = found
+			if not candidate.landscape_pending():
+				screen = candidate
+				break
+	for _i: int in range(30):
+		await process_frame
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	var bake: Bake = Bake.new(land, land.forest_floor.plan, true)
+	var frames: int = 0
+	while true:
+		await process_frame
+		frames += 1
+		if bake.advance() or frames > 3000:
+			break
+	var rids: Array[RID] = bake.take()
+	var rd: RenderingDevice = RenderingServer.get_rendering_device()
+	var out: Array[String] = []
+	for rid: RID in rids:
+		var ctx: HashingContext = HashingContext.new()
+		ctx.start(HashingContext.HASH_SHA256)
+		var bytes: PackedByteArray = rd.texture_get_data(rid, 0)
+		ctx.update(bytes)
+		var dump: String = OS.get_environment("LANE_BAKE_DUMP")
+		if not dump.is_empty():
+			var f: FileAccess = FileAccess.open("%s-%d.bin" % [dump, out.size()], FileAccess.WRITE)
+			f.store_buffer(bytes)
+		out.append(ctx.finish().hex_encode())
+		rd.free_rid(rid)
+	print("LANE_BAKE_HASH step=%d frames=%d lit=%s mask=%s" % [bake.step, frames, out[0], out[1]])
+	quit(0)
