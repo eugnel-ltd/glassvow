@@ -28,10 +28,11 @@ extends Control
 ##   warm compiles where it always did.
 ## Every material made is HELD FOR THE PROCESS: the engine frees a shader, its
 ## compiled variants and every pipeline built for it with the last material
-## wearing it (a BaseMaterial3D's generated shader, and a Shader built from a
-## string). The fight builds fresh string shaders each time; a held twin keeps
-## the Metal libraries those share by source. Kept for the process because
-## fights recur and the cost is a few MiB of shader code, not textures.
+## wearing it (a BaseMaterial3D's generated shader). A shader built from a
+## string is the process's one Shader for that code (`SharedShaders`), the one
+## the fight and the transitions wear too, so the pipelines drawn here are the
+## ones the use finds. Kept for the process because fights recur and the cost
+## is a few MiB of shader code, not textures.
 
 ## How long the title rests before the work starts, and before the draws.
 const REST: float = 0.8
@@ -164,11 +165,11 @@ static func _sources() -> Array[Callable]:
 	return out
 
 
+## A material wearing the process's Shader for `code`, the one every use wears
+## (`SharedShaders`), so the pipelines drawn here serve the use.
 static func _string(code: String) -> Material:
-	var sh: Shader = Shader.new()
-	sh.code = code
 	var mat: ShaderMaterial = ShaderMaterial.new()
-	mat.shader = sh
+	mat.shader = SharedShaders.of(code)
 	return mat
 
 
