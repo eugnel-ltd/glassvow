@@ -7,7 +7,9 @@
 #
 # Usage:
 #   tools/godot/bake_export.sh --enabled <preset>
-#       exit 0 when the preset bakes, 1 when it does not
+#       exit 0 when the preset bakes, 1 when it does not, 2 on any error (no
+#       such preset or more than one, an unreadable file, no python3), so that
+#       a caller never reads a broken environment as "does not bake"
 #   tools/godot/bake_export.sh <preset> <output path> <export log>
 #       run from the root of a Glassvow worktree
 #
@@ -33,37 +35,59 @@ die() { echo "bake_export: $*" >&2; exit 1; }
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 PRESETS="$ROOT/export_presets.cfg"
 
-# 0 when the preset named $1 sets shader_baker/enabled=true in its options.
+# 0 when the preset named $1 sets shader_baker/enabled=true in its options, 1
+# when it does not, 2 on any error. The answer is a word python3 prints, not its
+# exit status, so a python3 that fails in any way (1 included) is an error too.
 preset_bakes() {
-  python3 - "$PRESETS" "$1" <<'PY'
+  local status=0 answer
+  answer="$(python3 - "$PRESETS" "$1" <<'PY'
 import re
 import sys
 
-path, name = sys.argv[1:3]
-parts = re.split(r"^(\[[^\]\n]+\])[ \t]*$", open(path, encoding="utf-8").read(), flags=re.M)
-ids = [m.group(1) for head, body in zip(parts[1::2], parts[2::2])
-       if (m := re.fullmatch(r"\[preset\.(\d+)\]", head))
-       and re.search(r'^name="%s"$' % re.escape(name), body, re.M)]
-if len(ids) != 1:
-    sys.exit("expected one preset named %s, found %d" % (name, len(ids)))
-for head, body in zip(parts[1::2], parts[2::2]):
-    if head == "[preset.%s.options]" % ids[0]:
-        sys.exit(0 if re.search(r"^shader_baker/enabled=true$", body, re.M) else 1)
-sys.exit(1)
+try:
+    path, name = sys.argv[1:3]
+    parts = re.split(r"^(\[[^\]\n]+\])[ \t]*$", open(path, encoding="utf-8").read(), flags=re.M)
+    ids = [m.group(1) for head, body in zip(parts[1::2], parts[2::2])
+           if (m := re.fullmatch(r"\[preset\.(\d+)\]", head))
+           and re.search(r'^name="%s"$' % re.escape(name), body, re.M)]
+    if len(ids) != 1:
+        print("bake_export: expected one preset named %s, found %d" % (name, len(ids)), file=sys.stderr)
+        sys.exit(2)
+    for head, body in zip(parts[1::2], parts[2::2]):
+        if head == "[preset.%s.options]" % ids[0]:
+            print("BAKES" if re.search(r"^shader_baker/enabled=true$", body, re.M) else "UNBAKED")
+            sys.exit(0)
+    print("UNBAKED")
+except SystemExit:
+    raise
+except BaseException as error:
+    print("bake_export: cannot read the presets: %s" % error, file=sys.stderr)
+    sys.exit(2)
 PY
+)" || status=$?
+  [[ $status -eq 0 ]] || return 2
+  case "$answer" in
+    BAKES) return 0 ;;
+    UNBAKED) return 1 ;;
+    *) return 2 ;;
+  esac
 }
 
 if [[ "${1:-}" == "--enabled" ]]; then
-  [[ $# -eq 2 ]] || die "usage: $0 --enabled <preset>"
-  preset_bakes "$2"
-  exit $?
+  [[ $# -eq 2 ]] || { echo "usage: $0 --enabled <preset>" >&2; exit 2; }
+  status=0
+  preset_bakes "$2" || status=$?
+  exit $status
 fi
 [[ $# -eq 3 ]] || die "usage: $0 <preset> <output path> <export log>"
 PRESET="$1"
 OUT="$2"
 LOG="$3"
 
-preset_bakes "$PRESET" || die "preset \"$PRESET\" does not bake (shader_baker/enabled=true)"
+status=0
+preset_bakes "$PRESET" || status=$?
+[[ $status -ne 1 ]] || die "preset \"$PRESET\" does not bake (shader_baker/enabled=true)"
+[[ $status -eq 0 ]] || die "cannot tell whether preset \"$PRESET\" bakes (status $status)"
 EDITOR="${GLASSVOW_BAKE_EDITOR:-}"
 [[ -n "$EDITOR" && -x "$EDITOR" ]] \
   || die "GLASSVOW_BAKE_EDITOR must name the patched editor (tools/godot/patches/README.md)"

@@ -107,10 +107,14 @@ same zip's path there; the stock editor exports the same template either way.
   against a fake editor (the refusals, the `mobile` features, the stale-cache
   clean-up, project.godot put back). It is not run by CI; run it after changing
   `bake_export.sh`.
-- `scripts/ios_release.sh` never falls back to an unbaked build: while the
-  preset bakes, a missing `GLASSVOW_BAKE_EDITOR` stops it before the export, and
-  any failure of `bake_export.sh` (an unpinned editor, the guard's refusal, no
-  baked shader stored) stops the release.
+- `scripts/ios_release.sh` never falls back to an unbaked build. It asks
+  `bake_export.sh --enabled iOS`, which answers 0 (bakes), 1 (does not) or 2
+  (any error), and stops on anything else than 0 or 1; while the preset bakes, a
+  missing `GLASSVOW_BAKE_EDITOR` stops it before the export, and any failure of
+  `bake_export.sh` (an unpinned editor, the guard's refusal, no baked shader
+  stored, an engine group stored) stops the release. Its export step runs the
+  editor under a fresh scratch HOME in `build/ios/export-home`; the archive and
+  the signing keep the real HOME.
 
 ## When to rebake or rebuild
 

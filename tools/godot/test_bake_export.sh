@@ -83,6 +83,23 @@ run() {  # preset, then env assignments; prints the output, returns the status
 
 (cd "$REPO" && tools/godot/bake_export.sh --enabled iOS); check "a preset with shader_baker/enabled=true bakes" $?
 (cd "$REPO" && tools/godot/bake_export.sh --enabled Unbaked); [[ $? -eq 1 ]]; check "a preset without it does not" $?
+# Errors are 2, never 1: a caller (scripts/ios_release.sh) must not read a broken
+# environment as "does not bake" and fall back to an unbaked release.
+(cd "$REPO" && tools/godot/bake_export.sh --enabled Missing 2>/dev/null); [[ $? -eq 2 ]]; check "no such preset is an error (2)" $?
+mkdir -p "$SCRATCH/nopython"
+ln -s "$(command -v dirname)" "$SCRATCH/nopython/dirname"
+(cd "$REPO" && env PATH="$SCRATCH/nopython" /bin/bash tools/godot/bake_export.sh --enabled iOS 2>/dev/null); [[ $? -eq 2 ]]
+check "no python3 is an error (2)" $?
+mkdir -p "$SCRATCH/badpython"
+printf '#!/bin/sh\nexit 1\n' > "$SCRATCH/badpython/python3"
+chmod +x "$SCRATCH/badpython/python3"
+(cd "$REPO" && env PATH="$SCRATCH/badpython:$PATH" tools/godot/bake_export.sh --enabled iOS 2>/dev/null); [[ $? -eq 2 ]]
+check "a python3 that fails with 1 is an error (2), not \"does not bake\"" $?
+mkdir -p "$SCRATCH/oddpython"
+printf '#!/bin/sh\necho Python 3\nexit 0\n' > "$SCRATCH/oddpython/python3"
+chmod +x "$SCRATCH/oddpython/python3"
+(cd "$REPO" && env PATH="$SCRATCH/oddpython:$PATH" tools/godot/bake_export.sh --enabled iOS 2>/dev/null); [[ $? -eq 2 ]]
+check "a python3 that answers neither word is an error (2)" $?
 
 out="$(run iOS)"; status=$?
 check "a baked export with the mobile features stores scene and canvas shaders" "$([[ $status -eq 0 && "$out" == *"2 baked shader files stored (1 scene, 1 canvas)"* ]]; echo $?)"
@@ -102,6 +119,8 @@ out="$(run iOS FAKE_STORE=engine)"; status=$?
 check "an export that stores an engine shader (an older patch) fails" "$([[ $status -ne 0 && "$out" == *"1 baked engine shader files"* ]]; echo $?)"
 out="$(run iOS FAKE_VERSION=4.7.2.stable.official.ed1daf0bf)"; status=$?
 check "an editor other than the pinned one is refused" "$([[ $status -ne 0 && "$out" == *"not 4.7.3.rc.custom_build.83dec14d5"* ]]; echo $?)"
+out="$(run Missing)"; status=$?
+check "an export whose preset cannot be read is refused" "$([[ $status -ne 0 && "$out" == *"cannot tell whether preset"* ]]; echo $?)"
 out="$(run Unbaked)"; status=$?
 check "a preset that does not bake is refused" "$([[ $status -ne 0 && "$out" == *"does not bake"* ]]; echo $?)"
 out="$(cd "$REPO" && env -u GLASSVOW_BAKE_EDITOR tools/godot/bake_export.sh iOS out.ipa "$SCRATCH/log/export.log" 2>&1)"; status=$?

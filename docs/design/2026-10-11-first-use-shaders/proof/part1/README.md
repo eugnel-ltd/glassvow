@@ -194,7 +194,7 @@ back):
 | The warm holds its materials | `tests/test_path_warm.gd` | no hold in `_keep`; the sky material unheld |
 | The warm frees its targets | `tests/test_path_warm.gd` | the stages never let go; the 2D samples kept |
 | The floor bake waits for its gate | `tests/test_floor_bake_gate.gd` | no gate; the first tile not gated; the second wait not started afresh |
-| The baked export refuses a feature mismatch | `tools/godot/test_bake_export.sh` (fake editor) | the refusal unchecked; no `mobile` features; stale caches kept; project.godot not restored; engine groups let through |
+| The baked export refuses a feature mismatch, and never reads an error as "does not bake" | `tools/godot/test_bake_export.sh` (fake editor) | the refusal unchecked; no `mobile` features; stale caches kept; project.godot not restored; engine groups let through; python3's exit status trusted; an odd answer or a missing preset read as unbaked; an unreadable preset ignored |
 
 The guard itself is C++ in the editor and out of reach of a repository test: the
 real patched editor, run without the `mobile` features, printed the refusal and
@@ -202,12 +202,29 @@ baked nothing.
 
 ## The release path
 
-`scripts/ios_release.sh 21 <head> --no-upload --no-device` from a clean worktree
-of this branch (before the engine shaders left the bake) produced a signed App
-Store IPA (Apple Distribution, DTXcodeBuild 27A266a, not a beta), with nothing
-uploaded or installed. The script stops, never falls back: with
-`GLASSVOW_BAKE_EDITOR` unset it stops in its pre-flight, and with an unpinned
-editor `bake_export.sh` refuses and the release stops at its export.
+`scripts/ios_release.sh 21 1f732e20 --no-upload --no-device` from a clean
+worktree of the final code (the head differs from it only in this README), with
+nothing uploaded or installed (lane log `census/part1-release-dryrun2.log`):
+
+- the baked export ran under a fresh scratch HOME inside `build/ios`; Godot only
+  writes the Xcode project (`export_project_only`), so it never calls
+  `xcodebuild` there, and the archive and signing ran under the real HOME;
+- the bake stored 74 files, game groups only: 28 in each of the two
+  `SceneForwardMobileShaderRD` groups and 18 `CanvasShaderRD`; the guard printed
+  nothing;
+- the App Store IPA (324.8 MiB, sha256 `83402092386650ab…`) is signed "Apple
+  Distribution" for team V45S7U2LZB, and its `DTXcodeBuild` is 27A266a (a
+  release Xcode, no beta suffix);
+- the owner's Godot profile was untouched (no file newer, the folder's own time
+  unchanged).
+
+The script stops, never falls back. `bake_export.sh --enabled` answers 0 (bakes),
+1 (does not bake) or 2 (any error: no such preset, no python3, a python3 that
+fails or answers neither word), and the release stops on anything but 0 or 1: a
+python3 that exits 1 stopped it in its pre-flight ("cannot tell whether the iOS
+preset bakes its shaders"). With `GLASSVOW_BAKE_EDITOR` unset it stops in its
+pre-flight too, and with an unpinned editor `bake_export.sh` refuses and the
+release stops at its export.
 
 ## Payload
 
