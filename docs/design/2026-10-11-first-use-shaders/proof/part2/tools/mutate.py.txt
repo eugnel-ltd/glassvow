@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""Lane #682 Part 2 scratch: mutation proofs. Each mutation: back the file up,
+apply one replacement, run the named tests, copy the backup back (never git
+checkout), and check the file is byte-identical to the backup again.
+    python3 mutate.py <worktree> <backup-dir>"""
+import hashlib, shutil, subprocess, sys, os
+wt, bk = sys.argv[1], sys.argv[2]
+L = "/Users/jamesto/Coding/glassvow/.claude/worktrees/shader-lane"
+T = "res://tests/test_shared_shaders.gd,res://tests/test_path_warm.gd"
+M = [
+ ("use site makes its own Shader (CombatScreen vignette)", "presentation/combat/combat_screen.gd",
+  "\t_vignette_mat.shader = SharedShaders.of(VIGNETTE_SHADER)\n",
+  "\tvar sh: Shader = Shader.new()\n\tsh.code = VIGNETTE_SHADER\n\t_vignette_mat.shader = sh\n"),
+ ("use site makes its own Shader (EnemyView body)", "presentation/combat/enemy_view.gd",
+  "\t_body_mat.shader = SharedShaders.of(with_tint(with_erode(BODY_SHADER)))\n",
+  "\tvar sh: Shader = Shader.new()\n\tsh.code = with_tint(with_erode(BODY_SHADER))\n\t_body_mat.shader = sh\n"),
+ ("the warm makes its own Shader", "presentation/ui/path_warm.gd",
+  "\tmat.shader = SharedShaders.of(code)\n",
+  "\tvar sh: Shader = Shader.new()\n\tsh.code = code\n\tmat.shader = sh\n"),
+ ("the factory makes a Shader per request", "presentation/stage/shared_shaders.gd",
+  "\tif shader == null:\n", "\tif true:\n"),
+ ("no bake gate", "presentation/ui/path_warm.gd",
+  "\tif MapJourneyPrefetch.busy():\n\t\t_steps.push_front(_await_bake)\n", "\tpass\n"),
+ ("ward not drawn at frame 0", "presentation/ui/path_warm.gd",
+  "EnemyView.SHADOW_SHADER,\n\t\t\tEnemyView.WARD_SHADER]:", "EnemyView.SHADOW_SHADER]:"),
+ ("the warm ends before the land draw's compiles", "presentation/ui/path_warm.gd",
+  "\t_steps.append(_land_draw)\n\t_steps.append(_await_compiles)\n", "\t_steps.append(_land_draw)\n"),
+ ("one omni light", "presentation/ui/path_warm.gd",
+  "\tfor _i: int in range(2):\n\t\tvar omni", "\tfor _i: int in range(1):\n\t\tvar omni"),
+ ("lent land not stilled", "presentation/map/map_scene.gd",
+  "\t_journey_kept.process_mode = Node.PROCESS_MODE_DISABLED\n", ""),
+ ("a bind does not take the lent land back", "presentation/map/map_scene.gd",
+  "static func _kept_for(key: String) -> MapJourneyLandscape:\n\treturn_journey()\n",
+  "static func _kept_for(key: String) -> MapJourneyLandscape:\n"),
+]
+def md5(p): return hashlib.md5(open(p, "rb").read()).hexdigest()
+env = dict(os.environ, HOME=L + "/tmp/home")
+for name, rel, a, b in M:
+    path = os.path.join(wt, rel); back = os.path.join(bk, rel.replace("/", "_"))
+    shutil.copyfile(path, back); before = md5(path)
+    s = open(path).read(); assert s.count(a) == 1, (name, s.count(a))
+    open(path, "w").write(s.replace(a, b))
+    out = subprocess.run(["timeout", "900", "godot", "--headless", "-s", "res://tests/run_all.gd", "--", "--tests=" + T],
+                         cwd=wt, env=env, capture_output=True, text=True).stdout
+    shutil.copyfile(back, path)
+    assert md5(path) == before, "restore failed: " + rel
+    fails = [l.strip() for l in out.splitlines() if l.startswith("  - ")]
+    verdict = "FAILS (caught)" if any(l.startswith("FAIL") for l in out.splitlines()) else "PASSES (NOT CAUGHT)"
+    print("== %s [%s]: %s" % (name, rel, verdict))
+    for f in fails[:3]: print("     " + f[:200])

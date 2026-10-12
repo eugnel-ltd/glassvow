@@ -1964,10 +1964,8 @@ func _build_stage(tex: Texture2D, enemy_idx: int) -> void:
 	qm.subdivide_width = SEG_X
 	qm.subdivide_depth = SEG_Y
 	_quad.mesh = qm
-	var sh: Shader = Shader.new()
-	sh.code = with_tint(with_erode(BODY_SHADER))
 	_body_mat = ShaderMaterial.new()
-	_body_mat.shader = sh
+	_body_mat.shader = SharedShaders.of(with_tint(with_erode(BODY_SHADER)))
 	_body_mat.set_shader_parameter("body_tex", tex)
 	_body_mat.set_shader_parameter("erode", erode_uv)
 	_body_mat.set_shader_parameter("flare_gain", flare_gain)
@@ -2038,9 +2036,7 @@ func _build_stage(tex: Texture2D, enemy_idx: int) -> void:
 	# shader is the identity, so this costs the frame nothing until a pane
 	# shatters.
 	_display_mat = ShaderMaterial.new()
-	var reseam_sh: Shader = Shader.new()
-	reseam_sh.code = RESEAM_SHADER
-	_display_mat.shader = reseam_sh
+	_display_mat.shader = SharedShaders.of(RESEAM_SHADER)
 	_display.material = _display_mat
 	add_child(_display)
 
@@ -2382,10 +2378,8 @@ func _build_shadow(tex: Texture2D) -> void:
 	qm.center_offset = Vector3(
 		-(_contact_u - 0.5) * _quad_w, _box_u * 0.5 - _art_pad, 0.0)
 	_shadow.mesh = qm
-	var sh: Shader = Shader.new()
-	sh.code = SHADOW_SHADER
 	_shadow_mat = ShaderMaterial.new()
-	_shadow_mat.shader = sh
+	_shadow_mat.shader = SharedShaders.of(SHADOW_SHADER)
 	_shadow_mat.render_priority = -2   # under the body (-1) and the glass (1)
 	_shadow_mat.set_shader_parameter("body_tex", tex)
 	_shadow_mat.set_shader_parameter("box_u", _box_u)
@@ -2490,10 +2484,8 @@ static func _bounce(bounce: float = 0.28, friction: float = 0.7) -> PhysicsMater
 func _glass_material() -> ShaderMaterial:
 	if _glass_mat != null:
 		return _glass_mat
-	var sh: Shader = Shader.new()
-	sh.code = with_tint(GLASS_SHADER)
 	_glass_mat = ShaderMaterial.new()
-	_glass_mat.shader = sh
+	_glass_mat.shader = SharedShaders.of(with_tint(GLASS_SHADER))
 	_glass_mat.render_priority = 1   # after the body
 	if _body_mat != null:
 		_glass_mat.set_shader_parameter("body_tex",
@@ -2639,10 +2631,8 @@ func _build_ward_shell() -> void:
 	# Proud in Z, so the perspective camera gives real parallax against the body when the
 	# stage shakes. `render_priority` orders draws; it does not make a thing be in front.
 	_ward_mesh.position = Vector3(0.0, 0.0, _box_u * WARD_LIFT)
-	var sh: Shader = Shader.new()
-	sh.code = WARD_SHADER
 	_ward_mat = ShaderMaterial.new()
-	_ward_mat.shader = sh
+	_ward_mat.shader = SharedShaders.of(WARD_SHADER)
 	_ward_mat.render_priority = 4   # over the body and the crack glass
 	_ward_mat.set_shader_parameter("tint", WARD_TINT)
 	_ward_mat.set_shader_parameter("shell_opacity", WARD_OPACITY)
@@ -4241,8 +4231,7 @@ func _shard_thick() -> float:
 ## The shared shard shader, compiled once per process — see `_shard_shader`.
 static func shard_shader() -> Shader:
 	if _shard_shader == null:
-		_shard_shader = Shader.new()
-		_shard_shader.code = with_tint(with_erode(SHARD_SHADER))
+		_shard_shader = SharedShaders.of(with_tint(with_erode(SHARD_SHADER)))
 	return _shard_shader
 
 
@@ -4431,8 +4420,7 @@ void fragment() {
 
 static func _add_mat(tex: Texture2D) -> ShaderMaterial:
 	if _fx_shader == null:
-		_fx_shader = Shader.new()
-		_fx_shader.code = FX_SHADER
+		_fx_shader = SharedShaders.of(FX_SHADER)
 	var m: ShaderMaterial = ShaderMaterial.new()
 	m.shader = _fx_shader
 	m.set_shader_parameter("tex", tex)

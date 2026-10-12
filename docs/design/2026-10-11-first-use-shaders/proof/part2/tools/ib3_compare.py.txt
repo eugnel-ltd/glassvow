@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Lane #682 Part 2: IB3 (the clean release editor's bake of the identity scene)
+under identity's registered bar, against IU's cached launch (IU-2) and against
+IB2 (both launches), from device/identity1. Per tile: the cross difference must
+not exceed the larger of the in-arm launch-to-launch difference and one level.
+K: IB3 compiles no game shader on the device and rejects no baked file.
+    ib3_compare.py <ib-dir> <identity1-dir> [label, default IB3]"""
+import sys
+from pathlib import Path
+import json
+import numpy as np
+
+
+# As tools/identity_compare.py's (which runs its main on import).
+def load(json_path):
+    meta = json.loads(Path(json_path).read_text())
+    raw = Path(str(json_path)[:-5] + ".bin").read_bytes()
+    return meta, [(row, np.frombuffer(raw[row["offset"]:row["offset"] + row["bytes"]], dtype=np.uint8).astype(np.int16))
+                  for row in meta["tiles"]]
+
+
+def maxdiff(a, b):
+    return int(np.abs(a - b).max()) if a.shape == b.shape else 999
+
+ib3, id1 = Path(sys.argv[1]), Path(sys.argv[2])
+LAB = sys.argv[3] if len(sys.argv) > 3 else "IB3"
+B = [load(ib3 / ("682-identity-%s-%d.json" % (LAB, i))) for i in (1, 2)]
+U2 = load(id1 / "682-identity-IU-2.json")
+I2 = [load(id1 / ("682-identity-IB2-%d.json" % i)) for i in (1, 2)]
+for i, (meta, _) in enumerate(B, 1):
+    k = meta["k"]
+    game = sum(k["new"].get(n, 0) for n in ("SceneForwardMobileShaderRD", "CanvasShaderRD"))
+    print("K " + LAB + "-%d: res %d, new %s (game shader files %d), rejected %d" % (
+        i, k["res_files"], k["new"], game, len(k["new_with_baked"])))
+fails = {"IU-2": 0, "IB2": 0}
+n = len(B[0][1])
+print("%-60s %6s %8s %8s %6s %6s" % ("tile", "within", "x IU-2", "x IB2", "bound", "ok"))
+for t in range(n):
+    path = B[0][1][t][0]["path"]
+    b = [B[0][1][t][1], B[1][1][t][1]]
+    u = U2[1][t][1]
+    i2 = [I2[0][1][t][1], I2[1][1][t][1]]
+    within = max(maxdiff(b[0], b[1]), maxdiff(i2[0], i2[1]))
+    xu = max(maxdiff(x, u) for x in b)
+    xi = max(maxdiff(x, y) for x in b for y in i2)
+    bound = max(within, 1)
+    ok_u, ok_i = xu <= bound, xi <= bound
+    fails["IU-2"] += 0 if ok_u else 1
+    fails["IB2"] += 0 if ok_i else 1
+    print("%-60s %6d %8d %8d %6d %s" % (path[:60], within, xu, xi, bound, "PASS" if ok_u and ok_i else "FAIL"))
+print("RESULT " + LAB + " against IU-2: %s (%d tiles failed); against IB2: %s (%d failed); %d tiles" % (
+    "PASS" if not fails["IU-2"] else "FAIL", fails["IU-2"], "PASS" if not fails["IB2"] else "FAIL", fails["IB2"], n))

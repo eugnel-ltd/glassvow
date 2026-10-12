@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+"""Lane #682 Part 2 scratch: compare the probe's root pictures. For each
+stage: main against main (the noise band) and candidate against main, as the
+share of identical bytes, the mean absolute difference and the count of
+channels over 8 levels; and a contact sheet of main | candidate | |diff|x4.
+    python3 shots_compare.py <dir> <mainA> <mainB> <cand> <out.png>"""
+import sys
+from PIL import Image, ImageChops
+d, ma, mb, c, out = sys.argv[1:6]
+stages = ["title", "open", "map", "fight", "turns"]
+rows = []
+def stats(a, b):
+    diff = ImageChops.difference(a, b)
+    h = diff.histogram()
+    n = sum(h)
+    same = sum(h[i * 256] for i in range(len(h) // 256))
+    tot = sum(v * (i % 256) for i, v in enumerate(h))
+    over8 = sum(v for i, v in enumerate(h) if i % 256 > 8)
+    return same / n, tot / n, over8, diff
+for s in stages:
+    A = Image.open("%s/p2shot-%s-%s.png" % (d, ma, s)).convert("RGB")
+    B = Image.open("%s/p2shot-%s-%s.png" % (d, mb, s)).convert("RGB")
+    C = Image.open("%s/p2shot-%s-%s.png" % (d, c, s)).convert("RGB")
+    mm = stats(A, B); cm = stats(A, C); cm2 = stats(B, C)
+    print("%-6s main-main same %.4f mean %.3f over8 %d | cand-mainA same %.4f mean %.3f over8 %d | cand-mainB same %.4f mean %.3f over8 %d" % (
+        s, mm[0], mm[1], mm[2], cm[0], cm[1], cm[2], cm2[0], cm2[1], cm2[2]))
+    w, h = A.size
+    sheet = Image.new("RGB", (w * 3, h))
+    sheet.paste(A, (0, 0)); sheet.paste(C, (w, 0))
+    sheet.paste(cm[3].point(lambda v: min(255, v * 4)), (w * 2, 0))
+    rows.append(sheet.resize((w * 3 // 2, h // 2)))
+W = rows[0].size[0]
+out_img = Image.new("RGB", (W, sum(r.size[1] for r in rows)))
+y = 0
+for r in rows:
+    out_img.paste(r, (0, y)); y += r.size[1]
+out_img.save(out)

@@ -187,10 +187,8 @@ func _init() -> void:
 	_wipe.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_wipe.visible = false
 	add_child(_wipe)
-	var iris_sh: Shader = Shader.new()
-	iris_sh.code = IRIS_SHADER
 	_iris_mat = ShaderMaterial.new()
-	_iris_mat.shader = iris_sh
+	_iris_mat.shader = SharedShaders.of(IRIS_SHADER)
 	_iris = ColorRect.new()
 	_iris.material = _iris_mat
 	_iris.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -258,7 +256,7 @@ func _init() -> void:
 	_plate_omen.add_theme_font_size_override("font_size", 15)
 	_plate_omen_row.add_child(_plate_omen)
 	_flood_mat = ShaderMaterial.new()
-	_flood_mat.shader = iris_sh
+	_flood_mat.shader = SharedShaders.of(IRIS_SHADER)
 	_flood = ColorRect.new()
 	_flood.material = _flood_mat
 	_flood.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -272,10 +270,8 @@ func _init() -> void:
 	_flare.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_flare.visible = false
 	add_child(_flare)
-	var sh: Shader = Shader.new()
-	sh.code = GRAIN_SHADER
 	_grain_mat = ShaderMaterial.new()
-	_grain_mat.shader = sh
+	_grain_mat.shader = SharedShaders.of(GRAIN_SHADER)
 	_grain_mat.set_shader_parameter("amount", GRAIN_AMOUNT)
 	_grain = ColorRect.new()
 	_grain.material = _grain_mat

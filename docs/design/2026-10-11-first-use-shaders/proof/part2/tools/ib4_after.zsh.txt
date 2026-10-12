@@ -1,0 +1,36 @@
+#!/bin/zsh
+# Lane #682 Part 2: IB4 after the read, in the same iPad window (orchestrator, 14:41).
+# Waits for the read batch to end, takes `shader-682` back the moment hold.zsh's EXIT trap
+# releases it (0.1 s polls), then waits, holding and renewing it, up to 30 minutes for
+# IB4.ipa whose sha256 matches the one in the bake-editor README's IB4 section; installs
+# nothing on a mismatch. Then identity_batch.zsh for IB4 (one install, two launches, tiles
+# pulled), and releases the lock on exit. QA app only; never uninstalls.
+set -u
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/shader-lane
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+OWNER=shader-682
+IPA=/Users/jamesto/Coding/glassvow-bake-editor/ipa/IB4.ipa
+README=/Users/jamesto/Coding/glassvow-bake-editor/README.md
+LOG=$L/device/p2-hold.log
+until grep -q -E '^== (batch done|read batch rc=|hold done)' $LOG; do sleep 0.2; done
+echo "== read ended $(date +%T); waiting for hold.zsh to release"
+until [[ ! -d $FLOW/ipad.lock ]] || [[ "$(cat $FLOW/ipad.lock/owner 2>/dev/null)" != "$OWNER" ]]; do sleep 0.1; done
+$FLOW/ipad_lock.sh acquire $OWNER
+echo "== lock taken back $(date +%T) by $(cat $FLOW/ipad.lock/owner)"
+trap "$FLOW/ipad_lock.sh release $OWNER; echo \"== lock released \$(date +%T)\"" EXIT
+deadline=$(( $(date +%s) + 1800 ))
+while :; do
+  want=""
+  [[ -f $README ]] && want=$(awk '/IB4/{f=1} f' $README | grep -o -E '[0-9a-f]{64}' | head -1)
+  if [[ -f $IPA && -n "$want" ]]; then
+    got=$(shasum -a 256 $IPA | cut -d' ' -f1)
+    [[ "$got" == "$want" ]] && { echo "== IB4 sha256 matches the README ($got) $(date +%T)"; break; }
+    echo "   IB4 sha256 $got does not match the README's $want; waiting"
+  fi
+  (( $(date +%s) > deadline )) && { echo "== IB4 not ready (or not matching) after 30 min; releasing, IB4 not run"; exit 5; }
+  $FLOW/ipad_lock.sh acquire $OWNER
+  sleep 30
+done
+export HOLD_OUTER=1
+zsh $L/tools/identity_batch.zsh $L/device/p2/ib4 IB4=$IPA || echo "== IB4 identity batch rc=$?"
+echo "== IB4 done $(date +%T)"

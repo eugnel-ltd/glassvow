@@ -1,0 +1,30 @@
+#!/bin/zsh
+# Lane #682 Part 2 scratch: the route path (title, rooms, Back to the Road, the
+# map, the bench fight, two turns) on the Mac under the A12 condition (no
+# argument buffers, Metal, Mobile, the lazy Metal library load iOS uses, the
+# device's `mobile` feature), the lean map, with the diagnostic engine's
+# pipeline log (v3: ShaderData identity). Isolated user dir via the
+# override.cfg beside the pck and in the worktree. Stops with exit 9 if the
+# owner's Glassvow user dir changed during the run.
+#   [NOLOG=1 (timing: no pipeline log)] [PROBE_EXTRA="--probe-shots=... --shape=..."] mac_route.zsh <pck-name> <label> [probe mode, default route]
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/shader-lane
+E=$L/godot-src/bin/godot.macos.editor.arm64
+OWN="$HOME/Library/Application Support/Godot/app_userdata/Glassvow"
+# Files (not the folder's own time, not the editor's .recovery_mode_lock, which
+# other lanes' editor runs on this Mac create) newer than the stamp; and this
+# run's own log must land in the isolated user dir.
+own() { find "$OWN" -type f -newer $L/tmp/owner-stamp ! -name .recovery_mode_lock 2>/dev/null | wc -l | tr -d ' '; }
+ISO="$HOME/Library/Application Support/glassvow-682/logs"
+touch $L/tmp/owner-stamp; sleep 1
+before=$(own)
+cp $L/device/seed_dev_run_v2.json "$HOME/Library/Application Support/glassvow-682/glassvow_dev_run_v2.json"
+cd $L/wt-part2   # the sentry GDExtension resolves its dylib from the working directory
+echo "$2 start load $(uptime | sed 's/.*averages: //')"
+LOGVAR=GLASSVOW_PIPELINE_LOG; [[ -n "${NOLOG:-}" ]] && LOGVAR=GLASSVOW_NO_LOG
+env GODOT_EDITOR_CUSTOM_FEATURES=mobile $LOGVAR=1 GODOT_MTL_SHADER_LOAD_STRATEGY=lazy GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 500 $E --main-pack $L/tmp/mac/$1.pck --rendering-driver metal --rendering-method mobile -- --shader-probe=${3:-route} --probe-lean --probe-nonce=$2 ${=PROBE_EXTRA:-} > $L/census/p2/route-$2.out 2>&1
+echo "$2 exit=$? load $(uptime | sed 's/.*averages: //')"
+after=$(own)
+[[ "$after" == 0 ]] || { echo "OWNER PROFILE CHANGED: files newer than the stamp:"; find "$OWN" -type f -newer $L/tmp/owner-stamp ! -name .recovery_mode_lock; exit 9; }
+[[ -n "$(find "$ISO" -type f -newer $L/tmp/owner-stamp)" ]] || { echo "NO LOG IN THE ISOLATED USER DIR"; exit 9; }
+echo "owner profile: no file changed; dir mtime $(stat -f %Sm "$OWN")"
+grep -c 'Error compiling shader' $L/census/p2/route-$2.out | sed 's/^/shader compile errors: /'

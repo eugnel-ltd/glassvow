@@ -72,6 +72,8 @@ static var journey_async: bool = false
 ## rebuilt for the same layout, catalogue and salt re-parents it for free.
 static var _journey_kept: MapJourneyLandscape = null
 static var _journey_kept_key: String = ""
+## Whether the kept land is lent to a view (`lend_journey`).
+static var _journey_lent: bool = false
 var _journey_pending: bool = false
 ## A land built inline whose floor is still baking (`_step_floor`).
 var _floor_baking: bool = false
@@ -118,17 +120,7 @@ func _init(act_index: int = 0) -> void:
 	name = "MapScene"
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	_stage = SubViewport.new()
-	_stage.name = "MapStage"
-	_stage.own_world_3d = true
-	_stage.transparent_bg = false
-	_stage.size = Vector2i(64, 64)
-	_stage.msaa_3d = Viewport.MSAA_DISABLED if lean_profile() else Viewport.MSAA_4X
-	# The lean stage takes the imported meshes' coarser LODs a little sooner
-	# (6 px of error against the default 1): at the 40° camera the trees were
-	# half the triangles in view, and the A12's stage is bound by them.
-	_stage.mesh_lod_threshold = LEAN_LOD_THRESHOLD if lean_profile() else 1.0
-	_stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+	_stage = stage_view()
 	_shift = SubViewport.new()
 	_shift.name = "MapTiltShiftView"
 	_shift.disable_3d = true
@@ -194,6 +186,24 @@ func _notification(what: int) -> void:
 
 func get_rig() -> MapCameraRig:
 	return _rig
+
+
+## The map's stage: its own world, opaque, the profile's MSAA, drawn on
+## request. Also the title's warm's (`PathWarm`), so the pipelines it builds
+## have the map's own target formats (#682).
+static func stage_view() -> SubViewport:
+	var stage: SubViewport = SubViewport.new()
+	stage.name = "MapStage"
+	stage.own_world_3d = true
+	stage.transparent_bg = false
+	stage.size = Vector2i(64, 64)
+	stage.msaa_3d = Viewport.MSAA_DISABLED if lean_profile() else Viewport.MSAA_4X
+	# The lean stage takes the imported meshes' coarser LODs a little sooner
+	# (6 px of error against the default 1): at the 40° camera the trees were
+	# half the triangles in view, and the A12's stage is bound by them.
+	stage.mesh_lod_threshold = LEAN_LOD_THRESHOLD if lean_profile() else 1.0
+	stage.render_target_update_mode = SubViewport.UPDATE_ONCE
+	return stage
 
 
 func get_stage() -> SubViewport:
@@ -1220,6 +1230,7 @@ func _step_floor() -> void:
 ## screen hands the land over now instead of a second build starting (a
 ## language change on the map, a run restored over a kept screen).
 static func _kept_for(key: String) -> MapJourneyLandscape:
+	return_journey()
 	if key != _journey_kept_key or not is_instance_valid(_journey_kept):
 		return null
 	var holder: Node = _journey_kept.get_parent()
@@ -1233,6 +1244,32 @@ static func _kept_for(key: String) -> MapJourneyLandscape:
 	if leaving and scene != null and scene._landscape == _journey_kept:
 		scene._release_landscape()
 	return _journey_kept if _journey_kept.get_parent() == null else null
+
+
+## The kept land, lent to a view for the frame being drawn (`PathWarm`: the
+## title draws it once, so that the map's first open builds none of its
+## pipelines, #682); null when there is none or a screen draws it. Its scripts
+## and particles stand still while it is lent, and any bind takes it back
+## first (`return_journey`), so a map opening meanwhile finds it kept.
+static func lend_journey() -> MapJourneyLandscape:
+	if _journey_lent or not is_instance_valid(_journey_kept) or _journey_kept.get_parent() != null:
+		return null
+	_journey_lent = true
+	_journey_kept.process_mode = Node.PROCESS_MODE_DISABLED
+	return _journey_kept
+
+
+## Takes the lent land back off the view it was lent to, as it was kept.
+static func return_journey() -> void:
+	if not _journey_lent:
+		return
+	_journey_lent = false
+	if not is_instance_valid(_journey_kept):
+		return
+	var holder: Node = _journey_kept.get_parent()
+	if holder != null:
+		holder.remove_child(_journey_kept)
+	_journey_kept.process_mode = Node.PROCESS_MODE_INHERIT
 
 
 ## Makes `land`, built for binding `key` (`MapJourneyPrefetch`), the kept land.
@@ -1260,6 +1297,7 @@ static func release_journey(key: String) -> void:
 ## the scene that draws it (the next map is not the journey act's, process
 ## exit, tests).
 static func release_kept_journey() -> void:
+	return_journey()
 	if is_instance_valid(_journey_kept) and _journey_kept.get_parent() == null:
 		_journey_kept.free()
 	# A land still building is left to `reap`: waiting on its worker here could
@@ -1270,6 +1308,7 @@ static func release_kept_journey() -> void:
 
 
 static func _keep_journey(key: String, land: MapJourneyLandscape) -> void:
+	return_journey()
 	if _journey_kept != land and is_instance_valid(_journey_kept) \
 			and _journey_kept.get_parent() == null:
 		_journey_kept.free()

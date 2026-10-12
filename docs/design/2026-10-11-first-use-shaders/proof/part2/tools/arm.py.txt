@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""Lane #682 Part 2 scratch: arm a measuring worktree with the Part 2 shader
+probe (per-frame counters, the frame split, stage marks). Copies p2's
+qa_shader_probe.gd in as tools/qa_shader_probe.gd (a name the iOS preset packs),
+stamped with <label>; adds the attach block at the top of Main._ready (run when
+a --shader-probe=<mode> user argument is given); and adds QA-only stage marks
+(calls of the probe's `qa_stage` Engine meta, inert without the probe) at the
+fight load's construction stages and the map land's arrival. Every inserted
+line ends with a QA- marker. Uncommitted; deletes nothing. Asserts every anchor,
+so an arm whose code moved fails loudly rather than measuring less.
+
+    python3 arm.py <worktree> <label>
+"""
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+wt = Path(sys.argv[1]).resolve()
+label = sys.argv[2]
+MARK = "# QA-SHADER-PROBE"
+STAGE = "# QA-STAGE"
+
+
+def mark(indent, name):
+    return '%sif Engine.has_meta("qa_stage"): Engine.get_meta("qa_stage").call("%s")  %s\n' % (
+        indent, name, STAGE)
+
+
+def after_each(text, line, name, count):
+    """Insert a mark after every occurrence of the whole line `line`."""
+    full = line + "\n"
+    assert text.count(full) == count, (line, text.count(full), count)
+    indent = line[: len(line) - len(line.lstrip("\t"))]
+    return text.replace(full, full + mark(indent, name))
+
+
+# The probe's attach block.
+main = wt / "application/main.gd"
+text = main.read_text()
+anchor = 'func _ready() -> void:\n\tprint("glassvow boot " + str(Engine.get_version_info()["string"]))\n'
+assert MARK not in text and STAGE not in text, "already armed"
+assert text.count(anchor) == 1, "anchor"
+text = text.replace(anchor, anchor + (
+    '\tif " ".join(OS.get_cmdline_user_args()).contains("--shader-probe="):  ' + MARK + '\n'
+    '\t\tvar shader_probe: Node = (load("res://tools/qa_shader_probe.gd") as GDScript).new()  ' + MARK + '\n'
+    '\t\tadd_child(shader_probe)  ' + MARK + '\n'))
+
+# The fight load's construction stages (Main._start_fight).
+block_start = "\t_bench_fight = true\n"
+block_end = "\t_play_combat_music(kind)\n"
+i = text.index(block_start)
+j = text.index(block_end, i) + len(block_end)
+assert text.count(block_start) == 1 and text.count(block_end) == 1
+block = text[i:j]
+names = {
+    "\t_bench_fight = true": "fight:start",
+    "\t_clear_route()": "fight:clear_route",
+    "\t_screen = CombatScreen.new(game, _shape, maxi(0, _forced_act_index), _sfx_bus)": "fight:screen_new",
+    "\tadd_child(_screen)": "fight:screen_added",
+    "\t_prewarm_card_turns()": "fight:prewarm_card_turns",
+    '\t_screen.start_encounter(known, kind, "Bench  ·  %s" % kind.capitalize())': "fight:start_encounter",
+    "\t_play_combat_music(kind)": "fight:music",
+}
+for line, name in names.items():
+    block = after_each(block, line, name, 1)
+text = text[:i] + block + text[j:]
+
+# The map open (Main._show_map).
+for line, name in [
+    ("\t_remember_route(_show_map)", "map:show"),
+    ("\t_map_screen = _map_keep.take(_map_screen_key)", "map:take"),
+    ("\t\t_map_screen.refresh(game.run)", "map:refreshed"),
+    ("\t_transitions.screen_in(_map_screen)", "map:screen_in"),
+]:
+    text = after_each(text, line, name, 1)
+# The HUD and the music after the map's screen_in (`_attach_run_hud` recurs
+# elsewhere, so by its neighbours).
+hud = '\t_attach_run_hud()\n\t_music.play(&"map")\n'
+assert text.count(hud) == 1, "map hud anchor"
+text = text.replace(hud, '\t_attach_run_hud()\n' + mark("\t", "map:hud") + '\t_music.play(&"map")\n' + mark("\t", "map:music"))
+main.write_text(text)
+
+# The land's arrival (MapScene) and each floor step (MapJourneyLandscape).
+scene = wt / "presentation/map/map_scene.gd"
+text = scene.read_text()
+assert STAGE not in text
+text = after_each(text, "\t_world.add_child(land)", "map:land_added", 2)
+text = after_each(text, "\tland.set_node_states(_node_states)", "map:node_states", 2)
+text = after_each(text, "\t_floor_baking = not land.floor_step()", "map:first_floor_step", 1)
+text = after_each(text, "\tlandscape_ready.emit()", "map:ready_emit", 2)
+scene.write_text(text)
+land = wt / "presentation/map/map_journey_landscape.gd"
+text = land.read_text()
+assert STAGE not in text
+old = "\treturn forest_floor == null or forest_floor.step(self, paced)\n"
+assert text.count(old) == 1
+text = text.replace(old, mark("\t", "floor_step:start") +
+                    "\tvar qa_done: bool = forest_floor == null or forest_floor.step(self, paced)  " + STAGE + "\n" +
+                    mark("\t", "floor_step:end") + "\treturn qa_done  " + STAGE + "\n")
+land.write_text(text)
+
+probe = (HERE / "qa_shader_probe.gd").read_text()
+stamp = 'const BUILD: String = "unstamped"'
+assert probe.count(stamp) == 1
+(wt / "tools/qa_shader_probe.gd").write_text(probe.replace(stamp, 'const BUILD: String = "%s"' % label))
+print("armed", wt, label)

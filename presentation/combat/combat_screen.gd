@@ -1231,9 +1231,7 @@ func _build_vignette() -> void:
 	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_vignette.color = Color.WHITE   # the shader writes every channel
 	_vignette_mat = ShaderMaterial.new()
-	var sh: Shader = Shader.new()
-	sh.code = VIGNETTE_SHADER
-	_vignette_mat.shader = sh
+	_vignette_mat.shader = SharedShaders.of(VIGNETTE_SHADER)
 	_vignette_mat.set_shader_parameter("edge", VIGNETTE_EDGE)
 	_vignette_mat.set_shader_parameter("low_tint", LOW_HP_TINT)
 	_vignette.material = _vignette_mat
@@ -1249,9 +1247,7 @@ func _build_stage_dim() -> void:
 	_stage_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_stage_dim.color = Color.WHITE   # the shader writes every channel
 	_stage_dim_mat = ShaderMaterial.new()
-	var sh: Shader = Shader.new()
-	sh.code = STAGE_DIM_SHADER
-	_stage_dim_mat.shader = sh
+	_stage_dim_mat.shader = SharedShaders.of(STAGE_DIM_SHADER)
 	_stage_dim_mat.set_shader_parameter("dark", DIM_DARK)
 	_stage_dim_mat.set_shader_parameter("hole", DIM_HOLE)
 	_stage_dim.material = _stage_dim_mat
@@ -1268,9 +1264,7 @@ func _build_lantern() -> void:
 	_lantern.color = Color.WHITE
 	_lantern.visible = false
 	_lantern_mat = ShaderMaterial.new()
-	var sh: Shader = Shader.new()
-	sh.code = STAGE_DIM_SHADER
-	_lantern_mat.shader = sh
+	_lantern_mat.shader = SharedShaders.of(STAGE_DIM_SHADER)
 	_lantern_mat.set_shader_parameter("dark", DIM_DARK)
 	_lantern_mat.set_shader_parameter("hole", DIM_HOLE)
 	_lantern_mat.set_shader_parameter("la", 0.0)
@@ -1296,9 +1290,7 @@ func _build_grain() -> void:
 	_grain.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_grain.color = Color.WHITE
 	_grain_mat = ShaderMaterial.new()
-	var sh: Shader = Shader.new()
-	sh.code = GRAIN_SHADER
-	_grain_mat.shader = sh
+	_grain_mat.shader = SharedShaders.of(GRAIN_SHADER)
 	_grain_mat.set_shader_parameter("amount", GRAIN_AMOUNT)
 	_grain_mat.set_shader_parameter("drain_sat", WORLDSTOP_SAT)
 	_grain_mat.set_shader_parameter("drain_bright", WORLDSTOP_BRIGHT)

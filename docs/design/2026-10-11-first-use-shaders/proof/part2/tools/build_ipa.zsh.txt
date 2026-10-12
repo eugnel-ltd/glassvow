@@ -1,0 +1,38 @@
+#!/bin/zsh
+# Lane #682 Part 2 scratch: one measuring QA IPA (io.fol2.glassvow.qa) with the Part 2
+# probe and its own never-compiled nonce (both uncommitted, put back on exit), baked by
+# the clean release editor ($L/bin/godot-bake-clean: /Users/jamesto/Coding/glassvow-bake-editor),
+# to $L/ipa/<name>/.
+#   build_ipa.zsh <A|P> <nonce> <name>
+# A: origin/main 3e734010 ($L/wt-p2a, detached). P: the candidate ($L/wt-part2, its branch head).
+# Refuses a worktree with unstaged edits in the files the nonce and the probe touch.
+# bake_export.sh prints each stale bake cache it removes (inside the worktree's
+# .godot/exported); those lines are kept in qa_export.out and logged as deletions.
+set -eu
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/shader-lane
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+arm=$1; nonce=$2; name=$3
+case $arm in A) WT=$L/wt-p2a; HEAD_WANT=3e734010 ;; P) WT=$L/wt-part2; HEAD_WANT="" ;; *) echo "arm A or P"; exit 1 ;; esac
+OUT=$L/ipa/$name
+[[ ! -e $OUT ]] || { echo "exists: $OUT"; exit 1; }
+cd $WT
+[[ -z "$HEAD_WANT" || "$(git rev-parse --short HEAD)" == "$HEAD_WANT" ]] || { echo "$WT is not at $HEAD_WANT"; exit 1; }
+QA=($(git ls-files 'presentation/*.gdshader') presentation/combat/enemy_view.gd presentation/combat/combat_screen.gd
+  presentation/stage/transition_layer.gd presentation/reward/reward_stage.gd application/main.gd
+  presentation/map/map_scene.gd presentation/map/map_journey_landscape.gd)
+[[ -z "$(git status --porcelain --untracked-files=no)" ]] || { echo "worktree not clean"; git status --short; exit 1; }
+revert() { git checkout -q -- $QA; rm -f $WT/tools/qa_shader_probe.gd $WT/tools/qa_shader_probe.gd.uid; }
+trap revert EXIT
+mkdir -p $OUT
+echo "== $name arm $arm nonce $nonce head $(git rev-parse --short HEAD) $(date +%T) load $(uptime | sed 's/.*averages: //')"
+python3 $L/tools/nonce_all.py $WT $nonce | tail -1
+python3 $L/tools/p2/arm.py $WT $name | tail -1
+env GLASSVOW_BAKE_EDITOR=$L/bin/godot-bake-clean bash $FLOW/qa_export.sh $WT --no-install > $OUT/qa_export.out 2>&1 || { echo "qa_export failed"; tail -5 $OUT/qa_export.out; exit 1; }
+cp $WT/build/ios-qa/export-dev/glassvow.ipa $OUT/$name.ipa
+cp -R $WT/build/ios-qa/logs $OUT/logs
+grep -h -i 'remov' $OUT/qa_export.out $OUT/logs/*.log 2>/dev/null | grep -i 'shader_baker\|exported' | sed "s|^|$(date '+%F %T') bake_export.sh stale cache (inside $WT): |" >> $L/tmp/part2-deletions.txt || true
+echo "stored baked files: $(grep -c 'Storing File: res://.godot/shader_cache/' $OUT/logs/export.log || true) groups: $(grep -o 'Storing File: res://.godot/shader_cache/[A-Za-z]*' $OUT/logs/export.log | sort | uniq -c | awk '{print $NF":"$1}' | sed 's#.*shader_cache/##' | tr '\n' ' ')"
+grep -h "Shader baker" $OUT/logs/export.log | head -3 || true
+ls -la $OUT/$name.ipa | awk '{print "ipa " $5 " B"}'
+unzip -p $OUT/$name.ipa Payload/glassvow.app/Info.plist | plutil -extract DTXcodeBuild raw -o - - | sed 's/^/DTXcodeBuild /'
+unzip -p $OUT/$name.ipa Payload/glassvow.app/Info.plist | plutil -extract CFBundleIdentifier raw -o - -

@@ -182,7 +182,7 @@ The pilgrim casts no live shadow and stands on its blob
 - **Cold open**: before the land is attached, behind the veil
   (`presentation/map/map_scene.gd:1188 (in _poll_journey)`).
 - **Map waiting on the land**: inline, keeping `landscape_pending` true
-  (`presentation/map/map_scene.gd:1163 (in _bind_journey)`, `presentation/map/map_scene.gd:600 (in _process)`).
+  (`presentation/map/map_scene.gd:1163 (in _bind_journey)`, `presentation/map/map_scene.gd:610 (in _process)`).
 - **Journey prefetch under the title**: as its own `BAKING` step, paced to a
   tile a frame (`presentation/map/map_journey_prefetch.gd:232 (in _advance)`).
 
