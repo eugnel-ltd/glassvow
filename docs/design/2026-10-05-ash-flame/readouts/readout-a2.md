@@ -2,7 +2,7 @@
 
 > **A wall lane's reading of record (AI-SDLC discovery), not a verdict.** #544 A8, Endure's first lane: the diagnosis, three single-lever candidates screened on development seeds, and the one the orchestrator sent on, E1, read on the bands of record against Ash readout A1 under a ship rule registered before any result. E1 shipped in #710 (`3c8732ee`): Vitrify (`ironSkin`) is in `aspects[1].excludes.cards` and carries no affinity. `content/full-content.json` on `main` is `abb82590d4beafb6c20e76e131e998ade65ca7b3b84d255f2ba61cfecea924fd` (semantic `5adbd58a932bcf0d1098266152e08462e3987c1d318267b129aeb2343ba677d4`). This PR adds this readout and links it from the lock; no content, code, test or golden moves.
 >
-> **Head and content.** Every reading report ran at `5666c336` from a detached run worktree with `--content` set to catalogue `3da81813e078efdc5e0b4418b48f9c639ce69ef545d0a2fdc0b64bedb3c831e1`. The merged file differs from it by one line, `"ironSkin": 1.0,` in the Endure way's affinity, which the content PR dropped because an excluded card may carry none (`tests/test_flame.gd:213-216`). The line cannot reach an outcome: `offer_cards` filters exclusions out of card rewards, shops and events (the #710 review), so no Ashwarden run can be offered, hold or play Vitrify; in the reading's 60,000 Ashwarden runs none did; and a slice on the merged file (13000–13049, all four cells, every arm, the replays) reproduces the reading's rows, **1,212 of 1,212 identical**, only the manifests' content hashes differ. Between `5666c336` and `3c8732ee`, `git diff --stat -- domain 'tools/balance_*' tools/vow_incentives.gd content/content_db.gd content/line-table.json` is empty. The rows therefore describe `main`'s content.
+> **Head and content.** Every reading report ran at `5666c336` from a detached run worktree with `--content` set to catalogue `3da81813e078efdc5e0b4418b48f9c639ce69ef545d0a2fdc0b64bedb3c831e1`. The merged file differs from it by one line, `"ironSkin": 1.0,` in the Endure way's affinity, which the content PR dropped because an excluded card may carry none (`tests/test_flame.gd:213-216`). The line cannot reach an outcome: `offer_cards` filters exclusions out of card rewards, shops and events (the #710 review), so no Ashwarden run can be offered, hold or play Vitrify; in the reading's 44,012 Ashwarden runs none did; and a slice on the merged file (13000–13049, all four cells, every arm, the replays) reproduces the reading's rows, **1,212 of 1,212 identical**, only the manifests' content hashes differ. Between `5666c336` and `3c8732ee`, `git diff --stat -- domain 'tools/balance_*' tools/vow_incentives.gd content/content_db.gd content/line-table.json` is empty. The rows therefore describe `main`'s content.
 
 Ash readout A1 left Endure leading G2 by a decided margin in every cell, and #544 decision 2 reopened (the starter as the class's engine). The orchestrator put Endure's wall lane first (lock §14). This readout settles the instrument confound A1 left open, names Endure's mechanism, screens three candidates, and reads the chosen one on A1's bands.
 
@@ -12,7 +12,7 @@ Ash readout A1 left Endure leading G2 by a decided margin in every cell, and #54
 - **The confound is the instrument.** Under `s2` on A1's content and seeds, Smolder makes 61.5–77.6% of the kills in won fights, readout A0's 61–77%; under `s3`, 77.9–86.8%. Win rates and G2's order do not move. From now on the damage share stands beside the kill share (the ruling, 11 October).
 - **The mechanism.** Ashfall at any lit lantern is the class's kill condition (47% / 38% of committed Endure's damage at V0 `entry` / `full`; its own glass 3–4%). Endure's lead is survival that grows with the length of a fight, at the long bosses.
 - **G2 at V0 `full` passes on point** (9.3 pp, UNDECIDED; A1 17.0, FAIL/FAIL). V0 `entry` stays Smolder's wall (53.0 pp).
-- **Costs.** G6 at V0 `entry` is a decided FAIL (Hand 69.9% of A_lit's wins): **a reservation tied to A5a**. The commit-blind arms lose at V0 `entry` (A −10.0, A_lit −7.5 pp). Endure's Act 1 boss losses roughly double.
+- **Costs.** G6 at V0 `entry` is a decided FAIL (Hand 69.9% of A_lit's wins): **a reservation tied to A5a**. The commit-blind arms lose at V0 `entry` (A −10.0, A_lit −7.5 pp). Endure's Act 1 boss losses rise in every cell, most at V0 `entry` (×2.3).
 - **Endure still leads at V5** (+39.2 and +25.5 pp over the next way): the case for its second lane.
 
 The next section was written at 17:45 BST on 11 October 2026, after the first batch had started (17:28) and before any result was read, and is published unchanged. Its clause "byte-identical to the file the content PR commits" did not hold: the committed file drops one unreachable line (head note).
@@ -71,7 +71,7 @@ godot --headless -s res://tests/run_all.gd -- --tests=res://tests/test_balance_i
 - **Cells, arms, seeds.** A1's: the Ashwarden at V0 on 13000–13999 and V5 on 13000–14999, pools `entry` and `full`, the six arms with arm A's three-seed replay; G3 at V5 `full` joined with 15000–16999 for 4,000 common seeds; the Duskblade's A_lit at V0 `full`. Every run pairs with A1's on its seed. Nothing read 17000–18999.
 - **Measures.** A1's graders and intervals; the paired change is Newcombe's paired interval with the exact McNemar p.
 - **Budget and stop rule.** One candidate, one reading, the ship rule above; nothing re-tuned after the run.
-- **Wall time.** 23,933 s (6 h 39 min) for the four batches, 17:28 on 11 October to 00:15 on 12 October, 61,012 runs (V0 6,849 s; V5 11,444 s; G3's band 4,884 s; the Duskblade 756 s), load average 3.9 to 144 at the batches' ends (the shared host's peak, during V5); the slice 843 s.
+- **Wall time.** 23,933 s (6 h 39 min) for the four batches, 17:28 on 11 October to 00:15 on 12 October, 45,012 runs (V0 6,849 s; V5 11,444 s; G3's band 4,884 s; the Duskblade 756 s), load average 3.9 to 144 at the batches' ends (the shared host's peak, during V5); the slice 843 s.
 
 ## The lane, Phase A (development seeds, not of record)
 
@@ -118,7 +118,7 @@ The ruling on E3 (11 October): the Smother duo seed is the strongest lever on En
 | Condition | Result | Held |
 |---|---|---|
 | 1. Endure − next way ≤ 10 pp on point, V0 `entry` and `full` | +3.8 pp (paired +0.8 to +6.8); +4.2 pp (+0.5 to +7.9) | yes |
-| 2. G7 PASS in every cell | 0 stalls, 0 errors in 60,000 Ashwarden and 1,000 Duskblade runs; arm A's replay identical in every cell | yes |
+| 2. G7 PASS in every cell | 0 stalls, 0 errors in 44,012 Ashwarden and 1,000 Duskblade runs; arm A's replay identical in every cell | yes |
 | 3. The Duskblade byte-identical | The panel (168 pins) PASS at the candidate's commit and on #710's final tree; its A_lit at V0 `full` identical to A1's, 1,000 of 1,000 rows | yes |
 | 4. Smolder at V0 `entry` not decidedly worse by more than 5 pp | −0.6 pp (−4.6 to +3.4), p = 0.81: not decided | yes |
 
@@ -133,7 +133,7 @@ The ruling on E3 (11 October): the Smother duo seed is the strongest lever on En
 | V0 full | 68.4% (65.5–71.2) | 73.5% (70.7–76.1) | 77.7% (75.0–80.2) | 54.2% (51.1–57.3) | 62.8% (59.8–65.7) | 26.8% (24.1–29.6) |
 | change | −0.2 | −0.2 | **−7.9** | +1.8 | 0.0 | −1.9 |
 | V5 entry | 8.8% (7.7–10.2) | 33.1% (31.0–35.1) | 72.2% (70.2–74.2) | 15.2% (13.7–16.9) | 29.6% (27.7–31.7) | 5.3% (4.4–6.4) |
-| change | −1.6 | **+3.2** | **−13.7** | | **−9.5** | |
+| change | −1.6 | **+3.3** | **−13.7** | | **−9.5** | |
 | V5 full | 38.3% (36.2–40.5) | 29.3% (27.4–31.4) | 63.8% (61.7–65.9) | 26.1% (24.2–28.0) | 34.5% (32.5–36.7) | 6.1% (5.1–7.2) |
 | change | +1.0 | −1.9 | **−5.7** | | −0.8 | |
 
@@ -146,7 +146,7 @@ Bold: decided at 95% (paired). V5 changes for A and R are not listed: the compar
 | V0 entry | 53.0 pp FAIL / FAIL (A1 59.0) | +3.8 (A1 +10.3) | −40.2 FAIL / FAIL (A1 −39.3) | **Hand 69.9% (65.6–73.8) FAIL / FAIL** (A1 Endure 54.4%, PASS) |
 | V0 full | **9.3 pp PASS / UNDECIDED** (A1 17.0 FAIL / FAIL) | +4.2 (A1 +11.9) | −14.9 FAIL / FAIL (A1 −22.8) | Smolder 56.8% PASS / UNDECIDED |
 | V5 entry | 63.4 FAIL / FAIL (A1 75.4) | +39.2 (A1 +56.1) | −42.6 FAIL / FAIL (A1 −46.8) | Endure 63.7% FAIL / UNDECIDED (A1 81.9% FAIL / FAIL) |
-| V5 full | 34.5 FAIL / FAIL (A1 38.2) | +25.5 (A1 +32.1) | −27.7 on 4,000 seeds (−29.7 to −25.6) FAIL / FAIL (A1 −34.3) | Smolder 70.3% FAIL / FAIL |
+| V5 full | 34.4 pp FAIL / FAIL (A1 38.2) | +25.5 (A1 +32.1) | −27.7 on 4,000 seeds (−29.7 to −25.6) FAIL / FAIL (A1 −34.3) | Smolder 70.3% FAIL / FAIL |
 
 - **G5.** Committed Endure at V0 `full`: Steady by the end of Act 1 51.5% of the runs alive, True by the end of Act 2 12.4% (A1 57.4% and 19.6%). Smolder at V0 `entry`: Steady 12.5% (A1 13.5%).
 - **Row B, committed Endure.** V0 `entry`: close calls 0.7% (0.6–0.8; A1 0.43%), expression 53.2% (A1 62.9%), B2 FAIL. V0 `full`: close calls 1.1% (1.0–1.3), expression 61.0%, B2 UNDECIDED (A1 FAIL / UNDECIDED). B1 passes for every arm.
@@ -158,7 +158,7 @@ Bold: decided at 95% (paired). V5 changes for A and R are not listed: the compar
 
 1. **G6 at V0 `entry`** (Hand 69.9% of A_lit's wins, a decided FAIL, as registered): with Vitrify gone, Endure's flame lights less often and A_lit's wins swing to Hand; Smolder still takes 2.5%. **A reservation tied to A5a**: a Smolder way that can win the entry pool is what gives A_lit a third colour there.
 2. **The commit-blind arms at V0 `entry`** (A −10.0, A_lit −7.5 pp): they took Vitrify too. A_lit at V0 `full` is unchanged, so the cross-class gap is too.
-3. **Endure's Act 1 boss losses** roughly double, and its full-pool reach falls (G5, above).
+3. **Endure's Act 1 boss losses** rise in every cell, most at V0 `entry` (×2.3; ×1.6, ×1.7 and ×1.2 elsewhere), and its full-pool reach falls (G5, above).
 4. **Endure's expression at V0 `entry`** falls to 53.2% (B2).
 
 ## Every graded gate and reading, under P9's definition
