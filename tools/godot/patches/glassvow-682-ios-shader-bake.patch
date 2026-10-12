@@ -22,7 +22,7 @@ index ac0bdc4..bca8088 100644
  			"-Wno-uninitialized",
  			"-Wno-unused-function",
 diff --git a/editor/export/shader_baker_export_plugin.cpp b/editor/export/shader_baker_export_plugin.cpp
-index 0f51b22..a698ef7 100644
+index 0f51b22..9e2beb0 100644
 --- a/editor/export/shader_baker_export_plugin.cpp
 +++ b/editor/export/shader_baker_export_plugin.cpp
 @@ -96,6 +96,17 @@ bool ShaderBakerExportPlugin::_begin_customize_resources(const Ref<EditorExportP
@@ -60,6 +60,19 @@ index 0f51b22..a698ef7 100644
  	// Included all shaders created by renderers and effects.
  	ShaderRD::shaders_embedded_set_lock();
  	const ShaderRD::ShaderVersionPairSet &pair_set = ShaderRD::shaders_embedded_set_get();
+@@ -279,6 +300,12 @@ Ref<Resource> ShaderBakerExportPlugin::_customize_resource(const Ref<Resource> &
+ 	DEV_ASSERT(singleton != nullptr);
+ 
+ 	Ref<Material> material = p_resource;
++	// Glassvow #682: only the game's own shaders (ShaderMaterials) are baked. A material whose
++	// shader the engine generates (a BaseMaterial3D in an imported scene, or the Sprite3D and
++	// Label3D defaults) keeps its runtime compile, as the engine's own shaders do (see below).
++	if (Object::cast_to<ShaderMaterial>(material.ptr()) == nullptr) {
++		return Ref<Resource>();
++	}
+ 	if (material.is_valid()) {
+ 		RID material_rid = material->get_rid();
+ 		if (material_rid.is_valid()) {
 diff --git a/editor/shader/shader_baker/shader_baker_export_plugin_platform_metal.cpp b/editor/shader/shader_baker/shader_baker_export_plugin_platform_metal.cpp
 index 8570b5f..2c319da 100644
 --- a/editor/shader/shader_baker/shader_baker_export_plugin_platform_metal.cpp
