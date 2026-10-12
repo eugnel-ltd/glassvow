@@ -23,8 +23,9 @@ const AFFINITY: Dictionary = {
 	"hand": {"firstSpark": 1.0, "preparation": 1.0, "quickSlash": 1.0, "sidestep": 0.5,
 		"deflect": 0.5, "surge": 1.0, "phantomBlades": 1.0, "offering": 1.0, "tithe": 1.0,
 		"nightSight": 1.0, "emberdance": 0.5},
+	# Vitrify (ironSkin) left Endure with A8's first lane: an excluded card carries no affinity.
 	"endure": {"smother": 0.5, "sidestep": 0.5, "deflect": 0.5, "bulwark": 1.0, "fortify": 1.0,
-		"ironSkin": 1.0, "leechBlade": 1.0, "aegis": 1.0, "bastion": 1.0, "regrowth": 1.0,
+		"leechBlade": 1.0, "aegis": 1.0, "bastion": 1.0, "regrowth": 1.0,
 		"devour": 1.0, "flawlessForm": 1.0, "emberdance": 0.5},
 }
 const RELICS: Dictionary = {
@@ -45,11 +46,12 @@ const CAPSTONES: Dictionary = {
 	"endure": ["bastion", "flawlessForm"],
 }
 ## §6.3: the Shatter-only glass, the relics that pay on facets and Shatters, and
-## Beacon; added to the exclusions the Ashwarden already had, which stay.
+## Beacon; added to the exclusions the Ashwarden already had, which stay. #544 A8,
+## Endure's first wall lane, adds Vitrify (`ironSkin`).
 const EXCLUDED: Dictionary = {
 	"cards": ["splinterCut", "dimTheGlass", "cleft", "eclipseStep", "tremor", "totality",
 		"emberEye", "spall", "hearthfall", "uppercut", "quakeblow", "oblivionStrike",
-		"limitBreak", "resonantLance"],
+		"limitBreak", "resonantLance", "ironSkin"],
 	"relics": ["crownOfTheEclipse", "shatterersCrown", "bellOfEndings", "prismCharm"],
 	"arts": ["beacon"],
 }
@@ -76,9 +78,9 @@ const RECOGNITION: Array = [
 		"TRUE", "crownOfTithes", ""],
 	["steady endure", [], ["bulwark", "fortify"], [], "STEADY", "crownOfTheHearth", ""],
 	["steady endure, hand fringe", [],
-		["bulwark", "fortify", "ironSkin", "aegis", "preparation"], [],
+		["bulwark", "fortify", "leechBlade", "aegis", "preparation"], [],
 		"STEADY", "crownOfTheHearth", "crownOfTithes"],
-	["true endure", ["firstSpark"], ["bulwark", "fortify", "ironSkin"], [],
+	["true endure", ["firstSpark"], ["bulwark", "fortify", "leechBlade"], [],
 		"TRUE", "crownOfTheHearth", ""],
 	["soot", [], ["venomStrike", "preparation", "bulwark"], [], "SOOT", "hollowCrown", ""],
 	# No alternates: a held crown's slot is the draw's.

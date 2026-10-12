@@ -28,6 +28,7 @@ This lock changes no content, code or test. It edits no part of the Duskblade's 
 | 5 Oct 2026 | The 1.1 search player is `s3` (#544 P6b): `s2`'s honest play plus the credit for a Smolder tick that kills before the enemy acts, the same for every class. Readout 14's interim reading stays `s2`'s; the Duskblade is re-read under `s3` at A9, and the cross-class reading uses `s3` for both classes | §10; rc-bar P9 |
 | 5 Oct 2026 | Step A2 lands as two PRs: first the ways in content, with the Duskblade's invariance and the unit tests; then Ash readout A1, the reading of record, run on that content as merged on `main`. The content SHA-256 of record is then `main`'s, and a review change to the content never forces a re-run of the reading's simulations | The orchestrator; §12, A2 |
 | 9 Oct 2026 | On Ash readout A1: the cross-class trigger reads on point and on interval, so an interval that does not exclude +15 pp owes a diagnosis; B2's interval of record stays the grader's, over fights, with the run-clustered one beside it as a sensitivity; Endure leads G2 by a decided margin, so A8 puts its wall lane first; #544 decision 2 (the starter unchanged) is reopened before A8 | The orchestrator; [readout A1](readouts/readout-a1.md), *The orchestrator's ruling*; §10, §14 |
+| 11 Oct 2026 | A8 Phase A, Endure's wall lane (verbatim): "1. **The confound is settled.** Smolder's rise in kill share from readout A0 to A1 is the instrument, `s3`'s credit for a lethal tick, not the content. Win rates and G2's order do not move. From now on, the damage share stands beside the kill share wherever "the starter as the engine" is read. 2. **The mechanism.** Ashfall at any lit lantern is the class's kill condition. Endure's lead is survival that grows with the length of a fight: Vitrify's and Cathedral Glass's Ward a turn, and Thirsting Shard's healing at the long bosses. 3. **E2 is dropped,** decided ineffective. 4. **E3 is not adopted for A8.** It is recorded as a finding: the Smother duo seed is the strongest lever on Endure, but it leans the whole class towards Smolder. It raises A_lit at V0 full by +14.5, taking the cross-class gap to about +28, and makes G6 a FAIL. Decision 2 stays reopened, and no starter change is made now. 5. **E1 (`ironSkin` in the Ashwarden's `excludes.cards`) goes to a reading on the bands of record.** E1 misses one part of your pre-registered screen target: G2 at V0 full is 12.0, not 10 or less. That is why its delivery depends on the reading, not on the screen." **E1 shipped (12 Oct 2026)** on Ash readout A2's reading of record, every registered condition met: Endure − next way +3.8 and +4.2 pp at V0 `entry` and `full`; G7 PASS in every cell; the Duskblade byte-identical; Smolder at V0 `entry` −0.6 pp against A1, not decided. Vitrify's affinity left Endure with the exclusion, since an excluded card carries none; no Ashwarden run of the reading met the card. | The orchestrator; Ash readout A2 (`readouts/readout-a2.md`, landing after this content); §6.1–§6.3 |
 
 ## 1. The vision in one paragraph
 
@@ -159,7 +160,7 @@ Relics: crown crownOfTithes; verdantBranch 1.0, travelersPack ½.
 | sidestep (Glasstep), deflect (Refract) | ½ each | duos, see Hand |
 | bulwark (Glasswall) | 1.0 | base pool (uncommon) |
 | fortify (Mirrorlight) | 1.0 | base pool (uncommon) |
-| ironSkin (Vitrify) | 1.0 | base pool (uncommon) |
+| ~~ironSkin (Vitrify)~~ | — | base pool (uncommon); **excluded for the Ashwarden since A8's first Endure lane** (§6.3, 11 Oct 2026), so it carries no affinity (an excluded card is never coloured) |
 | leechBlade (Thirsting Shard) | 1.0 | base pool (uncommon) |
 | aegis (Cathedral Glass) | 1.0 | base pool (rare) |
 | bastion (Anneal) | 1.0 | base pool (rare; capstone) |
@@ -186,10 +187,12 @@ Count of cards carrying the way's affinity (mass in brackets), with the share of
 
 | Way | Entry pool | Full pool | Target | Gap |
 |---|---|---|---|---|
-| Smolder | **1** (1.0), 5.5% of slots | 6 (6.0), 10.4% | 4–5 / ~10 | **Entry: three to four cards short.** Full: four short |
-| Hand | 6 (5.0), 21.9% | 10 (8.5), 23.1% | 4–5 / ~10 | Met |
-| Endure | 8 (7.0), 22.4% | 12 (10.5), 16.5% | 4–5 / ~10 | Above target in entry |
-| Pool size | 25 (11 / 11 / 3) | 45 (11 / 20 / 14) | | |
+| Smolder | **1** (1.0), 5.5% of slots | 6 (6.0), 10.5% | 4–5 / ~10 | **Entry: three to four cards short.** Full: four short |
+| Hand | 6 (5.0), 22.2% | 10 (8.5), 23.4% | 4–5 / ~10 | Met |
+| Endure | 7 (6.0), 20.4% | 11 (9.5), 15.3% | 4–5 / ~10 | Above target in entry |
+| Pool size | 24 (11 / 10 / 3) | 44 (11 / 19 / 14) | | |
+
+Since A8's first Endure lane (11 October 2026) excluded Vitrify, an uncommon (§6.3). Before it: Smolder 5.5% and 6 (6.0), 10.4%; Hand 6 (5.0), 21.9% and 10 (8.5), 23.1%; Endure 8 (7.0), 22.4% and 12 (10.5), 16.5%; pools 25 (11 / 11 / 3) and 45 (11 / 20 / 14).
 
 The entry pool holds only three rares once the Shatter-only glass leaves it (§6.3): Phantom Blades, Cathedral Glass and Anneal.
 
@@ -200,6 +203,7 @@ Added to `aspects[1].excludes` (pool hygiene; nothing is deleted from content):
 - **cards** uppercut (Ringing Blow), quakeblow (Quakeblow), oblivionStrike (Bellstrike), limitBreak (Annealing Rite), resonantLance (Resonant Lance): the Shatter-only glass. Chips and Shatter are the Duskblade's alone in `combat.gd`, so for the Ashwarden these are dead or half-dead;
 - **relics** shatterersCrown, bellOfEndings, prismCharm: they pay on facets and Shatters;
 - **arts** beacon: "Your attacks chip 1 extra facet this turn".
+- **cards** ironSkin (Vitrify), by A8's first Endure wall lane (the orchestrator, 11 October 2026): not dead glass but Endure's defensive supply. Its Ward every turn is, with Cathedral Glass's Ward and Thirsting Shard's healing, the survival that grows with the length of a fight and carries Endure's lead at the long bosses (the A8 diagnosis; Ash readout A2 (`readouts/readout-a2.md`, landing after this content)).
 
 Kept from today's list: splinterCut, dimTheGlass, cleft, eclipseStep, tremor, totality, emberEye, spall, hearthfall; crownOfTheEclipse.
 
