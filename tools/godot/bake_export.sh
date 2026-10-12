@@ -20,8 +20,8 @@
 # writes the bake manifest, exports windowed with the target's `mobile` features
 # (the baker needs a rendering device, and its guard refuses a bake whose
 # features differ), restores project.godot byte for byte (the editor rewrites it),
-# and fails unless baked scene and canvas shaders were stored and the guard was
-# silent.
+# and fails unless baked scene and canvas shaders, and nothing else, were stored
+# and the guard was silent.
 
 set -euo pipefail
 
@@ -104,4 +104,8 @@ SCENE="$(stored SceneForwardMobileShaderRD/)"
 CANVAS="$(stored CanvasShaderRD/)"
 [[ "$SCENE" -gt 0 && "$CANVAS" -gt 0 ]] \
   || die "the export stored $SCENE baked scene and $CANVAS canvas shader files; see $LOG"
+# Only the game's groups: the engine's own shaders stay out of the bake
+# (tools/godot/patches/README.md), and an editor from an older patch would add them.
+[[ "$ALL" -eq $((SCENE + CANVAS)) ]] \
+  || die "the export stored $((ALL - SCENE - CANVAS)) baked engine shader files; rebuild the editor from tools/godot/patches/"
 echo "bake_export: $ALL baked shader files stored ($SCENE scene, $CANVAS canvas) by $VERSION"

@@ -63,9 +63,12 @@ for arg in "$@"; do
         echo "ERROR: Shader baker: \"rendering/reflections/sky_reflections/texture_array_reflections\" differs for this export target; set GODOT_EDITOR_CUSTOM_FEATURES to its features. Shaders not baked."
         exit 0
       fi
-      if [[ "${FAKE_STORE:-yes}" == yes ]]; then
+      if [[ "${FAKE_STORE:-yes}" != no ]]; then
         echo "Storing File: res://.godot/shader_cache/SceneForwardMobileShaderRD/a/b.metal.cache"
         echo "Storing File: res://.godot/shader_cache/CanvasShaderRD/c/d.metal.cache"
+      fi
+      if [[ "${FAKE_STORE:-yes}" == engine ]]; then
+        echo "Storing File: res://.godot/shader_cache/SkyShaderRD/e/f.metal.cache"
       fi
       exit 0 ;;
   esac
@@ -95,6 +98,8 @@ cp "$HERE/bake_export.sh" "$REPO/tools/godot/bake_export.sh"
 
 out="$(run iOS FAKE_STORE=no)"; status=$?
 check "an export that stores no baked scene shader fails" "$([[ $status -ne 0 && "$out" == *"0 baked scene and 0 canvas"* ]]; echo $?)"
+out="$(run iOS FAKE_STORE=engine)"; status=$?
+check "an export that stores an engine shader (an older patch) fails" "$([[ $status -ne 0 && "$out" == *"1 baked engine shader files"* ]]; echo $?)"
 out="$(run iOS FAKE_VERSION=4.7.2.stable.official.ed1daf0bf)"; status=$?
 check "an editor other than the pinned one is refused" "$([[ $status -ne 0 && "$out" == *"not 4.7.3.rc.custom_build.83dec14d5"* ]]; echo $?)"
 out="$(run Unbaked)"; status=$?

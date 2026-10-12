@@ -22,7 +22,7 @@ index ac0bdc4..bca8088 100644
  			"-Wno-uninitialized",
  			"-Wno-unused-function",
 diff --git a/editor/export/shader_baker_export_plugin.cpp b/editor/export/shader_baker_export_plugin.cpp
-index 0f51b22..e2c9113 100644
+index 0f51b22..a698ef7 100644
 --- a/editor/export/shader_baker_export_plugin.cpp
 +++ b/editor/export/shader_baker_export_plugin.cpp
 @@ -96,6 +96,17 @@ bool ShaderBakerExportPlugin::_begin_customize_resources(const Ref<EditorExportP
@@ -43,6 +43,23 @@ index 0f51b22..e2c9113 100644
  	if (!_initialize_container_format(p_platform, get_export_preset())) {
  		return false;
  	}
+@@ -140,6 +151,16 @@ bool ShaderBakerExportPlugin::_begin_customize_resources(const Ref<EditorExportP
+ 
+ 	RendererSceneRenderRD::get_singleton()->enable_features(renderer_features);
+ 
++	// Glassvow #682: the engine's own shaders (its renderers', effects' and embedded materials')
++	// are not baked. Their bake's picture could not be tested on the floor device, whose user
++	// cache, read first, always held their runtime compile; a fresh install compiles them as an
++	// unbaked build does. Set this true to bake them again, once their identity is proven on a
++	// fresh app container.
++	constexpr bool bake_engine_shaders = false;
++	if (!bake_engine_shaders) {
++		return true;
++	}
++
+ 	// Included all shaders created by renderers and effects.
+ 	ShaderRD::shaders_embedded_set_lock();
+ 	const ShaderRD::ShaderVersionPairSet &pair_set = ShaderRD::shaders_embedded_set_get();
 diff --git a/editor/shader/shader_baker/shader_baker_export_plugin_platform_metal.cpp b/editor/shader/shader_baker/shader_baker_export_plugin_platform_metal.cpp
 index 8570b5f..2c319da 100644
 --- a/editor/shader/shader_baker/shader_baker_export_plugin_platform_metal.cpp

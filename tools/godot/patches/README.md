@@ -38,6 +38,19 @@ commit with `glassvow-682-ios-shader-bake.patch`.
      the project settings load), and `tools/godot/bake_export.sh` fails on the
      guard's message.
 
+     The same file stops the baker short of **the engine's own shaders** (its
+     renderers', effects' and embedded materials', such as the canvas, sky,
+     tonemap, copy and blit shaders): only the game's materials, found through
+     the manifest, are baked. On the iPad 8 the QA app's user shader cache,
+     which the engine reads before the bake, always held their runtime compile,
+     so their baked picture could never be tested there (#682 Part 1); a fresh
+     install compiles them as an unbaked build does, at the cost main pays today.
+     To bring them back, set `bake_engine_shaders` to true in the patch, rebuild,
+     and first prove their picture identity on a fresh app container (a new QA
+     bundle id, or a device that never ran the QA app). `bake_export.sh` refuses a
+     bake that stores any group but the game's (`SceneForwardMobileShaderRD`,
+     `CanvasShaderRD`), so an editor built from an older patch cannot slip them in.
+
 ## Build it (macOS, about 10 minutes)
 
 ```bash
