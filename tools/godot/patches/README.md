@@ -75,6 +75,27 @@ guard did not refuse.
 Without the stale-bake clean-up the baker re-adds every bake still listed in its
 cache, so earlier shader versions pile up in the pack.
 
+## The template path in the preset
+
+The `iOS` preset names the template by an absolute path,
+`custom_template/release="/Users/jamesto/Library/Application Support/Godot/export_templates/4.7.2.stable/ios.zip"`:
+the 4.7.3-rc template (the A12 sampler fix) kept in the 4.7.2 directory, which
+the stock editor used by its version. The patched editor is version 4.7.3-rc
+and looks only for a `4.7.3.rc` template directory, so the preset reads the
+zip in place. On another Mac, or another account, change that one line to the
+same zip's path there; the stock editor exports the same template either way.
+
+## Checks
+
+- `tools/godot/test_bake_export.sh`: a local self-test of `bake_export.sh`
+  against a fake editor (the refusals, the `mobile` features, the stale-cache
+  clean-up, project.godot put back). It is not run by CI; run it after changing
+  `bake_export.sh`.
+- `scripts/ios_release.sh` never falls back to an unbaked build: while the
+  preset bakes, a missing `GLASSVOW_BAKE_EDITOR` stops it before the export, and
+  any failure of `bake_export.sh` (an unpinned editor, the guard's refusal, no
+  baked shader stored) stops the release.
+
 ## When to rebake or rebuild
 
 - **The floor device's iOS moves to a new major version** (a new Metal language
