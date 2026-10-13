@@ -138,12 +138,12 @@ godot --headless -s res://tests/run_all.gd -- --tests=res://tests/test_balance_i
 | change | **+12.2** | **+4.7** | **−8.7** | +2.3 | **+2.6** | **+7.7** |
 | V0 full | 69.8% (66.9–72.6) | 74.6% (71.8–77.2) | 72.6% (69.8–75.3) | 55.1% (52.0–58.2) | 63.5% (60.5–66.4) | 28.3% (25.6–31.2) |
 | change | +1.4 | +1.1 | **−5.1** | +0.9 | +0.7 | +1.5 |
-| V5 entry | 13.9% (12.5–15.5) | 41.5% (39.4–43.7) | 63.9% (61.7–65.9) | 15.0% (13.6–16.7) | 27.8% (25.8–29.8) | 7.6% (6.6–8.9) |
+| V5 entry | 14.0% (12.5–15.5) | 41.5% (39.4–43.7) | 63.8% (61.7–65.9) | 15.0% (13.6–16.7) | 27.8% (25.8–29.8) | 7.6% (6.6–8.9) |
 | change | **+5.1** | **+8.5** | **−8.4** | −0.2 | **−1.9** | **+2.3** |
 | V5 full | 38.4% (36.3–40.6) | 32.3% (30.3–34.4) | 56.4% (54.2–58.6) | 26.0% (24.1–28.0) | 34.6% (32.6–36.8) | 7.2% (6.1–8.4) |
 | change | +0.1 | **+2.9** | **−7.4** | −0.1 | +0.1 | **+1.1** |
 
-Bold: decided at 95% (paired; for A and R, the exact McNemar p below 0.05).
+Win rates and their intervals come from the grader (`balance_readout.py table`); the paired changes come from the paired comparison against A2. Bold: decided at 95% (paired; for A and R, the exact McNemar p below 0.05).
 
 ### Gates against A2 (point / interval)
 
