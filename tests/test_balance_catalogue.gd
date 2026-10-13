@@ -6,10 +6,12 @@ extends RefCounted
 ## e9c4d48f… / 5429a44a…, the content the Duskblade's 1.0 verdict binds; the
 ## 1.0 release candidate now takes rc-bar P9's route (b), content equivalence.
 ## #544 A8, Endure's first wall lane (Vitrify, `ironSkin`, in the Ashwarden's
-## `excludes.cards`), moved them from 4376691e… / 9f72ef7a….
+## `excludes.cards`), moved them from 4376691e… / 9f72ef7a…. #544 A8, Endure's
+## second wall lane (Thirsting Shard, `leechBlade`, leaves Endure's affinity),
+## moved them from abb82590… / 5adbd58a….
 
-const LIVE_FILE: String = "abb82590d4beafb6c20e76e131e998ade65ca7b3b84d255f2ba61cfecea924fd"
-const LIVE_SEMANTIC: String = "5adbd58a932bcf0d1098266152e08462e3987c1d318267b129aeb2343ba677d4"
+const LIVE_FILE: String = "3eea14297900c7f240fa0be9108279e7dc859b1cb29788e7a3cfc54d5b55aaf5"
+const LIVE_SEMANTIC: String = "0aff175e300170675c3b76ad7ee0503360a514e065e8630d55f994f07857c88f"
 
 
 static func run(fails: Array[String]) -> void:
