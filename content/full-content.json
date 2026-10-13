@@ -6207,7 +6207,10 @@
           "oblivionStrike",
           "limitBreak",
           "resonantLance",
-          "ironSkin"
+          "ironSkin",
+          "cleave",
+          "brace",
+          "cripple"
         ],
         "relics": [
           "crownOfTheEclipse",
