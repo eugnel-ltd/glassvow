@@ -2137,7 +2137,11 @@
           "kind": "status",
           "who": "target",
           "id": "poison",
-          "n": 6
+          "n": 4
+        },
+        {
+          "kind": "ember",
+          "n": 1
         }
       ],
       "up": {
@@ -2146,48 +2150,16 @@
             "kind": "status",
             "who": "target",
             "id": "poison",
-            "n": 9
+            "n": 6
+          },
+          {
+            "kind": "ember",
+            "n": 1
           }
         ],
         "text": ""
       },
       "name": "a5a_smolder_3",
-      "text": ""
-    },
-    "a5a_smolder_4": {
-      "type": "attack",
-      "rarity": "rare",
-      "cost": 2,
-      "target": "allEnemies",
-      "vfx": "fire",
-      "effects": [
-        {
-          "kind": "dmg",
-          "n": 7
-        },
-        {
-          "kind": "status",
-          "who": "allEnemies",
-          "id": "poison",
-          "n": 3
-        }
-      ],
-      "up": {
-        "effects": [
-          {
-            "kind": "dmg",
-            "n": 9
-          },
-          {
-            "kind": "status",
-            "who": "allEnemies",
-            "id": "poison",
-            "n": 4
-          }
-        ],
-        "text": ""
-      },
-      "name": "a5a_smolder_4",
       "text": ""
     }
   },
@@ -2247,8 +2219,7 @@
       "bastion",
       "frenzy",
       "virulence",
-      "emberEye",
-      "a5a_smolder_4"
+      "emberEye"
     ]
   },
   "statuses": {
@@ -6079,8 +6050,7 @@
           "ashenChoir",
           "a5a_smolder_1",
           "a5a_smolder_2",
-          "a5a_smolder_3",
-          "a5a_smolder_4"
+          "a5a_smolder_3"
         ],
         "relics": [
           "smolderingCoal"
@@ -6144,8 +6114,7 @@
             "ashenChoir": 1.0,
             "a5a_smolder_1": 1.0,
             "a5a_smolder_2": 1.0,
-            "a5a_smolder_3": 1.0,
-            "a5a_smolder_4": 1.0
+            "a5a_smolder_3": 1.0
           },
           "relics": {
             "smolderingCoal": 1.0
