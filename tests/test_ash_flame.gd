@@ -24,8 +24,9 @@ const AFFINITY: Dictionary = {
 		"deflect": 0.5, "surge": 1.0, "phantomBlades": 1.0, "offering": 1.0, "tithe": 1.0,
 		"nightSight": 1.0, "emberdance": 0.5},
 	# Vitrify (ironSkin) left Endure with A8's first lane: an excluded card carries no affinity.
+	# Thirsting Shard (leechBlade) left it with A8's second lane: clear glass, still in the pool.
 	"endure": {"smother": 0.5, "sidestep": 0.5, "deflect": 0.5, "bulwark": 1.0, "fortify": 1.0,
-		"leechBlade": 1.0, "aegis": 1.0, "bastion": 1.0, "regrowth": 1.0,
+		"aegis": 1.0, "bastion": 1.0, "regrowth": 1.0,
 		"devour": 1.0, "flawlessForm": 1.0, "emberdance": 0.5},
 }
 const RELICS: Dictionary = {
@@ -78,9 +79,9 @@ const RECOGNITION: Array = [
 		"TRUE", "crownOfTithes", ""],
 	["steady endure", [], ["bulwark", "fortify"], [], "STEADY", "crownOfTheHearth", ""],
 	["steady endure, hand fringe", [],
-		["bulwark", "fortify", "leechBlade", "aegis", "preparation"], [],
+		["bulwark", "fortify", "bastion", "aegis", "preparation"], [],
 		"STEADY", "crownOfTheHearth", "crownOfTithes"],
-	["true endure", ["firstSpark"], ["bulwark", "fortify", "leechBlade"], [],
+	["true endure", ["firstSpark"], ["bulwark", "fortify", "bastion"], [],
 		"TRUE", "crownOfTheHearth", ""],
 	["soot", [], ["venomStrike", "preparation", "bulwark"], [], "SOOT", "hollowCrown", ""],
 	# No alternates: a held crown's slot is the draw's.
