@@ -2054,7 +2054,7 @@
       "name": "Hearthfall",
       "text": "Spend 3 Embers: deal @12@ damage."
     },
-    "a5a_smolder_1": {
+    "a5a_smolder_l1": {
       "type": "attack",
       "rarity": "common",
       "cost": 1,
@@ -2063,34 +2063,36 @@
       "effects": [
         {
           "kind": "dmg",
-          "n": 5
+          "n": 4
         },
         {
           "kind": "status",
           "who": "target",
           "id": "poison",
-          "n": 3
+          "n": 3,
+          "lit": "smolder"
         }
       ],
       "up": {
         "effects": [
           {
             "kind": "dmg",
-            "n": 7
+            "n": 5
           },
           {
             "kind": "status",
             "who": "target",
             "id": "poison",
-            "n": 4
+            "n": 4,
+            "lit": "smolder"
           }
         ],
         "text": ""
       },
-      "name": "a5a_smolder_1",
+      "name": "a5a_smolder_l1",
       "text": ""
     },
-    "a5a_smolder_2": {
+    "a5a_smolder_l2": {
       "type": "skill",
       "rarity": "common",
       "cost": 1,
@@ -2098,38 +2100,40 @@
       "vfx": "poison",
       "effects": [
         {
+          "kind": "block",
+          "n": 4
+        },
+        {
           "kind": "status",
           "who": "allEnemies",
           "id": "poison",
-          "n": 2
-        },
-        {
-          "kind": "block",
-          "n": 4
+          "n": 3,
+          "lit": "smolder"
         }
       ],
       "up": {
         "effects": [
           {
+            "kind": "block",
+            "n": 6
+          },
+          {
             "kind": "status",
             "who": "allEnemies",
             "id": "poison",
-            "n": 3
-          },
-          {
-            "kind": "block",
-            "n": 6
+            "n": 4,
+            "lit": "smolder"
           }
         ],
         "text": ""
       },
-      "name": "a5a_smolder_2",
+      "name": "a5a_smolder_l2",
       "text": ""
     },
-    "a5a_smolder_3": {
+    "a5a_smolder_l3": {
       "type": "skill",
       "rarity": "uncommon",
-      "cost": 1,
+      "cost": 0,
       "target": "enemy",
       "vfx": "poison",
       "effects": [
@@ -2137,11 +2141,8 @@
           "kind": "status",
           "who": "target",
           "id": "poison",
-          "n": 4
-        },
-        {
-          "kind": "ember",
-          "n": 1
+          "n": 4,
+          "lit": "smolder"
         }
       ],
       "up": {
@@ -2150,16 +2151,13 @@
             "kind": "status",
             "who": "target",
             "id": "poison",
-            "n": 6
-          },
-          {
-            "kind": "ember",
-            "n": 1
+            "n": 6,
+            "lit": "smolder"
           }
         ],
         "text": ""
       },
-      "name": "a5a_smolder_3",
+      "name": "a5a_smolder_l3",
       "text": ""
     }
   },
@@ -2180,8 +2178,8 @@
       "dimTheGlass",
       "spall",
       "hearthfall",
-      "a5a_smolder_1",
-      "a5a_smolder_2"
+      "a5a_smolder_l1",
+      "a5a_smolder_l2"
     ],
     "uncommon": [
       "leechBlade",
@@ -2204,7 +2202,7 @@
       "cleft",
       "eclipseStep",
       "tremor",
-      "a5a_smolder_3"
+      "a5a_smolder_l3"
     ],
     "rare": [
       "oblivionStrike",
@@ -6048,9 +6046,9 @@
           "catalyst",
           "virulence",
           "ashenChoir",
-          "a5a_smolder_1",
-          "a5a_smolder_2",
-          "a5a_smolder_3"
+          "a5a_smolder_l1",
+          "a5a_smolder_l2",
+          "a5a_smolder_l3"
         ],
         "relics": [
           "smolderingCoal"
@@ -6112,9 +6110,9 @@
             "catalyst": 1.0,
             "virulence": 1.0,
             "ashenChoir": 1.0,
-            "a5a_smolder_1": 1.0,
-            "a5a_smolder_2": 1.0,
-            "a5a_smolder_3": 1.0
+            "a5a_smolder_l1": 1.0,
+            "a5a_smolder_l2": 1.0,
+            "a5a_smolder_l3": 1.0
           },
           "relics": {
             "smolderingCoal": 1.0
