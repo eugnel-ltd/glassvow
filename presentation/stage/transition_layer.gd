@@ -118,6 +118,14 @@ void fragment() {
 ## frame (a long frame) cannot spend the fade before it is seen, so a fade of
 ## REDUCED_FADE always takes at least nine drawn frames at 60 fps.
 const FADE_STEP_MAX: float = 1.0 / 60.0
+## The most a full-motion reveal (the wipe, the iris, the flood's clearing and
+## a screen's entrance) moves in one frame after a quiet one. The reveal is
+## built behind a cover on a frame that can run 150 ms and more, and the engine
+## hands the next frame that whole stretch as its delta; a tween left to spend
+## it would jump about half its length before it was seen. A frame may run up
+## to twice as long as the step before it (`_advance_paced`), so a device that
+## is steadily slow loses no time, and only a spike is held.
+const REVEAL_STEP_MAX: float = 1.0 / 30.0
 ## A route-form screen lifted off the title rebuilt beneath it (X2, V9).
 const LIFT_TIME: float = 0.30
 ## A frame's colour formats and their sRGB views (`_capture`).
@@ -147,6 +155,9 @@ var _grain: ColorRect
 var _grain_mat: ShaderMaterial
 var _grain_t: float = 0.0
 var _wipe_tween: Tween = null
+## The full-motion reveal tweens on this layer's own clock (`_pace`).
+var _paced: Array[Tween] = []
+var _reveal_step: float = 0.0
 ## The transit-slot guard, `navigation.js`'s `transitionSeq`: a later leaf
 ## takes the slot and an earlier one's finish must not hide it.
 var _transit_seq: int = 0
@@ -282,6 +293,7 @@ func _init() -> void:
 
 
 func _process(delta: float) -> void:
+	_advance_paced(delta)
 	if not _fades.is_empty():
 		advance_fades(delta)
 	if not _lifts.is_empty():
@@ -298,6 +310,21 @@ func _process(delta: float) -> void:
 	_grain_t += delta
 	var step: int = int(_grain_t / GRAIN_STEP) % GRAIN_JUMPS.size()
 	_grain_mat.set_shader_parameter("jitter", GRAIN_JUMPS[step])
+
+
+## Puts `tween` on this layer's clock: paused to the scene tree, then stepped
+## each frame by `_advance_paced`.
+func _pace(tween: Tween) -> Tween:
+	tween.pause()
+	_paced.append(tween)
+	return tween
+
+
+func _advance_paced(delta: float) -> void:
+	_reveal_step = minf(delta, maxf(REVEAL_STEP_MAX, _reveal_step * 2.0))
+	for tween: Tween in _paced.duplicate():
+		if not tween.is_valid() or not tween.custom_step(_reveal_step):
+			_paced.erase(tween)
 
 
 ## The band-of-light sweep. Fire-and-forget: main calls it BEFORE the route
@@ -318,7 +345,7 @@ func wipe() -> void:
 	_wipe.visible = true
 	if _wipe_tween != null:
 		_wipe_tween.kill()
-	_wipe_tween = Motion.bez(self, _place_wipe.bind(stage.x), WIPE_TIME, Motion.WIPE)
+	_wipe_tween = _pace(Motion.bez(self, _place_wipe.bind(stage.x), WIPE_TIME, Motion.WIPE))
 	_wipe_tween.finished.connect(_hide_wipe, CONNECT_ONE_SHOT)
 
 
@@ -376,7 +403,7 @@ func screen_in(root: Control) -> void:
 		root.modulate.a = eased
 		if sized:
 			root.scale = Vector2.ONE * lerpf(SCREEN_IN_SCALE, 1.0, eased)
-	Motion.bez(root, entrance, SCREEN_IN_TIME, Motion.SCREEN_IN)
+	_pace(Motion.bez(root, entrance, SCREEN_IN_TIME, Motion.SCREEN_IN))
 
 
 ## Reduce Motion's form of every change of screen (docs/design/2026-10-03-title-
@@ -593,7 +620,7 @@ func iris(at: Vector2) -> void:
 	var full: float = stage.length() * IRIS_SPAN
 	_iris_mat.set_shader_parameter("radius", full)
 	_iris.visible = true
-	var tw: Tween = Motion.bez(self, _shrink_iris.bind(full), IRIS_TIME, Motion.TRANSIT)
+	var tw: Tween = _pace(Motion.bez(self, _shrink_iris.bind(full), IRIS_TIME, Motion.TRANSIT))
 	tw.finished.connect(_end_transit.bind(_transit_seq), CONNECT_ONE_SHOT)
 
 
@@ -702,6 +729,7 @@ func flood(at: Vector2, colour: Color, on_covered: Callable) -> void:
 	if reduced:
 		_flood_tween.tween_property(_flood, "modulate:a", 1.0, LeadlightMotion.REDUCED_FADE)
 	else:
+		_pace(_flood_tween)
 		_flood_tween.tween_method(func(r: float) -> void:
 			_flood_mat.set_shader_parameter("radius", r), 0.0, full, IRIS_TIME) \
 			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)

@@ -264,5 +264,11 @@ static func _boot(tree: SceneTree, host: SubViewport) -> Main:
 	main._show_title()
 	# The title's own entrance lands before anything is asked of it.
 	await tree.create_timer(TransitionLayer.SCREEN_IN_TIME + 0.1).timeout
+	# A loaded machine draws fewer frames in that time, and an entrance moves at
+	# most REVEAL_STEP_MAX a frame after a quiet one: wait for it to land.
+	for waited: int in 600:
+		if main._choice_screen == null or main._choice_screen.modulate.a >= 1.0:
+			break
+		await tree.process_frame
 	await tree.process_frame
 	return main
