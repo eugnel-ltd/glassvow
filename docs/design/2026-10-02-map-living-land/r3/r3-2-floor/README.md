@@ -184,7 +184,7 @@ The pilgrim casts no live shadow and stands on its blob
 - **Map waiting on the land**: inline, keeping `landscape_pending` true
   (`presentation/map/map_scene.gd:1163 (in _bind_journey)`, `presentation/map/map_scene.gd:610 (in _process)`).
 - **Journey prefetch under the title**: as its own `BAKING` step, paced to a
-  tile a frame (`presentation/map/map_journey_prefetch.gd:232 (in _advance)`).
+  tile a frame (`presentation/map/map_journey_prefetch.gd:254 (in _advance)`).
 
 **The warm-up**: `FloorWarm` draws a sample of every pipeline the bake and the
 floor use, before the title's first frame shows, behind the launch screen
