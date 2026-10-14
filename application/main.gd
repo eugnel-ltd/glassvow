@@ -4018,7 +4018,9 @@ func _on_boss_relic_chosen(id: String) -> void:
 			var icon_path: String = "res://assets/art/omens/%s.png" % omen_id
 			if ResourceLoader.exists(icon_path):
 				omen_icon = load(icon_path) as Texture2D
-		_transitions.act_plate(act_name, omen_name, omen_tone, omen_icon)
+		# A frame later: the map's first open fills this frame (#660 II.3).
+		get_tree().process_frame.connect(func() -> void:
+			_transitions.act_plate(act_name, omen_name, omen_tone, omen_icon), CONNECT_ONE_SHOT)
 	else:
 		game.run.pending_scene = null
 		_show_save_error("ui.persistence.detail.nextActHold")
