@@ -67,13 +67,13 @@ var _layout_taken: bool = false
 var _first_frame_gone: bool = false
 
 
-## Starts a prefetch of `map`'s land for `run` when its act is the journey act
-## and nothing is already prefetched or prefetching for the same layout. For
-## any other act the journey land is let go (`release`): it is never drawn
-## there. A finished prefetch whose kept land has since been freed holds
-## nothing any more, so it is started again.
+## Starts a prefetch of `map`'s land for `run` when its act has a journey row
+## (`MapJourneyProfile`) that warms, and nothing is already prefetched or
+## prefetching for the same layout. For any other act the journey land is let
+## go (`release`): it is never drawn there. A finished prefetch whose kept land
+## has since been freed holds nothing any more, so it is started again.
 static func start(map: WorldMap, run: RunState) -> void:
-	if map == null or run == null or run.act != 0:
+	if map == null or run == null or not MapJourneyProfile.warms(run.act):
 		release()
 		return
 	var bound: Dictionary = MapLayoutInputBinding.bind(map, run.act)
@@ -279,7 +279,7 @@ func _take(assets: MapLandscapeAssets) -> bool:
 	_assets = assets
 	_bundle = assets.bundle()
 	_heroes = MapScene.hero_contract(assets.registry, assets.profiles,
-		MapLandscapeAssets.GATES[_act], "vigil" if _act == 0 else "")
+		MapJourneyProfile.gate_id(_act), MapJourneyProfile.threshold_id(_act))
 	_quality = WorldMapScreen.quality_registry()
 	return not (_bundle.is_empty() or _heroes.is_empty() or _quality.is_empty())
 

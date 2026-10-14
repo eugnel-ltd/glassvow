@@ -63,7 +63,7 @@ func light_up() -> void:
 	key = DirectionalLight3D.new()
 	key.name = "Floor bake key"
 	environment = Environment.new()
-	MapJourneyLandscape.light(key, environment)
+	MapJourneyProfile.light(MapJourneyProfile.FIRST_ACT, key, environment)
 	environment.background_color = Color.BLACK
 	environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	environment.tonemap_exposure = EXPOSURE
