@@ -87,6 +87,7 @@ Stop and surface a concrete blocker instead of weakening acceptance when work re
 
 - AI-SDLC, research promotion, CI scopes, autonomy, evidence, and metrics: `docs/agents/ai-sdlc.md`
 - Independent semantic review: `.claude/agents/ai-sdlc-reviewer.md`
+- Orchestrating lanes, reviews, merges, housekeeping: `.claude/skills/glassvow-orchestrator/SKILL.md`
 - Godot engine, architecture, saves, editing, and visual proof: `.claude/skills/glassvow-godot/SKILL.md`
 - Domain vocabulary lookup: `docs/agents/domain.md`
 - Issue ownership and research/delivery tracking: `docs/agents/issue-tracker.md`
