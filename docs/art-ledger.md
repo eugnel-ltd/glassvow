@@ -789,6 +789,58 @@ new picture and no new pass. Every choice is a value:
 
 Evidence: `docs/design/2026-10-02-map-living-land/r3/r3-6-light/README.md`.
 
+### `backs/vault.png`, `backs/rose.png`, `backs/eclipse.png` — 304×432 RGB — card backs, owner pick
+
+The three card backs in `content/card-backs.json` (#657 PR 8). Each painting is
+the whole face of the back: opaque, cut to the card's 152:216, at the 2×
+oversample the bake draws it at. The back's surface recipe still applies on
+top: aurora for the Lancet, prism for Vesper, gilt for Eclipse. Until this
+landed, Vault wore the pile painting `piles/draw.png`, which the reward screens
+still use, and Rose and Eclipse were procedural shaders, now removed.
+
+The paintings are the base only: no gloss, foil or sheen is baked into them.
+The finish is the back's `surface` recipe (`CardSurface.RECIPES` in
+`presentation/combat/card_surface.gd`), so a new finish, such as a hologram, is
+a recipe for the back to name, not a repaint.
+
+**James picked these on 2026-10-14 (10:23):** the Lancet **B**, Vesper **A**,
+Eclipse **C**, from three candidates per back. The unpicked candidates and the
+contact sheets stay in the lane folder and are not committed.
+
+| Path | Back | Candidate | Subject |
+|---|---|---|---|
+| `backs/vault.png` | The Lancet (長窗), the default | B | Three lancets as in a gothic chancel: a tall centre lancet between two shorter ones, sapphire and teal glass, a quatrefoil roundel above and a mirrored one below |
+| `backs/rose.png` | Vesper (晚禱), the first shard | A | A twelve-petal rose window in crimson, violet and cobalt round an ember-orange shard, on indigo diamond quarries, with gold roundels above and below |
+| `backs/eclipse.png` | Eclipse (日蝕), the first dawn | C | Rotational, like a playing card: a black sun with a gold corona, and fans of gold and rose rays pointing up and down; sunburst medallions in the four corners |
+
+The prompt clauses shared by all three were these. "Portrait 1024x1536, opaque,
+full-bleed rectangle (the image IS the card face edge to edge …) … a continuous
+leaded border band inset about 72 px from the left and right edges and about
+112 px from the top and bottom edges … Strongly symmetric … so it reads face-down
+in a pile at about 60x85 px. One bold central silhouette, 3-5 large jewel-tone
+glass colour masses, few thick dark lead cames, matte painterly glass texture,
+soft inner glow. No text … Serious cartoon-gothic stained glass (leadlight) game
+art: chunky dark lead lines (#04050b), jewel glass, warm amber rim light, night
+palette (void #05070e, ink #0b0e1a, gold #f2c14e, dim gold #9c7c34, ember orange,
+cold glass blue)." Each prompt then named its back and palette: the Lancet in
+cool night blue with one small warm accent; Vesper in dusk violet, indigo and
+rose-crimson with ember at the heart; Eclipse with gold dominant, for the gilt
+finish. The subject column above is each pick's own clause.
+
+All candidates were generated on 2026-10-14 by the `image-gen` agent, which
+runs the Codex built-in image tool and falls back to Cursor. One batch logged
+`FALLBACK: codex rate-limited -> cursor imagegen`, and the run did not record
+which candidate that applied to. The originals are 1024×1536 RGB.
+
+The crop script is `docs/design/2026-10-03-cards-real-objects/proof/pr8/land.py.txt`.
+For each pick it takes the full-width 152:216 cut, centres it on the picture's
+own gold border (not on the canvas), and resizes it with Lanczos to 304×432.
+The same folder, `docs/design/2026-10-03-cards-real-objects/proof/pr8/`, holds
+the stills, and its README gives the border measures. The import settings are
+the same as `piles/draw.png`'s (lossless, no mipmaps). Imported sizes are 171,
+195 and 208 KiB. To re-pick, swap a row of `PICKS` in the crop script and re-run
+it.
+
 ## Rejection note — what "technically shippable" means
 
 Judging generated character art by eye is not enough; two of the five
