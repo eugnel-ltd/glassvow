@@ -1,0 +1,34 @@
+main pad-landscape en lean: exit 0 0 shader errors, 0 script errors
+main pad-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+main pad-landscape en full: exit 0 0 shader errors, 0 script errors
+main phone-landscape en lean: exit 0 0 shader errors, 0 script errors
+main phone-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+main phone-landscape en full: exit 0 0 shader errors, 0 script errors
+main desktop-landscape en lean: exit 0 0 shader errors, 0 script errors
+main desktop-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+main desktop-landscape en full: exit 0 0 shader errors, 0 script errors
+main pad river close: exit 0 0 shader errors, 0 script errors
+main pad whole: exit 0 0 shader errors, 0 script errors
+main reduce motion on: exit 0 0 shader errors, 0 script errors
+main reduce motion on changed px 24371
+main reduce motion off: exit 0 0 shader errors, 0 script errors
+main reduce motion off changed px 125059
+main all logs: shader errors 0, script errors 0, other ERROR lines 0
+dev pad-landscape en lean: exit 0 0 shader errors, 0 script errors
+dev pad-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+dev pad-landscape en full: exit 0 0 shader errors, 0 script errors
+dev phone-landscape en lean: exit 0 0 shader errors, 0 script errors
+dev phone-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+dev phone-landscape en full: exit 0 0 shader errors, 0 script errors
+dev desktop-landscape en lean: exit 0 0 shader errors, 0 script errors
+dev desktop-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+dev desktop-landscape en full: exit 0 0 shader errors, 0 script errors
+dev pad river close: exit 0 0 shader errors, 0 script errors
+dev pad whole: exit 0 0 shader errors, 0 script errors
+dev reduce motion on: exit 0 0 shader errors, 0 script errors
+dev reduce motion on changed px 23365
+dev reduce motion off: exit 0 0 shader errors, 0 script errors
+dev reduce motion off changed px 132971
+dev all logs: shader errors 0, script errors 0, other ERROR lines 0
+
+[exited with code 0]

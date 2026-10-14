@@ -1,0 +1,7 @@
+Peak physical footprint of the QA app (process "glassvow", the launch pid), Activity Monitor, 140 s from 3 s after a boot launch; only recordings that ran their whole time limit.
+
+batchB1 dev1-l2 (4a95dbd5): samples 135 peak 591.8 MiB last 591.3 MiB
+batchB1 dev2-l3 (4a95dbd5): samples 135 peak 596.9 MiB last 593.2 MiB
+batchB2 ctl1-l1 (774c5932): samples 135 peak 596.6 MiB last 592.4 MiB
+
+Every other recording was cut short by the device (devicectl tunnel) and holds one sample or none.

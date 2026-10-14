@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+"""Lane R3.5 (scratch): batch W1's table. Rest holds, Journey video memory, memory warnings."""
+import json, glob, os, sys
+out = sys.argv[1]
+rows = {}
+for p in sorted(glob.glob(f'{out}/*.jsonl')):
+    if '.wrong.' in p: continue
+    label = os.path.basename(p)[:-6]
+    rows[label] = [json.loads(l) for l in open(p)]
+print("label build | holds (view/mode: missed, max ms) | Journey cadence video MiB | warnings")
+worst = 0; missed = 0; warn = 0
+vram = {'ctl': [], 'dev': []}
+for label, rs in rows.items():
+    build = next((r['build'] for r in rs if r.get('probe') == 'start'), '?')
+    view = 'default'; holds = []; jv = None
+    for r in rs:
+        if r.get('probe') == 'view': view = r['view']
+        if r.get('probe') == 'hold_start' and view == 'journey' and r['mode'] == 'cadence': jv = r['video_mib']
+        if r.get('probe') == 'hold_end':
+            holds.append(f"{r['view'][:3]}/{r['mode'][:3]}:{r['missed']},{r['max_ms']}")
+            worst = max(worst, r['max_ms']); missed += r['missed']
+    w = [r for r in rs if r.get('probe') == 'memory_warning']; warn += len(w)
+    if jv is not None: vram[label[:3]].append((label, jv))
+    print(f"{label} {build} | {' '.join(holds)} | {jv} | {len(w)}")
+print(f"\nall holds: missed {missed}, worst frame {worst} ms; memory warnings {warn}")
+for b in ('ctl', 'dev'):
+    print(b, 'Journey cadence video MiB:', ', '.join(f'{l}={v}' for l, v in vram[b]))
