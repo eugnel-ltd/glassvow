@@ -74,6 +74,7 @@ static func deck_coverage(routes: Node3D) -> Dictionary:
 	var samples: int = 0
 	var missing: int = 0
 	var worst: float = 0.0
+	var worst_at: Array = []
 	var failures: Array = []
 	var sampled: Dictionary = routes.sampled_routes
 	for key: String in sampled:
@@ -96,8 +97,11 @@ static func deck_coverage(routes: Node3D) -> Dictionary:
 				var error: float = INF
 				for height: float in found:
 					error = minf(error, absf(height - p.y - .022))
-				worst = maxf(worst, error)
-	return {"samples": samples, "missing": missing, "first_failures": failures, "worst_height": worst}
+				if error > worst:
+					worst = error
+					worst_at = [key, at, lateral]
+	return {"samples": samples, "missing": missing, "first_failures": failures, "worst_height": worst,
+		"worst_at": worst_at}
 
 
 ## Obstruction: no added masonry (edges, parapets, piers) stands in a walking

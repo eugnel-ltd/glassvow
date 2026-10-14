@@ -17,6 +17,12 @@ const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 const SEEDS: Array[int] = [1, 4, 42, 717, 17634]
 const SHAPES: Array[StringName] = [&"phone-landscape", &"pad-landscape", &"desktop-landscape"]
 const ACT: int = 1
+## How far the rendered deck may stand from a route's own sampled height (the
+## flights' fitted grade, the treads' risers and the blend across a bend's
+## outer edge: 0.33 to 0.89 m on these seeds; the archive measured 0.48 m).
+## Under half the 2.12 m that keeps stacked decks apart, so a deck of another
+## level never counts as cover.
+const DECK_TOLERANCE: float = 1.0
 
 
 static func _check(fails: Array[String], ok: bool, what: String) -> void:
@@ -120,8 +126,9 @@ static func _decks(fails: Array[String], routes: Node3D, seed_value: int) -> voi
 	_check(fails, routes.sampled_routes.size() == routes.lines.size() and routes.fields.size() == 2,
 		"seed %d: every route is drawn, ordinary and raised decks apart" % seed_value)
 	var coverage: Dictionary = Probes.deck_coverage(routes)
-	_check(fails, int(coverage["samples"]) > 10000 and int(coverage["missing"]) == 0,
-		"seed %d: a deck covers every route (%s)" % [seed_value, JSON.stringify(coverage)])
+	_check(fails, int(coverage["samples"]) > 10000 and int(coverage["missing"]) == 0
+			and float(coverage["worst_height"]) < DECK_TOLERANCE,
+		"seed %d: a deck covers every route at its own height (%s)" % [seed_value, JSON.stringify(coverage)])
 	var blocked: Dictionary = Probes.obstruction(routes)
 	_check(fails, int(blocked["samples"]) > 10000 and int(blocked["hits"]) == 0,
 		"seed %d: no added masonry stands in a walking corridor (%s)" % [seed_value, JSON.stringify(blocked)])
@@ -301,8 +308,8 @@ static func _paced(fails: Array[String], content: ContentDB) -> void:
 				"a causeway build given up ends as stopped")
 		else:
 			_check(fails, land.is_built() and land.failure.is_empty() and land.journey != null
-					and int(land.timings_ms.get("total", -1)) >= 0,
-				"the causeways build paced on a worker: %s" % land.failure)
+					and int(land.timings_ms.get("total", -1)) >= 0 and pacing.pauses > 0,
+				"the causeways build paced on a worker, pausing for frames (%d): %s" % [pacing.pauses, land.failure])
 		land.free()
 	screen.get_parent().remove_child(screen)
 	screen.free()

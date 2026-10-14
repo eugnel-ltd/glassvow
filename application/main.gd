@@ -388,7 +388,12 @@ func _ready() -> void:
 			_forced_act_index = forced["act_index"]
 		elif arg.begins_with(MapJourneyProfile.DEV_FLAG):
 			# A journey land players cannot reach yet (`--journey-act=2`), for
-			# captures only; refused before anything routes, as `--act=` is.
+			# captures only, and only where the development tools are: a
+			# release build ignores it whatever its launch arguments say. A
+			# wrong act is refused before anything routes, as `--act=` is.
+			if not DevTools.available():
+				push_warning("%s needs the development tools; ignored" % MapJourneyProfile.DEV_FLAG)
+				continue
 			var refused: String = MapJourneyProfile.enable_dev(arg.trim_prefix(MapJourneyProfile.DEV_FLAG))
 			if not refused.is_empty():
 				push_error(refused)
