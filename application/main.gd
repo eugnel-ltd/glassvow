@@ -442,7 +442,7 @@ func _ready() -> void:
 			# (#312): --finale-form=step | hold. Dev capture only.
 			FinaleStaging.form = StringName(arg.trim_prefix("--finale-form="))
 		elif arg in ["--enemies", "--chips", "--hud", "--reward", "--layout",
-				"--stagecraft", "--flame"]:
+				"--stagecraft", "--flame", "--holo"]:
 			lab_flag = arg
 	if performance_probe and (fight.is_empty() or not shot_path.is_empty()
 			or cards_lab or studio or turns or not lab_flag.is_empty()):
@@ -563,6 +563,8 @@ func _ready() -> void:
 		"--stagecraft": lab = StagecraftLab.new(content)
 		# #577 step 1: the lantern flame spike. A lab over the HUD, no run.
 		"--flame": lab = FlameLab.new()
+		# Research (#657 holo, never shipped): the hologram candidates.
+		"--holo": lab = HoloLab.new(content)
 	if lab != null:
 		add_child(lab)
 		if shot_path != "":

@@ -311,6 +311,8 @@ var _retired: bool = false
 ## a turn needs of the slab: its thickness and its side band's colour.
 var _display: Control = null
 var _shine: Control = null
+## Research (#657 holo, never shipped): a canvas holo over the picture.
+var _holo: ShaderMaterial = null
 var _thick: float = 0.0
 var _side: Color = Color.BLACK
 ## TURNING OVER (`turn`): the pose the card is laid at, the share of it the
@@ -1508,9 +1510,9 @@ func turn(yaw: float, pitch: float, live: bool) -> void:
 		CardTurn.set_back(_warp, back)
 		_display.material = _warp
 	else:
-		_display.material = null
+		_display.material = _holo
 	if _shine != null:
-		_shine.visible = not turned
+		_shine.visible = not turned and _holo == null
 	_shadow.pivot_offset = size * 0.5
 	_shadow.scale = CardTurn.footprint(_pose)
 	var was: Transform3D = _slab.transform
@@ -1518,6 +1520,16 @@ func turn(yaw: float, pitch: float, live: bool) -> void:
 	# A held or settling card's stage already renders every frame.
 	if not _slab.transform.is_equal_approx(was) and not _hovered and not is_processing():
 		_draw_stage_once()
+
+
+## Research (#657 holo): wear `mat` over the picture while the card is not
+## picture-turning; the rare's gilt shine steps aside for it.
+func set_holo(mat: ShaderMaterial) -> void:
+	_holo = mat
+	if not _picturing():
+		_display.material = mat
+	if _shine != null:
+		_shine.visible = mat == null
 
 
 ## Whether the picture turn is on: the card's picture wears the warp.
