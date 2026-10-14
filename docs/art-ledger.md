@@ -832,12 +832,14 @@ runs the Codex built-in image tool and falls back to Cursor. One batch logged
 `FALLBACK: codex rate-limited -> cursor imagegen`, and the run did not record
 which candidate that applied to. The originals are 1024×1536 RGB.
 
-Landing: `docs/design/2026-10-03-cards-real-objects/proof/pr8/land.py.txt` takes
-the full-width 152:216 cut, centres it on the picture's own gold border (not on
-the canvas), and resizes it with Lanczos to 304×432. Its border measures and the
-stills are in that folder's README. The import settings are the same as
-`piles/draw.png`'s (lossless, no mipmaps). Imported sizes are 171, 195 and 208 KiB.
-To re-pick, swap a row of `PICKS` in that script and re-run it.
+The crop script is `docs/design/2026-10-03-cards-real-objects/proof/pr8/land.py.txt`.
+For each pick it takes the full-width 152:216 cut, centres it on the picture's
+own gold border (not on the canvas), and resizes it with Lanczos to 304×432.
+The same folder, `docs/design/2026-10-03-cards-real-objects/proof/pr8/`, holds
+the stills, and its README gives the border measures. The import settings are
+the same as `piles/draw.png`'s (lossless, no mipmaps). Imported sizes are 171,
+195 and 208 KiB. To re-pick, swap a row of `PICKS` in the crop script and re-run
+it.
 
 ## Rejection note — what "technically shippable" means
 
