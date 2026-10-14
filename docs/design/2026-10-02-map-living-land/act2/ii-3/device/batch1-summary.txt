@@ -1,0 +1,84 @@
+== ctl1-l1 6ee88a9b
+  boot: worst 450.0 ms, elapsed 4585.5 ms, vram 0.0->295.5->292.1
+  transition: dwell 8.0 s, prefetch done -1.0 ms (step -1), worst 75.0 ms, slow [[75.0, 75.0]], vram 292.1->326.1->326.1
+  open next_act: call 531.1 first 3837.9 ready 3837.9 worst 3837.9 slow [[3838.0, 3837.9]] vram 326.1->326.1->326.1
+  hold journey/cadence: missed 0 max 17.62 p95 17.01 | video 274.2 MiB, draws 31
+  hold journey/live: missed 0 max 17.55 p95 17.16 | video 274.2 MiB, draws 31
+  hold close/cadence: missed 0 max 18.08 p95 17.39 | video 274.2 MiB, draws 31
+  hold close/live: missed 0 max 18.34 p95 17.31 | video 274.2 MiB, draws 31
+  hold whole/cadence: missed 0 max 18.15 p95 17.35 | video 274.2 MiB, draws 31
+  hold whole/live: missed 0 max 17.85 p95 17.31 | video 274.2 MiB, draws 31
+  footprint: samples 1 peak 305.1 MiB last 305.1 MiB
+== ctl1-l2 6ee88a9b
+  boot: worst 216.7 ms, elapsed 2929.5 ms, vram 0.0->301.8->298.0
+  open cold: call 672.8 first 690.6 ready 3232.1 worst 690.6 slow [[691.0, 690.6], [3149.0, 81.0]] vram 202.5->327.8->317.8
+  open reopen: call 42.3 first 62.8 ready 62.8 worst 62.8 slow [[63.0, 62.8]] vram 298.0->298.0->298.0
+  open reopen: call 29.1 first 46.6 ready 46.6 worst 46.6 slow [] vram 298.7->298.7->298.7
+  warm: worst 49.4 ms, elapsed 6121.1 ms, vram 202.5->302.1->292.1
+  open warmed: call 78.3 first 97.9 ready 97.9 worst 97.9 slow [[98.0, 97.9]] vram 292.1->292.1->292.1
+  transition: dwell 2.0 s, prefetch done -1.0 ms (step -1), worst 61.7 ms, slow [[62.0, 61.7]], vram 298.2->332.3->332.3
+  open next_act: call 517.5 first 556.8 ready 556.8 worst 556.8 slow [[557.0, 556.8]] vram 332.3->332.3->332.3
+  hold journey/cadence: missed 0 max 17.55 p95 17.04 | video 280.4 MiB, draws 31
+== ctl2-l1 6ee88a9b
+  boot: worst 116.8 ms, elapsed 2591.2 ms, vram 0.0->301.8->298.0
+  transition: dwell 8.0 s, prefetch done -1.0 ms (step -1), worst 60.0 ms, slow [[60.0, 60.0]], vram 298.0->332.2->332.2
+  open next_act: call 543.5 first 608.0 ready 608.0 worst 608.0 slow [[608.0, 608.0]] vram 332.2->332.2->332.2
+  hold journey/cadence: missed 0 max 17.52 p95 16.89 | video 280.3 MiB, draws 31
+  hold journey/live: missed 0 max 20.08 p95 17.32 | video 280.3 MiB, draws 31
+  hold close/cadence: missed 0 max 20.9 p95 17.46 | video 280.3 MiB, draws 31
+  hold close/live: missed 0 max 20.12 p95 17.4 | video 280.3 MiB, draws 31
+  hold whole/cadence: missed 0 max 18.92 p95 17.2 | video 280.3 MiB, draws 31
+  hold whole/live: missed 0 max 20.26 p95 17.29 | video 280.3 MiB, draws 31
+  footprint: 
+== ctl2-l2 6ee88a9b
+  boot: worst 133.3 ms, elapsed 2470.4 ms, vram 0.0->287.9->284.2
+  open cold: call 683.9 first 702.0 ready 2824.8 worst 702.0 slow [[702.0, 702.0], [2765.0, 66.7]] vram 188.5->313.9->303.9
+  open reopen: call 24.2 first 41.9 ready 41.9 worst 41.9 slow [] vram 284.2->284.2->284.2
+  open reopen: call 24.5 first 42.2 ready 42.2 worst 42.2 slow [] vram 284.8->284.8->284.8
+  warm: worst 50.0 ms, elapsed 5705.7 ms, vram 188.5->302.1->292.1
+  open warmed: call 72.5 first 94.5 ready 94.5 worst 94.5 slow [[95.0, 94.5]] vram 292.1->292.1->292.1
+  transition: dwell 2.0 s, prefetch done -1.0 ms (step -1), worst 48.2 ms, slow [], vram 298.2->332.3->332.3
+  open next_act: call 510.3 first 551.7 ready 551.7 worst 551.7 slow [[552.0, 551.7]] vram 332.3->332.3->332.3
+  hold journey/cadence: missed 0 max 17.25 p95 16.93 | video 280.3 MiB, draws 31
+== dev1-l1 5cf7f02e
+  boot: worst 133.4 ms, elapsed 2619.8 ms, vram 0.0->309.8->306.0
+  transition: dwell 8.0 s, prefetch done 4865.7 ms (step 5), worst 99.0 ms, slow [[99.0, 99.0]], vram 306.0->371.5->370.6
+  open next_act: call 119.6 first 156.2 ready 156.2 worst 156.2 slow [[156.0, 156.2]] vram 370.6->370.6->370.6
+  hold journey/cadence: missed 0 max 23.69 p95 22.5 | video 306.4 MiB, draws 79
+  hold journey/live: missed 0 max 21.9 p95 18.01 | video 306.4 MiB, draws 79
+  hold close/cadence: missed 0 max 22.66 p95 21.47 | video 306.4 MiB, draws 41
+  hold close/live: missed 0 max 21.21 p95 17.74 | video 306.4 MiB, draws 41
+  hold whole/cadence: missed 10 max 37.2 p95 24.23 | video 306.4 MiB, draws 151
+  hold whole/live: missed 0 max 22.71 p95 19.62 | video 306.4 MiB, draws 151
+  footprint: 
+== dev1-l2 5cf7f02e
+  boot: worst 67.6 ms, elapsed 2309.5 ms, vram 0.0->295.9->292.2
+  open cold: call 723.3 first 738.2 ready 2818.4 worst 738.2 slow [[738.0, 738.2], [2749.0, 66.6]] vram 185.9->322.1->312.1
+  open reopen: call 24.5 first 42.2 ready 42.2 worst 42.2 slow [] vram 292.4->292.4->292.4
+  open reopen: call 23.6 first 40.3 ready 40.3 worst 40.3 slow [] vram 292.8->292.8->292.8
+  warm: worst 50.3 ms, elapsed 5723.1 ms, vram 186.1->296.2->286.2
+  open warmed: call 88.1 first 107.7 ready 107.7 worst 107.7 slow [[108.0, 107.7]] vram 286.2->286.2->286.2
+  transition: dwell 2.0 s, prefetch done -1.0 ms (step 3), worst 65.0 ms, slow [[65.0, 65.0]], vram 292.3->330.1->330.1
+  open next_act: call 74.0 first 108.4 ready 1999.2 worst 108.4 slow [[108.0, 108.4]] vram 330.1->374.6->293.0
+  hold journey/cadence: missed 0 max 18.0 p95 17.09 | video 291.9 MiB, draws 79
+== dev2-l1 5cf7f02e
+  boot: worst 103.6 ms, elapsed 2418.4 ms, vram 0.0->309.8->306.0
+  transition: dwell 8.0 s, prefetch done 4798.8 ms (step 5), worst 50.5 ms, slow [[50.0, 50.5]], vram 306.0->371.5->370.6
+  open next_act: call 120.1 first 162.7 ready 162.7 worst 162.7 slow [[163.0, 162.7]] vram 370.6->370.6->370.6
+  hold journey/cadence: missed 0 max 23.11 p95 22.3 | video 306.0 MiB, draws 79
+  hold journey/live: missed 0 max 22.36 p95 17.74 | video 306.0 MiB, draws 79
+  hold close/cadence: missed 0 max 22.14 p95 21.54 | video 306.0 MiB, draws 41
+  hold close/live: missed 0 max 21.8 p95 17.8 | video 306.0 MiB, draws 41
+  hold whole/cadence: missed 29 max 37.62 p95 24.98 | video 306.0 MiB, draws 151
+  hold whole/live: missed 0 max 22.08 p95 19.08 | video 306.0 MiB, draws 151
+  footprint: 
+== dev2-l2 5cf7f02e
+  boot: worst 81.9 ms, elapsed 2392.7 ms, vram 0.0->301.8->298.0
+  open cold: call 703.5 first 718.8 ready 2830.5 worst 718.8 slow [[719.0, 718.8], [2747.0, 66.6]] vram 191.8->336.0->326.0
+  open reopen: call 28.6 first 46.8 ready 46.8 worst 46.8 slow [] vram 306.3->306.3->306.3
+  open reopen: call 25.3 first 42.2 ready 42.2 worst 42.2 slow [] vram 306.7->306.7->306.7
+  warm: worst 48.3 ms, elapsed 5687.8 ms, vram 200.0->310.1->300.1
+  open warmed: call 83.9 first 104.3 ready 104.3 worst 104.3 slow [[104.0, 104.3]] vram 300.1->300.1->300.1
+  transition: dwell 2.0 s, prefetch done -1.0 ms (step 3), worst 61.6 ms, slow [[62.0, 61.6]], vram 306.2->343.9->343.9
+  open next_act: call 75.1 first 111.4 ready 2181.1 worst 111.4 slow [[111.0, 111.4]] vram 343.9->388.5->306.9
+  hold journey/cadence: missed 0 max 23.72 p95 22.9 | video 305.8 MiB, draws 79
