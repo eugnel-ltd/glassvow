@@ -12,6 +12,9 @@ const float RULE_HALF = 1.6;
 const float FREQ = 2.6;           // hue cycles round the frame
 const float GAIN = 1.3;
 const float STRENGTH = 0.48;
+// The crystal's glint: a spectral band sweeping its facets with the tilt.
+const float GEM_GLINT = 0.34;
+const float GEM_BAND = 0.32;
 
 void fragment() {
 	vec4 base = texture(TEXTURE, UV);
@@ -29,5 +32,9 @@ void fragment() {
 	float env = exp(-pow((along - slide) * 2.4, 2.0));
 	vec3 foil = mix(vec3(0.78, 0.81, 0.88), rb, 0.75) * (0.45 + 0.55 * env);
 	vec3 col = mix(base.rgb, holo_screen(base.rgb * 0.45, foil * STRENGTH), m);
-	COLOR = vec4(col, base.a);
+	float ga = holo_gem_along(cp, vec2(1.0, 1.0));
+	float gs = dot(tilt, vec2(0.55, 0.4));
+	float gb = exp(-pow((ga - gs) / GEM_BAND, 2.0));
+	vec3 gem = holo_rainbow(ga * 1.4 + gs * GAIN) * GEM_GLINT * gb;
+	COLOR = vec4(holo_gem_keep(col, base.rgb, cp, gem), base.a);
 }

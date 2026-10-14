@@ -98,6 +98,17 @@ class Shooter:
 			var path: String = "%s/%s-%d.png" % [_out, _what, i]
 			get_tree().root.get_texture().get_image().save_png(path)
 			print("CAPTURE_HOLO %s hold=%s" % [path, str(HOLDS[i])])
+		# Where each card's cost crystal lands in the still, for crops of it:
+		# its centre (card px 10, 10) and the card's on-screen scale.
+		for node: Node in _main.find_children("", "CardView", true, false):
+			var card: CardView = node
+			if not card.is_visible_in_tree():
+				continue
+			var xf: Transform2D = card.get_viewport().get_final_transform() \
+				* card.get_global_transform_with_canvas()
+			var at: Vector2 = xf * Vector2(10.0, 10.0)
+			print("CAPTURE_HOLO_GEM %s %.1f %.1f %.3f %.4f" % [card.card_id, at.x, at.y,
+				xf.get_scale().x, xf.get_rotation()])
 		HoloMotion.hold(null)
 		finished.emit(true)
 

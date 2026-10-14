@@ -10,6 +10,9 @@ const float SCALE_PX = 34.0;
 const float GAIN = 1.1;
 const float STRENGTH = 0.34;
 const float DULL = 0.22;
+// The crystal's glint: a faint tar-iridescent band, as dull as the finish.
+const float GEM_GLINT = 0.16;
+const float GEM_BAND = 0.34;
 
 void fragment() {
 	vec4 base = texture(TEXTURE, UV);
@@ -26,5 +29,7 @@ void fragment() {
 	vec3 col = base.rgb * (1.0 - DULL * (1.0 - dark));
 	float plate = smoothstep(96.0, 104.0, cp.y) * 0.6;
 	col += iri * STRENGTH * dark * (0.08 + 0.92 * pool) * (1.0 - plate);
-	COLOR = vec4(mix(base.rgb, col, face), base.a);
+	float gb = exp(-pow((holo_gem_along(cp, vec2(1.0, 1.0)) - dot(tilt, vec2(0.55, 0.4))) / GEM_BAND, 2.0));
+	vec3 gem = holo_rainbow(film) * vec3(0.55, 0.75, 0.85) * GEM_GLINT * gb;
+	COLOR = vec4(holo_gem_keep(mix(base.rgb, col, face), base.rgb, cp, gem), base.a);
 }

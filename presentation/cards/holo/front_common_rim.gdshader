@@ -8,6 +8,9 @@ shader_type canvas_item;
 const float RIM_PX = 3.2;
 const float GLINT_W = 0.10;       // fraction of the perimeter the glint covers
 const float STRENGTH = 1.0;
+// The crystal's glint: a silver band sweeping its facets with the tilt.
+const float GEM_GLINT = 0.32;
+const float GEM_BAND = 0.30;
 
 void fragment() {
 	vec4 base = texture(TEXTURE, UV);
@@ -25,5 +28,6 @@ void fragment() {
 	vec3 silver = vec3(0.80, 0.83, 0.90);
 	vec3 foil = silver * (0.45 + 0.55 * glint) + rb * 0.18 * glint;
 	vec3 col = mix(base.rgb, holo_screen(base.rgb * 0.4, foil * STRENGTH), rim);
-	COLOR = vec4(col, base.a);
+	float gb = exp(-pow((holo_gem_along(cp, vec2(1.0, 1.0)) - dot(tilt, vec2(0.55, 0.4))) / GEM_BAND, 2.0));
+	COLOR = vec4(holo_gem_keep(col, base.rgb, cp, silver * GEM_GLINT * gb), base.a);
 }

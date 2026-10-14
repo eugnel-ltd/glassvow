@@ -77,3 +77,17 @@ as the card's own slab turned the same way.
 --rendering-method mobile` ("Metal 4.0 - Forward Mobile ... Apple7") on the
 fight with every front tier and a back on the pile: no shader, sampler or
 compile error, and every hologram rendered.
+
+## The cost crystal above the hologram (owner, 14 Oct 2026, 18:47)
+
+`10-crystal-crops-pad.jpg` and `10-crystal-crops-phone.jpg`: each tier's cost
+crystal in the fight's hand, before (left three) and after (right three), at
+the three holds. Before, the rim, the spectral frame and the cut glass crossed
+the numeral and the oil dimmed it. After, every front recipe lays the picture
+back over the crystal's footprint last (`holo_gem_keep`, holo_common), and the
+crystal takes its own small glint instead: a band that sweeps its light facets
+with the card's tilt, never its numeral's dark ink, tinted by the tier (silver
+on the common, a spectrum on the uncommon, the glass's sapphire to amber on the
+rare, a faint tar sheen on the special, nothing on the starter). No extra pass
+and no extra sampler. Crops come from `tools/capture_holo.gd`, which prints
+each crystal's place in the still (`CAPTURE_HOLO_GEM`).

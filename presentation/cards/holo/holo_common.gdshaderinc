@@ -88,3 +88,38 @@ float holo_luma(vec3 c) {
 vec3 holo_screen(vec3 base, vec3 add) {
 	return 1.0 - (1.0 - base) * (1.0 - clamp(add, 0.0, 1.0));
 }
+
+// THE COST CRYSTAL (CardView's stone) stands ABOVE every hologram (owner,
+// 14 Oct 2026): a recipe lays the picture back over its footprint last, so no
+// holo line crosses it and nothing dims it, and lights it with its own small
+// glint instead (`holo_gem_keep`). A pointy-top hexagon GEM = 36 card px tall
+// (CardView.GEM, HEX), centred at card px (10, 10) where CardView.GEM_AT
+// stands it (it overhangs the corner by PAD_IN), grown by its bevel and the
+// hover tilt's drift. tests/test_card_holo.gd holds these to CardView's.
+const vec2 HOLO_GEM_C = vec2(10.0, 10.0);
+const float HOLO_GEM_IN = 15.48;   // inradius across the flats, 0.43 * 36
+const float HOLO_GEM_GROW = 2.0;
+
+// 1 on the crystal, 0 off it, soft over one px.
+float holo_gem(vec2 cp) {
+	vec2 p = abs((cp - HOLO_GEM_C).yx);
+	const vec3 k = vec3(-0.866025404, 0.5, 0.577350269);
+	p -= 2.0 * min(dot(k.xy, p), 0.0) * k.xy;
+	p -= vec2(clamp(p.x, -k.z * HOLO_GEM_IN, k.z * HOLO_GEM_IN), HOLO_GEM_IN);
+	float d = length(p) * sign(p.y) - HOLO_GEM_GROW;
+	return 1.0 - smoothstep(-0.5, 0.5, d);
+}
+
+// Where a point lies across the crystal along `dir`, about -1..1 corner to
+// corner: a glint band's coordinate.
+float holo_gem_along(vec2 cp, vec2 dir) {
+	return dot(cp - HOLO_GEM_C, normalize(dir)) / 18.0;
+}
+
+// `col` (a recipe's result) with the crystal laid back over it as the picture
+// drew it, screened by `glint` (the recipe's own, 0 for none) on its light
+// gold facets only: the numeral's dark ink never takes it.
+vec3 holo_gem_keep(vec3 col, vec3 base, vec2 cp, vec3 glint) {
+	float facet = smoothstep(0.35, 0.60, holo_luma(base));
+	return mix(col, holo_screen(base, glint * facet), holo_gem(cp));
+}

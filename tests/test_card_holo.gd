@@ -13,6 +13,8 @@ const SH: String = "res://presentation/cards/holo/"
 static func run(fails: Array[String]) -> void:
 	_fronts_by_tier(fails)
 	_backs_by_knobs(fails)
+	_holo_pile_takes_no_glint(fails)
+	_crystal_stands_above(fails)
 	_back_knobs_validated(fails)
 	_cards_wear_the_map(fails)
 	_crop_uv(fails)
@@ -88,6 +90,57 @@ static func _backs_by_knobs(fails: Array[String]) -> void:
 		fails.append("holo: %d backs carry knobs, want the three shipped" % knob_sets.size())
 	if CardHolo.material_for({"back": "x.png"}) != null:
 		fails.append("holo: a back with no knobs wears a hologram")
+
+
+## Two shimmering systems never stack: a draw pile whose top back wears its
+## hologram takes no glint; one whose back has none keeps it.
+static func _holo_pile_takes_no_glint(fails: Array[String]) -> void:
+	var stage: ImageTexture = ImageTexture.create_from_image(Image.create(8, 8, false, Image.FORMAT_RGBA8))
+	var knobs: Dictionary = CardBackCatalogue.shipped().card_data("vault").get("holo", {})
+	var at: float = -1.0
+	for i: int in range(90):
+		if not is_nan(PileStack.glint_at(i * 0.1)):
+			at = i * 0.1
+			break
+	for holo: bool in [false, true]:
+		var pile: PileStack = PileStack.new(PileStack.Kind.DRAW)
+		pile.set_count(5)
+		pile.wear_back(stage, knobs if holo else {})
+		pile._t = at
+		pile._process(0.0)
+		var band: float = pile._glow.band
+		if holo and (not pile.has_holo_top() or not is_nan(band)):
+			fails.append("holo: a draw pile wearing its back's hologram still glints (band %s)" % band)
+		if not holo and (pile.has_holo_top() or is_nan(band)):
+			fails.append("holo: a draw pile with no back hologram lost its glint")
+		pile.free()
+
+
+## The cost crystal stands above every front's hologram (owner, 14 Oct 2026):
+## each recipe's every write to COLOR lays the picture back over the
+## crystal's footprint (`holo_gem_keep`), and that footprint is CardView's own
+## stone: its centre where GEM_AT stands it, its inradius the HEX's half-width.
+static func _crystal_stands_above(fails: Array[String]) -> void:
+	for recipe: String in CardHolo.FRONTS:
+		var sh: Shader = CardHolo.FRONTS[recipe]
+		var writes: int = 0
+		for line: String in sh.code.split("\n"):
+			if line.strip_edges().begins_with("COLOR ="):
+				writes += 1
+				if not line.contains("holo_gem_keep("):
+					fails.append("holo: %s writes COLOR without laying the crystal back: %s"
+						% [recipe, line.strip_edges()])
+		if writes == 0:
+			fails.append("holo: %s never writes COLOR" % recipe)
+	var common: String = FileAccess.get_file_as_string(SH + "holo_common.gdshaderinc")
+	var at: Vector2 = Vector2(CardView.GEM_AT.x + CardView.CARD_W * 0.5,
+		CardView.CARD_H * 0.5 - CardView.GEM_AT.y)
+	var half: float = absf((CardView.HEX[1] as Vector2).x) * CardView.GEM
+	var want_c: String = "const vec2 HOLO_GEM_C = vec2(%.1f, %.1f);" % [at.x, at.y]
+	var want_in: String = "const float HOLO_GEM_IN = %.2f;" % half
+	if not common.contains(want_c) or not common.contains(want_in):
+		fails.append("holo: the crystal's footprint is not CardView's stone (want '%s' and '%s')"
+			% [want_c, want_in])
 
 
 static func _back_knobs_validated(fails: Array[String]) -> void:

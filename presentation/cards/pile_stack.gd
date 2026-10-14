@@ -33,9 +33,11 @@ extends Control
 ## rim holds still.
 ##
 ## THE HOLOGRAM. The draw pile's top back wears the back's hologram (CardHolo,
-## the back's own knobs) as a child picture (`_top`) under the glint, so the
-## lit panes answer the device on the pile too; the pile itself still redraws
-## only when its count, top or back changes.
+## the back's own knobs) as a child picture (`_top`), so the lit panes answer
+## the device on the pile too; the pile itself still redraws only when its
+## count, top or back changes. A top wearing its hologram takes no glint: two
+## shimmering systems never stack. The glint stays only on a draw pile whose
+## back has no hologram (a back with no `holo` knobs; none ships today).
 
 enum Kind { DRAW, DISCARD, ASHES }
 
@@ -186,9 +188,14 @@ func wear_back(stage: Texture2D, holo: Dictionary = {}) -> void:
 		_top.stretch_mode = TextureRect.STRETCH_SCALE
 		_top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(_top)
-		move_child(_top, 0)    # under the glint
+		move_child(_top, 0)    # under the glow child
 		CardHolo.wear(_top, mat, self)
 	_changed()
+
+
+## Whether the top back wears its hologram (and so takes no glint).
+func has_holo_top() -> bool:
+	return _top != null
 
 
 ## The discard's top: card `uid`'s baked face (the card with CardFaces.REACH
@@ -359,7 +366,8 @@ func _process(delta: float) -> void:
 		var breath: float = 0.5 if still else 0.5 - 0.5 * cos(TAU * _t / RIM_CYCLE)
 		_glow.modulate.a = lerpf(RIM_LOW, RIM_HIGH, breath)
 		return
-	var band: float = NAN if still or count <= 0 else glint_at(_t + idle_phase)
+	var band: float = NAN if still or count <= 0 or has_holo_top() \
+		else glint_at(_t + idle_phase)
 	if is_nan(band) and is_nan(_glow.band):
 		return
 	_glow.band = band
