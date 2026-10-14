@@ -65,6 +65,7 @@ var _fixed: Vector2 = Vector2.ZERO
 var _frames_dir: String = ""   # --holo-frames=<dir>: sweep frame by frame to PNGs
 var _frame_n: int = 0
 var _absolute: bool = false
+var _wobble: bool = false
 var _nonce: String = ""
 var _t: float = 0.0
 var _cards: Array[CardView] = []
@@ -89,6 +90,8 @@ func _init(db: ContentDB) -> void:
 			_sheet = true
 		elif arg.begins_with("--holo-frames="):
 			_frames_dir = arg.trim_prefix("--holo-frames=")
+		elif arg == "--holo-wobble":
+			_wobble = true
 		elif arg == "--holo-absolute":
 			_absolute = true
 		elif arg.begins_with("--holo-nonce="):
@@ -276,7 +279,7 @@ func _process(delta: float) -> void:
 	_worst.append(delta * 1000.0)
 	if _worst.size() > 120:
 		_worst.remove_at(0)
-	if _sweep:
+	if _sweep and not _device:
 		_t += (1.0 / 30.0) if _frames_dir != "" else delta
 		var ph: float = TAU * _t / SWEEP_S
 		var t: Vector2 = Vector2(sin(ph), 0.75 * sin(2.0 * ph))
@@ -286,8 +289,15 @@ func _process(delta: float) -> void:
 		if _frames_dir != "" and _frame_n >= 0 and _t > 0.0:
 			_grab()
 	elif _device and _motion != null:
+		# --holo-device --holo-sweep: the motion signal plus a synthetic lean,
+		# so a resting device still exercises a moving holo (stages frozen).
+		var extra: Vector2 = Vector2.ZERO
+		if _wobble:
+			_t += delta
+			var ph: float = TAU * _t / SWEEP_S
+			extra = Vector2(sin(ph), 0.75 * sin(2.0 * ph))
 		for i: int in range(_cards.size()):
-			_push(i, _motion.tilt)
+			_push(i, (_motion.tilt + extra).clamp(Vector2(-1, -1), Vector2(1, 1)))
 		_readout.text = "[%s%s] source %s   gravity (%.2f, %.2f, %.2f)   tilt (%.2f, %.2f)   frame %.1f ms   worst/2s %.1f ms" % [
 			_nonce, " absolute" if _absolute else " calibrated", _motion.source, _motion.raw.x, _motion.raw.y, _motion.raw.z,
 			_motion.tilt.x, _motion.tilt.y, _frame_ms, _worst_ms()]

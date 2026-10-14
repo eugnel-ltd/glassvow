@@ -37,7 +37,7 @@ var absolute: bool = false
 ## orientation on iOS and Android.
 var axis_sign: Vector2 = Vector2(1.0, 1.0)
 
-var _neutral: Vector2 = Vector2.ZERO
+var _neutral3: Vector3 = Vector3(0.0, 0.0, -1.0)
 var _have_neutral: bool = false
 
 
@@ -59,17 +59,22 @@ func _process(delta: float) -> void:
 
 
 func _from_gravity(g: Vector3, dt: float) -> Vector2:
+	# Orientation-agnostic: the lean is the small rotation that carries the
+	# neutral gravity direction to the current one (w = n0 x n), read about the
+	# screen's x and y axes. Works lying flat, propped or upright. A twist
+	# ABOUT gravity (an upright phone turned left-right) is invisible to any
+	# gravity reading; the gyroscope is what would add it.
 	var n: Vector3 = g.normalized()
-	var ang: Vector2 = Vector2(rad_to_deg(asin(clampf(n.x, -1.0, 1.0))),
-		rad_to_deg(asin(clampf(n.y, -1.0, 1.0))))
 	if absolute:
-		_neutral = Vector2.ZERO
+		_neutral3 = Vector3(0.0, 0.0, -1.0)   # the screen lying flat, face up
 	else:
 		if not _have_neutral:
-			_neutral = ang
+			_neutral3 = n
 			_have_neutral = true
-		_neutral += (ang - _neutral) * (1.0 - exp(-dt / RECENTRE_TAU))
-	var d: Vector2 = ang - _neutral
+		_neutral3 = (_neutral3 + (n - _neutral3) * (1.0 - exp(-dt / RECENTRE_TAU))).normalized()
+	var w: Vector3 = _neutral3.cross(n)
+	var d: Vector2 = Vector2(rad_to_deg(asin(clampf(w.y, -1.0, 1.0))),
+		rad_to_deg(asin(clampf(w.x, -1.0, 1.0))))
 	var out: Vector2 = Vector2.ZERO
 	for i: int in range(2):
 		var v: float = d[i]
