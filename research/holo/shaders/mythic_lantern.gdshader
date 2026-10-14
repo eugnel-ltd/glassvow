@@ -4,14 +4,17 @@ shader_type canvas_item;
 // picture is drained cold and recessed, with only a faint blue glimmer where
 // a wick would be. Lean the card TOWARD you past a clear threshold and the
 // flame that is not there catches: a white-hot core, a warm halo that floods
-// the window, the colour comes back, embers rise in front, and the whole
-// leaded frame turns from sapphire to amber. One clear moment, not a fade.
-// Toolkit: window + reveal + motes + grade (warm).
+// the window, the colour comes back, embers rise in front, and the frame
+// turns from sapphire to amber. Toolkit: window + reveal + motes + grade.
+// v3: `frame_style` picks the grade mark version for the owner's comparison
+// (0 = M0 leaded, 1 = M1 cathedral, 2 = M2 tracery, 3 = M3 layered + halo).
 #include "res://research/holo/shaders/holo_common.gdshaderinc"
 #include "res://research/holo/shaders/mythic_toolkit.gdshaderinc"
+#include "res://research/holo/shaders/mythic_frames.gdshaderinc"
 
 uniform sampler2D art_tex : filter_linear_mipmap, repeat_disable;
 uniform vec4 art_win = vec4(0.0, 0.0, 1.0, 1.0);
+uniform int frame_style = 0;
 
 const float DEPTH_PX = 6.0;
 const vec2 FLAME_AT = vec2(0.50, 0.50);   // in the window
@@ -32,10 +35,8 @@ void fragment() {
 	vec3 warm_art = art * vec3(1.12, 1.0, 0.86);
 	art = mix(cold_art, warm_art, rv);
 	vec2 fp = ((l - FLAME_AT) * HOLO_ART.zw) / FLAME_SIZE;
-	// before: a faint cold glimmer at the wick, a hint to tilt
 	float wick = exp(-dot(fp - vec2(0.0, 0.35), fp - vec2(0.0, 0.35)) * 40.0);
 	art = holo_screen(art, vec3(0.45, 0.65, 1.0) * wick * 0.55 * (1.0 - rv));
-	// after: the flame
 	float fl = motif_flame(fp);
 	float core = motif_flame(fp * 1.9 + vec2(0.0, -0.25));
 	float flicker = 0.88 + 0.12 * sin(dot(tilt, vec2(11.0, 9.0)));
@@ -47,7 +48,31 @@ void fragment() {
 	art *= 1.0 - 0.6 * wall;
 	float m = myth_motes(cp, 7.0, 0.10 + 0.20 * rv, -6.0) * win;
 	art = holo_screen(art, vec3(1.0, 0.60, 0.25) * m * rv);
-	vec3 col = myth_grade(base.rgb, cp, face, rv);
-	col = mix(col, art, win * (1.0 - step(holo_inset(cp), MYTH_BAND)));
-	COLOR = vec4(mix(base.rgb, col, face), base.a);
+
+	float inset = holo_inset(cp);
+	vec3 col;
+	float bw;
+	vec4 outer = vec4(0.0);
+	if (frame_style == 1) {
+		col = m1_inside(base.rgb, cp, face, rv); bw = M1_BAND; outer = m1_outside(cp, rv);
+	} else if (frame_style == 2) {
+		col = m2_inside(base.rgb, cp, face, rv); bw = M2_BAND;
+	} else if (frame_style == 3) {
+		col = m3_inside(base.rgb, cp, face, rv); bw = M3_BAND; outer = m3_outside(cp, rv);
+	} else {
+		col = myth_grade(base.rgb, cp, face, rv); bw = MYTH_BAND;
+	}
+	col = mix(col, art, win * (1.0 - step(inset, bw)));
+	vec3 rgb = mix(base.rgb, col, face);
+	float a = base.a;
+	// what stands outside the card's rectangle (crest, halo), and the cabochons
+	float oa = outer.a * (1.0 - face);
+	rgb = mix(rgb, outer.rgb, oa);
+	a = max(a, oa);
+	if (frame_style == 2) {
+		vec4 cab = m2_cabochons(cp);
+		rgb = mix(rgb, cab.rgb, cab.a);
+		a = max(a, cab.a);
+	}
+	COLOR = vec4(rgb, a);
 }

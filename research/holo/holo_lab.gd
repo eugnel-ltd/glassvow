@@ -30,6 +30,13 @@ const CANDIDATES: Dictionary = {
 	"common-rule": {"shader": "front_common_rule", "cards": ["quickSlash", "brace"], "title": "Common · silver rule"},
 	"uncommon-reverse": {"shader": "front_uncommon_reverse", "cards": ["tempest", "bulwark"], "title": "Uncommon · reverse holo"},
 	"rare-crackle": {"shader": "front_rare_crackle", "cards": ["oblivionStrike", "aegis"], "title": "Rare · crackle glass"},
+	"rare-film": {"shader": "front_rare_film", "cards": ["oblivionStrike", "aegis"], "title": "Rare R1 · filmed plate"},
+	"rare-prism": {"shader": "front_rare_prism", "cards": ["oblivionStrike", "aegis"], "title": "Rare R2 · prism caustic"},
+	"rare-mount": {"shader": "front_rare_mount", "cards": ["oblivionStrike", "aegis"], "title": "Rare R3 · cut-glass mount"},
+	"mythic-m0": {"shader": "mythic_lantern", "cards": ["emberEye"], "title": "M0 leaded", "uniforms": {"frame_style": 0}},
+	"mythic-m1": {"shader": "mythic_lantern", "cards": ["emberEye"], "title": "M1 cathedral", "uniforms": {"frame_style": 1}},
+	"mythic-m2": {"shader": "mythic_lantern", "cards": ["emberEye"], "title": "M2 tracery", "uniforms": {"frame_style": 2}},
+	"mythic-m3": {"shader": "mythic_lantern", "cards": ["emberEye"], "title": "M3 layered + halo", "uniforms": {"frame_style": 3}},
 	"special-oil": {"shader": "front_special_oil", "cards": ["hex", "wound"], "title": "Special (curse/status) · oil"},
 	"mythic-lantern": {"shader": "mythic_lantern", "cards": ["emberEye"], "title": "Mythic · 'A Lantern with No Flame' (stand-in art)"},
 	"mythic-door": {"shader": "mythic_door", "cards": ["eclipseSlash"], "title": "Mythic · 'The Shadow of a Door' (stand-in art)"},
@@ -213,6 +220,9 @@ func _material(spec: Dictionary, id: String) -> ShaderMaterial:
 		return null
 	var mat: ShaderMaterial = ShaderMaterial.new()
 	mat.shader = load(SH + name + ".gdshader")
+	var extra: Dictionary = spec.get("uniforms", {})
+	for k: String in extra:
+		mat.set_shader_parameter(k, extra[k])
 	if name.begins_with("mythic_"):
 		var art: Texture2D = load(CardView.ART_DIR + id + ".jpg")
 		mat.set_shader_parameter("art_tex", art)
