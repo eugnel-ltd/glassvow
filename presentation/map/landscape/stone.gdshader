@@ -12,20 +12,21 @@ render_mode cull_back, diffuse_burley, specular_schlick_ggx;
 uniform sampler2D albedo_atlas : source_color, filter_linear_mipmap, repeat_disable;
 uniform sampler2D normal_atlas : hint_normal, filter_linear_mipmap, repeat_disable;
 uniform sampler2D moss : source_color, filter_linear_mipmap, repeat_enable;
-// The baked colour's grade on the land (linear): granite reads grey under
-// the warm key, not tan.
-uniform vec3 stone_tint = vec3(0.8, 0.83, 0.88);
+// The baked colour's grade on the land (linear): granite reads a cool
+// mid-grey under the warm key, not tan, nor pale (R3.6, the target's value).
+uniform vec3 stone_tint = vec3(0.5, 0.54, 0.6);
 // Metres the moss's picture spans, and its colour on stone (linear): the
-// floor's moss lifted to a living olive green.
+// floor's moss as the target's deep green, not a bright olive-yellow (R3.6).
 uniform float moss_metres = 1.3;
-uniform vec3 moss_tint = vec3(1.15, 1.5, 0.6);
-// The moss the cliffs' strata take, as a share of the outcrops': the atlas's
+uniform vec3 moss_tint = vec3(0.6, 0.85, 0.45);
+// The moss the cliffs' strata take, as a share of the outcrops' (R3.6: most
+// of it, so the cliff tops read as grown-over rock, not striped tan ledges): the atlas's
 // cells (`build_stone.py`, 4 x 3) hold the five outcrops first, then the six
 // cliff pieces, so a cliff's UV lies below the first row and right of the
 // fifth cell.
-uniform float strata_moss = 0.35;
+uniform float strata_moss = 0.8;
 // The world-up share of the mapped normal at which moss starts and is whole.
-uniform vec2 moss_rise = vec2(0.5, 0.8);
+uniform vec2 moss_rise = vec2(0.62, 0.92);
 uniform float roughness_stone = 0.88;
 uniform float roughness_moss = 0.97;
 

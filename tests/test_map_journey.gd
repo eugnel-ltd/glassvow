@@ -244,6 +244,12 @@ static func _stage_resolution_band(fails: Array[String], scene: MapScene,
 			and is_equal_approx(radius,
 				MapTiltShift.STRENGTH_PX * scene.get_stage().size.y / MapTiltShift.IDENTITY_HEIGHT),
 		"the band's uniforms are the band and its stage-texel radius at %s" % shape)
+	var haze: float = shift.get_shader_parameter("haze")
+	var near_shade: float = shift.get_shader_parameter("near_shade")
+	_check(fails, is_equal_approx(haze, MapTiltShift.HAZE)
+			and is_equal_approx(near_shade, MapTiltShift.NEAR_SHADE)
+			and MapTiltShift.HAZE > 0.0 and MapTiltShift.NEAR_SHADE > 0.0,
+		"the band carries the lens's depth, the far haze and the near shade, at %s" % shape)
 	var screen: WorldMapScreen = scene.get_parent() as WorldMapScreen
 	shift.set_shader_parameter("band", Vector2(-1.0, -1.0))
 	scene._shift.render_target_update_mode = SubViewport.UPDATE_DISABLED

@@ -5,7 +5,7 @@ const Paths = preload("res://presentation/map/landscape/road_paths.gd")
 const Surfaces = preload("res://presentation/map/landscape/bridge_surfaces.gd")
 ## The parapets' stone, lighter than the masonry below the deck so their
 ## coping catches the key (R3.5; a lane pick, owner re-pick open).
-const PARAPET_TINT: Vector3 = Vector3(.095,.086,.083)
+const PARAPET_TINT: Vector3 = Vector3(.082,.082,.088)
 
 static func build(parent: Node3D, lines: Array[PackedVector3Array], elevated: Callable, paint: ShaderMaterial) -> int:
 	var _t0: int = Time.get_ticks_msec()

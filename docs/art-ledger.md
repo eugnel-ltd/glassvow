@@ -765,6 +765,30 @@ Drawn with no new picture:
 A re-pick of the parapet or the setts is a change of values. Evidence:
 `docs/design/2026-10-02-map-living-land/r3/r3-5-set-pieces/README.md`.
 
+**R3.6 (the light, 14 Oct 2026), a lane pick, owner re-pick open:** Act I's
+light and colour are graded toward the owner's target at Journey, with no
+new picture and no new pass. Every choice is a value:
+
+- **The light** (`MapJourneyLandscape.light`): a stronger, paler key
+  (`ffdcb0` at 2.0), a neutral fill (`8f93a2` at 0.42), exposure 1.1,
+  contrast 1.12, saturation 1.1. The floor's bake lights with the same key.
+- **The lens's depth** (`map_tilt_shift.gdshader`, `MapTiltShift.HAZE` and
+  `NEAR_SHADE`): a golden haze over the far land at the frame's top
+  (`haze_colour`) and a shade on the near land at its foot. Not in Whole act,
+  which has no tilt-shift.
+- **The lamps' pools** (`floor_ground.gdshaderinc` `pool_energy`,
+  `pool_range`; `floor_paint.gdshader` `pool_colour`): wider and a deeper
+  orange.
+- **The road** (`floor_paint.gdshader` `road_tint`, `cover_saturation`):
+  warm packed earth, not grey-mauve gravel.
+- **The stone and the moss** (`stone.gdshader` `stone_tint`, `moss_tint`,
+  `moss_rise`, `strata_moss`): a cool mid-grey granite, the target's deep
+  green moss, and the cliffs' strata grown over; the parapets
+  (`PARAPET_TINT`) and the decks' setts (`deck_shade`) a little cooler and
+  darker.
+
+Evidence: `docs/design/2026-10-02-map-living-land/r3/r3-6-light/README.md`.
+
 ## Rejection note — what "technically shippable" means
 
 Judging generated character art by eye is not enough; two of the five

@@ -1,0 +1,16 @@
+label build | holds (view/mode: missed, max ms) | Journey cadence video MiB | warnings
+ctl1-r1 22d0e856 | jou/cad:0,17.56 jou/liv:0,17.61 riv/cad:0,17.41 riv/liv:0,17.32 clo/cad:0,17.55 clo/liv:0,18.23 who/cad:0,17.8 who/liv:0,17.59 | 306.1 | 0
+ctl1-r2 22d0e856 | jou/cad:0,22.3 jou/liv:0,19.36 riv/cad:0,22.08 riv/liv:0,19.0 clo/cad:0,21.57 clo/liv:0,18.56 who/cad:0,20.68 who/liv:0,19.68 | 306.1 | 0
+ctl2-r1 22d0e856 | jou/cad:0,18.65 jou/liv:0,18.05 riv/cad:0,18.62 riv/liv:0,17.57 clo/cad:0,17.54 clo/liv:0,17.63 who/cad:0,17.77 who/liv:0,17.78 | 306.1 | 0
+ctl2-r2 22d0e856 | jou/cad:0,19.72 jou/liv:0,21.48 riv/cad:0,21.92 riv/liv:0,19.08 clo/cad:0,22.62 clo/liv:0,20.55 who/cad:0,20.68 who/liv:0,20.51 | 298.1 | 0
+dev1-l1 5afc91b9 | jou/cad:0,21.09 jou/liv:0,20.33 riv/cad:0,22.01 riv/liv:0,20.8 clo/cad:0,22.19 clo/liv:0,20.86 who/cad:0,20.76 who/liv:0,20.33 | 298.1 | 0
+dev1-l2 5afc91b9 | jou/cad:0,21.74 jou/liv:0,20.01 riv/cad:0,21.17 riv/liv:0,20.91 clo/cad:0,21.1 clo/liv:0,20.95 who/cad:0,21.11 who/liv:0,20.43 | 306.1 | 0
+dev1-r1 5afc91b9 | jou/cad:0,19.79 jou/liv:0,18.74 riv/cad:0,23.03 riv/liv:0,21.43 clo/cad:0,20.52 clo/liv:0,18.44 who/cad:0,20.93 who/liv:0,20.0 | 298.1 | 0
+dev1-r2 5afc91b9 | jou/cad:0,18.47 jou/liv:0,17.77 riv/cad:0,17.32 riv/liv:0,17.46 clo/cad:0,17.43 clo/liv:0,17.71 who/cad:0,17.61 who/liv:0,17.68 | 306.1 | 0
+dev2-l1 5afc91b9 | jou/cad:0,22.4 jou/liv:0,20.16 riv/cad:0,21.99 riv/liv:0,21.42 clo/cad:0,21.6 clo/liv:0,21.07 who/cad:0,20.72 who/liv:0,20.13 | 298.0 | 0
+dev2-r1 5afc91b9 | jou/cad:0,22.53 jou/liv:0,20.33 riv/cad:0,21.65 riv/liv:0,20.96 clo/cad:0,21.39 clo/liv:0,18.62 who/cad:0,20.78 who/liv:0,19.87 | 306.1 | 0
+dev2-r2 5afc91b9 | jou/cad:0,20.95 jou/liv:0,18.77 riv/cad:0,21.42 riv/liv:0,18.56 clo/cad:0,21.78 clo/liv:0,18.64 who/cad:0,20.9 who/liv:0,20.36 | 306.1 | 0
+
+all holds: missed 0, worst frame 23.03 ms; memory warnings 0
+ctl Journey cadence video MiB: ctl1-r1=306.1, ctl1-r2=306.1, ctl2-r1=306.1, ctl2-r2=298.1
+dev Journey cadence video MiB: dev1-l1=298.1, dev1-l2=306.1, dev1-r1=298.1, dev1-r2=306.1, dev2-l1=298.0, dev2-r1=306.1, dev2-r2=306.1

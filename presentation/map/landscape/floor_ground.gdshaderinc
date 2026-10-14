@@ -29,10 +29,10 @@ uniform int lamp_count = 0;
 uniform vec4 lamps[48];
 // The lamps' lights: brighter than the desktop's few real ones (`lamps.gd`:
 // 1.6, 4.2 m, 1.4), since here every lamp has one and it is the pool of light
-// round each lantern that the target holds; no wider, so the road between the
-// lamps keeps its own grey.
-uniform float pool_energy = 4.2;
-uniform float pool_range = 4.2;
+// round each lantern that the target holds. R3.6 widened and warmed them
+// toward the target's, whose pools glow orange on the path round each lamp.
+uniform float pool_energy = 7.0;
+uniform float pool_range = 5.0;
 uniform float pool_decay = 1.2;
 
 float floor_hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }

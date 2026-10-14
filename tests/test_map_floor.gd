@@ -262,12 +262,19 @@ static func _stage(fails: Array[String], land: MapJourneyLandscape) -> void:
 	_check(fails, cards != null and cards.multimesh.instance_count == plan.caster_count
 		and cards.multimesh.buffer == plan.casters and stage.casters > plan.caster_count,
 		"the woodland casts through its cards, beside the kit, the bridges and the waystones")
+	var live_key: DirectionalLight3D = DirectionalLight3D.new()
+	var live_environment: Environment = Environment.new()
+	MapJourneyLandscape.light(live_key, live_environment)
 	_check(fails, stage.key.rotation_degrees.is_equal_approx(MapJourneyLandscape.KEY_ROTATION)
-		and stage.key.shadow_enabled and is_equal_approx(stage.key.light_energy, 1.6)
+		and stage.key.shadow_enabled and is_equal_approx(stage.key.light_energy, live_key.light_energy)
+		and stage.key.light_color.is_equal_approx(live_key.light_color)
+		and stage.environment.ambient_light_color.is_equal_approx(live_environment.ambient_light_color)
+		and is_equal_approx(stage.environment.ambient_light_energy, live_environment.ambient_light_energy)
 		and stage.environment.tonemap_mode == Environment.TONE_MAPPER_LINEAR
 		and is_equal_approx(stage.environment.tonemap_exposure, Stage.EXPOSURE)
 		and not stage.environment.adjustment_enabled and not stage.environment.glow_enabled,
 		"the bake lights the floor as the live land does, through a linear tonemap at its exposure")
+	live_key.free()
 	stage.free()
 
 

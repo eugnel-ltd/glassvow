@@ -7,7 +7,8 @@ extends RefCounted
 ## (`docs/design/2026-10-02-map-living-land/r2-plan.md` §3.1). Since R3.1 it is
 ## drawn at the stage's resolution, in a view of its own that renders only when
 ## the stage does, and the display upscales the result (`MapScene`). Off in
-## Whole act, and never on the painted acts.
+## Whole act, and never on the painted acts. Since R3.6 it also carries the
+## lens's depth: a golden haze over the far land and a shade on the near.
 
 const SHADER: Shader = preload("res://presentation/map/map_tilt_shift.gdshader")
 ## The band never narrows below this share of the frame's height. Once the
@@ -25,6 +26,10 @@ const FEATHER: float = 0.16
 ## (820 px); other shapes scale with their height.
 const STRENGTH_PX: float = 7.0
 const IDENTITY_HEIGHT: float = 820.0
+## The lens's depth (R3.6, the shader's own note): the far land's golden haze
+## at the frame's top edge, and the near land's shade at its foot.
+const HAZE: float = 0.2
+const NEAR_SHADE: float = 0.22
 
 
 ## The sharp band as (top, bottom) in px of a frame `height` tall: every y in
@@ -57,4 +62,6 @@ static func material() -> ShaderMaterial:
 	var out: ShaderMaterial = ShaderMaterial.new()
 	out.shader = SHADER
 	out.set_shader_parameter("feather", FEATHER)
+	out.set_shader_parameter("haze", HAZE)
+	out.set_shader_parameter("near_shade", NEAR_SHADE)
 	return out

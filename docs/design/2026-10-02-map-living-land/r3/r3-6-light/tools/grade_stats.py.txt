@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+"""Grade statistics of a capture against the owner's target (lane R3.6, scratch).
+
+Luma (Rec. 709, sRGB-encoded values) percentiles, mean HSV saturation, the share
+of dark pixels (luma < 0.08), the mean RGB, and the top and bottom thirds' mean
+luma (the depth haze). Captures are cropped to the safe frame (the chrome's
+insets in stage px, as R3.1b's metrics.py); the target to its land (no UI bars).
+Usage: grade_stats.py <png> [<png> ...]   (a path containing 'owner-target' is the target)
+"""
+import json, sys
+import numpy as np
+from PIL import Image
+
+def stats(path):
+    im = Image.open(path).convert('RGB')
+    if 'owner-target' in path:
+        im = im.crop((0, 90, 1672, 845))
+    else:
+        W, H = im.size
+        ref_h = 390.0 if W / H > 2.0 else 820.0
+        s = H / ref_h
+        im = im.crop((int(42 * s), int(76 * s), W - int(42 * s), H - int(46 * s)))
+    a = np.asarray(im).astype(float) / 255.0
+    y = a @ np.array([0.2126, 0.7152, 0.0722])
+    mx = a.max(-1); mn = a.min(-1)
+    sat = np.where(mx > 1e-6, (mx - mn) / np.maximum(mx, 1e-6), 0)
+    h = y.shape[0]
+    p = np.percentile(y, [10, 50, 90])
+    return {'p10': round(p[0], 3), 'p50': round(p[1], 3), 'p90': round(p[2], 3),
+            'mean': round(float(y.mean()), 3), 'dark': round(float((y < 0.08).mean()), 3),
+            'sat': round(float(sat.mean()), 3), 'rgb': [round(float(v), 3) for v in a.reshape(-1, 3).mean(0)],
+            'top': round(float(y[: h // 3].mean()), 3), 'bottom': round(float(y[2 * h // 3:].mean()), 3)}
+
+for p in sys.argv[1:]:
+    print(p.split('/')[-1], json.dumps(stats(p)))
