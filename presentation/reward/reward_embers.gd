@@ -263,6 +263,8 @@ var _lantern: RunLantern = null
 var _confirm: RewardLeaveConfirm = null
 var _t: float = 0.0                  # the entrance clock
 var _settled: bool = false
+## The picked card is in flight and the HUD's deck still owes it (`_card_home`).
+var _owes_home: bool = false
 var _centre: Vector2 = Vector2.ZERO
 
 ## The resolved set-out, rebuilt by `_place`; offsets from `_centre`.
@@ -947,16 +949,19 @@ func _turn(i: int, yaw: float, pitch: float) -> void:
 	_cards[i].turn(yaw, pitch, true)
 
 
-## Whether the offering is being dealt or turned: a tap lands it.
+## Whether the offering is still arriving, before the deal (its cards then sit
+## at PRE_DEAL_A) or during it: a pick lands the offering instead of taking.
 func _revealing() -> bool:
-	return not _settled and not _cards.is_empty() and _t >= _deal_at()
+	return not _settled and not _cards.is_empty()
 
 
 ## Skip (§3): a tap or a click while the offering is dealt lands it face up.
+## Before the deal there is nothing to land yet, so only a pick (`_take_card`)
+## lands it then, never a stray tap that would skip the husk's break.
 func _gui_input(event: InputEvent) -> void:
 	var down: bool = (event is InputEventMouseButton and (event as InputEventMouseButton).pressed) \
 		or (event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed)
-	if down and _revealing():
+	if down and _revealing() and _t >= _deal_at():
 		settle()
 		accept_event()
 
@@ -1207,6 +1212,7 @@ func _take_card(id: String) -> void:
 	if had_key and _walk_word != null:
 		_walk_word.grab_focus()
 	if flies:
+		_owes_home = true
 		hud.owe_card()    # counted as it lands, not as it is taken
 	claimed.emit(&"card", id)
 
@@ -1232,6 +1238,9 @@ func _fly(i: int, home: Control) -> void:
 	var to_centre: Vector2 = inverse * home.get_global_rect().get_center()
 	var to: Vector2 = to_centre - seat.size * 0.5
 	var shrink: float = DeckStack.CARD_H * home.size.x / DeckStack.ICON_SIDE / seat.size.y
+	# The tween dies with the seat, so a screen freed mid-flight still settles
+	# the deck's count as the seat leaves the tree.
+	seat.tree_exiting.connect(_card_home)
 	var tw: Tween = seat.create_tween()
 	tw.tween_method(func(v: float) -> void:
 		var e: float = v * v * (3.0 - 2.0 * v)
@@ -1241,8 +1250,17 @@ func _fly(i: int, home: Control) -> void:
 		_turn(i, 180.0 * s, TURN_PITCH * sin(PI * s)), 0.0, 1.0, PICK_FLY)
 	tw.tween_callback(func() -> void:
 		seat.visible = false
-		if hud != null and is_instance_valid(hud):
-			hud.card_home())
+		_card_home())
+
+
+## The picked card has landed, or its flight was cut short: the deck counts it
+## once, whichever comes first.
+func _card_home() -> void:
+	if not _owes_home:
+		return
+	_owes_home = false
+	if hud != null and is_instance_valid(hud):
+		hud.card_home()
 
 
 ## The offering has been answered: nothing on it takes a pick or the keyboard
@@ -1287,6 +1305,7 @@ func _leave() -> void:
 	for i: int in range(_spoils.size()):
 		_announce(i)
 	if not _picked and not _card_ids.is_empty():
+		settle()        # an offering still arriving is landed, so the skip is taken
 		_take_card("")
 	finished.emit()
 
