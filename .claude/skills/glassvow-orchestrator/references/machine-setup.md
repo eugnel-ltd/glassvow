@@ -75,7 +75,7 @@ Claude's per-machine memory does not travel with git. The 14 Oct 2026 copy is on
 - **Remote Login** on (System Settings, General, Sharing), with the seat's public key in the engine's `~/.ssh/authorized_keys`.
 - **File Sharing** on, for SMB.
 - **The engine's `PATH` for non-interactive ssh.** `mbp` runs `ssh host "cmd"`, a non-login shell that reads only `~/.zshenv`. Export the `PATH` that holds `godot`, `gh`, `rg`, `python3` and `tmux` there, for example `/opt/homebrew/bin` and the Godot binary's folder. `mbp --check` fails and names any tool it cannot find.
-- **Housekeeping guard:** set `GLASSVOW_ENGINE_HOST_NAME` to the engine's `scutil --get LocalHostName` in the seat's and the engine's shell env, so `housekeeping.sh` refuses to run on the seat.
+- **Housekeeping guard:** set `GLASSVOW_ENGINE_HOST_NAME` to the engine's `scutil --get LocalHostName` in `~/.zshenv` on both machines (the seat's copy is what Claude's Bash tool reads; the engine's is what a non-interactive ssh reads), so `housekeeping.sh` refuses to run on the seat.
 - **No sleep on AC power:** `sudo pmset -c sleep 0` (and `disksleep 0`), or keep a `caffeinate -s` running in a tmux session.
 - **After a reboot** the login keychain is locked and codesign fails (errSecInternalComponent). Unlock it over ssh with `ssh -t "${GLASSVOW_ENGINE_HOST:-mbp}" security unlock-keychain ~/Library/Keychains/login.keychain-db` typed by the owner, or ask the owner to unlock it at the machine. Agents never handle the password.
 - **The iPad stays cabled** to the engine; the lock and QA flow live there.

@@ -11,7 +11,7 @@
 # Install on the seat: symlink this file to a directory on PATH as `mbp`.
 # The engine is an ssh config alias, default `mbp`; override with
 # GLASSVOW_ENGINE_HOST. Host names and keys live in ~/.ssh/config, never here.
-set -u
+set -u -o pipefail
 
 host=${GLASSVOW_ENGINE_HOST:-mbp}
 ssh_opts=(-o BatchMode=yes -o ConnectTimeout=15)
@@ -37,8 +37,9 @@ case "${1:-}" in
       mp=$(df -P "${repo:A}" 2>/dev/null | awk 'NR==2 {print $NF}')
       mount | grep -F " on $mp (" | grep -q smbfs \
         || { print -u2 "mbp: $repo is not on the SMB mount here; a local clone would be a second tree"; exit 1; }
-      remote 'for t in godot gh rg python3 tmux; do command -v $t >/dev/null || echo "missing on engine PATH: $t"; done' \
-        | grep . >&2 && { print -u2 "mbp: export the engine PATH in its ~/.zshenv (see machine-setup.md 9.3)"; exit 1; }
+      missing=$(remote 'for t in godot gh rg python3 tmux; do command -v $t >/dev/null || echo "missing on engine PATH: $t"; done') \
+        || { print -u2 "mbp: engine unreachable during the tool check"; exit 255; }
+      [[ -z "$missing" ]] || { print -u2 -r -- "$missing"; print -u2 "mbp: export the engine PATH in its ~/.zshenv (see machine-setup.md 9.3)"; exit 1; }
       print "mbp: engine reachable; $repo is the same tree on both machines; tools on PATH"
       exit 0
     fi
