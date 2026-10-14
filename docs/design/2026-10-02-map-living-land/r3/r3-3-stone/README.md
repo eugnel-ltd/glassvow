@@ -240,7 +240,7 @@ banks of both rivers, a piece stands every 0.82 of its own width.
   (`floor_paint.gdshader`), biplanar along the bank.
 
 **The islands** (`presentation/map/landscape/land_islands.gd:30 (find)`,
-`presentation/map/landscape/kit.gd:568 (_islands)`):
+`presentation/map/landscape/kit.gd:569 (_islands)`):
 
 - **Finding them.** The ground no road or river lets out to the land's edge.
   Each island is held at its pole, the cell farthest from a road.
@@ -253,16 +253,16 @@ banks of both rivers, a piece stands every 0.82 of its own width.
 
 - **Gravestones.** Short rows of two along the roads' verges, one row every
   13 m of road on alternating sides, 2.3–3.1 m off the line, placed before
-  the woodland's families (`presentation/map/landscape/kit.gd:657 (_verge_graves)`);
+  the woodland's families (`presentation/map/landscape/kit.gd:658 (_verge_graves)`);
   after them, one beside each of up to eight memorial shrines, of the first
-  sixteen (`presentation/map/landscape/kit.gd:639 (_shrine_graves)`); more on the
+  sixteen (`presentation/map/landscape/kit.gd:640 (_shrine_graves)`); more on the
   islands; at most 30 on the verges and by the shrines (15–26 gravestones a
   land in all at seeds 717 and 1–3).
-- **Broken walls** (`presentation/map/landscape/kit.gd:702 (_ruins)`). Up to four
+- **Broken walls** (`presentation/map/landscape/kit.gd:703 (_ruins)`). Up to four
   stand 3 to 5.5 m off a road, at least 16 m apart, turned across the
   camera's view, each with fallen blocks and a mossy mound beside it.
-- **Only where they will be drawn** (`presentation/map/landscape/kit.gd:763 (_in_sight)`,
-  `presentation/map/landscape/kit.gd:782 (_unhidden)`). A ruin is a card, and the
+- **Only where they will be drawn** (`presentation/map/landscape/kit.gd:764 (_in_sight)`,
+  `presentation/map/landscape/kit.gd:783 (_unhidden)`). A ruin is a card, and the
   woodland draws a card only where it hides nothing it must keep in sight:
   the roads' lanes, the decks, the waystones, the lamps, the water, the
   gateway, the shrines, the rocks and the other ruins. The kit asks the same
@@ -271,7 +271,7 @@ banks of both rivers, a piece stands every 0.82 of its own width.
   `presentation/map/landscape/wood_planting.gd:309 (protected_area)`), and keeps it up
   to date with every placement after; and it places nothing the woodland
   keeps in sight behind a ruin's card. The planting then plants against the
-  kit's grid (`presentation/map/landscape/kit.gd:533 (woodland_sight)`), the same
+  kit's grid (`presentation/map/landscape/kit.gd:534 (woodland_sight)`), the same
   protection over the same placements, so the grid is built once. Without
   this, 34 of 58 ruins at seed 717 were placed and then left out.
 - **Planting.** The woodland plants them as cards where the kit placed them,
@@ -280,7 +280,7 @@ banks of both rivers, a piece stands every 0.82 of its own width.
   through their cards (`presentation/map/landscape/wood_planting.gd:536 (casts)`), and
   their cards never sway (`presentation/map/landscape/impostor_wood.gd:159 (card_colour)`).
 
-**Rocks off the water** (`presentation/map/landscape/kit.gd:967 (_clear)`): an
+**Rocks off the water** (`presentation/map/landscape/kit.gd:968 (_clear)`): an
 outcrop's footprint circle may reach over the bank and at most a quarter of
 its radius over the water. On main, two to five rocks a land reached further
 over the river (2, 3, 5 and 2 at seeds 717, 1, 2 and 3).
@@ -743,12 +743,12 @@ at seeds 717 and 1–3):
     where the pool has a thread to spare ([below](#a-pool-with-no-thread-to-spare)),
     and the islands' stage waits for it after the arch, the heroes and the
     lanterns (27 ms on the Mac; the search 9 ms)
-    (`presentation/map/landscape/kit.gd:603 (_seek_islands)`).
+    (`presentation/map/landscape/kit.gd:604 (_seek_islands)`).
   - The stone's merge reads only the kit's placements and the land. It now
     gathers the pieces into their cells on the worker pool, again where the
     pool has a thread to spare, while the woodland is planted beside it,
     and the land's worker commits the meshes
-    after (`presentation/map/landscape/kit.gd:821 (gather_stone)`,
+    after (`presentation/map/landscape/kit.gd:822 (gather_stone)`,
     `presentation/map/landscape/land_stone.gd:129 (finish)`).
   - Gathering sends nothing to the renderer, so no two uploads overlap.
   - On the Mac, the islands' stage on the land's worker falls from 25.3 to

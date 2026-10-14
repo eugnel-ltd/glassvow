@@ -6,6 +6,9 @@ var stone: SurfaceTool = SurfaceTool.new()
 var stone_count: int = 0
 var terrain: Terrain
 var _unit: Mesh = Meshes.unit_box()
+## The gateway arch's pose, [position, scale, yaw], footed at `finish`: the
+## kit may move the arch after placing it (`kit.gd` `_face_gateway`).
+var _arch: Array = []
 
 func begin(surface: Terrain) -> void:
 	terrain = surface
@@ -13,9 +16,7 @@ func begin(surface: Terrain) -> void:
 
 func place(kind: String, at: Vector3, scale_value: float, yaw: float) -> void:
 	if kind == "amber-arch":
-		for side: float in [-1, 1]:
-			var offset: Vector3 = Vector3(side * 1.65, 0, 0).rotated(Vector3.UP, yaw)
-			_pad(at + offset * scale_value, Vector2(1.2, 1.35) * scale_value, yaw)
+		_arch = [at, scale_value, yaw]
 	elif kind == "memorial":
 		_pad(at, Vector2(0.92, 0.63) * scale_value, yaw)
 
@@ -32,5 +33,12 @@ func _pad(at: Vector3, footprint: Vector2, yaw: float) -> void:
 	stone_count += 1
 
 func finish() -> void:
+	if not _arch.is_empty():
+		var at: Vector3 = _arch[0]
+		var scale_value: float = _arch[1]
+		var yaw: float = _arch[2]
+		for side: float in [-1, 1]:
+			var offset: Vector3 = Vector3(side * 1.65, 0, 0).rotated(Vector3.UP, yaw)
+			_pad(at + offset * scale_value, Vector2(1.2, 1.35) * scale_value, yaw)
 	if stone_count:
 		Meshes.node(self, Meshes.finish(stone), Meshes.material(Color("464048")), "Ground-following stone footings")

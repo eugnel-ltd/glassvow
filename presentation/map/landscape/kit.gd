@@ -343,6 +343,7 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 	_verges(grey)
 	_accents(grey)
 	_bridge_dressing(grey)
+	_face_gateway(grey)
 	contacts.finish()
 	if static_scenery!=null: static_scenery.call("finish")
 	if stone_later:
@@ -1084,3 +1085,85 @@ func _place(kind: String, p: Vector3, scale_value: float, yaw: float, grey: bool
 			var tile: int = ImpostorAtlas.tile_for(kind, yaw)
 			_cards.append([ImpostorAtlas.rect(tile, p, scale_value),
 				_sight.depth(p) + ImpostorAtlas.shift(tile) * scale_value + Sight.DEPTH_MARGIN])
+
+
+## A face-on gateway's clearance (`_gateway_clear`): round each pier's footing
+## and along the lane through it (metres).
+const GATEWAY_PIER: float = 0.85
+const GATEWAY_LANE: float = 0.9
+## How far the ground under either pier may lie from the ground under the
+## arch's centre (metres); its footings fill the rest (`ground_contacts.gd`).
+const GATEWAY_LEVEL: float = 0.2
+## Whether the build turns the gateway to face the camera (`_face_gateway`);
+## the suite turns it off to show the turn moves nothing else.
+static var face_gateway: bool = true
+
+
+## The gateway arch turned to face the journey camera (#660; the owner's leave,
+## 14 Oct 2026). `_landmark` stood it on `GatewaySites.choose`'s passage, a
+## road across the screen that shows it edge-on, and every other placement was
+## made round it there; last of all, drawing no random numbers, it moves to the
+## face-on site `GatewaySites.facing` finds clear of them (`_gateway_clear`),
+## so none of them moves. Its companions and its terrace stay at the first
+## site, and what the woodland keeps in sight there stays kept; its apron of
+## flags, its footings and its lamps go with it, and the woodland keeps it in
+## sight where it now stands. Where no leg has a face-on site it stays where
+## it stood.
+func _face_gateway(grey: bool) -> void:
+	if not face_gateway:
+		return
+	var index: int = placed.find_custom(func(item: Dictionary) -> bool: return item["kind"] == ARCH)
+	if index < 0:
+		return
+	var site: Dictionary = GatewaySites.facing(terrain, anchors, _gateway_clear.bind(placed[index]))
+	if site.is_empty():
+		return
+	var at: Vector3 = site["position"]
+	var yaw: float = float(str(site["yaw"]))
+	var item: Dictionary = placed[index]
+	var node: Node3D = placed_nodes[index]
+	var was: Vector3 = item["position"]
+	node.position = at + Vector3.UP * (node.position.y - was.y)
+	node.rotation.y = yaw
+	neighbours.remove(item)
+	item["position"] = at
+	item["yaw"] = yaw
+	neighbours.add(item)
+	if not grey:
+		contacts.place(ARCH, at, float(str(item["scale"])), yaw)
+		var ground: MeshInstance3D = terrain.get_node("Quiet sculpted ground") as MeshInstance3D
+		(ground.material_override as ShaderMaterial).set_shader_parameter("gateway_position", Vector2(at.x, at.z))
+	if _sight != null:
+		Planting.protect_item(_sight, item)
+		Planting.protect_lamps(_sight, _lamps_of(item))
+
+
+## Whether the arch (`arch`, its placement) at `at`, turned to `yaw`, stands
+## clear of every other placement: on dry ground level under both piers, no
+## earlier ruin's card hiding it, no tree's trunk and nothing but undergrowth
+## at either pier's footing, and nothing but foliage on its lane. Undergrowth
+## may grow round a pier's foot; the woodland trims whatever foliage would
+## hide the arch (`wood_planting.gd` `protected_area`).
+func _gateway_clear(at: Vector3, yaw: float, arch: Dictionary) -> bool:
+	var side: Vector3 = Vector3(cos(yaw), 0.0, -sin(yaw))
+	for pier: Vector3 in [at - side * GatewaySites.PIER_OFFSET, at + side * GatewaySites.PIER_OFFSET]:
+		if not terrain.is_dry(pier) or absf(terrain.surface_height(pier.x, pier.z) - at.y) > GATEWAY_LEVEL:
+			return false
+	if not terrain.is_dry(at) or not _unhidden({"kind": ARCH, "position": at, "radius": arch["radius"],
+			"height": arch["height"], "scale": arch["scale"], "yaw": yaw}):
+		return false
+	for other: Dictionary in neighbours.query(at, float(str(arch["radius"]))):
+		var kind: String = other["kind"]
+		if is_same(other, arch) or kind.begins_with("ash-"):
+			continue
+		var other_at: Vector3 = other["position"]
+		var there: Vector2 = _flat(other_at)
+		var tree: bool = kind.begins_with("conifer")
+		# A tree's trunk, as `_clear` keeps it off the walking lane.
+		var reach: float = float(str(other["radius"])) * (0.38 if tree else 1.0)
+		if not tree and there.distance_to(_flat(at)) < GATEWAY_LANE + reach:
+			return false
+		for sign_value: float in [-1, 1]:
+			if there.distance_to(_flat(at + side * sign_value * GatewaySites.PIER_OFFSET)) < GATEWAY_PIER + reach:
+				return false
+	return true

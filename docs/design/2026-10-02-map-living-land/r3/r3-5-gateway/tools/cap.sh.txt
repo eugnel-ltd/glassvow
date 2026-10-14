@@ -1,0 +1,7 @@
+#!/bin/zsh
+# cap.sh <out.png> [args]: one A12-condition capture (look.gd) in this worktree; lane map-arch scratch.
+WT=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-arch
+OUT=$1; shift 1
+GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 timeout 240 godot --path $WT --rendering-driver metal --rendering-method mobile --position 1400,900 \
+  -s res://artifacts/map-arch/look.gd -- --map --look-out=$OUT "$@" > ${OUT%.png}.log 2>&1
+echo "exit $? $(grep -c 'SHADER ERROR\|Error compiling shader' ${OUT%.png}.log) shader errors, $(grep -c 'SCRIPT ERROR' ${OUT%.png}.log) script errors $(grep '^ARCH' ${OUT%.png}.log)"

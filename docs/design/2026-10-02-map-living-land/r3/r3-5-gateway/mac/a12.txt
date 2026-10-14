@@ -1,0 +1,14 @@
+# A12 Metal condition (GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 --rendering-driver metal --rendering-method mobile), every still's log
+branch: 11 runs; shader-compile errors 0; script errors 0; other ERROR lines (exit-time leak notices aside) 0
+main 22d0e856: 10 runs; shader-compile errors 0; script errors 0; other ERROR lines (exit-time leak notices aside) 0
+
+ARCH (-2.241088, 1.481236, 8.593856) yaw -28.0204045281056 screen (1693.964, 183.8895)
+ARCH (-2.241088, 1.481236, 8.593856) yaw -28.0204045281056 screen (421.9676, 194.7123)
+ARCH (-2.241088, 1.481236, 8.593856) yaw -28.0204045281056 screen (421.978, 194.6977)
+ARCH (-2.241088, 1.481236, 8.593856) yaw -28.0204045281056 screen (589.9316, 410.0962)
+ARCH (-2.241088, 1.481236, 8.593856) yaw -28.0204045281056 screen (589.9536, 410.0654)
+ARCH (-2.241088, 1.481236, 8.593856) yaw -28.0204045281056 screen (728.9316, 410.0962)
+ARCH (-2.241088, 1.481236, 8.593856) yaw -28.0204045281056 screen (728.9536, 410.0654)
+ARCH (-24.49578, 0.362241, 7.59596) yaw 23.391493413564 screen (590.1802, 409.8159)
+ARCH (-33.08408, 0.194959, 7.461324) yaw 15.4625889678337 screen (589.826, 409.8741)
+ARCH (-6.841125, 0.946228, 15.14091) yaw -27.3393307662227 screen (589.952, 410.1484)
