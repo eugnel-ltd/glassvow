@@ -172,6 +172,9 @@ const TURN_GAP: float = 0.12
 const TURN_PITCH: float = -14.0
 ## Each card under the stack's top one sits this far down and to the side.
 const STACK_STEP: Vector2 = Vector2(2.0, 3.0)
+## A card's opacity before the deal: unseen, yet drawn (an item at zero
+## opacity is not drawn at all, so its pipelines would wait for its turn).
+const PRE_DEAL_A: float = 0.01
 const RM_FADE: float = 0.16
 const RM_GAP: float = 0.04
 ## THE PICK. The card taken turns face down as it flies into the top menu's
@@ -910,6 +913,15 @@ func _deal(i: int) -> void:
 	var n: int = _cards.size()
 	var up: float = _ramp(_deal_at(), STACK_IN)
 	_card_a[i] = up
+	if up <= 0.0:
+		# Until the deal each card stands face up as built, drawn at PRE_DEAL_A,
+		# so everything its face up at rest draws compiles in the frames that
+		# build the route, behind its wipe. Drawn first at the end of its turn,
+		# on the iPad 8 straight after an install that cost one 466 ms frame
+		# mid-reveal (a canvas pipeline main compiles as its cards rise in).
+		_card_a[i] = PRE_DEAL_A
+		_place_card(i)
+		return
 	_card_rise[i] = CARD_RISE * pow(1.0 - up, 3.0)
 	var top_first: int = n - 1 - i
 	var out: float = 1.0 - pow(1.0 - _ramp(_deal_at() + STACK_IN + DEAL_GAP * float(top_first), DEAL_OUT), 3.0)

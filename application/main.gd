@@ -1610,6 +1610,12 @@ func _build_vigil_ahead(delta: float) -> void:
 	screen.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child(screen)
 	_vigil_ahead = screen
+	# The Backs shelf's cards a frame later, apart from the hall's own build:
+	# built at the Backs pane's tap, their first draw ran one 50 ms frame into
+	# the look change on the iPad 8 (#657 PR 7).
+	get_tree().process_frame.connect(func() -> void:
+		if is_instance_valid(screen) and screen == _vigil_ahead:
+			screen.prepare_backs(), CONNECT_ONE_SHOT)
 	_vigil_ahead_key = _ahead_key()
 
 

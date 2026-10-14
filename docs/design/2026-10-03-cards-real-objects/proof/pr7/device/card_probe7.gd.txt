@@ -10,9 +10,10 @@ extends Node
 ##                (phase pick, 1.5 s: on B its flight into the HUD's deck).
 ##   mode=shelf   from the title at rest, the Vigil opened as from its word
 ##                (phase vigil, 2.5 s); on B then the Backs pane (phase backs,
-##                2 s: the shelf built, the look change) and a choice of an
-##                earned back not in use (phase choose, 1.5 s: the table's back
-##                baked on a bench). The Vigil holds one shard, so Vesper is earned.
+##                2 s: the look change; the shelf built ahead with the hall, or
+##                at the tap) and a choice of the earned back not in use (phase
+##                choose, 1.5 s: the table's back baked on a bench). The Vigil
+##                holds one shard, so Vesper is earned.
 ## Each frame row: phase, wall ms, start-to-draw, draw, process, root GPU,
 ## video memory MiB, pipeline compiles. Rows are held in memory and written at
 ## the end: no file I/O inside a measured frame.
@@ -41,6 +42,7 @@ static func config() -> Dictionary:
 				var kv: PackedStringArray = part.split("=", true, 1)
 				if kv.size() == 2:
 					out[kv[0]] = kv[1]
+	# user:// is the app's Documents on iOS, where devicectl reads it.
 	out["file"] = "user://card_probe_%s.txt" % out["nonce"]
 	return out
 
@@ -50,6 +52,9 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	cfg = config()
 	main = get_parent() as Main
+	# The probe's Vigil from boot, so the hall Main builds ahead while the
+	# title rests is built on it, as a player's is.
+	main._vigil = _vigil()
 	_vp = get_viewport().get_viewport_rid()
 	RenderingServer.viewport_set_measure_render_time(_vp, true)
 	_row("PROBE nonce=%s mode=%s engine=%s window=%s build=%s" % [cfg["nonce"], cfg["mode"],
@@ -96,12 +101,6 @@ func _run() -> void:
 	if f != null:
 		f.store_string("\n".join(_rows) + "\n")
 		f.close()
-	# The rows go to Documents for devicectl, as the earlier probes' did.
-	var docs: String = OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS)
-	var g: FileAccess = FileAccess.open(docs.path_join("card_probe_%s.txt" % cfg["nonce"]), FileAccess.WRITE)
-	if g != null:
-		g.store_string("\n".join(_rows) + "\n")
-		g.close()
 
 
 func _vigil() -> VigilState:
@@ -138,7 +137,6 @@ func _reward() -> void:
 
 
 func _shelf() -> void:
-	main._vigil = _vigil()
 	_phase = "vigil"
 	_row("MARK vigil")
 	main._show_vigil(false, true)
@@ -153,7 +151,11 @@ func _shelf() -> void:
 	await _wait(2.0)
 	_phase = "choose"
 	_row("MARK choose")
-	screen.call("backs_view")._pick("rose")
+	# A change of back: whichever earned back is not in use.
+	var shelf = screen.call("backs_view")
+	var to: String = "vault" if shelf.in_use() == "rose" else "rose"
+	_row("CHOOSE %s over %s" % [to, shelf.in_use()])
+	shelf._pick(to)
 	await _wait(1.5)
 	_row("WEARING %s" % CardTurn.wearing())
 

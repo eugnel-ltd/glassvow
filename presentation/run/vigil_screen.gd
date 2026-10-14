@@ -182,6 +182,9 @@ func _build_rose() -> void:
 
 ## The Backs look is built when it is first wanted, as the Rose look is: its
 ## earned backs are live cards, and the tap frame builds only the look on view.
+## A hall built ahead (Main, while the title rests) builds it then instead
+## (`prepare_backs`), hidden, so its cards have drawn and let their stages go
+## before the pane is tapped.
 func _build_backs() -> void:
 	if _backs != null:
 		return
@@ -206,6 +209,11 @@ func announce() -> void:
 func _show_deeds() -> void:
 	_look_to(VigilHall.DEEDS)
 	cue_requested.emit(&"vigil")
+
+
+## Build the Backs look now, hidden (a hall built ahead).
+func prepare_backs() -> void:
+	_build_backs()
 
 
 func _show_backs() -> void:
