@@ -1,0 +1,3 @@
+batchW2 dev1: samples 135 peak 604.9 MiB last 602.9 MiB
+batchW3 dev-a2: samples 135 peak 605.9 MiB last 601.7 MiB
+batchW4 ctl-a3: samples 135 peak 597.4 MiB last 596.7 MiB

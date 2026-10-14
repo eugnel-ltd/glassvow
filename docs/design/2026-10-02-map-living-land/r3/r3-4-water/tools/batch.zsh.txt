@@ -1,0 +1,50 @@
+#!/bin/zsh
+# Lane R3.4 batch W1/W2 (scratch; QA app only, under the shared lock, taken only when free
+# and never broken): the branch against main, interleaved, two installs each.
+# Per install: L1 = boot, then 600-frame rests at the cadence and live at Journey, river,
+# Close and Whole act, under an Activity Monitor recording (the peak physical footprint);
+# V1 (and in W1 V2, which also lingered for a screenshot) = short Journey holds for video memory.
+# Every memory warning the OS sends is a probe row (the measuring copy's own patch).
+set -u
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-r34-lane
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+LOCK=$FLOW/ipad.lock; OWNER=map-r34
+OUT=$L/device/${BATCH:-batchW1}
+[[ "${OUT:A}" == $L/* ]] || { echo "OUT outside the lane"; exit 1; }
+mkdir -p $OUT
+source /Users/jamesto/Coding/glassvow/.claude/worktrees/map-r34/tools/map_trace/device.zsh
+while ! mkdir $LOCK 2>/dev/null; do
+  echo "== lock held by '$(cat $LOCK/owner 2>/dev/null)'; waiting $(date +%T)"; sleep 60
+done
+echo $OWNER > $LOCK/owner; echo "== lock taken $(date +%T)"
+release() { [[ "$(cat $LOCK/owner 2>/dev/null)" == $OWNER ]] && rm -rf $LOCK && echo "== lock released $(date +%T)"; }
+trap release EXIT
+hold() { [[ "$(cat $LOCK/owner 2>/dev/null)" == $OWNER ]] && touch $LOCK/owner; }
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+echo "== start $(date +%T); Mac load $(uptime | sed 's/.*averages: //')"
+check_build() { grep -q "\"build\":\"$2\"" $OUT/$1.jsonl 2>/dev/null && echo "   $1: build $2" || { echo "   $1: WRONG BUILD (wanted $2)"; mv $OUT/$1.jsonl $OUT/$1.wrong.jsonl 2>/dev/null; }; }
+for n in 1 2; do
+  for b in ctl dev; do
+    hold
+    build=$(cat $L/ipa/$b.build)
+    echo "== install $b$n ($build) $(date +%T)"
+    timeout 300 zsh -c "source /Users/jamesto/Coding/glassvow/.claude/worktrees/map-r34/tools/map_trace/device.zsh; UDID=$UDID; OUT=$OUT; mt_install $L/ipa/$b.ipa" || { echo "install failed"; exit 1; }
+    # The launch drops devicectl's tunnel, which ends a recording started before it
+    # ("Device disconnected", batch W1): launch first, then record, as mt_trace does.
+    _mt_start $b$n-l1 --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --holds=cadence,live --probe-view=journey,river,close,whole
+    [[ -n "$MT_PID" ]] || { echo "== $b$n-l1: launch failed"; exit 1; }
+    echo $MT_PID > $OUT/$b$n-l1.pid
+    sleep 3
+    xcrun devicectl device info ddiServices --device $UDID >/dev/null 2>&1
+    rm -rf $OUT/$b$n-am.trace
+    timeout 300 xcrun xctrace record --device $UDID --template 'Activity Monitor' --all-processes \
+      --time-limit 140s --output $OUT/$b$n-am.trace --no-prompt 2>&1 | mt_redact > $OUT/$b$n-am.log
+    tail -1 $OUT/$b$n-am.log
+    _mt_rows $b$n-l1
+    check_build $b$n-l1 $build
+    hold
+    MT_WAIT=40 mt_launch $b$n-v1 --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --holds=cadence --hold-frames=60 --probe-view=journey
+    check_build $b$n-v1 $build
+  done
+done
+echo "== done $(date +%T)"

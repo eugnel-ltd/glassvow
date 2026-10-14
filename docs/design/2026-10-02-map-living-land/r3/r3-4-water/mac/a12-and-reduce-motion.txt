@@ -1,0 +1,34 @@
+# main 97890cad (the ctl measuring worktree)
+pad-landscape en lean: exit 0 0 shader errors, 0 script errors
+pad-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+pad-landscape en full: exit 0 0 shader errors, 0 script errors
+phone-landscape en lean: exit 0 0 shader errors, 0 script errors
+phone-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+phone-landscape en full: exit 0 0 shader errors, 0 script errors
+desktop-landscape en lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape en full: exit 0 0 shader errors, 0 script errors
+pad river close: exit 0 0 shader errors, 0 script errors
+pad whole: exit 0 0 shader errors, 0 script errors
+reduce motion on: exit 0 0 shader errors, 0 script errors
+reduce motion on changed px 12785
+reduce motion off: exit 0 0 shader errors, 0 script errors
+reduce motion off changed px 108860
+all logs: shader errors 0, script errors 0, other ERROR lines 0
+# the branch (code 74c2c62c)
+pad-landscape en lean: exit 0 0 shader errors, 0 script errors
+pad-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+pad-landscape en full: exit 0 0 shader errors, 0 script errors
+phone-landscape en lean: exit 0 0 shader errors, 0 script errors
+phone-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+phone-landscape en full: exit 0 0 shader errors, 0 script errors
+desktop-landscape en lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape en full: exit 0 0 shader errors, 0 script errors
+pad river close: exit 0 0 shader errors, 0 script errors
+pad whole: exit 0 0 shader errors, 0 script errors
+reduce motion on: exit 0 0 shader errors, 0 script errors
+reduce motion on changed px 24365
+reduce motion off: exit 0 0 shader errors, 0 script errors
+reduce motion off changed px 123949
+all logs: shader errors 0, script errors 0, other ERROR lines 0

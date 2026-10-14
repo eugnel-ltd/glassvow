@@ -1,0 +1,15 @@
+== lock taken 01:53:53
+== install ctl (97890cad) 01:53:53
+== ctl-a1 nonce ctl-a1-1959115181: rows fresh
+== ctl-a1: recording cut short: Device got disconnected, ending recording...
+== ctl-a2 nonce ctl-a2-3186330747: rows fresh
+== ctl-a2: recording cut short: Device got disconnected, ending recording...
+== ctl-a3 nonce ctl-a3-1707332584: rows fresh
+== ctl-a3: full recording
+== install dev (74c2c62c) 02:03:02
+== dev-a1 nonce dev-a1-419925608: rows fresh
+== dev-a1: recording cut short: Device got disconnected, ending recording...
+== dev-a2 nonce dev-a2-201729100: rows fresh
+== dev-a2: full recording
+== done 02:11:25
+== lock released 02:11:25
