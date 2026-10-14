@@ -64,6 +64,7 @@ static func run(fails: Array[String]) -> void:
 	MapScene.release_kept_journey()
 	_blob(fails)
 	_warm(fails)
+	await _warm_busy_parent(fails)
 
 
 ## The lit picture's tiles cover it exactly, none over the limit, none apart.
@@ -431,6 +432,34 @@ static func _blob(fails: Array[String]) -> void:
 			back = back and (node as GeometryInstance3D).cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	_check(fails, back, "without the blob the pilgrim casts its own shadow again")
 	pilgrim.free()
+
+
+## A parent still setting up its children refuses `add_child` (the root, while
+## a capture harness builds Main in `_initialize`). The warm-up asked then used
+## to log an error and dereference a view that never existed; it must stand in
+## and draw all the same, a frame later. The decision under test is that the
+## sample is drawn and let go, not that a guard exists.
+class SettingUp extends Node:
+	var sample: Node = null
+
+
+class Asker extends Node:
+	func _ready() -> void:
+		(get_parent() as SettingUp).sample = Warm.stand_in(get_parent())
+
+
+static func _warm_busy_parent(fails: Array[String]) -> void:
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	var parent: SettingUp = SettingUp.new()
+	parent.add_child(Asker.new())
+	tree.root.add_child(parent)
+	var sample: Node = parent.sample
+	var asked: bool = sample != null and not sample.is_inside_tree()
+	await tree.process_frame
+	await tree.process_frame
+	_check(fails, asked and not is_instance_valid(sample),
+		"the warm-up asked during its parent's setup waits, then stands in, draws and lets go")
+	parent.queue_free()
 
 
 ## The warm-up draws a sample of every pipeline the bake and the floor use

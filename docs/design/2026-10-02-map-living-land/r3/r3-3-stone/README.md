@@ -214,7 +214,7 @@ re-pick any of them.
   and the bridges' parapets (`presentation/map/landscape/land_floor.gd:28 (LIVE_CASTERS)`).
 - The floor's warm-up draws a sample of the stone's pipeline before the
   title, behind the launch screen, on a mesh in the stone's own vertex format
-  (`presentation/map/landscape/floor_warm.gd:196 (_stone_mesh)`).
+  (`presentation/map/landscape/floor_warm.gd:208 (_stone_mesh)`).
 
 **The ravine** (`presentation/map/landscape/ravine_cliffs.gd:57 (plan)`): along both
 banks of both rivers, a piece stands every 0.82 of its own width.
