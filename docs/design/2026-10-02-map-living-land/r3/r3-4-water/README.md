@@ -149,3 +149,28 @@ Run once on the code-final candidate (`74c2c62c`, at `f537e04d`), Mac,
 | `tools/check_imports.sh` | 0 | asset import OK |
 | `tools/check_scripts.sh` | 0 | scripts OK (511 checked) |
 | `godot --headless -s res://tests/run_all.gd` | 0 | PASS (165 tests) |
+
+Every further check `tools/ci_scope.py` selects for the PR's diff, at the docs head, 14 Oct from 02:58:
+
+| Command | Exit | Last verdict line |
+|---|---|---|
+| `python3 -B tests/test_ci_scope.py` | 0 | OK |
+| `python3 tools/check_store_dev_exclusion.py` | 0 | store-dev-exclusion OK |
+| `tools/test_check_store_dev_exclusion.sh` | 0 | check_store_dev_exclusion regression tests OK (12 cases) |
+| `python3 -B tools/check_export_paths.py --self-test` | 0 | export-paths self-test OK (10 cases) |
+| `python3 -B tools/check_export_paths.py` | 0 | export-paths OK |
+| `godot --headless -s res://tests/run_all.gd -- --tests=res://tests/test_release_identity.gd,res://tests/test_sentry_release.gd` | 0 | PASS (2 tests) |
+| `python3 -B tools/check_anchors.py` | 0 | anchors OK |
+| `python3 -B tools/check_benchmark_freeze.py` | 0 | benchmark citations frozen (592 in 52 file(s)) |
+| `python3 -B tools/build_site.py --check` | 0 | site is current: 7 files; the zh-Hant heading face covers all 54 display characters |
+| `python3 -B tools/check_map_assets.py --self-test` | 0 | self-test OK (all injected gates failed; GPU silhouette uses _silhouette_noise) |
+| `python3 -B tools/check_map_assets.py` | 0 | map assets OK (48 payload files; runtime landscape and retained asset library) |
+| `python3 -B tools/check_map_quality_v2.py --self-test` | 0 | self-test OK (12 fail-closed mutation fixtures) |
+| `python3 -B tools/check_map_quality_v2.py` | 0 | map quality v2 OK schema=1 contract=2.0.0 hard=18 soft=12 provisional=25 digest=4b54927afa7459be4b8b1bedc88fd8d653b8d9ba4ef8b79a53dce1282ecb0b5f |
+| `python3 -B tests/test_performance_budget.py` | 0 | OK |
+| `godot --headless -s res://tools/probe_map_seeds.gd -- --seeds=20` | 0 | map profiles OK (4 acts, 125978 candidate transforms; complete-layout proof is separate) |
+| `godot --headless -s res://tests/choice_scroll_reachability.gd` | 0 | PASS choice scroll reachability (844x390) |
+| `godot --headless -s res://tests/boss_relic_choice_containment.gd` | 0 | PASS boss relic choice containment (1180x820 en+zh-Hant) |
+| `godot --headless -s res://tests/dawn_phone_containment.gd` | 0 | PASS dawn containment (en + zh-Hant, pad-landscape) |
+| `godot --headless -s res://tests/measure_hud_location.gd` | 0 | MEASURE OK (0 clipped) |
+| `godot --headless -s res://tests/event_phone_containment.gd` | 0 | PASS event containment (2024 rects, en + zh-Hant, 11 events, 3 shapes) |
