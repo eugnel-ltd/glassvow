@@ -188,7 +188,7 @@ The pilgrim casts no live shadow and stands on its blob
 
 **The warm-up**: `FloorWarm` draws a sample of every pipeline the bake and the
 floor use, before the title's first frame shows, behind the launch screen
-(`presentation/map/landscape/floor_warm.gd:88 (draw_now)`). `MapJourneyPrefetch.prime` calls it for a
+(`presentation/map/landscape/floor_warm.gd:100 (draw_now)`). `MapJourneyPrefetch.prime` calls it for a
 run to resume (`presentation/map/map_journey_prefetch.gd:152 (in prime)`), and the title calls it for
 everyone else (`application/main.gd:1330 (in _show_title)`). See
 [Round 3](#round-3-the-title-stall-and-the-cold-open). The fallback is the old ground: where nothing can bake
@@ -287,10 +287,10 @@ The change:
 
 - `presentation/map/landscape/floor_warm.gd:41 (warm)`: builds the samples once a process, inside the
   title's build, and draws them at once.
-- `presentation/map/landscape/floor_warm.gd:88 (draw_now)`: draws every view twice with
+- `presentation/map/landscape/floor_warm.gd:100 (draw_now)`: draws every view twice with
   `RenderingServer.force_draw(false)`, nothing presented, under the bake's
   soft key, then lets go.
-- `presentation/map/landscape/floor_warm.gd:109 (_canvas)`: the 2D samples, in views of the bake's
+- `presentation/map/landscape/floor_warm.gd:121 (_canvas)`: the 2D samples, in views of the bake's
   kinds. The stamps go in a clear view; the mip chain is the bake's own, from a
   small picture of the floor's format. Each sample's command goes to the
   renderer as it is built.
