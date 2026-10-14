@@ -1,0 +1,19 @@
+#!/bin/zsh
+# SCRATCH (#657 PR 7): import, patch and export the QA builds of main (A) and the branch (B).
+set -euo pipefail
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/cards-pr7-dev
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+export GLASSVOW_BAKE_EDITOR=$HOME/Coding/glassvow-bake-editor/godot-src/bin/godot.macos.editor.arm64
+for b in A B; do
+  wt=$L/wt$b
+  echo "[$(date +%T)] import $b"
+  godot --headless --path $wt --import > $L/import_$b.log 2>&1 || true
+  python3 -I $L/patch7.py apply $wt $b-$(git -C $wt rev-parse --short HEAD) $L/card_probe7.gd
+  godot --headless --path $wt --import >> $L/import_$b.log 2>&1 || true
+  echo "[$(date +%T)] export $b"
+  $FLOW/qa_export.sh $wt --no-install > $L/export_$b.log 2>&1
+  mkdir -p $L/ipa_$b
+  cp $wt/build/ios-qa/export-dev/glassvow.ipa $L/ipa_$b/glassvow.ipa
+  python3 -I $L/patch7.py revert $wt x
+  echo "[$(date +%T)] built $b $(shasum -a 256 $L/ipa_$b/glassvow.ipa | cut -c1-12)"
+done

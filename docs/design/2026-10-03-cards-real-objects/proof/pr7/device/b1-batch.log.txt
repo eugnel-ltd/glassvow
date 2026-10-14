@@ -1,0 +1,66 @@
+[02:18:56] ipad lock held by 'map-r34' for 199 s; waiting 30 s
+[02:19:26] ipad lock held by 'map-r34' for 229 s; waiting 30 s
+[02:19:56] ipad lock held by 'map-r34' for 259 s; waiting 30 s
+[02:20:26] ipad lock held by 'map-r34' for 289 s; waiting 30 s
+[02:20:56] ipad lock held by 'map-r34' for 319 s; waiting 30 s
+[02:21:26] ipad lock held by 'map-r34' for 349 s; waiting 30 s
+[02:21:56] ipad lock held by 'map-r34' for 379 s; waiting 30 s
+[02:22:26] ipad lock held by 'map-r34' for 409 s; waiting 30 s
+[02:22:56] ipad lock held by 'map-r34' for 439 s; waiting 30 s
+[02:23:27] ipad lock held by 'map-r34' for 470 s; waiting 30 s
+[02:23:57] ipad lock held by 'map-r34' for 500 s; waiting 30 s
+[02:24:27] ipad lock held by 'map-r34' for 530 s; waiting 30 s
+[02:24:57] ipad lock held by 'map-r34' for 560 s; waiting 30 s
+[02:25:27] ipad lock held by 'map-r34' for 590 s; waiting 30 s
+[02:25:57] ipad lock held by 'map-r34' for 620 s; waiting 30 s
+[02:26:27] ipad lock held by 'map-r34' for 650 s; waiting 30 s
+[02:26:57] ipad lock held by 'map-r34' for 680 s; waiting 30 s
+[02:27:27] ipad lock held by 'map-r34' for 710 s; waiting 30 s
+[02:27:57] ipad lock held by 'map-r34' for 740 s; waiting 30 s
+[02:28:27] ipad lock held by 'map-r34' for 770 s; waiting 30 s
+[02:28:57] ipad lock held by 'map-r34' for 800 s; waiting 30 s
+[02:29:28] ipad lock held by 'map-r34' for 831 s; waiting 30 s
+[02:29:58] ipad lock held by 'map-r34' for 861 s; waiting 30 s
+[02:30:28] ipad lock held by 'map-r34' for 891 s; waiting 30 s
+[02:30:58] ipad lock held by 'map-r34' for 921 s; waiting 30 s
+[02:31:28] ipad lock held by 'map-r34' for 951 s; waiting 30 s
+[02:31:58] ipad lock held by 'map-r34' for 981 s; waiting 30 s
+[02:32:28] lock held
+[02:32:55] installed A (sha256 d28f0ddd6e1b)
+[02:32:55] launch b1a1wr mode=reward
+[02:33:21] rows b1a1wr: 290 frames
+[02:33:21] launch b1a1ws mode=shelf
+[02:33:50] rows b1a1ws: 481 frames
+[02:34:10] launch b1a1r mode=reward
+[02:34:39] rows b1a1r: 592 frames
+[02:34:39] launch b1a1s mode=shelf
+[02:35:06] rows b1a1s: 518 frames
+[02:35:28] installed B (sha256 42f4403a719a)
+[02:35:28] launch b1b2wr mode=reward
+[02:35:55] rows b1b2wr: 612 frames
+[02:35:55] launch b1b2ws mode=shelf
+[02:36:24] rows b1b2ws: 645 frames
+[02:36:44] launch b1b2r mode=reward
+[02:37:15] rows b1b2r: 641 frames
+[02:37:15] launch b1b2s mode=shelf
+[02:37:43] rows b1b2s: 728 frames
+[02:38:05] installed A (sha256 d28f0ddd6e1b)
+[02:38:05] launch b1a3wr mode=reward
+[02:38:31] rows b1a3wr: 529 frames
+[02:38:32] launch b1a3ws mode=shelf
+[02:38:58] rows b1a3ws: 534 frames
+[02:39:18] launch b1a3r mode=reward
+[02:39:45] rows b1a3r: 519 frames
+[02:39:45] launch b1a3s mode=shelf
+[02:40:11] rows b1a3s: 530 frames
+[02:40:33] installed B (sha256 42f4403a719a)
+[02:40:33] launch b1b4wr mode=reward
+[02:41:00] rows b1b4wr: 642 frames
+[02:41:00] launch b1b4ws mode=shelf
+[02:41:26] rows b1b4ws: 736 frames
+[02:41:46] launch b1b4r mode=reward
+[02:42:15] rows b1b4r: 639 frames
+[02:42:15] launch b1b4s mode=shelf
+[02:42:42] rows b1b4s: 691 frames
+[02:42:42] lock released
+[02:42:42] campaign done

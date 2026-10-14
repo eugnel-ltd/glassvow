@@ -1,0 +1,39 @@
+[02:56:27] lock held
+[02:56:51] installed A (sha256 c01b691c7ef8)
+[02:56:51] launch b2a1wr mode=reward
+[02:57:17] rows b2a1wr: 575 frames
+[02:57:17] launch b2a1ws mode=shelf
+[02:57:44] rows b2a1ws: 521 frames
+[02:58:04] launch b2a1r mode=reward
+[02:58:32] rows b2a1r: 564 frames
+[02:58:32] launch b2a1s mode=shelf
+[02:58:59] rows b2a1s: 533 frames
+[02:59:21] installed B (sha256 2e088f46c54f)
+[02:59:21] launch b2b2wr mode=reward
+[02:59:47] rows b2b2wr: 604 frames
+[02:59:47] launch b2b2ws mode=shelf
+[03:00:14] rows b2b2ws: 737 frames
+[03:00:34] launch b2b2r mode=reward
+[03:01:04] rows b2b2r: 640 frames
+[03:01:04] launch b2b2s mode=shelf
+[03:01:31] rows b2b2s: 729 frames
+[03:01:53] installed A (sha256 c01b691c7ef8)
+[03:01:53] launch b2a3wr mode=reward
+[03:02:21] rows b2a3wr: 603 frames
+[03:02:21] launch b2a3ws mode=shelf
+[03:02:48] rows b2a3ws: 528 frames
+[03:03:08] launch b2a3r mode=reward
+[03:03:36] rows b2a3r: 582 frames
+[03:03:36] launch b2a3s mode=shelf
+[03:04:03] rows b2a3s: 515 frames
+[03:04:30] installed B (sha256 2e088f46c54f)
+[03:04:30] launch b2b4wr mode=reward
+[03:04:57] rows b2b4wr: 597 frames
+[03:04:57] launch b2b4ws mode=shelf
+[03:05:24] rows b2b4ws: 738 frames
+[03:05:44] launch b2b4r mode=reward
+[03:06:13] rows b2b4r: 631 frames
+[03:06:13] launch b2b4s mode=shelf
+[03:06:41] rows b2b4s: 712 frames
+[03:06:41] lock released
+[03:06:41] campaign done
