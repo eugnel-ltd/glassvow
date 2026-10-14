@@ -1,0 +1,28 @@
+== lock taken 01:29:43
+== start 01:29:44; Mac load 50.92 82.63 136.06
+== install ctl1 (97890cad) 01:29:44
+Output file saved as: ctl1-am.trace
+== ctl1-l1 nonce ctl1-l1-1714928926: rows fresh
+   ctl1-l1: build 97890cad
+== ctl1-v1 nonce ctl1-v1-2179732758: rows fresh
+   ctl1-v1: build 97890cad
+== install dev1 (74c2c62c) 01:32:43
+Output file saved as: dev1-am.trace
+== dev1-l1 nonce dev1-l1-649720343: rows fresh
+   dev1-l1: build 74c2c62c
+== dev1-v1 nonce dev1-v1-1529112601: rows fresh
+   dev1-v1: build 74c2c62c
+== install ctl2 (97890cad) 01:39:08
+Output file saved as: ctl2-am.trace
+== ctl2-l1 nonce ctl2-l1-1038131798: rows fresh
+   ctl2-l1: build 97890cad
+== ctl2-v1 nonce ctl2-v1-234824268: rows fresh
+   ctl2-v1: build 97890cad
+== install dev2 (74c2c62c) 01:42:04
+Output file saved as: dev2-am.trace
+== dev2-l1 nonce dev2-l1-904828427: rows fresh
+   dev2-l1: build 74c2c62c
+== dev2-v1 nonce dev2-v1-3179715507: rows fresh
+   dev2-v1: build 74c2c62c
+== done 01:45:02
+== lock released 01:45:02

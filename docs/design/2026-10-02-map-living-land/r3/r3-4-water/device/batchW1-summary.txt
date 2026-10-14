@@ -1,0 +1,17 @@
+label build | holds (view/mode: missed, max ms) | Journey cadence video MiB | warnings
+ctl1-l1 97890cad | jou/cad:0,17.28 jou/liv:0,17.7 riv/cad:0,17.2 riv/liv:0,17.59 clo/cad:0,17.36 clo/liv:0,17.54 who/cad:0,17.81 who/liv:0,17.75 | 290.1 | 0
+ctl1-v1 97890cad | jou/cad:0,17.34 | 298.0 | 0
+ctl1-v2 97890cad | jou/cad:0,20.11 | 298.0 | 0
+ctl2-l1 97890cad | jou/cad:0,21.55 jou/liv:0,24.68 riv/cad:0,21.02 riv/liv:0,21.32 clo/cad:0,20.6 clo/liv:0,22.35 who/cad:0,20.69 who/liv:0,20.41 | 298.0 | 0
+ctl2-v1 97890cad | jou/cad:0,17.25 | 306.0 | 0
+ctl2-v2 97890cad | jou/cad:0,19.08 | 306.0 | 0
+dev1-l1 74c2c62c | jou/cad:0,22.05 jou/liv:0,20.24 riv/cad:0,22.56 riv/liv:0,19.93 clo/cad:0,20.36 clo/liv:0,21.03 who/cad:1,44.61 who/liv:0,17.74 | 306.0 | 0
+dev1-v1 74c2c62c | jou/cad:0,17.25 | 298.0 | 0
+dev1-v2 74c2c62c | jou/cad:0,18.82 | 298.0 | 0
+dev2-l1 74c2c62c | jou/cad:0,17.36 jou/liv:0,18.08 riv/cad:0,18.51 riv/liv:0,17.92 clo/cad:0,18.02 clo/liv:0,18.22 who/cad:0,17.75 who/liv:0,20.35 | 306.0 | 0
+dev2-v1 74c2c62c | jou/cad:0,17.33 | 292.2 | 0
+dev2-v2 74c2c62c | jou/cad:0,17.19 | 306.0 | 0
+
+all holds: missed 1, worst frame 44.61 ms; memory warnings 0
+ctl Journey cadence video MiB: ctl1-l1=290.1, ctl1-v1=298.0, ctl1-v2=298.0, ctl2-l1=298.0, ctl2-v1=306.0, ctl2-v2=306.0
+dev Journey cadence video MiB: dev1-l1=306.0, dev1-v1=298.0, dev1-v2=298.0, dev2-l1=306.0, dev2-v1=292.2, dev2-v2=306.0

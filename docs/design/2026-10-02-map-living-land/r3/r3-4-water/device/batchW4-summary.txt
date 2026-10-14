@@ -1,0 +1,8 @@
+label build | holds (view/mode: missed, max ms) | Journey cadence video MiB | warnings
+ctl-a1 97890cad | jou/cad:0,20.95 jou/liv:0,20.79 riv/cad:0,20.03 riv/liv:0,17.55 clo/cad:0,18.16 clo/liv:0,17.41 who/cad:0,20.84 who/liv:0,20.46 | 306.0 | 0
+ctl-a2 97890cad | jou/cad:0,19.74 jou/liv:0,18.29 riv/cad:0,19.99 riv/liv:0,17.38 clo/cad:0,18.34 clo/liv:0,19.22 who/cad:0,19.11 who/liv:0,17.47 | 292.2 | 0
+ctl-a3 97890cad | jou/cad:0,17.26 jou/liv:0,18.66 riv/cad:0,17.49 riv/liv:0,17.77 clo/cad:0,17.58 clo/liv:0,17.5 who/cad:0,17.49 who/liv:0,17.48 | 298.0 | 0
+
+all holds: missed 0, worst frame 20.95 ms; memory warnings 0
+ctl Journey cadence video MiB: ctl-a1=306.0, ctl-a2=292.2, ctl-a3=298.0
+dev Journey cadence video MiB: 

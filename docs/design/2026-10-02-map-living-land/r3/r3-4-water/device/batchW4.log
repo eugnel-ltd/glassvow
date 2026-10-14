@@ -1,0 +1,10 @@
+== lock taken 02:15:36
+== install ctl (97890cad) 02:15:37
+== ctl-a1 nonce ctl-a1-1126630788: rows fresh
+== ctl-a1: recording cut short: 
+== ctl-a2 nonce ctl-a2-2962026339: rows fresh
+== ctl-a2: recording cut short: 
+== ctl-a3 nonce ctl-a3-258095261: rows fresh
+== ctl-a3: full recording
+== done 02:32:26
+== lock released 02:32:26

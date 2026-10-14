@@ -731,6 +731,17 @@ The moss on the outcrops is the floor's own `floor/floor-moss.png`, sampled
 in world space and lifted to an olive green by `stone.gdshader`: nothing new
 ships for it.
 
+**R3.4 (the water, 14 Oct 2026), a lane pick, owner re-pick open:** Act I's
+river is drawn by `presentation/map/landscape/river_water.gdshaderinc`,
+shared by the desktop's and the lean river shaders, and ships no picture.
+The look is a cold river at the foot of a gorge at golden hour: dark, deep
+water, shaded at the cliffs' feet; the warm sky only at a grazing angle and
+along slick current lines; white water as lace where the river meets the
+cliffs and the shallows, faint flecks drifting downstream, and a ring and a
+tail round each pier. The palette is the include's uniforms (`deep_tint`,
+`shallow_tint`, `foam_tint`, `sky_low`, `sky_high`), so a re-pick is a
+change of values. Evidence: `docs/design/2026-10-02-map-living-land/r3/r3-4-water/README.md`.
+
 ## Rejection note — what "technically shippable" means
 
 Judging generated character art by eye is not enough; two of the five
