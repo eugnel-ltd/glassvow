@@ -198,7 +198,7 @@ re-pick any of them.
   renderer on the land's worker. The pieces load on the loader's threads
   before any land is built (`presentation/map/landscape/land_stone.gd:57 (prepare_step)`,
   from `Kit.preload_step`).
-- `stone.gdshader` (`presentation/map/landscape/stone.gdshader:34 (fragment)`):
+- `stone.gdshader` (`presentation/map/landscape/stone.gdshader:35 (fragment)`):
   - three samplers, none anisotropic: the atlas's colour and normals, and the
     moss;
   - a grade on the baked colour (`stone_tint`): granite reads grey under the

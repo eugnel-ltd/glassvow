@@ -1,0 +1,56 @@
+== lock taken 08:34:23
+== start 08:34:23; Mac load 29.45 23.73 19.76
+== install ctl1 (22d0e856) 08:34:24
+== ctl1-r1 nonce ctl1-r1-1927320894: rows fresh
+   ctl1-r1: build 22d0e856
+== ctl1-r2 nonce ctl1-r2-2986619666: rows fresh
+   ctl1-r2: build 22d0e856
+== ctl1-l1 nonce ctl1-l1-889924455: rows fresh
+   ctl1-l1: build 22d0e856
+== ctl1-l1: recording cut short
+== ctl1-l2 nonce ctl1-l2-182996823: rows fresh
+   ctl1-l2: build 22d0e856
+== ctl1-l2: full recording
+== ctl1-v1 nonce ctl1-v1-3229520648: rows fresh
+   ctl1-v1: build 22d0e856
+== install dev1 (5afc91b9) 08:50:50
+== dev1-r1 nonce dev1-r1-2939311204: rows fresh
+   dev1-r1: build 5afc91b9
+== dev1-r2 nonce dev1-r2-250988668: rows fresh
+   dev1-r2: build 5afc91b9
+== dev1-l1 nonce dev1-l1-70996580: rows fresh
+   dev1-l1: build 5afc91b9
+== dev1-l1: recording cut short
+== dev1-l2 nonce dev1-l2-1118220976: rows fresh
+   dev1-l2: build 5afc91b9
+== dev1-l2: recording cut short
+== dev1-v1 nonce dev1-v1-55802278: rows fresh
+   dev1-v1: build 5afc91b9
+== install ctl2 (22d0e856) 09:05:50
+== ctl2-r1 nonce ctl2-r1-2366622616: rows fresh
+   ctl2-r1: build 22d0e856
+== ctl2-r2 nonce ctl2-r2-973020509: rows fresh
+   ctl2-r2: build 22d0e856
+== ctl2-l1 nonce ctl2-l1-1972318858: rows fresh
+   ctl2-l1: build 22d0e856
+== ctl2-l1: recording cut short
+== ctl2-l2 nonce ctl2-l2-2514218485: rows fresh
+   ctl2-l2: build 22d0e856
+== ctl2-l2: recording cut short
+== ctl2-v1 nonce ctl2-v1-845212389: rows fresh
+   ctl2-v1: build 22d0e856
+== install dev2 (5afc91b9) 09:20:53
+== dev2-r1 nonce dev2-r1-2157230687: rows fresh
+   dev2-r1: build 5afc91b9
+== dev2-r2 nonce dev2-r2-3120723920: rows fresh
+   dev2-r2: build 5afc91b9
+== dev2-l1 nonce dev2-l1-2666125814: rows fresh
+   dev2-l1: build 5afc91b9
+== dev2-l1: recording cut short
+== dev2-l2 nonce dev2-l2-1799016163: rows fresh
+   dev2-l2: build 5afc91b9
+== dev2-l2: recording cut short
+== dev2-v1 nonce dev2-v1-143475394: rows fresh
+   dev2-v1: build 5afc91b9
+== done 09:35:50
+== lock released 09:35:50

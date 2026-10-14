@@ -1,0 +1,11 @@
+#!/bin/zsh
+# looks.zsh <worktree> <outdir>: lane R3.6's quick stills (scratch): Journey at the three
+# shapes (lean), Close over the river and the cliffs, Whole act, and the pad's cover count.
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-r36-lane
+WT=$1; OUT=$2; mkdir -p $OUT
+typeset -A VP; VP=(pad-landscape 1180x820 phone-landscape 844x390 desktop-landscape 1458x820)
+for shape in pad-landscape phone-landscape desktop-landscape; do
+  $L/tools/cap.sh $WT $OUT/${shape%-landscape}.png --map-steps=2 --shape=$shape --vp=$VP[$shape] --look-lean --look-view=journey | sed "s/^/$shape: /"
+done
+$L/tools/cap.sh $WT $OUT/close.png --map-steps=2 --shape=pad-landscape --vp=1180x820 --look-lean --look-view=close --look-pan=8,2 | sed "s/^/close: /"
+$L/tools/cap.sh $WT $OUT/whole.png --map-steps=2 --shape=pad-landscape --vp=1180x820 --look-lean --look-view=whole | sed "s/^/whole: /"

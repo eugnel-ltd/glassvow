@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+"""Lane R3.6 (scratch): two or three stills side by side with a caption, as JPEG.
+Usage: two_up.py <out.jpg> "<caption>" <png> <png> [<png>]; the target is cropped to its land."""
+import sys
+from PIL import Image, ImageDraw
+out, caption, paths = sys.argv[1], sys.argv[2], sys.argv[3:]
+ims = []
+for p in paths:
+    im = Image.open(p).convert('RGB')
+    if 'owner-target' in p:
+        im = im.crop((0, 90, 1672, 845))
+    ims.append(im)
+h = min(i.height for i in ims)
+ims = [i.resize((int(i.width * h / i.height), h)) for i in ims]
+W = sum(i.width for i in ims) + 8 * (len(ims) - 1)
+c = Image.new('RGB', (W, h + 24), (18, 18, 24)); d = ImageDraw.Draw(c)
+d.text((8, 6), caption, fill=(235, 235, 235)); x = 0
+for i in ims:
+    c.paste(i, (x, 24)); x += i.width + 8
+c.save(out, quality=86)

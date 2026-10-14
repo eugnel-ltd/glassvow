@@ -1,0 +1,33 @@
+== lock taken 09:36:39
+== start 09:36:39; Mac load 62.13 29.97 18.17
+== install ctl1 (22d0e856) 09:36:39
+== ctl1-r1 nonce ctl1-r1-295186506: rows fresh
+   ctl1-r1: build 22d0e856
+== ctl1-r2 nonce ctl1-r2-1358817000: rows fresh
+   ctl1-r2: build 22d0e856
+== install dev1 (5afc91b9) 09:40:43
+== dev1-r1 nonce dev1-r1-2552417374: rows fresh
+   dev1-r1: build 5afc91b9
+== dev1-r2 nonce dev1-r2-2260115507: rows fresh
+   dev1-r2: build 5afc91b9
+== dev1-l1 nonce dev1-l1-28436814: rows fresh
+   dev1-l1: build 5afc91b9
+== dev1-l1: recording cut short
+== dev1-l2 nonce dev1-l2-718426273: rows fresh
+   dev1-l2: build 5afc91b9
+== dev1-l2: full recording
+== install ctl2 (22d0e856) 09:52:20
+== ctl2-r1 nonce ctl2-r1-2292927036: rows fresh
+   ctl2-r1: build 22d0e856
+== ctl2-r2 nonce ctl2-r2-624830489: rows fresh
+   ctl2-r2: build 22d0e856
+== install dev2 (5afc91b9) 09:56:26
+== dev2-r1 nonce dev2-r1-1883926201: rows fresh
+   dev2-r1: build 5afc91b9
+== dev2-r2 nonce dev2-r2-121710472: rows fresh
+   dev2-r2: build 5afc91b9
+== dev2-l1 nonce dev2-l1-186809987: rows fresh
+   dev2-l1: build 5afc91b9
+== dev2-l1: full recording
+== done 10:04:32
+== lock released 10:04:32

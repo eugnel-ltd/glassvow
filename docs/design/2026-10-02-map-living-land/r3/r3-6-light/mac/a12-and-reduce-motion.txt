@@ -1,0 +1,37 @@
+Mac, A12 Metal condition (GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 --rendering-driver metal --rendering-method mobile), 14 Oct 2026.
+
+== R3.6 5afc91b9
+pad-landscape en lean: exit 0 0 shader errors, 0 script errors
+pad-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+pad-landscape en full: exit 0 0 shader errors, 0 script errors
+phone-landscape en lean: exit 0 0 shader errors, 0 script errors
+phone-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+phone-landscape en full: exit 0 0 shader errors, 0 script errors
+desktop-landscape en lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape en full: exit 0 0 shader errors, 0 script errors
+pad river close: exit 0 0 shader errors, 0 script errors
+pad whole: exit 0 0 shader errors, 0 script errors
+reduce motion on: exit 0 0 shader errors, 0 script errors
+reduce motion on changed px 0
+reduce motion off: exit 0 0 shader errors, 0 script errors
+reduce motion off changed px 187626
+all logs: shader errors 0, script errors 0, other ERROR lines 0
+
+== main 22d0e856
+pad-landscape en lean: exit 0 0 shader errors, 0 script errors
+pad-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+pad-landscape en full: exit 0 0 shader errors, 0 script errors
+phone-landscape en lean: exit 0 0 shader errors, 0 script errors
+phone-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+phone-landscape en full: exit 0 0 shader errors, 0 script errors
+desktop-landscape en lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape zh-Hant lean: exit 0 0 shader errors, 0 script errors
+desktop-landscape en full: exit 0 0 shader errors, 0 script errors
+pad river close: exit 0 0 shader errors, 0 script errors
+pad whole: exit 0 0 shader errors, 0 script errors
+reduce motion on: exit 0 0 shader errors, 0 script errors
+reduce motion on changed px 0
+reduce motion off: exit 0 0 shader errors, 0 script errors
+reduce motion off changed px 141623
+all logs: shader errors 0, script errors 0, other ERROR lines 0
