@@ -105,10 +105,11 @@ The pier draws with the kit's existing stone and bronze materials, the
 parapet with `bridge_stone.gdshader` (no sampler) and the decks with the
 same paint shader and its same two samplers, so no material gains a sampler.
 
-**Reduce Motion** at Close, two frames 1.5 s apart: 23,365 pixels change on
-the branch and 24,371 on main, every one of them the river's water (which
-moves under Reduce Motion on main too, another lane's follow-up). The piers'
-flames and the banners hold still.
+**Reduce Motion** at Close, two frames 1.5 s apart: on the measured branch
+(`4a95dbd5`, on `774c5932`) 23,365 pixels change against main's 24,371, every
+one of them the river's water, which main still moved then. After the rebase
+onto #719 (the river holds still under Reduce Motion), **0 pixels change**:
+the piers' flames and the banners hold still with everything else.
 
 **The token gate** (`tools/map_token_gate.gd`, #679), Act I, seeds 717 and
 1–3, phone and pad: **0 failed** in all eight runs, worst margin 1.017
@@ -172,8 +173,17 @@ QA copy (never committed): a row for every `NOTIFICATION_OS_MEMORY_WARNING`.
 
 ## Core gate
 
-Run once on the code-final candidate (`4a95dbd5`, at `8e85e209`), Mac,
-14 Oct, from 04:53, load 7 at the start:
+The measured build is `4a95dbd5` on main `774c5932`. Main then took #719 (the
+river's Reduce Motion) and #720 (the reward screen), neither touching this
+change's files; the branch was rebased onto `0ce8b226` without conflict, and
+the core gate was run again on the rebased head (code `5f2500a5`), 14 Oct
+from 06:21, load 8 at the start: `godot --version` 4.7.2.stable.official.ed1daf0bf;
+`tools/check_imports.sh` asset import OK; `tools/check_scripts.sh` scripts OK
+(513 checked); `godot --headless -s res://tests/run_all.gd` exit 0,
+**PASS (166 tests)**; anchors OK.
+
+Before the rebase, on the code-final candidate (`4a95dbd5`, at `8e85e209`),
+Mac, 14 Oct, from 04:53, load 7 at the start:
 
 | Command | Exit | Last verdict line |
 |---|---|---|
