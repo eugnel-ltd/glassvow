@@ -4,7 +4,8 @@ extends RefCounted
 ## only — the domain never sees a back. A back is a picture plus a CardSurface
 ## recipe: `art` (a painting on disk) or `shader` (a procedural canvas shader),
 ## and `surface`, so the stock, the edge, the shadow and the finish are the
-## same system the fronts wear and a new back costs one entry.
+## same system the fronts wear and a new back costs one entry. An optional
+## `holo` tunes the back's hologram to its painting (CardHolo.parse_back_knobs).
 ##
 ## Each back also names the rule that unlocks it. The rules are pure reads of
 ## what the Vigil ledger already records, so earning a back writes nothing:
@@ -107,10 +108,16 @@ static func _parse_back(id: String, value: Variant) -> Variant:
 	var surface: String = str(row.get("surface", ""))
 	if not CardSurface.RECIPES.has(surface):
 		return "%s surface '%s' is not a recipe" % [where, surface]
+	var holo: Variant = {}
+	if row.has("holo"):
+		holo = CardHolo.parse_back_knobs(row["holo"])
+		if holo is String:
+			return "%s holo %s" % [where, holo]
 	var unlock: Variant = _parse_unlock(row.get("unlock"))
 	if unlock is String:
 		return "%s unlock %s" % [where, unlock]
-	return {"back": art if art != "" else shader, "surface": surface, "unlock": unlock}
+	return {"back": art if art != "" else shader, "surface": surface, "holo": holo,
+		"unlock": unlock}
 
 
 static func _parse_unlock(value: Variant) -> Variant:
@@ -165,13 +172,14 @@ func has(id: String) -> bool:
 	return _backs.has(id)
 
 
-## The CardView data that builds this back: its picture under `back` and its
-## recipe under `surface`. Empty for an unknown id.
+## The CardView data that builds this back: its picture under `back`, its
+## recipe under `surface` and its hologram's knobs under `holo` (empty for
+## none). Empty for an unknown id.
 func card_data(id: String) -> Dictionary:
 	if not _backs.has(id):
 		return {}
 	var row: Dictionary = _backs[id]
-	return {"back": row["back"], "surface": row["surface"]}
+	return {"back": row["back"], "surface": row["surface"], "holo": row["holo"]}
 
 
 ## Whether `vigil` has earned this back. A null Vigil is a blank one: only the

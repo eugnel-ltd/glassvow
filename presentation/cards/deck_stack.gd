@@ -129,6 +129,6 @@ func _follow() -> void:
 	if back == _worn and stack.visible == (back != null):
 		return
 	_worn = back
-	stack.wear_back(back.stage if back != null else null)
+	stack.wear_back(back.stage if back != null else null, back.holo if back != null else {})
 	stack.visible = back != null
 	painting.visible = back == null

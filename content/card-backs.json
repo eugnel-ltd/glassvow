@@ -2,8 +2,8 @@
   "v": 1,
   "default": "vault",
   "backs": {
-    "vault": {"art": "res://assets/art/backs/vault.png", "surface": "aurora", "unlock": {"kind": "default"}},
-    "rose": {"art": "res://assets/art/backs/rose.png", "surface": "prism", "unlock": {"kind": "shards", "at": 1}},
-    "eclipse": {"art": "res://assets/art/backs/eclipse.png", "surface": "gilt", "unlock": {"kind": "deed", "deed": "wins", "at": 1}}
+    "vault": {"art": "res://assets/art/backs/vault.png", "surface": "plastic", "holo": {"band_mode": 0, "band_angle": 8, "centre": [76, 108], "palette": [0.55, 0.85, 1.0], "palette_mix": 0.35, "strength": 1.35, "scale": 1.5}, "unlock": {"kind": "default"}},
+    "rose": {"art": "res://assets/art/backs/rose.png", "surface": "plastic", "holo": {"band_mode": 1, "centre": [76, 108], "palette": [1.0, 0.55, 0.9], "palette_mix": 0.15, "strength": 1.3, "scale": 1.0}, "unlock": {"kind": "shards", "at": 1}},
+    "eclipse": {"art": "res://assets/art/backs/eclipse.png", "surface": "plastic", "holo": {"band_mode": 2, "centre": [76, 104], "palette": [1.0, 0.8, 0.45], "palette_mix": 0.4, "strength": 1.15, "scale": 1.2}, "unlock": {"kind": "deed", "deed": "wins", "at": 1}}
   }
 }

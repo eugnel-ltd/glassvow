@@ -2,13 +2,13 @@ class_name BakedCard
 extends Control
 ## One card of a many-card view (CardGrid). At rest it draws its baked face
 ## (CardFaces) — picture, table shadow and a rare's shine — through CardView's
-## own nodes, so it is the live card's pixels for a twentieth of its video
-## memory (to a level on a few pixels where the card is scaled:
-## tools/check_card_faces.gd). While a pointer is on it, a live CardView stands
-## in for it: built on the spot, lent this node's pointer (the live card takes
-## no input itself), and dropped once it has sprung back to rest, when the swap
-## is invisible. Which card may stand live is the grid's call
-## (`pointer_changed`).
+## own nodes, its picture wearing the card's hologram (CardHolo), so it is the
+## live card's pixels for a twentieth of its video memory (to a level on a few
+## pixels where the card is scaled: tools/check_card_faces.gd). While a pointer
+## is on it, a live CardView stands in for it: built on the spot, lent this
+## node's pointer (the live card takes no input itself), and dropped once it has
+## sprung back to rest, when the swap is invisible. Which card may stand live is
+## the grid's call (`pointer_changed`).
 ##
 ## The node keeps the CardView's footprint and pivot, so a grid seats and
 ## scales it exactly as it did a live card. It takes input only once its face
@@ -129,11 +129,19 @@ func _landed(face: CardFaces.Face) -> void:
 func _wear(face: CardFaces.Face) -> void:
 	_face = face
 	_rest.append(CardView.shadow_panel(face.shadow))
-	_rest.append(CardView.picture(face.picture, CardFaces.REACH))
+	var picture: Control = CardView.picture(face.picture, CardFaces.REACH)
+	_rest.append(picture)
 	if face.shine:
 		_rest.append(CardView.shine())
 	for node: Control in _rest:
 		add_child(node)
+	# The face's hologram, as the live card wears it: the bake is the stage
+	# cropped to REACH, so the shader is told where the whole stage lies.
+	var holo: ShaderMaterial = CardHolo.material_for(_definition)
+	if holo != null:
+		holo.set_shader_parameter("stage_uv", CardHolo.crop_uv(
+			Vector2(face.picture.get_size()), CardView.stage_inset(CardFaces.REACH)))
+		CardHolo.wear(picture, holo, self)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 

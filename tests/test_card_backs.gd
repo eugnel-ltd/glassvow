@@ -53,7 +53,7 @@ static func _shipped_catalogue_is_valid(fails: Array[String]) -> void:
 	if cat.default_id != "vault":
 		fails.append("card backs: the starter back is %s, want vault" % cat.default_id)
 	var pictures: Dictionary = {"vault": VAULT_ART, "rose": ROSE_ART, "eclipse": ECLIPSE_ART}
-	var surfaces: Dictionary = {"vault": "aurora", "rose": "prism", "eclipse": "gilt"}
+	var surfaces: Dictionary = {"vault": "plastic", "rose": "plastic", "eclipse": "plastic"}
 	for id: String in pictures:
 		var data: Dictionary = cat.card_data(id)
 		if data.get("back") != pictures[id] or data.get("surface") != surfaces[id]:
