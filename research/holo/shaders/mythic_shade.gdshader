@@ -37,5 +37,6 @@ void fragment() {
 	art = holo_screen(art, vec3(0.75, 0.88, 1.0) * m * 0.8);
 	vec3 col = myth_grade(base.rgb, cp, face, 0.0);
 	col = mix(col, art, win * (1.0 - step(holo_inset(cp), MYTH_BAND)));
+	col = mix(col, base.rgb, myth_gem(cp));    // the crystal above the frame
 	COLOR = vec4(mix(base.rgb, col, face), base.a);
 }

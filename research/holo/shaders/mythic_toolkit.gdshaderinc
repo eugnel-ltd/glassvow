@@ -9,6 +9,9 @@
 //   myth_motes    a layer IN FRONT of the art, sliding the other way
 //   myth_grade    the grade's frame and seal
 //   motifs        story shapes for foil masks and hidden layers
+//   myth_gem      the cost crystal's footprint: every mythic lays the picture
+//                 back over it last, so the crystal stands ABOVE the frame and
+//                 reads whole (owner, 14 Oct 2026)
 
 vec3 myth_art(sampler2D art, vec4 win, vec2 l) {
 	return textureLod(art, win.xy + clamp(l, 0.0, 1.0) * win.zw, 0.0).rgb;
@@ -130,4 +133,22 @@ vec3 myth_grade(vec3 base, vec2 cp, float face, float warm) {
 	vec3 gold = vec3(1.0, 0.82, 0.44) * (0.75 + 0.35 * lit);
 	vec3 sealc = mix(gold, mix(MYTH_SAPPHIRE, MYTH_AMBER, f) * 1.2, hub);
 	return mix(col, sealc, seal * face);
+}
+
+
+// The cost crystal (CardView's stone): a pointy-top hexagon GEM = 36 card px
+// tall, centred at (10, 10) in card px (it overhangs the corner by PAD_IN),
+// with its bevel and shadow inside a GEM_GROW margin. 1 on the crystal, 0 off
+// it, soft over one px.
+const vec2 GEM_C = vec2(10.0, 10.0);
+const float GEM_IN = 15.5;        // inradius across the flats (0.43 * 36)
+const float GEM_GROW = 1.5;
+
+float myth_gem(vec2 cp) {
+	vec2 p = abs((cp - GEM_C).yx);
+	const vec3 k = vec3(-0.866025404, 0.5, 0.577350269);
+	p -= 2.0 * min(dot(k.xy, p), 0.0) * k.xy;
+	p -= vec2(clamp(p.x, -k.z * GEM_IN, k.z * GEM_IN), GEM_IN);
+	float d = length(p) * sign(p.y) - GEM_GROW;
+	return 1.0 - smoothstep(-0.5, 0.5, d);
 }

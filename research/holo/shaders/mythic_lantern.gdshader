@@ -63,14 +63,15 @@ void fragment() {
 		col = myth_grade(base.rgb, cp, face, rv); bw = MYTH_BAND;
 	}
 	col = mix(col, art, win * (1.0 - step(inset, bw)));
+	col = mix(col, base.rgb, myth_gem(cp));    // the crystal above the frame
 	vec3 rgb = mix(base.rgb, col, face);
 	float a = base.a;
 	// what stands outside the card's rectangle (crest, halo), and the cabochons
-	float oa = outer.a * (1.0 - face);
+	float oa = outer.a * (1.0 - face) * (1.0 - myth_gem(cp));
 	rgb = mix(rgb, outer.rgb, oa);
 	a = max(a, oa);
 	if (frame_style == 2) {
-		vec4 cab = m2_cabochons(cp);
+		vec4 cab = m2_cabochons(cp) * (1.0 - myth_gem(cp));
 		rgb = mix(rgb, cab.rgb, cab.a);
 		a = max(a, cab.a);
 	}

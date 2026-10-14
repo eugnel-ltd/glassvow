@@ -30,6 +30,7 @@ const CANDIDATES: Dictionary = {
 	"common-rule": {"shader": "front_common_rule", "cards": ["quickSlash", "brace"], "title": "Common · silver rule"},
 	"uncommon-reverse": {"shader": "front_uncommon_reverse", "cards": ["tempest", "bulwark"], "title": "Uncommon · reverse holo"},
 	"rare-crackle": {"shader": "front_rare_crackle", "cards": ["oblivionStrike", "aegis"], "title": "Rare · crackle glass"},
+	"boss-gilt": {"shader": "front_boss_gilt", "cards": ["oblivionStrike", "aegis"], "title": "Boss · cut glass + warm gilt rim (stand-in: rare cards)"},
 	"rare-film": {"shader": "front_rare_film", "cards": ["oblivionStrike", "aegis"], "title": "Rare R1 · filmed plate"},
 	"rare-prism": {"shader": "front_rare_prism", "cards": ["oblivionStrike", "aegis"], "title": "Rare R2 · prism caustic"},
 	"rare-mount": {"shader": "front_rare_mount", "cards": ["oblivionStrike", "aegis"], "title": "Rare R3 · cut-glass mount"},
