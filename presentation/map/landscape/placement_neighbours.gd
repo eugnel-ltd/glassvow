@@ -11,6 +11,17 @@ func add(item: Dictionary) -> void:
 	cells[key].append(item)
 	maximum_radius = maxf(maximum_radius,float(str(item["radius"])))
 
+## Forgets `item` (the same placement `add` was given), before it moves.
+func remove(item: Dictionary) -> void:
+	var at: Vector3 = item["position"]
+	var key: Vector2i = Vector2i(floori(at.x/CELL),floori(at.z/CELL))
+	if cells.has(key):
+		var bucket: Array = cells[key]
+		for i: int in range(bucket.size()):
+			if is_same(bucket[i], item):
+				bucket.remove_at(i)
+				return
+
 func query(at: Vector3, radius: float) -> Array[Dictionary]:
 	var extent: float = radius+maximum_radius
 	var result: Array[Dictionary] = []

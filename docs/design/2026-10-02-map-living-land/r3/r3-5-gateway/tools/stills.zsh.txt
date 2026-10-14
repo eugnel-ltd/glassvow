@@ -1,0 +1,15 @@
+#!/bin/zsh
+# stills.zsh <tag>: the lane's stills in this worktree's current tree (b = branch, m = main).
+T=$1; D=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-arch/artifacts/map-arch/stills; C=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-arch/artifacts/map-arch/cap.sh
+typeset -A VP; VP=(pad-landscape 1180x820 phone-landscape 844x390 desktop-landscape 1458x820)
+typeset -A LEAN; LEAN=(pad-landscape --look-lean phone-landscape --look-lean desktop-landscape --look-settle=60)
+typeset -A AT; AT=(1 -2.24,1.48,8.59 2 -33.08,0.19,7.46 3 -24.50,0.36,7.60 717 -6.84,0.95,15.14)
+for shape in pad-landscape phone-landscape desktop-landscape; do
+  for view in journey close; do
+    $C $D/$T-s1-$shape-$view.png --seed=1 --map-steps=2 --shape=$shape --vp=$VP[$shape] $LEAN[$shape] --look-view=$view --look-at=$AT[1] | sed "s/^/$T s1 $shape $view: /"
+  done
+done
+for s in 2 3 717; do
+  $C $D/$T-s$s-pad-landscape-journey.png --seed=$s --map-steps=2 --shape=pad-landscape --vp=1180x820 --look-lean --look-view=journey --look-at=$AT[$s] | sed "s/^/$T s$s pad journey: /"
+done
+$C $D/$T-s1-pad-landscape-oldsite.png --seed=1 --map-steps=2 --shape=pad-landscape --vp=1180x820 --look-lean --look-view=journey --look-at=-28.09,0.32,19.04 | sed "s/^/$T s1 pad old site: /"

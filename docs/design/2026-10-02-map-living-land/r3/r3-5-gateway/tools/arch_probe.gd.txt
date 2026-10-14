@@ -1,0 +1,42 @@
+extends SceneTree
+## Lane scratch: the arch's placement per seed, the kit's digest without it,
+## the woodland's cards (one per line, for a diff) and the nearest waystone.
+func _initialize() -> void:
+	call_deferred("_run")
+
+func _run() -> void:
+	MapJourneyLandscape.Kit.preload_scenes()
+	var content: ContentDB = ContentDB.load_full()
+	for seed_value: int in [1, 2, 3, 717]:
+		var run_state: RunState = RunState.new_run(content, seed_value, "run-map-stone")
+		var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run_state, content), content)
+		root.add_child(screen)
+		screen.size = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
+		screen.set_shape(StageShape.IDENTITY)
+		screen.refresh(run_state)
+		var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+		var parts: PackedStringArray = []
+		for item: Dictionary in land.kit.placed:
+			if str(item["kind"]) == "amber-arch":
+				var at: Vector3 = item["position"]
+				var near: String = ""
+				var best: float = INF
+				for anchor: Vector3 in land.kit.anchors:
+					if (at - anchor).length() < best:
+						best = (at - anchor).length()
+						near = "dx %.2f dz %.2f" % [at.x - anchor.x, at.z - anchor.z]
+				print("ARCH seed=%d at %s yaw %.1f deg; nearest seat %s" % [seed_value, at, rad_to_deg(float(str(item["yaw"]))), near])
+				continue
+			parts.append("kit %s %s %s %s" % [item["kind"], item["position"], item["scale"], item["yaw"]])
+		print("KITDIGEST seed=%d %s (%d)" % [seed_value, "\n".join(parts).sha256_text().substr(0, 16), parts.size()])
+		print("LAYOUT seed=%d %s" % [seed_value, screen.layout_digest().substr(0, 16)])
+		var planting: RefCounted = land.wood.planting
+		var cards: PackedStringArray = []
+		for i: int in range(planting.kinds.size()):
+			cards.append("CARD seed=%d %s %s %d %s" % [seed_value, planting.kinds[i], planting.bases[i], planting.tiles[i], planting.scales[i]])
+		print("CARDDIGEST seed=%d %s (%d)" % [seed_value, "\n".join(cards).sha256_text().substr(0, 16), cards.size()])
+		print("\n".join(cards))
+		screen.get_parent().remove_child(screen)
+		screen.free()
+		MapScene.release_kept_journey()
+	quit()
