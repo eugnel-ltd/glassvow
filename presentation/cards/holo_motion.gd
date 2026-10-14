@@ -39,8 +39,9 @@ extends RefCounted
 ##
 ## AXES. Godot rotates iOS readings into the interface's frame only when it can
 ## read the window scene's orientation; on the iPad 8 under 4.7 it reports the
-## device's portrait axes (upright in landscape on its stand it reads gravity
-## along +x, not -y: §7 of the research, confirmed on the device by this PR).
+## device's portrait axes: upright in landscape on its stand, the iPad 8 reads
+## gravity (9.80, 0.07, 0.21), along +x, not -y (QA build, 14 Oct 2026), which
+## `to_screen` maps to (0.07, -9.80, 0.21), straight down the screen.
 ## `to_screen` turns those into the screen's axes (x right, y up, z out of the
 ## glass), picking the landscape from the side gravity falls to. Android
 ## (input_devices/sensors/enable_gravity and enable_gyroscope, both on in
