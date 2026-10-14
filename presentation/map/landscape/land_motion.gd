@@ -1,9 +1,9 @@
 extends RefCounted
 ## The journey land's living motion (R2 step 3): foliage and woodland sway,
-## banners, embers and ash, the lantern flames' flipbook and flicker, and the
-## pools of lamplight that flicker with them. One switch for all of it, which
-## `MapScene` turns off under Reduce Motion before the land's first frame and
-## on every frame after; only the water keeps its own cadence.
+## banners, embers and ash, the lantern flames' flipbook and flicker, the
+## pools of lamplight that flicker with them, and the river's flow. One switch
+## for all of it, which `MapScene` turns off under Reduce Motion before the
+## land's first frame and on every frame after.
 ##
 ## The shaders read one global uniform (`land_motion`, declared in
 ## project.godot's shader globals), so a material never registers here and a

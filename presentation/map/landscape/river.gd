@@ -8,6 +8,7 @@ extends MeshInstance3D
 ## line; `CHANNEL` narrows the whole cross-section to the ravine. Distances the
 ## landscape compares with river thresholds are in channel units
 ## (`distance`), so those thresholds keep the archive's proportions.
+const LandMotion = preload("res://presentation/map/landscape/land_motion.gd")
 const LEVEL: float = -2.30
 ## Half the water's width, in channel units.
 const HALF_WIDTH: float = 4.0
@@ -21,6 +22,8 @@ var half_length: float = HALF_LENGTH
 var cut: float = 0.0
 var field_size: Vector2i = FIELD_SIZE
 var clock_time: float = 0
+## The water flows only while the land's motion is on (`LandMotion`), so
+## Reduce Motion holds it at its current phase like the rest of the land.
 var animate: bool = true
 var field_image: Image
 
@@ -102,5 +105,5 @@ func set_time(seconds: float) -> void:
 	(material_override as ShaderMaterial).set_shader_parameter("flow_time",seconds)
 
 func _process(delta: float) -> void:
-	if animate:
+	if animate and LandMotion.enabled:
 		set_time(clock_time+delta)
