@@ -55,7 +55,8 @@ extends RefCounted
 ## pre-warm runs about 110-165 ms (N+1, the frame after the load), runs about
 ## 50 ms (N+2) with it, on the bench and on the players' route alike.
 ##
-## An earned back costs more the first time. Rose and Eclipse take about 1.8 s
+## An earned back costs more the first time. Rose and Eclipse, then procedural
+## shaders (paintings like Vault since #657 PR 8), took about 1.8 s
 ## in a warm load frame on the first load after the shader cache is cut, and
 ## 0.63-0.70 s on later loads. The bake holds 14 MB of video memory for the
 ## session, 11 MB more than one made later in the fight. A later fight pays

@@ -1,0 +1,73 @@
+"""Land the owner's picks (14 Oct): crop each raw candidate to the card face's
+152:216 at full width, centred on its own gold border, and resize to the face
+at the 2x oversample (304x432). Prints the border inset per side in card px and
+how much gold the rounded corner (radius 11 card px) and the 2 px edge cover.
+
+Usage: python3 -I land.py <lane_dir> <out_dir>
+"""
+import sys
+from pathlib import Path
+
+import numpy as np
+from PIL import Image, ImageDraw
+
+PICKS = {"vault": "vault-B", "rose": "rose-A", "eclipse": "eclipse-C"}
+OUT = (304, 432)
+SCALE = OUT[0] / 152.0        # px per card px at the 2x oversample
+RADIUS = 11 * SCALE
+EDGE = 2 * SCALE
+
+
+def gold(a):
+    r, g, b = (a[..., i].astype(int) for i in range(3))
+    return (r > 140) & (g > 100) & (r - b > 60) & (g - b > 30)
+
+
+def outer_band(profile, lo, hi, from_low, thr=0.5):
+    idx = [i for i in range(lo, hi) if profile[i] > thr]
+    return (min(idx) if from_low else max(idx)) if idx else None
+
+
+def border(a):
+    """Outer edge of the gold border: left, top, right, bottom (inclusive)."""
+    h, w = a.shape[:2]
+    m = gold(a)
+    rs = np.r_[int(.30 * h):int(.42 * h), int(.58 * h):int(.70 * h)]
+    cs = np.r_[int(.30 * w):int(.42 * w), int(.58 * w):int(.70 * w)]
+    cols, rows = m[rs, :].mean(axis=0), m[:, cs].mean(axis=1)
+    return (outer_band(cols, 0, w // 6, True), outer_band(rows, 0, h // 6, True),
+            outer_band(cols, w - w // 6, w, False), outer_band(rows, h - h // 6, h, False))
+
+
+def main(lane: Path, out_dir: Path) -> None:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for back_id, pick in PICKS.items():
+        img = Image.open(lane / "raw" / f"{pick}.png").convert("RGB")
+        a = np.asarray(img)
+        h, w = a.shape[:2]
+        l, t, r, b = border(a)
+        crop_h = round(w * OUT[1] / OUT[0])
+        y0 = round((t + b + 1) / 2 - crop_h / 2)
+        y0 = max(0, min(h - crop_h, y0))
+        face = img.crop((0, y0, w, y0 + crop_h)).resize(OUT, Image.LANCZOS)
+        face.save(out_dir / f"{back_id}.png", optimize=True)
+        k = 152.0 / w
+        insets = {"left": l * k, "right": (w - 1 - r) * k,
+                  "top": (t - y0) * k, "bottom": (y0 + crop_h - 1 - b) * k}
+        # Gold the silhouette would cut: outside the rounded rect, or under the edge.
+        m = gold(np.asarray(face))
+        inside = Image.new("L", OUT, 0)
+        ImageDraw.Draw(inside).rounded_rectangle((0, 0, OUT[0] - 1, OUT[1] - 1), RADIUS, fill=255)
+        clear = Image.new("L", OUT, 0)
+        ImageDraw.Draw(clear).rounded_rectangle(
+            (EDGE, EDGE, OUT[0] - 1 - EDGE, OUT[1] - 1 - EDGE), RADIUS - EDGE, fill=255)
+        cut = int((m & (np.asarray(inside) == 0)).sum())
+        under_edge = int((m & (np.asarray(clear) == 0)).sum())
+        size = (out_dir / f"{back_id}.png").stat().st_size
+        print(f"{back_id} <- {pick}: crop y {y0}..{y0 + crop_h} of {h}; border inset card px "
+              + ", ".join(f"{s} {v:.1f}" for s, v in insets.items())
+              + f"; gold px cut by corners {cut}, under the 2px edge {under_edge}; {size} bytes")
+
+
+if __name__ == "__main__":
+    main(Path(sys.argv[1]), Path(sys.argv[2]))

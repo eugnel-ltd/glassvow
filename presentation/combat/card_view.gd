@@ -467,17 +467,14 @@ func _init(inst: CardInst, data: Dictionary, cost: int) -> void:
 		if picture is Shader:
 			layer.add_child(_shader_plate(picture as Shader))
 		elif back_tex != null:
-			# The pile paintings sit in a 512 canvas with transparent margins,
-			# so the ink is cropped to its own used rect before placing.
-			var crop: AtlasTexture = AtlasTexture.new()
-			crop.atlas = back_tex
-			crop.region = Rect2(back_tex.get_image().get_used_rect())
+			# A back painting is the whole face, opaque and cut to the card's
+			# 152:216 at the 2x oversample (assets/art/backs/), so it fills the
+			# slab edge to edge and the silhouette rounds its corners. Fit, not
+			# cover: a painting of any other shape shows the stock round it
+			# rather than losing its border to the cut.
 			var back_rect: TextureRect = TextureRect.new()
-			back_rect.texture = crop
+			back_rect.texture = back_tex
 			back_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			# Fit, not cover: the painting is narrower than the slab (~0.59
-			# against 0.70), and the strip of stock it leaves either side is
-			# the card's material showing around the plate — wanted, not waste.
 			back_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			back_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 			layer.add_child(back_rect)

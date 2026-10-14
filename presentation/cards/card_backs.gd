@@ -28,7 +28,8 @@ extends RefCounted
 ## the main thread, inside the draw: that one frame runs long, and the frame
 ## wait cannot spread it. On the iPad 8 straight after an install, the
 ## session's first bake (Vault, the first card the session built) held one
-## frame for 3.7 s, Rose's 0.58 s and Eclipse's 0.47 s; on the M1 Max a
+## frame for 3.7 s, Rose's 0.58 s and Eclipse's 0.47 s (both then shaders;
+## paintings since #657 PR 8); on the M1 Max a
 ## first-ever bake took 290-384 ms. The engine's shader cache keeps those
 ## compiles across launches, but even warm an iPad 8 bake holds a frame for
 ## 33-58 ms (wall 77-118 ms; the Mac 3-7 ms and 11-39 ms). A cached repeat

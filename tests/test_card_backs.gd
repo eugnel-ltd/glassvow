@@ -15,9 +15,12 @@ extends RefCounted
 const TEST_SETTINGS: String = "user://test_card_backs_settings.cfg"
 const TEST_LEGACY: String = "user://test_card_backs_audio.cfg"
 const TEST_VIGIL: String = "user://test_card_backs_vigil.json"
-const ROSE: String = "res://presentation/cards/backs/rose.gdshader"
-const ECLIPSE: String = "res://presentation/cards/backs/eclipse.gdshader"
-const VAULT_ART: String = "res://assets/art/piles/draw.png"
+const VAULT_ART: String = "res://assets/art/backs/vault.png"
+const ROSE_ART: String = "res://assets/art/backs/rose.png"
+const ECLIPSE_ART: String = "res://assets/art/backs/eclipse.png"
+## No shipped back is a shader since #657 PR 8, but the catalogue still takes
+## one: the suite's own proves that path.
+const SHADER: String = "res://tests/fixtures/card_back_shader.gdshader"
 
 
 static func run(fails: Array[String]) -> void:
@@ -49,33 +52,28 @@ static func _shipped_catalogue_is_valid(fails: Array[String]) -> void:
 		fails.append("card backs: shipped ids %s, want vault, rose, eclipse" % _names(cat.ids()))
 	if cat.default_id != "vault":
 		fails.append("card backs: the starter back is %s, want vault" % cat.default_id)
-	var pictures: Dictionary = {"vault": VAULT_ART, "rose": ROSE, "eclipse": ECLIPSE}
+	var pictures: Dictionary = {"vault": VAULT_ART, "rose": ROSE_ART, "eclipse": ECLIPSE_ART}
 	var surfaces: Dictionary = {"vault": "aurora", "rose": "prism", "eclipse": "gilt"}
 	for id: String in pictures:
 		var data: Dictionary = cat.card_data(id)
 		if data.get("back") != pictures[id] or data.get("surface") != surfaces[id]:
 			fails.append("card backs: %s builds %s, want %s on %s"
 				% [id, str(data), pictures[id], surfaces[id]])
-	if not load(VAULT_ART) is Texture2D:
-		fails.append("card backs: the Vault painting does not load as a texture")
-	for path: String in [ROSE, ECLIPSE]:
-		var shader: Shader = load(path)
-		if shader == null:
-			fails.append("card backs: %s does not load as a shader" % path)
-			continue
-		var names: Array[String] = []
-		for uniform: Dictionary in shader.get_shader_uniform_list():
-			names.append(str(uniform.get("name", "")))
-		if not names.has("card"):
-			fails.append("card backs: %s has no `card` uniform for CardView to size" % path)
-		if _reads_time(shader.code):
-			fails.append("card backs: %s reads TIME, but a resting face is frozen" % path)
+	# The decision: every shipped back is a painting cut to the face at the 2x
+	# oversample, so the bake samples it 1:1 — no larger file the game never
+	# draws, no smaller one it has to stretch.
+	var face: Vector2i = Vector2i(roundi(CardView.CARD_W * 2.0), roundi(CardView.CARD_H * 2.0))
+	for id: String in pictures:
+		var painting: Texture2D = load(str(pictures[id])) as Texture2D
+		if painting == null or painting.get_size() != Vector2(face):
+			fails.append("card backs: the %s painting is %s, want a %s texture"
+				% [id, str(painting.get_size()) if painting != null else "missing", str(face)])
 
 
 static func _malformed_catalogues_refused(fails: Array[String]) -> void:
 	var good: Dictionary = {"v": 1, "default": "vault", "backs": {
 		"vault": {"art": VAULT_ART, "surface": "aurora", "unlock": {"kind": "default"}},
-		"rose": {"shader": ROSE, "surface": "prism", "unlock": {"kind": "shards", "at": 1}},
+		"rose": {"shader": SHADER, "surface": "prism", "unlock": {"kind": "shards", "at": 1}},
 	}}
 	if not CardBackCatalogue.parse(good) is CardBackCatalogue:
 		fails.append("card backs: a minimal good catalogue was refused: %s"
@@ -90,7 +88,7 @@ static func _malformed_catalogues_refused(fails: Array[String]) -> void:
 		"art and shader": _with(good, ["backs", "rose", "art"], VAULT_ART),
 		"neither picture": _with(good, ["backs", "rose", "shader"], ""),
 		"missing art": _with(good, ["backs", "vault", "art"], "res://nope.png"),
-		"shader as art": _with(good, ["backs", "vault", "art"], ROSE),
+		"shader as art": _with(good, ["backs", "vault", "art"], SHADER),
 		"art as shader": _with(good, ["backs", "rose", "shader"], VAULT_ART),
 		"unknown surface": _with(good, ["backs", "rose", "surface"], "velour"),
 		"unknown kind": _with(good, ["backs", "rose", "unlock"], {"kind": "quest"}),
@@ -111,29 +109,33 @@ static func _malformed_catalogues_refused(fails: Array[String]) -> void:
 
 
 static func _backs_build_their_pictures(fails: Array[String]) -> void:
-	var rose: CardView = CardBacks.build("rose")
+	var procedural: CardView = CardView.new(CardInst.new(0, &"back:sigil"),
+		{"back": SHADER, "surface": "gilt"}, 0)
 	var plate: ColorRect = null
-	for node: Node in rose.find_children("", "ColorRect", true, false):
+	for node: Node in procedural.find_children("", "ColorRect", true, false):
 		var rect: ColorRect = node
 		var material: ShaderMaterial = rect.material as ShaderMaterial
-		if material != null and material.shader != null and material.shader.resource_path == ROSE:
+		if material != null and material.shader != null and material.shader.resource_path == SHADER:
 			plate = rect
 	if plate == null:
-		fails.append("card backs: the Rose back built no shader plate")
+		fails.append("card backs: a shader back built no shader plate")
 	else:
 		var card_px: Variant = (plate.material as ShaderMaterial).get_shader_parameter("card")
 		if card_px != Vector2(CardView.CARD_W, CardView.CARD_H):
 			fails.append("card backs: the plate was sized %s, not the card" % str(card_px))
-	rose.free()
-	var vault: CardView = CardBacks.build("vault")
-	var painted: bool = false
-	for node: Node in vault.find_children("", "TextureRect", true, false):
-		var rect: TextureRect = node
-		var crop: AtlasTexture = rect.texture as AtlasTexture
-		painted = painted or (crop != null and crop.atlas.resource_path == VAULT_ART)
-	if not painted:
-		fails.append("card backs: the Vault back did not wear the draw painting")
-	vault.free()
+	procedural.free()
+	# Every shipped back wears its own painting, whole and uncropped.
+	var paintings: Dictionary = {"vault": VAULT_ART, "rose": ROSE_ART, "eclipse": ECLIPSE_ART}
+	for id: String in paintings:
+		var back: CardView = CardBacks.build(id)
+		var painted: bool = false
+		for node: Node in back.find_children("", "TextureRect", true, false):
+			var rect: TextureRect = node
+			painted = painted or (rect.texture != null
+				and rect.texture.resource_path == paintings[id])
+		if not painted:
+			fails.append("card backs: the %s back did not wear %s" % [id, paintings[id]])
+		back.free()
 
 
 static func _preference_round_trip(fails: Array[String]) -> void:
@@ -220,7 +222,7 @@ static func _grant_list_is_read(fails: Array[String]) -> void:
 	# the list this row trips on purpose: teach it the grant-only back then.
 	var with_grant: Dictionary = {"v": 1, "default": "vault", "backs": {
 		"vault": {"art": VAULT_ART, "surface": "aurora", "unlock": {"kind": "default"}},
-		"sigil": {"shader": ECLIPSE, "surface": "gilt", "unlock": {"kind": "grant"}},
+		"sigil": {"shader": SHADER, "surface": "gilt", "unlock": {"kind": "grant"}},
 	}}
 	if CardBackCatalogue.grant_list_exists():
 		fails.append("card backs: VigilState now declares %s; teach this test the grant-only back"
@@ -434,15 +436,6 @@ static func _load_planted(planted: Dictionary) -> VigilState:
 	file.store_string(JSON.stringify(saved))
 	file.close()
 	return SaveService.load_vigil(TEST_VIGIL)
-
-
-## Whether shader code reads TIME, comments aside (the headers name it).
-static func _reads_time(code: String) -> bool:
-	var token: RegEx = RegEx.create_from_string("\\bTIME\\b")
-	for line: String in code.split("\n"):
-		if token.search(line.get_slice("//", 0)) != null:
-			return true
-	return false
 
 
 static func _names(ids: Array[String]) -> String:
