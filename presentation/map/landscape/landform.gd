@@ -6,6 +6,14 @@ var cuts: Array[Dictionary] = []
 var ground_cells: Dictionary = {}
 var abutments: PackedVector2Array = []
 var terrace_centre: Vector2 = Vector2(-19.565,14.756)
+## How deep a lower road is cut where an upper road crosses it (a pass): the
+## woodland's 3.05 m; a land with less room below (Act II's water) cuts less.
+var pass_depth: float = 3.05
+## How far round a bridgehead's pad its roads stay level at the pad's height
+## before they descend: none in the woodland, whose raised roads run level.
+var pad_landing: float = 0.0
+## The grade a road falls at from a bridgehead's pad.
+var pad_grade: float = .27
 const River = preload("res://presentation/map/landscape/river.gd")
 
 func setup(lines: Array[PackedVector3Array]) -> void:
@@ -57,7 +65,7 @@ func cut_depth(x: float, z: float) -> float:
 		var along: float = absf(delta.dot(direction))
 		var across: float = absf(delta.cross(direction))
 		# A generous flat-bottomed pass, with graded approaches and shoulders.
-		depth = maxf(depth,3.05*(1.0-smoothstep(2.0,11.0,along))*(1.0-smoothstep(1.1,4.5,across)))
+		depth = maxf(depth,pass_depth*(1.0-smoothstep(2.0,11.0,along))*(1.0-smoothstep(1.1,4.5,across)))
 	for at: Vector2 in abutments:
 		depth *= smoothstep(1.6,3.1,Vector2(x,z).distance_to(at))
 	return depth
@@ -124,7 +132,7 @@ func _grade_roads(lines: Array[PackedVector3Array]) -> void:
 						var centre: Vector2 = cut["at"]
 						var distance: float = centre.distance_to(Vector2(p.x,p.z))
 						if distance<1.2:
-							p.y = minf(p.y,upland(centre.x,centre.y)-3.05+distance*.08)
+							p.y = minf(p.y,upland(centre.x,centre.y)-pass_depth+distance*.08)
 					points.append(p)
 					links.append([])
 				if previous>=0 and previous!=index:
@@ -161,13 +169,18 @@ func _grade_roads(lines: Array[PackedVector3Array]) -> void:
 		if index>=0:
 			lower_bound[index] = upland(pad.x,pad.y)
 			queue.append(index)
+		if pad_landing>0:
+			for i: int in range(points.size()):
+				if Vector2(points[i].x,points[i].z).distance_to(pad)<pad_landing:
+					lower_bound[i] = maxf(lower_bound[i],upland(pad.x,pad.y))
+					queue.append(i)
 	while cursor<queue.size():
 		var index: int = queue[cursor]
 		cursor += 1
 		for neighbour: int in links[index]:
 			var a: Vector3 = points[index]
 			var b: Vector3 = points[neighbour]
-			var limit: float = lower_bound[index]-Vector2(a.x-b.x,a.z-b.z).length()*.27
+			var limit: float = lower_bound[index]-Vector2(a.x-b.x,a.z-b.z).length()*pad_grade
 			if lower_bound[neighbour]<limit-.0001:
 				lower_bound[neighbour] = limit
 				queue.append(neighbour)

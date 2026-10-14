@@ -57,6 +57,8 @@ class Pacing extends RefCounted:
 	var stopped: bool = false
 	var vertices: int = 0
 	var meshes: int = 0
+	## How many times the build has paused for a frame (`committed`).
+	var pauses: int = 0
 
 	## Gives the build up: unpaced, so its thread is not held by pauses, and
 	## stopped at its next stage.
@@ -87,6 +89,7 @@ static func committed(mesh: ArrayMesh) -> ArrayMesh:
 	if pacing.vertices >= PACE_VERTICES or pacing.meshes >= PACE_MESHES:
 		pacing.vertices = 0
 		pacing.meshes = 0
+		pacing.pauses += 1
 		OS.delay_msec(PACE_PAUSE_MS)
 	return mesh
 

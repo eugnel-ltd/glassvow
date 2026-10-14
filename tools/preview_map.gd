@@ -1,6 +1,9 @@
 extends SceneTree
 ## Headed production map preview without the opening-boon screen.
 ## godot --path . -s res://tools/preview_map.gd -- --act-index=0 --seed=7 --output=/tmp/map.png
+## Add --journey-act=2 to draw Act II as its journey land (#660 II.2), which
+## players cannot reach yet (`MapJourneyProfile.DEV_FLAG`), and
+## --view=close|journey|whole to frame a journey land at that level.
 ## Add --map-compiler to lay the map out with Map Compiler v2 instead of the
 ## production fast layout (minutes per input; docs/map/production-layout.md).
 ## Omit --output to explore the real map with drag, wheel and keyboard input.
@@ -16,6 +19,9 @@ var _measure: bool = false
 var _compile_only: bool = false
 var _zoom: int = 2
 var _quality_path: String = ""
+## The journey camera's level (`--view=close|journey|whole`); empty keeps the
+## pose `--pose` and `--zoom-stop` set.
+var _view: String = ""
 var _input: MapLayoutInput
 var _quality: Dictionary
 var _assets: Dictionary
@@ -54,8 +60,17 @@ func _run() -> void:
 			_steps = int(arg.get_slice("=", 1))
 		elif arg.begins_with("--cache="):
 			_cache = arg.trim_prefix("--cache=")
+		elif arg.begins_with("--view="):
+			_view = arg.trim_prefix("--view=")
 		elif arg.begins_with("--quality="):
 			_quality_path = arg.trim_prefix("--quality=")
+		elif arg.begins_with(MapJourneyProfile.DEV_FLAG):
+			# A journey land players cannot reach yet (`--journey-act=2`).
+			var refused: String = MapJourneyProfile.enable_dev(arg.trim_prefix(MapJourneyProfile.DEV_FLAG))
+			if not refused.is_empty():
+				push_error(refused)
+				quit(2)
+				return
 		elif arg == MapLayoutPolicy.FLAG:
 			pass  # Read by MapLayoutPolicy: compile with Map Compiler v2.
 		else:
@@ -64,7 +79,8 @@ func _run() -> void:
 			return
 	if act < 0 or act > 3 or not StageShape.SHIPPING.has(shape) \
 			or _pose not in ["focused", "opening", "middle", "terminus"] \
-			or (DisplayServer.get_name() == "headless" and not _compile_only) or _zoom not in range(4):
+			or (DisplayServer.get_name() == "headless" and not _compile_only) or _zoom not in range(4) \
+			or _view not in ["", "close", "journey", "whole"]:
 		push_error("Preview needs a headed renderer, act index 0–3 and a shipping shape/pose")
 		quit(2)
 		return
@@ -124,6 +140,11 @@ func _run() -> void:
 		rig.set_camera_xz(MapCameraRig.pose_for_world(Vector3.ZERO))
 	elif _pose == "terminus":
 		rig.set_camera_xz(MapCameraRig.pose_for_world(Vector3(33.0, 0.0, 0.0)))
+	if not _view.is_empty() and screen._journey != null and screen._journey.active():
+		var levels: Dictionary = {"close": MapJourneyView.Level.CLOSE,
+			"journey": MapJourneyView.Level.JOURNEY, "whole": MapJourneyView.Level.WHOLE}
+		screen._journey.view.level = levels[_view]
+		screen._journey.frame(world_map.at)
 	screen._layout_waystones()
 	screen._push_bands(true)
 	if not _output.is_empty() and not _exercise:

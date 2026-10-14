@@ -295,6 +295,7 @@ func _ready() -> void:
 	# godot --path . -- --vp=1280x720            (watch the shape re-pick live)
 	# godot --path . -- --shape=phone-landscape   (force one; ?shape= ported)
 	# godot --path . -- --act=2                  (dress fight/map in Act II; 1-based)
+	# tools/shot.sh --map --act=2 --journey-act=2 --shot=…  (Act II causeways, dev only)
 	# tools/shot.sh --resume --shot=...          (exercise the durable router)
 	# tools/shot.sh --fight=… --settle=3 --shot=…  (photograph it at rest)
 	# tools/shot.sh --font-probe --shot=/tmp/font.png  (runtime default font)
@@ -385,6 +386,19 @@ func _ready() -> void:
 				get_tree().quit(2)
 				return
 			_forced_act_index = forced["act_index"]
+		elif arg.begins_with(MapJourneyProfile.DEV_FLAG):
+			# A journey land players cannot reach yet (`--journey-act=2`), for
+			# captures only, and only where the development tools are: a
+			# release build ignores it whatever its launch arguments say. A
+			# wrong act is refused before anything routes, as `--act=` is.
+			if not DevTools.available():
+				push_warning("%s needs the development tools; ignored" % MapJourneyProfile.DEV_FLAG)
+				continue
+			var refused: String = MapJourneyProfile.enable_dev(arg.trim_prefix(MapJourneyProfile.DEV_FLAG))
+			if not refused.is_empty():
+				push_error(refused)
+				get_tree().quit(2)
+				return
 		elif arg.begins_with("--vp="):
 			# Resize the OS window to see how the screen holds up, and to watch
 			# `_apply_shape` re-pick as you cross an aspect boundary. It DOES
