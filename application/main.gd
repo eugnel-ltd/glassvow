@@ -1336,9 +1336,10 @@ func _show_title() -> void:
 	# The map Back to the Road restores. A headless boot warms nothing, so it
 	# reads none.
 	var road: WorldMap = _title_road_map(saved) if MapScene.journey_async else null
-	# Whether that map is Act I's own: an Act I run at or past its boss opens
-	# Act II's next, which has no land to build.
-	var journey: bool = road != null and saved.act == 0 and not _past_boss(road, saved)
+	# Whether that map is a journey act's own (Act I's): a run at or past its
+	# boss opens the next act's, which has no land to build.
+	var journey: bool = road != null and MapJourneyProfile.warms(saved.act) \
+			and not _past_boss(road, saved)
 	if journey:
 		# The title warms this run's Act I land (`_warm_title_road`): what that
 		# would read back from the renderer is read now, before the title's

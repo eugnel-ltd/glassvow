@@ -274,7 +274,7 @@ func _map_look() -> void:
 	var light: WorldEnvironment = WorldEnvironment.new()
 	light.environment = Environment.new()
 	MapScene._painted_light(key, light.environment)
-	MapJourneyLandscape.light(key, light.environment)
+	MapJourneyProfile.light(MapJourneyProfile.FIRST_ACT, key, light.environment)
 	_map_view.add_child(key)
 	_map_view.add_child(light)
 	var eye: Camera3D = Camera3D.new()

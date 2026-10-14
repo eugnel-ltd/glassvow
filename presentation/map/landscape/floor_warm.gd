@@ -85,7 +85,7 @@ func _ready() -> void:
 	var live: SubViewport = _view(World3D.new())
 	var key: DirectionalLight3D = DirectionalLight3D.new()
 	var journey: Environment = Environment.new()
-	MapJourneyLandscape.light(key, journey)
+	MapJourneyProfile.light(MapJourneyProfile.FIRST_ACT, key, journey)
 	journey.glow_enabled = false
 	live.add_child(key)
 	live.add_child(_sample(_ground_mesh(), FLOOR, 1))

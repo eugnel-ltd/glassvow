@@ -359,7 +359,7 @@ func _deal_act(_region: MapRegions) -> void:
 	_key.light_color = MapRegions.LAND_KEY[_act]
 	setting.environment.ambient_light_color = MapRegions.LAND_AMBIENT[_act]
 	if is_journey_act():
-		MapJourneyLandscape.light(_key, setting.environment)
+		MapJourneyProfile.light(_act, _key, setting.environment)
 	else:
 		_rig.leave_journey()
 		set_focus_band(Vector2.INF)
@@ -752,9 +752,16 @@ func _bind_asset_geometry() -> void:
 	_asset_profiles = _landscape_assets.registry
 	_active_profiles = _landscape_assets.profiles
 	_active_profile_digest = _landscape_assets.digest
-	_terminus_id = MapLandscapeAssets.GATES[_act]
-	_threshold_id = "vigil" if _act == 0 else ""
+	_terminus_id = MapJourneyProfile.gate_id(_act)
+	_threshold_id = MapJourneyProfile.threshold_id(_act)
 	_repaint()
+
+
+## A bare land of the class this act draws: its journey row's, else the painted one.
+func _new_landscape() -> MapLandscape:
+	if is_journey_act():
+		return MapJourneyProfile.land_class(_act).new()
+	return MapLandscape.new()
 
 
 func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutResult:
@@ -767,7 +774,7 @@ func bind_layout(compiled: MapLayoutResult, quality: Dictionary) -> MapLayoutRes
 	var bound: Dictionary = _bound if kept else {}
 	var data: Dictionary = bound["data"] if kept else compiled.identity_dict()
 	_release_landscape()
-	_landscape = MapJourneyLandscape.new() if is_journey_act() else MapLandscape.new()
+	_landscape = _new_landscape()
 	if not is_journey_act():
 		_world.add_child(_landscape)
 	_landscape.prepare(data, _landscape_assets, _scatter_salt)
@@ -1116,15 +1123,16 @@ static func lean_profile() -> bool:
 	return lean_override == 1 if lean_override >= 0 else OS.has_feature("mobile")
 
 
-## Whether Act I is drawn as the journey land. Always on in the game; a test of
-## the painted landscape's own contract (which Acts II–IV keep) may turn it off.
+## Whether the acts with a journey row (`MapJourneyProfile`) are drawn as the
+## journey land. Always on in the game; a test of the painted landscape's own
+## contract (which the other acts keep) may turn it off.
 static var journey_enabled: bool = true
 
 
-## Whether this act is drawn as the journey woodland (`MapJourneyLandscape`).
-## Act I only; the other acts keep the painted landscape.
+## Whether this act is drawn as a journey land (`MapJourneyProfile`: Act I
+## only today); the other acts keep the painted landscape.
 func is_journey_act() -> bool:
-	return _act == 0 and journey_enabled
+	return MapJourneyProfile.has(_act) and journey_enabled
 
 
 func journey_landscape() -> MapJourneyLandscape:

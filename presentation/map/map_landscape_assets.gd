@@ -284,15 +284,17 @@ static func picture_files(act_index: int) -> PackedStringArray:
 
 
 ## Every asset an act declares, in bind order: its scenery, its gate and, for
-## Act I only, the Vigil. The one answer to "what must this act resolve", read by
+## an act whose journey row names a threshold (`MapJourneyProfile`: Act I's
+## Vigil), that threshold. The one answer to "what must this act resolve", read by
 ## `_init` and by the count a partial resolve reports. `act_index` is 0-based and
 ## must already be inside the tables, as `_init` clamps it.
 static func declared_ids(act_index: int) -> Array[String]:
 	var ids: Array[String] = []
 	ids.assign(SCENERY[act_index])
 	ids.append(GATES[act_index])
-	if act_index == 0:
-		ids.append("vigil")
+	var threshold: String = MapJourneyProfile.threshold_id(act_index)
+	if not threshold.is_empty():
+		ids.append(threshold)
 	return ids
 
 
