@@ -1,0 +1,76 @@
+#!/bin/zsh
+# SCRATCH (#657 PR 7), never committed: one interleaved iPad 8 batch, main (A)
+# against the branch (B): installs A, B, A, B; after each install a warm-up
+# launch of each mode, then one measured reward and one measured shelf launch.
+# Under ONE hold of the shared iPad lock (taken only when free, refreshed every
+# step and every minute, released in a trap). Only the QA app is installed,
+# launched or read; nothing is uninstalled; every devicectl copy is under
+# timeout 300; the UDID is never printed.
+#   campaign7.zsh <lane dir> <name>
+set -uo pipefail
+L=${1:?lane}
+NAME=${2:?name}
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+LOCK=cards-pr7
+QA=io.fol2.glassvow.qa
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+OUT=$L/$NAME
+mkdir -p $OUT
+log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a $OUT/batch.log; }
+until [[ "$($FLOW/ipad_lock.sh status)" == free ]] \
+    && timeout 20 $FLOW/ipad_lock.sh acquire $LOCK >> $OUT/batch.log 2>&1 \
+    && [[ "$(cat $FLOW/ipad.lock/owner 2>/dev/null)" == $LOCK ]]; do
+  log "ipad lock $($FLOW/ipad_lock.sh status); waiting 30 s"; sleep 30
+done
+cleanup() { $FLOW/ipad_lock.sh release $LOCK >> $OUT/batch.log 2>&1; log "lock released"; }
+trap cleanup EXIT
+trap 'exit 130' INT TERM
+log "lock held"
+mine() { [[ "$(cat $FLOW/ipad.lock/owner 2>/dev/null)" == $LOCK ]] || { log "lock lost"; exit 1; }; $FLOW/ipad_lock.sh acquire $LOCK > /dev/null 2>&1; }
+hold() { local n=$1; while (( n > 0 )); do mine; sleep $(( n < 60 ? n : 60 )); n=$(( n - 60 )); done; }
+udid() {
+  timeout 60 xcrun devicectl list devices --quiet --json-output - 2>/dev/null | python3 -c 'import json,sys; print(next(d["hardwareProperties"]["udid"] for d in json.load(sys.stdin)["result"]["devices"] if d["hardwareProperties"].get("productType")=="iPad11,6"))'
+}
+U=$(udid)
+[[ -n "$U" ]] || { log "no iPad"; exit 1; }
+redact() { sed "s/$U/<device>/g"; }
+pull() { timeout 300 xcrun devicectl device copy from --device "$U" --domain-type appDataContainer --domain-identifier $QA --source Documents/$1 --destination $2 >/dev/null 2>&1; }
+install() {
+  local b=$1 ipa=$L/ipa_$1/glassvow.ipa bid ok=0
+  bid=$(unzip -p "$ipa" Payload/glassvow.app/Info.plist | plutil -extract CFBundleIdentifier raw -o - -)
+  [[ "$bid" == "$QA" ]] || { log "refusing: $ipa is $bid"; exit 1; }
+  for attempt in 1 2 3; do
+    mine
+    if timeout 300 xcrun devicectl device install app --device "$U" "$ipa" 2>&1 | redact >> $OUT/install.log; then ok=1; break; fi
+    log "install $b attempt $attempt failed"; hold 10
+  done
+  [[ $ok == 1 ]] || { log "install $b failed"; exit 1; }
+  log "installed $b (sha256 $(shasum -a 256 $ipa | cut -c1-12))"
+}
+launch() {
+  local nonce=$1 mode=$2 got=0
+  mine
+  log "launch $nonce mode=$mode"
+  timeout 90 xcrun devicectl device process launch --terminate-existing --device "$U" \
+    $QA -- --card-probe=nonce=$nonce,mode=$mode 2>&1 | redact >> $OUT/launch.log || log "launch rc=$?"
+  hold 20
+  for i in $(seq 1 30); do
+    hold 4
+    if pull card_probe_$nonce.txt $OUT/rows_$nonce.txt && grep -q " DONE" $OUT/rows_$nonce.txt; then got=1; break; fi
+  done
+  [[ $got == 1 ]] && log "rows $nonce: $(grep -c ' F ' $OUT/rows_$nonce.txt) frames" || log "no DONE rows for $nonce"
+}
+k=0
+for b in A B A B; do
+  k=$((k + 1))
+  x=${(L)b}
+  install $b
+  launch ${NAME}${x}${k}wr reward
+  launch ${NAME}${x}${k}ws shelf
+  hold 20
+  launch ${NAME}${x}${k}r reward
+  launch ${NAME}${x}${k}s shelf
+done
+trap - EXIT
+cleanup
+log "campaign done"

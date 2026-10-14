@@ -30,6 +30,9 @@ var _collection: HFlowContainer
 var _deck_count: Label
 ## The deck as a stack of real cards, where the painted deck stood (#657).
 var _deck_stack: DeckStack
+## Cards on their way to the deck (the reward's pick in flight, #657 PR 7):
+## the deck counts them when they land (`card_home`), not when they are taken.
+var _deck_owed: int = 0
 ## Potion-id signature; rebuild `_right` only when this changes.
 var _right_sig: String = ""
 ## Act + omen + relic-id signature; rebuild `_collection` only when this changes.
@@ -67,13 +70,41 @@ func refresh(run: RunState) -> void:
 		_rebuild_right(player)
 		_right_sig = right_sig
 	elif _deck_count != null:
-		_deck_count.text = str(player.deck.size())
-		_deck_stack.set_count(player.deck.size())
+		_sync_deck(player)
 
 	var collection_sig: String = _collection_signature(run)
 	if collection_sig != _collection_sig:
 		_rebuild_collection(run, player)
 		_collection_sig = collection_sig
+
+
+## The deck's count and its stack: the cards in it, less those still flying in.
+func _sync_deck(player: RunState.Player) -> void:
+	var n: int = maxi(0, player.deck.size() - _deck_owed)
+	_deck_count.text = str(n)
+	_deck_stack.set_count(n)
+
+
+## The deck on the top menu, where a card taken flies home to.
+func deck_stack() -> DeckStack:
+	return _deck_stack
+
+
+## A card is on its way to the deck: count it when it lands (`card_home`).
+func owe_card() -> void:
+	_deck_owed += 1
+	if _deck_count != null:
+		_sync_deck(_run.player)
+
+
+## The card has landed: the deck gains its thickness and bumps.
+func card_home() -> void:
+	if _deck_owed <= 0:
+		return
+	_deck_owed -= 1
+	if _deck_count != null:
+		_sync_deck(_run.player)
+		_deck_stack.bump()
 
 
 func _right_signature(player: RunState.Player) -> String:
@@ -185,7 +216,6 @@ func _rebuild_right(player: RunState.Player) -> void:
 	# The deck stands where its painting stood, as a stack of the table's
 	# backs as thick as the deck (DeckStack); the painting until one is baked.
 	_deck_stack = DeckStack.new(icon_side, HudBar.icon("ui/deck"))
-	_deck_stack.set_count(player.deck.size())
 	var deck: Button = _seat_button(_deck_stack, icon_side, button_side,
 		Locale.active.t("ui.hud.viewDeck"))
 	for state: String in ["normal", "hover", "pressed"]:
@@ -197,6 +227,7 @@ func _rebuild_right(player: RunState.Player) -> void:
 	_deck_count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_deck_count.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	deck.add_child(_deck_count)
+	_sync_deck(player)
 	deck.pressed.connect(_request.bind(&"deck", -1))
 	_right.add_child(deck)
 	var menu: Button = _art_button("ui/menu",

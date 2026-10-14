@@ -5,9 +5,10 @@ extends LeadlightRoomHost
 ## Choosing it from the title turns you back to it (V1): the road turns away,
 ## the hall comes in from the west, the fire catches and answers the lantern
 ## as it is set down at the seat, and the word that was tapped becomes the
-## hall's crown. Its three tabs are three looks across the one hall (VigilHall):
-## to the hearth (the deeds, VigilDeeds), up to the window (the Rose Window,
-## RoseWindowView) and down to the floor before the fire (the epitaphs). The
+## hall's crown. Its tabs are looks across the one hall (VigilHall):
+## to the hearth (the deeds, VigilDeeds, and the card backs' shelf beside it,
+## VigilBacks), up to the window (the Rose Window, RoseWindowView) and down to
+## the floor before the fire (the epitaphs). The
 ## header never moves between looks: the crown, a carved ledger of the
 ## pilgrimages, and the look panes.
 ##
@@ -29,6 +30,10 @@ static func _whisper_lines() -> Array:
 	for index: int in range(24):
 		lines.append(Locale.active.whisper(index))
 	return lines
+
+## The Backs look's shelf: a back chosen there (#657 PR 7). Main stores it
+## and wears it on the table (CardTurn.choose).
+signal back_chosen(id: String)
 
 ## The column (pad and desktop, phone), stage px: its left, the crown's and
 ## the ledger's tops, the look panes' top and their right margin, the body's
@@ -67,10 +72,12 @@ var _crown: Label
 var _ledger: Label
 var _looks: HBoxContainer
 var _deeds_tab: LeadlightPane
+var _backs_tab: LeadlightPane
 var _rose_tab: LeadlightPane = null
 var _epitaph_tab: LeadlightPane = null
 var _deed_list: VigilDeeds
 var _epitaph_list: VigilEpitaphs = null
+var _backs: VigilBacks = null
 var _rose: RoseWindowView = null
 var _look: StringName = VigilHall.DEEDS
 var _landed: bool = false
@@ -123,6 +130,7 @@ func _build() -> void:
 	_looks.minimum_size_changed.connect(_fit)
 	add_child(_looks)
 	_deeds_tab = _tab(Locale.active.t("ui.vigil.deedsTab"), _show_deeds)
+	_backs_tab = _tab(Locale.active.t("ui.vigil.backsTab"), _show_backs)
 	if _has_rose:
 		_rose_tab = _tab(Locale.active.t("ui.vigil.roseTab"), _show_rose)
 	if not _vigil.defeat_epitaphs.is_empty():
@@ -172,6 +180,21 @@ func _build_rose() -> void:
 	_fit()
 
 
+## The Backs look is built when it is first wanted, as the Rose look is: its
+## earned backs are live cards, and the tap frame builds only the look on view.
+func _build_backs() -> void:
+	if _backs != null:
+		return
+	_backs = VigilBacks.new(_vigil, shape)
+	_backs.chosen.connect(func(id: String) -> void:
+		_sfx.play_owed(&"paneChoose", &"click")
+		back_chosen.emit(id))
+	_backs.visible = false
+	add_child(_backs)
+	move_child(_backs, _deed_list.get_index())
+	_fit()
+
+
 # ---------------------------------------------------------------- the looks
 
 ## The cue for the look on view, once Main has connected (the first cue of the
@@ -183,6 +206,16 @@ func announce() -> void:
 func _show_deeds() -> void:
 	_look_to(VigilHall.DEEDS)
 	cue_requested.emit(&"vigil")
+
+
+func _show_backs() -> void:
+	_build_backs()
+	_look_to(VigilHall.BACKS)
+	cue_requested.emit(&"vigil")
+
+
+func backs_view() -> VigilBacks:
+	return _backs
 
 
 func _show_rose() -> void:
@@ -252,6 +285,8 @@ func _look_nodes(which: StringName) -> Array[Control]:
 		nodes.append(_rose)
 	elif which == VigilHall.EPITAPHS and _epitaph_list != null:
 		nodes.append(_epitaph_list)
+	elif which == VigilHall.BACKS and _backs != null:
+		nodes.append(_backs)
 	elif which == VigilHall.DEEDS:
 		nodes.append(_deed_list)
 	return nodes
@@ -259,7 +294,7 @@ func _look_nodes(which: StringName) -> Array[Control]:
 
 ## Only the look on view is shown, whole.
 func _settle_look() -> void:
-	for node: Control in [_deed_list, _epitaph_list, _rose]:
+	for node: Control in [_deed_list, _epitaph_list, _rose, _backs]:
 		if node != null:
 			node.visible = _look_nodes(_look).has(node)
 			_reveal(node, 1.0)
@@ -292,7 +327,7 @@ func _step_change(delta: float) -> void:
 
 
 func _style_tabs() -> void:
-	for pair: Array in [[_deeds_tab, VigilHall.DEEDS], [_rose_tab, VigilHall.ROSE],
+	for pair: Array in [[_deeds_tab, VigilHall.DEEDS], [_backs_tab, VigilHall.BACKS], [_rose_tab, VigilHall.ROSE],
 			[_epitaph_tab, VigilHall.EPITAPHS]]:
 		var pane: LeadlightPane = pair[0]
 		if pane != null:
@@ -305,6 +340,8 @@ func _tab_for(which: StringName) -> LeadlightPane:
 			return _rose_tab
 		VigilHall.EPITAPHS:
 			return _epitaph_tab
+		VigilHall.BACKS:
+			return _backs_tab
 	return _deeds_tab
 
 
@@ -328,6 +365,8 @@ func reveal_groups() -> Array[Control]:
 		groups.append_array(_deed_list.rows())
 	elif _look == VigilHall.ROSE and _rose != null:
 		groups.append_array(_rose.parts())
+	elif _look == VigilHall.BACKS and _backs != null:
+		groups.append_array(_backs.slots())
 	elif _epitaph_list != null:
 		groups.append(_epitaph_list)
 	return groups
@@ -340,6 +379,8 @@ func content_rects() -> Array[Rect2]:
 		rects.append_array(_rose.content_rects())
 	elif _look == VigilHall.EPITAPHS and _epitaph_list != null:
 		rects.append(_epitaph_list.get_rect())
+	elif _look == VigilHall.BACKS and _backs != null:
+		rects.append(_backs.get_rect())
 	else:
 		rects.append(_deed_list.get_rect())
 	return rects
@@ -398,6 +439,8 @@ func set_shape(stage_shape: StringName) -> void:
 		tab.hit_height = LeadlightTokens.room_hit(shape)
 		tab.custom_minimum_size.y = 34.0 if LeadlightTokens.is_phone(shape) else 52.0
 	_deed_list.set_shape(shape)
+	if _backs != null:
+		_backs.set_shape(shape)
 	if _rose != null:
 		_rose.set_shape(shape)
 	super(stage_shape)
@@ -425,6 +468,8 @@ func _fit() -> void:
 	_deed_list.size = body.size
 	if _epitaph_list != null:
 		_epitaph_list.fit(body_rect(VigilHall.EPITAPHS))
+	if _backs != null:
+		_backs.fit(body_rect(VigilHall.BACKS))
 	if _rose != null:
 		_rose.position = Vector2.ZERO
 		_rose.size = size

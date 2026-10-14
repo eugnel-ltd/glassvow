@@ -45,12 +45,17 @@ const TOP_PX: float = 2.0
 ## the seal and the draw pile in one frame. Built more than about 3 s apart
 ## (4.5 - 1.4), their sweeps could overlap.
 const GLINT_PHASE: float = PileStack.GLINT_CYCLE * 0.5
+## A card come home (`bump`): its peak scale, lift (px) and length (s).
+const BUMP_PEAK: float = 1.05
+const BUMP_LIFT: float = 4.0
+const BUMP_TIME: float = 0.28
 
 ## The stack of backs, drawn once a back is baked.
 var stack: PileStack
 ## The painting the button wore before: shown until a back is worn.
 var painting: TextureRect
 var _worn: CardBacks.Baked = null
+var _bump: Tween = null
 ## The top card's centre in the stack's own px, where it stays.
 var _top: Vector2 = Vector2.ZERO
 
@@ -92,6 +97,22 @@ static func scale_for(side: float) -> float:
 func set_count(n: int) -> void:
 	stack.base = _top + Vector2(0.0, PileStack.thickness(maxi(n, 0)))
 	stack.set_count(n)
+
+
+## A card come home to the deck (the reward's pick, #657 PR 7): the piles'
+## `pileBump` (HudBar.bump_pile), 0.28 s, up 4 px and 5% wider at 40%, about
+## the square's centre. Still under Reduce Motion, where the count says it.
+func bump() -> void:
+	if Preferences.active.reduce_motion or not is_inside_tree():
+		return
+	if _bump != null and _bump.is_valid():
+		_bump.kill()
+	pivot_offset = size * 0.5
+	_bump = create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	_bump.tween_property(self, "scale", Vector2.ONE * BUMP_PEAK, BUMP_TIME * 0.4)
+	_bump.parallel().tween_property(stack, "position:y", -BUMP_LIFT, BUMP_TIME * 0.4)
+	_bump.tween_property(self, "scale", Vector2.ONE, BUMP_TIME * 0.6)
+	_bump.parallel().tween_property(stack, "position:y", 0.0, BUMP_TIME * 0.6)
 
 
 ## The back the stack wears, or null while it shows the painting.

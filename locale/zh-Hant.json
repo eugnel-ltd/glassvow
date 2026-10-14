@@ -108,6 +108,8 @@
       "kickerShard": "餘燼琉璃碎片",
       "kickerUnlock": "守夜敞開",
       "kickerDefault": "破曉",
+      "kickerBack": "新牌背",
+      "backBody": "它在守夜的架上等着。",
       "complete": "破曉完成",
       "progress": "破曉 {n} / {total} · 當前記憶已燃",
       "inputHint": "點擊或按空白鍵繼續  ·  長按跳過",
@@ -608,7 +610,14 @@
       "stats": "{runs} 次朝聖 · {wins} 次破曉 · 最深誓言：{vow}",
       "deedsTab": "功績",
       "roseTab": "彩窗",
-      "epitaphTab": "遺言"
+      "epitaphTab": "遺言",
+      "backsTab": "牌背"
+    },
+    "back": {
+      "vault": {"name": "長窗"},
+      "rose": {"name": "晚禱", "deed": "取得一片燼璃。"},
+      "eclipse": {"name": "日蝕", "deed": "迎來一次破曉。"},
+      "inUse": "現用"
     },
     "pilgrimage": {
       "survey": "滾動或拖曳以巡視朝聖之路",

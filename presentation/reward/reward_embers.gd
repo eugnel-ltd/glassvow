@@ -154,10 +154,40 @@ const BLAZE: float = 0.10            # the cracks taking light
 const BURST: float = 0.46            # it coming apart
 const COOL: float = 0.40             # white-hot fracture -> the item's colour
 const CARD_IN: float = 0.28
+## THE REVEAL (#657 PR 7; docs/design/2026-10-03-cards-real-objects §3, the
+## reward pick, live turn). The offering is dealt face down out of a small
+## stack standing where the rack's middle is: the stack rises into the bed
+## (STACK_IN), its cards go to their seats one after another (DEAL_OUT, DEAL_GAP
+## apart, the top card first), and then each turns over, left to right,
+## TURN_GAP apart and TURN long, pitching toward the eye on the way as the deal
+## does. The turn is the live one: the slab turns in the card's own stage
+## under its own lamp, so the finish flares as the face comes round. A tap
+## once the deal has begun lands the offering face up at once (`settle`);
+## under Reduce Motion each card fades in face up at its seat, RM_FADE long.
+const STACK_IN: float = 0.20
+const DEAL_OUT: float = 0.26
+const DEAL_GAP: float = 0.06
+const TURN: float = 0.48
+const TURN_GAP: float = 0.12
+const TURN_PITCH: float = -14.0
+## Each card under the stack's top one sits this far down and to the side.
+const STACK_STEP: Vector2 = Vector2(2.0, 3.0)
+const RM_FADE: float = 0.16
+const RM_GAP: float = 0.04
+## THE PICK. The card taken turns face down as it flies into the top menu's
+## deck and shrinks to the deck's card (PICK_FLY; face down by PICK_TURNED of
+## the way), and the deck counts it and bumps as it lands (RunHud.card_home).
+## The others turn back and slide away into the bed (PASS_AWAY, PASS_DROP px).
+## Under Reduce Motion every card fades where it stands (RM_FADE) and the
+## deck's count ticks.
+const PICK_FLY: float = 0.42
+const PICK_TURNED: float = 0.6
+const PASS_AWAY: float = 0.32
+const PASS_DROP: float = 36.0
+## Over the run HUD (z 100) while the taken card flies into its deck.
+const FLY_Z: int = 101
 const DEBRIS_A: float = 0.90
 const DEBRIS_SCALE: float = 0.60     # a piece of wreckage at rest, against its cut
-## A card not taken, once the offering has been answered.
-const PASSED_A: float = 0.14
 
 const TEXT: Color = Color(0.902, 0.914, 0.949)
 const TEXT_DIM: Color = Color(0.600, 0.628, 0.706)
@@ -173,6 +203,9 @@ var shape: StringName = StageShape.IDENTITY
 ## True on the route, where the run HUD stands over this screen: the set-out
 ## then keeps clear of the HUD's top bar and its first relic row.
 var under_hud: bool = false
+## The run HUD over this screen (Main sets it): its deck is where a card taken
+## flies. Without one (the lab), the card taken fades where it stands.
+var hud: RunHud = null
 ## WHAT THE SCREEN MAY NOT DRAW INTO. This screen does not get the whole canvas.
 ## In the viewer the lab's control strip lies across the top; in the game the
 ## run HUD does (`under_hud`). The set-out is a column of fixed heights, so told
@@ -246,6 +279,13 @@ var _face_a: Array[float] = []
 var _card_a: Array[float] = []
 var _card_rise: Array[float] = []
 var _card_dim: Array[float] = []
+## Each card's way out of the deal's stack to its seat, still to go (px), and
+## the turn it was last given (yaw, pitch), so a pose is sent only when it moves.
+var _card_off: Array[Vector2] = []
+var _card_pose: Array[Vector2] = []
+## The table's back the face-down cards were dressed in: a bake that lands
+## after the deal began (it is made as this route is built) dresses them again.
+var _dressed_back: CardBacks.Baked = null
 
 
 func _init(reward_ref: Dictionary, content_ref: ContentDB,
@@ -268,6 +308,8 @@ func _init(reward_ref: Dictionary, content_ref: ContentDB,
 		_card_a.append(0.0)
 		_card_rise.append(CARD_RISE)
 		_card_dim.append(1.0)
+		_card_off.append(Vector2.ZERO)
+		_card_pose.append(Vector2(-1.0, 0.0))
 	_read_shape()
 
 	var ground: ColorRect = ColorRect.new()
@@ -807,10 +849,11 @@ func advance(delta: float) -> void:
 		_reveal_face(_ramp(at, 0.24), i)
 		if _t >= at:
 			_announce(i)
-	var rise: float = CARD_IN + 0.08
+	if CardTurn.back() != _dressed_back:
+		_dressed_back = CardTurn.back()
+		_card_pose.fill(Vector2(-1.0, 0.0))
 	for i: int in range(_cards.size()):
-		var wait: float = SIT + BLAZE + BURST * 0.72 + 0.06 * float(i)
-		_card_in(1.0 - pow(1.0 - _ramp(wait, rise), 3.0), i)            # cubic out
+		_deal(i)
 	if _t >= _entrance_end():
 		_settled = true
 		set_process(false)
@@ -829,9 +872,81 @@ func settle() -> void:
 	advance(_entrance_end() - _t)
 
 
-## The entrance's length: the last card's rise ends it.
+## The entrance's length: the husk's break and its spoils, or the offering's
+## last turn when it ends later.
 func _entrance_end() -> float:
-	return SIT + BLAZE + BURST + 0.06 * float(_cards.size()) + CARD_IN + 0.08
+	var husk: float = SIT + BLAZE + BURST + CARD_IN + 0.08
+	if _cards.is_empty():
+		return husk
+	if _still():
+		return maxf(husk, _deal_at() + RM_GAP * float(_cards.size() - 1) + RM_FADE)
+	return maxf(husk, _turn_at(_cards.size() - 1) + TURN)
+
+
+## When the offering's stack comes up into the bed.
+func _deal_at() -> float:
+	return SIT + BLAZE + BURST * 0.72
+
+
+## When card `i` starts to turn over: once the deal is done, left to right.
+func _turn_at(i: int) -> float:
+	var n: int = _cards.size()
+	return _deal_at() + STACK_IN + DEAL_GAP * float(n - 1) + DEAL_OUT + TURN_GAP * float(i)
+
+
+## Reduce Motion, read as the reveal starts and the pick is made.
+static func _still() -> bool:
+	return Preferences.active.reduce_motion
+
+
+## Card `i` on the entrance clock: in the stack, dealt, turned (§3).
+func _deal(i: int) -> void:
+	if _still():
+		_card_rise[i] = 0.0
+		_card_off[i] = Vector2.ZERO
+		_card_a[i] = _ramp(_deal_at() + RM_GAP * float(i), RM_FADE)
+		_place_card(i)
+		return
+	var n: int = _cards.size()
+	var up: float = _ramp(_deal_at(), STACK_IN)
+	_card_a[i] = up
+	_card_rise[i] = CARD_RISE * pow(1.0 - up, 3.0)
+	var top_first: int = n - 1 - i
+	var out: float = 1.0 - pow(1.0 - _ramp(_deal_at() + STACK_IN + DEAL_GAP * float(top_first), DEAL_OUT), 3.0)
+	_card_off[i] = (_stack_rel(i) - _card_rel[i]) * (1.0 - out) if i < _card_rel.size() else Vector2.ZERO
+	var s: float = smoothstep(0.0, 1.0, _ramp(_turn_at(i), TURN))
+	_turn(i, 180.0 * (1.0 - s), TURN_PITCH * sin(PI * s))
+	_place_card(i)
+
+
+## Where card `i` stands in the deal's stack, offset from the screen's centre:
+## the rack's middle, each card under the top one a STACK_STEP further.
+func _stack_rel(i: int) -> Vector2:
+	var mid: Vector2 = (_card_rel[0] + _card_rel[-1]) * 0.5
+	return mid + STACK_STEP * float(_cards.size() - 1 - i)
+
+
+## Turn card `i` (the live turn), sending the pose only when it moved.
+func _turn(i: int, yaw: float, pitch: float) -> void:
+	var pose: Vector2 = Vector2(yaw, pitch)
+	if pose.is_equal_approx(_card_pose[i]):
+		return
+	_card_pose[i] = pose
+	_cards[i].turn(yaw, pitch, true)
+
+
+## Whether the offering is being dealt or turned: a tap lands it.
+func _revealing() -> bool:
+	return not _settled and not _cards.is_empty() and _t >= _deal_at()
+
+
+## Skip (§3): a tap or a click while the offering is dealt lands it face up.
+func _gui_input(event: InputEvent) -> void:
+	var down: bool = (event is InputEventMouseButton and (event as InputEventMouseButton).pressed) \
+		or (event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed)
+	if down and _revealing():
+		settle()
+		accept_event()
 
 
 ## 0 until `start`, 1 from `start + span`, linear between, on the entrance clock.
@@ -878,12 +993,6 @@ func _reveal_face(v: float, i: int) -> void:
 	_face_a[i] = v
 	if i < _faces.size():
 		_faces[i].modulate.a = v
-
-
-func _card_in(v: float, i: int) -> void:
-	_card_a[i] = clampf(v * (CARD_IN + 0.08) / CARD_IN, 0.0, 1.0)
-	_card_rise[i] = CARD_RISE * (1.0 - v)
-	_place_card(i)
 
 
 func _dim_card(v: float, i: int) -> void:
@@ -1033,7 +1142,9 @@ func _place_card(i: int) -> void:
 	if i >= _card_rel.size():
 		return
 	var seat: Control = _cards[i].get_parent()
-	seat.position = _centre + _card_rel[i] + Vector2(0.0, _card_rise[i])
+	if seat.z_index == FLY_Z:
+		return    # flying home to the deck (`_fly`)
+	seat.position = _centre + _card_rel[i] + _card_off[i] + Vector2(0.0, _card_rise[i])
 	seat.modulate.a = _card_a[i] * _card_dim[i]
 
 
@@ -1062,25 +1173,73 @@ func set_shape(stage_shape: StringName) -> void:
 func _take_card(id: String) -> void:
 	if _picked:
 		return
+	if _revealing():
+		settle()    # the first tap lands the offering; the next one takes
+		return
 	_picked = true
 	var had_key: bool = _card_keys.any(func(k: Button) -> bool: return k.has_focus())
 	var tw: Tween = create_tween().set_parallel(true)
+	var taken: int = _card_ids.find(id) if not id.is_empty() else -1
+	var home: Control = hud.deck_stack() if hud != null and is_instance_valid(hud) else null
+	var flies: bool = taken >= 0 and home != null and home.is_visible_in_tree() and not _still()
 	for i: int in range(_card_ids.size()):
-		if _card_ids[i] != id:
-			tw.tween_method(_dim_card.bind(i), _card_dim[i], PASSED_A, 0.30)
+		if i == taken and flies:
+			_fly(i, home)
+		elif _still():
+			tw.tween_method(_dim_card.bind(i), _card_dim[i], 0.0, RM_FADE)
+		else:
+			tw.tween_method(_pass_card.bind(i), 0.0, 1.0, PASS_AWAY)
 	if _take_line != null:
 		tw.tween_property(_take_line, "modulate:a", 0.0, 0.22)
-	_stand_down()
+	_stand_down(taken if flies else -1)
 	if had_key and _walk_word != null:
 		_walk_word.grab_focus()
+	if flies:
+		hud.owe_card()    # counted as it lands, not as it is taken
 	claimed.emit(&"card", id)
 
 
+## A card not taken: it turns back as it slides away into the bed.
+func _pass_card(v: float, i: int) -> void:
+	var s: float = smoothstep(0.0, 1.0, v)
+	_turn(i, 180.0 * s, TURN_PITCH * sin(PI * s))
+	_card_rise[i] = PASS_DROP * v * v
+	_card_dim[i] = 1.0 - v
+	_place_card(i)
+
+
+## The card taken flies into `home` (the run HUD's deck), turning face down
+## and shrinking to the deck's card; the deck counts it and bumps as it lands.
+func _fly(i: int, home: Control) -> void:
+	var seat: Control = _cards[i].get_parent()
+	seat.z_index = FLY_Z
+	seat.pivot_offset = seat.size * 0.5
+	_cards[i].mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var from: Vector2 = seat.position
+	var inverse: Transform2D = get_global_transform().affine_inverse()
+	var to_centre: Vector2 = inverse * home.get_global_rect().get_center()
+	var to: Vector2 = to_centre - seat.size * 0.5
+	var shrink: float = DeckStack.CARD_H * home.size.x / DeckStack.ICON_SIDE / seat.size.y
+	var tw: Tween = seat.create_tween()
+	tw.tween_method(func(v: float) -> void:
+		var e: float = v * v * (3.0 - 2.0 * v)
+		seat.position = from.lerp(to, e)
+		seat.scale = Vector2.ONE * lerpf(1.0, shrink, e)
+		var s: float = smoothstep(0.0, 1.0, clampf(v / PICK_TURNED, 0.0, 1.0))
+		_turn(i, 180.0 * s, TURN_PITCH * sin(PI * s)), 0.0, 1.0, PICK_FLY)
+	tw.tween_callback(func() -> void:
+		seat.visible = false
+		if hud != null and is_instance_valid(hud):
+			hud.card_home())
+
+
 ## The offering has been answered: nothing on it takes a pick or the keyboard
-## any more, and "Leave it" has nothing left to leave.
-func _stand_down() -> void:
-	for card: CardView in _cards:
-		card.set_playable(false)
+## any more, and "Leave it" has nothing left to leave. The card flying home
+## (`flying`) keeps its colour on the way.
+func _stand_down(flying: int = -1) -> void:
+	for i: int in range(_cards.size()):
+		if i != flying:
+			_cards[i].set_playable(false)
 	for key: Button in _card_keys:
 		key.focus_mode = Control.FOCUS_NONE
 		key.disabled = true
@@ -1130,8 +1289,10 @@ func mark_taken(what: StringName) -> void:
 		if _card_ids.is_empty():
 			return
 		_picked = true
+		# Answered before this screen was built: the offering has gone, the
+		# card taken into the deck and the others away, as the pick leaves it.
 		for i: int in range(_cards.size()):
-			_card_dim[i] = PASSED_A
+			_card_dim[i] = 0.0
 			_place_card(i)
 		if _take_line != null:
 			_take_line.visible = false

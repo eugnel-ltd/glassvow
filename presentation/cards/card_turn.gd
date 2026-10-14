@@ -185,6 +185,29 @@ static func prewarm(host: Node, id: String) -> void:
 	warmer.free()
 
 
+## Wear `id` on the table outside a fight: nothing when the table already
+## wears it baked, else `prewarm_on_bench` under `parent`. Main calls it for
+## the chosen back with every route that builds the run HUD.
+static func wear(parent: Node, id: String) -> void:
+	if _wearing == id and back() != null:
+		return
+	prewarm_on_bench(parent, id)
+
+
+## The player chooses `id` (the Vigil's Backs shelf, #657 PR 7): refused
+## unless `vigil` has earned it; else stored as the preference and worn on the
+## table at once, baked on a bench under `parent`, so every deck stack (they
+## follow `back()` frame by frame) wears it from its bake on and never the
+## painting. A choice of the back already worn changes nothing.
+static func choose(prefs: Preferences, vigil: VigilState, parent: Node, id: String) -> bool:
+	if not CardBacks.catalogue().is_unlocked(id, vigil):
+		return false
+	if prefs.card_back != id:
+		CardBacks.choose(prefs, id)
+	wear(parent, id)
+	return true
+
+
 ## Pay for the table's back outside a fight: `prewarm` under a bench of its
 ## own, added to `parent` and let go the moment the bake lands. The baked card
 ## leaves with the bench, so its video memory is released behind the same

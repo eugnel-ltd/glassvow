@@ -51,6 +51,19 @@ const SUNRISE_LOW: Color = Color(1.0, 0.76862746, 0.47058824, 0.07)
 const WASH_NIGHT: float = 0.62
 const WASH_DAWN: float = 0.40
 
+## A card back earned by the run (#657 PR 7) arrives as a card turning over:
+## its event's card holds the back as a live card at BACK_SCALE, face down as
+## the panel rises, turning face up from BACK_TURN_AT into the beat, BACK_TURN
+## long, pitching toward the eye as the deal's cards do. Skipped, resumed or
+## under Reduce Motion it stands face up. Built with the screen, hidden, so
+## its picture compiles in the frame that builds the route, behind its wipe.
+const BACK_SCALE: float = 0.30
+## The least width the back's words wrap at, beside it (they take the rest).
+const BACK_WORDS_W: float = 96.0
+const BACK_TURN_AT: float = 0.30
+const BACK_TURN: float = 0.48
+const BACK_PITCH: float = -14.0
+
 const BEAT_IDLE: int = 0
 const BEAT_REVEAL: int = 1
 const BEAT_WAIT: int = 2
@@ -84,6 +97,9 @@ var _sun_t: float = -1.0
 var _reveal_card: Control = null
 var _reveal_seat: MarginContainer = null
 var _confetti: Confetti = null
+## The earned backs' cards turning over now, with their clocks.
+var _turning: Array[CardView] = []
+var _turn_t: Array[float] = []
 
 ## The reveal's travel, and every seat's constant extra height: top and
 ## bottom margins always sum to this, so a sliding card never changes its
@@ -106,7 +122,50 @@ func _init(events: Array, cursor: int,
 	_build()
 
 
+## Each earned back still owed is drawn once, hidden, in the frame that
+## builds the route (behind its wipe), so its picture compiles there and not
+## at its beat. The card its beat shows is built then, in place: a card built
+## ahead and moved into the feed came up with its table-shadow panel twice its
+## size. The warm card stays, hidden, until the screen leaves, so its video
+## memory is never released inside the ceremony.
+func _warm_backs() -> void:
+	for i: int in range(_cursor, _events.size()):
+		var event: Dictionary = _events[i] if typeof(_events[i]) == TYPE_DICTIONARY else {}
+		var card: CardView = _back_card(event, 9500 + i)
+		if card != null:
+			card.releases_at_rest = false
+			card.visible = false
+			add_child(card)
+
+
+## The Dawn's events for the card backs `vigil` has earned that it had not
+## (`before`, read before the run was recorded): each its name and where it
+## waits. Unlocks are reads of the ledger (CardBackCatalogue), so nothing new
+## is saved but the events themselves, in the feed the run's save carries.
+static func back_events(before: Array[String], vigil: VigilState) -> Array:
+	var out: Array = []
+	for id: String in CardBacks.catalogue().unlocked(vigil):
+		if not before.has(id):
+			out.append({"kind": "back", "back": id,
+				"title": Locale.active.t("ui.back.%s.name" % id),
+				"body": Locale.active.t("ui.dawn.backBody")})
+	return out
+
+
+## The live card of the back an event names, or null for any other event (or
+## a back the catalogue no longer knows: its words still stand).
+static func _back_card(event: Dictionary, index: int) -> CardView:
+	var id: String = str(event.get("back", ""))
+	if str(event.get("kind", "")) != "back" or not CardBacks.catalogue().has(id):
+		return null
+	var card: CardView = CardBacks.build(id, 9400 + index)
+	card.releases_at_rest = true
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return card
+
+
 func _ready() -> void:
+	_warm_backs()
 	# The one-shots — flash, confetti, the fanfare — belong to the moment of
 	# ascent: a player killed mid-dawn comes back to a quiet feed. The LIGHT is
 	# not one of them: sunrise is a state the scene holds, so a resumed dawn
@@ -184,7 +243,7 @@ func _build() -> void:
 		# persisted through.
 		for i: int in range(_cursor):
 			var owed: Dictionary = _events[i]
-			_grid.add_child(_seat(_event_card(owed)))
+			_grid.add_child(_seat(_event_card(owed, i, false)))
 
 	_build_stats(column)
 	_progress = _label(_progress_text(), 11, RunStyle.GOLD_DIM)
@@ -267,7 +326,8 @@ func _begin_beat() -> void:
 	_beat_t = 0.0
 	_asked = false
 	var due: Dictionary = _events[_cursor]
-	var card: PanelContainer = _event_card(due)
+	var card: PanelContainer = _event_card(due, _cursor,
+		not _skipping and not Preferences.active.reduce_motion)
 	var seat: MarginContainer = _seat(card, 0.0 if _skipping else TRAVEL)
 	_grid.add_child(seat)
 	_reveal_card = card
@@ -315,6 +375,7 @@ func _complete() -> void:
 
 
 func _process(delta: float) -> void:
+	_turn_backs(delta)
 	if _sun_t >= 0.0 and _sun_t < SUNRISE_TIME:
 		_sun_t = minf(SUNRISE_TIME, _sun_t + delta)
 		var u: float = Motion.ease(Motion.EASE_IN_OUT, _sun_t / SUNRISE_TIME)
@@ -403,6 +464,7 @@ func _press(down: bool) -> void:
 		_reveal_card.modulate.a = 1.0
 		if is_instance_valid(_reveal_seat):
 			_set_travel(_reveal_seat, 0.0)
+		_land_backs()
 		_finish_beat()
 		_asked = true
 		advance_requested.emit()
@@ -562,7 +624,7 @@ static func _set_travel(seat: MarginContainer, px: float) -> void:
 ## same; the arriving one announces itself by its entrance, not by a border
 ## three times brighter than its neighbours' (which is also what kept a
 ## resumed feed from matching a watched one).
-func _event_card(event: Dictionary) -> PanelContainer:
+func _event_card(event: Dictionary, index: int = -1, turns: bool = false) -> PanelContainer:
 	var card: PanelContainer = PanelContainer.new()
 	card.custom_minimum_size = Vector2(145, 82)
 	var style: StyleBoxFlat = StyleBoxFlat.new()
@@ -590,6 +652,25 @@ func _event_card(event: Dictionary) -> PanelContainer:
 		var kicker: Label = _label(_event_kicker(kind), 9, RunStyle.GOLD_DIM)
 		kicker.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_700, 1))
 		stack.add_child(kicker)
+	var built: CardView = _back_card(event, index)
+	var back: Control = _back_seat(built) if built != null else null
+	if back != null and turns:
+		_turn_over(back.get_child(0) as CardView)
+	# An earned back stands beside its words, so its event is no taller than
+	# its neighbours in the feed's row.
+	var words: BoxContainer = stack
+	if back != null:
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		stack.add_child(row)
+		row.add_child(back)
+		words = VBoxContainer.new()
+		words.alignment = BoxContainer.ALIGNMENT_CENTER
+		words.custom_minimum_size.x = BACK_WORDS_W
+		words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		words.add_theme_constant_override("separation", 4)
+		row.add_child(words)
 	# Kicker speaks the register; title carries the earned thing; a whisper
 	# has no title and an unlock may have no body — empty lines take no room.
 	var title_text: String = str(event.get("title", ""))
@@ -597,12 +678,12 @@ func _event_card(event: Dictionary) -> PanelContainer:
 		var title: Label = _label(title_text, 13, RunStyle.PARCHMENT)
 		title.add_theme_font_override("font", GlassStyle.face(GlassStyle.CINZEL_700))
 		title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		stack.add_child(title)
+		words.add_child(title)
 	var body_text: String = str(event.get("body", ""))
 	if not body_text.is_empty():
 		var body: Label = _label(body_text, 11, RunStyle.TEXT)
 		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		stack.add_child(body)
+		words.add_child(body)
 	# `.dawn-count` (styles.css:2589-2590) — questProgress progress/target.
 	if event.has("count"):
 		var count_text: String = str(event["count"])
@@ -617,6 +698,52 @@ func _event_card(event: Dictionary) -> PanelContainer:
 			count_seat.add_child(count_label)
 			stack.add_child(count_seat)
 	return card
+
+
+## The earned back's seat in its event card: the card at BACK_SCALE.
+static func _back_seat(card: CardView) -> Control:
+	var span: Vector2 = Vector2(CardView.CARD_W, CardView.CARD_H)
+	var seat: Control = Control.new()
+	seat.custom_minimum_size = span * BACK_SCALE
+	seat.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	seat.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.scale = Vector2(BACK_SCALE, BACK_SCALE)
+	# Scaled about its centre (CardView's own pivot).
+	card.position = span * (BACK_SCALE - 1.0) * 0.5
+	seat.add_child(card)
+	return seat
+
+
+## Lay `card` face down and turn it over on the beat's clock (`_turn_backs`).
+func _turn_over(card: CardView) -> void:
+	card.turn(180.0, 0.0, true)
+	_turning.append(card)
+	_turn_t.append(0.0)
+
+
+## The earned backs turning over, on the beat's clock; all at once when the
+## player skips.
+func _turn_backs(delta: float) -> void:
+	if _skipping:
+		_land_backs()
+	for i: int in range(_turning.size() - 1, -1, -1):
+		var card: CardView = _turning[i]
+		_turn_t[i] += delta
+		var s: float = smoothstep(0.0, 1.0, clampf((_turn_t[i] - BACK_TURN_AT) / BACK_TURN, 0.0, 1.0))
+		if is_instance_valid(card):
+			card.turn(180.0 * (1.0 - s), BACK_PITCH * sin(PI * s), true)
+		if s >= 1.0 or not is_instance_valid(card):
+			_turning.remove_at(i)
+			_turn_t.remove_at(i)
+
+
+## Every back still turning stands face up.
+func _land_backs() -> void:
+	for card: CardView in _turning:
+		if is_instance_valid(card):
+			card.turn(0.0, 0.0, true)
+	_turning.clear()
+	_turn_t.clear()
 
 
 ## Emberglass shard + sealed-door glyphs (art.js:502, :506), drawn in a
@@ -737,6 +864,7 @@ func _event_kicker(kind: String) -> String:
 		"progress": return Locale.active.t("ui.dawn.kickerProgress")
 		"shard": return Locale.active.t("ui.dawn.kickerShard")
 		"unlock": return Locale.active.t("ui.dawn.kickerUnlock")
+		"back": return Locale.active.t("ui.dawn.kickerBack")
 		_: return Locale.active.t("ui.dawn.kickerDefault")
 
 
