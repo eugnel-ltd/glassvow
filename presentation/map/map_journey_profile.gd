@@ -6,8 +6,9 @@ extends RefCounted
 ## gate and threshold, and whether the title's prefetch warms it. An act with
 ## no row keeps the painted landscape, its own gate and no threshold.
 ##
-## Act I is the only row. Another act gains the journey land by gaining a row
-## here (and the land's own geometry), never by a branch elsewhere.
+## Act I is the only row players reach. Another act gains the journey land by
+## gaining a row here (and the land's own geometry), never by a branch
+## elsewhere; until players may see it, its row stands behind `DEV_FLAG`.
 
 ## One act's journey. `land` is the land class (`MapJourneyLandscape`, or a
 ## class that extends it); `light` is called as `light(key, environment)` and
@@ -32,8 +33,14 @@ class Row extends RefCounted:
 		return row
 
 
-## The act the floor's warm-ups and bakes stand in: the one act with a row.
+## The act the floor's warm-ups and bakes stand in: the one act with a row
+## players reach (a dev row's land has no floor to bake).
 const FIRST_ACT: int = 0
+## The command-line flag that adds a dev row (`enable_dev`): an act NUMBER
+## counted from 1, as `--act=` (`ActFlag`). `--journey-act=2` draws Act II's
+## causeways (`MapCausewayLandscape`, #660 II.2) on `tools/preview_map.gd` and
+## `tools/shot.sh`.
+const DEV_FLAG: String = "--journey-act="
 
 ## The rows by act index; a test swaps it and restores `default_rows()`.
 static var rows: Dictionary[int, Row] = default_rows()
@@ -44,6 +51,30 @@ static func default_rows() -> Dictionary[int, Row]:
 	table[FIRST_ACT] = Row.make(MapJourneyLandscape, MapJourneyLandscape.light,
 		MapLandscapeAssets.GATES[FIRST_ACT], "vigil", true)
 	return table
+
+
+## The rows only `DEV_FLAG` adds: lands not yet for players. Act II's
+## causeways end at the act's own gate, open on no threshold and are not
+## warmed by the title's prefetch.
+static func dev_rows() -> Dictionary[int, Row]:
+	var table: Dictionary[int, Row] = {}
+	table[1] = Row.make(MapCausewayLandscape, MapCausewayLandscape.light,
+		MapLandscapeAssets.GATES[1], "", false)
+	return table
+
+
+## Adds the dev row `value` (the flag's act number) names. Empty when it did,
+## otherwise the message to print: a wrong act is refused, never clamped.
+static func enable_dev(value: String) -> String:
+	var parsed: Dictionary = ActFlag.parse(value)
+	if parsed.has("error"):
+		return DEV_FLAG + " " + str(parsed["error"])
+	var act: int = parsed["act_index"]
+	var dev: Dictionary[int, Row] = dev_rows()
+	if not dev.has(act):
+		return "%s has no dev journey land for Act %d" % [DEV_FLAG, ActFlag.number_of(act)]
+	rows[act] = dev[act]
+	return ""
 
 
 ## Whether `act` has a journey row.
