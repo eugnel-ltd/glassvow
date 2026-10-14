@@ -28,6 +28,7 @@ uniform float lamp_strength = 0.55;
 // its colour (linear) with the pool's strength in a.
 uniform vec4 walker = vec4(0.0, -100.0, 0.0, 2.6);
 uniform vec4 walker_colour = vec4(1.0, 0.55, 0.2, 0.0);
+uniform float walker_strength = 2.2;
 uniform float roughness_dry = 0.82;
 uniform float roughness_wet = 0.32;
 
@@ -92,7 +93,8 @@ void fragment() {
 	vec3 glow = lamp_colour * mask.g * lamp_strength * top;
 	float near = 1.0 - smoothstep(0.0, walker.w, distance(world_at.xz, walker.xz));
 	float level = 1.0 - smoothstep(0.6, 1.8, abs(world_at.y - walker.y));
-	glow += walker_colour.rgb * walker_colour.a * near * near * level * top;
+	// The flame warms the stone round the pilgrim, the parapets' faces too.
+	glow += walker_colour.rgb * walker_colour.a * near * near * level * mix(0.45, 1.0, top) * walker_strength;
 	ALBEDO = stone;
 	EMISSION = glow * stone * 2.0;
 	NORMAL = normalize((VIEW_MATRIX * vec4(bent, 0.0)).xyz);

@@ -57,7 +57,8 @@ extends Node
 ##   --trace-kill=<what>    hide one part for the whole run: shadows, kit,
 ##                          stone, ground, land, glow, band, grain, display, hud
 ## Rows go to user://trace_probe.jsonl (flushed per row) and to stdout with the
-## prefix TRACE_PROBE. The start row carries BUILD, the commit `qa_patch.py`
+## prefix TRACE_PROBE; every memory warning the OS sends is a `memory_warning`
+## row. The start row carries BUILD, the commit `qa_patch.py`
 ## stamps in when it arms a measuring worktree ("+dirty" when tracked files
 ## other than the armed `main.gd` differ from it), so every row names its build.
 
@@ -272,6 +273,12 @@ func _map_grain() -> float:
 		return -1.0
 	var amount: float = grain.get_shader_parameter("amount")
 	return amount
+
+
+## Every memory warning the OS sends while the probe runs is a row.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_OS_MEMORY_WARNING:
+		_row({"probe": "memory_warning", "video_mib": FrameWatch.mib(), "memory": FrameWatch.memory()})
 
 
 ## Live: every enabled view of the map renders this frame. Runs after every

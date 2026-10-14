@@ -17,7 +17,7 @@ const CityLamps = preload("res://presentation/map/causeway/city_lamps.gd")
 const CityMask = preload("res://presentation/map/causeway/city_mask.gd")
 ## The lanterns' flame and glow, and the pilgrim's flame's pool's reach (m).
 const JADE: Color = Color(0.32, 1.0, 0.64, 1.0)
-const FLAME_REACH: float = 2.6
+const FLAME_REACH: float = 3.4
 
 var lanterns: CityLamps
 ## Every material the pilgrim's flame lights (`set_traveller`).
