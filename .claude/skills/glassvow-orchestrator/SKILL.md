@@ -98,6 +98,6 @@ It lists `~/Library/Developer/Xcode/DerivedData/glassvow-*` folders whose `info.
 - **30 Sep and 4 Oct:** `override.cfg` files with one key, or both keys without the `[application]` header, ran unisolated against the real profile. Hence the verbatim three-line block.
 - **5 Oct, about 07:30:** a map lane gave a probe a "purge renderer caches" mode meant for the iPad sandbox and ran it on the Mac, where `OS.get_cache_dir()` is `~/Library/Caches` itself: about 130,000 files, 14 GB, other apps' caches included. Hence the rule against derived paths.
 - **11 Oct:** an exported pck run with `--main-pack` read `override.cfg` beside the pck, not the worktree's, and wrote 84 files into the real profile. They were quarantined with a manifest after the owner approved, not deleted. Hence: briefs that run exported builds or a second binary put the block beside the pck and the binary, and check the real profile's mtimes after the first run.
-- **14 Oct, 18:22:** the owner granted the orchestrator one exception: the routine DerivedData prune in section 6. It does not extend to lanes or to any other path.
+- **14 Oct, 18:22:** the owner granted the orchestrator one exception: the routine housekeeping in section 6, which prunes orphaned `glassvow-*` DerivedData and expired git worktree records (metadata only, after a day: `git worktree prune --expire=1.day`). It does not extend to lanes or to any other path.
 
 Archived lane folders are deleted only after the NAS copy's sha256 matches the local one.

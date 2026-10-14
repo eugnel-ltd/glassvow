@@ -4,6 +4,11 @@
 # The orchestrator runs this after every lane cleanup or merge. Lanes never run it.
 set -u
 
+# Engine only: on the seat, the repo is an SMB mount and git must not run over it.
+if [[ -n "${GLASSVOW_ENGINE_HOST_NAME:-}" && "$(scutil --get LocalHostName 2>/dev/null)" != "$GLASSVOW_ENGINE_HOST_NAME" ]]; then
+  print "housekeeping runs on the engine; use: mbp zsh $0"; exit 1
+fi
+
 # The main checkout, found from git rather than hard-coded, so this works from
 # any worktree on any machine.
 common_dir=$(git -C "${0:A:h}" rev-parse --path-format=absolute --git-common-dir) || exit 1
@@ -41,5 +46,7 @@ while IFS= read -r d; do
 done < "$list"
 print "pruned $n orphaned DerivedData folder(s)"
 
-git -C "$repo" worktree prune
+# Metadata only: drops records of worktrees whose directory has been gone a day,
+# so a lane's folder caught mid-move is never pruned.
+git -C "$repo" worktree prune --expire=1.day
 df -h / | tail -1 | awk '{print $4" free"}'
