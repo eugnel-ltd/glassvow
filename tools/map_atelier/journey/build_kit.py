@@ -308,7 +308,7 @@ def save(name,description,budget,grounded=True):
     obj.data.materials.clear()
     for mat in materials:obj.data.materials.append(mat)
     for p,i in zip(obj.data.polygons,indices):p.material_index=i
-    if name.startswith('slate-') or name in ['amber-arch','memorial','waystone','bridge-bay','lantern-post']:
+    if name.startswith('slate-') or name in ['amber-arch','memorial','waystone','bridge-bay','lantern-post','bridge-pier']:
         stone_finish.apply(obj,OUT/'textures/ash-stone-colour.png')
     if any(mat.name.startswith('Foliage /') for mat in materials):
         assert obj.data.uv_layers and obj.data.uv_layers[0].name == 'UVMap'
