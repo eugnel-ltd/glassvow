@@ -14,16 +14,18 @@ extends RefCounted
 ## prefetch keys on the map, and the screen builds its own.
 
 
-## A copy of `run` standing at the start of the next act, its map drawn, or
-## null: the act's boss is not yet beaten on `map`, the run ends with this act,
-## or the run does not copy.
-static func predict(run: RunState, map: WorldMap, content: ContentDB) -> RunState:
+## The next act's run and map: `{"run": RunState, "map": WorldMap}`, a copy of
+## `run` standing at the start of the next act and the map it opens on, as
+## drawn (not round-tripped through the save, whose numbers it would round);
+## empty when the act's boss is not yet beaten on `map`, the run ends with this
+## act, or the run does not copy.
+static func predict(run: RunState, map: WorldMap, content: ContentDB) -> Dictionary:
 	var node: MapNode = map.current()
 	if node == null or node.type != "boss" or not map.is_cleared(map.at) or run.is_final_act():
-		return null
+		return {}
 	var copy: RunState = RunState.from_save_dict(run.to_save_dict(), content)
 	if copy == null:
-		return null
+		return {}
 	var game: GlassvowGame = GlassvowGame.new(content, copy)
 	if not copy.quest_scratch.has("bossRelicOffer"):
 		game.rewards.roll_boss_relics(copy)
@@ -31,4 +33,4 @@ static func predict(run: RunState, map: WorldMap, content: ContentDB) -> RunStat
 	var next: WorldMap = WorldMap.for_run(copy, content)
 	game.quests.decorate_map(copy, next)
 	copy.map = next.to_dict()
-	return copy
+	return {"run": copy, "map": next}

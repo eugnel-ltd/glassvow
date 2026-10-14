@@ -2298,9 +2298,11 @@ func _warm_landscape_for(map: WorldMap, run: RunState) -> void:
 ## crown's offer (#660 II.3). Until then, and for an act drawn as a painted
 ## landscape, no journey land is held.
 func _warm_next_act(map: WorldMap, run: RunState) -> void:
-	var next: RunState = NextActMap.predict(run, map, content) if MapScene.journey_async else null
-	if next != null and MapJourneyProfile.warms(next.act):
-		MapJourneyPrefetch.start(WorldMap.from_dict(next.map), next)
+	var next: Dictionary = NextActMap.predict(run, map, content) if MapScene.journey_async else {}
+	var next_run: RunState = next.get("run")
+	var next_map: WorldMap = next.get("map")
+	if next_run != null and MapJourneyProfile.warms(next_run.act):
+		MapJourneyPrefetch.start(next_map, next_run)
 	else:
 		MapJourneyPrefetch.release()
 
@@ -2334,8 +2336,8 @@ func _title_journey_act(saved: RunState, road: WorldMap) -> int:
 		return -1
 	if not _past_boss(road, saved):
 		return saved.act if MapJourneyProfile.warms(saved.act) else -1
-	var next: RunState = NextActMap.predict(saved, road, content)
-	return next.act if next != null and MapJourneyProfile.warms(next.act) else -1
+	var next_run: RunState = NextActMap.predict(saved, road, content).get("run")
+	return next_run.act if next_run != null and MapJourneyProfile.warms(next_run.act) else -1
 
 
 ## The map Back to the Road restores for `saved`, or null when there is none to

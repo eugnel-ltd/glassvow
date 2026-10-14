@@ -36,7 +36,7 @@ static func _beaten_boss(fails: Array[String], content: ContentDB, seed_value: i
 		if map.nodes[i].type == "boss":
 			boss = i
 	map.at = boss
-	_check(fails, NextActMap.predict(run, map, content) == null,
+	_check(fails, NextActMap.predict(run, map, content).is_empty(),
 		"seed %d: nothing is predicted while the boss stands" % seed_value)
 	map.cleared[boss] = true
 	# The fight and its rewards draw on the run's randomness before the crown.
@@ -44,12 +44,12 @@ static func _beaten_boss(fails: Array[String], content: ContentDB, seed_value: i
 		run.rng.next()
 	run.map = map.to_dict()
 	var before: Dictionary = run.to_save_dict()
-	var early: RunState = NextActMap.predict(run, map, content)
-	_check(fails, early != null and run.to_save_dict() == before,
+	var early: Dictionary = NextActMap.predict(run, map, content)
+	_check(fails, not early.is_empty() and run.to_save_dict() == before,
 		"seed %d: the prediction leaves the run untouched" % seed_value)
 	var offer: Array[String] = game.rewards.roll_boss_relics(run)
 	run.quest_scratch["bossRelicOffer"] = offer.duplicate()
-	var late: RunState = NextActMap.predict(run, map, content)
+	var late: Dictionary = NextActMap.predict(run, map, content)
 	if pick >= 0 and pick < offer.size():
 		game.rewards.gain_relic(run, offer[pick])
 	run.boss_relic_act = run.act
@@ -58,9 +58,15 @@ static func _beaten_boss(fails: Array[String], content: ContentDB, seed_value: i
 	var real: WorldMap = WorldMap.for_run(run, content)
 	game.quests.decorate_map(run, real)
 	var drawn: Dictionary = real.to_dict()
-	for predicted: RunState in [early, late]:
-		_check(fails, predicted != null and predicted.act == run.act and predicted.seed == run.seed
-				and predicted.map == drawn,
+	var bound: Dictionary = MapLayoutInputBinding.bind(real, run.act)
+	for predicted: Dictionary in [early, late]:
+		var next_run: RunState = predicted.get("run")
+		var next_map: WorldMap = predicted.get("map")
+		# The layout binds the map as drawn, its jitter unrounded: the map the
+		# prefetch builds from must bind to the same nodes and edges.
+		_check(fails, next_run != null and next_run.act == run.act and next_run.seed == run.seed
+				and next_run.map == drawn and next_map != null
+				and MapLayoutInputBinding.bind(next_map, next_run.act) == bound,
 			"seed %d (relic %d): the predicted map is the one the next act opens on" % [seed_value, pick])
 
 
@@ -73,4 +79,4 @@ static func _final_act(fails: Array[String], content: ContentDB) -> void:
 		if map.nodes[i].type == "boss":
 			map.at = i
 			map.cleared[i] = true
-	_check(fails, NextActMap.predict(run, map, content) == null, "nothing is predicted past the final act")
+	_check(fails, NextActMap.predict(run, map, content).is_empty(), "nothing is predicted past the final act")
