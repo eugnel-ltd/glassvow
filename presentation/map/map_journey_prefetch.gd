@@ -65,14 +65,20 @@ var _layout_lock: Mutex = Mutex.new()
 var _layout_taken: bool = false
 ## Whether the setup has let its first frame go by (`_advance`).
 var _first_frame_gone: bool = false
+## Whether this land is built ahead for the next act's map (`start`), and
+## whether its warm has been handed out (`take_warm`).
+var _ahead: bool = false
+var _warm_taken: bool = false
 
 
 ## Starts a prefetch of `map`'s land for `run` when its act has a journey row
 ## (`MapJourneyProfile`) that warms, and nothing is already prefetched or
-## prefetching for the same layout. For any other act the journey land is let
+## prefetching for the same layout. `ahead`: the map is the next act's, not
+## yet shown (`NextActMap`), and its built land is drawn once unseen
+## (`take_warm`). For any other act the journey land is let
 ## go (`release`): it is never drawn there. A finished prefetch whose kept land
 ## has since been freed holds nothing any more, so it is started again.
-static func start(map: WorldMap, run: RunState) -> void:
+static func start(map: WorldMap, run: RunState, ahead: bool = false) -> void:
 	if map == null or run == null or not MapJourneyProfile.warms(run.act):
 		release()
 		return
@@ -85,7 +91,9 @@ static func start(map: WorldMap, run: RunState) -> void:
 	job._salt = run.seed + WorldMapScreen.SCENERY_SEED_OFFSET
 	job._nodes = bound["nodes"]
 	job._edges = bound["edges"]
+	job._ahead = ahead
 	if _current != null and _current._same(job) and not _current._land_lost():
+		_current._ahead = _current._ahead or ahead
 		return
 	_drop()
 	MapJourneyProfile.release_kits(run.act)
@@ -150,6 +158,16 @@ static func layout_packet(input_digest: String) -> Dictionary:
 ## launch screen too (`floor_warm.gd`), so the land's first bake compiles none.
 static func prime(act: int = MapJourneyProfile.FIRST_ACT) -> void:
 	MapJourneyProfile.land_class(act).prime_kit()
+
+
+## True once, when the current prefetch built its land ahead for the next
+## act's map and it is now kept: `Main` then draws it once unseen
+## (`MapLandWarm.alone`).
+static func take_warm() -> bool:
+	if _current == null or not _current._ahead or _current._warm_taken or _current.step != Step.DONE:
+		return false
+	_current._warm_taken = true
+	return true
 
 
 ## The current prefetch's step, or -1 when there is none (tests and probes).

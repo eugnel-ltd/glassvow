@@ -2302,7 +2302,7 @@ func _warm_next_act(map: WorldMap, run: RunState) -> void:
 	var next_run: RunState = next.get("run")
 	var next_map: WorldMap = next.get("map")
 	if next_run != null and MapJourneyProfile.warms(next_run.act):
-		MapJourneyPrefetch.start(next_map, next_run)
+		MapJourneyPrefetch.start(next_map, next_run, true)
 	else:
 		MapJourneyPrefetch.release()
 
@@ -2492,6 +2492,10 @@ func _process(delta: float) -> void:
 		_take_vigil_art()
 	_build_vigil_ahead(delta)
 	MapJourneyPrefetch.step_current()
+	# The next act's land, built ahead under the boss's rewards, is drawn once
+	# unseen as soon as it is built, so its first open builds no pipeline.
+	if MapJourneyPrefetch.take_warm():
+		add_child(MapLandWarm.alone())
 	for retired: MapLayoutJob in _map_layout_retired.duplicate():
 		if retired.is_done():
 			retired.finish()
