@@ -64,6 +64,8 @@ var _device: bool = false
 var _fixed: Vector2 = Vector2.ZERO
 var _frames_dir: String = ""   # --holo-frames=<dir>: sweep frame by frame to PNGs
 var _frame_n: int = 0
+var _absolute: bool = false
+var _nonce: String = ""
 var _t: float = 0.0
 var _cards: Array[CardView] = []
 var _mats: Array[ShaderMaterial] = []
@@ -87,6 +89,10 @@ func _init(db: ContentDB) -> void:
 			_sheet = true
 		elif arg.begins_with("--holo-frames="):
 			_frames_dir = arg.trim_prefix("--holo-frames=")
+		elif arg == "--holo-absolute":
+			_absolute = true
+		elif arg.begins_with("--holo-nonce="):
+			_nonce = arg.trim_prefix("--holo-nonce=")
 		elif arg == "--holo-device":
 			_device = true
 		elif arg.begins_with("--holo-tilt="):
@@ -151,6 +157,7 @@ func _ready() -> void:
 	if _device:
 		_motion = HoloMotion.new()
 		_motion.reduce_motion = Preferences.active != null and Preferences.active.reduce_motion
+		_motion.absolute = _absolute
 		add_child(_motion)
 		_readout = Label.new()
 		_readout.add_theme_font_size_override("font_size", 12)
@@ -281,8 +288,8 @@ func _process(delta: float) -> void:
 	elif _device and _motion != null:
 		for i: int in range(_cards.size()):
 			_push(i, _motion.tilt)
-		_readout.text = "source %s   gravity (%.2f, %.2f, %.2f)   tilt (%.2f, %.2f)   frame %.1f ms   worst/2s %.1f ms" % [
-			_motion.source, _motion.raw.x, _motion.raw.y, _motion.raw.z,
+		_readout.text = "[%s%s] source %s   gravity (%.2f, %.2f, %.2f)   tilt (%.2f, %.2f)   frame %.1f ms   worst/2s %.1f ms" % [
+			_nonce, " absolute" if _absolute else " calibrated", _motion.source, _motion.raw.x, _motion.raw.y, _motion.raw.z,
 			_motion.tilt.x, _motion.tilt.y, _frame_ms, _worst_ms()]
 
 

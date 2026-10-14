@@ -29,6 +29,9 @@ var tilt: Vector2 = Vector2.ZERO
 var source: String = "none"
 var raw: Vector3 = Vector3.ZERO
 var reduce_motion: bool = false
+## Device check only: no calibration, the neutral is the screen lying flat,
+## so a device resting on a stand shows its stand angle as a lean.
+var absolute: bool = false
 ## Gravity axes into screen axes; flipped on the device check if a lean reads
 ## the wrong way round. Godot already rotates gravity into the interface
 ## orientation on iOS and Android.
@@ -59,10 +62,13 @@ func _from_gravity(g: Vector3, dt: float) -> Vector2:
 	var n: Vector3 = g.normalized()
 	var ang: Vector2 = Vector2(rad_to_deg(asin(clampf(n.x, -1.0, 1.0))),
 		rad_to_deg(asin(clampf(n.y, -1.0, 1.0))))
-	if not _have_neutral:
-		_neutral = ang
-		_have_neutral = true
-	_neutral += (ang - _neutral) * (1.0 - exp(-dt / RECENTRE_TAU))
+	if absolute:
+		_neutral = Vector2.ZERO
+	else:
+		if not _have_neutral:
+			_neutral = ang
+			_have_neutral = true
+		_neutral += (ang - _neutral) * (1.0 - exp(-dt / RECENTRE_TAU))
 	var d: Vector2 = ang - _neutral
 	var out: Vector2 = Vector2.ZERO
 	for i: int in range(2):
