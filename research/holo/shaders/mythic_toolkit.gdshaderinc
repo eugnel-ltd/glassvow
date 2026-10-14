@@ -74,27 +74,60 @@ float motif_door(vec2 p) {
 }
 
 // --- the grade mark ---
-vec3 myth_grade(vec3 base, vec2 cp, float face) {
+// A LEADED FRAME OF DICHROIC GLASS, shared by every mythic. An 8.5 px band
+// inside the cut (it frames the art window too) is cut by cames into panes
+// about 15 px long; each pane is dichroic glass that turns between two
+// jewels (sapphire and amber) as the lean crosses its own angle, so a tilt
+// walks a wave of colour round the frame. The leading is dark pewter with a
+// thin oil-iridescent glint. A gold six-petal seal sits on the rule.
+// `warm` (0..1) lets a card's story bias every pane toward amber.
+const vec3 MYTH_SAPPHIRE = vec3(0.14, 0.42, 1.0);
+const vec3 MYTH_AMBER = vec3(1.0, 0.64, 0.18);
+const float MYTH_BAND = 8.5;
+const float MYTH_PANE = 15.0;
+
+vec3 myth_grade(vec3 base, vec2 cp, float face, float warm) {
 	float inset = holo_inset(cp);
-	float frame = (1.0 - holo_art(cp)) * face;
-	vec2 q = cp / HOLO_CARD;
-	float along = dot(q - 0.5, normalize(vec2(1.0, 1.1)));
-	float env = exp(-pow((along - tilt.x * 0.42 - tilt.y * 0.30) * 2.2, 2.0));
-	vec3 rb = holo_rainbow(along * 3.4 + dot(tilt, vec2(1.2, 0.9)));
-	vec3 gold = vec3(1.0, 0.82, 0.44);
-	vec3 foil = mix(gold * 0.55, rb, 0.55 + 0.45 * env);
-	// a gilt rim, then a prismatic plate
-	float rim = 1.0 - smoothstep(3.0, 4.2, inset);
-	float band = (1.0 - smoothstep(7.0, 8.5, inset)) * frame;
-	vec3 col = holo_screen(base, foil * (0.10 + 0.25 * env) * 0.45 * frame);
-	col = holo_screen(col, foil * (0.35 + 0.65 * env) * 0.85 * band);
-	col = mix(col, holo_screen(gold * 0.70, rb * 0.55 * (0.3 + 0.7 * env)), rim * face);
-	// the six-petal seal on the rule under the window
-	vec2 sp = (cp - vec2(76.0, 93.5)) / 8.5;
+	float band = (1.0 - smoothstep(MYTH_BAND - 0.6, MYTH_BAND + 0.6, inset)) * face;
+	// perimeter coordinate, so panes run round the frame
+	vec2 c = cp - HOLO_CARD * 0.5;
+	vec2 h = HOLO_CARD * 0.5;
+	float side = (h.x - abs(c.x)) < (h.y - abs(c.y)) ? 1.0 : 0.0;
+	float s = side > 0.5 ? (c.y + (c.x > 0.0 ? 400.0 : 0.0)) : (c.x + (c.y > 0.0 ? 800.0 : 1200.0));
+	float sw = s / MYTH_PANE + 0.22 * sin(s * 0.09);   // panes of uneven length
+	float pane_id = floor(sw);
+	float pf = fract(sw);
+	float came_x = 1.0 - smoothstep(0.035, 0.075, min(pf, 1.0 - pf));
+	float came_y = max(1.0 - smoothstep(0.7, 1.4, inset), smoothstep(MYTH_BAND - 1.6, MYTH_BAND - 0.6, inset));
+	float came = max(came_x, came_y);
+	// the pane's own angle: where on the frame it sits, plus a jitter
+	vec2 out_dir = normalize(c * vec2(1.0, 0.75) + 0.001);
+	float j = holo_hash(vec2(pane_id, 3.0)) - 0.5;
+	float turn = dot(tilt, out_dir) * 1.5 + j * 0.9 + warm * 2.0 - 0.1;
+	float f = smoothstep(-0.45, 0.45, turn);
+	vec3 jewel = mix(MYTH_SAPPHIRE, MYTH_AMBER, f);
+	// dichroic glass shows a thin violet fringe as it turns between its two
+	jewel = mix(jewel, vec3(0.70, 0.36, 0.88), 4.0 * f * (1.0 - f) * 0.45);
+	float lit = exp(-pow(dot(tilt, out_dir) - 0.45 - j * 0.6, 2.0) * 5.0);
+	float across = (inset - 0.8) / (MYTH_BAND - 1.6);
+	float body = 0.62 + 0.38 * sin(clamp(across, 0.0, 1.0) * 3.14159);
+	// glass is never flat: streaks along the pane, and each pane its own density
+	body *= 0.78 + 0.34 * holo_noise(vec2(s * 0.22, inset * 0.7 + pane_id * 3.1));
+	body *= 0.85 + 0.3 * holo_hash(vec2(pane_id, 7.0));
+	vec3 pane = jewel * body * (0.70 + 0.65 * lit) + vec3(1.0, 0.97, 0.9) * pow(lit, 6.0) * 0.45;
+	vec3 lead = vec3(0.16, 0.17, 0.20);
+	vec3 oil = holo_rainbow(s * 0.012 + dot(tilt, vec2(0.7, 0.5)));
+	float glint = exp(-pow((dot(normalize(c + 0.001), normalize(tilt + 0.001)) - 0.8) * 3.0, 2.0)) * clamp(length(tilt) * 1.5, 0.2, 1.0);
+	lead += mix(vec3(0.55), oil, 0.55) * glint * 0.45;
+	vec3 frame = mix(pane, lead, came);
+	vec3 col = mix(base, frame, band);
+	// the six-petal seal on the rule under the window, gold with a jewel heart
+	vec2 sp = (cp - vec2(76.0, 93.5)) / 9.0;
 	float r = length(sp);
 	float sa = atan(sp.y, sp.x);
 	float seal = 1.0 - smoothstep(0.64 + 0.26 * cos(6.0 * sa), 0.74 + 0.26 * cos(6.0 * sa), r);
-	float hub = 1.0 - smoothstep(0.22, 0.30, r);
-	vec3 sealc = mix(gold, holo_rainbow(r * 0.9 + dot(tilt, vec2(1.5, 1.0))), 0.6 * (1.0 - hub));
+	float hub = 1.0 - smoothstep(0.24, 0.32, r);
+	vec3 gold = vec3(1.0, 0.82, 0.44) * (0.75 + 0.35 * lit);
+	vec3 sealc = mix(gold, mix(MYTH_SAPPHIRE, MYTH_AMBER, f) * 1.2, hub);
 	return mix(col, sealc, seal * face);
 }

@@ -66,6 +66,8 @@ var _frames_dir: String = ""   # --holo-frames=<dir>: sweep frame by frame to PN
 var _frame_n: int = 0
 var _absolute: bool = false
 var _wobble: bool = false
+var _off: bool = false      # --holo-off: the same cards with no holo (a control)
+var _first: bool = false    # --holo-first: one card per candidate (the ladder)
 var _rows_path: String = ""       # --holo-rows=<user:// file>: one row a second
 var _rows: FileAccess = null
 var _sec_t: float = 0.0
@@ -97,6 +99,10 @@ func _init(db: ContentDB) -> void:
 			_frames_dir = arg.trim_prefix("--holo-frames=")
 		elif arg.begins_with("--holo-rows="):
 			_rows_path = arg.trim_prefix("--holo-rows=")
+		elif arg == "--holo-off":
+			_off = true
+		elif arg == "--holo-first":
+			_first = true
 		elif arg == "--holo-wobble":
 			_wobble = true
 		elif arg == "--holo-absolute":
@@ -143,6 +149,8 @@ func _ready() -> void:
 					ids.append("back:" + b)
 			else:
 				ids.append(c)
+		if _first:
+			ids = ids.slice(0, 1)
 		rows_n += ids.size()
 		for id: String in ids:
 			for t: Vector2 in tilts:
@@ -151,7 +159,7 @@ func _ready() -> void:
 				add_child(card)
 				_cards.append(card)
 				_tilts.append(t)
-				var mat: ShaderMaterial = _material(spec, id)
+				var mat: ShaderMaterial = null if _off else _material(spec, id)
 				_mats.append(mat)
 				if mat != null:
 					card.set_holo(mat)

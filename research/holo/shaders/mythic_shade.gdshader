@@ -35,7 +35,7 @@ void fragment() {
 	art *= 1.0 - 0.5 * wall;
 	float m = myth_motes(cp, 7.0, 0.20, 6.0) * win;
 	art = holo_screen(art, vec3(0.75, 0.88, 1.0) * m * 0.8);
-	vec3 col = myth_grade(base.rgb, cp, face);
-	col = mix(col, art, win);
+	vec3 col = myth_grade(base.rgb, cp, face, 0.0);
+	col = mix(col, art, win * (1.0 - step(holo_inset(cp), MYTH_BAND)));
 	COLOR = vec4(mix(base.rgb, col, face), base.a);
 }

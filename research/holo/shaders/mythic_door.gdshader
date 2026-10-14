@@ -27,15 +27,16 @@ void fragment() {
 	dp.x -= dp.y * tilt.x * 0.35;
 	float door = motif_door(dp);
 	// the hologram lives only inside the door's shadow: a deep violet grating
-	vec2 q = cp / HOLO_CARD;
-	vec3 rb = holo_rainbow(dot(cp, vec2(0.05, 0.03)) + dot(tilt, vec2(1.4, 1.0)));
-	vec3 shade = art * 0.18 + rb * vec3(0.45, 0.35, 0.80) * 0.30;
+	// the shadow is the grade's own dichroic glass, sapphire turning violet
+	float turn = 0.5 + 0.5 * sin(dot(cp, vec2(0.05, 0.03)) + dot(tilt, vec2(2.4, 1.6)));
+	vec3 tint = mix(MYTH_SAPPHIRE, vec3(0.70, 0.36, 0.88), turn);
+	vec3 shade = art * 0.18 + tint * 0.30;
 	art = mix(art, shade, door * 0.85);
 	// at the far lean the door opens: a slit of light down its middle
 	float open = myth_reveal(vec2(1.0, 0.2), 0.45, 0.95);
 	float slit = (1.0 - smoothstep(0.02, 0.10 + 0.18 * open, abs(dp.x))) * door;
 	art = holo_screen(art, vec3(1.0, 0.93, 0.75) * slit * open);
-	vec3 col = myth_grade(base.rgb, cp, face);
-	col = mix(col, art, win);
+	vec3 col = myth_grade(base.rgb, cp, face, 0.0);
+	col = mix(col, art, win * (1.0 - step(holo_inset(cp), MYTH_BAND)));
 	COLOR = vec4(mix(base.rgb, col, face), base.a);
 }
