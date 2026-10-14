@@ -325,7 +325,7 @@ static func _rest_cadence(fails: Array[String], scene: MapScene) -> void:
 ## R2 step 3: banners hang on the bridges, facing the camera and off the walking
 ## lane; the woodland's cards (R3.1) and the banners' cloth move under
 ## `LandMotion`; and Reduce Motion stills them and takes the embers and ash
-## away (the water keeps its own cadence).
+## away.
 static func _living_motion(fails: Array[String], scene: MapScene,
 		land: MapJourneyLandscape) -> void:
 	var banners: Array[Dictionary] = []
@@ -376,7 +376,7 @@ static func _living_motion(fails: Array[String], scene: MapScene,
 ## notes): `LandMotion` follows the preference on a settle frame, not only at
 ## the first rest tick; the shaders that move under it (the flames' flipbook
 ## and flicker, the pools' flicker) read the one global switch; and the real
-## lamp lights stop breathing with them. Only the water keeps its cadence.
+## lamp lights stop breathing with them, and the river's flow stops too.
 static func _reduce_motion(fails: Array[String], scene: MapScene, land: MapJourneyLandscape) -> void:
 	var reduced: bool = Preferences.active.reduce_motion
 	Preferences.active.reduce_motion = false
