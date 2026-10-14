@@ -45,10 +45,22 @@ static func warm() -> void:
 	var tree: SceneTree = Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return
+	stand_in(tree.current_scene if tree.current_scene != null else tree.root)
+
+
+## Adds a sample to `host` and draws it. A host still setting up its children
+## (the root while a harness builds Main in `_initialize`) refuses `add_child`,
+## and a sample that never entered the tree has no views to draw, so the add
+## and the draw wait for the end of the frame, still before it shows.
+static func stand_in(host: Node) -> Node:
 	var sample: Node = (load("res://presentation/map/landscape/floor_warm.gd") as GDScript).new()
-	var host: Node = tree.current_scene if tree.current_scene != null else tree.root
-	host.add_child(sample)
-	sample.call("draw_now")
+	if host.is_node_ready():
+		host.add_child(sample)
+		sample.call("draw_now")
+	else:
+		host.add_child.call_deferred(sample)
+		sample.call_deferred("draw_now")
+	return sample
 
 
 func _ready() -> void:
