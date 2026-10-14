@@ -28,7 +28,8 @@ extends Control
 ## own, the button draws what it drew before this stack: the painting, never a
 ## blank. Main bakes the back outside a fight (`Main._bake_table_back`).
 ##
-## LIFE AT REST. The draw pile's glint (PileStack), every GLINT_CYCLE, starting
+## LIFE AT REST. The draw pile's glint (PileStack; none while the top back
+## wears its hologram), every GLINT_CYCLE, starting
 ## half a cycle after the draw pile's: in a fight the two stacks never glint
 ## together. Canvas only; Reduce Motion stills it.
 
@@ -129,6 +130,6 @@ func _follow() -> void:
 	if back == _worn and stack.visible == (back != null):
 		return
 	_worn = back
-	stack.wear_back(back.stage if back != null else null)
+	stack.wear_back(back.stage if back != null else null, back.holo if back != null else {})
 	stack.visible = back != null
 	painting.visible = back == null

@@ -259,7 +259,9 @@ static func _main_lets_faces_go(fails: Array[String], content: ContentDB) -> voi
 
 
 ## What a baked card lays at rest is what the live card draws: its stock's own
-## shadow, the picture at the stage's rect, and the gilt shine on a rare only.
+## shadow, the picture at the stage's rect wearing the card's hologram (the
+## rare's cut glass, the starter none), and no gilt shine: it steps aside for
+## the hologram.
 static func _baked_card_wears_the_rest_look(fails: Array[String], content: ContentDB) -> void:
 	CardFaces.forget()
 	var host: Control = _host()
@@ -295,8 +297,16 @@ static func _baked_card_wears_the_rest_look(fails: Array[String], content: Conte
 		if CardView.oversample == 2.0 and crop != Rect2i(28, 28, 344, 472):
 			fails.append("card faces: a 2x stage crops to %s, want 28,28 344x472" % str(crop))
 		var shines: int = baked.find_children("", "ColorRect", false, false).size()
-		if shines != (1 if id == &"oblivionStrike" else 0) or face.shine != (shines == 1):
-			fails.append("card faces: %s wears %d shines, want one on a rare only" % [id, shines])
+		if shines != 0 or face.shine:
+			fails.append("card faces: %s wears %d shines, want none beside its hologram" % [id, shines])
+		var holo: ShaderMaterial = shown.material as ShaderMaterial if shown != null else null
+		var want: String = "front_rare_glass" if id == &"oblivionStrike" else ""
+		var got: String = holo.shader.resource_path.get_file().get_basename() if holo != null else ""
+		if got != want:
+			fails.append("card faces: %s's baked picture wears '%s', want '%s'" % [id, got, want])
+		elif holo != null and holo.get_shader_parameter("stage_uv") != CardHolo.crop_uv(
+				Vector2(face.picture.get_size()), CardView.stage_inset(CardFaces.REACH)):
+			fails.append("card faces: %s's hologram is not told where the cropped stage lies" % id)
 		baked.free()
 		_free_card(live)
 	host.free()

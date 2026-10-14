@@ -31,6 +31,13 @@ extends Control
 ## redraws one polygon pair while it crosses: the pile itself redraws only when
 ## its count, top or back changes. Under Reduce Motion the glint is off and the
 ## rim holds still.
+##
+## THE HOLOGRAM. The draw pile's top back wears the back's hologram (CardHolo,
+## the back's own knobs) as a child picture (`_top`), so the lit panes answer
+## the device on the pile too; the pile itself still redraws only when its
+## count, top or back changes. A top wearing its hologram takes no glint: two
+## shimmering systems never stack. The glint stays only on a draw pile whose
+## back has no hologram (a back with no `holo` knobs; none ships today).
 
 enum Kind { DRAW, DISCARD, ASHES }
 
@@ -88,6 +95,7 @@ var _face_slip: Vector2 = Vector2.ZERO
 var _t: float = 0.0
 var _jog: float = 0.0
 var _glow: _Glow = null
+var _top: TextureRect = null
 var _sb_shadow: StyleBoxFlat = StyleBoxFlat.new()
 var _sb_edge: StyleBoxFlat = StyleBoxFlat.new()
 var _sb_blank: StyleBoxFlat = StyleBoxFlat.new()
@@ -162,12 +170,32 @@ func set_count(n: int) -> void:
 	_changed()
 
 
-## Wear the table's back (a bake's `stage`: the card with PAD_3D round it).
-func wear_back(stage: Texture2D) -> void:
+## Wear the table's back (a bake's `stage`: the card with PAD_3D round it),
+## its top wearing the back's hologram when `holo` carries knobs (the draw
+## pile only: a burnt card has lost its foil, and a discard is face up).
+func wear_back(stage: Texture2D, holo: Dictionary = {}) -> void:
 	if stage == _back:
 		return
 	_back = stage
+	if _top != null:
+		_top.queue_free()
+		_top = null
+	var mat: ShaderMaterial = CardHolo.back_material(holo)
+	if kind == Kind.DRAW and stage != null and mat != null:
+		_top = TextureRect.new()
+		_top.texture = stage
+		_top.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_top.stretch_mode = TextureRect.STRETCH_SCALE
+		_top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_top)
+		move_child(_top, 0)    # under the glow child
+		CardHolo.wear(_top, mat, self)
 	_changed()
+
+
+## Whether the top back wears its hologram (and so takes no glint).
+func has_holo_top() -> bool:
+	return _top != null
 
 
 ## The discard's top: card `uid`'s baked face (the card with CardFaces.REACH
@@ -242,6 +270,13 @@ func _changed() -> void:
 
 
 func _place_glow() -> void:
+	if _top != null:
+		var pad: Vector2 = Vector2.ONE * CardView.PAD_3D * card.x / CardView.CARD_W
+		_top.visible = count > 0
+		_top.size = card + pad * 2.0
+		_top.pivot_offset = _top.size * 0.5
+		_top.position = top_rect().get_center() - _top.pivot_offset
+		_top.rotation = top_rotation()
 	if _glow == null:
 		return
 	var top: Rect2 = top_rect()
@@ -307,6 +342,8 @@ func _draw() -> void:
 		for j: int in range(FACE_TAPS.size()):
 			draw_texture_rect(_face, Rect2(at.position + FACE_TAPS[j], at.size), false,
 				Color(1.0, 1.0, 1.0, 1.0 / float(j + 1)))
+	elif _top != null:
+		pass    # the top back is its own picture, wearing the hologram (`_top`)
 	elif _back != null and (kind != Kind.DISCARD or flipped):
 		var pad: Vector2 = Vector2.ONE * CardView.PAD_3D * k
 		draw_texture_rect(_back, Rect2(-card * 0.5 - pad, card + pad * 2.0), false,
@@ -329,7 +366,8 @@ func _process(delta: float) -> void:
 		var breath: float = 0.5 if still else 0.5 - 0.5 * cos(TAU * _t / RIM_CYCLE)
 		_glow.modulate.a = lerpf(RIM_LOW, RIM_HIGH, breath)
 		return
-	var band: float = NAN if still or count <= 0 else glint_at(_t + idle_phase)
+	var band: float = NAN if still or count <= 0 or has_holo_top() \
+		else glint_at(_t + idle_phase)
 	if is_nan(band) and is_nan(_glow.band):
 		return
 	_glow.band = band

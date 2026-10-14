@@ -311,6 +311,9 @@ var _retired: bool = false
 ## a turn needs of the slab: its thickness and its side band's colour.
 var _display: Control = null
 var _shine: Control = null
+## The card's hologram (CardHolo), worn by the picture whenever the picture
+## turn's warp is not; null for a card that wears none (a starter).
+var _holo: ShaderMaterial = null
 var _thick: float = 0.0
 var _side: Color = Color.BLACK
 ## TURNING OVER (`turn`): the pose the card is laid at, the share of it the
@@ -375,6 +378,7 @@ func _init(inst: CardInst, data: Dictionary, cost: int) -> void:
 	# how it springs back, so it has to be known first.
 	surface = CardSurface.stack_of(inst.id, data)
 	var mat: Dictionary = CardSurface.params(surface)
+	_holo = CardHolo.material_for(data)
 	_spr_free = mat["spring"]
 	var weight: float = mat["shadow"]
 	_shadow_size = int(roundf(float(SHADOW_SIZE) * weight))
@@ -668,7 +672,7 @@ func rest_shadow() -> StyleBoxFlat:
 
 ## Whether the card wears the rare's gilt shine over its picture.
 func has_shine() -> bool:
-	return _is_rare
+	return _shine != null
 
 
 ## The material the slab's face wears: a back's bake dresses the live turn's
@@ -837,7 +841,11 @@ func _build_stage(content: Control, mat: Dictionary, tint: Color,
 	_mount(SubViewport.UPDATE_ALWAYS)
 	_display = picture(_stage.get_texture())
 	add_child(_display)
-	if _is_rare:
+	if _holo != null:
+		CardHolo.wear(_display, _holo, self, holo_lean)
+	# The rare's time-driven shine steps aside for a hologram: two shimmering
+	# systems on one face read as noise.
+	if _is_rare and _holo == null:
 		_shine = shine()
 		add_child(_shine)
 
@@ -1167,6 +1175,12 @@ func hold_pose(n: Vector2) -> void:
 	# One repaint at the new pose, then idle: UPDATE_ONCE re-arms each call, so
 	# dragging a slider costs a frame per step instead of running forever.
 	_set_live(false)
+
+
+## The card's own lean for its hologram, in hold_pose's -1..1: the spring's
+## tilt, so a held, hovered or settling card's foil follows its slab.
+func holo_lean() -> Vector2:
+	return Vector2(-_tilt.y, -_tilt.x) / MAX_TILT
 
 
 ## Move the lamp's REST position, in the same normalised -1..1 the cursor gives,
@@ -1505,7 +1519,7 @@ func turn(yaw: float, pitch: float, live: bool) -> void:
 		CardTurn.set_back(_warp, back)
 		_display.material = _warp
 	else:
-		_display.material = null
+		_display.material = _holo
 	if _shine != null:
 		_shine.visible = not turned
 	_shadow.pivot_offset = size * 0.5

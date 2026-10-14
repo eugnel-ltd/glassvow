@@ -47,6 +47,11 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
 window/handheld/orientation=4
 
+[input_devices]
+
+sensors/enable_gravity=true
+sensors/enable_gyroscope=true
+
 [rendering]
 
 textures/vram_compression/import_etc2_astc=true

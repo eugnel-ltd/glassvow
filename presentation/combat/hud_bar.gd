@@ -1272,8 +1272,9 @@ func _follow_back() -> void:
 		return
 	_worn_back = back
 	var stage: Texture2D = back.stage if back != null else null
+	var holo: Dictionary = back.holo if back != null else {}
 	for p: Pile in [_draw_pile, _discard_pile, _ashes_pile]:
-		p.stack.wear_back(stage)
+		p.stack.wear_back(stage, holo)
 
 
 ## Where the lantern hangs, in global px — embers spilled by dying glass fly to
