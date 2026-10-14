@@ -66,10 +66,15 @@ var _was_moving: bool = false
 ## fill in the shadows, a little more saturation, and a two-level bloom that
 ## only the flames and their brightest pools reach. Review 10's workshop light
 ## (key `ddd7d2` at 0.95, ambient `a19caa` at 0.5, no grade) is the R1 base.
+## R3.6 graded it against the target's own values: a stronger, paler key and a
+## neutral fill lift the land out of the dark (the target's median luma 0.19,
+## main's 0.14), and a gentler contrast and saturation keep the shadows from
+## crushing into saturated brown. The far haze and near shade are the
+## tilt-shift's (`MapTiltShift`). A lane pick, the owner's re-pick open.
 static func light(key: DirectionalLight3D, environment: Environment) -> void:
 	key.rotation_degrees = KEY_ROTATION
-	key.light_color = Color("ffd1a0")
-	key.light_energy = 1.6
+	key.light_color = Color("ffdcb0")
+	key.light_energy = 2.0
 	key.light_specular = 1.0
 	key.shadow_enabled = true
 	key.shadow_opacity = 0.72
@@ -77,15 +82,15 @@ static func light(key: DirectionalLight3D, environment: Environment) -> void:
 	environment.background_mode = Environment.BG_COLOR
 	environment.background_color = Color("2a2427")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("7d86a8")
-	environment.ambient_light_energy = 0.30
+	environment.ambient_light_color = Color("8f93a2")
+	environment.ambient_light_energy = 0.42
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	environment.tonemap_exposure = 1.0
+	environment.tonemap_exposure = 1.1
 	environment.fog_enabled = false
 	environment.adjustment_enabled = true
 	environment.adjustment_brightness = 1.0
-	environment.adjustment_contrast = 1.2
-	environment.adjustment_saturation = 1.18
+	environment.adjustment_contrast = 1.12
+	environment.adjustment_saturation = 1.1
 	environment.glow_enabled = true
 	for level: int in range(7):
 		# The half- and quarter-resolution levels only: measured free on the A12.

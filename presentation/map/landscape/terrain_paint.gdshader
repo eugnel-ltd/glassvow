@@ -23,7 +23,7 @@ uniform vec4 damp_colour : source_color = vec4(.235,.217,.224,1.0);
 // ground flag, how deep their joints read and how dark the stone is.
 uniform float deck_setts = 1.9;
 uniform float deck_joint = .5;
-uniform float deck_shade = .62;
+uniform float deck_shade = .54;
 // The lamps' pools (habitat alpha, painted by `bind_habitat`): warm light added
 // to the lit surface, flickering with the lanterns; held steady while the
 // global `land_motion` is 0 (Reduce Motion; `LandMotion`).

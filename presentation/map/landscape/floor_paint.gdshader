@@ -25,19 +25,19 @@ uniform vec3 strata_tint = vec3(0.62, 0.6, 0.58);
 // Metres each cover's picture spans.
 uniform vec4 cover_metres = vec4(2.6, 3.2, 2.4, 2.2);
 // Each cover's picture scaled to the land's albedo (linear multipliers): the
-// photographs are lit brighter than a dusk woodland's ground. The road leans
-// cool against the key's warmth, so it lands a grey-brown gravel.
+// photographs are lit brighter than a dusk woodland's ground. The road is
+// packed earth, warm under the key as the target's tan paths (R3.6).
 uniform vec3 moss_tint = vec3(0.55, 0.56, 0.42);
 uniform vec3 litter_tint = vec3(0.44, 0.38, 0.38);
 uniform vec3 soil_tint = vec3(0.42, 0.4, 0.4);
-uniform vec3 road_tint = vec3(0.6, 0.6, 0.74);
+uniform vec3 road_tint = vec3(0.68, 0.61, 0.54);
 // Each cover's saturation (moss, litter, soil, road): the grade lifts it again.
-uniform vec4 cover_saturation = vec4(0.85, 0.8, 0.7, 0.2);
+uniform vec4 cover_saturation = vec4(0.85, 0.8, 0.7, 0.35);
 uniform vec3 rut_tint = vec3(0.78, 0.76, 0.76);
 uniform vec3 wet_tint = vec3(0.62, 0.62, 0.64);
 uniform vec3 rock_colour : source_color = vec3(0.3, 0.285, 0.3);
 uniform vec3 paving_colour : source_color = vec3(0.325, 0.314, 0.31);
-uniform vec3 pool_colour : source_color = vec3(1.0, 0.627, 0.29);
+uniform vec3 pool_colour : source_color = vec3(1.0, 0.56, 0.22);
 uniform float splat_cell = 0.42;
 uniform float relief = 0.06;
 uniform float contact_depth = 0.45;
