@@ -66,6 +66,11 @@ var _frames_dir: String = ""   # --holo-frames=<dir>: sweep frame by frame to PN
 var _frame_n: int = 0
 var _absolute: bool = false
 var _wobble: bool = false
+var _rows_path: String = ""       # --holo-rows=<user:// file>: one row a second
+var _rows: FileAccess = null
+var _sec_t: float = 0.0
+var _sec_ms: PackedFloat32Array = PackedFloat32Array()
+var _rows_n: int = 0
 var _nonce: String = ""
 var _t: float = 0.0
 var _cards: Array[CardView] = []
@@ -90,6 +95,8 @@ func _init(db: ContentDB) -> void:
 			_sheet = true
 		elif arg.begins_with("--holo-frames="):
 			_frames_dir = arg.trim_prefix("--holo-frames=")
+		elif arg.begins_with("--holo-rows="):
+			_rows_path = arg.trim_prefix("--holo-rows=")
 		elif arg == "--holo-wobble":
 			_wobble = true
 		elif arg == "--holo-absolute":
@@ -277,6 +284,7 @@ func _push(i: int, t: Vector2) -> void:
 func _process(delta: float) -> void:
 	_frame_ms = lerpf(_frame_ms, delta * 1000.0, 0.1)
 	_worst.append(delta * 1000.0)
+	_row(delta)
 	if _worst.size() > 120:
 		_worst.remove_at(0)
 	if _sweep and not _device:
@@ -301,6 +309,36 @@ func _process(delta: float) -> void:
 		_readout.text = "[%s%s] source %s   gravity (%.2f, %.2f, %.2f)   tilt (%.2f, %.2f)   frame %.1f ms   worst/2s %.1f ms" % [
 			_nonce, " absolute" if _absolute else " calibrated", _motion.source, _motion.raw.x, _motion.raw.y, _motion.raw.z,
 			_motion.tilt.x, _motion.tilt.y, _frame_ms, _worst_ms()]
+
+
+## One row a second for 30 s, after a 5 s settle: mean, worst, frames over
+## 20 ms and over 25 ms. Flushed per row (iOS never flushes on quit).
+func _row(delta: float) -> void:
+	if _rows_path == "" or _rows_n >= 35:
+		return
+	_sec_t += delta
+	_sec_ms.append(delta * 1000.0)
+	if _sec_t < 1.0:
+		return
+	_rows_n += 1
+	if _rows_n > 5:
+		if _rows == null:
+			_rows = FileAccess.open(_rows_path, FileAccess.WRITE)
+			_rows.store_line("nonce\twobble\tsec\tframes\tmean_ms\tworst_ms\tover20\tover25")
+		var sum: float = 0.0
+		var worst: float = 0.0
+		var o20: int = 0
+		var o25: int = 0
+		for v: float in _sec_ms:
+			sum += v
+			worst = maxf(worst, v)
+			o20 += 1 if v > 20.0 else 0
+			o25 += 1 if v > 25.0 else 0
+		_rows.store_line("%s\t%s\t%d\t%d\t%.2f\t%.1f\t%d\t%d" % [_nonce, _wobble, _rows_n - 5,
+			_sec_ms.size(), sum / _sec_ms.size(), worst, o20, o25])
+		_rows.flush()
+	_sec_t = 0.0
+	_sec_ms = PackedFloat32Array()
 
 
 func _worst_ms() -> float:
