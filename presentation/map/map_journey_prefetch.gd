@@ -287,7 +287,7 @@ func _take(assets: MapLandscapeAssets) -> bool:
 ## Starts the build on the pool: `paced` under a lit screen, as a low-priority
 ## task; unpaced and high-priority when a map is already waiting (`hurry`).
 func _launch(paced: bool) -> void:
-	var land: MapJourneyLandscape = MapJourneyLandscape.new()
+	var land: MapJourneyLandscape = MapJourneyProfile.land_class(_act).new()
 	_land = land
 	_pacing = Meshes.Pacing.new()
 	_pacing.on = paced
@@ -338,7 +338,7 @@ static func _build(pacing: Meshes.Pacing, out: Array, layout: Array, layout_lock
 	# As `MapScene.bind_layout` binds: a land of the act's class prepared for
 	# the record deals the candidates the filter keeps or rejects.
 	var bound_data: Dictionary = result.identity_dict()
-	var dealer: MapJourneyLandscape = MapJourneyLandscape.new()
+	var dealer: MapJourneyLandscape = MapJourneyProfile.land_class(act).new()
 	dealer.prepare(bound_data, assets, salt)
 	var profiles: Dictionary = bundle["profiles"]
 	var binding: Dictionary = MapScene.scenery_binding(bound_data, dealer, assets.registry,
