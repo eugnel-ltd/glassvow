@@ -6,9 +6,10 @@ extends RefCounted
 ## gate and threshold, and whether the title's prefetch warms it. An act with
 ## no row keeps the painted landscape, its own gate and no threshold.
 ##
-## Act I is the only row players reach. Another act gains the journey land by
-## gaining a row here (and the land's own geometry), never by a branch
-## elsewhere; until players may see it, its row stands behind `DEV_FLAG`.
+## Acts I and II are the rows players reach (Act II since #660 II.3). Another
+## act gains the journey land by gaining a row here (and the land's own
+## geometry), never by a branch elsewhere; until players may see it, its row
+## stands behind `DEV_FLAG`.
 
 ## One act's journey. `land` is the land class (`MapJourneyLandscape`, or a
 ## class that extends it); `light` is called as `light(key, environment)` and
@@ -36,10 +37,11 @@ class Row extends RefCounted:
 ## The act the floor's warm-ups and bakes stand in: the one act with a row
 ## players reach (a dev row's land has no floor to bake).
 const FIRST_ACT: int = 0
+const SECOND_ACT: int = 1
 ## The command-line flag that adds a dev row (`enable_dev`): an act NUMBER
-## counted from 1, as `--act=` (`ActFlag`). `--journey-act=2` draws Act II's
-## causeways (`MapCausewayLandscape`, #660 II.2) on `tools/preview_map.gd` and
-## `tools/shot.sh`.
+## counted from 1, as `--act=` (`ActFlag`). Naming an act players already
+## reach as a journey land (`--journey-act=2`, Act II's causeways since II.3)
+## changes nothing.
 const DEV_FLAG: String = "--journey-act="
 
 ## The rows by act index; a test swaps it and restores `default_rows()`.
@@ -50,16 +52,18 @@ static func default_rows() -> Dictionary[int, Row]:
 	var table: Dictionary[int, Row] = {}
 	table[FIRST_ACT] = Row.make(MapJourneyLandscape, MapJourneyLandscape.light,
 		MapLandscapeAssets.GATES[FIRST_ACT], "vigil", true)
+	# Act II's causeways end at the act's own gate, open on no threshold, and
+	# are built ahead as Act I's are: under the title for a restored run, and
+	# under Act I's boss rewards (`NextActMap`).
+	table[SECOND_ACT] = Row.make(MapCausewayLandscape, MapCausewayLandscape.light,
+		MapLandscapeAssets.GATES[SECOND_ACT], "", true)
 	return table
 
 
-## The rows only `DEV_FLAG` adds: lands not yet for players. Act II's
-## causeways end at the act's own gate, open on no threshold and are not
-## warmed by the title's prefetch.
+## The rows only `DEV_FLAG` adds: lands not yet for players (none since Act
+## II's went to players).
 static func dev_rows() -> Dictionary[int, Row]:
 	var table: Dictionary[int, Row] = {}
-	table[1] = Row.make(MapCausewayLandscape, MapCausewayLandscape.light,
-		MapLandscapeAssets.GATES[1], "", false)
 	return table
 
 
@@ -70,6 +74,8 @@ static func enable_dev(value: String) -> String:
 	if parsed.has("error"):
 		return DEV_FLAG + " " + str(parsed["error"])
 	var act: int = parsed["act_index"]
+	if rows.has(act):
+		return ""
 	var dev: Dictionary[int, Row] = dev_rows()
 	if not dev.has(act):
 		return "%s has no dev journey land for Act %d" % [DEV_FLAG, ActFlag.number_of(act)]
@@ -106,3 +112,20 @@ static func threshold_id(act: int) -> String:
 ## Whether the title's prefetch warms `act`'s journey land.
 static func warms(act: int) -> bool:
 	return rows.has(act) and rows[act].warm
+
+
+## Lets go of what `act`'s journey land builds with (`land_class(act).release_kit`):
+## that act's map is not shown again (`Main`, past its boss). Nothing for an
+## act with no row.
+static func release_kit(act: int) -> void:
+	if rows.has(act):
+		rows[act].land.release_kit()
+
+
+## Lets go of what every journey land but `keep`'s builds with: no journey
+## land but that act's is built any more (`MapJourneyPrefetch`; -1 keeps none).
+static func release_kits(keep: int = -1) -> void:
+	var kept: GDScript = rows[keep].land if rows.has(keep) else null
+	for act: int in rows:
+		if rows[act].land != kept:
+			rows[act].land.release_kit()

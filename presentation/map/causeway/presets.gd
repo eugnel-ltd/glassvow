@@ -1,5 +1,6 @@
 extends RefCounted
-## Act II's causeway proportions and placeholder materials: the archive's
+const CityKit = preload("res://presentation/map/causeway/city_kit.gd")
+## Act II's causeway proportions and materials: the archive's
 ## drowned-city preset (`stone_bridge/presets.gd`, 7d64678b), revived on the
 ## fast layout. Distances are world metres.
 ##
@@ -15,7 +16,8 @@ const DATUM: float = 0.0
 ## How far the still water lies under the deck datum (the archive's 1.18 m).
 const FREEBOARD: float = 1.18
 const WATER: float = DATUM - FREEBOARD
-## The archive's masonry and paving colours (placeholders until II.3's atlas).
+## The archive's masonry and paving colours: the flat masonry's, where the
+## atlas cannot load (`city_kit.gd`).
 const STONE: Color = Color("44536b")
 const TRIM: Color = Color("526277")
 const PAVING: Color = Color("555f70")
@@ -32,21 +34,12 @@ static func drowned_city() -> Dictionary:
 		"stone_colour": STONE, "trim_colour": TRIM, "paving_colour": PAVING}
 
 
-## Flat placeholder materials in the archive's colours: the body below the
-## deck, the trim (coping, treads, piers' caps) and the deck's paving.
+## The masonry's materials on the masonry atlas (`city_kit.gd`): the body
+## below the deck, the trim (coping, treads, piers' caps, lantern posts) and
+## the deck's paving; flat in the archive's colours where the atlas cannot load.
 static func materials(settings: Dictionary) -> Dictionary:
-	var stone: Color = settings["stone_colour"]
-	var coping: Color = settings["trim_colour"]
-	var paving: Color = settings["paving_colour"]
-	var body: StandardMaterial3D = _stone(stone)
-	var trim: StandardMaterial3D = _stone(coping)
-	trim.metallic_specular = .20
-	var deck: StandardMaterial3D = _stone(paving)
-	return {"body": body, "trim": trim, "deck": deck}
-
-
-static func _stone(colour: Color) -> StandardMaterial3D:
-	var material: StandardMaterial3D = StandardMaterial3D.new()
-	material.albedo_color = colour
-	material.roughness = .95
-	return material
+	var made: Dictionary = {}
+	for part: String in ["body", "trim", "deck"]:
+		var flat: Color = settings[{"body": "stone_colour", "trim": "trim_colour", "deck": "paving_colour"}[part]]
+		made[part] = CityKit.masonry(part, flat)
+	return made

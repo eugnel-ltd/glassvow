@@ -1,9 +1,10 @@
 extends RefCounted
 ## The per-act journey table (`MapJourneyProfile`) alone decides whether an act
 ## draws a journey land, of what class, under what light, at what gate and
-## threshold, and whether the prefetch warms it. Act II is given a probe row
+## threshold, and whether the prefetch warms it. Act III is given a probe row
 ## here and nothing else (no scene, branch or constant names it), so a code
-## path that still asks "is this Act I?" shows as a check that fails.
+## path that still asks "is this Act I?" (or Act II) shows as a check that
+## fails.
 
 const SEED: int = 717
 const PROBE_ENERGY: float = 7.25
@@ -39,29 +40,35 @@ static func run(fails: Array[String]) -> void:
 	MapJourneyProfile.rows = MapJourneyProfile.default_rows()
 
 
-## Act I is the only row, and it carries what the map used to hard-code.
+## Acts I and II are the rows (Act II's since #660 II.3), and Act I's carries
+## what the map used to hard-code.
 static func _act_one_row(fails: Array[String]) -> void:
 	MapJourneyProfile.rows = MapJourneyProfile.default_rows()
-	_check(fails, MapJourneyProfile.has(0) and MapJourneyProfile.rows.size() == 1,
-		"Act I is the only act with a journey row")
+	_check(fails, MapJourneyProfile.has(0) and MapJourneyProfile.has(1) and MapJourneyProfile.rows.size() == 2,
+		"Acts I and II are the acts with a journey row")
 	_check(fails, MapJourneyProfile.land_class(0) == MapJourneyLandscape
 			and MapJourneyProfile.warms(0)
 			and MapJourneyProfile.gate_id(0) == "amber-tower"
 			and MapJourneyProfile.threshold_id(0) == "vigil",
 		"Act I's row: the journey land, warmed, its gate and its vigil")
-	for act: int in range(1, 4):
+	_check(fails, MapJourneyProfile.land_class(1) == MapCausewayLandscape
+			and MapJourneyProfile.warms(1)
+			and MapJourneyProfile.gate_id(1) == MapLandscapeAssets.GATES[1]
+			and MapJourneyProfile.threshold_id(1).is_empty(),
+		"Act II's row: the causeways, warmed, its own gate and no threshold")
+	for act: int in range(2, 4):
 		_check(fails, not MapJourneyProfile.has(act) and not MapJourneyProfile.warms(act)
 				and MapJourneyProfile.gate_id(act) == MapLandscapeAssets.GATES[act]
 				and MapJourneyProfile.threshold_id(act).is_empty(),
 			"act %d keeps the painted landscape, its own gate and no threshold" % act)
 
 
-## A row for Act II, and the scene and the prefetch follow it.
+## A row for Act III, and the scene and the prefetch follow it.
 static func _probe_row_routes_act_two(fails: Array[String]) -> void:
 	MapJourneyProfile.rows = MapJourneyProfile.default_rows()
-	MapJourneyProfile.rows[1] = MapJourneyProfile.Row.make(ProbeLand, _probe_light,
+	MapJourneyProfile.rows[2] = MapJourneyProfile.Row.make(ProbeLand, _probe_light,
 		"amber-tower", "vigil", true)
-	var scene: MapScene = MapScene.new(1)
+	var scene: MapScene = MapScene.new(2)
 	_check(fails, scene.is_journey_act(), "a row makes its act a journey act")
 	MapScene.journey_enabled = false
 	_check(fails, not scene.is_journey_act(), "journey_enabled still turns every row off")
@@ -76,23 +83,23 @@ static func _probe_row_routes_act_two(fails: Array[String]) -> void:
 	_check(fails, scene._terminus_id == "amber-tower" and scene._threshold_id == "vigil",
 		"the row's gate and threshold are the act's")
 	scene.free()
-	_check(fails, MapLandscapeAssets.declared_ids(1) == _declared(1, ["vigil"]),
+	_check(fails, MapLandscapeAssets.declared_ids(2) == _declared(2, ["vigil"]),
 		"the row's threshold is an asset its act resolves")
-	for act: int in [0, 2, 3]:
+	for act: int in [0, 1, 3]:
 		_check(fails, MapLandscapeAssets.declared_ids(act) == _declared(act,
 				["vigil"] if act == 0 else []),
 			"act %d resolves its scenery, its gate and only the thresholds its row names" % act)
 
 	var content: ContentDB = ContentDB.load_full()
 	var run: RunState = RunState.new_run(content, SEED, "run-map-journey-profile")
-	run.act = 1
+	run.act = 2
 	MapJourneyPrefetch.release()
 	MapJourneyPrefetch.start(WorldMap.for_run(run, content), run)
-	_check(fails, MapJourneyPrefetch._current != null and MapJourneyPrefetch._current._act == 1,
+	_check(fails, MapJourneyPrefetch._current != null and MapJourneyPrefetch._current._act == 2,
 		"a row that warms has its act prefetched")
 	_launched_land_class(fails)
 	MapJourneyPrefetch.release()
-	MapJourneyProfile.rows[1].warm = false
+	MapJourneyProfile.rows[2].warm = false
 	MapJourneyPrefetch.start(WorldMap.for_run(run, content), run)
 	_check(fails, MapJourneyPrefetch._current == null,
 		"a row that does not warm has its act left alone")
@@ -115,7 +122,7 @@ static func _launched_land_class(fails: Array[String]) -> void:
 	if prefetch == null:
 		return
 	# The build deals the row's gate out of its act's own profiles.
-	MapJourneyProfile.rows[1].gate = MapLandscapeAssets.GATES[1]
+	MapJourneyProfile.rows[2].gate = MapLandscapeAssets.GATES[2]
 	ProbeLand.prepared = 0
 	MapJourneyPrefetch.hurry()
 	_check(fails, prefetch.step == MapJourneyPrefetch.Step.BUILDING and prefetch._land is ProbeLand,

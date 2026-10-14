@@ -1,6 +1,7 @@
 extends Node3D
 ## What drifts in Act I's air (R2 step 3): embers rising from the lamps' warmth
-## and ash settling through the Ashen Woods, in a box that follows the focus.
+## and ash settling through the Ashen Woods, in a box that follows the focus;
+## Act II's motes and specks over its water (`build`).
 ## Off, and hidden, under Reduce Motion (`LandMotion`). Two GPU particle
 ## systems, one draw each; built off the tree on the land's worker.
 
@@ -8,13 +9,26 @@ const SPARK: Shader = preload("res://presentation/map/landscape/spark.gdshader")
 const LandMotion = preload("res://presentation/map/landscape/land_motion.gd")
 const EMBERS: int = 90
 const ASH: int = 140
+const MOTES: int = 70
+const SPECKS: int = 110
 
 var embers: GPUParticles3D
 var ash: GPUParticles3D
 
 
-func build() -> void:
+## `motes` gives the air Act II's instead (#660 II.3): jade motes rising
+## slowly off the water and pale cyan specks drifting, where Act I's embers
+## and ash fly; the same two systems.
+func build(motes: bool = false) -> void:
 	name = "Air"
+	if motes:
+		embers = _system("Motes", MOTES, 7.0, 2.4,
+			Vector3(9.0, 0.6, 7.0), Vector3(0.0, -0.6, 0.0), Vector3(0.0, 0.12, 0.0),
+			Vector2(0.026, 0.05), Color(0.35, 1.0, 0.7), 0.9)
+		ash = _system("Specks", SPECKS, 10.0, 1.2,
+			Vector3(9.0, 2.5, 7.0), Vector3(0.0, 1.6, 0.0), Vector3(0.0, -0.03, 0.0),
+			Vector2(0.018, 0.032), Color(0.62, 0.86, 0.95, 0.7), 0.5)
+		return
 	embers = _system("Embers", EMBERS, 5.0, 3.2,
 		Vector3(8.0, 0.3, 6.0), Vector3(0.0, 0.5, 0.0), Vector3(0.0, 0.32, 0.0),
 		Vector2(0.03, 0.06), Color(1.0, 0.55, 0.18), 2.6)

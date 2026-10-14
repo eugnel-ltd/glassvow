@@ -1350,16 +1350,17 @@ func _show_title() -> void:
 	# The map Back to the Road restores. A headless boot warms nothing, so it
 	# reads none.
 	var road: WorldMap = _title_road_map(saved) if MapScene.journey_async else null
-	# Whether that map is a journey act's own (Act I's): a run at or past its
-	# boss opens the next act's, which has no land to build.
-	var journey: bool = road != null and MapJourneyProfile.warms(saved.act) \
-			and not _past_boss(road, saved)
+	# The act whose journey land that map draws, or -1: its own act's, or past
+	# its beaten boss the next act's (`NextActMap`); none mid-fight or for a
+	# painted act.
+	var journey_act: int = _title_journey_act(saved, road)
+	var journey: bool = journey_act >= 0
 	if journey:
-		# The title warms this run's Act I land (`_warm_title_road`): what that
-		# would read back from the renderer is read now, before the title's
-		# first frame (the rite's, or a later title's), and only for a player
-		# it serves. Once a process: a primed process reads nothing again.
-		MapJourneyPrefetch.prime()
+		# The title warms this run's land (`_warm_title_road`): what that would
+		# read back from the renderer is read now, before the title's first
+		# frame (the rite's, or a later title's), and only for a player it
+		# serves. Once a process: a primed process reads nothing again.
+		MapJourneyPrefetch.prime(journey_act)
 	else:
 		# The floor's pipelines all the same, behind the launch screen: a new
 		# player's first map bakes the floor too (`floor_warm.gd`).
@@ -1378,10 +1379,10 @@ func _show_title() -> void:
 	if game != null and game.run != null:
 		_transitions.wipe()
 	_clear_route()
-	# Act I's land warms from before the title is built, so its pictures decode
-	# meanwhile. Any other act's map has no land to build: its pictures wait
-	# for the launch rite to land, so they neither compete with the rite's
-	# frames nor are held in video memory under it.
+	# A journey act's land warms from before the title is built, so its
+	# pictures decode meanwhile. A map with no land to build waits for the
+	# launch rite to land with its pictures, so they neither compete with the
+	# rite's frames nor are held in video memory under it.
 	_title_road_due = rite and not journey
 	_title_road = saved if _title_road_due else null
 	if not _title_road_due:
@@ -2281,14 +2282,27 @@ func _warm_landscape_for(map: WorldMap, run: RunState) -> void:
 	if past_boss:
 		# The next map is the next act's, and the kept screen holds this act's
 		# artwork: it goes first, so one act's artwork is held at a time. This
-		# act's journey land is never drawn again either.
+		# act's journey land is never drawn again either, nor built: what its
+		# builds draw with is let go.
 		_map_keep.release()
-		MapJourneyPrefetch.release()
+		_warm_next_act(map, run)
+		MapJourneyProfile.release_kit(run.act)
 	MapLandscapeAssets.prefetch(run.act + (1 if past_boss else 0))
-	# Act I's journey land is built ahead too, once its pictures are decoded.
-	# The next act's map does not exist yet past a boss, so only this act's.
+	# A journey act's land is built ahead too, once its pictures are decoded.
 	if not past_boss and MapScene.journey_async:
 		MapJourneyPrefetch.start(map, run)
+
+
+## Past a boss, the next act's land is built ahead once its map is known: as
+## soon as the boss is beaten (`NextActMap`), paced under the rewards and the
+## crown's offer (#660 II.3). Until then, and for an act drawn as a painted
+## landscape, no journey land is held.
+func _warm_next_act(map: WorldMap, run: RunState) -> void:
+	var next: RunState = NextActMap.predict(run, map, content) if MapScene.journey_async else null
+	if next != null and MapJourneyProfile.warms(next.act):
+		MapJourneyPrefetch.start(WorldMap.from_dict(next.map), next)
+	else:
+		MapJourneyPrefetch.release()
 
 
 ## Back to the Road opens a drawn map (#660). The title warms `saved`'s next
@@ -2310,6 +2324,18 @@ func _warm_title_road(saved: RunState, restored: WorldMap) -> void:
 		MapLandscapeAssets.release()
 		return
 	_warm_landscape_for(restored, saved)
+
+
+## The act whose journey land the map Back to the Road restores for `saved`
+## draws (`road`), or -1 when it draws none: a painted act's, or the next act's
+## while the boss still stands.
+func _title_journey_act(saved: RunState, road: WorldMap) -> int:
+	if road == null:
+		return -1
+	if not _past_boss(road, saved):
+		return saved.act if MapJourneyProfile.warms(saved.act) else -1
+	var next: RunState = NextActMap.predict(saved, road, content)
+	return next.act if next != null and MapJourneyProfile.warms(next.act) else -1
 
 
 ## The map Back to the Road restores for `saved`, or null when there is none to

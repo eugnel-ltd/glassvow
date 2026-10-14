@@ -40,12 +40,12 @@ static func _rebind_leaves_the_shared_catalogue_whole(fails: Array[String]) -> v
 	scene.free()
 
 
-## Act II, a painted act: Act I draws the journey land, which has no painted
-## road (`_journey_return_reuses_the_land`).
+## Act III, a painted act: Acts I and II draw journey lands, which have no
+## painted road (`_journey_return_reuses_the_land`).
 static func _return_reuses_the_binding(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
 	var run: RunState = RunState.new_run(content, 717, "run-map-open-cache")
-	run.act = 1
+	run.act = 2
 	var world_map: WorldMap = WorldMap.for_run(run, content)
 	# The first screen binds from nothing, as the first open of a run does.
 	MapScene._bound_key = ""
@@ -58,7 +58,7 @@ static func _return_reuses_the_binding(fails: Array[String]) -> void:
 		"both screens bind")
 	_check(fails, fresh._map_scene.journey_landscape() == null
 			and again._map_scene.journey_landscape() == null,
-		"Act II draws the painted landscape")
+		"Act III draws the painted landscape")
 	if fresh.layout_result() == null or again.layout_result() == null \
 			or fresh._map_scene.journey_landscape() != null:
 		_close(screens)
@@ -82,7 +82,7 @@ static func _return_reuses_the_binding(fails: Array[String]) -> void:
 		"a return keeps the seeded ledges")
 	# Another run's salt is another binding.
 	var other_run: RunState = RunState.new_run(content, 1, "run-map-open-cache-other")
-	other_run.act = 1
+	other_run.act = 2
 	var other: WorldMapScreen = _open(WorldMap.for_run(other_run, content), content, other_run)
 	screens.append(other)
 	var other_road: Mesh = _road(other._map_scene._landscape)

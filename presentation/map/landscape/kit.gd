@@ -138,6 +138,19 @@ const ARCH: String = "amber-arch"
 static var preload_ms: float = 0.0
 
 
+## Lets go of everything the woodland's builds draw with: the held scenes,
+## their static templates, the impostor atlas and the stone (#660 II.3: Act I's
+## map is not shown again once the run is past its boss). The next build
+## readies them again (`preload_step`).
+static func release() -> void:
+	_held.clear()
+	_held_kinds = 0
+	_requested.clear()
+	preload("res://presentation/map/landscape/static_scenery.gd").release()
+	ImpostorAtlas.release()
+	LandStone.release()
+
+
 ## Readies every kit scene now (a map opening, tests and tools).
 static func preload_scenes() -> void:
 	while not preload_step(true):

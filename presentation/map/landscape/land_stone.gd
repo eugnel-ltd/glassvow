@@ -81,6 +81,15 @@ static func prepare_step(wait: bool = false) -> bool:
 	return true
 
 
+## Lets the stone go (`Kit.release`); `prepare_step` readies it again.
+static func release() -> void:
+	_pieces = null
+	_held.clear()
+	_material = null
+	failed = false
+	_take = null
+
+
 static func material() -> ShaderMaterial:
 	return _material
 

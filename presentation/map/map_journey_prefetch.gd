@@ -8,7 +8,7 @@ extends RefCounted
 ## frame, for the saved run Back to the Road restores. Main steps it every
 ## frame. Its main-thread setup is a little per frame, so the rite and the
 ## title it runs under keep their frames: it holds the kit's scenes one at a
-## time (`Kit.preload_step`) while the act's pictures decode on the pool, and
+## time (its land's `ready_kit`) while the act's pictures decode on the pool, and
 ## builds the act's catalogue from them a few small pieces at a time
 ## (`MapLandscapeAssets.prepare_step`). A map that opens meanwhile finishes that
 ## setup at once (`hurry`). Then the canonical layout input, the layout (the
@@ -88,6 +88,7 @@ static func start(map: WorldMap, run: RunState) -> void:
 	if _current != null and _current._same(job) and not _current._land_lost():
 		return
 	_drop()
+	MapJourneyProfile.release_kits(run.act)
 	_current = job
 
 
@@ -135,21 +136,20 @@ static func layout_packet(input_digest: String) -> Dictionary:
 	return _current._packet
 
 
-## Reads back from the renderer the two meshes a prefetch would otherwise read
-## back under the title's frames: the kit's unit cube and the slate cluster's
-## faces. Main calls it on the game's renderer as it builds any title that
-## warms a saved run's Act I land, before that title's first frame; once a
-## process, since both are held after. A read-back waits for the frames in
+## Reads back from the renderer what a prefetch of `act`'s land would
+## otherwise read back under the title's frames (its land class's `prime_kit`:
+## Act I's the kit's unit cube and the slate cluster's faces, Act II's the
+## cube). Main calls it on the game's renderer as it builds any title that
+## warms a saved run's land, before that title's first frame; once a process,
+## since they are held after. A read-back waits for the frames in
 ## flight: before the session's first frame there are none (about 10 ms on the
 ## iPad 8, behind the launch screen); before a later title (one reached from
 ## the run menu) it stalls the frame that builds that title (about 21-23 ms),
 ## which the title's lit frames would otherwise pay in 40-48 ms frames. And
 ## the floor's bake and the floor draw their pipelines once there, behind the
 ## launch screen too (`floor_warm.gd`), so the land's first bake compiles none.
-static func prime() -> void:
-	MapJourneyLandscape.Kit.Meshes.prepare_unit_box()
-	MapLandscapeAssets.prime()
-	MapJourneyLandscape.LandFloor.Warm.warm()
+static func prime(act: int = MapJourneyProfile.FIRST_ACT) -> void:
+	MapJourneyProfile.land_class(act).prime_kit()
 
 
 ## The current prefetch's step, or -1 when there is none (tests and probes).
@@ -157,13 +157,15 @@ static func current_step() -> int:
 	return _current.step if _current != null else -1
 
 
-## Lets go of the journey land: any prefetch ends, and the kept land is freed
-## once nothing draws it. For when the next map is not the journey act's (past
+## Lets go of the journey land: any prefetch ends, the kept land is freed
+## once nothing draws it, and what every journey land builds with is let go
+## (`MapJourneyProfile.release_kits`). For when the next map is not the journey act's (past
 ## its boss, a painted act, a title with no run to return to) and for tests
 ## and benches dropping every cache.
 static func release() -> void:
 	_drop()
 	MapScene.release_kept_journey()
+	MapJourneyProfile.release_kits()
 
 
 ## Joins the prefetch's worker and every abandoned land's, for the process's
@@ -240,10 +242,12 @@ func _advance(hurry: bool) -> void:
 		_first_frame_gone = true
 		return
 	var kit_held: bool = true
+	var land_class: GDScript = MapJourneyProfile.land_class(_act)
 	if hurry:
-		MapJourneyLandscape.Kit.preload_scenes()
+		while not land_class.ready_kit(true):
+			pass
 	else:
-		kit_held = MapJourneyLandscape.Kit.preload_step()
+		kit_held = land_class.ready_kit()
 	if step == Step.WAITING_PICTURES:
 		var warming: MapLandscapeAssets.Pictures = MapLandscapeAssets.warming()
 		if not hurry and warming != null and warming.act == _act and not warming.is_done():

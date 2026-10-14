@@ -360,6 +360,8 @@ func _deal_act(_region: MapRegions) -> void:
 	setting.environment.ambient_light_color = MapRegions.LAND_AMBIENT[_act]
 	if is_journey_act():
 		MapJourneyProfile.light(_act, _key, setting.environment)
+		(_shift_rect.material as ShaderMaterial).set_shader_parameter("haze_colour",
+			MapJourneyProfile.land_class(_act).haze())
 	else:
 		_rig.leave_journey()
 		set_focus_band(Vector2.INF)

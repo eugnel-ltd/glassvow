@@ -140,6 +140,22 @@ class Take:
 		return true
 
 
+## Lets the atlas go, its tiles with it (`Kit.release`); `prepare_step`
+## readies it again.
+static func release() -> void:
+	for array: Variant in [tile_kinds, layer, uv, low, size, front, top, shifts]:
+		array.clear()
+	spans.clear()
+	by_kind.clear()
+	span_m = 0.25
+	card = null
+	cone = null
+	egg = null
+	material = null
+	failed = false
+	_take = null
+
+
 ## Whether the atlas is ready for a build.
 static func ready() -> bool:
 	return material != null

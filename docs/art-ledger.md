@@ -789,6 +789,39 @@ new picture and no new pass. Every choice is a value:
 
 Evidence: `docs/design/2026-10-02-map-living-land/r3/r3-6-light/README.md`.
 
+**#660 II.3 (Act II's water, stone and light, 14 Oct 2026), lane picks, owner
+re-pick open:** Act II's journey land, the Sunken City, drawn as a drowned
+library city at night.
+
+| Asset | Recipe | Notes |
+|---|---|---|
+| `masonry/masonry-albedo.png` | `tools/map_atelier/journey/masonry/build_masonry.py` (numpy, Pillow; seed 6602, byte for byte on a re-run) | 1024×1024 RGB, two tileable layers of 2 m × 1 m: ashlar in the top half (four courses a metre, blocks 0.3–0.75 m, wandering joints, chipped and pale-worn arrises, dark mortar) and paving in the bottom (setts about 0.18 × 0.14 m, rounded and polished). Slate-lavender stone in a cool and a warm variant. The causeways' walls, piers, parapets and the lantern posts read the ashlar projected on the world; the decks read the paving along their own UV (`masonry.gdshader`). VRAM-compressed with mipmaps. |
+| `masonry/masonry-normal.png` | the same script, from the same height field | 512×512, half the colour's size; imports as a normal map. |
+
+Drawn with no new picture:
+
+- **The water** (`presentation/map/causeway/city_water.gdshader`): R3.4's
+  river water made a still city sheet: dark teal, darker in the ravines'
+  channels, a thin broken wash at every wall's foot, the walls' dark faces
+  mirrored toward the viewer, a cool sky at a grazing angle, glints on the
+  swell, and the lanterns and the pilgrim's flame mirrored in broken columns.
+  The wash, the pools and the reflections come from one small light mask
+  painted on the land's worker (`city_mask.gd`).
+- **The lanterns** (`city_lamps.gd`): a masonry post with a jade lantern at
+  the landing of each waystone, off every walking route; Act I's flame
+  flipbook burnt jade (`flame.gdshader` `recolour`).
+- **The air** (`air.gd`): jade motes and pale cyan specks in place of Act I's
+  embers and ash.
+- **The light** (`MapCausewayLandscape.light`, `haze`): a pale cool key
+  (`a9c8dd` at 1.35) from Act I's direction, a teal fill (`4d8f9c` at 0.8),
+  exposure 1.15, contrast 1.08, saturation 1.05, the lanterns' bloom, and a
+  cold mist for the tilt-shift's far haze. Amber stays on the pilgrim's flame
+  and the lit waystones only.
+
+A re-pick of the masonry is a change of the recipe's numbers; of the water,
+the lanterns or the light, a change of values. Evidence:
+`docs/design/2026-10-02-map-living-land/act2/ii-3/README.md`.
+
 ### `backs/vault.png`, `backs/rose.png`, `backs/eclipse.png` — 304×432 RGB — card backs, owner pick
 
 The three card backs in `content/card-backs.json` (#657 PR 8). Each painting is

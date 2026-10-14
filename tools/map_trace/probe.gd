@@ -38,6 +38,14 @@ extends Node
 ##                          `open` row each with the time to the land drawn
 ##                          and the worst frame, the floor's bake (R3.2) and
 ##                          the video memory before, at its peak and after
+##   --transition=<s>       after the boot, stand the run at Act I's boss,
+##                          beaten, so the crown's offer shows (where the next
+##                          act's land is built ahead, #660 II.3), stay there
+##                          <s> seconds as a player reading it would, then take
+##                          none and open Act II's map: a `transition` row (the
+##                          offer's frames and when the prefetch finished) and
+##                          an `open` row (kind `next_act`) for Act II's first
+##                          open; any holds then run on Act II
 ##   --probe-grain=off      take the map's grain off (and the TransitionLayer's)
 ##   --probe-rm             Reduce Motion, in memory only (nothing is saved)
 ##   --probe-overlay=deck   open the run's deck over the map (a room) first
@@ -120,6 +128,10 @@ func _run() -> void:
 	_row(watch.row("boot", _floor_timings(_scene.journey_landscape())))
 	if _flag("--opens"):
 		await _opens()
+		screen = _host.get("_map_screen")
+		_scene = screen._map_scene
+	if not _arg("--transition", "").is_empty():
+		await _transition(float(_arg("--transition", "8")))
 		screen = _host.get("_map_screen")
 		_scene = screen._map_scene
 	var views: PackedStringArray = _arg("--probe-view", "").split(",")
@@ -347,6 +359,30 @@ func _opens() -> void:
 	await _open("warmed")
 
 
+## Act I's boss beaten, the crown's offer read for `dwell` seconds, then the
+## next act's map opened (`--transition`).
+func _transition(dwell: float) -> void:
+	var game: GlassvowGame = _host.get("game")
+	var map: WorldMap = _host.get("_map")
+	for i: int in range(map.nodes.size()):
+		if map.nodes[i].type == "boss":
+			map.at = i
+			map.cleared[i] = true
+	game.run.map = map.to_dict()
+	var watch: FrameWatch = FrameWatch.new()
+	_host.call("_route_run")
+	var done_ms: float = -1.0
+	var until: int = Time.get_ticks_msec() + int(dwell * 1000.0)
+	while Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+		watch.tick()
+		if done_ms < 0.0 and MapJourneyPrefetch.current_step() == MapJourneyPrefetch.Step.DONE:
+			done_ms = watch.elapsed_ms()
+	_row(watch.row("transition", {"dwell_s": dwell, "prefetch_done_ms": snappedf(done_ms, 0.1),
+		"prefetch_step": MapJourneyPrefetch.current_step(), "act": game.run.act}))
+	await _open("next_act", Callable(_host, "_on_boss_relic_chosen").bind(""))
+
+
 ## Drops every cache a map open could take: the kept screen, the act's
 ## pictures, the prefetch, the kept land and binding, and the layout input.
 func _drop() -> void:
@@ -363,9 +399,13 @@ func _drop() -> void:
 
 ## One open, as R2's map probe read it: the call's own time, its first frame
 ## drawn, and the land ready (nothing pending, the first frame drawn at least).
-func _open(kind: String) -> void:
+## `opener` opens it (default: `Main._show_map`).
+func _open(kind: String, opener: Callable = Callable()) -> void:
 	var watch: FrameWatch = FrameWatch.new()
-	_host.call("_show_map")
+	if opener.is_valid():
+		opener.call()
+	else:
+		_host.call("_show_map")
 	var call_ms: float = (Time.get_ticks_usec() - watch.started) / 1000.0
 	await RenderingServer.frame_post_draw
 	watch.tick()

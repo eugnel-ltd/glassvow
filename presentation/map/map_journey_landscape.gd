@@ -100,6 +100,38 @@ static func light(key: DirectionalLight3D, environment: Environment) -> void:
 	environment.glow_hdr_threshold = 0.95
 
 
+## Readies what this land's builds draw with, a step at a time on the main
+## thread before a build on a worker (the woodland's kit, its atlas and stone:
+## `Kit.preload_step`), and answers whether nothing is left to wait for.
+## `wait`ing (a map opening now), a step waits for its loads. A land class
+## that draws with something else overrides it; call it on the land's class
+## (`MapJourneyProfile.land_class`) until it answers true.
+static func ready_kit(wait: bool = false) -> bool:
+	return Kit.preload_step(wait)
+
+
+## The tilt-shift's far haze over this land (`MapTiltShift`): the target's
+## golden hour.
+static func haze() -> Color:
+	return Color(0.86, 0.68, 0.46)
+
+
+## Reads back from the renderer, on the main thread before a title's first
+## frame, what this land's build would otherwise read back under the title
+## (`MapJourneyPrefetch.prime`): the kit's unit cube and the slate cluster's
+## faces; and the floor's bake pipelines (`floor_warm.gd`).
+static func prime_kit() -> void:
+	Kit.Meshes.prepare_unit_box()
+	MapLandscapeAssets.prime()
+	LandFloor.Warm.warm()
+
+
+## Lets go of what this land's builds draw with: its act's map is not shown
+## again (`MapJourneyProfile.release_kit`). A later build readies it again.
+static func release_kit() -> void:
+	Kit.release()
+
+
 ## The whole build on the calling thread (tests, tools, captures).
 func build(data: Dictionary) -> void:
 	start(data)
@@ -109,8 +141,8 @@ func build(data: Dictionary) -> void:
 
 
 ## The whole build from a worker-pool task (`MapJourneyPrefetch`), with the
-## node outside the tree. The kit's scenes must already be held
-## (`Kit.preload_scenes`, on the main thread). `pacing` is how the build hands
+## node outside the tree. Its kit must already be ready (`ready_kit`, on the
+## main thread). `pacing` is how the build hands
 ## its meshes to the renderer: unpaced (a map is waiting for the land), the
 ## heights are worked out across the whole pool, as a map's own build works
 ## them out, and paced (behind the launch rite or the lit title) across
@@ -138,7 +170,9 @@ func build_detached(data: Dictionary, pacing: Meshes.Pacing = null) -> void:
 func start(data: Dictionary, parallel: bool = true) -> void:
 	_started = Time.get_ticks_msec()
 	if parallel:
-		Kit.preload_scenes()
+		var land_class: GDScript = get_script()
+		while not land_class.ready_kit(true):
+			pass
 	var pacing: Meshes.Pacing = Meshes.Pacing.new()
 	pacing.on = false
 	_begin(data, pacing)

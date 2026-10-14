@@ -39,6 +39,10 @@ var decoration_meshes: Array[ArrayMesh] = []
 ## deck's paving alone, by field (`fields`).
 var underside_meshes: Array[ArrayMesh] = []
 var level_decks: Array[ArrayMesh] = []
+## The masonry's materials by part (`Presets.materials`), and each deck's
+## triangles as built, in threes (the light mask's footprint).
+var materials: Dictionary = {}
+var footprints: Array[PackedVector3Array] = []
 var build_timings_ms: Dictionary = {}
 var _stage_started: int = 0
 ## Each deck's triangles as built, held only until its edges are drawn.
@@ -47,7 +51,7 @@ var _deck_faces: Array[PackedVector3Array] = []
 
 func build(sample: Dictionary) -> void:
 	_stage_started = Time.get_ticks_msec()
-	var materials: Dictionary = Presets.materials(style)
+	materials = Presets.materials(style)
 	var stone: Material = materials["body"]
 	var trim: Material = materials["trim"]
 	var paving: Material = materials["deck"]
@@ -142,6 +146,7 @@ func build(sample: Dictionary) -> void:
 		var treads: ArrayMesh = Stairs.new().build(self, field, trim, tread_settings)
 		if treads != null:
 			deck_meshes.append(treads)
+	footprints = _deck_faces.duplicate()
 	_deck_faces.clear()
 	_mark("stairs")
 	if _stopped():
