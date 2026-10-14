@@ -25,6 +25,8 @@ static func run(fails: Array[String]) -> void:
 	_main_banks_every_slot(fails, content)
 	_full_rack_walk_on(fails, content)
 	_full_rack_mid_entrance(fails, content)
+	_early_pick_lands_the_offering(fails, content)
+	_freed_flight_settles_the_deck(fails, content)
 	_heading_names_the_fight(fails, content)
 	_shapes_contain(fails, content)
 
@@ -123,13 +125,15 @@ static func _walk_on_asks_first(fails: Array[String], content: ContentDB) -> voi
 		"Leave Them did not answer the slot and finish: %s" % [log])
 	screen.free()
 
-	# Walking on before the entrance reached the spoils banks them first.
+	# Walking on before the entrance reached the spoils banks them first, once,
+	# and still answers the offering. (A skip that early lands the offering, as
+	# a pick does, so the leave is the way out of an unanswered one.)
 	var early: Array[String] = []
 	var hasty: RewardEmbers = _screen(content, FULL, early)
-	hasty._skip()
-	hasty._walk_word.pressed.emit()
+	hasty.request_leave()
+	hasty._confirm.answered.emit(true)
 	hasty.advance(SETTLE)
-	_check(fails, early == ["card:", "gold:", "potion:healing", "relic:emberHeart",
+	_check(fails, early == ["gold:", "potion:healing", "relic:emberHeart", "card:",
 			"finished"],
 		"walking on early lost or repeated a spoil: %s" % [early])
 	hasty.free()
@@ -259,6 +263,63 @@ static func _is_quiet(screen: RewardEmbers) -> bool:
 		and is_equal_approx(screen._head_a, 1.0) \
 		and screen._face_a.all(func(a: float) -> bool: return is_equal_approx(a, 1.0)) \
 		and screen._card_a.all(func(a: float) -> bool: return is_equal_approx(a, 1.0))
+
+
+const OFFER: Dictionary = {"cards": ["strike", "defend"]}
+
+
+## Before the deal the cards sit at PRE_DEAL_A: a pick (a tap on one, or a key)
+## lands the offering instead of taking a card nobody can see, with or without
+## Reduce Motion, and walking away from it still answers the offering.
+static func _early_pick_lands_the_offering(fails: Array[String], content: ContentDB) -> void:
+	for still: bool in [false, true]:
+		Preferences.active.reduce_motion = still
+		var log: Array[String] = []
+		var screen: RewardEmbers = _screen(content, OFFER, log)
+		_check(fails, screen._t < screen._deal_at() and screen._revealing(),
+			"the offering is not arriving before the deal (still %s)" % still)
+		screen._take_card("defend")
+		_check(fails, screen._settled and not screen._picked and log.is_empty(),
+			"an early pick took a card, or did not land the offering (still %s): %s" % [still, log])
+		screen._take_card("defend")
+		_check(fails, log == ["card:defend"],
+			"the landed offering's pick was not taken (still %s): %s" % [still, log])
+		screen.free()
+		log.clear()
+		var leaving: RewardEmbers = _screen(content, OFFER, log)
+		leaving.request_leave()
+		leaving._on_confirm(true)
+		_check(fails, log == ["card:", "finished"],
+			"walking away before the deal did not answer the offering (still %s): %s" % [still, log])
+		leaving.free()
+	Preferences.active.reduce_motion = false
+
+
+## The picked card's flight dies with the screen: freed mid-flight, the deck
+## still counts the card home rather than staying one short.
+static func _freed_flight_settles_the_deck(fails: Array[String], content: ContentDB) -> void:
+	var root: Window = (Engine.get_main_loop() as SceneTree).root
+	var run: RunState = RunState.new()
+	run.player.potions.assign(["", "", ""])
+	for i: int in range(10):
+		run.player.deck.append(CardInst.new(900 + i, &"strike"))
+	var hud: RunHud = RunHud.new(run, content, &"pad-landscape")
+	root.add_child(hud)
+	var log: Array[String] = []
+	var screen: RewardEmbers = _screen(content, OFFER, log)
+	screen.hud = hud
+	screen.size = Vector2(1180.0, 820.0)
+	screen._place()
+	screen.settle()
+	screen._take_card("defend")
+	run.player.deck.append(CardInst.new(950, &"strike"))
+	hud.refresh(run)
+	_check(fails, hud._deck_owed == 1 and hud._deck_count.text == "10",
+		"the card in flight was not owed to the deck (%d owed, %s)" % [hud._deck_owed, hud._deck_count.text])
+	screen.free()
+	_check(fails, hud._deck_owed == 0 and hud._deck_count.text == "11",
+		"a screen freed mid-flight left the deck short (%d owed, %s)" % [hud._deck_owed, hud._deck_count.text])
+	hud.free()
 
 
 ## The heading says which fight this was, in the rows screen's own keys, and
