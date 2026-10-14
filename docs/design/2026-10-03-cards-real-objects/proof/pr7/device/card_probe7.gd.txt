@@ -1,0 +1,166 @@
+extends Node
+@warning_ignore_start("unsafe_call_argument", "unsafe_cast", "untyped_declaration", "inferred_declaration", "unsafe_method_access", "unsafe_property_access", "return_value_discarded")
+## SCRATCH QA PROBE (#657 PR 7, never committed). Attached by the QA patch in
+## Main._ready when a `--card-probe=` user argument is given:
+##   -- --card-probe=nonce=N,mode=reward|shelf
+## The same probe runs on a build of main (A) and of the branch (B).
+##   mode=reward  from the title at rest, a run's reward with a three-card
+##                offering (phase reveal, until 1 s past the entrance's end:
+##                on B the deal and the live turns), then the middle card taken
+##                (phase pick, 1.5 s: on B its flight into the HUD's deck).
+##   mode=shelf   from the title at rest, the Vigil opened as from its word
+##                (phase vigil, 2.5 s); on B then the Backs pane (phase backs,
+##                2 s: the look change; the shelf built ahead with the hall, or
+##                at the tap) and a choice of the earned back not in use (phase
+##                choose, 1.5 s: the table's back baked on a bench). The Vigil
+##                holds one shard, so Vesper is earned.
+## Each frame row: phase, wall ms, start-to-draw, draw, process, root GPU,
+## video memory MiB, pipeline compiles. Rows are held in memory and written at
+## the end: no file I/O inside a measured frame.
+
+const MONITORS: Array[int] = [
+	Performance.PIPELINE_COMPILATIONS_CANVAS, Performance.PIPELINE_COMPILATIONS_MESH,
+	Performance.PIPELINE_COMPILATIONS_SURFACE, Performance.PIPELINE_COMPILATIONS_DRAW,
+	Performance.PIPELINE_COMPILATIONS_SPECIALIZATION]
+
+var cfg: Dictionary = {}
+var main: Main = null
+var _phase: String = "boot"
+var _frame: int = 0
+var _t_start: int = 0
+var _t_pre: int = 0
+var _t_post: int = 0
+var _rows: PackedStringArray = PackedStringArray()
+var _vp: RID
+
+
+static func config() -> Dictionary:
+	var out: Dictionary = {"nonce": "none", "mode": "reward"}
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--card-probe="):
+			for part: String in arg.trim_prefix("--card-probe=").split(",", false):
+				var kv: PackedStringArray = part.split("=", true, 1)
+				if kv.size() == 2:
+					out[kv[0]] = kv[1]
+	# user:// is the app's Documents on iOS, where devicectl reads it.
+	out["file"] = "user://card_probe_%s.txt" % out["nonce"]
+	return out
+
+
+func _ready() -> void:
+	name = "CardProbe7"
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	cfg = config()
+	main = get_parent() as Main
+	# The probe's Vigil from boot, so the hall Main builds ahead while the
+	# title rests is built on it, as a player's is.
+	main._vigil = _vigil()
+	_vp = get_viewport().get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(_vp, true)
+	_row("PROBE nonce=%s mode=%s engine=%s window=%s build=%s" % [cfg["nonce"], cfg["mode"],
+		Engine.get_version_info()["string"], str(DisplayServer.window_get_size()),
+		str((load("res://qa_cards/build_tag.gd") as GDScript).get_script_constant_map().get("TAG", "?"))])
+	get_tree().process_frame.connect(_on_frame_start)
+	RenderingServer.frame_pre_draw.connect(func() -> void: _t_pre = Time.get_ticks_usec())
+	RenderingServer.frame_post_draw.connect(func() -> void: _t_post = Time.get_ticks_usec())
+	_t_start = Time.get_ticks_usec()
+	_run()
+
+
+func _row(line: String) -> void:
+	_rows.append("%s %d %s" % [cfg.get("nonce", "none"), Time.get_ticks_msec(), line])
+
+
+func _on_frame_start() -> void:
+	var now: int = Time.get_ticks_usec()
+	var counts: PackedStringArray = PackedStringArray()
+	for m: int in MONITORS:
+		counts.append(str(int(Performance.get_monitor(m))))
+	_row("F %d %s %.2f %.2f %.2f %.2f %.2f %.1f %s" % [_frame, _phase,
+		float(now - _t_start) / 1000.0,
+		float(_t_pre - _t_start) / 1000.0 if _t_pre >= _t_start else -1.0,
+		float(_t_post - _t_pre) / 1000.0 if _t_post >= _t_pre and _t_pre >= _t_start else -1.0,
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		RenderingServer.viewport_get_measured_render_time_gpu(_vp),
+		Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0, ",".join(counts)])
+	_frame += 1
+	_t_start = now
+
+
+func _run() -> void:
+	_phase = "title"
+	await _wait(6.0)    # the title at rest, its warms run
+	if str(cfg["mode"]) == "shelf":
+		await _shelf()
+	else:
+		await _reward()
+	_phase = "end"
+	await _wait(0.5)
+	_row("DONE")
+	var f: FileAccess = FileAccess.open(str(cfg["file"]), FileAccess.WRITE)
+	if f != null:
+		f.store_string("\n".join(_rows) + "\n")
+		f.close()
+
+
+func _vigil() -> VigilState:
+	var vigil: VigilState = VigilState.blank()
+	vigil.scenes_seen.append("opening")
+	vigil.shards.assign(["hollowLamplighter"])
+	vigil.quests["hollowLamplighter"] = {"state": "complete", "progress": 3, "memory": {}}
+	return vigil
+
+
+func _reward() -> void:
+	var content: ContentDB = main.content
+	var run: RunState = RunState.new_run(content, 65501, "probe7-%s" % cfg["nonce"])
+	run.map = WorldMap.benchmark(run).to_dict()
+	run.act = 1
+	run.waystones_lit = 3
+	run.pending_reward = {
+		"rewards": {"gold": 24, "cards": ["quakeblow", "resonantLance", "defend"]},
+		"taken": {"gold": false, "card": false, "potion": false, "relic": false},
+		"slain_enemy": {"id": "duskfang", "hue": 22},
+	}
+	main._hints = null
+	_phase = "reveal"
+	_row("MARK reveal")
+	main._continue_run(run)
+	var screen: RewardEmbers = main._reward_screen
+	var end: float = screen._entrance_end() if screen.has_method("_entrance_end") else 2.0
+	await _wait(end + 1.0)
+	_phase = "pick"
+	_row("MARK pick")
+	screen._take_card("resonantLance")
+	await _wait(1.5)
+	_row("DECK %s" % main._run_hud._deck_count.text)
+
+
+func _shelf() -> void:
+	_phase = "vigil"
+	_row("MARK vigil")
+	main._show_vigil(false, true)
+	await _wait(2.5)
+	var screen: VigilScreen = main._route_screen as VigilScreen
+	if screen == null or not screen.has_method("_show_backs"):
+		_row("NOSHELF")
+		return
+	_phase = "backs"
+	_row("MARK backs")
+	screen._choose_look(Callable(screen, "_show_backs"))
+	await _wait(2.0)
+	_phase = "choose"
+	_row("MARK choose")
+	# A change of back: whichever earned back is not in use.
+	var shelf = screen.call("backs_view")
+	var to: String = "vault" if shelf.in_use() == "rose" else "rose"
+	_row("CHOOSE %s over %s" % [to, shelf.in_use()])
+	shelf._pick(to)
+	await _wait(1.5)
+	_row("WEARING %s" % CardTurn.wearing())
+
+
+func _wait(seconds: float) -> void:
+	var until: int = Time.get_ticks_msec() + int(seconds * 1000.0)
+	while Time.get_ticks_msec() < until:
+		await get_tree().process_frame

@@ -1,0 +1,31 @@
+"""SCRATCH (#657 PR 7): per launch and phase, the frame times of the probe's rows.
+   analyze7.py <rows dir>"""
+import sys, glob, os, statistics
+rows = sorted(glob.glob(os.path.join(sys.argv[1], "rows_*.txt")))
+def q(xs, p):
+    xs = sorted(xs); return xs[min(len(xs) - 1, int(round(p * (len(xs) - 1))))] if xs else float("nan")
+print("launch      build phase    n    p50    p95    max  >33ms  >50ms  compiles(canvas,mesh,surface,draw,spec)")
+for f in rows:
+    nonce = os.path.basename(f)[5:-4]
+    build = "?"
+    phases = {}
+    first = {}
+    last = {}
+    for line in open(f):
+        parts = line.split()
+        if len(parts) > 3 and parts[2] == "PROBE":
+            build = [p for p in parts if p.startswith("build=")][0][6:]
+        if len(parts) < 12 or parts[2] != "F":
+            continue
+        phase, wall = parts[4], float(parts[5])
+        counts = [int(c) for c in parts[11].split(",")]
+        phases.setdefault(phase, []).append(wall)
+        first.setdefault(phase, counts)
+        last[phase] = counts
+    for ph in ["reveal", "pick", "vigil", "backs", "choose"]:
+        xs = phases.get(ph)
+        if not xs:
+            continue
+        xs = xs[1:]  # the first row of a phase is the frame the step was taken in, measured whole below
+        d = [b - a for a, b in zip(first[ph], last[ph])]
+        print(f"{nonce:11s} {build:5.5s} {ph:7s} {len(xs):4d} {q(xs,.5):6.2f} {q(xs,.95):6.2f} {max(xs):6.2f} {sum(x>33.4 for x in xs):5d} {sum(x>50 for x in xs):5d}  {d}  step={phases[ph][0]:.1f}")

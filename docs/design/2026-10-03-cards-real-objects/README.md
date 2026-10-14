@@ -616,6 +616,10 @@ nothing.
   Motion), the attack's discard-top swap, the inspector, the A12 condition and
   the iPad 8 batch against `main`; its `README.md` has §4 and the §3 rows as
   built, and the probe scripts are text under `device/`.
+- PR 7, the reward reveal, the Backs shelf and the Dawn's earned back:
+  `proof/pr7/` keeps the reveal, the pick and Reduce Motion, the shelf and the
+  Dawn's turning back at the three shapes in both locales, and the iPad 8
+  batch against `main`; its `README.md` has the §3 row and §5.3–§5.4 as built.
 - Fidelity diffs: the resting hand captured 1.2 s after the second deal,
   compared pixel by pixel with today's over the hand region (800 × 220 stage
   px).

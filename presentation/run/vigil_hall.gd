@@ -6,7 +6,8 @@ extends Control
 ## fire through HearthFigure's own stagecraft, so it adds no canon and no art.
 ##
 ## One plate, three looks across it (`frame`, a pure rule): to the hearth
-## (Deeds), up to the window (the Rose Window, where the Emberglass rose stands
+## (Deeds, and the card backs' shelf beside them: BACKS shares the hearth's
+## framing), up to the window (the Rose Window, where the Emberglass rose stands
 ## over the plate's own painted window, so the hall never shows two), and down
 ## to the floor before the fire (Epitaphs). The turn west (V1) slides the hall
 ## in from the west and the turn east (V3) out again; a look change moves the
@@ -17,10 +18,6 @@ extends Control
 ## and a stepped breath), embers rising from the fire, the Keeper's breath,
 ## and on the Rose look a shaft of moonlight from the window with dust in it.
 ## Under Reduce Motion only the firelight moves: it is the fire's flicker.
-##
-## The cards lane's back shelf (#657) stands on the hall's wall: `shelf()` is
-## its seat, a named, empty, input-blind layer on the plate (plate pixels,
-## lit by the fire drawn over it, under the Keeper), moving with every look.
 
 const PLATE: String = "res://assets/art/scenes/opening-hearth.png"
 const PLATE_SIZE: Vector2 = Vector2(1536.0, 1024.0)
@@ -58,6 +55,8 @@ const MOTES: int = 30
 const DEEDS: StringName = &"deeds"
 const ROSE: StringName = &"rose"
 const EPITAPHS: StringName = &"epitaphs"
+## The card backs' shelf (VigilBacks): the hearth's framing, its column.
+const BACKS: StringName = &"backs"
 
 ## 0..1: how far the fire has caught (V1 brings it up), and the flare as the
 ## lantern seats (the fire answers the flame).
@@ -70,7 +69,6 @@ var slide: float = 0.0:
 var shape: StringName = StageShape.IDENTITY
 
 var _plate: TextureRect
-var _shelf: Control
 var _fire: _Fire
 var _shaft: _Shaft
 var _keeper: HearthFigure
@@ -218,11 +216,6 @@ func _init(stage_shape: StringName = StageShape.IDENTITY) -> void:
 	_plate.stretch_mode = TextureRect.STRETCH_SCALE
 	_plate.size = PLATE_SIZE
 	add_child(_plate)
-	_shelf = Control.new()
-	_shelf.name = "Shelf"
-	_shelf.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_shelf.size = PLATE_SIZE
-	_plate.add_child(_shelf)
 	_fire = _Fire.new()
 	_fire.hall = self
 	_plate.add_child(_fire)
@@ -243,11 +236,6 @@ func _init(stage_shape: StringName = StageShape.IDENTITY) -> void:
 		_embers.append(_new_ember(true))
 	for i: int in range(MOTES):
 		_motes.append(Vector3(_rng.randf(), _rng.randf() * 2.0 - 1.0, _rng.randf() * TAU))
-
-
-## The cards lane's back shelf stands here (#657 PR 7): plate px, on the wall.
-func shelf() -> Control:
-	return _shelf
 
 
 func plate() -> TextureRect:

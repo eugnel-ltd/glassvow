@@ -1198,10 +1198,13 @@ func _attach_run_hud() -> void:
 ## back. Until it lands the deck shows its painting. A fight's load then finds
 ## the bake made (CardTurn.prewarm).
 func _bake_table_back() -> void:
-	var id: String = CardBacks.chosen(Preferences.active, _vigil)
-	if CardTurn.wearing() == id and CardTurn.back() != null:
-		return
-	CardTurn.prewarm_on_bench(self, id)
+	CardTurn.wear(self, CardBacks.chosen(Preferences.active, _vigil))
+
+
+## A back chosen on the Vigil's shelf: stored and worn on the table at once,
+## baked under Main so the bake outlives the hall (CardTurn.choose).
+func _choose_back(id: String) -> void:
+	CardTurn.choose(Preferences.active, _vigil, self, id)
 
 
 ## Under Reduce Motion a room never lands or leaves in one frame: it
@@ -1607,6 +1610,12 @@ func _build_vigil_ahead(delta: float) -> void:
 	screen.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child(screen)
 	_vigil_ahead = screen
+	# The Backs shelf's cards a frame later, apart from the hall's own build:
+	# built at the Backs pane's tap, their first draw ran one 50 ms frame into
+	# the look change on the iPad 8 (#657 PR 7).
+	get_tree().process_frame.connect(func() -> void:
+		if is_instance_valid(screen) and screen == _vigil_ahead:
+			screen.prepare_backs(), CONNECT_ONE_SHOT)
 	_vigil_ahead_key = _ahead_key()
 
 
@@ -1825,6 +1834,7 @@ func _show_vigil(open_rose: bool = false, from_title: bool = false) -> void:
 	screen.back_requested.connect(_leave_vigil)
 	screen.cue_requested.connect(func(cue: StringName) -> void: _music.play(cue))
 	screen.replay_requested.connect(_replay_from_vigil.bind(screen))
+	screen.back_chosen.connect(_choose_back)
 	screen.cross_fade = _cross_fade
 	# From the title the title is held under the hall, never torn down (§2.1):
 	# the lantern carries you in (V1, V2).
@@ -3748,6 +3758,8 @@ func _show_pending_reward(quiet: bool = false) -> void:
 	if not quiet:
 		_transitions.screen_in(_reward_screen)
 	_attach_run_hud()
+	# The card taken flies into the HUD's deck (#657 PR 7).
+	_reward_screen.hud = _run_hud
 	if reward_kind == "boss":
 		_music.play(&"victory")
 	for key: String in ["gold", "card", "potion", "relic"]:
@@ -4145,6 +4157,7 @@ func _on_terminal_commit(_id: String) -> void:
 	var before_quests: Dictionary = _vigil.quests.duplicate(true)
 	var before_shards: int = _vigil.shards.size()
 	var before_whispers: int = _vigil.whispers
+	var before_backs: Array[String] = CardBacks.catalogue().unlocked(_vigil)
 	var recorded: bool = _vigil.commit_run(game.run, outcome, content)
 	var dawn_leaves: Array[String] = []
 	if recorded:
@@ -4236,6 +4249,8 @@ func _on_terminal_commit(_id: String) -> void:
 				unlock_event["cue"] = "sealedDoor"
 				unlock_event["icon"] = "door"
 			events.append(unlock_event)
+	# A card back earned by this run turns over at its Dawn (#657 PR 7).
+	events.append_array(DawnScreen.back_events(before_backs, _vigil))
 	_fill_dawn_bodies(events, dawn_leaves)
 	if events.is_empty():
 		events.append({

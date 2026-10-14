@@ -117,6 +117,8 @@
       "kickerShard": "EMBERGLASS SHARD",
       "kickerUnlock": "THE VIGIL OPENS",
       "kickerDefault": "AT DAWN",
+      "kickerBack": "NEW CARD BACK",
+      "backBody": "It waits on the Vigil's shelf.",
       "complete": "DAWN COMPLETE",
       "progress": "DAWN {n} OF {total} · THE CURRENT MEMORY IS LIT",
       "inputHint": "click or space to continue  ·  hold to skip",
@@ -617,7 +619,14 @@
       "stats": "{runs} pilgrimages · {wins} dawns · deepest Vow: {vow}",
       "deedsTab": "DEEDS",
       "roseTab": "ROSE WINDOW",
-      "epitaphTab": "EPITAPHS"
+      "epitaphTab": "EPITAPHS",
+      "backsTab": "BACKS"
+    },
+    "back": {
+      "vault": {"name": "The Lancet"},
+      "rose": {"name": "Vesper", "deed": "Earn an emberglass shard."},
+      "eclipse": {"name": "Eclipse", "deed": "See a dawn."},
+      "inUse": "IN USE"
     },
     "pilgrimage": {
       "survey": "SCROLL OR DRAG TO SURVEY THE PILGRIMAGE",

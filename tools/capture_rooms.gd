@@ -13,7 +13,7 @@ extends SceneTree
 ##               back|runmenu|abandon|leave|ledger|erase]
 ##       [--hold] [--section=<id>] [--at=<ms>] [--burst=3]
 ##       [--seq=open|close|section|glass|run|look|pane|rose|route --room=settings|help|credits|vigil --frames=40]
-##       [--look=deeds|rose|epitaphs] [--memory]
+##       [--look=deeds|backs|rose|epitaphs] [--memory] [--back=<id>] [--nowins]
 ##       [--sheet=/abs/sheet.jpg] [--rm] [--window=1180x885]
 ##       [--measure=/abs/image]   (the oval measures of an existing still, at this shape)
 ##       [--control=/abs/image]   (a cold-boot still of the same state: the oval beyond it)
@@ -42,6 +42,8 @@ extends SceneTree
 ## --hold, --look taps that look's pane and --memory selects the pane holding
 ## the longest dawn memory. --seq=look taps --look in the settled hall (V4),
 ## --seq=pane a rose pane (V5), --seq=rose taps the title's rose (V2), and
+## --back sets the chosen card back (in memory) and --nowins seeds no win, so
+## the Backs look (#657 PR 7) shows an earned, a chosen and a locked back.
 ## --seq=routein opens the Vigil as a route from the title (the dev scenario's
 ## call, V8) and --seq=route opens it so and taps its Return (V9).
 ## The rooms (#655 PR B): with --hold a room path stays in the room, at
@@ -127,6 +129,7 @@ func _run() -> void:
 	preferences.diagnostics_notice_seen = str(_args.get("state", "")) != "consent" \
 		and not _args.has("consent")
 	preferences.reduce_motion = _args.has("rm")
+	preferences.card_back = str(_args.get("back", ""))
 	Preferences.active = preferences
 	var path: String = str(_args.get("path", "rest"))
 	_main._title_kindled = path != "rite"
@@ -191,6 +194,8 @@ func _seed(state: String) -> void:
 		vigil.whispers = 30
 		for i: int in range(12):
 			vigil.defeat_epitaphs.append("pool.loss.e%02d" % (i + 1))
+	if _args.has("nowins"):
+		vigil.deeds["wins"] = 0
 	SaveService.store_vigil(vigil, ScenarioKernel.VIGIL_PATH)
 
 
@@ -336,7 +341,7 @@ func _vigil_at(vigil: VigilScreen) -> void:
 
 func _look_pane(vigil: VigilScreen, look: String) -> Control:
 	var key: String = {"deeds": "ui.vigil.deedsTab", "rose": "ui.vigil.roseTab",
-		"epitaphs": "ui.vigil.epitaphTab"}.get(look, "ui.vigil.deedsTab")
+		"epitaphs": "ui.vigil.epitaphTab", "backs": "ui.vigil.backsTab"}.get(look, "ui.vigil.deedsTab")
 	return _labelled(vigil, Locale.active.t(key))
 
 
