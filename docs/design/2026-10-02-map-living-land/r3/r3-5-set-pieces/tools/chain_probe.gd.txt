@@ -1,0 +1,35 @@
+extends SceneTree
+func _initialize() -> void:
+	call_deferred("_run")
+
+func _run() -> void:
+	MapJourneyLandscape.Kit.preload_scenes()
+	var content: ContentDB = ContentDB.load_full()
+	var run_state: RunState = RunState.new_run(content, 1, "run-map-stone")
+	var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run_state, content), content)
+	root.add_child(screen)
+	screen.size = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
+	screen.set_shape(StageShape.IDENTITY)
+	screen.refresh(run_state)
+	var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+	var terrain: Node3D = land.terrain
+	var c: int = 0
+	for chain: Dictionary in terrain.get_meta("bridge_chains", []):
+		var points: PackedVector3Array = chain["points"]
+		var lengths: PackedFloat32Array = chain["lengths"]
+		var weights: PackedFloat32Array = chain["weights"]
+		var row: PackedStringArray = []
+		for i: int in range(points.size()):
+			var p: Vector3 = points[i]
+			if weights[i] < 0.5: continue
+			var ends: float = INF
+			for line: PackedVector3Array in terrain.lines:
+				ends = minf(ends, minf(Vector2(p.x,p.z).distance_to(Vector2(line[0].x,line[0].z)), Vector2(p.x,p.z).distance_to(Vector2(line[-1].x,line[-1].z))))
+			row.append("s%.1f w%.2f st%.1f e%.1f y%.2f" % [lengths[i], weights[i], terrain.stream_distance(p.x,p.z), ends, p.y])
+		if not row.is_empty():
+			print("CHAIN %d start %s: %s" % [c, points[0], " | ".join(row)])
+		c += 1
+	for item: Dictionary in land.kit.placed:
+		if str(item["kind"]) in ["bridge-pier", "bridge-banner"]:
+			print("PIECE %s %s" % [item["kind"], item["position"]])
+	quit()

@@ -65,6 +65,8 @@ static func _check_bound_route(fails: Array[String], act: int) -> void:
 			_check(fails, deck != null and deck.mesh.get_faces().size() > 0
 				and masonry != null and masonry.mesh.get_faces().size() > 0,
 				"journey land: a real deck and masonry span the ravine")
+			_check(fails, _flat_parapets(journey),
+				"journey land: the parapets are crenellated walls of flat faces, not rounded stones")
 			_check(fails, journey.journey.bases.size() == 2,
 				"journey land: one seated waystone per canonical node")
 			_check(fails, act == 0 and scene.is_journey_act(), "Act I draws the journey land")
@@ -140,3 +142,27 @@ static func _check_projection(fails: Array[String], scene: MapScene) -> void:
 static func _check(fails: Array[String], ok: bool, message: String) -> void:
 	if not ok:
 		fails.append("test_map_landscape: " + message)
+
+
+## R3.5: the parapets' stone has every face flat (the R2 stones shared their
+## corners' normals and read as pale pills) and a crenellated top: the wall's
+## coping and the merlons above it stand at two heights over the deck.
+static func _flat_parapets(journey: MapJourneyLandscape) -> bool:
+	var wall: MeshInstance3D = journey.find_child("Bridge parapet stones", true, false) as MeshInstance3D
+	if wall == null or wall.mesh == null or wall.mesh.get_surface_count() == 0:
+		return false
+	var arrays: Array = wall.mesh.surface_get_arrays(0)
+	var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	if points.is_empty() or normals.size() != points.size() or points.size() % 3 != 0:
+		return false
+	var tops: Dictionary = {}
+	for i: int in range(0, points.size(), 3):
+		var face: Vector3 = (points[i + 2] - points[i]).cross(points[i + 1] - points[i]).normalized()
+		for k: int in range(3):
+			if normals[i + k].dot(face) < 0.999:
+				return false
+		if face.y > 0.999:
+			tops[snappedf(points[i].y - journey.terrain.bridge_height(points[i].x, points[i].z), 0.05)] = true
+	return tops.size() >= 2
+

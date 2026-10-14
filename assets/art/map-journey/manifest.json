@@ -439,6 +439,29 @@
         ]
       ],
       "grounded": false
+    },
+    {
+      "id": "bridge-pier",
+      "file": "bridge-pier.glb",
+      "source": "tools/map_atelier/journey/sources/bridge-pier.blend",
+      "description": "Coursed bridge pier with an open flame in a bronze dish, standing out of the parapet; R3.5, lane pick",
+      "triangles": 304,
+      "materials": 6,
+      "blender_xyz_bounds": [
+        [
+          -0.25,
+          0.25
+        ],
+        [
+          -0.25,
+          0.25
+        ],
+        [
+          0.0,
+          0.845
+        ]
+      ],
+      "grounded": true
     }
   ]
 }

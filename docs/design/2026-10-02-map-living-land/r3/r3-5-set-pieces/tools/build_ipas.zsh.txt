@@ -1,0 +1,33 @@
+#!/bin/zsh
+# Lane R3.5 scratch: arm the two measuring worktrees (main, branch) and export their QA .ipas.
+set -eu
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-r35-lane
+R=/Users/jamesto/Coding/glassvow/.claude/worktrees
+mkdir -p $L/ipa
+for pair in ctl:map-r35-main dev:map-r35-dev; do
+  b=${pair%%:*}; wt=$R/${pair##*:}
+  echo "== $b $wt $(date +%T)"
+  (cd $wt && timeout 900 godot --headless --import > /dev/null 2>&1; wc -l project.godot)
+  python3 $R/map-r35/tools/map_trace/qa_patch.py $wt
+  # A row for every memory warning the OS sends (scratch, never committed).
+  python3 - $wt/tools/qa_map_trace_probe.gd <<'PY'
+import sys
+p = sys.argv[1]; s = open(p).read()
+hook = '''
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_OS_MEMORY_WARNING:
+		_row({"probe": "memory_warning", "static_mib": snappedf(Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0, 0.1)})
+'''
+if 'memory_warning' not in s:
+    s = s.replace('\n\nfunc _arg(name: String', hook + '\n\nfunc _arg(name: String', 1)
+    open(p, 'w').write(s)
+print('memory hook', 'memory_warning' in open(p).read())
+PY
+  grep -o 'const BUILD.*' $wt/tools/qa_map_trace_probe.gd | head -1
+  /Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow/qa_export.sh $wt --no-install > $L/ipa/$b-export.log 2>&1
+  cp $wt/build/ios-qa/export-dev/glassvow.ipa $L/ipa/$b.ipa
+  grep -o 'const BUILD: String = "[^"]*"' $wt/tools/qa_map_trace_probe.gd | sed 's/.*"\(.*\)"/\1/' > $L/ipa/$b.build
+  echo "   $b build $(cat $L/ipa/$b.build), ipa $(ls -la $L/ipa/$b.ipa | awk '{print $5}')"
+done
+echo "== done $(date +%T)"

@@ -12,6 +12,7 @@ const LandStone = preload("res://presentation/map/landscape/land_stone.gd")
 const Islands = preload("res://presentation/map/landscape/land_islands.gd")
 const RavineCliffs = preload("res://presentation/map/landscape/ravine_cliffs.gd")
 const StaticScenery = preload("res://presentation/map/landscape/static_scenery.gd")
+const Bridges = preload("res://presentation/map/landscape/bridge_geometry.gd")
 const Planting = preload("res://presentation/map/landscape/wood_planting.gd")
 const Sight = preload("res://presentation/map/landscape/wood_sight.gd")
 const River = preload("res://presentation/map/landscape/river.gd")
@@ -86,6 +87,7 @@ const PROFILES: Dictionary = {
 	"amber-arch": Vector2(2.65, 5.50),
 	"lantern-post": Vector2(0.35, 1.70),
 	"bridge-banner": Vector2(0.40, 1.60),
+	"bridge-pier": Vector2(0.36, 1.25),
 }
 
 ## Where each lamp-carrying kind holds its flame (the lantern glass's centre),
@@ -94,6 +96,7 @@ const PROFILES: Dictionary = {
 const LAMP_ANCHORS: Dictionary = {
 	"amber-arch": [Vector3(-2.30, 2.21, 0.46), Vector3(2.30, 2.21, 0.46)],
 	"lantern-post": [Vector3(0.0, 1.38, 0.0)],
+	"bridge-pier": [Vector3(0.0, 1.02, 0.0)],
 }
 ## Lanterns along the roads: about one stone post per `LANTERN_SPACING` metres
 ## of road (one on any road of `LANTERN_SHORTEST` or more), spread evenly along
@@ -103,13 +106,19 @@ const LANTERN_SPACING: float = 9.0
 const LANTERN_SHORTEST: float = 4.0
 const LANTERN_OFFSET: float = 1.3
 const LANTERN_GAP: float = 6.0
-## Banners on the bridges: one every `BANNER_SPACING` metres of deck raised
-## over the river, hung clear of the parapet stones and the masonry below them
-## (`BANNER_OFFSET` off the deck's centreline), on the side facing the journey
-## camera (whose yaw never turns): the far side's would hang behind the deck.
-const BANNER_SPACING: float = 3.5
-const BANNER_OFFSET: float = 1.0
-const BANNER_HEIGHT: float = 0.30
+## The bridges' set pieces (R3.5), along every stretch of deck raised over
+## the river: a flame pier standing out of each parapet at both ends of the
+## stretch and evenly between, at most `PIER_SPACING` metres apart, and halfway
+## between each pair, on the side facing the journey camera (whose yaw never
+## turns; the far side's would hang behind the deck), a banner hung against the
+## parapet's outer face (`BANNER_OFFSET` off the deck's centreline, its bar
+## `BANNER_HEIGHT` above the deck, `BANNER_SCALE` the R2 cloth's drop).
+const PIER_SPACING: float = 3.6
+const BANNER_OFFSET: float = 0.95
+const BANNER_HEIGHT: float = 0.28
+const BANNER_SCALE: float = 1.35
+## Where the bridges' dressing begins in `placed` (`_bridge_dressing`).
+var _dressing_from: int = 0
 
 ## The kit scene the worker places as a scene (the arch), held for the process
 ## so a build on a worker only ever reads the resource cache (an uncached
@@ -333,7 +342,7 @@ func build(surface: Terrain, points: PackedVector3Array, grey: bool, heroes: Dic
 	_undergrowth(grey)
 	_verges(grey)
 	_accents(grey)
-	_banners(grey)
+	_bridge_dressing(grey)
 	contacts.finish()
 	if static_scenery!=null: static_scenery.call("finish")
 	if stone_later:
@@ -390,39 +399,105 @@ func _lanterns(grey: bool) -> void:
 			travelled += length
 
 
-## Banners hung from the bridge parapets over the river (R2 motion). They are
+## Piers and banners on the bridges over the river (R2 motion, R3.5). They are
 ## part of the bridge, not the ground, so they skip the ground clearance, and
 ## go in last: the undergrowth and verges draw from every placement before
-## them, so placing banners earlier would move the woodland. They keep clear of
+## them, so placing them earlier would move the woodland. They keep clear of
 ## the roads' ends, where waystones and junctions stand.
-func _banners(grey: bool) -> void:
+func _bridge_dressing(grey: bool) -> void:
+	_dressing_from = placed.size()
 	var chains: Array = terrain.get_meta("bridge_chains", [])
+	var field: RefCounted = terrain.get_meta("bridge_field", null)
 	for chain: Dictionary in chains:
 		var points: PackedVector3Array = chain["points"]
 		var lengths: PackedFloat32Array = chain["lengths"]
 		var weights: PackedFloat32Array = chain["weights"]
-		var next: float = 0.0
-		for i: int in range(points.size() - 1):
-			if lengths[i + 1] < next:
-				continue
-			var p: Vector3 = points[i]
-			var q: Vector3 = points[i + 1]
-			var middle: Vector3 = (p + q) * 0.5
-			if minf(weights[i], weights[i + 1]) < 0.95 \
-					or terrain.stream_distance(middle.x, middle.z) > 5.0 \
-					or terrain.lines.any(func(line: PackedVector3Array) -> bool:
-						return _flat(middle).distance_to(_flat(line[0])) < 2.0 \
-							or _flat(middle).distance_to(_flat(line[-1])) < 2.0):
-				continue
-			var forward: Vector3 = (q - p).normalized()
-			var across: Vector3 = forward.cross(Vector3.UP).normalized()
-			if across.z < 0.0:
-				across = -across
-			if across.z < 0.5:
-				continue
-			var at: Vector3 = middle + across * BANNER_OFFSET + Vector3.UP * BANNER_HEIGHT
-			_place("bridge-banner", at, 1.0, atan2(across.x, across.z), grey)
-			next = lengths[i + 1] + BANNER_SPACING
+		var first: int = -1
+		for i: int in range(points.size()):
+			var over: bool = weights[i] >= 0.95 and terrain.stream_distance(points[i].x, points[i].z) <= 5.0 \
+				and not terrain.lines.any(func(line: PackedVector3Array) -> bool:
+					return _flat(points[i]).distance_to(_flat(line[0])) < 2.0 \
+						or _flat(points[i]).distance_to(_flat(line[-1])) < 2.0)
+			if over and first < 0:
+				first = i
+			if first >= 0 and (not over or i == points.size() - 1):
+				_span(points, lengths, first, i if over else i - 1, field, grey)
+				first = -1
+
+
+## One raised stretch of a deck, `first` to `last` along its centreline: its
+## piers, both sides, and its banners, the camera's side.
+func _span(points: PackedVector3Array, lengths: PackedFloat32Array, first: int, last: int,
+		field: RefCounted, grey: bool) -> void:
+	var run: float = lengths[last] - lengths[first]
+	if run < 1.0:
+		return
+	var gaps: int = maxi(1, ceili(run / PIER_SPACING))
+	for k: int in range(gaps * 2 + 1):
+		var pose: Array = _along(points, lengths, first, last, lengths[first] + run * k / (gaps * 2.0))
+		var middle: Vector3 = pose[0]
+		var forward: Vector3 = pose[1]
+		var across: Vector3 = forward.cross(Vector3.UP).normalized()
+		if across.z < 0.0:
+			across = -across
+		if k % 2 == 0:
+			for sign_value: float in [-1.0, 1.0]:
+				var at: Vector3 = middle + across * Bridges.PARAPET_OFFSET * sign_value
+				at.y = _deck(field, at, middle.y)
+				if _on_parapet(field, at, across * sign_value) and _free_on_bridge("bridge-pier", at, 1.0):
+					_place("bridge-pier", at, 1.0, atan2(forward.x, forward.z), grey)
+		elif across.z >= 0.5:
+			var cloth: Vector3 = middle + across * BANNER_OFFSET
+			cloth.y = _deck(field, middle, middle.y) + BANNER_HEIGHT
+			if _free_on_bridge("bridge-banner", cloth, PIER_SPACING * 0.5):
+				_place("bridge-banner", cloth, BANNER_SCALE, atan2(across.x, across.z), grey)
+
+
+## Whether `at` is on a parapet's line: at its deck's edge, with no deck
+## beyond it (`outward`), as the parapet's own wall stands (`Bridges`); where
+## two decks fork, one road's edge lies on the other's walking lane.
+static func _on_parapet(field: RefCounted, at: Vector3, outward: Vector3) -> bool:
+	if field == null:
+		return true
+	var here: Dictionary = field.call("field", Vector2(at.x, at.z))
+	var beyond: Vector3 = at + outward * 0.22
+	var there: Dictionary = field.call("field", Vector2(beyond.x, beyond.z))
+	return float(str(here["distance"])) > -0.2 and float(str(there["distance"])) >= 0.0
+
+
+## Roads that share a bridgehead share their deck there: a piece one road's
+## stretch has already set within `apart` metres stands for both.
+func _free_on_bridge(kind: String, at: Vector3, apart: float) -> bool:
+	for index: int in range(_dressing_from, placed.size()):
+		var item: Dictionary = placed[index]
+		var other: Vector3 = item["position"]
+		if str(item["kind"]) == kind and _flat(other).distance_to(_flat(at)) < apart:
+			return false
+	return true
+
+
+## The centreline's point `s` metres along and its heading, within `first` to
+## `last`.
+static func _along(points: PackedVector3Array, lengths: PackedFloat32Array, first: int, last: int,
+		s: float) -> Array:
+	var i: int = first
+	while i < last - 1 and lengths[i + 1] < s:
+		i += 1
+	var j: int = mini(i + 1, last)
+	if j == i:
+		i = maxi(first, i - 1)
+	var t: float = clampf((s - lengths[i]) / maxf(0.0001, lengths[j] - lengths[i]), 0.0, 1.0)
+	var forward: Vector3 = points[j] - points[i]
+	forward.y = 0.0
+	return [points[i].lerp(points[j], t), forward.normalized()]
+
+
+## The deck's walking height at `at`, from the bridges' field where it has one.
+static func _deck(field: RefCounted, at: Vector3, fallback: float) -> float:
+	if field == null:
+		return fallback
+	var sample: Dictionary = field.call("field", Vector2(at.x, at.z))
+	return float(str(sample["height"])) if float(str(sample["distance"])) < 0.3 else fallback
 
 
 static func _flat(p: Vector3) -> Vector2:

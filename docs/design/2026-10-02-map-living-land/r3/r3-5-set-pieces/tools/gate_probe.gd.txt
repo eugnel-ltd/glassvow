@@ -1,0 +1,41 @@
+extends SceneTree
+## Lane scratch: prints the gateway's placement per seed.
+func _initialize() -> void:
+	call_deferred("_run")
+
+func _run() -> void:
+	MapJourneyLandscape.Kit.preload_scenes()
+	var content: ContentDB = ContentDB.load_full()
+	for seed_value: int in [1, 2, 3, 717]:
+		var run_state: RunState = RunState.new_run(content, seed_value, "run-map-stone")
+		var screen: WorldMapScreen = WorldMapScreen.new(WorldMap.for_run(run_state, content), content)
+		root.add_child(screen)
+		screen.size = Vector2(StageShape.REFERENCES[StageShape.IDENTITY])
+		screen.set_shape(StageShape.IDENTITY)
+		screen.refresh(run_state)
+		var land: MapJourneyLandscape = screen._map_scene.journey_landscape()
+		var arch: String = "none"
+		var counts: Dictionary = {}
+		if land != null:
+			for item: Dictionary in land.kit.placed:
+				counts[item["kind"]] = int(str(counts.get(item["kind"], 0))) + 1
+				if str(item["kind"]) == "amber-arch":
+					arch = "at %s yaw %.1f deg" % [item["position"], rad_to_deg(float(str(item["yaw"])))]
+		if land != null:
+			var parts: PackedStringArray = []
+			for item: Dictionary in land.kit.placed:
+				if not str(item["kind"]) in ["bridge-pier", "bridge-banner"]:
+					parts.append("kit %s %s %s %s" % [item["kind"], item["position"], item["scale"], item["yaw"]])
+			print("KITDIGEST seed=%d %s (%d)" % [seed_value, "\n".join(parts).sha256_text().substr(0, 16), parts.size()])
+			var planting: RefCounted = land.wood.planting
+			for i: int in range(planting.kinds.size()):
+				parts.append("card %s %s %d %s" % [planting.kinds[i], planting.bases[i], planting.tiles[i], planting.scales[i]])
+				print("CARD seed=%d %s %s %d %s" % [seed_value, planting.kinds[i], planting.bases[i], planting.tiles[i], planting.scales[i]])
+			print("DIGEST seed=%d %s (%d)" % [seed_value, "\n".join(parts).sha256_text().substr(0, 16), parts.size()])
+			var wall: MeshInstance3D = land.find_child("Bridge parapet stones", true, false) as MeshInstance3D
+			print("WALL seed=%d triangles %d" % [seed_value, wall.mesh.get_faces().size() / 3])
+		print("GATE seed=%d arch %s posts %d banners %d piers %d lamps %d" % [seed_value, arch, counts.get("lantern-post", 0), counts.get("bridge-banner", 0), counts.get("bridge-pier", 0), land.lamps.anchors.size() if land != null else -1])
+		screen.get_parent().remove_child(screen)
+		screen.free()
+		MapScene.release_kept_journey()
+	quit()

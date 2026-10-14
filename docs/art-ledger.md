@@ -742,6 +742,29 @@ tail round each pier. The palette is the include's uniforms (`deep_tint`,
 `shallow_tint`, `foam_tint`, `sky_low`, `sky_high`), so a re-pick is a
 change of values. Evidence: `docs/design/2026-10-02-map-living-land/r3/r3-4-water/README.md`.
 
+**R3.5 (the bridges, 14 Oct 2026), lane picks, owner re-pick open:** Act I's
+bridges are dressed after the owner's target's: flame-topped piers stand out
+of crenellated parapets, banners hang between them, and the decks are laid in
+small dark setts.
+
+| Asset | Recipe | Notes |
+|---|---|---|
+| `bridge-pier.glb` | `tools/map_atelier/journey/living_kit.py` (`bridge_pier`; `blender -b -P tools/map_atelier/journey/living_kit.py -- bridge-pier`), master `sources/bridge-pier.blend` | A squat pier of three coursed blocks on a plinth, with a pale cap and crown, in the kit's ash stone (`stone_finish`), and a bronze dish of embers on its crown. 304 triangles, no textures of its own. The open flame is the lamps' flipbook card (`lamps.gd`), 1.02 m above the deck (`Kit.LAMP_ANCHORS`), as the target's bridge piers burn open flames. Candidates: a first build carried the gateway's amber lantern box on the crown; it read as a road lamp and outweighed the pier at Close, so the open flame was kept. |
+
+Drawn with no new picture:
+
+- **The parapets** (`presentation/map/landscape/bridge_geometry.gd`): a
+  continuous wall along each raised side, merlons every other 0.43 m, in
+  `bridge_stone.gdshader`'s coursed stone at `PARAPET_TINT`.
+- **The setts** (`terrain_paint.gdshader`): the decks' stones 1.9 times as
+  many to the metre as the ground's flags, with deeper joints and darker
+  stone (`deck_setts`, `deck_joint`, `deck_shade`).
+- **The banners**: R2's `bridge-banner.glb`, unchanged, hung 1.35 times its
+  size against the parapet's outer face between the piers.
+
+A re-pick of the parapet or the setts is a change of values. Evidence:
+`docs/design/2026-10-02-map-living-land/r3/r3-5-set-pieces/README.md`.
+
 ## Rejection note — what "technically shippable" means
 
 Judging generated character art by eye is not enough; two of the five

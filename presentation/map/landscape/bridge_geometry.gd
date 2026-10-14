@@ -3,6 +3,9 @@ extends RefCounted
 const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 const Paths = preload("res://presentation/map/landscape/road_paths.gd")
 const Surfaces = preload("res://presentation/map/landscape/bridge_surfaces.gd")
+## The parapets' stone, lighter than the masonry below the deck so their
+## coping catches the key (R3.5; a lane pick, owner re-pick open).
+const PARAPET_TINT: Vector3 = Vector3(.095,.086,.083)
 
 static func build(parent: Node3D, lines: Array[PackedVector3Array], elevated: Callable, paint: ShaderMaterial) -> int:
 	var _t0: int = Time.get_ticks_msec()
@@ -73,7 +76,10 @@ static func build(parent: Node3D, lines: Array[PackedVector3Array], elevated: Ca
 	kerbs.begin(Mesh.PRIMITIVE_TRIANGLES)
 	_stonework(kerbs,chains,surface,lines)
 	parent.build_timings_ms["roads_stonework"] = Time.get_ticks_msec() - _t0
-	Meshes.node(parent,Meshes.finish(kerbs),Meshes.material(Color("49454b")),"Bridge parapet stones")
+	var coursed: ShaderMaterial = ShaderMaterial.new()
+	coursed.shader = preload("res://presentation/map/landscape/bridge_stone.gdshader")
+	coursed.set_shader_parameter("tint",PARAPET_TINT)
+	Meshes.node(parent,Meshes.committed(kerbs.commit()),coursed,"Bridge parapet stones")
 	var deck_paint: ShaderMaterial = preload("res://presentation/map/landscape/terrain_paint.gd").deck_variant(paint)
 	Meshes.node(parent,Meshes.finish(top),deck_paint,"Continuous bridge decks")
 	var stone: ShaderMaterial = ShaderMaterial.new()
@@ -81,35 +87,81 @@ static func build(parent: Node3D, lines: Array[PackedVector3Array], elevated: Ca
 	Meshes.node(parent,Meshes.finish(masonry),stone,"Joined bridge masonry")
 	return spans.size()
 
+## The parapets (R3.5): a continuous wall along each raised side, crenellated
+## along its top as the owner's target's bridges are, in the masonry's own
+## coursed stone. Each run overlaps the next a little so a bend leaves no gap,
+## and every face is flat: the old stones' shared normals rounded them into
+## pale pills under the key. Merlons alternate with crenels at `MERLON` metres.
+const PARAPET_OFFSET: float = .755
+const PARAPET_THICK: float = .16
+const PARAPET_HEIGHT: float = .22
+const MERLON: float = .43
+const MERLON_SIZE: Vector3 = Vector3(.18,.14,.24)
+
 static func _stonework(masonry: SurfaceTool, chains: Array[Dictionary], surface: Surfaces,
 		lines: Array[PackedVector3Array]) -> void:
-	var box: Mesh = Meshes.unit_box()
 	for chain: Dictionary in chains:
 		var points: PackedVector3Array = chain["points"]
 		var lengths: PackedFloat32Array = chain["lengths"]
 		var weights: PackedFloat32Array = chain["weights"]
-		var next_stone: float = .25
+		var start: int = -1
+		var merlon: bool = true
 		for i: int in range(points.size()-1):
-			if lengths[i+1]<next_stone or maxf(weights[i],weights[i+1])<.72:
-				continue
-			var p: Vector3 = points[i]
-			var q: Vector3 = points[i+1]
-			var middle: Vector3 = (p+q)*.5
-			next_stone = lengths[i+1]+.43
-			var forward: Vector3 = (q-p).normalized()
-			var side: Vector3 = forward.cross(Vector3.UP).normalized()
-			var join: bool = false
+			var middle: Vector3 = (points[i]+points[i+1])*.5
+			var walled: bool = maxf(weights[i],weights[i+1])>=.72
 			for line: PackedVector3Array in lines:
 				if minf(Vector2(middle.x,middle.z).distance_to(Vector2(line[0].x,line[0].z)),Vector2(middle.x,middle.z).distance_to(Vector2(line[-1].x,line[-1].z)))<1.7:
-					join = true
-			if join:
+					walled = false
+			if not walled:
+				start = -1
 				continue
-			for sign_value: float in [-1,1]:
-				var at: Vector3 = middle+side*.755*sign_value
-				var nearby: Dictionary = surface.field(Vector2(at.x,at.z))
-				var outside: Vector3 = at+side*.22*sign_value
-				if Surfaces._number(surface.field(Vector2(outside.x,outside.z)),"distance")<0:
-					continue
-				at.y = Surfaces._number(nearby,"height")+.13
-				var basis: Basis = Basis(Vector3.UP,atan2(forward.x,forward.z))
-				masonry.append_from(box,0,Transform3D(basis.scaled_local(Vector3(.18,.26,.44)),at))
+			if start<0:
+				start = i
+			# One wall piece a merlon's length, so a straight run is a few long
+			# boxes rather than one per centreline sample.
+			if lengths[i+1]-lengths[start]>=MERLON or i==points.size()-2:
+				_piece(masonry,points[start],points[i+1],surface,merlon)
+				merlon = not merlon
+				start = i+1
+
+
+## The parapet from `p` to `q` on both sides of the deck, where that side is the
+## deck's edge, with a merlon on top when `merlon`.
+static func _piece(masonry: SurfaceTool, p: Vector3, q: Vector3, surface: Surfaces, merlon: bool) -> void:
+	var middle: Vector3 = (p+q)*.5
+	var forward: Vector3 = (q-p).normalized()
+	var side: Vector3 = forward.cross(Vector3.UP).normalized()
+	var run: float = Vector2(q.x-p.x,q.z-p.z).length()
+	var basis: Basis = Basis(Vector3.UP,atan2(forward.x,forward.z))
+	basis = basis*Basis(Vector3.RIGHT,-atan2(q.y-p.y,run))
+	for sign_value: float in [-1,1]:
+		var at: Vector3 = middle+side*PARAPET_OFFSET*sign_value
+		var outside: Vector3 = at+side*.22*sign_value
+		if Surfaces._number(surface.field(Vector2(outside.x,outside.z)),"distance")<0:
+			continue
+		at.y = Surfaces._number(surface.field(Vector2(at.x,at.z)),"height")+PARAPET_HEIGHT*.5-.02
+		_box(masonry,Transform3D(basis.scaled_local(Vector3(PARAPET_THICK,PARAPET_HEIGHT+.04,run+.06)),at))
+		if merlon:
+			var top: Vector3 = at+basis.y.normalized()*(PARAPET_HEIGHT*.5+MERLON_SIZE.y*.5-.02)
+			_box(masonry,Transform3D(basis.scaled_local(MERLON_SIZE),top))
+
+
+## A unit cube's faces under `pose`, each with its own flat normal; not its
+## underside, which stands on the deck or the wall and is never seen.
+static func _box(surface: SurfaceTool, pose: Transform3D) -> void:
+	for axis: int in range(3):
+		for sign_value: float in [-1.0,1.0]:
+			if axis==1 and sign_value<0:
+				continue
+			var normal: Vector3 = Vector3.ZERO
+			normal[axis] = sign_value
+			var u: Vector3 = Vector3.ZERO
+			u[(axis+1)%3] = 1.0
+			var v: Vector3 = normal.cross(u)
+			var corners: Array[Vector3] = []
+			for c: Vector2 in [Vector2(-1,-1),Vector2(1,-1),Vector2(1,1),Vector2(-1,1)]:
+				corners.append(pose*((normal+u*c.x+v*c.y)*.5))
+			var facing: Vector3 = (pose.basis*normal).normalized()
+			surface.set_normal(facing)
+			for k: int in [0,2,1,0,3,2]:
+				surface.add_vertex(corners[k])

@@ -1,0 +1,49 @@
+== lock taken 04:46:03
+== start 04:46:03; Mac load 6.37 9.07 11.49
+== install ctl1 (774c5932) 04:46:03
+== ctl1-l1 nonce ctl1-l1-14008851: rows fresh
+   ctl1-l1: build 774c5932
+== ctl1-l1: recording cut short: Device got disconnected, ending recording...
+== ctl1-l2 nonce ctl1-l2-20919264: rows fresh
+   ctl1-l2: build 774c5932
+== ctl1-l2: recording cut short: 
+== ctl1-l3 nonce ctl1-l3-3210816783: rows fresh
+   ctl1-l3: build 774c5932
+== ctl1-l3: recording cut short: 
+== ctl1-v1 nonce ctl1-v1-212577604: rows fresh
+   ctl1-v1: build 774c5932
+== install dev1 (4a95dbd5) 04:59:06
+== dev1-l1 nonce dev1-l1-213866170: rows fresh
+   dev1-l1: build 4a95dbd5
+== dev1-l1: recording cut short: 
+== dev1-l2 nonce dev1-l2-246914351: rows fresh
+   dev1-l2: build 4a95dbd5
+== dev1-l2: full recording
+== dev1-v1 nonce dev1-v1-547825131: rows fresh
+   dev1-v1: build 4a95dbd5
+== install ctl2 (774c5932) 05:11:26
+== ctl2-l1 nonce ctl2-l1-3000010035: rows fresh
+   ctl2-l1: build 774c5932
+== ctl2-l1: recording cut short: 
+== ctl2-l2 nonce ctl2-l2-1797131810: rows fresh
+   ctl2-l2: build 774c5932
+== ctl2-l2: recording cut short: 
+== ctl2-l3 nonce ctl2-l3-142018618: rows fresh
+   ctl2-l3: build 774c5932
+== ctl2-l3: recording cut short: 
+== ctl2-v1 nonce ctl2-v1-2607422011: rows fresh
+   ctl2-v1: build 774c5932
+== install dev2 (4a95dbd5) 05:27:54
+== dev2-l1 nonce dev2-l1-25937635: rows fresh
+   dev2-l1: build 4a95dbd5
+== dev2-l1: recording cut short: 
+== dev2-l2 nonce dev2-l2-286212612: rows fresh
+   dev2-l2: build 4a95dbd5
+== dev2-l2: recording cut short: 
+== dev2-l3 nonce dev2-l3-218420527: rows fresh
+   dev2-l3: build 4a95dbd5
+== dev2-l3: full recording
+== dev2-v1 nonce dev2-v1-2661712274: rows fresh
+   dev2-v1: build 4a95dbd5
+== done 05:41:45
+== lock released 05:41:45

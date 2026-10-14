@@ -109,10 +109,11 @@ static func _lamps(fails: Array[String], screen: WorldMapScreen,
 			var seat: Vector3 = land.seat(screen.map.nodes[i].id, anchors[i])
 			clear = clear and Vector2(p.x - seat.x, p.z - seat.z).length() >= 1.5
 	_check(fails, clear, "every lantern stands off the walking lane and clear of every waystone")
+	var piers: Array[Vector3] = _bridge_piers(fails, screen, land, anchors)
 	var lamps: MapJourneyLandscape.Lamps = land.lamps
-	_check(fails, lamps.anchors.size() == posts.size() + 2
+	_check(fails, lamps.anchors.size() == posts.size() + piers.size() + 2
 			and lamps.flames.multimesh.instance_count == lamps.anchors.size(),
-		"one flame for each lantern and each of the gateway's two lamps")
+		"one flame for each lantern, each bridge pier and each of the gateway's two lamps")
 	land.focus_lamps(lamps.anchors[0])
 	var lit: PackedVector3Array = lamps.lit()
 	var real: int = 0 if MapScene.lean_profile() else MapJourneyLandscape.Lamps.REAL_LIGHTS
@@ -134,6 +135,31 @@ static func _lamps(fails: Array[String], screen: WorldMapScreen,
 		"phones and tablets keep every flame and give no lamp a real light")
 	lean_lamps.free()
 	MapScene.lean_override = lean_was
+
+
+## R3.5: flame piers stand out of the bridges' parapets over the river, a
+## pair at each end of every raised stretch at least, each on its deck's
+## parapet line at the deck's height, and clear of every waystone.
+static func _bridge_piers(fails: Array[String], screen: WorldMapScreen, land: MapJourneyLandscape,
+		anchors: PackedVector3Array) -> Array[Vector3]:
+	var piers: Array[Vector3] = []
+	for item: Dictionary in land.kit.placed:
+		if str(item["kind"]) == "bridge-pier":
+			piers.append(item["position"])
+	var field: RefCounted = land.terrain.get_meta("bridge_field", null)
+	var seated: bool = piers.size() >= 8 and field != null
+	for p: Vector3 in piers:
+		if not seated:
+			break
+		var sample: Dictionary = field.call("field", Vector2(p.x, p.z))
+		var edge: float = float(str(sample["distance"]))
+		seated = edge > -0.2 and edge < 0.05 and absf(float(str(sample["height"])) - p.y) < 0.05 \
+			and land.terrain.stream_distance(p.x, p.z) <= 6.0
+		for i: int in range(anchors.size()):
+			var seat: Vector3 = land.seat(screen.map.nodes[i].id, anchors[i])
+			seated = seated and Vector2(p.x - seat.x, p.z - seat.z).length() >= 1.5
+	_check(fails, seated, "flame piers stand on the bridges' parapets over the river, clear of every waystone (%d)" % piers.size())
+	return piers
 
 
 ## Journey frames the pilgrim's stone and its next stones on the journey camera,

@@ -19,6 +19,11 @@ uniform vec4 gravel_colour : source_color = vec4(.345,.321,.310,1.0);
 uniform vec4 rock_colour : source_color = vec4(.30,.285,.30,1.0);
 uniform vec4 paving_colour : source_color = vec4(.325,.314,.31,1.0);
 uniform vec4 damp_colour : source_color = vec4(.235,.217,.224,1.0);
+// The decks' setts (R3.5; a lane pick, owner re-pick open): how many to a
+// ground flag, how deep their joints read and how dark the stone is.
+uniform float deck_setts = 1.9;
+uniform float deck_joint = .5;
+uniform float deck_shade = .62;
 // The lamps' pools (habitat alpha, painted by `bind_habitat`): warm light added
 // to the lit surface, flickering with the lanterns; held steady while the
 // global `land_motion` is 0 (Reduce Motion; `LandMotion`).
@@ -79,7 +84,9 @@ void fragment() {
  vec3 trail=mix(earth,worn,core*.88+shoulder*.12);
  // A shared world-space layout never resets at a ramp, bend or junction.
  // Broad, staggered flags remain legible as individual stones under soil.
- vec2 stone=vec2(p.x*.94+p.y*.342,-p.x*.342+p.y*.94)*vec2(1.55,1.85);
+ // A deck is laid in setts, smaller and darker than the ground's flags, with
+ // deep joints, as the owner's target's bridges are (R3.5).
+ vec2 stone=vec2(p.x*.94+p.y*.342,-p.x*.342+p.y*.94)*vec2(1.55,1.85)*(bridge_surface ? deck_setts : 1.0);
  float row=floor(stone.y);
  stone.x*=.88+.26*hash(vec2(row,23.0));
  stone.x+=hash(vec2(row,17.0))*.72;
@@ -92,7 +99,8 @@ void fragment() {
  float joint=smoothstep(.468,.492,stone_edge);
  float slab=hash(cell_id+9.0);
  vec3 masonry=paving_colour.rgb*(.89+.19*slab);
- masonry*=1.0-joint*.19;
+ masonry*=1.0-joint*(bridge_surface ? deck_joint : .19);
+ if(bridge_surface) { masonry*=deck_shade; }
  masonry*=lite ? 1.0 : .97+.06*noise(p*5.0);
  float wear=smoothstep(.3,.76,noise(p*1.1+31.0));
  float paving=entrance*(.65+.35*broad)*core;

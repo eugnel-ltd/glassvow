@@ -1,0 +1,51 @@
+#!/bin/zsh
+# Lane R3.5 batch B1 (scratch; QA app only, under the shared lock via ipad_lock.sh, never
+# broken): main against the branch, interleaved, two installs each (ctl dev ctl dev).
+# Per install: L = boot launch with 600-frame rests at the cadence and live at Journey, the
+# river, Close and Whole act, then an Activity Monitor recording (launch first, then record;
+# a recording cut short is retried with a fresh launch, up to 3); V = a short Journey hold
+# for video memory. Every memory warning is a probe row (the measuring copies' own patch).
+set -u
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-r35-lane
+LOCKSH=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow/ipad_lock.sh
+OWNER=map-r35
+DEV=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-r35/tools/map_trace/device.zsh
+OUT=$L/device/${BATCH:-batchB1}
+[[ "${OUT:A}" == $L/* ]] || { echo "OUT outside the lane"; exit 1; }
+mkdir -p $OUT
+source $DEV
+$LOCKSH acquire $OWNER || exit 1
+echo "== lock taken $(date +%T)"
+trap '$LOCKSH release $OWNER; echo "== lock released $(date +%T)"' EXIT
+hold() { $LOCKSH acquire $OWNER; }
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+echo "== start $(date +%T); Mac load $(uptime | sed 's/.*averages: //')"
+check_build() { grep -q "\"build\":\"$2\"" $OUT/$1.jsonl 2>/dev/null && echo "   $1: build $2" || { echo "   $1: WRONG BUILD (wanted $2)"; mv $OUT/$1.jsonl $OUT/$1.wrong.jsonl 2>/dev/null; }; }
+for n in 1 2; do
+  for b in ctl dev; do
+    hold
+    build=$(cat $L/ipa/$b.build)
+    echo "== install $b$n ($build) $(date +%T)"
+    timeout 300 zsh -c "source $DEV; UDID=$UDID; OUT=$OUT; mt_install $L/ipa/$b.ipa" || { echo "install failed"; exit 1; }
+    for a in 1 2 3; do
+      lab=$b$n-l$a
+      _mt_start $lab --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --holds=cadence,live --probe-view=journey,river,close,whole
+      [[ -n "$MT_PID" ]] || { echo "== $lab: launch failed"; continue; }
+      echo $MT_PID > $OUT/$lab.pid
+      sleep 3
+      xcrun devicectl device info ddiServices --device $UDID >/dev/null 2>&1
+      rm -rf $OUT/$lab-am.trace
+      timeout 300 xcrun xctrace record --device $UDID --template 'Activity Monitor' --all-processes \
+        --time-limit 140s --output $OUT/$lab-am.trace --no-prompt 2>&1 | mt_redact > $OUT/$lab-am.log
+      _mt_rows $lab
+      check_build $lab $build
+      if grep -q 'time limit' $OUT/$lab-am.log && xcrun xctrace export --input $OUT/$lab-am.trace --toc >/dev/null 2>&1; then echo "== $lab: full recording"; break; fi
+      echo "== $lab: recording cut short: $(grep -i disconnect $OUT/$lab-am.log | head -1)"
+      hold
+    done
+    hold
+    MT_WAIT=40 mt_launch $b$n-v1 --map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2 --holds=cadence --hold-frames=60 --probe-view=journey
+    check_build $b$n-v1 $build
+  done
+done
+echo "== done $(date +%T)"
