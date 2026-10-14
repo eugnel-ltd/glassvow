@@ -19,16 +19,7 @@ const FlightGrade = preload("res://presentation/map/causeway/flight_grade.gd")
 const Edges = preload("res://presentation/map/causeway/edges.gd")
 const Stairs = preload("res://presentation/map/causeway/stairs.gd")
 const Piers = preload("res://presentation/map/causeway/piers.gd")
-## A raised road keeps a level landing this long at each end, its
-## bridgehead's (`Levels.HEAD_LANDING`), before it climbs.
-const LANDING: float = Levels.HEAD_LANDING
-## A raised road climbs from its bridgeheads at this grade (a flight's steepest
-## is 0.52) to at most `RAISED_RISE` over them, easing into it over its last
-## `EASE`.
-const RAISED_GRADE: float = .52
-const RAISED_RISE: float = 2.2
-const EASE: float = .25
-
+const RaisedProfiles = preload("res://presentation/map/causeway/raised_profiles.gd")
 var levels: Levels = Levels.new()
 var style: Dictionary = Presets.drowned_city()
 ## A build given up ends at its next stage (`Meshes.Pacing.stopped`).
@@ -44,6 +35,10 @@ var sampled_routes: Dictionary = {}
 var fields: Array[Smooth] = []
 var deck_meshes: Array[ArrayMesh] = []
 var decoration_meshes: Array[ArrayMesh] = []
+## Each deck's masonry under it (its arches' intrados and walls), and each
+## deck's paving alone, by field (`fields`).
+var underside_meshes: Array[ArrayMesh] = []
+var level_decks: Array[ArrayMesh] = []
 var build_timings_ms: Dictionary = {}
 var _stage_started: int = 0
 ## Each deck's triangles as built, held only until its edges are drawn.
@@ -63,6 +58,8 @@ func build(sample: Dictionary) -> void:
 		for value: Array in edge["centerline"]:
 			line.append(Meshes.v3(value))
 		lines.append(line)
+	var profiles: RaisedProfiles = RaisedProfiles.new()
+	profiles.plan(edges, lines, spacing, levels, style)
 	levels.setup(lines)
 	var raw_anchors: Dictionary = sample["anchors"]
 	for key: String in raw_anchors:
@@ -72,28 +69,32 @@ func build(sample: Dictionary) -> void:
 		anchors[key] = p
 	var lower: Array[Dictionary] = []
 	var upper: Array[Dictionary] = []
+	var graded: Dictionary = {}
+	var ordinary: Array[PackedVector3Array] = []
 	var index: int = 0
 	for key: String in edges:
-		var source_edge: Dictionary = edges[key]
 		var line: PackedVector3Array = lines[index]
 		index += 1
-		var raised: bool = false
-		for p: Vector3 in line:
-			raised = raised or p.y > .3
+		if profiles.raised.has(key):
+			continue
 		var points: PackedVector3Array = Paths.sample(line, spacing)
-		var lengths: PackedFloat32Array = [0]
-		for i: int in range(1, points.size()):
-			lengths.append(lengths[-1] + Vector2(points[i].x - points[i - 1].x, points[i].z - points[i - 1].z).length())
 		for i: int in range(points.size()):
-			points[i].y = levels.deck_base(points[i].x, points[i].z) + Levels.BRIDGEHEAD \
-				+ _rise(lengths[i], lengths[-1]) if raised else levels.height(points[i].x, points[i].z)
+			points[i].y = levels.height(points[i].x, points[i].z)
+		graded[key] = points
+		ordinary.append(Paths.sample(line, RaisedProfiles.STEP))
+	profiles.lift(ordinary)
+	for key: String in edges:
+		var source_edge: Dictionary = edges[key]
+		var raised: bool = profiles.raised.has(key)
+		var points: PackedVector3Array = profiles.raised[key].points if raised else graded[key]
+		var lengths: PackedFloat32Array = RaisedProfiles._stations(points)
 		anchors[source_edge["from"]] = points[0] + Vector3.UP * .022
 		anchors[source_edge["to"]] = points[-1] + Vector3.UP * .022
 		sampled_routes[key] = points
 		for i: int in range(points.size() - 1):
 			var span: Dictionary = {"edge": key, "from": source_edge["from"], "to": source_edge["to"],
 				"a": points[i], "b": points[i + 1], "wa": 1.0, "wb": 1.0,
-				"half_a": _half(lengths[i], lengths[-1]), "half_b": _half(lengths[i + 1], lengths[-1]),
+				"half_a": RaisedProfiles.half_width(lengths[i], lengths[-1]), "half_b": RaisedProfiles.half_width(lengths[i + 1], lengths[-1]),
 				"s": lengths[i],
 				"bottom_a": Profile.soffit(points[i].y, lengths[i], lengths[-1], raised, style),
 				"bottom_b": Profile.soffit(points[i + 1].y, lengths[i + 1], lengths[-1], raised, style)}
@@ -117,6 +118,7 @@ func build(sample: Dictionary) -> void:
 			var landing: Landing = Landing.new()
 			landing.lower = fields[0]
 			landing.pads = levels.abutments
+			landing.routes_apart = true
 			field = landing
 		field.setup(spans, func(_x: float, _z: float) -> float: return bed)
 		var grading: FlightGrade = FlightGrade.new()
@@ -148,24 +150,6 @@ func build(sample: Dictionary) -> void:
 	_mark("piers")
 
 
-## How far a raised road stands over the datum `station` metres along a route
-## `total` long: level at its landings, then climbing at `RAISED_GRADE` (the
-## archive's soft start) and easing into `RAISED_RISE`.
-static func _rise(station: float, total: float) -> float:
-	var run: float = maxf(0, minf(station, total - station) - LANDING)
-	var rise: float = RAISED_GRADE * (run - .15 * (1.0 - exp(-run / .15)))
-	var knee: float = RAISED_RISE - EASE
-	if rise > knee:
-		var ease: float = clampf((rise - knee) / (2.0 * EASE), 0, 1)
-		rise = knee + EASE * ease * (2 - ease)
-	return rise
-
-
-## A deck's half width: 0.92 m, widening to 1.29 m into each node's landing.
-static func _half(station: float, total: float) -> float:
-	return .92 + .37 * (1 - smoothstep(.4, 1.5, minf(station, total - station)))
-
-
 ## Meshes `field`'s deck (paving) and the masonry under it (body). The deck's
 ## arrays are kept as built, so its outline is read without asking the renderer.
 func _deck(field: Smooth, paving: Material, stone: Material) -> void:
@@ -180,8 +164,11 @@ func _deck(field: Smooth, paving: Material, stone: Material) -> void:
 	deck.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	_deck_faces.append(_unindexed(arrays))
 	deck_meshes.append(Meshes.committed(deck))
+	level_decks.append(deck)
 	Meshes.node(self, deck, paving, "Causeway deck")
-	Meshes.node(self, Meshes.finish(sides), stone, "Causeway arches")
+	var under: ArrayMesh = Meshes.finish(sides)
+	underside_meshes.append(under)
+	Meshes.node(self, under, stone, "Causeway arches")
 
 
 static func _unindexed(arrays: Array) -> PackedVector3Array:

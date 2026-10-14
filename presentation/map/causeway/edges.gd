@@ -12,6 +12,9 @@ var blocks: SurfaceTool
 var caps: SurfaceTool
 var arch_stones: SurfaceTool
 var stone_batch: BoxBatch
+## Each deck's answers already asked for, by position: neighbouring stones ask
+## at the same points (a piece's end is the next one's start).
+var _asked: Dictionary = {}
 
 
 ## The masonry of `field`'s deck, whose triangles are `faces`; `other_fields`
@@ -43,8 +46,8 @@ func build(parent: Node3D, faces: PackedVector3Array, field: RefCounted,
 			continue
 		var at: Vector3 = (a + b) * .5
 		var outward: Vector3 = Vector3(b.z - a.z, 0, a.x - b.x).normalized()
-		var left: float = field.field(Vector2(at.x + outward.x * .1, at.z + outward.z * .1))["distance"]
-		var right: float = field.field(Vector2(at.x - outward.x * .1, at.z - outward.z * .1))["distance"]
+		var left: float = _field(field, Vector2(at.x + outward.x * .1, at.z + outward.z * .1))["distance"]
+		var right: float = _field(field, Vector2(at.x - outward.x * .1, at.z - outward.z * .1))["distance"]
 		# A triangulation seam is not an exposed deck boundary.
 		if left < -.03 and right < -.03:
 			continue
@@ -59,7 +62,7 @@ func build(parent: Node3D, faces: PackedVector3Array, field: RefCounted,
 		var outer: float = .14 + (rail_width + .12) * .5
 		for endpoint: Vector3 in [a, at, b]:
 			var probe_at: Vector3 = endpoint + outward * outer
-			var own: Dictionary = field.field(Vector2(probe_at.x, probe_at.z))
+			var own: Dictionary = _field(field, Vector2(probe_at.x, probe_at.z))
 			var own_distance: float = own["distance"]
 			var own_height: float = own["height"]
 			shared_join = shared_join or (own_distance < -.025
@@ -68,7 +71,7 @@ func build(parent: Node3D, faces: PackedVector3Array, field: RefCounted,
 			if other == field:
 				continue
 			for endpoint: Vector3 in [a, at, b]:
-				var query: Dictionary = other.field(Vector2(endpoint.x + outward.x * .08, endpoint.z + outward.z * .08))
+				var query: Dictionary = _field(other, Vector2(endpoint.x + outward.x * .08, endpoint.z + outward.z * .08))
 				var distance: float = query["distance"]
 				var height: float = query["height"]
 				shared_join = shared_join or (distance <= .20
@@ -98,8 +101,8 @@ func _arch_band(a: Vector3, b: Vector3, outward: Vector3, field: RefCounted,
 	for i: int in range(divisions):
 		var pa: Vector3 = a.lerp(b, float(i) / divisions)
 		var pb: Vector3 = a.lerp(b, float(i + 1) / divisions)
-		var low_a: float = field.field(Vector2(pa.x, pa.z))["bottom"]
-		var low_b: float = field.field(Vector2(pb.x, pb.z))["bottom"]
+		var low_a: float = _field(field, Vector2(pa.x, pa.z))["bottom"]
+		var low_b: float = _field(field, Vector2(pb.x, pb.z))["bottom"]
 		if minf(low_a, low_b) <= floor_level or absf(low_a - low_b) > .65:
 			continue
 		# Voussoirs project beyond the structural underside. Keep their full
@@ -111,7 +114,7 @@ func _arch_band(a: Vector3, b: Vector3, outward: Vector3, field: RefCounted,
 				for other: RefCounted in other_fields:
 					if other == field:
 						continue
-					var query: Dictionary = other.field(Vector2(at.x, at.z))
+					var query: Dictionary = _field(other, Vector2(at.x, at.z))
 					var floor_height: float = query["height"]
 					var distance: float = query["distance"]
 					obstructs = obstructs or (distance <= .025
@@ -122,6 +125,16 @@ func _arch_band(a: Vector3, b: Vector3, outward: Vector3, field: RefCounted,
 		pa.y = low_a + .12
 		pb.y = low_b + .12
 		_piece(pa, pb, outward * .04, .23, .26, -.012)
+
+
+## `deck`'s answer at `at`, asked once.
+func _field(deck: RefCounted, at: Vector2) -> Dictionary:
+	if not _asked.has(deck):
+		_asked[deck] = {}
+	var answers: Dictionary = _asked[deck]
+	if not answers.has(at):
+		answers[at] = deck.field(at)
+	return answers[at]
 
 
 func _piece(a: Vector3, b: Vector3, offset: Vector3, width: float, height: float, overlap: float = .008) -> void:

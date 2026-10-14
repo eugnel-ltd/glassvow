@@ -72,7 +72,7 @@ static func _seed(fails: Array[String], content: ContentDB, seed_value: int) -> 
 		return
 	var routes: Node3D = land.terrain.causeways
 	_same_layout(fails, content, run, screen, seed_value)
-	_decks(fails, routes, seed_value)
+	_decks(fails, land, seed_value)
 	_seats(fails, screen, land, seed_value)
 	_water(fails, land, seed_value)
 	_high_bridges(fails, routes, seed_value)
@@ -106,6 +106,25 @@ static func _free(screen: WorldMapScreen) -> void:
 	MapScene.release_kept_journey()
 
 
+## The pilgrim's walking route along every edge of the record.
+static func _walks(land: MapJourneyLandscape) -> Array[PackedVector3Array]:
+	var walks: Array[PackedVector3Array] = []
+	for edge: Dictionary in land.terrain.source_edges.values():
+		walks.append(land.walking_route(str(edge["from"]), str(edge["to"])))
+	return walks
+
+
+## Which of `_walks` the raised decks carry.
+static func _raised(land: MapJourneyLandscape) -> Array[bool]:
+	var raised: Array[bool] = []
+	for edge: Dictionary in land.terrain.source_edges.values():
+		var upper: bool = false
+		for point: Array in edge["centerline"]:
+			upper = upper or float(point[1]) > .015
+		raised.append(upper)
+	return raised
+
+
 ## The land is presentation only: the painted Act II binds the same record.
 static func _same_layout(fails: Array[String], content: ContentDB, run: RunState,
 		screen: WorldMapScreen, seed_value: int) -> void:
@@ -122,7 +141,8 @@ static func _same_layout(fails: Array[String], content: ContentDB, run: RunState
 
 ## Every route is a deck (seven offsets across 1.2 m find a rendered deck), and
 ## no edge masonry, parapet or pier stands in a walking corridor.
-static func _decks(fails: Array[String], routes: Node3D, seed_value: int) -> void:
+static func _decks(fails: Array[String], land: MapJourneyLandscape, seed_value: int) -> void:
+	var routes: Node3D = land.terrain.causeways
 	_check(fails, routes.sampled_routes.size() == routes.lines.size() and routes.fields.size() == 2,
 		"seed %d: every route is drawn, ordinary and raised decks apart" % seed_value)
 	var coverage: Dictionary = Probes.deck_coverage(routes)
@@ -132,6 +152,10 @@ static func _decks(fails: Array[String], routes: Node3D, seed_value: int) -> voi
 	var blocked: Dictionary = Probes.obstruction(routes)
 	_check(fails, int(blocked["samples"]) > 10000 and int(blocked["hits"]) == 0,
 		"seed %d: no added masonry stands in a walking corridor (%s)" % [seed_value, JSON.stringify(blocked)])
+	var overhead: Dictionary = Probes.headroom(routes, _walks(land), _raised(land))
+	_check(fails, int(overhead["samples"]) > 2000 and int(overhead["hits"]) == 0,
+		"seed %d: no deck's underside stands within a walking body over any walking sample (%s)"
+			% [seed_value, JSON.stringify(overhead)])
 
 
 ## Each waystone stands on its compiled anchor's X/Z, on a deck.

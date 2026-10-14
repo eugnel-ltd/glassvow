@@ -14,6 +14,19 @@ var pass_depth: float = 3.05
 var pad_landing: float = 0.0
 ## The grade a road falls at from a bridgehead's pad.
 var pad_grade: float = .27
+## The least a road may be graded at (x, z) beside a bridgehead, as
+## `landing_floor.call(x, z)` (-INF where it is free): Act II's roads leaving a
+## raised road's pad stay level with it while under its landing. Unset in the
+## woodland.
+var landing_floor: Callable = Callable()
+## The highest a lower road may be graded at (x, z), as `ceiling.call(x, z)`
+## (INF where it is free): Act II's ordinary roads keep a walking body under a
+## raised deck. Unset in the woodland.
+var ceiling: Callable = Callable()
+## The steepest a road steps down from a held pad or landing to pass under a
+## ceiling: a flight's (the raised roads climb at 0.52; a short flight down
+## to a pass may be steeper).
+const CEILING_GRADE: float = .8
 const River = preload("res://presentation/map/landscape/river.gd")
 
 func setup(lines: Array[PackedVector3Array]) -> void:
@@ -133,6 +146,9 @@ func _grade_roads(lines: Array[PackedVector3Array]) -> void:
 						var distance: float = centre.distance_to(Vector2(p.x,p.z))
 						if distance<1.2:
 							p.y = minf(p.y,upland(centre.x,centre.y)-pass_depth+distance*.08)
+					if ceiling.is_valid():
+						var highest: float = ceiling.call(p.x,p.z)
+						p.y = minf(p.y,highest)
 					points.append(p)
 					links.append([])
 				if previous>=0 and previous!=index:
@@ -174,6 +190,19 @@ func _grade_roads(lines: Array[PackedVector3Array]) -> void:
 				if Vector2(points[i].x,points[i].z).distance_to(pad)<pad_landing:
 					lower_bound[i] = maxf(lower_bound[i],upland(pad.x,pad.y))
 					queue.append(i)
+	# Where a pad or a landing holds a road's height, no ceiling lowers it.
+	var held: Array[bool] = []
+	held.resize(points.size())
+	held.fill(false)
+	for i: int in queue:
+		held[i] = true
+	if landing_floor.is_valid():
+		for i: int in range(points.size()):
+			var floor_height: float = landing_floor.call(points[i].x,points[i].z)
+			if floor_height>lower_bound[i]:
+				lower_bound[i] = floor_height
+				held[i] = true
+				queue.append(i)
 	while cursor<queue.size():
 		var index: int = queue[cursor]
 		cursor += 1
@@ -186,6 +215,8 @@ func _grade_roads(lines: Array[PackedVector3Array]) -> void:
 				queue.append(neighbour)
 	for i: int in range(points.size()):
 		points[i].y = maxf(points[i].y,lower_bound[i])
+	if ceiling.is_valid():
+		_pass_under(points,links,held)
 	ground_cells.clear()
 	for piece: Vector2i in pieces:
 		var a: Vector3 = points[piece.x]
@@ -200,3 +231,34 @@ func _grade_roads(lines: Array[PackedVector3Array]) -> void:
 				if not ground_cells.has(key):
 					ground_cells[key] = []
 				ground_cells[key].append([start,end,a.y,b.y])
+
+
+## A ceiling outranks the approach grade a bridgehead sets: the road steps
+## down to pass under it, but never falls from a held pad or landing (`held`)
+## faster than `CEILING_GRADE`.
+func _pass_under(points: PackedVector3Array, links: Array[Array], held: Array[bool]) -> void:
+	var floor_heights: PackedFloat32Array = []
+	floor_heights.resize(points.size())
+	floor_heights.fill(-10000)
+	var queue: Array[int] = []
+	for i: int in range(points.size()):
+		if held[i]:
+			floor_heights[i] = points[i].y
+			queue.append(i)
+	var cursor: int = 0
+	while cursor<queue.size():
+		var index: int = queue[cursor]
+		cursor += 1
+		for neighbour: int in links[index]:
+			var a: Vector3 = points[index]
+			var b: Vector3 = points[neighbour]
+			var limit: float = floor_heights[index]-Vector2(a.x-b.x,a.z-b.z).length()*CEILING_GRADE
+			if floor_heights[neighbour]<limit-.0001:
+				floor_heights[neighbour] = limit
+				queue.append(neighbour)
+	for i: int in range(points.size()):
+		if held[i]:
+			continue
+		var highest: float = ceiling.call(points[i].x,points[i].z)
+		if highest<points[i].y:
+			points[i].y = maxf(highest,floor_heights[i])
