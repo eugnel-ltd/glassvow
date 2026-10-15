@@ -247,12 +247,14 @@ func give_up() -> void:
 
 ## Ends the bookkeeping of a finished task so the land can be freed.
 func settle() -> void:
-	if _stage == Stage.HEIGHTS:
-		terrain.finish_heights()
-		_stage = Stage.DONE
 	if _task >= 0:
+		# An adopted prefetch may write HEIGHTS after adoption. Its outer task
+		# owns that grid's finalisation, so join it before reading the stage.
 		WorkerThreadPool.wait_for_task_completion(_task)
 		_task = -1
+	elif _stage == Stage.HEIGHTS:
+		terrain.finish_heights()
+		_stage = Stage.DONE
 
 
 func is_started() -> bool:
