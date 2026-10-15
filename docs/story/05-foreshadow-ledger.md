@@ -662,6 +662,25 @@ James 2026-10-02:不做新音樂,同一 prompt 的 held candidates 作同場備�
 | 470 | 門的另一面 / The Far Side of the Door | manifest `act4CombatD.title`(credits;Act IV 精英戰三選一)。取 row 343 `story.act4-entry.b1.l1` 門的半句;窗門同體的半句(L4,#259 Q4)不取 | L1 | 門後之地:「門會開、門後有目的地」是表面虛構,任何級都可直說(00 §5,#262 Q3) | 門的另一面就是窗的另一面,即爐邊(00 §8.1)。說的是「一面」,不是「門後之物」,不復活 row 12 的 legend-drift;方位水平,合 row 31「王冠之後」公式 | 新寫 [PROPOSED] |
 | 471 | 這裏你認得 / You Know This Place | manifest `act4BossB.title`(credits;Act IV boss 重逢——守夜帳已勝過或已到過 boss)。取 row 357 `story.act4-node5.b1.l1`(守爐人)後半句 | L1 | 似曾相識;你來過這裏 | hearth′=爐邊真貌(00 §2.4,#259 Q3),你從未離開過。字面真,守爐人四條聲線規則全過:不催出發,不以第一身講路,不說「你回來了」(#259 Q1)。勝過或敗過都成立,不倚賴勝後守爐人狀態(07 §5:未入 00-truth 不得落筆) | 新寫 [PROPOSED] |
 
+## Mythic set (#212, 2026-10-15)
+
+Selected copy: [mythic batch](batches/2026-10-15-batch-mythic-set.md). Promoted after all six distinct story checks passed; ready for lane 2 wiring. These are L1 card-lore and event-script lines. Names share their fragment's row. Rules and the rarity label are mechanical copy, recorded in the batch rather than assigned a hidden narrative meaning. No new whisper or Knight dialogue; rows 377–380 remain unchanged.
+
+The ember is visible heat in shelter. No row asserts that the Knight's will stays here after his death: row 303's westward return remains intact. The design's proposed reading “what he kept from the wind outlasts him” is not adopted. The shelter can acquire a colder reading without identifying the ember or closing row 380's “someone erected a monument / he is the monument” ambiguity.
+
+| # | Line | Source | Level | Surface reading | After the twist | Leak risk / status |
+|---|---|---|---|---|---|---|
+| 472 | 封火 / Banked Fire — 仍有餘溫。風吹不到碑腳。 / Still warm, sheltered at the foot of the monument. | `bankedFire` name and lore | L1 | A coal remains warm where stone shelters it from the wind. | The standing shelter can be reread as a body (00 §3.3). The coal remains an observable coal; no personal will is assigned to it. | Low–medium; no identity, origin or survival mechanism asserted. Promoted. |
+| 473 | 鍍銀 / Silvering — 鏡子從不先動。這一次，它把那一擊還了回去。 / A mirror never strikes first. This one returned the blow. | `silvering` name and lore | L1 | A mirror reflects an incoming blow. | The image behind glass evokes the stayer who has not taken the first step; the line never identifies that image (rows 10 and 14). | Low–medium; metaphor, not a new power or knowledge claim. Promoted. |
+| 474 | 未碎之火 / The Unbroken Flame — 成為六片之前，它是一團。 / Six pieces. Once, a single fire. | `unbrokenFlame` name and lore | L1 | The surface legend of one fire and six pieces. | The fire's wholeness recalls the door's condition (00 §2.2). The cause of its breaking and that condition remain unsaid. | Low; row 20's drift remains untouched. Promoted. |
+| 475 | 不臥 / Unbowed — 有些人，始終沒有躺下。 / Some never lay down. | `unbowed` name and lore | L1 | People who refuse to yield. | Walkers die standing (00 §3.3); the fragment echoes rows 1 and 9 without saying that they are monuments. | Low; no greater weight than whisper 11. Promoted. |
+| 476 | 熟路 / The Known Road — 你記得走過這段路。記得很清楚。 / You remember this road. Every step of it. | `knownRoad` name and lore | L1 | A familiar road, remembered with certainty. | The memory is inherited (00 §3.2 and §3.7). Remembering the journey remains true; who took the steps is unstated (row 11). | Medium; memory alone must not establish the stayer's identity. Promoted. |
+| 477 | 無痕 / Clean Break — 切口很乾淨。看不出舊痕。 / A clean edge. Nothing to show where it broke before. | `cleanBreak` name and lore | L1 | A clean glass edge has no visible old marks. | Glass evokes memory (00 §8.6); an unseen mark does not prove there was no past. No cutting-erases-memory rule is introduced. | Low; observation, not new material physics. Promoted. |
+| 478 | 石柱前那座碑仍在。 / The monument still stands at the foot of the pillar. | `knight-2` beat 2 | L1 | The coda's monument remains at the pillar. | It can be read as his only body (00 §3.3), but the narration identifies nobody. Both row-380 readings remain possible. | Low; the coda already names the monument. Promoted. |
+| 479 | 風吹不到碑腳。那一點火，沒有被吹走。 / In the monument's shelter, one ember still glows. | `knight-2` beat 4 | L1 | A stone breaks the wind; an ember glows in its lee. | The thing providing shelter can be reread as the standing body. The ember's origin and metaphysical status remain unstated; row 303 still holds. | Low–medium; no will retained at the monument. Promoted. |
+| 480 | 它還在。 / Still there. | `knight-3` beat 2 | L1 | The visible ember is still in the shelter. | The shelter has not fallen. This does not identify the monument or personify the ember. | Low; the preceding scene beat fixes the pronoun's referent. Promoted. |
+| 481 | 仍有餘溫。 / Still warm. | `knight-3` beat 4; echoes `bankedFire.lore` | L1 | Residual heat when the ember is lifted. | Still a statement about warmth, with the shelter reread through 00 §3.3. No claim that the Knight's will survives in this coal. | Low; surface-only fire reading protects row 303. Promoted. |
+
 ## `[REWRITE:climb]` 清單狀態 — 已關閉
 
 全量掃描由 #232 的十四-agent 量度完成,記錄於
