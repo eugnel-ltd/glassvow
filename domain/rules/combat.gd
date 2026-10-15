@@ -611,6 +611,17 @@ func _spend_embers(run: RunState, cb: CombatState, n: int) -> void:
 	gain_embers(run, cb, -n)
 
 
+## On-hit statuses from an enemy blow; an affix replaces matching omen values.
+func _enemy_hit_applies(run: RunState, cb: CombatState) -> Dictionary:
+	var applies: Dictionary = _omen_mods(run).get("playerHitApplies", {}).duplicate()
+	if cb.affix != &"":
+		var affix_def: Dictionary = content.affixes.get(String(cb.affix), {})
+		var affix_mods: Dictionary = affix_def.get("mods", {})
+		var affix_applies: Dictionary = affix_mods.get("attackApplies", {})
+		applies.merge(affix_applies, true)
+	return applies
+
+
 ## Damage the player. source: enemy idx | "thorns" | "poison" | "burn" | "self".
 func damage_player(
 	run: RunState,
@@ -668,12 +679,7 @@ func damage_player(
 		lose_combat(run, cb)
 		return loss
 	if is_attack and attacker != null:
-		var applies: Dictionary = _omen_mods(run).get("playerHitApplies", {}).duplicate()
-		if cb.affix != &"":
-			var affix_def: Dictionary = content.affixes.get(String(cb.affix), {})
-			var affix_mods: Dictionary = affix_def.get("mods", {})
-			var affix_applies: Dictionary = affix_mods.get("attackApplies", {})
-			applies.merge(affix_applies, true)
+		var applies: Dictionary = _enemy_hit_applies(run, cb)
 		for id: String in applies:
 			add_status_player(cb, id, _ji(applies[id]))
 		if _sget(p.statuses, "thorns") > 0 and attacker.hp > 0:
@@ -1469,6 +1475,10 @@ func _hit_itself(run: RunState, cb: CombatState, e: EnemyCombatant, base: int) -
 	if _sget(e.statuses, "vulnerable") > 0:
 		dmg = int(floorf(float(dmg) * 1.5))
 	hit_enemy(run, cb, e, maxi(0, dmg), false)
+	if e.hp > 0 and not cb.over:
+		var applies: Dictionary = _enemy_hit_applies(run, cb)
+		for id: String in applies:
+			add_status_enemy(cb, e, id, _ji(applies[id]))
 
 
 static func _tick_status(statuses: Dictionary, id: String) -> void:

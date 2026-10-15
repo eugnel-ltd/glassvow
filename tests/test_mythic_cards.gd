@@ -16,6 +16,7 @@ static func run(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
 	_banked_fire(content, fails)
 	_silvering(content, fails)
+	_silvering_on_hit(fails)
 	_silvering_keeper(content, fails)
 	_unbroken_flame(content, fails)
 	_unbowed(content, fails)
@@ -76,6 +77,62 @@ static func _silvering(content: ContentDB, fails: Array[String]) -> void:
 	_check(fails, e.hp == 99 - expected and cb.player.hp == hp_before
 			and not e.flags.has(CombatRules.SILVERED),
 		"the turned blow: enemy %d (want %d), player %d (want %d)" % [e.hp, 99 - expected, cb.player.hp, hp_before])
+
+
+## On-hit riders follow each blow. The affix replaces a matching omen value;
+## ordinary hits still poison the player, then tick as the player's turn starts.
+static func _silvering_on_hit(fails: Array[String]) -> void:
+	for case: Dictionary in [
+		{"label": "Cinder-Veined Crush", "affix": "cinderVeined", "omen": "", "n": 1, "times": 1},
+		{"label": "Ashfall Crush", "affix": "", "omen": "ashfall", "n": 1, "times": 1},
+		{"label": "overriding affix, two blows", "affix": "cinderVeined", "omen": "ashfall", "n": 1, "times": 2},
+	]:
+		var content: ContentDB = ContentDB.load_full()
+		if case["times"] == 2:
+			# Deliberately different values expose replacement versus addition.
+			content.omens["ashfall"]["mods"]["playerHitApplies"]["poison"] = 3
+		for mirrored: bool in [false, true]:
+			var run_state: RunState = RunState.new_run(content, SEED, "silvering-on-hit")
+			run_state.omens[run_state.act] = case["omen"]
+			var game: GlassvowGame = GlassvowGame.new(content, run_state)
+			game.apply({"t": "startCombat", "enemies": ["gravewarden"],
+				"kind": "elite" if case["affix"] != "" else "normal", "affix": case["affix"]})
+			var cb: CombatState = game.cb
+			var e: EnemyCombatant = cb.enemies[0]
+			e.hp = 99
+			e.max_hp = 99
+			e.statuses = {"thorns": 3}  # Remove Ashfall's starting Smolder.
+			e.move_key = &"crush"
+			e.def = e.def.duplicate(true)
+			e.def["moves"]["crush"]["times"] = case["times"]
+			cb.player.statuses = {"str": 7}
+			cb.player.block = 0
+			if mirrored:
+				_play(game, _in_hand(game, "silvering"), 0)
+			var hp_before: int = cb.player.hp
+			var damage: int = (12 + game.rules._challenge_mods(run_state)["enemyDmgBonus"]) * case["times"]
+			var poison: int = case["n"] * case["times"]
+			var events: Array[Dictionary] = game.apply({"t": "endTurn"})
+			var label: String = "%s, mirrored %s" % [case["label"], mirrored]
+			var riders: int = 0
+			for i: int in range(events.size()):
+				var event: Dictionary = events[i]
+				if event.get("t") != EventTypes.STATUS or event.get("id") != "poison":
+					continue
+				riders += 1
+				_check(fails, event["who"] == (0 if mirrored else "player") and event["n"] == case["n"]
+						and i > 0 and events[i - 1]["t"] == (EventTypes.HIT_ENEMY if mirrored else EventTypes.HIT_PLAYER),
+					label + ": on-hit rider did not follow its blow with the merged value")
+			_check(fails, riders == case["times"], "%s: got %d on-hit riders" % [label, riders])
+			var player_statuses: Dictionary = {"str": 7}
+			if not mirrored and poison > 1:
+				player_statuses["poison"] = poison - 1
+			_check(fails, e.statuses.get("poison", 0) == (poison if mirrored else 0)
+					and cb.player.statuses == player_statuses,
+				"%s: enemy statuses %s, player statuses %s" % [label, e.statuses, cb.player.statuses])
+			_check(fails, e.hp == (99 - damage if mirrored else 99)
+					and cb.player.hp == (hp_before if mirrored else hp_before - damage - poison),
+				"%s: enemy HP %d, player HP %d" % [label, e.hp, cb.player.hp])
 
 
 ## Silvering on the Eternal Keeper: what it meant to lay on you lands on it, and
