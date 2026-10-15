@@ -2,6 +2,11 @@
 
 Issue #212, lane `mythic-design`, 15 October 2026. Base `3a502235`.
 
+Round 2 (the review of PR #732) changes §1.5 (Unbowed's HP guard), §1.6 (the
+Known Road's deal), §2.4 and §2.7 (the Act IV gate on the full set), §3 (the
+Knight's route now fits his shipped death and has a scene seam), §4, §6, §7,
+§8 and §9.
+
 This is a design document. It changes no code, content, locale file or asset.
 Every name, rules line, fragment and scene line below is **[PROPOSED]** copy. It
 enters `content/` or `locale/` only through the story-draft batch (§4.4). The
@@ -67,8 +72,9 @@ Rules every mythic shares:
   with a lit lantern, so the Art is ready on turn one and Ember-priced cards cost
   nothing extra to set up. The player finds this out by playing, not by reading.
 - **Why a player shares it.** It is the story card, not a clip card. The player
-  shares the moment the Knight's hand opens (§3) and the realisation, several
-  fights later, that the lantern has not gone out since.
+  shares the third visit to the Knight's monument, where one ember has stayed
+  out of the wind (§3). Then, several fights later, the player sees that the
+  lantern has not gone out since.
 - **Mechanics.** Playing it marks the fight. On a **win** in a marked fight, the
   run stores the lantern's Embers. At the next `start_combat`, after the lantern
   quality is set, the store goes into the lantern through
@@ -133,7 +139,7 @@ Rules every mythic shares:
 
 | | en | zh-Hant |
 |---|---|---|
-| Rules | Unplayable. Unless you have Kindled this, the first time each fight you would fall, you stay standing: you cannot lose HP until the end of your next turn. If you have 0 HP then, you fall. | 無法打出。若此牌未被燃燼，每場戰鬥中你首次將要倒下時，你仍然站着：直到你下一個回合結束前，你不會失去生命。屆時若生命為 0，你才倒下。 |
+| Rules | Unplayable. Unless you have Kindled this, the first time each fight you would fall, you stay standing: until the end of your next turn, you cannot lose HP and you cannot play a card that makes you lose HP. If you have 0 HP then, you fall. | 無法打出。若此牌未被燃燼，每場戰鬥中你首次將要倒下時，你仍然站着：直到你下一個回合結束前，你不會失去生命，也不能打出令你失去生命的牌。屆時若生命為 0，你才倒下。 |
 | Upgraded | None. Like a curse, it has no `up`. | 無。 |
 
 - **The rule it breaks.** Two rules. At 0 HP you fall. And an unplayable card is
@@ -149,11 +155,22 @@ Rules every mythic shares:
   (`domain/rules/combat.gd` (`end_turn`)), if HP is still 0, the fight is lost.
   A win before then goes through `_win_combat`, which already clamps HP to at
   least 1.
-- **Interactions.** Smolder, Hex, Cinder and self-loss (Blood for Oil) are all
-  absorbed while standing. Mendglass, Hearthglow and other heals lift the doom if
-  HP is above 0 at the deadline. Kindling it gives the usual Ember and removes
-  the protection for that fight: a real choice. It works in the Own Shade fight
-  and the final fight.
+- **The HP guard.** While standing, HP cannot be a payment.
+  `domain/rules/combat.gd` (`can_play`), the one gate every play passes,
+  refuses a card whose resolved effects hold a `loseHp` effect. In the content
+  today, `loseHp` exists only on Blood for Oil (`bloodRite`, base and
+  upgraded); no relic, potion, Art or other card pays HP in a fight. Without
+  the guard, Blood for Oil gives 2 or 3 Energy for nothing while standing, and
+  two Tinder+ (`preparation` upgraded: 0 cost, draw 2, no Kindle) bring it back
+  every cycle, so the cycle never ends. With the guard, the cycle ends at the
+  stand (§7.1, the directed test in §8.2). A later card or relic that pays HP
+  in a fight must go through the same check.
+- **Interactions.** Smolder, Hex, Cinder and enemy hits are all absorbed while
+  standing. Blood for Oil can cause the stand (its `loseHp` resolves first, then
+  its Energy), and after that it cannot be played until the deadline. Mendglass,
+  Hearthglow and other heals lift the doom if HP is above 0 at the deadline.
+  Kindling it gives the usual Ember and removes the protection for that fight: a
+  real choice. It works in the Own Shade fight and the final fight.
 - **Save and load, determinism.** Fight-scoped flags. No random draw.
 
 ### 1.6 The Known Road (熟路)
@@ -166,21 +183,44 @@ Rules every mythic shares:
 - **The rule it breaks.** The deal is random. Every deckbuilder is built on it.
 - **Why a player shares it.** The perfect hand, every turn, by choice. It is a
   build screenshot and a "how did you do that" clip.
-- **Mechanics.** While it is in play, `domain/rules/combat.gd`
-  (`_start_player_turn`) does not draw the deal. It sets a pending choice of the
-  deal's size (hand size, omen delta, Night Sight, the Traveller's Pack). A new
-  command, `GlassvowGame.apply({"t": "chooseHand", "uids": [...]})`, takes the
-  chosen cards. If the draw pile holds fewer cards than the deal, the discard is
-  shuffled into it first, exactly as a normal draw would, and the player chooses
-  from the whole pile. Cards drawn later in the turn stay random.
-- **The picker.** It opens with the cards the shuffle would have dealt already
-  selected. Confirming at once is an ordinary draw, so the extra taps are only
-  for the player who wants them.
-- **Interactions.** All 0-cost draw and Energy cards Kindle, so there is no
-  infinite turn. Momentum and Phantom Blades become reliable. The hand cap of 10
-  still holds.
-- **Save and load, determinism.** Fight-scoped. The default selection is the
-  shuffle's own deal, so no extra random draw.
+- **Mechanics: the default deal is the normal draw.** While it is in play,
+  `domain/rules/combat.gd` (`_start_player_turn`) runs the normal deal
+  (`_draw_from_pile`, the same count `maxi(1, draws)`, covering hand size, omen
+  delta, Night Sight and the Traveller's Pack) into a staging list instead of
+  the hand. Staged cards count toward the hand cap of 10. So the deal takes the
+  draw pile first, from its end, and shuffles the discard (and only the
+  discard) only when the pile runs out while a card is still due. The RNG calls
+  are the same calls, in the same order, as a normal draw. The staged cards are
+  the **default deal**.
+- **The pick.** The pool is the staged cards plus the cards left in the draw
+  pile after that deal. A new command,
+  `GlassvowGame.apply({"t": "chooseHand", "uids": [...]})`, takes exactly as
+  many uids as were staged, all from the pool. A pick only swaps places: the
+  i-th chosen card that was not staged (in draw-pile order) swaps with the i-th
+  staged card that was not chosen (in deal order). The staged card goes back
+  into the draw pile at the chosen card's index. No RNG call. The chosen cards
+  then enter the hand in deal order, with their `DRAW` events; the `RESHUFFLE`
+  event stays where the deal made it. `_tally_drawn` counts the same number as
+  a normal draw. Cards drawn later in the turn stay random.
+- **Example (the short pile).** Draw pile `[A]`, discard `[B, C]`, a deal of 2.
+  The deal takes A, then shuffles B and C (one Fisher–Yates call), then takes
+  the pile's end, say C. Default deal {A, C}; B stays in the pile. The player
+  may confirm {A, C}, which is the normal draw, or pick {B, C}, which puts A
+  back in B's place. Either way the RNG cursor ends where a normal draw leaves
+  it.
+- **The picker.** It opens with the default deal already selected. Confirming
+  at once is an ordinary draw, so the extra taps are only for the player who
+  wants them.
+- **While the pick is pending,** `GlassvowGame.apply` takes only `chooseHand`:
+  no card, potion, Art or end turn. So nothing can draw or call the RNG between
+  the deal and the pick.
+- **Interactions.** It changes only which cards make up the deal. It adds no
+  card, draw or Energy, so it cannot make a finite turn infinite (§7.1).
+  Momentum and Phantom Blades become reliable. The hand cap of 10 still holds.
+- **Save and load, determinism.** Fight-scoped. A pending pick is never saved:
+  a killed fight restarts from its saved start (§1.1). The default deal is the
+  normal draw, and a pick calls no RNG, so the RNG cursor after the deal never
+  depends on the pick.
 
 ### 1.7 Clean Break (無痕)
 
@@ -289,7 +329,8 @@ if kind == "elite" and mythic_rate > 0.0 and _mythic_open(run):
 - `_mythic_pool(run)`: every card of rarity `mythic`, sorted by id (a fixed
   order), minus the aspect's `excludes` (`domain/rules/rewards.gd` (`_excluded`)),
   minus cards in the deck, minus `bankedFire` until the Knight's route is
-  complete (call 3).
+  complete (call 3), minus `unbrokenFlame` until the profile has cleared Act IV
+  (§2.7, call 16).
 - Uniform pick. No pity counter: a scheduled reward is not one anybody posts.
 
 **Why Vow 0–2 cannot move.** The rate is 0 at Vow 0–2 for every profile (with
@@ -310,8 +351,8 @@ change.
    `tests/test_balance_sim.gd` (`EXPECTED`) and (`EXPECTED_UNLIT`) and every
    `port_fixtures/` trace pass unchanged. Every `"vow"` field in
    `port_fixtures/` (33 of them) is 0.
-4. A Vow 2 run whose profile has the Knight's route at step 0 rolls its first
-   event exactly as a fresh Vow 2 run does.
+4. A Vow 2 run whose profile has the Knight's route at step 0, 1 or 2 rolls its
+   first event exactly as a fresh Vow 2 run does, and stages no scene.
 
 ### 2.5 How the drop is handed over
 
@@ -334,52 +375,92 @@ Bequest, because a player could then farm deaths to keep one. And a mythic that
 crosses runs would break "at most one per run" for the next run. In the fiction
 the card stays with the fallen walker; nothing on screen needs to say so.
 
+### 2.7 The full set waits for Act IV
+
+The settled #210 resolution (repeated on #212): "Full-set collection therefore
+requires **Vow 3 and** an Act IV clear; a lucky player may still see a mythic
+before Act IV." Without a gate, all five chance mythics can drop before Act IV,
+and the Knight's route gives Banked Fire at Vow 3. So a Vow 3 profile
+could own all six without the clear.
+
+**The rule.** The Unbroken Flame joins the elite pool only when
+`run.unlocks.has(RunState.MIRRORED_ROAD)` at run start: the profile has cleared
+Act IV at least once (§2.2). Before that, only five of the six can ever reach a
+deck (four by elite roll, Banked Fire by the route), so the set cannot be
+complete. A lucky player still sees mythics before Act IV.
+
+Why this card: its fragment is "Before it was six, it was one" (§4.1). The
+player who has stood at the door finds the fire whole. The gate needs no new
+state and no draw: `_mythic_pool` is built before the roll, so the RNG calls do
+not change; only the pool the pick reads changes, and only at Vow 3 and above.
+
+**The test.** `test_mythic_drop` › `full set needs the Act IV clear` (§8.2).
+
 ---
 
-## 3. The side quest: the Knight's amber
+## 3. The side quest: the Knight's ember
 
 ### 3.1 The idea
 
 The shipped Wounded Knight event (`assets/art/events/woundedKnight.png`) shows a
-dying knight holding out a glowing amber crystal. Every player who has met him
-has seen it. At Vow 3 the story reinterprets that image: the amber is his fire,
-banked so it would not go out. Over three Vow 3 runs the player meets him three
-times. At the third meeting he stands, still, and his hand is open.
+knight near death against a shattered pillar. All three choices (Aid him, Loot
+him, Leave) end with him on his feet, and the shipped coda follows each one:
+"The next time you come by, there is a monument at the foot of the pillar"
+(foreshadow ledger rows 377–380).
 
-Assets are immutable; story may reinterpret any shipped image (story skill §6).
-This route changes no shipped asset and no shipped event text.
+At Vow 3 the route keeps that promise. The player comes by again, twice. The
+monument stands in the wind, and in its lee one ember has not blown away. On the
+third visit the player takes it into the lantern, and it is Banked Fire.
+
+- **It fits the shipped outcome.** Meeting one is the shipped event, unchanged.
+  Meetings two and three happen at the monument. The Knight never speaks again,
+  so the route adds no line in his voice and no cast or truth row.
+- **It keeps row 380's two readings open.** At L1 the monument is either one
+  that someone set up for him or his own body (`00-truth.md` §3,
+  [SETTLED — #258 R1 Q1A]; the #340 choice recorded on row 380). The route says
+  only what a passer-by sees.
+- **It adds no canon fact.** Embers drift west on the wind (`00-truth.md` §2,
+  [SETTLED — #258 R2 Q8]). An ember out of the wind does not drift. That is
+  plain physics.
+- **Vow 0–2 see the shipped event unchanged**, and so does Vow 3: the route adds
+  only the two later visits. No shipped asset or event text changes. No
+  route-only coda override is needed.
 
 ### 3.2 Gate, steps and nodes
 
 | Step | When | Where | What happens | Progress mark |
 |---|---|---|---|---|
-| 0 → 1 | A run at Vow ≥ 3 | The first event node the run enters | The shipped `woundedKnight` event, forced in place of the roll. Choosing **Aid him** (choice 0) plays scene `knight-1` after its outcome. | `knight-1` in the Vigil's `scenes_seen` |
-| 1 → 2 | A later run at Vow ≥ 3 | The first event node | Scene `knight-2`, staged in place of an event. | `knight-2` |
+| 0 → 1 | A run at Vow ≥ 3 | The first event node the run enters | The shipped `woundedKnight` event, forced in place of the roll, with its shipped copy and coda. Choosing **Aid him** (choice 0) advances the route. No new line. | Once-flag `knight-1` (no scene) |
+| 1 → 2 | A later run at Vow ≥ 3 | The first event node | Scene `knight-2` in place of the event: the monument, and the ember in its lee. | `knight-2` |
 | 2 → 3 | A later run at Vow ≥ 3, with the run's mythic slot open | The first event node | Scene `knight-3`. Its last beat grants Banked Fire. | `knight-3` |
 
 - **The Vow 3 gate.** `run.vow >= 3`, the value fixed at run start. Below Vow 3
   the route is dormant and the event behaves exactly as today.
-- **At most one meeting per run.**
-- **Step 0 also counts a natural roll.** If the random roll gives `woundedKnight`
-  at Vow ≥ 3 while the route is at step 0, Aid him advances it the same way.
+- **At most one meeting per run** (`quest_scratch["knight"]["met"]`, §3.4).
+- **Why only Aid him advances.** All three choices end at the monument. The
+  route follows the player who stopped for him.
 - **Continuity.** At Vow ≥ 3, once the route has reached step 1, the run starts
   with `woundedKnight` already in `quest_scratch["seenEvents"]`, so the slumped
-  knight never appears beside the standing one. This reuses the existing
-  no-repeat mechanism and is gated on the vow, so Vow 0–2 rolls do not change.
+  knight never appears beside the monument. This reuses the existing no-repeat
+  mechanism and is gated on the vow, so Vow 0–2 rolls do not change.
+- **No Knight scene at a Lamplighter node.** A node where the Hollow
+  Lamplighter met the player already uses `pending_scene` for his scenes. A
+  Knight scene due there waits for the next event node (§3.4). The forced
+  step-0 event is an event, so it can still occur there.
 
 ### 3.3 Reward, failure and abandon
 
 - **Reward.** Banked Fire, granted on the last beat of `knight-3`. It fills the
   run's mythic slot (`via: "knight"`).
-- **Loot him or Leave** at step 0: no advance. The Knight is there again at the
+- **Loot him or Leave** at step 0: no advance. The event is forced again at the
   next Vow ≥ 3 run's first event node.
 - **No event node** in a run: no advance. The route waits.
-- **Death or abandon after a meeting:** the meeting counts. The mark is written
-  when the scene finishes, so it outlives the run.
-- **Killed mid-scene:** the run still points at the scene, and resume replays it
-  (the scene player's persistence-gated advance).
+- **Death or abandon after a meeting:** the meeting counts. The flag is written
+  when the meeting ends (§3.4), so it outlives the run.
+- **Killed mid-scene:** the run still holds `pending_scene` and the uncleared
+  node, and resume replays the scene from its cursor (§3.4).
 - **The run's slot is already used** when step 2 is due: `knight-3` is not
-  forced this run. It waits for a run with an open slot.
+  staged this run. It waits for a run with an open slot.
 - **After completion** the route never plays again. Banked Fire then joins the
   elite pool (call 3).
 
@@ -388,65 +469,114 @@ This route changes no shipped asset and no shipped event text.
 `domain/rules/quests.gd` is the home of quest rules, but its state machine is
 the six Emberglass journeys: `domain/state/vigil_state.gd` (`QUEST_IDS`) is fixed
 at six, and each completion lights a pane and grants a Shard. A seventh entry
-would light a seventh pane. So the route reuses the module's seam pattern
-(`domain/rules/quests.gd` (`encounter_override`)), not its state machine:
+would light a seventh pane. So the route reuses the module's seam pattern (as
+`domain/rules/quests.gd` (`stage_hollow_meeting`) stages the Lamplighter), not
+its state machine.
 
-- **Progress** is the once-flags `knight-1`, `knight-2`, `knight-3` in
-  `domain/state/vigil_state.gd` (`scenes_seen`). `application/main.gd`
-  (`_on_scene_finished`) already writes the flag Vigil first, then the run, so a
-  kill between the two replays a scene that finishes idempotently. No new Vigil
-  field.
-- **Run start.** `application/main.gd` (`_new_run`) adds `"knight": n` (flags
-  seen) to the profile. `domain/state/run_state.gd` (`new_run`) copies it into
-  `quest_scratch["knight"] = {"step": n, "met": false}`.
-- **The seam.** A static `QuestRules.knight_event(run)` returns the meeting due
-  or "". `domain/rules/rewards.gd` (`roll_event`), the one function both event
-  call sites use, returns it before its own draw. Vow is checked first.
-- **The grant.** When `knight-3` finishes, append Banked Fire **if the deck holds
-  no mythic**, then set the slot. That check makes a replayed scene grant
-  nothing twice.
-- **Scenes** are data in `content/scenes.json`. All three reuse
-  `events/woundedKnight.png`, staged by the scene player. Dedicated plates for
-  meetings 2 and 3 are optional; if made, they follow the #263 rule (new scene
-  assets allowed, owner pick).
+**Progress (Vigil).** The once-flags `knight-1`, `knight-2` and `knight-3` in
+`domain/state/vigil_state.gd` (`scenes_seen`). The Vigil load keeps any
+non-empty id there, and no code lists the flags, so `knight-1`, which has no
+scene, is a plain once-flag. No new Vigil field.
+
+**Run start.** `application/main.gd` (`_new_run`) adds `"knight": n` (flags
+seen) to the profile. `domain/state/run_state.gd` (`new_run`) copies it into
+`quest_scratch["knight"] = {"step": n, "met": false}`.
+
+**Domain seams.** Pure, no draw. Each checks `run.vow >= 3` first and does
+nothing below it.
+
+| Seam | What it does |
+|---|---|
+| `domain/rules/rewards.gd` (`roll_event`) | At step 0 with `met` false: sets `met`, adds `woundedKnight` to `seenEvents` and returns it **before** its own draw. It still returns only event ids, so both callers keep their `content.events` lookup. |
+| `QuestRules.knight_aid_flag(run, event_id, choice)` | Returns `knight-1` at step 0 for `woundedKnight`, choice 0; else "". |
+| `QuestRules.stage_knight_scene(run)` | With `met` false: returns `knight-2` at step 1, or `knight-3` at step 2 when the run's mythic slot is open (§2.3), and sets `met`. Else returns "" and changes nothing. |
+| `QuestRules.finish_knight_meeting(run, scene_id)` | For `knight-3`: appends Banked Fire **if the deck holds no mythic**, and sets the slot `{"id": "bankedFire", "via": "knight"}`. A replay grants nothing twice. |
+
+**The scene seam in `application/main.gd`.** `_show_event` and
+`_stage_hollow_exit` both call `roll_event` and keep its result as
+`eventNode`, and the event screen then indexes `content.events` with it. A
+scene id must never reach that lookup, so the scene path branches before the
+roll:
+
+1. **Meeting one's flag.** `_on_event_choice`, after the choice's ops apply,
+   asks `knight_aid_flag`. If it returns the flag, main appends it to
+   `scenes_seen`, stores the Vigil, then stores the run (the order
+   `_on_scene_finished` uses). A kill between the two stores replays the event
+   choice; the flag already holds, so the route advances once.
+2. **Before the roll.** `_show_event`, when `eventNode` is empty, calls a new
+   `_stage_knight_scene()` before `roll_event`. If `stage_knight_scene` returns
+   an id, main sets `pending_scene = {"id": id, "cursor": 0}`, stores the run
+   (on failure it undoes `pending_scene` and `met` and shows the save error)
+   and calls `_show_scene`. No `eventNode` is written, so
+   `_dispatch_current_route` never looks up a scene id in `content.events`.
+3. **Not at the Lamplighter's exit.** `_stage_hollow_exit` does not call it
+   (§3.2).
+4. **Resume.** `_route_run` shows a `pending_scene` before any route dispatch,
+   so a killed meeting replays from its cursor.
+5. **Completion.** `_stage_after_scene` gains a `knight-` branch. It calls
+   `finish_knight_meeting`, then completes the node with the state half of
+   `_finish_node` (clear the current node, write `run.map`, erase the route
+   scratch, clear `pending_hollow_route`), split out as a helper that does not
+   store. The one Vigil-then-run store at the end of `_on_scene_finished` then
+   writes the flag, the card and the cleared node together. A kill between the
+   two stores leaves the disk run on the scene and the node; resume replays the
+   scene, and the deck check stops a second grant. After the store,
+   `_route_run` shows the map.
+
+**The persisted continuation**, in short: `pending_scene` and the uncleared node
+are the whole continuation. Both are already in the run save. The meeting's own
+completion write clears them.
+
+**The simulator** (`tools/balance_sim.gd` (`_resolve_event`)). Before
+`roll_event`, it calls `stage_knight_scene`. If that returns an id, it calls
+`finish_knight_meeting` and returns: the node is done, and no event is looked
+up. The forced step-0 event needs no change there, because it is an event. The
+simulator plays no scenes, so this is its whole path.
+
+**Ownership.** Lane 3 owns all of §3.4: the domain seams, the `main.gd`
+dispatch and completion, and the simulator's path. The simulator's path lands
+in the same PR as the seam, so no Vow 3 simulator run can meet a scene id it
+cannot resolve. Lane 6 also edits `tools/balance_sim.gd`, so it follows lane 3
+(§8.1).
+
+**Scenes** are data in `content/scenes.json`. Meetings two and three must not
+reuse `events/woundedKnight.png`, because it shows him alive. Until the owner
+picks a monument plate (new scene assets allowed under the #263 rule, owner
+pick), they play plate-less over the act's stage backdrop, as the scene player
+already does for a scene without a plate (`application/main.gd`
+(`_scene_plate_act`)). Call 17.
 
 ### 3.5 Scene beats and lines [PROPOSED]
 
-Ceiling L1 (event scripts, `docs/story/04-delivery.md`). Forbidden in all three:
-碑 / monument / stone, 凝, 隊伍 / queue, 行者 / walker, any statement that he is
-the player, and any vertical word.
-
-**`knight-1`** (after Aid him)
-
-1. Beat: he pushes the chained satchel across the floor to you. The relic came
-   from there.
-2. Beat: his other hand closes over the amber.
-3. Knight: 「這個不給。還不是時候。」 / "Not this one. Not yet."
-4. Knight: 「我會在這裏。」 / "I will be here."
+Ceiling L1 (event scripts, `docs/story/04-delivery.md`). Meeting one is the
+shipped event: no new line. Forbidden in `knight-2` and `knight-3`: any line in
+the Knight's voice; any line that says or implies whose monument it is (row 380
+keeps both readings); 凝; 隊伍 / queue; 行者 / walker; 死 / die; any vertical
+word. 碑 / monument is allowed: the shipped coda already names it at L1.
 
 **`knight-2`**
 
-1. Beat: the same pillar. He is on his feet, one hand on the stone, frost-like
-   glaze on the steel.
-2. Knight: 「我站起來了。」 / "I got up."
-3. Beat: the amber glows between his closed fingers.
-4. Knight: 「它還暖。我替它擋着風。」 / "It is still warm. I am keeping the wind
-   off it."
-5. Knight: 「再來一次。」 / "Once more."
+1. Beat: the shattered pillar. At its foot, the monument. Wind crosses the road
+   and carries ash west.
+2. Narration: 「石柱前那座碑仍在。」 / "The monument is still at the foot of the
+   pillar."
+3. Beat: in the monument's lee, out of the wind, one ember glows under a skin of
+   ash.
+4. Narration: 「風吹不到碑腳。那一點火，沒有被吹走。」 / "The wind does not
+   reach the foot of the monument. That one ember has not blown away."
 
 **`knight-3`**
 
-1. Beat: he stands. No breath. The cape does not move.
-2. Narration: 「他沒有躺下。」 / "He has not lain down."
-3. Narration: 「他的手張開了。」 / "His hand is open."
-4. Beat (tap): you take the amber. The card turns to face you: Banked Fire on
-   the M0 frame, its Lantern hologram cold until you tilt it.
-5. Narration: 「仍有餘溫。」 / "Still warm."
+1. Beat: the pillar, the monument, the ember in its lee. The ash has fallen from
+   it.
+2. Narration: 「它還在。」 / "It is still there."
+3. Beat (tap): you lift the ember into your lantern. The card turns to face you:
+   Banked Fire on the M0 frame, its Lantern hologram cold until you tilt it.
+4. Narration: 「仍有餘溫。」 / "Still warm."
 
-**The Knight's voice [PROPOSED, for `docs/story/02-cast.md`].** Few words. Short
-declaratives. No names. He never says "die" or 死. He talks only of warmth, wind,
-standing and his hand. He does not know about the split, the Keeper or the door.
-He knows only that he is staying where he is.
+**The two readings.** Surface: a stone breaks the wind, and one coal survives.
+After the twist: he still stands between the wind and the fire. No line says
+which. Both readings go through the twist-safety pass (§4.3).
 
 ---
 
@@ -461,7 +591,7 @@ lore, ceiling L1.
 
 | Card | Bundle | Fragment (zh / en) | Anchor in canon |
 |---|---|---|---|
-| Banked Fire | **Quest** (§3) + fragment | 仍有餘溫。他替它擋了很久的風。 / Still warm. He kept the wind off it for a long time. | The Knight's shipped art; fire = will, glass = memory (`00-truth.md` §8.6, [SETTLED #259]) |
+| Banked Fire | **Quest** (§3) + fragment | 仍有餘溫。風吹不到碑腳。 / Still warm. The wind does not reach the foot of the monument. | The shipped coda (ledger row 380); embers drift west on the wind (`00-truth.md` §2, [SETTLED — #258 R2 Q8]); fire = will (`00-truth.md` §8.6, [SETTLED #259]) |
 | Silvering | **Event** anchor + fragment | 鏡子從不先動。這一次，它把那一擊還了回去。 / A mirror never moves first. This time, it gave the blow back. | The Silvered Mirror, 鍍銀之鏡 (ledger row 14, L1); `mirror.png` (row 10) |
 | The Unbroken Flame | Fragment | 成為六片之前，它是一團。 / Before it was six, it was one. | The surface legend of one fire and six shards (`00-truth.md` §5 note; ledger row 20) |
 | Unbowed | **Whisper** anchor + fragment | 有些人，始終沒有躺下。 / Some of them never lay down. | Whisper 11 (ledger row 1); Page 3 (row 9) |
@@ -476,11 +606,19 @@ are fixed.
 - **No new canon fact.** Every fragment leans on settled physics, shipped
   whispers, the surface legend or the shipped mirror motif. None leans on an
   [OPEN] item.
-- **One new character arc.** The Knight's route adds a voice sheet (§3.5) and an
-  information-matrix row for `00-truth.md` §4: knows the split ✗; knows that he
-  himself is becoming still, partly; knows the Keeper ✗; knows the door ✗. Both
-  are [PROPOSED]. Under the story skill (§2), the scene copy cannot ship until
-  the owner promotes them (call 2).
+- **No new character arc.** The Knight's route fits his shipped death (rows
+  377–380): meeting one is the shipped event, and meetings two and three are
+  narration at his monument. He has no new line, so the route needs no voice
+  sheet and no information-matrix row. The copy still goes through the batch
+  (§4.4).
+- **Row 380 stays open.** No route line says whose monument it is, so both L1
+  readings survive (§3.5).
+- **One reading to lint.** The post-twist reading of `knight-2` and Banked
+  Fire's fragment is "what he kept from the wind outlasts him" (fire = will).
+  Canon lint must confirm that this stays a reading and does not contradict
+  "the fire goes west, back to the hearth" (ledger row 303). If it does, cut
+  the post-twist reading to the surface one; the lines stand on the surface
+  alone.
 - **Keeper rules.** No Keeper line is written. The Keeper's rules (never lies,
   never urges departure, never claims a step) are not touched.
 - **Vocabulary.** No banned vertical word. zh uses 着 and 裏 (燃着, 擋着, 站着,
@@ -494,19 +632,18 @@ row ids).
 
 | Line | Source | Level | Surface reading | After the twist | Leak risk |
 |---|---|---|---|---|---|
-| 封火 / Banked Fire + fragment | `bankedFire` name, lore | L1 | The Knight kept a coal alive. | Unfinished will kept, like the light in each walker's chest. | Low |
+| 封火 / Banked Fire + fragment | `bankedFire` name, lore | L1 | A coal kept alive out of the wind. | What he kept from the wind outlasts him (§4.2, lint item). | Low–medium: twist-safety pass |
 | 鍍銀 / Silvering + fragment | `silvering` name, lore | L1 | A mirror throws a blow back. | "Never moves first": the one behind the glass has never walked first, until the finale. | Low–medium: twist-safety pass |
 | 未碎之火 + fragment | `unbrokenFlame` name, lore | L1 | The legend of six from one. | The whole fire the door asks for. | None |
 | 不臥 / Unbowed + fragment | `unbowed` name, lore | L1 | Brave pilgrims who would not yield. | The walkers died standing. Same weight as whisper 11. | Low |
 | 熟路 / The Known Road + fragment | `knownRoad` name, lore | L1 | Déjà vu. | The stayer never walked; the memory is second-hand, and "you are sure" is the illusion. | Medium: twist-safety pass |
 | 無痕 / Clean Break + fragment | `cleanBreak` name, lore | L1 | Glazier's craft. | Glass is memory: a clean cut leaves none. | Low |
-| 這個不給。還不是時候。 | `knight-1` | L1 | He is not ready to give it. | He is not yet still. | Low |
-| 我會在這裏。 | `knight-1` | L1 | He expects to last. | He will stand here for good. | Low |
-| 我站起來了。 | `knight-2` | L1 | He recovers a little. | He has begun to die standing. | Low |
-| 它還暖。我替它擋着風。 | `knight-2` | L1 | He shields the amber. | He keeps his own will alive. | Low |
-| 再來一次。 | `knight-2` | L1 | Come back. | One more meeting before he is still. | Low |
-| 他沒有躺下。／他的手張開了。 | `knight-3` | L1 | He died on his feet. | A walker becoming what lines the road. The nearest the route comes to L2: it must not name 碑 or 凝. | Medium: twist-safety pass |
-| 仍有餘溫。 | `knight-3` | L1 | The amber is warm. | His will outlived him. | Low |
+| 石柱前那座碑仍在。 | `knight-2` | L1 | The coda's monument is still there. | His only body still stands (`00-truth.md` §3), unread. Both row-380 readings stay open. | Low |
+| 風吹不到碑腳。那一點火，沒有被吹走。 | `knight-2` | L1 | A stone breaks the wind, and one ember stays. | He still stands between the wind and the fire. No line says so. | Low–medium: twist-safety pass |
+| 它還在。 | `knight-3` | L1 | The ember waited. | It waited in the lee of what still stands. No line says what that is. | Low |
+| 仍有餘溫。 | `knight-3`, Banked Fire lore | L1 | The coal is warm. | What he kept from the wind outlasts him (§4.2, lint item). | Low |
+
+Meeting one adds no line, so the shipped rows 377–380 are unchanged.
 
 ### 4.4 The copy pipeline
 
@@ -550,7 +687,7 @@ add no pass and make no backbuffer copy, as the holo design measured.
 
 | Card | Hologram | From | What the lean does |
 |---|---|---|---|
-| Banked Fire | **Lantern** | Toolkit, as built | The art sits cold. Past the threshold lean the banked coal inside the amber flares white-hot, warmth floods the window and the frame turns amber. |
+| Banked Fire | **Lantern** | Toolkit, as built | The art sits cold. Past the threshold lean the banked coal flares white-hot under its ash, warmth floods the window and the frame turns amber. |
 | Silvering | **Shade** | Toolkit, as built | A pale copy of the picture lags half a breath behind, the other way. At a hard lean the copy steps over the picture. |
 | The Unbroken Flame | **Six into one** | New, from toolkit parts | A six-petal mask holds six coloured shards (the three way colours, twice). At rest they sit apart. At one lean they slide into one white-gold flame. Motes drift in front. |
 | Unbowed | **Will not tilt** | New, `myth_window` with inverse parallax | The frame leans with the card; the picture holds level, so the figure stays upright whatever the tilt. No mask, so no third sampler. |
@@ -564,7 +701,8 @@ add no pass and make no backbuffer copy, as the holo design measured.
 - **The Unbroken Flame in play.** The combat lantern burns all three colours.
 - **Silvering.** The chosen enemy's intent glyph turns to face it.
 - **Unbowed.** The hero does not fall: a glazed, still hero plate with HP at 0,
-  until the deadline.
+  until the deadline. A card that makes you lose HP shows as unplayable while
+  the hero stands, as a card you cannot afford does.
 - **The Known Road.** The hand picker (§1.6).
 - **Banked Fire.** Nothing announces it. The next fight opens with the lantern
   already lit.
@@ -586,13 +724,15 @@ glyphs.** Walkers are faceless. Each plate must read on the 148×91 art window
 crop and on a 64 px thumbnail. Two candidates per card in different
 compositions; the owner picks; nothing enters `assets/` before that.
 
-1. **Banked Fire.** An armoured gauntlet, blue steel with gold trim like the
-   Knight's, cupping an amber crystal. Inside the crystal a low coal glows under
-   a skin of grey ash: banked, not blazing. Crystal on the left-centre third;
-   the gauntlet fills the lower half; behind, a broken pillar and dim leaded
-   windows. Palette: a cold blue-grey world, and the amber core is the only warm
-   colour, so the Lantern hologram's cold-to-warm reveal reads. No flame tongue:
-   the hologram supplies the flare. At 64 px: one amber jewel in blue dark.
+1. **Banked Fire.** Low and close: the foot of a weathered upright stone at the
+   base of a shattered pillar. Grey ash streams across the frame on a hard
+   diagonal. In the stone's lee, on the ground, one coal glows under a skin of
+   ash: banked, not blazing. The coal sits on the left-centre third; the stone
+   fills the right half. No figure, no armour, no inscription, and the stone has
+   no human shape (row 380's two readings stay open). Palette: a cold blue-grey
+   world, and the coal's amber is the only warm colour, so the Lantern
+   hologram's cold-to-warm reveal reads. No flame tongue: the hologram supplies
+   the flare. At 64 px: one amber point in blue dark.
 2. **Silvering.** A tall arched mirror in a leaded frame on a rubble floor. A
    hooded walker stands before it, back to us. In the glass the reflection is
    half a step out of pose: its blade is already raised while the walker's is
@@ -633,13 +773,31 @@ Check `tools/payload_budget.json` (the `assets/art/cards` group) with
 combination of mythics needs a guard: Silvering with Clean Break, for example,
 cannot happen.
 
+**What "finite" means here.** The first draft said that every 0-cost draw and
+Energy card Kindles. That is false. Tinder+ (`preparation` upgraded) and Dim the
+Glass+ (`dimTheGlass` upgraded) are 0-cost draw cards that do not Kindle, and
+Blood for Oil (`bloodRite`) is a 0-cost Energy card that does not Kindle. Two
+such draw cards can already cycle each other in the base game when the other
+cards stay in hand. That is a base-game property and out of scope here. The
+claim for the mythics is narrower, and it holds by construction:
+
+- No mythic adds a draw, an Energy source or a card. No lit rider in
+  `content/full-content.json` gives draw or Energy (of those kinds, only
+  Ember riders exist, and Embers are capped), so the Unbroken Flame, which
+  lights every rider, adds neither.
+- In the base game, Blood for Oil's Energy is bounded by HP: each play costs 3
+  HP, and 0 HP ends the fight. Unbowed is the only mythic that lifts a bound the
+  base game relies on, and its guard puts that bound back: while standing, no
+  card that makes you lose HP can be played (§1.5).
+- The Known Road changes only which cards make up the deal (§1.6).
+
 | Card | Degenerate line | Softlock | Infinite turn | Guard |
 |---|---|---|---|---|
 | Banked Fire | Turn-one Art in every fight; Crown of the Hearth heals and carries the same Embers. Accepted: subtle-overpowered is the brief. | None | None | Carry clamped to the next fight's cap; store overwritten, never added; written only on a win; read, not cleared, at fight start. |
 | Silvering | Bosses with big telegraphs kill themselves. Accepted. | None: a Staggered target's reflection waits until it acts. | None: Kindle, and one copy per deck. | Non-attack self-hit through `hit_enemy`, so the finale handoff holds; card-adding parts are dropped. |
-| The Unbroken Flame | Draft anything; every rider fires. Accepted. | None | None | Only riders change; tier and lantern quality do not. |
-| Unbowed | Fall on purpose for a turn of immunity; self-loss is free while standing. Accepted. | None: the deadline always resolves the fight. | None: once per fight. | Kindle disables it; HP cannot fall below 0; the normal win path sets HP to 1. |
-| The Known Road | A perfect hand every turn. Accepted. | Picker with fewer cards than the deal: it takes what exists and confirms. Empty piles give an empty hand, as today. | None: the choice is only at the deal, later draws are random, and all 0-cost draw and Energy cards Kindle. | Validate chosen uids against the draw pile; default selection is the shuffle's own deal; hand cap 10. |
+| The Unbroken Flame | Draft anything; every rider fires. Accepted. | None | None: no lit rider gives draw or Energy. | Only riders change; tier and lantern quality do not. |
+| Unbowed | Fall on purpose for a turn of immunity. Accepted. | None: the deadline always resolves the fight. | None. While standing, HP is no payment, so the Blood for Oil and Tinder+ cycle ends at the stand (directed test, §8.2). | Kindle disables it; while standing, `can_play` refuses any card with a `loseHp` effect; HP cannot fall below 0; the normal win path sets HP to 1. |
+| The Known Road | A perfect hand every turn. Accepted. | A pool smaller than the deal: the deal takes what exists, as today. Empty piles give an empty hand, as today. | None added: it changes only which cards make up the deal, and later draws stay random. | The default deal is the normal draw (same cards, same RNG calls, same order); a pick only swaps cards with the draw pile and calls no RNG; while the pick is pending, `apply` takes only `chooseHand`; uids validated against the pool; hand cap 10. |
 | Clean Break | A strong Shatter deck Staggers an enemy every turn, so it never acts. A player win, not a softlock. Accepted. | None | None | Fight-scoped; the adamant hold still fires once. |
 
 ### 7.2 What the implementation lane must run
@@ -650,11 +808,19 @@ cannot happen.
   the same seeds. Set the sim profile's Knight route to complete, so the route
   does not change the event rolls. `--jobs 4` or fewer, one batch at a time (the
   Mac is shared with ks2's CI).
-- **Natural-drop arm.** Vow 5, 1,000 seeds, no forcing: count offers per elite
-  clear against 5%. And Vow 2, 200 seeds: there must be zero offers.
+- **Natural-drop arm.** Vow 5, 1,000 seeds, no forcing, a profile without the
+  Act IV clear. The roll stops after the first mythic of a run, so elite clears
+  are the wrong denominator. For each elite clear, record whether a roll was
+  made (the guard passed and the pool was not empty: an **eligible roll
+  attempt**) and the rate it used. The expected offer count is the sum of those
+  rates, and its standard deviation is the square root of the sum of
+  `r × (1 − r)`. At Vow 5 before the clear every rate is 5%. Also count The
+  Unbroken Flame's offers: there must be zero (§2.7). And Vow 2, 200 seeds:
+  there must be zero eligible attempts and zero offers.
 - **Sim support** (§8, lane 6): a `--mythic=<id>` option, the pilot's play rule
   for each mythic (Silvering targets the largest incoming hit; the Known Road
-  picks by the pilot's card score), and the invariant checks below.
+  picks by the pilot's card score), the eligible-attempt record, and the
+  invariant checks below.
 
 **A failure is any of these:**
 
@@ -665,10 +831,12 @@ cannot happen.
   trace changing;
 - a mythic offered at Vow 0–2, or appearing in a shop, an event or the normal
   Offering;
+- The Unbroken Flame offered to a profile without the Act IV clear;
 - two mythics in one deck;
 - Embers above the lantern's cap, a hand above 10, or HP below 0 at a fight's
   end;
-- the natural-drop count outside three standard deviations of the curve.
+- the natural-drop offer count outside three standard deviations of the count
+  expected over the eligible roll attempts.
 
 **Information only:** win rate, turns per fight, HP at each act's end, deck
 size, deaths by act. Win-rate deltas do not fail anything.
@@ -684,15 +852,16 @@ sequence, never in parallel.
 
 | # | Lane | Owns | Needs | Proof |
 |---|---|---|---|---|
-| 1 | **Story copy** | `docs/story/05-foreshadow-ledger.md`, `docs/story/02-cast.md` (Knight row), `docs/story/00-truth.md` §4 (Knight row), a batch file under `docs/story/batches/` | Owner promotion of the Knight row (call 2) | The story-draft workflow; `tools/check_anchors.py` |
+| 1 | **Story copy** | `docs/story/05-foreshadow-ledger.md`, a batch file under `docs/story/batches/` | Nothing; starts at once (the route adds no cast or truth row) | The story-draft workflow; `tools/check_anchors.py` |
 | 2 | **Tier, drop and the six rules** | `content/full-content.json` (six rows), `locale/en.json`, `locale/zh-Hant.json` (card leaves, `ui.rarity.mythic`), `tools/vow_incentives.gd`, `domain/game.gd`, `domain/rules/rewards.gd` (roll), `domain/rules/combat.gd`, `domain/state/combat_state.gd`, `domain/state/run_state.gd` (`_valid_pending_reward`), `content/content_db.gd`, `application/main.gd` (Bequest, duplicate, reward claim, `chooseHand` routing), font subsets | Lane 1's promoted strings | The core Godot gate; new tests (§8.2); the counts (§8.3) |
-| 3 | **The Knight's route** | `domain/rules/quests.gd` (a new `knight_event`), `domain/rules/rewards.gd` (the `roll_event` seam only), `domain/state/run_state.gd` (`new_run`), `content/scenes.json`, scene locale leaves, `application/main.gd` (`_new_run`, `_on_scene_finished`, the Aid him hook) | Lanes 1 and 2 merged | The core gate; route tests; scene stills at three shapes |
+| 3 | **The Knight's route** | `domain/rules/quests.gd` (`knight_aid_flag`, `stage_knight_scene`, `finish_knight_meeting`), `domain/rules/rewards.gd` (the `roll_event` seam only), `domain/state/run_state.gd` (`new_run`), `content/scenes.json`, scene locale leaves, `application/main.gd` (`_new_run`, `_show_event`, `_on_event_choice`, `_stage_after_scene`, the `_finish_node` split), `tools/balance_sim.gd` (`_resolve_event`, the Knight path only) | Lanes 1 and 2 merged | The core gate; route tests; scene stills at three shapes |
 | 4 | **Presentation** | `presentation/cards/` (M0, the six recipes, from `b16c1501`), `presentation/combat/card_view.gd`, `presentation/combat/card_surface.gd`, `presentation/reward/`, the combat screen's lantern, intent, standing and hand-picker views, `presentation/lab/card_lab.gd` | Lane 2 merged (faces can start earlier in the lab with stand-in art) | Stills at the three reference shapes, looked at; an A12 iPad combat-frame read with a mythic in hand (QA app, shared lock) |
 | 5 | **Art** | Candidate plates and contact sheets under `docs/reviews/`; after the owner's pick, `assets/art/cards/<id>.jpg` and a `docs/art-ledger.md` entry | Nothing; starts at once | Owner pick; the payload report |
-| 6 | **Balance read** | `tools/balance_sim.gd`, `tools/balance_pilot.gd`, `tools/balance_policy.gd` (a `mythic` rarity value) | Lane 2 merged | The runs and failure rules of §7.2 |
+| 6 | **Balance read** | `tools/balance_sim.gd` (all but the Knight path), `tools/balance_pilot.gd`, `tools/balance_policy.gd` (a `mythic` rarity value) | Lanes 2 and 3 merged | The runs and failure rules of §7.2 |
 
 Order: 1 and 5 start now. 2 follows 1. 3, 4 and 6 follow 2. 3 and 4 both touch
-`application/main.gd`, so run them in sequence.
+`application/main.gd`, so run them in sequence. 6 follows 3, because both touch
+`tools/balance_sim.gd`.
 
 `domain/rules/combat.gd` gains six small mechanics in lane 2. If the lane's diff
 there passes 600 lines in one commit, split the commit (CLAUDE.md stop
@@ -709,16 +878,46 @@ New tests, each able to fail:
   Bequest offers the rare, never the mythic; the duplicate pick excludes a
   mythic; a pending reward with a mythic round-trips, an unknown id rejects the
   save, an old save without the key loads.
+  - **`full set needs the Act IV clear`** (§2.7): for a profile without
+    `mirroredRoad`, at Vow 3, 4 and 5, over every deck and route state,
+    `_mythic_pool` never holds `unbrokenFlame`, and the route grants only
+    `bankedFire`. So the ids that can reach a deck number five, not six. With
+    `mirroredRoad`, the pool holds `unbrokenFlame`. Mutation check: remove the
+    gate, and the test must fail.
 - **`test_mythic_cards`**, one case per card: Banked Fire carries, clamps to the
   new cap and survives a restarted fight; Silvering's self-hit, including the
   Eternal Keeper stopping at 1 HP; the Unbroken Flame lights every rider and
   leaves the tier alone; Unbowed's deadline, Kindle disabling it, healing lifting
-  the doom, and a win setting HP to 1; the Known Road's validation, default
-  selection and short-pile case; Clean Break holding `facet_max` and still
-  honouring adamant.
-- **`test_knight_route`**: Vow 2 untouched; Vow 3 step 0 forces `woundedKnight`
-  with no draw; one meeting per run; `knight-3` deferred while the slot is used;
-  a replayed `knight-3` grants nothing twice.
+  the doom, and a win setting HP to 1; Clean Break holding `facet_max` and still
+  honouring adamant. Two directed cases:
+  - **Unbowed: the Blood for Oil cycle ends.** Hand: Unbowed, Blood for Oil and
+    two Tinder+; empty draw and discard piles; 6 HP; 0 Energy. The cycle: play
+    Blood for Oil, then play Tinder+ until Blood for Oil is back in hand. The
+    cycle ends when Blood for Oil is in hand and `can_play` refuses it. Assert
+    that it ends, that Blood for Oil was played exactly twice (6 → 3 HP, then
+    the stand at 0), that the cycle gained exactly 4 Energy, and that
+    `can_play` still refuses it while standing. A limit of 100 plays is a
+    harness bound that fails the test if reached; it is not a game rule.
+    Mutation check: remove the HP guard, and Blood for Oil is playable on every
+    return, so the cycle reaches the bound and the test fails.
+  - **The Known Road: the short pile.** Draw pile `[A]`, discard `[B, C]`, a
+    deal of 2, one seed. (1) A normal draw and the Known Road confirmed at
+    once give the same hand uids in the same order and the same
+    `run.rng_state()`. (2) The Known Road with the pick {B, C} ends with the
+    same `run.rng_state()` as the normal draw, with A in the draw pile. (3) A
+    full draw pile calls no RNG during the deal or the pick. Also: uids outside
+    the pool or of the wrong count are refused, and while the pick is pending,
+    every other command is refused.
+- **`test_knight_route`**: Vow 2 untouched at steps 0, 1 and 2; Vow 3 step 0
+  forces `woundedKnight` with no draw; Aid him writes `knight-1`, Loot and
+  Leave write nothing; one meeting per run; at steps 1 and 2 `_show_event`
+  stages the scene and writes no `eventNode`, and no scene id ever reaches
+  `content.events`; the scene's completion clears the node in the same store;
+  a kill between the Vigil and run stores replays the scene, and a replayed
+  `knight-3` grants nothing twice; no Knight scene at the Lamplighter's exit;
+  `knight-3` deferred while the slot is used; the simulator's
+  `_resolve_event` completes a due scene at step 1 and grants Banked Fire at
+  step 2 without an event lookup.
 
 ### 8.3 The hard-coded counts
 
@@ -753,15 +952,20 @@ Vigil. `SAVE_VERSION` stays 2. Content ids are append-only.
 
 ## 9. Calls the owner may re-pick
 
-Each line gives the call made here, then the alternative.
+Each line gives the call made here, then the alternative. (R2) marks a call
+that round 2 changed or added.
 
 1. **The six rules.** Lantern goes dark, intent, one flame colour, falling at 0
    HP, a random deal, glass reseaming harder. Alternatives considered: an HP
    swap with an enemy (dropped: it rhymes with the finale's swap, an L4 secret);
    extra turns and keeping the hand (dropped: the genre already has them).
-2. **The guaranteed route is the Wounded Knight**, three meetings over three Vow
-   3 runs. It needs the owner to promote the Knight's voice sheet and matrix row.
-   Alternative: a one-run route of three steps.
+2. (R2) **The guaranteed route is the Wounded Knight**, over three Vow 3 runs:
+   the shipped event (Aid him), then two visits to the monument the shipped
+   coda promises, where one ember stays out of the wind. He has no new line,
+   so the route needs no voice sheet and no matrix row. The first draft had him
+   speak after his death, which contradicted rows 377–380. Alternatives: a
+   one-run route of three steps; or a route-only coda override that keeps him
+   alive (not needed, so not specified).
 3. **Banked Fire joins the elite roll after the route completes.** Alternatives:
    never again, or a route that repeats every run.
 4. **A mythic cannot be bequeathed.** Alternative: it can, and it fills the next
@@ -779,9 +983,13 @@ Each line gives the call made here, then the alternative.
    ten needs a second seal. Alternative: a plain seal.
 10. **Names** (zh first): 封火, 鍍銀, 未碎之火, 不臥, 熟路, 無痕. "The Broken Halo"
     was dropped because an Act IV enemy move already uses it.
-11. **Unbowed is Unplayable and passive**, and Kindling it gives up the
-    protection. Alternative: a playable power.
-12. **The Known Road's picker preselects the shuffle's deal.**
+11. (R2) **Unbowed is Unplayable and passive**, and Kindling it gives up the
+    protection. While it holds you, you cannot play a card that makes you lose
+    HP (the loop guard, on the card's own text). Alternatives: a playable
+    power; or a hidden cap on HP payments (not readable on the card).
+12. (R2) **The Known Road's default deal is the normal draw**, preselected, and
+    a pick only swaps cards with the draw pile. Alternative: the player picks
+    from the whole draw and discard (needs a different RNG story).
 13. **All six are clear glass** and never move the Flame. Alternative: Banked
     Fire carries Lantern affinity.
 14. **No Keeper line acknowledges a mythic.** A dual-reading hearth line ("that
@@ -789,3 +997,10 @@ Each line gives the call made here, then the alternative.
     condition.
 15. **The shipped Wounded Knight event stays in the random pool** at every vow.
     Only Vow 3+ runs on the route hide it.
+16. (R2) **The Unbroken Flame waits for the first Act IV clear.** Before it,
+    five mythics can drop, so the full set needs Vow 3 and an Act IV clear
+    (#210). Alternatives: gate a different card; or gate the Knight's last
+    meeting on the clear (that delays the guaranteed mythic past Act IV).
+17. (R2) **Meetings two and three play plate-less** over the act's backdrop
+    until the owner picks a monument plate. Alternative: commission the plate
+    with the six card plates (lane 5).
