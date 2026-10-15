@@ -8,10 +8,12 @@ extends RefCounted
 ## #544 A8, Endure's first wall lane (Vitrify, `ironSkin`, in the Ashwarden's
 ## `excludes.cards`), moved them from 4376691e… / 9f72ef7a…. #544 A8, Endure's
 ## second wall lane (Thirsting Shard, `leechBlade`, leaves Endure's affinity),
-## moved them from abb82590… / 5adbd58a….
+## moved them from abb82590… / 5adbd58a…. #212's mythic set (six `mythic`
+## cards in no `cardPools` tier, so no balance pool changes) moved them from
+## 3eea1429… / 0aff175e….
 
-const LIVE_FILE: String = "3eea14297900c7f240fa0be9108279e7dc859b1cb29788e7a3cfc54d5b55aaf5"
-const LIVE_SEMANTIC: String = "0aff175e300170675c3b76ad7ee0503360a514e065e8630d55f994f07857c88f"
+const LIVE_FILE: String = "922635e5a1529a5ff306df4c5bc4a884dbd2e246cceac7b4a3e84ce29b38cd67"
+const LIVE_SEMANTIC: String = "c7bfa20100fdc20ea8e021ccf4a56567dc0f5b937be05176155da8213af4a053"
 
 
 static func run(fails: Array[String]) -> void:

@@ -53,7 +53,7 @@ const HOVER_RISE: float = 8.0
 const HOVER_SCALE: float = 1.05
 const HOVER_TIME: float = 0.18
 const HEADING_H: float = 34.0
-const RARITY_ORDER: Array = ["starter", "common", "uncommon", "rare", "special"]
+const RARITY_ORDER: Array = ["starter", "common", "uncommon", "rare", "mythic", "special"]
 
 ## Lab ids for the card backs: `back:<id>` for every back in the catalogue
 ## (content/card-backs.json), e.g. `--cards=back:vault,back:rose,back:eclipse`
@@ -227,9 +227,9 @@ func _init(content_ref: ContentDB, only: PackedStringArray = PackedStringArray()
 	var plan: Array[Array] = []          # [[card id, recipe or ""], ...]
 	if surfaces.is_empty():
 		for id: String in ids:
-			# Backs ride the catalogue for the studio and the surfaces sheet;
-			# the parity sheet stays the benchmark's 61 cards, no more.
-			if str(_catalog.get(id, {}).get("rarity", "")) == "back" \
+			# Backs and mythics (#212) ride the catalogue for the studio and the
+			# surfaces sheet; the parity sheet stays the benchmark's cards, no more.
+			if str(_catalog.get(id, {}).get("rarity", "")) in ["back", "mythic"] \
 					and not only.has(id):
 				continue
 			plan.append([id, ""])

@@ -19,6 +19,20 @@ var rarity_shift: float = 0.0
 var rarity_uncommon_only: bool = false
 var gold_vow_mult: float = 1.0
 var elite_relic_second: float = 0.0
+## The mythic roll per elite clear (#212 §2.2); 0 below Vow 3.
+var mythic_rate: float = 0.0
+
+## #212 O6: the mythic set ships dark until its presentation lands (lane 4).
+## While this is off, no mythic is rolled or granted and no draw is made for
+## one; tests turn it on, as `MapJourneyProfile.rows` holds a dev land back.
+static var mythics_live: bool = false
+## The run's one mythic slot (#212 §2.3): `{"id", "via", "embers"}` in
+## `run.quest_scratch`, written when a mythic is rolled or granted.
+const MYTHIC_SLOT: String = "mythic"
+const BANKED_FIRE: String = "bankedFire"
+const UNBROKEN_FLAME: String = "unbrokenFlame"
+## `quest_scratch["knight"]["step"]` once the Knight's route is complete (§3.2).
+const KNIGHT_ROUTE_DONE: int = 3
 
 ## A lean on every way at once (flame lock §8, the Kindling lift): an entry with
 ## at least 0.5 affinity to any way takes it once, whatever its colours.
@@ -241,7 +255,8 @@ func _crown_of(run: RunState, way_id: String, available: Array[String], taken: S
 	return ""
 
 
-## {"gold": int, "cards": Array[String], "potion": null|String, "relic": null|String}
+## {"gold": int, "cards": Array[String], "potion": null|String, "relic": null|String},
+## plus "relic2" and "mythic" (an elite's Spoils, #212 §2.5) when they drop.
 func gen_combat_rewards(run: RunState, kind: String, affix: StringName = &"") -> Dictionary:
 	var tier_key: String = "boss" if kind == "boss" else ("elite" if kind == "elite" else "normal")
 	var act_row: Dictionary = content.reward_gold[
@@ -267,9 +282,52 @@ func gen_combat_rewards(run: RunState, kind: String, affix: StringName = &"") ->
 		relic = _random_relic(run)
 		if elite_relic_second > 0.0 and run.rng.next() < elite_relic_second:
 			relic2 = _random_relic(run)
+	# #212 §2.4, O1 by construction: no draw unless the rate is above 0 (Vow 3
+	# and up), the set is live and the run's slot is open; the pool draws nothing.
+	var mythic: Variant = null
+	if kind == "elite" and mythic_rate > 0.0 and mythic_slot_open(run):
+		var pool: Array[String] = mythic_pool(run)
+		if not pool.is_empty() and run.rng.next() < mythic_rate:
+			mythic = pool[run.rng.pick_index(pool.size())]
+			run.quest_scratch[MYTHIC_SLOT] = {"id": mythic, "via": "elite"}
 	var out: Dictionary = {"gold": gold, "cards": cards, "potion": potion, "relic": relic}
 	if relic2 != null:
 		out["relic2"] = relic2
+	if mythic != null:
+		out["mythic"] = mythic
+	return out
+
+
+## The run's one mythic slot (#212 §2.3) is open only while the set is live
+## (O6), no mythic has been rolled or granted this run and the deck holds none.
+## The Knight's route asks the same before it grants Banked Fire.
+func mythic_slot_open(run: RunState) -> bool:
+	if not mythics_live or run.quest_scratch.has(MYTHIC_SLOT):
+		return false
+	for card: CardInst in run.player.deck:
+		if content.is_mythic(String(card.id)):
+			return false
+	return true
+
+
+## What an elite may hand this run (#212 §2.4, §2.7): every mythic in id order,
+## less the aspect's exclusions and the deck, Banked Fire only once the Knight's
+## route is complete, the Unbroken Flame only once the profile has cleared Act IV.
+func mythic_pool(run: RunState) -> Array[String]:
+	var excluded: Array = _excluded(run, "cards")
+	var held: Array[String] = []
+	for card: CardInst in run.player.deck:
+		held.append(String(card.id))
+	var knight_v: Variant = run.quest_scratch.get("knight", {})
+	var knight: Dictionary = knight_v if typeof(knight_v) == TYPE_DICTIONARY else {}
+	var route_done: bool = _ji(knight.get("step", 0)) >= KNIGHT_ROUTE_DONE
+	var out: Array[String] = []
+	for id: String in content.mythic_ids():
+		if excluded.has(id) or held.has(id) \
+				or (id == BANKED_FIRE and not route_done) \
+				or (id == UNBROKEN_FLAME and not run.unlocks.has(RunState.MIRRORED_ROAD)):
+			continue
+		out.append(id)
 	return out
 
 

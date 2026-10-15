@@ -29,7 +29,7 @@ const DISPLAY_LEAVES: Dictionary = {
 	"deathDialogue": true, "resolved": true, "accepted": true, "final": true,
 	"huntInscription": true, "huntName": true, "bought": true, "death": true,
 	"itemName": true, "itemText": true, "poor": true, "ask": true,
-	"cannot": true, "paid": true,
+	"cannot": true, "paid": true, "lore": true,
 }
 const DISPLAY_STRING_ARRAYS: Dictionary = {
 	"waystoneEchoes": true, "fragments": true, "progress": true, "pages": true,

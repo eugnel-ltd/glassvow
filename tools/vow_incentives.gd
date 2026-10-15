@@ -62,9 +62,12 @@ static func reset(rewards: RewardRules) -> void:
 	rewards.rarity_uncommon_only = false
 	rewards.gold_vow_mult = 1.0
 	rewards.elite_relic_second = 0.0
+	rewards.mythic_rate = 0.0
 
 
-static func apply(rewards: RewardRules, mix: Dictionary, vow: int) -> void:
+## `post_act4`: the profile has cleared Act IV (`RunState.MIRRORED_ROAD` at run
+## start), which adds the mix's post-Act-IV mythic delta (#212 §2.2).
+static func apply(rewards: RewardRules, mix: Dictionary, vow: int, post_act4: bool = false) -> void:
 	reset(rewards)
 	if mix.is_empty() or str(mix.get("id", "")) == NONE_ID:
 		return
@@ -81,8 +84,11 @@ static func apply(rewards: RewardRules, mix: Dictionary, vow: int) -> void:
 	else:
 		rewards.gold_vow_mult = 1.0 + gold_pp * float(vow)
 	rewards.elite_relic_second = float(str(mix.get("elite_second", 0))) if vow >= 4 else 0.0
+	rewards.mythic_rate = mythic_rate(mix, vow, post_act4)
 
 
+## A rung whose own rate is 0 stays 0 after Act IV (#212 §2.2, O1): the
+## post-Act-IV delta never lifts Vow 0-2 above zero, so no draw is made there.
 static func mythic_rate(mix: Dictionary, vow: int, post_act4: bool) -> float:
 	if mix.is_empty():
 		return 0.0
@@ -92,6 +98,8 @@ static func mythic_rate(mix: Dictionary, vow: int, post_act4: bool) -> float:
 	var rates: Array = rates_v
 	var idx: int = clampi(vow, 0, maxi(0, rates.size() - 1))
 	var rate: float = float(str(rates[idx])) if idx < rates.size() else 0.0
+	if rate <= 0.0:
+		return 0.0
 	if not post_act4:
 		return rate
 	var delta: float = float(str(mix.get("mythic_post_delta", 0)))

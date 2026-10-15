@@ -4,6 +4,8 @@ extends Control
 ## title, durable run checkpoints, the benchmark map, combat and terminal
 ## screens. Domain mutation remains behind GlassvowGame and its rules.
 
+## `mythic` is left out on purpose (#212 §1.8, §2.6): a rarity this map does not
+## name ranks 0, so the Bequest never offers a mythic and offers the best other.
 const RARITY_RANK: Dictionary = {
 	"starter": 0, "special": 0, "common": 1, "uncommon": 2, "rare": 3, "boss": 4,
 }
@@ -3036,6 +3038,9 @@ func _show_event_pick(pending: Dictionary) -> void:
 	else:
 		for card: CardInst in game.run.player.deck:
 			var definition: Dictionary = content.cards.get(String(card.id), {})
+			# The Mirror never copies a mythic: a deck holds one at most (#212 §1.8).
+			if kind == "duplicate" and content.is_mythic(String(card.id)):
+				continue
 			if kind != "upgrade" or (not card.up and definition.has("up")):
 				choices.append(_card_choice(card, str(card.uid)))
 	if choices.is_empty():
@@ -3060,8 +3065,9 @@ func _on_event_pick(id: String, kind: String) -> void:
 				"remove": game.run.player.deck.erase(picked)
 				"upgrade": picked.up = true
 				"duplicate":
-					game.run.player.deck.append(CardInst.new(
-						game.run.next_uid(), picked.id, picked.up))
+					if not content.is_mythic(String(picked.id)):
+						game.run.player.deck.append(CardInst.new(
+							game.run.next_uid(), picked.id, picked.up))
 	_read_flame_at_event()
 	_continue_event_after_ops()
 
@@ -3856,8 +3862,8 @@ func _on_reward_claimed(what: StringName, id: String) -> void:
 			game.run.player.gold += gold
 			game.run.stats["goldEarned"] = int(float(str(
 				game.run.stats.get("goldEarned", 0)))) + gold
-		&"card":
-			if not id.is_empty():
+		&"card", &"mythic":
+			if not id.is_empty() and (RewardRules.mythics_live or not content.is_mythic(id)):
 				game.run.player.deck.append(CardInst.new(game.run.next_uid(), StringName(id), false))
 		&"potion":
 			var slot: int = game.run.player.potions.find("")
@@ -3950,6 +3956,16 @@ func _on_reward_finished() -> void:
 	# from there.
 	if _choice_screen != null:
 		return
+	# A mythic is a Spoil, never declined (#212 §2.5): walking on banks it if
+	# the screen has not, in the same write that clears the reward.
+	if typeof(game.run.pending_reward) == TYPE_DICTIONARY:
+		var pending: Dictionary = game.run.pending_reward
+		var rewards: Dictionary = pending["rewards"]
+		var taken: Dictionary = pending["taken"]
+		var mythic_v: Variant = rewards.get("mythic")
+		if RewardRules.mythics_live and mythic_v != null and not taken.get("mythic", false):
+			game.run.player.deck.append(CardInst.new(
+				game.run.next_uid(), StringName(str(mythic_v)), false))
 	game.run.pending_reward = null
 	_map.clear_current()
 	game.run.map = _map.to_dict()

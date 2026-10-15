@@ -285,8 +285,10 @@ clear, plus 1 pp once Act IV has been cleared (`"stack"`).
 
 The run columns are arithmetic, `1 - (1 - r)^E`, not measurements. Three and
 six elites per run are two illustrative routes; how many elites a real route
-meets is not measured here (lane 6 can count it). A specific mythic is one fifth
-or one sixth of these figures (§2.4).
+meets is not measured here (lane 6 can count it). A specific mythic is one
+quarter, one fifth or one sixth of these figures: the eligible pool holds four
+mythics until the Knight's route is complete and the profile has cleared Act IV,
+five once one of the two holds, and six once both do (§2.4, §2.7).
 
 **A leak to close.** `tools/vow_incentives.gd` (`mythic_rate`) adds the post-Act-IV
 delta to whatever the rung holds, so at Vow 0 after Act IV it returns 0.01. That
