@@ -5,7 +5,9 @@ extends RefCounted
 ## entry's knobs are validated, the cards wear what the map says (the rare's
 ## shine steps aside; a picture turn hands the hologram back), and the motion
 ## signal calibrates, clamps, holds still under Reduce Motion, survives a
-## missing sensor and lets the gyroscope's twist decay home.
+## missing sensor and lets the gyroscope's twist decay home; it polls no sensor
+## under Reduce Motion, doubts iOS readings already in the screen's axes, and
+## lets the pointer light the cards on a touchscreen laptop.
 
 const SH: String = "res://presentation/cards/holo/"
 
@@ -25,6 +27,11 @@ static func run(fails: Array[String]) -> void:
 	_gyro_twist(fails)
 	_lean_matches_the_slab(fails)
 	_screen_axes(fails)
+	_still_polls_no_sensor(fails)
+	_ios_axes_doubt(fails)
+	_pointer_lights(fails)
+	_ambient_pointer_dispatch(fails)
+	_ambient_ios_axes_warning(fails)
 
 
 static func _fronts_by_tier(fails: Array[String]) -> void:
@@ -354,3 +361,155 @@ static func _screen_axes(fails: Array[String]) -> void:
 		if not crossed.is_equal_approx(HoloMotion.to_screen(a.cross(b), d)) \
 				or HoloMotion.to_screen(Vector3(0, 0, 1), d) != Vector3(0, 0, 1):
 			fails.append("holo: the screen frame for landscape %+.0f is not a turn" % d)
+
+
+## Under Reduce Motion the shared signal holds the still pose and polls no
+## sensor at all; with it off, the same frame polls them once.
+static func _still_polls_no_sensor(fails: Array[String]) -> void:
+	var prefs: Preferences = Preferences.active
+	var forced: Variant = HoloMotion._forced
+	var reads: Array[int] = [0]
+	HoloMotion._forced = false
+	HoloMotion._sensors = func() -> Array:
+		reads[0] += 1
+		return [FLAT, Vector3.ZERO]
+	for reduce: bool in [true, false]:
+		Preferences.active = Preferences.new()
+		Preferences.active.reduce_motion = reduce
+		reads[0] = 0
+		HoloMotion._stepped = -2
+		var t: Vector2 = HoloMotion.ambient(null, 1.0 / 60.0)
+		if reduce and (reads[0] != 0 or t != HoloMotion.STILL_POSE):
+			fails.append("holo: under Reduce Motion the signal polled the sensors %d times and reads %s"
+				% [reads[0], str(t)])
+		if not reduce and reads[0] != 1:
+			fails.append("holo: with motion on, a frame polled the sensors %d times, want once" % reads[0])
+	HoloMotion._sensors = Callable()
+	HoloMotion._forced = forced
+	HoloMotion._stepped = -2
+	Preferences.active = prefs
+
+
+## The iOS map is proven on the iPad 8 only (portrait axes; upright on its
+## stand, gravity along +x). A reading already turned to the screen (gravity
+## down the device's y) raises the doubt; the stand, a propped or flat pad
+## and no sensor do not.
+static func _ios_axes_doubt(fails: Array[String]) -> void:
+	var calm: Dictionary = {
+		"the stand": Vector3(9.81, 0.06, 0.12),
+		"a pad propped at 45 degrees": Vector3(6.9, 0.1, -6.9),
+		"a pad lying flat": Vector3(0.5, 0.3, -9.8),
+		"no sensor": Vector3(0.2, 0.4, 0.0),
+	}
+	for label: String in calm:
+		var m: HoloMotion = HoloMotion.new()
+		var g: Vector3 = calm[label]
+		var out: Array[Vector3] = m.from_portrait(g, Vector3.ZERO)
+		if m.axes_doubt:
+			fails.append("holo: %s raised the iOS axes doubt" % label)
+		if label == "the stand" and not out[0].is_equal_approx(Vector3(0.06, -9.81, 0.12)):
+			fails.append("holo: the stand's reading maps to %s, want down the screen" % str(out[0]))
+	var turned: HoloMotion = HoloMotion.new()
+	turned.from_portrait(Vector3(0.07, -9.80, 0.21), Vector3.ZERO)
+	if not turned.axes_doubt:
+		fails.append("holo: a reading already in the screen's axes raised no doubt")
+
+
+## The pointer lights the cards on any desktop, a touchscreen laptop too, and
+## never on a phone or pad (Android reports a mouse) or a touch-only screen.
+static func _pointer_lights(fails: Array[String]) -> void:
+	# [handheld, touchscreen, has_mouse, lights]
+	var cases: Dictionary = {
+		"a desktop": [false, false, true, true],
+		"a touchscreen laptop": [false, true, true, true],
+		"a touch-only desktop screen": [false, true, false, false],
+		"a pad": [true, true, false, false],
+		"an Android phone": [true, true, true, false],
+	}
+	for label: String in cases:
+		var c: Array = cases[label]
+		var handheld: bool = c[0]
+		var touch: bool = c[1]
+		var mouse: bool = c[2]
+		var want: bool = c[3]
+		if HoloMotion.pointer_lights(handheld, touch, mouse) != want:
+			fails.append("holo: on %s the pointer lights %s, want %s" % [label, not want, want])
+
+
+static func _restore_holo_hooks(saved: Dictionary) -> void:
+	HoloMotion._sensors = saved.get("sensors", Callable())
+	HoloMotion._platform_facts = saved.get("platform", Callable())
+	HoloMotion._pointer_at = saved.get("pointer", Callable())
+	HoloMotion._warn_hook = saved.get("warn", Callable())
+	HoloMotion._forced = saved.get("forced")
+	HoloMotion._stepped = -2
+	HoloMotion._shared = null
+	Preferences.active = saved.get("prefs")
+
+
+static func _save_holo_hooks() -> Dictionary:
+	return {
+		"sensors": HoloMotion._sensors,
+		"platform": HoloMotion._platform_facts,
+		"pointer": HoloMotion._pointer_at,
+		"warn": HoloMotion._warn_hook,
+		"forced": HoloMotion._forced,
+		"prefs": Preferences.active,
+	}
+
+
+## Through `ambient()` / `_pointer()`, not the helpers alone: a touchscreen
+## laptop's pointer lights the signal; a handheld Android mouse does not.
+static func _ambient_pointer_dispatch(fails: Array[String]) -> void:
+	var saved: Dictionary = _save_holo_hooks()
+	HoloMotion._forced = false
+	Preferences.active = Preferences.new()
+	Preferences.active.reduce_motion = false
+	var no_sensor: Vector3 = Vector3.ZERO
+	HoloMotion._sensors = func() -> Array:
+		return [no_sensor, Vector3.ZERO]
+	# Touchscreen laptop: pointer drives POINTER source.
+	HoloMotion._platform_facts = func() -> Dictionary:
+		return {"handheld": false, "touchscreen": true, "has_mouse": true, "ios": false}
+	HoloMotion._pointer_at = func(_vp: Viewport) -> Variant:
+		return Vector2(1.0, 0.0)
+	HoloMotion._stepped = -2
+	HoloMotion._shared = null
+	var t: Vector2 = HoloMotion.ambient(null, 1.0 / 60.0)
+	if HoloMotion._shared.source != HoloMotion.Source.POINTER or t.x <= 0.0:
+		fails.append("holo: ambient on a touchscreen laptop reads %s (%d), want the pointer"
+			% [str(t), HoloMotion._shared.source])
+	# Android phone with a mouse: pointer must not light.
+	HoloMotion._platform_facts = func() -> Dictionary:
+		return {"handheld": true, "touchscreen": true, "has_mouse": true, "ios": false}
+	HoloMotion._pointer_at = func(_vp: Viewport) -> Variant:
+		return Vector2(1.0, 0.0)
+	HoloMotion._stepped = -2
+	HoloMotion._shared = null
+	t = HoloMotion.ambient(null, 1.0 / 60.0)
+	if HoloMotion._shared.source != HoloMotion.Source.NONE or t.length() > 0.02:
+		fails.append("holo: ambient on a handheld Android mouse reads %s (%d), want none"
+			% [str(t), HoloMotion._shared.source])
+	_restore_holo_hooks(saved)
+
+
+## The iOS axes guard warns once through `ambient()`, not only in `from_portrait()`.
+static func _ambient_ios_axes_warning(fails: Array[String]) -> void:
+	var saved: Dictionary = _save_holo_hooks()
+	HoloMotion._forced = false
+	Preferences.active = Preferences.new()
+	Preferences.active.reduce_motion = false
+	var warned: Array[String] = []
+	HoloMotion._warn_hook = func(msg: String) -> void:
+		warned.append(msg)
+	HoloMotion._platform_facts = func() -> Dictionary:
+		return {"handheld": true, "touchscreen": true, "has_mouse": false, "ios": true}
+	var turned: Vector3 = Vector3(0.07, -9.80, 0.21)
+	HoloMotion._sensors = func() -> Array:
+		return [turned, Vector3.ZERO]
+	HoloMotion._stepped = -2
+	HoloMotion._shared = null
+	HoloMotion.ambient(null, 1.0 / 60.0)
+	if warned.is_empty() or not warned[0].begins_with("HoloMotion: iOS gravity"):
+		fails.append("holo: ambient raised no iOS axes warning, got %s" % str(warned))
+	_restore_holo_hooks(saved)

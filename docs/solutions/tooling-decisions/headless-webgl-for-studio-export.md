@@ -1,7 +1,7 @@
 ---
 title: "Headless WebGL for Studio Export is a Chromium launch problem, not a Studio URL problem"
 date: 2026-08-19
-last_updated: 2026-08-19
+last_updated: 2026-10-15
 category: tooling-decisions
 module: assets/art/map
 problem_type: tooling_decision
@@ -12,6 +12,7 @@ applies_when:
   - "Export on /workspace/generate or /3d-model never mounts"
   - "THREE.WebGLRenderer fails with BindToCurrentSequence or Error creating WebGL context"
   - "Choosing Playwright headless true versus new Headless versus headed-offscreen"
+  - "Studio stops on Cloudflare's \"Verify you are human\" page (use --headed)"
 root_cause: missing_tooling
 resolution_type: documented_workaround
 related_components:
@@ -447,6 +448,42 @@ accept a substitute.
   switch we can flip so Studio mounts Export.
 
 "Load the WebGL UI" on this product means a real WebGL2 context.
+
+## 7. Cloudflare check: New Headless is now refused (2026-10-15)
+
+From October 2026, `studio.tripo3d.ai/workspace/generate` can answer New
+Headless with Cloudflare's "Just a moment… / Performing security
+verification / Verify you are human" page. The page sits at the requested
+URL, so a `--task-id` href still matched and the old wait read it as ready.
+The driver now records `challenge` in its page state, never treats that page
+as ready or reusable, and refuses at once in headless mode.
+
+`--headed` launches Chrome for Testing without `--headless=new`. Measured on
+the Mac mini (Chrome for Testing 149): the headed window loaded Studio with
+no check shown, while New Headless was refused on the same profile. If the
+check does appear, a person ticks it in the window; the driver waits
+`HUMAN_CHECK_WAIT_MS`. Never script the tick or disguise the headless
+browser: that is evading a bot check.
+
+The same rule removed three older shortcuts (review of PR #731):
+
+- Chrome no longer gets `--disable-blink-features=AutomationControlled`,
+  which hid `navigator.webdriver`. Cloudflare may now show the check more
+  often; the answer stays a human tick in the headed window.
+- Cookies imported from the owner's Chrome are filtered: `cf_*`, `__cf*`
+  and `_cfuvid` never move into the automated browser. The login cookie
+  (`ory_kratos_session`) still does.
+- A Cloudflare stop (headless refusal, or no human pass within
+  `HUMAN_CHECK_WAIT_MS`) ends the run. The cache-login fallback no longer
+  re-imports cookies and waits again.
+
+Two measured details:
+
+- `/json/version` `Browser` reads plain `Chrome/149…` in New Headless; only
+  `User-Agent` says `HeadlessChrome/`. Warm-mode detection reads the
+  User-Agent.
+- A killed Chrome still answers on 9335 for a moment, so `reapChrome` now
+  waits for the port to close before a relaunch attaches.
 
 ## Verdict
 

@@ -288,7 +288,7 @@ func _ready() -> void:
 	# tools/shot.sh --shot=/tmp/map.png [--seed=N] [--enter=0]
 	# tools/shot.sh --cards[=id,id] --shot=/tmp/cards.png        (card designer)
 	# tools/shot.sh --enemies|--chips|--hud|--reward --shot=...  (labs)
-	# godot --path . -- --cards=bastion --surfaces[=gilt,holofoil]  (materials)
+	# godot --path . -- --cards=bastion --surfaces[=satin,holofoil]  (materials)
 	# godot --path . -- --studio[=bastion] [--zoom=3]   (material bench)
 	# tools/shot.sh --turns[=bastion] --vp=2916x1640 --settle=1 --shot=...  (turn sheet)
 	# godot --path . -- --fight=id[,id] [--kind=normal|elite|boss]   (battlefield)

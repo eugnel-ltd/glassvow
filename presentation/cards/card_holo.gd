@@ -178,9 +178,10 @@ static func wear(picture: CanvasItem, mat: ShaderMaterial, host: CanvasItem,
 	return lean
 
 
-## The driver: one per card wearing a hologram. It reads the shared motion
-## signal only while its card shows, so with no card on screen no sensor is
-## read; it writes the one uniform only when the value moved.
+## The driver: one per card wearing a hologram. It steps the shared motion
+## signal only while its card shows, so with no card on screen the game polls
+## no sensor (the OS keeps them running: HoloMotion); it writes the one uniform
+## only when the value moved.
 class Lean:
 	extends Node
 	var mat: ShaderMaterial

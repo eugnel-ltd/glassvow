@@ -827,7 +827,8 @@ the lanterns or the light, a change of values. Evidence:
 The three card backs in `content/card-backs.json` (#657 PR 8). Each painting is
 the whole face of the back: opaque, cut to the card's 152:216, at the 2×
 oversample the bake draws it at. The back's surface recipe still applies on
-top: aurora for the Lancet, prism for Vesper, gilt for Eclipse. Until this
+top: since the hologram build (#728) all three wear the quiet shared
+`plastic` stock under their own lit-panes hologram. Until this
 landed, Vault wore the pile painting `piles/draw.png`, which the reward screens
 still use, and Rose and Eclipse were procedural shaders, now removed.
 

@@ -356,22 +356,18 @@ const RECIPES: Dictionary = {
 	"velvet": ["stock", "soft-touch", "matte", "premium"],
 	"leaden": ["lead", "tooth", "dead", "cursed"],
 	# ──
-	# The two anisotropic tiers this replaced. They were tuned under a light
-	# that could not pool, and an elongated lobe reads as a wider band there;
-	# the moment the lamp became a real point the same lobe came out as a
-	# horizontal bar laid across the card. Only the FINISH changed — glass keeps
-	# its linen weave, gold leaf keeps its guilloche — which is the whole reason
-	# the layers are separate catalogues.
+	# The anisotropic tier this replaced. It was tuned under a light that could
+	# not pool, and an elongated lobe reads as a wider band there; the moment
+	# the lamp became a real point the same lobe came out as a horizontal bar
+	# laid across the card. Only the FINISH changed — glass keeps its linen
+	# weave — which is the whole reason the layers are separate catalogues.
 	"satin": ["glass", "linen", "satin", "premium"],
-	"gilt": ["gold-leaf", "engine-turned", "metallic", "gilded"],
 	"holofoil": ["silver-leaf", "cross-etch", "holo", "gilded"],
 	"rainbow": ["silver-leaf", "smooth", "rainbow", "gilded"],
 	"reverse": ["stock", "smooth", "reverse-holo", "premium"],
 	"pearl": ["nacre", "smooth", "pearlescent", "premium"],
 	"cosmos": ["silver-leaf", "smooth", "cosmos", "gilded"],
 	"confetti": ["stock", "smooth", "cosmos-art", "gilded"],
-	"prism": ["glass", "engine-turned", "prismatic", "gilded"],
-	"aurora": ["silver-leaf", "smooth", "aurora", "gilded"],
 	"plastic": ["pvc", "glassy", "gloss", "rigid"],
 	"crystal": ["acrylic", "glassy", "gloss", "rigid"],
 	"spot": ["stock", "smooth", "spot-foil", "premium"],

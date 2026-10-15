@@ -72,8 +72,8 @@ static func _shipped_catalogue_is_valid(fails: Array[String]) -> void:
 
 static func _malformed_catalogues_refused(fails: Array[String]) -> void:
 	var good: Dictionary = {"v": 1, "default": "vault", "backs": {
-		"vault": {"art": VAULT_ART, "surface": "aurora", "unlock": {"kind": "default"}},
-		"rose": {"shader": SHADER, "surface": "prism", "unlock": {"kind": "shards", "at": 1}},
+		"vault": {"art": VAULT_ART, "surface": "plastic", "unlock": {"kind": "default"}},
+		"rose": {"shader": SHADER, "surface": "plastic", "unlock": {"kind": "shards", "at": 1}},
 	}}
 	if not CardBackCatalogue.parse(good) is CardBackCatalogue:
 		fails.append("card backs: a minimal good catalogue was refused: %s"
@@ -110,7 +110,7 @@ static func _malformed_catalogues_refused(fails: Array[String]) -> void:
 
 static func _backs_build_their_pictures(fails: Array[String]) -> void:
 	var procedural: CardView = CardView.new(CardInst.new(0, &"back:sigil"),
-		{"back": SHADER, "surface": "gilt"}, 0)
+		{"back": SHADER, "surface": "plastic"}, 0)
 	var plate: ColorRect = null
 	for node: Node in procedural.find_children("", "ColorRect", true, false):
 		var rect: ColorRect = node
@@ -221,8 +221,8 @@ static func _grant_list_is_read(fails: Array[String]) -> void:
 	# could never unlock, and the catalogue refuses it. The day the domain adds
 	# the list this row trips on purpose: teach it the grant-only back then.
 	var with_grant: Dictionary = {"v": 1, "default": "vault", "backs": {
-		"vault": {"art": VAULT_ART, "surface": "aurora", "unlock": {"kind": "default"}},
-		"sigil": {"shader": SHADER, "surface": "gilt", "unlock": {"kind": "grant"}},
+		"vault": {"art": VAULT_ART, "surface": "plastic", "unlock": {"kind": "default"}},
+		"sigil": {"shader": SHADER, "surface": "plastic", "unlock": {"kind": "grant"}},
 	}}
 	if CardBackCatalogue.grant_list_exists():
 		fails.append("card backs: VigilState now declares %s; teach this test the grant-only back"

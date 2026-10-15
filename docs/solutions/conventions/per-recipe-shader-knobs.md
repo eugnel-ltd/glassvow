@@ -71,7 +71,7 @@ Four rules, all load-bearing:
    have decided not to look at.
 
 2. **Add the key to every `FINISH` entry, not just the ones you are changing.**
-   `params()` (`presentation/combat/card_surface.gd:437` (`params`)) asserts the four layers own disjoint keys,
+   `params()` (`presentation/combat/card_surface.gd:433` (`params`)) asserts the four layers own disjoint keys,
    and `apply()` reads `p[key]` with a strict index — a missing key is a hard
    crash at load, not a silent default. Both are guardrails; feed them.
 

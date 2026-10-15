@@ -16,10 +16,11 @@ extends RefCounted
 ##                  already gone), fused with the gyroscope for the twist that
 ##                  gravity cannot see (an upright device turned left-right).
 ##                  A missing or non-finite gyroscope leaves the twist at zero.
-##   pointer        desktop: the pointer over the window, at POINTER_GAIN, a
-##                  room light drifting; the hovered card adds its own tilt.
-##   none           touch with no sensor: neutral; the held card's own tilt is
-##                  all that moves.
+##   pointer        desktop, a touchscreen laptop too (`pointer_lights`): the
+##                  pointer over the window, at POINTER_GAIN, a room light
+##                  drifting; the hovered card adds its own tilt.
+##   none           a phone or pad with no sensor: neutral; the held card's own
+##                  tilt is all that moves.
 ##
 ## THE SIGNAL PATH (step): the first reading on a screen entry is the neutral,
 ## so the player's own resting hold is "flat", and the neutral leaks toward the
@@ -32,9 +33,12 @@ extends RefCounted
 ## nearly full throw, inside the card's own angular budget however small the
 ## slab's own tilt. Last, a low-pass at SMOOTH_TAU.
 ##
-## SENSORS ARE READ ONLY WHILE A CARD IS ON SCREEN: the shared signal (`ambient`)
-## is stepped by the cards' own drivers (CardHolo.Lean), once a frame, and only
-## from a card that is visible. A frame with none leaves the sensors unread; the
+## SENSORS ARE POLLED ONLY WHILE A CARD IS ON SCREEN: the shared signal
+## (`ambient`) is stepped by the cards' own drivers (CardHolo.Lean), once a
+## frame, and only from a card that is visible; under Reduce Motion it polls
+## none at all. This stops the polling, not the sensors: the Android switches
+## in project.godot are project-wide, and on iOS Godot's view runs Core Motion
+## for the whole session. A frame with no card leaves the sensors unread; the
 ## next one is a screen entry and re-centres.
 ##
 ## AXES. Godot rotates iOS readings into the interface's frame only when it can
@@ -43,7 +47,10 @@ extends RefCounted
 ## gravity (9.80, 0.07, 0.21), along +x, not -y (QA build, 14 Oct 2026), which
 ## `to_screen` maps to (0.07, -9.80, 0.21), straight down the screen.
 ## `to_screen` turns those into the screen's axes (x right, y up, z out of the
-## glass), picking the landscape from the side gravity falls to. Android
+## glass), picking the landscape from the side gravity falls to. The map is
+## proven on the iPad 8 only, so `from_portrait` raises `axes_doubt` (and
+## `ambient` warns once) when gravity falls along the device's y: no landscape
+## hold puts it there, but readings already turned to the screen would. Android
 ## (input_devices/sensors/enable_gravity and enable_gyroscope, both on in
 ## project.godot) already reports in the screen's frame.
 
@@ -72,12 +79,25 @@ var _twist: float = 0.0              # radians about the gravity axis
 ## Which landscape a device reporting portrait axes is in: +1 when gravity
 ## falls toward its +x (upright, as the iPad 8 stands), -1 the other way round.
 var _down_x: float = 1.0
+## A portrait-axes reading has looked already turned to the screen
+## (`from_portrait`). It stays set: it is a doubt about the platform, not
+## about one hold.
+var axes_doubt: bool = false
 
 ## The signal every card on screen shares, stepped once a frame (`ambient`).
 static var _shared: HoloMotion = null
 static var _stepped: int = -2
 ## GLASSVOW_HOLO="x,y": hold the signal there, for a scripted capture.
 static var _forced: Variant = null
+## A test's stand-in for the device: returns [gravity, gyroscope]. Invalid in
+## the game, which reads Input.
+static var _sensors: Callable = Callable()
+## A test's stand-in for platform facts (`_facts`). Invalid in the game.
+static var _platform_facts: Callable = Callable()
+## A test's stand-in for push_warning from the iOS axes guard. Invalid in the game.
+static var _warn_hook: Callable = Callable()
+## A test's stand-in for the pointer position, -1..1. Invalid in the game.
+static var _pointer_at: Callable = Callable()
 
 
 ## One frame of readings, already in the screen's frame. `pointer` is the
@@ -145,6 +165,18 @@ static func to_screen(v: Vector3, down_x: float) -> Vector3:
 	return Vector3(down_x * v.y, -down_x * v.x, v.z)
 
 
+## A portrait-axes reading (iOS) in the screen's axes: [gravity, rate]. A
+## gravity mostly along the device's y, which a landscape hold never gives,
+## raises `axes_doubt`: a Godot or iOS that already turns the readings to the
+## screen would give it, and `to_screen` would then turn them twice.
+func from_portrait(g: Vector3, w: Vector3) -> Array[Vector3]:
+	if g.length() > SENSOR_FLOOR and absf(g.y) > maxf(absf(g.x), absf(g.z)):
+		axes_doubt = true
+	_down_x = landscape_of(g, _down_x)
+	var out: Array[Vector3] = [to_screen(g, _down_x), to_screen(w, _down_x)]
+	return out
+
+
 ## Which landscape a portrait-axes gravity reading says the device is in, or
 ## `was` while it lies too flat to tell.
 static func landscape_of(g: Vector3, was: float) -> float:
@@ -185,13 +217,27 @@ static func ambient(vp: Viewport, dt: float) -> Vector2:
 	if _forced is Vector2:
 		_shared.tilt = _forced
 		return _shared.tilt
-	var g: Vector3 = Input.get_gravity()
-	var w: Vector3 = Input.get_gyroscope()
-	if OS.get_name() == "iOS":
-		_shared._down_x = landscape_of(g, _shared._down_x)
-		g = to_screen(g, _shared._down_x)
-		w = to_screen(w, _shared._down_x)
-	return _shared.update(g, w, _pointer(vp), still(), dt)
+	# Reduce Motion holds the still pose and polls no sensor at all.
+	if still():
+		return _shared.update(Vector3.ZERO, Vector3.ZERO, null, true, dt)
+	var read: Array = _sensors.call() if _sensors.is_valid() \
+		else [Input.get_gravity(), Input.get_gyroscope()]
+	var g: Vector3 = read[0]
+	var w: Vector3 = read[1]
+	if _as_bool(_facts().get("ios")):
+		var doubted: bool = _shared.axes_doubt
+		var turned: Array[Vector3] = _shared.from_portrait(g, w)
+		if _shared.axes_doubt and not doubted:
+				var msg: String = ("HoloMotion: iOS gravity %s falls along the device's y, which no "
+					+ "landscape hold gives; the readings may already be in the screen's axes, "
+					+ "and to_screen turns them twice") % str(g)
+				if _warn_hook.is_valid():
+					_warn_hook.call(msg)
+				else:
+					push_warning(msg)
+		g = turned[0]
+		w = turned[1]
+	return _shared.update(g, w, _pointer(vp), false, dt)
 
 
 ## Hold the shared signal at `t` (a scripted capture's three tilts), or let it
@@ -200,10 +246,41 @@ static func hold(t: Variant) -> void:
 	_forced = t if t is Vector2 else false
 
 
-## The pointer over the window, -1..1, or null on a touch screen or with the
-## pointer outside it.
+## Whether the pointer lights the cards, from the device's facts: on a desktop,
+## touchscreen or not, since a touchscreen laptop's pointer is still a pointer
+## (and Windows can report a touchscreen it lacks, godot#84235); never on a
+## `handheld` (mobile) platform, whose touches would otherwise leave the light
+## where the last finger lifted (Android reports a mouse); never on a
+## touch-only screen (PointerDevice.coarse_for).
+static func pointer_lights(handheld: bool, touchscreen: bool, has_mouse: bool) -> bool:
+	return not handheld and not PointerDevice.coarse_for(touchscreen, has_mouse)
+
+
+## The pointer over the window, -1..1, or null where it lights nothing
+## (`pointer_lights`) or lies outside the window.
+static func _facts() -> Dictionary:
+	if _platform_facts.is_valid():
+		return _platform_facts.call()
+	return {
+		"handheld": OS.has_feature("mobile"),
+		"touchscreen": DisplayServer.is_touchscreen_available(),
+		"has_mouse": DisplayServer.has_feature(DisplayServer.FEATURE_MOUSE),
+		"ios": OS.get_name() == "iOS",
+	}
+
+
+static func _as_bool(v: Variant, default: bool = false) -> bool:
+	return v if v is bool else default
+
+
 static func _pointer(vp: Viewport) -> Variant:
-	if vp == null or DisplayServer.is_touchscreen_available():
+	var f: Dictionary = _facts()
+	if not pointer_lights(_as_bool(f.get("handheld")), _as_bool(f.get("touchscreen")),
+			_as_bool(f.get("has_mouse"))):
+		return null
+	if _pointer_at.is_valid():
+		return _pointer_at.call(vp)
+	if vp == null:
 		return null
 	var r: Rect2 = vp.get_visible_rect()
 	var m: Vector2 = vp.get_mouse_position()
