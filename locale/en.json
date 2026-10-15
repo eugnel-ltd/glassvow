@@ -2490,6 +2490,14 @@
       "b3": {"l1": "You take up the lantern and step out. The long road runs east, and the sky is not yet light.", "l2": "Behind you, the fire is still burning."},
       "b4": {"l1": "The Vigil begins."}
     },
+    "knight-2": {
+      "l1": "The monument still stands at the foot of the pillar.",
+      "l2": "In the monument's shelter, one ember still glows."
+    },
+    "knight-3": {
+      "l1": "Still there.",
+      "l2": "Still warm."
+    },
     "lamplighter-m1": {
       "pre": {
         "l1": "An old man sits by the road, holding a lantern. There is no flame in it.",

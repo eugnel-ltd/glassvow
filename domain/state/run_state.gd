@@ -216,6 +216,11 @@ static func new_run(
 					),
 					"memory": source.get("memory", {}).duplicate(true),
 				}
+	if RewardRules.mythics_live and rs.vow >= 3:
+		var knight_step: int = clampi(_sji(profile.get("knight", 0)), 0, 3)
+		rs.quest_scratch["knight"] = {"step": knight_step, "met": false}
+		if knight_step > 0:
+			rs.quest_scratch["seenEvents"] = ["woundedKnight"]
 	rs.pending_lamplighter = profile.get("lamplighter", false)
 	if rs.vow >= 4:
 		rs.player.deck.append(CardInst.new(rs.next_uid(), &"hex", false))

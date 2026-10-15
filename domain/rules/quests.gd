@@ -139,6 +139,38 @@ func stage_hollow_meeting(run: RunState, node: MapNode, was_unlit: bool) -> bool
 	return true
 
 
+## Separate from the six shard journeys: progress is a Vigil scene once-flag.
+func knight_aid_flag(run: RunState, event_id: String, choice: int) -> String:
+	if not RewardRules.mythics_live or run.vow < 3:
+		return ""
+	var knight: Dictionary = run.quest_scratch.get("knight", {})
+	return "knight-1" if event_id == "woundedKnight" and choice == 0 \
+		and _ji(knight.get("step", -1)) == 0 and knight.get("met", false) else ""
+
+
+func stage_knight_scene(run: RunState) -> String:
+	if not RewardRules.mythics_live or run.vow < 3 \
+			or run.pending_scene != null or run.pending_hollow != null \
+			or run.pending_hollow_route != null:
+		return ""
+	var knight: Dictionary = run.quest_scratch.get("knight", {})
+	if knight.get("met", false):
+		return ""
+	var step: int = _ji(knight.get("step", -1))
+	if step != 1 and (step != 2 or not RewardRules.new(content).mythic_slot_open(run)):
+		return ""
+	knight["met"] = true
+	return "knight-%d" % (step + 1)
+
+
+func finish_knight_meeting(run: RunState, scene_id: String) -> void:
+	if not RewardRules.mythics_live or run.vow < 3 or scene_id != "knight-3" \
+			or not RewardRules.new(content).mythic_slot_open(run):
+		return
+	run.player.deck.append(CardInst.new(run.next_uid(), &"bankedFire", false))
+	run.quest_scratch[RewardRules.MYTHIC_SLOT] = {"id": "bankedFire", "via": "knight"}
+
+
 func decorate_map(run: RunState, map: WorldMap) -> void:
 	if not active(run, "paleOnes"):
 		return

@@ -130,6 +130,8 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 	if vigil != null:
 		profile["quests"] = vigil.quests.duplicate(true)
 		profile["shards"] = vigil.shards.duplicate()
+		profile["knight"] = ["knight-1", "knight-2", "knight-3"].filter(
+			func(id: String) -> bool: return vigil.scenes_seen.has(id)).size()
 	var run: RunState = RunState.new_run(content, seed, "sim-%s-%d" % [aspect, seed], profile)
 	if strip_start_hex:
 		_strip_hex(run)
@@ -164,7 +166,7 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 					return _finish(run, aspect, seed, "win", fights, "", economy, vigil, content)
 				_claim_rewards(game, game.gen_combat_rewards(node.combat_kind(), game.cb.affix))
 			else:
-				_resolve_safe_node(game, node)
+				_resolve_safe_node(game, node, vigil)
 			map.clear_current()
 			if node.type == "boss" and not run.is_final_act():
 				economy.append(_economy_row(run))
@@ -254,7 +256,8 @@ static func _claim_rewards(game: GlassvowGame, rewards: Dictionary) -> void:
 	var relic2_v: Variant = rewards.get("relic2")
 	if relic2_v != null and not Pilot.is_banned(str(relic2_v)):
 		game.rewards.gain_relic(game.run, str(relic2_v))
-static func _resolve_safe_node(game: GlassvowGame, node: MapNode) -> void:
+static func _resolve_safe_node(game: GlassvowGame, node: MapNode,
+		vigil: VigilState = null) -> void:
 	Pilot.see_flame(game.content, game.run)
 	match node.type:
 		"rest":
@@ -264,7 +267,7 @@ static func _resolve_safe_node(game: GlassvowGame, node: MapNode) -> void:
 				game.run.player.hp = mini(game.run.player.max_hp, game.run.player.hp + amount)
 			else:
 				_upgrade_best(game)
-		"event": _resolve_event(game)
+		"event": _resolve_event(game, vigil)
 		"shop": _resolve_shop(game)
 		"treasure": _claim_treasure(game)
 static func _upgrade_best(game: GlassvowGame) -> void:
@@ -281,7 +284,13 @@ static func _upgrade_best(game: GlassvowGame) -> void:
 			best_score = score
 	if best != null:
 		best.up = true
-static func _resolve_event(game: GlassvowGame) -> void:
+static func _resolve_event(game: GlassvowGame, vigil: VigilState = null) -> void:
+	var scene_id: String = game.quests.stage_knight_scene(game.run)
+	if not scene_id.is_empty():
+		game.quests.finish_knight_meeting(game.run, scene_id)
+		if vigil != null and not vigil.scenes_seen.has(scene_id):
+			vigil.scenes_seen.append(scene_id)
+		return
 	var event_id: String = game.rewards.roll_event(game.run)
 	if event_id == "forgottenShrine":
 		_bump("forgottenShrineSeen")
@@ -300,6 +309,10 @@ static func _resolve_event(game: GlassvowGame) -> void:
 			choice = row
 	var ops: Array = choice.get("ops", [])
 	var pending: Dictionary = game.rewards.apply_event_ops(game.run, ops)
+	var choices: Array = event.get("choices", [])
+	var flag: String = game.quests.knight_aid_flag(game.run, event_id, choices.find(choice))
+	if vigil != null and not flag.is_empty() and not vigil.scenes_seen.has(flag):
+		vigil.scenes_seen.append(flag)
 	Pilot.see_flame(game.content, game.run) # The choice's ops may have changed the deck.
 	match str(pending.get("kind", "")):
 		"card":

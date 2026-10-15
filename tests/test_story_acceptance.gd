@@ -65,8 +65,8 @@ static func run(fails: Array[String]) -> void:
 static func _inventory(content: ContentDB, fails: Array[String]) -> void:
 	var en: Dictionary = _flatten_story(Locale.CODE_EN)
 	var zh: Dictionary = _flatten_story(Locale.CODE_ZH_HANT)
-	_check(fails, en.size() == 123 and zh.size() == 123,
-		"story.* census is not 123/123 (en=%d zh=%d)" % [en.size(), zh.size()])
+	_check(fails, en.size() == 127 and zh.size() == 127,
+		"story.* census is not 127/127 (en=%d zh=%d)" % [en.size(), zh.size()])
 	var homes: Dictionary = _scene_homes()
 	var seen: Dictionary = {}
 	for key_v: Variant in en.keys():

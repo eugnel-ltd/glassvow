@@ -6,7 +6,7 @@ extends RefCounted
 const SCENE_IDS: Array[String] = [
 	"opening", "unsealing", "unsealing-short", "act4-entry",
 	"act4-node1", "act4-node2", "act4-node3", "act4-node4", "act4-node5",
-	"finale", "finale-win", "finale-loss",
+	"finale", "finale-win", "finale-loss", "knight-2", "knight-3",
 	"lamplighter-m1-pre", "lamplighter-m1-post",
 	"lamplighter-m2-pre", "lamplighter-m2-post",
 	"lamplighter-m3-pre", "lamplighter-m3-post",
@@ -18,6 +18,7 @@ const SLOT_COUNTS: Dictionary = {
 	"act4-node1": 2, "act4-node2": 2, "act4-node3": 2,
 	"act4-node4": 5, "act4-node5": 4,
 	"finale": 7, "finale-win": 3, "finale-loss": 2,
+	"knight-2": 2, "knight-3": 2,
 }
 
 

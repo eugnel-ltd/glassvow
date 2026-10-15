@@ -70,7 +70,7 @@ what lets a policy cut a singleton — the way a player builds a thin deck.
 One dict. `apply_policy` / `policy_snapshot` at
 `tools/balance_pilot.gd:94` (`apply_policy`) and
 `tools/balance_pilot.gd:117` (`policy_snapshot`). CLI keys in
-`tools/balance_sim.gd:715-717` (`_policy`). `simulate(..., policy)` applies the
+`tools/balance_sim.gd:728` (`_policy`). `simulate(..., policy)` applies the
 dict at the start of every run. Slice B records the resolved vector on every
 run row (`policy`) as the replay key; the seed-1000 digest moves with that
 field. See `docs/balance/2026-08-14-policy-vector.md`.

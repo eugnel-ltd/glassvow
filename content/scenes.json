@@ -22,6 +22,22 @@
         ]}
       ]
     },
+    "knight-2": {
+      "beats": [
+        {"motion": "hold", "transition": "fade", "ambient": "ash", "grade": "dusk", "lines": [
+          {"key": "story.knight-2.l1"},
+          {"key": "story.knight-2.l2"}
+        ]}
+      ]
+    },
+    "knight-3": {
+      "beats": [
+        {"motion": "hold", "transition": "fade", "ambient": "ash", "grade": "dusk", "lines": [
+          {"key": "story.knight-3.l1"},
+          {"key": "story.knight-3.l2"}
+        ]}
+      ]
+    },
     "lamplighter-m1-pre": {
       "beats": [
         {"motion": "hold", "transition": "black", "ambient": "ash", "grade": "dusk", "lines": [
