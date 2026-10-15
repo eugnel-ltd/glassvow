@@ -38,6 +38,7 @@ static func run(fails: Array[String]) -> void:
 	await _frame_zero(fails, tree, host)
 	await _title_steps(fails, tree, host)
 	await _land_lent(fails, tree, host)
+	await _next_act_warm(fails, tree, host)
 	host.free()
 
 
@@ -188,13 +189,13 @@ static func _land_lent(fails: Array[String], tree: SceneTree, host: Node) -> voi
 	warm._map_look()
 	for step: Callable in [warm._land_queue, warm._land_draw]:
 		step.call()
-		_check(fails, land.get_parent() == warm._map_view and land.process_mode == Node.PROCESS_MODE_DISABLED,
+		_check(fails, land.get_parent() == warm._land.view and land.process_mode == Node.PROCESS_MODE_DISABLED,
 			"the land stands still on the map's view while lent")
 		RenderingServer.frame_post_draw.emit()
 		await tree.process_frame
 		_check(fails, land.get_parent() == null and land.process_mode == Node.PROCESS_MODE_INHERIT,
 			"the land is given back as it was kept at the frame's end")
-	_check(fails, warm._map_view == null, "the map's view is let go once the land is drawn")
+	_check(fails, warm._land.view == null, "the map's view is let go once the land is drawn")
 	var lent: MapJourneyLandscape = MapScene.lend_journey()
 	host.add_child(lent)
 	_check(fails, MapScene._kept_for(LAND_KEY) == land and land.get_parent() == null,
@@ -202,3 +203,39 @@ static func _land_lent(fails: Array[String], tree: SceneTree, host: Node) -> voi
 	warm.free()
 	MapScene.release_kept_journey()
 	_check(fails, not is_instance_valid(land), "the kept land is let go as before")
+
+
+## The next act's land built ahead (#660 II.3): the prefetch hands its warm
+## out once, only once its land is built, and only for a land built ahead;
+## the warm, running alone, lends the kept land, draws it, gives it back and
+## lets itself go.
+static func _next_act_warm(fails: Array[String], tree: SceneTree, host: Node) -> void:
+	var kept: MapJourneyPrefetch = MapJourneyPrefetch._current
+	var job: MapJourneyPrefetch = MapJourneyPrefetch.new()
+	MapJourneyPrefetch._current = job
+	job.step = MapJourneyPrefetch.Step.DONE
+	var behind: bool = MapJourneyPrefetch.take_warm()
+	job._ahead = true
+	job.step = MapJourneyPrefetch.Step.BUILDING
+	var building: bool = MapJourneyPrefetch.take_warm()
+	job.step = MapJourneyPrefetch.Step.DONE
+	var once: bool = MapJourneyPrefetch.take_warm()
+	var twice: bool = MapJourneyPrefetch.take_warm()
+	MapJourneyPrefetch._current = kept
+	_check(fails, not behind and not building and once and not twice,
+		"a land built ahead for the next act is warmed once, once it is built")
+	var land: MapJourneyLandscape = MapJourneyLandscape.new()
+	MapScene._keep_journey(LAND_KEY, land)
+	var warm: MapLandWarm = MapLandWarm.alone()
+	host.add_child(warm)
+	var lent: bool = false
+	for _frame: int in range(600):
+		if not is_instance_valid(warm):
+			break
+		await tree.process_frame
+		lent = lent or land.get_parent() != null
+		RenderingServer.frame_post_draw.emit()
+	_check(fails, lent and not is_instance_valid(warm) and land.get_parent() == null
+			and land.process_mode == Node.PROCESS_MODE_INHERIT,
+		"the warm alone lends the kept land, gives it back as it was kept and lets itself go")
+	MapScene.release_kept_journey()

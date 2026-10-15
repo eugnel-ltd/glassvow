@@ -7,31 +7,30 @@ extends RefCounted
 const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 const Outline = preload("res://presentation/map/causeway/outline.gd")
 const Parapets = preload("res://presentation/map/causeway/pointed_parapets.gd")
-const BoxBatch = preload("res://presentation/map/causeway/box_batch.gd")
-var blocks: SurfaceTool
-var caps: SurfaceTool
-var arch_stones: SurfaceTool
-var stone_batch: BoxBatch
+const CellSurfaces = preload("res://presentation/map/causeway/cell_surfaces.gd")
+## The length of an edge's pieces (m): the course, the arch stones and the
+## parapets' sections. The masonry atlas draws the joints between them.
+const PIECE: float = .40
+## The body, the coping and the arch stones (with the outer course), each one
+## surface a cell, every deck's in the same cells (`finish`).
+var blocks: CellSurfaces = CellSurfaces.new(-1)
+var caps: CellSurfaces = CellSurfaces.new(-1)
+var arch_stones: CellSurfaces = CellSurfaces.new()
+## Each deck's answers already asked for, by position: neighbouring stones ask
+## at the same points (a piece's end is the next one's start).
+var _asked: Dictionary = {}
 
 
-## The masonry of `field`'s deck, whose triangles are `faces`; `other_fields`
-## are every deck (this one included). Returns the meshes it drew under
-## `parent`: the body, the coping and the arch stones.
-func build(parent: Node3D, faces: PackedVector3Array, field: RefCounted,
-		other_fields: Array, stone: Material, trim: Material, settings: Dictionary) -> Array[ArrayMesh]:
-	blocks = SurfaceTool.new()
-	caps = SurfaceTool.new()
-	arch_stones = SurfaceTool.new()
-	for surface: SurfaceTool in [blocks, caps, arch_stones]:
-		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	stone_batch = BoxBatch.new(arch_stones)
-	var count: int = 0
+## Appends the masonry of `field`'s deck, whose triangles are `faces`;
+## `other_fields` are every deck (this one included).
+func build(faces: PackedVector3Array, field: RefCounted, other_fields: Array,
+		settings: Dictionary) -> void:
 	var accepted: Array[Dictionary] = []
 	var boundary: Array[Dictionary] = []
 	for edge: Dictionary in Outline.segments(faces):
 		var a: Vector3 = edge["a"]
 		var b: Vector3 = edge["b"]
-		var divisions: int = maxi(1, ceili(a.distance_to(b) / .20))
+		var divisions: int = maxi(1, ceili(a.distance_to(b) / PIECE))
 		for i: int in range(divisions):
 			boundary.append({"a": a.lerp(b, float(i) / divisions), "b": a.lerp(b, float(i + 1) / divisions)})
 	var openings: Array = settings.get("openings", [])
@@ -43,8 +42,8 @@ func build(parent: Node3D, faces: PackedVector3Array, field: RefCounted,
 			continue
 		var at: Vector3 = (a + b) * .5
 		var outward: Vector3 = Vector3(b.z - a.z, 0, a.x - b.x).normalized()
-		var left: float = field.field(Vector2(at.x + outward.x * .1, at.z + outward.z * .1))["distance"]
-		var right: float = field.field(Vector2(at.x - outward.x * .1, at.z - outward.z * .1))["distance"]
+		var left: float = _field(field, Vector2(at.x + outward.x * .1, at.z + outward.z * .1))["distance"]
+		var right: float = _field(field, Vector2(at.x - outward.x * .1, at.z - outward.z * .1))["distance"]
 		# A triangulation seam is not an exposed deck boundary.
 		if left < -.03 and right < -.03:
 			continue
@@ -59,7 +58,7 @@ func build(parent: Node3D, faces: PackedVector3Array, field: RefCounted,
 		var outer: float = .14 + (rail_width + .12) * .5
 		for endpoint: Vector3 in [a, at, b]:
 			var probe_at: Vector3 = endpoint + outward * outer
-			var own: Dictionary = field.field(Vector2(probe_at.x, probe_at.z))
+			var own: Dictionary = _field(field, Vector2(probe_at.x, probe_at.z))
 			var own_distance: float = own["distance"]
 			var own_height: float = own["height"]
 			shared_join = shared_join or (own_distance < -.025
@@ -68,7 +67,7 @@ func build(parent: Node3D, faces: PackedVector3Array, field: RefCounted,
 			if other == field:
 				continue
 			for endpoint: Vector3 in [a, at, b]:
-				var query: Dictionary = other.field(Vector2(endpoint.x + outward.x * .08, endpoint.z + outward.z * .08))
+				var query: Dictionary = _field(other, Vector2(endpoint.x + outward.x * .08, endpoint.z + outward.z * .08))
 				var distance: float = query["distance"]
 				var height: float = query["height"]
 				shared_join = shared_join or (distance <= .20
@@ -78,14 +77,20 @@ func build(parent: Node3D, faces: PackedVector3Array, field: RefCounted,
 		accepted.append({"a": a, "b": b, "outward": outward})
 		_piece(a, b, outward * .04 - Vector3.UP * (COURSE_DROP - .08), .34, .16)
 		_arch_band(a, b, outward, field, other_fields, settings)
-		count += 1
 	Parapets.new().build(accepted, blocks, caps, other_fields, settings)
+
+
+## Draws every cell of every part under `parent` and returns the meshes.
+func finish(parent: Node3D, stone: Material, trim: Material) -> Array[ArrayMesh]:
 	var result: Array[ArrayMesh] = []
-	if count > 0:
-		for surface: SurfaceTool in [blocks, caps, arch_stones]:
+	for part: CellSurfaces in [blocks, caps, arch_stones]:
+		for surface: SurfaceTool in part.surfaces.values():
 			var finished: ArrayMesh = Meshes.finish(surface)
 			result.append(finished)
-			Meshes.node(parent, finished, stone if surface == blocks else trim, "Causeway edge masonry")
+			# Most of the causeway's triangles, in pieces too small to read in a
+			# shadow: the decks' walls and the piers cast it (#660 II.3).
+			Meshes.node(parent, finished, stone if part == blocks else trim,
+				"Causeway edge masonry").cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return result
 
 
@@ -94,12 +99,12 @@ func _arch_band(a: Vector3, b: Vector3, outward: Vector3, field: RefCounted,
 	# The deck outline can be straight above an entire arch. Sample the
 	# intrados separately; joining only deck endpoints draws a false diagonal.
 	var floor_level: float = settings["arch_floor"]
-	var divisions: int = maxi(1, ceili(a.distance_to(b) / .20))
+	var divisions: int = maxi(1, ceili(a.distance_to(b) / PIECE))
 	for i: int in range(divisions):
 		var pa: Vector3 = a.lerp(b, float(i) / divisions)
 		var pb: Vector3 = a.lerp(b, float(i + 1) / divisions)
-		var low_a: float = field.field(Vector2(pa.x, pa.z))["bottom"]
-		var low_b: float = field.field(Vector2(pb.x, pb.z))["bottom"]
+		var low_a: float = _field(field, Vector2(pa.x, pa.z))["bottom"]
+		var low_b: float = _field(field, Vector2(pb.x, pb.z))["bottom"]
 		if minf(low_a, low_b) <= floor_level or absf(low_a - low_b) > .65:
 			continue
 		# Voussoirs project beyond the structural underside. Keep their full
@@ -111,7 +116,7 @@ func _arch_band(a: Vector3, b: Vector3, outward: Vector3, field: RefCounted,
 				for other: RefCounted in other_fields:
 					if other == field:
 						continue
-					var query: Dictionary = other.field(Vector2(at.x, at.z))
+					var query: Dictionary = _field(other, Vector2(at.x, at.z))
 					var floor_height: float = query["height"]
 					var distance: float = query["distance"]
 					obstructs = obstructs or (distance <= .025
@@ -124,6 +129,16 @@ func _arch_band(a: Vector3, b: Vector3, outward: Vector3, field: RefCounted,
 		_piece(pa, pb, outward * .04, .23, .26, -.012)
 
 
+## `deck`'s answer at `at`, asked once.
+func _field(deck: RefCounted, at: Vector2) -> Dictionary:
+	if not _asked.has(deck):
+		_asked[deck] = {}
+	var answers: Dictionary = _asked[deck]
+	if not answers.has(at):
+		answers[at] = deck.field(at)
+	return answers[at]
+
+
 func _piece(a: Vector3, b: Vector3, offset: Vector3, width: float, height: float, overlap: float = .008) -> void:
 	var delta: Vector3 = b - a
 	var run: float = maxf(.002, Vector2(delta.x, delta.z).length())
@@ -131,7 +146,7 @@ func _piece(a: Vector3, b: Vector3, offset: Vector3, width: float, height: float
 	# Vertical sections shear with the slope: tilted boxes used to produce
 	# a serrated coping silhouette where their rotated ends overlapped.
 	var basis: Basis = Basis(side, Vector3.UP, -delta / run)
-	stone_batch.append(Transform3D(basis.scaled_local(Vector3(width, height, maxf(.002, run + overlap))), (a + b) * .5 + offset))
+	arch_stones.batch((a + b) * .5).append(Transform3D(basis.scaled_local(Vector3(width, height, maxf(.002, run + overlap))), (a + b) * .5 + offset))
 
 
 ## A rising route can cross a lower rail before reaching equal deck height.

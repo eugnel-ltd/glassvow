@@ -33,7 +33,6 @@ static func _check(fails: Array[String], ok: bool, what: String) -> void:
 static func run(fails: Array[String]) -> void:
 	_dev_flag(fails)
 	MapJourneyProfile.rows = MapJourneyProfile.default_rows()
-	_check(fails, MapJourneyProfile.enable_dev("2").is_empty(), "--journey-act=2 adds Act II's row")
 	var content: ContentDB = ContentDB.load_full()
 	for seed_value: int in SEEDS:
 		_seed(fails, content, seed_value)
@@ -41,22 +40,25 @@ static func run(fails: Array[String]) -> void:
 	MapJourneyProfile.rows = MapJourneyProfile.default_rows()
 
 
-## Without the flag players see the painted Act II; the flag names an act by
-## its number and is refused, never clamped, for an act without a dev land.
+## Act II's causeways are a player row (#660 II.3): built ahead as Act I's
+## land is, at the act's own gate, with no threshold. The flag names an act by
+## its number: an act players already reach changes nothing, and one with no
+## journey land is refused, never clamped.
 static func _dev_flag(fails: Array[String]) -> void:
 	MapJourneyProfile.rows = MapJourneyProfile.default_rows()
-	_check(fails, not MapJourneyProfile.has(ACT), "without the flag Act II keeps the painted landscape")
-	for refused: String in ["1", "3", "0", "02", "two", ""]:
-		_check(fails, not MapJourneyProfile.enable_dev(refused).is_empty()
-				and MapJourneyProfile.rows.size() == 1,
-			"--journey-act=%s is refused and adds no row" % refused)
-	_check(fails, MapJourneyProfile.enable_dev("2").is_empty() and MapJourneyProfile.has(ACT)
-			and MapJourneyProfile.land_class(ACT) == MapCausewayLandscape
-			and not MapJourneyProfile.warms(ACT)
+	_check(fails, MapJourneyProfile.has(ACT) and MapJourneyProfile.land_class(ACT) == MapCausewayLandscape
+			and MapJourneyProfile.warms(ACT)
 			and MapJourneyProfile.gate_id(ACT) == MapLandscapeAssets.GATES[ACT]
 			and MapJourneyProfile.threshold_id(ACT).is_empty()
 			and MapJourneyProfile.land_class(0) == MapJourneyLandscape,
-		"--journey-act=2 gives Act II the causeways, at its own gate, unwarmed; Act I keeps its row")
+		"players see Act II's causeways, built ahead, at its own gate; Act I keeps its row")
+	for refused: String in ["3", "0", "02", "two", ""]:
+		_check(fails, not MapJourneyProfile.enable_dev(refused).is_empty()
+				and MapJourneyProfile.rows.size() == 2,
+			"--journey-act=%s is refused and adds no row" % refused)
+	for accepted: String in ["1", "2"]:
+		_check(fails, MapJourneyProfile.enable_dev(accepted).is_empty() and MapJourneyProfile.rows.size() == 2,
+			"--journey-act=%s names a journey act players reach and changes nothing" % accepted)
 
 
 static func _seed(fails: Array[String], content: ContentDB, seed_value: int) -> void:
@@ -72,12 +74,14 @@ static func _seed(fails: Array[String], content: ContentDB, seed_value: int) -> 
 		return
 	var routes: Node3D = land.terrain.causeways
 	_same_layout(fails, content, run, screen, seed_value)
-	_decks(fails, routes, seed_value)
+	_decks(fails, land, seed_value)
 	_seats(fails, screen, land, seed_value)
 	_water(fails, land, seed_value)
 	_high_bridges(fails, routes, seed_value)
 	_camera(fails, screen, land, seed_value)
+	_lanterns(fails, land, seed_value)
 	if seed_value == SEEDS[0]:
+		_still(fails, land)
 		_walk(fails, screen, land, run)
 	_free(screen)
 
@@ -106,6 +110,62 @@ static func _free(screen: WorldMapScreen) -> void:
 	MapScene.release_kept_journey()
 
 
+## The jade lanterns (#660 II.3) stand on decks, clear of every walking route
+## and every place the pilgrim waits; the water and every masonry material read
+## the one light mask they paint.
+static func _lanterns(fails: Array[String], land: MapJourneyLandscape, seed_value: int) -> void:
+	var city: MapCausewayLandscape = land as MapCausewayLandscape
+	var anchors: PackedVector3Array = city.lanterns.anchors
+	var clear: bool = true
+	for walk: PackedVector3Array in _walks(land):
+		for lamp: Vector3 in anchors:
+			clear = clear and city.lanterns._distance(walk, Vector2(lamp.x, lamp.z)) >= city.lanterns.CLEAR - .001
+	_check(fails, anchors.size() >= 10 and clear and city.lamps.anchors == anchors,
+		"seed %d: %d jade lanterns burn, each clear of every walking route" % [seed_value, anchors.size()])
+	var materials: Array = land.terrain.causeways.materials.values()
+	materials.append(land.terrain.water.material)
+	var mask: Variant = (land.terrain.water.material as ShaderMaterial).get_shader_parameter("city_mask")
+	var shared: bool = mask is ImageTexture
+	for material: Material in materials:
+		shared = shared and material is ShaderMaterial \
+			and (material as ShaderMaterial).get_shader_parameter("city_mask") == mask
+	_check(fails, shared, "seed %d: the water and the masonry read one light mask" % seed_value)
+
+
+## Reduce Motion holds the land still: the water's flow and the air stop.
+static func _still(fails: Array[String], land: MapJourneyLandscape) -> void:
+	var LandMotion: GDScript = MapJourneyLandscape.LandMotion
+	LandMotion.call("apply", false)
+	var water: Node = land.terrain.water
+	var before: float = water.get("clock_time")
+	water.call("_process", 0.5)
+	land.air.call("_process", 0.016)
+	var held: bool = is_equal_approx(float(water.get("clock_time")), before) and not land.air.visible
+	LandMotion.call("apply", true)
+	water.call("_process", 0.5)
+	_check(fails, held and float(water.get("clock_time")) > before,
+		"Reduce Motion holds the water and the air still, and the land moves again after")
+
+
+## The pilgrim's walking route along every edge of the record.
+static func _walks(land: MapJourneyLandscape) -> Array[PackedVector3Array]:
+	var walks: Array[PackedVector3Array] = []
+	for edge: Dictionary in land.terrain.source_edges.values():
+		walks.append(land.walking_route(str(edge["from"]), str(edge["to"])))
+	return walks
+
+
+## Which of `_walks` the raised decks carry.
+static func _raised(land: MapJourneyLandscape) -> Array[bool]:
+	var raised: Array[bool] = []
+	for edge: Dictionary in land.terrain.source_edges.values():
+		var upper: bool = false
+		for point: Array in edge["centerline"]:
+			upper = upper or float(point[1]) > .015
+		raised.append(upper)
+	return raised
+
+
 ## The land is presentation only: the painted Act II binds the same record.
 static func _same_layout(fails: Array[String], content: ContentDB, run: RunState,
 		screen: WorldMapScreen, seed_value: int) -> void:
@@ -122,7 +182,8 @@ static func _same_layout(fails: Array[String], content: ContentDB, run: RunState
 
 ## Every route is a deck (seven offsets across 1.2 m find a rendered deck), and
 ## no edge masonry, parapet or pier stands in a walking corridor.
-static func _decks(fails: Array[String], routes: Node3D, seed_value: int) -> void:
+static func _decks(fails: Array[String], land: MapJourneyLandscape, seed_value: int) -> void:
+	var routes: Node3D = land.terrain.causeways
 	_check(fails, routes.sampled_routes.size() == routes.lines.size() and routes.fields.size() == 2,
 		"seed %d: every route is drawn, ordinary and raised decks apart" % seed_value)
 	var coverage: Dictionary = Probes.deck_coverage(routes)
@@ -132,6 +193,10 @@ static func _decks(fails: Array[String], routes: Node3D, seed_value: int) -> voi
 	var blocked: Dictionary = Probes.obstruction(routes)
 	_check(fails, int(blocked["samples"]) > 10000 and int(blocked["hits"]) == 0,
 		"seed %d: no added masonry stands in a walking corridor (%s)" % [seed_value, JSON.stringify(blocked)])
+	var overhead: Dictionary = Probes.headroom(routes, _walks(land), _raised(land))
+	_check(fails, int(overhead["samples"]) > 2000 and int(overhead["hits"]) == 0,
+		"seed %d: no deck's underside stands within a walking body over any walking sample (%s)"
+			% [seed_value, JSON.stringify(overhead)])
 
 
 ## Each waystone stands on its compiled anchor's X/Z, on a deck.

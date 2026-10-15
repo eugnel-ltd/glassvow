@@ -505,23 +505,23 @@ static func _clip_slab(fails: Array[String], screen: WorldMapScreen, land: MapJo
 		"the built land lies within the clip slab's heights (%.2f to %.2f m)" % [low, high])
 
 
-## Leaving Act I gives the painted acts back their governed camera, and their
-## own light: Act I's grade and bloom stay in Act I.
+## Leaving the journey acts gives the painted acts (Act III here) back their
+## governed camera, and their own light: Act I's grade and bloom stay in Act I.
 static func _act_switch(fails: Array[String], screen: WorldMapScreen, run: RunState) -> void:
 	var environment: Environment = (screen._map_scene._world.get_node("MapEnvironment") as WorldEnvironment).environment
 	_check(fails, environment.glow_enabled and environment.adjustment_enabled,
 		"Act I's journey light grades and blooms")
-	run.act = 1
+	run.act = 2
 	screen.refresh(run)
 	_check(fails, not environment.glow_enabled and not environment.adjustment_enabled,
-		"Act II's painted light neither grades nor blooms")
+		"Act III's painted light neither grades nor blooms")
 	_check(fails, not screen._map_scene.focus_band.is_finite()
 			and screen._map_scene._display.texture == screen._map_scene.get_stage().get_texture(),
-		"Act II has no tilt-shift")
+		"Act III has no tilt-shift")
 	var rig: MapCameraRig = screen._map_scene.get_rig()
 	_check(fails, not rig.journey_mode and screen._map_scene.journey_landscape() == null
 			and is_equal_approx(rig.get_camera().rotation_degrees.x, MapCameraRig.TILT_DEGREES),
-		"Act II draws the painted landscape on the governed camera")
+		"Act III draws the painted landscape on the governed camera")
 	run.act = 0
 
 

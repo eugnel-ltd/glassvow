@@ -188,12 +188,12 @@ re-pick any of them.
 
 ## How the stone is drawn
 
-`land_stone.gd`, `presentation/map/landscape/land_stone.gd:98 (build)`:
+`land_stone.gd`, `presentation/map/landscape/land_stone.gd:107 (build)`:
 
 - The kit's granite and the ravine's cliff pieces are merged into one mesh per
   32 m cell on one material, so the stone draws in a few draws (seven at
   seed 717 for 49 pieces, six at seed 1 for 65). The merge is `SurfaceTool.append_from` over the
-  packed arrays (`presentation/map/landscape/land_stone.gd:146 (_merge)`), which are
+  packed arrays (`presentation/map/landscape/land_stone.gd:155 (_merge)`), which are
   held as meshes the renderer never sees, so nothing is read back from the
   renderer on the land's worker. The pieces load on the loader's threads
   before any land is built (`presentation/map/landscape/land_stone.gd:57 (prepare_step)`,
@@ -240,7 +240,7 @@ banks of both rivers, a piece stands every 0.82 of its own width.
   (`floor_paint.gdshader`), biplanar along the bank.
 
 **The islands** (`presentation/map/landscape/land_islands.gd:30 (find)`,
-`presentation/map/landscape/kit.gd:569 (_islands)`):
+`presentation/map/landscape/kit.gd:582 (_islands)`):
 
 - **Finding them.** The ground no road or river lets out to the land's edge.
   Each island is held at its pole, the cell farthest from a road.
@@ -253,16 +253,16 @@ banks of both rivers, a piece stands every 0.82 of its own width.
 
 - **Gravestones.** Short rows of two along the roads' verges, one row every
   13 m of road on alternating sides, 2.3–3.1 m off the line, placed before
-  the woodland's families (`presentation/map/landscape/kit.gd:658 (_verge_graves)`);
+  the woodland's families (`presentation/map/landscape/kit.gd:671 (_verge_graves)`);
   after them, one beside each of up to eight memorial shrines, of the first
-  sixteen (`presentation/map/landscape/kit.gd:640 (_shrine_graves)`); more on the
+  sixteen (`presentation/map/landscape/kit.gd:653 (_shrine_graves)`); more on the
   islands; at most 30 on the verges and by the shrines (15–26 gravestones a
   land in all at seeds 717 and 1–3).
-- **Broken walls** (`presentation/map/landscape/kit.gd:703 (_ruins)`). Up to four
+- **Broken walls** (`presentation/map/landscape/kit.gd:716 (_ruins)`). Up to four
   stand 3 to 5.5 m off a road, at least 16 m apart, turned across the
   camera's view, each with fallen blocks and a mossy mound beside it.
-- **Only where they will be drawn** (`presentation/map/landscape/kit.gd:764 (_in_sight)`,
-  `presentation/map/landscape/kit.gd:783 (_unhidden)`). A ruin is a card, and the
+- **Only where they will be drawn** (`presentation/map/landscape/kit.gd:777 (_in_sight)`,
+  `presentation/map/landscape/kit.gd:796 (_unhidden)`). A ruin is a card, and the
   woodland draws a card only where it hides nothing it must keep in sight:
   the roads' lanes, the decks, the waystones, the lamps, the water, the
   gateway, the shrines, the rocks and the other ruins. The kit asks the same
@@ -271,7 +271,7 @@ banks of both rivers, a piece stands every 0.82 of its own width.
   `presentation/map/landscape/wood_planting.gd:309 (protected_area)`), and keeps it up
   to date with every placement after; and it places nothing the woodland
   keeps in sight behind a ruin's card. The planting then plants against the
-  kit's grid (`presentation/map/landscape/kit.gd:534 (woodland_sight)`), the same
+  kit's grid (`presentation/map/landscape/kit.gd:547 (woodland_sight)`), the same
   protection over the same placements, so the grid is built once. Without
   this, 34 of 58 ruins at seed 717 were placed and then left out.
 - **Planting.** The woodland plants them as cards where the kit placed them,
@@ -280,7 +280,7 @@ banks of both rivers, a piece stands every 0.82 of its own width.
   through their cards (`presentation/map/landscape/wood_planting.gd:536 (casts)`), and
   their cards never sway (`presentation/map/landscape/impostor_wood.gd:159 (card_colour)`).
 
-**Rocks off the water** (`presentation/map/landscape/kit.gd:968 (_clear)`): an
+**Rocks off the water** (`presentation/map/landscape/kit.gd:981 (_clear)`): an
 outcrop's footprint circle may reach over the bank and at most a quarter of
 its radius over the water. On main, two to five rocks a land reached further
 over the river (2, 3, 5 and 2 at seeds 717, 1, 2 and 3).
@@ -457,7 +457,7 @@ opens, the one page grows it by 16 MiB and the two layers do not grow it.
 - It packed a re-bake of the committed recipes, byte-identical to the bake
   behind the one-page atlas.
 - A card carries its tile's rect on its page, with the page added to the
-  rect's top (`presentation/map/landscape/impostor_atlas.gd:230 (custom)`).
+  rect's top (`presentation/map/landscape/impostor_atlas.gd:246 (custom)`).
   `impostor.gdshader` and `floor_caster.gdshader` read the page back as the
   whole part and sample a `sampler2DArray`. Their sampler counts are
   unchanged: two and one.
@@ -743,13 +743,13 @@ at seeds 717 and 1–3):
     where the pool has a thread to spare ([below](#a-pool-with-no-thread-to-spare)),
     and the islands' stage waits for it after the arch, the heroes and the
     lanterns (27 ms on the Mac; the search 9 ms)
-    (`presentation/map/landscape/kit.gd:604 (_seek_islands)`).
+    (`presentation/map/landscape/kit.gd:617 (_seek_islands)`).
   - The stone's merge reads only the kit's placements and the land. It now
     gathers the pieces into their cells on the worker pool, again where the
     pool has a thread to spare, while the woodland is planted beside it,
     and the land's worker commits the meshes
-    after (`presentation/map/landscape/kit.gd:822 (gather_stone)`,
-    `presentation/map/landscape/land_stone.gd:129 (finish)`).
+    after (`presentation/map/landscape/kit.gd:835 (gather_stone)`,
+    `presentation/map/landscape/land_stone.gd:138 (finish)`).
   - Gathering sends nothing to the renderer, so no two uploads overlap.
   - On the Mac, the islands' stage on the land's worker falls from 25.3 to
     17.1 ms, and the stone's from 9.4 to 2.0 ms.
@@ -832,15 +832,15 @@ found the two waits outside the rule. `848699c6` brings them under it:
 - **The island search.** Where `Terrain.pool_spares_threads()` is false
   (fewer than three threads), `_seek_islands` runs `_find_islands` at once
   on the land's own thread and records `searched_in_turn`
-  (`presentation/map/landscape/kit.gd:605 (in _seek_islands)`).
+  (`presentation/map/landscape/kit.gd:619 (in _seek_islands)`).
   `_join_islands` then has no task to wait for.
 - **The stone's gathering.** Where it is false, `_finish` records
   `gathered_in_turn` and calls `kit.gather_stone()` on its own thread after
   the woodland, the lamps and the air, where it would otherwise wait for the
-  task (`presentation/map/map_journey_landscape.gd:245 (in _finish)`).
+  task (`presentation/map/map_journey_landscape.gd:284 (in _finish)`).
 - **The latent double gather.** `gather_stone` now returns when the stone
   already holds its pieces
-  (`presentation/map/landscape/kit.gd:822 (in gather_stone)`). So a replayed
+  (`presentation/map/landscape/kit.gd:836 (in gather_stone)`). So a replayed
   build with `stone_later`, which makes its stone in place, cannot gather it
   twice. `_finish` passes no cache, so it could not happen before either.
 

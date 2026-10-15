@@ -10,6 +10,9 @@ uniform sampler2D flipbook : source_color, filter_linear_mipmap, repeat_disable;
 uniform float frames_per_second = 12.0;
 uniform float intensity = 2.4;
 uniform float lift = 0.24;
+// A land whose lamps burn another colour (Act II's jade): the flame's
+// brightness in `recolour.rgb`, by `recolour.a` (0 keeps the flipbook's own).
+uniform vec4 recolour = vec4(0.0);
 global uniform float land_motion;
 varying float phase;
 
@@ -28,6 +31,7 @@ void fragment() {
 	vec2 cell = vec2(mod(frame, 4.0), floor(frame / 4.0));
 	vec4 flame = texture(flipbook, (cell + UV) * 0.25);
 	float flicker = 0.9 + 0.1 * sin(TIME * 9.0 + phase * 40.0) * land_motion;
-	ALBEDO = flame.rgb * intensity * flicker;
+	vec3 colour = mix(flame.rgb, vec3(dot(flame.rgb, vec3(0.299, 0.587, 0.114))) * recolour.rgb, recolour.a);
+	ALBEDO = colour * intensity * flicker;
 	ALPHA = flame.a;
 }

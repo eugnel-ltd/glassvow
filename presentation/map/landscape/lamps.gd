@@ -27,7 +27,9 @@ var flames: MultiMeshInstance3D
 var lights: Array[OmniLight3D] = []
 
 
-func build(points: PackedVector3Array) -> void:
+## Lamps at `points`; `recolour` (its alpha above 0) burns their flames and
+## real lights in another colour than the flipbook's amber (Act II's jade).
+func build(points: PackedVector3Array, recolour: Color = Color(0, 0, 0, 0)) -> void:
 	name = "Lamps"
 	anchors = points
 	var card: QuadMesh = QuadMesh.new()
@@ -35,6 +37,8 @@ func build(points: PackedVector3Array) -> void:
 	var material: ShaderMaterial = ShaderMaterial.new()
 	material.shader = FLAME_SHADER
 	material.set_shader_parameter("flipbook", FLIPBOOK)
+	if recolour.a > 0:
+		material.set_shader_parameter("recolour", Vector4(recolour.r, recolour.g, recolour.b, recolour.a))
 	card.material = material
 	var multi: MultiMesh = MultiMesh.new()
 	multi.transform_format = MultiMesh.TRANSFORM_3D
@@ -50,7 +54,7 @@ func build(points: PackedVector3Array) -> void:
 	for i: int in range(0 if MapScene.lean_profile() else REAL_LIGHTS):
 		var light: OmniLight3D = OmniLight3D.new()
 		light.name = "Lamp light %d" % i
-		light.light_color = LIGHT_COLOUR
+		light.light_color = LIGHT_COLOUR if recolour.a <= 0 else Color(recolour, 1.0)
 		light.light_energy = LIGHT_ENERGY
 		light.omni_range = LIGHT_RANGE
 		light.omni_attenuation = 1.4

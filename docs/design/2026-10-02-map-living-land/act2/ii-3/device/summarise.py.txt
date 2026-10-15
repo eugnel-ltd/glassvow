@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""Lane map-ii3 (scratch): the batch's table. Usage: summarise.py <out folder>"""
+import json, glob, os, re, sys, subprocess
+out = sys.argv[1]
+def rows(label):
+    p = f'{out}/{label}.jsonl'
+    return [json.loads(l) for l in open(p)] if os.path.exists(p) else []
+labels = sorted({os.path.basename(p)[:-6] for p in glob.glob(f'{out}/*.jsonl') if '.wrong.' not in p})
+def footprint(label):
+    run = label.split('-')[0]
+    trace = f'{out}/{run}-am.trace'
+    if not os.path.isdir(trace): return 'not read: no trace'
+    # A trace whose save never finished (xctrace killed while saving) has no
+    # table of contents; one the device left early ran short of its limit.
+    toc = subprocess.run(['xcrun', 'xctrace', 'export', '--input', trace, '--toc'],
+        capture_output=True, text=True)
+    if toc.returncode != 0:
+        return 'not read: the trace was never saved (%s)' % (toc.stderr.strip() or toc.stdout.strip())
+    duration = re.search(r'<duration>([\d.]+)', toc.stdout)
+    reason = re.search(r'<end-reason>([^<]*)', toc.stdout)
+    window = '%s s, %s' % (duration.group(1) if duration else '?', reason.group(1) if reason else '?')
+    xml = f'{out}/{run}-am-live.xml'
+    if not os.path.exists(xml):
+        r = subprocess.run(['xcrun', 'xctrace', 'export', '--input', trace, '--xpath',
+            '/trace-toc/run[@number="1"]/data/table[@schema="activity-monitor-process-live"]', '--output', xml],
+            capture_output=True, text=True)
+        if r.returncode != 0:
+            return f'not read: the live table did not export ({window})'
+    pid = open(f'{out}/{label}.pid').read().strip() if os.path.exists(f'{out}/{label}.pid') else None
+    r = subprocess.run(['python3', '-I', os.path.join(os.path.dirname(__file__), 'footprint.py'), xml, 'glassvow', pid or ''],
+        capture_output=True, text=True)
+    read = r.stdout.strip() or r.stderr.strip().splitlines()[-1]
+    if not (reason and reason.group(1) == 'Time limit reached'):
+        return f'not read: the recording was cut short ({window}; {read})'
+    return f'{read} (window {window})'
+for label in labels:
+    rs = rows(label)
+    build = next((r['build'] for r in rs if r.get('probe') == 'start'), '?')
+    print(f'== {label} {build}')
+    view = 'default'
+    for r in rs:
+        p = r.get('probe')
+        if p == 'view': view = r['view']
+        elif p in ('boot', 'warm'):
+            print(f"  {p}: worst {r['worst_frame_ms']} ms, elapsed {r['elapsed_ms']} ms, vram {r['vram_start']}->{r['vram_peak']}->{r['vram_end']}")
+        elif p == 'open':
+            print(f"  open {r.get('kind')}: call {r['call_ms']} first {r['first_frame_ms']} ready {r['ready_ms']} worst {r['worst_frame_ms']} slow {r['slow_frames'][:6]} vram {r['vram_start']}->{r['vram_peak']}->{r['vram_end']}")
+        elif p == 'transition':
+            print(f"  transition: dwell {r['dwell_s']} s, prefetch done {r['prefetch_done_ms']} ms (step {r['prefetch_step']}), worst {r['worst_frame_ms']} ms, slow {r['slow_frames'][:8]}, vram {r['vram_start']}->{r['vram_peak']}->{r['vram_end']}")
+        elif p == 'hold_start':
+            hs = r
+        elif p == 'hold_end':
+            print(f"  hold {r['view']}/{r['mode']}: missed {r['missed']} max {r['max_ms']} p95 {r['p95_ms']} | video {hs['video_mib']} MiB, draws {hs['render'].get('stage_draw_calls')}")
+        elif p == 'memory_warning':
+            print(f"  MEMORY WARNING at {r['t_ms']} ms: video {r['video_mib']}")
+        elif p == 'error':
+            print(f"  ERROR {r}")
+    if label.endswith('-l1'):
+        print(f"  footprint: {footprint(label)}")

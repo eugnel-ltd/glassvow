@@ -1,0 +1,28 @@
+== lock taken 09:14:24
+== start 09:14:24; Mac load 8.92 28.45 30.21
+== install ctl1 (3a502235) 09:14:24
+   ctl1 am (attempt 1): 30.902053 s, Time_limit_reached
+== ctl1-l1 nonce ctl1-l1-862624976: rows fresh
+   ctl1-l1: build 3a502235
+== ctl1-l2 nonce ctl1-l2-1738823459: rows fresh
+   ctl1-l2: build 3a502235
+== install dev1 (602b0a4b) 09:19:08
+   dev1 am (attempt 1): 30.804972 s, Time_limit_reached
+== dev1-l1 nonce dev1-l1-1883726529: rows fresh
+   dev1-l1: build 602b0a4b
+== dev1-l2 nonce dev1-l2-10848806: rows fresh
+   dev1-l2: build 602b0a4b
+== install ctl2 (3a502235) 09:24:50
+   ctl2 am (attempt 1): 30.750804 s, Time_limit_reached
+== ctl2-l1 nonce ctl2-l1-534012462: rows fresh
+   ctl2-l1: build 3a502235
+== ctl2-l2 nonce ctl2-l2-182031896: rows fresh
+   ctl2-l2: build 3a502235
+== install dev2 (602b0a4b) 09:30:11
+   dev2 am (attempt 1): 30.754018 s, Time_limit_reached
+== dev2-l1 nonce dev2-l1-3130520742: rows fresh
+   dev2-l1: build 602b0a4b
+== dev2-l2 nonce dev2-l2-9727012: rows fresh
+   dev2-l2: build 602b0a4b
+== done 09:34:30
+== lock released 09:34:30

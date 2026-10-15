@@ -47,6 +47,11 @@ static func prepare_template(path: String, kind: String, packed: PackedScene) ->
 	return failure
 
 
+## Lets every collected template go (`Kit.release`).
+static func release() -> void:
+	_shared.clear()
+
+
 ## Whether a kind is drawn by something other than its own scene: as an
 ## impostor card (`impostor_wood.gd`) or in the merged stone (`land_stone.gd`).
 static func drawn_elsewhere(kind: String) -> bool:

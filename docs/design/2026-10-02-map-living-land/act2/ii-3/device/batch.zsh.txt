@@ -1,0 +1,65 @@
+#!/bin/zsh
+# Lane map-ii3 batch (scratch; QA app only, under the shared lock, taken only when free and
+# never broken): the branch against main, interleaved, two installs each (ctl, dev, ctl, dev).
+# Per install:
+#   L1 = Act I boots, its boss beaten, the crown's offer read 8 s (Act II's land built ahead
+#        on the branch), none taken, Act II's map opens; then 600-frame rests at the cadence
+#        and live at Journey, Close and Whole act; under an Activity Monitor recording (peak
+#        physical footprint).
+#   L2 = Act I's opens (cold, reopened twice, warmed), then the same transition with a 2 s
+#        read (a fast tap: the land may not be built yet), then a short Journey rest.
+# Every memory warning the OS sends is a probe row.
+set -u
+L=/Users/jamesto/Coding/glassvow/.claude/worktrees/map-ii3
+FLOW=/Users/jamesto/Coding/glassvow/.claude/worktrees/device13-flow
+OWNER=map-ii3
+OUT=$L/device/${BATCH:-batch1}
+[[ "${OUT:A}" == $L/* ]] || { echo "OUT outside the lane"; exit 1; }
+mkdir -p $OUT
+source $L/wt/tools/map_trace/device.zsh
+$FLOW/ipad_lock.sh acquire $OWNER || { echo "no lock"; exit 1; }
+echo "== lock taken $(date +%T)"
+release() { $FLOW/ipad_lock.sh release $OWNER && echo "== lock released $(date +%T)"; }
+trap release EXIT
+hold() { $FLOW/ipad_lock.sh acquire $OWNER >/dev/null 2>&1; }
+UDID=$(mt_udid); [[ -n "$UDID" ]] || { echo "no iPad"; exit 1; }
+echo "== start $(date +%T); Mac load $(uptime | sed 's/.*averages: //')"
+check_build() { grep -q "\"build\":\"$2\"" $OUT/$1.jsonl 2>/dev/null && echo "   $1: build $2" || { echo "   $1: WRONG BUILD (wanted $2)"; mv $OUT/$1.jsonl $OUT/$1.wrong.jsonl 2>/dev/null; }; }
+COMMON=(--map --map-trace-probe --map-lean --seed=1 --shape=pad-landscape --map-steps=2)
+for n in 1 2; do
+  for b in ctl dev; do
+    hold
+    build=$(cat $L/ipa/$b.build)
+    echo "== install $b$n ($build) $(date +%T)"
+    timeout 300 zsh -c "source $L/wt/tools/map_trace/device.zsh; UDID=$UDID; OUT=$OUT; mt_install $L/ipa/$b.ipa" || { echo "install failed"; exit 1; }
+    # The footprint's recording: batch 1 lost all four. Given the identifier,
+    # xctrace often sees the iPad disconnect at once (ctl1: 0.7 s); named, it
+    # runs its limit. Its save outlasts the recording (about 270 s after 30 s),
+    # so it has its own long timeout: batch 1's 300 s killed three mid-save.
+    # Batch 2's first start: a 100 s window never saved (one save failed after
+    # 14 min, one ran past 17 min), so the window is the dry run's proven 30 s.
+    # It opens a few seconds after launch and covers the offer (Act II's land
+    # building), Act II's first open and its Journey rests; Close and Whole act
+    # come after it. A window cut short relaunches L1 once.
+    for attempt in 1 2; do
+      _mt_start $b$n-l1 $COMMON --transition=8 --holds=cadence,live --probe-view=journey,close,whole
+      [[ -n "$MT_PID" ]] || { echo "== $b$n-l1: launch failed"; exit 1; }
+      echo $MT_PID > $OUT/$b$n-l1.pid
+      sleep 3
+      xcrun devicectl device info ddiServices --device $UDID >/dev/null 2>&1
+      rm -rf $OUT/$b$n-am.trace
+      timeout 900 xcrun xctrace record --device "$(mt_name)" --template 'Activity Monitor' --all-processes \
+        --time-limit 30s --output $OUT/$b$n-am.trace --no-prompt 2>&1 | mt_redact > $OUT/$b$n-am.log
+      window=($(_mt_window $OUT/$b$n-am.trace))
+      echo "   $b$n am (attempt $attempt): ${window[1]} s, ${window[2]}"
+      [[ ${window[2]} == Time_limit_reached ]] && break
+      hold
+    done
+    _mt_rows $b$n-l1
+    check_build $b$n-l1 $build
+    hold
+    MT_WAIT=75 mt_launch $b$n-l2 $COMMON --opens --transition=2 --holds=cadence --hold-frames=120 --probe-view=journey
+    check_build $b$n-l2 $build
+  done
+done
+echo "== done $(date +%T)"

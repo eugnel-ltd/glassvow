@@ -15,10 +15,12 @@ extends RefCounted
 ## kit and conifer shadow cones are checked against the renderer's own: and a
 ## headless boot warms nothing and still builds inline. Every title that warms a
 ## saved Act I run reads back first what the warm-up would read under its frames,
-## the rite's or a later title's; an Act I run past its boss warms Act II's
-## pictures once the rite has landed, as an Act II run does. A screen covering
-## the title leaves Act I's warm alone, and the next title warms another act's
-## map at once. A finished warm whose land was freed warms again, and a screen
+## the rite's or a later title's. An Act II run, and an Act I run past its
+## beaten boss, warm Act II's land from the rite as an Act I run warms Act I's
+## (#660 II.3); an Act II run past its boss warms Act III's pictures once the
+## rite has landed, as an Act III run does. A screen covering the title leaves
+## a journey act's warm alone, and the next title warms a painted act's map at
+## once. A finished warm whose land was freed warms again, and a screen
 ## going while it builds its own land gives the build up and waits for it
 ## instead of leaving it running.
 
@@ -597,19 +599,21 @@ static func _map_opened_mid_build_takes_the_layout(fails: Array[String],
 	_dispose(main)
 
 
-## A saved run whose next map is another act's has no land to build, and its
+## A saved run whose next map is a painted act's has no land to build, and its
 ## map opens as fast from a tap as the rite lands with its pictures decoded
 ## once the rite has landed: nothing of it warms or is read back under the
-## rite, and the lit title warms its pictures. So for an Act II run, and for an
-## Act I run past its boss (stored as the crown relic's offer stores it), whose
-## next map is Act II's.
+## rite, and the lit title warms its pictures. So for an Act III run, and for
+## an Act II run past its boss (stored as the crown relic's offer stores it),
+## whose next map is Act III's. An Act II run, and an Act I run past its
+## beaten boss, whose next map is Act II's, warm Act II's land from the rite's
+## first frame instead (#660 II.3).
 static func _other_act_warms_once_lit(fails: Array[String], content: ContentDB) -> void:
 	for past_boss: bool in [false, true]:
-		var which: String = "an Act I run past its boss" if past_boss else "an Act II run"
+		var which: String = "an Act II run past its boss" if past_boss else "an Act III run"
 		_release_all()
 		_unprime()
 		var main: Main = _main(content)
-		_store_run(content, SEED_A, 0 if past_boss else 1, past_boss)
+		_store_run(content, SEED_A, 1 if past_boss else 2, past_boss)
 		main._show_title()
 		var title: TitleScreen = main._choice_screen as TitleScreen
 		title.kindle_now()
@@ -622,10 +626,25 @@ static func _other_act_warms_once_lit(fails: Array[String], content: ContentDB) 
 		title.rite.skip()
 		main._process(0.016)
 		var warming: MapLandscapeAssets.Pictures = MapLandscapeAssets.warming()
-		_check(fails, warming != null and warming.act == 1
+		_check(fails, warming != null and warming.act == 2
 				and MapJourneyPrefetch.current_step() == -1,
-			"once the rite has landed the title warms Act II's pictures for %s, and no land"
+			"once the rite has landed the title warms Act III's pictures for %s, and no land"
 				% which)
+		_dispose(main)
+	for past_boss: bool in [false, true]:
+		var which: String = "an Act I run past its beaten boss" if past_boss else "an Act II run"
+		_release_all()
+		_unprime()
+		var main: Main = _main(content)
+		_store_run(content, SEED_A, 0 if past_boss else 1, past_boss)
+		main._show_title()
+		var title: TitleScreen = main._choice_screen as TitleScreen
+		title.kindle_now()
+		main._process(0.016)
+		_check(fails, title.rite != null and title.rite.is_running()
+				and MapJourneyPrefetch._current != null and MapJourneyPrefetch._current._act == 1
+				and not Meshes._unit_arrays.is_empty(),
+			"the title warms Act II's land from the rite's first frame for %s" % which)
 		_dispose(main)
 	_release_all()
 
@@ -633,16 +652,16 @@ static func _other_act_warms_once_lit(fails: Array[String], content: ContentDB) 
 ## A title that warms a saved Act I run reads back what the warm-up would read
 ## back under its frames before its own first frame, the rite's title or a later
 ## one (a session whose first title had no Act I run to warm, back from the
-## run menu); a title warming no Act I run reads nothing.
+## run menu); a title warming no journey act's run (Act III's) reads nothing.
 static func _later_title_primes(fails: Array[String], content: ContentDB) -> void:
 	_release_all()
 	var main: Main = _main(content)
 	main._title_kindled = true
-	_store_run(content, SEED_A, 1)
+	_store_run(content, SEED_A, 2)
 	_unprime()
 	main._show_title()
 	_check(fails, MapLandscapeAssets._slate == null and Meshes._unit_arrays.is_empty(),
-		"a title warming no Act I run reads nothing back")
+		"a title warming no journey act's run reads nothing back")
 	_store_run(content, SEED_A)
 	main._show_title()
 	_check(fails, (main._choice_screen as TitleScreen).rite == null
@@ -664,11 +683,11 @@ static func _unprime() -> void:
 ## A screen in the title's place before Act I's warm-up has ended (a saved map
 ## that would not load, a save that would not hold) leaves the warm-up running:
 ## it started before the title and needs nothing of it, and the title after
-## that screen takes its land. Another act's warm-up waits for the rite: with
-## the title gone it lets go, and the next title, which plays no rite, warms
-## that act's map at once.
+## that screen takes its land. A painted act's warm-up (Act III's) waits for
+## the rite: with the title gone it lets go, and the next title, which plays no
+## rite, warms that act's map at once.
 static func _covered_title_keeps_the_warm(fails: Array[String], content: ContentDB) -> void:
-	for act: int in [0, 1]:
+	for act: int in [0, 2]:
 		_release_all()
 		var main: Main = _main(content)
 		_store_run(content, SEED_A, act)
@@ -693,11 +712,11 @@ static func _covered_title_keeps_the_warm(fails: Array[String], content: Content
 				"the title after that screen keeps the land its warm-up built")
 		else:
 			_check(fails, MapLandscapeAssets.warming() == null and MapLandscapeAssets._kept == null,
-				"another act's warm-up lets go when the title is gone before its rite landed")
+				"a painted act's warm-up lets go when the title is gone before its rite landed")
 			main._on_save_error_choice("title")
 			var warming: MapLandscapeAssets.Pictures = MapLandscapeAssets.warming()
-			_check(fails, warming != null and warming.act == 1,
-				"the next title warms another act's map at once")
+			_check(fails, warming != null and warming.act == 2,
+				"the next title warms a painted act's map at once")
 		_dispose(main)
 	_release_all()
 

@@ -47,11 +47,6 @@ extends Control
 ## How long the title rests before the work starts, and before the draws.
 const REST: float = 0.8
 const SETTLE: float = 2.0
-## The eye the land is drawn from, after the bake: straight down from this
-## height (metres), seeing a square this wide, more than the land's bounds
-## (`MapJourneyLandscape.MAP_BOUNDS`).
-const LAND_EYE_HEIGHT: float = 60.0
-const LAND_EYE_SPAN: float = 140.0
 ## A road for the waylight tracer's stand-in: any two points will do.
 const WAYLIGHT_ROAD: Dictionary = {"centerline": [[0.0, 0.0, 0.0], [4.0, 0.0, 0.0]], "corridor_width": 1.0}
 
@@ -68,10 +63,9 @@ var _rested: float = 0.0
 var _settled: float = -1.0
 var _sample: Node = null
 var _canvas: Array[Material] = []
-## The view of the map's stage the land is drawn on, after the bake.
-var _map_view: SubViewport = null
-var _canaries: Array[int] = []
-var _settle_until: int = 0
+## The land's warm (`MapLandWarm`): its view of the map's stage, after the
+## bake.
+var _land: MapLandWarm = null
 
 
 static func started() -> bool:
@@ -260,27 +254,15 @@ func _await_bake() -> void:
 		_steps.push_front(_await_bake)
 
 
-## A view of the map's stage (`MapScene.stage_view`), lit as Act I's journey
-## land, drawn empty: its glow's post pass is a target format of its own, and
-## the engine builds a surface's pipelines for a format only once a view has
-## drawn with it. Drawn a frame before the fight's targets stand again, so
-## theirs include it; kept to draw the land on.
+## A view of the map's stage, lit as the kept land's act lights it (Act I's
+## journey land under a first title), drawn empty (`MapLandWarm.look`). Drawn
+## a frame before the fight's targets stand again, so theirs include its glow's
+## target format; kept to draw the land on.
 func _map_look() -> void:
-	_map_view = MapScene.stage_view()
-	_map_view.name = "PathWarmMap"
-	var key: DirectionalLight3D = DirectionalLight3D.new()
-	key.name = "Key"
-	key.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
-	var light: WorldEnvironment = WorldEnvironment.new()
-	light.environment = Environment.new()
-	MapScene._painted_light(key, light.environment)
-	MapJourneyProfile.light(MapJourneyProfile.FIRST_ACT, key, light.environment)
-	_map_view.add_child(key)
-	_map_view.add_child(light)
-	var eye: Camera3D = Camera3D.new()
-	eye.name = "Eye"
-	_map_view.add_child(eye)
-	add_child(_map_view)
+	_land = MapLandWarm.new()
+	_land.name = "PathWarmLand"
+	add_child(_land)
+	_land.look("PathWarmMap")
 
 
 ## Frame 0's targets drawn again, after the floor bake's switches: the foe's
@@ -297,92 +279,41 @@ func _restand_card() -> void:
 	add_child(holder)
 
 
-## Act I's kept land (`MapScene.lend_journey`) on the map's view for a frame,
-## seen by no camera: the engine queues its surfaces' pipelines, in the
-## background, for every target format the map draws with. Its shadow is off
-## for the frame, so nothing is drawn and no frame waits.
+## The kept land on the map's view for a frame, seen by no camera
+## (`MapLandWarm.queue`).
 func _land_queue() -> void:
-	var land: MapJourneyLandscape = MapScene.lend_journey()
-	if land == null:
+	if _land.queue() == null:
 		_steps.clear()
-		_drop_map_view()
 		return
-	(_map_view.get_node("Key") as DirectionalLight3D).shadow_enabled = false
-	(_map_view.get_node("Eye") as Camera3D).cull_mask = 0
-	_map_view.add_child(land)
 	# A waylight tracer, as the map binds one per road at its open (hidden on
-	# Act I's land, its surfaces' pipelines built all the same); its material
-	# held, so the shader the engine generates for it outlives the stand-in.
+	# the journey land, its surfaces' pipelines built all the same); its
+	# material held, so the shader the engine generates for it outlives the
+	# stand-in.
 	var tracer: MapWaylightTracer = MapWaylightTracer.new()
 	if tracer.configure_route(WAYLIGHT_ROAD, MapWaylightTracer.STATE_COLD):
 		_keep(tracer.material_override)
 		tracer.visible = false
-		_map_view.add_child(tracer)
+		_land.view.add_child(tracer)
+		RenderingServer.frame_post_draw.connect(tracer.queue_free, CONNECT_ONE_SHOT)
 	else:
 		tracer.free()
-		tracer = null
-	_map_view.render_target_update_mode = SubViewport.UPDATE_ONCE
-	RenderingServer.frame_post_draw.connect(func() -> void:
-		MapScene.return_journey()
-		if tracer != null:
-			tracer.queue_free(), CONNECT_ONE_SHOT)
 
 
 ## Waits, without holding a frame, until the pipelines queued so far have
-## compiled: a task queued after them on each queue of the worker pool ends
-## once they have all started, and SETTLE more lets the last ones end (as the
-## floor bake waits, `floor_bake.gd`). Once after the land is queued (its draw
+## compiled (`MapLandWarm.compiled`). Once after the land is queued (its draw
 ## then finds them built), and once after it is drawn: the warm is done only
 ## when its specialised pipelines are, since on the iPad 8 their compiles,
 ## still running when the title's first room opened, slowed that opening by
 ## 10-15 ms (#682 Part 2's read).
 func _await_compiles() -> void:
-	if _canaries.is_empty() and _settle_until == 0:
-		for high: bool in [true, false]:
-			_canaries.append(WorkerThreadPool.add_task(func() -> void: pass, high, "PathWarm: land pipelines started"))
-	for task: int in _canaries:
-		if not WorkerThreadPool.is_task_completed(task):
-			_steps.push_front(_await_compiles)
-			return
-	for task: int in _canaries:
-		WorkerThreadPool.wait_for_task_completion(task)
-	_canaries.clear()
-	if _settle_until == 0:
-		_settle_until = Time.get_ticks_msec() + roundi(SETTLE * 1000.0)
-	if Time.get_ticks_msec() < _settle_until:
+	if not _land.compiled():
 		_steps.push_front(_await_compiles)
 
 
 ## The land drawn once, whole, from above, lit and shadowed as the map lights
-## it: each surface's specialised pipelines are built for the map's lights
-## (in the background, its ubershader drawing meanwhile, already built). Then
-## the land is given back and the view let go.
+## it (`MapLandWarm.draw`); then given back and the view let go.
 func _land_draw() -> void:
-	var land: MapJourneyLandscape = MapScene.lend_journey()
-	if land == null:
-		_drop_map_view()
-		return
-	var key: DirectionalLight3D = _map_view.get_node("Key")
-	key.shadow_enabled = true
-	key.directional_shadow_max_distance = LAND_EYE_HEIGHT * 2.0
-	var eye: Camera3D = _map_view.get_node("Eye")
-	eye.cull_mask = 0xFFFFF
-	eye.projection = Camera3D.PROJECTION_ORTHOGONAL
-	eye.size = LAND_EYE_SPAN
-	eye.far = LAND_EYE_HEIGHT * 2.0
-	eye.position = Vector3(0.0, LAND_EYE_HEIGHT, 0.0)
-	eye.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
-	_map_view.add_child(land)
-	_map_view.render_target_update_mode = SubViewport.UPDATE_ONCE
-	RenderingServer.frame_post_draw.connect(func() -> void:
-		MapScene.return_journey()
-		_drop_map_view(), CONNECT_ONE_SHOT)
-
-
-func _drop_map_view() -> void:
-	if _map_view != null:
-		_map_view.queue_free()
-		_map_view = null
+	_land.draw()
 
 
 ## Made and held.

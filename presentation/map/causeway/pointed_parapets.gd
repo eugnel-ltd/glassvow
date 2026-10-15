@@ -5,11 +5,12 @@ extends RefCounted
 ## `stone_bridge/pointed_parapets.gd`; distances belong to the boundary run,
 ## never a nearest-route lookup.
 const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
+const CellSurfaces = preload("res://presentation/map/causeway/cell_surfaces.gd")
 var points: Array[Vector3] = []
 var normals: Array[Vector3] = []
 var stations: Array[float] = []
-var body: SurfaceTool
-var trim: SurfaceTool
+var body: CellSurfaces
+var trim: CellSurfaces
 var fields: Array
 var wall: float = .83
 var thickness: float = .20
@@ -17,15 +18,13 @@ var bays: int = 0
 var stair_bays: int = 0
 
 
-func build(edges: Array[Dictionary], blocks: SurfaceTool, caps: SurfaceTool, all_fields: Array,
+func build(edges: Array[Dictionary], blocks: CellSurfaces, caps: CellSurfaces, all_fields: Array,
 		settings: Dictionary) -> void:
 	body = blocks
 	trim = caps
 	fields = all_fields
 	wall = settings["parapet_height"]
 	thickness = settings["parapet_width"]
-	body.set_smooth_group(-1)
-	trim.set_smooth_group(-1)
 	for edge: Dictionary in edges:
 		var a: Vector3 = edge["a"]
 		var b: Vector3 = edge["b"]
@@ -132,7 +131,7 @@ func _sample(at: float) -> Dictionary:
 		"normal": normals[index].lerp(normals[index + 1], t).normalized()}
 
 
-func _band(surface: SurfaceTool, start: float, end: float, low: float, high: float, width: float,
+func _band(surface: CellSurfaces, start: float, end: float, low: float, high: float, width: float,
 		offset: float = .14) -> void:
 	if end - start < .001:
 		return
@@ -145,7 +144,7 @@ func _band(surface: SurfaceTool, start: float, end: float, low: float, high: flo
 		_loft(surface, cuts[i], cuts[i + 1], low, low, high, high, width, offset)
 
 
-func _loft(surface: SurfaceTool, start: float, end: float, low_a: float, low_b: float, high_a: float,
+func _loft(cells: CellSurfaces, start: float, end: float, low_a: float, low_b: float, high_a: float,
 		high_b: float, width: float, offset: float) -> void:
 	var a: Dictionary = _sample(start)
 	var b: Dictionary = _sample(end)
@@ -162,6 +161,7 @@ func _loft(surface: SurfaceTool, start: float, end: float, low_a: float, low_b: 
 	# Boundary winding can reverse around an island: face orientation follows
 	# the measured outward vector, not the order returned by the outline.
 	var reverse: bool = (pb - pa).cross(Vector3.UP).dot(na) < 0
+	var surface: SurfaceTool = cells.at((pa + pb) * .5)
 	for face: Array in [[0, 1, 2, 3], [5, 4, 7, 6], [4, 0, 3, 7], [1, 5, 6, 2], [3, 2, 6, 7], [4, 5, 1, 0]]:
 		if reverse:
 			Meshes.triangle(surface, p[face[0]], p[face[2]], p[face[1]])

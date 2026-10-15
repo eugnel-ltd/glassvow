@@ -1,0 +1,28 @@
+== lock taken 23:19:48
+== start 23:19:48; Mac load 10.18 22.46 17.85
+== install ctl1 (6ee88a9b) 23:19:48
+Output file saved as: ctl1-am.trace
+== ctl1-l1 nonce ctl1-l1-2471216385: rows fresh
+   ctl1-l1: build 6ee88a9b
+== ctl1-l2 nonce ctl1-l2-165723024: rows fresh
+   ctl1-l2: build 6ee88a9b
+== install dev1 (5cf7f02e) 23:23:11
+Reached specified time limit, ending recording...
+== dev1-l1 nonce dev1-l1-1477632172: rows fresh
+   dev1-l1: build 5cf7f02e
+== dev1-l2 nonce dev1-l2-1919429413: rows fresh
+   dev1-l2: build 5cf7f02e
+== install ctl2 (6ee88a9b) 23:29:51
+Reached specified time limit, ending recording...
+== ctl2-l1 nonce ctl2-l1-192026802: rows fresh
+   ctl2-l1: build 6ee88a9b
+== ctl2-l2 nonce ctl2-l2-599217934: rows fresh
+   ctl2-l2: build 6ee88a9b
+== install dev2 (5cf7f02e) 23:36:33
+Reached specified time limit, ending recording...
+== dev2-l1 nonce dev2-l1-2926913088: rows fresh
+   dev2-l1: build 5cf7f02e
+== dev2-l2 nonce dev2-l2-914925411: rows fresh
+   dev2-l2: build 5cf7f02e
+== done 23:43:18
+== lock released 23:43:18

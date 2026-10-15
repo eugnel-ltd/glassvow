@@ -10,13 +10,18 @@ extends RefCounted
 class MeshProbe extends RefCounted:
 	var cells: Dictionary = {}
 
-	func build(mesh: Mesh) -> void:
+	## `steepest`: the faces more upright than this (the cosine of their
+	## normal's angle to the vertical) are left out, so a wall is not read as
+	## an underside; 0 keeps every face that is not exactly vertical.
+	func build(mesh: Mesh, steepest: float = 0.0) -> void:
 		var faces: PackedVector3Array = mesh.get_faces()
 		for i: int in range(0, faces.size(), 3):
 			var a: Vector3 = faces[i]
 			var b: Vector3 = faces[i + 1]
 			var c: Vector3 = faces[i + 2]
 			if absf(Vector2(b.x - a.x, b.z - a.z).cross(Vector2(c.x - a.x, c.z - a.z))) < .0000001:
+				continue
+			if steepest > 0 and absf((b - a).cross(c - a).normalized().y) < steepest:
 				continue
 			var lo: Vector2 = Vector2(minf(a.x, minf(b.x, c.x)), minf(a.z, minf(b.z, c.z)))
 			var hi: Vector2 = Vector2(maxf(a.x, maxf(b.x, c.x)), maxf(a.z, maxf(b.z, c.z)))
@@ -57,11 +62,11 @@ static func stations(source: PackedVector3Array, spacing: float = .2) -> PackedV
 	return result
 
 
-static func _probes(meshes: Array[ArrayMesh]) -> Array[MeshProbe]:
+static func _probes(meshes: Array[ArrayMesh], steepest: float = 0.0) -> Array[MeshProbe]:
 	var out: Array[MeshProbe] = []
 	for mesh: ArrayMesh in meshes:
 		var probe: MeshProbe = MeshProbe.new()
-		probe.build(mesh)
+		probe.build(mesh, steepest)
 		out.append(probe)
 	return out
 
@@ -143,3 +148,46 @@ static func obstruction(routes: Node3D) -> Dictionary:
 					if examples.size() < 8:
 						examples.append([key, at, floor_height, part, obstacle])
 	return {"samples": tested, "hits": hits, "examples": examples}
+
+
+
+
+## Junction headroom: from every walking sample of `walks` (the pilgrim's
+## walking routes, `MapJourneyLandscape.walking_route`, sampled every 0.2 m;
+## `raised` says which walk the raised decks carry) a ray cast down from above
+## finds nothing of another deck less than a walking body (2.12 m) over the
+## walked surface: neither a deck's underside (its arches' intrados,
+## `Routes.underside_meshes`, any level's, without its walls: faces steeper
+## than 60 degrees) nor another level's deck, a ramp the walker would stand
+## inside, more than a tread's rise (0.19 m) over it.
+## Returns the sample and hit counts, the least clearance over a walker and the
+## first hits.
+static func headroom(routes: Node3D, walks: Array[PackedVector3Array], raised: Array[bool]) -> Dictionary:
+	var undersides: Array[MeshProbe] = _probes(routes.underside_meshes, .5)
+	var decks: Array[MeshProbe] = _probes(routes.level_decks)
+	var tested: int = 0
+	var hits: int = 0
+	var least: float = INF
+	var examples: Array = []
+	for w: int in range(walks.size()):
+		var own: int = 1 if raised[w] else 0
+		for point: Vector3 in stations(walks[w]):
+			tested += 1
+			var at: Vector2 = Vector2(point.x, point.z)
+			var clearance: float = INF
+			for probe: MeshProbe in undersides:
+				for height: float in probe.heights(at):
+					if height > point.y + .04:
+						clearance = minf(clearance, height - point.y)
+			for level: int in range(decks.size()):
+				if level == own:
+					continue
+				for height: float in decks[level].heights(at):
+					if height > point.y + .19:
+						clearance = minf(clearance, height - point.y)
+			least = minf(least, clearance)
+			if clearance < 2.12:
+				hits += 1
+				if examples.size() < 8:
+					examples.append([at, snappedf(point.y, .01), snappedf(clearance, .01)])
+	return {"samples": tested, "hits": hits, "least": least, "examples": examples}
