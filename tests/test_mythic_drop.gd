@@ -186,6 +186,7 @@ static func _bequest_never_a_mythic(content: ContentDB, fails: Array[String]) ->
 	run_state.player.deck.append(rare)
 	run_state.player.deck.append(CardInst.new(run_state.next_uid(), &"silvering", true))
 	var main: Main = Main.new()
+	TestProfile.install(main)
 	main.content = content
 	main.game = GlassvowGame.new(content, run_state)
 	var card_choice: String = ""
