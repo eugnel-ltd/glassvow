@@ -23,7 +23,7 @@ func take(key: Dictionary) -> WorldMapScreen:
 	_key = {}
 	if screen == null or same:
 		return screen
-	screen.queue_free()
+	screen.dispose()
 	return null
 
 
@@ -39,7 +39,7 @@ func keep(screen: WorldMapScreen, key: Dictionary) -> void:
 	if not screen.can_keep():
 		_screen = null
 		_key = {}
-		screen.queue_free()
+		screen.dispose()
 		return
 	var parent: Node = screen.get_parent()
 	if parent != null:
@@ -57,7 +57,7 @@ func kept() -> WorldMapScreen:
 ## from a signal the kept screen itself emitted before it was detached.
 func release() -> void:
 	if is_instance_valid(_screen) and not _screen.is_queued_for_deletion():
-		_screen.queue_free()
+		_screen.dispose()
 	_screen = null
 	_key = {}
 

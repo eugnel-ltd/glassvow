@@ -468,6 +468,13 @@ func can_keep() -> bool:
 	return _layout_result != null and not _layout_pending and not _travelling
 
 
+## Hand the land to its existing keep or abandonment owner before deferred
+## deletion: a title can release kits in this stack, before PREDELETE runs.
+func dispose() -> void:
+	_map_scene._release_landscape()
+	queue_free()
+
+
 func _sync_sealed_door(run: RunState) -> void:
 	# The door fronts the final act: it stands on the last ordinary map
 	# (act == final_act() - 1), not inside the act it opens.

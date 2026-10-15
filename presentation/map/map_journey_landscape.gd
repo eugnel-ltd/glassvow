@@ -221,6 +221,8 @@ func busy() -> bool:
 	if _task >= 0:
 		return not WorkerThreadPool.is_task_completed(_task)
 	if _stage == Stage.HEIGHTS:
+		if not terrain.heights_ready():
+			return true
 		terrain.finish_heights()
 		_stage = Stage.DONE
 	return false
@@ -245,6 +247,9 @@ func give_up() -> void:
 
 ## Ends the bookkeeping of a finished task so the land can be freed.
 func settle() -> void:
+	if _stage == Stage.HEIGHTS:
+		terrain.finish_heights()
+		_stage = Stage.DONE
 	if _task >= 0:
 		WorkerThreadPool.wait_for_task_completion(_task)
 		_task = -1

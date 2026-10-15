@@ -1031,7 +1031,7 @@ func _clear_route() -> void:
 		_map_keep.release()
 	if _map_screen != null:
 		if run_over:
-			_map_screen.queue_free()
+			_map_screen.dispose()
 		else:
 			# Keyed by the shape the screen now has: `_reshape` may have moved it.
 			_map_screen_key["shape"] = _map_screen.shape
@@ -2595,7 +2595,7 @@ func _sync_map_grain() -> void:
 ## unbound map screen is dropped rather than shown half-built.
 func _show_map_charting() -> void:
 	remove_child(_map_screen)
-	_map_screen.queue_free()
+	_map_screen.dispose()
 	_map_screen = null
 	_route_screen = MapChartingVeil.new()
 	add_child(_route_screen)
