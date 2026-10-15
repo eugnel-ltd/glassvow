@@ -7,34 +7,30 @@ extends RefCounted
 const Meshes = preload("res://presentation/map/landscape/mesh_tools.gd")
 const Outline = preload("res://presentation/map/causeway/outline.gd")
 const Parapets = preload("res://presentation/map/causeway/pointed_parapets.gd")
-const BoxBatch = preload("res://presentation/map/causeway/box_batch.gd")
-var blocks: SurfaceTool
-var caps: SurfaceTool
-var arch_stones: SurfaceTool
-var stone_batch: BoxBatch
+const CellSurfaces = preload("res://presentation/map/causeway/cell_surfaces.gd")
+## The length of an edge's pieces (m): the course, the arch stones and the
+## parapets' sections. The masonry atlas draws the joints between them.
+const PIECE: float = .40
+## The body, the coping and the arch stones (with the outer course), each one
+## surface a cell, every deck's in the same cells (`finish`).
+var blocks: CellSurfaces = CellSurfaces.new(-1)
+var caps: CellSurfaces = CellSurfaces.new(-1)
+var arch_stones: CellSurfaces = CellSurfaces.new()
 ## Each deck's answers already asked for, by position: neighbouring stones ask
 ## at the same points (a piece's end is the next one's start).
 var _asked: Dictionary = {}
 
 
-## The masonry of `field`'s deck, whose triangles are `faces`; `other_fields`
-## are every deck (this one included). Returns the meshes it drew under
-## `parent`: the body, the coping and the arch stones.
-func build(parent: Node3D, faces: PackedVector3Array, field: RefCounted,
-		other_fields: Array, stone: Material, trim: Material, settings: Dictionary) -> Array[ArrayMesh]:
-	blocks = SurfaceTool.new()
-	caps = SurfaceTool.new()
-	arch_stones = SurfaceTool.new()
-	for surface: SurfaceTool in [blocks, caps, arch_stones]:
-		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	stone_batch = BoxBatch.new(arch_stones)
-	var count: int = 0
+## Appends the masonry of `field`'s deck, whose triangles are `faces`;
+## `other_fields` are every deck (this one included).
+func build(faces: PackedVector3Array, field: RefCounted, other_fields: Array,
+		settings: Dictionary) -> void:
 	var accepted: Array[Dictionary] = []
 	var boundary: Array[Dictionary] = []
 	for edge: Dictionary in Outline.segments(faces):
 		var a: Vector3 = edge["a"]
 		var b: Vector3 = edge["b"]
-		var divisions: int = maxi(1, ceili(a.distance_to(b) / .20))
+		var divisions: int = maxi(1, ceili(a.distance_to(b) / PIECE))
 		for i: int in range(divisions):
 			boundary.append({"a": a.lerp(b, float(i) / divisions), "b": a.lerp(b, float(i + 1) / divisions)})
 	var openings: Array = settings.get("openings", [])
@@ -81,14 +77,20 @@ func build(parent: Node3D, faces: PackedVector3Array, field: RefCounted,
 		accepted.append({"a": a, "b": b, "outward": outward})
 		_piece(a, b, outward * .04 - Vector3.UP * (COURSE_DROP - .08), .34, .16)
 		_arch_band(a, b, outward, field, other_fields, settings)
-		count += 1
 	Parapets.new().build(accepted, blocks, caps, other_fields, settings)
+
+
+## Draws every cell of every part under `parent` and returns the meshes.
+func finish(parent: Node3D, stone: Material, trim: Material) -> Array[ArrayMesh]:
 	var result: Array[ArrayMesh] = []
-	if count > 0:
-		for surface: SurfaceTool in [blocks, caps, arch_stones]:
+	for part: CellSurfaces in [blocks, caps, arch_stones]:
+		for surface: SurfaceTool in part.surfaces.values():
 			var finished: ArrayMesh = Meshes.finish(surface)
 			result.append(finished)
-			Meshes.node(parent, finished, stone if surface == blocks else trim, "Causeway edge masonry")
+			# Most of the causeway's triangles, in pieces too small to read in a
+			# shadow: the decks' walls and the piers cast it (#660 II.3).
+			Meshes.node(parent, finished, stone if part == blocks else trim,
+				"Causeway edge masonry").cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return result
 
 
@@ -97,7 +99,7 @@ func _arch_band(a: Vector3, b: Vector3, outward: Vector3, field: RefCounted,
 	# The deck outline can be straight above an entire arch. Sample the
 	# intrados separately; joining only deck endpoints draws a false diagonal.
 	var floor_level: float = settings["arch_floor"]
-	var divisions: int = maxi(1, ceili(a.distance_to(b) / .20))
+	var divisions: int = maxi(1, ceili(a.distance_to(b) / PIECE))
 	for i: int in range(divisions):
 		var pa: Vector3 = a.lerp(b, float(i) / divisions)
 		var pb: Vector3 = a.lerp(b, float(i + 1) / divisions)
@@ -144,7 +146,7 @@ func _piece(a: Vector3, b: Vector3, offset: Vector3, width: float, height: float
 	# Vertical sections shear with the slope: tilted boxes used to produce
 	# a serrated coping silhouette where their rotated ends overlapped.
 	var basis: Basis = Basis(side, Vector3.UP, -delta / run)
-	stone_batch.append(Transform3D(basis.scaled_local(Vector3(width, height, maxf(.002, run + overlap))), (a + b) * .5 + offset))
+	arch_stones.batch((a + b) * .5).append(Transform3D(basis.scaled_local(Vector3(width, height, maxf(.002, run + overlap))), (a + b) * .5 + offset))
 
 
 ## A rising route can cross a lower rail before reaching equal deck height.

@@ -135,12 +135,13 @@ func build(sample: Dictionary) -> void:
 			return
 	var settings: Dictionary = style.duplicate()
 	settings["openings"] = []
+	var masonry: Edges = Edges.new()
 	for i: int in range(fields.size()):
-		decoration_meshes.append_array(Edges.new().build(self, _deck_faces[i], fields[i], fields,
-			stone, trim, settings))
+		masonry.build(_deck_faces[i], fields[i], fields, settings)
 		_mark("edges_%d" % i)
 		if _stopped():
 			return
+	decoration_meshes.append_array(masonry.finish(self, stone, trim))
 	var tread_settings: Dictionary = {"openings": openings, "tread_width": style["tread_width"]}
 	for field: Smooth in fields:
 		var treads: ArrayMesh = Stairs.new().build(self, field, trim, tread_settings)
