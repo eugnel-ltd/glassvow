@@ -3814,7 +3814,7 @@ func _on_reward_claimed(what: StringName, id: String) -> void:
 			game.run.stats["goldEarned"] = int(float(str(
 				game.run.stats.get("goldEarned", 0)))) + gold
 		&"card", &"mythic":
-			if not id.is_empty():
+			if not id.is_empty() and (RewardRules.mythics_live or not content.is_mythic(id)):
 				game.run.player.deck.append(CardInst.new(game.run.next_uid(), StringName(id), false))
 		&"potion":
 			var slot: int = game.run.player.potions.find("")
@@ -3914,7 +3914,7 @@ func _on_reward_finished() -> void:
 		var rewards: Dictionary = pending["rewards"]
 		var taken: Dictionary = pending["taken"]
 		var mythic_v: Variant = rewards.get("mythic")
-		if mythic_v != null and not taken.get("mythic", false):
+		if RewardRules.mythics_live and mythic_v != null and not taken.get("mythic", false):
 			game.run.player.deck.append(CardInst.new(
 				game.run.next_uid(), StringName(str(mythic_v)), false))
 	game.run.pending_reward = null

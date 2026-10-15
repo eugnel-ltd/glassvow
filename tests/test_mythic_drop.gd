@@ -11,6 +11,11 @@ const LanternFlameTest: GDScript = preload("res://tests/test_lantern_flame.gd")
 const SEED: int = 21201
 
 
+class QuietMain extends Main:
+	func _route_run() -> void:
+		pass
+
+
 static func _check(fails: Array[String], ok: Variant, what: String) -> void:
 	if ok != true:
 		fails.append("mythic drop: " + what)
@@ -30,6 +35,7 @@ static func run(fails: Array[String]) -> void:
 	_mirror_never_copies_a_mythic(content, fails)
 	RewardRules.mythics_live = false
 	_ships_dark(content, fails)
+	_pending_grants_respect_gate(content, fails)
 	RewardRules.mythics_live = was_live
 
 
@@ -238,6 +244,46 @@ static func _ships_dark(content: ContentDB, fails: Array[String]) -> void:
 			"a dark set offered %s at rate %.1f" % [out.get("mythic"), rate])
 		states.append(run_state.rng_state())
 	_check(fails, states[0] == states[1], "a dark set still drew for a mythic")
+
+
+## O6 covers saved grants as well as new rolls. Exercise both Main handlers
+## after a valid v2 round-trip; the live control grants once, and the dark set
+## still completes the reward without changing the run's occupied slot.
+static func _pending_grants_respect_gate(content: ContentDB, fails: Array[String]) -> void:
+	for live: bool in [false, true]:
+		RewardRules.mythics_live = live
+		for claim: bool in [false, true]:
+			var run_state: RunState = RunState.new_run(content, SEED, "mythic-pending", {"vow": 5})
+			var slot: Dictionary = {"id": "silvering", "via": "elite"}
+			run_state.quest_scratch[RewardRules.MYTHIC_SLOT] = slot
+			run_state.pending_reward = {"rewards": {"gold": 12, "cards": ["strike"],
+				"potion": null, "relic": null, "mythic": "silvering"}, "taken": {}}
+			var saved: Dictionary = JSON.parse_string(JSON.stringify(run_state.to_save_dict()))
+			run_state = RunState.from_save_dict(saved, content)
+			_check(fails, run_state != null, "a saved pending mythic did not load")
+			if run_state == null:
+				continue
+			var main: QuietMain = QuietMain.new()
+			TestProfile.install(main)
+			main.content = content
+			main.game = GlassvowGame.new(content, run_state)
+			main._map = WorldMap.slice()
+			var deck_size: int = run_state.player.deck.size()
+			var gold: int = run_state.player.gold
+			main._on_reward_claimed(&"gold", "")
+			main._on_reward_claimed(&"card", "strike")
+			if claim:
+				main._on_reward_claimed(&"mythic", "silvering")
+				main._on_reward_claimed(&"mythic", "silvering")
+				_check(fails, run_state.player.deck.size() == deck_size + 1 + int(live),
+					"saved claim with gate %s granted a mythic incorrectly" % live)
+			main._on_reward_finished()
+			_check(fails, run_state.player.deck.size() == deck_size + 1 + int(live),
+				"saved completion with gate %s (claim %s) granted a mythic incorrectly" % [live, claim])
+			_check(fails, run_state.player.gold == gold + 12 and run_state.pending_reward == null
+					and run_state.quest_scratch[RewardRules.MYTHIC_SLOT] == slot,
+				"saved completion lost ordinary spoils, the slot or its continuation")
+			main.free()
 
 
 static func _rewards(content: ContentDB, rate: float) -> RewardRules:
