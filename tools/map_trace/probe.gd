@@ -379,11 +379,16 @@ func _transition(dwell: float) -> void:
 	var watch: FrameWatch = FrameWatch.new()
 	_host.call("_route_run")
 	var done_ms: float = -1.0
+	# The next act's prefetch starts a few frames after the offer draws; until
+	# then the step read is Act I's own finished one.
+	var started: bool = false
 	var until: int = Time.get_ticks_msec() + int(dwell * 1000.0)
 	while Time.get_ticks_msec() < until:
 		await get_tree().process_frame
 		watch.tick()
-		if done_ms < 0.0 and MapJourneyPrefetch.current_step() == MapJourneyPrefetch.Step.DONE:
+		var step: int = MapJourneyPrefetch.current_step()
+		started = started or step != MapJourneyPrefetch.Step.DONE
+		if done_ms < 0.0 and started and step == MapJourneyPrefetch.Step.DONE:
 			done_ms = watch.elapsed_ms()
 	_row(watch.row("transition", {"dwell_s": dwell, "prefetch_done_ms": snappedf(done_ms, 0.1),
 		"prefetch_step": MapJourneyPrefetch.current_step(), "act": game.run.act}))

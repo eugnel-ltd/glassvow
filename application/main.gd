@@ -2272,20 +2272,31 @@ func _route_run() -> void:
 func _warm_map_landscape() -> void:
 	if game == null or game.run == null or _map == null or game.run.pending_run_end != null:
 		return
-	_warm_landscape_for(_map, game.run)
+	_warm_landscape_for(_map, game.run, MapScene.journey_async)
 
 
 ## What `_warm_map_landscape` warms for `map` and `run`, which the title also
-## warms for the run Back to the Road restores (`_warm_title_road`).
-func _warm_landscape_for(map: WorldMap, run: RunState) -> void:
+## warms for the run Back to the Road restores (`_warm_title_road`). `paced`
+## (a run under way, past a boss): the screen it routes to (the rewards, the
+## crown's offer) opens on this frame, so the kept screen goes once that has
+## drawn, the next act is worked out a frame later and its land starts a frame
+## after that (#660 II.3), each while the run still stands there.
+func _warm_landscape_for(map: WorldMap, run: RunState, paced: bool = false) -> void:
 	var past_boss: bool = _past_boss(map, run)
 	if past_boss:
 		# The next map is the next act's, and the kept screen holds this act's
 		# artwork: it goes first, so one act's artwork is held at a time. This
 		# act's journey land is never drawn again either, nor built: what its
 		# builds draw with is let go.
+		if paced and not await _still_past_boss_after_draw(map, run):
+			return
 		_map_keep.release()
-		_warm_next_act(map, run)
+		if paced and not await _still_past_boss_after_draw(map, run):
+			return
+		var next: Dictionary = NextActMap.predict(run, map, content) if MapScene.journey_async else {}
+		if paced and not await _still_past_boss_after_draw(map, run):
+			return
+		_warm_next_act(next)
 		MapJourneyProfile.release_kit(run.act)
 	MapLandscapeAssets.prefetch(run.act + (1 if past_boss else 0))
 	# A journey act's land is built ahead too, once its pictures are decoded.
@@ -2296,9 +2307,8 @@ func _warm_landscape_for(map: WorldMap, run: RunState) -> void:
 ## Past a boss, the next act's land is built ahead once its map is known: as
 ## soon as the boss is beaten (`NextActMap`), paced under the rewards and the
 ## crown's offer (#660 II.3). Until then, and for an act drawn as a painted
-## landscape, no journey land is held.
-func _warm_next_act(map: WorldMap, run: RunState) -> void:
-	var next: Dictionary = NextActMap.predict(run, map, content) if MapScene.journey_async else {}
+## landscape, no journey land is held. `next` is `NextActMap.predict`'s answer.
+func _warm_next_act(next: Dictionary) -> void:
 	var next_run: RunState = next.get("run")
 	var next_map: WorldMap = next.get("map")
 	if next_run != null and MapJourneyProfile.warms(next_run.act):
@@ -2353,6 +2363,13 @@ static func _title_road_map(saved: RunState) -> WorldMap:
 static func _past_boss(map: WorldMap, run: RunState) -> bool:
 	var node: MapNode = map.current()
 	return node != null and node.type == "boss" and not run.is_final_act()
+
+
+## Waits for the next frame drawn and answers whether the run under way is
+## still `run`, standing on `map`'s boss (no act taken up since).
+func _still_past_boss_after_draw(map: WorldMap, run: RunState) -> bool:
+	await RenderingServer.frame_post_draw
+	return game != null and game.run == run and _map == map and _past_boss(map, run)
 
 
 ## The title's warm-up that waits for the launch rite (a saved run whose next
