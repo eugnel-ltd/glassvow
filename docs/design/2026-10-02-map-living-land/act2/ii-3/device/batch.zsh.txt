@@ -32,15 +32,29 @@ for n in 1 2; do
     build=$(cat $L/ipa/$b.build)
     echo "== install $b$n ($build) $(date +%T)"
     timeout 300 zsh -c "source $L/wt/tools/map_trace/device.zsh; UDID=$UDID; OUT=$OUT; mt_install $L/ipa/$b.ipa" || { echo "install failed"; exit 1; }
-    _mt_start $b$n-l1 $COMMON --transition=8 --holds=cadence,live --probe-view=journey,close,whole
-    [[ -n "$MT_PID" ]] || { echo "== $b$n-l1: launch failed"; exit 1; }
-    echo $MT_PID > $OUT/$b$n-l1.pid
-    sleep 3
-    xcrun devicectl device info ddiServices --device $UDID >/dev/null 2>&1
-    rm -rf $OUT/$b$n-am.trace
-    timeout 300 xcrun xctrace record --device $UDID --template 'Activity Monitor' --all-processes \
-      --time-limit 150s --output $OUT/$b$n-am.trace --no-prompt 2>&1 | mt_redact > $OUT/$b$n-am.log
-    tail -1 $OUT/$b$n-am.log
+    # The footprint's recording: batch 1 lost all four. Given the identifier,
+    # xctrace often sees the iPad disconnect at once (ctl1: 0.7 s); named, it
+    # runs its limit. Its save outlasts the recording (about 270 s after 30 s),
+    # so it has its own long timeout: batch 1's 300 s killed three mid-save.
+    # Batch 2's first start: a 100 s window never saved (one save failed after
+    # 14 min, one ran past 17 min), so the window is the dry run's proven 30 s.
+    # It opens a few seconds after launch and covers the offer (Act II's land
+    # building), Act II's first open and its Journey rests; Close and Whole act
+    # come after it. A window cut short relaunches L1 once.
+    for attempt in 1 2; do
+      _mt_start $b$n-l1 $COMMON --transition=8 --holds=cadence,live --probe-view=journey,close,whole
+      [[ -n "$MT_PID" ]] || { echo "== $b$n-l1: launch failed"; exit 1; }
+      echo $MT_PID > $OUT/$b$n-l1.pid
+      sleep 3
+      xcrun devicectl device info ddiServices --device $UDID >/dev/null 2>&1
+      rm -rf $OUT/$b$n-am.trace
+      timeout 900 xcrun xctrace record --device "$(mt_name)" --template 'Activity Monitor' --all-processes \
+        --time-limit 30s --output $OUT/$b$n-am.trace --no-prompt 2>&1 | mt_redact > $OUT/$b$n-am.log
+      window=($(_mt_window $OUT/$b$n-am.trace))
+      echo "   $b$n am (attempt $attempt): ${window[1]} s, ${window[2]}"
+      [[ ${window[2]} == Time_limit_reached ]] && break
+      hold
+    done
     _mt_rows $b$n-l1
     check_build $b$n-l1 $build
     hold
