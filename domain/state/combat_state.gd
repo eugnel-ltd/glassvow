@@ -45,6 +45,22 @@ var hp_lost: int = 0
 var prism_procd: bool = false
 ## True when the Eternal Keeper's lethal threshold handed the fight to #312.
 var finale_handoff: bool = false
+## The mythic set's fight rules (#212 §1). None is saved or projected: a fight
+## that resumes restarts from its saved start.
+## Banked Fire was played: a win carries the lantern's Embers on.
+var banked: bool = false
+## The Unbroken Flame is in play: every `lit` effect resolves.
+var unbroken: bool = false
+## Clean Break was played: a shatter no longer adds a Facet.
+var clean_break: bool = false
+## The Known Road is in play: each turn's deal waits in `staged` for the pick.
+var known_road: bool = false
+## The deal awaiting `CombatRules.choose_hand`, in deal order; empty when none.
+var staged: Array[CardInst] = []
+## Unbowed has held the player up this fight.
+var unbowed_used: bool = false
+## The turn at whose end a standing player falls at 0 HP; 0 while not standing.
+var standing_until: int = 0
 
 
 func living_enemies() -> Array[EnemyCombatant]:

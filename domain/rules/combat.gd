@@ -17,7 +17,12 @@ const SPECIAL_IDS: Array[String] = [
 	"leech", "execute", "momentum", "doubleBlock", "phantom", "devour",
 	"pyreTithe", "catalyst", "shatterEcho", "flawless", "emberNova", "emberdance",
 	"cleft", "totality",
+	"bankedFire", "silvering", "unbrokenFlame", "knownRoad", "cleanBreak",
 ]
+## Unbowed (#212 §1.5) is unplayable: it holds while it sits in a pile.
+const UNBOWED: StringName = &"unbowed"
+## Silvering (#212 §1.3) marks an enemy whose next move lands on itself.
+const SILVERED: String = "silvered"
 const POTION_IDS: Array[String] = [
 	"healing", "strength", "swift", "block", "fire", "venom", "energy",
 ]
@@ -152,10 +157,10 @@ func _with_counterfactual(run: RunState, requested_id: String, def: Dictionary) 
 
 
 ## A card effect marked `lit` resolves only while the lantern burns that way's
-## colour, Steady or True, as the fight began (flame readout 9); every other
-## effect always resolves.
+## colour, Steady or True, as the fight began (flame readout 9), or while the
+## Unbroken Flame is in play (#212 §1.4); every other effect always resolves.
 static func effect_lit(cb: CombatState, fx: Dictionary) -> bool:
-	return not fx.has("lit") or str(fx["lit"]) == cb.lit_way
+	return not fx.has("lit") or cb.unbroken or str(fx["lit"]) == cb.lit_way
 
 
 ## Resolved card data: base def merged with its `up` overrides when upgraded.
@@ -274,6 +279,10 @@ func start_combat(
 	_light_lantern(run, cb, _ji(omen.get("startEmbers", 0)))
 	_apply_start_relics(run, cb)
 	_set_lantern_quality(run, cb)
+	# Banked Fire (#212 §1.2): what a won fight kept, up to this fight's cap.
+	var carried: int = _banked_embers(run)
+	if carried > 0:
+		_light_lantern(run, cb, carried)
 	_compute_intents(run, cb)
 	_start_player_turn(run, cb)
 	return cb
@@ -444,8 +453,9 @@ func _start_player_turn(run: RunState, cb: CombatState) -> void:
 		draws += 2
 		_proc(cb, "travelersPack")
 	# Night Sight's and the Traveller's Pack's cards ride on the deal, and are
-	# `drawn` only where the hand actually took more than the deal itself.
-	_tally_drawn(run, _draw_from_pile(run, cb, maxi(1, draws)) - maxi(1, deal))
+	# `drawn` only where the hand actually took more than the deal itself. Under
+	# the Known Road the same deal is staged for `choose_hand`.
+	_tally_drawn(run, _draw_from_pile(run, cb, maxi(1, draws), cb.known_road) - maxi(1, deal))
 
 
 ## Draw `n` cards for a card, relic, potion or the Art: everything drawn here is
@@ -457,11 +467,13 @@ func draw_cards(run: RunState, cb: CombatState, n: int) -> void:
 
 ## Moves up to `n` cards from the draw pile into the hand, reshuffling the
 ## discard when the pile runs out, and returns how many the hand took: a full
-## hand (10) or two empty piles stop it short.
-func _draw_from_pile(run: RunState, cb: CombatState, n: int) -> int:
+## hand (10) or two empty piles stop it short. `stage` puts them in `cb.staged`
+## instead, unannounced, for the Known Road's pick: the same cards and the same
+## draws, and staged cards count against the hand's 10.
+func _draw_from_pile(run: RunState, cb: CombatState, n: int, stage: bool = false) -> int:
 	var taken: int = 0
 	for _i: int in range(n):
-		if cb.hand.size() >= 10:
+		if cb.hand.size() + cb.staged.size() >= 10:
 			break
 		if cb.draw.is_empty():
 			if cb.discard.is_empty():
@@ -472,10 +484,49 @@ func _draw_from_pile(run: RunState, cb: CombatState, n: int) -> int:
 			_shuffle_cards(run.rng, cb.draw)
 			cb.queue.append({"t": EventTypes.RESHUFFLE, "n": count})
 		var c: CardInst = cb.draw.pop_back()
-		cb.hand.append(c)
-		cb.queue.append({"t": EventTypes.DRAW, "uid": c.uid, "id": String(c.id)})
+		if stage:
+			cb.staged.append(c)
+		else:
+			cb.hand.append(c)
+			cb.queue.append({"t": EventTypes.DRAW, "uid": c.uid, "id": String(c.id)})
 		taken += 1
 	return taken
+
+
+## The Known Road's pick (#212 §1.6). `uids` names as many cards as were staged,
+## each from the staged deal or the draw pile. The i-th chosen card from the
+## pile (in pile order) swaps places with the i-th unchosen staged card (in deal
+## order), which goes back to the pile at the chosen card's index. No draw is
+## made, so the RNG cursor is the normal deal's whatever is picked. The hand
+## then takes the deal in deal order, each card with its DRAW event.
+func choose_hand(cb: CombatState, uids: Array) -> bool:
+	if cb == null or cb.over or cb.staged.is_empty() or uids.size() != cb.staged.size():
+		return false
+	var chosen: Dictionary = {}
+	for uid_v: Variant in uids:
+		if typeof(uid_v) != TYPE_INT and typeof(uid_v) != TYPE_FLOAT:
+			return false
+		chosen[_ji(uid_v)] = true
+	var dropped: Array[int] = []
+	for i: int in range(cb.staged.size()):
+		if not chosen.has(cb.staged[i].uid):
+			dropped.append(i)
+	var picked: Array[int] = []
+	for i: int in range(cb.draw.size()):
+		if chosen.has(cb.draw[i].uid):
+			picked.append(i)
+	# Distinct uids, and every one in the pool: the staged deal or the pile.
+	if chosen.size() != uids.size() or picked.size() != dropped.size():
+		return false
+	for k: int in range(picked.size()):
+		var back: CardInst = cb.staged[dropped[k]]
+		cb.staged[dropped[k]] = cb.draw[picked[k]]
+		cb.draw[picked[k]] = back
+	for c: CardInst in cb.staged:
+		cb.hand.append(c)
+		cb.queue.append({"t": EventTypes.DRAW, "uid": c.uid, "id": String(c.id)})
+	cb.staged.clear()
+	return true
 
 
 func _tally_drawn(run: RunState, n: int) -> void:
@@ -590,6 +641,17 @@ func damage_player(
 		blocked = mini(p.block, dmg)
 		p.block -= blocked
 	var loss: int = dmg - blocked
+	# Unbowed (#212 §1.5): the first fall of a fight, while the card sits in a
+	# pile, leaves the player standing at 0 HP, and standing loses no HP until
+	# the end of the player's next turn (`end_turn` reads the deadline).
+	var stood: bool = false
+	if cb.standing_until > 0:
+		loss = 0
+	elif loss >= p.hp and _unbowed_holds(cb):
+		loss = p.hp
+		cb.unbowed_used = true
+		cb.standing_until = cb.turn + 1
+		stood = true
 	p.hp -= loss
 	run.stats["dmgTaken"] = _ji(run.stats.get("dmgTaken", 0)) + maxi(0, loss)
 	cb.hp_lost += maxi(0, loss)
@@ -600,7 +662,9 @@ func damage_player(
 		"hpAfter": maxi(0, p.hp),
 		"source": source,
 	})
-	if p.hp <= 0:
+	if stood:
+		cb.queue.append({"t": &"standing", "until": cb.standing_until})
+	if p.hp <= 0 and cb.standing_until == 0:
 		lose_combat(run, cb)
 		return loss
 	if is_attack and attacker != null:
@@ -625,10 +689,23 @@ func lose_combat(run: RunState, cb: CombatState) -> void:
 	cb.queue.append({"t": EventTypes.DEFEAT})
 
 
+## Unbowed holds while it is in the draw pile, the hand or the discard (not
+## Kindled) and has not yet held this fight.
+static func _unbowed_holds(cb: CombatState) -> bool:
+	if cb.unbowed_used:
+		return false
+	for pile: Array in [cb.draw, cb.staged, cb.hand, cb.discard]:
+		for card: CardInst in pile:
+			if card.id == UNBOWED:
+				return true
+	return false
+
+
 func _win_combat(run: RunState, cb: CombatState) -> void:
 	cb.over = true
 	cb.result = "win"
 	quests.on_combat_win(run, cb)
+	_bank_embers(run, cb)
 	run.player.hp = clampi(cb.player.hp, 1, run.player.max_hp)
 	if run.has_relic("emberHeart"):
 		heal_player(run, null, _ji(content.relic(&"emberHeart").get("heal", 6)))
@@ -644,6 +721,28 @@ func _win_combat(run: RunState, cb: CombatState) -> void:
 		run.stats["perfects"] = _ji(run.stats.get("perfects", 0)) + 1
 	# An untouched fight is worth saying so.
 	cb.queue.append({"t": EventTypes.VICTORY, "perfect": cb.hp_lost == 0})
+
+
+## Banked Fire (#212 §1.2): every won fight overwrites the carry, with the
+## lantern's Embers when the card was played and with 0 when it was not. It is
+## never added to. A run that never held a mythic has no slot to write.
+func _bank_embers(run: RunState, cb: CombatState) -> void:
+	var slot_v: Variant = run.quest_scratch.get(RewardRules.MYTHIC_SLOT)
+	if typeof(slot_v) != TYPE_DICTIONARY and not cb.banked:
+		return
+	var slot: Dictionary = slot_v if typeof(slot_v) == TYPE_DICTIONARY else {}
+	slot["embers"] = cb.embers if cb.banked else 0
+	run.quest_scratch[RewardRules.MYTHIC_SLOT] = slot
+
+
+## The Embers a won fight banked; read, never cleared, so a restarted fight
+## opens the same.
+static func _banked_embers(run: RunState) -> int:
+	var slot_v: Variant = run.quest_scratch.get(RewardRules.MYTHIC_SLOT)
+	if typeof(slot_v) != TYPE_DICTIONARY:
+		return 0
+	var slot: Dictionary = slot_v
+	return _ji(slot.get("embers", 0))
 
 
 ## Heals cb.player when cb is given (with a heal event), else run.player silently.
@@ -813,7 +912,8 @@ func apply_chips(run: RunState, cb: CombatState, e: EnemyCombatant, n: int) -> v
 
 
 func _shatter_enemy(run: RunState, cb: CombatState, e: EnemyCombatant) -> void:
-	e.facet_max += 1  # annealed: each pane reseams harder than the last
+	if not cb.clean_break:  # Clean Break (#212 §1.7) stops the reseaming
+		e.facet_max += 1  # annealed: each pane reseams harder than the last
 	if e.flags.get("adamant", false) and not e.flags.get("adamantSpent", false):
 		e.flags["adamantSpent"] = true
 		cb.queue.append({"t": &"adamantHold", "idx": e.idx})
@@ -886,6 +986,9 @@ func can_play(run: RunState, cb: CombatState, inst: CardInst, target_idx: Varian
 	# leaves the Art unusable.
 	if _ji(d.get("emberCost", 0)) > cb.embers:
 		return false
+	# Unbowed's guard (#212 §1.5): while standing, HP is no payment.
+	if cb.standing_until > 0 and _pays_hp(d):
+		return false
 	if str(d.get("target", "")) == "enemy":
 		if target_idx == null:
 			return false
@@ -893,6 +996,17 @@ func can_play(run: RunState, cb: CombatState, inst: CardInst, target_idx: Varian
 		if ti < 0 or ti >= cb.enemies.size() or cb.enemies[ti].hp <= 0:
 			return false
 	return true
+
+
+static func _pays_hp(d: Dictionary) -> bool:
+	var effects: Array = d.get("effects", [])
+	for fx_v: Variant in effects:
+		if typeof(fx_v) != TYPE_DICTIONARY:
+			continue
+		var fx: Dictionary = fx_v
+		if str(fx.get("kind", "")) == "loseHp":
+			return true
+	return false
 
 
 func play_card(run: RunState, cb: CombatState, uid: int, target_idx: Variant = null) -> bool:
@@ -1164,6 +1278,20 @@ func _apply_special(
 			var cracked: int = _sget(target.statuses, "vulnerable")
 			if cracked > 0 and target.hp > 0 and not cb.over:
 				add_status_enemy(cb, target, "vulnerable", cracked, run)
+		# The mythic set (#212 §1): each marks the fight or its target; the rule
+		# lives where it bites (the win, the enemy's action, `effect_lit`, the
+		# deal, the shatter).
+		"bankedFire":
+			cb.banked = true
+		"silvering":
+			if target != null and target.hp > 0:
+				target.flags[SILVERED] = true
+		"unbrokenFlame":
+			cb.unbroken = true
+		"knownRoad":
+			cb.known_road = true
+		"cleanBreak":
+			cb.clean_break = true
 		_:
 			push_error("CombatRules: unknown special %s" % sid)
 
@@ -1190,6 +1318,12 @@ func end_turn(run: RunState, cb: CombatState) -> void:
 	var regen: int = _sget(p.statuses, "regen")
 	if regen > 0:
 		heal_player(run, cb, regen)
+	# Unbowed's deadline (#212 §1.5): the turn the stand named has ended.
+	if cb.standing_until > 0 and cb.turn >= cb.standing_until:
+		cb.standing_until = 0
+		if p.hp <= 0:
+			lose_combat(run, cb)
+			return
 	# A Soot lantern gutters as your turn ends (flame lock §5). The Embers are
 	# lost, not spent: no deed counts them.
 	if cb.ember_leak > 0:
@@ -1257,16 +1391,24 @@ func end_turn(run: RunState, cb: CombatState) -> void:
 				"name": str(mv.get("name", "")),
 			})
 			e.last_moves.append(String(e.move_key))
+			# Silvering (#212 §1.3): this move lands on the enemy itself.
+			var mirrored: bool = e.flags.has(SILVERED)
+			e.flags.erase(SILVERED)
 			if mv.get("dmg") != null:
 				var times: int = _ji(mv.get("times", 1))
 				for _t: int in range(times):
 					if cb.over:
 						break
-					damage_player(run, cb, _ji(mv["dmg"]), e.idx, true, e)
+					if mirrored:
+						_hit_itself(run, cb, e, _ji(mv["dmg"]))
+					else:
+						damage_player(run, cb, _ji(mv["dmg"]), e.idx, true, e)
 				if mv.get("ramp") != null:
 					e.flags["rampBonus"] = _ji(e.flags.get("rampBonus", 0)) + _ji(mv["ramp"])
 			if cb.over:
 				return
+			if mirrored and e.hp <= 0:
+				continue
 			if mv.get("block") != null:
 				gain_block_enemy(cb, e, _ji(mv["block"]), run)
 			if mv.get("heal") != null:
@@ -1279,7 +1421,9 @@ func end_turn(run: RunState, cb: CombatState) -> void:
 				for s_v: Variant in mv_fx:
 					var s: Dictionary = s_v
 					var who: String = str(s.get("who", ""))
-					if who == "player":
+					if who == "player" and mirrored:
+						add_status_enemy(cb, e, str(s["id"]), _ji(s["n"]))
+					elif who == "player":
 						add_status_player(cb, str(s["id"]), _ji(s["n"]))
 					elif who == "self":
 						add_status_enemy(cb, e, str(s["id"]), _ji(s["n"]))
@@ -1288,7 +1432,7 @@ func end_turn(run: RunState, cb: CombatState) -> void:
 							if ally.hp > 0:
 								add_status_enemy(cb, ally, str(s["id"]), _ji(s["n"]))
 			var adds_v: Variant = mv.get("addCards")
-			if typeof(adds_v) == TYPE_DICTIONARY:
+			if typeof(adds_v) == TYPE_DICTIONARY and not mirrored:
 				var adds: Dictionary = adds_v
 				for _i: int in range(_ji(adds.get("n", 1))):
 					var added: CardInst = CardInst.new(
@@ -1310,6 +1454,21 @@ func end_turn(run: RunState, cb: CombatState) -> void:
 		return
 	_compute_intents(run, cb)
 	_start_player_turn(run, cb)
+
+
+## Silvering's blow (#212 §1.3): the hit an enemy meant for you, by its own
+## Fervor and Dimmed and the Cracked it bears, lands on itself as a non-attack
+## hit, so your Fervor never adds, no Splinters answer and the finale handoff
+## still stops the Eternal Keeper at 1 HP.
+func _hit_itself(run: RunState, cb: CombatState, e: EnemyCombatant, base: int) -> void:
+	var dmg: int = base + _sget(e.statuses, "str") + _ji(e.flags.get("rampBonus", 0))
+	dmg += _ji(_omen_mods(run).get("enemyDmgBonus", 0))
+	dmg += _ji(_challenge_mods(run).get("enemyDmgBonus", 0))
+	if _sget(e.statuses, "weak") > 0:
+		dmg = int(floorf(float(dmg) * 0.75))
+	if _sget(e.statuses, "vulnerable") > 0:
+		dmg = int(floorf(float(dmg) * 1.5))
+	hit_enemy(run, cb, e, maxi(0, dmg), false)
 
 
 static func _tick_status(statuses: Dictionary, id: String) -> void:

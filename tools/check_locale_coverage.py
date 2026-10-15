@@ -27,7 +27,7 @@ DISPLAY_LEAVES = frozenset({
     "name", "nameBare", "namePattern", "text", "desc", "label", "sub",
     "bossName", "blurb", "inscription", "mode", "deathDialogue", "resolved",
     "accepted", "final", "huntInscription", "huntName", "bought", "death",
-    "itemName", "itemText", "poor", "ask", "cannot", "paid",
+    "itemName", "itemText", "poor", "ask", "cannot", "paid", "lore",
 })
 DISPLAY_STRING_ARRAYS = frozenset({"waystoneEchoes", "fragments", "progress", "pages", "dialogue"})
 CONTENT_DOMAINS = {

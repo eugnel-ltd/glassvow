@@ -550,6 +550,25 @@ func card_ids() -> Array[StringName]:
 	return _ids(cards)
 
 
+## The mythic set's ids (#212), sorted. No `cardPools` tier names the rarity,
+## so only the elite roll and the Knight's route can hand one out.
+func mythic_ids() -> Array[String]:
+	var out: Array[String] = []
+	for id: String in cards:
+		if is_mythic(id):
+			out.append(id)
+	out.sort()
+	return out
+
+
+func is_mythic(card_id: String) -> bool:
+	var card_v: Variant = cards.get(card_id)
+	if typeof(card_v) != TYPE_DICTIONARY:
+		return false
+	var card: Dictionary = card_v
+	return str(card.get("rarity", "")) == "mythic"
+
+
 func enemy_ids() -> Array[StringName]:
 	return _ids(enemies)
 
