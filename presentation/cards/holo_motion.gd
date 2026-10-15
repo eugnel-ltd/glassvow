@@ -92,6 +92,12 @@ static var _forced: Variant = null
 ## A test's stand-in for the device: returns [gravity, gyroscope]. Invalid in
 ## the game, which reads Input.
 static var _sensors: Callable = Callable()
+## A test's stand-in for platform facts (`_facts`). Invalid in the game.
+static var _platform_facts: Callable = Callable()
+## A test's stand-in for push_warning from the iOS axes guard. Invalid in the game.
+static var _warn_hook: Callable = Callable()
+## A test's stand-in for the pointer position, -1..1. Invalid in the game.
+static var _pointer_at: Callable = Callable()
 
 
 ## One frame of readings, already in the screen's frame. `pointer` is the
@@ -218,13 +224,17 @@ static func ambient(vp: Viewport, dt: float) -> Vector2:
 		else [Input.get_gravity(), Input.get_gyroscope()]
 	var g: Vector3 = read[0]
 	var w: Vector3 = read[1]
-	if OS.get_name() == "iOS":
+	if _as_bool(_facts().get("ios")):
 		var doubted: bool = _shared.axes_doubt
 		var turned: Array[Vector3] = _shared.from_portrait(g, w)
 		if _shared.axes_doubt and not doubted:
-			push_warning(("HoloMotion: iOS gravity %s falls along the device's y, which no "
-				+ "landscape hold gives; the readings may already be in the screen's axes, "
-				+ "and to_screen turns them twice") % str(g))
+				var msg: String = ("HoloMotion: iOS gravity %s falls along the device's y, which no "
+					+ "landscape hold gives; the readings may already be in the screen's axes, "
+					+ "and to_screen turns them twice") % str(g)
+				if _warn_hook.is_valid():
+					_warn_hook.call(msg)
+				else:
+					push_warning(msg)
 		g = turned[0]
 		w = turned[1]
 	return _shared.update(g, w, _pointer(vp), false, dt)
@@ -248,10 +258,29 @@ static func pointer_lights(handheld: bool, touchscreen: bool, has_mouse: bool) -
 
 ## The pointer over the window, -1..1, or null where it lights nothing
 ## (`pointer_lights`) or lies outside the window.
+static func _facts() -> Dictionary:
+	if _platform_facts.is_valid():
+		return _platform_facts.call()
+	return {
+		"handheld": OS.has_feature("mobile"),
+		"touchscreen": DisplayServer.is_touchscreen_available(),
+		"has_mouse": DisplayServer.has_feature(DisplayServer.FEATURE_MOUSE),
+		"ios": OS.get_name() == "iOS",
+	}
+
+
+static func _as_bool(v: Variant, default: bool = false) -> bool:
+	return v if v is bool else default
+
+
 static func _pointer(vp: Viewport) -> Variant:
-	if vp == null or not pointer_lights(OS.has_feature("mobile"),
-			DisplayServer.is_touchscreen_available(),
-			DisplayServer.has_feature(DisplayServer.FEATURE_MOUSE)):
+	var f: Dictionary = _facts()
+	if not pointer_lights(_as_bool(f.get("handheld")), _as_bool(f.get("touchscreen")),
+			_as_bool(f.get("has_mouse"))):
+		return null
+	if _pointer_at.is_valid():
+		return _pointer_at.call(vp)
+	if vp == null:
 		return null
 	var r: Rect2 = vp.get_visible_rect()
 	var m: Vector2 = vp.get_mouse_position()
