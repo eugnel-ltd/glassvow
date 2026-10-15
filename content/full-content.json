@@ -2053,6 +2053,144 @@
       },
       "name": "Hearthfall",
       "text": "Spend 3 Embers: deal @12@ damage."
+    },
+    "bankedFire": {
+      "type": "skill",
+      "rarity": "mythic",
+      "cost": 0,
+      "target": "self",
+      "vfx": "fire",
+      "effects": [
+        {
+          "kind": "ember",
+          "n": 1
+        },
+        {
+          "kind": "special",
+          "id": "bankedFire"
+        }
+      ],
+      "up": {
+        "effects": [
+          {
+            "kind": "ember",
+            "n": 2
+          },
+          {
+            "kind": "special",
+            "id": "bankedFire"
+          }
+        ],
+        "text": "Gain 2 Embers. If you win this fight, carry your lantern's Embers into the next fight."
+      },
+      "name": "Banked Fire",
+      "text": "Gain 1 Ember. If you win this fight, carry your lantern's Embers into the next fight.",
+      "lore": "Still warm, sheltered at the foot of the monument."
+    },
+    "silvering": {
+      "type": "skill",
+      "rarity": "mythic",
+      "cost": 2,
+      "target": "enemy",
+      "vfx": "void",
+      "exhaust": true,
+      "effects": [
+        {
+          "kind": "special",
+          "id": "silvering"
+        }
+      ],
+      "up": {
+        "cost": 1
+      },
+      "name": "Silvering",
+      "text": "Choose an enemy. On its next action, any damage and harmful effects meant for you are redirected to it. It adds no cards to your piles. Kindle.",
+      "lore": "A mirror never strikes first. This one returned the blow."
+    },
+    "unbrokenFlame": {
+      "type": "power",
+      "rarity": "mythic",
+      "cost": 2,
+      "target": "self",
+      "vfx": "fire",
+      "effects": [
+        {
+          "kind": "special",
+          "id": "unbrokenFlame"
+        }
+      ],
+      "up": {
+        "cost": 1
+      },
+      "name": "The Unbroken Flame",
+      "text": "For this fight, all flame effects are active, whatever colour your lantern burns.",
+      "lore": "Six pieces. Once, a single fire."
+    },
+    "unbowed": {
+      "type": "skill",
+      "rarity": "mythic",
+      "cost": null,
+      "target": "none",
+      "vfx": "ward",
+      "unplayable": true,
+      "effects": [],
+      "name": "Unbowed",
+      "text": "Unplayable. Unless you have Kindled this card, the first time each fight you would fall, you stay standing. Until the end of your next turn, you cannot lose HP or play cards that make you lose HP. If you still have 0 HP then, you fall.",
+      "lore": "Some never lay down."
+    },
+    "knownRoad": {
+      "type": "power",
+      "rarity": "mythic",
+      "cost": 3,
+      "target": "self",
+      "vfx": "void",
+      "effects": [
+        {
+          "kind": "special",
+          "id": "knownRoad"
+        }
+      ],
+      "up": {
+        "cost": 2
+      },
+      "name": "The Known Road",
+      "text": "For this fight, when you draw at the start of a turn, you may swap the cards dealt for cards in your draw pile. Keep the same number of cards.",
+      "lore": "You remember this road. Every step of it."
+    },
+    "cleanBreak": {
+      "type": "attack",
+      "rarity": "mythic",
+      "cost": 2,
+      "target": "enemy",
+      "chip": 2,
+      "vfx": "slash",
+      "effects": [
+        {
+          "kind": "dmg",
+          "n": 8
+        },
+        {
+          "kind": "special",
+          "id": "cleanBreak"
+        }
+      ],
+      "up": {
+        "chip": 3,
+        "effects": [
+          {
+            "kind": "dmg",
+            "n": 11
+          },
+          {
+            "kind": "special",
+            "id": "cleanBreak"
+          }
+        ],
+        "text": "Deal @11@ damage. Chip 3 extra Facets. For the rest of this fight, enemies no longer gain a Facet when they shatter."
+      },
+      "name": "Clean Break",
+      "text": "Deal @8@ damage. Chip 2 extra Facets. For the rest of this fight, enemies no longer gain a Facet when they shatter.",
+      "lore": "A clean edge. Nothing to show where it broke before."
     }
   },
   "cardPools": {
