@@ -26,6 +26,9 @@ var _screen: CombatScreen = null
 var _content_hydration_pending: bool = false
 var _pending_language: StringName = &""
 var _route_checkpoint_quarantined: bool = false
+## A changed run must not reach disk before its scene flags do.
+var _vigil_before_run: bool = false
+var _save_error_detail: String = ""
 ## Exact live route constructor; durable resume reconstructs the initial route.
 var _route_rebuilder: Callable = Callable()
 var _map_layout_compile: Callable = Callable()
@@ -816,7 +819,12 @@ func _quit_game() -> void:
 ## `SaveService` call outside these six, or on any one of the six that stops
 ## handing over its path field.
 func _store_run() -> bool:
-	return SaveService.store(game.run, _run_save_path)
+	if _vigil_before_run and not _store_vigil():
+		return false
+	if not SaveService.store(game.run, _run_save_path):
+		return false
+	_vigil_before_run = false
+	return true
 
 
 func _store_vigil() -> bool:
@@ -2026,6 +2034,7 @@ func _on_reset_choice(id: String) -> void:
 
 
 func _show_save_error(detail_key: String) -> void:
+	_save_error_detail = detail_key
 	_show_choice(Locale.active.t("ui.persistence.lightWouldNotHoldTitle"),
 		Locale.active.t(detail_key) + "\n" + Locale.active.t("ui.persistence.noProgressDiscarded"),
 		[{"id": "retry", "label": Locale.active.t("ui.common.retry")},
@@ -2034,6 +2043,20 @@ func _show_save_error(detail_key: String) -> void:
 
 
 func _on_save_error_choice(id: String) -> void:
+	if _vigil_before_run:
+		if id == "retry":
+			if _store_run():
+				_route_run()
+			else:
+				_show_save_error(_save_error_detail)
+		else:
+			# Title resumes the last durable checkpoint, as a restart would.
+			_vigil_before_run = false
+			_vigil = _load_vigil()
+			game = null
+			_map = null
+			_show_title()
+		return
 	# Continuations first, same shape as #332's Vigil-scoped Retry: inspect
 	# live state, re-hold the write that failed, then resume the owed surface.
 	# Generic `_store_run()` → `_route_run()` drops both of these.
@@ -2991,9 +3014,7 @@ func _on_event_choice(choice_text: String, event_id: String) -> void:
 	if not knight_flag.is_empty():
 		if not _vigil.scenes_seen.has(knight_flag):
 			_vigil.scenes_seen.append(knight_flag)
-		if not _store_vigil():
-			_show_save_error("ui.persistence.detail.eventChoiceHold")
-			return
+		_vigil_before_run = true
 	_read_flame_at_event()
 	# A narrated roll (the gambler's bones) is owed as its own beat. The id is
 	# persisted, never the text, so a resume narrates it in the live locale.
@@ -4719,7 +4740,9 @@ func _on_scene_finished() -> void:
 	# scenes_seen already holds it. Run-then-Vigil is the harmful order:
 	# the disk run says the opening is done while the disk Vigil never
 	# recorded it, so the next run replays.
-	if not _store_vigil() or (run_pending and not _store_run()):
+	_vigil_before_run = run_pending
+	var held: bool = _store_run() if run_pending else _store_vigil()
+	if not held:
 		_show_save_error("ui.persistence.detail.sceneHold")
 		return
 	var player: ScenePlayer = _route_screen as ScenePlayer

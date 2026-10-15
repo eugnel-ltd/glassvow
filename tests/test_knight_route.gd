@@ -11,13 +11,23 @@ const SEED: int = 21203
 
 class InterruptMain extends Main:
 	var interrupt_run: bool = false
+	var interrupt_vigil: bool = false
 	var save_error: bool = false
 
 	func _store_run() -> bool:
-		return false if interrupt_run else super._store_run()
+		var path: String = _run_save_path
+		if interrupt_run:
+			_run_save_path = RUN_PATH + "/blocked"
+		var ok: bool = super._store_run()
+		_run_save_path = path
+		return ok
 
-	func _show_save_error(_detail: String) -> void:
+	func _store_vigil() -> bool:
+		return false if interrupt_vigil else super._store_vigil()
+
+	func _show_save_error(detail: String) -> void:
 		save_error = true
+		super._show_save_error(detail)
 
 
 static func _check(fails: Array[String], ok: Variant, what: String) -> void:
@@ -35,6 +45,8 @@ static func run(fails: Array[String]) -> void:
 	_scene_completion(content, fails)
 	_interrupted_scene(content, fails)
 	_interrupted_aid(content, fails)
+	_vigil_retry(content, fails)
+	_failed_title_reload(content, fails)
 	_staging_failure(content, fails)
 	_deferrals(content, fails)
 	_simulator(content, fails)
@@ -181,6 +193,130 @@ static func _interrupted_aid(content: ContentDB, fails: Array[String]) -> void:
 		and SaveService.load_run(content, RUN_PATH).quest_scratch.get("eventChoice") == 0,
 		"Aid replay did not preserve one flag and one choice")
 	_dispose(resumed)
+
+
+## Use the production error screen's signal and Retry handler. Fail each store
+## separately, then reload both files at every boundary.
+static func _vigil_retry(content: ContentDB, fails: Array[String]) -> void:
+	for step: int in [0, 1, 2]:
+		var main: InterruptMain = _main(content, _run(content, step))
+		main._vigil.scenes_seen.append("opening")
+		main._store_vigil()
+		main._show_event()
+		var before: Dictionary = main.game.run.to_dict()
+		var expected: RunState = main._load_run()
+		if step == 0:
+			var ops: Array = content.events["woundedKnight"]["choices"][0]["ops"]
+			main.game.rewards.apply_event_ops(expected, ops)
+		main.interrupt_vigil = true
+		if step == 0:
+			main._on_event_choice("0", "woundedKnight")
+		else:
+			Wiring._drive(main)
+		var flag: String = "knight-%d" % (step + 1)
+		_check(fails, main.save_error and main._choice_screen is ChoiceScreen,
+			"Vigil failure did not show the actual error screen at " + flag)
+		_check(fails, main._load_run().to_dict() == before
+			and not main._load_vigil().scenes_seen.has(flag), "Vigil failure wrote a partial run at " + flag)
+		_restart_checkpoint(content, step, fails)
+		for _attempt: int in range(2):
+			_answer_error(main, "retry", fails)
+			_check(fails, main._choice_screen is ChoiceScreen
+				and main._load_run().to_dict() == before
+				and not main._load_vigil().scenes_seen.has(flag), "failed Retry escaped or wrote the run at " + flag)
+		main.interrupt_vigil = false
+		main.interrupt_run = true
+		_answer_error(main, "retry", fails)
+		_check(fails, main._choice_screen is ChoiceScreen
+			and main._load_vigil().scenes_seen.count(flag) == 1
+			and main._load_run().to_dict() == before, "Vigil-then-run boundary was lost at " + flag)
+		_restart_checkpoint(content, step, fails)
+		main.interrupt_run = false
+		_answer_error(main, "retry", fails)
+		var disk: RunState = main._load_run()
+		_check(fails, main._load_vigil().scenes_seen.count(flag) == 1, "Retry lost the flag at " + flag)
+		if step == 0:
+			_check(fails, disk.quest_scratch.get("eventStory", {}).get("phase") == "result"
+				and main._route_screen is EventScreen and (main._route_screen as EventScreen).beat == "c0"
+				and disk.player.hp == expected.player.hp and disk.player.relics == expected.player.relics
+				and disk.rng_state() == expected.rng_state(), "Retry repeated Aid or lost its result")
+		else:
+			_check(fails, disk.pending_scene == null and WorldMap.from_dict(disk.map).is_cleared(3)
+				and _mythics(disk) == step - 1 and not disk.quest_scratch.has("eventNode")
+				and disk.pending_hollow_route == null, "Retry lost scene completion at " + flag)
+		_dispose(main)
+		var resumed: InterruptMain = _main(content, null, false)
+		resumed._vigil = resumed._load_vigil()
+		resumed._continue_run(disk)
+		if step == 0:
+			_check(fails, (resumed._route_screen as EventScreen).beat == "c0", "restart offered Aid again")
+			resumed._on_event_story_continue()
+			resumed._on_event_story_continue()
+		else:
+			resumed.game.quests.finish_knight_meeting(resumed.game.run, flag)
+		_check(fails, WorldMap.from_dict(resumed._load_run().map).is_cleared(3)
+			and _mythics(resumed.game.run) == maxi(0, step - 1), "restart lost the node or duplicated the grant")
+		_dispose(resumed)
+
+
+static func _restart_checkpoint(content: ContentDB, step: int, fails: Array[String]) -> void:
+	var resumed: InterruptMain = _main(content, null, false)
+	resumed._vigil = resumed._load_vigil()
+	resumed._continue_run(resumed._load_run())
+	if step == 0:
+		_check(fails, resumed._route_screen is EventScreen
+			and (resumed._route_screen as EventScreen).beat.is_empty()
+			and not resumed.game.run.quest_scratch.has("eventChoice"), "restart retained a partial Aid grant")
+	else:
+		_check(fails, _playing(resumed, "knight-%d" % (step + 1))
+			and not resumed._map.is_cleared(3) and _mythics(resumed.game.run) == 0,
+			"restart lost the pending meeting before run commit")
+	_dispose(resumed)
+
+
+static func _failed_title_reload(content: ContentDB, fails: Array[String]) -> void:
+	for step: int in [0, 1, 2]:
+		for boundary: String in ["vigil", "run"]:
+			var main: InterruptMain = _main(content, _run(content, step))
+			main._vigil.scenes_seen.append("opening")
+			main._store_vigil()
+			main._show_event()
+			var before: Dictionary = main._load_run().to_dict()
+			main.interrupt_vigil = boundary == "vigil"
+			main.interrupt_run = boundary == "run"
+			if step == 0:
+				main._on_event_choice("0", "woundedKnight")
+			else:
+				main._on_scene_finished()
+			_answer_error(main, "title", fails)
+			var flag: String = "knight-%d" % (step + 1)
+			_check(fails, main._choice_screen is TitleScreen
+				and main._load_run().to_dict() == before
+				and main._vigil.scenes_seen.has(flag) == (boundary == "run"),
+				"Title retained uncommitted state at %s/%s" % [flag, boundary])
+			main.interrupt_vigil = false
+			main.interrupt_run = false
+			main._on_title_choice("continue", main._load_run())
+			if step == 0:
+				main._on_event_choice("0", "woundedKnight")
+				_check(fails, main._load_run().player.hp == int(float(str(before["player"]["hp"]))) - 8
+					and main._load_run().player.relics.size() == before["player"]["relics"].size() + 1,
+					"Title/reload repeated Aid")
+			else:
+				_check(fails, _playing(main, flag), "Title/reload dropped the pending scene")
+				Wiring._drive(main)
+				_check(fails, main._load_run().pending_scene == null
+					and WorldMap.from_dict(main._load_run().map).is_cleared(3)
+					and _mythics(main._load_run()) == step - 1, "Title/reload lost scene completion")
+			_check(fails, main._load_vigil().scenes_seen.count(flag) == 1, "Title/reload lost the flag")
+			_dispose(main)
+
+
+static func _answer_error(main: Main, id: String, fails: Array[String]) -> void:
+	if main._choice_screen is ChoiceScreen:
+		main._choice_screen.emit_signal("chosen", id)
+	else:
+		_check(fails, false, "no production error choice for " + id)
 
 
 static func _staging_failure(content: ContentDB, fails: Array[String]) -> void:
