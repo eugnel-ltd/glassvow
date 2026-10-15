@@ -34,7 +34,8 @@ export function isBareGenerateHref(href: string): boolean {
   return path === "/workspace/generate";
 }
 
-export type PageState = { href?: string; login?: boolean; err?: boolean; smart?: boolean };
+/** `challenge` is Cloudflare's "Just a moment…" page, served at the requested URL. */
+export type PageState = { href?: string; login?: boolean; err?: boolean; smart?: boolean; challenge?: boolean };
 
 export function planWarmGeneratePage(state: PageState | null | undefined, taskIdArg: string) {
   const href = String(state?.href || "");
@@ -42,12 +43,12 @@ export function planWarmGeneratePage(state: PageState | null | undefined, taskId
   const targetUrl = generateTargetUrl(taskIdArg);
   if (taskIdArg) {
     return {
-      reuse: !!(state && !state.login && !state.err && href.includes(taskIdArg)),
+      reuse: !!(state && !state.login && !state.err && !state.challenge && href.includes(taskIdArg)),
       targetUrl, resetViaBlank: false, leftoverTaskId: "",
     };
   }
   return {
-    reuse: !!(state && !state.login && !state.err && state.smart && isBareGenerateHref(href)),
+    reuse: !!(state && !state.login && !state.err && !state.challenge && state.smart && isBareGenerateHref(href)),
     targetUrl, resetViaBlank: leftoverTaskId !== "", leftoverTaskId,
   };
 }
@@ -58,7 +59,7 @@ export function generateWaitReady(
   taskIdArg: string,
   phase: "initial" | "authed",
 ): boolean {
-  if (!s || s.err) return false;
+  if (!s || s.err || s.challenge) return false;
   if (taskIdArg) {
     const onTask = String(s.href || "").includes(taskIdArg);
     if (phase === "initial") return !!(s.login || onTask);
@@ -227,6 +228,7 @@ Usage:
   bun tools/studio_image_to_glb.ts --image <path> --out <path> [options]
   bun tools/studio_image_to_glb.ts --dry-run --textured --image <path> --out <path>
   bun tools/studio_image_to_glb.ts --smoke-run --textured --image <path> --out <path>
+  bun tools/studio_image_to_glb.ts --headed --smoke-run --image <path> --out <path>
   bun tools/studio_image_to_glb.ts --task-id <id> --out <path>
   bun tools/studio_image_to_glb.ts --kill-chrome
 
@@ -248,11 +250,18 @@ Options:
   --stop-before-generate      same Generate-not-clicked stop as --smoke-run
   --task-id ID                re-export an existing task (no Generate)
   --cookie-browser NAME       default Chrome
+  --headed                    visible Chrome window, for Studio's Cloudflare check
   --kill-chrome
   --help
 
 Smart Mesh (tab=low_poly) has no texture stage. Textured game content uses
 --textured, which stays on the HD Model tab (tab=high_detail).
+
+Studio shows a Cloudflare "Verify you are human" check that New Headless
+cannot pass. Run --headed once and tick the box if the window shows it; the
+warm headed Chrome then serves later runs, with or without --headed. If the
+window shows Sign up/Log in, log in there by hand: the session stays in the
+warm profile.
 
 --dry-run JSON remaining_studio_features lists Studio controls this driver
 does not spend credits on (rig, Multi-Views, 8K trial, OpenAPI, …).
@@ -321,6 +330,7 @@ export type StudioRawArgs = {
   taskId: string;
   killChrome: boolean;
   cookieBrowser: string;
+  headed: boolean;
   help: boolean;
 };
 
@@ -344,6 +354,7 @@ export type StudioRequest = {
   taskId: string;
   killChrome: boolean;
   cookieBrowser: string;
+  headed: boolean;
   help: boolean;
 };
 
@@ -368,6 +379,7 @@ export function parseStudioArgv(argv: string[]): StudioRawArgs {
     taskId: argValue(argv, "--task-id"),
     killChrome: hasFlag(argv, "--kill-chrome"),
     cookieBrowser: argValue(argv, "--cookie-browser", "Chrome"),
+    headed: hasFlag(argv, "--headed"),
     help: hasFlag(argv, "--help") || hasFlag(argv, "-h"),
   };
 }
@@ -388,7 +400,7 @@ export function resolveStudioRequest(raw: StudioRawArgs): StudioRequest {
       aiComplete: false, dryRun: raw.dryRun, smokeRun: raw.smokeRun,
       stopBeforeGenerate: raw.stopBeforeGenerate, wouldClickGenerate: false,
       taskId: raw.taskId, killChrome: raw.killChrome, cookieBrowser: raw.cookieBrowser,
-      help: true,
+      headed: raw.headed, help: true,
     };
   }
   if (!raw.image && !raw.taskId && !raw.killChrome) {
@@ -481,8 +493,35 @@ export function resolveStudioRequest(raw: StudioRawArgs): StudioRequest {
     taskId: raw.taskId,
     killChrome: raw.killChrome,
     cookieBrowser: raw.cookieBrowser,
+    headed: raw.headed,
     help: false,
   };
+}
+
+/** How long a headed run waits for a person to pass the Cloudflare check. */
+export const HUMAN_CHECK_WAIT_MS = 180_000;
+export const CLOUDFLARE_HEADLESS_REFUSAL =
+  "Studio shows a Cloudflare \"Verify you are human\" check that New Headless cannot pass; "
+  + "re-run with --headed and tick the box in the Chrome window";
+
+/** Warm-port Chrome argv. Headed opens a window so a person can pass the check. */
+export function chromeLaunchArgs(chromePath: string, port: number, profile: string, headed: boolean): string[] {
+  return [
+    chromePath,
+    `--remote-debugging-port=${port}`,
+    `--user-data-dir=${profile}`,
+    ...(headed ? ["--window-size=1280,1000"] : ["--headless=new"]),
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--disable-blink-features=AutomationControlled",
+    "about:blank",
+  ];
+}
+
+/** `/json/version` User-Agent of New Headless. Its `Browser` field reads plain
+ *  `Chrome/149…`; only the User-Agent says `HeadlessChrome/` (measured 2026-10-15). */
+export function isHeadlessUserAgent(userAgent: string): boolean {
+  return /\bHeadlessChrome\//.test(String(userAgent || ""));
 }
 
 /** `--task-id` never set the form. Do not report argv as if it did. */

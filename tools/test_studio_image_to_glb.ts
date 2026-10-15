@@ -4,8 +4,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  BARE_GENERATE_URL, STUDIO, UPLOAD_WATCH_LIMIT_MS,
-  blankResetArrived, decideHdForm, decideHdExport, generateTargetUrl, generateTaskIdFromHref,
+  BARE_GENERATE_URL, STUDIO, STUDIO_HELP, UPLOAD_WATCH_LIMIT_MS,
+  blankResetArrived, chromeLaunchArgs, decideHdForm, isHeadlessUserAgent, decideHdExport, generateTargetUrl, generateTaskIdFromHref,
   hdGenerateTextureQuality, isStudioConvertHref,
   generateWaitReady, isBareGenerateHref, isPriceAgnosticGenerateLabel,
   isTransientEvaluateError, newImageExportGuard, parseStudioArgv,
@@ -122,6 +122,30 @@ test("export guard: leftover GLB/Export without a new Generate is refused", () =
     { gltf: null, taskId: TASK, exportN: 1 },
     { generateClicked: true, leftoverTaskId: TASK },
   )).toBe("watch_generate");
+});
+
+test("Cloudflare check: never ready, never reused; only --headed opens a window", () => {
+  const cf = { href: BARE_GENERATE_URL, login: false, err: false, smart: false, challenge: true };
+  expect(generateWaitReady(cf, "", "initial")).toBe(false);
+  expect(generateWaitReady({ ...cf, smart: true }, "", "authed")).toBe(false);
+  // The check is served at the requested URL, so a --task-id href still matches.
+  expect(generateWaitReady({ ...cf, href: TASK_HREF }, TASK, "initial")).toBe(false);
+  expect(planWarmGeneratePage({ ...cf, href: TASK_HREF }, TASK).reuse).toBe(false);
+  expect(planWarmGeneratePage({ ...cf, smart: true }, "").reuse).toBe(false);
+
+  expect(resolveStudioRequest(parseStudioArgv(["--image", "a.png"])).headed).toBe(false);
+  expect(resolveStudioRequest(parseStudioArgv(["--image", "a.png", "--headed"])).headed).toBe(true);
+  expect(chromeLaunchArgs("c", 9335, "p", false)).toContain("--headless=new");
+  expect(chromeLaunchArgs("c", 9335, "p", true).some((a) => a.startsWith("--headless"))).toBe(false);
+  // Measured /json/version User-Agent of New Headless 149; its Browser field is plain "Chrome/149…".
+  const ua = (p: string) => `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 `
+    + `(KHTML, like Gecko) ${p}/149.0.0.0 Safari/537.36`;
+  expect(isHeadlessUserAgent(ua("HeadlessChrome"))).toBe(true);
+  expect(isHeadlessUserAgent(ua("Chrome"))).toBe(false);
+  expect(isHeadlessUserAgent("")).toBe(false);
+  expect(STUDIO_HELP).toContain("--headed");
+  expect(DRIVER).toContain("CLOUDFLARE_HEADLESS_REFUSAL");
+  expect(DRIVER).toContain("challenge:");
 });
 
 test("driver source: poll blank reset, overall upload deadline, export guard, OpenAPI ban", () => {

@@ -28,6 +28,11 @@
  * cookies decrypted from Chrome Default (`ory_kratos_session` on `.tripo3d.ai`).
  * HD Geometry & Texture walk: 2026-08-24.
  *
+ * Since 2026-10-15 Studio serves a Cloudflare "Verify you are human" page
+ * that New Headless never passes. Headless runs now fail fast on it;
+ * `--headed` opens a window, waits for a person to tick the box, and leaves
+ * a warm headed Chrome that later runs reuse. Never script the tick.
+ *
  * Measured path (do not skip):
  * 1. After cookie login, `Page.navigate` `/workspace/generate`. New Headless
  *    has WebGL so this cold GET works. Gallery home at 1280px hides
@@ -77,16 +82,20 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import {
   BLANK_RESET_URL,
+  CLOUDFLARE_HEADLESS_REFUSAL,
+  HUMAN_CHECK_WAIT_MS,
   STUDIO_HELP,
   UPLOAD_WATCH_LIMIT_MS,
   UPLOAD_WATCH_POLL_MS,
   blankResetArrived,
+  chromeLaunchArgs,
   decideHdForm,
   decideHdExport,
   hdGenerateTextureQuality,
   isStudioConvertHref,
   generateTargetUrl,
   generateWaitReady,
+  isHeadlessUserAgent,
   isTransientEvaluateError,
   newImageExportGuard,
   parseStudioArgv,
@@ -234,8 +243,19 @@ async function portUp(port: number): Promise<boolean> {
   }
 }
 
+/** `/json/version` User-Agent of the warm Chrome, or "" when none is up. */
+async function warmUserAgent(): Promise<string> {
+  try {
+    const v = await (await fetch(`http://127.0.0.1:${WARM_PORT}/json/version`)).json() as { "User-Agent"?: string };
+    return String(v["User-Agent"] || "");
+  } catch {
+    return "";
+  }
+}
+
+/** 15 s: a cold Chrome for Testing 149 took over 4 s on the Mac mini (2026-10-15). */
 async function waitPort(port: number) {
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 300; i++) {
     if (await portUp(port)) return;
     await sleep(50);
   }
@@ -248,6 +268,8 @@ async function reapChrome() {
   });
   await proc.exited;
   await sleep(150);
+  // A dying Chrome still answers on the port; a relaunch must not attach to it.
+  for (let i = 0; i < 100 && await portUp(WARM_PORT); i++) await sleep(50);
   for (const name of ["SingletonLock", "SingletonCookie", "SingletonSocket"]) {
     const p = join(WARM_PROFILE, name);
     if (existsSync(p)) {
@@ -384,7 +406,9 @@ const pageStateExpr = `({
     return t === "Smart Mesh" || t.replace(/ /g,"") === "SmartMesh";
   }),
   exp: [...document.querySelectorAll("button")].some(b => (b.innerText||"").trim() === "Export"),
-  err: /WebGL|Internal Server Error/.test(document.body.innerText||"")
+  err: /WebGL|Internal Server Error/.test(document.body.innerText||""),
+  challenge: /^Just a moment/.test(document.title)
+    || /Performing security verification/.test(document.body.innerText||"")
 })`;
 
 if (killChrome && !image && !taskIdArg) {
@@ -402,22 +426,18 @@ mkdirSync(WARM_PROFILE, { recursive: true });
 
 let close = () => {};
 let attachedWarm = false;
+let headedChrome = req.headed;
 try {
-  if (await portUp(WARM_PORT)) {
+  // A warm headless Chrome cannot show the Cloudflare check, so --headed relaunches it.
+  const warm = await warmUserAgent();
+  if (warm && !(req.headed && isHeadlessUserAgent(warm))) {
     attachedWarm = true;
+    headedChrome = !isHeadlessUserAgent(warm);
   } else {
     await reapChrome();
-    const chromePath = findChrome();
-    const spawned = Bun.spawn([
-      chromePath,
-      `--remote-debugging-port=${WARM_PORT}`,
-      `--user-data-dir=${WARM_PROFILE}`,
-      "--headless=new",
-      "--no-first-run",
-      "--no-default-browser-check",
-      "--disable-blink-features=AutomationControlled",
-      "about:blank",
-    ], { stdout: "ignore", stderr: "ignore" });
+    const spawned = Bun.spawn(chromeLaunchArgs(findChrome(), WARM_PORT, WARM_PROFILE, req.headed), {
+      stdout: "ignore", stderr: "ignore",
+    });
     spawned.unref();
     await waitPort(WARM_PORT);
   }
@@ -443,6 +463,17 @@ try {
   let cookieSource = "profile";
   const targetUrl = generateTargetUrl(taskIdArg);
 
+  /** Wait for Studio. On the Cloudflare check: headless refuses; headed waits for a person. */
+  async function waitGenerate(phase: "initial" | "authed") {
+    const s = await waitEv(cdp, pageStateExpr,
+      (s) => generateWaitReady(s, taskIdArg, phase) || !!s?.challenge, 20000);
+    if (!s.challenge) return s;
+    if (!headedChrome) die(CLOUDFLARE_HEADLESS_REFUSAL);
+    console.error(`Studio: Cloudflare check. Tick "Verify you are human" in the Chrome window `
+      + `(waiting up to ${HUMAN_CHECK_WAIT_MS / 1000} s).`);
+    return await waitEv(cdp, pageStateExpr, (s) => generateWaitReady(s, taskIdArg, phase), HUMAN_CHECK_WAIT_MS);
+  }
+
   let state = await ev(cdp, pageStateExpr);
   const plan = planWarmGeneratePage(state, taskIdArg);
   if (!plan.reuse) {
@@ -451,14 +482,14 @@ try {
       await waitEv(cdp, "({ href: location.href })", (s) => s && blankResetArrived(String(s.href || ""), plan.leftoverTaskId), 10000);
     }
     await cdp("Page.navigate", { url: targetUrl });
-    state = await waitEv(cdp, pageStateExpr, (s) => generateWaitReady(s, taskIdArg, "initial"), 20000);
+    state = await waitGenerate("initial");
   }
 
   async function injectCookies(source: string, cookies: StudioCookie[]) {
     await applyCookies(cdp, cookies);
     cookieSource = source;
     await cdp("Page.navigate", { url: targetUrl });
-    state = await waitEv(cdp, pageStateExpr, (s) => generateWaitReady(s, taskIdArg, "authed"), 20000);
+    state = await waitGenerate("authed");
   }
 
   if (state.login) {
@@ -884,6 +915,7 @@ try {
       stopped: true,
       smoke_run: smokeRun,
       would_spend_credits: false,
+      headed: headedChrome,
       workflow: ["image", "arguments", "3d-model"],
       tab: req.tab,
       textured: req.textured,
@@ -1217,7 +1249,7 @@ try {
       summary: `Studio ${tabName} Export GLB ${out} (${bytes.length} bytes)`,
       glb_path: out,
       task_id: taskId,
-      driver: "chrome-for-testing-new-headless",
+      driver: headedChrome ? "chrome-for-testing-headed" : "chrome-for-testing-new-headless",
       timings: { ...timings, driver_ms, total_ms: Date.now() - t0 },
       warm: attachedWarm,
       cookie_source: cookieSource,
