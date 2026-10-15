@@ -82,7 +82,8 @@ void fragment() {
 		down = vec3(0.0, -1.0, 0.0);
 	}
 	vec3 stone = layer_sample(albedo_atlas, at, paving).rgb * tint;
-	vec3 mapped = layer_sample(normal_atlas, at, paving).rgb * 2.0 - 1.0;
+	vec2 xy = layer_sample(normal_atlas, at, paving).rg * 2.0 - 1.0;
+	vec3 mapped = vec3(xy, sqrt(max(0.0, 1.0 - dot(xy, xy))));
 	// The atlas's green points up its image, against `down`.
 	vec3 bent = normalize(along * mapped.x - down * mapped.y + n * mapped.z);
 	float wet = 1.0 - smoothstep(water_level, water_level + wet_height, world_at.y);

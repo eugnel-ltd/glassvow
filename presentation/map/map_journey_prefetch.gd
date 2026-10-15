@@ -107,6 +107,7 @@ static func step_current() -> void:
 	if _current != null:
 		_current._advance(false)
 	MapScene.reap()
+	MapJourneyProfile.reap_kits()
 
 
 ## A map is opening now: whatever main-thread setup the current prefetch has
@@ -203,6 +204,7 @@ static func join() -> void:
 		_current._land.free()
 	_current = null
 	MapScene.join_abandoned()
+	MapJourneyProfile.reap_kits()
 	MapJourneyLandscape.LandFloor.Bake.reap()
 
 

@@ -114,18 +114,39 @@ static func warms(act: int) -> bool:
 	return rows.has(act) and rows[act].warm
 
 
-## Lets go of what `act`'s journey land builds with (`land_class(act).release_kit`):
-## that act's map is not shown again (`Main`, past its boss). Nothing for an
-## act with no row.
+static var _pending_release: Array[GDScript] = []
+
+
+## Lets go of what `act`'s journey land builds with after its workers finish.
+## Nothing for an act with no row.
 static func release_kit(act: int) -> void:
-	if rows.has(act):
-		rows[act].land.release_kit()
+	if rows.has(act) and not _pending_release.has(rows[act].land):
+		_pending_release.append(rows[act].land)
+	reap_kits()
+
+
+## Main-thread cleanup: an abandoned worker can still read its kit until its
+## current stage ends. Never join it under a visible frame.
+static func reap_kits() -> void:
+	for land_class: GDScript in _pending_release.duplicate():
+		var job: MapJourneyPrefetch = MapJourneyPrefetch._current
+		if job != null and land_class == MapJourneyProfile.land_class(job._act):
+			continue
+		var used: bool = false
+		for land: MapJourneyLandscape in MapScene._abandoned:
+			if land.get_script() == land_class and land.busy():
+				used = true
+				break
+		if not used:
+			land_class.release_kit()
+			_pending_release.erase(land_class)
 
 
 ## Lets go of what every journey land but `keep`'s builds with: no journey
 ## land but that act's is built any more (`MapJourneyPrefetch`; -1 keeps none).
 static func release_kits(keep: int = -1) -> void:
 	var kept: GDScript = rows[keep].land if rows.has(keep) else null
+	_pending_release.erase(kept)
 	for act: int in rows:
 		if rows[act].land != kept:
-			rows[act].land.release_kit()
+			release_kit(act)
