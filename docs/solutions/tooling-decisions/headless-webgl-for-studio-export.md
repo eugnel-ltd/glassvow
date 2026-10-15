@@ -465,6 +465,18 @@ check does appear, a person ticks it in the window; the driver waits
 `HUMAN_CHECK_WAIT_MS`. Never script the tick or disguise the headless
 browser: that is evading a bot check.
 
+The same rule removed three older shortcuts (review of PR #731):
+
+- Chrome no longer gets `--disable-blink-features=AutomationControlled`,
+  which hid `navigator.webdriver`. Cloudflare may now show the check more
+  often; the answer stays a human tick in the headed window.
+- Cookies imported from the owner's Chrome are filtered: `cf_*`, `__cf*`
+  and `_cfuvid` never move into the automated browser. The login cookie
+  (`ory_kratos_session`) still does.
+- A Cloudflare stop (headless refusal, or no human pass within
+  `HUMAN_CHECK_WAIT_MS`) ends the run. The cache-login fallback no longer
+  re-imports cookies and waits again.
+
 Two measured details:
 
 - `/json/version` `Browser` reads plain `Chrome/149…` in New Headless; only

@@ -503,8 +503,23 @@ export const HUMAN_CHECK_WAIT_MS = 180_000;
 export const CLOUDFLARE_HEADLESS_REFUSAL =
   "Studio shows a Cloudflare \"Verify you are human\" check that New Headless cannot pass; "
   + "re-run with --headed and tick the box in the Chrome window";
+export const CLOUDFLARE_HUMAN_TIMEOUT =
+  `Studio's Cloudflare check was not passed within ${HUMAN_CHECK_WAIT_MS / 1000} s; `
+  + "re-run with --headed and tick the box in the Chrome window";
 
-/** Warm-port Chrome argv. Headed opens a window so a person can pass the check. */
+/** A Cloudflare stop ends the run: no cookie re-import, no second wait. */
+export function isCloudflareStop(err: unknown): boolean {
+  const m = err instanceof Error ? err.message : String(err);
+  return m === CLOUDFLARE_HEADLESS_REFUSAL || m === CLOUDFLARE_HUMAN_TIMEOUT;
+}
+
+/** Login cookies only. Cloudflare's own cookies never move into the automated browser. */
+export function withoutCloudflareCookies<T extends { name: string }>(cookies: T[]): T[] {
+  return cookies.filter((c) => !/^(cf_|__cf|_cfuvid)/.test(c.name));
+}
+
+/** Warm-port Chrome argv. Headed opens a window so a person can pass the check.
+ *  No switch here hides automation from the page (navigator.webdriver stays true). */
 export function chromeLaunchArgs(chromePath: string, port: number, profile: string, headed: boolean): string[] {
   return [
     chromePath,
@@ -513,7 +528,6 @@ export function chromeLaunchArgs(chromePath: string, port: number, profile: stri
     ...(headed ? ["--window-size=1280,1000"] : ["--headless=new"]),
     "--no-first-run",
     "--no-default-browser-check",
-    "--disable-blink-features=AutomationControlled",
     "about:blank",
   ];
 }

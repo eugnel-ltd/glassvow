@@ -83,6 +83,7 @@ import { dirname, join, resolve } from "node:path";
 import {
   BLANK_RESET_URL,
   CLOUDFLARE_HEADLESS_REFUSAL,
+  CLOUDFLARE_HUMAN_TIMEOUT,
   HUMAN_CHECK_WAIT_MS,
   STUDIO_HELP,
   UPLOAD_WATCH_LIMIT_MS,
@@ -95,6 +96,7 @@ import {
   isStudioConvertHref,
   generateTargetUrl,
   generateWaitReady,
+  isCloudflareStop,
   isHeadlessUserAgent,
   isTransientEvaluateError,
   newImageExportGuard,
@@ -109,6 +111,7 @@ import {
   shouldClickGenerate,
   studioExportFormFields,
   uploadWatchTimedOut,
+  withoutCloudflareCookies,
 } from "./studio_image_to_glb_logic.ts";
 
 const FORBIDDEN = ["openapi.tripo3d.ai", "platform.tripo3d.ai"];
@@ -310,7 +313,7 @@ async function importFreshCookies(): Promise<StudioCookie[]> {
 }
 
 async function applyCookies(cdp: Cdp, cookies: StudioCookie[]) {
-  for (const c of cookies) {
+  for (const c of withoutCloudflareCookies(cookies)) {
     const sameSite = String(c.sameSite || "Lax");
     await cdp("Network.setCookie", {
       name: c.name,
@@ -409,6 +412,9 @@ const pageStateExpr = `({
   err: /WebGL|Internal Server Error/.test(document.body.innerText||""),
   challenge: /^Just a moment/.test(document.title)
     || /Performing security verification/.test(document.body.innerText||"")
+    || (!document.querySelector("#__nuxt") && !!document.querySelector(
+      "script[src*='challenges.cloudflare.com'], iframe[src*='challenges.cloudflare.com'], "
+      + "script[src*='/cdn-cgi/challenge-platform/h/']"))
 })`;
 
 if (killChrome && !image && !taskIdArg) {
@@ -440,6 +446,12 @@ try {
     });
     spawned.unref();
     await waitPort(WARM_PORT);
+    // The port can still belong to the Chrome that reapChrome could not stop.
+    const ua = await warmUserAgent();
+    headedChrome = !!ua && !isHeadlessUserAgent(ua);
+    if (headedChrome !== req.headed) {
+      die(`relaunched Chrome is ${headedChrome ? "headed" : "headless"}, wanted ${req.headed ? "headed" : "headless"}`);
+    }
   }
 
   const pages = await (await fetch(`http://127.0.0.1:${WARM_PORT}/json/list`)).json() as Array<{
@@ -471,7 +483,12 @@ try {
     if (!headedChrome) die(CLOUDFLARE_HEADLESS_REFUSAL);
     console.error(`Studio: Cloudflare check. Tick "Verify you are human" in the Chrome window `
       + `(waiting up to ${HUMAN_CHECK_WAIT_MS / 1000} s).`);
-    return await waitEv(cdp, pageStateExpr, (s) => generateWaitReady(s, taskIdArg, phase), HUMAN_CHECK_WAIT_MS);
+    try {
+      return await waitEv(cdp, pageStateExpr, (s) => generateWaitReady(s, taskIdArg, phase), HUMAN_CHECK_WAIT_MS);
+    } catch (e) {
+      if (e instanceof Error && e.message.startsWith("timeout: ")) die(CLOUDFLARE_HUMAN_TIMEOUT);
+      throw e;
+    }
   }
 
   let state = await ev(cdp, pageStateExpr);
@@ -497,7 +514,8 @@ try {
     if (cached) {
       try {
         await injectCookies("cache", cached);
-      } catch {
+      } catch (e) {
+        if (isCloudflareStop(e)) throw e;
         await injectCookies("chrome-default", await importFreshCookies());
       }
     } else {

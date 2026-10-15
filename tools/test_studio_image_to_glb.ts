@@ -4,8 +4,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  BARE_GENERATE_URL, STUDIO, STUDIO_HELP, UPLOAD_WATCH_LIMIT_MS,
-  blankResetArrived, chromeLaunchArgs, decideHdForm, isHeadlessUserAgent, decideHdExport, generateTargetUrl, generateTaskIdFromHref,
+  BARE_GENERATE_URL, CLOUDFLARE_HEADLESS_REFUSAL, CLOUDFLARE_HUMAN_TIMEOUT, STUDIO, STUDIO_HELP, UPLOAD_WATCH_LIMIT_MS,
+  blankResetArrived, chromeLaunchArgs, isCloudflareStop, withoutCloudflareCookies, decideHdForm, isHeadlessUserAgent, decideHdExport, generateTargetUrl, generateTaskIdFromHref,
   hdGenerateTextureQuality, isStudioConvertHref,
   generateWaitReady, isBareGenerateHref, isPriceAgnosticGenerateLabel,
   isTransientEvaluateError, newImageExportGuard, parseStudioArgv,
@@ -146,6 +146,27 @@ test("Cloudflare check: never ready, never reused; only --headed opens a window"
   expect(STUDIO_HELP).toContain("--headed");
   expect(DRIVER).toContain("CLOUDFLARE_HEADLESS_REFUSAL");
   expect(DRIVER).toContain("challenge:");
+});
+
+test("Cloudflare: nothing hides automation, a stop is never retried, its cookies never move", () => {
+  for (const headed of [false, true]) {
+    expect(chromeLaunchArgs("c", 9335, "p", headed).some((a) => /AutomationControlled/.test(a))).toBe(false);
+  }
+  expect(DRIVER).not.toContain("AutomationControlled");
+
+  expect(isCloudflareStop(new Error(CLOUDFLARE_HEADLESS_REFUSAL))).toBe(true);
+  expect(isCloudflareStop(new Error(CLOUDFLARE_HUMAN_TIMEOUT))).toBe(true);
+  expect(isCloudflareStop(new Error('timeout: {"login":true}'))).toBe(false);
+  // The cache-login fallback rethrows a Cloudflare stop before any cookie re-import.
+  const fallback = DRIVER.slice(DRIVER.indexOf('injectCookies("cache", cached)'), DRIVER.indexOf('lap("login_ms")'));
+  expect(fallback).toMatch(/catch \(e\) \{\s*if \(isCloudflareStop\(e\)\) throw e;\s*await injectCookies\("chrome-default"/);
+  expect(DRIVER).toContain("die(CLOUDFLARE_HUMAN_TIMEOUT)");
+
+  const jar = ["ory_kratos_session", "cf_clearance", "__cf_bm", "_cfuvid", "__cflb", "lang"].map((name) => ({ name }));
+  expect(withoutCloudflareCookies(jar).map((c) => c.name)).toEqual(["ory_kratos_session", "lang"]);
+  expect(DRIVER).toContain("of withoutCloudflareCookies(cookies)");
+  // A relaunch reads the mode back instead of trusting the argv.
+  expect(DRIVER).toContain("headedChrome !== req.headed");
 });
 
 test("driver source: poll blank reset, overall upload deadline, export guard, OpenAPI ban", () => {
