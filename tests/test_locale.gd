@@ -259,7 +259,7 @@ static func _derived_display_seed(fails: Array[String]) -> void:
 		"ui.rarity.common": "common",
 		"ui.rarity.uncommon": "uncommon",
 		"ui.rarity.rare": "rare",
-		"ui.rarity.mythic": "mythic",
+		"ui.rarity.mythic": "Mythic",
 		"ui.rarity.special": "special",
 		"ui.rarity.boss": "boss",
 	}
