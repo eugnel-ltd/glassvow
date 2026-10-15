@@ -447,15 +447,28 @@ func rest_heal_fraction(run: RunState) -> float:
 func roll_event(run: RunState) -> String:
 	var seen_v: Variant = run.quest_scratch.get("seenEvents", [])
 	var seen: Array = seen_v if typeof(seen_v) == TYPE_ARRAY else []
+	var knight: Dictionary = run.quest_scratch.get("knight", {})
+	var knight_live: bool = mythics_live and run.vow >= 3
+	if knight_live and _ji(knight.get("step", -1)) == 0 and not knight.get("met", false):
+		knight["met"] = true
+		if not seen.has("woundedKnight"):
+			seen.append("woundedKnight")
+		run.quest_scratch["seenEvents"] = seen
+		return "woundedKnight"
+	var knight_past: bool = knight_live and (_ji(knight.get("step", 0)) > 0 \
+		or knight.get("met", false))
 	var available: Array[String] = []
 	for id_v: Variant in content.events.keys():
 		var id: String = str(id_v)
-		if not seen.has(id):
+		if not seen.has(id) and not (knight_past and id == "woundedKnight"):
 			available.append(id)
 	if available.is_empty():
 		seen.clear()
+		if knight_past:
+			seen.append("woundedKnight")
 		for id_v: Variant in content.events.keys():
-			available.append(str(id_v))
+			if not (knight_past and str(id_v) == "woundedKnight"):
+				available.append(str(id_v))
 	var picked: String = available[run.rng.pick_index(available.size())]
 	seen.append(picked)
 	run.quest_scratch["seenEvents"] = seen

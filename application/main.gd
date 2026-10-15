@@ -2089,6 +2089,8 @@ func _new_run(profile: Dictionary = {}) -> void:
 		"quests": _vigil.quests,
 		"shards": _vigil.shards,
 		"lamplighter": _vigil.unlocks.has("lamplighter"),
+		"knight": ["knight-1", "knight-2", "knight-3"].filter(
+			func(id: String) -> bool: return _vigil.scenes_seen.has(id)).size(),
 	}
 	game = GlassvowGame.new(content, RunState.new_run(content, run_seed, run_id, merged))
 	game.run.stats["start"] = Time.get_unix_time_from_system()
@@ -2840,13 +2842,17 @@ func _act4_arrival_scene(n: MapNode) -> String:
 	return scene_id
 
 
-func _finish_node() -> void:
+func _complete_node_state() -> void:
 	game.run.pending_hollow_route = null
 	_map.clear_current()
 	game.run.map = _map.to_dict()
 	for key: String in ["eventNode", "eventPending", "eventStory", "eventChoice",
 			"eventRoll", "shopStock", "treasureClaim"]:
 		game.run.quest_scratch.erase(key)
+
+
+func _finish_node() -> void:
+	_complete_node_state()
 	if _store_run():
 		_route_run()
 	else:
@@ -2904,6 +2910,8 @@ func _show_event() -> void:
 	_remember_route(_show_event)
 	var event_id: String = str(game.run.quest_scratch.get("eventNode", ""))
 	if event_id.is_empty():
+		if _stage_knight_scene():
+			return
 		event_id = game.rewards.roll_event(game.run)
 		game.run.quest_scratch["eventNode"] = event_id
 		if not _store_run():
@@ -2942,6 +2950,21 @@ func _show_event() -> void:
 	_show_event_screen(screen)
 
 
+## The scene owns this event node. Store its continuation before showing it.
+func _stage_knight_scene() -> bool:
+	var scene_id: String = game.quests.stage_knight_scene(game.run)
+	if scene_id.is_empty():
+		return false
+	game.run.pending_scene = {"id": scene_id, "cursor": 0}
+	if not _store_run():
+		game.run.pending_scene = null
+		game.run.quest_scratch["knight"]["met"] = false
+		_show_save_error("ui.persistence.detail.sceneHold")
+		return true
+	_show_scene()
+	return true
+
+
 ## Route an event screen and light its lantern (lock §9). A result beat carries
 ## on the lantern of the event screen it replaces, mid-tween as it stands: the
 ## deck change is made on the choice, and the beat is where the player then
@@ -2964,6 +2987,13 @@ func _on_event_choice(choice_text: String, event_id: String) -> void:
 	game.run.quest_scratch["eventChoice"] = int(choice_text)
 	var ops: Array = choice.get("ops", [])
 	var pending: Dictionary = game.rewards.apply_event_ops(game.run, ops)
+	var knight_flag: String = game.quests.knight_aid_flag(game.run, event_id, int(choice_text))
+	if not knight_flag.is_empty():
+		if not _vigil.scenes_seen.has(knight_flag):
+			_vigil.scenes_seen.append(knight_flag)
+		if not _store_vigil():
+			_show_save_error("ui.persistence.detail.eventChoiceHold")
+			return
 	_read_flame_at_event()
 	# A narrated roll (the gambler's bones) is owed as its own beat. The id is
 	# persisted, never the text, so a resume narrates it in the live locale.
@@ -3698,6 +3728,10 @@ func _stage_flame_line() -> bool:
 ## and after each other, the Queue after the first Act IV crossing, and then
 ## any flame whisper still owed.
 func _stage_after_scene(scene_id: String) -> void:
+	if scene_id in ["knight-2", "knight-3"]:
+		game.quests.finish_knight_meeting(game.run, scene_id)
+		_complete_node_state()
+		return
 	if scene_id.begins_with(SceneScript.PAGE_PREFIX):
 		_stage_closer(PoolBeats.BOSS_CLOSERS)
 	elif scene_id.begins_with(SceneScript.LINE_PREFIX):
