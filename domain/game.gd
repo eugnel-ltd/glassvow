@@ -32,7 +32,8 @@ func _init(content_db: ContentDB, run_state: RunState) -> void:
 	quests = QuestRules.new(content_db)
 	run = run_state
 	# #211: James signed A as drafted. Vow 0 is identity; higher vows overlay.
-	Incentives.apply(rewards, Incentives.shipping(), run.vow)
+	Incentives.apply(rewards, Incentives.shipping(), run.vow,
+		run.unlocks.has(RunState.MIRRORED_ROAD))
 
 
 ## Post-combat rewards (not a queued-event op; the app layer calls this after
@@ -45,6 +46,11 @@ func apply(cmd: Dictionary) -> Array[Dictionary]:
 	var t: String = str(cmd.get("t", ""))
 	last_ret = null
 	var q_before: int = cb.queue.size() if cb != null else 0
+	# The Known Road (#212 §1.6): between the deal and the pick nothing may draw
+	# or call the RNG, so only the pick (or a new fight) is taken.
+	if cb != null and not cb.staged.is_empty() and t != "chooseHand" and t != "startCombat":
+		last_ret = false
+		return []
 	match t:
 		"startCombat":
 			var enemies: Array = cmd.get("enemies", [])
@@ -70,6 +76,10 @@ func apply(cmd: Dictionary) -> Array[Dictionary]:
 			var slot: int = cmd.get("slot", 0)
 			var potion_target: Variant = cmd.get("target")
 			last_ret = rules.use_potion(run, cb, slot, potion_target)
+		"chooseHand":
+			var uids_v: Variant = cmd.get("uids", [])
+			var uids: Array = uids_v if typeof(uids_v) == TYPE_ARRAY else []
+			last_ret = rules.choose_hand(cb, uids)
 		"addCardToDeck":
 			var card_id: StringName = StringName(str(cmd.get("cardId", "")))
 			run.player.deck.append(CardInst.new(run.next_uid(), card_id, false))

@@ -34,7 +34,7 @@ DISPLAY_LEAVES = frozenset({
     "name", "nameBare", "namePattern", "text", "desc", "label", "sub",
     "bossName", "blurb", "inscription", "mode", "deathDialogue", "resolved",
     "accepted", "final", "huntInscription", "huntName", "bought", "death",
-    "itemName", "itemText", "poor", "ask", "cannot", "paid",
+    "itemName", "itemText", "poor", "ask", "cannot", "paid", "lore",
 })
 CONTENT_DOMAINS = {
     "acts": "acts", "affixes": "affixes", "arts": "arts", "aspects": "aspects",

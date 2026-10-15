@@ -457,8 +457,11 @@ static func _valid_pending_reward(value: Variant, content: ContentDB) -> bool:
 			return false
 	var potion_v: Variant = rewards.get("potion")
 	var relic_v: Variant = rewards.get("relic")
+	# The mythic Spoil (#212 §2.5) is additive: absent in an older save.
+	var mythic_v: Variant = rewards.get("mythic")
 	return (potion_v == null or content.potions.has(str(potion_v))) \
-		and (relic_v == null or content.relics.has(str(relic_v)))
+		and (relic_v == null or content.relics.has(str(relic_v))) \
+		and (mythic_v == null or content.is_mythic(str(mythic_v)))
 
 
 static func _valid_boon_receipt(

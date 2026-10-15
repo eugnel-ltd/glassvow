@@ -40,6 +40,9 @@ static func _fronts_by_tier(fails: Array[String]) -> void:
 		"uncommon": SH + "front_uncommon_frame.gdshader",
 		"rare": SH + "front_rare_glass.gdshader",
 		"special": SH + "front_special_oil.gdshader",
+		# #212: the set ships dark and wears no hologram until its M0 frame
+		# lands (lane 4).
+		"mythic": "",
 	}
 	var seen: Dictionary = {}
 	for rarity: String in want:
