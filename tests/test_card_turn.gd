@@ -252,13 +252,14 @@ static func _prewarm(fails: Array[String], render: _FakeRender) -> void:
 static func _turns(fails: Array[String], content: ContentDB) -> void:
 	var host: Control = _host()
 	var back: CardBacks.Baked = CardTurn.back()
-	# A rare, so the shine's rule is seen.
+	# A rare, so the hologram's hand-over is seen: the picture turn borrows the
+	# picture's material and rest hands it back.
 	var card: CardView = _card(content, &"novaflare")
 	host.add_child(card)
 	await _frames(host, 3)
-	var shine: Control = card._shine
-	if shine == null:
-		fails.append("card turn: the rare under test wears no shine")
+	var holo: ShaderMaterial = card._holo
+	if holo == null or card._display.material != holo:
+		fails.append("card turn: the rare under test wears no hologram")
 		host.queue_free()
 		return
 
@@ -277,8 +278,8 @@ static func _turns(fails: Array[String], content: ContentDB) -> void:
 		fails.append("card turn: a picture turn moved the slab or built a plate")
 	if card._stage.render_target_update_mode != SubViewport.UPDATE_DISABLED:
 		fails.append("card turn: a picture turn asked the frozen stage to render")
-	if shine.visible or card.at_rest():
-		fails.append("card turn: a turned card kept its resting shine, or reads as at rest")
+	if card.at_rest():
+		fails.append("card turn: a turned card reads as at rest")
 	if not card._shadow.scale.is_equal_approx(CardTurn.footprint(CardTurn.pose(70.0, -10.0))):
 		fails.append("card turn: the table shadow did not narrow with the turn")
 
@@ -286,8 +287,8 @@ static func _turns(fails: Array[String], content: ContentDB) -> void:
 	# plate wears the table's back under the card's own lamp, the stage renders.
 	card.turn(140.0, -10.0, true)
 	var plate: MeshInstance3D = card._back_plate
-	if card._display.material != null:
-		fails.append("card turn: a live turn left the picture warped")
+	if card._display.material != holo:
+		fails.append("card turn: a live turn left the picture warped, or took its hologram")
 	if not card._slab.basis.is_equal_approx(CardTurn.pose(140.0, -10.0)):
 		fails.append("card turn: the live turn's slab is not at the pose the picture turn takes")
 	if plate == null or plate.get_parent() != card._slab or not plate.visible:
@@ -308,7 +309,7 @@ static func _turns(fails: Array[String], content: ContentDB) -> void:
 	# once more at rest.
 	card._stage.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	card.turn(0.0, 0.0, true)
-	_check_rest(fails, card, shine, "a live turn")
+	_check_rest(fails, card, holo, "a live turn")
 	if card._stage.render_target_update_mode != SubViewport.UPDATE_ONCE:
 		fails.append("card turn: a live turn back to rest did not render the stage at rest")
 
@@ -319,17 +320,17 @@ static func _turns(fails: Array[String], content: ContentDB) -> void:
 	if not card._slab.basis.is_equal_approx(Basis.IDENTITY) or card._back_plate.visible:
 		fails.append("card turn: a picture turn after a live one warps a turned stage")
 	card.turn(0.0, 0.0, false)
-	_check_rest(fails, card, shine, "a picture turn")
+	_check_rest(fails, card, holo, "a picture turn")
 	host.queue_free()
 	await _frames(host, 1)
 
 
-static func _check_rest(fails: Array[String], card: CardView, shine: Control, after: String) -> void:
-	if card._display.material != null or not card._slab.basis.is_equal_approx(Basis.IDENTITY) \
+static func _check_rest(fails: Array[String], card: CardView, holo: ShaderMaterial, after: String) -> void:
+	if card._display.material != holo or not card._slab.basis.is_equal_approx(Basis.IDENTITY) \
 			or (card._back_plate != null and card._back_plate.visible):
-		fails.append("card turn: after %s, rest left a material, a turned slab or a plate" % after)
-	if not shine.visible or not card._shadow.scale.is_equal_approx(Vector2.ONE) or not card.at_rest():
-		fails.append("card turn: after %s, rest did not bring back the shine and the whole shadow" % after)
+		fails.append("card turn: after %s, rest left the warp, a turned slab or a plate" % after)
+	if not card._shadow.scale.is_equal_approx(Vector2.ONE) or not card.at_rest():
+		fails.append("card turn: after %s, rest did not bring back the whole shadow" % after)
 
 
 ## A card under the pointer, tilted and lifted, turns with both renderers

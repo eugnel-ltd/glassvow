@@ -108,6 +108,11 @@ static func _glints_apart(fails: Array[String]) -> void:
 	hud.set_values(72, 72, 0, 0, 3, 3, 20, 5, 0, 5)
 	var draw: PileStack = hud._draw_pile.stack
 	var seal: PileStack = hud._deck_stack.stack
+	# The glint is the life of a pile whose top back wears no hologram (a top
+	# wearing one takes none: tests/test_card_holo.gd), so both are dressed
+	# in the table's back without one here.
+	for pile: PileStack in [draw, seal]:
+		_without_holo(pile)
 	var draw_lit: bool = false
 	var seal_lit: bool = false
 	for i: int in range(int(PileStack.GLINT_CYCLE * 2.0 / 0.05)):
@@ -166,7 +171,9 @@ static func _run_hud_deck(fails: Array[String]) -> void:
 			if hud._deck_stack.stack.count != n or hud._deck_count.text != str(n):
 				fails.append("run hud deck: %s counts %d on the stack and '%s' over it, want %d"
 					% [shape, hud._deck_stack.stack.count, hud._deck_count.text, n])
-		# Its glint crosses once a cycle, and never under Reduce Motion.
+		# Its glint crosses once a cycle, and never under Reduce Motion (on a
+		# top back that wears no hologram).
+		_without_holo(deck.stack)
 		for still: bool in [false, true]:
 			Preferences.active.reduce_motion = still
 			var lit: bool = false
@@ -252,3 +259,10 @@ class _FakeRender:
 		out.inner = ImageTexture.create_from_image(Image.create_empty(2, 2, false, Image.FORMAT_RGBA8))
 		out.oversample = scale
 		return out
+
+
+## `pile` in the back it wears, its hologram taken off.
+static func _without_holo(pile: PileStack) -> void:
+	var back: Texture2D = pile.back_texture()
+	pile.wear_back(null)
+	pile.wear_back(back, {})

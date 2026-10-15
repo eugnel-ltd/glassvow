@@ -87,6 +87,9 @@ class Baked:
 	var plate: ShaderMaterial
 	## The oversample the card was BUILT at, which is what its pixels are.
 	var oversample: float = 0.0
+	## The back's hologram knobs (CardBackCatalogue.card_data), empty for none:
+	## what a pile wearing the bake lays over its top back (PileStack).
+	var holo: Dictionary = {}
 
 
 ## A bake in flight. Every caller of one back shares it and gets its result.
@@ -199,6 +202,8 @@ static func _try(host: Node, id: String) -> Baked:
 	var out: Baked = await render.call(host, known, scale)
 	if made_from != _catalogue or not is_equal_approx(scale, CardView.oversample):
 		out = null
+	if out != null:
+		out.holo = made_from.card_data(known).get("holo", {})
 	if out != null and job.keep:
 		_bakes[known] = out
 	job.result = out

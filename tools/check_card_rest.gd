@@ -7,7 +7,7 @@ extends SceneTree
 ## Not a test: `tests/run_all.gd` only discovers `res://tests/test_*.gd`. It
 ## needs a real renderer, so it refuses `--headless` (exit 2). It boots the
 ## game on the map (the Development profile), deals a five-card deck whose
-## opening hand is all of it — a rare (the foil finish and the gilt shine), an
+## opening hand is all of it — a rare (the foil finish and its hologram), an
 ## uncommon, a common and two starters (the plain finish) — and opens the
 ## bench fight on it (duskfang, elite). Run it at a fixed frame rate, so that
 ## two builds take the same steps on the same frames and their frames can be
@@ -128,7 +128,7 @@ class Probe:
 		await _shoot("01-rest")
 		_rest_check("REST")
 		_row("VRAM at rest, %d in hand: %.1f MiB" % [cards.size(), _vram()])
-		var foil: CardView = _first(cards, func(c: CardView) -> bool: return c.has_shine())
+		var foil: CardView = _first(cards, func(c: CardView) -> bool: return c.card_id == RARE)
 		var plain: CardView = _first(cards, func(c: CardView) -> bool:
 			return CardSurface.name_of(c.surface) == "plain")
 		await _touch(foil)
