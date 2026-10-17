@@ -1,0 +1,32 @@
+[
+  {
+    "layer": "L1",
+    "role": "ground",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 11679
+  },
+  {
+    "layer": "L2",
+    "role": "subject",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 32409
+  },
+  {
+    "layer": "L3",
+    "role": "hot-core",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 26376
+  },
+  {
+    "layer": "L4",
+    "role": "front",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 6896
+  },
+  {
+    "layer": "L5",
+    "role": "particles",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 1632
+  }
+]

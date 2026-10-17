@@ -1,0 +1,44 @@
+[
+  {
+    "layer": "L1",
+    "role": "ground",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 12737
+  },
+  {
+    "layer": "L2",
+    "role": "light-slit",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 210265
+  },
+  {
+    "layer": "L3",
+    "role": "door-shadow",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 15926
+  },
+  {
+    "layer": "L4",
+    "role": "door-leaf",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 28
+  },
+  {
+    "layer": "L5",
+    "role": "subject",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 1336
+  },
+  {
+    "layer": "L6",
+    "role": "front",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 11872
+  },
+  {
+    "layer": "L7",
+    "role": "particles",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 384
+  }
+]

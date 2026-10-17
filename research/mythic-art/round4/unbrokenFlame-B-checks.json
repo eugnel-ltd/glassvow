@@ -1,0 +1,74 @@
+[
+  {
+    "layer": "L1",
+    "role": "ground",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 26431
+  },
+  {
+    "layer": "L2",
+    "role": "subject",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 19363
+  },
+  {
+    "layer": "L3",
+    "role": "chamber-light",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 70955
+  },
+  {
+    "layer": "L4",
+    "role": "shard",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 0
+  },
+  {
+    "layer": "L5",
+    "role": "shard",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 0
+  },
+  {
+    "layer": "L6",
+    "role": "shard",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 0
+  },
+  {
+    "layer": "L7",
+    "role": "shard",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 0
+  },
+  {
+    "layer": "L8",
+    "role": "shard",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 0
+  },
+  {
+    "layer": "L9",
+    "role": "shard",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 0
+  },
+  {
+    "layer": "L10",
+    "role": "flame-core",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 0
+  },
+  {
+    "layer": "L11",
+    "role": "front",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 10343
+  },
+  {
+    "layer": "L12",
+    "role": "particles",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 384
+  }
+]

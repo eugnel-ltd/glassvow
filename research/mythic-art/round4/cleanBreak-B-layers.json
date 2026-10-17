@@ -1,0 +1,190 @@
+{
+  "name": "cleanBreak-B",
+  "card": "cleanBreak",
+  "canvas": [
+    2304,
+    1546
+  ],
+  "window": [
+    128,
+    86,
+    2176,
+    1460
+  ],
+  "flat_size": [
+    2048,
+    1374
+  ],
+  "texture_count": 9,
+  "layers": [
+    {
+      "key": "L0",
+      "file": "cleanBreak-B-L0.jpg",
+      "role": "back",
+      "depth_px": 1,
+      "effect": "lean: complete distant world",
+      "bounds": [
+        0,
+        0,
+        2304,
+        1546
+      ],
+      "source": "cleanBreak-B-relic-back",
+      "source_size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "key": "L1",
+      "file": "cleanBreak-B-L1.png",
+      "role": "ground",
+      "depth_px": 3,
+      "effect": "lean: shared contact support; contour occlusion",
+      "bounds": [
+        0,
+        138,
+        2304,
+        1546
+      ],
+      "source": "cleanBreak-B-relic-ground",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "source_bounds": [
+        0,
+        92,
+        1536,
+        1024
+      ],
+      "matte": "inner lead cut, despill, premultiplied resampling"
+    },
+    {
+      "key": "L2",
+      "file": "cleanBreak-B-L2.png",
+      "role": "half-left",
+      "depth_px": 3,
+      "effect": "lean: lower relic half on its support",
+      "bounds": [
+        160,
+        631,
+        1813,
+        1410
+      ]
+    },
+    {
+      "key": "L3",
+      "file": "cleanBreak-B-L3.png",
+      "role": "half-right",
+      "depth_px": 3,
+      "effect": "lean: upper relic half, fixed 3 px offset on the support",
+      "bounds": [
+        498,
+        401,
+        2111,
+        1134
+      ]
+    },
+    {
+      "key": "L4",
+      "file": "cleanBreak-B-L4.png",
+      "role": "seam",
+      "depth_px": 3,
+      "effect": "lean: cold blue-white light in the gap, absent at negative lean",
+      "bounds": [
+        372,
+        578,
+        1941,
+        1194
+      ],
+      "full_from": 0
+    },
+    {
+      "key": "L5",
+      "file": "cleanBreak-B-L5.png",
+      "role": "blade",
+      "depth_px": 3,
+      "effect": "lean: blade edge has already left the cut",
+      "bounds": [
+        1234,
+        831,
+        2154,
+        1250
+      ]
+    },
+    {
+      "key": "L6",
+      "file": "cleanBreak-B-L6.png",
+      "role": "front",
+      "depth_px": 14,
+      "effect": "lean: unique near-edge occluder",
+      "bounds": [
+        1832,
+        1233,
+        2304,
+        1546
+      ],
+      "source": "cleanBreak-B-relic-front",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "source_bounds": [
+        984,
+        552,
+        1536,
+        1024
+      ],
+      "matte": "inner lead cut, despill, premultiplied resampling"
+    },
+    {
+      "key": "L7",
+      "file": "cleanBreak-B-L7.png",
+      "role": "particles",
+      "depth_px": 8,
+      "effect": "lean: depth; time: sparse four-second loop",
+      "bounds": [
+        1098,
+        751,
+        2038,
+        1203
+      ]
+    },
+    {
+      "key": "L8",
+      "file": "cleanBreak-B-L8.png",
+      "role": "emission-mask",
+      "depth_px": 3,
+      "effect": "non-drawn input for the focal reveal",
+      "bounds": [
+        495,
+        630,
+        1820,
+        1137
+      ]
+    }
+  ],
+  "draw_order": [
+    "L0",
+    "L1",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "L6",
+    "L7"
+  ],
+  "ground_method": "flat ground",
+  "contact_mask": "cleanBreak-B-contact-mask.png",
+  "contact": {
+    "ground_depth_px": 3,
+    "subject_depth_px": 3
+  },
+  "max_shift_px": 123,
+  "world_tilt_degrees": 0,
+  "pivot": [
+    1400,
+    1280
+  ]
+}

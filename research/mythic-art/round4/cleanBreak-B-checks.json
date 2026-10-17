@@ -1,0 +1,44 @@
+[
+  {
+    "layer": "L1",
+    "role": "ground",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 13824
+  },
+  {
+    "layer": "L2",
+    "role": "half-left",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 12057
+  },
+  {
+    "layer": "L3",
+    "role": "half-right",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 14752
+  },
+  {
+    "layer": "L4",
+    "role": "seam",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 452579
+  },
+  {
+    "layer": "L5",
+    "role": "blade",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 81938
+  },
+  {
+    "layer": "L6",
+    "role": "front",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 2808
+  },
+  {
+    "layer": "L7",
+    "role": "particles",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 96
+  }
+]

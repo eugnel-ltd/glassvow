@@ -1,0 +1,12 @@
+[
+  {
+    "material": "Smooth silver-blue stained glass with frosted white panes, heavy outer lead and finer silver internal came",
+    "composition": "Elevated 55 mm three-quarter over-left-shoulder view; tall mirror at x42 percent; quiet empty right quarter",
+    "light": "One cold-white key from upper right",
+    "palette": "Silver-blue and cold white; blood-moon crimson only as one narrow line on the reflection blade",
+    "cue": "Tall off-centre arched mirror outline",
+    "name": "silvering-B-double2",
+    "request": "ONE pale reflected hooded walker, front three-quarter turned towards the left. Faceless void hood with no eyes, two arms and legs. One sword already RAISED in the right hand, held across the upper chest pointing diagonally towards upper LEFT; other hand down. Exactly ONE THIN blood-moon crimson line down the cold silver blade, not a red sword. Silver-white simple long cloak silhouette, fully visible boots. No glow outside object. The figure stands ALONE on the flat magenta: NO arch, NO mirror frame, NO outline, NO halo, NO ring and NO shape of any kind behind or around the figure.",
+    "surface": "Perfectly uniform flat RGB(255,0,255) magenta everywhere outside the requested object. No scenery, shadow, ground, gradient, vignette or external glow. The object and all attachments are fully visible with at least 10 percent empty margin on all four sides. Holes are magenta too. No magenta or violet within the object. Thick dark outer lead boundary."
+  }
+]

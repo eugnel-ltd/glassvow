@@ -1,0 +1,195 @@
+{
+  "name": "knownRoad-A",
+  "card": "knownRoad",
+  "canvas": [
+    2304,
+    1546
+  ],
+  "window": [
+    128,
+    86,
+    2176,
+    1460
+  ],
+  "flat_size": [
+    2048,
+    1374
+  ],
+  "texture_count": 9,
+  "layers": [
+    {
+      "key": "L0",
+      "file": "knownRoad-A-L0.jpg",
+      "role": "back",
+      "depth_px": -3,
+      "effect": "lean: complete distant world",
+      "bounds": [
+        0,
+        0,
+        2304,
+        1546
+      ],
+      "source": "knownRoad-A-back",
+      "source_size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "key": "L1",
+      "file": "knownRoad-A-L1.png",
+      "role": "ground",
+      "depth_px": 4,
+      "effect": "lean: shared contact support; contour occlusion",
+      "bounds": [
+        0,
+        887,
+        2304,
+        1546
+      ],
+      "source": "knownRoad-A-ground",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "source_bounds": [
+        0,
+        589,
+        1536,
+        1024
+      ],
+      "matte": "inner lead cut, despill, premultiplied resampling"
+    },
+    {
+      "key": "L2",
+      "file": "knownRoad-A-L2.png",
+      "role": "light-slit",
+      "depth_px": 4,
+      "effect": "lean: pale-gold backlight; slit widens behind door leaf",
+      "bounds": [
+        972,
+        609,
+        1444,
+        1166
+      ]
+    },
+    {
+      "key": "L3",
+      "file": "knownRoad-A-L3.png",
+      "role": "door-shadow",
+      "depth_px": 4,
+      "effect": "lean: shadow swings about the threshold",
+      "bounds": [
+        1135,
+        994,
+        1296,
+        1105
+      ],
+      "pivot_y": 994
+    },
+    {
+      "key": "L4",
+      "file": "knownRoad-A-L4.png",
+      "role": "door-leaf",
+      "depth_px": 4,
+      "effect": "lean: simple leaf opens about its left hinge",
+      "bounds": [
+        1150,
+        772,
+        1266,
+        995
+      ],
+      "hinge_x": 1150
+    },
+    {
+      "key": "L5",
+      "file": "knownRoad-A-L5.png",
+      "role": "subject",
+      "depth_px": 4,
+      "effect": "lean: small fixed arch and threshold",
+      "bounds": [
+        1080,
+        704,
+        1340,
+        1030
+      ]
+    },
+    {
+      "key": "L6",
+      "file": "knownRoad-A-L6.png",
+      "role": "front",
+      "depth_px": 118,
+      "effect": "lean: unique near-edge occluder",
+      "bounds": [
+        0,
+        1319,
+        2304,
+        1546
+      ],
+      "source": "knownRoad-A-front",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "source_bounds": [
+        0,
+        874,
+        1536,
+        1024
+      ],
+      "matte": "inner lead cut, despill, premultiplied resampling"
+    },
+    {
+      "key": "L7",
+      "file": "knownRoad-A-L7.png",
+      "role": "particles",
+      "depth_px": 30,
+      "effect": "lean: depth; time: sparse four-second loop",
+      "bounds": [
+        267,
+        224,
+        2045,
+        1298
+      ]
+    },
+    {
+      "key": "L8",
+      "file": "knownRoad-A-L8.png",
+      "role": "emission-mask",
+      "depth_px": 4,
+      "effect": "non-drawn input for the focal reveal",
+      "bounds": [
+        1150,
+        772,
+        1266,
+        995
+      ]
+    }
+  ],
+  "draw_order": [
+    "L0",
+    "L1",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "L6",
+    "L7"
+  ],
+  "ground_method": "shear ground",
+  "contact_mask": "knownRoad-A-contact-mask.png",
+  "contact": {
+    "ground_depth_px": 4,
+    "subject_depth_px": 4
+  },
+  "max_shift_px": 123,
+  "world_tilt_degrees": 0,
+  "pivot": [
+    1400,
+    1280
+  ],
+  "horizon": [
+    1210,
+    1030
+  ]
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "material": "Warm cathedral stained glass with bold heavy black lead, simple rounded jewel-like panes and rough matte claret surround",
+    "composition": "Eye-height 120 mm telephoto frontal compression, centred and perfectly symmetrical, no perspective floor grid",
+    "light": "One white-gold core shining outward; world dark",
+    "palette": "Near-black claret surround, amber, frost-white and blood-moon crimson lantern glass; never cobalt",
+    "cue": "Exactly six rounded lobes of light around one white-gold centre",
+    "name": "unbrokenFlame-B-back",
+    "request": "An empty small compressed black-claret reliquary niche, straight frontal view. Broad dark burgundy side wings angle slightly inwards around an empty rectangular black recess; no arch. Six-petal lantern will stand here later. Dark claret glass, heavy black came, very low contrast. No lantern, flame, rose, jewel, symbol, chain or blue.",
+    "surface": "Opaque complete background plate."
+  },
+  {
+    "material": "Warm cathedral stained glass with bold heavy black lead, simple rounded jewel-like panes and rough matte claret surround",
+    "composition": "Eye-height 120 mm telephoto frontal compression, centred and perfectly symmetrical, no perspective floor grid",
+    "light": "One white-gold core shining outward; world dark",
+    "palette": "Near-black claret surround, amber, frost-white and blood-moon crimson lantern glass; never cobalt",
+    "cue": "Exactly six rounded lobes of light around one white-gold centre",
+    "name": "unbrokenFlame-B-ground",
+    "request": "A broad altar top of nearly black claret glass, frontal telephoto view. One thick horizontal step, bevel at its front, dark matte face. Flat empty support for three short lantern feet, no object or glow.",
+    "surface": "Lower 25 percent opaque altar, top near y75 percent. Upper 75 percent perfectly uniform RGB(255,0,255) magenta. Surface extends beyond side and bottom edges, solid dark lead upper boundary. No violet or magenta on altar."
+  },
+  {
+    "material": "Warm cathedral stained glass with bold heavy black lead, simple rounded jewel-like panes and rough matte claret surround",
+    "composition": "Eye-height 120 mm telephoto frontal compression, centred and perfectly symmetrical, no perspective floor grid",
+    "light": "One white-gold core shining outward; world dark",
+    "palette": "Near-black claret surround, amber, frost-white and blood-moon crimson lantern glass; never cobalt",
+    "cue": "Exactly six rounded lobes of light around one white-gold centre",
+    "name": "unbrokenFlame-B-front",
+    "request": "Two small curved dark iron glass hooks emerging only at the two extreme bottom corners, symmetrical and low, no writing, symbol, flower or flame. Keep bottom centre open so lantern feet remain visible.",
+    "surface": "Only the specified near-edge object in the LOWER 12 percent and/or extreme side edge of the canvas. It extends beyond the canvas edges as an edge-running occluder. The rest is perfectly uniform RGB(255,0,255) magenta. No central object, no floor plane, no shadow, no scenery. Heavy dark lead boundary; no violet in the object."
+  },
+  {
+    "material": "Warm cathedral stained glass with bold heavy black lead, simple rounded jewel-like panes and rough matte claret surround",
+    "composition": "Eye-height 120 mm telephoto frontal compression, centred and perfectly symmetrical, no perspective floor grid",
+    "light": "One white-gold core shining outward; world dark",
+    "palette": "Near-black claret surround, amber, frost-white and blood-moon crimson lantern glass; never cobalt",
+    "cue": "Exactly six rounded lobes of light around one white-gold centre",
+    "name": "unbrokenFlame-B-subject",
+    "request": "ONE tangible monumental squat lantern, frontal and completely symmetrical. Broad six-lobed ROSE body wider than A: exactly SIX large rounded petal panes around ONE WHITE-GOLD FLAME, no extra panes. Clockwise from top: FROST-WHITE, BLOOD-MOON CRIMSON, AMBER, FROST-WHITE, BLOOD-MOON CRIMSON, AMBER. Three colours each twice. The panes are broad and simple with very thick dark lead dividers and a bold six-lobed outline. The body stands on THREE short evenly spaced feet, not hanging, with one low pointed crown above. No separate circle around rose, no handle, chain, rays, secondary flame or small ornamental facets. Entire lantern visible with margin. Core is an actual flame, not a disc.",
+    "surface": "Perfectly uniform flat RGB(255,0,255) magenta everywhere outside the requested object. No scenery, shadow, ground, gradient, vignette or external glow. The object and all attachments are fully visible with at least 10 percent empty margin on all four sides. Holes are magenta too. No magenta or violet within the object. Thick dark outer lead boundary."
+  }
+]

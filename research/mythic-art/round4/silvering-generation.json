@@ -1,0 +1,62 @@
+[
+  {
+    "material": "Smooth silver-blue stained glass with frosted white panes, heavy outer lead and finer silver internal came",
+    "composition": "Elevated 55 mm three-quarter over-left-shoulder view; tall mirror at x42 percent; quiet empty right quarter",
+    "light": "One cold-white key from upper right",
+    "palette": "Silver-blue and cold white; blood-moon crimson only as one narrow line on the reflection blade",
+    "cue": "Tall off-centre arched mirror outline",
+    "name": "silvering-A-back",
+    "request": "A narrow collapsed mirror chamber viewed from above and to the left: a large quiet silver-white plaster-like GLASS wall, broad slanting cold light, shadow at far left. Rightmost quarter open and quiet. No mirror, no person, no window arch, no cathedral, no repetitive pillars. A single sober silver chamber.",
+    "surface": "Full-bleed opaque complete world plate, no key colour, no focal subject."
+  },
+  {
+    "material": "Smooth silver-blue stained glass with frosted white panes, heavy outer lead and finer silver internal came",
+    "composition": "Elevated 55 mm three-quarter over-left-shoulder view; tall mirror at x42 percent; quiet empty right quarter",
+    "light": "One cold-white key from upper right",
+    "palette": "Silver-blue and cold white; blood-moon crimson only as one narrow line on the reflection blade",
+    "cue": "Tall off-centre arched mirror outline",
+    "name": "silvering-A-ground",
+    "request": "An uneven silver-grey rubble floor with a few broad broken mirror-stone chunks embedded in it. Shallow elevated three-quarter perspective, no regular slab grid. Empty support for mirror feet and walker boots.",
+    "surface": "Only the complete supporting surface in the LOWER 40 percent of the image, reaching both side edges and the bottom edge. Its top outline is near y60 percent. The UPPER 60 percent is perfectly uniform RGB(255,0,255) magenta. No subject, no rock, no flame, no figure, no pillar, no door, no loose object, no oval shadow. The surface must be unbroken below y68 percent. Heavy dark lead upper boundary."
+  },
+  {
+    "material": "Smooth silver-blue stained glass with frosted white panes, heavy outer lead and finer silver internal came",
+    "composition": "Elevated 55 mm three-quarter over-left-shoulder view; tall mirror at x42 percent; quiet empty right quarter",
+    "light": "One cold-white key from upper right",
+    "palette": "Silver-blue and cold white; blood-moon crimson only as one narrow line on the reflection blade",
+    "cue": "Tall off-centre arched mirror outline",
+    "name": "silvering-A-front",
+    "request": "ONE near black leaded mirror jamb along the extreme LEFT edge, curved narrow and out of focus, entering only the leftmost eight percent and bottom-left corner. No rubble strip and no floor.",
+    "surface": "Only the specified near-edge object in the LOWER 12 percent and/or extreme side edge of the canvas. It extends beyond the canvas edges as an edge-running occluder. The rest is perfectly uniform RGB(255,0,255) magenta. No central object, no floor plane, no shadow, no scenery. Heavy dark lead boundary; no violet in the object."
+  },
+  {
+    "material": "Smooth silver-blue stained glass with frosted white panes, heavy outer lead and finer silver internal came",
+    "composition": "Elevated 55 mm three-quarter over-left-shoulder view; tall mirror at x42 percent; quiet empty right quarter",
+    "light": "One cold-white key from upper right",
+    "palette": "Silver-blue and cold white; blood-moon crimson only as one narrow line on the reflection blade",
+    "cue": "Tall off-centre arched mirror outline",
+    "name": "silvering-A-mirror",
+    "request": "ONE complete tall arched standing mirror, viewed three-quarter from upper left, frame made of heavy dark lead with thin silver edge. Simple flat integral feet on the base line. Glass interior is EMPTY unbroken silver-blue dark glass, absolutely no reflection, no figure, no face, no red. The arch has a pointed rounded top, huge clear central field, restrained frame, no decorative symbol. Whole object with margins.",
+    "surface": "Perfectly uniform flat RGB(255,0,255) magenta everywhere outside the requested object. No scenery, shadow, ground, gradient, vignette or external glow. The object and all attachments are fully visible with at least 10 percent empty margin on all four sides. Holes are magenta too. No magenta or violet within the object. Thick dark outer lead boundary."
+  },
+  {
+    "material": "Smooth silver-blue stained glass with frosted white panes, heavy outer lead and finer silver internal came",
+    "composition": "Elevated 55 mm three-quarter over-left-shoulder view; tall mirror at x42 percent; quiet empty right quarter",
+    "light": "One cold-white key from upper right",
+    "palette": "Silver-blue and cold white; blood-moon crimson only as one narrow line on the reflection blade",
+    "cue": "Tall off-centre arched mirror outline",
+    "name": "silvering-A-walker",
+    "request": "ONE faceless hooded armoured walker seen strictly FROM BEHIND and slightly above left shoulder. Hood back visible, no face. Feet planted on a level base line, torn cloak hangs down. Exactly one narrow sword held LOW in the right hand, point down. Two arms, two legs, complete boots. Smooth silver-blue glass armour with cold-white edge, no crimson.",
+    "surface": "Perfectly uniform flat RGB(255,0,255) magenta everywhere outside the requested object. No scenery, shadow, ground, gradient, vignette or external glow. The object and all attachments are fully visible with at least 10 percent empty margin on all four sides. Holes are magenta too. No magenta or violet within the object. Thick dark outer lead boundary."
+  },
+  {
+    "material": "Smooth silver-blue stained glass with frosted white panes, heavy outer lead and finer silver internal came",
+    "composition": "Elevated 55 mm three-quarter over-left-shoulder view; tall mirror at x42 percent; quiet empty right quarter",
+    "light": "One cold-white key from upper right",
+    "palette": "Silver-blue and cold white; blood-moon crimson only as one narrow line on the reflection blade",
+    "cue": "Tall off-centre arched mirror outline",
+    "name": "silvering-A-double",
+    "request": "ONE faceless hooded silver-white spectral walker, full body, front three-quarter. Empty black hood, no face or eyes. The RIGHT arm holds a sword already RAISED diagonally above shoulder. Exactly one narrow BLOOD-MOON CRIMSON LINE on the otherwise cold-white blade. Left arm lowered; two arms, two legs, complete boots. Pale silver and frost-white body, simple readable silhouette.",
+    "surface": "Perfectly uniform flat RGB(255,0,255) magenta everywhere outside the requested object. No scenery, shadow, ground, gradient, vignette or external glow. The object and all attachments are fully visible with at least 10 percent empty margin on all four sides. Holes are magenta too. No magenta or violet within the object. Thick dark outer lead boundary."
+  }
+]

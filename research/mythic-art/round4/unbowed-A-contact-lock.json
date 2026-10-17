@@ -1,0 +1,27 @@
+{
+  "name": "unbowed-A",
+  "method": "warp real contact mask through subject and support transforms at full resolution",
+  "samples": [
+    {
+      "lean": -1,
+      "relative_slide_px": 0,
+      "contact_mask_differing_pixels": 0,
+      "ground_alpha_under_contact_min": 255
+    },
+    {
+      "lean": 0,
+      "relative_slide_px": 0,
+      "contact_mask_differing_pixels": 0,
+      "ground_alpha_under_contact_min": 255
+    },
+    {
+      "lean": 1,
+      "relative_slide_px": 0,
+      "contact_mask_differing_pixels": 0,
+      "ground_alpha_under_contact_min": 255
+    }
+  ],
+  "worst_slide_px": 0,
+  "contact_pixel_count": 429,
+  "mutation_detected": true
+}

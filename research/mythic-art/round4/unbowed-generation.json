@@ -1,0 +1,42 @@
+[
+  {
+    "material": "Smoked grey stained glass, broad rough panels and strong thick black lead silhouette",
+    "composition": "Boot-height 24 mm worm-eye wide view; lone vertical figure at x61 percent; hard diagonal wind left to right",
+    "light": "Narrow ember-orange rim directly behind the figure; surrounding world remains neutral grey",
+    "palette": "Neutral ash grey and charcoal, ember-orange only as a thin figure rim; no blue, no gold sky",
+    "cue": "One upright vertical figure against a hard grey diagonal sweep",
+    "name": "unbowed-A-back",
+    "request": "An open wind-cut moor road at dusk seen from boot height. Huge charcoal-grey sky in broad diagonal stained-glass ash bands from upper left to lower right. Low distant bent heath silhouettes. NO figure, no sword, no building, no cathedral, no orange sunset. Neutral grey world, a very narrow dull light behind future figure at x61 percent.",
+    "surface": "Full-bleed opaque complete world plate, no key colour, no focal subject."
+  },
+  {
+    "material": "Smoked grey stained glass, broad rough panels and strong thick black lead silhouette",
+    "composition": "Boot-height 24 mm worm-eye wide view; lone vertical figure at x61 percent; hard diagonal wind left to right",
+    "light": "Narrow ember-orange rim directly behind the figure; surrounding world remains neutral grey",
+    "palette": "Neutral ash grey and charcoal, ember-orange only as a thin figure rim; no blue, no gold sky",
+    "cue": "One upright vertical figure against a hard grey diagonal sweep",
+    "name": "unbowed-A-ground",
+    "request": "A level narrow moor road, rough dark ash-grey glass and sparse grass at sides, seen from boot height with a wide lens. Central support remains horizontal and unbroken. No slab floor, no tiles, no rubble piles, no orange reflection.",
+    "surface": "Only the complete supporting surface in the LOWER 40 percent of the image, reaching both side edges and the bottom edge. Its top outline is near y60 percent. The UPPER 60 percent is perfectly uniform RGB(255,0,255) magenta. No subject, no rock, no flame, no figure, no pillar, no door, no loose object, no oval shadow. The surface must be unbroken below y68 percent. Heavy dark lead upper boundary."
+  },
+  {
+    "material": "Smoked grey stained glass, broad rough panels and strong thick black lead silhouette",
+    "composition": "Boot-height 24 mm worm-eye wide view; lone vertical figure at x61 percent; hard diagonal wind left to right",
+    "light": "Narrow ember-orange rim directly behind the figure; surrounding world remains neutral grey",
+    "palette": "Neutral ash grey and charcoal, ember-orange only as a thin figure rim; no blue, no gold sky",
+    "cue": "One upright vertical figure against a hard grey diagonal sweep",
+    "name": "unbowed-A-front",
+    "request": "A sparse fan of wind-bent dead grass entering from lower LEFT, long grey glass blades bent on a hard upper-left to lower-right diagonal. Only edge-running grasses, no stones, no floor, no figure.",
+    "surface": "Only the specified near-edge object in the LOWER 12 percent and/or extreme side edge of the canvas. It extends beyond the canvas edges as an edge-running occluder. The rest is perfectly uniform RGB(255,0,255) magenta. No central object, no floor plane, no shadow, no scenery. Heavy dark lead boundary; no violet in the object."
+  },
+  {
+    "material": "Smoked grey stained glass, broad rough panels and strong thick black lead silhouette",
+    "composition": "Boot-height 24 mm worm-eye wide view; lone vertical figure at x61 percent; hard diagonal wind left to right",
+    "light": "Narrow ember-orange rim directly behind the figure; surrounding world remains neutral grey",
+    "palette": "Neutral ash grey and charcoal, ember-orange only as a thin figure rim; no blue, no gold sky",
+    "cue": "One upright vertical figure against a hard grey diagonal sweep",
+    "name": "unbowed-A-subject",
+    "request": "ONE lone armoured walker, full length, viewed from boot height and slightly upward. Strong straight vertical spine, head upright, completely still, torn cloak hangs down. Faceless black hood without eyes. Right hand holds ONE sword point down, beside body, not raised, with point reaching boot baseline. Two arms, two legs, complete planted boots. Broad smoked-grey armour, a very narrow ember-orange rim from directly behind, no amber fill. Powerful immovable silhouette.",
+    "surface": "Perfectly uniform flat RGB(255,0,255) magenta everywhere outside the requested object. No scenery, shadow, ground, gradient, vignette or external glow. The object and all attachments are fully visible with at least 10 percent empty margin on all four sides. Holes are magenta too. No magenta or violet within the object. Thick dark outer lead boundary."
+  }
+]

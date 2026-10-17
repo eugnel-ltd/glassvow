@@ -1,0 +1,147 @@
+{
+  "name": "unbowed-A",
+  "card": "unbowed",
+  "canvas": [
+    2304,
+    1546
+  ],
+  "window": [
+    128,
+    86,
+    2176,
+    1460
+  ],
+  "flat_size": [
+    2048,
+    1374
+  ],
+  "texture_count": 6,
+  "layers": [
+    {
+      "key": "L0",
+      "file": "unbowed-A-L0.jpg",
+      "role": "back",
+      "depth_px": -12,
+      "effect": "lean: complete distant world",
+      "bounds": [
+        0,
+        0,
+        2304,
+        1546
+      ],
+      "source": "unbowed-A-back",
+      "source_size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "key": "L1",
+      "file": "unbowed-A-L1.png",
+      "role": "ground",
+      "depth_px": 58,
+      "effect": "lean: shared contact support; contour occlusion",
+      "bounds": [
+        0,
+        1089,
+        2304,
+        1546
+      ],
+      "source": "unbowed-A-ground",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "source_bounds": [
+        0,
+        563,
+        1536,
+        1024
+      ],
+      "matte": "inner lead cut, despill, premultiplied resampling"
+    },
+    {
+      "key": "L2",
+      "file": "unbowed-A-L2.png",
+      "role": "subject",
+      "depth_px": 58,
+      "effect": "lean: figure and level boot line never rotate",
+      "bounds": [
+        994,
+        150,
+        1815,
+        1400
+      ]
+    },
+    {
+      "key": "L3",
+      "file": "unbowed-A-L3.png",
+      "role": "front",
+      "depth_px": 64,
+      "effect": "lean: unique near-edge occluder",
+      "bounds": [
+        0,
+        964,
+        1420,
+        1546
+      ],
+      "source": "unbowed-A-front",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "source_bounds": [
+        0,
+        639,
+        946,
+        1024
+      ],
+      "matte": "inner lead cut, despill, premultiplied resampling"
+    },
+    {
+      "key": "L4",
+      "file": "unbowed-A-L4.png",
+      "role": "particles",
+      "depth_px": 75,
+      "effect": "lean: depth; time: sparse four-second loop",
+      "bounds": [
+        325,
+        237,
+        2085,
+        1357
+      ]
+    },
+    {
+      "key": "L5",
+      "file": "unbowed-A-L5.png",
+      "role": "emission-mask",
+      "depth_px": 58,
+      "effect": "non-drawn input for the focal reveal",
+      "bounds": [
+        1013,
+        155,
+        1797,
+        1391
+      ]
+    }
+  ],
+  "draw_order": [
+    "L0",
+    "L1",
+    "L2",
+    "L3",
+    "L4"
+  ],
+  "ground_method": "flat ground",
+  "contact_mask": "unbowed-A-contact-mask.png",
+  "contact": {
+    "ground_depth_px": 58,
+    "subject_depth_px": 58
+  },
+  "max_shift_px": 123,
+  "world_tilt_degrees": 2.5,
+  "pivot": [
+    1400,
+    1280
+  ]
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "material": "Coarse chipped slate stained glass, rough matte slabs, thick blunt black lead, restrained large shapes",
+    "composition": "Low 90 mm macro side view just above ash; stone to the right and coal left of centre",
+    "light": "Cold diffuse upper-left light; only the coal may emit warm amber",
+    "palette": "Cold slate blue-grey and charcoal; amber only on the coal",
+    "cue": "One amber point in blue dark beside a blunt stone mass",
+    "name": "bankedFire-B-back",
+    "request": "Empty distant slate-grey storm darkness, low macro side view. A broad grey ash ribbon crosses on a HARD DIAGONAL from upper left to lower right. The ribbon is stylised wind-blown powder rendered as two broad leaded glass bands, not a stream of stones. No pillar, stone, coal, figure, arch or building. Quiet dark blue-grey atmosphere behind a future huge close stone.",
+    "surface": "Opaque complete world, no key colour."
+  },
+  {
+    "material": "Coarse chipped slate stained glass, rough matte slabs, thick blunt black lead, restrained large shapes",
+    "composition": "Low 90 mm macro side view just above ash; stone to the right and coal left of centre",
+    "light": "Cold diffuse upper-left light; only the coal may emit warm amber",
+    "palette": "Cold slate blue-grey and charcoal; amber only on the coal",
+    "cue": "One amber point in blue dark beside a blunt stone mass",
+    "name": "bankedFire-B-ground",
+    "request": "An empty ash-covered ground at very low macro eye level: broad soft grey powder deposits over cold slate glass. Gentle ash ripples, no paved slabs, bricks or grids. Entire lower half is uninterrupted ash support for a blunt stone and one small coal.",
+    "surface": "Lower 52 percent opaque unbroken ash ground extending to side and bottom edges. Upper 48 percent perfectly uniform RGB(255,0,255) magenta. Thick dark lead boundary, no shadow, coal, pillar, stone or other object."
+  },
+  {
+    "material": "Coarse chipped slate stained glass, rough matte slabs, thick blunt black lead, restrained large shapes",
+    "composition": "Low 90 mm macro side view just above ash; stone to the right and coal left of centre",
+    "light": "Cold diffuse upper-left light; only the coal may emit warm amber",
+    "palette": "Cold slate blue-grey and charcoal; amber only on the coal",
+    "cue": "One amber point in blue dark beside a blunt stone mass",
+    "name": "bankedFire-B-front",
+    "request": "One low soft ridge of loose dark ash entering from the BOTTOM RIGHT, rising gently to the right edge, confined to lowest ten percent. One long dark silhouette, no pebbles or stone blocks.",
+    "surface": "Only the specified near-edge object in the LOWER 12 percent and/or extreme side edge of the canvas. It extends beyond the canvas edges as an edge-running occluder. The rest is perfectly uniform RGB(255,0,255) magenta. No central object, no floor plane, no shadow, no scenery. Heavy dark lead boundary; no violet in the object."
+  },
+  {
+    "material": "Coarse chipped slate stained glass, rough matte slabs, thick blunt black lead, restrained large shapes",
+    "composition": "Low 90 mm macro side view just above ash; stone to the right and coal left of centre",
+    "light": "Cold diffuse upper-left light; only the coal may emit warm amber",
+    "palette": "Cold slate blue-grey and charcoal; amber only on the coal",
+    "cue": "One amber point in blue dark beside a blunt stone mass",
+    "name": "bankedFire-B-subject",
+    "request": "ONE connected ancient stone arrangement only: a broad BLUNT NON-HUMAN weathered upright slab on the right, directly against the jagged SHATTERED BASE of a thicker pillar. The pillar is broken off at about two-thirds the slab height; its jagged broken top and three large fallen pieces are clearly visible AT THE SLAB BASE, not in the distance. The upright slab fills the right two-thirds of this object. The left third is an empty sheltered pocket at ground level for a separately added coal. No coal or warm light. Whole arrangement stands on one low baseline. No cradle, pedestal, face, head, shoulders, armour, inscription, symbols or writing. Large simple glass masses.",
+    "surface": "Perfectly uniform flat RGB(255,0,255) magenta everywhere outside the requested object. No scenery, shadow, ground, gradient, vignette or external glow. The object and all attachments are fully visible with at least 10 percent empty margin on all four sides. Holes are magenta too. No magenta or violet within the object. Thick dark outer lead boundary."
+  },
+  {
+    "material": "Coarse chipped slate stained glass, rough matte slabs, thick blunt black lead, restrained large shapes",
+    "composition": "Low 90 mm macro side view just above ash; stone to the right and coal left of centre",
+    "light": "Cold diffuse upper-left light; only the coal may emit warm amber",
+    "palette": "Cold slate blue-grey and charcoal; amber only on the coal",
+    "cue": "One amber point in blue dark beside a blunt stone mass",
+    "name": "bankedFire-B-coal",
+    "request": "ONE small squat coal banked under a thick soft skin of pale grey ash. Wide low oval silhouette, a SINGLE narrow AMBER fissure beneath the ash skin. Most of the coal is cold grey; no blazing flame, no flame tongue, no long radiant rays. A luminous ember held in reserve. Complete object, no hearth, stones, cradle, support or shadow. The coal is less than one-third the height of the future stone, but the amber point must survive at thumbnail size.",
+    "surface": "Perfectly uniform flat RGB(255,0,255) magenta everywhere outside the requested object. No scenery, shadow, ground, gradient, vignette or external glow. The object and all attachments are fully visible with at least 10 percent empty margin on all four sides. Holes are magenta too. No magenta or violet within the object. Thick dark outer lead boundary."
+  }
+]

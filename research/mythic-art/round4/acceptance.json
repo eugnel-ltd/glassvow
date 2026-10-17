@@ -1,0 +1,485 @@
+{
+  "candidates": [
+    {
+      "name": "bankedFire-A",
+      "textures": 8,
+      "ground_method": "flat ground",
+      "contact_slide_px": 0,
+      "spill_pixels": 0,
+      "mp4": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1024,
+            "height": 752,
+            "r_frame_rate": "24/1",
+            "nb_frames": "96"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      },
+      "gif": {
+        "size": [
+          640,
+          470
+        ],
+        "frames": 24,
+        "duration_ms": 4000,
+        "bytes": 4618864
+      },
+      "review_limits": "Offline samples only; no Godot shader or device performance claim"
+    },
+    {
+      "name": "silvering-A",
+      "textures": 8,
+      "ground_method": "flat ground",
+      "contact_slide_px": 0,
+      "spill_pixels": 0,
+      "mp4": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1024,
+            "height": 752,
+            "r_frame_rate": "24/1",
+            "nb_frames": "96"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      },
+      "gif": {
+        "size": [
+          640,
+          470
+        ],
+        "frames": 24,
+        "duration_ms": 4000,
+        "bytes": 4681125
+      },
+      "review_limits": "Offline samples only; no Godot shader or device performance claim"
+    },
+    {
+      "name": "unbrokenFlame-A",
+      "textures": 14,
+      "ground_method": "flat ground",
+      "contact_slide_px": 0,
+      "spill_pixels": 0,
+      "mp4": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1024,
+            "height": 752,
+            "r_frame_rate": "24/1",
+            "nb_frames": "96"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      },
+      "gif": {
+        "size": [
+          640,
+          470
+        ],
+        "frames": 24,
+        "duration_ms": 4000,
+        "bytes": 3242607
+      },
+      "review_limits": "Offline samples only; no Godot shader or device performance claim"
+    },
+    {
+      "name": "unbowed-A",
+      "textures": 6,
+      "ground_method": "flat ground",
+      "contact_slide_px": 0,
+      "spill_pixels": 0,
+      "mp4": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1024,
+            "height": 752,
+            "r_frame_rate": "24/1",
+            "nb_frames": "96"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      },
+      "gif": {
+        "size": [
+          640,
+          470
+        ],
+        "frames": 24,
+        "duration_ms": 4000,
+        "bytes": 4883458
+      },
+      "review_limits": "Offline samples only; no Godot shader or device performance claim"
+    },
+    {
+      "name": "knownRoad-A",
+      "textures": 9,
+      "ground_method": "shear ground",
+      "contact_slide_px": 0,
+      "spill_pixels": 0,
+      "mp4": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1024,
+            "height": 752,
+            "r_frame_rate": "24/1",
+            "nb_frames": "96"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      },
+      "gif": {
+        "size": [
+          640,
+          470
+        ],
+        "frames": 24,
+        "duration_ms": 4000,
+        "bytes": 4106584
+      },
+      "review_limits": "Offline samples only; no Godot shader or device performance claim"
+    },
+    {
+      "name": "cleanBreak-A",
+      "textures": 9,
+      "ground_method": "flat ground",
+      "contact_slide_px": 0,
+      "spill_pixels": 0,
+      "mp4": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1024,
+            "height": 752,
+            "r_frame_rate": "24/1",
+            "nb_frames": "96"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      },
+      "gif": {
+        "size": [
+          640,
+          470
+        ],
+        "frames": 24,
+        "duration_ms": 4000,
+        "bytes": 4411210
+      },
+      "review_limits": "Offline samples only; no Godot shader or device performance claim"
+    },
+    {
+      "name": "bankedFire-B",
+      "textures": 7,
+      "ground_method": "flat ground",
+      "contact_slide_px": 0,
+      "spill_pixels": 0,
+      "mp4": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1024,
+            "height": 752,
+            "r_frame_rate": "24/1",
+            "nb_frames": "96"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      },
+      "gif": {
+        "size": [
+          640,
+          470
+        ],
+        "frames": 24,
+        "duration_ms": 4000,
+        "bytes": 4317246
+      },
+      "review_limits": "Offline samples only; no Godot shader or device performance claim"
+    },
+    {
+      "name": "silvering-B",
+      "textures": 8,
+      "ground_method": "flat ground",
+      "contact_slide_px": 0,
+      "spill_pixels": 0,
+      "mp4": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1024,
+            "height": 752,
+            "r_frame_rate": "24/1",
+            "nb_frames": "96"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      },
+      "gif": {
+        "size": [
+          640,
+          470
+        ],
+        "frames": 24,
+        "duration_ms": 4000,
+        "bytes": 4927371
+      },
+      "review_limits": "Offline samples only; no Godot shader or device performance claim"
+    },
+    {
+      "name": "unbrokenFlame-B",
+      "textures": 14,
+      "ground_method": "flat ground",
+      "contact_slide_px": 0,
+      "spill_pixels": 0,
+      "mp4": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1024,
+            "height": 752,
+            "r_frame_rate": "24/1",
+            "nb_frames": "96"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      },
+      "gif": {
+        "size": [
+          640,
+          470
+        ],
+        "frames": 24,
+        "duration_ms": 4000,
+        "bytes": 3408628
+      },
+      "review_limits": "Offline samples only; no Godot shader or device performance claim"
+    },
+    {
+      "name": "unbowed-B",
+      "textures": 6,
+      "ground_method": "flat ground",
+      "contact_slide_px": 0,
+      "spill_pixels": 0,
+      "mp4": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1024,
+            "height": 752,
+            "r_frame_rate": "24/1",
+            "nb_frames": "96"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      },
+      "gif": {
+        "size": [
+          640,
+          470
+        ],
+        "frames": 24,
+        "duration_ms": 4000,
+        "bytes": 4623093
+      },
+      "review_limits": "Offline samples only; no Godot shader or device performance claim"
+    },
+    {
+      "name": "knownRoad-B",
+      "textures": 9,
+      "ground_method": "shear ground",
+      "contact_slide_px": 0,
+      "spill_pixels": 0,
+      "mp4": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1024,
+            "height": 752,
+            "r_frame_rate": "24/1",
+            "nb_frames": "96"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      },
+      "gif": {
+        "size": [
+          640,
+          470
+        ],
+        "frames": 24,
+        "duration_ms": 4000,
+        "bytes": 3478424
+      },
+      "review_limits": "Offline samples only; no Godot shader or device performance claim"
+    },
+    {
+      "name": "cleanBreak-B",
+      "textures": 9,
+      "ground_method": "flat ground",
+      "contact_slide_px": 0,
+      "spill_pixels": 0,
+      "mp4": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1024,
+            "height": 752,
+            "r_frame_rate": "24/1",
+            "nb_frames": "96"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      },
+      "gif": {
+        "size": [
+          640,
+          470
+        ],
+        "frames": 24,
+        "duration_ms": 4000,
+        "bytes": 4215482
+      },
+      "review_limits": "Offline samples only; no Godot shader or device performance claim"
+    }
+  ],
+  "generation_calls": 61,
+  "stage_4b_calls": 34,
+  "completed_calls": 61,
+  "unique_world_sources": 36,
+  "unique_world_layers": 36,
+  "earlier_round_sources_compared": 37,
+  "earlier_round_matches": 0,
+  "source_sha256": {
+    "bankedFire-A/back": "63c6c2443ec0fb1c894f6e056d61a877841253c6dd1b0e7116be9ac4fb971a69",
+    "bankedFire-A/ground": "9e5c786f4d539401a90459af4c701913f22a890103c6e0273e9b9349d455899f",
+    "bankedFire-A/front": "c0b75cbfc332ad82e68b1e04381a537cff33d58e3c5ba168e4a3e7c70fc66422",
+    "silvering-A/back": "a44c85bbd9eed3d55de60665c1db89432e1cb22b4cb83d65341e81d565664cda",
+    "silvering-A/ground": "8c774e7d9fe7c97ff95573aa983357f3708976a2d9fcac3efd5f0aeef4b54188",
+    "silvering-A/front": "1dc42ebb992d037afeaecebed347a88da2b0518afde3e2ee11246571249e4687",
+    "unbrokenFlame-A/back": "00cdffa2ffe4db92a6a9a0e6a105b5e2bfcba4d3f8ff74f8ff123d7e4d16a1b1",
+    "unbrokenFlame-A/ground": "896edc0223e8211c90ace7e0132be721b52f8a60eeffed17edda503418ae6d4a",
+    "unbrokenFlame-A/front": "68bfddc5d250e73db4374451243c6b663ea02eff532c0f912e79c6450394f63e",
+    "unbowed-A/back": "54483a62876bde2e3abe975ffe84e34715fa682307adeef836225e1b7a5cbd55",
+    "unbowed-A/ground": "c70be491eeed3bb385eb4044a6d174573d48b0c5b597277eea6e6b4160b5d948",
+    "unbowed-A/front": "ba5c69237716765e157e75e37037587f2906183e72865fff9ab1ee32904f37bf",
+    "knownRoad-A/back": "45201a11c9cda25a9145639f07c8d8e35ef9038cd2e315eaf7cd0e05a80abf2f",
+    "knownRoad-A/ground": "05bd8e86dd3d721a8bef162694ca92c8d19dcf31779248ec8ddc7676acbafb2f",
+    "knownRoad-A/front": "b65b18e2663bff254b2db9067f957f20cb810a741ab37c31db4cf840f137ab18",
+    "cleanBreak-A/back": "99f5fe65f51dedc77a329c8f11c8f604dbc748a5accb3723c9fc296b99f1738b",
+    "cleanBreak-A/ground": "6ac9dfbfe658d9cdbf98c47f584567d7b9b44884c78e958885d6329e6abb8cff",
+    "cleanBreak-A/front": "cf0e443473ed8e3e7561662ab0db83714813519d7bff7b3a8e9c4706f3b8b5b9",
+    "bankedFire-B/back": "3d22a15fb785aae5f9f656b2ca0ccf2478ff957db8aaab0322e964bd0a0a5e37",
+    "bankedFire-B/ground": "78e109468b6fd75caf4f82d3e23fa5dd41e060a451f55240c69854e077d7f970",
+    "bankedFire-B/front": "0c6fd5476a14d81784131cc98b7d030ddf91eb9b4f22552df5b9c8b3ec1e2e86",
+    "silvering-B/back": "25c84078f06dd9a5640ae8267d955dcd5e9c91e46874d2fde8f7a80404c427c0",
+    "silvering-B/ground": "d2e77168f65cabe11a899f39d69ab6652c1b721232427d011d6907da54fd6797",
+    "silvering-B/front": "462989549cb3262c5c017b0d4c6fb485cc19cafaac827d1db05eb12d6f4d6297",
+    "unbrokenFlame-B/back": "c60a85252150c16a62fecad1af865b9921a78c0d35cd92fc0f33973f908ce81d",
+    "unbrokenFlame-B/ground": "b8a107a6be9b205eef36045fd1d027f59ca01a94812a37bd17115bd575c32fa9",
+    "unbrokenFlame-B/front": "50698a6712a19d99f04cef494c740588a7def2f4d322b4319ca94ee972e6403d",
+    "unbowed-B/back": "c59deab3b6095286f464612a3b2db144cc233c4c098c79035ef7a075032df25a",
+    "unbowed-B/ground": "e32571aa2d99427b7c41944191e157cc6cc4f9e9631a2ad6543214be0f9fc085",
+    "unbowed-B/front": "69c888830c4818dc651cb7eaf08eb568c48bf9c4a984e08a3a0cf3eaa15ccc82",
+    "knownRoad-B/back": "db0580ec94da7037a052e13642eed8f853e74212ea911a58fed57aae106dd084",
+    "knownRoad-B/ground": "d186503c37b5d63cda591493f3ab474ed39cbd6e5ba83c717da77850b6344e62",
+    "knownRoad-B/front": "b4a43c88bade4bbbc942415e4d9606d3bf9d6b92d5f5a072c6e882a5f3e166cf",
+    "cleanBreak-B/back": "5d1bedce0e5da570181e571237bb721b2bda9be2d52397a9c43b35bcbb5ee2dd",
+    "cleanBreak-B/ground": "bb4871f81ad483033b647824e4b413ffbd8d9479b74f4ba2fb2e149d47283d2c",
+    "cleanBreak-B/front": "f440edd84f4b7d8e917019ab37c076641af88d10a8d46e20258128987a066f39"
+  },
+  "layer_sha256": {
+    "bankedFire-A/back": "0212273dcfbd7ba621956dc63af0e03a682238588f8daabb9158cf56d49e4332",
+    "bankedFire-A/ground": "00aff54ac3d638852b2fd6054bb10bfc64981109ed3308980d6cef35a53f37b2",
+    "bankedFire-A/front": "0a1db61e58254a111e5e6e57a382aa4b07d8304a056922fdc6a4b976829a9f55",
+    "silvering-A/back": "dc060f22ecc663ee0b0f4b3adaaa42aad2ed2775f69f9b9497876ae4ab12f79f",
+    "silvering-A/ground": "35b99bbce1fc2bff6aba098c9ef9c8a1ee20504b751783fa26f8d9c37e3e1a87",
+    "silvering-A/front": "639842db4df325933684e335a416d879e48cb0dc2770f779311d4745490878ca",
+    "unbrokenFlame-A/back": "efcc2ba5e0ff99fd9a7bcb9a5e1c6117cb82bfb5d475952c70253d5ae8f8e668",
+    "unbrokenFlame-A/ground": "e05a327c34ca08373127e9777d9e2f15d9b0685cffae930326701e6f20bd514a",
+    "unbrokenFlame-A/front": "ac8ff0484671f6cd3b8e41400064e8a3dd54552378fe4a6847dfb970ab82acbf",
+    "unbowed-A/back": "7d44bfcc20679095689a6c06a526f6779dfc8729f7367c43e0121c9000458d69",
+    "unbowed-A/ground": "d8e3935fb662c99dd1be7e98d5b2420355be20f4d14446738123fe8b91159020",
+    "unbowed-A/front": "3977158c3dc6bd6961212ed7267bfd3c30da2f35781644cb46c8b7ebd1347432",
+    "knownRoad-A/back": "18ab88b5393f8d3d9e7b42a78b2b0e46fdf6bd6f135a3ef372609bb69a80bdcb",
+    "knownRoad-A/ground": "ef6e0941de938424184113405d753b8d0e23912f8beb27c887bf3cfd65a46571",
+    "knownRoad-A/front": "0ccd290d04bebbf919ac87d81feeb951ae4d5377f22faea9c86ee8618306e816",
+    "cleanBreak-A/back": "cb70b6cf7a2361d67f00515b6cc66fd2988452c62eae72597444da9a83cb5f52",
+    "cleanBreak-A/ground": "4bab248d784fb9ca864a68d1cf3493f5e0fa16ca5ffd506ae956383e8e90885f",
+    "cleanBreak-A/front": "0ecee675aa323510baf532bd4389d4234e6f77593953980562e9dab9ff5ceedd",
+    "bankedFire-B/back": "596144359841148a2eb3b4d1f5d01c54e7540cf14c9299e44baf2ea16dbdfb32",
+    "bankedFire-B/ground": "67268fd5e060b957c0fb428536a4daa1cd4e23b5392932a40e4d9f345f83b653",
+    "bankedFire-B/front": "e6e5c991c7ab4c6eec613faa881c376b92a33b071678dd4583d1b3b569e6b0d0",
+    "silvering-B/back": "9b0e058ddda571c02640606763b522170655eb36edd3a14d20077aeefde32dee",
+    "silvering-B/ground": "c77e2edb9339ca1bbb16e6bca2ea8d6ca43bbe24b8120ae8d7c65121a70f6a2e",
+    "silvering-B/front": "e35dc65d20bf0d6f5aa15f8ca3bcee3c076121e77cafda51dee6d990c7fa9239",
+    "unbrokenFlame-B/back": "00572430cb1b5c9ab6424267c47476133f62724c461801614365ef2654a6f159",
+    "unbrokenFlame-B/ground": "c4d56a9c35d3714591d350d0284e40469722cd02787a6419381ae5d22cbbd751",
+    "unbrokenFlame-B/front": "6823fe53628dee030c9bfd03007be1e3654ce5accd760e4012002c27a2e4957d",
+    "unbowed-B/back": "7b73b2c3f409729e95f3ce02b177055eb02b4e9e0689716cb2450ac8a0753ca5",
+    "unbowed-B/ground": "cb72c7b50c5863fddfc39700448bf857ecb5228934845accdb5ac8900b378196",
+    "unbowed-B/front": "a1e1f1053e8cf6b37538f986bdffa5c80490ef5edf836a226ee9e84a8e2a8d1c",
+    "knownRoad-B/back": "bf3f2fd1235cb9aa560796bb2a12ff2898c7b9f017123aa8c3f9b7e52822b1a1",
+    "knownRoad-B/ground": "630c07d3a638e4b90311f4a4cf19fa34bd631df4e1b936e4030c6775ecfd5d28",
+    "knownRoad-B/front": "37dda690b492d9902f9b235d275cc69b85e3365807bb60aedc5d4d88a5eaa53c",
+    "cleanBreak-B/back": "4f156c0d3688530396ac83679f81ac264dd264e9d417faaa35886180732eb92c",
+    "cleanBreak-B/ground": "2ec1e08e943f951dd7a62d031a9b0a52c11766a3ea19f9c5e60e54e0d1330adc",
+    "cleanBreak-B/front": "4c50bb00ea27272fc6a6259687d69566f183954e5e2ecaaf689931b65fb3404d"
+  },
+  "free_gib": 103.07,
+  "visual_verdict": "Recorded separately after direct image inspection"
+}

@@ -1,0 +1,289 @@
+{
+  "name": "unbrokenFlame-B",
+  "card": "unbrokenFlame",
+  "canvas": [
+    2304,
+    1546
+  ],
+  "window": [
+    128,
+    86,
+    2176,
+    1460
+  ],
+  "flat_size": [
+    2048,
+    1374
+  ],
+  "texture_count": 14,
+  "layers": [
+    {
+      "key": "L0",
+      "file": "unbrokenFlame-B-L0.jpg",
+      "role": "back",
+      "depth_px": 0,
+      "effect": "lean: complete distant world",
+      "bounds": [
+        0,
+        0,
+        2304,
+        1546
+      ],
+      "source": "unbrokenFlame-B-back",
+      "source_size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "key": "L1",
+      "file": "unbrokenFlame-B-L1.png",
+      "role": "ground",
+      "depth_px": 12,
+      "effect": "lean: shared contact support; contour occlusion",
+      "bounds": [
+        0,
+        1203,
+        2304,
+        1546
+      ],
+      "source": "unbrokenFlame-B-ground",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "source_bounds": [
+        0,
+        678,
+        1536,
+        1024
+      ],
+      "matte": "inner lead cut, despill, premultiplied resampling"
+    },
+    {
+      "key": "L2",
+      "file": "unbrokenFlame-B-L2.png",
+      "role": "subject",
+      "depth_px": 12,
+      "effect": "lean: complete grounded lantern housing and cold chamber",
+      "bounds": [
+        732,
+        155,
+        1572,
+        1330
+      ]
+    },
+    {
+      "key": "L3",
+      "file": "unbrokenFlame-B-L3.png",
+      "role": "chamber-light",
+      "depth_px": 12,
+      "effect": "lean: amber-to-white-gold light fills the chamber as the six panes converge",
+      "bounds": [
+        784,
+        396,
+        1520,
+        1130
+      ]
+    },
+    {
+      "key": "L4",
+      "file": "unbrokenFlame-B-L4.png",
+      "role": "shard",
+      "depth_px": 12,
+      "effect": "lean: six petals converge 34 px into one flame",
+      "bounds": [
+        1032,
+        402,
+        1273,
+        628
+      ],
+      "petal": 1,
+      "centre": [
+        1152,
+        761
+      ]
+    },
+    {
+      "key": "L5",
+      "file": "unbrokenFlame-B-L5.png",
+      "role": "shard",
+      "depth_px": 12,
+      "effect": "lean: six petals converge 34 px into one flame",
+      "bounds": [
+        1273,
+        498,
+        1512,
+        739
+      ],
+      "petal": 2,
+      "centre": [
+        1152,
+        761
+      ]
+    },
+    {
+      "key": "L6",
+      "file": "unbrokenFlame-B-L6.png",
+      "role": "shard",
+      "depth_px": 12,
+      "effect": "lean: six petals converge 34 px into one flame",
+      "bounds": [
+        1273,
+        775,
+        1514,
+        1013
+      ],
+      "petal": 3,
+      "centre": [
+        1152,
+        761
+      ]
+    },
+    {
+      "key": "L7",
+      "file": "unbrokenFlame-B-L7.png",
+      "role": "shard",
+      "depth_px": 12,
+      "effect": "lean: six petals converge 34 px into one flame",
+      "bounds": [
+        1031,
+        904,
+        1273,
+        1124
+      ],
+      "petal": 4,
+      "centre": [
+        1152,
+        761
+      ]
+    },
+    {
+      "key": "L8",
+      "file": "unbrokenFlame-B-L8.png",
+      "role": "shard",
+      "depth_px": 12,
+      "effect": "lean: six petals converge 34 px into one flame",
+      "bounds": [
+        790,
+        775,
+        1031,
+        1013
+      ],
+      "petal": 5,
+      "centre": [
+        1152,
+        761
+      ]
+    },
+    {
+      "key": "L9",
+      "file": "unbrokenFlame-B-L9.png",
+      "role": "shard",
+      "depth_px": 12,
+      "effect": "lean: six petals converge 34 px into one flame",
+      "bounds": [
+        792,
+        498,
+        1032,
+        740
+      ],
+      "petal": 6,
+      "centre": [
+        1152,
+        761
+      ]
+    },
+    {
+      "key": "L10",
+      "file": "unbrokenFlame-B-L10.png",
+      "role": "flame-core",
+      "depth_px": 12,
+      "effect": "lean: one white-gold flame strengthens as petals converge",
+      "bounds": [
+        1068,
+        615,
+        1237,
+        909
+      ]
+    },
+    {
+      "key": "L11",
+      "file": "unbrokenFlame-B-L11.png",
+      "role": "front",
+      "depth_px": 52,
+      "effect": "lean: unique near-edge occluder",
+      "bounds": [
+        0,
+        1175,
+        2304,
+        1546
+      ],
+      "source": "unbrokenFlame-B-front",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "source_bounds": [
+        0,
+        779,
+        1536,
+        1024
+      ],
+      "matte": "inner lead cut, despill, premultiplied resampling"
+    },
+    {
+      "key": "L12",
+      "file": "unbrokenFlame-B-L12.png",
+      "role": "particles",
+      "depth_px": 70,
+      "effect": "lean: depth; time: sparse four-second loop",
+      "bounds": [
+        427,
+        185,
+        1923,
+        1359
+      ]
+    },
+    {
+      "key": "L13",
+      "file": "unbrokenFlame-B-L13.png",
+      "role": "emission-mask",
+      "depth_px": 12,
+      "effect": "non-drawn input for the focal reveal",
+      "bounds": [
+        742,
+        175,
+        1562,
+        1319
+      ]
+    }
+  ],
+  "draw_order": [
+    "L0",
+    "L1",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "L6",
+    "L7",
+    "L8",
+    "L9",
+    "L10",
+    "L11",
+    "L12"
+  ],
+  "ground_method": "flat ground",
+  "contact_mask": "unbrokenFlame-B-contact-mask.png",
+  "contact": {
+    "ground_depth_px": 12,
+    "subject_depth_px": 12
+  },
+  "max_shift_px": 123,
+  "world_tilt_degrees": 0,
+  "pivot": [
+    1400,
+    1280
+  ]
+}

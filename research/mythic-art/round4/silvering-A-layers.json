@@ -1,0 +1,189 @@
+{
+  "name": "silvering-A",
+  "card": "silvering",
+  "canvas": [
+    2304,
+    1546
+  ],
+  "window": [
+    128,
+    86,
+    2176,
+    1460
+  ],
+  "flat_size": [
+    2048,
+    1374
+  ],
+  "texture_count": 8,
+  "layers": [
+    {
+      "key": "L0",
+      "file": "silvering-A-L0.jpg",
+      "role": "back",
+      "depth_px": -20,
+      "effect": "lean: complete distant world",
+      "bounds": [
+        0,
+        0,
+        2304,
+        1546
+      ],
+      "source": "silvering-A-back",
+      "source_size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "key": "L1",
+      "file": "silvering-A-L1.png",
+      "role": "ground",
+      "depth_px": 40,
+      "effect": "lean: shared contact support; contour occlusion",
+      "bounds": [
+        0,
+        819,
+        2304,
+        1546
+      ],
+      "source": "silvering-A-ground",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "source_bounds": [
+        0,
+        543,
+        1536,
+        1024
+      ],
+      "matte": "inner lead cut, despill, premultiplied resampling"
+    },
+    {
+      "key": "L2",
+      "file": "silvering-A-L2.png",
+      "role": "subject",
+      "depth_px": 40,
+      "effect": "lean: complete mirror and integral feet",
+      "bounds": [
+        630,
+        150,
+        1220,
+        1240
+      ]
+    },
+    {
+      "key": "L3",
+      "file": "silvering-A-L3.png",
+      "role": "double",
+      "depth_px": 40,
+      "effect": "lean: opposite upper-body shear; time: half-breath lag",
+      "bounds": [
+        765,
+        518,
+        1095,
+        1110
+      ],
+      "lag_px": 30,
+      "foot_y": 1110,
+      "source": "silvering-A-double",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "source_bounds": [
+        298,
+        13,
+        844,
+        992
+      ],
+      "matte": "inner lead cut, despill, premultiplied resampling"
+    },
+    {
+      "key": "L4",
+      "file": "silvering-A-L4.png",
+      "role": "subject",
+      "depth_px": 40,
+      "effect": "lean: back-facing walker with lowered blade and planted feet",
+      "bounds": [
+        350,
+        490,
+        931,
+        1340
+      ]
+    },
+    {
+      "key": "L5",
+      "file": "silvering-A-L5.png",
+      "role": "front",
+      "depth_px": 86,
+      "effect": "lean: unique near-edge occluder",
+      "bounds": [
+        0,
+        0,
+        355,
+        1546
+      ],
+      "source": "silvering-A-front",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "source_bounds": [
+        0,
+        0,
+        236,
+        1024
+      ],
+      "matte": "inner lead cut, despill, premultiplied resampling"
+    },
+    {
+      "key": "L6",
+      "file": "silvering-A-L6.png",
+      "role": "particles",
+      "depth_px": 62,
+      "effect": "lean: depth; time: sparse four-second loop",
+      "bounds": [
+        373,
+        180,
+        1908,
+        1270
+      ]
+    },
+    {
+      "key": "L7",
+      "file": "silvering-A-L7.png",
+      "role": "emission-mask",
+      "depth_px": 40,
+      "effect": "non-drawn input for the focal reveal",
+      "bounds": [
+        765,
+        518,
+        1095,
+        1110
+      ]
+    }
+  ],
+  "draw_order": [
+    "L0",
+    "L1",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "L6"
+  ],
+  "ground_method": "flat ground",
+  "contact_mask": "silvering-A-contact-mask.png",
+  "contact": {
+    "ground_depth_px": 40,
+    "subject_depth_px": 40
+  },
+  "max_shift_px": 123,
+  "world_tilt_degrees": 0,
+  "pivot": [
+    1400,
+    1280
+  ]
+}

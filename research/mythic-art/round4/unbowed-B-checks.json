@@ -1,0 +1,26 @@
+[
+  {
+    "layer": "L1",
+    "role": "ground",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 12328
+  },
+  {
+    "layer": "L2",
+    "role": "subject",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 36926
+  },
+  {
+    "layer": "L3",
+    "role": "front",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 26120
+  },
+  {
+    "layer": "L4",
+    "role": "particles",
+    "key_spill_pixels": 0,
+    "semitransparent_pixels": 2466
+  }
+]

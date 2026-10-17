@@ -1,0 +1,52 @@
+[
+  {
+    "name": "cleanBreak-A-relic-back",
+    "request": "An empty ancient cold-glass sanctuary seen from almost directly OVERHEAD, an austere dark STEEL-BLUE field of broad massive fitted glass blocks, no perspective horizon. A shallow octagonal recess occupies the central space, but contains NO object. Quiet cold shadow, two wide diagonal stone-glass planes, no bench or workshop. No relic, sword, pane, archway, star, emblem or light beam. Complete uninterrupted world behind a future relic.",
+    "cue": "A cold overhead sanctuary for a vast frost-glass relic",
+    "material": "Matte steel-blue stained glass, broad heavy black lead seams, no small tiles",
+    "composition": "70 mm near-overhead camera, all surfaces horizontal under the viewer; low contrast full-bleed field",
+    "surface": "Opaque complete background, no key colour and no foreground objects",
+    "light": "Very restrained cold-white indirect light, no warm colours",
+    "palette": "Dark steel blue and slate, no ultramarine, gold, amber or crimson"
+  },
+  {
+    "name": "cleanBreak-A-relic-ground",
+    "request": "ONE massive flat cold sanctuary plinth viewed nearly straight down. It is a broad slab of very dark STEEL-BLUE GLASS with thick black lead joints and a restrained silver-cut outer bevel. The slab extends across the entire image and supports a future great relic. Quiet empty central surface with no decoration, no symbol, no circle, no object, no weapon, no pane. It feels ancient and ceremonial, never a workbench.",
+    "cue": "A dark grounded support beneath a luminous relic",
+    "material": "Matte dark steel-blue stained glass, heavy lead boundary and large sober facets",
+    "composition": "Near-overhead 70 mm view, slab fills lower 92 percent, no upright perspective",
+    "surface": "The LOWER 92 percent is a continuous opaque slab reaching both side edges and bottom. The upper eight percent is perfectly uniform RGB(255,0,255) magenta. No magenta in the slab. Thick dark outline at its upper edge.",
+    "light": "Dim cold-blue edge light, no independent focal highlight",
+    "palette": "Dark steel blue only, no gold, amber, crimson or violet"
+  },
+  {
+    "name": "cleanBreak-A-relic-front",
+    "request": "ONE close silver-leaded crystal retaining bevel from an ancient glass sanctuary floor, entering only the BOTTOM LEFT corner. Broad restrained faceted shape, with two small cold prismatic glints. No sword, no shards, no rubble, no writing, no symbol. Keep the centre completely empty.",
+    "cue": "Cold near-edge depth beneath the relic",
+    "material": "Steel-blue cut crystal and silver came within heavy dark lead outlines",
+    "composition": "Near-overhead view; object confined to bottom-left six percent, extending through the left and bottom edges",
+    "surface": "Only the corner bevel is painted. All other pixels are perfectly uniform RGB(255,0,255) magenta. No gradient, shadow or glow on the key colour. No violet in the object.",
+    "light": "Cold blue-white from upper right, restrained",
+    "palette": "Dark steel blue, cool silver, tiny ice-cyan glint"
+  },
+  {
+    "name": "cleanBreak-A-relic-pane",
+    "request": "ONE vast legendary frost-glass RELIC SEAL laid FLAT and seen nearly straight down. It is a broad oblique OCTAGONAL pane, longer left-to-right than top-to-bottom, rotated about 16 degrees clockwise. Magnificent thick SILVER CAME outer mount, cut-crystal bevels, radial pointed architectural tracery contained ONLY inside a narrow perimeter band. Not a badge, logo, rose, coin or upright window: a monumental tangible object with thickness. The central two-thirds is one broad unbroken FROST-WHITE frosted-glass field, quiet and slightly steel-blue, without any internal lines. NO cut yet: exactly one straight cut will be made later by compositing. Absolutely NO crack, fracture, splinter, chip, sword, text, rune, glyph, writing, face, star or emblem. One complete object with generous margins. Heavy near-black outer lead boundary remains clear; silver detail must not replace the bold silhouette.",
+    "cue": "A mythic frost-white relic with a calm broad face that can carry one luminous diagonal",
+    "material": "Stained glass with bold heavy outer lead, silver came perimeter, matte frosted crystal, sober monumental craftsmanship",
+    "composition": "Near-overhead 70 mm camera; one wide oblique octagonal relic fully visible, centred, occupying about 75 percent of canvas width and 70 percent height",
+    "surface": "Outside the complete relic is perfectly uniform RGB(255,0,255) magenta, including through any perimeter holes. No floor, shadow, external glow, gradient or scenery. At least ten percent empty margin on every edge. No magenta or violet within the relic.",
+    "light": "Cold blue-white light grazing the raised silver perimeter; centre lower value than future luminous cut",
+    "palette": "Frost-white and steel blue, cool silver accents only; NO gold, amber, crimson or warm lighting"
+  },
+  {
+    "name": "cleanBreak-A-relic-blade",
+    "request": "ONE complete unmistakable LEGENDARY LONGSWORD seen from nearly straight overhead. Wide elegant double-edged ice-steel BLADE, a strong swept SILVER CROSSGUARD, dark blue wrapped GRIP and faceted crystal POMMEL. The sword points diagonally DOWN LEFT at about 40 degrees from the horizontal; grip and pommel extend UP RIGHT. The blade is broad enough to read at thumbnail size. Only three broad blue-white facets in the blade; no inscriptions, no runes, no serration. The crossguard is one clean pair of swept wings, not a character or emblem. Magnificent but restrained heavy leaded stained glass. Whole sword from tip to pommel fully visible. No hand, figure, floor, scabbard, other object, fragments or magic circle.",
+    "cue": "A true legendary sword with full hilt, just leaving a perfectly clean cut",
+    "material": "Ice-steel stained-glass sword with heavy dark outer lead and cold silver crossguard",
+    "composition": "Near-overhead 70 mm view, a complete diagonal sword from lower left tip to upper right pommel; generous margin on all sides",
+    "surface": "Perfectly uniform RGB(255,0,255) magenta outside the sword and between guard wings. No background, shadow, glow, gradient or floor. No violet or magenta within the sword. At least ten percent margin on every side.",
+    "light": "Cold blue-white light catches the cutting edge",
+    "palette": "Frost-white, steel blue and cool silver; no gold, amber or crimson"
+  }
+]

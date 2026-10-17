@@ -1,0 +1,12 @@
+[
+  {
+    "name":"bankedFire-A-ash",
+    "material":"Coarse smoky grey stained glass, broad flowing matte masses with thick black lead outer edges",
+    "composition":"Low macro scene; ash streams on a HARD DIAGONAL from upper left to lower right, a long thin ribbon across the middle with generous margins",
+    "light":"Cold low diffuse light, no glow",
+    "palette":"Slate grey and charcoal only, absolutely no warm colour",
+    "cue":"Strong diagonal grey ash stream behind the stone and coal",
+    "request":"ONE long airborne stream of grey ash expressed as a broad tapered stained-glass ribbon. Its centreline drops from x15 percent y25 percent to x85 percent y75 percent. It is 8 percent of canvas height thick, with two short ragged trailing edges. No stone, no ground, no cloud bank, no ribbon loop, no cloth or literal fabric, no figure. A forceful hard diagonal wind-swept ash band, complete within the canvas, to cross behind the focal stone.",
+    "surface":"Perfectly uniform RGB(255,0,255) magenta everywhere except the grey ash ribbon. Complete isolated form with generous margin all around. Thick dark outer lead line. No scenery, no shadow, no gradient and no glow. No magenta or violet within the object."
+  }
+]

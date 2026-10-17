@@ -1,0 +1,42 @@
+[
+  {
+    "material": "Coarse chipped slate stained glass, rough matte slabs, thick blunt black lead, restrained large shapes",
+    "composition": "Low 90 mm macro side view just above ash; stone to the right and coal left of centre",
+    "light": "Cold diffuse upper-left light; only the coal may emit warm amber",
+    "palette": "Cold slate blue-grey and charcoal; amber only on the coal",
+    "cue": "One amber point in blue dark beside a blunt stone mass",
+    "name": "bankedFire-A-back",
+    "request": "Complete opaque empty setting behind a close ground-level stone: one visibly SHATTERED pillar stump rises on the upper RIGHT, a broken jagged top fully visible. Broad empty slate mist on the left. Sparse diagonally swept ash. NO coal, no upright foreground stone, no ground prop, no cathedral, no arcade. Continue the cold ash terrain behind where objects will be added.",
+    "surface": "Full-bleed opaque complete world plate, no key colour, no focal subject."
+  },
+  {
+    "material": "Coarse chipped slate stained glass, rough matte slabs, thick blunt black lead, restrained large shapes",
+    "composition": "Low 90 mm macro side view just above ash; stone to the right and coal left of centre",
+    "light": "Cold diffuse upper-left light; only the coal may emit warm amber",
+    "palette": "Cold slate blue-grey and charcoal; amber only on the coal",
+    "cue": "One amber point in blue dark beside a blunt stone mass",
+    "name": "bankedFire-A-ground",
+    "request": "A compressed cold ash bed at ground level, layered grey powder and broad irregular coarse glass strata. Low macro side view; flat support under a future stone and coal. No tiled floor and no cobblestone grid.",
+    "surface": "Only the complete supporting surface in the LOWER 40 percent of the image, reaching both side edges and the bottom edge. Its top outline is near y60 percent. The UPPER 60 percent is perfectly uniform RGB(255,0,255) magenta. No subject, no rock, no flame, no figure, no pillar, no door, no loose object, no oval shadow. The surface must be unbroken below y68 percent. Heavy dark lead upper boundary."
+  },
+  {
+    "material": "Coarse chipped slate stained glass, rough matte slabs, thick blunt black lead, restrained large shapes",
+    "composition": "Low 90 mm macro side view just above ash; stone to the right and coal left of centre",
+    "light": "Cold diffuse upper-left light; only the coal may emit warm amber",
+    "palette": "Cold slate blue-grey and charcoal; amber only on the coal",
+    "cue": "One amber point in blue dark beside a blunt stone mass",
+    "name": "bankedFire-A-front",
+    "request": "ONE close broad curved ridge of loose dark grey ash sweeps from lower-left to lower-right on a strong upward diagonal. No rubble, bricks, slabs or rocks. Keep most of the frame empty.",
+    "surface": "Only the specified near-edge object in the LOWER 12 percent and/or extreme side edge of the canvas. It extends beyond the canvas edges as an edge-running occluder. The rest is perfectly uniform RGB(255,0,255) magenta. No central object, no floor plane, no shadow, no scenery. Heavy dark lead boundary; no violet in the object."
+  },
+  {
+    "material": "Coarse chipped slate stained glass, rough matte slabs, thick blunt black lead, restrained large shapes",
+    "composition": "Low 90 mm macro side view just above ash; stone to the right and coal left of centre",
+    "light": "Cold diffuse upper-left light; only the coal may emit warm amber",
+    "palette": "Cold slate blue-grey and charcoal; amber only on the coal",
+    "cue": "One amber point in blue dark beside a blunt stone mass",
+    "name": "bankedFire-A-subject",
+    "request": "ONE isolated connected arrangement: a blunt weathered upright stone on the RIGHT, rooted directly at ground level, sheltering a huge banked ember heart to its LEFT. The coal is half buried under a thick grey ash skin, with only a narrow amber fissure; no flame tongue. Stone has no head, shoulder, face or human outline. Stone is twice the coal height. Coal is directly on the same base line as the stone, no cradle, stand, lantern or pedestal. Wide asymmetrical composition: coal left-centre, stone right. Both objects wholly visible.",
+    "surface": "Perfectly uniform flat RGB(255,0,255) magenta everywhere outside the requested object. No scenery, shadow, ground, gradient, vignette or external glow. The object and all attachments are fully visible with at least 10 percent empty margin on all four sides. Holes are magenta too. No magenta or violet within the object. Thick dark outer lead boundary."
+  }
+]
