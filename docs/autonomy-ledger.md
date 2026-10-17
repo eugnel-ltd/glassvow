@@ -4,7 +4,7 @@ How far each task type runs by itself. The orchestrator reads this before every 
 
 Levels: 0 Propose · 1 Draft (open the PR) · 2 Merge · 3 Release (deploy, production and store submissions included, verify, roll back) · 4 Initiate (start work from the north star or a monitor).
 
-Enforcement status: `not yet green` (the adoption PR adds the AI-SDLC checks; they run from the base branch once it merges, on the self-hosted org runner). Levels 3 and 4 need green.
+Enforcement status: `not yet green` (the company checks are pending: this public repo cannot call the private skill's workflows, and ai-sdlc `scripts/repo_ci.sh` does not run glassvow yet). Levels 3 and 4 need green.
 
 This repo's process (`docs/agents/ai-sdlc.md`, `tools/ci_scope.py`, `docs/rc-bar.md`) stays in force; the ledger's `release` type covers TestFlight, store submission and release. Where `AGENTS.md` escalates an irreversible external action, the 2026-10-17 company entry below is the owner's authority for release effects; spending money still needs the owner (`expenditure`).
 
