@@ -1,0 +1,15 @@
+{
+ "source_capture_candidate_sha256": "701efa5f899c49d970ace0f925b6a4e599d1f6d6a3fad7c2d3279b81787899fa",
+ "final_candidate_sha256": "5797318236f76db65d74876ff3104f08df83d981fb850735338aff2771d6a2fc",
+ "byte_identical_reusable_clips": [
+  "attack",
+  "death",
+  "hurt",
+  "idle",
+  "walk"
+ ],
+ "must_recapture": [
+  "cast"
+ ],
+ "note": "Final front/rear captures use final candidate for all clips; earlier trial3 side death and front-quarter attack are also valid because these accessor arrays are byte-identical."
+}

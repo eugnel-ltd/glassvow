@@ -1,0 +1,16 @@
+{
+ "source": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/shade/rig-round4-collapse3-local/shade.blend",
+ "changed_action": "cast",
+ "weights_identical": true,
+ "weight_sha256": "53adf3d6ffe50b406dd9c2433b8bd7851ccbb412aeb9f842a7ff53ce72f7b287",
+ "unchanged_action_fingerprints": {
+  "attack": "dc92560236a6c6ef44f8915cb5f26deafd31bf07d5e43982d40e747a6b981e06",
+  "death": "1b860f075f42162fadc9a6db1b33d8f8357ccda930303235cc0f101bf877b351",
+  "hurt": "117165e8b10871b6236e0dc8650396b8eb3c9568ecaddae8e7f19a631092b8a6",
+  "idle": "633ce824cd826806a46e493431d1c01b7ef1af1a19df92a170469452b0fa45e7",
+  "walk": "60205133b268e43381f7b75552547b5819af723543183a402e8f8ebda3bd340c"
+ },
+ "cast_solve_vs_blender_max_m": 3.2781901437398936e-06,
+ "grounding_rerun": false,
+ "source_contact_report": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/shade/rig-round4-collapse3-local/contact.json"
+}

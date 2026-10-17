@@ -1,0 +1,50 @@
+[
+  {
+    "clip": "attack",
+    "min_z": 0.16007639467716217,
+    "max_min_z": 0.2188173532485962,
+    "max_stretched_edges": 0,
+    "worst_frame": 1,
+    "samples": 201
+  },
+  {
+    "clip": "cast",
+    "min_z": 0.16007639467716217,
+    "max_min_z": 0.2188173532485962,
+    "max_stretched_edges": 0,
+    "worst_frame": 1,
+    "samples": 201
+  },
+  {
+    "clip": "death",
+    "min_z": 0.001985900104045868,
+    "max_min_z": 0.004686594009399414,
+    "max_stretched_edges": 0,
+    "worst_frame": 1,
+    "samples": 249
+  },
+  {
+    "clip": "hurt",
+    "min_z": 0.16008231043815613,
+    "max_min_z": 0.2188207358121872,
+    "max_stretched_edges": 0,
+    "worst_frame": 1,
+    "samples": 97
+  },
+  {
+    "clip": "idle",
+    "min_z": 0.1600712090730667,
+    "max_min_z": 0.21882054209709167,
+    "max_stretched_edges": 0,
+    "worst_frame": 1,
+    "samples": 377
+  },
+  {
+    "clip": "walk",
+    "min_z": 0.14993621408939362,
+    "max_min_z": 0.21511344611644745,
+    "max_stretched_edges": 0,
+    "worst_frame": 1,
+    "samples": 201
+  }
+]

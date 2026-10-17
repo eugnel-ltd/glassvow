@@ -1,0 +1,16 @@
+{
+  "candidate": "rig-round4-collapse-port1",
+  "model_sha256": "be916be1743010b307bedbf5f803bfe61142a703104153f8ef52ad9ebf5a4b06",
+  "status": "Isolated reviewed candidate; not production. Frozen after sampled visual review.",
+  "changes": [
+    "Attack and cast sleeve tips follow the forearm after removal of original leg-weight contamination.",
+    "Sleeve drape is visibly reduced, especially in cast.",
+    "Walk displacement is small in the reviewed worst pose."
+  ],
+  "limitations": [
+    "Same-fit static worst-pose views do not establish full temporal quality.",
+    "Final continuous clip and game-transition review is still required."
+  ],
+  "comparison_sheet": "changed-clips-worst-poses.png",
+  "displacement_report": "nondeath-unobsidian-port1.json"
+}

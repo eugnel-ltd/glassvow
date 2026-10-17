@@ -1,0 +1,283 @@
+{
+  "attack": [
+    {
+      "frame": 1,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 2,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 3,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 4,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 5,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 6,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 7,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 8,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 9,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 10,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 11,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 12,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 13,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 14,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 15,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 16,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 17,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 18,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 19,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 20,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 21,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 22,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 23,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 24,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 25,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 26,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 27,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 28,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 29,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 30,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 31,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 32,
+      "arm_collisions_m": {}
+    }
+  ],
+  "cast": [
+    {
+      "frame": 1,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 2,
+      "arm_collisions_m": {
+        "RightLowerArm/RightFoot": 0.007
+      }
+    },
+    {
+      "frame": 3,
+      "arm_collisions_m": {
+        "LeftLowerArm/LeftFoot": 0.007,
+        "RightLowerArm/RightFoot": 0.019
+      }
+    },
+    {
+      "frame": 4,
+      "arm_collisions_m": {
+        "LeftLowerArm/LeftFoot": 0.008,
+        "RightUpperLeg/RightUpperArm": 0.002,
+        "RightLowerArm/RightFoot": 0.03
+      }
+    },
+    {
+      "frame": 5,
+      "arm_collisions_m": {
+        "LeftLowerArm/LeftFoot": 0.021,
+        "RightUpperLeg/RightUpperArm": 0.007,
+        "RightLowerArm/RightFoot": 0.02
+      }
+    },
+    {
+      "frame": 6,
+      "arm_collisions_m": {
+        "LeftLowerArm/LeftFoot": 0.009,
+        "RightUpperLeg/RightUpperArm": 0.009,
+        "RightLowerArm/RightFoot": 0.018
+      }
+    },
+    {
+      "frame": 7,
+      "arm_collisions_m": {
+        "RightUpperLeg/RightUpperArm": 0.009
+      }
+    },
+    {
+      "frame": 8,
+      "arm_collisions_m": {
+        "LeftLowerArm/LeftFoot": 0.002
+      }
+    },
+    {
+      "frame": 9,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 10,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 11,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 12,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 13,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 14,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 15,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 16,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 17,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 18,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 19,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 20,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 21,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 22,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 23,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 24,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 25,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 26,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 27,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 28,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 29,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 30,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 31,
+      "arm_collisions_m": {}
+    },
+    {
+      "frame": 32,
+      "arm_collisions_m": {}
+    }
+  ]
+}

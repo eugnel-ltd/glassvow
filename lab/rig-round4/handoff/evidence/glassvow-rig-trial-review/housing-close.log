@@ -1,0 +1,11 @@
+GATE 5.7294921875 102.53586959838867
+00:13.245  blend            | Read blend: "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/gravewarden/rig-round4-recessed8-release-ground/gravewarden.blend"
+/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-recessed8/housing_close.py:15: DeprecationWarning: 'World.use_nodes' is expected to be removed in Blender 6.0
+  scene.world=bpy.data.worlds.new('HousingClose');scene.world.use_nodes=True;scene.world.node_tree.nodes['Background'].inputs[0].default_value=(.2,.2,.2,1)
+00:14.482  render           | Saved: '/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-recessed8/housing-close/before.png'
+00:14.483  blend            | Read blend: "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/gravewarden/rig-round4-housing1/gravewarden.blend"
+00:14.947  render           | Saved: '/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-recessed8/housing-close/after.png'
+HOUSING CLOSE DONE /Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-recessed8/housing-close
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

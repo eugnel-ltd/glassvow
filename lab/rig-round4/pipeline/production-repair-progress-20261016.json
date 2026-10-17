@@ -1,0 +1,432 @@
+{
+  "date": "2026-10-16",
+  "goal": "Repair the 29 candidates that failed production visual review, one character at a time",
+  "accepted_inventory": "current-research-inventory-round2.json",
+  "production_approved": false,
+  "completed_trials": [
+    {
+      "name": "waylayer",
+      "variant": "rig-round3-local",
+      "result": "rejected",
+      "before": 2,
+      "after": 5
+    },
+    {
+      "name": "obsidianGolem",
+      "variant": "rig-round3-trunk",
+      "result": "awaiting Godot and visual review",
+      "before": 3,
+      "after": 1
+    },
+    {
+      "name": "ashAcolyte",
+      "variant": "rig-round3-trunk",
+      "before": 4,
+      "after": 1,
+      "result": "awaiting visual review"
+    },
+    {
+      "name": "gloomslime",
+      "variant": "rig-round3-trunk",
+      "before": 5,
+      "after": 2,
+      "result": "awaiting visual review"
+    },
+    {
+      "name": "drownedOne",
+      "variant": "rig-round3-fall",
+      "before": 0,
+      "after": 0,
+      "result": "Godot capture passed; sampled sheet shows a clearer side-fall endpoint; continuous review outstanding"
+    },
+    {
+      "name": "abyssalKnight",
+      "variant": "rig-round3-trunk",
+      "before": 10,
+      "after": 2,
+      "result": "awaiting visual review"
+    },
+    {
+      "name": "obsidianGolem",
+      "variant": "rig-round3-local2",
+      "before": 3,
+      "after": 0,
+      "result": "Godot capture and sampled visual review pass; death still weak"
+    }
+  ],
+  "pending_trials": [
+    "ashAcolyte local2",
+    "gloomslime local2",
+    "obsidianGolem local2",
+    "rootheart fall",
+    "sporeling fall",
+    "thornling fall",
+    "eternalKeeper distinct"
+  ],
+  "resource_state": "Load remains above 100. One sequential weight runner waits below 30; motion trials are configured but not started.",
+  "remaining_work": "After weight repairs, improve death endpoints, attack/cast readability, held rigs and grip defects. Validate each replacement before selection.",
+  "prepared_motion_trials": [
+    "drownedOne",
+    "rootheart",
+    "sporeling",
+    "thornling",
+    "eternalKeeper",
+    "shade",
+    "siren",
+    "sovereign",
+    "starCultist",
+    "unlitSelf",
+    "unobsidianSelf",
+    "unopenedSelf",
+    "unwalkedSelf",
+    "voidColossus",
+    "voidWisp",
+    "voltEel",
+    "watcherEye"
+  ],
+  "manual_rig_work_remaining": [
+    "uncarvedSelf",
+    "unsunkSelf",
+    "unwoodedSelf",
+    "gravewarden",
+    "uncrossedSelf"
+  ],
+  "hero_death_work_remaining": [
+    "ashwarden",
+    "duskblade"
+  ],
+  "queue": "production_round3_queue.py waits for weight checks and then runs DrownedOne only. Review the first motion result before expanding.",
+  "motion_review": {
+    "drownedOne": "Clearer side-fall endpoint; zero stretch; unchanged non-death-root channels pass",
+    "rootheart": "Clearer side-fall endpoint; walk still weak",
+    "sporeling": "Clearer defeated endpoint; PodStalk difference is quaternion sign only",
+    "thornling": "Side fall distinguishable from crouch",
+    "root_action_offsets": "13 trials inspected. Direction differs, but many limb gestures remain similar. Not accepted as resolved."
+  },
+  "inspected_trials": {
+    "drownedOne": "Clearer side-fall endpoint; six clips zero stretch; Godot pass",
+    "rootheart": "Clearer side fall; walk still weak",
+    "sporeling": "Side fall clearer than bow; zero stretch; equivalent rotation check pass",
+    "thornling": "Side fall clearer than crouch; zero stretch",
+    "obsidianGolem": "Weights now zero stretch; forward-lean death still needs new fall trial",
+    "abyssalKnight": "Weights reduced 10 to 2; weak death remains",
+    "ashAcolyte": "Weights reduced 4 to 1; weak death remains",
+    "gloomslime": "Weights reduced 5 to 2; death still resembles crouch",
+    "13_distinct_root_trials": "All zero stretch. Sheets inspected; direction differs but gesture similarity remains. Do not mark resolved."
+  },
+  "accepted_inventory_unchanged": true,
+  "disk_note": "Disk briefly fell below 100 GiB. Guards stopped two cast-low trials before Blender. Disk recovered to 101 GiB without deletion; resume remains guarded.",
+  "independent_cast_trials": {
+    "unlitSelf": "zero stretch; inspected sheet shows distinct free-hand cast",
+    "sovereign": "zero stretch; awaiting sheet review",
+    "starCultist": "zero stretch; awaiting sheet review",
+    "unopenedSelf": "zero stretch; capture queued",
+    "unwalkedSelf": "zero stretch; capture queued",
+    "voidColossus": "zero stretch; capture queued",
+    "eternalKeeper": "55-degree forward: 7; 30-degree forward: 3; 25-degree lateral: 3. Reject all; local sleeve weights need repair.",
+    "unobsidianSelf": "30-degree arm and 12-degree forearm: zero stretch; Godot capture pass; sheet awaiting review"
+  },
+  "combined_fall_trials": {
+    "obsidianGolem": "zero stretch; Godot pass; sheet inspected; defeat endpoint clearer",
+    "ashAcolyte": "one severe edge remains; side fall clearer",
+    "abyssalKnight": "two severe edges remain; side fall clearer"
+  },
+  "archive": {
+    "path": "Archives/glassvow-asset-lab/superseded-evidence-20261016-155325.tar",
+    "sha256": "1e2afe921b1181cbe116589d392c856aac1bc7ba16307361dae75f6499943374",
+    "reclaimed_gib": 3.2254291297867894,
+    "verified_payloads": 19262
+  },
+  "held_unsunk": "Nine-bone rig; zero stretch; reimport clasp error below 0.4 mm; real arm displacement proven. Godot captured and sheet inspected. Gestures remain subtle; not resolved production.",
+  "hero_falls": "75 and 105 degree side-fall trials zero stretch and sheets inspected. Still curled; cape self-intersection and support need close inspection.",
+  "gravewarden": "Source closed. Rigid split opens seams up to 0.9 m. Cap repair delegated to isolated script; no acceptance yet.",
+  "stretch_best_trials": {
+    "obsidianGolem": {
+      "before": 3,
+      "after": 0,
+      "variant": "rig-round3-fall"
+    },
+    "ashAcolyte": {
+      "before": 4,
+      "after": 0,
+      "variant": "rig-round3-fine-fall"
+    },
+    "abyssalKnight": {
+      "before": 10,
+      "after": 1,
+      "variant": "rig-round3-fine-fall"
+    },
+    "gloomslime": {
+      "before": 5,
+      "after": 0,
+      "variant": "rig-round3-anchor-fall",
+      "status": "awaiting visual review"
+    },
+    "waylayer": {
+      "before": 2,
+      "after": 2,
+      "variant": "rig-round2-small"
+    }
+  },
+  "grip_trial": "Thumb20 candidate: eight vertices, 29.56 to 3.62 mm book gap; zero added severe edges; Godot capture passed; close inspection pending",
+  "latest_review": {
+    "watcherEye_head_cast": "Zero stretch but still subtle; not resolved",
+    "eternalKeeper_head_cast": "Zero stretch but posture-only; not resolved",
+    "unlitSelf_cast": "Free hand moves separately; sampled silhouette improved",
+    "starCultist_cast": "Shield lifts separately; sampled silhouette improved",
+    "sovereign_cast": "Gesture remains partly hidden; close review required",
+    "unobsidianSelf_cast_low": "Zero stretch; free-hand motion subtle; not resolved",
+    "unsunkSelf": "Articulation real, clasp held; standard camera readability remains weak"
+  },
+  "preserved_round2_hashes": 38,
+  "remaining_acceptance": [
+    "Close inspection and playback for selected new death variants",
+    "Arm gesture readability still weak on several robes and floating rigs",
+    "Real held-rig verification and Godot review for uncarvedSelf and unwoodedSelf",
+    "Gravewarden cap topology and multi-view review",
+    "UncrossedSelf grip close views and existing finger penetration",
+    "Remaining severe signals: Knight 1, slime 2, Waylayer 2",
+    "Gameplay integration, transitions and target-device performance remain outside lab proof"
+  ],
+  "latest_verified": [
+    "Best AshAcolyte zero-stretch skinning preserves all animation channels; fine-fall changes only death Hips rotation",
+    "Best AbyssalKnight one-edge skinning preserves all animation channels; fine-fall changes only death Hips rotation",
+    "Best ObsidianGolem zero-stretch skinning preserves all animation channels",
+    "Side-fall candidates retain all original models and source geometry",
+    "All production approvals remain withheld pending complete perceptual and runtime acceptance"
+  ],
+  "new_rejected_trials": [
+    "Waylayer narrow torso filter: 2 to 3 severe edges",
+    "UnwalkedSelf leg stride: 0 to 2 walk severe edges",
+    "Keeper sleeve weight filter: 3 to 9 cast severe edges",
+    "Gloomslime melt [1.3,0.35,1.3]: 0 to 1 death severe edge at the left back/arm seam",
+    "Gloomslime anchor-fall: base disc exposed in back view",
+    "Rootheart crumble (tilt 30 + squash): parent scale over the stooped spine smears the body diagonally",
+    "Ashwarden and Duskblade fall-long: curl into a ball (superseded by collapse)",
+    "Contrast full strength: unlitSelf cast 1, sovereign attack 1, unobsidianSelf cast 2, voidColossus attack 5 cast 2 (half strength queued)",
+    "Waylayer legs-arm: 40 degree arm offset about the old swing axis barely moved the raised axe",
+    "UnlitSelf sleeve filter radius 0.04: edge moved one ring outward (still 1)",
+    "UnlitSelf sleeve2 (radius 0.075, no gate): the patch boundary cut through the contaminated sleeve, cast 2",
+    "Ashwarden contrast-half: zero stretch but no visible change at gameplay scale",
+    "Shade lunge: attack 1; hood vertices carry right-arm weight (hood repair running)",
+    "Siren lunge: attack 2, cast 1; far body vertices carry Head weight, so head pitch drags them (reduced-head lunge2 running)",
+    "UnlitSelf sleeve3-contrast and sleeve3-wide: cast zero but attack 1; right sleeve mirrors the left contamination"
+  ],
+  "best_stretch_total_provisional": 0,
+  "multiview_tool": "view_capture.py renders the standard preview from another camera direction (godot_preview_view.gd, GV_VIEW_DIR). Back view uses -2.2,0.9,-3.2.",
+  "back_view_findings": {
+    "gloomslime anchor-fall": "Rejected: the 90 degree side fall exposes the flat dark base disc",
+    "rootheart fall": "Rejected: the side fall exposes the flat dark root base disc",
+    "drownedOne fall": "Acceptable: the dark area is the natural bell interior",
+    "sporeling fall": "Acceptable: the cap underside and gills show; natural geometry",
+    "thornling fall": "Acceptable: round body rolls; no exposed base",
+    "obsidianGolem fall": "Acceptable from the back; the curled pose remains a style concern",
+    "ashAcolyte fine-fall": "Acceptable; compact fallen lump",
+    "abyssalKnight fine-fall": "Front and back captured; side-lying endpoint reads; one severe edge remains",
+    "ashwarden fall-long": "Rejected: curls into a ball with the lantern",
+    "duskblade fall-long": "Rejected: compacts into a very small ball"
+  },
+  "motion_tool_scale": "production_motion_trial.py accepts a 'scale' edit (bone-local multiplier) beside rotation edits",
+  "candidate_tiers": {
+    "gloomslime": {
+      "tier": "integration_candidate_provisional",
+      "variant": "rig-round3-melt2",
+      "evidence": "Six clips zero severe stretch; only death Hips scale changed against rig-round3-anchor; Godot front and back captured; melt endpoint has no exposed base",
+      "open": "Combat transitions at gameplay scale; attack squash accepted as slime slam"
+    },
+    "drownedOne": {
+      "tier": "integration_candidate_provisional",
+      "variant": "rig-round3-fall",
+      "evidence": "Only the death endpoint failed review. Side fall: six clips zero stretch; only death Hips rotation changed; front and back views read as fallen; dark area is the natural bell interior",
+      "open": "Combat transitions at gameplay scale"
+    },
+    "sporeling": {
+      "tier": "integration_candidate_provisional",
+      "variant": "rig-round3-fall",
+      "evidence": "Only the death endpoint failed review. Tips onto the cap; six clips zero stretch; PodStalk change is quaternion sign only; front and back views read as fallen",
+      "open": "Combat transitions at gameplay scale"
+    },
+    "thornling": {
+      "tier": "integration_candidate_provisional",
+      "variant": "rig-round3-fall",
+      "evidence": "Only the death endpoint failed review. Rolls onto its side; six clips zero stretch; only death Hips rotation changed; no exposed base in either view",
+      "open": "Combat transitions at gameplay scale"
+    },
+    "ashwarden": {
+      "tier": "revise",
+      "variant": "rig-round3-collapse",
+      "evidence": "Contrast-half is zero stretch but nearly invisible at gameplay scale",
+      "open": "Censer raise cast (rig-round3-raise, zero stretch, compare passes) awaiting visual review"
+    },
+    "duskblade": {
+      "tier": "revise",
+      "variant": "rig-round3-contrast",
+      "evidence": "Collapse death plus contrast: attack is an overhead-to-horizontal sickle slash with a forward lean; cast raises the free hand overhead with a back arch. Six clips zero stretch",
+      "open": "Hood face design needs owner approval; cape self-collision not measured"
+    },
+    "rootheart": {
+      "tier": "integration_candidate_provisional",
+      "variant": "rig-round3-sway2",
+      "evidence": "Forward topple death plus a looping lumber sway walk (Hips roll 11, yaw 8, Chest counter-roll 6; one whole cycle). Six clips zero stretch; only walk Hips/Chest rotation changed against rig-round3-topple; front and back inspected",
+      "open": "Walk is a rocking lumber without stepping (legless root body); back view shows a dark root underside at the death endpoint"
+    },
+    "ashAcolyte": {
+      "tier": "integration_candidate_provisional",
+      "variant": "rig-round3-contrast",
+      "evidence": "Zero stretch on all six clips (fine weights); side-fall death; attack hunches forward and cast arches back with the head lifted; only authored channels changed",
+      "open": "Combat transitions at gameplay scale"
+    },
+    "starCultist": {
+      "tier": "integration_candidate_provisional",
+      "variant": "rig-round3-contrast",
+      "evidence": "Zero stretch; attack keeps the diagonal staff strike with a forward hunch; cast now arches back with the staff level; clearly different silhouettes",
+      "open": "Shield and robe stay rigid during death"
+    },
+    "unopenedSelf": {
+      "tier": "revise",
+      "variant": "rig-round3-contrast",
+      "evidence": "Zero stretch; cast raises the shield flat with a back arch, distinct from attack",
+      "open": "Wrist attachment needs close inspection"
+    },
+    "unwalkedSelf": {
+      "tier": "revise",
+      "variant": "rig-round3-contrast",
+      "evidence": "Zero stretch; cast raises the staff with a back arch, distinct from attack",
+      "open": "Walk lacks a stride; symmetric leg pulse was rejected"
+    },
+    "eternalKeeper": {
+      "tier": "revise",
+      "variant": "rig-round3-contrast",
+      "evidence": "Zero stretch; forward lean versus back arch gives some posture contrast",
+      "open": "Arms barely move (sleeve stretch blocks raises); walk weak"
+    },
+    "abyssalKnight": {
+      "tier": "integration_candidate_provisional",
+      "variant": "rig-round3-anchor-fall",
+      "evidence": "Right hip anchor (RightUpperLeg + Hips only, radius 0.05) removed knee contamination: six clips zero stretch (was 10). Weight-only compare passes; side fall changes only death Hips rotation; full front sheet and back view inspected",
+      "open": "Cast is a modest shield push; combat transitions"
+    },
+    "sovereign": {
+      "tier": "revise_rig_and_motion",
+      "variant": "rig-round3-hem2",
+      "evidence": "Half contrast plus a 50 degree cast PropPivot lift: attack thrusts the staff forward-down, cast holds it upright with a back arch. Six clips zero stretch; only authored channels changed",
+      "open": "Death reads as a rigid plank falling. Rebuild support loss, articulation and robe deformation.",
+      "visual_acceptance": "Withdrawn following owner feedback on 16 October 2026"
+    },
+    "unobsidianSelf": {
+      "tier": "revise_rig_and_motion",
+      "variant": "rig-round3-hem",
+      "evidence": "Half contrast plus a 50 degree cast PropPivot lift: cast raises the star staff high and upright, attack points it down-forward. Six clips zero stretch; only authored channels changed",
+      "open": "Death reads as a rigid plank falling. Rebuild support loss, articulation and robe deformation.",
+      "visual_acceptance": "Withdrawn following owner feedback on 16 October 2026"
+    },
+    "voidColossus": {
+      "tier": "revise",
+      "variant": "rig-round3-contrast-half",
+      "evidence": "Zero stretch; cast punches one fist out while attack bows forward",
+      "open": "Walk has minimal stride"
+    },
+    "waylayer": {
+      "tier": "revise",
+      "variant": "rig-round3-brandish",
+      "evidence": "Chain collapse-legs > legs-arm2 > drop > contrast > brandish, each zero stretch with only authored channels changed. Death drops the axe flat on the ground; attack hunches into a low forward swing; cast arches back and raises the axe overhead (PropPivot upright pulse keeps the blade up)",
+      "open": "Back view of brandish pending"
+    },
+    "unlitSelf": {
+      "tier": "revise_rig_and_motion",
+      "variant": "rig-round3-hem",
+      "evidence": "Gated sleeve filter: strip left-leg weights only where left-arm weight dominates (gate 0.40-0.55; 302 vertices, a clean partition: gate 0.30-0.50 gave a byte-identical GLB). Six clips zero stretch (was cast 1); weight-only compare passes against rig-round3-hang; lantern hangs upright; front and back cast, walk and death inspected",
+      "open": "Death reads as a rigid plank falling. Rebuild support loss, articulation and robe deformation.",
+      "visual_acceptance": "Withdrawn following owner feedback on 16 October 2026"
+    },
+    "obsidianGolem": {
+      "tier": "integration_candidate_provisional",
+      "variant": "rig-round3-fall",
+      "evidence": "Six clips zero stretch; side-fall death reads clearly with no open base; front and back inspected",
+      "open": "Attack (quick cross punch) and cast (held side reach) both use the left arm: moderate contrast; walk is a short-legged shuffle"
+    },
+    "gravewarden": {
+      "tier": "revise_rig_and_motion",
+      "variant": "rig-round3-capped2",
+      "evidence": "Godot import passes. Pixel diff against a fresh baseline capture (byte-identical motion): caps fill the attack shoulder hole and the death roof hole",
+      "open": "Arm articulation reads as broken. Reassess segmentation, shoulder and elbow pivots, and gauntlet attachment.",
+      "visual_acceptance": "Withdrawn following owner feedback on 16 October 2026"
+    },
+    "shade": {
+      "tier": "revise_rig_and_motion",
+      "variant": "rig-round3-lunge3",
+      "open": "Motion is unnatural. Rebuild floating core, hood and segmented cloth controls instead of rotating the entire character.",
+      "visual_acceptance": "Withdrawn following owner feedback on 16 October 2026"
+    }
+  },
+  "float_cast_review": {
+    "shade": "Sleeves gather in cast; attack tilts; still subtle",
+    "voidWisp": "Ring tilt in both attack and cast; still similar",
+    "voltEel": "Attack lunges long, cast dips the head; readable difference"
+  },
+  "motion_tool_cycles": "production_motion_trial.py accepts 'cycles' (whole-number signed sine) for looping clips",
+  "motion_tool_upright": "production_motion_trial.py accepts 'upright' (0..1) to hang a prop bone towards its rest orientation in armature space",
+  "selection_audit": "selection_audit.py total 0 after unlitSelf moved to rig-round3-hang-sleeve3 (read from each selected variant report, 2026-10-16)",
+  "motion_tool_pulse": "production_motion_trial.py: 'pulse': true blends an 'upright' edit in and out with sin^2, keeping first and last poses",
+  "weight_tool_gate": "stretch_round2_weights.py: 'removed_bones' (filter by exclusion) and 'gate_bones' + 'gate_range' (apply only where those bones dominate)",
+  "edit_queue": "edit_queue.py runs per-character motion edits from one plan file, then compare and front capture for zero-stretch results",
+  "repair_evidence_fix": "repair_evidence.py now resolves the model path; Godot runs from its own project directory, so a relative path failed with import error 7",
+  "owner_feedback_20261016": {
+    "finding": "Zero severe edge stretch does not establish convincing articulation, weight or motion.",
+    "rejected": {
+      "sovereign": "Death reads as a rigid plank falling. Rebuild support loss, articulation and robe deformation.",
+      "unlitSelf": "Death reads as a rigid plank falling. Rebuild support loss, articulation and robe deformation.",
+      "unobsidianSelf": "Death reads as a rigid plank falling. Rebuild support loss, articulation and robe deformation.",
+      "gravewarden": "Arm articulation reads as broken. Reassess segmentation, shoulder and elbow pivots, and gauntlet attachment.",
+      "shade": "Motion is unnatural. Rebuild floating core, hood and segmented cloth controls instead of rotating the entire character."
+    },
+    "verification": [
+      "Inspect continuous normal-speed motion from front, rear and a side view.",
+      "Check anatomical or mechanical pivot placement and attachments throughout the motion.",
+      "Check support loss, changing silhouette, delayed follow-through and a stable final contact pose.",
+      "For rebuilt rigs, validate the new hierarchy and skinning instead of requiring old animation bytes.",
+      "Retain numerical deformation and contact checks as necessary technical checks."
+    ],
+    "approval": "The agent performs technical and visual verification. No owner review gate is imposed."
+  },
+  "open_findings": {
+    "hover_death_pop": {
+      "date": "2026-10-16",
+      "finding": "Hovering creatures pop down about 0.15 m on death frame 1. candidate_motions.drift() authors the hover at loc z 0.09 H, contact_rollout grounds only the death clip for hovering creatures, and ground_candidate.py re-solves Hips from frame 1, so death starts on the floor while idle floats.",
+      "affects": "Every candidate grounded with ground_clips [\"death\"] (voidWisp, watcherEye, shade and the other floaters).",
+      "fix_direction": "Death starts at the idle hover height and pose, then sinks before the first floor contact. Gate: min z >= -5 mm on every sample; [-5, +15] mm only from the first contact frame. Use a separate grounding script; ground_candidate.py stays shared and unchanged.",
+      "status": "Pilot on Shade (rig-round4); port to the other floaters after its review."
+    }
+  },
+  "rig_redesign_review": {
+    "unlitSelf-collapse3": {
+      "candidate": "mobs/unlitSelf/rig-round4-collapse3",
+      "status": "Improved trial; revise before integration",
+      "compared_with": [
+        "rig-round3-hem",
+        "rig-round4-collapse2"
+      ],
+      "evidence": "pipeline/robe-collapse/clips3/",
+      "observed_improvements": [
+        "The lantern arm stays in front instead of sweeping over the head.",
+        "The loss of support is visible earlier from the front.",
+        "The torso curl is distributed more evenly.",
+        "The end pose has a longer, recognisable body silhouette than collapse2."
+      ],
+      "remaining_defects": [
+        "The lying robe has an inflated bell-like silhouette.",
+        "The hood is obscured by the hand and its bend needs refinement.",
+        "The attached shoes form fin-like shapes at the hem in the rear view.",
+        "The reported prop floor minimum at frame 36 is -0.0058 m.",
+        "Two severe edges remain in the inner hem; the trial is not a technical pass."
+      ],
+      "measurement_limits": [
+        "The mesh has boundary loops, so signed tetrahedral volume is not a reliable enclosed-volume gate.",
+        "A sleeve path measured through slice centres does not bound local edge distortion.",
+        "Reported non-death displacement is up to 0.00513 m in attack and 0.00385 m in cast; these clips are not byte-identical.",
+        "Frame inspection supports pose and shape findings; it does not establish gameplay transition quality."
+      ],
+      "next": "Render collapse4 side death and front/rear end poses before further tuning or porting."
+    }
+  }
+}

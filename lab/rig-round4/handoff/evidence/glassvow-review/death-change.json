@@ -1,0 +1,13 @@
+{
+ "source": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/shade/rig-round4-temporal4/shade.blend",
+ "changed_action": "death",
+ "weights_identical": true,
+ "unchanged_action_fingerprints": {
+  "attack": "dc92560236a6c6ef44f8915cb5f26deafd31bf07d5e43982d40e747a6b981e06",
+  "cast": "13a681c88526e559d93387e1521c3c8be54aac0aaf70f09eb4948b67637d8d5c",
+  "hurt": "117165e8b10871b6236e0dc8650396b8eb3c9568ecaddae8e7f19a631092b8a6",
+  "idle": "633ce824cd826806a46e493431d1c01b7ef1af1a19df92a170469452b0fa45e7",
+  "walk": "60205133b268e43381f7b75552547b5819af723543183a402e8f8ebda3bd340c"
+ },
+ "death_solve_vs_blender_max_m": 0.0875502562327641
+}

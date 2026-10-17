@@ -1,0 +1,16 @@
+RESOURCE GATE {"path": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab", "load_1m": 10.650390625, "free_bytes": 110453784576, "free_GiB": 102.86810302734375}
+21:24:38 | INFO: Data are loaded, start creating Blender stuff
+21:24:38 | INFO: Blender create Mesh node tripo_mesh_7a1dfbbf-85b3-49fb-ab76-14834daa6211
+21:24:38 | INFO: glTF import finished in 0.02s
+Info: Saved as "gravewarden.blend"
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+21:24:44 | INFO: Starting glTF 2.0 export
+21:24:44 | INFO: Extracting primitive: ArticulatedStone
+21:24:44 | INFO: Primitives created: 2
+21:24:44 | INFO: Finished glTF 2.0 export in 0.2762889862060547 s
+
+ROUND4 FIRST PREVIEW /Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/gravewarden/rig-round4-articulated3 FK max metres 9.292509205069712e-07
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

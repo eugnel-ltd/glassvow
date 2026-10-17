@@ -1,0 +1,2689 @@
+{
+ "method": "Blender BVH triangle overlap on focused triangle subsets; rest count subtracted",
+ "rest": {
+  "sleeveL-core": 7,
+  "sleeveR-core": 3,
+  "crescent-core": 0,
+  "crescent-sleeveL": 0,
+  "crescent-sleeveR": 0,
+  "hem-core": 22
+ },
+ "clips": [
+  {
+   "clip": "attack",
+   "max_new_focused_overlaps": 12,
+   "rows": [
+    {
+     "source_frame": 1,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 6
+     },
+     "total_new": 9
+    },
+    {
+     "source_frame": 2,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 3,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 4,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 5,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 6,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 2,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 7,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 8,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 9,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 10,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 11,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 5,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 6
+    },
+    {
+     "source_frame": 12,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 13,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 14,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 2,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 3
+     },
+     "total_new": 6
+    },
+    {
+     "source_frame": 15,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 5
+     },
+     "total_new": 9
+    },
+    {
+     "source_frame": 16,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 17,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 18,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 19,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 6,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 6
+     },
+     "total_new": 12
+    },
+    {
+     "source_frame": 20,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 21,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 5
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 22,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 3
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 23,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 24,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 25,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 7,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 7
+    },
+    {
+     "source_frame": 26,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 27,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 28,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 29,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 30,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 31,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 6,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 6
+    },
+    {
+     "source_frame": 32,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    }
+   ]
+  },
+  {
+   "clip": "cast",
+   "max_new_focused_overlaps": 19,
+   "rows": [
+    {
+     "source_frame": 1,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 2,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 3,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 5,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 4,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 5,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 6,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 7,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 6,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 6
+    },
+    {
+     "source_frame": 8,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 17,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 17
+    },
+    {
+     "source_frame": 9,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 5,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 10,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 11,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 12,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 13,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 1,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 14,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 10,
+      "sleeveR-core": 8,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 18
+    },
+    {
+     "source_frame": 15,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 4,
+      "sleeveR-core": 7,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 13
+    },
+    {
+     "source_frame": 16,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 9,
+      "sleeveR-core": 10,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 19
+    },
+    {
+     "source_frame": 17,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 8,
+      "sleeveR-core": 7,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 15
+    },
+    {
+     "source_frame": 18,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 8,
+      "sleeveR-core": 9,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 17
+    },
+    {
+     "source_frame": 19,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 3,
+      "sleeveR-core": 12,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 15
+    },
+    {
+     "source_frame": 20,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 6,
+      "sleeveR-core": 7,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 13
+    },
+    {
+     "source_frame": 21,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 8,
+      "sleeveR-core": 11,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 19
+    },
+    {
+     "source_frame": 22,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 6,
+      "sleeveR-core": 7,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 13
+    },
+    {
+     "source_frame": 23,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 6,
+      "sleeveR-core": 9,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 15
+    },
+    {
+     "source_frame": 24,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 7,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 10
+    },
+    {
+     "source_frame": 25,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 7,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 10
+    },
+    {
+     "source_frame": 26,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 27,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 4
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 28,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 29,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 30,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 31,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 32,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    }
+   ]
+  },
+  {
+   "clip": "death",
+   "max_new_focused_overlaps": 329,
+   "rows": [
+    {
+     "source_frame": 1,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 2,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 3,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 4,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 6
+     },
+     "total_new": 6
+    },
+    {
+     "source_frame": 5,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 6,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 7,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 8,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 9,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 56,
+      "sleeveR-core": 70,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 6
+     },
+     "total_new": 132
+    },
+    {
+     "source_frame": 10,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 64,
+      "sleeveR-core": 93,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 158
+    },
+    {
+     "source_frame": 11,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 72,
+      "sleeveR-core": 93,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 3
+     },
+     "total_new": 168
+    },
+    {
+     "source_frame": 12,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 72,
+      "sleeveR-core": 77,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 149
+    },
+    {
+     "source_frame": 13,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 97,
+      "sleeveR-core": 81,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 178
+    },
+    {
+     "source_frame": 14,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 63,
+      "sleeveR-core": 54,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 117
+    },
+    {
+     "source_frame": 15,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 16,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 17,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 18,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 19,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 20,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 6,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 7
+    },
+    {
+     "source_frame": 21,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 8
+     },
+     "total_new": 12
+    },
+    {
+     "source_frame": 22,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 23,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 24,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 63,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 63
+    },
+    {
+     "source_frame": 25,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 81,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 25
+     },
+     "total_new": 110
+    },
+    {
+     "source_frame": 26,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 104,
+      "sleeveR-core": 77,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 21
+     },
+     "total_new": 202
+    },
+    {
+     "source_frame": 27,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 122,
+      "sleeveR-core": 97,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 15
+     },
+     "total_new": 234
+    },
+    {
+     "source_frame": 28,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 128,
+      "sleeveR-core": 122,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 250
+    },
+    {
+     "source_frame": 29,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 190,
+      "sleeveR-core": 136,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 3
+     },
+     "total_new": 329
+    },
+    {
+     "source_frame": 30,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 139,
+      "sleeveR-core": 142,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 9
+     },
+     "total_new": 290
+    },
+    {
+     "source_frame": 31,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 66,
+      "sleeveR-core": 72,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 7
+     },
+     "total_new": 145
+    },
+    {
+     "source_frame": 32,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 41,
+      "sleeveR-core": 48,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 6
+     },
+     "total_new": 95
+    },
+    {
+     "source_frame": 33,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 19,
+      "sleeveR-core": 44,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 63
+    },
+    {
+     "source_frame": 34,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 16,
+      "sleeveR-core": 49,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 5
+     },
+     "total_new": 70
+    },
+    {
+     "source_frame": 35,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 39,
+      "sleeveR-core": 24,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 63
+    },
+    {
+     "source_frame": 36,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 71,
+      "sleeveR-core": 52,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 123
+    },
+    {
+     "source_frame": 37,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 74,
+      "sleeveR-core": 104,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 178
+    },
+    {
+     "source_frame": 38,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 63,
+      "sleeveR-core": 174,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 4
+     },
+     "total_new": 241
+    },
+    {
+     "source_frame": 39,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 55,
+      "sleeveR-core": 174,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 231
+    },
+    {
+     "source_frame": 40,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 33,
+      "sleeveR-core": 183,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 216
+    },
+    {
+     "source_frame": 41,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 43,
+      "sleeveR-core": 198,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 242
+    },
+    {
+     "source_frame": 42,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 31,
+      "sleeveR-core": 160,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 192
+    },
+    {
+     "source_frame": 43,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 10,
+      "sleeveR-core": 127,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 137
+    },
+    {
+     "source_frame": 44,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 7,
+      "sleeveR-core": 113,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 120
+    },
+    {
+     "source_frame": 45,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 9,
+      "sleeveR-core": 102,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 26
+     },
+     "total_new": 137
+    },
+    {
+     "source_frame": 46,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 6,
+      "sleeveR-core": 112,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 21
+     },
+     "total_new": 139
+    },
+    {
+     "source_frame": 47,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 15,
+      "sleeveR-core": 66,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 81
+    },
+    {
+     "source_frame": 48,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 17,
+      "sleeveR-core": 53,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 70
+    }
+   ]
+  },
+  {
+   "clip": "hurt",
+   "max_new_focused_overlaps": 9,
+   "rows": [
+    {
+     "source_frame": 1,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 6
+     },
+     "total_new": 9
+    },
+    {
+     "source_frame": 2,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 6,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 6
+    },
+    {
+     "source_frame": 3,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 4,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 5,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 6,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 7,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 8,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 9,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 10,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 11,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 6
+    },
+    {
+     "source_frame": 12,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 13,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 3
+     },
+     "total_new": 6
+    },
+    {
+     "source_frame": 14,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 15,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 3
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 16,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    }
+   ]
+  },
+  {
+   "clip": "idle",
+   "max_new_focused_overlaps": 9,
+   "rows": [
+    {
+     "source_frame": 1,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 2,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 3,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 4,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 5,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 6,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 7,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 8,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 9,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 10,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 11,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 5,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 12,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 13,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 14,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 15,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 6
+     },
+     "total_new": 8
+    },
+    {
+     "source_frame": 16,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 17,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 6,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 6
+    },
+    {
+     "source_frame": 18,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 19,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 7
+     },
+     "total_new": 9
+    },
+    {
+     "source_frame": 20,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 21,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 3
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 22,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 23,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 4
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 24,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 25,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 26,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 27,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 28,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 29,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 30,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 31,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 32,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 33,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 34,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 35,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 4
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 36,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 37,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 38,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 39,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 1,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 40,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 41,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 42,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 6,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 6
+    },
+    {
+     "source_frame": 43,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 44,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 45,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 46,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 47,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 5,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 48,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 49,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 50,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 51,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 52,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 53,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 2,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 54,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 55,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 56,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 57,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 58,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 1,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 5
+     },
+     "total_new": 6
+    },
+    {
+     "source_frame": 59,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 60,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    }
+   ]
+  },
+  {
+   "clip": "walk",
+   "max_new_focused_overlaps": 7,
+   "rows": [
+    {
+     "source_frame": 1,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 2,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 3,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 4,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 5,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 6,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 7,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 8,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 9,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 10,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 11,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 12,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 13,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 14,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 15,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 4,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 16,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 17,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 5,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 18,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 5
+     },
+     "total_new": 7
+    },
+    {
+     "source_frame": 19,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 20,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 21,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 22,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 23,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    },
+    {
+     "source_frame": 24,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 4
+     },
+     "total_new": 4
+    },
+    {
+     "source_frame": 25,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 26,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 27,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 5,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 1
+     },
+     "total_new": 6
+    },
+    {
+     "source_frame": 28,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 0,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 0
+    },
+    {
+     "source_frame": 29,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 2
+     },
+     "total_new": 5
+    },
+    {
+     "source_frame": 30,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 1,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 1
+    },
+    {
+     "source_frame": 31,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 2,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 2
+    },
+    {
+     "source_frame": 32,
+     "new_overlaps_vs_rest": {
+      "sleeveL-core": 0,
+      "sleeveR-core": 3,
+      "crescent-core": 0,
+      "crescent-sleeveL": 0,
+      "crescent-sleeveR": 0,
+      "hem-core": 0
+     },
+     "total_new": 3
+    }
+   ]
+  }
+ ]
+}

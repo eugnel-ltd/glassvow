@@ -1,0 +1,20 @@
+[
+  {
+    "clip": "walk",
+    "frames": 1,
+    "seconds": 1.06666672229767,
+    "start": 0
+  },
+  {
+    "clip": "attack",
+    "frames": 1,
+    "seconds": 1.06666672229767,
+    "start": 1
+  },
+  {
+    "clip": "cast",
+    "frames": 1,
+    "seconds": 1.06666672229767,
+    "start": 2
+  }
+]

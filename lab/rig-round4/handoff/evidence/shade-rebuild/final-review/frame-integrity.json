@@ -1,0 +1,114 @@
+{
+ "final-front": [
+  {
+   "clip": "idle",
+   "frames": 61,
+   "seconds": 2.0,
+   "nonidentical_adjacent_frames": 60,
+   "max_pixel_abs_sum": 1875335,
+   "min_luminance": 0,
+   "max_luminance": 255
+  },
+  {
+   "clip": "walk",
+   "frames": 34,
+   "seconds": 1.06666672229767,
+   "nonidentical_adjacent_frames": 32,
+   "max_pixel_abs_sum": 3505856,
+   "min_luminance": 0,
+   "max_luminance": 255
+  },
+  {
+   "clip": "attack",
+   "frames": 34,
+   "seconds": 1.06666672229767,
+   "nonidentical_adjacent_frames": 32,
+   "max_pixel_abs_sum": 7807577,
+   "min_luminance": 0,
+   "max_luminance": 255
+  },
+  {
+   "clip": "cast",
+   "frames": 34,
+   "seconds": 1.06666672229767,
+   "nonidentical_adjacent_frames": 32,
+   "max_pixel_abs_sum": 6626776,
+   "min_luminance": 0,
+   "max_luminance": 255
+  },
+  {
+   "clip": "hurt",
+   "frames": 18,
+   "seconds": 0.533333361148834,
+   "nonidentical_adjacent_frames": 16,
+   "max_pixel_abs_sum": 5857577,
+   "min_luminance": 0,
+   "max_luminance": 255
+  },
+  {
+   "clip": "death",
+   "frames": 50,
+   "seconds": 1.60000002384186,
+   "nonidentical_adjacent_frames": 48,
+   "max_pixel_abs_sum": 6061925,
+   "min_luminance": 0,
+   "max_luminance": 255
+  }
+ ],
+ "final-rear": [
+  {
+   "clip": "idle",
+   "frames": 61,
+   "seconds": 2.0,
+   "nonidentical_adjacent_frames": 60,
+   "max_pixel_abs_sum": 1435059,
+   "min_luminance": 0,
+   "max_luminance": 255
+  },
+  {
+   "clip": "walk",
+   "frames": 34,
+   "seconds": 1.06666672229767,
+   "nonidentical_adjacent_frames": 32,
+   "max_pixel_abs_sum": 2693474,
+   "min_luminance": 0,
+   "max_luminance": 255
+  },
+  {
+   "clip": "attack",
+   "frames": 34,
+   "seconds": 1.06666672229767,
+   "nonidentical_adjacent_frames": 32,
+   "max_pixel_abs_sum": 5041190,
+   "min_luminance": 0,
+   "max_luminance": 255
+  },
+  {
+   "clip": "cast",
+   "frames": 34,
+   "seconds": 1.06666672229767,
+   "nonidentical_adjacent_frames": 32,
+   "max_pixel_abs_sum": 4526936,
+   "min_luminance": 0,
+   "max_luminance": 255
+  },
+  {
+   "clip": "hurt",
+   "frames": 18,
+   "seconds": 0.533333361148834,
+   "nonidentical_adjacent_frames": 16,
+   "max_pixel_abs_sum": 3645104,
+   "min_luminance": 0,
+   "max_luminance": 255
+  },
+  {
+   "clip": "death",
+   "frames": 50,
+   "seconds": 1.60000002384186,
+   "nonidentical_adjacent_frames": 48,
+   "max_pixel_abs_sum": 4535904,
+   "min_luminance": 0,
+   "max_luminance": 255
+  }
+ ]
+}

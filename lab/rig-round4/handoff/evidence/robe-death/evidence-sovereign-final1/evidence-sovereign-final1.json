@@ -1,0 +1,56 @@
+{
+  "candidate": "mobs/sovereign/rig-round4-collapse-final1",
+  "status": "REJECTED - isolated lab candidate, not production",
+  "glb_sha256": "c3c356cdcb1797eb8cedef46acf44c6c4ed065f6a2be5ef1708ae039ad4dbdd5",
+  "verdict": "Body collapses into an unreadable mass from 1.00 s. Material grip does not hold: at rest the fingers hang below the shaft, at death f30 the hand leaves the staff. Rear ring stays rigid. Three severe edges remain FAIL.",
+  "deformation": {
+    "death_integer_max_severe": 3,
+    "death_fractional_max_severe": 3,
+    "other_five_clips_severe": 0,
+    "failing_edges": [
+      {"vertices": [3305, 3334], "rest_m": 0.01157, "worst_posed_m": 0.04702, "worst_ratio": 4.066, "at_frame": 29.0, "span": [26.375, 44.0], "weights": "Spine/Chest/RightUpperArm vs Spine/Chest/RightShoulder"},
+      {"vertices": [3493, 3501], "rest_m": 0.00956, "worst_posed_m": 0.04275, "worst_ratio": 4.469, "at_frame": 29.0, "span": [26.75, 44.0], "weights": "Skirt6A/Spine/Skirt7A vs Skirt6A/Spine/RightUpperArm/Skirt7A"},
+      {"vertices": [3219, 3256], "rest_m": 0.0078, "worst_posed_m": 0.03603, "worst_ratio": 4.622, "at_frame": 29.0, "span": [26.938, 44.0], "weights": "Spine/Chest/RightUpperArm vs Spine/Chest/RightUpperArm"}
+    ],
+    "note": "Same three edges reported by the preliminary solve. They sit on the trunk-to-arm and skirt-to-arm boundary after the centreline pivot move."
+  },
+  "floor": {
+    "death_body_min_z_m": 0.00084,
+    "death_prop_min_z_m": 0.045,
+    "other_clips_prop_min_z_m": 0.05442,
+    "note": "Floor contact passes. This does not make the body or grip acceptable."
+  },
+  "material_grip": {
+    "palm_face": 776,
+    "palm_vertices": [4575, 4529, 4581],
+    "shaft_material_vertex_source": 119,
+    "shaft_vertex_imported": 554,
+    "barycentre_to_shaft_gap_m_all_clips": 0.0,
+    "same_point_in_hand_frame": [0.007979, 0.058474, -0.018858],
+    "visual": "Point coincidence does not prove a grip. Rest close-up shows the fingers hanging below the shaft, not around it. Death f30 close-up shows the hand clear of the staff. The palm triangle stays on the shaft point because those three vertices are pinned to RightHand; the fingers are not."
+  },
+  "ring": {
+    "vertices": 922,
+    "assignment": "Head only",
+    "visual": "Rest and end rear views keep the ring circular and at full scale. Ring rigidity holds."
+  },
+  "nondeath_body_change_from_pivot_move": {
+    "idle_max_m": 0.00523,
+    "walk_max_m": 0.02427,
+    "attack_max_m": 0.1591,
+    "cast_max_m": 0.25596,
+    "hurt_max_m": 0.08171,
+    "note": "Not visually accepted. Pivot change moves the whole body. Reported from the source build, not re-captured."
+  },
+  "blocker": "The robe mesh has no separate cloth topology. The skirt, torso and right arm share vertices across Spine, Chest, RightShoulder and RightUpperArm. Moving the trunk pivots onto the centreline and raising the waist redistributes those shared weights, but the same vertices still have to follow both the collapsing torso and the arm. That boundary stretches three edges past 4x from frame 26.4 to the end. The hand is a single bone: the palm triangle can be pinned to the shaft point, but the finger vertices have no bones that can close around the shaft.",
+  "recommendation": "Stop parameter work on this mesh. A credible robe collapse and a finger grip both need mesh topology that does not exist here: a skirt shell whose vertices are not shared with the arm, and a hand with finger bones. Reuse the accepted unlitSelf pilot method only on a mesh that already separates cloth from limbs.",
+  "visual_evidence": {
+    "intact_side": "death-side-1x-diagnostic.mp4",
+    "intact_side_sha256": "92d2546122230e761e9d1842ca369bd796e55d7a04d57b700b706ae8f1b68914",
+    "grip_diagnostic_rest": "grip2-rest.png",
+    "grip_diagnostic_death_f30": "grip2-death-f30.png",
+    "ring_rest": "ring-rest.png",
+    "ring_end": "ring-end.png",
+    "note": "Grip images hide the torso and are diagnostic only. Overall appearance is judged from the intact side clip."
+  }
+}

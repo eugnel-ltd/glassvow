@@ -1,0 +1,146 @@
+[
+ {
+  "frame": 1,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2915
+ },
+ {
+  "frame": 2,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2008,
+  "chest": 0.3022
+ },
+ {
+  "frame": 3,
+  "root_z": 0.0017,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0682,
+  "fists": 0.1819,
+  "chest": 0.3235
+ },
+ {
+  "frame": 4,
+  "root_z": 0.0015,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0683,
+  "fists": 0.1693,
+  "chest": 0.3358
+ },
+ {
+  "frame": 5,
+  "root_z": 0.0016,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0683,
+  "fists": 0.1793,
+  "chest": 0.326
+ },
+ {
+  "frame": 6,
+  "root_z": 0.0018,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0682,
+  "fists": 0.1994,
+  "chest": 0.3059
+ },
+ {
+  "frame": 7,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2071,
+  "chest": 0.2876
+ },
+ {
+  "frame": 8,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.211,
+  "chest": 0.2799
+ },
+ {
+  "frame": 9,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2099,
+  "chest": 0.2822
+ },
+ {
+  "frame": 10,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2074,
+  "chest": 0.2875
+ },
+ {
+  "frame": 11,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2049,
+  "chest": 0.293
+ },
+ {
+  "frame": 12,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2038,
+  "chest": 0.2956
+ },
+ {
+  "frame": 13,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.204,
+  "chest": 0.2949
+ },
+ {
+  "frame": 14,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2045,
+  "chest": 0.2935
+ },
+ {
+  "frame": 15,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2049,
+  "chest": 0.2921
+ },
+ {
+  "frame": 16,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2915
+ }
+]

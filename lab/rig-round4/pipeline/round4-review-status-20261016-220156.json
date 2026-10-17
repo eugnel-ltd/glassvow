@@ -1,0 +1,106 @@
+{
+  "scope": "Glassvow isolated rig and animation research",
+  "production_approved": false,
+  "assets_promoted": false,
+  "runtime_integration": "Not verified. The reported read-only search of presentation/ and application/ found no 3D actor AnimationPlayer, AnimationTree or blend configuration. Preview-only blends are not integration evidence.",
+  "execution": "Browser, Godot and Blender run on the MacBook Pro only. Heavy jobs are serialised, with load below 30 and at least 100 GiB free.",
+  "historical_records": "The round-two inventory and round-three comparison selection remain historical references. This record does not replace accepted assets.",
+  "candidates": {
+    "unlitSelf": {
+      "variant": "rig-round4-collapse4-repair1",
+      "sha256": "699bec12163e3e3e021b235c3f05db212bf0b2eb7d6dd52f5239cb085bdda0ec",
+      "status": "Reviewed pilot; frozen for porting, not production",
+      "evidence_local": "/tmp/robe-death/evidence4-repair1/",
+      "verified": [
+        "All six exported clips have zero severe edges in the reported integer and fractional samples",
+        "Death: 48 integer and 329 fractional samples; minimum body height 0.979 mm and prop height 13.929 mm",
+        "Coordinator inspected the side sequence and front/rear final poses; the hem follows folded legs rather than preserving the upright bell"
+      ],
+      "open": [
+        "Full temporal and gameplay transition review remains outstanding",
+        "Visible boots and sculpted cloth limitations remain"
+      ]
+    },
+    "unobsidianSelf": {
+      "variant": "rig-round4-collapse-port1",
+      "sha256": "be916be1743010b307bedbf5f803bfe61142a703104153f8ef52ad9ebf5a4b06",
+      "status": "Isolated candidate provisionally accepted; frozen, not production",
+      "evidence_local": "/tmp/robe-death/evidence-unobsidian-port1/",
+      "verified": [
+        "All six exported clips report zero severe edges at integer and fractional samples",
+        "Coordinator inspected death sequence, end views and matching worst-deviation poses for walk, attack and cast",
+        "Sleeve vertex 3472 originally mixed RightLowerArm 0.41567 and RightUpperLeg 0.58433; ownership correction is documented"
+      ],
+      "open": [
+        "Attack and cast have visibly reduced sleeve droop; they are changed, not unchanged",
+        "Maximum non-death displacement is 36.7 mm in walk, 239.1 mm in attack and 350.7 mm in cast",
+        "Static worst-pose inspection does not establish complete temporal or gameplay transition quality"
+      ]
+    },
+    "shade": {
+      "variant": "rig-round4-temporal4",
+      "sha256": "5797318236f76db65d74876ff3104f08df83d981fb850735338aff2771d6a2fc",
+      "status": "Local deformation and cast-return repairs reviewed; final six-clip visual verification in progress",
+      "evidence_local": "/tmp/shade-rebuild/temporal4/",
+      "verified": [
+        "Local repair altered 121 vertices; six-clip predecessor checks covered 1718 integer and eighth-frame samples with zero severe edges",
+        "Temporal4 changes only cast; mesh, rest, skin, weights and the other five decoded animation arrays are identical",
+        "Exported cast: 249 samples, zero severe edges, minimum world height 139.724 mm",
+        "Cast endpoint matches moving idle; reported surface step-vector difference is 0.055 mm",
+        "Death preserves the hovering start and measured contact band"
+      ],
+      "open": [
+        "Focused final multiview inspection is pending",
+        "Full cloth/core self-collision clearance and unshaded darkness attribution are not established",
+        "Arched final back and hooked cloth tips remain; no new aesthetic redesign is authorised by this record",
+        "Actual gameplay integration is not verified"
+      ]
+    },
+    "gravewarden": {
+      "variant": "rig-round4-clearance1",
+      "status": "Rejected: shoulder-offset pass does not clear the complete interval and the forearm band remains visibly broken",
+      "floor_verified_variant": "rig-round4-recessed8-release-ground",
+      "evidence_local": "/tmp/glassvow-rig-trial-review/release-visual/",
+      "verified": [
+        "Coordinator inspected the staggered release sequence",
+        "Exported death: 385 samples, zero severe edges, minimum world height 1.485 mm",
+        "Walk frame 1 had four actual triangle crossings; a local shoulder offset removed those crossings at that pose"
+      ],
+      "open": [
+        "Forearm stone-band gap still reads as a broken joint",
+        "Integer-frame surface tests still find upper-arm/leg crossings in walk frames 3-6 and 31, and cast frames 5-8 and 31; shoulder/chest crossings need classification as hidden socket contact or harmful exterior penetration",
+        "The passing death floor gate belongs to release-ground, not the new clearance1 GLB",
+        "Raw idle-to-walk shoulders differ by -17 and +1 degrees; an eight-frame preview blend is proposed only",
+        "Feet remain elevated in the final prone pose; the chest and fists provide the measured contact",
+        "Volume overlap and a single pose with no surface crossing do not establish full collision clearance"
+      ]
+    },
+    "sovereign": {
+      "rejected_variant": "rig-round4-collapse-port1",
+      "rejected_sha256": "7b746729518337e7d1a3cf61465e45428a2bb967695d1565ebf4f8526adb53e5",
+      "status": "Bounded repair in progress; source still has 16 severe edges and is not accepted",
+      "evidence_local": "/tmp/robe-death/evidence-sovereign-port1/",
+      "measured_causes": [
+        "Death f28.5 has staff penetration in source, bake and reimport; it is not introduced by export",
+        "Near-vertical horizontal direction was normalised before testing its magnitude, invalidating the fallback and producing a 106-degree turn between adjacent keys",
+        "Non-death staff penetration of about 0.43 to 0.45 m is inherited from the base",
+        "The disconnected 922-vertex rear ring has arm/shoulder contamination and visibly bends",
+        "Original 37 severe edges comprise 28 hem-transition edges and 9 trunk/arm edges"
+      ],
+      "next": [
+        "Use continuous floor-clearing staff orientation with inter-key exported sampling and actual hand-to-shaft grip checks",
+        "Rigidly bind only the verified ring component",
+        "Repair local edge patches with fixed body motion and pivots",
+        "Retain all failures and inspect a small diagnostic preview before further changes"
+      ]
+    }
+  },
+  "measurement_rules": [
+    "Zero severe stretch is necessary technical evidence, not proof of natural animation",
+    "Signed tetrahedral volume of an open mesh is diagnostic only, not an enclosed-volume acceptance gate",
+    "Sleeve-centre path length does not bound local edge distortion",
+    "Source validation does not substitute for exported GLB validation",
+    "When keys are densified, sample between the new keys as well",
+    "Record absolute world floor contact, not height relative to the mesh minimum"
+  ]
+}

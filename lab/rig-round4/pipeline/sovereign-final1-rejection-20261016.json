@@ -1,0 +1,22 @@
+{
+ "date": "2026-10-16",
+ "candidate": "mobs/sovereign/rig-round4-collapse-final1",
+ "glb_sha256": "c3c356cdcb1797eb8cedef46acf44c6c4ed065f6a2be5ef1708ae039ad4dbdd5",
+ "status": "REJECTED. Isolated lab candidate, not production.",
+ "production_approved": false,
+ "assets_promoted": false,
+ "verdict": "Body collapses into an unreadable mass from 1.00 s. The grip does not hold: at rest the fingers hang below the shaft, at death frame 30 the hand leaves the staff. The rear ring stays rigid. Three severe edges remain.",
+ "holds": [
+  "Rear ring stays rigid and full scale, bound to Head only",
+  "Floor contact passes: death body minimum 0.84 mm, prop minimum 45 mm",
+  "The other five clips have zero severe edges"
+ ],
+ "fails": [
+  "Three edges stretch past 4x from frame 26.4 to 44, all at the trunk-to-arm and skirt-to-arm boundary",
+  "Palm-point coincidence is not a grip; the finger vertices have no bones and hang below the shaft",
+  "Non-death clips changed from the pivot move: attack 0.159 m, cast 0.256 m, hurt 0.082 m, walk 0.024 m, none visually accepted"
+ ],
+ "blocker": "The skirt, torso and right arm share vertices across Spine, Chest, RightShoulder and RightUpperArm. The same vertices cannot follow both a collapsing torso and an arm. The hand is a single bone, so the palm triangle can be pinned to the shaft point but the fingers cannot close around it.",
+ "decision": "Stop parameter work on this mesh. A credible robe collapse and a finger grip both need topology this mesh does not have: a skirt shell whose vertices are not shared with the arm, and a hand with finger bones. No paid generation is authorised. The next trial, if started, is a bounded topology edit on an isolated copy.",
+ "evidence_local": "/tmp/robe-death/evidence-sovereign-final1/"
+}

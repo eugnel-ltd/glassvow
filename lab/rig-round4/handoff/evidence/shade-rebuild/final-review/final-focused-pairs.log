@@ -1,0 +1,33 @@
+load 6.24; free GiB 102.54
+22:06:55 | INFO: Data are loaded, start creating Blender stuff
+22:06:55 | INFO: Blender create Mesh node tripo_mesh_eab813ee-555b-4c63-ad63-34d97e1a75d2
+22:06:55 | INFO: glTF import finished in 0.09s
+attack 1 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+attack 15 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+attack 16 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+attack 19 1 {'sleeveL-core': 0, 'sleeveR-core': 1, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+attack 32 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+cast 1 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+cast 16 14 {'sleeveL-core': 8, 'sleeveR-core': 6, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+cast 21 14 {'sleeveL-core': 8, 'sleeveR-core': 6, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+cast 27 2 {'sleeveL-core': 1, 'sleeveR-core': 1, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+cast 28 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+cast 32 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+death 1 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+death 24 65 {'sleeveL-core': 64, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 1}
+death 29 329 {'sleeveL-core': 192, 'sleeveR-core': 132, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 5}
+death 36 122 {'sleeveL-core': 71, 'sleeveR-core': 48, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 3}
+death 48 70 {'sleeveL-core': 19, 'sleeveR-core': 49, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 2}
+hurt 1 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+hurt 8 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+hurt 16 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+idle 1 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+idle 19 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+idle 60 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+walk 1 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+walk 16 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+walk 18 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+walk 32 0 {'sleeveL-core': 0, 'sleeveR-core': 0, 'crescent-core': 0, 'crescent-sleeveL': 0, 'crescent-sleeveR': 0, 'hem-core': 0}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

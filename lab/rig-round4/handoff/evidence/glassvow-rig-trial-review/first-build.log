@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-rebuild/build_round4.py", line 26, in <module>
+    assert os.getloadavg()[0]<30 and shutil.disk_usage(LAB).free>=100*2**30
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+Error: script failed, file: '/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-rebuild/build_round4.py', exiting.
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

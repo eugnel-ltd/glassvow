@@ -1,0 +1,19 @@
+{
+ "date": "2026-10-16",
+ "candidate": "mobs/shade/rig-round4-death5",
+ "glb_sha256": "7a974d5938e49d90563d9e50fd6a6751038a1e84cae66f812955b5a9f3d9206b",
+ "status": "REJECTED. Experiment only, not for integration.",
+ "production_approved": false,
+ "holds": [
+  "Only the death action changed; the other five clips and the weights match temporal4 by fingerprint",
+  "Death frame 29 sleeve-cloak overlap fell from 329 to 12"
+ ],
+ "fails": [
+  "Both sleeves extend horizontally and read as wings, from front and rear",
+  "Sleeve tips stretch into lines by frame 48",
+  "Exported skin differs from the offline solve by up to 87.6 mm"
+ ],
+ "cause": "With the existing weights the sleeve chain has three segments and the shoulder band is bound to the chest. A target that clears the front cloak must point nearly sideways, so the three segments sum into a wing. There is no short downward path that stays outside the bound cloak volume.",
+ "next": "The smallest rig change is to reassign only the outermost shoulder ring of each sleeve so it follows the sleeve bone instead of the chest, then author a short downward death path. Not started.",
+ "predecessor_still_unapproved": "mobs/shade/rig-round4-temporal4 sha 5797318236f76db65d74876ff3104f08df83d981fb850735338aff2771d6a2fc"
+}

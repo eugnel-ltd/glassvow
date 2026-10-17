@@ -1,0 +1,51 @@
+{
+  "old": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/unobsidianSelf/rig-round3-hem-source/unobsidianSelf.blend",
+  "new": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/unobsidianSelf/rig-round4-collapse-port1-source/unobsidianSelf.blend",
+  "clips": {
+    "idle": {
+      "max_m": 2.430305843099965e-07,
+      "p99_m": 1.2377834115800373e-07,
+      "vertices_over_1cm": 0,
+      "worst_source_frame": 15,
+      "worst_seconds": 0.4666666666666667,
+      "worst_vertex": 780,
+      "fps": 30
+    },
+    "walk": {
+      "max_m": 0.03668065118238606,
+      "p99_m": 0.013423207915747637,
+      "vertices_over_1cm": 87,
+      "worst_source_frame": 16,
+      "worst_seconds": 0.5,
+      "worst_vertex": 3472,
+      "fps": 30
+    },
+    "attack": {
+      "max_m": 0.23910658584780786,
+      "p99_m": 0.034555933605106844,
+      "vertices_over_1cm": 123,
+      "worst_source_frame": 20,
+      "worst_seconds": 0.6333333333333333,
+      "worst_vertex": 3472,
+      "fps": 30
+    },
+    "cast": {
+      "max_m": 0.3507215734739895,
+      "p99_m": 0.11146833436905845,
+      "vertices_over_1cm": 146,
+      "worst_source_frame": 16,
+      "worst_seconds": 0.5,
+      "worst_vertex": 3472,
+      "fps": 30
+    },
+    "hurt": {
+      "max_m": 2.9988008435812754e-07,
+      "p99_m": 1.2377834115800373e-07,
+      "vertices_over_1cm": 0,
+      "worst_source_frame": 8,
+      "worst_seconds": 0.23333333333333334,
+      "worst_vertex": 1612,
+      "fps": 30
+    }
+  }
+}

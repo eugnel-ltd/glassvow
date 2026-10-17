@@ -1,0 +1,15 @@
+GATE 4.53857421875 102.5012435913086
+53719 /Applications/Blender.app/Contents/PlugIns/blender-thumbnailer.appex/Contents/MacOS/blender-thumbnailer
+22:10:52 | INFO: Data are loaded, start creating Blender stuff
+22:10:52 | INFO: Blender create Mesh node ArticulatedStone
+22:10:52 | INFO: glTF import finished in 0.16s
+EXPORTED SIX {"clip": "idle", "samples": 473, "max_severe": 0, "min_world_z_m": 0.0019998489879071712}
+EXPORTED SIX {"clip": "walk", "samples": 257, "max_severe": 0, "min_world_z_m": 0.001985047711059451}
+EXPORTED SIX {"clip": "attack", "samples": 249, "max_severe": 0, "min_world_z_m": 0.00017010129522532225}
+EXPORTED SIX {"clip": "cast", "samples": 249, "max_severe": 0, "min_world_z_m": 0.0019108769483864307}
+EXPORTED SIX {"clip": "hurt", "samples": 121, "max_severe": 0, "min_world_z_m": 0.0017354126321151853}
+EXPORTED SIX {"clip": "death", "samples": 385, "max_severe": 0, "min_world_z_m": 0.001485198736190796}
+ALL SIX EXPORTED PASS
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

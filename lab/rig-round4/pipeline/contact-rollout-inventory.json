@@ -1,0 +1,2608 @@
+[
+  {
+    "candidate": "mobs/abyssalKnight/rig-contact-batch",
+    "source": "mobs/abyssalKnight/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0019844353664666414,
+        "max_min_z": 0.002000095322728157,
+        "max_stretched_edges": 18,
+        "worst_frame": 6.375,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.0020000175572931767,
+        "max_min_z": 0.0020000175572931767,
+        "max_stretched_edges": 5,
+        "worst_frame": 7.25,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001954655861482024,
+        "max_min_z": 0.0020658583380281925,
+        "max_stretched_edges": 74,
+        "worst_frame": 24.0,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.0019946370739489794,
+        "max_min_z": 0.0020218186546117067,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0020000175572931767,
+        "max_min_z": 0.0020000175572931767,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.001963326707482338,
+        "max_min_z": 0.0026291683316230774,
+        "max_stretched_edges": 1,
+        "worst_frame": 10.0,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/abyssalKnight/rig-contact-batch/abyssalKnight.glb",
+    "sha256": "aca6d2ab92b0ff3278f7e2b06fd4540679f6b852a1dbf6e62094ec2ca9db64c4",
+    "bytes": 1370588,
+    "structure": {
+      "candidate": "mobs/abyssalKnight/rig-contact-batch",
+      "bones": 23,
+      "vertices": 4724,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": [
+        {
+          "name": "abyssalKnight_prop_RightHand",
+          "bone": "PropPivot"
+        }
+      ]
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/abyssalKnight",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/alphaFang/rig-contact-batch",
+    "source": "mobs/alphaFang/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0018899317365139723,
+        "max_min_z": 0.0027502980083227158,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.0019997761119157076,
+        "max_min_z": 0.002200812567025423,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0018537165597081184,
+        "max_min_z": 0.0024438798427581787,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.002000004518777132,
+        "max_min_z": 0.002400726545602083,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.001999937929213047,
+        "max_min_z": 0.0020004212856292725,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019182664109393954,
+        "max_min_z": 0.0028141792863607407,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/alphaFang/rig-contact-batch/alphaFang.glb",
+    "sha256": "16bff22df2a834169f407b030cc616cdf81150bf8e77ae13136ba6b92f63816d",
+    "bytes": 959444,
+    "structure": {
+      "candidate": "mobs/alphaFang/rig-contact-batch",
+      "bones": 20,
+      "vertices": 4841,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/alphaFang",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/ashAcolyte/rig-contact-batch",
+    "source": "mobs/ashAcolyte/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0019953546579927206,
+        "max_min_z": 0.0019999074283987284,
+        "max_stretched_edges": 5,
+        "worst_frame": 10.625,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.001999796135351062,
+        "max_min_z": 0.001999796135351062,
+        "max_stretched_edges": 3,
+        "worst_frame": 6.375,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019644745625555515,
+        "max_min_z": 0.0020449687726795673,
+        "max_stretched_edges": 37,
+        "worst_frame": 22.375,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.001995859667658806,
+        "max_min_z": 0.0020753764547407627,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.001999796135351062,
+        "max_min_z": 0.001999796135351062,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019724275916814804,
+        "max_min_z": 0.002267790026962757,
+        "max_stretched_edges": 1,
+        "worst_frame": 8.75,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/ashAcolyte/rig-contact-batch/ashAcolyte.glb",
+    "sha256": "f29a14fc36f69e25a7394c25b1b49ec0a4b4521352d5bdd1335a0a3b7636f2e2",
+    "bytes": 1153828,
+    "structure": {
+      "candidate": "mobs/ashAcolyte/rig-contact-batch",
+      "bones": 23,
+      "vertices": 3755,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": [
+        {
+          "name": "ashAcolyte_prop_RightHand",
+          "bone": "PropPivot"
+        }
+      ]
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/ashAcolyte",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/chaosHound/rig-contact-batch",
+    "source": "mobs/chaosHound/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0019126912811771035,
+        "max_min_z": 0.003028877079486847,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.0019996061455458403,
+        "max_min_z": 0.0021342637483030558,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0018790537724271417,
+        "max_min_z": 0.0035881996154785156,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.0019998340867459774,
+        "max_min_z": 0.002244472736492753,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.001999662723392248,
+        "max_min_z": 0.002037960570305586,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.001933979569002986,
+        "max_min_z": 0.002335258759558201,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/chaosHound/rig-contact-batch/chaosHound.glb",
+    "sha256": "24163d2c30a0fc5ce423c5ad4ce68ae1cfa65bb1b75df0fdc70c890c83175b53",
+    "bytes": 983060,
+    "structure": {
+      "candidate": "mobs/chaosHound/rig-contact-batch",
+      "bones": 20,
+      "vertices": 3774,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/chaosHound",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/deepmaw/rig-contact-batch",
+    "source": "mobs/deepmaw/rig",
+    "ground_clips": [
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.08977058529853821,
+        "max_min_z": 0.13549451529979706,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.10288285464048386,
+        "max_min_z": 0.14326374232769012,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001968773314729333,
+        "max_min_z": 0.0020399093627929688,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.09196887910366058,
+        "max_min_z": 0.13442465662956238,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.09086701273918152,
+        "max_min_z": 0.1346227377653122,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.09087084233760834,
+        "max_min_z": 0.1346202939748764,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/deepmaw/rig-contact-batch/deepmaw.glb",
+    "sha256": "22f34732f7ba13d9a7e23d2a9627ddf24878abf4cc51638088e489a082f00a44",
+    "bytes": 819128,
+    "structure": {
+      "candidate": "mobs/deepmaw/rig-contact-batch",
+      "bones": 10,
+      "vertices": 3832,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/deepmaw",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/drownedOne/rig-contact-batch",
+    "source": "mobs/drownedOne/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0019921984057873487,
+        "max_min_z": 0.002065399195998907,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.002000081352889538,
+        "max_min_z": 0.002000081352889538,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001914246822707355,
+        "max_min_z": 0.002093986142426729,
+        "max_stretched_edges": 16,
+        "worst_frame": 22.5,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.001995605416595936,
+        "max_min_z": 0.0020017744973301888,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.002000081352889538,
+        "max_min_z": 0.002000081352889538,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019701181445270777,
+        "max_min_z": 0.0030065409373492002,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/drownedOne/rig-contact-batch/drownedOne.glb",
+    "sha256": "a22cb05cb53f3a6798b8c358c1303491987fccd6abd4dbffd726302c87bbf5e8",
+    "bytes": 874172,
+    "structure": {
+      "candidate": "mobs/drownedOne/rig-contact-batch",
+      "bones": 22,
+      "vertices": 3888,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/drownedOne",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/duskfang/rig-contact-batch",
+    "source": "mobs/duskfang/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0019191466271877289,
+        "max_min_z": 0.0026599233970046043,
+        "max_stretched_edges": 2,
+        "worst_frame": 10.875,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.001999449683353305,
+        "max_min_z": 0.0021711101289838552,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0018835619557648897,
+        "max_min_z": 0.002249317243695259,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.001999547705054283,
+        "max_min_z": 0.002189311198890209,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0019999416545033455,
+        "max_min_z": 0.0020030613522976637,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019335224060341716,
+        "max_min_z": 0.00272816582582891,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/duskfang/rig-contact-batch/duskfang.glb",
+    "sha256": "a0df54b88e9445b719a2961210c13cf43c7e23625564dca1c062eb55c3a5e1e5",
+    "bytes": 897648,
+    "structure": {
+      "candidate": "mobs/duskfang/rig-contact-batch",
+      "bones": 20,
+      "vertices": 3886,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/duskfang",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/eternalKeeper/rig-contact-batch",
+    "source": "mobs/eternalKeeper/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0019997383933514357,
+        "max_min_z": 0.00199995469301939,
+        "max_stretched_edges": 18,
+        "worst_frame": 11.125,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.0019988231360912323,
+        "max_min_z": 0.002169528044760227,
+        "max_stretched_edges": 21,
+        "worst_frame": 7.75,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019365178886801004,
+        "max_min_z": 0.0020242477767169476,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.0019849231466650963,
+        "max_min_z": 0.002630563685670495,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0019997062627226114,
+        "max_min_z": 0.0020000438671559095,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019994471222162247,
+        "max_min_z": 0.00202416954562068,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/eternalKeeper/rig-contact-batch/eternalKeeper.glb",
+    "sha256": "34370e601d234b8449a44aa978b19b8c8b3bd1c1696ca7e4182a9073eb7436b5",
+    "bytes": 887052,
+    "structure": {
+      "candidate": "mobs/eternalKeeper/rig-contact-batch",
+      "bones": 22,
+      "vertices": 4804,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/eternalKeeper",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/gloomslime/rig-contact-batch",
+    "source": "mobs/gloomslime/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0018756482750177383,
+        "max_min_z": 0.0024767015129327774,
+        "max_stretched_edges": 209,
+        "worst_frame": 7.375,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.001999996602535248,
+        "max_min_z": 0.001999996602535248,
+        "max_stretched_edges": 41,
+        "worst_frame": 7.875,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001995418220758438,
+        "max_min_z": 0.002089928137138486,
+        "max_stretched_edges": 75,
+        "worst_frame": 23.25,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.001999996602535248,
+        "max_min_z": 0.0020000040531158447,
+        "max_stretched_edges": 6,
+        "worst_frame": 3.875,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.001999945379793644,
+        "max_min_z": 0.002000845968723297,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.001997727667912841,
+        "max_min_z": 0.0030153754632920027,
+        "max_stretched_edges": 2,
+        "worst_frame": 1.0,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/gloomslime/rig-contact-batch/gloomslime.glb",
+    "sha256": "527dcb81fdfc60138b4de4422277a587ad2744213a6cd6795dda4c5e1606a3b1",
+    "bytes": 934764,
+    "structure": {
+      "candidate": "mobs/gloomslime/rig-contact-batch",
+      "bones": 16,
+      "vertices": 3590,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/gloomslime",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/gravewarden/rig-contact-batch",
+    "source": "mobs/gravewarden/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.001981319859623909,
+        "max_min_z": 0.003106200136244297,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.002000332809984684,
+        "max_min_z": 0.002000332809984684,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001895710825920105,
+        "max_min_z": 0.0020254491828382015,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.001993045210838318,
+        "max_min_z": 0.0020679121371358633,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.002000332809984684,
+        "max_min_z": 0.002000332809984684,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.001955382525920868,
+        "max_min_z": 0.004975640214979649,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/gravewarden/rig-contact-batch/gravewarden.glb",
+    "sha256": "eb652071cdf02ddb622fce945f86f9975e112a1cfb6b8662c7c1619284182a70",
+    "bytes": 992600,
+    "structure": {
+      "candidate": "mobs/gravewarden/rig-contact-batch",
+      "bones": 22,
+      "vertices": 5193,
+      "unweighted": 0,
+      "max_influences": 1,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/gravewarden",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/heraldOfEnd/rig-contact-batch",
+    "source": "mobs/heraldOfEnd/rig",
+    "ground_clips": [
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.16007639467716217,
+        "max_min_z": 0.2188173532485962,
+        "max_stretched_edges": 13,
+        "worst_frame": 11.5,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.16007639467716217,
+        "max_min_z": 0.2188173532485962,
+        "max_stretched_edges": 7,
+        "worst_frame": 10.875,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001985900104045868,
+        "max_min_z": 0.00433349609375,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.16008231043815613,
+        "max_min_z": 0.2188207358121872,
+        "max_stretched_edges": 4,
+        "worst_frame": 6.125,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.1600712090730667,
+        "max_min_z": 0.21882054209709167,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.14993621408939362,
+        "max_min_z": 0.21511344611644745,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/heraldOfEnd/rig-contact-batch/heraldOfEnd.glb",
+    "sha256": "52649df7b0ebd9fc3fe91a1007d506c340c6acc1f4bc01af44e42520551d3168",
+    "bytes": 789428,
+    "structure": {
+      "candidate": "mobs/heraldOfEnd/rig-contact-batch",
+      "bones": 7,
+      "vertices": 4860,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/heraldOfEnd",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/leviathan/rig-contact-batch",
+    "source": "mobs/leviathan/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.001784391701221466,
+        "max_min_z": 0.004223718773573637,
+        "max_stretched_edges": 1,
+        "worst_frame": 10.375,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.001995459198951721,
+        "max_min_z": 0.003455325961112976,
+        "max_stretched_edges": 1,
+        "worst_frame": 7.375,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0017517805099487305,
+        "max_min_z": 0.0042874813079833984,
+        "max_stretched_edges": 1,
+        "worst_frame": 10.125,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.001987933646887541,
+        "max_min_z": 0.005154922604560852,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.001998697640374303,
+        "max_min_z": 0.001999413128942251,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.001959793269634247,
+        "max_min_z": 0.005495617166161537,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/leviathan/rig-contact-batch/leviathan.glb",
+    "sha256": "53c11595eb061a75f9a4533a86cf87caa8585c0d7bd926cbf307e3ee86b8bf53",
+    "bytes": 1016836,
+    "structure": {
+      "candidate": "mobs/leviathan/rig-contact-batch",
+      "bones": 13,
+      "vertices": 4636,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/leviathan",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/obsidianGolem/rig-contact-batch",
+    "source": "mobs/obsidianGolem/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.001994224963709712,
+        "max_min_z": 0.002000058302655816,
+        "max_stretched_edges": 29,
+        "worst_frame": 6.75,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.0020000473596155643,
+        "max_min_z": 0.0020000473596155643,
+        "max_stretched_edges": 5,
+        "worst_frame": 7.375,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019054594449698925,
+        "max_min_z": 0.003734298050403595,
+        "max_stretched_edges": 29,
+        "worst_frame": 23.25,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.0020000175572931767,
+        "max_min_z": 0.0020000473596155643,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0020000473596155643,
+        "max_min_z": 0.0020000473596155643,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019232642371207476,
+        "max_min_z": 0.0027315965853631496,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/obsidianGolem/rig-contact-batch/obsidianGolem.glb",
+    "sha256": "974d4a652a97de54ab0a48745572445296f689b6f4f71d77723acf29a09967f5",
+    "bytes": 898028,
+    "structure": {
+      "candidate": "mobs/obsidianGolem/rig-contact-batch",
+      "bones": 21,
+      "vertices": 3742,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/obsidianGolem",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/rootheart/rig-contact-batch",
+    "source": "mobs/rootheart/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0014511384069919586,
+        "max_min_z": 0.0031641609966754913,
+        "max_stretched_edges": 6,
+        "worst_frame": 5.5,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.0020000040531158447,
+        "max_min_z": 0.0020000040531158447,
+        "max_stretched_edges": 7,
+        "worst_frame": 7.25,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001994740217924118,
+        "max_min_z": 0.0020589791238307953,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.001999974250793457,
+        "max_min_z": 0.0020000040531158447,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0020000040531158447,
+        "max_min_z": 0.0020000040531158447,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019850954413414,
+        "max_min_z": 0.0025343596935272217,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/rootheart/rig-contact-batch/rootheart.glb",
+    "sha256": "be901391c04adaf7f4357e39c03e76c1e594aa9d168f1406eb4313706f6872bb",
+    "bytes": 926472,
+    "structure": {
+      "candidate": "mobs/rootheart/rig-contact-batch",
+      "bones": 10,
+      "vertices": 4916,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/rootheart",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/shade/rig-contact-batch",
+    "source": "mobs/shade/rig",
+    "ground_clips": [
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.13619443774223328,
+        "max_min_z": 0.17303870618343353,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.1361943781375885,
+        "max_min_z": 0.17303870618343353,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019766315817832947,
+        "max_min_z": 0.0021075159311294556,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.1361968070268631,
+        "max_min_z": 0.1730421483516693,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.1361924111843109,
+        "max_min_z": 0.1730419397354126,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.14638890326023102,
+        "max_min_z": 0.17797017097473145,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/shade/rig-contact-batch/shade.glb",
+    "sha256": "5f23be2bd8b3982eb0c3a8fba2c7458cd577fb41526c50c84ef2f2991e2fb667",
+    "bytes": 895784,
+    "structure": {
+      "candidate": "mobs/shade/rig-contact-batch",
+      "bones": 8,
+      "vertices": 3737,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/shade",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/siren/rig-contact-batch",
+    "source": "mobs/siren/rig",
+    "ground_clips": [
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.11439624428749084,
+        "max_min_z": 0.16530665755271912,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.11439624428749084,
+        "max_min_z": 0.16530665755271912,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001969601958990097,
+        "max_min_z": 0.004103481769561768,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.11439016461372375,
+        "max_min_z": 0.16544373333454132,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.11422113329172134,
+        "max_min_z": 0.165196031332016,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.11336170136928558,
+        "max_min_z": 0.1833016276359558,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/siren/rig-contact-batch/siren.glb",
+    "sha256": "061cf96dcdfb2e935f567258c456247d98e3b2f129538d1a48dd949b30d113f4",
+    "bytes": 887180,
+    "structure": {
+      "candidate": "mobs/siren/rig-contact-batch",
+      "bones": 8,
+      "vertices": 4908,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/siren",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/sovereign/rig-contact-batch",
+    "source": "mobs/sovereign/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0019997097551822662,
+        "max_min_z": 0.002000001259148121,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.001999371685087681,
+        "max_min_z": 0.002014574594795704,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001968825701624155,
+        "max_min_z": 0.002004867186769843,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.0019917921163141727,
+        "max_min_z": 0.0020373528823256493,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0019997195340692997,
+        "max_min_z": 0.0020134111400693655,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.001999508822336793,
+        "max_min_z": 0.00206352723762393,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/sovereign/rig-contact-batch/sovereign.glb",
+    "sha256": "03f0bb67a7b138f60e05d123b3036a35ce8cea82a1f82081bfac0b54245c059c",
+    "bytes": 1024528,
+    "structure": {
+      "candidate": "mobs/sovereign/rig-contact-batch",
+      "bones": 23,
+      "vertices": 4620,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": [
+        {
+          "name": "sovereign_prop_RightHand",
+          "bone": "PropPivot"
+        }
+      ]
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/sovereign",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/sporeling/rig-contact-batch",
+    "source": "mobs/sporeling/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0019534812308847904,
+        "max_min_z": 0.002060028724372387,
+        "max_stretched_edges": 28,
+        "worst_frame": 10.75,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.0020000343210995197,
+        "max_min_z": 0.0020000343210995197,
+        "max_stretched_edges": 21,
+        "worst_frame": 7.0,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019846768118441105,
+        "max_min_z": 0.0021920043509453535,
+        "max_stretched_edges": 28,
+        "worst_frame": 12.75,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.002000004518777132,
+        "max_min_z": 0.0020000343210995197,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0020000343210995197,
+        "max_min_z": 0.0020000343210995197,
+        "max_stretched_edges": 4,
+        "worst_frame": 30.5,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.001981227658689022,
+        "max_min_z": 0.002090165391564369,
+        "max_stretched_edges": 5,
+        "worst_frame": 10.75,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/sporeling/rig-contact-batch/sporeling.glb",
+    "sha256": "bd1c2f9d3d7e9f9ed418f7ffeacd4efff149e1cc67c79827d9b12c5428a36585",
+    "bytes": 896456,
+    "structure": {
+      "candidate": "mobs/sporeling/rig-contact-batch",
+      "bones": 9,
+      "vertices": 3787,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/sporeling",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/starCultist/rig-contact-batch",
+    "source": "mobs/starCultist/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0019999973010271788,
+        "max_min_z": 0.0020002564415335655,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.0019994715694338083,
+        "max_min_z": 0.0021300879307091236,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019560568034648895,
+        "max_min_z": 0.0021387115120887756,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.0019930778071284294,
+        "max_min_z": 0.002430239226669073,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0019999591168016195,
+        "max_min_z": 0.002000219887122512,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019998326897621155,
+        "max_min_z": 0.0020476635545492172,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/starCultist/rig-contact-batch/starCultist.glb",
+    "sha256": "5fde5fef87113f74ef0399a5ea806df0211f122967a0f6c49f46f94e693d7f5a",
+    "bytes": 1855232,
+    "structure": {
+      "candidate": "mobs/starCultist/rig-contact-batch",
+      "bones": 23,
+      "vertices": 3627,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": [
+        {
+          "name": "starCultist_prop_LeftHand",
+          "bone": "LeftHand"
+        },
+        {
+          "name": "starCultist_prop_RightHand",
+          "bone": "PropPivot"
+        }
+      ]
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/starCultist",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/thornling/rig-contact-batch",
+    "source": "mobs/thornling/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0019990038126707077,
+        "max_min_z": 0.002000029431656003,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.002000002423301339,
+        "max_min_z": 0.002000002423301339,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001986261224374175,
+        "max_min_z": 0.0020616778638213873,
+        "max_stretched_edges": 34,
+        "worst_frame": 23.25,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.002000002423301339,
+        "max_min_z": 0.002000017324462533,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.002000002423301339,
+        "max_min_z": 0.002000002423301339,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019825617782771587,
+        "max_min_z": 0.0026876383926719427,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/thornling/rig-contact-batch/thornling.glb",
+    "sha256": "a0bc34b316e44ae1e3d7df48642e52c65925736ffc1582918012ff1f77c925fa",
+    "bytes": 833740,
+    "structure": {
+      "candidate": "mobs/thornling/rig-contact-batch",
+      "bones": 11,
+      "vertices": 3783,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/thornling",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/uncarvedSelf/rig-contact-batch",
+    "source": "mobs/uncarvedSelf/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0020000245422124863,
+        "max_min_z": 0.002000089269131422,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.0019997823983430862,
+        "max_min_z": 0.002062397776171565,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019423887133598328,
+        "max_min_z": 0.0023788660764694214,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.0019854772835969925,
+        "max_min_z": 0.0020828014239668846,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0019999442156404257,
+        "max_min_z": 0.002001754008233547,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019996289629489183,
+        "max_min_z": 0.002196141518652439,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/uncarvedSelf/rig-contact-batch/uncarvedSelf.glb",
+    "sha256": "b54518f3776c486e332311db0d730534d9c03d331e5eab968f102a6366a2b8cb",
+    "bytes": 832432,
+    "structure": {
+      "candidate": "mobs/uncarvedSelf/rig-contact-batch",
+      "bones": 3,
+      "vertices": 3517,
+      "unweighted": 0,
+      "max_influences": 3,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/uncarvedSelf",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/unlitSelf/rig-contact-batch",
+    "source": "mobs/unlitSelf/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.00199978519231081,
+        "max_min_z": 0.002000037580728531,
+        "max_stretched_edges": 64,
+        "worst_frame": 11.125,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.0019989050924777985,
+        "max_min_z": 0.002030088799074292,
+        "max_stretched_edges": 67,
+        "worst_frame": 7.625,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001941293478012085,
+        "max_min_z": 0.00200045108795166,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.0019851401448249817,
+        "max_min_z": 0.0023834165185689926,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0019997430499643087,
+        "max_min_z": 0.0020000601653009653,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.001999413827434182,
+        "max_min_z": 0.0020236389245837927,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/unlitSelf/rig-contact-batch/unlitSelf.glb",
+    "sha256": "d1a06fa388611aa01f52433d9441ec6996cd1d4fbd1d2170a196869ba8814156",
+    "bytes": 1430224,
+    "structure": {
+      "candidate": "mobs/unlitSelf/rig-contact-batch",
+      "bones": 23,
+      "vertices": 3769,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": [
+        {
+          "name": "unlitSelf_prop_RightHand",
+          "bone": "PropPivot"
+        }
+      ]
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/unlitSelf",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/unobsidianSelf/rig-contact-batch",
+    "source": "mobs/unobsidianSelf/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.001999868545681238,
+        "max_min_z": 0.0020001945085823536,
+        "max_stretched_edges": 42,
+        "worst_frame": 11.25,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.001999023836106062,
+        "max_min_z": 0.002102995291352272,
+        "max_stretched_edges": 42,
+        "worst_frame": 7.625,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019444343633949757,
+        "max_min_z": 0.0020002592355012894,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.001985512673854828,
+        "max_min_z": 0.002283196896314621,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0019998305942863226,
+        "max_min_z": 0.00200020638294518,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019993451423943043,
+        "max_min_z": 0.002070064889267087,
+        "max_stretched_edges": 1,
+        "worst_frame": 1.0,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/unobsidianSelf/rig-contact-batch/unobsidianSelf.glb",
+    "sha256": "13c6dbd1d2ca5c7e4100a7cea62bd822d16dc9761dcf7a5e9abc751739dc5403",
+    "bytes": 1383780,
+    "structure": {
+      "candidate": "mobs/unobsidianSelf/rig-contact-batch",
+      "bones": 23,
+      "vertices": 3618,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": [
+        {
+          "name": "unobsidianSelf_prop_RightHand",
+          "bone": "PropPivot"
+        }
+      ]
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/unobsidianSelf",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/unopenedSelf/rig-contact-batch",
+    "source": "mobs/unopenedSelf/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0019999132491648197,
+        "max_min_z": 0.0020000427030026913,
+        "max_stretched_edges": 27,
+        "worst_frame": 10.25,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.00199899566359818,
+        "max_min_z": 0.0021110724192112684,
+        "max_stretched_edges": 27,
+        "worst_frame": 5.875,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019460620824247599,
+        "max_min_z": 0.0022355918772518635,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.0019849743694067,
+        "max_min_z": 0.002310025505721569,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0019998711068183184,
+        "max_min_z": 0.002000669715926051,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019997581839561462,
+        "max_min_z": 0.002024973277002573,
+        "max_stretched_edges": 1,
+        "worst_frame": 1.0,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/unopenedSelf/rig-contact-batch/unopenedSelf.glb",
+    "sha256": "a87ecfa6722b709f2e32df11e41c1800ad460585dc0100712c17cac8255cf876",
+    "bytes": 1530628,
+    "structure": {
+      "candidate": "mobs/unopenedSelf/rig-contact-batch",
+      "bones": 23,
+      "vertices": 3619,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": [
+        {
+          "name": "unopenedSelf_prop_RightHand",
+          "bone": "PropPivot"
+        }
+      ]
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/unopenedSelf",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/unsunkSelf/rig-contact-batch",
+    "source": "mobs/unsunkSelf/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.002000021282583475,
+        "max_min_z": 0.0020000264048576355,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.0019997688941657543,
+        "max_min_z": 0.0020390115678310394,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019352436065673828,
+        "max_min_z": 0.002021756023168564,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.0019852779805660248,
+        "max_min_z": 0.002143650548532605,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0019999416545033455,
+        "max_min_z": 0.002006756141781807,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019996813498437405,
+        "max_min_z": 0.002134134992957115,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/unsunkSelf/rig-contact-batch/unsunkSelf.glb",
+    "sha256": "4582c4e2f9f6d21ecb77c8e1939214c1ed144b948c1b7bfd7533c165187b6694",
+    "bytes": 840248,
+    "structure": {
+      "candidate": "mobs/unsunkSelf/rig-contact-batch",
+      "bones": 3,
+      "vertices": 3681,
+      "unweighted": 0,
+      "max_influences": 3,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/unsunkSelf",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/unwalkedSelf/rig-contact-batch",
+    "source": "mobs/unwalkedSelf/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.002000013366341591,
+        "max_min_z": 0.002000187523663044,
+        "max_stretched_edges": 17,
+        "worst_frame": 11.25,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.0019992287270724773,
+        "max_min_z": 0.002000265521928668,
+        "max_stretched_edges": 17,
+        "worst_frame": 7.25,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019460022449493408,
+        "max_min_z": 0.0020611127838492393,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.001985394163057208,
+        "max_min_z": 0.0020002417732030153,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0019997255876660347,
+        "max_min_z": 0.0020158609841018915,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019994808826595545,
+        "max_min_z": 0.0020786235108971596,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/unwalkedSelf/rig-contact-batch/unwalkedSelf.glb",
+    "sha256": "2e27863031d5e76d0e1b56960ed0a239fe042fe2774bbf16fd759461e6c9c29e",
+    "bytes": 1411712,
+    "structure": {
+      "candidate": "mobs/unwalkedSelf/rig-contact-batch",
+      "bones": 23,
+      "vertices": 3620,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": [
+        {
+          "name": "unwalkedSelf_prop_RightHand",
+          "bone": "PropPivot"
+        }
+      ]
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/unwalkedSelf",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/unwoodedSelf/rig-contact-batch",
+    "source": "mobs/unwoodedSelf/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0020000594668090343,
+        "max_min_z": 0.0020001218654215336,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.001999789383262396,
+        "max_min_z": 0.0020001335069537163,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019401386380195618,
+        "max_min_z": 0.0026438236236572266,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.001985423266887665,
+        "max_min_z": 0.002026135101914406,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0019999269861727953,
+        "max_min_z": 0.0020063859410583973,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.0019997060298919678,
+        "max_min_z": 0.0021399380639195442,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/unwoodedSelf/rig-contact-batch/unwoodedSelf.glb",
+    "sha256": "77d6588ecba8871655a27182a77b69dca9c7eee29cdf471e9327b6aa75b37932",
+    "bytes": 867972,
+    "structure": {
+      "candidate": "mobs/unwoodedSelf/rig-contact-batch",
+      "bones": 3,
+      "vertices": 3501,
+      "unweighted": 0,
+      "max_influences": 3,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/unwoodedSelf",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/voidColossus/rig-contact-batch",
+    "source": "mobs/voidColossus/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.001999971689656377,
+        "max_min_z": 0.002000162610784173,
+        "max_stretched_edges": 70,
+        "worst_frame": 11.125,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.001999346539378166,
+        "max_min_z": 0.002083323197439313,
+        "max_stretched_edges": 73,
+        "worst_frame": 8.0,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001966293901205063,
+        "max_min_z": 0.0020479208324104548,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.0019921669736504555,
+        "max_min_z": 0.0020454879850149155,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.001999695785343647,
+        "max_min_z": 0.0020029705483466387,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.001999808242544532,
+        "max_min_z": 0.0022298849653452635,
+        "max_stretched_edges": 2,
+        "worst_frame": 1.0,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/voidColossus/rig-contact-batch/voidColossus.glb",
+    "sha256": "5baab949969d08eefbd64e7e656596cc6c34bbdf9200feda7ebacee8f511a069",
+    "bytes": 772480,
+    "structure": {
+      "candidate": "mobs/voidColossus/rig-contact-batch",
+      "bones": 22,
+      "vertices": 4657,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/voidColossus",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/voidWisp/rig-contact-batch",
+    "source": "mobs/voidWisp/rig",
+    "ground_clips": [
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.10250969976186752,
+        "max_min_z": 0.12727037072181702,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.10250969976186752,
+        "max_min_z": 0.12727037072181702,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001973013859242201,
+        "max_min_z": 0.0026973485946655273,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.10255293548107147,
+        "max_min_z": 0.1272747665643692,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.10251720994710922,
+        "max_min_z": 0.12727005779743195,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.10762923955917358,
+        "max_min_z": 0.13747306168079376,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/voidWisp/rig-contact-batch/voidWisp.glb",
+    "sha256": "f858aa2bceb01ab8eec619c8b1b97832ec5e4b81fffc47e729c17404d41ddc7b",
+    "bytes": 815800,
+    "structure": {
+      "candidate": "mobs/voidWisp/rig-contact-batch",
+      "bones": 7,
+      "vertices": 3826,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/voidWisp",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/voltEel/rig-contact-batch",
+    "source": "mobs/voltEel/rig",
+    "ground_clips": [
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.03791697323322296,
+        "max_min_z": 0.06406852602958679,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.04200832173228264,
+        "max_min_z": 0.07605955749750137,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019907145760953426,
+        "max_min_z": 0.0022316277027130127,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.03796917945146561,
+        "max_min_z": 0.06404608488082886,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.0379662923514843,
+        "max_min_z": 0.06404595077037811,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.03796763718128204,
+        "max_min_z": 0.0640435591340065,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/voltEel/rig-contact-batch/voltEel.glb",
+    "sha256": "a3fa6c2641e4ac4d3c061a7d69cd067d40e2376f9780dda1d0c6f79f1636ad5a",
+    "bytes": 824700,
+    "structure": {
+      "candidate": "mobs/voltEel/rig-contact-batch",
+      "bones": 7,
+      "vertices": 3764,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/voltEel",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/watcherEye/rig-contact-batch",
+    "source": "mobs/watcherEye/rig",
+    "ground_clips": [
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.11519049853086472,
+        "max_min_z": 0.15044260025024414,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.11519049853086472,
+        "max_min_z": 0.15044260025024414,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.0019669262692332268,
+        "max_min_z": 0.0028812289237976074,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.11519249528646469,
+        "max_min_z": 0.1504461020231247,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.11518873274326324,
+        "max_min_z": 0.1504458636045456,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.12446149438619614,
+        "max_min_z": 0.16174662113189697,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/watcherEye/rig-contact-batch/watcherEye.glb",
+    "sha256": "6c44c1019bbb4f72534d0ea0703cebb1fb77a5f849f3b5101e71f89499a55e72",
+    "bytes": 927876,
+    "structure": {
+      "candidate": "mobs/watcherEye/rig-contact-batch",
+      "bones": 8,
+      "vertices": 3903,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": []
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/watcherEye",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  },
+  {
+    "candidate": "mobs/waylayer/rig-contact-batch",
+    "source": "mobs/waylayer/rig",
+    "ground_clips": [
+      "idle",
+      "walk",
+      "attack",
+      "cast",
+      "hurt",
+      "death"
+    ],
+    "body_contact": "passed",
+    "deformation": [
+      {
+        "clip": "attack",
+        "min_z": 0.0019941264763474464,
+        "max_min_z": 0.0019999921787530184,
+        "max_stretched_edges": 2,
+        "worst_frame": 10.875,
+        "samples": 201
+      },
+      {
+        "clip": "cast",
+        "min_z": 0.001999975647777319,
+        "max_min_z": 0.001999975647777319,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      },
+      {
+        "clip": "death",
+        "min_z": 0.001939510926604271,
+        "max_min_z": 0.0021368081215769053,
+        "max_stretched_edges": 12,
+        "worst_frame": 19.0,
+        "samples": 249
+      },
+      {
+        "clip": "hurt",
+        "min_z": 0.001996659906581044,
+        "max_min_z": 0.002000003820285201,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 97
+      },
+      {
+        "clip": "idle",
+        "min_z": 0.001999975647777319,
+        "max_min_z": 0.001999975647777319,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 377
+      },
+      {
+        "clip": "walk",
+        "min_z": 0.001978739397600293,
+        "max_min_z": 0.0025545270182192326,
+        "max_stretched_edges": 0,
+        "worst_frame": 1,
+        "samples": 201
+      }
+    ],
+    "limitations": [
+      "Body minimum height only; no foot locking, prop clearance or visual approval"
+    ],
+    "glb": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/waylayer/rig-contact-batch/waylayer.glb",
+    "sha256": "5bad71120bb8f4da7422396eb60d092078fa66605cd29fffe50a54358181e1a7",
+    "bytes": 1201948,
+    "structure": {
+      "candidate": "mobs/waylayer/rig-contact-batch",
+      "bones": 23,
+      "vertices": 3814,
+      "unweighted": 0,
+      "max_influences": 4,
+      "props": [
+        {
+          "name": "waylayer_prop_RightHand",
+          "bone": "PropPivot"
+        }
+      ]
+    },
+    "godot_import_movement_idle_return": "passed",
+    "preview": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/godot-preview-contact-rollout/waylayer",
+    "captured_frames": 223,
+    "approval": "Unapproved research candidate; visual review pending"
+  }
+]

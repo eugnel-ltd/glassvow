@@ -1,0 +1,64 @@
+{
+ "candidate": "/tmp/shade-rebuild/temporal4/shade.glb",
+ "clips": [
+  {
+   "name": "attack",
+   "first_key_seconds": 0.03333333333333333,
+   "last_key_seconds": 1.0666666666666667,
+   "key_span_seconds": 1.0333333333333332,
+   "godot_preview_length_seconds": 1.0666666666666667
+  },
+  {
+   "name": "cast",
+   "first_key_seconds": 0.03333333333333333,
+   "last_key_seconds": 1.0666666666666667,
+   "key_span_seconds": 1.0333333333333332,
+   "godot_preview_length_seconds": 1.0666666666666667
+  },
+  {
+   "name": "death",
+   "first_key_seconds": 0.03333333333333333,
+   "last_key_seconds": 1.6,
+   "key_span_seconds": 1.5666666666666667,
+   "godot_preview_length_seconds": 1.6
+  },
+  {
+   "name": "hurt",
+   "first_key_seconds": 0.03333333333333333,
+   "last_key_seconds": 0.5333333333333333,
+   "key_span_seconds": 0.5,
+   "godot_preview_length_seconds": 0.5333333333333333
+  },
+  {
+   "name": "idle",
+   "first_key_seconds": 0.03333333333333333,
+   "last_key_seconds": 2,
+   "key_span_seconds": 1.9666666666666666,
+   "godot_preview_length_seconds": 2
+  },
+  {
+   "name": "walk",
+   "first_key_seconds": 0.03333333333333333,
+   "last_key_seconds": 1.0666666666666667,
+   "key_span_seconds": 1.0333333333333332,
+   "godot_preview_length_seconds": 1.0666666666666667
+  }
+ ],
+ "runtime_search": {
+  "paths": [
+   "/Users/jamesto/Coding/glassvow/presentation",
+   "/Users/jamesto/Coding/glassvow/application"
+  ],
+  "recursive_terms": [
+   "AnimationTree",
+   "AnimationPlayer",
+   "playback",
+   "xfade",
+   "blend_time",
+   "crossfade"
+  ],
+  "result": "No AnimationPlayer, AnimationTree or blend_time hit. Crossfade hits were portrait, audio and combat UI scripts only.",
+  "scope_limit": "This only shows no 3D rig blend configuration in these two runtime directories; it does not prove none exists elsewhere."
+ },
+ "integration_claim": "Isolated import/playback verified; actual gameplay asset selection, clip calls, transitions and blending remain unverified."
+}

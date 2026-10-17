@@ -1,0 +1,5800 @@
+{
+  "model": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/gravewarden/rig-round4-recessed8-release-ground/gravewarden.glb",
+  "method": "Blender GLB reimport at 30 FPS, actual evaluated world-space vertices of every mesh",
+  "meshes": {
+    "tripo_node_7a1dfbbf-85b3-49fb-ab76-14834daa6211": 46152
+  },
+  "death_rows": [
+    {
+      "import_frame": 1.0,
+      "elapsed_seconds": 0.0,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999626092612743,
+        "Chest": 0.2915107011795044,
+        "Finial": 2.0870001316070557,
+        "LeftLowerArm": 0.12512889504432678,
+        "RightLowerArm": 0.16446766257286072,
+        "LeftFoot": 0.0037202094681560993,
+        "RightFoot": 0.0019999626092612743,
+        "front_ornament_region": 1.152451753616333
+      }
+    },
+    {
+      "import_frame": 1.125,
+      "elapsed_seconds": 0.004166666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001998909981921315,
+        "Chest": 0.2914809286594391,
+        "Finial": 2.086595058441162,
+        "LeftLowerArm": 0.12494689971208572,
+        "RightLowerArm": 0.1643911600112915,
+        "LeftFoot": 0.003561029676347971,
+        "RightFoot": 0.001998909981921315,
+        "front_ornament_region": 1.1525051593780518
+      }
+    },
+    {
+      "import_frame": 1.25,
+      "elapsed_seconds": 0.008333333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000068470835686,
+        "Chest": 0.29145070910453796,
+        "Finial": 2.086188793182373,
+        "LeftLowerArm": 0.12476450949907303,
+        "RightLowerArm": 0.16431431472301483,
+        "LeftFoot": 0.00340397865511477,
+        "RightFoot": 0.0020000068470835686,
+        "front_ornament_region": 1.1525580883026123
+      }
+    },
+    {
+      "import_frame": 1.375,
+      "elapsed_seconds": 0.0125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019989321008324623,
+        "Chest": 0.29141610860824585,
+        "Finial": 2.085777759552002,
+        "LeftLowerArm": 0.12457770109176636,
+        "RightLowerArm": 0.16423307359218597,
+        "LeftFoot": 0.0032447578851133585,
+        "RightFoot": 0.0019989321008324623,
+        "front_ornament_region": 1.1526061296463013
+      }
+    },
+    {
+      "import_frame": 1.5,
+      "elapsed_seconds": 0.016666666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000289659947157,
+        "Chest": 0.2913808226585388,
+        "Finial": 2.0853652954101562,
+        "LeftLowerArm": 0.12439051270484924,
+        "RightLowerArm": 0.16415101289749146,
+        "LeftFoot": 0.0030876975506544113,
+        "RightFoot": 0.0020000289659947157,
+        "front_ornament_region": 1.1526532173156738
+      }
+    },
+    {
+      "import_frame": 1.625,
+      "elapsed_seconds": 0.020833333333333332,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019989111460745335,
+        "Chest": 0.291341096162796,
+        "Finial": 2.0849483013153076,
+        "LeftLowerArm": 0.12419862300157547,
+        "RightLowerArm": 0.1640647053718567,
+        "LeftFoot": 0.0029284076299518347,
+        "RightFoot": 0.0019989111460745335,
+        "front_ornament_region": 1.152695655822754
+      }
+    },
+    {
+      "import_frame": 1.75,
+      "elapsed_seconds": 0.025,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00199997634626925,
+        "Chest": 0.29130086302757263,
+        "Finial": 2.0845296382904053,
+        "LeftLowerArm": 0.12400669604539871,
+        "RightLowerArm": 0.16397805511951447,
+        "LeftFoot": 0.0027713587041944265,
+        "RightFoot": 0.00199997634626925,
+        "front_ornament_region": 1.1527371406555176
+      }
+    },
+    {
+      "import_frame": 1.875,
+      "elapsed_seconds": 0.029166666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019989609718322754,
+        "Chest": 0.2912561595439911,
+        "Finial": 2.0841064453125,
+        "LeftLowerArm": 0.12380989640951157,
+        "RightLowerArm": 0.16388684511184692,
+        "LeftFoot": 0.0026121437549591064,
+        "RightFoot": 0.0019989609718322754,
+        "front_ornament_region": 1.1527739763259888
+      }
+    },
+    {
+      "import_frame": 2.0,
+      "elapsed_seconds": 0.03333333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000095322728157,
+        "Chest": 0.2912110686302185,
+        "Finial": 2.083682060241699,
+        "LeftLowerArm": 0.12361300736665726,
+        "RightLowerArm": 0.16379526257514954,
+        "LeftFoot": 0.0024550813250243664,
+        "RightFoot": 0.002000095322728157,
+        "front_ornament_region": 1.1528102159500122
+      }
+    },
+    {
+      "import_frame": 2.125,
+      "elapsed_seconds": 0.0375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020612955559045076,
+        "Chest": 0.29117459058761597,
+        "Finial": 2.082939386367798,
+        "LeftLowerArm": 0.12329483032226562,
+        "RightLowerArm": 0.1636728197336197,
+        "LeftFoot": 0.002222812734544277,
+        "RightFoot": 0.0020612955559045076,
+        "front_ornament_region": 1.1529240608215332
+      }
+    },
+    {
+      "import_frame": 2.25,
+      "elapsed_seconds": 0.041666666666666664,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000634249299765,
+        "Chest": 0.29113703966140747,
+        "Finial": 2.0821938514709473,
+        "LeftLowerArm": 0.12297554314136505,
+        "RightLowerArm": 0.16354936361312866,
+        "LeftFoot": 0.0020000634249299765,
+        "RightFoot": 0.002132150111719966,
+        "front_ornament_region": 1.1530358791351318
+      }
+    },
+    {
+      "import_frame": 2.375,
+      "elapsed_seconds": 0.04583333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019952377770096064,
+        "Chest": 0.2913064956665039,
+        "Finial": 2.081653594970703,
+        "LeftLowerArm": 0.12286350876092911,
+        "RightLowerArm": 0.16363264620304108,
+        "LeftFoot": 0.0019952377770096064,
+        "RightFoot": 0.0024209844414144754,
+        "front_ornament_region": 1.1533536911010742
+      }
+    },
+    {
+      "import_frame": 2.5,
+      "elapsed_seconds": 0.05,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000291988253593,
+        "Chest": 0.29147475957870483,
+        "Finial": 2.0811097621917725,
+        "LeftLowerArm": 0.12275049835443497,
+        "RightLowerArm": 0.16371531784534454,
+        "LeftFoot": 0.0020000291988253593,
+        "RightFoot": 0.002719420939683914,
+        "front_ornament_region": 1.1536693572998047
+      }
+    },
+    {
+      "import_frame": 2.625,
+      "elapsed_seconds": 0.05416666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00199520168825984,
+        "Chest": 0.2916226387023926,
+        "Finial": 2.0805437564849854,
+        "LeftLowerArm": 0.12261718511581421,
+        "RightLowerArm": 0.16377760469913483,
+        "LeftFoot": 0.00199520168825984,
+        "RightFoot": 0.0030082925222814083,
+        "front_ornament_region": 1.153963565826416
+      }
+    },
+    {
+      "import_frame": 2.75,
+      "elapsed_seconds": 0.058333333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000026870518923,
+        "Chest": 0.29176920652389526,
+        "Finial": 2.0799741744995117,
+        "LeftLowerArm": 0.12248300760984421,
+        "RightLowerArm": 0.16383865475654602,
+        "LeftFoot": 0.002000026870518923,
+        "RightFoot": 0.0033067085314542055,
+        "front_ornament_region": 1.1542556285858154
+      }
+    },
+    {
+      "import_frame": 2.875,
+      "elapsed_seconds": 0.0625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019951818976551294,
+        "Chest": 0.29189538955688477,
+        "Finial": 2.0793826580047607,
+        "LeftLowerArm": 0.12232846021652222,
+        "RightLowerArm": 0.16387957334518433,
+        "LeftFoot": 0.0019951818976551294,
+        "RightFoot": 0.003595324931666255,
+        "front_ornament_region": 1.1545264720916748
+      }
+    },
+    {
+      "import_frame": 3.0,
+      "elapsed_seconds": 0.06666666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000613294541836,
+        "Chest": 0.29202041029930115,
+        "Finial": 2.0787878036499023,
+        "LeftLowerArm": 0.12217289954423904,
+        "RightLowerArm": 0.16391943395137787,
+        "LeftFoot": 0.0020000613294541836,
+        "RightFoot": 0.003893652930855751,
+        "front_ornament_region": 1.1547949314117432
+      }
+    },
+    {
+      "import_frame": 3.125,
+      "elapsed_seconds": 0.07083333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019953311420977116,
+        "Chest": 0.29203006625175476,
+        "Finial": 2.07840895652771,
+        "LeftLowerArm": 0.12203149497509003,
+        "RightLowerArm": 0.16388335824012756,
+        "LeftFoot": 0.0019953311420977116,
+        "RightFoot": 0.004046732094138861,
+        "front_ornament_region": 1.154881477355957
+      }
+    },
+    {
+      "import_frame": 3.25,
+      "elapsed_seconds": 0.075,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999677315354347,
+        "Chest": 0.2920392155647278,
+        "Finial": 2.0780293941497803,
+        "LeftLowerArm": 0.12188981473445892,
+        "RightLowerArm": 0.16384665668010712,
+        "LeftFoot": 0.0019999677315354347,
+        "RightFoot": 0.004209171049296856,
+        "front_ornament_region": 1.1549674272537231
+      }
+    },
+    {
+      "import_frame": 3.375,
+      "elapsed_seconds": 0.07916666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019953912124037743,
+        "Chest": 0.29202988743782043,
+        "Finial": 2.0776305198669434,
+        "LeftLowerArm": 0.12172945588827133,
+        "RightLowerArm": 0.16379156708717346,
+        "LeftFoot": 0.0019953912124037743,
+        "RightFoot": 0.004362721461802721,
+        "front_ornament_region": 1.1550343036651611
+      }
+    },
+    {
+      "import_frame": 3.5,
+      "elapsed_seconds": 0.08333333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000776275992393,
+        "Chest": 0.29202011227607727,
+        "Finial": 2.077230453491211,
+        "LeftLowerArm": 0.12156884372234344,
+        "RightLowerArm": 0.16373616456985474,
+        "LeftFoot": 0.0020000776275992393,
+        "RightFoot": 0.004525709897279739,
+        "front_ornament_region": 1.1551008224487305
+      }
+    },
+    {
+      "import_frame": 3.625,
+      "elapsed_seconds": 0.0875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019953956361860037,
+        "Chest": 0.2919915020465851,
+        "Finial": 2.076810836791992,
+        "LeftLowerArm": 0.12138967961072922,
+        "RightLowerArm": 0.16366183757781982,
+        "LeftFoot": 0.0019953956361860037,
+        "RightFoot": 0.004679100587964058,
+        "front_ornament_region": 1.155147910118103
+      }
+    },
+    {
+      "import_frame": 3.75,
+      "elapsed_seconds": 0.09166666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001039374619722,
+        "Chest": 0.2919623851776123,
+        "Finial": 2.0763907432556152,
+        "LeftLowerArm": 0.12120983749628067,
+        "RightLowerArm": 0.16358715295791626,
+        "LeftFoot": 0.0020001039374619722,
+        "RightFoot": 0.004841949325054884,
+        "front_ornament_region": 1.1551944017410278
+      }
+    },
+    {
+      "import_frame": 3.875,
+      "elapsed_seconds": 0.09583333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001995425671339035,
+        "Chest": 0.2919144928455353,
+        "Finial": 2.075951099395752,
+        "LeftLowerArm": 0.12101121246814728,
+        "RightLowerArm": 0.16349373757839203,
+        "LeftFoot": 0.001995425671339035,
+        "RightFoot": 0.004995032213628292,
+        "front_ornament_region": 1.155221700668335
+      }
+    },
+    {
+      "import_frame": 4.0,
+      "elapsed_seconds": 0.1,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000941585749388,
+        "Chest": 0.2918662130832672,
+        "Finial": 2.075510263442993,
+        "LeftLowerArm": 0.12081238627433777,
+        "RightLowerArm": 0.16339996457099915,
+        "LeftFoot": 0.0020000941585749388,
+        "RightFoot": 0.005157495383173227,
+        "front_ornament_region": 1.1552485227584839
+      }
+    },
+    {
+      "import_frame": 4.125,
+      "elapsed_seconds": 0.10416666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001992612611502409,
+        "Chest": 0.2917444705963135,
+        "Finial": 2.0752928256988525,
+        "LeftLowerArm": 0.1204659566283226,
+        "RightLowerArm": 0.16269217431545258,
+        "LeftFoot": 0.001992612611502409,
+        "RightFoot": 0.0050583272241055965,
+        "front_ornament_region": 1.1551449298858643
+      }
+    },
+    {
+      "import_frame": 4.25,
+      "elapsed_seconds": 0.10833333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000122796744108,
+        "Chest": 0.29162266850471497,
+        "Finial": 2.0750749111175537,
+        "LeftLowerArm": 0.12012011557817459,
+        "RightLowerArm": 0.16198743879795074,
+        "LeftFoot": 0.002000122796744108,
+        "RightFoot": 0.004974123556166887,
+        "front_ornament_region": 1.1550415754318237
+      }
+    },
+    {
+      "import_frame": 4.375,
+      "elapsed_seconds": 0.1125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001992622157558799,
+        "Chest": 0.2914709150791168,
+        "Finial": 2.074827194213867,
+        "LeftLowerArm": 0.11974585056304932,
+        "RightLowerArm": 0.1612558811903,
+        "LeftFoot": 0.001992622157558799,
+        "RightFoot": 0.0048757269978523254,
+        "front_ornament_region": 1.1549079418182373
+      }
+    },
+    {
+      "import_frame": 4.5,
+      "elapsed_seconds": 0.11666666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000506192445755,
+        "Chest": 0.2913188636302948,
+        "Finial": 2.0745790004730225,
+        "LeftLowerArm": 0.11937268823385239,
+        "RightLowerArm": 0.16052745282649994,
+        "LeftFoot": 0.0020000506192445755,
+        "RightFoot": 0.004792265594005585,
+        "front_ornament_region": 1.1547741889953613
+      }
+    },
+    {
+      "import_frame": 4.625,
+      "elapsed_seconds": 0.12083333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001992488279938698,
+        "Chest": 0.2911370098590851,
+        "Finial": 2.07430100440979,
+        "LeftLowerArm": 0.11897019296884537,
+        "RightLowerArm": 0.15977244079113007,
+        "LeftFoot": 0.001992488279938698,
+        "RightFoot": 0.004693819209933281,
+        "front_ornament_region": 1.154610514640808
+      }
+    },
+    {
+      "import_frame": 4.75,
+      "elapsed_seconds": 0.125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000343210995197,
+        "Chest": 0.29095491766929626,
+        "Finial": 2.0740225315093994,
+        "LeftLowerArm": 0.11856863647699356,
+        "RightLowerArm": 0.15902037918567657,
+        "LeftFoot": 0.0020000343210995197,
+        "RightFoot": 0.004610433708876371,
+        "front_ornament_region": 1.1544464826583862
+      }
+    },
+    {
+      "import_frame": 4.875,
+      "elapsed_seconds": 0.12916666666666668,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001992597011849284,
+        "Chest": 0.2907428443431854,
+        "Finial": 2.0737147331237793,
+        "LeftLowerArm": 0.11813829094171524,
+        "RightLowerArm": 0.1582416146993637,
+        "LeftFoot": 0.001992597011849284,
+        "RightFoot": 0.004511247389018536,
+        "front_ornament_region": 1.1542527675628662
+      }
+    },
+    {
+      "import_frame": 5.0,
+      "elapsed_seconds": 0.13333333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000011969357729,
+        "Chest": 0.29053062200546265,
+        "Finial": 2.0734059810638428,
+        "LeftLowerArm": 0.11770876497030258,
+        "RightLowerArm": 0.1574660837650299,
+        "LeftFoot": 0.002000011969357729,
+        "RightFoot": 0.00442696176469326,
+        "front_ornament_region": 1.1540586948394775
+      }
+    },
+    {
+      "import_frame": 5.125,
+      "elapsed_seconds": 0.1375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001984954811632633,
+        "Chest": 0.290236234664917,
+        "Finial": 2.0729801654815674,
+        "LeftLowerArm": 0.11693350970745087,
+        "RightLowerArm": 0.1558329313993454,
+        "LeftFoot": 0.001984954811632633,
+        "RightFoot": 0.0041715651750564575,
+        "front_ornament_region": 1.1537891626358032
+      }
+    },
+    {
+      "import_frame": 5.25,
+      "elapsed_seconds": 0.14166666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000056905671954,
+        "Chest": 0.28994065523147583,
+        "Finial": 2.0725526809692383,
+        "LeftLowerArm": 0.11616415530443192,
+        "RightLowerArm": 0.15421868860721588,
+        "LeftFoot": 0.002000056905671954,
+        "RightFoot": 0.003946228418499231,
+        "front_ornament_region": 1.1535183191299438
+      }
+    },
+    {
+      "import_frame": 5.375,
+      "elapsed_seconds": 0.14583333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019849659875035286,
+        "Chest": 0.2895839810371399,
+        "Finial": 2.0720643997192383,
+        "LeftLowerArm": 0.11534009873867035,
+        "RightLowerArm": 0.1525634229183197,
+        "LeftFoot": 0.0019849659875035286,
+        "RightFoot": 0.0036926260218024254,
+        "front_ornament_region": 1.153186559677124
+      }
+    },
+    {
+      "import_frame": 5.5,
+      "elapsed_seconds": 0.15,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001069642603397,
+        "Chest": 0.28922611474990845,
+        "Finial": 2.0715746879577637,
+        "LeftLowerArm": 0.11452184617519379,
+        "RightLowerArm": 0.15092748403549194,
+        "LeftFoot": 0.0020001069642603397,
+        "RightFoot": 0.003469181479886174,
+        "front_ornament_region": 1.15285325050354
+      }
+    },
+    {
+      "import_frame": 5.625,
+      "elapsed_seconds": 0.15416666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019850842654705048,
+        "Chest": 0.2888070344924927,
+        "Finial": 2.07102370262146,
+        "LeftLowerArm": 0.11364899575710297,
+        "RightLowerArm": 0.14925087988376617,
+        "LeftFoot": 0.0019850842654705048,
+        "RightFoot": 0.0032155788503587246,
+        "front_ornament_region": 1.152458906173706
+      }
+    },
+    {
+      "import_frame": 5.75,
+      "elapsed_seconds": 0.15833333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000031527131796,
+        "Chest": 0.28838664293289185,
+        "Finial": 2.0704712867736816,
+        "LeftLowerArm": 0.11278188973665237,
+        "RightLowerArm": 0.14759334921836853,
+        "LeftFoot": 0.002000031527131796,
+        "RightFoot": 0.002991899847984314,
+        "front_ornament_region": 1.1520631313323975
+      }
+    },
+    {
+      "import_frame": 5.875,
+      "elapsed_seconds": 0.1625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019851201213896275,
+        "Chest": 0.28790533542633057,
+        "Finial": 2.0698578357696533,
+        "LeftLowerArm": 0.11186057329177856,
+        "RightLowerArm": 0.1458951085805893,
+        "LeftFoot": 0.0019851201213896275,
+        "RightFoot": 0.0027363880071789026,
+        "front_ornament_region": 1.151606559753418
+      }
+    },
+    {
+      "import_frame": 6.0,
+      "elapsed_seconds": 0.16666666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000741351395845,
+        "Chest": 0.2874228060245514,
+        "Finial": 2.0692434310913086,
+        "LeftLowerArm": 0.1109444871544838,
+        "RightLowerArm": 0.1442164033651352,
+        "LeftFoot": 0.0020000741351395845,
+        "RightFoot": 0.0025107325054705143,
+        "front_ornament_region": 1.1511485576629639
+      }
+    },
+    {
+      "import_frame": 6.125,
+      "elapsed_seconds": 0.17083333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020632813684642315,
+        "Chest": 0.28683963418006897,
+        "Finial": 2.0687289237976074,
+        "LeftLowerArm": 0.10993447154760361,
+        "RightLowerArm": 0.1422276794910431,
+        "LeftFoot": 0.0020632813684642315,
+        "RightFoot": 0.002236525062471628,
+        "front_ornament_region": 1.150552749633789
+      }
+    },
+    {
+      "import_frame": 6.25,
+      "elapsed_seconds": 0.175,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000662188977003,
+        "Chest": 0.28625422716140747,
+        "Finial": 2.0682120323181152,
+        "LeftLowerArm": 0.10893309861421585,
+        "RightLowerArm": 0.14027075469493866,
+        "LeftFoot": 0.002164224162697792,
+        "RightFoot": 0.0020000662188977003,
+        "front_ornament_region": 1.1499545574188232
+      }
+    },
+    {
+      "import_frame": 6.375,
+      "elapsed_seconds": 0.17916666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001981309847906232,
+        "Chest": 0.2858441472053528,
+        "Finial": 2.0678703784942627,
+        "LeftLowerArm": 0.10811862349510193,
+        "RightLowerArm": 0.1385229080915451,
+        "LeftFoot": 0.0024805429857224226,
+        "RightFoot": 0.001981309847906232,
+        "front_ornament_region": 1.149531602859497
+      }
+    },
+    {
+      "import_frame": 6.5,
+      "elapsed_seconds": 0.18333333333333332,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000727381557226,
+        "Chest": 0.28543171286582947,
+        "Finial": 2.0675268173217773,
+        "LeftLowerArm": 0.1073131337761879,
+        "RightLowerArm": 0.1368071287870407,
+        "LeftFoot": 0.00283442041836679,
+        "RightFoot": 0.0020000727381557226,
+        "front_ornament_region": 1.1491062641143799
+      }
+    },
+    {
+      "import_frame": 6.625,
+      "elapsed_seconds": 0.1875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019815063569694757,
+        "Chest": 0.2849419414997101,
+        "Finial": 2.067105293273926,
+        "LeftLowerArm": 0.10644149780273438,
+        "RightLowerArm": 0.1350478082895279,
+        "LeftFoot": 0.0031509227119386196,
+        "RightFoot": 0.0019815063569694757,
+        "front_ornament_region": 1.1486036777496338
+      }
+    },
+    {
+      "import_frame": 6.75,
+      "elapsed_seconds": 0.19166666666666668,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001165103167295,
+        "Chest": 0.2844497859477997,
+        "Finial": 2.0666821002960205,
+        "LeftLowerArm": 0.10557931661605835,
+        "RightLowerArm": 0.13332059979438782,
+        "LeftFoot": 0.0035047349520027637,
+        "RightFoot": 0.0020001165103167295,
+        "front_ornament_region": 1.1480987071990967
+      }
+    },
+    {
+      "import_frame": 6.875,
+      "elapsed_seconds": 0.19583333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001981449080631137,
+        "Chest": 0.2838832437992096,
+        "Finial": 2.0661838054656982,
+        "LeftLowerArm": 0.10465380549430847,
+        "RightLowerArm": 0.13155359029769897,
+        "LeftFoot": 0.0038236184045672417,
+        "RightFoot": 0.001981449080631137,
+        "front_ornament_region": 1.1475193500518799
+      }
+    },
+    {
+      "import_frame": 7.0,
+      "elapsed_seconds": 0.2,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000531803816557,
+        "Chest": 0.28331440687179565,
+        "Finial": 2.065683603286743,
+        "LeftLowerArm": 0.10373731702566147,
+        "RightLowerArm": 0.12981875240802765,
+        "LeftFoot": 0.004179683979600668,
+        "RightFoot": 0.0020000531803816557,
+        "front_ornament_region": 1.1469378471374512
+      }
+    },
+    {
+      "import_frame": 7.125,
+      "elapsed_seconds": 0.20416666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019831594545394182,
+        "Chest": 0.2826175093650818,
+        "Finial": 2.065490961074829,
+        "LeftLowerArm": 0.10293086618185043,
+        "RightLowerArm": 0.12819907069206238,
+        "LeftFoot": 0.0045450408942997456,
+        "RightFoot": 0.0019831594545394182,
+        "front_ornament_region": 1.1461458206176758
+      }
+    },
+    {
+      "import_frame": 7.25,
+      "elapsed_seconds": 0.20833333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999970292672515,
+        "Chest": 0.2819176912307739,
+        "Finial": 2.0652945041656494,
+        "LeftLowerArm": 0.10213224589824677,
+        "RightLowerArm": 0.12660881876945496,
+        "LeftFoot": 0.004943985491991043,
+        "RightFoot": 0.001999970292672515,
+        "front_ornament_region": 1.1453508138656616
+      }
+    },
+    {
+      "import_frame": 7.375,
+      "elapsed_seconds": 0.2125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019831806421279907,
+        "Chest": 0.2811458706855774,
+        "Finial": 2.0650250911712646,
+        "LeftLowerArm": 0.10127192735671997,
+        "RightLowerArm": 0.12497937679290771,
+        "LeftFoot": 0.00530758174136281,
+        "RightFoot": 0.0019831806421279907,
+        "front_ornament_region": 1.1444833278656006
+      }
+    },
+    {
+      "import_frame": 7.5,
+      "elapsed_seconds": 0.21666666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999978441745043,
+        "Chest": 0.2803712785243988,
+        "Finial": 2.0647518634796143,
+        "LeftLowerArm": 0.10041965544223785,
+        "RightLowerArm": 0.1233796626329422,
+        "LeftFoot": 0.005704712122678757,
+        "RightFoot": 0.001999978441745043,
+        "front_ornament_region": 1.1436125040054321
+      }
+    },
+    {
+      "import_frame": 7.625,
+      "elapsed_seconds": 0.22083333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019834123086184263,
+        "Chest": 0.27952709794044495,
+        "Finial": 2.06440806388855,
+        "LeftLowerArm": 0.09950835257768631,
+        "RightLowerArm": 0.12174361944198608,
+        "LeftFoot": 0.006068426184356213,
+        "RightFoot": 0.0019834123086184263,
+        "front_ornament_region": 1.1426715850830078
+      }
+    },
+    {
+      "import_frame": 7.75,
+      "elapsed_seconds": 0.225,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001837983727455,
+        "Chest": 0.27868008613586426,
+        "Finial": 2.064060688018799,
+        "LeftLowerArm": 0.09860468655824661,
+        "RightLowerArm": 0.12013737857341766,
+        "LeftFoot": 0.0064654541201889515,
+        "RightFoot": 0.0020001837983727455,
+        "front_ornament_region": 1.1417276859283447
+      }
+    },
+    {
+      "import_frame": 7.875,
+      "elapsed_seconds": 0.22916666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001983580645173788,
+        "Chest": 0.2777659296989441,
+        "Finial": 2.063645124435425,
+        "LeftLowerArm": 0.09764466434717178,
+        "RightLowerArm": 0.11849682033061981,
+        "LeftFoot": 0.006830807309597731,
+        "RightFoot": 0.001983580645173788,
+        "front_ornament_region": 1.1407158374786377
+      }
+    },
+    {
+      "import_frame": 8.0,
+      "elapsed_seconds": 0.23333333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999974250793457,
+        "Chest": 0.27684882283210754,
+        "Finial": 2.063225746154785,
+        "LeftLowerArm": 0.09669196605682373,
+        "RightLowerArm": 0.11688624322414398,
+        "LeftFoot": 0.0072291153483092785,
+        "RightFoot": 0.001999974250793457,
+        "front_ornament_region": 1.1397006511688232
+      }
+    },
+    {
+      "import_frame": 8.125,
+      "elapsed_seconds": 0.2375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019896116573363543,
+        "Chest": 0.27588266134262085,
+        "Finial": 2.0634164810180664,
+        "LeftLowerArm": 0.09610706567764282,
+        "RightLowerArm": 0.1157703846693039,
+        "LeftFoot": 0.00759340263903141,
+        "RightFoot": 0.0019896116573363543,
+        "front_ornament_region": 1.1385042667388916
+      }
+    },
+    {
+      "import_frame": 8.25,
+      "elapsed_seconds": 0.24166666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999924425035715,
+        "Chest": 0.27491506934165955,
+        "Finial": 2.063600778579712,
+        "LeftLowerArm": 0.09552387148141861,
+        "RightLowerArm": 0.11466865241527557,
+        "LeftFoot": 0.007978304289281368,
+        "RightFoot": 0.001999924425035715,
+        "front_ornament_region": 1.1373040676116943
+      }
+    },
+    {
+      "import_frame": 8.375,
+      "elapsed_seconds": 0.24583333333333332,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019896964076906443,
+        "Chest": 0.27390381693840027,
+        "Finial": 2.0637362003326416,
+        "LeftLowerArm": 0.09490104019641876,
+        "RightLowerArm": 0.11353877186775208,
+        "LeftFoot": 0.008341855369508266,
+        "RightFoot": 0.0019896964076906443,
+        "front_ornament_region": 1.1360573768615723
+      }
+    },
+    {
+      "import_frame": 8.5,
+      "elapsed_seconds": 0.25,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000129083171487,
+        "Chest": 0.2728911340236664,
+        "Finial": 2.0638649463653564,
+        "LeftLowerArm": 0.09428027272224426,
+        "RightLowerArm": 0.11242318153381348,
+        "LeftFoot": 0.00872594490647316,
+        "RightFoot": 0.002000129083171487,
+        "front_ornament_region": 1.1348072290420532
+      }
+    },
+    {
+      "import_frame": 8.625,
+      "elapsed_seconds": 0.25416666666666665,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001989813754335046,
+        "Chest": 0.27183565497398376,
+        "Finial": 2.06394624710083,
+        "LeftLowerArm": 0.09362036734819412,
+        "RightLowerArm": 0.11128057539463043,
+        "LeftFoot": 0.009089361876249313,
+        "RightFoot": 0.001989813754335046,
+        "front_ornament_region": 1.1335117816925049
+      }
+    },
+    {
+      "import_frame": 8.75,
+      "elapsed_seconds": 0.25833333333333336,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000729709863663,
+        "Chest": 0.27077874541282654,
+        "Finial": 2.0640206336975098,
+        "LeftLowerArm": 0.09296251088380814,
+        "RightLowerArm": 0.1101522445678711,
+        "LeftFoot": 0.009473210200667381,
+        "RightFoot": 0.0020000729709863663,
+        "front_ornament_region": 1.1322121620178223
+      }
+    },
+    {
+      "import_frame": 8.875,
+      "elapsed_seconds": 0.2625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019898689351975918,
+        "Chest": 0.269680380821228,
+        "Finial": 2.0640487670898438,
+        "LeftLowerArm": 0.09226728230714798,
+        "RightLowerArm": 0.10899809002876282,
+        "LeftFoot": 0.009837161749601364,
+        "RightFoot": 0.0019898689351975918,
+        "front_ornament_region": 1.130868911743164
+      }
+    },
+    {
+      "import_frame": 9.0,
+      "elapsed_seconds": 0.26666666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999926520511508,
+        "Chest": 0.2685803771018982,
+        "Finial": 2.0640697479248047,
+        "LeftLowerArm": 0.09157369285821915,
+        "RightLowerArm": 0.10785800218582153,
+        "LeftFoot": 0.010221260599792004,
+        "RightFoot": 0.001999926520511508,
+        "front_ornament_region": 1.129521369934082
+      }
+    },
+    {
+      "import_frame": 9.125,
+      "elapsed_seconds": 0.2708333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019924084190279245,
+        "Chest": 0.2674303650856018,
+        "Finial": 2.064385414123535,
+        "LeftLowerArm": 0.09119772911071777,
+        "RightLowerArm": 0.10707651078701019,
+        "LeftFoot": 0.010603534989058971,
+        "RightFoot": 0.0019924084190279245,
+        "front_ornament_region": 1.1279785633087158
+      }
+    },
+    {
+      "import_frame": 9.25,
+      "elapsed_seconds": 0.275,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999034702777863,
+        "Chest": 0.26628056168556213,
+        "Finial": 2.0646889209747314,
+        "LeftLowerArm": 0.09082012623548508,
+        "RightLowerArm": 0.10630089044570923,
+        "LeftFoot": 0.011000554077327251,
+        "RightFoot": 0.0019999034702777863,
+        "front_ornament_region": 1.126429557800293
+      }
+    },
+    {
+      "import_frame": 9.375,
+      "elapsed_seconds": 0.2791666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019925476517528296,
+        "Chest": 0.26510089635849,
+        "Finial": 2.0649499893188477,
+        "LeftLowerArm": 0.09041053801774979,
+        "RightLowerArm": 0.10550123453140259,
+        "LeftFoot": 0.01138258446007967,
+        "RightFoot": 0.0019925476517528296,
+        "front_ornament_region": 1.1248447895050049
+      }
+    },
+    {
+      "import_frame": 9.5,
+      "elapsed_seconds": 0.2833333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999404903501272,
+        "Chest": 0.2639216184616089,
+        "Finial": 2.0651981830596924,
+        "LeftLowerArm": 0.08999942243099213,
+        "RightLowerArm": 0.10470753908157349,
+        "LeftFoot": 0.011779213324189186,
+        "RightFoot": 0.0019999404903501272,
+        "front_ornament_region": 1.1232542991638184
+      }
+    },
+    {
+      "import_frame": 9.625,
+      "elapsed_seconds": 0.2875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001992694567888975,
+        "Chest": 0.2627131938934326,
+        "Finial": 2.0654046535491943,
+        "LeftLowerArm": 0.08955731242895126,
+        "RightLowerArm": 0.10389003157615662,
+        "LeftFoot": 0.012161090038716793,
+        "RightFoot": 0.001992694567888975,
+        "front_ornament_region": 1.121568202972412
+      }
+    },
+    {
+      "import_frame": 9.75,
+      "elapsed_seconds": 0.2916666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000130247324705,
+        "Chest": 0.2615049481391907,
+        "Finial": 2.065598726272583,
+        "LeftLowerArm": 0.08911355584859848,
+        "RightLowerArm": 0.10307833552360535,
+        "LeftFoot": 0.01255741436034441,
+        "RightFoot": 0.002000130247324705,
+        "front_ornament_region": 1.1198750734329224
+      }
+    },
+    {
+      "import_frame": 9.875,
+      "elapsed_seconds": 0.29583333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019926978275179863,
+        "Chest": 0.2602679133415222,
+        "Finial": 2.065751075744629,
+        "LeftLowerArm": 0.08863885700702667,
+        "RightLowerArm": 0.10224352777004242,
+        "LeftFoot": 0.012938980013132095,
+        "RightFoot": 0.0019926978275179863,
+        "front_ornament_region": 1.1181468963623047
+      }
+    },
+    {
+      "import_frame": 10.0,
+      "elapsed_seconds": 0.3,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999786745756865,
+        "Chest": 0.2590310871601105,
+        "Finial": 2.0658910274505615,
+        "LeftLowerArm": 0.08816240727901459,
+        "RightLowerArm": 0.10141418874263763,
+        "LeftFoot": 0.013334961608052254,
+        "RightFoot": 0.0019999786745756865,
+        "front_ornament_region": 1.1164131164550781
+      }
+    },
+    {
+      "import_frame": 10.125,
+      "elapsed_seconds": 0.30416666666666664,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019921367056667805,
+        "Chest": 0.25766521692276,
+        "Finial": 2.0662782192230225,
+        "LeftLowerArm": 0.08779134601354599,
+        "RightLowerArm": 0.10062815248966217,
+        "LeftFoot": 0.013774185441434383,
+        "RightFoot": 0.0019921367056667805,
+        "front_ornament_region": 1.114398717880249
+      }
+    },
+    {
+      "import_frame": 10.25,
+      "elapsed_seconds": 0.30833333333333335,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999939326196909,
+        "Chest": 0.25630101561546326,
+        "Finial": 2.066645860671997,
+        "LeftLowerArm": 0.08741649240255356,
+        "RightLowerArm": 0.0998467206954956,
+        "LeftFoot": 0.014228954911231995,
+        "RightFoot": 0.001999939326196909,
+        "front_ornament_region": 1.1123757362365723
+      }
+    },
+    {
+      "import_frame": 10.375,
+      "elapsed_seconds": 0.3125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019923043437302113,
+        "Chest": 0.2549067437648773,
+        "Finial": 2.066962718963623,
+        "LeftLowerArm": 0.08700530976057053,
+        "RightLowerArm": 0.09903855621814728,
+        "LeftFoot": 0.014667823910713196,
+        "RightFoot": 0.0019923043437302113,
+        "front_ornament_region": 1.1103129386901855
+      }
+    },
+    {
+      "import_frame": 10.5,
+      "elapsed_seconds": 0.31666666666666665,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001460798084736,
+        "Chest": 0.25351405143737793,
+        "Finial": 2.0672595500946045,
+        "LeftLowerArm": 0.08659002184867859,
+        "RightLowerArm": 0.09823514521121979,
+        "LeftFoot": 0.015121928416192532,
+        "RightFoot": 0.0020001460798084736,
+        "front_ornament_region": 1.1082415580749512
+      }
+    },
+    {
+      "import_frame": 10.625,
+      "elapsed_seconds": 0.32083333333333336,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019923821091651917,
+        "Chest": 0.25209179520606995,
+        "Finial": 2.0675055980682373,
+        "LeftLowerArm": 0.08613916486501694,
+        "RightLowerArm": 0.097405344247818,
+        "LeftFoot": 0.015560518018901348,
+        "RightFoot": 0.0019923821091651917,
+        "front_ornament_region": 1.1061307191848755
+      }
+    },
+    {
+      "import_frame": 10.75,
+      "elapsed_seconds": 0.325,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000000949949026,
+        "Chest": 0.25067126750946045,
+        "Finial": 2.067732334136963,
+        "LeftLowerArm": 0.08568406105041504,
+        "RightLowerArm": 0.09658053517341614,
+        "LeftFoot": 0.0160142220556736,
+        "RightFoot": 0.0020000000949949026,
+        "front_ornament_region": 1.1040115356445312
+      }
+    },
+    {
+      "import_frame": 10.875,
+      "elapsed_seconds": 0.32916666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001992366975173354,
+        "Chest": 0.24922162294387817,
+        "Finial": 2.06790828704834,
+        "LeftLowerArm": 0.08519360423088074,
+        "RightLowerArm": 0.09572950005531311,
+        "LeftFoot": 0.016452006995677948,
+        "RightFoot": 0.001992366975173354,
+        "front_ornament_region": 1.101853370666504
+      }
+    },
+    {
+      "import_frame": 11.0,
+      "elapsed_seconds": 0.3333333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000911317765713,
+        "Chest": 0.24777346849441528,
+        "Finial": 2.0680646896362305,
+        "LeftLowerArm": 0.08469901233911514,
+        "RightLowerArm": 0.09488329291343689,
+        "LeftFoot": 0.01690489612519741,
+        "RightFoot": 0.0020000911317765713,
+        "front_ornament_region": 1.099686622619629
+      }
+    },
+    {
+      "import_frame": 11.125,
+      "elapsed_seconds": 0.3375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019935197196900845,
+        "Chest": 0.24629643559455872,
+        "Finial": 2.068528890609741,
+        "LeftLowerArm": 0.08438096940517426,
+        "RightLowerArm": 0.09415031969547272,
+        "LeftFoot": 0.017380090430378914,
+        "RightFoot": 0.0019935197196900845,
+        "front_ornament_region": 1.0973135232925415
+      }
+    },
+    {
+      "import_frame": 11.25,
+      "elapsed_seconds": 0.3416666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999328069388866,
+        "Chest": 0.24438264966011047,
+        "Finial": 2.068964958190918,
+        "LeftLowerArm": 0.08405371755361557,
+        "RightLowerArm": 0.09341752529144287,
+        "LeftFoot": 0.017867978662252426,
+        "RightFoot": 0.0019999328069388866,
+        "front_ornament_region": 1.0949293375015259
+      }
+    },
+    {
+      "import_frame": 11.375,
+      "elapsed_seconds": 0.3458333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001993501093238592,
+        "Chest": 0.24236425757408142,
+        "Finial": 2.0693466663360596,
+        "LeftLowerArm": 0.08369020372629166,
+        "RightLowerArm": 0.09265926480293274,
+        "LeftFoot": 0.018342675641179085,
+        "RightFoot": 0.001993501093238592,
+        "front_ornament_region": 1.0925077199935913
+      }
+    },
+    {
+      "import_frame": 11.5,
+      "elapsed_seconds": 0.35,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001132506877184,
+        "Chest": 0.24034970998764038,
+        "Finial": 2.069699764251709,
+        "LeftLowerArm": 0.08331704884767532,
+        "RightLowerArm": 0.0919012725353241,
+        "LeftFoot": 0.018830040469765663,
+        "RightFoot": 0.0020001132506877184,
+        "front_ornament_region": 1.090075135231018
+      }
+    },
+    {
+      "import_frame": 11.625,
+      "elapsed_seconds": 0.3541666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019936049357056618,
+        "Chest": 0.23831313848495483,
+        "Finial": 2.0699987411499023,
+        "LeftLowerArm": 0.08290816843509674,
+        "RightLowerArm": 0.09111806750297546,
+        "LeftFoot": 0.019303973764181137,
+        "RightFoot": 0.0019936049357056618,
+        "front_ornament_region": 1.0876054763793945
+      }
+    },
+    {
+      "import_frame": 11.75,
+      "elapsed_seconds": 0.35833333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200000312179327,
+        "Chest": 0.2362804114818573,
+        "Finial": 2.0702693462371826,
+        "LeftLowerArm": 0.08248946815729141,
+        "RightLowerArm": 0.09033535420894623,
+        "LeftFoot": 0.019790343940258026,
+        "RightFoot": 0.00200000312179327,
+        "front_ornament_region": 1.0851247310638428
+      }
+    },
+    {
+      "import_frame": 11.875,
+      "elapsed_seconds": 0.3625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019937148317694664,
+        "Chest": 0.2342260479927063,
+        "Finial": 2.0704855918884277,
+        "LeftLowerArm": 0.08203530311584473,
+        "RightLowerArm": 0.08952696621417999,
+        "LeftFoot": 0.020263317972421646,
+        "RightFoot": 0.0019937148317694664,
+        "front_ornament_region": 1.0826075077056885
+      }
+    },
+    {
+      "import_frame": 12.0,
+      "elapsed_seconds": 0.36666666666666664,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200008531101048,
+        "Chest": 0.23212391138076782,
+        "Finial": 2.070673704147339,
+        "LeftLowerArm": 0.08157141506671906,
+        "RightLowerArm": 0.08871966600418091,
+        "LeftFoot": 0.020748579874634743,
+        "RightFoot": 0.00200008531101048,
+        "front_ornament_region": 1.0800790786743164
+      }
+    },
+    {
+      "import_frame": 12.125,
+      "elapsed_seconds": 0.37083333333333335,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001995864324271679,
+        "Chest": 0.22996452450752258,
+        "Finial": 2.071256399154663,
+        "LeftLowerArm": 0.08137992024421692,
+        "RightLowerArm": 0.08812117576599121,
+        "LeftFoot": 0.021238259971141815,
+        "RightFoot": 0.001995864324271679,
+        "front_ornament_region": 1.0774531364440918
+      }
+    },
+    {
+      "import_frame": 12.25,
+      "elapsed_seconds": 0.375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200002733618021,
+        "Chest": 0.22781264781951904,
+        "Finial": 2.071800947189331,
+        "LeftLowerArm": 0.0811772346496582,
+        "RightLowerArm": 0.08752600848674774,
+        "LeftFoot": 0.021735871210694313,
+        "RightFoot": 0.00200002733618021,
+        "front_ornament_region": 1.0748136043548584
+      }
+    },
+    {
+      "import_frame": 12.375,
+      "elapsed_seconds": 0.37916666666666665,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019959034398198128,
+        "Chest": 0.22565138339996338,
+        "Finial": 2.0722897052764893,
+        "LeftLowerArm": 0.08094672858715057,
+        "RightLowerArm": 0.08691799640655518,
+        "LeftFoot": 0.02222462370991707,
+        "RightFoot": 0.0019959034398198128,
+        "front_ornament_region": 1.072143316268921
+      }
+    },
+    {
+      "import_frame": 12.5,
+      "elapsed_seconds": 0.38333333333333336,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000122331082821,
+        "Chest": 0.22349771857261658,
+        "Finial": 2.0727405548095703,
+        "LeftLowerArm": 0.08070516586303711,
+        "RightLowerArm": 0.08631366491317749,
+        "LeftFoot": 0.02272113785147667,
+        "RightFoot": 0.002000122331082821,
+        "front_ornament_region": 1.0694596767425537
+      }
+    },
+    {
+      "import_frame": 12.625,
+      "elapsed_seconds": 0.3875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019959760829806328,
+        "Chest": 0.2213348150253296,
+        "Finial": 2.0731353759765625,
+        "LeftLowerArm": 0.0804356187582016,
+        "RightLowerArm": 0.08569596707820892,
+        "LeftFoot": 0.023208769038319588,
+        "RightFoot": 0.0019959760829806328,
+        "front_ornament_region": 1.0667455196380615
+      }
+    },
+    {
+      "import_frame": 12.75,
+      "elapsed_seconds": 0.39166666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200017262250185,
+        "Chest": 0.2191796600818634,
+        "Finial": 2.0734927654266357,
+        "LeftLowerArm": 0.08015479892492294,
+        "RightLowerArm": 0.08508224785327911,
+        "LeftFoot": 0.02370418980717659,
+        "RightFoot": 0.00200017262250185,
+        "front_ornament_region": 1.0640182495117188
+      }
+    },
+    {
+      "import_frame": 12.875,
+      "elapsed_seconds": 0.3958333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001996041275560856,
+        "Chest": 0.21701568365097046,
+        "Finial": 2.07379412651062,
+        "LeftLowerArm": 0.07984618097543716,
+        "RightLowerArm": 0.08445566892623901,
+        "LeftFoot": 0.024190662428736687,
+        "RightFoot": 0.001996041275560856,
+        "front_ornament_region": 1.0612609386444092
+      }
+    },
+    {
+      "import_frame": 13.0,
+      "elapsed_seconds": 0.4,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001260563731194,
+        "Chest": 0.21460238099098206,
+        "Finial": 2.07405686378479,
+        "LeftLowerArm": 0.07952646166086197,
+        "RightLowerArm": 0.0838327705860138,
+        "LeftFoot": 0.024684753268957138,
+        "RightFoot": 0.0020001260563731194,
+        "front_ornament_region": 1.05849027633667
+      }
+    },
+    {
+      "import_frame": 13.125,
+      "elapsed_seconds": 0.4041666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019966315012425184,
+        "Chest": 0.211524099111557,
+        "Finial": 2.0746381282806396,
+        "LeftLowerArm": 0.07939986884593964,
+        "RightLowerArm": 0.08333060145378113,
+        "LeftFoot": 0.025203946977853775,
+        "RightFoot": 0.0019966315012425184,
+        "front_ornament_region": 1.0552325248718262
+      }
+    },
+    {
+      "import_frame": 13.25,
+      "elapsed_seconds": 0.4083333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999805372208357,
+        "Chest": 0.20841673016548157,
+        "Finial": 2.0751590728759766,
+        "LeftLowerArm": 0.07924974709749222,
+        "RightLowerArm": 0.08281131088733673,
+        "LeftFoot": 0.025729143992066383,
+        "RightFoot": 0.0019999805372208357,
+        "front_ornament_region": 1.0519559383392334
+      }
+    },
+    {
+      "import_frame": 13.375,
+      "elapsed_seconds": 0.4125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019966354593634605,
+        "Chest": 0.20531108975410461,
+        "Finial": 2.075606107711792,
+        "LeftLowerArm": 0.07906264811754227,
+        "RightLowerArm": 0.08226059377193451,
+        "LeftFoot": 0.026246903464198112,
+        "RightFoot": 0.0019966354593634605,
+        "front_ornament_region": 1.0486469268798828
+      }
+    },
+    {
+      "import_frame": 13.5,
+      "elapsed_seconds": 0.4166666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001763477921486,
+        "Chest": 0.20222118496894836,
+        "Finial": 2.0759925842285156,
+        "LeftLowerArm": 0.07885245978832245,
+        "RightLowerArm": 0.08169281482696533,
+        "LeftFoot": 0.02677074633538723,
+        "RightFoot": 0.0020001763477921486,
+        "front_ornament_region": 1.0453190803527832
+      }
+    },
+    {
+      "import_frame": 13.625,
+      "elapsed_seconds": 0.42083333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019966987892985344,
+        "Chest": 0.19913358986377716,
+        "Finial": 2.0763046741485596,
+        "LeftLowerArm": 0.07860519737005234,
+        "RightLowerArm": 0.08109390735626221,
+        "LeftFoot": 0.0272868350148201,
+        "RightFoot": 0.0019966987892985344,
+        "front_ornament_region": 1.0419591665267944
+      }
+    },
+    {
+      "import_frame": 13.75,
+      "elapsed_seconds": 0.425,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000962540507317,
+        "Chest": 0.19606195390224457,
+        "Finial": 2.076556921005249,
+        "LeftLowerArm": 0.07833492755889893,
+        "RightLowerArm": 0.08047786355018616,
+        "LeftFoot": 0.027809059247374535,
+        "RightFoot": 0.0020000962540507317,
+        "front_ornament_region": 1.0385808944702148
+      }
+    },
+    {
+      "import_frame": 13.875,
+      "elapsed_seconds": 0.42916666666666664,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019965944811701775,
+        "Chest": 0.19299305975437164,
+        "Finial": 2.0767345428466797,
+        "LeftLowerArm": 0.07802775502204895,
+        "RightLowerArm": 0.0798308253288269,
+        "LeftFoot": 0.028323723003268242,
+        "RightFoot": 0.0019965944811701775,
+        "front_ornament_region": 1.0351711511611938
+      }
+    },
+    {
+      "import_frame": 14.0,
+      "elapsed_seconds": 0.43333333333333335,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999984495341778,
+        "Chest": 0.18994039297103882,
+        "Finial": 2.0768516063690186,
+        "LeftLowerArm": 0.07769734412431717,
+        "RightLowerArm": 0.0791664719581604,
+        "LeftFoot": 0.028844302520155907,
+        "RightFoot": 0.001999984495341778,
+        "front_ornament_region": 1.0317432880401611
+      }
+    },
+    {
+      "import_frame": 14.125,
+      "elapsed_seconds": 0.4375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001995981903746724,
+        "Chest": 0.18629103899002075,
+        "Finial": 2.0769643783569336,
+        "LeftLowerArm": 0.07726089656352997,
+        "RightLowerArm": 0.07825504243373871,
+        "LeftFoot": 0.02939586713910103,
+        "RightFoot": 0.001995981903746724,
+        "front_ornament_region": 1.027590036392212
+      }
+    },
+    {
+      "import_frame": 14.25,
+      "elapsed_seconds": 0.44166666666666665,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000135602429509,
+        "Chest": 0.18266838788986206,
+        "Finial": 2.0769882202148438,
+        "LeftLowerArm": 0.07678525894880295,
+        "RightLowerArm": 0.07730284333229065,
+        "LeftFoot": 0.02995471842586994,
+        "RightFoot": 0.002000135602429509,
+        "front_ornament_region": 1.0234122276306152
+      }
+    },
+    {
+      "import_frame": 14.375,
+      "elapsed_seconds": 0.44583333333333336,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001995957689359784,
+        "Chest": 0.1790558099746704,
+        "Finial": 2.0769083499908447,
+        "LeftLowerArm": 0.07625341415405273,
+        "RightLowerArm": 0.07629334926605225,
+        "LeftFoot": 0.03050440363585949,
+        "RightFoot": 0.001995957689359784,
+        "front_ornament_region": 1.0191938877105713
+      }
+    },
+    {
+      "import_frame": 14.5,
+      "elapsed_seconds": 0.45,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997910130769014,
+        "Chest": 0.1754700243473053,
+        "Finial": 2.076740026473999,
+        "LeftLowerArm": 0.07568184286355972,
+        "RightLowerArm": 0.07524344325065613,
+        "LeftFoot": 0.031061096116900444,
+        "RightFoot": 0.0019997910130769014,
+        "front_ornament_region": 1.014951229095459
+      }
+    },
+    {
+      "import_frame": 14.625,
+      "elapsed_seconds": 0.45416666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001995827304199338,
+        "Chest": 0.1718953251838684,
+        "Finial": 2.076467752456665,
+        "LeftLowerArm": 0.07505468279123306,
+        "RightLowerArm": 0.07413691282272339,
+        "LeftFoot": 0.03160864859819412,
+        "RightFoot": 0.001995827304199338,
+        "front_ornament_region": 1.0106687545776367
+      }
+    },
+    {
+      "import_frame": 14.75,
+      "elapsed_seconds": 0.4583333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000024076551199,
+        "Chest": 0.1683056652545929,
+        "Finial": 2.0761072635650635,
+        "LeftLowerArm": 0.07438809424638748,
+        "RightLowerArm": 0.07298985123634338,
+        "LeftFoot": 0.03216326981782913,
+        "RightFoot": 0.002000024076551199,
+        "front_ornament_region": 1.006362795829773
+      }
+    },
+    {
+      "import_frame": 14.875,
+      "elapsed_seconds": 0.4625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001995971193537116,
+        "Chest": 0.16470974683761597,
+        "Finial": 2.0756425857543945,
+        "LeftLowerArm": 0.07366590946912766,
+        "RightLowerArm": 0.07178601622581482,
+        "LeftFoot": 0.032708682119846344,
+        "RightFoot": 0.001995971193537116,
+        "front_ornament_region": 1.002017855644226
+      }
+    },
+    {
+      "import_frame": 15.0,
+      "elapsed_seconds": 0.4666666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999591168016195,
+        "Chest": 0.16114148497581482,
+        "Finial": 2.075089931488037,
+        "LeftLowerArm": 0.07290404289960861,
+        "RightLowerArm": 0.07054173946380615,
+        "LeftFoot": 0.03326097130775452,
+        "RightFoot": 0.0019999591168016195,
+        "front_ornament_region": 0.9976497292518616
+      }
+    },
+    {
+      "import_frame": 15.125,
+      "elapsed_seconds": 0.4708333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001995384693145752,
+        "Chest": 0.1573677957057953,
+        "Finial": 2.0744171142578125,
+        "LeftLowerArm": 0.07204584032297134,
+        "RightLowerArm": 0.06914539635181427,
+        "LeftFoot": 0.03380553051829338,
+        "RightFoot": 0.001995384693145752,
+        "front_ornament_region": 0.9929631948471069
+      }
+    },
+    {
+      "import_frame": 15.25,
+      "elapsed_seconds": 0.475,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000013366341591,
+        "Chest": 0.1536274254322052,
+        "Finial": 2.0736443996429443,
+        "LeftLowerArm": 0.07114481180906296,
+        "RightLowerArm": 0.06770683825016022,
+        "LeftFoot": 0.034358032047748566,
+        "RightFoot": 0.002000013366341591,
+        "front_ornament_region": 0.9882520437240601
+      }
+    },
+    {
+      "import_frame": 15.375,
+      "elapsed_seconds": 0.4791666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019953642040491104,
+        "Chest": 0.14990220963954926,
+        "Finial": 2.072753667831421,
+        "LeftLowerArm": 0.0701824352145195,
+        "RightLowerArm": 0.06620819866657257,
+        "LeftFoot": 0.03490028157830238,
+        "RightFoot": 0.0019953642040491104,
+        "front_ornament_region": 0.9834979772567749
+      }
+    },
+    {
+      "import_frame": 15.5,
+      "elapsed_seconds": 0.48333333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000222448259592,
+        "Chest": 0.14621073007583618,
+        "Finial": 2.071763038635254,
+        "LeftLowerArm": 0.06917751580476761,
+        "RightLowerArm": 0.06466805934906006,
+        "LeftFoot": 0.03545062988996506,
+        "RightFoot": 0.002000222448259592,
+        "front_ornament_region": 0.9787197113037109
+      }
+    },
+    {
+      "import_frame": 15.625,
+      "elapsed_seconds": 0.4875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019955397583544254,
+        "Chest": 0.1425347626209259,
+        "Finial": 2.0706539154052734,
+        "LeftLowerArm": 0.06811131536960602,
+        "RightLowerArm": 0.06306751072406769,
+        "LeftFoot": 0.03599036484956741,
+        "RightFoot": 0.0019955397583544254,
+        "front_ornament_region": 0.9738990664482117
+      }
+    },
+    {
+      "import_frame": 15.75,
+      "elapsed_seconds": 0.49166666666666664,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001144148409367,
+        "Chest": 0.13889314234256744,
+        "Finial": 2.0694456100463867,
+        "LeftLowerArm": 0.06700257211923599,
+        "RightLowerArm": 0.06142564117908478,
+        "LeftFoot": 0.03653806820511818,
+        "RightFoot": 0.0020001144148409367,
+        "front_ornament_region": 0.9690549373626709
+      }
+    },
+    {
+      "import_frame": 15.875,
+      "elapsed_seconds": 0.49583333333333335,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019954803865402937,
+        "Chest": 0.1352679431438446,
+        "Finial": 2.0681188106536865,
+        "LeftLowerArm": 0.06583312153816223,
+        "RightLowerArm": 0.059724271297454834,
+        "LeftFoot": 0.037075288593769073,
+        "RightFoot": 0.0019954803865402937,
+        "front_ornament_region": 0.9641696810722351
+      }
+    },
+    {
+      "import_frame": 16.0,
+      "elapsed_seconds": 0.5,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999078940600157,
+        "Chest": 0.13167758285999298,
+        "Finial": 2.06669282913208,
+        "LeftLowerArm": 0.06462105363607407,
+        "RightLowerArm": 0.057981640100479126,
+        "LeftFoot": 0.037620291113853455,
+        "RightFoot": 0.0019999078940600157,
+        "front_ornament_region": 0.9592615962028503
+      }
+    },
+    {
+      "import_frame": 16.125,
+      "elapsed_seconds": 0.5041666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019950279965996742,
+        "Chest": 0.12822797894477844,
+        "Finial": 2.0652031898498535,
+        "LeftLowerArm": 0.06339378654956818,
+        "RightLowerArm": 0.05624634027481079,
+        "LeftFoot": 0.03812030702829361,
+        "RightFoot": 0.0019950279965996742,
+        "front_ornament_region": 0.9544866681098938
+      }
+    },
+    {
+      "import_frame": 16.25,
+      "elapsed_seconds": 0.5083333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000116975978017,
+        "Chest": 0.12481142580509186,
+        "Finial": 2.0636215209960938,
+        "LeftLowerArm": 0.06212662160396576,
+        "RightLowerArm": 0.054471418261528015,
+        "LeftFoot": 0.038629136979579926,
+        "RightFoot": 0.002000116975978017,
+        "front_ornament_region": 0.9496913552284241
+      }
+    },
+    {
+      "import_frame": 16.375,
+      "elapsed_seconds": 0.5125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019950431305915117,
+        "Chest": 0.12140823900699615,
+        "Finial": 2.0619280338287354,
+        "LeftLowerArm": 0.060800276696681976,
+        "RightLowerArm": 0.052637338638305664,
+        "LeftFoot": 0.03912683203816414,
+        "RightFoot": 0.0019950431305915117,
+        "front_ornament_region": 0.9448560476303101
+      }
+    },
+    {
+      "import_frame": 16.5,
+      "elapsed_seconds": 0.5166666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000031527131796,
+        "Chest": 0.11803875863552094,
+        "Finial": 2.060142993927002,
+        "LeftLowerArm": 0.059434473514556885,
+        "RightLowerArm": 0.05076427757740021,
+        "LeftFoot": 0.03963322564959526,
+        "RightFoot": 0.002000031527131796,
+        "front_ornament_region": 0.9400011301040649
+      }
+    },
+    {
+      "import_frame": 16.625,
+      "elapsed_seconds": 0.5208333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001995084574446082,
+        "Chest": 0.11468277871608734,
+        "Finial": 2.0582456588745117,
+        "LeftLowerArm": 0.05800887197256088,
+        "RightLowerArm": 0.048831745982170105,
+        "LeftFoot": 0.04012841358780861,
+        "RightFoot": 0.001995084574446082,
+        "front_ornament_region": 0.935106635093689
+      }
+    },
+    {
+      "import_frame": 16.75,
+      "elapsed_seconds": 0.525,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999088253825903,
+        "Chest": 0.11136084794998169,
+        "Finial": 2.0562567710876465,
+        "LeftLowerArm": 0.05654429644346237,
+        "RightLowerArm": 0.046859949827194214,
+        "LeftFoot": 0.04063227027654648,
+        "RightFoot": 0.0019999088253825903,
+        "front_ornament_region": 0.9301931858062744
+      }
+    },
+    {
+      "import_frame": 16.875,
+      "elapsed_seconds": 0.5291666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019949860870838165,
+        "Chest": 0.10805344581604004,
+        "Finial": 2.054156541824341,
+        "LeftLowerArm": 0.0550207644701004,
+        "RightLowerArm": 0.04482997953891754,
+        "LeftFoot": 0.04112512618303299,
+        "RightFoot": 0.0019949860870838165,
+        "front_ornament_region": 0.9252413511276245
+      }
+    },
+    {
+      "import_frame": 17.0,
+      "elapsed_seconds": 0.5333333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999428186565638,
+        "Chest": 0.10478036105632782,
+        "Finial": 2.05196475982666,
+        "LeftLowerArm": 0.05345795303583145,
+        "RightLowerArm": 0.04276084899902344,
+        "LeftFoot": 0.04162657633423805,
+        "RightFoot": 0.0019999428186565638,
+        "front_ornament_region": 0.9202709794044495
+      }
+    },
+    {
+      "import_frame": 17.125,
+      "elapsed_seconds": 0.5375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019944575615227222,
+        "Chest": 0.10150676965713501,
+        "Finial": 2.049643039703369,
+        "LeftLowerArm": 0.051813818514347076,
+        "RightLowerArm": 0.040612444281578064,
+        "LeftFoot": 0.042076196521520615,
+        "RightFoot": 0.0019944575615227222,
+        "front_ornament_region": 0.9152552485466003
+      }
+    },
+    {
+      "import_frame": 17.25,
+      "elapsed_seconds": 0.5416666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999926520511508,
+        "Chest": 0.09826831519603729,
+        "Finial": 2.047231435775757,
+        "LeftLowerArm": 0.05013111233711243,
+        "RightLowerArm": 0.03842516243457794,
+        "LeftFoot": 0.042535871267318726,
+        "RightFoot": 0.001999926520511508,
+        "front_ornament_region": 0.9102223515510559
+      }
+    },
+    {
+      "import_frame": 17.375,
+      "elapsed_seconds": 0.5458333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001994420774281025,
+        "Chest": 0.09504316747188568,
+        "Finial": 2.044708251953125,
+        "LeftLowerArm": 0.04838772863149643,
+        "RightLowerArm": 0.03617669641971588,
+        "LeftFoot": 0.04298338666558266,
+        "RightFoot": 0.001994420774281025,
+        "front_ornament_region": 0.9051506519317627
+      }
+    },
+    {
+      "import_frame": 17.5,
+      "elapsed_seconds": 0.55,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999586511403322,
+        "Chest": 0.0918535590171814,
+        "Finial": 2.04209566116333,
+        "LeftLowerArm": 0.04660610854625702,
+        "RightLowerArm": 0.033889636397361755,
+        "LeftFoot": 0.04344083368778229,
+        "RightFoot": 0.0019999586511403322,
+        "front_ornament_region": 0.9000626802444458
+      }
+    },
+    {
+      "import_frame": 17.625,
+      "elapsed_seconds": 0.5541666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019945106469094753,
+        "Chest": 0.08867771923542023,
+        "Finial": 2.039371967315674,
+        "LeftLowerArm": 0.04476384073495865,
+        "RightLowerArm": 0.031541839241981506,
+        "LeftFoot": 0.0438862070441246,
+        "RightFoot": 0.0019945106469094753,
+        "front_ornament_region": 0.8949366211891174
+      }
+    },
+    {
+      "import_frame": 17.75,
+      "elapsed_seconds": 0.5583333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999982323497534,
+        "Chest": 0.08553771674633026,
+        "Finial": 2.0365591049194336,
+        "LeftLowerArm": 0.042883723974227905,
+        "RightLowerArm": 0.029155373573303223,
+        "LeftFoot": 0.04434138536453247,
+        "RightFoot": 0.0019999982323497534,
+        "front_ornament_region": 0.889794647693634
+      }
+    },
+    {
+      "import_frame": 17.875,
+      "elapsed_seconds": 0.5625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001994440332055092,
+        "Chest": 0.08241213858127594,
+        "Finial": 2.033635139465332,
+        "LeftLowerArm": 0.04094350337982178,
+        "RightLowerArm": 0.026708796620368958,
+        "LeftFoot": 0.04478425532579422,
+        "RightFoot": 0.001994440332055092,
+        "front_ornament_region": 0.8846156001091003
+      }
+    },
+    {
+      "import_frame": 18.0,
+      "elapsed_seconds": 0.5666666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999726209789515,
+        "Chest": 0.07932277023792267,
+        "Finial": 2.030622959136963,
+        "LeftLowerArm": 0.03896518051624298,
+        "RightLowerArm": 0.024223938584327698,
+        "LeftFoot": 0.045237068086862564,
+        "RightFoot": 0.0019999726209789515,
+        "front_ornament_region": 0.8794214725494385
+      }
+    },
+    {
+      "import_frame": 18.125,
+      "elapsed_seconds": 0.5708333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019941204227507114,
+        "Chest": 0.07613624632358551,
+        "Finial": 2.0273845195770264,
+        "LeftLowerArm": 0.03684774041175842,
+        "RightLowerArm": 0.021589502692222595,
+        "LeftFoot": 0.045655302703380585,
+        "RightFoot": 0.0019941204227507114,
+        "front_ornament_region": 0.8740041851997375
+      }
+    },
+    {
+      "import_frame": 18.25,
+      "elapsed_seconds": 0.575,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999640062451363,
+        "Chest": 0.07298944890499115,
+        "Finial": 2.024052858352661,
+        "LeftLowerArm": 0.03469063341617584,
+        "RightLowerArm": 0.018923863768577576,
+        "LeftFoot": 0.04608413577079773,
+        "RightFoot": 0.0019999640062451363,
+        "front_ornament_region": 0.8685647249221802
+      }
+    },
+    {
+      "import_frame": 18.375,
+      "elapsed_seconds": 0.5791666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001994141610339284,
+        "Chest": 0.069859579205513,
+        "Finial": 2.0206046104431152,
+        "LeftLowerArm": 0.03247100114822388,
+        "RightLowerArm": 0.0162036269903183,
+        "LeftFoot": 0.04650028422474861,
+        "RightFoot": 0.001994141610339284,
+        "front_ornament_region": 0.8630875945091248
+      }
+    },
+    {
+      "import_frame": 18.5,
+      "elapsed_seconds": 0.5833333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000911317765713,
+        "Chest": 0.06676970422267914,
+        "Finial": 2.0170631408691406,
+        "LeftLowerArm": 0.030212000012397766,
+        "RightLowerArm": 0.013452291488647461,
+        "LeftFoot": 0.04692711681127548,
+        "RightFoot": 0.0020000911317765713,
+        "front_ornament_region": 0.8575962781906128
+      }
+    },
+    {
+      "import_frame": 18.625,
+      "elapsed_seconds": 0.5875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001994222169741988,
+        "Chest": 0.06369709968566895,
+        "Finial": 2.0134053230285645,
+        "LeftLowerArm": 0.027890734374523163,
+        "RightLowerArm": 0.010646626353263855,
+        "LeftFoot": 0.04734094440937042,
+        "RightFoot": 0.001994222169741988,
+        "front_ornament_region": 0.852068305015564
+      }
+    },
+    {
+      "import_frame": 18.75,
+      "elapsed_seconds": 0.5916666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999828964471817,
+        "Chest": 0.060664862394332886,
+        "Finial": 2.009655237197876,
+        "LeftLowerArm": 0.025530047714710236,
+        "RightLowerArm": 0.0078102946281433105,
+        "LeftFoot": 0.047765254974365234,
+        "RightFoot": 0.001999828964471817,
+        "front_ornament_region": 0.8465268015861511
+      }
+    },
+    {
+      "import_frame": 18.875,
+      "elapsed_seconds": 0.5958333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019941930659115314,
+        "Chest": 0.057650476694107056,
+        "Finial": 2.0057895183563232,
+        "LeftLowerArm": 0.02310749888420105,
+        "RightLowerArm": 0.004920214414596558,
+        "LeftFoot": 0.04817689210176468,
+        "RightFoot": 0.0019941930659115314,
+        "front_ornament_region": 0.8409495949745178
+      }
+    },
+    {
+      "import_frame": 19.0,
+      "elapsed_seconds": 0.6,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997507333755493,
+        "Chest": 0.05467686057090759,
+        "Finial": 2.0018317699432373,
+        "LeftLowerArm": 0.020646072924137115,
+        "RightLowerArm": 0.0019997507333755493,
+        "LeftFoot": 0.0485989972949028,
+        "RightFoot": 0.001999991713091731,
+        "front_ornament_region": 0.835359513759613
+      }
+    },
+    {
+      "import_frame": 19.125,
+      "elapsed_seconds": 0.6041666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0017116665840148926,
+        "Chest": 0.053586870431900024,
+        "Finial": 1.9997014999389648,
+        "LeftLowerArm": 0.01998954266309738,
+        "RightLowerArm": 0.0017116665840148926,
+        "LeftFoot": 0.05068089812994003,
+        "RightFoot": 0.0036881500855088234,
+        "front_ornament_region": 0.8317751884460449
+      }
+    },
+    {
+      "import_frame": 19.25,
+      "elapsed_seconds": 0.6083333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997209310531616,
+        "Chest": 0.052532702684402466,
+        "Finial": 1.9974902868270874,
+        "LeftLowerArm": 0.019347310066223145,
+        "RightLowerArm": 0.0019997209310531616,
+        "LeftFoot": 0.05277229845523834,
+        "RightFoot": 0.005386683624237776,
+        "front_ornament_region": 0.8281803727149963
+      }
+    },
+    {
+      "import_frame": 19.375,
+      "elapsed_seconds": 0.6125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0017115920782089233,
+        "Chest": 0.05035921931266785,
+        "Finial": 1.9940441846847534,
+        "LeftLowerArm": 0.017564013600349426,
+        "RightLowerArm": 0.0017115920782089233,
+        "LeftFoot": 0.053717926144599915,
+        "RightFoot": 0.005940548609942198,
+        "front_ornament_region": 0.8234197497367859
+      }
+    },
+    {
+      "import_frame": 19.5,
+      "elapsed_seconds": 0.6166666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019998103380203247,
+        "Chest": 0.04822191596031189,
+        "Finial": 1.9905176162719727,
+        "LeftLowerArm": 0.015795335173606873,
+        "RightLowerArm": 0.0019998103380203247,
+        "LeftFoot": 0.0546727254986763,
+        "RightFoot": 0.006504710763692856,
+        "front_ornament_region": 0.8186489939689636
+      }
+    },
+    {
+      "import_frame": 19.625,
+      "elapsed_seconds": 0.6208333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0017134249210357666,
+        "Chest": 0.0449712872505188,
+        "Finial": 1.9857622385025024,
+        "LeftLowerArm": 0.012891791760921478,
+        "RightLowerArm": 0.0017134249210357666,
+        "LeftFoot": 0.05448763445019722,
+        "RightFoot": 0.005929872393608093,
+        "front_ornament_region": 0.8127191066741943
+      }
+    },
+    {
+      "import_frame": 19.75,
+      "elapsed_seconds": 0.625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999586820602417,
+        "Chest": 0.04175683856010437,
+        "Finial": 1.9809268712997437,
+        "LeftLowerArm": 0.010002493858337402,
+        "RightLowerArm": 0.001999586820602417,
+        "LeftFoot": 0.05431161820888519,
+        "RightFoot": 0.005365558434277773,
+        "front_ornament_region": 0.8067795038223267
+      }
+    },
+    {
+      "import_frame": 19.875,
+      "elapsed_seconds": 0.6291666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00171661376953125,
+        "Chest": 0.03744515776634216,
+        "Finial": 1.9748785495758057,
+        "LeftLowerArm": 0.005994141101837158,
+        "RightLowerArm": 0.00171661376953125,
+        "LeftFoot": 0.05301115661859512,
+        "RightFoot": 0.003677545813843608,
+        "front_ornament_region": 0.7996970415115356
+      }
+    },
+    {
+      "import_frame": 20.0,
+      "elapsed_seconds": 0.6333333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019998550415039062,
+        "Chest": 0.033169955015182495,
+        "Finial": 1.968751072883606,
+        "LeftLowerArm": 0.0020006075501441956,
+        "RightLowerArm": 0.0019998550415039062,
+        "LeftFoot": 0.05171995237469673,
+        "RightFoot": 0.00199997890740633,
+        "front_ornament_region": 0.7926056385040283
+      }
+    },
+    {
+      "import_frame": 20.125,
+      "elapsed_seconds": 0.6375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0018334165215492249,
+        "Chest": 0.031929999589920044,
+        "Finial": 1.9656809568405151,
+        "LeftLowerArm": 0.0018334165215492249,
+        "RightLowerArm": 0.0026545822620391846,
+        "LeftFoot": 0.053044166415929794,
+        "RightFoot": 0.0029735558200627565,
+        "front_ornament_region": 0.7887001037597656
+      }
+    },
+    {
+      "import_frame": 20.25,
+      "elapsed_seconds": 0.6416666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020004361867904663,
+        "Chest": 0.030722230672836304,
+        "Finial": 1.9625425338745117,
+        "LeftLowerArm": 0.0020004361867904663,
+        "RightLowerArm": 0.0034080296754837036,
+        "LeftFoot": 0.05437447503209114,
+        "RightFoot": 0.003954078536480665,
+        "front_ornament_region": 0.7847875952720642
+      }
+    },
+    {
+      "import_frame": 20.375,
+      "elapsed_seconds": 0.6458333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0018337666988372803,
+        "Chest": 0.028878003358840942,
+        "Finial": 1.958667278289795,
+        "LeftLowerArm": 0.0018337666988372803,
+        "RightLowerArm": 0.003592386841773987,
+        "LeftFoot": 0.0550425723195076,
+        "RightFoot": 0.004273158963769674,
+        "front_ornament_region": 0.7801993489265442
+      }
+    },
+    {
+      "import_frame": 20.5,
+      "elapsed_seconds": 0.65,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020003393292427063,
+        "Chest": 0.02706587314605713,
+        "Finial": 1.9547243118286133,
+        "LeftLowerArm": 0.0020003393292427063,
+        "RightLowerArm": 0.0038750022649765015,
+        "LeftFoot": 0.0557168573141098,
+        "RightFoot": 0.004599422216415405,
+        "front_ornament_region": 0.7756043672561646
+      }
+    },
+    {
+      "import_frame": 20.625,
+      "elapsed_seconds": 0.6541666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0018347129225730896,
+        "Chest": 0.024621009826660156,
+        "Finial": 1.950048804283142,
+        "LeftLowerArm": 0.0018347129225730896,
+        "RightLowerArm": 0.003590226173400879,
+        "LeftFoot": 0.05573244020342827,
+        "RightFoot": 0.00426809536293149,
+        "front_ornament_region": 0.7703377604484558
+      }
+    },
+    {
+      "import_frame": 20.75,
+      "elapsed_seconds": 0.6583333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000376582145691,
+        "Chest": 0.022208482027053833,
+        "Finial": 1.9453051090240479,
+        "LeftLowerArm": 0.002000376582145691,
+        "RightLowerArm": 0.003402501344680786,
+        "LeftFoot": 0.055754028260707855,
+        "RightFoot": 0.003943775314837694,
+        "front_ornament_region": 0.7650647759437561
+      }
+    },
+    {
+      "import_frame": 20.875,
+      "elapsed_seconds": 0.6625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0018359199166297913,
+        "Chest": 0.019170403480529785,
+        "Finial": 1.939836859703064,
+        "LeftLowerArm": 0.0018359199166297913,
+        "RightLowerArm": 0.0026530027389526367,
+        "LeftFoot": 0.05512373894453049,
+        "RightFoot": 0.002968412823975086,
+        "front_ornament_region": 0.7591279149055481
+      }
+    },
+    {
+      "import_frame": 21.0,
+      "elapsed_seconds": 0.6666666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001616794615984,
+        "Chest": 0.01616489887237549,
+        "Finial": 1.9343011379241943,
+        "LeftLowerArm": 0.0020008236169815063,
+        "RightLowerArm": 0.002000167965888977,
+        "LeftFoot": 0.054499588906764984,
+        "RightFoot": 0.0020001616794615984,
+        "front_ornament_region": 0.7531850934028625
+      }
+    },
+    {
+      "import_frame": 21.125,
+      "elapsed_seconds": 0.6708333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019619911909103394,
+        "Chest": 0.014651954174041748,
+        "Finial": 1.93031907081604,
+        "LeftLowerArm": 0.0019619911909103394,
+        "RightLowerArm": 0.0020603984594345093,
+        "LeftFoot": 0.05503550171852112,
+        "RightFoot": 0.002210394712164998,
+        "front_ornament_region": 0.7488760948181152
+      }
+    },
+    {
+      "import_frame": 21.25,
+      "elapsed_seconds": 0.675,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002126693725586,
+        "Chest": 0.013167709112167358,
+        "Finial": 1.926277995109558,
+        "LeftLowerArm": 0.0020002126693725586,
+        "RightLowerArm": 0.0021693259477615356,
+        "LeftFoot": 0.05557618290185928,
+        "RightFoot": 0.002426351886242628,
+        "front_ornament_region": 0.7445621490478516
+      }
+    },
+    {
+      "import_frame": 21.375,
+      "elapsed_seconds": 0.6791666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019617900252342224,
+        "Chest": 0.011557936668395996,
+        "Finial": 1.9220234155654907,
+        "LeftLowerArm": 0.0019617900252342224,
+        "RightLowerArm": 0.0021734237670898438,
+        "LeftFoot": 0.0559673011302948,
+        "RightFoot": 0.0024934650864452124,
+        "front_ornament_region": 0.7400890588760376
+      }
+    },
+    {
+      "import_frame": 21.5,
+      "elapsed_seconds": 0.6833333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020005255937576294,
+        "Chest": 0.009977012872695923,
+        "Finial": 1.9177100658416748,
+        "LeftLowerArm": 0.0020005255937576294,
+        "RightLowerArm": 0.002225935459136963,
+        "LeftFoot": 0.05636313185095787,
+        "RightFoot": 0.0025661771651357412,
+        "front_ornament_region": 0.7356113195419312
+      }
+    },
+    {
+      "import_frame": 21.625,
+      "elapsed_seconds": 0.6875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019623637199401855,
+        "Chest": 0.008271902799606323,
+        "Finial": 1.9131852388381958,
+        "LeftLowerArm": 0.0019623637199401855,
+        "RightLowerArm": 0.0021735429763793945,
+        "LeftFoot": 0.056610703468322754,
+        "RightFoot": 0.0024917239788919687,
+        "front_ornament_region": 0.7309762239456177
+      }
+    },
+    {
+      "import_frame": 21.75,
+      "elapsed_seconds": 0.6916666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020003393292427063,
+        "Chest": 0.006595790386199951,
+        "Finial": 1.9086021184921265,
+        "LeftLowerArm": 0.0020003393292427063,
+        "RightLowerArm": 0.0021692216396331787,
+        "LeftFoot": 0.05686310678720474,
+        "RightFoot": 0.002422966528683901,
+        "front_ornament_region": 0.7263370752334595
+      }
+    },
+    {
+      "import_frame": 21.875,
+      "elapsed_seconds": 0.6958333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019626468420028687,
+        "Chest": 0.004797518253326416,
+        "Finial": 1.9038095474243164,
+        "LeftLowerArm": 0.0019626468420028687,
+        "RightLowerArm": 0.0020609796047210693,
+        "LeftFoot": 0.05696894973516464,
+        "RightFoot": 0.002208598656579852,
+        "front_ornament_region": 0.7215426564216614
+      }
+    },
+    {
+      "import_frame": 22.0,
+      "elapsed_seconds": 0.7,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999826170504093,
+        "Chest": 0.003028303384780884,
+        "Finial": 1.8989589214324951,
+        "LeftLowerArm": 0.0020007193088531494,
+        "RightLowerArm": 0.002000153064727783,
+        "LeftFoot": 0.05707954615354538,
+        "RightFoot": 0.001999826170504093,
+        "front_ornament_region": 0.7167444825172424
+      }
+    },
+    {
+      "import_frame": 22.125,
+      "elapsed_seconds": 0.7041666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001996278762817383,
+        "Chest": 0.0028593838214874268,
+        "Finial": 1.8961461782455444,
+        "LeftLowerArm": 0.001996278762817383,
+        "RightLowerArm": 0.001996859908103943,
+        "LeftFoot": 0.05874580144882202,
+        "RightFoot": 0.0033214029390364885,
+        "front_ornament_region": 0.7140169143676758
+      }
+    },
+    {
+      "import_frame": 22.25,
+      "elapsed_seconds": 0.7083333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020006150007247925,
+        "Chest": 0.0027094483375549316,
+        "Finial": 1.8932915925979614,
+        "LeftLowerArm": 0.0020006150007247925,
+        "RightLowerArm": 0.0020020008087158203,
+        "LeftFoot": 0.06041828542947769,
+        "RightFoot": 0.004650152754038572,
+        "front_ornament_region": 0.7112854719161987
+      }
+    },
+    {
+      "import_frame": 22.375,
+      "elapsed_seconds": 0.7125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001996174454689026,
+        "Chest": 0.0025610029697418213,
+        "Finial": 1.8903772830963135,
+        "LeftLowerArm": 0.001996174454689026,
+        "RightLowerArm": 0.0019981563091278076,
+        "LeftFoot": 0.062079623341560364,
+        "RightFoot": 0.005968954414129257,
+        "front_ornament_region": 0.7085325717926025
+      }
+    },
+    {
+      "import_frame": 22.5,
+      "elapsed_seconds": 0.7166666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200045108795166,
+        "Chest": 0.002431541681289673,
+        "Finial": 1.8874218463897705,
+        "LeftLowerArm": 0.00200045108795166,
+        "RightLowerArm": 0.0020025670528411865,
+        "LeftFoot": 0.06374726444482803,
+        "RightFoot": 0.00729497941210866,
+        "front_ornament_region": 0.7057761549949646
+      }
+    },
+    {
+      "import_frame": 22.625,
+      "elapsed_seconds": 0.7208333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019960924983024597,
+        "Chest": 0.0023036301136016846,
+        "Finial": 1.8844074010849,
+        "LeftLowerArm": 0.0019960924983024597,
+        "RightLowerArm": 0.001998007297515869,
+        "LeftFoot": 0.06540358066558838,
+        "RightFoot": 0.008610929362475872,
+        "front_ornament_region": 0.702998697757721
+      }
+    },
+    {
+      "import_frame": 22.75,
+      "elapsed_seconds": 0.725,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000361680984497,
+        "Chest": 0.0021947920322418213,
+        "Finial": 1.8813518285751343,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0020020753145217896,
+        "LeftFoot": 0.06706609576940536,
+        "RightFoot": 0.009934219531714916,
+        "front_ornament_region": 0.7002179026603699
+      }
+    },
+    {
+      "import_frame": 22.875,
+      "elapsed_seconds": 0.7291666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001995973289012909,
+        "Chest": 0.002087801694869995,
+        "Finial": 1.8782377243041992,
+        "LeftLowerArm": 0.001995973289012909,
+        "RightLowerArm": 0.0019966959953308105,
+        "LeftFoot": 0.06871780008077621,
+        "RightFoot": 0.011247805319726467,
+        "front_ornament_region": 0.6974166035652161
+      }
+    },
+    {
+      "import_frame": 23.0,
+      "elapsed_seconds": 0.7333333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000040531158447,
+        "Chest": 0.0020001232624053955,
+        "Finial": 1.8750828504562378,
+        "LeftLowerArm": 0.0020005926489830017,
+        "RightLowerArm": 0.0020000040531158447,
+        "LeftFoot": 0.07037562131881714,
+        "RightFoot": 0.012568525969982147,
+        "front_ornament_region": 0.6946123242378235
+      }
+    },
+    {
+      "import_frame": 23.125,
+      "elapsed_seconds": 0.7375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019938647747039795,
+        "Chest": 0.0019938647747039795,
+        "Finial": 1.8723993301391602,
+        "LeftLowerArm": 0.002006120979785919,
+        "RightLowerArm": 0.0020061731338500977,
+        "LeftFoot": 0.07249945402145386,
+        "RightFoot": 0.014331791549921036,
+        "front_ornament_region": 0.692259669303894
+      }
+    },
+    {
+      "import_frame": 23.25,
+      "elapsed_seconds": 0.7416666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200006365776062,
+        "Chest": 0.00200006365776062,
+        "Finial": 1.8696845769882202,
+        "LeftLowerArm": 0.002020612359046936,
+        "RightLowerArm": 0.002021193504333496,
+        "LeftFoot": 0.0746362954378128,
+        "RightFoot": 0.01610952988266945,
+        "front_ornament_region": 0.6899033784866333
+      }
+    },
+    {
+      "import_frame": 23.375,
+      "elapsed_seconds": 0.7458333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019937753677368164,
+        "Chest": 0.0019937753677368164,
+        "Finial": 1.8669131994247437,
+        "LeftLowerArm": 0.0020196661353111267,
+        "RightLowerArm": 0.0020204931497573853,
+        "LeftFoot": 0.07676129788160324,
+        "RightFoot": 0.01787644997239113,
+        "front_ornament_region": 0.6875181794166565
+      }
+    },
+    {
+      "import_frame": 23.5,
+      "elapsed_seconds": 0.75,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000182867050171,
+        "Chest": 0.002000182867050171,
+        "Finial": 1.8641103506088257,
+        "LeftLowerArm": 0.0020277947187423706,
+        "RightLowerArm": 0.0020288825035095215,
+        "LeftFoot": 0.07889946550130844,
+        "RightFoot": 0.019657935947179794,
+        "front_ornament_region": 0.6851295232772827
+      }
+    },
+    {
+      "import_frame": 23.625,
+      "elapsed_seconds": 0.7541666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001993805170059204,
+        "Chest": 0.001993805170059204,
+        "Finial": 1.8612511157989502,
+        "LeftLowerArm": 0.0020197629928588867,
+        "RightLowerArm": 0.0020208358764648438,
+        "LeftFoot": 0.08102525025606155,
+        "RightFoot": 0.021428324282169342,
+        "front_ornament_region": 0.6827121376991272
+      }
+    },
+    {
+      "import_frame": 23.75,
+      "elapsed_seconds": 0.7583333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200006365776062,
+        "Chest": 0.00200006365776062,
+        "Finial": 1.8583604097366333,
+        "LeftLowerArm": 0.0020211786031723022,
+        "RightLowerArm": 0.0020217597484588623,
+        "LeftFoot": 0.08316393196582794,
+        "RightFoot": 0.023213129490613937,
+        "front_ornament_region": 0.6802911162376404
+      }
+    },
+    {
+      "import_frame": 23.875,
+      "elapsed_seconds": 0.7625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019936859607696533,
+        "Chest": 0.0019936859607696533,
+        "Finial": 1.8554136753082275,
+        "LeftLowerArm": 0.0020058751106262207,
+        "RightLowerArm": 0.0020059943199157715,
+        "LeftFoot": 0.08529040962457657,
+        "RightFoot": 0.024987168610095978,
+        "front_ornament_region": 0.6778417229652405
+      }
+    },
+    {
+      "import_frame": 24.0,
+      "elapsed_seconds": 0.7666666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999765634536743,
+        "Chest": 0.002000182867050171,
+        "Finial": 1.8524361848831177,
+        "LeftLowerArm": 0.002000272274017334,
+        "RightLowerArm": 0.001999765634536743,
+        "LeftFoot": 0.08742973953485489,
+        "RightFoot": 0.026775304228067398,
+        "front_ornament_region": 0.675389289855957
+      }
+    },
+    {
+      "import_frame": 24.125,
+      "elapsed_seconds": 0.7708333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001990288496017456,
+        "Chest": 0.001990288496017456,
+        "Finial": 1.84864342212677,
+        "LeftLowerArm": 0.0020393505692481995,
+        "RightLowerArm": 0.002040863037109375,
+        "LeftFoot": 0.09010130912065506,
+        "RightFoot": 0.029010916128754616,
+        "front_ornament_region": 0.6722904443740845
+      }
+    },
+    {
+      "import_frame": 24.25,
+      "elapsed_seconds": 0.775,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000040531158447,
+        "Chest": 0.0020000040531158447,
+        "Finial": 1.844802975654602,
+        "LeftLowerArm": 0.002084106206893921,
+        "RightLowerArm": 0.0020870864391326904,
+        "LeftFoot": 0.09279404580593109,
+        "RightFoot": 0.03126990422606468,
+        "front_ornament_region": 0.6691867709159851
+      }
+    },
+    {
+      "import_frame": 24.375,
+      "elapsed_seconds": 0.7791666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001990079879760742,
+        "Chest": 0.001990079879760742,
+        "Finial": 1.8408746719360352,
+        "LeftLowerArm": 0.0020951777696609497,
+        "RightLowerArm": 0.0020990371704101562,
+        "LeftFoot": 0.09546847641468048,
+        "RightFoot": 0.03351264446973801,
+        "front_ornament_region": 0.6660386919975281
+      }
+    },
+    {
+      "import_frame": 24.5,
+      "elapsed_seconds": 0.7833333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200006365776062,
+        "Chest": 0.00200006365776062,
+        "Finial": 1.836898922920227,
+        "LeftLowerArm": 0.0021121948957443237,
+        "RightLowerArm": 0.0021165460348129272,
+        "LeftFoot": 0.09816379100084305,
+        "RightFoot": 0.035778552293777466,
+        "front_ornament_region": 0.6628861427307129
+      }
+    },
+    {
+      "import_frame": 24.625,
+      "elapsed_seconds": 0.7875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001989990472793579,
+        "Chest": 0.001989990472793579,
+        "Finial": 1.8328362703323364,
+        "LeftLowerArm": 0.0020954087376594543,
+        "RightLowerArm": 0.0020992159843444824,
+        "LeftFoot": 0.10083980858325958,
+        "RightFoot": 0.03802725300192833,
+        "front_ornament_region": 0.6596894860267639
+      }
+    },
+    {
+      "import_frame": 24.75,
+      "elapsed_seconds": 0.7916666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200006365776062,
+        "Chest": 0.00200006365776062,
+        "Finial": 1.8287264108657837,
+        "LeftLowerArm": 0.002084597945213318,
+        "RightLowerArm": 0.002087891101837158,
+        "LeftFoot": 0.10353676229715347,
+        "RightFoot": 0.040299128741025925,
+        "front_ornament_region": 0.656488835811615
+      }
+    },
+    {
+      "import_frame": 24.875,
+      "elapsed_seconds": 0.7958333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00199010968208313,
+        "Chest": 0.00199010968208313,
+        "Finial": 1.824530005455017,
+        "LeftLowerArm": 0.002039581537246704,
+        "RightLowerArm": 0.002041250467300415,
+        "LeftFoot": 0.1062142625451088,
+        "RightFoot": 0.04255397245287895,
+        "front_ornament_region": 0.6532442569732666
+      }
+    },
+    {
+      "import_frame": 25.0,
+      "elapsed_seconds": 0.8,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000040531158447,
+        "Chest": 0.002000153064727783,
+        "Finial": 1.820286750793457,
+        "LeftLowerArm": 0.0020004957914352417,
+        "RightLowerArm": 0.0020000040531158447,
+        "LeftFoot": 0.10891213268041611,
+        "RightFoot": 0.044831398874521255,
+        "front_ornament_region": 0.6499959826469421
+      }
+    },
+    {
+      "import_frame": 25.125,
+      "elapsed_seconds": 0.8041666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019763410091400146,
+        "Chest": 0.0019763410091400146,
+        "Finial": 1.8135650157928467,
+        "LeftLowerArm": 0.0021186694502830505,
+        "RightLowerArm": 0.002131223678588867,
+        "LeftFoot": 0.10812440514564514,
+        "RightFoot": 0.04226590692996979,
+        "front_ornament_region": 0.6448945999145508
+      }
+    },
+    {
+      "import_frame": 25.25,
+      "elapsed_seconds": 0.8083333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000093460083008,
+        "Chest": 0.002000093460083008,
+        "Finial": 1.806732416152954,
+        "LeftLowerArm": 0.002243906259536743,
+        "RightLowerArm": 0.0022657066583633423,
+        "LeftFoot": 0.10661926120519638,
+        "RightFoot": 0.038839247077703476,
+        "front_ornament_region": 0.6397845149040222
+      }
+    },
+    {
+      "import_frame": 25.375,
+      "elapsed_seconds": 0.8125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001976102590560913,
+        "Chest": 0.001976102590560913,
+        "Finial": 1.7996933460235596,
+        "LeftLowerArm": 0.0022810548543930054,
+        "RightLowerArm": 0.0023083388805389404,
+        "LeftFoot": 0.1049000546336174,
+        "RightFoot": 0.035430170595645905,
+        "front_ornament_region": 0.6345701217651367
+      }
+    },
+    {
+      "import_frame": 25.5,
+      "elapsed_seconds": 0.8166666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999444484710693,
+        "Chest": 0.0019999444484710693,
+        "Finial": 1.7925443649291992,
+        "LeftLowerArm": 0.0023251622915267944,
+        "RightLowerArm": 0.002354443073272705,
+        "LeftFoot": 0.10259202122688293,
+        "RightFoot": 0.032136499881744385,
+        "front_ornament_region": 0.6293480396270752
+      }
+    },
+    {
+      "import_frame": 25.625,
+      "elapsed_seconds": 0.8208333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019761323928833008,
+        "Chest": 0.0019761323928833008,
+        "Finial": 1.7851918935775757,
+        "LeftLowerArm": 0.002281293272972107,
+        "RightLowerArm": 0.0023088455200195312,
+        "LeftFoot": 0.10003481805324554,
+        "RightFoot": 0.028865031898021698,
+        "front_ornament_region": 0.6240237951278687
+      }
+    },
+    {
+      "import_frame": 25.75,
+      "elapsed_seconds": 0.825,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000040531158447,
+        "Chest": 0.0020000040531158447,
+        "Finial": 1.7777308225631714,
+        "LeftLowerArm": 0.002243831753730774,
+        "RightLowerArm": 0.002266019582748413,
+        "LeftFoot": 0.0975889265537262,
+        "RightFoot": 0.025712646543979645,
+        "front_ornament_region": 0.6186925768852234
+      }
+    },
+    {
+      "import_frame": 25.875,
+      "elapsed_seconds": 0.8291666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019761621952056885,
+        "Chest": 0.0019761621952056885,
+        "Finial": 1.7700684070587158,
+        "LeftLowerArm": 0.0021184906363487244,
+        "RightLowerArm": 0.0021312981843948364,
+        "LeftFoot": 0.09516140818595886,
+        "RightFoot": 0.02258690819144249,
+        "front_ornament_region": 0.6132609844207764
+      }
+    },
+    {
+      "import_frame": 26.0,
+      "elapsed_seconds": 0.8333333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001381635665894,
+        "Chest": 0.0020003020763397217,
+        "Finial": 1.7622997760772705,
+        "LeftLowerArm": 0.002000480890274048,
+        "RightLowerArm": 0.0020001381635665894,
+        "LeftFoot": 0.09284879267215729,
+        "RightFoot": 0.01958407461643219,
+        "front_ornament_region": 0.6078240275382996
+      }
+    },
+    {
+      "import_frame": 26.125,
+      "elapsed_seconds": 0.8375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020263418555259705,
+        "Chest": 0.007764548063278198,
+        "Finial": 1.7575803995132446,
+        "LeftLowerArm": 0.0020263418555259705,
+        "RightLowerArm": 0.002094089984893799,
+        "LeftFoot": 0.08982851356267929,
+        "RightFoot": 0.015448786318302155,
+        "front_ornament_region": 0.6063249111175537
+      }
+    },
+    {
+      "import_frame": 26.25,
+      "elapsed_seconds": 0.8416666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000264823436737,
+        "Chest": 0.013611018657684326,
+        "Finial": 1.752678632736206,
+        "LeftLowerArm": 0.002000264823436737,
+        "RightLowerArm": 0.0021167397499084473,
+        "LeftFoot": 0.08734896779060364,
+        "RightFoot": 0.011794857680797577,
+        "front_ornament_region": 0.6048175692558289
+      }
+    },
+    {
+      "import_frame": 26.375,
+      "elapsed_seconds": 0.8458333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002025231719017029,
+        "Chest": 0.01964476704597473,
+        "Finial": 1.747697353363037,
+        "LeftLowerArm": 0.002025231719017029,
+        "RightLowerArm": 0.0021706223487854004,
+        "LeftFoot": 0.08551491051912308,
+        "RightFoot": 0.008808895945549011,
+        "front_ornament_region": 0.6034055352210999
+      }
+    },
+    {
+      "import_frame": 26.5,
+      "elapsed_seconds": 0.85,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001381635665894,
+        "Chest": 0.025760918855667114,
+        "Finial": 1.7425380945205688,
+        "LeftLowerArm": 0.0020001381635665894,
+        "RightLowerArm": 0.002154931426048279,
+        "LeftFoot": 0.08426788449287415,
+        "RightFoot": 0.006219491362571716,
+        "front_ornament_region": 0.6019879579544067
+      }
+    },
+    {
+      "import_frame": 26.625,
+      "elapsed_seconds": 0.8541666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020243898034095764,
+        "Chest": 0.03205803036689758,
+        "Finial": 1.7372993230819702,
+        "LeftLowerArm": 0.0020243898034095764,
+        "RightLowerArm": 0.0021690726280212402,
+        "LeftFoot": 0.08372709900140762,
+        "RightFoot": 0.004108399152755737,
+        "front_ornament_region": 0.6006640195846558
+      }
+    },
+    {
+      "import_frame": 26.75,
+      "elapsed_seconds": 0.8583333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000465989112854,
+        "Chest": 0.03843775391578674,
+        "Finial": 1.7318857908248901,
+        "LeftLowerArm": 0.002000465989112854,
+        "RightLowerArm": 0.0021157562732696533,
+        "LeftFoot": 0.08381348103284836,
+        "RightFoot": 0.0026518702507019043,
+        "front_ornament_region": 0.5993368029594421
+      }
+    },
+    {
+      "import_frame": 26.875,
+      "elapsed_seconds": 0.8625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019807517528533936,
+        "Chest": 0.04499143362045288,
+        "Finial": 1.7263939380645752,
+        "LeftLowerArm": 0.002023637294769287,
+        "RightLowerArm": 0.002090543508529663,
+        "LeftFoot": 0.0846545472741127,
+        "RightFoot": 0.0019807517528533936,
+        "front_ornament_region": 0.5981011390686035
+      }
+    },
+    {
+      "import_frame": 27.0,
+      "elapsed_seconds": 0.8666666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019998252391815186,
+        "Chest": 0.05162772536277771,
+        "Finial": 1.7207307815551758,
+        "LeftLowerArm": 0.002000473439693451,
+        "RightLowerArm": 0.0019998252391815186,
+        "LeftFoot": 0.08573709428310394,
+        "RightFoot": 0.0019999444484710693,
+        "front_ornament_region": 0.5968647003173828
+      }
+    },
+    {
+      "import_frame": 27.125,
+      "elapsed_seconds": 0.8708333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001533210277557373,
+        "Chest": 0.05808040499687195,
+        "Finial": 1.7134170532226562,
+        "LeftLowerArm": 0.004798218607902527,
+        "RightLowerArm": 0.004888206720352173,
+        "LeftFoot": 0.08609963953495026,
+        "RightFoot": 0.001533210277557373,
+        "front_ornament_region": 0.5945965051651001
+      }
+    },
+    {
+      "import_frame": 27.25,
+      "elapsed_seconds": 0.875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999295473098755,
+        "Chest": 0.06463205814361572,
+        "Finial": 1.705902099609375,
+        "LeftLowerArm": 0.00760689377784729,
+        "RightLowerArm": 0.007761895656585693,
+        "LeftFoot": 0.08735592663288116,
+        "RightFoot": 0.0019999295473098755,
+        "front_ornament_region": 0.5923299789428711
+      }
+    },
+    {
+      "import_frame": 27.375,
+      "elapsed_seconds": 0.8791666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0015106350183486938,
+        "Chest": 0.06939294934272766,
+        "Finial": 1.6962922811508179,
+        "LeftLowerArm": 0.008544087409973145,
+        "RightLowerArm": 0.008735984563827515,
+        "LeftFoot": 0.08761663734912872,
+        "RightFoot": 0.0015106350183486938,
+        "front_ornament_region": 0.5881730914115906
+      }
+    },
+    {
+      "import_frame": 27.5,
+      "elapsed_seconds": 0.8833333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999444484710693,
+        "Chest": 0.07425299286842346,
+        "Finial": 1.6864862442016602,
+        "LeftLowerArm": 0.009494557976722717,
+        "RightLowerArm": 0.00969773530960083,
+        "LeftFoot": 0.08881688117980957,
+        "RightFoot": 0.0019999444484710693,
+        "front_ornament_region": 0.5840210914611816
+      }
+    },
+    {
+      "import_frame": 27.625,
+      "elapsed_seconds": 0.8875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001493990421295166,
+        "Chest": 0.07738083600997925,
+        "Finial": 1.6746553182601929,
+        "LeftLowerArm": 0.008628681302070618,
+        "RightLowerArm": 0.008817583322525024,
+        "LeftFoot": 0.08914268016815186,
+        "RightFoot": 0.001493990421295166,
+        "front_ornament_region": 0.5780444741249084
+      }
+    },
+    {
+      "import_frame": 27.75,
+      "elapsed_seconds": 0.8916666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999444484710693,
+        "Chest": 0.08060786128044128,
+        "Finial": 1.6626335382461548,
+        "LeftLowerArm": 0.007778048515319824,
+        "RightLowerArm": 0.007926881313323975,
+        "LeftFoot": 0.09043991565704346,
+        "RightFoot": 0.0019999444484710693,
+        "front_ornament_region": 0.5720759630203247
+      }
+    },
+    {
+      "import_frame": 27.875,
+      "elapsed_seconds": 0.8958333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001485198736190796,
+        "Chest": 0.08187761902809143,
+        "Finial": 1.6483733654022217,
+        "LeftLowerArm": 0.004880346357822418,
+        "RightLowerArm": 0.004966989159584045,
+        "LeftFoot": 0.09067535400390625,
+        "RightFoot": 0.001485198736190796,
+        "front_ornament_region": 0.5640648007392883
+      }
+    },
+    {
+      "import_frame": 28.0,
+      "elapsed_seconds": 0.9,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019996464252471924,
+        "Chest": 0.08324649930000305,
+        "Finial": 1.6339285373687744,
+        "LeftLowerArm": 0.0020003467798233032,
+        "RightLowerArm": 0.0019996464252471924,
+        "LeftFoot": 0.09189967811107635,
+        "RightFoot": 0.002000182867050171,
+        "front_ornament_region": 0.5560654401779175
+      }
+    },
+    {
+      "import_frame": 28.125,
+      "elapsed_seconds": 0.9041666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0017021894454956055,
+        "Chest": 0.08214837312698364,
+        "Finial": 1.6174492835998535,
+        "LeftLowerArm": 0.0019969940185546875,
+        "RightLowerArm": 0.0027369409799575806,
+        "LeftFoot": 0.09225156903266907,
+        "RightFoot": 0.0017021894454956055,
+        "front_ornament_region": 0.5459310412406921
+      }
+    },
+    {
+      "import_frame": 28.25,
+      "elapsed_seconds": 0.9083333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999974250793457,
+        "Chest": 0.08114033937454224,
+        "Finial": 1.6008055210113525,
+        "LeftLowerArm": 0.002502068877220154,
+        "RightLowerArm": 0.0037755966186523438,
+        "LeftFoot": 0.09317073225975037,
+        "RightFoot": 0.001999974250793457,
+        "front_ornament_region": 0.5358098745346069
+      }
+    },
+    {
+      "import_frame": 28.375,
+      "elapsed_seconds": 0.9125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0017003417015075684,
+        "Chest": 0.07902771234512329,
+        "Finial": 1.5827996730804443,
+        "LeftLowerArm": 0.002382807433605194,
+        "RightLowerArm": 0.0039501190185546875,
+        "LeftFoot": 0.0934637188911438,
+        "RightFoot": 0.0017003417015075684,
+        "front_ornament_region": 0.5245052576065063
+      }
+    },
+    {
+      "import_frame": 28.5,
+      "elapsed_seconds": 0.9166666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020000338554382324,
+        "Chest": 0.07700508832931519,
+        "Finial": 1.5646336078643799,
+        "LeftLowerArm": 0.00277121365070343,
+        "RightLowerArm": 0.004422709345817566,
+        "LeftFoot": 0.09432703256607056,
+        "RightFoot": 0.0020000338554382324,
+        "front_ornament_region": 0.5132165551185608
+      }
+    },
+    {
+      "import_frame": 28.625,
+      "elapsed_seconds": 0.9208333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00170096755027771,
+        "Chest": 0.07387471199035645,
+        "Finial": 1.5451126098632812,
+        "LeftLowerArm": 0.002466648817062378,
+        "RightLowerArm": 0.003993302583694458,
+        "LeftFoot": 0.09456288814544678,
+        "RightFoot": 0.00170096755027771,
+        "front_ornament_region": 0.500747561454773
+      }
+    },
+    {
+      "import_frame": 28.75,
+      "elapsed_seconds": 0.925,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999974250793457,
+        "Chest": 0.07083433866500854,
+        "Finial": 1.525437593460083,
+        "LeftLowerArm": 0.0026626065373420715,
+        "RightLowerArm": 0.0038569867610931396,
+        "LeftFoot": 0.09536769986152649,
+        "RightFoot": 0.001999974250793457,
+        "front_ornament_region": 0.48549914360046387
+      }
+    },
+    {
+      "import_frame": 28.875,
+      "elapsed_seconds": 0.9291666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001703709363937378,
+        "Chest": 0.06669491529464722,
+        "Finial": 1.5044293403625488,
+        "LeftLowerArm": 0.002089262008666992,
+        "RightLowerArm": 0.0027860701084136963,
+        "LeftFoot": 0.09554824233055115,
+        "RightFoot": 0.001703709363937378,
+        "front_ornament_region": 0.46689605712890625
+      }
+    },
+    {
+      "import_frame": 29.0,
+      "elapsed_seconds": 0.9333333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997209310531616,
+        "Chest": 0.06264528632164001,
+        "Finial": 1.4832717180252075,
+        "LeftLowerArm": 0.002000972628593445,
+        "RightLowerArm": 0.0019997209310531616,
+        "LeftFoot": 0.09629252552986145,
+        "RightFoot": 0.0020002126693725586,
+        "front_ornament_region": 0.4483160972595215
+      }
+    },
+    {
+      "import_frame": 29.125,
+      "elapsed_seconds": 0.9375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0017574280500411987,
+        "Chest": 0.05843520164489746,
+        "Finial": 1.4610940217971802,
+        "LeftLowerArm": 0.0017574280500411987,
+        "RightLowerArm": 0.0025306344032287598,
+        "LeftFoot": 0.09722825884819031,
+        "RightFoot": 0.002441883087158203,
+        "front_ornament_region": 0.4288461208343506
+      }
+    },
+    {
+      "import_frame": 29.25,
+      "elapsed_seconds": 0.9416666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020003244280815125,
+        "Chest": 0.05432000756263733,
+        "Finial": 1.4387614727020264,
+        "LeftLowerArm": 0.0020003244280815125,
+        "RightLowerArm": 0.0033963918685913086,
+        "LeftFoot": 0.09841176867485046,
+        "RightFoot": 0.003154188394546509,
+        "front_ornament_region": 0.4093174934387207
+      }
+    },
+    {
+      "import_frame": 29.375,
+      "elapsed_seconds": 0.9458333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001759856939315796,
+        "Chest": 0.049235016107559204,
+        "Finial": 1.4152085781097412,
+        "LeftLowerArm": 0.001759856939315796,
+        "RightLowerArm": 0.0036781728267669678,
+        "LeftFoot": 0.09878215193748474,
+        "RightFoot": 0.0030759871006011963,
+        "front_ornament_region": 0.3887525796890259
+      }
+    },
+    {
+      "import_frame": 29.5,
+      "elapsed_seconds": 0.95,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000182867050171,
+        "Chest": 0.044229358434677124,
+        "Finial": 1.3915069103240967,
+        "LeftLowerArm": 0.002000182867050171,
+        "RightLowerArm": 0.004368096590042114,
+        "LeftFoot": 0.09939631819725037,
+        "RightFoot": 0.003264307975769043,
+        "front_ornament_region": 0.36822187900543213
+      }
+    },
+    {
+      "import_frame": 29.625,
+      "elapsed_seconds": 0.9541666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0018241405487060547,
+        "Chest": 0.03842833638191223,
+        "Finial": 1.3667702674865723,
+        "LeftLowerArm": 0.0018241405487060547,
+        "RightLowerArm": 0.004570469260215759,
+        "LeftFoot": 0.09936201572418213,
+        "RightFoot": 0.002826988697052002,
+        "front_ornament_region": 0.34683823585510254
+      }
+    },
+    {
+      "import_frame": 29.75,
+      "elapsed_seconds": 0.9583333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999959349632263,
+        "Chest": 0.03272169828414917,
+        "Finial": 1.3418912887573242,
+        "LeftLowerArm": 0.001999959349632263,
+        "RightLowerArm": 0.005168601870536804,
+        "LeftFoot": 0.09956660866737366,
+        "RightFoot": 0.0026516616344451904,
+        "front_ornament_region": 0.3254941701889038
+      }
+    },
+    {
+      "import_frame": 29.875,
+      "elapsed_seconds": 0.9625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0017774403095245361,
+        "Chest": 0.02657341957092285,
+        "Finial": 1.3163467645645142,
+        "LeftLowerArm": 0.0017774403095245361,
+        "RightLowerArm": 0.005545437335968018,
+        "LeftFoot": 0.09946960210800171,
+        "RightFoot": 0.0021977126598358154,
+        "front_ornament_region": 0.30366337299346924
+      }
+    },
+    {
+      "import_frame": 30.0,
+      "elapsed_seconds": 0.9666666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020003318786621094,
+        "Chest": 0.020519107580184937,
+        "Finial": 1.2906668186187744,
+        "LeftLowerArm": 0.002000853419303894,
+        "RightLowerArm": 0.0020003914833068848,
+        "LeftFoot": 0.09960612654685974,
+        "RightFoot": 0.0020003318786621094,
+        "front_ornament_region": 0.2818775177001953
+      }
+    },
+    {
+      "import_frame": 30.125,
+      "elapsed_seconds": 0.9708333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0017383694648742676,
+        "Chest": 0.0194055438041687,
+        "Finial": 1.2686271667480469,
+        "LeftLowerArm": 0.002812713384628296,
+        "RightLowerArm": 0.0017383694648742676,
+        "LeftFoot": 0.10529035329818726,
+        "RightFoot": 0.007325977087020874,
+        "front_ornament_region": 0.2641357183456421
+      }
+    },
+    {
+      "import_frame": 30.25,
+      "elapsed_seconds": 0.975,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000093460083008,
+        "Chest": 0.018394500017166138,
+        "Finial": 1.2464431524276733,
+        "LeftLowerArm": 0.003674328327178955,
+        "RightLowerArm": 0.002000093460083008,
+        "LeftFoot": 0.11117061972618103,
+        "RightFoot": 0.012872695922851562,
+        "front_ornament_region": 0.24644768238067627
+      }
+    },
+    {
+      "import_frame": 30.375,
+      "elapsed_seconds": 0.9791666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0017430782318115234,
+        "Chest": 0.016372591257095337,
+        "Finial": 1.2229939699172974,
+        "LeftLowerArm": 0.003757268190383911,
+        "RightLowerArm": 0.0017430782318115234,
+        "LeftFoot": 0.11613261699676514,
+        "RightFoot": 0.017526328563690186,
+        "front_ornament_region": 0.22769486904144287
+      }
+    },
+    {
+      "import_frame": 30.5,
+      "elapsed_seconds": 0.9833333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000182867050171,
+        "Chest": 0.014452636241912842,
+        "Finial": 1.1994081735610962,
+        "LeftLowerArm": 0.004097700119018555,
+        "RightLowerArm": 0.002000182867050171,
+        "LeftFoot": 0.1212838888168335,
+        "RightFoot": 0.022394686937332153,
+        "front_ornament_region": 0.20900237560272217
+      }
+    },
+    {
+      "import_frame": 30.625,
+      "elapsed_seconds": 0.9875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0017523765563964844,
+        "Chest": 0.011625587940216064,
+        "Finial": 1.1746805906295776,
+        "LeftLowerArm": 0.003682345151901245,
+        "RightLowerArm": 0.0017523765563964844,
+        "LeftFoot": 0.12561243772506714,
+        "RightFoot": 0.026465535163879395,
+        "front_ornament_region": 0.18936383724212646
+      }
+    },
+    {
+      "import_frame": 30.75,
+      "elapsed_seconds": 0.9916666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997060298919678,
+        "Chest": 0.008899986743927002,
+        "Finial": 1.149824619293213,
+        "LeftLowerArm": 0.0035165250301361084,
+        "RightLowerArm": 0.0019997060298919678,
+        "LeftFoot": 0.13012275099754333,
+        "RightFoot": 0.030743569135665894,
+        "front_ornament_region": 0.1697918176651001
+      }
+    },
+    {
+      "import_frame": 30.875,
+      "elapsed_seconds": 0.9958333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0017657876014709473,
+        "Chest": 0.005399733781814575,
+        "Finial": 1.1239807605743408,
+        "LeftLowerArm": 0.0026396512985229492,
+        "RightLowerArm": 0.0017657876014709473,
+        "LeftFoot": 0.1339336335659027,
+        "RightFoot": 0.03434792160987854,
+        "front_ornament_region": 0.14942264556884766
+      }
+    },
+    {
+      "import_frame": 31.0,
+      "elapsed_seconds": 1.0,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001232624053955,
+        "Chest": 0.0020001232624053955,
+        "Finial": 1.0980167388916016,
+        "LeftLowerArm": 0.0020006000995635986,
+        "RightLowerArm": 0.0020003020763397217,
+        "LeftFoot": 0.13791882991790771,
+        "RightFoot": 0.03815203905105591,
+        "front_ornament_region": 0.12912583351135254
+      }
+    },
+    {
+      "import_frame": 31.125,
+      "elapsed_seconds": 1.0041666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001914381980895996,
+        "Chest": 0.002271801233291626,
+        "Finial": 1.0791597366333008,
+        "LeftLowerArm": 0.002145916223526001,
+        "RightLowerArm": 0.001914381980895996,
+        "LeftFoot": 0.14509597420692444,
+        "RightFoot": 0.04518610239028931,
+        "front_ornament_region": 0.11517906188964844
+      }
+    },
+    {
+      "import_frame": 31.25,
+      "elapsed_seconds": 1.0083333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001232624053955,
+        "Chest": 0.002612888813018799,
+        "Finial": 1.060222864151001,
+        "LeftLowerArm": 0.002393782138824463,
+        "RightLowerArm": 0.0020001232624053955,
+        "LeftFoot": 0.15239441394805908,
+        "RightFoot": 0.0523606538772583,
+        "front_ornament_region": 0.10128653049468994
+      }
+    },
+    {
+      "import_frame": 31.375,
+      "elapsed_seconds": 1.0125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019167065620422363,
+        "Chest": 0.0026493072509765625,
+        "Finial": 1.0408244132995605,
+        "LeftLowerArm": 0.0024038702249526978,
+        "RightLowerArm": 0.0019167065620422363,
+        "LeftFoot": 0.1594393253326416,
+        "RightFoot": 0.05930092930793762,
+        "front_ornament_region": 0.08706867694854736
+      }
+    },
+    {
+      "import_frame": 31.5,
+      "elapsed_seconds": 1.0166666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019996464252471924,
+        "Chest": 0.0027546584606170654,
+        "Finial": 1.0213501453399658,
+        "LeftLowerArm": 0.002513676881790161,
+        "RightLowerArm": 0.0019996464252471924,
+        "LeftFoot": 0.166599839925766,
+        "RightFoot": 0.06637614965438843,
+        "front_ornament_region": 0.07290828227996826
+      }
+    },
+    {
+      "import_frame": 31.625,
+      "elapsed_seconds": 1.0208333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019195377826690674,
+        "Chest": 0.0026007890701293945,
+        "Finial": 1.0014746189117432,
+        "LeftLowerArm": 0.00239621102809906,
+        "RightLowerArm": 0.0019195377826690674,
+        "LeftFoot": 0.17354515194892883,
+        "RightFoot": 0.0732555091381073,
+        "front_ornament_region": 0.05847907066345215
+      }
+    },
+    {
+      "import_frame": 31.75,
+      "elapsed_seconds": 1.025,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00199967622756958,
+        "Chest": 0.0025153756141662598,
+        "Finial": 0.9815287590026855,
+        "LeftLowerArm": 0.0023759156465530396,
+        "RightLowerArm": 0.00199967622756958,
+        "LeftFoot": 0.1805998980998993,
+        "RightFoot": 0.08026349544525146,
+        "front_ornament_region": 0.044110655784606934
+      }
+    },
+    {
+      "import_frame": 31.875,
+      "elapsed_seconds": 1.0291666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019229352474212646,
+        "Chest": 0.0022237002849578857,
+        "Finial": 0.9612479209899902,
+        "LeftLowerArm": 0.0021408796310424805,
+        "RightLowerArm": 0.0019229352474212646,
+        "LeftFoot": 0.1874849498271942,
+        "RightFoot": 0.08712136745452881,
+        "front_ornament_region": 0.029536128044128418
+      }
+    },
+    {
+      "import_frame": 32.0,
+      "elapsed_seconds": 1.0333333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997060298919678,
+        "Chest": 0.00200006365776062,
+        "Finial": 0.9409018754959106,
+        "LeftLowerArm": 0.0020004063844680786,
+        "RightLowerArm": 0.0019997060298919678,
+        "LeftFoot": 0.1944734752178192,
+        "RightFoot": 0.09410172700881958,
+        "front_ornament_region": 0.015025973320007324
+      }
+    },
+    {
+      "import_frame": 32.125,
+      "elapsed_seconds": 1.0375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019842982292175293,
+        "Chest": 0.008504033088684082,
+        "Finial": 0.9361006021499634,
+        "LeftLowerArm": 0.0020914822816848755,
+        "RightLowerArm": 0.0019842982292175293,
+        "LeftFoot": 0.2068316638469696,
+        "RightFoot": 0.1064804196357727,
+        "front_ornament_region": 0.013543248176574707
+      }
+    },
+    {
+      "import_frame": 32.25,
+      "elapsed_seconds": 1.0416666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002126693725586,
+        "Chest": 0.012066841125488281,
+        "Finial": 0.9312795400619507,
+        "LeftLowerArm": 0.0021835267543792725,
+        "RightLowerArm": 0.0020002126693725586,
+        "LeftFoot": 0.21924659609794617,
+        "RightFoot": 0.11892381310462952,
+        "front_ornament_region": 0.012066841125488281
+      }
+    },
+    {
+      "import_frame": 32.375,
+      "elapsed_seconds": 1.0458333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001983940601348877,
+        "Chest": 0.010524630546569824,
+        "Finial": 0.926375150680542,
+        "LeftLowerArm": 0.0022143423557281494,
+        "RightLowerArm": 0.001983940601348877,
+        "LeftFoot": 0.2316572666168213,
+        "RightFoot": 0.13137087225914001,
+        "front_ornament_region": 0.010524630546569824
+      }
+    },
+    {
+      "import_frame": 32.5,
+      "elapsed_seconds": 1.05,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999884843826294,
+        "Chest": 0.00888979434967041,
+        "Finial": 0.9214520454406738,
+        "LeftLowerArm": 0.0022465884685516357,
+        "RightLowerArm": 0.001999884843826294,
+        "LeftFoot": 0.24412238597869873,
+        "RightFoot": 0.14388009905815125,
+        "front_ornament_region": 0.00888979434967041
+      }
+    },
+    {
+      "import_frame": 32.625,
+      "elapsed_seconds": 1.0541666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001983433961868286,
+        "Chest": 0.007167816162109375,
+        "Finial": 0.9164458513259888,
+        "LeftLowerArm": 0.0022157281637191772,
+        "RightLowerArm": 0.001983433961868286,
+        "LeftFoot": 0.25657689571380615,
+        "RightFoot": 0.15591323375701904,
+        "front_ornament_region": 0.007167816162109375
+      }
+    },
+    {
+      "import_frame": 32.75,
+      "elapsed_seconds": 1.0583333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001232624053955,
+        "Chest": 0.005467653274536133,
+        "Finial": 0.9114217758178711,
+        "LeftLowerArm": 0.0021869242191314697,
+        "RightLowerArm": 0.0020001232624053955,
+        "LeftFoot": 0.2683989405632019,
+        "RightFoot": 0.16759973764419556,
+        "front_ornament_region": 0.005467653274536133
+      }
+    },
+    {
+      "import_frame": 32.875,
+      "elapsed_seconds": 1.0625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019835233688354492,
+        "Chest": 0.0037229061126708984,
+        "Finial": 0.9063143730163574,
+        "LeftLowerArm": 0.0020927637815475464,
+        "RightLowerArm": 0.0019835233688354492,
+        "LeftFoot": 0.28007468581199646,
+        "RightFoot": 0.1792769432067871,
+        "front_ornament_region": 0.0037229061126708984
+      }
+    },
+    {
+      "import_frame": 33.0,
+      "elapsed_seconds": 1.0666666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999974250793457,
+        "Chest": 0.002000093460083008,
+        "Finial": 0.9011894464492798,
+        "LeftLowerArm": 0.00200045108795166,
+        "RightLowerArm": 0.001999974250793457,
+        "LeftFoot": 0.29180026054382324,
+        "RightFoot": 0.1910121738910675,
+        "front_ornament_region": 0.002000093460083008
+      }
+    },
+    {
+      "import_frame": 33.125,
+      "elapsed_seconds": 1.0708333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001978635787963867,
+        "Chest": 0.002125382423400879,
+        "Finial": 0.900357723236084,
+        "LeftLowerArm": 0.0021279454231262207,
+        "RightLowerArm": 0.001978635787963867,
+        "LeftFoot": 0.29929065704345703,
+        "RightFoot": 0.19851946830749512,
+        "front_ornament_region": 0.002125382423400879
+      }
+    },
+    {
+      "import_frame": 33.25,
+      "elapsed_seconds": 1.075,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000093460083008,
+        "Chest": 0.002251863479614258,
+        "Finial": 0.899524450302124,
+        "LeftLowerArm": 0.0022566020488739014,
+        "RightLowerArm": 0.002000093460083008,
+        "LeftFoot": 0.30681461095809937,
+        "RightFoot": 0.20606306195259094,
+        "front_ornament_region": 0.002251863479614258
+      }
+    },
+    {
+      "import_frame": 33.375,
+      "elapsed_seconds": 1.0791666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001978844404220581,
+        "Chest": 0.00229489803314209,
+        "Finial": 0.8986045122146606,
+        "LeftLowerArm": 0.0023006796836853027,
+        "RightLowerArm": 0.001978844404220581,
+        "LeftFoot": 0.31428760290145874,
+        "RightFoot": 0.2135583460330963,
+        "front_ornament_region": 0.00229489803314209
+      }
+    },
+    {
+      "import_frame": 33.5,
+      "elapsed_seconds": 1.0833333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000570297241211,
+        "Chest": 0.0023391246795654297,
+        "Finial": 0.8976829051971436,
+        "LeftLowerArm": 0.0023453235626220703,
+        "RightLowerArm": 0.002000570297241211,
+        "LeftFoot": 0.32179322838783264,
+        "RightFoot": 0.2210889756679535,
+        "front_ornament_region": 0.0023391246795654297
+      }
+    },
+    {
+      "import_frame": 33.625,
+      "elapsed_seconds": 1.0875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001978456974029541,
+        "Chest": 0.002297043800354004,
+        "Finial": 0.8966717720031738,
+        "LeftLowerArm": 0.0023027360439300537,
+        "RightLowerArm": 0.001978456974029541,
+        "LeftFoot": 0.32924380898475647,
+        "RightFoot": 0.22856712341308594,
+        "front_ornament_region": 0.002297043800354004
+      }
+    },
+    {
+      "import_frame": 33.75,
+      "elapsed_seconds": 1.0916666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999765634536743,
+        "Chest": 0.0022559165954589844,
+        "Finial": 0.8956587314605713,
+        "LeftLowerArm": 0.002260550856590271,
+        "RightLowerArm": 0.001999765634536743,
+        "LeftFoot": 0.33672571182250977,
+        "RightFoot": 0.23607927560806274,
+        "front_ornament_region": 0.0022559165954589844
+      }
+    },
+    {
+      "import_frame": 33.875,
+      "elapsed_seconds": 1.0958333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001978158950805664,
+        "Chest": 0.0021276473999023438,
+        "Finial": 0.8945555686950684,
+        "LeftLowerArm": 0.002130448818206787,
+        "RightLowerArm": 0.001978158950805664,
+        "LeftFoot": 0.3441495895385742,
+        "RightFoot": 0.24353617429733276,
+        "front_ornament_region": 0.0021276473999023438
+      }
+    },
+    {
+      "import_frame": 34.0,
+      "elapsed_seconds": 1.1,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020006895065307617,
+        "Chest": 0.0020006895065307617,
+        "Finial": 0.8934504985809326,
+        "LeftLowerArm": 0.0020011961460113525,
+        "RightLowerArm": 0.0020006895065307617,
+        "LeftFoot": 0.35160380601882935,
+        "RightFoot": 0.2510260045528412,
+        "front_ornament_region": 0.0020006895065307617
+      }
+    },
+    {
+      "import_frame": 34.125,
+      "elapsed_seconds": 1.1041666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200045108795166,
+        "Chest": 0.00200045108795166,
+        "Finial": 0.8932700157165527,
+        "LeftLowerArm": 0.0020010769367218018,
+        "RightLowerArm": 0.0024423301219940186,
+        "LeftFoot": 0.3549853563308716,
+        "RightFoot": 0.254425972700119,
+        "front_ornament_region": 0.00200045108795166
+      }
+    },
+    {
+      "import_frame": 34.25,
+      "elapsed_seconds": 1.1083333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999974250793457,
+        "Chest": 0.001999974250793457,
+        "Finial": 0.8930892944335938,
+        "LeftLowerArm": 0.0020006299018859863,
+        "RightLowerArm": 0.0029150843620300293,
+        "LeftFoot": 0.35837435722351074,
+        "RightFoot": 0.25783389806747437,
+        "front_ornament_region": 0.001999974250793457
+      }
+    },
+    {
+      "import_frame": 34.375,
+      "elapsed_seconds": 1.1125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.892909049987793,
+        "LeftLowerArm": 0.0020006000995635986,
+        "RightLowerArm": 0.003419339656829834,
+        "LeftFoot": 0.3617708683013916,
+        "RightFoot": 0.26124998927116394,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 34.5,
+      "elapsed_seconds": 1.1166666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999974250793457,
+        "Chest": 0.001999974250793457,
+        "Finial": 0.8927286863327026,
+        "LeftLowerArm": 0.0020010918378829956,
+        "RightLowerArm": 0.003955662250518799,
+        "LeftFoot": 0.3651742935180664,
+        "RightFoot": 0.26467373967170715,
+        "front_ornament_region": 0.001999974250793457
+      }
+    },
+    {
+      "import_frame": 34.625,
+      "elapsed_seconds": 1.1208333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002126693725586,
+        "Chest": 0.0020002126693725586,
+        "Finial": 0.8925485610961914,
+        "LeftLowerArm": 0.002001255750656128,
+        "RightLowerArm": 0.004523873329162598,
+        "LeftFoot": 0.3685857057571411,
+        "RightFoot": 0.268105685710907,
+        "front_ornament_region": 0.0020002126693725586
+      }
+    },
+    {
+      "import_frame": 34.75,
+      "elapsed_seconds": 1.125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200045108795166,
+        "Chest": 0.00200045108795166,
+        "Finial": 0.8923684358596802,
+        "LeftLowerArm": 0.002001464366912842,
+        "RightLowerArm": 0.005123794078826904,
+        "LeftFoot": 0.37200403213500977,
+        "RightFoot": 0.2715454697608948,
+        "front_ornament_region": 0.00200045108795166
+      }
+    },
+    {
+      "import_frame": 34.875,
+      "elapsed_seconds": 1.1291666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200045108795166,
+        "Chest": 0.00200045108795166,
+        "Finial": 0.8921875953674316,
+        "LeftLowerArm": 0.002001345157623291,
+        "RightLowerArm": 0.004824742674827576,
+        "LeftFoot": 0.375429630279541,
+        "RightFoot": 0.274992972612381,
+        "front_ornament_region": 0.00200045108795166
+      }
+    },
+    {
+      "import_frame": 35.0,
+      "elapsed_seconds": 1.1333333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.001999974250793457,
+        "Finial": 0.8920063972473145,
+        "LeftLowerArm": 0.0020005404949188232,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.3788623809814453,
+        "RightFoot": 0.2784479856491089,
+        "front_ornament_region": 0.001999974250793457
+      }
+    },
+    {
+      "import_frame": 35.125,
+      "elapsed_seconds": 1.1375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001993730664253235,
+        "Chest": 0.0020383596420288086,
+        "Finial": 0.8924975395202637,
+        "LeftLowerArm": 0.0020408034324645996,
+        "RightLowerArm": 0.001993730664253235,
+        "LeftFoot": 0.37758123874664307,
+        "RightFoot": 0.27716153860092163,
+        "front_ornament_region": 0.0020383596420288086
+      }
+    },
+    {
+      "import_frame": 35.25,
+      "elapsed_seconds": 1.1416666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000272274017334,
+        "Chest": 0.0020766258239746094,
+        "Finial": 0.8929884433746338,
+        "LeftLowerArm": 0.0020801424980163574,
+        "RightLowerArm": 0.002000272274017334,
+        "LeftFoot": 0.3763003945350647,
+        "RightFoot": 0.2758753001689911,
+        "front_ornament_region": 0.0020766258239746094
+      }
+    },
+    {
+      "import_frame": 35.375,
+      "elapsed_seconds": 1.1458333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019939392805099487,
+        "Chest": 0.0020897388458251953,
+        "Finial": 0.8934537172317505,
+        "LeftLowerArm": 0.0020940303802490234,
+        "RightLowerArm": 0.0019939392805099487,
+        "LeftFoot": 0.3749939203262329,
+        "RightFoot": 0.27456364035606384,
+        "front_ornament_region": 0.0020897388458251953
+      }
+    },
+    {
+      "import_frame": 35.5,
+      "elapsed_seconds": 1.15,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019998699426651,
+        "Chest": 0.0021027326583862305,
+        "Finial": 0.893918514251709,
+        "LeftLowerArm": 0.002106890082359314,
+        "RightLowerArm": 0.0019998699426651,
+        "LeftFoot": 0.37368762493133545,
+        "RightFoot": 0.27325206995010376,
+        "front_ornament_region": 0.0021027326583862305
+      }
+    },
+    {
+      "import_frame": 35.625,
+      "elapsed_seconds": 1.1541666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019935816526412964,
+        "Chest": 0.0020902156829833984,
+        "Finial": 0.8943576812744141,
+        "LeftLowerArm": 0.0020942389965057373,
+        "RightLowerArm": 0.0019935816526412964,
+        "LeftFoot": 0.37235504388809204,
+        "RightFoot": 0.2719145119190216,
+        "front_ornament_region": 0.0020902156829833984
+      }
+    },
+    {
+      "import_frame": 35.75,
+      "elapsed_seconds": 1.1583333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000182867050171,
+        "Chest": 0.002077937126159668,
+        "Finial": 0.89479660987854,
+        "LeftLowerArm": 0.0020813345909118652,
+        "RightLowerArm": 0.002000182867050171,
+        "LeftFoot": 0.3710227608680725,
+        "RightFoot": 0.2705770432949066,
+        "front_ornament_region": 0.002077937126159668
+      }
+    },
+    {
+      "import_frame": 35.875,
+      "elapsed_seconds": 1.1625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001993805170059204,
+        "Chest": 0.0020389556884765625,
+        "Finial": 0.895208477973938,
+        "LeftLowerArm": 0.002041459083557129,
+        "RightLowerArm": 0.001993805170059204,
+        "LeftFoot": 0.36966294050216675,
+        "RightFoot": 0.2692122459411621,
+        "front_ornament_region": 0.0020389556884765625
+      }
+    },
+    {
+      "import_frame": 36.0,
+      "elapsed_seconds": 1.1666666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999974250793457,
+        "Chest": 0.001999974250793457,
+        "Finial": 0.8956201076507568,
+        "LeftLowerArm": 0.0020007193088531494,
+        "RightLowerArm": 0.00200006365776062,
+        "LeftFoot": 0.3683032989501953,
+        "RightFoot": 0.26784777641296387,
+        "front_ornament_region": 0.001999974250793457
+      }
+    },
+    {
+      "import_frame": 36.125,
+      "elapsed_seconds": 1.1708333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00199948251247406,
+        "Chest": 0.0020006895065307617,
+        "Finial": 0.8964568376541138,
+        "LeftLowerArm": 0.0020069777965545654,
+        "RightLowerArm": 0.00199948251247406,
+        "LeftFoot": 0.3658502697944641,
+        "RightFoot": 0.26538577675819397,
+        "front_ornament_region": 0.0020006895065307617
+      }
+    },
+    {
+      "import_frame": 36.25,
+      "elapsed_seconds": 1.175,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000465989112854,
+        "Chest": 0.0020028352737426758,
+        "Finial": 0.8972938060760498,
+        "LeftLowerArm": 0.002012789249420166,
+        "RightLowerArm": 0.002000465989112854,
+        "LeftFoot": 0.36339783668518066,
+        "RightFoot": 0.26292476058006287,
+        "front_ornament_region": 0.0020028352737426758
+      }
+    },
+    {
+      "import_frame": 36.375,
+      "elapsed_seconds": 1.1791666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019992589950561523,
+        "Chest": 0.002002120018005371,
+        "Finial": 0.8981268405914307,
+        "LeftLowerArm": 0.0020143985748291016,
+        "RightLowerArm": 0.0019992589950561523,
+        "LeftFoot": 0.36094218492507935,
+        "RightFoot": 0.26046067476272583,
+        "front_ornament_region": 0.002002120018005371
+      }
+    },
+    {
+      "import_frame": 36.5,
+      "elapsed_seconds": 1.1833333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997507333755493,
+        "Chest": 0.0020030736923217773,
+        "Finial": 0.8989603519439697,
+        "LeftLowerArm": 0.002015918493270874,
+        "RightLowerArm": 0.0019997507333755493,
+        "LeftFoot": 0.3584868907928467,
+        "RightFoot": 0.2579972743988037,
+        "front_ornament_region": 0.0020030736923217773
+      }
+    },
+    {
+      "import_frame": 36.625,
+      "elapsed_seconds": 1.1875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019991695880889893,
+        "Chest": 0.002002239227294922,
+        "Finial": 0.89979088306427,
+        "LeftLowerArm": 0.0020142048597335815,
+        "RightLowerArm": 0.0019991695880889893,
+        "LeftFoot": 0.35602867603302,
+        "RightFoot": 0.25553107261657715,
+        "front_ornament_region": 0.002002239227294922
+      }
+    },
+    {
+      "import_frame": 36.75,
+      "elapsed_seconds": 1.1916666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00199967622756958,
+        "Chest": 0.0020023584365844727,
+        "Finial": 0.9006214141845703,
+        "LeftLowerArm": 0.0020117759704589844,
+        "RightLowerArm": 0.00199967622756958,
+        "LeftFoot": 0.35357099771499634,
+        "RightFoot": 0.25306573510169983,
+        "front_ornament_region": 0.0020023584365844727
+      }
+    },
+    {
+      "import_frame": 36.875,
+      "elapsed_seconds": 1.1958333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001998990774154663,
+        "Chest": 0.0020006895065307617,
+        "Finial": 0.9014487266540527,
+        "LeftLowerArm": 0.002006351947784424,
+        "RightLowerArm": 0.001998990774154663,
+        "LeftFoot": 0.3511105179786682,
+        "RightFoot": 0.2505977749824524,
+        "front_ornament_region": 0.0020006895065307617
+      }
+    },
+    {
+      "import_frame": 37.0,
+      "elapsed_seconds": 1.2,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019994527101516724,
+        "Chest": 0.0020002126693725586,
+        "Finial": 0.9022763967514038,
+        "LeftLowerArm": 0.0019999444484710693,
+        "RightLowerArm": 0.0019994527101516724,
+        "LeftFoot": 0.3486504554748535,
+        "RightFoot": 0.24813058972358704,
+        "front_ornament_region": 0.0020002126693725586
+      }
+    },
+    {
+      "import_frame": 37.125,
+      "elapsed_seconds": 1.2041666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000093460083008,
+        "Chest": 0.002000093460083008,
+        "Finial": 0.9027218818664551,
+        "LeftLowerArm": 0.0020019561052322388,
+        "RightLowerArm": 0.002001136541366577,
+        "LeftFoot": 0.3473252058029175,
+        "RightFoot": 0.24680164456367493,
+        "front_ornament_region": 0.002000093460083008
+      }
+    },
+    {
+      "import_frame": 37.25,
+      "elapsed_seconds": 1.2083333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002126693725586,
+        "Chest": 0.0020002126693725586,
+        "Finial": 0.9031670093536377,
+        "LeftLowerArm": 0.0020033419132232666,
+        "RightLowerArm": 0.0020022690296173096,
+        "LeftFoot": 0.346000075340271,
+        "RightFoot": 0.24547281861305237,
+        "front_ornament_region": 0.0020002126693725586
+      }
+    },
+    {
+      "import_frame": 37.375,
+      "elapsed_seconds": 1.2125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999974250793457,
+        "Chest": 0.001999974250793457,
+        "Finial": 0.9036115407943726,
+        "LeftLowerArm": 0.0020038485527038574,
+        "RightLowerArm": 0.0020030587911605835,
+        "LeftFoot": 0.3446744680404663,
+        "RightFoot": 0.24414363503456116,
+        "front_ornament_region": 0.001999974250793457
+      }
+    },
+    {
+      "import_frame": 37.5,
+      "elapsed_seconds": 1.2166666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.9040559530258179,
+        "LeftLowerArm": 0.002003610134124756,
+        "RightLowerArm": 0.002003103494644165,
+        "LeftFoot": 0.34334897994995117,
+        "RightFoot": 0.24281451106071472,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 37.625,
+      "elapsed_seconds": 1.2208333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999974250793457,
+        "Chest": 0.001999974250793457,
+        "Finial": 0.9045002460479736,
+        "LeftLowerArm": 0.002003714442253113,
+        "RightLowerArm": 0.002002894878387451,
+        "LeftFoot": 0.34202295541763306,
+        "RightFoot": 0.2414850890636444,
+        "front_ornament_region": 0.001999974250793457
+      }
+    },
+    {
+      "import_frame": 37.75,
+      "elapsed_seconds": 1.225,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002126693725586,
+        "Chest": 0.0020002126693725586,
+        "Finial": 0.9049441814422607,
+        "LeftLowerArm": 0.0020031332969665527,
+        "RightLowerArm": 0.002002209424972534,
+        "LeftFoot": 0.34069710969924927,
+        "RightFoot": 0.2401559054851532,
+        "front_ornament_region": 0.0020002126693725586
+      }
+    },
+    {
+      "import_frame": 37.875,
+      "elapsed_seconds": 1.2291666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002126693725586,
+        "Chest": 0.0020002126693725586,
+        "Finial": 0.9053877592086792,
+        "LeftLowerArm": 0.0020022690296173096,
+        "RightLowerArm": 0.002001628279685974,
+        "LeftFoot": 0.33937036991119385,
+        "RightFoot": 0.23882579803466797,
+        "front_ornament_region": 0.0020002126693725586
+      }
+    },
+    {
+      "import_frame": 38.0,
+      "elapsed_seconds": 1.2333333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020003169775009155,
+        "Chest": 0.00200045108795166,
+        "Finial": 0.9058312177658081,
+        "LeftLowerArm": 0.0020010769367218018,
+        "RightLowerArm": 0.0020003169775009155,
+        "LeftFoot": 0.33804380893707275,
+        "RightFoot": 0.2374960482120514,
+        "front_ornament_region": 0.00200045108795166
+      }
+    },
+    {
+      "import_frame": 38.125,
+      "elapsed_seconds": 1.2375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002126693725586,
+        "Chest": 0.0020002126693725586,
+        "Finial": 0.905327320098877,
+        "LeftLowerArm": 0.0020030438899993896,
+        "RightLowerArm": 0.002001941204071045,
+        "LeftFoot": 0.3395470380783081,
+        "RightFoot": 0.23900291323661804,
+        "front_ornament_region": 0.0020002126693725586
+      }
+    },
+    {
+      "import_frame": 38.25,
+      "elapsed_seconds": 1.2416666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002126693725586,
+        "Chest": 0.0020002126693725586,
+        "Finial": 0.9048233032226562,
+        "LeftLowerArm": 0.0020041167736053467,
+        "RightLowerArm": 0.002003014087677002,
+        "LeftFoot": 0.3410506844520569,
+        "RightFoot": 0.2405102550983429,
+        "front_ornament_region": 0.0020002126693725586
+      }
+    },
+    {
+      "import_frame": 38.375,
+      "elapsed_seconds": 1.2458333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999497413635254,
+        "Chest": 0.001999497413635254,
+        "Finial": 0.9043183326721191,
+        "LeftLowerArm": 0.0020039379596710205,
+        "RightLowerArm": 0.0020027458667755127,
+        "LeftFoot": 0.3425534963607788,
+        "RightFoot": 0.24201679229736328,
+        "front_ornament_region": 0.001999497413635254
+      }
+    },
+    {
+      "import_frame": 38.5,
+      "elapsed_seconds": 1.25,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.9038138389587402,
+        "LeftLowerArm": 0.0020044445991516113,
+        "RightLowerArm": 0.002003192901611328,
+        "LeftFoot": 0.3440561294555664,
+        "RightFoot": 0.24352356791496277,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 38.625,
+      "elapsed_seconds": 1.2541666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999974250793457,
+        "Chest": 0.001999974250793457,
+        "Finial": 0.9033091068267822,
+        "LeftLowerArm": 0.002004474401473999,
+        "RightLowerArm": 0.0020034760236740112,
+        "LeftFoot": 0.34555768966674805,
+        "RightFoot": 0.2450292408466339,
+        "front_ornament_region": 0.001999974250793457
+      }
+    },
+    {
+      "import_frame": 38.75,
+      "elapsed_seconds": 1.2583333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000093460083008,
+        "Chest": 0.002000093460083008,
+        "Finial": 0.9028041362762451,
+        "LeftLowerArm": 0.002003803849220276,
+        "RightLowerArm": 0.0020031481981277466,
+        "LeftFoot": 0.34705960750579834,
+        "RightFoot": 0.24653524160385132,
+        "front_ornament_region": 0.002000093460083008
+      }
+    },
+    {
+      "import_frame": 38.875,
+      "elapsed_seconds": 1.2625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002126693725586,
+        "Chest": 0.0020002126693725586,
+        "Finial": 0.9022988080978394,
+        "LeftLowerArm": 0.0020027607679367065,
+        "RightLowerArm": 0.0020019561052322388,
+        "LeftFoot": 0.34856081008911133,
+        "RightFoot": 0.24804073572158813,
+        "front_ornament_region": 0.0020002126693725586
+      }
+    },
+    {
+      "import_frame": 39.0,
+      "elapsed_seconds": 1.2666666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002126693725586,
+        "Chest": 0.0020003318786621094,
+        "Finial": 0.9017932415008545,
+        "LeftLowerArm": 0.0020008385181427,
+        "RightLowerArm": 0.0020002126693725586,
+        "LeftFoot": 0.3500622510910034,
+        "RightFoot": 0.24954652786254883,
+        "front_ornament_region": 0.0020003318786621094
+      }
+    },
+    {
+      "import_frame": 39.125,
+      "elapsed_seconds": 1.2708333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019989013671875,
+        "Chest": 0.0019989013671875,
+        "Finial": 0.9008517265319824,
+        "LeftLowerArm": 0.0020063668489456177,
+        "RightLowerArm": 0.00200517475605011,
+        "LeftFoot": 0.3528486490249634,
+        "RightFoot": 0.2523411214351654,
+        "front_ornament_region": 0.0019989013671875
+      }
+    },
+    {
+      "import_frame": 39.25,
+      "elapsed_seconds": 1.275,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019998550415039062,
+        "Chest": 0.0019998550415039062,
+        "Finial": 0.8999112844467163,
+        "LeftLowerArm": 0.0020121335983276367,
+        "RightLowerArm": 0.0020107775926589966,
+        "LeftFoot": 0.35563552379608154,
+        "RightFoot": 0.2551366686820984,
+        "front_ornament_region": 0.0019998550415039062
+      }
+    },
+    {
+      "import_frame": 39.375,
+      "elapsed_seconds": 1.2791666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019990205764770508,
+        "Chest": 0.0019990205764770508,
+        "Finial": 0.8989682197570801,
+        "LeftLowerArm": 0.002014368772506714,
+        "RightLowerArm": 0.0020128339529037476,
+        "LeftFoot": 0.35841959714889526,
+        "RightFoot": 0.2579296827316284,
+        "front_ornament_region": 0.0019990205764770508
+      }
+    },
+    {
+      "import_frame": 39.5,
+      "elapsed_seconds": 1.2833333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200045108795166,
+        "Chest": 0.00200045108795166,
+        "Finial": 0.8980263471603394,
+        "LeftLowerArm": 0.002016991376876831,
+        "RightLowerArm": 0.002015411853790283,
+        "LeftFoot": 0.3612043261528015,
+        "RightFoot": 0.2607235908508301,
+        "front_ornament_region": 0.00200045108795166
+      }
+    },
+    {
+      "import_frame": 39.625,
+      "elapsed_seconds": 1.2875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8970811367034912,
+        "LeftLowerArm": 0.002015143632888794,
+        "RightLowerArm": 0.0020137280225753784,
+        "LeftFoot": 0.36398619413375854,
+        "RightFoot": 0.2635151147842407,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 39.75,
+      "elapsed_seconds": 1.2916666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020003318786621094,
+        "Chest": 0.0020003318786621094,
+        "Finial": 0.8961362838745117,
+        "LeftLowerArm": 0.0020125210285186768,
+        "RightLowerArm": 0.002011328935623169,
+        "LeftFoot": 0.3667687177658081,
+        "RightFoot": 0.2663075625896454,
+        "front_ornament_region": 0.0020003318786621094
+      }
+    },
+    {
+      "import_frame": 39.875,
+      "elapsed_seconds": 1.2958333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019990205764770508,
+        "Chest": 0.0019990205764770508,
+        "Finial": 0.8951886892318726,
+        "LeftLowerArm": 0.0020061731338500977,
+        "RightLowerArm": 0.0020054876804351807,
+        "LeftFoot": 0.3695482611656189,
+        "RightFoot": 0.2690972089767456,
+        "front_ornament_region": 0.0019990205764770508
+      }
+    },
+    {
+      "import_frame": 40.0,
+      "elapsed_seconds": 1.3,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999795436859131,
+        "Chest": 0.001999974250793457,
+        "Finial": 0.8942420482635498,
+        "LeftLowerArm": 0.0020002126693725586,
+        "RightLowerArm": 0.001999795436859131,
+        "LeftFoot": 0.37232816219329834,
+        "RightFoot": 0.2718878388404846,
+        "front_ornament_region": 0.001999974250793457
+      }
+    },
+    {
+      "import_frame": 40.125,
+      "elapsed_seconds": 1.3041666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019998550415039062,
+        "Chest": 0.0019998550415039062,
+        "Finial": 0.8937313556671143,
+        "LeftLowerArm": 0.002002149820327759,
+        "RightLowerArm": 0.002001717686653137,
+        "LeftFoot": 0.37382376194000244,
+        "RightFoot": 0.27338916063308716,
+        "front_ornament_region": 0.0019998550415039062
+      }
+    },
+    {
+      "import_frame": 40.25,
+      "elapsed_seconds": 1.3083333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000093460083008,
+        "Chest": 0.002000093460083008,
+        "Finial": 0.8932206630706787,
+        "LeftLowerArm": 0.002003982663154602,
+        "RightLowerArm": 0.002003297209739685,
+        "LeftFoot": 0.37531960010528564,
+        "RightFoot": 0.2748909294605255,
+        "front_ornament_region": 0.002000093460083008
+      }
+    },
+    {
+      "import_frame": 40.375,
+      "elapsed_seconds": 1.3125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999974250793457,
+        "Chest": 0.001999974250793457,
+        "Finial": 0.892709493637085,
+        "LeftLowerArm": 0.0020049214363098145,
+        "RightLowerArm": 0.0020040422677993774,
+        "LeftFoot": 0.376814603805542,
+        "RightFoot": 0.27639201283454895,
+        "front_ornament_region": 0.001999974250793457
+      }
+    },
+    {
+      "import_frame": 40.5,
+      "elapsed_seconds": 1.3166666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002126693725586,
+        "Chest": 0.0020002126693725586,
+        "Finial": 0.8921980857849121,
+        "LeftLowerArm": 0.002005070447921753,
+        "RightLowerArm": 0.0020042359828948975,
+        "LeftFoot": 0.37830984592437744,
+        "RightFoot": 0.2778933346271515,
+        "front_ornament_region": 0.0020002126693725586
+      }
+    },
+    {
+      "import_frame": 40.625,
+      "elapsed_seconds": 1.3208333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8916858434677124,
+        "LeftLowerArm": 0.002004295587539673,
+        "RightLowerArm": 0.002003505825996399,
+        "LeftFoot": 0.3798043131828308,
+        "RightFoot": 0.2793939709663391,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 40.75,
+      "elapsed_seconds": 1.325,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200045108795166,
+        "Chest": 0.00200045108795166,
+        "Finial": 0.8911741971969604,
+        "LeftLowerArm": 0.0020041614770889282,
+        "RightLowerArm": 0.0020034462213516235,
+        "LeftFoot": 0.38129889965057373,
+        "RightFoot": 0.2808947265148163,
+        "front_ornament_region": 0.00200045108795166
+      }
+    },
+    {
+      "import_frame": 40.875,
+      "elapsed_seconds": 1.3291666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8906614780426025,
+        "LeftLowerArm": 0.002002030611038208,
+        "RightLowerArm": 0.0020012855529785156,
+        "LeftFoot": 0.38279247283935547,
+        "RightFoot": 0.282394677400589,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 41.0,
+      "elapsed_seconds": 1.3333333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020001083612442017,
+        "Chest": 0.00200045108795166,
+        "Finial": 0.8901493549346924,
+        "LeftLowerArm": 0.0020008087158203125,
+        "RightLowerArm": 0.0020001083612442017,
+        "LeftFoot": 0.38428616523742676,
+        "RightFoot": 0.2838948369026184,
+        "front_ornament_region": 0.00200045108795166
+      }
+    },
+    {
+      "import_frame": 41.125,
+      "elapsed_seconds": 1.3375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020003467798233032,
+        "Chest": 0.00200045108795166,
+        "Finial": 0.8902649879455566,
+        "LeftLowerArm": 0.0020010024309158325,
+        "RightLowerArm": 0.0020003467798233032,
+        "LeftFoot": 0.38394737243652344,
+        "RightFoot": 0.28355446457862854,
+        "front_ornament_region": 0.00200045108795166
+      }
+    },
+    {
+      "import_frame": 41.25,
+      "elapsed_seconds": 1.3416666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999146461486816,
+        "Chest": 0.002000093460083008,
+        "Finial": 0.8903805017471313,
+        "LeftLowerArm": 0.00200064480304718,
+        "RightLowerArm": 0.0019999146461486816,
+        "LeftFoot": 0.3836085796356201,
+        "RightFoot": 0.283214271068573,
+        "front_ornament_region": 0.002000093460083008
+      }
+    },
+    {
+      "import_frame": 41.375,
+      "elapsed_seconds": 1.3458333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019998103380203247,
+        "Chest": 0.002000093460083008,
+        "Finial": 0.8904962539672852,
+        "LeftLowerArm": 0.0020006895065307617,
+        "RightLowerArm": 0.0019998103380203247,
+        "LeftFoot": 0.38326960802078247,
+        "RightFoot": 0.2828739285469055,
+        "front_ornament_region": 0.002000093460083008
+      }
+    },
+    {
+      "import_frame": 41.5,
+      "elapsed_seconds": 1.35,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019998699426651,
+        "Chest": 0.002000093460083008,
+        "Finial": 0.8906121253967285,
+        "LeftLowerArm": 0.0020008087158203125,
+        "RightLowerArm": 0.0019998699426651,
+        "LeftFoot": 0.3829307556152344,
+        "RightFoot": 0.28253358602523804,
+        "front_ornament_region": 0.002000093460083008
+      }
+    },
+    {
+      "import_frame": 41.625,
+      "elapsed_seconds": 1.3541666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002424716949463,
+        "Chest": 0.00200045108795166,
+        "Finial": 0.890728235244751,
+        "LeftLowerArm": 0.002001151442527771,
+        "RightLowerArm": 0.0020002424716949463,
+        "LeftFoot": 0.38259196281433105,
+        "RightFoot": 0.2821933627128601,
+        "front_ornament_region": 0.00200045108795166
+      }
+    },
+    {
+      "import_frame": 41.75,
+      "elapsed_seconds": 1.3583333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000078558921814,
+        "Chest": 0.0020003318786621094,
+        "Finial": 0.8908443450927734,
+        "LeftLowerArm": 0.0020007938146591187,
+        "RightLowerArm": 0.002000078558921814,
+        "LeftFoot": 0.38225334882736206,
+        "RightFoot": 0.2818531394004822,
+        "front_ornament_region": 0.0020003318786621094
+      }
+    },
+    {
+      "import_frame": 41.875,
+      "elapsed_seconds": 1.3625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020002126693725586,
+        "Chest": 0.00200045108795166,
+        "Finial": 0.8909602165222168,
+        "LeftLowerArm": 0.002000868320465088,
+        "RightLowerArm": 0.0020002126693725586,
+        "LeftFoot": 0.3819144368171692,
+        "RightFoot": 0.2815127968788147,
+        "front_ornament_region": 0.00200045108795166
+      }
+    },
+    {
+      "import_frame": 42.0,
+      "elapsed_seconds": 1.3666666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020003020763397217,
+        "Chest": 0.0020006895065307617,
+        "Finial": 0.8910764455795288,
+        "LeftLowerArm": 0.002000778913497925,
+        "RightLowerArm": 0.0020003020763397217,
+        "LeftFoot": 0.3815755844116211,
+        "RightFoot": 0.28117260336875916,
+        "front_ornament_region": 0.0020006895065307617
+      }
+    },
+    {
+      "import_frame": 42.125,
+      "elapsed_seconds": 1.3708333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.002000376582145691,
+        "Chest": 0.0020006895065307617,
+        "Finial": 0.8911926746368408,
+        "LeftLowerArm": 0.0020009875297546387,
+        "RightLowerArm": 0.002000376582145691,
+        "LeftFoot": 0.3812364935874939,
+        "RightFoot": 0.28083208203315735,
+        "front_ornament_region": 0.0020006895065307617
+      }
+    },
+    {
+      "import_frame": 42.25,
+      "elapsed_seconds": 1.375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0020005106925964355,
+        "Chest": 0.0020006895065307617,
+        "Finial": 0.8913087844848633,
+        "LeftLowerArm": 0.0020010769367218018,
+        "RightLowerArm": 0.0020005106925964355,
+        "LeftFoot": 0.38089728355407715,
+        "RightFoot": 0.28049150109291077,
+        "front_ornament_region": 0.0020006895065307617
+      }
+    },
+    {
+      "import_frame": 42.375,
+      "elapsed_seconds": 1.3791666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999586820602417,
+        "Chest": 0.001999974250793457,
+        "Finial": 0.8914245367050171,
+        "LeftLowerArm": 0.0020002126693725586,
+        "RightLowerArm": 0.001999586820602417,
+        "LeftFoot": 0.3805581331253052,
+        "RightFoot": 0.280150830745697,
+        "front_ornament_region": 0.001999974250793457
+      }
+    },
+    {
+      "import_frame": 42.5,
+      "elapsed_seconds": 1.3833333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019999295473098755,
+        "Chest": 0.001999974250793457,
+        "Finial": 0.8915408849716187,
+        "LeftLowerArm": 0.0020006299018859863,
+        "RightLowerArm": 0.0019999295473098755,
+        "LeftFoot": 0.38021862506866455,
+        "RightFoot": 0.2798099219799042,
+        "front_ornament_region": 0.001999974250793457
+      }
+    },
+    {
+      "import_frame": 42.625,
+      "elapsed_seconds": 1.3875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00200006365776062,
+        "Chest": 0.002000093460083008,
+        "Finial": 0.8916571140289307,
+        "LeftLowerArm": 0.0020006895065307617,
+        "RightLowerArm": 0.00200006365776062,
+        "LeftFoot": 0.3798796534538269,
+        "RightFoot": 0.27946949005126953,
+        "front_ornament_region": 0.002000093460083008
+      }
+    },
+    {
+      "import_frame": 42.75,
+      "elapsed_seconds": 1.3916666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.001999959349632263,
+        "Chest": 0.0020002126693725586,
+        "Finial": 0.8917735815048218,
+        "LeftLowerArm": 0.0020008385181427,
+        "RightLowerArm": 0.001999959349632263,
+        "LeftFoot": 0.37954044342041016,
+        "RightFoot": 0.2791289687156677,
+        "front_ornament_region": 0.0020002126693725586
+      }
+    },
+    {
+      "import_frame": 42.875,
+      "elapsed_seconds": 1.3958333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019998550415039062,
+        "Chest": 0.001999974250793457,
+        "Finial": 0.8918898105621338,
+        "LeftLowerArm": 0.0020006150007247925,
+        "RightLowerArm": 0.0019998550415039062,
+        "LeftFoot": 0.37920135259628296,
+        "RightFoot": 0.2787884473800659,
+        "front_ornament_region": 0.001999974250793457
+      }
+    },
+    {
+      "import_frame": 43.0,
+      "elapsed_seconds": 1.4,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 43.125,
+      "elapsed_seconds": 1.4041666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 43.25,
+      "elapsed_seconds": 1.4083333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 43.375,
+      "elapsed_seconds": 1.4125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 43.5,
+      "elapsed_seconds": 1.4166666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 43.625,
+      "elapsed_seconds": 1.4208333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 43.75,
+      "elapsed_seconds": 1.425,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 43.875,
+      "elapsed_seconds": 1.4291666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 44.0,
+      "elapsed_seconds": 1.4333333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 44.125,
+      "elapsed_seconds": 1.4375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 44.25,
+      "elapsed_seconds": 1.4416666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 44.375,
+      "elapsed_seconds": 1.4458333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 44.5,
+      "elapsed_seconds": 1.45,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 44.625,
+      "elapsed_seconds": 1.4541666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 44.75,
+      "elapsed_seconds": 1.4583333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 44.875,
+      "elapsed_seconds": 1.4625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 45.0,
+      "elapsed_seconds": 1.4666666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 45.125,
+      "elapsed_seconds": 1.4708333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 45.25,
+      "elapsed_seconds": 1.475,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 45.375,
+      "elapsed_seconds": 1.4791666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 45.5,
+      "elapsed_seconds": 1.4833333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 45.625,
+      "elapsed_seconds": 1.4875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 45.75,
+      "elapsed_seconds": 1.4916666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 45.875,
+      "elapsed_seconds": 1.4958333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 46.0,
+      "elapsed_seconds": 1.5,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 46.125,
+      "elapsed_seconds": 1.5041666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 46.25,
+      "elapsed_seconds": 1.5083333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 46.375,
+      "elapsed_seconds": 1.5125,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 46.5,
+      "elapsed_seconds": 1.5166666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 46.625,
+      "elapsed_seconds": 1.5208333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 46.75,
+      "elapsed_seconds": 1.525,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 46.875,
+      "elapsed_seconds": 1.5291666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 47.0,
+      "elapsed_seconds": 1.5333333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 47.125,
+      "elapsed_seconds": 1.5375,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 47.25,
+      "elapsed_seconds": 1.5416666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 47.375,
+      "elapsed_seconds": 1.5458333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 47.5,
+      "elapsed_seconds": 1.55,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 47.625,
+      "elapsed_seconds": 1.5541666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 47.75,
+      "elapsed_seconds": 1.5583333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 47.875,
+      "elapsed_seconds": 1.5625,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 48.0,
+      "elapsed_seconds": 1.5666666666666667,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 48.125,
+      "elapsed_seconds": 1.5708333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 48.25,
+      "elapsed_seconds": 1.575,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 48.375,
+      "elapsed_seconds": 1.5791666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 48.5,
+      "elapsed_seconds": 1.5833333333333333,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 48.625,
+      "elapsed_seconds": 1.5875,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 48.75,
+      "elapsed_seconds": 1.5916666666666666,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 48.875,
+      "elapsed_seconds": 1.5958333333333334,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.0019997358322143555,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920062780380249,
+        "LeftLowerArm": 0.002000361680984497,
+        "RightLowerArm": 0.0019997358322143555,
+        "LeftFoot": 0.378862202167511,
+        "RightFoot": 0.27844780683517456,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    },
+    {
+      "import_frame": 49.0,
+      "elapsed_seconds": 1.6,
+      "severe": 0,
+      "minimum_world_z_m": {
+        "all": 0.00199928879737854,
+        "Chest": 0.0019997358322143555,
+        "Finial": 0.8920061588287354,
+        "LeftLowerArm": 0.0020000338554382324,
+        "RightLowerArm": 0.00199928879737854,
+        "LeftFoot": 0.37886226177215576,
+        "RightFoot": 0.2784477472305298,
+        "front_ornament_region": 0.0019997358322143555
+      }
+    }
+  ],
+  "final": {
+    "import_frame": 49.0,
+    "elapsed_seconds": 1.6,
+    "severe": 0,
+    "minimum_world_z_m": {
+      "all": 0.00199928879737854,
+      "Chest": 0.0019997358322143555,
+      "Finial": 0.8920061588287354,
+      "LeftLowerArm": 0.0020000338554382324,
+      "RightLowerArm": 0.00199928879737854,
+      "LeftFoot": 0.37886226177215576,
+      "RightFoot": 0.2784477472305298,
+      "front_ornament_region": 0.0019997358322143555
+    }
+  },
+  "all_mesh_min_z_m": 0.001485198736190796
+}

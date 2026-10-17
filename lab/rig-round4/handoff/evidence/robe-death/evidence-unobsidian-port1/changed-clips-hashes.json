@@ -1,0 +1,13 @@
+{
+  "candidate_glb_sha256": "be916be1743010b307bedbf5f803bfe61142a703104153f8ef52ad9ebf5a4b06",
+  "files": {
+    "changed-clips-worst-poses.png": "d5279d7f786c305d30634700d36645c743507e11d6645788ce1b9f0bd856c64a",
+    "nondeath-unobsidian-port1.json": "ff34e4b0412b869f0ba4371370e5db8ea24272d0afaaf3922cb7a0250d9ac258",
+    "changed/rig-round3-hem/frame-0000.png": "bce32b602b8705d3f4023c8737c85d87dd9c3b16c4be2e08148effd0bb1b023f",
+    "changed/rig-round3-hem/frame-0001.png": "d0a877250d4cfd3c0c7de4afd642d071d1445ace8eaaac38be1f41d2d07c0801",
+    "changed/rig-round3-hem/frame-0002.png": "da75ade509c1fed7abbc75746e896635beae29049bfa485c849d2e5e626434a9",
+    "changed/rig-round4-collapse-port1/frame-0000.png": "4f68d0912df51c2a63492457f45a887139d31946c6937f228e6ca8b2bf901881",
+    "changed/rig-round4-collapse-port1/frame-0001.png": "f2369134100ef8f821b3cc3bf5d75d995930b832836746726760816a3206c2c4",
+    "changed/rig-round4-collapse-port1/frame-0002.png": "8191106784062d2202d9b6b5ad7e9996106a42449a7a3d90abf9616e2473fa2a"
+  }
+}

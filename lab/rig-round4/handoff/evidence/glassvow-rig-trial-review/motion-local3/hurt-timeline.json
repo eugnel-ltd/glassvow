@@ -1,0 +1,600 @@
+[
+ {
+  "frame": 1,
+  "root": [
+   0.0,
+   0.0,
+   0.002
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   0.0,
+   0.0
+  ],
+  "feet": 0.002,
+  "knees": 0.1627,
+  "fists": 0.2051,
+  "chest": 0.2915,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.034,
+   0.212
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0592,
+   0.212
+  ],
+  "collisions": {}
+ },
+ {
+  "frame": 2,
+  "root": [
+   0.0,
+   0.0119,
+   0.0016
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -2.5,
+   -2.6
+  ],
+  "feet": 0.002,
+  "knees": 0.1637,
+  "fists": 0.2131,
+  "chest": 0.3018,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.0339,
+   0.2103
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0592,
+   0.2145
+  ],
+  "collisions": {
+   "LeftLowerLeg/LeftFoot": 0.001,
+   "LeftLowerArm/LeftFoot": 0.004,
+   "LeftLowerArm/LeftLowerLeg": 0.003,
+   "RightUpperLeg/RightLowerLeg": 0.0,
+   "RightLowerLeg/RightFoot": 0.0,
+   "RightFoot/RightLowerLeg": 0.003
+  }
+ },
+ {
+  "frame": 3,
+  "root": [
+   0.0,
+   0.034,
+   0.0029
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -8.2,
+   -8.3
+  ],
+  "feet": 0.002,
+  "knees": 0.1652,
+  "fists": 0.2743,
+  "chest": 0.3245,
+  "support": [
+   "LeftFoot"
+  ],
+  "com_over_support": false,
+  "ankleL": [
+   0.4401,
+   0.0336,
+   0.2103
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0588,
+   0.2223
+  ],
+  "collisions": {
+   "LeftLowerLeg/LeftFoot": 0.003,
+   "LeftLowerLeg/LeftUpperLeg": 0.002,
+   "RightUpperLeg/RightLowerLeg": 0.006,
+   "RightLowerLeg/RightFoot": 0.002,
+   "RightFoot/RightLowerLeg": 0.01
+  }
+ },
+ {
+  "frame": 4,
+  "root": [
+   0.0,
+   0.0457,
+   0.0029
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -14.0,
+   -14.0
+  ],
+  "feet": 0.002,
+  "knees": 0.1626,
+  "fists": 0.344,
+  "chest": 0.3369,
+  "support": [
+   "LeftFoot"
+  ],
+  "com_over_support": false,
+  "ankleL": [
+   0.4401,
+   0.0333,
+   0.2103
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0585,
+   0.2265
+  ],
+  "collisions": {
+   "LeftLowerLeg/LeftFoot": 0.005,
+   "LeftLowerLeg/LeftUpperLeg": 0.005,
+   "RightUpperLeg/RightLowerLeg": 0.009,
+   "RightLowerLeg/RightFoot": 0.003,
+   "RightLowerLeg/RightUpperLeg": 0.001,
+   "RightFoot/RightLowerLeg": 0.014
+  }
+ },
+ {
+  "frame": 5,
+  "root": [
+   0.0,
+   0.0328,
+   0.0031
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -20.1,
+   -19.4
+  ],
+  "feet": 0.002,
+  "knees": 0.1672,
+  "fists": 0.3364,
+  "chest": 0.3274,
+  "support": [
+   "LeftFoot"
+  ],
+  "com_over_support": false,
+  "ankleL": [
+   0.4401,
+   0.0335,
+   0.2103
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0588,
+   0.2232
+  ],
+  "collisions": {
+   "LeftLowerLeg/LeftFoot": 0.002,
+   "LeftLowerLeg/LeftUpperLeg": 0.005,
+   "RightUpperLeg/RightLowerLeg": 0.009,
+   "RightLowerLeg/RightFoot": 0.001,
+   "RightLowerLeg/RightUpperLeg": 0.001,
+   "RightFoot/RightLowerLeg": 0.007
+  }
+ },
+ {
+  "frame": 6,
+  "root": [
+   0.0,
+   0.0044,
+   0.0019
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -27.0,
+   -25.3
+  ],
+  "feet": 0.002,
+  "knees": 0.1693,
+  "fists": 0.2916,
+  "chest": 0.306,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.0339,
+   0.2103
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0591,
+   0.216
+  ],
+  "collisions": {
+   "LeftLowerLeg/LeftUpperLeg": 0.004,
+   "RightUpperLeg/RightLowerLeg": 0.008,
+   "RightLowerLeg/RightFoot": 0.0
+  }
+ },
+ {
+  "frame": 7,
+  "root": [
+   0.0,
+   -0.0236,
+   0.002
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -32.6,
+   -30.0
+  ],
+  "feet": 0.002,
+  "knees": 0.1684,
+  "fists": 0.2567,
+  "chest": 0.2876,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.034,
+   0.2136
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0592,
+   0.212
+  ],
+  "collisions": {
+   "LeftLowerLeg/LeftFoot": 0.005,
+   "LeftLowerLeg/LeftUpperLeg": 0.003,
+   "RightUpperLeg/RightLowerLeg": 0.007,
+   "RightLowerLeg/RightFoot": 0.006,
+   "RightFoot/RightLowerLeg": 0.001
+  }
+ },
+ {
+  "frame": 8,
+  "root": [
+   0.0,
+   -0.035,
+   0.0033
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -35.0,
+   -32.0
+  ],
+  "feet": 0.002,
+  "knees": 0.1696,
+  "fists": 0.2466,
+  "chest": 0.2812,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.0339,
+   0.2169
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0592,
+   0.212
+  ],
+  "collisions": {
+   "LeftLowerLeg/LeftFoot": 0.008,
+   "LeftLowerLeg/LeftUpperLeg": 0.001,
+   "RightUpperLeg/RightLowerLeg": 0.005,
+   "RightUpperLeg/RightUpperArm": 0.003,
+   "RightLowerLeg/RightFoot": 0.008,
+   "RightLowerLeg/RightUpperArm": 0.012,
+   "RightFoot/RightLowerLeg": 0.002
+  }
+ },
+ {
+  "frame": 9,
+  "root": [
+   0.0,
+   -0.0281,
+   0.0033
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -29.8,
+   -27.2
+  ],
+  "feet": 0.002,
+  "knees": 0.1685,
+  "fists": 0.2328,
+  "chest": 0.2835,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.0339,
+   0.2159
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0592,
+   0.212
+  ],
+  "collisions": {
+   "LeftLowerLeg/LeftFoot": 0.005,
+   "LeftLowerLeg/LeftUpperLeg": 0.0,
+   "LeftLowerArm/LeftFoot": 0.019,
+   "LeftLowerArm/LeftLowerLeg": 0.0,
+   "RightUpperLeg/RightLowerLeg": 0.004,
+   "RightUpperLeg/RightUpperArm": 0.001,
+   "RightLowerLeg/RightFoot": 0.006,
+   "RightLowerLeg/RightUpperArm": 0.009,
+   "RightFoot/RightLowerLeg": 0.001,
+   "RightLowerArm/RightFoot": 0.013,
+   "RightLowerArm/RightLowerLeg": 0.007
+  }
+ },
+ {
+  "frame": 10,
+  "root": [
+   0.0,
+   -0.0156,
+   0.0026
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -18.2,
+   -16.7
+  ],
+  "feet": 0.002,
+  "knees": 0.1666,
+  "fists": 0.2111,
+  "chest": 0.2882,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.034,
+   0.2136
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0592,
+   0.212
+  ],
+  "collisions": {
+   "LeftLowerArm/LeftFoot": 0.023,
+   "LeftLowerArm/LeftLowerLeg": 0.021,
+   "RightUpperLeg/RightLowerLeg": 0.002,
+   "RightLowerLeg/RightFoot": 0.003,
+   "RightLowerLeg/RightUpperArm": 0.003,
+   "RightLowerArm/RightFoot": 0.001,
+   "RightLowerArm/RightLowerLeg": 0.005
+  }
+ },
+ {
+  "frame": 11,
+  "root": [
+   0.0,
+   -0.0032,
+   0.0016
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -6.6,
+   -6.1
+  ],
+  "feet": 0.002,
+  "knees": 0.1645,
+  "fists": 0.2024,
+  "chest": 0.2926,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.034,
+   0.2114
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0592,
+   0.212
+  ],
+  "collisions": {
+   "LeftLowerArm/LeftFoot": 0.007,
+   "LeftLowerArm/LeftLowerLeg": 0.008,
+   "RightUpperLeg/RightLowerLeg": 0.0
+  }
+ },
+ {
+  "frame": 12,
+  "root": [
+   0.0,
+   0.0031,
+   0.0009
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -1.0,
+   -1.0
+  ],
+  "feet": 0.002,
+  "knees": 0.1627,
+  "fists": 0.203,
+  "chest": 0.2945,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.034,
+   0.2104
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0592,
+   0.212
+  ],
+  "collisions": {
+   "RightUpperLeg/RightLowerLeg": 0.0
+  }
+ },
+ {
+  "frame": 13,
+  "root": [
+   0.0,
+   0.0034,
+   0.0011
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -0.6,
+   -0.6
+  ],
+  "feet": 0.002,
+  "knees": 0.1624,
+  "fists": 0.2034,
+  "chest": 0.294,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.034,
+   0.2106
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0592,
+   0.212
+  ],
+  "collisions": {
+   "RightFoot/RightLowerLeg": 0.0
+  }
+ },
+ {
+  "frame": 14,
+  "root": [
+   0.0,
+   0.0023,
+   0.0015
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -0.3,
+   -0.3
+  ],
+  "feet": 0.002,
+  "knees": 0.1624,
+  "fists": 0.2041,
+  "chest": 0.293,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.034,
+   0.2112
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0592,
+   0.212
+  ],
+  "collisions": {}
+ },
+ {
+  "frame": 15,
+  "root": [
+   0.0,
+   0.0007,
+   0.0018
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   -0.1,
+   -0.1
+  ],
+  "feet": 0.002,
+  "knees": 0.1626,
+  "fists": 0.2048,
+  "chest": 0.292,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.034,
+   0.2117
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0592,
+   0.212
+  ],
+  "collisions": {}
+ },
+ {
+  "frame": 16,
+  "root": [
+   0.0,
+   -0.0,
+   0.002
+  ],
+  "min_z": 0.002,
+  "elbow": [
+   0.0,
+   0.0
+  ],
+  "feet": 0.002,
+  "knees": 0.1627,
+  "fists": 0.2051,
+  "chest": 0.2915,
+  "support": [
+   "LeftFoot",
+   "RightFoot"
+  ],
+  "com_over_support": true,
+  "ankleL": [
+   0.4401,
+   0.034,
+   0.212
+  ],
+  "ankleR": [
+   -0.4245,
+   -0.0592,
+   0.212
+  ],
+  "collisions": {}
+ }
+]

@@ -1,0 +1,674 @@
+[
+  {
+    "clip": "walk",
+    "frame": 1,
+    "pair": [
+      "RightUpperLeg",
+      "RightUpperArm"
+    ],
+    "surface_triangle_intersections": 4,
+    "rest_intersections": 0,
+    "new_against_rest": 4,
+    "local_clearance_trials": [
+      {
+        "shoulder_delta_deg": -8.0,
+        "surface_triangle_intersections": 0,
+        "new_against_rest": 0
+      },
+      {
+        "shoulder_delta_deg": -16.0,
+        "surface_triangle_intersections": 0,
+        "new_against_rest": 0
+      }
+    ],
+    "pose": {
+      "Hips": [
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          -20.152407361098234
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ],
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "Chest": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "Finial": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "LeftUpperLeg": [
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          -0.0
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "LeftLowerLeg": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          2.0
+        ]
+      ],
+      "LeftFoot": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -2.0
+        ],
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          20.152407361098234
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "LeftUpperArm": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -9.0
+        ]
+      ],
+      "LeftLowerArm": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -15.0
+        ]
+      ],
+      "RightUpperLeg": [
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          -0.0
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "RightLowerLeg": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          2.0
+        ]
+      ],
+      "RightFoot": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -2.0
+        ],
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          20.152407361098234
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "RightUpperArm": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          9.0
+        ]
+      ],
+      "RightLowerArm": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -42.0
+        ]
+      ],
+      "loc": [
+        0.002303618717722361,
+        -0.004961554262975024,
+        0.0018720736740100753
+      ]
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 14,
+    "pair": [
+      "LeftLowerArm",
+      "LeftFoot"
+    ],
+    "surface_triangle_intersections": 0,
+    "rest_intersections": 0,
+    "new_against_rest": 0,
+    "local_clearance_trials": [
+      {
+        "shoulder_delta_deg": -8.0,
+        "surface_triangle_intersections": 0,
+        "new_against_rest": 0
+      },
+      {
+        "shoulder_delta_deg": -16.0,
+        "surface_triangle_intersections": 0,
+        "new_against_rest": 0
+      }
+    ],
+    "pose": {
+      "Hips": [
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          4.713213493839667
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ],
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          2.21484375
+        ]
+      ],
+      "Chest": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "Finial": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "LeftUpperLeg": [
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          -2.21484375
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "LeftLowerLeg": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          2.31640625
+        ]
+      ],
+      "LeftFoot": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -2.31640625
+        ],
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          -4.713213493839667
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "LeftUpperArm": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          6.997345604599406
+        ]
+      ],
+      "LeftLowerArm": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -32.327830559045225
+        ]
+      ],
+      "RightUpperLeg": [
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          -2.21484375
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "RightLowerLeg": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          7.0625
+        ]
+      ],
+      "RightFoot": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -7.0625
+        ],
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          -4.713213493839667
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "RightUpperArm": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -6.997345604599406
+        ]
+      ],
+      "RightLowerArm": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -10.32275463249876
+        ]
+      ],
+      "loc": [
+        -0.005106243031894836,
+        -0.02533659610638281,
+        0.01711658905243935
+      ]
+    }
+  },
+  {
+    "clip": "cast",
+    "frame": 4,
+    "pair": [
+      "RightLowerArm",
+      "RightFoot"
+    ],
+    "surface_triangle_intersections": 0,
+    "rest_intersections": 0,
+    "new_against_rest": 0,
+    "local_clearance_trials": [
+      {
+        "shoulder_delta_deg": -8.0,
+        "surface_triangle_intersections": 0,
+        "new_against_rest": 0
+      },
+      {
+        "shoulder_delta_deg": -16.0,
+        "surface_triangle_intersections": 0,
+        "new_against_rest": 0
+      }
+    ],
+    "pose": {
+      "Hips": [
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          0.0
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          1.0
+        ],
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "Chest": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "Finial": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "LeftUpperLeg": [
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          -0.0
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "LeftLowerLeg": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          4.0
+        ]
+      ],
+      "LeftFoot": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -5.0
+        ],
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          -0.0
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "LeftUpperArm": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          3.0
+        ]
+      ],
+      "LeftLowerArm": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -15.5
+        ]
+      ],
+      "RightUpperLeg": [
+        [
+          [
+            0,
+            1,
+            0
+          ],
+          -0.0
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "RightLowerLeg": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          4.0
+        ]
+      ],
+      "RightFoot": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -5.0
+        ],
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          -0.0
+        ],
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          0.0
+        ]
+      ],
+      "RightUpperArm": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          3.0
+        ]
+      ],
+      "RightLowerArm": [
+        [
+          [
+            1,
+            0,
+            0
+          ],
+          -20.0
+        ]
+      ],
+      "loc": [
+        0.0,
+        -0.02144606229455174,
+        0.002207092289709331
+      ]
+    }
+  }
+]

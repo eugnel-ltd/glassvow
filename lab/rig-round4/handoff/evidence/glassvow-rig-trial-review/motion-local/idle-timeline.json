@@ -1,0 +1,542 @@
+[
+ {
+  "frame": 1,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2915
+ },
+ {
+  "frame": 2,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2915
+ },
+ {
+  "frame": 3,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2052,
+  "chest": 0.2914
+ },
+ {
+  "frame": 4,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2053,
+  "chest": 0.2912
+ },
+ {
+  "frame": 5,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2054,
+  "chest": 0.2911
+ },
+ {
+  "frame": 6,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2055,
+  "chest": 0.2908
+ },
+ {
+  "frame": 7,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2056,
+  "chest": 0.2906
+ },
+ {
+  "frame": 8,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2057,
+  "chest": 0.2903
+ },
+ {
+  "frame": 9,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2059,
+  "chest": 0.29
+ },
+ {
+  "frame": 10,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.206,
+  "chest": 0.2897
+ },
+ {
+  "frame": 11,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2062,
+  "chest": 0.2893
+ },
+ {
+  "frame": 12,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2063,
+  "chest": 0.289
+ },
+ {
+  "frame": 13,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2064,
+  "chest": 0.2887
+ },
+ {
+  "frame": 14,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2066,
+  "chest": 0.2884
+ },
+ {
+  "frame": 15,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2067,
+  "chest": 0.2882
+ },
+ {
+  "frame": 16,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2068,
+  "chest": 0.288
+ },
+ {
+  "frame": 17,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2069,
+  "chest": 0.2878
+ },
+ {
+  "frame": 18,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2069,
+  "chest": 0.2876
+ },
+ {
+  "frame": 19,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.207,
+  "chest": 0.2875
+ },
+ {
+  "frame": 20,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.207,
+  "chest": 0.2875
+ },
+ {
+  "frame": 21,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.207,
+  "chest": 0.2875
+ },
+ {
+  "frame": 22,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2069,
+  "chest": 0.2874
+ },
+ {
+  "frame": 23,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2069,
+  "chest": 0.2873
+ },
+ {
+  "frame": 24,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2069,
+  "chest": 0.2871
+ },
+ {
+  "frame": 25,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2069,
+  "chest": 0.287
+ },
+ {
+  "frame": 26,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2069,
+  "chest": 0.2868
+ },
+ {
+  "frame": 27,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.207,
+  "chest": 0.2866
+ },
+ {
+  "frame": 28,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.207,
+  "chest": 0.2864
+ },
+ {
+  "frame": 29,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2071,
+  "chest": 0.2862
+ },
+ {
+  "frame": 30,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2072,
+  "chest": 0.286
+ },
+ {
+  "frame": 31,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2073,
+  "chest": 0.2858
+ },
+ {
+  "frame": 32,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2074,
+  "chest": 0.2857
+ },
+ {
+  "frame": 33,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2074,
+  "chest": 0.2856
+ },
+ {
+  "frame": 34,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2075,
+  "chest": 0.2855
+ },
+ {
+  "frame": 35,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0682,
+  "fists": 0.2075,
+  "chest": 0.2855
+ },
+ {
+  "frame": 36,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2075,
+  "chest": 0.2855
+ },
+ {
+  "frame": 37,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2074,
+  "chest": 0.2857
+ },
+ {
+  "frame": 38,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2073,
+  "chest": 0.2859
+ },
+ {
+  "frame": 39,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2071,
+  "chest": 0.2862
+ },
+ {
+  "frame": 40,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2069,
+  "chest": 0.2865
+ },
+ {
+  "frame": 41,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2067,
+  "chest": 0.2869
+ },
+ {
+  "frame": 42,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2064,
+  "chest": 0.2873
+ },
+ {
+  "frame": 43,
+  "root_z": 0.0019,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2062,
+  "chest": 0.2877
+ },
+ {
+  "frame": 44,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2059,
+  "chest": 0.2881
+ },
+ {
+  "frame": 45,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2057,
+  "chest": 0.2885
+ },
+ {
+  "frame": 46,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2055,
+  "chest": 0.2888
+ },
+ {
+  "frame": 47,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2054,
+  "chest": 0.2891
+ },
+ {
+  "frame": 48,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2052,
+  "chest": 0.2893
+ },
+ {
+  "frame": 49,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2895
+ },
+ {
+  "frame": 50,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2895
+ },
+ {
+  "frame": 51,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2896
+ },
+ {
+  "frame": 52,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2897
+ },
+ {
+  "frame": 53,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2899
+ },
+ {
+  "frame": 54,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.205,
+  "chest": 0.2902
+ },
+ {
+  "frame": 55,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.205,
+  "chest": 0.2905
+ },
+ {
+  "frame": 56,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2908
+ },
+ {
+  "frame": 57,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2911
+ },
+ {
+  "frame": 58,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2913
+ },
+ {
+  "frame": 59,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2915
+ },
+ {
+  "frame": 60,
+  "root_z": 0.002,
+  "min_z": 0.002,
+  "feet": 0.002,
+  "knees": 0.0681,
+  "fists": 0.2051,
+  "chest": 0.2915
+ }
+]

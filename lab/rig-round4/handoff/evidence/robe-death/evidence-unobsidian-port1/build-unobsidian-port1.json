@@ -1,0 +1,47 @@
+{
+  "source": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/unobsidianSelf/rig-round3-hem-source/unobsidianSelf.blend",
+  "solve": "pipeline/robe-collapse/unobsidian-port1-sleeve2/unobsidianSelf-solve.npz",
+  "out": "mobs/unobsidianSelf/rig-round4-collapse-port1-source/unobsidianSelf.blend",
+  "skirt_bones": 17,
+  "skirt_rest_error": 1.0251998901367188e-05,
+  "old_death_range": [
+    1.0,
+    40.0
+  ],
+  "death_frames": 56,
+  "death_vs_solve_max_m": 0.0,
+  "dropped_location_max_m": 5.1924125968576635e-08,
+  "dropped_scale_max": 1.1920928955078125e-06,
+  "other_clips_vs_pick": {
+    "idle": {
+      "frames": 60,
+      "max_m": 0.0,
+      "p99_m": 0.0,
+      "verts_over_1cm": 0
+    },
+    "walk": {
+      "frames": 32,
+      "max_m": 0.03668,
+      "p99_m": 0.01342,
+      "verts_over_1cm": 87
+    },
+    "attack": {
+      "frames": 32,
+      "max_m": 0.23911,
+      "p99_m": 0.03456,
+      "verts_over_1cm": 123
+    },
+    "cast": {
+      "frames": 32,
+      "max_m": 0.35072,
+      "p99_m": 0.11147,
+      "verts_over_1cm": 146
+    },
+    "hurt": {
+      "frames": 16,
+      "max_m": 0.0,
+      "p99_m": 0.0,
+      "verts_over_1cm": 0
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+ "front": [
+  {
+   "clip": "idle",
+   "frames": 61,
+   "seconds": 2.0,
+   "start": 0
+  },
+  {
+   "clip": "walk",
+   "frames": 34,
+   "seconds": 1.06666672229767,
+   "start": 61
+  },
+  {
+   "clip": "attack",
+   "frames": 34,
+   "seconds": 1.06666672229767,
+   "start": 95
+  },
+  {
+   "clip": "cast",
+   "frames": 34,
+   "seconds": 1.06666672229767,
+   "start": 129
+  },
+  {
+   "clip": "hurt",
+   "frames": 18,
+   "seconds": 0.533333361148834,
+   "start": 163
+  },
+  {
+   "clip": "death",
+   "frames": 50,
+   "seconds": 1.60000002384186,
+   "start": 181
+  }
+ ],
+ "rear": [
+  {
+   "clip": "idle",
+   "frames": 61,
+   "seconds": 2.0,
+   "start": 0
+  },
+  {
+   "clip": "walk",
+   "frames": 34,
+   "seconds": 1.06666672229767,
+   "start": 61
+  },
+  {
+   "clip": "attack",
+   "frames": 34,
+   "seconds": 1.06666672229767,
+   "start": 95
+  },
+  {
+   "clip": "cast",
+   "frames": 34,
+   "seconds": 1.06666672229767,
+   "start": 129
+  },
+  {
+   "clip": "hurt",
+   "frames": 18,
+   "seconds": 0.533333361148834,
+   "start": 163
+  },
+  {
+   "clip": "death",
+   "frames": 50,
+   "seconds": 1.60000002384186,
+   "start": 181
+  }
+ ]
+}

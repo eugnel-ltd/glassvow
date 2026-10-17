@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-16",
+  "stage": "Comparison references only; owner-rejected motion requires redesign",
+  "changes": {
+    "ashAcolyte": "rig-round3-contrast",
+    "obsidianGolem": "rig-round3-fall",
+    "drownedOne": "rig-round3-fall",
+    "rootheart": "rig-round3-sway2",
+    "sporeling": "rig-round3-fall",
+    "thornling": "rig-round3-fall",
+    "unlitSelf": "rig-round3-hem",
+    "starCultist": "rig-round3-contrast",
+    "unopenedSelf": "rig-round3-contrast",
+    "unwalkedSelf": "rig-round3-contrast",
+    "voidColossus": "rig-round3-contrast-half",
+    "unsunkSelf": "rig-round3-held-articulated",
+    "uncrossedSelf": "rig-round3-grip-thumb20",
+    "abyssalKnight": "rig-round3-anchor-fall",
+    "gloomslime": "rig-round3-melt2",
+    "ashwarden": "rig-round3-raise",
+    "duskblade": "rig-round3-contrast",
+    "eternalKeeper": "rig-round3-contrast",
+    "sovereign": "rig-round3-hem2",
+    "unobsidianSelf": "rig-round3-hem",
+    "waylayer": "rig-round3-brandish",
+    "voidWisp": "rig-round3-lunge",
+    "watcherEye": "rig-round3-lunge",
+    "siren": "rig-round3-lunge2",
+    "gravewarden": "rig-round3-capped2",
+    "shade": "rig-round3-lunge3"
+  },
+  "notes": [
+    "Do not replace accepted inventory until all selected evidence is verified.",
+    "Some changes improve only one reported defect; remaining production limitations stay open.",
+    "Root-only action trials do not resolve weak limb gestures.",
+    "Hero falls and new floating casts need close visual review.",
+    "16 Oct: unobsidianSelf hem UV fill, gravewarden capped2 inner lining and shade lunge3 added after front and back review.",
+    "16 Oct: sovereign hem2 closes the open robe hem (cap on existing vertices) and fills its UVs; unlitSelf hem fills the underside UVs. In a rear death view both undersides still read dark from shading; this needs an owner visual check.",
+    "Owner review 16 Oct: rejects rigid plank-like robe deaths, Gravewarden arm articulation and unnatural Shade motion. Previous visual acceptance is withdrawn. Selected variants remain comparison references only, pending rig and motion redesign; no owner approval gate."
+  ],
+  "best_stretch_sum": 0,
+  "best_stretch_note": "selection_audit.py total 0: every selected variant reports zero severe edges. Provisional; visual and owner review still open."
+}

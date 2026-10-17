@@ -1,0 +1,16 @@
+GATE 6.30859375 102.53845977783203
+53719 /Applications/Blender.app/Contents/PlugIns/blender-thumbnailer.appex/Contents/MacOS/blender-thumbnailer
+GATE 6.30859375 102.53855895996094
+00:16.124  blend            | Read blend: "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/gravewarden/rig-round4-recessed8/gravewarden.blend"
+/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-recessed8/housing_probe.py:40: DeprecationWarning: 'World.use_nodes' is expected to be removed in Blender 6.0
+  scene.world=bpy.data.worlds.new('JointInspection');scene.world.use_nodes=True;scene.world.node_tree.nodes['Background'].inputs[0].default_value=(.2,.2,.2,1)
+/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-recessed8/housing_probe.py:44: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  mat=bpy.data.materials.new('Marked harmful-shell candidates');mat.diffuse_color=(1,.03,.01,1);mat.use_nodes=True;bs=mat.node_tree.nodes.get('Principled BSDF');bs.inputs['Base Color'].default_value=(1,.03,.01,1);bs.inputs['Emission Color'].default_value=(1,.02,0,1);bs.inputs['Emission Strength'].default_value=.6
+00:17.640  render           | Saved: '/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-recessed8/housing-classification/walk-f10-marked.png'
+MARKED walk 10
+00:18.419  render           | Saved: '/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-recessed8/housing-classification/cast-f9-marked.png'
+MARKED cast 9
+HOUSING PROBE DONE /Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-recessed8/housing-classification
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

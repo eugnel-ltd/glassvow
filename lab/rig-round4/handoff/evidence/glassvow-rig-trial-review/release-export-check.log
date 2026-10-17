@@ -1,0 +1,15 @@
+GATE 5.39892578125 102.68118667602539
+21:47:24 | INFO: Data are loaded, start creating Blender stuff
+21:47:24 | INFO: Blender create Mesh node ArticulatedStone
+21:47:24 | INFO: glTF import finished in 0.14s
+EXPORTED FLOOR {"model": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/gravewarden/rig-round4-recessed8-release/gravewarden.glb", "method": "Blender GLB reimport at 30 FPS, actual evaluated world-space vertices of every mesh", "meshes": {"tripo_node_7a1dfbbf-85b3-49fb-ab76-14834daa6211": 46152}, "final": {"import_frame": 49.0, "elapsed_seconds": 1.6, "severe": 0, "minimum_world_z_m": {"all": 0.00199928879737854, "Chest": 0.0019997358322143555, "Finial": 0.8920061588287354, "LeftLowerArm": 0.0020000338554382324, "RightLowerArm": 0.00199928879737854, "LeftFoot": 0.37886226177215576, "RightFoot": 0.2784477472305298, "front_ornament_region": 0.0019997358322143555}}, "all_mesh_min_z_m": -0.005609452724456787}
+Traceback (most recent call last):
+  File "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-recessed8/gravewarden_export_floor.py", line 58, in <module>
+    assert report['all_mesh_min_z_m']>=-.001,'Exported mesh penetrates floor; see report'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exported mesh penetrates floor; see report
+
+Error: script failed, file: '/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/pipeline/gravewarden-recessed8/gravewarden_export_floor.py', exiting.
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

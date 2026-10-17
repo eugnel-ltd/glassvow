@@ -1,0 +1,10 @@
+GATE 11.51904296875 102.66896438598633
+53719 /Applications/Blender.app/Contents/PlugIns/blender-thumbnailer.appex/Contents/MacOS/blender-thumbnailer
+21:50:25 | INFO: Data are loaded, start creating Blender stuff
+21:50:25 | INFO: Blender create Mesh node ArticulatedStone
+21:50:25 | INFO: glTF import finished in 0.14s
+EXPORTED FLOOR {"model": "/Users/jamesto/Coding/glassvow/.claude/worktrees/asset-manager-lab/mobs/gravewarden/rig-round4-recessed8-release-ground/gravewarden.glb", "method": "Blender GLB reimport at 30 FPS, actual evaluated world-space vertices of every mesh", "meshes": {"tripo_node_7a1dfbbf-85b3-49fb-ab76-14834daa6211": 46152}, "final": {"import_frame": 49.0, "elapsed_seconds": 1.6, "severe": 0, "minimum_world_z_m": {"all": 0.00199928879737854, "Chest": 0.0019997358322143555, "Finial": 0.8920061588287354, "LeftLowerArm": 0.0020000338554382324, "RightLowerArm": 0.00199928879737854, "LeftFoot": 0.37886226177215576, "RightFoot": 0.2784477472305298, "front_ornament_region": 0.0019997358322143555}}, "all_mesh_min_z_m": 0.001485198736190796}
+EXPORTED FLOOR PASS
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit
