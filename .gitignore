@@ -68,3 +68,5 @@ addons/Tripo*/
 
 # The shader bake manifest, written by every baked export (tools/shader_bake_manifest.gd)
 /tools/shader_bake_manifest.tscn
+.claude/gate.log
+.ai-sdlc/quota.json

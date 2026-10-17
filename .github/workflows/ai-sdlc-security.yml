@@ -1,0 +1,19 @@
+# Thin caller for the AI-SDLC weekly security scan. Copy to .github/workflows/ai-sdlc-security.yml.
+# Free tools on a self-hosted runner with Homebrew and python3; each new finding becomes one intent
+# issue labelled security-finding. Close an issue as "not planned" with the reason to dismiss it.
+name: AI-SDLC weekly security
+
+on:
+  schedule:
+    - cron: "30 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  security:
+    uses: eugnel-ltd/ai-sdlc/.github/workflows/security.yml@v3
+    with:
+      runs_on: '["self-hosted", "macOS"]'
