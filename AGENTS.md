@@ -95,7 +95,7 @@ AI-SDLC: v3 (2026-10-17). Adopted by mapping (skill `modules/adoption.md` §2); 
 | Product manifest for the company registry | `product.yaml` (checked by `.ai-sdlc/manifest_check.py`) |
 | Reviewer and fall-backs | `REVIEW.md`; `.claude/agents/ai-sdlc-reviewer.md` |
 | Lessons | `LESSONS.md` (short live log); `docs/solutions/` |
-| Company checks on every PR | `.github/workflows/ai-sdlc-checks.yml`; `.ai-sdlc/` (skill-owned, never edited here) |
+| Company checks on every PR | from the cloud, ai-sdlc `scripts/repo_ci.sh` with `.ai-sdlc/` (skill-owned, never edited here); a public repo cannot call the private skill's workflows |
 
 ## Progressive-disclosure map
 
