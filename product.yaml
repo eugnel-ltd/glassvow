@@ -1,0 +1,53 @@
+# product.yaml: the one file a product owes the company.
+#
+# The company registry (eugnel-hq) reads this file from `main` and never edits it. The AI-SDLC
+# channel modules write `live_version` and `live_since`; the baseline step writes `baseline`;
+# the owner or an intake writes `status`. Validate with `.ai-sdlc/manifest_check.py product.yaml`
+# (run it by hand: the company `manifest` check is pending here, see AGENTS.md). Schema: the
+# skill's `schemas/product.schema.json`.
+
+id: glassvow
+name: Glassvow
+status: building             # TestFlight builds only; not on sale yet (docs/rc-bar.md)
+repo: eugnel-ltd/glassvow
+north_star: docs/north-star.md
+support: glassvow@eugnel.com
+# Read by the company support intake (docs/release-signing.md, "Sentry operator access").
+sentry:
+  org: pgnetwork
+  project: glassvow
+  scope: client
+
+channels:
+  ios:
+    bundle_id: io.fol2.glassvow      # export_presets.cfg; iOS is the first store (docs/rc-bar.md)
+    live_version: null
+    live_since: null
+  play:
+    package: io.fol2.glassvow        # export_presets.cfg; the Android phase follows iOS
+    live_version: null
+    live_since: null
+  # The static game site (site/, glassvow.eugnel.com): privacy policy and contact. It sells nothing.
+  web:
+    domain: glassvow.eugnel.com
+    live_version: null
+    live_since: null
+
+# Paraphrased (docs/rc-bar.md, the repos inventory of 16 Oct 2026): a premium game at one price;
+# expansion-pack IAP is left open. No price or store product id exists yet.
+pricing:
+  model: one-off
+  products: []
+
+# The product baseline (skill `modules/baseline.md`). Values: done | missing | waived | excluded.
+baseline:
+  accounts: excluded         # no accounts, chat or online features (docs/privacy/privacy-policy.en.md)
+  durable_data: done         # saves stay on the device (the v2 save lineage, AGENTS.md)
+  payments: missing          # store agreements, banking and tax are owner steps (docs/rc-bar.md)
+  legal: missing             # privacy policy live at glassvow.eugnel.com/privacy; no terms yet
+  observability: done        # Sentry pgnetwork/glassvow
+  support: done              # glassvow@eugnel.com on the site and in the privacy policy
+  listing: missing           # no store listing yet
+waivers: {}
+exclusions:
+  accounts: "Glassvow accounts: the game has no accounts, chat or online features; saves stay on the device."

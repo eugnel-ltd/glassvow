@@ -83,6 +83,20 @@ Exact-head artifact packets are required only when the task, release protocol, o
 
 Stop and surface a concrete blocker instead of weakening acceptance when work requires a breaking save-schema or internal-ID change, native platform plugin integration, more than 600 additions plus deletions in one code file in one commit, an unavailable relevant gate, or a contradiction with an active architecture or product contract.
 
+## Company AI-SDLC (eugnel-ltd/ai-sdlc)
+
+AI-SDLC: v3 (2026-10-17). Adopted by mapping (skill `modules/adoption.md` §2); where this repo's file is richer, it governs. Read `LESSONS.md` and `docs/autonomy-ledger.md` before every task.
+
+| Skill concept | Governing file here |
+|---|---|
+| Delivery process, proof, metrics | `docs/agents/ai-sdlc.md`; CI selection `tools/ci_scope.py` |
+| Autonomy per task type; what needs the owner | `docs/autonomy-ledger.md`; company skill `modules/autonomy.md` (only expenditure) |
+| Why the product exists and how it earns | `docs/north-star.md` |
+| Product manifest for the company registry | `product.yaml` (checked by `.ai-sdlc/manifest_check.py`) |
+| Reviewer and fall-backs | `REVIEW.md`; `.claude/agents/ai-sdlc-reviewer.md` |
+| Lessons | `LESSONS.md` (short live log); `docs/solutions/` |
+| Company checks | pending: a public repo cannot call the private skill's workflows, and ai-sdlc `scripts/repo_ci.sh` has no glassvow entry yet; `.ai-sdlc/` holds the scripts (skill-owned, never edited here) |
+
 ## Progressive-disclosure map
 
 - AI-SDLC, research promotion, CI scopes, autonomy, evidence, and metrics: `docs/agents/ai-sdlc.md`

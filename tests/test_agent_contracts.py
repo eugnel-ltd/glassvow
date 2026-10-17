@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 import tempfile
 import unittest
@@ -148,6 +149,83 @@ class AgentContractTests(unittest.TestCase):
     def test_minimal_valid_fixture(self) -> None:
         temporary, root = self.make_fixture()
         self.addCleanup(temporary.cleanup)
+        self.assertEqual([], CONTRACTS.validate_repository(root))
+
+    def write_hook_settings(self, root: Path, command: str) -> None:
+        settings = {"hooks": {"PostToolUse": [{"hooks": []}, {"hooks": [
+            {"type": "prompt", "prompt": "Review the result."},
+            {"type": "command", "command": command},
+        ]}]}}
+        (root / ".claude/settings.json").write_text(
+            json.dumps(settings), encoding="utf-8")
+
+    def test_hook_command_missing_file_fails(self) -> None:
+        temporary, root = self.make_fixture()
+        self.addCleanup(temporary.cleanup)
+        self.write_hook_settings(
+            root, '"$CLAUDE_PROJECT_DIR"/.claude/hooks/format-lint.sh --check')
+        self.assertEqual([
+            ".claude/settings.json: hook command names missing file "
+            ".claude/hooks/format-lint.sh",
+        ], CONTRACTS.validate_repository(root))
+
+    def test_hook_command_executable_file_passes(self) -> None:
+        temporary, root = self.make_fixture()
+        self.addCleanup(temporary.cleanup)
+        self.write_hook_settings(
+            root, '"$CLAUDE_PROJECT_DIR"/.claude/hooks/format-lint.sh\t--check')
+        path = root / ".claude/hooks/format-lint.sh"
+        path.parent.mkdir()
+        path.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        path.chmod(0o755)
+        self.assertEqual([], CONTRACTS.validate_repository(root))
+
+    def test_hook_command_non_executable_file_fails(self) -> None:
+        temporary, root = self.make_fixture()
+        self.addCleanup(temporary.cleanup)
+        self.write_hook_settings(
+            root, '"$CLAUDE_PROJECT_DIR"/.claude/hooks/format-lint.sh')
+        path = root / ".claude/hooks/format-lint.sh"
+        path.parent.mkdir()
+        path.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        path.chmod(0o644)
+        self.assertEqual([
+            ".claude/settings.json: hook command names non-executable file "
+            ".claude/hooks/format-lint.sh",
+        ], CONTRACTS.validate_repository(root))
+
+    def test_hook_commands_without_project_prefix_are_ignored(self) -> None:
+        temporary, root = self.make_fixture()
+        self.addCleanup(temporary.cleanup)
+        self.write_hook_settings(root, "external-command --check")
+        self.assertEqual([], CONTRACTS.validate_repository(root))
+
+    def test_malformed_hook_settings_json_fails(self) -> None:
+        temporary, root = self.make_fixture()
+        self.addCleanup(temporary.cleanup)
+        (root / ".claude/settings.json").write_text('{"hooks":', encoding="utf-8")
+        errors = CONTRACTS.validate_repository(root)
+        self.assertTrue(any(
+            ".claude/settings.json: invalid JSON:" in error for error in errors), errors)
+
+    def test_agent_names_missing_code_standards_fails(self) -> None:
+        temporary, root = self.make_fixture()
+        self.addCleanup(temporary.cleanup)
+        (root / ".claude/agents/verifier.md").write_text(
+            "---\nname: verifier\ndescription: Verify changes.\n---\n"
+            "Read docs/code-standards.md.\n", encoding="utf-8")
+        self.assertEqual([
+            ".claude/agents/verifier.md: names docs/code-standards.md, "
+            "which this repo does not have",
+        ], CONTRACTS.validate_repository(root))
+
+    def test_agent_names_existing_code_standards_passes(self) -> None:
+        temporary, root = self.make_fixture()
+        self.addCleanup(temporary.cleanup)
+        (root / ".claude/agents/verifier.md").write_text(
+            "---\nname: verifier\ndescription: Verify changes.\n---\n"
+            "Read docs/code-standards.md.\n", encoding="utf-8")
+        (root / "docs/code-standards.md").write_text("# Standards\n", encoding="utf-8")
         self.assertEqual([], CONTRACTS.validate_repository(root))
 
     def test_scientific_and_delivery_corrections_stay_distinct(self) -> None:

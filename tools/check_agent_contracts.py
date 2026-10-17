@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -158,6 +160,45 @@ def validate_repository(root: Path) -> list[str]:
     texts: dict[Path, str] = {}
     for relative in _active_instruction_paths(root):
         texts[relative] = _read_text(root, relative, errors)
+        if ("docs/code-standards.md" in texts[relative]
+                and not (root / "docs/code-standards.md").exists()):
+            errors.append(
+                f"{relative}: names docs/code-standards.md, which this repo does not have")
+
+    settings_path = Path(".claude/settings.json")
+    if (root / settings_path).exists():
+        try:
+            settings = json.loads(_read_text(root, settings_path, errors))
+        except json.JSONDecodeError as error:
+            errors.append(f"{settings_path}: invalid JSON: {error}")
+        else:
+            hooks = settings.get("hooks", {}) if isinstance(settings, dict) else {}
+            for entries in hooks.values() if isinstance(hooks, dict) else ():
+                for entry in entries if isinstance(entries, list) else ():
+                    commands = entry.get("hooks", []) if isinstance(entry, dict) else []
+                    for hook in commands if isinstance(commands, list) else ():
+                        if not isinstance(hook, dict) or hook.get("type") != "command":
+                            continue
+                        command = hook.get("command")
+                        if not isinstance(command, str):
+                            continue
+                        match = re.match(r'^"\$CLAUDE_PROJECT_DIR"/(\S*)', command)
+                        if match is None:
+                            continue
+                        relative_path = match.group(1)
+                        path = (root / relative_path).resolve()
+                        if not path.is_relative_to(root):
+                            errors.append(
+                                f"{settings_path}: hook command names file outside root "
+                                f"{relative_path}")
+                        elif not path.is_file():
+                            errors.append(
+                                f"{settings_path}: hook command names missing file "
+                                f"{relative_path}")
+                        elif not os.access(path, os.X_OK):
+                            errors.append(
+                                f"{settings_path}: hook command names non-executable file "
+                                f"{relative_path}")
 
     kernel = texts.get(KERNEL_PATH, "")
     if kernel:
