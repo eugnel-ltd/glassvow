@@ -16,6 +16,9 @@
 *.yaml text eol=lf
 *.svg text eol=lf
 
+# Unified-patch context includes a space before original tab indentation.
+tools/godot/patches/glassvow-661-native-boot-upload-cap.patch whitespace=-blank-at-eol,-space-before-tab
+
 # Binary assets — no text diff / merge / EOL conversion
 # (markers now so enabling LFS later is a filter-line change; no LFS at M0)
 *.png binary

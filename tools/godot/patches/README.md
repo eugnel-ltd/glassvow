@@ -136,3 +136,16 @@ same zip's path there; the stock editor exports the same template either way.
 Worth sending: the toolchain quoting fix (already #122692), and a preset option
 for the iOS bake's GPU family and target OS, so a project can bake for its own
 floor device without a patch.
+
+## Native boot upload cap candidate (#660 / #661)
+
+`glassvow-661-native-boot-upload-cap.patch` is a separate runtime source patch
+for lossless native PNG boot pages. Its source pins, immutable original PNG,
+CPU tests and bounded portable build/render proof are documented in
+[`../native_boot_upload/README.md`](../native_boot_upload/README.md).
+
+This candidate does not change or activate the current iOS template, editor
+pin or #682 bake patch. Applying an editor-only patch does not fix a shipped
+runtime. Adoption still requires the real patched runtime/export identity and
+the existing native device gates; portable Linux evidence proves only its
+declared component surface.

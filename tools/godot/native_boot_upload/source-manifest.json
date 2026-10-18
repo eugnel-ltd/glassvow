@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "pins": {
+    "ed1daf0bf001b61586d9930840f2f1394092c079": {
+      "servers/rendering/rendering_server_types.h": "8507be956189306817b191fe0e7b923965537cf9b703c1c922c5b4b49a744966",
+      "servers/rendering/renderer_rd/renderer_compositor_rd.cpp": "def96d4762332133e099fa78045edfdf9fa8e0135dee30d18727bf65eaef7876",
+      "drivers/gles3/rasterizer_gles3.cpp": "7906073ee78a23816dfa0a0a21ec5879980f10f4eb5119ffa39051aba957311e",
+      "drivers/gles3/effects/copy_effects.cpp": "0ee61b24cfd9e25c153809fcfb2d9315480d973374d153438b07499b7896e150",
+      "drivers/gles3/effects/copy_effects.h": "432f30980407c39edc478b0e4178ebc04380a37502a5f3aae8bc8d92b360e1e7",
+      "tests/test_main.cpp": "9e02882e874eea3bca5885455ba3712c2eaf02d4393e8a3f3ba573dd510be731"
+    },
+    "83dec14d549108e1f314f57c1ce7e932c65370dd": {
+      "servers/rendering/rendering_server_types.h": "8507be956189306817b191fe0e7b923965537cf9b703c1c922c5b4b49a744966",
+      "servers/rendering/renderer_rd/renderer_compositor_rd.cpp": "def96d4762332133e099fa78045edfdf9fa8e0135dee30d18727bf65eaef7876",
+      "drivers/gles3/rasterizer_gles3.cpp": "7906073ee78a23816dfa0a0a21ec5879980f10f4eb5119ffa39051aba957311e",
+      "drivers/gles3/effects/copy_effects.cpp": "0ee61b24cfd9e25c153809fcfb2d9315480d973374d153438b07499b7896e150",
+      "drivers/gles3/effects/copy_effects.h": "432f30980407c39edc478b0e4178ebc04380a37502a5f3aae8bc8d92b360e1e7",
+      "tests/test_main.cpp": "dea1c560a042515e6d85a9dd3d291f3c0ccee521a226a9c8301d925969186b70"
+    }
+  },
+  "new_paths": [
+    "tests/servers/test_boot_image_slices.h"
+  ]
+}
