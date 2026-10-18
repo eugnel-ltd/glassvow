@@ -1,0 +1,123 @@
+{
+  "schema": "glassvow.agent-eval-measured-evidence/v1",
+  "artifacts": {
+    "694-calibration-014f58ba.tar.gz": {
+      "sha256": "908a6f2357f2ec58af38a9c52a817bf5e2b5d7362c7f62f4c65984f9b55fbfc5",
+      "bytes": 68252
+    },
+    "694-calibration-7a164ad9.tar.gz": {
+      "sha256": "4a117e047983bd90e9bc3560fedbfa4c39a2941e3a2d148828483a00888d1f9f",
+      "bytes": 177984
+    },
+    "694-adjudication-labels-both-campaigns.tar.gz": {
+      "sha256": "1ec33f275b5fa07baec05f3b9b387ad64c2769a143db090e189b89738980a39c",
+      "bytes": 32030
+    },
+    "RESULT-014f58ba.md": {
+      "sha256": "015f4b14f449aeab5a0c07626fbe3266bd6243f1bfbfe999903054c42786a8fa",
+      "bytes": 2612
+    },
+    "RESULT-7a164ad9.md": {
+      "sha256": "1c404b526fb4efc8f883d47db6fc835e1867aae09f2a475cb4f5a353e4583b7d",
+      "bytes": 3534
+    }
+  },
+  "campaigns": {
+    "014f58ba": {
+      "measured_head": "014f58ba3c4a62bbb3c41e19944caae6df47a81d",
+      "programmatic_result": "FAIL",
+      "cases": {
+        "sha256": "5b7138c0a9249b5fc09200a7ae3b375eebc73c432e805c79eeb6c31469a0568a",
+        "bytes": 116731
+      },
+      "claims_sha256": "9d43d59793df7f5c5d9860024ad9c496a7669bf8fdfc95b455fd709a2476142e",
+      "split": {
+        "sha256": "0e0944423bc9954f644f9b4417f689e12424fe75b4fb88c74a0f4c1c8002e516",
+        "bytes": 2959
+      },
+      "answers": {
+        "correct-a.jsonl": {
+          "sha256": "8003378334e67a1e2f5ab6912b8e2387a09168130ea84adc05a143a47a985949",
+          "bytes": 56188
+        },
+        "correct-b.jsonl": {
+          "sha256": "74e2dce254af156094cae45eb364d43cd74127c92d93f04a7e7b9fadafa36693",
+          "bytes": 57335
+        },
+        "wrong.jsonl": {
+          "sha256": "f298a1db8482d6306ad01ac001229ab4fa532f46efcdc65366592e493ef1128f",
+          "bytes": 93471
+        },
+        "adversarial.jsonl": {
+          "sha256": "12b17c7c9d969f1c587570b9a5504fd4de3f3d6b36035a818687e516c0cec6c0",
+          "bytes": 257076
+        }
+      },
+      "scored_claims_for_adjudication": {
+        "sha256": "cb45f303fc55bcc960616faa06a56b9f85200d132a966cc1b19177693205f2f5",
+        "bytes": 18488
+      },
+      "labels": {
+        "sha256": "34238b480b3387d365f10073a731db08f658a08a7d03c747a3d611bd8a2a5a8a",
+        "bytes": 108304
+      },
+      "protocol": {
+        "sha256": "db021960441a65a556f8057e7644daad7cf2b4233ce3a5fe7030f48a17d92333",
+        "bytes": 5817
+      },
+      "preflight": {
+        "sha256": "d56c6e5709525bcf2a7d85b1168a195e2b58af7ded218cc08a9e35d8b3da1949",
+        "bytes": 6057
+      }
+    },
+    "7a164ad9": {
+      "measured_head": "7a164ad943fa13d8d56adc91efffb09efe147317",
+      "programmatic_result": "PASS",
+      "cases": {
+        "sha256": "2d3eb9a44ed593e9860fc3cb26927f170383fb011f090e942c20d4be2eef9a2c",
+        "bytes": 117784
+      },
+      "claims_sha256": "402b46ec30db914db2243a6fda0888ea55a842064d0dada16a6c0d2ec3fba32b",
+      "split": {
+        "sha256": "cd5bc1f665dd0ab1626a433926cba73b1dd799b99dcaebaa0e88eb56a8fca006",
+        "bytes": 2959
+      },
+      "answers": {
+        "correct-a.jsonl": {
+          "sha256": "8dc6204ee6bbcf5c6f6fa51cddfca7af0cd266bf742f81a198a9d56cd7a96046",
+          "bytes": 54508
+        },
+        "correct-b.jsonl": {
+          "sha256": "8c9347120a8b20a2d60b7c1a6b8239ca739142ae866de89312af0cfb14c16a65",
+          "bytes": 55165
+        },
+        "wrong.jsonl": {
+          "sha256": "e480fd6a0251ee9f6dbb2c7da048bc8356ad922ef97b2c3f69f1f2d8291a64d4",
+          "bytes": 92140
+        },
+        "adversarial.jsonl": {
+          "sha256": "7d14b183d6e65028f19915f6c09f90800327dd6d7bed3845d20e33774d542b50",
+          "bytes": 134233
+        }
+      },
+      "scored_claims_for_adjudication": {
+        "sha256": "2dbd4f80c5a95830ad3a9a6ecf585a6f2c0a3076ea1c9cf7eaefc294e7e97594",
+        "bytes": 19272
+      },
+      "labels": {
+        "sha256": "81206e0859ef919296a7526ba720f9cbbf474778881599d15e6d55a4e1149e59",
+        "bytes": 135116
+      },
+      "protocol": {
+        "sha256": "7b8d9d316d51e8d3ea01e8436628c09ac543dd01fe3b7559be8594adf37622c7",
+        "bytes": 6311
+      },
+      "preflight": {
+        "sha256": "088e290d0272b3221c6a54f4498a9980b6cfd955746cbbc7c7ebd953dc504d79",
+        "bytes": 7351
+      }
+    }
+  },
+  "measured_evaluation_tree_7a164ad9": "28b408716596b387f953b7d567b383a20d270a3d",
+  "scope": "Historical offline programmatic calibration only; immutable sets are spent. No Sonnet baseline, new approval, hill-climb or remote-CI claim."
+}
