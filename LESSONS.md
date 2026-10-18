@@ -16,7 +16,21 @@ Entry format (newest first):
 - Seen: 1× (YYYY-MM-DD)
 ```
 
+## Current entry
+
+### Refresh pending cache retention from the latest selection
+- Cause: Choosing a different card back cleared the first bake's retention flag permanently, so selecting it again before completion discarded its result and rendered it twice.
+- Fix: fcc606f6af07291c9b7e4eb648e71becc141ed29
+- Done right: Set every pending job's retention from the latest choice. A signal-gated A to B to A regression keeps the shared A result, drops B and proves a repeated request does not render again.
+- Seen: 1× (2026-10-18)
+
 ## Entries
+
+### Pass one platform snapshot through each shared update
+- Cause: The hologram's shared update and its pointer helper each built the same platform-facts dictionary, doubling that work every active frame.
+- Fix: bf786ce7b004179b75ed767a84c586ab414d53a7
+- Done right: Read once after the still and forced-pose exits, then pass the snapshot to both consumers. Count provider calls through the real shared-update dispatch and check same-frame reuse.
+- Seen: 1× (2026-10-18)
 
 ### Gate every structured choice required for an actionable answer
 - Cause: Exact checks rejected wrong secondary choices, but only the first selected decision gated; a wrong heading or corrected expression still earned partial credit.
@@ -24,10 +38,10 @@ Entry format (newest first):
 - Done right: Audit each selected field against its source and prove that a wrong or missing required choice scores zero; keep free-text reasoning reported only.
 - Seen: 1× (2026-10-18)
 
-### Refresh pending cache retention from the latest selection
-- Cause: Choosing a different card back cleared the first bake's retention flag permanently, so selecting it again before completion discarded its result and rendered it twice.
-- Fix: fcc606f6af07291c9b7e4eb648e71becc141ed29
-- Done right: Set every pending job's retention from the latest choice. A signal-gated A to B to A regression keeps the shared A result, drops B and proves a repeated request does not render again.
+### Keep animation regression budgets on the simulation clock
+- Cause: Card and pile regressions compared wall-clock deadlines and frame samples with variable-step animations, so heavy host load could change which states they observed.
+- Fix: 431b6363 (issue #661), fixed-step children for the two affected suites.
+- Done right: Exercise the real timers, tweens and event sequence; verify the fixed delta across a wall delay and prove a slower flight still fails the original checks.
 - Seen: 1× (2026-10-18)
 
 This repo's long record of solved problems is `docs/solutions/`, by category. Short repeatable lessons go here.
