@@ -281,7 +281,11 @@ func gen_combat_rewards(run: RunState, kind: String, affix: StringName = &"") ->
 	if kind == "elite":
 		relic = _random_relic(run)
 		if elite_relic_second > 0.0 and run.rng.next() < elite_relic_second:
-			relic2 = _random_relic(run)
+			relic2 = _random_relic(run, "" if relic == null else str(relic))
+			# If the primary exhausted the pool, suppress the duplicate while
+			# keeping the pick draw the original second slot would have taken.
+			if relic2 == null and relic != null:
+				run.rng.next()
 	# #212 §2.4, O1 by construction: no draw unless the rate is above 0 (Vow 3
 	# and up), the set is live and the run's slot is open; the pool draws nothing.
 	var mythic: Variant = null
@@ -865,7 +869,7 @@ func roll_event_cards(run: RunState, count: int) -> Array[String]:
 ## Web randomRelic: tier roll on the SHARED cursor (its closure's writes are
 ## the last ones, so they stick), then first non-empty pool wins. Every slice
 ## relic pool is empty -> null after exactly one draw.
-func _random_relic(run: RunState) -> Variant:
+func _random_relic(run: RunState, excluded: String = "") -> Variant:
 	var r: float = run.rng.next()
 	var order: Array[String] = ["common", "uncommon", "rare"]
 	var weights: Dictionary = {"common": 0.5, "uncommon": 0.35, "rare": 0.15}
@@ -882,7 +886,7 @@ func _random_relic(run: RunState) -> Variant:
 		var avail: Array = []
 		for id_v: Variant in offer_relics(run, t):
 			var id: String = str(id_v)
-			if not run.player.relics.has(id):
+			if id != excluded and not run.player.relics.has(id):
 				avail.append(id)
 		if avail.size() > 0:
 			return avail[run.rng.pick_index(avail.size())]

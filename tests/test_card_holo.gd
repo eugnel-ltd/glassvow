@@ -32,6 +32,7 @@ static func run(fails: Array[String]) -> void:
 	_pointer_lights(fails)
 	_ambient_pointer_dispatch(fails)
 	_ambient_ios_axes_warning(fails)
+	_ambient_platform_snapshot(fails)
 
 
 static func _fronts_by_tier(fails: Array[String]) -> void:
@@ -515,4 +516,37 @@ static func _ambient_ios_axes_warning(fails: Array[String]) -> void:
 	HoloMotion.ambient(null, 1.0 / 60.0)
 	if warned.is_empty() or not warned[0].begins_with("HoloMotion: iOS gravity"):
 		fails.append("holo: ambient raised no iOS axes warning, got %s" % str(warned))
+	_restore_holo_hooks(saved)
+
+
+## Every card in one frame shares one platform snapshot, and still/forced
+## poses do not need platform facts at all.
+static func _ambient_platform_snapshot(fails: Array[String]) -> void:
+	var saved: Dictionary = _save_holo_hooks()
+	HoloMotion._forced = false
+	Preferences.active = Preferences.new()
+	Preferences.active.reduce_motion = false
+	var reads: Array[int] = [0]
+	HoloMotion._platform_facts = func() -> Dictionary:
+		reads[0] += 1
+		return {"handheld": false, "touchscreen": true, "has_mouse": true, "ios": false}
+	HoloMotion._sensors = func() -> Array:
+		return [Vector3.ZERO, Vector3.ZERO]
+	HoloMotion._pointer_at = func(_vp: Viewport) -> Variant:
+		return Vector2(0.5, -0.25)
+	HoloMotion._stepped = -2
+	HoloMotion._shared = null
+	var first: Vector2 = HoloMotion.ambient(null, 1.0 / 60.0)
+	var second: Vector2 = HoloMotion.ambient(null, 1.0 / 60.0)
+	if reads[0] != 1 or first != second:
+		fails.append("holo: one shared update read platform facts %d times, want once" % reads[0])
+	var before_still: int = reads[0]
+	Preferences.active.reduce_motion = true
+	HoloMotion._stepped = -2
+	HoloMotion.ambient(null, 1.0 / 60.0)
+	HoloMotion._forced = Vector2(0.25, 0.5)
+	HoloMotion._stepped = -2
+	HoloMotion.ambient(null, 1.0 / 60.0)
+	if reads[0] != before_still:
+		fails.append("holo: a still or forced pose read platform facts")
 	_restore_holo_hooks(saved)

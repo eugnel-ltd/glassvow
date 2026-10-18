@@ -14,7 +14,7 @@ vector through the same dict.
 
 ## Flags go after `--`
 
-`tools/balance_sim.gd:37` (in `_initialize`) reads `OS.get_cmdline_user_args()`,
+`tools/balance_sim.gd:43` (in `_initialize`) reads `OS.get_cmdline_user_args()`,
 so every sim flag must come **after a bare `--`**:
 
 ```
@@ -33,7 +33,7 @@ T1a is decline. `_claim_rewards` used to append `Pilot.choose_card`'s pick
 unconditionally. It now scores that pick and keeps it only when
 `accepts_card_reward` says so:
 
-- Gate: `tools/balance_sim.gd:236-237` (in `_claim_rewards`)
+- Gate: `tools/balance_sim.gd:291-292` (in `_claim_rewards`)
 - Predicate: `tools/balance_pilot.gd:136` (`accepts_card_reward`) —
   `score >= card_decline_threshold`
 - Default: `CARD_DECLINE_DEFAULT = -1e9` at `tools/balance_pilot.gd:10`
@@ -54,7 +54,7 @@ stays the unified intercept.
   `copies >= removal_min_copies and wscore <= removal_appetite - REMOVAL_SHOP_MARGIN`
 - Shop numerator and event score: `tools/balance_pilot.gd:138-139` (`remove_value`)
   — `removal_appetite - wscore`. Event path:
-  `tools/balance_sim.gd:346` (in `_event_op_score`). Shop call:
+  `tools/balance_sim.gd:477` (in `_event_op_score`). Shop call:
   `tools/balance_pilot.gd:889` (in `choose_shop`).
 - Defaults: `removalAppetite = 8.5`, `removalMinCopies = 3`,
   `REMOVAL_SHOP_MARGIN = 2.0` (not sampled). So the default shop gate is still
@@ -70,7 +70,7 @@ what lets a policy cut a singleton — the way a player builds a thin deck.
 One dict. `apply_policy` / `policy_snapshot` at
 `tools/balance_pilot.gd:94` (`apply_policy`) and
 `tools/balance_pilot.gd:117` (`policy_snapshot`). CLI keys in
-`tools/balance_sim.gd:728` (`_policy`). `simulate(..., policy)` applies the
+`tools/balance_sim.gd:841` (`_policy`). `simulate(..., policy)` applies the
 dict at the start of every run. Slice B records the resolved vector on every
 run row (`policy`) as the replay key; the seed-1000 digest moves with that
 field. See `docs/balance/2026-08-14-policy-vector.md`.

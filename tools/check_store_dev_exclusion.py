@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CI-negative check: store/RC packs cannot carry developer-only bytecode."""
+"""CI-negative check: store isolation and lean, functional developer presets."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from pathlib import Path
 STORE = ("macOS", "iOS", "Android (Play AAB)")
 REVIEW_MARK = "Dev Review"
 WEB_DEV = "Web Dev"
+DEV_PRESETS = (WEB_DEV, "iOS Dev Review", "Android Dev Review")
 DEV_PREFIX = "presentation/dev/"
 PROD_ROOTS = ("application/", "presentation/", "domain/", "content/")
 TOKENS = (
@@ -30,6 +31,16 @@ STORE_MUST_KEEP = (
     ("addons/sentry/sentry.gdextension", "Sentry"),
     ("application/dev_tools.gd", "application/dev_tools.gd"),
     ("presentation/lab/card_lab.gd", "presentation/lab"),
+)
+DEV_MUST_KEEP = STORE_MUST_KEEP + (
+    ("tools/bench_map_assets.gd", "tools/bench_map_assets.gd"),
+    ("tools/bench_map_scene.gd", "tools/bench_map_scene.gd"),
+    ("tools/bench_combat.gd", "tools/bench_combat.gd"),
+    ("tools/bench_map_open.gd", "tools/bench_map_open.gd"),
+    ("tools/bench_map_rest.gd", "tools/bench_map_rest.gd"),
+)
+DEV_CLASS_DEPENDENCIES = (
+    ("tools/bench_map_scene.gd", "MapSceneProxy", "tools/map_scene_proxy.gd"),
 )
 DEV_TREE_PREFIXES = (
     DEV_PREFIX,
@@ -193,6 +204,25 @@ def check_pck_paths(paths: list[str]) -> list[str]:
     return errors
 
 
+def dev_dependency_errors(root: Path, tracked: list[str], globs: list[str]) -> list[str]:
+    errors: list[str] = []
+    for source, class_name, dependency in DEV_CLASS_DEPENDENCIES:
+        if source not in tracked or hits(globs, source):
+            continue
+        if not (root / source).is_file():
+            errors.append("tracked developer script is missing: %s" % source)
+            continue
+        text = "\n".join(line.split("#", 1)[0]
+                         for line in (root / source).read_text().splitlines())
+        if re.search(r"\b%s\b" % re.escape(class_name), text) is None:
+            continue
+        if dependency not in tracked:
+            errors.append("missing %s required by %s" % (dependency, source))
+        elif hits(globs, dependency):
+            errors.append("exclude_filter drops %s required by %s" % (dependency, source))
+    return errors
+
+
 def check_presets(root: Path, presets_path: Path) -> list[str]:
     errors: list[str] = []
     presets = parse_presets(presets_path.read_text())
@@ -205,6 +235,11 @@ def check_presets(root: Path, presets_path: Path) -> list[str]:
     if not any(p == "tests/run_all.gd" or p.startswith("tests/") for p in tracked):
         errors.append("tests/ has no tracked files (vacuous exclude)")
     sweep = [p for p in tracked if is_dev_tree_path(p)]
+    # Import sidecars identify authoring GLBs/images without guessing formats.
+    # These tools/map_* inputs are excluded from store/QA exports already;
+    # developer builds use the finished assets under assets/, not these inputs.
+    authoring_resources = [p[:-7] for p in tracked
+                           if p.startswith("tools/map_") and p.endswith(".import")]
     for name in STORE:
         if REVIEW_MARK in name:
             continue
@@ -224,20 +259,26 @@ def check_presets(root: Path, presets_path: Path) -> list[str]:
         for path, label in STORE_MUST_KEEP:
             if hits(globs, path):
                 errors.append("%s exclude_filter drops %s" % (name, label))
+    for name in DEV_PRESETS:
+        if name not in by_name:
+            errors.append("%s preset is missing" % name)
     for preset in presets:
         name = preset["name"]
-        if REVIEW_MARK not in name:
+        if REVIEW_MARK not in name and name != WEB_DEV:
             continue
         globs = csv(preset["exclude_filter"])
         if any(glob_match(g, "presentation/dev/console.gd") for g in globs):
             errors.append("%s must include the Console tree" % name)
         if "dev_tools" not in csv(preset["custom_features"]):
             errors.append("%s must list custom feature dev_tools" % name)
-    web = by_name.get(WEB_DEV)
-    if web is None:
-        errors.append("Web Dev preset is missing")
-    elif "dev_tools" not in csv(web["custom_features"]):
-        errors.append("Web Dev must list custom feature dev_tools")
+        for path in authoring_resources:
+            if not hits(globs, path):
+                errors.append("%s exclude_filter does not match %s" % (name, path))
+        for path, label in DEV_MUST_KEEP:
+            if hits(globs, path):
+                errors.append("%s exclude_filter drops %s" % (name, label))
+        errors.extend("%s %s" % (name, error)
+                      for error in dev_dependency_errors(root, tracked, globs))
     for path in tracked:
         if not path.startswith(PROD_ROOTS) or path.startswith(DEV_PREFIX):
             continue

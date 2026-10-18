@@ -1222,6 +1222,10 @@ func _apply_special(
 			var leech_loss: int = hit_enemy(run, cb, target, _ji(fx["n"]), true, damage_mult)
 			if leech_loss > 0:
 				heal_player(run, cb, leech_loss / 2)
+				# The final blow already banked combat HP and victory relics.
+				# Keep the heal event above and carry this heal into the run too.
+				if cb.over and cb.result == "win":
+					heal_player(run, null, leech_loss / 2)
 		"execute":
 			# Each hit reads Cracked for itself: Faultline strikes once, Tremor thrice.
 			for _t: int in range(_ji(fx.get("times", 1))):

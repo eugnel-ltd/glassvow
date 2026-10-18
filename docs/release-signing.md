@@ -26,6 +26,28 @@ The selected iOS, Android, macOS and no-thread Web templates are installed
 under the 4.7.2 directory; the old 4.7.1 directory remains available only for
 replaying historical evidence.
 
+## IPA Xcode qualification
+
+Before TestFlight upload, `scripts/ios_release.sh` reads `DTXcodeBuild` from the
+signed IPA's single top-level app `Info.plist`. The offline checker
+`scripts/ios_release_qualification.py` accepts only release builds with recorded
+provenance. The current qualified build is **27A266a (Xcode 27.0)**, from the
+toolchain table above and the first-use-shaders Part 1 export proof. A trailing
+letter does not identify a beta: this release build ends in `a`.
+
+Missing, malformed, ambiguous or unqualified metadata stops before `asc builds
+upload`. `--no-upload` retains the existing local-artifact flow. This checks
+Xcode release provenance; App Store processing and the other release gates
+still decide their own requirements.
+
+When adopting another release Xcode, verify its exact build against the official
+Apple release record, record that provenance here, and add the build to
+`QUALIFIED_XCODE_BUILDS` with a fixture in
+`tests/test_ios_release_qualification.py`. Do not infer release status from a
+name or suffix, or add an environment bypass. The selected release-identity CI
+step runs the offline fixtures, including the maintained release script with
+stub build and provider commands; it performs no signing, device action or upload.
+
 ## Credentials — where they live
 
 - **Play upload keystore**: `~/Library/Application Support/Godot/keystores/glassvow-upload.keystore`

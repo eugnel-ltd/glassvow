@@ -6,15 +6,21 @@ extends RefCounted
 ## fight: the hand's order after a deal, and input while cards fly (no play
 ## lost, none made twice).
 ##
-## The flights run on real tweens, so the checks wait real time with margin
-## (the suite is headless: nothing renders, everything moves). How the
-## flights look is checked in frame bursts, not here.
+## The flights run on real tweens and timers in a fixed-step child process,
+## so the same simulation time passes on a busy or idle host (headless:
+## nothing renders, everything moves). Frame bursts check how they look.
 
 const PILE: Rect2 = Rect2(Vector2(20.0, 700.0), Vector2(58.0, 83.0))
 const TO: Rect2 = Rect2(Vector2(1000.0, 680.0), Vector2(58.0, 83.0))
+const SUITE: String = "res://tests/test_card_flights.gd"
+const FIXED_FPS: int = 60
 
 
 static func run(fails: Array[String]) -> void:
+	TreeSuite.spawn(fails, SUITE, FIXED_FPS)
+
+
+static func run_in_tree(_tree: SceneTree, _host: SubViewport, fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full()
 	var was_still: bool = Preferences.active.reduce_motion
 	Preferences.active.reduce_motion = false
@@ -290,9 +296,9 @@ static func _reduce_motion(fails: Array[String], content: ContentDB) -> void:
 	await _frames(1)
 
 
-## A real fight, its drain running in real time: the redraw keeps the hand's
-## order and lands every card in its seat, and input while cards fly plays
-## each card once.
+## A real fight, its drain on the fixed simulation clock: the redraw keeps
+## the hand's order and lands every card in its seat, and input while cards
+## fly plays each card once.
 static func _fight(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_slice()
 	var game: GlassvowGame = GlassvowGame.new(content, RunState.new_run(content, 12345))
@@ -341,9 +347,9 @@ static func _fight(fails: Array[String]) -> void:
 		var again: bool = screen.request_play(skill, null)
 		if again or not hand.has_card(other) or game.cb.hand.size() != order.size() - 1:
 			fails.append("card flights: input while a card flies played something")
-		await _idle(screen)
+		await _idle(screen, fails)
 		screen.request_play(skill, null)
-		await _idle(screen)
+		await _idle(screen, fails)
 		if _played(game) != played + 1:
 			fails.append("card flights: a card already played played again")
 		# A card still being dealt takes no press; landed, it plays once.
@@ -357,7 +363,7 @@ static func _fight(fails: Array[String]) -> void:
 			fails.append("card flights: a press on a card still in the air took it")
 		await _wait(CardFlight.DEAL_TIME + 0.1)
 		_play(screen, other)
-		await _idle(screen)
+		await _idle(screen, fails)
 		if hand.has_card(other) or game.cb.hand.size() != order.size() - 2 \
 				or _played(game) != played + 2:
 			fails.append("card flights: two plays through flights did not play exactly two cards")
@@ -398,10 +404,13 @@ static func _played(game: GlassvowGame) -> int:
 	return n
 
 
-static func _idle(screen: CombatScreen) -> void:
-	var until: int = Time.get_ticks_msec() + 8000
-	while screen.seq.is_busy() and Time.get_ticks_msec() < until:
+static func _idle(screen: CombatScreen, fails: Array[String]) -> void:
+	var left: int = 8 * FIXED_FPS
+	while screen.seq.is_busy() and left > 0:
 		await _frames(1)
+		left -= 1
+	if screen.seq.is_busy():
+		fails.append("card flights: the drain did not finish in 8 simulated seconds")
 	await _wait(0.4)
 
 

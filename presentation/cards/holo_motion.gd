@@ -224,7 +224,8 @@ static func ambient(vp: Viewport, dt: float) -> Vector2:
 		else [Input.get_gravity(), Input.get_gyroscope()]
 	var g: Vector3 = read[0]
 	var w: Vector3 = read[1]
-	if _as_bool(_facts().get("ios")):
+	var facts: Dictionary = _facts()
+	if _as_bool(facts.get("ios")):
 		var doubted: bool = _shared.axes_doubt
 		var turned: Array[Vector3] = _shared.from_portrait(g, w)
 		if _shared.axes_doubt and not doubted:
@@ -237,7 +238,7 @@ static func ambient(vp: Viewport, dt: float) -> Vector2:
 					push_warning(msg)
 		g = turned[0]
 		w = turned[1]
-	return _shared.update(g, w, _pointer(vp), false, dt)
+	return _shared.update(g, w, _pointer(vp, facts), false, dt)
 
 
 ## Hold the shared signal at `t` (a scripted capture's three tilts), or let it
@@ -273,8 +274,7 @@ static func _as_bool(v: Variant, default: bool = false) -> bool:
 	return v if v is bool else default
 
 
-static func _pointer(vp: Viewport) -> Variant:
-	var f: Dictionary = _facts()
+static func _pointer(vp: Viewport, f: Dictionary) -> Variant:
 	if not pointer_lights(_as_bool(f.get("handheld")), _as_bool(f.get("touchscreen")),
 			_as_bool(f.get("has_mouse"))):
 		return null

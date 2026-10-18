@@ -12,6 +12,14 @@ extends RefCounted
 ## instrument (pilot or search version), its content, or the rules it runs. Say
 ## so in the commit that re-pins it, never as a side effect of something else.
 ##
+## Winning Thirsting Shard intentionally carries its final-hit heal into run HP.
+## The rule correction re-pins 6 original, 4 p9/s2 and 4 p9/s3 rows; the other
+## 154 expectations stay unchanged. Matched old/candidate actual-play traces
+## explain each first divergent fight; 14 candidate rows replay, an unchanged
+## control agrees, and a four-line revert restores its representative old row.
+## Later HP-dependent policy choices can move deck, RNG and outcome too. These
+## development pins do not renew historical release balance exams/equivalence.
+##
 ## PINS are 1.0's instrument of record, pilot `p8-d0-v3` and search `s1` (the
 ## simulator's defaults, named here explicitly). PINS_1_1 pin the 1.1 instrument
 ## of #544 P6 beside them, pilot `p9` and search `s2`, on one seed a cell and arm
@@ -44,10 +52,10 @@ const PINS: Dictionary = {
 	"v0-fresh/C_shatter/search/12000": "a5ce0abf5bd6300d035d6a6973cd6480333304ad0e85f7651653b21c79067142",
 	"v0-fresh/C_lantern/greedy/12000": "ff55e432765bf8bb8b3a2e2441adb134a6d86a0011fae796b231be4672eb0cd6",
 	"v0-fresh/C_lantern/greedy/12001": "0da6b57c628ea42e7c8c6458d6ec5a2da3dcd7087cc2e0f50f9d5ac82305269d",
-	"v0-fresh/C_lantern/search/12000": "0b82b7e245133189f7eae1fee9995524f36131ad0543fe09971ec80dad61ffb9",
+	"v0-fresh/C_lantern/search/12000": "463573bab0d7184484fc32f9247eb1dad0cb416ca5a862ff69106bb4fc863987",
 	"v0-fresh/C_edge/greedy/12000": "6ed1c4d2edcc6a12f9b769a36c7cc2da71a227faa34aa964f28b0d6e790317e9",
 	"v0-fresh/C_edge/greedy/12001": "c7a7f667dc4892554f461c600ec5dc317271f1a4871b060fcc3319f49aebe4a4",
-	"v0-fresh/C_edge/search/12000": "9272cd3f2b526e340417d9834bbade0130e64e000079638bb1d25b56bb9306c4",
+	"v0-fresh/C_edge/search/12000": "6d06d98fa2cbbb44ffe0fb376e9743f36d70ea83eb4164cdddec58cd3c5bf28f",
 	"v0-fresh/A/greedy/12000": "b3f74bab615865753e8a9646891c1778c9ab58802cb89f69ef7179161023bcab",
 	"v0-fresh/A/greedy/12001": "d3ddc247ac56af2955e61bbe7395509d084195b4dc69d98a42b46b97c9b1e796",
 	"v0-fresh/A/search/12000": "ac6a92318f6e451e6b09569409ed09f8c533a130663bd2ca2c553c8369e2ad15",
@@ -56,13 +64,13 @@ const PINS: Dictionary = {
 	"v0-fresh/A_lit/search/12000": "61b7f10432cc23d27e75153dfd1d9c3b3ccdc0dfcae0e6cf2e2ffd8f0d8a511d",
 	"v0-fresh/R/greedy/12000": "a581181bd043ef61ab3ba990fafdb13db33c4dcf2ea539277f07a160c17053f5",
 	"v0-fresh/R/greedy/12001": "353c94620538d31cb962cdcd25337c21c8e1e58530a7ff977d76a95d952ef9ea",
-	"v0-fresh/R/search/12000": "e60bd190b663fb58a0157319ae6c058c744da6141ae66daf598ba24855a1639b",
+	"v0-fresh/R/search/12000": "53b07c453bc1237988022e74d3fdad43b34d2daa7c9bb4d427d6e920cd89c9b8",
 	"v0-full/C_shatter/greedy/12000": "8d2ddeba66f4e065499451f33f3bb1b06d9638f8c30844259739b4eacd795271",
 	"v0-full/C_shatter/greedy/12001": "5d7f85160fca6ba5400ede0b54ecb21ce2f073a531dba4d32f018f2f6a256c5f",
-	"v0-full/C_shatter/search/12000": "67a203fa7dc70cb221eb7f9149f6f57ad6699f020b3ee4009ceaca030ed08c9d",
+	"v0-full/C_shatter/search/12000": "1fad88c6fb64dc2c64fd893890a93ab4486d874f8cce30a056c1d4d3ea2e1ffe",
 	"v0-full/C_lantern/greedy/12000": "83b5544f052cbb297352f9847cf2e12ed3269dc06b2ec343ce5df50956e6487a",
 	"v0-full/C_lantern/greedy/12001": "b0d8c709c41ad40275a1d220fa766539523dde80124366a454d2a550a30dbf06",
-	"v0-full/C_lantern/search/12000": "617b6bbfa71b9eb6e45405f2579e97821574daa4921237e16124fca66a656bcf",
+	"v0-full/C_lantern/search/12000": "88347c620a9fce66efd4d92afbae3cdabbb74aa035a6d1ed13dd9eff036a98d5",
 	"v0-full/C_edge/greedy/12000": "9bc1dbda1b5ebc5547ddca99fc0d47b0a9c84f1c56af658d4ecf5fdb3e0ac2ae",
 	"v0-full/C_edge/greedy/12001": "e382dcb5cace829cd1499619a7386742d739b42374181ac23c22b99f65bb2163",
 	"v0-full/C_edge/search/12000": "4d0bcffb0a1e5631fd16c1ebb94357078f52226245d89a1c5709fcd03a000f7c",
@@ -76,7 +84,7 @@ const PINS: Dictionary = {
 	"v0-full/R/greedy/12001": "bda48c51171ce3e4837d564cfd692e9f7e1707b6a5694f3975181bc9dcd56a33",
 	"v0-full/R/search/12000": "094b661da95ee21522f74fa9af8ba91db7be310e9f10c6eed1db9cfeaae0019f",
 	"v5-fresh/C_shatter/greedy/12000": "3e3154e2dec133e54188c9b0e092f9686e765941956780a9988849822a21fb8b",
-	"v5-fresh/C_shatter/greedy/12001": "f3d6d2d433e70c31ed06f1dd7dc6051cbaafb2122d77da254fa55fdfd50ec5bd",
+	"v5-fresh/C_shatter/greedy/12001": "c6a9358cce90bbcd5088a83606231fccd5d551e65c03d9ef5d5d5a00cfe14a25",
 	"v5-fresh/C_shatter/search/12000": "c7e14e58e65ecbe46005b2bbb96be0ebc859c81ecb339a1cea2b89e8cf6704f2",
 	"v5-fresh/C_lantern/greedy/12000": "24f0202d8fdb4f52d64ee0ccd68f186333233c86204ccb7960e9ea6110087b72",
 	"v5-fresh/C_lantern/greedy/12001": "33a9ea7169d844029b446f33ecada0730eed53b0a8a964015a9d81e3b4c6dff7",
@@ -117,19 +125,19 @@ const PINS_1_1: Dictionary = {
 	"v0-fresh/C_shatter/greedy/12000/p9-s2": "e6884361bad93bef66f7b26e269a8798bf22218aaf202b9d3e8278829a6571f3",
 	"v0-fresh/C_shatter/search/12000/p9-s2": "a6c27a431234b5eb3acd66fc32d89d66d8b6b04624c491ebca93bb78981e12d3",
 	"v0-fresh/C_lantern/greedy/12000/p9-s2": "ff55e432765bf8bb8b3a2e2441adb134a6d86a0011fae796b231be4672eb0cd6",
-	"v0-fresh/C_lantern/search/12000/p9-s2": "deb3cfbe29ccbaa2f97482c2a3ceafcbc296ce3ad02fe7fbe5a674ff8b7a7835",
+	"v0-fresh/C_lantern/search/12000/p9-s2": "e0a1d3142d2736e0316acccea3e94822bd348e946c0f7382ecf5f7d7ae1e0daf",
 	"v0-fresh/C_edge/greedy/12000/p9-s2": "6ed1c4d2edcc6a12f9b769a36c7cc2da71a227faa34aa964f28b0d6e790317e9",
-	"v0-fresh/C_edge/search/12000/p9-s2": "e4d30d0da8bd9390b8d29f2361c989204d8e9378ed85456c7db5792826d4d750",
+	"v0-fresh/C_edge/search/12000/p9-s2": "2f3d4de9c9e6f0877bd7a577a2772a2c4eb3cf01d2e67d87ccc7f08768440986",
 	"v0-fresh/A/greedy/12000/p9-s2": "b3f74bab615865753e8a9646891c1778c9ab58802cb89f69ef7179161023bcab",
 	"v0-fresh/A/search/12000/p9-s2": "ac6a92318f6e451e6b09569409ed09f8c533a130663bd2ca2c553c8369e2ad15",
 	"v0-fresh/A_lit/greedy/12000/p9-s2": "6e5be33dbc60209142e96b07ff37f4f83844c40c74d66685a0f65275d8c8283c",
 	"v0-fresh/A_lit/search/12000/p9-s2": "61b7f10432cc23d27e75153dfd1d9c3b3ccdc0dfcae0e6cf2e2ffd8f0d8a511d",
 	"v0-fresh/R/greedy/12000/p9-s2": "a581181bd043ef61ab3ba990fafdb13db33c4dcf2ea539277f07a160c17053f5",
-	"v0-fresh/R/search/12000/p9-s2": "e2f05476cd46c80dd92f28634d5806c7590ace69da09aeeb662802e0e7e6a352",
+	"v0-fresh/R/search/12000/p9-s2": "1a731cd72abf0660b3a2bbb2d9b0bfb7afaceb646ef2610bd571792ac93597ef",
 	"v0-full/C_shatter/greedy/12000/p9-s2": "8d2ddeba66f4e065499451f33f3bb1b06d9638f8c30844259739b4eacd795271",
 	"v0-full/C_shatter/search/12000/p9-s2": "c4dc90a6f15bbdf83366785f61a888ac07ee4505e697c59fd687a0943ceca473",
 	"v0-full/C_lantern/greedy/12000/p9-s2": "83b5544f052cbb297352f9847cf2e12ed3269dc06b2ec343ce5df50956e6487a",
-	"v0-full/C_lantern/search/12000/p9-s2": "3700b2bbc2b6ee5b60f35bf05291e79b313c7e75a3234778e427cb07179676d2",
+	"v0-full/C_lantern/search/12000/p9-s2": "1f5cb2ee8d7c3d10e53768cb35dad3e814512f8b6f95fc6681dd7275f75e436a",
 	"v0-full/C_edge/greedy/12000/p9-s2": "9bc1dbda1b5ebc5547ddca99fc0d47b0a9c84f1c56af658d4ecf5fdb3e0ac2ae",
 	"v0-full/C_edge/search/12000/p9-s2": "b09b98f0ca8d1864b5961d1168abef6b3ce905cd8a98a4bab159137ea146fea9",
 	"v0-full/A/greedy/12000/p9-s2": "601774be6e04ea826ce245600099374f6d90b6387e25ac37b07fb1f84d21a643",
@@ -172,19 +180,19 @@ const PINS_S3: Dictionary = {
 	"v0-fresh/C_shatter/greedy/12000/p9-s3": "e6884361bad93bef66f7b26e269a8798bf22218aaf202b9d3e8278829a6571f3",
 	"v0-fresh/C_shatter/search/12000/p9-s3": "a6c27a431234b5eb3acd66fc32d89d66d8b6b04624c491ebca93bb78981e12d3",
 	"v0-fresh/C_lantern/greedy/12000/p9-s3": "ff55e432765bf8bb8b3a2e2441adb134a6d86a0011fae796b231be4672eb0cd6",
-	"v0-fresh/C_lantern/search/12000/p9-s3": "deb3cfbe29ccbaa2f97482c2a3ceafcbc296ce3ad02fe7fbe5a674ff8b7a7835",
+	"v0-fresh/C_lantern/search/12000/p9-s3": "e0a1d3142d2736e0316acccea3e94822bd348e946c0f7382ecf5f7d7ae1e0daf",
 	"v0-fresh/C_edge/greedy/12000/p9-s3": "6ed1c4d2edcc6a12f9b769a36c7cc2da71a227faa34aa964f28b0d6e790317e9",
-	"v0-fresh/C_edge/search/12000/p9-s3": "e4d30d0da8bd9390b8d29f2361c989204d8e9378ed85456c7db5792826d4d750",
+	"v0-fresh/C_edge/search/12000/p9-s3": "2f3d4de9c9e6f0877bd7a577a2772a2c4eb3cf01d2e67d87ccc7f08768440986",
 	"v0-fresh/A/greedy/12000/p9-s3": "b3f74bab615865753e8a9646891c1778c9ab58802cb89f69ef7179161023bcab",
 	"v0-fresh/A/search/12000/p9-s3": "ac6a92318f6e451e6b09569409ed09f8c533a130663bd2ca2c553c8369e2ad15",
 	"v0-fresh/A_lit/greedy/12000/p9-s3": "6e5be33dbc60209142e96b07ff37f4f83844c40c74d66685a0f65275d8c8283c",
 	"v0-fresh/A_lit/search/12000/p9-s3": "61b7f10432cc23d27e75153dfd1d9c3b3ccdc0dfcae0e6cf2e2ffd8f0d8a511d",
 	"v0-fresh/R/greedy/12000/p9-s3": "a581181bd043ef61ab3ba990fafdb13db33c4dcf2ea539277f07a160c17053f5",
-	"v0-fresh/R/search/12000/p9-s3": "e2f05476cd46c80dd92f28634d5806c7590ace69da09aeeb662802e0e7e6a352",
+	"v0-fresh/R/search/12000/p9-s3": "1a731cd72abf0660b3a2bbb2d9b0bfb7afaceb646ef2610bd571792ac93597ef",
 	"v0-full/C_shatter/greedy/12000/p9-s3": "8d2ddeba66f4e065499451f33f3bb1b06d9638f8c30844259739b4eacd795271",
 	"v0-full/C_shatter/search/12000/p9-s3": "3644728452b4d83675433ce5b669d6c8fc712b407b98616903be3f855beabcdf",
 	"v0-full/C_lantern/greedy/12000/p9-s3": "83b5544f052cbb297352f9847cf2e12ed3269dc06b2ec343ce5df50956e6487a",
-	"v0-full/C_lantern/search/12000/p9-s3": "3700b2bbc2b6ee5b60f35bf05291e79b313c7e75a3234778e427cb07179676d2",
+	"v0-full/C_lantern/search/12000/p9-s3": "1f5cb2ee8d7c3d10e53768cb35dad3e814512f8b6f95fc6681dd7275f75e436a",
 	"v0-full/C_edge/greedy/12000/p9-s3": "9bc1dbda1b5ebc5547ddca99fc0d47b0a9c84f1c56af658d4ecf5fdb3e0ac2ae",
 	"v0-full/C_edge/search/12000/p9-s3": "534b71c263cd022436ad87b0c8193e364836223ce8b319a5051902bbff2617b6",
 	"v0-full/A/greedy/12000/p9-s3": "601774be6e04ea826ce245600099374f6d90b6387e25ac37b07fb1f84d21a643",
