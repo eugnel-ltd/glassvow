@@ -15,7 +15,7 @@ Pure documentation and isolated Python balance or ML research do not need this c
 
 The minimum is Godot 4.7.2 stable; later stable releases are supported. Reject older and pre-release builds. A release or evidence protocol may bind one exact supported version, and historical evidence keeps the version it actually used.
 
-Before engine work, check `godot --version`. Do not install or replace the provisioned Cloud Agent toolchain unless the environment contract explicitly says it is missing.
+Before engine work, check `godot --version`. Cloud sessions follow `docs/agents/cloud-environment.md`: select the execution mode, confirm the provisioned toolchain (including tools outside `PATH`), and install the CI baseline only when no supported engine is provisioned. Do not replace a working provisioned toolchain.
 
 Godot 4.7 traps that matter here:
 

@@ -100,7 +100,7 @@ def cmd_approve_grader(args: argparse.Namespace) -> int:
         entry = approvals.approve_grader(spec.directory, spec.cases_sha256, spec.surface_sha256, ids,
                                          args.run, args.read.split(",") if args.read else [],
                                          results, [c.id for c in cases], delegation,
-                                         trivial_fingerprint(cases), needs_judge(cases))
+                                         trivial_fingerprint(cases), needs_judge(cases, scored_only=True))
     except approvals.ApprovalError as error:
         print(f"not approved: {error}", file=sys.stderr)
         print("Open these scored transcripts and check each verdict is right:", file=sys.stderr)
@@ -141,7 +141,7 @@ def cmd_hillclimb(args: argparse.Namespace) -> int:
                                       "runs that CLAUDE.md, memory or settings can reach proves nothing")
     spec, cases = _load(args)
     model = args.model or spec.hillclimb_model
-    judged = needs_judge(cases)
+    judged = needs_judge(cases, scored_only=True)
     judge_model = (args.judge_model or spec.judge_model) if judged else ""
     judge_arm = (args.judge_arm or spec.judge_arm) if judged else ""
     approved = approvals.require_approvals(spec.directory, spec.cases_sha256, spec.surface_sha256,
@@ -156,7 +156,7 @@ def cmd_hillclimb(args: argparse.Namespace) -> int:
         judge_model=judge_model or spec.judge_model, judge_arm=judge_arm or spec.judge_arm)
     run_dir = spec.build_dir / (args.run_id or _run_id("hc-"))
     backend = _backend(args)
-    judge = backend if judged else None
+    judge = backend if needs_judge(cases) else None
     write_json(run_dir / "config.json", config.__dict__)
     summary = Climb(spec, cases, split, backend, backend, config, run_dir, judge,
                     approved.get("judge_model_id") if judged else None).run()

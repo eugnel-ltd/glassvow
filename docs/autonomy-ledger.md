@@ -4,7 +4,11 @@ How far each task type runs by itself. The orchestrator reads this before every 
 
 Levels: 0 Propose · 1 Draft (open the PR) · 2 Merge · 3 Release (deploy, production and store submissions included, verify, roll back) · 4 Initiate (start work from the north star or a monitor).
 
-Enforcement status: `not yet green` (the company checks are pending: this public repo cannot call the private skill's workflows, and ai-sdlc `scripts/repo_ci.sh` does not run glassvow yet). Levels 3 and 4 need green.
+Enforcement status: `not yet green`. Levels 3 and 4 need green. This status and the release hold remain unchanged by the check evidence below.
+
+The public-repo cloud path is available: [ai-sdlc #192](https://github.com/eugnel-ltd/ai-sdlc/pull/192), merged on 17 October 2026, added Glassvow to company `scripts/repo_ci.sh`. Its adapter runs the agent-contract checker and agent/scope tests plus company gates; it does not replace the checks selected by `tools/ci_scope.py`.
+
+On 18 October 2026, company gates and the separately selected repository CI passed on PR #757 at `820b725220607ee5558813694d27b3c80467c3f2` ([trusted exact-head report](https://github.com/eugnel-ltd/glassvow/pull/757#issuecomment-6247319322)). That evidence covers this examined head. Future heads still need their selected checks; this entry changes no autonomy level or enforcement decision.
 
 This repo's process (`docs/agents/ai-sdlc.md`, `tools/ci_scope.py`, `docs/rc-bar.md`) stays in force; the ledger's `release` type covers TestFlight, store submission and release. Where `AGENTS.md` escalates an irreversible external action, the 2026-10-17 company entry below is the owner's authority for release effects; spending money still needs the owner (`expenditure`).
 

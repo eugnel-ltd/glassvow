@@ -1,11 +1,12 @@
 # Lane brief template
 
-Save each brief as `<repo>/.claude/worktrees/orch/<lane>-brief.md` and hand the agent one line: "Read and follow `<path>` exactly." Keep it under about 60 lines. State facts and decisions; do not restate the lane rules.
+In local mode save each brief as `<repo>/.claude/worktrees/orch/<lane>-brief.md`; in cloud mode use the orchestrator's task-owned `work/` directory. Hand the agent one line: "Read and follow `<path>` exactly." Keep it under about 60 lines. State facts and decisions; do not restate the lane rules.
 
 ```markdown
 You own **#<issue> <short outcome>** (Glassvow, `<repo>`, GitHub `<owner>/<repo-name>`). Lane name `<lane>`; branch `<type>/<slug>`, from `origin/main` (`<short sha>` or newer). Worktree: `<repo>/.claude/worktrees/<lane>/wt`.
 
-Rules: read `<repo>/.claude/worktrees/orch/product-lane-rules.md` first; it binds.
+Execution mode: `<cloud|local>`; set `GLASSVOW_EXECUTION_MODE` accordingly and run the mode check in `docs/agents/cloud-environment.md`.
+Rules: read `<path-to-lane-rules.md>` first; it binds. Cloud lanes use the assigned isolated checkout; local lanes use the worktree path above.
 
 **Read (only these):**
 - <plan of record, with the sections that are the contract>
