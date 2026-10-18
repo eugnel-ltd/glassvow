@@ -2,7 +2,8 @@ class_name Preferences
 extends RefCounted
 ## Player-facing settings persisted at user://settings.cfg — audio (Master/
 ## Music/SFX), display (fullscreen, vsync), motion (screen shake, reduce
-## motion), privacy (crash diagnostics) and cosmetics (the card back).
+## motion), privacy (crash diagnostics), cosmetics (the card back), and the
+## last accepted departure's setup. Setup remembers choices, never unlocks.
 ## Supersedes the audio-only user://audio.cfg: its values are imported once,
 ## the first time this file is created, and never re-read.
 ##
@@ -35,6 +36,11 @@ const DEFAULT_DIAGNOSTICS: bool = true
 const COSMETICS_SECTION: String = "cosmetics"
 const CARD_BACK_KEY: String = "card_back"
 
+## Optional defaults only: canonical aspect/art IDs and a vow level. The live
+## catalogue and Vigil decide whether Main can offer them on this launch.
+const DEPARTURE_SECTION: String = "departure"
+const DEPARTURE_KEY: String = "setup"
+
 static var active: Preferences = Preferences.new()
 
 var master_volume: float = DEFAULT_MASTER
@@ -60,6 +66,7 @@ var diagnostics_notice_seen: bool = false
 ## validated here: CardBacks.chosen() owns the catalogue and the unlocks, and
 ## resolves an empty, unknown or locked id to the default back.
 var card_back: String = ""
+var _last_departure: Dictionary = {}
 
 ## Only the instance read from disk writes back to disk; the default `active`
 ## stand-in stays in memory whatever a lab does to it.
@@ -176,6 +183,22 @@ func set_card_back(id: String) -> void:
 	_store()
 
 
+func last_departure() -> Dictionary:
+	return _last_departure.duplicate()
+
+
+func remember_departure(aspect_id: String, vow: int, art_id: String) -> void:
+	# Labs/tests without a disk-backed owner keep only Main's session copy;
+	# they must not publish one throwaway Main's setup into another's defaults.
+	if not _persistent:
+		return
+	var setup: Dictionary = _departure_value({"aspect": aspect_id, "vow": vow, "art": art_id})
+	if setup.is_empty():
+		return
+	_last_departure = setup
+	_store()
+
+
 func mark_diagnostics_notice_seen() -> void:
 	if diagnostics_notice_seen:
 		return
@@ -238,6 +261,7 @@ func _read(config: ConfigFile) -> void:
 		config.get_value(PRIVACY_SECTION, DIAGNOSTICS_NOTICE_KEY, false), false)
 	var back: Variant = config.get_value(COSMETICS_SECTION, CARD_BACK_KEY, "")
 	card_back = back if back is String else ""
+	_last_departure = _departure_value(config.get_value(DEPARTURE_SECTION, DEPARTURE_KEY, {}))
 
 
 func _import_legacy(legacy_audio_path: String) -> void:
@@ -262,6 +286,25 @@ static func _bool_value(value: Variant, fallback: bool) -> bool:
 	if value is bool:
 		return value
 	return fallback
+
+
+static func _departure_value(value: Variant) -> Dictionary:
+	if typeof(value) != TYPE_DICTIONARY:
+		return {}
+	var setup: Dictionary = value
+	if setup.size() != 3:
+		return {}
+	var aspect: Variant = setup.get("aspect")
+	var vow: Variant = setup.get("vow")
+	var art: Variant = setup.get("art")
+	if not aspect is String or not art is String:
+		return {}
+	if not vow is int:
+		return {}
+	var vow_number: int = vow
+	if str(aspect).is_empty() or str(art).is_empty() or vow_number < 0:
+		return {}
+	return {"aspect": aspect, "vow": vow, "art": art}
 
 
 static func _diagnostics_value(config: ConfigFile) -> bool:
@@ -296,5 +339,6 @@ func _store() -> void:
 	config.set_value(PRIVACY_SECTION, DIAGNOSTICS_KEY, diagnostics_enabled)
 	config.set_value(PRIVACY_SECTION, DIAGNOSTICS_NOTICE_KEY, diagnostics_notice_seen)
 	config.set_value(COSMETICS_SECTION, CARD_BACK_KEY, card_back)
+	config.set_value(DEPARTURE_SECTION, DEPARTURE_KEY, _last_departure)
 	if not SaveService.store_text_atomic(_path, config.encode_to_text()):
 		push_warning("preferences: could not save settings")
