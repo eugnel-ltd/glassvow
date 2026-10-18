@@ -6,11 +6,28 @@ additional anchored situations. Each case carries its source and reason for incl
 any model run. The seeded split contains 48 training and 32 test cases.
 
 The original `../repo_traps/` corpus, its approvals, council records and spent calibration
-sets remain frozen. This directory has no approvals. No baseline, judge calibration or
-hill-climb has been run on this candidate.
+sets remain frozen. This directory has no approvals. No real-model baseline, judge calibration
+or hill-climb has been run on this candidate. The predecessor at `014f58ba` failed offline
+programmatic calibration; its results and single-use answer sets remain unchanged and spent.
 
-Every scored field uses strict scalar equality or a fully anchored citation pattern. A case's
-first decisive field is a programmatic gate. Free-text reasoning is a `report_only` judge
+Every scored field uses strict scalar equality or a fully anchored citation pattern.
+`decision_gate_audit.jsonl` records the once-through source audit of all 80 cases and all 138
+scored claims against the source tree at `014f58ba3c4a62bbb3c41e19944caae6df47a81d`, with
+source hashes, locations and a reason for every classification. All 137 required selected
+decisions are gates (136 explicit scalar/pattern gates and one implicit boolean gate).
+The one non-gate claim is Funplay's `likely-cause`: the task asks for the first check, while
+its source says an absent editor is only one possible explanation, alongside a disabled
+server or a fallback port. The endpoint and probe action both gate. This exception is
+source-based; it makes no promise that a future adversarial metric will pass.
+
+The font case now defines `baseline_offset` as `Label.position.y - NUM_BASELINE`, with the
+intended glyph baseline as the anchor. The source explicitly computes that top coordinate
+by subtracting ascent. The old response field did not name its coordinate relation, so the
+future prompt is clarified rather than broadening accepted values from scored answers.
+The two predecessor false negatives and their frozen classification remain historical
+results; this clarification does not retrospectively establish that those writers were wrong.
+
+Free-text reasoning is a `report_only` judge
 claim: its field, verdicts, ballots, model identity and any failure are reported separately
 and cannot affect accuracy, pass status or scoring infrastructure status. Without a judge
 backend the transcript records the claim as not evaluated. The Sonnet judge alias and plain
@@ -31,6 +48,7 @@ Offline commands, from the repository root:
 python3 -B tools/agent_evals/cli.py init repo_traps_structured
 python3 -B tools/agent_evals/cli.py review repo_traps_structured
 python3 -B tests/test_agent_evals_review.py
+python3 -B tests/test_agent_evals_decision_gates.py
 ```
 
 Before #694 or its parent #672 can close, the remaining work is:
