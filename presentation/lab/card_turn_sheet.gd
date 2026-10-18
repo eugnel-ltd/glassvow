@@ -51,7 +51,7 @@ func _init(content_ref: ContentDB, card_id: String = "") -> void:
 
 func _ready() -> void:
 	await get_tree().process_frame
-	var data: Dictionary = CardLab.load_catalog(content).get(_card_id, {})
+	var data: Dictionary = CardLab.load_catalog(content, PackedStringArray([_card_id])).get(_card_id, {})
 	if data.is_empty():
 		push_warning("turn sheet: no such card id: %s" % _card_id)
 		data = CardLab.load_catalog(content).get(DEFAULT_CARD, {})
