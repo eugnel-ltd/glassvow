@@ -12,8 +12,8 @@ extends RefCounted
 ## cards in no `cardPools` tier, so no balance pool changes) moved them from
 ## 3eea1429… / 0aff175e….
 ## #544 A4 adds only four bilingual `litText` display maps. Their new live
-## identities include that metadata; test_class_rider_catalogue_identity
-## reconstructs the preceding 922635e5… / c7bfa201… catalogue byte-for-byte.
+## identities include that metadata; test_class_rider_metadata_identity
+## protects the owned rows and copy. The delivery proof seals the prior catalogue.
 
 const LIVE_FILE: String = "ec55d80a6e8c732436809b8c0f867139b7cd48174b3b9ea77c1faf00cabad19d"
 const LIVE_SEMANTIC: String = "909016d061721bcaa217a729db2010ca827300f461796978c7149ed08101dbbc"
