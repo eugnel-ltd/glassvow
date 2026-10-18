@@ -2143,6 +2143,10 @@ func _on_save_error_choice(id: String) -> void:
 			else:
 				_show_title()
 			return
+	if id == "retry" and game != null and game.run.pending_run_end != null \
+			and _save_error_detail == "ui.persistence.detail.vigilRecord":
+		_on_terminal_commit("commit")
+		return
 	if id == "retry" and game != null and _store_run():
 		_route_run()
 	elif id == "retry" and game == null \
@@ -4313,19 +4317,46 @@ func _on_terminal_commit(_id: String) -> void:
 	var before_shards: int = _vigil.shards.size()
 	var before_whispers: int = _vigil.whispers
 	var before_backs: Array[String] = CardBacks.catalogue().unlocked(_vigil)
-	# A failed win leaves every reader on the accepted ledger, so Retry can
-	# still compute the original Dawn delta without exposing unheld awards.
+	# A failed fold leaves every reader on the accepted ledger. Death also
+	# draws seeded epitaphs: stage its RNG so an unheld fold consumes nothing.
 	var accepted_vigil: VigilState = _vigil
-	if outcome == "win":
+	var accepted_rng: Rng = game.run.rng
+	if outcome in ["win", "death"]:
 		_vigil = VigilState.from_dict(_vigil.to_dict())
+	if outcome == "death":
+		game.run.rng = Rng.new(accepted_rng.get_state())
 	var recorded: bool = _vigil.commit_run(game.run, outcome, content)
 	var dawn_leaves: Array[String] = []
+	var loss_backs: Array = []
 	if recorded:
 		dawn_leaves = DawnPassages.archive(_vigil, DawnPassages.earned(
 			before_quests, _vigil.quests, before_shards, _vigil.shards.size()))
+		if outcome == "death":
+			var held: Dictionary = _vigil.receipts["runEnd"]
+			var held_backs: Variant = held.get("backEvents")
+			if typeof(held_backs) == TYPE_ARRAY \
+					and typeof(held.get("rngState")) in [TYPE_INT, TYPE_FLOAT]:
+				# The ledger may have landed before a process died holding the
+				# reveal's run checkpoint. Its award delta and RNG travel together.
+				loss_backs = held_backs.duplicate(true)
+				game.run.rng = Rng.new(int(float(str(held["rngState"]))))
+			else:
+				loss_backs = DawnScreen.back_events(before_backs, _vigil)
+				if not loss_backs.is_empty():
+					held["backEvents"] = loss_backs.duplicate(true)
+					held["rngState"] = game.run.rng.get_state()
 	if not recorded or not _store_vigil():
 		_vigil = accepted_vigil
+		game.run.rng = accepted_rng
 		_show_save_error("ui.persistence.detail.vigilRecord")
+		return
+	if not loss_backs.is_empty():
+		game.run.pending_run_end = null
+		game.run.pending_dawn = {"events": loss_backs, "cursor": 0, "backOnly": true}
+		if _store_run():
+			_show_dawn()
+		else:
+			_show_save_error("ui.persistence.detail.dawnHold")
 		return
 	if outcome != "win":
 		var run_id: String = game.run.run_id
@@ -4872,11 +4903,13 @@ func _show_dawn() -> void:
 	var dawn: Dictionary = game.run.pending_dawn
 	var events: Array = dawn["events"]
 	var cursor: int = int(float(str(dawn.get("cursor", 0))))
-	var screen: DawnScreen = DawnScreen.new(events, cursor, _shape, _run_end_stats(), _sfx_bus)
+	var back_only: bool = dawn.get("backOnly", false) == true
+	var screen: DawnScreen = DawnScreen.new(
+		events, cursor, _shape, _run_end_stats(), _sfx_bus, back_only)
 	screen.deck_requested.connect(_show_run_deck)
 	screen.commit_requested.connect(_finish_dawn)
 	screen.advance_requested.connect(_on_dawn_advance.bind(screen))
-	var cue: StringName = &"victory" if cursor == 0 else &""
+	var cue: StringName = &"victory" if cursor == 0 and not back_only else &""
 	if cursor < events.size():
 		var event: Dictionary = events[cursor]
 		if not str(event.get("cue", "")).is_empty():
