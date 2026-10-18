@@ -1,0 +1,43 @@
+Godot Engine v4.7.2.stable.custom_build - https://godotengine.org
+Vulkan 1.4.318 - Forward Mobile - Using Device #0: Unknown - llvmpipe (LLVM 20.1.2, 256 bits)
+
+WARNING: Falling back to dummy PhysicsServer2D; 2D physics functionality will be disabled. If this is intended, set the physics/2d/physics_engine project setting to Dummy.
+     at: initialize_physics (main/main.cpp:391)
+ERROR: Could not load global script cache.
+   at: get_global_class_list (core/config/project_settings.cpp:1458)
+GV_MIP_CAPABILITY {"case":"rgba8-mip-surrogate","depth":1,"format":"RGBA8","format_id":36,"height":1024,"mips":11,"supported":true,"usage":193,"validated_upload_format":"RGBA8","width":1024}
+GV_MIP_START case=rgba8-mip-surrogate layer=0 format=36 width=1024 height=1024 depth=1 mips=11 payload=5592404 pitch_step=1 align=128 block_w=1 block_h=1 block_bytes=1 pixel_size=4 rshift=0 forced=0
+GV_MIP_REQUEST case=rgba8-mip-surrogate layer=0 batch=0 bytes=5592580 first_mip=0 mip_count=11
+GV_MIP_BARRIER case=rgba8-mip-surrogate layer=0 batch=0 phase=begin first_mip=0 mip_count=11
+GV_MIP_COPY case=rgba8-mip-surrogate layer=0 batch=0 mip=0 z=0 offset=0 local=0 pitch=4096 width=1024 height=1024 padded_w=1024 padded_h=1024 source=0
+GV_MIP_COPY case=rgba8-mip-surrogate layer=0 batch=0 mip=1 z=0 offset=4194304 local=4194304 pitch=2048 width=512 height=512 padded_w=512 padded_h=512 source=4194304
+GV_MIP_COPY case=rgba8-mip-surrogate layer=0 batch=0 mip=2 z=0 offset=5242880 local=5242880 pitch=1024 width=256 height=256 padded_w=256 padded_h=256 source=5242880
+GV_MIP_COPY case=rgba8-mip-surrogate layer=0 batch=0 mip=3 z=0 offset=5505024 local=5505024 pitch=512 width=128 height=128 padded_w=128 padded_h=128 source=5505024
+GV_MIP_COPY case=rgba8-mip-surrogate layer=0 batch=0 mip=4 z=0 offset=5570560 local=5570560 pitch=256 width=64 height=64 padded_w=64 padded_h=64 source=5570560
+GV_MIP_COPY case=rgba8-mip-surrogate layer=0 batch=0 mip=5 z=0 offset=5586944 local=5586944 pitch=128 width=32 height=32 padded_w=32 padded_h=32 source=5586944
+GV_MIP_COPY case=rgba8-mip-surrogate layer=0 batch=0 mip=6 z=0 offset=5591040 local=5591040 pitch=64 width=16 height=16 padded_w=16 padded_h=16 source=5591040
+GV_MIP_COPY case=rgba8-mip-surrogate layer=0 batch=0 mip=7 z=0 offset=5592064 local=5592064 pitch=32 width=8 height=8 padded_w=8 padded_h=8 source=5592064
+GV_MIP_COPY case=rgba8-mip-surrogate layer=0 batch=0 mip=8 z=0 offset=5592320 local=5592320 pitch=16 width=4 height=4 padded_w=4 padded_h=4 source=5592320
+GV_MIP_COPY case=rgba8-mip-surrogate layer=0 batch=0 mip=9 z=0 offset=5592448 local=5592448 pitch=8 width=2 height=2 padded_w=2 padded_h=2 source=5592384
+GV_MIP_COPY case=rgba8-mip-surrogate layer=0 batch=0 mip=10 z=0 offset=5592576 local=5592576 pitch=4 width=1 height=1 padded_w=1 padded_h=1 source=5592400
+GV_MIP_BARRIER case=rgba8-mip-surrogate layer=0 batch=0 phase=end first_mip=0 mip_count=11
+GV_MIP_READBACK {"actual_bytes":5592404,"actual_sha256":"19b04e621a743dad4d2d7234bd77a4714a09c942c2b360b783423944fdd66ec9","case":"rgba8-mip-surrogate","created_format":36,"created_mipmaps":11,"depth":1,"equal":true,"format":"RGBA8","format_id":36,"height":1024,"layer":0,"mips":11,"source_bytes":5592404,"source_sha256":"19b04e621a743dad4d2d7234bd77a4714a09c942c2b360b783423944fdd66ec9","width":1024}
+GV_MIP_CAPABILITY {"case":"vigil-astc","depth":1,"format":"ASTC_4x4","format_id":156,"height":2048,"mips":12,"supported":false,"usage":193,"validated_upload_format":"UNSUPPORTED","width":2048}
+GV_MIP_CAPABILITY {"case":"vigil-astc-padded","depth":1,"format":"ASTC_4x4","format_id":156,"height":2048,"mips":12,"supported":false,"usage":193,"validated_upload_format":"UNSUPPORTED","width":2048}
+GV_MIP_CAPABILITY {"case":"astc4-odd-padded","depth":1,"format":"ASTC_4x4","format_id":156,"height":31,"mips":6,"supported":false,"usage":193,"validated_upload_format":"UNSUPPORTED","width":53}
+GV_MIP_CAPABILITY {"case":"rgba8-depth-padded","depth":3,"format":"RGBA8","format_id":36,"height":17,"mips":5,"supported":true,"usage":193,"validated_upload_format":"RGBA8","width":23}
+GV_MIP_START case=rgba8-depth-padded layer=0 format=36 width=23 height=17 depth=3 mips=5 payload=5144 pitch_step=256 align=512 block_w=1 block_h=1 block_bytes=1 pixel_size=4 rshift=0 forced=1
+GV_MIP_REQUEST case=rgba8-depth-padded layer=0 batch=0 bytes=17664 first_mip=0 mip_count=5
+GV_MIP_BARRIER case=rgba8-depth-padded layer=0 batch=0 phase=begin first_mip=0 mip_count=5
+GV_MIP_COPY case=rgba8-depth-padded layer=0 batch=0 mip=0 z=0 offset=0 local=0 pitch=256 width=23 height=17 padded_w=23 padded_h=17 source=0
+GV_MIP_COPY case=rgba8-depth-padded layer=0 batch=0 mip=0 z=1 offset=4608 local=4608 pitch=256 width=23 height=17 padded_w=23 padded_h=17 source=1564
+GV_MIP_COPY case=rgba8-depth-padded layer=0 batch=0 mip=0 z=2 offset=9216 local=9216 pitch=256 width=23 height=17 padded_w=23 padded_h=17 source=3128
+GV_MIP_COPY case=rgba8-depth-padded layer=0 batch=0 mip=1 z=0 offset=13824 local=13824 pitch=256 width=11 height=8 padded_w=11 padded_h=8 source=4692
+GV_MIP_COPY case=rgba8-depth-padded layer=0 batch=0 mip=2 z=0 offset=15872 local=15872 pitch=256 width=5 height=4 padded_w=5 padded_h=4 source=5044
+GV_MIP_COPY case=rgba8-depth-padded layer=0 batch=0 mip=3 z=0 offset=16896 local=16896 pitch=256 width=2 height=2 padded_w=2 padded_h=2 source=5124
+GV_MIP_COPY case=rgba8-depth-padded layer=0 batch=0 mip=4 z=0 offset=17408 local=17408 pitch=256 width=1 height=1 padded_w=1 padded_h=1 source=5140
+GV_MIP_BARRIER case=rgba8-depth-padded layer=0 batch=0 phase=end first_mip=0 mip_count=5
+GV_MIP_READBACK {"actual_bytes":5144,"actual_sha256":"be4902321b79d8a53b2d1ee35d0ed05565a82a5e7a2cca34356a743f7c90b3a4","case":"rgba8-depth-padded","created_format":36,"created_mipmaps":5,"depth":3,"equal":true,"format":"RGBA8","format_id":36,"height":17,"layer":0,"mips":5,"source_bytes":5144,"source_sha256":"be4902321b79d8a53b2d1ee35d0ed05565a82a5e7a2cca34356a743f7c90b3a4","width":23}
+GV_MIP_CAPABILITY {"case":"single-exact-cap","depth":1,"format":"ASTC_4x4","format_id":156,"height":2048,"mips":1,"supported":false,"usage":193,"validated_upload_format":"UNSUPPORTED","width":2048}
+GV_MIP_CAPABILITY {"case":"atomic-reject","depth":1,"format":"ASTC_4x4","format_id":156,"height":2048,"mips":13,"supported":false,"usage":193,"validated_upload_format":"UNSUPPORTED","width":4096}
+GV_MIP_DONE 2
