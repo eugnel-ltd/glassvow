@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run actual RD uploads/readback in a fresh X11 software-Vulkan process."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -150,6 +151,11 @@ def run(binary, output):
     script = project / 'probe.gd'
     script.write_text(SCRIPT)
     env = dict(os.environ, LIBGL_ALWAYS_SOFTWARE='1', GALLIUM_DRIVER='llvmpipe')
+    manifests = list(Path('/usr/share/vulkan/icd.d').glob('*lvp*.json'))
+    if len(manifests) != 1:
+        raise RuntimeError('required software-Vulkan ICD is unavailable or ambiguous')
+    manifest = manifests[0]
+    env['VK_DRIVER_FILES'] = str(manifest.resolve())
     for suffix in ['DATA', 'CACHE', 'CONFIG', 'STATE']:
         path = output / ('xdg-' + suffix.lower())
         path.mkdir()
@@ -160,6 +166,8 @@ def run(binary, output):
         'vulkan', '--rendering-method', 'mobile', '--audio-driver', 'Dummy',
         '--script', str(script.resolve())]
     (output / 'command.json').write_text(json.dumps({'argv': command,
+        'vulkan_icd': str(manifest.resolve()),
+        'vulkan_icd_sha256': hashlib.sha256(manifest.read_bytes()).hexdigest(),
         'environment_names': ['DISPLAY', 'LIBGL_ALWAYS_SOFTWARE', 'GALLIUM_DRIVER',
             'VK_DRIVER_FILES', 'XDG_DATA_HOME', 'XDG_CACHE_HOME', 'XDG_CONFIG_HOME', 'XDG_STATE_HOME']}, indent=2) + '\n')
     with (output / 'native.log').open('wb') as log:
