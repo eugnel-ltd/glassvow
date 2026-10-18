@@ -8,6 +8,12 @@ Short live log of repeatable mistakes. Read it before every task. At most fiftee
 
 ## Recent entry
 
+### Keep report provenance complete in statistical fixtures
+- Cause: A B2 reporting fixture used an empty manifest, concealing a path that accepted another class and cell under the requested report filename.
+- Fix: The #661/#544 B2 sensitivity correction shares the grader's complete report-identity validation and adds a public CLI regression with matching content but conflicting class/cell metadata.
+- Done right: Synthetic reports preserve the production manifest identity and seed metadata; numerical regression claims do not excuse missing provenance.
+- Seen: 1× (2026-10-18)
+
 ### Cast Variant values before passing them to typed GDScript boundaries
 - Cause: Dictionary values passed to typed bool parameters caused warning-as-error parse failures in two test additions.
 - Fix: ad90cb8396fc6755dbe1ef2152ae605cdec88117
