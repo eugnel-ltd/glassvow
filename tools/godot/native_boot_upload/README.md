@@ -166,6 +166,7 @@ python3 tools/godot/native_boot_upload/check_patch.py --output work/native-boot/
 python3 tools/godot/native_boot_upload/test_harness.py
 python3 tools/godot/native_boot_upload/test_schema2.py
 python3 tools/godot/native_boot_upload/test_frame_capacity.py
+python3 tests/native/test_native_boot_call_setup.py
 python3 tools/godot/native_boot_upload/native_calls.py --output work/native-boot/native-calls
 python3 tests/native/test_boot_capture_cli.py
 python3 tests/native/test_boot_capture_diagnostics.py
@@ -180,6 +181,11 @@ accepts an already downloaded archive with the sealed hash; an archive hash
 override is an explicit source-pin contract change, not a cache convenience.
 The capture invocation is shown in the workflow and consumes only the newly
 built executable paths recorded by `build.py`.
+
+Native-call candidate preparation prevents Git from discovering an enclosing
+repository. The same patched RD methods must reach the capacity fixture when
+the evidence output is inside the hosted checkout or in a detached directory;
+the setup regression exercises both layouts without compiling native code.
 
 An explicit empty `--test-suite ''` is reserved for independently owned
 components with a separate compiled test protocol. The build manifest records

@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 import re
 from pathlib import Path
 import shutil
@@ -45,8 +46,11 @@ def run(args):
     destination = candidate / relative
     destination.parent.mkdir(parents=True)
     shutil.copyfile(original / relative, destination)
+    # Hosted output is inside the checkout. Stop repository discovery before
+    # Git can interpret these paths relative to that enclosing worktree.
     subprocess.run(["git", "apply", "--include=" + relative, str(patch)],
-                   cwd=candidate, check=True, timeout=20)
+                   cwd=candidate, check=True, timeout=20,
+                   env=dict(os.environ, GIT_CEILING_DIRECTORIES=str(candidate.parent.resolve())))
     result = subprocess.run([sys.executable, str(root / "tests/native/rd_boot_upload_capacity/run_fixture.py"),
         "--source", str(destination.resolve()), "--baseline-source", str((original / relative).resolve()),
         "--output", str((args.output / "rd.json").resolve())],

@@ -12,6 +12,7 @@ on:
       - 'tests/native/test_boot_capture_diagnostics.py'
       - 'tests/native/test_boot_contact_sheets.py'
       - 'tests/native/test_boot_runtime_configuration.py'
+      - 'tests/native/test_native_boot_call_setup.py'
       - tools/godot/patches/glassvow-661-native-boot-upload-cap.patch
       - tools/godot/native_boot_upload/**
       - .github/workflows/native-boot-upload.yml
@@ -55,6 +56,7 @@ jobs:
           work/native-boot-venv/bin/python tests/native/test_boot_capture_diagnostics.py
           work/native-boot-venv/bin/python tests/native/test_boot_contact_sheets.py
           work/native-boot-venv/bin/python tests/native/test_boot_runtime_configuration.py
+          work/native-boot-venv/bin/python tests/native/test_native_boot_call_setup.py
       - name: Verify the bounded patch applies to both exact source pins
         timeout-minutes: 3
         run: |
