@@ -60,10 +60,12 @@ static func _settings_round_trip(fails: Array[String]) -> void:
 	_check(fails, _last(again) == wanted, "caller mutated the stored choice through its getter")
 	var config: ConfigFile = ConfigFile.new()
 	_check(fails, config.load(PREFS_PATH) == OK, "settings stopped loading")
-	_check(fails, config.get_value("future", "setting", "") == "preserve me"
-		and config.get_value("privacy", "diagnostics_enabled", true) == false,
+	var settings_preserved: bool = config.get_value("future", "setting", "") == "preserve me" \
+		and config.get_value("privacy", "diagnostics_enabled", true) == false
+	_check(fails, settings_preserved,
 		"remembering setup discarded other settings or diagnostics opt-out")
-	_check(fails, config.get_value("departure", "setup", {}) == wanted,
+	var stored_setup_matches: bool = config.get_value("departure", "setup", {}) == wanted
+	_check(fails, stored_setup_matches,
 		"stored setup contains an index, seed, run ID, boon or unlock authority")
 	var memory: Preferences = Preferences.new()
 	memory._path = PREFS_PATH + ".standin"
@@ -184,7 +186,8 @@ static func _failed_checkpoint_and_retry(fails: Array[String], content: ContentD
 		"failed run acceptance overwrote the last remembered departure")
 	main._run_save_path = RUN_PATH
 	main._on_save_error_choice("retry")
-	_check(fails, main._load_run() != null and _last(Preferences.active).get("vow", -1) == 1,
+	var retry_remembered: bool = main._load_run() != null and _last(Preferences.active).get("vow", -1) == 1
+	_check(fails, retry_remembered,
 		"successful checkpoint retry did not remember the now-durable setup")
 	_dispose(main)
 	DirAccess.remove_absolute(blocked)
