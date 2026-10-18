@@ -8,6 +8,12 @@ Short live log of repeatable mistakes. Read it before every task. At most fiftee
 
 ## Recent entry
 
+### Compare retained floating values without a text round trip
+- Cause: A p10 regression converted a saved float through `str`, whose display precision rounded it and falsely rejected an identical score. The invalid attempt and logs remain preserved; a new canonical first fixture was strictly parsed and failed unchanged source before production edits.
+- Fix: d86a67d4a2337a0186f022b2c572a9cb082d096c
+- Done right: Assign a Dictionary value to an explicitly typed float before comparing it. Never round production calculations to satisfy a faulty fixture.
+- Seen: 1× (2026-10-18)
+
 ### Cast Variant values before passing them to typed GDScript boundaries
 - Cause: Dictionary values passed to typed bool parameters caused warning-as-error parse failures in two test additions.
 - Fix: ad90cb8396fc6755dbe1ef2152ae605cdec88117

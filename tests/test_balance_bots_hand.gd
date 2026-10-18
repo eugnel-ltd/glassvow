@@ -41,7 +41,12 @@ static func _flags(fails: Array[String]) -> void:
 	if [plain.get("pilot"), plain.get("search")] != ["p8-d0-v3", "s1"] \
 			or [manifest.get("pilot"), search.get("version")] != ["p9", "s2"]:
 		fails.append("balance bots: options %s and manifest %s name the wrong bots" % [plain, manifest])
-	for bad: Array in [["--pilot=p10"], ["--play=search", "--search=s4"], ["--search=s2"]]:
+	var honest: Dictionary = Sim._options(PackedStringArray(["--play=search", "--pilot=p10", "--search=s3"]))
+	var honest_manifest: Dictionary = Sim._manifest(honest, "", {})
+	var honest_search: Dictionary = honest_manifest.get("search", {})
+	if honest.has("error") or [honest_manifest.get("pilot"), honest_search.get("version")] != ["p10", "s3"]:
+		fails.append("balance bots: p10/s3 candidate is not explicitly selectable in its manifest")
+	for bad: Array in [["--pilot=p11"], ["--play=search", "--search=s4"], ["--search=s2"]]:
 		if not Sim._options(PackedStringArray(bad)).has("error"):
 			fails.append("balance bots: the simulator accepts %s" % [bad])
 
