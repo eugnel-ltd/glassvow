@@ -2165,7 +2165,7 @@ func _new_run(profile: Dictionary = {}) -> void:
 			func(id: String) -> bool: return _vigil.scenes_seen.has(id)).size(),
 	}
 	game = GlassvowGame.new(content, RunState.new_run(content, run_seed, run_id, merged))
-	_remember_setup_for_run = game.run.run_id if _story_flow() else ""
+	_remember_setup_for_run = game.run.run_id if _remembers_player_departure() else ""
 	game.run.stats["start"] = Time.get_unix_time_from_system()
 	game.quests.prepare_run(game.run)
 	# Six shards used to replace the whole pilgrimage with a one-node Act IV
@@ -2228,6 +2228,14 @@ func _admits_new_run(aspect: int) -> bool:
 
 func _story_flow() -> bool:
 	return not _opening_suppressed and not _dev_claimed
+
+
+## Story-flow onboarding still uses the Development profile. Follow the
+## installed pair chosen by select_profile (including --production-save), not
+## narrative flow alone; a later Development installation stays isolated too.
+func _remembers_player_departure() -> bool:
+	return _story_flow() and _run_save_path != ScenarioKernel.RUN_PATH \
+		and _vigil_save_path != ScenarioKernel.VIGIL_PATH
 
 
 func _hint_layer_ahead() -> bool:
@@ -5081,7 +5089,7 @@ func _on_lamplighter_confirmed(boon_id: String, art_id: StringName) -> void:
 	game.run.quest_scratch.erase("lamplighterOffer")
 	# A saved gift may finish in a later process, after its temporary departure
 	# marker is gone. This accepted choice still owes its stable setup defaults.
-	if _story_flow():
+	if _remembers_player_departure():
 		_remember_setup_for_run = game.run.run_id
 	if _store_run():
 		_flood_from_departure(_after_lamplighter)
