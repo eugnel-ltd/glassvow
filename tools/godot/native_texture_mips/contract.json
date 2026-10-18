@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "task": "#660 vigil full mip chain bounded native requests",
+  "claim": "https://github.com/eugnel-ltd/glassvow/issues/660#issuecomment-6251809208",
+  "product_base": "6235b82f949846412d820e2378eb3c7ac68177a0",
+  "source_pins": [
+    "ed1daf0bf001b61586d9930840f2f1394092c079",
+    "83dec14d549108e1f314f57c1ce7e932c65370dd"
+  ],
+  "original_rd_sha256": "cb319128c2650189dc3ebff5aad7e70ac73b0bd4c4d0c58993f06d4d002ddc62",
+  "prerequisite_patch": "tools/godot/patches/glassvow-660-compressed-upload-staging.patch",
+  "prerequisite_patch_sha256": "a2603c7dbb0c2a7a85d9167ed84c56dd4b7efbc6a21dcba6295300235c150358",
+  "allocator_baseline_rd_sha256": "ac38319ac1cf7da23889580b158d4a5e89fd4e4552d73760f0a2081ed076a4d3",
+  "candidate_rd_sha256": "14b79a01e2a99a6f4923ab3d1b4f620e4e86b071734da239b5820a95623e0968",
+  "production_patch_sha256": "e8a1c7b9f1cda377104faa3e8a6b0c2a733486a9833d2d418a90946aa1eb51e4",
+  "first_native_fixture_commit": "081ce7de121b8bd006b1bdc1a8e5d87bc6059553",
+  "first_fixture_sha256": "a401fd0a8dec2aebad7205c67776d20ff7d0333e33c3165a1fd4f5d4bbc2dc92",
+  "request_limit": 4194304,
+  "asset": {
+    "path": "assets/art/map/geometry/act1/vigil-hall.glb",
+    "sha256": "6ee66212ddd504f92f5de896c5b5c3d053a8ab1bc5b692103a6bd0d2a0098f13",
+    "embedded_basis_sha256": "0629ca671afafcd4ab852cadc6c2b09e53c0300716e46908855c22b49561db35",
+    "astc_width": 2048,
+    "astc_height": 2048,
+    "mip_levels": 12,
+    "astc_bytes": 5592432,
+    "base_bytes": 4194304,
+    "tail_bytes": 1398128
+  },
+  "limits": [
+    "one padded whole mip including depth must fit the request bound; larger atomic mips fail before copying",
+    "row/block-band uploads not implemented",
+    "earlier batches synchronously complete to preserve existing single worker dependency; final batch keeps async behavior",
+    "native observer/compiler/RD readback not yet run",
+    "no template activation, A12/device, timing, memory/RSS/peak-VRAM or release PASS"
+  ],
+  "first_runner_sha256": "9e9d4f597346b72b7a76a8e1306ab96af568e48ab813123fad119e3c35f5cd53"
+}

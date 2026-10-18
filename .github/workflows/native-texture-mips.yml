@@ -1,0 +1,125 @@
+name: Native complete mip upload proof
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - tools/godot/patches/glassvow-660-bounded-mip-upload.patch
+      - tools/godot/patches/glassvow-660-compressed-upload-staging.patch
+      - tools/godot/native_texture_mips/**
+      - tools/godot/native_boot_upload/build.py
+      - tools/godot/native_boot_upload/processes.py
+      - tests/native/test_texture_mip_batches.py
+      - tests/native/texture_mip_batches.cpp.in
+      - tests/native/test_texture_mip_evidence.py
+      - tests/native/test_native_mip_builder.py
+      - .github/workflows/native-texture-mips.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-texture-mips-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-mip-requests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install bounded native compiler and software renderer dependencies
+        timeout-minutes: 5
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential pkg-config \
+            libx11-dev libxcursor-dev libxinerama-dev libxi-dev libxrandr-dev \
+            libgl1-mesa-dev libvulkan-dev mesa-vulkan-drivers libasound2-dev \
+            libpulse-dev libudev-dev xvfb xauth
+          python3 -m venv work/native-mips-venv
+          work/native-mips-venv/bin/python -m pip install SCons==4.9.1
+      - name: Reject seeded evidence defects and verify exact source application
+        timeout-minutes: 3
+        run: |
+          mkdir -p work/native-mips-evidence work/native-mips-source
+          work/native-mips-venv/bin/python -m unittest discover -s tests/native -p 'test_*mip*.py'
+          work/native-mips-venv/bin/python tools/godot/native_boot_upload/test_harness.py
+          work/native-mips-venv/bin/python - <<'PY'
+          import json,pathlib,urllib.request
+          contract=json.loads(pathlib.Path('tools/godot/native_texture_mips/contract.json').read_text())
+          for role,pin in zip(('stable','shipping'),contract['source_pins']):
+              url=f'https://raw.githubusercontent.com/godotengine/godot/{pin}/servers/rendering/rendering_device.cpp'
+              with urllib.request.urlopen(url,timeout=30) as response:
+                  data=response.read(1024*1024+1)
+              if len(data)>1024*1024:
+                  raise SystemExit('source file exceeds bounded retrieval')
+              pathlib.Path(f'work/native-mips-source/{role}.cpp').write_bytes(data)
+          PY
+          work/native-mips-venv/bin/python tools/godot/native_texture_mips/check_patch.py \
+            --source work/native-mips-source/stable.cpp --shipping-source work/native-mips-source/shipping.cpp \
+            --prerequisite-patch tools/godot/patches/glassvow-660-compressed-upload-staging.patch \
+            --output work/native-mips-evidence/source-application
+      - name: Compile and exercise immutable whole-chain red then bounded green fixture
+        timeout-minutes: 3
+        run: |
+          set +e
+          work/native-mips-venv/bin/python tests/native/test_texture_mip_batches.py \
+            --source work/native-mips-evidence/source-application/stable-allocator-baseline.cpp --build-dir work/native-mips-evidence/old-red
+          code=$?
+          set -e
+          test "$code" -eq 1
+          work/native-mips-venv/bin/python - <<'PY'
+          import json,pathlib
+          root=pathlib.Path('work/native-mips-evidence/old-red')
+          report=json.loads((root/'result.json').read_text())
+          assert report['compile_exit']==0 and report['native_exit']==1
+          assert report['source_sha256']=='ac38319ac1cf7da23889580b158d4a5e89fd4e4552d73760f0a2081ed076a4d3'
+          log=(root/'native.log').read_text()
+          assert 'FAIL bounded staging request' in log and 'requests=5592432,' in log
+          assert 'AddressSanitizer' not in log and 'runtime error:' not in log
+          PY
+          work/native-mips-venv/bin/python tests/native/test_texture_mip_batches.py \
+            --source work/native-mips-evidence/source-application/stable/servers/rendering/rendering_device.cpp \
+            --build-dir work/native-mips-evidence/candidate-green
+      - name: Compile allocator-only baseline and bounded candidate from the same sealed archive
+        timeout-minutes: 62
+        run: |
+          work/native-mips-venv/bin/python tools/godot/native_boot_upload/build.py \
+            --prerequisite-patch tools/godot/patches/glassvow-660-compressed-upload-staging.patch \
+            --production-patch tools/godot/patches/glassvow-660-bounded-mip-upload.patch \
+            --observer tools/godot/native_texture_mips/observer.py --test-suite '' \
+            --work work/native-mips-builds --output work/native-mips-evidence
+      - name: Observe actual RD requests and every GPU mip byte
+        timeout-minutes: 5
+        run: |
+          work/native-mips-venv/bin/python - <<'PY'
+          import glob,json,os,pathlib,subprocess
+          icds=glob.glob('/usr/share/vulkan/icd.d/*lvp*.json')
+          if len(icds)!=1:
+              raise SystemExit('required software Vulkan ICD absent or ambiguous')
+          os.environ['VK_DRIVER_FILES']=icds[0]
+          inputs=json.loads(pathlib.Path('work/native-mips-evidence/render-inputs.json').read_text())
+          for variant in ('baseline','candidate'):
+              subprocess.run(['work/native-mips-venv/bin/python','tools/godot/native_texture_mips/probe.py',
+                  '--variant',variant,'--binary',inputs[variant],'--output',f'work/native-mips-evidence/{variant}-rd'],check=True,timeout=135)
+          PY
+          work/native-mips-venv/bin/python tools/godot/native_texture_mips/verify.py \
+            --baseline work/native-mips-evidence/baseline-rd --candidate work/native-mips-evidence/candidate-rd \
+            --build-manifest work/native-mips-evidence/build-manifest.json \
+            --output work/native-mips-evidence/actual-rd-proof.json
+      - name: Keep exact-head evidence and failure logs
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-texture-mips-${{ github.sha }}
+          path: |
+            work/native-mips-evidence/
+            !work/native-mips-evidence/**/project/**
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

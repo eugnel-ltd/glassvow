@@ -110,6 +110,11 @@ and `--test-suite` so another independently owned component can reuse the
 source/build interface without changing this boot patch. `--source-archive`
 accepts an already downloaded archive with the sealed hash; an archive hash
 override is an explicit source-pin contract change, not a cache convenience.
+
+An optional repeated `--prerequisite-patch PATH` applies each patch in order to
+both variants before the candidate's production patch. The manifest records
+every patch hash and resulting source-tree hash per variant. With no argument,
+boot's original baseline/candidate behavior is unchanged.
 The capture invocation is shown in the workflow and consumes only the newly
 built executable paths recorded by `build.py`.
 
