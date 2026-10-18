@@ -13,7 +13,7 @@ static func run(fails: Array[String]) -> void:
 	if config.save(path) != OK:
 		fails.append("preferences atomic: could not seed accepted settings")
 		return
-	if not SaveService._store_json_atomic(path + ".json", {"accepted": true}):
+	if not SaveService.store_vigil(VigilState.blank(), path + ".json"):
 		fails.append("preferences atomic: could not seed accepted JSON")
 		return
 	if OS.get_name() in ["Linux", "macOS", "FreeBSD", "NetBSD", "OpenBSD", "BSD"]:

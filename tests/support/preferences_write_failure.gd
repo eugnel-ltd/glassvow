@@ -25,7 +25,9 @@ func _initialize() -> void:
 	# leaves get_error() at OK; checking that field alone would accept it.
 	var json_path: String = path + ".json"
 	var accepted_json: String = FileAccess.get_file_as_string(json_path)
-	if SaveService._store_json_atomic(json_path, {"accepted": false}):
+	var vigil: VigilState = VigilState.blank()
+	vigil.whispers = 1
+	if SaveService.store_vigil(vigil, json_path):
 		fails.append("buffered JSON flush failure reported success")
 	if FileAccess.get_file_as_string(json_path) != accepted_json:
 		fails.append("buffered JSON flush failure replaced accepted bytes")
