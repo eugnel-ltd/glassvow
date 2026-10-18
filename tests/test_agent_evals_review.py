@@ -533,6 +533,14 @@ class ReportOnlyGraderTests(unittest.TestCase):
                 {'command': 'tools/check_scripts.sh', 'reason': reason}), fake_judge(False))
             self.assertEqual((1.0, True), (result.score, result.passed), reason[:30])
 
+    def test_report_only_backend_exception_cannot_abort_scoring(self) -> None:
+        judge = fake_judge(True)
+        with mock.patch.object(judge, 'complete', side_effect=RuntimeError('synthetic failure')):
+            result = grade(self.case(), json.dumps(
+                {'command': 'tools/check_scripts.sh', 'reason': 'A rationale.'}), judge)
+        self.assertEqual((1.0, True, None), (result.score, result.passed, result.judge_error))
+        self.assertIn('RuntimeError', result.reported_judge_error)
+
     def test_strict_scalar_rejects_siblings_hedges_and_other_json_types(self) -> None:
         for value in ('tools/check_scripts.sh or tools/check_imports.sh',
                       'Do not run tools/check_scripts.sh', ['tools/check_scripts.sh']):
