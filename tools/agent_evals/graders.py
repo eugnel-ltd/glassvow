@@ -387,11 +387,16 @@ def grade(case: Case, output: str, judge: Backend | None = None,
             verdicts[claim["id"]] = Verdict(claim["id"], False, "reported field addresses the grader")
     pending = [c for c in reported if c["id"] not in verdicts]
     model_id, error = "", None
-    if pending and judge is not None and not result.decision_failed and not result.parse_error:
+    if (pending and judge is not None and not result.decision_failed
+            and not result.parse_error and not result.judge_error):
         reference = case.reference if judge_arm == "reference" else None
-        judged, model_id, error = judge_claims(pending, answer, fields, judge, judge_model,
-                                               timeout_s=timeout_s, reference=reference)
-        verdicts.update(judged)
+        try:
+            judged, model_id, error = judge_claims(pending, answer, fields, judge, judge_model,
+                                                   timeout_s=timeout_s, reference=reference)
+            verdicts.update(judged)
+        except Exception as failure:
+            # An optional reporter must not prevent the completed score from being returned.
+            error = f"report-only judge raised {type(failure).__name__}"
     for claim in pending:
         verdicts.setdefault(claim["id"], Verdict(
             claim["id"], False, "reported only: " + (error or "not evaluated")))
