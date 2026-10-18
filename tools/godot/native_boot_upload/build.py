@@ -77,6 +77,9 @@ def build(args):
     require(not args.work.exists(), "build work directory must be new (no stale objects)")
     args.work.mkdir(parents=True)
     args.output.mkdir(parents=True, exist_ok=True)
+    prerequisites = getattr(args, "prerequisite_patches", [])
+    prerequisite_identity = [{"path": str(path.resolve()), "sha256": digest(path)}
+                             for path in prerequisites]
     report = {"schema": 1, "status": "running", "source_sha": SOURCE_SHA,
               "source_url": SOURCE_URL, "flags": FLAGS,
               "runtime_test_configuration": {"purpose": "portable_component_proof",
@@ -86,6 +89,7 @@ def build(args):
               "python_version": sys.version, "host": list(os.uname()),
               "scope": "Linux software-renderer component evidence, not shipping template proof",
               "patch_sha256": digest(args.patch), "observer_sha256": digest(args.observer),
+              "prerequisite_patches": prerequisite_identity,
               "test_suite": args.test_suite, "builds": {}}
     if args.splash:
         report["splash_sha256"] = digest(args.splash)
@@ -119,11 +123,23 @@ def build(args):
                     "baseline/candidate extracted sources differ")
             original_tree = source_hash
             variant_report = {"unmodified_source_tree_sha256": source_hash,
-                              "version_py_sha256": digest(tree / "version.py")}
+                              "version_py_sha256": digest(tree / "version.py"),
+                              "applied_patches": []}
             report["builds"][variant] = variant_report
+            for index, path in enumerate(prerequisites):
+                require(digest(path) == prerequisite_identity[index]["sha256"],
+                        "prerequisite patch changed after its identity was recorded")
+                run(["patch", "--batch", "--forward", "--fuzz=0", "-p1", "--input", str(path.resolve())],
+                    tree, args.output / f"{variant}-prerequisite-{index}.log", 30)
+                variant_report["applied_patches"].append({"role": "prerequisite",
+                    **prerequisite_identity[index], "source_tree_sha256": tree_digest(tree)})
             if variant == "candidate":
                 run(["patch", "--batch", "--forward", "--fuzz=0", "-p1", "--input", str(args.patch.resolve())],
                     tree, args.output / "candidate-apply-patch.log", 30)
+                variant_report["applied_patches"].append({"role": "production",
+                    "path": str(args.patch.resolve()), "sha256": digest(args.patch),
+                    "source_tree_sha256": tree_digest(tree)})
+            variant_report["pre_observer_source_tree_sha256"] = tree_digest(tree)
             run([sys.executable, str(args.observer.resolve()), "--source-dir", str(tree.resolve())],
                 tree, args.output / f"{variant}-instrument.log", 30)
             variant_report["instrumented_source_tree_sha256"] = tree_digest(tree)
@@ -176,6 +192,8 @@ def main():
                         default=Path("tools/godot/patches/glassvow-661-native-boot-upload-cap.patch"))
     parser.add_argument("--observer", type=Path,
                         default=Path("tools/godot/native_boot_upload/observer.py"))
+    parser.add_argument("--prerequisite-patch", dest="prerequisite_patches", action="append",
+                        type=Path, default=[], help="ordered patch applied identically to both variants")
     parser.add_argument("--test-suite", default="GlassvowBootUpload")
     parser.add_argument("--splash", type=Path)
     parser.add_argument("--work", required=True, type=Path)

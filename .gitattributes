@@ -18,6 +18,7 @@
 
 # Unified-patch context includes a space before original tab indentation.
 tools/godot/patches/glassvow-661-native-boot-upload-cap.patch whitespace=-blank-at-eol,-space-before-tab
+tools/godot/patches/glassvow-660-bounded-mip-upload.patch whitespace=-blank-at-eol,-space-before-tab
 
 # Binary assets — no text diff / merge / EOL conversion
 # (markers now so enabling LFS later is a filter-line change; no LFS at M0)

@@ -1,0 +1,12 @@
+{
+  "job": 117746266505,
+  "subject_head": "f16b7d4177873cb2bd1d0b83f767150892c3740e",
+  "ci_merge": "deb3abdbd27b5e3145779e964dff5bacd769dd59",
+  "original_job_log_sha256": "b3bb71fd2b7c23fa01e10199c455ce9d8b102721f40f1de997e1fdb837101e7c",
+  "extraction": "Exact Generated diagnostic {baseline,candidate}-rd/native.log group contents; GitHub timestamp/group delimiters and trailing console-separator blank lines removed. Original native ERROR retained; complete originals remain bound by job SHA.",
+  "scope": "Actual archived native log replay; no new engine or GPU run; ASTC unsupported, original wrapper exit1.",
+  "files": {
+    "baseline.log": "44abd7b361b22a3ff17c6db3238f0434ba92170a27e69c969e5a165acff7650f",
+    "candidate.log": "191529a4785f3e7c6d5a9edaa69aa0e4088229fb68231c8a5b6453e810367568"
+  }
+}
