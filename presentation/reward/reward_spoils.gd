@@ -96,11 +96,13 @@ static func tint_of(content: ContentDB, id: String) -> Color:
 ## unplayable cards, so Dictionary.get's default never fires — this is the same
 ## read combat's eff_cost does.
 static func card(content: ContentDB, id: String, uid: int, scale: float,
-		on_take: Callable) -> CardView:
-	var data: Dictionary = content.cards.get(id, {})
+		on_take: Callable, card_data: Callable = Callable()) -> CardView:
+	var inst: CardInst = CardInst.new(uid, StringName(id))
+	var data: Dictionary = card_data.call(inst) if card_data.is_valid() \
+		else content.cards.get(id, {})
 	var cost_v: Variant = data.get("cost")
 	var cost: int = 0 if cost_v == null else int(float(str(cost_v)))
-	var view: CardView = CardView.new(CardInst.new(uid, StringName(id)), data, cost)
+	var view: CardView = CardView.new(inst, data, cost)
 	view.scale = Vector2(scale, scale)
 	# An offering waits on the player at rest: it holds each card's last frame,
 	# not its live stage, until a pointer or a turn wants the stage (CardView).

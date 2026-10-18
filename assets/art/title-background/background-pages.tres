@@ -1,0 +1,9 @@
+[gd_resource type="Texture2D" script_class="TitlePaintingTexture" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://presentation/title/title_painting_texture.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/art/title-background/background-page-top.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/art/title-background/background-page-bottom.png" id="3"]
+
+[resource]
+script = ExtResource("1")
+pages = Array[Texture2D]([ExtResource("2"), ExtResource("3")])

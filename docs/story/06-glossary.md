@@ -37,6 +37,9 @@
 | 金城 | the Gilded City | Act IV 盡頭=守夜之爐的真貌;入城=歸家(00 §8.1,#259 Q3)。此名是眾人的 legend 名,真身無另名(舊佔位【城】) | locked(legend-drift 名)[#261 Q12] |
 | 行過 | passed | 勝仗對 Sovereign 的動詞:打退「不肯」,不殺那個人(00 §2.1) | placeholder |
 | 路 / 長路 | the road | **世界尺度的普通名詞**,非專名——舊 尖塔 佔的那個主語位由它接。世界無專名:地理是六個地名串成的一條路(01 §地理),朝聖 是活動,路 是那個地方 | locked [#303 James 2026-08-16] |
+| 灰綠 | ash-green | 陰燃之火的低伏灰綠色；與火形並寫，非新物理 | locked (promoted copy, #544 A7) |
+| 明黃 | candle-yellow | 如手分出多尖的火色；不是 Duskblade 的金黃 / amber | locked (promoted copy, #544 A7) |
+| 珠光 | pearl | 挺直安靜的火色；形狀與顏色並寫 | locked (promoted copy, #544 A7) |
 | 尖塔 / Spire | — | 舊垂直語彙;地區位由 黑曜王庭 接,世界位由 路 接 | **banned** [SETTLED] |
 | 爬 / 攀 / climb / ascend / 登臨(敘事用) | — | 垂直朝聖語彙 | **banned**,逐句清洗見 ledger |
 | 頂點 / summit ・ 之上(地方)/ above(地方)・ 向上 / upward ・ 階梯(那條路)/ stair(the road) | — | Tier A 其餘四項,補齊七項全表 | **banned** [#232 Q1 → #303] |
