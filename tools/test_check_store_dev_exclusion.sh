@@ -7,6 +7,7 @@ trap 'rm -rf -- "$tmpdir"' EXIT
 output="$tmpdir/output"
 failures=0
 OK_FILTER="port_fixtures/*,presentation/dev/*,tests/*,addons/funplay_mcp/*,addons/core/*,addons/runtime/*,addons/ui/*,addons/plugin.*,addons/icon.svg*,addons/glassvow_ios_export/*,addons/glassvow_web_export/*,tools/balance_*,tools/bench_*,tools/capture_*,tools/check_*,tools/live.*,tools/map_*,tools/probe_*,tools/raster_*,tools/vigil_*,tools/vow_ladder_*"
+DEV_FILTER="port_fixtures/*,tools/map_*"
 
 check_case() {
 	name=$1 expected_rc=$2 expected_text=$3
@@ -23,12 +24,14 @@ check_case() {
 }
 
 ini() {
-	review_ex=${5:-port_fixtures/*}
+	review_ex=${5-$DEV_FILTER}
+	web_ex=${6-tools/map_*}
+	android_ex=${7-$review_ex}
 	cat >"$1" <<EOF
 [preset.0]
 name="Web Dev"
 custom_features="$4"
-exclude_filter=""
+exclude_filter="$web_ex"
 [preset.1]
 name="macOS"
 custom_features="$3"
@@ -45,6 +48,10 @@ exclude_filter="$2"
 name="iOS Dev Review"
 custom_features="dev_tools"
 exclude_filter="$review_ex"
+[preset.5]
+name="Android Dev Review"
+custom_features="dev_tools"
+exclude_filter="$android_ex"
 EOF
 }
 
@@ -77,7 +84,9 @@ root="$tmpdir/tree"
 mkdir -p "$root/presentation/dev" "$root/application"
 printf 'extends RefCounted\n' >"$root/presentation/dev/boot.gd"
 printf 'extends RefCounted\n' >"$root/application/main.gd"
-printf 'presentation/dev/boot.gd\napplication/main.gd\ntests/run_all.gd\n' >"$tmpdir/tracked"
+printf '%s\n' presentation/dev/boot.gd application/main.gd tests/run_all.gd \
+	tools/map_atelier/fixture.glb tools/map_atelier/fixture.glb.import \
+	tools/map_atelier/fixture.png tools/map_atelier/fixture.png.import >"$tmpdir/tracked"
 run() {
 	env STORE_DEV_PRESETS="$1" STORE_DEV_TRACKED="$tmpdir/tracked" \
 		STORE_DEV_ROOT="$root" python3 tools/check_store_dev_exclusion.py
@@ -104,6 +113,16 @@ ini "$tmpdir/sentry.cfg" "presentation/dev/*,tests/*,addons/*" "" "dev_tools"
 check_case "drops sentry" 1 "drops Sentry" run "$tmpdir/sentry.cfg"
 ini "$tmpdir/review.cfg" "$OK_FILTER" "" "dev_tools" "port_fixtures/*,presentation/dev/*"
 check_case "review console" 1 "must include the Console tree" run "$tmpdir/review.cfg"
+ini "$tmpdir/web-map.cfg" "$OK_FILTER" "" "dev_tools" "$DEV_FILTER" ""
+check_case "Web authoring model" 1 "Web Dev exclude_filter does not match tools/map_atelier/fixture.glb" run "$tmpdir/web-map.cfg"
+ini "$tmpdir/ios-map.cfg" "$OK_FILTER" "" "dev_tools" "port_fixtures/*,tools/map_atelier/*.glb*"
+check_case "iOS review authoring image" 1 "iOS Dev Review exclude_filter does not match tools/map_atelier/fixture.png" run "$tmpdir/ios-map.cfg"
+ini "$tmpdir/android-map.cfg" "$OK_FILTER" "" "dev_tools" "$DEV_FILTER" "tools/map_*" "port_fixtures/*"
+check_case "Android review authoring model" 1 "Android Dev Review exclude_filter does not match tools/map_atelier/fixture.glb" run "$tmpdir/android-map.cfg"
+ini "$tmpdir/web-console.cfg" "$OK_FILTER" "" "dev_tools" "$DEV_FILTER" "tools/map_*,presentation/dev/*"
+check_case "Web console" 1 "Web Dev must include the Console tree" run "$tmpdir/web-console.cfg"
+ini "$tmpdir/dev-tools.cfg" "$OK_FILTER" "" "dev_tools" "port_fixtures/*,tools/*"
+check_case "review benchmark retained" 1 "iOS Dev Review exclude_filter drops tools/bench_map_scene.gd" run "$tmpdir/dev-tools.cfg"
 
 write_pck "$tmpdir/good.pck" <<'EOF'
 res://tools/vow_incentives.gd
@@ -140,4 +159,4 @@ if [ "$failures" -ne 0 ]; then
 	printf '%d store-dev-exclusion regression test(s) failed.\n' "$failures"
 	exit 1
 fi
-printf 'check_store_dev_exclusion regression tests OK (12 cases)\n'
+printf 'check_store_dev_exclusion regression tests OK (17 cases)\n'
