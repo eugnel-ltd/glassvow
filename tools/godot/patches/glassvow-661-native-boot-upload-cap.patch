@@ -208,9 +208,9 @@
 +	}
 +	for (int i = 0; i < slices.size(); i++) {
 +		GLES3::Texture *t = texture_storage->get_texture(textures[i]);
-+		t->gl_set_filter(p_use_filter ? RSE::CANVAS_ITEM_TEXTURE_FILTER_LINEAR : RSE::CANVAS_ITEM_TEXTURE_FILTER_NEAREST);
 +		glActiveTexture(GL_TEXTURE0);
 +		glBindTexture(GL_TEXTURE_2D, t->tex_id);
++		t->gl_set_filter(p_use_filter ? RSE::CANVAS_ITEM_TEXTURE_FILTER_LINEAR : RSE::CANVAS_ITEM_TEXTURE_FILTER_NEAREST);
 +		const Rect2 page_rect = slices.size() == 1 ? screenrect : RenderingServerTypes::get_boot_image_slice_screen_rect(screenrect, slices[i], p_image->get_height());
 +		if (slices.size() == 1) {
 +			copy_effects->copy_to_rect(screenrect);
