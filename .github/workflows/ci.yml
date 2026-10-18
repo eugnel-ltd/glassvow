@@ -236,6 +236,8 @@ jobs:
           python3 -B tests/test_agent_evals.py
           python3 -B tests/test_agent_evals_review.py
           python3 -B tests/test_agent_evals_council.py
+          python3 -B tests/test_agent_evals_decision_gates.py
+          python3 -B tests/test_agent_evals_workflow.py
 
       # The web-reference twin used to be excluded from CI on purpose: it
       # resolved citations against the roguecardv2-benchmark checkout and
