@@ -7,7 +7,7 @@ trap 'rm -rf -- "$tmpdir"' EXIT
 output="$tmpdir/output"
 failures=0
 OK_FILTER="port_fixtures/*,presentation/dev/*,tests/*,addons/funplay_mcp/*,addons/core/*,addons/runtime/*,addons/ui/*,addons/plugin.*,addons/icon.svg*,addons/glassvow_ios_export/*,addons/glassvow_web_export/*,tools/balance_*,tools/bench_*,tools/capture_*,tools/check_*,tools/live.*,tools/map_*,tools/probe_*,tools/raster_*,tools/vigil_*,tools/vow_ladder_*"
-DEV_FILTER="port_fixtures/*,tools/map_atelier/*"
+DEV_FILTER="port_fixtures/*,tools/map_*"
 
 check_case() {
 	name=$1 expected_rc=$2 expected_text=$3
@@ -25,7 +25,7 @@ check_case() {
 
 ini() {
 	review_ex=${5-$DEV_FILTER}
-	web_ex=${6-tools/map_atelier/*}
+	web_ex=${6-tools/map_*}
 	android_ex=${7-$review_ex}
 	cat >"$1" <<EOF
 [preset.0]
@@ -123,8 +123,6 @@ ini "$tmpdir/web-console.cfg" "$OK_FILTER" "" "dev_tools" "$DEV_FILTER" "tools/m
 check_case "Web console" 1 "Web Dev must include the Console tree" run "$tmpdir/web-console.cfg"
 ini "$tmpdir/dev-tools.cfg" "$OK_FILTER" "" "dev_tools" "port_fixtures/*,tools/*"
 check_case "review benchmark retained" 1 "iOS Dev Review exclude_filter drops tools/bench_map_scene.gd" run "$tmpdir/dev-tools.cfg"
-ini "$tmpdir/dev-proxy.cfg" "$OK_FILTER" "" "dev_tools" "port_fixtures/*,tools/map_*"
-check_case "review map bench dependency retained" 1 "iOS Dev Review exclude_filter drops tools/map_scene_proxy.gd" run "$tmpdir/dev-proxy.cfg"
 
 write_pck "$tmpdir/good.pck" <<'EOF'
 res://tools/vow_incentives.gd
@@ -161,4 +159,4 @@ if [ "$failures" -ne 0 ]; then
 	printf '%d store-dev-exclusion regression test(s) failed.\n' "$failures"
 	exit 1
 fi
-printf 'check_store_dev_exclusion regression tests OK (18 cases)\n'
+printf 'check_store_dev_exclusion regression tests OK (17 cases)\n'

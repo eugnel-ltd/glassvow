@@ -165,7 +165,9 @@ jobs:
 
       - name: Test store Dev-tree exclusion gate
         if: steps.scope.outputs.run_store_gate_tests == 'true'
-        run: tools/test_check_store_dev_exclusion.sh
+        run: |
+          tools/test_check_store_dev_exclusion.sh
+          python3 -B -m unittest tests.test_dev_export_dependencies
 
       # docs/ carries a .gdignore, so a preload() of a file there parses in the
       # editor and breaks in every export.  Runtime data lives under content/.
