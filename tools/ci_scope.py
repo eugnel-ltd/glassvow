@@ -223,7 +223,8 @@ def _scope_matches(path: str) -> set[str]:
             or github_agent_instruction
             or _starts(lower, ".claude/", ".grok/workflows/", "docs/agents/")
             or lower in {"tools/check_agent_contracts.py",
-                         "tests/test_agent_contracts.py"}):
+                         "tests/test_agent_contracts.py",
+                         "scripts/record_decision.sh", "tests/test_record_decision.py"}):
         matches.add("agent_config")
 
     # site/ is the published privacy policy, generated from docs/privacy/.
@@ -241,7 +242,8 @@ def _scope_matches(path: str) -> set[str]:
     if (lower == "export_presets.cfg"
             or name == ".gdignore"
             or lower == "tools/check_export_paths.py"
-            or _starts(lower, "scripts/", "addons/glassvow_ios_export/",
+            or (lower != "scripts/record_decision.sh" and _starts(lower, "scripts/"))
+            or _starts(lower, "addons/glassvow_ios_export/",
                        "addons/glassvow_web_export/", "addons/sentry/",
                        "application/sentry_")
             or ((_starts(lower, "tests/", "tools/", "docs/")) and release_named)):
