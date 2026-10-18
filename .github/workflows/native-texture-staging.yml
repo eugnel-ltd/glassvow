@@ -7,6 +7,7 @@ on:
       - tests/native/test_texture_upload_staging.py
       - tests/native/test_texture_staging_runtime.py
       - tests/native/test_texture_staging_diagnostics.py
+      - tests/native/test_texture_staging_fixture_setup.py
       - tools/godot/native_texture_staging/**
       - tools/godot/patches/glassvow-660-compressed-upload-staging.patch
       - tools/godot/patches/compressed-upload-staging.md
@@ -49,6 +50,7 @@ jobs:
             /tests/native/test_texture_upload_staging.py
             /tests/native/test_texture_staging_runtime.py
             /tests/native/test_texture_staging_diagnostics.py
+            /tests/native/test_texture_staging_fixture_setup.py
             /tools/godot/native_texture_staging/
             /tools/godot/patches/glassvow-660-compressed-upload-staging.patch
       - name: Check out the immutable shared builder separately
@@ -99,6 +101,8 @@ jobs:
             --builder shared-builder/tools/godot/native_boot_upload/build.py
           "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
             allocator/tests/native/test_texture_staging_diagnostics.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_fixture_setup.py
       - name: Compile native controls and run actual RD requests, copies and readback
         timeout-minutes: 75
         run: |
