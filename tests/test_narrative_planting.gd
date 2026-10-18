@@ -33,6 +33,10 @@ const SLOT_LEVEL: Dictionary = {
 	"codex.lantern.shatter": 0,
 	"codex.lantern.lantern": 0,
 	"codex.lantern.edge": 0,
+	# A7 colours share the shard-0 flame channel; aspect gates class only.
+	"codex.lantern.smolder": 0,
+	"codex.lantern.hand": 0,
+	"codex.lantern.endure": 0,
 }
 
 

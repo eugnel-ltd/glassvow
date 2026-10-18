@@ -25,12 +25,6 @@ const FLAME_BANNED_ZH: Array[String] = ["餘燼", "點燃", "燃燼", "碎裂", 
 const CODEX_NUMBERS: String = "(?i)[0-9一二三四五六七八九十兩百千]|\\b(one|two|three|four|five|six|seven|eight|nine|ten)\\b"
 const SHATTER_CODEX: String = "codex.lantern.shatter"
 const LANTERN_CODEX: String = "codex.lantern.lantern"
-## The codex sentences a deferred class's ways still owe, by name: the
-## Ashwarden's three are #544 step A7's (docs/design/2026-10-05-ash-flame §9),
-## and the class is not offered before step A10. A7 removes each as it lands.
-const CODEX_OWED: Array[String] = [
-	"codex.lantern.smolder", "codex.lantern.hand", "codex.lantern.endure",
-]
 
 
 static func _check(fails: Array[String], ok: bool, what: String) -> void:
@@ -481,7 +475,7 @@ static func _batch3_pools(fails: Array[String]) -> void:
 		var slot: String = str(row.get("slot", ""))
 		if counts.has(slot):
 			counts[slot] = _i(counts[slot]) + 1
-	_check(fails, _i(counts["hearth"]) == 60 and _i(counts["waystone"]) == 60
+	_check(fails, _i(counts["hearth"]) == 61 and _i(counts["waystone"]) == 60
 		and _i(counts["loss"]) == 50,
 		"pool counts hearth=%d waystone=%d loss=%d" % [
 			_i(counts["hearth"]), _i(counts["waystone"]), _i(counts["loss"])])
@@ -684,7 +678,7 @@ static func _flame_soot_fall(fails: Array[String]) -> void:
 
 ## The codex keeps each colour seen steady: in the run as drawn, across the
 ## Vigil once folded, in way order, and one sentence for every way of a class
-## on offer (a deferred class's may still be owed, CODEX_OWED).
+## with declared ways, including the deferred Ashwarden.
 static func _flame_codex(fails: Array[String]) -> void:
 	var content: ContentDB = ContentDB.load_full(false)
 	var vigil: VigilState = VigilState.blank()
@@ -714,13 +708,8 @@ static func _flame_codex(fails: Array[String]) -> void:
 	for aspect: int in range(content.aspects.size()):
 		for way: Dictionary in Flame.ways(content, aspect):
 			var slot: String = FlameLines.CODEX_PREFIX + str(way.get("id", ""))
-			var pending: bool = CODEX_OWED.has(slot) and not ClassScope.is_offered(content, aspect)
-			if pending:
-				_check(fails, not LineTable.has_slot(content.line_table, slot),
-					"codex: %s has its sentence now; take it out of CODEX_OWED" % slot)
-			else:
-				_check(fails, LineTable.has_slot(content.line_table, slot),
-					"codex: way %s has no sentence" % str(way.get("id", "")))
+			_check(fails, LineTable.has_slot(content.line_table, slot),
+				"codex: way %s has no sentence" % str(way.get("id", "")))
 
 
 ## The six lines ship exactly as locked; none of the nine (the six and the
@@ -751,10 +740,12 @@ static func _flame_copy(fails: Array[String]) -> void:
 		var zh: String = LineTable.text(row, true)
 		var en: String = LineTable.text(row, false)
 		var once: bool = row.get("once", false)
-		_check(fails, numbers.search(zh) == null and numbers.search(en) == null and once,
+		# The supplied Hand simile uses 一隻手 as an indefinite article, not a number.
+		_check(fails, numbers.search(zh.replace("像一隻手", "像手")) == null
+				and numbers.search(en) == null and once,
 			"flame copy: codex %s carries a number or can be heard twice" % str(row.get("id")))
 		lines.append([str(row.get("id")), zh, en])
-	_check(fails, codex == 3, "flame copy: the codex has %d sentences, not three" % codex)
+	_check(fails, codex == 6, "flame copy: the codex has %d sentences, not six" % codex)
 	var en_locale: Locale = Locale.new(Locale.CODE_EN)
 	var zh_locale: Locale = Locale.new(Locale.CODE_ZH_HANT)
 	_check(fails, zh_locale.t(FLAME_OPENING_KEY) == FLAME_OPENING[0]

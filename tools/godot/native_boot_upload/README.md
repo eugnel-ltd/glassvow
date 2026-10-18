@@ -82,6 +82,15 @@ step. Limits cover source download, native compilation, native tests, process
 groups, captures and the whole job. Logs and small captures are retained on
 failure as well as success.
 
+On failure, the job prints the active renderer/case/variant/phase and bounded
+tails of that capture's generated `capture-worker.log` and `native.log` (at
+most 8 KiB / 80 lines each). It reads neither environment values nor command
+or project files, prefixes every line and omits URLs and credential fields.
+The active capture is persisted before launch so an outer timeout still leaves
+useful context. The CLI regression observes the worker's actual argv without
+launching an engine: pinned Godot requires `--resolution WxH`, while
+`--position X,Y` retains its distinct comma delimiter.
+
 The reason to retain this component mechanism is the risk of a native upload
 fix that compiles but changes pre-script rendering or never reaches the actual
 boot call. Run the native job when the patch or observer/proof contract changes;
@@ -102,6 +111,8 @@ Pillow/numpy versions listed in the workflow for verifier/capture commands.
 ```sh
 python3 tools/godot/native_boot_upload/check_patch.py --output work/native-boot/source-check.json
 python3 tools/godot/native_boot_upload/test_harness.py
+python3 tests/native/test_boot_capture_cli.py
+python3 tests/native/test_boot_capture_diagnostics.py
 python3 tools/godot/native_boot_upload/build.py --splash assets/art/title/splash.png --work work/native-boot/builds --output work/native-boot/evidence
 ```
 
@@ -124,10 +135,17 @@ that native suite as `NOT RUN` with the reason; it does not count as native
 test evidence. This boot workflow explicitly selects `GlassvowBootUpload` and
 still requires a nonempty passing native suite.
 
-Local preparation ran the real original-PNG failing control, both source-pin
+Initial local preparation ran the real original-PNG failing control, both source-pin
 application checks, observer application/refusal checks, and evidence/process
 verifier tests. Native engine compilation, C++ doctests, headed renderer
 captures, live corrupt-source rendering and hosted execution are **NOT RUN**.
 The preparation host has no Xvfb or SCons, and no installation or long local
 engine compilation was attempted. Logs and manifests in the task capsule
 record the actual results; no native PASS follows from this preparation.
+
+Hosted run `39144005120` at `071395306922586d7384b095753499b28d541efa`
+subsequently passed the baseline/candidate build and native C++ control step,
+then failed at the first GLES baseline capture. Its inner capture logs were
+unavailable to the author. The source-grounded resolution delimiter regression
+failed before its harness correction; a new real capture must still establish
+renderer behavior. The previous build-step receipt is not a renderer PASS.

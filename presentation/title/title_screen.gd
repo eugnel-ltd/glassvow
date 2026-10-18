@@ -17,7 +17,7 @@ signal language_chosen(code: StringName)
 ## A tap while the title is leaving: hurry the transition carrying it away.
 signal hurry
 
-const TITLE_BACKGROUND: String = "res://assets/art/title-background/background.png"
+const TITLE_BACKGROUND: String = "res://assets/art/title-background/background-pages.tres"
 const WORDMARK_EN: String = "res://assets/art/title/title.png"
 const WORDMARK_ZH: String = "res://assets/art/title/title-zh.png"
 const BANNER_ALPHA: float = 0.35
