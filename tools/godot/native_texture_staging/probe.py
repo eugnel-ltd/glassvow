@@ -159,6 +159,11 @@ def run(binary, output):
     (project / 'project.godot').write_text('config_version=5\n[application]\nconfig/name="Native Staging Probe"\nboot_splash/show_image=false\n[rendering]\nrenderer/rendering_method="mobile"\n')
     script = project / 'probe.gd'
     script.write_text(SCRIPT)
+    # This standalone script declares no global classes. Non-tools builds
+    # require the cache's root list and cannot recreate it like the editor.
+    cache = project / '.godot/global_script_class_cache.cfg'
+    cache.parent.mkdir()
+    cache.write_text('list=[]\n')
     env = dict(os.environ, LIBGL_ALWAYS_SOFTWARE='1', GALLIUM_DRIVER='llvmpipe')
     manifests = list(Path('/usr/share/vulkan/icd.d').glob('*lvp*.json'))
     if len(manifests) != 1:
