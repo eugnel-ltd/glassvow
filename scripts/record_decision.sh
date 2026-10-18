@@ -25,8 +25,14 @@ case "$why" in
   *\"*|*“*|Paraphrased:*) ;;
   *) echo 'record_decision: Why must quote the owner or begin with Paraphrased:' >&2; exit 1 ;;
 esac
-grep -q '^## Decisions$' "$file" || {
-  echo "record_decision: $file has no '## Decisions' heading" >&2
+[ "$(grep -c '^## Decisions$' "$file")" = 1 ] || {
+  echo "record_decision: $file must have exactly one '## Decisions' heading" >&2
+  exit 1
+}
+# awk would add a missing final newline and therefore rewrite existing content.
+last_byte=$(tail -c 1 "$file" | od -An -tu1 | tr -d '[:space:]')
+[ "$last_byte" = 10 ] || {
+  echo "record_decision: $file must end with a newline" >&2
   exit 1
 }
 decision_date=$(date -u +%F)

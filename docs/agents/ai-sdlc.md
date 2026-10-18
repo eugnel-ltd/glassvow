@@ -131,6 +131,7 @@ Promote only the selected decision, required data, and reproducible acceptance i
 | `release_platform` | export, signing, store, platform and release evidence | release/store/performance/containment checks |
 | `dev_tools` | governed developer tooling | developer-tool contract |
 | `ci_infra` | CI workflow, classifier, import/script gates | fail-closed complete PR check set |
+| `product_metadata` | exact `product.yaml` company registry manifest | company manifest validation; no game setup |
 | `conservative_core` | unknown production path | import plus complete Godot regression rather than skip-all |
 
 Malformed or empty classifier input fails. Deleted GDScript keeps the Godot scope but is not passed to the parser. The classifier contract has focused fixtures in `tests/test_ci_scope.py`.

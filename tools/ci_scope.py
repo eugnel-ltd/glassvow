@@ -23,6 +23,7 @@ SCOPE_NAMES = (
     "agent_evals",
     "locale_content",
     "agent_config",
+    "product_metadata",
     "docs",
     "release_platform",
     "presentation",
@@ -44,6 +45,7 @@ class Check:
 CHECKS = (
     Check("run_scope_contract", "Test CI scope classifier", always=True),
     Check("run_agent_contracts", "Check AI-SDLC agent contracts", ("agent_config",)),
+    Check("run_product_manifest", "Check company product manifest", ("product_metadata",)),
     Check("setup_godot", "Setup Godot", (
         "godot_code", "map_code", "map_assets", "balance_ml", "locale_content",
         "release_platform", "presentation", "conservative_core")),
@@ -153,6 +155,11 @@ def _scope_matches(path: str) -> set[str]:
     name = PurePosixPath(lower).name
     matches: set[str] = set()
 
+    # The company registry consumes this exact metadata file; the game does not.
+    # A deletion still selects validation so the missing manifest fails closed.
+    if path == "product.yaml":
+        matches.add("product_metadata")
+
     # The balance tools' per-class data is read by the simulator and the search
     # player, so a change to it must run the Godot tests (the Duskblade
     # invariance guard among them), not only the Python ones.
@@ -216,7 +223,8 @@ def _scope_matches(path: str) -> set[str]:
             or github_agent_instruction
             or _starts(lower, ".claude/", ".grok/workflows/", "docs/agents/")
             or lower in {"tools/check_agent_contracts.py",
-                         "tests/test_agent_contracts.py"}):
+                         "tests/test_agent_contracts.py",
+                         "scripts/record_decision.sh", "tests/test_record_decision.py"}):
         matches.add("agent_config")
 
     # site/ is the published privacy policy, generated from docs/privacy/.
@@ -234,7 +242,8 @@ def _scope_matches(path: str) -> set[str]:
     if (lower == "export_presets.cfg"
             or name == ".gdignore"
             or lower == "tools/check_export_paths.py"
-            or _starts(lower, "scripts/", "addons/glassvow_ios_export/",
+            or (lower != "scripts/record_decision.sh" and _starts(lower, "scripts/"))
+            or _starts(lower, "addons/glassvow_ios_export/",
                        "addons/glassvow_web_export/", "addons/sentry/",
                        "application/sentry_")
             or ((_starts(lower, "tests/", "tools/", "docs/")) and release_named)):
@@ -250,6 +259,7 @@ def _scope_matches(path: str) -> set[str]:
 
     if ((_starts(lower, ".github/") and not github_agent_instruction)
             or lower in {"tools/ci_scope.py", "tests/test_ci_scope.py",
+                         ".ai-sdlc/manifest_check.py",
                          "tools/check_imports.sh", "tools/test_check_imports.sh",
                          "tools/check_scripts.sh", "tools/test_check_scripts.sh"}):
         matches.add("ci_infra")
