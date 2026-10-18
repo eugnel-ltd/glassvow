@@ -122,6 +122,9 @@ jobs:
         name: Check the supported portable runtime configuration and failure diagnostics
         timeout-minutes: 1
         run: |
+          # macOS /var aliases /private/var; give fixtures the physical temp path.
+          TMPDIR="$(cd -- "${TMPDIR:-/tmp}" && pwd -P)"
+          export TMPDIR
           "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
             allocator/tests/native/test_texture_staging_runtime.py \
             --builder shared-builder/tools/godot/native_boot_upload/build.py
