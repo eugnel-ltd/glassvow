@@ -96,6 +96,10 @@ jobs:
           python3 -m pip install 'PyYAML==6.0.3'
           python3 -B .ai-sdlc/manifest_check.py product.yaml
 
+      - name: Test iOS editor HOME isolation
+        if: steps.scope.outputs.run_release_identity_tests == 'true'
+        run: python3 -B tests/test_ios_release_home.py
+
       - name: Setup Godot
         if: steps.scope.outputs.setup_godot == 'true'
         uses: chickensoft-games/setup-godot@v2

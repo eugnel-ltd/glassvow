@@ -156,17 +156,17 @@ find build/ios -mindepth 1 -maxdepth 1 ! -name logs -exec rm -rf {} +
 engine_version() { grep -a -o -m1 "$ENGINE_PATTERN" "$1" 2>/dev/null || true; }
 
 step "export build $BUILD"
+# Either editor runs under a fresh scratch HOME inside build/ios, so its settings,
+# recovery lock and the project's user dir stay out of the owner's profile.
+# Godot only writes the Xcode project here (export_project_only); the archive
+# and the signing below run under the real HOME.
+EXPORT_HOME="$REPO_ROOT/build/ios/export-home"
+mkdir -p "$EXPORT_HOME"
+echo "export HOME:     $EXPORT_HOME"
 if [[ $BAKED -eq 1 ]]; then
-  # The editor runs under a fresh scratch HOME inside build/ios, so its settings,
-  # recovery lock and the project's user dir stay out of the owner's profile.
-  # Godot only writes the Xcode project here (export_project_only); the archive
-  # and the signing below run under the real HOME.
-  EXPORT_HOME="$REPO_ROOT/build/ios/export-home"
-  mkdir -p "$EXPORT_HOME"
-  echo "export HOME:     $EXPORT_HOME"
   HOME="$EXPORT_HOME" tools/godot/bake_export.sh "iOS" build/ios/glassvow.ipa "$LOGS/export$BUILD.log"
 else
-  godot --headless --export-release "iOS" build/ios/glassvow.ipa > "$LOGS/export$BUILD.log" 2>&1
+  HOME="$EXPORT_HOME" godot --headless --export-release "iOS" build/ios/glassvow.ipa > "$LOGS/export$BUILD.log" 2>&1
 fi
 engine_version "build/ios/glassvow.xcframework/ios-arm64/libgodot.a"
 
