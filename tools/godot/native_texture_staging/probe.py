@@ -85,6 +85,18 @@ func _run_probe() -> void:
         push_error("Native staging probe requires an actual RenderingDevice")
         quit(2)
         return
+    var flags: int = RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT | RenderingDevice.TEXTURE_USAGE_CAN_UPDATE_BIT
+    var unavailable: bool = false
+    for item: Dictionary in CASES:
+        var supported: bool = rd.texture_is_format_supported_for_usage(_format(str(item["format"])), flags)
+        print("GV_STAGING_CAPABILITY ", JSON.stringify({"case": item["id"], "format": item["format"],
+            "native_format": int(_format(str(item["format"]))), "usage_flags": flags, "supported": supported}))
+        unavailable = unavailable or not supported
+    if unavailable:
+        push_error("Native staging format unavailable; no compressed component PASS")
+        rd.free()
+        quit(2)
+        return
     var checked: int = 0
     for item: Dictionary in CASES:
         var case_id: String = str(item["id"])
@@ -94,11 +106,6 @@ func _run_probe() -> void:
         var depth: int = int(item["depth"])
         var layers: int = int(item["layers"])
         var mips: int = _mips(w, h, depth)
-        var flags: int = RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT | RenderingDevice.TEXTURE_USAGE_CAN_UPDATE_BIT
-        if not rd.texture_is_format_supported_for_usage(_format(name), flags):
-            push_error("Native staging format unavailable: " + name)
-            quit(2)
-            return
         var description: RDTextureFormat = RDTextureFormat.new()
         description.format = _format(name)
         description.width = w
@@ -123,11 +130,13 @@ func _run_probe() -> void:
             push_error("Native staging texture creation failed: " + case_id)
             quit(2)
             return
+        var created: RDTextureFormat = rd.texture_get_format(texture)
         for layer: int in range(layers):
             var actual: PackedByteArray = rd.texture_get_data(texture, layer)
             var equal: bool = actual == sources[layer]
             print("GV_STAGING_READBACK ", JSON.stringify({"case": case_id, "format": name,
                 "layer": layer, "width": w, "height": h, "depth": depth, "mips": mips,
+                "requested_native_format": int(description.format), "created_native_format": int(created.format),
                 "source_bytes": sources[layer].size(), "actual_bytes": actual.size(),
                 "source_sha256": _hash(sources[layer]), "actual_sha256": _hash(actual), "equal": equal}))
             if not equal:

@@ -8,10 +8,22 @@ from pathlib import Path
 REQUEST = 'GV_STAGING_REQUEST '
 COPY = 'GV_STAGING_COPY '
 READBACK = 'GV_STAGING_READBACK '
+CAPABILITY = 'GV_STAGING_CAPABILITY '
 EXPECTED_LAYERS = {
     'etc2-rgb-odd': 2, 'etc2-rgba-wood': 2, 'eac-rg11-normal': 1,
     'astc4-material': 1, 'astc4-padded': 2, 'rgba8-depth-padded': 1,
     'la8-control': 2,
+}
+# Exact ed1 DataFormat enum plus native block width/height, pixel size and shift.
+# Direct RD textures never use TextureStorage's decompression fallback.
+EXPECTED_FORMATS = {
+    'etc2-rgb-odd': (146, 4, 4, 1, 1),
+    'etc2-rgba-wood': (150, 4, 4, 1, 0),
+    'eac-rg11-normal': (154, 4, 4, 1, 0),
+    'astc4-material': (156, 4, 4, 1, 0),
+    'astc4-padded': (156, 4, 4, 1, 0),
+    'rgba8-depth-padded': (36, 1, 1, 4, 0),
+    'la8-control': (15, 1, 1, 2, 0),
 }
 
 
@@ -37,9 +49,13 @@ def inspect(path, variant):
     text = raw.decode(errors='replace')
     require('SCRIPT ERROR' not in text and 'Parse Error' not in text,
             variant + ': script diagnostics invalidate the run')
-    requests, copies, readbacks = {}, {}, {}
+    requests, copies, readbacks, capabilities = {}, {}, {}, {}
     for line in text.splitlines():
-        if line.startswith(REQUEST):
+        if line.startswith(CAPABILITY):
+            item = json.loads(line[len(CAPABILITY):])
+            require(item['case'] not in capabilities, variant + ': duplicate format support query')
+            capabilities[item['case']] = item
+        elif line.startswith(REQUEST):
             item = fields(line[len(REQUEST):])
             key = item['case'], item['layer']
             require(key not in requests, variant + ': duplicate request')
@@ -53,12 +69,23 @@ def inspect(path, variant):
             require(key not in readbacks, variant + ': duplicate readback')
             readbacks[key] = item
     expected = {(case, layer) for case, count in EXPECTED_LAYERS.items() for layer in range(count)}
+    require(set(capabilities) == set(EXPECTED_LAYERS), variant + ': incomplete actual format support evidence')
     require(set(requests) == set(copies) == set(readbacks) == expected,
             variant + ': missing or unexpected actual request/copy/readback case')
     require('GV_STAGING_DONE 11' in text, variant + ': complete probe exit marker absent')
     result = {}
     for key in sorted(expected):
         request, readback = requests[key], readbacks[key]
+        capability = capabilities[key[0]]
+        native_format, block_w, block_h, pixel_size, rshift = EXPECTED_FORMATS[key[0]]
+        require(capability['supported'] is True and capability['usage_flags'] > 0,
+                variant + ': requested physical format is unsupported')
+        require(capability['native_format'] == request['format'] == readback['requested_native_format']
+                == readback['created_native_format'] == native_format,
+                variant + ': requested/created/native physical format differs')
+        require(capability['format'] == readback['format'], variant + ': format name differs')
+        require(tuple(request[name] for name in ['block_w', 'block_h', 'pixel_size', 'rshift'])
+                == (block_w, block_h, pixel_size, rshift), variant + ': native block layout differs')
         require(readback['equal'] is True, variant + ': GPU byte equality failed')
         require(readback['source_sha256'] == readback['actual_sha256'],
                 variant + ': byte digest equality failed')
@@ -116,6 +143,7 @@ def inspect(path, variant):
             'copy_events': index, 'source_sha256': readback['source_sha256'],
             'actual_sha256': readback['actual_sha256'], 'readback_equal': True,
             'pitch_step': request['pitch_step'], 'alignment': request['align'],
+            'native_format': native_format, 'format_supported': True,
         }
     return {'log_sha256': hashlib.sha256(raw).hexdigest(), 'cases': result}
 
@@ -125,7 +153,7 @@ def compare(baseline, candidate):
     for key, before in baseline['cases'].items():
         after = candidate['cases'][key]
         for field in ['payload', 'source_sha256', 'actual_sha256', 'copy_events',
-                      'pitch_step', 'alignment', 'minimal_request']:
+                      'pitch_step', 'alignment', 'minimal_request', 'native_format', 'format_supported']:
             require(before[field] == after[field], key + ': variant evidence differs for ' + field)
         require(after['request'] <= before['request'], key + ': reservation grew')
     return {'scope': 'Actual Linux software-Vulkan RD component; not Metal/iOS template qualification',
