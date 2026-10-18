@@ -64,6 +64,9 @@ class Grade:
     decision_failed: bool = False  # a wrong decision or a failed gate claim caps the score at 0
     judge_error: str | None = None  # an infrastructure failure: the transcript is not scored
     judge_model_id: str = ""
+    reported_verdicts: tuple[Verdict, ...] = ()
+    reported_judge_error: str | None = None
+    reported_judge_model_id: str = ""
 
     @property
     def score(self) -> float:
@@ -83,6 +86,11 @@ class Grade:
             "parse_error": self.parse_error,
             "judge_error": self.judge_error,
             "judge_model_id": self.judge_model_id,
+            "reported_judge_error": self.reported_judge_error,
+            "reported_judge_model_id": self.reported_judge_model_id,
+            "reported_verdicts": [
+                {"claim": v.claim_id, "passed": v.passed, "detail": v.detail, "votes": list(v.votes)}
+                for v in self.reported_verdicts],
             "verdicts": [
                 {"claim": v.claim_id, "passed": v.passed, "detail": v.detail, "votes": list(v.votes)}
                 for v in self.verdicts],

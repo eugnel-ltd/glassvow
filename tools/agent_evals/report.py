@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import html
+import json
 from typing import Any, Mapping, Sequence
 
 from .models import Case
@@ -37,7 +38,14 @@ def review_html(eval_name: str, cases: Sequence[Case], cases_sha256: str) -> str
             f"<p><b>source</b> <code>{html.escape(case.source)}</code></p>"
             f"<p><b>why hard</b> {html.escape(case.why_hard)}</p>"
             f"<pre>{html.escape(case.user_prompt())}</pre>"
-            f"<p><b>reference answer</b> {html.escape(case.reference)}</p></section>")
+            f"<p><b>reference answer</b> {html.escape(case.reference)}</p>")
+        for claim in case.grader["claims"]:
+            label = "Reported only (unscored)" if claim.get("report_only") else "Scored"
+            detail = claim.get("question", json.dumps(
+                {k: claim[k] for k in ("equals", "must_match", "must_not_match") if k in claim}))
+            parts.append(f"<p><b>{label}</b> <code>{html.escape(claim['id'])}</code>: "
+                         f"{html.escape(detail)}</p>")
+        parts.append("</section>")
     return _page(f"Review: {eval_name}", "".join(parts))
 
 

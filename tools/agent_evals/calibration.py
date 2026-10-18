@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Grader calibration: grade answer sets once, then compute the bars offline.
 
-`grade` is the only step that calls the judge: it grades every answer in one set with the frozen
+`grade` is the only step that can call a scored judge: it grades every answer in one set with the frozen
 claims and writes one grading (a JSONL file). `metrics` reads gradings and the adjudicator's labels
 and computes the round-3 bars (council-2026-10-05.md) with no model call:
 
@@ -12,6 +12,9 @@ and computes the round-3 bars (council-2026-10-05.md) with no model call:
 - adversarial sets: mean score per transform beside the oracle-booleans score;
 - stability: two gradings of a set give the majority disagreement, the raw split share, gate
   splits and the test-retest change in the total score.
+
+A programmatic-only spec, including report-only judge claims, is graded offline. Reported
+claims are marked not evaluated; no report-only calibration backend is constructed.
 
 Rates carry a Wilson interval and a case-clustered bootstrap interval.
 """
@@ -33,7 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from agent_evals.backends import Backend, ClaudeCliBackend  # noqa: E402
 from agent_evals.diagnostics import oracle_booleans_score  # noqa: E402
 from agent_evals.evalspec import load_cases, load_eval  # noqa: E402
-from agent_evals.graders import JUDGE_ARMS, claims_sha256, grade, is_judge_claim  # noqa: E402
+from agent_evals.graders import JUDGE_ARMS, claims_sha256, grade, is_judge_claim, needs_judge  # noqa: E402
 from agent_evals.models import Case  # noqa: E402
 from agent_evals.stats import BOOTSTRAP_RESAMPLES, STATS_SEED, mean  # noqa: E402
 
@@ -101,7 +104,10 @@ def grade_set(cases: Mapping[str, Case], rows: Sequence[Mapping[str, Any]], judg
                 "index": index, "id": row["id"], "kind": row.get("kind", ""),
                 "hedged": bool(row.get("hedged", False)), "score": result.score,
                 "decision_failed": result.decision_failed, "judge_error": result.judge_error,
-                "verdicts": [[v.claim_id, v.passed, list(v.votes)] for v in result.verdicts]}
+                "verdicts": [[v.claim_id, v.passed, list(v.votes)] for v in result.verdicts],
+                "reported_verdicts": result.to_json()["reported_verdicts"],
+                "reported_judge_error": result.reported_judge_error,
+                "reported_judge_model_id": result.reported_judge_model_id}
     with ThreadPoolExecutor(max(1, workers)) as pool:
         return list(pool.map(one, enumerate(rows)))
 
@@ -256,7 +262,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--eval", default="repo_traps")
     sub = parser.add_subparsers(dest="command", required=True)
-    g = sub.add_parser("grade", help="grade one answer set once (calls the judge)")
+    g = sub.add_parser("grade", help="grade one answer set once (judge only for scored judge claims)")
     g.add_argument("--answers", type=Path, required=True)
     g.add_argument("--set", required=True, help="the set's name, as the labels file uses it")
     g.add_argument("--role", choices=ROLES, required=True)
@@ -279,7 +285,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         meta = {"set": args.set, "role": args.role, "run": args.run,
                 "claims_sha256": claims_sha256(cases.values()),
                 "answers_sha256": hashlib.sha256(args.answers.read_bytes()).hexdigest()}
-        rows = grade_set(cases, read_answers(args.answers), ClaudeCliBackend(),
+        judge = ClaudeCliBackend() if needs_judge(cases.values(), scored_only=True) else None
+        rows = grade_set(cases, read_answers(args.answers), judge,
                          args.judge_model or spec.judge_model, args.arm, meta, args.workers)
         args.out.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
         print(f"graded {len(rows)} answers into {args.out}")
