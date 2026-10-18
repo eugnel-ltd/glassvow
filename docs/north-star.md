@@ -10,7 +10,7 @@ Paraphrased (`AGENTS.md`, `docs/commercial-game-delivery.md`): ship Glassvow (Áê
 
 ## Who pays, for what
 
-Paraphrased: players buy the game once at one price. Expansion-pack IAP stays open. No price is set yet.
+Paraphrased: players buy the game once at one price. The [signed store-presence decision](https://github.com/eugnel-ltd/glassvow/issues/243#issuecomment-5335822126) sets the launch base price at US$6.99 with Apple regional prices and no introductory discount. Expansion-pack IAP stays open as a later possibility. This decision does not prove the current store price or availability.
 
 ## Channels
 
@@ -22,7 +22,7 @@ Paraphrased: players buy the game once at one price. Expansion-pack IAP stays op
 ## Priorities, in order
 
 1. Pass the iOS RC bar and release on the App Store.
-2. The owner steps that let a paid app sell: the Apple Paid Apps Agreement, banking and tax, EU DSA trader status, the Google payments profile.
+2. Keep paid-store prerequisites current. [#426](https://github.com/eugnel-ltd/glassvow/issues/426#issuecomment-5368972109) records Apple agreement, banking, tax and EU DSA verification on 21 August 2026; current sale readiness still needs readback. The Google payments profile belongs to the later Android wave.
 3. Everything else.
 
 ## Non-goals
