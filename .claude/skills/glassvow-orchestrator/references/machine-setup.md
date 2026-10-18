@@ -1,5 +1,7 @@
 # Machine setup
 
+Local mode only. Cloud sessions follow `docs/agents/cloud-environment.md`; do not probe these hosts or run these procedures from cloud. Hand off any required local step through `needs-local-machine`.
+
 What a Glassvow orchestrator machine needs, and where each thing lives. **Locations and procedures only.** No value in this file is a secret, and none may be added: name the file or environment variable instead. The owner moves keys by hand, securely; never paste one into a session, a brief, a commit or an issue.
 
 Since 15 Oct 2026 there are two machines. The **seat** (a Mac mini) runs Claude. The **engine** (the MacBook Pro) holds the repo and runs every command. Sections 1 to 8 describe the engine unless they say otherwise; section 9 is the seat and engine setup.

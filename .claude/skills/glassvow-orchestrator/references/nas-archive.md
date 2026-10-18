@@ -1,5 +1,7 @@
 # Archiving a lane folder to the NAS
 
+Local mode only. Cloud sessions follow `docs/agents/cloud-environment.md`; do not probe these hosts or run these procedures from cloud. Hand off any required local step through `needs-local-machine`.
+
 The NAS is a Synology reached only by ssh, through the host alias `ds1819-clawdbot` in `~/.ssh/config` on the engine host. It is not an SMB mount, so an empty `/Volumes` says nothing about it. Before saying the NAS is unavailable, try:
 
 ```bash

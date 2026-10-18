@@ -18,6 +18,12 @@ Entry format (newest first):
 
 ## Entries
 
+### Gate every structured choice required for an actionable answer
+- Cause: Exact checks rejected wrong secondary choices, but only the first selected decision gated; a wrong heading or corrected expression still earned partial credit.
+- Fix: e93d5c43 (source audit and regression), issue #694 gate repair; keep optional background hypotheses separate from required decisions.
+- Done right: Audit each selected field against its source and prove that a wrong or missing required choice scores zero; keep free-text reasoning reported only.
+- Seen: 1× (2026-10-18)
+
 ### Refresh pending cache retention from the latest selection
 - Cause: Choosing a different card back cleared the first bake's retention flag permanently, so selecting it again before completion discarded its result and rendered it twice.
 - Fix: fcc606f6af07291c9b7e4eb648e71becc141ed29
