@@ -456,6 +456,7 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
+          lfs: true
 
       - name: Reserve finite remote qualification budget
         if: inputs.mode == 'godot-runtime'
