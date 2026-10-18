@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - 'tests/native/boot_upload_baseline.gd'
+      - 'tests/native/test_boot_capture_cli.py'
+      - 'tests/native/test_boot_capture_diagnostics.py'
       - tools/godot/patches/glassvow-661-native-boot-upload-cap.patch
       - tools/godot/native_boot_upload/**
       - .github/workflows/native-boot-upload.yml
@@ -42,6 +44,8 @@ jobs:
           mkdir -p work/native-boot-evidence
           work/native-boot-venv/bin/python tools/godot/native_boot_upload/test_harness.py \
             > work/native-boot-evidence/verifier-tests.log 2>&1
+          work/native-boot-venv/bin/python tests/native/test_boot_capture_cli.py
+          work/native-boot-venv/bin/python tests/native/test_boot_capture_diagnostics.py
       - name: Verify the bounded patch applies to both exact source pins
         timeout-minutes: 3
         run: |
@@ -70,6 +74,10 @@ jobs:
               '--baseline',p['baseline'],'--candidate',p['candidate'],'--splash',p['splash'],
               '--output','work/native-boot-evidence/render'],check=True,timeout=850)
           PY
+      - name: Print bounded capture diagnostics after failure
+        if: failure()
+        timeout-minutes: 1
+        run: python3 -B tools/godot/native_boot_upload/diagnostics.py --root work/native-boot-evidence/render
       - name: Upload bounded component evidence even when a gate fails
         if: always()
         timeout-minutes: 3

@@ -87,7 +87,7 @@ def capture_worker(spec):
     command = [spec["binary"], "--path", str(project), "--display-driver", "x11",
                "--rendering-method", "gl_compatibility" if renderer == "gles3" else "mobile",
                "--rendering-driver", "opengl3" if renderer == "gles3" else "vulkan",
-               "--audio-driver", "Dummy", "--resolution", f"{width},{height}",
+               "--audio-driver", "Dummy", "--resolution", f"{width}x{height}",
                "--position", "0,0"]
     environment = dict(os.environ, GLASSVOW_BOOT_UPLOAD_PROBE="1", GV_BOOT_PROBE_HOLD_MS="30000",
                        LIBGL_ALWAYS_SOFTWARE="1", GALLIUM_DRIVER="llvmpipe")
@@ -190,9 +190,16 @@ def run_matrix(args):
                 paths = {}
                 for variant in ("baseline", "candidate"):
                     directory = args.output / renderer / case["name"] / variant
+                    report["active_capture"] = {"renderer": renderer, "case": case["name"],
+                                                "variant": variant, "phase": "native_capture"}
+                    write_json(report_path, report)
                     capture(getattr(args, variant), case, renderer, directory)
+                    report["active_capture"]["phase"] = "upload_verification"
+                    write_json(report_path, report)
                     item[variant] = verify_uploads(directory / "native.log", case, renderer, variant)
                     paths[variant] = directory / "boot.png"
+                report["active_capture"]["phase"] = "pixel_verification"
+                write_json(report_path, report)
                 item["pixels"] = verify_pixels(paths["baseline"], paths["candidate"], case, renderer)
                 report["cases"].append(item)
                 write_json(report_path, report)
@@ -205,7 +212,12 @@ def run_matrix(args):
         corrupt.save(corrupt_path)
         control_case["source"] = str(corrupt_path.resolve())
         control_dir = args.output / "negative-corrupt-source"
+        report["active_capture"] = {"renderer": "gles3", "case": "negative-corrupt-source",
+                                    "variant": "candidate", "phase": "native_capture"}
+        write_json(report_path, report)
         capture(args.candidate, control_case, "gles3", control_dir)
+        report["active_capture"]["phase"] = "negative_control_verification"
+        write_json(report_path, report)
         verify_uploads(control_dir / "native.log", control_case, "gles3", "candidate")
         baseline_path = args.output / "gles3" / cases[0]["name"] / "baseline" / "boot.png"
         try:
@@ -214,6 +226,7 @@ def run_matrix(args):
             report["live_negative_control"] = {"expected_rejection": str(error)}
         else:
             raise AssertionError("live corrupt-source frame incorrectly passed the image oracle")
+        report.pop("active_capture")
         report["status"] = "pass"
     except Exception as error:
         report["status"] = "failed_or_inconclusive"
