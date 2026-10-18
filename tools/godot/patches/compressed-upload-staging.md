@@ -84,3 +84,55 @@ There is no source/art exception to make a budget pass. The genuinely large
 23 historical images and Vigil Hall's 5,592,432-byte ASTC mip chain require
 their separately owned engineering outcomes; this patch only removes unused
 compressed staging space.
+
+
+## Desktop arm64 Metal component profile
+
+The existing component workflow also maintains `macos-arm64-metal-v1` on the
+standard public `macos-15` arm64 runner. A fresh official 4.7.2 six-format
+usage193 query screens that same job before any paired build. Its
+`CAPABILITY_SUPPORTED` result is necessary capability evidence and always
+has `component_status: NOT_RUN`; it never proves an upload or readback.
+The earlier Linux run whose relative ICD library path was refused remains
+INCONCLUSIVE before engine execution, with no unsupported-format conclusion.
+
+`mac_builder.py` reuses the hash-locked shared builder's archive, tree and
+bounded process helpers. It creates two fresh exact-ed1 source trees,
+records source/patch/observer hashes, selects the actual Xcode SDK and clang
+bytes, and builds only arm64 Metal portable test executables. It retains
+`disable_path_overrides=no` and records shipping qualification false.
+The original Linux builder and all original native controls remain intact.
+A pinned Python 3.12 arm64 interpreter and the same pinned Python packages
+serve both stock and native proof in that job.
+
+`metal.py` binds the stock receipt to the live host boot and workflow job.
+Each new native executable must report its actual stable custom-build
+version, then repeat the six physical queries on the same observed Metal
+API/vendor/device before it can run the unchanged upload script. Each
+variant has a separate UUID macOS custom user directory and four private
+XDG directories, plus a valid empty global class cache. Loader, forced
+barrier and Metal target-version overrides are refused. Native exits,
+logs, binary/script/project identities and actual query results are retained.
+A successful owned process receipt is not semantic component PASS: the
+strict component verifier must still validate every query, request, copy,
+readback and baseline/candidate reservation.
+
+The additive `metal_observer.py` retains the original observer and production
+patch bytes. Exact ed1 Metal3 advertises unit row-pitch/transfer alignment
+and derives tight block-row bytes in its blit path; it does not consume an
+arbitrary observer-injected row pitch. This adapter therefore removes only
+the invalid artificial 256-byte pitch override and its printed claim. It
+retains the valid 512-byte offset-alignment stress and all seven case IDs /
+eleven layers, mip/depth transfers and byte-readback requirements. The
+actual natural driver traits are emitted and verified. Forced256 GPU row
+padding is explicitly NOT_RUN; the original CPU/Vulkan256 controls remain
+separate and are not relabelled as Metal coverage. No production backend
+fix or arbitrary-pitch API promise follows from this adapter.
+
+Bounded typed job-log summaries expose only the observed device and exact
+stock/native physical-format queries. They never print command/environment
+records, unrelated files or general JSON fields; raw component logs remain
+in the bounded evidence artifact. This profile cannot establish iOS/A12,
+shipping-template activation, general device or memory/performance budgets.
+Actual paired native Metal execution remains required before component
+acceptance; source and synthetic Python controls alone cannot supply it.

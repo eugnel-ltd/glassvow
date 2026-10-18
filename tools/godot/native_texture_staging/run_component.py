@@ -17,6 +17,8 @@ import tarfile
 SOURCE = 'ed1daf0bf001b61586d9930840f2f1394092c079'
 ARCHIVE_SHA = 'e607e9985e1c201bc9cdc1aec8a120f0c3f53b9603f1f828e2b748534a2471ef'
 RD_SOURCE_SHA = 'cb319128c2650189dc3ebff5aad7e70ac73b0bd4c4d0c58993f06d4d002ddc62'
+MAC = 'macos-arm64-metal-v1'
+LINUX = 'linux-x86_64-lavapipe-v1'
 
 
 def digest(path):
@@ -36,6 +38,15 @@ def load(name, path):
 
 
 def run(args):
+    profile = getattr(args, 'profile', LINUX)
+    require(profile in (LINUX, MAC), 'unknown native component profile')
+    metal = None
+    if profile == MAC:
+        # Qualify the same live host/job before any source download or compile.
+        spec = importlib.util.spec_from_file_location('gv_staging_metal', Path(__file__).with_name('metal.py'))
+        metal = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(metal)
+        metal.verify_venue(args.venue_receipt, args.head)
     for name in ['work', 'output', 'builder', 'builder_manifest']:
         setattr(args, name, getattr(args, name).resolve())
     if args.source_archive is not None:
@@ -81,7 +92,7 @@ def run(args):
             path.parent.mkdir(parents=True)
             path.write_bytes(source)
             if variant == 'candidate':
-                subprocess.run(['patch', '--batch', '--fuzz=0', '-p1', '--input', str(patch)],
+                subprocess.run(['patch', '-f', '-N', '-F', '0', '-p1', '-i', str(patch)],
                                cwd=target, check=True, timeout=15)
             result_dir = args.output / ('cpu-' + variant)
             command = [sys.executable, str(fixture), '--source', str(path), '--build-dir', str(result_dir)]
@@ -105,22 +116,53 @@ def run(args):
         # The shared builder owns bounded process-group compiler cleanup. Its
         # optional doctest suite is explicitly absent; our immutable native CPU
         # fixture and the actual RD probe are the selected component proof.
-        builder.build(argparse.Namespace(patch=patch, observer=here / 'observer.py',
+        build_args = argparse.Namespace(patch=patch, observer=here / 'observer.py',
             test_suite='', splash=None, work=args.work / 'engines',
             output=args.output / 'build', source_archive=archive,
-            source_archive_sha256=ARCHIVE_SHA))
+            source_archive_sha256=ARCHIVE_SHA)
+        if metal:
+            build_args.profile, build_args.head, build_args.venue_receipt = profile, args.head, args.venue_receipt
+            build_args.baseline_patches, build_args.observer = [], here / 'metal_observer.py'
+            load('gv_staging_mac_builder', here / 'mac_builder.py').build(build_args, builder)
+        else:
+            builder.build(build_args)
         inputs = json.loads((args.output / 'build/render-inputs.json').read_text())
         probe = load('gv_staging_probe', here / 'probe.py')
+        commands = {}
         for variant in ['baseline', 'candidate']:
-            probe.run(Path(inputs[variant]), args.output / ('rd-' + variant))
+            if metal:
+                commands[variant] = metal.run_probe(Path(inputs[variant]), args.output / ('rd-' + variant),
+                    args.venue_receipt, args.head, probe.SCRIPT)
+            else:
+                probe.run(Path(inputs[variant]), args.output / ('rd-' + variant))
         verifier = load('gv_staging_verifier', here / 'verify.py')
+        kwargs = {'profile': profile} if metal else {}
         native = verifier.compare(
-            verifier.inspect(args.output / 'rd-baseline/native.log', 'baseline'),
-            verifier.inspect(args.output / 'rd-candidate/native.log', 'candidate'))
+            verifier.inspect(args.output / 'rd-baseline/native.log', 'baseline', **kwargs),
+            verifier.inspect(args.output / 'rd-candidate/native.log', 'candidate', **kwargs), **kwargs)
+        if metal:
+            build = metal.read_json(args.output / 'build/build-manifest.json')
+            native['provenance'] = metal.verify_provenance(build, commands, args.venue_receipt, args.head)
+            require(build['source_head'] == args.head and build['patch_sha256'] == digest(patch)
+                    and build['observer_sha256'] == digest(here / 'metal_observer.py')
+                    and build['prerequisite_patches'] == [], 'allocator production/observer inputs differ')
+            for variant in ['baseline', 'candidate']:
+                item, command = build['builds'][variant], commands[variant]
+                require(item['query_source_sha256'] == metal.capability.QUERY_SHA256
+                        and item['observer_receipt']['observer_sha256'] == digest(here / 'observer.py')
+                        and item['observer_receipt']['adapter_sha256'] == digest(here / 'metal_observer.py')
+                        and item['observer_receipt']['variant'] == variant,
+                        'actual native query/observer source binding differs')
+                require(item['applied_patches'] == ([{'name': patch.name, 'sha256': digest(patch)}]
+                        if variant == 'candidate' else []), 'allocator patch order differs')
+                require(command['script_sha256'] == hashlib.sha256(probe.SCRIPT.encode()).hexdigest()
+                        and command['commands'][-1]['log_sha256'] == native[variant]['log_sha256'],
+                        'verified native log/script differs from the owned child')
         (args.output / 'native-rd-result.json').write_text(json.dumps(native, indent=2) + '\n')
         report['status'] = 'PASS'
         report['actual_rd_cases_per_variant'] = len(native['candidate']['cases'])
-        report['scope'] = 'Linux software-Vulkan RD component; runtime/template pins unchanged; no Metal/iOS qualification claim'
+        report['profile'] = profile
+        report['scope'] = native['scope']
     except BaseException as error:
         report['status'] = 'failed_or_inconclusive'
         report['error'] = type(error).__name__ + ': ' + str(error)
@@ -136,6 +178,9 @@ def main():
     parser.add_argument('--source-archive', type=Path)
     parser.add_argument('--work', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--profile', choices=[LINUX, MAC], default=LINUX)
+    parser.add_argument('--head')
+    parser.add_argument('--venue-receipt', type=Path)
     run(parser.parse_args())
 
 

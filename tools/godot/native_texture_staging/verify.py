@@ -9,6 +9,8 @@ REQUEST = 'GV_STAGING_REQUEST '
 COPY = 'GV_STAGING_COPY '
 READBACK = 'GV_STAGING_READBACK '
 CAPABILITY = 'GV_STAGING_CAPABILITY '
+METAL_TRAITS = 'GV_STAGING_METAL_TRAITS '
+MAC, LINUX = 'macos-arm64-metal-v1', 'linux-x86_64-lavapipe-v1'
 EXPECTED_LAYERS = {
     'etc2-rgb-odd': 2, 'etc2-rgba-wood': 2, 'eac-rg11-normal': 1,
     'astc4-material': 1, 'astc4-padded': 2, 'rgba8-depth-padded': 1,
@@ -44,14 +46,21 @@ def fields(text):
     return result
 
 
-def inspect(path, variant):
+def inspect(path, variant, profile=LINUX):
+    require(profile in (MAC, LINUX), 'unknown native profile')
     raw = path.read_bytes()
     text = raw.decode(errors='replace')
-    require('SCRIPT ERROR' not in text and 'Parse Error' not in text,
-            variant + ': script diagnostics invalidate the run')
-    requests, copies, readbacks, capabilities = {}, {}, {}, {}
+    require('SCRIPT ERROR' not in text and 'Parse Error' not in text and not any(
+        line.lstrip().startswith('ERROR:') for line in text.splitlines()),
+        variant + ': native/script diagnostics invalidate the run')
+    requests, copies, readbacks, capabilities, traits = {}, {}, {}, {}, {}
     for line in text.splitlines():
-        if line.startswith(CAPABILITY):
+        if line.startswith(METAL_TRAITS):
+            item = fields(line[len(METAL_TRAITS):])
+            key = item['case'], item['layer']
+            require(key not in traits, variant + ': duplicate Metal trait event')
+            traits[key] = item
+        elif line.startswith(CAPABILITY):
             item = json.loads(line[len(CAPABILITY):])
             require(item['case'] not in capabilities, variant + ': duplicate format support query')
             capabilities[item['case']] = item
@@ -73,12 +82,14 @@ def inspect(path, variant):
     require(set(requests) == set(copies) == set(readbacks) == expected,
             variant + ': missing or unexpected actual request/copy/readback case')
     require('GV_STAGING_DONE 11' in text, variant + ': complete probe exit marker absent')
+    if profile == MAC:
+        require(set(traits) == expected, variant + ': incomplete actual Metal driver traits')
     result = {}
     for key in sorted(expected):
         request, readback = requests[key], readbacks[key]
         capability = capabilities[key[0]]
         native_format, block_w, block_h, pixel_size, rshift = EXPECTED_FORMATS[key[0]]
-        require(capability['supported'] is True and capability['usage_flags'] > 0,
+        require(capability['supported'] is True and capability['usage_flags'] == 193,
                 variant + ': requested physical format is unsupported')
         require(capability['native_format'] == request['format'] == readback['requested_native_format']
                 == readback['created_native_format'] == native_format,
@@ -96,10 +107,17 @@ def inspect(path, variant):
         require(request['pitch_step'] > 0 and request['align'] > 0,
                 variant + ': missing actual driver alignment traits')
         if key[0].endswith('-padded'):
-            require(request['forced'] == 1 and request['pitch_step'] >= 256 and request['align'] >= 512,
+            require(request['forced'] == 1 and (request['pitch_step'] == 1 if profile == MAC else request['pitch_step'] >= 256)
+                    and request['align'] >= 512,
                     variant + ': requested nonunit test configuration not active')
         else:
             require(request['forced'] == 0, variant + ': unexpected forced configuration')
+        if profile == MAC:
+            trait = traits[key]
+            require((trait['row_pitch_step'], trait['transfer_alignment'], trait['honors_pipeline_barriers'],
+                     trait['forced_row_padding'], trait['forced_offset_alignment']) ==
+                    (1, 1, 0, 0, int(key[0].endswith('-padded'))), variant + ': Metal driver/profile traits differ')
+            require(request['pitch_step'] == trait['row_pitch_step'], variant + ': natural Metal row pitch differs')
         width, height, depth = request['width'], request['height'], request['depth']
         actual_offset, minimal_offset, payload = 0, 0, 0
         index = 0
@@ -145,10 +163,15 @@ def inspect(path, variant):
             'pitch_step': request['pitch_step'], 'alignment': request['align'],
             'native_format': native_format, 'format_supported': True,
         }
-    return {'log_sha256': hashlib.sha256(raw).hexdigest(), 'cases': result}
+    report = {'log_sha256': hashlib.sha256(raw).hexdigest(), 'cases': result}
+    if profile == MAC:
+        report['coverage'] = {'forced_256_gpu_row_padding': 'NOT_RUN', 'forced_512_offset_alignment': 'PASS',
+                              'scope': 'Natural Metal rows; original CPU/Vulkan 256-row stress remains separate'}
+    return report
 
 
-def compare(baseline, candidate):
+def compare(baseline, candidate, profile=LINUX):
+    require(profile in (MAC, LINUX), 'unknown native profile')
     require(set(baseline['cases']) == set(candidate['cases']), 'variant cases differ')
     for key, before in baseline['cases'].items():
         after = candidate['cases'][key]
@@ -156,7 +179,8 @@ def compare(baseline, candidate):
                       'pitch_step', 'alignment', 'minimal_request', 'native_format', 'format_supported']:
             require(before[field] == after[field], key + ': variant evidence differs for ' + field)
         require(after['request'] <= before['request'], key + ': reservation grew')
-    return {'scope': 'Actual Linux software-Vulkan RD component; not Metal/iOS template qualification',
+    return {'scope': ('Actual desktop arm64 Metal RD component; no iOS/A12/shipping or forced256 GPU qualification'
+                     if profile == MAC else 'Actual Linux software-Vulkan RD component; not Metal/iOS template qualification'),
             'baseline': baseline, 'candidate': candidate, 'status': 'PASS'}
 
 

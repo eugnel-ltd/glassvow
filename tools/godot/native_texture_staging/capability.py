@@ -43,6 +43,8 @@ OVERRIDES = ('LD_LIBRARY_PATH', 'LD_PRELOAD', 'DYLD_LIBRARY_PATH', 'DYLD_INSERT_
              'VK_ICD_FILENAMES', 'VK_ADD_DRIVER_FILES', 'VK_LAYER_PATH', 'VK_INSTANCE_LAYERS',
              'VK_LOADER_DRIVERS_SELECT', 'VK_LOADER_DRIVERS_DISABLE', 'VK_LAYER_SETTINGS_PATH',
              'VK_LOADER_LAYERS_ENABLE', 'VK_LOADER_LAYERS_DISABLE', 'VK_LOADER_LAYERS_ALLOW')
+METAL_OVERRIDES = OVERRIDES + ('VK_DRIVER_FILES', 'GODOT_MTL_FORCE_BARRIERS', 'GODOT_MTL_TARGET_VERSION',
+                             'OSXCROSS_ROOT', 'CCACHE')
 SCRIPT = r'''
 extends SceneTree
 const FORMATS: Array[Dictionary] = [
@@ -104,7 +106,7 @@ def write_result(path, data):
     temporary.replace(path)
 
 
-def assess(profile, host, version, text, code):
+def assess(profile, host, version, text, code, expected_version=VERSION):
     result = {'schema': 1, 'profile': profile, 'status': 'INCONCLUSIVE',
               'component_status': 'NOT_RUN', 'errors': [], 'formats': []}
     try:
@@ -114,7 +116,7 @@ def assess(profile, host, version, text, code):
         require((host.get('system'), host.get('uname_machine')) == expected and
                 host.get('python_machine') == expected[1] and host.get('translated') is False,
                 'wrong host architecture/OS or translated execution')
-        require(version.strip() == VERSION, 'unsupported stock engine version')
+        require(version.strip() == expected_version, 'unsupported engine version')
         require(code == 0, 'native process failed or timed out')
         require(not re.search(r'(?m)^\s*(?:SCRIPT ERROR|ERROR|Parse Error):', text),
                 'native/script diagnostics invalidate capability')
@@ -275,6 +277,24 @@ def verify_native_backend(receipt, text):
     return devices[0]
 
 
+def mac_host_binding():
+    """Same boot and hosted job, not a reusable cross-VM capability token."""
+    require(platform.system() == 'Darwin' and platform.machine() == 'arm64'
+            and os.uname().machine == 'arm64', 'native arm64 macOS host required')
+    require(not any(os.environ.get(k) for k in METAL_OVERRIDES), 'Metal environment override is unqualified')
+    record = run_process(['/usr/sbin/sysctl', '-n', 'kern.boottime'], Path.cwd(),
+                         os.environ.copy(), 10, 4096)
+    require(record['exit'] == 0 and record['reaped'] and not record['timed_out']
+            and not record['output_limit'], 'bounded host boot query failed')
+    marker = re.search(r'sec\s*=\s*(\d+),\s*usec\s*=\s*(\d+)', record['output'])
+    require(marker is not None, 'host boot marker absent')
+    value = os.uname().nodename + ':' + ':'.join(marker.groups())
+    return {'system': 'Darwin', 'machine': 'arm64',
+            'boot_sha256': hashlib.sha256(value.encode()).hexdigest(),
+            'job': {key: os.environ.get(key) for key in ('GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT',
+                'GITHUB_JOB', 'RUNNER_NAME', 'ImageOS', 'ImageVersion')}}
+
+
 def main_run(args):
     args.output.mkdir(parents=True, exist_ok=False)
     result = {'schema': 1, 'head': args.head, 'profile': args.profile, 'status': 'INCONCLUSIVE',
@@ -313,6 +333,7 @@ def main_run(args):
         require((host['system'], host['uname_machine'], host['python_machine']) ==
                 (('Darwin', 'arm64', 'arm64') if metal else ('Linux', 'x86_64', 'x86_64')), 'wrong host architecture/OS')
         if metal:
+            result['mac_host_binding'] = mac_host_binding()
             host['os_version'] = command(['sw_vers', '-productVersion'])
             host['xcode'] = command(['xcodebuild', '-version'])
             host['sdk'] = command(['xcrun', '--sdk', 'macosx', '--show-sdk-version'])
@@ -405,6 +426,8 @@ def main_run(args):
             require(Path(result['device'].get('user_data_dir', '')).name == user_dir, 'private engine userdata ownership differs')
         if not metal:
             require(result['linux_driver'] == linux_binding(manifests[0], env), 'driver identity changed during stock query')
+        else:
+            require(result['mac_host_binding'] == mac_host_binding(), 'Mac host/job changed during stock query')
         result['phase'] = 'complete'
     except Exception as error:
         result['status'] = 'INCONCLUSIVE'
