@@ -51,6 +51,17 @@ complete source tree, patch, observer and binary hashes are captured; a custom
 archive build truthfully need not report a git suffix. Neither build replaces
 the provisioned official stable engine.
 
+These portable `template_debug` builds explicitly use
+`disable_path_overrides=no` for both variants. Their isolated fixture projects
+and scripts require native `--path`/`--script` support; the pinned engine resets
+cwd to the executable directory and discards script overrides without it.
+Changing cwd alone cannot support these probes. `build-manifest.json` records
+the identical SCons flags and `runtime_test_configuration`, explicitly marking
+portable component proof with `shipping_template_qualification: false`.
+This test configuration changes no shipping template, runtime/source pin or
+production patch. Historical builds without the flag retain their own receipts
+and need a new compiled/runtime run under this supported test configuration.
+
 The observer is **CI-only source instrumentation**. It logs the actual decoded
 source and validated Images at the actual RD/GLES storage upload callsites,
 then counts boot clears/draws and holds after the actual final presentation.
