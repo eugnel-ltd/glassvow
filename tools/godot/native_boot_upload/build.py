@@ -19,7 +19,7 @@ SOURCE_SHA = "ed1daf0bf001b61586d9930840f2f1394092c079"
 SOURCE_URL = f"https://codeload.github.com/godotengine/godot/tar.gz/{SOURCE_SHA}"
 SOURCE_ARCHIVE_SHA256 = "e607e9985e1c201bc9cdc1aec8a120f0c3f53b9603f1f828e2b748534a2471ef"
 FLAGS = ["platform=linuxbsd", "target=template_debug", "arch=x86_64", "optimize=speed",
-         "debug_symbols=no", "tests=yes", "vulkan=yes", "opengl3=yes", "x11=yes",
+         "debug_symbols=no", "tests=yes", "disable_path_overrides=no", "vulkan=yes", "opengl3=yes", "x11=yes",
          "wayland=no", "disable_3d=yes", "modules_enabled_by_default=no",
          "module_gdscript_enabled=yes", "module_glslang_enabled=yes",
          "module_text_server_fb_enabled=yes", "-j2"]
@@ -82,6 +82,9 @@ def build(args):
                              for path in prerequisites]
     report = {"schema": 1, "status": "running", "source_sha": SOURCE_SHA,
               "source_url": SOURCE_URL, "flags": FLAGS,
+              "runtime_test_configuration": {"purpose": "portable_component_proof",
+                  "path_overrides": True, "scons_option": "disable_path_overrides=no",
+                  "shipping_template_qualification": False},
               "product_ci_sha": os.environ.get("GITHUB_SHA"),
               "python_version": sys.version, "host": list(os.uname()),
               "scope": "Linux software-renderer component evidence, not shipping template proof",

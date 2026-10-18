@@ -7,6 +7,8 @@ on:
       - 'tests/native/boot_upload_baseline.gd'
       - 'tests/native/test_boot_capture_cli.py'
       - 'tests/native/test_boot_capture_diagnostics.py'
+      - 'tests/native/test_boot_contact_sheets.py'
+      - 'tests/native/test_boot_runtime_configuration.py'
       - tools/godot/patches/glassvow-661-native-boot-upload-cap.patch
       - tools/godot/native_boot_upload/**
       - .github/workflows/native-boot-upload.yml
@@ -46,6 +48,8 @@ jobs:
             > work/native-boot-evidence/verifier-tests.log 2>&1
           work/native-boot-venv/bin/python tests/native/test_boot_capture_cli.py
           work/native-boot-venv/bin/python tests/native/test_boot_capture_diagnostics.py
+          work/native-boot-venv/bin/python tests/native/test_boot_contact_sheets.py
+          work/native-boot-venv/bin/python tests/native/test_boot_runtime_configuration.py
       - name: Verify the bounded patch applies to both exact source pins
         timeout-minutes: 3
         run: |
@@ -74,6 +78,9 @@ jobs:
               '--baseline',p['baseline'],'--candidate',p['candidate'],'--splash',p['splash'],
               '--output','work/native-boot-evidence/render'],check=True,timeout=850)
           PY
+      - name: Transport bounded contact sheets of successful actual captures
+        timeout-minutes: 1
+        run: work/native-boot-venv/bin/python tools/godot/native_boot_upload/contact_sheets.py --root work/native-boot-evidence/render
       - name: Print bounded capture diagnostics after failure
         if: failure()
         timeout-minutes: 1

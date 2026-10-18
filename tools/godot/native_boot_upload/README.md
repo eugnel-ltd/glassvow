@@ -51,6 +51,17 @@ complete source tree, patch, observer and binary hashes are captured; a custom
 archive build truthfully need not report a git suffix. Neither build replaces
 the provisioned official stable engine.
 
+These portable `template_debug` builds explicitly use
+`disable_path_overrides=no` for both variants. Their isolated fixture projects
+and scripts require native `--path`/`--script` support; the pinned engine resets
+cwd to the executable directory and discards script overrides without it.
+Changing cwd alone cannot support these probes. `build-manifest.json` records
+the identical SCons flags and `runtime_test_configuration`, explicitly marking
+portable component proof with `shipping_template_qualification: false`.
+This test configuration changes no shipping template, runtime/source pin or
+production patch. Historical builds without the flag retain their own receipts
+and need a new compiled/runtime run under this supported test configuration.
+
 The observer is **CI-only source instrumentation**. It logs the actual decoded
 source and validated Images at the actual RD/GLES storage upload callsites,
 then counts boot clears/draws and holds after the actual final presentation.
@@ -91,6 +102,26 @@ useful context. The CLI regression observes the worker's actual argv without
 launching an engine: pinned Godot requires `--resolution WxH`, while
 `--position X,Y` retains its distinct comma delimiter.
 
+After the complete real matrix succeeds, `contact_sheets.py` transports two
+labeled JPEG review sheets through job stdout, one per renderer. Every
+baseline/candidate pair appears in `cases.json` order; GLES also includes the
+actual live negative comparison. The reader accepts only successful report
+entries and exact PNG/native-hold metadata paths, checks screenshot hashes,
+and rejects missing, symlinked or outside-root proof. It never reads source
+paths, environment, commands, specifications or unrelated files.
+
+The sheets use fixed 288 x 200 thumbnail bounds, at most 200 KiB per JPEG and
+600 KiB total base64. A bounded quality ladder must fit every case or the
+transport fails; no case is dropped. `GV_BOOT_CONTACT_BEGIN` carries JSON
+filename/size/SHA-256/chunk metadata, followed by sequential
+`GV_BOOT_CONTACT_DATA <filename> <0000/total> <base64>` records (4096 characters
+per chunk) and `GV_BOOT_CONTACT_END <filename> <sha256>`. Decode all chunks
+with strict base64 validation, check byte count, SHA and both end records before
+viewing. This permits inspection through the existing job-log reader when
+artifact byte transport is unavailable. Full PNGs, pixel oracles and the
+capture-to-sheet manifest remain in the original artifact. These lossy review
+copies add no native/GPU PASS and never replace the exact pixel comparison.
+
 The reason to retain this component mechanism is the risk of a native upload
 fix that compiles but changes pre-script rendering or never reaches the actual
 boot call. Run the native job when the patch or observer/proof contract changes;
@@ -113,6 +144,7 @@ python3 tools/godot/native_boot_upload/check_patch.py --output work/native-boot/
 python3 tools/godot/native_boot_upload/test_harness.py
 python3 tests/native/test_boot_capture_cli.py
 python3 tests/native/test_boot_capture_diagnostics.py
+python3 tests/native/test_boot_contact_sheets.py
 python3 tools/godot/native_boot_upload/build.py --splash assets/art/title/splash.png --work work/native-boot/builds --output work/native-boot/evidence
 ```
 
