@@ -34,6 +34,12 @@ Entry format (newest first):
 
 ## Entries
 
+### Recheck each waiter's lifetime after a shared async job completes
+- Cause: A successful shared card-back bake reached a waiter whose host was freed; the existing freed-waiter regression exercised only a failed render.
+- Fix: #657 successful-owner / freed-waiter follow-up.
+- Done right: Validate the waiting caller after the shared await. Use one signal barrier to require a live owner's result and cache, a live waiter's shared result, a freed waiter's null result, and no extra render.
+- Seen: 1× (2026-10-18)
+
 ### Pass one platform snapshot through each shared update
 - Cause: The hologram's shared update and its pointer helper each built the same platform-facts dictionary, doubling that work every active frame.
 - Fix: bf786ce7b004179b75ed767a84c586ab414d53a7
