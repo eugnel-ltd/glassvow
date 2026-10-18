@@ -253,3 +253,29 @@ tests and failed one, `test_pile_fight`'s real-time "a kindle bumped the ash 0
 times under Reduce Motion", the load-sensitive test PR 5b also met; it builds no
 `Main` and its cards never release headless. Alone, twice, at a load of 23 to
 26: **PASS** both times.
+
+## Membership guard evidence correction (18 October 2026)
+
+The historical `r14` recipe replaces the side material. Its retained table
+entry names the same material-identity diagnostic as `r13`. It does not prove
+that shader membership failed independently. `r15` separately checks generated
+material retention. The old campaign has no retained independent negative
+control for the script-held shader branch.
+
+`tests/test_card_rest_membership_controls.gd` now calls the unchanged structural
+guard through a real hand's release and rebuild. After the guard captures its
+baseline, one control changes the same side material's cull mode. Another
+changes the same face material's shader to an unheld copy with identical code.
+Each keeps all material objects and requires exactly its own membership
+diagnostic, with no material-identity diagnostic. Untouched controls run before
+and after both cases.
+
+The first valid fixture and UID are frozen at `ef3f0d01`. They pass on the
+unchanged production code. Two separate temporary bypasses of the old guard
+each make exactly the corresponding new expectation fail. These failures are
+deliberate test mutations, not evidence of a production defect. The original
+test is restored byte for byte after each run.
+
+This headless proof checks material identity and membership. It measures no
+GPU readiness, pipeline compilation, pixels or device timing. The historical
+mutation recipes, results and images remain unchanged.
