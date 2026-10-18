@@ -18,4 +18,10 @@ Entry format (newest first):
 
 ## Entries
 
+### Refresh pending cache retention from the latest selection
+- Cause: Choosing a different card back cleared the first bake's retention flag permanently, so selecting it again before completion discarded its result and rendered it twice.
+- Fix: fcc606f6af07291c9b7e4eb648e71becc141ed29
+- Done right: Set every pending job's retention from the latest choice. A signal-gated A to B to A regression keeps the shared A result, drops B and proves a repeated request does not render again.
+- Seen: 1× (2026-10-18)
+
 This repo's long record of solved problems is `docs/solutions/`, by category. Short repeatable lessons go here.
