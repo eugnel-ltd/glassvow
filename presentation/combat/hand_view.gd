@@ -245,7 +245,9 @@ func _seat_of(view: CardView) -> Vector2:
 
 func add_card(inst: CardInst, data: Dictionary, cost: int) -> CardView:
 	if _views.has(inst.uid):
-		return _views[inst.uid]
+		var existing: CardView = _views[inst.uid]
+		existing.set_rules_text(str(data.get("text", "")))
+		return existing
 	var view: CardView = CardView.new(inst, data, cost)
 	# Before the tree sees it, so the card is never laid out at the wrong size
 	# for a frame — a card that pops from 152 to 104 on its first relayout reads

@@ -516,12 +516,17 @@ func _init(game_ref: GlassvowGame, stage_shape: StringName = StageShape.IDENTITY
 	act = act_index
 	_authored = LayoutBook.resolve(&"battlefield", shape, act)
 	seq.handler = _handle_event
-	_top = DiscardTop.new(_find_card, _rules.card_data)
+	_top = DiscardTop.new(_find_card, _card_data)
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = GlassStyle.theme()
 	_sfx = sfx
 	_build_ui()
 	seq.busy_changed.connect(_on_busy_changed)
+
+
+## A live combat display includes every rider the current fight can resolve.
+func _card_data(inst: CardInst) -> Dictionary:
+	return _rules.card_data(inst, game.run, game.cb)
 
 
 ## Swap the authored battlefield while keeping the encounter, actors and fracture
@@ -997,7 +1002,7 @@ func _show_inspector(title: String, cards: Array[CardInst]) -> void:
 	var rows: Array[Dictionary] = []
 	for card: CardInst in cards:
 		rows.append({"id": "card:%d" % card.uid, "card": card,
-			"definition": _rules.card_data(card), "disabled": true})
+			"definition": _card_data(card), "disabled": true})
 	if rows.is_empty():
 		var empty: Label = _label(Locale.active.t("ui.combat.inspectorEmpty"))
 		empty.add_theme_color_override("font_color", GlassStyle.TEXT_DIM)
@@ -2493,7 +2498,7 @@ func _handle_event(ev: Dictionary) -> void:
 				# draws it heads rather than guessing from the hand.
 				var wave: int = seq.run_length(EventTypes.DRAW)
 				_sfx.play(&"draw")
-				_hand.add_card(inst, _rules.card_data(inst),
+				_hand.add_card(inst, _card_data(inst),
 					_rules.eff_cost(game.run, game.cb, inst))
 				# The card leaves from the top as it was; then the pile is one
 				# lighter (this draw has left the queue `_push_hud` reads), so
@@ -3342,7 +3347,7 @@ func _sync_all() -> void:
 	# holds is taken out.
 	var order: Array[int] = []
 	for c: CardInst in cb.hand:
-		_hand.add_card(c, _rules.card_data(c), _rules.eff_cost(game.run, cb, c))
+		_hand.add_card(c, _card_data(c), _rules.eff_cost(game.run, cb, c))
 		order.append(c.uid)
 	_hand.sync_hand(order)
 	for c: CardInst in cb.hand:

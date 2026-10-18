@@ -327,7 +327,7 @@ The Duskblade's lock §11 is the measurement contract, with the rulings and amen
 
 **Way stats** (`tools/balance_classes.json`): `smolder` → `smolderKills`, `hand` → `drawn`, `endure` → `perfects`. They are part of the instrument: the search player credits a turn's way stats as it credits Shatter, Kindle and Cracked for the Duskblade. So they are written before the first reading of record (step A3 lands before step A2's reading; §12).
 
-**The hand's size** (orchestrator, 5 Oct 2026). The game deals each class its content `handSize` since step A2, but the pilot still assumes a hand of 5 (`TURN_DRAW`, `tools/balance_pilot.gd:21 (TURN_DRAW)`). So a change to a class's `handSize` is an instrument change: the pilot must first read `handSize`, and the Duskblade must then be re-read (§11, rule 3).
+**The hand's size** (orchestrator, 5 Oct 2026). The game deals each class its content `handSize` since step A2, but the pilot still assumes a hand of 5 (`TURN_DRAW`, `tools/balance_pilot.gd:24 (TURN_DRAW)`). So a change to a class's `handSize` is an instrument change: the pilot must first read `handSize`, and the Duskblade must then be re-read (§11, rule 3).
 
 **Cells.** Aspect 1 (the Ashwarden) × vows {0, 5} × pools {`entry`, `full`}. The `entry` pool takes `fresh`'s place wherever the Duskblade's lock grades `fresh`: G1 at V0 ≥ 40% (a reading); G5 at V0, Steady by the end of Act 1 ≥ 40% of runs alive then, True not graded; B1 at V0 ≥ 10%; V5 `entry` ungraded for G1 and G5, as V5 `fresh` is. The simulator's `entry` profile is `balance_sim.gd`'s `_apply_entry` (#544 P3).
 

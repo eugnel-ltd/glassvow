@@ -82,6 +82,13 @@ func _init(text: String, tint: Color, plain: Font, bold: Font, size: int,
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
+## Replace a paragraph when the live fight changes which riders can resolve.
+func set_text(text: String) -> void:
+	_tokens = tokenize(text)
+	_wrap(size.x)
+	queue_redraw()
+
+
 static func _refresh_keyword_cache() -> void:
 	var terms: Dictionary = Locale.active.keyword_terms()
 	var signature: String = JSON.stringify(terms)

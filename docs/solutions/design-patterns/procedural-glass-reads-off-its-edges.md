@@ -80,7 +80,7 @@ Three corollaries follow, and skipping any of them keeps the paper look:
 3. **The inner glow is inset *and* pushed toward the light.** Centred, it reads
    as a shape with a hole in it; shifted, the bright region crowds the lit edge
    and the piece reads as something light enters from one side
-   (`reward_embers.gd:531-537` (in `_draw_shard`)).
+   (`reward_embers.gd:534-540` (in `_draw_shard`)).
 
 **The light has to actually exist in the scene**, or none of the above has an
 argument to take. That imposes two more rules:

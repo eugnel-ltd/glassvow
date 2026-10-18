@@ -525,6 +525,7 @@
       "text": "Gain #3# Ward. Draw 1 card."
     },
     "preparation": {
+      "litText": {"en": " Amber flame: gain 1 Ember.", "zh-Hant": "金黃之火：獲得 1 點餘燼。"},
       "type": "skill",
       "rarity": "common",
       "cost": 0,
@@ -789,6 +790,7 @@
       "text": "Gain #13# Ward."
     },
     "surge": {
+      "litText": {"en": " Amber flame: gain 1 Ember.", "zh-Hant": "金黃之火：獲得 1 點餘燼。"},
       "type": "skill",
       "rarity": "uncommon",
       "cost": 0,
@@ -889,6 +891,7 @@
       "text": "Snuff an enemy's fire: it loses 2 Fervor. Kindle."
     },
     "warCry": {
+      "litText": {"en": " Blood-moon flame: gain #3# Ward.", "zh-Hant": "血月之火：獲得 #3# 點護光。"},
       "type": "skill",
       "rarity": "uncommon",
       "cost": 1,
@@ -1497,6 +1500,7 @@
       "text": "Deal @7@ damage. Deals double to Staggered or Cracked glass."
     },
     "tithe": {
+      "litText": {"en": " Amber flame: gain 1 Ember.", "zh-Hant": "金黃之火：獲得 1 點餘燼。"},
       "type": "skill",
       "rarity": "uncommon",
       "cost": 1,
