@@ -572,9 +572,9 @@ confirmation on the iPad 8 remains the way to close P2.
 3. **Hero lantern** is the lane pick (candidate 1); owner re-pick open.
 4. **Copy** `ui.firstLight.diagnostics` is ledgered PROPOSED (row 467).
 5. **Device**: an iPad 8 launch-and-frame-pacing pass for P2.
-6. **Follow-ups outside this lane:** `LayoutBook`'s `titlescreen/*` keys are
-   now unused data; the shipped `ui.brand.stats` reads "I pilgrimages" at a
-   count of one (a plural the copy never had).
+6. **Follow-ups outside this lane:** `LayoutBook`'s unused `titlescreen/*`
+   authoring controls were removed in #661. The shipped `ui.brand.stats`
+   reads "I pilgrimages" at a count of one (a plural the copy never had).
 
 ### 16.6 Polish round — pad and desktop (orchestrator review)
 

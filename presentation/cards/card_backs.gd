@@ -190,7 +190,7 @@ static func _try(host: Node, id: String) -> Baked:
 	var running: _Job = _jobs.get(known)
 	if running != null:
 		await running.done
-		return running.result
+		return running.result if is_instance_valid(host) else null
 	var job: _Job = _Job.new()
 	_jobs[known] = job
 	var made_from: CardBackCatalogue = catalogue()

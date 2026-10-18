@@ -2,7 +2,10 @@
   "formatVersion": 1,
   "ui": {
     "brand": {
+      "dawnOne": "{n} 次破曉",
+      "pilgrimageOne": "{n} 次朝聖",
       "secrets": " · {n} 個秘密已現",
+      "secretsOne": " · {n} 個秘密已現",
       "stats": "{runs} 次朝聖 · {wins} 次破曉 · {slain} 敵隕落",
       "tagline": "Roguelite 卡牌構築 · 守夜銘記",
       "title": "琉璃誓言"

@@ -638,43 +638,13 @@
         "inset": 24.0,
         "scale": 1.0,
         "scroll": 420.0,
-        "title": {
-          "columnW": 400.0,
-          "gap": 12.0,
-          "primaryCols": 1.0,
-          "primaryPt": 27.0,
-          "roseSide": 78.0,
-          "tagline": 1.0,
-          "taglinePt": 14.0,
-          "taglineTrack": 5.0,
-          "utilityCols": 1.0,
-          "utilityPt": 15.0,
-          "wordmarkMax": 520.0,
-          "wordmarkRate": 0.6,
-          "wrapHelp": 0.0
-        },
         "w": 520.0
       },
       "shapes": {
         "phone-landscape": {
           "inset": 14.0,
           "scale": 0.86,
-          "scroll": 220.0,
-          "title": {
-            "columnW": 360.0,
-            "gap": 6.0,
-            "primaryCols": 1.0,
-            "primaryPt": 16.0,
-            "roseSide": 58.0,
-            "tagline": 0.0,
-            "taglinePt": 11.0,
-            "taglineTrack": 2.0,
-            "utilityCols": 1.0,
-            "utilityPt": 11.0,
-            "wordmarkMax": 230.0,
-            "wordmarkRate": 0.28,
-            "wrapHelp": 0.0
-          }
+          "scroll": 220.0
         }
       }
     }

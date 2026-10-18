@@ -190,7 +190,7 @@ The pilgrim casts no live shadow and stands on its blob
 floor use, before the title's first frame shows, behind the launch screen
 (`presentation/map/landscape/floor_warm.gd:100 (draw_now)`). `MapJourneyPrefetch.prime` calls it for a
 run to resume (`presentation/map/map_journey_prefetch.gd:152 (in prime)`), and the title calls it for
-everyone else (`application/main.gd:1330 (in _show_title)`). See
+everyone else (`application/main.gd` (`_show_title`)). See
 [Round 3](#round-3-the-title-stall-and-the-cold-open). The fallback is the old ground: where nothing can bake
 (headless, Compatibility) or the bake fails, the ground keeps
 `terrain_paint` and its live shadows.
@@ -296,7 +296,7 @@ The change:
   renderer as it is built.
 - `presentation/map/landscape/floor_bake.gd:333 (mip_views)` and `presentation/map/landscape/floor_bake.gd:387 (texture_rd)`: the bake's mip chain
   and picture format, shared with the warm-up.
-- `application/main.gd:1330 (in _show_title)`: a title with no run to resume warms too, for a new
+- `application/main.gd` (`_show_title`): a title with no run to resume warms too, for a new
   player's first map.
 - The proofs: `tests/test_map_floor.gd` checks the samples' kinds, their views
   waiting, and that they are let go. `tools/check_floor_bake.gd` checks the
