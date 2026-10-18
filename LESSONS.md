@@ -53,3 +53,9 @@ Entry format (newest first):
 - Seen: 1× (2026-10-18)
 
 This repo's long record of solved problems is `docs/solutions/`, by category. Short repeatable lessons go here.
+
+### Reject duplicate dictionary keys before qualifying external metadata
+- Cause: plistlib silently kept the last repeated Xcode build, allowing conflicting IPA identity metadata to pass the upload guard.
+- Fix: 05533b2082664a787a17497b91a2b1619d32d6e4.
+- Done right: use a duplicate-rejecting dict_type for both XML and binary plists, and prove that raw conflicting metadata cannot reach the release upload boundary.
+- Seen: 1× (2026-10-18)

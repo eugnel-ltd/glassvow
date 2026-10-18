@@ -226,6 +226,9 @@ fi
 BUILD_ID="n/a"
 ATTACH_STATUS="skipped (--no-upload)"
 if [[ $DO_UPLOAD -eq 1 ]]; then
+  step "qualify IPA Xcode build"
+  python3 -B scripts/ios_release_qualification.py build/ios/export/glassvow.ipa
+
   step "upload"
   asc builds upload --app "$ASC_APP_ID" --ipa build/ios/export/glassvow.ipa > "$LOGS/upload$BUILD.log" 2>&1
   tail -n 2 "$LOGS/upload$BUILD.log"

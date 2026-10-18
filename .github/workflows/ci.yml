@@ -179,7 +179,10 @@ jobs:
 
       - name: Test release identity pins
         if: steps.scope.outputs.run_release_identity_tests == 'true'
-        run: godot --headless -s res://tests/run_all.gd -- --tests=res://tests/test_release_identity.gd,res://tests/test_sentry_release.gd
+        run: |
+          python3 -B tests/test_ios_release_qualification.py
+          python3 -B tests/test_ios_release_qualification_duplicates.py
+          godot --headless -s res://tests/run_all.gd -- --tests=res://tests/test_release_identity.gd,res://tests/test_sentry_release.gd
 
       - name: Check developer-tool registry and coordinate conversion
         if: steps.scope.outputs.run_dev_tools == 'true'
