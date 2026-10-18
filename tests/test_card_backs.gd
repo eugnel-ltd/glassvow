@@ -35,6 +35,7 @@ static func run(fails: Array[String]) -> void:
 	_grant_list_is_read(fails)
 	_bake_cache_invalidation(fails)
 	_bake_jobs(fails)
+	_in_flight_reselection(fails)
 	_live_render_headless(fails)
 	_lab_wears_the_catalogue(fails)
 	CardBacks.use_renderer(Callable())
@@ -374,6 +375,41 @@ static func _bake_jobs(fails: Array[String]) -> void:
 	if b.got == null or CardBacks.cached("eclipse") != b.got:
 		fails.append("card backs: the chosen back's bake in flight was not kept")
 
+	CardBacks.use_renderer(Callable())
+	CardBacks.use_catalogue(null)
+	host_a.free()
+	host_b.free()
+
+
+## Switching A -> B -> A before either render finishes keeps A's existing
+## job, shares its result with every waiter, and drops B from the cache.
+static func _in_flight_reselection(fails: Array[String]) -> void:
+	CardBacks.use_catalogue(null)
+	var render: _FakeRender = _FakeRender.new()
+	CardBacks.use_renderer(render.render)
+	var host_a: Node = Node.new()
+	var host_b: Node = Node.new()
+	var prefs: Preferences = Preferences.read_from_disk(TEST_SETTINGS, TEST_LEGACY)
+	var a: _Caller = _Caller.start(host_a, "vault")
+	var a2: _Caller = _Caller.start(host_b, "vault")
+	var b: _Caller = _Caller.start(host_b, "eclipse")
+	if a.done or a2.done or b.done or render.calls != ["vault", "eclipse"]:
+		fails.append("card backs: reselection did not start two pending, shared jobs")
+	CardBacks.choose(prefs, "vault")
+	CardBacks.choose(prefs, "eclipse")
+	CardBacks.choose(prefs, "vault")
+	render.open.emit()
+	if not a.done or not a2.done or not b.done or a.got == null or a2.got != a.got \
+			or b.got == null:
+		fails.append("card backs: reselection lost an in-flight bake or its waiters")
+	if prefs.card_back != "vault" or CardBacks.cached("vault") != a.got \
+			or CardBacks.cached("eclipse") != null:
+		fails.append("card backs: A-B-A reselection did not cache only the final choice")
+	var repeat: _Caller = _Caller.start(host_b, "vault")
+	if not repeat.done or repeat.got != a.got or render.calls.size() != 2:
+		fails.append("card backs: reselected in-flight bake rendered again after completion")
+	# Release a repeated render too if the regression made the cache miss.
+	render.open.emit()
 	CardBacks.use_renderer(Callable())
 	CardBacks.use_catalogue(null)
 	host_a.free()
