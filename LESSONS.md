@@ -24,6 +24,12 @@ Entry format (newest first):
 - Done right: Audit each selected field against its source and prove that a wrong or missing required choice scores zero; keep free-text reasoning reported only.
 - Seen: 1× (2026-10-18)
 
+### Keep animation regression budgets on the simulation clock
+- Cause: Card and pile regressions compared wall-clock deadlines and frame samples with variable-step animations, so heavy host load could change which states they observed.
+- Fix: 431b6363 (issue #661), fixed-step children for the two affected suites.
+- Done right: Exercise the real timers, tweens and event sequence; verify the fixed delta across a wall delay and prove a slower flight still fails the original checks.
+- Seen: 1× (2026-10-18)
+
 ### Pass one platform snapshot through each shared update
 - Cause: The hologram's shared update and its pointer helper each built the same platform-facts dictionary, doubling that work every active frame.
 - Fix: bf786ce7b004179b75ed767a84c586ab414d53a7
