@@ -4428,6 +4428,15 @@ func _on_terminal_commit(_id: String) -> void:
 
 
 func _unlock_dawn_copy(id: String) -> String:
+	# Deeds keep prefixed compatibility IDs; the Dawn speaks the same
+	# hydrated display names as the card and relic surfaces.
+	var reward: Dictionary = {}
+	if id.begins_with("card:"):
+		reward = content.cards.get(id.trim_prefix("card:"), {})
+	elif id.begins_with("relic:"):
+		reward = content.relics.get(id.trim_prefix("relic:"), {})
+	if not reward.is_empty():
+		return str(reward.get("name", id.capitalize()))
 	match id:
 		"lamplighter": return Locale.active.t("ui.dawn.unlock.lamplighter")
 		"phials": return Locale.active.t("ui.dawn.unlock.phials")
