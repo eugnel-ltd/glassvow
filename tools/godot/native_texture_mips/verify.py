@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 
 LIMIT = 4194304
@@ -57,9 +58,9 @@ def layout(start, variant):
     return source, requests, copies
 
 
-def inspect(text, variant):
+def inspect(text, variant, metal=False):
     require('SCRIPT ERROR' not in text and 'Parse Error' not in text,'script diagnostics invalidate evidence')
-    starts,requests,copies,barriers,waits,readbacks,rejected,caps = {},{},{},{},{},{},{},{}
+    starts,requests,copies,barriers,waits,readbacks,rejected,caps,traits = {},{},{},{},{},{},{},{},{}
     for line in text.splitlines():
         if line.startswith(('GV_MIP_READBACK ','GV_MIP_REJECT ','GV_MIP_CAPABILITY ')):
             marker,raw = line.split(' ',1);item=json.loads(raw)
@@ -70,6 +71,9 @@ def inspect(text, variant):
                 require(item['case'] not in rejected,'duplicate rejection')
                 rejected[item['case']]=item;continue
             key=item['case'],item['layer'];require(key not in readbacks,'duplicate GPU readback');readbacks[key]=item
+        elif metal and line.startswith('GV_MIP_METAL_TRAITS '):
+            item=fields(line.split(' ',1)[1]);key=item['case'],item['layer']
+            require(key not in traits,'duplicate native Metal traits');traits[key]=item
         elif line.startswith(('GV_MIP_START ','GV_MIP_REQUEST ','GV_MIP_COPY ','GV_MIP_BARRIER ','GV_MIP_WAIT ')):
             marker,raw=line.split(' ',1);item=fields(raw);key=item['case'],item['layer']
             if marker=='GV_MIP_START':
@@ -77,9 +81,12 @@ def inspect(text, variant):
             else:
                 target={'GV_MIP_REQUEST':requests,'GV_MIP_COPY':copies,'GV_MIP_BARRIER':barriers,'GV_MIP_WAIT':waits}[marker]
                 target.setdefault(key,[]).append(item)
+        elif metal and line.startswith('GV_MIP_') and not line.startswith('GV_MIP_DONE '):
+            raise ValueError('unknown native Metal event')
     require(set(caps)==set(CASES),'physical format capability report incomplete')
     for name,cap in caps.items():
         require(type(cap['supported']) is bool and cap['usage']>0,'physical format support/usage missing')
+        require(not metal or cap['usage']==193,'Metal capability usage differs')
         require(tuple(cap[k] for k in ('width','height','depth','mips'))==CASES[name][:4],'capability case shape differs')
         wanted_format='RGBA8' if name.startswith('rgba8') else 'ASTC_4x4'
         require(cap['format_id']==(36 if wanted_format=='RGBA8' else 156),'physical DataFormat differs from pinned enum')
@@ -95,7 +102,12 @@ def inspect(text, variant):
         require(start['payload']==layout(start,'baseline')[0],'initializer full-chain bytes differ')
         expected_format=(36,1,1,4,0) if key[0].startswith('rgba8') else (156,4,4,1,0)
         require(tuple(start[k] for k in ('format','block_w','block_h','pixel_size','rshift'))==expected_format,'native format/block layout differs from pinned source')
-    require(set(requests)==set(copies)==set(barriers)==set(readbacks)==success,'missing or unexpected request/copy/barrier/readback')
+    require(set(requests)==set(copies)==set(readbacks)==success,'missing or unexpected request/copy/readback')
+    if metal:
+        require(set(traits)==success,'missing or unexpected native Metal traits')
+        require(not barriers,'default hazard-tracked Metal must have exactly zero explicit barriers')
+    else:
+        require(set(barriers)==success,'missing or unexpected native barriers')
     require(set(waits)<=success,'unexpected wait or partial rejected upload')
     require([line for line in text.splitlines() if line.startswith('GV_MIP_DONE ')] ==
             ['GV_MIP_DONE '+str(len(success))], 'complete native probe marker absent or duplicated')
@@ -110,7 +122,15 @@ def inspect(text, variant):
         require(tuple(start[name] for name in ('width','height','depth','mips'))==shape[:4],'wrong case dimensions/depth/mips')
         require(start['align']>0 and start['pitch_step']>0,'missing actual backend traits')
         require(start['forced']==int(key[0].endswith('-padded')),'wrong forced-profile marker')
-        if start['forced']:
+        if metal:
+            require(traits[key]=={'case':key[0],'layer':key[1],'native_pitch_step':1,
+                    'native_transfer_align':1,'honors_barriers':0},'native Metal traits differ from pinned default')
+            require(start['block_bytes']==(1 if key[0].startswith('rgba8') else 16),
+                    'native Metal block bytes differ from pinned format')
+            unit=start['block_bytes'] if start['block_w']!=1 else start['pixel_size']
+            require(start['pitch_step']==1 and start['align']==(512 if start['forced'] else unit),
+                    'Metal must use natural rows and recorded offset stress')
+        elif start['forced']:
             require(start['align']>=512 and start['pitch_step']>=256,'nonunit profile inactive')
         payload,wanted_requests,wanted_copies=layout(start,variant)
         require(start['payload']==payload,'complete raw mip/depth payload differs')
@@ -125,11 +145,11 @@ def inspect(text, variant):
             require(actual['offset']>=actual['local'] and actual['offset']%start['align']==0,'worker offset misaligned')
             worker_offset=actual['offset']-actual['local']
             require(worker_offsets.setdefault(actual['batch'],worker_offset)==worker_offset,'worker offset changed within one request')
-        for phase in ('begin','end'):
+        for phase in (() if metal else ('begin','end')):
             phase_events=[event for event in barriers[key] if event['phase']==phase]
             wanted=[{k:event[k] for k in ('batch','first_mip','mip_count')} for event in wanted_requests]
             require([{k:event[k] for k in ('batch','first_mip','mip_count')} for event in phase_events]==wanted,'mip barrier coverage differs')
-        require(len(barriers[key])==2*len(wanted_requests),'unexpected barrier phase')
+        require(metal or len(barriers[key])==2*len(wanted_requests),'unexpected barrier phase')
         require([event['batch'] for event in waits.get(key,[])]==list(range(len(wanted_requests)-1)),'earlier batches not completed before final dependency')
         readback=readbacks[key]
         require(readback['equal'] is True and readback['source_sha256']==readback['actual_sha256'],'actual GPU bytes differ')
@@ -158,7 +178,31 @@ def inspect(text, variant):
             require(len(case['requests'])>=2 and case['requests'][0]['first_mip']==0 and
                     case['requests'][0]['mip_count']==1,'base mip not separated from complete tail')
     require(not waits.get(('atomic-reject',0)),'rejected mip performed partial work')
-    return {'cases':result,'capabilities':caps}
+    report={'cases':result,'capabilities':caps}
+    if metal:
+        report.update(profile='macos-arm64-metal-v1',
+            native_traits={name+':'+str(layer):value for (name,layer),value in traits.items()})
+    return report
+
+
+def inspect_metal(text, variant):
+    require(variant in ('baseline','candidate'),'unknown Metal variant')
+    diagnostics=re.findall(r'(?m)^\s*(?:SCRIPT ERROR|ERROR|Parse Error):[^\n]*',text)
+    expected=['ERROR: One padded texture mip exceeds the bounded staging request.'] if variant=='candidate' and 'GV_MIP_REJECT ' in text else []
+    require([line.strip() for line in diagnostics]==expected,'unexpected native Metal error or missing rejection error')
+    return inspect(text,variant,metal=True)
+
+
+def compare_metal(before, after):
+    require(before.get('profile')==after.get('profile')=='macos-arm64-metal-v1','Metal profile missing')
+    require({key:value for key,value in before['native_traits'].items() if key!='atomic-reject:0'}==
+            after['native_traits'],'native Metal traits changed between variants')
+    report=compare(before,after)
+    report.update(profile='macos-arm64-metal-v1',
+        scope='desktop Metal RD component only; no iOS/A12, shipping-template, timing or memory qualification',
+        row_pitch_coverage='native tight rows and retained 512-byte offset stress; original CPU/Vulkan 256-byte row-pitch controls remain separate',
+        explicit_barrier_events=0)
+    return report
 
 
 def compare(before,after):

@@ -1,5 +1,44 @@
 # Complete mip-chain upload requests (#660)
 
+## Additive desktop Metal profile
+
+The Mac profile preserves every existing case, source payload and readback. All
+five ASTC cases use physical format 156, usage 193; RGBA uses format 36 with the
+same usage. The existing six-format stock screen covers this format set. Actual
+stock job `117769864313` reported `CAPABILITY_SUPPORTED`, component `NOT_RUN`;
+it establishes a venue, not Vigil upload evidence. Each future component pair
+requires a fresh same-host receipt and queries from both built binaries.
+
+`metal_observer.py` reuses the frozen original observer, retains 512-byte offset
+stress and records actual native pitch, transfer and barrier traits. Exact ed1
+Metal3 derives tight rows from logical block extents and ignores region.row_pitch.
+Removing the observer-only 256-byte pitch override restores that actual backend
+contract; it changes no production driver or patch. Original CPU/Vulkan 256-byte
+row-pitch controls remain separate and unchanged. Every case ID, odd extent,
+depth slice, layer, mip, copy, wait, byte hash and atomic rejection stays required.
+
+Ordinary Metal3 tracks hazards and reports its explicit-barrier trait false. The
+Mac verifier requires the observed false trait and exactly zero explicit barrier
+events; it rejects missing trait evidence. Experimental barrier overrides,
+fallback formats, unexpected native errors and corrupt provenance fail closed.
+
+The additive `metal-contract.json` binds original byte identities and the Mac
+regression frozen at `e413def4`. Source/synthetic controls do not claim native
+compilation or a GPU result. Desktop Metal component evidence cannot qualify
+iOS/A12, shipping templates, memory, timing or peak VRAM.
+
+The thin `metal.py` controller consumes the maintained shared allocator
+`native_texture_staging/mac_builder.py` and `metal.py` helpers. Those dependency
+hunks must be integrated before execution. It requires a same-job stock receipt,
+the sealed ed1 source archive and the exact allocator prerequisite. The shared
+helper queries each built binary before passing the original variant SCRIPT to
+it. Vigil then checks the complete native log before writing a component result.
+The scripts' frozen `EXPECT_REJECT` values differ intentionally; provenance binds
+both exact hashes. Only the candidate's exact atomic-rejection ERROR is required
+and permitted. Every other native ERROR remains fatal.
+
+## Original Linux component contract
+
 Vigil Hall's 2048×2048 ASTC 4×4 texture has 12 mip levels: a 4,194,304-byte
 base level and a 1,398,128-byte tail. Correcting the separate compressed staging
 allocator still leaves its complete 5,592,432-byte upload above the 4 MiB

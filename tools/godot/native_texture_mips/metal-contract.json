@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "profile": "macos-arm64-metal-v1",
+  "component": "vigil-bounded-mip-upload",
+  "approved_source_base": "e628e476f41ea14c23fa93a968a3c64eb397d36b",
+  "first_metal_fixture_commit": "e413def4e0987b53ac1a608606b5af7354500a16",
+  "first_metal_fixture_sha256": "ccd38de1fcdc0d80480cebdf40f967d1f32814ae0bb12747153744aa0d14e0bd",
+  "original_contract": "tools/godot/native_texture_mips/contract.json",
+  "protected_files": {
+    "tools/godot/native_texture_mips/observer.py": "37d7ecbb90016c38238b0dc79f02c1c68aab3b63ee01fdd31b723ace570dba57",
+    "tools/godot/native_texture_mips/probe.py": "1098c10034a8d9a88e5a234a587c403c2e88dc3242456c6b991560b1347ea233",
+    "tools/godot/patches/glassvow-660-bounded-mip-upload.patch": "e8a1c7b9f1cda377104faa3e8a6b0c2a733486a9833d2d418a90946aa1eb51e4",
+    "tests/native/test_texture_mip_batches.py": "9e9d4f597346b72b7a76a8e1306ab96af568e48ab813123fad119e3c35f5cd53",
+    "tests/native/texture_mip_batches.cpp.in": "a401fd0a8dec2aebad7205c67776d20ff7d0333e33c3165a1fd4f5d4bbc2dc92",
+    "tests/native/test_native_mip_runtime_config.py": "f5559e269c4b698bc85baf21e8a921f96fc7d0d5c6dc49f00fe6424feeddc372",
+    "tests/native/test_native_mip_hosted_regressions.py": "20bc9acb3c69860f8433be8b98638a2360b776006de82e4c3ded6d3d0a52d1b7"
+  },
+  "embedded_probe_script_sha256": "8f905cfe509b994fcdfe7ea9598e4537aea6923cbf23f94ff893534343e582c1",
+  "metal_sources": {
+    "drivers/metal/rendering_context_driver_metal.cpp": "a82d1f4637439327b5c95c74e116d0ca30148331206f1c2da277ef5d01e10ced",
+    "drivers/metal/rendering_device_driver_metal3.cpp": "efb4727ff7cca2fc2f3caa4d4e7be92215446a0041b0e32ca386edc0c917471f",
+    "drivers/metal/rendering_device_driver_metal.h": "a2fbb56762efcb67a17d24dbe42a7b0819a53c3ad5b62780b869849ebff75f54",
+    "drivers/metal/rendering_device_driver_metal.cpp": "3e1332160b0baacbbcb8499e13441564c71336730441aff9d22a39765c35b393",
+    "drivers/metal/metal3_objects.cpp": "801b417c2a3642cc839eb6f6c410cdc012d43f4bf1bbd079c5029094be22cd1e",
+    "drivers/metal/metal_objects_shared.h": "106aa1a090b350eac0027445440143693abae501a2e6197ca395545edf2a044e",
+    "drivers/metal/pixel_formats.cpp": "3cf8c5be5b4bc05c8e8daf89a80dbb2ea91ea1673a259b810da65a14090daa42",
+    "servers/rendering/rendering_device_driver.cpp": "e33892c5c721d008dd277e19848dce62bec84754d99bf3ea342df0939fa41f91"
+  },
+  "physical_formats": [
+    {
+      "format": "ASTC_4x4_UNORM",
+      "format_id": 156,
+      "usage": 193
+    },
+    {
+      "format": "RGBA8",
+      "format_id": 36,
+      "usage": 193
+    }
+  ],
+  "backend_contract": {
+    "metal_generation": 3,
+    "native_row_pitch_step": 1,
+    "native_transfer_alignment": 1,
+    "honors_pipeline_barriers": false,
+    "explicit_barrier_events": 0,
+    "hazard_tracking": "Tracked",
+    "synthetic_offset_alignment": 512,
+    "synthetic_row_pitch_override": false
+  },
+  "preserved_cases": [
+    "rgba8-mip-surrogate",
+    "vigil-astc",
+    "vigil-astc-padded",
+    "astc4-odd-padded",
+    "rgba8-depth-padded",
+    "single-exact-cap",
+    "atomic-reject"
+  ],
+  "shared_api": {
+    "directory": "tools/godot/native_texture_staging",
+    "builder": "mac_builder.build(args, shared_builder)",
+    "venue": "metal.verify_venue(receiptPath, head)",
+    "probe": "metal.run_probe(binaryPath, outputPath, receiptPath, head, scriptString)",
+    "provenance": "metal.verify_provenance(buildDict, commandsDict, receiptPath, head, expected_scripts=variantScriptHashes)"
+  },
+  "qualification": {
+    "desktop_component_only": true,
+    "shipping_template": false,
+    "ios_a12": false,
+    "memory_timing_peak_vram": false,
+    "active_stage_i": false
+  },
+  "limits": [
+    "Metal exercises native tight rows and retained 512-byte offset stress; original CPU/Vulkan 256-byte row-pitch controls remain separate.",
+    "Stock capability support is not component PASS.",
+    "Source and synthetic checks are not native compilation, upload or GPU readback results."
+  ],
+  "instrumented_rd_sha256": {
+    "baseline": "537c2038d2c9ae4acccee18a335715c77f17148a9759d822abae1ec4aa5437db",
+    "candidate": "e14c9335d90a98e8edbf22028b05d366220b7de2c8bcd9d3b4384657343ff762"
+  }
+}
