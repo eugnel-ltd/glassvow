@@ -24,4 +24,10 @@ Entry format (newest first):
 - Done right: Audit each selected field against its source and prove that a wrong or missing required choice scores zero; keep free-text reasoning reported only.
 - Seen: 1× (2026-10-18)
 
+### Keep animation regression budgets on the simulation clock
+- Cause: Card and pile regressions compared wall-clock deadlines and frame samples with variable-step animations, so heavy host load could change which states they observed.
+- Fix: 431b6363 (issue #661), fixed-step children for the two affected suites.
+- Done right: Exercise the real timers, tweens and event sequence; verify the fixed delta across a wall delay and prove a slower flight still fails the original checks.
+- Seen: 1× (2026-10-18)
+
 This repo's long record of solved problems is `docs/solutions/`, by category. Short repeatable lessons go here.
