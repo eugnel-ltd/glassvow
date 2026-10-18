@@ -47,3 +47,4 @@ tools/godot/patches/glassvow-661-native-boot-upload-cap.patch whitespace=-blank-
 *.pdb binary
 *.exe binary
 addons/sentry/bin/** binary
+assets/art/title-background/background-page-*.png filter=lfs diff=lfs merge=lfs -text

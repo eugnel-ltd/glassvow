@@ -12,7 +12,7 @@ extends RefCounted
 ## header and each layer's image block, sized as the engine uploads it.
 ##
 ## `BEFORE` holds the textures that already uploaded more when this guard
-## landed: 2D art imported lossless (the boot splash, the title's background,
+## landed: 2D art imported lossless (the boot splash,
 ## the scenes and the combat stages). Each is held at its upload, so none may
 ## grow and nothing may join them; bringing them under 4 MiB is a follow-up.
 
@@ -30,7 +30,6 @@ const DATA_FORMAT_WEBP: int = 2
 ## Uploads over 4 MiB when this guard landed (R3.3, 10 Oct 2026), in bytes.
 const BEFORE: Dictionary = {
 	"assets/art/title/splash.png": 11611200,
-	"assets/art/title-background/background.png": 4718592,
 	"assets/art/scenes/act4-node1.png": 4718592,
 	"assets/art/scenes/act4-node2.png": 4718592,
 	"assets/art/scenes/act4-node3.png": 4718592,
