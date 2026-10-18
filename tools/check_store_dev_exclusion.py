@@ -38,8 +38,9 @@ DEV_MUST_KEEP = STORE_MUST_KEEP + (
     ("tools/bench_combat.gd", "tools/bench_combat.gd"),
     ("tools/bench_map_open.gd", "tools/bench_map_open.gd"),
     ("tools/bench_map_rest.gd", "tools/bench_map_rest.gd"),
-    # bench_map_scene uses this global class rather than a literal preload.
-    ("tools/map_scene_proxy.gd", "tools/map_scene_proxy.gd"),
+)
+DEV_CLASS_DEPENDENCIES = (
+    ("tools/bench_map_scene.gd", "MapSceneProxy", "tools/map_scene_proxy.gd"),
 )
 DEV_TREE_PREFIXES = (
     DEV_PREFIX,
@@ -203,6 +204,25 @@ def check_pck_paths(paths: list[str]) -> list[str]:
     return errors
 
 
+def dev_dependency_errors(root: Path, tracked: list[str], globs: list[str]) -> list[str]:
+    errors: list[str] = []
+    for source, class_name, dependency in DEV_CLASS_DEPENDENCIES:
+        if source not in tracked or hits(globs, source):
+            continue
+        if not (root / source).is_file():
+            errors.append("tracked developer script is missing: %s" % source)
+            continue
+        text = "\n".join(line.split("#", 1)[0]
+                         for line in (root / source).read_text().splitlines())
+        if re.search(r"\b%s\b" % re.escape(class_name), text) is None:
+            continue
+        if dependency not in tracked:
+            errors.append("missing %s required by %s" % (dependency, source))
+        elif hits(globs, dependency):
+            errors.append("exclude_filter drops %s required by %s" % (dependency, source))
+    return errors
+
+
 def check_presets(root: Path, presets_path: Path) -> list[str]:
     errors: list[str] = []
     presets = parse_presets(presets_path.read_text())
@@ -257,6 +277,8 @@ def check_presets(root: Path, presets_path: Path) -> list[str]:
         for path, label in DEV_MUST_KEEP:
             if hits(globs, path):
                 errors.append("%s exclude_filter drops %s" % (name, label))
+        errors.extend("%s %s" % (name, error)
+                      for error in dev_dependency_errors(root, tracked, globs))
     for path in tracked:
         if not path.startswith(PROD_ROOTS) or path.startswith(DEV_PREFIX):
             continue
