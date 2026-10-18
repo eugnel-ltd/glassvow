@@ -6,6 +6,14 @@ Short live log of repeatable mistakes. Read it before every task. At most fiftee
 - The nightly audit bumps `Seen` (one count per day), merges duplicates, deletes obsolete entries and moves overflow to `docs/solutions/`.
 - A lesson seen on three different days moves by PR into the governing doc for its area (`docs/agents/ai-sdlc.md` for process, `AGENTS.md` for invariants, the matching skill under `.claude/skills/`, or a `docs/solutions/` entry otherwise) and leaves this file. This repo has no `docs/code-standards.md`.
 
+## Onboarding entry
+
+### Prewarm real fights through every development entry
+- Cause: The onboarding bench built the real combat screen but skipped the shared card-back bake and shader hold used by both normal fight entries.
+- Fix: Issue #661, onboarding card prewarm follow-up.
+- Done right: Exercise the actual onboarding entry with cold, chosen and cached backs, and check that its screen owns the generated-material hold.
+- Seen: 1× (2026-10-18)
+
 ## Recent entry
 
 ### Cast Variant values before passing them to typed GDScript boundaries
