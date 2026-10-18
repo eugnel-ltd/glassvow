@@ -6,7 +6,19 @@ Short live log of repeatable mistakes. Read it before every task. At most fiftee
 - The nightly audit bumps `Seen` (one count per day), merges duplicates, deletes obsolete entries and moves overflow to `docs/solutions/`.
 - A lesson seen on three different days moves by PR into the governing doc for its area (`docs/agents/ai-sdlc.md` for process, `AGENTS.md` for invariants, the matching skill under `.claude/skills/`, or a `docs/solutions/` entry otherwise) and leaves this file. This repo has no `docs/code-standards.md`.
 
-## Recent entry
+## Recent entries
+
+### Qualify native executable startup flags before runtime probes
+- Cause: Jobs `117733507995` and `117736644148` rejected `--path`; without the same path-override option, the pinned template also resets the working directory and clears `--script`.
+- Fix: Candidates `928d065e9ceb6ae8a9f3e77bd7ad4a80ab935909` (PR #790) and `2aaf938a6fb9ade3f9c009c2d35eb1b133cbdd93` (PR #793); corrected native/RD evidence remains pending.
+- Done right: Qualify the executable's startup contract, enable `disable_path_overrides=no` for both portable test variants, and record that configuration in the manifest with shipping qualification false.
+- Seen: 1× (2026-10-18)
+
+### Execute component preflight in its actual sparse checkout
+- Cause: Review of `665b9ab6c484c09920b3b43801f617cad9b9366b` hit `FileNotFoundError`: the allocator sparse checkout omitted `.github/workflows/native-texture-staging.yml`, which its runtime fixture reads.
+- Fix: Candidate `7ea1f8830416e5c9577a264cb2b547ea626180be` (PR #792); actual sparse controls at `3df78f7fd4ff8ff0a21977718eb646006b297149` pass. Corrected native/RD evidence remains pending.
+- Done right: Materialise the workflow's exact sparse patterns, include files read by fixtures, and execute component preflight in that resulting checkout; full-checkout success does not prove sparse completeness.
+- Seen: 1× (2026-10-18)
 
 ### Cast Variant values before passing them to typed GDScript boundaries
 - Cause: Dictionary values passed to typed bool parameters caused warning-as-error parse failures in two test additions.

@@ -2741,7 +2741,8 @@ func _card_choice(card: CardInst, id: String, disabled: bool = false) -> Diction
 	return {
 		"id": id,
 		"card": card,
-		"definition": game.rules.card_data(card),
+		"definition": game.rules.card_data(card, game.run,
+			game.cb if game.cb != null and not game.cb.over else null),
 		"disabled": disabled,
 	}
 
@@ -3310,7 +3311,7 @@ func _show_shop() -> void:
 		quest_item,
 		game.run.player.potions.has(""),
 		_shape,
-		_sfx_bus)
+		_sfx_bus, game.rules.card_data.bind(game.run, null))
 	screen.say(_shop_line(false))
 	screen.action_selected.connect(_on_shop_choice)
 	_show_route(screen, true, &"safeNodes")
@@ -3893,7 +3894,7 @@ func _show_pending_reward(quiet: bool = false) -> void:
 		_transitions.wipe()
 	_clear_route()
 	_reward_screen = RewardEmbers.new(rewards, content,
-		reward_kind, hue, _shape, true)
+		reward_kind, hue, _shape, true, game.rules.card_data.bind(game.run, null))
 	_reward_screen.claimed.connect(_on_reward_claimed)
 	_reward_screen.finished.connect(_on_reward_finished)
 	add_child(_reward_screen)
