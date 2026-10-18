@@ -18,4 +18,10 @@ Entry format (newest first):
 
 ## Entries
 
+### Pass one platform snapshot through each shared update
+- Cause: The hologram's shared update and its pointer helper each built the same platform-facts dictionary, doubling that work every active frame.
+- Fix: bf786ce7b004179b75ed767a84c586ab414d53a7
+- Done right: Read once after the still and forced-pose exits, then pass the snapshot to both consumers. Count provider calls through the real shared-update dispatch and check same-frame reuse.
+- Seen: 1× (2026-10-18)
+
 This repo's long record of solved problems is `docs/solutions/`, by category. Short repeatable lessons go here.
