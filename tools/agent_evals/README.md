@@ -6,6 +6,9 @@ of Anthropic's article "Automating eval design and hillclimbing with Claude" (th
 `build-eval` and `hillclimb` workflows). Pure Python standard library; no Godot.
 
 The first eval is `repo_traps` (see `evals/repo_traps/README.md`).
+Issue #694's separate, unapproved 80-case development candidate is
+`repo_traps_structured` (`evals/repo_traps_structured/README.md`). The original corpus and
+spent calibration evidence stay frozen.
 
 ## Commands
 
@@ -62,6 +65,19 @@ A claim applies to one field of the model's JSON reply and is one of two kinds:
 
 A case score is the share of claims that hold. Scoring is per output, so there is no pair to
 randomise. `validate_grader_spec` refuses a claim that is both kinds, or neither.
+
+**Programmatic fallback.** New specs may mark a judge claim `"report_only": true`. It must
+read a separate field, cannot be a gate and requires at least one scored claim. Reported
+fields are removed from scoring inputs; their verdicts, ballots, model identity and errors
+appear separately under `reported_verdicts`, `reported_judge_model_id` and
+`reported_judge_error`. They never alter the case score or pass status, and a failed or
+absent report-only judge does not remove a scored transcript. The input review labels these
+claims **Reported only (unscored)**. Approval binds a judge identity only when judge claims
+are scored; all existing inputs, surface, isolation and baseline guards still apply.
+
+A programmatic `equals` claim may use `"strict": true` for an exact scalar value and JSON
+type. This rejects alternatives, appended prose and booleans encoded as strings or numbers.
+Legacy claims retain their existing comparison and scored-judge behaviour.
 
 **Decision gate, programmatic first.** In a case with a boolean decision claim (`equals` true or
 false), a wrong or missing decision caps the case score at 0, so a coin-flip boolean cannot earn
