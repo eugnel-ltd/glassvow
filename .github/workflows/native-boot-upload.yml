@@ -5,10 +5,15 @@ on:
   pull_request:
     paths:
       - 'tests/native/boot_upload_baseline.gd'
+      - 'tests/native/boot_upload_calls/**'
+      - 'tests/native/rd_boot_upload_calls/**'
+      - 'tests/native/rd_boot_upload_capacity/**'
       - 'tests/native/test_boot_capture_cli.py'
       - 'tests/native/test_boot_capture_diagnostics.py'
       - 'tests/native/test_boot_contact_sheets.py'
       - 'tests/native/test_boot_runtime_configuration.py'
+      - 'tests/native/test_native_boot_call_setup.py'
+      - 'tests/native/test_native_boot_source_oracle.py'
       - tools/godot/patches/glassvow-661-native-boot-upload-cap.patch
       - tools/godot/native_boot_upload/**
       - .github/workflows/native-boot-upload.yml
@@ -46,15 +51,36 @@ jobs:
           mkdir -p work/native-boot-evidence
           work/native-boot-venv/bin/python tools/godot/native_boot_upload/test_harness.py \
             > work/native-boot-evidence/verifier-tests.log 2>&1
+          work/native-boot-venv/bin/python tools/godot/native_boot_upload/test_schema2_corrected_oracle.py
+          work/native-boot-venv/bin/python tools/godot/native_boot_upload/test_frame_capacity.py
           work/native-boot-venv/bin/python tests/native/test_boot_capture_cli.py
           work/native-boot-venv/bin/python tests/native/test_boot_capture_diagnostics.py
           work/native-boot-venv/bin/python tests/native/test_boot_contact_sheets.py
           work/native-boot-venv/bin/python tests/native/test_boot_runtime_configuration.py
+          work/native-boot-venv/bin/python tests/native/test_native_boot_call_setup.py
+          work/native-boot-venv/bin/python tests/native/test_native_boot_source_oracle.py
       - name: Verify the bounded patch applies to both exact source pins
         timeout-minutes: 3
         run: |
           work/native-boot-venv/bin/python tools/godot/native_boot_upload/check_patch.py \
             --output work/native-boot-evidence/source-check.json
+      - name: Compile exact native calls with recording backends and sanitizers
+        timeout-minutes: 5
+        run: |
+          work/native-boot-venv/bin/python tools/godot/native_boot_upload/native_calls.py \
+            --output work/native-boot-evidence/native-calls
+      - name: Set up unchanged stock engine for the source-oracle preflight
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.7.2
+          use-dotnet: false
+          include-templates: false
+      - name: Check source oracle against stock native boot before paired builds
+        timeout-minutes: 4
+        run: |
+          work/native-boot-venv/bin/python tools/godot/native_boot_upload/stock_oracle.py \
+            --binary "$(command -v godot)" --splash assets/art/title/splash.png \
+            --output work/native-boot-evidence/stock-oracle
       - name: Build exact stable baseline and patched candidate with identical flags
         timeout-minutes: 62
         run: |

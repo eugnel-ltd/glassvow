@@ -1,3 +1,261 @@
+--- a/drivers/gles3/rasterizer_gles3.cpp
++++ b/drivers/gles3/rasterizer_gles3.cpp
+@@ -491,7 +491,7 @@
+ 	glClear(GL_COLOR_BUFFER_BIT);
+ 
+ 	RID texture = texture_storage->texture_allocate();
+-	texture_storage->texture_2d_initialize(texture, p_image);
++	texture_storage->texture_2d_initialize_boot_image(texture, p_image);
+ 
+ 	Rect2 screenrect = RenderingServerTypes::get_splash_stretched_screen_rect(p_image->get_size(), win_size, p_stretch_mode);
+ 
+--- a/drivers/gles3/storage/texture_storage.cpp
++++ b/drivers/gles3/storage/texture_storage.cpp
+@@ -1036,7 +1036,19 @@
+ }
+ 
+ void TextureStorage::texture_2d_initialize(RID p_texture, const Ref<Image> &p_image) {
++	_texture_2d_initialize(p_texture, p_image, false);
++}
++
++void TextureStorage::texture_2d_initialize_boot_image(RID p_texture, const Ref<Image> &p_image) {
++	_texture_2d_initialize(p_texture, p_image, true);
++}
++
++void TextureStorage::_texture_2d_initialize(RID p_texture, const Ref<Image> &p_image, bool p_boot_image) {
+ 	ERR_FAIL_COND(p_image.is_null());
++	const Image::Format source_format = p_image->get_format();
++	p_boot_image = p_boot_image && !p_image->has_mipmaps() &&
++			(source_format == Image::FORMAT_L8 || source_format == Image::FORMAT_LA8 ||
++					source_format == Image::FORMAT_RGB8 || source_format == Image::FORMAT_RGBA8);
+ 
+ 	Texture texture;
+ 	texture.width = p_image->get_width();
+@@ -1044,6 +1056,7 @@
+ 	texture.alloc_width = texture.width;
+ 	texture.alloc_height = texture.height;
+ 	texture.mipmaps = p_image->get_mipmap_count() + 1;
++	texture.boot_image_upload = p_boot_image;
+ 	texture.format = p_image->get_format();
+ 	texture.type = Texture::TYPE_2D;
+ 	texture.target = GL_TEXTURE_2D;
+@@ -2068,6 +2081,20 @@
+ 					glTexImage3D(GL_TEXTURE_2D_ARRAY, i, internal_format, w, h, texture->layers, 0, format, type, nullptr);
+ 				}
+ 				glTexSubImage3D(GL_TEXTURE_2D_ARRAY, i, 0, 0, p_layer, w, h, 1, format, type, &read[ofs]);
++			} else if (texture->boot_image_upload && uint64_t(w) * h * 4 > 4 * 1024 * 1024) {
++				// Preserve the original full texture and normalized sampling. Only
++				// the native data submissions are split; no gutter pixels are needed.
++				const uint64_t limit = 4 * 1024 * 1024;
++				const int max_rows = int(limit / (uint64_t(w) * 4));
++				ERR_FAIL_COND(max_rows < 1 || size % h != 0);
++				const int count = (h + max_rows - 1) / max_rows;
++				const int64_t row_bytes = size / h;
++				glTexImage2D(blit_target, i, internal_format, w, h, 0, format, type, nullptr);
++				for (int band = 0; band < count; band++) {
++					const int first = int(int64_t(band) * h / count);
++					const int end = int(int64_t(band + 1) * h / count);
++					glTexSubImage2D(blit_target, i, 0, first, w, end - first, format, type, &read[ofs + first * row_bytes]);
++				}
+ 			} else {
+ 				glTexImage2D(blit_target, i, internal_format, w, h, 0, format, type, &read[ofs]);
+ 			}
+--- a/drivers/gles3/storage/texture_storage.h
++++ b/drivers/gles3/storage/texture_storage.h
+@@ -196,6 +196,7 @@
+ 	bool resize_to_po2 = false;
+ 
+ 	bool active = false;
++	bool boot_image_upload = false;
+ 	GLuint tex_id = 0;
+ 
+ 	uint16_t stored_cube_sides = 0;
+@@ -478,6 +479,7 @@
+ 	void _render_target_clear_sdf(RenderTarget *rt);
+ 	Rect2i _render_target_get_sdf_rect(const RenderTarget *rt) const;
+ 
++	void _texture_2d_initialize(RID p_texture, const Ref<Image> &p_image, bool p_boot_image);
+ 	void _texture_set_data(RID p_texture, const Ref<Image> &p_image, int p_layer, bool p_initialize);
+ 	void _texture_set_3d_data(RID p_texture, const Vector<Ref<Image>> &p_data, bool p_initialize);
+ 	void _texture_set_swizzle(Texture *p_texture, Image::Format p_real_format);
+@@ -548,6 +550,7 @@
+ 	virtual void texture_free(RID p_rid) override;
+ 
+ 	virtual void texture_2d_initialize(RID p_texture, const Ref<Image> &p_image) override;
++	void texture_2d_initialize_boot_image(RID p_texture, const Ref<Image> &p_image);
+ 	virtual void texture_2d_layered_initialize(RID p_texture, const Vector<Ref<Image>> &p_layers, RSE::TextureLayeredType p_layered_type) override;
+ 	virtual void texture_3d_initialize(RID p_texture, Image::Format, int p_width, int p_height, int p_depth, bool p_mipmaps, const Vector<Ref<Image>> &p_data) override;
+ 	virtual void texture_external_initialize(RID p_texture, int p_width, int p_height, uint64_t p_external_buffer) override;
+--- a/servers/rendering/renderer_rd/renderer_compositor_rd.cpp
++++ b/servers/rendering/renderer_rd/renderer_compositor_rd.cpp
+@@ -225,7 +225,7 @@
+ 	BlitPipelines blit_pipelines = _get_blit_pipelines_for_format(RD::get_singleton()->screen_get_framebuffer_format(DisplayServerEnums::MAIN_WINDOW_ID));
+ 
+ 	RID texture = texture_storage->texture_allocate();
+-	texture_storage->texture_2d_initialize(texture, p_image);
++	texture_storage->texture_2d_initialize_boot_image(texture, p_image);
+ 	RID rd_texture = texture_storage->texture_get_rd_texture(texture, false);
+ 
+ 	RD::SamplerState sampler_state;
+--- a/servers/rendering/renderer_rd/storage_rd/texture_storage.cpp
++++ b/servers/rendering/renderer_rd/storage_rd/texture_storage.cpp
+@@ -991,7 +991,19 @@
+ }
+ 
+ void TextureStorage::texture_2d_initialize(RID p_texture, const Ref<Image> &p_image) {
++	_texture_2d_initialize(p_texture, p_image, false);
++}
++
++void TextureStorage::texture_2d_initialize_boot_image(RID p_texture, const Ref<Image> &p_image) {
++	_texture_2d_initialize(p_texture, p_image, true);
++}
++
++void TextureStorage::_texture_2d_initialize(RID p_texture, const Ref<Image> &p_image, bool p_boot_image) {
+ 	ERR_FAIL_COND(p_image.is_null());
++	const Image::Format source_format = p_image->get_format();
++	p_boot_image = p_boot_image && !p_image->has_mipmaps() &&
++			(source_format == Image::FORMAT_L8 || source_format == Image::FORMAT_LA8 ||
++					source_format == Image::FORMAT_RGB8 || source_format == Image::FORMAT_RGBA8);
+ 
+ 	TextureToRDFormat ret_format;
+ 	Ref<Image> image = _validate_texture_format(p_image, ret_format);
+@@ -1038,8 +1050,17 @@
+ 	Vector<uint8_t> data = image->get_data(); //use image data
+ 	Vector<Vector<uint8_t>> data_slices;
+ 	data_slices.push_back(data);
+-	texture.rd_texture = RD::get_singleton()->texture_create(rd_format, rd_view, data_slices);
+-	ERR_FAIL_COND(texture.rd_texture.is_null());
++	if (p_boot_image) {
++		texture.rd_texture = RD::get_singleton()->texture_create(rd_format, rd_view);
++		ERR_FAIL_COND(texture.rd_texture.is_null());
++		if (RD::get_singleton()->texture_update_boot_image(texture.rd_texture, 0, data) != OK) {
++			RD::get_singleton()->free_rid(texture.rd_texture);
++			ERR_FAIL_MSG("Failed to upload the native boot image.");
++		}
++	} else {
++		texture.rd_texture = RD::get_singleton()->texture_create(rd_format, rd_view, data_slices);
++		ERR_FAIL_COND(texture.rd_texture.is_null());
++	}
+ 	if (texture.rd_format_srgb != RD::DATA_FORMAT_MAX) {
+ 		rd_view.format_override = texture.rd_format_srgb;
+ 		texture.rd_texture_srgb = RD::get_singleton()->texture_create_shared(rd_view, texture.rd_texture);
+--- a/servers/rendering/renderer_rd/storage_rd/texture_storage.h
++++ b/servers/rendering/renderer_rd/storage_rd/texture_storage.h
+@@ -549,6 +549,8 @@
+ 		// 128 is the max size of a push constant. We can replace "pad" but we can't add any more.
+ 	};
+ 
++	void _texture_2d_initialize(RID p_texture, const Ref<Image> &p_image, bool p_boot_image);
++
+ public:
+ 	static TextureStorage *get_singleton();
+ 
+@@ -589,6 +591,7 @@
+ 	virtual void texture_free(RID p_rid) override;
+ 
+ 	virtual void texture_2d_initialize(RID p_texture, const Ref<Image> &p_image) override;
++	void texture_2d_initialize_boot_image(RID p_texture, const Ref<Image> &p_image);
+ 	virtual void texture_2d_layered_initialize(RID p_texture, const Vector<Ref<Image>> &p_layers, RSE::TextureLayeredType p_layered_type) override;
+ 	virtual void texture_3d_initialize(RID p_texture, Image::Format, int p_width, int p_height, int p_depth, bool p_mipmaps, const Vector<Ref<Image>> &p_data) override;
+ 	virtual void texture_external_initialize(RID p_texture, int p_width, int p_height, uint64_t p_external_buffer) override;
+--- a/servers/rendering/rendering_device.cpp
++++ b/servers/rendering/rendering_device.cpp
+@@ -2252,6 +2252,14 @@
+ }
+ 
+ Error RenderingDevice::texture_update(RID p_texture, uint32_t p_layer, const Vector<uint8_t> &p_data) {
++	return _texture_update(p_texture, p_layer, p_data, false);
++}
++
++Error RenderingDevice::texture_update_boot_image(RID p_texture, uint32_t p_layer, const Vector<uint8_t> &p_data) {
++	return _texture_update(p_texture, p_layer, p_data, true);
++}
++
++Error RenderingDevice::_texture_update(RID p_texture, uint32_t p_layer, const Vector<uint8_t> &p_data, bool p_boot_image) {
+ 	ERR_RENDER_THREAD_GUARD_V(ERR_UNAVAILABLE);
+ 
+ 	ERR_FAIL_COND_V_MSG(draw_list.active, ERR_INVALID_PARAMETER, "Updating textures is forbidden during creation of a draw list.");
+@@ -2295,7 +2303,24 @@
+ 	uint32_t pixel_rshift = get_compressed_image_format_pixel_rshift(texture->format);
+ 	uint32_t block_size = get_compressed_image_format_block_byte_size(texture->format);
+ 
+-	uint32_t region_size = texture_upload_region_size_px;
++	uint32_t region_width = texture_upload_region_size_px;
++	uint32_t region_height = texture_upload_region_size_px;
++	const uint32_t boot_upload_limit = MIN(4u * 1024 * 1024, upload_staging_buffers.block_size);
++	if (p_boot_image) {
++		// This concrete entry point is only for Main's uncompressed PNG boot
++		// image. Preserve one full texture, original sampler and one draw.
++		ERR_FAIL_COND_V(texture->type != TEXTURE_TYPE_2D || texture->layers != 1 ||
++				texture->mipmaps != 1 || texture->depth != 1 || p_layer != 0 ||
++				block_w != 1 || block_h != 1 || pixel_rshift != 0 ||
++				(pixel_size != 1 && pixel_size != 2 && pixel_size != 4), ERR_INVALID_PARAMETER);
++		const uint32_t pitch_step = driver->api_trait_get(RDD::API_TRAIT_TEXTURE_DATA_ROW_PITCH_STEP);
++		const uint64_t conservative_pitch = STEPIFY(uint64_t(width) * 4, uint64_t(pitch_step));
++		ERR_FAIL_COND_V(conservative_pitch == 0 || conservative_pitch > boot_upload_limit, ERR_INVALID_PARAMETER);
++		const uint32_t max_rows = boot_upload_limit / conservative_pitch;
++		const uint32_t count = (height + max_rows - 1) / max_rows;
++		region_width = width;
++		region_height = (height + count - 1) / count;
++	}
+ 
+ 	const uint8_t *read_ptr = p_data.ptr();
+ 
+@@ -2319,18 +2344,21 @@
+ 
+ 		for (uint32_t z = 0; z < depth; z++) {
+ 			const uint8_t *read_ptr_mipmap_layer = read_ptr_mipmap + (tight_mip_size / depth) * z;
+-			for (uint32_t y = 0; y < height; y += region_size) {
+-				for (uint32_t x = 0; x < width; x += region_size) {
+-					uint32_t region_w = MIN(region_size, width - x);
+-					uint32_t region_h = MIN(region_size, height - y);
+-
+-					uint32_t region_logic_w = MIN(region_size, logic_width - x);
+-					uint32_t region_logic_h = MIN(region_size, logic_height - y);
++			for (uint32_t y = 0, band = 0; y < height; band++) {
++				const uint32_t band_count = (height + region_height - 1) / region_height;
++				const uint32_t next_y = p_boot_image ? uint32_t(uint64_t(band + 1) * height / band_count) : MIN(y + region_height, height);
++				for (uint32_t x = 0; x < width; x += region_width) {
++					uint32_t region_w = MIN(region_width, width - x);
++					uint32_t region_h = next_y - y;
++
++					uint32_t region_logic_w = MIN(region_width, logic_width - x);
++					uint32_t region_logic_h = MIN(region_h, logic_height - y);
+ 
+ 					uint32_t region_pitch = (region_w * pixel_size * block_w) >> pixel_rshift;
+ 					uint32_t pitch_step = driver->api_trait_get(RDD::API_TRAIT_TEXTURE_DATA_ROW_PITCH_STEP);
+ 					region_pitch = STEPIFY(region_pitch, pitch_step);
+ 					uint32_t to_allocate = region_pitch * region_h;
++					ERR_FAIL_COND_V(p_boot_image && to_allocate > boot_upload_limit, ERR_INVALID_PARAMETER);
+ 					uint32_t alloc_offset = 0, alloc_size = 0;
+ 					StagingRequiredAction required_action;
+ 					Error err = _staging_buffer_allocate(upload_staging_buffers, to_allocate, required_align, alloc_offset, alloc_size, required_action, false);
+@@ -2372,6 +2400,7 @@
+ 
+ 					upload_staging_buffers.blocks.write[upload_staging_buffers.current].fill_amount = alloc_offset + alloc_size;
+ 				}
++				y = next_y;
+ 			}
+ 		}
+ 
+--- a/servers/rendering/rendering_device.h
++++ b/servers/rendering/rendering_device.h
+@@ -413,6 +413,7 @@
+ 	uint32_t _texture_layer_count(Texture *p_texture) const;
+ 	uint32_t _texture_alignment(Texture *p_texture) const;
+ 	Error _texture_initialize(RID p_texture, uint32_t p_layer, const Vector<uint8_t> &p_data, RDD::TextureLayout p_dst_layout, bool p_immediate_flush);
++	Error _texture_update(RID p_texture, uint32_t p_layer, const Vector<uint8_t> &p_data, bool p_boot_image);
+ 	void _texture_check_shared_fallback(Texture *p_texture);
+ 	void _texture_update_shared_fallback(RID p_texture_rid, Texture *p_texture, bool p_for_writing);
+ 	void _texture_free_shared_fallback(Texture *p_texture);
+@@ -465,6 +466,7 @@
+ 	RID texture_create_from_extension(TextureType p_type, DataFormat p_format, TextureSamples p_samples, BitField<RenderingDevice::TextureUsageBits> p_usage, uint64_t p_image, uint64_t p_width, uint64_t p_height, uint64_t p_depth, uint64_t p_layers, uint64_t p_mipmaps = 1);
+ 	RID texture_create_shared_from_slice(const TextureView &p_view, RID p_with_texture, uint32_t p_layer, uint32_t p_mipmap, uint32_t p_mipmaps = 1, TextureSliceType p_slice_type = TEXTURE_SLICE_2D, uint32_t p_layers = 0);
+ 	Error texture_update(RID p_texture, uint32_t p_layer, const Vector<uint8_t> &p_data);
++	Error texture_update_boot_image(RID p_texture, uint32_t p_layer, const Vector<uint8_t> &p_data);
+ 	Vector<uint8_t> texture_get_data(RID p_texture, uint32_t p_layer); // CPU textures will return immediately, while GPU textures will most likely force a flush
+ 	Error texture_get_data_async(RID p_texture, uint32_t p_layer, const Callable &p_callback);
+ 
 --- a/servers/rendering/rendering_server_types.h
 +++ b/servers/rendering/rendering_server_types.h
 @@ -156,6 +156,68 @@
@@ -69,205 +327,6 @@
  // Helper for RSE::SplashStretchMode, put here for convenience.
  inline Rect2 get_splash_stretched_screen_rect(const Size2 &p_image_size, const Size2 &p_window_size, RSE::SplashStretchMode p_stretch_mode) {
  	Size2 imgsize = p_image_size;
---- a/servers/rendering/renderer_rd/renderer_compositor_rd.cpp
-+++ b/servers/rendering/renderer_rd/renderer_compositor_rd.cpp
-@@ -224,9 +224,10 @@
- 
- 	BlitPipelines blit_pipelines = _get_blit_pipelines_for_format(RD::get_singleton()->screen_get_framebuffer_format(DisplayServerEnums::MAIN_WINDOW_ID));
- 
--	RID texture = texture_storage->texture_allocate();
--	texture_storage->texture_2d_initialize(texture, p_image);
--	RID rd_texture = texture_storage->texture_get_rd_texture(texture, false);
-+	Vector<RenderingServerTypes::BootImageSlice> slices = RenderingServerTypes::get_boot_image_slices(p_image, false);
-+	ERR_FAIL_COND(slices.is_empty());
-+	Vector<RID> textures;
-+	Vector<RID> uniform_sets;
- 
- 	RD::SamplerState sampler_state;
- 	sampler_state.min_filter = p_use_filter ? RD::SAMPLER_FILTER_LINEAR : RD::SAMPLER_FILTER_NEAREST;
-@@ -234,8 +235,28 @@
- 	sampler_state.max_lod = 0;
- 	RID sampler = RD::get_singleton()->sampler_create(sampler_state);
- 
--	RID uset;
--	{
-+	auto free_boot_resources = [&]() {
-+		for (const RID &uniform_set : uniform_sets) {
-+			RD::get_singleton()->free_rid(uniform_set);
-+		}
-+		for (const RID &texture : textures) {
-+			texture_storage->texture_free(texture);
-+		}
-+		if (sampler.is_valid()) {
-+			RD::get_singleton()->free_rid(sampler);
-+		}
-+	};
-+	ERR_FAIL_COND(sampler.is_null());
-+	for (int i = 0; i < slices.size(); i++) {
-+		RID texture = texture_storage->texture_allocate();
-+		texture_storage->texture_2d_initialize(texture, slices[i].image);
-+		RID rd_texture = texture_storage->texture_get_rd_texture(texture, false);
-+		if (rd_texture.is_null()) {
-+			free_boot_resources();
-+			ERR_FAIL_MSG("Failed to initialize a native boot image page.");
-+		}
-+		textures.push_back(texture);
-+		slices.write[i].image.unref();
- 		Vector<RD::Uniform> uniforms;
- 		RD::Uniform u;
- 		u.uniform_type = RD::UNIFORM_TYPE_SAMPLER_WITH_TEXTURE;
-@@ -243,7 +264,12 @@
- 		u.append_id(sampler);
- 		u.append_id(rd_texture);
- 		uniforms.push_back(u);
--		uset = RD::get_singleton()->uniform_set_create(uniforms, blit.shader.version_get_shader(blit.shader_version, BLIT_MODE_NORMAL), 0);
-+		RID uniform_set = RD::get_singleton()->uniform_set_create(uniforms, blit.shader.version_get_shader(blit.shader_version, BLIT_MODE_NORMAL), 0);
-+		if (uniform_set.is_null()) {
-+			free_boot_resources();
-+			ERR_FAIL_MSG("Failed to bind a native boot image page.");
-+		}
-+		uniform_sets.push_back(uniform_set);
- 	}
- 
- 	Size2 window_size = DisplayServer::get_singleton()->window_get_size();
-@@ -269,10 +295,13 @@
- 	}
- 
- 	RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin_for_screen(DisplayServerEnums::MAIN_WINDOW_ID, clear_color);
-+	if (draw_list == RD::INVALID_ID) {
-+		free_boot_resources();
-+		return;
-+	}
- 
- 	RD::get_singleton()->draw_list_bind_render_pipeline(draw_list, blit_pipelines.pipelines[BLIT_MODE_NORMAL_ALPHA]);
- 	RD::get_singleton()->draw_list_bind_index_array(draw_list, blit.array);
--	RD::get_singleton()->draw_list_bind_uniform_set(draw_list, uset, 0);
- 
- 	const int screen_rotation_degrees = -RD::get_singleton()->screen_get_pre_rotation_degrees(DisplayServerEnums::MAIN_WINDOW_ID);
- 	float screen_rotation = Math::deg_to_rad((float)screen_rotation_degrees);
-@@ -299,15 +328,27 @@
- 	blit.push_constant.reference_multiplier = reference_multiplier;
- 	blit.push_constant.output_max_value = output_max_value;
- 
--	RD::get_singleton()->draw_list_set_push_constant(draw_list, &blit.push_constant, sizeof(BlitPushConstant));
--	RD::get_singleton()->draw_list_draw(draw_list, true);
-+	for (int i = 0; i < slices.size(); i++) {
-+		const Rect2 page_rect = slices.size() == 1 ? screenrect : RenderingServerTypes::get_boot_image_slice_screen_rect(screenrect, slices[i], p_image->get_height());
-+		const Rect2 &source_rect = slices[i].source_rect;
-+		blit.push_constant.src_rect[0] = source_rect.position.x;
-+		blit.push_constant.src_rect[1] = source_rect.position.y;
-+		blit.push_constant.src_rect[2] = source_rect.size.x;
-+		blit.push_constant.src_rect[3] = source_rect.size.y;
-+		blit.push_constant.dst_rect[0] = page_rect.position.x;
-+		blit.push_constant.dst_rect[1] = page_rect.position.y;
-+		blit.push_constant.dst_rect[2] = page_rect.size.x;
-+		blit.push_constant.dst_rect[3] = page_rect.size.y;
-+		RD::get_singleton()->draw_list_bind_uniform_set(draw_list, uniform_sets[i], 0);
-+		RD::get_singleton()->draw_list_set_push_constant(draw_list, &blit.push_constant, sizeof(BlitPushConstant));
-+		RD::get_singleton()->draw_list_draw(draw_list, true);
-+	}
- 
- 	RD::get_singleton()->draw_list_end();
- 
- 	RD::get_singleton()->swap_buffers(true);
- 
--	texture_storage->texture_free(texture);
--	RD::get_singleton()->free_rid(sampler);
-+	free_boot_resources();
- }
- 
- RendererCompositorRD *RendererCompositorRD::singleton = nullptr;
---- a/drivers/gles3/rasterizer_gles3.cpp
-+++ b/drivers/gles3/rasterizer_gles3.cpp
-@@ -490,8 +490,8 @@
- 	glClearColor(p_color.r, p_color.g, p_color.b, OS::get_singleton()->is_layered_allowed() ? p_color.a : 1.0);
- 	glClear(GL_COLOR_BUFFER_BIT);
- 
--	RID texture = texture_storage->texture_allocate();
--	texture_storage->texture_2d_initialize(texture, p_image);
-+	Vector<RenderingServerTypes::BootImageSlice> slices = RenderingServerTypes::get_boot_image_slices(p_image, true);
-+	ERR_FAIL_COND(slices.is_empty());
- 
- 	Rect2 screenrect = RenderingServerTypes::get_splash_stretched_screen_rect(p_image->get_size(), win_size, p_stretch_mode);
- 
-@@ -508,16 +508,32 @@
- 	screenrect.position /= win_size;
- 	screenrect.size /= win_size;
- 
--	GLES3::Texture *t = texture_storage->get_texture(texture);
--	t->gl_set_filter(p_use_filter ? RSE::CANVAS_ITEM_TEXTURE_FILTER_LINEAR : RSE::CANVAS_ITEM_TEXTURE_FILTER_NEAREST);
--	glActiveTexture(GL_TEXTURE0);
--	glBindTexture(GL_TEXTURE_2D, t->tex_id);
--	copy_effects->copy_to_rect(screenrect);
-+	Vector<RID> textures;
-+	for (int i = 0; i < slices.size(); i++) {
-+		RID texture = texture_storage->texture_allocate();
-+		texture_storage->texture_2d_initialize(texture, slices[i].image);
-+		textures.push_back(texture);
-+		slices.write[i].image.unref();
-+	}
-+	for (int i = 0; i < slices.size(); i++) {
-+		GLES3::Texture *t = texture_storage->get_texture(textures[i]);
-+		glActiveTexture(GL_TEXTURE0);
-+		glBindTexture(GL_TEXTURE_2D, t->tex_id);
-+		t->gl_set_filter(p_use_filter ? RSE::CANVAS_ITEM_TEXTURE_FILTER_LINEAR : RSE::CANVAS_ITEM_TEXTURE_FILTER_NEAREST);
-+		const Rect2 page_rect = slices.size() == 1 ? screenrect : RenderingServerTypes::get_boot_image_slice_screen_rect(screenrect, slices[i], p_image->get_height());
-+		if (slices.size() == 1) {
-+			copy_effects->copy_to_rect(screenrect);
-+		} else {
-+			copy_effects->copy_to_rect_from_rect(page_rect, slices[i].source_rect);
-+		}
-+	}
- 	glBindTexture(GL_TEXTURE_2D, 0);
- 
- 	gl_end_frame(true);
- 
--	texture_storage->texture_free(texture);
-+	for (const RID &texture : textures) {
-+		texture_storage->texture_free(texture);
-+	}
- }
- 
- #endif // GLES3_ENABLED
---- a/drivers/gles3/effects/copy_effects.cpp
-+++ b/drivers/gles3/effects/copy_effects.cpp
-@@ -128,6 +128,16 @@
- 	draw_screen_quad();
- }
- 
-+void CopyEffects::copy_to_rect_from_rect(const Rect2 &p_dst, const Rect2 &p_src) {
-+	bool success = copy.shader.version_bind_shader(copy.shader_version, CopyShaderGLES3::MODE_COPY_SECTION_SOURCE);
-+	if (!success) {
-+		return;
-+	}
-+	copy.shader.version_set_uniform(CopyShaderGLES3::COPY_SECTION, p_dst.position.x, p_dst.position.y, p_dst.size.x, p_dst.size.y, copy.shader_version, CopyShaderGLES3::MODE_COPY_SECTION_SOURCE);
-+	copy.shader.version_set_uniform(CopyShaderGLES3::SOURCE_SECTION, p_src.position.x, p_src.position.y, p_src.size.x, p_src.size.y, copy.shader_version, CopyShaderGLES3::MODE_COPY_SECTION_SOURCE);
-+	draw_screen_quad();
-+}
-+
- void CopyEffects::copy_to_rect_3d(const Rect2 &p_rect, float p_layer, int p_type, float p_lod, bool p_linear_to_srgb) {
- 	ERR_FAIL_COND(p_type != Texture::TYPE_LAYERED && p_type != Texture::TYPE_3D);
- 
---- a/drivers/gles3/effects/copy_effects.h
-+++ b/drivers/gles3/effects/copy_effects.h
-@@ -61,6 +61,7 @@
- 
- 	// These functions assume that a framebuffer and texture are bound already. They only manage the shader, uniforms, and vertex array.
- 	void copy_to_rect(const Rect2 &p_rect, bool p_linear_to_srgb = false);
-+	void copy_to_rect_from_rect(const Rect2 &p_dst, const Rect2 &p_src);
- 	void copy_to_rect_3d(const Rect2 &p_rect, float p_layer, int p_type, float p_lod = 0.0f, bool p_linear_to_srgb = false);
- 	void copy_with_lens_distortion(const Rect2 &p_rect, float p_layer, const Vector2 &p_eye_center, float p_k1, float p_k2, float p_upscale, float p_aspect_ration, bool p_linear_to_srgb = false);
- 	void copy_to_and_from_rect(const Rect2 &p_rect);
---- a/tests/test_main.cpp
-+++ b/tests/test_main.cpp
-@@ -47,6 +47,7 @@
- #include "tests/force_link.gen.h"
- #include "tests/signal_watcher.h"
- #include "tests/test_macros.h"
-+#include "tests/servers/test_boot_image_slices.h"
- #include "tests/test_utils.h"
- 
- #ifdef TOOLS_ENABLED
 --- /dev/null
 +++ b/tests/servers/test_boot_image_slices.h
 @@ -0,0 +1,80 @@
@@ -351,3 +410,13 @@
 +}
 +}
 +}
+--- a/tests/test_main.cpp
++++ b/tests/test_main.cpp
+@@ -47,6 +47,7 @@
+ #include "tests/force_link.gen.h"
+ #include "tests/signal_watcher.h"
+ #include "tests/test_macros.h"
++#include "tests/servers/test_boot_image_slices.h"
+ #include "tests/test_utils.h"
+ 
+ #ifdef TOOLS_ENABLED

@@ -57,6 +57,8 @@ CHECKS = (
     Check("run_gdscript_gate_tests", "Test GDScript gate failures", ("ci_infra",)),
     Check("run_locale_font", "Check zh-Hant bundled font coverage", ("locale_content",)),
     Check("run_locale_coverage", "Check narrative locale coverage", ("locale_content",)),
+    Check("run_painting_export", "Audit generated painting uploads in a real pack", (
+        "godot_code", "release_platform", "conservative_core")),
     Check("run_store_exclusion", "Check store Dev-tree exclusion", ("release_platform",)),
     Check("run_store_gate_tests", "Test store Dev-tree exclusion gate", ("release_platform",)),
     Check("run_export_paths", "Check exported scripts load only exported paths", (

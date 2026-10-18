@@ -140,7 +140,7 @@ floor device without a patch.
 ## Native boot upload cap candidate (#660 / #661)
 
 `glassvow-661-native-boot-upload-cap.patch` is a separate runtime source patch
-for lossless native PNG boot pages. Its source pins, immutable original PNG,
+for bounded native PNG boot transfers into the original full texture. Its source pins, immutable original PNG,
 CPU tests and bounded portable build/render proof are documented in
 [`../native_boot_upload/README.md`](../native_boot_upload/README.md).
 

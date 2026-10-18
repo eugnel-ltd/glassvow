@@ -1,0 +1,212 @@
+[
+  {
+    "path": "res://assets/art/scenes/act4-node1.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": false,
+    "source_sha256": "8e5d12eeb52da5c4f307b7cc9d4d6c7a5dd9e0dd4ebfafd7bda7eb8daf326c57",
+    "import_sha256": "5231f5fbdd9e2f68b29b5fd2aea3091ed89d47ab033dd8b3e91c7ccefb6330e4",
+    "rgba_sha256": "720f19af0ec8c03a4c7be3fdeac037713d29fb42acc55d13773cd987febcca3f",
+    "artifact": "res://.godot/imported/act4-node1.png-a36dae9fbaa2195fc7df1d9da2b8820f.ctex"
+  },
+  {
+    "path": "res://assets/art/scenes/act4-node2.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": false,
+    "source_sha256": "769219699e326967dc4f156a0088164e14f7d2e4cfe7dc4d828697b60a979351",
+    "import_sha256": "c5c8067dbf3a8ca97243962c32bb0a2cc55ddc18a025757ecf6ef099be2ab335",
+    "rgba_sha256": "c85c7a198d1b9b2b2bf93dd7fbaa9205654e5c3219d5180ddae441ec398cf4b5",
+    "artifact": "res://.godot/imported/act4-node2.png-fa7cdb7f373ea882354113e6ea499b85.ctex"
+  },
+  {
+    "path": "res://assets/art/scenes/act4-node3.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": false,
+    "source_sha256": "b669fb4ad4cab6cc7eb36656e4e4589a21fae2909147a3d70b2de6afc317dce2",
+    "import_sha256": "974c4c1a6db75dc552fa6c6cbac9ac792a5ae3f60128f552c834d60e371f2a85",
+    "rgba_sha256": "ee3174d03bad900281d2d6118f4b5f5d88d63b239156860163268ec438e01f90",
+    "artifact": "res://.godot/imported/act4-node3.png-a7ea36c8923cd2c604792fac4577132b.ctex"
+  },
+  {
+    "path": "res://assets/art/scenes/act4-node4.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": false,
+    "source_sha256": "f5f046b87f7eb382e33a0c2ef0b7ff5e524573b902102f3415ef1642e60012c1",
+    "import_sha256": "5368464d06c96af4e588b2f12187874c83ec0c086e988e0baeef4ff6142af112",
+    "rgba_sha256": "36abd634a334f7f1326a62f7a779d9e11672d25698bc2f095691081a6347d10a",
+    "artifact": "res://.godot/imported/act4-node4.png-d7749d2d2b30b68050a27f52d067a230.ctex"
+  },
+  {
+    "path": "res://assets/art/scenes/act4-node5.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": false,
+    "source_sha256": "c14c46539659399eb09b1e629896be07b0a2add61ba6beb92a9b79c2de53ca5c",
+    "import_sha256": "bbb1528d36feea48d7c6a9e4fc147f982484e4d2ba7990d41dd56ec5070b3711",
+    "rgba_sha256": "1ccd48a13c3c5e7efc83fc663a99eba06d530317143126a5f3c7392c8c99bd69",
+    "artifact": "res://.godot/imported/act4-node5.png-9343c9d6ef51f86a9aa1222c73ea89e6.ctex"
+  },
+  {
+    "path": "res://assets/art/scenes/finale-swap.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": false,
+    "source_sha256": "e971e6170940e3baf70ffdf66bdc12458b952b08a449d0dac6c7cc641011ab78",
+    "import_sha256": "89bc967200b8aaa1c2448e1365388283924985972a33cb88caadad742a9b6c79",
+    "rgba_sha256": "7ddb827b247b6598dd5a2665a007e40c7cfc55b6d09c44fbc3787364f23d0f5f",
+    "artifact": "res://.godot/imported/finale-swap.png-408cc5281d3c5ee9077e9df945bc07b8.ctex"
+  },
+  {
+    "path": "res://assets/art/scenes/night-stall.png",
+    "width": 1512,
+    "height": 1040,
+    "alpha": false,
+    "source_sha256": "98794ea45d735507b84265b606cf206fd382893abc341584bcfd567392a306c9",
+    "import_sha256": "2725e93d7283ab9d06644e0cce0736481c3797c61f3378da5a3608fa7ee895c5",
+    "rgba_sha256": "f48711f9a690ac8735e5241a251e005b17a4e045f032497d6de86510c5b10d7f",
+    "artifact": "res://.godot/imported/night-stall.png-823913d38f1bb6a50ffcba907065cba9.ctex"
+  },
+  {
+    "path": "res://assets/art/scenes/opening-hearth.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": false,
+    "source_sha256": "b97cf7e8315e62d50092f2d7299e071ca80c2381c73efccf2f7165223de9e281",
+    "import_sha256": "c18d8eb18417c6dae5d07dff0c21e25165c3a76099fa6199846820c97bcf0c43",
+    "rgba_sha256": "553ddc20b4d6ea839d1a2fdf81be746a3ee06febc0c04613ea170e921af4f8ae",
+    "artifact": "res://.godot/imported/opening-hearth.png-57ad992fc0d689b59b93d5c6b5c070d8.ctex"
+  },
+  {
+    "path": "res://assets/art/scenes/unsealing-door-open.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": false,
+    "source_sha256": "5e4b32ce769804d2f939765a63d75e52497ae27da144d62aa4035079f451f76c",
+    "import_sha256": "10c98671fce08fb58ee7bf2228e92534acf3a239f7d799467eab188ba0ea02e7",
+    "rgba_sha256": "cb79ace851a47aeb0bbd1c03ba0cb0cc33b825c6bdded080c38bd81ebbc77fc5",
+    "artifact": "res://.godot/imported/unsealing-door-open.png-9c6ff5ddcaae6ed063630dd41e341a0b.ctex"
+  },
+  {
+    "path": "res://assets/art/scenes/unsealing-mirror-queue.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": false,
+    "source_sha256": "aa8cc41842654d37aa03df24aae0efed5a3b366c475e48883e642e634580d25a",
+    "import_sha256": "f149d020150db9a4f451a5014f244d605173998390173c58dd42e650e47ef921",
+    "rgba_sha256": "0133fe4309583eb73af672403b68cf80b2cfa38162b959b62b77c17fcac7484e",
+    "artifact": "res://.godot/imported/unsealing-mirror-queue.png-0b535c7b4a9becdedb6af50c89a7ba7b.ctex"
+  },
+  {
+    "path": "res://assets/art/scenes/unsealing-monuments-push.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": false,
+    "source_sha256": "4f6237505c98b40d1da532912f61fab5952e259b56dccab986e076df2bbe236c",
+    "import_sha256": "1cd73272ada477c0a98cfe0a2daefefb0ba94fcf7f9966b9e02110d124cce6de",
+    "rgba_sha256": "8cc9f87c83cf4426de9558f2528b69a5a93d9d87d6f9283b8f40137811aa059b",
+    "artifact": "res://.godot/imported/unsealing-monuments-push.png-e87a57c3d1626f5f42d575354b7012ff.ctex"
+  },
+  {
+    "path": "res://assets/art/stage/act1-backdrop.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": true,
+    "source_sha256": "9efa43aed645789c1e8d5ba995ae9fbaf4fbd22b6280efbc83eb0ce2c659d743",
+    "import_sha256": "b8632bab87250ac0972c8ead19d9799956934292092d82f3ce603f8ba358c378",
+    "rgba_sha256": "434e4ee78a2293c259d689251ada6114a99d1a6a8811c937df093edb88391a51",
+    "artifact": "res://.godot/imported/act1-backdrop.png-8356626b47944232984a3d9fb6db228d.ctex"
+  },
+  {
+    "path": "res://assets/art/stage/act1-mid.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": true,
+    "source_sha256": "acf8195c386b79c04a850e9f6aee4a34aedf8f5bd4513faa04856299971bf0b9",
+    "import_sha256": "29924adfece7b078b626120b73a338ad9e13dcfcda25860a5df6140bded708e3",
+    "rgba_sha256": "775a3d2c579b129f2a8db3b12f5cf4636461f7375b2d53a071895372adc1fd73",
+    "artifact": "res://.godot/imported/act1-mid.png-592511e87ff0ce3f7dea17476d16ee30.ctex"
+  },
+  {
+    "path": "res://assets/art/stage/act1-ledge.png",
+    "width": 1536,
+    "height": 761,
+    "alpha": true,
+    "source_sha256": "a3a409d8a3dbe02dfea59f0d47dcdb29d90c15998845f180d20af09f33747ceb",
+    "import_sha256": "0fe667afa4e694f0c23b60eaf3d063e74c4c57f62d9c5bbb5822dfaaeb69262f",
+    "rgba_sha256": "db66eeb61af6a98273e8ef8a106ffc7e79a4239d94c5c8cbce3ed152c09ef57a",
+    "artifact": "res://.godot/imported/act1-ledge.png-6399f4385196d2c6c091a3cf90658177.ctex"
+  },
+  {
+    "path": "res://assets/art/stage/act2-backdrop.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": true,
+    "source_sha256": "3961239760244fcdcb2fb3513a512d080a983d6675b081cd68f8a278a4efff55",
+    "import_sha256": "db13df3c2b1ec9ebde78507bc84f1184e41a2b4e9179f1f297cc98e8c1682d42",
+    "rgba_sha256": "d8ee29f05446928188a93fc671d03a3ba75a63836724a016cde6bd7aaf8f8506",
+    "artifact": "res://.godot/imported/act2-backdrop.png-c44b59862aa133c420c6d416dca07a06.ctex"
+  },
+  {
+    "path": "res://assets/art/stage/act2-mid.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": true,
+    "source_sha256": "f03099b136712f6c8e93968605ac37fd368975223e410a98b9c201461be17436",
+    "import_sha256": "395841dd98ea5e8c0e3c4f93b463bac745a5c339d326ce71b70614c8d3f45aa3",
+    "rgba_sha256": "3a40b37783f146c753848d4adabc13bcf35d87f8886aeaf56279a186d52c360b",
+    "artifact": "res://.godot/imported/act2-mid.png-263b328614fc441b3027e73ca77ead9b.ctex"
+  },
+  {
+    "path": "res://assets/art/stage/act3-backdrop.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": true,
+    "source_sha256": "b5e9409f1a9854461c84fa51e0f3d0fffd0d8c333b0782ebdac8b8c3306bd0c4",
+    "import_sha256": "fc4520cf7ae4fb5557d878b45bf45311ae83e0b27f4ad971dd21f25752edef24",
+    "rgba_sha256": "df97c164eeb07dfdd316dd96cc67b37f4e54b45486533f0ed658d4652b5b72dd",
+    "artifact": "res://.godot/imported/act3-backdrop.png-3170d4de0ab7a76621e3c0ed57843c29.ctex"
+  },
+  {
+    "path": "res://assets/art/stage/act3-mid.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": true,
+    "source_sha256": "dd7fd1f40caa3e8fd34888e625722649ddf01bc07c2b541973baabf9be5693a3",
+    "import_sha256": "64dac81a9e53ec23702fe5976d282a331eab2e360e19eae64296433958ae4df8",
+    "rgba_sha256": "5ae9457eb189af244caeb33102ba0295024bd6cab5ad995afdcb8ecfa492f106",
+    "artifact": "res://.godot/imported/act3-mid.png-1a3153f56f143a3f7196d79a1fca0e66.ctex"
+  },
+  {
+    "path": "res://assets/art/stage/act4-backdrop.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": true,
+    "source_sha256": "544974f72d145401a3d04485ad8d97dd57f4e59d91b46f6efbe553082b2c3af5",
+    "import_sha256": "baad47e0c6495e746e4117b7355491dd4d3e0738f9eadf9dde37e4dfe56e3117",
+    "rgba_sha256": "ef3e4d05c79f7b0732cbd4bbd8ad7b3c22d6611e62d167ab131f033e9d7d015c",
+    "artifact": "res://.godot/imported/act4-backdrop.png-5f8f7ecc37486db83c41011c131746be.ctex"
+  },
+  {
+    "path": "res://assets/art/stage/act4-mid.png",
+    "width": 1536,
+    "height": 1024,
+    "alpha": true,
+    "source_sha256": "108ae167e01296838ff02748aba93ffa6aa977cbf9074331c58781a98867415a",
+    "import_sha256": "df9dd75625865436952fef0db94fe660692fedd775666ab02dd78637ba3f668a",
+    "rgba_sha256": "42a065d74d20b821444e682a660c0141d6ed7699e820df093272cf605a692c74",
+    "artifact": "res://.godot/imported/act4-mid.png-35ae62d03646f546c28545154d3b9e7b.ctex"
+  },
+  {
+    "path": "res://assets/art/stage/act4-ledge.png",
+    "width": 1536,
+    "height": 789,
+    "alpha": true,
+    "source_sha256": "c37215bc93daef3a0be2c2b8b24889002294fee35e40f6a7d352dd22e7c0c796",
+    "import_sha256": "d05081ff9bf35ea75c277ace30676b171e0c4b818134c02d23a1fe1cc99182fd",
+    "rgba_sha256": "ef8fc530e899e521c68873cb04138603f416679bb484cc6d8db601f9c56bfe3b",
+    "artifact": "res://.godot/imported/act4-ledge.png-8b2afae47fb1490fe3492de97644d8cb.ctex"
+  }
+]

@@ -12,7 +12,10 @@
   "expected_height": 1640,
   "expected_decoded_rgb_bytes": 11611200,
   "expected_rd_validated_rgba_bytes": 15481600,
-  "expected_leaf_count": 4,
   "scope": "native boot only; original pixels, geometry, blend, color, filter, timing and one final swap; unchanged runtime and bake pins",
-  "evidence_boundary": "portable source/compiler/render coverage only; no device, Metal, A12, timing, total VRAM, signing or store acceptance"
+  "evidence_boundary": "portable source/compiler/render coverage only; no device, Metal, A12, timing, total VRAM, signing or store acceptance",
+  "expected_gles_transfer_count": 4,
+  "rd_transfer_count": "adaptive to actual frame-staging block capacity and aligned conservative RGBA row pitch",
+  "expected_full_texture_count": 1,
+  "expected_draw_count": 1
 }

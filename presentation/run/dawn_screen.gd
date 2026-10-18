@@ -73,6 +73,7 @@ var shape: StringName = StageShape.IDENTITY
 var _events: Array
 var _cursor: int
 var _stats: Dictionary
+var _back_only: bool
 var _sfx: SfxBus
 var _margin: MarginContainer
 var _panel: PanelContainer
@@ -109,10 +110,11 @@ const TRAVEL: float = 12.0
 
 func _init(events: Array, cursor: int,
 		stage_shape: StringName = StageShape.IDENTITY,
-		stats: Dictionary = {}, sfx: SfxBus = null) -> void:
+		stats: Dictionary = {}, sfx: SfxBus = null, back_only: bool = false) -> void:
 	_events = events.duplicate(true)
 	_cursor = clampi(cursor, 0, _events.size())
 	_stats = stats.duplicate(true)
+	_back_only = back_only
 	shape = stage_shape if StageShape.REFERENCES.has(stage_shape) else StageShape.IDENTITY
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = GlassStyle.theme()
@@ -170,7 +172,7 @@ func _ready() -> void:
 	# ascent: a player killed mid-dawn comes back to a quiet feed. The LIGHT is
 	# not one of them: sunrise is a state the scene holds, so a resumed dawn
 	# arrives with it already settled rather than stranded in night.
-	if _cursor == 0 and not _events.is_empty():
+	if not _back_only and _cursor == 0 and not _events.is_empty():
 		_sun_t = 0.0
 		# REDUCE MOTION: flash and confetti are celebration MOTION and stay
 		# out (`.dawn-event { animation: none; transition: none; }`,
@@ -180,7 +182,7 @@ func _ready() -> void:
 			_flash_in()
 			_confetti = Confetti.new()
 			add_child(_confetti)
-	else:
+	elif not _back_only:
 		_sun.modulate.a = 1.0
 		_wash.color.a = WASH_DAWN
 	if _cursor < _events.size():
@@ -189,13 +191,16 @@ func _ready() -> void:
 
 
 func _build() -> void:
-	var art: TextureRect = TextureRect.new()
-	art.texture = load(ARRIVED) as Texture2D
-	art.set_anchors_preset(Control.PRESET_FULL_RECT)
-	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(art)
+	if _back_only:
+		RunStyle.add_backdrop(self)
+	else:
+		var art: TextureRect = TextureRect.new()
+		art.texture = load(ARRIVED) as Texture2D
+		art.set_anchors_preset(Control.PRESET_FULL_RECT)
+		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(art)
 	_wash = ColorRect.new()
 	_wash.color = Color(0.025, 0.020, 0.035, 0.62)
 	_wash.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -218,10 +223,14 @@ func _build() -> void:
 
 	_title = _label(Locale.active.t("ui.dawn.title"), 42, RunStyle.GOLD)
 	_title.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_700, 4))
+	_title.visible = not _back_only
 	column.add_child(_title)
 	var subtitle: Label = _label(Locale.active.t("ui.dawn.subtitle"), 15, RunStyle.PARCHMENT)
+	subtitle.visible = not _back_only
 	column.add_child(subtitle)
-	column.add_child(_underline())
+	var underline: TextureRect = _underline()
+	underline.visible = not _back_only
+	column.add_child(underline)
 
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -246,6 +255,7 @@ func _build() -> void:
 			_grid.add_child(_seat(_event_card(owed, i, false)))
 
 	_build_stats(column)
+	_stats_grid.visible = not _back_only
 	_progress = _label(_progress_text(), 11, RunStyle.GOLD_DIM)
 	_progress.add_theme_font_override("font", RunStyle.tracked(GlassStyle.CINZEL_500, 1))
 	_progress.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -315,6 +325,7 @@ func _build() -> void:
 	_sun.stretch_mode = TextureRect.STRETCH_SCALE
 	_sun.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_sun.modulate.a = 0.0
+	_sun.visible = not _back_only
 	add_child(_sun)
 	set_shape(shape)
 
