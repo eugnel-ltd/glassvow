@@ -95,9 +95,3 @@ This repo's long record of solved problems is `docs/solutions/`, by category. Sh
 - Fix: a85b52f3 (runnable immutable fixture), f009a32e (source fix).
 - Done right: run the explicit-path parser before the first test commit, commit the runnable test, observe its named failure on unchanged source, then apply the fix and observe green. Preserve abandoned candidates and their failed logs without rewriting them.
 - Seen: 1× (2026-10-18)
-
-### Compare retained floating values without a text round trip
-- Cause: A p10 regression converted a saved float through `str`, whose display precision rounded it and falsely rejected an identical score. The invalid attempt and logs remain preserved; a new canonical first fixture was strictly parsed and failed unchanged source before production edits.
-- Fix: d86a67d4a2337a0186f022b2c572a9cb082d096c
-- Done right: Assign a Dictionary value to an explicitly typed float before comparing it. Never round production calculations to satisfy a faulty fixture.
-- Seen: 1× (2026-10-18)

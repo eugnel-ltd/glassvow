@@ -73,3 +73,12 @@ clean-other-host agreement. Historical p9 rows cannot substitute for new-pair
 qualification. The 1.1 holdout 17000–18999 stays untouched until its single
 final-candidate exam. A5b remains unrun until instrument validity, its registered
 budget and the integrated source/content identity are bound.
+
+The prospective A9 B2 uncertainty method is independently adopted in
+[#544 comment6251310075](https://github.com/eugnel-ltd/glassvow/issues/544#issuecomment-6251310075):
+2,000 whole-run resamples per report with Python Random seed0, linear
+2.5/97.5 percentiles and any zero-denominator draw making the metric interval
+non-estimable/B2 UNDECIDED. New A9 readouts explicitly cite the adopted clustered
+column; historical Wilson records and the tool's default/raw sensitivity labels
+remain unchanged. This p10 outcome changes neither that estimator nor its
+thresholds, and gives no A9 acceptance.
