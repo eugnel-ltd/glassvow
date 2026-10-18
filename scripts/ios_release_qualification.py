@@ -18,12 +18,25 @@ QUALIFIED_XCODE_BUILDS = {"27A266a": "Xcode 27.0"}
 APP_INFO = re.compile(r"Payload/[^/]+\.app/Info\.plist\Z")
 
 
+class _DuplicateKeyError(Exception):
+    """Keep duplicate-key diagnostics through the binary parser's error wrapper."""
+
+
+class _UniqueKeys(dict):
+    """Preserve ambiguity as an error in both plistlib parser formats."""
+
+    def __setitem__(self, key: object, value: object) -> None:
+        if key in self:
+            raise _DuplicateKeyError("duplicate Info.plist dictionary key")
+        super().__setitem__(key, value)
+
+
 def qualify(ipa: Path) -> tuple[str, str]:
     with zipfile.ZipFile(ipa) as archive:
         entries = [item for item in archive.infolist() if APP_INFO.fullmatch(item.filename)]
         if len(entries) != 1 or entries[0].is_dir():
             raise ValueError("expected exactly one top-level app Info.plist")
-        metadata = plistlib.loads(archive.read(entries[0]))
+        metadata = plistlib.loads(archive.read(entries[0]), dict_type=_UniqueKeys)
     if not isinstance(metadata, dict):
         raise ValueError("app Info.plist must be a dictionary")
     build = metadata.get("DTXcodeBuild")
@@ -42,7 +55,7 @@ def main() -> int:
     try:
         build, release = qualify(args.ipa)
     except (OSError, zipfile.BadZipFile, plistlib.InvalidFileException,
-            ExpatError, ValueError, RuntimeError) as error:
+            ExpatError, ValueError, RuntimeError, _DuplicateKeyError) as error:
         print(f"ios_release: IPA Xcode qualification failed: {error}", file=sys.stderr)
         return 1
     print(f"Qualified DTXcodeBuild: {build} ({release})")
