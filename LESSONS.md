@@ -8,10 +8,17 @@ Short live log of repeatable mistakes. Read it before every task. At most fiftee
 
 ## Recent entries
 
-### Qualify native executable startup flags before runtime probes
+### Isolate patch application from an enclosing checkout
+- Cause: Hosted job `117765641710` ran `git apply` inside its evidence directory; Git found the parent repository, skipped the root-relative RD hunk and exited zero.
+- Fix: PR #790 bounds Git discovery and freezes the nested/detached setup regression at `4673c774a08c4554fb5b4041771891eff6c9d004`; corrected hosted native proof remains pending.
+- Done right: Exercise the workflow's actual output layout and require the patched methods at fixture dispatch; a zero patch exit alone does not prove application.
+- Seen: 1× (2026-10-18)
+
+### Qualify native startup and the baseline oracle before paired builds
 - Cause: Jobs `117733507995` and `117736644148` rejected `--path`; without the same path-override option, the pinned template also resets the working directory and clears `--script`.
 - Fix: Candidates `928d065e9ceb6ae8a9f3e77bd7ad4a80ab935909` (PR #790) and `2aaf938a6fb9ade3f9c009c2d35eb1b133cbdd93` (PR #793); corrected native/RD evidence remains pending.
 - Done right: Qualify the executable's startup contract, enable `disable_path_overrides=no` for both portable test variants, and record that configuration in the manifest with shipping qualification false.
+- Oracle follow-up: Job `117768816495` preserved exact pairs but rejected the unchanged baseline at an exact nearest boundary. The stock ed1 binary reproduced max 208 on 308 pixels. Frozen regression `2257b517` and a bounded stock prebuild screen require exact-boundary whole samples while keeping pair 0/source 2; corrected native proof remains pending.
 - Seen: 1× (2026-10-18)
 
 ### Execute component preflight in its actual sparse checkout

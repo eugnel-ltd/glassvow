@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "pins": {
+    "ed1daf0bf001b61586d9930840f2f1394092c079": {
+      "drivers/gles3/rasterizer_gles3.cpp": "7906073ee78a23816dfa0a0a21ec5879980f10f4eb5119ffa39051aba957311e",
+      "drivers/gles3/storage/texture_storage.cpp": "061ffc38fe2a378b61661c90bce54ffe4c5a7724c4c95d3c9acc0b300a67e6ad",
+      "drivers/gles3/storage/texture_storage.h": "7e28363633cf294046546c664da823907f9c35945ae96ccdf795f66c0a812db1",
+      "servers/rendering/renderer_rd/renderer_compositor_rd.cpp": "def96d4762332133e099fa78045edfdf9fa8e0135dee30d18727bf65eaef7876",
+      "servers/rendering/renderer_rd/storage_rd/texture_storage.cpp": "37d32f106cefe17872676d7a35c9ca30e881ad6474f335d7df18e826378a4917",
+      "servers/rendering/renderer_rd/storage_rd/texture_storage.h": "f82269d66f910973e051332cb32e443888ad809bf865b643d5ab71a78f67bdb9",
+      "servers/rendering/rendering_device.cpp": "cb319128c2650189dc3ebff5aad7e70ac73b0bd4c4d0c58993f06d4d002ddc62",
+      "servers/rendering/rendering_device.h": "8a3f94c7af4e72be5f0767b9fa84970c36a8aa12bfd58fb269f61b3ffdd712bd",
+      "servers/rendering/rendering_server_types.h": "8507be956189306817b191fe0e7b923965537cf9b703c1c922c5b4b49a744966",
+      "tests/test_main.cpp": "9e02882e874eea3bca5885455ba3712c2eaf02d4393e8a3f3ba573dd510be731"
+    },
+    "83dec14d549108e1f314f57c1ce7e932c65370dd": {
+      "drivers/gles3/rasterizer_gles3.cpp": "7906073ee78a23816dfa0a0a21ec5879980f10f4eb5119ffa39051aba957311e",
+      "drivers/gles3/storage/texture_storage.cpp": "061ffc38fe2a378b61661c90bce54ffe4c5a7724c4c95d3c9acc0b300a67e6ad",
+      "drivers/gles3/storage/texture_storage.h": "7e28363633cf294046546c664da823907f9c35945ae96ccdf795f66c0a812db1",
+      "servers/rendering/renderer_rd/renderer_compositor_rd.cpp": "def96d4762332133e099fa78045edfdf9fa8e0135dee30d18727bf65eaef7876",
+      "servers/rendering/renderer_rd/storage_rd/texture_storage.cpp": "37d32f106cefe17872676d7a35c9ca30e881ad6474f335d7df18e826378a4917",
+      "servers/rendering/renderer_rd/storage_rd/texture_storage.h": "f82269d66f910973e051332cb32e443888ad809bf865b643d5ab71a78f67bdb9",
+      "servers/rendering/rendering_device.cpp": "cb319128c2650189dc3ebff5aad7e70ac73b0bd4c4d0c58993f06d4d002ddc62",
+      "servers/rendering/rendering_device.h": "8a3f94c7af4e72be5f0767b9fa84970c36a8aa12bfd58fb269f61b3ffdd712bd",
+      "servers/rendering/rendering_server_types.h": "8507be956189306817b191fe0e7b923965537cf9b703c1c922c5b4b49a744966",
+      "tests/test_main.cpp": "dea1c560a042515e6d85a9dd3d291f3c0ccee521a226a9c8301d925969186b70"
+    }
+  },
+  "new_paths": [
+    "tests/servers/test_boot_image_slices.h"
+  ],
+  "fixture_files": {
+    "ed1daf0bf001b61586d9930840f2f1394092c079": {
+      "drivers/gles3/effects/copy_effects.cpp": "0ee61b24cfd9e25c153809fcfb2d9315480d973374d153438b07499b7896e150",
+      "drivers/gles3/shaders/effects/copy.glsl": "4715bcd874431c403573560961b48d5f83f80b4cd2a9404089b762f573dadc72",
+      "core/config/project_settings.cpp": "7de9335773ee4498d7559300d06f14717e715909db92b62b52dd44887e19cc94"
+    },
+    "83dec14d549108e1f314f57c1ce7e932c65370dd": {
+      "drivers/gles3/effects/copy_effects.cpp": "0ee61b24cfd9e25c153809fcfb2d9315480d973374d153438b07499b7896e150",
+      "drivers/gles3/shaders/effects/copy.glsl": "4715bcd874431c403573560961b48d5f83f80b4cd2a9404089b762f573dadc72"
+    }
+  }
+}
