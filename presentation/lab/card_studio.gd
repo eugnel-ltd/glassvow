@@ -89,7 +89,7 @@ func _init(content_ref: ContentDB, only: PackedStringArray = PackedStringArray()
 	content = content_ref
 	_zoom = maxf(1.0, zoom)
 	# The lab's loader, not a second copy of it — one JSON contract, one reader.
-	_catalog = CardLab.load_catalog(content_ref)
+	_catalog = CardLab.load_catalog(content_ref, only)
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = GlassStyle.theme()
 

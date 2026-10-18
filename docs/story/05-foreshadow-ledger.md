@@ -695,3 +695,19 @@ chrome 與 prose 一併掃,因為 #228 是**讀稿質檢**,不是詞彙掃除,�
 禁令自此由 `tests/test_locale.gd` 的 `_retired_vertical_vocabulary` 機檢,
 allowlist 逐條具名(已注入 mutation 驗證可以紅)。
 原 [TODO] 於 Batch 1(#301)開稿時關閉。
+
+## Ashwarden flame and codex (#544 A7)
+
+Selected copy from the Ash lock §9; L1 throughout. Promotion and fresh-context checks are recorded in [the Ash batch](batches/2026-10-18-batch-ash-flame.md). No settled canon is changed.
+
+| # | zh / en | surface | level | surface reading | post-twist reading | leak risk |
+|---|---|---|---|---|---|---|
+| 482 | 它燒得慢，燒得久。 / It burns slow, and it burns long. | `flame.ashwarden.hearth` | L1 | This lantern burns slowly and lasts | What burns is the walker's will (00 §3.2): a slow fire is a long dying, and the arrangement is served longest by a walker who lasts | Low; no hidden mechanism or identity stated. |
+| 483 | 灰下的火，認得你了。 / Under the ash, the fire knows you now. | `flame.ashwarden.steady` | L1 | The flame has taken your colour | The hearth's fire is the first fire's embers under the ash that drifted west (00 §2.2); every walker who carried it was you, so it knew you already (as row 459) | Low; no hidden mechanism or identity stated. |
+| 484 | 別的都燒成了灰，只剩一種火。 / Everything else has burned to ash. One fire is left. | `flame.ashwarden.true` | L1 | One kind of glass; one clean fire | Ash is will burned out (00 §8.6): the walker has spent everything but one fire, and the door wants one whole fire (00 §2.2, §2.6) | Low; no hidden mechanism or identity stated. |
+| 485 | 煙多於火。 / More smoke than fire. | `flame.ashwarden.soot` | L1 | A scattered deck burns poorly | A will spread thin gives off more than it burns; it lights nothing (as row 462) | Low; no hidden mechanism or identity stated. |
+| 486 | 你的火從來只有煙。 / Your fire was only ever smoke. | `flame.ashwarden.sootDeath` | L1 | This run's flame never took | The walker went out before the fire took hold: a death in smoke, read at the hearth by the one who stayed | Low; no hidden mechanism or identity stated. |
+| 487 | 煙裏有另一種顏色。 / There is another colour in the smoke. | `flame.ashwarden.fringe` | L1 | A second way shows at the edge | The other colour is also you; there is no one else in the Queue (as row 460) | Low; no hidden mechanism or identity stated. |
+| 488 | 灰綠的火伏得低，在灰下燒得最久。 / An ash-green fire lies low, and lasts longest under the ash. | `codex.lantern.smolder` | L1 | The Smolder fire is slow and patient | The fire that lasts longest under the ash is the hearth's own: it never left the hearth (00 §2.4) | Low; no hidden mechanism or identity stated. |
+| 489 | 明黃的火分出許多火尖，像一隻手；手裏握着的越多，它燒得越亮。 / A candle-yellow fire parts into many tips, like a hand; the more the hand holds, the brighter it burns. | `codex.lantern.hand` | L1 | The more a Hand deck holds, the stronger | The lantern burns what the walker carries: the more it holds, the more there is to burn | Low; no hidden mechanism or identity stated. |
+| 490 | 珠光的火又直又靜，風來了也不倒。 / A pearl fire stands straight and still, and does not fall when the wind comes. | `codex.lantern.endure` | L1 | The Endure flame cannot be put out | The walkers die standing and do not lie down (row 1, L1) | Low; no hidden mechanism or identity stated. |

@@ -2,7 +2,7 @@ class_name LineTable
 extends RefCounted
 ## One flat narrative table. Reveal-ladder enforcement is the `conditions`
 ## column — there is no parallel gate. Phase-1 signed vocabulary is textual:
-## `shards>=N` / `act=N` / `quest:<id>.<state>` / `quest:<id>>=N`. The loader
+## `shards>=N` / `act=N` / `aspect=N` / `quest:<id>.<state>` / `quest:<id>>=N`. The loader
 ## normalizes those clauses to an internal dict; unknown keys and unknown
 ## quest states fail the table load.
 
@@ -32,7 +32,7 @@ static func parse_conditions(value: Variant) -> Dictionary:
 		var as_dict: Dictionary = value
 		if as_dict.is_empty():
 			return _parsed({}, "")
-		return _parsed({}, "conditions must be textual (shards>=N / act=N / quest:<id>.<state> / quest:<id>>=N)")
+		return _parsed({}, "conditions must be textual (shards>=N / act=N / aspect=N / quest:<id>.<state> / quest:<id>>=N)")
 	if typeof(value) == TYPE_STRING:
 		return _parse_clause_list(_split_clauses(str(value)))
 	if typeof(value) != TYPE_ARRAY:
@@ -46,6 +46,9 @@ static func parse_conditions(value: Variant) -> Dictionary:
 			return _parsed({}, "empty condition clause")
 		clauses.append(item)
 	return _parse_clause_list(clauses)
+
+
+const _ASPECT_CLAUSE: String = "^aspect=(\\d+)$"
 
 
 static func _parsed(conditions: Dictionary, error: String) -> Dictionary:
@@ -68,10 +71,12 @@ static func _parse_clause_list(clauses: PackedStringArray) -> Dictionary:
 	var quest_progress: Dictionary = {}
 	var shards_re: RegEx = RegEx.new()
 	var act_re: RegEx = RegEx.new()
+	var aspect_re: RegEx = RegEx.new()
 	var quest_re: RegEx = RegEx.new()
 	var progress_re: RegEx = RegEx.new()
 	shards_re.compile(_SHARDS_CLAUSE)
 	act_re.compile(_ACT_CLAUSE)
+	aspect_re.compile(_ASPECT_CLAUSE)
 	quest_re.compile(_QUEST_CLAUSE)
 	progress_re.compile(_QUEST_PROGRESS_CLAUSE)
 	for clause: String in clauses:
@@ -86,6 +91,12 @@ static func _parse_clause_list(clauses: PackedStringArray) -> Dictionary:
 			if conditions.has("act"):
 				return _parsed({}, "duplicate act clause")
 			conditions["act"] = _ji(act_found.get_string(1))
+			continue
+		var aspect_found: RegExMatch = aspect_re.search(clause)
+		if aspect_found != null:
+			if conditions.has("aspect"):
+				return _parsed({}, "duplicate aspect clause")
+			conditions["aspect"] = _ji(aspect_found.get_string(1))
 			continue
 		var progress_found: RegExMatch = progress_re.search(clause)
 		if progress_found != null:
@@ -126,6 +137,7 @@ static func context(run: RunState, shard_count: int = -1) -> Dictionary:
 	return {
 		"shards": shard_count if shard_count >= 0 else run.shards.size(),
 		"act": run.act,
+		"aspect": run.aspect,
 		"quests": quests,
 		"quest_progress": quest_progress,
 	}
@@ -161,6 +173,8 @@ static func conditions_match(conditions_v: Variant, ctx: Dictionary) -> bool:
 		return false
 	if conditions.has("act") and _ji(ctx.get("act", -1)) != _ji(conditions["act"]):
 		return false
+	if conditions.has("aspect") and _ji(ctx.get("aspect", -1)) != _ji(conditions["aspect"]):
+		return false
 	if typeof(conditions.get("quest_state")) == TYPE_DICTIONARY:
 		var wanted: Dictionary = conditions["quest_state"]
 		var quests_v: Variant = ctx.get("quests", {})
@@ -186,6 +200,8 @@ static func specificity(conditions_v: Variant) -> int:
 	if conditions.has("shards_gte"):
 		n += 1
 	if conditions.has("act"):
+		n += 1
+	if conditions.has("aspect"):
 		n += 1
 	var quests_v: Variant = conditions.get("quest_state")
 	if typeof(quests_v) == TYPE_DICTIONARY:

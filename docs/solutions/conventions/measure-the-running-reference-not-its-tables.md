@@ -98,7 +98,7 @@ numbers live in the same container-query blocks
 (`styles.css:1657, 2060, 2174, 2261`), and they were never in a data file
 either. It has since been closed the same way this doc prescribes: the rack's
 per-shape numbers were authored into the layout book's `reward` scope
-(`presentation/stage/layout_book.gd:282-284` (`rack/w`)), and the four
+(`presentation/stage/layout_book.gd:246` (`rack/w`)), and the four
 `CARD_SCALE` consts survive only as identity-column defaults
 (`presentation/reward/reward_screen.gd:144` (`CARD_SCALE`)).
 

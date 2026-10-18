@@ -79,6 +79,8 @@ pipeline research, `docs/research/2026-08-14-narrative-pipeline.md`):
   line always fires.
 - Phase 1 condition vocabulary is deliberately small: **shard-count / act /
   quest-state**. `priority`/`weight` default; columns may sit empty.
+  #544 A7 adds `aspect=N`, the existing numeric `RunState.aspect`, for class-specific
+  flame and codex rows. A saved draw still replays its stored ID; it is not reselected.
 - The engine (#270) implements selection; its shard gate **is** the
   `conditions` column, not a parallel mechanism.
 - Scripted scenes (opening, Lamplighter, sixth-shard, Act IV) are scripts,
