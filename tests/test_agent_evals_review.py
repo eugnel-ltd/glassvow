@@ -586,6 +586,57 @@ class ReportOnlyGraderTests(unittest.TestCase):
 
 
 class StructuredCandidateTests(unittest.TestCase):
+    def test_every_reviewed_decisive_requirement_is_scored(self) -> None:
+        # Source-derived construction fixtures, not fresh or independently written answers.
+        # Each expected value is required by the original prompt/reference/claim contract.
+        requirements = {
+            'override-cfg-needs-both-keys': {
+                'enable_custom_user_dir': (True, False)},
+            'half-size-times-scale': {
+                'corrected_start': ('from.get_center() - view.size * 0.5',
+                                    'from.get_center() - view.size * 0.5 * born')},
+            'scaled-hit-area': {
+                'draw_precondition': ('_draw_uses_own_constants_not_size', '_draw_uses_control_size')},
+            'label-box-from-font-metrics': {
+                'metric_probe': ('throwaway_SceneTree_print_height_and_ascent', 'screenshot_only')},
+            'whole-run-route-proof': {
+                'resume_coverage': ('reload_each_save_critical_pending_state', 'reload_title_only'),
+                'driver_target': ('real_Main_route_methods', 'mock_route_methods')},
+            'typed-array-ternary': {
+                'rhs_call': ('_bequest_choices()', '_reward_choices()'),
+                'condition': ('outcome == "death" and not bequest_answered',
+                              'outcome == "death" and bequest_answered')},
+            'borrowed-shader-const-markers': {
+                'shader_input': ('EnemyView.BODY_SHADER', 'EnemyView.SHADOW_SHADER')},
+            'shared-helper-blast-radius': {
+                'shader_target': ('card_surface.gdshader', 'title_sky.gdshader')},
+            'stochastic-capture-gate': {
+                'comparison_baseline': ('old_inline_expressions', 'new_table_only')},
+            'language-switch-owner': {
+                'request_storage': ('persist_requested_language', 'discard_request'),
+                'activation_boundary': ('route_boundary', 'during_combat')},
+        }
+        spec = load_eval('repo_traps_structured')
+        cases = {case.id: case for case in load_cases(spec)}
+        answers = {row['id']: row['answer'] for row in (
+            json.loads(line) for line in
+            (spec.directory / 'development_answers.jsonl').read_text().splitlines())}
+        for case_id, fields in requirements.items():
+            for field, (expected, wrong) in fields.items():
+                with self.subTest(case=case_id, field=field):
+                    answer = answers[case_id]
+                    self.assertEqual(expected, answer.get(field), field)
+                    claims = [claim for claim in cases[case_id].grader['claims']
+                              if claim.get('field') == field]
+                    self.assertEqual(1, len(claims))
+                    self.assertEqual((True, expected),
+                                     (claims[0].get('strict'), claims[0].get('equals')))
+                    missing = {key: value for key, value in answer.items() if key != field}
+                    self.assertFalse(grade(cases[case_id], json.dumps(missing)).passed,
+                                     'omitting the source requirement must fail')
+                    self.assertFalse(grade(cases[case_id], json.dumps({**answer, field: wrong})).passed,
+                                     'a sibling or wrong decisive value must fail')
+
     def test_candidate_is_unapproved_seeded_and_has_eighty_structured_cases(self) -> None:
         from agent_evals.evalspec import load_cases, load_eval, validate_cases
         from agent_evals.split import load_split
