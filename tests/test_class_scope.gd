@@ -24,6 +24,7 @@ static func run(fails: Array[String]) -> void:
 	_policy(content, fails)
 	_policy_follows_the_data(fails)
 	_deeds_complete_for_offered_classes(content, fails)
+	_title_counts_only_offered_unlocks(content, fails)
 	_fresh_title_begins_duskblade(content, fails)
 	_earned_aspect2_is_no_choice(content, fails)
 	_embark_offers_no_ashwarden(content, fails)
@@ -114,6 +115,37 @@ static func _deeds_complete_for_offered_classes(content: ContentDB, fails: Array
 				_check(fails, vigil.unlocks.has(str(unlock_v)) == expected,
 					"%s's %s granted %s with the Ashwarden %s" % [id, unlock_v, not expected,
 						"offered" if db == offered else "deferred"])
+
+
+## A deferred unlock stays earned but adds no secret to the title. Once the
+## same class is offered, its existing unlock counts again in both locales.
+static func _title_counts_only_offered_unlocks(content: ContentDB, fails: Array[String]) -> void:
+	var previous: Locale = Locale.active
+	var offered: ContentDB = ContentDB.load_full(false)
+	var ash: Dictionary = offered.aspects[ASH]
+	ash.erase("deferred")
+	for code: StringName in [Locale.CODE_EN, Locale.CODE_ZH_HANT]:
+		Locale.active = Locale.new(code)
+		var main: Main = _main(content)
+		main._vigil.deeds["runs"] = 1
+		var bare: Array[String] = main._carved_deeds()
+		main._vigil.unlocks.append("aspect2")
+		_check(fails, main._carved_deeds() == bare,
+			"%s title counts a withheld class as an unearthed secret" % code)
+		main._vigil.unlocks.append("poolWave2")
+		var one: String = Main._carve(Locale.active.t("ui.brand.secrets", {
+			"n": LeadlightNumerals.carved(1)}).trim_prefix(" · "))
+		_check(fails, main._carved_deeds() == bare + [one],
+			"%s title does not count only the offered unlock beside aspect2" % code)
+		main.content = offered
+		var two: String = Main._carve(Locale.active.t("ui.brand.secrets", {
+			"n": LeadlightNumerals.carved(2)}).trim_prefix(" · "))
+		_check(fails, main._carved_deeds() == bare + [two],
+			"%s title does not restore the earned count when the class is offered" % code)
+		_check(fails, main._vigil.unlocks == ["aspect2", "poolWave2"],
+			"%s title changed the profile's earned unlocks" % code)
+		_dispose(main)
+	Locale.active = previous
 
 
 static func _fresh_title_begins_duskblade(content: ContentDB, fails: Array[String]) -> void:
