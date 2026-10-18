@@ -15,6 +15,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
@@ -96,6 +97,10 @@ jobs:
           python3 -m pip install 'PyYAML==6.0.3'
           python3 -B .ai-sdlc/manifest_check.py product.yaml
 
+      - name: Test iOS editor HOME isolation
+        if: steps.scope.outputs.run_release_identity_tests == 'true'
+        run: python3 -B tests/test_ios_release_home.py
+
       - name: Setup Godot
         if: steps.scope.outputs.setup_godot == 'true'
         uses: chickensoft-games/setup-godot@v2
@@ -165,7 +170,9 @@ jobs:
 
       - name: Test store Dev-tree exclusion gate
         if: steps.scope.outputs.run_store_gate_tests == 'true'
-        run: tools/test_check_store_dev_exclusion.sh
+        run: |
+          tools/test_check_store_dev_exclusion.sh
+          python3 -B -m unittest tests.test_dev_export_dependencies
 
       # docs/ carries a .gdignore, so a preload() of a file there parses in the
       # editor and breaks in every export.  Runtime data lives under content/.
@@ -177,7 +184,10 @@ jobs:
 
       - name: Test release identity pins
         if: steps.scope.outputs.run_release_identity_tests == 'true'
-        run: godot --headless -s res://tests/run_all.gd -- --tests=res://tests/test_release_identity.gd,res://tests/test_sentry_release.gd
+        run: |
+          python3 -B tests/test_ios_release_qualification.py
+          python3 -B tests/test_ios_release_qualification_duplicates.py
+          godot --headless -s res://tests/run_all.gd -- --tests=res://tests/test_release_identity.gd,res://tests/test_sentry_release.gd
 
       - name: Check developer-tool registry and coordinate conversion
         if: steps.scope.outputs.run_dev_tools == 'true'

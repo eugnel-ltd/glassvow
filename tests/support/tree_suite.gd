@@ -25,12 +25,17 @@ var _guard: ScriptErrorGuard = ScriptErrorGuard.new()
 
 
 ## Run `suite`'s in-tree half in a child process and add its failures to
-## `fails`. Blocks until the child exits.
-static func spawn(fails: Array[String], suite: String) -> void:
+## `fails`. Blocks until the child exits. A positive `fixed_fps` advances the
+## engine's real timers and tweens at that simulation step, regardless of
+## host load. Other suites retain the engine's normal clock.
+static func spawn(fails: Array[String], suite: String, fixed_fps: int = 0) -> void:
 	var output: Array = []
 	var args: PackedStringArray = PackedStringArray(["--headless", "--path",
-		ProjectSettings.globalize_path("res://"), "-s", "res://tests/support/tree_suite.gd",
-		"--", "--suite=%s" % suite])
+		ProjectSettings.globalize_path("res://")])
+	if fixed_fps > 0:
+		args.append_array(PackedStringArray(["--fixed-fps", str(fixed_fps)]))
+	args.append_array(PackedStringArray(["-s", "res://tests/support/tree_suite.gd",
+		"--", "--suite=%s" % suite]))
 	var code: int = OS.execute(OS.get_executable_path(), args, output, true)
 	var text: String = "\n".join(PackedStringArray(output))
 	var lines: PackedStringArray = text.split("\n")

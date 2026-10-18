@@ -1,5 +1,5 @@
 extends RefCounted
-## The piles of real cards in a real fight, its drain running in real time
+## The piles of real cards in a real fight, its drain on a fixed simulation clock
 ## (issue #657, PR 5): the counts the piles show are the domain's at every
 ## rest, through a deal, a reshuffle, a kindle and a Skip mid-stream; the
 ## discard's top is the last card discarded; a kindle's ash is bumped once; a
@@ -31,7 +31,15 @@ class _Errors:
 		_mutex.unlock()
 
 
+const SUITE: String = "res://tests/test_pile_fight.gd"
+const FIXED_FPS: int = 60
+
+
 static func run(fails: Array[String]) -> void:
+	TreeSuite.spawn(fails, SUITE, FIXED_FPS)
+
+
+static func run_in_tree(_tree: SceneTree, _host: SubViewport, fails: Array[String]) -> void:
 	var was_still: bool = Preferences.active.reduce_motion
 	Preferences.active.reduce_motion = false
 	await _counts_and_top(fails)
@@ -68,7 +76,7 @@ static func _counts_and_top(fails: Array[String]) -> void:
 	if skill >= 0:
 		var played: int = _played(game)
 		_drag_play(screen, skill)
-		await _idle(screen)
+		await _idle(screen, fails)
 		if _played(game) != played + 1 or screen._hand.has_card(skill):
 			fails.append("pile fight: the skill was not played")
 		if tops != [skill]:
@@ -84,11 +92,11 @@ static func _counts_and_top(fails: Array[String]) -> void:
 			if ev["t"] == EventTypes.TO_DISCARD and ev.get("uid", -1) == attack:
 				resolved[0] = screen._hud.discard_top_uid() == attack
 		screen.request_play(attack, screen._first_living())
-		await _idle(screen)
+		await _idle(screen, fails)
 		screen.seq.handler = handle
 		if not resolved[0]:
 			fails.append("pile fight: a struck card did not top the discard as its blow resolved")
-		await _idle(screen)
+		await _idle(screen, fails)
 		_check_rest(fails, screen, "a strike")
 	var walk: Array[int] = []
 	var streamed: bool = false
@@ -111,7 +119,7 @@ static func _counts_and_top(fails: Array[String]) -> void:
 				if is_instance_valid(stream) and not stream.done():
 					fails.append("pile fight: a tap did not complete the reshuffle in 150 ms")
 			await _frames(1)
-		await _idle(screen)
+		await _idle(screen, fails)
 		if last_held >= 0 and (tops.is_empty() or tops[0] != last_held):
 			fails.append("pile fight: the end of turn %d answered with %s on top, want %d"
 				% [turn + 1, str(tops), last_held])
@@ -141,7 +149,7 @@ static func _kindle_bumps_once(fails: Array[String], still: bool) -> void:
 	var uid: int = screen.game.cb.hand[0].uid
 	if not screen.request_kindle(uid):
 		fails.append("pile fight: the kindle was refused")
-	await _idle(screen)
+	await _idle(screen, fails)
 	var ash: int = bumps.count(&"ashes")
 	if ash != 1:
 		fails.append("pile fight: a kindle bumped the ash %d times%s" % [
@@ -185,7 +193,7 @@ static func _skip_races(fails: Array[String], end_turn: bool) -> void:
 		var skill: int = _playable(game, "skill", false)
 		if skill < 0 or not screen.request_play(skill, null):
 			fails.append("pile fight: no play to race the tap with")
-	await _idle(screen)
+	await _idle(screen, fails)
 	if end_turn and game.cb.turn != turn + 1 and not game.cb.over:
 		fails.append("pile fight: a tap racing an End Turn ended %d turns" % (game.cb.turn - turn))
 	if not end_turn and _played(game) != played + 1:
@@ -226,7 +234,7 @@ static func _pile_tap_takes_nothing(fails: Array[String]) -> void:
 		if screen._hand.sent(skill) and not screen._hand._leaving.is_empty():
 			fails.append("pile fight: a pile tap did not land the card in flight")
 		_check_inspector(fails, screen, game.cb.draw, "the draw pile mid-flight")
-		await _idle(screen)
+		await _idle(screen, fails)
 		screen._close_inspector()
 		if _played(game) != played + 1:
 			fails.append("pile fight: a pile tap during a flight played %d cards"
@@ -252,7 +260,7 @@ static func _pile_tap_takes_nothing(fails: Array[String]) -> void:
 				if is_instance_valid(stream) and not stream.done():
 					fails.append("pile fight: a pile tap did not complete the reshuffle")
 			await _frames(1)
-		await _idle(screen)
+		await _idle(screen, fails)
 		screen._close_inspector()
 	if tapped:
 		_check_rest(fails, screen, "a pile tap during the reshuffle")
@@ -295,9 +303,9 @@ static func _inspector_shows_cards(fails: Array[String]) -> void:
 	var attack: int = _playable(game, "attack", false)
 	if skill >= 0 and attack >= 0:
 		_drag_play(screen, skill)
-		await _idle(screen)
+		await _idle(screen, fails)
 		screen.request_play(attack, screen._first_living())
-		await _idle(screen)
+		await _idle(screen, fails)
 		screen._show_pile(&"discard")
 		var top_first: Array[int] = []
 		for card: BakedCard in screen._inspector_grid.cards():
@@ -348,7 +356,7 @@ static func _freed_mid_flight(fails: Array[String]) -> void:
 				var skill: int = _playable(game, "skill", false)
 				if attack >= 0 and skill >= 0:
 					screen.request_play(attack, screen._first_living())
-					await _idle(screen)
+					await _idle(screen, fails)
 					_drag_play(screen, skill)
 					await _frames(2)
 					caught = screen._hand.sent(skill)
@@ -362,7 +370,7 @@ static func _freed_mid_flight(fails: Array[String]) -> void:
 						if not caught:
 							await _frames(1)
 					if not caught:
-						await _idle(screen)
+						await _idle(screen, fails)
 		if not caught:
 			fails.append("pile fight: the screen was never caught mid-%s" % when)
 		var tree: SceneTree = Engine.get_main_loop() as SceneTree
@@ -485,10 +493,13 @@ static func _played(game: GlassvowGame) -> int:
 	return n
 
 
-static func _idle(screen: CombatScreen) -> void:
-	var until: int = Time.get_ticks_msec() + 10000
-	while screen.seq.is_busy() and Time.get_ticks_msec() < until:
+static func _idle(screen: CombatScreen, fails: Array[String]) -> void:
+	var left: int = 10 * FIXED_FPS
+	while screen.seq.is_busy() and left > 0:
 		await _frames(1)
+		left -= 1
+	if screen.seq.is_busy():
+		fails.append("pile fight: the drain did not finish in 10 simulated seconds")
 	await _wait(CardFlight.HANDOFF_HOLD + CardFlight.HANDOFF_FADE + 0.15)
 
 

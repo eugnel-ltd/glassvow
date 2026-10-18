@@ -170,11 +170,13 @@ static func choose_node(map: WorldMap, run: RunState) -> int:
 			best_score = score
 	return best
 static func play_turn(game: GlassvowGame) -> void:
+	_choose_hand(game)
 	_use_potions(game)
 	play_hand(game)
 ## The turn after the potions: the Art, the cards, one kindle, then both again.
 ## Flame readout 8's search player plays this turn whenever no line it finds beats it.
 static func play_hand(game: GlassvowGame) -> void:
+	_choose_hand(game)
 	_use_art(game)
 	_play_cards(game)
 	if game.cb.over:
@@ -186,6 +188,27 @@ static func play_hand(game: GlassvowGame) -> void:
 	_play_cards(game) # Verdant Branch can draw from the kindle.
 ## The Art, unless paying for it now would leave a better Ember-cost card in hand
 ## unpaid: that card is played first and the Art waits for the Embers left.
+## The Known Road: highest catalogue scores, upgraded definitions included;
+## strict comparison keeps deal/pile order on ties and consumes no RNG.
+static func _choose_hand(game: GlassvowGame) -> void:
+	if game.cb.staged.is_empty():
+		return
+	var pool: Array[CardInst] = game.cb.staged.duplicate()
+	pool.append_array(game.cb.draw)
+	var uids: Array[int] = []
+	for _slot: int in range(game.cb.staged.size()):
+		var best: int = 0
+		var score: float = -INF
+		for i: int in range(pool.size()):
+			var card: CardInst = pool[i]
+			var value: float = catalogue_card_score(game.content, game.run.aspect, String(card.id), card.up)
+			if value > score:
+				best = i
+				score = value
+		uids.append(pool[best].uid)
+		pool.remove_at(best)
+	game.apply({"t": "chooseHand", "uids": uids})
+
 static func _use_art(game: GlassvowGame) -> void:
 	if game.rules.can_use_art(game.run, game.cb) and not _art_outranked(game):
 		game.apply({"t": "useArt"})
@@ -282,6 +305,9 @@ static func _foes_after(game: GlassvowGame, d: Dictionary, target: Variant,
 					and (who == "allEnemies" or (who == "target" and aimed)):
 				twin.statuses[id] = int(float(str(twin.statuses.get(id, 0)))) \
 					+ int(float(str(fx.get("n", 0))))
+		if aimed and _special_id(d) == "silvering":
+			twin.flags = twin.flags.duplicate()
+			twin.flags[CombatRules.SILVERED] = true
 		if aimed and preview.get("lethal", false):
 			twin.hp = 0
 		elif aimed and preview.get("willShatter", false):
@@ -355,6 +381,20 @@ static func _target(game: GlassvowGame, card: CardInst, d: Dictionary,
 		living: Array[EnemyCombatant], previews: Dictionary) -> Variant:
 	if str(d.get("target", "")) != "enemy":
 		return null
+	if _special_id(d) == "silvering":
+		var strongest: EnemyCombatant = living[0]
+		var largest: int = -1
+		for enemy: EnemyCombatant in living:
+			var hit: int = 0
+			var preview_v: Variant = game.rules.preview_enemy_dmg(game.cb, enemy, game.run)
+			if not enemy.staggered and not enemy.flags.has(CombatRules.SILVERED) \
+					and typeof(preview_v) == TYPE_DICTIONARY:
+				var preview: Dictionary = preview_v
+				hit = int(float(str(preview["dmg"]))) * int(float(str(preview["times"])))
+			if hit > largest:
+				strongest = enemy
+				largest = hit
+		return strongest.idx
 	var poison: bool = _has_effect(d, "status", "poison") \
 		or _has_effect(d, "special", "catalyst")
 	if _special_id(d) == "catalyst":
@@ -483,7 +523,7 @@ static func incoming_on(rules: CombatRules, run: RunState, cb: CombatState,
 					smolder[living[rng.pick_index(living.size())]] += smolder[i]
 				continue
 		var e: EnemyCombatant = standing[i]
-		if e.staggered:
+		if e.staggered or e.flags.has(CombatRules.SILVERED):
 			continue
 		var preview_v: Variant = rules.preview_enemy_dmg(cb, e, run)
 		if typeof(preview_v) == TYPE_DICTIONARY:
@@ -794,7 +834,7 @@ static func worst_card(run: RunState, content: ContentDB, cards: Array, kindle: 
 	var worst: CardInst = null
 	var score: float = INF
 	for card: CardInst in cards:
-		if kindle and str(content.cards.get(String(card.id), {}).get("type", "")) == "curse":
+		if kindle and (card.id == &"unbowed" or str(content.cards.get(String(card.id), {}).get("type", "")) == "curse"):
 			continue
 		var candidate: float = catalogue_card_score(content, run.aspect, String(card.id)) if kindle \
 			else build_card_score(content, run.aspect, String(card.id))

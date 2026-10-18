@@ -135,6 +135,9 @@ static func _search(points: Array[Vector2], graph: Dictionary, obstacles: Array,
 	var open: Array = []
 	var labels: Dictionary = {}
 	var closed: Dictionary = {}
+	# Clearance depends on this directed segment, not its predecessor. Keep
+	# the cache local to the search and retain the cost and queue ordering.
+	var clearance_by_edge: Dictionary = {}
 	var serial: int = 0
 	var start: Dictionary = {"s": "-1>0", "p": -1, "n": 0, "parent": "",
 		"c": [0.0, 0, 0.0, 0.0, 0.0], "k": "000", "v": serial}
@@ -163,8 +166,13 @@ static func _search(points: Array[Vector2], graph: Dictionary, obstacles: Array,
 			if next == previous:
 				continue
 			var previous_point: Variant = points[previous] if previous >= 0 else null
-			var cost: Array = _advance(current["c"], previous_point, points[at], points[next], obstacles, source, target)
 			var next_state: String = "%d>%d" % [at, next]
+			if not clearance_by_edge.has(next_state):
+				clearance_by_edge[next_state] = _clearance(
+					points[at].distance_to(points[next]), points[at], points[next], obstacles)
+			var clearance: float = clearance_by_edge[next_state]
+			var cost: Array = _advance(current["c"], previous_point, points[at], points[next],
+				obstacles, source, target, clearance)
 			var key: String = "%s|%03d" % [str(current["k"]), next]
 			if labels.has(next_state):
 				var old: Dictionary = labels[next_state]
@@ -184,13 +192,14 @@ static func _search(points: Array[Vector2], graph: Dictionary, obstacles: Array,
 		target_state = str(label["parent"])
 	return {"ok": true, "path": path, "state_count": labels.size(), "expansions": expansions}
 static func _advance(cost_v: Variant, previous_v: Variant, a: Vector2, b: Vector2,
-		obstacles: Array, source: Vector2, target: Vector2) -> Array:
+		obstacles: Array, source: Vector2, target: Vector2, clearance: float = -1.0) -> Array:
 	var source_cost: Array = cost_v
 	var cost: Array = source_cost.duplicate()
 	var leg: float = a.distance_to(b)
 	cost[LENGTH] = MapLayoutCanonical.float_value(cost[LENGTH]) + leg
 	cost[LANE] = MapLayoutCanonical.float_value(cost[LANE]) + leg * absf((target - source).cross((a + b) * 0.5 - source)) / source.distance_to(target)
-	cost[CLEARANCE] = MapLayoutCanonical.float_value(cost[CLEARANCE]) + _clearance(leg, a, b, obstacles)
+	cost[CLEARANCE] = MapLayoutCanonical.float_value(cost[CLEARANCE]) + (
+		_clearance(leg, a, b, obstacles) if clearance < 0.0 else clearance)
 	if previous_v is Vector2:
 		var previous: Vector2 = previous_v
 		var turn: float = absf(rad_to_deg((a - previous).angle_to(b - a)))

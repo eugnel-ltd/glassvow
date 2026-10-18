@@ -97,8 +97,8 @@ class _Job:
 	extends RefCounted
 	signal done
 	var result: Baked = null
-	## Whether the result goes into the cache. `choose` clears it for every
-	## back but the chosen one.
+	## Whether the result goes into the cache. `choose` refreshes it from the
+	## latest choice, including a back selected again before its bake lands.
 	var keep: bool = true
 
 
@@ -145,9 +145,8 @@ static func choose(prefs: Preferences, id: String) -> void:
 		if str(key) != id:
 			_bakes.erase(key)
 	for key: Variant in _jobs:
-		if str(key) != id:
-			var job: _Job = _jobs[key]
-			job.keep = false
+		var job: _Job = _jobs[key]
+		job.keep = str(key) == id
 
 
 ## A live back, as the card lab stands one up. Everything that needs many

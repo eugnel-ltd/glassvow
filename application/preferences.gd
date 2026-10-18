@@ -65,6 +65,8 @@ var card_back: String = ""
 ## stand-in stays in memory whatever a lab does to it.
 var _persistent: bool = false
 var _path: String = PATH
+## Retain unrecognised sections and keys from a newer settings catalogue.
+var _config: ConfigFile = ConfigFile.new()
 
 
 static func read_from_disk(path: String = PATH,
@@ -74,6 +76,7 @@ static func read_from_disk(path: String = PATH,
 	preferences._persistent = true
 	var config: ConfigFile = ConfigFile.new()
 	if config.load(path) == OK:
+		preferences._config = config
 		preferences._read(config)
 	else:
 		# First boot on the new file: carry the old audio.cfg choices over,
@@ -278,7 +281,7 @@ func _apply_bus(bus: StringName) -> void:
 func _store() -> void:
 	if not _persistent:
 		return
-	var config: ConfigFile = ConfigFile.new()
+	var config: ConfigFile = _config
 	config.set_value("audio", "master_volume", master_volume)
 	config.set_value("audio", "music_volume", music_volume)
 	config.set_value("audio", "sfx_volume", sfx_volume)
@@ -293,6 +296,5 @@ func _store() -> void:
 	config.set_value(PRIVACY_SECTION, DIAGNOSTICS_KEY, diagnostics_enabled)
 	config.set_value(PRIVACY_SECTION, DIAGNOSTICS_NOTICE_KEY, diagnostics_notice_seen)
 	config.set_value(COSMETICS_SECTION, CARD_BACK_KEY, card_back)
-	var error: Error = config.save(_path)
-	if error != OK:
-		push_warning("preferences: could not save (%s)" % error_string(error))
+	if not SaveService.store_text_atomic(_path, config.encode_to_text()):
+		push_warning("preferences: could not save settings")

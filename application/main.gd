@@ -3852,7 +3852,7 @@ func _show_pending_reward(quiet: bool = false) -> void:
 	_reward_screen.hud = _run_hud
 	if reward_kind == "boss":
 		_music.play(&"victory")
-	for key: String in ["gold", "card", "potion", "relic"]:
+	for key: String in ["gold", "card", "potion", "relic", "relic2"]:
 		if taken.get(key, false):
 			_reward_screen.mark_taken(StringName(key))
 	# After the marks, so only a spoil the entrance had not reached is banked.
@@ -3891,7 +3891,7 @@ func _on_reward_claimed(what: StringName, id: String) -> void:
 				_show_potion_replace(id)
 				return
 			game.run.player.potions[slot] = id
-		&"relic":
+		&"relic", &"relic2":
 			if not id.is_empty():
 				game.rewards.gain_relic(game.run, id)
 	taken[key] = true
@@ -4258,12 +4258,18 @@ func _on_terminal_commit(_id: String) -> void:
 	var before_shards: int = _vigil.shards.size()
 	var before_whispers: int = _vigil.whispers
 	var before_backs: Array[String] = CardBacks.catalogue().unlocked(_vigil)
+	# A failed win leaves every reader on the accepted ledger, so Retry can
+	# still compute the original Dawn delta without exposing unheld awards.
+	var accepted_vigil: VigilState = _vigil
+	if outcome == "win":
+		_vigil = VigilState.from_dict(_vigil.to_dict())
 	var recorded: bool = _vigil.commit_run(game.run, outcome, content)
 	var dawn_leaves: Array[String] = []
 	if recorded:
 		dawn_leaves = DawnPassages.archive(_vigil, DawnPassages.earned(
 			before_quests, _vigil.quests, before_shards, _vigil.shards.size()))
 	if not recorded or not _store_vigil():
+		_vigil = accepted_vigil
 		_show_save_error("ui.persistence.detail.vigilRecord")
 		return
 	if outcome != "win":
