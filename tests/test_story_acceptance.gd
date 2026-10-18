@@ -104,11 +104,12 @@ static func _inventory(content: ContentDB, fails: Array[String]) -> void:
 			waystone_n += 1
 		elif slot == "loss":
 			loss_n += 1
-	_check(fails, hearth_n == 60 and waystone_n == 60 and loss_n == 50,
+	_check(fails, hearth_n == 61 and waystone_n == 60 and loss_n == 50,
 		"Batch 3 pools hearth=%d waystone=%d loss=%d" % [
 			hearth_n, waystone_n, loss_n])
-	_check(fails, content.line_table.size() == 186,
-		"line-table census is not 186 (got %d)" % content.line_table.size())
+	# A7 adds six Ash lines (one hearth) and three codex sentences to 186 rows.
+	_check(fails, content.line_table.size() == 195,
+		"line-table census is not 195 (got %d)" % content.line_table.size())
 	var whispers: Locale = Locale.new(Locale.CODE_EN)
 	var whispers_zh: Locale = Locale.new(Locale.CODE_ZH_HANT)
 	_check(fails, whispers_zh.code == Locale.CODE_ZH_HANT, "zh-Hant whispers missing")

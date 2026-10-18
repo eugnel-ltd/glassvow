@@ -3573,6 +3573,7 @@ func _onboard_fight(ids: PackedStringArray, kind: String) -> void:
 	_screen.potion_requested.connect(_show_combat_potion_menu)
 	_screen.hint_guide = _hints
 	add_child(_screen)
+	_prewarm_card_turns()
 	_screen.start_encounter(ids, kind, "Onboard  ·  %s" % kind.capitalize())
 
 

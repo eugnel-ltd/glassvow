@@ -79,11 +79,13 @@ var _captions: Array[Label] = []     # parallel to _ordered; empty off the surfa
 var _caption_h: float = 0.0          # extra row height the captions need
 
 
-## All 61 cards' display fields. Falls back to the slice's own registry if the
-## catalogue is absent. Public because the studio reads the same catalogue and
-## one JSON contract deserves one reader — an older checkout still gets a working lab, just the
-## 18 cards the domain can deal, and says so rather than coming up empty.
-static func load_catalog(fallback: ContentDB) -> Dictionary:
+## The historical comparison catalogue and backs. An explicit id missing from
+## that sheet may preview a current card, copied so authoring cannot mutate
+## ContentDB. With no explicit request, the accepted 61-card sheet stays intact.
+## The studio and turn sheet share this reader. An absent fixture still falls
+## back to the supplied content registry.
+static func load_catalog(fallback: ContentDB,
+		requested: PackedStringArray = PackedStringArray()) -> Dictionary:
 	if ResourceLoader.exists(CATALOG_PATH) or FileAccess.file_exists(CATALOG_PATH):
 		var text: String = FileAccess.get_file_as_string(CATALOG_PATH)
 		if not text.is_empty():
@@ -94,12 +96,16 @@ static func load_catalog(fallback: ContentDB) -> Dictionary:
 				if typeof(cards) == TYPE_DICTIONARY:
 					var out: Dictionary = cards
 					out.merge(back_entries())
+					for id: String in requested:
+						if fallback != null and not out.has(id) and fallback.cards.has(id):
+							var row: Dictionary = fallback.cards[id]
+							out[id] = row.duplicate(true)
 					return out
 	push_warning("card lab: %s unreadable — falling back to the slice registry"
 		% CATALOG_PATH)
 	# Duplicated before the merge: the fallback is the live content registry,
 	# and the backs must not leak into it.
-	var merged: Dictionary = fallback.cards.duplicate()
+	var merged: Dictionary = fallback.cards.duplicate(true)
 	merged.merge(back_entries())
 	return merged
 
@@ -171,7 +177,7 @@ func _init(content_ref: ContentDB, only: PackedStringArray = PackedStringArray()
 	# The offscreen passes are sized in logical px, so they have to grow with
 	# the window's content scale or a zoomed sheet inspects a stretched card.
 	CardView.oversample = maxf(2.0, _zoom)
-	_catalog = load_catalog(content_ref)
+	_catalog = load_catalog(content_ref, only)
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = GlassStyle.theme()
 
