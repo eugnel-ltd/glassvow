@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from dataclasses import replace
 from functools import lru_cache
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -70,8 +71,9 @@ def is_decision_claim(claim: Mapping[str, Any]) -> bool:
     return isinstance(claim.get("equals"), bool) or claim.get("gate") is True
 
 
-def needs_judge(cases: Iterable[Case]) -> bool:
-    return any(is_judge_claim(claim) for case in cases for claim in case.grader["claims"])
+def needs_judge(cases: Iterable[Case], *, scored_only: bool = False) -> bool:
+    return any(is_judge_claim(claim) and not (scored_only and claim.get("report_only"))
+               for case in cases for claim in case.grader["claims"])
 
 
 def validate_grader_spec(spec: Mapping[str, Any]) -> None:
@@ -83,12 +85,25 @@ def validate_grader_spec(spec: Mapping[str, Any]) -> None:
     if not isinstance(claims, list) or not claims:
         raise EvalError("grader needs a non-empty claims list")
     seen: set[str] = set()
+    reported_fields: set[str] = set()
+    scored_fields: set[str] = set()
     for claim in claims:
         claim_id = claim.get("id")
         if not claim_id or claim_id in seen:
             raise EvalError(f"claim id missing or duplicated: {claim_id!r}")
         seen.add(claim_id)
         programmatic = [key for key in CLAIM_KEYS if key in claim]
+        if "report_only" in claim:
+            if claim["report_only"] is not True or not is_judge_claim(claim) or claim.get("gate"):
+                raise EvalError(f"claim {claim_id!r}: report_only must be true on an unscored judge, never a gate")
+            if not claim.get("field"):
+                raise EvalError(f"claim {claim_id!r}: report_only needs a separate field")
+            reported_fields.add(claim["field"])
+        else:
+            scored_fields.add(claim.get("field", ""))
+        if "strict" in claim and (claim["strict"] is not True or programmatic != ["equals"]
+                                  or type(claim["equals"]) not in (str, bool, int, float)):
+            raise EvalError(f"claim {claim_id!r}: strict requires one scalar equals value")
         if is_judge_claim(claim):
             if programmatic or not str(claim["question"]).strip():
                 raise EvalError(f"judge claim {claim_id!r} needs a question and no regex or equals")
@@ -109,6 +124,8 @@ def validate_grader_spec(spec: Mapping[str, Any]) -> None:
                     re.compile(claim[key])
                 except re.error as error:
                     raise EvalError(f"claim {claim_id!r} has a bad regex: {error}") from error
+    if reported_fields and (not scored_fields or reported_fields & scored_fields):
+        raise EvalError("report-only fields must be separate from at least one scored claim")
 
 
 @lru_cache(maxsize=None)
@@ -188,8 +205,11 @@ def check_claim(claim: Mapping[str, Any], answer: Mapping[str, Any]) -> Verdict:
         return Verdict(claim_id, False, f"does not match /{claim['must_match']}/")
     if "must_not_match" in claim and re.search(claim["must_not_match"], text, REGEX_FLAGS):
         return Verdict(claim_id, False, f"matches forbidden /{claim['must_not_match']}/")
-    if "equals" in claim and not _equals(value, claim["equals"]):
-        return Verdict(claim_id, False, f"is not {claim['equals']!r}")
+    if "equals" in claim:
+        expected = claim["equals"]
+        equal = (type(value) is type(expected) and value == expected) if claim.get("strict") else _equals(value, expected)
+        if not equal:
+            return Verdict(claim_id, False, f"is not {expected!r}")
     return Verdict(claim_id, True)
 
 
@@ -294,7 +314,7 @@ def judge_claims(claims: Sequence[Mapping[str, Any]], answer: Mapping[str, Any],
     return verdicts, model_id, None
 
 
-def grade(case: Case, output: str, judge: Backend | None = None,
+def _grade_scored(case: Case, output: str, judge: Backend | None = None,
           judge_model: str = DEFAULT_JUDGE_MODEL, expected_judge_id: str | None = None,
           timeout_s: float = JUDGE_TIMEOUT_S, judge_arm: str = DEFAULT_JUDGE_ARM) -> Grade:
     """Grade one output: programmatic claims first, then (only if no gate failed) the judge.
@@ -331,6 +351,57 @@ def grade(case: Case, output: str, judge: Backend | None = None,
     ordered = tuple(verdicts[c["id"]] for c in claims)
     decision_failed = any(is_decision_claim(c) and not v.passed for c, v in zip(claims, ordered))
     return Grade(ordered, decision_failed=decision_failed, judge_model_id=model_id)
+
+
+def grade(case: Case, output: str, judge: Backend | None = None,
+          judge_model: str = DEFAULT_JUDGE_MODEL, expected_judge_id: str | None = None,
+          timeout_s: float = JUDGE_TIMEOUT_S, judge_arm: str = DEFAULT_JUDGE_ARM) -> Grade:
+    """Score decisive claims; optional report-only judgements cannot change that result.
+
+    Reported fields, votes, model identity and failures stay outside the scorer's inputs,
+    gates and infrastructure status. Legacy specs keep their scored hybrid behaviour.
+    """
+    reported = [c for c in case.grader["claims"] if c.get("report_only") is True]
+    if not reported:
+        return _grade_scored(case, output, judge, judge_model, expected_judge_id, timeout_s, judge_arm)
+    validate_grader_spec(case.grader)
+    scored = [c for c in case.grader["claims"] if not c.get("report_only")]
+    scoring_case = replace(case, grader={**case.grader, "claims": scored})
+    fields = list(dict.fromkeys(c["field"] for c in reported))
+    try:
+        answer = _unwrap(parse_json_answer(output))
+    except ValueError:
+        result = _grade_scored(scoring_case, output, judge, judge_model,
+                                expected_judge_id, timeout_s, judge_arm)
+        return replace(result, reported_verdicts=tuple(
+            Verdict(c["id"], False, "reported only: unparseable reply") for c in reported))
+    scoring_output = json.dumps({k: v for k, v in answer.items() if k not in fields})
+    result = _grade_scored(scoring_case, scoring_output, judge, judge_model,
+                           expected_judge_id, timeout_s, judge_arm)
+    verdicts = {}
+    for claim in reported:
+        settled = _precheck(claim, answer)
+        if settled is not None:
+            verdicts[claim["id"]] = settled
+        elif ADDRESSES_GRADER.search(_field_text(answer[claim["field"]])):
+            verdicts[claim["id"]] = Verdict(claim["id"], False, "reported field addresses the grader")
+    pending = [c for c in reported if c["id"] not in verdicts]
+    model_id, error = "", None
+    if (pending and judge is not None and not result.decision_failed
+            and not result.parse_error and not result.judge_error):
+        reference = case.reference if judge_arm == "reference" else None
+        try:
+            judged, model_id, error = judge_claims(pending, answer, fields, judge, judge_model,
+                                                   timeout_s=timeout_s, reference=reference)
+            verdicts.update(judged)
+        except Exception as failure:
+            # An optional reporter must not prevent the completed score from being returned.
+            error = f"report-only judge raised {type(failure).__name__}"
+    for claim in pending:
+        verdicts.setdefault(claim["id"], Verdict(
+            claim["id"], False, "reported only: " + (error or "not evaluated")))
+    return replace(result, reported_verdicts=tuple(verdicts[c["id"]] for c in reported),
+                   reported_judge_error=error, reported_judge_model_id=model_id)
 
 
 def grade_claims(case: Case, output: str) -> Grade:

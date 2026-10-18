@@ -18,6 +18,12 @@ Entry format (newest first):
 
 ## Entries
 
+### Gate every structured choice required for an actionable answer
+- Cause: Exact checks rejected wrong secondary choices, but only the first selected decision gated; a wrong heading or corrected expression still earned partial credit.
+- Fix: e93d5c43 (source audit and regression), issue #694 gate repair; keep optional background hypotheses separate from required decisions.
+- Done right: Audit each selected field against its source and prove that a wrong or missing required choice scores zero; keep free-text reasoning reported only.
+- Seen: 1× (2026-10-18)
+
 ### Keep animation regression budgets on the simulation clock
 - Cause: Card and pile regressions compared wall-clock deadlines and frame samples with variable-step animations, so heavy host load could change which states they observed.
 - Fix: 431b6363 (issue #661), fixed-step children for the two affected suites.
