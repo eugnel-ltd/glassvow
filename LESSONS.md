@@ -18,6 +18,12 @@ Entry format (newest first):
 
 ## Entries
 
+### Pass one platform snapshot through each shared update
+- Cause: The hologram's shared update and its pointer helper each built the same platform-facts dictionary, doubling that work every active frame.
+- Fix: bf786ce7b004179b75ed767a84c586ab414d53a7
+- Done right: Read once after the still and forced-pose exits, then pass the snapshot to both consumers. Count provider calls through the real shared-update dispatch and check same-frame reuse.
+- Seen: 1× (2026-10-18)
+
 ### Gate every structured choice required for an actionable answer
 - Cause: Exact checks rejected wrong secondary choices, but only the first selected decision gated; a wrong heading or corrected expression still earned partial credit.
 - Fix: e93d5c43 (source audit and regression), issue #694 gate repair; keep optional background hypotheses separate from required decisions.
@@ -28,12 +34,6 @@ Entry format (newest first):
 - Cause: Card and pile regressions compared wall-clock deadlines and frame samples with variable-step animations, so heavy host load could change which states they observed.
 - Fix: 431b6363 (issue #661), fixed-step children for the two affected suites.
 - Done right: Exercise the real timers, tweens and event sequence; verify the fixed delta across a wall delay and prove a slower flight still fails the original checks.
-- Seen: 1× (2026-10-18)
-
-### Pass one platform snapshot through each shared update
-- Cause: The hologram's shared update and its pointer helper each built the same platform-facts dictionary, doubling that work every active frame.
-- Fix: bf786ce7b004179b75ed767a84c586ab414d53a7
-- Done right: Read once after the still and forced-pose exits, then pass the snapshot to both consumers. Count provider calls through the real shared-update dispatch and check same-frame reuse.
 - Seen: 1× (2026-10-18)
 
 This repo's long record of solved problems is `docs/solutions/`, by category. Short repeatable lessons go here.
