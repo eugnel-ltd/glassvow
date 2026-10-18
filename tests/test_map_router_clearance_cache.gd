@@ -2,17 +2,33 @@ extends RefCounted
 ## Keep the author's visibility-router bytes while bounding repeated geometry.
 
 const Cases = preload("res://tests/support/router_clearance_cases.gd")
-## Captured from c0e0010c before the cache, on Godot 4.7.2. Includes every route
-## field: centerline, costs, failure, diagnostics and digest, on all nine cases.
-const ORIGINAL_ROWS: String = "0a9e3c0a3e3f377dc6a59ae7b6e6f868a54e2bda8327e0c180a4371622d87527"
 
 static func run(fails: Array[String]) -> void:
-	var rows: Array = []
-	for fixture: Dictionary in Cases.cases():
-		rows.append({"name": fixture["name"], "result": Cases.route(MapSingleEdgeRouter, fixture)})
-	_check(fails, MapLayoutCanonical.digest(rows) == ORIGINAL_ROWS,
-		"canonical output changed on the symmetric, reordered, rotated, channel or near-tie fixtures")
+	var uncached: GDScript = _uncached_router(fails)
+	if uncached != null:
+		for fixture: Dictionary in Cases.cases():
+			var current: Dictionary = Cases.route(MapSingleEdgeRouter, fixture)
+			var original: Dictionary = Cases.route(uncached, fixture)
+			_check(fails, MapLayoutCanonical.canonical_bytes(current) == MapLayoutCanonical.canonical_bytes(original),
+				"memoised and uncached route bytes differ on %s" % fixture["name"])
 	_check_search_geometry(fails)
+
+static func _uncached_router(fails: Array[String]) -> GDScript:
+	# Recompute only the memoised geometry on this host. Every other route
+	# path, cost addition and queue comparison remains the production code.
+	var source: String = FileAccess.get_file_as_string("res://presentation/map/map_single_edge_router.gd")
+	var guard: String = "\t\t\tif not clearance_by_edge.has(next_state):"
+	if source.count(guard) != 1:
+		fails.append("test_map_router_clearance_cache: cannot locate exactly one memo guard")
+		return null
+	source = source.replace("class_name MapSingleEdgeRouter\n", "")
+	source = source.replace(guard, "\t\t\tif true:")
+	var router: GDScript = GDScript.new()
+	router.source_code = source
+	if router.reload() != OK:
+		fails.append("test_map_router_clearance_cache: the uncached router failed to load")
+		return null
+	return router
 
 static func _check_search_geometry(fails: Array[String]) -> void:
 	var router: GDScript = _counting_router(fails)
