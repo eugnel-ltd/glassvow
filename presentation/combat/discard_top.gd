@@ -26,7 +26,8 @@ var uid: int = -1
 var _swept: bool = false
 var _face: CardFaces.Face = null
 var _face_uid: int = -1
-var _seen: Dictionary = {}    # uid -> CardFaces.Face
+var _definition_key: String = ""
+var _seen: Dictionary = {}    # uid -> [CardFaces.Face, resolved definition key]
 var _hud: HudBar = null
 var _hand: HandView = null
 ## func(uid: int) -> CardInst, and func(inst: CardInst) -> Dictionary.
@@ -51,12 +52,15 @@ func show_on(hud: HudBar, hand: HandView) -> void:
 func arrive(card_uid: int, swept: bool = false) -> void:
 	uid = card_uid
 	_swept = swept
-	var face: CardFaces.Face = _seen.get(card_uid)
+	_definition_key = _key_of(card_uid)
+	var pending: Array = _seen.get(card_uid, [])
+	var face: CardFaces.Face = pending[0] if pending.size() == 2 \
+		and str(pending[1]) == _definition_key else null
 	_seen.erase(card_uid)
 	if face == null:
 		face = _cached(card_uid)
 	if face != null:
-		_wear(card_uid, face)
+		_wear(card_uid, face, _definition_key)
 		return
 	_apply()
 	if _hand == null or not _hand.sent(card_uid):
@@ -71,9 +75,9 @@ func face_ready(card_uid: int, face: CardFaces.Face) -> void:
 			_bake(card_uid)
 		return
 	if card_uid == uid:
-		_wear(card_uid, face)
+		_wear(card_uid, face, _key_of(card_uid))
 	else:
-		_seen[card_uid] = face
+		_seen[card_uid] = [face, _key_of(card_uid)]
 
 
 ## The discard has gone (a reshuffle took it).
@@ -81,6 +85,7 @@ func clear() -> void:
 	uid = -1
 	_face = null
 	_face_uid = -1
+	_definition_key = ""
 	_apply()
 
 
@@ -90,6 +95,16 @@ func clear() -> void:
 func settle(want_uid: int) -> void:
 	if want_uid == uid:
 		_seen.clear()
+		# A power can change rider printing without entering the discard. Keep
+		# the fast snapshot/cache path unless this same card's definition changed.
+		var key: String = _key_of(want_uid) if want_uid >= 0 else ""
+		if key != _definition_key:
+			_definition_key = key
+			var face: CardFaces.Face = _cached(want_uid)
+			if face != null:
+				_wear(want_uid, face, key)
+			else:
+				_bake(want_uid)
 		return
 	if want_uid >= 0 and _hand != null and _hand.in_air(false).has(want_uid):
 		return
@@ -100,8 +115,8 @@ func settle(want_uid: int) -> void:
 		arrive(want_uid)
 
 
-func _wear(card_uid: int, face: CardFaces.Face) -> void:
-	if card_uid != uid:
+func _wear(card_uid: int, face: CardFaces.Face, key: String) -> void:
+	if card_uid != uid or key != _definition_key:
 		return
 	_face = face
 	_face_uid = card_uid
@@ -129,10 +144,20 @@ func _cached(card_uid: int) -> CardFaces.Face:
 	return CardFaces.cached(inst, data, CardFaces.cost_of(data))
 
 
+func _key_of(card_uid: int) -> String:
+	var inst: CardInst = _card_of.call(card_uid)
+	if inst == null:
+		return ""
+	var data: Dictionary = _data_of.call(inst)
+	return CardFaces.key_of(inst, data, CardFaces.cost_of(data))
+
+
 func _bake(card_uid: int) -> void:
 	var inst: CardInst = _card_of.call(card_uid)
 	if inst == null or _hud == null or not _hud.is_inside_tree():
 		return
 	var data: Dictionary = _data_of.call(inst)
+	var key: String = CardFaces.key_of(inst, data, CardFaces.cost_of(data))
+	_definition_key = key
 	CardFaces.request(_hud, inst, data, CardFaces.cost_of(data),
-		func(face: CardFaces.Face) -> void: _wear(card_uid, face))
+		func(face: CardFaces.Face) -> void: _wear(card_uid, face, key))

@@ -11,9 +11,12 @@ extends RefCounted
 ## moved them from abb82590… / 5adbd58a…. #212's mythic set (six `mythic`
 ## cards in no `cardPools` tier, so no balance pool changes) moved them from
 ## 3eea1429… / 0aff175e….
+## #544 A4 adds only four bilingual `litText` display maps. Their new live
+## identities include that metadata; test_class_rider_catalogue_identity
+## reconstructs the preceding 922635e5… / c7bfa201… catalogue byte-for-byte.
 
-const LIVE_FILE: String = "922635e5a1529a5ff306df4c5bc4a884dbd2e246cceac7b4a3e84ce29b38cd67"
-const LIVE_SEMANTIC: String = "c7bfa20100fdc20ea8e021ccf4a56567dc0f5b937be05176155da8213af4a053"
+const LIVE_FILE: String = "ec55d80a6e8c732436809b8c0f867139b7cd48174b3b9ea77c1faf00cabad19d"
+const LIVE_SEMANTIC: String = "909016d061721bcaa217a729db2010ca827300f461796978c7149ed08101dbbc"
 
 
 static func run(fails: Array[String]) -> void:

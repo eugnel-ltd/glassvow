@@ -303,6 +303,7 @@ var _hovered: bool = false
 ## over. It lives inside the face SubViewport and is not reachable by node path
 ## from outside.
 var _body: RulesText = null
+var _rules_text: String = ""
 ## Built as a card back — a painting on the slab, no face furniture, no stone.
 var _is_back: bool = false
 ## Kept for what it holds and never drawn again (`retire`).
@@ -362,6 +363,7 @@ static var _keeper: Callable = Callable()
 
 func _init(inst: CardInst, data: Dictionary, cost: int) -> void:
 	uid = inst.uid
+	_rules_text = str(data.get("text", ""))
 	card_id = inst.id
 	target_kind = str(data.get("target", ""))
 	var unplayable_flag: bool = data.get("unplayable", false)
@@ -1844,6 +1846,15 @@ func _kill_pose() -> void:
 	if _pose_tw != null and _pose_tw.is_valid():
 		_pose_tw.kill()
 	_pose_tw = null
+
+
+## Refresh an already-held card when the Unbroken Flame changes its rules.
+func set_rules_text(text: String) -> void:
+	if _body == null or _rules_text == text:
+		return
+	_rules_text = text
+	_body.set_text(text)
+	_set_live(_hovered or is_processing() or not CardTurn.is_rest(_slab_turn))
 
 
 ## Which keyword the pointer is over, or "" for none.
