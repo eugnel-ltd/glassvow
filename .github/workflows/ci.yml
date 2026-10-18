@@ -88,6 +88,13 @@ jobs:
           python3 -B tests/test_agent_contracts.py
           python3 -B tools/check_agent_contracts.py
 
+      - name: Check company product manifest
+        if: steps.scope.outputs.run_product_manifest == 'true'
+        run: |
+          set -euo pipefail
+          python3 -m pip install 'PyYAML==6.0.3'
+          python3 -B .ai-sdlc/manifest_check.py product.yaml
+
       - name: Setup Godot
         if: steps.scope.outputs.setup_godot == 'true'
         uses: chickensoft-games/setup-godot@v2
