@@ -1702,7 +1702,8 @@ func preview_enemy_dmg(
 
 ## What would this card actually do to this target? null when it previews nothing.
 func preview_play(
-	cb: CombatState, inst: CardInst, target_idx: Variant = null, run: RunState = null
+	cb: CombatState, inst: CardInst, target_idx: Variant = null, run: RunState = null,
+	include_hand_payoffs: bool = true
 ) -> Variant:
 	var d: Dictionary = card_data(inst)
 	var p: PlayerCombatant = cb.player
@@ -1712,6 +1713,7 @@ func preview_play(
 		target = cb.enemies[ti]
 	var hits: Array[Dictionary] = []
 	var block: int = 0
+	var hand_payoff: bool = false
 	var effects: Array = d.get("effects", [])
 	for fx_v: Variant in effects:
 		var fx: Dictionary = fx_v
@@ -1734,6 +1736,24 @@ func preview_play(
 				hits.append({"dmg": _preview_hit(p, target, _ji(fx["n"])), "times": 1})
 			elif sid == "momentum":
 				hits.append({"dmg": _preview_hit(p, target, _ji(fx["n"]) + inst.bonus), "times": 1})
+			elif sid == "phantom" and include_hand_payoffs:
+				var remaining: int = cb.hand.size()
+				for held: CardInst in cb.hand:
+					if held.uid == inst.uid:
+						remaining -= 1
+						break
+				# Attack relics resolve before the card's effects. Keep their new
+				# projection local to Phantom; frozen callers retain every old field.
+				var strength: int = 0
+				var multiplier: int = 1
+				if run != null and str(d.get("type", "")) == "attack":
+					if run.has_relic("ironTalisman") and (cb.counters_attacks + 1) % 3 == 0:
+						strength = 1
+					if run.has_relic("executionersSeal") and (cb.counters_attacks + 1) % 10 == 0:
+						multiplier = 2
+				hits.append({"dmg": _preview_hit(p, target, _ji(fx["n"]) * remaining + strength)
+					* multiplier, "times": 1})
+				hand_payoff = true
 			elif sid == "doubleBlock":
 				block += p.block
 	var fx_chips: int = 0
@@ -1752,17 +1772,28 @@ func preview_play(
 	var lethal: bool = false
 	var chips: int = 0
 	var will_shatter: bool = false
+	var handoff: bool = false
 	if target != null:
 		var b: int = target.block
+		var hp: int = target.hp
 		loss = 0
 		for h: Dictionary in hits:
+			if hand_payoff and (hp <= 0 or handoff):
+				break
 			var hd: int = h["dmg"]
 			var ht: int = h["times"]
 			for _i: int in range(ht):
+				if hand_payoff and (hp <= 0 or handoff):
+					break
 				var soak: int = mini(b, hd)
 				b -= soak
-				loss += hd - soak
-		lethal = loss >= target.hp
+				var hit_loss: int = hd - soak
+				if hand_payoff and hit_loss >= hp and _is_finale_handoff(target):
+					hit_loss = maxi(0, hp - 1)
+					handoff = true
+				loss += hit_loss
+				hp -= hit_loss
+		lethal = loss >= target.hp and not handoff
 		# Facet arithmetic mirrors play_card: an attack that draws unblocked
 		# blood chips once (plus card/beacon bonuses); explicit chips always land.
 		# Ash (aspect != 0) still computes per, then zeros — apply_chips no-ops.
@@ -1772,8 +1803,10 @@ func preview_play(
 		chips = (per if (hits.size() > 0 and loss > 0) else 0) + fx_chips
 		if run != null and run.aspect != 0:
 			chips = 0
+		if hand_payoff and (handoff or lethal):
+			chips = 0  # A terminal hit never receives the card's deferred chips.
 		will_shatter = chips > 0 and target.chips + chips >= target.facet_max and not lethal
-	return {
+	var preview: Dictionary = {
 		"hits": hits,
 		"total": total,
 		"loss": loss,
@@ -1782,6 +1815,9 @@ func preview_play(
 		"chips": chips,
 		"willShatter": will_shatter,
 	}
+	if hand_payoff:
+		preview["handoff"] = handoff
+	return preview
 
 
 func _preview_hit(p: PlayerCombatant, target: EnemyCombatant, base: int) -> int:
