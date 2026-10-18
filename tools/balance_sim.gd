@@ -28,6 +28,12 @@ const PLAYERS: Dictionary = {"greedy": Pilot, "search": Search}
 ## How the build is chosen: by the pilot's scores, at random, or by the pilot's
 ## scores leaning on the lantern's lit colour (flame readout 10's A_lit arm).
 const BUILDS: Array[String] = ["adaptive", "random", "lit"]
+## Explicit research arms only. The shipping O6 gate and default rows stay dark.
+const MYTHIC_ARMS: Array[String] = ["control", "natural", "bankedFire", "silvering",
+	"unbrokenFlame", "unbowed", "knownRoad", "cleanBreak"]
+static var _mythic_arm: String = ""
+static var _mythic_rolls: Array[Dictionary] = []
+static var _mythic_faults: PackedStringArray = PackedStringArray()
 static var _probe: Dictionary = {}
 static var _flame_acts: Array[Dictionary] = []
 static var _flame_fights: Array[Dictionary] = []
@@ -86,7 +92,7 @@ func _initialize() -> void:
 			rows.append(simulate(content, aspect, int(float(str(opts["seed0"]))) + offset,
 				int(float(str(opts["vow"]))), ban, _policy(opts), str(opts["build"]) == "random",
 				false, _mix(opts), null, false, str(opts["pool"]), str(opts["play"]),
-				str(opts["pilot"]), str(opts["search"])))
+				str(opts["pilot"]), str(opts["search"]), str(opts["mythic"])))
 	var report: Dictionary = Metrics.report(rows, _manifest(opts, overlay, identity))
 	if rows.size() == 1:
 		report["outcomeDigest"] = outcome_digest(rows[0])
@@ -101,13 +107,30 @@ func _initialize() -> void:
 			return
 		file.store_string(text + "\n")
 		print(JSON.stringify({"calibration": report["calibration"], "summary": report["summary"]}))
-	quit(0)
+	quit(1 if not str(opts["mythic"]).is_empty() and rows.any(
+		func(row: Dictionary) -> bool: return row.get("outcome") == "error") else 0)
 static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0,
 		ban: PackedStringArray = PackedStringArray(), policy: Dictionary = {},
 		random_build: bool = false, random_play: bool = false, mix: Dictionary = {},
 		vigil: VigilState = null, strip_start_hex: bool = false, pool: String = "",
 		play: String = "greedy", pilot: String = Pilot.VERSION,
-		search: String = Search.VERSION) -> Dictionary:
+		search: String = Search.VERSION, mythic: String = "") -> Dictionary:
+	var live: bool = RewardRules.mythics_live
+	if not mythic.is_empty():
+		RewardRules.mythics_live = mythic == "natural"
+	var row: Dictionary = _simulate(content, aspect, seed, vow, ban, policy, random_build,
+		random_play, mix, vigil, strip_start_hex, pool, play, pilot, search, mythic)
+	RewardRules.mythics_live = live
+	_mythic_arm = ""
+	return row
+
+static func _simulate(content: ContentDB, aspect: String, seed: int, vow: int,
+		ban: PackedStringArray, policy: Dictionary, random_build: bool, random_play: bool,
+		mix: Dictionary, vigil: VigilState, strip_start_hex: bool, pool: String,
+		play: String, pilot: String, search: String, mythic: String) -> Dictionary:
+	_mythic_arm = mythic
+	_mythic_rolls = []
+	_mythic_faults = PackedStringArray()
 	_probe = {}
 	_flame_acts = []
 	_flame_fights = []
@@ -116,7 +139,7 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 	Pilot.select(pilot)
 	Search.select(search)
 	Pilot.set_ban(ban)
-	Pilot.apply_policy(policy)
+	Pilot.apply_policy(policy if mythic.is_empty() else Policy.mythic_read(policy))
 	Pilot.set_modes(random_build, random_play)
 	var aspect_index: int = _aspect_index(content, aspect)
 	if aspect_index < 0:
@@ -132,7 +155,15 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 		profile["shards"] = vigil.shards.duplicate()
 		profile["knight"] = ["knight-1", "knight-2", "knight-3"].filter(
 			func(id: String) -> bool: return vigil.scenes_seen.has(id)).size()
+	if not mythic.is_empty():
+		profile["unlocks"].erase(RunState.MIRRORED_ROAD)
+		profile["knight"] = RewardRules.KNIGHT_ROUTE_DONE
 	var run: RunState = RunState.new_run(content, seed, "sim-%s-%d" % [aspect, seed], profile)
+	if not mythic.is_empty() and mythic not in ["control", "natural"]:
+		if not content.is_mythic(mythic) or vow < 3:
+			return {"seed": seed, "aspect": aspect, "vow": vow, "outcome": "error", "error": "invalid forced mythic"}
+		run.player.deck.append(CardInst.new(run.next_uid(), StringName(mythic), false))
+		run.quest_scratch[RewardRules.MYTHIC_SLOT] = {"id": mythic, "via": "sim-forced"}
 	if strip_start_hex:
 		_strip_hex(run)
 	_apply_ban(run)
@@ -164,9 +195,18 @@ static func simulate(content: ContentDB, aspect: String, seed: int, vow: int = 0
 					economy.append(_economy_row(run))
 					_flame_acts.append(Flame.read(content, run))
 					return _finish(run, aspect, seed, "win", fights, "", economy, vigil, content)
-				_claim_rewards(game, game.gen_combat_rewards(node.combat_kind(), game.cb.affix))
+				if mythic.is_empty():
+					_claim_rewards(game, game.gen_combat_rewards(node.combat_kind(), game.cb.affix))
+				else:
+					var read: Dictionary = mythic_rewards(game, node.combat_kind(), game.cb.affix)
+					var drops: Dictionary = read["rewards"]
+					_claim_rewards(game, drops)
+					read.erase("rewards")
+					if node.combat_kind() == "elite":
+						_mythic_rolls.append(read)
 			else:
 				_resolve_safe_node(game, node, vigil)
+			_observe_mythic(game)
 			map.clear_current()
 			if node.type == "boss" and not run.is_final_act():
 				economy.append(_economy_row(run))
@@ -192,14 +232,18 @@ static func _fight(game: GlassvowGame, node: MapNode) -> Dictionary:
 	var shatters_before: int = int(float(str(game.run.stats.get("shatters", 0))))
 	var reading: Dictionary = Flame.read(game.content, game.run)
 	game.apply({"t": "startCombat", "enemies": enemies, "kind": node.combat_kind()})
+	_observe_mythic(game)
 	while not game.cb.over:
 		_player.play_turn(game)
+		_observe_mythic(game)
 		if game.cb.over:
 			break
 		if game.cb.turn >= TURN_GUARD:
 			game.run.player.hp = maxi(0, game.cb.player.hp)
 			break
 		game.apply({"t": "endTurn"})
+		_observe_mythic(game)
+	_observe_mythic(game)
 	var smolder_kills: int = 0
 	var plays: Dictionary = {}
 	for event: Dictionary in game.cb.queue:
@@ -237,6 +281,7 @@ static func _claim_rewards(game: GlassvowGame, rewards: Dictionary) -> void:
 	var gold: int = int(float(str(rewards.get("gold", 0))))
 	game.run.player.gold += gold
 	game.run.stats["goldEarned"] = int(float(str(game.run.stats.get("goldEarned", 0)))) + gold
+	_forbidden_mythics(game, rewards.get("cards", []), "Offering")
 	for card_v: Variant in rewards.get("cards", []):
 		_bump("%sOffered" % str(card_v))
 	var card: String = Pilot.choose_card(rewards.get("cards", []), game.content, game.run.aspect,
@@ -256,6 +301,55 @@ static func _claim_rewards(game: GlassvowGame, rewards: Dictionary) -> void:
 	var relic2_v: Variant = rewards.get("relic2")
 	if relic2_v != null and not Pilot.is_banned(str(relic2_v)):
 		game.rewards.gain_relic(game.run, str(relic2_v))
+	var mythic_id: String = str(rewards.get("mythic", ""))
+	if not mythic_id.is_empty() and game.content.is_mythic(mythic_id):
+		game.run.player.deck.append(CardInst.new(game.run.next_uid(), StringName(mythic_id), false))
+
+## Observe the real guard before generation; both public pool helpers are RNG-free.
+static func mythic_rewards(game: GlassvowGame, kind: String, affix: StringName = &"") -> Dictionary:
+	var eligible: bool = kind == "elite" and game.rewards.mythic_rate > 0.0 \
+		and game.rewards.mythic_slot_open(game.run) and not game.rewards.mythic_pool(game.run).is_empty()
+	var rate: float = game.rewards.mythic_rate
+	var rewards: Dictionary = game.gen_combat_rewards(kind, affix)
+	var offered: String = str(rewards.get("mythic", ""))
+	if not offered.is_empty() and (not eligible or game.run.vow < 3 \
+			or (offered == RewardRules.UNBROKEN_FLAME and not game.run.unlocks.has(RunState.MIRRORED_ROAD))):
+		_mythic_faults.append("forbidden mythic offer: " + offered)
+	return {"act": game.run.act + 1, "eligible": eligible, "rate": rate,
+		"offer": offered, "rewards": rewards}
+
+static func mythic_invariants(game: GlassvowGame) -> PackedStringArray:
+	var faults: PackedStringArray = PackedStringArray()
+	var count: int = 0
+	for card: CardInst in game.run.player.deck:
+		count += 1 if game.content.is_mythic(String(card.id)) else 0
+	if count > 1:
+		faults.append("two mythics in one deck")
+	if game.run.player.hp < 0:
+		faults.append("negative run HP")
+	if game.cb != null:
+		if game.cb.embers > game.cb.ember_cap:
+			faults.append("Embers above lantern cap")
+		if game.cb.hand.size() + game.cb.staged.size() > 10:
+			faults.append("hand above ten")
+		if game.cb.player.hp < 0:
+			faults.append("negative combat HP")
+	return faults
+
+static func _observe_mythic(game: GlassvowGame) -> void:
+	if not _mythic_arm.is_empty():
+		for fault: String in mythic_invariants(game):
+			if not _mythic_faults.has(fault):
+				_mythic_faults.append(fault)
+
+static func _forbidden_mythics(game: GlassvowGame, cards_v: Variant, source: String) -> void:
+	if _mythic_arm.is_empty():
+		return
+	var cards: Array = cards_v if typeof(cards_v) == TYPE_ARRAY else []
+	for id_v: Variant in cards:
+		if game.content.is_mythic(str(id_v)):
+			_mythic_faults.append("mythic in " + source)
+
 static func _resolve_safe_node(game: GlassvowGame, node: MapNode,
 		vigil: VigilState = null) -> void:
 	Pilot.see_flame(game.content, game.run)
@@ -316,6 +410,7 @@ static func _resolve_event(game: GlassvowGame, vigil: VigilState = null) -> void
 	Pilot.see_flame(game.content, game.run) # The choice's ops may have changed the deck.
 	match str(pending.get("kind", "")):
 		"card":
+			_forbidden_mythics(game, pending.get("cards", []), "event")
 			for pending_card: Variant in pending.get("cards", []):
 				_bump("%sOffered" % str(pending_card))
 			var id: String = Pilot.choose_card(pending.get("cards", []), game.content, game.run.aspect,
@@ -332,7 +427,11 @@ static func _resolve_event(game: GlassvowGame, vigil: VigilState = null) -> void
 				elif event_id == "mirror":
 					_bump("mirrorRemovalChosen")
 		"duplicate":
-			var source: CardInst = Pilot.best_card(game.run, game.content, game.run.player.deck)
+			var candidates: Array[CardInst] = []
+			for card: CardInst in game.run.player.deck:
+				if not game.content.is_mythic(String(card.id)):
+					candidates.append(card)
+			var source: CardInst = Pilot.best_card(game.run, game.content, candidates)
 			if source != null:
 				game.run.player.deck.append(CardInst.new(game.run.next_uid(), source.id, source.up))
 static func _event_choice_score(game: GlassvowGame, choice: Dictionary) -> float:
@@ -454,6 +553,7 @@ static func _resolve_shop(game: GlassvowGame) -> void:
 	var stock: Dictionary = game.rewards.gen_shop(game.run)
 	for row_v: Variant in stock.get("cards", []):
 		var row: Dictionary = row_v
+		_forbidden_mythics(game, [row.get("id", "")], "shop")
 		_bump("%sOffered" % str(row.get("id", "")))
 	var buys: Array[Dictionary] = Pilot.choose_shop(stock, game.run, game.content)
 	for buy: Dictionary in buys:
@@ -592,6 +692,12 @@ static func _finish(run: RunState, aspect: String, seed: int, outcome: String,
 		vigil: VigilState, content: ContentDB) -> Dictionary:
 	var row: Dictionary = _result(run, aspect, seed, outcome, fights, error, economy)
 	row["flame"] = _flame_row(run, content, fights.size())
+	if not _mythic_arm.is_empty():
+		row["mythicStudy"] = {"arm": _mythic_arm, "rolls": _mythic_rolls.duplicate(true),
+			"violations": _mythic_faults.duplicate(), "knightComplete": true, "actIVClear": false}
+		if not _mythic_faults.is_empty():
+			row["outcome"] = "error"
+			row["error"] = "; ".join(_mythic_faults)
 	if vigil != null:
 		var commit: String = "win" if outcome == "win" else "death"
 		vigil.commit_run(run, commit, content)
@@ -685,7 +791,7 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		"removalAppetite": Pilot.REMOVAL_APPETITE_DEFAULT,
 		"removalMinCopies": Pilot.REMOVAL_MIN_COPIES_DEFAULT,
 		"way": "none", "pool": "mature", "build": "adaptive", "wayCommit": "", "wayOff": "",
-		"play": "greedy", "pilot": Pilot.VERSION, "search": Search.VERSION}
+		"play": "greedy", "pilot": Pilot.VERSION, "search": Search.VERSION, "mythic": ""}
 	for arg: String in args:
 		if not arg.begins_with("--") or not arg.contains("="):
 			return {"error": "expected --name=value, got %s" % arg}
@@ -719,6 +825,11 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		return {"error": "--search must be one of %s" % ", ".join(Search.VERSIONS)}
 	if str(out["search"]) != Search.VERSION and str(out["play"]) != "search":
 		return {"error": "--search=%s needs --play=search" % out["search"]}
+	var mythic: String = str(out["mythic"])
+	if not mythic.is_empty() and not MYTHIC_ARMS.has(mythic):
+		return {"error": "--mythic must name a declared mythic, control or natural"}
+	if mythic not in ["", "control", "natural"] and int(float(str(out["vow"]))) < 3:
+		return {"error": "forced mythics require Vow 3..5"}
 	return _way_weights(out)
 static func _mix(opts: Dictionary) -> Dictionary:
 	var id: String = str(opts.get("mix", ""))
@@ -737,12 +848,14 @@ static func _policy(opts: Dictionary) -> Dictionary:
 		for key: String in ["wayCommit", "wayOff"]:
 			if not str(opts.get(key, "")).is_empty():
 				over[key] = float(str(opts[key]))
-	return Policy.resolve(over)
+	return Policy.resolve(over) if str(opts.get("mythic", "")).is_empty() else Policy.mythic_read(over)
 static func _manifest(opts: Dictionary, overlay: String, identity: Dictionary) -> Dictionary:
 	var row: Dictionary = identity.duplicate()
 	row["contentSha256"] = str(identity.get("contentFileSha256", ""))
 	row["overlay"] = null if overlay.is_empty() else {"path": overlay,
 		"sha256": FileAccess.get_sha256(overlay)}
+	if not str(opts.get("mythic", "")).is_empty():
+		row["mythicStudy"] = {"arm": opts["mythic"], "knightComplete": true, "actIVClear": false}
 	row["pilot"] = opts["pilot"]
 	row["play"] = opts["play"]
 	if str(opts["play"]) == "search":
