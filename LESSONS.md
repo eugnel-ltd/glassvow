@@ -18,6 +18,12 @@ Entry format (newest first):
 
 ## Entries
 
+### Gate every structured choice required for an actionable answer
+- Cause: Exact checks rejected wrong secondary choices, but only the first selected decision gated; a wrong heading or corrected expression still earned partial credit.
+- Fix: e93d5c43 (source audit and regression), issue #694 gate repair; keep optional background hypotheses separate from required decisions.
+- Done right: Audit each selected field against its source and prove that a wrong or missing required choice scores zero; keep free-text reasoning reported only.
+- Seen: 1× (2026-10-18)
+
 ### Pass one platform snapshot through each shared update
 - Cause: The hologram's shared update and its pointer helper each built the same platform-facts dictionary, doubling that work every active frame.
 - Fix: bf786ce7b004179b75ed767a84c586ab414d53a7

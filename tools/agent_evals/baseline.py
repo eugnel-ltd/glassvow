@@ -8,7 +8,7 @@ from .backends import Backend
 from .diagnostics import (HEADROOM_LIMIT, TRIVIAL_LIMIT, grader_consistency,
                           headroom_warnings, ordering_warnings, trivial_answerer_scores)
 from .evalspec import EvalSpec
-from .graders import DEFAULT_JUDGE_ARM, DEFAULT_JUDGE_MODEL
+from .graders import DEFAULT_JUDGE_ARM, DEFAULT_JUDGE_MODEL, needs_judge
 from .models import Case, sha256_text, write_json
 from .report import results_html
 from .runner import (DEFAULT_INFRA_THRESHOLD, DEFAULT_TIMEOUT_S, infra_summary, run_set)
@@ -68,13 +68,18 @@ def run_baseline(spec: EvalSpec, cases: Sequence[Case], backend: Backend,
         warnings.append(f"infrastructure failure rate {infra['rate']:.1%} exceeds "
                         f"{infra_threshold:.1%}; the run is invalid")
     judge_ids = sorted({t["judge_model_id"] for t in all_transcripts if t.get("judge_model_id")})
+    scored_judge = judge is not None and needs_judge(cases, scored_only=True)
+    reported_ids = sorted({t["grade"].get("reported_judge_model_id") for t in all_transcripts
+                           if t["grade"].get("reported_judge_model_id")})
     results = {
         "eval": spec.name, "run_id": run_id, "status": "failed" if infra["rate"] > infra_threshold else "ok",
         "surface_sha256": sha256_text(surface_text), "cases_sha256": spec.cases_sha256,
         "case_ids": [c.id for c in cases], "reps": reps, "backend": backend.describe(), "models": model_blocks,
-        "judge": {"model": judge_model if judge is not None else "",
-                  "arm": judge_arm if judge is not None else "",
+        "judge": {"model": judge_model if scored_judge else "",
+                  "arm": judge_arm if scored_judge else "",
                   "model_id": judge_ids[0] if len(judge_ids) == 1 else "", "model_ids": judge_ids},
+        "reported_judge": {"model_ids": reported_ids, "errors": sum(
+            bool(t["grade"].get("reported_judge_error")) for t in all_transcripts)},
         "diagnostics": {"trivial_answerers": trivial, "infra": infra,
                         "headroom_flagged": [m for m, b in model_blocks.items()
                                              if b["summary"]["mean"] > HEADROOM_LIMIT], "infra_threshold": infra_threshold,

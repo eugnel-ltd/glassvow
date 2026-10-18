@@ -86,7 +86,15 @@ jobs:
         if: steps.scope.outputs.run_agent_contracts == 'true'
         run: |
           python3 -B tests/test_agent_contracts.py
+          python3 -B tests/test_record_decision.py
           python3 -B tools/check_agent_contracts.py
+
+      - name: Check company product manifest
+        if: steps.scope.outputs.run_product_manifest == 'true'
+        run: |
+          set -euo pipefail
+          python3 -m pip install 'PyYAML==6.0.3'
+          python3 -B .ai-sdlc/manifest_check.py product.yaml
 
       - name: Setup Godot
         if: steps.scope.outputs.setup_godot == 'true'
@@ -236,6 +244,8 @@ jobs:
           python3 -B tests/test_agent_evals.py
           python3 -B tests/test_agent_evals_review.py
           python3 -B tests/test_agent_evals_council.py
+          python3 -B tests/test_agent_evals_decision_gates.py
+          python3 -B tests/test_agent_evals_workflow.py
 
       # The web-reference twin used to be excluded from CI on purpose: it
       # resolved citations against the roguecardv2-benchmark checkout and

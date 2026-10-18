@@ -182,7 +182,9 @@ def validate_repository(root: Path) -> list[str]:
                         command = hook.get("command")
                         if not isinstance(command, str):
                             continue
-                        match = re.match(r'^"\$CLAUDE_PROJECT_DIR"/(\S*)', command)
+                        match = re.match(
+                            r'^(?:"\$CLAUDE_PROJECT_DIR"|\$CLAUDE_PROJECT_DIR)/(\S*)',
+                            command)
                         if match is None:
                             continue
                         relative_path = match.group(1)

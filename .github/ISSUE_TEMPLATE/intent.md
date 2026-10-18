@@ -1,6 +1,6 @@
 ---
 name: Intent
-about: What is wanted and how we will know it is done. The issue is the intent and its single source of truth.
+about: What is wanted and how we will know it is done. A complete owner instruction or active issue is the intent.
 title: ""
 labels: intent
 ---

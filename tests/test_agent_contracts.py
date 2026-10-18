@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -193,6 +194,40 @@ class AgentContractTests(unittest.TestCase):
             ".claude/settings.json: hook command names non-executable file "
             ".claude/hooks/format-lint.sh",
         ], CONTRACTS.validate_repository(root))
+
+    def test_unquoted_hook_commands_receive_the_same_path_checks(self) -> None:
+        for prefix in ('"$CLAUDE_PROJECT_DIR"/', '$CLAUDE_PROJECT_DIR/'):
+            for state, expected in (
+                ('missing', 'missing file .claude/hooks/format-lint.sh'),
+                ('non-executable', 'non-executable file .claude/hooks/format-lint.sh'),
+                ('executable', None),
+            ):
+                with self.subTest(prefix=prefix, state=state):
+                    temporary, root = self.make_fixture()
+                    self.addCleanup(temporary.cleanup)
+                    self.write_hook_settings(
+                        root, prefix + '.claude/hooks/format-lint.sh --check')
+                    if state != 'missing':
+                        path = root / '.claude/hooks/format-lint.sh'
+                        path.parent.mkdir()
+                        path.write_text('#!/bin/sh\nexit 0\n', encoding='utf-8')
+                        path.chmod(0o755 if state == 'executable' else 0o644)
+                    errors = CONTRACTS.validate_repository(root)
+                    self.assertEqual(
+                        [] if expected is None else [
+                            '.claude/settings.json: hook command names ' + expected],
+                        errors)
+
+    def test_unquoted_hook_command_cannot_escape_the_project(self) -> None:
+        for prefix in ('"$CLAUDE_PROJECT_DIR"/', '$CLAUDE_PROJECT_DIR/'):
+            with self.subTest(prefix=prefix):
+                temporary, root = self.make_fixture()
+                self.addCleanup(temporary.cleanup)
+                self.write_hook_settings(root, prefix + '../outside.sh --check')
+                self.assertEqual([
+                    '.claude/settings.json: hook command names file outside root '
+                    '../outside.sh',
+                ], CONTRACTS.validate_repository(root))
 
     def test_hook_commands_without_project_prefix_are_ignored(self) -> None:
         temporary, root = self.make_fixture()
@@ -419,6 +454,81 @@ class AgentContractTests(unittest.TestCase):
         errors = CONTRACTS.validate_repository(root)
         self.assertTrue(any("one bounded owner audition and choice" in error
                             for error in errors), errors)
+
+
+class RecordDecisionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        temporary = tempfile.TemporaryDirectory(prefix='glassvow-owner-decision-')
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.path = self.root / 'owner-decisions.md'
+        self.original = (
+            '# Owner decisions\n\n## Decisions\n\n'
+            '## 2026-10-01: Existing decision\n'
+            '- Decision: Preserve the old rule.\n'
+            '- Why: "Keep it."\n'
+            '- Scope: delivery\n')
+
+    def run_helper(self, *args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ['sh', str(ROOT / 'scripts/record_decision.sh'), *args],
+            cwd=self.root, text=True, capture_output=True, check=False)
+
+    def test_hook_recommended_decision_helper_is_executable(self) -> None:
+        path = ROOT / 'scripts/record_decision.sh'
+        self.assertTrue(path.is_file(), 'the guard-edits recommendation must exist')
+        self.assertTrue(path.stat().st_mode & 0o111, 'the decision helper must execute')
+
+    def test_records_quoted_decision_without_rewriting_prior_entries(self) -> None:
+        self.path.write_text(self.original, encoding='utf-8')
+        decision = r'Keep C:\temp\new and the regex \d+ literally.'
+        result = self.run_helper(
+            'A new decision', decision, '"Use the stated path."', 'delivery',
+            str(self.path))
+        self.assertEqual(0, result.returncode, result.stderr)
+        text = self.path.read_text(encoding='utf-8')
+        self.assertRegex(text, r'## \d{4}-\d{2}-\d{2}: A new decision\n')
+        self.assertIn('- Decision: ' + decision + '\n', text)
+        self.assertIn('- Why: "Use the stated path."\n', text)
+        prefix, old_entries = self.original.split('## Decisions\n', 1)
+        self.assertTrue(text.startswith(prefix + '## Decisions\n'))
+        self.assertTrue(text.endswith(old_entries), 'existing entries must stay intact')
+        self.assertEqual(len(self.original.splitlines()) + 5, len(text.splitlines()))
+
+    def test_records_paraphrased_decision_at_the_default_path(self) -> None:
+        path = self.root / 'docs/owner-decisions.md'
+        path.parent.mkdir()
+        path.write_text(self.original, encoding='utf-8')
+        result = self.run_helper(
+            'Delivery', 'Keep the rule.', 'Paraphrased: from the owner thread.', 'docs')
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn('- Why: Paraphrased: from the owner thread.\n',
+                      path.read_text(encoding='utf-8'))
+
+    def test_invalid_decision_does_not_change_existing_entries(self) -> None:
+        self.path.write_text(self.original, encoding='utf-8')
+        for args in (
+            ('Title', 'Decision', 'the owner said so', 'scope'),
+            ('Title', 'Decision', 'Not a Paraphrased: source', 'scope'),
+            ('Title\nnew heading', 'Decision', '"Quoted"', 'scope'),
+            ('Title', 'Decision', '"Quoted"', ''),
+        ):
+            with self.subTest(args=args):
+                result = self.run_helper(*args, str(self.path))
+                self.assertEqual(1, result.returncode, result.stderr)
+                self.assertEqual(self.original, self.path.read_text(encoding='utf-8'))
+
+    def test_missing_document_is_not_fabricated(self) -> None:
+        result = self.run_helper('Title', 'Decision', '"Quoted"', 'scope', str(self.path))
+        self.assertEqual(1, result.returncode, result.stderr)
+        self.assertFalse(self.path.exists())
+
+    def test_document_without_decisions_heading_is_unchanged(self) -> None:
+        original = '# Owner decisions\nNo decisions section.\n'
+        self.path.write_text(original, encoding='utf-8')
+        result = self.run_helper('Title', 'Decision', '"Quoted"', 'scope', str(self.path))
+        self.assertEqual(1, result.returncode, result.stderr)
+        self.assertEqual(original, self.path.read_text(encoding='utf-8'))
 
 
 if __name__ == "__main__":

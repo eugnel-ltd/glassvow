@@ -1,0 +1,14 @@
+{
+  "name": "repo_traps_structured",
+  "description": "Unapproved 80-case programmatic fallback development candidate for issue #694.",
+  "surface": ".claude/skills/glassvow-godot/SKILL.md",
+  "grader_type": "claims",
+  "default_models": [
+    "haiku",
+    "sonnet",
+    "opus"
+  ],
+  "hillclimb_model": "sonnet",
+  "judge_model": "sonnet",
+  "judge_arm": "plain"
+}
