@@ -224,6 +224,7 @@ var _overlay: ColorRect = null       # the scrim; one at a time, reused
 var _deep: bool = false
 var _picked: bool = false
 var _lantern: RunLantern = null      # the Flame, once a reading arrives
+var _card_data: Callable
 
 ## One FontVariation per (face, tracking); Label wants a Font resource and a
 ## fresh one per label re-pays the shaping setup.
@@ -232,9 +233,11 @@ static var _fonts: Dictionary = {}
 
 func _init(reward_ref: Dictionary, content_ref: ContentDB,
 		kind: String = "normal", benchmark: bool = false,
-		stage_shape: StringName = StageShape.IDENTITY) -> void:
+		stage_shape: StringName = StageShape.IDENTITY,
+		card_data: Callable = Callable()) -> void:
 	reward = reward_ref
 	content = content_ref
+	_card_data = card_data
 	encounter_kind = kind
 	bench = benchmark
 	shape = stage_shape if StageShape.REFERENCES.has(stage_shape) else StageShape.IDENTITY
@@ -790,12 +793,14 @@ func _open_choice_modal(ids: Array) -> void:
 
 
 func _card(id: String, uid: int) -> CardView:
-	var data: Dictionary = content.cards.get(id, {})
+	var inst: CardInst = CardInst.new(uid, StringName(id))
+	var data: Dictionary = _card_data.call(inst) if _card_data.is_valid() \
+		else content.cards.get(id, {})
 	# `cost` is present-but-null on the unplayable cards, so Dictionary.get's
 	# default never fires — the same read combat.gd's eff_cost does.
 	var cost_v: Variant = data.get("cost")
 	var cost: int = 0 if cost_v == null else int(float(str(cost_v)))
-	var card: CardView = CardView.new(CardInst.new(uid, StringName(id)), data, cost)
+	var card: CardView = CardView.new(inst, data, cost)
 	var k: float = _card_scale()
 	card.scale = Vector2(k, k)
 	card.released_at.connect(func(_u: int, _p: Vector2) -> void: _take_card(id))
