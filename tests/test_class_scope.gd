@@ -133,7 +133,7 @@ static func _title_counts_only_offered_unlocks(content: ContentDB, fails: Array[
 		_check(fails, main._carved_deeds() == bare,
 			"%s title counts a withheld class as an unearthed secret" % code)
 		main._vigil.unlocks.append("poolWave2")
-		var one: String = Main._carve(Locale.active.t("ui.brand.secrets", {
+		var one: String = Main._carve(Locale.active.t("ui.brand.secretsOne", {
 			"n": LeadlightNumerals.carved(1)}).trim_prefix(" · "))
 		_check(fails, main._carved_deeds() == bare + [one],
 			"%s title does not count only the offered unlock beside aspect2" % code)
