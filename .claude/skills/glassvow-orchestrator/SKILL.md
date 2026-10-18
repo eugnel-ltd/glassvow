@@ -7,6 +7,8 @@ description: How to run Glassvow as the orchestrator - brief and delegate lanes,
 
 The orchestrator is the session that owns the programme rather than one change. It writes briefs, starts lanes, commissions reviews, merges, archives and keeps the machine healthy. It does very little implementation itself.
 
+Before machine-specific work, select and check `GLASSVOW_EXECUTION_MODE` as documented in `docs/agents/cloud-environment.md`. Cloud sessions run directly in independent checkouts; sections 4 to 6 and the Mac/NAS references are local-mode procedures only. The environment contract owns cloud setup, evidence retention and `needs-local-machine` handoffs.
+
 This skill adds the orchestration method only. `AGENTS.md` (also served as `CLAUDE.md`) and `docs/agents/ai-sdlc.md` remain the contract for delivery, evidence, review and autonomy; where this file seems to disagree, they win. Engine work inside a lane loads `.claude/skills/glassvow-godot/SKILL.md`; copy loads `.claude/skills/glassvow-story/SKILL.md`.
 
 Depth lives in `references/`:
@@ -18,7 +20,8 @@ Depth lives in `references/`:
 | `references/housekeeping.sh` | The routine DerivedData prune and worktree prune |
 | `references/nas-archive.md` | Archiving a lane folder to the NAS with sha256 on both ends |
 | `references/lessons.md` | The engineering lessons behind the rules, one section each |
-| `references/machine-setup.md` | What a new machine needs, where each thing lives, and the seat and engine setup |
+| `references/machine-setup.md` | Local Mac setup and the seat and engine |
+| `docs/agents/cloud-environment.md` | Mode selection, cloud toolchain, tests and local-only handoffs |
 | `references/mbp.sh` | Run a shell command on the engine host from the seat |
 
 ## 1. The role
@@ -32,7 +35,7 @@ Depth lives in `references/`:
 ## 2. The lane lifecycle
 
 1. **Brief.** Copy `references/brief-template.md`. Name the outcome, the lane, the branch from `origin/<main>` at an exact SHA, the worktree path, the only sources to read, the owner decisions already made, scope and non-scope, acceptance and proof, and "report as the lane rules say". Link `references/lane-rules.md` (or a local copy with the session trailer filled in); never restate it loosely.
-2. **One lane per outcome.** Its own branch and its own git worktree under `<repo>/.claude/worktrees/<lane>/` (git-ignored, survives reboots; never `/tmp`). Each worktree gets an untracked `override.cfg` holding the full three-line block from the lane rules: the `[application]` header and both keys. Paste the block verbatim; "both keys" in prose has failed before.
+2. **One lane per outcome.** Its own branch and isolated checkout. Local mode uses a git worktree under `<repo>/.claude/worktrees/<lane>/` (git-ignored, survives reboots; never `/tmp`); cloud mode uses its assigned checkout or a separate worktree. Every checkout gets an untracked `override.cfg` holding the full three-line block from the lane rules: the `[application]` header and both keys. Paste the block verbatim; "both keys" in prose has failed before.
 3. **Lane works to its brief** and reports the PR number and exact head, the gates, the stills or device figures and the open risks. Lanes do not merge and do not post on issues.
 4. **Independent review.** Commission one `ai-sdlc-reviewer` as a non-fork subagent on the exact head, giving only the task contract, base SHA, head SHA, constraints and deterministic evidence already run (`docs/agents/ai-sdlc.md` section 5). If it reaches its turn cap, resume it once, then ask for a report-only answer.
    - `REQUEST_CHANGES`: batch every finding into one fix round by the lane (or a fresh owner with the lane's handoff), then send the delta to the same reviewer once more.
@@ -40,8 +43,8 @@ Depth lives in `references/`:
    - Skip the model review only for a fully mechanical change with decisive deterministic proof.
 5. **Record the verdict** as a PR comment (the reviewer shares the owner's identity, so never a GitHub `APPROVE`). Post long bodies from a file with `gh api ... -F body=@<file>` and read the first characters back.
 6. **Merge.** Wait until the required `test` check reports SUCCESS on that head; `gh pr checks --watch` returns at once if no check is registered yet, so poll. Then `gh pr merge <n> --squash --delete-branch --match-head-commit <full head SHA>`.
-7. **Archive and delete.** Archive the lane folder to the NAS with sha256 on both ends (`references/nas-archive.md`). Only when the two hashes match, remove the worktree (`git worktree remove`) and the lane folder by literal path, checking and deleting as separate commands.
-8. **Housekeeping.** Run `references/housekeeping.sh` (section 6) and note the free disk.
+7. **Archive and delete.** In local mode archive the lane folder to the NAS with sha256 on both ends (`references/nas-archive.md`); remove it only after the hashes match. In cloud mode preserve required evidence on the issue or PR before the checkout expires; no NAS archive is required unless the task explicitly binds it, in which case hand off that step. Remove only owned checkouts or lane folders, by literal path, checking and deleting as separate commands.
+8. **Housekeeping.** Local mode runs `references/housekeeping.sh` (section 6) and notes the free disk. Cloud mode skips Mac housekeeping.
 9. **Tracker.** Comment on the tracking issue: what merged (PR, squash SHA), the review verdict, follow-ups. Update the programme tracker if one exists. Never post an agent's draft text verbatim; strip drafting wrappers first.
 
 Pushes from scripts use `git -c credential.helper= -c credential.helper='!gh auth git-credential' push ...` when the macOS keychain reports -25308. In zsh write refspecs as `"${sha}:refs/heads/x"`.
@@ -56,7 +59,7 @@ Pushes from scripts use `git -c credential.helper= -c credential.helper='!gh aut
 - **Product rulings that still bind.** The map is the revived September journey rebuild, never a from-scratch concept; Acts II to IV follow that archive's approved chapter paintings. The iPad 8 (A12) is the floor, not the only target: the ceiling devices should gain through quality tiers. All player-facing copy comes from Claude through the story skill. Card and art picks are the owner's.
 - **Routing.** Codex Sol (newest, effort xhigh, when quota allows) is a cross-model reviewer and image tool, never a design voice. External CLIs are never the only reviewer or implementer.
 
-## 4. The shared Mac and iPad (with ks2)
+## 4. The shared Mac and iPad (local mode, with ks2)
 
 The Mac and the iPad 8 are shared with the Spelling Camp project (ks2-spelling), whose self-hosted iOS CI flakes under heavy load.
 
@@ -66,7 +69,7 @@ The Mac and the iPad 8 are shared with the Spelling Camp project (ks2-spelling),
 - **QA bundle only.** Lanes install only the QA app (`io.fol2.glassvow.qa`, "Glassvow QA") through `qa_export.sh`. Never the production bundle, never uninstall either app, never touch their containers or the owner's saves. Only `scripts/ios_release.sh` installs production, for a release. Ask before installing anything on the owner's iPhone.
 - **Device ids** come from the environment only, never echoed or committed.
 
-## 5. The seat and the engine (Mac mini and MacBook Pro)
+## 5. The seat and the engine (local mode: Mac mini and MacBook Pro)
 
 From 15 Oct 2026 Claude runs on a Mac mini (16 GB), **the seat**. The MacBook Pro (64 GB) is **the engine**. There is one copy of the repo, on the engine.
 
@@ -78,7 +81,7 @@ From 15 Oct 2026 Claude runs on a Mac mini (16 GB), **the seat**. The MacBook Pr
 
 Setup, the engine checklist and the caveats are in `references/machine-setup.md` section 9.
 
-## 6. Housekeeping
+## 6. Housekeeping (local mode only)
 
 Owner-authorised on 14 Oct 2026: after every lane cleanup or merge, the orchestrator (never a lane) prunes Glassvow's own orphaned Xcode DerivedData without asking. Run it on the engine:
 
@@ -100,4 +103,4 @@ It lists `~/Library/Developer/Xcode/DerivedData/glassvow-*` folders whose `info.
 - **11 Oct:** an exported pck run with `--main-pack` read `override.cfg` beside the pck, not the worktree's, and wrote 84 files into the real profile. They were quarantined with a manifest after the owner approved, not deleted. Hence: briefs that run exported builds or a second binary put the block beside the pck and the binary, and check the real profile's mtimes after the first run.
 - **14 Oct, 18:22:** the owner granted the orchestrator one exception: the routine housekeeping in section 6, which prunes orphaned `glassvow-*` DerivedData and expired git worktree records (metadata only, after a day: `git worktree prune --expire=1.day`). It does not extend to lanes or to any other path.
 
-Archived lane folders are deleted only after the NAS copy's sha256 matches the local one.
+In local mode, archived lane folders are deleted only after the NAS copy's sha256 matches the local one. Cloud evidence retention follows `docs/agents/cloud-environment.md`.
