@@ -1,0 +1,145 @@
+// CPU-native contract for the verbatim upstream _texture_initialize method.
+// The driver below records real method calls; it is not a renderer substitute.
+#include <algorithm>
+#include <cstdint>
+#include <cstring>
+#include <iostream>
+#include <numeric>
+#include <vector>
+#include <initializer_list>
+
+#define _ALWAYS_INLINE_ inline
+#define MAX(a,b) std::max(a,b)
+#define STEPIFY(v,s) (((v)+(s)-1)/(s)*(s))
+#define ERR_FAIL_NULL_V(p,e) do { if (!(p)) return e; } while (0)
+#define ERR_FAIL_COND_V(p,e) do { if (p) return e; } while (0)
+#define ERR_FAIL_COND_V_MSG(p,e,...) ERR_FAIL_COND_V(p,e)
+#define ERR_FAIL_V(e) return e
+enum Error { OK, ERR_INVALID_PARAMETER, ERR_BUG, ERR_CANT_CREATE, ERR_OUT_OF_MEMORY };
+struct RID { int id=0; bool operator!=(RID b)const{return id!=b.id;} };
+struct Vector3i { int x,y,z; Vector3i(int a,int b,int c):x(a),y(b),z(c){} };
+template<class T> struct Vector:std::vector<T> { using std::vector<T>::vector; const T *ptr()const{return this->data();} };
+template<class T> using LocalVector=std::vector<T>;
+struct MutexLock { explicit MutexLock(int&){} };
+struct Flags { int value=0; bool has_flag(int n)const{return value&n;} };
+static uint32_t failures=0,checks=0;
+static void check(bool yes,const char *message){checks++;if(!yes){failures++;std::cerr<<"FAIL "<<message<<'\n';}}
+struct Format {uint32_t bw,bh,bytes,pixel,shift;};
+static Format fmt;
+static uint32_t get_image_format_pixel_size(int){return fmt.pixel;}
+static uint32_t get_compressed_image_format_pixel_rshift(int){return fmt.shift;}
+static uint32_t get_compressed_image_format_block_byte_size(int){return fmt.bytes;}
+static void get_compressed_image_format_block_dimensions(int,uint32_t&w,uint32_t&h){w=fmt.bw;h=fmt.bh;}
+static uint32_t tight_slice(uint32_t w,uint32_t h){return STEPIFY(w,fmt.bw)/fmt.bw*(STEPIFY(h,fmt.bh)/fmt.bh)*fmt.bytes;}
+static uint32_t get_image_format_required_size(int,uint32_t w,uint32_t h,uint32_t d,uint32_t m,uint32_t*pw=nullptr,uint32_t*ph=nullptr,uint32_t*pd=nullptr){
+ uint32_t total=0;
+ for(uint32_t i=0;i<m;i++){
+  if(pw)*pw=STEPIFY(w,fmt.bw);if(ph)*ph=STEPIFY(h,fmt.bh);if(pd)*pd=d;
+  total+=tight_slice(w,h)*d;w=std::max(1u,w>>1);h=std::max(1u,h>>1);d=std::max(1u,d>>1);
+ }return total;
+}
+namespace RDD {
+ enum TextureLayout {TEXTURE_LAYOUT_UNDEFINED,TEXTURE_LAYOUT_GENERAL,TEXTURE_LAYOUT_COPY_DST_OPTIMAL,TEXTURE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+ enum {API_TRAIT_TEXTURE_DATA_ROW_PITCH_STEP,API_TRAIT_TEXTURE_TRANSFER_ALIGNMENT,API_TRAIT_HONORS_PIPELINE_BARRIERS};
+ enum {BARRIER_ACCESS_COPY_WRITE_BIT=1,PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT=2,PIPELINE_STAGE_COPY_BIT=3,TEXTURE_ASPECT_DEPTH_BIT=4,TEXTURE_ASPECT_DEPTH=5,TEXTURE_ASPECT_COLOR=6};
+ struct Range {int aspect=0;uint32_t base_mipmap=0,mipmap_count=0,base_layer=0,layer_count=0;};
+ struct TextureBarrier {int texture=0,src_access=0,dst_access=0;TextureLayout prev_layout=TEXTURE_LAYOUT_UNDEFINED,next_layout=TEXTURE_LAYOUT_UNDEFINED;Range subresources;};
+ struct Subresource {int aspect=0;uint32_t mipmap=0,layer=0;};
+ struct BufferTextureCopyRegion {uint64_t buffer_offset=0;uint32_t row_pitch=0;Subresource texture_subresource;Vector3i texture_offset{0,0,0},texture_region_size{0,0,0};};
+}
+struct Texture {
+ RID owner;int format=0,driver_id=1,barrier_aspect_flags=0;Flags read_aspect_flags;
+ uint32_t width=0,height=0,depth=1,mipmaps=1,layers=1,transfer_worker_index=0,transfer_worker_operation=0;
+ void *draw_tracker=nullptr;
+};
+struct TransferWorker {uint32_t index=0,operations_counter=0;int operations_mutex=0,staging_buffer=1,command_buffer=1;std::vector<RDD::TextureBarrier> texture_barriers;};
+struct Driver {
+ uint32_t pitch_step=1,alignment=1,base=0,request=0;
+ Texture *texture=nullptr;const Vector<uint8_t>*expected=nullptr;
+ std::vector<uint8_t> buffer,observed,touched;
+ std::vector<uint32_t> coverage;
+ std::vector<RDD::TextureBarrier> begins;
+ uint32_t api_trait_get(int trait)const{return trait==RDD::API_TRAIT_TEXTURE_DATA_ROW_PITCH_STEP?pitch_step:trait==RDD::API_TRAIT_TEXTURE_TRANSFER_ALIGNMENT?alignment:1;}
+ uint8_t *buffer_map(int){return buffer.data();}
+ void buffer_unmap(int){
+  bool untouched=true;for(size_t i=0;i<buffer.size();i++)if(!touched[i])untouched=untouched&&buffer[i]==0xcd;
+  check(untouched,"untouched padding/canary");
+ }
+ void command_pipeline_barrier(int,int,int,std::initializer_list<int>,std::initializer_list<int>,const RDD::TextureBarrier&b,std::initializer_list<int>){begins.push_back(b);}
+ void command_copy_buffer_to_texture(int,int,int,RDD::TextureLayout,const RDD::BufferTextureCopyRegion&r){
+  uint32_t w=std::max(1u,texture->width>>r.texture_subresource.mipmap),h=std::max(1u,texture->height>>r.texture_subresource.mipmap);
+  uint32_t off=r.texture_subresource.mipmap?get_image_format_required_size(0,texture->width,texture->height,texture->depth,r.texture_subresource.mipmap):0;
+  off+=tight_slice(w,h)*r.texture_offset.z;
+  uint32_t rows=STEPIFY(h,fmt.bh)/fmt.bh,rowbytes=STEPIFY(w,fmt.bw)/fmt.bw*fmt.bytes;
+  check(r.texture_region_size.x==int(w)&&r.texture_region_size.y==int(h)&&r.texture_region_size.z==1,"original logical copy extents");
+  check(r.buffer_offset%std::lcm(fmt.bytes,alignment)==0,"backend transfer alignment");
+  check(r.row_pitch%pitch_step==0,"backend row pitch alignment");
+  for(uint32_t y=0;y<rows;y++){
+   size_t from=r.buffer_offset+y*r.row_pitch;
+   check(from+rowbytes<=buffer.size()-32,"copy inside real allocated request");
+   check(std::memcmp(expected->data()+off+y*rowbytes,buffer.data()+from,rowbytes)==0,"first and every source byte preserved");
+   std::memcpy(observed.data()+off+y*rowbytes,buffer.data()+from,rowbytes);
+   for(uint32_t x=0;x<rowbytes;x++){touched[from+x]=1;coverage[off+y*rowbytes+x]++;}
+  }
+ }
+};
+class RenderingDevice {
+ public:
+ Texture tex;Driver storage;Driver *driver=&storage;TransferWorker worker;
+ struct Owner {Texture *p;Texture*get_or_null(RID r){return r.id==1?p:nullptr;}} texture_owner{&tex};
+ std::vector<uint32_t> requests;
+ uint32_t waits=0,submits=0,ends=0,releases=0;bool previous_waited=true;
+ uint32_t _texture_layer_count(Texture*t)const{return t->layers;}
+ uint32_t _texture_alignment(Texture*)const{return std::lcm(fmt.bytes,storage.alignment);}
+ TransferWorker *_acquire_transfer_worker(uint32_t n,uint32_t align,uint32_t &offset){
+  check(previous_waited,"earlier batches complete before replacing single worker tracking");
+  requests.push_back(n);check(n<=4194304,"bounded staging request");
+  offset=align*2;storage.base=offset;storage.request=n;
+  storage.buffer.assign(offset+n+32,0xcd);storage.touched.assign(offset+n+32,0);
+  previous_waited=false;return &worker;
+ }
+ void _end_transfer_worker(TransferWorker*){ends++;}
+ void _submit_transfer_worker(TransferWorker*){submits++;}
+ void _wait_for_transfer_worker(TransferWorker*){waits++;previous_waited=true;}
+ void _release_transfer_worker(TransferWorker*){releases++;}
+ Error _texture_initialize(RID,uint32_t,const Vector<uint8_t>&,RDD::TextureLayout,bool);
+};
+
+// EXACT_NATIVE_COPY_FUNCTIONS
+// EXACT_NATIVE_INITIALIZE
+
+static void run_case(const char *name,Format f,uint32_t w,uint32_t h,uint32_t d,uint32_t m,uint32_t layers,uint32_t pitch,uint32_t align,bool immediate,bool rejects=false){
+ fmt=f;RenderingDevice rd;rd.tex.width=w;rd.tex.height=h;rd.tex.depth=d;rd.tex.mipmaps=m;rd.tex.layers=layers;
+ rd.storage.pitch_step=pitch;rd.storage.alignment=align;rd.storage.texture=&rd.tex;
+ uint32_t bytes=get_image_format_required_size(0,w,h,d,m);
+ for(uint32_t layer=0;layer<layers;layer++){
+  Vector<uint8_t> source(bytes);for(uint32_t i=0;i<bytes;i++)source[i]=uint8_t((i*37+layer*17)%251);
+  Vector<uint8_t> first=source;rd.storage.expected=&source;rd.storage.observed.assign(bytes,0);rd.storage.coverage.assign(bytes,0);
+  rd.previous_waited=true;rd.requests.clear();rd.storage.begins.clear();rd.worker.texture_barriers.clear();rd.waits=rd.submits=rd.ends=rd.releases=0;
+  Error result=rd._texture_initialize(RID{1},layer,source,RDD::TEXTURE_LAYOUT_COPY_DST_OPTIMAL,immediate);
+  check(source==first,"immutable input including first bytes");
+  if(rejects){check(result!=OK,"oversized atomic mip rejects before acquiring a worker");check(rd.requests.empty(),"failed preflight performs no partial upload");continue;}
+  check(result==OK,"complete native upload method succeeds");
+  check(rd.storage.observed==std::vector<uint8_t>(source.begin(),source.end()),"complete mip/depth/layer payload equal");
+  check(std::all_of(rd.storage.coverage.begin(),rd.storage.coverage.end(),[](uint32_t n){return n==1;}),"every byte copied exactly once");
+  check(rd.releases==rd.requests.size(),"all workers released");
+  check(rd.waits==rd.requests.size()-(immediate?0u:1u),"only earlier batches forced synchronous");
+  std::vector<uint32_t> initial(m,0),final(m,0);
+  for(const auto &b:rd.storage.begins){check(b.subresources.base_layer==layer&&b.subresources.layer_count==1,"initial layer barrier");for(uint32_t i=0;i<b.subresources.mipmap_count;i++)initial.at(b.subresources.base_mipmap+i)++;}
+  for(const auto &b:rd.worker.texture_barriers){check(b.subresources.base_layer==layer&&b.subresources.layer_count==1,"final layer barrier");for(uint32_t i=0;i<b.subresources.mipmap_count;i++)final.at(b.subresources.base_mipmap+i)++;}
+  check(std::all_of(initial.begin(),initial.end(),[](uint32_t n){return n==1;}),"each mip initialized exactly once");
+  check(initial==final,"sampling transitions cover precisely uploaded mips");
+  if(w==2048&&h==2048&&m==12&&fmt.bw==4&&fmt.bytes==16&&pitch==1){check(rd.requests==std::vector<uint32_t>({4194304,1398128}),"vigil base and complete tail in two requests");}
+  std::cout<<"CASE "<<name<<" layer="<<layer<<" bytes="<<bytes<<" requests=";for(auto n:rd.requests)std::cout<<n<<",";std::cout<<'\n';
+ }
+}
+int main(){
+ run_case("vigil ASTC full chain",{4,4,16,1,0},2048,2048,1,12,2,1,1,false);
+ run_case("vigil backend padded",{4,4,16,1,0},2048,2048,1,12,1,256,512,true);
+ run_case("odd ASTC depth layers",{4,4,16,1,0},53,31,3,6,2,256,512,false);
+ run_case("RGBA depth layers",{1,1,4,4,0},23,17,3,5,2,256,512,true);
+ run_case("single exact cap",{4,4,16,1,0},2048,2048,1,1,1,1,1,false);
+ run_case("atomic mip too large",{4,4,16,1,0},2048,2048,2,12,1,1,1,false,true);
+ run_case("pitch makes mip too large",{4,4,16,1,0},2048,2048,1,12,1,16384,512,false,true);
+ std::cout<<"Native mip upload checks="<<checks<<" failures="<<failures<<'\n';return failures?1:0;
+}
