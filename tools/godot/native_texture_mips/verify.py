@@ -164,6 +164,11 @@ def compare(before,after):
 
 def validate_build(manifest, contract, observer_sha, patch_sha):
     require(manifest['status']=='pass','hosted native compiler proof missing')
+    require([flag for flag in manifest.get('flags', []) if flag.startswith('disable_path_overrides=')] ==
+            ['disable_path_overrides=no'], 'runtime-test configuration must enable unambiguous path overrides')
+    require(json.dumps(manifest.get('runtime_test_configuration'), sort_keys=True) ==
+            json.dumps(contract['runtime_test_configuration'], sort_keys=True),
+            'runtime-test configuration must distinguish component proof from shipping templates')
     require(manifest['source_sha']==contract['source_pins'][0] and manifest['source_archive_sha256']=='e607e9985e1c201bc9cdc1aec8a120f0c3f53b9603f1f828e2b748534a2471ef','compiler source/archive identity differs')
     require(manifest['observer_sha256']==observer_sha,'compiler observer identity differs')
     require(manifest['patch_sha256']==patch_sha==contract['production_patch_sha256'],'compiler patch identity differs')
@@ -190,6 +195,8 @@ def main():
     import probe
     manifest=json.loads(args.build_manifest.read_text())
     contract=json.loads(Path(__file__).with_name('contract.json').read_text())
+    require(hashlib.sha256(Path(__file__).parents[1].joinpath('native_boot_upload/build.py').read_bytes()).hexdigest()==
+            contract['shared_builder_sha256'],'shared runtime-test builder differs')
     observer_sha=hashlib.sha256(Path(__file__).with_name('observer.py').read_bytes()).hexdigest()
     patch_sha=hashlib.sha256(Path(__file__).parents[1].joinpath('patches/glassvow-660-bounded-mip-upload.patch').read_bytes()).hexdigest()
     validate_build(manifest,contract,observer_sha,patch_sha)
@@ -213,6 +220,8 @@ def main():
     report=compare(logs['baseline'],logs['candidate'])
     report['build_manifest_sha256']=hashlib.sha256(args.build_manifest.read_bytes()).hexdigest()
     report['icd_sha256']=icd_sha
+    report['runtime_test_configuration']=manifest['runtime_test_configuration']
+    report['shared_builder_sha256']=contract['shared_builder_sha256']
     args.output.write_text(json.dumps(report,indent=2)+'\n')
     print('Actual native mip request/readback evidence: '+report['status'])
     return 0 if report['status']=='PASS' else 2

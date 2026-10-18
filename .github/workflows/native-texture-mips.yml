@@ -13,6 +13,7 @@ on:
       - tests/native/texture_mip_batches.cpp.in
       - tests/native/test_texture_mip_evidence.py
       - tests/native/test_native_mip_builder.py
+      - tests/native/test_native_mip_runtime_config.py
       - .github/workflows/native-texture-mips.yml
 
 permissions:

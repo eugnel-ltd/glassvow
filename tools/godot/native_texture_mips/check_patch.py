@@ -29,6 +29,8 @@ def main():
     tests=own.parents[2]/'tests/native'
     require(digest(tests/'texture_mip_batches.cpp.in')==contract['first_fixture_sha256'],'frozen first native fixture differs')
     require(digest(tests/'test_texture_mip_batches.py')==contract['first_runner_sha256'],'frozen first native runner differs')
+    require(digest(tests/'test_native_mip_runtime_config.py')==contract['runtime_configuration_first_fixture_sha256'],'frozen runtime configuration fixture differs')
+    require(digest(own.parent/'native_boot_upload/build.py')==contract['shared_builder_sha256'],'shared runtime-test builder differs')
     require(digest(patch)==contract['production_patch_sha256'],'production patch identity differs')
     require(digest(args.prerequisite_patch)==contract['prerequisite_patch_sha256'],'prerequisite patch identity differs')
     args.output.mkdir(parents=True,exist_ok=False)

@@ -65,6 +65,15 @@ has this mip patch. An empty doctest selection explicitly means **NOT RUN**;
 the independent CPU contract and actual RD probe supply this component's
 checks. No unrelated repository suite is replayed by this workflow.
 
+Both portable test builds explicitly use `disable_path_overrides=no`; the
+manifest declares `portable_component_proof` and denies shipping template
+qualification. The pinned engine otherwise rejects `--path`, resets the
+working directory to the executable directory, and clears `--script`.
+Changing only the process working directory cannot run this SceneTree probe.
+The verifier requires exactly one enabling flag and the explicit declaration;
+the contract also pins the integrated shared builder's bytes. This supported
+test-build configuration does not modify an installed or shipping template.
+
 `observer.py` adds opt-in, local-RD-only hooks immediately around actual worker
 requests, copy commands, mip barriers, and completed waits. It refuses source
 hashes other than the exact allocator-only and bounded candidates. Test-only
@@ -98,7 +107,11 @@ platform proofs remain separate governed work.
 
 The frozen CPU fixture is red on both original native code and allocator-only
 native code. The bounded candidate passes the full CPU fixture and cheap
-tooling checks. Actual hosted engine compilation, observer compilation, and
-RD/GPU execution have not run yet. The workflow is the executable next step;
-its status must be reported from actual artifacts rather than inferred from
-the CPU control or source checks.
+tooling checks. Hosted engine and observer compilation completed at
+`b409e476647564738ed2376ad017a0e069bce4ce`, but job `117733507995` rejected the
+baseline probe's `--path` before RD uploads because path overrides were
+disabled. That failed attempt remains evidence, not a renderer pass. A
+separate source-only regression was frozen before this runtime configuration
+correction. The corrected configuration awaits the next hosted build and
+actual RD/GPU execution; no pass is inferred from the CPU control or source
+checks.

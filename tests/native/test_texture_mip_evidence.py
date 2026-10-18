@@ -122,6 +122,7 @@ class EvidenceTests(unittest.TestCase):
         production={'role':'production','path':'production.patch','sha256':contract['production_patch_sha256'],'source_tree_sha256':'b'*64}
         common={'unmodified_source_tree_sha256':'0'*64,'instrumented_source_tree_sha256':'c'*64,'binary_sha256':'d'*64}
         manifest={'status':'pass','source_sha':contract['source_pins'][0],
+            'flags':['disable_path_overrides=no'],'runtime_test_configuration':contract['runtime_test_configuration'],
             'source_archive_sha256':'e607e9985e1c201bc9cdc1aec8a120f0c3f53b9603f1f828e2b748534a2471ef',
             'observer_sha256':'e'*64,'patch_sha256':contract['production_patch_sha256'],
             'prerequisite_patches':[{'sha256':dependency['sha256']}],

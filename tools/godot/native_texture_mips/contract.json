@@ -31,8 +31,17 @@
     "one padded whole mip including depth must fit the request bound; larger atomic mips fail before copying",
     "row/block-band uploads not implemented",
     "earlier batches synchronously complete to preserve existing single worker dependency; final batch keeps async behavior",
-    "native observer/compiler/RD readback not yet run",
+    "hosted native compilation passed at b409e476; actual RD probe rejected disabled path overrides before upload; corrected runtime-test configuration awaits hosted rerun",
     "no template activation, A12/device, timing, memory/RSS/peak-VRAM or release PASS"
   ],
-  "first_runner_sha256": "9e9d4f597346b72b7a76a8e1306ab96af568e48ab813123fad119e3c35f5cd53"
+  "first_runner_sha256": "9e9d4f597346b72b7a76a8e1306ab96af568e48ab813123fad119e3c35f5cd53",
+  "runtime_test_configuration": {
+    "purpose": "portable_component_proof",
+    "path_overrides": true,
+    "scons_option": "disable_path_overrides=no",
+    "shipping_template_qualification": false
+  },
+  "shared_builder_sha256": "0d13c78129936bd45e018a0aeb4a68a9ad6d0899c485c9daa09794612838ff15",
+  "runtime_configuration_first_fixture_commit": "57d13b6ac042f6530e2f23ee3a5c9b017d388c16",
+  "runtime_configuration_first_fixture_sha256": "f5559e269c4b698bc85baf21e8a921f96fc7d0d5c6dc49f00fe6424feeddc372"
 }
