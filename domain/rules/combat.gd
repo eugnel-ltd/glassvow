@@ -163,16 +163,37 @@ static func effect_lit(cb: CombatState, fx: Dictionary) -> bool:
 	return not fx.has("lit") or cb.unbroken or str(fx["lit"]) == cb.lit_way
 
 
-## Resolved card data: base def merged with its `up` overrides when upgraded.
-func card_data(inst: CardInst) -> Dictionary:
+## Resolved card data. Classless rules/authoring callers keep the full definition;
+## displays supply the run, and the live fight for the Unbroken Flame exception.
+func card_data(inst: CardInst, run: RunState = null, cb: CombatState = null) -> Dictionary:
 	var base: Dictionary = content.card(inst.id)
-	if not inst.up or not base.has("up"):
-		return base
-	var merged: Dictionary = base.duplicate()
-	var up: Dictionary = base["up"]
-	for k: Variant in up.keys():
-		merged[k] = up[k]
-	return merged
+	var data: Dictionary = base
+	if inst.up and base.has("up"):
+		data = base.duplicate()
+		var up: Dictionary = base["up"]
+		for k: Variant in up.keys():
+			data[k] = up[k]
+	if run == null or (cb != null and cb.unbroken):
+		return data
+	# Only the shared cards with authored fragments need a class projection.
+	# These fragments are exact suffixes of the existing bilingual base/up text.
+	var fragments: Dictionary = data.get("litText", {})
+	if fragments.is_empty():
+		return data
+	var rider_way: String = ""
+	for fx: Dictionary in data.get("effects", []):
+		if fx.has("lit"):
+			rider_way = str(fx["lit"])
+	for way: Dictionary in Flame.ways(content, run.aspect):
+		if str(way.get("id", "")) == rider_way:
+			return data
+	var text: String = str(data.get("text", ""))
+	for fragment: String in fragments.values():
+		if text.ends_with(fragment):
+			var shown: Dictionary = data.duplicate()
+			shown["text"] = text.trim_suffix(fragment)
+			return shown
+	return data
 
 
 # ---------------------------------------------------------------- start

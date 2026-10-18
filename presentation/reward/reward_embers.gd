@@ -291,13 +291,16 @@ var _card_pose: Array[Vector2] = []
 ## The table's back the face-down cards were dressed in: a bake that lands
 ## after the deal began (it is made as this route is built) dresses them again.
 var _dressed_back: CardBacks.Baked = null
+var _card_data: Callable
 
 
 func _init(reward_ref: Dictionary, content_ref: ContentDB,
 		kind: String = "normal", enemy_hue: float = -1.0,
-		stage_shape: StringName = StageShape.IDENTITY, run_hud: bool = false) -> void:
+		stage_shape: StringName = StageShape.IDENTITY, run_hud: bool = false,
+		card_data: Callable = Callable()) -> void:
 	reward = reward_ref
 	content = content_ref
+	_card_data = card_data
 	encounter_kind = kind
 	hue = EMBER_HUE if enemy_hue < 0.0 else enemy_hue
 	shape = stage_shape if StageShape.REFERENCES.has(stage_shape) else StageShape.IDENTITY
@@ -649,7 +652,7 @@ func _build_plate() -> void:
 	_plate.add_child(_heading)
 	for i: int in range(_card_ids.size()):
 		var card: CardView = RewardSpoils.card(content, _card_ids[i],
-			9100 + i, _card_scale, _take_card)
+			9100 + i, _card_scale, _take_card, _card_data)
 		var seat: Control = RewardSpoils.pedestal(card, _card_scale)
 		seat.modulate.a = 0.0
 		_plate.add_child(seat)
