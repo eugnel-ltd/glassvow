@@ -101,4 +101,3 @@ This repo's long record of solved problems is `docs/solutions/`, by category. Sh
 - Fix: d86a67d4a2337a0186f022b2c572a9cb082d096c
 - Done right: Assign a Dictionary value to an explicitly typed float before comparing it. Never round production calculations to satisfy a faulty fixture.
 - Seen: 1× (2026-10-18)
-
