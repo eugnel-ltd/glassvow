@@ -32,6 +32,15 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+      - name: Check out the exact allocator prerequisite from this repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ github.repository }}
+          ref: 0d9df1eca065ad2e882dc11aea875e555e42d75b
+          path: prerequisite
+          sparse-checkout: tools/godot/patches/glassvow-660-compressed-upload-staging.patch
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
       - name: Install bounded native compiler and software renderer dependencies
         timeout-minutes: 5
         run: |
@@ -41,7 +50,7 @@ jobs:
             libgl1-mesa-dev libvulkan-dev mesa-vulkan-drivers libasound2-dev \
             libpulse-dev libudev-dev xvfb xauth
           python3 -m venv work/native-mips-venv
-          work/native-mips-venv/bin/python -m pip install SCons==4.9.1
+          work/native-mips-venv/bin/python -m pip install SCons==4.9.1 Pillow==11.3.0 numpy==2.2.6
       - name: Reject seeded evidence defects and verify exact source application
         timeout-minutes: 3
         run: |
@@ -61,7 +70,7 @@ jobs:
           PY
           work/native-mips-venv/bin/python tools/godot/native_texture_mips/check_patch.py \
             --source work/native-mips-source/stable.cpp --shipping-source work/native-mips-source/shipping.cpp \
-            --prerequisite-patch tools/godot/patches/glassvow-660-compressed-upload-staging.patch \
+            --prerequisite-patch prerequisite/tools/godot/patches/glassvow-660-compressed-upload-staging.patch \
             --output work/native-mips-evidence/source-application
       - name: Compile and exercise immutable whole-chain red then bounded green fixture
         timeout-minutes: 3
@@ -89,7 +98,7 @@ jobs:
         timeout-minutes: 62
         run: |
           work/native-mips-venv/bin/python tools/godot/native_boot_upload/build.py \
-            --prerequisite-patch tools/godot/patches/glassvow-660-compressed-upload-staging.patch \
+            --prerequisite-patch prerequisite/tools/godot/patches/glassvow-660-compressed-upload-staging.patch \
             --production-patch tools/godot/patches/glassvow-660-bounded-mip-upload.patch \
             --observer tools/godot/native_texture_mips/observer.py --test-suite '' \
             --work work/native-mips-builds --output work/native-mips-evidence
@@ -111,6 +120,24 @@ jobs:
             --baseline work/native-mips-evidence/baseline-rd --candidate work/native-mips-evidence/candidate-rd \
             --build-manifest work/native-mips-evidence/build-manifest.json \
             --output work/native-mips-evidence/actual-rd-proof.json
+      - name: Print bounded generated diagnostics when a component fails
+        if: failure()
+        timeout-minutes: 1
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          root=pathlib.Path('work/native-mips-evidence').resolve()
+          logs=sorted(root.rglob('*.log')) if root.is_dir() else []
+          for path in logs[:16]:
+              if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root):
+                  continue
+              with path.open('rb') as stream:
+                  stream.seek(max(0,path.stat().st_size-8000))
+                  tail=stream.read(8000).decode('utf-8',errors='replace')
+              print(f'::group::Generated diagnostic {path.relative_to(root)}')
+              print(tail)
+              print('::endgroup::')
+          PY
       - name: Keep exact-head evidence and failure logs
         if: always()
         timeout-minutes: 3
