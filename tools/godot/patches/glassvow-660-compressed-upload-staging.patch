@@ -1,0 +1,7 @@
+--- a/servers/rendering/rendering_device.cpp
++++ b/servers/rendering/rendering_device.cpp
+@@ -2196,2 +2196,2 @@
+-				uint32_t to_allocate = pitch * height;
+-				to_allocate >>= pixel_rshift;
++				// Pitch is per block row, not per pixel row.
++				uint32_t to_allocate = pitch * (height / block_h);
