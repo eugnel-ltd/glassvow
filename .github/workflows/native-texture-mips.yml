@@ -233,6 +233,7 @@ jobs:
         timeout-minutes: 2
         run: |
           test "$(git -C vigil rev-parse HEAD)" = "$VIGIL_HEAD"
+          git -C vigil rev-parse HEAD > "$RUNNER_TEMP/native-mips-metal-evidence/vigil-head.txt"
           git -C shared-runtime rev-parse HEAD > "$RUNNER_TEMP/native-mips-metal-evidence/shared-runtime-head.txt"
           git -C shared-builder rev-parse HEAD > "$RUNNER_TEMP/native-mips-metal-evidence/shared-builder-head.txt"
           "$RUNNER_TEMP/native-mips-metal-venv/bin/python" -B - <<'PY'
