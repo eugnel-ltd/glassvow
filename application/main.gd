@@ -133,9 +133,12 @@ var _sfx_bus: SfxBus
 var _vigil: VigilState
 var _embark_aspect: int = 0
 var _embark_vow: int = 0
-## This session's last setting-out ({"aspect", "vow", "art"}), offered as
-## "set out as before". Session memory only: no save or preference key.
+## This session's last accepted setup, using the live aspect index. Preferences
+## keeps stable IDs across launches; neither copy grants unlocks or holds a seed.
 var _last_setup: Dictionary = {}
+## A new departure is owed remembered defaults only after its checkpoint and
+## any parting gift are durable. A failed write keeps this debt for Retry.
+var _remember_setup_for_run: String = ""
 ## A new run's departure is on screen and owes the road its opening or its
 ## staging once the Lamplighter's gift is answered.
 var _setting_out: bool = false
@@ -824,6 +827,14 @@ func _store_run() -> bool:
 	if not SaveService.store(game.run, _run_save_path):
 		return false
 	_vigil_before_run = false
+	if not _remember_setup_for_run.is_empty() and game.run.run_id == _remember_setup_for_run \
+			and not game.run.pending_lamplighter:
+		_remember_setup_for_run = ""
+		_last_setup = {"aspect": game.run.aspect, "vow": game.run.vow, "art": game.run.art}
+		if game.run.aspect >= 0 and game.run.aspect < content.aspects.size():
+			var aspect: Dictionary = content.aspects[game.run.aspect]
+			Preferences.active.remember_departure(str(aspect.get("id", "")), game.run.vow,
+				String(game.run.art))
 	return true
 
 
@@ -1806,10 +1817,45 @@ func _show_embark() -> void:
 	screen.show_embark(content.aspects, content.vows,
 		ClassScope.admitted(content, _vigil.unlocks).size() > 1, _vigil.vow_unlocked,
 		saved, _embark_aspect, _embark_vow,
-		_last_setup if _last_setup.size() == 3 else {}, _vigil.unlocks.has("lamplighter"))
+		_remembered_setup(), _vigil.unlocks.has("lamplighter"))
 	screen.embark_chosen.connect(_on_embark_begin)
 	screen.back_requested.connect(_lift_to_title)
 	_show_route(screen, false, &"embark")
+
+
+## Defaults are advisory. Resolve stable IDs against this build and this
+## profile each time; an ineligible choice is not silently clamped or granted.
+func _remembered_setup() -> Dictionary:
+	var setup: Dictionary = _last_setup if _last_setup.size() == 3 else Preferences.active.last_departure()
+	if setup.is_empty():
+		return {}
+	var aspect: int = -1
+	var aspect_value: Variant = setup.get("aspect")
+	if aspect_value is int:
+		aspect = aspect_value
+	else:
+		for index: int in content.aspects.size():
+			var candidate_row: Dictionary = content.aspects[index]
+			if str(candidate_row.get("id", "")) == str(setup.get("aspect", "")):
+				aspect = index
+				break
+	if not ClassScope.admits(content, aspect, _vigil.unlocks):
+		return {}
+	var vow_value: Variant = setup.get("vow")
+	if not vow_value is int:
+		return {}
+	var vow: int = vow_value
+	if vow < 0 or vow > mini(_vigil.vow_unlocked, content.vows.size()):
+		return {}
+	var art: String = str(setup.get("art", ""))
+	var probe: RunState = RunState.new()
+	probe.aspect = aspect
+	if not RewardRules.new(content).offer_arts(probe).has(art):
+		return {}
+	var aspect_row: Dictionary = content.aspects[aspect] if not content.aspects.is_empty() else content.player
+	if not _vigil.unlocks.has("lamplighter") and art != str(aspect_row.get("art", "flare")):
+		return {}
+	return {"aspect": aspect, "vow": vow, "art": StringName(art)}
 
 
 func _on_embark_begin(aspect: int, vow: int) -> void:
@@ -1817,8 +1863,6 @@ func _on_embark_begin(aspect: int, vow: int) -> void:
 		return
 	_embark_aspect = aspect
 	_embark_vow = vow
-	_last_setup["aspect"] = aspect
-	_last_setup["vow"] = vow
 	if _load_run() == null:
 		_new_run({"aspect": _embark_aspect, "vow": _embark_vow})
 	else:
@@ -2121,6 +2165,7 @@ func _new_run(profile: Dictionary = {}) -> void:
 			func(id: String) -> bool: return _vigil.scenes_seen.has(id)).size(),
 	}
 	game = GlassvowGame.new(content, RunState.new_run(content, run_seed, run_id, merged))
+	_remember_setup_for_run = game.run.run_id if _remembers_player_departure() else ""
 	game.run.stats["start"] = Time.get_unix_time_from_system()
 	game.quests.prepare_run(game.run)
 	# Six shards used to replace the whole pilgrimage with a one-node Act IV
@@ -2183,6 +2228,14 @@ func _admits_new_run(aspect: int) -> bool:
 
 func _story_flow() -> bool:
 	return not _opening_suppressed and not _dev_claimed
+
+
+## Story-flow onboarding still uses the Development profile. Follow the
+## installed pair chosen by select_profile (including --production-save), not
+## narrative flow alone; a later Development installation stays isolated too.
+func _remembers_player_departure() -> bool:
+	return _story_flow() and _run_save_path != ScenarioKernel.RUN_PATH \
+		and _vigil_save_path != ScenarioKernel.VIGIL_PATH
 
 
 func _hint_layer_ahead() -> bool:
@@ -5034,7 +5087,10 @@ func _on_lamplighter_confirmed(boon_id: String, art_id: StringName) -> void:
 	game.rewards.apply_boon(game.run, boon_id)
 	game.run.pending_lamplighter = false
 	game.run.quest_scratch.erase("lamplighterOffer")
-	_last_setup["art"] = art_id
+	# A saved gift may finish in a later process, after its temporary departure
+	# marker is gone. This accepted choice still owes its stable setup defaults.
+	if _remembers_player_departure():
+		_remember_setup_for_run = game.run.run_id
 	if _store_run():
 		_flood_from_departure(_after_lamplighter)
 	else:

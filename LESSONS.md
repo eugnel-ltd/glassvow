@@ -59,3 +59,9 @@ This repo's long record of solved problems is `docs/solutions/`, by category. Sh
 - Fix: 05533b2082664a787a17497b91a2b1619d32d6e4.
 - Done right: use a duplicate-rejecting dict_type for both XML and binary plists, and prove that raw conflicting metadata cannot reach the release upload boundary.
 - Seen: 1× (2026-10-18)
+
+### Check profile ownership before persisting player defaults
+- Cause: onboarding deliberately kept story flow active on the Development profile, so a narrative-flow check let synthetic departures overwrite player Preferences.
+- Fix: `edd0084876e99f47db862fce978b64910ac71b1f`.
+- Done right: use the installed profile boundary at every write-entry marker; prove byte preservation for synthetic starts and resumed choices while preserving the explicit production-profile opt-out.
+- Seen: 1× (2026-10-18)
