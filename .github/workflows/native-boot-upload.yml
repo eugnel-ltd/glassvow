@@ -1,0 +1,84 @@
+name: Native boot upload component proof
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tests/native/boot_upload_baseline.gd'
+      - tools/godot/patches/glassvow-661-native-boot-upload-cap.patch
+      - tools/godot/native_boot_upload/**
+      - .github/workflows/native-boot-upload.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-boot-upload-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  portable-native-boot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install this job's Linux build and software-rendering dependencies
+        timeout-minutes: 5
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential pkg-config \
+            libx11-dev libxcursor-dev libxinerama-dev libxi-dev libxrandr-dev \
+            libgl1-mesa-dev libvulkan-dev mesa-vulkan-drivers libasound2-dev \
+            libpulse-dev libudev-dev xvfb xauth imagemagick
+          python3 -m venv work/native-boot-venv
+          work/native-boot-venv/bin/python -m pip install SCons==4.9.1 Pillow==11.3.0 numpy==2.2.6
+      - name: Test the evidence verifier and its rejection controls
+        timeout-minutes: 2
+        run: |
+          mkdir -p work/native-boot-evidence
+          work/native-boot-venv/bin/python tools/godot/native_boot_upload/test_harness.py \
+            > work/native-boot-evidence/verifier-tests.log 2>&1
+      - name: Verify the bounded patch applies to both exact source pins
+        timeout-minutes: 3
+        run: |
+          work/native-boot-venv/bin/python tools/godot/native_boot_upload/check_patch.py \
+            --output work/native-boot-evidence/source-check.json
+      - name: Build exact stable baseline and patched candidate with identical flags
+        timeout-minutes: 62
+        run: |
+          work/native-boot-venv/bin/python tools/godot/native_boot_upload/build.py \
+            --patch tools/godot/patches/glassvow-661-native-boot-upload-cap.patch \
+            --observer tools/godot/native_boot_upload/observer.py \
+            --test-suite GlassvowBootUpload \
+            --splash assets/art/title/splash.png \
+            --work work/native-boot-builds --output work/native-boot-evidence
+      - name: Capture real native boot on software GLES and Vulkan RD
+        timeout-minutes: 15
+        run: |
+          work/native-boot-venv/bin/python - <<'PY'
+          import glob,json,os,pathlib,subprocess
+          manifests=glob.glob('/usr/share/vulkan/icd.d/*lvp*.json')
+          if len(manifests)!=1:
+              raise SystemExit('Required lavapipe Vulkan ICD is unavailable or ambiguous')
+          os.environ['VK_DRIVER_FILES']=manifests[0]
+          p=json.loads(pathlib.Path('work/native-boot-evidence/render-inputs.json').read_text())
+          subprocess.run(['work/native-boot-venv/bin/python','tools/godot/native_boot_upload/capture.py',
+              '--baseline',p['baseline'],'--candidate',p['candidate'],'--splash',p['splash'],
+              '--output','work/native-boot-evidence/render'],check=True,timeout=850)
+          PY
+      - name: Upload bounded component evidence even when a gate fails
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-boot-upload-${{ github.sha }}
+          path: |
+            work/native-boot-evidence/
+            !work/native-boot-evidence/**/project/**
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

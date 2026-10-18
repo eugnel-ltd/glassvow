@@ -1,0 +1,353 @@
+--- a/servers/rendering/rendering_server_types.h
++++ b/servers/rendering/rendering_server_types.h
+@@ -156,6 +156,68 @@
+ 
+ /* BACKGROUND */
+ 
++// Native PNG boot images bypass the resource importer. Bound their initial
++// uploads without changing their source pixels or the full-image screen rect.
++struct BootImageSlice {
++	Ref<Image> image;
++	Rect2 source_rect = Rect2(0, 0, 1, 1);
++	int first_row = 0;
++	int end_row = 0;
++};
++
++inline Vector<BootImageSlice> get_boot_image_slices(const Ref<Image> &p_image, bool p_repeat) {
++	Vector<BootImageSlice> slices;
++	ERR_FAIL_COND_V(p_image.is_null() || p_image->is_empty(), slices);
++	const int width = p_image->get_width();
++	const int height = p_image->get_height();
++	const Image::Format format = p_image->get_format();
++	const uint64_t limit = 4 * 1024 * 1024;
++	const bool native_png = !p_image->has_mipmaps() &&
++			(format == Image::FORMAT_L8 || format == Image::FORMAT_LA8 || format == Image::FORMAT_RGB8 || format == Image::FORMAT_RGBA8);
++	// Keep other callers of the Image-based API unchanged; Main's PNG loader
++	// produces only the four formats above, with no mipmaps.
++	if (!native_png || uint64_t(width) * height * 4 <= limit) {
++		BootImageSlice slice;
++		slice.image = p_image;
++		slice.end_row = height;
++		slices.push_back(slice);
++		return slices;
++	}
++	// RGB8 expands to RGBA8 on RD. Reserve both linear-filter neighbors even
++	// on GLES so all native PNG pages satisfy the same conservative ceiling.
++	const int owned_rows = int(limit / (uint64_t(width) * 4)) - 2;
++	ERR_FAIL_COND_V(owned_rows < 1, slices);
++	const int count = (height + owned_rows - 1) / owned_rows;
++	for (int i = 0; i < count; i++) {
++		BootImageSlice slice;
++		slice.first_row = int(int64_t(i) * height / count);
++		slice.end_row = int(int64_t(i + 1) * height / count);
++		const int rows = slice.end_row - slice.first_row;
++		const int top = (p_repeat || slice.first_row > 0) ? 1 : 0;
++		const int bottom = (p_repeat || slice.end_row < height) ? 1 : 0;
++		const int upload_rows = rows + top + bottom;
++		slice.image = Image::create_empty(width, upload_rows, false, format);
++		slice.image->blit_rect(p_image, Rect2i(0, slice.first_row, width, rows), Point2i(0, top));
++		if (top) {
++			const int row = (slice.first_row + height - 1) % height;
++			slice.image->blit_rect(p_image, Rect2i(0, row, width, 1), Point2i(0, 0));
++		}
++		if (bottom) {
++			const int row = slice.end_row % height;
++			slice.image->blit_rect(p_image, Rect2i(0, row, width, 1), Point2i(0, top + rows));
++		}
++		slice.source_rect = Rect2(0, real_t(top) / upload_rows, 1, real_t(rows) / upload_rows);
++		slices.push_back(slice);
++	}
++	return slices;
++}
++
++inline Rect2 get_boot_image_slice_screen_rect(const Rect2 &p_full_rect, const BootImageSlice &p_slice, int p_image_height) {
++	const real_t first = p_full_rect.position.y + p_full_rect.size.y * (real_t(p_slice.first_row) / p_image_height);
++	const real_t end = p_full_rect.position.y + p_full_rect.size.y * (real_t(p_slice.end_row) / p_image_height);
++	return Rect2(p_full_rect.position.x, first, p_full_rect.size.x, end - first);
++}
++
+ // Helper for RSE::SplashStretchMode, put here for convenience.
+ inline Rect2 get_splash_stretched_screen_rect(const Size2 &p_image_size, const Size2 &p_window_size, RSE::SplashStretchMode p_stretch_mode) {
+ 	Size2 imgsize = p_image_size;
+--- a/servers/rendering/renderer_rd/renderer_compositor_rd.cpp
++++ b/servers/rendering/renderer_rd/renderer_compositor_rd.cpp
+@@ -224,9 +224,10 @@
+ 
+ 	BlitPipelines blit_pipelines = _get_blit_pipelines_for_format(RD::get_singleton()->screen_get_framebuffer_format(DisplayServerEnums::MAIN_WINDOW_ID));
+ 
+-	RID texture = texture_storage->texture_allocate();
+-	texture_storage->texture_2d_initialize(texture, p_image);
+-	RID rd_texture = texture_storage->texture_get_rd_texture(texture, false);
++	Vector<RenderingServerTypes::BootImageSlice> slices = RenderingServerTypes::get_boot_image_slices(p_image, false);
++	ERR_FAIL_COND(slices.is_empty());
++	Vector<RID> textures;
++	Vector<RID> uniform_sets;
+ 
+ 	RD::SamplerState sampler_state;
+ 	sampler_state.min_filter = p_use_filter ? RD::SAMPLER_FILTER_LINEAR : RD::SAMPLER_FILTER_NEAREST;
+@@ -234,8 +235,28 @@
+ 	sampler_state.max_lod = 0;
+ 	RID sampler = RD::get_singleton()->sampler_create(sampler_state);
+ 
+-	RID uset;
+-	{
++	auto free_boot_resources = [&]() {
++		for (const RID &uniform_set : uniform_sets) {
++			RD::get_singleton()->free_rid(uniform_set);
++		}
++		for (const RID &texture : textures) {
++			texture_storage->texture_free(texture);
++		}
++		if (sampler.is_valid()) {
++			RD::get_singleton()->free_rid(sampler);
++		}
++	};
++	ERR_FAIL_COND(sampler.is_null());
++	for (int i = 0; i < slices.size(); i++) {
++		RID texture = texture_storage->texture_allocate();
++		texture_storage->texture_2d_initialize(texture, slices[i].image);
++		RID rd_texture = texture_storage->texture_get_rd_texture(texture, false);
++		if (rd_texture.is_null()) {
++			free_boot_resources();
++			ERR_FAIL_MSG("Failed to initialize a native boot image page.");
++		}
++		textures.push_back(texture);
++		slices.write[i].image.unref();
+ 		Vector<RD::Uniform> uniforms;
+ 		RD::Uniform u;
+ 		u.uniform_type = RD::UNIFORM_TYPE_SAMPLER_WITH_TEXTURE;
+@@ -243,7 +264,12 @@
+ 		u.append_id(sampler);
+ 		u.append_id(rd_texture);
+ 		uniforms.push_back(u);
+-		uset = RD::get_singleton()->uniform_set_create(uniforms, blit.shader.version_get_shader(blit.shader_version, BLIT_MODE_NORMAL), 0);
++		RID uniform_set = RD::get_singleton()->uniform_set_create(uniforms, blit.shader.version_get_shader(blit.shader_version, BLIT_MODE_NORMAL), 0);
++		if (uniform_set.is_null()) {
++			free_boot_resources();
++			ERR_FAIL_MSG("Failed to bind a native boot image page.");
++		}
++		uniform_sets.push_back(uniform_set);
+ 	}
+ 
+ 	Size2 window_size = DisplayServer::get_singleton()->window_get_size();
+@@ -269,10 +295,13 @@
+ 	}
+ 
+ 	RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin_for_screen(DisplayServerEnums::MAIN_WINDOW_ID, clear_color);
++	if (draw_list == RD::INVALID_ID) {
++		free_boot_resources();
++		return;
++	}
+ 
+ 	RD::get_singleton()->draw_list_bind_render_pipeline(draw_list, blit_pipelines.pipelines[BLIT_MODE_NORMAL_ALPHA]);
+ 	RD::get_singleton()->draw_list_bind_index_array(draw_list, blit.array);
+-	RD::get_singleton()->draw_list_bind_uniform_set(draw_list, uset, 0);
+ 
+ 	const int screen_rotation_degrees = -RD::get_singleton()->screen_get_pre_rotation_degrees(DisplayServerEnums::MAIN_WINDOW_ID);
+ 	float screen_rotation = Math::deg_to_rad((float)screen_rotation_degrees);
+@@ -299,15 +328,27 @@
+ 	blit.push_constant.reference_multiplier = reference_multiplier;
+ 	blit.push_constant.output_max_value = output_max_value;
+ 
+-	RD::get_singleton()->draw_list_set_push_constant(draw_list, &blit.push_constant, sizeof(BlitPushConstant));
+-	RD::get_singleton()->draw_list_draw(draw_list, true);
++	for (int i = 0; i < slices.size(); i++) {
++		const Rect2 page_rect = slices.size() == 1 ? screenrect : RenderingServerTypes::get_boot_image_slice_screen_rect(screenrect, slices[i], p_image->get_height());
++		const Rect2 &source_rect = slices[i].source_rect;
++		blit.push_constant.src_rect[0] = source_rect.position.x;
++		blit.push_constant.src_rect[1] = source_rect.position.y;
++		blit.push_constant.src_rect[2] = source_rect.size.x;
++		blit.push_constant.src_rect[3] = source_rect.size.y;
++		blit.push_constant.dst_rect[0] = page_rect.position.x;
++		blit.push_constant.dst_rect[1] = page_rect.position.y;
++		blit.push_constant.dst_rect[2] = page_rect.size.x;
++		blit.push_constant.dst_rect[3] = page_rect.size.y;
++		RD::get_singleton()->draw_list_bind_uniform_set(draw_list, uniform_sets[i], 0);
++		RD::get_singleton()->draw_list_set_push_constant(draw_list, &blit.push_constant, sizeof(BlitPushConstant));
++		RD::get_singleton()->draw_list_draw(draw_list, true);
++	}
+ 
+ 	RD::get_singleton()->draw_list_end();
+ 
+ 	RD::get_singleton()->swap_buffers(true);
+ 
+-	texture_storage->texture_free(texture);
+-	RD::get_singleton()->free_rid(sampler);
++	free_boot_resources();
+ }
+ 
+ RendererCompositorRD *RendererCompositorRD::singleton = nullptr;
+--- a/drivers/gles3/rasterizer_gles3.cpp
++++ b/drivers/gles3/rasterizer_gles3.cpp
+@@ -490,8 +490,8 @@
+ 	glClearColor(p_color.r, p_color.g, p_color.b, OS::get_singleton()->is_layered_allowed() ? p_color.a : 1.0);
+ 	glClear(GL_COLOR_BUFFER_BIT);
+ 
+-	RID texture = texture_storage->texture_allocate();
+-	texture_storage->texture_2d_initialize(texture, p_image);
++	Vector<RenderingServerTypes::BootImageSlice> slices = RenderingServerTypes::get_boot_image_slices(p_image, true);
++	ERR_FAIL_COND(slices.is_empty());
+ 
+ 	Rect2 screenrect = RenderingServerTypes::get_splash_stretched_screen_rect(p_image->get_size(), win_size, p_stretch_mode);
+ 
+@@ -508,16 +508,32 @@
+ 	screenrect.position /= win_size;
+ 	screenrect.size /= win_size;
+ 
+-	GLES3::Texture *t = texture_storage->get_texture(texture);
+-	t->gl_set_filter(p_use_filter ? RSE::CANVAS_ITEM_TEXTURE_FILTER_LINEAR : RSE::CANVAS_ITEM_TEXTURE_FILTER_NEAREST);
+-	glActiveTexture(GL_TEXTURE0);
+-	glBindTexture(GL_TEXTURE_2D, t->tex_id);
+-	copy_effects->copy_to_rect(screenrect);
++	Vector<RID> textures;
++	for (int i = 0; i < slices.size(); i++) {
++		RID texture = texture_storage->texture_allocate();
++		texture_storage->texture_2d_initialize(texture, slices[i].image);
++		textures.push_back(texture);
++		slices.write[i].image.unref();
++	}
++	for (int i = 0; i < slices.size(); i++) {
++		GLES3::Texture *t = texture_storage->get_texture(textures[i]);
++		glActiveTexture(GL_TEXTURE0);
++		glBindTexture(GL_TEXTURE_2D, t->tex_id);
++		t->gl_set_filter(p_use_filter ? RSE::CANVAS_ITEM_TEXTURE_FILTER_LINEAR : RSE::CANVAS_ITEM_TEXTURE_FILTER_NEAREST);
++		const Rect2 page_rect = slices.size() == 1 ? screenrect : RenderingServerTypes::get_boot_image_slice_screen_rect(screenrect, slices[i], p_image->get_height());
++		if (slices.size() == 1) {
++			copy_effects->copy_to_rect(screenrect);
++		} else {
++			copy_effects->copy_to_rect_from_rect(page_rect, slices[i].source_rect);
++		}
++	}
+ 	glBindTexture(GL_TEXTURE_2D, 0);
+ 
+ 	gl_end_frame(true);
+ 
+-	texture_storage->texture_free(texture);
++	for (const RID &texture : textures) {
++		texture_storage->texture_free(texture);
++	}
+ }
+ 
+ #endif // GLES3_ENABLED
+--- a/drivers/gles3/effects/copy_effects.cpp
++++ b/drivers/gles3/effects/copy_effects.cpp
+@@ -128,6 +128,16 @@
+ 	draw_screen_quad();
+ }
+ 
++void CopyEffects::copy_to_rect_from_rect(const Rect2 &p_dst, const Rect2 &p_src) {
++	bool success = copy.shader.version_bind_shader(copy.shader_version, CopyShaderGLES3::MODE_COPY_SECTION_SOURCE);
++	if (!success) {
++		return;
++	}
++	copy.shader.version_set_uniform(CopyShaderGLES3::COPY_SECTION, p_dst.position.x, p_dst.position.y, p_dst.size.x, p_dst.size.y, copy.shader_version, CopyShaderGLES3::MODE_COPY_SECTION_SOURCE);
++	copy.shader.version_set_uniform(CopyShaderGLES3::SOURCE_SECTION, p_src.position.x, p_src.position.y, p_src.size.x, p_src.size.y, copy.shader_version, CopyShaderGLES3::MODE_COPY_SECTION_SOURCE);
++	draw_screen_quad();
++}
++
+ void CopyEffects::copy_to_rect_3d(const Rect2 &p_rect, float p_layer, int p_type, float p_lod, bool p_linear_to_srgb) {
+ 	ERR_FAIL_COND(p_type != Texture::TYPE_LAYERED && p_type != Texture::TYPE_3D);
+ 
+--- a/drivers/gles3/effects/copy_effects.h
++++ b/drivers/gles3/effects/copy_effects.h
+@@ -61,6 +61,7 @@
+ 
+ 	// These functions assume that a framebuffer and texture are bound already. They only manage the shader, uniforms, and vertex array.
+ 	void copy_to_rect(const Rect2 &p_rect, bool p_linear_to_srgb = false);
++	void copy_to_rect_from_rect(const Rect2 &p_dst, const Rect2 &p_src);
+ 	void copy_to_rect_3d(const Rect2 &p_rect, float p_layer, int p_type, float p_lod = 0.0f, bool p_linear_to_srgb = false);
+ 	void copy_with_lens_distortion(const Rect2 &p_rect, float p_layer, const Vector2 &p_eye_center, float p_k1, float p_k2, float p_upscale, float p_aspect_ration, bool p_linear_to_srgb = false);
+ 	void copy_to_and_from_rect(const Rect2 &p_rect);
+--- a/tests/test_main.cpp
++++ b/tests/test_main.cpp
+@@ -47,6 +47,7 @@
+ #include "tests/force_link.gen.h"
+ #include "tests/signal_watcher.h"
+ #include "tests/test_macros.h"
++#include "tests/servers/test_boot_image_slices.h"
+ #include "tests/test_utils.h"
+ 
+ #ifdef TOOLS_ENABLED
+--- /dev/null
++++ b/tests/servers/test_boot_image_slices.h
+@@ -0,0 +1,80 @@
++#pragma once
++
++#include "servers/rendering/rendering_server_types.h"
++#include "tests/test_macros.h"
++
++namespace TestBootImageSlices {
++TEST_SUITE("GlassvowBootUpload") {
++TEST_CASE("Native PNG pages preserve owned pixels, gutters and 4 MiB bound") {
++	Vector<uint8_t> pixels;
++	pixels.resize(2360 * 1640 * 3);
++	uint8_t *bytes = pixels.ptrw();
++	for (int i = 0; i < pixels.size(); i++) {
++		bytes[i] = uint8_t((i * 37 + i / 2360) % 251);
++	}
++	Ref<Image> image = Image::create_from_data(2360, 1640, false, Image::FORMAT_RGB8, pixels);
++	CHECK(image->get_data_size() > 4 * 1024 * 1024);
++	for (int repeat_case = 0; repeat_case < 2; repeat_case++) {
++		const bool repeat = repeat_case == 1;
++		Vector<RenderingServerTypes::BootImageSlice> slices = RenderingServerTypes::get_boot_image_slices(image, repeat);
++		REQUIRE(slices.size() == 4);
++		int owned_rows = 0;
++		for (int i = 0; i < slices.size(); i++) {
++			const auto &slice = slices[i];
++			const int top = (repeat || i > 0) ? 1 : 0;
++			const int rows = slice.end_row - slice.first_row;
++			CHECK(slice.first_row == owned_rows);
++			CHECK(slice.image->get_width() == 2360);
++			CHECK(slice.image->get_height() * 2360 * 4 <= 4 * 1024 * 1024);
++			CHECK_FALSE(slice.image->has_mipmaps());
++			const Vector<uint8_t> page = slice.image->get_data();
++			for (int y = 0; y < slice.image->get_height(); y++) {
++				const int source_row = (slice.first_row + y - top + 1640) % 1640;
++				CHECK(memcmp(page.ptr() + y * 2360 * 3, pixels.ptr() + source_row * 2360 * 3, 2360 * 3) == 0);
++			}
++			owned_rows += rows;
++		}
++		CHECK(owned_rows == 1640);
++	}
++}
++TEST_CASE("RGBA transparent colors and signed destination geometry are retained") {
++	Vector<uint8_t> pixels;
++	pixels.resize(2048 * 513 * 4);
++	uint8_t *bytes = pixels.ptrw();
++	for (int i = 0; i < pixels.size(); i++) {
++		bytes[i] = uint8_t((i * 13 + i / 2048) % 256);
++	}
++	Ref<Image> image = Image::create_from_data(2048, 513, false, Image::FORMAT_RGBA8, pixels);
++	Vector<RenderingServerTypes::BootImageSlice> slices = RenderingServerTypes::get_boot_image_slices(image, true);
++	REQUIRE(slices.size() == 2);
++	Rect2 full(-0.2, 1.1, 1.4, -1.2);
++	real_t last = full.position.y;
++	for (const auto &slice : slices) {
++		const Vector<uint8_t> page = slice.image->get_data();
++		for (int y = 0; y < slice.image->get_height(); y++) {
++			const int source_row = (slice.first_row + y - 1 + 513) % 513;
++			CHECK(memcmp(page.ptr() + y * 2048 * 4, pixels.ptr() + source_row * 2048 * 4, 2048 * 4) == 0);
++		}
++		CHECK(slice.image->get_data_size() <= 4 * 1024 * 1024);
++		const Rect2 rect = RenderingServerTypes::get_boot_image_slice_screen_rect(full, slice, 513);
++		CHECK(Math::is_equal_approx(rect.position.y, last));
++		CHECK(rect.position.x == full.position.x);
++		CHECK(rect.size.x == full.size.x);
++		last = rect.position.y + rect.size.y;
++	}
++	CHECK(Math::is_equal_approx(last, full.position.y + full.size.y));
++}
++TEST_CASE("Small images and non-PNG Image callers keep their original image") {
++	const Image::Format formats[] = { Image::FORMAT_L8, Image::FORMAT_LA8, Image::FORMAT_RGB8, Image::FORMAT_RGBA8, Image::FORMAT_RGBAF };
++	for (const auto format : formats) {
++		Ref<Image> image = Image::create_empty(5, 3, false, format);
++		const auto slices = RenderingServerTypes::get_boot_image_slices(image, true);
++		REQUIRE(slices.size() == 1);
++		CHECK(slices[0].image == image);
++		CHECK(slices[0].source_rect == Rect2(0, 0, 1, 1));
++		CHECK(slices[0].first_row == 0);
++		CHECK(slices[0].end_row == 3);
++	}
++}
++}
++}
