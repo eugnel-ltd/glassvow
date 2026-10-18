@@ -52,10 +52,11 @@ static func list(reward: Dictionary, content: ContentDB) -> Array[Dictionary]:
 	if potion_v != null:
 		var def: Dictionary = content.potions.get(str(potion_v), {})
 		out.append(_entry(&"potion", str(potion_v), def, POTION_ART))
-	var relic_v: Variant = reward.get("relic")
-	if relic_v != null:
-		var def: Dictionary = content.relics.get(str(relic_v), {})
-		out.append(_entry(&"relic", str(relic_v), def, RELIC_ART))
+	for slot: String in ["relic", "relic2"]:
+		var relic_v: Variant = reward.get(slot)
+		if relic_v != null:
+			var def: Dictionary = content.relics.get(str(relic_v), {})
+			out.append(_entry(StringName(slot), str(relic_v), def, RELIC_ART))
 	return out
 
 

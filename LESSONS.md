@@ -6,6 +6,14 @@ Short live log of repeatable mistakes. Read it before every task. At most fiftee
 - The nightly audit bumps `Seen` (one count per day), merges duplicates, deletes obsolete entries and moves overflow to `docs/solutions/`.
 - A lesson seen on three different days moves by PR into the governing doc for its area (`docs/agents/ai-sdlc.md` for process, `AGENTS.md` for invariants, the matching skill under `.claude/skills/`, or a `docs/solutions/` entry otherwise) and leaves this file. This repo has no `docs/code-standards.md`.
 
+## Recent entry
+
+### Cast Variant values before passing them to typed GDScript boundaries
+- Cause: Dictionary values passed to typed bool parameters caused warning-as-error parse failures in two test additions.
+- Fix: ad90cb8396fc6755dbe1ef2152ae605cdec88117
+- Done right: Assign an explicitly typed local before a typed call, or use the existing Variant-aware test assertion helper and compare its value with true.
+- Seen: 1× (2026-10-18)
+
 Entry format (newest first):
 
 ```markdown

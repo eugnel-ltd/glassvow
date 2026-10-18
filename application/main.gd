@@ -3843,7 +3843,7 @@ func _show_pending_reward(quiet: bool = false) -> void:
 	_reward_screen.hud = _run_hud
 	if reward_kind == "boss":
 		_music.play(&"victory")
-	for key: String in ["gold", "card", "potion", "relic"]:
+	for key: String in ["gold", "card", "potion", "relic", "relic2"]:
 		if taken.get(key, false):
 			_reward_screen.mark_taken(StringName(key))
 	# After the marks, so only a spoil the entrance had not reached is banked.
@@ -3882,7 +3882,7 @@ func _on_reward_claimed(what: StringName, id: String) -> void:
 				_show_potion_replace(id)
 				return
 			game.run.player.potions[slot] = id
-		&"relic":
+		&"relic", &"relic2":
 			if not id.is_empty():
 				game.rewards.gain_relic(game.run, id)
 	taken[key] = true
