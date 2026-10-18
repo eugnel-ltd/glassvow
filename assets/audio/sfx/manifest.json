@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "pack_id": "ashglass-v1-opening",
+  "pack_id": "ashglass-v1-stagecraft-crack",
   "theme": "Ashglass Vigil",
   "source": "docs/sfx-ledger.md",
   "items": {
@@ -213,6 +213,21 @@
       "prompt": "Energy candle gained: quick candle-flame whoosh with a bright crystal spark, warm amber, very short, game feedback, no melody, no vocals, no big fire burst, no long tail.",
       "usage": "Energy gain sample",
       "review_note": "Small but noticeable; should not fight piano attacks in BGM."
+    },
+    "glassCrack": {
+      "file": "glassCrack.mp3",
+      "bytes": 13836,
+      "duration_seconds": 0.8,
+      "requested_duration_seconds": 0.8,
+      "prompt_influence": 0.6,
+      "prompt": "A single sharp crack running through a thick pane of old stained glass: a hard brittle snap, a short splintering tick as the fracture spreads, then silence. Close and dry. No shatter, no falling shards, no impact thud, no reverb tail.",
+      "source_candidates": [
+        "glassCrack-c.mp3"
+      ],
+      "source_commit": "2ac9668f7849228ed2cbd49a62a251b5aaf34529",
+      "source_sha256": "fd14989020a5a889ee1e939b7928c8836f999d44543f3973f4adac01b1c4f3f4",
+      "usage": "Stagecraft crack effect: unsealing beat 3 line 4 and act4-node5 line 2",
+      "review_note": "James firm pick after round-1 audition, recorded in #564 comment 5900061022. Original render bytes; no normalisation or new generation."
     },
     "glassTakesLight": {
       "file": "glassTakesLight.mp3",

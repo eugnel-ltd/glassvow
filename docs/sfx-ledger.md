@@ -1,4 +1,4 @@
-# SFX ledger — ashglass-v1-opening
+# SFX ledger — ashglass-v1-stagecraft-crack
 
 Port-scoped inventory of the sound pack Glassvow ships. The full generation
 ledger (prompt set, category law, render pipeline) lives at
@@ -16,8 +16,9 @@ this pack. REST fallback is `POST /v1/sound-generation`.
 The immutable **ashglass-v1** pack: 36 one-shot sounds at
 `assets/audio/sfx/`, plus the **ashglass-v1-unsealing** addendum
 (`unsealingSting`), and the **ashglass-v1-opening** addendum (six start-up
-cues, two of them rotations). Theme: Ashglass Vigil — glass, ash, lantern, and
-the small metallic ticks of a climb. `pack_id` is `ashglass-v1-opening`.
+cues, two of them rotations), and the **ashglass-v1-stagecraft-crack** addendum
+(`glassCrack`). Theme: Ashglass Vigil — glass, ash, lantern, and
+the small metallic ticks of a climb. `pack_id` is `ashglass-v1-stagecraft-crack`.
 v1 bytes stay untouched.
 
 ## Provenance
@@ -145,7 +146,28 @@ For the generation bible and category law, see
 `../roguecardv2-benchmark/docs/sfx-ledger.md` (roguecardv2@6e06911).
 This file is the port-facing contract only.
 
-## Commissioned — stagecraft cues (2026-09-27, not yet generated)
+## Shipped — stagecraft crack (#564, 2026-10-18)
+
+James's firm pick is **glassCrack-c**, recorded after his round-1 audition in
+[#564](https://github.com/eugnel-ltd/glassvow/issues/564#issuecomment-5900061022).
+The original render is copied byte-for-byte from candidate commit
+`2ac9668f7849228ed2cbd49a62a251b5aaf34529`, path
+`docs/design/2026-09-29-stagecraft-cues/candidates/glassCrack-c.mp3`.
+No new generation, normalisation or audition is claimed. `pack_id` is
+`ashglass-v1-stagecraft-crack`; every previously shipped sample is unchanged.
+The other three stagecraft cues below remain commissioned, awaiting the
+running-scene audition and final picks requested in round 2. #564 remains open.
+
+| cue | file | pick | duration | usage |
+|---|---|---|---|---|
+| `glassCrack` | `glassCrack.mp3` | **C** (`glassCrack-c.mp3`) | 0.800 s | `crack`: unsealing beat 3 line 4 and act4-node5 line 2 |
+
+Prompt that rendered (`eleven_text_to_sound_v2`, `duration_seconds` 0.8,
+`prompt_influence` 0.6, one-shot, no loop):
+
+> A single sharp crack running through a thick pane of old stained glass: a hard brittle snap, a short splintering tick as the fracture spreads, then silence. Close and dry. No shatter, no falling shards, no impact thud, no reverb tail.
+
+## Commissioned — remaining stagecraft cues (2026-09-27)
 
 Billed by the dialogue stagecraft layer
 (`docs/design/2026-09-27-stagecraft/README.md`); tracked in #564 under #559. `SceneDirector` already asks
@@ -158,7 +180,6 @@ its pick and bump `pack_id` — the 36 v1 files stay byte-identical.
 | cue | fires on | fallback today | duration |
 |---|---|---|---|
 | `paneOpen` | a conversation's dialogue pane arriving (first line, or back from a title card) | silent | ~0.6 s |
-| `glassCrack` | the `crack` effect (a truth landing: unsealing b3 l4, act4-node5 l2) | `chip` | ~0.8 s |
 | `glassImpact` | the `impact` effect (the monuments' push, a blow) | `hit` | ~0.7 s |
 | `shoutSting` | any line in the `shout` style | silent | ~0.5 s |
 
@@ -168,11 +189,6 @@ Prompts (`eleven_text_to_sound_v2`, `prompt_influence` 0.6, one-shot, no loop):
 > settles into its frame: one clear high glass tone with a faint warm
 > resonance, very short, intimate, quiet. No bell tower, no choir, no whoosh,
 > no UI beep, no sparkle arpeggio.
-
-> **glassCrack** — A single sharp crack running through a thick pane of old
-> stained glass: a hard brittle snap, a short splintering tick as the fracture
-> spreads, then silence. Close and dry. No shatter, no falling shards, no
-> impact thud, no reverb tail.
 
 > **glassImpact** — A heavy blow landing against a great leaded window: a deep
 > low thud of weight on stone and lead, the whole pane ringing once in a short
