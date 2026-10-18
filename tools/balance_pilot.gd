@@ -267,7 +267,7 @@ static func _pick_play(game: GlassvowGame) -> Dictionary:
 		var previews: Dictionary = {}
 		var target: Variant = _target(game, card, d, living, previews)
 		var preview_v: Variant = previews[target] if previews.has(target) \
-			else game.rules.preview_play(game.cb, card, target, game.run)
+			else game.rules.preview_play(game.cb, card, target, game.run, false)
 		var preview: Dictionary = preview_v if typeof(preview_v) == TYPE_DICTIONARY else {}
 		var block: int = int(float(str(preview.get("block", 0))))
 		# A lethal turn ranks plays first by the HP they spare this enemy phase:
@@ -418,7 +418,7 @@ static func _target(game: GlassvowGame, card: CardInst, d: Dictionary,
 	var best: Variant = null
 	var best_rank: Array[int] = []
 	for e: EnemyCombatant in living:
-		var pv: Variant = game.rules.preview_play(game.cb, card, e.idx, game.run)
+		var pv: Variant = game.rules.preview_play(game.cb, card, e.idx, game.run, false)
 		previews[e.idx] = pv
 		var preview: Dictionary = pv if typeof(pv) == TYPE_DICTIONARY else {}
 		var spared: int = incoming - _incoming(game, _foes_after(game, d, e.idx, {})) \
