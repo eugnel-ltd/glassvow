@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - tests/native/test_texture_upload_staging.py
+      - tests/native/test_texture_staging_runtime.py
+      - tests/native/test_texture_staging_diagnostics.py
       - tools/godot/native_texture_staging/**
       - tools/godot/patches/glassvow-660-compressed-upload-staging.patch
       - tools/godot/patches/compressed-upload-staging.md
@@ -44,6 +46,8 @@ jobs:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /tests/native/test_texture_upload_staging.py
+            /tests/native/test_texture_staging_runtime.py
+            /tests/native/test_texture_staging_diagnostics.py
             /tools/godot/native_texture_staging/
             /tools/godot/patches/glassvow-660-compressed-upload-staging.patch
       - name: Check out the immutable shared builder separately
@@ -51,7 +55,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: ${{ github.repository }}
-          ref: 071395306922586d7384b095753499b28d541efa
+          ref: 928d065e9ceb6ae8a9f3e77bd7ad4a80ab935909
           path: shared-builder
           persist-credentials: false
           sparse-checkout-cone-mode: false
@@ -74,18 +78,26 @@ jobs:
           ALLOCATOR_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           test "$(git -C allocator rev-parse HEAD)" = "$ALLOCATOR_HEAD"
-          test "$(git -C shared-builder rev-parse HEAD)" = 071395306922586d7384b095753499b28d541efa
+          test "$(git -C shared-builder rev-parse HEAD)" = 928d065e9ceb6ae8a9f3e77bd7ad4a80ab935909
           git -C allocator rev-parse HEAD \
             > "$RUNNER_TEMP/native-texture-staging-evidence/allocator-head.txt"
           git -C shared-builder rev-parse HEAD \
             > "$RUNNER_TEMP/native-texture-staging-evidence/shared-builder-head.txt"
           cat > "$RUNNER_TEMP/native-texture-staging-evidence/shared-builder-inputs.json" <<'JSON'
           {
-            "build.py": "3ce0a84e99baf3141e65c134ac41c0dfcee9b4ad299a8d80098efb9051f5db97",
+            "build.py": "26cb1d174f45af3a6db2a9f30e04f73148fe1438452ee3d505f0c6a3758b2840",
             "verify.py": "3ebc04a65feb3b60830df8783803bc94aa6e094065945833354b35cae27eebe7",
             "processes.py": "603abae76bc5ce79b413f7b9bf685424c699d068425e3b3778dff9a59273aff0"
           }
           JSON
+      - name: Check the supported portable runtime configuration and failure diagnostics
+        timeout-minutes: 1
+        run: |
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_runtime.py \
+            --builder shared-builder/tools/godot/native_boot_upload/build.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_diagnostics.py
       - name: Compile native controls and run actual RD requests, copies and readback
         timeout-minutes: 75
         run: |
@@ -96,6 +108,12 @@ jobs:
             --work "$RUNNER_TEMP/native-texture-staging-build" \
             --output "$RUNNER_TEMP/native-texture-staging-evidence/component" \
             2>&1 | tee "$RUNNER_TEMP/native-texture-staging-evidence/component-command.log"
+      - name: Print bounded generated native probe logs after failure
+        if: failure()
+        timeout-minutes: 1
+        run: |
+          python3 -B allocator/tools/godot/native_texture_staging/diagnostics.py \
+            --root "$RUNNER_TEMP/native-texture-staging-evidence/component"
       - name: Upload bounded component proof and logs even after failure
         if: always()
         timeout-minutes: 3

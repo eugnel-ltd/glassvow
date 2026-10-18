@@ -48,6 +48,19 @@ does not substitute for actual RD/driver execution.
 The hosted component route uses the separately pinned shared native builder
 and `tools/godot/native_texture_staging/`:
 
+The workflow pins shared builder `928d065e9ceb6ae8a9f3e77bd7ad4a80ab935909`
+and its exact helper hashes. Both portable template variants explicitly use
+`disable_path_overrides=no`, required by these isolated `--path`/`--script`
+projects. The pinned native source resets cwd and discards script overrides
+without this support, so changing cwd alone is insufficient. The manifest
+records `runtime_test_configuration` as portable component proof with
+`shipping_template_qualification: false`; no shipping build pin changes.
+The wrapper rejects an unsupported shared configuration before downloading or
+compiling. Source-only runtime/identity controls run before the hosted build.
+On failure, only the two generated RD `native.log` tails are printed (at most
+8192 bytes/80 lines each); symlink/outside paths, unrelated files, commands
+and environment dumps are excluded. Full logs remain in the artifact.
+
 - `observer.py --source-dir TREE` installs the same opt-in request/copy hooks
   in baseline and candidate. Only a local RD and a probe-selected case emit
   data. Two cases conservatively force 256-byte row pitch / 512-byte alignment

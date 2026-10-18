@@ -57,6 +57,8 @@ def run(args):
     builder = load('gv_shared_native_builder', args.builder.resolve())
     require(builder.SOURCE_SHA == SOURCE and builder.SOURCE_ARCHIVE_SHA256 == ARCHIVE_SHA,
             'shared source pin differs from this accepted component contract')
+    require(builder.FLAGS.count('disable_path_overrides=no') == 1,
+            'portable --path/--script probes require explicit runtime-test path overrides')
     archive = args.source_archive
     if archive is None:
         archive = args.work / 'upstream.tar.gz'
