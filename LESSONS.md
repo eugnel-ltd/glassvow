@@ -60,16 +60,14 @@ This repo's long record of solved problems is `docs/solutions/`, by category. Sh
 - Done right: use a duplicate-rejecting dict_type for both XML and binary plists, and prove that raw conflicting metadata cannot reach the release upload boundary.
 - Seen: 1× (2026-10-18)
 
+### Check profile ownership before persisting player defaults
+- Cause: onboarding deliberately kept story flow active on the Development profile, so a narrative-flow check let synthetic departures overwrite player Preferences.
+- Fix: `edd0084876e99f47db862fce978b64910ac71b1f`.
+- Done right: use the installed profile boundary at every write-entry marker; prove byte preservation for synthetic starts and resumed choices while preserving the explicit production-profile opt-out.
+- Seen: 1× (2026-10-18)
+
 ### Parse a new regression fixture before freezing its first test commit
 - Cause: a new locked fixture passed Variant comparisons to a bool parameter; its first replacement also omitted parentheses around a multiline comparison. Neither parsed, so neither proved a behavioural failure.
 - Fix: a85b52f3 (runnable immutable fixture), f009a32e (source fix).
 - Done right: run the explicit-path parser before the first test commit, commit the runnable test, observe its named failure on unchanged source, then apply the fix and observe green. Preserve abandoned candidates and their failed logs without rewriting them.
 - Seen: 1× (2026-10-18)
-
-### Gate every structured choice required for an actionable answer
-- Cause: Exact checks rejected wrong secondary choices, but only the first selected decision gated; a wrong heading or corrected expression still earned partial credit.
-- Fix: e93d5c43 (source audit and regression), issue #694 gate repair; keep optional background hypotheses separate from required decisions.
-- Done right: Audit each selected field against its source and prove that a wrong or missing required choice scores zero; keep free-text reasoning reported only.
-- Seen: 1× (2026-10-18)
-
-This repo's long record of solved problems is `docs/solutions/`, by category. Short repeatable lessons go here.
