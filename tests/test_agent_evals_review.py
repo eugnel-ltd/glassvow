@@ -555,6 +555,27 @@ class ReportOnlyGraderTests(unittest.TestCase):
         self.assertIn('Reported only (unscored)', page)
         self.assertIn('The answer explains why.', page)
 
+    def test_programmatic_set_grading_never_constructs_a_report_only_judge(self) -> None:
+        from agent_evals import calibration
+        with tempfile.TemporaryDirectory(prefix='agent-eval-offline-grade-') as tmp:
+            directory = Path(tmp)
+            answers = directory / 'synthetic-answers.jsonl'
+            answers.write_text(json.dumps({'id': 'reported', 'answer': {
+                'command': 'tools/check_scripts.sh', 'reason': 'A synthetic test answer.'}}) + '\n')
+            out = directory / 'grading.jsonl'
+            spec = SimpleNamespace(judge_model='sonnet')
+            with mock.patch.object(calibration, 'load_eval', return_value=spec), \
+                    mock.patch.object(calibration, 'load_cases', return_value=[self.case()]), \
+                    mock.patch.object(calibration, 'ClaudeCliBackend', side_effect=AssertionError(
+                        'report-only claims must not start a judge calibration')):
+                code = calibration.main(['--eval', 'synthetic', 'grade', '--answers', str(answers),
+                                         '--set', 'synthetic', '--role', 'correct', '--run', '1',
+                                         '--arm', 'plain', '--out', str(out)])
+            self.assertEqual(0, code)
+            row = json.loads(out.read_text())
+            self.assertEqual(1.0, row['score'])
+            self.assertEqual('reason', row['reported_verdicts'][0]['claim'])
+
 
 class StructuredCandidateTests(unittest.TestCase):
     def test_candidate_is_unapproved_seeded_and_has_eighty_structured_cases(self) -> None:
