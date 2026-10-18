@@ -13,17 +13,28 @@ static func store(run: RunState, path: String = RUN_PATH) -> bool:
 	return _store_json_atomic(path, run.to_save_dict())
 
 
-## Write beside the target, flush, then replace it. A failed write or rename
-## leaves the last accepted checkpoint readable.
 static func _store_json_atomic(path: String, value: Dictionary) -> bool:
+	return store_text_atomic(path, JSON.stringify(value))
+
+
+## Write beside the target, flush, then replace it. A failed write or rename
+## leaves the last accepted file readable, for both checkpoints and settings.
+static func store_text_atomic(path: String, value: String) -> bool:
 	var tmp_path: String = path + ".tmp"
 	var f: FileAccess = FileAccess.open(tmp_path, FileAccess.WRITE)
 	if f == null:
 		return false
-	f.store_string(JSON.stringify(value))
+	var bytes: PackedByteArray = value.to_utf8_buffer()
+	f.store_buffer(bytes)
 	f.flush()
+	# Godot 4.7.2 can leave get_error() at OK when a buffered flush fails.
+	# The file's actual length must also account for every encoded byte.
+	var write_failed: bool = f.get_error() != OK or f.get_length() != bytes.size()
 	f.close()
 	var absolute_tmp: String = ProjectSettings.globalize_path(tmp_path)
+	if write_failed:
+		DirAccess.remove_absolute(absolute_tmp)
+		return false
 	var absolute_target: String = ProjectSettings.globalize_path(path)
 	if DirAccess.rename_absolute(absolute_tmp, absolute_target) != OK:
 		DirAccess.remove_absolute(absolute_tmp)
