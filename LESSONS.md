@@ -18,4 +18,10 @@ Entry format (newest first):
 
 ## Entries
 
+### Cast Variant values before passing them to typed GDScript boundaries
+- Cause: Dictionary values passed to typed bool parameters caused warning-as-error parse failures in two test additions.
+- Fix: ad90cb8396fc6755dbe1ef2152ae605cdec88117
+- Done right: Assign an explicitly typed local before a typed call, or use the existing Variant-aware test assertion helper and compare its value with true.
+- Seen: 1× (2026-10-18)
+
 This repo's long record of solved problems is `docs/solutions/`, by category. Short repeatable lessons go here.
