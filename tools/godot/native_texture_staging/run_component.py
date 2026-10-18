@@ -36,6 +36,10 @@ def load(name, path):
 
 
 def run(args):
+    for name in ['work', 'output', 'builder', 'builder_manifest']:
+        setattr(args, name, getattr(args, name).resolve())
+    if args.source_archive is not None:
+        args.source_archive = args.source_archive.resolve()
     require(not args.output.exists() and not args.work.exists(), 'proof/build directories must be new')
     args.output.mkdir(parents=True)
     args.work.mkdir(parents=True)
