@@ -44,7 +44,7 @@ baseline:
   accounts: excluded         # no accounts, chat or online features (docs/privacy/privacy-policy.en.md)
   durable_data: done         # saves stay on the device (the v2 save lineage, AGENTS.md)
   payments: missing          # store agreements, banking and tax are owner steps (docs/rc-bar.md)
-  legal: missing             # privacy policy live at glassvow.eugnel.com/privacy; no terms yet
+  legal: missing             # privacy policy prepared; deployment unconfirmed (docs/privacy/README.md); no terms yet
   observability: done        # Sentry pgnetwork/glassvow
   support: done              # glassvow@eugnel.com on the site and in the privacy policy
   listing: missing           # no store listing yet
