@@ -830,6 +830,8 @@ static func _options(args: PackedStringArray) -> Dictionary:
 		return {"error": "--mythic must name a declared mythic, control or natural"}
 	if mythic not in ["", "control", "natural"] and int(float(str(out["vow"]))) < 3:
 		return {"error": "forced mythics require Vow 3..5"}
+	if not mythic.is_empty() and str(out["play"]) == "search":
+		return {"error": "--mythic requires --play=greedy"}
 	return _way_weights(out)
 static func _mix(opts: Dictionary) -> Dictionary:
 	var id: String = str(opts.get("mix", ""))
