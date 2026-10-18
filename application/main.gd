@@ -1736,15 +1736,23 @@ func _title_context(saved: RunState, choices: Array[Dictionary], rite: bool,
 ## carved numerals, one deed per line, and only deeds that were done.
 func _carved_deeds() -> Array[String]:
 	var lines: Array[String] = []
-	if _deed("runs") == 0:
+	var runs: int = _deed("runs")
+	var wins: int = _deed("wins")
+	if runs == 0:
 		return lines
-	var stats: String = Locale.active.t("ui.brand.stats", {
-		"runs": LeadlightNumerals.carved(_deed("runs")),
-		"wins": LeadlightNumerals.carved(_deed("wins")),
+	var counts: Dictionary = {
+		"runs": LeadlightNumerals.carved(runs),
+		"wins": LeadlightNumerals.carved(wins),
 		"slain": LeadlightNumerals.carved(_deed("slain")),
-	})
+	}
+	var stats: String = Locale.active.t("ui.brand.stats", counts)
 	var keys: Array[String] = ["runs", "wins", "slain"]
 	var parts: PackedStringArray = stats.split(" · ")
+	# Grammar follows the raw counts, before they were carved as numerals.
+	if runs == 1:
+		parts[0] = Locale.active.t("ui.brand.pilgrimageOne", {"n": counts["runs"]})
+	if wins == 1:
+		parts[1] = Locale.active.t("ui.brand.dawnOne", {"n": counts["wins"]})
 	for i: int in parts.size():
 		if i < keys.size() and i > 0 and _deed(keys[i]) == 0:
 			continue
@@ -1755,8 +1763,9 @@ func _carved_deeds() -> Array[String]:
 		if not withheld.has(unlock):
 			secret_count += 1
 	if secret_count > 0:
-		var secrets: String = Locale.active.t("ui.brand.secrets", {
-			"n": LeadlightNumerals.carved(secret_count)})
+		var params: Dictionary = {"n": LeadlightNumerals.carved(secret_count)}
+		var secrets: String = Locale.active.t("ui.brand.secretsOne", params) if secret_count == 1 \
+			else Locale.active.t("ui.brand.secrets", params)
 		lines.append(_carve(secrets.trim_prefix(" · ")))
 	return lines
 

@@ -2,7 +2,10 @@
   "formatVersion": 1,
   "ui": {
     "brand": {
+      "dawnOne": "{n} dawn",
+      "pilgrimageOne": "{n} pilgrimage",
       "secrets": " · {n} secrets unearthed",
+      "secretsOne": " · {n} secret unearthed",
       "stats": "{runs} pilgrimages · {wins} dawns · {slain} slain",
       "tagline": "A Roguelite Deckbuilder · The Vigil Remembers",
       "title": "GLASSVOW"

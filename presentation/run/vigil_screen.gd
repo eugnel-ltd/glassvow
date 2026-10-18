@@ -117,11 +117,21 @@ func _build() -> void:
 	_crown.name = "Crown"
 	add_child(_crown)
 	# Its numerals set against their counter word, as the title carves them.
-	_ledger = _text(LeadlightNumerals.set_against(Locale.active.t("ui.vigil.stats", {
-		"runs": LeadlightNumerals.carved_drawn(_deed("runs")),
-		"wins": LeadlightNumerals.carved_drawn(_deed("wins")),
+	var runs: int = _deed("runs")
+	var wins: int = _deed("wins")
+	var counts: Dictionary = {
+		"runs": LeadlightNumerals.carved_drawn(runs),
+		"wins": LeadlightNumerals.carved_drawn(wins),
 		"vow": LeadlightNumerals.carved_drawn(_deed("bestVow")) if _deed("bestVow") > 0 else "—",
-	})), LeadlightTokens.ROLE_CARVED, LeadlightTokens.SIZE_ROOM_CARVED, Color(LeadlightTokens.GOLD, 0.7))
+	}
+	var stats: String = Locale.active.t("ui.vigil.stats", counts)
+	var parts: PackedStringArray = stats.split(" · ")
+	if runs == 1:
+		parts[0] = Locale.active.t("ui.brand.pilgrimageOne", {"n": counts["runs"]})
+	if wins == 1:
+		parts[1] = Locale.active.t("ui.brand.dawnOne", {"n": counts["wins"]})
+	_ledger = _text(LeadlightNumerals.set_against(" · ".join(parts)), LeadlightTokens.ROLE_CARVED,
+		LeadlightTokens.SIZE_ROOM_CARVED, Color(LeadlightTokens.GOLD, 0.7))
 	_ledger.name = "Ledger"
 	add_child(_ledger)
 	_looks = HBoxContainer.new()
