@@ -31,6 +31,8 @@ func _initialize() -> void:
 				failures.append(path + ": input manifest differs from frozen contract " + key)
 		var virtual: String = PREFIX + path.trim_prefix("res://assets/art/").trim_suffix(".png") + ".res"
 		expected_files.append(virtual)
+		if not _serialized_graph(virtual):
+			failures.append(path + ": unexpected serialized texture resource graph")
 		var remap: ConfigFile = ConfigFile.new()
 		if remap.load(path + ".remap") != OK or remap.get_value("remap", "path", "") != virtual:
 			failures.append(path + ": missing or wrong original-path remap")
@@ -45,6 +47,15 @@ func _initialize() -> void:
 			var script: Script = texture.get_script()
 			if script == null or script.resource_path != SCRIPT:
 				failures.append(path + ": wrong runtime wrapper script")
+			else:
+				var pages: Array = texture.get("pages")
+				for value: Variant in pages:
+					if not value is ImageTexture:
+						failures.append(path + ": physical leaf is not a native ImageTexture")
+					elif value.get_script() != null:
+						failures.append(path + ": physical leaf has an unexpected script")
+				if pages.size() == 2 and pages[0] == pages[1]:
+					failures.append(path + ": physical leaf references are not distinct")
 		contract.call("audit_texture", failures, fixed, texture, true)
 		var dependencies: PackedStringArray = ResourceLoader.get_dependencies(virtual)
 		if dependencies.size() != 1 or not dependencies[0].ends_with(SCRIPT):
@@ -69,3 +80,64 @@ func _walk(path: String, files: PackedStringArray) -> void:
 		files.append(path.path_join(name))
 	for name: String in DirAccess.get_directories_at(path):
 		_walk(path.path_join(name), files)
+
+
+## ResourceFormatBinary v6 (Godot 4.7.2): inspect every internal resource,
+## including unused/orphan entries that a visible-pages traversal cannot see.
+## The builder deliberately saves uncompressed resources with flags=0.
+func _serialized_graph(path: String) -> bool:
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null or file.get_buffer(4).get_string_from_ascii() != "RSRC":
+		return false
+	if file.get_32() != 0 or file.get_32() != 0:
+		return false  # little endian; native single-precision build
+	var major: int = file.get_32()
+	var minor: int = file.get_32()
+	if major != 4 or minor < 7 or file.get_32() != 6 or _resource_text(file) != "Texture2D":
+		return false
+	if file.get_64() != 0 or file.get_32() != 11:
+		return false  # no import metadata; named IDs, UIDs and script class
+	file.get_64()  # generated resource UID
+	if _resource_text(file) != "PagedPaintingTexture":
+		return false
+	for _reserved: int in range(11):
+		if file.get_32() != 0:
+			return false
+	var strings: int = file.get_32()
+	if strings < 1 or strings > 64:
+		return false
+	for _index: int in range(strings):
+		if _resource_text(file).is_empty():
+			return false
+	if file.get_32() != 1 or _resource_text(file) != "Script" or _resource_text(file) != SCRIPT:
+		return false
+	file.get_64()  # external script UID; original path remains the fallback
+	if file.get_32() != 5:
+		return false
+	var offsets: PackedInt64Array = []
+	var names: Dictionary = {}
+	for _index: int in range(5):
+		var name: String = _resource_text(file)
+		var offset: int = file.get_64()
+		if name.is_empty() or names.has(name) or offset <= 0 or offset >= file.get_length() or offsets.has(offset):
+			return false
+		names[name] = true
+		offsets.append(offset)
+	var classes: Dictionary = {}
+	for offset: int in offsets:
+		file.seek(offset)
+		var kind: String = _resource_text(file)
+		var count: int = classes.get(kind, 0)
+		classes[kind] = count + 1
+	var expected: Dictionary = {"Image": 2, "ImageTexture": 2, "Texture2D": 1}
+	return classes == expected
+
+
+func _resource_text(file: FileAccess) -> String:
+	var length: int = file.get_32()
+	if length < 1 or length > 1024 or length > file.get_length() - file.get_position():
+		return ""
+	var bytes: PackedByteArray = file.get_buffer(length)
+	if bytes[-1] != 0:
+		return ""
+	return bytes.slice(0, length - 1).get_string_from_utf8()

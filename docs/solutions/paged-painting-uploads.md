@@ -44,6 +44,13 @@ cannot promise a nonzero CLI status; an unaudited export is not accepted
 shipping evidence. Native signing/device validation remains its own release
 contract.
 
+The audit also reads the binary's complete internal resource table: exactly two
+native ImageTextures, their two Images and the wrapper, with only the expected
+runtime script outside that graph. Extra textures in metadata or unused internal
+entries fail even if the visible pages reconstruct perfectly. Unknown resource
+formats fail closed; changing the serializer requires updating this contract
+with real pack proof.
+
 CI runs the same actual-pack contract, including malformed packs with a real
 oversized ImageTexture, missing embedded page/remap, broken gutter, unexpected
 leaf, stranded original import, forged empty manifest and legacy single-image
