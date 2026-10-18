@@ -44,6 +44,7 @@ var _leave: Button
 var _leave_font: FontVariation = RunStyle.tracked(GlassStyle.CINZEL_700, 3)
 var _jar: BellJar
 var _card_views: Array[CardView] = []
+var _card_data: Callable
 ## Purchasable slots registered at build; update() refreshes state in place.
 var _slots: Array[Dictionary] = []
 ## Slots standing in the foreground rack, in the order they stand there.
@@ -84,10 +85,12 @@ func show_flame(event: Dictionary, instant: bool = false) -> void:
 
 func _init(stock: Dictionary, gold: int, content: ContentDB,
 		quest_offer: Dictionary = {}, potion_slot_available: bool = true,
-		stage_shape: StringName = StageShape.IDENTITY, sfx: SfxBus = null) -> void:
+		stage_shape: StringName = StageShape.IDENTITY, sfx: SfxBus = null,
+		card_data: Callable = Callable()) -> void:
 	_stock = stock
 	_gold = gold
 	_content = content
+	_card_data = card_data
 	_quest_offer = quest_offer
 	_potion_slot_available = potion_slot_available
 	shape = stage_shape if StageShape.REFERENCES.has(stage_shape) else StageShape.IDENTITY
@@ -176,11 +179,12 @@ func _add_stock() -> void:
 
 func _add_card(row: Dictionary, index: int) -> void:
 	var id: String = str(row.get("id", ""))
-	var definition: Dictionary = _content.cards.get(id, {})
+	var inst: CardInst = CardInst.new(-index - 1, StringName(id))
+	var definition: Dictionary = _card_data.call(inst) if _card_data.is_valid() \
+		else _content.cards.get(id, {})
 	var cost_v: Variant = definition.get("cost")
 	var cost: int = 0 if cost_v == null else int(float(str(cost_v)))
-	var view: CardView = CardView.new(CardInst.new(-index - 1, StringName(id)),
-		definition, cost)
+	var view: CardView = CardView.new(inst, definition, cost)
 	# A card carries its own name and rules on its face, so its tag is the price
 	# row alone — until it sells and the pocket needs the struck name.
 	var tag: WareTag = _tag(str(definition.get("name", id)), "", _price(row))
