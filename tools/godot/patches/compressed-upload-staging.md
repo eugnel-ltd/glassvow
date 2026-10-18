@@ -48,7 +48,7 @@ does not substitute for actual RD/driver execution.
 The hosted component route uses the separately pinned shared native builder
 and `tools/godot/native_texture_staging/`:
 
-The workflow pins shared builder `928d065e9ceb6ae8a9f3e77bd7ad4a80ab935909`
+The workflow pins shared builder `a08e1ab8f9b5e1c8c0dd3e8c450db839f0a5acb6`
 and its exact helper hashes. Both portable template variants explicitly use
 `disable_path_overrides=no`, required by these isolated `--path`/`--script`
 projects. The pinned native source resets cwd and discards script overrides
