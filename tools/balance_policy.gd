@@ -133,6 +133,15 @@ static func resolve(over: Dictionary) -> Dictionary:
 	return v
 
 
+## Research-only rarity value: no default vector or historical sampler changes.
+static func mythic_read(over: Dictionary = {}) -> Dictionary:
+	var out: Dictionary = resolve(over)
+	var card: Dictionary = out["card"]
+	var rarity: Dictionary = card["rarity"]
+	rarity["mythic"] = rarity["rare"]
+	return out
+
+
 static func sample_range(root_seed: int, first: int, count: int) -> Array[Dictionary]:
 	var rng: Rng = Rng.new(root_seed)
 	var out: Array[Dictionary] = []
