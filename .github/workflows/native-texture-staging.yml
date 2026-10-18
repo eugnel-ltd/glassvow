@@ -8,6 +8,10 @@ on:
       - tests/native/test_texture_staging_runtime.py
       - tests/native/test_texture_staging_diagnostics.py
       - tests/native/test_texture_staging_fixture_setup.py
+      - tests/native/test_texture_staging_capability.py
+      - tests/native/test_texture_staging_capability_binding.py
+      - tests/native/test_texture_staging_capability_safety.py
+      - tests/native/test_texture_staging_capability_linux.py
       - tools/godot/native_texture_staging/**
       - tools/godot/patches/glassvow-660-compressed-upload-staging.patch
       - tools/godot/patches/compressed-upload-staging.md
@@ -51,6 +55,10 @@ jobs:
             /tests/native/test_texture_staging_runtime.py
             /tests/native/test_texture_staging_diagnostics.py
             /tests/native/test_texture_staging_fixture_setup.py
+            /tests/native/test_texture_staging_capability.py
+            /tests/native/test_texture_staging_capability_binding.py
+            /tests/native/test_texture_staging_capability_safety.py
+            /tests/native/test_texture_staging_capability_linux.py
             /tools/godot/native_texture_staging/
             /tools/godot/patches/glassvow-660-compressed-upload-staging.patch
       - name: Check out the immutable shared builder separately
@@ -103,8 +111,29 @@ jobs:
             allocator/tests/native/test_texture_staging_diagnostics.py
           "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
             allocator/tests/native/test_texture_staging_fixture_setup.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_capability.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_capability_binding.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_capability_safety.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_capability_linux.py
+      - name: Screen stock physical formats on this Linux build host before compiling
+        timeout-minutes: 6
+        env:
+          ALLOCATOR_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" -B \
+            allocator/tools/godot/native_texture_staging/capability.py \
+            --profile linux-x86_64-lavapipe-v1 --head "$ALLOCATOR_HEAD" \
+            --work "$RUNNER_TEMP/native-texture-staging-stock-work" \
+            --output "$RUNNER_TEMP/native-texture-staging-evidence/venue"
       - name: Compile native controls and run actual RD requests, copies and readback
         timeout-minutes: 75
+        env:
+          GLASSVOW_STAGING_CAPABILITY_RECEIPT: ${{ runner.temp }}/native-texture-staging-evidence/venue/result.json
+          GLASSVOW_STAGING_SOURCE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
             allocator/tools/godot/native_texture_staging/run_component.py \
@@ -130,6 +159,64 @@ jobs:
             !${{ runner.temp }}/native-texture-staging-evidence/**/project/**
             !${{ runner.temp }}/native-texture-staging-evidence/**/xdg-*/**
             !${{ runner.temp }}/native-texture-staging-evidence/**/native-contract
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 6
+  stock-macos-metal-capability:
+    # Standard public arm64 runner. This job never builds a native component.
+    runs-on: macos-15
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Initialise bounded capability evidence before setup
+        timeout-minutes: 1
+        run: |
+          mkdir -p "$RUNNER_TEMP/native-texture-staging-metal-evidence"
+          printf '%s\n' 'Stock Metal physical-format screen only; component NOT_RUN, never PASS.' \
+            > "$RUNNER_TEMP/native-texture-staging-metal-evidence/scope.txt"
+      - name: Check out the exact capability helper and cheap controls
+        timeout-minutes: 2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: allocator
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.github/workflows/native-texture-staging.yml
+            /tests/native/test_texture_staging_capability.py
+            /tests/native/test_texture_staging_capability_binding.py
+            /tests/native/test_texture_staging_capability_safety.py
+            /tests/native/test_texture_staging_capability_linux.py
+            /tools/godot/native_texture_staging/
+      - name: Check capability refusal, archive bounds and owned-child cleanup without a GPU
+        timeout-minutes: 1
+        run: |
+          python3 -B allocator/tests/native/test_texture_staging_capability.py
+          python3 -B allocator/tests/native/test_texture_staging_capability_binding.py
+          python3 -B allocator/tests/native/test_texture_staging_capability_safety.py
+          python3 -B allocator/tests/native/test_texture_staging_capability_linux.py
+      - name: Observe the actual stock arm64 Metal device and six exact usage193 formats
+        timeout-minutes: 6
+        env:
+          ALLOCATOR_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 -B allocator/tools/godot/native_texture_staging/capability.py \
+            --profile macos-arm64-metal-v1 --head "$ALLOCATOR_HEAD" \
+            --work "$RUNNER_TEMP/native-texture-staging-metal-stock-work" \
+            --output "$RUNNER_TEMP/native-texture-staging-metal-evidence/venue"
+      - name: Upload bounded Metal venue result even after failure
+        if: always()
+        timeout-minutes: 2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-texture-staging-metal-capability-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/native-texture-staging-metal-evidence/
           if-no-files-found: error
           retention-days: 7
           compression-level: 6

@@ -2,6 +2,7 @@
 """Run actual RD uploads/readback in a fresh X11 software-Vulkan process."""
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -170,6 +171,17 @@ def run(binary, output):
         raise RuntimeError('required software-Vulkan ICD is unavailable or ambiguous')
     manifest = manifests[0]
     env['VK_DRIVER_FILES'] = str(manifest.resolve())
+    # This optional same-host screen prevents a known unsupported venue from
+    # spending a full pair build. Actual native queries/readbacks remain below.
+    receipt = os.environ.get('GLASSVOW_STAGING_CAPABILITY_RECEIPT')
+    binding, capability = None, None
+    if receipt:
+        spec = importlib.util.spec_from_file_location('gv_staging_capability',
+            Path(__file__).with_name('capability.py'))
+        capability = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(capability)
+        receipt = Path(receipt)
+        binding = capability.verify_linux_binding(receipt, manifest, env)
     for suffix in ['DATA', 'CACHE', 'CONFIG', 'STATE']:
         path = output / ('xdg-' + suffix.lower())
         path.mkdir()
@@ -179,11 +191,14 @@ def run(binary, output):
         str(project.resolve()), '--display-driver', 'x11', '--rendering-driver',
         'vulkan', '--rendering-method', 'mobile', '--audio-driver', 'Dummy',
         '--script', str(script.resolve())]
-    (output / 'command.json').write_text(json.dumps({'argv': command,
+    metadata = {'argv': command,
         'vulkan_icd': str(manifest.resolve()),
         'vulkan_icd_sha256': hashlib.sha256(manifest.read_bytes()).hexdigest(),
         'environment_names': ['DISPLAY', 'LIBGL_ALWAYS_SOFTWARE', 'GALLIUM_DRIVER',
-            'VK_DRIVER_FILES', 'XDG_DATA_HOME', 'XDG_CACHE_HOME', 'XDG_CONFIG_HOME', 'XDG_STATE_HOME']}, indent=2) + '\n')
+            'VK_DRIVER_FILES', 'XDG_DATA_HOME', 'XDG_CACHE_HOME', 'XDG_CONFIG_HOME', 'XDG_STATE_HOME']}
+    if binding:
+        metadata['stock_capability_binding'] = binding
+    (output / 'command.json').write_text(json.dumps(metadata, indent=2) + '\n')
     with (output / 'native.log').open('wb') as log:
         process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
             env=env, start_new_session=True)
@@ -206,6 +221,10 @@ def run(binary, output):
     text = (output / 'native.log').read_text(errors='replace')
     if code != 0 or 'SCRIPT ERROR' in text or 'Parse Error' in text:
         raise RuntimeError(f'actual native probe failed/inconclusive, exit {code}; see native.log')
+    if binding:
+        metadata['stock_capability_after'] = capability.verify_linux_binding(receipt, manifest, env)
+        metadata['native_backend_startup'] = capability.verify_native_backend(receipt, text)
+        (output / 'command.json').write_text(json.dumps(metadata, indent=2) + '\n')
     return code
 
 
