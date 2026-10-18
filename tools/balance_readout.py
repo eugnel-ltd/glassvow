@@ -12,7 +12,8 @@ this adds what readouts 9-13 kept in scratch:
   join        join one cell's arms across directories of disjoint seed bands (the longer G3 band)
   paired      paired change of every arm between two runs on the same seeds (exact binomial / McNemar)
   g3          paired G3 on common seeds (Newcombe 1998, method 10 for paired proportions)
-  rowb        row B (B1 win rate, B2 expression and close calls) on 95% intervals
+  rowb        row B (B1 win rate, B2 expression and close calls) on 95% intervals;
+              --b2-sensitivity adds whole-run bootstrap sensitivity beside the Wilson record
   table       the complete section 11 table with reference columns (--tidy for the readout's gate table)
   compare     two run directories, run for run
   equivalence content equivalence for the class (docs/rc-bar.md P9): a candidate's re-run against the
@@ -126,7 +127,7 @@ def cmd_g3(opts: argparse.Namespace) -> int:
 def cmd_rowb(opts: argparse.Namespace) -> int:
     who = graded_class(opts)
     who.require_ways()  # row B reads each committed arm
-    print(tables.row_b_table(who, opts.dir, opts.vow, opts.ref))
+    print(tables.row_b_table(who, opts.dir, opts.vow, opts.ref, opts.b2_sensitivity, opts.b2_seed))
     return 0
 
 
@@ -134,10 +135,13 @@ def cmd_table(opts: argparse.Namespace) -> int:
     refs = list(zip(opts.refs[::2], opts.refs[1::2]))
     if len(opts.refs) % 2:
         raise ValueError("--ref takes a V0 and a V5 directory, in pairs")
+    if opts.tidy and opts.b2_sensitivity:
+        raise ValueError("--tidy omits row B; use --b2-sensitivity without --tidy")
     who = graded_class(opts)
     who.require_ways()
     text = tables.full_table(who, opts.v0, opts.v5, bw.parse_seeds(opts.v0_seeds, opts.holdout_1_1),
-                             bw.parse_seeds(opts.v5_seeds, opts.holdout_1_1), refs)
+                             bw.parse_seeds(opts.v5_seeds, opts.holdout_1_1), refs,
+                             opts.b2_sensitivity, opts.b2_seed)
     print(tables.tidy_gates(text) if opts.tidy else text)
     return 0
 
@@ -175,6 +179,13 @@ def grader_options(parser: argparse.ArgumentParser) -> None:
 def holdout_option(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--holdout-1-1", action="store_true",
                         help="the A9 exam only: the seeds lie inside the 1.1 holdout 17000-18999, otherwise refused")
+
+
+def b2_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--b2-sensitivity", action="store_true",
+                        help="add 2,000 whole-run bootstrap B2 resamples beside the Wilson record")
+    parser.add_argument("--b2-seed", type=int, default=tables.stats.B2_SEED,
+                        help="reported bootstrap PRNG seed (default 0); simulation seeds are unchanged")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -230,6 +241,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("dir", type=Path)
     p.add_argument("--vow", type=int, default=tables.B_VOW)
     p.add_argument("--ref", type=Path, help="a reference directory for the Before column")
+    b2_options(p)
 
     p = add("table", cmd_table, "the complete section 11 table")
     grader_options(p)
@@ -241,6 +253,7 @@ def build_parser() -> argparse.ArgumentParser:
                    metavar=("V0_DIR", "V5_DIR"), help="a reference table's directories (repeatable)")
     p.add_argument("--tidy", action="store_true", help="the readout's gate table, bold where the last reference moved")
     holdout_option(p)
+    b2_options(p)
 
     p = add("compare", cmd_compare, "compare two run directories run for run (exit 2 on any difference)")
     p.add_argument("a", type=Path)

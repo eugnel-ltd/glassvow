@@ -1508,4 +1508,9 @@ class CommandLineTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    # Keep the governed CI entry point running both the immutable regression and
+    # the separate synthetic statistical fixtures without changing its scope.
+    from test_balance_b2_regression import WholeRunB2Regression
+    from test_balance_b2_clustered import ClusteredB2Tests, ClusteredB2ReportTests
+
     unittest.main()

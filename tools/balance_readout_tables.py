@@ -107,16 +107,60 @@ def _span(span: tuple[float, float, float]) -> str:
     return f"{bw.pct(span[0])} ({100 * span[1]:.1f}–{100 * span[2]:.1f})"
 
 
-def row_b_table(who: bw.Roster, directory: Path, vow: int = B_VOW, reference: Path | None = None) -> str:
+def _cluster_span(rate: stats.ClusteredRate, resamples: int) -> str:
+    if rate.point is None:
+        return "n/a (non-estimable: zero denominator)"
+    if rate.span is None:
+        return f"{bw.pct(rate.point)} (non-estimable: {rate.undefined}/{resamples} zero-denominator resamples)"
+    return _span(rate.span)
+
+
+def clustered_b2_verdict(result: stats.B2Sensitivity) -> str:
+    expression, close = result.expression.span, result.close.span
+    if expression is None or close is None:
+        return "UNDECIDED"
+    return bw.decided([bw.at_least(expression, B2_EXPRESSION), bw.at_least(close, B2_CLOSE[0]),
+                       bw.at_most(close, B2_CLOSE[1])])
+
+
+def row_b_sensitivity(who: bw.Roster, directory: Path, vow: int = B_VOW,
+                      seed: int = stats.B2_SEED) -> dict[tuple[str, str], stats.B2Sensitivity]:
+    """B2 sensitivity for each class/vow/pool/arm report, never mixing run clusters across reports."""
+    out = {}
+    for pool in who.pools:
+        who.check_cell_arms(directory, vow, pool)
+        for arm in who.committed + (bw.SKILLED,):
+            name = bw.report_name(vow, pool, arm)
+            manifest, runs = bw.load_report(directory / name, None, who.rates)
+            who.check_report_identity(name, manifest, vow, pool, arm)
+            out[pool, arm] = stats.b2_sensitivity(runs, who.arms[arm][0], who.ways, seed=seed, label=name)
+    return out
+
+
+def row_b_table(who: bw.Roster, directory: Path, vow: int = B_VOW, reference: Path | None = None,
+                b2_sensitivity: bool = False, b2_seed: int = stats.B2_SEED) -> str:
+    sensitivity = row_b_sensitivity(who, directory, vow, b2_seed) if b2_sensitivity else {}
     rows, before = row_b(who, directory, vow), row_b(who.unbound(), reference, vow) if reference else None
     head = "| Cell | Arm | Win rate (95%) | B1 | Expression (95%) | Close calls (95%) | B2 |"
     lines = [head + (" Before B1 / B2 |" if before else ""), "|---|---|---|---|---|---|---|" + ("---|" if before else "")]
+    if b2_sensitivity:
+        lines[0] += " Run clusters | Expression clustered (95%) | Close calls clustered (95%) | B2 sensitivity |"
+        lines[1] += "---|---|---|---|"
     for pool in who.pools:
         for arm in who.committed + (bw.SKILLED,):
             rate, b1, expression, close, b2, _, _ = rows[pool, arm]
             extra = f" {before[pool, arm][1]} / {before[pool, arm][4]} |" if before else ""
+            if b2_sensitivity:
+                clustered = sensitivity[pool, arm]
+                extra += (f" {clustered.runs} | {_cluster_span(clustered.expression, clustered.resamples)} | "
+                          f"{_cluster_span(clustered.close, clustered.resamples)} | {clustered_b2_verdict(clustered)} |")
             lines.append(f"| V{vow} {pool} | {arm} | {_span(rate)} | {b1} | {_span(expression)} | "
                          f"{_span(close)} | {b2} |{extra}")
+    if b2_sensitivity:
+        lines += ["", f"B2 sensitivity: {stats.B2_RESAMPLES:,} resamples of whole runs with replacement per report; "
+                  f"Python Random seed {b2_seed}; runs sorted by unique simulation seed; pooled count ratios; "
+                  "linear 2.5/97.5 percentiles. Any zero-denominator resample makes that interval non-estimable "
+                  "and B2 sensitivity UNDECIDED. Wilson remains the method of record. Reference columns remain Wilson."]
     return "\n".join(lines)
 
 
@@ -129,7 +173,8 @@ def graded(who: bw.Roster, v0: Path, v5: Path, v0_seeds: tuple[int, int], v5_see
 
 
 def full_table(who: bw.Roster, v0: Path, v5: Path, v0_seeds: tuple[int, int], v5_seeds: tuple[int, int],
-               references: list[tuple[Path, Path]] | None = None) -> str:
+               references: list[tuple[Path, Path]] | None = None, b2_sensitivity: bool = False,
+               b2_seed: int = stats.B2_SEED) -> str:
     """The complete section 11 table: win rates, every gate in every cell on point and 95% interval,
     row B, and the verdicts of each reference table (a previous readout's or a baseline's) beside it."""
     references = references or []
@@ -155,7 +200,7 @@ def full_table(who: bw.Roster, v0: Path, v5: Path, v0_seeds: tuple[int, int], v5
             lines.append(f"| V{cell[0]} {cell[1]} | {name} | {gate[1]} | {gate[3]} | {interval[0]} | "
                          f"{interval[1]} |{before}")
     lines += ["", f"### Row B (V{B_VOW}, search player)", "",
-              row_b_table(who, v0, B_VOW, references[0][0] if references else None)]
+              row_b_table(who, v0, B_VOW, references[0][0] if references else None, b2_sensitivity, b2_seed)]
     return "\n".join(lines)
 
 
