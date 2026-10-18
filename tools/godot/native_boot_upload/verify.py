@@ -2,6 +2,7 @@
 """Verify observed native boot calls and independently sampled screen pixels."""
 import hashlib
 import json
+from fractions import Fraction
 from pathlib import Path
 
 import numpy as np
@@ -147,6 +148,46 @@ def content_bbox(array):
     return [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1]
 
 
+def source_pixel_error(actual, reference, case, renderer):
+    """Compare whole source samples, including exact nearest discontinuities.
+
+    The pinned native quad/uniforms/interpolated UV are floats. At an exact
+    rational texel boundary either adjacent nearest sample can result from
+    rounding; elsewhere this retains the single original reference. This is
+    neither a spatial search nor a channel-wise mixture of candidate colours.
+    """
+    error = np.max(np.abs(actual.astype(int) - reference.astype(int)), axis=2)
+    if case["filter"]:
+        return error, 0
+    with Image.open(case["source"]) as image:
+        source = np.asarray(image.convert("RGBA"), dtype=np.float64)
+    ih, iw, _ = source.shape
+    ww, wh = case["size"]
+    left, top, width, height = screen_rect(
+        (Fraction(iw), Fraction(ih)), (Fraction(ww), Fraction(wh)), case["stretch"])
+    qx = [(Fraction(2 * x + 1, 2) - left) * iw / width for x in range(ww)]
+    qy = [(Fraction(2 * y + 1, 2) - top) * ih / height for y in range(wh)]
+    xtie = np.array([q.denominator == 1 and 0 < q < iw for q in qx])
+    ytie = np.array([q.denominator == 1 and 0 < q < ih for q in qy])
+    inside = (np.array([0 <= q < ih for q in qy])[:, None] &
+              np.array([0 <= q < iw for q in qx])[None, :])
+    rows, columns = np.nonzero((ytie[:, None] | xtie[None, :]) & inside)
+    if not len(rows):
+        return error, 0
+    xi = np.array([q.numerator // q.denominator for q in qx])[columns]
+    yi = np.array([q.numerator // q.denominator for q in qy])[rows]
+    for previous_y, previous_x in ((False, False), (False, True), (True, False), (True, True)):
+        sx = xi - (xtie[columns] if previous_x else 0)
+        sy = yi - (ytie[rows] if previous_y else 0)
+        sampled = source[sy, sx]
+        alpha = sampled[:, 3:4] / 255
+        rgb = np.clip(np.rint(sampled[:, :3] * alpha + np.asarray(BACKGROUND) * (1 - alpha)),
+                      0, 255).astype(int)
+        whole_sample_error = np.max(np.abs(actual[rows, columns].astype(int) - rgb), axis=1)
+        error[rows, columns] = np.minimum(error[rows, columns], whole_sample_error)
+    return error, len(rows)
+
+
 def verify_pixels(baseline, candidate, case, renderer):
     before = np.asarray(Image.open(baseline).convert("RGB"))
     after = np.asarray(Image.open(candidate).convert("RGB"))
@@ -161,19 +202,24 @@ def verify_pixels(baseline, candidate, case, renderer):
     reference = source_reference(case, renderer)
     reference_bbox = content_bbox(reference)
     require(before_bbox == reference_bbox, "native capture differs from source content bounding box")
-    source_difference = np.abs(before.astype(int) - reference.astype(int))
+    raw_source_difference = np.abs(before.astype(int) - reference.astype(int))
+    source_difference, boundary_pixels = source_pixel_error(before, reference, case, renderer)
     # The pair gate above is exact. This independent numeric oracle allows the
     # native sampler/blender's 8-bit rounding, never source/crop/color changes.
     require(source_difference.max() <= 2,
             f"native frame differs from independent source oracle: max={source_difference.max()}")
     return {"pair_exact": True, "bbox": after_bbox,
             "source_oracle_max_channel_error": int(source_difference.max()),
+            "source_oracle_nominal_max_channel_error": int(raw_source_difference.max()),
+            "nearest_exact_boundary_pixels": boundary_pixels,
             "baseline_sha256": digest(baseline), "candidate_sha256": digest(candidate),
             "source_sha256": digest(case["source"])}
 
 
-# Schema 1 and every pixel function above remain frozen byte-for-byte. Schema 2
-# describes a different causal mechanism: one full texture, bounded transfers.
+# Schema 1 upload semantics are retained. The pixel oracle above explicitly
+# corrects exact nearest-boundary handling; the historical prefix is preserved
+# with its failed native/stock receipts. Schema 2 describes one full texture
+# with bounded transfers.
 _verify_uploads_schema1 = verify_uploads
 
 

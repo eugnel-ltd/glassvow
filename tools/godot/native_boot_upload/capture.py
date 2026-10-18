@@ -82,6 +82,13 @@ def capture_worker(spec):
     output.mkdir(parents=True, exist_ok=True)
     project = output / "project"
     make_project(project, spec["case"])
+    stock_oracle = spec.get("stock_oracle", False)
+    if stock_oracle:
+        settings = project / "project.godot"
+        settings.write_text(settings.read_text().replace("boot_splash/show_image=true",
+            "boot_splash/show_image=true\nboot_splash/minimum_display_time=30000"))
+        (project / ".godot").mkdir()
+        (project / ".godot/global_script_class_cache.cfg").write_text("list=[]\n")
     width, height = spec["case"]["size"]
     renderer = spec["renderer"]
     command = [spec["binary"], "--path", str(project), "--display-driver", "x11",
@@ -91,6 +98,11 @@ def capture_worker(spec):
                "--position", "0,0"]
     environment = dict(os.environ, GLASSVOW_BOOT_UPLOAD_PROBE="1", GV_BOOT_PROBE_HOLD_MS="30000",
                        LIBGL_ALWAYS_SOFTWARE="1", GALLIUM_DRIVER="llvmpipe")
+    if stock_oracle:
+        for suffix in ("DATA_HOME", "CACHE_HOME", "CONFIG_HOME", "STATE_HOME", "RUNTIME_DIR"):
+            folder = output / ("xdg-" + suffix.lower())
+            folder.mkdir(mode=0o700)
+            environment["XDG_" + suffix] = str(folder.resolve())
     log_path = output / "native.log"
     capture_path = output / "boot.png"
     write_json(output / "command.json", {"argv": command, "renderer": renderer,
@@ -112,6 +124,13 @@ def capture_worker(spec):
                          and json.loads(line[len("GV_BOOT_PROBE "):]).get("event") == "hold"]
                 if holds:
                     break
+                if stock_oracle and ("OpenGL API" if renderer == "gles3" else "Vulkan") in contents:
+                    require(("Compatibility" if renderer == "gles3" else "Mobile") in contents,
+                            "stock oracle renderer fallback")
+                    # Native startup presents before the minimum display-time
+                    # wait. Capture once; never search/retry frames until green.
+                    time.sleep(1)
+                    break
                 require(process.poll() is None, "engine exited before the native hold")
                 time.sleep(0.05)
             else:
@@ -122,7 +141,8 @@ def capture_worker(spec):
             require(process.poll() is None, "engine exited while capturing boot")
             require("GV_BOOT_SCRIPT_STARTED" not in log_path.read_text(errors="replace"),
                     "project script ran during native capture")
-            write_json(output / "capture.json", {"captured_while_native_hold": True,
+            write_json(output / "capture.json", {"captured_while_native_hold": not stock_oracle,
+                       "stock_pre_script_minimum_display_time": stock_oracle,
                        "native_pid": process.pid, "screenshot_sha256": digest(capture_path),
                        "log_sha256": digest(log_path), "source_sha256": digest(spec["case"]["source"])})
     finally:
@@ -138,17 +158,19 @@ def capture_worker(spec):
                 process.wait(timeout=3)
 
 
-def capture(binary, case, renderer, output):
+def capture(binary, case, renderer, output, stock_oracle=False, timeout=40):
     output.mkdir(parents=True, exist_ok=True)
     spec = {"binary": str(binary.resolve()), "case": case,
             "renderer": renderer, "output": str(output.resolve())}
+    if stock_oracle:
+        spec["stock_oracle"] = True
     spec_path = output / "spec.json"
     write_json(spec_path, spec)
     width, height = case["size"]
     command = ["xvfb-run", "--auto-servernum", "--server-args",
                f"-screen 0 {width}x{height}x24 -nolisten tcp -ac -nocursor",
                sys.executable, str(Path(__file__).resolve()), "--capture", str(spec_path)]
-    run_logged(command, output / "capture-worker.log", 40)
+    run_logged(command, output / "capture-worker.log", timeout)
 
 
 def matrix(splash, directory):

@@ -81,8 +81,9 @@ and need a new compiled/runtime run under this supported test configuration.
 
 The additive schema 2 verifier requires one full allocation, exact contiguous
 row coverage, original source offsets and UVs, the original quad, actual driver
-pitch, real staging capacity and the derived band count. The full schema 1
-verifier prefix and every pixel comparison remain byte-for-byte unchanged.
+pitch, real staging capacity and the derived band count. The schema 1 upload
+contract is retained. The independent pixel oracle now handles exact nearest
+boundaries as described below; its former prefix remains historical evidence.
 
 The observer is **CI-only source instrumentation**. It logs the actual decoded
 source, full native allocation, actual transfer calls and native staging
@@ -105,6 +106,23 @@ and asymmetric RGB/RGBA edge/seam fixtures. The exact baseline/candidate pixel
 comparison is supplemented by an independent source sampler and bounding-box
 check. This prevents equality of two empty frames from passing. Captures still
 need actual visual inspection before claiming the presentation invariant.
+
+The native quad, uniforms and interpolated UVs are floats. At an exact rational
+interior texel boundary, rounding can choose either adjacent nearest sample.
+The oracle compares whole source colours, including alpha blending, from those
+exact boundary samples. It never searches neighbouring pixels, admits nearby
+values or mixes channels from different samples. Other pixels and linear
+filtering keep the original reference. Frame pairing remains exact; the global
+source channel-error limit remains 2 and bounding-box checks are unchanged.
+Reports expose both the nominal error and the error against admissible samples.
+
+Before paired builds, `stock_oracle.py` hashes the official 4.7.2 binary and
+checks all 17 source cases on both software renderers within 180 seconds. It
+captures once per case during native minimum display time, with unique project
+and XDG state and process-group cleanup. Missing capability, early script entry,
+source mismatch or deadline exhaustion fails the screen. This is an oracle
+preflight; paired builds, upload observations, exact captures and live negatives
+remain required.
 
 ## Trigger, cost and scope
 
@@ -164,9 +182,10 @@ Pillow/numpy versions listed in the workflow for verifier/capture commands.
 ```sh
 python3 tools/godot/native_boot_upload/check_patch.py --output work/native-boot/source-check.json
 python3 tools/godot/native_boot_upload/test_harness.py
-python3 tools/godot/native_boot_upload/test_schema2.py
+python3 tools/godot/native_boot_upload/test_schema2_corrected_oracle.py
 python3 tools/godot/native_boot_upload/test_frame_capacity.py
 python3 tests/native/test_native_boot_call_setup.py
+python3 tests/native/test_native_boot_source_oracle.py
 python3 tools/godot/native_boot_upload/native_calls.py --output work/native-boot/native-calls
 python3 tests/native/test_boot_capture_cli.py
 python3 tests/native/test_boot_capture_diagnostics.py
@@ -181,6 +200,12 @@ accepts an already downloaded archive with the sealed hash; an archive hash
 override is an explicit source-pin contract change, not a cache convenience.
 The capture invocation is shown in the workflow and consumes only the newly
 built executable paths recorded by `build.py`.
+
+The maintained schema2 runner executes all 17 original behavioral cases without
+editing their frozen file. It explicitly retires that file's obsolete whole
+pixel-prefix assertion, retains the old prefix under `historical/`, and checks
+the unchanged active schema1 upload body and original harness bytes. The new
+source-oracle controls govern the deliberate pixel-reference correction.
 
 Native-call candidate preparation prevents Git from discovering an enclosing
 repository. The same patched RD methods must reach the capacity fixture when
@@ -221,6 +246,14 @@ assembled bytes, bounded submissions and unchanged ordinary API behavior with
 ASan/UBSan. These are compiled native function-body controls with backend/type
 stubs, not renderer or engine-build proof. New paired hosted compilation and
 exact captures remain required for the correction.
+
+Hosted job `117768816495` at `ab38334f1c03428e8a2fd41d7b2a3590972331b0`
+built both engines, passed native controls and preserved exact frame equality.
+Its source oracle rejected the unchanged GLES baseline on `asymmetric-s2-f0`
+with nominal error 208. The unchanged official ed1 binary reproduced exactly
+308 affected pixels on the centre-column nearest boundary. The exact-boundary
+correction accepts those whole samples with error 0. This diagnoses the oracle
+defect and does not qualify the patched renderer.
 
 The first RD recording proposal (`tests/native/rd_boot_upload_calls/`) is frozen
 but superseded: its backend allocated a new unconstrained buffer per request
