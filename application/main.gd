@@ -1738,9 +1738,14 @@ func _carved_deeds() -> Array[String]:
 		if i < keys.size() and i > 0 and _deed(keys[i]) == 0:
 			continue
 		lines.append(_carve(parts[i]))
-	if not _vigil.unlocks.is_empty():
+	var withheld: Array[String] = ClassScope.withheld_unlocks(content)
+	var secret_count: int = 0
+	for unlock: String in _vigil.unlocks:
+		if not withheld.has(unlock):
+			secret_count += 1
+	if secret_count > 0:
 		var secrets: String = Locale.active.t("ui.brand.secrets", {
-			"n": LeadlightNumerals.carved(_vigil.unlocks.size())})
+			"n": LeadlightNumerals.carved(secret_count)})
 		lines.append(_carve(secrets.trim_prefix(" · ")))
 	return lines
 
