@@ -119,8 +119,10 @@ G6_MAX, G6_HELD, G6_WAYS = Fraction(60, 100), Fraction(20, 100), 2
 PLAYS = ("greedy", "search")
 # The bots (#544 P6): the pilot that builds every run, and the search player that plays its fights
 # under --play search. The first of each is 1.0's instrument of record (docs/rc-bar.md P9) and the
-# default; the second is the 1.1 instrument. Every simulator command names them.
-PILOTS = ("p8-d0-v3", "p9")
+# default; p9 is the accepted 1.1 instrument. p10 is its separately selectable
+# visible-state forecast candidate (#544 A9), pending both-class qualification.
+# Every simulator command names its exact versions.
+PILOTS = ("p8-d0-v3", "p9", "p10")
 SEARCHES = ("s1", "s2", "s3")
 # Readout 8's feel proxies: a won fight the hero leaves under this share of max HP
 # is a close call.
@@ -771,7 +773,7 @@ def render(result: dict[str, Any], wall: float | None = None) -> str:
 
 def bots_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--pilot", choices=PILOTS, default=PILOTS[0],
-                        help="the pilot that builds every run (default p8-d0-v3, 1.0's; p9 is 1.1's)")
+                        help="the pilot that builds every run (default p8-d0-v3; p9 is 1.1's, p10 its visible-state candidate)")
     parser.add_argument("--search", choices=SEARCHES, default=SEARCHES[0],
                         help="the search player under --play search (default s1, 1.0's; s2 and s3 are 1.1's)")
 

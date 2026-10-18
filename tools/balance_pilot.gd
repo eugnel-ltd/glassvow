@@ -16,7 +16,10 @@ const VERSION: String = "p8-d0-v3"
 ## a flat weight, and scores 0 for a lit rider of a way the run's class does not have
 ## (the rider can never resolve there). Chosen per run with `select`.
 const HAND_VERSION: String = "p9"
-const VERSIONS: Array[String] = [VERSION, HAND_VERSION]
+## #544 A9: p9's Hand/rider model with a visible-state Smolder blow forecast.
+## Historical pilots retain their exact copied-RNG forecast and preview usage.
+const HONEST_VERSION: String = "p10"
+const VERSIONS: Array[String] = [VERSION, HAND_VERSION, HONEST_VERSION]
 ## The cards each turn deals and the hand's cap (`CombatRules.start_turn`, `draw_cards`).
 const TURN_DRAW: int = 5
 const HAND_CAP: int = 10
@@ -497,6 +500,13 @@ static func _incoming(game: GlassvowGame, foes: Dictionary = {}) -> int:
 ## `_incoming` for any run and fight, live or a search's detached copy.
 static func incoming_on(rules: CombatRules, run: RunState, cb: CombatState,
 		foes: Dictionary = {}) -> int:
+	if version == HONEST_VERSION:
+		return _honest_incoming_on(rules, run, cb, foes)
+	return _legacy_incoming_on(rules, run, cb, foes)
+## Frozen historical p8/p9 forecast. A copy leaves the live cursor alone but
+## reads a hidden future leap; preserve it for their reproducible instrument.
+static func _legacy_incoming_on(rules: CombatRules, run: RunState, cb: CombatState,
+		foes: Dictionary = {}) -> int:
 	var standing: Array[EnemyCombatant] = []
 	for e: EnemyCombatant in cb.enemies:
 		var foe: EnemyCombatant = foes.get(e.idx, e)
@@ -526,6 +536,45 @@ static func incoming_on(rules: CombatRules, run: RunState, cb: CombatState,
 		if e.staggered or e.flags.has(CombatRules.SILVERED):
 			continue
 		var preview_v: Variant = rules.preview_enemy_dmg(cb, e, run)
+		if typeof(preview_v) == TYPE_DICTIONARY:
+			var preview: Dictionary = preview_v
+			total += int(float(str(preview["dmg"]))) * int(float(str(preview["times"])))
+	return total
+## Visible-state forecast, not an exact enemy-phase simulator. Known ticks
+## precede each foe's blow in order. Credit a leap only with one living recipient;
+## an ambiguous leap earns no credit and never reads/copies the hidden RNG.
+## A finale handoff stops later blows, retaining any already forecast earlier.
+static func _honest_incoming_on(rules: CombatRules, run: RunState, cb: CombatState,
+		foes: Dictionary = {}) -> int:
+	var standing: Array[EnemyCombatant] = []
+	var hp: Array[int] = []
+	var smolder: Array[int] = []
+	for live: EnemyCombatant in cb.enemies:
+		var foe: EnemyCombatant = foes.get(live.idx, live)
+		standing.append(foe)
+		hp.append(foe.hp)
+		smolder.append(int(float(str(foe.statuses.get("poison", 0)))))
+	var total: int = 0
+	for i: int in range(standing.size()):
+		if hp[i] <= 0:
+			continue
+		if smolder[i] > 0:
+			hp[i] -= smolder[i]
+			smolder[i] = maxi(0, smolder[i] - 1)
+			if hp[i] <= 0:
+				if rules._is_finale_handoff(standing[i]):
+					return total
+				var living: Array[int] = []
+				for j: int in range(hp.size()):
+					if hp[j] > 0:
+						living.append(j)
+				if smolder[i] > 0 and living.size() == 1:
+					smolder[living[0]] += smolder[i]
+				continue
+		var foe: EnemyCombatant = standing[i]
+		if foe.staggered or foe.flags.has(CombatRules.SILVERED):
+			continue
+		var preview_v: Variant = rules.preview_enemy_dmg(cb, foe, run)
 		if typeof(preview_v) == TYPE_DICTIONARY:
 			var preview: Dictionary = preview_v
 			total += int(float(str(preview["dmg"]))) * int(float(str(preview["times"])))
@@ -603,7 +652,7 @@ static func offer_card_score(content: ContentDB, aspect: int, card_id: String) -
 static func see_flame(content: ContentDB, run: RunState) -> void:
 	lit = ""
 	held.clear()
-	if version == HAND_VERSION:
+	if version in [HAND_VERSION, HONEST_VERSION]:
 		var expected: float = expected_hand(content, run.player.deck)
 		if expected != hand:
 			hand = expected
@@ -705,7 +754,7 @@ static func card_score(d: Dictionary, aspect: int, card_id: String = "", lit_way
 static func _rider_share(fx: Dictionary, aspect: int, lit_way: String, content: ContentDB) -> float:
 	if not fx.has("lit") or str(fx["lit"]) == lit_way:
 		return 1.0
-	if version == HAND_VERSION and content != null and not way_ids(content, aspect).has(str(fx["lit"])):
+	if version in [HAND_VERSION, HONEST_VERSION] and content != null and not way_ids(content, aspect).has(str(fx["lit"])):
 		return 0.0
 	return _w("special", "crackedShare")
 static func _status_value(id: String, n: int, dusk: bool) -> float:
@@ -743,7 +792,7 @@ static func _status_value(id: String, n: int, dusk: bool) -> float:
 static func _special_value(fx: Dictionary, dusk: bool) -> float:
 	var n: float = float(str(fx.get("n", 0)))
 	var share: float = _w("special", "crackedShare")
-	if version == HAND_VERSION and HAND_PAYOFFS.has(str(fx.get("id", ""))):
+	if version in [HAND_VERSION, HONEST_VERSION] and HAND_PAYOFFS.has(str(fx.get("id", ""))):
 		return n * (hand - 1.0)
 	match str(fx.get("id", "")):
 		"execute":

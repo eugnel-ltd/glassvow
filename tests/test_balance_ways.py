@@ -292,13 +292,14 @@ class BalanceWaysTest(unittest.TestCase):
     def test_every_command_names_its_bots_and_a_table_has_one_pair(self) -> None:
         self.assertEqual(("p8-d0-v3", "s1"), (ways.PILOTS[0], ways.SEARCHES[0]))  # 1.0's, rc-bar P9
         for play, pilot, search in (("greedy", "p8-d0-v3", "s1"), ("search", "p8-d0-v3", "s1"),
-                                    ("search", "p9", "s2"), ("greedy", "p9", "s1")):
+                                    ("search", "p9", "s2"), ("greedy", "p9", "s1"),
+                                    ("search", "p10", "s3"), ("greedy", "p10", "s1")):
             work = ways.jobs("godot", DUSK, (13000, 13199), Path("/out"), play=play, pilot=pilot, search=search)
             for _, command in work:
                 self.assertIn(f"--pilot={pilot}", command)
                 self.assertEqual([f"--search={search}", "--play=search"] if play == "search" else [],
                                  [arg for arg in command if arg.startswith(("--search", "--play"))])
-        for play, pilot, search in (("greedy", "p8-d0-v3", "s2"), ("search", "p10", "s1"), ("search", "p9", "s4")):
+        for play, pilot, search in (("greedy", "p8-d0-v3", "s2"), ("search", "p11", "s1"), ("search", "p9", "s4")):
             with self.subTest(play=play, pilot=pilot, search=search), self.assertRaises(ValueError):
                 ways.sim_command("godot", DUSK, 0, "full", "A", 13000, 3, Path("/o.json"), play=play,
                                  pilot=pilot, search=search)
