@@ -8,12 +8,6 @@ Short live log of repeatable mistakes. Read it before every task. At most fiftee
 
 ## Recent entry
 
-### Compare retained floating values without a text round trip
-- Cause: A p10 regression converted a saved float through `str`, whose display precision rounded it and falsely rejected an identical score. The invalid attempt and logs remain preserved; a new canonical first fixture was strictly parsed and failed unchanged source before production edits.
-- Fix: d86a67d4a2337a0186f022b2c572a9cb082d096c
-- Done right: Assign a Dictionary value to an explicitly typed float before comparing it. Never round production calculations to satisfy a faulty fixture.
-- Seen: 1× (2026-10-18)
-
 ### Cast Variant values before passing them to typed GDScript boundaries
 - Cause: Dictionary values passed to typed bool parameters caused warning-as-error parse failures in two test additions.
 - Fix: ad90cb8396fc6755dbe1ef2152ae605cdec88117
@@ -71,3 +65,40 @@ This repo's long record of solved problems is `docs/solutions/`, by category. Sh
 - Fix: `edd0084876e99f47db862fce978b64910ac71b1f`.
 - Done right: use the installed profile boundary at every write-entry marker; prove byte preservation for synthetic starts and resumed choices while preserving the explicit production-profile opt-out.
 - Seen: 1× (2026-10-18)
+
+### Keep report provenance complete in statistical fixtures
+- Cause: A B2 reporting fixture used an empty manifest, concealing a path that accepted another class and cell under the requested report filename.
+- Fix: The #661/#544 B2 sensitivity correction shares the grader's complete report-identity validation and adds a public CLI regression with matching content but conflicting class/cell metadata.
+- Done right: Synthetic reports preserve the production manifest identity and seed metadata; numerical regression claims do not excuse missing provenance.
+- Seen: 1× (2026-10-18)
+
+### Refresh retained faces when their resolved definition changes
+- Cause: The discard top reused a snapshot by card UID, so the Unbroken power changed the rider text while the same top card kept its old face.
+- Fix: ff3cfae9b475b93f746f7cfb176adbdd79c94bab
+- Done right: Compare the resolved definition key, reject stale handoff and bake results, and prove an unchanged UID updates without rebaking unchanged definitions.
+- Seen: 1× (2026-10-18)
+
+### Prewarm real fights through every development entry
+- Cause: The onboarding bench built the real combat screen but skipped the shared card-back bake and shader hold used by both normal fight entries.
+- Fix: Issue #661, onboarding card prewarm follow-up.
+- Done right: Exercise the actual onboarding entry with cold, chosen and cached backs, and check that its screen owns the generated-material hold.
+- Seen: 1× (2026-10-18)
+
+### Recheck each waiter's lifetime after a shared async job completes
+- Cause: A successful shared card-back bake reached a waiter whose host was freed; the existing freed-waiter regression exercised only a failed render.
+- Fix: #657 successful-owner / freed-waiter follow-up.
+- Done right: Validate the waiting caller after the shared await. Use one signal barrier to require a live owner's result and cache, a live waiter's shared result, a freed waiter's null result, and no extra render.
+- Seen: 1× (2026-10-18)
+
+### Parse a new regression fixture before freezing its first test commit
+- Cause: a new locked fixture passed Variant comparisons to a bool parameter; its first replacement also omitted parentheses around a multiline comparison. Neither parsed, so neither proved a behavioural failure.
+- Fix: a85b52f3 (runnable immutable fixture), f009a32e (source fix).
+- Done right: run the explicit-path parser before the first test commit, commit the runnable test, observe its named failure on unchanged source, then apply the fix and observe green. Preserve abandoned candidates and their failed logs without rewriting them.
+- Seen: 1× (2026-10-18)
+
+### Compare retained floating values without a text round trip
+- Cause: A p10 regression converted a saved float through `str`, whose display precision rounded it and falsely rejected an identical score. The invalid attempt and logs remain preserved; a new canonical first fixture was strictly parsed and failed unchanged source before production edits.
+- Fix: d86a67d4a2337a0186f022b2c572a9cb082d096c
+- Done right: Assign a Dictionary value to an explicitly typed float before comparing it. Never round production calculations to satisfy a faulty fixture.
+- Seen: 1× (2026-10-18)
+

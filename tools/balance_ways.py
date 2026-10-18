@@ -191,6 +191,14 @@ class Roster(NamedTuple):
             raise ValueError(f"{name}: its manifest names content {manifest.get('contentFileSha256')!r}, not "
                              f"--content's {self.content}; grade reports with the catalogue they ran on")
 
+    def check_report_identity(self, name: str, manifest: dict[str, Any], vow: int, pool: str, arm: str) -> None:
+        """Bind a report's complete class/cell/arm identity and optional content catalogue."""
+        self.check_content(name, manifest)
+        way, build = self.arms[arm]
+        expected = {"aspect": self.aspect, "vow": vow, "pool": pool, "way": way, "build": build}
+        _require(all(type(manifest.get(key)) is type(value) and manifest.get(key) == value
+                     for key, value in expected.items()), f"{name}: manifest is not this cell and arm")
+
     def check_cell_arms(self, directory: Path, vow: int, pool: str) -> None:
         """Refuses a directory holding a committed arm of the cell that this class does not have: its reports
         ran on a catalogue with other ways, and grading them by these ways would leave one out."""
@@ -677,11 +685,7 @@ def grade(who: Roster, directory: Path, seeds: tuple[int, int], vows: tuple[int,
             adaptive_rows: dict[str, list[dict[str, Any]]] = {}
             for arm, (way, build) in who.arms.items():
                 manifest, rows = load_report(directory / report_name(vow, pool, arm), seeds, who.rates)
-                who.check_content(report_name(vow, pool, arm), manifest)
-                _require(manifest.get("vow") == vow and manifest.get("pool") == pool
-                         and manifest.get("way") == way and manifest.get("build") == build
-                         and manifest.get("aspect") == who.aspect,
-                         f"{report_name(vow, pool, arm)}: manifest is not this cell and arm")
+                who.check_report_identity(report_name(vow, pool, arm), manifest, vow, pool, arm)
                 identity.add((str(manifest.get("commit")), str(manifest.get("contentFileSha256"))))
                 plays.add(str(manifest.get("play", "greedy")))
                 search = manifest.get("search") if isinstance(manifest.get("search"), dict) else {}
