@@ -37,6 +37,17 @@ The scripts' frozen `EXPECT_REJECT` values differ intentionally; provenance bind
 both exact hashes. Only the candidate's exact atomic-rejection ERROR is required
 and permitted. Every other native ERROR remains fatal.
 
+The maintained Mac job checks out immutable runtime helpers at `1aebd36a` and
+pure builder helpers at `a08e1ab8`, verifies `metal-shared-inputs.json`, and
+materialises only the declared runtime bytes beside the Vigil tools. This keeps
+the stock query bound to the exact Vigil checkout HEAD. The controller accepts
+the external builder/source/manifest explicitly and hashes its transitive
+`verify.py` import. Vigil's own prerequisite-aware builder remains unchanged.
+The actual sparse preflight runs before stock qualification; source download and
+the paired build run only after that same-job stock screen succeeds. Unsupported
+stock remains component NOT_RUN. The old unqualified Linux build job is explicitly
+skipped, with its historical steps and failed attempts retained.
+
 ## Original Linux component contract
 
 Vigil Hall's 2048×2048 ASTC 4×4 texture has 12 mip levels: a 4,194,304-byte

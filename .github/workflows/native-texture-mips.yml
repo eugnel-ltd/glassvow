@@ -9,12 +9,18 @@ on:
       - tools/godot/native_texture_mips/**
       - tools/godot/native_boot_upload/build.py
       - tools/godot/native_boot_upload/processes.py
+      - tools/godot/native_boot_upload/verify.py
+      - tools/godot/native_texture_staging/**
       - tests/native/test_texture_mip_batches.py
       - tests/native/texture_mip_batches.cpp.in
       - tests/native/test_texture_mip_evidence.py
       - tests/native/test_native_mip_builder.py
       - tests/native/test_native_mip_runtime_config.py
       - tests/native/test_native_mip_hosted_regressions.py
+      - tests/native/test_native_mip_metal.py
+      - tests/native/test_native_mip_metal_delivery.py
+      - tests/native/test_native_mip_metal_controller.py
+      - tests/native/test_native_mip_metal_workflow.py
       - tests/native/fixtures/mip-hosted-117746266505/**
       - .github/workflows/native-texture-mips.yml
 
@@ -27,6 +33,10 @@ concurrency:
 
 jobs:
   native-mip-requests:
+    # Archived qualification path: job 117746266505 had no ASTC support and failed.
+    # Do not repeat its expensive pair or relabel that INCONCLUSIVE result PASS.
+    # Maintained physical-format qualification now runs in the explicit Mac job.
+    if: ${{ false }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
@@ -153,3 +163,168 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
+  paired-macos-metal-mips:
+    runs-on: macos-15
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTHONUNBUFFERED: "1"
+      VIGIL_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Initialise bounded desktop Metal evidence
+        timeout-minutes: 1
+        run: |
+          mkdir -p "$RUNNER_TEMP/native-mips-metal-evidence"
+          printf '%s\n' 'Desktop Metal component; iOS/A12/template/memory/timing and Vulkan 256-byte row controls unqualified.' \
+            > "$RUNNER_TEMP/native-mips-metal-evidence/scope.txt"
+      - name: Check out the exact Vigil source and every cheap-fixture dependency
+        timeout-minutes: 2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: vigil
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.github/workflows/native-texture-mips.yml
+            /tests/native/
+            /tools/godot/native_texture_mips/
+            /tools/godot/native_boot_upload/
+            /tools/godot/patches/glassvow-660-bounded-mip-upload.patch
+      - name: Check out the immutable shared Mac runtime and allocator prerequisite
+        timeout-minutes: 2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ github.repository }}
+          ref: 1aebd36a47ceee6d5d74328b79b852d1e0eb95db
+          path: shared-runtime
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /tools/godot/native_texture_staging/
+            /tools/godot/patches/glassvow-660-compressed-upload-staging.patch
+      - name: Check out immutable pure builder helpers separately
+        timeout-minutes: 2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ github.repository }}
+          ref: a08e1ab8f9b5e1c8c0dd3e8c450db839f0a5acb6
+          path: shared-builder
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /tools/godot/native_boot_upload/
+      - name: Select pinned Python 3.12 on arm64
+        timeout-minutes: 2
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+          architecture: arm64
+      - name: Install only pinned component Python dependencies
+        timeout-minutes: 3
+        run: |
+          python3.12 -m venv "$RUNNER_TEMP/native-mips-metal-venv"
+          "$RUNNER_TEMP/native-mips-metal-venv/bin/python" -m pip install \
+            SCons==4.9.1 Pillow==11.3.0 numpy==2.2.6
+      - name: Bind immutable helpers and preflight actual sparse transitive imports
+        timeout-minutes: 2
+        run: |
+          test "$(git -C vigil rev-parse HEAD)" = "$VIGIL_HEAD"
+          git -C shared-runtime rev-parse HEAD > "$RUNNER_TEMP/native-mips-metal-evidence/shared-runtime-head.txt"
+          git -C shared-builder rev-parse HEAD > "$RUNNER_TEMP/native-mips-metal-evidence/shared-builder-head.txt"
+          "$RUNNER_TEMP/native-mips-metal-venv/bin/python" -B - <<'PY'
+          import hashlib,importlib.util,json,os,pathlib,subprocess
+          root=pathlib.Path('vigil').resolve()
+          own=root/'tools/godot/native_texture_mips'
+          source=pathlib.Path('shared-runtime/tools/godot/native_texture_staging').resolve()
+          builder=pathlib.Path('shared-builder/tools/godot/native_boot_upload/build.py').resolve()
+          manifest=own/'metal-shared-inputs.json'
+          pins=json.loads(manifest.read_text())
+          for directory,expected in ((source,pins['runtime_source_head']),(builder.parent,pins['builder_source_head'])):
+              assert subprocess.check_output(['git','-C',str(directory),'rev-parse','HEAD'],text=True).strip()==expected
+          destination=root/'tools/godot/native_texture_staging'
+          destination.mkdir(exist_ok=True)
+          for name,expected in pins['runtime'].items():
+              data=(source/name).read_bytes()
+              assert hashlib.sha256(data).hexdigest()==expected
+              (destination/name).write_bytes(data)
+          spec=importlib.util.spec_from_file_location('vigil_metal_controller',own/'metal.py')
+          controller=importlib.util.module_from_spec(spec);spec.loader.exec_module(controller)
+          identity=controller.inputs(builder,source,manifest)[3]
+          controller.load_shared(builder)
+          output=pathlib.Path(os.environ['RUNNER_TEMP'])/'native-mips-metal-evidence'
+          (output/'shared-helper-inputs.json').write_text(json.dumps(identity,indent=2)+'\n')
+          PY
+          cd vigil
+          "$RUNNER_TEMP/native-mips-metal-venv/bin/python" -B -m unittest discover -s tests/native -p 'test_*mip*.py'
+      - name: Screen this exact stock Mac host before any native source download or build
+        timeout-minutes: 6
+        run: |
+          "$RUNNER_TEMP/native-mips-metal-venv/bin/python" -B \
+            vigil/tools/godot/native_texture_staging/capability.py \
+            --profile macos-arm64-metal-v1 --head "$VIGIL_HEAD" \
+            --work "$RUNNER_TEMP/native-mips-metal-stock-work" \
+            --output "$RUNNER_TEMP/native-mips-metal-evidence/venue"
+      - name: Retrieve the sealed source archive with the existing bounded helper
+        timeout-minutes: 4
+        run: |
+          "$RUNNER_TEMP/native-mips-metal-venv/bin/python" -B - <<'PY'
+          import importlib.util,os,pathlib
+          path=pathlib.Path('vigil/tools/godot/native_texture_mips/metal.py')
+          spec=importlib.util.spec_from_file_location('vigil_archive_inputs',path)
+          controller=importlib.util.module_from_spec(spec);spec.loader.exec_module(controller)
+          builder=pathlib.Path('shared-builder/tools/godot/native_boot_upload/build.py').resolve()
+          source=pathlib.Path('shared-runtime/tools/godot/native_texture_staging').resolve()
+          manifest=path.parent/'metal-shared-inputs.json'
+          controller.inputs(builder,source,manifest)
+          _,support,shared=controller.load_shared(builder)
+          support.verify_venue(pathlib.Path(os.environ['RUNNER_TEMP'])/'native-mips-metal-evidence/venue/result.json',os.environ['VIGIL_HEAD'])
+          archive=pathlib.Path(os.environ['RUNNER_TEMP'])/'native-mips-metal-source/upstream.tar.gz'
+          archive.parent.mkdir(exist_ok=False)
+          shared.download(archive)
+          assert shared.digest(archive)==support.ARCHIVE
+          PY
+      - name: Build the exact pair and require strict Vigil Metal upload and readback proof
+        timeout-minutes: 75
+        run: |
+          "$RUNNER_TEMP/native-mips-metal-venv/bin/python" -B \
+            vigil/tools/godot/native_texture_mips/metal.py \
+            --head "$VIGIL_HEAD" \
+            --venue-receipt "$RUNNER_TEMP/native-mips-metal-evidence/venue/result.json" \
+            --shared-builder "$GITHUB_WORKSPACE/shared-builder/tools/godot/native_boot_upload/build.py" \
+            --runtime-source "$GITHUB_WORKSPACE/shared-runtime/tools/godot/native_texture_staging" \
+            --shared-manifest "$GITHUB_WORKSPACE/vigil/tools/godot/native_texture_mips/metal-shared-inputs.json" \
+            --prerequisite-patch "$GITHUB_WORKSPACE/shared-runtime/tools/godot/patches/glassvow-660-compressed-upload-staging.patch" \
+            --source-archive "$RUNNER_TEMP/native-mips-metal-source/upstream.tar.gz" \
+            --work "$RUNNER_TEMP/native-mips-metal-build" \
+            --output "$RUNNER_TEMP/native-mips-metal-evidence/component"
+      - name: Print bounded generated diagnostics after failure
+        if: failure()
+        timeout-minutes: 1
+        run: |
+          python3 -B - <<'PY'
+          import os,pathlib
+          root=(pathlib.Path(os.environ['RUNNER_TEMP'])/'native-mips-metal-evidence').resolve()
+          for path in sorted(root.rglob('*.log'))[:16]:
+              if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root): continue
+              with path.open('rb') as stream:
+                  stream.seek(max(0,path.stat().st_size-8000));data=stream.read(8000)
+              print('::group::Generated diagnostic '+str(path.relative_to(root)))
+              print(data.decode('utf-8',errors='replace'));print('::endgroup::')
+          PY
+      - name: Preserve bounded Metal evidence and inconclusive or failure logs
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-texture-mips-metal-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            ${{ runner.temp }}/native-mips-metal-evidence/
+            !${{ runner.temp }}/native-mips-metal-evidence/**/project/**
+            !${{ runner.temp }}/native-mips-metal-evidence/**/xdg-*/**
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 6

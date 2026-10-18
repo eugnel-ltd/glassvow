@@ -9,6 +9,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import sys
 
 HERE = Path(__file__).resolve().parent
@@ -31,16 +32,16 @@ def load(name, path):
     return module
 
 
-def load_shared():
+def load_shared(builder_file=None):
     directory = HERE.parent / 'native_texture_staging'
-    boot = HERE.parent / 'native_boot_upload'
+    boot = Path(builder_file).resolve().parent if builder_file else HERE.parent / 'native_boot_upload'
     sys.path.insert(0, str(boot))
     return (load('gv_vigil_mac_pair', directory / 'mac_builder.py'),
             load('gv_vigil_metal_support', directory / 'metal.py'),
             load('gv_vigil_portable_helpers', boot / 'build.py'))
 
 
-def inputs():
+def inputs(builder_file=None, runtime_source=None, shared_manifest=None):
     contract = json.loads((HERE / 'metal-contract.json').read_text())
     original = json.loads((HERE / 'contract.json').read_text())
     for path, expected in contract['protected_files'].items():
@@ -50,14 +51,34 @@ def inputs():
     probe = load('gv_vigil_frozen_metal_probe', HERE / 'probe.py')
     require(hashlib.sha256(probe.SCRIPT.encode()).hexdigest() ==
             contract['embedded_probe_script_sha256'], 'frozen probe SCRIPT differs')
-    shared_paths = ['native_texture_staging/mac_builder.py', 'native_texture_staging/metal.py',
-                    'native_texture_staging/capability.py', 'native_boot_upload/build.py',
-                    'native_boot_upload/processes.py']
+    runtime = HERE.parent / 'native_texture_staging'
+    boot = Path(builder_file).resolve().parent if builder_file else HERE.parent / 'native_boot_upload'
+    helper_paths = {**{'native_texture_staging/' + name: runtime / name
+                       for name in ('mac_builder.py', 'metal.py', 'capability.py')},
+                    **{'native_boot_upload/' + name: boot / name
+                       for name in ('build.py', 'verify.py', 'processes.py')}}
+    source_identity = {}
+    if builder_file or runtime_source or shared_manifest:
+        require(builder_file and runtime_source and shared_manifest, 'all immutable external helper inputs are required')
+        require(digest(Path(shared_manifest)) == digest(HERE / 'metal-shared-inputs.json'), 'shared helper manifest differs')
+        manifest = json.loads(Path(shared_manifest).read_text())
+        source = Path(runtime_source).resolve()
+        for role, directory, files in (('runtime', source, manifest['runtime']), ('builder', boot, manifest['builder'])):
+            actual = subprocess.check_output(['git', '-C', str(directory), 'rev-parse', 'HEAD'],
+                                             text=True, timeout=10).strip()
+            require(actual == manifest[role + '_source_head'], 'immutable ' + role + ' checkout differs')
+            for name, expected in files.items():
+                require(digest(directory / name) == expected, 'immutable helper differs: ' + role + '/' + name)
+                if role == 'runtime':
+                    require(digest(runtime / name) == expected, 'materialised runtime helper differs: ' + name)
+        source_identity = {'manifest_sha256': digest(Path(shared_manifest)),
+            'runtime_source_head': manifest['runtime_source_head'], 'builder_source_head': manifest['builder_source_head']}
     identity = {'contract_sha256': digest(HERE / 'metal-contract.json'),
         'original_contract_sha256': digest(HERE / 'contract.json'),
         'observer_sha256': digest(HERE / 'metal_observer.py'),
         'protected_files': contract['protected_files'],
-        'shared_helper_sha256': {path: digest(HERE.parent / path) for path in shared_paths},
+        'shared_helper_sha256': {name: digest(path) for name, path in helper_paths.items()},
+        'shared_sources': source_identity,
         'script_sha256': {variant: hashlib.sha256(probe.script_for(variant).encode()).hexdigest()
                           for variant in ('baseline', 'candidate')}}
     return contract, original, probe, identity
@@ -103,10 +124,12 @@ def validate_build(build, contract, original, identity):
 
 
 def run(args):
-    contract, original, probe, identity = inputs()
+    external = (getattr(args, 'shared_builder', None), getattr(args, 'runtime_source', None),
+                getattr(args, 'shared_manifest', None))
+    contract, original, probe, identity = inputs(*external)
     require(digest(args.prerequisite_patch) == original['prerequisite_patch_sha256'],
             'allocator prerequisite bytes differ')
-    builder, support, shared = load_shared()
+    builder, support, shared = load_shared(external[0])
     support.verify_venue(args.venue_receipt, args.head)
     build_args = argparse.Namespace(profile=contract['profile'], head=args.head,
         venue_receipt=args.venue_receipt, baseline_patches=[args.prerequisite_patch],
@@ -137,7 +160,7 @@ def run(args):
             observations[variant] = verify.inspect_metal(log.read_text(), variant)
         provenance = support.verify_provenance(build, commands, args.venue_receipt, args.head,
                                                expected_scripts=identity['script_sha256'])
-        require(inputs()[3] == identity, 'component/helper inputs changed during execution')
+        require(inputs(*external)[3] == identity, 'component/helper inputs changed during execution')
         proof = verify.compare_metal(observations['baseline'], observations['candidate'])
         proof.update(head=args.head, provenance=provenance,
             build_manifest_sha256=digest(args.output / 'build-manifest.json'), component_inputs=identity)
@@ -159,6 +182,9 @@ def main():
     parser.add_argument('--venue-receipt', type=Path, required=True)
     parser.add_argument('--prerequisite-patch', type=Path, required=True)
     parser.add_argument('--source-archive', type=Path, required=True)
+    parser.add_argument('--shared-builder', type=Path)
+    parser.add_argument('--runtime-source', type=Path)
+    parser.add_argument('--shared-manifest', type=Path)
     parser.add_argument('--work', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     return run(parser.parse_args())
