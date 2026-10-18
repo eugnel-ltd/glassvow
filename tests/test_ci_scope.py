@@ -265,6 +265,33 @@ class ScopeFixtureTests(unittest.TestCase):
         self.assertTrue(selection.checks["run_godot_tests"])
         self.assertFalse(selection.checks["run_map_assets"])
 
+    def test_product_manifest_runs_its_validator_without_the_game(self) -> None:
+        for present in (["product.yaml"], []):
+            with self.subTest(present=present):
+                selection = CI.classify_paths(["product.yaml"], present_paths=present)
+                self.assert_scopes(selection, "product_metadata")
+                self.assertTrue(selection.checks["run_product_manifest"])
+                for check in ("setup_godot", "run_import_assets", "run_godot_tests"):
+                    self.assertFalse(selection.checks[check], check)
+
+    def test_product_metadata_does_not_hide_mixed_runtime_changes(self) -> None:
+        selection = CI.classify_paths(["product.yaml", "application/main.gd"])
+        self.assert_scopes(selection, "product_metadata", "godot_code")
+        for check in ("run_product_manifest", "run_import_assets", "run_godot_tests"):
+            self.assertTrue(selection.checks[check], check)
+
+    def test_only_the_exact_company_manifest_path_has_the_metadata_scope(self) -> None:
+        for path in ("Product.yaml", "product.yml", "config/product.yaml", "product.yaml.bak"):
+            with self.subTest(path=path):
+                selection = CI.classify_paths([path])
+                self.assert_scopes(selection, "conservative_core")
+                self.assertTrue(selection.checks["run_godot_tests"])
+
+    def test_company_manifest_validator_is_ci_authority(self) -> None:
+        selection = CI.classify_paths([".ai-sdlc/manifest_check.py"])
+        self.assert_scopes(selection, "ci_infra")
+        self.assertTrue(all(selection.checks.values()))
+
     def test_ci_authority_change_fails_closed_to_every_check(self) -> None:
         selection = CI.classify_paths([".github/workflows/ci.yml"])
         self.assert_scopes(selection, "ci_infra")
