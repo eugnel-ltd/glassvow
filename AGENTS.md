@@ -95,7 +95,7 @@ AI-SDLC: v3 (2026-10-17). Adopted by mapping (skill `modules/adoption.md` §2); 
 | Product manifest for the company registry | `product.yaml` (checked by `.ai-sdlc/manifest_check.py`) |
 | Reviewer and fall-backs | `REVIEW.md`; `.claude/agents/ai-sdlc-reviewer.md` |
 | Lessons | `LESSONS.md` (short live log); `docs/solutions/` |
-| Company checks | pending: a public repo cannot call the private skill's workflows, and ai-sdlc `scripts/repo_ci.sh` has no glassvow entry yet; `.ai-sdlc/` holds the scripts (skill-owned, never edited here) |
+| Company checks | Public-repo cloud path: company `scripts/repo_ci.sh` includes Glassvow ([ai-sdlc #192](https://github.com/eugnel-ltd/ai-sdlc/pull/192)); run the separately selected repository CI too. First exact-head evidence: `docs/autonomy-ledger.md`. `.ai-sdlc/` scripts stay skill-owned, never edited here. |
 
 ## Progressive-disclosure map
 
