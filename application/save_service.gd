@@ -22,8 +22,12 @@ static func _store_json_atomic(path: String, value: Dictionary) -> bool:
 		return false
 	f.store_string(JSON.stringify(value))
 	f.flush()
+	var write_error: Error = f.get_error()
 	f.close()
 	var absolute_tmp: String = ProjectSettings.globalize_path(tmp_path)
+	if write_error != OK:
+		DirAccess.remove_absolute(absolute_tmp)
+		return false
 	var absolute_target: String = ProjectSettings.globalize_path(path)
 	if DirAccess.rename_absolute(absolute_tmp, absolute_target) != OK:
 		DirAccess.remove_absolute(absolute_tmp)

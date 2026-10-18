@@ -385,20 +385,7 @@ func _quest_profile(shard_ids: Array) -> Dictionary:
 
 
 func _store_ref(ref: ScenarioReference) -> bool:
-	var tmp: String = ref_path + ".tmp"
-	var f: FileAccess = FileAccess.open(tmp, FileAccess.WRITE)
-	if f == null:
-		return false
-	f.store_string(JSON.stringify(ref.encode()))
-	f.flush()
-	f.close()
-	if DirAccess.rename_absolute(
-		ProjectSettings.globalize_path(tmp),
-		ProjectSettings.globalize_path(ref_path)
-	) != OK:
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(tmp))
-		return false
-	return true
+	return SaveService._store_json_atomic(ref_path, ref.encode())
 
 
 func _resolve_node(map: WorldMap, node_v: Variant) -> int:
