@@ -1,21 +1,38 @@
 # Native boot upload component proof (#660 / #661)
 
 The raw boot PNG is loaded before resource import or scripts. The governed
-`glassvow-661-native-boot-upload-cap.patch` divides large native PNGs into
-lossless full-width slices before native texture initialization. The original
-2360 x 1640 splash uses four pages; every page is at most 3,889,280 bytes even
-after RD expands RGB8 to RGBA8. The PNG, its resource path, settings, resolution
-and runtime/template pins remain unchanged.
+`glassvow-661-native-boot-upload-cap.patch` preserves one full native texture,
+its original dimensions, normalized sampler coordinates and single full-image
+quad. Only the boot data submissions are divided into full-width owned-row
+bands. GLES allocates the original 2360 x 1640 texture without initial data, then uses
+four 410-row subimage transfers, each 3,870,400 conservative RGBA bytes. RD
+chooses balanced full-width row bands using the actual driver's row-pitch
+requirement and the existing frame-staging block capacity. Every request is at
+most the smaller of 4 MiB and that real capacity. With a 256-byte pitch and the
+pinned 256 KiB default block, the splash uses 61 bands of 26 or 27 rows, at most
+255,744 bytes each. The full validated payload is still 15,481,600 bytes; those
+aligned staging requests total 15,534,080 bytes. Different supported driver
+pitch or configured block sizes produce a truthfully recorded different count.
+RD creates the full empty texture and reuses its existing staging, copy,
+required-action/flush and draw-graph update lifetime without global pool changes.
 
-The native helper copies original-neighbor rows for linear filtering and draws
-only each page's owned rows through the original full-image screen rectangle.
-RD retains clamp sampling. GLES retains horizontal repeat and copies the
-opposite original edge into the outer vertical gutters, preserving its existing
-repeat sampling. Existing blend, color/HDR conversion, pre-rotation, filter,
-clear and final presentation paths stay in the compositor. Images outside the
-helper's format/mipmap predicate retain the previous single-image path.
-Qualifying large Image API inputs are sliced regardless of their source file
-type. Main supplies four uncompressed native PNG formats, with no mipmaps.
+RD retains clamp sampling and GLES retains repeat sampling on the original
+full texture. No page boundaries, gutters, source remapping or extra quads enter
+the active draw path. Blend, color/HDR conversion, pre-rotation, filter, clear
+and final presentation remain the original compositor code. The PNG, its
+resource path, settings, resolution and runtime/template pins remain unchanged.
+Other Image API formats and mipmaps retain their previous initialization path.
+The original slice helper and its immutable native tests remain as historical
+controls; the compositor no longer calls that helper.
+
+The 4 MiB limit governs individual native upload/staging requests. This change
+retains the full GPU allocation and decoded source image. It establishes no
+reduction in total VRAM, decoder lifetime, existing staging-pool capacity or
+peak process memory. The existing pool may grow and retain multiple blocks
+under its unchanged policy; the request cap alone establishes no total-memory
+gain. A full conservative row must fit the actual block or the boot upload
+rejects before submitting a partial texture. The shipped guard stays failing until an identified
+patched template is actually adopted and qualified.
 
 This patch is a source candidate. These files do not activate a template,
 change the bake editor pin, replace the installed engine, sign an app or
@@ -62,9 +79,14 @@ This test configuration changes no shipping template, runtime/source pin or
 production patch. Historical builds without the flag retain their own receipts
 and need a new compiled/runtime run under this supported test configuration.
 
+The additive schema 2 verifier requires one full allocation, exact contiguous
+row coverage, original source offsets and UVs, the original quad, actual driver
+pitch, real staging capacity and the derived band count. The full schema 1
+verifier prefix and every pixel comparison remain byte-for-byte unchanged.
+
 The observer is **CI-only source instrumentation**. It logs the actual decoded
-source and validated Images at the actual RD/GLES storage upload callsites,
-then counts boot clears/draws and holds after the actual final presentation.
+source, full native allocation, actual transfer calls and native staging
+requests, then counts boot clears/draws and holds after the final presentation.
 It does not enter the shipping patch. Its environment-controlled hold never
 changes the shipped splash timing.
 
@@ -142,6 +164,9 @@ Pillow/numpy versions listed in the workflow for verifier/capture commands.
 ```sh
 python3 tools/godot/native_boot_upload/check_patch.py --output work/native-boot/source-check.json
 python3 tools/godot/native_boot_upload/test_harness.py
+python3 tools/godot/native_boot_upload/test_schema2.py
+python3 tools/godot/native_boot_upload/test_frame_capacity.py
+python3 tools/godot/native_boot_upload/native_calls.py --output work/native-boot/native-calls
 python3 tests/native/test_boot_capture_cli.py
 python3 tests/native/test_boot_capture_diagnostics.py
 python3 tests/native/test_boot_contact_sheets.py
@@ -176,3 +201,25 @@ then failed at the first GLES baseline capture. Its inner capture logs were
 unavailable to the author. The source-grounded resolution delimiter regression
 failed before its harness correction; a new real capture must still establish
 renderer behavior. The previous build-step receipt is not a renderer PASS.
+
+Hosted job `117745515281` at `a08e1ab8f9b5e1c8c0dd3e8c450db839f0a5acb6`
+compiled both variants and reached actual rendering. It failed exact GLES
+linear-filter equality on `asymmetric-s1-f1`: maximum difference 1, with 147
+changed pixels. Nearest-filter cases passed. Sliced textures changed the
+normalized source interpolation and sampler dimensions; source-bound float
+analysis identifies rounding-sensitive source rows. No tolerance was changed.
+The subsequent immutable native call regression compiles the actual old
+compositor/storage bodies and fails their multiple-texture layout, before the
+full-texture transfer correction. Recording GL/RD fixtures then verify exact
+assembled bytes, bounded submissions and unchanged ordinary API behavior with
+ASan/UBSan. These are compiled native function-body controls with backend/type
+stubs, not renderer or engine-build proof. New paired hosted compilation and
+exact captures remain required for the correction.
+
+The first RD recording proposal (`tests/native/rd_boot_upload_calls/`) is frozen
+but superseded: its backend allocated a new unconstrained buffer per request
+and omitted the real 256 KiB default capacity. Its green result did not prove
+that the four-band draft fit Godot's pool. That draft and receipts are retained.
+The capacity-bound successor models a finite block and reuse/flush, first
+rejects the oversized draft, then proves adaptive bands against actual block
+capacity. The GLES immutable regression remains the original valid lineage.

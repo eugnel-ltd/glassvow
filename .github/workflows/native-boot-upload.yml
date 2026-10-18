@@ -5,6 +5,9 @@ on:
   pull_request:
     paths:
       - 'tests/native/boot_upload_baseline.gd'
+      - 'tests/native/boot_upload_calls/**'
+      - 'tests/native/rd_boot_upload_calls/**'
+      - 'tests/native/rd_boot_upload_capacity/**'
       - 'tests/native/test_boot_capture_cli.py'
       - 'tests/native/test_boot_capture_diagnostics.py'
       - 'tests/native/test_boot_contact_sheets.py'
@@ -46,6 +49,8 @@ jobs:
           mkdir -p work/native-boot-evidence
           work/native-boot-venv/bin/python tools/godot/native_boot_upload/test_harness.py \
             > work/native-boot-evidence/verifier-tests.log 2>&1
+          work/native-boot-venv/bin/python tools/godot/native_boot_upload/test_schema2.py
+          work/native-boot-venv/bin/python tools/godot/native_boot_upload/test_frame_capacity.py
           work/native-boot-venv/bin/python tests/native/test_boot_capture_cli.py
           work/native-boot-venv/bin/python tests/native/test_boot_capture_diagnostics.py
           work/native-boot-venv/bin/python tests/native/test_boot_contact_sheets.py
@@ -55,6 +60,11 @@ jobs:
         run: |
           work/native-boot-venv/bin/python tools/godot/native_boot_upload/check_patch.py \
             --output work/native-boot-evidence/source-check.json
+      - name: Compile exact native calls with recording backends and sanitizers
+        timeout-minutes: 5
+        run: |
+          work/native-boot-venv/bin/python tools/godot/native_boot_upload/native_calls.py \
+            --output work/native-boot-evidence/native-calls
       - name: Build exact stable baseline and patched candidate with identical flags
         timeout-minutes: 62
         run: |
