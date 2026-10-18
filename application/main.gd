@@ -1830,8 +1830,9 @@ func _remembered_setup() -> Dictionary:
 	if setup.is_empty():
 		return {}
 	var aspect: int = -1
-	if setup.get("aspect") is int:
-		aspect = int(setup["aspect"])
+	var aspect_value: Variant = setup.get("aspect")
+	if aspect_value is int:
+		aspect = aspect_value
 	else:
 		for index: int in content.aspects.size():
 			var candidate_row: Dictionary = content.aspects[index]
@@ -1840,8 +1841,11 @@ func _remembered_setup() -> Dictionary:
 				break
 	if not ClassScope.admits(content, aspect, _vigil.unlocks):
 		return {}
-	var vow: Variant = setup.get("vow")
-	if not vow is int or int(vow) < 0 or int(vow) > mini(_vigil.vow_unlocked, content.vows.size()):
+	var vow_value: Variant = setup.get("vow")
+	if not vow_value is int:
+		return {}
+	var vow: int = vow_value
+	if vow < 0 or vow > mini(_vigil.vow_unlocked, content.vows.size()):
 		return {}
 	var art: String = str(setup.get("art", ""))
 	var probe: RunState = RunState.new()

@@ -297,9 +297,12 @@ static func _departure_value(value: Variant) -> Dictionary:
 	var aspect: Variant = setup.get("aspect")
 	var vow: Variant = setup.get("vow")
 	var art: Variant = setup.get("art")
-	if not aspect is String or not art is String or not vow is int:
+	if not aspect is String or not art is String:
 		return {}
-	if str(aspect).is_empty() or str(art).is_empty() or int(vow) < 0:
+	if not vow is int:
+		return {}
+	var vow_number: int = vow
+	if str(aspect).is_empty() or str(art).is_empty() or vow_number < 0:
 		return {}
 	return {"aspect": aspect, "vow": vow, "art": art}
 
