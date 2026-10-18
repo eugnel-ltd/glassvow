@@ -12,9 +12,10 @@ only each page's owned rows through the original full-image screen rectangle.
 RD retains clamp sampling. GLES retains horizontal repeat and copies the
 opposite original edge into the outer vertical gutters, preserving its existing
 repeat sampling. Existing blend, color/HDR conversion, pre-rotation, filter,
-clear and final presentation paths stay in the compositor. Small images and
-non-PNG Image API callers retain their previous single-image path; the bound
-applies to Main's four uncompressed native PNG formats, with no mipmaps.
+clear and final presentation paths stay in the compositor. Images outside the
+helper's format/mipmap predicate retain the previous single-image path.
+Qualifying large Image API inputs are sliced regardless of their source file
+type. Main supplies four uncompressed native PNG formats, with no mipmaps.
 
 This patch is a source candidate. These files do not activate a template,
 change the bake editor pin, replace the installed engine, sign an app or
