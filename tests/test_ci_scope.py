@@ -97,6 +97,15 @@ class ScopeFixtureTests(unittest.TestCase):
 
         self.assertFalse(selection.checks["run_import_assets"])
 
+    def test_decision_helper_and_its_regressions_run_the_agent_contract_gate(self) -> None:
+        for path in ("scripts/record_decision.sh", "tests/test_record_decision.py"):
+            with self.subTest(path=path):
+                selection = CI.classify_paths([path])
+                self.assert_scopes(selection, "agent_config")
+                self.assertTrue(selection.checks["run_agent_contracts"])
+                self.assertFalse(selection.checks["setup_godot"])
+                self.assertFalse(selection.checks["run_godot_tests"])
+
     def test_code_change_verifies_doc_anchors(self) -> None:
         # Anchors point into code, so a code-only diff must re-check them
         # (#614 moved application/main.gd lines and broke main for docs PRs).
@@ -391,6 +400,7 @@ class WorkflowContractTests(unittest.TestCase):
     def test_pre_change_full_gate_commands_remain_present(self) -> None:
         commands = (
             "tests/test_agent_contracts.py",
+            "tests/test_record_decision.py",
             "tools/check_agent_contracts.py",
             "tools/check_imports.sh",
             "tools/test_check_imports.sh",
