@@ -9,6 +9,8 @@ import signal
 import subprocess
 import sys
 
+GLOBAL_CLASS_CACHE = 'list=[]\n'
+
 
 SCRIPT = r'''
 extends SceneTree
@@ -174,6 +176,10 @@ def run(binary, output, variant):
     (project / 'project.godot').write_text('config_version=5\n[application]\nconfig/name="Native Staging Probe"\nboot_splash/show_image=false\n[rendering]\nrenderer/rendering_method="mobile"\n')
     script = project / 'probe.gd'
     script.write_text(script_for(variant))
+    # Templates require a global-class cache; this standalone script has none.
+    cache = project / '.godot/global_script_class_cache.cfg'
+    cache.parent.mkdir()
+    cache.write_text(GLOBAL_CLASS_CACHE)
     icd_name = os.environ.get('VK_DRIVER_FILES', '')
     if not icd_name or os.pathsep in icd_name:
         raise RuntimeError('probe requires one explicit software Vulkan ICD')
@@ -184,6 +190,7 @@ def run(binary, output, variant):
     (output / 'probe-input.json').write_text(json.dumps({'variant': variant,
         'binary_sha256': hashlib.sha256(binary.read_bytes()).hexdigest(),
         'script_sha256': hashlib.sha256(script.read_bytes()).hexdigest(),
+        'global_class_cache_sha256': hashlib.sha256(cache.read_bytes()).hexdigest(),
         'icd_sha256': hashlib.sha256(icd.read_bytes()).hexdigest()}, indent=2) + '\n')
     env = dict(os.environ, LIBGL_ALWAYS_SOFTWARE='1', GALLIUM_DRIVER='llvmpipe')
     for suffix in ['DATA', 'CACHE', 'CONFIG', 'STATE']:

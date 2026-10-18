@@ -14,6 +14,8 @@ on:
       - tests/native/test_texture_mip_evidence.py
       - tests/native/test_native_mip_builder.py
       - tests/native/test_native_mip_runtime_config.py
+      - tests/native/test_native_mip_hosted_regressions.py
+      - tests/native/fixtures/mip-hosted-117746266505/**
       - .github/workflows/native-texture-mips.yml
 
 permissions:

@@ -83,7 +83,9 @@ profile in both variants. Observer hooks never enter the production patch.
 `probe.py` runs a headed X11/Vulkan process through Xvfb with one explicitly
 selected, hashed lavapipe ICD. It reports physical format support before each
 case, reads the created RD format descriptor, and compares every GPU readback
-byte with a varying source pattern. ASTC tests include Vigil's exact shape,
+byte with a varying source pattern. Its standalone project includes a valid
+empty global-class cache because the probe declares no global classes; the
+cache hash joins the script and executable identities. ASTC tests include Vigil's exact shape,
 two layers, padded and odd-size chains, a single exact-cap level, and an
 oversized atomic rejection. RGBA8 depth and oversized full-chain controls
 exercise supported RD transport when compressed formats are unavailable;
@@ -95,6 +97,9 @@ events, altered payloads, format fallback, incomplete mip copies, wrong
 barriers/waits, and unbounded requests. Requested, physically supported,
 created, and native observed formats must agree. The verifier independently
 reconstructs payload hashes and backend layouts.
+Reservation totals come from the actual recorded backend pitch/alignment;
+raw payload totals stay fixed. Every copy in one request must share the same
+worker base offset. Native ERROR rejection remains strict.
 
 If actual ASTC support is absent, supported RGBA readback can be reported
 separately, but the overall result is `INCONCLUSIVE_ASTC_UNSUPPORTED` and exits
@@ -115,3 +120,16 @@ separate source-only regression was frozen before this runtime configuration
 correction. The corrected configuration awaits the next hosted build and
 actual RD/GPU execution; no pass is inferred from the CPU control or source
 checks.
+
+Job `117746266505` subsequently compiled both variants and completed equal
+RGBA8 readbacks, with an actual 128-byte transfer alignment. Its baseline
+request was 5,592,580 bytes; candidate requests were 4,194,304 and 1,398,276
+bytes. ASTC was unsupported. The wrapper exited 1 on the missing global-class
+cache, before reaching its separate incorrect unaligned-total assertion.
+Those complete failed logs are retained in the archived regression corpus.
+The cache/layout regression was frozen at `2dbea2d5752c0e599a293dba8177ac20dc040303`
+before correction. Event-only offline replay validates the supported control
+arithmetic without qualifying the original failed run or claiming ASTC proof.
+The corrected cache setup still awaits actual native execution. See
+[macOS venue feasibility](macos-venue.md) for a maintained possible venue;
+no GPU capability or new workflow is established by that note.

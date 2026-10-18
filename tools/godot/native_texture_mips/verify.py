@@ -119,9 +119,12 @@ def inspect(text, variant):
         if variant=='candidate':
             require(all(0<event['bytes']<=LIMIT for event in requests[key]),'actual candidate request exceeds cap')
         require(len(copies[key])==len(wanted_copies),'mip/depth copy omitted or duplicated')
+        worker_offsets={}
         for actual,wanted in zip(copies[key],wanted_copies):
             require(all(actual[name]==value for name,value in wanted.items()),'actual copy span/pitch/source differs')
             require(actual['offset']>=actual['local'] and actual['offset']%start['align']==0,'worker offset misaligned')
+            worker_offset=actual['offset']-actual['local']
+            require(worker_offsets.setdefault(actual['batch'],worker_offset)==worker_offset,'worker offset changed within one request')
         for phase in ('begin','end'):
             phase_events=[event for event in barriers[key] if event['phase']==phase]
             wanted=[{k:event[k] for k in ('batch','first_mip','mip_count')} for event in wanted_requests]
@@ -142,12 +145,19 @@ def inspect(text, variant):
         result[key[0]+':'+str(key[1])]={'payload':payload,'requests':wanted_requests,'copies':len(wanted_copies),
              'source_sha256':readback['source_sha256'],'actual_sha256':readback['actual_sha256'],
              'pitch_step':start['pitch_step'],'alignment':start['align']}
-    if variant=='baseline' and 'vigil-astc:0' in result:
-        require(result['vigil-astc:0']['requests'][0]['bytes']==5592432,'allocator-only baseline overage not observed')
-    elif variant=='candidate' and 'vigil-astc:0' in result:
-        require([r['bytes'] for r in result['vigil-astc:0']['requests']]==[4194304,1398128],'actual vigil base/tail bound differs')
-        require(not waits.get(('atomic-reject',0)),'rejected mip performed partial work')
-    require([r['bytes'] for r in result['rgba8-mip-surrogate:0']['requests']]==([5592404] if variant=='baseline' else [4194304,1398100]),'supported RGBA transport surrogate bound differs')
+    # Native reservations include the recorded backend's per-mip alignment;
+    # raw payload totals are invariant, while reservation totals are not.
+    for name,payload in (('vigil-astc:0',5592432),('rgba8-mip-surrogate:0',5592404)):
+        if name not in result:
+            continue
+        case=result[name]
+        require(case['payload']==payload,'complete-chain source payload differs')
+        if variant=='baseline':
+            require(len(case['requests'])==1 and case['requests'][0]['bytes']>LIMIT,'whole-chain baseline overage not observed')
+        else:
+            require(len(case['requests'])>=2 and case['requests'][0]['first_mip']==0 and
+                    case['requests'][0]['mip_count']==1,'base mip not separated from complete tail')
+    require(not waits.get(('atomic-reject',0)),'rejected mip performed partial work')
     return {'cases':result,'capabilities':caps}
 
 
@@ -210,6 +220,7 @@ def main():
         inputs=json.loads((directory/'probe-input.json').read_text())
         require(inputs['variant']==variant and inputs['binary_sha256']==manifest['builds'][variant]['binary_sha256'],'actual probe binary does not match hosted compiler')
         require(inputs['script_sha256']==hashlib.sha256(probe.script_for(variant).encode()).hexdigest(),'actual probe script differs')
+        require(inputs['global_class_cache_sha256']==hashlib.sha256(probe.GLOBAL_CLASS_CACHE.encode()).hexdigest(),'actual standalone global-class cache differs')
         require(len(inputs['icd_sha256'])==64 and (icd_sha is None or icd_sha==inputs['icd_sha256']),'actual Vulkan ICD identity differs')
         icd_sha=inputs['icd_sha256']
         text=(directory/'native.log').read_text(errors='replace')
