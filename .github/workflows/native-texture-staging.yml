@@ -31,6 +31,10 @@ concurrency:
 
 jobs:
   portable-native-staging:
+    # Archived unqualified Linux venue: latest actual screen was INCONCLUSIVE
+    # before engine execution (relative ICD library path), never component PASS.
+    # Retain every strict step; the supported Mac venue remains live below.
+    if: ${{ false }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     defaults:

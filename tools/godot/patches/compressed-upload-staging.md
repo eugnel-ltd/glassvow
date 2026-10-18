@@ -136,3 +136,10 @@ in the bounded evidence artifact. This profile cannot establish iOS/A12,
 shipping-template activation, general device or memory/performance budgets.
 Actual paired native Metal execution remains required before component
 acceptance; source and synthetic Python controls alone cannot supply it.
+
+The Linux job is explicitly archived with a job-level skip, retaining all
+strict capability/build/probe steps. Its latest actual receipt remains
+INCONCLUSIVE before engine execution because of the relative ICD library
+path; it is never a component PASS. The supported Mac venue remains live
+and must satisfy every native query/upload/copy/readback gate. Linux needs
+a qualified venue before its archived job can resume.
