@@ -397,6 +397,10 @@ body.home .threshold {
   margin: 2.25rem 0 2rem;
 }
 
+.panes + .panes {
+  margin-top: 0;
+}
+
 .pane {
   display: flex;
   flex-direction: column;

@@ -3,7 +3,8 @@
 
 docs/privacy/privacy-policy.en.md and privacy-policy.zh-Hant.md become
 /privacy/ and /privacy/zh-hant/; docs/legal/company-information.en.md and
-.zh-Hant.md become /company/ and /company/zh-hant/. A deliberately small
+.zh-Hant.md become /company/ and /company/zh-hant/; docs/site/*.md become
+/faq/, /play/ and /genre/ (each with a zh-Hant twin). A deliberately small
 reader accepts `#` and `##` headings, paragraphs, `-` lists, links, **strong**
 and *emphasis*. Anything else, an unfilled [placeholder] or the draft HTML
 comment stops the build. Every page is then audited: balanced tags, a language,
@@ -11,6 +12,11 @@ a title and a description, internal links that exist, no inline code and
 nothing loaded from another origin, because site/_headers serves a self-only
 Content-Security-Policy. The per-page footer is © EUGNEL LTD plus a link to
 the Company information page; statutory details live only on that page.
+Indexable pages also carry length-bounded titles and descriptions, a canonical
+URL, hreflang en/zh-Hant/x-default, Open Graph/Twitter tags, and JSON-LD
+(VideoGame + MobileApplication + Organization). FAQ pages add FAQPage whose
+Q/A match the visible headings. The builder writes sitemap.xml, robots.txt
+and llms.txt.
 
     python3 tools/build_site.py                 write site/
     python3 tools/build_site.py --check         exit 1 when site/ is stale
@@ -33,6 +39,7 @@ import re
 import shutil
 import sys
 import tempfile
+import xml.etree.ElementTree as ET
 from collections import Counter
 from dataclasses import dataclass
 from html.parser import HTMLParser
@@ -54,7 +61,30 @@ RETIRED_REGULATOR = "Information Commissioner"
 RETIRED_REGULATOR_ZH = "資訊專員"
 COMPANY_HREF = {"en": "/company/", "zh-Hant": "/company/zh-hant/"}
 COMPANY_LABEL = {"en": "Company information", "zh-Hant": "公司資料"}
-NOTICE_FORBIDDEN = (COMPANY_NUMBER, REGISTERED_OFFICE, ICO_NUMBER)
+ORGANIZATION_NAME = "EUGNEL LTD"
+GAME_NAME = "Glassvow"
+GAME_ALTERNATE_NAME = "琉璃誓言"
+GAME_DESCRIPTION = (
+    "Glassvow (琉璃誓言) is a single-player card game for iPhone and iPad."
+)
+TITLE_BOUNDS = (8, 70)
+DESCRIPTION_BOUNDS = (50, 160)
+OG_IMAGE = "assets/og.png"
+OG_IMAGE_SIZE = (512, 512)
+OG_LOCALE = {"en": "en_GB", "zh-Hant": "zh_Hant"}
+JSONLD_FORBIDDEN = (COMPANY_NUMBER, REGISTERED_OFFICE, ICO_NUMBER)
+NOTICE_FORBIDDEN = JSONLD_FORBIDDEN
+AI_BOTS = ("GPTBot", "OAI-SearchBot", "Google-Extended", "PerplexityBot", "ClaudeBot")
+ENTITY_PATH = ROOT / "docs/marketing/entity.md"
+ENTITY_FIELD = re.compile(r"^([a-z_]+): (.+)$")
+ENTITY_REQUIRED = (
+    "developer", "url", "privacy_email", "support_email",
+    "game_en", "game_zh", "subtitle_en", "subtitle_zh", "short_en", "short_zh",
+)
+LISTING_JSON = {
+    "en-US": ROOT / "docs/product/listing/ios/en-US.json",
+    "zh-Hant": ROOT / "docs/product/listing/ios/zh-Hant.json",
+}
 FOOTER_FORBIDDEN = NOTICE_FORBIDDEN + (PRIVACY_CONTACT,)
 SLIM_SOURCES = (
     "docs/privacy/privacy-policy.en.md",
@@ -110,13 +140,13 @@ class Policy:
     name: str
     brand: str
     description: str
+    kind: str = "article"
 
 
 POLICIES = (
     Policy("en", "docs/privacy/privacy-policy.en.md", "/privacy/", "Privacy policy", "Glassvow",
-           "What Glassvow, a card game for iPhone and iPad, handles: no accounts, "
-           "advertising or analytics tools; saved games stay on your device; technical "
-           "crash and error reports go to one service provider, Sentry."),
+           "What Glassvow, a card game for iPhone and iPad, handles: no accounts, ads or "
+           "analytics; saves stay on your device; crash reports go only to Sentry."),
     Policy("zh-Hant", "docs/privacy/privacy-policy.zh-Hant.md", "/privacy/zh-hant/", "私隱政策",
            "琉璃誓言",
            "《琉璃誓言》會處理哪些資料：沒有帳戶、廣告或分析工具；存檔只保存在你的裝置上；"
@@ -129,8 +159,34 @@ COMPANY_PAGES = (
            "contact and ICO registration."),
     Policy("zh-Hant", "docs/legal/company-information.zh-Hant.md", "/company/zh-hant/", "公司資料",
            "琉璃誓言",
-           "EUGNEL LTD 公司資料：英格蘭及威爾斯註冊、公司編號、註冊辦事處、聯絡及 ICO 登記。"),
+           "EUGNEL LTD 公司資料：英格蘭及威爾斯註冊、公司編號、註冊辦事處、聯絡電郵及 ICO 登記。"),
 )
+FAQ_PAGES = (
+    Policy("en", "docs/site/faq.en.md", "/faq/", "FAQ", "Glassvow",
+           "Answers about Glassvow (琉璃誓言): what it is, who makes it, iPhone and iPad, "
+           "saves, ads, and how to reach EUGNEL LTD.", "faq"),
+    Policy("zh-Hant", "docs/site/faq.zh-Hant.md", "/faq/zh-hant/", "常見問題", "琉璃誓言",
+           "《琉璃誓言》（Glassvow）常見問題：這是甚麼遊戲、誰製作、iPhone 及 iPad、存檔、廣告，"
+           "以及如何聯絡 EUGNEL LTD。", "faq"),
+)
+PLAY_PAGES = (
+    Policy("en", "docs/site/play.en.md", "/play/", "How to play", "Glassvow",
+           "How to play Glassvow: walk east from the Vigil with a lantern, build a deck of "
+           "glass, spend light, and shatter what blocks the way."),
+    Policy("zh-Hant", "docs/site/play.zh-Hant.md", "/play/zh-hant/", "玩法", "琉璃誓言",
+           "《琉璃誓言》怎麼玩：提燈離開守夜之爐向東走，組一副琉璃牌，花費光，打碎擋路之物。"
+           "單人卡牌遊戲，供 iPhone 及 iPad 使用。"),
+)
+GENRE_PAGES = (
+    Policy("en", "docs/site/genre.en.md", "/genre/", "A roguelite deckbuilder", "Glassvow",
+           "Glassvow is a single-player roguelite deckbuilder for iPhone and iPad, told as a "
+           "stained-glass pilgrimage. No accounts and no ads."),
+    Policy("zh-Hant", "docs/site/genre.zh-Hant.md", "/genre/zh-hant/", "Roguelike 牌組構築",
+           "琉璃誓言",
+           "《琉璃誓言》是一款供 iPhone 及 iPad 使用的單人 Roguelike 牌組構築遊戲，亦是一場彩窗上的朝聖。"
+           "沒有帳戶，沒有廣告。"),
+)
+PAGE_GROUPS = (POLICIES, COMPANY_PAGES, FAQ_PAGES, PLAY_PAGES, GENRE_PAGES)
 
 # Copied byte for byte, so the game's own files stay the single source.
 COPIES = {
@@ -259,9 +315,136 @@ def render_markdown(source: str, lang: str) -> list[str]:
 
 # --- Pages -----------------------------------------------------------------
 
+def page_url(path: str) -> str:
+    return f"{ORIGIN}{path}"
+
+
+def load_entity() -> dict[str, str]:
+    text = ENTITY_PATH.read_text(encoding="utf-8")
+    values = {}
+    for line in text.splitlines():
+        match = ENTITY_FIELD.fullmatch(line)
+        if match:
+            values[match.group(1)] = match.group(2)
+    missing = [name for name in ENTITY_REQUIRED if name not in values]
+    if missing:
+        raise BuildError(f"{ENTITY_PATH.relative_to(ROOT)} missing {', '.join(missing)}")
+    return values
+
+
+def entity_errors() -> list[str]:
+    """Keep site, JSON-LD, llms.txt and listing names on one public entity."""
+    try:
+        values = load_entity()
+    except (OSError, BuildError) as error:
+        return [str(error)]
+    text = ENTITY_PATH.read_text(encoding="utf-8")
+    errors = [f"entity.md still carries {item!r}" for item in NOTICE_FORBIDDEN if item in text]
+    expected = {
+        "developer": ORGANIZATION_NAME,
+        "url": ORIGIN,
+        "privacy_email": PRIVACY_CONTACT,
+        "support_email": CONTACT,
+        "game_en": GAME_NAME,
+        "game_zh": GAME_ALTERNATE_NAME,
+        "short_en": GAME_DESCRIPTION,
+    }
+    errors.extend(f"entity {key} != {want!r}" for key, want in expected.items()
+                  if values.get(key) != want)
+    names = {"en-US": "game_en", "zh-Hant": "game_zh"}
+    subs = {"en-US": "subtitle_en", "zh-Hant": "subtitle_zh"}
+    for locale, path in LISTING_JSON.items():
+        listing = json.loads(path.read_text(encoding="utf-8"))
+        if listing.get("name") != values[names[locale]]:
+            errors.append(f"listing {locale} name != entity {names[locale]}")
+        if listing.get("subtitle") != values[subs[locale]]:
+            errors.append(f"listing {locale} subtitle != entity {subs[locale]}")
+    return errors
+
+
+def plain_inline(text: str) -> str:
+    text = LINK.sub(r"\1", text)
+    text = STRONG.sub(r"\1", text)
+    return EMPHASIS.sub(r"\1", text)
+
+
+def faq_pairs(source: str) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+    pending: str | None = None
+    for block in blocks_of(source):
+        heading = HEADING.fullmatch(block[0]) if len(block) == 1 else None
+        if heading and len(heading.group(1)) == 2:
+            pending = heading.group(2)
+            continue
+        if pending is None:
+            continue
+        if heading or all(line.startswith("- ") for line in block):
+            raise BuildError(f"FAQ answer must open with a paragraph: {pending}")
+        pairs.append((pending, plain_inline(" ".join(block))))
+        pending = None
+    if pending:
+        raise BuildError(f"FAQ question has no answer: {pending}")
+    if len(pairs) < 3:
+        raise BuildError("FAQ needs at least three questions")
+    return pairs
+
+
+def visible_text(fragment: str) -> str:
+    fragment = re.sub(r"<!--.*?-->", "", fragment, flags=re.S)
+    fragment = re.sub(r"<[^>]+>", "", fragment)
+    return html.unescape(fragment).strip()
+
+
+def visible_faq_pairs(page: str) -> list[tuple[str, str]]:
+    return [(visible_text(question), visible_text(answer))
+            for question, answer in re.findall(r"<h2>(.*?)</h2>\s*<p>(.*?)</p>", page, flags=re.S)]
+
+
+def node_types(node: dict) -> set[str]:
+    value = node.get("@type")
+    if isinstance(value, list):
+        return {item for item in value if isinstance(item, str)}
+    return {value} if isinstance(value, str) else set()
+
+
+def structured_data(*, lang: str, title: str, description: str, canonical: str,
+                    faq: tuple[tuple[str, str], ...] = ()) -> dict:
+    """VideoGame + MobileApplication + Organization. No postal address or company number."""
+    page = page_url(canonical)
+    org_id = f"{ORIGIN}/#organization"
+    game_id = f"{ORIGIN}/#videogame"
+    image = page_url(f"/{OG_IMAGE}")
+    graph: list[dict] = [
+        {"@type": "Organization", "@id": org_id, "name": ORGANIZATION_NAME,
+         "url": page_url("/"), "email": PRIVACY_CONTACT},
+        {"@type": ["VideoGame", "MobileApplication"], "@id": game_id, "name": GAME_NAME,
+         "alternateName": GAME_ALTERNATE_NAME, "url": page_url("/"),
+         "description": GAME_DESCRIPTION, "inLanguage": ["en", "zh-Hant"],
+         "operatingSystem": "iOS", "applicationCategory": "GameApplication",
+         "author": {"@id": org_id}, "publisher": {"@id": org_id}, "image": image},
+        {"@type": "WebPage", "@id": f"{page}#webpage", "url": page, "name": title,
+         "description": description, "inLanguage": lang,
+         "isPartOf": {"@id": game_id}, "publisher": {"@id": org_id}, "image": image},
+    ]
+    if faq:
+        graph.append({
+            "@type": "FAQPage", "@id": f"{page}#faq", "url": page, "inLanguage": lang,
+            "mainEntity": [{"@type": "Question", "name": question,
+                            "acceptedAnswer": {"@type": "Answer", "text": answer}}
+                           for question, answer in faq],
+        })
+    return {"@context": "https://schema.org", "@graph": graph}
+
+
+def json_ld_tag(data: dict) -> str:
+    payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", r"\u003c")
+    return f'<script type="application/ld+json">{payload}</script>'
+
+
 def shell(*, lang: str, title: str, description: str, body: list[str],
           canonical: str | None = None, alternates: tuple[tuple[str, str], ...] = (),
-          body_class: str | None = None) -> str:
+          body_class: str | None = None, robots: str | None = None,
+          faq: tuple[tuple[str, str], ...] = ()) -> str:
     head = [
         "<!DOCTYPE html>",
         f'<html lang="{lang}">',
@@ -274,11 +457,45 @@ def shell(*, lang: str, title: str, description: str, body: list[str],
         f"<title>{html.escape(title)}</title>",
         f'<meta name="description" content="{html.escape(description)}">',
     ]
+    if robots:
+        head.append(f'<meta name="robots" content="{html.escape(robots)}">')
     if canonical:
-        head.append(f'<link rel="canonical" href="{ORIGIN}{canonical}">')
-    head += [f'<link rel="alternate" hreflang="{code}" href="{ORIGIN}{path}">'
-             for code, path in alternates]
+        absolute = page_url(canonical)
+        image = page_url(f"/{OG_IMAGE}")
+        locale = OG_LOCALE[lang]
+        alternate_locale = "zh_Hant" if lang == "en" else "en_GB"
+        head += [
+            f'<link rel="canonical" href="{absolute}">',
+            *[f'<link rel="alternate" hreflang="{code}" href="{page_url(path)}">'
+              for code, path in alternates],
+            '<meta property="og:type" content="website">',
+            f'<meta property="og:site_name" content="{html.escape(GAME_NAME)}">',
+            f'<meta property="og:locale" content="{locale}">',
+            f'<meta property="og:locale:alternate" content="{alternate_locale}">',
+            f'<meta property="og:title" content="{html.escape(title)}">',
+            f'<meta property="og:description" content="{html.escape(description)}">',
+            f'<meta property="og:url" content="{absolute}">',
+            f'<meta property="og:image" content="{image}">',
+            '<meta property="og:image:type" content="image/png">',
+            f'<meta property="og:image:width" content="{OG_IMAGE_SIZE[0]}">',
+            f'<meta property="og:image:height" content="{OG_IMAGE_SIZE[1]}">',
+            f'<meta property="og:image:alt" content="{html.escape(GAME_NAME)}">',
+            '<meta name="twitter:card" content="summary">',
+            f'<meta name="twitter:title" content="{html.escape(title)}">',
+            f'<meta name="twitter:description" content="{html.escape(description)}">',
+            f'<meta name="twitter:image" content="{image}">',
+            f'<meta name="twitter:image:alt" content="{html.escape(GAME_NAME)}">',
+            json_ld_tag(structured_data(lang=lang, title=title, description=description,
+                                       canonical=canonical, faq=faq)),
+        ]
+    elif alternates:
+        head += [f'<link rel="alternate" hreflang="{code}" href="{page_url(path)}">'
+                 for code, path in alternates]
     head += [
+        '<link rel="preload" href="/assets/fonts/Cinzel-700.woff2" as="font" '
+        'type="font/woff2" crossorigin>',
+        '<link rel="preload" href="/assets/fonts/NotoSerifTC-SemiBold-display.woff2" as="font" '
+        'type="font/woff2" crossorigin>',
         '<link rel="icon" href="/assets/icon.png" type="image/png">',
         f'<link rel="stylesheet" href="/{STYLESHEET}">',
         "</head>",
@@ -295,7 +512,8 @@ def company_footer(lang: str = "en") -> list[str]:
 
 
 def article_page(page: Policy, twin: Policy, article: list[str],
-                 group: tuple[Policy, ...]) -> str:
+                 group: tuple[Policy, ...],
+                 faq: tuple[tuple[str, str], ...] = ()) -> str:
     bar = [f'  <a class="brand display" href="/">{page.brand}</a>',
            f'  <a class="switch" href="{twin.path}" hreflang="{twin.lang}" '
            f'lang="{twin.lang}">{LANGUAGE_NAMES[twin.lang]}</a>']
@@ -306,7 +524,7 @@ def article_page(page: Policy, twin: Policy, article: list[str],
     alternates = tuple((item.lang, item.path) for item in group)
     return shell(lang=page.lang, title=f"{page.name} · {page.brand}",
                  description=page.description, body=body, canonical=page.path,
-                 alternates=alternates + (("x-default", group[0].path),))
+                 alternates=alternates + (("x-default", group[0].path),), faq=faq)
 
 
 def policy_panes() -> list[str]:
@@ -316,6 +534,17 @@ def policy_panes() -> list[str]:
     return ['  <nav class="panes" aria-label="Privacy policy">', *panes, "  </nav>"]
 
 
+def guide_panes() -> list[str]:
+    panes = []
+    for group in (FAQ_PAGES, PLAY_PAGES, GENRE_PAGES):
+        english, chinese = group
+        panes.append(
+            f'    <a class="pane" href="{english.path}">'
+            f'<span class="pane-kicker" lang="{chinese.lang}">{chinese.name}</span> '
+            f'<span class="pane-title display">{english.name}</span></a>')
+    return ['  <nav class="panes" aria-label="About Glassvow">', *panes, "  </nav>"]
+
+
 def home_page() -> str:
     body = [
         '<main class="threshold">',
@@ -323,15 +552,18 @@ def home_page() -> str:
         '<span class="title-zh" lang="zh-Hant">琉璃誓言</span></h1>',
         '  <p class="lede">A single-player card game for iPhone and iPad.</p>',
         '  <p class="lede" lang="zh-Hant">一款供 iPhone 及 iPad 使用的單人卡牌遊戲。</p>',
+        *guide_panes(),
         *policy_panes(),
         '  <p class="support">Support · <span lang="zh-Hant">支援</span></p>',
         f'  <p class="address">{email(CONTACT)}</p>',
         "</main>",
         *company_footer("en"),
     ]
-    return shell(lang="en", title="Glassvow · 琉璃誓言", body=body, canonical="/",
-                 description="Glassvow (琉璃誓言), a single-player card game for iPhone and "
-                             "iPad: its privacy policy in English and 繁體中文, and support.",
+    return shell(lang="en", title="Glassvow · 琉璃誓言 — a card game for iPhone and iPad",
+                 body=body, canonical="/",
+                 description="Glassvow (琉璃誓言) is a single-player card game for iPhone and "
+                             "iPad. FAQ, how to play, privacy in English and 繁體中文, and support.",
+                 alternates=(("en", "/"), ("zh-Hant", "/"), ("x-default", "/")),
                  body_class="home")
 
 
@@ -340,13 +572,14 @@ def not_found_page() -> str:
         '<main class="threshold">',
         '  <a class="brand display" href="/">Glassvow</a>',
         '  <h1 class="lost">Page not found <span lang="zh-Hant">找不到此頁面</span></h1>',
+        *guide_panes(),
         *policy_panes(),
         "</main>",
         *company_footer("en"),
     ]
     return shell(lang="en", title="Page not found · Glassvow", body=body,
                  description="There is no page at this address on the Glassvow site.",
-                 body_class="home")
+                 robots="noindex", body_class="home")
 
 
 def page_file(path: str) -> str:
@@ -371,15 +604,30 @@ class PageAudit(HTMLParser):
         self.links: set[str] = set()
         self.seen: Counter[str] = Counter()
         self.lang = self.title = self.description = ""
+        self.canonical = self.robots = ""
+        self.hreflang: dict[str, str] = {}
+        self.json_ld: list[str] = []
+        self.og: dict[str, str] = {}
+        self.twitter: dict[str, str] = {}
+        self.images: list[tuple[str, str, str, str]] = []
+        self._json_ld_parts: list[str] | None = None
         self.doctype = False
 
     def handle_decl(self, decl: str) -> None:
         self.doctype = decl.lower() == "doctype html"
 
+    def _site_path(self, url: str) -> str:
+        if url.startswith(ORIGIN) and not url.startswith(ORIGIN + "//"):
+            path = url[len(ORIGIN):] or "/"
+            return path if path.startswith("/") else "/" + path
+        return url
+
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = {name: value or "" for name, value in attrs}
         self.seen[tag] += 1
-        if tag in FORBIDDEN_TAGS:
+        json_ld = (tag == "script" and values.get("type") == "application/ld+json"
+                   and "src" not in values)
+        if tag in FORBIDDEN_TAGS and not json_ld:
             self.errors.append(f"<{tag}> is not allowed on a script-free, self-only page")
         self.errors += [f"inline {name}= on <{tag}>" for name in values
                         if name == "style" or name.startswith("on")]
@@ -397,14 +645,40 @@ class PageAudit(HTMLParser):
             self.links.add(href)
         if tag == "html":
             self.lang = values.get("lang", "")
-        if tag == "meta" and values.get("name") == "description":
-            self.description = values.get("content", "")
+        if tag == "link":
+            rels = set(values.get("rel", "").split())
+            if "canonical" in rels:
+                self.canonical = href
+            if "alternate" in rels and values.get("hreflang"):
+                self.hreflang[values["hreflang"]] = href
+        if tag == "meta":
+            name, prop, content = values.get("name", ""), values.get("property", ""), values.get("content", "")
+            if name == "description":
+                self.description = content
+            if name == "robots":
+                self.robots = content
+            if prop.startswith("og:"):
+                self.og[prop] = content
+            if name.startswith("twitter:"):
+                self.twitter[name] = content
+            if prop == "og:image" or name == "twitter:image":
+                path = self._site_path(content)
+                if path.startswith("/"):
+                    self.links.add(path)
+        if tag == "img":
+            src, alt = values.get("src", ""), values.get("alt", "")
+            self.images.append((src, alt, values.get("width", ""), values.get("height", "")))
+        if json_ld:
+            self._json_ld_parts = []
         if tag not in VOID_TAGS:
             display = (tag in ("h1", "h2") or "display" in values.get("class", "").split()
                        or bool(self.open and self.open[-1][1]))
             self.open.append((tag, display))
 
     def handle_endtag(self, tag: str) -> None:
+        if tag == "script" and self._json_ld_parts is not None:
+            self.json_ld.append("".join(self._json_ld_parts))
+            self._json_ld_parts = None
         if not self.open or self.open[-1][0] != tag:
             expected = f"<{self.open[-1][0]}>" if self.open else "no open element"
             self.errors.append(f"</{tag}> does not close {expected}")
@@ -412,6 +686,8 @@ class PageAudit(HTMLParser):
             self.open.pop()
 
     def handle_data(self, data: str) -> None:
+        if self._json_ld_parts is not None:
+            self._json_ld_parts.append(data)
         if self.open and self.open[-1][0] == "title":
             self.title += data
         if self.open and self.open[-1][1]:
@@ -484,6 +760,181 @@ def audit_page(page: str) -> PageAudit:
     return audit
 
 
+def json_ld_errors(data: object, *, require_faq: bool = False,
+                   visible_faq: list[tuple[str, str]] | None = None) -> list[str]:
+    dumped = json.dumps(data, ensure_ascii=False)
+    errors = [f"JSON-LD must not include {needle!r}" for needle in JSONLD_FORBIDDEN
+              if needle in dumped]
+    nodes = data.get("@graph", [data]) if isinstance(data, dict) else []
+    types: set[str] = set()
+    for node in nodes:
+        if isinstance(node, dict):
+            types |= node_types(node)
+    for needed in ("VideoGame", "MobileApplication", "Organization"):
+        if needed not in types:
+            errors.append(f"JSON-LD missing {needed}")
+    if require_faq and "FAQPage" not in types:
+        errors.append("JSON-LD missing FAQPage")
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        if "Organization" in node_types(node):
+            if node.get("name") != ORGANIZATION_NAME:
+                errors.append("Organization name must be EUGNEL LTD")
+            if not str(node.get("url", "")).startswith(ORIGIN):
+                errors.append("Organization url missing")
+            if node.get("email") != PRIVACY_CONTACT:
+                errors.append("Organization email must be hello@eugnel.com")
+            extras = {"address", "taxID", "leiCode", "identifier", "legalName"}
+            if extras & node.keys():
+                errors.append("Organization must not include address or company identifiers")
+        if "FAQPage" in node_types(node) and visible_faq is not None:
+            entities = node.get("mainEntity") if isinstance(node.get("mainEntity"), list) else []
+            encoded = []
+            for item in entities:
+                if not isinstance(item, dict):
+                    continue
+                answer = item.get("acceptedAnswer")
+                text = answer.get("text", "") if isinstance(answer, dict) else ""
+                encoded.append((item.get("name", ""), text))
+            if encoded != visible_faq:
+                errors.append("FAQPage Q/A must match visible questions and first answers")
+    return errors
+
+
+def seo_errors(relative: str, audit: PageAudit, page: str = "") -> list[str]:
+    """Title/description bounds, canonical, hreflang, JSON-LD. 404 is noindex only."""
+    errors = []
+    low, high = TITLE_BOUNDS
+    if not low <= len(audit.title.strip()) <= high:
+        errors.append(f"title length {len(audit.title.strip())} not in {low}-{high}")
+    low, high = DESCRIPTION_BOUNDS
+    if not low <= len(audit.description.strip()) <= high:
+        errors.append(f"description length {len(audit.description.strip())} not in {low}-{high}")
+    for src, alt, width, height in audit.images:
+        if not alt.strip():
+            errors.append(f"img {src!r} missing alt")
+        if not width or not height:
+            errors.append(f"img {src!r} missing width or height")
+    if relative == "404.html":
+        if "noindex" not in {part.strip() for part in audit.robots.split(",")}:
+            errors.append("404 needs noindex")
+        if audit.canonical:
+            errors.append("404 must not have a canonical")
+        return errors
+    expected = page_url("/" if relative == "index.html"
+                        else "/" + relative[: -len("index.html")] if relative.endswith("/index.html")
+                        else "/" + relative)
+    if audit.canonical != expected:
+        errors.append(f"canonical {audit.canonical!r} != {expected!r}")
+    if set(audit.hreflang) != {"en", "zh-Hant", "x-default"}:
+        errors.append("hreflang must declare en, zh-Hant and x-default")
+    errors.extend(f"hreflang {code} is not on {ORIGIN}"
+                  for code, href in audit.hreflang.items() if not href.startswith(ORIGIN))
+    if len(audit.json_ld) != 1:
+        errors.append("needs exactly one JSON-LD block")
+    else:
+        try:
+            data = json.loads(audit.json_ld[0])
+        except json.JSONDecodeError:
+            errors.append("JSON-LD does not parse")
+        else:
+            require_faq = relative.startswith("faq/")
+            errors.extend(json_ld_errors(
+                data, require_faq=require_faq,
+                visible_faq=visible_faq_pairs(page) if require_faq else None))
+    for key in ("og:title", "og:description", "og:url", "og:type", "og:image"):
+        if key not in audit.og:
+            errors.append(f"missing {key}")
+    if audit.og.get("og:url") != audit.canonical:
+        errors.append("og:url must match canonical")
+    return errors
+
+
+def robots_txt() -> bytes:
+    lines = ["User-agent: *", "Allow: /", ""]
+    for bot in AI_BOTS:
+        lines += [f"User-agent: {bot}", "Allow: /", ""]
+    lines += [f"Sitemap: {ORIGIN}/sitemap.xml", ""]
+    return "\n".join(lines).encode()
+
+
+def robots_has_sitemap(text: str) -> bool:
+    return f"Sitemap: {ORIGIN}/sitemap.xml" in text
+
+
+def robots_allows_bots(text: str) -> bool:
+    return all(f"User-agent: {bot}" in text and "Allow: /" in text for bot in AI_BOTS)
+
+
+def llms_txt() -> bytes:
+    values = load_entity()
+    links = [
+        ("Home", "/"),
+        ("FAQ", "/faq/"),
+        ("FAQ (zh-Hant)", "/faq/zh-hant/"),
+        ("How to play", "/play/"),
+        ("How to play (zh-Hant)", "/play/zh-hant/"),
+        ("A roguelite deckbuilder", "/genre/"),
+        ("Roguelike 牌組構築", "/genre/zh-hant/"),
+        ("Privacy policy", "/privacy/"),
+        ("Privacy policy (zh-Hant)", "/privacy/zh-hant/"),
+        ("Company information", "/company/"),
+        ("Company information (zh-Hant)", "/company/zh-hant/"),
+    ]
+    lines = [
+        f"# {values['game_en']}",
+        "",
+        values["short_en"],
+        values["short_zh"],
+        "",
+        f"Developer: {values['developer']}",
+        f"Site: {values['url']}/",
+        f"Support: {values['support_email']}",
+        f"Privacy: {values['privacy_email']}",
+        "",
+        "## Pages",
+        *(f"- {label}: {page_url(path)}" for label, path in links),
+        "",
+    ]
+    return "\n".join(lines).encode()
+
+
+def llms_errors(text: str) -> list[str]:
+    required = (
+        GAME_NAME, GAME_ALTERNATE_NAME, ORGANIZATION_NAME, GAME_DESCRIPTION,
+        page_url("/"), page_url("/faq/"), page_url("/play/"), page_url("/genre/"),
+        page_url("/privacy/"), page_url("/company/"),
+        page_url("/faq/zh-hant/"), page_url("/play/zh-hant/"),
+        page_url("/genre/zh-hant/"), page_url("/privacy/zh-hant/"),
+        page_url("/company/zh-hant/"), CONTACT, PRIVACY_CONTACT,
+    )
+    errors = [f"llms.txt missing {item!r}" for item in required if item not in text]
+    errors.extend(f"llms.txt still carries {item!r}" for item in NOTICE_FORBIDDEN if item in text)
+    return errors
+
+
+def sitemap_xml(indexable: list[tuple[str, dict[str, str]]]) -> bytes:
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
+        '        xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+    ]
+    for loc, alts in sorted(indexable):
+        lines += ["  <url>", f"    <loc>{html.escape(loc)}</loc>"]
+        lines += [f'    <xhtml:link rel="alternate" hreflang="{html.escape(code)}" '
+                  f'href="{html.escape(href)}"/>' for code, href in sorted(alts.items())]
+        lines.append("  </url>")
+    lines += ["</urlset>", ""]
+    return "\n".join(lines).encode()
+
+
+def sitemap_locs(payload: bytes) -> set[str]:
+    root = ET.fromstring(payload)
+    ns = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
+    return {el.text or "" for el in root.findall("sm:url/sm:loc", ns)}
+
+
 # --- Build and check -------------------------------------------------------
 
 def render_pages(group: tuple[Policy, ...]) -> dict[str, str]:
@@ -496,9 +947,11 @@ def render_pages(group: tuple[Policy, ...]) -> dict[str, str]:
             if RETIRED_REGULATOR in source or RETIRED_REGULATOR_ZH in source:
                 raise BuildError("uses retired Information Commissioner wording")
             article = render_markdown(source, page.lang)
+            faq = tuple(faq_pairs(source)) if page.kind == "faq" else ()
         except BuildError as error:
             raise BuildError(f"{page.source}: {error}") from None
-        pages[page_file(page.path)] = article_page(page, group[1 - index], article, group)
+        pages[page_file(page.path)] = article_page(
+            page, group[1 - index], article, group, faq=faq)
     return pages
 
 
@@ -507,22 +960,35 @@ def build() -> tuple[dict[str, bytes], set[str], str]:
     slim = slim_source_errors()
     if slim:
         raise BuildError("; ".join(slim))
+    drifted = entity_errors()
+    if drifted:
+        raise BuildError("; ".join(drifted))
     pages: dict[str, str] = {}
-    pages.update(render_pages(POLICIES))
-    pages.update(render_pages(COMPANY_PAGES))
+    for group in PAGE_GROUPS:
+        pages.update(render_pages(group))
     pages["index.html"] = home_page()
     pages["404.html"] = not_found_page()
     links: set[str] = set()
     corpus: set[str] = set()
+    indexable: list[tuple[str, dict[str, str]]] = []
     for relative, page in pages.items():
         audit = audit_page(page)
         audit.errors.extend(disclosure_errors(relative, page))
+        audit.errors.extend(seo_errors(relative, audit, page))
         if audit.errors:
             raise BuildError(f"site/{relative}: " + "; ".join(audit.errors))
         links |= audit.links
         corpus |= set(CJK.findall("".join(audit.display)))
+        if relative != "404.html":
+            indexable.append((audit.canonical, dict(audit.hreflang)))
     outputs = {relative: page.encode("utf-8") for relative, page in pages.items()}
     outputs.update({target: (ROOT / source).read_bytes() for target, source in COPIES.items()})
+    outputs["robots.txt"] = robots_txt()
+    outputs["sitemap.xml"] = sitemap_xml(indexable)
+    outputs["llms.txt"] = llms_txt()
+    llms = llms_errors(outputs["llms.txt"].decode())
+    if llms:
+        raise BuildError("; ".join(llms))
     return outputs, links, "".join(sorted(corpus))
 
 
@@ -581,7 +1047,12 @@ def write_display_font(corpus: str) -> None:
     if pyftsubset is None:
         raise BuildError("pyftsubset is not on PATH; bootstrap FontTools as "
                          "tools/subset_noto_serif_tc.py describes")
-    source = fonts.ensure_cjk_sources(fonts.DEFAULT_SOURCE_DIR)["SemiBold"]
+    source_dir = fonts.DEFAULT_SOURCE_DIR
+    try:
+        source_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        source_dir = Path("/tmp/glassvow-noto-serif-tc-sources")
+    source = fonts.ensure_cjk_sources(source_dir)["SemiBold"]
     fonts.subset(pyftsubset, source, corpus, SITE / DISPLAY_FONT)
     manifest = {
         "source": f"{source.name} from {fonts.CJK_ARCHIVE_URL}",
@@ -649,6 +1120,48 @@ def self_test() -> int:
             ("missing lang", good.replace(' lang="en"', ""))):
         expect(label, lambda page=page: bool(audit_page(page).errors))
 
+    indexed = shell(
+        lang="en", title="Glassvow policy page",
+        description="Glassvow privacy notes for iPhone and iPad players and support.",
+        body=["<main><h1>T</h1></main>"], canonical="/privacy/",
+        alternates=(("en", "/privacy/"), ("zh-Hant", "/privacy/zh-hant/"),
+                    ("x-default", "/privacy/")))
+    failures += ["indexable seo"] if seo_errors("privacy/index.html", audit_page(indexed)) else []
+    expect("title too long", lambda: any("title length" in item for item in seo_errors(
+        "privacy/index.html", audit_page(indexed.replace(
+            "<title>Glassvow policy page</title>", f"<title>{'G' * 80}</title>")))))
+    expect("missing canonical", lambda: any("canonical" in item for item in seo_errors(
+        "privacy/index.html", audit_page(indexed.replace(
+            f'<link rel="canonical" href="{ORIGIN}/privacy/">', "")))))
+    expect("hreflang pair", lambda: any("hreflang" in item for item in seo_errors(
+        "privacy/index.html", audit_page(indexed.replace(
+            'hreflang="zh-Hant"', 'hreflang="fr"')))))
+    expect("json-ld parse", lambda: any("JSON-LD does not parse" in item for item in seo_errors(
+        "privacy/index.html", audit_page(indexed.replace(
+            '<script type="application/ld+json">',
+            '<script type="application/ld+json">{', 1)))))
+    expect("json-ld company number", lambda: any(COMPANY_NUMBER in item for item in json_ld_errors(
+        {"@graph": [{"@type": "Organization", "name": ORGANIZATION_NAME,
+                     "url": f"{ORIGIN}/", "email": PRIVACY_CONTACT, "taxID": COMPANY_NUMBER},
+                    {"@type": ["VideoGame", "MobileApplication"]}]})))
+    expect("json-ld missing email", lambda: any("email" in item for item in json_ld_errors(
+        {"@graph": [{"@type": "Organization", "name": ORGANIZATION_NAME, "url": f"{ORIGIN}/"},
+                    {"@type": ["VideoGame", "MobileApplication"]}]})))
+    expect("faq qa mismatch", lambda: any("FAQPage Q/A" in item for item in json_ld_errors(
+        {"@graph": [
+            {"@type": ["VideoGame", "MobileApplication"]},
+            {"@type": "Organization", "name": ORGANIZATION_NAME,
+             "url": f"{ORIGIN}/", "email": PRIVACY_CONTACT},
+            {"@type": "FAQPage", "mainEntity": [
+                {"@type": "Question", "name": "Q",
+                 "acceptedAnswer": {"@type": "Answer", "text": "A"}}]}]},
+        require_faq=True, visible_faq=[("Q", "B")])))
+    expect("robots missing sitemap", lambda: not robots_has_sitemap("User-agent: *\nAllow: /\n"))
+    expect("robots missing AI bot", lambda: not robots_allows_bots(
+        f"User-agent: *\nAllow: /\nSitemap: {ORIGIN}/sitemap.xml\n"))
+    expect("sitemap omission", lambda: page_url("/") not in sitemap_locs(sitemap_xml([])))
+    expect("llms missing faq", lambda: any("/faq/" in item for item in llms_errors("# Glassvow\n")))
+
     outputs, links, corpus = build()
     with tempfile.TemporaryDirectory(prefix="glassvow-site-") as temporary:
         site = Path(temporary)
@@ -704,6 +1217,25 @@ def self_test() -> int:
         failures.append("company pages were not built")
     if any(disclosure_errors(rel, page) for rel, page in html_pages.items()):
         failures.append("built pages fail the company/privacy disclosure contract")
+    if any(seo_errors(rel, audit_page(page), page) for rel, page in html_pages.items()):
+        failures.append("built pages fail the SEO contract")
+    if not robots_has_sitemap(outputs["robots.txt"].decode()):
+        failures.append("robots missing sitemap")
+    if not robots_allows_bots(outputs["robots.txt"].decode()):
+        failures.append("robots missing AI bots")
+    if llms_errors(outputs["llms.txt"].decode()):
+        failures.append("llms.txt is incomplete")
+    if entity_errors():
+        failures.append("public entity drifted")
+    if "faq/index.html" not in outputs or "play/index.html" not in outputs:
+        failures.append("AIO pages were not built")
+    expected_locs = {audit_page(page).canonical for rel, page in html_pages.items()
+                     if rel != "404.html"}
+    if sitemap_locs(outputs["sitemap.xml"]) != expected_locs:
+        failures.append("sitemap does not list every indexable page")
+    if any(path.endswith("404.html") or path.rstrip("/").endswith("404")
+           for path in sitemap_locs(outputs["sitemap.xml"])):
+        failures.append("sitemap lists 404")
     if slim_source_errors():
         failures.append("privacy or terms still carry company number, address or ICO registration")
     if failures:
