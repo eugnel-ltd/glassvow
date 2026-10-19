@@ -10,6 +10,7 @@ Privacy: hello@eugnel.com
 
 ## Pages
 - Home: https://glassvow.eugnel.com/
+- Home (zh-Hant): https://glassvow.eugnel.com/zh-hant/
 - FAQ: https://glassvow.eugnel.com/faq/
 - FAQ (zh-Hant): https://glassvow.eugnel.com/faq/zh-hant/
 - How to play: https://glassvow.eugnel.com/play/

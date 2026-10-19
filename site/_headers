@@ -1,8 +1,9 @@
-# Cloudflare Pages response headers for every path. The pages run no script and
-# load nothing from another origin (tools/build_site.py audits both), so the
-# policy allows only this site's own styles, fonts and icon.
+# Cloudflare Pages response headers for every path. Pages load nothing from
+# another origin and carry no inline code (tools/build_site.py audits both, and
+# checks this policy); the teaser home runs one module script and plays sound
+# only from this site, so the policy allows only this site's own files.
 /*
-  Content-Security-Policy: default-src 'none'; style-src 'self'; font-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   Referrer-Policy: no-referrer
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
