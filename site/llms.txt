@@ -1,0 +1,22 @@
+# Glassvow
+
+Glassvow (琉璃誓言) is a single-player card game for iPhone and iPad.
+《琉璃誓言》（Glassvow）是一款供 iPhone 及 iPad 使用的單人卡牌遊戲。
+
+Developer: EUGNEL LTD
+Site: https://glassvow.eugnel.com/
+Support: glassvow@eugnel.com
+Privacy: hello@eugnel.com
+
+## Pages
+- Home: https://glassvow.eugnel.com/
+- FAQ: https://glassvow.eugnel.com/faq/
+- FAQ (zh-Hant): https://glassvow.eugnel.com/faq/zh-hant/
+- How to play: https://glassvow.eugnel.com/play/
+- How to play (zh-Hant): https://glassvow.eugnel.com/play/zh-hant/
+- A roguelite deckbuilder: https://glassvow.eugnel.com/genre/
+- Roguelike 牌組構築: https://glassvow.eugnel.com/genre/zh-hant/
+- Privacy policy: https://glassvow.eugnel.com/privacy/
+- Privacy policy (zh-Hant): https://glassvow.eugnel.com/privacy/zh-hant/
+- Company information: https://glassvow.eugnel.com/company/
+- Company information (zh-Hant): https://glassvow.eugnel.com/company/zh-hant/

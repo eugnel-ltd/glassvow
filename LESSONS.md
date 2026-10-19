@@ -38,6 +38,12 @@ Entry format (newest first):
 
 ## Current entry
 
+### Forbid only statutory identifiers in JSON-LD, not ordinary English
+- Cause: Listing "registered office" as a JSON-LD forbidden needle failed the Company information page: its meta description uses those words, and WebPage.description copies the meta description, while the postal address still belongs only in the HTML body.
+- Fix: PR #804 (site JSON-LD forbidden needles).
+- Done right: Forbid company number, registered-office address and ICO number in JSON-LD. Do not forbid the English phrase "registered office".
+- Seen: 1× (2026-10-19)
+
 ### Refresh pending cache retention from the latest selection
 - Cause: Choosing a different card back cleared the first bake's retention flag permanently, so selecting it again before completion discarded its result and rendered it twice.
 - Fix: fcc606f6af07291c9b7e4eb648e71becc141ed29
