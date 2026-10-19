@@ -1,10 +1,10 @@
 # Roguelike 牌組構築
 
-《琉璃誓言》是一款供 iPhone 及 iPad 使用的單人 Roguelike 牌組構築遊戲，亦是一場彩窗上的朝聖。
+《琉璃誓言》是一款單人 Roguelike 牌組構築遊戲，亦是一場彩窗上的朝聖，即將登陸 iOS（App Store）、Android（Google Play）、Amazon Appstore 及 Steam（PC）。
 
 ## 類似琉璃誓言的遊戲？
 
-《琉璃誓言》本身就是一款供 iPhone 及 iPad 使用的單人 Roguelike 牌組構築遊戲。
+《琉璃誓言》本身就是一款單人 Roguelike 牌組構築遊戲。
 
 本頁不為其他作品排名，也不借用它們的名字。比較的是類型：回合制卡牌、你自己組的牌組、敗仗後再上路，英文或繁體中文，沒有帳戶，沒有廣告。
 
@@ -14,4 +14,4 @@
 
 ## 給誰玩
 
-想在 iPhone 及 iPad 上玩單人、回合制卡牌遊戲的人。由 EUGNEL LTD 製作。怎麼開始見[玩法](/play/zh-hant/)。短答見[常見問題](/faq/zh-hant/)。
+想在手機、平板或電腦上玩單人、回合制卡牌遊戲的人。由 EUGNEL LTD 製作。怎麼開始見[玩法](/play/zh-hant/)。短答見[常見問題](/faq/zh-hant/)。

@@ -14,6 +14,6 @@
 
 ## 在你的裝置上
 
-《琉璃誓言》在 iPhone 及 iPad 上運行，提供英文及繁體中文。存檔留在裝置上。刪除遊戲就會一併刪除。
+《琉璃誓言》即將登陸 iOS（App Store）、Android（Google Play）、Amazon Appstore 及 Steam（PC），提供英文及繁體中文。存檔留在裝置上。刪除遊戲就會一併刪除。
 
 更多回答見[常見問題](/faq/zh-hant/)。這一類遊戲在本作為何叫 Roguelike 牌組構築，見[類型說明](/genre/zh-hant/)。

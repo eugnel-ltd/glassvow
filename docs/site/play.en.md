@@ -14,6 +14,6 @@ Losses return you to the road. There is no account and no online play.
 
 ## On your device
 
-Glassvow runs on iPhone and iPad, in English and Traditional Chinese. Saved games stay on the device. Deleting the game removes them.
+Glassvow is coming soon to iOS (App Store), Android (Google Play), Amazon Appstore and Steam (PC), in English and Traditional Chinese. Saved games stay on the device. Deleting the game removes them.
 
 More answers sit on the [FAQ](/faq/). What the genre means for this game sits under [A roguelite deckbuilder](/genre/).

@@ -4,14 +4,17 @@
 docs/privacy/privacy-policy.en.md and privacy-policy.zh-Hant.md become
 /privacy/ and /privacy/zh-hant/; docs/legal/company-information.en.md and
 .zh-Hant.md become /company/ and /company/zh-hant/; docs/site/*.md become
-/faq/, /play/ and /genre/ (each with a zh-Hant twin). A deliberately small
+/faq/, /play/ and /genre/ (each with a zh-Hant twin). The home page is the
+teaser in tools/teaser_page.py, at / and /zh-hant/. A deliberately small
 reader accepts `#` and `##` headings, paragraphs, `-` lists, links, **strong**
 and *emphasis*. Anything else, an unfilled [placeholder] or the draft HTML
 comment stops the build. Every page is then audited: balanced tags, a language,
 a title and a description, internal links that exist, no inline code and
 nothing loaded from another origin, because site/_headers serves a self-only
-Content-Security-Policy. The per-page footer is © EUGNEL LTD plus a link to
-the Company information page; statutory details live only on that page.
+Content-Security-Policy; the teaser's one module script is a file on this
+site. The per-page footer is © EUGNEL LTD plus a link to the Company
+information page (the teaser's adds only its privacy link); statutory details
+live only on that page.
 Indexable pages also carry length-bounded titles and descriptions, a canonical
 URL, hreflang en/zh-Hant/x-default, Open Graph/Twitter tags, and JSON-LD
 (VideoGame + MobileApplication + Organization). FAQ pages add FAQPage whose
@@ -22,9 +25,11 @@ and llms.txt.
     python3 tools/build_site.py --check         exit 1 when site/ is stale
     python3 tools/build_site.py --self-test     prove that each check can fail
     python3 tools/build_site.py --display-font  re-subset the zh-Hant heading face
+    python3 tools/build_site.py --media         re-encode the teaser's art and sound
 
-Only --display-font needs more than the standard library: it reuses the pinned
-Noto sources and pyftsubset of tools/subset_noto_serif_tc.py.
+Only --display-font and --media need more than the standard library: the first
+reuses the pinned Noto sources and pyftsubset of tools/subset_noto_serif_tc.py,
+the second needs Pillow (with AVIF) and ffmpeg.
 Deploy with: npx wrangler pages deploy site --project-name glassvow-site
 """
 
@@ -37,6 +42,7 @@ import importlib.util
 import json
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import xml.etree.ElementTree as ET
@@ -45,6 +51,8 @@ from dataclasses import dataclass
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Callable
+
+import teaser_page as teaser
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
@@ -64,9 +72,11 @@ COMPANY_LABEL = {"en": "Company information", "zh-Hant": "公司資料"}
 ORGANIZATION_NAME = "EUGNEL LTD"
 GAME_NAME = "Glassvow"
 GAME_ALTERNATE_NAME = "琉璃誓言"
-GAME_DESCRIPTION = (
-    "Glassvow (琉璃誓言) is a single-player card game for iPhone and iPad."
-)
+GAME_DESCRIPTION = f"Glassvow (琉璃誓言) is a single-player card game coming soon to {teaser.platform_list('en')}."
+GAME_DESCRIPTION_ZH = f"《琉璃誓言》（Glassvow）是一款單人卡牌遊戲，即將登陸 {teaser.platform_list('zh-Hant')}。"
+# The privacy policy describes the iOS build as it exists today; every other page
+# names all four platforms (teaser.GAME_PLATFORMS) and never the iOS-only wording.
+IOS_ONLY = ("iPhone and iPad", "iPhone 及 iPad")
 TITLE_BOUNDS = (8, 70)
 DESCRIPTION_BOUNDS = (50, 160)
 OG_IMAGE = "assets/og.png"
@@ -163,10 +173,10 @@ COMPANY_PAGES = (
 )
 FAQ_PAGES = (
     Policy("en", "docs/site/faq.en.md", "/faq/", "FAQ", "Glassvow",
-           "Answers about Glassvow (琉璃誓言): what it is, who makes it, iPhone and iPad, "
-           "saves, ads, and how to reach EUGNEL LTD.", "faq"),
+           "Answers about Glassvow (琉璃誓言): what it is, who makes it, which platforms it is "
+           "coming to, saves, ads, and how to reach EUGNEL LTD.", "faq"),
     Policy("zh-Hant", "docs/site/faq.zh-Hant.md", "/faq/zh-hant/", "常見問題", "琉璃誓言",
-           "《琉璃誓言》（Glassvow）常見問題：這是甚麼遊戲、誰製作、iPhone 及 iPad、存檔、廣告，"
+           "《琉璃誓言》（Glassvow）常見問題：這是甚麼遊戲、誰製作、即將登陸哪些平台、存檔、廣告，"
            "以及如何聯絡 EUGNEL LTD。", "faq"),
 )
 PLAY_PAGES = (
@@ -175,16 +185,15 @@ PLAY_PAGES = (
            "glass, spend light, and shatter what blocks the way."),
     Policy("zh-Hant", "docs/site/play.zh-Hant.md", "/play/zh-hant/", "玩法", "琉璃誓言",
            "《琉璃誓言》怎麼玩：提燈離開守夜之爐向東走，組一副琉璃牌，花費光，打碎擋路之物。"
-           "單人卡牌遊戲，供 iPhone 及 iPad 使用。"),
+           f"單人卡牌遊戲，即將登陸 {teaser.platform_list('zh-Hant')}。"),
 )
 GENRE_PAGES = (
     Policy("en", "docs/site/genre.en.md", "/genre/", "A roguelite deckbuilder", "Glassvow",
-           "Glassvow is a single-player roguelite deckbuilder for iPhone and iPad, told as a "
-           "stained-glass pilgrimage. No accounts and no ads."),
+           f"Glassvow, a stained-glass roguelite deckbuilder, coming soon to {teaser.platform_list('en')}."),
     Policy("zh-Hant", "docs/site/genre.zh-Hant.md", "/genre/zh-hant/", "Roguelike 牌組構築",
            "琉璃誓言",
-           "《琉璃誓言》是一款供 iPhone 及 iPad 使用的單人 Roguelike 牌組構築遊戲，亦是一場彩窗上的朝聖。"
-           "沒有帳戶，沒有廣告。"),
+           "《琉璃誓言》是一款單人 Roguelike 牌組構築遊戲，亦是一場彩窗上的朝聖，"
+           f"即將登陸 {teaser.platform_list('zh-Hant')}。"),
 )
 PAGE_GROUPS = (POLICIES, COMPANY_PAGES, FAQ_PAGES, PLAY_PAGES, GENRE_PAGES)
 
@@ -348,9 +357,13 @@ def entity_errors() -> list[str]:
         "game_en": GAME_NAME,
         "game_zh": GAME_ALTERNATE_NAME,
         "short_en": GAME_DESCRIPTION,
+        "short_zh": GAME_DESCRIPTION_ZH,
     }
     errors.extend(f"entity {key} != {want!r}" for key, want in expected.items()
                   if values.get(key) != want)
+    errors.extend(f"platform {platform!r} does not name store {store!r}"
+                  for store, platform in zip(teaser.PLATFORMS, teaser.GAME_PLATFORMS, strict=True)
+                  if store not in platform)
     names = {"en-US": "game_en", "zh-Hant": "game_zh"}
     subs = {"en-US": "subtitle_en", "zh-Hant": "subtitle_zh"}
     for locale, path in LISTING_JSON.items():
@@ -420,7 +433,8 @@ def structured_data(*, lang: str, title: str, description: str, canonical: str,
         {"@type": ["VideoGame", "MobileApplication"], "@id": game_id, "name": GAME_NAME,
          "alternateName": GAME_ALTERNATE_NAME, "url": page_url("/"),
          "description": GAME_DESCRIPTION, "inLanguage": ["en", "zh-Hant"],
-         "operatingSystem": "iOS", "applicationCategory": "GameApplication",
+         "operatingSystem": teaser.OPERATING_SYSTEMS, "gamePlatform": list(teaser.GAME_PLATFORMS),
+         "applicationCategory": "GameApplication",
          "author": {"@id": org_id}, "publisher": {"@id": org_id}, "image": image},
         {"@type": "WebPage", "@id": f"{page}#webpage", "url": page, "name": title,
          "description": description, "inLanguage": lang,
@@ -441,10 +455,14 @@ def json_ld_tag(data: dict) -> str:
     return f'<script type="application/ld+json">{payload}</script>'
 
 
+FONT_PRELOADS = ("/assets/fonts/Cinzel-700.woff2", f"/{DISPLAY_FONT}")
+
+
 def shell(*, lang: str, title: str, description: str, body: list[str],
           canonical: str | None = None, alternates: tuple[tuple[str, str], ...] = (),
           body_class: str | None = None, robots: str | None = None,
-          faq: tuple[tuple[str, str], ...] = ()) -> str:
+          faq: tuple[tuple[str, str], ...] = (), preloads: tuple[str, ...] = FONT_PRELOADS,
+          head_extra: tuple[str, ...] = ()) -> str:
     head = [
         "<!DOCTYPE html>",
         f'<html lang="{lang}">',
@@ -492,12 +510,11 @@ def shell(*, lang: str, title: str, description: str, body: list[str],
         head += [f'<link rel="alternate" hreflang="{code}" href="{page_url(path)}">'
                  for code, path in alternates]
     head += [
-        '<link rel="preload" href="/assets/fonts/Cinzel-700.woff2" as="font" '
-        'type="font/woff2" crossorigin>',
-        '<link rel="preload" href="/assets/fonts/NotoSerifTC-SemiBold-display.woff2" as="font" '
-        'type="font/woff2" crossorigin>',
+        *(f'<link rel="preload" href="{font}" as="font" type="font/woff2" crossorigin>'
+          for font in preloads),
         '<link rel="icon" href="/assets/icon.png" type="image/png">',
         f'<link rel="stylesheet" href="/{STYLESHEET}">',
+        *head_extra,
         "</head>",
         f'<body class="{body_class}">' if body_class else "<body>",
     ]
@@ -511,10 +528,46 @@ def company_footer(lang: str = "en") -> list[str]:
             "</footer>"]
 
 
+def teaser_footer(lang: str) -> list[str]:
+    privacy = html.escape(teaser.COPY[lang]["privacy"])
+    return ['<footer class="legal">',
+            f'  <p><a href="{COMPANY_HREF[lang]}">© EUGNEL LTD</a> · '
+            f'<a href="{teaser.PRIVACY[lang]}">{privacy}</a></p>',
+            "</footer>"]
+
+
+def teaser_footer_errors(page: str, lang: str) -> list[str]:
+    """The company rule: only © EUGNEL LTD to /company/ and the privacy link; support stays."""
+    footers = LEGAL_FOOTER.findall(page)
+    footer = footers[0] if len(footers) == 1 else ""
+    links = re.findall(r'<a href="([^"]*)">([^<]*)</a>', footer)
+    privacy = teaser.COPY[lang]["privacy"]
+    errors = []
+    if (links != [(COMPANY_HREF[lang], "© EUGNEL LTD"), (teaser.PRIVACY[lang], html.escape(privacy))]
+            or visible_text(footer) != f"© EUGNEL LTD · {privacy}"):
+        errors.append("teaser footer must be only © EUGNEL LTD linking to the Company page, "
+                      "and the privacy link")
+    if CONTACT not in page:
+        errors.append(f"teaser must show the support address {CONTACT}")
+    return errors
+
+
+def platform_errors(relative: str, page: str, lang: str) -> list[str]:
+    """Guides and teasers name all four platforms; only the privacy policy stays iOS-only."""
+    text = html.unescape(page)
+    errors = [f"still says only {phrase!r}" for phrase in IOS_ONLY
+              if phrase in text and not relative.startswith("privacy/")]
+    named = {item.path for group in (FAQ_PAGES, PLAY_PAGES, GENRE_PAGES) for item in group}
+    path = "/" + relative.removesuffix("index.html")
+    if path in named | set(teaser.HOME.values()) and teaser.platform_list(lang) not in text:
+        errors.append(f"must name the four platforms as {teaser.platform_list(lang)!r}")
+    return errors
+
+
 def article_page(page: Policy, twin: Policy, article: list[str],
                  group: tuple[Policy, ...],
                  faq: tuple[tuple[str, str], ...] = ()) -> str:
-    bar = [f'  <a class="brand display" href="/">{page.brand}</a>',
+    bar = [f'  <a class="brand display" href="{teaser.HOME[page.lang]}">{page.brand}</a>',
            f'  <a class="switch" href="{twin.path}" hreflang="{twin.lang}" '
            f'lang="{twin.lang}">{LANGUAGE_NAMES[twin.lang]}</a>']
     body = (['<header class="masthead">', *bar, "</header>", "<main>"]
@@ -545,26 +598,19 @@ def guide_panes() -> list[str]:
     return ['  <nav class="panes" aria-label="About Glassvow">', *panes, "  </nav>"]
 
 
-def home_page() -> str:
-    body = [
-        '<main class="threshold">',
-        '  <h1 class="title"><span class="title-en">Glassvow</span> '
-        '<span class="title-zh" lang="zh-Hant">琉璃誓言</span></h1>',
-        '  <p class="lede">A single-player card game for iPhone and iPad.</p>',
-        '  <p class="lede" lang="zh-Hant">一款供 iPhone 及 iPad 使用的單人卡牌遊戲。</p>',
-        *guide_panes(),
-        *policy_panes(),
-        '  <p class="support">Support · <span lang="zh-Hant">支援</span></p>',
-        f'  <p class="address">{email(CONTACT)}</p>',
-        "</main>",
-        *company_footer("en"),
-    ]
-    return shell(lang="en", title="Glassvow · 琉璃誓言 — a card game for iPhone and iPad",
-                 body=body, canonical="/",
-                 description="Glassvow (琉璃誓言) is a single-player card game for iPhone and "
-                             "iPad. FAQ, how to play, privacy in English and 繁體中文, and support.",
-                 alternates=(("en", "/"), ("zh-Hant", "/"), ("x-default", "/")),
-                 body_class="home")
+def teaser_home(lang: str) -> str:
+    twin = "zh-Hant" if lang == "en" else "en"
+    index = 0 if lang == "en" else 1
+    guides = [(group[index].path, group[index].name) for group in (PLAY_PAGES, FAQ_PAGES, GENRE_PAGES)]
+    body = teaser.body(lang, site=SITE, twin=twin, twin_name=LANGUAGE_NAMES[twin], guides=guides,
+                       contact=email(CONTACT)) + teaser_footer(lang)
+    copy = teaser.COPY[lang]
+    return shell(lang=lang, title=copy["title"], description=copy["description"], body=body,
+                 canonical=teaser.HOME[lang],
+                 alternates=(("en", teaser.HOME["en"]), ("zh-Hant", teaser.HOME["zh-Hant"]),
+                             ("x-default", teaser.HOME["en"])),
+                 body_class="teaser", preloads=FONT_PRELOADS[: 1 if lang == "en" else 2],
+                 head_extra=teaser.HEAD)
 
 
 def not_found_page() -> str:
@@ -627,13 +673,19 @@ class PageAudit(HTMLParser):
         self.seen[tag] += 1
         json_ld = (tag == "script" and values.get("type") == "application/ld+json"
                    and "src" not in values)
-        if tag in FORBIDDEN_TAGS and not json_ld:
+        # A script file on this site is allowed (CSP script-src 'self'); its body must be empty.
+        script_file = tag == "script" and values.get("type") == "module" and "src" in values
+        if tag in FORBIDDEN_TAGS and not (json_ld or script_file):
             self.errors.append(f"<{tag}> is not allowed on a script-free, self-only page")
         self.errors += [f"inline {name}= on <{tag}>" for name in values
                         if name == "style" or name.startswith("on")]
         loads = [values["src"]] if "src" in values else []
         if tag == "link" and not set(values.get("rel", "").split()) <= {"canonical", "alternate"}:
             loads.append(values.get("href", ""))
+        loads += [part.split()[0] for name in ("srcset", "imagesrcset")
+                  for part in values.get(name, "").split(",") if part.strip()]
+        loads += [url for name, value in values.items() if name.startswith("data-")
+                  for url in value.split() if url.startswith("/")]
         for url in loads:
             if not url.startswith("/") or url.startswith("//"):
                 self.errors.append(f"<{tag}> loads {url!r} from outside the site")
@@ -666,8 +718,11 @@ class PageAudit(HTMLParser):
                 if path.startswith("/"):
                     self.links.add(path)
         if tag == "img":
-            src, alt = values.get("src", ""), values.get("alt", "")
-            self.images.append((src, alt, values.get("width", ""), values.get("height", "")))
+            alt = values.get("alt") if "alt" in values else None
+            if alt == "" and values.get("aria-hidden") == "true":
+                alt = "decorative"
+            self.images.append((values.get("src", ""), alt or "", values.get("width", ""),
+                                values.get("height", "")))
         if json_ld:
             self._json_ld_parts = []
         if tag not in VOID_TAGS:
@@ -688,6 +743,8 @@ class PageAudit(HTMLParser):
     def handle_data(self, data: str) -> None:
         if self._json_ld_parts is not None:
             self._json_ld_parts.append(data)
+        elif self.open and self.open[-1][0] == "script" and data.strip():
+            self.errors.append("inline script")
         if self.open and self.open[-1][0] == "title":
             self.title += data
         if self.open and self.open[-1][1]:
@@ -788,6 +845,11 @@ def json_ld_errors(data: object, *, require_faq: bool = False,
             extras = {"address", "taxID", "leiCode", "identifier", "legalName"}
             if extras & node.keys():
                 errors.append("Organization must not include address or company identifiers")
+        if "VideoGame" in node_types(node) and (
+                node.get("gamePlatform") != list(teaser.GAME_PLATFORMS)
+                or node.get("operatingSystem") != teaser.OPERATING_SYSTEMS
+                or node.get("description") != GAME_DESCRIPTION):
+            errors.append("VideoGame must name the four platforms and the entity description")
         if "FAQPage" in node_types(node) and visible_faq is not None:
             entities = node.get("mainEntity") if isinstance(node.get("mainEntity"), list) else []
             encoded = []
@@ -871,6 +933,7 @@ def llms_txt() -> bytes:
     values = load_entity()
     links = [
         ("Home", "/"),
+        ("Home (zh-Hant)", "/zh-hant/"),
         ("FAQ", "/faq/"),
         ("FAQ (zh-Hant)", "/faq/zh-hant/"),
         ("How to play", "/play/"),
@@ -902,8 +965,8 @@ def llms_txt() -> bytes:
 
 def llms_errors(text: str) -> list[str]:
     required = (
-        GAME_NAME, GAME_ALTERNATE_NAME, ORGANIZATION_NAME, GAME_DESCRIPTION,
-        page_url("/"), page_url("/faq/"), page_url("/play/"), page_url("/genre/"),
+        GAME_NAME, GAME_ALTERNATE_NAME, ORGANIZATION_NAME, GAME_DESCRIPTION, GAME_DESCRIPTION_ZH,
+        page_url("/"), page_url("/zh-hant/"), page_url("/faq/"), page_url("/play/"), page_url("/genre/"),
         page_url("/privacy/"), page_url("/company/"),
         page_url("/faq/zh-hant/"), page_url("/play/zh-hant/"),
         page_url("/genre/zh-hant/"), page_url("/privacy/zh-hant/"),
@@ -966,7 +1029,11 @@ def build() -> tuple[dict[str, bytes], set[str], str]:
     pages: dict[str, str] = {}
     for group in PAGE_GROUPS:
         pages.update(render_pages(group))
-    pages["index.html"] = home_page()
+    try:
+        teasers = {lang: page_file(path) for lang, path in teaser.HOME.items()}
+        pages.update({relative: teaser_home(lang) for lang, relative in teasers.items()})
+    except teaser.MediaError as error:
+        raise BuildError(str(error)) from None
     pages["404.html"] = not_found_page()
     links: set[str] = set()
     corpus: set[str] = set()
@@ -975,6 +1042,9 @@ def build() -> tuple[dict[str, bytes], set[str], str]:
         audit = audit_page(page)
         audit.errors.extend(disclosure_errors(relative, page))
         audit.errors.extend(seo_errors(relative, audit, page))
+        audit.errors.extend(platform_errors(relative, page, audit.lang))
+        for lang in (lang for lang, path in teasers.items() if path == relative):
+            audit.errors += teaser_footer_errors(page, lang) + teaser.page_errors(page, lang)
         if audit.errors:
             raise BuildError(f"site/{relative}: " + "; ".join(audit.errors))
         links |= audit.links
@@ -1002,12 +1072,39 @@ CSS_URL = re.compile(r"""url\(\s*["']?([^"')]+)""")
 CSS_EXTERNAL = re.compile(r"@import|url\(\s*[\"']?\s*(?:[a-z][a-z0-9+.-]*:|//)", re.IGNORECASE)
 
 
+SCRIPT_UNSAFE = re.compile(r"[a-z][a-z0-9+.-]*://|\beval\s*\(|\bFunction\s*\(|document\.write",
+                           re.IGNORECASE)
+CSP_REQUIRED = ("default-src 'none'", "script-src 'self'", "media-src 'self'", "base-uri 'none'")
+CSP_UNSAFE = re.compile(r"unsafe-|https?:|\*|data:|blob:|\bnonce-|\bsha\d+-")
+
+
+def script_problems(relative: str, source: str) -> list[str]:
+    """The teaser script may reach only this site and never evaluates strings."""
+    return [f"UNSAFE site/{relative}: {match.group(0)}" for match in SCRIPT_UNSAFE.finditer(source)]
+
+
+def csp_problems(headers: str) -> list[str]:
+    policies = re.findall(r"Content-Security-Policy: (.*)", headers)
+    if len(policies) != 1:
+        return ["CSP site/_headers needs exactly one Content-Security-Policy"]
+    problems = [f"CSP lacks {item}" for item in CSP_REQUIRED if item not in policies[0]]
+    return problems + [f"CSP admits {match.group(0)!r}" for match in CSP_UNSAFE.finditer(policies[0])]
+
+
 def reference_problems(site: Path, links: set[str]) -> list[str]:
-    css = (site / STYLESHEET).read_text(encoding="utf-8")
-    problems = [f"EXTERNAL site/{STYLESHEET}: {match.group(0)}" for match in CSS_EXTERNAL.finditer(css)]
-    targets = {url.split("#")[0] for url in links}
-    targets |= {"/" + str(Path(STYLESHEET).parent / url) for url in CSS_URL.findall(css)
-                if not CSS_EXTERNAL.match(f"url({url})")}
+    problems, targets = [], {url.split("#")[0] for url in links}
+    for sheet in (STYLESHEET, teaser.STYLESHEET.lstrip("/")):
+        if not (site / sheet).is_file():
+            continue  # reported as DANGLING below
+        css = (site / sheet).read_text(encoding="utf-8")
+        problems += [f"EXTERNAL site/{sheet}: {match.group(0)}" for match in CSS_EXTERNAL.finditer(css)]
+        targets |= {"/" + str(Path(sheet).parent / url) for url in CSS_URL.findall(css)
+                    if not CSS_EXTERNAL.match(f"url({url})")}
+    script = teaser.SCRIPT.lstrip("/")
+    if (site / script).is_file():
+        problems += script_problems(script, (site / script).read_text(encoding="utf-8"))
+    if (site / "_headers").is_file():
+        problems += csp_problems((site / "_headers").read_text(encoding="utf-8"))
     for url in sorted(targets):
         path = site / (page_file(url) if url.endswith("/") else url.lstrip("/"))
         if not path.is_file():
@@ -1116,9 +1213,20 @@ def self_test() -> int:
             ("unclosed tag", good.replace("</main>", "")),
             ("inline style", good.replace("<main>", '<main style="color:red">')),
             ("script", good.replace("<main>", "<main><script></script>")),
+            ("inline module script", good.replace("<main>", '<main><script type="module">go()</script>')),
+            ("third-party script", good.replace(
+                "<main>", '<main><script type="module" src="https://cdn.example/a.js"></script>')),
+            ("off-site srcset", good.replace(
+                "<main>", '<main><img src="/a.webp" srcset="https://cdn.example/a.webp 2x" alt="A">')),
             ("third-party stylesheet", good.replace(f'href="/{STYLESHEET}"', 'href="https://cdn.example/a.css"')),
             ("missing lang", good.replace(' lang="en"', ""))):
         expect(label, lambda page=page: bool(audit_page(page).errors))
+    expect("script reaches off-site", lambda: bool(script_problems("a.js", 'fetch("https://t.example")')))
+    expect("script evaluates strings", lambda: bool(script_problems("a.js", "eval(code)")))
+    policy = "Content-Security-Policy: " + "; ".join(CSP_REQUIRED)
+    failures += ["clean CSP"] if csp_problems(policy) else []
+    expect("CSP unsafe-inline", lambda: bool(csp_problems(policy + "; style-src 'unsafe-inline'")))
+    expect("CSP without script-src", lambda: bool(csp_problems(policy.replace("script-src 'self'", ""))))
 
     indexed = shell(
         lang="en", title="Glassvow policy page",
@@ -1172,15 +1280,25 @@ def self_test() -> int:
         (site / DISPLAY_FONT).write_bytes(b"font")
         (site / DISPLAY_MANIFEST).write_text(json.dumps(
             {"text": corpus[:-1], "woff2_sha256": hashlib.sha256(b"other").hexdigest()}), encoding="utf-8")
+        media = teaser.load_manifest(SITE)
+        drifted = next(iter(media))
+        media[drifted] = {**media[drifted], "source_sha256": "0" * 64}
+        (site / teaser.MANIFEST).parent.mkdir(parents=True, exist_ok=True)
+        (site / teaser.MANIFEST).write_text(json.dumps({"outputs": media}), encoding="utf-8")
+        (site / teaser.MEDIA_DIR / "stray.webp").write_bytes(b"stray")
         stale = stale_paths(site, outputs)
         references = reference_problems(site, links)
         font = display_font_problems(site, corpus)
+        media_found = teaser.media_problems(site)
     expect("stale page", lambda: "STALE site/index.html" in stale)
     expect("missing page", lambda: "MISSING site/404.html" in stale)
     expect("third-party CSS import", lambda: any(item.startswith("EXTERNAL") for item in references))
     expect("dangling link", lambda: any(item.startswith("DANGLING /assets/icon.png") for item in references))
     expect("display font drift", lambda: any(item.startswith("DISPLAY_FONT") for item in font))
     expect("missing display glyph", lambda: any(corpus[-1] in item for item in font))
+    expect("media source drift", lambda: any(item.startswith("MEDIA_SOURCE") and drifted in item
+                                             for item in media_found))
+    expect("unlisted media", lambda: any(item.startswith("MEDIA_UNLISTED") for item in media_found))
     short_footer = ('<footer class="legal"><p>© EUGNEL LTD · '
                     '<a href="/company/">Company information</a></p></footer>')
     expect("missing company footer",
@@ -1213,6 +1331,40 @@ def self_test() -> int:
            lambda: any("Information Commissioner" in item for item in disclosure_errors(
                "privacy/index.html", f"{short_footer} Information Commissioner's Office")))
     html_pages = {rel: text.decode("utf-8") for rel, text in outputs.items() if rel.endswith(".html")}
+    teasers = {"en": html_pages["index.html"], "zh-Hant": html_pages["zh-hant/index.html"]}
+    if any(teaser_footer_errors(page, lang) + teaser.page_errors(page, lang) for lang, page in teasers.items()):
+        failures.append("built teaser pages fail their own rules")
+    four, game = teaser.platform_list("en"), structured_data(lang="en", title="T", description="D", canonical="/")
+    game["@graph"][1]["gamePlatform"] = list(teaser.GAME_PLATFORMS[:-1])
+    expect("json-ld platform drift", lambda: any("four platforms" in item for item in json_ld_errors(game)))
+    expect("guide platform drift", lambda: bool(platform_errors(
+        "faq/index.html", html_pages["faq/index.html"].replace(four, "iOS (App Store)"), "en")))
+    expect("iOS-only wording", lambda: bool(platform_errors(
+        "genre/index.html", html_pages["genre/index.html"] + "for iPhone and iPad", "en")))
+    expect("llms missing platforms", lambda: bool(llms_errors(
+        outputs["llms.txt"].decode().replace(teaser.platform_list("zh-Hant"), "iOS"))))
+    en, privacy = teasers["en"], f'<a href="{teaser.PRIVACY["en"]}">'
+    coming = f'<span class="platform-soon">{teaser.COPY["en"]["coming"]}</span>'
+    for label, check, page in (
+            ("teaser footer extra link", teaser_footer_errors, en.replace(
+                privacy, f'<a href="/terms/">Terms</a> · {privacy}')),
+            ("teaser footer unlinked ©", teaser_footer_errors, en.replace(
+                '<a href="/company/">© EUGNEL LTD</a>', "© EUGNEL LTD")),
+            ("teaser footer wrong company page", teaser_footer_errors, en.replace(
+                '<a href="/company/">', f'<a href="{COMPANY_HREF["zh-Hant"]}">')),
+            ("teaser footer missing privacy", teaser_footer_errors, en.replace(
+                f' · {privacy}{teaser.COPY["en"]["privacy"]}</a>', "")),
+            ("teaser missing support", teaser_footer_errors, en.replace(CONTACT, "help@example.com")),
+            ("fake store link", teaser.page_errors, en.replace(coming, f'<a href="/">{coming}</a>', 1)),
+            ("missing Steam", teaser.page_errors, en.replace(">Steam<", ">Itch<", 1)),
+            ("autoplay", teaser.page_errors, en.replace("<main", '<audio autoplay src="/a.ogg"></audio><main')),
+            ("sound on by default", teaser.page_errors, en.replace(
+                'type="button" aria-pressed="false"', 'type="button" aria-pressed="true"')),
+            ("release date", teaser.page_errors, en.replace("</h1>", "</h1><p>Spring 2027</p>")),
+            ("price", teaser.page_errors, en.replace("</h1>", "</h1><p>$4.99</p>")),
+            ("rating", teaser.page_errors, en.replace("</h1>", "</h1><p>★★★★★</p>")),
+            ("missing language switch", teaser.page_errors, en.replace('class="switch"', 'class="toggle"'))):
+        expect(label, lambda check=check, page=page: bool(check(page, "en")))
     if "company/index.html" not in outputs or "company/zh-hant/index.html" not in outputs:
         failures.append("company pages were not built")
     if any(disclosure_errors(rel, page) for rel, page in html_pages.items()):
@@ -1253,23 +1405,28 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--self-test", action="store_true", help="prove that each check can fail")
     mode.add_argument("--display-font", action="store_true",
                       help="re-subset the zh-Hant heading face (needs pyftsubset)")
+    mode.add_argument("--media", action="store_true",
+                      help="re-encode the teaser's art and sound (needs Pillow with AVIF, ffmpeg)")
     args = parser.parse_args(argv)
     if args.self_test:
         return self_test()
     try:
+        if args.media:
+            teaser.encode_media(SITE)
         outputs, links, corpus = build()
         if args.display_font:
             write_display_font(corpus)
         if not args.check:
             write_outputs(SITE, outputs)
         problems = (stale_paths(SITE, outputs) + reference_problems(SITE, links)
-                    + display_font_problems(SITE, corpus))
-    except (BuildError, OSError) as error:
+                    + display_font_problems(SITE, corpus) + teaser.media_problems(SITE))
+    except (BuildError, OSError, teaser.MediaError, subprocess.CalledProcessError) as error:
         print(f"site build FAILED: {error}", file=sys.stderr)
         return 1
     if problems:
         print(f"site {'check' if args.check else 'build'} FAILED; run python3 tools/build_site.py "
-              "(with --display-font for DISPLAY_* issues)\n" + "\n".join(problems), file=sys.stderr)
+              "(with --display-font for DISPLAY_* issues, --media for MEDIA_* issues)\n"
+              + "\n".join(problems), file=sys.stderr)
         return 1
     print(f"site {'is current' if args.check else 'written'}: {len(outputs)} files; "
           f"the zh-Hant heading face covers all {len(corpus)} display characters")

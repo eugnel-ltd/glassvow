@@ -5,7 +5,7 @@
     <loc>https://glassvow.eugnel.com/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://glassvow.eugnel.com/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://glassvow.eugnel.com/"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://glassvow.eugnel.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://glassvow.eugnel.com/zh-hant/"/>
   </url>
   <url>
     <loc>https://glassvow.eugnel.com/company/</loc>
@@ -66,5 +66,11 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://glassvow.eugnel.com/privacy/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://glassvow.eugnel.com/privacy/"/>
     <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://glassvow.eugnel.com/privacy/zh-hant/"/>
+  </url>
+  <url>
+    <loc>https://glassvow.eugnel.com/zh-hant/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://glassvow.eugnel.com/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://glassvow.eugnel.com/"/>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://glassvow.eugnel.com/zh-hant/"/>
   </url>
 </urlset>
