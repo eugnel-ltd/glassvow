@@ -1,6 +1,6 @@
 # Glassvow terms and refunds — review draft
 
-This is a proposed customer document for #753, not effective or published terms. A solicitor must review it before first public release. Owner decision of 19 October 2026: Glassvow is an EUGNEL LTD product and EUGNEL LTD is the data controller. The App Store app/IP transfer from James's individual Apple developer account is later and separate; until it happens the App Store still shows the individual seller, which is expected. An effective date and the final policy links are added only after solicitor review.
+This is a proposed customer document for #753, not effective or published terms. A solicitor must review it before first public release. Owner decision of 19 October 2026: Glassvow is an EUGNEL LTD product and EUGNEL LTD is the data controller. This draft names the controller and hello@eugnel.com only; company number, registered office and ICO registration live on the Company information page. The App Store app/IP transfer from James's individual Apple developer account is later and separate; until it happens the App Store still shows the individual seller, which is expected. An effective date and the final policy links are added only after solicitor review.
 
 ## Proposed terms
 

@@ -27,7 +27,7 @@ channels:
     package: io.fol2.glassvow        # export_presets.cfg; the Android phase follows iOS
     live_version: null
     live_since: null
-  # The static game site (site/, glassvow.eugnel.com): privacy policy and contact. It sells nothing.
+  # The static game site (site/, glassvow.eugnel.com): privacy policy, company information and contact. It sells nothing.
   web:
     domain: glassvow.eugnel.com
     live_version: null

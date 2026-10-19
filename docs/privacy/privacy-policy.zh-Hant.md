@@ -8,7 +8,7 @@
 
 ## 1. 我們是誰
 
-《琉璃誓言》由 EUGNEL LTD（下稱「我們」）製作。EUGNEL LTD 於英格蘭及威爾斯註冊，公司編號 17505169。我們已向資訊委員會（ICO）登記，登記編號 ZC277339。你可透過 hello@eugnel.com 聯絡我們。
+《琉璃誓言》由 EUGNEL LTD（下稱「我們」）製作。你可透過 hello@eugnel.com 聯絡我們。公司資料見[公司資料](/company/zh-hant/)頁。
 
 ## 2. 遊戲會收集甚麼
 
@@ -68,7 +68,7 @@ Sentry 會把錯誤及當機報告保留最多 90 日（實際期限視乎 Sentr
 
 ## 8. 聯絡我們
 
-EUGNEL LTD，於英格蘭及威爾斯註冊，公司編號 17505169：hello@eugnel.com
+EUGNEL LTD：hello@eugnel.com
 
 如果你覺得我們處理你的資料有問題，你有權先向我們投訴。請電郵至 hello@eugnel.com，說明發生了甚麼事。你無須填寫特定表格。我們會在收到投訴後 30 日內確認已收到。然後我們會盡快查清楚，並告訴你結果，不得無故拖延。
 

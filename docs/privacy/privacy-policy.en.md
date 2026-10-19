@@ -8,7 +8,7 @@ Glassvow (琉璃誓言) is a single-player card game for iPhone and iPad. This p
 
 ## 1. Who we are
 
-Glassvow is made by EUGNEL LTD, registered in England & Wales, company no. 17505169 ("we", "us"). We are registered with the Information Commission (ICO), registration number ZC277339. You can reach us at hello@eugnel.com.
+Glassvow is made by EUGNEL LTD ("we", "us"). You can reach us at hello@eugnel.com. Company details are on the [Company information](/company/) page.
 
 ## 2. What the game collects
 
@@ -68,7 +68,7 @@ We may update this page from time to time. The date at the top shows the latest 
 
 ## 8. Contact
 
-EUGNEL LTD, registered in England & Wales, company no. 17505169: hello@eugnel.com
+EUGNEL LTD: hello@eugnel.com
 
 If you think we have used your information in a way that is not allowed, you have the right to complain to us first. Email hello@eugnel.com and tell us what happened. You do not need a special form. We will acknowledge your complaint within 30 days of receiving it. We will then look into it and tell you the outcome without undue delay.
 
