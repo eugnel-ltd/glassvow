@@ -49,7 +49,7 @@ baseline:
   accounts: excluded         # no accounts, chat or online features (docs/privacy/privacy-policy.en.md)
   durable_data: done         # saves stay on the device (the v2 save lineage, AGENTS.md)
   payments: missing          # #426 records account setup; current sale/price proof still pending (#755)
-  legal: missing             # privacy policy prepared; deployment unconfirmed (docs/privacy/README.md); no terms yet
+  legal: missing             # EUGNEL LTD named as controller; live page deploy and solicitor review still open (#753)
   observability: done        # Sentry pgnetwork/glassvow
   support: done              # glassvow@eugnel.com on the site and in the privacy policy
   listing: missing           # bilingual text in docs/product/listing/; live fields/assets not verified (#427)

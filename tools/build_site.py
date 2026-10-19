@@ -40,6 +40,37 @@ ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
 ORIGIN = "https://glassvow.eugnel.com"
 CONTACT = "glassvow@eugnel.com"
+PRIVACY_CONTACT = "hello@eugnel.com"
+# Companies Act / e-commerce disclosure: once per page, including home and 404.
+# Ampersand is escaped when this line is written to HTML.
+COMPANY_FOOTER = (
+    "EUGNEL LTD · Registered in England & Wales · Company no. 17505169 · "
+    "Registered office: 122 New Road, Ascot, SL5 8QH · hello@eugnel.com"
+)
+COMPANY_NUMBER = "17505169"
+ICO_NUMBER = "ZC277339"
+OLD_CONTROLLER = "James TO"
+RETIRED_REGULATOR = "Information Commissioner"
+RETIRED_REGULATOR_ZH = "資訊專員"
+PRIVACY_EN_REQUIRED = (
+    "EUGNEL LTD",
+    "company no. 17505169",
+    "registered with the Information Commission (ICO), registration number ZC277339",
+    "https://ico.org.uk/make-a-complaint/",
+    PRIVACY_CONTACT,
+    "within 30 days",
+    "without undue delay",
+)
+PRIVACY_ZH_REQUIRED = (
+    "EUGNEL LTD",
+    "公司編號 17505169",
+    "資訊委員會（ICO）",
+    ICO_NUMBER,
+    "https://ico.org.uk/make-a-complaint/",
+    PRIVACY_CONTACT,
+    "30 日",
+    "不得無故拖延",
+)
 # Each language names itself, as the game's language selector does.
 LANGUAGE_NAMES = {"en": "English", "zh-Hant": "繁體中文"}
 
@@ -220,13 +251,19 @@ def shell(*, lang: str, title: str, description: str, body: list[str],
     return "\n".join(head + body + ["</body>", "</html>", ""])
 
 
+def company_footer() -> list[str]:
+    line = html.escape(COMPANY_FOOTER).replace(PRIVACY_CONTACT, email(PRIVACY_CONTACT))
+    return ['<footer class="legal">', f"  <p>{line}</p>", "</footer>"]
+
+
 def policy_page(policy: Policy, twin: Policy, article: list[str]) -> str:
     bar = [f'  <a class="brand display" href="/">{policy.brand}</a>',
            f'  <a class="switch" href="{twin.path}" hreflang="{twin.lang}" '
            f'lang="{twin.lang}">{LANGUAGE_NAMES[twin.lang]}</a>']
     body = (['<header class="masthead">', *bar, "</header>", "<main>"]
             + [f"  {line}" for line in article]
-            + ["</main>", '<footer class="colophon">', *bar, "</footer>"])
+            + ["</main>", '<footer class="colophon">', *bar, "</footer>"]
+            + company_footer())
     alternates = tuple((item.lang, item.path) for item in POLICIES)
     return shell(lang=policy.lang, title=f"{policy.name} · {policy.brand}",
                  description=policy.description, body=body, canonical=policy.path,
@@ -251,6 +288,7 @@ def home_page() -> str:
         '  <p class="support">Support · <span lang="zh-Hant">支援</span></p>',
         f'  <p class="address">{email(CONTACT)}</p>',
         "</main>",
+        *company_footer(),
     ]
     return shell(lang="en", title="Glassvow · 琉璃誓言", body=body, canonical="/",
                  description="Glassvow (琉璃誓言), a single-player card game for iPhone and "
@@ -265,6 +303,7 @@ def not_found_page() -> str:
         '  <h1 class="lost">Page not found <span lang="zh-Hant">找不到此頁面</span></h1>',
         *policy_panes(),
         "</main>",
+        *company_footer(),
     ]
     return shell(lang="en", title="Page not found · Glassvow", body=body,
                  description="There is no page at this address on the Glassvow site.",
@@ -340,6 +379,30 @@ class PageAudit(HTMLParser):
             self.display.append(data)
 
 
+def disclosure_errors(relative: str, page: str) -> list[str]:
+    """Company footer and 2026 controller/regulator wording that every page must keep."""
+    errors = []
+    if page.count('class="legal"') != 1:
+        errors.append("needs exactly one company footer")
+    if COMPANY_NUMBER not in page or "122 New Road, Ascot, SL5 8QH" not in page:
+        errors.append("company footer is missing the registered name, number or office")
+    if PRIVACY_CONTACT not in page:
+        errors.append(f"company footer is missing {PRIVACY_CONTACT}")
+    if OLD_CONTROLLER in page:
+        errors.append("still names James TO")
+    if RETIRED_REGULATOR in page:
+        errors.append("uses retired Information Commissioner wording")
+    if RETIRED_REGULATOR_ZH in page:
+        errors.append("uses retired 資訊專員 wording")
+    if relative.startswith("privacy/"):
+        required = PRIVACY_ZH_REQUIRED if "zh-hant" in relative else PRIVACY_EN_REQUIRED
+        errors.extend(f"missing {item!r}" for item in required if item not in page)
+        lowered = page.lower()
+        if "application reference" in lowered or "c2062045" in lowered:
+            errors.append("ICO registration still uses pending/application wording")
+    return errors
+
+
 def audit_page(page: str) -> PageAudit:
     audit = PageAudit()
     audit.feed(page)
@@ -364,7 +427,12 @@ def build() -> tuple[dict[str, bytes], set[str], str]:
     pages: dict[str, str] = {}
     for index, policy in enumerate(POLICIES):
         try:
-            article = render_markdown((ROOT / policy.source).read_text(encoding="utf-8"), policy.lang)
+            source = (ROOT / policy.source).read_text(encoding="utf-8")
+            if OLD_CONTROLLER in source:
+                raise BuildError(f"still names {OLD_CONTROLLER}")
+            if RETIRED_REGULATOR in source or RETIRED_REGULATOR_ZH in source:
+                raise BuildError("uses retired Information Commissioner wording")
+            article = render_markdown(source, policy.lang)
         except BuildError as error:
             raise BuildError(f"{policy.source}: {error}") from None
         pages[page_file(policy.path)] = policy_page(policy, POLICIES[1 - index], article)
@@ -374,6 +442,7 @@ def build() -> tuple[dict[str, bytes], set[str], str]:
     corpus: set[str] = set()
     for relative, page in pages.items():
         audit = audit_page(page)
+        audit.errors.extend(disclosure_errors(relative, page))
         if audit.errors:
             raise BuildError(f"site/{relative}: " + "; ".join(audit.errors))
         links |= audit.links
@@ -525,6 +594,18 @@ def self_test() -> int:
     expect("dangling link", lambda: any(item.startswith("DANGLING /assets/icon.png") for item in references))
     expect("display font drift", lambda: any(item.startswith("DISPLAY_FONT") for item in font))
     expect("missing display glyph", lambda: any(corpus[-1] in item for item in font))
+    expect("missing company footer",
+           lambda: "needs exactly one company footer" in disclosure_errors("index.html", "<html></html>"))
+    expect("old controller name",
+           lambda: "still names James TO" in disclosure_errors(
+               "privacy/index.html", f'<footer class="legal"></footer>{COMPANY_NUMBER} 122 New Road, Ascot, SL5 8QH {PRIVACY_CONTACT} James TO'))
+    expect("retired regulator wording",
+           lambda: any("Information Commissioner" in item for item in disclosure_errors(
+               "privacy/index.html",
+               f'<footer class="legal"></footer>{COMPANY_NUMBER} 122 New Road, Ascot, SL5 8QH {PRIVACY_CONTACT} Information Commissioner\'s Office')))
+    html_pages = {rel: text.decode("utf-8") for rel, text in outputs.items() if rel.endswith(".html")}
+    if any(disclosure_errors(rel, page) for rel, page in html_pages.items()):
+        failures.append("built pages fail the company/privacy disclosure contract")
     if failures:
         print(f"site self-test FAILED: {', '.join(failures)}", file=sys.stderr)
         return 1

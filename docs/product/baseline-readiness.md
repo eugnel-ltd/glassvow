@@ -20,7 +20,7 @@ Apple's app ID is stored as the iOS store identifier for the known paid app. It 
 
 | Issue | Available output | Exact remaining dependency |
 |---|---|---|
-| #753 | Existing two-language privacy pages plus new two-language terms/refund drafts; product-specific consent and renderer assessment in `docs/legal/` | Confirmed company privacy address/ICO/entity, solicitor review, #415/#420 observed disclosures and current ASC answers; publication only after required proof |
+| #753 | Two-language privacy pages naming EUGNEL LTD as controller, 2026 UK data-law complaints wording, site-wide company footer, plus terms/refund drafts in `docs/legal/` | Deploy the updated pages, solicitor review, #415/#420 observed disclosures and current ASC answers; `baseline.legal` stays missing until that proof exists |
 | #754 | Complete local bilingual iOS text JSON and first-release note; known signed price and historical app identity | Current ASC field validation/readback, Chinese keyword entry check, #425 choices, accepted #545/#546 asset slots and final #108/#541 identity |
 | #755 | Existing paid-download SKU/app ID registered in the manifest; #426's completed account proof linked | Current account/price/configured-availability reads, agreed interpretation of any generic entitlement requirement and authorised storefront policy; #429 purchase/download smoke is a separate post-release check |
 
