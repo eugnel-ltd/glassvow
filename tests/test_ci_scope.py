@@ -43,6 +43,7 @@ class ScopeFixtureTests(unittest.TestCase):
             "site/assets/fonts/NotoSerifTC-SemiBold-display.woff2",
             "site/privacy/zh-hant/index.html",
             "tools/build_site.py",
+            "tools/teaser_page.py",
         ])
         self.assert_scopes(selection, "docs")
         self.assertTrue(selection.checks["run_privacy_site"])

@@ -229,12 +229,14 @@ def _scope_matches(path: str) -> set[str]:
                          "scripts/record_decision.sh", "tests/test_record_decision.py"}):
         matches.add("agent_config")
 
-    # site/ is the published privacy policy, generated from docs/privacy/.
+    # site/ is the published site (privacy policy, guides, teaser home), generated
+    # by tools/build_site.py with tools/teaser_page.py.
     if (_starts(lower, "docs/", ".grok/history/", "site/")
             or lower.endswith((".md", ".markdown"))
             or lower in {"license", "tools/check_anchors.py",
                          "tools/check_benchmark_freeze.py",
-                         "tools/benchmark-citations.txt", "tools/build_site.py"}):
+                         "tools/benchmark-citations.txt", "tools/build_site.py",
+                         "tools/teaser_page.py"}):
         matches.add("docs")
 
     release_named = any(token in lower for token in (
