@@ -1,10 +1,10 @@
 # 常見問題
 
-《琉璃誓言》（Glassvow）是一款供 iPhone 及 iPad 使用的單人卡牌遊戲。先是短答，再補說明。
+《琉璃誓言》（Glassvow）是一款單人卡牌遊戲，即將登陸 iOS（App Store）、Android（Google Play）、Amazon Appstore 及 Steam（PC）。先是短答，再補說明。
 
 ## 琉璃誓言是甚麼遊戲？
 
-《琉璃誓言》（Glassvow）是一款供 iPhone 及 iPad 使用的單人卡牌遊戲。
+《琉璃誓言》（Glassvow）是一款單人卡牌遊戲，即將登陸 iOS（App Store）、Android（Google Play）、Amazon Appstore 及 Steam（PC）。
 
 它也是一場彩窗上的朝聖，以及一款 Roguelike 牌組構築遊戲。由 EUGNEL LTD 製作。本站說明遊戲，並不售賣。
 
@@ -32,6 +32,6 @@ EUGNEL LTD 製作《琉璃誓言》。
 
 ## 可以在哪裏玩琉璃誓言？
 
-《琉璃誓言》是一款供 iPhone 及 iPad 使用的卡牌遊戲。
+《琉璃誓言》即將登陸 iOS（App Store）、Android（Google Play）、Amazon Appstore 及 Steam（PC）。
 
-本頁不列出推出日期、現價或其他店面。
+遊戲尚未推出，所以本頁不列出推出日期、價格或商店連結。

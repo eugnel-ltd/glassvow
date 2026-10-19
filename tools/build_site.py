@@ -72,9 +72,11 @@ COMPANY_LABEL = {"en": "Company information", "zh-Hant": "公司資料"}
 ORGANIZATION_NAME = "EUGNEL LTD"
 GAME_NAME = "Glassvow"
 GAME_ALTERNATE_NAME = "琉璃誓言"
-GAME_DESCRIPTION = (
-    "Glassvow (琉璃誓言) is a single-player card game for iPhone and iPad."
-)
+GAME_DESCRIPTION = f"Glassvow (琉璃誓言) is a single-player card game coming soon to {teaser.platform_list('en')}."
+GAME_DESCRIPTION_ZH = f"《琉璃誓言》（Glassvow）是一款單人卡牌遊戲，即將登陸 {teaser.platform_list('zh-Hant')}。"
+# The privacy policy describes the iOS build as it exists today; every other page
+# names all four platforms (teaser.GAME_PLATFORMS) and never the iOS-only wording.
+IOS_ONLY = ("iPhone and iPad", "iPhone 及 iPad")
 TITLE_BOUNDS = (8, 70)
 DESCRIPTION_BOUNDS = (50, 160)
 OG_IMAGE = "assets/og.png"
@@ -171,10 +173,10 @@ COMPANY_PAGES = (
 )
 FAQ_PAGES = (
     Policy("en", "docs/site/faq.en.md", "/faq/", "FAQ", "Glassvow",
-           "Answers about Glassvow (琉璃誓言): what it is, who makes it, iPhone and iPad, "
-           "saves, ads, and how to reach EUGNEL LTD.", "faq"),
+           "Answers about Glassvow (琉璃誓言): what it is, who makes it, which platforms it is "
+           "coming to, saves, ads, and how to reach EUGNEL LTD.", "faq"),
     Policy("zh-Hant", "docs/site/faq.zh-Hant.md", "/faq/zh-hant/", "常見問題", "琉璃誓言",
-           "《琉璃誓言》（Glassvow）常見問題：這是甚麼遊戲、誰製作、iPhone 及 iPad、存檔、廣告，"
+           "《琉璃誓言》（Glassvow）常見問題：這是甚麼遊戲、誰製作、即將登陸哪些平台、存檔、廣告，"
            "以及如何聯絡 EUGNEL LTD。", "faq"),
 )
 PLAY_PAGES = (
@@ -183,16 +185,15 @@ PLAY_PAGES = (
            "glass, spend light, and shatter what blocks the way."),
     Policy("zh-Hant", "docs/site/play.zh-Hant.md", "/play/zh-hant/", "玩法", "琉璃誓言",
            "《琉璃誓言》怎麼玩：提燈離開守夜之爐向東走，組一副琉璃牌，花費光，打碎擋路之物。"
-           "單人卡牌遊戲，供 iPhone 及 iPad 使用。"),
+           f"單人卡牌遊戲，即將登陸 {teaser.platform_list('zh-Hant')}。"),
 )
 GENRE_PAGES = (
     Policy("en", "docs/site/genre.en.md", "/genre/", "A roguelite deckbuilder", "Glassvow",
-           "Glassvow is a single-player roguelite deckbuilder for iPhone and iPad, told as a "
-           "stained-glass pilgrimage. No accounts and no ads."),
+           f"Glassvow, a stained-glass roguelite deckbuilder, coming soon to {teaser.platform_list('en')}."),
     Policy("zh-Hant", "docs/site/genre.zh-Hant.md", "/genre/zh-hant/", "Roguelike 牌組構築",
            "琉璃誓言",
-           "《琉璃誓言》是一款供 iPhone 及 iPad 使用的單人 Roguelike 牌組構築遊戲，亦是一場彩窗上的朝聖。"
-           "沒有帳戶，沒有廣告。"),
+           "《琉璃誓言》是一款單人 Roguelike 牌組構築遊戲，亦是一場彩窗上的朝聖，"
+           f"即將登陸 {teaser.platform_list('zh-Hant')}。"),
 )
 PAGE_GROUPS = (POLICIES, COMPANY_PAGES, FAQ_PAGES, PLAY_PAGES, GENRE_PAGES)
 
@@ -356,9 +357,13 @@ def entity_errors() -> list[str]:
         "game_en": GAME_NAME,
         "game_zh": GAME_ALTERNATE_NAME,
         "short_en": GAME_DESCRIPTION,
+        "short_zh": GAME_DESCRIPTION_ZH,
     }
     errors.extend(f"entity {key} != {want!r}" for key, want in expected.items()
                   if values.get(key) != want)
+    errors.extend(f"platform {platform!r} does not name store {store!r}"
+                  for store, platform in zip(teaser.PLATFORMS, teaser.GAME_PLATFORMS, strict=True)
+                  if store not in platform)
     names = {"en-US": "game_en", "zh-Hant": "game_zh"}
     subs = {"en-US": "subtitle_en", "zh-Hant": "subtitle_zh"}
     for locale, path in LISTING_JSON.items():
@@ -428,7 +433,8 @@ def structured_data(*, lang: str, title: str, description: str, canonical: str,
         {"@type": ["VideoGame", "MobileApplication"], "@id": game_id, "name": GAME_NAME,
          "alternateName": GAME_ALTERNATE_NAME, "url": page_url("/"),
          "description": GAME_DESCRIPTION, "inLanguage": ["en", "zh-Hant"],
-         "operatingSystem": "iOS", "applicationCategory": "GameApplication",
+         "operatingSystem": teaser.OPERATING_SYSTEMS, "gamePlatform": list(teaser.GAME_PLATFORMS),
+         "applicationCategory": "GameApplication",
          "author": {"@id": org_id}, "publisher": {"@id": org_id}, "image": image},
         {"@type": "WebPage", "@id": f"{page}#webpage", "url": page, "name": title,
          "description": description, "inLanguage": lang,
@@ -543,6 +549,18 @@ def teaser_footer_errors(page: str, lang: str) -> list[str]:
                       "and the privacy link")
     if CONTACT not in page:
         errors.append(f"teaser must show the support address {CONTACT}")
+    return errors
+
+
+def platform_errors(relative: str, page: str, lang: str) -> list[str]:
+    """Guides and teasers name all four platforms; only the privacy policy stays iOS-only."""
+    text = html.unescape(page)
+    errors = [f"still says only {phrase!r}" for phrase in IOS_ONLY
+              if phrase in text and not relative.startswith("privacy/")]
+    named = {item.path for group in (FAQ_PAGES, PLAY_PAGES, GENRE_PAGES) for item in group}
+    path = "/" + relative.removesuffix("index.html")
+    if path in named | set(teaser.HOME.values()) and teaser.platform_list(lang) not in text:
+        errors.append(f"must name the four platforms as {teaser.platform_list(lang)!r}")
     return errors
 
 
@@ -827,6 +845,11 @@ def json_ld_errors(data: object, *, require_faq: bool = False,
             extras = {"address", "taxID", "leiCode", "identifier", "legalName"}
             if extras & node.keys():
                 errors.append("Organization must not include address or company identifiers")
+        if "VideoGame" in node_types(node) and (
+                node.get("gamePlatform") != list(teaser.GAME_PLATFORMS)
+                or node.get("operatingSystem") != teaser.OPERATING_SYSTEMS
+                or node.get("description") != GAME_DESCRIPTION):
+            errors.append("VideoGame must name the four platforms and the entity description")
         if "FAQPage" in node_types(node) and visible_faq is not None:
             entities = node.get("mainEntity") if isinstance(node.get("mainEntity"), list) else []
             encoded = []
@@ -942,7 +965,7 @@ def llms_txt() -> bytes:
 
 def llms_errors(text: str) -> list[str]:
     required = (
-        GAME_NAME, GAME_ALTERNATE_NAME, ORGANIZATION_NAME, GAME_DESCRIPTION,
+        GAME_NAME, GAME_ALTERNATE_NAME, ORGANIZATION_NAME, GAME_DESCRIPTION, GAME_DESCRIPTION_ZH,
         page_url("/"), page_url("/zh-hant/"), page_url("/faq/"), page_url("/play/"), page_url("/genre/"),
         page_url("/privacy/"), page_url("/company/"),
         page_url("/faq/zh-hant/"), page_url("/play/zh-hant/"),
@@ -1019,6 +1042,7 @@ def build() -> tuple[dict[str, bytes], set[str], str]:
         audit = audit_page(page)
         audit.errors.extend(disclosure_errors(relative, page))
         audit.errors.extend(seo_errors(relative, audit, page))
+        audit.errors.extend(platform_errors(relative, page, audit.lang))
         for lang in (lang for lang, path in teasers.items() if path == relative):
             audit.errors += teaser_footer_errors(page, lang) + teaser.page_errors(page, lang)
         if audit.errors:
@@ -1310,6 +1334,15 @@ def self_test() -> int:
     teasers = {"en": html_pages["index.html"], "zh-Hant": html_pages["zh-hant/index.html"]}
     if any(teaser_footer_errors(page, lang) + teaser.page_errors(page, lang) for lang, page in teasers.items()):
         failures.append("built teaser pages fail their own rules")
+    four, game = teaser.platform_list("en"), structured_data(lang="en", title="T", description="D", canonical="/")
+    game["@graph"][1]["gamePlatform"] = list(teaser.GAME_PLATFORMS[:-1])
+    expect("json-ld platform drift", lambda: any("four platforms" in item for item in json_ld_errors(game)))
+    expect("guide platform drift", lambda: bool(platform_errors(
+        "faq/index.html", html_pages["faq/index.html"].replace(four, "iOS (App Store)"), "en")))
+    expect("iOS-only wording", lambda: bool(platform_errors(
+        "genre/index.html", html_pages["genre/index.html"] + "for iPhone and iPad", "en")))
+    expect("llms missing platforms", lambda: bool(llms_errors(
+        outputs["llms.txt"].decode().replace(teaser.platform_list("zh-Hant"), "iOS"))))
     en, privacy = teasers["en"], f'<a href="{teaser.PRIVACY["en"]}">'
     coming = f'<span class="platform-soon">{teaser.COPY["en"]["coming"]}</span>'
     for label, check, page in (

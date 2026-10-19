@@ -29,8 +29,21 @@ STYLESHEET = "/assets/teaser.css"
 HOME = {"en": "/", "zh-Hant": "/zh-hant/"}
 NAME = {"en": "Glassvow", "zh-Hant": "琉璃誓言"}
 PRIVACY = {"en": "/privacy/", "zh-Hant": "/privacy/zh-hant/"}
-# Unreleased: plain names only, never store badges, links, dates or prices.
+# Owner decision, 19 October 2026: all four are coming soon. Unreleased, so plain
+# names only, never store badges, links, dates or prices. One store per platform.
 PLATFORMS = ("App Store", "Google Play", "Amazon Appstore", "Steam")
+GAME_PLATFORMS = ("iOS (App Store)", "Android (Google Play)", "Amazon Appstore", "Steam (PC)")
+OPERATING_SYSTEMS = "iOS, Android"
+
+
+def platform_list(lang: str) -> str:
+    """The four platforms as one phrase, worded the same on every page and in the entity."""
+    if lang == "en":
+        return f"{', '.join(GAME_PLATFORMS[:-1])} and {GAME_PLATFORMS[-1]}"
+    wide = [name.replace(" (", "（").replace(")", "）") for name in GAME_PLATFORMS]
+    return f"{'、'.join(wide[:-1])} 及 {wide[-1]}"
+
+
 ART = "assets/art/"
 SCENES = ("opening-hearth", "night-stall", "act4-node4", "act4-node1", "act4-node2")
 CARDS = ("cleave", "eclipseSlash", "aegis", "emberdance", "totality", "dimTheGlass", "annihilate")
@@ -95,9 +108,8 @@ SOUNDS = (
 COPY = {
     "en": {
         "title": "Glassvow · 琉璃誓言 — a stained-glass roguelite deckbuilder",
-        "description": "Glassvow (琉璃誓言), a single-player roguelite deckbuilder told as a "
-                       "stained-glass pilgrimage. Coming soon to App Store, Google Play, "
-                       "Amazon Appstore and Steam.",
+        "description": "Glassvow (琉璃誓言): a stained-glass roguelite deckbuilder, coming soon to "
+                       f"{platform_list('en')}.",
         "kicker": "A pilgrimage in stained glass",
         "lede": "A single-player roguelite deckbuilder. Build a deck of glass, spend light, "
                 "and shatter what blocks the way.",
@@ -121,7 +133,7 @@ COPY = {
     "zh-Hant": {
         "title": "琉璃誓言 Glassvow — 彩窗上的朝聖之路",
         "description": "《琉璃誓言》（Glassvow）是一款單人 Roguelike 牌組構築遊戲，亦是一場彩窗上的朝聖。"
-                       "即將登陸 App Store、Google Play、Amazon Appstore 及 Steam。",
+                       f"即將登陸 {platform_list('zh-Hant')}。",
         "kicker": "彩窗上的朝聖之路",
         "lede": "單人 Roguelike 牌組構築遊戲。組一副琉璃牌，花費光，打碎擋路之物。",
         "soon_on": "即將登陸",

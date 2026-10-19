@@ -1,7 +1,7 @@
 # Glassvow
 
-Glassvow (琉璃誓言) is a single-player card game for iPhone and iPad.
-《琉璃誓言》（Glassvow）是一款供 iPhone 及 iPad 使用的單人卡牌遊戲。
+Glassvow (琉璃誓言) is a single-player card game coming soon to iOS (App Store), Android (Google Play), Amazon Appstore and Steam (PC).
+《琉璃誓言》（Glassvow）是一款單人卡牌遊戲，即將登陸 iOS（App Store）、Android（Google Play）、Amazon Appstore 及 Steam（PC）。
 
 Developer: EUGNEL LTD
 Site: https://glassvow.eugnel.com/

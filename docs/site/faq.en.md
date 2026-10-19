@@ -1,10 +1,10 @@
 # FAQ
 
-Glassvow (琉璃誓言) is a single-player card game for iPhone and iPad. Short answers first; detail follows.
+Glassvow (琉璃誓言) is a single-player card game coming soon to iOS (App Store), Android (Google Play), Amazon Appstore and Steam (PC). Short answers first; detail follows.
 
 ## What is Glassvow?
 
-Glassvow (琉璃誓言) is a single-player card game for iPhone and iPad.
+Glassvow (琉璃誓言) is a single-player card game coming soon to iOS (App Store), Android (Google Play), Amazon Appstore and Steam (PC).
 
 It is also a stained-glass pilgrimage and a roguelite deckbuilder. EUGNEL LTD makes it. This site explains the game; it does not sell it.
 
@@ -32,6 +32,6 @@ English and Traditional Chinese (繁體中文).
 
 ## Where can I play Glassvow?
 
-Glassvow is a card game for iPhone and iPad.
+Glassvow is coming soon to iOS (App Store), Android (Google Play), Amazon Appstore and Steam (PC).
 
-This page does not list a release date, a live price, or other storefronts.
+It is not out yet, so this page lists no release date, price or store link.
