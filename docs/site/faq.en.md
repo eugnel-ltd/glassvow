@@ -24,7 +24,7 @@ Saved games stay on your device. Deleting the game removes them. The game may se
 
 Glassvow is a roguelite deckbuilder and a stained-glass pilgrimage.
 
-You build a deck of glass, spend light, and walk east from the Vigil with a lantern. There is a longer note under [How to play](/play/) and [A roguelite deckbuilder](/genre/).
+You build a deck of glass, kindle the lantern, and walk east from the Vigil with a lantern. There is a longer note under [How to play](/play/) and [A roguelite deckbuilder](/genre/).
 
 ## Which languages does Glassvow use?
 

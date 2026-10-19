@@ -1,6 +1,6 @@
 # How to play
 
-Glassvow is a single-player card game: walk east from the Vigil with a lantern, build a deck of glass, spend light, and shatter what blocks the way.
+Glassvow is a single-player card game: walk east from the Vigil with a lantern, build a deck of glass, kindle the lantern, and shatter what blocks the way.
 
 ## The road
 
@@ -8,7 +8,7 @@ A fire was cut into six pieces and scattered along the road. Gather what was bro
 
 ## The cards
 
-It is also a roguelite deckbuilder. Build a deck of glass. Spend light. Shatter what blocks the way.
+It is also a roguelite deckbuilder. Build a deck of glass. Kindle the lantern. Shatter what blocks the way.
 
 Losses return you to the road. There is no account and no online play.
 

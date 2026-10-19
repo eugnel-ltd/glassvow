@@ -182,9 +182,9 @@ FAQ_PAGES = (
 PLAY_PAGES = (
     Policy("en", "docs/site/play.en.md", "/play/", "How to play", "Glassvow",
            "How to play Glassvow: walk east from the Vigil with a lantern, build a deck of "
-           "glass, spend light, and shatter what blocks the way."),
+           "glass, kindle the lantern, and shatter what blocks the way."),
     Policy("zh-Hant", "docs/site/play.zh-Hant.md", "/play/zh-hant/", "玩法", "琉璃誓言",
-           "《琉璃誓言》怎麼玩：提燈離開守夜之爐向東走，組一副琉璃牌，花費光，打碎擋路之物。"
+           "《琉璃誓言》怎麼玩：提燈離開守夜之爐向東走，組一副琉璃牌，點燃提燈，打碎擋路之物。"
            f"單人卡牌遊戲，即將登陸 {teaser.platform_list('zh-Hant')}。"),
 )
 GENRE_PAGES = (

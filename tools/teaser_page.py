@@ -45,7 +45,7 @@ def platform_list(lang: str) -> str:
 
 
 ART = "assets/art/"
-SCENES = ("opening-hearth", "night-stall", "act4-node4", "act4-node1", "act4-node2")
+SCENES = ("opening-hearth", "night-stall")
 CARDS = ("cleave", "eclipseSlash", "aegis", "emberdance", "totality", "dimTheGlass", "annihilate")
 BACKS = ("vault", "rose", "eclipse")
 ASPECTS = ("ashwarden", "duskblade")
@@ -111,7 +111,7 @@ COPY = {
         "description": "Glassvow (琉璃誓言): a stained-glass roguelite deckbuilder, coming soon to "
                        f"{platform_list('en')}.",
         "kicker": "A pilgrimage in stained glass",
-        "lede": "A single-player roguelite deckbuilder. Build a deck of glass, spend light, "
+        "lede": "A single-player roguelite deckbuilder. Build a deck of glass, kindle the lantern, "
                 "and shatter what blocks the way.",
         "soon_on": "Available soon on",
         "coming": "Coming soon",
@@ -119,10 +119,9 @@ COPY = {
         "fire": "A fire was cut into six pieces and scattered along the road.",
         "fire_after": "Gather what was broken. Light the rose.",
         "road": "The road",
-        "road_lines": ("Walk east from the Vigil with a lantern.", None, "The pilgrimage continues.", None,
-                       "Open the sealed door at the far end."),
+        "road_lines": ("Walk east from the Vigil with a lantern.", None),
         "deck_kicker": "A roguelite deckbuilder",
-        "deck": "Build a deck of glass. Spend light.",
+        "deck": "Build a deck of glass. Kindle the lantern.",
         "foes": "Shatter what blocks the way.",
         "soon": "Available soon",
         "facts": "Single-player · No accounts · No ads",
@@ -135,16 +134,16 @@ COPY = {
         "description": "《琉璃誓言》（Glassvow）是一款單人 Roguelike 牌組構築遊戲，亦是一場彩窗上的朝聖。"
                        f"即將登陸 {platform_list('zh-Hant')}。",
         "kicker": "彩窗上的朝聖之路",
-        "lede": "單人 Roguelike 牌組構築遊戲。組一副琉璃牌，花費光，打碎擋路之物。",
+        "lede": "單人 Roguelike 牌組構築遊戲。組一副琉璃牌，點燃提燈，打碎擋路之物。",
         "soon_on": "即將登陸",
         "coming": "即將推出",
         "sound": ("聲音：關", "聲音：開"),
         "fire": "一團火被裁成六片，散落於路。",
         "fire_after": "尋回碎去的東西。點亮彩窗。",
         "road": "長路",
-        "road_lines": ("提燈離開守夜之爐向東走。", None, "朝聖仍在繼續。", None, "打開路盡頭的封門。"),
+        "road_lines": ("提燈離開守夜之爐向東走。", None),
         "deck_kicker": "Roguelike 牌組構築",
-        "deck": "組一副琉璃牌，花費光。",
+        "deck": "組一副琉璃牌，點燃提燈。",
         "foes": "打碎擋路之物。",
         "soon": "即將推出",
         "facts": "單人遊戲 · 沒有帳戶 · 沒有廣告",
@@ -154,9 +153,8 @@ COPY = {
     },
 }
 # Road kickers, and the lines COPY leaves as None, come from the game's own strings.
-ROAD_KEYS = ("ui.vigil.title", "ui.shop.title", "ui.help.roadTitle", "ui.dawn.quietTitle",
-             "ui.map.sealedDoor.title")
-ROAD_LINE_KEYS = (None, "ui.shop.cardRemoval.confirmBody", None, "ui.dawn.subtitle", None)
+ROAD_KEYS = ("ui.vigil.title", "ui.shop.title")
+ROAD_LINE_KEYS = (None, "ui.shop.cardRemoval.confirmBody")
 
 
 def digest(path: Path) -> str:
