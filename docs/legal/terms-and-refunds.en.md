@@ -1,6 +1,6 @@
 # Glassvow terms and refunds — review draft
 
-This is a proposed customer document for #753, not effective or published terms. A solicitor must review it before first public release. Confirm the contracting entity against the actual seller record: company facts name EUGNEL LTD, while the existing privacy policy names James TO. Do not replace that policy's identity by inference. An effective date and the final policy links are added only after those checks.
+This is a proposed customer document for #753, not effective or published terms. A solicitor must review it before first public release. Owner decision of 19 October 2026: Glassvow is an EUGNEL LTD product and EUGNEL LTD is the data controller. The App Store app/IP transfer from James's individual Apple developer account is later and separate; until it happens the App Store still shows the individual seller, which is expected. An effective date and the final policy links are added only after solicitor review.
 
 ## Proposed terms
 
@@ -16,7 +16,7 @@ Glassvow is digital content. Under the Consumer Rights Act 2015, it must be as d
 
 The proposed governing law is England and Wales. Mandatory consumer protections and rights to bring proceedings in your own jurisdiction still apply. Counsel must confirm the final jurisdiction wording for the intended storefronts.
 
-For help with the game, contact glassvow@eugnel.com. The final privacy policy must explain the diagnostics actually shipped and the confirmed controller/contact details.
+For help with the game, contact glassvow@eugnel.com. The privacy policy names EUGNEL LTD as controller, with hello@eugnel.com as the privacy contact.
 
 ## Proposed refund policy
 

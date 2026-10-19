@@ -167,8 +167,27 @@ main,
 
 .colophon {
   margin-top: 1rem;
-  padding-block: 1rem 2.5rem;
+  padding-block: 1rem 1.25rem;
   border-top: 1px solid var(--rule);
+}
+
+.legal {
+  width: min(var(--measure), 100% - 2 * var(--gutter));
+  margin-inline: auto;
+  padding: 0 0 2.5rem;
+  color: var(--ink-dim);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.legal p {
+  margin: 0;
+}
+
+body.home .legal {
+  width: min(34rem, 100% - 2 * var(--gutter));
+  padding: 0 0 1.5rem;
 }
 
 .brand {
@@ -315,10 +334,19 @@ html:lang(zh-Hant) section em {
 /* Home and not-found: a threshold rather than a column */
 
 body.home {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
   background:
     radial-gradient(22rem 12rem at 50% 30%, var(--hearth), transparent 70%),
     radial-gradient(46rem 34rem at 50% 32%, var(--dusk), var(--ground) 74%);
   background-color: var(--ground);
+}
+
+body.home .threshold {
+  flex: 1 1 auto;
+  min-height: auto;
 }
 
 .threshold {

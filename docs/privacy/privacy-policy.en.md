@@ -1,6 +1,6 @@
 # Glassvow privacy policy
 
-*Last updated: 30 September 2026*
+*Last updated: 19 October 2026*
 
 Glassvow (琉璃誓言) is a single-player card game for iPhone and iPad. This page explains, in plain language, what information the game handles. It describes the game as it is built today, and it will be updated when that changes.
 
@@ -8,7 +8,7 @@ Glassvow (琉璃誓言) is a single-player card game for iPhone and iPad. This p
 
 ## 1. Who we are
 
-Glassvow is made by James TO ("we", "us"). You can reach us at glassvow@eugnel.com.
+Glassvow is made by EUGNEL LTD, registered in England & Wales, company no. 17505169 ("we", "us"). We are registered with the Information Commission (ICO), registration number ZC277339. You can reach us at hello@eugnel.com.
 
 ## 2. What the game collects
 
@@ -56,11 +56,11 @@ Apple may separately give us crash reports and basic usage figures for the game 
 
 Sentry keeps error and crash reports for up to 90 days (the exact period depends on Sentry's plan) and then deletes them automatically. Other diagnostic records, such as the session summaries, are kept for the period set out in Sentry's retention policy.
 
-Reports carry only a random code that you cannot see, so we usually cannot tell which reports came from your device. You can switch diagnostics off at any time in Settings. Reports already sent are deleted automatically after the period above. If you have a question, want to withdraw from diagnostics or want us to delete anything we can find, email glassvow@eugnel.com and we will do what we can to help.
+Reports carry only a random code that you cannot see, so we usually cannot tell which reports came from your device. You can switch diagnostics off at any time in Settings. Reports already sent are deleted automatically after the period above. If you have a question, want to withdraw from diagnostics or want us to delete anything we can find, email hello@eugnel.com and we will do what we can to help.
 
 ## 6. Children
 
-Glassvow does not ask anyone for their age, name or contact details, and it has no accounts, chat or online features. The only information it sends is the technical diagnostics described above, and it sends them in the same way for every player, whatever their age. We do not knowingly collect any other information from children. If you are a parent or guardian and have a question, please contact us at glassvow@eugnel.com.
+Glassvow does not ask anyone for their age, name or contact details, and it has no accounts, chat or online features. The only information it sends is the technical diagnostics described above, and it sends them in the same way for every player, whatever their age. We do not knowingly collect any other information from children. If you are a parent or guardian and have a question, please contact us at hello@eugnel.com.
 
 ## 7. Changes to this policy
 
@@ -68,4 +68,8 @@ We may update this page from time to time. The date at the top shows the latest 
 
 ## 8. Contact
 
-James TO: glassvow@eugnel.com
+EUGNEL LTD, registered in England & Wales, company no. 17505169: hello@eugnel.com
+
+If you think we have used your information in a way that is not allowed, you have the right to complain to us first. Email hello@eugnel.com and tell us what happened. You do not need a special form. We will acknowledge your complaint within 30 days of receiving it. We will then look into it and tell you the outcome without undue delay.
+
+You also have the right to complain to the Information Commission (ICO), the UK organisation that checks how we look after people's information: [Make a complaint to the ICO](https://ico.org.uk/make-a-complaint/).
