@@ -1097,7 +1097,7 @@ def csp_problems(headers: str) -> list[str]:
 
 
 def reference_problems(site: Path, links: set[str]) -> list[str]:
-    problems, targets = [], {url.split("#")[0] for url in links}
+    problems, targets = [], {url.split("#")[0].split("?")[0] for url in links}
     for sheet in (STYLESHEET, *(sheet.lstrip("/") for sheet in teaser.STYLESHEETS)):
         if not (site / sheet).is_file():
             continue  # reported as DANGLING below

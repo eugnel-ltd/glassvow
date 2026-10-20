@@ -4,18 +4,20 @@
 // Sound starts off and plays only after a press; the clips have no sound.
 
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+// The page loads this file as story.js?v=<digest>; its modules carry the same digest.
+const v = new URL(import.meta.url).search;
 const sound = setupSound(document.querySelector(".sound"));
 
 heroLight(document.querySelector("#top"), document.querySelector(".hglow"));
 clips(document.querySelectorAll(".gv video"));
 near(document.querySelector(".shardbox"), () =>
-  import("./story-shards.js").then((m) => m.shards(document.querySelector(".shardbox"), { still, sound })));
+  import(`./story-shards.js${v}`).then((m) => m.shards(document.querySelector(".shardbox"), { still, sound })));
 const foes = [...document.querySelectorAll(".mob-cv")];
 if (foes.length) {
-  near(foes[0], () => import("./story-mobs.js").then((m) => m.mobs(foes, { still })), "1200px 0px");
+  near(foes[0], () => import(`./story-mobs.js${v}`).then((m) => m.mobs(foes, { still })), "1200px 0px");
 }
 near(document.querySelector("#glass"), () =>
-  import("./story-glass.js").then((m) => m.glass(document.querySelectorAll(".card-cv"), { still })), "900px 0px");
+  import(`./story-glass.js${v}`).then((m) => m.glass(document.querySelectorAll(".card-cv"), { still })), "900px 0px");
 
 function near(el, run, margin = "600px 0px") {
   if (!el) return;
