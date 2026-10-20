@@ -2,8 +2,6 @@
 // CardView draws it, then lit by the ported glass shader as the pointer or the
 // phone tilts it. The unnamed glass moves its layered art with the lean.
 
-import { FRAG } from "./story-glass-shader.js";
-
 const K = 3, W = 600, H = 792;
 const TINT = { attack: "#FF5964", skill: "#4EA8DE", power: "#B388FF", status: "#7FAE9C", curse: "#C77BD4" };
 const KEY_EN = ["kindle", "kindled", "cracked", "ward", "facet", "facets", "ember", "embers", "smolder", "dimmed", "unplayable", "chip"];
@@ -12,6 +10,7 @@ const FONTS = [["GVCinzel", "700", "Cinzel-700"], ["GVCinzel", "800", "Cinzel-80
 const DEFAULT_KNOBS = { mode: 0, angle: 35, centre: [76, 108], palette: [1, 1, 1], mix: 0, strength: 0.5, scale: 1 };
 
 export async function glass(canvases, { still }) {
+  const { FRAG } = await import(`./story-glass-shader.js${new URL(import.meta.url).search}`);
   const fonts = FONTS.map(([family, weight, file]) =>
     new FontFace(family, `url(/assets/fonts/${file}.woff2)`, { weight }).load().then((f) => document.fonts.add(f)).catch(() => {}));
   const image = (src) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
@@ -22,7 +21,7 @@ export async function glass(canvases, { still }) {
     return { el, ...face, img: imgs[0], layerImgs: imgs, state: { tilt: [0.35, -0.25], target: null, visible: true } };
   }));
   await Promise.all(fonts);
-  const gl = setupGL();
+  const gl = setupGL(FRAG);
   if (!gl) return;
   for (const c of cards) {
     c.el.width = W; c.el.height = H;
@@ -238,7 +237,7 @@ function composeLayers(c, lean, t) {
   x.restore();
 }
 
-function setupGL() {
+function setupGL(FRAG) {
   const cv = document.createElement("canvas");
   cv.width = W; cv.height = H;
   const gl = cv.getContext("webgl", { premultipliedAlpha: false, preserveDrawingBuffer: true, alpha: true });

@@ -351,8 +351,19 @@ def body(lang: str, *, site: Path, twin: str, twin_name: str, guides: list[tuple
     return story.render(ctx, found)
 
 
-HEAD = (*(f'<link rel="stylesheet" href="{sheet}">' for sheet in STYLESHEETS),
-        f'<script type="module" src="{SCRIPT}"></script>')
+def asset_version() -> str:
+    """One digest of the home page's own stylesheets and modules. The pages ask
+    for them with ?v=<digest>, so a deploy reaches every browser at once instead
+    of after the four-hour asset cache runs out."""
+    h = hashlib.sha256()
+    for path in sorted((ROOT / "site/assets").glob("story*")):
+        h.update(path.name.encode("utf-8") + b"\0" + path.read_bytes())
+    return h.hexdigest()[:10]
+
+
+VERSION = asset_version()
+HEAD = (*(f'<link rel="stylesheet" href="{sheet}?v={VERSION}">' for sheet in STYLESHEETS),
+        f'<script type="module" src="{SCRIPT}?v={VERSION}"></script>')
 
 
 # --- Rules -----------------------------------------------------------------
