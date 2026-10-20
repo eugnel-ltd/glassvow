@@ -1815,6 +1815,16 @@ detailed record.
   - Shatter, Lantern and Edge way emblems.
 - **Spoiler review:** done against `docs/story/00-truth.md` and the
   foreshadow ledger. No Act IV, unsealing, Queue or mirror imagery.
+- **Second batch (nine images):** concept art and mechanism backdrops, made
+  with the full style block and each subject's shipped art as reference:
+  - the Vigil exterior, with no figure;
+  - the Merchant, the Gambler, the Wounded Knight, the Flesh Trader and the
+    Tidecaller;
+  - a single monument, Kindle and Shatter, which sit behind the page's
+    mechanism diagrams.
+
+  The Flesh Trader plate is cropped to remove a background window that reads
+  as the Rose Window. The README holds the table and the spoiler notes.
 
 ## Owed — shipped content still on its fallback
 
