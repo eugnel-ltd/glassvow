@@ -218,8 +218,6 @@ a{color:#f2c14e}a:hover{color:#ffe3a1}
   .say .q{font-size:22px}
   .tiers{grid-template-columns:repeat(2,minmax(0,1fr))}
   .fl-stage{grid-template-columns:minmax(0,1fr)}
-  .walker{left:58%}
-  .lamplighter{right:-14%}
   .card-cv.big{width:260px;height:343px}
   .par-b{animation:none}
   .road text{font-size:30px}
@@ -408,4 +406,36 @@ a{color:#f2c14e}a:hover{color:#ffe3a1}
   body.teaser header{gap:8px 12px;flex-wrap:nowrap}
   body.teaser header .bar-mark span{font-size:15px;letter-spacing:.08em}
   body.teaser header .bar-mark img{width:30px;height:30px}
+}
+
+/* Phones and narrow tablets: art first, words after. Each chapter's scene gets
+   its own panel at the top (--art tall), framed on its subject (--fp for a
+   single plate, --fx to slide a layered stage); the text follows on solid
+   ground instead of covering the picture. */
+@media (max-width: 960px){
+  .chap-sec{--art:min(118vw,92vh);display:block!important;min-height:0!important;height:auto!important;padding:var(--art) 0 56px!important}
+  .chap-sec>.stage{top:0;left:50%;width:calc(var(--art) * 1.5);height:var(--art);aspect-ratio:auto;transform:translateX(calc(-50% + var(--fx,0%)))}
+  .chap-sec>picture>.lay.fill,.chap-sec>.lay.fill{inset:0 0 auto 0;height:var(--art);object-position:var(--fp,50% 50%)}
+  .chap-sec>div[aria-hidden="true"]:not(.stage){inset:0 0 auto 0!important;height:var(--art)!important}
+  .chap-sec>div[aria-hidden="true"]:not(.stage):not(:has(*)){background:linear-gradient(180deg,rgba(5,6,11,.55) 0%,rgba(5,6,11,0) 20%,rgba(5,6,11,0) 64%,#05060b 100%)!important}
+  .chap-sec>div:not([aria-hidden]){position:relative;z-index:3;width:100%;max-width:none;margin:-64px 0 0!important;padding:0 16px!important;display:block!important}
+  .chap-sec .panel{max-width:none!important;padding:26px 20px;background:linear-gradient(180deg,rgba(9,10,20,.94),rgba(5,6,11,.98))}
+  .chap-sec .ghost{display:none}
+  .chap-sec>.mob-cv{top:calc(var(--art) * .2)!important;bottom:auto!important;left:0!important;right:auto!important;width:100%!important;height:calc(var(--art) * .74)!important}
+  .chap-sec>p.lbl{top:calc(var(--art) - 100px);bottom:auto!important;left:16px!important;right:auto!important;z-index:2}
+  .chap-sec>.swing{transform-origin:50% 0;scale:.7}
+  /* where each scene's subject sits */
+  .ch-hero{--art:min(100vw,74vh);--fx:-12%}
+  .ch-lantern{--fx:20%}
+  .ch-lamp{--fx:-22%}
+  .ch-road{--fp:34% 50%}
+  .ch-sov{--fp:68% 50%}
+  .ch-stall{--fp:66% 50%}
+  /* the hero keeps its words over the fire's lower edge */
+  .ch-hero{padding-bottom:40px!important}
+  .ch-hero>div:not([aria-hidden]){margin-top:-22vw!important}
+  .ch-hero>a.cue-line,.ch-hero>a[href$="#prologue"]:last-child{display:none}
+  .ch-hero .wm img{max-width:86vw}
+  /* the prologue: lighter veil so the road shows around the shards */
+  #prologue .panel{background:linear-gradient(180deg,rgba(9,10,20,.9),rgba(5,6,11,.96))}
 }
