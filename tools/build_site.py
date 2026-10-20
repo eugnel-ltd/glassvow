@@ -42,6 +42,7 @@ import importlib.util
 import json
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -1305,6 +1306,37 @@ def self_test() -> int:
     expect("media source drift", lambda: any(item.startswith("MEDIA_SOURCE") and drifted in item
                                              for item in media_found))
     expect("unlisted media", lambda: any(item.startswith("MEDIA_UNLISTED") for item in media_found))
+
+    def glb(doc: dict, blob: bytes, bin_type: int = 0x004E4942) -> bytes:
+        text = json.dumps(doc).encode("utf-8")
+        text += b" " * (-len(text) % 4)
+        body = struct.pack("<II", len(text), 0x4E4F534A) + text + struct.pack("<II", len(blob), bin_type) + blob
+        return struct.pack("<III", 0x46546C67, 2, 12 + len(body)) + body
+
+    model = {"buffers": [{"byteLength": 20}], "images": [{"bufferView": 1, "mimeType": "image/jpeg"}],
+             "bufferViews": [{"buffer": 0, "byteLength": 8}, {"buffer": 0, "byteOffset": 8, "byteLength": 6},
+                             {"buffer": 0, "byteOffset": 16, "byteLength": 4}],
+             "accessors": [{"bufferView": 0}, {"bufferView": 2, "sparse": {"indices": {"bufferView": 2},
+                                                                         "values": {"bufferView": 0}}}]}
+    packed, skin = teaser.split_glb(glb(model, b"geometry" + b"SKIN!!\0\0" + b"tail"), "x-skin.jpg")
+    packed_doc = json.loads(packed[20:20 + struct.unpack_from("<I", packed, 12)[0]])
+    if (skin != b"SKIN!!" or not packed.endswith(b"geometrytail") or b"SKIN" in packed
+            or packed_doc["images"] != [{"uri": "x-skin.jpg"}] or packed_doc["buffers"] != [{"byteLength": 12}]
+            or [view.get("byteOffset", 0) for view in packed_doc["bufferViews"]] != [0, 8]
+            or packed_doc["accessors"][1] != {"bufferView": 1, "sparse": {"indices": {"bufferView": 1},
+                                                                          "values": {"bufferView": 0}}}):
+        failures.append("GLB repack keeps the embedded skin or misplaces a buffer view")
+
+    def glb_rejected(data: bytes) -> bool:
+        try:
+            teaser.split_glb(data, "x-skin.jpg")
+        except teaser.MediaError:
+            return True
+        return False
+
+    expect("GLB without a BIN chunk", lambda: glb_rejected(glb(model, bytes(20), bin_type=0x4E4F534A)))
+    expect("GLB accessor reading the skin", lambda: glb_rejected(glb(
+        {**model, "accessors": [{"bufferView": 1}]}, bytes(20))))
     short_footer = ('<footer class="legal"><p>© EUGNEL LTD · '
                     '<a href="/company/">Company information</a></p></footer>')
     expect("missing company footer",

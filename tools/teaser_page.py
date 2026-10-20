@@ -84,29 +84,58 @@ class Model:
     source: str
 
     def outputs(self) -> dict[str, str]:
-        return {f"{self.name}.glb": "glb skin=external", f"{self.name}-skin.jpg": "glb skin"}
+        return {f"{self.name}.glb": "glb skin=external bin=repacked", f"{self.name}-skin.jpg": "glb skin"}
 
 
 def split_glb(data: bytes, skin_uri: str) -> tuple[bytes, bytes]:
-    """The GLB with its single image pointed at skin_uri, and that image's bytes."""
+    """The GLB with its single image pointed at skin_uri and cut out of the BIN
+    chunk, so the skin ships once, and that image's bytes."""
     magic, version, _ = struct.unpack_from("<III", data, 0)
     json_len, json_type = struct.unpack_from("<II", data, 12)
     if magic != 0x46546C67 or version != 2 or json_type != 0x4E4F534A:
         raise MediaError("not a glTF 2.0 binary")
     doc = json.loads(data[20:20 + json_len])
-    rest = data[20 + json_len:]
-    bin_len, _ = struct.unpack_from("<II", rest, 0)
-    blob = rest[8:8 + bin_len]
+    bin_len, bin_type = struct.unpack_from("<II", data, 20 + json_len)
+    if bin_type != 0x004E4942 or len(doc.get("buffers", [])) != 1 or "uri" in doc["buffers"][0]:
+        raise MediaError("expected one buffer, held in the BIN chunk")
+    if doc.get("extensionsUsed"):
+        raise MediaError("extensions may point at buffer views; repacking supports none")
+    blob = data[28 + json_len:28 + json_len + bin_len]
     images = doc.get("images", [])
     if len(images) != 1 or images[0].get("mimeType") != "image/jpeg" or "bufferView" not in images[0]:
         raise MediaError("expected exactly one embedded JPEG")
-    view = doc["bufferViews"][images[0]["bufferView"]]
+    index = images[0]["bufferView"]
+    views = doc["bufferViews"]
+    view = views.pop(index)
     start = view.get("byteOffset", 0)
     skin = blob[start:start + view["byteLength"]]
+    # Cut a multiple of 4 bytes so every later view keeps its alignment.
+    end = min(start + view["byteLength"] + (-view["byteLength"] % 4), len(blob))
+    for other in views:
+        offset = other.get("byteOffset", 0)
+        if offset < end and offset + other["byteLength"] > start:
+            raise MediaError("another buffer view overlaps the embedded JPEG")
+        if offset >= end:
+            other["byteOffset"] = offset - (end - start)
+
+    def renumber(node: dict) -> None:
+        if node.get("bufferView") == index:
+            raise MediaError("an accessor reads the embedded JPEG's buffer view")
+        if node.get("bufferView", -1) > index:
+            node["bufferView"] -= 1
+
+    for accessor in doc.get("accessors", []):
+        renumber(accessor)
+        for part in ("indices", "values"):
+            renumber(accessor.get("sparse", {}).get(part, {}))
     images[0] = {"uri": skin_uri}
+    blob = blob[:start] + blob[end:]
+    doc["buffers"][0]["byteLength"] = len(blob)
+    blob += b"\0" * (-len(blob) % 4)
     text = json.dumps(doc, separators=(",", ":")).encode("utf-8")
     text += b" " * (-len(text) % 4)
-    body = struct.pack("<II", len(text), json_type) + text + rest
+    body = (struct.pack("<II", len(text), json_type) + text
+            + struct.pack("<II", len(blob), bin_type) + blob)
     return struct.pack("<III", magic, version, 12 + len(body)) + body, skin
 
 
