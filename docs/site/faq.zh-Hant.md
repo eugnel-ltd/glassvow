@@ -24,7 +24,7 @@ EUGNEL LTD 製作《琉璃誓言》。
 
 《琉璃誓言》是 Roguelike 牌組構築，也是一場彩窗上的朝聖。
 
-你組一副琉璃牌，花費光，提燈離開守夜之爐向東走。較長的說明見[玩法](/play/zh-hant/)及 [Roguelike 牌組構築](/genre/zh-hant/)。
+你組一副琉璃牌，點燃提燈，提燈離開守夜之爐向東走。較長的說明見[玩法](/play/zh-hant/)及 [Roguelike 牌組構築](/genre/zh-hant/)。
 
 ## 琉璃誓言用哪些語言？
 

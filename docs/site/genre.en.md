@@ -10,7 +10,7 @@ This page does not rank other titles or borrow their names. The comparison is to
 
 ## What that means here
 
-Roguelite deckbuilder, in this game, means you build a deck of glass, spend light, and shatter what blocks the way. The story is a stained-glass pilgrimage: a fire cut into six pieces, a lantern, a rose to light, a sealed door at the far end.
+Roguelite deckbuilder, in this game, means you build a deck of glass, kindle the lantern, and shatter what blocks the way. The story is a stained-glass pilgrimage: a fire cut into six pieces, a lantern, a rose to light, a sealed door at the far end.
 
 ## Who it is for
 

@@ -1,8 +1,9 @@
-"""Glassvow's teaser home page in English and 繁體中文: / and /zh-hant/.
+"""Glassvow's home page in English and 繁體中文: / and /zh-hant/.
 
-tools/build_site.py renders and audits these pages. Game names and lines come
-from locale/*.json; the site's own lines sit in COPY. The art and sound the
-pages show are web copies of the game's files: `build_site.py --media` encodes
+tools/build_site.py renders and audits these pages. What the page shows lives in
+tools/story_page.py (template, copy and media list); this module owns the media
+pipeline, the head and the rules. The art, clips, models and sound the pages
+use are web copies of files in this repository: `build_site.py --media` encodes
 them into site/assets/teaser/ (needs Pillow with AVIF and ffmpeg) and writes
 media.json, which pins each output to its source digest and recipe, so
 `--check` fails when a source, a recipe or an output drifts.
@@ -13,10 +14,12 @@ from __future__ import annotations
 import hashlib
 import html
 import json
-import math
 import re
 import shutil
+import struct
 import subprocess
+
+import story_page as story
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -24,13 +27,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MEDIA_DIR = "assets/teaser"
 MANIFEST = f"{MEDIA_DIR}/media.json"
-SCRIPT = "/assets/teaser.js"
-STYLESHEET = "/assets/teaser.css"
+SCRIPT = "/assets/story.js"
+STYLESHEETS = ("/assets/story.css", "/assets/story-systems.css")
 HOME = {"en": "/", "zh-Hant": "/zh-hant/"}
 NAME = {"en": "Glassvow", "zh-Hant": "琉璃誓言"}
 PRIVACY = {"en": "/privacy/", "zh-Hant": "/privacy/zh-hant/"}
-# Owner decision, 19 October 2026: all four are coming soon. Unreleased, so plain
-# names only, never store badges, links, dates or prices. One store per platform.
+# Owner decision, 19 October 2026: all four are coming soon. Unreleased, so never
+# store badges, links, dates or prices. One store per platform. Owner, 20 October
+# 2026 (website comments): each plain name may carry its platform's mark.
 PLATFORMS = ("App Store", "Google Play", "Amazon Appstore", "Steam")
 GAME_PLATFORMS = ("iOS (App Store)", "Android (Google Play)", "Amazon Appstore", "Steam (PC)")
 OPERATING_SYSTEMS = "iOS, Android"
@@ -44,17 +48,6 @@ def platform_list(lang: str) -> str:
     return f"{'、'.join(wide[:-1])} 及 {wide[-1]}"
 
 
-ART = "assets/art/"
-SCENES = ("opening-hearth", "night-stall", "act4-node4", "act4-node1", "act4-node2")
-CARDS = ("cleave", "eclipseSlash", "aegis", "emberdance", "totality", "dimTheGlass", "annihilate")
-BACKS = ("vault", "rose", "eclipse")
-ASPECTS = ("ashwarden", "duskblade")
-FOES = ("duskfang", "chaosHound", "deepmaw", "shade", "gravewarden", "starCultist")
-# Rose-window panes: (light, deep) glass colours of the game's card backs.
-ROSE_GLASS = (("#ff8a8a", "#7a1530"), ("#ffe08a", "#b8641a"), ("#8fc1ff", "#1d3a8f"),
-              ("#c9a6ff", "#4b2a8a"), ("#ffb36b", "#9a3412"), ("#8ff0e2", "#0f5f66"))
-
-
 class MediaError(ValueError):
     """Teaser media that is missing, stale or cannot be encoded."""
 
@@ -66,10 +59,68 @@ class Picture:
     widths: tuple[int, ...]
     aspect: float | None = None  # centre crop to width / height
     trim: bool = False  # crop to the alpha bounding box first
+    box: tuple[int, int, int, int] | None = None  # crop to this box before anything else
 
     def outputs(self) -> dict[str, str]:
-        return {f"{self.name}-{width}.{ext}": f"{ext} w={width} aspect={self.aspect} trim={self.trim}"
+        crop = f" box={self.box}" if self.box else ""
+        return {f"{self.name}-{width}.{ext}": f"{ext} w={width} aspect={self.aspect} trim={self.trim}{crop}"
                 for width in self.widths for ext in ("avif", "webp")}
+
+
+@dataclass(frozen=True)
+class File:
+    name: str
+    source: str
+
+    def outputs(self) -> dict[str, str]:
+        return {self.name: "copy"}
+
+
+@dataclass(frozen=True)
+class Model:
+    """A GLB whose one embedded image moves out beside it, so three.js loads it
+    as an ordinary same-origin image (the CSP admits no blob: URL)."""
+    name: str
+    source: str
+
+    def outputs(self) -> dict[str, str]:
+        return {f"{self.name}.glb": "glb skin=external", f"{self.name}-skin.jpg": "glb skin"}
+
+
+def split_glb(data: bytes, skin_uri: str) -> tuple[bytes, bytes]:
+    """The GLB with its single image pointed at skin_uri, and that image's bytes."""
+    magic, version, _ = struct.unpack_from("<III", data, 0)
+    json_len, json_type = struct.unpack_from("<II", data, 12)
+    if magic != 0x46546C67 or version != 2 or json_type != 0x4E4F534A:
+        raise MediaError("not a glTF 2.0 binary")
+    doc = json.loads(data[20:20 + json_len])
+    rest = data[20 + json_len:]
+    bin_len, _ = struct.unpack_from("<II", rest, 0)
+    blob = rest[8:8 + bin_len]
+    images = doc.get("images", [])
+    if len(images) != 1 or images[0].get("mimeType") != "image/jpeg" or "bufferView" not in images[0]:
+        raise MediaError("expected exactly one embedded JPEG")
+    view = doc["bufferViews"][images[0]["bufferView"]]
+    start = view.get("byteOffset", 0)
+    skin = blob[start:start + view["byteLength"]]
+    images[0] = {"uri": skin_uri}
+    text = json.dumps(doc, separators=(",", ":")).encode("utf-8")
+    text += b" " * (-len(text) % 4)
+    body = struct.pack("<II", len(text), json_type) + text + rest
+    return struct.pack("<III", magic, version, 12 + len(body)) + body, skin
+
+
+# Vendored scripts, pinned: three.js r128 (npm three@0.128.0, MIT) for the foes.
+VENDOR = {
+    "assets/vendor/three.min.js": "9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2",
+    "assets/vendor/GLTFLoader.js": "5c15967ba830918a9caea6338712c994c354bccd4edc4569bde411c3ec06a3e6",
+    "assets/vendor/three-LICENSE.txt": "7dddf7c5b8fd10ee654db8857d75d104b5557889aa5a91fc4ca545ea7c07062f",
+}
+
+
+def vendor_problems(site: Path) -> list[str]:
+    return [f"VENDOR site/{path} does not match its pinned digest" for path, sha in VENDOR.items()
+            if not (site / path).is_file() or digest(site / path) != sha]
 
 
 @dataclass(frozen=True)
@@ -85,23 +136,16 @@ class Sound:
 
 
 PICTURES = (
-    Picture("vigil-road", ART + "title-background/background.png", (960, 1536)),
-    Picture("vigil-road-tall", ART + "title-background/background.png", (432, 576), aspect=9 / 16),
-    Picture("wordmark-en", ART + "title/title.png", (640, 1280), trim=True),
-    Picture("wordmark-zh-Hant", ART + "title/title-zh.png", (640, 1280), trim=True),
-    Picture("lantern", ART + "title/lantern-hero.png", (240, 480), trim=True),
-    *(Picture(f"scene-{name}", f"{ART}scenes/{name}.png", (640, 1280)) for name in SCENES),
-    *(Picture(f"card-{name}", f"{ART}cards/{name}.jpg", (480,), aspect=1.2) for name in CARDS),
-    *(Picture(f"back-{name}", f"{ART}backs/{name}.png", (304,)) for name in BACKS),
-    *(Picture(f"aspect-{name}", f"{ART}heroes/{name}.png", (300, 600), trim=True) for name in ASPECTS),
-    *(Picture(f"foe-{name}", f"{ART}enemies/{name}.png", (200, 400), trim=True) for name in FOES),
+    Picture("wordmark-en", "assets/art/title/title.png", (640, 1280), trim=True),
+    Picture("wordmark-zh-Hant", "assets/art/title/title-zh.png", (640, 1280), trim=True),
+    *(Picture(name, source, widths, opts.get("aspect"), opts.get("trim", False), opts.get("box"))
+      for name, source, widths, opts in story.PICTURE_SPECS),
 )
+FILES = (*(File(name, source) for name, source in story.FILE_SPECS),
+         *(Model(name, source) for name, source in story.MODEL_SPECS))
 SOUNDS = (
     # The title theme falls quiet near 2:05; the cut and fade land there.
     Sound("theme", "assets/audio/music/title.mp3", 126.0, ("64k", "96k")),
-    Sound("flip", "assets/audio/sfx/card.mp3"),
-    Sound("rise", "assets/audio/sfx/paneRise.mp3"),
-    Sound("crack", "assets/audio/sfx/glassCrack.mp3"),
     Sound("shatter", "assets/audio/sfx/shatter.mp3"),
 )
 
@@ -110,53 +154,19 @@ COPY = {
         "title": "Glassvow · 琉璃誓言 — a stained-glass roguelite deckbuilder",
         "description": "Glassvow (琉璃誓言): a stained-glass roguelite deckbuilder, coming soon to "
                        f"{platform_list('en')}.",
-        "kicker": "A pilgrimage in stained glass",
-        "lede": "A single-player roguelite deckbuilder. Build a deck of glass, spend light, "
-                "and shatter what blocks the way.",
-        "soon_on": "Available soon on",
         "coming": "Coming soon",
         "sound": ("Sound off", "Sound on"),
-        "fire": "A fire was cut into six pieces and scattered along the road.",
-        "fire_after": "Gather what was broken. Light the rose.",
-        "road": "The road",
-        "road_lines": ("Walk east from the Vigil with a lantern.", None, "The pilgrimage continues.", None,
-                       "Open the sealed door at the far end."),
-        "deck_kicker": "A roguelite deckbuilder",
-        "deck": "Build a deck of glass. Spend light.",
-        "foes": "Shatter what blocks the way.",
-        "soon": "Available soon",
-        "facts": "Single-player · No accounts · No ads",
-        "more": "About Glassvow",
-        "support": "Support",
         "privacy": "Privacy",
     },
     "zh-Hant": {
         "title": "琉璃誓言 Glassvow — 彩窗上的朝聖之路",
         "description": "《琉璃誓言》（Glassvow）是一款單人 Roguelike 牌組構築遊戲，亦是一場彩窗上的朝聖。"
                        f"即將登陸 {platform_list('zh-Hant')}。",
-        "kicker": "彩窗上的朝聖之路",
-        "lede": "單人 Roguelike 牌組構築遊戲。組一副琉璃牌，花費光，打碎擋路之物。",
-        "soon_on": "即將登陸",
         "coming": "即將推出",
         "sound": ("聲音：關", "聲音：開"),
-        "fire": "一團火被裁成六片，散落於路。",
-        "fire_after": "尋回碎去的東西。點亮彩窗。",
-        "road": "長路",
-        "road_lines": ("提燈離開守夜之爐向東走。", None, "朝聖仍在繼續。", None, "打開路盡頭的封門。"),
-        "deck_kicker": "Roguelike 牌組構築",
-        "deck": "組一副琉璃牌，花費光。",
-        "foes": "打碎擋路之物。",
-        "soon": "即將推出",
-        "facts": "單人遊戲 · 沒有帳戶 · 沒有廣告",
-        "more": "關於琉璃誓言",
-        "support": "支援",
         "privacy": "私隱政策",
     },
 }
-# Road kickers, and the lines COPY leaves as None, come from the game's own strings.
-ROAD_KEYS = ("ui.vigil.title", "ui.shop.title", "ui.help.roadTitle", "ui.dawn.quietTitle",
-             "ui.map.sealedDoor.title")
-ROAD_LINE_KEYS = (None, "ui.shop.cardRemoval.confirmBody", None, "ui.dawn.subtitle", None)
 
 
 def digest(path: Path) -> str:
@@ -164,7 +174,7 @@ def digest(path: Path) -> str:
 
 
 def expected_outputs() -> dict[str, tuple[str, str]]:
-    return {name: (item.source, recipe) for item in (*PICTURES, *SOUNDS)
+    return {name: (item.source, recipe) for item in (*PICTURES, *SOUNDS, *FILES)
             for name, recipe in item.outputs().items()}
 
 
@@ -232,6 +242,8 @@ def encode_media(site: Path) -> None:
     for picture in PICTURES:
         image = Image.open(ROOT / picture.source)
         image = image.convert("RGBA" if image.has_transparency_data else "RGB")
+        if picture.box:
+            image = image.crop(picture.box)
         if picture.trim:
             image = image.crop(image.getchannel("A").getbbox())
         if picture.aspect:
@@ -259,6 +271,15 @@ def encode_media(site: Path) -> None:
             subprocess.run([ffmpeg, "-v", "error", "-y", "-i", str(ROOT / sound.source), *cut, *codec,
                             "-b:a", rate, "-map_metadata", "-1", str(folder / name)], check=True)
             outputs[name] = {}
+    for file in FILES:
+        if isinstance(file, Model):
+            glb, skin = split_glb((ROOT / file.source).read_bytes(), f"{file.name}-skin.jpg")
+            (folder / f"{file.name}.glb").write_bytes(glb)
+            (folder / f"{file.name}-skin.jpg").write_bytes(skin)
+            outputs[f"{file.name}.glb"], outputs[f"{file.name}-skin.jpg"] = {}, {}
+        else:
+            shutil.copyfile(ROOT / file.source, folder / file.name)
+            outputs[file.name] = {}
     for name, (source, recipe) in expected_outputs().items():
         outputs[name].update(source=source, recipe=recipe, source_sha256=digest(ROOT / source),
                              sha256=digest(folder / name), bytes=(folder / name).stat().st_size)
@@ -272,169 +293,36 @@ def esc(text: str) -> str:
     return html.escape(text, quote=True)
 
 
-def picture(site: Path, name: str, alt: str, sizes: str, cls: str, *, eager: bool = False,
-            tall: str | None = None) -> str:
-    """<picture> with AVIF then WebP; `tall` art-directs portrait screens."""
+def pictures(site: Path) -> dict[str, dict]:
+    """Each picture's URL stem, widths and largest WebP size, from media.json."""
     outputs = load_manifest(site)
-    item = next(p for p in PICTURES if p.name == name)
-
-    def srcset(pic: Picture, ext: str) -> str:
-        return ", ".join(f"/{MEDIA_DIR}/{pic.name}-{w}.{ext} {w}w" for w in pic.widths)
-
-    sources = []
-    if tall:
-        portrait = next(p for p in PICTURES if p.name == tall)
-        sources += [f'<source media="(max-aspect-ratio: 4/5)" type="image/{ext}" '
-                    f'srcset="{srcset(portrait, ext)}" sizes="100vw">' for ext in ("avif", "webp")]
-    sources += [f'<source type="image/avif" srcset="{srcset(item, "avif")}" sizes="{sizes}">']
-    largest = outputs[f"{name}-{item.widths[-1]}.webp"]
-    loading = 'fetchpriority="high"' if eager else 'loading="lazy"'
-    hidden = ' aria-hidden="true"' if not alt else ""
-    return (f'<picture class="{cls}">{"".join(sources)}<img src="/{MEDIA_DIR}/{name}-{item.widths[0]}.webp" '
-            f'srcset="{srcset(item, "webp")}" sizes="{sizes}" alt="{esc(alt)}"{hidden} '
-            f'width="{largest["width"]}" height="{largest["height"]}" {loading} decoding="async"></picture>')
-
-
-def platforms(lang: str, cls: str) -> list[str]:
-    coming = esc(COPY[lang]["coming"])
-    return [f'<ul class="{cls}">',
-            *(f'  <li class="platform"><span class="platform-name display">{esc(name)}</span>'
-              f'<span class="platform-soon">{coming}</span></li>' for name in PLATFORMS),
-            "</ul>"]
-
-
-def rose_window() -> list[str]:
-    petal = "M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z"
-    veins = "M0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70"
-    stops = [f'<radialGradient id="rose-{k}" cx="50%" cy="70%" r="75%"><stop offset="0" '
-             f'stop-color="{light}"/><stop offset="1" stop-color="{deep}"/></radialGradient>'
-             for k, (light, deep) in enumerate(ROSE_GLASS)]
-    turns = [f'transform="rotate({60 * k})"' for k in range(6)]
-    gems = [f'<circle cx="{74 * math.sin(math.radians(30 + 60 * k)):.2f}" '
-            f'cy="{-74 * math.cos(math.radians(30 + 60 * k)):.2f}" r="9"/>' for k in range(6)]
-    return [
-        '<svg class="rose" viewBox="-100 -100 200 200" aria-hidden="true" focusable="false">',
-        f'  <defs>{"".join(stops)}</defs>',
-        '  <circle class="rose-ground" r="96"/>',
-        '  <g class="rose-dark">' + "".join(f'<path d="{petal}" {t}/>' for t in turns) + "</g>",
-        '  <g class="rose-lit">' + "".join(
-            f'<path d="{petal}" fill="url(#rose-{k})" {t}/>' for k, t in enumerate(turns)) + "</g>",
-        f'  <g class="rose-gems">{"".join(gems)}</g>',
-        '  <g class="rose-lead">' + "".join(
-            f'<path d="{petal}{veins}" {t}/>' for t in turns) + "".join(gems)
-        + '<circle r="20"/><circle r="92"/><circle r="97"/></g>',
-        '  <circle class="rose-heart" r="15"/>',
-        "</svg>",
-    ]
+    found = {}
+    for pic in PICTURES:
+        largest = outputs.get(f"{pic.name}-{pic.widths[-1]}.webp")
+        if largest is None:
+            raise MediaError(f"{pic.name} is not encoded; run tools/build_site.py --media")
+        found[pic.name] = {"url": f"/{MEDIA_DIR}/{pic.name}", "widths": pic.widths,
+                           "width": largest["width"], "height": largest["height"]}
+    return found
 
 
 def body(lang: str, *, site: Path, twin: str, twin_name: str, guides: list[tuple[str, str]],
          contact: str) -> list[str]:
-    """Header and <main> of one teaser page; build_site.py adds the footer."""
-    c = COPY[lang]
-    off, on = c["sound"]
+    """Header and <main> of one home page; build_site.py adds the footer."""
+    off, on = COPY[lang]["sound"]
     sounds = " ".join(f'data-{s.name}="{" ".join(f"/{MEDIA_DIR}/{n}" for n in s.outputs())}"'
                       for s in SOUNDS)
-    road = []
-    for scene, key, line, line_key in zip(SCENES, ROAD_KEYS, c["road_lines"], ROAD_LINE_KEYS):
-        road += ['    <li class="road-pane"><figure>',
-                 "      " + picture(site, f"scene-{scene}", "", "(min-width: 64rem) 46vw, 82vw", "road-art"),
-                 f'      <figcaption><span class="road-kicker display">{esc(say(lang, key))}</span>'
-                 f'{esc(line or say(lang, line_key))}</figcaption>',
-                 "    </figure></li>"]
-    cards = [f'    <li class="card"><div class="card-turn"><div class="card-back">'
-             f'{picture(site, f"back-{BACKS[i % 3]}", "", "12rem", "card-pic")}</div>'
-             f'<div class="card-face">{picture(site, f"card-{card}", "", "12rem", "card-pic")}'
-             f'<span class="card-name display">{esc(say(lang, f"content.cards.{card}.name"))}</span>'
-             f"</div></div></li>" for i, card in enumerate(CARDS)]
-    aspects = []
-    for aspect in ASPECTS:
-        name = say(lang, f"content.aspects.{aspect}.name")
-        aspects += [f'    <article class="aspect aspect-{aspect}">',
-                    "      " + picture(site, f"aspect-{aspect}", name, "(min-width: 48rem) 22rem, 70vw",
-                                       "aspect-art"),
-                    f'      <h3 class="aspect-name display">{esc(name)}</h3>',
-                    f'      <p>{esc(say(lang, f"content.aspects.{aspect}.blurb"))}</p>',
-                    "    </article>"]
-    foes = ["    <li>" + picture(site, f"foe-{foe}", say(lang, f"content.enemies.{foe}.name"),
-                                 "(min-width: 48rem) 12rem, 30vw", "foe") + "</li>" for foe in FOES]
-    return [
-        '<header class="bar">',
-        f'  <a class="bar-mark display" href="{HOME[lang]}">'
-        f'<img src="/assets/icon.png" alt="" aria-hidden="true" width="64" height="64">'
-        f'<span>{NAME[lang]}</span></a>',
-        f'  <button class="sound" type="button" aria-pressed="false" hidden {sounds} '
-        f'data-off="{esc(off)}" data-on="{esc(on)}"><span class="sound-wave" aria-hidden="true">'
-        f'<i></i><i></i><i></i></span><span class="sound-label">{esc(off)}</span></button>',
-        f'  <a class="switch" href="{HOME[twin]}" hreflang="{twin}" lang="{twin}">{twin_name}</a>',
-        "</header>",
-        '<main class="teaser-main">',
-        '<section class="hero" data-scene="hero">',
-        '  <div class="hero-sky" aria-hidden="true">',
-        "    " + picture(site, "vigil-road", "", "100vw", "hero-road", eager=True, tall="vigil-road-tall"),
-        '    <canvas class="hero-light"></canvas>',
-        '    <div class="shafts"><i></i><i></i><i></i></div>',
-        "  </div>",
-        "  " + picture(site, "lantern", "", "(min-width: 48rem) 13rem, 7.5rem", "lantern", eager=True),
-        '  <div class="hero-copy">',
-        '    <h1 class="wordmark">' + picture(site, f"wordmark-{lang}", NAME[lang],
-                                             "(min-width: 48rem) 40rem, 88vw", "wordmark-art", eager=True)
-        + "</h1>",
-        f'    <p class="kicker display">{esc(c["kicker"])}</p>',
-        f'    <p class="lede">{esc(c["lede"])}</p>',
-        f'    <p class="soon-on">{esc(c["soon_on"])}</p>',
-        *("    " + line for line in platforms(lang, "platforms")),
-        "  </div>",
-        f'  <a class="cue" href="{HOME[lang]}#fire"><span>{esc(say(lang, "ui.embark.title"))}</span></a>',
-        "</section>",
-        '<section class="fire" id="fire" data-scene="fire">',
-        '  <div class="fire-stage">',
-        '    <div class="fire-glow" aria-hidden="true"></div>',
-        *("    " + line for line in rose_window()),
-        f'    <h2 class="fire-line">{esc(c["fire"])}</h2>',
-        f'    <p class="fire-after">{esc(c["fire_after"])}</p>',
-        "  </div>",
-        "</section>",
-        '<section class="road" data-scene="road" aria-labelledby="road-title">',
-        '  <div class="road-stage">',
-        f'    <h2 class="road-title" id="road-title">{esc(c["road"])}</h2>',
-        '    <ol class="road-track">', *road, "    </ol>",
-        "  </div>",
-        "</section>",
-        '<section class="deck" data-scene="deck" aria-labelledby="deck-title">',
-        '  <div class="deck-stage">',
-        f'    <p class="kicker display">{esc(c["deck_kicker"])}</p>',
-        f'    <h2 id="deck-title">{esc(c["deck"])}</h2>',
-        '    <ul class="fan">', *cards, "    </ul>",
-        "  </div>",
-        "</section>",
-        '<section class="aspects" aria-labelledby="aspects-title">',
-        f'  <h2 id="aspects-title">{esc(say(lang, "ui.embark.aspectLabel"))}</h2>',
-        '  <div class="aspect-row">', *aspects, "  </div>",
-        "</section>",
-        '<section class="foes" data-scene="foes" aria-labelledby="foes-title">',
-        '  <ul class="foe-row">', *foes, "  </ul>",
-        f'  <h2 id="foes-title">{esc(c["foes"])}</h2>',
-        "</section>",
-        '<section class="vow" id="soon" data-scene="vow" aria-labelledby="vow-title">',
-        '  <div class="vow-stage">',
-        '    <div class="vow-copy">',
-        f'      <h2 id="vow-title">{esc(c["soon"])}</h2>',
-        *("      " + line for line in platforms(lang, "platforms platforms-large")),
-        f'      <p class="facts">{esc(c["facts"])}</p>',
-        "    </div>",
-        '    <canvas class="vow-glass" aria-hidden="true"></canvas>',
-        "  </div>",
-        "</section>",
-        f'<nav class="more" aria-label="{esc(c["more"])}">',
-        *(f'  <a href="{path}">{esc(name)}</a>' for path, name in guides),
-        "</nav>",
-        f'<p class="support">{esc(c["support"])} · <span class="address">{contact}</span></p>',
-        "</main>",
-    ]
+    sound = (f'<button class="sound" type="button" aria-pressed="false" hidden {sounds} '
+             f'data-off="{esc(off)}" data-on="{esc(on)}"><span class="sound-wave" aria-hidden="true">'
+             f'<i></i><i></i><i></i></span><span class="sound-label">{esc(off)}</span></button>')
+    found = pictures(site)
+    ctx = story.context(lang, pictures=found, media_url=MEDIA_DIR, twin=twin, twin_name=twin_name,
+                        home=HOME[lang], twin_home=HOME[twin], name=NAME[lang], guides=guides,
+                        contact=contact, sound=sound, platforms=PLATFORMS)
+    return story.render(ctx, found)
 
 
-HEAD = (f'<link rel="stylesheet" href="{STYLESHEET}">',
+HEAD = (*(f'<link rel="stylesheet" href="{sheet}">' for sheet in STYLESHEETS),
         f'<script type="module" src="{SCRIPT}"></script>')
 
 

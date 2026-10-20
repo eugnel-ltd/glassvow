@@ -1,0 +1,1123 @@
+{
+ "en": {
+  "brandName": "Glassvow",
+  "navLabel": "Sections",
+  "nav1": "The Story",
+  "nav2": "The Acts",
+  "nav3": "How it works",
+  "nav4": "The Glass",
+  "heroKicker": "A pilgrimage in stained glass",
+  "heroQuote": "“You’re awake.”",
+  "heroWho": "At the Vigil’s fire",
+  "heroLede": "A single-player roguelite deckbuilder. Take up the lantern, build a deck of glass, and walk east toward a door that has never opened.",
+  "heroCta1": "Begin the story",
+  "heroCta2": "How it works",
+  "heroPlatforms": "Platforms",
+  "heroSoon": "Coming soon to",
+  "scroll": "Scroll to walk",
+  "conceptLbl": "Concept art",
+  "c1": {
+   "num": "I · PROLOGUE",
+   "title": "One fire. Six pieces.",
+   "alt": "Six shards of emberglass bursting away from one fire",
+   "tap": "Touch the fire",
+   "p1": "Before the first night there was one fire. Then it was cut into six, and the pieces were scattered along a road that runs from the western edge of the world to a door no one has opened.",
+   "p2": "The shards burn on somewhere in the dark — in a forest that grows on ash, beneath the water of a city that stopped to wait, in a court of black glass where no fire burns. At the western end of the road, a single hearth has burned since that first night.",
+   "p3": "Carry it east. Break what stands in your way. Bring the fire home.",
+   "quote": "“A fire was cut into six pieces and scattered along the road.”"
+  },
+  "c2": {
+   "num": "II · THE VIGIL",
+   "g": "II",
+   "title": "A fire in the far west",
+   "tag": "The Vigil · concept art",
+   "narr": "You wake at a hearth on the western edge of the world. The hall is old and the stone is warm. Someone has kept this fire burning since the first night — and kept a place beside it for you.",
+   "quotes": [
+    {
+     "q": "“Take your time. The road isn’t going anywhere.”",
+     "who": "At the hearth"
+    }
+   ]
+  },
+  "c3": {
+   "num": "III · THE LANTERN",
+   "g": "III",
+   "title": "It burns what you carry",
+   "narr": "Before you leave, you are given a lantern that others carried before you. On the road ahead, its light will be the only light that is yours — and it is always hungry.",
+   "quotes": [
+    {
+     "q": "“It burns what you carry.”",
+     "who": "At the hearth"
+    },
+    {
+     "q": "“The road runs east. At its end stands a sealed door. Bring back the six shards of emberglass, and it will open.”",
+     "who": "At the hearth"
+    }
+   ]
+  },
+  "c4": {
+   "num": "IV · THE ROAD EAST",
+   "g": "IV",
+   "title": "The Vigil begins",
+   "narr": "The door of the hall opens onto the dark before dawn. The road runs level and east, past the last lamp, into country where the glass is alive — and does not want to be broken.",
+   "quotes": [
+    {
+     "q": "“You take up the lantern and step out. The long road runs east, and the sky is not yet light.”"
+    },
+    {
+     "q": "“Behind you, the fire is still burning.”"
+    },
+    {
+     "q": "“The Vigil begins.”"
+    }
+   ],
+   "bearerLbl": "Who carries the lantern",
+   "bearer": "The Duskblade",
+   "bearerText": "Glass honed to a killing edge. Strikes, shatters, and turns broken facets into fuel — a blade that cuts a road through any night."
+  },
+  "c5": {
+   "num": "V · ACT I",
+   "title": "The Ashen Woods",
+   "narr": "A forest that grows on ash. Spores hang in the lamplight like slow snow, pale masks lie half-buried under the trees, and old monuments stand thick where the road begins. Something has prayed here for a very long time. Nothing has answered.",
+   "quotes": [
+    {
+     "q": "“Two lanterns burning side by side. The flames are fresh. Whose?”"
+    },
+    {
+     "q": "“They pray to the ash. The ash answers no one.”"
+    }
+   ],
+   "bossLbl": "At the heart of the woods",
+   "boss": "The Rootheart",
+   "mob": "Signature foe · Gravewarden"
+  },
+  "c6": {
+   "num": "VI · THE UNLIT WAY",
+   "g": "VI",
+   "title": "The Hollow Lamplighter",
+   "narr": "On the Unlit Way, an old man waits beside the road with a lantern that holds no flame. He studies every face that passes. Five times he will stop you, and five times he will name a price.",
+   "quotes": [
+    {
+     "q": "“An old man sits by the road, holding a lantern. There is no flame in it.”",
+     "who": ""
+    },
+    {
+     "q": "“Oil can be shared. Flame cannot. Flame you carry to the end yourself.”",
+     "who": "The Lamplighter"
+    },
+    {
+     "q": "“He steps aside and lifts the hollow lantern toward the east, as if to light the way. There is no light in it. He lifts it all the same.”",
+     "who": ""
+    }
+   ]
+  },
+  "c7": {
+   "num": "VII · THE NIGHT STALL",
+   "g": "VII",
+   "title": "Strangers on the road",
+   "tag": "The Merchant · concept art",
+   "narr": "Not everything on the road is glass that wants breaking. A merchant in an eyeless mask trades by lantern light. A skeleton deals cards to anyone who will sit. A knight rests against a burned tree with something to give. A smiling trader weighs hearts against gold. Each of them wants something. Few of them say what.",
+   "quote": "“Gold for glory, stranger. Everything’s fair-priced — for the doomed.”",
+   "who": "The Merchant"
+  },
+  "strangers": [
+   [
+    "The Gambler",
+    "“One throw, stranger. Fortune loves the reckless.”",
+    "A grinning skeleton in a wide hat deals cards beside a roadside fire, an empty chair facing him"
+   ],
+   [
+    "The Wounded Knight",
+    "He holds out a shard of amber. He will not need it now.",
+    "A knight of cracked stained glass slumped against a burned tree, holding out a glowing amber crystal"
+   ],
+   [
+    "The Flesh Trader",
+    "He pays well for what you will not be needing.",
+    "A thin trader in a white mask holding brass scales with a red glass heart on one pan"
+   ]
+  ],
+  "c8": {
+   "num": "VIII · ACT II",
+   "title": "The Sunken City",
+   "narr": "Halfway along the road, a whole city stopped to wait for the door. The water rose around its waiting and never went down. Its people still stand at their windows beneath the tide, and a light drifts through the drowned streets — a light that leads no one anywhere.",
+   "quotes": [
+    {
+     "q": "“The city stayed to wait. So did the water.”"
+    },
+    {
+     "q": "“There’s a light under the water. It leads to nothing — it only leads people.”"
+    }
+   ],
+   "bossLbl": "Beneath the tide",
+   "boss": "Leviathan’s Maw",
+   "mob": "Signature foe · Siren"
+  },
+  "c9": {
+   "num": "IX · ACT III",
+   "title": "The Obsidian Court",
+   "narr": "Before the door stands a court of black glass. No fire is lit there. Its courtiers sit in starlight and have sat too long; broken halos lie where they fell, and something watches every step you take toward the throne.",
+   "quotes": [
+    {
+     "q": "“No fire in the court. They sit in starlight, and have sat too long.”"
+    },
+    {
+     "q": "“Broken halos on the ground. No one gathers them.”"
+    },
+    {
+     "q": "“The nearer the door, the more of them. All seated.”"
+    }
+   ],
+   "mob": "Signature foe · Watcher Eye"
+  },
+  "c10": {
+   "num": "X · BOSS OF ACT III",
+   "g": "X",
+   "title": "The Eternal Sovereign",
+   "narr": "A masked king holds the throne before the last door, crowned in violet glass, a broken halo at his back. Somewhere on the road behind you, a merchant is selling a lantern with no flame.",
+   "quotes": [
+    {
+     "q": "“The Sovereign is a mask worn before the last door.”",
+     "who": "A whisper on the road"
+    },
+    {
+     "q": "“Cold glass. No wick. The merchant will not say who left it.”",
+     "who": "The Lantern with No Flame"
+    }
+   ]
+  },
+  "c11": {
+   "num": "XI · THE DOOR",
+   "title": "There is a sealed door beyond the crown.",
+   "narr": "Six shards. One lantern. One road. What waits on the other side is not written here. It is written on the road.",
+   "cta": "Learn how it works"
+  },
+  "s": {
+   "kicker": "The design",
+   "title": "How the pilgrimage works",
+   "intro": "Three loops turn inside one another: the walk across a pilgrimage, the turn inside a fight, and the slow change of a deck and its flame. This is how each of them works.",
+   "loop": {
+    "kicker": "Loop one · the pilgrimage",
+    "title": "Every step is a choice",
+    "body": "A pilgrimage crosses three acts. Each act is a map of fifteen waystones woven from six paths, and you choose every step: which fights to take, which mysteries to risk, when to rest and when to press on.",
+    "alt": "Diagram: an ember chooses one route across a branching map of waystones, past a fight, an unknown, an elite and a rest site, to the boss",
+    "n0": "Start",
+    "n4": "Rest",
+    "n5": "Boss",
+    "bullets": [
+     {
+      "h": "Paths split and rejoin.",
+      "p": "A safer road now can mean a harder one later. Elites guard the best rewards."
+     },
+     {
+      "h": "Unlit waystones",
+      "p": "hide what they hold, but pay a bounty to whoever lights them."
+     },
+     {
+      "h": "A fire before every boss.",
+      "p": "The last waystone of each act is always a rest site: heal, or reforge one card."
+     }
+    ],
+    "nodesLbl": "What a waystone can hold",
+    "cap": "Act I · the journey map · in game",
+    "shotAlt": "The journey map of the Ashen Woods, with waystones along a river gorge"
+   },
+   "footLbl": "In-game footage",
+   "turn": {
+    "kicker": "Loop two · the turn",
+    "title": "Five cards, three candles, one lantern",
+    "body": "Energy refills every turn. Embers stay. Each card you feed to the lantern is gone for the rest of the fight — so every turn asks what you can afford to burn.",
+    "alt": "In-game footage of one turn against an Alpha Duskfang: a Strike chips a facet, a Defend is kindled into the lantern, the Lantern Art breaks the glass, and the foe acts on its shown intent",
+    "steps": [
+     [
+      "Draw",
+      "Five cards come to hand."
+     ],
+     [
+      "Light",
+      "Three candles of Energy pay for what you play."
+     ],
+     [
+      "Strike",
+      "Cards spend Energy to hit, guard and afflict."
+     ],
+     [
+      "Kindle",
+      "Once a turn, feed any card to the lantern for one Ember."
+     ],
+     [
+      "Art",
+      "Once a turn, spend Embers on a Lantern Art."
+     ],
+     [
+      "Read",
+      "Every foe shows its intent before it acts."
+     ]
+    ],
+    "cap": "One turn, recorded from the game · Act I, Alpha Duskfang"
+   },
+   "glass": {
+    "kicker": "Loop two · the glass",
+    "title": "Chip. Crack. Shatter.",
+    "body": "Every creature is glass with a facet gauge: four facets for most foes, more for elites and bosses. An unblocked hit chips one facet. Fill the gauge and the glass shatters.",
+    "alt": "In-game footage, slowed: the Lantern Art and a Strike break the Alpha Duskfang, which is Staggered and gains two Cracked",
+    "tags": [
+     "Staggered · loses its next action",
+     "+2 Cracked · takes 50% more",
+     "+2 Embers · into the lantern"
+    ],
+    "bullets": [
+     {
+      "h": "Shatter is a turn won.",
+      "p": "A shattered foe skips its next action, so timing the break against a big intent is the best defence there is."
+     },
+     {
+      "h": "Breaking feeds the fire.",
+      "p": "Every shatter spills two Embers. Glass you break pays for the Art that breaks the next one."
+     },
+     {
+      "h": "The glass learns.",
+      "p": "Each break makes the next one harder: the foe’s facet gauge grows by one."
+     }
+    ]
+   },
+   "flame": {
+    "kicker": "Loop three · the deck",
+    "title": "The flame reads your deck",
+    "body": "Before each fight the lantern weighs the coloured glass in your deck and settles on a flame. It never watches how you play — only what you carry — and the fight keeps that flame to the end.",
+    "alt": "Diagram on the game’s own numbers: as one colour comes to lead the deck’s coloured glass, the lantern goes from Kindling and Soot to Steady and True, holding more Embers and paying less for its Art",
+    "deckLbl": "Your deck · twelve cards",
+    "purLbl": "The leading way’s share of coloured glass",
+    "capLbl": "Ember capacity",
+    "artLbl": "Flare costs",
+    "marks": [
+     "Soot ≤45%",
+     "Steady 60%",
+     "True 75%"
+    ],
+    "tiers": [
+     [
+      "Kindling",
+      "Fewer than five coloured cards. The plain lantern: 9 Embers, Arts at full price.",
+      "Three coloured cards · too few to read",
+      "3"
+     ],
+     [
+      "Soot",
+      "No way leads (45% or less). Leaks 1 Ember a turn; Arts cost 1 more.",
+      "Leading way 33%",
+      "4"
+     ],
+     [
+      "Steady",
+      "One way holds 60%. Holds 4 more Embers; the first Ember each turn burns 2 brighter.",
+      "Leading way 60%",
+      "3"
+     ],
+     [
+      "True",
+      "One way holds 75%. Everything Steady gives, and Arts cost 2 less.",
+      "Leading way 80%",
+      "1"
+     ]
+    ],
+    "bullets": [
+     {
+      "h": "Clear glass is fuel, not noise.",
+      "p": "Cards with no colour never dim the flame. Cutting off-colour glass steadies it."
+     },
+     {
+      "h": "Lit glass.",
+      "p": "Some cards carry a rider that resolves only while the lantern burns their colour, Steady or True."
+     },
+     {
+      "h": "Ways are found, not chosen.",
+      "p": "The Duskblade’s glass leans three ways. Draft into one and the flame turns its colour."
+     }
+    ]
+   },
+   "stats": [
+    {
+     "n": "3",
+     "l": "Acts"
+    },
+    {
+     "n": "27",
+     "l": "Foes"
+    },
+    {
+     "n": "66",
+     "l": "Cards"
+    },
+    {
+     "n": "32",
+     "l": "Relics"
+    },
+    {
+     "n": "17",
+     "l": "Statuses"
+    },
+    {
+     "n": "5",
+     "l": "Vows"
+    }
+   ]
+  },
+  "g": {
+   "kicker": "Real glass, real light",
+   "title": "Build a deck of glass",
+   "intro": "Every card is a slab of glass, and every rarity has its own finish. Move your pointer across a card — or tilt your phone — and the light moves with you.",
+   "veil": "Rarer still",
+   "veilSub": "Some glass is not written here."
+  },
+  "v": {
+   "kicker": "Take up the lantern",
+   "title": "Available soon",
+   "facts": "Single-player · No accounts · No ads · No in-app purchases",
+   "platforms": [
+    {
+     "n": "App Store",
+     "s": "Coming soon"
+    },
+    {
+     "n": "Google Play",
+     "s": "Coming soon"
+    },
+    {
+     "n": "Amazon Appstore",
+     "s": "Coming soon"
+    },
+    {
+     "n": "Steam",
+     "s": "Coming soon"
+    }
+   ]
+  },
+  "footLabel": "About Glassvow",
+  "nodes": [
+   "Fight",
+   "Unknown",
+   "Elite",
+   "Rest",
+   "Merchant",
+   "Treasure",
+   "Unlit waystone",
+   "Boss"
+  ],
+  "ways": [
+   [
+    "Shatter",
+    "Frostlight flame"
+   ],
+   [
+    "Lantern",
+    "Hearthfire flame"
+   ],
+   [
+    "Edge",
+    "Eclipse flame"
+   ]
+  ],
+  "cards": {
+   "common": "Common",
+   "uncommon": "Uncommon",
+   "rare": "Rare",
+   "special": "Curse",
+   "back": "Card back",
+   "f1": "Silver rim",
+   "f2": "Spectral frame",
+   "f3": "Cut glass",
+   "f4": "Oil",
+   "f5": "Lit panes",
+   "types": {
+    "attack": "ATTACK",
+    "skill": "SKILL",
+    "power": "POWER",
+    "curse": "CURSE"
+   },
+   "mythicType": ""
+  },
+  "supportLbl": "Support"
+ },
+ "zh-Hant": {
+  "brandName": "琉璃誓言",
+  "navLabel": "章節",
+  "nav1": "故事",
+  "nav2": "三幕",
+  "nav3": "玩法",
+  "nav4": "琉璃",
+  "heroKicker": "彩窗上的朝聖之路",
+  "heroQuote": "「你醒了。」",
+  "heroWho": "守夜爐火旁",
+  "heroLede": "一款單人牌組構築冒險。提起燈，組一副琉璃牌，向東走向一扇從未打開的門。每一次啟程，路都不一樣。",
+  "heroCta1": "展開故事",
+  "heroCta2": "玩法",
+  "heroPlatforms": "平台",
+  "heroSoon": "即將登陸",
+  "scroll": "向下而行",
+  "conceptLbl": "概念美術",
+  "c1": {
+   "num": "壹 · 序章",
+   "title": "一團火，六片碎璃。",
+   "alt": "六片燼璃由一團火中迸散",
+   "tap": "輕觸火焰",
+   "p1": "在第一夜之前，世上只有一團火。後來它被裁成六片，散落在一條長路上——那條路由世界的西端，一直通往一扇從未有人打開的門。",
+   "p2": "那些碎璃仍在黑暗中燃燒：在長於灰燼上的樹林裏，在一座留下來等待、終被水淹沒的城底下，在一座無火燃燒的黑曜王庭之中。長路的西端，有一爐火由第一夜燒到現在。",
+   "p3": "帶着它向東走。打碎擋路之物。把火帶回家。",
+   "quote": "「一團火被裁成六片，散落於路。」"
+  },
+  "c2": {
+   "num": "貳 · 守夜",
+   "g": "貳",
+   "title": "極西之火",
+   "tag": "守夜 · 概念美術",
+   "narr": "你在世界西端的一爐火旁醒來。大廳古老，石頭溫暖。有人由第一夜起一直守着這爐火——也在火旁替你留了一個位置。",
+   "quotes": [
+    {
+     "q": "「慢慢來。路不會走掉。」",
+     "who": "爐火旁"
+    }
+   ]
+  },
+  "c3": {
+   "num": "參 · 提燈",
+   "g": "參",
+   "title": "它燒的是你帶着的東西",
+   "narr": "臨行前，有人遞給你一盞前人提過的燈。前面的路上，只有這點光是屬於你的——而它永遠都餓。",
+   "quotes": [
+    {
+     "q": "「它燒的是你帶着的東西。」",
+     "who": "爐火旁"
+    },
+    {
+     "q": "「路向東，盡頭有一道封門。尋回六片燼璃，門便會開。」",
+     "who": "爐火旁"
+    }
+   ]
+  },
+  "c4": {
+   "num": "肆 · 向東",
+   "g": "肆",
+   "title": "守夜開始了",
+   "narr": "大廳的門向着黎明前的黑暗打開。長路平直向東，越過最後一盞燈，通往一片琉璃都活着、而且不願被打碎的土地。",
+   "quotes": [
+    {
+     "q": "「你提起燈，推門而出。長路向東，天未亮。」"
+    },
+    {
+     "q": "「身後，爐火仍亮着。」"
+    },
+    {
+     "q": "「守夜開始了。」"
+    }
+   ],
+   "bearerLbl": "誰提着燈",
+   "bearer": "暮刃",
+   "bearerText": "琉璃磨成殺伐之鋒。揮斬、碎裂，再以破碎璃面化作薪火——任何長夜皆可劈開前路。"
+  },
+  "c5": {
+   "num": "伍 · 第一幕",
+   "title": "灰燼樹林",
+   "narr": "一片長在灰燼上的樹林。孢子在燈光中緩緩飄落，像遲來的雪；蒼白的面具半埋在樹下；長路起點的紀念碑立得密密麻麻。這裏有人祈禱了很久很久，從來沒有回應。",
+   "quotes": [
+    {
+     "q": "「兩盞燈並亮。火是新的。誰點的？」"
+    },
+    {
+     "q": "「他們向灰祈禱。灰不應人。」"
+    }
+   ],
+   "bossLbl": "樹林深處",
+   "boss": "根脈之心",
+   "mob": "本幕代表 · 墓園守衛"
+  },
+  "c6": {
+   "num": "陸 · 未燃之路",
+   "g": "陸",
+   "title": "空燈掌燈人",
+   "narr": "未燃之路上，一個老人坐在路旁，手裏的燈沒有火。他細看每一張經過的臉。他會攔下你五次，每一次都開出一個價錢。",
+   "quotes": [
+    {
+     "q": "「路上坐着一個提燈的老人。燈是空的，沒有火。」",
+     "who": ""
+    },
+    {
+     "q": "「油可以分，火不能分。火要自己帶到最後。」",
+     "who": "掌燈人"
+    },
+    {
+     "q": "「他讓開路，提起空燈，向東照了照——燈中沒有光；他仍是照了。」",
+     "who": ""
+    }
+   ]
+  },
+  "c7": {
+   "num": "柒 · 夜市",
+   "g": "柒",
+   "title": "路上的陌生人",
+   "tag": "商人 · 概念美術",
+   "narr": "路上並非每樣東西都是等着被打碎的琉璃。戴無眼面具的商人在燈下買賣；骷髏向每個肯坐下的人發牌；騎士靠着燒焦的樹，手裏有東西要給你；含笑的商販用秤去量心與黃金。他們各有所求，很少人說出口。",
+   "quote": "「黃金換榮耀，異鄉人。就算你命定殞落——價錢仍然公道。」",
+   "who": "商人"
+  },
+  "strangers": [
+   [
+    "賭徒",
+    "「只擲一次，陌生人。命運偏愛不顧一切的人。」",
+    "戴寬邊帽的骷髏在路邊火旁發牌，對面放着一張空椅"
+   ],
+   [
+    "負傷騎士",
+    "他遞出一片琥珀。他已經用不着了。",
+    "裂紋琉璃騎士靠在燒焦的樹下，遞出一塊發光的琥珀晶體"
+   ],
+   [
+    "血肉商人",
+    "你用不着的東西，他出價很高。",
+    "戴白面具的瘦削商人提着銅秤，一邊秤盤上是紅色琉璃心"
+   ]
+  ],
+  "c8": {
+   "num": "捌 · 第二幕",
+   "title": "沉沒之城",
+   "narr": "在長路中段，整座城停下來等那扇門。水在它的等待中漲起，再沒有退去。城中的人仍站在潮水下的窗前，一點光在被淹沒的街道間游走——那點光不引任何人到任何地方。",
+   "quotes": [
+    {
+     "q": "「這座城留下來等。水，也留下來。」"
+    },
+    {
+     "q": "「水下有光。那光不引路，只引人。」"
+    }
+   ],
+   "bossLbl": "潮水之下",
+   "boss": "利維坦之喉",
+   "mob": "本幕代表 · 海妖"
+  },
+  "c9": {
+   "num": "玖 · 第三幕",
+   "title": "黑曜王庭",
+   "narr": "門前是一座黑色琉璃的王庭。那裏不點火。朝臣坐在星光裏，坐了太久；斷了的光環落在原地。你向王座走的每一步，都有東西在看。",
+   "quotes": [
+    {
+     "q": "「庭中無火。他們坐在星光裏，坐了太久。」"
+    },
+    {
+     "q": "「斷了的光環落在地上，無人拾起。」"
+    },
+    {
+     "q": "「越近門，人越多。全部坐着。」"
+    }
+   ],
+   "mob": "本幕代表 · 守望之眼"
+  },
+  "c10": {
+   "num": "拾 · 第三幕首領",
+   "g": "拾",
+   "title": "永恆君王",
+   "narr": "一位戴面具的君王佔據最後那扇門前的王座，頭戴紫色琉璃王冠，身後是一圈破碎的光環。在你身後的路上，某個商人正在出售一盞沒有火焰的燈。",
+   "quotes": [
+    {
+     "q": "「永恆君王，只是門前披上的一副面具。」",
+     "who": "路上的低語"
+    },
+    {
+     "q": "「冰冷琉璃。沒有燈芯。商人不肯說是誰留下它。」",
+     "who": "無焰提燈"
+    }
+   ]
+  },
+  "c11": {
+   "num": "拾壹 · 門",
+   "title": "王冠之後，有一扇封印之門。",
+   "narr": "六片燼璃，一盞燈，一條路。門的另一邊是甚麼，這裏沒有寫。它寫在路上。",
+   "cta": "看看怎樣玩"
+  },
+  "s": {
+   "kicker": "設計",
+   "title": "朝聖之路如何運轉",
+   "intro": "三個循環一層套一層：一次朝聖的長行、一場戰鬥裏的每個回合，以及牌組與火焰慢慢的變化。以下逐一說明。",
+   "loop": {
+    "kicker": "循環一 · 朝聖",
+    "title": "每一步都是選擇",
+    "body": "一次朝聖橫越三幕。每一幕都是一張由十五座路碑、六條路線交織而成的地圖，每一步都由你決定：迎哪一場戰鬥，冒哪一次險，何時休息，何時前進。",
+    "alt": "示意圖：一點餘燼在分岔的路碑地圖上選定一條路，經過戰鬥、未知事件、菁英與休息處，直抵首領",
+    "n0": "起點",
+    "n4": "休息",
+    "n5": "首領",
+    "bullets": [
+     {
+      "h": "路線分岔又匯合。",
+      "p": "此刻走得安穩，之後可能更難。菁英守着最好的獎賞。"
+     },
+     {
+      "h": "未燃的路碑",
+      "p": "隱藏所藏之物，但點亮它的人可得賞金。"
+     },
+     {
+      "h": "每個首領之前都有一爐火。",
+      "p": "每一幕最後一座路碑必是休息處：回復生命，或重鑄一張牌。"
+     }
+    ],
+    "nodesLbl": "路碑可能藏着甚麼",
+    "cap": "第一幕 · 旅程地圖 · 遊戲畫面",
+    "shotAlt": "灰燼樹林的旅程地圖，路碑沿峽谷河流分佈"
+   },
+   "footLbl": "遊戲實錄",
+   "turn": {
+    "kicker": "循環二 · 回合",
+    "title": "五張牌，三支燭，一盞燈",
+    "body": "能量每回合回滿，餘燼卻會留下。每一張餵給提燈的牌，在本場戰鬥中都不會再回來——所以每個回合都在問：你燒得起甚麼？",
+    "alt": "對陣暮牙首領的一個回合遊戲實錄：打擊琢去一格璃面，防禦被燃燼進提燈，提燈術打碎琉璃，敵人按顯示的意圖行動",
+    "steps": [
+     [
+      "抽牌",
+      "五張牌來到手中。"
+     ],
+     [
+      "點燭",
+      "三支能量燭火支付你打出的牌。"
+     ],
+     [
+      "出擊",
+      "花費能量去攻擊、格擋與削弱。"
+     ],
+     [
+      "燃燼",
+      "每回合一次，把任意一張牌餵給提燈，得一點餘燼。"
+     ],
+     [
+      "提燈術",
+      "每回合一次，花費餘燼施展提燈術。"
+     ],
+     [
+      "看清",
+      "每個敵人行動前都會顯示意圖。"
+     ]
+    ],
+    "cap": "由遊戲錄下的一個回合 · 第一幕，暮牙首領"
+   },
+   "glass": {
+    "kicker": "循環二 · 琉璃",
+    "title": "琢擊。裂開。碎裂。",
+    "body": "每一隻生物都是琉璃，身上有一道璃面量表：大多數敵人四格，菁英與首領更多。每一下未被格擋的攻擊琢去一格。量表填滿，琉璃便碎裂。",
+    "alt": "放慢的遊戲實錄：提燈術與一記打擊打碎暮牙首領，牠陷入踉蹌並獲得兩層裂痕",
+    "tags": [
+     "踉蹌 · 失去下一次行動",
+     "+2 裂痕 · 受傷增加 50%",
+     "+2 餘燼 · 濺入提燈"
+    ],
+    "bullets": [
+     {
+      "h": "碎裂就是贏回一個回合。",
+      "p": "碎裂的敵人會跳過下一次行動；在它蓄勢重擊之前打碎它，就是最好的防守。"
+     },
+     {
+      "h": "打碎也是添火。",
+      "p": "每次碎裂都會濺出兩點餘燼。今次打碎的琉璃，替下一次碎裂的提燈術付賬。"
+     },
+     {
+      "h": "琉璃會記住。",
+      "p": "每碎一次，下一次便更難：敵人的璃面量表多一格。"
+     }
+    ]
+   },
+   "flame": {
+    "kicker": "循環三 · 牌組",
+    "title": "火焰讀懂你的牌組",
+    "body": "每場戰鬥之前，提燈會衡量你牌組中的有色琉璃，定下一種火焰。它從不看你怎樣出牌——只看你帶着甚麼——而整場戰鬥都維持那一種火焰。",
+    "alt": "按遊戲實際數值繪製的示意圖：當一種顏色在有色琉璃中佔優，提燈由「燃」與「塵」變成「定」與「真」，容納更多餘燼，提燈術也更便宜",
+    "deckLbl": "你的牌組 · 十二張",
+    "purLbl": "領先之道佔有色琉璃的比例",
+    "capLbl": "餘燼容量",
+    "artLbl": "焰閃耗費",
+    "marks": [
+     "塵 ≤45%",
+     "定 60%",
+     "真 75%"
+    ],
+    "tiers": [
+     [
+      "燃",
+      "有色牌少於五張。普通的提燈：容納 9 點餘燼，提燈術原價。",
+      "三張有色牌 · 未足以判讀",
+      "3"
+     ],
+     [
+      "塵",
+      "沒有一道領先（45% 或以下）。每回合流失 1 點餘燼；提燈術貴 1 點。",
+      "領先之道 33%",
+      "4"
+     ],
+     [
+      "定",
+      "一道佔 60%。多容納 4 點餘燼；每回合第一點餘燼額外多 2。",
+      "領先之道 60%",
+      "3"
+     ],
+     [
+      "真",
+      "一道佔 75%。擁有「定」的一切，提燈術再便宜 2 點。",
+      "領先之道 80%",
+      "1"
+     ]
+    ],
+    "bullets": [
+     {
+      "h": "透明琉璃是燃料，不是雜音。",
+      "p": "沒有顏色的牌從不令火焰變暗；剔走別色的琉璃，火焰便更穩。"
+     },
+     {
+      "h": "燃色效果。",
+      "p": "部分卡牌附有額外效果，只在提燈燃着其顏色（定或真）時生效。"
+     },
+     {
+      "h": "道路是找到的，不是選的。",
+      "p": "暮刃的琉璃傾向三條道路。選牌時走進其中一條，火焰便會換上它的顏色。"
+     }
+    ]
+   },
+   "stats": [
+    {
+     "n": "3",
+     "l": "幕"
+    },
+    {
+     "n": "27",
+     "l": "種敵人"
+    },
+    {
+     "n": "66",
+     "l": "張卡牌"
+    },
+    {
+     "n": "32",
+     "l": "件遺物"
+    },
+    {
+     "n": "17",
+     "l": "種狀態"
+    },
+    {
+     "n": "5",
+     "l": "道誓言"
+    }
+   ]
+  },
+  "g": {
+   "kicker": "真正的琉璃，真正的光",
+   "title": "組一副琉璃牌",
+   "intro": "每張牌都是一片琉璃，每種稀有度都有自己的質感。把指標移過一張牌——或傾斜手機——光便隨你移動。",
+   "veil": "更為稀有",
+   "veilSub": "有些琉璃，這裏不寫。"
+  },
+  "v": {
+   "kicker": "提起燈",
+   "title": "即將推出",
+   "facts": "單人遊戲 · 無需帳戶 · 沒有廣告 · 沒有內購",
+   "platforms": [
+    {
+     "n": "App Store",
+     "s": "即將推出"
+    },
+    {
+     "n": "Google Play",
+     "s": "即將推出"
+    },
+    {
+     "n": "Amazon Appstore",
+     "s": "即將推出"
+    },
+    {
+     "n": "Steam",
+     "s": "即將推出"
+    }
+   ]
+  },
+  "footLabel": "關於琉璃誓言",
+  "nodes": [
+   "怪物",
+   "未知事件",
+   "菁英",
+   "休息處",
+   "商人",
+   "寶箱",
+   "未燃之路",
+   "首領"
+  ],
+  "ways": [
+   [
+    "碎",
+    "霜光之火"
+   ],
+   [
+    "燼",
+    "爐火之火"
+   ],
+   [
+    "蝕",
+    "蝕月之火"
+   ]
+  ],
+  "cards": {
+   "common": "普通",
+   "uncommon": "罕見",
+   "rare": "稀有",
+   "special": "詛咒",
+   "back": "牌背",
+   "f1": "銀邊",
+   "f2": "光譜框",
+   "f3": "切割琉璃",
+   "f4": "油膜",
+   "f5": "窗格光",
+   "types": {
+    "attack": "攻擊",
+    "skill": "技巧",
+    "power": "能力",
+    "curse": "詛咒"
+   },
+   "mythicType": ""
+  },
+  "supportLbl": "支援"
+ },
+ "glass": [
+  {
+   "id": "cleave",
+   "r": "common",
+   "fk": "f1",
+   "type": "attack",
+   "cost": 1,
+   "tier": 1,
+   "art": "c0e17cb4219004bc805bb7f5b22fa860",
+   "name": [
+    "Fan of Glass",
+    "琉璃扇"
+   ],
+   "text": [
+    "Deal @6@ damage to ALL enemies.",
+    "對所有敵人造成 @6@ 點傷害。"
+   ]
+  },
+  {
+   "id": "emberdance",
+   "r": "uncommon",
+   "fk": "f2",
+   "type": "skill",
+   "cost": 0,
+   "tier": 2,
+   "art": "92e8ccfa4e5c079500943c884314de84",
+   "name": [
+    "Emberdance",
+    "餘燼舞"
+   ],
+   "text": [
+    "Spill your lantern: gain 3 Ward for each Ember spent. Kindle.",
+    "傾盡提燈：每花費 1 點餘燼，獲得 3 點護光。燃燼。"
+   ]
+  },
+  {
+   "id": "totality",
+   "r": "rare",
+   "fk": "f3",
+   "type": "attack",
+   "cost": 2,
+   "tier": 3,
+   "art": "f8fe0ef4fc9d8cdce65313d35544b09d",
+   "name": [
+    "Totality",
+    "全蝕"
+   ],
+   "text": [
+    "Deal @14@ damage, then double the enemy's Cracked.",
+    "造成 @14@ 點傷害，然後令該敵人的裂痕層數加倍。"
+   ]
+  },
+  {
+   "id": "hex",
+   "r": "special",
+   "fk": "f4",
+   "type": "curse",
+   "cost": null,
+   "tier": 4,
+   "art": "a8c996b7979e5b35bc81f0d8f83fb75e",
+   "name": [
+    "Hex",
+    "咒印"
+   ],
+   "text": [
+    "Unplayable. At the end of your turn, lose 1 HP if this is in your hand. Refuses the fire.",
+    "無法打出。若此牌留在手中，你的回合結束時失去 1 點生命。此牌拒火。"
+   ]
+  },
+  {
+   "id": "back-vault",
+   "r": "back",
+   "fk": "f5",
+   "tier": 5,
+   "back": "bf219ee6f9b0b7952479ed0973199fa0",
+   "name": [
+    "The Lancet",
+    "長窗"
+   ],
+   "knobs": {
+    "mode": 0,
+    "angle": 8,
+    "centre": [
+     76,
+     108
+    ],
+    "palette": [
+     0.55,
+     0.85,
+     1
+    ],
+    "mix": 0.35,
+    "strength": 1.35,
+    "scale": 1.5
+   }
+  }
+ ],
+ "myth": [
+  {
+   "id": "bankedFire",
+   "r": "mythic",
+   "type": "skill",
+   "cost": 0,
+   "warm": 0.3,
+   "tier": 6,
+   "name": [
+    "Banked Fire",
+    "封火"
+   ],
+   "text": [
+    "Gain 1 Ember. If you win this fight, carry your lantern's Embers into the next fight.",
+    "獲得 1 點餘燼。若本場戰鬥獲勝，提燈的餘燼會保留至下一場戰鬥。"
+   ],
+   "layers": [
+    [
+     "cfd94092533b6f2dc65503611c9db928",
+     "back",
+     -6
+    ],
+    [
+     "89275b5ff67a819e09946a588cd24bca",
+     "ground",
+     22
+    ],
+    [
+     "583dd5922c6c2b6cdb85d604b2192bfb",
+     "subject",
+     22
+    ],
+    [
+     "aa34e07cf905529ed1712d4579e7ecd0",
+     "hot-core",
+     22
+    ],
+    [
+     "b25b74b96f4d38a981dd704d2f58b28d",
+     "front",
+     106
+    ],
+    [
+     "b3a6cbfc1c38826d3bb403710a5e015f",
+     "particles",
+     55
+    ]
+   ]
+  }
+ ],
+ "shards": [
+  [
+   "3b1433af3baa4ce4c3e8881188ad0e11",
+   "#6ebeff",
+   180,
+   0.4,
+   -14
+  ],
+  [
+   "ad55a3be2e0a026f7c39b9ce3cea8b9a",
+   "#ff5a5a",
+   242,
+   0.38,
+   -8
+  ],
+  [
+   "35b307eb5159d1e92432c108178396c5",
+   "#ffc850",
+   307,
+   0.41,
+   9
+  ],
+  [
+   "3d901f77336a7ab7ca6132797e8da289",
+   "#5078ff",
+   7,
+   0.42,
+   16
+  ],
+  [
+   "3ae1c82802b621d8a236d022a8ac6ade",
+   "#aa6eff",
+   63,
+   0.39,
+   6
+  ],
+  [
+   "e9a4f0a3b45263fbc0036bc867d8a904",
+   "#ff8c3c",
+   115,
+   0.38,
+   -10
+  ]
+ ],
+ "mobs": {
+  "act1": {
+   "id": "d6751e33a8b38354cb9ba06feef58f15",
+   "rot": 0.35,
+   "h": 1.2,
+   "ts": 0.55,
+   "key": 16761466,
+   "rim": 8248207,
+   "hemi": 9075302
+  },
+  "act2": {
+   "id": "579518e2b1763d07f1215a209d1f80b8",
+   "rot": -0.35,
+   "h": 1,
+   "ts": 0.5,
+   "key": 13629183,
+   "rim": 5499135,
+   "hemi": 5929610
+  },
+  "act3": {
+   "id": "96314875c0a31d047c3cbd2cfad88f2c",
+   "rot": 0.2,
+   "h": 1.2,
+   "ts": 0.5,
+   "float": 0.035,
+   "key": 15391999,
+   "rim": 16732120,
+   "hemi": 6969994
+  }
+ },
+ "deck": [
+  "HHHH",
+  "CHHH",
+  "FHHH",
+  "CFHH",
+  "EFHH",
+  "CFHH",
+  "CEFH",
+  "CEFH",
+  "CEEF",
+  "CCEE",
+  "CCCC",
+  "CCCC"
+ ],
+ "platformD": [
+  "M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701",
+  "M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z",
+  "M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.174.09.336-.12.48-.256.19-.6.41-1.006.654-1.244.743-2.64 1.316-4.185 1.726a17.617 17.617 0 01-10.951-.577 17.88 17.88 0 01-5.43-3.35c-.1-.074-.151-.15-.151-.22 0-.047.021-.09.051-.13zm6.565-6.218c0-1.005.247-1.863.743-2.577.495-.71 1.17-1.25 2.04-1.615.796-.335 1.756-.575 2.912-.72.39-.046 1.033-.103 1.92-.174v-.37c0-.93-.105-1.558-.3-1.875-.302-.43-.78-.65-1.44-.65h-.182c-.48.046-.896.196-1.246.46-.35.27-.575.63-.675 1.096-.06.3-.206.465-.435.51l-2.52-.315c-.248-.06-.372-.18-.372-.39 0-.046.007-.09.022-.15.247-1.29.855-2.25 1.82-2.88.976-.616 2.1-.975 3.39-1.05h.54c1.65 0 2.957.434 3.888 1.29.135.15.27.3.405.48.12.165.224.314.283.45.075.134.15.33.195.57.06.254.105.42.135.51.03.104.062.3.076.615.01.313.02.493.02.553v5.28c0 .376.06.72.165 1.036.105.313.21.54.315.674l.51.674c.09.136.136.256.136.36 0 .12-.06.226-.18.314-1.2 1.05-1.86 1.62-1.963 1.71-.165.135-.375.15-.63.045a6.062 6.062 0 01-.526-.496l-.31-.347a9.391 9.391 0 01-.317-.42l-.3-.435c-.81.886-1.603 1.44-2.4 1.665-.494.15-1.093.227-1.83.227-1.11 0-2.04-.343-2.76-1.034-.72-.69-1.08-1.665-1.08-2.94l-.05-.076zm3.753-.438c0 .566.14 1.02.425 1.364.285.34.675.512 1.155.512.045 0 .106-.007.195-.02.09-.016.134-.023.166-.023.614-.16 1.08-.553 1.424-1.178.165-.28.285-.58.36-.91.09-.32.12-.59.135-.8.015-.195.015-.54.015-1.005v-.54c-.84 0-1.484.06-1.92.18-1.275.36-1.92 1.17-1.92 2.43l-.035-.02zm9.162 7.027c.03-.06.075-.11.132-.17.362-.243.714-.41 1.05-.5a8.094 8.094 0 011.612-.24c.14-.012.28 0 .41.03.65.06 1.05.168 1.172.33.063.09.099.228.099.39v.15c0 .51-.149 1.11-.424 1.8-.278.69-.664 1.248-1.156 1.68-.073.06-.14.09-.197.09-.03 0-.06 0-.09-.012-.09-.044-.107-.12-.064-.24.54-1.26.806-2.143.806-2.64 0-.15-.03-.27-.087-.344-.145-.166-.55-.257-1.224-.257-.243 0-.533.016-.87.046-.363.045-.7.09-1 .135-.09 0-.148-.014-.18-.044-.03-.03-.036-.047-.02-.077 0-.017.006-.03.02-.063v-.06z",
+  "M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z"
+ ]
+}

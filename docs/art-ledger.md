@@ -1779,6 +1779,61 @@ portraits wait until a scene needs more than one register from them; their
 voice rules (`02-cast.md`: the Sovereign's avoidance of "walk", the Shade's
 fragments) should shape the poses then.
 
+## Website — story plates and parallax layers (2026-10-20)
+
+Seventeen images for the storytelling home page of glassvow.eugnel.com, which
+tells the Acts I–III story in eleven chapters. They are not game assets: nothing
+under `assets/` changed, and the game never loads them. The files and the exact
+prompts live in `docs/design/2026-10-20-website-story/`, whose README is the
+detailed record.
+
+- **Generator:** the Codex CLI built-in image tool on the owner's ChatGPT
+  subscription (`codex exec --sandbox read-only`), one request per image.
+- **Plates:** the shared scene-plate style block
+  (`docs/design/2026-08-16-scene-plates/README.md` › *Shared style block*).
+  These requests dropped the block's first two lines. The README records the
+  defect; regenerate with the full block.
+- **Figures:** the style-bible block and construction clause above. Layers use
+  the Keeper portraits' transparent-background clause. Each character request
+  read its shipped figure as a reference:
+  - `meta/keeper.png`
+  - `meta/hollow-lamplighter.png`
+  - `heroes/duskblade.png`
+  - `enemies/sovereign.png`
+- **Subjects:**
+  - Act I, II and III plates.
+  - The sealed door, closed with nothing behind it.
+  - The prologue road.
+  - Six emberglass shards.
+  - The Keeper seated on the hearth step.
+  - The Keeper offering the lantern.
+  - The pilgrim's lantern.
+  - The Duskblade on the road east.
+  - The Unlit Way with the Hollow Lamplighter.
+  - The Eternal Sovereign enthroned.
+  - Foreground frames for the hall and each act.
+  - Shatter, Lantern and Edge way emblems.
+- **Spoiler review:** done against `docs/story/00-truth.md` and the
+  foreshadow ledger. No Act IV, unsealing, Queue or mirror imagery.
+- **Second batch (nine images):** concept art and mechanism backdrops, made
+  with the full style block and each subject's shipped art as reference:
+  - the Vigil exterior, with no figure;
+  - the Merchant, the Gambler, the Wounded Knight, the Flesh Trader and the
+    Tidecaller;
+  - a single monument, Kindle and Shatter, which sit behind the page's
+    mechanism diagrams.
+
+  The Flesh Trader plate is cropped to remove a background window that reads
+  as the Rose Window. The README holds the table and the spoiler notes.
+- **Third batch (ten layers):** chapters II, III and VI as parallax scenes:
+  background plates with the full style block, and transparent figure and
+  foreground layers, each on its shipped reference. The Lamplighter is redone
+  from `meta/hollow-lamplighter.png` with his lantern dark, as canon requires
+  (the first plate showed it lit and is off the page). The folder also holds
+  in-game combat footage recorded with Godot's movie writer; the README says
+  how, and what the driver staged. From this batch the folder's binaries are in
+  Git LFS.
+
 ## Owed — shipped content still on its fallback
 
 Content that ships before its art exists. Each row renders today on the

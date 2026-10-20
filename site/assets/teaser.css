@@ -543,7 +543,7 @@ body.teaser {
   opacity: clamp(0, calc(var(--p) * 6 - 4.8), 1);
 }
 
-/* The road: five panes along the pilgrimage */
+/* The road: two panes along the pilgrimage */
 
 .road {
   position: relative;
@@ -570,7 +570,7 @@ body.teaser {
 }
 
 .road-track {
-  --n: 5;
+  --n: 2;
   display: grid;
   gap: 3rem;
   margin: 0;
@@ -585,9 +585,6 @@ body.teaser {
 }
 
 .road-pane:nth-child(2) { --i: 1; }
-.road-pane:nth-child(3) { --i: 2; }
-.road-pane:nth-child(4) { --i: 3; }
-.road-pane:nth-child(5) { --i: 4; }
 
 .road-pane figure {
   margin: 0;
