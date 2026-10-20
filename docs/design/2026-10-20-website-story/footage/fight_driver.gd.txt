@@ -1,0 +1,134 @@
+extends SceneTree
+## Website footage, not shipped: boots the real Main into a bench fight and
+## plays one scripted turn through the same request_* paths the UI uses, so the
+## movie writer records the shipping combat screen, its VFX and its HUD.
+##
+##   xvfb-run -a -s "-screen 0 1458x820x24" godot --path . --rendering-driver opengl3 \
+##     --write-movie work/footage/out.avi --fixed-fps 30 -s res://work/footage/fight_driver.gd -- \
+##     --foe=gravewarden --kind=elite --seed=7 --plan=turn
+
+var _main: Main
+var _args: Dictionary = {}
+
+
+func _initialize() -> void:
+	for arg: String in OS.get_cmdline_user_args():
+		var at: int = arg.find("=")
+		if at > 0:
+			_args[arg.substr(2, at - 2)] = arg.substr(at + 1)
+		else:
+			_args[arg.trim_prefix("--")] = "true"
+	DisplayServer.window_set_size(Vector2i(1180, 820))
+	_main = (load("res://application/main.tscn") as PackedScene).instantiate() as Main
+	_main._boot_args = PackedStringArray([
+		"--fight=%s" % str(_args.get("foe", "gravewarden")),
+		"--kind=%s" % str(_args.get("kind", "elite")),
+		"--seed=%s" % str(_args.get("seed", "7")),
+		"--shape=%s" % str(_args.get("shape", "pad-landscape")),
+		"--locale=%s" % str(_args.get("locale", "en")),
+	])
+	root.add_child(_main)
+	_run.call_deferred()
+
+
+func _frames(n: int) -> void:
+	for i: int in n:
+		await process_frame
+
+
+func _seconds(s: float) -> void:
+	await _frames(int(s * 30.0))
+
+
+func _idle(cs: CombatScreen, limit_s: float = 10.0) -> void:
+	var n: int = 0
+	while cs.seq.is_busy() and n < int(limit_s * 30.0):
+		await process_frame
+		n += 1
+
+
+func _log(msg: String) -> void:
+	print("[footage] ", msg)
+
+
+func _run() -> void:
+	AudioServer.set_bus_mute(0, true)
+	var cs: CombatScreen = null
+	for i: int in 300:
+		await process_frame
+		cs = _main._screen as CombatScreen
+		if cs != null and _main.game != null and _main.game.cb != null:
+			break
+	if cs == null:
+		_log("no combat screen")
+		quit(3)
+		return
+	await _seconds(str(_args.get("intro", "3.2")).to_float())
+	await _idle(cs)
+	var g: GlassvowGame = _main.game
+	var foe: EnemyCombatant = g.cb.enemies[0]
+	_log("foe %s facets %d/%d hp %d embers %d energy %d hand %d" % [foe.key, foe.chips, foe.facet_max, foe.hp, g.cb.embers, g.cb.player.energy, g.cb.hand.size()])
+	# Stage the demo inside the real rules: the foe is two chips from breaking
+	# and the lantern holds two Embers, so one turn shows a chip, a Kindle, an Art
+	# and a shatter. Everything after this is the game's own resolution.
+	var plan: String = str(_args.get("plan", "turn"))
+	if plan == "turn":
+		foe.chips = maxi(0, foe.facet_max - str(_args.get("left", "2")).to_int())
+		g.cb.embers = str(_args.get("embers", "2")).to_int()
+		cs._sync_all()
+		await _seconds(0.8)
+		# 1. strike
+		await _play_attack(cs, g)
+		await _seconds(0.9)
+		# 2. kindle a card that is not an attack
+		await _kindle(cs, g)
+		await _seconds(0.9)
+		# 3. the Art
+		if cs._rules.can_use_art(g.run, g.cb):
+			cs._on_art_pressed()
+			_log("art")
+			await _idle(cs)
+			await _seconds(1.0)
+		# 4. strike until the glass breaks or the energy runs out
+		for k: int in 3:
+			if g.cb.over or foe.hp <= 0:
+				break
+			if not await _play_attack(cs, g):
+				break
+			await _seconds(0.9)
+		await _seconds(1.2)
+		# 5. end the turn: the foe acts on its shown intent
+		if not g.cb.over:
+			cs._on_end_turn_pressed()
+			_log("end turn")
+			await _idle(cs, 14.0)
+			await _seconds(2.0)
+	else:
+		await _seconds(str(_args.get("hold", "6")).to_float())
+	_log("done facets %d/%d hp %d embers %d" % [foe.chips, foe.facet_max, foe.hp, g.cb.embers])
+	quit(0)
+
+
+func _play_attack(cs: CombatScreen, g: GlassvowGame) -> bool:
+	for c: CardInst in g.cb.hand.duplicate():
+		var def: Dictionary = g.content.cards.get(String(c.id), {})
+		if str(def.get("type", "")) != "attack":
+			continue
+		if cs.request_play(c.uid, 0):
+			await _idle(cs)
+			var e: EnemyCombatant = g.cb.enemies[0]
+			_log("play %s -> chips %d/%d staggered %s hp %d embers %d" % [c.id, e.chips, e.facet_max, e.staggered, e.hp, g.cb.embers])
+			return true
+	return false
+
+
+func _kindle(cs: CombatScreen, g: GlassvowGame) -> bool:
+	for c: CardInst in g.cb.hand.duplicate():
+		var def: Dictionary = g.content.cards.get(String(c.id), {})
+		if str(def.get("type", "")) == "attack":
+			continue
+		if cs.request_kindle(c.uid):
+			_log("kindle %s" % c.id)
+			await _idle(cs)
+			return true
+	return false

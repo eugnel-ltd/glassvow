@@ -1825,6 +1825,14 @@ detailed record.
 
   The Flesh Trader plate is cropped to remove a background window that reads
   as the Rose Window. The README holds the table and the spoiler notes.
+- **Third batch (ten layers):** chapters II, III and VI as parallax scenes:
+  background plates with the full style block, and transparent figure and
+  foreground layers, each on its shipped reference. The Lamplighter is redone
+  from `meta/hollow-lamplighter.png` with his lantern dark, as canon requires
+  (the first plate showed it lit and is off the page). The folder also holds
+  in-game combat footage recorded with Godot's movie writer; the README says
+  how, and what the driver staged. From this batch the folder's binaries are in
+  Git LFS.
 
 ## Owed — shipped content still on its fallback
 

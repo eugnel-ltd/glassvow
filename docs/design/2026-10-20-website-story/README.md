@@ -78,6 +78,46 @@ the page.
 | `art/kindle.webp` | 1536×1024 | `ui/lantern.png` | Backdrop of the turn diagram: a card fed to the lantern |
 | `art/shatter.webp` | 1536×1024 | `enemies/duskfang.png` | Backdrop of the shatter diagram |
 
+### Third batch — layered scenes and the Lamplighter redone
+
+Chapters II, III and VI became parallax scenes built from separate layers, each
+generated with the reference named in its prompt file: a background plate with
+the full style block, then transparent figure and foreground layers. Figure
+layers are cropped to their bounding box; the page places and sizes them.
+
+| Files | Reference | Chapter |
+|---|---|---|
+| `art/vigil-bg.webp`, `art/vigil-hall.webp`, `art/vigil-walker.webp`, `art/vigil-fg.webp` | `art/vigil-exterior.webp` | II: sky and road, the hall, the walker leaving east, the foreground frame. No figure at the hall. |
+| `art/lantern-bg.webp`, `art/lantern-keeper.webp`, `art/lantern-fg.webp` | `art/keeper-lantern-scene.webp`; `meta/keeper.png` for the figure | III: the hall and hearth, the Keeper kneeling to offer the lantern (the Keeper's one appearance on the page), the pillar and coals |
+| `art/lamp-bg.webp`, `art/lamp-figure.webp`, `art/lamp-fg.webp` | `meta/hollow-lamplighter.png` | VI: the Unlit Way in a storm, the Lamplighter raising his dead lantern, wind-bent grass |
+
+`art/lamplighter-scene.webp` is off the page: its lantern is lit, and the
+Lamplighter's lantern holds no flame. The new figure's lantern is dark.
+
+## Footage
+
+`footage/turn.mp4` and `footage/shatter.mp4` are recorded from the game, not
+generated. Godot 4.7.2 ran the real Main into a bench fight (`--fight=alphaFang
+--kind=normal --seed=7`, pad-landscape) under `xvfb-run` with the OpenGL
+compatibility renderer and the movie writer (`--write-movie`, 30 fps).
+`footage/fight_driver.gd.txt` is the driver: it plays a Strike, Kindles a
+Defend, uses the Lantern Art, Strikes again and ends the turn through the
+combat screen's own request paths.
+
+One thing is staged and is said here so the clip is not over-read: before the
+first card the driver sets the foe two facets from breaking and the lantern to
+two Embers, so a single turn shows a chip, a Kindle, an Art and a shatter.
+Everything after that is the game's own resolution. The compatibility renderer
+is not the shipping mobile renderer, so colour and grading differ slightly; a
+map capture made the same way looked wrong for that reason and was not used.
+`shatter.mp4` is a crop of the same take around the foe, slowed to 0.7×.
+
+## Storage
+
+From this batch on, the folder's WebP, MP4 and JPEG files are tracked by Git
+LFS (`.gitattributes`). The first two batches were committed as ordinary blobs
+and are re-added here as LFS pointers; their history is not rewritten.
+
 ## Spoiler review
 
 Every subject was checked against `docs/story/00-truth.md`, the foreshadow
@@ -98,6 +138,9 @@ The second batch was checked the same way:
 - The Wounded Knight is dying, not shown becoming a monument.
 - The monument stands alone, with no queue of stones before a door.
 - The Flesh Trader crop removes the round window (see above).
+- The page's old pilgrimage diagram showed a fall, a monument and a return to
+  the Vigil. That loop reads as a spoiler, so the page now shows only the
+  choice of paths, and `art/monument.webp` is no longer used on it.
 
 The emberglass mural (`meta/emberglass-mural.png`) was left off the page: its
 panes show a line of figures that reads as the Queue.
