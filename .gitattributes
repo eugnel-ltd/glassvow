@@ -46,3 +46,6 @@ assets/art/title-background/background-page-*.png filter=lfs diff=lfs merge=lfs 
 docs/design/2026-10-20-website-story/art/*.webp filter=lfs diff=lfs merge=lfs -text
 docs/design/2026-10-20-website-story/footage/*.mp4 filter=lfs diff=lfs merge=lfs -text
 docs/design/2026-10-20-website-story/footage/*.jpg filter=lfs diff=lfs merge=lfs -text
+docs/design/2026-10-20-website-story/models/*.glb filter=lfs diff=lfs merge=lfs -text
+docs/design/2026-10-20-website-story/mythic/*.png filter=lfs diff=lfs merge=lfs -text
+docs/design/2026-10-20-website-story/mythic/*.jpg filter=lfs diff=lfs merge=lfs -text

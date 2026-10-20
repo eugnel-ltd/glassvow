@@ -112,10 +112,30 @@ is not the shipping mobile renderer, so colour and grading differ slightly; a
 map capture made the same way looked wrong for that reason and was not used.
 `shatter.mp4` is a crop of the same take around the foe, slowed to 0.7×.
 
+## Promoted for the live home page
+
+The home page at glassvow.eugnel.com is built from this work by
+`tools/teaser_page.py` and `tools/story_page.py` (template
+`tools/story_page.html`, copy `tools/story_copy.json`). Two inputs came from
+unmerged branches and are promoted here on the owner's approval (3D foes, round
+4 review: "3d is good"; the unnamed card, round 2: "keep the mythics"):
+
+| Files | Source |
+|---|---|
+| `models/gravewarden.glb` | `lab/rig-round4-handoff` at `6d02a484`: `lab/rig-round4/mobs/gravewarden/rig-round4-housing1/gravewarden.glb` |
+| `models/siren.glb` | same commit: `lab/rig-round4/mobs/siren/rig-contact-batch/siren.glb` |
+| `models/watcherEye.glb` | same commit: `lab/rig-round4/mobs/watcherEye/rig-contact-batch/watcherEye.glb` |
+| `mythic/bankedFire-B-L0.jpg` … `L5.png` | research branch at `c70766cf`: `research/mythic-art/round4/bankedFire-B-L0` … `L5` |
+
+Each copy is byte-identical to its source. `build_site.py --media` moves each
+model's one embedded JPEG out beside it (`<name>-skin.jpg`), because the site's
+Content-Security-Policy admits no `blob:` URL, which three.js would otherwise use
+for embedded textures.
+
 ## Storage
 
-From this batch on, the folder's WebP, MP4 and JPEG files are tracked by Git
-LFS (`.gitattributes`). The first two batches were committed as ordinary blobs
+From this batch on, the folder's WebP, MP4 and JPEG files, the models and the
+unnamed card's layers are tracked by Git LFS (`.gitattributes`). The first two batches were committed as ordinary blobs
 and are re-added here as LFS pointers; their history is not rewritten.
 
 ## Spoiler review
