@@ -1,0 +1,464 @@
+<div class="gv lang-{{lang}}">
+<!-- ══════════ NAV ══════════ -->
+<header class="f-body xb85bcc">
+  <a href="{{home}}" class="bar-mark xfdab73">
+    <img src="/assets/icon.png" alt="" aria-hidden="true" width="64" height="64" class="x2a8a22">
+    <span class="f-disp display xb8457e">{{name}}</span>
+  </a>
+  <nav aria-label="{{t.navLabel}}" class="x8b58cf">
+    <a class="nav-link f-disp display up" href="{{home}}#prologue">{{t.nav1}}</a>
+    <a class="nav-link f-disp display up" href="{{home}}#act1">{{t.nav2}}</a>
+    <a class="nav-link f-disp display up" href="{{home}}#play">{{t.nav3}}</a>
+    <a class="nav-link f-disp display up" href="{{home}}#glass">{{t.nav4}}</a>
+  </nav>
+  <div class="x292995">
+    {{html.sound}}
+    <a class="switch" href="{{twinHref}}" hreflang="{{twin}}" lang="{{twin}}">{{twinName}}</a>
+    <a class="btn btn-primary f-disp display up x2efb68" href="{{home}}#soon">{{t.v.title}}</a>
+  </div>
+  <span class="thread" aria-hidden="true"></span>
+</header>
+<main class="story-main">
+
+<!-- ══════════ HERO · THE EMPTY HEARTH ══════════ -->
+<section id="top" class="xe148c4">
+  <div class="stage" aria-hidden="true">
+    <img class="lay fill lay-bg" data-pic="hearth" alt="" fetchpriority="high">
+    <span class="lay flicker x67c757"></span>
+  </div>
+  <img class="lay fill lay-fg x3a4807" data-pic="hero-fg" alt="" aria-hidden="true">
+  <span class="hglow xf3685a" aria-hidden="true"></span>
+  <div aria-hidden="true" class="xfb2789"></div>
+  <div aria-hidden="true" class="x0380d6">
+    <span class="mote xc1b3b5"></span><span class="mote x9a6959"></span><span class="mote xf13e66"></span>
+    <span class="mote xd7544c"></span><span class="mote x2b7c8a"></span><span class="mote x4de014"></span>
+  </div>
+  <div class="swing xfb09a6" aria-hidden="true">
+    <span class="xa0cf25"></span>
+    <div class="xa8a903"><span class="flicker xa97477"></span><img data-pic="lantern" alt="" class="x664360"></div>
+  </div>
+  <div class="xb4a998">
+    <div class="xf9e17a">
+      <p class="kicker f-disp display up x6c2762">{{t.heroKicker}}</p>
+      <h1 class="wm wm-{{lang}}"><img data-pic="wordmark-{{lang}}" data-sizes="(min-width: 48rem) 36rem, 88vw" alt="{{name}}" class="xb2d912" fetchpriority="high"></h1>
+      <blockquote class="say"><p class="q f-quote xf064f5">{{t.heroQuote}}</p><span class="who f-body up">{{t.heroWho}}</span></blockquote>
+      <p class="narr f-prose xa93273">{{t.heroLede}}</p>
+      <div class="x350bba">
+        <a class="btn btn-primary f-disp display up" href="{{home}}#prologue">{{t.heroCta1}}</a>
+        <a class="btn btn-ghost f-disp display up" href="{{home}}#play">{{t.heroCta2}}</a>
+      </div>
+      <div class="plat-row"><span class="f-body up">{{t.heroSoon}}</span><ul class="platforms plat-list"><sc-for list="{{platforms}}" as="p"><li class="platform"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="{{p.d}}"/></svg><span class="platform-name display">{{p.n}}</span><span class="platform-soon">{{p.s}}</span></li></sc-for></ul></div>
+    </div>
+  </div>
+  <a href="{{home}}#prologue" class="f-disp display up x91a094"><span>{{t.scroll}}</span><span class="cue-line" aria-hidden="true"></span></a>
+</section>
+
+<!-- ══════════ I · PROLOGUE ══════════ -->
+<section id="prologue" class="xd3a0e6">
+  <img class="lay fill lay-bg xa9d36f" data-pic="prologue-bg" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="x577fac"></div>
+  <div class="two-col x93c1d2">
+    <div class="x1f7af8">
+      <div class="shardbox" role="img" aria-label="{{t.c1.alt}}">
+        <canvas aria-hidden="true"></canvas>
+        <span class="core" aria-hidden="true"></span>
+        <span class="ring" aria-hidden="true"></span>
+        <sc-for list="{{shards}}" as="s"><img class="shard" data-pic="{{s.pic}}" data-sizes="8rem" alt="" data-c="{{s.c}}" data-a="{{s.a}}" data-r="{{s.r}}" data-t="{{s.t}}"></sc-for>
+        <span class="flash" aria-hidden="true"></span>
+        <span class="tap f-quote" aria-hidden="true">{{t.c1.tap}}</span>
+      </div>
+    </div>
+    <div class="panel x7356d2">
+      <p class="chap f-disp display">{{t.c1.num}}</p>
+      <h2 class="h-chap f-disp display rvh">{{t.c1.title}}</h2>
+      <p class="narr f-prose">{{t.c1.p1}}</p>
+      <p class="narr f-prose">{{t.c1.p2}}</p>
+      <p class="f-prose xc4f5e8">{{t.c1.p3}}</p>
+      <blockquote class="say"><p class="q f-quote">{{t.c1.quote}}</p></blockquote>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ II · THE VIGIL (layered concept art, no figure at the hall) ══════════ -->
+<section class="x7c60ed">
+  <div class="stage x101596" aria-hidden="true">
+    <img class="lay fill lay-bg" data-pic="vigil-bg" alt="" loading="lazy" decoding="async">
+    <span class="mist xec496f"></span>
+    <img class="lay fill lay-mid" data-pic="vigil-hall" alt="" loading="lazy" decoding="async">
+    <span class="smoke xd48b00"></span><span class="smoke xc14cb6"></span>
+    <span class="lay flicker x820318"></span>
+    <div class="lay walker"><img data-pic="vigil-walker" alt="" loading="lazy" decoding="async"><span class="walker-glow flicker"></span></div>
+  </div>
+  <img class="lay fill lay-fg xab9b65" data-pic="vigil-fg" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="xa4e885"></div>
+  <span class="ghost f-disp display xe57fbd" aria-hidden="true">{{t.c2.g}}</span>
+  <div class="x8356ff">
+    <div class="panel x945d63">
+      <p class="chap f-disp display">{{t.c2.num}}</p>
+      <h2 class="h-chap f-disp display rvh">{{t.c2.title}}</h2>
+      <p class="narr f-prose">{{t.c2.narr}}</p>
+      <sc-for list="{{t.c2.quotes}}" as="q"><blockquote class="say"><p class="q f-quote">{{q.q}}</p><span class="who f-body up">{{q.who}}</span></blockquote></sc-for>
+    </div>
+  </div>
+  <p class="lbl f-body up x18b779">{{t.c2.tag}}</p>
+</section>
+
+<!-- ══════════ III · THE LANTERN (layered; the Keeper's one appearance) ══════════ -->
+<section class="x7c60ed">
+  <div class="stage x101596" aria-hidden="true">
+    <img class="lay fill lay-bg" data-pic="lantern-bg" alt="" loading="lazy" decoding="async">
+    <span class="lay flicker x84fdce"></span>
+    <div class="lay keeper lay-mid"><img class="breathe" data-pic="lantern-keeper" alt="" loading="lazy" decoding="async"><span class="keeper-glow flicker"></span></div>
+    <span class="mote xd00d41"></span><span class="mote x6cc105"></span><span class="mote x7dad28"></span>
+  </div>
+  <img class="lay fill lay-fg xab9b65" data-pic="lantern-fg" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="xb8af75"></div>
+  <span class="ghost f-disp display x75ff9b" aria-hidden="true">{{t.c3.g}}</span>
+  <div class="x8356ff">
+    <div class="panel xf85935">
+      <p class="chap f-disp display">{{t.c3.num}}</p>
+      <h2 class="h-chap f-disp display rvh">{{t.c3.title}}</h2>
+      <p class="narr f-prose">{{t.c3.narr}}</p>
+      <sc-for list="{{t.c3.quotes}}" as="q"><blockquote class="say"><p class="q f-quote">{{q.q}}</p><span class="who f-body up">{{q.who}}</span></blockquote></sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ IV · THE ROAD EAST ══════════ -->
+<section class="xc46d7a">
+  <img class="lay fill lay-bg xa9d36f" data-pic="duskblade-scene" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="x6bae99"></div>
+  <div aria-hidden="true" class="x924164"><span class="mote x8e0d77"></span><span class="mote xc535c6"></span><span class="mote x80f64a"></span></div>
+  <span class="ghost f-disp display xa11523" aria-hidden="true">{{t.c4.g}}</span>
+  <div class="x8356ff">
+    <div class="panel x85dfa5">
+      <p class="chap f-disp display">{{t.c4.num}}</p>
+      <h2 class="h-chap f-disp display rvh">{{t.c4.title}}</h2>
+      <p class="narr f-prose">{{t.c4.narr}}</p>
+      <sc-for list="{{t.c4.quotes}}" as="q"><blockquote class="say"><p class="q f-quote">{{q.q}}</p></blockquote></sc-for>
+      <div class="x164929">
+        <p class="lbl f-body up">{{t.c4.bearerLbl}}</p>
+        <p class="f-disp display x5e4978">{{t.c4.bearer}}</p>
+        <p class="f-prose x3db748">{{t.c4.bearerText}}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ V · ACT I ══════════ -->
+<section id="act1" class="x1fea43">
+  <img class="lay fill lay-bg x101596" data-pic="act1" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="xade031"></div>
+  <canvas class="mob-cv xaf33c5" data-mob="act1" data-src="{{media.gravewarden_glb}}" aria-hidden="true"></canvas>
+  <img class="lay fill lay-fg x3a4807" data-pic="act1-fg" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="x774072"><span class="mote xbe3369"></span><span class="mote x050d83"></span><span class="mote xbf677e"></span><span class="mote x3001f4"></span><span class="mist xe1b77a"></span></div>
+  <div class="xa545b2">
+    <div class="panel x85dfa5">
+      <p class="chap f-disp display">{{t.c5.num}}</p>
+      <h2 class="h-act f-disp display rvh">{{t.c5.title}}</h2>
+      <p class="narr f-prose">{{t.c5.narr}}</p>
+      <sc-for list="{{t.c5.quotes}}" as="q"><blockquote class="say"><p class="q f-quote">{{q.q}}</p></blockquote></sc-for>
+      <p class="boss-line"><span class="lbl f-body up">{{t.c5.bossLbl}}</span><b class="f-disp display">{{t.c5.boss}}</b></p>
+    </div>
+  </div>
+  <p class="lbl f-body up xcf84f7">{{t.c5.mob}}</p>
+</section>
+
+<!-- ══════════ VI · THE HOLLOW LAMPLIGHTER (layered, storm) ══════════ -->
+<section class="x11ec04">
+  <div class="stage x101596" aria-hidden="true">
+    <img class="lay fill lay-bg" data-pic="lamp-bg" alt="" loading="lazy" decoding="async">
+    <span class="lay storm"></span>
+    <span class="mist x840e23"></span><span class="mist x6eae58"></span>
+    <div class="lay lamplighter lay-mid"><img data-pic="lamp-figure" alt="" loading="lazy" decoding="async"></div>
+  </div>
+  <img class="lay fill lay-fg xab9b65" data-pic="lamp-fg" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="x39b7c4"><span class="ash x337797"></span><span class="ash x6df6e8"></span><span class="ash x31be98"></span><span class="ash x947496"></span><span class="ash x135136"></span><span class="ash xa0e3f5"></span></div>
+  <div aria-hidden="true" class="xa99cbf"></div>
+  <span class="ghost f-disp display x941572" aria-hidden="true">{{t.c6.g}}</span>
+  <div class="xc2d031">
+    <div class="panel xf85935">
+      <p class="chap f-disp display">{{t.c6.num}}</p>
+      <h2 class="h-chap f-disp display rvh">{{t.c6.title}}</h2>
+      <p class="narr f-prose">{{t.c6.narr}}</p>
+      <sc-for list="{{t.c6.quotes}}" as="q"><blockquote class="say"><p class="q f-quote">{{q.q}}</p><span class="who f-body up">{{q.who}}</span></blockquote></sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ VII · STRANGERS ON THE ROAD (concept art) ══════════ -->
+<section class="xb760c5">
+  <div class="xc1c7bc">
+    <img class="lay fill lay-bg x87f0e1" data-pic="merchant" alt="" aria-hidden="true" loading="lazy" decoding="async">
+    <div aria-hidden="true" class="x0e3424"></div>
+    <span class="ghost f-disp display x75ff9b" aria-hidden="true">{{t.c7.g}}</span>
+    <div class="x532c90">
+      <div class="panel x85dfa5">
+        <p class="chap f-disp display">{{t.c7.num}}</p>
+        <h2 class="h-chap f-disp display rvh">{{t.c7.title}}</h2>
+        <p class="narr f-prose">{{t.c7.narr}}</p>
+        <blockquote class="say"><p class="q f-quote">{{t.c7.quote}}</p><span class="who f-body up">{{t.c7.who}}</span></blockquote>
+      </div>
+    </div>
+    <p class="lbl f-body up xb4dbac">{{t.c7.tag}}</p>
+  </div>
+  <ul class="x39d672">
+    <sc-for list="{{strangers}}" as="s">
+      <li class="stranger stranger-{{s.i}} {{s.par}}">
+        <figure class="rv">
+          <div class="concept"><img data-pic="{{s.pic}}" data-sizes="(min-width: 64rem) 30vw, 90vw" alt="{{s.alt}}"><span class="concept-tag f-body up">{{t.conceptLbl}}</span></div>
+          <figcaption class="concept-cap"><b class="f-disp display">{{s.n}}</b><span class="f-quote">{{s.q}}</span></figcaption>
+        </figure>
+      </li>
+    </sc-for>
+  </ul>
+</section>
+
+<!-- ══════════ VIII · ACT II ══════════ -->
+<section id="act2" class="x1fea43">
+  <img class="lay fill lay-bg x101596" data-pic="act2" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="xade031"></div>
+  <canvas class="mob-cv x800aae" data-mob="act2" data-src="{{media.siren_glb}}" aria-hidden="true"></canvas>
+  <img class="lay fill lay-fg x3a4807" data-pic="act2-fg" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="x774072"><span class="mote cold x16078c"></span><span class="mote cold xadd3ab"></span><span class="mote cold xe07386"></span></div>
+  <div class="xa545b2">
+    <div class="panel x85dfa5">
+      <p class="chap f-disp display">{{t.c8.num}}</p>
+      <h2 class="h-act f-disp display rvh">{{t.c8.title}}</h2>
+      <p class="narr f-prose">{{t.c8.narr}}</p>
+      <sc-for list="{{t.c8.quotes}}" as="q"><blockquote class="say"><p class="q f-quote">{{q.q}}</p></blockquote></sc-for>
+      <p class="boss-line"><span class="lbl f-body up">{{t.c8.bossLbl}}</span><b class="f-disp display">{{t.c8.boss}}</b></p>
+    </div>
+  </div>
+  <p class="lbl f-body up xcf84f7">{{t.c8.mob}}</p>
+</section>
+
+<!-- ══════════ IX · ACT III ══════════ -->
+<section id="act3" class="x1fea43">
+  <img class="lay fill lay-bg x101596" data-pic="act3" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="x8f5de0"></div>
+  <canvas class="mob-cv xc908e7" data-mob="act3" data-src="{{media.watcherEye_glb}}" aria-hidden="true"></canvas>
+  <img class="lay fill lay-fg x3a4807" data-pic="act3-fg" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="x774072"><span class="mote violet x313941"></span><span class="mote violet x9397e3"></span><span class="mote violet x562002"></span><span class="shaft x883b2c"></span></div>
+  <div class="xadadf1">
+    <div class="panel x85dfa5">
+      <p class="chap f-disp display">{{t.c9.num}}</p>
+      <h2 class="h-act f-disp display rvh">{{t.c9.title}}</h2>
+      <p class="narr f-prose">{{t.c9.narr}}</p>
+      <sc-for list="{{t.c9.quotes}}" as="q"><blockquote class="say"><p class="q f-quote">{{q.q}}</p></blockquote></sc-for>
+    </div>
+  </div>
+  <p class="lbl f-body up x18b779">{{t.c9.mob}}</p>
+</section>
+
+<!-- ══════════ X · THE ETERNAL SOVEREIGN ══════════ -->
+<section class="xc46d7a">
+  <img class="lay fill lay-bg xa9d36f" data-pic="sovereign-scene" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="x8fb0a8"></div>
+  <span class="ghost f-disp display xa2c029" aria-hidden="true">{{t.c10.g}}</span>
+  <div class="x5b59c4">
+    <div class="panel xa34c31">
+      <p class="chap f-disp display">{{t.c10.num}}</p>
+      <h2 class="h-chap f-disp display rvh">{{t.c10.title}}</h2>
+      <p class="narr f-prose">{{t.c10.narr}}</p>
+      <sc-for list="{{t.c10.quotes}}" as="q"><blockquote class="say"><p class="q f-quote">{{q.q}}</p><span class="who f-body up">{{q.who}}</span></blockquote></sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ XI · THE DOOR ══════════ -->
+<section class="x2cf522">
+  <img class="lay fill lay-bg xa9d36f" data-pic="door" alt="" aria-hidden="true" loading="lazy" decoding="async">
+  <div aria-hidden="true" class="x1434f0"></div>
+  <div aria-hidden="true" class="x924164"><span class="shaft xe6dcae"></span><span class="shaft xb6ef02"></span></div>
+  <div class="xedb5dc">
+    <p class="chap f-disp display rv">{{t.c11.num}}</p>
+    <h2 class="f-disp display rvh xc8e59e">{{t.c11.title}}</h2>
+    <p class="narr f-prose rv x4559ae">{{t.c11.narr}}</p>
+    <a class="btn btn-primary f-disp display up rv" href="{{home}}#play">{{t.c11.cta}}</a>
+  </div>
+</section>
+
+<!-- ══════════ HOW IT WORKS · MECHANISMS, NOT CATALOGUES ══════════ -->
+<section id="play" class="x86a388">
+  <div class="rv xe35eb5">
+    <p class="kicker f-disp display up x37e245">{{t.s.kicker}}</p>
+    <h2 class="f-disp display rvh xaa8a9e">{{t.s.title}}</h2>
+    <p class="narr f-prose x09afac">{{t.s.intro}}</p>
+  </div>
+
+  <!-- loop one: the pilgrimage (a choice of paths; no spoilers) -->
+  <div class="mech rv x022124">
+    <div class="two-col x823ede">
+      <div class="x89dbb6">
+        <p class="loopnum f-disp display up">{{t.s.loop.kicker}}</p>
+        <h3 class="sys-h f-disp display">{{t.s.loop.title}}</h3>
+        <p class="sys-p f-body">{{t.s.loop.body}}</p>
+        <ul class="bul f-body"><sc-for list="{{t.s.loop.bullets}}" as="b"><li><b>{{b.h}}</b> {{b.p}}</li></sc-for></ul>
+      </div>
+      <div class="road" role="img" aria-label="{{t.s.loop.alt}}">
+        <svg viewBox="0 0 960 260" aria-hidden="true">
+        <line x1="80" y1="130" x2="240" y2="60" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <line x1="80" y1="130" x2="240" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="80" y1="130" x2="240" y2="200" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="240" y1="60" x2="400" y2="60" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="240" y1="60" x2="400" y2="130" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <line x1="240" y1="130" x2="400" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="240" y1="200" x2="400" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="240" y1="200" x2="400" y2="200" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="400" y1="60" x2="560" y2="60" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="400" y1="130" x2="560" y2="60" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <line x1="400" y1="130" x2="560" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="400" y1="200" x2="560" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="400" y1="200" x2="560" y2="200" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="560" y1="60" x2="720" y2="130" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <line x1="560" y1="130" x2="720" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="560" y1="200" x2="720" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="720" y1="130" x2="880" y2="130" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <image href="{{pic.node-unlit}}" x="58.0" y="108.0" width="44" height="44" opacity=".45"/>
+        <image href="{{pic.node-monster}}" x="218.0" y="38.0" width="44" height="44" opacity="1"/>
+        <circle cx="240" cy="60" r="28.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.17;0.23;0.28;.97;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="24.0;24.0;36.0;28.0;28.0" keyTimes="0;0.17;0.23;0.28;1" dur="12s" repeatCount="indefinite"/></circle>
+        <image href="{{pic.node-event}}" x="218.0" y="108.0" width="44" height="44" opacity=".45"/>
+        <image href="{{pic.node-monster}}" x="218.0" y="178.0" width="44" height="44" opacity=".45"/>
+        <image href="{{pic.node-shop}}" x="378.0" y="38.0" width="44" height="44" opacity=".45"/>
+        <image href="{{pic.node-event}}" x="378.0" y="108.0" width="44" height="44" opacity="1"/>
+        <circle cx="400" cy="130" r="28.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.34;0.4;0.45;.97;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="24.0;24.0;36.0;28.0;28.0" keyTimes="0;0.34;0.4;0.45;1" dur="12s" repeatCount="indefinite"/></circle>
+        <image href="{{pic.node-elite}}" x="378.0" y="178.0" width="44" height="44" opacity=".45"/>
+        <image href="{{pic.node-elite}}" x="538.0" y="38.0" width="44" height="44" opacity="1"/>
+        <circle cx="560" cy="60" r="28.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.51;0.5700000000000001;0.6200000000000001;.97;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="24.0;24.0;36.0;28.0;28.0" keyTimes="0;0.51;0.5700000000000001;0.6200000000000001;1" dur="12s" repeatCount="indefinite"/></circle>
+        <image href="{{pic.node-treasure}}" x="538.0" y="108.0" width="44" height="44" opacity=".45"/>
+        <image href="{{pic.node-monster}}" x="538.0" y="178.0" width="44" height="44" opacity=".45"/>
+        <image href="{{pic.node-rest}}" x="698.0" y="108.0" width="44" height="44" opacity="1"/>
+        <circle cx="720" cy="130" r="28.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.68;0.74;0.79;.97;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="24.0;24.0;36.0;28.0;28.0" keyTimes="0;0.68;0.74;0.79;1" dur="12s" repeatCount="indefinite"/></circle>
+        <image href="{{pic.node-boss}}" x="852.0" y="102.0" width="56" height="56" opacity="1"/>
+        <circle cx="880" cy="130" r="34.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.88;0.93;0.96;.98;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="30.0;30.0;42.0;34.0;34.0" keyTimes="0;0.88;0.94;0.99;1" dur="12s" repeatCount="indefinite"/></circle>
+        <circle r="16" fill="url(#emb)"><animateMotion dur="12s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;0.2034;0.2034;0.4068;0.4068;0.6102;0.6102;0.8136;0.8136;1.0;1.0" keyTimes="0;0.08;0.17;0.25;0.34;0.42;0.51;0.59;0.68;0.76;0.88;1" path="M80 130 L240 60 L400 130 L560 60 L720 130 L880 130"/></circle>
+        <defs><radialGradient id="emb"><stop offset="0" stop-color="#fff6dc"/><stop offset=".45" stop-color="#ffb45a"/><stop offset="1" stop-color="#ff7a2a" stop-opacity="0"/></radialGradient></defs>
+        <text x="80" y="252" text-anchor="middle" class="f-disp display">{{t.s.loop.n0}}</text>
+        <text x="720" y="252" text-anchor="middle" class="f-disp display">{{t.s.loop.n4}}</text>
+        <text x="880" y="252" text-anchor="middle" class="f-disp display">{{t.s.loop.n5}}</text>
+        </svg>
+      </div>
+    </div>
+    <div class="two-col xb58597">
+      <figure><div class="shot"><img data-pic="map-act1" alt="{{t.s.loop.shotAlt}}" loading="lazy" decoding="async"></div><figcaption class="cap f-body up">{{t.s.loop.cap}}</figcaption></figure>
+      <div class="x64bd62">
+        <p class="lbl f-body up x6c2762">{{t.s.loop.nodesLbl}}</p>
+        <ul class="x1e14ef"><sc-for list="{{nodes}}" as="n"><li class="node"><img data-pic="{{n.pic}}" data-sizes="2.2rem" alt=""><span class="f-body">{{n.name}}</span></li></sc-for></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- loop two: the turn, as the game plays it -->
+  <div class="mech rv xdb7ee3">
+    <img class="mech-art x7a63c0" data-pic="kindle" alt="" aria-hidden="true" loading="lazy" decoding="async">
+    <div class="two-col x9aa25f">
+      <div class="x89dbb6">
+        <p class="loopnum f-disp display up">{{t.s.turn.kicker}}</p>
+        <h3 class="sys-h f-disp display">{{t.s.turn.title}}</h3>
+        <p class="sys-p f-body">{{t.s.turn.body}}</p>
+        <ol class="t-steps"><sc-for list="{{turnSteps}}" as="s"><li><b class="f-disp display up">{{s.n}}</b><span class="f-body">{{s.p}}</span></li></sc-for></ol>
+      </div>
+      <figure>
+        <div class="clip"><video src="{{media.turn_mp4}}" data-poster="turn-poster" muted loop playsinline preload="none" aria-label="{{t.s.turn.alt}}"></video><span class="clip-tag f-body up">{{t.s.footLbl}}</span></div>
+        <figcaption class="cap f-body up">{{t.s.turn.cap}}</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <!-- loop two: the glass, a real break -->
+  <div class="mech rv xb93d59">
+    <img class="mech-art x06dfdb" data-pic="shatter" alt="" aria-hidden="true" loading="lazy" decoding="async">
+    <div class="two-col x65b6b5">
+      <figure>
+        <div class="clip x01997b"><video src="{{media.shatter_mp4}}" data-poster="shatter-poster" muted loop playsinline preload="none" aria-label="{{t.s.glass.alt}}"></video><span class="clip-tag f-body up">{{t.s.footLbl}}</span></div>
+        <div class="s-tags2"><sc-for list="{{t.s.glass.tags}}" as="g"><span class="f-body">{{g}}</span></sc-for></div>
+      </figure>
+      <div class="x89dbb6">
+        <p class="loopnum f-disp display up">{{t.s.glass.kicker}}</p>
+        <h3 class="sys-h f-disp display">{{t.s.glass.title}}</h3>
+        <p class="sys-p f-body">{{t.s.glass.body}}</p>
+        <ul class="bul f-body"><sc-for list="{{t.s.glass.bullets}}" as="b"><li><b>{{b.h}}</b> {{b.p}}</li></sc-for></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- loop three: the deck and its flame, on the game's own numbers -->
+  <div class="mech rv xdb7ee3">
+    <div class="two-col x9aa25f">
+      <div class="x89dbb6">
+        <p class="loopnum f-disp display up">{{t.s.flame.kicker}}</p>
+        <h3 class="sys-h f-disp display">{{t.s.flame.title}}</h3>
+        <p class="sys-p f-body">{{t.s.flame.body}}</p>
+        <ul class="bul f-body"><sc-for list="{{t.s.flame.bullets}}" as="b"><li><b>{{b.h}}</b> {{b.p}}</li></sc-for></ul>
+        <div class="xd46a25"><sc-for list="{{ways}}" as="w"><div class="way way-{{w.key}}"><img data-pic="{{w.pic}}" data-sizes="4rem" alt=""><div><b class="f-disp display">{{w.name}}</b><span class="f-body up">{{w.flame}}</span></div></div></sc-for></div>
+      </div>
+      <div class="fl" role="img" aria-label="{{t.s.flame.alt}}">
+        <div class="fl-stage" aria-hidden="true">
+          <div class="fl-left">
+            <p class="lbl f-body up">{{t.s.flame.deckLbl}}</p>
+            <div class="fl-cards"><sc-for list="{{deckChips}}" as="c"><i class="dk {{c.k}}"></i></sc-for></div>
+            <p class="lbl f-body up xffc6f7">{{t.s.flame.purLbl}}</p>
+            <div class="fl-bar"><i class="fb-lead"></i><i class="fb-b"></i><i class="fb-c"></i><sc-for list="{{marks}}" as="m"><span class="fl-mark at-{{m.at}}"><em class="f-body">{{m.l}}</em></span></sc-for></div>
+            <div class="fl-read"><sc-for list="{{tiers}}" as="r"><span class="f-body w{{r.i}}">{{r.read}}</span></sc-for></div>
+          </div>
+          <div class="fl-right">
+            <div class="fl-name"><sc-for list="{{tiers}}" as="r"><b class="f-disp display w{{r.i}}">{{r.n}}</b></sc-for></div>
+            <div class="lan"><span class="lan-fire"></span><span class="spark"></span><span class="spark x445723"></span><span class="spark x31f858"></span><span class="drip"></span><img data-pic="ui-lantern" alt="" loading="lazy" decoding="async"></div>
+            <div class="rack"><sc-for list="{{rack}}" as="p"><i class="{{p.c}}"></i></sc-for></div>
+            <p class="lbl f-body up x65f9d5">{{t.s.flame.capLbl}}</p>
+            <div class="artcost"><span class="lbl f-body up">{{t.s.flame.artLbl}}</span><span class="gem"><sc-for list="{{tiers}}" as="r"><b class="f-disp display w{{r.i}}">{{r.cost}}</b></sc-for></span></div>
+          </div>
+        </div>
+        <ol class="tiers"><sc-for list="{{tiers}}" as="r"><li class="w{{r.i}}"><b class="f-disp display">{{r.n}}</b><span class="f-body">{{r.p}}</span></li></sc-for></ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="rv xf253e7">
+    <sc-for list="{{t.s.stats}}" as="s"><div class="stat"><b class="f-disp display">{{s.n}}</b><span class="f-body up">{{s.l}}</span></div></sc-for>
+  </div>
+</section>
+
+<!-- ══════════ THE GLASS ══════════ -->
+<section id="glass" class="xdec0fd">
+  <div class="rv xf2dd4f">
+    <p class="kicker f-disp display up x6c2762">{{t.g.kicker}}</p>
+    <h2 class="f-disp display rvh xaa8a9e">{{t.g.title}}</h2>
+    <p class="narr f-prose x97d381">{{t.g.intro}}</p>
+  </div>
+  <ul class="x4e36b1">
+    <sc-for list="{{glassCards}}" as="c">
+      <li class="rv xba4187">
+        <canvas class="card-cv xf22370" role="img" aria-label="{{c.label}}" data-card="{{c.id}}" data-face="{{c.face}}" data-src="{{c.src}}"></canvas>
+        <span class="finish f-disp display up">{{c.rarity}}</span>
+        <span class="finish-sub f-body up">{{c.finish}}</span>
+      </li>
+    </sc-for>
+  </ul>
+  <div class="veil rv x2a6752">
+    <sc-for list="{{mythCards}}" as="c">
+      <canvas class="card-cv big xf7c99f" role="img" aria-label="{{c.label}}" data-card="{{c.id}}" data-face="{{c.face}}" data-src="{{c.src}}"></canvas>
+    </sc-for>
+    <span class="finish f-disp display up x55a3ba">{{t.g.veil}}</span>
+    <span class="f-quote x0d06a4">{{t.g.veilSub}}</span>
+  </div>
+</section>
+
+<!-- ══════════ AVAILABLE SOON ══════════ -->
+<section id="soon" class="x967cb0">
+  <div class="rv x7a7e53">
+    <img data-pic="lantern" alt="" aria-hidden="true" loading="lazy" decoding="async" class="swing x1116ab">
+    <p class="kicker f-disp display up x6c2762">{{t.v.kicker}}</p>
+    <h2 class="f-disp display rvh xd16844">{{t.v.title}}</h2>
+    <ul class="x3059f5">
+      <sc-for list="{{platforms}}" as="p"><li class="tile"><svg viewBox="0 0 24 24" aria-hidden="true" class="tile-logo"><path d="{{p.d}}"/></svg><span class="xbc0172"><span class="f-disp display xb79d25">{{p.n}}</span><span class="f-body up x828d1c">{{p.s}}</span></span></li></sc-for>
+    </ul>
+    <p class="f-body up xc6bfbd">{{t.v.facts}}</p>
+  </div>
+</section>
+
+<nav class="more" aria-label="{{t.footLabel}}"><sc-for list="{{guides}}" as="l"><a href="{{l.path}}">{{l.name}}</a></sc-for></nav>
+<p class="support">{{t.supportLbl}} · <span class="address">{{html.contact}}</span></p>
+</main>
+</div>

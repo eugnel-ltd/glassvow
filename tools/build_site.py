@@ -201,6 +201,10 @@ PAGE_GROUPS = (POLICIES, COMPANY_PAGES, FAQ_PAGES, PLAY_PAGES, GENRE_PAGES)
 COPIES = {
     "assets/fonts/Cinzel-700.woff2": "assets/fonts/Cinzel-700.woff2",
     "assets/fonts/OFL-Cinzel.txt": "assets/fonts/OFL-Cinzel.txt",
+    "assets/fonts/Cinzel-800.woff2": "assets/fonts/Cinzel-800.woff2",
+    "assets/fonts/Alegreya-400.woff2": "assets/fonts/Alegreya-400.woff2",
+    "assets/fonts/Alegreya-700.woff2": "assets/fonts/Alegreya-700.woff2",
+    "assets/fonts/OFL-Alegreya.txt": "assets/fonts/OFL-Alegreya.txt",
     "assets/fonts/OFL-NotoSerifTC.txt": "assets/fonts/OFL.txt",
 }
 STYLESHEET = "assets/site.css"
@@ -1093,16 +1097,18 @@ def csp_problems(headers: str) -> list[str]:
 
 def reference_problems(site: Path, links: set[str]) -> list[str]:
     problems, targets = [], {url.split("#")[0] for url in links}
-    for sheet in (STYLESHEET, teaser.STYLESHEET.lstrip("/")):
+    for sheet in (STYLESHEET, *(sheet.lstrip("/") for sheet in teaser.STYLESHEETS)):
         if not (site / sheet).is_file():
             continue  # reported as DANGLING below
         css = (site / sheet).read_text(encoding="utf-8")
         problems += [f"EXTERNAL site/{sheet}: {match.group(0)}" for match in CSS_EXTERNAL.finditer(css)]
         targets |= {"/" + str(Path(sheet).parent / url) for url in CSS_URL.findall(css)
                     if not CSS_EXTERNAL.match(f"url({url})")}
-    script = teaser.SCRIPT.lstrip("/")
-    if (site / script).is_file():
-        problems += script_problems(script, (site / script).read_text(encoding="utf-8"))
+    # The home page's own modules; vendored scripts are pinned by digest instead.
+    for path in sorted((site / "assets").glob("story*.js")):
+        script = str(path.relative_to(site))
+        problems += script_problems(script, path.read_text(encoding="utf-8"))
+    problems += teaser.vendor_problems(site)
     if (site / "_headers").is_file():
         problems += csp_problems((site / "_headers").read_text(encoding="utf-8"))
     for url in sorted(targets):

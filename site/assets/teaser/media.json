@@ -1,112 +1,292 @@
 {
  "outputs": {
-  "aspect-ashwarden-300.avif": {
-   "bytes": 18778,
-   "height": 475,
-   "recipe": "avif w=300 aspect=None trim=True",
-   "sha256": "a786150ae7596e6b2f86194282b1876baea06bffe0c22e2948ba0dd53bfc1ac2",
-   "source": "assets/art/heroes/ashwarden.png",
-   "source_sha256": "d9d8b35e001ec2baa20d0567edd67aabde81cdfcfb56f2ff28098970544f7edd",
-   "width": 300
+  "act1-1536.avif": {
+   "bytes": 163797,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "44cfc75dc3b912de3910a3fbdcb3d077132dbfe1a66b685b61fbc22a2c7af99c",
+   "source": "docs/design/2026-10-20-website-story/art/act1.webp",
+   "source_sha256": "5447ebd3f39e901d56bb7497a0bb0a9a09298ad7c4053a2f18f8d0d0b0444817",
+   "width": 1536
   },
-  "aspect-ashwarden-300.webp": {
-   "bytes": 30652,
-   "height": 475,
-   "recipe": "webp w=300 aspect=None trim=True",
-   "sha256": "800c143324db124d4337488664a00748afd29e37aec48fadee3ba93faef2f69c",
-   "source": "assets/art/heroes/ashwarden.png",
-   "source_sha256": "d9d8b35e001ec2baa20d0567edd67aabde81cdfcfb56f2ff28098970544f7edd",
-   "width": 300
+  "act1-1536.webp": {
+   "bytes": 219948,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "2c0189bdc95a008a64e53e1617649105245492a35b87c1ab77237431b1c88e27",
+   "source": "docs/design/2026-10-20-website-story/art/act1.webp",
+   "source_sha256": "5447ebd3f39e901d56bb7497a0bb0a9a09298ad7c4053a2f18f8d0d0b0444817",
+   "width": 1536
   },
-  "aspect-ashwarden-600.avif": {
-   "bytes": 46114,
-   "height": 951,
-   "recipe": "avif w=600 aspect=None trim=True",
-   "sha256": "6eaf16ff2df78ae6304cf3d6ecb01a41f5eb00ff29257f24854e212513ca5003",
-   "source": "assets/art/heroes/ashwarden.png",
-   "source_sha256": "d9d8b35e001ec2baa20d0567edd67aabde81cdfcfb56f2ff28098970544f7edd",
-   "width": 600
+  "act1-960.avif": {
+   "bytes": 78900,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "d7d3ed1d527314c6838b4d51ad933d6ea9e5c4b2cf5e8507c90afa44b946493e",
+   "source": "docs/design/2026-10-20-website-story/art/act1.webp",
+   "source_sha256": "5447ebd3f39e901d56bb7497a0bb0a9a09298ad7c4053a2f18f8d0d0b0444817",
+   "width": 960
   },
-  "aspect-ashwarden-600.webp": {
-   "bytes": 75982,
-   "height": 951,
-   "recipe": "webp w=600 aspect=None trim=True",
-   "sha256": "09069058fc972c43bfd5f14eb9b7503f3f4094b31ed77d76501b1ce55c39f2ef",
-   "source": "assets/art/heroes/ashwarden.png",
-   "source_sha256": "d9d8b35e001ec2baa20d0567edd67aabde81cdfcfb56f2ff28098970544f7edd",
-   "width": 600
+  "act1-960.webp": {
+   "bytes": 114514,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "6b377f82d9855d8830f6f435aa1518680297bafa3c9a78f764621b15c45738fb",
+   "source": "docs/design/2026-10-20-website-story/art/act1.webp",
+   "source_sha256": "5447ebd3f39e901d56bb7497a0bb0a9a09298ad7c4053a2f18f8d0d0b0444817",
+   "width": 960
   },
-  "aspect-duskblade-300.avif": {
-   "bytes": 12776,
-   "height": 412,
-   "recipe": "avif w=300 aspect=None trim=True",
-   "sha256": "09b7ce60583418f50090ec8aa557a7b524d0959a4df1715a73154ca457e78d92",
-   "source": "assets/art/heroes/duskblade.png",
-   "source_sha256": "aed1bbb8f679f562c54f40ecee62a72504188b164d649cb8f82bdfeb702c5e16",
-   "width": 300
+  "act1-fg-1536.avif": {
+   "bytes": 95743,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "97d4a4c5a6cfd112e653a6523d5a2e0160af114ea7eb46312ac51947448f63ae",
+   "source": "docs/design/2026-10-20-website-story/art/act1-fg.webp",
+   "source_sha256": "ab20a9f2374180c6344465649b79bb51739b46ed4ac95216d44bfb2f82a019d0",
+   "width": 1536
   },
-  "aspect-duskblade-300.webp": {
-   "bytes": 22840,
-   "height": 412,
-   "recipe": "webp w=300 aspect=None trim=True",
-   "sha256": "69fb4401ebb5df783671a80570648bfc09209e32b30420e17ff22edff989a6d0",
-   "source": "assets/art/heroes/duskblade.png",
-   "source_sha256": "aed1bbb8f679f562c54f40ecee62a72504188b164d649cb8f82bdfeb702c5e16",
-   "width": 300
+  "act1-fg-1536.webp": {
+   "bytes": 235458,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "cfbdbe0fbd0875d70a238abc0d7c21688248c122cdc3ba837e14d3751a31066e",
+   "source": "docs/design/2026-10-20-website-story/art/act1-fg.webp",
+   "source_sha256": "ab20a9f2374180c6344465649b79bb51739b46ed4ac95216d44bfb2f82a019d0",
+   "width": 1536
   },
-  "aspect-duskblade-600.avif": {
-   "bytes": 32416,
-   "height": 824,
-   "recipe": "avif w=600 aspect=None trim=True",
-   "sha256": "802630df9df3241cbe9f24a744381f34d33393da0a23a0e65ed4e71bba45ed48",
-   "source": "assets/art/heroes/duskblade.png",
-   "source_sha256": "aed1bbb8f679f562c54f40ecee62a72504188b164d649cb8f82bdfeb702c5e16",
-   "width": 600
+  "act1-fg-960.avif": {
+   "bytes": 57141,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "d9d9bcb1a23ff0bade7533e0c5352b27d94b0c887dca66d5403ea04e3f4c53a0",
+   "source": "docs/design/2026-10-20-website-story/art/act1-fg.webp",
+   "source_sha256": "ab20a9f2374180c6344465649b79bb51739b46ed4ac95216d44bfb2f82a019d0",
+   "width": 960
   },
-  "aspect-duskblade-600.webp": {
-   "bytes": 58138,
-   "height": 824,
-   "recipe": "webp w=600 aspect=None trim=True",
-   "sha256": "9287ce3d1336dd75ab3bc1257f1349f5858a368130d272915732b747dca9da96",
-   "source": "assets/art/heroes/duskblade.png",
-   "source_sha256": "aed1bbb8f679f562c54f40ecee62a72504188b164d649cb8f82bdfeb702c5e16",
-   "width": 600
+  "act1-fg-960.webp": {
+   "bytes": 123206,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "d12bdb574c4bd89e2c95a6b997685482ede1d6eab374f5d533e3b46e93030076",
+   "source": "docs/design/2026-10-20-website-story/art/act1-fg.webp",
+   "source_sha256": "ab20a9f2374180c6344465649b79bb51739b46ed4ac95216d44bfb2f82a019d0",
+   "width": 960
   },
-  "back-eclipse-304.avif": {
-   "bytes": 16363,
-   "height": 432,
-   "recipe": "avif w=304 aspect=None trim=False",
-   "sha256": "daa6d08d4a02c30691b1a499eed32e75291f40c77cbf994a00c67b47b682d4b1",
-   "source": "assets/art/backs/eclipse.png",
-   "source_sha256": "097191536d86c511ea0ea92964a847b8f7e1642a9739c432ea1bd8bd26787bb0",
-   "width": 304
+  "act2-1536.avif": {
+   "bytes": 152810,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "14427090570099d0353c4d0a75a3ec53f5ab0934d96d9b22eac1ed11f2599ad6",
+   "source": "docs/design/2026-10-20-website-story/art/act2.webp",
+   "source_sha256": "977a6d46603ab408b3111a50b960e841cd2c4eca1432d65c0871fb705753241d",
+   "width": 1536
   },
-  "back-eclipse-304.webp": {
-   "bytes": 29820,
-   "height": 432,
-   "recipe": "webp w=304 aspect=None trim=False",
-   "sha256": "9ed069684ba074afb14c98a0bfb20b7601a25e3d639dd126e56d0672fb8bbe44",
-   "source": "assets/art/backs/eclipse.png",
-   "source_sha256": "097191536d86c511ea0ea92964a847b8f7e1642a9739c432ea1bd8bd26787bb0",
-   "width": 304
+  "act2-1536.webp": {
+   "bytes": 206010,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "cea43853733c7f2b7961298e9931d8b7c2f59753226ee227bd13cf9a9c7f0ddd",
+   "source": "docs/design/2026-10-20-website-story/art/act2.webp",
+   "source_sha256": "977a6d46603ab408b3111a50b960e841cd2c4eca1432d65c0871fb705753241d",
+   "width": 1536
   },
-  "back-rose-304.avif": {
-   "bytes": 15417,
-   "height": 432,
-   "recipe": "avif w=304 aspect=None trim=False",
-   "sha256": "c95bcc5a3731a600f9063994a9d151cfdc2bd65384b654737cc5db2346f3f1f3",
-   "source": "assets/art/backs/rose.png",
-   "source_sha256": "adaa9f448b1e46acdf3cb9ee92bc9f7237ddd9332a3aa7501033ca9c61c76342",
-   "width": 304
+  "act2-960.avif": {
+   "bytes": 71635,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "6eec3c43f636646a4892e5402c82935252a6b74c5a8c3089d5d5aef24790ef1a",
+   "source": "docs/design/2026-10-20-website-story/art/act2.webp",
+   "source_sha256": "977a6d46603ab408b3111a50b960e841cd2c4eca1432d65c0871fb705753241d",
+   "width": 960
   },
-  "back-rose-304.webp": {
-   "bytes": 23204,
-   "height": 432,
-   "recipe": "webp w=304 aspect=None trim=False",
-   "sha256": "d2261f9cdd34ae2566bc31f7242ab7459e5022c17323ef0f9da3ca362aa0895a",
-   "source": "assets/art/backs/rose.png",
-   "source_sha256": "adaa9f448b1e46acdf3cb9ee92bc9f7237ddd9332a3aa7501033ca9c61c76342",
-   "width": 304
+  "act2-960.webp": {
+   "bytes": 102352,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "d864591597a50ab291417a5acc1abd78f5a4b3ca054552e2a0df8934b83608c1",
+   "source": "docs/design/2026-10-20-website-story/art/act2.webp",
+   "source_sha256": "977a6d46603ab408b3111a50b960e841cd2c4eca1432d65c0871fb705753241d",
+   "width": 960
+  },
+  "act2-fg-1536.avif": {
+   "bytes": 77782,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "2602b09e9e52307cd57c0932263b9606336fc1342c238662a7ef1676cabaf80b",
+   "source": "docs/design/2026-10-20-website-story/art/act2-fg.webp",
+   "source_sha256": "ea641725d7fc37b7b8098deb3725e63aa18645f55aaa972deb93f0fefbf8bec6",
+   "width": 1536
+  },
+  "act2-fg-1536.webp": {
+   "bytes": 189400,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "505d2bcda41bd8ee6b57ee6b7586e8a4fb86c7d672ffa1801320bbe78f3bbc52",
+   "source": "docs/design/2026-10-20-website-story/art/act2-fg.webp",
+   "source_sha256": "ea641725d7fc37b7b8098deb3725e63aa18645f55aaa972deb93f0fefbf8bec6",
+   "width": 1536
+  },
+  "act2-fg-960.avif": {
+   "bytes": 40543,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "104b6f76c28ae94848747a146d6bab1b86c74f118d0e925c155e8ddc8100a067",
+   "source": "docs/design/2026-10-20-website-story/art/act2-fg.webp",
+   "source_sha256": "ea641725d7fc37b7b8098deb3725e63aa18645f55aaa972deb93f0fefbf8bec6",
+   "width": 960
+  },
+  "act2-fg-960.webp": {
+   "bytes": 91564,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "7b71c0bcafec49d8b8383e1acfc53d760a0179c10fd881882e5c23c685a72486",
+   "source": "docs/design/2026-10-20-website-story/art/act2-fg.webp",
+   "source_sha256": "ea641725d7fc37b7b8098deb3725e63aa18645f55aaa972deb93f0fefbf8bec6",
+   "width": 960
+  },
+  "act3-1536.avif": {
+   "bytes": 145711,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "8649c0d05e5c361718f36505d3dd4ba9c13e1691c4e9d1595b645295e3558185",
+   "source": "docs/design/2026-10-20-website-story/art/act3.webp",
+   "source_sha256": "98e5033907fcc9ea69ecb019e7789a2db660fa15215ed8e26cb59f3ce0b41f24",
+   "width": 1536
+  },
+  "act3-1536.webp": {
+   "bytes": 186340,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "3a4eef762aa68d28fbb58f88c914e59747b76e920fcd990a3a4d3a42663be650",
+   "source": "docs/design/2026-10-20-website-story/art/act3.webp",
+   "source_sha256": "98e5033907fcc9ea69ecb019e7789a2db660fa15215ed8e26cb59f3ce0b41f24",
+   "width": 1536
+  },
+  "act3-960.avif": {
+   "bytes": 67852,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "8b2cc5ba62109e22b60f6904f971d4f7202e34c0fb979919724303e80af6af3f",
+   "source": "docs/design/2026-10-20-website-story/art/act3.webp",
+   "source_sha256": "98e5033907fcc9ea69ecb019e7789a2db660fa15215ed8e26cb59f3ce0b41f24",
+   "width": 960
+  },
+  "act3-960.webp": {
+   "bytes": 90208,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "7c03cebb474483ae35b0a5bb39547aecd1a6dbd5f83f8dec211b6ae58bb3cabc",
+   "source": "docs/design/2026-10-20-website-story/art/act3.webp",
+   "source_sha256": "98e5033907fcc9ea69ecb019e7789a2db660fa15215ed8e26cb59f3ce0b41f24",
+   "width": 960
+  },
+  "act3-fg-1536.avif": {
+   "bytes": 86032,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "443454c37c828a2b19c15e417f5b1b6c977f32de140e38098d53b56e67cf86ae",
+   "source": "docs/design/2026-10-20-website-story/art/act3-fg.webp",
+   "source_sha256": "ccca654a2abd604dbfabed0e557c6763f61ae2e0c86d743d30c66420507e3ff7",
+   "width": 1536
+  },
+  "act3-fg-1536.webp": {
+   "bytes": 211576,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "dd7fa07800fd04b99695bf159ae5d5a93cf3dc1fa0c8e9f211e104564fff596b",
+   "source": "docs/design/2026-10-20-website-story/art/act3-fg.webp",
+   "source_sha256": "ccca654a2abd604dbfabed0e557c6763f61ae2e0c86d743d30c66420507e3ff7",
+   "width": 1536
+  },
+  "act3-fg-960.avif": {
+   "bytes": 45161,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "32557e96827a145b64c613e223a8680f6600da84fbc36d2f6b1f5e8b849ddd9a",
+   "source": "docs/design/2026-10-20-website-story/art/act3-fg.webp",
+   "source_sha256": "ccca654a2abd604dbfabed0e557c6763f61ae2e0c86d743d30c66420507e3ff7",
+   "width": 960
+  },
+  "act3-fg-960.webp": {
+   "bytes": 102964,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "ca61dbe911a28e9f502f7ff5adb6515286fe1666b38f29b2d01d6b5317e11e2b",
+   "source": "docs/design/2026-10-20-website-story/art/act3-fg.webp",
+   "source_sha256": "ccca654a2abd604dbfabed0e557c6763f61ae2e0c86d743d30c66420507e3ff7",
+   "width": 960
+  },
+  "art-cleave-640.avif": {
+   "bytes": 36486,
+   "height": 429,
+   "recipe": "avif w=640 aspect=None trim=False",
+   "sha256": "d03746439a81f1a227b44b19ed1bf919f39c67a848350b5d4a7ff53b1c037311",
+   "source": "assets/art/cards/cleave.jpg",
+   "source_sha256": "da0456a4bd1253978686e868d7b8b691ff04de654a227bdb2bb6a336c3a8920b",
+   "width": 640
+  },
+  "art-cleave-640.webp": {
+   "bytes": 49590,
+   "height": 429,
+   "recipe": "webp w=640 aspect=None trim=False",
+   "sha256": "bfc2f5f5519fa90de9be21a25b43682e93c54588087ae176e1f808462f0f80db",
+   "source": "assets/art/cards/cleave.jpg",
+   "source_sha256": "da0456a4bd1253978686e868d7b8b691ff04de654a227bdb2bb6a336c3a8920b",
+   "width": 640
+  },
+  "art-emberdance-640.avif": {
+   "bytes": 34355,
+   "height": 429,
+   "recipe": "avif w=640 aspect=None trim=False",
+   "sha256": "a57144a24e09f11bfd9af21d45e77a9059126a71226ccf0dd8eeb5486345c40d",
+   "source": "assets/art/cards/emberdance.jpg",
+   "source_sha256": "23d3705203a45188c51ce808c37545cd43f8f7195d0889aa3fd87871fb5bddde",
+   "width": 640
+  },
+  "art-emberdance-640.webp": {
+   "bytes": 50226,
+   "height": 429,
+   "recipe": "webp w=640 aspect=None trim=False",
+   "sha256": "96867375307e1c50b0223cb37fbd676ab80936312af50fb3ba5713ba674c03cd",
+   "source": "assets/art/cards/emberdance.jpg",
+   "source_sha256": "23d3705203a45188c51ce808c37545cd43f8f7195d0889aa3fd87871fb5bddde",
+   "width": 640
+  },
+  "art-hex-640.avif": {
+   "bytes": 30024,
+   "height": 429,
+   "recipe": "avif w=640 aspect=None trim=False",
+   "sha256": "abd206f7abc55f90ddaf4252bc785c14629b00e952ec6fa0bb9fae5f26bdef6b",
+   "source": "assets/art/cards/hex.jpg",
+   "source_sha256": "2244200e3b4b7e9116df7bc4a6eeccc6a17c1a89489a7cff9f9ccc0fa15c9797",
+   "width": 640
+  },
+  "art-hex-640.webp": {
+   "bytes": 42468,
+   "height": 429,
+   "recipe": "webp w=640 aspect=None trim=False",
+   "sha256": "1dd8dd04799fe845631a01e3fd49fc1cc4a4332aa6b1ce073815f10aaf022640",
+   "source": "assets/art/cards/hex.jpg",
+   "source_sha256": "2244200e3b4b7e9116df7bc4a6eeccc6a17c1a89489a7cff9f9ccc0fa15c9797",
+   "width": 640
+  },
+  "art-totality-640.avif": {
+   "bytes": 32324,
+   "height": 429,
+   "recipe": "avif w=640 aspect=None trim=False",
+   "sha256": "41b1867fec26010cd08c870e163e8f20b0eca561714be750d5f884a197394703",
+   "source": "assets/art/cards/totality.jpg",
+   "source_sha256": "df26c0cac3aeaaad382829ea44aa186a05992d67c18d5ef56403cc8c95cd98fe",
+   "width": 640
+  },
+  "art-totality-640.webp": {
+   "bytes": 40622,
+   "height": 429,
+   "recipe": "webp w=640 aspect=None trim=False",
+   "sha256": "fe85677def81dcd8aa7697a3a47bd779168ea5e3a97c64e63834f7e436b652c5",
+   "source": "assets/art/cards/totality.jpg",
+   "source_sha256": "df26c0cac3aeaaad382829ea44aa186a05992d67c18d5ef56403cc8c95cd98fe",
+   "width": 640
   },
   "back-vault-304.avif": {
    "bytes": 12764,
@@ -126,497 +306,1009 @@
    "source_sha256": "adc1f0eaf00876f8dd4d812c69e6f333aaf895b4661887fd5c2407d8c23ae71b",
    "width": 304
   },
-  "card-aegis-480.avif": {
-   "bytes": 38252,
-   "height": 400,
-   "recipe": "avif w=480 aspect=1.2 trim=False",
-   "sha256": "fae82f88437e1d6f2cde6c7ddfe3be78054d92a522250b180e3a384524ad28af",
-   "source": "assets/art/cards/aegis.jpg",
-   "source_sha256": "0cb58b96ede276dbc3b14f9c832ae68043d97cb67a42eda6738e2002215a915f",
-   "width": 480
+  "door-1536.avif": {
+   "bytes": 123379,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "ab3e4b0821af5ca36b0b80de1a00ce89330895e0c4855177544d9b71a27cc733",
+   "source": "docs/design/2026-10-20-website-story/art/door.webp",
+   "source_sha256": "ee7011e0867b9b3fcce2f8d0c1dbae6ec86be2f5e9be7d650b3c8f721bba49ef",
+   "width": 1536
   },
-  "card-aegis-480.webp": {
-   "bytes": 60402,
-   "height": 400,
-   "recipe": "webp w=480 aspect=1.2 trim=False",
-   "sha256": "9fed8ae5dcd28c74811381453752ed324e35a0cccad5fd8df90372e493ec17b8",
-   "source": "assets/art/cards/aegis.jpg",
-   "source_sha256": "0cb58b96ede276dbc3b14f9c832ae68043d97cb67a42eda6738e2002215a915f",
-   "width": 480
+  "door-1536.webp": {
+   "bytes": 150588,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "21acefa2dd8636c79fd6c318b47bb4f545a1824c6b544df9f52632e6b3422fee",
+   "source": "docs/design/2026-10-20-website-story/art/door.webp",
+   "source_sha256": "ee7011e0867b9b3fcce2f8d0c1dbae6ec86be2f5e9be7d650b3c8f721bba49ef",
+   "width": 1536
   },
-  "card-annihilate-480.avif": {
-   "bytes": 28482,
-   "height": 400,
-   "recipe": "avif w=480 aspect=1.2 trim=False",
-   "sha256": "6ce83ab5404811b7d71f384eaac34b3203b4a50d5b790e8a4ae070b0e267f581",
-   "source": "assets/art/cards/annihilate.jpg",
-   "source_sha256": "96d12a661e3090aa3b740c05d94c804faa77aebc07f252e4cc0f5b1702a0cb82",
-   "width": 480
+  "door-960.avif": {
+   "bytes": 54312,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "7b68dd897555939ee172413bb0e50d32e4403693935028891052eebf29abda58",
+   "source": "docs/design/2026-10-20-website-story/art/door.webp",
+   "source_sha256": "ee7011e0867b9b3fcce2f8d0c1dbae6ec86be2f5e9be7d650b3c8f721bba49ef",
+   "width": 960
   },
-  "card-annihilate-480.webp": {
-   "bytes": 44208,
-   "height": 400,
-   "recipe": "webp w=480 aspect=1.2 trim=False",
-   "sha256": "61e06beb0b6b1167181fe998ad4ad123668fbc726fb239c5520758b79f833b50",
-   "source": "assets/art/cards/annihilate.jpg",
-   "source_sha256": "96d12a661e3090aa3b740c05d94c804faa77aebc07f252e4cc0f5b1702a0cb82",
-   "width": 480
+  "door-960.webp": {
+   "bytes": 71672,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "6629ab4647c00b332a8ea6e98901e772f4778c16a560f50a05f8550196b92a95",
+   "source": "docs/design/2026-10-20-website-story/art/door.webp",
+   "source_sha256": "ee7011e0867b9b3fcce2f8d0c1dbae6ec86be2f5e9be7d650b3c8f721bba49ef",
+   "width": 960
   },
-  "card-cleave-480.avif": {
-   "bytes": 27212,
-   "height": 400,
-   "recipe": "avif w=480 aspect=1.2 trim=False",
-   "sha256": "12d4bd205ef41f352cf67dcfc4c94b47edc2dacf6a6c7fc5b9c41d2e11ed21c7",
-   "source": "assets/art/cards/cleave.jpg",
-   "source_sha256": "da0456a4bd1253978686e868d7b8b691ff04de654a227bdb2bb6a336c3a8920b",
-   "width": 480
+  "duskblade-scene-1536.avif": {
+   "bytes": 89779,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "3430e21d721d8da1e0b1e66ef240dfdc7023957a311b4dcbe6b24390cdfc463c",
+   "source": "docs/design/2026-10-20-website-story/art/duskblade-scene.webp",
+   "source_sha256": "e142aae269bc696620e59fa22288b26e272bae9d4c6ae5ec0a90dae3c2f5ad68",
+   "width": 1536
   },
-  "card-cleave-480.webp": {
-   "bytes": 37384,
-   "height": 400,
-   "recipe": "webp w=480 aspect=1.2 trim=False",
-   "sha256": "6dd3faf7168eb7851391e70e8510a9d0502fa384ac7d2d905ad165427c31d3fc",
-   "source": "assets/art/cards/cleave.jpg",
-   "source_sha256": "da0456a4bd1253978686e868d7b8b691ff04de654a227bdb2bb6a336c3a8920b",
-   "width": 480
+  "duskblade-scene-1536.webp": {
+   "bytes": 107516,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "757ee036a69981756c33813cd5dfd881129996aaeabc2218d55a3067d58e5a10",
+   "source": "docs/design/2026-10-20-website-story/art/duskblade-scene.webp",
+   "source_sha256": "e142aae269bc696620e59fa22288b26e272bae9d4c6ae5ec0a90dae3c2f5ad68",
+   "width": 1536
   },
-  "card-dimTheGlass-480.avif": {
-   "bytes": 16853,
-   "height": 400,
-   "recipe": "avif w=480 aspect=1.2 trim=False",
-   "sha256": "740502796c45947ffc17429e211800ab203491b705cf8502c3d609db6b89a81a",
-   "source": "assets/art/cards/dimTheGlass.jpg",
-   "source_sha256": "a1657192bb9a9962d450b65a3bfac06e02e4bb57204e950e97a244e1313902f9",
-   "width": 480
+  "duskblade-scene-960.avif": {
+   "bytes": 43325,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "5db9b30f12d903c4e4fefef0339366aad904cf6d291a21e8f06da4f4c6dfb9af",
+   "source": "docs/design/2026-10-20-website-story/art/duskblade-scene.webp",
+   "source_sha256": "e142aae269bc696620e59fa22288b26e272bae9d4c6ae5ec0a90dae3c2f5ad68",
+   "width": 960
   },
-  "card-dimTheGlass-480.webp": {
-   "bytes": 20604,
-   "height": 400,
-   "recipe": "webp w=480 aspect=1.2 trim=False",
-   "sha256": "e111a58e4198b67c29daf9647a4b7185b675dae6bb3292928eab9c8cb9dc21d6",
-   "source": "assets/art/cards/dimTheGlass.jpg",
-   "source_sha256": "a1657192bb9a9962d450b65a3bfac06e02e4bb57204e950e97a244e1313902f9",
-   "width": 480
+  "duskblade-scene-960.webp": {
+   "bytes": 55212,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "f15fac31fcc3aa59fc43da9156b08db66c30a691a7c1061a98e369c181f892f5",
+   "source": "docs/design/2026-10-20-website-story/art/duskblade-scene.webp",
+   "source_sha256": "e142aae269bc696620e59fa22288b26e272bae9d4c6ae5ec0a90dae3c2f5ad68",
+   "width": 960
   },
-  "card-eclipseSlash-480.avif": {
-   "bytes": 23375,
-   "height": 400,
-   "recipe": "avif w=480 aspect=1.2 trim=False",
-   "sha256": "ab60c0df548b7357b15db7a0596cba744be38c11a6863473e09875978f3f7c0c",
-   "source": "assets/art/cards/eclipseSlash.jpg",
-   "source_sha256": "344602cc4496ef7dc79867e78f80bfade927130d263893cf661db118a79fb711",
-   "width": 480
+  "flesh-trader-1016.avif": {
+   "bytes": 75167,
+   "height": 1024,
+   "recipe": "avif w=1016 aspect=None trim=False",
+   "sha256": "78b85b7808829193a980c25db40f8ccb00f701d7d69f454b75559cc84ff47f07",
+   "source": "docs/design/2026-10-20-website-story/art/flesh-trader.webp",
+   "source_sha256": "f0057668f013f54f8add8dc2c5a8a588adaeb4eeff20e2e6546c07e71ac9cc24",
+   "width": 1016
   },
-  "card-eclipseSlash-480.webp": {
-   "bytes": 35668,
-   "height": 400,
-   "recipe": "webp w=480 aspect=1.2 trim=False",
-   "sha256": "0640a6f0bfe22a71099f754df8b107c9fbdb407a2a03a36bd3bcfdf0d77ab283",
-   "source": "assets/art/cards/eclipseSlash.jpg",
-   "source_sha256": "344602cc4496ef7dc79867e78f80bfade927130d263893cf661db118a79fb711",
-   "width": 480
+  "flesh-trader-1016.webp": {
+   "bytes": 98572,
+   "height": 1024,
+   "recipe": "webp w=1016 aspect=None trim=False",
+   "sha256": "ac3a38c0b4a6a0418c833c1255e87a9529d63bce3d0be60284b42d4d9950ee09",
+   "source": "docs/design/2026-10-20-website-story/art/flesh-trader.webp",
+   "source_sha256": "f0057668f013f54f8add8dc2c5a8a588adaeb4eeff20e2e6546c07e71ac9cc24",
+   "width": 1016
   },
-  "card-emberdance-480.avif": {
-   "bytes": 26465,
-   "height": 400,
-   "recipe": "avif w=480 aspect=1.2 trim=False",
-   "sha256": "801708cf23e12883053ad171cc2187e86c4535ffbdc98230d9a18ee29cd080d6",
-   "source": "assets/art/cards/emberdance.jpg",
-   "source_sha256": "23d3705203a45188c51ce808c37545cd43f8f7195d0889aa3fd87871fb5bddde",
-   "width": 480
+  "flesh-trader-640.avif": {
+   "bytes": 37007,
+   "height": 645,
+   "recipe": "avif w=640 aspect=None trim=False",
+   "sha256": "57cf4777ef071dd179bec96e2418414de6af13a44dccf2a22f7c897f9e7b69bd",
+   "source": "docs/design/2026-10-20-website-story/art/flesh-trader.webp",
+   "source_sha256": "f0057668f013f54f8add8dc2c5a8a588adaeb4eeff20e2e6546c07e71ac9cc24",
+   "width": 640
   },
-  "card-emberdance-480.webp": {
-   "bytes": 38462,
-   "height": 400,
-   "recipe": "webp w=480 aspect=1.2 trim=False",
-   "sha256": "928b572586343209a65f3ae51d5323562f07b9ee13e154071502a4c221722368",
-   "source": "assets/art/cards/emberdance.jpg",
-   "source_sha256": "23d3705203a45188c51ce808c37545cd43f8f7195d0889aa3fd87871fb5bddde",
-   "width": 480
+  "flesh-trader-640.webp": {
+   "bytes": 47662,
+   "height": 645,
+   "recipe": "webp w=640 aspect=None trim=False",
+   "sha256": "7be8db2ceee0d7f437b673f6ff4e8ec6b26cce5d1655352078a403d734e16a6f",
+   "source": "docs/design/2026-10-20-website-story/art/flesh-trader.webp",
+   "source_sha256": "f0057668f013f54f8add8dc2c5a8a588adaeb4eeff20e2e6546c07e71ac9cc24",
+   "width": 640
   },
-  "card-totality-480.avif": {
-   "bytes": 25247,
-   "height": 400,
-   "recipe": "avif w=480 aspect=1.2 trim=False",
-   "sha256": "b0fcba5d3a63a4b04112b54777a29b1bd8049d85f24408176068d8ee019d4cc9",
-   "source": "assets/art/cards/totality.jpg",
-   "source_sha256": "df26c0cac3aeaaad382829ea44aa186a05992d67c18d5ef56403cc8c95cd98fe",
-   "width": 480
+  "gambler-1280.avif": {
+   "bytes": 115809,
+   "height": 853,
+   "recipe": "avif w=1280 aspect=None trim=False",
+   "sha256": "0a093809fca5ea9e64209b18a1f643d6d03352ceaad63b701e306574a3fe621a",
+   "source": "docs/design/2026-10-20-website-story/art/gambler.webp",
+   "source_sha256": "5ffcc6477eff4ed0276881437e6337a014c376cb9e5a295b81bc096e43017d22",
+   "width": 1280
   },
-  "card-totality-480.webp": {
-   "bytes": 32292,
-   "height": 400,
-   "recipe": "webp w=480 aspect=1.2 trim=False",
-   "sha256": "59723a6e010435bac72c0a94e020e1ced046e64f334edd1cb3c8039c673a54d4",
-   "source": "assets/art/cards/totality.jpg",
-   "source_sha256": "df26c0cac3aeaaad382829ea44aa186a05992d67c18d5ef56403cc8c95cd98fe",
-   "width": 480
+  "gambler-1280.webp": {
+   "bytes": 165316,
+   "height": 853,
+   "recipe": "webp w=1280 aspect=None trim=False",
+   "sha256": "95cad04bf76fed6440a83220124339b9d6506678ed935b229dfbe947a436df64",
+   "source": "docs/design/2026-10-20-website-story/art/gambler.webp",
+   "source_sha256": "5ffcc6477eff4ed0276881437e6337a014c376cb9e5a295b81bc096e43017d22",
+   "width": 1280
   },
-  "crack.mp3": {
-   "bytes": 6940,
-   "recipe": "mp3 64k seconds=None",
-   "sha256": "9be6ce68c85fb1028678c114503fdc2af591b0d0904d620535e570c0fc2c3734",
-   "source": "assets/audio/sfx/glassCrack.mp3",
-   "source_sha256": "fd14989020a5a889ee1e939b7928c8836f999d44543f3973f4adac01b1c4f3f4"
+  "gambler-640.avif": {
+   "bytes": 40000,
+   "height": 427,
+   "recipe": "avif w=640 aspect=None trim=False",
+   "sha256": "2211702d62e1d8397eae7c79b424196f8fa9dba059b3b99f5fd11f7ce4b2f12d",
+   "source": "docs/design/2026-10-20-website-story/art/gambler.webp",
+   "source_sha256": "5ffcc6477eff4ed0276881437e6337a014c376cb9e5a295b81bc096e43017d22",
+   "width": 640
   },
-  "crack.ogg": {
-   "bytes": 5349,
-   "recipe": "ogg 48k seconds=None",
-   "sha256": "e038f44047294694ef9694661552e9870dacbf5e2da600d391ac1b6983f20ce5",
-   "source": "assets/audio/sfx/glassCrack.mp3",
-   "source_sha256": "fd14989020a5a889ee1e939b7928c8836f999d44543f3973f4adac01b1c4f3f4"
+  "gambler-640.webp": {
+   "bytes": 60656,
+   "height": 427,
+   "recipe": "webp w=640 aspect=None trim=False",
+   "sha256": "d8e80eb12986424360c5c3745aa85e9dfabda65516faf0b087c7996fe0c75da0",
+   "source": "docs/design/2026-10-20-website-story/art/gambler.webp",
+   "source_sha256": "5ffcc6477eff4ed0276881437e6337a014c376cb9e5a295b81bc096e43017d22",
+   "width": 640
   },
-  "flip.mp3": {
-   "bytes": 4641,
-   "recipe": "mp3 64k seconds=None",
-   "sha256": "6c4f6dd3dd8242d12ec8932843577775b7270453648fd25b9586afe9083516fe",
-   "source": "assets/audio/sfx/card.mp3",
-   "source_sha256": "26b8d193ef1dca17750b5883bd2fc2ca6dcc50f7b0d4ca2440857f02002c3a6f"
+  "gravewarden-skin.jpg": {
+   "bytes": 400789,
+   "recipe": "glb skin",
+   "sha256": "c794439232119afd6f0321e12ab804c77d92e1ff7fa15cdc9a46e244ba252759",
+   "source": "docs/design/2026-10-20-website-story/models/gravewarden.glb",
+   "source_sha256": "c08c1a2babe3b36d8d598c1a42c4fdd98a71fef4fc57cd431edbcbd422e2b947"
   },
-  "flip.ogg": {
-   "bytes": 3020,
-   "recipe": "ogg 48k seconds=None",
-   "sha256": "eb036ded19fb35a40b42a256f16c854260041217439757d747786c2c165e8a2b",
-   "source": "assets/audio/sfx/card.mp3",
-   "source_sha256": "26b8d193ef1dca17750b5883bd2fc2ca6dcc50f7b0d4ca2440857f02002c3a6f"
+  "gravewarden.glb": {
+   "bytes": 4161280,
+   "recipe": "glb skin=external",
+   "sha256": "45fdf92084833e0fb694048da70f0cd2f6d58078eb66c0bb3cb917de35a91fd5",
+   "source": "docs/design/2026-10-20-website-story/models/gravewarden.glb",
+   "source_sha256": "c08c1a2babe3b36d8d598c1a42c4fdd98a71fef4fc57cd431edbcbd422e2b947"
   },
-  "foe-chaosHound-200.avif": {
-   "bytes": 9861,
-   "height": 192,
-   "recipe": "avif w=200 aspect=None trim=True",
-   "sha256": "ddcc7854fc5d4b2b69a3c2da01a31751b03302c18476cce4fb12921cbd1e259a",
-   "source": "assets/art/enemies/chaosHound.png",
-   "source_sha256": "5e266d75fd9dcbbc6e36d7da2d504fa75628931c3441c69766449819d45a8896",
-   "width": 200
+  "hearth-1536.avif": {
+   "bytes": 97054,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "b261a279240d2c20dfc02ad985da85c518dd7df24ca6ac0a64db75d3987edfe8",
+   "source": "assets/art/scenes/opening-hearth.png",
+   "source_sha256": "b97cf7e8315e62d50092f2d7299e071ca80c2381c73efccf2f7165223de9e281",
+   "width": 1536
   },
-  "foe-chaosHound-200.webp": {
-   "bytes": 15666,
-   "height": 192,
-   "recipe": "webp w=200 aspect=None trim=True",
-   "sha256": "19cf4cea0d5320037cb784f33d60278c390ef3afa370d8c8e4f0afdbb8050ecf",
-   "source": "assets/art/enemies/chaosHound.png",
-   "source_sha256": "5e266d75fd9dcbbc6e36d7da2d504fa75628931c3441c69766449819d45a8896",
-   "width": 200
+  "hearth-1536.webp": {
+   "bytes": 121138,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "82af79e772e4ffee70401017dc4b1b94eb43dab2cea4d3f5ac7ed4011fa24849",
+   "source": "assets/art/scenes/opening-hearth.png",
+   "source_sha256": "b97cf7e8315e62d50092f2d7299e071ca80c2381c73efccf2f7165223de9e281",
+   "width": 1536
   },
-  "foe-chaosHound-400.avif": {
-   "bytes": 25642,
-   "height": 384,
-   "recipe": "avif w=400 aspect=None trim=True",
-   "sha256": "f073652d0edef96bd8a529aa6f00abcd83d4a3e926b699c062862b7a91c4c187",
-   "source": "assets/art/enemies/chaosHound.png",
-   "source_sha256": "5e266d75fd9dcbbc6e36d7da2d504fa75628931c3441c69766449819d45a8896",
-   "width": 400
+  "hearth-960.avif": {
+   "bytes": 42231,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "b8d0359342a6880cfd6442c64e914b5c3936f8d687bea1f9d1838fffc43abf35",
+   "source": "assets/art/scenes/opening-hearth.png",
+   "source_sha256": "b97cf7e8315e62d50092f2d7299e071ca80c2381c73efccf2f7165223de9e281",
+   "width": 960
   },
-  "foe-chaosHound-400.webp": {
-   "bytes": 41840,
-   "height": 384,
-   "recipe": "webp w=400 aspect=None trim=True",
-   "sha256": "61f04dbd399fc242dd97cc6b11cade3731bb4312baf5e5a6c3b745de590742d4",
-   "source": "assets/art/enemies/chaosHound.png",
-   "source_sha256": "5e266d75fd9dcbbc6e36d7da2d504fa75628931c3441c69766449819d45a8896",
-   "width": 400
+  "hearth-960.webp": {
+   "bytes": 52848,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "7fac525f6ae4987b8edfc0044d3ec26d400ea94d56829cef13dc994093d3867b",
+   "source": "assets/art/scenes/opening-hearth.png",
+   "source_sha256": "b97cf7e8315e62d50092f2d7299e071ca80c2381c73efccf2f7165223de9e281",
+   "width": 960
   },
-  "foe-deepmaw-200.avif": {
-   "bytes": 7041,
-   "height": 248,
-   "recipe": "avif w=200 aspect=None trim=True",
-   "sha256": "ccf63f04081b2f74b7c8db1ef123bc2463b0c0144ea9c2fc7765d82a84398b4a",
-   "source": "assets/art/enemies/deepmaw.png",
-   "source_sha256": "fc4200d11d0a55ddb09875859303ad8d61f0dfcde3ffeecb99acbb9af5ab80bf",
-   "width": 200
+  "hero-fg-1536.avif": {
+   "bytes": 64623,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "560b76798e48cce74f0bde18d66c7c94aaef20c7cf59e955437d5342a01db5fd",
+   "source": "docs/design/2026-10-20-website-story/art/hero-fg.webp",
+   "source_sha256": "2e762663f675769d46bf7f2a332f1f3de18ed0970953ccec4b134de7ce85a6c4",
+   "width": 1536
   },
-  "foe-deepmaw-200.webp": {
-   "bytes": 10882,
-   "height": 248,
-   "recipe": "webp w=200 aspect=None trim=True",
-   "sha256": "70ab34f0636b42b858d6515a3faa048e15469a5c69e7ea176ec9b1178c36f5c6",
-   "source": "assets/art/enemies/deepmaw.png",
-   "source_sha256": "fc4200d11d0a55ddb09875859303ad8d61f0dfcde3ffeecb99acbb9af5ab80bf",
-   "width": 200
+  "hero-fg-1536.webp": {
+   "bytes": 154762,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "882b6ee8b3ef829df2656ec1908a73f210742a0a2d196dcc6b6a49dedb0b3d0a",
+   "source": "docs/design/2026-10-20-website-story/art/hero-fg.webp",
+   "source_sha256": "2e762663f675769d46bf7f2a332f1f3de18ed0970953ccec4b134de7ce85a6c4",
+   "width": 1536
   },
-  "foe-deepmaw-400.avif": {
-   "bytes": 17190,
-   "height": 496,
-   "recipe": "avif w=400 aspect=None trim=True",
-   "sha256": "384f08c90c977372e81ef501f15ae49bbd6c3eee92404a5d79fdf9c7ef5bfc97",
-   "source": "assets/art/enemies/deepmaw.png",
-   "source_sha256": "fc4200d11d0a55ddb09875859303ad8d61f0dfcde3ffeecb99acbb9af5ab80bf",
-   "width": 400
+  "hero-fg-960.avif": {
+   "bytes": 31973,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "4d67eeec561f20d278dafc879d9674629112688dbe5d738d7826ce5f2e731e50",
+   "source": "docs/design/2026-10-20-website-story/art/hero-fg.webp",
+   "source_sha256": "2e762663f675769d46bf7f2a332f1f3de18ed0970953ccec4b134de7ce85a6c4",
+   "width": 960
   },
-  "foe-deepmaw-400.webp": {
-   "bytes": 27564,
-   "height": 496,
-   "recipe": "webp w=400 aspect=None trim=True",
-   "sha256": "0347da7a374055c7d780ddad525fadcc7060533a2f83e74b5b3fa43a4318ef14",
-   "source": "assets/art/enemies/deepmaw.png",
-   "source_sha256": "fc4200d11d0a55ddb09875859303ad8d61f0dfcde3ffeecb99acbb9af5ab80bf",
-   "width": 400
+  "hero-fg-960.webp": {
+   "bytes": 73984,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "24eae7a98bef71a7cd8eae873d039547cc68f42ff174ed1033e92522e79c004a",
+   "source": "docs/design/2026-10-20-website-story/art/hero-fg.webp",
+   "source_sha256": "2e762663f675769d46bf7f2a332f1f3de18ed0970953ccec4b134de7ce85a6c4",
+   "width": 960
   },
-  "foe-duskfang-200.avif": {
-   "bytes": 6309,
-   "height": 192,
-   "recipe": "avif w=200 aspect=None trim=True",
-   "sha256": "417eb649bda91e7149f73f5d38f7af4df8ea23c02f87a1b4e966c1115c66725a",
-   "source": "assets/art/enemies/duskfang.png",
-   "source_sha256": "38a9900aa378e3ebef08ad392f26715dd92690cf86ccf9f141f5fa41fc2bbc6f",
-   "width": 200
+  "kindle-960.avif": {
+   "bytes": 50892,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "d1b2073a2e2bdb75d5d64d2659ef0683f03e8fb6f588d7e5ec74d7014d786fe0",
+   "source": "docs/design/2026-10-20-website-story/art/kindle.webp",
+   "source_sha256": "1ac883cc1a1f36811e1f8bdb72aa77dfeabc48bd6eba36c03ef4094c02cb0970",
+   "width": 960
   },
-  "foe-duskfang-200.webp": {
-   "bytes": 10210,
-   "height": 192,
-   "recipe": "webp w=200 aspect=None trim=True",
-   "sha256": "fbd96e8c75e83015fdea2de71e15e9ec55f01f30a5670b58707668076edb4b0d",
-   "source": "assets/art/enemies/duskfang.png",
-   "source_sha256": "38a9900aa378e3ebef08ad392f26715dd92690cf86ccf9f141f5fa41fc2bbc6f",
-   "width": 200
+  "kindle-960.webp": {
+   "bytes": 67660,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "b3159ffa17181b7b899dd28768a48416ae6dd9007a483adc7ca689efc241ef4f",
+   "source": "docs/design/2026-10-20-website-story/art/kindle.webp",
+   "source_sha256": "1ac883cc1a1f36811e1f8bdb72aa77dfeabc48bd6eba36c03ef4094c02cb0970",
+   "width": 960
   },
-  "foe-duskfang-400.avif": {
-   "bytes": 15026,
-   "height": 383,
-   "recipe": "avif w=400 aspect=None trim=True",
-   "sha256": "94ed9c2669a277ce0d484bd915c8d75479a3062c95809934746055bf63f62bdf",
-   "source": "assets/art/enemies/duskfang.png",
-   "source_sha256": "38a9900aa378e3ebef08ad392f26715dd92690cf86ccf9f141f5fa41fc2bbc6f",
-   "width": 400
+  "lamp-bg-1536.avif": {
+   "bytes": 132290,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "ae948c3601cbe6cfcc2714c7f3909351576d924484f6535f32bac01402327886",
+   "source": "docs/design/2026-10-20-website-story/art/lamp-bg.webp",
+   "source_sha256": "acb68e4ba269bd111b6f05de45e172f44440adb3a8e48a4c2326043b87a6dc92",
+   "width": 1536
   },
-  "foe-duskfang-400.webp": {
-   "bytes": 25496,
-   "height": 383,
-   "recipe": "webp w=400 aspect=None trim=True",
-   "sha256": "a7414490b2be257db12263d2d6e34a5b8708a58f1c76e8d81fa606ee632266cc",
-   "source": "assets/art/enemies/duskfang.png",
-   "source_sha256": "38a9900aa378e3ebef08ad392f26715dd92690cf86ccf9f141f5fa41fc2bbc6f",
-   "width": 400
+  "lamp-bg-1536.webp": {
+   "bytes": 178538,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "af54b882e7976ef3b87be6fbd2eba5bcc55d4ed0762f286132195e087d5474a4",
+   "source": "docs/design/2026-10-20-website-story/art/lamp-bg.webp",
+   "source_sha256": "acb68e4ba269bd111b6f05de45e172f44440adb3a8e48a4c2326043b87a6dc92",
+   "width": 1536
   },
-  "foe-gravewarden-200.avif": {
-   "bytes": 8140,
-   "height": 212,
-   "recipe": "avif w=200 aspect=None trim=True",
-   "sha256": "8f77f3bd352035bbe063bde56d15adea6e5996b75774530cb079c44f1d55cbb9",
-   "source": "assets/art/enemies/gravewarden.png",
-   "source_sha256": "70c1bb28d401cad1bf4f6465306c841d32b56c03858daaf026a19657dc33545f",
-   "width": 200
+  "lamp-bg-960.avif": {
+   "bytes": 63395,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "b395097fbc06c8b83c802c9cbeb91114dc2a1e781215f20e306d8b1b77cf3027",
+   "source": "docs/design/2026-10-20-website-story/art/lamp-bg.webp",
+   "source_sha256": "acb68e4ba269bd111b6f05de45e172f44440adb3a8e48a4c2326043b87a6dc92",
+   "width": 960
   },
-  "foe-gravewarden-200.webp": {
-   "bytes": 12932,
-   "height": 212,
-   "recipe": "webp w=200 aspect=None trim=True",
-   "sha256": "b7aaf079e40966a8b901b941a28360f277f23a2329af1a1f4abc723b7d6570bf",
-   "source": "assets/art/enemies/gravewarden.png",
-   "source_sha256": "70c1bb28d401cad1bf4f6465306c841d32b56c03858daaf026a19657dc33545f",
-   "width": 200
+  "lamp-bg-960.webp": {
+   "bytes": 81142,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "fd04e516b79b200853ac70813c24f0576a4da50c589cd37769eee90df0ae63cf",
+   "source": "docs/design/2026-10-20-website-story/art/lamp-bg.webp",
+   "source_sha256": "acb68e4ba269bd111b6f05de45e172f44440adb3a8e48a4c2326043b87a6dc92",
+   "width": 960
   },
-  "foe-gravewarden-400.avif": {
-   "bytes": 24520,
-   "height": 423,
-   "recipe": "avif w=400 aspect=None trim=True",
-   "sha256": "f8bc04a9ec4f3975a419fdcc979efc2df24b7f8f71a962a20621afe6c3719393",
-   "source": "assets/art/enemies/gravewarden.png",
-   "source_sha256": "70c1bb28d401cad1bf4f6465306c841d32b56c03858daaf026a19657dc33545f",
-   "width": 400
+  "lamp-fg-1536.avif": {
+   "bytes": 76556,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "7004dd5ed8a23508720e65124464e79725ba41bfab2e2c3810fc626828230fc7",
+   "source": "docs/design/2026-10-20-website-story/art/lamp-fg.webp",
+   "source_sha256": "ef38deb18e72d616bcac5f41954e475d529bf406b25d89aa1038ea5ba3587644",
+   "width": 1536
   },
-  "foe-gravewarden-400.webp": {
-   "bytes": 39388,
-   "height": 423,
-   "recipe": "webp w=400 aspect=None trim=True",
-   "sha256": "a72fda1315d9913ceac819393f050734e8428c3bdbaf1c9ceaeebf9f96641b3d",
-   "source": "assets/art/enemies/gravewarden.png",
-   "source_sha256": "70c1bb28d401cad1bf4f6465306c841d32b56c03858daaf026a19657dc33545f",
-   "width": 400
+  "lamp-fg-1536.webp": {
+   "bytes": 205724,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "4af85f98d81f2ae0844e2878847364dff30b7347d846b08a40e875f23b6e24a5",
+   "source": "docs/design/2026-10-20-website-story/art/lamp-fg.webp",
+   "source_sha256": "ef38deb18e72d616bcac5f41954e475d529bf406b25d89aa1038ea5ba3587644",
+   "width": 1536
   },
-  "foe-shade-200.avif": {
-   "bytes": 13579,
-   "height": 368,
-   "recipe": "avif w=200 aspect=None trim=True",
-   "sha256": "105a18d68ca8f82475cb827a13cbb1df3c9e00dbfe2341cd519183fe1acf9e09",
-   "source": "assets/art/enemies/shade.png",
-   "source_sha256": "7a532510bb3915fc5a9e8a17b18e7960004abf7500f33f6066d5305359650738",
-   "width": 200
+  "lamp-fg-960.avif": {
+   "bytes": 46886,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "2bf3c6fe8e63b2ab8d6bdc23d28f57c9f9d57db9751aa5b8457d9655fab5b954",
+   "source": "docs/design/2026-10-20-website-story/art/lamp-fg.webp",
+   "source_sha256": "ef38deb18e72d616bcac5f41954e475d529bf406b25d89aa1038ea5ba3587644",
+   "width": 960
   },
-  "foe-shade-200.webp": {
-   "bytes": 22104,
-   "height": 368,
-   "recipe": "webp w=200 aspect=None trim=True",
-   "sha256": "8b3462e87df894f4871a7b445a7989e26005f6cf63bb19856e72c04f6a8fe2cb",
-   "source": "assets/art/enemies/shade.png",
-   "source_sha256": "7a532510bb3915fc5a9e8a17b18e7960004abf7500f33f6066d5305359650738",
-   "width": 200
+  "lamp-fg-960.webp": {
+   "bytes": 103460,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "11182e35fe11fd41ea0d2e9dbf0e09a07ae42d99a84b3a5bd63ac30ebfb9f6b5",
+   "source": "docs/design/2026-10-20-website-story/art/lamp-fg.webp",
+   "source_sha256": "ef38deb18e72d616bcac5f41954e475d529bf406b25d89aa1038ea5ba3587644",
+   "width": 960
   },
-  "foe-shade-400.avif": {
-   "bytes": 33763,
-   "height": 737,
-   "recipe": "avif w=400 aspect=None trim=True",
-   "sha256": "869cc19a3e5e2abfc91c3beaedea962ba54173148a39d1da878d9471881b0a49",
-   "source": "assets/art/enemies/shade.png",
-   "source_sha256": "7a532510bb3915fc5a9e8a17b18e7960004abf7500f33f6066d5305359650738",
-   "width": 400
+  "lamp-figure-460.avif": {
+   "bytes": 36492,
+   "height": 743,
+   "recipe": "avif w=460 aspect=None trim=False",
+   "sha256": "be50f375fdb9b9e96b3b6852ff7a6a3bcb31bfa4cbea3d8b379b3e522c605eba",
+   "source": "docs/design/2026-10-20-website-story/art/lamp-figure.webp",
+   "source_sha256": "9199617a8b9e12141682422b98a61312b01a6a491a80a0a87288a3874be07e49",
+   "width": 460
   },
-  "foe-shade-400.webp": {
-   "bytes": 59182,
-   "height": 737,
-   "recipe": "webp w=400 aspect=None trim=True",
-   "sha256": "47b7f70c8ac46d8b47c9b0fe0614d21af102f17cddede0bd1b46d20509e6427a",
-   "source": "assets/art/enemies/shade.png",
-   "source_sha256": "7a532510bb3915fc5a9e8a17b18e7960004abf7500f33f6066d5305359650738",
-   "width": 400
+  "lamp-figure-460.webp": {
+   "bytes": 73504,
+   "height": 743,
+   "recipe": "webp w=460 aspect=None trim=False",
+   "sha256": "b1a33a7c814f4b00b1b80bd0dcb0070ec11f4c82ac7ef4bc32d23df91d543a31",
+   "source": "docs/design/2026-10-20-website-story/art/lamp-figure.webp",
+   "source_sha256": "9199617a8b9e12141682422b98a61312b01a6a491a80a0a87288a3874be07e49",
+   "width": 460
   },
-  "foe-starCultist-200.avif": {
-   "bytes": 11571,
-   "height": 251,
-   "recipe": "avif w=200 aspect=None trim=True",
-   "sha256": "18d788536cfdbac799c5b1eb7d3c7addca89afbb5d6681676be39e6aab6f142e",
-   "source": "assets/art/enemies/starCultist.png",
-   "source_sha256": "a8c39d3c5b957d976dff28e4c97d795b4b731f63f01e4393af1d80e876bc2b54",
-   "width": 200
+  "lamp-figure-920.avif": {
+   "bytes": 100161,
+   "height": 1485,
+   "recipe": "avif w=920 aspect=None trim=False",
+   "sha256": "ceec3e2f578c1ffe41ae3b9281d4c034ce119341b6bd639a65f50a4a3bef4097",
+   "source": "docs/design/2026-10-20-website-story/art/lamp-figure.webp",
+   "source_sha256": "9199617a8b9e12141682422b98a61312b01a6a491a80a0a87288a3874be07e49",
+   "width": 920
   },
-  "foe-starCultist-200.webp": {
-   "bytes": 19028,
-   "height": 251,
-   "recipe": "webp w=200 aspect=None trim=True",
-   "sha256": "9683dd5578f033d8d8271e6e6158144736c0c0a3d1d754ec89fe51126a6a0241",
-   "source": "assets/art/enemies/starCultist.png",
-   "source_sha256": "a8c39d3c5b957d976dff28e4c97d795b4b731f63f01e4393af1d80e876bc2b54",
-   "width": 200
-  },
-  "foe-starCultist-400.avif": {
-   "bytes": 30985,
-   "height": 502,
-   "recipe": "avif w=400 aspect=None trim=True",
-   "sha256": "382b1875bdc116ede2302b8edf880b85a83a61752528ccbc80329be703637058",
-   "source": "assets/art/enemies/starCultist.png",
-   "source_sha256": "a8c39d3c5b957d976dff28e4c97d795b4b731f63f01e4393af1d80e876bc2b54",
-   "width": 400
-  },
-  "foe-starCultist-400.webp": {
-   "bytes": 52270,
-   "height": 502,
-   "recipe": "webp w=400 aspect=None trim=True",
-   "sha256": "0c3836911939f1f5b213913a199e560994215ab8972ba475091751a61623c007",
-   "source": "assets/art/enemies/starCultist.png",
-   "source_sha256": "a8c39d3c5b957d976dff28e4c97d795b4b731f63f01e4393af1d80e876bc2b54",
-   "width": 400
+  "lamp-figure-920.webp": {
+   "bytes": 221254,
+   "height": 1485,
+   "recipe": "webp w=920 aspect=None trim=False",
+   "sha256": "0207a620222875b82c1ec11f6f16a81b5db9f20f800a56b968fcec5423bf7605",
+   "source": "docs/design/2026-10-20-website-story/art/lamp-figure.webp",
+   "source_sha256": "9199617a8b9e12141682422b98a61312b01a6a491a80a0a87288a3874be07e49",
+   "width": 920
   },
   "lantern-240.avif": {
-   "bytes": 9850,
-   "height": 407,
+   "bytes": 8805,
+   "height": 388,
    "recipe": "avif w=240 aspect=None trim=True",
-   "sha256": "ed88e0edd3f3cff0237f735038bf8b20f2943b423335f9c89631e2a88f69a722",
-   "source": "assets/art/title/lantern-hero.png",
-   "source_sha256": "90bead900c26f8d645e39c29afb5d393dc03180dba7f84b17091d4ccccbcbd6d",
+   "sha256": "fec53f1f2673d2696c9de11b324c00aabea5797bec88d816ea45c5f8d7a1a6eb",
+   "source": "docs/design/2026-10-20-website-story/art/lantern.webp",
+   "source_sha256": "9451ae7870f7e3f0026e60235e5f2865057a7c2f705d5530c6bbae4e085ad9f6",
    "width": 240
   },
   "lantern-240.webp": {
-   "bytes": 18568,
-   "height": 407,
+   "bytes": 17306,
+   "height": 388,
    "recipe": "webp w=240 aspect=None trim=True",
-   "sha256": "86919fe85b57b73f360db3e0dfb28dd36817c8d2d38f76fdf1cd4813fa4a9396",
-   "source": "assets/art/title/lantern-hero.png",
-   "source_sha256": "90bead900c26f8d645e39c29afb5d393dc03180dba7f84b17091d4ccccbcbd6d",
+   "sha256": "bef9562f7f1c207ad00514bb31bc424bb194f2c8b4a1b170d322de245aa85926",
+   "source": "docs/design/2026-10-20-website-story/art/lantern.webp",
+   "source_sha256": "9451ae7870f7e3f0026e60235e5f2865057a7c2f705d5530c6bbae4e085ad9f6",
    "width": 240
   },
   "lantern-480.avif": {
-   "bytes": 25359,
-   "height": 815,
+   "bytes": 23014,
+   "height": 776,
    "recipe": "avif w=480 aspect=None trim=True",
-   "sha256": "f48ecb5ea07235ab7f21fe103f74ddd8e26df006ef7439cb9c75546de1ab763b",
-   "source": "assets/art/title/lantern-hero.png",
-   "source_sha256": "90bead900c26f8d645e39c29afb5d393dc03180dba7f84b17091d4ccccbcbd6d",
+   "sha256": "7c33d46ae77840e070c45d57f051fe5466dabae9c06e47323369dbb28f855238",
+   "source": "docs/design/2026-10-20-website-story/art/lantern.webp",
+   "source_sha256": "9451ae7870f7e3f0026e60235e5f2865057a7c2f705d5530c6bbae4e085ad9f6",
    "width": 480
   },
   "lantern-480.webp": {
-   "bytes": 51394,
-   "height": 815,
+   "bytes": 47290,
+   "height": 776,
    "recipe": "webp w=480 aspect=None trim=True",
-   "sha256": "1d97f05ad3ef4ee65580e2804b4b4e7373f0d0b4542f7daca84529439262d0f2",
-   "source": "assets/art/title/lantern-hero.png",
-   "source_sha256": "90bead900c26f8d645e39c29afb5d393dc03180dba7f84b17091d4ccccbcbd6d",
+   "sha256": "24d42623cc5ce006a3b415f7c1055220bf66976f69fc6227aca3780fa78c694b",
+   "source": "docs/design/2026-10-20-website-story/art/lantern.webp",
+   "source_sha256": "9451ae7870f7e3f0026e60235e5f2865057a7c2f705d5530c6bbae4e085ad9f6",
    "width": 480
   },
-  "rise.mp3": {
-   "bytes": 5268,
-   "recipe": "mp3 64k seconds=None",
-   "sha256": "2e6155b27165bf372af0f8de05491da1cd0293a470fe4e540509b97a9fd81552",
-   "source": "assets/audio/sfx/paneRise.mp3",
-   "source_sha256": "3ab7f299da0815d7971e9a3608a1066f7a8077411b4c955e4484885f53fb1251"
+  "lantern-bg-1536.avif": {
+   "bytes": 160347,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "625a4c85d216dcec0547813dc8d6e1abca876dcd5e0dd58f7351ae3e9296a840",
+   "source": "docs/design/2026-10-20-website-story/art/lantern-bg.webp",
+   "source_sha256": "bb023071764562938796862162af9a1ea755de3c92d1e140a7304a8536d45fb9",
+   "width": 1536
   },
-  "rise.ogg": {
-   "bytes": 4403,
-   "recipe": "ogg 48k seconds=None",
-   "sha256": "fc853ff00627b01d62b8112fbbe08ce4f6c5040af57650f498de15ad4cf3b96e",
-   "source": "assets/audio/sfx/paneRise.mp3",
-   "source_sha256": "3ab7f299da0815d7971e9a3608a1066f7a8077411b4c955e4484885f53fb1251"
+  "lantern-bg-1536.webp": {
+   "bytes": 228122,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "51e86d18e3efebf2b663c87e356b2d353a9de7d795c74f391e1e18420d13cfc0",
+   "source": "docs/design/2026-10-20-website-story/art/lantern-bg.webp",
+   "source_sha256": "bb023071764562938796862162af9a1ea755de3c92d1e140a7304a8536d45fb9",
+   "width": 1536
   },
-  "scene-night-stall-1280.avif": {
-   "bytes": 76284,
-   "height": 880,
-   "recipe": "avif w=1280 aspect=None trim=False",
-   "sha256": "f7e7609b1134f8c3fd3c938facfdf21922f8a178b19cd3c5df42028cda5d1f3f",
-   "source": "assets/art/scenes/night-stall.png",
-   "source_sha256": "98794ea45d735507b84265b606cf206fd382893abc341584bcfd567392a306c9",
-   "width": 1280
+  "lantern-bg-960.avif": {
+   "bytes": 76458,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "e0eddb2cf5397c58327aeaa949c7307163ade202479d08d38e48acb6934d4ebc",
+   "source": "docs/design/2026-10-20-website-story/art/lantern-bg.webp",
+   "source_sha256": "bb023071764562938796862162af9a1ea755de3c92d1e140a7304a8536d45fb9",
+   "width": 960
   },
-  "scene-night-stall-1280.webp": {
-   "bytes": 83288,
-   "height": 880,
-   "recipe": "webp w=1280 aspect=None trim=False",
-   "sha256": "6d44e60945b781981e7e801231cc6150faa6e85cce0f7d455376352f302d206f",
-   "source": "assets/art/scenes/night-stall.png",
-   "source_sha256": "98794ea45d735507b84265b606cf206fd382893abc341584bcfd567392a306c9",
-   "width": 1280
+  "lantern-bg-960.webp": {
+   "bytes": 111396,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "601be20cf83387bb5a8c6814d503bb031b1f5c9bf5fb826dc4bcb5d6db9a99d4",
+   "source": "docs/design/2026-10-20-website-story/art/lantern-bg.webp",
+   "source_sha256": "bb023071764562938796862162af9a1ea755de3c92d1e140a7304a8536d45fb9",
+   "width": 960
   },
-  "scene-night-stall-640.avif": {
-   "bytes": 23447,
-   "height": 440,
-   "recipe": "avif w=640 aspect=None trim=False",
-   "sha256": "006844ae3e7d27043003618ad2b7b2134deecb45b70c9e54dbc70e5f634d0ab5",
-   "source": "assets/art/scenes/night-stall.png",
-   "source_sha256": "98794ea45d735507b84265b606cf206fd382893abc341584bcfd567392a306c9",
-   "width": 640
+  "lantern-fg-1536.avif": {
+   "bytes": 62471,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "a65094365a9a584bb1e84005deaeeb28a4898b31ada4fbc70c494d61839dc9b6",
+   "source": "docs/design/2026-10-20-website-story/art/lantern-fg.webp",
+   "source_sha256": "2fc8a36da74bec8d72e4525b4434041969bd29741f5d117a8c5c065a931035cb",
+   "width": 1536
   },
-  "scene-night-stall-640.webp": {
-   "bytes": 27096,
-   "height": 440,
-   "recipe": "webp w=640 aspect=None trim=False",
-   "sha256": "0c4daf41227d1e450cdf97680aec37ce32e2b4d61ac3e5d297b225837dfe025c",
-   "source": "assets/art/scenes/night-stall.png",
-   "source_sha256": "98794ea45d735507b84265b606cf206fd382893abc341584bcfd567392a306c9",
-   "width": 640
+  "lantern-fg-1536.webp": {
+   "bytes": 163238,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "9b35b3bb1ae7f6ec6f205e20d885003a26a8864b8548a735fe6ca852e43ef7b4",
+   "source": "docs/design/2026-10-20-website-story/art/lantern-fg.webp",
+   "source_sha256": "2fc8a36da74bec8d72e4525b4434041969bd29741f5d117a8c5c065a931035cb",
+   "width": 1536
   },
-  "scene-opening-hearth-1280.avif": {
-   "bytes": 71338,
-   "height": 853,
-   "recipe": "avif w=1280 aspect=None trim=False",
-   "sha256": "216d7d2343ec7655009ad7880bbab7d7f399ec2e82377eba136b124158e20a4a",
-   "source": "assets/art/scenes/opening-hearth.png",
-   "source_sha256": "b97cf7e8315e62d50092f2d7299e071ca80c2381c73efccf2f7165223de9e281",
-   "width": 1280
+  "lantern-fg-960.avif": {
+   "bytes": 35417,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "299b1b387ce65309dbb693d5b84bceaea1a91d85905cd0bf5f34986ef83678c5",
+   "source": "docs/design/2026-10-20-website-story/art/lantern-fg.webp",
+   "source_sha256": "2fc8a36da74bec8d72e4525b4434041969bd29741f5d117a8c5c065a931035cb",
+   "width": 960
   },
-  "scene-opening-hearth-1280.webp": {
-   "bytes": 87252,
-   "height": 853,
-   "recipe": "webp w=1280 aspect=None trim=False",
-   "sha256": "348c22b48fd23a162bc0c06be4dca90dbd7260cc22e544be5102c8599e928db0",
-   "source": "assets/art/scenes/opening-hearth.png",
-   "source_sha256": "b97cf7e8315e62d50092f2d7299e071ca80c2381c73efccf2f7165223de9e281",
-   "width": 1280
+  "lantern-fg-960.webp": {
+   "bytes": 79826,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "682bdc748af179e3fddbc33e5fc5d2355f896ab870d506c80e32748ddc10e7d9",
+   "source": "docs/design/2026-10-20-website-story/art/lantern-fg.webp",
+   "source_sha256": "2fc8a36da74bec8d72e4525b4434041969bd29741f5d117a8c5c065a931035cb",
+   "width": 960
   },
-  "scene-opening-hearth-640.avif": {
-   "bytes": 19134,
-   "height": 427,
-   "recipe": "avif w=640 aspect=None trim=False",
-   "sha256": "27fb2c73552372642b98919ba3126c28740f8b022188a51b62057bc9c2182b04",
-   "source": "assets/art/scenes/opening-hearth.png",
-   "source_sha256": "b97cf7e8315e62d50092f2d7299e071ca80c2381c73efccf2f7165223de9e281",
-   "width": 640
+  "lantern-keeper-480.avif": {
+   "bytes": 31439,
+   "height": 605,
+   "recipe": "avif w=480 aspect=None trim=False",
+   "sha256": "0ac50518394106f20e7359810418864cec6b14ffe9564d21d3677051562f69da",
+   "source": "docs/design/2026-10-20-website-story/art/lantern-keeper.webp",
+   "source_sha256": "596259f71f1148b106f15a4884eb65158c454d31da621fd2a42874a92f05f0c8",
+   "width": 480
   },
-  "scene-opening-hearth-640.webp": {
-   "bytes": 23632,
-   "height": 427,
-   "recipe": "webp w=640 aspect=None trim=False",
-   "sha256": "3e860827fdf1f87811e84366c7080fb3a2c5b10bb82be48b69df41823ffb5e30",
-   "source": "assets/art/scenes/opening-hearth.png",
-   "source_sha256": "b97cf7e8315e62d50092f2d7299e071ca80c2381c73efccf2f7165223de9e281",
-   "width": 640
+  "lantern-keeper-480.webp": {
+   "bytes": 62706,
+   "height": 605,
+   "recipe": "webp w=480 aspect=None trim=False",
+   "sha256": "148af352653732c8156b534374db98b612e326245f361d0be60d259c190ad7db",
+   "source": "docs/design/2026-10-20-website-story/art/lantern-keeper.webp",
+   "source_sha256": "596259f71f1148b106f15a4884eb65158c454d31da621fd2a42874a92f05f0c8",
+   "width": 480
+  },
+  "lantern-keeper-960.avif": {
+   "bytes": 97749,
+   "height": 1209,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "d896e2d8df51fed0a2314ccd2060413160c8ea84cc65ce6c185e39850bf7fd61",
+   "source": "docs/design/2026-10-20-website-story/art/lantern-keeper.webp",
+   "source_sha256": "596259f71f1148b106f15a4884eb65158c454d31da621fd2a42874a92f05f0c8",
+   "width": 960
+  },
+  "lantern-keeper-960.webp": {
+   "bytes": 204682,
+   "height": 1209,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "6e7f6ad1403bdfba67b5965e66cdd1f7262c544a898370405e07eef17c361480",
+   "source": "docs/design/2026-10-20-website-story/art/lantern-keeper.webp",
+   "source_sha256": "596259f71f1148b106f15a4884eb65158c454d31da621fd2a42874a92f05f0c8",
+   "width": 960
+  },
+  "map-act1-1440.avif": {
+   "bytes": 129752,
+   "height": 831,
+   "recipe": "avif w=1440 aspect=None trim=False box=(1462, 0, 2924, 844)",
+   "sha256": "65748656271bb0e5a52aaab65235e665c9c988475f8d70173f3f3b0f7ce3f89a",
+   "source": "docs/design/2026-10-02-map-living-land/r3/r3-6-light/frames/act1-desktop-full.jpg",
+   "source_sha256": "cd41ede0e29e84e193d5554911d875463c186dcc79601cd9e55c01c8274c3818",
+   "width": 1440
+  },
+  "map-act1-1440.webp": {
+   "bytes": 170676,
+   "height": 831,
+   "recipe": "webp w=1440 aspect=None trim=False box=(1462, 0, 2924, 844)",
+   "sha256": "35bddcd0f634a2d79e73ff2560d0b2abf581333312e2dc6445d26aa338613a74",
+   "source": "docs/design/2026-10-02-map-living-land/r3/r3-6-light/frames/act1-desktop-full.jpg",
+   "source_sha256": "cd41ede0e29e84e193d5554911d875463c186dcc79601cd9e55c01c8274c3818",
+   "width": 1440
+  },
+  "map-act1-720.avif": {
+   "bytes": 40326,
+   "height": 416,
+   "recipe": "avif w=720 aspect=None trim=False box=(1462, 0, 2924, 844)",
+   "sha256": "e5d23cfb5850c3f6debc795de902b758ed41ac714540875eaaf50fca71225f63",
+   "source": "docs/design/2026-10-02-map-living-land/r3/r3-6-light/frames/act1-desktop-full.jpg",
+   "source_sha256": "cd41ede0e29e84e193d5554911d875463c186dcc79601cd9e55c01c8274c3818",
+   "width": 720
+  },
+  "map-act1-720.webp": {
+   "bytes": 55238,
+   "height": 416,
+   "recipe": "webp w=720 aspect=None trim=False box=(1462, 0, 2924, 844)",
+   "sha256": "2f4ae749c9e132afd210d9b1e0437581df44fe2725eeecd15df73f621552a637",
+   "source": "docs/design/2026-10-02-map-living-land/r3/r3-6-light/frames/act1-desktop-full.jpg",
+   "source_sha256": "cd41ede0e29e84e193d5554911d875463c186dcc79601cd9e55c01c8274c3818",
+   "width": 720
+  },
+  "merchant-1536.avif": {
+   "bytes": 180517,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "fd9ff8a0f200bc391bbc755f52e2dccb13f87e3c0b50d2d7e416b6ffd8c70097",
+   "source": "docs/design/2026-10-20-website-story/art/merchant.webp",
+   "source_sha256": "64d229f98991d5f4b98e0ede79f8918553f8cfa4131af35157261e55ecb0f7b1",
+   "width": 1536
+  },
+  "merchant-1536.webp": {
+   "bytes": 268876,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "78c538cb974fda4ab2bae038436fdf601074609f6a0294ca48e949a17f4bc602",
+   "source": "docs/design/2026-10-20-website-story/art/merchant.webp",
+   "source_sha256": "64d229f98991d5f4b98e0ede79f8918553f8cfa4131af35157261e55ecb0f7b1",
+   "width": 1536
+  },
+  "merchant-960.avif": {
+   "bytes": 88390,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "43eb011acfb63d7072f295e96ddb6864c6589b9235a0d8b60c1760e4f485c89c",
+   "source": "docs/design/2026-10-20-website-story/art/merchant.webp",
+   "source_sha256": "64d229f98991d5f4b98e0ede79f8918553f8cfa4131af35157261e55ecb0f7b1",
+   "width": 960
+  },
+  "merchant-960.webp": {
+   "bytes": 128232,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "bd2d789c867aa405af84b8ccfeb152e7aad9fa327f6a89c76550b9ee41ab2996",
+   "source": "docs/design/2026-10-20-website-story/art/merchant.webp",
+   "source_sha256": "64d229f98991d5f4b98e0ede79f8918553f8cfa4131af35157261e55ecb0f7b1",
+   "width": 960
+  },
+  "myth-0-1152.avif": {
+   "bytes": 41756,
+   "height": 773,
+   "recipe": "avif w=1152 aspect=None trim=False",
+   "sha256": "24db9439e360179fd2f5daaeb8d3b495cc7d1f56ea4da21981b7ae66444f4a0b",
+   "source": "docs/design/2026-10-20-website-story/mythic/bankedFire-B-L0.jpg",
+   "source_sha256": "596144359841148a2eb3b4d1f5d01c54e7540cf14c9299e44baf2ea16dbdfb32",
+   "width": 1152
+  },
+  "myth-0-1152.webp": {
+   "bytes": 42688,
+   "height": 773,
+   "recipe": "webp w=1152 aspect=None trim=False",
+   "sha256": "ca8a692f33daefd80e169db9d19c6e2f4e7cf06aec5127bf5310ba6f3a1ad03d",
+   "source": "docs/design/2026-10-20-website-story/mythic/bankedFire-B-L0.jpg",
+   "source_sha256": "596144359841148a2eb3b4d1f5d01c54e7540cf14c9299e44baf2ea16dbdfb32",
+   "width": 1152
+  },
+  "myth-1-1152.avif": {
+   "bytes": 61710,
+   "height": 773,
+   "recipe": "avif w=1152 aspect=None trim=False",
+   "sha256": "5309456e8e1626386c218e8410e041bbb49819d33f3d7711306df55e7de4df21",
+   "source": "docs/design/2026-10-20-website-story/mythic/bankedFire-B-L1.png",
+   "source_sha256": "67268fd5e060b957c0fb428536a4daa1cd4e23b5392932a40e4d9f345f83b653",
+   "width": 1152
+  },
+  "myth-1-1152.webp": {
+   "bytes": 82164,
+   "height": 773,
+   "recipe": "webp w=1152 aspect=None trim=False",
+   "sha256": "2b7e04a0c98de9814c2da7a7548d8743ef1784f45270ad9a6d2513a375698eb9",
+   "source": "docs/design/2026-10-20-website-story/mythic/bankedFire-B-L1.png",
+   "source_sha256": "67268fd5e060b957c0fb428536a4daa1cd4e23b5392932a40e4d9f345f83b653",
+   "width": 1152
+  },
+  "myth-2-1152.avif": {
+   "bytes": 27666,
+   "height": 773,
+   "recipe": "avif w=1152 aspect=None trim=False",
+   "sha256": "fbcb20c355a0dfed54ac9803d628e422052e3a4f2b40fa4a1d72781ab7634e97",
+   "source": "docs/design/2026-10-20-website-story/mythic/bankedFire-B-L2.png",
+   "source_sha256": "82e64f95fcf47ad39d720ba552345eb5b409b5b9f9fcf11afa6a02346dbcf097",
+   "width": 1152
+  },
+  "myth-2-1152.webp": {
+   "bytes": 40274,
+   "height": 773,
+   "recipe": "webp w=1152 aspect=None trim=False",
+   "sha256": "7d22147894f9d4e7ca415df8e1e23e45a8c072aab0aac9bf16b14f5f81a85eba",
+   "source": "docs/design/2026-10-20-website-story/mythic/bankedFire-B-L2.png",
+   "source_sha256": "82e64f95fcf47ad39d720ba552345eb5b409b5b9f9fcf11afa6a02346dbcf097",
+   "width": 1152
+  },
+  "myth-3-1152.avif": {
+   "bytes": 6290,
+   "height": 773,
+   "recipe": "avif w=1152 aspect=None trim=False",
+   "sha256": "6b1bb153d6cdae60d465aef20ca04d95d66d408090f91b5305909a66bc3edda2",
+   "source": "docs/design/2026-10-20-website-story/mythic/bankedFire-B-L3.png",
+   "source_sha256": "0eb279b733a8cbf525f847759cd2275061167ea388bbf6988ea5841f4e0d1a16",
+   "width": 1152
+  },
+  "myth-3-1152.webp": {
+   "bytes": 9184,
+   "height": 773,
+   "recipe": "webp w=1152 aspect=None trim=False",
+   "sha256": "eab11b2280245b3b6973bf9303629d392891a2862bf0dfd9bf534790801ebc7d",
+   "source": "docs/design/2026-10-20-website-story/mythic/bankedFire-B-L3.png",
+   "source_sha256": "0eb279b733a8cbf525f847759cd2275061167ea388bbf6988ea5841f4e0d1a16",
+   "width": 1152
+  },
+  "myth-4-1152.avif": {
+   "bytes": 7189,
+   "height": 773,
+   "recipe": "avif w=1152 aspect=None trim=False",
+   "sha256": "98f20da36005a0663d22ddb131d517e221e9b3e2a764f76403b228c698b535ec",
+   "source": "docs/design/2026-10-20-website-story/mythic/bankedFire-B-L4.png",
+   "source_sha256": "e6e5c991c7ab4c6eec613faa881c376b92a33b071678dd4583d1b3b569e6b0d0",
+   "width": 1152
+  },
+  "myth-4-1152.webp": {
+   "bytes": 10930,
+   "height": 773,
+   "recipe": "webp w=1152 aspect=None trim=False",
+   "sha256": "56bf68c8008ef6ddfefafd35f69e4f2e9de1d93c77ad88448e63ede57375ec5f",
+   "source": "docs/design/2026-10-20-website-story/mythic/bankedFire-B-L4.png",
+   "source_sha256": "e6e5c991c7ab4c6eec613faa881c376b92a33b071678dd4583d1b3b569e6b0d0",
+   "width": 1152
+  },
+  "myth-5-1152.avif": {
+   "bytes": 4510,
+   "height": 773,
+   "recipe": "avif w=1152 aspect=None trim=False",
+   "sha256": "dfdfae679137f4a266e28325c499de12fab67e8c3e3c5c3eac9099e8496b6a01",
+   "source": "docs/design/2026-10-20-website-story/mythic/bankedFire-B-L5.png",
+   "source_sha256": "3c5ab0905e6ee38cc3e2ca5b3723555d826416eac4a99247318e6d961abf06d6",
+   "width": 1152
+  },
+  "myth-5-1152.webp": {
+   "bytes": 6640,
+   "height": 773,
+   "recipe": "webp w=1152 aspect=None trim=False",
+   "sha256": "d3e3f231ef7af7321a226f5198d1e29286b83f3b6523ac7dcd87d2074171e943",
+   "source": "docs/design/2026-10-20-website-story/mythic/bankedFire-B-L5.png",
+   "source_sha256": "3c5ab0905e6ee38cc3e2ca5b3723555d826416eac4a99247318e6d961abf06d6",
+   "width": 1152
+  },
+  "node-boss-96.avif": {
+   "bytes": 2714,
+   "height": 96,
+   "recipe": "avif w=96 aspect=None trim=False",
+   "sha256": "5b054f9895e238cc75c98eec09f57813dc995d3b1e366eadd60a53adafa475ff",
+   "source": "assets/art/ui/node-boss.png",
+   "source_sha256": "997ab2e0159c4fe4848b52a03cd52d3d8720ecb69c3207cd0573434345255cc8",
+   "width": 96
+  },
+  "node-boss-96.webp": {
+   "bytes": 3572,
+   "height": 96,
+   "recipe": "webp w=96 aspect=None trim=False",
+   "sha256": "9b6f29fdd263c78b36f4ac1e57c934f2a5380b75843a780263978d0d6fd114d2",
+   "source": "assets/art/ui/node-boss.png",
+   "source_sha256": "997ab2e0159c4fe4848b52a03cd52d3d8720ecb69c3207cd0573434345255cc8",
+   "width": 96
+  },
+  "node-elite-96.avif": {
+   "bytes": 2324,
+   "height": 96,
+   "recipe": "avif w=96 aspect=None trim=False",
+   "sha256": "790c31bd53ab7d8c57d293fa4cd2aeba03b6a7858d12c259a721a9fe3e553784",
+   "source": "assets/art/ui/node-elite.png",
+   "source_sha256": "a963654b2b256870623f840d8a4b3340c3f24cd527fb5db0562856675cff7b4b",
+   "width": 96
+  },
+  "node-elite-96.webp": {
+   "bytes": 3036,
+   "height": 96,
+   "recipe": "webp w=96 aspect=None trim=False",
+   "sha256": "fc1109e1a81919b4fd74a6fd554dcc4d00daf780896d3a12b0d185dacf590cf3",
+   "source": "assets/art/ui/node-elite.png",
+   "source_sha256": "a963654b2b256870623f840d8a4b3340c3f24cd527fb5db0562856675cff7b4b",
+   "width": 96
+  },
+  "node-event-96.avif": {
+   "bytes": 2076,
+   "height": 96,
+   "recipe": "avif w=96 aspect=None trim=False",
+   "sha256": "1e0b3bbd1dc7a714aef714646539ffcff74db0a35e2f5de59d82b78fe81f6cda",
+   "source": "assets/art/ui/node-event.png",
+   "source_sha256": "98c90e9b5ca8700b60fdcf89c5a7f2790ee39b651d574e0c03d9dfcc1b17d020",
+   "width": 96
+  },
+  "node-event-96.webp": {
+   "bytes": 2700,
+   "height": 96,
+   "recipe": "webp w=96 aspect=None trim=False",
+   "sha256": "c9e4db36bcee4bf21819c37cbcc8c6699b9bfd1c479855d596aba97fdb945f92",
+   "source": "assets/art/ui/node-event.png",
+   "source_sha256": "98c90e9b5ca8700b60fdcf89c5a7f2790ee39b651d574e0c03d9dfcc1b17d020",
+   "width": 96
+  },
+  "node-monster-96.avif": {
+   "bytes": 2424,
+   "height": 96,
+   "recipe": "avif w=96 aspect=None trim=False",
+   "sha256": "b69298177a897b5c36cb7d8fc4ea3131e56c545f438353334874316a8a457b51",
+   "source": "assets/art/ui/node-monster.png",
+   "source_sha256": "5d3cde23aba74a2071d69102bd98a503ad3b1cb2cfd29d689da40aa4fd42b721",
+   "width": 96
+  },
+  "node-monster-96.webp": {
+   "bytes": 3208,
+   "height": 96,
+   "recipe": "webp w=96 aspect=None trim=False",
+   "sha256": "01d772225f97c41e54ddb9e16a184fe4716de4f1a567594b4de509ab58446a6e",
+   "source": "assets/art/ui/node-monster.png",
+   "source_sha256": "5d3cde23aba74a2071d69102bd98a503ad3b1cb2cfd29d689da40aa4fd42b721",
+   "width": 96
+  },
+  "node-rest-96.avif": {
+   "bytes": 2771,
+   "height": 96,
+   "recipe": "avif w=96 aspect=None trim=False",
+   "sha256": "bf594ed962e92cc64d42640b5836d25a1c164073a35375cde09e8f135250cd3a",
+   "source": "assets/art/ui/node-rest.png",
+   "source_sha256": "8afbe96f789cfdfe3af5523e6de3c3d63da2417e5341a2791dd0443e70984106",
+   "width": 96
+  },
+  "node-rest-96.webp": {
+   "bytes": 3916,
+   "height": 96,
+   "recipe": "webp w=96 aspect=None trim=False",
+   "sha256": "5d9d30ef984ecad3ad5f21e3e2787a74cf580f1dbbd7f1cfa17a44ae0680faac",
+   "source": "assets/art/ui/node-rest.png",
+   "source_sha256": "8afbe96f789cfdfe3af5523e6de3c3d63da2417e5341a2791dd0443e70984106",
+   "width": 96
+  },
+  "node-shop-96.avif": {
+   "bytes": 2433,
+   "height": 96,
+   "recipe": "avif w=96 aspect=None trim=False",
+   "sha256": "d9c3731e389df673d67f775701376715be2ce5fab7bdcb57c69beba5243d6ee9",
+   "source": "assets/art/ui/node-shop.png",
+   "source_sha256": "2302833cf8fb80ff38ab9dd82400c5c6673363d49e3ce74ed7ca44a479183b12",
+   "width": 96
+  },
+  "node-shop-96.webp": {
+   "bytes": 3292,
+   "height": 96,
+   "recipe": "webp w=96 aspect=None trim=False",
+   "sha256": "c37ed05f19fc8ccfa470471566d833a1f669c10214db9131d7230cb865ab07da",
+   "source": "assets/art/ui/node-shop.png",
+   "source_sha256": "2302833cf8fb80ff38ab9dd82400c5c6673363d49e3ce74ed7ca44a479183b12",
+   "width": 96
+  },
+  "node-treasure-96.avif": {
+   "bytes": 2253,
+   "height": 96,
+   "recipe": "avif w=96 aspect=None trim=False",
+   "sha256": "ea917c815010d3fab7857dd337d8ffd8ebcec3f271a2f11fb703141fba198a49",
+   "source": "assets/art/ui/node-treasure.png",
+   "source_sha256": "9ad3da64541e760901afa6f6b1fe1493ac320db7539a281412e6bfcd2007cc82",
+   "width": 96
+  },
+  "node-treasure-96.webp": {
+   "bytes": 3132,
+   "height": 96,
+   "recipe": "webp w=96 aspect=None trim=False",
+   "sha256": "019176d82a92edeba080d0b41af02899c34a4f0c510a50efd216d59bde98360a",
+   "source": "assets/art/ui/node-treasure.png",
+   "source_sha256": "9ad3da64541e760901afa6f6b1fe1493ac320db7539a281412e6bfcd2007cc82",
+   "width": 96
+  },
+  "node-unlit-96.avif": {
+   "bytes": 2129,
+   "height": 96,
+   "recipe": "avif w=96 aspect=None trim=False",
+   "sha256": "e6c8bc9a15bfee3e75acd3ae5d0432e0b38c04632d603c07244ec0e71773e751",
+   "source": "assets/art/ui/node-unlit.png",
+   "source_sha256": "7e7b5cc2ea222ce35140cb24ce18ff6d4ff19f044074dd1c212f58e92afce2ae",
+   "width": 96
+  },
+  "node-unlit-96.webp": {
+   "bytes": 2688,
+   "height": 96,
+   "recipe": "webp w=96 aspect=None trim=False",
+   "sha256": "8342fdd35da4e86df7c007781e622d3adb380734d2dcf4df4bf0592a466a72e7",
+   "source": "assets/art/ui/node-unlit.png",
+   "source_sha256": "7e7b5cc2ea222ce35140cb24ce18ff6d4ff19f044074dd1c212f58e92afce2ae",
+   "width": 96
+  },
+  "prologue-bg-1536.avif": {
+   "bytes": 78627,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "ccdada48da2f2988a1eb0712919d85f9133c2407eb2a868d3f0bc941f2c7831a",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-bg.webp",
+   "source_sha256": "0f8bb8cdab0e885fe03eb2af2420288a0b163489caa55c2b9a8bbf3c29649a52",
+   "width": 1536
+  },
+  "prologue-bg-1536.webp": {
+   "bytes": 82572,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "2f730c2efcca45336f0e7424605c17734cf556016d711e3b9e979349ca685efd",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-bg.webp",
+   "source_sha256": "0f8bb8cdab0e885fe03eb2af2420288a0b163489caa55c2b9a8bbf3c29649a52",
+   "width": 1536
+  },
+  "prologue-bg-960.avif": {
+   "bytes": 36267,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "91cdce31a7efaec7d53cd1e0883bf37d16003838700371640023e4a57f82b3fa",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-bg.webp",
+   "source_sha256": "0f8bb8cdab0e885fe03eb2af2420288a0b163489caa55c2b9a8bbf3c29649a52",
+   "width": 960
+  },
+  "prologue-bg-960.webp": {
+   "bytes": 38924,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "036c8320d87aa7a2448326a3c434757d9f6781868fa70d3175ffb6b4941cfca8",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-bg.webp",
+   "source_sha256": "0f8bb8cdab0e885fe03eb2af2420288a0b163489caa55c2b9a8bbf3c29649a52",
+   "width": 960
+  },
+  "shard-0-240.avif": {
+   "bytes": 16747,
+   "height": 453,
+   "recipe": "avif w=240 aspect=None trim=True box=(40, 360, 320, 888)",
+   "sha256": "b0526053d91bd88cd68ba93bfe5d5abcfbee157d7cb6ae3ca6ed9640b0559752",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-shards.webp",
+   "source_sha256": "46866d185bf2fd8b0b69318145ad171f0d0abb3bb2ab069e127e76adde5a6653",
+   "width": 240
+  },
+  "shard-0-240.webp": {
+   "bytes": 36062,
+   "height": 453,
+   "recipe": "webp w=240 aspect=None trim=True box=(40, 360, 320, 888)",
+   "sha256": "94bac99111f8f8fd04e64d244cc31b7a9c03b83f991bc9c553cddff487be2896",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-shards.webp",
+   "source_sha256": "46866d185bf2fd8b0b69318145ad171f0d0abb3bb2ab069e127e76adde5a6653",
+   "width": 240
+  },
+  "shard-1-240.avif": {
+   "bytes": 14689,
+   "height": 418,
+   "recipe": "avif w=240 aspect=None trim=True box=(284, 12, 580, 528)",
+   "sha256": "523d5a8162dbd920caa5affef00b734ace38d74dd8419e2dcc54f1a049827cad",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-shards.webp",
+   "source_sha256": "46866d185bf2fd8b0b69318145ad171f0d0abb3bb2ab069e127e76adde5a6653",
+   "width": 240
+  },
+  "shard-1-240.webp": {
+   "bytes": 30404,
+   "height": 418,
+   "recipe": "webp w=240 aspect=None trim=True box=(284, 12, 580, 528)",
+   "sha256": "0058e6661fed94da0781286c2c1315b48eab5b158b14ef92e508f496adf86137",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-shards.webp",
+   "source_sha256": "46866d185bf2fd8b0b69318145ad171f0d0abb3bb2ab069e127e76adde5a6653",
+   "width": 240
+  },
+  "shard-2-240.avif": {
+   "bytes": 13337,
+   "height": 355,
+   "recipe": "avif w=240 aspect=None trim=True box=(728, 44, 1044, 512)",
+   "sha256": "f51e3165c80be4d174a48e4fedb0d6fdb5d09a1b21fb43e7cdc47a5485f6677d",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-shards.webp",
+   "source_sha256": "46866d185bf2fd8b0b69318145ad171f0d0abb3bb2ab069e127e76adde5a6653",
+   "width": 240
+  },
+  "shard-2-240.webp": {
+   "bytes": 27032,
+   "height": 355,
+   "recipe": "webp w=240 aspect=None trim=True box=(728, 44, 1044, 512)",
+   "sha256": "4200c2371a990b6efbf6ed8b87b9c5523376e0c72f9bf356d8f5383e170e5ec4",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-shards.webp",
+   "source_sha256": "46866d185bf2fd8b0b69318145ad171f0d0abb3bb2ab069e127e76adde5a6653",
+   "width": 240
+  },
+  "shard-3-240.avif": {
+   "bytes": 18402,
+   "height": 515,
+   "recipe": "avif w=240 aspect=None trim=True box=(968, 428, 1216, 960)",
+   "sha256": "2d47041793d1ba153de5ceea282ce1bffd8e09398822ce52430557a06618d988",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-shards.webp",
+   "source_sha256": "46866d185bf2fd8b0b69318145ad171f0d0abb3bb2ab069e127e76adde5a6653",
+   "width": 240
+  },
+  "shard-3-240.webp": {
+   "bytes": 41680,
+   "height": 515,
+   "recipe": "webp w=240 aspect=None trim=True box=(968, 428, 1216, 960)",
+   "sha256": "b6a8ed9a3c38dc2765024f459ac72cb3d0597828665794f57054e78dc6358612",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-shards.webp",
+   "source_sha256": "46866d185bf2fd8b0b69318145ad171f0d0abb3bb2ab069e127e76adde5a6653",
+   "width": 240
+  },
+  "shard-4-240.avif": {
+   "bytes": 14595,
+   "height": 393,
+   "recipe": "avif w=240 aspect=None trim=True box=(692, 784, 968, 1236)",
+   "sha256": "daf9d5920907944692a91e23034fcc298946d22a753c3eb0c1a5552801cebd59",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-shards.webp",
+   "source_sha256": "46866d185bf2fd8b0b69318145ad171f0d0abb3bb2ab069e127e76adde5a6653",
+   "width": 240
+  },
+  "shard-4-240.webp": {
+   "bytes": 31208,
+   "height": 393,
+   "recipe": "webp w=240 aspect=None trim=True box=(692, 784, 968, 1236)",
+   "sha256": "4b69c65fc37c3399dbf0327cfda5dd4ec5176999ef69b9666553ed820db14214",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-shards.webp",
+   "source_sha256": "46866d185bf2fd8b0b69318145ad171f0d0abb3bb2ab069e127e76adde5a6653",
+   "width": 240
+  },
+  "shard-5-240.avif": {
+   "bytes": 13165,
+   "height": 360,
+   "recipe": "avif w=240 aspect=None trim=True box=(296, 780, 600, 1236)",
+   "sha256": "2de93e66e963b13e22d3e8b6d0403ec78b998b28dd4521dc4933578b6ee2e8f7",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-shards.webp",
+   "source_sha256": "46866d185bf2fd8b0b69318145ad171f0d0abb3bb2ab069e127e76adde5a6653",
+   "width": 240
+  },
+  "shard-5-240.webp": {
+   "bytes": 27488,
+   "height": 360,
+   "recipe": "webp w=240 aspect=None trim=True box=(296, 780, 600, 1236)",
+   "sha256": "4492ff4d6e7f03dbadfd9e9fbd2c2d323d6abcec16db0df8aeb8ba4e2d56f4f0",
+   "source": "docs/design/2026-10-20-website-story/art/prologue-shards.webp",
+   "source_sha256": "46866d185bf2fd8b0b69318145ad171f0d0abb3bb2ab069e127e76adde5a6653",
+   "width": 240
+  },
+  "shatter-960.avif": {
+   "bytes": 84318,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "a30e97c2ac91738d724622c8a4463775191c644c703ae4198e7163a23daac3c9",
+   "source": "docs/design/2026-10-20-website-story/art/shatter.webp",
+   "source_sha256": "d5203fba4cc2b5432620b409cfada058835367cfc7244b8fbf346349171820b6",
+   "width": 960
+  },
+  "shatter-960.webp": {
+   "bytes": 115142,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "52ec832c054ea6dbf0dc65f9c2df8075035f60e1473d6d3878449d86b0cb12c2",
+   "source": "docs/design/2026-10-20-website-story/art/shatter.webp",
+   "source_sha256": "d5203fba4cc2b5432620b409cfada058835367cfc7244b8fbf346349171820b6",
+   "width": 960
+  },
+  "shatter-poster-600.avif": {
+   "bytes": 31767,
+   "height": 540,
+   "recipe": "avif w=600 aspect=None trim=False",
+   "sha256": "2e5eb55e3171a060820a096dec0e233f1958156d592794d31ecc5dd50cd2e1b0",
+   "source": "docs/design/2026-10-20-website-story/footage/shatter-poster.jpg",
+   "source_sha256": "4a537ced427f4a3d2c134729a7f18c8d11cb77a8f3ad6049b84b87c4dc938ee9",
+   "width": 600
+  },
+  "shatter-poster-600.webp": {
+   "bytes": 36754,
+   "height": 540,
+   "recipe": "webp w=600 aspect=None trim=False",
+   "sha256": "3ac404c6ba8af427103535e6d454af336b083db17b5962a197814499813c3029",
+   "source": "docs/design/2026-10-20-website-story/footage/shatter-poster.jpg",
+   "source_sha256": "4a537ced427f4a3d2c134729a7f18c8d11cb77a8f3ad6049b84b87c4dc938ee9",
+   "width": 600
   },
   "shatter.mp3": {
    "bytes": 5686,
@@ -625,12 +1317,69 @@
    "source": "assets/audio/sfx/shatter.mp3",
    "source_sha256": "bc6298ede2df9ebb8e346f756bffac1408a0e170503479495ec9510f3582ca69"
   },
+  "shatter.mp4": {
+   "bytes": 978317,
+   "recipe": "copy",
+   "sha256": "fea7f22bf13f18c2f344f1d84281c16c2dd4b5430feb4ae6cd1d911959d1aea8",
+   "source": "docs/design/2026-10-20-website-story/footage/shatter.mp4",
+   "source_sha256": "fea7f22bf13f18c2f344f1d84281c16c2dd4b5430feb4ae6cd1d911959d1aea8"
+  },
   "shatter.ogg": {
    "bytes": 3791,
    "recipe": "ogg 48k seconds=None",
-   "sha256": "bb68d8f6033dfe0a69057ce3614764cd988f1893766f9e482a3803cfc8b4f1b1",
+   "sha256": "8013ddddefa3746a18edbc9fc4c74c7cd8b1afb978469bca1ce3f87dbc0db1ef",
    "source": "assets/audio/sfx/shatter.mp3",
    "source_sha256": "bc6298ede2df9ebb8e346f756bffac1408a0e170503479495ec9510f3582ca69"
+  },
+  "siren-skin.jpg": {
+   "bytes": 371663,
+   "recipe": "glb skin",
+   "sha256": "654fcc219eeabe8678752ff2dc5a1c70ef9bc62a6a4a51289910920f2a3c53e4",
+   "source": "docs/design/2026-10-20-website-story/models/siren.glb",
+   "source_sha256": "061cf96dcdfb2e935f567258c456247d98e3b2f129538d1a48dd949b30d113f4"
+  },
+  "siren.glb": {
+   "bytes": 887120,
+   "recipe": "glb skin=external",
+   "sha256": "cf0b8fcc600910b805b1e5491bbeca05fb4563b73560c5452ff66ed9411da199",
+   "source": "docs/design/2026-10-20-website-story/models/siren.glb",
+   "source_sha256": "061cf96dcdfb2e935f567258c456247d98e3b2f129538d1a48dd949b30d113f4"
+  },
+  "sovereign-scene-1536.avif": {
+   "bytes": 133128,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "030e2bffe3127633b1dc0a75aa6c80625f42669dea529ccaeeb84922e51b09ce",
+   "source": "docs/design/2026-10-20-website-story/art/sovereign-scene.webp",
+   "source_sha256": "4bce12363c45d5d8747fdc82ea4f7968c3e3df3629cee8a6e200e9b26036fe98",
+   "width": 1536
+  },
+  "sovereign-scene-1536.webp": {
+   "bytes": 169092,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "3984db6f2a94db5dc65fa1583f3b89d66104009f0656b8c0df75a242f5058fef",
+   "source": "docs/design/2026-10-20-website-story/art/sovereign-scene.webp",
+   "source_sha256": "4bce12363c45d5d8747fdc82ea4f7968c3e3df3629cee8a6e200e9b26036fe98",
+   "width": 1536
+  },
+  "sovereign-scene-960.avif": {
+   "bytes": 64026,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "771872d1e1db14fb890fbf33b5c02ad2b5b7916f2f25b51ecca8f5124c29d435",
+   "source": "docs/design/2026-10-20-website-story/art/sovereign-scene.webp",
+   "source_sha256": "4bce12363c45d5d8747fdc82ea4f7968c3e3df3629cee8a6e200e9b26036fe98",
+   "width": 960
+  },
+  "sovereign-scene-960.webp": {
+   "bytes": 87348,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "84d1e0d4d05561aae6f1aa7706483dcb7540703ba34c51f4e763e9e0ff050838",
+   "source": "docs/design/2026-10-20-website-story/art/sovereign-scene.webp",
+   "source_sha256": "4bce12363c45d5d8747fdc82ea4f7968c3e3df3629cee8a6e200e9b26036fe98",
+   "width": 960
   },
   "theme.mp3": {
    "bytes": 1548085,
@@ -642,81 +1391,264 @@
   "theme.ogg": {
    "bytes": 1217454,
    "recipe": "ogg 64k seconds=126.0",
-   "sha256": "3a793759cd161c02752a686a46de7051d38259bcf0da079431bf36a99b96cdb4",
+   "sha256": "57c4ff69c29ce69c5dfdf61a7c7388560b372c4dfa9fbd27bfa1a6444e9dc785",
    "source": "assets/audio/music/title.mp3",
    "source_sha256": "e77971d2e799dec137a77e5a008a5694f1252e132c22f001df119b8b5ff398ff"
   },
-  "vigil-road-1536.avif": {
-   "bytes": 126334,
+  "turn-poster-944.avif": {
+   "bytes": 59281,
+   "height": 656,
+   "recipe": "avif w=944 aspect=None trim=False",
+   "sha256": "e08272595bd0c961ff22b97a37d0c44bf8470e81dfc53b2543aa795edf60c73d",
+   "source": "docs/design/2026-10-20-website-story/footage/turn-poster.jpg",
+   "source_sha256": "2367802bbc1431ce18852d108bbfe950bd2b311197686c9cebe5974a3b66e3e9",
+   "width": 944
+  },
+  "turn-poster-944.webp": {
+   "bytes": 66052,
+   "height": 656,
+   "recipe": "webp w=944 aspect=None trim=False",
+   "sha256": "3ed5e31ff1cf2f5ee25d3967dab455d8d85727fdb3744b448c0e058763169ac9",
+   "source": "docs/design/2026-10-20-website-story/footage/turn-poster.jpg",
+   "source_sha256": "2367802bbc1431ce18852d108bbfe950bd2b311197686c9cebe5974a3b66e3e9",
+   "width": 944
+  },
+  "turn.mp4": {
+   "bytes": 1751911,
+   "recipe": "copy",
+   "sha256": "a47fc49667f707c8bfef509277b8b0e5e0d7327b9e33c9924b56a8e57b3a7f44",
+   "source": "docs/design/2026-10-20-website-story/footage/turn.mp4",
+   "source_sha256": "a47fc49667f707c8bfef509277b8b0e5e0d7327b9e33c9924b56a8e57b3a7f44"
+  },
+  "ui-lantern-200.avif": {
+   "bytes": 3687,
+   "height": 200,
+   "recipe": "avif w=200 aspect=None trim=False",
+   "sha256": "ab7831d1123b0669093025d940919b2c0ede17c2589df5ba6c1ff729e2f65bda",
+   "source": "assets/art/ui/lantern.png",
+   "source_sha256": "365748b73c6505e24987947225e1dd29310dbeef9b04dc05e41c405075340fdb",
+   "width": 200
+  },
+  "ui-lantern-200.webp": {
+   "bytes": 5804,
+   "height": 200,
+   "recipe": "webp w=200 aspect=None trim=False",
+   "sha256": "b59c5885b4af2e4b23cf8d1f04507280082b6ccbfcac71cf5972c4964983afd9",
+   "source": "assets/art/ui/lantern.png",
+   "source_sha256": "365748b73c6505e24987947225e1dd29310dbeef9b04dc05e41c405075340fdb",
+   "width": 200
+  },
+  "vigil-bg-1536.avif": {
+   "bytes": 163333,
    "height": 1024,
    "recipe": "avif w=1536 aspect=None trim=False",
-   "sha256": "ceb1b2dc1ad1ceae42d62918af7b3bccbef02c76ec64c996dc61f5cfa4e4e56d",
-   "source": "assets/art/title-background/background.png",
-   "source_sha256": "2e06a05a294b277d0a9736aeece6971282d501859276a314a20162b6645ade5d",
+   "sha256": "a654df68277571f29ff24be898d6b5e8ca7d6f8824f7ee1ee260a0d5d174e262",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-bg.webp",
+   "source_sha256": "ef794c91206b0c53ad97767b439d8dcff841376c667f8f08f3b27247ce14a7ac",
    "width": 1536
   },
-  "vigil-road-1536.webp": {
-   "bytes": 156214,
+  "vigil-bg-1536.webp": {
+   "bytes": 228220,
    "height": 1024,
    "recipe": "webp w=1536 aspect=None trim=False",
-   "sha256": "62bf7dd29888797ac9fe832648e1a10294a74dd42888cfe1f4a592d48b60e5b7",
-   "source": "assets/art/title-background/background.png",
-   "source_sha256": "2e06a05a294b277d0a9736aeece6971282d501859276a314a20162b6645ade5d",
+   "sha256": "e02e21d446e88f0db7128e1b279cf9c5c099970f045256cb49e5fb895ef0caa6",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-bg.webp",
+   "source_sha256": "ef794c91206b0c53ad97767b439d8dcff841376c667f8f08f3b27247ce14a7ac",
    "width": 1536
   },
-  "vigil-road-960.avif": {
-   "bytes": 61341,
+  "vigil-bg-960.avif": {
+   "bytes": 77459,
    "height": 640,
    "recipe": "avif w=960 aspect=None trim=False",
-   "sha256": "9733bd8efea40fa613fb71367868eb9f1096450016cf39e8fb150d6674c3c536",
-   "source": "assets/art/title-background/background.png",
-   "source_sha256": "2e06a05a294b277d0a9736aeece6971282d501859276a314a20162b6645ade5d",
+   "sha256": "426511473547f3cd987eb3018dda0eb5a743c347d49cf24c1e6985758c641309",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-bg.webp",
+   "source_sha256": "ef794c91206b0c53ad97767b439d8dcff841376c667f8f08f3b27247ce14a7ac",
    "width": 960
   },
-  "vigil-road-960.webp": {
-   "bytes": 76130,
+  "vigil-bg-960.webp": {
+   "bytes": 106928,
    "height": 640,
    "recipe": "webp w=960 aspect=None trim=False",
-   "sha256": "0695fcf227c2d61aae455619402421e7d74732faefe37be959e0276404d4218f",
-   "source": "assets/art/title-background/background.png",
-   "source_sha256": "2e06a05a294b277d0a9736aeece6971282d501859276a314a20162b6645ade5d",
+   "sha256": "cbfed594e0dec078a0f1962c7ff026168cda92807f65763ae5b6ad389c2bd072",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-bg.webp",
+   "source_sha256": "ef794c91206b0c53ad97767b439d8dcff841376c667f8f08f3b27247ce14a7ac",
    "width": 960
   },
-  "vigil-road-tall-432.avif": {
-   "bytes": 36974,
-   "height": 768,
-   "recipe": "avif w=432 aspect=0.5625 trim=False",
-   "sha256": "dd483d9b98f2f2a50551495110b6dbaf77a8f91771f3a6bfb402ab8c4db92f20",
-   "source": "assets/art/title-background/background.png",
-   "source_sha256": "2e06a05a294b277d0a9736aeece6971282d501859276a314a20162b6645ade5d",
-   "width": 432
-  },
-  "vigil-road-tall-432.webp": {
-   "bytes": 50844,
-   "height": 768,
-   "recipe": "webp w=432 aspect=0.5625 trim=False",
-   "sha256": "0c85d4e7039d79d907071411507151fa2edb9f2697e0526d3113468b65abb0f5",
-   "source": "assets/art/title-background/background.png",
-   "source_sha256": "2e06a05a294b277d0a9736aeece6971282d501859276a314a20162b6645ade5d",
-   "width": 432
-  },
-  "vigil-road-tall-576.avif": {
-   "bytes": 57616,
+  "vigil-fg-1536.avif": {
+   "bytes": 99016,
    "height": 1024,
-   "recipe": "avif w=576 aspect=0.5625 trim=False",
-   "sha256": "862ec6c063855e5bc1c3e9e00295f1cacd7cd390a322313a2b1fb911d797fc27",
-   "source": "assets/art/title-background/background.png",
-   "source_sha256": "2e06a05a294b277d0a9736aeece6971282d501859276a314a20162b6645ade5d",
-   "width": 576
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "7fb1156b61bc35cc957be1904b7ee61e861f8203b4ca3208dcae2246f78f3015",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-fg.webp",
+   "source_sha256": "e2a9449648f5e4f32307623aa6e11ea5e11a64d987855ef91c5f5c23a3523e19",
+   "width": 1536
   },
-  "vigil-road-tall-576.webp": {
-   "bytes": 76760,
+  "vigil-fg-1536.webp": {
+   "bytes": 253548,
    "height": 1024,
-   "recipe": "webp w=576 aspect=0.5625 trim=False",
-   "sha256": "14b553db1d5e9a8341f9a67bbc2aea919837e1b3ee8106ffd79aff2d9467178f",
-   "source": "assets/art/title-background/background.png",
-   "source_sha256": "2e06a05a294b277d0a9736aeece6971282d501859276a314a20162b6645ade5d",
-   "width": 576
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "f39ef8a9b64df66ff14a861bc254e026539ea122645abb6d0ba64b767f63b913",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-fg.webp",
+   "source_sha256": "e2a9449648f5e4f32307623aa6e11ea5e11a64d987855ef91c5f5c23a3523e19",
+   "width": 1536
+  },
+  "vigil-fg-960.avif": {
+   "bytes": 54198,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "98a9923424890b97cf0eb644224b13e1e32cfae4e75e4aac120a88daf87bfb89",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-fg.webp",
+   "source_sha256": "e2a9449648f5e4f32307623aa6e11ea5e11a64d987855ef91c5f5c23a3523e19",
+   "width": 960
+  },
+  "vigil-fg-960.webp": {
+   "bytes": 119080,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "407857483661f9e597dc8ff6cbf4a504a506b4da9794d74896808a38230d1f4f",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-fg.webp",
+   "source_sha256": "e2a9449648f5e4f32307623aa6e11ea5e11a64d987855ef91c5f5c23a3523e19",
+   "width": 960
+  },
+  "vigil-hall-1536.avif": {
+   "bytes": 110380,
+   "height": 1024,
+   "recipe": "avif w=1536 aspect=None trim=False",
+   "sha256": "430c3ddd53f22f44209a111811cd8fcee970d52269c427525d19eb4d78a27c47",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-hall.webp",
+   "source_sha256": "cb834d828d5b3541f1dbc8b7c5dff07004f538b986c7d05db91a9b486f5bbf1f",
+   "width": 1536
+  },
+  "vigil-hall-1536.webp": {
+   "bytes": 259898,
+   "height": 1024,
+   "recipe": "webp w=1536 aspect=None trim=False",
+   "sha256": "651722d7be14b200eaa6be6a65b0ec2f5618012822b802d63ac770ec59918675",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-hall.webp",
+   "source_sha256": "cb834d828d5b3541f1dbc8b7c5dff07004f538b986c7d05db91a9b486f5bbf1f",
+   "width": 1536
+  },
+  "vigil-hall-960.avif": {
+   "bytes": 59791,
+   "height": 640,
+   "recipe": "avif w=960 aspect=None trim=False",
+   "sha256": "3504f797676a25392f4d01c273fd93f3549c66db3a40f59e9d86a85fe1968ca7",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-hall.webp",
+   "source_sha256": "cb834d828d5b3541f1dbc8b7c5dff07004f538b986c7d05db91a9b486f5bbf1f",
+   "width": 960
+  },
+  "vigil-hall-960.webp": {
+   "bytes": 123628,
+   "height": 640,
+   "recipe": "webp w=960 aspect=None trim=False",
+   "sha256": "8970a23a8b86eabd2018b52e4a71d2da21d5b7ab892a2716713ca20fce01a41b",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-hall.webp",
+   "source_sha256": "cb834d828d5b3541f1dbc8b7c5dff07004f538b986c7d05db91a9b486f5bbf1f",
+   "width": 960
+  },
+  "vigil-walker-220.avif": {
+   "bytes": 11352,
+   "height": 363,
+   "recipe": "avif w=220 aspect=None trim=False",
+   "sha256": "ed85efb0f45d9416dfefb271663ea5dc419fcc96455e33b3292447bbbf8fa7ff",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-walker.webp",
+   "source_sha256": "46243bcf6f0cd565b9855ccfe2b6e99c86f9d3163f3cd0d13e1e1651ced81600",
+   "width": 220
+  },
+  "vigil-walker-220.webp": {
+   "bytes": 21194,
+   "height": 363,
+   "recipe": "webp w=220 aspect=None trim=False",
+   "sha256": "f12888250ba887f73f88b29e10233b6a1359680316b1beea2f31ed8fb3e47ddc",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-walker.webp",
+   "source_sha256": "46243bcf6f0cd565b9855ccfe2b6e99c86f9d3163f3cd0d13e1e1651ced81600",
+   "width": 220
+  },
+  "vigil-walker-440.avif": {
+   "bytes": 29170,
+   "height": 727,
+   "recipe": "avif w=440 aspect=None trim=False",
+   "sha256": "6635bd53dfad25981df33674692d82ec75b90d2740e035b7540aa4b0fe346138",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-walker.webp",
+   "source_sha256": "46243bcf6f0cd565b9855ccfe2b6e99c86f9d3163f3cd0d13e1e1651ced81600",
+   "width": 440
+  },
+  "vigil-walker-440.webp": {
+   "bytes": 58742,
+   "height": 727,
+   "recipe": "webp w=440 aspect=None trim=False",
+   "sha256": "e462c72e46c9813aa51ad4fd87453424be95d449f564e88d0fb099e069f80512",
+   "source": "docs/design/2026-10-20-website-story/art/vigil-walker.webp",
+   "source_sha256": "46243bcf6f0cd565b9855ccfe2b6e99c86f9d3163f3cd0d13e1e1651ced81600",
+   "width": 440
+  },
+  "watcherEye-skin.jpg": {
+   "bytes": 451913,
+   "recipe": "glb skin",
+   "sha256": "ebc64e501fbc3a14bc34cea919c5b7d417216452733da04e11ce01d98eab3426",
+   "source": "docs/design/2026-10-20-website-story/models/watcherEye.glb",
+   "source_sha256": "6c44c1019bbb4f72534d0ea0703cebb1fb77a5f849f3b5101e71f89499a55e72"
+  },
+  "watcherEye.glb": {
+   "bytes": 927816,
+   "recipe": "glb skin=external",
+   "sha256": "d98ee7d544f9cbef58b0da0cc3dd14dfb9260816810c04decf8048010702278c",
+   "source": "docs/design/2026-10-20-website-story/models/watcherEye.glb",
+   "source_sha256": "6c44c1019bbb4f72534d0ea0703cebb1fb77a5f849f3b5101e71f89499a55e72"
+  },
+  "way-eclipse-160.avif": {
+   "bytes": 4570,
+   "height": 162,
+   "recipe": "avif w=160 aspect=None trim=True box=(1332, 72, 1940, 696)",
+   "sha256": "2bd2f7d1ff56d9778783f591c75e2c63019350d5e19a747e1832d5582ee078f4",
+   "source": "docs/design/2026-10-20-website-story/art/way-emblems.webp",
+   "source_sha256": "b6b129e3a470913243f44edf424eb3193c497141e81e33292a377c80851d7eb2",
+   "width": 160
+  },
+  "way-eclipse-160.webp": {
+   "bytes": 7632,
+   "height": 162,
+   "recipe": "webp w=160 aspect=None trim=True box=(1332, 72, 1940, 696)",
+   "sha256": "f9f8751f367cf6dc64fa8926a82360474de18e48568f6cb46f5a5781e92b8697",
+   "source": "docs/design/2026-10-20-website-story/art/way-emblems.webp",
+   "source_sha256": "b6b129e3a470913243f44edf424eb3193c497141e81e33292a377c80851d7eb2",
+   "width": 160
+  },
+  "way-frost-160.avif": {
+   "bytes": 7496,
+   "height": 349,
+   "recipe": "avif w=160 aspect=None trim=True box=(60, 24, 404, 760)",
+   "sha256": "d986adde67b81722032e9609bd4855ac79948ad9659b18b5ba7d89f7123f0986",
+   "source": "docs/design/2026-10-20-website-story/art/way-emblems.webp",
+   "source_sha256": "b6b129e3a470913243f44edf424eb3193c497141e81e33292a377c80851d7eb2",
+   "width": 160
+  },
+  "way-frost-160.webp": {
+   "bytes": 15532,
+   "height": 349,
+   "recipe": "webp w=160 aspect=None trim=True box=(60, 24, 404, 760)",
+   "sha256": "0438a5d73be45dd29af4f1826813a752368c329a78f8cda8cc8ee2d9590d28c5",
+   "source": "docs/design/2026-10-20-website-story/art/way-emblems.webp",
+   "source_sha256": "b6b129e3a470913243f44edf424eb3193c497141e81e33292a377c80851d7eb2",
+   "width": 160
+  },
+  "way-hearth-160.avif": {
+   "bytes": 7926,
+   "height": 304,
+   "recipe": "avif w=160 aspect=None trim=True box=(768, 24, 1132, 720)",
+   "sha256": "444b9c07e895560128a163d0efd2b1ee958354cbee66f20a313d7a1ea3f045e9",
+   "source": "docs/design/2026-10-20-website-story/art/way-emblems.webp",
+   "source_sha256": "b6b129e3a470913243f44edf424eb3193c497141e81e33292a377c80851d7eb2",
+   "width": 160
+  },
+  "way-hearth-160.webp": {
+   "bytes": 15122,
+   "height": 304,
+   "recipe": "webp w=160 aspect=None trim=True box=(768, 24, 1132, 720)",
+   "sha256": "16a92337d04a922572c39add8f77d35cc6915fa35c885592f85448c8b6e074d8",
+   "source": "docs/design/2026-10-20-website-story/art/way-emblems.webp",
+   "source_sha256": "b6b129e3a470913243f44edf424eb3193c497141e81e33292a377c80851d7eb2",
+   "width": 160
   },
   "wordmark-en-1280.avif": {
    "bytes": 54485,
@@ -788,6 +1720,42 @@
    "sha256": "8dc7cc3c4cff8902ddf121df1185aec02abbd9d5b79205222904c07922acb0a0",
    "source": "assets/art/title/title-zh.png",
    "source_sha256": "e16f36babf7d294e1d5d4582826aa5fe074a05900d3749aaf72a56f261a4cdf8",
+   "width": 640
+  },
+  "wounded-knight-1280.avif": {
+   "bytes": 112643,
+   "height": 853,
+   "recipe": "avif w=1280 aspect=None trim=False",
+   "sha256": "0a4edd4c0d1839241afba356bc8f52b0e6c70a073bf0c2046f95b63d5b175b22",
+   "source": "docs/design/2026-10-20-website-story/art/wounded-knight.webp",
+   "source_sha256": "6eafafc610730ddc4c7c2c3ae21e20566f8e6b490eca618836db4e982a9bd447",
+   "width": 1280
+  },
+  "wounded-knight-1280.webp": {
+   "bytes": 146566,
+   "height": 853,
+   "recipe": "webp w=1280 aspect=None trim=False",
+   "sha256": "f6c754c4981e1ff295e3baebd8801e5ba2f4aec92e2847d6544ab8eaaa19492d",
+   "source": "docs/design/2026-10-20-website-story/art/wounded-knight.webp",
+   "source_sha256": "6eafafc610730ddc4c7c2c3ae21e20566f8e6b490eca618836db4e982a9bd447",
+   "width": 1280
+  },
+  "wounded-knight-640.avif": {
+   "bytes": 38474,
+   "height": 427,
+   "recipe": "avif w=640 aspect=None trim=False",
+   "sha256": "7f8e8213bf4e219c3e4e4e55570f211fac32936fa60dc93609f889f605979706",
+   "source": "docs/design/2026-10-20-website-story/art/wounded-knight.webp",
+   "source_sha256": "6eafafc610730ddc4c7c2c3ae21e20566f8e6b490eca618836db4e982a9bd447",
+   "width": 640
+  },
+  "wounded-knight-640.webp": {
+   "bytes": 54370,
+   "height": 427,
+   "recipe": "webp w=640 aspect=None trim=False",
+   "sha256": "b1845787f39afb00c3bc9bbdb7ca160d49a999601b1309d6e06182bc13da851f",
+   "source": "docs/design/2026-10-20-website-story/art/wounded-knight.webp",
+   "source_sha256": "6eafafc610730ddc4c7c2c3ae21e20566f8e6b490eca618836db4e982a9bd447",
    "width": 640
   }
  }

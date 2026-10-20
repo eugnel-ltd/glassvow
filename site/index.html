@@ -33,131 +33,493 @@
 <link rel="preload" href="/assets/fonts/Cinzel-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="/assets/icon.png" type="image/png">
 <link rel="stylesheet" href="/assets/site.css">
-<link rel="stylesheet" href="/assets/teaser.css">
-<script type="module" src="/assets/teaser.js"></script>
+<link rel="stylesheet" href="/assets/story.css">
+<link rel="stylesheet" href="/assets/story-systems.css">
+<script type="module" src="/assets/story.js"></script>
 </head>
 <body class="teaser">
-<header class="bar">
-  <a class="bar-mark display" href="/"><img src="/assets/icon.png" alt="" aria-hidden="true" width="64" height="64"><span>Glassvow</span></a>
-  <button class="sound" type="button" aria-pressed="false" hidden data-theme="/assets/teaser/theme.ogg /assets/teaser/theme.mp3" data-flip="/assets/teaser/flip.ogg /assets/teaser/flip.mp3" data-rise="/assets/teaser/rise.ogg /assets/teaser/rise.mp3" data-crack="/assets/teaser/crack.ogg /assets/teaser/crack.mp3" data-shatter="/assets/teaser/shatter.ogg /assets/teaser/shatter.mp3" data-off="Sound off" data-on="Sound on"><span class="sound-wave" aria-hidden="true"><i></i><i></i><i></i></span><span class="sound-label">Sound off</span></button>
-  <a class="switch" href="/zh-hant/" hreflang="zh-Hant" lang="zh-Hant">繁體中文</a>
+<div class="gv lang-en">
+<header class="f-body xb85bcc">
+  <a href="/" class="bar-mark xfdab73">
+    <img src="/assets/icon.png" alt="" aria-hidden="true" width="64" height="64" class="x2a8a22">
+    <span class="f-disp display xb8457e">Glassvow</span>
+  </a>
+  <nav aria-label="Sections" class="x8b58cf">
+    <a class="nav-link f-disp display up" href="/#prologue">The Story</a>
+    <a class="nav-link f-disp display up" href="/#act1">The Acts</a>
+    <a class="nav-link f-disp display up" href="/#play">How it works</a>
+    <a class="nav-link f-disp display up" href="/#glass">The Glass</a>
+  </nav>
+  <div class="x292995">
+    <button class="sound" type="button" aria-pressed="false" hidden data-theme="/assets/teaser/theme.ogg /assets/teaser/theme.mp3" data-shatter="/assets/teaser/shatter.ogg /assets/teaser/shatter.mp3" data-off="Sound off" data-on="Sound on"><span class="sound-wave" aria-hidden="true"><i></i><i></i><i></i></span><span class="sound-label">Sound off</span></button>
+    <a class="switch" href="/zh-hant/" hreflang="zh-Hant" lang="zh-Hant">繁體中文</a>
+    <a class="btn btn-primary f-disp display up x2efb68" href="/#soon">Available soon</a>
+  </div>
+  <span class="thread" aria-hidden="true"></span>
 </header>
-<main class="teaser-main">
-<section class="hero" data-scene="hero">
-  <div class="hero-sky" aria-hidden="true">
-    <picture class="hero-road"><source media="(max-aspect-ratio: 4/5)" type="image/avif" srcset="/assets/teaser/vigil-road-tall-432.avif 432w, /assets/teaser/vigil-road-tall-576.avif 576w" sizes="100vw"><source media="(max-aspect-ratio: 4/5)" type="image/webp" srcset="/assets/teaser/vigil-road-tall-432.webp 432w, /assets/teaser/vigil-road-tall-576.webp 576w" sizes="100vw"><source type="image/avif" srcset="/assets/teaser/vigil-road-960.avif 960w, /assets/teaser/vigil-road-1536.avif 1536w" sizes="100vw"><img src="/assets/teaser/vigil-road-960.webp" srcset="/assets/teaser/vigil-road-960.webp 960w, /assets/teaser/vigil-road-1536.webp 1536w" sizes="100vw" alt="" aria-hidden="true" width="1536" height="1024" fetchpriority="high" decoding="async"></picture>
-    <canvas class="hero-light"></canvas>
-    <div class="shafts"><i></i><i></i><i></i></div>
+<main class="story-main">
+
+<section id="top" class="xe148c4">
+  <div class="stage" aria-hidden="true">
+    <picture><source type="image/avif" srcset="/assets/teaser/hearth-960.avif 960w, /assets/teaser/hearth-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg" alt="" fetchpriority="high" aria-hidden="true" src="/assets/teaser/hearth-960.webp" srcset="/assets/teaser/hearth-960.webp 960w, /assets/teaser/hearth-1536.webp 1536w" sizes="100vw" width="1536" height="1024" decoding="async"></picture>
+    <span class="lay flicker x67c757"></span>
   </div>
-  <picture class="lantern"><source type="image/avif" srcset="/assets/teaser/lantern-240.avif 240w, /assets/teaser/lantern-480.avif 480w" sizes="(min-width: 48rem) 13rem, 7.5rem"><img src="/assets/teaser/lantern-240.webp" srcset="/assets/teaser/lantern-240.webp 240w, /assets/teaser/lantern-480.webp 480w" sizes="(min-width: 48rem) 13rem, 7.5rem" alt="" aria-hidden="true" width="480" height="815" fetchpriority="high" decoding="async"></picture>
-  <div class="hero-copy">
-    <h1 class="wordmark"><picture class="wordmark-art"><source type="image/avif" srcset="/assets/teaser/wordmark-en-640.avif 640w, /assets/teaser/wordmark-en-1280.avif 1280w" sizes="(min-width: 48rem) 40rem, 88vw"><img src="/assets/teaser/wordmark-en-640.webp" srcset="/assets/teaser/wordmark-en-640.webp 640w, /assets/teaser/wordmark-en-1280.webp 1280w" sizes="(min-width: 48rem) 40rem, 88vw" alt="Glassvow" width="1280" height="320" fetchpriority="high" decoding="async"></picture></h1>
-    <p class="kicker display">A pilgrimage in stained glass</p>
-    <p class="lede">A single-player roguelite deckbuilder. Build a deck of glass, kindle the lantern, and shatter what blocks the way.</p>
-    <p class="soon-on">Available soon on</p>
-    <ul class="platforms">
-      <li class="platform"><span class="platform-name display">App Store</span><span class="platform-soon">Coming soon</span></li>
-      <li class="platform"><span class="platform-name display">Google Play</span><span class="platform-soon">Coming soon</span></li>
-      <li class="platform"><span class="platform-name display">Amazon Appstore</span><span class="platform-soon">Coming soon</span></li>
-      <li class="platform"><span class="platform-name display">Steam</span><span class="platform-soon">Coming soon</span></li>
-    </ul>
+  <picture><source type="image/avif" srcset="/assets/teaser/hero-fg-960.avif 960w, /assets/teaser/hero-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg x3a4807" alt="" aria-hidden="true" src="/assets/teaser/hero-fg-960.webp" srcset="/assets/teaser/hero-fg-960.webp 960w, /assets/teaser/hero-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <span class="hglow xf3685a" aria-hidden="true"></span>
+  <div aria-hidden="true" class="xfb2789"></div>
+  <div aria-hidden="true" class="x0380d6">
+    <span class="mote xc1b3b5"></span><span class="mote x9a6959"></span><span class="mote xf13e66"></span>
+    <span class="mote xd7544c"></span><span class="mote x2b7c8a"></span><span class="mote x4de014"></span>
   </div>
-  <a class="cue" href="/#fire"><span>THE PILGRIMAGE BEGINS</span></a>
-</section>
-<section class="fire" id="fire" data-scene="fire">
-  <div class="fire-stage">
-    <div class="fire-glow" aria-hidden="true"></div>
-    <svg class="rose" viewBox="-100 -100 200 200" aria-hidden="true" focusable="false">
-      <defs><radialGradient id="rose-0" cx="50%" cy="70%" r="75%"><stop offset="0" stop-color="#ff8a8a"/><stop offset="1" stop-color="#7a1530"/></radialGradient><radialGradient id="rose-1" cx="50%" cy="70%" r="75%"><stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#b8641a"/></radialGradient><radialGradient id="rose-2" cx="50%" cy="70%" r="75%"><stop offset="0" stop-color="#8fc1ff"/><stop offset="1" stop-color="#1d3a8f"/></radialGradient><radialGradient id="rose-3" cx="50%" cy="70%" r="75%"><stop offset="0" stop-color="#c9a6ff"/><stop offset="1" stop-color="#4b2a8a"/></radialGradient><radialGradient id="rose-4" cx="50%" cy="70%" r="75%"><stop offset="0" stop-color="#ffb36b"/><stop offset="1" stop-color="#9a3412"/></radialGradient><radialGradient id="rose-5" cx="50%" cy="70%" r="75%"><stop offset="0" stop-color="#8ff0e2"/><stop offset="1" stop-color="#0f5f66"/></radialGradient></defs>
-      <circle class="rose-ground" r="96"/>
-      <g class="rose-dark"><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" transform="rotate(0)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" transform="rotate(60)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" transform="rotate(120)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" transform="rotate(180)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" transform="rotate(240)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" transform="rotate(300)"/></g>
-      <g class="rose-lit"><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" fill="url(#rose-0)" transform="rotate(0)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" fill="url(#rose-1)" transform="rotate(60)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" fill="url(#rose-2)" transform="rotate(120)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" fill="url(#rose-3)" transform="rotate(180)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" fill="url(#rose-4)" transform="rotate(240)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" fill="url(#rose-5)" transform="rotate(300)"/></g>
-      <g class="rose-gems"><circle cx="37.00" cy="-64.09" r="9"/><circle cx="74.00" cy="-0.00" r="9"/><circle cx="37.00" cy="64.09" r="9"/><circle cx="-37.00" cy="64.09" r="9"/><circle cx="-74.00" cy="0.00" r="9"/><circle cx="-37.00" cy="-64.09" r="9"/></g>
-      <g class="rose-lead"><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20ZM0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70" transform="rotate(0)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20ZM0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70" transform="rotate(60)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20ZM0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70" transform="rotate(120)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20ZM0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70" transform="rotate(180)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20ZM0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70" transform="rotate(240)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20ZM0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70" transform="rotate(300)"/><circle cx="37.00" cy="-64.09" r="9"/><circle cx="74.00" cy="-0.00" r="9"/><circle cx="37.00" cy="64.09" r="9"/><circle cx="-37.00" cy="64.09" r="9"/><circle cx="-74.00" cy="0.00" r="9"/><circle cx="-37.00" cy="-64.09" r="9"/><circle r="20"/><circle r="92"/><circle r="97"/></g>
-      <circle class="rose-heart" r="15"/>
-    </svg>
-    <h2 class="fire-line">A fire was cut into six pieces and scattered along the road.</h2>
-    <p class="fire-after">Gather what was broken. Light the rose.</p>
+  <div class="swing xfb09a6" aria-hidden="true">
+    <span class="xa0cf25"></span>
+    <div class="xa8a903"><span class="flicker xa97477"></span><picture><source type="image/avif" srcset="/assets/teaser/lantern-240.avif 240w, /assets/teaser/lantern-480.avif 480w" sizes="100vw"><img alt="" class="x664360" aria-hidden="true" src="/assets/teaser/lantern-240.webp" srcset="/assets/teaser/lantern-240.webp 240w, /assets/teaser/lantern-480.webp 480w" sizes="100vw" width="480" height="776" loading="lazy" decoding="async"></picture></div>
   </div>
-</section>
-<section class="road" data-scene="road" aria-labelledby="road-title">
-  <div class="road-stage">
-    <h2 class="road-title" id="road-title">The road</h2>
-    <ol class="road-track">
-    <li class="road-pane"><figure>
-      <picture class="road-art"><source type="image/avif" srcset="/assets/teaser/scene-opening-hearth-640.avif 640w, /assets/teaser/scene-opening-hearth-1280.avif 1280w" sizes="(min-width: 64rem) 46vw, 82vw"><img src="/assets/teaser/scene-opening-hearth-640.webp" srcset="/assets/teaser/scene-opening-hearth-640.webp 640w, /assets/teaser/scene-opening-hearth-1280.webp 1280w" sizes="(min-width: 64rem) 46vw, 82vw" alt="" aria-hidden="true" width="1280" height="853" loading="lazy" decoding="async"></picture>
-      <figcaption><span class="road-kicker display">THE VIGIL</span>Walk east from the Vigil with a lantern.</figcaption>
-    </figure></li>
-    <li class="road-pane"><figure>
-      <picture class="road-art"><source type="image/avif" srcset="/assets/teaser/scene-night-stall-640.avif 640w, /assets/teaser/scene-night-stall-1280.avif 1280w" sizes="(min-width: 64rem) 46vw, 82vw"><img src="/assets/teaser/scene-night-stall-640.webp" srcset="/assets/teaser/scene-night-stall-640.webp 640w, /assets/teaser/scene-night-stall-1280.webp 1280w" sizes="(min-width: 64rem) 46vw, 82vw" alt="" aria-hidden="true" width="1280" height="880" loading="lazy" decoding="async"></picture>
-      <figcaption><span class="road-kicker display">THE MERCHANT</span>The merchant keeps the broken pane.</figcaption>
-    </figure></li>
-    </ol>
-  </div>
-</section>
-<section class="deck" data-scene="deck" aria-labelledby="deck-title">
-  <div class="deck-stage">
-    <p class="kicker display">A roguelite deckbuilder</p>
-    <h2 id="deck-title">Build a deck of glass. Kindle the lantern.</h2>
-    <ul class="fan">
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-vault-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-vault-304.webp" srcset="/assets/teaser/back-vault-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-cleave-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-cleave-480.webp" srcset="/assets/teaser/card-cleave-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">Fan of Glass</span></div></div></li>
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-rose-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-rose-304.webp" srcset="/assets/teaser/back-rose-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-eclipseSlash-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-eclipseSlash-480.webp" srcset="/assets/teaser/card-eclipseSlash-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">Eclipse Slash</span></div></div></li>
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-eclipse-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-eclipse-304.webp" srcset="/assets/teaser/back-eclipse-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-aegis-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-aegis-480.webp" srcset="/assets/teaser/card-aegis-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">Cathedral Glass</span></div></div></li>
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-vault-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-vault-304.webp" srcset="/assets/teaser/back-vault-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-emberdance-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-emberdance-480.webp" srcset="/assets/teaser/card-emberdance-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">Emberdance</span></div></div></li>
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-rose-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-rose-304.webp" srcset="/assets/teaser/back-rose-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-totality-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-totality-480.webp" srcset="/assets/teaser/card-totality-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">Totality</span></div></div></li>
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-eclipse-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-eclipse-304.webp" srcset="/assets/teaser/back-eclipse-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-dimTheGlass-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-dimTheGlass-480.webp" srcset="/assets/teaser/card-dimTheGlass-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">Dim the Glass</span></div></div></li>
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-vault-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-vault-304.webp" srcset="/assets/teaser/back-vault-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-annihilate-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-annihilate-480.webp" srcset="/assets/teaser/card-annihilate-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">Requiem</span></div></div></li>
-    </ul>
-  </div>
-</section>
-<section class="aspects" aria-labelledby="aspects-title">
-  <h2 id="aspects-title">Who carries the lantern</h2>
-  <div class="aspect-row">
-    <article class="aspect aspect-ashwarden">
-      <picture class="aspect-art"><source type="image/avif" srcset="/assets/teaser/aspect-ashwarden-300.avif 300w, /assets/teaser/aspect-ashwarden-600.avif 600w" sizes="(min-width: 48rem) 22rem, 70vw"><img src="/assets/teaser/aspect-ashwarden-300.webp" srcset="/assets/teaser/aspect-ashwarden-300.webp 300w, /assets/teaser/aspect-ashwarden-600.webp 600w" sizes="(min-width: 48rem) 22rem, 70vw" alt="The Ashwarden" width="600" height="951" loading="lazy" decoding="async"></picture>
-      <h3 class="aspect-name display">The Ashwarden</h3>
-      <p>Smoke given a shape. Lets the Smolder do the killing and kindles its own hand to feed the lantern. Slower, but it endures — and everything it touches burns.</p>
-    </article>
-    <article class="aspect aspect-duskblade">
-      <picture class="aspect-art"><source type="image/avif" srcset="/assets/teaser/aspect-duskblade-300.avif 300w, /assets/teaser/aspect-duskblade-600.avif 600w" sizes="(min-width: 48rem) 22rem, 70vw"><img src="/assets/teaser/aspect-duskblade-300.webp" srcset="/assets/teaser/aspect-duskblade-300.webp 300w, /assets/teaser/aspect-duskblade-600.webp 600w" sizes="(min-width: 48rem) 22rem, 70vw" alt="The Duskblade" width="600" height="824" loading="lazy" decoding="async"></picture>
-      <h3 class="aspect-name display">The Duskblade</h3>
-      <p>Glass honed to a killing edge. Strikes, shatters, and turns broken facets into fuel — a blade that cuts a road through any night.</p>
-    </article>
-  </div>
-</section>
-<section class="foes" data-scene="foes" aria-labelledby="foes-title">
-  <ul class="foe-row">
-    <li><picture class="foe"><source type="image/avif" srcset="/assets/teaser/foe-duskfang-200.avif 200w, /assets/teaser/foe-duskfang-400.avif 400w" sizes="(min-width: 48rem) 12rem, 30vw"><img src="/assets/teaser/foe-duskfang-200.webp" srcset="/assets/teaser/foe-duskfang-200.webp 200w, /assets/teaser/foe-duskfang-400.webp 400w" sizes="(min-width: 48rem) 12rem, 30vw" alt="Duskfang" width="400" height="383" loading="lazy" decoding="async"></picture></li>
-    <li><picture class="foe"><source type="image/avif" srcset="/assets/teaser/foe-chaosHound-200.avif 200w, /assets/teaser/foe-chaosHound-400.avif 400w" sizes="(min-width: 48rem) 12rem, 30vw"><img src="/assets/teaser/foe-chaosHound-200.webp" srcset="/assets/teaser/foe-chaosHound-200.webp 200w, /assets/teaser/foe-chaosHound-400.webp 400w" sizes="(min-width: 48rem) 12rem, 30vw" alt="Chaos Hound" width="400" height="384" loading="lazy" decoding="async"></picture></li>
-    <li><picture class="foe"><source type="image/avif" srcset="/assets/teaser/foe-deepmaw-200.avif 200w, /assets/teaser/foe-deepmaw-400.avif 400w" sizes="(min-width: 48rem) 12rem, 30vw"><img src="/assets/teaser/foe-deepmaw-200.webp" srcset="/assets/teaser/foe-deepmaw-200.webp 200w, /assets/teaser/foe-deepmaw-400.webp 400w" sizes="(min-width: 48rem) 12rem, 30vw" alt="Deepmaw" width="400" height="496" loading="lazy" decoding="async"></picture></li>
-    <li><picture class="foe"><source type="image/avif" srcset="/assets/teaser/foe-shade-200.avif 200w, /assets/teaser/foe-shade-400.avif 400w" sizes="(min-width: 48rem) 12rem, 30vw"><img src="/assets/teaser/foe-shade-200.webp" srcset="/assets/teaser/foe-shade-200.webp 200w, /assets/teaser/foe-shade-400.webp 400w" sizes="(min-width: 48rem) 12rem, 30vw" alt="Shade" width="400" height="737" loading="lazy" decoding="async"></picture></li>
-    <li><picture class="foe"><source type="image/avif" srcset="/assets/teaser/foe-gravewarden-200.avif 200w, /assets/teaser/foe-gravewarden-400.avif 400w" sizes="(min-width: 48rem) 12rem, 30vw"><img src="/assets/teaser/foe-gravewarden-200.webp" srcset="/assets/teaser/foe-gravewarden-200.webp 200w, /assets/teaser/foe-gravewarden-400.webp 400w" sizes="(min-width: 48rem) 12rem, 30vw" alt="Gravewarden" width="400" height="423" loading="lazy" decoding="async"></picture></li>
-    <li><picture class="foe"><source type="image/avif" srcset="/assets/teaser/foe-starCultist-200.avif 200w, /assets/teaser/foe-starCultist-400.avif 400w" sizes="(min-width: 48rem) 12rem, 30vw"><img src="/assets/teaser/foe-starCultist-200.webp" srcset="/assets/teaser/foe-starCultist-200.webp 200w, /assets/teaser/foe-starCultist-400.webp 400w" sizes="(min-width: 48rem) 12rem, 30vw" alt="Star Cultist" width="400" height="502" loading="lazy" decoding="async"></picture></li>
-  </ul>
-  <h2 id="foes-title">Shatter what blocks the way.</h2>
-</section>
-<section class="vow" id="soon" data-scene="vow" aria-labelledby="vow-title">
-  <div class="vow-stage">
-    <div class="vow-copy">
-      <h2 id="vow-title">Available soon</h2>
-      <ul class="platforms platforms-large">
-        <li class="platform"><span class="platform-name display">App Store</span><span class="platform-soon">Coming soon</span></li>
-        <li class="platform"><span class="platform-name display">Google Play</span><span class="platform-soon">Coming soon</span></li>
-        <li class="platform"><span class="platform-name display">Amazon Appstore</span><span class="platform-soon">Coming soon</span></li>
-        <li class="platform"><span class="platform-name display">Steam</span><span class="platform-soon">Coming soon</span></li>
-      </ul>
-      <p class="facts">Single-player · No accounts · No ads</p>
+  <div class="xb4a998">
+    <div class="xf9e17a">
+      <p class="kicker f-disp display up x6c2762">A pilgrimage in stained glass</p>
+      <h1 class="wm wm-en"><picture><source type="image/avif" srcset="/assets/teaser/wordmark-en-640.avif 640w, /assets/teaser/wordmark-en-1280.avif 1280w" sizes="(min-width: 48rem) 36rem, 88vw"><img alt="Glassvow" class="xb2d912" fetchpriority="high" src="/assets/teaser/wordmark-en-640.webp" srcset="/assets/teaser/wordmark-en-640.webp 640w, /assets/teaser/wordmark-en-1280.webp 1280w" sizes="(min-width: 48rem) 36rem, 88vw" width="1280" height="320" decoding="async"></picture></h1>
+      <blockquote class="say"><p class="q f-quote xf064f5">“You’re awake.”</p><span class="who f-body up">At the Vigil’s fire</span></blockquote>
+      <p class="narr f-prose xa93273">A single-player roguelite deckbuilder. Take up the lantern, build a deck of glass, and walk east toward a door that has never opened.</p>
+      <div class="x350bba">
+        <a class="btn btn-primary f-disp display up" href="/#prologue">Begin the story</a>
+        <a class="btn btn-ghost f-disp display up" href="/#play">How it works</a>
+      </div>
+      <div class="plat-row"><span class="f-body up">Coming soon to</span><ul class="platforms plat-list"><li class="platform"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span class="platform-name display">App Store</span><span class="platform-soon">Coming soon</span></li><li class="platform"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/></svg><span class="platform-name display">Google Play</span><span class="platform-soon">Coming soon</span></li><li class="platform"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.174.09.336-.12.48-.256.19-.6.41-1.006.654-1.244.743-2.64 1.316-4.185 1.726a17.617 17.617 0 01-10.951-.577 17.88 17.88 0 01-5.43-3.35c-.1-.074-.151-.15-.151-.22 0-.047.021-.09.051-.13zm6.565-6.218c0-1.005.247-1.863.743-2.577.495-.71 1.17-1.25 2.04-1.615.796-.335 1.756-.575 2.912-.72.39-.046 1.033-.103 1.92-.174v-.37c0-.93-.105-1.558-.3-1.875-.302-.43-.78-.65-1.44-.65h-.182c-.48.046-.896.196-1.246.46-.35.27-.575.63-.675 1.096-.06.3-.206.465-.435.51l-2.52-.315c-.248-.06-.372-.18-.372-.39 0-.046.007-.09.022-.15.247-1.29.855-2.25 1.82-2.88.976-.616 2.1-.975 3.39-1.05h.54c1.65 0 2.957.434 3.888 1.29.135.15.27.3.405.48.12.165.224.314.283.45.075.134.15.33.195.57.06.254.105.42.135.51.03.104.062.3.076.615.01.313.02.493.02.553v5.28c0 .376.06.72.165 1.036.105.313.21.54.315.674l.51.674c.09.136.136.256.136.36 0 .12-.06.226-.18.314-1.2 1.05-1.86 1.62-1.963 1.71-.165.135-.375.15-.63.045a6.062 6.062 0 01-.526-.496l-.31-.347a9.391 9.391 0 01-.317-.42l-.3-.435c-.81.886-1.603 1.44-2.4 1.665-.494.15-1.093.227-1.83.227-1.11 0-2.04-.343-2.76-1.034-.72-.69-1.08-1.665-1.08-2.94l-.05-.076zm3.753-.438c0 .566.14 1.02.425 1.364.285.34.675.512 1.155.512.045 0 .106-.007.195-.02.09-.016.134-.023.166-.023.614-.16 1.08-.553 1.424-1.178.165-.28.285-.58.36-.91.09-.32.12-.59.135-.8.015-.195.015-.54.015-1.005v-.54c-.84 0-1.484.06-1.92.18-1.275.36-1.92 1.17-1.92 2.43l-.035-.02zm9.162 7.027c.03-.06.075-.11.132-.17.362-.243.714-.41 1.05-.5a8.094 8.094 0 011.612-.24c.14-.012.28 0 .41.03.65.06 1.05.168 1.172.33.063.09.099.228.099.39v.15c0 .51-.149 1.11-.424 1.8-.278.69-.664 1.248-1.156 1.68-.073.06-.14.09-.197.09-.03 0-.06 0-.09-.012-.09-.044-.107-.12-.064-.24.54-1.26.806-2.143.806-2.64 0-.15-.03-.27-.087-.344-.145-.166-.55-.257-1.224-.257-.243 0-.533.016-.87.046-.363.045-.7.09-1 .135-.09 0-.148-.014-.18-.044-.03-.03-.036-.047-.02-.077 0-.017.006-.03.02-.063v-.06z"/></svg><span class="platform-name display">Amazon Appstore</span><span class="platform-soon">Coming soon</span></li><li class="platform"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z"/></svg><span class="platform-name display">Steam</span><span class="platform-soon">Coming soon</span></li></ul></div>
     </div>
-    <canvas class="vow-glass" aria-hidden="true"></canvas>
+  </div>
+  <a href="/#prologue" class="f-disp display up x91a094"><span>Scroll to walk</span><span class="cue-line" aria-hidden="true"></span></a>
+</section>
+
+<section id="prologue" class="xd3a0e6">
+  <picture><source type="image/avif" srcset="/assets/teaser/prologue-bg-960.avif 960w, /assets/teaser/prologue-bg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg xa9d36f" alt="" aria-hidden="true" src="/assets/teaser/prologue-bg-960.webp" srcset="/assets/teaser/prologue-bg-960.webp 960w, /assets/teaser/prologue-bg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x577fac"></div>
+  <div class="two-col x93c1d2">
+    <div class="x1f7af8">
+      <div class="shardbox" role="img" aria-label="Six shards of emberglass bursting away from one fire">
+        <canvas aria-hidden="true"></canvas>
+        <span class="core" aria-hidden="true"></span>
+        <span class="ring" aria-hidden="true"></span>
+        <picture><source type="image/avif" srcset="/assets/teaser/shard-0-240.avif 240w" sizes="8rem"><img class="shard" alt="" data-c="#6ebeff" data-a="180" data-r="0.4" data-t="-14" aria-hidden="true" src="/assets/teaser/shard-0-240.webp" srcset="/assets/teaser/shard-0-240.webp 240w" sizes="8rem" width="240" height="453" loading="lazy" decoding="async"></picture><picture><source type="image/avif" srcset="/assets/teaser/shard-1-240.avif 240w" sizes="8rem"><img class="shard" alt="" data-c="#ff5a5a" data-a="242" data-r="0.38" data-t="-8" aria-hidden="true" src="/assets/teaser/shard-1-240.webp" srcset="/assets/teaser/shard-1-240.webp 240w" sizes="8rem" width="240" height="418" loading="lazy" decoding="async"></picture><picture><source type="image/avif" srcset="/assets/teaser/shard-2-240.avif 240w" sizes="8rem"><img class="shard" alt="" data-c="#ffc850" data-a="307" data-r="0.41" data-t="9" aria-hidden="true" src="/assets/teaser/shard-2-240.webp" srcset="/assets/teaser/shard-2-240.webp 240w" sizes="8rem" width="240" height="355" loading="lazy" decoding="async"></picture><picture><source type="image/avif" srcset="/assets/teaser/shard-3-240.avif 240w" sizes="8rem"><img class="shard" alt="" data-c="#5078ff" data-a="7" data-r="0.42" data-t="16" aria-hidden="true" src="/assets/teaser/shard-3-240.webp" srcset="/assets/teaser/shard-3-240.webp 240w" sizes="8rem" width="240" height="515" loading="lazy" decoding="async"></picture><picture><source type="image/avif" srcset="/assets/teaser/shard-4-240.avif 240w" sizes="8rem"><img class="shard" alt="" data-c="#aa6eff" data-a="63" data-r="0.39" data-t="6" aria-hidden="true" src="/assets/teaser/shard-4-240.webp" srcset="/assets/teaser/shard-4-240.webp 240w" sizes="8rem" width="240" height="393" loading="lazy" decoding="async"></picture><picture><source type="image/avif" srcset="/assets/teaser/shard-5-240.avif 240w" sizes="8rem"><img class="shard" alt="" data-c="#ff8c3c" data-a="115" data-r="0.38" data-t="-10" aria-hidden="true" src="/assets/teaser/shard-5-240.webp" srcset="/assets/teaser/shard-5-240.webp 240w" sizes="8rem" width="240" height="360" loading="lazy" decoding="async"></picture>
+        <span class="flash" aria-hidden="true"></span>
+        <span class="tap f-quote" aria-hidden="true">Touch the fire</span>
+      </div>
+    </div>
+    <div class="panel x7356d2">
+      <p class="chap f-disp display">I · PROLOGUE</p>
+      <h2 class="h-chap f-disp display rvh">One fire. Six pieces.</h2>
+      <p class="narr f-prose">Before the first night there was one fire. Then it was cut into six, and the pieces were scattered along a road that runs from the western edge of the world to a door no one has opened.</p>
+      <p class="narr f-prose">The shards burn on somewhere in the dark — in a forest that grows on ash, beneath the water of a city that stopped to wait, in a court of black glass where no fire burns. At the western end of the road, a single hearth has burned since that first night.</p>
+      <p class="f-prose xc4f5e8">Carry it east. Break what stands in your way. Bring the fire home.</p>
+      <blockquote class="say"><p class="q f-quote">“A fire was cut into six pieces and scattered along the road.”</p></blockquote>
+    </div>
   </div>
 </section>
-<nav class="more" aria-label="About Glassvow">
-  <a href="/play/">How to play</a>
-  <a href="/faq/">FAQ</a>
-  <a href="/genre/">A roguelite deckbuilder</a>
-</nav>
-<p class="support">Support · <span class="address"><!--email_off-->glassvow@eugnel.com<!--/email_off--></span></p>
+
+<section class="x7c60ed">
+  <div class="stage x101596" aria-hidden="true">
+    <picture><source type="image/avif" srcset="/assets/teaser/vigil-bg-960.avif 960w, /assets/teaser/vigil-bg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg" alt="" aria-hidden="true" src="/assets/teaser/vigil-bg-960.webp" srcset="/assets/teaser/vigil-bg-960.webp 960w, /assets/teaser/vigil-bg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+    <span class="mist xec496f"></span>
+    <picture><source type="image/avif" srcset="/assets/teaser/vigil-hall-960.avif 960w, /assets/teaser/vigil-hall-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-mid" alt="" aria-hidden="true" src="/assets/teaser/vigil-hall-960.webp" srcset="/assets/teaser/vigil-hall-960.webp 960w, /assets/teaser/vigil-hall-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+    <span class="smoke xd48b00"></span><span class="smoke xc14cb6"></span>
+    <span class="lay flicker x820318"></span>
+    <div class="lay walker"><picture><source type="image/avif" srcset="/assets/teaser/vigil-walker-220.avif 220w, /assets/teaser/vigil-walker-440.avif 440w" sizes="100vw"><img alt="" aria-hidden="true" src="/assets/teaser/vigil-walker-220.webp" srcset="/assets/teaser/vigil-walker-220.webp 220w, /assets/teaser/vigil-walker-440.webp 440w" sizes="100vw" width="440" height="727" loading="lazy" decoding="async"></picture><span class="walker-glow flicker"></span></div>
+  </div>
+  <picture><source type="image/avif" srcset="/assets/teaser/vigil-fg-960.avif 960w, /assets/teaser/vigil-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg xab9b65" alt="" aria-hidden="true" src="/assets/teaser/vigil-fg-960.webp" srcset="/assets/teaser/vigil-fg-960.webp 960w, /assets/teaser/vigil-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="xa4e885"></div>
+  <span class="ghost f-disp display xe57fbd" aria-hidden="true">II</span>
+  <div class="x8356ff">
+    <div class="panel x945d63">
+      <p class="chap f-disp display">II · THE VIGIL</p>
+      <h2 class="h-chap f-disp display rvh">A fire in the far west</h2>
+      <p class="narr f-prose">You wake at a hearth on the western edge of the world. The hall is old and the stone is warm. Someone has kept this fire burning since the first night — and kept a place beside it for you.</p>
+      <blockquote class="say"><p class="q f-quote">“Take your time. The road isn’t going anywhere.”</p><span class="who f-body up">At the hearth</span></blockquote>
+    </div>
+  </div>
+  <p class="lbl f-body up x18b779">The Vigil · concept art</p>
+</section>
+
+<section class="x7c60ed">
+  <div class="stage x101596" aria-hidden="true">
+    <picture><source type="image/avif" srcset="/assets/teaser/lantern-bg-960.avif 960w, /assets/teaser/lantern-bg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg" alt="" aria-hidden="true" src="/assets/teaser/lantern-bg-960.webp" srcset="/assets/teaser/lantern-bg-960.webp 960w, /assets/teaser/lantern-bg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+    <span class="lay flicker x84fdce"></span>
+    <div class="lay keeper lay-mid"><picture><source type="image/avif" srcset="/assets/teaser/lantern-keeper-480.avif 480w, /assets/teaser/lantern-keeper-960.avif 960w" sizes="100vw"><img class="breathe" alt="" aria-hidden="true" src="/assets/teaser/lantern-keeper-480.webp" srcset="/assets/teaser/lantern-keeper-480.webp 480w, /assets/teaser/lantern-keeper-960.webp 960w" sizes="100vw" width="960" height="1209" loading="lazy" decoding="async"></picture><span class="keeper-glow flicker"></span></div>
+    <span class="mote xd00d41"></span><span class="mote x6cc105"></span><span class="mote x7dad28"></span>
+  </div>
+  <picture><source type="image/avif" srcset="/assets/teaser/lantern-fg-960.avif 960w, /assets/teaser/lantern-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg xab9b65" alt="" aria-hidden="true" src="/assets/teaser/lantern-fg-960.webp" srcset="/assets/teaser/lantern-fg-960.webp 960w, /assets/teaser/lantern-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="xb8af75"></div>
+  <span class="ghost f-disp display x75ff9b" aria-hidden="true">III</span>
+  <div class="x8356ff">
+    <div class="panel xf85935">
+      <p class="chap f-disp display">III · THE LANTERN</p>
+      <h2 class="h-chap f-disp display rvh">It burns what you carry</h2>
+      <p class="narr f-prose">Before you leave, you are given a lantern that others carried before you. On the road ahead, its light will be the only light that is yours — and it is always hungry.</p>
+      <blockquote class="say"><p class="q f-quote">“It burns what you carry.”</p><span class="who f-body up">At the hearth</span></blockquote><blockquote class="say"><p class="q f-quote">“The road runs east. At its end stands a sealed door. Bring back the six shards of emberglass, and it will open.”</p><span class="who f-body up">At the hearth</span></blockquote>
+    </div>
+  </div>
+</section>
+
+<section class="xc46d7a">
+  <picture><source type="image/avif" srcset="/assets/teaser/duskblade-scene-960.avif 960w, /assets/teaser/duskblade-scene-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg xa9d36f" alt="" aria-hidden="true" src="/assets/teaser/duskblade-scene-960.webp" srcset="/assets/teaser/duskblade-scene-960.webp 960w, /assets/teaser/duskblade-scene-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x6bae99"></div>
+  <div aria-hidden="true" class="x924164"><span class="mote x8e0d77"></span><span class="mote xc535c6"></span><span class="mote x80f64a"></span></div>
+  <span class="ghost f-disp display xa11523" aria-hidden="true">IV</span>
+  <div class="x8356ff">
+    <div class="panel x85dfa5">
+      <p class="chap f-disp display">IV · THE ROAD EAST</p>
+      <h2 class="h-chap f-disp display rvh">The Vigil begins</h2>
+      <p class="narr f-prose">The door of the hall opens onto the dark before dawn. The road runs level and east, past the last lamp, into country where the glass is alive — and does not want to be broken.</p>
+      <blockquote class="say"><p class="q f-quote">“You take up the lantern and step out. The long road runs east, and the sky is not yet light.”</p></blockquote><blockquote class="say"><p class="q f-quote">“Behind you, the fire is still burning.”</p></blockquote><blockquote class="say"><p class="q f-quote">“The Vigil begins.”</p></blockquote>
+      <div class="x164929">
+        <p class="lbl f-body up">Who carries the lantern</p>
+        <p class="f-disp display x5e4978">The Duskblade</p>
+        <p class="f-prose x3db748">Glass honed to a killing edge. Strikes, shatters, and turns broken facets into fuel — a blade that cuts a road through any night.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="act1" class="x1fea43">
+  <picture><source type="image/avif" srcset="/assets/teaser/act1-960.avif 960w, /assets/teaser/act1-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg x101596" alt="" aria-hidden="true" src="/assets/teaser/act1-960.webp" srcset="/assets/teaser/act1-960.webp 960w, /assets/teaser/act1-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="xade031"></div>
+  <canvas class="mob-cv xaf33c5" data-mob="act1" data-src="/assets/teaser/gravewarden.glb" aria-hidden="true"></canvas>
+  <picture><source type="image/avif" srcset="/assets/teaser/act1-fg-960.avif 960w, /assets/teaser/act1-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg x3a4807" alt="" aria-hidden="true" src="/assets/teaser/act1-fg-960.webp" srcset="/assets/teaser/act1-fg-960.webp 960w, /assets/teaser/act1-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x774072"><span class="mote xbe3369"></span><span class="mote x050d83"></span><span class="mote xbf677e"></span><span class="mote x3001f4"></span><span class="mist xe1b77a"></span></div>
+  <div class="xa545b2">
+    <div class="panel x85dfa5">
+      <p class="chap f-disp display">V · ACT I</p>
+      <h2 class="h-act f-disp display rvh">The Ashen Woods</h2>
+      <p class="narr f-prose">A forest that grows on ash. Spores hang in the lamplight like slow snow, pale masks lie half-buried under the trees, and old monuments stand thick where the road begins. Something has prayed here for a very long time. Nothing has answered.</p>
+      <blockquote class="say"><p class="q f-quote">“Two lanterns burning side by side. The flames are fresh. Whose?”</p></blockquote><blockquote class="say"><p class="q f-quote">“They pray to the ash. The ash answers no one.”</p></blockquote>
+      <p class="boss-line"><span class="lbl f-body up">At the heart of the woods</span><b class="f-disp display">The Rootheart</b></p>
+    </div>
+  </div>
+  <p class="lbl f-body up xcf84f7">Signature foe · Gravewarden</p>
+</section>
+
+<section class="x11ec04">
+  <div class="stage x101596" aria-hidden="true">
+    <picture><source type="image/avif" srcset="/assets/teaser/lamp-bg-960.avif 960w, /assets/teaser/lamp-bg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg" alt="" aria-hidden="true" src="/assets/teaser/lamp-bg-960.webp" srcset="/assets/teaser/lamp-bg-960.webp 960w, /assets/teaser/lamp-bg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+    <span class="lay storm"></span>
+    <span class="mist x840e23"></span><span class="mist x6eae58"></span>
+    <div class="lay lamplighter lay-mid"><picture><source type="image/avif" srcset="/assets/teaser/lamp-figure-460.avif 460w, /assets/teaser/lamp-figure-920.avif 920w" sizes="100vw"><img alt="" aria-hidden="true" src="/assets/teaser/lamp-figure-460.webp" srcset="/assets/teaser/lamp-figure-460.webp 460w, /assets/teaser/lamp-figure-920.webp 920w" sizes="100vw" width="920" height="1485" loading="lazy" decoding="async"></picture></div>
+  </div>
+  <picture><source type="image/avif" srcset="/assets/teaser/lamp-fg-960.avif 960w, /assets/teaser/lamp-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg xab9b65" alt="" aria-hidden="true" src="/assets/teaser/lamp-fg-960.webp" srcset="/assets/teaser/lamp-fg-960.webp 960w, /assets/teaser/lamp-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x39b7c4"><span class="ash x337797"></span><span class="ash x6df6e8"></span><span class="ash x31be98"></span><span class="ash x947496"></span><span class="ash x135136"></span><span class="ash xa0e3f5"></span></div>
+  <div aria-hidden="true" class="xa99cbf"></div>
+  <span class="ghost f-disp display x941572" aria-hidden="true">VI</span>
+  <div class="xc2d031">
+    <div class="panel xf85935">
+      <p class="chap f-disp display">VI · THE UNLIT WAY</p>
+      <h2 class="h-chap f-disp display rvh">The Hollow Lamplighter</h2>
+      <p class="narr f-prose">On the Unlit Way, an old man waits beside the road with a lantern that holds no flame. He studies every face that passes. Five times he will stop you, and five times he will name a price.</p>
+      <blockquote class="say"><p class="q f-quote">“An old man sits by the road, holding a lantern. There is no flame in it.”</p><span class="who f-body up"></span></blockquote><blockquote class="say"><p class="q f-quote">“Oil can be shared. Flame cannot. Flame you carry to the end yourself.”</p><span class="who f-body up">The Lamplighter</span></blockquote><blockquote class="say"><p class="q f-quote">“He steps aside and lifts the hollow lantern toward the east, as if to light the way. There is no light in it. He lifts it all the same.”</p><span class="who f-body up"></span></blockquote>
+    </div>
+  </div>
+</section>
+
+<section class="xb760c5">
+  <div class="xc1c7bc">
+    <picture><source type="image/avif" srcset="/assets/teaser/merchant-960.avif 960w, /assets/teaser/merchant-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg x87f0e1" alt="" aria-hidden="true" src="/assets/teaser/merchant-960.webp" srcset="/assets/teaser/merchant-960.webp 960w, /assets/teaser/merchant-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+    <div aria-hidden="true" class="x0e3424"></div>
+    <span class="ghost f-disp display x75ff9b" aria-hidden="true">VII</span>
+    <div class="x532c90">
+      <div class="panel x85dfa5">
+        <p class="chap f-disp display">VII · THE NIGHT STALL</p>
+        <h2 class="h-chap f-disp display rvh">Strangers on the road</h2>
+        <p class="narr f-prose">Not everything on the road is glass that wants breaking. A merchant in an eyeless mask trades by lantern light. A skeleton deals cards to anyone who will sit. A knight rests against a burned tree with something to give. A smiling trader weighs hearts against gold. Each of them wants something. Few of them say what.</p>
+        <blockquote class="say"><p class="q f-quote">“Gold for glory, stranger. Everything’s fair-priced — for the doomed.”</p><span class="who f-body up">The Merchant</span></blockquote>
+      </div>
+    </div>
+    <p class="lbl f-body up xb4dbac">The Merchant · concept art</p>
+  </div>
+  <ul class="x39d672">
+    
+      <li class="stranger stranger-1 par-a">
+        <figure class="rv">
+          <div class="concept"><picture><source type="image/avif" srcset="/assets/teaser/gambler-640.avif 640w, /assets/teaser/gambler-1280.avif 1280w" sizes="(min-width: 64rem) 30vw, 90vw"><img alt="A grinning skeleton in a wide hat deals cards beside a roadside fire, an empty chair facing him" src="/assets/teaser/gambler-640.webp" srcset="/assets/teaser/gambler-640.webp 640w, /assets/teaser/gambler-1280.webp 1280w" sizes="(min-width: 64rem) 30vw, 90vw" width="1280" height="853" loading="lazy" decoding="async"></picture><span class="concept-tag f-body up">Concept art</span></div>
+          <figcaption class="concept-cap"><b class="f-disp display">The Gambler</b><span class="f-quote">“One throw, stranger. Fortune loves the reckless.”</span></figcaption>
+        </figure>
+      </li>
+    
+      <li class="stranger stranger-2 par-b">
+        <figure class="rv">
+          <div class="concept"><picture><source type="image/avif" srcset="/assets/teaser/wounded-knight-640.avif 640w, /assets/teaser/wounded-knight-1280.avif 1280w" sizes="(min-width: 64rem) 30vw, 90vw"><img alt="A knight of cracked stained glass slumped against a burned tree, holding out a glowing amber crystal" src="/assets/teaser/wounded-knight-640.webp" srcset="/assets/teaser/wounded-knight-640.webp 640w, /assets/teaser/wounded-knight-1280.webp 1280w" sizes="(min-width: 64rem) 30vw, 90vw" width="1280" height="853" loading="lazy" decoding="async"></picture><span class="concept-tag f-body up">Concept art</span></div>
+          <figcaption class="concept-cap"><b class="f-disp display">The Wounded Knight</b><span class="f-quote">He holds out a shard of amber. He will not need it now.</span></figcaption>
+        </figure>
+      </li>
+    
+      <li class="stranger stranger-3 par-a">
+        <figure class="rv">
+          <div class="concept"><picture><source type="image/avif" srcset="/assets/teaser/flesh-trader-640.avif 640w, /assets/teaser/flesh-trader-1016.avif 1016w" sizes="(min-width: 64rem) 30vw, 90vw"><img alt="A thin trader in a white mask holding brass scales with a red glass heart on one pan" src="/assets/teaser/flesh-trader-640.webp" srcset="/assets/teaser/flesh-trader-640.webp 640w, /assets/teaser/flesh-trader-1016.webp 1016w" sizes="(min-width: 64rem) 30vw, 90vw" width="1016" height="1024" loading="lazy" decoding="async"></picture><span class="concept-tag f-body up">Concept art</span></div>
+          <figcaption class="concept-cap"><b class="f-disp display">The Flesh Trader</b><span class="f-quote">He pays well for what you will not be needing.</span></figcaption>
+        </figure>
+      </li>
+    
+  </ul>
+</section>
+
+<section id="act2" class="x1fea43">
+  <picture><source type="image/avif" srcset="/assets/teaser/act2-960.avif 960w, /assets/teaser/act2-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg x101596" alt="" aria-hidden="true" src="/assets/teaser/act2-960.webp" srcset="/assets/teaser/act2-960.webp 960w, /assets/teaser/act2-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="xade031"></div>
+  <canvas class="mob-cv x800aae" data-mob="act2" data-src="/assets/teaser/siren.glb" aria-hidden="true"></canvas>
+  <picture><source type="image/avif" srcset="/assets/teaser/act2-fg-960.avif 960w, /assets/teaser/act2-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg x3a4807" alt="" aria-hidden="true" src="/assets/teaser/act2-fg-960.webp" srcset="/assets/teaser/act2-fg-960.webp 960w, /assets/teaser/act2-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x774072"><span class="mote cold x16078c"></span><span class="mote cold xadd3ab"></span><span class="mote cold xe07386"></span></div>
+  <div class="xa545b2">
+    <div class="panel x85dfa5">
+      <p class="chap f-disp display">VIII · ACT II</p>
+      <h2 class="h-act f-disp display rvh">The Sunken City</h2>
+      <p class="narr f-prose">Halfway along the road, a whole city stopped to wait for the door. The water rose around its waiting and never went down. Its people still stand at their windows beneath the tide, and a light drifts through the drowned streets — a light that leads no one anywhere.</p>
+      <blockquote class="say"><p class="q f-quote">“The city stayed to wait. So did the water.”</p></blockquote><blockquote class="say"><p class="q f-quote">“There’s a light under the water. It leads to nothing — it only leads people.”</p></blockquote>
+      <p class="boss-line"><span class="lbl f-body up">Beneath the tide</span><b class="f-disp display">Leviathan’s Maw</b></p>
+    </div>
+  </div>
+  <p class="lbl f-body up xcf84f7">Signature foe · Siren</p>
+</section>
+
+<section id="act3" class="x1fea43">
+  <picture><source type="image/avif" srcset="/assets/teaser/act3-960.avif 960w, /assets/teaser/act3-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg x101596" alt="" aria-hidden="true" src="/assets/teaser/act3-960.webp" srcset="/assets/teaser/act3-960.webp 960w, /assets/teaser/act3-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x8f5de0"></div>
+  <canvas class="mob-cv xc908e7" data-mob="act3" data-src="/assets/teaser/watcherEye.glb" aria-hidden="true"></canvas>
+  <picture><source type="image/avif" srcset="/assets/teaser/act3-fg-960.avif 960w, /assets/teaser/act3-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg x3a4807" alt="" aria-hidden="true" src="/assets/teaser/act3-fg-960.webp" srcset="/assets/teaser/act3-fg-960.webp 960w, /assets/teaser/act3-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x774072"><span class="mote violet x313941"></span><span class="mote violet x9397e3"></span><span class="mote violet x562002"></span><span class="shaft x883b2c"></span></div>
+  <div class="xadadf1">
+    <div class="panel x85dfa5">
+      <p class="chap f-disp display">IX · ACT III</p>
+      <h2 class="h-act f-disp display rvh">The Obsidian Court</h2>
+      <p class="narr f-prose">Before the door stands a court of black glass. No fire is lit there. Its courtiers sit in starlight and have sat too long; broken halos lie where they fell, and something watches every step you take toward the throne.</p>
+      <blockquote class="say"><p class="q f-quote">“No fire in the court. They sit in starlight, and have sat too long.”</p></blockquote><blockquote class="say"><p class="q f-quote">“Broken halos on the ground. No one gathers them.”</p></blockquote><blockquote class="say"><p class="q f-quote">“The nearer the door, the more of them. All seated.”</p></blockquote>
+    </div>
+  </div>
+  <p class="lbl f-body up x18b779">Signature foe · Watcher Eye</p>
+</section>
+
+<section class="xc46d7a">
+  <picture><source type="image/avif" srcset="/assets/teaser/sovereign-scene-960.avif 960w, /assets/teaser/sovereign-scene-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg xa9d36f" alt="" aria-hidden="true" src="/assets/teaser/sovereign-scene-960.webp" srcset="/assets/teaser/sovereign-scene-960.webp 960w, /assets/teaser/sovereign-scene-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x8fb0a8"></div>
+  <span class="ghost f-disp display xa2c029" aria-hidden="true">X</span>
+  <div class="x5b59c4">
+    <div class="panel xa34c31">
+      <p class="chap f-disp display">X · BOSS OF ACT III</p>
+      <h2 class="h-chap f-disp display rvh">The Eternal Sovereign</h2>
+      <p class="narr f-prose">A masked king holds the throne before the last door, crowned in violet glass, a broken halo at his back. Somewhere on the road behind you, a merchant is selling a lantern with no flame.</p>
+      <blockquote class="say"><p class="q f-quote">“The Sovereign is a mask worn before the last door.”</p><span class="who f-body up">A whisper on the road</span></blockquote><blockquote class="say"><p class="q f-quote">“Cold glass. No wick. The merchant will not say who left it.”</p><span class="who f-body up">The Lantern with No Flame</span></blockquote>
+    </div>
+  </div>
+</section>
+
+<section class="x2cf522">
+  <picture><source type="image/avif" srcset="/assets/teaser/door-960.avif 960w, /assets/teaser/door-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg xa9d36f" alt="" aria-hidden="true" src="/assets/teaser/door-960.webp" srcset="/assets/teaser/door-960.webp 960w, /assets/teaser/door-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x1434f0"></div>
+  <div aria-hidden="true" class="x924164"><span class="shaft xe6dcae"></span><span class="shaft xb6ef02"></span></div>
+  <div class="xedb5dc">
+    <p class="chap f-disp display rv">XI · THE DOOR</p>
+    <h2 class="f-disp display rvh xc8e59e">There is a sealed door beyond the crown.</h2>
+    <p class="narr f-prose rv x4559ae">Six shards. One lantern. One road. What waits on the other side is not written here. It is written on the road.</p>
+    <a class="btn btn-primary f-disp display up rv" href="/#play">Learn how it works</a>
+  </div>
+</section>
+
+<section id="play" class="x86a388">
+  <div class="rv xe35eb5">
+    <p class="kicker f-disp display up x37e245">The design</p>
+    <h2 class="f-disp display rvh xaa8a9e">How the pilgrimage works</h2>
+    <p class="narr f-prose x09afac">Three loops turn inside one another: the walk across a pilgrimage, the turn inside a fight, and the slow change of a deck and its flame. This is how each of them works.</p>
+  </div>
+
+    <div class="mech rv x022124">
+    <div class="two-col x823ede">
+      <div class="x89dbb6">
+        <p class="loopnum f-disp display up">Loop one · the pilgrimage</p>
+        <h3 class="sys-h f-disp display">Every step is a choice</h3>
+        <p class="sys-p f-body">A pilgrimage crosses three acts. Each act is a map of fifteen waystones woven from six paths, and you choose every step: which fights to take, which mysteries to risk, when to rest and when to press on.</p>
+        <ul class="bul f-body"><li><b>Paths split and rejoin.</b> A safer road now can mean a harder one later. Elites guard the best rewards.</li><li><b>Unlit waystones</b> hide what they hold, but pay a bounty to whoever lights them.</li><li><b>A fire before every boss.</b> The last waystone of each act is always a rest site: heal, or reforge one card.</li></ul>
+      </div>
+      <div class="road" role="img" aria-label="Diagram: an ember chooses one route across a branching map of waystones, past a fight, an unknown, an elite and a rest site, to the boss">
+        <svg viewBox="0 0 960 260" aria-hidden="true">
+        <line x1="80" y1="130" x2="240" y2="60" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <line x1="80" y1="130" x2="240" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="80" y1="130" x2="240" y2="200" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="240" y1="60" x2="400" y2="60" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="240" y1="60" x2="400" y2="130" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <line x1="240" y1="130" x2="400" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="240" y1="200" x2="400" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="240" y1="200" x2="400" y2="200" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="400" y1="60" x2="560" y2="60" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="400" y1="130" x2="560" y2="60" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <line x1="400" y1="130" x2="560" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="400" y1="200" x2="560" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="400" y1="200" x2="560" y2="200" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="560" y1="60" x2="720" y2="130" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <line x1="560" y1="130" x2="720" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="560" y1="200" x2="720" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="720" y1="130" x2="880" y2="130" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <image href="/assets/teaser/node-unlit-96.webp" x="58.0" y="108.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-monster-96.webp" x="218.0" y="38.0" width="44" height="44" opacity="1"/>
+        <circle cx="240" cy="60" r="28.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.17;0.23;0.28;.97;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="24.0;24.0;36.0;28.0;28.0" keyTimes="0;0.17;0.23;0.28;1" dur="12s" repeatCount="indefinite"/></circle>
+        <image href="/assets/teaser/node-event-96.webp" x="218.0" y="108.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-monster-96.webp" x="218.0" y="178.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-shop-96.webp" x="378.0" y="38.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-event-96.webp" x="378.0" y="108.0" width="44" height="44" opacity="1"/>
+        <circle cx="400" cy="130" r="28.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.34;0.4;0.45;.97;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="24.0;24.0;36.0;28.0;28.0" keyTimes="0;0.34;0.4;0.45;1" dur="12s" repeatCount="indefinite"/></circle>
+        <image href="/assets/teaser/node-elite-96.webp" x="378.0" y="178.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-elite-96.webp" x="538.0" y="38.0" width="44" height="44" opacity="1"/>
+        <circle cx="560" cy="60" r="28.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.51;0.5700000000000001;0.6200000000000001;.97;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="24.0;24.0;36.0;28.0;28.0" keyTimes="0;0.51;0.5700000000000001;0.6200000000000001;1" dur="12s" repeatCount="indefinite"/></circle>
+        <image href="/assets/teaser/node-treasure-96.webp" x="538.0" y="108.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-monster-96.webp" x="538.0" y="178.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-rest-96.webp" x="698.0" y="108.0" width="44" height="44" opacity="1"/>
+        <circle cx="720" cy="130" r="28.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.68;0.74;0.79;.97;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="24.0;24.0;36.0;28.0;28.0" keyTimes="0;0.68;0.74;0.79;1" dur="12s" repeatCount="indefinite"/></circle>
+        <image href="/assets/teaser/node-boss-96.webp" x="852.0" y="102.0" width="56" height="56" opacity="1"/>
+        <circle cx="880" cy="130" r="34.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.88;0.93;0.96;.98;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="30.0;30.0;42.0;34.0;34.0" keyTimes="0;0.88;0.94;0.99;1" dur="12s" repeatCount="indefinite"/></circle>
+        <circle r="16" fill="url(#emb)"><animateMotion dur="12s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;0.2034;0.2034;0.4068;0.4068;0.6102;0.6102;0.8136;0.8136;1.0;1.0" keyTimes="0;0.08;0.17;0.25;0.34;0.42;0.51;0.59;0.68;0.76;0.88;1" path="M80 130 L240 60 L400 130 L560 60 L720 130 L880 130"/></circle>
+        <defs><radialGradient id="emb"><stop offset="0" stop-color="#fff6dc"/><stop offset=".45" stop-color="#ffb45a"/><stop offset="1" stop-color="#ff7a2a" stop-opacity="0"/></radialGradient></defs>
+        <text x="80" y="252" text-anchor="middle" class="f-disp display">Start</text>
+        <text x="720" y="252" text-anchor="middle" class="f-disp display">Rest</text>
+        <text x="880" y="252" text-anchor="middle" class="f-disp display">Boss</text>
+        </svg>
+      </div>
+    </div>
+    <div class="two-col xb58597">
+      <figure><div class="shot"><picture><source type="image/avif" srcset="/assets/teaser/map-act1-720.avif 720w, /assets/teaser/map-act1-1440.avif 1440w" sizes="100vw"><img alt="The journey map of the Ashen Woods, with waystones along a river gorge" src="/assets/teaser/map-act1-720.webp" srcset="/assets/teaser/map-act1-720.webp 720w, /assets/teaser/map-act1-1440.webp 1440w" sizes="100vw" width="1440" height="831" loading="lazy" decoding="async"></picture></div><figcaption class="cap f-body up">Act I · the journey map · in game</figcaption></figure>
+      <div class="x64bd62">
+        <p class="lbl f-body up x6c2762">What a waystone can hold</p>
+        <ul class="x1e14ef"><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-monster-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-monster-96.webp" srcset="/assets/teaser/node-monster-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">Fight</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-event-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-event-96.webp" srcset="/assets/teaser/node-event-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">Unknown</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-elite-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-elite-96.webp" srcset="/assets/teaser/node-elite-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">Elite</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-rest-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-rest-96.webp" srcset="/assets/teaser/node-rest-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">Rest</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-shop-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-shop-96.webp" srcset="/assets/teaser/node-shop-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">Merchant</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-treasure-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-treasure-96.webp" srcset="/assets/teaser/node-treasure-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">Treasure</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-unlit-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-unlit-96.webp" srcset="/assets/teaser/node-unlit-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">Unlit waystone</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-boss-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-boss-96.webp" srcset="/assets/teaser/node-boss-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">Boss</span></li></ul>
+      </div>
+    </div>
+  </div>
+
+    <div class="mech rv xdb7ee3">
+    <picture><source type="image/avif" srcset="/assets/teaser/kindle-960.avif 960w" sizes="100vw"><img class="mech-art x7a63c0" alt="" aria-hidden="true" src="/assets/teaser/kindle-960.webp" srcset="/assets/teaser/kindle-960.webp 960w" sizes="100vw" width="960" height="640" loading="lazy" decoding="async"></picture>
+    <div class="two-col x9aa25f">
+      <div class="x89dbb6">
+        <p class="loopnum f-disp display up">Loop two · the turn</p>
+        <h3 class="sys-h f-disp display">Five cards, three candles, one lantern</h3>
+        <p class="sys-p f-body">Energy refills every turn. Embers stay. Each card you feed to the lantern is gone for the rest of the fight — so every turn asks what you can afford to burn.</p>
+        <ol class="t-steps"><li><b class="f-disp display up">Draw</b><span class="f-body">Five cards come to hand.</span></li><li><b class="f-disp display up">Light</b><span class="f-body">Three candles of Energy pay for what you play.</span></li><li><b class="f-disp display up">Strike</b><span class="f-body">Cards spend Energy to hit, guard and afflict.</span></li><li><b class="f-disp display up">Kindle</b><span class="f-body">Once a turn, feed any card to the lantern for one Ember.</span></li><li><b class="f-disp display up">Art</b><span class="f-body">Once a turn, spend Embers on a Lantern Art.</span></li><li><b class="f-disp display up">Read</b><span class="f-body">Every foe shows its intent before it acts.</span></li></ol>
+      </div>
+      <figure>
+        <div class="clip"><video src="/assets/teaser/turn.mp4" poster="/assets/teaser/turn-poster-944.webp" muted loop playsinline preload="none" aria-label="In-game footage of one turn against an Alpha Duskfang: a Strike chips a facet, a Defend is kindled into the lantern, the Lantern Art breaks the glass, and the foe acts on its shown intent"></video><span class="clip-tag f-body up">In-game footage</span></div>
+        <figcaption class="cap f-body up">One turn, recorded from the game · Act I, Alpha Duskfang</figcaption>
+      </figure>
+    </div>
+  </div>
+
+    <div class="mech rv xb93d59">
+    <picture><source type="image/avif" srcset="/assets/teaser/shatter-960.avif 960w" sizes="100vw"><img class="mech-art x06dfdb" alt="" aria-hidden="true" src="/assets/teaser/shatter-960.webp" srcset="/assets/teaser/shatter-960.webp 960w" sizes="100vw" width="960" height="640" loading="lazy" decoding="async"></picture>
+    <div class="two-col x65b6b5">
+      <figure>
+        <div class="clip x01997b"><video src="/assets/teaser/shatter.mp4" poster="/assets/teaser/shatter-poster-600.webp" muted loop playsinline preload="none" aria-label="In-game footage, slowed: the Lantern Art and a Strike break the Alpha Duskfang, which is Staggered and gains two Cracked"></video><span class="clip-tag f-body up">In-game footage</span></div>
+        <div class="s-tags2"><span class="f-body">Staggered · loses its next action</span><span class="f-body">+2 Cracked · takes 50% more</span><span class="f-body">+2 Embers · into the lantern</span></div>
+      </figure>
+      <div class="x89dbb6">
+        <p class="loopnum f-disp display up">Loop two · the glass</p>
+        <h3 class="sys-h f-disp display">Chip. Crack. Shatter.</h3>
+        <p class="sys-p f-body">Every creature is glass with a facet gauge: four facets for most foes, more for elites and bosses. An unblocked hit chips one facet. Fill the gauge and the glass shatters.</p>
+        <ul class="bul f-body"><li><b>Shatter is a turn won.</b> A shattered foe skips its next action, so timing the break against a big intent is the best defence there is.</li><li><b>Breaking feeds the fire.</b> Every shatter spills two Embers. Glass you break pays for the Art that breaks the next one.</li><li><b>The glass learns.</b> Each break makes the next one harder: the foe’s facet gauge grows by one.</li></ul>
+      </div>
+    </div>
+  </div>
+
+    <div class="mech rv xdb7ee3">
+    <div class="two-col x9aa25f">
+      <div class="x89dbb6">
+        <p class="loopnum f-disp display up">Loop three · the deck</p>
+        <h3 class="sys-h f-disp display">The flame reads your deck</h3>
+        <p class="sys-p f-body">Before each fight the lantern weighs the coloured glass in your deck and settles on a flame. It never watches how you play — only what you carry — and the fight keeps that flame to the end.</p>
+        <ul class="bul f-body"><li><b>Clear glass is fuel, not noise.</b> Cards with no colour never dim the flame. Cutting off-colour glass steadies it.</li><li><b>Lit glass.</b> Some cards carry a rider that resolves only while the lantern burns their colour, Steady or True.</li><li><b>Ways are found, not chosen.</b> The Duskblade’s glass leans three ways. Draft into one and the flame turns its colour.</li></ul>
+        <div class="xd46a25"><div class="way way-frost"><picture><source type="image/avif" srcset="/assets/teaser/way-frost-160.avif 160w" sizes="4rem"><img alt="" aria-hidden="true" src="/assets/teaser/way-frost-160.webp" srcset="/assets/teaser/way-frost-160.webp 160w" sizes="4rem" width="160" height="349" loading="lazy" decoding="async"></picture><div><b class="f-disp display">Shatter</b><span class="f-body up">Frostlight flame</span></div></div><div class="way way-hearth"><picture><source type="image/avif" srcset="/assets/teaser/way-hearth-160.avif 160w" sizes="4rem"><img alt="" aria-hidden="true" src="/assets/teaser/way-hearth-160.webp" srcset="/assets/teaser/way-hearth-160.webp 160w" sizes="4rem" width="160" height="304" loading="lazy" decoding="async"></picture><div><b class="f-disp display">Lantern</b><span class="f-body up">Hearthfire flame</span></div></div><div class="way way-eclipse"><picture><source type="image/avif" srcset="/assets/teaser/way-eclipse-160.avif 160w" sizes="4rem"><img alt="" aria-hidden="true" src="/assets/teaser/way-eclipse-160.webp" srcset="/assets/teaser/way-eclipse-160.webp 160w" sizes="4rem" width="160" height="162" loading="lazy" decoding="async"></picture><div><b class="f-disp display">Edge</b><span class="f-body up">Eclipse flame</span></div></div></div>
+      </div>
+      <div class="fl" role="img" aria-label="Diagram on the game’s own numbers: as one colour comes to lead the deck’s coloured glass, the lantern goes from Kindling and Soot to Steady and True, holding more Embers and paying less for its Art">
+        <div class="fl-stage" aria-hidden="true">
+          <div class="fl-left">
+            <p class="lbl f-body up">Your deck · twelve cards</p>
+            <div class="fl-cards"><i class="dk dk_HHHH"></i><i class="dk dk_CHHH"></i><i class="dk dk_FHHH"></i><i class="dk dk_CFHH"></i><i class="dk dk_EFHH"></i><i class="dk dk_CFHH"></i><i class="dk dk_CEFH"></i><i class="dk dk_CEFH"></i><i class="dk dk_CEEF"></i><i class="dk dk_CCEE"></i><i class="dk dk_CCCC"></i><i class="dk dk_CCCC"></i></div>
+            <p class="lbl f-body up xffc6f7">The leading way’s share of coloured glass</p>
+            <div class="fl-bar"><i class="fb-lead"></i><i class="fb-b"></i><i class="fb-c"></i><span class="fl-mark at-45"><em class="f-body">Soot ≤45%</em></span><span class="fl-mark at-60"><em class="f-body">Steady 60%</em></span><span class="fl-mark at-75"><em class="f-body">True 75%</em></span></div>
+            <div class="fl-read"><span class="f-body w0">Three coloured cards · too few to read</span><span class="f-body w1">Leading way 33%</span><span class="f-body w2">Leading way 60%</span><span class="f-body w3">Leading way 80%</span></div>
+          </div>
+          <div class="fl-right">
+            <div class="fl-name"><b class="f-disp display w0">Kindling</b><b class="f-disp display w1">Soot</b><b class="f-disp display w2">Steady</b><b class="f-disp display w3">True</b></div>
+            <div class="lan"><span class="lan-fire"></span><span class="spark"></span><span class="spark x445723"></span><span class="spark x31f858"></span><span class="drip"></span><picture><source type="image/avif" srcset="/assets/teaser/ui-lantern-200.avif 200w" sizes="100vw"><img alt="" aria-hidden="true" src="/assets/teaser/ui-lantern-200.webp" srcset="/assets/teaser/ui-lantern-200.webp 200w" sizes="100vw" width="200" height="200" loading="lazy" decoding="async"></picture></div>
+            <div class="rack"><i class="b"></i><i class="b"></i><i class="b"></i><i class="b"></i><i class="b"></i><i class="b"></i><i class="b"></i><i class="b"></i><i class="b"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i></div>
+            <p class="lbl f-body up x65f9d5">Ember capacity</p>
+            <div class="artcost"><span class="lbl f-body up">Flare costs</span><span class="gem"><b class="f-disp display w0">3</b><b class="f-disp display w1">4</b><b class="f-disp display w2">3</b><b class="f-disp display w3">1</b></span></div>
+          </div>
+        </div>
+        <ol class="tiers"><li class="w0"><b class="f-disp display">Kindling</b><span class="f-body">Fewer than five coloured cards. The plain lantern: 9 Embers, Arts at full price.</span></li><li class="w1"><b class="f-disp display">Soot</b><span class="f-body">No way leads (45% or less). Leaks 1 Ember a turn; Arts cost 1 more.</span></li><li class="w2"><b class="f-disp display">Steady</b><span class="f-body">One way holds 60%. Holds 4 more Embers; the first Ember each turn burns 2 brighter.</span></li><li class="w3"><b class="f-disp display">True</b><span class="f-body">One way holds 75%. Everything Steady gives, and Arts cost 2 less.</span></li></ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="rv xf253e7">
+    <div class="stat"><b class="f-disp display">3</b><span class="f-body up">Acts</span></div><div class="stat"><b class="f-disp display">27</b><span class="f-body up">Foes</span></div><div class="stat"><b class="f-disp display">66</b><span class="f-body up">Cards</span></div><div class="stat"><b class="f-disp display">32</b><span class="f-body up">Relics</span></div><div class="stat"><b class="f-disp display">17</b><span class="f-body up">Statuses</span></div><div class="stat"><b class="f-disp display">5</b><span class="f-body up">Vows</span></div>
+  </div>
+</section>
+
+<section id="glass" class="xdec0fd">
+  <div class="rv xf2dd4f">
+    <p class="kicker f-disp display up x6c2762">Real glass, real light</p>
+    <h2 class="f-disp display rvh xaa8a9e">Build a deck of glass</h2>
+    <p class="narr f-prose x97d381">Every card is a slab of glass, and every rarity has its own finish. Move your pointer across a card — or tilt your phone — and the light moves with you.</p>
+  </div>
+  <ul class="x4e36b1">
+    
+      <li class="rv xba4187">
+        <canvas class="card-cv xf22370" role="img" aria-label="Fan of Glass — Deal 6 damage to ALL enemies." data-card="cleave" data-face="{&quot;name&quot;: &quot;Fan of Glass&quot;, &quot;text&quot;: &quot;Deal @6@ damage to ALL enemies.&quot;, &quot;type&quot;: &quot;attack&quot;, &quot;cost&quot;: 1, &quot;tier&quot;: 1, &quot;warm&quot;: 0, &quot;typeLabel&quot;: &quot;ATTACK&quot;, &quot;lang&quot;: &quot;en&quot;, &quot;knobs&quot;: null}" data-src="/assets/teaser/art-cleave-640.webp"></canvas>
+        <span class="finish f-disp display up">Common</span>
+        <span class="finish-sub f-body up">Silver rim</span>
+      </li>
+    
+      <li class="rv xba4187">
+        <canvas class="card-cv xf22370" role="img" aria-label="Emberdance — Spill your lantern: gain 3 Ward for each Ember spent. Kindle." data-card="emberdance" data-face="{&quot;name&quot;: &quot;Emberdance&quot;, &quot;text&quot;: &quot;Spill your lantern: gain 3 Ward for each Ember spent. Kindle.&quot;, &quot;type&quot;: &quot;skill&quot;, &quot;cost&quot;: 0, &quot;tier&quot;: 2, &quot;warm&quot;: 0, &quot;typeLabel&quot;: &quot;SKILL&quot;, &quot;lang&quot;: &quot;en&quot;, &quot;knobs&quot;: null}" data-src="/assets/teaser/art-emberdance-640.webp"></canvas>
+        <span class="finish f-disp display up">Uncommon</span>
+        <span class="finish-sub f-body up">Spectral frame</span>
+      </li>
+    
+      <li class="rv xba4187">
+        <canvas class="card-cv xf22370" role="img" aria-label="Totality — Deal 14 damage, then double the enemy&#x27;s Cracked." data-card="totality" data-face="{&quot;name&quot;: &quot;Totality&quot;, &quot;text&quot;: &quot;Deal @14@ damage, then double the enemy&#x27;s Cracked.&quot;, &quot;type&quot;: &quot;attack&quot;, &quot;cost&quot;: 2, &quot;tier&quot;: 3, &quot;warm&quot;: 0, &quot;typeLabel&quot;: &quot;ATTACK&quot;, &quot;lang&quot;: &quot;en&quot;, &quot;knobs&quot;: null}" data-src="/assets/teaser/art-totality-640.webp"></canvas>
+        <span class="finish f-disp display up">Rare</span>
+        <span class="finish-sub f-body up">Cut glass</span>
+      </li>
+    
+      <li class="rv xba4187">
+        <canvas class="card-cv xf22370" role="img" aria-label="Hex — Unplayable. At the end of your turn, lose 1 HP if this is in your hand. Refuses the fire." data-card="hex" data-face="{&quot;name&quot;: &quot;Hex&quot;, &quot;text&quot;: &quot;Unplayable. At the end of your turn, lose 1 HP if this is in your hand. Refuses the fire.&quot;, &quot;type&quot;: &quot;curse&quot;, &quot;cost&quot;: null, &quot;tier&quot;: 4, &quot;warm&quot;: 0, &quot;typeLabel&quot;: &quot;CURSE&quot;, &quot;lang&quot;: &quot;en&quot;, &quot;knobs&quot;: null}" data-src="/assets/teaser/art-hex-640.webp"></canvas>
+        <span class="finish f-disp display up">Curse</span>
+        <span class="finish-sub f-body up">Oil</span>
+      </li>
+    
+      <li class="rv xba4187">
+        <canvas class="card-cv xf22370" role="img" aria-label="The Lancet" data-card="back-vault" data-face="{&quot;name&quot;: &quot;The Lancet&quot;, &quot;text&quot;: &quot;&quot;, &quot;type&quot;: &quot;&quot;, &quot;cost&quot;: null, &quot;tier&quot;: 5, &quot;warm&quot;: 0, &quot;typeLabel&quot;: &quot;&quot;, &quot;lang&quot;: &quot;en&quot;, &quot;knobs&quot;: {&quot;mode&quot;: 0, &quot;angle&quot;: 8, &quot;centre&quot;: [76, 108], &quot;palette&quot;: [0.55, 0.85, 1], &quot;mix&quot;: 0.35, &quot;strength&quot;: 1.35, &quot;scale&quot;: 1.5}}" data-src="/assets/teaser/back-vault-304.webp"></canvas>
+        <span class="finish f-disp display up">Card back</span>
+        <span class="finish-sub f-body up">Lit panes</span>
+      </li>
+    
+  </ul>
+  <div class="veil rv x2a6752">
+    
+      <canvas class="card-cv big xf7c99f" role="img" aria-label="Banked Fire — Gain 1 Ember. If you win this fight, carry your lantern&#x27;s Embers into the next fight." data-card="bankedFire" data-face="{&quot;name&quot;: &quot;Banked Fire&quot;, &quot;text&quot;: &quot;Gain 1 Ember. If you win this fight, carry your lantern&#x27;s Embers into the next fight.&quot;, &quot;type&quot;: &quot;skill&quot;, &quot;cost&quot;: 0, &quot;tier&quot;: 6, &quot;warm&quot;: 0.3, &quot;typeLabel&quot;: &quot;SKILL&quot;, &quot;lang&quot;: &quot;en&quot;, &quot;knobs&quot;: null, &quot;layers&quot;: [[&quot;back&quot;, -6], [&quot;ground&quot;, 22], [&quot;subject&quot;, 22], [&quot;hot-core&quot;, 22], [&quot;front&quot;, 106], [&quot;particles&quot;, 55]]}" data-src="/assets/teaser/myth-0-1152.webp /assets/teaser/myth-1-1152.webp /assets/teaser/myth-2-1152.webp /assets/teaser/myth-3-1152.webp /assets/teaser/myth-4-1152.webp /assets/teaser/myth-5-1152.webp"></canvas>
+    
+    <span class="finish f-disp display up x55a3ba">Rarer still</span>
+    <span class="f-quote x0d06a4">Some glass is not written here.</span>
+  </div>
+</section>
+
+<section id="soon" class="x967cb0">
+  <div class="rv x7a7e53">
+    <picture><source type="image/avif" srcset="/assets/teaser/lantern-240.avif 240w, /assets/teaser/lantern-480.avif 480w" sizes="100vw"><img alt="" aria-hidden="true" class="swing x1116ab" src="/assets/teaser/lantern-240.webp" srcset="/assets/teaser/lantern-240.webp 240w, /assets/teaser/lantern-480.webp 480w" sizes="100vw" width="480" height="776" loading="lazy" decoding="async"></picture>
+    <p class="kicker f-disp display up x6c2762">Take up the lantern</p>
+    <h2 class="f-disp display rvh xd16844">Available soon</h2>
+    <ul class="x3059f5">
+      <li class="tile"><svg viewBox="0 0 24 24" aria-hidden="true" class="tile-logo"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span class="xbc0172"><span class="f-disp display xb79d25">App Store</span><span class="f-body up x828d1c">Coming soon</span></span></li><li class="tile"><svg viewBox="0 0 24 24" aria-hidden="true" class="tile-logo"><path d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/></svg><span class="xbc0172"><span class="f-disp display xb79d25">Google Play</span><span class="f-body up x828d1c">Coming soon</span></span></li><li class="tile"><svg viewBox="0 0 24 24" aria-hidden="true" class="tile-logo"><path d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.174.09.336-.12.48-.256.19-.6.41-1.006.654-1.244.743-2.64 1.316-4.185 1.726a17.617 17.617 0 01-10.951-.577 17.88 17.88 0 01-5.43-3.35c-.1-.074-.151-.15-.151-.22 0-.047.021-.09.051-.13zm6.565-6.218c0-1.005.247-1.863.743-2.577.495-.71 1.17-1.25 2.04-1.615.796-.335 1.756-.575 2.912-.72.39-.046 1.033-.103 1.92-.174v-.37c0-.93-.105-1.558-.3-1.875-.302-.43-.78-.65-1.44-.65h-.182c-.48.046-.896.196-1.246.46-.35.27-.575.63-.675 1.096-.06.3-.206.465-.435.51l-2.52-.315c-.248-.06-.372-.18-.372-.39 0-.046.007-.09.022-.15.247-1.29.855-2.25 1.82-2.88.976-.616 2.1-.975 3.39-1.05h.54c1.65 0 2.957.434 3.888 1.29.135.15.27.3.405.48.12.165.224.314.283.45.075.134.15.33.195.57.06.254.105.42.135.51.03.104.062.3.076.615.01.313.02.493.02.553v5.28c0 .376.06.72.165 1.036.105.313.21.54.315.674l.51.674c.09.136.136.256.136.36 0 .12-.06.226-.18.314-1.2 1.05-1.86 1.62-1.963 1.71-.165.135-.375.15-.63.045a6.062 6.062 0 01-.526-.496l-.31-.347a9.391 9.391 0 01-.317-.42l-.3-.435c-.81.886-1.603 1.44-2.4 1.665-.494.15-1.093.227-1.83.227-1.11 0-2.04-.343-2.76-1.034-.72-.69-1.08-1.665-1.08-2.94l-.05-.076zm3.753-.438c0 .566.14 1.02.425 1.364.285.34.675.512 1.155.512.045 0 .106-.007.195-.02.09-.016.134-.023.166-.023.614-.16 1.08-.553 1.424-1.178.165-.28.285-.58.36-.91.09-.32.12-.59.135-.8.015-.195.015-.54.015-1.005v-.54c-.84 0-1.484.06-1.92.18-1.275.36-1.92 1.17-1.92 2.43l-.035-.02zm9.162 7.027c.03-.06.075-.11.132-.17.362-.243.714-.41 1.05-.5a8.094 8.094 0 011.612-.24c.14-.012.28 0 .41.03.65.06 1.05.168 1.172.33.063.09.099.228.099.39v.15c0 .51-.149 1.11-.424 1.8-.278.69-.664 1.248-1.156 1.68-.073.06-.14.09-.197.09-.03 0-.06 0-.09-.012-.09-.044-.107-.12-.064-.24.54-1.26.806-2.143.806-2.64 0-.15-.03-.27-.087-.344-.145-.166-.55-.257-1.224-.257-.243 0-.533.016-.87.046-.363.045-.7.09-1 .135-.09 0-.148-.014-.18-.044-.03-.03-.036-.047-.02-.077 0-.017.006-.03.02-.063v-.06z"/></svg><span class="xbc0172"><span class="f-disp display xb79d25">Amazon Appstore</span><span class="f-body up x828d1c">Coming soon</span></span></li><li class="tile"><svg viewBox="0 0 24 24" aria-hidden="true" class="tile-logo"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z"/></svg><span class="xbc0172"><span class="f-disp display xb79d25">Steam</span><span class="f-body up x828d1c">Coming soon</span></span></li>
+    </ul>
+    <p class="f-body up xc6bfbd">Single-player · No accounts · No ads · No in-app purchases</p>
+  </div>
+</section>
+
+<nav class="more" aria-label="About Glassvow"><a href="/play/">How to play</a><a href="/faq/">FAQ</a><a href="/genre/">A roguelite deckbuilder</a></nav>
+<p class="support">Support · <span class="address">glassvow@eugnel.com</span></p>
 </main>
+</div>
 <footer class="legal">
   <p><a href="/company/">© EUGNEL LTD</a> · <a href="/privacy/">Privacy</a></p>
 </footer>

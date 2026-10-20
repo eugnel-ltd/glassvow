@@ -34,131 +34,493 @@
 <link rel="preload" href="/assets/fonts/NotoSerifTC-SemiBold-display.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="/assets/icon.png" type="image/png">
 <link rel="stylesheet" href="/assets/site.css">
-<link rel="stylesheet" href="/assets/teaser.css">
-<script type="module" src="/assets/teaser.js"></script>
+<link rel="stylesheet" href="/assets/story.css">
+<link rel="stylesheet" href="/assets/story-systems.css">
+<script type="module" src="/assets/story.js"></script>
 </head>
 <body class="teaser">
-<header class="bar">
-  <a class="bar-mark display" href="/zh-hant/"><img src="/assets/icon.png" alt="" aria-hidden="true" width="64" height="64"><span>琉璃誓言</span></a>
-  <button class="sound" type="button" aria-pressed="false" hidden data-theme="/assets/teaser/theme.ogg /assets/teaser/theme.mp3" data-flip="/assets/teaser/flip.ogg /assets/teaser/flip.mp3" data-rise="/assets/teaser/rise.ogg /assets/teaser/rise.mp3" data-crack="/assets/teaser/crack.ogg /assets/teaser/crack.mp3" data-shatter="/assets/teaser/shatter.ogg /assets/teaser/shatter.mp3" data-off="聲音：關" data-on="聲音：開"><span class="sound-wave" aria-hidden="true"><i></i><i></i><i></i></span><span class="sound-label">聲音：關</span></button>
-  <a class="switch" href="/" hreflang="en" lang="en">English</a>
+<div class="gv lang-zh-Hant">
+<header class="f-body xb85bcc">
+  <a href="/zh-hant/" class="bar-mark xfdab73">
+    <img src="/assets/icon.png" alt="" aria-hidden="true" width="64" height="64" class="x2a8a22">
+    <span class="f-disp display xb8457e">琉璃誓言</span>
+  </a>
+  <nav aria-label="章節" class="x8b58cf">
+    <a class="nav-link f-disp display up" href="/zh-hant/#prologue">故事</a>
+    <a class="nav-link f-disp display up" href="/zh-hant/#act1">三幕</a>
+    <a class="nav-link f-disp display up" href="/zh-hant/#play">玩法</a>
+    <a class="nav-link f-disp display up" href="/zh-hant/#glass">琉璃</a>
+  </nav>
+  <div class="x292995">
+    <button class="sound" type="button" aria-pressed="false" hidden data-theme="/assets/teaser/theme.ogg /assets/teaser/theme.mp3" data-shatter="/assets/teaser/shatter.ogg /assets/teaser/shatter.mp3" data-off="聲音：關" data-on="聲音：開"><span class="sound-wave" aria-hidden="true"><i></i><i></i><i></i></span><span class="sound-label">聲音：關</span></button>
+    <a class="switch" href="/" hreflang="en" lang="en">English</a>
+    <a class="btn btn-primary f-disp display up x2efb68" href="/zh-hant/#soon">即將推出</a>
+  </div>
+  <span class="thread" aria-hidden="true"></span>
 </header>
-<main class="teaser-main">
-<section class="hero" data-scene="hero">
-  <div class="hero-sky" aria-hidden="true">
-    <picture class="hero-road"><source media="(max-aspect-ratio: 4/5)" type="image/avif" srcset="/assets/teaser/vigil-road-tall-432.avif 432w, /assets/teaser/vigil-road-tall-576.avif 576w" sizes="100vw"><source media="(max-aspect-ratio: 4/5)" type="image/webp" srcset="/assets/teaser/vigil-road-tall-432.webp 432w, /assets/teaser/vigil-road-tall-576.webp 576w" sizes="100vw"><source type="image/avif" srcset="/assets/teaser/vigil-road-960.avif 960w, /assets/teaser/vigil-road-1536.avif 1536w" sizes="100vw"><img src="/assets/teaser/vigil-road-960.webp" srcset="/assets/teaser/vigil-road-960.webp 960w, /assets/teaser/vigil-road-1536.webp 1536w" sizes="100vw" alt="" aria-hidden="true" width="1536" height="1024" fetchpriority="high" decoding="async"></picture>
-    <canvas class="hero-light"></canvas>
-    <div class="shafts"><i></i><i></i><i></i></div>
+<main class="story-main">
+
+<section id="top" class="xe148c4">
+  <div class="stage" aria-hidden="true">
+    <picture><source type="image/avif" srcset="/assets/teaser/hearth-960.avif 960w, /assets/teaser/hearth-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg" alt="" fetchpriority="high" aria-hidden="true" src="/assets/teaser/hearth-960.webp" srcset="/assets/teaser/hearth-960.webp 960w, /assets/teaser/hearth-1536.webp 1536w" sizes="100vw" width="1536" height="1024" decoding="async"></picture>
+    <span class="lay flicker x67c757"></span>
   </div>
-  <picture class="lantern"><source type="image/avif" srcset="/assets/teaser/lantern-240.avif 240w, /assets/teaser/lantern-480.avif 480w" sizes="(min-width: 48rem) 13rem, 7.5rem"><img src="/assets/teaser/lantern-240.webp" srcset="/assets/teaser/lantern-240.webp 240w, /assets/teaser/lantern-480.webp 480w" sizes="(min-width: 48rem) 13rem, 7.5rem" alt="" aria-hidden="true" width="480" height="815" fetchpriority="high" decoding="async"></picture>
-  <div class="hero-copy">
-    <h1 class="wordmark"><picture class="wordmark-art"><source type="image/avif" srcset="/assets/teaser/wordmark-zh-Hant-640.avif 640w, /assets/teaser/wordmark-zh-Hant-1280.avif 1280w" sizes="(min-width: 48rem) 40rem, 88vw"><img src="/assets/teaser/wordmark-zh-Hant-640.webp" srcset="/assets/teaser/wordmark-zh-Hant-640.webp 640w, /assets/teaser/wordmark-zh-Hant-1280.webp 1280w" sizes="(min-width: 48rem) 40rem, 88vw" alt="琉璃誓言" width="1280" height="315" fetchpriority="high" decoding="async"></picture></h1>
-    <p class="kicker display">彩窗上的朝聖之路</p>
-    <p class="lede">單人 Roguelike 牌組構築遊戲。組一副琉璃牌，點燃提燈，打碎擋路之物。</p>
-    <p class="soon-on">即將登陸</p>
-    <ul class="platforms">
-      <li class="platform"><span class="platform-name display">App Store</span><span class="platform-soon">即將推出</span></li>
-      <li class="platform"><span class="platform-name display">Google Play</span><span class="platform-soon">即將推出</span></li>
-      <li class="platform"><span class="platform-name display">Amazon Appstore</span><span class="platform-soon">即將推出</span></li>
-      <li class="platform"><span class="platform-name display">Steam</span><span class="platform-soon">即將推出</span></li>
-    </ul>
+  <picture><source type="image/avif" srcset="/assets/teaser/hero-fg-960.avif 960w, /assets/teaser/hero-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg x3a4807" alt="" aria-hidden="true" src="/assets/teaser/hero-fg-960.webp" srcset="/assets/teaser/hero-fg-960.webp 960w, /assets/teaser/hero-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <span class="hglow xf3685a" aria-hidden="true"></span>
+  <div aria-hidden="true" class="xfb2789"></div>
+  <div aria-hidden="true" class="x0380d6">
+    <span class="mote xc1b3b5"></span><span class="mote x9a6959"></span><span class="mote xf13e66"></span>
+    <span class="mote xd7544c"></span><span class="mote x2b7c8a"></span><span class="mote x4de014"></span>
   </div>
-  <a class="cue" href="/zh-hant/#fire"><span>朝聖啟程</span></a>
-</section>
-<section class="fire" id="fire" data-scene="fire">
-  <div class="fire-stage">
-    <div class="fire-glow" aria-hidden="true"></div>
-    <svg class="rose" viewBox="-100 -100 200 200" aria-hidden="true" focusable="false">
-      <defs><radialGradient id="rose-0" cx="50%" cy="70%" r="75%"><stop offset="0" stop-color="#ff8a8a"/><stop offset="1" stop-color="#7a1530"/></radialGradient><radialGradient id="rose-1" cx="50%" cy="70%" r="75%"><stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#b8641a"/></radialGradient><radialGradient id="rose-2" cx="50%" cy="70%" r="75%"><stop offset="0" stop-color="#8fc1ff"/><stop offset="1" stop-color="#1d3a8f"/></radialGradient><radialGradient id="rose-3" cx="50%" cy="70%" r="75%"><stop offset="0" stop-color="#c9a6ff"/><stop offset="1" stop-color="#4b2a8a"/></radialGradient><radialGradient id="rose-4" cx="50%" cy="70%" r="75%"><stop offset="0" stop-color="#ffb36b"/><stop offset="1" stop-color="#9a3412"/></radialGradient><radialGradient id="rose-5" cx="50%" cy="70%" r="75%"><stop offset="0" stop-color="#8ff0e2"/><stop offset="1" stop-color="#0f5f66"/></radialGradient></defs>
-      <circle class="rose-ground" r="96"/>
-      <g class="rose-dark"><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" transform="rotate(0)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" transform="rotate(60)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" transform="rotate(120)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" transform="rotate(180)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" transform="rotate(240)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" transform="rotate(300)"/></g>
-      <g class="rose-lit"><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" fill="url(#rose-0)" transform="rotate(0)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" fill="url(#rose-1)" transform="rotate(60)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" fill="url(#rose-2)" transform="rotate(120)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" fill="url(#rose-3)" transform="rotate(180)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" fill="url(#rose-4)" transform="rotate(240)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20Z" fill="url(#rose-5)" transform="rotate(300)"/></g>
-      <g class="rose-gems"><circle cx="37.00" cy="-64.09" r="9"/><circle cx="74.00" cy="-0.00" r="9"/><circle cx="37.00" cy="64.09" r="9"/><circle cx="-37.00" cy="64.09" r="9"/><circle cx="-74.00" cy="0.00" r="9"/><circle cx="-37.00" cy="-64.09" r="9"/></g>
-      <g class="rose-lead"><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20ZM0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70" transform="rotate(0)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20ZM0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70" transform="rotate(60)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20ZM0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70" transform="rotate(120)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20ZM0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70" transform="rotate(180)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20ZM0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70" transform="rotate(240)"/><path d="M0-20C24-30 34-62 0-88C-34-62-24-30 0-20ZM0-21Q-12-52 0-87M0-21Q12-52 0-87M-21-46Q0-40 21-46M-17-70Q0-64 17-70" transform="rotate(300)"/><circle cx="37.00" cy="-64.09" r="9"/><circle cx="74.00" cy="-0.00" r="9"/><circle cx="37.00" cy="64.09" r="9"/><circle cx="-37.00" cy="64.09" r="9"/><circle cx="-74.00" cy="0.00" r="9"/><circle cx="-37.00" cy="-64.09" r="9"/><circle r="20"/><circle r="92"/><circle r="97"/></g>
-      <circle class="rose-heart" r="15"/>
-    </svg>
-    <h2 class="fire-line">一團火被裁成六片，散落於路。</h2>
-    <p class="fire-after">尋回碎去的東西。點亮彩窗。</p>
+  <div class="swing xfb09a6" aria-hidden="true">
+    <span class="xa0cf25"></span>
+    <div class="xa8a903"><span class="flicker xa97477"></span><picture><source type="image/avif" srcset="/assets/teaser/lantern-240.avif 240w, /assets/teaser/lantern-480.avif 480w" sizes="100vw"><img alt="" class="x664360" aria-hidden="true" src="/assets/teaser/lantern-240.webp" srcset="/assets/teaser/lantern-240.webp 240w, /assets/teaser/lantern-480.webp 480w" sizes="100vw" width="480" height="776" loading="lazy" decoding="async"></picture></div>
   </div>
-</section>
-<section class="road" data-scene="road" aria-labelledby="road-title">
-  <div class="road-stage">
-    <h2 class="road-title" id="road-title">長路</h2>
-    <ol class="road-track">
-    <li class="road-pane"><figure>
-      <picture class="road-art"><source type="image/avif" srcset="/assets/teaser/scene-opening-hearth-640.avif 640w, /assets/teaser/scene-opening-hearth-1280.avif 1280w" sizes="(min-width: 64rem) 46vw, 82vw"><img src="/assets/teaser/scene-opening-hearth-640.webp" srcset="/assets/teaser/scene-opening-hearth-640.webp 640w, /assets/teaser/scene-opening-hearth-1280.webp 1280w" sizes="(min-width: 64rem) 46vw, 82vw" alt="" aria-hidden="true" width="1280" height="853" loading="lazy" decoding="async"></picture>
-      <figcaption><span class="road-kicker display">守夜</span>提燈離開守夜之爐向東走。</figcaption>
-    </figure></li>
-    <li class="road-pane"><figure>
-      <picture class="road-art"><source type="image/avif" srcset="/assets/teaser/scene-night-stall-640.avif 640w, /assets/teaser/scene-night-stall-1280.avif 1280w" sizes="(min-width: 64rem) 46vw, 82vw"><img src="/assets/teaser/scene-night-stall-640.webp" srcset="/assets/teaser/scene-night-stall-640.webp 640w, /assets/teaser/scene-night-stall-1280.webp 1280w" sizes="(min-width: 64rem) 46vw, 82vw" alt="" aria-hidden="true" width="1280" height="880" loading="lazy" decoding="async"></picture>
-      <figcaption><span class="road-kicker display">商人</span>商人收下破碎的璃片。</figcaption>
-    </figure></li>
-    </ol>
-  </div>
-</section>
-<section class="deck" data-scene="deck" aria-labelledby="deck-title">
-  <div class="deck-stage">
-    <p class="kicker display">Roguelike 牌組構築</p>
-    <h2 id="deck-title">組一副琉璃牌，點燃提燈。</h2>
-    <ul class="fan">
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-vault-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-vault-304.webp" srcset="/assets/teaser/back-vault-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-cleave-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-cleave-480.webp" srcset="/assets/teaser/card-cleave-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">琉璃扇</span></div></div></li>
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-rose-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-rose-304.webp" srcset="/assets/teaser/back-rose-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-eclipseSlash-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-eclipseSlash-480.webp" srcset="/assets/teaser/card-eclipseSlash-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">蝕月斬</span></div></div></li>
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-eclipse-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-eclipse-304.webp" srcset="/assets/teaser/back-eclipse-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-aegis-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-aegis-480.webp" srcset="/assets/teaser/card-aegis-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">聖堂琉璃</span></div></div></li>
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-vault-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-vault-304.webp" srcset="/assets/teaser/back-vault-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-emberdance-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-emberdance-480.webp" srcset="/assets/teaser/card-emberdance-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">餘燼舞</span></div></div></li>
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-rose-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-rose-304.webp" srcset="/assets/teaser/back-rose-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-totality-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-totality-480.webp" srcset="/assets/teaser/card-totality-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">全蝕</span></div></div></li>
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-eclipse-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-eclipse-304.webp" srcset="/assets/teaser/back-eclipse-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-dimTheGlass-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-dimTheGlass-480.webp" srcset="/assets/teaser/card-dimTheGlass-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">暗琉</span></div></div></li>
-    <li class="card"><div class="card-turn"><div class="card-back"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/back-vault-304.avif 304w" sizes="12rem"><img src="/assets/teaser/back-vault-304.webp" srcset="/assets/teaser/back-vault-304.webp 304w" sizes="12rem" alt="" aria-hidden="true" width="304" height="432" loading="lazy" decoding="async"></picture></div><div class="card-face"><picture class="card-pic"><source type="image/avif" srcset="/assets/teaser/card-annihilate-480.avif 480w" sizes="12rem"><img src="/assets/teaser/card-annihilate-480.webp" srcset="/assets/teaser/card-annihilate-480.webp 480w" sizes="12rem" alt="" aria-hidden="true" width="480" height="400" loading="lazy" decoding="async"></picture><span class="card-name display">安魂曲</span></div></div></li>
-    </ul>
-  </div>
-</section>
-<section class="aspects" aria-labelledby="aspects-title">
-  <h2 id="aspects-title">誰執提燈</h2>
-  <div class="aspect-row">
-    <article class="aspect aspect-ashwarden">
-      <picture class="aspect-art"><source type="image/avif" srcset="/assets/teaser/aspect-ashwarden-300.avif 300w, /assets/teaser/aspect-ashwarden-600.avif 600w" sizes="(min-width: 48rem) 22rem, 70vw"><img src="/assets/teaser/aspect-ashwarden-300.webp" srcset="/assets/teaser/aspect-ashwarden-300.webp 300w, /assets/teaser/aspect-ashwarden-600.webp 600w" sizes="(min-width: 48rem) 22rem, 70vw" alt="灰衛" width="600" height="951" loading="lazy" decoding="async"></picture>
-      <h3 class="aspect-name display">灰衛</h3>
-      <p>煙灰凝成形體。讓陰燃奪命，亦燃燼手牌以餵養提燈。步伐較慢，卻能久持——所觸一切，終將燃燒。</p>
-    </article>
-    <article class="aspect aspect-duskblade">
-      <picture class="aspect-art"><source type="image/avif" srcset="/assets/teaser/aspect-duskblade-300.avif 300w, /assets/teaser/aspect-duskblade-600.avif 600w" sizes="(min-width: 48rem) 22rem, 70vw"><img src="/assets/teaser/aspect-duskblade-300.webp" srcset="/assets/teaser/aspect-duskblade-300.webp 300w, /assets/teaser/aspect-duskblade-600.webp 600w" sizes="(min-width: 48rem) 22rem, 70vw" alt="暮刃" width="600" height="824" loading="lazy" decoding="async"></picture>
-      <h3 class="aspect-name display">暮刃</h3>
-      <p>琉璃磨成殺伐之鋒。揮斬、碎裂，再以破碎璃面化作薪火——任何長夜皆可劈開前路。</p>
-    </article>
-  </div>
-</section>
-<section class="foes" data-scene="foes" aria-labelledby="foes-title">
-  <ul class="foe-row">
-    <li><picture class="foe"><source type="image/avif" srcset="/assets/teaser/foe-duskfang-200.avif 200w, /assets/teaser/foe-duskfang-400.avif 400w" sizes="(min-width: 48rem) 12rem, 30vw"><img src="/assets/teaser/foe-duskfang-200.webp" srcset="/assets/teaser/foe-duskfang-200.webp 200w, /assets/teaser/foe-duskfang-400.webp 400w" sizes="(min-width: 48rem) 12rem, 30vw" alt="暮牙" width="400" height="383" loading="lazy" decoding="async"></picture></li>
-    <li><picture class="foe"><source type="image/avif" srcset="/assets/teaser/foe-chaosHound-200.avif 200w, /assets/teaser/foe-chaosHound-400.avif 400w" sizes="(min-width: 48rem) 12rem, 30vw"><img src="/assets/teaser/foe-chaosHound-200.webp" srcset="/assets/teaser/foe-chaosHound-200.webp 200w, /assets/teaser/foe-chaosHound-400.webp 400w" sizes="(min-width: 48rem) 12rem, 30vw" alt="混沌獵犬" width="400" height="384" loading="lazy" decoding="async"></picture></li>
-    <li><picture class="foe"><source type="image/avif" srcset="/assets/teaser/foe-deepmaw-200.avif 200w, /assets/teaser/foe-deepmaw-400.avif 400w" sizes="(min-width: 48rem) 12rem, 30vw"><img src="/assets/teaser/foe-deepmaw-200.webp" srcset="/assets/teaser/foe-deepmaw-200.webp 200w, /assets/teaser/foe-deepmaw-400.webp 400w" sizes="(min-width: 48rem) 12rem, 30vw" alt="深淵巨口" width="400" height="496" loading="lazy" decoding="async"></picture></li>
-    <li><picture class="foe"><source type="image/avif" srcset="/assets/teaser/foe-shade-200.avif 200w, /assets/teaser/foe-shade-400.avif 400w" sizes="(min-width: 48rem) 12rem, 30vw"><img src="/assets/teaser/foe-shade-200.webp" srcset="/assets/teaser/foe-shade-200.webp 200w, /assets/teaser/foe-shade-400.webp 400w" sizes="(min-width: 48rem) 12rem, 30vw" alt="影" width="400" height="737" loading="lazy" decoding="async"></picture></li>
-    <li><picture class="foe"><source type="image/avif" srcset="/assets/teaser/foe-gravewarden-200.avif 200w, /assets/teaser/foe-gravewarden-400.avif 400w" sizes="(min-width: 48rem) 12rem, 30vw"><img src="/assets/teaser/foe-gravewarden-200.webp" srcset="/assets/teaser/foe-gravewarden-200.webp 200w, /assets/teaser/foe-gravewarden-400.webp 400w" sizes="(min-width: 48rem) 12rem, 30vw" alt="墓園守衛" width="400" height="423" loading="lazy" decoding="async"></picture></li>
-    <li><picture class="foe"><source type="image/avif" srcset="/assets/teaser/foe-starCultist-200.avif 200w, /assets/teaser/foe-starCultist-400.avif 400w" sizes="(min-width: 48rem) 12rem, 30vw"><img src="/assets/teaser/foe-starCultist-200.webp" srcset="/assets/teaser/foe-starCultist-200.webp 200w, /assets/teaser/foe-starCultist-400.webp 400w" sizes="(min-width: 48rem) 12rem, 30vw" alt="星辰教徒" width="400" height="502" loading="lazy" decoding="async"></picture></li>
-  </ul>
-  <h2 id="foes-title">打碎擋路之物。</h2>
-</section>
-<section class="vow" id="soon" data-scene="vow" aria-labelledby="vow-title">
-  <div class="vow-stage">
-    <div class="vow-copy">
-      <h2 id="vow-title">即將推出</h2>
-      <ul class="platforms platforms-large">
-        <li class="platform"><span class="platform-name display">App Store</span><span class="platform-soon">即將推出</span></li>
-        <li class="platform"><span class="platform-name display">Google Play</span><span class="platform-soon">即將推出</span></li>
-        <li class="platform"><span class="platform-name display">Amazon Appstore</span><span class="platform-soon">即將推出</span></li>
-        <li class="platform"><span class="platform-name display">Steam</span><span class="platform-soon">即將推出</span></li>
-      </ul>
-      <p class="facts">單人遊戲 · 沒有帳戶 · 沒有廣告</p>
+  <div class="xb4a998">
+    <div class="xf9e17a">
+      <p class="kicker f-disp display up x6c2762">彩窗上的朝聖之路</p>
+      <h1 class="wm wm-zh-Hant"><picture><source type="image/avif" srcset="/assets/teaser/wordmark-zh-Hant-640.avif 640w, /assets/teaser/wordmark-zh-Hant-1280.avif 1280w" sizes="(min-width: 48rem) 36rem, 88vw"><img alt="琉璃誓言" class="xb2d912" fetchpriority="high" src="/assets/teaser/wordmark-zh-Hant-640.webp" srcset="/assets/teaser/wordmark-zh-Hant-640.webp 640w, /assets/teaser/wordmark-zh-Hant-1280.webp 1280w" sizes="(min-width: 48rem) 36rem, 88vw" width="1280" height="315" decoding="async"></picture></h1>
+      <blockquote class="say"><p class="q f-quote xf064f5">「你醒了。」</p><span class="who f-body up">守夜爐火旁</span></blockquote>
+      <p class="narr f-prose xa93273">一款單人牌組構築冒險。提起燈，組一副琉璃牌，向東走向一扇從未打開的門。每一次啟程，路都不一樣。</p>
+      <div class="x350bba">
+        <a class="btn btn-primary f-disp display up" href="/zh-hant/#prologue">展開故事</a>
+        <a class="btn btn-ghost f-disp display up" href="/zh-hant/#play">玩法</a>
+      </div>
+      <div class="plat-row"><span class="f-body up">即將登陸</span><ul class="platforms plat-list"><li class="platform"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span class="platform-name display">App Store</span><span class="platform-soon">即將推出</span></li><li class="platform"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/></svg><span class="platform-name display">Google Play</span><span class="platform-soon">即將推出</span></li><li class="platform"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.174.09.336-.12.48-.256.19-.6.41-1.006.654-1.244.743-2.64 1.316-4.185 1.726a17.617 17.617 0 01-10.951-.577 17.88 17.88 0 01-5.43-3.35c-.1-.074-.151-.15-.151-.22 0-.047.021-.09.051-.13zm6.565-6.218c0-1.005.247-1.863.743-2.577.495-.71 1.17-1.25 2.04-1.615.796-.335 1.756-.575 2.912-.72.39-.046 1.033-.103 1.92-.174v-.37c0-.93-.105-1.558-.3-1.875-.302-.43-.78-.65-1.44-.65h-.182c-.48.046-.896.196-1.246.46-.35.27-.575.63-.675 1.096-.06.3-.206.465-.435.51l-2.52-.315c-.248-.06-.372-.18-.372-.39 0-.046.007-.09.022-.15.247-1.29.855-2.25 1.82-2.88.976-.616 2.1-.975 3.39-1.05h.54c1.65 0 2.957.434 3.888 1.29.135.15.27.3.405.48.12.165.224.314.283.45.075.134.15.33.195.57.06.254.105.42.135.51.03.104.062.3.076.615.01.313.02.493.02.553v5.28c0 .376.06.72.165 1.036.105.313.21.54.315.674l.51.674c.09.136.136.256.136.36 0 .12-.06.226-.18.314-1.2 1.05-1.86 1.62-1.963 1.71-.165.135-.375.15-.63.045a6.062 6.062 0 01-.526-.496l-.31-.347a9.391 9.391 0 01-.317-.42l-.3-.435c-.81.886-1.603 1.44-2.4 1.665-.494.15-1.093.227-1.83.227-1.11 0-2.04-.343-2.76-1.034-.72-.69-1.08-1.665-1.08-2.94l-.05-.076zm3.753-.438c0 .566.14 1.02.425 1.364.285.34.675.512 1.155.512.045 0 .106-.007.195-.02.09-.016.134-.023.166-.023.614-.16 1.08-.553 1.424-1.178.165-.28.285-.58.36-.91.09-.32.12-.59.135-.8.015-.195.015-.54.015-1.005v-.54c-.84 0-1.484.06-1.92.18-1.275.36-1.92 1.17-1.92 2.43l-.035-.02zm9.162 7.027c.03-.06.075-.11.132-.17.362-.243.714-.41 1.05-.5a8.094 8.094 0 011.612-.24c.14-.012.28 0 .41.03.65.06 1.05.168 1.172.33.063.09.099.228.099.39v.15c0 .51-.149 1.11-.424 1.8-.278.69-.664 1.248-1.156 1.68-.073.06-.14.09-.197.09-.03 0-.06 0-.09-.012-.09-.044-.107-.12-.064-.24.54-1.26.806-2.143.806-2.64 0-.15-.03-.27-.087-.344-.145-.166-.55-.257-1.224-.257-.243 0-.533.016-.87.046-.363.045-.7.09-1 .135-.09 0-.148-.014-.18-.044-.03-.03-.036-.047-.02-.077 0-.017.006-.03.02-.063v-.06z"/></svg><span class="platform-name display">Amazon Appstore</span><span class="platform-soon">即將推出</span></li><li class="platform"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z"/></svg><span class="platform-name display">Steam</span><span class="platform-soon">即將推出</span></li></ul></div>
     </div>
-    <canvas class="vow-glass" aria-hidden="true"></canvas>
+  </div>
+  <a href="/zh-hant/#prologue" class="f-disp display up x91a094"><span>向下而行</span><span class="cue-line" aria-hidden="true"></span></a>
+</section>
+
+<section id="prologue" class="xd3a0e6">
+  <picture><source type="image/avif" srcset="/assets/teaser/prologue-bg-960.avif 960w, /assets/teaser/prologue-bg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg xa9d36f" alt="" aria-hidden="true" src="/assets/teaser/prologue-bg-960.webp" srcset="/assets/teaser/prologue-bg-960.webp 960w, /assets/teaser/prologue-bg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x577fac"></div>
+  <div class="two-col x93c1d2">
+    <div class="x1f7af8">
+      <div class="shardbox" role="img" aria-label="六片燼璃由一團火中迸散">
+        <canvas aria-hidden="true"></canvas>
+        <span class="core" aria-hidden="true"></span>
+        <span class="ring" aria-hidden="true"></span>
+        <picture><source type="image/avif" srcset="/assets/teaser/shard-0-240.avif 240w" sizes="8rem"><img class="shard" alt="" data-c="#6ebeff" data-a="180" data-r="0.4" data-t="-14" aria-hidden="true" src="/assets/teaser/shard-0-240.webp" srcset="/assets/teaser/shard-0-240.webp 240w" sizes="8rem" width="240" height="453" loading="lazy" decoding="async"></picture><picture><source type="image/avif" srcset="/assets/teaser/shard-1-240.avif 240w" sizes="8rem"><img class="shard" alt="" data-c="#ff5a5a" data-a="242" data-r="0.38" data-t="-8" aria-hidden="true" src="/assets/teaser/shard-1-240.webp" srcset="/assets/teaser/shard-1-240.webp 240w" sizes="8rem" width="240" height="418" loading="lazy" decoding="async"></picture><picture><source type="image/avif" srcset="/assets/teaser/shard-2-240.avif 240w" sizes="8rem"><img class="shard" alt="" data-c="#ffc850" data-a="307" data-r="0.41" data-t="9" aria-hidden="true" src="/assets/teaser/shard-2-240.webp" srcset="/assets/teaser/shard-2-240.webp 240w" sizes="8rem" width="240" height="355" loading="lazy" decoding="async"></picture><picture><source type="image/avif" srcset="/assets/teaser/shard-3-240.avif 240w" sizes="8rem"><img class="shard" alt="" data-c="#5078ff" data-a="7" data-r="0.42" data-t="16" aria-hidden="true" src="/assets/teaser/shard-3-240.webp" srcset="/assets/teaser/shard-3-240.webp 240w" sizes="8rem" width="240" height="515" loading="lazy" decoding="async"></picture><picture><source type="image/avif" srcset="/assets/teaser/shard-4-240.avif 240w" sizes="8rem"><img class="shard" alt="" data-c="#aa6eff" data-a="63" data-r="0.39" data-t="6" aria-hidden="true" src="/assets/teaser/shard-4-240.webp" srcset="/assets/teaser/shard-4-240.webp 240w" sizes="8rem" width="240" height="393" loading="lazy" decoding="async"></picture><picture><source type="image/avif" srcset="/assets/teaser/shard-5-240.avif 240w" sizes="8rem"><img class="shard" alt="" data-c="#ff8c3c" data-a="115" data-r="0.38" data-t="-10" aria-hidden="true" src="/assets/teaser/shard-5-240.webp" srcset="/assets/teaser/shard-5-240.webp 240w" sizes="8rem" width="240" height="360" loading="lazy" decoding="async"></picture>
+        <span class="flash" aria-hidden="true"></span>
+        <span class="tap f-quote" aria-hidden="true">輕觸火焰</span>
+      </div>
+    </div>
+    <div class="panel x7356d2">
+      <p class="chap f-disp display">壹 · 序章</p>
+      <h2 class="h-chap f-disp display rvh">一團火，六片碎璃。</h2>
+      <p class="narr f-prose">在第一夜之前，世上只有一團火。後來它被裁成六片，散落在一條長路上——那條路由世界的西端，一直通往一扇從未有人打開的門。</p>
+      <p class="narr f-prose">那些碎璃仍在黑暗中燃燒：在長於灰燼上的樹林裏，在一座留下來等待、終被水淹沒的城底下，在一座無火燃燒的黑曜王庭之中。長路的西端，有一爐火由第一夜燒到現在。</p>
+      <p class="f-prose xc4f5e8">帶着它向東走。打碎擋路之物。把火帶回家。</p>
+      <blockquote class="say"><p class="q f-quote">「一團火被裁成六片，散落於路。」</p></blockquote>
+    </div>
   </div>
 </section>
-<nav class="more" aria-label="關於琉璃誓言">
-  <a href="/play/zh-hant/">玩法</a>
-  <a href="/faq/zh-hant/">常見問題</a>
-  <a href="/genre/zh-hant/">Roguelike 牌組構築</a>
-</nav>
-<p class="support">支援 · <span class="address"><!--email_off-->glassvow@eugnel.com<!--/email_off--></span></p>
+
+<section class="x7c60ed">
+  <div class="stage x101596" aria-hidden="true">
+    <picture><source type="image/avif" srcset="/assets/teaser/vigil-bg-960.avif 960w, /assets/teaser/vigil-bg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg" alt="" aria-hidden="true" src="/assets/teaser/vigil-bg-960.webp" srcset="/assets/teaser/vigil-bg-960.webp 960w, /assets/teaser/vigil-bg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+    <span class="mist xec496f"></span>
+    <picture><source type="image/avif" srcset="/assets/teaser/vigil-hall-960.avif 960w, /assets/teaser/vigil-hall-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-mid" alt="" aria-hidden="true" src="/assets/teaser/vigil-hall-960.webp" srcset="/assets/teaser/vigil-hall-960.webp 960w, /assets/teaser/vigil-hall-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+    <span class="smoke xd48b00"></span><span class="smoke xc14cb6"></span>
+    <span class="lay flicker x820318"></span>
+    <div class="lay walker"><picture><source type="image/avif" srcset="/assets/teaser/vigil-walker-220.avif 220w, /assets/teaser/vigil-walker-440.avif 440w" sizes="100vw"><img alt="" aria-hidden="true" src="/assets/teaser/vigil-walker-220.webp" srcset="/assets/teaser/vigil-walker-220.webp 220w, /assets/teaser/vigil-walker-440.webp 440w" sizes="100vw" width="440" height="727" loading="lazy" decoding="async"></picture><span class="walker-glow flicker"></span></div>
+  </div>
+  <picture><source type="image/avif" srcset="/assets/teaser/vigil-fg-960.avif 960w, /assets/teaser/vigil-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg xab9b65" alt="" aria-hidden="true" src="/assets/teaser/vigil-fg-960.webp" srcset="/assets/teaser/vigil-fg-960.webp 960w, /assets/teaser/vigil-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="xa4e885"></div>
+  <span class="ghost f-disp display xe57fbd" aria-hidden="true">貳</span>
+  <div class="x8356ff">
+    <div class="panel x945d63">
+      <p class="chap f-disp display">貳 · 守夜</p>
+      <h2 class="h-chap f-disp display rvh">極西之火</h2>
+      <p class="narr f-prose">你在世界西端的一爐火旁醒來。大廳古老，石頭溫暖。有人由第一夜起一直守着這爐火——也在火旁替你留了一個位置。</p>
+      <blockquote class="say"><p class="q f-quote">「慢慢來。路不會走掉。」</p><span class="who f-body up">爐火旁</span></blockquote>
+    </div>
+  </div>
+  <p class="lbl f-body up x18b779">守夜 · 概念美術</p>
+</section>
+
+<section class="x7c60ed">
+  <div class="stage x101596" aria-hidden="true">
+    <picture><source type="image/avif" srcset="/assets/teaser/lantern-bg-960.avif 960w, /assets/teaser/lantern-bg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg" alt="" aria-hidden="true" src="/assets/teaser/lantern-bg-960.webp" srcset="/assets/teaser/lantern-bg-960.webp 960w, /assets/teaser/lantern-bg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+    <span class="lay flicker x84fdce"></span>
+    <div class="lay keeper lay-mid"><picture><source type="image/avif" srcset="/assets/teaser/lantern-keeper-480.avif 480w, /assets/teaser/lantern-keeper-960.avif 960w" sizes="100vw"><img class="breathe" alt="" aria-hidden="true" src="/assets/teaser/lantern-keeper-480.webp" srcset="/assets/teaser/lantern-keeper-480.webp 480w, /assets/teaser/lantern-keeper-960.webp 960w" sizes="100vw" width="960" height="1209" loading="lazy" decoding="async"></picture><span class="keeper-glow flicker"></span></div>
+    <span class="mote xd00d41"></span><span class="mote x6cc105"></span><span class="mote x7dad28"></span>
+  </div>
+  <picture><source type="image/avif" srcset="/assets/teaser/lantern-fg-960.avif 960w, /assets/teaser/lantern-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg xab9b65" alt="" aria-hidden="true" src="/assets/teaser/lantern-fg-960.webp" srcset="/assets/teaser/lantern-fg-960.webp 960w, /assets/teaser/lantern-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="xb8af75"></div>
+  <span class="ghost f-disp display x75ff9b" aria-hidden="true">參</span>
+  <div class="x8356ff">
+    <div class="panel xf85935">
+      <p class="chap f-disp display">參 · 提燈</p>
+      <h2 class="h-chap f-disp display rvh">它燒的是你帶着的東西</h2>
+      <p class="narr f-prose">臨行前，有人遞給你一盞前人提過的燈。前面的路上，只有這點光是屬於你的——而它永遠都餓。</p>
+      <blockquote class="say"><p class="q f-quote">「它燒的是你帶着的東西。」</p><span class="who f-body up">爐火旁</span></blockquote><blockquote class="say"><p class="q f-quote">「路向東，盡頭有一道封門。尋回六片燼璃，門便會開。」</p><span class="who f-body up">爐火旁</span></blockquote>
+    </div>
+  </div>
+</section>
+
+<section class="xc46d7a">
+  <picture><source type="image/avif" srcset="/assets/teaser/duskblade-scene-960.avif 960w, /assets/teaser/duskblade-scene-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg xa9d36f" alt="" aria-hidden="true" src="/assets/teaser/duskblade-scene-960.webp" srcset="/assets/teaser/duskblade-scene-960.webp 960w, /assets/teaser/duskblade-scene-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x6bae99"></div>
+  <div aria-hidden="true" class="x924164"><span class="mote x8e0d77"></span><span class="mote xc535c6"></span><span class="mote x80f64a"></span></div>
+  <span class="ghost f-disp display xa11523" aria-hidden="true">肆</span>
+  <div class="x8356ff">
+    <div class="panel x85dfa5">
+      <p class="chap f-disp display">肆 · 向東</p>
+      <h2 class="h-chap f-disp display rvh">守夜開始了</h2>
+      <p class="narr f-prose">大廳的門向着黎明前的黑暗打開。長路平直向東，越過最後一盞燈，通往一片琉璃都活着、而且不願被打碎的土地。</p>
+      <blockquote class="say"><p class="q f-quote">「你提起燈，推門而出。長路向東，天未亮。」</p></blockquote><blockquote class="say"><p class="q f-quote">「身後，爐火仍亮着。」</p></blockquote><blockquote class="say"><p class="q f-quote">「守夜開始了。」</p></blockquote>
+      <div class="x164929">
+        <p class="lbl f-body up">誰提着燈</p>
+        <p class="f-disp display x5e4978">暮刃</p>
+        <p class="f-prose x3db748">琉璃磨成殺伐之鋒。揮斬、碎裂，再以破碎璃面化作薪火——任何長夜皆可劈開前路。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="act1" class="x1fea43">
+  <picture><source type="image/avif" srcset="/assets/teaser/act1-960.avif 960w, /assets/teaser/act1-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg x101596" alt="" aria-hidden="true" src="/assets/teaser/act1-960.webp" srcset="/assets/teaser/act1-960.webp 960w, /assets/teaser/act1-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="xade031"></div>
+  <canvas class="mob-cv xaf33c5" data-mob="act1" data-src="/assets/teaser/gravewarden.glb" aria-hidden="true"></canvas>
+  <picture><source type="image/avif" srcset="/assets/teaser/act1-fg-960.avif 960w, /assets/teaser/act1-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg x3a4807" alt="" aria-hidden="true" src="/assets/teaser/act1-fg-960.webp" srcset="/assets/teaser/act1-fg-960.webp 960w, /assets/teaser/act1-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x774072"><span class="mote xbe3369"></span><span class="mote x050d83"></span><span class="mote xbf677e"></span><span class="mote x3001f4"></span><span class="mist xe1b77a"></span></div>
+  <div class="xa545b2">
+    <div class="panel x85dfa5">
+      <p class="chap f-disp display">伍 · 第一幕</p>
+      <h2 class="h-act f-disp display rvh">灰燼樹林</h2>
+      <p class="narr f-prose">一片長在灰燼上的樹林。孢子在燈光中緩緩飄落，像遲來的雪；蒼白的面具半埋在樹下；長路起點的紀念碑立得密密麻麻。這裏有人祈禱了很久很久，從來沒有回應。</p>
+      <blockquote class="say"><p class="q f-quote">「兩盞燈並亮。火是新的。誰點的？」</p></blockquote><blockquote class="say"><p class="q f-quote">「他們向灰祈禱。灰不應人。」</p></blockquote>
+      <p class="boss-line"><span class="lbl f-body up">樹林深處</span><b class="f-disp display">根脈之心</b></p>
+    </div>
+  </div>
+  <p class="lbl f-body up xcf84f7">本幕代表 · 墓園守衛</p>
+</section>
+
+<section class="x11ec04">
+  <div class="stage x101596" aria-hidden="true">
+    <picture><source type="image/avif" srcset="/assets/teaser/lamp-bg-960.avif 960w, /assets/teaser/lamp-bg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg" alt="" aria-hidden="true" src="/assets/teaser/lamp-bg-960.webp" srcset="/assets/teaser/lamp-bg-960.webp 960w, /assets/teaser/lamp-bg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+    <span class="lay storm"></span>
+    <span class="mist x840e23"></span><span class="mist x6eae58"></span>
+    <div class="lay lamplighter lay-mid"><picture><source type="image/avif" srcset="/assets/teaser/lamp-figure-460.avif 460w, /assets/teaser/lamp-figure-920.avif 920w" sizes="100vw"><img alt="" aria-hidden="true" src="/assets/teaser/lamp-figure-460.webp" srcset="/assets/teaser/lamp-figure-460.webp 460w, /assets/teaser/lamp-figure-920.webp 920w" sizes="100vw" width="920" height="1485" loading="lazy" decoding="async"></picture></div>
+  </div>
+  <picture><source type="image/avif" srcset="/assets/teaser/lamp-fg-960.avif 960w, /assets/teaser/lamp-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg xab9b65" alt="" aria-hidden="true" src="/assets/teaser/lamp-fg-960.webp" srcset="/assets/teaser/lamp-fg-960.webp 960w, /assets/teaser/lamp-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x39b7c4"><span class="ash x337797"></span><span class="ash x6df6e8"></span><span class="ash x31be98"></span><span class="ash x947496"></span><span class="ash x135136"></span><span class="ash xa0e3f5"></span></div>
+  <div aria-hidden="true" class="xa99cbf"></div>
+  <span class="ghost f-disp display x941572" aria-hidden="true">陸</span>
+  <div class="xc2d031">
+    <div class="panel xf85935">
+      <p class="chap f-disp display">陸 · 未燃之路</p>
+      <h2 class="h-chap f-disp display rvh">空燈掌燈人</h2>
+      <p class="narr f-prose">未燃之路上，一個老人坐在路旁，手裏的燈沒有火。他細看每一張經過的臉。他會攔下你五次，每一次都開出一個價錢。</p>
+      <blockquote class="say"><p class="q f-quote">「路上坐着一個提燈的老人。燈是空的，沒有火。」</p><span class="who f-body up"></span></blockquote><blockquote class="say"><p class="q f-quote">「油可以分，火不能分。火要自己帶到最後。」</p><span class="who f-body up">掌燈人</span></blockquote><blockquote class="say"><p class="q f-quote">「他讓開路，提起空燈，向東照了照——燈中沒有光；他仍是照了。」</p><span class="who f-body up"></span></blockquote>
+    </div>
+  </div>
+</section>
+
+<section class="xb760c5">
+  <div class="xc1c7bc">
+    <picture><source type="image/avif" srcset="/assets/teaser/merchant-960.avif 960w, /assets/teaser/merchant-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg x87f0e1" alt="" aria-hidden="true" src="/assets/teaser/merchant-960.webp" srcset="/assets/teaser/merchant-960.webp 960w, /assets/teaser/merchant-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+    <div aria-hidden="true" class="x0e3424"></div>
+    <span class="ghost f-disp display x75ff9b" aria-hidden="true">柒</span>
+    <div class="x532c90">
+      <div class="panel x85dfa5">
+        <p class="chap f-disp display">柒 · 夜市</p>
+        <h2 class="h-chap f-disp display rvh">路上的陌生人</h2>
+        <p class="narr f-prose">路上並非每樣東西都是等着被打碎的琉璃。戴無眼面具的商人在燈下買賣；骷髏向每個肯坐下的人發牌；騎士靠着燒焦的樹，手裏有東西要給你；含笑的商販用秤去量心與黃金。他們各有所求，很少人說出口。</p>
+        <blockquote class="say"><p class="q f-quote">「黃金換榮耀，異鄉人。就算你命定殞落——價錢仍然公道。」</p><span class="who f-body up">商人</span></blockquote>
+      </div>
+    </div>
+    <p class="lbl f-body up xb4dbac">商人 · 概念美術</p>
+  </div>
+  <ul class="x39d672">
+    
+      <li class="stranger stranger-1 par-a">
+        <figure class="rv">
+          <div class="concept"><picture><source type="image/avif" srcset="/assets/teaser/gambler-640.avif 640w, /assets/teaser/gambler-1280.avif 1280w" sizes="(min-width: 64rem) 30vw, 90vw"><img alt="戴寬邊帽的骷髏在路邊火旁發牌，對面放着一張空椅" src="/assets/teaser/gambler-640.webp" srcset="/assets/teaser/gambler-640.webp 640w, /assets/teaser/gambler-1280.webp 1280w" sizes="(min-width: 64rem) 30vw, 90vw" width="1280" height="853" loading="lazy" decoding="async"></picture><span class="concept-tag f-body up">概念美術</span></div>
+          <figcaption class="concept-cap"><b class="f-disp display">賭徒</b><span class="f-quote">「只擲一次，陌生人。命運偏愛不顧一切的人。」</span></figcaption>
+        </figure>
+      </li>
+    
+      <li class="stranger stranger-2 par-b">
+        <figure class="rv">
+          <div class="concept"><picture><source type="image/avif" srcset="/assets/teaser/wounded-knight-640.avif 640w, /assets/teaser/wounded-knight-1280.avif 1280w" sizes="(min-width: 64rem) 30vw, 90vw"><img alt="裂紋琉璃騎士靠在燒焦的樹下，遞出一塊發光的琥珀晶體" src="/assets/teaser/wounded-knight-640.webp" srcset="/assets/teaser/wounded-knight-640.webp 640w, /assets/teaser/wounded-knight-1280.webp 1280w" sizes="(min-width: 64rem) 30vw, 90vw" width="1280" height="853" loading="lazy" decoding="async"></picture><span class="concept-tag f-body up">概念美術</span></div>
+          <figcaption class="concept-cap"><b class="f-disp display">負傷騎士</b><span class="f-quote">他遞出一片琥珀。他已經用不着了。</span></figcaption>
+        </figure>
+      </li>
+    
+      <li class="stranger stranger-3 par-a">
+        <figure class="rv">
+          <div class="concept"><picture><source type="image/avif" srcset="/assets/teaser/flesh-trader-640.avif 640w, /assets/teaser/flesh-trader-1016.avif 1016w" sizes="(min-width: 64rem) 30vw, 90vw"><img alt="戴白面具的瘦削商人提着銅秤，一邊秤盤上是紅色琉璃心" src="/assets/teaser/flesh-trader-640.webp" srcset="/assets/teaser/flesh-trader-640.webp 640w, /assets/teaser/flesh-trader-1016.webp 1016w" sizes="(min-width: 64rem) 30vw, 90vw" width="1016" height="1024" loading="lazy" decoding="async"></picture><span class="concept-tag f-body up">概念美術</span></div>
+          <figcaption class="concept-cap"><b class="f-disp display">血肉商人</b><span class="f-quote">你用不着的東西，他出價很高。</span></figcaption>
+        </figure>
+      </li>
+    
+  </ul>
+</section>
+
+<section id="act2" class="x1fea43">
+  <picture><source type="image/avif" srcset="/assets/teaser/act2-960.avif 960w, /assets/teaser/act2-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg x101596" alt="" aria-hidden="true" src="/assets/teaser/act2-960.webp" srcset="/assets/teaser/act2-960.webp 960w, /assets/teaser/act2-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="xade031"></div>
+  <canvas class="mob-cv x800aae" data-mob="act2" data-src="/assets/teaser/siren.glb" aria-hidden="true"></canvas>
+  <picture><source type="image/avif" srcset="/assets/teaser/act2-fg-960.avif 960w, /assets/teaser/act2-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg x3a4807" alt="" aria-hidden="true" src="/assets/teaser/act2-fg-960.webp" srcset="/assets/teaser/act2-fg-960.webp 960w, /assets/teaser/act2-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x774072"><span class="mote cold x16078c"></span><span class="mote cold xadd3ab"></span><span class="mote cold xe07386"></span></div>
+  <div class="xa545b2">
+    <div class="panel x85dfa5">
+      <p class="chap f-disp display">捌 · 第二幕</p>
+      <h2 class="h-act f-disp display rvh">沉沒之城</h2>
+      <p class="narr f-prose">在長路中段，整座城停下來等那扇門。水在它的等待中漲起，再沒有退去。城中的人仍站在潮水下的窗前，一點光在被淹沒的街道間游走——那點光不引任何人到任何地方。</p>
+      <blockquote class="say"><p class="q f-quote">「這座城留下來等。水，也留下來。」</p></blockquote><blockquote class="say"><p class="q f-quote">「水下有光。那光不引路，只引人。」</p></blockquote>
+      <p class="boss-line"><span class="lbl f-body up">潮水之下</span><b class="f-disp display">利維坦之喉</b></p>
+    </div>
+  </div>
+  <p class="lbl f-body up xcf84f7">本幕代表 · 海妖</p>
+</section>
+
+<section id="act3" class="x1fea43">
+  <picture><source type="image/avif" srcset="/assets/teaser/act3-960.avif 960w, /assets/teaser/act3-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg x101596" alt="" aria-hidden="true" src="/assets/teaser/act3-960.webp" srcset="/assets/teaser/act3-960.webp 960w, /assets/teaser/act3-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x8f5de0"></div>
+  <canvas class="mob-cv xc908e7" data-mob="act3" data-src="/assets/teaser/watcherEye.glb" aria-hidden="true"></canvas>
+  <picture><source type="image/avif" srcset="/assets/teaser/act3-fg-960.avif 960w, /assets/teaser/act3-fg-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-fg x3a4807" alt="" aria-hidden="true" src="/assets/teaser/act3-fg-960.webp" srcset="/assets/teaser/act3-fg-960.webp 960w, /assets/teaser/act3-fg-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x774072"><span class="mote violet x313941"></span><span class="mote violet x9397e3"></span><span class="mote violet x562002"></span><span class="shaft x883b2c"></span></div>
+  <div class="xadadf1">
+    <div class="panel x85dfa5">
+      <p class="chap f-disp display">玖 · 第三幕</p>
+      <h2 class="h-act f-disp display rvh">黑曜王庭</h2>
+      <p class="narr f-prose">門前是一座黑色琉璃的王庭。那裏不點火。朝臣坐在星光裏，坐了太久；斷了的光環落在原地。你向王座走的每一步，都有東西在看。</p>
+      <blockquote class="say"><p class="q f-quote">「庭中無火。他們坐在星光裏，坐了太久。」</p></blockquote><blockquote class="say"><p class="q f-quote">「斷了的光環落在地上，無人拾起。」</p></blockquote><blockquote class="say"><p class="q f-quote">「越近門，人越多。全部坐着。」</p></blockquote>
+    </div>
+  </div>
+  <p class="lbl f-body up x18b779">本幕代表 · 守望之眼</p>
+</section>
+
+<section class="xc46d7a">
+  <picture><source type="image/avif" srcset="/assets/teaser/sovereign-scene-960.avif 960w, /assets/teaser/sovereign-scene-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg xa9d36f" alt="" aria-hidden="true" src="/assets/teaser/sovereign-scene-960.webp" srcset="/assets/teaser/sovereign-scene-960.webp 960w, /assets/teaser/sovereign-scene-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x8fb0a8"></div>
+  <span class="ghost f-disp display xa2c029" aria-hidden="true">拾</span>
+  <div class="x5b59c4">
+    <div class="panel xa34c31">
+      <p class="chap f-disp display">拾 · 第三幕首領</p>
+      <h2 class="h-chap f-disp display rvh">永恆君王</h2>
+      <p class="narr f-prose">一位戴面具的君王佔據最後那扇門前的王座，頭戴紫色琉璃王冠，身後是一圈破碎的光環。在你身後的路上，某個商人正在出售一盞沒有火焰的燈。</p>
+      <blockquote class="say"><p class="q f-quote">「永恆君王，只是門前披上的一副面具。」</p><span class="who f-body up">路上的低語</span></blockquote><blockquote class="say"><p class="q f-quote">「冰冷琉璃。沒有燈芯。商人不肯說是誰留下它。」</p><span class="who f-body up">無焰提燈</span></blockquote>
+    </div>
+  </div>
+</section>
+
+<section class="x2cf522">
+  <picture><source type="image/avif" srcset="/assets/teaser/door-960.avif 960w, /assets/teaser/door-1536.avif 1536w" sizes="100vw"><img class="lay fill lay-bg xa9d36f" alt="" aria-hidden="true" src="/assets/teaser/door-960.webp" srcset="/assets/teaser/door-960.webp 960w, /assets/teaser/door-1536.webp 1536w" sizes="100vw" width="1536" height="1024" loading="lazy" decoding="async"></picture>
+  <div aria-hidden="true" class="x1434f0"></div>
+  <div aria-hidden="true" class="x924164"><span class="shaft xe6dcae"></span><span class="shaft xb6ef02"></span></div>
+  <div class="xedb5dc">
+    <p class="chap f-disp display rv">拾壹 · 門</p>
+    <h2 class="f-disp display rvh xc8e59e">王冠之後，有一扇封印之門。</h2>
+    <p class="narr f-prose rv x4559ae">六片燼璃，一盞燈，一條路。門的另一邊是甚麼，這裏沒有寫。它寫在路上。</p>
+    <a class="btn btn-primary f-disp display up rv" href="/zh-hant/#play">看看怎樣玩</a>
+  </div>
+</section>
+
+<section id="play" class="x86a388">
+  <div class="rv xe35eb5">
+    <p class="kicker f-disp display up x37e245">設計</p>
+    <h2 class="f-disp display rvh xaa8a9e">朝聖之路如何運轉</h2>
+    <p class="narr f-prose x09afac">三個循環一層套一層：一次朝聖的長行、一場戰鬥裏的每個回合，以及牌組與火焰慢慢的變化。以下逐一說明。</p>
+  </div>
+
+    <div class="mech rv x022124">
+    <div class="two-col x823ede">
+      <div class="x89dbb6">
+        <p class="loopnum f-disp display up">循環一 · 朝聖</p>
+        <h3 class="sys-h f-disp display">每一步都是選擇</h3>
+        <p class="sys-p f-body">一次朝聖橫越三幕。每一幕都是一張由十五座路碑、六條路線交織而成的地圖，每一步都由你決定：迎哪一場戰鬥，冒哪一次險，何時休息，何時前進。</p>
+        <ul class="bul f-body"><li><b>路線分岔又匯合。</b> 此刻走得安穩，之後可能更難。菁英守着最好的獎賞。</li><li><b>未燃的路碑</b> 隱藏所藏之物，但點亮它的人可得賞金。</li><li><b>每個首領之前都有一爐火。</b> 每一幕最後一座路碑必是休息處：回復生命，或重鑄一張牌。</li></ul>
+      </div>
+      <div class="road" role="img" aria-label="示意圖：一點餘燼在分岔的路碑地圖上選定一條路，經過戰鬥、未知事件、菁英與休息處，直抵首領">
+        <svg viewBox="0 0 960 260" aria-hidden="true">
+        <line x1="80" y1="130" x2="240" y2="60" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <line x1="80" y1="130" x2="240" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="80" y1="130" x2="240" y2="200" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="240" y1="60" x2="400" y2="60" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="240" y1="60" x2="400" y2="130" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <line x1="240" y1="130" x2="400" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="240" y1="200" x2="400" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="240" y1="200" x2="400" y2="200" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="400" y1="60" x2="560" y2="60" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="400" y1="130" x2="560" y2="60" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <line x1="400" y1="130" x2="560" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="400" y1="200" x2="560" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="400" y1="200" x2="560" y2="200" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="560" y1="60" x2="720" y2="130" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <line x1="560" y1="130" x2="720" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="560" y1="200" x2="720" y2="130" stroke="rgba(160,170,200,.25)" stroke-width="2" stroke-dasharray="5 7"/>
+        <line x1="720" y1="130" x2="880" y2="130" stroke="rgba(242,193,78,.75)" stroke-width="3" stroke-dasharray="0"/>
+        <image href="/assets/teaser/node-unlit-96.webp" x="58.0" y="108.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-monster-96.webp" x="218.0" y="38.0" width="44" height="44" opacity="1"/>
+        <circle cx="240" cy="60" r="28.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.17;0.23;0.28;.97;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="24.0;24.0;36.0;28.0;28.0" keyTimes="0;0.17;0.23;0.28;1" dur="12s" repeatCount="indefinite"/></circle>
+        <image href="/assets/teaser/node-event-96.webp" x="218.0" y="108.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-monster-96.webp" x="218.0" y="178.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-shop-96.webp" x="378.0" y="38.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-event-96.webp" x="378.0" y="108.0" width="44" height="44" opacity="1"/>
+        <circle cx="400" cy="130" r="28.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.34;0.4;0.45;.97;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="24.0;24.0;36.0;28.0;28.0" keyTimes="0;0.34;0.4;0.45;1" dur="12s" repeatCount="indefinite"/></circle>
+        <image href="/assets/teaser/node-elite-96.webp" x="378.0" y="178.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-elite-96.webp" x="538.0" y="38.0" width="44" height="44" opacity="1"/>
+        <circle cx="560" cy="60" r="28.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.51;0.5700000000000001;0.6200000000000001;.97;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="24.0;24.0;36.0;28.0;28.0" keyTimes="0;0.51;0.5700000000000001;0.6200000000000001;1" dur="12s" repeatCount="indefinite"/></circle>
+        <image href="/assets/teaser/node-treasure-96.webp" x="538.0" y="108.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-monster-96.webp" x="538.0" y="178.0" width="44" height="44" opacity=".45"/>
+        <image href="/assets/teaser/node-rest-96.webp" x="698.0" y="108.0" width="44" height="44" opacity="1"/>
+        <circle cx="720" cy="130" r="28.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.68;0.74;0.79;.97;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="24.0;24.0;36.0;28.0;28.0" keyTimes="0;0.68;0.74;0.79;1" dur="12s" repeatCount="indefinite"/></circle>
+        <image href="/assets/teaser/node-boss-96.webp" x="852.0" y="102.0" width="56" height="56" opacity="1"/>
+        <circle cx="880" cy="130" r="34.0" fill="none" stroke="#ffd38a" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;.35;.35;0" keyTimes="0;0.88;0.93;0.96;.98;1" dur="12s" repeatCount="indefinite"/><animate attributeName="r" values="30.0;30.0;42.0;34.0;34.0" keyTimes="0;0.88;0.94;0.99;1" dur="12s" repeatCount="indefinite"/></circle>
+        <circle r="16" fill="url(#emb)"><animateMotion dur="12s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;0.2034;0.2034;0.4068;0.4068;0.6102;0.6102;0.8136;0.8136;1.0;1.0" keyTimes="0;0.08;0.17;0.25;0.34;0.42;0.51;0.59;0.68;0.76;0.88;1" path="M80 130 L240 60 L400 130 L560 60 L720 130 L880 130"/></circle>
+        <defs><radialGradient id="emb"><stop offset="0" stop-color="#fff6dc"/><stop offset=".45" stop-color="#ffb45a"/><stop offset="1" stop-color="#ff7a2a" stop-opacity="0"/></radialGradient></defs>
+        <text x="80" y="252" text-anchor="middle" class="f-disp display">起點</text>
+        <text x="720" y="252" text-anchor="middle" class="f-disp display">休息</text>
+        <text x="880" y="252" text-anchor="middle" class="f-disp display">首領</text>
+        </svg>
+      </div>
+    </div>
+    <div class="two-col xb58597">
+      <figure><div class="shot"><picture><source type="image/avif" srcset="/assets/teaser/map-act1-720.avif 720w, /assets/teaser/map-act1-1440.avif 1440w" sizes="100vw"><img alt="灰燼樹林的旅程地圖，路碑沿峽谷河流分佈" src="/assets/teaser/map-act1-720.webp" srcset="/assets/teaser/map-act1-720.webp 720w, /assets/teaser/map-act1-1440.webp 1440w" sizes="100vw" width="1440" height="831" loading="lazy" decoding="async"></picture></div><figcaption class="cap f-body up">第一幕 · 旅程地圖 · 遊戲畫面</figcaption></figure>
+      <div class="x64bd62">
+        <p class="lbl f-body up x6c2762">路碑可能藏着甚麼</p>
+        <ul class="x1e14ef"><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-monster-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-monster-96.webp" srcset="/assets/teaser/node-monster-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">怪物</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-event-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-event-96.webp" srcset="/assets/teaser/node-event-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">未知事件</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-elite-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-elite-96.webp" srcset="/assets/teaser/node-elite-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">菁英</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-rest-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-rest-96.webp" srcset="/assets/teaser/node-rest-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">休息處</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-shop-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-shop-96.webp" srcset="/assets/teaser/node-shop-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">商人</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-treasure-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-treasure-96.webp" srcset="/assets/teaser/node-treasure-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">寶箱</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-unlit-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-unlit-96.webp" srcset="/assets/teaser/node-unlit-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">未燃之路</span></li><li class="node"><picture><source type="image/avif" srcset="/assets/teaser/node-boss-96.avif 96w" sizes="2.2rem"><img alt="" aria-hidden="true" src="/assets/teaser/node-boss-96.webp" srcset="/assets/teaser/node-boss-96.webp 96w" sizes="2.2rem" width="96" height="96" loading="lazy" decoding="async"></picture><span class="f-body">首領</span></li></ul>
+      </div>
+    </div>
+  </div>
+
+    <div class="mech rv xdb7ee3">
+    <picture><source type="image/avif" srcset="/assets/teaser/kindle-960.avif 960w" sizes="100vw"><img class="mech-art x7a63c0" alt="" aria-hidden="true" src="/assets/teaser/kindle-960.webp" srcset="/assets/teaser/kindle-960.webp 960w" sizes="100vw" width="960" height="640" loading="lazy" decoding="async"></picture>
+    <div class="two-col x9aa25f">
+      <div class="x89dbb6">
+        <p class="loopnum f-disp display up">循環二 · 回合</p>
+        <h3 class="sys-h f-disp display">五張牌，三支燭，一盞燈</h3>
+        <p class="sys-p f-body">能量每回合回滿，餘燼卻會留下。每一張餵給提燈的牌，在本場戰鬥中都不會再回來——所以每個回合都在問：你燒得起甚麼？</p>
+        <ol class="t-steps"><li><b class="f-disp display up">抽牌</b><span class="f-body">五張牌來到手中。</span></li><li><b class="f-disp display up">點燭</b><span class="f-body">三支能量燭火支付你打出的牌。</span></li><li><b class="f-disp display up">出擊</b><span class="f-body">花費能量去攻擊、格擋與削弱。</span></li><li><b class="f-disp display up">燃燼</b><span class="f-body">每回合一次，把任意一張牌餵給提燈，得一點餘燼。</span></li><li><b class="f-disp display up">提燈術</b><span class="f-body">每回合一次，花費餘燼施展提燈術。</span></li><li><b class="f-disp display up">看清</b><span class="f-body">每個敵人行動前都會顯示意圖。</span></li></ol>
+      </div>
+      <figure>
+        <div class="clip"><video src="/assets/teaser/turn.mp4" poster="/assets/teaser/turn-poster-944.webp" muted loop playsinline preload="none" aria-label="對陣暮牙首領的一個回合遊戲實錄：打擊琢去一格璃面，防禦被燃燼進提燈，提燈術打碎琉璃，敵人按顯示的意圖行動"></video><span class="clip-tag f-body up">遊戲實錄</span></div>
+        <figcaption class="cap f-body up">由遊戲錄下的一個回合 · 第一幕，暮牙首領</figcaption>
+      </figure>
+    </div>
+  </div>
+
+    <div class="mech rv xb93d59">
+    <picture><source type="image/avif" srcset="/assets/teaser/shatter-960.avif 960w" sizes="100vw"><img class="mech-art x06dfdb" alt="" aria-hidden="true" src="/assets/teaser/shatter-960.webp" srcset="/assets/teaser/shatter-960.webp 960w" sizes="100vw" width="960" height="640" loading="lazy" decoding="async"></picture>
+    <div class="two-col x65b6b5">
+      <figure>
+        <div class="clip x01997b"><video src="/assets/teaser/shatter.mp4" poster="/assets/teaser/shatter-poster-600.webp" muted loop playsinline preload="none" aria-label="放慢的遊戲實錄：提燈術與一記打擊打碎暮牙首領，牠陷入踉蹌並獲得兩層裂痕"></video><span class="clip-tag f-body up">遊戲實錄</span></div>
+        <div class="s-tags2"><span class="f-body">踉蹌 · 失去下一次行動</span><span class="f-body">+2 裂痕 · 受傷增加 50%</span><span class="f-body">+2 餘燼 · 濺入提燈</span></div>
+      </figure>
+      <div class="x89dbb6">
+        <p class="loopnum f-disp display up">循環二 · 琉璃</p>
+        <h3 class="sys-h f-disp display">琢擊。裂開。碎裂。</h3>
+        <p class="sys-p f-body">每一隻生物都是琉璃，身上有一道璃面量表：大多數敵人四格，菁英與首領更多。每一下未被格擋的攻擊琢去一格。量表填滿，琉璃便碎裂。</p>
+        <ul class="bul f-body"><li><b>碎裂就是贏回一個回合。</b> 碎裂的敵人會跳過下一次行動；在它蓄勢重擊之前打碎它，就是最好的防守。</li><li><b>打碎也是添火。</b> 每次碎裂都會濺出兩點餘燼。今次打碎的琉璃，替下一次碎裂的提燈術付賬。</li><li><b>琉璃會記住。</b> 每碎一次，下一次便更難：敵人的璃面量表多一格。</li></ul>
+      </div>
+    </div>
+  </div>
+
+    <div class="mech rv xdb7ee3">
+    <div class="two-col x9aa25f">
+      <div class="x89dbb6">
+        <p class="loopnum f-disp display up">循環三 · 牌組</p>
+        <h3 class="sys-h f-disp display">火焰讀懂你的牌組</h3>
+        <p class="sys-p f-body">每場戰鬥之前，提燈會衡量你牌組中的有色琉璃，定下一種火焰。它從不看你怎樣出牌——只看你帶着甚麼——而整場戰鬥都維持那一種火焰。</p>
+        <ul class="bul f-body"><li><b>透明琉璃是燃料，不是雜音。</b> 沒有顏色的牌從不令火焰變暗；剔走別色的琉璃，火焰便更穩。</li><li><b>燃色效果。</b> 部分卡牌附有額外效果，只在提燈燃着其顏色（定或真）時生效。</li><li><b>道路是找到的，不是選的。</b> 暮刃的琉璃傾向三條道路。選牌時走進其中一條，火焰便會換上它的顏色。</li></ul>
+        <div class="xd46a25"><div class="way way-frost"><picture><source type="image/avif" srcset="/assets/teaser/way-frost-160.avif 160w" sizes="4rem"><img alt="" aria-hidden="true" src="/assets/teaser/way-frost-160.webp" srcset="/assets/teaser/way-frost-160.webp 160w" sizes="4rem" width="160" height="349" loading="lazy" decoding="async"></picture><div><b class="f-disp display">碎</b><span class="f-body up">霜光之火</span></div></div><div class="way way-hearth"><picture><source type="image/avif" srcset="/assets/teaser/way-hearth-160.avif 160w" sizes="4rem"><img alt="" aria-hidden="true" src="/assets/teaser/way-hearth-160.webp" srcset="/assets/teaser/way-hearth-160.webp 160w" sizes="4rem" width="160" height="304" loading="lazy" decoding="async"></picture><div><b class="f-disp display">燼</b><span class="f-body up">爐火之火</span></div></div><div class="way way-eclipse"><picture><source type="image/avif" srcset="/assets/teaser/way-eclipse-160.avif 160w" sizes="4rem"><img alt="" aria-hidden="true" src="/assets/teaser/way-eclipse-160.webp" srcset="/assets/teaser/way-eclipse-160.webp 160w" sizes="4rem" width="160" height="162" loading="lazy" decoding="async"></picture><div><b class="f-disp display">蝕</b><span class="f-body up">蝕月之火</span></div></div></div>
+      </div>
+      <div class="fl" role="img" aria-label="按遊戲實際數值繪製的示意圖：當一種顏色在有色琉璃中佔優，提燈由「燃」與「塵」變成「定」與「真」，容納更多餘燼，提燈術也更便宜">
+        <div class="fl-stage" aria-hidden="true">
+          <div class="fl-left">
+            <p class="lbl f-body up">你的牌組 · 十二張</p>
+            <div class="fl-cards"><i class="dk dk_HHHH"></i><i class="dk dk_CHHH"></i><i class="dk dk_FHHH"></i><i class="dk dk_CFHH"></i><i class="dk dk_EFHH"></i><i class="dk dk_CFHH"></i><i class="dk dk_CEFH"></i><i class="dk dk_CEFH"></i><i class="dk dk_CEEF"></i><i class="dk dk_CCEE"></i><i class="dk dk_CCCC"></i><i class="dk dk_CCCC"></i></div>
+            <p class="lbl f-body up xffc6f7">領先之道佔有色琉璃的比例</p>
+            <div class="fl-bar"><i class="fb-lead"></i><i class="fb-b"></i><i class="fb-c"></i><span class="fl-mark at-45"><em class="f-body">塵 ≤45%</em></span><span class="fl-mark at-60"><em class="f-body">定 60%</em></span><span class="fl-mark at-75"><em class="f-body">真 75%</em></span></div>
+            <div class="fl-read"><span class="f-body w0">三張有色牌 · 未足以判讀</span><span class="f-body w1">領先之道 33%</span><span class="f-body w2">領先之道 60%</span><span class="f-body w3">領先之道 80%</span></div>
+          </div>
+          <div class="fl-right">
+            <div class="fl-name"><b class="f-disp display w0">燃</b><b class="f-disp display w1">塵</b><b class="f-disp display w2">定</b><b class="f-disp display w3">真</b></div>
+            <div class="lan"><span class="lan-fire"></span><span class="spark"></span><span class="spark x445723"></span><span class="spark x31f858"></span><span class="drip"></span><picture><source type="image/avif" srcset="/assets/teaser/ui-lantern-200.avif 200w" sizes="100vw"><img alt="" aria-hidden="true" src="/assets/teaser/ui-lantern-200.webp" srcset="/assets/teaser/ui-lantern-200.webp 200w" sizes="100vw" width="200" height="200" loading="lazy" decoding="async"></picture></div>
+            <div class="rack"><i class="b"></i><i class="b"></i><i class="b"></i><i class="b"></i><i class="b"></i><i class="b"></i><i class="b"></i><i class="b"></i><i class="b"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i></div>
+            <p class="lbl f-body up x65f9d5">餘燼容量</p>
+            <div class="artcost"><span class="lbl f-body up">焰閃耗費</span><span class="gem"><b class="f-disp display w0">3</b><b class="f-disp display w1">4</b><b class="f-disp display w2">3</b><b class="f-disp display w3">1</b></span></div>
+          </div>
+        </div>
+        <ol class="tiers"><li class="w0"><b class="f-disp display">燃</b><span class="f-body">有色牌少於五張。普通的提燈：容納 9 點餘燼，提燈術原價。</span></li><li class="w1"><b class="f-disp display">塵</b><span class="f-body">沒有一道領先（45% 或以下）。每回合流失 1 點餘燼；提燈術貴 1 點。</span></li><li class="w2"><b class="f-disp display">定</b><span class="f-body">一道佔 60%。多容納 4 點餘燼；每回合第一點餘燼額外多 2。</span></li><li class="w3"><b class="f-disp display">真</b><span class="f-body">一道佔 75%。擁有「定」的一切，提燈術再便宜 2 點。</span></li></ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="rv xf253e7">
+    <div class="stat"><b class="f-disp display">3</b><span class="f-body up">幕</span></div><div class="stat"><b class="f-disp display">27</b><span class="f-body up">種敵人</span></div><div class="stat"><b class="f-disp display">66</b><span class="f-body up">張卡牌</span></div><div class="stat"><b class="f-disp display">32</b><span class="f-body up">件遺物</span></div><div class="stat"><b class="f-disp display">17</b><span class="f-body up">種狀態</span></div><div class="stat"><b class="f-disp display">5</b><span class="f-body up">道誓言</span></div>
+  </div>
+</section>
+
+<section id="glass" class="xdec0fd">
+  <div class="rv xf2dd4f">
+    <p class="kicker f-disp display up x6c2762">真正的琉璃，真正的光</p>
+    <h2 class="f-disp display rvh xaa8a9e">組一副琉璃牌</h2>
+    <p class="narr f-prose x97d381">每張牌都是一片琉璃，每種稀有度都有自己的質感。把指標移過一張牌——或傾斜手機——光便隨你移動。</p>
+  </div>
+  <ul class="x4e36b1">
+    
+      <li class="rv xba4187">
+        <canvas class="card-cv xf22370" role="img" aria-label="琉璃扇 — 對所有敵人造成 6 點傷害。" data-card="cleave" data-face="{&quot;name&quot;: &quot;琉璃扇&quot;, &quot;text&quot;: &quot;對所有敵人造成 @6@ 點傷害。&quot;, &quot;type&quot;: &quot;attack&quot;, &quot;cost&quot;: 1, &quot;tier&quot;: 1, &quot;warm&quot;: 0, &quot;typeLabel&quot;: &quot;攻擊&quot;, &quot;lang&quot;: &quot;zh-Hant&quot;, &quot;knobs&quot;: null}" data-src="/assets/teaser/art-cleave-640.webp"></canvas>
+        <span class="finish f-disp display up">普通</span>
+        <span class="finish-sub f-body up">銀邊</span>
+      </li>
+    
+      <li class="rv xba4187">
+        <canvas class="card-cv xf22370" role="img" aria-label="餘燼舞 — 傾盡提燈：每花費 1 點餘燼，獲得 3 點護光。燃燼。" data-card="emberdance" data-face="{&quot;name&quot;: &quot;餘燼舞&quot;, &quot;text&quot;: &quot;傾盡提燈：每花費 1 點餘燼，獲得 3 點護光。燃燼。&quot;, &quot;type&quot;: &quot;skill&quot;, &quot;cost&quot;: 0, &quot;tier&quot;: 2, &quot;warm&quot;: 0, &quot;typeLabel&quot;: &quot;技巧&quot;, &quot;lang&quot;: &quot;zh-Hant&quot;, &quot;knobs&quot;: null}" data-src="/assets/teaser/art-emberdance-640.webp"></canvas>
+        <span class="finish f-disp display up">罕見</span>
+        <span class="finish-sub f-body up">光譜框</span>
+      </li>
+    
+      <li class="rv xba4187">
+        <canvas class="card-cv xf22370" role="img" aria-label="全蝕 — 造成 14 點傷害，然後令該敵人的裂痕層數加倍。" data-card="totality" data-face="{&quot;name&quot;: &quot;全蝕&quot;, &quot;text&quot;: &quot;造成 @14@ 點傷害，然後令該敵人的裂痕層數加倍。&quot;, &quot;type&quot;: &quot;attack&quot;, &quot;cost&quot;: 2, &quot;tier&quot;: 3, &quot;warm&quot;: 0, &quot;typeLabel&quot;: &quot;攻擊&quot;, &quot;lang&quot;: &quot;zh-Hant&quot;, &quot;knobs&quot;: null}" data-src="/assets/teaser/art-totality-640.webp"></canvas>
+        <span class="finish f-disp display up">稀有</span>
+        <span class="finish-sub f-body up">切割琉璃</span>
+      </li>
+    
+      <li class="rv xba4187">
+        <canvas class="card-cv xf22370" role="img" aria-label="咒印 — 無法打出。若此牌留在手中，你的回合結束時失去 1 點生命。此牌拒火。" data-card="hex" data-face="{&quot;name&quot;: &quot;咒印&quot;, &quot;text&quot;: &quot;無法打出。若此牌留在手中，你的回合結束時失去 1 點生命。此牌拒火。&quot;, &quot;type&quot;: &quot;curse&quot;, &quot;cost&quot;: null, &quot;tier&quot;: 4, &quot;warm&quot;: 0, &quot;typeLabel&quot;: &quot;詛咒&quot;, &quot;lang&quot;: &quot;zh-Hant&quot;, &quot;knobs&quot;: null}" data-src="/assets/teaser/art-hex-640.webp"></canvas>
+        <span class="finish f-disp display up">詛咒</span>
+        <span class="finish-sub f-body up">油膜</span>
+      </li>
+    
+      <li class="rv xba4187">
+        <canvas class="card-cv xf22370" role="img" aria-label="長窗" data-card="back-vault" data-face="{&quot;name&quot;: &quot;長窗&quot;, &quot;text&quot;: &quot;&quot;, &quot;type&quot;: &quot;&quot;, &quot;cost&quot;: null, &quot;tier&quot;: 5, &quot;warm&quot;: 0, &quot;typeLabel&quot;: &quot;&quot;, &quot;lang&quot;: &quot;zh-Hant&quot;, &quot;knobs&quot;: {&quot;mode&quot;: 0, &quot;angle&quot;: 8, &quot;centre&quot;: [76, 108], &quot;palette&quot;: [0.55, 0.85, 1], &quot;mix&quot;: 0.35, &quot;strength&quot;: 1.35, &quot;scale&quot;: 1.5}}" data-src="/assets/teaser/back-vault-304.webp"></canvas>
+        <span class="finish f-disp display up">牌背</span>
+        <span class="finish-sub f-body up">窗格光</span>
+      </li>
+    
+  </ul>
+  <div class="veil rv x2a6752">
+    
+      <canvas class="card-cv big xf7c99f" role="img" aria-label="封火 — 獲得 1 點餘燼。若本場戰鬥獲勝，提燈的餘燼會保留至下一場戰鬥。" data-card="bankedFire" data-face="{&quot;name&quot;: &quot;封火&quot;, &quot;text&quot;: &quot;獲得 1 點餘燼。若本場戰鬥獲勝，提燈的餘燼會保留至下一場戰鬥。&quot;, &quot;type&quot;: &quot;skill&quot;, &quot;cost&quot;: 0, &quot;tier&quot;: 6, &quot;warm&quot;: 0.3, &quot;typeLabel&quot;: &quot;技巧&quot;, &quot;lang&quot;: &quot;zh-Hant&quot;, &quot;knobs&quot;: null, &quot;layers&quot;: [[&quot;back&quot;, -6], [&quot;ground&quot;, 22], [&quot;subject&quot;, 22], [&quot;hot-core&quot;, 22], [&quot;front&quot;, 106], [&quot;particles&quot;, 55]]}" data-src="/assets/teaser/myth-0-1152.webp /assets/teaser/myth-1-1152.webp /assets/teaser/myth-2-1152.webp /assets/teaser/myth-3-1152.webp /assets/teaser/myth-4-1152.webp /assets/teaser/myth-5-1152.webp"></canvas>
+    
+    <span class="finish f-disp display up x55a3ba">更為稀有</span>
+    <span class="f-quote x0d06a4">有些琉璃，這裏不寫。</span>
+  </div>
+</section>
+
+<section id="soon" class="x967cb0">
+  <div class="rv x7a7e53">
+    <picture><source type="image/avif" srcset="/assets/teaser/lantern-240.avif 240w, /assets/teaser/lantern-480.avif 480w" sizes="100vw"><img alt="" aria-hidden="true" class="swing x1116ab" src="/assets/teaser/lantern-240.webp" srcset="/assets/teaser/lantern-240.webp 240w, /assets/teaser/lantern-480.webp 480w" sizes="100vw" width="480" height="776" loading="lazy" decoding="async"></picture>
+    <p class="kicker f-disp display up x6c2762">提起燈</p>
+    <h2 class="f-disp display rvh xd16844">即將推出</h2>
+    <ul class="x3059f5">
+      <li class="tile"><svg viewBox="0 0 24 24" aria-hidden="true" class="tile-logo"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span class="xbc0172"><span class="f-disp display xb79d25">App Store</span><span class="f-body up x828d1c">即將推出</span></span></li><li class="tile"><svg viewBox="0 0 24 24" aria-hidden="true" class="tile-logo"><path d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/></svg><span class="xbc0172"><span class="f-disp display xb79d25">Google Play</span><span class="f-body up x828d1c">即將推出</span></span></li><li class="tile"><svg viewBox="0 0 24 24" aria-hidden="true" class="tile-logo"><path d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.174.09.336-.12.48-.256.19-.6.41-1.006.654-1.244.743-2.64 1.316-4.185 1.726a17.617 17.617 0 01-10.951-.577 17.88 17.88 0 01-5.43-3.35c-.1-.074-.151-.15-.151-.22 0-.047.021-.09.051-.13zm6.565-6.218c0-1.005.247-1.863.743-2.577.495-.71 1.17-1.25 2.04-1.615.796-.335 1.756-.575 2.912-.72.39-.046 1.033-.103 1.92-.174v-.37c0-.93-.105-1.558-.3-1.875-.302-.43-.78-.65-1.44-.65h-.182c-.48.046-.896.196-1.246.46-.35.27-.575.63-.675 1.096-.06.3-.206.465-.435.51l-2.52-.315c-.248-.06-.372-.18-.372-.39 0-.046.007-.09.022-.15.247-1.29.855-2.25 1.82-2.88.976-.616 2.1-.975 3.39-1.05h.54c1.65 0 2.957.434 3.888 1.29.135.15.27.3.405.48.12.165.224.314.283.45.075.134.15.33.195.57.06.254.105.42.135.51.03.104.062.3.076.615.01.313.02.493.02.553v5.28c0 .376.06.72.165 1.036.105.313.21.54.315.674l.51.674c.09.136.136.256.136.36 0 .12-.06.226-.18.314-1.2 1.05-1.86 1.62-1.963 1.71-.165.135-.375.15-.63.045a6.062 6.062 0 01-.526-.496l-.31-.347a9.391 9.391 0 01-.317-.42l-.3-.435c-.81.886-1.603 1.44-2.4 1.665-.494.15-1.093.227-1.83.227-1.11 0-2.04-.343-2.76-1.034-.72-.69-1.08-1.665-1.08-2.94l-.05-.076zm3.753-.438c0 .566.14 1.02.425 1.364.285.34.675.512 1.155.512.045 0 .106-.007.195-.02.09-.016.134-.023.166-.023.614-.16 1.08-.553 1.424-1.178.165-.28.285-.58.36-.91.09-.32.12-.59.135-.8.015-.195.015-.54.015-1.005v-.54c-.84 0-1.484.06-1.92.18-1.275.36-1.92 1.17-1.92 2.43l-.035-.02zm9.162 7.027c.03-.06.075-.11.132-.17.362-.243.714-.41 1.05-.5a8.094 8.094 0 011.612-.24c.14-.012.28 0 .41.03.65.06 1.05.168 1.172.33.063.09.099.228.099.39v.15c0 .51-.149 1.11-.424 1.8-.278.69-.664 1.248-1.156 1.68-.073.06-.14.09-.197.09-.03 0-.06 0-.09-.012-.09-.044-.107-.12-.064-.24.54-1.26.806-2.143.806-2.64 0-.15-.03-.27-.087-.344-.145-.166-.55-.257-1.224-.257-.243 0-.533.016-.87.046-.363.045-.7.09-1 .135-.09 0-.148-.014-.18-.044-.03-.03-.036-.047-.02-.077 0-.017.006-.03.02-.063v-.06z"/></svg><span class="xbc0172"><span class="f-disp display xb79d25">Amazon Appstore</span><span class="f-body up x828d1c">即將推出</span></span></li><li class="tile"><svg viewBox="0 0 24 24" aria-hidden="true" class="tile-logo"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z"/></svg><span class="xbc0172"><span class="f-disp display xb79d25">Steam</span><span class="f-body up x828d1c">即將推出</span></span></li>
+    </ul>
+    <p class="f-body up xc6bfbd">單人遊戲 · 無需帳戶 · 沒有廣告 · 沒有內購</p>
+  </div>
+</section>
+
+<nav class="more" aria-label="關於琉璃誓言"><a href="/play/zh-hant/">玩法</a><a href="/faq/zh-hant/">常見問題</a><a href="/genre/zh-hant/">Roguelike 牌組構築</a></nav>
+<p class="support">支援 · <span class="address">glassvow@eugnel.com</span></p>
 </main>
+</div>
 <footer class="legal">
   <p><a href="/company/zh-hant/">© EUGNEL LTD</a> · <a href="/privacy/zh-hant/">私隱政策</a></p>
 </footer>
