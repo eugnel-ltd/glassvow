@@ -458,9 +458,9 @@
    "source_sha256": "c08c1a2babe3b36d8d598c1a42c4fdd98a71fef4fc57cd431edbcbd422e2b947"
   },
   "gravewarden.glb": {
-   "bytes": 4161280,
-   "recipe": "glb skin=external",
-   "sha256": "45fdf92084833e0fb694048da70f0cd2f6d58078eb66c0bb3cb917de35a91fd5",
+   "bytes": 3760432,
+   "recipe": "glb skin=external bin=repacked",
+   "sha256": "a8e44a1a1e0102ac94fcd0704d8586b4d84d25a31c925ec9163615eda4298014",
    "source": "docs/design/2026-10-20-website-story/models/gravewarden.glb",
    "source_sha256": "c08c1a2babe3b36d8d598c1a42c4fdd98a71fef4fc57cd431edbcbd422e2b947"
   },
@@ -1339,9 +1339,9 @@
    "source_sha256": "061cf96dcdfb2e935f567258c456247d98e3b2f129538d1a48dd949b30d113f4"
   },
   "siren.glb": {
-   "bytes": 887120,
-   "recipe": "glb skin=external",
-   "sha256": "cf0b8fcc600910b805b1e5491bbeca05fb4563b73560c5452ff66ed9411da199",
+   "bytes": 515400,
+   "recipe": "glb skin=external bin=repacked",
+   "sha256": "e3a93d3aa75f92391c5b0d6712219c080cddb0b35e3fcdd27c41d407748ed75a",
    "source": "docs/design/2026-10-20-website-story/models/siren.glb",
    "source_sha256": "061cf96dcdfb2e935f567258c456247d98e3b2f129538d1a48dd949b30d113f4"
   },
@@ -1590,9 +1590,9 @@
    "source_sha256": "6c44c1019bbb4f72534d0ea0703cebb1fb77a5f849f3b5101e71f89499a55e72"
   },
   "watcherEye.glb": {
-   "bytes": 927816,
-   "recipe": "glb skin=external",
-   "sha256": "d98ee7d544f9cbef58b0da0cc3dd14dfb9260816810c04decf8048010702278c",
+   "bytes": 475844,
+   "recipe": "glb skin=external bin=repacked",
+   "sha256": "b05c46fa5f8463d9565103e467e2c5c7aec53ea1184d734a6085ad3699270520",
    "source": "docs/design/2026-10-20-website-story/models/watcherEye.glb",
    "source_sha256": "6c44c1019bbb4f72534d0ea0703cebb1fb77a5f849f3b5101e71f89499a55e72"
   },
