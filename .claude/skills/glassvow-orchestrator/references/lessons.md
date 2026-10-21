@@ -83,7 +83,7 @@ The iPad 8 (A12) is the floor every budget must hold on, not the only target. Re
 `/private/tmp` is wiped by a reboot: on 5 Oct that took every lane worktree, the handoffs, the device scripts and a 10-hour balance batch. Durable lane work, long runs and orchestrator notes live under `<repo>/.claude/worktrees/` (git-ignored); the scratchpad is for throwaway files. Commit work in progress locally before a wind-down. Lost scratch files can be replayed from the session `.jsonl` Write and Edit calls (the recovery kit is in the orchestrator folder's `recover/`).
 
 ### The keychain after a reboot
-A reboot leaves the login keychain locked for agent shells; codesign then fails with errSecInternalComponent and every QA export stops. Ask the owner at once to unlock it (`security unlock-keychain ~/Library/Keychains/login.keychain-db`, typed by him). Lanes never handle the password.
+A reboot leaves the dedicated build keychain locked for agent shells; codesign then fails with errSecInternalComponent and every signed export stops. Run `~/.config/eugnel-build/bin/unlock-build-keychain.sh` on the engine. Never unlock the login keychain for Glassvow signing. Lanes never handle the password.
 
 ### git push keychain error -25308
 Scripted pushes intermittently fail with osxkeychain -25308 ("failed to push some refs"); it is not a GitHub refusal. Push with `git -c credential.helper= -c credential.helper='!gh auth git-credential' push ...`, one second apart. In zsh write refspecs as `"${sha}:refs/heads/x"`; `$sha:r...` is parsed as a modifier.

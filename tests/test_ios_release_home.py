@@ -37,7 +37,9 @@ def event(kind, **extra):
     with open(os.environ["GLASSVOW_TEST_EVENTS"], "a") as file:
         file.write(json.dumps(row) + "\n")
 
-if name == "git":
+if name == "unlock-build-keychain.sh":
+    event("unlock")
+elif name == "git":
     if args[0] == "rev-parse":
         print("a" * 40)
     elif args[0] != "status":
@@ -126,17 +128,19 @@ class Fixture:
         with zipfile.ZipFile(self.ipa, "w") as archive:
             archive.writestr("Payload/glassvow.app/Info.plist",
                              plistlib.dumps({"DTXcodeBuild": "27A266a"}))
-        bindir = scratch / "fake commands"
-        bindir.mkdir()
-        for name in ("git", "godot", "xcodebuild", "asc", "sentry-cli", "stat", "python3"):
-            self.write_stub(bindir / name)
+        self.bindir = scratch / "fake commands"
+        self.bindir.mkdir()
+        for name in ("git", "godot", "xcodebuild", "asc", "sentry-cli", "stat",
+                     "python3", "unlock-build-keychain.sh"):
+            self.write_stub(self.bindir / name)
         self.write_stub(tools / "godot/bake_export.sh")
         self.env = {
-            "PATH": str(bindir) + os.pathsep + os.defpath,
+            "PATH": str(self.bindir) + os.pathsep + os.defpath,
             "HOME": str(self.owner), "LANG": "C.UTF-8",
             "DEVELOPER_DIR": str(developer),
-            "GLASSVOW_BAKE_EDITOR": str(bindir / "godot"),
+            "GLASSVOW_BAKE_EDITOR": str(self.bindir / "godot"),
             "ASC_KEY_ID": "offline-fixture", "ASC_ISSUER_ID": "offline-fixture",
+            "ASC_APP_ID": "offline-fixture", "ASC_BETA_GROUP_ID": "offline-fixture",
             "ASC_PRIVATE_KEY_PATH": str(self.key),
             "GLASSVOW_TEST_BAKED": "1" if baked else "0",
             "GLASSVOW_TEST_EXPORT_FAIL": "0",
@@ -154,6 +158,8 @@ class Fixture:
                 for path in self.owner.rglob("*") if path.is_file()}
 
     def events(self) -> list[dict]:
+        if not self.events_file.is_file():
+            return []
         return [json.loads(line) for line in self.events_file.read_text().splitlines()]
 
     def release(self, *, upload: bool = False, fail_export: bool = False) -> subprocess.CompletedProcess:
@@ -190,7 +196,8 @@ class EditorHomeTests(unittest.TestCase):
                 result = case.release()
                 self.assertEqual(0, result.returncode, result.stdout + result.stderr)
                 events = case.events()
-                self.assertEqual(["editor", "archive", "sign"], [e["kind"] for e in events])
+                self.assertEqual(["editor", "unlock", "archive", "sign"],
+                                 [e["kind"] for e in events])
                 self.assert_editor_isolated(case, events[0], baked)
                 for event in events[1:]:
                     self.assert_owner_environment(case, event)
@@ -217,14 +224,61 @@ class EditorHomeTests(unittest.TestCase):
                 self.assert_editor_isolated(case, editors[-1], baked)
                 self.assertEqual("keep previous evidence\n", kept.read_text())
 
+    def test_placeholder_profile_stops_before_unlock(self) -> None:
+        with fixture(True) as case:
+            scripts = case.root / "scripts"
+            shutil.copyfile(ROOT / "scripts/ios_export_options.plist",
+                            scripts / "ios_export_options.plist")
+            result = case.release()
+            self.assertNotEqual(0, result.returncode, result.stdout + result.stderr)
+            self.assertIn("PENDING_EUGNEL_IOS_PROFILE", result.stderr)
+            self.assertEqual([], case.events())
+
+    def test_profile_override_reaches_signing(self) -> None:
+        with fixture(True) as case:
+            scripts = case.root / "scripts"
+            shutil.copyfile(ROOT / "scripts/ios_export_options.plist",
+                            scripts / "ios_export_options.plist")
+            case.env["IOS_DISTRIBUTION_PROFILE"] = "fixture-profile"
+            result = case.release()
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+            self.assertEqual(["editor", "unlock", "archive", "sign"],
+                             [e["kind"] for e in case.events()])
+
+    def test_asc_env_file_fills_missing_variables_without_printing_issuer(self) -> None:
+        with fixture(True) as case:
+            issuer = "issuer-secret-must-not-leak"
+            env_file = case.owner / "asc.env"
+            env_file.write_text(
+                f"ASC_KEY_ID=9PBA26ZNT6\nASC_ISSUER_ID={issuer}\n"
+                f"ASC_PRIVATE_KEY_PATH={case.key}\n")
+            for name in ("ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_PRIVATE_KEY_PATH"):
+                del case.env[name]
+            case.env["ASC_ENV_FILE"] = str(env_file)
+            result = case.release()
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+            combined = result.stdout + result.stderr
+            self.assertNotIn(issuer, combined)
+            self.assertEqual("unlock", case.events()[1]["kind"])
+
+    def test_missing_unlocker_stops_after_export(self) -> None:
+        with fixture(True) as case:
+            (case.bindir / "unlock-build-keychain.sh").unlink()
+            result = case.release()
+            self.assertNotEqual(0, result.returncode, result.stdout + result.stderr)
+            self.assertIn("dedicated build keychain", result.stderr)
+            self.assertNotIn("login.keychain", result.stderr)
+            self.assertEqual(["editor"], [e["kind"] for e in case.events()])
+
     def test_upload_boundary_retains_owner_home_after_either_export(self) -> None:
         for baked in (False, True):
             with self.subTest(baked=baked), fixture(baked) as case:
                 result = case.release(upload=True)
                 self.assertEqual(23, result.returncode, result.stdout + result.stderr)
                 events = case.events()
-                self.assertEqual(["sentry-preflight", "editor", "archive", "sign", "upload"],
-                                 [e["kind"] for e in events])
+                self.assertEqual(
+                    ["sentry-preflight", "editor", "unlock", "archive", "sign", "upload"],
+                    [e["kind"] for e in events])
                 self.assert_editor_isolated(case, events[1], baked)
                 for event in events:
                     if event["kind"] != "editor":

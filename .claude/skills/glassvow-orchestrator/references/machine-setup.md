@@ -19,9 +19,9 @@ Since 15 Oct 2026 there are two machines. The **seat** (a Mac mini) runs Claude.
 ## 3. App Store Connect and TestFlight
 
 - **Procedure:** `docs/release-signing.md` (read it first) and `scripts/ios_release.sh <build> <main sha>`, whose header lists every environment variable it needs.
-- **Credentials:** `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_PRIVATE_KEY_PATH`, exported by a scratch launcher that reads them from where the owner keeps them (the `.p8` under `~/.appstoreconnect/private_keys/`; the issuer from the owner's existing TestFlight upload script). Never printed.
-- **Rules:** marketing version stays 1.0.0; bump only the build number in both iOS presets, after checking `asc builds list` for the highest. Run the release from a clean worktree detached at the merge SHA, with no `override.cfg`. A launcher that holds the iPad lock must not `exec` the release script, or its EXIT trap never frees the lock. The keychain must be unlocked (section 9).
-- **QA builds** use the separate bundle `io.fol2.glassvow.qa` with its own development profile, via `qa_export.sh` in `<repo>/.claude/worktrees/device13-flow/` (README beside it; also in the NAS orchestrator archive).
+- **Credentials:** `ASC_KEY_ID` (default `9PBA26ZNT6`), `ASC_ISSUER_ID` and `ASC_PRIVATE_KEY_PATH`. The script reads missing values from `~/.config/eugnel-build/keys/asc.env`; the `.p8` default is `~/.config/eugnel-build/keys/AuthKey_9PBA26ZNT6.p8`. Never print the issuer or the key contents. Team `GPABDG7FX9`, bundle `uk.eugnel.glassvow`.
+- **Rules:** marketing version stays 1.0.0; bump only the build number in both iOS presets, after checking `asc builds list` for the highest. Run the release from a clean worktree detached at the merge SHA, with no `override.cfg`. A launcher that holds the iPad lock must not `exec` the release script, or its EXIT trap never frees the lock. Unlock the dedicated build keychain with `~/.config/eugnel-build/bin/unlock-build-keychain.sh` (never the login keychain). No upload under `GPABDG7FX9` until the signing switch is on `main` and Len's profiles exist.
+- **QA builds** still use the separate bundle `io.fol2.glassvow.qa` with its own development profile, via `qa_export.sh` in `<repo>/.claude/worktrees/device13-flow/` (README beside it; also in the NAS orchestrator archive), until a EUGNEL QA profile exists.
 
 ## 4. ElevenLabs
 
@@ -79,7 +79,7 @@ Claude's per-machine memory does not travel with git. The 14 Oct 2026 copy is on
 - **The engine's `PATH` for non-interactive ssh.** `mbp` runs `ssh host "cmd"`, a non-login shell that reads only `~/.zshenv`. Export the `PATH` that holds `godot`, `gh`, `rg`, `python3` and `tmux` there, for example `/opt/homebrew/bin` and the Godot binary's folder. `mbp --check` fails and names any tool it cannot find.
 - **Housekeeping guard:** set `GLASSVOW_ENGINE_HOST_NAME` to the engine's `scutil --get LocalHostName` in `~/.zshenv` on both machines (the seat's copy is what Claude's Bash tool reads; the engine's is what a non-interactive ssh reads), so `housekeeping.sh` refuses to run on the seat.
 - **No sleep on AC power:** `sudo pmset -c sleep 0` (and `disksleep 0`), or keep a `caffeinate -s` running in a tmux session.
-- **After a reboot** the login keychain is locked and codesign fails (errSecInternalComponent). Unlock it over ssh with `ssh -t "${GLASSVOW_ENGINE_HOST:-mbp}" security unlock-keychain ~/Library/Keychains/login.keychain-db` typed by the owner, or ask the owner to unlock it at the machine. Agents never handle the password.
+- **After a reboot** the dedicated build keychain is locked and codesign fails (errSecInternalComponent). Unlock it with `~/.config/eugnel-build/bin/unlock-build-keychain.sh` on the engine (`mbp ~/.config/eugnel-build/bin/unlock-build-keychain.sh`). Never `security unlock-keychain` on the login keychain for a Glassvow store or release export. Agents never handle the password.
 - **The iPad stays cabled** to the engine; the lock and QA flow live there.
 - **ks2 (Spelling Camp) also uses this Mac:** the load, disk and iPad-lock rules in SKILL.md section 4 apply on the engine.
 - **The mount can drop after sleep.** `mbp --check` fails with "not visible here" or "differs"; remount with `open smb://<engine-host>.local/Coding` and check again.

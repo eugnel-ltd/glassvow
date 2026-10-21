@@ -20,11 +20,11 @@ sentry:
 
 channels:
   ios:
-    bundle_id: io.fol2.glassvow      # export_presets.cfg; iOS is the first store (docs/rc-bar.md)
+    bundle_id: uk.eugnel.glassvow    # Team GPABDG7FX9; export_presets.cfg; iOS is the first store (docs/rc-bar.md)
     live_version: null
     live_since: null
   play:
-    package: io.fol2.glassvow        # export_presets.cfg; the Android phase follows iOS
+    package: io.fol2.glassvow        # export_presets.cfg; Android is unchanged; it ships after iOS
     live_version: null
     live_since: null
   # The static game site (site/, glassvow.eugnel.com): privacy policy, company information and contact. It sells nothing.
@@ -38,11 +38,12 @@ channels:
 pricing:
   model: one-off
   products:
-    # Existing paid-app SKU and app ID read back in #426 on 21 Aug 2026.
-    # This is not an in-app-purchase product or proof of current price/availability.
+    # SKU kept from the #426 personal-team record. The EUGNEL App Store Connect
+    # app id is unset until Len creates that record; #426's 6803851427 is not
+    # the shipping identity.
     - sku: GLASSVOW-IOS-2026
       store_ids:
-        ios: "6803851427"
+        ios: null
 
 # The product baseline (skill `modules/baseline.md`). Values: done | missing | waived | excluded.
 baseline:

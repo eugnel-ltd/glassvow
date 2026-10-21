@@ -137,6 +137,7 @@ exit 92
             "sentry-cli": "exit 0\n",
             "stat": "wc -c < \"$3\"\n",
             "python3": 'if [ "$1" = -c ]; then exit 0; fi\nexec "' + sys.executable + '" "$@"\n',
+            "unlock-build-keychain.sh": "exit 0\n",
         }
         for name, body in programs.items():
             executable = bindir / name
@@ -146,6 +147,7 @@ exit 92
             "PATH": str(bindir) + os.pathsep + os.environ["PATH"],
             "DEVELOPER_DIR": str(developer),
             "ASC_KEY_ID": "offline-fixture", "ASC_ISSUER_ID": "offline-fixture",
+            "ASC_APP_ID": "offline-fixture", "ASC_BETA_GROUP_ID": "offline-fixture",
             "ASC_PRIVATE_KEY_PATH": str(key),
             "GLASSVOW_TEST_IPA": str(self.ipa),
             "GLASSVOW_TEST_UPLOADS": str(self.uploads),

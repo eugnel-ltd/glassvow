@@ -229,27 +229,27 @@ pause
 
 # ── Stage 2: Apple Developer Program ──────────────────────────────────────
 stage "Apple Developer Program (US\$99/yr)"
-say "Individual enrollment shows your personal name on the store;"
-say "organization enrollment needs a D-U-N-S number + domain website/email."
+say "Glassvow ships under EUGNEL LTD, Team GPABDG7FX9 — not a personal team."
+say "Organization enrollment needs a D-U-N-S number + domain website/email."
 open_url "https://developer.apple.com/programs/enroll/"
-step "Enroll (or confirm the membership is active) and pay the US\$99 fee."
+step "Confirm the EUGNEL LTD membership is active (Team GPABDG7FX9)."
 step "In App Store Connect → Agreements, accept the Paid Applications agreement."
 note "EU DSA: you'll declare trader status at first app submission — a paid game"
 note "is in practice a trader; address/phone/email get verified and shown in the EU."
 pause "Done? Press Enter."
-open_url "https://developer.apple.com/account#MembershipDetailsCard"
-step "Under Membership details, copy the 10-character Team ID."
-ask APPLE_TEAM_ID "Paste the Team ID:"
+APPLE_TEAM_ID="GPABDG7FX9"
 sed -i '' "s|^application/app_store_team_id=.*|application/app_store_team_id=\"$APPLE_TEAM_ID\"|" export_presets.cfg
-say "✓ wrote Team ID into export_presets.cfg (iOS preset) — commit this change"
+say "✓ wrote Team ID GPABDG7FX9 into export_presets.cfg (iOS presets) — commit this change"
 write_env APPLE_TEAM_ID "$APPLE_TEAM_ID"
 
 # ── Stage 3: Xcode signing bootstrap ──────────────────────────────────────
-stage "Xcode — sign in your Apple ID"
-step "Open Xcode → Settings… → Accounts → '+' → add the Apple ID you enrolled with."
-say "Automatic signing will create the Apple Distribution certificate and"
-say "provisioning profile on your first archive — nothing to make by hand."
-pause "Signed in? Press Enter."
+stage "Xcode — EUGNEL signing identities"
+say "Select certificates by SHA-1, not by name (docs/release-signing.md)."
+note "Distribution: E9424DE51C7A973A15E62BB4F5BCA2D228578935 (expires 21 Oct 2027)"
+note "Development:  B4331E019A5948B169B10B581668BB6B89C06DEC (expires 21 Oct 2027)"
+step "Confirm those identities sit in the dedicated build keychain, not login."
+step "Provisioning profiles: leave the PENDING_EUGNEL_IOS_* placeholders until Len creates them."
+pause "Identities confirmed? Press Enter."
 
 # ── Stage 4: Google Play Console ──────────────────────────────────────────
 stage "Google Play Console (US\$25 one-time)"
@@ -331,27 +331,32 @@ stage "iOS — export, archive, distribution-sign"
 say "Exporting the Xcode project (Godot signs nothing; Xcode does)..."
 godot --headless --export-release "iOS" build/ios/glassvow.ipa
 say "✓ Xcode project at build/ios/"
-say "Archiving (development signing; distribution happens at export)..."
+UNLOCKER="$HOME/.config/eugnel-build/bin/unlock-build-keychain.sh"
+if [[ -x "$UNLOCKER" ]]; then
+  "$UNLOCKER"
+else
+  warn "dedicated build keychain unlocker missing at $UNLOCKER"
+  warn "never unlock the login keychain for this export"
+fi
+say "Archiving unsigned; distribution signing happens at export by SHA-1..."
 xcodebuild -project build/ios/glassvow.xcodeproj -scheme glassvow \
   -destination "generic/platform=iOS" archive \
   -archivePath build/ios/glassvow.xcarchive \
-  -allowProvisioningUpdates CODE_SIGN_IDENTITY="Apple Development" \
+  CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
   | tail -2
-say "Re-signing with Apple Distribution and exporting the .ipa..."
+say "Signing with the EUGNEL Distribution SHA-1 from ios_export_options.plist..."
 if xcodebuild -exportArchive -archivePath build/ios/glassvow.xcarchive \
      -exportPath build/ios/export \
      -exportOptionsPlist scripts/ios_export_options.plist \
-     -allowProvisioningUpdates; then
+     -allowProvisioningUpdates \
+     -authenticationKeyPath "${ASC_PRIVATE_KEY_PATH:-$HOME/.config/eugnel-build/keys/AuthKey_9PBA26ZNT6.p8}" \
+     -authenticationKeyID "${ASC_KEY_ID:-9PBA26ZNT6}" \
+     -authenticationKeyIssuerID "${ASC_ISSUER_ID:?set ASC_ISSUER_ID from env or ~/.config/eugnel-build/keys/asc.env}"; then
   say "✓ signed .ipa at build/ios/export/"
 else
-  warn "exportArchive failed (usually 'No Accounts' — the CLI can't reach"
-  warn "Xcode's Apple ID session). Finish this one step in the Xcode UI:"
+  warn "exportArchive failed. Profiles may still be PENDING placeholders."
+  warn "Do not upload under GPABDG7FX9 until this merge is on main and Len's profiles exist."
   open_url "$(pwd)/build/ios/glassvow.xcarchive"
-  step "Organizer opens with the archive → Distribute App → App Store"
-  step "Connect → Export (not Upload) — that writes the signed .ipa."
-  note "For fully headless releases later: create an App Store Connect API"
-  note "key and pass -authenticationKeyPath/-authenticationKeyID/"
-  note "-authenticationKeyIssuerID to xcodebuild."
 fi
 say "A signed .ipa on disk is the release-candidate proof this pipeline"
 say "works end to end. Uploading waits for the store-presence work."

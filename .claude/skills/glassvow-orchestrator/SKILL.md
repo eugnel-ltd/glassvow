@@ -29,7 +29,7 @@ Depth lives in `references/`:
 - **Delegate.** One lane per outcome, each a fresh subagent with its own brief, branch and worktree. Route by tier: Sonnet for daily delivery and mechanical work, Opus for design, judgement and hard problems; the owner's personal model-routing table, where present, governs.
 - **Keep context lean.** Read reports, not transcripts. Hold a task capsule per lane (goal, head, evidence, next action) in a durable run log, not in chat. Do not re-read what a lane has already settled.
 - **Act autonomously.** Plans, candidate choices among equivalents, gate reruns, merges, housekeeping and issue hygiene are the orchestrator's calls. Decide, record the decision and its reason, and keep it reversible.
-- **Escalate to the owner only for:** credentials and accounts, art and other subjective product picks, product-defining choices absent from the source of truth, and things only he can physically do (unlocking the keychain after a reboot, holding the iPad, accepting an Apple agreement). Put each as one numbered question with a recommendation.
+- **Escalate to the owner only for:** credentials and accounts, art and other subjective product picks, product-defining choices absent from the source of truth, and things only he can physically do (a dedicated-keychain unlocker that prompts, holding the iPad, accepting an Apple agreement). Put each as one numbered question with a recommendation.
 - **The owner's input is never a gate.** His play reports and picks are inputs when they arrive; work that does not depend on them continues.
 
 ## 2. The lane lifecycle

@@ -55,10 +55,33 @@ stub build and provider commands; it performs no signing, device action or uploa
   pass, alphanumeric — a Godot requirement). Password lives in the password
   manager only, **never on disk**. Play App Signing holds the real app key;
   this upload key is resettable via a Play Console help form if lost.
-- **Apple Team ID**: `application/app_store_team_id` in `export_presets.cfg`
-  (not secret; committed).
-- **Apple distribution cert + provisioning profile**: minted and stored by
-  Xcode automatic signing (Keychain); nothing to manage by hand.
+- **Apple Team ID**: `GPABDG7FX9` (EUGNEL LTD), in `export_presets.cfg`
+  (not secret; committed). James approved the switch from the personal Apple
+  team on 21 Oct 2026. The iOS bundle is `uk.eugnel.glassvow`.
+- **Signing identities**: select by SHA-1, never by name. Both expire on
+  21 Oct 2027.
+  - Distribution: `Apple Distribution: EUGNEL LTD (GPABDG7FX9)`, SHA-1
+    `E9424DE51C7A973A15E62BB4F5BCA2D228578935`.
+  - Development: `Apple Development: Created via API (9PBA26ZNT6)`, SHA-1
+    `B4331E019A5948B169B10B581668BB6B89C06DEC`.
+- **Dedicated build keychain**: `scripts/ios_release.sh` unlocks it with
+  `~/.config/eugnel-build/bin/unlock-build-keychain.sh`. Never the login
+  keychain.
+- **App Store Connect API key**: key ID `9PBA26ZNT6`, file
+  `~/.config/eugnel-build/keys/AuthKey_9PBA26ZNT6.p8`. The issuer is read from
+  the environment or `~/.config/eugnel-build/keys/asc.env`. Never hardcode or
+  print the issuer or the `.p8` contents.
+- **Provisioning profiles**: they do not exist yet. Len creates them after the
+  App Store Connect record exists. The export plists keep clearly marked
+  placeholders (`PENDING_EUGNEL_IOS_PROFILE` /
+  `PENDING_EUGNEL_IOS_DEVELOPMENT_PROFILE`). Override with
+  `IOS_DISTRIBUTION_PROFILE` / `IOS_DEVELOPMENT_PROFILE` once the real name or
+  UUID is known. The release script refuses to sign while a placeholder is
+  still in effect.
+- **Hold — no upload under `GPABDG7FX9`:** do not `asc builds upload`,
+  TestFlight-upload, or otherwise submit an IPA for this team until (1) this
+  signing switch is on `main` and (2) the EUGNEL provisioning profiles exist
+  and have replaced the placeholders.
 - **`export_credentials.cfg`**: written by the Godot editor if keystore fields
   are ever filled in the Export dialog; gitignored along with `*.keystore`.
 
@@ -149,42 +172,44 @@ so iOS is the release path that matters now.
 
 ```bash
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+~/.config/eugnel-build/bin/unlock-build-keychain.sh
 mkdir -p build/ios
 godot --headless --export-release "iOS" build/ios/glassvow.ipa   # emits build/ios/glassvow.xcodeproj
-# archive UNSIGNED (verified headless 2026-09-30, build 6); -exportArchive signs everything:
+# archive UNSIGNED; -exportArchive signs with the Distribution SHA-1:
 xcodebuild -project build/ios/glassvow.xcodeproj -scheme glassvow \
   -destination "generic/platform=iOS" archive \
   -archivePath build/ios/glassvow.xcarchive \
   CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
-# sign with Apple Distribution through the team API key + export the .ipa:
+# sign through the EUGNEL team API key + export the .ipa:
 xcodebuild -exportArchive -archivePath build/ios/glassvow.xcarchive \
   -exportPath build/ios/export \
   -exportOptionsPlist scripts/ios_export_options.plist \
   -allowProvisioningUpdates \
-  -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_<key-id>.p8 \
-  -authenticationKeyID <key-id> -authenticationKeyIssuerID <issuer-id>
-# verify, then upload (asc reads ASC_KEY_ID / ASC_ISSUER_ID / ASC_PRIVATE_KEY_PATH from the environment):
+  -authenticationKeyPath ~/.config/eugnel-build/keys/AuthKey_9PBA26ZNT6.p8 \
+  -authenticationKeyID 9PBA26ZNT6 -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+# verify, then upload only after this switch is on main AND Len's profiles exist
+# (asc reads ASC_KEY_ID / ASC_ISSUER_ID / ASC_PRIVATE_KEY_PATH from the environment
+# or ~/.config/eugnel-build/keys/asc.env; pass the new ASC_APP_ID, never a
+# personal-team app id):
 codesign --verify --deep --strict build/ios/export/Payload/glassvow.app 2>/dev/null || true
-asc builds upload --app io.fol2.glassvow --ipa build/ios/export/glassvow.ipa
-asc builds list --app io.fol2.glassvow --build-number <n>   # processingState VALID before testers see it
+asc builds upload --app "$ASC_APP_ID" --ipa build/ios/export/glassvow.ipa
+asc builds list --app "$ASC_APP_ID" --build-number <n>   # processingState VALID before testers see it
 ```
 
-Why the archive is unsigned: Xcode's automatic development signing picks the
-first matching "Apple Development" identity across every keychain in the
-search list, and on this Mac those identities live in locked per-agent
-keychains (`octomiser-agent`, `octomiser-independent-166`), so `codesign` fails
-with `errSecInternalComponent`; forcing another identity trips the
-"conflicting provisioning settings" check, and manual signing fails because
-the managed wildcard profile does not include the login keychain's
-`iPhone Developer` certificate. Signing only at `-exportArchive` with the
-Apple Distribution identity (login keychain) needs none of that. The login
-keychain must be unlocked for this process tree (`security unlock-keychain`),
-and its keys pre-authorised once with `security set-key-partition-list -S
-apple-tool:,apple: -s`; hand the password over in a 0600 temp file that is
-deleted after use, never on the command line.
+Why the archive is unsigned: signing at archive time searches every keychain
+for a development identity. This machine still has locked per-agent keychains,
+so that search fails with `errSecInternalComponent` or picks the wrong cert.
+The shipping path archives unsigned, then `-exportArchive` selects the EUGNEL
+Distribution identity **by SHA-1** from the dedicated build keychain. Unlock
+that keychain with `~/.config/eugnel-build/bin/unlock-build-keychain.sh` for
+this process tree. Never `security unlock-keychain` on the login keychain for
+a Glassvow store build.
 
 `scripts/ios_export_options.plist` keeps `method = app-store-connect`,
-`teamID = V45S7U2LZB`, and `signingStyle = automatic`. It also pins
+`teamID = GPABDG7FX9`, `signingStyle = manual`, and
+`signingCertificate` equal to the Distribution SHA-1 above. The bundle
+`uk.eugnel.glassvow` maps to `PENDING_EUGNEL_IOS_PROFILE` until Len replaces
+that placeholder. It also pins
 `manageAppVersionAndBuildNumber = false` so App Store Connect cannot rewrite
 the tracked marketing version and build number (currently **1.0.0 (21)**; TestFlight already holds 1–16 and 18–20; 17 was rejected by ITMS-90534), and
 `uploadSymbols = true` so a direct
@@ -192,16 +217,13 @@ App Store Connect upload includes symbols. With `destination = export`, retain
 the archive's `dSYMs/` for the later Apple and Sentry symbol-upload steps; dSYMs
 are not embedded in the IPA.
 
-Headless, `-exportArchive` alone fails with **"No Accounts"** (the CLI can't
-reach Xcode's Apple ID session). The working path — verified 2026-08-13, it
-produced a distribution-signed `glassvow.ipa` (Team V45S7U2LZB, full Apple
-chain) — authenticates with the existing App Store Connect **team API key**:
-append `-authenticationKeyPath` / `-authenticationKeyID` /
-`-authenticationKeyIssuerID` to the `-exportArchive` command above. The `.p8`
-lives under `~/.appstoreconnect/private_keys/`; its key + issuer IDs are in
-`~/.appstoreconnect/octomiser-api-key.json` (a team-wide key, first created
-for Octomiser's TestFlight uploads — IDs deliberately not reproduced here:
-public repo). The same key later serves upload/TestFlight automation.
+Headless, `-exportArchive` authenticates with the EUGNEL App Store Connect
+**team API key** (key ID `9PBA26ZNT6`): append `-authenticationKeyPath` /
+`-authenticationKeyID` / `-authenticationKeyIssuerID`. The `.p8` lives at
+`~/.config/eugnel-build/keys/AuthKey_9PBA26ZNT6.p8`; the issuer is in
+`~/.config/eugnel-build/keys/asc.env` and is never committed or printed. The
+same key later serves upload/TestFlight automation, once the EUGNEL app
+record and profiles exist.
 
 ## One-script release
 
@@ -213,8 +235,9 @@ recipe above stays as the reference for what each step does and for debugging a
 single step.
 
 ```bash
-export ASC_KEY_ID=<key-id> ASC_ISSUER_ID=<issuer-id> \
-       ASC_PRIVATE_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_<key-id>.p8
+# Either export the three ASC_* variables, or leave them unset and let the
+# script read ~/.config/eugnel-build/keys/asc.env (issuer) plus the default
+# key-id / .p8 path. Never print the issuer.
 source ~/.config/glassvow/sentry.sh        # SENTRY_AUTH_TOKEN for the dSYM upload
 scripts/ios_release.sh <build-number> <expected-main-sha> [--no-upload] [--no-device]
 ```
@@ -222,17 +245,22 @@ scripts/ios_release.sh <build-number> <expected-main-sha> [--no-upload] [--no-de
 It refuses, before building anything, when HEAD is not `<expected-main-sha>`,
 when the tree is dirty (the machine-local `.wrangler/` folder is tolerated),
 when `application/version` in the **`iOS`** preset of `export_presets.cfg` is
-not `<build-number>`, when any of the three `ASC_*` variables is missing, or
-(without `--no-device`) when the iPad is not known to `devicectl`. Bump and
+not `<build-number>`, when the App Store Connect issuer/key cannot be resolved,
+when a provisioning-profile placeholder is still in effect, or
+(without `--no-device`) when the iPad is not known to `devicectl`. Upload
+also requires `ASC_APP_ID` and `ASC_BETA_GROUP_ID` for the EUGNEL record (no
+personal-team default). Bump and
 commit the pin first, merge, then run from a clean `main`. `--no-upload` stops
 after the signed App Store `.ipa` (no `asc`, Sentry, wait or attach);
 `--no-device` skips the development export and the iPad install.
+There is still **no upload under `GPABDG7FX9` until this change is on `main`
+and Len's profiles exist**.
 
 Preconditions (the script cannot satisfy these for you):
 
-- **Login keychain unlocked** for this process tree, with its keys pre-authorised
-  once (see "Why the archive is unsigned" above). A locked keychain fails the
-  export step.
+- **Dedicated build keychain unlocked** for this process tree via
+  `~/.config/eugnel-build/bin/unlock-build-keychain.sh`. Never the login
+  keychain. A locked dedicated keychain fails the export step.
 - **Patched iOS template** installed, the 4.7.3-rc device slice described in the
   "iOS template" row of the toolchain table. The script prints
   `GLASSVOW-TEMPLATE-NOTE.txt` and the engine version string found in the
@@ -256,17 +284,18 @@ Preconditions (the script cannot satisfy these for you):
   succeeds only if the build id is already there; otherwise it prints the error
   body and fails.
 
-Where things live. Credentials are only ever read from the environment; the key
-and issuer IDs are not in the repository. The numeric App Store Connect app id
-(`ASC_APP_ID`) and the internal beta group id (`ASC_BETA_GROUP_ID`) are defaults
-in the script header, overridable from the environment; that header is their
-single source. `scripts/ios_export_options_development.plist` holds the
-development signing pin for the iPad install: manual signing with the Apple
-Development certificate's SHA-1 fingerprint and the profile name
-`Glassvow device QA 2026-09-30` for `io.fol2.glassvow`. A fingerprint and a
-profile name are identifiers, not secrets (the private key stays in the
-keychain). When the profile is regenerated or the certificate renewed, update
-both values in that file.
+Where things live. The issuer is only ever read from the environment or
+`~/.config/eugnel-build/keys/asc.env`; it is not in the repository. Key ID
+`9PBA26ZNT6` and the `.p8` path are the documented defaults. The numeric App
+Store Connect app id (`ASC_APP_ID`) and the internal beta group id
+(`ASC_BETA_GROUP_ID`) have **no defaults** until Len creates the EUGNEL app
+record; set them from the environment then. `scripts/ios_export_options_development.plist`
+holds the development signing pin for the iPad install: manual signing with
+the Development SHA-1 above and placeholder
+`PENDING_EUGNEL_IOS_DEVELOPMENT_PROFILE` for `uk.eugnel.glassvow`. A fingerprint
+and a profile name are identifiers, not secrets (the private key stays in the
+dedicated build keychain). When Len has the real profile name or UUID, replace
+the placeholder or pass `IOS_DEVELOPMENT_PROFILE`.
 
 Output: every step logs to `build/ios/logs/<step><build-number>.log` (gitignored
 with the rest of `build/`, kept between runs; the rest of `build/ios` is wiped
@@ -299,10 +328,11 @@ xcrun devicectl device install app --device <devicectl identifier> \
   build/ios-dev/dd/Build/Products/Debug-iphoneos/glassvow.app
 ```
 
-`xcrun devicectl list devices` gives the identifier. Signing needs no new
-profile: automatic signing picked `Apple Development: James TO` under the
-wildcard `iOS Team Provisioning Profile: *`, and **BUILD SUCCEEDED** without a
-portal visit.
+`xcrun devicectl list devices` gives the identifier. Device installs now use
+the EUGNEL Development SHA-1 and the development profile for
+`uk.eugnel.glassvow` (placeholder until Len creates it). A 2026-08-14
+rehearsal on the previous personal team is historical, not the shipping
+identity.
 
 Three things that will stop you:
 
@@ -338,7 +368,7 @@ working recipe: set `godot_cmdline` to
 project's Info.plist (plutil, then rebuild — the exporter regenerates the plist
 on every export), and pull the log with
 `xcrun devicectl device copy from … --domain-type appDataContainer
---domain-identifier io.fol2.glassvow --source Documents/bench.log`, since
+--domain-identifier uk.eugnel.glassvow --source Documents/bench.log`, since
 `print()` output never reaches `devicectl --console` (also measured; `user://`
 maps to `Documents/`).
 
