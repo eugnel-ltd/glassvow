@@ -6,6 +6,12 @@ extends RefCounted
 const MARKETING: String = "1.0.0"
 const IOS_BUILD: String = "21"
 const ANDROID_BUILD: String = "1"
+const IOS_TEAM: String = "GPABDG7FX9"
+const IOS_BUNDLE: String = "uk.eugnel.glassvow"
+const DIST_CERT_SHA1: String = "E9424DE51C7A973A15E62BB4F5BCA2D228578935"
+const DEV_CERT_SHA1: String = "B4331E019A5948B169B10B581668BB6B89C06DEC"
+const DIST_PROFILE_UUID: String = "b7e59e22-1ebc-47d7-843e-27e99d5cbb4b"
+const DEV_PROFILE_UUID: String = "0b2a6f42-cadf-4b3e-8de8-7fd41d072ddb"
 
 
 static func run(fails: Array[String]) -> void:
@@ -39,6 +45,10 @@ static func _ios_identity(fails: Array[String]) -> void:
 			fails.append("identity: %s short_version is not %s" % [name, MARKETING])
 		if str(opts.get("application/version", "")) != IOS_BUILD:
 			fails.append("identity: %s CFBundleVersion is not %s" % [name, IOS_BUILD])
+		if str(opts.get("application/app_store_team_id", "")) != IOS_TEAM:
+			fails.append("identity: %s team is not %s" % [name, IOS_TEAM])
+		if str(opts.get("application/bundle_identifier", "")) != IOS_BUNDLE:
+			fails.append("identity: %s bundle id is not %s" % [name, IOS_BUNDLE])
 
 
 static func _shared_marketing(fails: Array[String]) -> void:
@@ -67,16 +77,42 @@ static func _sentry_dist(fails: Array[String]) -> void:
 
 
 static func _export_options(fails: Array[String]) -> void:
-	var text: String = FileAccess.get_file_as_string("res://scripts/ios_export_options.plist")
-	if text.is_empty():
+	var store: String = FileAccess.get_file_as_string("res://scripts/ios_export_options.plist")
+	if store.is_empty():
 		fails.append("identity: ios_export_options.plist is missing")
+	else:
+		_expect_plist(fails, store, "method", "app-store-connect")
+		_expect_plist(fails, store, "destination", "export")
+		_expect_plist(fails, store, "teamID", IOS_TEAM)
+		_expect_plist(fails, store, "signingStyle", "manual")
+		_expect_plist(fails, store, "signingCertificate", DIST_CERT_SHA1)
+		_expect_profile(fails, store, IOS_BUNDLE, DIST_PROFILE_UUID)
+		_expect_plist_bool(fails, store, "manageAppVersionAndBuildNumber", false)
+		_expect_plist_bool(fails, store, "uploadSymbols", true)
+	var development: String = FileAccess.get_file_as_string(
+			"res://scripts/ios_export_options_development.plist")
+	if development.is_empty():
+		fails.append("identity: ios_export_options_development.plist is missing")
 		return
-	_expect_plist(fails, text, "method", "app-store-connect")
-	_expect_plist(fails, text, "destination", "export")
-	_expect_plist(fails, text, "teamID", "V45S7U2LZB")
-	_expect_plist(fails, text, "signingStyle", "automatic")
-	_expect_plist_bool(fails, text, "manageAppVersionAndBuildNumber", false)
-	_expect_plist_bool(fails, text, "uploadSymbols", true)
+	_expect_plist(fails, development, "method", "development")
+	_expect_plist(fails, development, "destination", "export")
+	_expect_plist(fails, development, "teamID", IOS_TEAM)
+	_expect_plist(fails, development, "signingStyle", "manual")
+	_expect_plist(fails, development, "signingCertificate", DEV_CERT_SHA1)
+	_expect_profile(fails, development, IOS_BUNDLE, DEV_PROFILE_UUID)
+
+
+static func _expect_profile(
+		fails: Array[String], text: String, bundle: String, profile: String) -> void:
+	var at: int = text.find("<key>provisioningProfiles</key>")
+	if at < 0:
+		fails.append("identity: provisioningProfiles is missing")
+		return
+	var rest: String = text.substr(at)
+	if rest.find("<key>%s</key>" % bundle) < 0:
+		fails.append("identity: profile bundle is not %s" % bundle)
+	if rest.find("<string>%s</string>" % profile) < 0:
+		fails.append("identity: profile name is not %s" % profile)
 
 
 static func _expect_plist(fails: Array[String], text: String, key: String, want: String) -> void:

@@ -7,15 +7,17 @@
 	<key>destination</key>
 	<string>export</string>
 	<key>teamID</key>
-	<string>V45S7U2LZB</string>
+	<string>GPABDG7FX9</string>
 	<key>signingStyle</key>
 	<string>manual</string>
+	<!-- Apple Development: Created via API (9PBA26ZNT6). Select by SHA-1, not by name. Expires 21 Oct 2027. -->
 	<key>signingCertificate</key>
-	<string>1DF1405515AC5A0D3E4CB38AA85189FD8D9D6A0E</string>
+	<string>B4331E019A5948B169B10B581668BB6B89C06DEC</string>
 	<key>provisioningProfiles</key>
 	<dict>
-		<key>io.fol2.glassvow</key>
-		<string>Glassvow device QA 2026-09-30</string>
+		<!-- Glassvow Development EUGNEL, App ID uk.eugnel.glassvow (JW83GQ7SJ6). Select by UUID. Expires 21 Oct 2027. Override with IOS_DEVELOPMENT_PROFILE. -->
+		<key>uk.eugnel.glassvow</key>
+		<string>0b2a6f42-cadf-4b3e-8de8-7fd41d072ddb</string>
 	</dict>
 	<key>compileBitcode</key>
 	<false/>
@@ -23,3 +25,4 @@
 	<string>&lt;none&gt;</string>
 </dict>
 </plist>
+

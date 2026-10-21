@@ -196,7 +196,7 @@ From the store-compliance dossier
 
 **Accounts and declarations**
 
-- [ ] Apple Developer Program membership active (Team `V45S7U2LZB`); **Paid Apps Agreement**
+- [ ] Apple Developer Program membership active (Team `GPABDG7FX9`, EUGNEL LTD); **Paid Apps Agreement**
       signed by the Account Holder, banking and tax complete.
 - [ ] **EU DSA trader status** declared and verified (address/phone/email; shown on the EU
       product page).

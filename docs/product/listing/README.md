@@ -14,7 +14,7 @@ The draft `whatsNew` strings derive from `releases/1.0.0.md`. They do not announ
 
 | Item | Evidence or exact missing proof |
 |---|---|
-| App identity | #426 read back app `6803851427`, SKU `GLASSVOW-IOS-2026`, primary locale `en-US`, version `1.0.0`; current editable state and field readback remain pending |
+| App identity | Shipping App Store Connect app: Apple ID `6825547714`, name `Glassvow`, SKU `glassvow`, bundle `uk.eugnel.glassvow`, primary language English (U.K.). The James TO record `6803851427` (bundle `io.fol2.glassvow`, SKU `GLASSVOW-IOS-2026`) still exists and is unused. Listing field readback remains pending |
 | Price | #243 signed US$6.99 base price, Apple regional prices, no introductory discount; current store schedule/readback pending |
 | Storefronts, pre-order, release control | #425 remains open; its recommendation is not a recorded choice |
 | Support URL | The prepared root `https://glassvow.eugnel.com/` shows `glassvow@eugnel.com`; live HTTP, routing and mailbox delivery proof remain pending |

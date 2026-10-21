@@ -7,9 +7,18 @@
 	<key>destination</key>
 	<string>export</string>
 	<key>teamID</key>
-	<string>V45S7U2LZB</string>
+	<string>GPABDG7FX9</string>
 	<key>signingStyle</key>
-	<string>automatic</string>
+	<string>manual</string>
+	<!-- Apple Distribution: EUGNEL LTD (GPABDG7FX9). Select by SHA-1, not by name. Expires 21 Oct 2027. -->
+	<key>signingCertificate</key>
+	<string>E9424DE51C7A973A15E62BB4F5BCA2D228578935</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<!-- Glassvow App Store EUGNEL, App ID uk.eugnel.glassvow (JW83GQ7SJ6). Select by UUID. Expires 21 Oct 2027. Override with IOS_DISTRIBUTION_PROFILE. -->
+		<key>uk.eugnel.glassvow</key>
+		<string>b7e59e22-1ebc-47d7-843e-27e99d5cbb4b</string>
+	</dict>
 	<key>manageAppVersionAndBuildNumber</key>
 	<false/>
 	<key>uploadSymbols</key>
