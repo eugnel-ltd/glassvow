@@ -131,7 +131,7 @@ assert_usable_profile() {
   fi
   case "$name" in
     PENDING_EUGNEL_IOS*)
-      die "$kind provisioning profile is still the placeholder ($name); Len creates profiles after the App Store Connect record exists (docs/release-signing.md)" ;;
+      die "$kind provisioning profile is still a placeholder ($name); use the EUGNEL profile UUID (docs/release-signing.md)" ;;
     "")
       die "$kind provisioning profile is empty in $plist" ;;
   esac

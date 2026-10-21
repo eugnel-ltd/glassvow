@@ -248,7 +248,7 @@ say "Select certificates by SHA-1, not by name (docs/release-signing.md)."
 note "Distribution: E9424DE51C7A973A15E62BB4F5BCA2D228578935 (expires 21 Oct 2027)"
 note "Development:  B4331E019A5948B169B10B581668BB6B89C06DEC (expires 21 Oct 2027)"
 step "Confirm those identities sit in the dedicated build keychain, not login."
-step "Provisioning profiles: leave the PENDING_EUGNEL_IOS_* placeholders until Len creates them."
+step "Provisioning profiles: Glassvow App Store EUGNEL / Glassvow Development EUGNEL (UUIDs in the export plists)."
 pause "Identities confirmed? Press Enter."
 
 # ── Stage 4: Google Play Console ──────────────────────────────────────────
@@ -354,8 +354,8 @@ if xcodebuild -exportArchive -archivePath build/ios/glassvow.xcarchive \
      -authenticationKeyIssuerID "${ASC_ISSUER_ID:?set ASC_ISSUER_ID from env or ~/.config/eugnel-build/keys/asc.env}"; then
   say "✓ signed .ipa at build/ios/export/"
 else
-  warn "exportArchive failed. Profiles may still be PENDING placeholders."
-  warn "Do not upload under GPABDG7FX9 until this merge is on main and Len's profiles exist."
+  warn "exportArchive failed. Check the dedicated keychain and profile UUIDs."
+  warn "Do not upload under GPABDG7FX9 until this merge is on main and the App Store Connect app record exists."
   open_url "$(pwd)/build/ios/glassvow.xcarchive"
 fi
 say "A signed .ipa on disk is the release-candidate proof this pipeline"

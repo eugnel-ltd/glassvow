@@ -10,8 +10,8 @@ const IOS_TEAM: String = "GPABDG7FX9"
 const IOS_BUNDLE: String = "uk.eugnel.glassvow"
 const DIST_CERT_SHA1: String = "E9424DE51C7A973A15E62BB4F5BCA2D228578935"
 const DEV_CERT_SHA1: String = "B4331E019A5948B169B10B581668BB6B89C06DEC"
-const DIST_PROFILE_PLACEHOLDER: String = "PENDING_EUGNEL_IOS_PROFILE"
-const DEV_PROFILE_PLACEHOLDER: String = "PENDING_EUGNEL_IOS_DEVELOPMENT_PROFILE"
+const DIST_PROFILE_UUID: String = "b7e59e22-1ebc-47d7-843e-27e99d5cbb4b"
+const DEV_PROFILE_UUID: String = "0b2a6f42-cadf-4b3e-8de8-7fd41d072ddb"
 
 
 static func run(fails: Array[String]) -> void:
@@ -86,7 +86,7 @@ static func _export_options(fails: Array[String]) -> void:
 		_expect_plist(fails, store, "teamID", IOS_TEAM)
 		_expect_plist(fails, store, "signingStyle", "manual")
 		_expect_plist(fails, store, "signingCertificate", DIST_CERT_SHA1)
-		_expect_profile(fails, store, IOS_BUNDLE, DIST_PROFILE_PLACEHOLDER)
+		_expect_profile(fails, store, IOS_BUNDLE, DIST_PROFILE_UUID)
 		_expect_plist_bool(fails, store, "manageAppVersionAndBuildNumber", false)
 		_expect_plist_bool(fails, store, "uploadSymbols", true)
 	var development: String = FileAccess.get_file_as_string(
@@ -99,7 +99,7 @@ static func _export_options(fails: Array[String]) -> void:
 	_expect_plist(fails, development, "teamID", IOS_TEAM)
 	_expect_plist(fails, development, "signingStyle", "manual")
 	_expect_plist(fails, development, "signingCertificate", DEV_CERT_SHA1)
-	_expect_profile(fails, development, IOS_BUNDLE, DEV_PROFILE_PLACEHOLDER)
+	_expect_profile(fails, development, IOS_BUNDLE, DEV_PROFILE_UUID)
 
 
 static func _expect_profile(

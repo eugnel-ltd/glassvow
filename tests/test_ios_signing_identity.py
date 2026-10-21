@@ -14,8 +14,11 @@ IOS_BUNDLE = "uk.eugnel.glassvow"
 ANDROID_PACKAGE = "io.fol2.glassvow"
 DIST_SHA1 = "E9424DE51C7A973A15E62BB4F5BCA2D228578935"
 DEV_SHA1 = "B4331E019A5948B169B10B581668BB6B89C06DEC"
-DIST_PROFILE = "PENDING_EUGNEL_IOS_PROFILE"
-DEV_PROFILE = "PENDING_EUGNEL_IOS_DEVELOPMENT_PROFILE"
+DIST_PROFILE = "b7e59e22-1ebc-47d7-843e-27e99d5cbb4b"
+DEV_PROFILE = "0b2a6f42-cadf-4b3e-8de8-7fd41d072ddb"
+DIST_PROFILE_NAME = "Glassvow App Store EUGNEL"
+DEV_PROFILE_NAME = "Glassvow Development EUGNEL"
+APP_ID_RESOURCE = "JW83GQ7SJ6"
 HISTORICAL_PREFIXES = ("docs/reviews/", "docs/design/")
 LIVE_SIGNING_PATHS = (
     "export_presets.cfg",
@@ -110,6 +113,10 @@ class SigningIdentityTests(unittest.TestCase):
         self.assertEqual(TEAM, development["teamID"])
         self.assertEqual(DEV_SHA1, development["signingCertificate"])
         self.assertEqual({IOS_BUNDLE: DEV_PROFILE}, development["provisioningProfiles"])
+        docs = (ROOT / "docs/release-signing.md").read_text(encoding="utf-8")
+        for needle in (DIST_PROFILE, DEV_PROFILE, DIST_PROFILE_NAME, DEV_PROFILE_NAME,
+                       APP_ID_RESOURCE):
+            self.assertIn(needle, docs)
 
     def test_release_script_uses_dedicated_keychain_and_asc_file(self) -> None:
         text = (ROOT / "scripts/ios_release.sh").read_text(encoding="utf-8")
@@ -118,6 +125,7 @@ class SigningIdentityTests(unittest.TestCase):
         self.assertIn("AuthKey_9PBA26ZNT6.p8", text)
         self.assertNotIn("login.keychain", text)
         self.assertNotIn("6803851427", text)
+        self.assertIn('ASC_APP_ID="${ASC_APP_ID:-}"', text)
         self.assertNotRegex(text, r"ASC_ISSUER_ID=\$\{ASC_ISSUER_ID:-.+\}")
         self.assertIsNone(re.search(
             r"ASC_ISSUER_ID=.?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-", text))

@@ -15,9 +15,9 @@
 	<string>E9424DE51C7A973A15E62BB4F5BCA2D228578935</string>
 	<key>provisioningProfiles</key>
 	<dict>
-		<!-- Placeholder: Len creates the App Store profile after the ASC record exists. Override with IOS_DISTRIBUTION_PROFILE. -->
+		<!-- Glassvow App Store EUGNEL, App ID uk.eugnel.glassvow (JW83GQ7SJ6). Select by UUID. Expires 21 Oct 2027. Override with IOS_DISTRIBUTION_PROFILE. -->
 		<key>uk.eugnel.glassvow</key>
-		<string>PENDING_EUGNEL_IOS_PROFILE</string>
+		<string>b7e59e22-1ebc-47d7-843e-27e99d5cbb4b</string>
 	</dict>
 	<key>manageAppVersionAndBuildNumber</key>
 	<false/>

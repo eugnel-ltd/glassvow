@@ -227,8 +227,11 @@ class EditorHomeTests(unittest.TestCase):
     def test_placeholder_profile_stops_before_unlock(self) -> None:
         with fixture(True) as case:
             scripts = case.root / "scripts"
-            shutil.copyfile(ROOT / "scripts/ios_export_options.plist",
-                            scripts / "ios_export_options.plist")
+            plist = plistlib.loads(
+                (ROOT / "scripts/ios_export_options.plist").read_bytes())
+            plist["provisioningProfiles"] = {
+                "uk.eugnel.glassvow": "PENDING_EUGNEL_IOS_PROFILE"}
+            (scripts / "ios_export_options.plist").write_bytes(plistlib.dumps(plist))
             result = case.release()
             self.assertNotEqual(0, result.returncode, result.stdout + result.stderr)
             self.assertIn("PENDING_EUGNEL_IOS_PROFILE", result.stderr)
