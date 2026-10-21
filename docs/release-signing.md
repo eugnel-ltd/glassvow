@@ -58,8 +58,13 @@ stub build and provider commands; it performs no signing, device action or uploa
 - **Apple Team ID**: `GPABDG7FX9` (EUGNEL LTD), in `export_presets.cfg`
   (not secret; committed). James approved the switch from the personal Apple
   team on 21 Oct 2026. The iOS App ID is `uk.eugnel.glassvow` (Developer
-  portal resource `JW83GQ7SJ6`). The App Store Connect app record is not
-  created yet, so `ASC_APP_ID` stays an environment override with no default.
+  portal resource `JW83GQ7SJ6`).
+- **App Store Connect app**: Apple ID `6825547714`, name `Glassvow`, SKU `glassvow`,
+  bundle `uk.eugnel.glassvow`, primary language English (U.K.).
+  `ASC_APP_ID` defaults to `6825547714` in `scripts/ios_release.sh` and
+  `product.yaml` `store_ids.ios`. The James TO record (`6803851427`, bundle
+  `io.fol2.glassvow`, SKU `GLASSVOW-IOS-2026`, primary locale `en-US`) still
+  exists and is **legacy, unused** — never upload to it.
 - **Signing identities**: select by SHA-1, never by name. Both expire on
   21 Oct 2027.
   - Distribution: `Apple Distribution: EUGNEL LTD (GPABDG7FX9)`, SHA-1
@@ -82,9 +87,9 @@ stub build and provider commands; it performs no signing, device action or uploa
   - Development: `Glassvow Development EUGNEL`, UUID
     `0b2a6f42-cadf-4b3e-8de8-7fd41d072ddb`.
 - **Hold — no upload under `GPABDG7FX9`:** do not `asc builds upload`,
-  TestFlight-upload, or otherwise submit an IPA for this team until (1) this
-  signing switch is on `main` and (2) the App Store Connect app record exists
-  and `ASC_APP_ID` is set. Profiles already exist; the store listing does not.
+  TestFlight-upload, or otherwise submit an IPA for this team until this
+  signing switch is on `main`. The App Store Connect app record exists
+  (`6825547714`); `ASC_BETA_GROUP_ID` still has no default.
 - **`export_credentials.cfg`**: written by the Godot editor if keystore fields
   are ever filled in the Export dialog; gitignored along with `*.keystore`.
 
@@ -190,13 +195,13 @@ xcodebuild -exportArchive -archivePath build/ios/glassvow.xcarchive \
   -allowProvisioningUpdates \
   -authenticationKeyPath ~/.config/eugnel-build/keys/AuthKey_9PBA26ZNT6.p8 \
   -authenticationKeyID 9PBA26ZNT6 -authenticationKeyIssuerID "$ASC_ISSUER_ID"
-# verify, then upload only after this switch is on main AND the App Store
-# Connect app record exists (asc reads ASC_KEY_ID / ASC_ISSUER_ID /
-# ASC_PRIVATE_KEY_PATH from the environment or ~/.config/eugnel-build/keys/asc.env;
-# pass ASC_APP_ID; never a personal-team app id):
+# verify, then upload only after this switch is on main (asc reads ASC_KEY_ID /
+# ASC_ISSUER_ID / ASC_PRIVATE_KEY_PATH from the environment or
+# ~/.config/eugnel-build/keys/asc.env; ASC_APP_ID defaults to 6825547714;
+# never the legacy James TO app 6803851427):
 codesign --verify --deep --strict build/ios/export/Payload/glassvow.app 2>/dev/null || true
-asc builds upload --app "$ASC_APP_ID" --ipa build/ios/export/glassvow.ipa
-asc builds list --app "$ASC_APP_ID" --build-number <n>   # processingState VALID before testers see it
+asc builds upload --app "${ASC_APP_ID:-6825547714}" --ipa build/ios/export/glassvow.ipa
+asc builds list --app "${ASC_APP_ID:-6825547714}" --build-number <n>   # processingState VALID before testers see it
 ```
 
 Why the archive is unsigned: signing at archive time searches every keychain
@@ -225,8 +230,8 @@ Headless, `-exportArchive` authenticates with the EUGNEL App Store Connect
 `-authenticationKeyID` / `-authenticationKeyIssuerID`. The `.p8` lives at
 `~/.config/eugnel-build/keys/AuthKey_9PBA26ZNT6.p8`; the issuer is in
 `~/.config/eugnel-build/keys/asc.env` and is never committed or printed. The
-same key later serves upload/TestFlight automation, once the EUGNEL App
-Store Connect app record exists and `ASC_APP_ID` is set.
+same key later serves upload/TestFlight automation against Apple ID
+`6825547714`.
 
 ## One-script release
 
@@ -251,13 +256,12 @@ when `application/version` in the **`iOS`** preset of `export_presets.cfg` is
 not `<build-number>`, when the App Store Connect issuer/key cannot be resolved,
 when a provisioning-profile placeholder is still in effect, or
 (without `--no-device`) when the iPad is not known to `devicectl`. Upload
-also requires `ASC_APP_ID` and `ASC_BETA_GROUP_ID` for the EUGNEL App Store
-Connect record (no default; that record does not exist yet). Bump and
+also requires `ASC_APP_ID` (defaults to `6825547714`) and `ASC_BETA_GROUP_ID`
+(no default until the internal group is recorded). Bump and
 commit the pin first, merge, then run from a clean `main`. `--no-upload` stops
 after the signed App Store `.ipa` (no `asc`, Sentry, wait or attach);
 `--no-device` skips the development export and the iPad install.
-There is still **no upload under `GPABDG7FX9` until this change is on `main`
-and the App Store Connect app record exists**.
+There is still **no upload under `GPABDG7FX9` until this change is on `main`**.
 
 Preconditions (the script cannot satisfy these for you):
 
@@ -290,9 +294,9 @@ Preconditions (the script cannot satisfy these for you):
 Where things live. The issuer is only ever read from the environment or
 `~/.config/eugnel-build/keys/asc.env`; it is not in the repository. Key ID
 `9PBA26ZNT6` and the `.p8` path are the documented defaults. The numeric App
-Store Connect app id (`ASC_APP_ID`) and the internal beta group id
-(`ASC_BETA_GROUP_ID`) have **no defaults** until the EUGNEL App Store Connect
-record exists; set them from the environment then. `scripts/ios_export_options_development.plist`
+Store Connect app id (`ASC_APP_ID`) defaults to `6825547714`. The internal
+beta group id (`ASC_BETA_GROUP_ID`) has no default until that group is
+recorded. `scripts/ios_export_options_development.plist`
 holds the development signing pin for the iPad install: manual signing with
 the Development SHA-1 above and profile UUID
 `0b2a6f42-cadf-4b3e-8de8-7fd41d072ddb` (`Glassvow Development EUGNEL`) for

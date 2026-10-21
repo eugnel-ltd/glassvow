@@ -355,7 +355,7 @@ if xcodebuild -exportArchive -archivePath build/ios/glassvow.xcarchive \
   say "✓ signed .ipa at build/ios/export/"
 else
   warn "exportArchive failed. Check the dedicated keychain and profile UUIDs."
-  warn "Do not upload under GPABDG7FX9 until this merge is on main and the App Store Connect app record exists."
+  warn "Do not upload under GPABDG7FX9 until this merge is on main. Target ASC_APP_ID 6825547714, never the legacy James TO app."
   open_url "$(pwd)/build/ios/glassvow.xcarchive"
 fi
 say "A signed .ipa on disk is the release-candidate proof this pipeline"

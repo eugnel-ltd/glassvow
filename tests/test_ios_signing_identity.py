@@ -19,6 +19,8 @@ DEV_PROFILE = "0b2a6f42-cadf-4b3e-8de8-7fd41d072ddb"
 DIST_PROFILE_NAME = "Glassvow App Store EUGNEL"
 DEV_PROFILE_NAME = "Glassvow Development EUGNEL"
 APP_ID_RESOURCE = "JW83GQ7SJ6"
+ASC_APP_ID = "6825547714"
+LEGACY_ASC_APP_ID = "6803851427"
 HISTORICAL_PREFIXES = ("docs/reviews/", "docs/design/")
 LIVE_SIGNING_PATHS = (
     "export_presets.cfg",
@@ -115,7 +117,8 @@ class SigningIdentityTests(unittest.TestCase):
         self.assertEqual({IOS_BUNDLE: DEV_PROFILE}, development["provisioningProfiles"])
         docs = (ROOT / "docs/release-signing.md").read_text(encoding="utf-8")
         for needle in (DIST_PROFILE, DEV_PROFILE, DIST_PROFILE_NAME, DEV_PROFILE_NAME,
-                       APP_ID_RESOURCE):
+                       APP_ID_RESOURCE, ASC_APP_ID, "SKU `glassvow`",
+                       "English (U.K.)", LEGACY_ASC_APP_ID, "legacy, unused"):
             self.assertIn(needle, docs)
 
     def test_release_script_uses_dedicated_keychain_and_asc_file(self) -> None:
@@ -124,17 +127,19 @@ class SigningIdentityTests(unittest.TestCase):
         self.assertIn("~/.config/eugnel-build/keys/asc.env", text)
         self.assertIn("AuthKey_9PBA26ZNT6.p8", text)
         self.assertNotIn("login.keychain", text)
-        self.assertNotIn("6803851427", text)
-        self.assertIn('ASC_APP_ID="${ASC_APP_ID:-}"', text)
+        self.assertNotIn(LEGACY_ASC_APP_ID, text)
+        self.assertIn(f'ASC_APP_ID="${{ASC_APP_ID:-{ASC_APP_ID}}}"', text)
         self.assertNotRegex(text, r"ASC_ISSUER_ID=\$\{ASC_ISSUER_ID:-.+\}")
         self.assertIsNone(re.search(
             r"ASC_ISSUER_ID=.?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-", text))
 
-    def test_product_manifest_ios_bundle_and_pending_store_id(self) -> None:
+    def test_product_manifest_ios_bundle_and_store_id(self) -> None:
         text = (ROOT / "product.yaml").read_text(encoding="utf-8")
         self.assertIn("bundle_id: uk.eugnel.glassvow", text)
         self.assertIn("package: io.fol2.glassvow", text)
-        self.assertRegex(text, r"store_ids:\n\s+ios: null")
+        self.assertRegex(text, rf'store_ids:\n\s+ios: "{ASC_APP_ID}"')
+        self.assertIn(LEGACY_ASC_APP_ID, text)
+        self.assertIn("unused", text)
 
 
 if __name__ == "__main__":

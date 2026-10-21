@@ -38,12 +38,12 @@ channels:
 pricing:
   model: one-off
   products:
-    # SKU kept from the #426 personal-team record. The EUGNEL App Store Connect
-    # app id is unset until Len creates that record; #426's 6803851427 is not
-    # the shipping identity.
+    # Company product SKU (not the App Store Connect SKU `glassvow`).
+    # store_ids.ios is the EUGNEL App Store Connect Apple ID. The James TO
+    # record 6803851427 (bundle io.fol2.glassvow) still exists and is unused.
     - sku: GLASSVOW-IOS-2026
       store_ids:
-        ios: null
+        ios: "6825547714"
 
 # The product baseline (skill `modules/baseline.md`). Values: done | missing | waived | excluded.
 baseline:
