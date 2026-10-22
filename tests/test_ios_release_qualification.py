@@ -43,15 +43,16 @@ class QualificationTests(unittest.TestCase):
     def test_documented_release_accepts_xml_and_binary_plists(self) -> None:
         for binary in (False, True):
             with self.subTest(binary=binary):
-                write_ipa(self.ipa, {"DTXcodeBuild": "27A266a"}, binary=binary)
-                result = self.check()
-                self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertIn("27A266a", result.stdout)
+                for build in ("27A266a", "27A9275"):
+                    write_ipa(self.ipa, {"DTXcodeBuild": build}, binary=binary)
+                    result = self.check()
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertIn(build, result.stdout)
 
     def test_missing_wrong_type_unknown_and_beta_builds_fail_closed(self) -> None:
         for metadata in ({}, {"DTXcodeBuild": ""}, {"DTXcodeBuild": 27},
                          {"DTXcodeBuild": "27A266a\n"},
-                         {"DTXcodeBuild": "27A9999"},
+                         {"DTXcodeBuild": "27A9999"}, {"DTXcodeBuild": "27A9269"},
                          {"DTXcodeBuild": "27A-beta"}, ["27A266a"]):
             with self.subTest(metadata=metadata):
                 write_ipa(self.ipa, metadata)

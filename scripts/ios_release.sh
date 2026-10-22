@@ -22,7 +22,7 @@
 #   ASC_PRIVATE_KEY_PATH    (defaults to ~/.config/eugnel-build/keys/AuthKey_9PBA26ZNT6.p8)
 # Required for upload:
 #   ASC_APP_ID              (defaults to 6825547714, the EUGNEL Glassvow app)
-#   ASC_BETA_GROUP_ID       (no default; set once the internal group is recorded)
+#   ASC_BETA_GROUP_ID       (defaults to 104b9277-9d7e-448b-b6d4-6d096503f57c, Glassvow Internal)
 # Optional overrides:
 #   DEVELOPER_DIR, SENTRY_ORG, SENTRY_PROJECT,
 #   PROCESSING_POLL_LIMIT, PROCESSING_POLL_SECONDS,
@@ -41,10 +41,10 @@
 set -euo pipefail
 
 # Not secrets: the EUGNEL App Store Connect app (6825547714, SKU glassvow) and
-# its internal beta group. Never the legacy personal-team app. The beta group
-# id has no default until that group is recorded.
+# its internal beta group (Glassvow Internal, isInternalGroup=true, recorded
+# 2026-10-22). Never the legacy personal-team app.
 ASC_APP_ID="${ASC_APP_ID:-6825547714}"
-ASC_BETA_GROUP_ID="${ASC_BETA_GROUP_ID:-}"
+ASC_BETA_GROUP_ID="${ASC_BETA_GROUP_ID:-104b9277-9d7e-448b-b6d4-6d096503f57c}"
 IOS_BUNDLE_ID="uk.eugnel.glassvow"
 IOS_DEVICE_UDID="${IOS_DEVICE_UDID:-}"
 SENTRY_ORG="${SENTRY_ORG:-pgnetwork}"
