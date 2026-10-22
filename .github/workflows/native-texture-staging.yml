@@ -1,0 +1,275 @@
+name: Native texture staging component proof
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - tests/native/test_texture_upload_staging.py
+      - tests/native/test_texture_staging_runtime.py
+      - tests/native/test_texture_staging_diagnostics.py
+      - tests/native/test_texture_staging_fixture_setup.py
+      - tests/native/test_texture_staging_capability.py
+      - tests/native/test_texture_staging_capability_binding.py
+      - tests/native/test_texture_staging_capability_safety.py
+      - tests/native/test_texture_staging_capability_linux.py
+      - tests/native/metal_staging_fixtures.py
+      - tests/native/test_texture_staging_metal.py
+      - tests/native/test_texture_staging_metal_probe.py
+      - tests/native/test_texture_staging_metal_integrity.py
+      - tests/native/test_texture_staging_metal_observer.py
+      - tools/godot/native_texture_staging/**
+      - tools/godot/patches/glassvow-660-compressed-upload-staging.patch
+      - tools/godot/patches/compressed-upload-staging.md
+      - .github/workflows/native-texture-staging.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-texture-staging-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  portable-native-staging:
+    # Archived unqualified Linux venue: latest actual screen was INCONCLUSIVE
+    # before engine execution (relative ICD library path), never component PASS.
+    # Retain every strict step; the supported Mac venue remains live below.
+    if: ${{ false }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Initialise bounded evidence before setup
+        timeout-minutes: 1
+        run: |
+          mkdir -p "$RUNNER_TEMP/native-texture-staging-evidence"
+          printf '%s\n' 'Native texture staging component; setup/build/render evidence only.' \
+            > "$RUNNER_TEMP/native-texture-staging-evidence/scope.txt"
+      - &allocator-checkout
+        name: Check out the exact allocator candidate
+        timeout-minutes: 2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: allocator
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.github/workflows/native-texture-staging.yml
+            /tests/native/test_texture_upload_staging.py
+            /tests/native/test_texture_staging_runtime.py
+            /tests/native/test_texture_staging_diagnostics.py
+            /tests/native/test_texture_staging_fixture_setup.py
+            /tests/native/test_texture_staging_capability.py
+            /tests/native/test_texture_staging_capability_binding.py
+            /tests/native/test_texture_staging_capability_safety.py
+            /tests/native/test_texture_staging_capability_linux.py
+            /tests/native/metal_staging_fixtures.py
+            /tests/native/test_texture_staging_metal.py
+            /tests/native/test_texture_staging_metal_probe.py
+            /tests/native/test_texture_staging_metal_integrity.py
+            /tests/native/test_texture_staging_metal_observer.py
+            /tools/godot/native_texture_staging/
+            /tools/godot/patches/glassvow-660-compressed-upload-staging.patch
+      - &shared-builder-checkout
+        name: Check out the immutable shared builder separately
+        timeout-minutes: 2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ github.repository }}
+          ref: a08e1ab8f9b5e1c8c0dd3e8c450db839f0a5acb6
+          path: shared-builder
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /tools/godot/native_boot_upload/
+      - name: Install the shared Linux compiler and software-rendering dependencies
+        timeout-minutes: 5
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential pkg-config \
+            libx11-dev libxcursor-dev libxinerama-dev libxi-dev libxrandr-dev \
+            libgl1-mesa-dev libvulkan-dev mesa-vulkan-drivers libasound2-dev \
+            libpulse-dev libudev-dev xvfb xauth imagemagick
+          python3 -m venv "$RUNNER_TEMP/native-texture-staging-venv"
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" -m pip install \
+            SCons==4.9.1 Pillow==11.3.0 numpy==2.2.6
+      - &bind-source-identities
+        name: Bind both source checkouts and the shared helper bytes
+        timeout-minutes: 1
+        env:
+          ALLOCATOR_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git -C allocator rev-parse HEAD)" = "$ALLOCATOR_HEAD"
+          test "$(git -C shared-builder rev-parse HEAD)" = a08e1ab8f9b5e1c8c0dd3e8c450db839f0a5acb6
+          git -C allocator rev-parse HEAD \
+            > "$RUNNER_TEMP/native-texture-staging-evidence/allocator-head.txt"
+          git -C shared-builder rev-parse HEAD \
+            > "$RUNNER_TEMP/native-texture-staging-evidence/shared-builder-head.txt"
+          cat > "$RUNNER_TEMP/native-texture-staging-evidence/shared-builder-inputs.json" <<'JSON'
+          {
+            "build.py": "26cb1d174f45af3a6db2a9f30e04f73148fe1438452ee3d505f0c6a3758b2840",
+            "verify.py": "3ebc04a65feb3b60830df8783803bc94aa6e094065945833354b35cae27eebe7",
+            "processes.py": "603abae76bc5ce79b413f7b9bf685424c699d068425e3b3778dff9a59273aff0"
+          }
+          JSON
+      - &cheap-component-controls
+        name: Check the supported portable runtime configuration and failure diagnostics
+        timeout-minutes: 1
+        run: |
+          # macOS /var aliases /private/var; give fixtures the physical temp path.
+          TMPDIR="$(cd -- "${TMPDIR:-/tmp}" && pwd -P)"
+          export TMPDIR
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_runtime.py \
+            --builder shared-builder/tools/godot/native_boot_upload/build.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_diagnostics.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_fixture_setup.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_capability.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_capability_binding.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_capability_safety.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tests/native/test_texture_staging_capability_linux.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" -B \
+            allocator/tests/native/test_texture_staging_metal.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" -B \
+            allocator/tests/native/test_texture_staging_metal_probe.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" -B \
+            allocator/tests/native/test_texture_staging_metal_integrity.py
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" -B \
+            allocator/tests/native/test_texture_staging_metal_observer.py
+      - name: Screen stock physical formats on this Linux build host before compiling
+        timeout-minutes: 6
+        env:
+          ALLOCATOR_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" -B \
+            allocator/tools/godot/native_texture_staging/capability.py \
+            --profile linux-x86_64-lavapipe-v1 --head "$ALLOCATOR_HEAD" \
+            --work "$RUNNER_TEMP/native-texture-staging-stock-work" \
+            --output "$RUNNER_TEMP/native-texture-staging-evidence/venue"
+      - name: Compile native controls and run actual RD requests, copies and readback
+        timeout-minutes: 75
+        env:
+          GLASSVOW_STAGING_CAPABILITY_RECEIPT: ${{ runner.temp }}/native-texture-staging-evidence/venue/result.json
+          GLASSVOW_STAGING_SOURCE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" \
+            allocator/tools/godot/native_texture_staging/run_component.py \
+            --builder shared-builder/tools/godot/native_boot_upload/build.py \
+            --builder-manifest "$RUNNER_TEMP/native-texture-staging-evidence/shared-builder-inputs.json" \
+            --work "$RUNNER_TEMP/native-texture-staging-build" \
+            --output "$RUNNER_TEMP/native-texture-staging-evidence/component" \
+            2>&1 | tee "$RUNNER_TEMP/native-texture-staging-evidence/component-command.log"
+      - name: Print bounded generated native probe logs after failure
+        if: failure()
+        timeout-minutes: 1
+        run: |
+          python3 -B allocator/tools/godot/native_texture_staging/diagnostics.py \
+            --root "$RUNNER_TEMP/native-texture-staging-evidence/component"
+      - name: Upload bounded component proof and logs even after failure
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-texture-staging-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            ${{ runner.temp }}/native-texture-staging-evidence/
+            !${{ runner.temp }}/native-texture-staging-evidence/**/project/**
+            !${{ runner.temp }}/native-texture-staging-evidence/**/xdg-*/**
+            !${{ runner.temp }}/native-texture-staging-evidence/**/native-contract
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 6
+  paired-macos-metal-staging:
+    # Standard public arm64 runner; stock support is only a prerequisite.
+    runs-on: macos-15
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Initialise bounded desktop Metal component evidence
+        timeout-minutes: 1
+        run: |
+          mkdir -p "$RUNNER_TEMP/native-texture-staging-evidence"
+          printf '%s\n' 'Desktop arm64 Metal component only; no iOS/A12/shipping/forced256 GPU qualification.' \
+            > "$RUNNER_TEMP/native-texture-staging-evidence/scope.txt"
+      - *allocator-checkout
+      - *shared-builder-checkout
+      - name: Select immutable Python 3.12 with an arm64 interpreter
+        timeout-minutes: 2
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+          architecture: arm64
+      - name: Install only pinned component Python build dependencies
+        timeout-minutes: 3
+        run: |
+          python3.12 -m venv "$RUNNER_TEMP/native-texture-staging-venv"
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" -m pip install \
+            SCons==4.9.1 Pillow==11.3.0 numpy==2.2.6
+      - *bind-source-identities
+      - *cheap-component-controls
+      - name: Observe the actual stock arm64 Metal device and six exact usage193 formats
+        timeout-minutes: 6
+        env:
+          ALLOCATOR_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" -B \
+            allocator/tools/godot/native_texture_staging/capability.py \
+            --profile macos-arm64-metal-v1 --head "$ALLOCATOR_HEAD" \
+            --work "$RUNNER_TEMP/native-texture-staging-metal-stock-work" \
+            --output "$RUNNER_TEMP/native-texture-staging-evidence/venue"
+      - name: Print bounded typed stock device and format observations
+        if: always()
+        timeout-minutes: 1
+        run: |
+          python3 -B allocator/tools/godot/native_texture_staging/diagnostics.py --summary \
+            --root "$RUNNER_TEMP/native-texture-staging-evidence"
+      - name: Build the pinned pair and prove actual Metal queries uploads copies and readbacks
+        timeout-minutes: 65
+        env:
+          ALLOCATOR_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          "$RUNNER_TEMP/native-texture-staging-venv/bin/python" -B \
+            allocator/tools/godot/native_texture_staging/run_component.py \
+            --profile macos-arm64-metal-v1 --head "$ALLOCATOR_HEAD" \
+            --venue-receipt "$RUNNER_TEMP/native-texture-staging-evidence/venue/result.json" \
+            --builder shared-builder/tools/godot/native_boot_upload/build.py \
+            --builder-manifest "$RUNNER_TEMP/native-texture-staging-evidence/shared-builder-inputs.json" \
+            --work "$RUNNER_TEMP/native-texture-staging-metal-build" \
+            --output "$RUNNER_TEMP/native-texture-staging-evidence/component" \
+            2>&1 | tee "$RUNNER_TEMP/native-texture-staging-evidence/component-command.log"
+      - name: Print only bounded typed native device and physical-format queries
+        if: always()
+        timeout-minutes: 1
+        run: |
+          python3 -B allocator/tools/godot/native_texture_staging/diagnostics.py --summary \
+            --root "$RUNNER_TEMP/native-texture-staging-evidence"
+      - name: Upload bounded Metal component evidence even after failure
+        if: always()
+        timeout-minutes: 3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-texture-staging-metal-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            ${{ runner.temp }}/native-texture-staging-evidence/
+            !${{ runner.temp }}/native-texture-staging-evidence/**/project/**
+            !${{ runner.temp }}/native-texture-staging-evidence/**/xdg-*/**
+            !${{ runner.temp }}/native-texture-staging-evidence/**/native-contract
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 6
