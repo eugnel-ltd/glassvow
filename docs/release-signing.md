@@ -15,7 +15,7 @@ this pipeline is wayfinder #165.
 | **iOS template: local 4.7.3-rc build (since build 11, 2026-09-30)** | `export_templates/4.7.2.stable/ios.zip` is the official 4.7.2 zip with its device release slice (`libgodot.ios.release.xcframework/ios-arm64/libgodot.a`) replaced by a `scons platform=ios target=template_release arch=arm64 vulkan=no metal=yes` build of the Godot `4.7` branch at `83dec14` (4.7.3-rc, 2026-09-20) from `~/Coding/godot-4.7`; the official zip is kept beside it as `ios.zip.4.7.2-official`, and the zip carries `GLASSVOW-TEMPLATE-NOTE.txt`. The exported binary reports `Godot Engine v4.7.3.rc.custom_build` | Godot 4.7.2's Forward Mobile scene shader exceeds the 16 samplers per stage that Apple5/Apple6 GPUs allow under classic Metal binding, so every shaded 3D material fails to build its pipeline on the iPad 8 (A12): the map landscape and the enemy's shaded glass vanish. Fixed upstream by godot PR #121404 (remove AreaLight3D samplers), cherry-picked for 4.7.3. Reproduce on the Mac in seconds: `GODOT_MTL_DISABLE_ARGUMENT_BUFFERS=1 tools/shot.sh --rendering-driver metal --onboard=map-select --seed=1 --shape=pad --shot=/tmp/x.png` prints `Error compiling shader SceneForwardMobileShaderRD:…: 'sampler' attribute parameter is out of bounds`. Switch back to the official template when 4.7.3-stable ships and re-run that check |
 | JDK 17 (Temurin 17.0.20) | `~/.local/share/jdk-17/Contents/Home`, wired into Godot's `export/android/java_sdk_path` editor setting | Godot 4.7's gradle template runs Gradle 8.11.1, which rejects JDK >23 ("Unsupported class file major version 69" on the machine's JDK 25); docs pin OpenJDK 17 |
 | Android SDK | `~/Library/Android/sdk` (platform android-36, build-tools 36.0.0) | Play requires target API 36 from 2026-08-31 |
-| Xcode 27.0 (27A266a) | `/Applications/Xcode.app`; a 27.0 beta also sits at `/Applications/Xcode-27.0-beta.app` and `xcode-select` points at the beta, so every store command below sets `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` | App Store uploads must be built with a release SDK; a beta-built upload is rejected |
+| Xcode 27.1 (27A9275) | `/Applications/Xcode.app` (the only Xcode installed as of 22 Oct 2026; 27.0 / 27A266a stays qualified); every store command below sets `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` | App Store uploads must be built with a release SDK; a beta-built upload is rejected |
 | Android gradle template | `android/` (gitignored, machine-local) | reinstall any checkout: `mkdir -p android/build && unzip -o ~/Library/Application\ Support/Godot/export_templates/4.7.2.stable/android_source.zip -d android/build && echo 4.7.2.stable > android/.build_version && touch android/build/.gdignore` — the wizard's preflight does this automatically |
 | Sentry for Godot **2.1.1** | `addons/sentry` ([release](https://github.com/getsentry/sentry-godot/releases/tag/2.1.1), tree `d288ad9`) | crash reporting on iOS store + Dev Review; do not follow `latest`. Client DSN lives in `project.godot` `[sentry]`; privacy-minimal (`attach_log=false`). Android Gradle injection is a later wave |
 
@@ -31,8 +31,11 @@ replaying historical evidence.
 Before TestFlight upload, `scripts/ios_release.sh` reads `DTXcodeBuild` from the
 signed IPA's single top-level app `Info.plist`. The offline checker
 `scripts/ios_release_qualification.py` accepts only release builds with recorded
-provenance. The current qualified build is **27A266a (Xcode 27.0)**, from the
-toolchain table above and the first-use-shaders Part 1 export proof. A trailing
+provenance. Qualified builds: **27A266a (Xcode 27.0)**, from the first-use-shaders
+Part 1 export proof, and **27A9275 (Xcode 27.1)**, listed by Apple Developer
+Releases (developer.apple.com/news/releases) as the final Xcode 27.1 on
+15 Oct 2026; its build number is unchanged from the 5 Oct RC. A signed
+App Store IPA of main 8f0e037b (build 21) was exported with it on 22 Oct 2026. A trailing
 letter does not identify a beta: this release build ends in `a`.
 
 Missing, malformed, ambiguous or unqualified metadata stops before `asc builds
@@ -89,7 +92,8 @@ stub build and provider commands; it performs no signing, device action or uploa
 - **Hold — no upload under `GPABDG7FX9`:** do not `asc builds upload`,
   TestFlight-upload, or otherwise submit an IPA for this team until this
   signing switch is on `main`. The App Store Connect app record exists
-  (`6825547714`); `ASC_BETA_GROUP_ID` still has no default.
+  (`6825547714`); `ASC_BETA_GROUP_ID` defaults to `104b9277-9d7e-448b-b6d4-6d096503f57c`
+  (`Glassvow Internal`, internal group on that app, recorded 22 Oct 2026).
 - **`export_credentials.cfg`**: written by the Godot editor if keystore fields
   are ever filled in the Export dialog; gitignored along with `*.keystore`.
 
@@ -257,7 +261,7 @@ not `<build-number>`, when the App Store Connect issuer/key cannot be resolved,
 when a provisioning-profile placeholder is still in effect, or
 (without `--no-device`) when the iPad is not known to `devicectl`. Upload
 also requires `ASC_APP_ID` (defaults to `6825547714`) and `ASC_BETA_GROUP_ID`
-(no default until the internal group is recorded). Bump and
+(defaults to `104b9277-9d7e-448b-b6d4-6d096503f57c`, Glassvow Internal). Bump and
 commit the pin first, merge, then run from a clean `main`. `--no-upload` stops
 after the signed App Store `.ipa` (no `asc`, Sentry, wait or attach);
 `--no-device` skips the development export and the iPad install.
@@ -279,7 +283,7 @@ Preconditions (the script cannot satisfy these for you):
   `xcrun devicectl list devices`). The repository is public, so no UDID is
   committed anywhere and the script has no default: without it the run refuses
   before building, unless `--no-device` is given.
-- Xcode 27.0 release at `/Applications/Xcode.app` (override with `DEVELOPER_DIR`),
+- Xcode 27.0 or 27.1 release at `/Applications/Xcode.app` (override with `DEVELOPER_DIR`),
   and `godot`, `asc` and `sentry-cli` on `PATH`. `sentry-cli` must be
   authenticated (`SENTRY_AUTH_TOKEN`, see above); the script checks it with
   `sentry-cli info` before building, so a missing token cannot abort the run
@@ -295,8 +299,8 @@ Where things live. The issuer is only ever read from the environment or
 `~/.config/eugnel-build/keys/asc.env`; it is not in the repository. Key ID
 `9PBA26ZNT6` and the `.p8` path are the documented defaults. The numeric App
 Store Connect app id (`ASC_APP_ID`) defaults to `6825547714`. The internal
-beta group id (`ASC_BETA_GROUP_ID`) has no default until that group is
-recorded. `scripts/ios_export_options_development.plist`
+beta group id (`ASC_BETA_GROUP_ID`) defaults to
+`104b9277-9d7e-448b-b6d4-6d096503f57c` (`Glassvow Internal`). `scripts/ios_export_options_development.plist`
 holds the development signing pin for the iPad install: manual signing with
 the Development SHA-1 above and profile UUID
 `0b2a6f42-cadf-4b3e-8de8-7fd41d072ddb` (`Glassvow Development EUGNEL`) for

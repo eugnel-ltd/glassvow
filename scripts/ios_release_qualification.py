@@ -14,7 +14,9 @@ import zipfile
 # Release provenance: docs/release-signing.md, toolchain table; confirmed in
 # docs/design/2026-10-11-first-use-shaders/proof/part1/README.md.
 # A letter suffix is not a beta test: the qualified release ends in "a".
-QUALIFIED_XCODE_BUILDS = {"27A266a": "Xcode 27.0"}
+# 27A9275 (Xcode 27.1): Apple Developer Releases lists it as the final release
+# on 2026-10-15 (the same build number as the 2026-10-05 RC).
+QUALIFIED_XCODE_BUILDS = {"27A266a": "Xcode 27.0", "27A9275": "Xcode 27.1"}
 APP_INFO = re.compile(r"Payload/[^/]+\.app/Info\.plist\Z")
 
 
